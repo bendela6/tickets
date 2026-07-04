@@ -1,0 +1,24 @@
+{
+  "name": "tickets",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "turbo build",
+    "db:generate": "turbo run db:generate",
+    "db:migrate": "pnpm --filter @tickets/db db:migrate",
+    "db:seed": "pnpm --filter @tickets/db db:seed",
+    "db:import": "pnpm --filter @tickets/db db:import",
+    "dev": "turbo dev",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "turbo typecheck"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "turbo": "~2.9.6"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}
