@@ -9,8 +9,8 @@ pnpm + turbo), same visual, data in Postgres via Drizzle.
 - **Multi-project from day one** — `projects` table, project switcher in the UI;
   items-core's `tasks.json` imports as the first project.
 - **Dynamic fields** — everything user-visible on a ticket (title, status, severity,
-  epic, area, …) is a field definition + typed value. Field *types* are code, field
-  *instances* are data: adding a "Due date" field later is an INSERT, not a migration.
+  epic, area, …) is a field definition + typed value. Field _types_ are code, field
+  _instances_ are data: adding a "Due date" field later is an INSERT, not a migration.
 - **Ticket types** — `task`, `bug`, `subtask`, …; fields attach per type with
   per-type ordering and required-ness.
 - **Subtasks are tickets** — a child ticket of type `subtask` via `tickets.parent_id`;
@@ -25,8 +25,8 @@ pnpm + turbo), same visual, data in Postgres via Drizzle.
   (key, label, kind, position), everything presentational or behavioral is a
   `config` jsonb (color, icon, widget, flags) — extensible without migrations.
 - **Relations are data-driven** — `link_types` (blocks / relates-to / duplicates / …)
-  + `ticket_links`; dependencies are just `blocks` links. Parent/child is structural
-  (`parent_id`), not a link.
+  - `ticket_links`; dependencies are just `blocks` links. Parent/child is structural
+    (`parent_id`), not a link.
 - **Authors are rows** — `users` table (humans and agents); no free-text names.
 - **Every mutation has an actor and leaves a trail** — all write endpoints carry an
   actor user id; the API appends `ticket_events` rows (who, what, when) in the same
@@ -104,7 +104,7 @@ braces on every `if`.
 ### `status_transitions` — the workflow graph: which status can move to which
 
 - `id` — serial PK
-- `from_status_id` — FK → statuses, nullable // NULL = a valid *starting* status for new tickets (entry edge)
+- `from_status_id` — FK → statuses, nullable // NULL = a valid _starting_ status for new tickets (entry edge)
 - `to_status_id` — FK → statuses
 - `ticket_type_id` — FK → ticket_types, nullable // NULL = edge applies to all types; set it for per-type workflows (bug flow ≠ task flow)
 - `config` — jsonb // future: { requireComment: true, requiredFields: [...] } on taking this edge
