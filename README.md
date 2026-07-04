@@ -28,6 +28,9 @@ New empty project: `pnpm db:seed <key> <name> <PREFIX>` or `POST /api/projects`.
 
 ## HTTP API
 
+Per-endpoint reference — request/response types, error codes, DB tables
+touched — lives in [`docs/api/`](docs/api/README.md).
+
 Conventions:
 
 - Every **mutation** carries `actorId` (a user id) and writes a `ticket_events`
@@ -94,6 +97,9 @@ Conventions:
 | `POST`   | `/api/projects/:key/link-types`         | `{ key, label, inverseLabel, directional }`                                                                                                 |
 
 ## MCP server
+
+Per-tool reference — input/output shapes and the HTTP calls behind each
+tool — lives in [`docs/mcp/`](docs/mcp/README.md).
 
 Lets any Claude session read and write the tracker with attributed actions.
 It talks to the HTTP API only (start the API first) and resolves
