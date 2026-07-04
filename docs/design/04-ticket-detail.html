@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body { margin:0; background:#E9E8E3; font-family:'IBM Plex Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+</style>
+</helmet>
+
+<div style="padding:48px 40px 96px;display:flex;flex-direction:column;gap:40px;align-items:flex-start">
+
+  <header style="max-width:760px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="width:10px;height:10px;background:#4E46C6;border-radius:2px"></span>
+      <span style="font:600 18px 'IBM Plex Mono',monospace;color:#25231D">tickets</span>
+      <span style="font:400 12px 'IBM Plex Mono',monospace;color:#918D80">screen 04 — ticket detail: peek drawer + full page</span>
+    </div>
+    <p style="font:400 13px/1.6 'IBM Plex Sans',sans-serif;color:#5D5A50;margin:0;text-wrap:pretty">One detail model, two containers. <strong style="font-weight:600;color:#25231D">Drawer</strong> (light frame): a single scroll stack for triage — fields as a compact two-column grid, then description, subtasks, links, and a Comments/Activity segmented pane. <strong style="font-weight:600;color:#25231D">Full page</strong> (dark frame): reading layout — prose, subtasks, links and comments in the main column; the per-type field form and the activity feed live in a right rail. Same components, re-flowed. Subtasks are real tickets: opening one swaps the header for a parent breadcrumb (small exhibit below).</p>
+  </header>
+
+  <!-- ================= DRAWER OVER BOARD (LIGHT) ================= -->
+  <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+  <section data-screen-label="Ticket peek drawer — light">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:10px">DESKTOP · LIGHT · PEEK DRAWER — board stays behind; esc closes, ↹ j/k moves to next row</div>
+    <div style="width:1440px;height:920px;border:1px solid #D6D3C9;border-radius:12px;overflow:hidden;display:flex;background:var(--bg);color:var(--f1);box-shadow:0 24px 60px rgba(28,26,20,.10);position:relative;--bg:#F7F6F2;--rs:#FFFFFF;--in:#ECEAE3;--bd:#E0DDD5;--bs:#C9C5BA;--f1:#25231D;--f2:#5D5A50;--f3:#918D80;--ac:#4E46C6;--acs:#E9E7FA;--oac:#FFFFFF;--dg:#C0382E;--kt:#6E6A5E;--kts:#EBEAE3;--ka:#2E6FCC;--kas:#E4EDF9;--kb:#C25425;--kbs:#F8E9DF;--kd:#2E7D4F;--kds:#E2F0E7;--shsm:0 1px 2px rgba(28,26,20,.06);--shlg:0 16px 40px rgba(28,26,20,.16),0 4px 10px rgba(28,26,20,.08)">
+
+      <!-- dimmed board behind -->
+      <aside style="width:236px;flex:none;border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px 12px 12px;opacity:.55">
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 14px"><span style="width:9px;height:9px;background:var(--ac);border-radius:2px"></span><span style="font:600 15px 'IBM Plex Mono',monospace">tickets</span></div>
+        <button style="height:34px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;margin-bottom:14px">＋ New ticket</button>
+        <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;border-radius:7px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif"><span style="font:500 10px 'IBM Plex Mono',monospace;background:var(--rs);border:1px solid var(--bd);border-radius:4px;padding:2px 5px">CORE</span><span>Items Core</span></div>
+      </aside>
+      <main style="flex:1;padding:22px 28px;opacity:.55;min-width:0">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <span style="font:500 12px 'IBM Plex Mono',monospace;background:var(--in);border-radius:5px;padding:3px 7px">CORE</span>
+          <span style="font:600 22px 'IBM Plex Sans',sans-serif">Items Core</span>
+        </div>
+        <div style="border:1px solid var(--bd);border-radius:12px;background:var(--rs);overflow:hidden">
+          <sc-for list="{{ghostRows}}" as="r" hint-placeholder-count="7">
+            <div style="display:grid;grid-template-columns:100px 1fr 150px;align-items:center;height:42px;border-bottom:1px solid var(--bd);padding:0 12px;background:{{r.bg}}">
+              <span style="font:500 12px 'IBM Plex Mono',monospace">{{r.key}}</span>
+              <span style="font:400 13px 'IBM Plex Sans',sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{r.title}}</span>
+              <span><span style="height:22px;padding:0 9px;border-radius:6px;background:{{r.stBg}};color:{{r.stFg}};font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">{{r.status}}</span></span>
+            </div>
+          </sc-for>
+        </div>
+      </main>
+      <div style="position:absolute;inset:0;background:rgba(37,35,29,.18)"></div>
+
+      <!-- Drawer -->
+      <div style="position:absolute;top:0;right:0;bottom:0;width:620px;background:var(--rs);border-left:1px solid var(--bd);box-shadow:-24px 0 60px rgba(28,26,20,.14);display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;gap:9px;padding:14px 20px;border-bottom:1px solid var(--bd);flex:none">
+          <span style="font:500 12px 'IBM Plex Mono',monospace;background:var(--in);border-radius:5px;padding:3px 7px">CORE-128</span>
+          <span style="height:20px;padding:0 8px;border-radius:5px;border:1px solid #E3B9AF;font:500 11px 'IBM Plex Sans',sans-serif;color:#A03028;display:inline-flex;align-items:center;gap:5px"><span style="width:5px;height:5px;background:#A03028;border-radius:50%"></span>Bug</span>
+          <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">items-core</span>
+          <span style="flex:1"></span>
+          <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">j/k next · esc</span>
+          <span style="width:30px;height:30px;border-radius:7px;border:1px solid var(--bd);display:inline-flex;align-items:center;justify-content:center;color:var(--f2)" title="Open full page">↗</span>
+          <span style="width:30px;height:30px;border-radius:7px;border:1px solid var(--bd);display:inline-flex;align-items:center;justify-content:center;color:var(--f2)">⋯</span>
+          <span style="width:30px;height:30px;border-radius:7px;border:1px solid var(--bd);display:inline-flex;align-items:center;justify-content:center;color:var(--f2)">×</span>
+        </div>
+
+        <div style="flex:1;overflow:auto;padding:18px 20px 24px;display:flex;flex-direction:column;gap:18px">
+          <div style="font:600 18px/1.35 'IBM Plex Sans',sans-serif;border-bottom:1px dashed transparent;cursor:text" style-hover="border-bottom-color:var(--bs)">Fix pagination reset on column resize</div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 18px">
+            <div style="display:flex;align-items:center;gap:10px"><span style="width:76px;font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);flex:none">Status</span><span style="height:26px;padding:0 10px;border-radius:6px;background:var(--kas);color:var(--ka);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px;cursor:pointer"><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--ka);background:linear-gradient(90deg,var(--ka) 50%,transparent 50%)"></span>In progress <span style="font-size:9px;opacity:.55">▾</span></span></div>
+            <div style="display:flex;align-items:center;gap:10px"><span style="width:76px;font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);flex:none">Priority <span style="color:var(--dg)">*</span></span><span style="height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--bd);font:400 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:7px;cursor:pointer"><span style="width:7px;height:7px;border-radius:999px;background:#A03028"></span>P0 · critical <span style="font-size:9px;color:var(--f3)">▾</span></span></div>
+            <div style="display:flex;align-items:center;gap:10px"><span style="width:76px;font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);flex:none">Assignee</span><span style="height:26px;padding:0 8px;border-radius:6px;border:1px solid var(--bd);font:400 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:7px;cursor:pointer"><span style="width:18px;height:18px;border-radius:5px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 8px 'IBM Plex Mono',monospace">CL</span>claude-worker <span style="height:14px;padding:0 5px;border-radius:3px;background:var(--acs);color:var(--ac);font:500 9px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">AGENT</span></span></div>
+            <div style="display:flex;align-items:center;gap:10px"><span style="width:76px;font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);flex:none">Due</span><span style="height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--bd);font:400 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:7px;cursor:pointer"><span style="border-bottom:1px dotted var(--f3)">in 2 days</span><span style="font-size:9px;color:var(--f3)">▾</span></span></div>
+            <div style="display:flex;align-items:center;gap:10px"><span style="width:76px;font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);flex:none">Severity <span style="color:var(--dg)">*</span></span><span style="height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--bd);font:400 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:7px"><span style="height:18px;padding:0 7px;border-radius:999px;background:#FAE3E1;color:#A03028;font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">S1 · data loss</span><span style="font-size:9px;color:var(--f3)">▾</span></span></div>
+            <div style="display:flex;align-items:center;gap:10px"><span style="width:76px;font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);flex:none">Sprint</span><span style="height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--bd);font:400 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:7px"><span style="height:18px;padding:0 7px;border-radius:999px;background:#E0EAF9;color:#2A5DAE;font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">12</span><span style="font-size:9px;color:var(--f3)">▾</span></span></div>
+            <div style="display:flex;align-items:center;gap:10px"><span style="width:76px;font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);flex:none">Env</span><span style="min-height:26px;padding:2px 8px;border-radius:6px;border:1px solid var(--bd);display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="height:18px;padding:0 7px;border-radius:999px;background:#DFF0E2;color:#2E7042;font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">prod</span><span style="height:18px;padding:0 7px;border-radius:999px;background:#DBEEF6;color:#14687E;font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">staging</span></span></div>
+            <div style="display:flex;align-items:center;gap:10px"><span style="width:76px;font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);flex:none">Repro %</span><span style="height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--bd);font:400 13px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">80</span></div>
+          </div>
+
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Description</span><span style="flex:1"></span><span style="font:500 12px 'IBM Plex Sans',sans-serif;color:var(--f3);cursor:pointer" style-hover="color:var(--f1)">Edit</span></div>
+            <div style="border:1px solid var(--bd);border-radius:10px;padding:14px 16px;background:var(--bg)">
+              <div style="font:600 14px 'IBM Plex Sans',sans-serif;margin-bottom:6px">Repro</div>
+              <div style="font:400 14px/1.6 'IBM Plex Sans',sans-serif;color:var(--f1)">1. Open board with &gt;200 rows<br>2. Resize <strong>status</strong> column<br>3. Scroll — table jumps to page 1</div>
+              <div style="margin-top:8px;font:400 14px/1.6 'IBM Plex Sans',sans-serif"><span style="font:400 12px 'IBM Plex Mono',monospace;background:var(--in);padding:2px 6px;border-radius:5px">rowVirtualizer</span> loses its offset cache when column widths change.</div>
+            </div>
+          </div>
+
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Subtasks</span>
+              <span style="width:60px;height:4px;border-radius:2px;background:var(--in);overflow:hidden"><span style="display:block;height:100%;width:40%;background:var(--kd)"></span></span>
+              <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">2/5 done</span>
+            </div>
+            <div style="border:1px solid var(--bd);border-radius:10px;overflow:hidden">
+              <sc-for list="{{subtasks}}" as="s" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:10px;height:38px;padding:0 12px;border-bottom:1px solid var(--bd);cursor:pointer" style-hover="background:var(--bg)">
+                  <span style="width:9px;height:9px;border-radius:{{s.dotR}};border:{{s.dotBorder}};background:{{s.dotBg}};transform:{{s.dotT}};flex:none"></span>
+                  <span style="font:500 11px 'IBM Plex Mono',monospace;color:{{s.keyC}}">{{s.key}}</span>
+                  <span style="font:400 13px 'IBM Plex Sans',sans-serif;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:{{s.titleC}}">{{s.title}}</span>
+                  <span style="width:18px;height:18px;border-radius:{{s.avR}};background:{{s.avBg}};color:{{s.avFg}};display:inline-flex;align-items:center;justify-content:center;font:600 8px 'IBM Plex Mono',monospace">{{s.av}}</span>
+                  <span style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--f3)">→</span>
+                </div>
+              </sc-for>
+              <div style="display:flex;align-items:center;gap:10px;height:38px;padding:0 12px;background:var(--bg)">
+                <span style="width:9px;height:9px;border-radius:50%;border:1.5px dashed var(--bs);flex:none"></span>
+                <span style="font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f3);flex:1">Add subtask — type a title…</span>
+                <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">↵ creates CORE-136</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Links</span><span style="flex:1"></span><span style="font:500 12px 'IBM Plex Sans',sans-serif;color:var(--f3);cursor:pointer" style-hover="color:var(--f1)">＋ Add link</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="display:flex;align-items:center;gap:9px;height:34px;padding:0 11px;border:1px solid var(--bd);border-radius:9px" style-hover="background:var(--bg)"><span style="height:20px;padding:0 8px;border-radius:5px;background:var(--in);font:500 11px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center">blocks →</span><span style="font:500 11px 'IBM Plex Mono',monospace">CORE-131</span><span style="font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Migrate field storage to JSONB</span><span style="color:var(--f3);font:400 12px 'IBM Plex Sans',sans-serif">×</span></div>
+              <div style="display:flex;align-items:center;gap:9px;height:34px;padding:0 11px;border:1px solid var(--bd);border-radius:9px" style-hover="background:var(--bg)"><span style="height:20px;padding:0 8px;border-radius:5px;background:var(--kbs);color:var(--kb);font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">← is blocked by</span><span style="font:500 11px 'IBM Plex Mono',monospace">WEB-77</span><span style="font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Cursor pagination for search results</span><span style="color:var(--f3);font:400 12px 'IBM Plex Sans',sans-serif">×</span></div>
+              <div style="display:flex;align-items:center;gap:9px;height:34px;padding:0 11px;border:1px solid var(--bd);border-radius:9px" style-hover="background:var(--bg)"><span style="height:20px;padding:0 8px;border-radius:5px;background:var(--in);font:500 11px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center">relates ↔</span><span style="font:500 11px 'IBM Plex Mono',monospace">OPS-199</span><span style="font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Alert on webhook retry exhaustion</span><span style="color:var(--f3);font:400 12px 'IBM Plex Sans',sans-serif">×</span></div>
+            </div>
+          </div>
+
+          <div>
+            <div style="display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--bd);margin-bottom:12px">
+              <span style="padding:8px 12px;font:500 13px 'IBM Plex Sans',sans-serif;border-bottom:2px solid var(--ac);margin-bottom:-1px">Comments <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">2</span></span>
+              <span style="padding:8px 12px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Activity <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">12</span></span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;gap:10px">
+                <span style="width:26px;height:26px;border-radius:50%;background:#DBEEF6;color:#14687E;display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Sans',sans-serif;flex:none">MK</span>
+                <div style="flex:1">
+                  <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:3px"><span style="font:500 13px 'IBM Plex Sans',sans-serif">Mara K.</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">1d ago</span></div>
+                  <div style="font:400 13px/1.55 'IBM Plex Sans',sans-serif;color:var(--f1)">Repro'd on staging with 300 rows. The <span style="font:400 12px 'IBM Plex Mono',monospace;background:var(--in);padding:1px 5px;border-radius:4px">rowVirtualizer</span> offset cache is stale after resize.</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px">
+                <span style="width:26px;height:26px;border-radius:7px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace;flex:none">CL</span>
+                <div style="flex:1">
+                  <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:3px"><span style="font:500 13px 'IBM Plex Sans',sans-serif">claude-worker</span><span style="height:14px;padding:0 5px;border-radius:3px;background:var(--acs);color:var(--ac);font:500 9px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;align-self:center">AGENT</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">2h ago</span></div>
+                  <div style="font:400 13px/1.55 'IBM Plex Sans',sans-serif;color:var(--f1)">Bisected to <span style="font:400 12px 'IBM Plex Mono',monospace;background:var(--in);padding:1px 5px;border-radius:4px">#4821</span>. Fix drafted; moving to In progress and taking assignment.</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px">
+                <span style="width:26px;height:26px;border-radius:50%;background:#DBEEF6;color:#14687E;display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Sans',sans-serif;flex:none">MK</span>
+                <div style="flex:1;border:1px solid var(--bs);border-radius:10px;overflow:hidden">
+                  <div style="padding:10px 12px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f3);min-height:40px">Comment — markdown supported…</div>
+                  <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-top:1px solid var(--bd);background:var(--bg)">
+                    <span style="font:500 11px 'IBM Plex Sans',sans-serif;color:var(--f1)">Write</span><span style="font:500 11px 'IBM Plex Sans',sans-serif;color:var(--f3)">Preview</span>
+                    <span style="flex:1"></span>
+                    <span style="height:26px;padding:0 11px;border-radius:6px;background:var(--ac);color:var(--oac);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">Comment</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <!-- ================= SUBTASK BREADCRUMB EXHIBIT ================= -->
+  <section data-screen-label="Subtask breadcrumb">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:10px">OPENING A SUBTASK — header swaps to a parent breadcrumb + sibling pager</div>
+    <div style="width:620px;border:1px solid #D6D3C9;border-radius:14px;background:#FFFFFF;padding:16px 20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 2px rgba(28,26,20,.06)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font:500 12px 'IBM Plex Sans',sans-serif;color:#4E46C6;cursor:pointer">‹ CORE-128 Fix pagination reset on column resize</span>
+        <span style="flex:1"></span>
+        <span style="font:400 11px 'IBM Plex Mono',monospace;color:#918D80">subtask 2 of 5</span>
+        <span style="width:24px;height:24px;border-radius:6px;border:1px solid #E0DDD5;display:inline-flex;align-items:center;justify-content:center;color:#5D5A50;font:400 12px 'IBM Plex Sans',sans-serif">‹</span>
+        <span style="width:24px;height:24px;border-radius:6px;border:1px solid #E0DDD5;display:inline-flex;align-items:center;justify-content:center;color:#5D5A50;font:400 12px 'IBM Plex Sans',sans-serif">›</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="font:500 12px 'IBM Plex Mono',monospace;background:#ECEAE3;border-radius:5px;padding:3px 7px">CORE-133</span>
+        <span style="height:20px;padding:0 8px;border-radius:5px;border:1px dashed #C9C5BA;font:500 11px 'IBM Plex Sans',sans-serif;color:#5D5A50;display:inline-flex;align-items:center">Subtask</span>
+        <span style="height:22px;padding:0 9px;border-radius:6px;background:#E4EDF9;color:#2E6FCC;font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid #2E6FCC;background:linear-gradient(90deg,#2E6FCC 50%,transparent 50%)"></span>In progress</span>
+      </div>
+      <div style="font:600 17px 'IBM Plex Sans',sans-serif;color:#25231D">Repro harness for virtualizer offsets</div>
+    </div>
+  </section>
+
+  <!-- ================= FULL PAGE (DARK) ================= -->
+  <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+  <section data-screen-label="Ticket full page — dark">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:10px">DESKTOP · DARK · FULL PAGE — deep-linkable; fields + activity in the right rail</div>
+    <div style="width:1440px;height:960px;border:1px solid #35322B;border-radius:12px;overflow:hidden;display:flex;background:var(--bg);color:var(--f1);box-shadow:0 24px 60px rgba(28,26,20,.18);--bg:#1B1A17;--rs:#252320;--in:#2C2A25;--bd:#343128;--bs:#4C483D;--f1:#EDEBE3;--f2:#A6A296;--f3:#79756A;--ac:#918AEC;--acs:#2C2A4A;--oac:#16143C;--dg:#E26A5F;--kt:#8A8678;--kts:#26251F;--ka:#6BA4EE;--kas:#1E2A3F;--kb:#E08B56;--kbs:#392317;--kd:#57B383;--kds:#1B2E22;--shsm:0 1px 2px rgba(0,0,0,.4)">
+
+      <aside style="width:236px;flex:none;border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px 12px 12px">
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 14px"><span style="width:9px;height:9px;background:var(--ac);border-radius:2px"></span><span style="font:600 15px 'IBM Plex Mono',monospace">tickets</span><span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">acme</span></div>
+        <div style="height:32px;border:1px solid var(--bd);border-radius:8px;background:var(--rs);display:flex;align-items:center;padding:0 10px;gap:7px;margin-bottom:8px"><span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f3)">⌕</span><span style="font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f3);flex:1">Search…</span><span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3);border:1px solid var(--bd);border-radius:4px;padding:1px 4px">⌘K</span></div>
+        <button style="height:34px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;margin-bottom:14px">＋ New ticket</button>
+        <nav style="display:flex;flex-direction:column;gap:2px">
+          <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">⌂<span style="flex:1">Home</span></div>
+          <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">▤<span style="flex:1">All tickets</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">218</span></div>
+        </nav>
+        <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3);padding:16px 9px 6px">PROJECTS</div>
+        <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;border-radius:7px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif"><span style="font:500 10px 'IBM Plex Mono',monospace;background:var(--rs);border:1px solid var(--bd);border-radius:4px;padding:2px 5px">CORE</span><span style="flex:1">Items Core</span></div>
+        <sc-for list="{{sideProjects}}" as="p" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="font:500 10px 'IBM Plex Mono',monospace;background:var(--in);border-radius:4px;padding:2px 5px;color:var(--f2)">{{p.prefix}}</span><span style="flex:1">{{p.name}}</span></div>
+        </sc-for>
+        <span style="flex:1"></span>
+        <div style="border-top:1px solid var(--bd);padding-top:10px;display:flex;align-items:center;gap:9px">
+          <div style="flex:1;display:flex;align-items:center;gap:9px;padding:6px 8px;border:1px solid var(--bd);border-radius:8px;background:var(--rs)">
+            <span style="width:24px;height:24px;border-radius:50%;background:#173139;color:#74C4DC;display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Sans',sans-serif;flex:none">MK</span>
+            <span style="display:flex;flex-direction:column;flex:1"><span style="font:500 12px 'IBM Plex Sans',sans-serif">Mara K.</span><span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">acting as</span></span>
+            <span style="font:400 10px 'IBM Plex Sans',sans-serif;color:var(--f3)">⇅</span>
+          </div>
+          <span style="width:32px;height:38px;border:1px solid var(--bd);border-radius:8px;background:var(--rs);display:inline-flex;align-items:center;justify-content:center;color:var(--f2)">◑</span>
+        </div>
+      </aside>
+
+      <main style="flex:1;overflow:auto;min-width:0">
+        <div style="display:flex;align-items:center;gap:9px;padding:16px 32px;border-bottom:1px solid var(--bd)">
+          <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)">Items Core</span>
+          <span style="color:var(--f3)">▸</span>
+          <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)">Sprint 12</span>
+          <span style="color:var(--f3)">▸</span>
+          <span style="font:500 12px 'IBM Plex Mono',monospace">CORE-128</span>
+          <span style="flex:1"></span>
+          <span style="height:28px;padding:0 10px;border-radius:7px;border:1px solid var(--bd);font:500 12px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center;gap:6px">⧉ Copy link</span>
+          <span style="width:28px;height:28px;border-radius:7px;border:1px solid var(--bd);display:inline-flex;align-items:center;justify-content:center;color:var(--f2)">⋯</span>
+        </div>
+
+        <div style="display:flex;gap:36px;padding:26px 32px 40px">
+          <!-- main column -->
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:22px">
+            <div>
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
+                <span style="font:500 12px 'IBM Plex Mono',monospace;background:var(--in);border-radius:5px;padding:3px 7px">CORE-128</span>
+                <span style="height:20px;padding:0 8px;border-radius:5px;border:1px solid #6B3833;font:500 11px 'IBM Plex Sans',sans-serif;color:#F0968D;display:inline-flex;align-items:center;gap:5px"><span style="width:5px;height:5px;background:#F0968D;border-radius:50%"></span>Bug</span>
+                <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">created 5d ago by MK</span>
+              </div>
+              <div style="font:600 24px/1.3 'IBM Plex Sans',sans-serif;cursor:text">Fix pagination reset on column resize</div>
+            </div>
+
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Description</span><span style="flex:1"></span><span style="font:500 12px 'IBM Plex Sans',sans-serif;color:var(--f3)">Edit</span></div>
+              <div style="border:1px solid var(--bd);border-radius:10px;padding:16px 18px;background:var(--rs)">
+                <div style="font:600 14px 'IBM Plex Sans',sans-serif;margin-bottom:6px">Repro</div>
+                <div style="font:400 14px/1.6 'IBM Plex Sans',sans-serif">1. Open board with &gt;200 rows<br>2. Resize <strong>status</strong> column<br>3. Scroll — table jumps to page 1</div>
+                <div style="margin-top:8px;font:400 14px/1.6 'IBM Plex Sans',sans-serif"><span style="font:400 12px 'IBM Plex Mono',monospace;background:var(--in);padding:2px 6px;border-radius:5px">rowVirtualizer</span> loses its offset cache when column widths change.</div>
+              </div>
+            </div>
+
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Subtasks</span>
+                <span style="width:60px;height:4px;border-radius:2px;background:var(--in);overflow:hidden"><span style="display:block;height:100%;width:40%;background:var(--kd)"></span></span>
+                <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">2/5 done</span>
+                <span style="flex:1"></span>
+                <span style="font:500 12px 'IBM Plex Sans',sans-serif;color:var(--f3)">＋ Add</span>
+              </div>
+              <div style="border:1px solid var(--bd);border-radius:10px;overflow:hidden;background:var(--rs)">
+                <sc-for list="{{subtasksDark}}" as="s" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:10px;height:38px;padding:0 12px;border-bottom:1px solid var(--bd);cursor:pointer" style-hover="background:var(--in)">
+                    <span style="width:9px;height:9px;border-radius:{{s.dotR}};border:{{s.dotBorder}};background:{{s.dotBg}};transform:{{s.dotT}};flex:none"></span>
+                    <span style="font:500 11px 'IBM Plex Mono',monospace;color:{{s.keyC}}">{{s.key}}</span>
+                    <span style="font:400 13px 'IBM Plex Sans',sans-serif;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:{{s.titleC}}">{{s.title}}</span>
+                    <span style="width:18px;height:18px;border-radius:{{s.avR}};background:{{s.avBg}};color:{{s.avFg}};display:inline-flex;align-items:center;justify-content:center;font:600 8px 'IBM Plex Mono',monospace">{{s.av}}</span>
+                    <span style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--f3)">→</span>
+                  </div>
+                </sc-for>
+                <div style="display:flex;align-items:center;gap:10px;height:38px;padding:0 12px;background:var(--in)">
+                  <span style="width:9px;height:9px;border-radius:50%;border:1.5px dashed var(--bs);flex:none"></span>
+                  <span style="font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f3);flex:1">Add subtask — type a title…</span>
+                  <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">↵ creates CORE-136</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Links</span><span style="flex:1"></span><span style="font:500 12px 'IBM Plex Sans',sans-serif;color:var(--f3)">＋ Add link</span></div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;align-items:center;gap:9px;height:34px;padding:0 11px;border:1px solid var(--bd);border-radius:9px;background:var(--rs)"><span style="height:20px;padding:0 8px;border-radius:5px;background:var(--in);font:500 11px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center">blocks →</span><span style="font:500 11px 'IBM Plex Mono',monospace">CORE-131</span><span style="font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Migrate field storage to JSONB</span><span style="color:var(--f3)">×</span></div>
+                <div style="display:flex;align-items:center;gap:9px;height:34px;padding:0 11px;border:1px solid var(--bd);border-radius:9px;background:var(--rs)"><span style="height:20px;padding:0 8px;border-radius:5px;background:var(--kbs);color:var(--kb);font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">← is blocked by</span><span style="font:500 11px 'IBM Plex Mono',monospace">WEB-77</span><span style="font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Cursor pagination for search results</span><span style="color:var(--f3)">×</span></div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);margin-bottom:12px">Comments</div>
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;gap:10px">
+                  <span style="width:26px;height:26px;border-radius:50%;background:#173139;color:#74C4DC;display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Sans',sans-serif;flex:none">MK</span>
+                  <div style="flex:1">
+                    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:3px"><span style="font:500 13px 'IBM Plex Sans',sans-serif">Mara K.</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">1d ago</span></div>
+                    <div style="font:400 13px/1.55 'IBM Plex Sans',sans-serif">Repro'd on staging with 300 rows. The <span style="font:400 12px 'IBM Plex Mono',monospace;background:var(--in);padding:1px 5px;border-radius:4px">rowVirtualizer</span> offset cache is stale after resize.</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:10px">
+                  <span style="width:26px;height:26px;border-radius:7px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace;flex:none">CL</span>
+                  <div style="flex:1">
+                    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:3px"><span style="font:500 13px 'IBM Plex Sans',sans-serif">claude-worker</span><span style="height:14px;padding:0 5px;border-radius:3px;background:var(--acs);color:var(--ac);font:500 9px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;align-self:center">AGENT</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">2h ago</span></div>
+                    <div style="font:400 13px/1.55 'IBM Plex Sans',sans-serif">Bisected to <span style="font:400 12px 'IBM Plex Mono',monospace;background:var(--in);padding:1px 5px;border-radius:4px">#4821</span>. Fix drafted; moving to In progress and taking assignment.</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:10px">
+                  <span style="width:26px;height:26px;border-radius:50%;background:#173139;color:#74C4DC;display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Sans',sans-serif;flex:none">MK</span>
+                  <div style="flex:1;border:1px solid var(--bs);border-radius:10px;overflow:hidden;background:var(--rs)">
+                    <div style="padding:10px 12px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f3);min-height:40px">Comment — markdown supported…</div>
+                    <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-top:1px solid var(--bd);background:var(--in)">
+                      <span style="font:500 11px 'IBM Plex Sans',sans-serif">Write</span><span style="font:500 11px 'IBM Plex Sans',sans-serif;color:var(--f3)">Preview</span>
+                      <span style="flex:1"></span>
+                      <span style="height:26px;padding:0 11px;border-radius:6px;background:var(--ac);color:var(--oac);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">Comment</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- right rail -->
+          <div style="width:320px;flex:none;display:flex;flex-direction:column;gap:20px">
+            <div style="border:1px solid var(--bd);border-radius:12px;background:var(--rs);padding:16px 16px 18px;display:flex;flex-direction:column;gap:12px">
+              <div style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Fields — Bug form</div>
+              <sc-for list="{{railFields}}" as="f" hint-placeholder-count="8">
+                <div style="display:flex;flex-direction:column;gap:5px">
+                  <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">{{f.label}} <span style="color:{{f.reqC}}">{{f.req}}</span></span>
+                  <div style="min-height:32px;border:1px solid var(--bd);border-radius:8px;display:flex;align-items:center;padding:3px 10px;gap:7px;flex-wrap:wrap">
+                    <span style="display:{{f.dotD}};width:8px;height:8px;border-radius:{{f.dotR}};border:{{f.dotBorder}};background:{{f.dotBg}};transform:{{f.dotT}}"></span>
+                    <span style="display:{{f.pillD}};height:18px;padding:0 7px;border-radius:999px;background:{{f.pillBg}};color:{{f.pillFg}};font:500 11px 'IBM Plex Sans',sans-serif;align-items:center">{{f.pill}}</span>
+                    <span style="display:{{f.pill2D}};height:18px;padding:0 7px;border-radius:999px;background:{{f.pill2Bg}};color:{{f.pill2Fg}};font:500 11px 'IBM Plex Sans',sans-serif;align-items:center">{{f.pill2}}</span>
+                    <span style="display:{{f.avD}};width:18px;height:18px;border-radius:{{f.avR}};background:{{f.avBg}};color:{{f.avFg}};align-items:center;justify-content:center;font:600 8px 'IBM Plex Mono',monospace">{{f.avTxt}}</span>
+                    <span style="font:{{f.valFont}};color:{{f.valC}}">{{f.val}}</span>
+                    <span style="flex:1"></span>
+                    <span style="font-size:9px;color:var(--f3)">▾</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Activity</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">12 events</span></div>
+              <div style="display:flex;flex-direction:column;gap:11px">
+                <sc-for list="{{activity}}" as="a" hint-placeholder-count="5">
+                  <div style="display:flex;gap:9px;align-items:flex-start">
+                    <span style="width:18px;height:18px;border-radius:{{a.avR}};background:{{a.avBg}};color:{{a.avFg}};display:inline-flex;align-items:center;justify-content:center;font:600 8px 'IBM Plex Mono',monospace;flex:none;margin-top:1px">{{a.av}}</span>
+                    <span style="flex:1;font:400 12px/1.5 'IBM Plex Sans',sans-serif;color:var(--f2)"><strong style="font-weight:500;color:var(--f1)">{{a.who}}</strong> {{a.what}} <span style="font:400 11px 'IBM Plex Mono',monospace;background:var(--in);padding:1px 5px;border-radius:4px;display:{{a.fromD}}">{{a.from}}</span><span style="display:{{a.arrowD}}"> → </span><span style="font:400 11px 'IBM Plex Mono',monospace;background:{{a.toBg}};color:{{a.toFg}};padding:1px 5px;border-radius:4px;display:{{a.toD}}">{{a.to}}</span></span>
+                    <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3);flex:none">{{a.when}}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+  </sc-if>
+
+  <!-- ================= MOBILE ================= -->
+  <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+  <section data-screen-label="Ticket detail — mobile sheet">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:10px">MOBILE · 390 — full-screen sheet; fields collapse to a summary row that expands</div>
+    <div style="width:390px;height:800px;border:1px solid #D6D3C9;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;background:var(--rs);color:var(--f1);box-shadow:0 24px 60px rgba(28,26,20,.10);--bg:#F7F6F2;--rs:#FFFFFF;--in:#ECEAE3;--bd:#E0DDD5;--bs:#C9C5BA;--f1:#25231D;--f2:#5D5A50;--f3:#918D80;--ac:#4E46C6;--acs:#E9E7FA;--oac:#FFFFFF;--dg:#C0382E;--ka:#2E6FCC;--kas:#E4EDF9;--kb:#C25425;--kbs:#F8E9DF;--kd:#2E7D4F">
+      <div style="display:flex;justify-content:center;padding:10px 0 2px"><span style="width:36px;height:4px;border-radius:2px;background:var(--bs)"></span></div>
+      <div style="display:flex;align-items:center;gap:9px;padding:8px 18px 12px;border-bottom:1px solid var(--bd)">
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);display:inline-flex;align-items:center;justify-content:center;color:var(--f2)">‹</span>
+        <span style="font:500 12px 'IBM Plex Mono',monospace;background:var(--in);border-radius:5px;padding:3px 7px">CORE-128</span>
+        <span style="height:20px;padding:0 8px;border-radius:5px;border:1px solid #E3B9AF;font:500 11px 'IBM Plex Sans',sans-serif;color:#A03028;display:inline-flex;align-items:center">Bug</span>
+        <span style="flex:1"></span>
+        <span style="width:40px;height:40px;border-radius:10px;border:1px solid var(--bd);display:inline-flex;align-items:center;justify-content:center;color:var(--f2)">⋯</span>
+      </div>
+      <div style="flex:1;overflow:auto;padding:16px 18px;display:flex;flex-direction:column;gap:16px">
+        <div style="font:600 19px/1.35 'IBM Plex Sans',sans-serif">Fix pagination reset on column resize</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="height:32px;padding:0 12px;border-radius:8px;background:var(--kas);color:var(--ka);font:500 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:7px"><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--ka);background:linear-gradient(90deg,var(--ka) 50%,transparent 50%)"></span>In progress ▾</span>
+          <span style="height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--bd);font:500 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:7px"><span style="width:7px;height:7px;border-radius:999px;background:#A03028"></span>P0</span>
+          <span style="height:32px;padding:0 10px;border-radius:8px;border:1px solid var(--bd);font:500 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:7px"><span style="width:20px;height:20px;border-radius:6px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 8px 'IBM Plex Mono',monospace">CL</span>due in 2d</span>
+        </div>
+        <div style="border:1px solid var(--bd);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+          <span style="font:500 12px 'IBM Plex Sans',sans-serif;color:var(--f2)">All fields</span>
+          <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">severity S1 · sprint 12 · env prod, staging · repro 80</span>
+          <span style="flex:1"></span>
+          <span style="color:var(--f3)">▾</span>
+        </div>
+        <div>
+          <div style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);margin-bottom:8px">Description</div>
+          <div style="border:1px solid var(--bd);border-radius:12px;padding:14px 16px;background:var(--bg)">
+            <div style="font:600 14px 'IBM Plex Sans',sans-serif;margin-bottom:6px">Repro</div>
+            <div style="font:400 14px/1.6 'IBM Plex Sans',sans-serif">1. Open board with &gt;200 rows<br>2. Resize <strong>status</strong> column<br>3. Scroll — jumps to page 1</div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Subtasks</span>
+            <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">2/5</span>
+          </div>
+          <div style="border:1px solid var(--bd);border-radius:12px;overflow:hidden">
+            <sc-for list="{{subtasksMobile}}" as="s" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;border-bottom:1px solid var(--bd)">
+                <span style="width:9px;height:9px;border-radius:{{s.dotR}};border:{{s.dotBorder}};background:{{s.dotBg}};transform:{{s.dotT}};flex:none"></span>
+                <span style="font:500 11px 'IBM Plex Mono',monospace;color:{{s.keyC}}">{{s.key}}</span>
+                <span style="font:400 13px 'IBM Plex Sans',sans-serif;flex:1;color:{{s.titleC}}">{{s.title}}</span>
+                <span style="color:var(--f3)">›</span>
+              </div>
+            </sc-for>
+            <div style="display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;background:var(--bg);color:var(--f3);font:400 13px 'IBM Plex Sans',sans-serif">＋ Add subtask</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <span style="height:34px;padding:0 14px;border-radius:999px;background:var(--f1);color:var(--rs);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">Comments 2</span>
+          <span style="height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--bd);color:var(--f2);font:400 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">Activity 12</span>
+          <span style="height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--bd);color:var(--f2);font:400 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">Links 3</span>
+        </div>
+        <div style="display:flex;gap:10px">
+          <span style="width:26px;height:26px;border-radius:7px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace;flex:none">CL</span>
+          <div style="flex:1">
+            <div style="display:flex;align-items:baseline;gap:7px;margin-bottom:3px"><span style="font:500 13px 'IBM Plex Sans',sans-serif">claude-worker</span><span style="height:14px;padding:0 5px;border-radius:3px;background:var(--acs);color:var(--ac);font:500 9px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;align-self:center">AGENT</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">2h</span></div>
+            <div style="font:400 13px/1.5 'IBM Plex Sans',sans-serif">Bisected to <span style="font:400 12px 'IBM Plex Mono',monospace;background:var(--in);padding:1px 5px;border-radius:4px">#4821</span>. Fix drafted.</div>
+          </div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--bd);padding:10px 16px 22px;display:flex;gap:9px;align-items:center;background:var(--rs)">
+        <div style="flex:1;height:44px;border:1px solid var(--bs);border-radius:12px;display:flex;align-items:center;padding:0 14px;font:400 14px 'IBM Plex Sans',sans-serif;color:var(--f3)">Comment…</div>
+        <span style="width:44px;height:44px;border-radius:12px;background:var(--ac);color:var(--oac);display:inline-flex;align-items:center;justify-content:center;font:400 16px 'IBM Plex Sans',sans-serif">↑</span>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;theme&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;both&quot;, &quot;light&quot;, &quot;dark&quot;], &quot;default&quot;: &quot;both&quot;, &quot;tsType&quot;: &quot;'both' | 'light' | 'dark'&quot;, &quot;section&quot;: &quot;Preview&quot; }
+}">
+class Component extends DCLogic {
+  renderVals() {
+    const t = this.props.theme ?? 'both';
+
+    const dot = (kind, c) => {
+      if (kind === 'todo')    return { dotR: '50%', dotBorder: '1.5px solid ' + c, dotBg: 'transparent', dotT: 'none' };
+      if (kind === 'active')  return { dotR: '50%', dotBorder: '1.5px solid ' + c, dotBg: 'linear-gradient(90deg,' + c + ' 50%,transparent 50%)', dotT: 'none' };
+      if (kind === 'blocked') return { dotR: '1px', dotBorder: 'none', dotBg: c, dotT: 'rotate(45deg)' };
+      return { dotR: '50%', dotBorder: 'none', dotBg: c, dotT: 'none' };
+    };
+    const kindC = {
+      light: { todo: '#6E6A5E', active: '#2E6FCC', blocked: '#C25425', done: '#2E7D4F' },
+      dark:  { todo: '#8A8678', active: '#6BA4EE', blocked: '#E08B56', done: '#57B383' },
+    };
+    const avTok = {
+      light: { MK: ['#14687E', '#DBEEF6', '50%'], JR: ['#7B3FA0', '#F0E3F7', '50%'], TS: ['#2E7042', '#DFF0E2', '50%'], CL: ['#4E46C6', '#E9E7FA', '5px'], '—': ['#918D80', '#ECEAE3', '50%'] },
+      dark:  { MK: ['#74C4DC', '#173139', '50%'], JR: ['#C591E8', '#332240', '50%'], TS: ['#7FCB97', '#1E3626', '50%'], CL: ['#918AEC', '#2C2A4A', '5px'], '—': ['#79756A', '#2C2A25', '50%'] },
+    };
+
+    const subsRaw = [
+      { key: 'CORE-132', title: 'Cache offsets keyed by column set', kind: 'done', av: 'CL' },
+      { key: 'CORE-133', title: 'Repro harness for virtualizer offsets', kind: 'active', av: 'MK' },
+      { key: 'CORE-134', title: 'Regression test: resize + scroll', kind: 'done', av: 'CL' },
+      { key: 'CORE-135', title: 'Audit column-width persistence', kind: 'todo', av: '—' },
+    ];
+    const mkSubs = (mode) => subsRaw.map(s => {
+      const A = avTok[mode][s.av];
+      const f3 = mode === 'dark' ? '#79756A' : '#918D80';
+      return {
+        ...s, ...dot(s.kind, kindC[mode][s.kind]),
+        avFg: A[0], avBg: A[1], avR: A[2],
+        keyC: s.kind === 'done' ? f3 : 'inherit',
+        titleC: s.kind === 'done' ? f3 : 'inherit',
+      };
+    });
+
+    // ghost board rows behind drawer (light)
+    const KL = { active: ['#2E6FCC', '#E4EDF9'], blocked: ['#C25425', '#F8E9DF'], todo: ['#6E6A5E', '#EBEAE3'] };
+    const ghostRows = [
+      { key: 'CORE-128', title: 'Fix pagination reset on column resize', kind: 'active', status: 'In progress', sel: true },
+      { key: 'CORE-131', title: 'Migrate field storage to JSONB', kind: 'blocked', status: 'Blocked' },
+      { key: 'CORE-127', title: 'Bulk status transitions API', kind: 'active', status: 'In review' },
+      { key: 'CORE-126', title: 'Workflow editor: entry edges', kind: 'active', status: 'In progress' },
+      { key: 'CORE-124', title: 'Status kind rollup cache', kind: 'active', status: 'In review' },
+      { key: 'CORE-122', title: 'Agent attribution on bulk ops', kind: 'active', status: 'In progress' },
+      { key: 'CORE-119', title: 'Select options lose order after archive', kind: 'todo', status: 'Backlog' },
+    ].map(r => ({ ...r, stFg: KL[r.kind][0], stBg: KL[r.kind][1], bg: r.sel ? '#ECEAE3' : 'transparent' }));
+
+    // right-rail fields (dark)
+    const off = { dotD: 'none', pillD: 'none', pill2D: 'none', avD: 'none', dotR: '50%', dotBorder: 'none', dotBg: 'transparent', dotT: 'none', pillBg: '', pillFg: '', pill: '', pill2Bg: '', pill2Fg: '', pill2: '', avR: '50%', avBg: '', avFg: '', avTxt: '', req: '', reqC: 'transparent', val: '', valC: 'var(--f1)', valFont: "400 13px 'IBM Plex Sans',sans-serif" };
+    const railFields = [
+      { ...off, label: 'Status', dotD: 'inline-block', ...dot('active', '#6BA4EE'), val: 'In progress' },
+      { ...off, label: 'Priority', req: '*', reqC: 'var(--dg)', pillD: 'inline-flex', pillBg: '#46231F', pillFg: '#F0968D', pill: 'P0 · critical' },
+      { ...off, label: 'Assignee', avD: 'inline-flex', avR: '5px', avBg: '#2C2A4A', avFg: '#918AEC', avTxt: 'CL', val: 'claude-worker' },
+      { ...off, label: 'Due date', val: 'in 2 days — Jul 7' },
+      { ...off, label: 'Severity', req: '*', reqC: 'var(--dg)', pillD: 'inline-flex', pillBg: '#46231F', pillFg: '#F0968D', pill: 'S1 · data loss' },
+      { ...off, label: 'Sprint', pillD: 'inline-flex', pillBg: '#1D2C44', pillFg: '#8BB4EF', pill: '12' },
+      { ...off, label: 'Environment', pillD: 'inline-flex', pillBg: '#1E3626', pillFg: '#7FCB97', pill: 'prod', pill2D: 'inline-flex', pill2Bg: '#173139', pill2Fg: '#74C4DC', pill2: 'staging' },
+      { ...off, label: 'Repro rate', val: '80', valFont: "400 13px 'IBM Plex Mono',monospace" },
+    ];
+
+    // activity feed (dark)
+    const AD = avTok.dark;
+    const actOff = { fromD: 'none', arrowD: 'none', toD: 'none', from: '', to: '', toBg: 'var(--in)', toFg: 'var(--f1)' };
+    const activity = [
+      { ...actOff, av: 'CL', who: 'claude-worker', what: 'status:', fromD: 'inline', from: 'open', arrowD: 'inline', toD: 'inline', to: 'in progress', toBg: '#1E2A3F', toFg: '#6BA4EE', when: '2h' },
+      { ...actOff, av: 'CL', who: 'claude-worker', what: 'assignee: — →', toD: 'inline', to: 'claude-worker', toBg: '#2C2A4A', toFg: '#918AEC', when: '2h' },
+      { ...actOff, av: 'MK', who: 'Mara K.', what: 'linked CORE-131 as blocks', when: '1d' },
+      { ...actOff, av: 'MK', who: 'Mara K.', what: 'severity:', fromD: 'inline', from: '—', arrowD: 'inline', toD: 'inline', to: 'S1 · data loss', toBg: '#46231F', toFg: '#F0968D', when: '2d' },
+      { ...actOff, av: 'MK', who: 'Mara K.', what: 'created this ticket', when: '5d' },
+    ].map(a => { const A = AD[a.av]; return { ...a, avFg: A[0], avBg: A[1], avR: A[2] }; });
+
+    return {
+      showLight: t !== 'dark', showDark: t !== 'light',
+      subtasks: mkSubs('light'), subtasksDark: mkSubs('dark'), subtasksMobile: mkSubs('light').slice(0, 3),
+      ghostRows, railFields, activity,
+      sideProjects: [
+        { prefix: 'WEB', name: 'Storefront Web' }, { prefix: 'MOB', name: 'Mobile App' }, { prefix: 'OPS', name: 'Infra' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
