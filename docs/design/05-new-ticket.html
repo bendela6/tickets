@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body { margin:0; background:#E9E8E3; font-family:'IBM Plex Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+</style>
+</helmet>
+
+<div style="padding:48px 40px 96px;display:flex;flex-direction:column;gap:40px;align-items:flex-start">
+
+  <header style="max-width:760px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="width:10px;height:10px;background:#4E46C6;border-radius:2px"></span>
+      <span style="font:600 18px 'IBM Plex Mono',monospace;color:#25231D">tickets</span>
+      <span style="font:400 12px 'IBM Plex Mono',monospace;color:#918D80">screen 05 — new ticket flow</span>
+    </div>
+    <p style="font:400 13px/1.6 'IBM Plex Sans',sans-serif;color:#5D5A50;margin:0;text-wrap:pretty">Type first, because type is forever: the picker is a deliberate step with the permanence rule stated on every card, and the chosen type renders as a <strong style="font-weight:600;color:#25231D">locked chip</strong> in the form header. Step 2 is the type's own field form — required flags enforced inline, never on submit alone. The subtask fast path skips all of this: a title and ↵.</p>
+  </header>
+
+  <!-- ================= STEP 1 — TYPE PICKER (LIGHT) ================= -->
+  <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+  <section data-screen-label="New ticket — step 1 type picker">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:10px">STEP 1 · TYPE PICKER · LIGHT — Bug hovered; press 1–3 to pick</div>
+    <div style="width:640px;border:1px solid var(--bd);border-radius:14px;background:var(--rs);box-shadow:0 24px 60px rgba(28,26,20,.18),0 4px 12px rgba(28,26,20,.08);overflow:hidden;color:var(--f1);--bg:#F7F6F2;--rs:#FFFFFF;--in:#ECEAE3;--bd:#E0DDD5;--bs:#C9C5BA;--f1:#25231D;--f2:#5D5A50;--f3:#918D80;--ac:#4E46C6;--acs:#E9E7FA;--oac:#FFFFFF">
+      <div style="display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--bd)">
+        <span style="font:600 16px 'IBM Plex Sans',sans-serif">New ticket</span>
+        <span style="font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">in</span>
+        <span style="height:28px;padding:0 10px;border-radius:7px;border:1px solid var(--bd);display:inline-flex;align-items:center;gap:7px;font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer"><span style="font:500 11px 'IBM Plex Mono',monospace;background:var(--in);border-radius:4px;padding:2px 5px">CORE</span>Items Core <span style="font-size:9px;color:var(--f3)">▾</span></span>
+        <span style="flex:1"></span>
+        <span style="width:30px;height:30px;border-radius:7px;border:1px solid var(--bd);display:inline-flex;align-items:center;justify-content:center;color:var(--f2)">×</span>
+      </div>
+      <div style="padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--bd);border-radius:12px;cursor:pointer" style-hover="border-color:var(--bs);background:var(--bg)">
+          <span style="width:36px;height:36px;border-radius:10px;background:var(--in);display:inline-flex;align-items:center;justify-content:center;flex:none"><span style="width:10px;height:10px;background:var(--f2);border-radius:2px"></span></span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:2px">
+            <span style="font:600 14px 'IBM Plex Sans',sans-serif">Task</span>
+            <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)">Default unit of work — 7 fields, 1 required</span>
+          </span>
+          <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3);border:1px solid var(--bd);border-radius:4px;padding:1px 6px">1</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--ac);border-radius:12px;background:var(--acs);cursor:pointer;box-shadow:0 0 0 3px #E9E7FA80">
+          <span style="width:36px;height:36px;border-radius:10px;background:#FAE3E1;display:inline-flex;align-items:center;justify-content:center;flex:none"><span style="width:10px;height:10px;background:#A03028;border-radius:50%"></span></span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:2px">
+            <span style="font:600 14px 'IBM Plex Sans',sans-serif">Bug</span>
+            <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)">Defect with repro — 8 fields, 2 required (severity, priority)</span>
+          </span>
+          <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3);border:1px solid var(--bs);border-radius:4px;padding:1px 6px">2</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--bd);border-radius:12px;cursor:pointer" style-hover="border-color:var(--bs);background:var(--bg)">
+          <span style="width:36px;height:36px;border-radius:10px;background:var(--in);display:inline-flex;align-items:center;justify-content:center;flex:none"><span style="width:10px;height:10px;border:1.5px solid var(--f2);border-radius:50%"></span></span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:2px">
+            <span style="font:600 14px 'IBM Plex Sans',sans-serif">Spike</span>
+            <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)">Timeboxed research — 5 fields, 1 required</span>
+          </span>
+          <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3);border:1px solid var(--bd);border-radius:4px;padding:1px 6px">3</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px dashed var(--bd);border-radius:12px;opacity:.65">
+          <span style="width:36px;height:36px;border-radius:10px;background:var(--in);display:inline-flex;align-items:center;justify-content:center;flex:none"><span style="width:10px;height:10px;border:1.5px dashed var(--f3);border-radius:2px"></span></span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:2px">
+            <span style="font:600 14px 'IBM Plex Sans',sans-serif;color:var(--f2)">Subtask</span>
+            <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f3)">Created from a parent ticket's Subtasks section — not from here</span>
+          </span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:12px 20px;border-top:1px solid var(--bd);background:var(--bg)">
+        <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)">🔒 Type is permanent — it decides this ticket's form and can't be changed after creation.</span>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <!-- ================= STEP 2 — BUG FORM (DARK) ================= -->
+  <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+  <section data-screen-label="New ticket — step 2 bug form">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:10px">STEP 2 · BUG FORM · DARK — Severity blank on submit attempt; type chip is locked</div>
+    <div style="width:760px;border:1px solid var(--bd);border-radius:14px;background:var(--rs);box-shadow:0 24px 60px rgba(0,0,0,.5),0 4px 12px rgba(0,0,0,.35);overflow:hidden;color:var(--f1);--bg:#1B1A17;--rs:#252320;--in:#2C2A25;--bd:#343128;--bs:#4C483D;--f1:#EDEBE3;--f2:#A6A296;--f3:#79756A;--ac:#918AEC;--acs:#2C2A4A;--oac:#16143C;--dg:#E26A5F;--dgs:#41231F;--ka:#6BA4EE;--kas:#1E2A3F">
+      <div style="display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--bd)">
+        <span style="font:500 12px 'IBM Plex Sans',sans-serif;color:var(--ac);cursor:pointer">‹ Type</span>
+        <span style="font:600 16px 'IBM Plex Sans',sans-serif">New Bug</span>
+        <span style="height:24px;padding:0 9px;border-radius:6px;border:1px solid #6B3833;font:500 12px 'IBM Plex Sans',sans-serif;color:#F0968D;display:inline-flex;align-items:center;gap:6px"><span style="width:6px;height:6px;background:#F0968D;border-radius:50%"></span>Bug · 🔒 permanent</span>
+        <span style="font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">in</span>
+        <span style="height:26px;padding:0 9px;border-radius:7px;border:1px solid var(--bd);display:inline-flex;align-items:center;gap:6px;font:500 12px 'IBM Plex Sans',sans-serif"><span style="font:500 10px 'IBM Plex Mono',monospace;background:var(--in);border-radius:4px;padding:2px 5px">CORE</span>Items Core</span>
+        <span style="flex:1"></span>
+        <span style="width:30px;height:30px;border-radius:7px;border:1px solid var(--bd);display:inline-flex;align-items:center;justify-content:center;color:var(--f2)">×</span>
+      </div>
+      <div style="padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+        <div style="height:40px;border:1px solid var(--ac);border-radius:9px;background:var(--rs);display:flex;align-items:center;padding:0 13px;font:400 15px 'IBM Plex Sans',sans-serif;box-shadow:0 0 0 3px var(--acs)">Select options lose order after archive<span style="width:1.5px;height:18px;background:var(--ac);margin-left:1px;display:inline-block"></span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 16px">
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Severity <span style="color:var(--dg)">*</span></span>
+            <div style="height:34px;border:1px solid var(--dg);border-radius:8px;display:flex;align-items:center;padding:0 11px;box-shadow:0 0 0 3px var(--dgs);font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f3)">Choose severity… <span style="flex:1"></span><span style="font-size:9px">▾</span></div>
+            <span style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--dg)">Required for bugs</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Priority <span style="color:var(--dg)">*</span></span>
+            <div style="height:34px;border:1px solid var(--bd);border-radius:8px;display:flex;align-items:center;padding:0 11px;gap:7px;font:400 13px 'IBM Plex Sans',sans-serif"><span style="height:18px;padding:0 7px;border-radius:999px;background:#3E3316;color:#DFC060;font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">P2 · normal</span><span style="flex:1"></span><span style="font-size:9px;color:var(--f3)">▾</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Assignee</span>
+            <div style="height:34px;border:1px solid var(--bd);border-radius:8px;display:flex;align-items:center;padding:0 11px;gap:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f3)">Unassigned <span style="flex:1"></span><span style="font-size:9px">▾</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Environment</span>
+            <div style="height:34px;border:1px solid var(--bd);border-radius:8px;display:flex;align-items:center;padding:0 8px;gap:5px"><span style="height:18px;padding:0 7px;border-radius:999px;background:#1E3626;color:#7FCB97;font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:4px">prod <span style="opacity:.6">×</span></span><span style="flex:1"></span><span style="font-size:9px;color:var(--f3)">▾</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Description</span>
+          <div style="border:1px solid var(--bd);border-radius:10px;overflow:hidden">
+            <div style="display:flex;align-items:center;border-bottom:1px solid var(--bd);padding:0 6px;background:var(--in)">
+              <span style="padding:8px 10px;font:500 12px 'IBM Plex Sans',sans-serif;border-bottom:2px solid var(--ac);margin-bottom:-1px">Write</span>
+              <span style="padding:8px 10px;font:500 12px 'IBM Plex Sans',sans-serif;color:var(--f3)">Preview</span>
+              <span style="flex:1"></span>
+              <span style="font:600 12px 'IBM Plex Sans',sans-serif;color:var(--f2);padding:0 7px">B</span><span style="font:400 12px 'IBM Plex Sans',sans-serif;font-style:italic;color:var(--f2);padding:0 7px">I</span><span style="font:500 11px 'IBM Plex Mono',monospace;color:var(--f2);padding:0 7px">&lt;/&gt;</span>
+            </div>
+            <div style="padding:12px;font:400 13px/1.6 'IBM Plex Mono',monospace;color:var(--f2);min-height:76px">## Repro<br>1. Archive an option from a select field<br>2. Reload — remaining options render alphabetically, not by rank</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 20px;border-top:1px solid var(--bd);background:var(--in)">
+        <span style="display:inline-flex;align-items:center;gap:8px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="width:32px;height:18px;border-radius:999px;background:var(--bs);position:relative;display:inline-block"><span style="position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#1B1A17"></span></span>Create another</span>
+        <span style="flex:1"></span>
+        <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">⌘↵ create</span>
+        <button style="height:34px;padding:0 13px;border-radius:8px;border:none;background:transparent;color:var(--f2);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">Cancel</button>
+        <button style="height:34px;padding:0 14px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">Create CORE-136</button>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <!-- ================= SUBTASK FAST PATH ================= -->
+  <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+  <section data-screen-label="Subtask quick create">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:10px">FAST PATH — quick-create from the parent's Subtasks section; title only, everything else inherits defaults</div>
+    <div style="width:620px;border:1px solid #D6D3C9;border-radius:14px;background:#FFFFFF;padding:16px 20px;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 2px rgba(28,26,20,.06)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:2px">
+        <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#5D5A50">Subtasks of CORE-128</span>
+        <span style="font:400 11px 'IBM Plex Mono',monospace;color:#918D80">2/5 done</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;height:42px;padding:0 13px;border:1px solid #4E46C6;border-radius:10px;box-shadow:0 0 0 3px #E9E7FA">
+        <span style="width:9px;height:9px;border-radius:50%;border:1.5px dashed #C9C5BA;flex:none"></span>
+        <span style="font:400 14px 'IBM Plex Sans',sans-serif;color:#25231D;flex:1">Audit column-width persistence<span style="width:1.5px;height:16px;background:#4E46C6;margin-left:1px;display:inline-block;vertical-align:-3px"></span></span>
+        <span style="font:400 10px 'IBM Plex Mono',monospace;color:#918D80">↵ creates CORE-136 · ⇧↵ create + open</span>
+      </div>
+      <div style="font:400 12px 'IBM Plex Sans',sans-serif;color:#918D80">Subtasks are real tickets: type <span style="font:500 11px 'IBM Plex Mono',monospace;background:#ECEAE3;padding:1px 5px;border-radius:4px">Subtask</span>, parent CORE-128, status from the workflow's entry status.</div>
+    </div>
+  </section>
+  </sc-if>
+
+  <!-- ================= MOBILE ================= -->
+  <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+  <section data-screen-label="New ticket — mobile">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:10px">MOBILE · 390 — the center tab-bar action opens this full-screen sheet; type rows are 56px targets</div>
+    <div style="width:390px;height:700px;border:1px solid #D6D3C9;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;background:#FFFFFF;color:#25231D;box-shadow:0 24px 60px rgba(28,26,20,.10)">
+      <div style="display:flex;justify-content:center;padding:10px 0 2px"><span style="width:36px;height:4px;border-radius:2px;background:#C9C5BA"></span></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 18px 12px;border-bottom:1px solid #E0DDD5">
+        <span style="font:600 18px 'IBM Plex Sans',sans-serif;flex:1">New ticket</span>
+        <span style="height:36px;padding:0 11px;border-radius:9px;border:1px solid #E0DDD5;display:inline-flex;align-items:center;gap:7px;font:500 13px 'IBM Plex Sans',sans-serif"><span style="font:500 10px 'IBM Plex Mono',monospace;background:#ECEAE3;border-radius:4px;padding:2px 5px">CORE</span><span style="font-size:9px;color:#918D80">▾</span></span>
+        <span style="width:36px;height:36px;border-radius:9px;border:1px solid #E0DDD5;display:inline-flex;align-items:center;justify-content:center;color:#5D5A50">×</span>
+      </div>
+      <div style="flex:1;overflow:auto;padding:16px 18px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:12px;padding:16px;border:1px solid #E0DDD5;border-radius:14px;min-height:56px">
+          <span style="width:38px;height:38px;border-radius:10px;background:#ECEAE3;display:inline-flex;align-items:center;justify-content:center;flex:none"><span style="width:10px;height:10px;background:#5D5A50;border-radius:2px"></span></span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font:600 15px 'IBM Plex Sans',sans-serif">Task</span><span style="font:400 12px 'IBM Plex Sans',sans-serif;color:#5D5A50">7 fields · 1 required</span></span>
+          <span style="color:#918D80">›</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:16px;border:1px solid #E0DDD5;border-radius:14px;min-height:56px">
+          <span style="width:38px;height:38px;border-radius:10px;background:#FAE3E1;display:inline-flex;align-items:center;justify-content:center;flex:none"><span style="width:10px;height:10px;background:#A03028;border-radius:50%"></span></span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font:600 15px 'IBM Plex Sans',sans-serif">Bug</span><span style="font:400 12px 'IBM Plex Sans',sans-serif;color:#5D5A50">8 fields · 2 required</span></span>
+          <span style="color:#918D80">›</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:16px;border:1px solid #E0DDD5;border-radius:14px;min-height:56px">
+          <span style="width:38px;height:38px;border-radius:10px;background:#ECEAE3;display:inline-flex;align-items:center;justify-content:center;flex:none"><span style="width:10px;height:10px;border:1.5px solid #5D5A50;border-radius:50%"></span></span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font:600 15px 'IBM Plex Sans',sans-serif">Spike</span><span style="font:400 12px 'IBM Plex Sans',sans-serif;color:#5D5A50">5 fields · 1 required</span></span>
+          <span style="color:#918D80">›</span>
+        </div>
+        <div style="margin-top:8px;padding:12px 14px;border-radius:12px;background:#F7F6F2;font:400 12px/1.5 'IBM Plex Sans',sans-serif;color:#5D5A50">🔒 Type is permanent — it decides the ticket's form and can't be changed after creation.</div>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;theme&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;both&quot;, &quot;light&quot;, &quot;dark&quot;], &quot;default&quot;: &quot;both&quot;, &quot;tsType&quot;: &quot;'both' | 'light' | 'dark'&quot;, &quot;section&quot;: &quot;Preview&quot; }
+}">
+class Component extends DCLogic {
+  renderVals() {
+    const t = this.props.theme ?? 'both';
+    return { showLight: t !== 'dark', showDark: t !== 'light' };
+  }
+}
+</script>
+</body>
+</html>

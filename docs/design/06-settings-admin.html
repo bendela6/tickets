@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body { margin:0; background:#E9E8E3; font-family:'IBM Plex Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+</style>
+</helmet>
+
+<div style="padding:48px 40px 96px;display:flex;flex-direction:column;gap:40px;align-items:flex-start">
+
+  <header style="max-width:780px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="width:10px;height:10px;background:#4E46C6;border-radius:2px"></span>
+      <span style="font:600 18px 'IBM Plex Mono',monospace;color:#25231D">tickets</span>
+      <span style="font:400 12px 'IBM Plex Mono',monospace;color:#918D80">screen 06 — settings &amp; admin</span>
+    </div>
+    <p style="font:400 13px/1.6 'IBM Plex Sans',sans-serif;color:#5D5A50;margin:0;text-wrap:pretty">One settings shell: a secondary nav splits <strong style="font-weight:600;color:#25231D">project vocabulary</strong> (fields, types, statuses, workflow, link types, views) from <strong style="font-weight:600;color:#25231D">workspace</strong> (projects, users). Three deep dives below — Fields CRUD with the option-color manager, the type/field form builder, and the workflow graph editor. Every other entity (statuses, link types, views, users, projects) is the same list + edit-panel pattern, shown compact at the end. Archive everywhere, delete nowhere.</p>
+  </header>
+
+  <!-- ================= A · FIELDS CRUD (LIGHT) ================= -->
+  <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+  <section data-screen-label="Settings — fields CRUD, light">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:10px">A · FIELDS · LIGHT — Severity open in the edit panel; color palette popover on S2</div>
+    <div style="width:1440px;height:880px;border:1px solid #D6D3C9;border-radius:12px;overflow:hidden;display:flex;background:var(--bg);color:var(--f1);box-shadow:0 24px 60px rgba(28,26,20,.10);--bg:#F7F6F2;--rs:#FFFFFF;--in:#ECEAE3;--bd:#E0DDD5;--bs:#C9C5BA;--f1:#25231D;--f2:#5D5A50;--f3:#918D80;--ac:#4E46C6;--acs:#E9E7FA;--oac:#FFFFFF;--dg:#C0382E;--shsm:0 1px 2px rgba(28,26,20,.06);--shlg:0 16px 40px rgba(28,26,20,.16),0 4px 10px rgba(28,26,20,.08)">
+
+      <aside style="width:236px;flex:none;border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px 12px 12px">
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 14px"><span style="width:9px;height:9px;background:var(--ac);border-radius:2px"></span><span style="font:600 15px 'IBM Plex Mono',monospace">tickets</span><span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">acme</span></div>
+        <nav style="display:flex;flex-direction:column;gap:2px">
+          <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">⌂<span style="flex:1">Home</span></div>
+          <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">▤<span style="flex:1">All tickets</span></div>
+        </nav>
+        <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3);padding:16px 9px 6px">PROJECTS</div>
+        <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="font:500 10px 'IBM Plex Mono',monospace;background:var(--in);border-radius:4px;padding:2px 5px">CORE</span><span style="flex:1">Items Core</span></div>
+        <span style="flex:1"></span>
+        <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif;margin-bottom:8px">⚙<span style="flex:1">Settings</span></div>
+      </aside>
+
+      <!-- settings secondary nav -->
+      <div style="width:212px;flex:none;border-right:1px solid var(--bd);padding:22px 12px;display:flex;flex-direction:column;gap:2px;background:var(--bg)">
+        <div style="font:600 16px 'IBM Plex Sans',sans-serif;padding:0 9px 12px">Settings</div>
+        <div style="display:flex;align-items:center;gap:7px;padding:0 9px 8px"><span style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3)">PROJECT</span><span style="height:20px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);font:500 11px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:4px">CORE <span style="font-size:8px;color:var(--f3)">▾</span></span></div>
+        <sc-for list="{{navProject}}" as="n" hint-placeholder-count="6">
+          <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;background:{{n.bg}};font:{{n.font}};color:{{n.color}};cursor:pointer">{{n.label}}<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">{{n.count}}</span></div>
+        </sc-for>
+        <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3);padding:16px 9px 6px">WORKSPACE</div>
+        <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Projects<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">4</span></div>
+        <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Users<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">7</span></div>
+      </div>
+
+      <!-- fields list -->
+      <main style="flex:1;min-width:0;padding:22px 26px;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <h1 style="font:600 20px 'IBM Plex Sans',sans-serif;margin:0">Fields</h1>
+          <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3)">9 fields · 1 archived</span>
+          <span style="flex:1"></span>
+          <span style="display:inline-flex;align-items:center;gap:8px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="width:32px;height:18px;border-radius:999px;background:var(--ac);position:relative;display:inline-block"><span style="position:absolute;top:2px;right:2px;width:14px;height:14px;border-radius:50%;background:#fff"></span></span>Show archived</span>
+          <button style="height:32px;padding:0 12px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">＋ New field</button>
+        </div>
+        <div style="flex:1;overflow:auto;border:1px solid var(--bd);border-radius:12px;background:var(--rs)">
+          <div style="display:grid;grid-template-columns:1.4fr 94px 122px 70px 26px;align-items:center;height:36px;border-bottom:1px solid var(--bd);background:var(--bg);font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);padding:0 8px">
+            <span style="padding:0 10px">Field</span><span>Type</span><span>Used by</span><span>Options</span><span></span>
+          </div>
+          <sc-for list="{{fields}}" as="f" hint-placeholder-count="8">
+            <div style="display:grid;grid-template-columns:1.4fr 94px 122px 70px 26px;align-items:center;height:44px;border-bottom:1px solid var(--bd);padding:0 8px;cursor:pointer;background:{{f.bg}};opacity:{{f.op}}" style-hover="background:var(--bg)">
+              <span style="padding:0 10px;display:flex;align-items:center;gap:8px;min-width:0"><span style="font:500 13px 'IBM Plex Sans',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{f.name}}</span><span style="display:{{f.archD}};height:17px;padding:0 6px;border-radius:4px;background:var(--in);color:var(--f3);font:500 10px 'IBM Plex Mono',monospace;align-items:center;white-space:nowrap;flex:none">ARCH</span></span>
+              <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f2);white-space:nowrap">{{f.type}}</span>
+              <span style="display:flex;gap:5px;align-items:center;min-width:0">
+                <span style="height:18px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);font:500 10px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center;white-space:nowrap">{{f.u1}}</span>
+                <span style="display:{{f.uMoreD}};font:400 10px 'IBM Plex Mono',monospace;color:var(--f3);white-space:nowrap">{{f.uMore}}</span>
+              </span>
+              <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f2);white-space:nowrap">{{f.opts}}</span>
+              <span style="color:var(--f3)">›</span>
+            </div>
+          </sc-for>
+        </div>
+      </main>
+
+      <!-- edit panel -->
+      <div style="width:372px;flex:none;border-left:1px solid var(--bd);background:var(--rs);display:flex;flex-direction:column;position:relative">
+        <div style="display:flex;align-items:center;gap:9px;padding:16px 18px;border-bottom:1px solid var(--bd)">
+          <span style="font:600 15px 'IBM Plex Sans',sans-serif;flex:1">Severity</span>
+          <span style="height:28px;padding:0 10px;border-radius:7px;border:1px solid var(--bd);font:500 12px 'IBM Plex Sans',sans-serif;color:var(--dg);display:inline-flex;align-items:center;cursor:pointer">Archive field</span>
+          <span style="width:28px;height:28px;border-radius:7px;border:1px solid var(--bd);display:inline-flex;align-items:center;justify-content:center;color:var(--f2)">×</span>
+        </div>
+        <div style="flex:1;overflow:auto;padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Label</span>
+            <div style="height:34px;border:1px solid var(--bs);border-radius:8px;display:flex;align-items:center;padding:0 11px;font:400 14px 'IBM Plex Sans',sans-serif">Severity</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:5px">
+              <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Key</span>
+              <div style="height:34px;border:1px solid var(--bd);border-radius:8px;background:var(--in);display:flex;align-items:center;padding:0 11px;font:400 13px 'IBM Plex Mono',monospace;color:var(--f3)">severity 🔒</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px">
+              <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Type</span>
+              <div style="height:34px;border:1px solid var(--bd);border-radius:8px;background:var(--in);display:flex;align-items:center;padding:0 11px;font:400 13px 'IBM Plex Mono',monospace;color:var(--f3)">select 🔒</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Widget</span>
+            <div style="height:34px;border:1px solid var(--bd);border-radius:8px;display:flex;align-items:center;padding:0 11px;font:400 13px 'IBM Plex Sans',sans-serif">Colored badge <span style="flex:1"></span><span style="font-size:9px;color:var(--f3)">▾</span></div>
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Options</span>
+              <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">drag to reorder</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <sc-for list="{{options}}" as="o" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:9px;height:38px;padding:0 10px;border:1px solid {{o.border}};border-radius:9px;background:{{o.bg}}">
+                  <span style="color:var(--bs);cursor:grab;font:400 12px 'IBM Plex Sans',sans-serif">⋮⋮</span>
+                  <span style="width:16px;height:16px;border-radius:50%;background:{{o.sw}};border:2px solid var(--rs);box-shadow:0 0 0 1px var(--bd);cursor:pointer"></span>
+                  <span style="flex:1;font:400 13px 'IBM Plex Sans',sans-serif">{{o.label}}</span>
+                  <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f3);cursor:pointer" title="Archive option">⌫</span>
+                </div>
+              </sc-for>
+              <div style="display:flex;align-items:center;gap:9px;height:34px;padding:0 10px;border:1px dashed var(--bs);border-radius:9px;color:var(--f3);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer">＋ Add option</div>
+              <div style="display:flex;align-items:center;gap:9px;height:34px;padding:0 10px;border-radius:9px;color:var(--f3);font:400 12px 'IBM Plex Sans',sans-serif;opacity:.6"><span style="width:12px;height:12px;border-radius:50%;background:#9B968A"></span><span style="text-decoration:line-through">S5 · wontfix</span><span style="font:400 10px 'IBM Plex Mono',monospace">archived</span><span style="flex:1"></span><span style="cursor:pointer">restore</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- palette popover -->
+        <div style="position:absolute;top:398px;left:26px;border:1px solid var(--bd);border-radius:10px;background:var(--rs);box-shadow:var(--shlg);padding:10px;z-index:5">
+          <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--f3);margin-bottom:8px">OPTION COLOR</div>
+          <div style="display:grid;grid-template-columns:repeat(6,22px);gap:6px">
+            <sc-for list="{{palette}}" as="c" hint-placeholder-count="11">
+              <span style="width:22px;height:22px;border-radius:50%;background:{{c.hex}};box-shadow:{{c.ring}};cursor:pointer"></span>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid var(--bd);background:var(--bg)">
+          <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">used by 214 tickets</span>
+          <span style="flex:1"></span>
+          <button style="height:30px;padding:0 11px;border-radius:7px;border:1px solid var(--bs);background:var(--rs);color:var(--f1);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer">Cancel</button>
+          <button style="height:30px;padding:0 12px;border-radius:7px;border:none;background:var(--ac);color:var(--oac);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer">Save</button>
+        </div>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <!-- ================= B · FORM BUILDER (DARK) ================= -->
+  <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+  <section data-screen-label="Settings — type form builder, dark">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:10px">B · TICKET TYPES — THE FORM BUILDER · DARK — Environment is mid-drag; required toggles are per type</div>
+    <div style="width:1440px;height:820px;border:1px solid #35322B;border-radius:12px;overflow:hidden;display:flex;background:var(--bg);color:var(--f1);box-shadow:0 24px 60px rgba(28,26,20,.18);--bg:#1B1A17;--rs:#252320;--in:#2C2A25;--bd:#343128;--bs:#4C483D;--f1:#EDEBE3;--f2:#A6A296;--f3:#79756A;--ac:#918AEC;--acs:#2C2A4A;--oac:#16143C;--dg:#E26A5F;--shsm:0 1px 2px rgba(0,0,0,.4);--shlg:0 16px 40px rgba(0,0,0,.55),0 4px 10px rgba(0,0,0,.4)">
+
+      <div style="width:212px;flex:none;border-right:1px solid var(--bd);padding:22px 12px;display:flex;flex-direction:column;gap:2px">
+        <div style="font:600 16px 'IBM Plex Sans',sans-serif;padding:0 9px 12px">Ticket types</div>
+        <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="width:8px;height:8px;background:var(--f3);border-radius:2px"></span>Task<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">7</span></div>
+        <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 9px;border-radius:7px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif"><span style="width:8px;height:8px;background:#F0968D;border-radius:50%"></span>Bug<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">8</span></div>
+        <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="width:8px;height:8px;border:1.5px solid var(--f3);border-radius:50%"></span>Spike<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">5</span></div>
+        <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="width:8px;height:8px;border:1.5px dashed var(--f3);border-radius:2px"></span>Subtask<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">3</span></div>
+        <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;border-radius:7px;color:var(--f3);font:400 12px 'IBM Plex Sans',sans-serif;cursor:pointer">＋ New type</div>
+        <span style="flex:1"></span>
+        <div style="padding:10px;border-radius:9px;background:var(--in);font:400 11px/1.5 'IBM Plex Sans',sans-serif;color:var(--f2)">Field order here <strong style="font-weight:500;color:var(--f1)">is</strong> the form order — in the drawer, the full page, and new-ticket.</div>
+      </div>
+
+      <main style="flex:1;min-width:0;padding:22px 26px;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;gap:11px;margin-bottom:16px">
+          <span style="height:24px;padding:0 9px;border-radius:6px;border:1px solid #6B3833;font:500 12px 'IBM Plex Sans',sans-serif;color:#F0968D;display:inline-flex;align-items:center;gap:6px"><span style="width:6px;height:6px;background:#F0968D;border-radius:50%"></span>Bug</span>
+          <h1 style="font:600 20px 'IBM Plex Sans',sans-serif;margin:0">Bug — form layout</h1>
+          <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3)">8 fields · 2 required</span>
+          <span style="flex:1"></span>
+          <span style="height:28px;padding:0 10px;border-radius:7px;border:1px solid var(--bd);font:500 12px 'IBM Plex Sans',sans-serif;color:var(--dg);display:inline-flex;align-items:center">Archive type</span>
+        </div>
+        <div style="flex:1;overflow:auto;display:flex;flex-direction:column;gap:7px;max-width:660px">
+          <div style="display:flex;align-items:center;gap:10px;height:44px;padding:0 13px;border:1px solid var(--bd);border-radius:10px;background:var(--in);opacity:.75">
+            <span style="color:var(--bs)">⋮⋮</span>
+            <span style="font:500 13px 'IBM Plex Sans',sans-serif;flex:1">Title</span>
+            <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">built-in · always first · required</span>
+          </div>
+          <sc-for list="{{formFields}}" as="f" hint-placeholder-count="6">
+            <div style="display:flex;align-items:center;gap:10px;height:44px;padding:0 13px;border:{{f.border}};border-radius:10px;background:var(--rs);box-shadow:{{f.shadow}};transform:{{f.tf}};opacity:{{f.op}}">
+              <span style="color:var(--bs);cursor:grab">⋮⋮</span>
+              <span style="font:500 13px 'IBM Plex Sans',sans-serif">{{f.name}}</span>
+              <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">{{f.type}}</span>
+              <span style="flex:1"></span>
+              <span style="display:inline-flex;align-items:center;gap:7px;font:400 12px 'IBM Plex Sans',sans-serif;color:{{f.reqTxtC}}">required
+                <span style="width:30px;height:17px;border-radius:999px;background:{{f.swBg}};position:relative;display:inline-block"><span style="position:absolute;top:2px;left:{{f.swKnob}};width:13px;height:13px;border-radius:50%;background:{{f.swKnobC}}"></span></span>
+              </span>
+              <span style="color:var(--f3);cursor:pointer">×</span>
+            </div>
+          </sc-for>
+          <div style="height:3px;border-radius:2px;background:var(--ac);margin:1px 2px;box-shadow:0 0 8px var(--ac)"></div>
+          <div style="display:flex;align-items:center;gap:10px;height:44px;padding:0 13px;border:1.5px solid var(--ac);border-radius:10px;background:var(--rs);box-shadow:var(--shlg);transform:rotate(1.2deg)">
+            <span style="color:var(--ac);cursor:grabbing">⋮⋮</span>
+            <span style="font:500 13px 'IBM Plex Sans',sans-serif">Environment</span>
+            <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">multi_select</span>
+            <span style="flex:1"></span>
+            <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--ac)">dragging…</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;height:44px;padding:0 13px;border:1px solid var(--bd);border-radius:10px;background:var(--rs)">
+            <span style="color:var(--bs);cursor:grab">⋮⋮</span>
+            <span style="font:500 13px 'IBM Plex Sans',sans-serif">Repro rate</span>
+            <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">number</span>
+            <span style="flex:1"></span>
+            <span style="display:inline-flex;align-items:center;gap:7px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f3)">required
+              <span style="width:30px;height:17px;border-radius:999px;background:var(--bs);position:relative;display:inline-block"><span style="position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#1B1A17"></span></span>
+            </span>
+            <span style="color:var(--f3)">×</span>
+          </div>
+        </div>
+      </main>
+
+      <div style="width:300px;flex:none;border-left:1px solid var(--bd);padding:22px 18px;display:flex;flex-direction:column;gap:8px;background:var(--rs)">
+        <div style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);margin-bottom:4px">Attach a field</div>
+        <div style="height:32px;border:1px solid var(--bd);border-radius:8px;display:flex;align-items:center;padding:0 10px;gap:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f3)">⌕ Find field…</div>
+        <sc-for list="{{library}}" as="l" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:9px;height:40px;padding:0 12px;border:1px solid var(--bd);border-radius:9px;cursor:pointer" style-hover="border-color:var(--bs);background:var(--in)">
+            <span style="font:500 13px 'IBM Plex Sans',sans-serif">{{l.name}}</span>
+            <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">{{l.type}}</span>
+            <span style="flex:1"></span>
+            <span style="color:var(--ac);font:500 13px 'IBM Plex Sans',sans-serif">＋</span>
+          </div>
+        </sc-for>
+        <div style="display:flex;align-items:center;gap:9px;height:40px;padding:0 12px;border:1px dashed var(--bs);border-radius:9px;color:var(--f3);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer">＋ New field…</div>
+        <span style="flex:1"></span>
+        <div style="font:400 11px/1.5 'IBM Plex Sans',sans-serif;color:var(--f3)">Attaching adds this field to Bug tickets only. The same field can attach to other types with its own order + required flag.</div>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <!-- ================= C · WORKFLOW EDITOR (LIGHT) ================= -->
+  <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+  <section data-screen-label="Settings — workflow editor, light">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:10px">C · WORKFLOW GRAPH EDITOR · LIGHT — edge In review → Shipped selected</div>
+    <div style="width:1440px;height:720px;border:1px solid #D6D3C9;border-radius:12px;overflow:hidden;display:flex;background:var(--bg);color:var(--f1);box-shadow:0 24px 60px rgba(28,26,20,.10);--bg:#F7F6F2;--rs:#FFFFFF;--in:#ECEAE3;--bd:#E0DDD5;--bs:#C9C5BA;--f1:#25231D;--f2:#5D5A50;--f3:#918D80;--ac:#4E46C6;--acs:#E9E7FA;--oac:#FFFFFF;--dg:#C0382E;--kt:#6E6A5E;--kts:#EBEAE3;--ka:#2E6FCC;--kas:#E4EDF9;--kb:#C25425;--kbs:#F8E9DF;--kd:#2E7D4F;--kds:#E2F0E7;--kx:#9B968A;--kxs:#EFEEE8;--shsm:0 1px 2px rgba(28,26,20,.06)">
+      <main style="flex:1;min-width:0;display:flex;flex-direction:column;padding:22px 26px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <h1 style="font:600 20px 'IBM Plex Sans',sans-serif;margin:0">Workflow</h1>
+          <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3)">Items Core · 8 transitions</span>
+          <span style="flex:1"></span>
+          <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)">Applies to: <strong style="font-weight:500;color:var(--f1)">All ticket types</strong> <span style="font-size:10px;color:var(--f3)">▾</span></span>
+          <button style="height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--bs);background:var(--rs);color:var(--f1);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">＋ Add status</button>
+        </div>
+        <div style="flex:1;border:1px solid var(--bd);border-radius:12px;background:var(--rs);position:relative;overflow:hidden">
+          <svg width="1100" height="560" style="position:absolute;inset:0" viewBox="0 0 1100 560">
+            <defs>
+              <marker id="mg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9B968A"></path></marker>
+              <marker id="ma" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4E46C6"></path></marker>
+            </defs>
+            <path d="M84,272 L136,272" stroke="#2E7D4F" stroke-width="2" stroke-dasharray="4 3" fill="none" marker-end="url(#mg)"></path>
+            <path d="M292,258 C340,258 350,162 396,162" stroke="#9B968A" stroke-width="1.5" fill="none" marker-end="url(#mg)"></path>
+            <path d="M556,156 L652,156" stroke="#9B968A" stroke-width="1.5" fill="none" marker-end="url(#mg)"></path>
+            <path d="M656,172 L560,172" stroke="#9B968A" stroke-width="1.5" fill="none" marker-end="url(#mg)"></path>
+            <path d="M816,158 C868,158 872,214 912,216" stroke="#4E46C6" stroke-width="2.5" fill="none" marker-end="url(#ma)"></path>
+            <path d="M468,186 L468,356" stroke="#9B968A" stroke-width="1.5" fill="none" marker-end="url(#mg)"></path>
+            <path d="M492,356 L492,186" stroke="#9B968A" stroke-width="1.5" fill="none" marker-end="url(#mg)"></path>
+            <path d="M292,286 C560,330 700,402 912,402" stroke="#9B968A" stroke-width="1.5" fill="none" marker-end="url(#mg)"></path>
+          </svg>
+          <span style="position:absolute;left:36px;top:258px;width:44px;height:28px;border-radius:999px;border:1.5px dashed var(--kd);color:var(--kd);display:inline-flex;align-items:center;justify-content:center;font:500 10px 'IBM Plex Mono',monospace">entry</span>
+          <sc-for list="{{nodes}}" as="n" hint-placeholder-count="6">
+            <span style="position:absolute;left:{{n.x}}px;top:{{n.y}}px;height:44px;padding:0 14px;border-radius:11px;background:{{n.bg}};border:1.5px solid {{n.bc}};display:inline-flex;align-items:center;gap:8px;box-shadow:var(--shsm);cursor:grab">
+              <span style="width:9px;height:9px;border-radius:{{n.dotR}};border:{{n.dotBorder}};background:{{n.dotBg}};transform:{{n.dotT}}"></span>
+              <span style="font:500 13px 'IBM Plex Sans',sans-serif;color:{{n.fg}}">{{n.name}}</span>
+              <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">{{n.kind}}</span>
+            </span>
+          </sc-for>
+          <span style="position:absolute;left:16px;bottom:14px;font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">drag node → node to add a transition · click an edge to edit · double-click canvas to add status</span>
+        </div>
+      </main>
+      <div style="width:300px;flex:none;border-left:1px solid var(--bd);background:var(--rs);padding:22px 18px;display:flex;flex-direction:column;gap:14px">
+        <div style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Transition</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="height:24px;padding:0 9px;border-radius:6px;background:var(--kas);color:var(--ka);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--ka);background:linear-gradient(90deg,var(--ka) 50%,transparent 50%)"></span>In review</span>
+          <span style="color:var(--f3)">→</span>
+          <span style="height:24px;padding:0 9px;border-radius:6px;background:var(--kds);color:var(--kd);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:var(--kd)"></span>Shipped</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Applies to</span>
+          <div style="min-height:34px;border:1px solid var(--bd);border-radius:8px;display:flex;align-items:center;padding:3px 9px;gap:5px;flex-wrap:wrap">
+            <span style="height:19px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);font:500 11px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center;gap:4px">Task <span style="opacity:.5">×</span></span>
+            <span style="height:19px;padding:0 7px;border-radius:5px;border:1px solid #E3B9AF;font:500 11px 'IBM Plex Sans',sans-serif;color:#A03028;display:inline-flex;align-items:center;gap:4px">Bug <span style="opacity:.5">×</span></span>
+            <span style="flex:1"></span><span style="font-size:9px;color:var(--f3)">▾</span>
+          </div>
+          <span style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--f3)">Empty = every type may use this move.</span>
+        </div>
+        <button style="height:32px;border-radius:8px;border:1px solid var(--bd);background:var(--rs);color:var(--f1);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer">＋ Add reverse edge (Shipped → In review)</button>
+        <button style="height:32px;border-radius:8px;border:none;background:transparent;color:var(--dg);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer;text-align:left;padding:0 4px">Remove transition</button>
+        <span style="flex:1"></span>
+        <div style="padding:11px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--bd);font:400 11px/1.5 'IBM Plex Sans',sans-serif;color:var(--f2)"><strong style="font-weight:500;color:var(--f1)">Entry edges</strong> (dashed, from the entry stub) mark valid starting statuses for new tickets.</div>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <!-- ================= EMPTY GRAPH + PATTERN APPLIED ================= -->
+  <section data-screen-label="Settings — empty graph and pattern">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:10px">EMPTY GRAPH STATE (DARK) · AND THE LIST PATTERN APPLIED TO OTHER ENTITIES (LIGHT)</div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+      <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <div style="width:520px;height:340px;border:1px solid #343128;border-radius:12px;background:#252320;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden">
+        <span style="position:absolute;inset:0;opacity:.25;background-image:radial-gradient(#4C483D 1px, transparent 1px);background-size:22px 22px"></span>
+        <span style="height:40px;padding:0 16px;border-radius:11px;border:1.5px dashed #4C483D;display:inline-flex;align-items:center;gap:8px;font:500 13px 'IBM Plex Sans',sans-serif;color:#79756A;position:relative">any status ⇄ any status</span>
+        <span style="font:600 15px 'IBM Plex Sans',sans-serif;color:#EDEBE3;position:relative">No transitions defined — everything is allowed</span>
+        <span style="font:400 12px/1.5 'IBM Plex Sans',sans-serif;color:#A6A296;max-width:360px;text-align:center;position:relative">Tickets can move between any two statuses. Add the first edge to start constraining moves.</span>
+        <button style="height:32px;padding:0 12px;border-radius:8px;border:none;background:#918AEC;color:#16143C;font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer;position:relative">＋ First transition</button>
+      </div>
+      </sc-if>
+      <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <div style="width:560px;border:1px solid #D6D3C9;border-radius:12px;background:#FFFFFF;overflow:hidden">
+        <div style="display:flex;align-items:center;gap:9px;padding:12px 16px;border-bottom:1px solid #E0DDD5"><span style="font:600 14px 'IBM Plex Sans',sans-serif;color:#25231D">Statuses</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:#918D80">same pattern: list · edit panel · archive</span></div>
+        <sc-for list="{{statuses}}" as="s" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:10px;height:42px;padding:0 16px;border-bottom:1px solid #E0DDD5">
+            <span style="color:#C9C5BA;cursor:grab">⋮⋮</span>
+            <span style="width:9px;height:9px;border-radius:{{s.dotR}};border:{{s.dotBorder}};background:{{s.dotBg}};transform:{{s.dotT}}"></span>
+            <span style="font:500 13px 'IBM Plex Sans',sans-serif;color:#25231D">{{s.name}}</span>
+            <span style="height:18px;padding:0 7px;border-radius:5px;background:{{s.kBg}};color:{{s.kFg}};font:500 10px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">{{s.kind}}</span>
+            <span style="flex:1"></span>
+            <span style="font:400 11px 'IBM Plex Mono',monospace;color:#918D80">{{s.count}} tickets</span>
+            <span style="color:#918D80">›</span>
+          </div>
+        </sc-for>
+        <div style="display:flex;align-items:center;gap:9px;padding:12px 16px;border-bottom:1px solid #E0DDD5;border-top:6px solid #F7F6F2"><span style="font:600 14px 'IBM Plex Sans',sans-serif;color:#25231D">Users</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:#918D80">humans and agents, same list</span></div>
+        <div style="display:flex;align-items:center;gap:10px;height:42px;padding:0 16px;border-bottom:1px solid #E0DDD5">
+          <span style="width:24px;height:24px;border-radius:50%;background:#DBEEF6;color:#14687E;display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Sans',sans-serif">MK</span>
+          <span style="font:500 13px 'IBM Plex Sans',sans-serif;color:#25231D">Mara K.</span>
+          <span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:#918D80">human</span><span style="color:#918D80">›</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;height:42px;padding:0 16px">
+          <span style="width:24px;height:24px;border-radius:7px;background:#E9E7FA;color:#4E46C6;display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace">CL</span>
+          <span style="font:500 13px 'IBM Plex Sans',sans-serif;color:#25231D">claude-worker</span>
+          <span style="height:16px;padding:0 6px;border-radius:4px;background:#E9E7FA;color:#4E46C6;font:500 10px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">AGENT</span>
+          <span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:#918D80">agent</span><span style="color:#918D80">›</span>
+        </div>
+      </div>
+      </sc-if>
+    </div>
+  </section>
+
+  <!-- ================= MOBILE ================= -->
+  <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+  <section data-screen-label="Settings — mobile">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:10px">MOBILE · 390 — settings become drill-down lists; graph editing stays desktop-only (view-only summary on mobile)</div>
+    <div style="width:390px;height:700px;border:1px solid #D6D3C9;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;background:#F7F6F2;color:#25231D;box-shadow:0 24px 60px rgba(28,26,20,.10)">
+      <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 12px">
+        <span style="font:600 20px 'IBM Plex Sans',sans-serif;flex:1">Settings</span>
+        <span style="height:36px;padding:0 11px;border-radius:9px;border:1px solid #E0DDD5;background:#FFFFFF;display:inline-flex;align-items:center;gap:7px;font:500 13px 'IBM Plex Sans',sans-serif"><span style="font:500 10px 'IBM Plex Mono',monospace;background:#ECEAE3;border-radius:4px;padding:2px 5px">CORE</span><span style="font-size:9px;color:#918D80">▾</span></span>
+      </div>
+      <div style="flex:1;overflow:auto;padding:0 16px 16px;display:flex;flex-direction:column;gap:8px">
+        <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:#918D80;padding:8px 4px 2px">PROJECT</div>
+        <sc-for list="{{mobileNav}}" as="m" hint-placeholder-count="6">
+          <div style="display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px;background:#FFFFFF;border:1px solid #E0DDD5;border-radius:12px">
+            <span style="font:500 14px 'IBM Plex Sans',sans-serif;flex:1">{{m.label}}</span>
+            <span style="font:400 12px 'IBM Plex Mono',monospace;color:#918D80">{{m.meta}}</span>
+            <span style="color:#918D80">›</span>
+          </div>
+        </sc-for>
+        <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:#918D80;padding:10px 4px 2px">WORKSPACE</div>
+        <div style="display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px;background:#FFFFFF;border:1px solid #E0DDD5;border-radius:12px"><span style="font:500 14px 'IBM Plex Sans',sans-serif;flex:1">Projects</span><span style="font:400 12px 'IBM Plex Mono',monospace;color:#918D80">4</span><span style="color:#918D80">›</span></div>
+        <div style="display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px;background:#FFFFFF;border:1px solid #E0DDD5;border-radius:12px"><span style="font:500 14px 'IBM Plex Sans',sans-serif;flex:1">Users</span><span style="font:400 12px 'IBM Plex Mono',monospace;color:#918D80">7</span><span style="color:#918D80">›</span></div>
+      </div>
+      <div style="border-top:1px solid #E0DDD5;background:#FFFFFF;display:flex;align-items:center;justify-content:space-around;padding:8px 10px 18px">
+        <span style="display:flex;flex-direction:column;align-items:center;gap:3px;width:56px;padding-top:5px"><span style="font:400 16px 'IBM Plex Sans',sans-serif;color:#918D80">⌂</span><span style="font:400 10px 'IBM Plex Sans',sans-serif;color:#918D80">Home</span></span>
+        <span style="display:flex;flex-direction:column;align-items:center;gap:3px;width:56px;padding-top:5px"><span style="font:400 16px 'IBM Plex Sans',sans-serif;color:#918D80">▤</span><span style="font:400 10px 'IBM Plex Sans',sans-serif;color:#918D80">Tickets</span></span>
+        <span style="width:48px;height:48px;border-radius:14px;background:#4E46C6;color:#FFFFFF;display:inline-flex;align-items:center;justify-content:center;font:400 22px 'IBM Plex Sans',sans-serif;box-shadow:0 6px 16px rgba(78,70,198,.35)">＋</span>
+        <span style="display:flex;flex-direction:column;align-items:center;gap:3px;width:56px;padding-top:5px"><span style="font:400 16px 'IBM Plex Sans',sans-serif;color:#918D80">⌕</span><span style="font:400 10px 'IBM Plex Sans',sans-serif;color:#918D80">Search</span></span>
+        <span style="display:flex;flex-direction:column;align-items:center;gap:3px;width:56px;padding-top:5px"><span style="font:400 16px 'IBM Plex Sans',sans-serif;color:#25231D">⚙</span><span style="font:500 10px 'IBM Plex Sans',sans-serif;color:#25231D">Settings</span></span>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;theme&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;both&quot;, &quot;light&quot;, &quot;dark&quot;], &quot;default&quot;: &quot;both&quot;, &quot;tsType&quot;: &quot;'both' | 'light' | 'dark'&quot;, &quot;section&quot;: &quot;Preview&quot; }
+}">
+class Component extends DCLogic {
+  renderVals() {
+    const t = this.props.theme ?? 'both';
+
+    const navProject = [
+      { label: 'Fields', count: '9', active: true },
+      { label: 'Ticket types', count: '4' },
+      { label: 'Statuses', count: '6' },
+      { label: 'Workflow', count: '8' },
+      { label: 'Link types', count: '3' },
+      { label: 'Views', count: '5' },
+    ].map(n => ({
+      ...n,
+      bg: n.active ? 'var(--in)' : 'transparent',
+      font: (n.active ? '500' : '400') + " 13px 'IBM Plex Sans',sans-serif",
+      color: n.active ? 'var(--f1)' : 'var(--f2)',
+    }));
+
+    const u = (arr) => ({
+      u1: arr[0] || '',
+      uMore: arr.length > 1 ? '+' + (arr.length - 1) : '',
+      uMoreD: arr.length > 1 ? 'inline' : 'none',
+    });
+    const fields = [
+      { name: 'Severity', key: 'severity', type: 'select', widget: 'colored badge', used: ['Bug'], opts: '4 +1', sel: true },
+      { name: 'Priority', key: 'priority', type: 'select', widget: 'colored badge', used: ['All types'], opts: '4' },
+      { name: 'Description', key: 'description', type: 'text', widget: 'markdown', used: ['All types'], opts: '—' },
+      { name: 'Assignee', key: 'assignee', type: 'select', widget: 'user', used: ['All types'], opts: 'users' },
+      { name: 'Due date', key: 'due_date', type: 'date', widget: 'relative', used: ['Task', 'Bug'], opts: '—' },
+      { name: 'Sprint', key: 'sprint', type: 'select', widget: 'badge', used: ['Task', 'Bug', 'Spike'], opts: '14' },
+      { name: 'Environment', key: 'environment', type: 'multi_select', widget: 'chips', used: ['Bug'], opts: '3' },
+      { name: 'Repro rate', key: 'repro_rate', type: 'number', widget: 'percent', used: ['Bug'], opts: '—' },
+      { name: 'Runbook URL', key: 'runbook_url', type: 'text', widget: 'link', used: ['Task'], opts: '—', archived: true },
+    ].map(f => ({
+      ...f, ...u(f.used),
+      archD: f.archived ? 'inline-flex' : 'none',
+      op: f.archived ? '.55' : '1',
+      bg: f.sel ? 'var(--acs)' : 'transparent',
+    }));
+
+    const options = [
+      { label: 'S1 · data loss', sw: '#A03028', sel: false },
+      { label: 'S2 · degraded', sw: '#A44E14', sel: true },
+      { label: 'S3 · cosmetic', sw: '#8A6A10' },
+      { label: 'S4 · nit', sw: '#5C594F' },
+    ].map(o => ({ ...o, border: o.sel ? 'var(--ac)' : 'var(--bd)', bg: o.sel ? 'var(--acs)' : 'var(--rs)' }));
+
+    const palette = [
+      '#A03028', '#A44E14', '#8A6A10', '#2E7042', '#176D5C', '#14687E',
+      '#2A5DAE', '#4A44B0', '#7B3FA0', '#A63368', '#5C594F',
+    ].map((hex, i) => ({ hex, ring: i === 1 ? '0 0 0 2px #FFFFFF, 0 0 0 3.5px #4E46C6' : 'none' }));
+
+    const sw = (on) => on
+      ? { swBg: 'var(--ac)', swKnob: '15px', swKnobC: '#16143C', reqTxtC: 'var(--f1)' }
+      : { swBg: 'var(--bs)', swKnob: '2px', swKnobC: '#1B1A17', reqTxtC: 'var(--f3)' };
+    const formFields = [
+      { name: 'Severity', type: 'select', req: true },
+      { name: 'Priority', type: 'select', req: true },
+      { name: 'Description', type: 'text · markdown', req: false },
+      { name: 'Assignee', type: 'select · user', req: false },
+      { name: 'Due date', type: 'date', req: false },
+    ].map(f => ({
+      ...f, ...sw(f.req),
+      border: '1px solid var(--bd)', shadow: 'none', tf: 'none', op: '1',
+    }));
+
+    const library = [
+      { name: 'Sprint', type: 'select' },
+      { name: 'Story points', type: 'number' },
+      { name: 'Runbook URL', type: 'text · link' },
+      { name: 'Reviewer', type: 'select · user' },
+    ];
+
+    // workflow nodes (light)
+    const dot = (kind, c) => {
+      if (kind === 'todo')    return { dotR: '50%', dotBorder: '1.5px solid ' + c, dotBg: 'transparent', dotT: 'none' };
+      if (kind === 'active')  return { dotR: '50%', dotBorder: '1.5px solid ' + c, dotBg: 'linear-gradient(90deg,' + c + ' 50%,transparent 50%)', dotT: 'none' };
+      if (kind === 'blocked') return { dotR: '1px', dotBorder: 'none', dotBg: c, dotT: 'rotate(45deg)' };
+      if (kind === 'done')    return { dotR: '50%', dotBorder: 'none', dotBg: c, dotT: 'none' };
+      return { dotR: '50%', dotBorder: '1.5px dashed ' + c, dotBg: 'transparent', dotT: 'none' };
+    };
+    const KL = { todo: ['#6E6A5E', '#EBEAE3'], active: ['#2E6FCC', '#E4EDF9'], blocked: ['#C25425', '#F8E9DF'], done: ['#2E7D4F', '#E2F0E7'], dropped: ['#9B968A', '#EFEEE8'] };
+    const nodes = [
+      { name: 'Backlog', kind: 'todo', x: 140, y: 250 },
+      { name: 'In progress', kind: 'active', x: 400, y: 140 },
+      { name: 'In review', kind: 'active', x: 660, y: 140 },
+      { name: 'Blocked', kind: 'blocked', x: 400, y: 360 },
+      { name: 'Shipped', kind: 'done', x: 916, y: 196, sel: true },
+      { name: "Won't do", kind: 'dropped', x: 916, y: 380 },
+    ].map(n => ({
+      ...n, ...dot(n.kind, KL[n.kind][0]),
+      bg: KL[n.kind][1], fg: KL[n.kind][0],
+      bc: n.sel ? '#4E46C6' : KL[n.kind][1],
+    }));
+
+    const statuses = [
+      { name: 'Backlog', kind: 'todo', count: 14 },
+      { name: 'In progress', kind: 'active', count: 9 },
+      { name: 'Blocked', kind: 'blocked', count: 3 },
+      { name: 'Shipped', kind: 'done', count: 23 },
+    ].map(s => ({ ...s, ...dot(s.kind, KL[s.kind][0]), kFg: KL[s.kind][0], kBg: KL[s.kind][1] }));
+
+    const mobileNav = [
+      { label: 'Fields', meta: '9' },
+      { label: 'Ticket types', meta: '4' },
+      { label: 'Statuses', meta: '6' },
+      { label: 'Workflow', meta: 'view only' },
+      { label: 'Link types', meta: '3' },
+      { label: 'Views', meta: '5' },
+    ];
+
+    return {
+      showLight: t !== 'dark', showDark: t !== 'light',
+      navProject, fields, options, palette, formFields, library, nodes, statuses, mobileNav,
+    };
+  }
+}
+</script>
+</body>
+</html>
