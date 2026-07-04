@@ -1,0 +1,287 @@
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import * as v from 'valibot';
+import { count, eq, sql } from 'drizzle-orm';
+import type { Db } from '@tickets/db';
+import {
+  fieldOptions,
+  fields,
+  linkTypes,
+  statusTransitions,
+  statuses,
+  ticketTypeFields,
+} from '@tickets/db';
+import { HttpError } from '../errors';
+import { parseBody } from '../utils/parse-body';
+import { parseId } from '../utils/parse-id';
+import { loadProjectVocab } from '../vocab/load-project-vocab';
+
+const createFieldSchema = v.object({
+  //
+  key: v.pipe(v.string(), v.minLength(1)),
+  label: v.pipe(v.string(), v.minLength(1)),
+  type: v.picklist(['text', 'number', 'date', 'boolean', 'json', 'select', 'multi_select']),
+  config: v.optional(v.record(v.string(), v.unknown())),
+  attach: v.optional(
+    v.array(
+      v.object({
+        //
+        typeKey: v.pipe(v.string(), v.minLength(1)),
+        required: v.optional(v.boolean()),
+      }),
+    ),
+  ),
+});
+
+const patchArchivableSchema = v.object({
+  //
+  label: v.optional(v.pipe(v.string(), v.minLength(1))),
+  config: v.optional(v.record(v.string(), v.unknown())),
+  archived: v.optional(v.boolean()),
+});
+
+const createOptionSchema = v.object({
+  //
+  value: v.pipe(v.string(), v.minLength(1)),
+  label: v.pipe(v.string(), v.minLength(1)),
+  config: v.optional(v.record(v.string(), v.unknown())),
+});
+
+const createStatusSchema = v.object({
+  //
+  key: v.pipe(v.string(), v.minLength(1)),
+  label: v.pipe(v.string(), v.minLength(1)),
+  kind: v.picklist(['todo', 'active', 'blocked', 'done', 'dropped']),
+  config: v.optional(v.record(v.string(), v.unknown())),
+});
+
+const createTransitionSchema = v.object({
+  //
+  fromStatusKey: v.nullable(v.string()),
+  toStatusKey: v.pipe(v.string(), v.minLength(1)),
+  ticketTypeKey: v.optional(v.nullable(v.string())),
+});
+
+const createLinkTypeSchema = v.object({
+  //
+  key: v.pipe(v.string(), v.minLength(1)),
+  label: v.pipe(v.string(), v.minLength(1)),
+  inverseLabel: v.pipe(v.string(), v.minLength(1)),
+  directional: v.boolean(),
+});
+
+export function registerVocabularyRoutes(app: FastifyInstance, context: { db: Db }) {
+  const { db } = context;
+
+  const createField = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { key } = request.params as { key: string };
+    const body = parseBody(createFieldSchema, request.body);
+    const vocab = await loadProjectVocab(db, { key });
+    const created = await db.transaction(async (tx) => {
+      const inserted = await tx
+        .insert(fields)
+        .values({
+          projectId: vocab.project.id,
+          key: body.key,
+          label: body.label,
+          type: body.type,
+          config: body.config ?? {},
+        })
+        .returning();
+      const field = inserted[0];
+      if (!field) {
+        throw new HttpError(500, 'field insert returned no row');
+      }
+      for (const attachment of body.attach ?? []) {
+        const type = vocab.typeByKey.get(attachment.typeKey);
+        if (!type) {
+          throw new HttpError(400, `unknown ticket type "${attachment.typeKey}"`);
+        }
+        const positionRows = await tx
+          .select({ value: count() })
+          .from(ticketTypeFields)
+          .where(eq(ticketTypeFields.ticketTypeId, type.id));
+        await tx.insert(ticketTypeFields).values({
+          ticketTypeId: type.id,
+          fieldId: field.id,
+          position: positionRows[0]?.value ?? 0,
+          required: attachment.required ?? false,
+        });
+      }
+      return field;
+    });
+    reply.status(201).send(created);
+  };
+
+  const patchField = async (request: FastifyRequest, reply: FastifyReply) => {
+    const id = parseId((request.params as { id: string }).id);
+    const body = parseBody(patchArchivableSchema, request.body);
+    const rows = await db.select().from(fields).where(eq(fields.id, id));
+    const field = rows[0];
+    if (!field) {
+      throw new HttpError(404, 'field not found');
+    }
+    if (field.system && body.archived) {
+      throw new HttpError(422, 'system fields cannot be archived');
+    }
+    const updated = await db
+      .update(fields)
+      .set({
+        ...(body.label !== undefined ? { label: body.label } : {}),
+        ...(body.config !== undefined ? { config: body.config } : {}),
+        ...(body.archived !== undefined ? { archivedAt: body.archived ? sql`now()` : null } : {}),
+      })
+      .where(eq(fields.id, id))
+      .returning();
+    reply.send(updated[0]);
+  };
+
+  const createOption = async (request: FastifyRequest, reply: FastifyReply) => {
+    const fieldId = parseId((request.params as { id: string }).id);
+    const body = parseBody(createOptionSchema, request.body);
+    const fieldRows = await db.select().from(fields).where(eq(fields.id, fieldId));
+    const field = fieldRows[0];
+    if (!field) {
+      throw new HttpError(404, 'field not found');
+    }
+    if (field.type !== 'select' && field.type !== 'multi_select') {
+      throw new HttpError(422, `field "${field.key}" does not take options`);
+    }
+    const positionRows = await db
+      .select({ value: count() })
+      .from(fieldOptions)
+      .where(eq(fieldOptions.fieldId, fieldId));
+    const inserted = await db
+      .insert(fieldOptions)
+      .values({
+        fieldId,
+        value: body.value,
+        label: body.label,
+        config: body.config ?? {},
+        position: positionRows[0]?.value ?? 0,
+      })
+      .returning();
+    reply.status(201).send(inserted[0]);
+  };
+
+  const patchOption = async (request: FastifyRequest, reply: FastifyReply) => {
+    const id = parseId((request.params as { id: string }).id);
+    const body = parseBody(patchArchivableSchema, request.body);
+    const updated = await db
+      .update(fieldOptions)
+      .set({
+        ...(body.label !== undefined ? { label: body.label } : {}),
+        ...(body.config !== undefined ? { config: body.config } : {}),
+        ...(body.archived !== undefined ? { archivedAt: body.archived ? sql`now()` : null } : {}),
+      })
+      .where(eq(fieldOptions.id, id))
+      .returning();
+    if (!updated[0]) {
+      throw new HttpError(404, 'option not found');
+    }
+    reply.send(updated[0]);
+  };
+
+  const createStatus = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { key } = request.params as { key: string };
+    const body = parseBody(createStatusSchema, request.body);
+    const vocab = await loadProjectVocab(db, { key });
+    const inserted = await db
+      .insert(statuses)
+      .values({
+        projectId: vocab.project.id,
+        key: body.key,
+        label: body.label,
+        kind: body.kind,
+        config: body.config ?? {},
+        position: vocab.statuses.length,
+      })
+      .returning();
+    reply.status(201).send(inserted[0]);
+  };
+
+  const patchStatus = async (request: FastifyRequest, reply: FastifyReply) => {
+    const id = parseId((request.params as { id: string }).id);
+    const body = parseBody(patchArchivableSchema, request.body);
+    const updated = await db
+      .update(statuses)
+      .set({
+        ...(body.label !== undefined ? { label: body.label } : {}),
+        ...(body.config !== undefined ? { config: body.config } : {}),
+        ...(body.archived !== undefined ? { archivedAt: body.archived ? sql`now()` : null } : {}),
+      })
+      .where(eq(statuses.id, id))
+      .returning();
+    if (!updated[0]) {
+      throw new HttpError(404, 'status not found');
+    }
+    reply.send(updated[0]);
+  };
+
+  const createTransition = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { key } = request.params as { key: string };
+    const body = parseBody(createTransitionSchema, request.body);
+    const vocab = await loadProjectVocab(db, { key });
+    const resolveStatus = (statusKey: string) => {
+      const status = vocab.statusByKey.get(statusKey);
+      if (!status) {
+        throw new HttpError(400, `unknown status "${statusKey}"`);
+      }
+      return status;
+    };
+    const fromStatusId = body.fromStatusKey === null ? null : resolveStatus(body.fromStatusKey).id;
+    const toStatusId = resolveStatus(body.toStatusKey).id;
+    let ticketTypeId: number | null = null;
+    if (body.ticketTypeKey) {
+      const type = vocab.typeByKey.get(body.ticketTypeKey);
+      if (!type) {
+        throw new HttpError(400, `unknown ticket type "${body.ticketTypeKey}"`);
+      }
+      ticketTypeId = type.id;
+    }
+    const inserted = await db
+      .insert(statusTransitions)
+      .values({ fromStatusId, toStatusId, ticketTypeId })
+      .returning();
+    reply.status(201).send(inserted[0]);
+  };
+
+  const deleteTransition = async (request: FastifyRequest, reply: FastifyReply) => {
+    const id = parseId((request.params as { id: string }).id);
+    const deleted = await db
+      .delete(statusTransitions)
+      .where(eq(statusTransitions.id, id))
+      .returning();
+    if (!deleted[0]) {
+      throw new HttpError(404, 'transition not found');
+    }
+    reply.send({ deleted: true });
+  };
+
+  const createLinkType = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { key } = request.params as { key: string };
+    const body = parseBody(createLinkTypeSchema, request.body);
+    const vocab = await loadProjectVocab(db, { key });
+    const inserted = await db
+      .insert(linkTypes)
+      .values({
+        projectId: vocab.project.id,
+        key: body.key,
+        label: body.label,
+        inverseLabel: body.inverseLabel,
+        directional: body.directional,
+        position: vocab.linkTypes.length,
+      })
+      .returning();
+    reply.status(201).send(inserted[0]);
+  };
+
+  app.post('/api/projects/:key/fields', createField);
+  app.patch('/api/fields/:id', patchField);
+  app.post('/api/fields/:id/options', createOption);
+  app.patch('/api/options/:id', patchOption);
+  app.post('/api/projects/:key/statuses', createStatus);
+  app.patch('/api/statuses/:id', patchStatus);
+  app.post('/api/projects/:key/status-transitions', createTransition);
+  app.delete('/api/status-transitions/:id', deleteTransition);
+  app.post('/api/projects/:key/link-types', createLinkType);
+}
