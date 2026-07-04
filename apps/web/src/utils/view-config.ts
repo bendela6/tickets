@@ -12,11 +12,43 @@ export type ViewSort = {
   dir: 'asc' | 'desc';
 } | null;
 
+export type FilterRule = {
+  fieldId: number;
+  op: 'any-of' | 'none-of' | 'contains' | 'empty' | 'not-empty' | 'kinds';
+  values: string[];
+};
+
 export type ViewConfig = {
   columns: ViewColumn[];
   sort: ViewSort;
-  filters: Record<string, unknown>;
+  filters: { rules: FilterRule[] };
 };
+
+const FILTER_OPS = new Set(['any-of', 'none-of', 'contains', 'empty', 'not-empty', 'kinds']);
+
+export function normalizeFilterRules(raw: unknown): FilterRule[] {
+  const record = raw !== null && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const rawRules = Array.isArray(record.rules) ? record.rules : Array.isArray(raw) ? raw : [];
+  const rules: FilterRule[] = [];
+  for (const entry of rawRules) {
+    if (entry === null || typeof entry !== 'object') {
+      continue;
+    }
+    const rule = entry as Record<string, unknown>;
+    if (
+      typeof rule.fieldId === 'number' &&
+      typeof rule.op === 'string' &&
+      FILTER_OPS.has(rule.op)
+    ) {
+      rules.push({
+        fieldId: rule.fieldId,
+        op: rule.op as FilterRule['op'],
+        values: Array.isArray(rule.values) ? rule.values.map((value) => String(value)) : [],
+      });
+    }
+  }
+  return rules;
+}
 
 // Views store loose jsonb; normalize to something the table can trust. A view
 // with no columns falls back to number + type + every unarchived field.
@@ -29,20 +61,15 @@ export function normalizeViewConfig(raw: unknown, board: Board): ViewConfig {
       continue;
     }
     const column = entry as Record<string, unknown>;
+    const shared = {
+      width: typeof column.width === 'number' ? column.width : undefined,
+      hidden: column.hidden === true,
+    };
     if (column.source === 'number' || column.source === 'type' || column.source === 'progress') {
-      columns.push({
-        source: column.source,
-        width: typeof column.width === 'number' ? column.width : undefined,
-        hidden: column.hidden === true,
-      });
+      columns.push({ source: column.source, ...shared });
     }
     if (column.source === 'field' && typeof column.fieldId === 'number') {
-      columns.push({
-        source: 'field',
-        fieldId: column.fieldId,
-        width: typeof column.width === 'number' ? column.width : undefined,
-        hidden: column.hidden === true,
-      });
+      columns.push({ source: 'field', fieldId: column.fieldId, ...shared });
     }
   }
   if (columns.length === 0) {
@@ -70,9 +97,5 @@ export function normalizeViewConfig(raw: unknown, board: Board): ViewConfig {
           dir: rawSort.dir === 'desc' ? 'desc' : 'asc',
         }
       : null;
-  const filters =
-    record.filters !== null && typeof record.filters === 'object'
-      ? (record.filters as Record<string, unknown>)
-      : {};
-  return { columns, sort, filters };
+  return { columns, sort, filters: { rules: normalizeFilterRules(record.filters) } };
 }
