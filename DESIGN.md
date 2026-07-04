@@ -229,8 +229,9 @@ Indexes: `tickets(project_id, type_id)`, `tickets(parent_id)`,
 
 - **New ticket**: pick type → form renders that type's fields from
   `ticket_type_fields` order, enforcing its `required` flags.
-- **Changing type**: values for fields the new type doesn't include are kept but
-  hidden, never deleted.
+- **Type is immutable after creation** — pick the right type up front; the API
+  rejects `typeKey` on PATCH. (The value store would tolerate a change —
+  kept-but-hidden values — but the product forbids it; re-create instead.)
 - **Subtasks**: quick-add in the drawer creates a child ticket (type `subtask`,
   `parent_id` set) with just a title; it's a real ticket — open it to add anything.
   Progress = children with done-kind status / children not dropped-kind.
@@ -250,14 +251,46 @@ Indexes: `tickets(project_id, type_id)`, `tickets(parent_id)`,
   create/PATCH (which also makes parent cycles impossible).
 - **Link cycles** — creating a directional link (blocks) that would close a cycle
   is rejected at write time (cheap BFS; projects are small).
-- **Type change vs required** — allowed even if the new type's required fields are
-  empty: required gates creation (and later transitions), not type switches.
+- **Type is immutable** — PATCH rejects `typeKey`; a ticket created as the wrong
+  type is re-created, not converted. `required` gates creation (and later,
+  transitions).
 - **Concurrent edits** — PATCH carries expectedUpdatedAt; stale → 409 and the UI
   re-fetches. Applies to humans and agents equally. Implementation note (verified):
   compare as text (`updated_at::text`) end to end — a timestamptz round-tripped
   through a JS Date loses microseconds and never matches.
 - **Deletion** — vocabulary rows and tickets archive; hard delete is reserved for
   rows nothing references yet.
+
+## Web UI architecture (v1)
+
+Same visual language as the tasks dashboard, but dynamic end to end.
+
+- **Nav shell** — projects list (switcher + create), and per-project **view tabs**;
+  a view = named { columns, sort, filters } stored in the `views` table. Views are
+  creatable/renamable/archivable from the UI. Header: project switcher, user
+  picker (sets `actorId` on every write), theme toggle, + New ticket.
+- **Table** — light, view-config-driven: resize / reorder / show-hide columns,
+  sort, filter; every layout change PATCHes the view config (debounced), so a
+  view looks the same after refresh on any machine. Inline status editing via
+  the badge (targets filtered by the transition graph). No virtualization at
+  current scale; revisit past a few thousand rows.
+- **Field display config** — one renderer registry decides how a field shows:
+  storage `type` picks the base renderer (select/status → colored badge, text →
+  plain, date → formatted, boolean → check, json → code chip), `fields.config`
+  refines it (`widget`: markdown editor vs input, etc.), option/status `config`
+  supplies colors. Table cells and drawer widgets share the registry.
+- **Ticket detail** — drawer for peeking (board stays visible) AND a dedicated
+  page for focus/deep-linking; both render one shared detail component:
+  per-type field form, children list with quick-add (child = real ticket,
+  "← parent" breadcrumb), links (label/inverse_label directions), comments,
+  activity feed. No type switching.
+- **Filters** — a per-view filter builder: pick field → operator → value(s);
+  status filters can target kinds or specific statuses. Ad-hoc tweaks live in
+  the URL until saved into the view.
+- **State persistence map** — URL: project, view, open ticket (`?t=NUM`), ad-hoc
+  filter overrides; full page at `/p/:project/t/:number`. DB (`views.config`):
+  columns, widths, order, visibility, sort, filters. localStorage: theme,
+  current user, last project. Refresh always lands where you were.
 
 ## Seed (per new project)
 
@@ -295,8 +328,10 @@ Indexes: `tickets(project_id, type_id)`, `tickets(parent_id)`,
 - `GET  /api/projects/:key/board` — types + fields (with options) + statuses +
   link types + views + assembled tickets (incl. children) + comments, one payload
 - `POST /api/projects/:key/tickets` — `{ typeKey, parentId?, values: {...} }`
-- `PATCH /api/tickets/:id` — `{ typeKey?, parentId?, values?: {...} }`; each value
-  validated against its field's type/options/statuses
+- `PATCH /api/tickets/:id` — `{ parentId?, archived?, values?: {...} }`; each value
+  validated against its field's type/options/statuses; type is immutable
+- `POST /api/projects/:key/views` · `PATCH /api/views/:id` · archive — view CRUD
+  with config validation (columns/sort/filters reference fields by id)
 - `POST /api/tickets/:id/comments` — `{ authorId, body }`
 - `POST /api/tickets/:id/links` · `DELETE /api/links/:id`
 - `GET/POST /api/users`
@@ -318,12 +353,12 @@ List endpoints use the `{ data, meta: { skip, take, total, sort } }` envelope.
    seed factory (types, statuses, system fields, link types, default view).
 3. **Import script** — one-shot from `items-core/tasks/`; verify counts.
 4. **`apps/api`** — Fastify routes above; validated with curl before any UI.
-5. **`apps/web`** — field-driven port of the dashboard: tiles (status kinds),
-   filter chips (select/status fields), table with view-driven columns
-   (select/status → colored badge, text → plain, date → formatted) + progress
-   rollup column, drawer (per-type field form, children as subtask list, comments,
-   links, activity feed), new-ticket dialog (type picker → dynamic form), project
-   switcher, user picker. TanStack Query with ~10s polling.
+5. **`apps/web`** — foundation done (scaffold, tokens, data layer). The rest is
+   split per the Web UI architecture section: API views CRUD + immutable type,
+   routing + persistent state, nav shell with view tabs, renderer registry,
+   detail drawer + page, new-ticket dialog — plus a dedicated **table epic**
+   (foundation decision, view-driven core, resize/reorder/show-hide, sort,
+   filter builder). Tracked as individual tickets in the items-core tracker.
 6. **Cutover** — run side by side against imported data, compare, freeze
    `tasks/tasks.json` as archive.
 7. **Later phases** — agent runner (adds a `runs` table + jsonl logs + edit locks),
