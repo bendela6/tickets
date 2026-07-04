@@ -4,7 +4,8 @@ export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> 
   const response = await fetch(url, {
     ...init,
     headers: {
-      'content-type': 'application/json',
+      // only claim a JSON body when there is one — Fastify 400s otherwise
+      ...(init?.body !== undefined ? { 'content-type': 'application/json' } : {}),
       ...(init?.headers ?? {}),
     },
   });
