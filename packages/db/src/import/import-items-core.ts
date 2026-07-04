@@ -212,25 +212,23 @@ for (const task of payload.tasks) {
       if (!mappedStatus) {
         throw new Error(`unmapped subtask status "${subtask.status}" on ${task.id}`);
       }
-      await tx
-        .insert(ticketValues)
-        .values([
-          { ticketId: child.id, fieldId: requireField('title').id, valueText: subtask.title },
-          {
-            ticketId: child.id,
-            fieldId: requireField('status').id,
-            statusId: requireStatus(mappedStatus).id,
-          },
-          ...(subtask.note
-            ? [
-                {
-                  ticketId: child.id,
-                  fieldId: requireField('description').id,
-                  valueText: subtask.note,
-                },
-              ]
-            : []),
-        ]);
+      await tx.insert(ticketValues).values([
+        { ticketId: child.id, fieldId: requireField('title').id, valueText: subtask.title },
+        {
+          ticketId: child.id,
+          fieldId: requireField('status').id,
+          statusId: requireStatus(mappedStatus).id,
+        },
+        ...(subtask.note
+          ? [
+              {
+                ticketId: child.id,
+                fieldId: requireField('description').id,
+                valueText: subtask.note,
+              },
+            ]
+          : []),
+      ]);
       await tx.insert(ticketEvents).values({
         ticketId: child.id,
         actorId: claudeUserId,

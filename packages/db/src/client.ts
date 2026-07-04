@@ -11,3 +11,7 @@ export function createDbClient({ max = 10 }: { max?: number } = {}) {
 
 export type DbClient = ReturnType<typeof createDbClient>;
 export type Db = DbClient['db'];
+// what a db.transaction callback receives — no $client on it
+export type DbTransaction = Parameters<Parameters<Db['transaction']>[0]>[0];
+// accept either the root handle or a transaction handle
+export type DbExecutor = Db | DbTransaction;
