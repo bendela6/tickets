@@ -6,6 +6,7 @@ import { registerLinksRoutes } from './routes/links.routes';
 import { registerProjectsRoutes } from './routes/projects.routes';
 import { registerTicketsRoutes } from './routes/tickets.routes';
 import { registerUsersRoutes } from './routes/users.routes';
+import { registerViewsRoutes } from './routes/views.routes';
 import { registerVocabularyRoutes } from './routes/vocabulary.routes';
 
 export function buildApp(context: { db: Db }) {
@@ -25,6 +26,7 @@ export function buildApp(context: { db: Db }) {
   registerCommentsRoutes(app, context);
   registerLinksRoutes(app, context);
   registerUsersRoutes(app, context);
+  registerViewsRoutes(app, context);
   registerVocabularyRoutes(app, context);
 
   return app;

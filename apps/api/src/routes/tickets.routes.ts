@@ -22,11 +22,10 @@ const createTicketSchema = v.object({
   values: v.record(v.string(), v.unknown()),
 });
 
-const patchTicketSchema = v.object({
+const patchTicketSchema = v.strictObject({
   //
   actorId: v.pipe(v.number(), v.integer()),
   expectedUpdatedAt: v.pipe(v.string(), v.minLength(1)),
-  typeKey: v.optional(v.pipe(v.string(), v.minLength(1))),
   parentId: v.optional(v.nullable(v.pipe(v.number(), v.integer()))),
   archived: v.optional(v.boolean()),
   values: v.optional(v.record(v.string(), v.unknown())),
@@ -161,23 +160,8 @@ export function registerTicketsRoutes(app: FastifyInstance, context: { db: Db })
         throw new HttpError(409, 'ticket changed since you loaded it — refresh and retry');
       }
 
-      let typeId = ticket.typeId;
-      if (body.typeKey !== undefined) {
-        const nextType = vocab.typeByKey.get(body.typeKey);
-        if (!nextType || nextType.archivedAt) {
-          throw new HttpError(400, `unknown ticket type "${body.typeKey}"`);
-        }
-        if (nextType.id !== typeId) {
-          await tx.update(tickets).set({ typeId: nextType.id }).where(eq(tickets.id, id));
-          await writeEvent(tx, {
-            ticketId: id,
-            actorId: body.actorId,
-            kind: 'type-changed',
-            payload: { from: vocab.typeById.get(typeId)?.key, to: nextType.key },
-          });
-          typeId = nextType.id;
-        }
-      }
+      // ticket type is immutable: typeId only ever comes from the loaded row
+      const typeId = ticket.typeId;
 
       if (body.parentId !== undefined && body.parentId !== ticket.parentId) {
         if (body.parentId !== null) {
