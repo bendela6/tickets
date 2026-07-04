@@ -1,14 +1,6 @@
+import { RouterProvider } from '@tanstack/react-router';
+import { router } from './router';
+
 export function App() {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-      }}
-    >
-      <p>tickets — UI under construction</p>
-    </div>
-  );
+  return <RouterProvider router={router} />;
 }
