@@ -292,6 +292,30 @@ Same visual language as the tasks dashboard, but dynamic end to end.
   columns, widths, order, visibility, sort, filters. localStorage: theme,
   current user, last project. Refresh always lands where you were.
 
+## MCP server (planned — epic tickets-mcp)
+
+`apps/mcp` (@tickets/mcp): a stdio MCP server that talks to the **HTTP API only**
+(never the DB) — validation, events, transitions, and future run-locks stay
+enforced in one place, and every MCP mutation shows up in activity feeds.
+
+- **Config** — `TICKETS_API_URL` (default http://127.0.0.1:4600) and
+  `TICKETS_ACTOR` (default `claude`): resolved to a user id at startup (created
+  with kind `agent` if missing), stamped as `actorId` on every write.
+- **Addressing** — tools speak project keys and ticket numbers (TASK-042 style),
+  never internal ids; the server resolves them.
+- **Read tools** — `list_projects`; `get_board` (token-lean: vocabulary summary +
+  ticket rows without descriptions/comments); `get_ticket` (full: values,
+  comments, links, children, recent events); `search_tickets` (query + status
+  kind / epic / type filters evaluated over the board); `list_ticket_events`.
+- **Write tools** — `create_ticket`, `update_ticket` (fetches fresh `updatedAt`
+  itself and retries once on 409 — agents never see the lock plumbing),
+  `add_comment`, `link_tickets`, `remove_link`.
+- **SDK decision (gate)** — official `@modelcontextprotocol/sdk` (+ zod for tool
+  schemas; recommended) vs hand-rolled JSON-RPC over stdio (zero deps, ~200
+  lines, brittle against protocol evolution).
+- **Phase 2** — vocabulary/view management tools, streamable-HTTP transport,
+  runner integration: solve-ticket agents get this MCP instead of raw curl.
+
 ## Seed (per new project)
 
 - Ticket types: `task` (position 0), `subtask` (position 1).
@@ -361,7 +385,10 @@ List endpoints use the `{ data, meta: { skip, take, total, sort } }` envelope.
    filter builder). Tracked as individual tickets in the items-core tracker.
 6. **Cutover** — run side by side against imported data, compare, freeze
    `tasks/tasks.json` as archive.
-7. **Later phases** — agent runner (adds a `runs` table + jsonl logs + edit locks),
+7. **MCP server** (epic tickets-mcp) — stdio MCP over the HTTP API so any Claude
+   session can read/write the tracker with attributed actions; prerequisite for
+   the runner port, whose headless agents will use it instead of curl.
+8. **Later phases** — agent runner (adds a `runs` table + jsonl logs + edit locks),
    field/status/view management UI, more field types (user, relation, url),
    auth on top of `users`.
 
