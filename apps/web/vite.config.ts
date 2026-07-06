@@ -5,7 +5,9 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    port: 4610,
+    // 4610 by default; during the redesign the dockerized web owns 4610, so the
+    // dev server runs on WEB_DEV_PORT=4620 and proxies /api to the docker api.
+    port: Number(process.env.WEB_DEV_PORT ?? 4610),
     strictPort: true,
     proxy: {
       '/api': {
