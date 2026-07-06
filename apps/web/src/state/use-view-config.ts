@@ -12,7 +12,14 @@ export function useViewConfig(board: Board | undefined, view: View | undefined) 
     () =>
       board
         ? normalizeViewConfig(view?.config ?? {}, board)
-        : ({ columns: [], sort: null, filters: { rules: [] } } as ViewConfig),
+        : ({
+            columns: [],
+            sort: null,
+            filters: { rules: [] },
+            mode: 'table',
+            density: 'comfortable',
+            kpi: true,
+          } as ViewConfig),
     [view, board],
   );
   const [local, setLocal] = useState<ViewConfig | null>(null);

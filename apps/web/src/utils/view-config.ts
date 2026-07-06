@@ -18,10 +18,19 @@ export type FilterRule = {
   values: string[];
 };
 
+export type ViewMode = 'table' | 'board';
+export type ViewDensity = 'comfortable' | 'compact';
+
 export type ViewConfig = {
   columns: ViewColumn[];
   sort: ViewSort;
   filters: { rules: FilterRule[] };
+  /** Renderer for the board area. Defaults to 'table'. */
+  mode: ViewMode;
+  /** Table row density. Defaults to 'comfortable'. */
+  density: ViewDensity;
+  /** Whether the KPI strip is shown. Defaults to true. */
+  kpi: boolean;
 };
 
 const FILTER_OPS = new Set(['any-of', 'none-of', 'contains', 'empty', 'not-empty', 'kinds']);
@@ -97,5 +106,12 @@ export function normalizeViewConfig(raw: unknown, board: Board): ViewConfig {
           dir: rawSort.dir === 'desc' ? 'desc' : 'asc',
         }
       : null;
-  return { columns, sort, filters: { rules: normalizeFilterRules(record.filters) } };
+  return {
+    columns,
+    sort,
+    filters: { rules: normalizeFilterRules(record.filters) },
+    mode: record.mode === 'board' ? 'board' : 'table',
+    density: record.density === 'compact' ? 'compact' : 'comfortable',
+    kpi: record.kpi !== false,
+  };
 }
