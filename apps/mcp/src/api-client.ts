@@ -10,14 +10,24 @@ export class ApiError extends Error {
 }
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(environment.apiUrl + path, {
-    ...init,
-    headers: {
-      // only claim a JSON body when there is one — Fastify 400s otherwise
-      ...(init?.body !== undefined ? { 'content-type': 'application/json' } : {}),
-      ...(init?.headers ?? {}),
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(environment.apiUrl + path, {
+      ...init,
+      headers: {
+        // only claim a JSON body when there is one — Fastify 400s otherwise
+        ...(init?.body !== undefined ? { 'content-type': 'application/json' } : {}),
+        ...(init?.headers ?? {}),
+      },
+    });
+  } catch (error) {
+    // Network-level failure: no HTTP response at all, hence status 0.
+    throw new ApiError(
+      0,
+      `tickets API unreachable at ${environment.apiUrl} — is the tickets stack running ` +
+        `("docker compose up" in the tickets repo)? (${(error as Error).message})`,
+    );
+  }
   const text = await response.text();
   if (!response.ok) {
     let message = `request failed with status ${response.status}`;

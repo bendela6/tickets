@@ -22,13 +22,14 @@ export function registerLinkTickets(server: McpServer, context: ToolContext) {
     },
     ({ projectKey, linkTypeKey, sourceNumber, targetNumber }) =>
       runTool(async () => {
+        const { actorId } = await context.getActor();
         const board = await loadBoard(projectKey);
         const source = resolveTicket(board, sourceNumber);
         const target = resolveTicket(board, targetNumber);
         await apiFetch('/api/links', {
           method: 'POST',
           body: JSON.stringify({
-            actorId: context.actorId,
+            actorId,
             linkTypeKey,
             sourceTicketId: source.id,
             targetTicketId: target.id,

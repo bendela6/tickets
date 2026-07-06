@@ -20,11 +20,12 @@ export function registerAddComment(server: McpServer, context: ToolContext) {
     },
     ({ projectKey, ticketNumber, body }) =>
       runTool(async () => {
+        const { actorId } = await context.getActor();
         const board = await loadBoard(projectKey);
         const ticket = resolveTicket(board, ticketNumber);
         await apiFetch(`/api/tickets/${ticket.id}/comments`, {
           method: 'POST',
-          body: JSON.stringify({ authorId: context.actorId, body }),
+          body: JSON.stringify({ authorId: actorId, body }),
         });
         return toText({ commented: true, ticketNumber });
       }),

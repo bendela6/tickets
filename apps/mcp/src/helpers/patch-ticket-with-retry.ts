@@ -1,5 +1,4 @@
 import { ApiError, apiFetch } from '../api-client';
-import type { ToolContext } from '../actor';
 import { loadBoard } from './load-board';
 import { resolveTicket } from './resolve-ticket';
 
@@ -7,7 +6,7 @@ import { resolveTicket } from './resolve-ticket';
 // a 409 (someone moved the ticket between our read and write) retry exactly
 // once with the newer timestamp.
 export async function patchTicketWithRetry(
-  context: ToolContext,
+  actorId: number,
   projectKey: string,
   ticketNumber: number,
   body: Record<string, unknown>,
@@ -21,7 +20,7 @@ export async function patchTicketWithRetry(
         method: 'PATCH',
         body: JSON.stringify({
           ...body,
-          actorId: context.actorId,
+          actorId,
           expectedUpdatedAt: ticket.updatedAt,
         }),
       });

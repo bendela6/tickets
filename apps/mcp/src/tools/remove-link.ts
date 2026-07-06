@@ -21,6 +21,7 @@ export function registerRemoveLink(server: McpServer, context: ToolContext) {
     },
     ({ projectKey, linkTypeKey, sourceNumber, targetNumber }) =>
       runTool(async () => {
+        const { actorId } = await context.getActor();
         const board = await loadBoard(projectKey);
         const source = resolveTicket(board, sourceNumber);
         const target = resolveTicket(board, targetNumber);
@@ -37,7 +38,7 @@ export function registerRemoveLink(server: McpServer, context: ToolContext) {
         if (!link) {
           throw new Error(`no ${linkTypeKey} link from ${sourceNumber} to ${targetNumber}`);
         }
-        await apiFetch(`/api/links/${link.id}?actorId=${context.actorId}`, { method: 'DELETE' });
+        await apiFetch(`/api/links/${link.id}?actorId=${actorId}`, { method: 'DELETE' });
         return toText({ removed: true });
       }),
   );
