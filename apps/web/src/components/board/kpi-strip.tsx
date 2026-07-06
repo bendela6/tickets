@@ -13,30 +13,15 @@ const KIND_ORDER: { kind: StatusKind; label: string; textClass: string }[] = [
 
 // Per-kind count tiles per docs/design/03-project-board.html lines 116–125;
 // the trailing × hides the strip (persisted as `kpi: false` in the view
-// config, re-enabled from the Columns popover).
-export function KpiStrip({
-  tickets,
-  indexes,
+// config, re-enabled from the Columns popover). Presentational half: callers
+// that span several boards (the all-tickets screen) pass precomputed counts.
+export function KpiTiles({
+  counts,
   onHide,
 }: {
-  tickets: BoardTicket[];
-  indexes: BoardIndexes;
+  counts: Record<StatusKind, number>;
   onHide: () => void;
 }) {
-  const byKind: Record<StatusKind, number> = {
-    todo: 0,
-    active: 0,
-    blocked: 0,
-    done: 0,
-    dropped: 0,
-  };
-  for (const ticket of tickets) {
-    const raw = indexes.statusField ? ticket.values[indexes.statusField.key] : undefined;
-    const kind =
-      (typeof raw === 'string' ? indexes.statusByKey.get(raw)?.kind : undefined) ?? 'todo';
-    byKind[kind] += 1;
-  }
-
   return (
     <div className="mb-3.5 flex shrink-0 gap-2.5">
       {KIND_ORDER.map(({ kind, label, textClass }) => (
@@ -48,7 +33,7 @@ export function KpiStrip({
             <KindGlyph kind={kind} />
           </span>
           <span className="font-mono text-[18px] leading-none font-semibold text-ink">
-            {byKind[kind]}
+            {counts[kind]}
           </span>
           <span className="font-sans text-meta text-ink-2">{label}</span>
         </div>
@@ -64,4 +49,30 @@ export function KpiStrip({
       </button>
     </div>
   );
+}
+
+/** Single-board variant: derives the per-kind counts from the board's tickets. */
+export function KpiStrip({
+  tickets,
+  indexes,
+  onHide,
+}: {
+  tickets: BoardTicket[];
+  indexes: BoardIndexes;
+  onHide: () => void;
+}) {
+  const counts: Record<StatusKind, number> = {
+    todo: 0,
+    active: 0,
+    blocked: 0,
+    done: 0,
+    dropped: 0,
+  };
+  for (const ticket of tickets) {
+    const raw = indexes.statusField ? ticket.values[indexes.statusField.key] : undefined;
+    const kind =
+      (typeof raw === 'string' ? indexes.statusByKey.get(raw)?.kind : undefined) ?? 'todo';
+    counts[kind] += 1;
+  }
+  return <KpiTiles counts={counts} onHide={onHide} />;
 }
