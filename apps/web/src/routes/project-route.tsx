@@ -47,16 +47,13 @@ function ProjectLayout() {
             activeViewId={childParams.viewId ? Number(childParams.viewId) : null}
           />
           <Outlet />
-          {/* Legacy dialog keeps its globals.css styling until Phase 5. */}
-          <div className="wrap">
-            <NewTicketDialog
-              projectKey={projectKey}
-              board={board}
-              indexes={indexes}
-              open={dialogOpen}
-              onClose={() => setDialogOpen(false)}
-            />
-          </div>
+          <NewTicketDialog
+            projectKey={projectKey}
+            board={board}
+            indexes={indexes}
+            open={dialogOpen}
+            onClose={() => setDialogOpen(false)}
+          />
         </div>
       )}
     </AppShell>

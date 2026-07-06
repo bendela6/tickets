@@ -3,6 +3,8 @@ import type { Board, BoardTicket } from '../api/types';
 import type { BoardIndexes } from '../utils/index-board';
 import { TicketDetail } from './ticket-detail';
 
+// Right-side peek panel over the board: scrim + fixed full-height drawer.
+// Esc closes; the board behind stays mounted.
 export function TicketDrawer({
   projectKey,
   board,
@@ -28,9 +30,14 @@ export function TicketDrawer({
 
   return (
     <>
-      <div className="overlay open" onClick={onClose} />
-      <aside className="drawer open" aria-label="Ticket detail">
+      <div aria-hidden className="fixed inset-0 z-40 bg-black/20" onClick={onClose} />
+      <aside
+        aria-label="Ticket detail"
+        className="fixed inset-y-0 right-0 z-40 flex w-155 max-w-[calc(100vw-3rem)] flex-col border-l border-hairline bg-raised font-sans text-ink shadow-lg"
+      >
+        {/* Keyed so switching tickets in-place resets edit drafts and tab state. */}
         <TicketDetail
+          key={ticket.id}
           projectKey={projectKey}
           board={board}
           indexes={indexes}
