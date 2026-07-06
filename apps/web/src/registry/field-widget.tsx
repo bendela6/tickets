@@ -1,19 +1,27 @@
 import { useState } from 'react';
 import type { Board, BoardTicket, Field } from '../api/types';
 import { MarkdownEditor } from '../components/markdown-editor';
+import { Checkbox } from '../ui/checkbox';
+import { Combobox } from '../ui/combobox';
+import type { ComboOption } from '../ui/combobox-list';
+import { DatePicker } from '../ui/date-picker';
+import { Input } from '../ui/input';
+import { MultiCombobox } from '../ui/multi-combobox';
+import { NumberInput } from '../ui/number-input';
+import { StatusSelect } from '../ui/status-select';
+import { Textarea } from '../ui/textarea';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
+import { hexToOptionColor } from './option-color';
 
-const inputStyle = {
-  font: 'inherit',
-  fontSize: 13,
-  color: 'var(--ink)',
-  background: 'var(--page)',
-  border: '1px solid var(--ring)',
-  borderRadius: 8,
-  padding: '6px 10px',
-  width: '100%',
-} as const;
+function toComboOptions(field: Field, indexes: BoardIndexes): ComboOption[] {
+  const options = indexes.optionsByFieldId.get(field.id) ?? [];
+  return options.map((option) => ({
+    value: option.value,
+    label: option.label,
+    color: hexToOptionColor(option.config.color),
+  }));
+}
 
 // The editable counterpart of getCellContent: one widget per storage type,
 // refined by fields.config.widget. Controlled: (value, onChange).
@@ -35,6 +43,9 @@ export function FieldWidget({
   onChange: (next: unknown) => void;
 }) {
   const [jsonDraft, setJsonDraft] = useState<string | null>(null);
+  // undefined = not editing; commit number edits when focus leaves the control
+  // so stepper clicks and typing don't fire one PATCH per keystroke.
+  const [numberDraft, setNumberDraft] = useState<number | null | undefined>(undefined);
 
   if (field.type === 'text' && field.config.widget === 'markdown') {
     return (
@@ -47,10 +58,10 @@ export function FieldWidget({
   }
   if (field.type === 'text') {
     return (
-      <input
-        style={inputStyle}
+      <Input
         defaultValue={typeof value === 'string' ? value : ''}
         disabled={disabled}
+        aria-label={field.label}
         onBlur={(event) => {
           const next = event.target.value;
           if (next !== (value ?? '')) {
@@ -61,34 +72,31 @@ export function FieldWidget({
     );
   }
   if (field.type === 'number') {
+    const shown = numberDraft !== undefined ? numberDraft : typeof value === 'number' ? value : null;
     return (
-      <input
-        type="number"
-        style={inputStyle}
-        defaultValue={typeof value === 'number' ? value : ''}
-        disabled={disabled}
+      <span
+        className="inline-flex"
         onBlur={(event) => {
-          const raw = event.target.value;
-          const next = raw === '' ? null : Number(raw);
-          if (next !== value) {
-            onChange(next);
+          if (event.currentTarget.contains(event.relatedTarget)) {
+            return; // focus moved within the control (input ↔ steppers)
           }
+          if (numberDraft !== undefined && numberDraft !== (typeof value === 'number' ? value : null)) {
+            onChange(numberDraft);
+          }
+          setNumberDraft(undefined);
         }}
-      />
+      >
+        <NumberInput value={shown} onChange={setNumberDraft} disabled={disabled} />
+      </span>
     );
   }
   if (field.type === 'date') {
-    const current = typeof value === 'string' ? value.slice(0, 10) : '';
     return (
-      <input
-        type="date"
-        style={inputStyle}
-        defaultValue={current}
+      <DatePicker
+        value={typeof value === 'string' ? value : null}
         disabled={disabled}
-        onChange={(event) => {
-          const raw = event.target.value;
-          const next = raw === '' ? null : `${raw}T00:00:00Z`;
-          if (raw !== current) {
+        onChange={(next) => {
+          if (next !== value) {
             onChange(next);
           }
         }}
@@ -97,8 +105,9 @@ export function FieldWidget({
   }
   if (field.type === 'boolean') {
     return (
-      <input
-        type="checkbox"
+      <Checkbox
+        label=""
+        aria-label={field.label}
         checked={value === true}
         disabled={disabled}
         onChange={(event) => onChange(event.target.checked)}
@@ -117,9 +126,11 @@ export function FieldWidget({
       }
     }
     return (
-      <textarea
+      <Textarea
         rows={4}
-        style={{ ...inputStyle, borderColor: invalid ? 'var(--critical)' : 'var(--ring)' }}
+        invalid={invalid}
+        className="font-mono text-meta"
+        aria-label={field.label}
         value={shown}
         disabled={disabled}
         onChange={(event) => setJsonDraft(event.target.value)}
@@ -143,65 +154,46 @@ export function FieldWidget({
     );
   }
   if (field.type === 'select') {
-    const options = indexes.optionsByFieldId.get(field.id) ?? [];
     return (
-      <select
-        style={inputStyle}
-        value={typeof value === 'string' ? value : ''}
+      <Combobox
+        options={toComboOptions(field, indexes)}
+        value={typeof value === 'string' ? value : null}
         disabled={disabled}
-        onChange={(event) => onChange(event.target.value === '' ? null : event.target.value)}
-      >
-        <option value="">—</option>
-        {options.map((option) => (
-          <option key={option.id} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+        clearable
+        placeholder="—"
+        onChange={(next) => onChange(next)}
+      />
     );
   }
   if (field.type === 'multi_select') {
-    const options = indexes.optionsByFieldId.get(field.id) ?? [];
     const selected = Array.isArray(value) ? (value as string[]) : [];
     return (
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-        {options.map((option) => (
-          <label
-            key={option.id}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13 }}
-          >
-            <input
-              type="checkbox"
-              checked={selected.includes(option.value)}
-              disabled={disabled}
-              onChange={(event) => {
-                const next = event.target.checked
-                  ? [...selected, option.value]
-                  : selected.filter((entry) => entry !== option.value);
-                onChange(next.length > 0 ? next : null);
-              }}
-            />
-            {option.label}
-          </label>
-        ))}
-      </div>
+      <MultiCombobox
+        options={toComboOptions(field, indexes)}
+        value={selected}
+        disabled={disabled}
+        placeholder="—"
+        onChange={(next) => onChange(next.length > 0 ? next : null)}
+      />
     );
   }
   if (field.type === 'status') {
     const targets = legalStatusTargets(board, indexes, ticket);
+    const active = [...board.statuses]
+      .filter((status) => !status.archivedAt)
+      .sort((left, right) => left.position - right.position);
     return (
-      <select
-        style={inputStyle}
-        value={typeof value === 'string' ? value : ''}
+      <StatusSelect
+        statuses={active.map((status) => ({
+          key: status.key,
+          label: status.label,
+          kind: status.kind,
+        }))}
+        legalTargets={targets.map((status) => status.key)}
+        value={typeof value === 'string' ? value : null}
         disabled={disabled}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        {targets.map((status) => (
-          <option key={status.id} value={status.key} title={status.config.description}>
-            {status.label}
-          </option>
-        ))}
-      </select>
+        onChange={(next) => onChange(next)}
+      />
     );
   }
   return null;
