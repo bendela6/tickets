@@ -23,6 +23,7 @@ export function registerUpdateTicket(server: McpServer, context: ToolContext) {
     },
     ({ projectKey, ticketNumber, values, parentNumber, archived }) =>
       runTool(async () => {
+        const { actorId } = await context.getActor();
         const body: Record<string, unknown> = {};
         if (values !== undefined) {
           body.values = values;
@@ -38,7 +39,7 @@ export function registerUpdateTicket(server: McpServer, context: ToolContext) {
         if (archived !== undefined) {
           body.archived = archived;
         }
-        const result = await patchTicketWithRetry(context, projectKey, ticketNumber, body);
+        const result = await patchTicketWithRetry(actorId, projectKey, ticketNumber, body);
         return toText({ updated: true, ticketNumber, updatedAt: result.updatedAt });
       }),
   );

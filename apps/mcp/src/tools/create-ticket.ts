@@ -22,6 +22,7 @@ export function registerCreateTicket(server: McpServer, context: ToolContext) {
     },
     ({ projectKey, typeKey, values, parentNumber }) =>
       runTool(async () => {
+        const { actorId } = await context.getActor();
         let parentId: number | undefined;
         if (parentNumber !== undefined) {
           const board = await loadBoard(projectKey);
@@ -32,7 +33,7 @@ export function registerCreateTicket(server: McpServer, context: ToolContext) {
           {
             method: 'POST',
             body: JSON.stringify({
-              actorId: context.actorId,
+              actorId,
               typeKey,
               ...(parentId !== undefined ? { parentId } : {}),
               values,
