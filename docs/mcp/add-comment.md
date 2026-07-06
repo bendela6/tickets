@@ -20,7 +20,10 @@ comment to a ticket.
 JSON text:
 
 ```ts
-{ commented: true; ticketNumber: number }
+{
+  commented: true;
+  ticketNumber: number;
+}
 ```
 
 ## Behavior

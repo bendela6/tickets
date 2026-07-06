@@ -24,7 +24,12 @@ No parameters.
     archivedAt: string | null;
     createdAt: string;
   }[];
-  meta: { skip: 0; take: number; total: number; sort: null };
+  meta: {
+    skip: 0;
+    take: number;      // = total — no pagination on this endpoint
+    total: number;
+    sort: null;
+  };
 }
 ```
 

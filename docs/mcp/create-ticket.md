@@ -24,7 +24,10 @@ status defaults to the project's initial one.
 JSON text:
 
 ```ts
-{ created: true; ticketNumber: number }
+{
+  created: true;
+  ticketNumber: number;
+}
 ```
 
 ## Behavior

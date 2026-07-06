@@ -27,7 +27,7 @@ JSON text:
 ```ts
 {
   total: number;
-  tickets: SummaryRow[];   // see get_board — includes child tickets, unlike get_board
+  tickets: SummaryRow[];   // defined in Types below — includes child tickets, unlike get_board
 }
 ```
 
@@ -39,6 +39,21 @@ JSON text:
 ## Errors
 
 Unknown project key surfaces the API's 404 message as `isError` text.
+
+## Types
+
+```ts
+type SummaryRow = {
+  number: number;
+  type: string;                 // ticket type key
+  // ...every field value except description (e.g. title, status, severity, epic)
+  parentNumber: number | null;
+  children?: number[];          // unarchived child ticket numbers
+  blockedBy?: number[];         // tickets that block this one (via the "blocks" type)
+  commentCount?: number;        // omitted when 0
+  archived?: true;              // omitted when live
+};
+```
 
 ## Related
 

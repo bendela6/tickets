@@ -26,8 +26,19 @@ Body (all optional):
 
 ## Response
 
-`200 OK` — the updated option row (same shape as
-[Create field option](create-field-option.md)).
+`200 OK` — the updated option row:
+
+```ts
+{
+  id: number;
+  fieldId: number;
+  value: string;               // immutable — what ticket values store
+  label: string;
+  config: object;
+  position: number;
+  archivedAt: string | null;
+}
+```
 
 ## Errors
 

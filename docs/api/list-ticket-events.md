@@ -36,7 +36,12 @@ history: creation, status flips, value edits, comments, links, archiving.
     payload: object;          // kind-specific, e.g. { fieldKey, from, to }
     createdAt: string;
   }[];
-  meta: { skip: number; take: number; total: number; sort: '-createdAt' };
+  meta: {
+    skip: number;
+    take: number;
+    total: number;
+    sort: '-createdAt';
+  };
 }
 ```
 

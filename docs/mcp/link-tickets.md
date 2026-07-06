@@ -23,7 +23,10 @@ source is done).
 JSON text:
 
 ```ts
-{ linked: true; relation: string }   // e.g. "12 blocks 34"
+{
+  linked: true;
+  relation: string;   // e.g. "12 blocks 34"
+}
 ```
 
 ## Behavior

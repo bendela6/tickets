@@ -25,7 +25,21 @@ Body (all optional):
 
 ## Response
 
-`200 OK` — the updated status row (same shape as [Create status](create-status.md)).
+`200 OK` — the updated status row:
+
+```ts
+{
+  id: number;
+  projectId: number;
+  key: string;                 // immutable
+  label: string;
+  kind: 'todo' | 'active' | 'blocked' | 'done' | 'dropped';   // immutable
+  config: object;
+  position: number;
+  archivedAt: string | null;
+  createdAt: string;
+}
+```
 
 ## Errors
 

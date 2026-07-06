@@ -23,16 +23,28 @@ JSON text:
 
 ```ts
 {
-  project: { id; key; name; ticketPrefix; createdAt };
-  types: string[];                            // unarchived type keys
-  statuses: { key: string; kind: 'todo' | 'active' | 'blocked' | 'done' | 'dropped' }[];
-  fields: { key: string; type: string; options?: string[] }[];  // unarchived
-  epics: string[];                            // option values of the epic field
-  linkTypes: string[];                        // link type keys
-  transitionCount: number;                    // 0 = unrestricted workflow
-  tickets: SummaryRow[];                      // unarchived TOP-LEVEL tickets only,
-                                              // sorted by number; children appear
-                                              // inside their parent's row
+  project: {
+    id: number;
+    key: string;
+    name: string;
+    ticketPrefix: string;
+    createdAt: string;
+  };
+  types: string[];             // unarchived type keys
+  statuses: {
+    key: string;
+    kind: 'todo' | 'active' | 'blocked' | 'done' | 'dropped';
+  }[];
+  fields: {                    // unarchived
+    key: string;
+    type: string;              // text · number · date · boolean · json · select · multi_select · status
+    options?: string[];        // present for select / multi_select fields
+  }[];
+  epics: string[];             // option values of the epic field
+  linkTypes: string[];         // link type keys
+  transitionCount: number;     // 0 = unrestricted workflow
+  tickets: SummaryRow[];       // unarchived TOP-LEVEL tickets only, sorted by
+                               // number; children appear inside their parent's row
 }
 ```
 

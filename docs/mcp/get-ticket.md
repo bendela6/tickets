@@ -18,7 +18,7 @@ a ticket.
 
 ## Output
 
-JSON text — the [summary row](get-board.md#output) plus:
+JSON text — the summary row (defined in Types below) plus:
 
 ```ts
 {
@@ -26,7 +26,11 @@ JSON text — the [summary row](get-board.md#output) plus:
   description: string | null;    // markdown
   createdAt: string;
   updatedAt: string;
-  comments: { by: string; at: string; body: string }[];
+  comments: {
+    by: string;                  // author name
+    at: string;
+    body: string;                // markdown
+  }[];
   links: {
     relation: string;            // link label from THIS ticket's perspective
                                  // ("blocks" outgoing, "is blocked by" incoming)
@@ -34,7 +38,12 @@ JSON text — the [summary row](get-board.md#output) plus:
     ticketNumber: number;        // the other ticket
     title: unknown;              // the other ticket's title
   }[];
-  recentEvents: { kind: string; by: string; at: string; payload: object }[];  // newest 10
+  recentEvents: {                // newest 10
+    kind: string;
+    by: string;                  // actor name
+    at: string;
+    payload: object;
+  }[];
 }
 ```
 
@@ -48,6 +57,21 @@ JSON text — the [summary row](get-board.md#output) plus:
 
 Unknown project or ticket number returns `isError` text
 (`no ticket TASK-42 in project "..."`).
+
+## Types
+
+```ts
+type SummaryRow = {
+  number: number;
+  type: string;                 // ticket type key
+  // ...every field value except description (e.g. title, status, severity, epic)
+  parentNumber: number | null;
+  children?: number[];          // unarchived child ticket numbers
+  blockedBy?: number[];         // tickets that block this one (via the "blocks" type)
+  commentCount?: number;        // omitted when 0
+  archived?: true;              // omitted when live
+};
+```
 
 ## Related
 
