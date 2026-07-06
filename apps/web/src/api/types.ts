@@ -72,6 +72,7 @@ export type FieldType =
 
 export interface FieldConfig {
   widget?: string;
+  description?: string;
 }
 
 export interface FieldOptionConfig {

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link, useMatchRoute, useNavigate } from '@tanstack/react-router';
 import { useProjects } from '../../api/use-projects';
 import { useProjectStats } from '../../api/use-project-stats';
 import { applyTheme } from '../../utils/apply-theme';
@@ -27,6 +27,7 @@ export function AppShell({
   children: ReactNode;
 }) {
   const navigate = useNavigate();
+  const matchRoute = useMatchRoute();
   const projects = useProjects();
   const projectList = projects.data?.data ?? [];
   const stats = useProjectStats(projectList);
@@ -125,13 +126,31 @@ export function AppShell({
 
         <span className="flex-1" />
 
-        <div
-          className={cn(navItemClasses(false), 'mb-2 cursor-default opacity-60')}
-          title="Settings — coming in a later phase"
-        >
-          <span aria-hidden>⚙</span>
-          <span className="flex-1">Settings</span>
-        </div>
+        {(() => {
+          const settingsProjectKey = activeProjectKey ?? projectList[0]?.key;
+          if (!settingsProjectKey) {
+            return (
+              <div
+                className={cn(navItemClasses(false), 'mb-2 cursor-default opacity-60')}
+                title="Settings — create a project first"
+              >
+                <span aria-hidden>⚙</span>
+                <span className="flex-1">Settings</span>
+              </div>
+            );
+          }
+          const onSettings = Boolean(matchRoute({ to: '/p/$projectKey/settings' }));
+          return (
+            <Link
+              to="/p/$projectKey/settings"
+              params={{ projectKey: settingsProjectKey }}
+              className={cn(navItemClasses(onSettings), 'mb-2')}
+            >
+              <span aria-hidden>⚙</span>
+              <span className="flex-1">Settings</span>
+            </Link>
+          );
+        })()}
         <div className="flex items-center gap-2 border-t border-hairline pt-2.5">
           <ActorMenu />
           <button
