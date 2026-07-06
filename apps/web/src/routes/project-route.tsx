@@ -38,20 +38,25 @@ function ProjectLayout() {
           </Link>
         </div>
       ) : (
-        <div className="wrap">
+        // Instrument board area — deliberately NOT inside .wrap (legacy
+        // globals.css scoping); design main padding is 22px 28px 0.
+        <div className="flex h-full min-h-0 flex-col px-7 pt-5.5">
           <ViewTabs
             projectKey={projectKey}
             board={board}
             activeViewId={childParams.viewId ? Number(childParams.viewId) : null}
           />
           <Outlet />
-          <NewTicketDialog
-            projectKey={projectKey}
-            board={board}
-            indexes={indexes}
-            open={dialogOpen}
-            onClose={() => setDialogOpen(false)}
-          />
+          {/* Legacy dialog keeps its globals.css styling until Phase 5. */}
+          <div className="wrap">
+            <NewTicketDialog
+              projectKey={projectKey}
+              board={board}
+              indexes={indexes}
+              open={dialogOpen}
+              onClose={() => setDialogOpen(false)}
+            />
+          </div>
         </div>
       )}
     </AppShell>
