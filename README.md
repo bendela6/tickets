@@ -26,6 +26,26 @@ pnpm dev                      # turbo: api on 4600 + web on 4610
 
 New empty project: `pnpm db:seed <key> <name> <PREFIX>` or `POST /api/projects`.
 
+## Run in Docker
+
+```sh
+docker compose up -d --build
+```
+
+Three services: `postgres` (17-alpine, own named volume `tickets-pgdata`,
+**not** published to the host — the dev postgres keeps 5532), `api`
+(runs migrations on start, then serves on
+[http://127.0.0.1:4600](http://127.0.0.1:4600)), and `web` (nginx serving the
+built SPA on [http://127.0.0.1:4610](http://127.0.0.1:4610), proxying `/api`
+to the api container). Same ports as dev, so run one or the other, not both.
+
+- Inspect the DB: `docker compose exec postgres psql -U postgres tickets`
+- Logs: `docker compose logs -f api`
+- Stop: `docker compose down` (add `-v` to also drop the data volume)
+
+The MCP server stays on the host (stdio) — point it at the containerized API
+with `TICKETS_API_URL=http://127.0.0.1:4600` (the default).
+
 ## HTTP API
 
 Per-endpoint reference — request/response types, error codes, DB tables

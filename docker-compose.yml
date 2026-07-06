@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tickets
+    # deliberately NOT published to the host — the dev postgres owns 5532;
+    # inspect with: docker compose exec postgres psql -U postgres tickets
+    volumes:
+      - tickets-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d tickets']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      target: api
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: tickets
+      API_HOST: 0.0.0.0
+      API_PORT: 4600
+    ports:
+      - '4600:4600'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      target: web
+    ports:
+      - '4610:80'
+    depends_on:
+      - api
+
+volumes:
+  tickets-pgdata:
