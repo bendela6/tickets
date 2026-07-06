@@ -18,9 +18,15 @@
     background-image: none;
     border: 0 solid;
     cursor: pointer;
+    font: inherit;
   }
   button:disabled {
     cursor: default;
+  }
+  /* Preflight-off: keep UA link blue out of Instrument screens. Legacy .wrap
+     screens re-assert their own link color in globals.css (unlayered wins). */
+  a {
+    color: inherit;
   }
 }
 

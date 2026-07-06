@@ -47,14 +47,20 @@ body {
     'Segoe UI',
     sans-serif;
 }
+/* Scoped to legacy screens (.wrap) so Instrument-shell links keep their own
+   Tailwind colors — unlayered rules would otherwise beat layered utilities. */
 a {
-  color: var(--accent);
   text-decoration: none;
 }
-a:hover {
+.wrap a {
+  color: var(--accent);
+}
+.wrap a:hover {
   text-decoration: underline;
 }
-button {
+/* Scoped to legacy screens — the unlayered `font` shorthand would otherwise
+   reset font-size/weight utilities on every Instrument button. */
+.wrap button {
   font: inherit;
 }
 

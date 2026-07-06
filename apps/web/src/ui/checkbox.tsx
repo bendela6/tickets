@@ -37,7 +37,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           className={cn(
             // shrink-0 is required: as a flex item the input otherwise collapses
             // from 16px to ~9px wide (the switch/radio inputs already have it).
-            'peer size-4 shrink-0 appearance-none rounded-[4px] border border-control bg-raised transition-colors',
+            'peer m-0 size-4 shrink-0 appearance-none rounded-[4px] border-[1.5px] border-control bg-raised transition-colors',
             'checked:border-accent checked:bg-accent indeterminate:border-accent indeterminate:bg-accent',
             'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-accent-subtle',
             'disabled:cursor-not-allowed disabled:border-hairline disabled:bg-inset',

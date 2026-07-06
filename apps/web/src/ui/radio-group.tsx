@@ -29,7 +29,7 @@ export function RadioGroup({ name, label, value, options, onValueChange, classNa
               disabled={option.disabled}
               onChange={() => onValueChange(option.value)}
               className={cn(
-                'peer size-4 shrink-0 appearance-none rounded-full border border-control bg-raised transition-colors',
+                'peer m-0 size-4 shrink-0 appearance-none rounded-full border-[1.5px] border-control bg-raised transition-colors',
                 'checked:border-accent',
                 'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-accent-subtle',
                 'disabled:cursor-not-allowed disabled:border-hairline disabled:bg-inset',
