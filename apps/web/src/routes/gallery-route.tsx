@@ -13,6 +13,7 @@ import type { StatusKind } from '../ui/kind-glyph';
 import { OptionChip, type OptionColor } from '../ui/option-chip';
 import { RadioGroup } from '../ui/radio-group';
 import { StatusBadge } from '../ui/status-badge';
+import { StatusSelect, type StatusOption } from '../ui/status-select';
 import { Switch } from '../ui/switch';
 import { Textarea } from '../ui/textarea';
 import { TicketKey } from '../ui/ticket-key';
@@ -67,10 +68,20 @@ const LABEL_OPTIONS: ComboOption[] = [
   { value: 'design', label: 'design', color: 'pink' },
 ];
 
+const STATUSES: StatusOption[] = [
+  { key: 'backlog', label: 'Backlog', kind: 'todo' },
+  { key: 'in-progress', label: 'In progress', kind: 'active' },
+  { key: 'in-review', label: 'In review', kind: 'active' },
+  { key: 'blocked', label: 'Blocked', kind: 'blocked' },
+  { key: 'shipped', label: 'Shipped', kind: 'done' },
+  { key: 'wont-do', label: "Won't do", kind: 'dropped' },
+];
+
 function GalleryScreen() {
   const [density, setDensity] = useState('comfortable');
   const [priority, setPriority] = useState<string | null>('p0');
   const [labels, setLabels] = useState<string[]>(['frontend', 'api']);
+  const [status, setStatus] = useState<string | null>('in-progress');
 
   function toggleTheme() {
     const root = document.documentElement;
@@ -172,6 +183,14 @@ function GalleryScreen() {
               value={labels}
               onChange={setLabels}
               placeholder="Labels"
+            />
+          </div>
+          <div className="w-56">
+            <StatusSelect
+              statuses={STATUSES}
+              value={status}
+              onChange={setStatus}
+              legalTargets={['in-review', 'blocked', 'shipped']}
             />
           </div>
         </Section>

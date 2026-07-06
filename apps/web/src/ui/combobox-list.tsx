@@ -20,6 +20,8 @@ type ComboboxListProps = {
   groupOf?: (option: ComboOption) => string;
   /** Order + display labels for groups. */
   groups?: { key: string; label: string }[];
+  /** Custom rendering for an option's inner content (defaults to OptionChip/label). */
+  renderOption?: (option: ComboOption, selected: boolean) => ReactNode;
   header?: ReactNode;
   footer?: ReactNode;
   emptyLabel?: string;
@@ -35,6 +37,7 @@ export function ComboboxList({
   searchPlaceholder = 'Search…',
   groupOf,
   groups,
+  renderOption,
   header,
   footer,
   emptyLabel = 'No matches',
@@ -138,7 +141,13 @@ export function ComboboxList({
                   option.disabled && 'cursor-not-allowed opacity-50',
                 )}
               >
-                {option.color ? <OptionChip color={option.color} label={option.label} /> : <span>{option.label}</span>}
+                {renderOption ? (
+                  renderOption(option, selected)
+                ) : option.color ? (
+                  <OptionChip color={option.color} label={option.label} />
+                ) : (
+                  <span>{option.label}</span>
+                )}
                 {selected ? <span className="text-accent">✓</span> : null}
               </button>
             </li>
