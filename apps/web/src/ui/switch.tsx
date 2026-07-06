@@ -15,7 +15,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
           type="checkbox"
           role="switch"
           className={cn(
-            'peer h-5 w-9 shrink-0 appearance-none rounded-full border border-control bg-inset transition-colors',
+            'peer m-0 h-5 w-9 shrink-0 appearance-none rounded-full border border-control bg-inset transition-colors',
             'checked:border-accent checked:bg-accent',
             'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-accent-subtle',
             'disabled:opacity-50 disabled:cursor-not-allowed',
@@ -25,8 +25,8 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
         <span
           aria-hidden
           className={cn(
-            'pointer-events-none absolute left-0.5 top-1/2 size-4 -translate-y-1/2 rounded-full bg-raised shadow-sm transition-transform',
-            'peer-checked:translate-x-4 peer-checked:bg-on-accent',
+            'pointer-events-none absolute left-0.5 top-1/2 size-4 -translate-y-1/2 rounded-full bg-white shadow-sm transition-transform',
+            'peer-checked:translate-x-4',
           )}
         />
       </span>

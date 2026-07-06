@@ -12,7 +12,13 @@ test('renders and clicks', async () => {
 
 test('primary variant gets accent classes', () => {
   render(<Button variant="primary">New ticket</Button>);
-  expect(screen.getByRole('button')).toHaveClass('bg-accent');
+  const button = screen.getByRole('button');
+  expect(button).toHaveClass('bg-accent');
+  // Regression guard: cn()/tailwind-merge must not drop the text color when a
+  // font-size utility is also present (custom named sizes like `text-ui` used to
+  // silently evict `text-on-accent`, rendering dark text on the accent fill).
+  expect(button).toHaveClass('text-on-accent');
+  expect(button).toHaveClass('text-[13px]');
 });
 
 test('loading disables and marks busy', () => {

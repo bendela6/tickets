@@ -9,14 +9,19 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantClasses = {
   primary: 'bg-accent text-on-accent hover:bg-accent-hover border border-transparent',
-  secondary: 'bg-raised text-ink border border-control hover:bg-inset',
+  secondary: 'bg-raised text-ink border border-control hover:bg-inset hover:border-ink-3',
   ghost: 'bg-transparent text-ink-2 border border-transparent hover:bg-inset hover:text-ink',
-  destructive: 'bg-transparent text-danger border border-control hover:bg-danger-subtle',
+  destructive: 'bg-danger text-white dark:text-[#2b0f0b] hover:bg-danger-hover border border-transparent',
 };
 
+// NOTE: font-size utilities here use arbitrary lengths (text-[12px]/text-[13px])
+// rather than the semantic `text-ui`/`text-meta` tokens on purpose. tailwind-merge
+// does not know those custom named sizes are font-sizes, so it groups them with
+// `text-{color}` utilities and silently drops the color (e.g. text-on-accent).
+// Arbitrary lengths are classified as font-size, so the variant color survives.
 const sizeClasses = {
-  compact: 'h-7 px-2.5 text-ui',
-  regular: 'h-9 px-3.5 text-ui',
+  compact: 'h-7 px-2.5 text-[12px]',
+  regular: 'h-9 px-3.5 text-[13px]',
   touch: 'h-11 px-4 text-sm',
   icon: 'h-8 w-8 p-0',
 };

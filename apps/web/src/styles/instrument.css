@@ -128,6 +128,8 @@
 
 @theme inline {
   --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
   --color-app: var(--ins-app);
   --color-raised: var(--ins-raised);
   --color-inset: var(--ins-inset);
