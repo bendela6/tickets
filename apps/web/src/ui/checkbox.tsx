@@ -40,7 +40,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
             'peer size-4 shrink-0 appearance-none rounded-[4px] border border-control bg-raised transition-colors',
             'checked:border-accent checked:bg-accent indeterminate:border-accent indeterminate:bg-accent',
             'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-accent-subtle',
-            'disabled:cursor-not-allowed disabled:opacity-50',
+            'disabled:cursor-not-allowed disabled:border-hairline disabled:bg-inset',
           )}
           {...rest}
         />
@@ -61,7 +61,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           <path d="M3 6h6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
       </span>
-      <span className="group-has-disabled:opacity-50">{label}</span>
+      <span className="group-has-disabled:text-ink-3">{label}</span>
     </label>
   );
 });

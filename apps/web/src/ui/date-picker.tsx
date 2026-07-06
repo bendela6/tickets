@@ -85,7 +85,7 @@ export function DatePicker({
           type="button"
           disabled={disabled}
           className={cn(
-            'flex w-full items-center justify-between gap-2 rounded-ctrl border border-control bg-raised px-3 font-sans text-ui',
+            'flex w-full items-center justify-between gap-2 rounded-[8px] border border-control bg-raised px-3 font-sans text-[14px]',
             'hover:border-ink-3 focus:border-accent focus:outline-none focus:ring-[3px] focus:ring-accent-subtle',
             'disabled:pointer-events-none disabled:opacity-50',
             size === 'compact' ? 'h-7' : 'h-9',
@@ -94,36 +94,36 @@ export function DatePicker({
           )}
         >
           {value ? formatExact(value) : placeholder}
-          <span aria-hidden className="text-ink-3">
+          <span aria-hidden className="text-[10px] text-ink-3">
             ▾
           </span>
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-3">
+      <PopoverContent className="w-59 rounded-[10px] p-3">
         <div className="mb-2 flex items-center justify-between">
           <button
             type="button"
             aria-label="Previous month"
             onClick={() => shiftMonth(-1)}
-            className="rounded-ctrl px-2 py-1 text-ink-2 hover:bg-inset"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-ink-2 hover:bg-inset"
           >
             ‹
           </button>
-          <span className="font-sans text-ui font-medium text-ink">
+          <span className="font-sans text-ui font-semibold text-ink">
             {MONTH_NAMES[view.month]} {view.year}
           </span>
           <button
             type="button"
             aria-label="Next month"
             onClick={() => shiftMonth(1)}
-            className="rounded-ctrl px-2 py-1 text-ink-2 hover:bg-inset"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-ink-2 hover:bg-inset"
           >
             ›
           </button>
         </div>
-        <div className="grid grid-cols-7 gap-0.5">
+        <div className="grid grid-cols-[repeat(7,28px)] justify-center gap-0.5">
           {WEEKDAYS.map((weekday, index) => (
-            <div key={index} className="py-1 text-center font-sans text-label text-ink-3">
+            <div key={index} className="text-center font-mono text-[10px] font-medium text-ink-3">
               {weekday}
             </div>
           ))}
@@ -133,14 +133,22 @@ export function DatePicker({
             }
             const isSelected =
               selected?.year === view.year && selected?.month === view.month && selected?.day === day;
+            const isToday =
+              today.getUTCFullYear() === view.year &&
+              today.getUTCMonth() === view.month &&
+              today.getUTCDate() === day;
             return (
               <button
                 key={day}
                 type="button"
                 onClick={() => pick(day)}
                 className={cn(
-                  'flex h-8 items-center justify-center rounded-ctrl font-sans text-ui',
-                  isSelected ? 'bg-accent text-on-accent' : 'text-ink hover:bg-inset',
+                  'flex h-7 w-7 items-center justify-center rounded-md font-sans text-[12px]',
+                  isSelected
+                    ? 'bg-accent text-on-accent'
+                    : isToday
+                      ? 'text-ink ring-1 ring-inset ring-accent hover:bg-inset'
+                      : 'text-ink hover:bg-inset',
                 )}
               >
                 {day}
@@ -148,25 +156,23 @@ export function DatePicker({
             );
           })}
         </div>
-        <div className="mt-3 border-t border-hairline pt-2">
-          <input
-            aria-label="Enter date"
-            type="text"
-            defaultValue={value ? value.slice(0, 10) : ''}
-            placeholder="YYYY-MM-DD"
-            onKeyDown={(event) => {
-              if (event.key !== 'Enter') {
-                return;
-              }
-              const parts = parseParts((event.target as HTMLInputElement).value);
-              if (parts) {
-                onChange(`${parts.year}-${pad(parts.month + 1)}-${pad(parts.day)}T00:00:00Z`);
-                setOpen(false);
-              }
-            }}
-            className="h-7 w-full rounded-ctrl border border-control bg-raised px-2 font-mono text-meta text-ink focus:border-accent focus:outline-none focus:ring-[3px] focus:ring-accent-subtle"
-          />
-        </div>
+        <input
+          aria-label="Enter date"
+          type="text"
+          defaultValue={value ? value.slice(0, 10) : ''}
+          placeholder="YYYY-MM-DD"
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter') {
+              return;
+            }
+            const parts = parseParts((event.target as HTMLInputElement).value);
+            if (parts) {
+              onChange(`${parts.year}-${pad(parts.month + 1)}-${pad(parts.day)}T00:00:00Z`);
+              setOpen(false);
+            }
+          }}
+          className="mt-2.5 h-7 w-full rounded-md border border-control bg-raised px-2.25 font-mono text-meta text-ink-3 focus:border-accent focus:outline-none focus:ring-[3px] focus:ring-accent-subtle"
+        />
       </PopoverContent>
     </Popover>
   );

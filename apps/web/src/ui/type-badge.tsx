@@ -4,7 +4,7 @@ export function TypeBadge({ label, className }: { label: string; className?: str
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-ctrl border border-hairline px-1.5 py-px font-sans text-meta text-ink-2',
+        'inline-flex h-5.5 items-center rounded-md border border-control px-2.25 font-sans text-meta font-medium text-ink-2',
         className,
       )}
     >

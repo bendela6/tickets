@@ -22,7 +22,7 @@ export function Tooltip({ content, children, side = 'top', className }: TooltipP
           side={side}
           sideOffset={5}
           className={cn(
-            'z-50 max-w-64 rounded-ctrl bg-ink px-2 py-1 font-sans text-meta text-app shadow-sm',
+            'z-50 max-w-64 rounded-ctrl bg-ink px-2 py-1 font-sans text-meta text-app',
             'select-none',
             className,
           )}

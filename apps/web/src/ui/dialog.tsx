@@ -20,7 +20,7 @@ export const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(func
         ref={ref}
         className={cn(
           'fixed left-1/2 top-1/2 z-50 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2',
-          'rounded-panel border border-hairline bg-raised p-5 text-ink shadow-sm outline-none',
+          'rounded-panel border border-hairline bg-raised p-5 text-ink shadow-lg outline-none',
           'font-sans',
           className,
         )}
@@ -42,7 +42,7 @@ export function DialogTitle({ children, className }: { children: ReactNode; clas
 
 export function DialogDescription({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <RadixDialog.Description className={cn('mt-2 font-sans text-ui text-ink-2', className)}>
+    <RadixDialog.Description className={cn('mt-1.5 font-sans text-ui text-ink-2', className)}>
       {children}
     </RadixDialog.Description>
   );
@@ -74,8 +74,8 @@ export function ConfirmDialog({
       <DialogContent>
         <DialogTitle>{title}</DialogTitle>
         {body ? <DialogDescription>{body}</DialogDescription> : null}
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
             {cancelLabel}
           </Button>
           <Button

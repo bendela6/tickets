@@ -4,6 +4,29 @@ import { FieldError } from './field-error';
 import { FieldLabel } from './field-label';
 import { Input } from './input';
 
+test('regular input carries the spec size classes', () => {
+  render(<Input aria-label="Title" />);
+  const input = screen.getByLabelText('Title');
+  expect(input).toHaveClass('h-9', 'px-3', 'rounded-[8px]', 'bg-raised', 'border-control');
+  // Regression guard: tailwind-merge must not let the 14px font size evict the
+  // ink text color (the same trap the primary button hit with text-ui).
+  expect(input).toHaveClass('text-[14px]');
+  expect(input).toHaveClass('text-ink');
+});
+
+test('compact input overrides height, padding, radius, and font size', () => {
+  render(<Input size="compact" aria-label="Estimate" />);
+  const input = screen.getByLabelText('Estimate');
+  expect(input).toHaveClass('h-7', 'px-2.25', 'rounded-[6px]', 'text-[13px]');
+  expect(input).not.toHaveClass('text-[14px]');
+});
+
+test('invalid input shows the danger border and always-on halo', () => {
+  render(<Input invalid aria-label="Key" />);
+  const input = screen.getByLabelText('Key');
+  expect(input).toHaveClass('border-danger', 'ring-[3px]', 'ring-danger-subtle');
+});
+
 test('input associates label and error', () => {
   render(
     <>

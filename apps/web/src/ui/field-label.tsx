@@ -6,7 +6,7 @@ type FieldLabelProps = LabelHTMLAttributes<HTMLLabelElement> & { required?: bool
 export function FieldLabel({ required, className, children, ...rest }: FieldLabelProps) {
   return (
     <label
-      className={cn('block font-sans text-label font-medium tracking-wider uppercase text-ink-2', className)}
+      className={cn('block font-sans text-label font-medium uppercase text-ink-2', className)}
       {...rest}
     >
       {children}

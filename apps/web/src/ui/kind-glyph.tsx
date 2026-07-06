@@ -7,7 +7,7 @@ export function KindGlyph({ kind }: { kind: StatusKind }) {
       {kind === 'active' ? (
         <>
           <circle cx="5" cy="5" r="4" fill="none" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M5 1a4 4 0 0 1 0 8Z" fill="currentColor" />
+          <path d="M5 1a4 4 0 0 0 0 8Z" fill="currentColor" />
         </>
       ) : null}
       {kind === 'blocked' ? <path d="M5 0.8 9.2 5 5 9.2 0.8 5Z" fill="currentColor" /> : null}

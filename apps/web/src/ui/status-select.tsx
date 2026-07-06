@@ -70,7 +70,7 @@ export function StatusSelect({
           ) : (
             <span className="pl-1 font-sans text-ui text-ink-3">Set status…</span>
           )}
-          <span aria-hidden className="text-ink-3">
+          <span aria-hidden className="text-[10px] text-ink-3">
             ▾
           </span>
         </button>
@@ -88,7 +88,7 @@ export function StatusSelect({
           renderOption={(option) => {
             const kind = kindByKey.get(option.value) ?? 'todo';
             return (
-              <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-2.25">
                 <span className={cn('inline-flex', kindTextClass(kind))}>
                   <KindGlyph kind={kind} />
                 </span>

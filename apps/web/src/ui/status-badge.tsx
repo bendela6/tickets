@@ -13,7 +13,7 @@ export function StatusBadge({ kind, label, className }: { kind: StatusKind; labe
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-ctrl px-2 py-0.5 font-sans text-meta font-medium',
+        'inline-flex h-5.5 items-center gap-1.5 rounded-md px-2.25 font-sans text-meta font-medium',
         kindClasses[kind],
         className,
       )}

@@ -42,7 +42,7 @@ export function MultiCombobox({
       <PopoverAnchor asChild>
         <div
           className={cn(
-            'flex w-full items-center gap-1.5 rounded-ctrl border border-control bg-raised px-2',
+            'flex w-full items-center gap-1.5 rounded-ctrl border border-control bg-raised px-2.5',
             'focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent-subtle',
             disabled && 'pointer-events-none opacity-50',
             size === 'compact' ? 'min-h-7 py-0.5' : 'min-h-9 py-1',
@@ -66,7 +66,7 @@ export function MultiCombobox({
                 </button>
               </span>
             ))}
-            {overflow > 0 ? <span className="font-sans text-meta text-ink-2">+{overflow}</span> : null}
+            {overflow > 0 ? <span className="font-mono text-meta font-medium text-ink-2">+{overflow}</span> : null}
           </div>
           <PopoverTrigger asChild>
             <button
@@ -75,7 +75,7 @@ export function MultiCombobox({
               disabled={disabled}
               className="flex shrink-0 items-center self-center font-sans text-ui text-ink-3 outline-none"
             >
-              <span aria-hidden>▾</span>
+              <span aria-hidden className="text-[10px]">▾</span>
             </button>
           </PopoverTrigger>
         </div>
@@ -86,19 +86,19 @@ export function MultiCombobox({
           keepOpen
           isSelected={(candidate) => value.includes(candidate)}
           onPick={toggle}
-          header={
+          footer={
             <div className="flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => onChange(options.filter((option) => !option.disabled).map((option) => option.value))}
-                className="rounded-ctrl px-1 font-sans text-meta text-accent hover:underline"
+                className="rounded-ctrl px-1 font-sans text-meta font-medium text-accent hover:underline"
               >
                 Select all
               </button>
               <button
                 type="button"
                 onClick={() => onChange([])}
-                className="rounded-ctrl px-1 font-sans text-meta text-ink-2 hover:underline"
+                className="rounded-ctrl px-1 font-sans text-meta font-medium text-ink-2 hover:underline"
               >
                 Clear ({value.length})
               </button>

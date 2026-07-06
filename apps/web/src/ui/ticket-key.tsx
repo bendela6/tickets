@@ -4,7 +4,7 @@ type TicketKeyProps = { prefix: string; number: number; muted?: boolean; classNa
 
 export function TicketKey({ prefix, number, muted, className }: TicketKeyProps) {
   return (
-    <span className={cn('font-mono text-meta font-medium', muted ? 'text-ink-3' : 'text-ink-2', className)}>
+    <span className={cn('font-mono text-meta font-medium', muted ? 'text-ink-3' : 'text-ink', className)}>
       {prefix}-{number}
     </span>
   );
