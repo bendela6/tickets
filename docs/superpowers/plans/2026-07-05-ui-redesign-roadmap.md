@@ -27,3 +27,22 @@ screens don't shift; preflight arrives in phase 8 when the last old CSS dies.
 
 Dependency policy: every new package is flagged in its phase plan and goes
 through the add-package approval flow at install time.
+
+## Execution decisions (2026-07-06)
+
+Locked by the user before the implementation marathon:
+
+1. **Full-stack.** Build the API/DB endpoints the design needs (vocabulary
+   mutations for settings, workspace-level views, cross-project board payload),
+   not frontend-only. The UI must be real end-to-end.
+2. **Replace & delete per phase.** When a screen's redesign lands it becomes
+   the real app and the old component is deleted. No long-lived flag; old and
+   new only coexist within a phase until the swap.
+3. **Extend vocab + seed to match the design.** Add the `assignee` field
+   (already spec'd) and seed real workflow transitions so workflow-aware UI has
+   data to act on. DB mutations are in scope.
+4. **Browser screenshot-compare each screen** against its `docs/design/*.html`
+   file and self-correct before moving on (chrome-devtools MCP).
+
+Mode: autonomous — commit after every task, keep the TIX-89..96 ticket statuses
+in sync, only stop for genuine blockers.
