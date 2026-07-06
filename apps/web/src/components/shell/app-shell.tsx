@@ -78,18 +78,15 @@ export function AppShell({
         </button>
 
         <nav className="flex flex-col gap-0.5">
-          <Link to="/" className={navItemClasses(!activeProjectKey)}>
+          <Link to="/" className={navItemClasses(Boolean(matchRoute({ to: '/' })))}>
             <span aria-hidden>⌂</span>
             <span className="flex-1">Home</span>
           </Link>
-          <div
-            className={cn(navItemClasses(false), 'cursor-default opacity-60')}
-            title="All tickets — coming in a later phase"
-          >
+          <Link to="/all" className={navItemClasses(Boolean(matchRoute({ to: '/all' })))}>
             <span aria-hidden>▤</span>
             <span className="flex-1">All tickets</span>
             <span className="font-mono text-[11px] text-ink-3">{allCount || ''}</span>
-          </div>
+          </Link>
         </nav>
 
         <div className="px-2.25 pb-1.5 pt-4 font-mono text-[10px] font-medium tracking-[0.09em] text-ink-3">
