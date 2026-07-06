@@ -113,25 +113,21 @@ export function BoardScreen() {
         />
       )}
       {openTicket ? (
-        <div className="wrap">
-          <TicketDrawer
-            projectKey={projectKey}
-            board={board}
-            indexes={indexes}
-            ticket={openTicket}
-            onClose={() => setSearch({ t: undefined })}
-          />
-        </div>
-      ) : null}
-      <div className="wrap">
-        <NewTicketDialog
+        <TicketDrawer
           projectKey={projectKey}
           board={board}
           indexes={indexes}
-          open={creating}
-          onClose={() => setCreating(false)}
+          ticket={openTicket}
+          onClose={() => setSearch({ t: undefined })}
         />
-      </div>
+      ) : null}
+      <NewTicketDialog
+        projectKey={projectKey}
+        board={board}
+        indexes={indexes}
+        open={creating}
+        onClose={() => setCreating(false)}
+      />
     </div>
   );
 }

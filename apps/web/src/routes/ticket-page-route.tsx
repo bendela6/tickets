@@ -19,19 +19,16 @@ function TicketPageScreen() {
       <p className="py-4 font-sans text-ui text-danger">No ticket #{number} in this project.</p>
     );
   }
-  // Legacy detail keeps its globals.css styling (scoped to .wrap) until
-  // Phase 5 — the parent route no longer wraps the board area.
   return (
-    <div className="wrap min-h-0 overflow-y-auto py-4">
-      <section className="card" style={{ maxWidth: 860 }}>
-        <TicketDetail
-          projectKey={projectKey}
-          board={board}
-          indexes={indexes}
-          ticket={ticket}
-          variant="page"
-        />
-      </section>
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <TicketDetail
+        key={ticket.id}
+        projectKey={projectKey}
+        board={board}
+        indexes={indexes}
+        ticket={ticket}
+        variant="page"
+      />
     </div>
   );
 }
