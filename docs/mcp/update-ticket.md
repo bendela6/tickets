@@ -26,7 +26,11 @@ never see the optimistic-lock plumbing.
 JSON text:
 
 ```ts
-{ updated: true; ticketNumber: number; updatedAt: string }
+{
+  updated: true;
+  ticketNumber: number;
+  updatedAt: string;
+}
 ```
 
 ## Behavior

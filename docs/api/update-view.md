@@ -25,7 +25,19 @@ Body (all optional — send what changes):
 
 ## Response
 
-`200 OK` — the updated view row (same shape as [Create view](create-view.md)).
+`200 OK` — the updated view row:
+
+```ts
+{
+  id: number;
+  projectId: number;
+  name: string;
+  config: object;              // { columns, sort, filters } — see Create view
+  position: number;
+  archivedAt: string | null;
+  createdAt: string;
+}
+```
 
 ## Errors
 

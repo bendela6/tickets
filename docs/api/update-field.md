@@ -26,8 +26,21 @@ Body (all optional):
 
 ## Response
 
-`200 OK` — the updated field row (same shape as [Create field](create-field.md),
-`system` may be `true`).
+`200 OK` — the updated field row:
+
+```ts
+{
+  id: number;
+  projectId: number;
+  key: string;                 // immutable
+  label: string;
+  type: 'text' | 'number' | 'date' | 'boolean' | 'json' | 'select' | 'multi_select' | 'status';
+  system: boolean;             // seeded fields — cannot be archived
+  config: object;
+  archivedAt: string | null;
+  createdAt: string;
+}
+```
 
 ## Errors
 

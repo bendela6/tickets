@@ -20,16 +20,10 @@ Body:
 
 ```ts
 {
-  name: string;        // non-empty
+  name: string;             // non-empty
   config?: {
-    columns?: (
-      | { source: 'number' | 'type' | 'progress' }                              // built-ins
-      | { source: 'field'; fieldId: number; width?: number; hidden?: boolean }
-    )[];
-    sort?:
-      | { source: 'number' | 'type' | 'progress'; dir: 'asc' | 'desc' }
-      | { source: 'field'; fieldId: number; dir: 'asc' | 'desc' }
-      | null;
+    columns?: Column[];     // Column and Sort defined in Types below
+    sort?: Sort | null;
     filters?: Record<string, unknown>;
     // unknown extra keys are allowed and pass through untouched
   };
@@ -67,6 +61,30 @@ Defaults to `{}` when omitted. `position` is assigned automatically
 - **Reads:** project vocabulary (for field validation), `views`
 - **Writes:** `views`
 - **Events:** none
+
+## Types
+
+```ts
+type Column =
+  | { source: 'number' | 'type' | 'progress' }   // built-in columns
+  | {
+      source: 'field';
+      fieldId: number;
+      width?: number;
+      hidden?: boolean;
+    };
+
+type Sort =
+  | {
+      source: 'number' | 'type' | 'progress';
+      dir: 'asc' | 'desc';
+    }
+  | {
+      source: 'field';
+      fieldId: number;
+      dir: 'asc' | 'desc';
+    };
+```
 
 ## Related
 
