@@ -4,6 +4,26 @@
 
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
+/* Preflight is intentionally not loaded (old globals.css screens coexist), but
+   native controls still leak UA defaults. Neutralize the button background so
+   bg-less buttons inherit their surface instead of showing UA "buttonface" gray.
+   Layered so `bg-*` utilities (utilities layer) still win; unlayered globals.css
+   `.btn` rules also still win. */
+@layer base {
+  button,
+  [type='button'],
+  [type='reset'],
+  [type='submit'] {
+    background-color: transparent;
+    background-image: none;
+    border: 0 solid;
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: default;
+  }
+}
+
 :root {
   --ins-app: #f7f6f2;
   --ins-raised: #ffffff;
