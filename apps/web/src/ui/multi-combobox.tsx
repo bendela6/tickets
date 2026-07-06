@@ -42,40 +42,40 @@ export function MultiCombobox({
       <PopoverAnchor asChild>
         <div
           className={cn(
-            'flex w-full flex-wrap items-center gap-1.5 rounded-ctrl border border-control bg-raised px-2',
+            'flex w-full items-center gap-1.5 rounded-ctrl border border-control bg-raised px-2',
             'focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent-subtle',
             disabled && 'pointer-events-none opacity-50',
             size === 'compact' ? 'min-h-7 py-0.5' : 'min-h-9 py-1',
             className,
           )}
         >
-          {shown.map((option) => (
-            <span key={option.value} className="inline-flex items-center gap-1">
-              <OptionChip color={option.color ?? 'gray'} label={option.label} />
-              <button
-                type="button"
-                aria-label={`Remove ${option.label}`}
-                onClick={() => toggle(option.value)}
-                className="rounded-ctrl px-0.5 text-ink-3 hover:text-ink"
-              >
-                ×
-              </button>
-            </span>
-          ))}
-          {overflow > 0 ? <span className="font-sans text-meta text-ink-2">+{overflow}</span> : null}
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+            {selectedOptions.length === 0 ? (
+              <span className="truncate font-sans text-ui text-ink-3">{placeholder}</span>
+            ) : null}
+            {shown.map((option) => (
+              <span key={option.value} className="inline-flex items-center gap-1">
+                <OptionChip color={option.color ?? 'gray'} label={option.label} />
+                <button
+                  type="button"
+                  aria-label={`Remove ${option.label}`}
+                  onClick={() => toggle(option.value)}
+                  className="rounded-ctrl px-0.5 text-ink-3 hover:text-ink"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            {overflow > 0 ? <span className="font-sans text-meta text-ink-2">+{overflow}</span> : null}
+          </div>
           <PopoverTrigger asChild>
             <button
               type="button"
               aria-label={placeholder}
               disabled={disabled}
-              className="flex min-w-8 flex-1 items-center gap-2 self-stretch font-sans text-ui text-ink outline-none"
+              className="flex shrink-0 items-center self-center font-sans text-ui text-ink-3 outline-none"
             >
-              {selectedOptions.length === 0 ? (
-                <span className="truncate text-ink-3">{placeholder}</span>
-              ) : null}
-              <span aria-hidden className="ml-auto text-ink-3">
-                ▾
-              </span>
+              <span aria-hidden>▾</span>
             </button>
           </PopoverTrigger>
         </div>
