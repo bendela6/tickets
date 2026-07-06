@@ -50,7 +50,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               }
             }}
             className={cn(
-              'flex items-center justify-between gap-4 rounded-card border border-hairline bg-raised px-3 py-2 shadow-sm',
+              'flex items-center justify-between gap-4 rounded-card border border-hairline bg-raised px-3.5 py-2.5 shadow-lg',
               'font-sans text-ui text-ink',
               'data-[state=open]:animate-in data-[state=closed]:animate-out',
             )}
@@ -60,7 +60,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <RadixToast.Action
                 altText={entry.action.label}
                 onClick={entry.action.onClick}
-                className="font-sans text-meta font-medium text-accent hover:underline"
+                className="font-sans text-ui font-medium text-accent hover:underline"
               >
                 {entry.action.label}
               </RadixToast.Action>

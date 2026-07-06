@@ -27,3 +27,50 @@ test('loading disables and marks busy', () => {
   expect(button).toBeDisabled();
   expect(button).toHaveAttribute('aria-busy', 'true');
 });
+
+test('sizes match design height/padding/radius/font-size', () => {
+  const { rerender } = render(<Button size="compact">c</Button>);
+  expect(screen.getByRole('button')).toHaveClass('h-7', 'px-2.5', 'rounded-[6px]', 'text-[12px]');
+  rerender(<Button size="regular">r</Button>);
+  expect(screen.getByRole('button')).toHaveClass('h-9', 'px-3.5', 'rounded-[8px]', 'text-[13px]');
+  rerender(<Button size="touch">t</Button>);
+  expect(screen.getByRole('button')).toHaveClass('h-11', 'px-[18px]', 'rounded-[10px]', 'text-[14px]');
+  rerender(<Button size="icon" aria-label="more" />);
+  expect(screen.getByRole('button')).toHaveClass('h-8', 'w-8', 'p-0', 'rounded-[8px]');
+});
+
+test('focus halo is 3px accent-subtle, danger-subtle for destructive', () => {
+  const { rerender } = render(<Button variant="primary">New</Button>);
+  expect(screen.getByRole('button')).toHaveClass('focus-visible:ring-[3px]', 'focus-visible:ring-accent-subtle');
+  rerender(<Button variant="destructive">Archive</Button>);
+  const danger = screen.getByRole('button');
+  expect(danger).toHaveClass('focus-visible:ring-danger-subtle');
+  expect(danger).not.toHaveClass('focus-visible:ring-accent-subtle');
+});
+
+test('disabled swaps variant colors; loading keeps the fill', () => {
+  const { rerender } = render(
+    <Button variant="primary" disabled>
+      New
+    </Button>,
+  );
+  // Pure-disabled: design swaps the accent fill for an inset/ink-3 treatment.
+  expect(screen.getByRole('button')).toHaveClass('bg-inset', 'text-ink-3');
+  expect(screen.getByRole('button')).not.toHaveClass('bg-accent');
+  // Loading is also `disabled` but must keep the accent fill (design LOADING row).
+  rerender(
+    <Button variant="primary" loading>
+      New
+    </Button>,
+  );
+  const busy = screen.getByRole('button');
+  expect(busy).toBeDisabled();
+  expect(busy).toHaveClass('bg-accent');
+  expect(busy).not.toHaveClass('bg-inset');
+});
+
+test('loading spinner is a 12px ring', () => {
+  render(<Button loading>Creating…</Button>);
+  const spinner = screen.getByRole('button').querySelector('[aria-hidden]');
+  expect(spinner).toHaveClass('size-3', 'animate-spin', 'rounded-full');
+});

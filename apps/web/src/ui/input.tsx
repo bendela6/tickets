@@ -8,12 +8,12 @@ type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> & {
 
 export const inputClasses = (invalid: boolean | undefined, className?: string) =>
   cn(
-    'w-full rounded-ctrl border bg-raised font-sans text-ui text-ink placeholder:text-ink-3',
+    'w-full appearance-none rounded-[8px] border bg-raised font-sans text-[14px] text-ink placeholder:text-ink-3',
     'transition-colors focus:outline-none focus:ring-[3px]',
     invalid
-      ? 'border-danger focus:ring-danger-subtle'
+      ? 'border-danger ring-[3px] ring-danger-subtle'
       : 'border-control hover:border-ink-3 focus:border-accent focus:ring-accent-subtle',
-    'disabled:opacity-50 disabled:bg-inset',
+    'disabled:border-hairline disabled:bg-inset disabled:text-ink-3',
     className,
   );
 
@@ -25,7 +25,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     <input
       ref={ref}
       aria-invalid={invalid || undefined}
-      className={cn(inputClasses(invalid), size === 'compact' ? 'h-7 px-2' : 'h-9 px-3', className)}
+      className={cn(
+        inputClasses(invalid),
+        size === 'compact' ? 'h-7 rounded-[6px] px-2.25 text-[13px]' : 'h-9 px-3',
+        className,
+      )}
       {...rest}
     />
   );

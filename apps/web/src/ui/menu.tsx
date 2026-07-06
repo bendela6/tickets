@@ -18,7 +18,7 @@ export const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(function
         sideOffset={sideOffset}
         align={align}
         className={cn(
-          'z-50 min-w-44 rounded-card border border-hairline bg-raised p-1 text-ink shadow-sm',
+          'z-50 min-w-47.5 rounded-card border border-hairline bg-raised p-1 text-ink shadow-lg',
           'font-sans text-ui outline-none',
           className,
         )}
@@ -57,5 +57,5 @@ export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(function MenuI
 });
 
 export function MenuSeparator({ className }: { className?: string }) {
-  return <DropdownMenu.Separator className={cn('my-1 h-px bg-hairline', className)} />;
+  return <DropdownMenu.Separator className={cn('mx-1 my-1 h-px bg-hairline', className)} />;
 }

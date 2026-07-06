@@ -31,7 +31,7 @@ export function OptionChip({ color, label, className }: { color: OptionColor; la
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2 py-0.5 font-sans text-meta font-medium',
+        'inline-flex h-5.5 items-center rounded-full px-2.5 font-sans text-meta font-medium',
         colorClasses[color],
         className,
       )}

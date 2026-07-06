@@ -12,9 +12,11 @@ export function Avatar({ name, kind, size = 'sm', className }: AvatarProps) {
     <span
       title={name}
       className={cn(
-        'inline-flex shrink-0 items-center justify-center border border-hairline bg-inset font-sans font-medium text-ink-2',
-        kind === 'agent' ? 'rounded-[4px]' : 'rounded-full',
-        size === 'sm' ? 'size-5 text-[9px]' : 'size-7 text-meta',
+        'inline-flex shrink-0 items-center justify-center font-semibold',
+        kind === 'agent'
+          ? 'rounded-md bg-accent-subtle font-mono text-accent'
+          : 'rounded-full bg-opt-cyan-subtle font-sans text-opt-cyan',
+        size === 'sm' ? 'size-4.5 text-[9px]' : 'size-5.5 text-[10px]',
         className,
       )}
     >

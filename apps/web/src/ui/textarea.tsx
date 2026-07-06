@@ -12,7 +12,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
     <textarea
       ref={ref}
       aria-invalid={invalid || undefined}
-      className={cn(inputClasses(invalid), 'min-h-24 px-3 py-2 leading-normal', className)}
+      className={cn(inputClasses(invalid), 'min-h-18 resize-y px-3 py-2.5 leading-normal', className)}
       {...rest}
     />
   );

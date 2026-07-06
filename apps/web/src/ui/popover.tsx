@@ -21,7 +21,7 @@ export const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(fu
         collisionPadding={collisionPadding}
         align={align}
         className={cn(
-          'z-50 rounded-card border border-hairline bg-raised text-ink shadow-sm',
+          'z-50 rounded-card border border-hairline bg-raised text-ink shadow-lg',
           'font-sans text-ui outline-none',
           'data-[state=open]:animate-in data-[state=closed]:animate-out',
           className,

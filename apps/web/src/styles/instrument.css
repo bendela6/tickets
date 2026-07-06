@@ -51,6 +51,7 @@
   --ins-kind-dropped: #6b675c;
   --ins-kind-dropped-subtle: #ebeae3;
   --ins-shadow-sm: 0 1px 2px rgba(28, 26, 20, 0.06);
+  --ins-shadow-lg: 0 16px 40px rgba(28, 26, 20, 0.16), 0 4px 10px rgba(28, 26, 20, 0.08);
   --ins-opt-red: #a03028;
   --ins-opt-red-subtle: #fae3e1;
   --ins-opt-orange: #a44e14;
@@ -102,6 +103,7 @@
   --ins-kind-dropped: #9b968a;
   --ins-kind-dropped-subtle: #26251f;
   --ins-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --ins-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55), 0 4px 10px rgba(0, 0, 0, 0.4);
   --ins-opt-red: #f0968d;
   --ins-opt-red-subtle: #46231f;
   --ins-opt-orange: #efa36c;
@@ -178,6 +180,7 @@
   --color-opt-gray: var(--ins-opt-gray);
   --color-opt-gray-subtle: var(--ins-opt-gray-subtle);
   --shadow-sm: var(--ins-shadow-sm);
+  --shadow-lg: var(--ins-shadow-lg);
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
   --radius-ctrl: 5px;

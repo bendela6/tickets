@@ -87,7 +87,10 @@ export function ComboboxList({
 
   return (
     <div className="flex max-h-72 w-64 flex-col">
-      <div className="border-b border-hairline p-1.5">
+      <div className="flex items-center gap-2 border-b border-hairline px-3 py-2.25">
+        <span aria-hidden className="font-sans text-meta text-ink-3">
+          ⌕
+        </span>
         <input
           ref={inputRef}
           role="combobox"
@@ -103,13 +106,13 @@ export function ComboboxList({
           }}
           onKeyDown={onKeyDown}
           className={cn(
-            'h-8 w-full rounded-ctrl border border-control bg-raised px-2 font-sans text-ui text-ink',
-            'placeholder:text-ink-3 focus:border-accent focus:outline-none focus:ring-[3px] focus:ring-accent-subtle',
+            'min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-ui text-ink',
+            'placeholder:text-ink-3 focus:outline-none focus:ring-0',
           )}
         />
       </div>
       {header ? <div className="border-b border-hairline px-1.5 py-1">{header}</div> : null}
-      <ul id={listId} role="listbox" className="flex-1 overflow-y-auto p-1">
+      <ul id={listId} role="listbox" className="flex-1 overflow-y-auto p-1.25">
         {filtered.length === 0 ? (
           <li className="px-2 py-3 text-center font-sans text-meta text-ink-3">{emptyLabel}</li>
         ) : null}
@@ -123,7 +126,7 @@ export function ComboboxList({
           return (
             <li key={option.value}>
               {showHeader ? (
-                <div className="px-2 pb-1 pt-2 font-sans text-label font-medium uppercase tracking-wider text-ink-3">
+                <div className="px-2.25 pb-0.75 pt-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-3">
                   {groupLabel}
                 </div>
               ) : null}
@@ -136,7 +139,7 @@ export function ComboboxList({
                 onMouseEnter={() => setActiveIndex(index)}
                 onClick={() => pick(index)}
                 className={cn(
-                  'flex w-full items-center justify-between gap-2 rounded-ctrl px-2 py-1.5 text-left font-sans text-ui text-ink',
+                  'flex w-full items-center justify-between gap-2 rounded-ctrl px-2.25 py-1.75 text-left font-sans text-ui text-ink',
                   active && 'bg-inset',
                   option.disabled && 'cursor-not-allowed opacity-50',
                 )}
@@ -148,13 +151,13 @@ export function ComboboxList({
                 ) : (
                   <span>{option.label}</span>
                 )}
-                {selected ? <span className="text-accent">✓</span> : null}
+                {selected ? <span className="font-sans text-meta font-medium text-accent">✓</span> : null}
               </button>
             </li>
           );
         })}
       </ul>
-      {footer ? <div className="border-t border-hairline px-2 py-1.5 font-sans text-meta text-ink-3">{footer}</div> : null}
+      {footer ? <div className="border-t border-hairline px-3 py-1.75 font-sans text-[11px] text-ink-3">{footer}</div> : null}
     </div>
   );
 }
