@@ -58,11 +58,11 @@ a {
 .wrap a:hover {
   text-decoration: underline;
 }
-/* Scoped to legacy screens — the unlayered `font` shorthand would otherwise
-   reset font-size/weight utilities on every Instrument button. */
-.wrap button {
-  font: inherit;
-}
+/* No `.wrap button { font: inherit }` here: instrument.css's LAYERED
+   `@layer base { button { font: inherit } }` already gives every button the
+   inherited font-family, and being layered it loses to `.btn`'s own
+   `font-size: 13px`. An unlayered `.wrap button` rule (specificity 0,1,1) would
+   instead outrank `.btn` (0,1,0) and bloat legacy buttons to the inherited 14px. */
 
 .wrap {
   width: 100%;
