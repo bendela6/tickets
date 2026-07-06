@@ -1,4 +1,5 @@
 import { createRouter } from '@tanstack/react-router';
+import { galleryRoute } from './routes/gallery-route';
 import { indexRoute } from './routes/index-route';
 import { projectIndexRoute } from './routes/project-index-route';
 import { projectRoute } from './routes/project-route';
@@ -8,6 +9,7 @@ import { viewRoute } from './routes/view-route';
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
+  galleryRoute,
   projectRoute.addChildren([projectIndexRoute, viewRoute, ticketPageRoute]),
 ]);
 
