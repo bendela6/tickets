@@ -3,6 +3,9 @@ import { useState, type ReactNode } from 'react';
 import { Avatar } from '../ui/avatar';
 import { Button } from '../ui/button';
 import { Checkbox } from '../ui/checkbox';
+import { Combobox } from '../ui/combobox';
+import { MultiCombobox } from '../ui/multi-combobox';
+import type { ComboOption } from '../ui/combobox-list';
 import { FieldError } from '../ui/field-error';
 import { FieldLabel } from '../ui/field-label';
 import { Input } from '../ui/input';
@@ -49,8 +52,25 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
+const PRIORITY_OPTIONS: ComboOption[] = [
+  { value: 'p0', label: 'P0 · critical', color: 'red' },
+  { value: 'p1', label: 'P1 · high', color: 'orange' },
+  { value: 'p2', label: 'P2 · normal', color: 'gray' },
+  { value: 'p3', label: 'P3 · low', color: 'blue' },
+];
+
+const LABEL_OPTIONS: ComboOption[] = [
+  { value: 'frontend', label: 'frontend', color: 'blue' },
+  { value: 'api', label: 'api', color: 'green' },
+  { value: 'infra', label: 'infra', color: 'gray' },
+  { value: 'docs', label: 'docs', color: 'purple' },
+  { value: 'design', label: 'design', color: 'pink' },
+];
+
 function GalleryScreen() {
   const [density, setDensity] = useState('comfortable');
+  const [priority, setPriority] = useState<string | null>('p0');
+  const [labels, setLabels] = useState<string[]>(['frontend', 'api']);
 
   function toggleTheme() {
     const root = document.documentElement;
@@ -64,7 +84,7 @@ function GalleryScreen() {
           <div>
             <h1 className="font-sans text-[22px] font-semibold text-ink">Instrument — primitives gallery</h1>
             <p className="mt-1 font-sans text-meta text-ink-2">
-              Phase 1 control library. Compare against docs/design/design-system.html.
+              Instrument control library. Compare against docs/design/design-system.html.
             </p>
           </div>
           <Button variant="secondary" onClick={toggleTheme}>
@@ -134,6 +154,26 @@ function GalleryScreen() {
               { value: 'off', label: 'Disabled', disabled: true },
             ]}
           />
+        </Section>
+
+        <Section title="Comboboxes — searchable single & multi">
+          <div className="w-56">
+            <Combobox
+              options={PRIORITY_OPTIONS}
+              value={priority}
+              onChange={setPriority}
+              placeholder="Priority"
+              clearable
+            />
+          </div>
+          <div className="w-72">
+            <MultiCombobox
+              options={LABEL_OPTIONS}
+              value={labels}
+              onChange={setLabels}
+              placeholder="Labels"
+            />
+          </div>
         </Section>
 
         <Section title="Status badges — shape-coded kinds">
