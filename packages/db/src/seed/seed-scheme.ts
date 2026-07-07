@@ -4,10 +4,12 @@ import {
   fields,
   linkTypes,
   schemes,
+  statusTransitions,
   statuses,
   ticketTypeFields,
   ticketTypes,
 } from '../schema';
+import { buildTransitions } from './build-transitions';
 import type { SchemeDef } from './scheme-types';
 import { KIND_COLORS } from './software-scheme';
 
@@ -82,6 +84,18 @@ export async function seedScheme(db: Db, def: SchemeDef) {
         byStatusKey[st.key] = statusRow.id;
       }
       statusIdByTypeKey[t.key] = byStatusKey;
+
+      const edgeDefs = buildTransitions(t);
+      if (edgeDefs.length > 0) {
+        await tx.insert(statusTransitions).values(
+          edgeDefs.map((e) => ({
+            fromStatusId: e.fromKey === null ? null : byStatusKey[e.fromKey]!,
+            toStatusId: byStatusKey[e.toKey]!,
+            ticketTypeId: typeRow.id,
+            config: e.config ?? {},
+          })),
+        );
+      }
 
       const required = new Set(t.requiredFieldKeys ?? []);
       await tx.insert(ticketTypeFields).values(

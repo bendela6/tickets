@@ -28,6 +28,12 @@ export type FieldDef = {
 
 export type LinkTypeDef = { key: string; label: string; inverseLabel: string; directional: boolean };
 
+export type TransitionDef = {
+  fromKey: string | null;
+  toKey: string;
+  config?: { guard?: { requiresField?: string; requiresComment?: boolean } };
+};
+
 export type ViewColumnDef =
   | { source: 'number' | 'type' | 'progress' }
   | { source: 'field'; fieldKey: string };
