@@ -13,21 +13,36 @@ The user asked for three things — hooks, event listeners, and integrations
 1. **Event bus / outbox** — reliable after-commit dispatch of domain events.
 2. **Automation rules engine (internal actions)** — user-configured "when X → do
    Y" rules stored as data, run against events, performing internal actions.
-3. **Integration framework + outbound connectors** — a connector interface,
-   connection/credential storage, id/field mapping, and a "push to \<connector\>"
-   action type. Ships with one real connector.
-4. **Inbound + bidirectional sync** — inbound webhooks, `connector.parse()`,
-   echo/loop suppression, conflict resolution.
+3. **Integration framework + connectors** — one `Connector` interface behind a
+   *connector (type) vs connection (instance)* split; connection/credential
+   storage; id/field mapping; connections subscribe to the same event bus for
+   outbound push. Delivered in two sub-phases:
+   - **3a** — the interface + a **generic no-code HTTP connector** (users add a
+     "custom connection" to any REST API from the UI — auth, outbound request
+     templates using the automations `{{…}}` tokens; **outbound only** first),
+     with encrypted secret storage and an **SSRF guard** (host allowlist, block
+     internal/metadata IPs). API-key / bearer-token auth first; generic OAuth
+     deferred.
+   - **3b** — one first-party **code connector** (likely Linear — cleanest API)
+     to prove the interface with real logic (OAuth, pagination).
+4. **Inbound + bidirectional sync** — inbound webhooks with **HMAC verification**,
+   `connector.parse()`, an `external_links` id-mapping table, echo/loop
+   suppression, and conflict resolution. Applies to generic and code connectors
+   alike.
 
-Build order is strictly 1 → 2 → 3 → 4. **This spec is layers 1 + 2**, chosen
-because the outbox alone is not observable — pairing it with internal automations
-yields a shippable, testable feature (no-code automations) end-to-end.
+Build order is strictly 1 → 2 → 3a → 3b → 4. **This spec is layers 1 + 2**,
+chosen because the outbox alone is not observable — pairing it with internal
+automations yields a shippable, testable feature (no-code automations) end-to-end.
 
 ### Locked decisions (from brainstorming)
 
-- **Automations are data, connectors are code.** Non-developers author rules in
-  the web UI; the rules are rows in the DB. (Connectors, arriving in layer 3, are
-  code a developer writes once.)
+- **Automations are data.** Non-developers author rules in the web UI; the rules
+  are rows in the DB.
+- **Custom connections are supported two ways behind one interface** (layer 3):
+  a **generic no-code HTTP connector** users configure in the UI (the primary
+  "add a custom connection" path, no deploy), plus **code connector plugins** a
+  developer adds for full-power targets (Jira/Linear/Notion). Both implement the
+  same `Connector` contract, so the sync engine never special-cases a connector.
 - **Full bidirectional sync is the eventual target** (layer 4) — so the
   foundation must be reliable. Hence a durable outbox, not best-effort in-memory.
 - **Delivery is at-least-once via a transactional outbox**, polled by an
