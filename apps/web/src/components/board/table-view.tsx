@@ -31,7 +31,7 @@ function columnWidth(column: ViewColumn, indexes: BoardIndexes): string {
   if (column.source === 'progress') {
     return '96px';
   }
-  const field = indexes.fieldById.get(column.fieldId);
+  const field = indexes.fieldByKey.get(column.fieldKey);
   if (!field) {
     return '96px';
   }
@@ -253,7 +253,7 @@ export function TableView({
       return false;
     }
     if (column.source === 'field') {
-      return config.sort.source === 'field' && config.sort.fieldId === column.fieldId;
+      return config.sort.source === 'field' && config.sort.fieldKey === column.fieldKey;
     }
     return config.sort.source === column.source;
   };
@@ -269,7 +269,7 @@ export function TableView({
         ...current,
         sort:
           column.source === 'field'
-            ? { source: 'field', fieldId: column.fieldId, dir }
+            ? { source: 'field', fieldKey: column.fieldKey, dir }
             : { source: column.source, dir },
       };
     });
@@ -298,7 +298,7 @@ export function TableView({
         </span>
       );
     }
-    const field = indexes.fieldById.get(column.fieldId);
+    const field = indexes.fieldByKey.get(column.fieldKey);
     if (!field) {
       return <span key={key} />;
     }

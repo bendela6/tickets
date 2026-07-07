@@ -21,7 +21,7 @@ function asValueList(value: unknown): string[] {
   return [String(value)];
 }
 
-// AND across rules; every rule targets one field by id.
+// AND across rules; every rule targets one field by key.
 export function evaluateFilters(
   rules: FilterRule[],
   query: string,
@@ -40,7 +40,7 @@ export function evaluateFilters(
     }
   }
   for (const rule of rules) {
-    const field = indexes.fieldById.get(rule.fieldId);
+    const field = indexes.fieldByKey.get(rule.fieldKey);
     if (!field) {
       continue;
     }

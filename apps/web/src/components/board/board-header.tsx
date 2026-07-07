@@ -19,7 +19,7 @@ export function columnLabel(column: ViewColumn, indexes: BoardIndexes): string {
   if (column.source === 'progress') {
     return 'Subtasks';
   }
-  return indexes.fieldById.get(column.fieldId)?.label ?? `field ${column.fieldId}`;
+  return indexes.fieldByKey.get(column.fieldKey)?.label ?? column.fieldKey;
 }
 
 function segmentClasses(active: boolean, withBorder: boolean) {

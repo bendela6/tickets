@@ -21,7 +21,7 @@ export function compareTickets(
       const progress = childProgress(ticket, indexes);
       return progress.total === 0 ? -1 : progress.done / progress.total;
     }
-    const field = sort.fieldId === undefined ? undefined : indexes.fieldById.get(sort.fieldId);
+    const field = sort.fieldKey === undefined ? undefined : indexes.fieldByKey.get(sort.fieldKey);
     if (!field) {
       return ticket.number;
     }
