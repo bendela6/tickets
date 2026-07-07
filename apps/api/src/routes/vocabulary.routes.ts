@@ -48,6 +48,7 @@ const createOptionSchema = v.object({
 
 const createStatusSchema = v.object({
   //
+  ticketTypeKey: v.pipe(v.string(), v.minLength(1)),
   key: v.pipe(v.string(), v.minLength(1)),
   label: v.pipe(v.string(), v.minLength(1)),
   kind: v.picklist(['todo', 'active', 'blocked', 'done', 'dropped']),
@@ -80,7 +81,9 @@ export function registerVocabularyRoutes(app: FastifyInstance, context: { db: Db
       const inserted = await tx
         .insert(fields)
         .values({
-          projectId: vocab.project.id,
+          ...(vocab.project.schemeId != null
+            ? { schemeId: vocab.project.schemeId }
+            : { projectId: vocab.project.id }),
           key: body.key,
           label: body.label,
           type: body.type,
@@ -185,15 +188,20 @@ export function registerVocabularyRoutes(app: FastifyInstance, context: { db: Db
     const { key } = request.params as { key: string };
     const body = parseBody(createStatusSchema, request.body);
     const vocab = await loadProjectVocab(db, { key });
+    const type = vocab.typeByKey.get(body.ticketTypeKey);
+    if (!type) {
+      throw new HttpError(400, `unknown ticket type "${body.ticketTypeKey}"`);
+    }
+    const typeStatusCount = vocab.statuses.filter((s) => s.ticketTypeId === type.id).length;
     const inserted = await db
       .insert(statuses)
       .values({
-        projectId: vocab.project.id,
+        ticketTypeId: type.id,
         key: body.key,
         label: body.label,
         kind: body.kind,
         config: body.config ?? {},
-        position: vocab.statuses.length,
+        position: typeStatusCount,
       })
       .returning();
     reply.status(201).send(inserted[0]);
@@ -221,26 +229,25 @@ export function registerVocabularyRoutes(app: FastifyInstance, context: { db: Db
     const { key } = request.params as { key: string };
     const body = parseBody(createTransitionSchema, request.body);
     const vocab = await loadProjectVocab(db, { key });
+    if (!body.ticketTypeKey) {
+      throw new HttpError(400, 'ticketTypeKey is required (statuses are type-owned)');
+    }
+    const type = vocab.typeByKey.get(body.ticketTypeKey);
+    if (!type) {
+      throw new HttpError(400, `unknown ticket type "${body.ticketTypeKey}"`);
+    }
     const resolveStatus = (statusKey: string) => {
-      const status = vocab.statusByKey.get(statusKey);
+      const status = vocab.statusByTypeKey.get(`${type.id}:${statusKey}`);
       if (!status) {
-        throw new HttpError(400, `unknown status "${statusKey}"`);
+        throw new HttpError(400, `unknown status "${statusKey}" for type "${type.key}"`);
       }
       return status;
     };
     const fromStatusId = body.fromStatusKey === null ? null : resolveStatus(body.fromStatusKey).id;
     const toStatusId = resolveStatus(body.toStatusKey).id;
-    let ticketTypeId: number | null = null;
-    if (body.ticketTypeKey) {
-      const type = vocab.typeByKey.get(body.ticketTypeKey);
-      if (!type) {
-        throw new HttpError(400, `unknown ticket type "${body.ticketTypeKey}"`);
-      }
-      ticketTypeId = type.id;
-    }
     const inserted = await db
       .insert(statusTransitions)
-      .values({ fromStatusId, toStatusId, ticketTypeId })
+      .values({ fromStatusId, toStatusId, ticketTypeId: type.id })
       .returning();
     reply.status(201).send(inserted[0]);
   };
@@ -264,7 +271,9 @@ export function registerVocabularyRoutes(app: FastifyInstance, context: { db: Db
     const inserted = await db
       .insert(linkTypes)
       .values({
-        projectId: vocab.project.id,
+        ...(vocab.project.schemeId != null
+          ? { schemeId: vocab.project.schemeId }
+          : { projectId: vocab.project.id }),
         key: body.key,
         label: body.label,
         inverseLabel: body.inverseLabel,
