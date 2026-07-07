@@ -2,10 +2,11 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import * as v from 'valibot';
 import { and, count, desc, eq, sql } from 'drizzle-orm';
 import type { Db, DbExecutor } from '@tickets/db';
-import { ticketEvents, ticketValues, tickets, users } from '@tickets/db';
+import { comments, ticketEvents, ticketValues, tickets, users } from '@tickets/db';
 import { HttpError } from '../errors';
 import { writeEvent } from '../events/write-event';
 import { buildValueRows } from '../tickets/build-value-rows';
+import { checkGuard, type Guard } from '../tickets/check-guard';
 import { checkParent } from '../tickets/check-parent';
 import { checkTransition } from '../tickets/check-transition';
 import { initialStatusFor } from '../tickets/resolve-status';
@@ -13,7 +14,7 @@ import { nextTicketNumber } from '../tickets/next-ticket-number';
 import { renderValue } from '../tickets/render-value';
 import { parseBody } from '../utils/parse-body';
 import { parseId } from '../utils/parse-id';
-import { loadProjectVocab, type ProjectVocab } from '../vocab/load-project-vocab';
+import { loadProjectVocab, transitionEdge, type ProjectVocab } from '../vocab/load-project-vocab';
 
 const createTicketSchema = v.object({
   //
@@ -210,6 +211,26 @@ export function registerTicketsRoutes(app: FastifyInstance, context: { db: Db })
             continue;
           }
           checkTransition(vocab, { fromStatusId, toStatusId: nextStatusId, typeId });
+
+          const edge = transitionEdge(vocab, { fromStatusId, toStatusId: nextStatusId, typeId });
+          const guard = (edge?.config as { guard?: Guard } | undefined)?.guard;
+          if (guard) {
+            const commentRows = guard.requiresComment
+              ? await tx.select({ n: count() }).from(comments).where(eq(comments.ticketId, id))
+              : [{ n: 0 }];
+            const prField = vocab.fieldByKey.get('pr');
+            const prRows =
+              guard.requiresField && prField
+                ? await tx
+                    .select()
+                    .from(ticketValues)
+                    .where(and(eq(ticketValues.ticketId, id), eq(ticketValues.fieldId, prField.id)))
+                : [];
+            checkGuard(guard, {
+              hasField: () => prRows.some((r) => (r.valueText ?? '') !== ''),
+              commentCount: Number(commentRows[0]?.n ?? 0),
+            });
+          }
         }
 
         // replace semantics keep single-select single even though the DB
