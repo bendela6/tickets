@@ -2,16 +2,19 @@
 //
 // Reads the primitive + semantic (light/dark) token JSON files, resolves
 // one level of `{group.name}` alias references from semantic values against
-// the primitives map, and emits `instrument.generated.css` in the same
-// shape as the hand-written `instrument.css` (:root, [data-theme='dark'],
-// @theme inline).
+// the primitives map, and SPLICES the token-derived regions of
+// `instrument.css` back in place — between the `tokens:light` /
+// `tokens:dark` / `tokens:theme` marker comments — leaving every
+// hand-authored line around them (the `@layer base` reset, the
+// radius/font/text vars inside `@theme inline`, the `.md` prose rules)
+// byte-for-byte untouched.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const tokensDir = path.join(__dirname, '..', 'src', 'styles', 'tokens');
-const outFile = path.join(__dirname, '..', 'src', 'styles', 'instrument.generated.css');
+const cssFile = path.join(__dirname, '..', 'src', 'styles', 'instrument.css');
 
 const ALIAS_RE = /^\{([^}]+)\}$/;
 
@@ -84,61 +87,72 @@ function shadowVarLines(names, indent = '  ') {
     .join('');
 }
 
-// Static tail of `@theme inline`: type/radius/text tokens that aren't part
-// of the `--ins-*` DTCG pipeline (no primitive/semantic tier for these —
-// see the plan's non-goals). Kept verbatim here to match instrument.css.
-const THEME_STATIC_TAIL = `  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
-  --radius-ctrl: 5px;
-  --radius-card: 8px;
-  --radius-panel: 12px;
-  --text-label: 11px;
-  --text-label--line-height: 1.2;
-  --text-label--letter-spacing: 0.06em;
-  --text-meta: 12px;
-  --text-meta--line-height: 1.4;
-  --text-ui: 13px;
-  --text-ui--line-height: 1.45;
-`;
-
-export function emitInstrumentCss({ light, dark }) {
-  const names = Object.keys(light);
-  const colorNames = names.filter((name) => light[name].type !== 'shadow');
-  const shadowNames = names.filter((name) => light[name].type === 'shadow');
-
-  let css = '';
-  css += ':root {\n';
-  css += cssLines(light);
-  css += '}\n\n';
-
-  css += "[data-theme='dark'] {\n";
-  css += cssLines(dark);
-  css += '}\n\n';
-
-  css += '@theme inline {\n';
-  css += '  --color-*: initial;\n';
-  css += '  --color-white: #ffffff;\n';
-  css += '  --color-black: #000000;\n';
-  css += colorVarLines(colorNames);
-  css += shadowVarLines(shadowNames);
-  css += THEME_STATIC_TAIL;
-  css += '}\n';
-
-  return css;
-}
-
-function build() {
+function buildTokenMaps() {
   const primitivesDoc = readJson('primitives.tokens.json');
   const lightDoc = readJson('semantic.light.tokens.json');
   const darkDoc = readJson('semantic.dark.tokens.json');
 
   const primitivesMap = flattenPrimitives(primitivesDoc);
-  const lightMap = resolveAliases(flattenSemantic(lightDoc), primitivesMap);
-  const darkMap = resolveAliases(flattenSemantic(darkDoc), primitivesMap);
+  const light = resolveAliases(flattenSemantic(lightDoc), primitivesMap);
+  const dark = resolveAliases(flattenSemantic(darkDoc), primitivesMap);
+  return { light, dark };
+}
 
-  const css = emitInstrumentCss({ light: lightMap, dark: darkMap });
-  writeFileSync(outFile, css, 'utf8');
-  console.log(`Wrote ${path.relative(process.cwd(), outFile)}`);
+// Resolve the token JSON into the three generated regions of instrument.css:
+// the `:root` `--ins-*` lines (light), the `[data-theme='dark']` `--ins-*`
+// lines (dark), and the `@theme inline` `--color-*`/`--shadow-*` bridge
+// lines (theme). Exported so other scripts (e.g. a docs/token-report task)
+// can get at the same generated CSS text without re-deriving it and without
+// touching instrument.css.
+export function emitInstrumentCss({ light, dark }) {
+  const names = Object.keys(light);
+  const colorNames = names.filter((name) => light[name].type !== 'shadow');
+  const shadowNames = names.filter((name) => light[name].type === 'shadow');
+
+  return {
+    light: cssLines(light),
+    dark: cssLines(dark),
+    theme: colorVarLines(colorNames) + shadowVarLines(shadowNames),
+  };
+}
+
+// Marker comment pairs in instrument.css. Only the text strictly between
+// each pair is regenerated; the markers themselves, and everything outside
+// them (base layer, radius/font/text vars, .md prose), are left alone.
+const MARKERS = [
+  { start: '/* tokens:light — generated, do not edit */', end: '/* /tokens:light */', region: 'light' },
+  { start: '/* tokens:dark — generated, do not edit */', end: '/* /tokens:dark */', region: 'dark' },
+  { start: '/* tokens:theme — generated, do not edit */', end: '/* /tokens:theme */', region: 'theme' },
+];
+
+// Replace the body of one marker pair with freshly generated lines. The
+// markers are always indented 2 spaces in instrument.css, so the
+// replacement re-establishes that indentation itself rather than trusting
+// whatever was there before — making the splice idempotent regardless of
+// prior contents.
+function spliceRegion(css, { start, end }, body, indent = '  ') {
+  const startIdx = css.indexOf(start);
+  if (startIdx === -1) {
+    throw new Error(`Marker not found in instrument.css: ${start}`);
+  }
+  const afterStart = startIdx + start.length;
+  const endIdx = css.indexOf(end, afterStart);
+  if (endIdx === -1) {
+    throw new Error(`Marker not found in instrument.css: ${end}`);
+  }
+  return css.slice(0, afterStart) + '\n' + body + indent + css.slice(endIdx);
+}
+
+function build() {
+  const { light, dark } = buildTokenMaps();
+  const regions = emitInstrumentCss({ light, dark });
+
+  let css = readFileSync(cssFile, 'utf8');
+  for (const marker of MARKERS) {
+    css = spliceRegion(css, marker, regions[marker.region]);
+  }
+  writeFileSync(cssFile, css, 'utf8');
+  console.log(`Updated ${path.relative(process.cwd(), cssFile)}`);
 }
 
 const isMain = process.argv[1] === fileURLToPath(import.meta.url);
