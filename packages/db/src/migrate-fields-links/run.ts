@@ -202,6 +202,13 @@ const summary = await db.transaction(async (tx) => {
   // --- Step 4: remap ticket_values ----------------------------------------
   type ValueGroup = { fieldId: number; optionId: number | null; ids: number[] };
   const valueGroups = new Map<string, ValueGroup>();
+  // Orphan values: a value whose ticket type does not own the value's field
+  // (legacy data — e.g. `severity` on task, `component` on subtask). Those
+  // types deliberately exclude the field, so the value is dropped (logged in
+  // the summary). Must be deleted here so step 7's old-field DELETE doesn't
+  // hit an FK from a still-pointing value row.
+  const orphanValueIds: number[] = [];
+  const droppedOrphans = new Map<string, number>();
 
   for (const v of allTicketValues) {
     const key = keyByOldFieldId.get(v.fieldId);
@@ -213,9 +220,10 @@ const summary = await db.transaction(async (tx) => {
     }
     const newFieldId = newFieldIdByTypeKey.get(compositeKey(typeId, key));
     if (newFieldId === undefined) {
-      throw new Error(
-        `migrate-fields-links: no per-type field for type ${typeId} key "${key}" (ticket_values row ${v.id})`,
-      );
+      orphanValueIds.push(v.id);
+      const dk = `${typeId}:${key}`;
+      droppedOrphans.set(dk, (droppedOrphans.get(dk) ?? 0) + 1);
+      continue;
     }
 
     let newOptionId: number | null = null;
@@ -237,6 +245,10 @@ const summary = await db.transaction(async (tx) => {
     const group = valueGroups.get(groupKey) ?? { fieldId: newFieldId, optionId: newOptionId, ids: [] };
     group.ids.push(v.id);
     valueGroups.set(groupKey, group);
+  }
+
+  if (orphanValueIds.length > 0) {
+    await tx.delete(ticketValues).where(inArray(ticketValues.id, orphanValueIds));
   }
 
   for (const group of valueGroups.values()) {
@@ -356,7 +368,10 @@ const summary = await db.transaction(async (tx) => {
   return {
     fieldsInserted: derivedFields.length,
     linksInserted: derivedLinks.length,
-    valuesRemapped: allTicketValues.filter((v) => keyByOldFieldId.has(v.fieldId)).length,
+    valuesRemapped:
+      allTicketValues.filter((v) => keyByOldFieldId.has(v.fieldId)).length - orphanValueIds.length,
+    valuesDropped: orphanValueIds.length,
+    droppedOrphansByTypeKey: Object.fromEntries(droppedOrphans),
     linksRemapped: scopedTicketLinks.length,
     viewsRewritten: scopedViews.length,
   };
