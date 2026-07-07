@@ -18,6 +18,7 @@ export type SharedFieldRow = {
   type: FieldTypeKey;
   system: boolean;
   config: Record<string, unknown>;
+  archivedAt: string | null;
 };
 
 // A `ticket_type_fields` junction row: which type attaches which shared
@@ -42,6 +43,7 @@ export type TypeFieldDerived = {
   config: Record<string, unknown>;
   required: boolean;
   position: number;
+  archivedAt: string | null;
 };
 
 // For each `(type, attached field)` pair in `ticketTypeFields`, produce the
@@ -68,6 +70,7 @@ export function deriveTypeFields(
       config: field.config,
       required: attachment.required,
       position: attachment.position,
+      archivedAt: field.archivedAt,
     };
   });
 }
@@ -126,6 +129,7 @@ export type SharedLinkRow = {
   label: string;
   inverseLabel: string;
   directional: boolean;
+  archivedAt: string | null;
 };
 
 // One observed `(sourceTypeId, targetTypeId, oldLinkTypeId)` triple, read
@@ -146,6 +150,7 @@ export type TypeLinkDerived = {
   inverseLabel: string;
   directional: boolean;
   targetTypeIds: number[];
+  archivedAt: string | null;
 };
 
 // For each shared link type, derive the per-source-type link rows to
@@ -174,6 +179,7 @@ export function deriveTypeLinks(
           inverseLabel: link.inverseLabel,
           directional: link.directional,
           targetTypeIds: [...sortedAllTypeIds],
+          archivedAt: link.archivedAt,
         });
       }
       continue;
@@ -197,6 +203,7 @@ export function deriveTypeLinks(
         inverseLabel: link.inverseLabel,
         directional: link.directional,
         targetTypeIds,
+        archivedAt: link.archivedAt,
       });
     }
   }

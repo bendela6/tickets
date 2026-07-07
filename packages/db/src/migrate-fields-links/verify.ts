@@ -78,7 +78,17 @@ for (const v of allViews) {
   }
 }
 
-console.log(JSON.stringify({ badValueField, orphanValue, badLinkOwner, badLinkTarget, badViewKey }));
+// strayFields/strayLinks: old scheme-owned rows (ticket_type_id IS NULL)
+// that run.ts's Step 7 should have deleted. Expected to be 0 after a
+// successful migration — a nonzero count here means run.ts's deletion step
+// regressed or was skipped, and the later contract migration's
+// `ticket_type_id SET NOT NULL` would fail on these rows.
+const strayFields = allFields.filter((f) => f.ticketTypeId === null).length;
+const strayLinks = allLinkTypes.filter((l) => l.ticketTypeId === null).length;
+
+console.log(
+  JSON.stringify({ badValueField, orphanValue, badLinkOwner, badLinkTarget, badViewKey, strayFields, strayLinks }),
+);
 await sql.end();
 
 // Mirrors the walk shape in `./derive`'s remapViewConfig, but collects
