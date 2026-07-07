@@ -11,14 +11,16 @@ import {
 } from 'drizzle-orm/pg-core';
 import { fieldTypeEnum } from './enums';
 import { schemes } from './schemes';
+import { ticketTypes } from './ticket-types';
 
 export const fields = pgTable(
   'fields',
   {
     id: serial('id').primaryKey(),
-    schemeId: integer('scheme_id')
-      .notNull()
-      .references(() => schemes.id),
+    schemeId: integer('scheme_id').references(() => schemes.id),
+    ticketTypeId: integer('ticket_type_id').references(() => ticketTypes.id),
+    position: integer('position'),
+    required: boolean('required').notNull().default(false),
     key: text('key').notNull(),
     label: text('label').notNull(),
     type: fieldTypeEnum('type').notNull(),

@@ -14,4 +14,5 @@ export { ticketValues } from './ticket-values';
 export { comments } from './comments';
 export { ticketEvents } from './ticket-events';
 export { linkTypes } from './link-types';
+export { linkTypeTargetTypes } from './link-type-target-types';
 export { ticketLinks } from './ticket-links';
