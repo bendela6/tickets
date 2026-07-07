@@ -19,11 +19,11 @@ export function buildValueRows(
   vocab: ProjectVocab,
   fieldKey: string,
   value: unknown,
-  typeId?: number,
+  typeId: number,
 ): ValueRow[] {
-  const field = vocab.fieldByKey.get(fieldKey);
+  const field = vocab.fieldByTypeKey.get(`${typeId}:${fieldKey}`);
   if (!field || field.archivedAt) {
-    throw new HttpError(400, `unknown field "${fieldKey}"`);
+    throw new HttpError(400, `unknown field "${fieldKey}" for this ticket type`);
   }
   if (value === null || value === undefined) {
     return [];
@@ -78,9 +78,6 @@ export function buildValueRows(
   if (field.type === 'status') {
     if (typeof value !== 'string') {
       throw new HttpError(400, `field "${fieldKey}" expects a status key`);
-    }
-    if (typeId === undefined) {
-      throw new HttpError(500, 'status resolution requires a ticket type');
     }
     const status = resolveStatus(vocab, typeId, value);
     return [{ fieldId: field.id, statusId: status.id }];

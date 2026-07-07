@@ -63,21 +63,20 @@ export function registerTicketsRoutes(app: FastifyInstance, context: { db: Db })
       throw new HttpError(400, `unknown ticket type "${body.typeKey}"`);
     }
 
-    // required gates creation: every required field of the type needs a value
-    const requiredFieldIds = vocab.typeFields
-      .filter((row) => row.ticketTypeId === type.id && row.required)
-      .map((row) => row.fieldId);
-    for (const fieldId of requiredFieldIds) {
-      const field = vocab.fieldById.get(fieldId);
-      const value = field ? body.values[field.key] : undefined;
+    // required gates creation: every required field the type owns needs a value
+    const requiredFields = (vocab.fieldsByType.get(type.id) ?? []).filter(
+      (field) => field.required,
+    );
+    for (const field of requiredFields) {
+      const value = body.values[field.key];
       if (value === undefined || value === null || value === '') {
-        throw new HttpError(400, `field "${field?.key}" is required for type "${type.key}"`);
+        throw new HttpError(400, `field "${field.key}" is required for type "${type.key}"`);
       }
     }
 
     // default the status to the project's initial one when the type has a
     // status field and the caller did not choose
-    const statusField = vocab.fields.find((field) => field.type === 'status');
+    const statusField = vocab.fieldByTypeKey.get(`${type.id}:status`);
     const values = { ...body.values };
     if (statusField && values[statusField.key] === undefined) {
       const initial =
@@ -115,7 +114,7 @@ export function registerTicketsRoutes(app: FastifyInstance, context: { db: Db })
       }
       for (const [fieldKey, value] of Object.entries(values)) {
         const rows = buildValueRows(vocab, fieldKey, value, type.id);
-        const field = vocab.fieldByKey.get(fieldKey);
+        const field = vocab.fieldByTypeKey.get(`${type.id}:${fieldKey}`);
         if (field?.type === 'status' && rows[0]?.statusId) {
           checkTransition(vocab, {
             fromStatusId: null,
@@ -194,9 +193,9 @@ export function registerTicketsRoutes(app: FastifyInstance, context: { db: Db })
       }
 
       for (const [fieldKey, value] of Object.entries(body.values ?? {})) {
-        const field = vocab.fieldByKey.get(fieldKey);
+        const field = vocab.fieldByTypeKey.get(`${typeId}:${fieldKey}`);
         if (!field || field.archivedAt) {
-          throw new HttpError(400, `unknown field "${fieldKey}"`);
+          throw new HttpError(400, `unknown field "${fieldKey}" for this ticket type`);
         }
         const current = await currentFieldValue(tx, vocab, id, field.id);
         const nextRows = buildValueRows(vocab, fieldKey, value, typeId);
@@ -218,7 +217,7 @@ export function registerTicketsRoutes(app: FastifyInstance, context: { db: Db })
             const commentRows = guard.requiresComment
               ? await tx.select({ n: count() }).from(comments).where(eq(comments.ticketId, id))
               : [{ n: 0 }];
-            const prField = vocab.fieldByKey.get('pr');
+            const prField = vocab.fieldByTypeKey.get(`${typeId}:pr`);
             const prRows =
               guard.requiresField && prField
                 ? await tx
