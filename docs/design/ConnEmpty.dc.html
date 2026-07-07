@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="border:1px solid var(--bd);border-radius:14px;background:var(--rs);padding:30px 28px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;box-shadow:var(--shsm)">
+  <div style="width:44px;height:44px;border-radius:11px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:400 20px 'IBM Plex Mono',monospace">⇄</div>
+  <div style="font:600 17px 'IBM Plex Sans',sans-serif;color:var(--f1)">Connect an external tool</div>
+  <div style="font:400 13px/1.6 'IBM Plex Sans',sans-serif;color:var(--f2);max-width:400px;text-wrap:pretty">Push ticket changes to Jira, Linear, Notion — or wire up <span style="color:var(--f1)">any REST API</span> with the no-code Custom connector.</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:6px 0 2px">
+    <div style="width:150px;border:1px solid var(--bd);border-radius:11px;background:var(--rs);padding:12px;display:flex;flex-direction:column;gap:8px;cursor:pointer;text-align:left" style-hover="border-color:var(--ac)">
+      <span style="width:28px;height:28px;border-radius:8px;background:var(--kas);color:var(--ka);display:inline-flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono',monospace">JI</span>
+      <span style="font:600 13px 'IBM Plex Sans',sans-serif;color:var(--f1)">Jira</span>
+      <span style="height:17px;padding:0 6px;border-radius:5px;background:var(--in);color:var(--f3);font:500 10px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;align-self:flex-start">OAuth</span>
+    </div>
+    <div style="width:150px;border:1px solid var(--bd);border-radius:11px;background:var(--rs);padding:12px;display:flex;flex-direction:column;gap:8px;cursor:pointer;text-align:left" style-hover="border-color:var(--ac)">
+      <span style="width:28px;height:28px;border-radius:8px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono',monospace">LI</span>
+      <span style="font:600 13px 'IBM Plex Sans',sans-serif;color:var(--f1)">Linear</span>
+      <span style="height:17px;padding:0 6px;border-radius:5px;background:var(--in);color:var(--f3);font:500 10px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;align-self:flex-start">API key</span>
+    </div>
+    <div style="width:150px;border:1px solid var(--bd);border-radius:11px;background:var(--rs);padding:12px;display:flex;flex-direction:column;gap:8px;cursor:pointer;text-align:left" style-hover="border-color:var(--ac)">
+      <span style="width:28px;height:28px;border-radius:8px;background:var(--in);color:var(--f1);display:inline-flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono',monospace">NO</span>
+      <span style="font:600 13px 'IBM Plex Sans',sans-serif;color:var(--f1)">Notion</span>
+      <span style="height:17px;padding:0 6px;border-radius:5px;background:var(--in);color:var(--f3);font:500 10px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;align-self:flex-start">API key</span>
+    </div>
+    <div style="width:150px;border:1px dashed var(--bs);border-radius:11px;background:var(--rs);padding:12px;display:flex;flex-direction:column;gap:8px;cursor:pointer;text-align:left" style-hover="border-color:var(--ac)">
+      <span style="width:28px;height:28px;border-radius:8px;background:var(--in);color:var(--f1);display:inline-flex;align-items:center;justify-content:center;font:600 12px 'IBM Plex Mono',monospace">&lt;/&gt;</span>
+      <span style="font:600 13px 'IBM Plex Sans',sans-serif;color:var(--f1)">Custom (HTTP)</span>
+      <span style="height:17px;padding:0 6px;border-radius:5px;background:var(--acs);color:var(--ac);font:500 10px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;align-self:flex-start">no-code</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:700,&quot;height&quot;:300}}"></script>
+</body>
+</html>

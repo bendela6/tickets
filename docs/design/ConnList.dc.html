@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="width:1440px;height:760px;border:1px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;background:var(--bg);color:var(--f1);box-shadow:var(--shlg);{{tok}}">
+
+  <!-- app rail -->
+  <aside style="width:224px;flex:none;border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px 12px 12px">
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 14px"><span style="width:9px;height:9px;background:var(--ac);border-radius:2px"></span><span style="font:600 15px 'IBM Plex Mono',monospace">tickets</span><span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">acme</span></div>
+    <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">⌂<span style="flex:1">Home</span></div>
+    <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">▤<span style="flex:1">All tickets</span></div>
+    <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3);padding:16px 9px 6px">PROJECTS</div>
+    <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="font:500 10px 'IBM Plex Mono',monospace;background:var(--in);border-radius:4px;padding:2px 5px">TIX</span><span style="flex:1">tickets</span></div>
+    <span style="flex:1"></span>
+    <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif;margin-bottom:8px">⚙<span style="flex:1">Settings</span></div>
+  </aside>
+
+  <!-- settings secondary nav -->
+  <div style="width:212px;flex:none;border-right:1px solid var(--bd);padding:22px 12px;display:flex;flex-direction:column;gap:2px;background:var(--bg)">
+    <div style="font:600 16px 'IBM Plex Sans',sans-serif;padding:0 9px 12px">Settings</div>
+    <div style="display:flex;align-items:center;gap:7px;padding:0 9px 8px"><span style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3)">PROJECT</span><span style="height:20px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);font:500 11px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:4px">TIX <span style="font-size:8px;color:var(--f3)">▾</span></span></div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Fields<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">9</span></div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Workflow<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">8</span></div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Views<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">5</span></div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Automations<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">4</span></div>
+    <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3);padding:16px 9px 6px">WORKSPACE</div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Projects<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">4</span></div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Users<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">7</span></div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif;color:var(--f1)">Connections<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">4</span></div>
+  </div>
+
+  <!-- main -->
+  <main style="flex:1;min-width:0;padding:22px 26px;display:flex;flex-direction:column;position:relative">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+      <h1 style="font:600 20px 'IBM Plex Sans',sans-serif;margin:0">Connections</h1>
+      <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3)">4 · 1 needs attention</span>
+      <span style="flex:1"></span>
+      <button style="height:32px;padding:0 12px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">＋ Add connection</button>
+    </div>
+    <p style="font:400 12px/1.5 'IBM Plex Sans',sans-serif;color:var(--f2);margin:0 0 16px;max-width:640px">Integrations that push ticket changes to external tools. Automations can target a connection as an action.</p>
+
+    <div style="flex:1;overflow:auto;display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:min-content;gap:14px;align-content:start">
+      <sc-for list="{{cards}}" as="c" hint-placeholder-count="4">
+        <div style="border:1px solid {{c.bd}};border-radius:13px;background:var(--rs);padding:15px 16px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shsm);opacity:{{c.op}}">
+          <div style="display:flex;align-items:flex-start;gap:11px">
+            <span style="width:34px;height:34px;flex:none;border-radius:9px;background:{{c.tileBg}};color:{{c.tileFg}};display:inline-flex;align-items:center;justify-content:center;font:600 13px 'IBM Plex Mono',monospace">{{c.mark}}</span>
+            <div style="flex:1;min-width:0">
+              <div style="font:600 15px 'IBM Plex Sans',sans-serif;color:var(--f1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{c.name}}</div>
+              <div style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f3);margin-top:1px">{{c.connector}}</div>
+            </div>
+            <span style="height:23px;padding:0 9px;border-radius:6px;background:{{c.pillBg}};color:{{c.pillFg}};font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px"><span style="width:{{c.dotSz}};height:{{c.dotSz}};border-radius:{{c.dotR}};border:{{c.dotBd}};background:{{c.dotBg}};transform:{{c.dotT}};display:inline-flex;align-items:center;justify-content:center;color:var(--onpos);font:600 7px 'IBM Plex Sans',sans-serif;flex:none">{{c.dotInner}}</span>{{c.status}}</span>
+            <span style="color:var(--f3);cursor:pointer;padding:0 2px;font-size:16px">⋯</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:11px 0;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)">
+            <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f2)">{{c.target}}</span>
+            <span style="width:3px;height:3px;border-radius:50%;background:var(--bs)"></span>
+            <span style="height:20px;padding:0 8px;border-radius:5px;background:var(--in);font:500 11px 'IBM Plex Mono',monospace;color:var(--f2);display:inline-flex;align-items:center;gap:5px">{{c.mapFrom}}<span style="color:var(--ac)">→</span>{{c.mapTo}}</span>
+            <span style="display:{{c.authD}};height:20px;padding:0 8px;border-radius:5px;background:var(--in);font:500 11px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center">{{c.auth}}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="width:32px;height:18px;border-radius:999px;background:{{c.swBg}};position:relative;display:inline-block"><span style="position:absolute;top:2px;{{c.swSide}}:2px;width:14px;height:14px;border-radius:50%;background:{{c.swKnob}}"></span></span>
+            <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)">{{c.enLabel}}</span>
+            <span style="flex:1"></span>
+            <span style="font:400 11px 'IBM Plex Mono',monospace;color:{{c.syncC}}">{{c.sync}}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{menu}}" hint-placeholder-val="{{false}}">
+    <div style="position:absolute;right:52px;top:290px;width:170px;border:1px solid var(--bd);border-radius:10px;background:var(--rs);box-shadow:var(--shlg);padding:5px;z-index:6">
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;font:400 13px 'IBM Plex Sans',sans-serif" style-hover="background:var(--in)"><span style="color:var(--f3);width:14px">✎</span>Edit</div>
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;font:400 13px 'IBM Plex Sans',sans-serif" style-hover="background:var(--in)"><span style="color:var(--f3);width:14px">▷</span>Test</div>
+      <div style="height:1px;background:var(--bd);margin:5px 4px"></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--dg)" style-hover="background:var(--in)"><span style="width:14px">⊘</span>Disconnect</div>
+    </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:760},&quot;tok&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;menu&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const pill = (s) => {
+      switch (s) {
+        case 'connected': return { pillBg: 'var(--kds)', pillFg: 'var(--kd)', dotSz: '11px', dotR: '50%', dotBd: 'none', dotBg: 'var(--kd)', dotT: 'none', dotInner: '✓', status: 'connected' };
+        case 'syncing':   return { pillBg: 'var(--kas)', pillFg: 'var(--ka)', dotSz: '10px', dotR: '50%', dotBd: '1.5px solid var(--ka)', dotBg: 'linear-gradient(90deg,var(--ka) 50%,transparent 50%)', dotT: 'none', dotInner: '', status: 'syncing' };
+        case 'authfailed':return { pillBg: 'var(--dgs)', pillFg: 'var(--dg)', dotSz: '9px', dotR: '1.5px', dotBd: 'none', dotBg: 'var(--dg)', dotT: 'rotate(45deg)', dotInner: '', status: 'auth failed' };
+        default:          return { pillBg: 'var(--in)', pillFg: 'var(--f3)', dotSz: '10px', dotR: '50%', dotBd: '1.5px solid var(--f3)', dotBg: 'transparent', dotT: 'none', dotInner: '', status: 'disabled' };
+      }
+    };
+    const marks = {
+      jira:   { mark: 'JI', tileBg: 'var(--kas)', tileFg: 'var(--ka)' },
+      linear: { mark: 'LI', tileBg: 'var(--acs)', tileFg: 'var(--ac)' },
+      custom: { mark: '</>', tileBg: 'var(--in)', tileFg: 'var(--f1)' },
+      notion: { mark: 'NO', tileBg: 'var(--in)', tileFg: 'var(--f1)' },
+    };
+    const raw = [
+      { name: 'Acme Jira', kind: 'jira', connector: 'Jira', status: 'connected', target: 'acme.atlassian.net', mapFrom: 'TIX', mapTo: 'ACME', auth: '', enabled: true, sync: 'synced 3m ago' },
+      { name: 'Linear (Core)', kind: 'linear', connector: 'Linear', status: 'connected', target: 'linear.app/acme', mapFrom: 'TASK', mapTo: 'ENG', auth: '', enabled: true, sync: 'synced 12m ago' },
+      { name: 'Acme Tracker', kind: 'custom', connector: 'Custom (HTTP)', status: 'connected', target: 'api.acme.com', mapFrom: 'APP', mapTo: 'default', auth: 'Bearer', enabled: true, sync: 'synced 1h ago' },
+      { name: 'Notion Docs', kind: 'notion', connector: 'Notion', status: 'authfailed', target: 'notion.so/acme', mapFrom: 'DOC', mapTo: '—', auth: '', enabled: false, sync: 'needs reconnect' },
+    ];
+    const cards = raw.map(r => ({
+      name: r.name, connector: r.connector, target: r.target,
+      mapFrom: r.mapFrom, mapTo: r.mapTo,
+      auth: r.auth, authD: r.auth ? 'inline-flex' : 'none',
+      ...marks[r.kind], ...pill(r.status),
+      bd: r.status === 'authfailed' ? 'var(--dg)' : 'var(--bd)',
+      op: r.enabled ? '1' : '.72',
+      swBg: r.enabled ? 'var(--ac)' : 'var(--bs)',
+      swSide: r.enabled ? 'right' : 'left',
+      swKnob: r.enabled ? '#fff' : 'var(--rs)',
+      enLabel: r.enabled ? 'Enabled' : 'Disabled',
+      sync: r.sync,
+      syncC: r.status === 'authfailed' ? 'var(--dg)' : 'var(--f3)',
+    }));
+    return { cards, tok: this.props.tok ?? '', menu: this.props.menu ?? false };
+  }
+}
+</script>
+</body>
+</html>

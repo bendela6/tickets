@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="width:1440px;height:900px;border:1px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;background:var(--bg);color:var(--f1);box-shadow:var(--shlg);{{tok}}">
+
+  <!-- app rail -->
+  <aside style="width:224px;flex:none;border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px 12px 12px">
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 14px"><span style="width:9px;height:9px;background:var(--ac);border-radius:2px"></span><span style="font:600 15px 'IBM Plex Mono',monospace">tickets</span><span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">acme</span></div>
+    <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">⌂<span style="flex:1">Home</span></div>
+    <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">▤<span style="flex:1">All tickets</span></div>
+    <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3);padding:16px 9px 6px">PROJECTS</div>
+    <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="font:500 10px 'IBM Plex Mono',monospace;background:var(--in);border-radius:4px;padding:2px 5px">TIX</span><span style="flex:1">tickets</span></div>
+    <span style="flex:1"></span>
+    <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif;margin-bottom:8px">⚙<span style="flex:1">Settings</span></div>
+  </aside>
+
+  <!-- main -->
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <!-- sticky header -->
+    <div style="display:flex;align-items:center;gap:12px;padding:18px 30px;border-bottom:1px solid var(--bd);background:var(--bg)">
+      <span style="font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f3)">Connections</span>
+      <span style="color:var(--f3)">/</span>
+      <span style="width:26px;height:26px;border-radius:7px;background:var(--in);color:var(--f1);display:inline-flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono',monospace">&lt;/&gt;</span>
+      <h1 style="font:600 18px 'IBM Plex Sans',sans-serif;margin:0">Acme Tracker</h1>
+      <span style="height:22px;padding:0 8px;border-radius:6px;background:var(--in);color:var(--f2);font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">Custom (HTTP)</span>
+      <span style="flex:1"></span>
+      <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2);margin-right:2px">Enabled</span>
+      <span style="width:34px;height:20px;border-radius:999px;background:var(--ac);position:relative;display:inline-block;margin-right:6px"><span style="position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#fff"></span></span>
+      <button style="height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--bs);background:var(--rs);color:var(--f1);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">▷ Test</button>
+      <button style="height:32px;padding:0 14px;border-radius:8px;border:none;background:{{saveBg}};color:{{saveFg}};font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer;opacity:{{saveOp}}">Save</button>
+    </div>
+
+    <div style="flex:1;overflow:auto;padding:22px 30px 40px">
+      <div style="max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:22px">
+
+        <!-- validation error banner -->
+        <sc-if value="{{isError}}" hint-placeholder-val="{{false}}">
+          <div style="display:flex;align-items:center;gap:11px;border:1px solid var(--dg);border-radius:11px;background:var(--dgs);padding:12px 14px">
+            <span style="width:18px;height:18px;background:var(--dg);transform:rotate(45deg);border-radius:3px;flex:none"></span>
+            <div style="flex:1"><div style="font:500 13px 'IBM Plex Sans',sans-serif;color:var(--f1)">Can’t save — 1 problem</div><div style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--dg)">Base URL must be a public HTTPS host. Private &amp; loopback addresses are blocked.</div></div>
+          </div>
+        </sc-if>
+
+        <!-- NAME -->
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Connection name</span>
+          <div style="max-width:380px;height:38px;border:1px solid var(--bs);border-radius:9px;background:var(--rs);display:flex;align-items:center;padding:0 12px;font:400 14px 'IBM Plex Sans',sans-serif;color:var(--f1)">Acme Tracker</div>
+        </div>
+
+        <!-- AUTH -->
+        <div style="border:1px solid var(--bd);border-radius:13px;background:var(--rs);padding:16px 17px;display:flex;flex-direction:column;gap:13px;box-shadow:var(--shsm)">
+          <div style="display:flex;align-items:baseline;gap:9px"><span style="font:600 13px 'IBM Plex Sans',sans-serif;color:var(--f1)">Authentication</span><span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f3)">how we sign outbound requests</span></div>
+          <div style="display:inline-flex;padding:3px;border:1px solid var(--bd);border-radius:9px;background:var(--in);align-self:flex-start">
+            <span style="height:28px;padding:0 13px;border-radius:6px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center;cursor:pointer">None</span>
+            <span style="height:28px;padding:0 13px;border-radius:6px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center;cursor:pointer">API key</span>
+            <span style="height:28px;padding:0 13px;border-radius:6px;background:var(--rs);box-shadow:var(--shsm);font:500 12px 'IBM Plex Sans',sans-serif;color:var(--f1);display:inline-flex;align-items:center;cursor:pointer">Bearer</span>
+            <span style="height:28px;padding:0 13px;border-radius:6px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f3);display:inline-flex;align-items:center;gap:6px;cursor:not-allowed;opacity:.65">OAuth <span style="height:15px;padding:0 5px;border-radius:4px;background:var(--in);font:500 9px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">SOON</span></span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;max-width:420px">
+            <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">BEARER TOKEN</span>
+            <div style="display:flex;align-items:center;gap:7px;height:36px;border:1px solid var(--bs);border-radius:8px;background:var(--rs);padding:0 7px 0 11px">
+              <span style="flex:1;font:500 14px 'IBM Plex Mono',monospace;color:var(--f1);letter-spacing:.06em">••••••••••••</span>
+              <span style="width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3);cursor:pointer" style-hover="background:var(--in)">◡</span>
+              <span style="height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--bs);background:var(--rs);color:var(--f2);font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;cursor:pointer">Replace</span>
+            </div>
+            <span style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--f3)">Stored encrypted · sent as <span style="font:500 11px 'IBM Plex Mono',monospace;color:var(--f2)">Authorization: Bearer …</span></span>
+          </div>
+        </div>
+
+        <!-- BASE URL -->
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Base URL</span>
+          <div style="max-width:480px;height:38px;border:1px solid {{urlBd}};border-radius:9px;background:var(--rs);display:flex;align-items:center;padding:0 12px;font:400 13px 'IBM Plex Mono',monospace;color:{{urlFg}}">{{baseUrl}}</div>
+          <div style="display:flex;align-items:center;gap:8px;border:1px solid {{noteBd}};border-radius:9px;background:{{noteBg}};padding:9px 11px;max-width:520px">
+            <span style="width:16px;height:16px;border-radius:5px;background:{{noteIconBg}};color:{{noteIconFg}};display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Sans',sans-serif;flex:none">{{noteIcon}}</span>
+            <span style="font:400 12px/1.45 'IBM Plex Sans',sans-serif;color:{{noteFg}}">{{noteText}}</span>
+          </div>
+        </div>
+
+        <!-- OUTBOUND -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:9px">
+            <span style="font:600 15px 'IBM Plex Sans',sans-serif">Outbound</span>
+            <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f3)">requests we send when a ticket changes</span>
+          </div>
+
+          <div style="border:1px solid var(--bd);border-radius:13px;background:var(--rs);overflow:hidden;box-shadow:var(--shsm)">
+            <!-- trigger row -->
+            <div style="display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid var(--bd);background:var(--bg)">
+              <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">on</span>
+              <span style="height:24px;padding:0 10px 0 8px;border-radius:6px;background:var(--acs);color:var(--ac);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px;cursor:pointer"><span style="font:400 11px 'IBM Plex Mono',monospace">⇄</span>Status changed<span style="font-size:9px;margin-left:2px">▾</span></span>
+              <span style="flex:1"></span>
+              <span style="width:26px;height:26px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3);cursor:pointer" style-hover="background:var(--in);color:var(--dg)">×</span>
+            </div>
+            <!-- method + url -->
+            <div style="display:flex;align-items:center;gap:8px;padding:12px 14px 10px">
+              <span style="height:30px;padding:0 11px;border-radius:7px;background:var(--kbs);color:var(--kb);font:600 13px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:6px;cursor:pointer">PUT<span style="font-size:9px;opacity:.7">▾</span></span>
+              <span style="flex:1;height:30px;border:1px solid var(--bs);border-radius:7px;background:var(--rs);display:inline-flex;align-items:center;padding:0 10px;font:400 13px 'IBM Plex Mono',monospace;color:var(--f2);min-width:0;overflow:hidden;white-space:nowrap"><span style="color:var(--ac)">{{baseUrlTok}}</span>/items/<span style="color:var(--ac)">{{extId}}</span></span>
+            </div>
+            <!-- body -->
+            <div style="padding:2px 14px 12px;display:flex;flex-direction:column;gap:8px">
+              <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">BODY TEMPLATE</span>
+              <div style="border:1px solid var(--bs);border-radius:8px;background:var(--bg);padding:11px 13px;font:400 13px/1.7 'IBM Plex Mono',monospace;color:var(--f2)">{<br>&nbsp;&nbsp;"state": "<span style="color:var(--ac)">{{eventTo}}</span>",<br>&nbsp;&nbsp;"title": "<span style="color:var(--ac)">{{ticketTitle}}</span>"<br>}</div>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">insert:</span>
+                <span style="height:21px;padding:0 7px;border-radius:5px;background:var(--acs);color:var(--ac);font:500 11px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;cursor:pointer">{{ticketKey}}</span>
+                <span style="height:21px;padding:0 7px;border-radius:5px;background:var(--acs);color:var(--ac);font:500 11px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;cursor:pointer">{{ticketTitle}}</span>
+                <span style="height:21px;padding:0 7px;border-radius:5px;background:var(--acs);color:var(--ac);font:500 11px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;cursor:pointer">{{eventTo}}</span>
+                <span style="height:21px;padding:0 7px;border-radius:5px;background:var(--acs);color:var(--ac);font:500 11px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;cursor:pointer">{{extId}}</span>
+              </div>
+            </div>
+            <!-- send test -->
+            <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-top:1px solid var(--bd);background:var(--bg)">
+              <span style="height:30px;padding:0 13px;border-radius:8px;border:1px solid var(--bs);background:var(--rs);color:var(--f1);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:7px;cursor:pointer">▷ Send test</span>
+              <sc-if value="{{isError}}" hint-placeholder-val="{{false}}">
+                <span style="height:23px;padding:0 9px;border-radius:6px;background:var(--dgs);color:var(--dg);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px"><span style="width:9px;height:9px;background:var(--dg);transform:rotate(45deg);border-radius:1.5px"></span>could not reach host</span>
+                <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">ENOTFOUND</span>
+              </sc-if>
+              <sc-if value="{{isPop}}" hint-placeholder-val="{{true}}">
+                <span style="height:23px;padding:0 9px;border-radius:6px;background:var(--kds);color:var(--kd);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px"><span style="width:11px;height:11px;border-radius:50%;background:var(--kd);display:inline-flex;align-items:center;justify-content:center;color:var(--onpos);font:600 7px 'IBM Plex Sans',sans-serif">✓</span>200 OK</span>
+                <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">142&#8202;ms · {"ok":true}</span>
+              </sc-if>
+            </div>
+          </div>
+
+          <div style="display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px dashed var(--bs);border-radius:10px;color:var(--f3);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer;align-self:flex-start">＋ Add request</div>
+        </div>
+
+        <!-- FIELD MAPPING -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:9px"><span style="font:600 15px 'IBM Plex Sans',sans-serif">Field mapping</span><span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f3)">local field ⇄ remote JSON path</span></div>
+          <sc-for list="{{mapRows}}" as="m" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:7px;height:38px;padding:0 9px;border:1px solid var(--bd);border-radius:9px;background:var(--rs)">
+              <span style="color:var(--bs);cursor:grab;font:400 12px 'IBM Plex Sans',sans-serif">⋮⋮</span>
+              <span style="width:150px;height:28px;padding:0 9px;border:1px solid var(--bs);border-radius:7px;background:var(--rs);font:400 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:7px">{{m.left}}<span style="flex:1"></span><span style="font-size:9px;color:var(--f3)">▾</span></span>
+              <span style="color:var(--ac);font:400 14px 'IBM Plex Mono',monospace">⇄</span>
+              <span style="flex:1;height:28px;border:1px solid var(--bs);border-radius:7px;background:var(--rs);display:inline-flex;align-items:center;padding:0 9px;font:400 13px 'IBM Plex Mono',monospace;color:var(--f1)">{{m.right}}</span>
+              <span style="width:26px;height:26px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3);cursor:pointer" style-hover="background:var(--in);color:var(--dg)">×</span>
+            </div>
+          </sc-for>
+          <div style="display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 11px;border:1px dashed var(--bs);border-radius:9px;color:var(--f3);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer;align-self:flex-start">＋ Add mapping</div>
+          <!-- id key -->
+          <div style="display:flex;align-items:center;gap:9px;border:1px solid var(--bd);border-radius:9px;background:var(--bg);padding:11px 13px;margin-top:2px">
+            <span style="height:20px;padding:0 8px;border-radius:5px;background:var(--acs);color:var(--ac);font:500 11px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">id key</span>
+            <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)">match a local ticket to a remote object by</span>
+            <span style="height:24px;padding:0 9px;border:1px solid var(--bs);border-radius:7px;background:var(--rs);font:400 12px 'IBM Plex Mono',monospace;color:var(--f1);display:inline-flex;align-items:center">external.id</span>
+            <span style="color:var(--ac);font:400 13px 'IBM Plex Mono',monospace">⇄</span>
+            <span style="height:24px;padding:0 9px;border:1px solid var(--bs);border-radius:7px;background:var(--rs);font:400 12px 'IBM Plex Mono',monospace;color:var(--f1);display:inline-flex;align-items:center">$.id</span>
+          </div>
+        </div>
+
+        <!-- INBOUND (forward-looking) -->
+        <div style="display:flex;flex-direction:column;gap:12px;border:1px dashed var(--bs);border-radius:13px;background:var(--bg);padding:17px 18px">
+          <div style="display:flex;align-items:center;gap:9px">
+            <span style="font:600 15px 'IBM Plex Sans',sans-serif;color:var(--f2)">Inbound</span>
+            <span style="height:19px;padding:0 8px;border-radius:5px;background:var(--acs);color:var(--ac);font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.04em;display:inline-flex;align-items:center">COMING SOON</span>
+            <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f3)">let the external tool push changes back</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">WEBHOOK URL — POST changes here</span>
+            <div style="display:flex;align-items:center;gap:7px;height:36px;border:1px solid var(--bs);border-radius:8px;background:var(--rs);padding:0 7px 0 11px">
+              <span style="flex:1;font:400 12px 'IBM Plex Mono',monospace;color:var(--f1);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">https://tickets.acme.com/api/connections/conn_ak29/inbound</span>
+              <span style="height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--bs);background:var(--rs);color:var(--f2);font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:5px;cursor:pointer">⧉ Copy</span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:6px;max-width:440px">
+            <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">HMAC SIGNING SECRET — verify each inbound request</span>
+            <div style="display:flex;align-items:center;gap:7px;height:36px;border:1px solid var(--bs);border-radius:8px;background:var(--rs);padding:0 7px 0 11px">
+              <span style="flex:1;font:500 14px 'IBM Plex Mono',monospace;color:var(--f1);letter-spacing:.06em">••••••••••••••</span>
+              <span style="width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3);cursor:pointer" style-hover="background:var(--in)">◡</span>
+              <span style="height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--bs);background:var(--rs);color:var(--f2);font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;cursor:pointer">Rotate</span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:6px;opacity:.55;pointer-events:none">
+            <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">INBOUND FIELD MAPPING</span>
+            <div style="display:flex;align-items:center;gap:7px;height:38px;padding:0 9px;border:1px solid var(--bd);border-radius:9px;background:var(--rs)">
+              <span style="flex:1;height:28px;border:1px solid var(--bs);border-radius:7px;background:var(--rs);display:inline-flex;align-items:center;padding:0 9px;font:400 13px 'IBM Plex Mono',monospace;color:var(--f3)">$.state</span>
+              <span style="color:var(--f3);font:400 14px 'IBM Plex Mono',monospace">→</span>
+              <span style="width:150px;height:28px;padding:0 9px;border:1px solid var(--bs);border-radius:7px;background:var(--rs);font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f3);display:inline-flex;align-items:center;gap:7px">Status<span style="flex:1"></span><span style="font-size:9px">▾</span></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;tok&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;error&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;'populated' | 'error'&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const mode = this.props.mode ?? 'populated';
+    const err = mode === 'error';
+    const mapRows = [
+      { left: 'Status', right: '$.state' },
+      { left: 'Title', right: '$.title' },
+      { left: 'Assignee', right: '$.owner' },
+    ];
+    const common = {
+      tok: this.props.tok ?? '',
+      isError: err, isPop: !err,
+      mapRows,
+      baseUrlTok: '{{baseUrl}}', extId: '{{external.id}}',
+      eventTo: '{{event.to}}', ticketTitle: '{{ticket.title}}', ticketKey: '{{ticket.key}}',
+      saveBg: err ? 'var(--in)' : 'var(--ac)',
+      saveFg: err ? 'var(--f3)' : 'var(--oac)',
+      saveOp: err ? '.6' : '1',
+    };
+    if (err) {
+      return { ...common,
+        baseUrl: 'http://10.0.0.5:8080', urlBd: 'var(--dg)', urlFg: 'var(--f1)',
+        noteBd: 'var(--dg)', noteBg: 'var(--dgs)', noteFg: 'var(--dg)',
+        noteIcon: '!', noteIconBg: 'var(--dg)', noteIconFg: '#fff',
+        noteText: 'Private / loopback address blocked. Only public HTTPS hosts are allowed to prevent SSRF.' };
+    }
+    return { ...common,
+      baseUrl: 'https://api.acme.com', urlBd: 'var(--bs)', urlFg: 'var(--f1)',
+      noteBd: 'var(--bd)', noteBg: 'var(--rs)', noteFg: 'var(--f2)',
+      noteIcon: '⛨', noteIconBg: 'var(--in)', noteIconFg: 'var(--f2)',
+      noteText: 'Only public HTTPS hosts are allowed. Private, loopback & metadata addresses are blocked (SSRF-safe).' };
+  }
+}
+</script>
+</body>
+</html>
