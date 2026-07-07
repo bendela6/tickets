@@ -91,7 +91,8 @@ export function registerTicketsRoutes(app: FastifyInstance, context: { db: Db })
       await checkParent(db, {
         ticketId: null,
         parentId: body.parentId,
-        projectId: vocab.project.id,
+        childTypeKey: type.key,
+        vocab,
       });
     }
 
@@ -168,7 +169,8 @@ export function registerTicketsRoutes(app: FastifyInstance, context: { db: Db })
           await checkParent(tx, {
             ticketId: id,
             parentId: body.parentId,
-            projectId: existing.projectId,
+            childTypeKey: vocab.typeById.get(typeId)!.key,
+            vocab,
           });
         }
         await tx.update(tickets).set({ parentId: body.parentId }).where(eq(tickets.id, id));

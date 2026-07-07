@@ -2,31 +2,35 @@ import { eq } from 'drizzle-orm';
 import type { DbExecutor } from '@tickets/db';
 import { tickets } from '@tickets/db';
 import { HttpError } from '../errors';
+import type { ProjectVocab } from '../vocab/load-project-vocab';
 
-// Hierarchy policy: depth 1. A parent cannot itself have a parent, and a
-// ticket that already has children cannot become a child.
+// pure rule — exported for unit tests
+export function assertChildAllowed(
+  parentTypeKey: string,
+  allowed: string[],
+  childTypeKey: string,
+): void {
+  if (!allowed.includes(childTypeKey)) {
+    throw new HttpError(422, `a ${childTypeKey} cannot be nested under a ${parentTypeKey}`);
+  }
+}
+
+// Hierarchy policy: type-aware nesting (Epic→Task/Bug/Spike→Subtask). The rules
+// form a DAG, so they inherently cap depth and prevent cycles.
 export async function checkParent(
   db: DbExecutor,
-  input: { ticketId: number | null; parentId: number; projectId: number },
+  input: { ticketId: number | null; parentId: number; childTypeKey: string; vocab: ProjectVocab },
 ): Promise<void> {
   const parentRows = await db.select().from(tickets).where(eq(tickets.id, input.parentId));
   const parent = parentRows[0];
-  if (!parent || parent.projectId !== input.projectId) {
+  if (!parent || parent.projectId !== input.vocab.project.id) {
     throw new HttpError(400, 'parent ticket not found in this project');
   }
-  if (parent.parentId !== null) {
-    throw new HttpError(422, 'hierarchy is depth-1: the parent is itself a child');
+  if (input.ticketId !== null && input.ticketId === input.parentId) {
+    throw new HttpError(422, 'a ticket cannot be its own parent');
   }
-  if (input.ticketId !== null) {
-    if (input.ticketId === input.parentId) {
-      throw new HttpError(422, 'a ticket cannot be its own parent');
-    }
-    const childRows = await db
-      .select({ id: tickets.id })
-      .from(tickets)
-      .where(eq(tickets.parentId, input.ticketId));
-    if (childRows.length > 0) {
-      throw new HttpError(422, 'hierarchy is depth-1: this ticket already has children');
-    }
-  }
+  const parentType = input.vocab.typeById.get(parent.typeId);
+  const allowed =
+    (parentType?.config as { allowedChildTypes?: string[] })?.allowedChildTypes ?? [];
+  assertChildAllowed(parentType?.key ?? 'unknown', allowed, input.childTypeKey);
 }

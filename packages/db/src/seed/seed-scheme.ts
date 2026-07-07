@@ -54,7 +54,13 @@ export async function seedScheme(db: Db, def: SchemeDef) {
     for (const [position, t] of def.types.entries()) {
       const [typeRow] = await tx
         .insert(ticketTypes)
-        .values({ schemeId: scheme.id, key: t.key, label: t.label, position, config: { color: t.color } })
+        .values({
+          schemeId: scheme.id,
+          key: t.key,
+          label: t.label,
+          position,
+          config: { color: t.color, allowedChildTypes: t.allowedChildTypes ?? [] },
+        })
         .returning();
       if (!typeRow) throw new Error(`type insert failed: ${t.key}`);
       typeIdByKey[t.key] = typeRow.id;
