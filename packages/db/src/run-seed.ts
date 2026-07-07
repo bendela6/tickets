@@ -10,7 +10,7 @@ if (!key || !name || !ticketPrefix) {
 
 const { db, sql } = createDbClient({ max: 1 });
 
-const { schemeId, fieldIdByKey } = await ensureSoftwareScheme(db);
-const seeded = await seedProject(db, { key, name, ticketPrefix, schemeId, fieldIdByKey });
+const { schemeId } = await ensureSoftwareScheme(db);
+const seeded = await seedProject(db, { key, name, ticketPrefix, schemeId });
 await sql.end();
 console.log(`seeded project ${seeded.project.key} (#${seeded.project.id}) bound to scheme #${schemeId}`);

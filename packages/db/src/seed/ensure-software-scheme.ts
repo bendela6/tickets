@@ -1,22 +1,22 @@
 import { eq } from 'drizzle-orm';
 import type { Db } from '../client';
-import { fields, schemes } from '../schema';
+import { schemes, ticketTypes } from '../schema';
 import { seedScheme } from './seed-scheme';
 import { SOFTWARE_SCHEME } from './software-scheme';
 
 // Ensures the shared Software scheme exists and returns its id plus a
-// key→id map of its fields (needed to resolve a project's default view).
+// key→id map of its ticket types (fields are now type-owned, not scheme-wide).
 export async function ensureSoftwareScheme(
   db: Db,
-): Promise<{ schemeId: number; fieldIdByKey: Record<string, number> }> {
+): Promise<{ schemeId: number; typeIdByKey: Record<string, number> }> {
   const existing = await db.select().from(schemes).where(eq(schemes.key, SOFTWARE_SCHEME.key));
   if (existing[0]) {
-    const fieldRows = await db.select().from(fields).where(eq(fields.schemeId, existing[0].id));
+    const typeRows = await db.select().from(ticketTypes).where(eq(ticketTypes.schemeId, existing[0].id));
     return {
       schemeId: existing[0].id,
-      fieldIdByKey: Object.fromEntries(fieldRows.map((r) => [r.key, r.id])),
+      typeIdByKey: Object.fromEntries(typeRows.map((t) => [t.key, t.id])),
     };
   }
   const seeded = await seedScheme(db, SOFTWARE_SCHEME);
-  return { schemeId: seeded.schemeId, fieldIdByKey: seeded.fieldIdByKey };
+  return { schemeId: seeded.schemeId, typeIdByKey: seeded.typeIdByKey };
 }
