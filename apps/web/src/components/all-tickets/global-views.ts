@@ -42,14 +42,14 @@ export const DEFAULT_GLOBAL_VIEW: GlobalView = {
 const FILTER_OPS = new Set(['any-of', 'none-of', 'contains', 'empty', 'not-empty', 'kinds']);
 
 /**
- * Adapter for utils/evaluate-filters: it resolves rules through the board's
- * fieldById map, so key-based global rules become that project's fieldIds.
- * A key the project lacks maps to -1, which evaluate-filters skips — shared
- * fields (the only ones offered in the UI) always resolve.
+ * Adapter for utils/evaluate-filters: board-level FilterRule is field-key
+ * addressed too, so this is a passthrough. Kept as an explicit boundary since
+ * evaluate-filters resolves via the target board's own fieldByKey — a key
+ * that board lacks simply misses (rule skipped), same as before.
  */
-export function toBoardRules(rules: GlobalFilterRule[], indexes: BoardIndexes): FilterRule[] {
+export function toBoardRules(rules: GlobalFilterRule[], _indexes: BoardIndexes): FilterRule[] {
   return rules.map((rule) => ({
-    fieldId: indexes.fieldByKey.get(rule.fieldKey)?.id ?? -1,
+    fieldKey: rule.fieldKey,
     op: rule.op,
     values: rule.values,
   }));

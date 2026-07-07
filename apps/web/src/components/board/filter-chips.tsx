@@ -39,7 +39,7 @@ function isOptionish(field: Field | null): boolean {
 
 /** Value chips for one rule: option/status labels with their palette color. */
 function RuleValues({ rule, indexes }: { rule: FilterRule; indexes: BoardIndexes }) {
-  const field = indexes.fieldById.get(rule.fieldId);
+  const field = indexes.fieldByKey.get(rule.fieldKey);
   if (rule.op === 'empty' || rule.op === 'not-empty') {
     return null;
   }
@@ -99,17 +99,17 @@ function AddFilter({
   onAdd: (rule: FilterRule) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [fieldId, setFieldId] = useState<number | null>(null);
+  const [fieldKey, setFieldKey] = useState<string | null>(null);
   const [op, setOp] = useState<FilterRule['op']>('any-of');
   const [values, setValues] = useState<string[]>([]);
   const [text, setText] = useState('');
 
-  const selectedField = fieldId === null ? null : (indexes.fieldById.get(fieldId) ?? null);
+  const selectedField = fieldKey === null ? null : (indexes.fieldByKey.get(fieldKey) ?? null);
   const optionish = isOptionish(selectedField);
 
   const fieldOptions: ComboOption[] = board.fields
     .filter((field) => !field.archivedAt)
-    .map((field) => ({ value: String(field.id), label: field.label }));
+    .map((field) => ({ value: field.key, label: field.label }));
 
   const opOptions: ComboOption[] = [
     ...(optionish
@@ -147,7 +147,7 @@ function AddFilter({
     (needsValues ? values.length > 0 : op === 'contains' ? text.length > 0 : true);
 
   const reset = () => {
-    setFieldId(null);
+    setFieldKey(null);
     setOp('any-of');
     setValues([]);
     setText('');
@@ -176,12 +176,11 @@ function AddFilter({
           <Combobox
             size="compact"
             options={fieldOptions}
-            value={fieldId === null ? null : String(fieldId)}
+            value={fieldKey}
             placeholder="Field…"
             onChange={(next) => {
-              const nextId = next === null ? null : Number(next);
-              setFieldId(nextId);
-              const nextField = nextId === null ? null : (indexes.fieldById.get(nextId) ?? null);
+              setFieldKey(next);
+              const nextField = next === null ? null : (indexes.fieldByKey.get(next) ?? null);
               setOp(isOptionish(nextField) ? 'any-of' : 'contains');
               setValues([]);
               setText('');
@@ -230,7 +229,7 @@ function AddFilter({
                   return;
                 }
                 onAdd({
-                  fieldId: selectedField.id,
+                  fieldKey: selectedField.key,
                   op,
                   values: op === 'contains' ? [text] : needsValues ? values : [],
                 });
@@ -272,14 +271,14 @@ export function FilterChips({
   return (
     <div className="mb-3 flex shrink-0 flex-wrap items-center gap-2">
       {rules.map((rule, index) => {
-        const field = indexes.fieldById.get(rule.fieldId);
+        const field = indexes.fieldByKey.get(rule.fieldKey);
         return (
           <span
             key={index}
             className="inline-flex h-7 items-center gap-1.5 rounded-[7px] border border-hairline bg-raised px-2.5 font-sans text-meta text-ink-2"
           >
             <strong className="font-medium text-ink">
-              {field?.label ?? `field ${rule.fieldId}`}
+              {field?.label ?? rule.fieldKey}
             </strong>
             {OP_LABELS[rule.op]}
             <RuleValues rule={rule} indexes={indexes} />
