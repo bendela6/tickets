@@ -9,7 +9,8 @@
     "test": "vitest run",
     "tokens:build": "node scripts/build-tokens.mjs",
     "tokens:lint": "node scripts/scan-hardcoded-values.mjs",
-    "tokens:check": "node scripts/check-design-tokens.mjs"
+    "tokens:check": "node scripts/check-design-tokens.mjs",
+    "tokens:verify": "node scripts/build-tokens.mjs && git diff --exit-code src/styles/instrument.css && node scripts/scan-hardcoded-values.mjs && node scripts/check-design-tokens.mjs"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",
