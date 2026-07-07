@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="border:1px solid var(--bd);border-radius:14px;background:var(--rs);overflow:hidden;box-shadow:var(--shsm)">
+  <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--bd)">
+    <span style="font:600 15px 'IBM Plex Sans',sans-serif">Connections</span>
+    <span style="height:18px;padding:0 7px;border-radius:5px;background:var(--acs);color:var(--ac);font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.05em;display:inline-flex;align-items:center">SOON</span>
+    <span style="flex:1"></span>
+    <button style="height:30px;padding:0 11px;border-radius:8px;border:1px solid var(--bs);background:var(--rs);color:var(--f1);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer">＋ Add connection</button>
+  </div>
+  <sc-for list="{{providers}}" as="p" hint-placeholder-count="3">
+    <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 18px;border-bottom:1px solid var(--bd)">
+      <span style="width:30px;height:30px;border-radius:8px;background:var(--in);color:var(--f2);display:inline-flex;align-items:center;justify-content:center;font:600 12px 'IBM Plex Mono',monospace">{{p.mark}}</span>
+      <span style="font:500 13px 'IBM Plex Sans',sans-serif;flex:1">{{p.name}}</span>
+      <span style="display:flex;align-items:center;gap:7px;font:400 12px 'IBM Plex Sans',sans-serif;color:{{p.stateC}}"><span style="width:8px;height:8px;border-radius:50%;background:{{p.dot}}"></span>{{p.state}}</span>
+      <span style="height:28px;padding:0 11px;border-radius:7px;border:1px solid var(--bs);background:var(--rs);font:500 12px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center">{{p.cta}}</span>
+    </div>
+  </sc-for>
+  <div style="padding:12px 18px;font:400 11px/1.5 'IBM Plex Sans',sans-serif;color:var(--f3);background:var(--bg)">Later: two-way sync and connector-backed triggers/actions. Rules will be able to reference a connection (e.g. “create a Linear issue”).</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:600,&quot;height&quot;:300}}">
+class Component extends DCLogic {
+  renderVals() {
+    const providers = [
+      { mark: 'JI', name: 'Jira', connected: true },
+      { mark: 'LI', name: 'Linear', connected: false },
+      { mark: 'NO', name: 'Notion', connected: false },
+    ].map(p => p.connected
+      ? { ...p, state: 'connected', stateC: 'var(--kd)', dot: 'var(--kd)', cta: 'Manage' }
+      : { ...p, state: 'not connected', stateC: 'var(--f3)', dot: 'var(--bs)', cta: 'Connect' });
+    return { providers };
+  }
+}
+</script>
+</body>
+</html>

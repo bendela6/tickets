@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="width:390px;height:760px;border:1px solid var(--bd);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;background:var(--bg);color:var(--f1);box-shadow:var(--shlg)">
+
+  <!-- LIST -->
+  <sc-if value="{{isList}}" hint-placeholder-val="{{false}}">
+    <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 10px">
+      <span style="font:600 20px 'IBM Plex Sans',sans-serif;flex:1">Automations</span>
+      <span style="height:34px;padding:0 12px;border-radius:9px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">＋ New</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:2px;padding:0 18px;border-bottom:1px solid var(--bd)">
+      <span style="padding:8px 4px;margin-right:16px;font:500 13px 'IBM Plex Sans',sans-serif;color:var(--f1);border-bottom:2px solid var(--ac);margin-bottom:-1px">Rules</span>
+      <span style="padding:8px 4px;font:500 13px 'IBM Plex Sans',sans-serif;color:var(--f3)">Runs</span>
+      <span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">4 · 1 off</span>
+    </div>
+    <div style="flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{cards}}" as="c" hint-placeholder-count="4">
+        <div style="border:1px solid var(--bd);border-radius:14px;background:var(--rs);padding:13px 14px;display:flex;flex-direction:column;gap:11px;opacity:{{c.op}}">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font:500 14px 'IBM Plex Sans',sans-serif;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{c.name}}</span>
+            <span style="color:var(--f3);font-size:16px">⋯</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="height:24px;padding:0 10px 0 8px;border-radius:6px;background:var(--acs);color:var(--ac);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px"><span style="font:400 11px 'IBM Plex Mono',monospace">{{c.trigIcon}}</span>{{c.trigLabel}}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;border-top:1px solid var(--bd);padding-top:10px">
+            <span style="width:32px;height:18px;border-radius:999px;background:{{c.swBg}};position:relative;display:inline-block"><span style="position:absolute;top:2px;{{c.swSide}}:2px;width:14px;height:14px;border-radius:50%;background:{{c.swKnob}}"></span></span>
+            <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)">{{c.enLabel}}</span>
+            <span style="flex:1"></span>
+            <span style="display:{{c.runD}};height:22px;padding:0 8px;border-radius:6px;background:{{c.pillBg}};color:{{c.pillFg}};font:500 12px 'IBM Plex Sans',sans-serif;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:{{c.dotR}};border:{{c.dotBd}};background:{{c.dotBg}};transform:{{c.dotT}};display:inline-flex;align-items:center;justify-content:center;color:var(--onpos);font:600 6px 'IBM Plex Sans',sans-serif;flex:none">{{c.dotInner}}</span>{{c.pillLabel}}</span>
+            <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">{{c.when}}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <!-- RUNS -->
+  <sc-if value="{{isRuns}}" hint-placeholder-val="{{false}}">
+    <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 10px">
+      <span style="font:600 20px 'IBM Plex Sans',sans-serif;flex:1">Automations</span>
+      <span style="height:32px;padding:0 11px;border-radius:8px;border:1px solid var(--bd);background:var(--rs);font:500 12px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center;gap:6px">Status ▾</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:2px;padding:0 18px;border-bottom:1px solid var(--bd)">
+      <span style="padding:8px 4px;margin-right:16px;font:500 13px 'IBM Plex Sans',sans-serif;color:var(--f3)">Rules</span>
+      <span style="padding:8px 4px;font:500 13px 'IBM Plex Sans',sans-serif;color:var(--f1);border-bottom:2px solid var(--ac);margin-bottom:-1px">Runs</span>
+    </div>
+    <div style="flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:9px">
+      <sc-for list="{{runCards}}" as="r" hint-placeholder-count="6">
+        <div style="border:1px solid var(--bd);border-radius:13px;background:var(--rs);padding:12px 13px;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="height:24px;padding:0 9px;border-radius:6px;background:{{r.pillBg}};color:{{r.pillFg}};font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px"><span style="width:11px;height:11px;border-radius:{{r.dotR}};border:{{r.dotBd}};background:{{r.dotBg}};transform:{{r.dotT}};display:inline-flex;align-items:center;justify-content:center;color:var(--onpos);font:600 7px 'IBM Plex Sans',sans-serif;flex:none">{{r.dotInner}}</span>{{r.label}}<span style="display:{{r.suffixD}};font:400 11px 'IBM Plex Mono',monospace;opacity:.85">{{r.suffix}}</span></span>
+            <span style="flex:1"></span>
+            <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ac)">{{r.ticket}}</span>
+            <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">{{r.when}}</span>
+          </div>
+          <span style="font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f1)">{{r.rule}}</span>
+          <span style="display:{{r.detailD}};font:400 12px 'IBM Plex Sans',sans-serif;color:{{r.detailC}}">{{r.detail}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <!-- EDITOR SHEET -->
+  <sc-if value="{{isEditor}}" hint-placeholder-val="{{false}}">
+    <div style="display:flex;align-items:center;gap:10px;padding:16px 18px 12px;border-bottom:1px solid var(--bd)">
+      <span style="font:400 18px 'IBM Plex Sans',sans-serif;color:var(--f2)">←</span>
+      <span style="font:600 16px 'IBM Plex Sans',sans-serif;flex:1">Edit rule</span>
+      <span style="height:32px;padding:0 13px;border-radius:8px;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">Save</span>
+    </div>
+    <div style="flex:1;overflow:auto;padding:16px 18px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1;height:40px;border:1px solid var(--bs);border-radius:9px;background:var(--rs);display:flex;align-items:center;padding:0 12px;font:400 14px 'IBM Plex Sans',sans-serif">Escalate blocked criticals</div>
+        <span style="width:34px;height:20px;border-radius:999px;background:var(--ac);position:relative;display:inline-block"><span style="position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#fff"></span></span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.06em">WHEN</span></div>
+        <div style="height:44px;border:1px solid var(--bs);border-radius:10px;background:var(--rs);display:flex;align-items:center;padding:0 12px;gap:9px"><span style="height:26px;padding:0 10px 0 8px;border-radius:6px;background:var(--acs);color:var(--ac);font:500 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px"><span style="font:400 11px 'IBM Plex Mono',monospace">⇄</span>Status changed</span><span style="flex:1"></span><span style="font-size:10px;color:var(--f3)">▾</span></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.06em">IF</span><span style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--f3)">all match (AND)</span></div>
+        <sc-for list="{{mConds}}" as="c" hint-placeholder-count="2">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="border:1px solid var(--bd);border-radius:11px;background:var(--rs);padding:10px 11px;display:flex;flex-direction:column;gap:7px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="flex:1;height:38px;border:1px solid var(--bs);border-radius:8px;background:var(--rs);display:flex;align-items:center;padding:0 11px;font:400 13px 'IBM Plex Sans',sans-serif">{{c.field}}<span style="flex:1"></span><span style="font-size:9px;color:var(--f3)">▾</span></span>
+                <span style="width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3);border:1px solid var(--bd)">×</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="height:38px;padding:0 11px;border:1px solid var(--bs);border-radius:8px;background:var(--rs);display:inline-flex;align-items:center;gap:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">{{c.op}}<span style="font-size:9px;color:var(--f3)">▾</span></span>
+                <span style="flex:1;height:38px;border:1px solid var(--bs);border-radius:8px;background:var(--rs);display:flex;align-items:center;padding:0 11px;gap:7px;font:400 13px 'IBM Plex Sans',sans-serif"><span style="width:8px;height:8px;border-radius:{{c.dotR}};border:{{c.dotBd}};background:{{c.dotBg}};transform:{{c.dotT}};flex:none"></span>{{c.value}}<span style="flex:1"></span><span style="font-size:9px;color:var(--f3)">▾</span></span>
+              </div>
+            </div>
+            <div style="display:{{c.andD}};font:500 11px 'IBM Plex Mono',monospace;color:var(--f3);padding-left:4px">and</div>
+          </div>
+        </sc-for>
+        <div style="display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 13px;border:1px dashed var(--bs);border-radius:10px;color:var(--f3);font:500 13px 'IBM Plex Sans',sans-serif;align-self:flex-start">＋ Add condition</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.06em">THEN</span><span style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--f3)">top to bottom</span></div>
+        <div style="border:1px solid var(--bd);border-radius:11px;background:var(--rs);padding:10px 11px;display:flex;flex-direction:column;gap:8px">
+          <span style="height:34px;padding:0 11px;border:1px solid var(--bs);border-radius:8px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:7px;align-self:flex-start"><span style="color:var(--f3)">✎</span>Set field ▾</span>
+          <div style="display:flex;align-items:center;gap:8px"><span style="height:38px;padding:0 11px;border:1px solid var(--bs);border-radius:8px;background:var(--rs);display:inline-flex;align-items:center;gap:7px;font:400 13px 'IBM Plex Sans',sans-serif">Assignee ▾</span><span style="font:400 13px 'IBM Plex Mono',monospace;color:var(--f3)">=</span><span style="flex:1;height:38px;border:1px solid var(--bs);border-radius:8px;background:var(--rs);display:flex;align-items:center;padding:0 11px;gap:6px;font:400 13px 'IBM Plex Sans',sans-serif"><span style="width:18px;height:18px;border-radius:50%;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 8px 'IBM Plex Sans',sans-serif">TL</span>Team Lead</span></div>
+        </div>
+        <div style="border:1px solid var(--bd);border-radius:11px;background:var(--rs);padding:10px 11px;display:flex;flex-direction:column;gap:8px">
+          <span style="height:34px;padding:0 11px;border:1px solid var(--bs);border-radius:8px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:7px;align-self:flex-start"><span style="color:var(--f3)">＋</span>Add comment ▾</span>
+          <div style="border:1px solid var(--bs);border-radius:8px;background:var(--rs);padding:9px 11px;font:400 13px/1.5 'IBM Plex Mono',monospace">Escalated — blocked &amp; critical</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap"><span style="height:22px;padding:0 8px;border-radius:5px;background:var(--acs);color:var(--ac);font:500 11px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">{{tKey}}</span><span style="height:22px;padding:0 8px;border-radius:5px;background:var(--acs);color:var(--ac);font:500 11px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">{{tTo}}</span></div>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 13px;border:1px dashed var(--bs);border-radius:10px;color:var(--f3);font:500 13px 'IBM Plex Sans',sans-serif;align-self:flex-start">＋ Add action</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- bottom nav -->
+  <div style="border-top:1px solid var(--bd);background:var(--rs);display:flex;align-items:center;justify-content:space-around;padding:8px 10px 18px">
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;width:56px;padding-top:5px"><span style="font:400 16px 'IBM Plex Sans',sans-serif;color:var(--f3)">⌂</span><span style="font:400 10px 'IBM Plex Sans',sans-serif;color:var(--f3)">Home</span></span>
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;width:56px;padding-top:5px"><span style="font:400 16px 'IBM Plex Sans',sans-serif;color:var(--f3)">▤</span><span style="font:400 10px 'IBM Plex Sans',sans-serif;color:var(--f3)">Tickets</span></span>
+    <span style="width:48px;height:48px;border-radius:14px;background:var(--ac);color:var(--oac);display:inline-flex;align-items:center;justify-content:center;font:400 22px 'IBM Plex Sans',sans-serif">＋</span>
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;width:56px;padding-top:5px"><span style="font:400 16px 'IBM Plex Sans',sans-serif;color:var(--f3)">⌕</span><span style="font:400 10px 'IBM Plex Sans',sans-serif;color:var(--f3)">Search</span></span>
+    <span style="display:flex;flex-direction:column;align-items:center;gap:3px;width:56px;padding-top:5px"><span style="font:400 16px 'IBM Plex Sans',sans-serif;color:var(--f1)">⚙</span><span style="font:500 10px 'IBM Plex Sans',sans-serif;color:var(--f1)">Settings</span></span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:760},&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;list&quot;,&quot;editor&quot;,&quot;runs&quot;],&quot;default&quot;:&quot;list&quot;,&quot;tsType&quot;:&quot;'list' | 'editor' | 'runs'&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const view = this.props.view ?? 'list';
+
+    const TRIG = {
+      created: { icon: '✦', label: 'Ticket created' },
+      status: { icon: '⇄', label: 'Status changed' },
+    };
+    const pill = (s) => {
+      switch (s) {
+        case 'done':    return { pillBg: 'var(--kds)', pillFg: 'var(--kd)', dotR: '50%', dotBd: 'none', dotBg: 'var(--kd)', dotT: 'none', dotInner: '✓', label: 'done' };
+        case 'running': return { pillBg: 'var(--kas)', pillFg: 'var(--ka)', dotR: '50%', dotBd: '1.5px solid var(--ka)', dotBg: 'linear-gradient(90deg,var(--ka) 50%,transparent 50%)', dotT: 'none', dotInner: '', label: 'running' };
+        case 'skipped': return { pillBg: 'var(--in)', pillFg: 'var(--f3)', dotR: '50%', dotBd: '1.5px dashed var(--f3)', dotBg: 'transparent', dotT: 'none', dotInner: '', label: 'skipped' };
+        default:        return { pillBg: 'var(--dgs)', pillFg: 'var(--dg)', dotR: '2px', dotBd: 'none', dotBg: 'var(--dg)', dotT: 'rotate(45deg)', dotInner: '', label: 'failed' };
+      }
+    };
+
+    const cards = [
+      { name: 'Announce shipped bugs', trig: 'status', enabled: true, run: 'done', when: '4m' },
+      { name: 'Escalate blocked criticals', trig: 'status', enabled: true, run: 'done', when: '1h' },
+      { name: 'Auto-triage new bugs', trig: 'created', enabled: true, run: 'done', when: '20m' },
+      { name: 'Ping ops on new epics', trig: 'created', enabled: false, run: null, when: '—' },
+    ].map(c => ({
+      name: c.name,
+      trigIcon: TRIG[c.trig].icon, trigLabel: TRIG[c.trig].label,
+      op: c.enabled ? '1' : '.55',
+      swBg: c.enabled ? 'var(--ac)' : 'var(--bs)',
+      swSide: c.enabled ? 'right' : 'left',
+      swKnob: c.enabled ? '#fff' : 'var(--rs)',
+      enLabel: c.enabled ? 'Enabled' : 'Disabled',
+      runD: c.run ? 'inline-flex' : 'none',
+      ...pill(c.run || 'done'),
+      pillLabel: c.run || '',
+      when: c.when,
+    }));
+
+    const runsRaw = [
+      { rule: 'Announce shipped bugs', ticket: 'TIX-90', s: 'done', when: '4m' },
+      { rule: 'Escalate blocked criticals', ticket: 'GW-9', s: 'running', when: 'now' },
+      { rule: 'Ping ops on new epics', ticket: 'APP-3', s: 'failed', suffix: '· 3/5', detail: 'webhook POST → 503', when: '2h', danger: true },
+      { rule: 'Auto-triage new bugs', ticket: 'TASK-77', s: 'failed', detail: 'transition To Do → Done not allowed', when: '3h', danger: true },
+      { rule: 'Announce shipped bugs', ticket: 'TIX-88', s: 'skipped', detail: 'stopped at depth 5 to prevent a loop', when: '5h' },
+      { rule: 'Escalate blocked criticals', ticket: 'GW-14', s: 'done', when: '1h' },
+    ];
+    const runCards = runsRaw.map(r => ({
+      ...r, ...pill(r.s),
+      suffix: r.suffix || '', suffixD: r.suffix ? 'inline' : 'none',
+      detail: r.detail || '', detailD: r.detail ? 'block' : 'none',
+      detailC: r.danger ? 'var(--dg)' : 'var(--f3)',
+    }));
+
+    const mConds = [
+      { field: 'Priority', op: 'is', value: 'Critical', dotR: '50%', dotBd: 'none', dotBg: '#A03028', dotT: 'none', andD: 'block' },
+      { field: 'Status', op: 'changed to', value: 'Blocked', dotR: '2px', dotBd: 'none', dotBg: 'var(--kb)', dotT: 'rotate(45deg)', andD: 'none' },
+    ];
+
+    return {
+      isList: view === 'list', isRuns: view === 'runs', isEditor: view === 'editor',
+      cards, runCards, mConds,
+      tKey: '{{ticket.key}}', tTo: '{{event.to}}',
+    };
+  }
+}
+</script>
+</body>
+</html>

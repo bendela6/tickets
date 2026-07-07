@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="width:1440px;height:760px;border:1px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;background:var(--bg);color:var(--f1);box-shadow:var(--shlg);{{tok}}">
+
+  <!-- app rail -->
+  <aside style="width:224px;flex:none;border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px 12px 12px">
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 14px"><span style="width:9px;height:9px;background:var(--ac);border-radius:2px"></span><span style="font:600 15px 'IBM Plex Mono',monospace">tickets</span><span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">acme</span></div>
+    <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">⌂<span style="flex:1">Home</span></div>
+    <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">▤<span style="flex:1">All tickets</span></div>
+    <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3);padding:16px 9px 6px">PROJECTS</div>
+    <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="font:500 10px 'IBM Plex Mono',monospace;background:var(--in);border-radius:4px;padding:2px 5px">TIX</span><span style="flex:1">tickets</span></div>
+    <span style="flex:1"></span>
+    <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif;margin-bottom:8px">⚙<span style="flex:1">Settings</span></div>
+  </aside>
+
+  <!-- settings secondary nav -->
+  <div style="width:212px;flex:none;border-right:1px solid var(--bd);padding:22px 12px;display:flex;flex-direction:column;gap:2px;background:var(--bg)">
+    <div style="font:600 16px 'IBM Plex Sans',sans-serif;padding:0 9px 12px">Settings</div>
+    <div style="display:flex;align-items:center;gap:7px;padding:0 9px 8px"><span style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3)">PROJECT</span><span style="height:20px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);font:500 11px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:4px">TIX <span style="font-size:8px;color:var(--f3)">▾</span></span></div>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="7">
+      <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;background:{{n.bg}};font:{{n.font}};color:{{n.color}};cursor:pointer">{{n.label}}<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">{{n.count}}</span></div>
+    </sc-for>
+    <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3);padding:16px 9px 6px">WORKSPACE</div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Projects<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">4</span></div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Users<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">7</span></div>
+  </div>
+
+  <!-- main -->
+  <main style="flex:1;min-width:0;padding:22px 26px;display:flex;flex-direction:column;position:relative">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <h1 style="font:600 20px 'IBM Plex Sans',sans-serif;margin:0">Automations</h1>
+      <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3)">6 runs · last 24h</span>
+      <span style="flex:1"></span>
+      <button style="height:32px;padding:0 12px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">＋ New rule</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--bd);margin-bottom:14px">
+      <span style="padding:8px 10px;font:500 13px 'IBM Plex Sans',sans-serif;color:var(--f3);cursor:pointer">Rules <span style="font:400 11px 'IBM Plex Mono',monospace">4</span></span>
+      <span style="padding:8px 10px;font:500 13px 'IBM Plex Sans',sans-serif;color:var(--f1);border-bottom:2px solid var(--ac);margin-bottom:-1px">Runs <span style="font:400 11px 'IBM Plex Mono',monospace">6</span></span>
+    </div>
+
+    <!-- filters -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;position:relative">
+      <span style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--f3)">Filter</span>
+      <span style="height:30px;padding:0 11px;border-radius:8px;border:1px solid var(--bd);background:var(--rs);font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center;gap:7px;cursor:pointer">Rule: <span style="color:var(--f1)">all</span> <span style="font-size:9px;color:var(--f3)">▾</span></span>
+      <span style="height:30px;padding:0 11px;border-radius:8px;border:1px solid {{statusBorder}};background:var(--rs);font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center;gap:7px;cursor:pointer;box-shadow:{{statusRing}}">Status: <span style="color:var(--f1)">all</span> <span style="font-size:9px;color:var(--f3)">▾</span></span>
+      <span style="flex:1"></span>
+      <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">auto-refresh · 30s</span>
+
+      <sc-if value="{{filter}}" hint-placeholder-val="{{false}}">
+      <div style="position:absolute;top:36px;left:118px;width:196px;border:1px solid var(--bd);border-radius:10px;background:var(--rs);box-shadow:var(--shlg);padding:5px;z-index:6">
+        <sc-for list="{{statusFilter}}" as="s" hint-placeholder-count="5">
+          <div style="display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:6px;font:400 13px 'IBM Plex Sans',sans-serif" style-hover="background:var(--in)"><span style="width:14px;height:14px;border-radius:4px;border:{{s.boxBd}};background:{{s.boxBg}};display:inline-flex;align-items:center;justify-content:center;color:#fff;font:600 9px 'IBM Plex Sans',sans-serif">{{s.check}}</span><span style="width:9px;height:9px;border-radius:{{s.dotR}};border:{{s.dotBd}};background:{{s.dotBg}};transform:{{s.dotT}}"></span>{{s.label}}</div>
+        </sc-for>
+      </div>
+      </sc-if>
+    </div>
+
+    <!-- table -->
+    <div style="flex:1;overflow:auto;border:1px solid var(--bd);border-radius:12px;background:var(--rs)">
+      <div style="display:grid;grid-template-columns:1.6fr 96px 148px 2.1fr 96px;align-items:center;height:36px;border-bottom:1px solid var(--bd);background:var(--bg);font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);padding:0 14px">
+        <span>Rule</span><span>Ticket</span><span>Status</span><span>Detail</span><span style="text-align:right">When</span>
+      </div>
+      <sc-for list="{{runs}}" as="r" hint-placeholder-count="6">
+        <div style="display:grid;grid-template-columns:1.6fr 96px 148px 2.1fr 96px;align-items:center;min-height:46px;border-bottom:1px solid var(--bd);padding:0 14px;cursor:pointer;background:{{r.rowBg}}" style-hover="background:var(--bg)">
+          <span style="font:500 13px 'IBM Plex Sans',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px;display:flex;align-items:center;gap:7px"><span style="color:var(--f3);font-size:10px;width:10px">{{r.caret}}</span>{{r.rule}}</span>
+          <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ac)">{{r.ticket}}</span>
+          <span><span style="height:23px;padding:0 9px;border-radius:6px;background:{{r.pillBg}};color:{{r.pillFg}};font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px"><span style="width:11px;height:11px;border-radius:{{r.dotR}};border:{{r.dotBd}};background:{{r.dotBg}};transform:{{r.dotT}};display:inline-flex;align-items:center;justify-content:center;color:var(--onpos);font:600 7px 'IBM Plex Sans',sans-serif;flex:none">{{r.dotInner}}</span>{{r.label}}<span style="display:{{r.suffixD}};font:400 11px 'IBM Plex Mono',monospace;opacity:.85">{{r.suffix}}</span></span></span>
+          <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:{{r.detailC}};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px">{{r.detail}}</span>
+          <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3);text-align:right">{{r.when}}</span>
+        </div>
+        <sc-if value="{{r.expanded}}" hint-placeholder-val="{{false}}">
+        <div style="border-bottom:1px solid var(--bd);background:var(--bg);padding:14px 14px 16px 32px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:10px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)">
+            <span style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--f3)">TRIGGERED BY</span>
+            <span style="height:22px;padding:0 9px 0 7px;border-radius:6px;background:var(--acs);color:var(--ac);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px"><span style="font:400 11px 'IBM Plex Mono',monospace">✦</span>Ticket created</span>
+            <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ac)">TASK-77</span>
+            <span style="width:18px;height:18px;border-radius:6px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 9px 'IBM Plex Mono',monospace">AU</span>
+            <span style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--f3)">as Automation</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--f3)">PER-ACTION OUTCOMES</div>
+            <sc-for list="{{outcomes}}" as="o" hint-placeholder-count="2">
+              <div style="display:flex;align-items:center;gap:10px;min-height:34px;padding:6px 12px;border:1px solid {{o.bd}};border-radius:9px;background:var(--rs)">
+                <span style="width:18px;height:18px;border-radius:{{o.mR}};background:{{o.mBg}};display:inline-flex;align-items:center;justify-content:center;color:{{o.mFg}};font:600 10px 'IBM Plex Sans',sans-serif;transform:{{o.mT}};flex:none">{{o.mark}}</span>
+                <span style="height:22px;padding:0 8px;border-radius:5px;background:var(--in);font:500 12px 'IBM Plex Sans',sans-serif;color:var(--f1);display:inline-flex;align-items:center;gap:4px">{{o.action}}</span>
+                <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:{{o.noteC}}">{{o.note}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+      </sc-for>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:760},&quot;tok&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;filter&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const nav = [
+      { label: 'Fields', count: '9' },
+      { label: 'Ticket types', count: '4' },
+      { label: 'Statuses', count: '6' },
+      { label: 'Workflow', count: '8' },
+      { label: 'Link types', count: '3' },
+      { label: 'Views', count: '5' },
+      { label: 'Automations', count: '4', active: true },
+    ].map(n => ({
+      ...n,
+      bg: n.active ? 'var(--in)' : 'transparent',
+      font: (n.active ? '500' : '400') + " 13px 'IBM Plex Sans',sans-serif",
+      color: n.active ? 'var(--f1)' : 'var(--f2)',
+    }));
+
+    const pill = (s) => {
+      switch (s) {
+        case 'done':    return { pillBg: 'var(--kds)', pillFg: 'var(--kd)', dotR: '50%', dotBd: 'none', dotBg: 'var(--kd)', dotT: 'none', dotInner: '✓', label: 'done' };
+        case 'running': return { pillBg: 'var(--kas)', pillFg: 'var(--ka)', dotR: '50%', dotBd: '1.5px solid var(--ka)', dotBg: 'linear-gradient(90deg,var(--ka) 50%,transparent 50%)', dotT: 'none', dotInner: '', label: 'running' };
+        case 'pending': return { pillBg: 'var(--in)', pillFg: 'var(--f2)', dotR: '50%', dotBd: '1.5px solid var(--f2)', dotBg: 'transparent', dotT: 'none', dotInner: '', label: 'pending' };
+        case 'skipped': return { pillBg: 'var(--in)', pillFg: 'var(--f3)', dotR: '50%', dotBd: '1.5px dashed var(--f3)', dotBg: 'transparent', dotT: 'none', dotInner: '', label: 'skipped' };
+        default:        return { pillBg: 'var(--dgs)', pillFg: 'var(--dg)', dotR: '2px', dotBd: 'none', dotBg: 'var(--dg)', dotT: 'rotate(45deg)', dotInner: '', label: 'failed' };
+      }
+    };
+
+    const raw = [
+      { rule: 'Announce shipped bugs', ticket: 'TIX-90', s: 'done', detail: 'commented TIX-90#c41', when: '4m' },
+      { rule: 'Escalate blocked criticals', ticket: 'GW-14', s: 'done', detail: 'set assignee · commented', when: '1h' },
+      { rule: 'Ping ops on new epics', ticket: 'APP-3', s: 'failed', suffix: '· 3/5', detail: 'webhook POST → 503', when: '2h', danger: true },
+      { rule: 'Auto-triage new bugs', ticket: 'TASK-77', s: 'failed', detail: 'transition To Do → Done not allowed', when: '3h', danger: true, expanded: true },
+      { rule: 'Announce shipped bugs', ticket: 'TIX-88', s: 'skipped', detail: 'stopped at depth 5 to prevent a loop', when: '5h' },
+      { rule: 'Escalate blocked criticals', ticket: 'GW-9', s: 'running', detail: 'running action 1 of 2…', when: 'now' },
+    ];
+
+    const runs = raw.map(r => ({
+      ...r, ...pill(r.s),
+      suffix: r.suffix || '', suffixD: r.suffix ? 'inline' : 'none',
+      detailC: r.danger ? 'var(--dg)' : 'var(--f2)',
+      when: r.when, caret: r.expanded ? '▾' : '',
+      rowBg: r.expanded ? 'var(--bg)' : 'transparent',
+    }));
+
+    const outcomes = [
+      { mark: '✓', mR: '50%', mBg: 'var(--kd)', mFg: 'var(--onpos)', mT: 'none', bd: 'var(--bd)',
+        action: '✎ Set priority = Medium', note: 'field updated', noteC: 'var(--f3)' },
+      { mark: '', mR: '2px', mBg: 'var(--dg)', mFg: '#fff', mT: 'rotate(45deg)', bd: 'var(--dg)',
+        action: '→ Change status Done', note: 'transition To Do → Done not allowed', noteC: 'var(--dg)' },
+    ];
+
+    const statusFilter = [
+      { label: 'done',    s: 'done',    on: true },
+      { label: 'running', s: 'running', on: true },
+      { label: 'pending', s: 'pending', on: true },
+      { label: 'skipped', s: 'skipped', on: false },
+      { label: 'failed',  s: 'failed',  on: true },
+    ].map(f => {
+      const p = pill(f.s);
+      return {
+        label: f.label,
+        check: f.on ? '✓' : '',
+        boxBd: f.on ? 'none' : '1.5px solid var(--bs)',
+        boxBg: f.on ? 'var(--ac)' : 'var(--rs)',
+        dotR: p.dotR, dotBd: p.dotBd, dotBg: p.dotBg, dotT: p.dotT,
+      };
+    });
+
+    const filter = this.props.filter ?? false;
+    return {
+      nav, runs, outcomes, statusFilter,
+      tok: this.props.tok ?? '', filter,
+      statusBorder: filter ? 'var(--ac)' : 'var(--bd)',
+      statusRing: filter ? '0 0 0 3px var(--acs)' : 'none',
+    };
+  }
+}
+</script>
+</body>
+</html>
