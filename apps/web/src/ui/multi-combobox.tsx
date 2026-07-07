@@ -66,7 +66,9 @@ export function MultiCombobox({
                 </button>
               </span>
             ))}
-            {overflow > 0 ? <span className="font-mono text-meta font-medium text-ink-2">+{overflow}</span> : null}
+            {overflow > 0 ? (
+              <span className="font-mono text-meta font-medium text-ink-2">+{overflow}</span>
+            ) : null}
           </div>
           <PopoverTrigger asChild>
             <button
@@ -75,7 +77,9 @@ export function MultiCombobox({
               disabled={disabled}
               className="flex shrink-0 items-center self-center font-sans text-ui text-ink-3 outline-none"
             >
-              <span aria-hidden className="text-[10px]">▾</span>
+              <span aria-hidden className="text-[10px]">
+                ▾
+              </span>
             </button>
           </PopoverTrigger>
         </div>
@@ -90,7 +94,11 @@ export function MultiCombobox({
             <div className="flex items-center justify-between">
               <button
                 type="button"
-                onClick={() => onChange(options.filter((option) => !option.disabled).map((option) => option.value))}
+                onClick={() =>
+                  onChange(
+                    options.filter((option) => !option.disabled).map((option) => option.value),
+                  )
+                }
                 className="rounded-ctrl px-1 font-sans text-meta font-medium text-accent hover:underline"
               >
                 Select all

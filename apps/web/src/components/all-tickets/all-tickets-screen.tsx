@@ -456,9 +456,9 @@ export function AllTicketsScreen() {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col px-7 pt-5.5">
+    <div className="flex h-full min-h-0 flex-col px-4 pt-4 md:px-7 md:pt-5.5">
       {/* Header: title · meta · search · columns · density */}
-      <div className="mb-3.5 flex shrink-0 items-center gap-3.5">
+      <div className="mb-3.5 flex shrink-0 flex-wrap items-center gap-3.5 gap-y-2">
         <h1 className="m-0 font-sans text-[22px] leading-tight font-semibold text-ink">
           All tickets
         </h1>
@@ -472,7 +472,7 @@ export function AllTicketsScreen() {
           placeholder="Search titles…"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          className="h-8 w-55"
+          className="h-8 w-full md:w-55"
         />
         <ColumnsPopover
           projectCount={entries.length}
@@ -592,7 +592,7 @@ export function AllTicketsScreen() {
       <div className="flex min-h-0 flex-1 flex-col overflow-auto rounded-t-[12px] border border-hairline bg-raised">
         <div
           role="row"
-          className="sticky top-0 z-10 grid h-9 shrink-0 items-center border-b border-hairline bg-app px-1"
+          className="sticky top-0 z-10 grid h-9 min-w-170 shrink-0 items-center border-b border-hairline bg-app px-1"
           style={{ gridTemplateColumns }}
         >
           <span className="px-3 font-sans text-label font-medium text-ink-2 uppercase">Key</span>
@@ -619,7 +619,7 @@ export function AllTicketsScreen() {
           </div>
         ) : (
           groups.map((group) => (
-            <div key={group.key}>
+            <div key={group.key} className="min-w-170">
               <div className="flex h-8.5 items-center gap-2.5 border-b border-hairline bg-app px-4">
                 {group.header}
               </div>

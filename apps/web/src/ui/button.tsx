@@ -53,7 +53,15 @@ const sizeClasses = {
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant = 'secondary', size = 'regular', loading = false, className, children, disabled, ...rest },
+  {
+    variant = 'secondary',
+    size = 'regular',
+    loading = false,
+    className,
+    children,
+    disabled,
+    ...rest
+  },
   ref,
 ) {
   const showDisabled = Boolean(disabled) && !loading;

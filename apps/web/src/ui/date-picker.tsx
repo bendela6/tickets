@@ -132,7 +132,9 @@ export function DatePicker({
               return <div key={`blank-${index}`} />;
             }
             const isSelected =
-              selected?.year === view.year && selected?.month === view.month && selected?.day === day;
+              selected?.year === view.year &&
+              selected?.month === view.month &&
+              selected?.day === day;
             const isToday =
               today.getUTCFullYear() === view.year &&
               today.getUTCMonth() === view.month &&

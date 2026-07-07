@@ -51,14 +51,27 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           aria-hidden
           className="pointer-events-none absolute inset-0 hidden size-4 p-px text-on-accent peer-checked:block"
         >
-          <path d="M2.5 6.5 5 9l4.5-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M2.5 6.5 5 9l4.5-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
         <svg
           viewBox="0 0 12 12"
           aria-hidden
           className="pointer-events-none absolute inset-0 hidden size-4 p-px text-on-accent peer-indeterminate:block"
         >
-          <path d="M3 6h6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path
+            d="M3 6h6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
         </svg>
       </span>
       <span className="group-has-disabled:text-ink-3">{label}</span>

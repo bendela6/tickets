@@ -27,7 +27,15 @@ const colorClasses: Record<OptionColor, string> = {
   gray: 'bg-opt-gray-subtle text-opt-gray',
 };
 
-export function OptionChip({ color, label, className }: { color: OptionColor; label: string; className?: string }) {
+export function OptionChip({
+  color,
+  label,
+  className,
+}: {
+  color: OptionColor;
+  label: string;
+  className?: string;
+}) {
   return (
     <span
       className={cn(

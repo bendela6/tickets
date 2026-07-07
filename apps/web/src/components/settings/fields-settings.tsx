@@ -55,7 +55,8 @@ const dotClasses: Record<OptionColor, string> = {
 
 // Label gets a real minimum so it never collapses to an ellipsis on narrow
 // content areas; headers stay one line via whitespace-nowrap at the call site.
-const GRID_COLUMNS = 'grid-cols-[minmax(150px,1.5fr)_minmax(90px,120px)_90px_minmax(90px,1fr)_110px_24px]';
+const GRID_COLUMNS =
+  'grid-cols-[minmax(150px,1.5fr)_minmax(90px,120px)_90px_minmax(90px,1fr)_110px_24px]';
 
 function slugifyKey(label: string): string {
   return label

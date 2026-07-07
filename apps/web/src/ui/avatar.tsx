@@ -1,6 +1,11 @@
 import { cn } from './cn';
 
-type AvatarProps = { name: string; kind: 'human' | 'agent'; size?: 'sm' | 'md'; className?: string };
+type AvatarProps = {
+  name: string;
+  kind: 'human' | 'agent';
+  size?: 'sm' | 'md';
+  className?: string;
+};
 
 function initials(name: string) {
   const parts = name.trim().split(/[\s-]+/);

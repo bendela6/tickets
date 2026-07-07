@@ -40,7 +40,8 @@ export function MarkdownEditor({ value, disabled, placeholder, onSave }: Markdow
     }
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const next = draft.slice(0, start) + mark.before + draft.slice(start, end) + mark.after + draft.slice(end);
+    const next =
+      draft.slice(0, start) + mark.before + draft.slice(start, end) + mark.after + draft.slice(end);
     setDraft(next);
     textarea.focus();
   }
