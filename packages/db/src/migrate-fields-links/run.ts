@@ -10,10 +10,13 @@
 // (docs/superpowers/plans/2026-07-07-type-owned-migration.md) runs it
 // against a dev copy of the live DB via `pnpm exec tsx src/migrate-fields-links/run.ts`.
 //
-// Leaves the old `scheme_id` values and `ticket_type_fields` rows in place;
-// Task 4's contract migration drops them once this has been verified.
+// Deletes the old scheme-owned `fields`/`link_types` rows (and their
+// `ticket_type_fields`/`field_options` dependents) once every reference has
+// been remapped onto the new per-type rows — see Step 7. This is what lets
+// Task 4's contract migration (`ticket_type_id SET NOT NULL`) succeed: no
+// NULL rows are left behind.
 
-import { eq, inArray, isNotNull } from 'drizzle-orm';
+import { eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import { createDbClient } from '../client';
 import {
   fieldOptions,
@@ -84,6 +87,7 @@ const summary = await db.transaction(async (tx) => {
     type: f.type,
     system: f.system,
     config: f.config as Record<string, unknown>,
+    archivedAt: f.archivedAt,
   }));
   const sharedFieldIds = sharedFields.map((f) => f.id);
 
@@ -122,6 +126,7 @@ const summary = await db.transaction(async (tx) => {
     label: l.label,
     inverseLabel: l.inverseLabel,
     directional: l.directional,
+    archivedAt: l.archivedAt,
   }));
   const sharedLinkIds = new Set(sharedLinks.map((l) => l.id));
 
@@ -164,6 +169,7 @@ const summary = await db.transaction(async (tx) => {
         required: df.required,
         position: df.position,
         config: df.config,
+        archivedAt: df.archivedAt,
       })
       .returning();
     if (!row) throw new Error(`migrate-fields-links: field insert failed for type ${df.typeId}/${df.key}`);
@@ -184,11 +190,11 @@ const summary = await db.transaction(async (tx) => {
           })),
         )
         .returning();
-      // A single multi-row INSERT ... RETURNING preserves VALUES-list order
-      // in Postgres, so zipping by index is safe (same pattern would need a
-      // per-row insert otherwise).
-      for (let i = 0; i < opts.length; i++) {
-        newOptionIdByFieldValue.set(compositeKey(row.id, opts[i]!.value), insertedOptions[i]!.id);
+      // Rekey off each returned row's own `value` rather than zipping by
+      // index against the input `opts` array — correct regardless of
+      // whether INSERT ... RETURNING preserves VALUES-list order.
+      for (const inserted of insertedOptions) {
+        newOptionIdByFieldValue.set(compositeKey(row.id, inserted.value), inserted.id);
       }
     }
   }
@@ -273,6 +279,7 @@ const summary = await db.transaction(async (tx) => {
         inverseLabel: dl.inverseLabel,
         directional: dl.directional,
         position,
+        archivedAt: dl.archivedAt,
       })
       .returning();
     if (!row) throw new Error(`migrate-fields-links: link insert failed for type ${dl.sourceTypeId}/${dl.key}`);
@@ -311,9 +318,40 @@ const summary = await db.transaction(async (tx) => {
     await tx.update(views).set({ config: remapped }).where(eq(views.id, v.id));
   }
 
-  // Step 7: old scheme_id values on `fields`/`link_types` and the
-  // `ticket_type_fields` rows are intentionally left in place — Task 4's
-  // contract migration drops them once this has verified all-zero.
+  // --- Step 7: delete the now-unreferenced old scheme-owned rows ----------
+  // Every ticket_values/ticket_links/views reference has been remapped onto
+  // the new per-type fields/links above, so the old shared rows are safe to
+  // drop. This makes Task 4's contract migration (`ticket_type_id SET NOT
+  // NULL` on `fields`/`link_types`) succeed — no NULL rows remain. FK order:
+  // junction/dependent rows first, then the shared rows they pointed at.
+  // (Intentionally deviates from the original brief, which left these for
+  // Task 4 to drop in a DDL-only migration — deleting *data* belongs in this
+  // data-migration script, keeping Task 4 pure-DDL.)
+
+  // 1. ticket_type_fields: the new per-type model doesn't use this junction
+  //    at all (each field now belongs to exactly one type) — clear it so it
+  //    no longer FKs to the shared `fields` rows being dropped in step 3.
+  await tx.delete(ticketTypeFields);
+
+  // 2. field_options belonging to the old shared fields (ticket_type_id IS
+  //    NULL) — must go before step 3 drops the fields they FK to. Scoped by
+  //    the same `ticket_type_id IS NULL` subquery as step 3 (not
+  //    `sharedFieldIds`) so the two stay FK-consistent no matter how many
+  //    schemes' shared fields this predicate ends up covering.
+  await tx.delete(fieldOptions).where(
+    inArray(
+      fieldOptions.fieldId,
+      tx.select({ id: fields.id }).from(fields).where(isNull(fields.ticketTypeId)),
+    ),
+  );
+
+  // 3. The old shared fields themselves — safe: every ticket_values row that
+  //    pointed at one was remapped to a per-type field in step 4.
+  await tx.delete(fields).where(isNull(fields.ticketTypeId));
+
+  // 4. The old shared link types — safe: every ticket_links row that pointed
+  //    at one was remapped to a per-source-type link in step 5.
+  await tx.delete(linkTypes).where(isNull(linkTypes.ticketTypeId));
 
   return {
     fieldsInserted: derivedFields.length,

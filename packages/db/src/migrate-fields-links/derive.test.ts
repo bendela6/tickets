@@ -12,8 +12,16 @@ import {
 // --- deriveTypeFields ------------------------------------------------------
 
 const sharedFields: SharedFieldRow[] = [
-  { id: 1, key: 'priority', label: 'Priority', type: 'select', system: false, config: {} },
-  { id: 2, key: 'status', label: 'Status', type: 'status', system: true, config: { locked: true } },
+  { id: 1, key: 'priority', label: 'Priority', type: 'select', system: false, config: {}, archivedAt: null },
+  {
+    id: 2,
+    key: 'status',
+    label: 'Status',
+    type: 'status',
+    system: true,
+    config: { locked: true },
+    archivedAt: null,
+  },
 ];
 
 const ticketTypeFields: TicketTypeFieldRow[] = [
@@ -36,6 +44,7 @@ test('deriveTypeFields produces one row per attachment with required/position fr
     config: {},
     required: true,
     position: 0,
+    archivedAt: null,
   });
 
   // Same shared field attached to two types: required/position come from
@@ -55,6 +64,7 @@ test('deriveTypeFields produces one row per attachment with required/position fr
     config: { locked: true },
     required: false,
     position: 1,
+    archivedAt: null,
   });
 });
 
@@ -62,6 +72,23 @@ test('deriveTypeFields throws on an attachment referencing an unknown field id',
   expect(() =>
     deriveTypeFields(sharedFields, [{ ticketTypeId: 10, fieldId: 999, position: 0, required: false }]),
   ).toThrow();
+});
+
+test('deriveTypeFields carries archivedAt through from the shared field', () => {
+  const archivedSharedFields: SharedFieldRow[] = [
+    {
+      id: 3,
+      key: 'legacy',
+      label: 'Legacy',
+      type: 'text',
+      system: false,
+      config: {},
+      archivedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ];
+  const out = deriveTypeFields(archivedSharedFields, [{ ticketTypeId: 10, fieldId: 3, position: 2, required: false }]);
+  expect(out).toHaveLength(1);
+  expect(out[0]?.archivedAt).toBe('2026-01-01T00:00:00.000Z');
 });
 
 // --- remapViewConfig --------------------------------------------------------
@@ -95,8 +122,15 @@ test('remapViewConfig throws when a fieldId has no mapped key', () => {
 // --- deriveTypeLinks ---------------------------------------------------------
 
 const sharedLinks: SharedLinkRow[] = [
-  { id: 100, key: 'blocks', label: 'Blocks', inverseLabel: 'Blocked by', directional: true },
-  { id: 101, key: 'relates-to', label: 'Relates to', inverseLabel: 'Relates to', directional: false },
+  { id: 100, key: 'blocks', label: 'Blocks', inverseLabel: 'Blocked by', directional: true, archivedAt: null },
+  {
+    id: 101,
+    key: 'relates-to',
+    label: 'Relates to',
+    inverseLabel: 'Relates to',
+    directional: false,
+    archivedAt: null,
+  },
 ];
 
 test('deriveTypeLinks fans unused links to every type with all-type targets', () => {
@@ -119,6 +153,7 @@ test('deriveTypeLinks fans unused links to every type with all-type targets', ()
       inverseLabel: 'Blocked by',
       directional: true,
       targetTypeIds: [20, 30],
+      archivedAt: null,
     },
   ]);
 
@@ -149,6 +184,7 @@ test('deriveTypeLinks keeps distinct observed source types as separate owned lin
       inverseLabel: 'Blocked by',
       directional: true,
       targetTypeIds: [20],
+      archivedAt: null,
     },
     {
       sourceTypeId: 20,
@@ -158,6 +194,34 @@ test('deriveTypeLinks keeps distinct observed source types as separate owned lin
       inverseLabel: 'Blocked by',
       directional: true,
       targetTypeIds: [10],
+      archivedAt: null,
     },
   ]);
+});
+
+test('deriveTypeLinks carries archivedAt through from the shared link, for both the observed-usage and fanned-out (zero-usage) branches', () => {
+  const archivedSharedLinks: SharedLinkRow[] = [
+    {
+      id: 102,
+      key: 'duplicates',
+      label: 'Duplicates',
+      inverseLabel: 'Duplicated by',
+      directional: true,
+      archivedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ];
+
+  const usageOut = deriveTypeLinks(
+    archivedSharedLinks,
+    [{ sourceTypeId: 10, targetTypeId: 20, oldLinkTypeId: 102 }],
+    [10, 20],
+  );
+  expect(usageOut).toHaveLength(1);
+  expect(usageOut[0]?.archivedAt).toBe('2026-01-01T00:00:00.000Z');
+
+  const fannedOut = deriveTypeLinks(archivedSharedLinks, [], [10, 20]);
+  expect(fannedOut).toHaveLength(2);
+  for (const row of fannedOut) {
+    expect(row.archivedAt).toBe('2026-01-01T00:00:00.000Z');
+  }
 });
