@@ -33,6 +33,7 @@
 }
 
 :root {
+  /* tokens:light — generated, do not edit */
   --ins-app: #f7f6f2;
   --ins-raised: #ffffff;
   --ins-inset: #eceae3;
@@ -48,6 +49,7 @@
   --ins-danger: #c0382e;
   --ins-danger-hover: #a82f26;
   --ins-danger-subtle: #f8e7e5;
+  --ins-on-danger: #ffffff;
   --ins-kind-todo: #6e6a5e;
   --ins-kind-todo-subtle: #ebeae3;
   --ins-kind-active: #2e6fcc;
@@ -82,9 +84,11 @@
   --ins-opt-pink-subtle: #fae1ec;
   --ins-opt-gray: #5c594f;
   --ins-opt-gray-subtle: #eae9e4;
+  /* /tokens:light */
 }
 
 [data-theme='dark'] {
+  /* tokens:dark — generated, do not edit */
   --ins-app: #1b1a17;
   --ins-raised: #252320;
   --ins-inset: #141310;
@@ -100,6 +104,7 @@
   --ins-danger: #e26a5f;
   --ins-danger-hover: #e9847a;
   --ins-danger-subtle: #41231f;
+  --ins-on-danger: #2b0f0b;
   --ins-kind-todo: #8a8678;
   --ins-kind-todo-subtle: #26251f;
   --ins-kind-active: #6ba4ee;
@@ -134,12 +139,14 @@
   --ins-opt-pink-subtle: #40222f;
   --ins-opt-gray: #a5a195;
   --ins-opt-gray-subtle: #2a2924;
+  /* /tokens:dark */
 }
 
 @theme inline {
   --color-*: initial;
   --color-white: #ffffff;
   --color-black: #000000;
+  /* tokens:theme — generated, do not edit */
   --color-app: var(--ins-app);
   --color-raised: var(--ins-raised);
   --color-inset: var(--ins-inset);
@@ -155,6 +162,7 @@
   --color-danger: var(--ins-danger);
   --color-danger-hover: var(--ins-danger-hover);
   --color-danger-subtle: var(--ins-danger-subtle);
+  --color-on-danger: var(--ins-on-danger);
   --color-kind-todo: var(--ins-kind-todo);
   --color-kind-todo-subtle: var(--ins-kind-todo-subtle);
   --color-kind-active: var(--ins-kind-active);
@@ -189,6 +197,7 @@
   --color-opt-gray-subtle: var(--ins-opt-gray-subtle);
   --shadow-sm: var(--ins-shadow-sm);
   --shadow-lg: var(--ins-shadow-lg);
+  /* /tokens:theme */
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
   --radius-ctrl: 5px;

@@ -32,8 +32,8 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
         <span
           aria-hidden
           className={cn(
-            // 14px thumb, inset 2px. Off thumb: #fff (light) / app (dark).
-            // On thumb: #fff (light) / on-accent (dark). Disabled thumb: hairline.
+            // 14px thumb, inset 2px. Off thumb: white (light) / app (dark).
+            // On thumb: white (light) / on-accent (dark). Disabled thumb: hairline.
             'pointer-events-none absolute left-0.5 top-0.5 size-3.5 rounded-full transition-transform',
             'bg-white dark:bg-app dark:peer-checked:bg-on-accent peer-disabled:bg-hairline',
             'peer-checked:translate-x-3.5',

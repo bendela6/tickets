@@ -23,7 +23,7 @@ const variantClasses = {
     'bg-transparent text-ink-2 border border-transparent hover:bg-inset hover:text-ink ' +
     'focus-visible:ring-[3px] focus-visible:ring-accent-subtle',
   destructive:
-    'bg-danger text-white dark:text-[#2b0f0b] border border-transparent hover:bg-danger-hover ' +
+    'bg-danger text-on-danger border border-transparent hover:bg-danger-hover ' +
     'focus-visible:ring-[3px] focus-visible:ring-danger-subtle',
 };
 
