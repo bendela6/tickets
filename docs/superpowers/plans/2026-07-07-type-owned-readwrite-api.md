@@ -70,6 +70,9 @@ export function buildValueRows(
 Remove the now-redundant `typeId === undefined` guard in the `status` branch.
 
 - [ ] **Step 4: Update `tickets.routes.ts`** — ensure both create and update pass the ticket's `typeId` to every `buildValueRows` call. On create it's the new ticket's `type.id`; on update, load the ticket row first and pass `ticket.typeId`. Grep: `git grep -n buildValueRows apps/api/src`.
+  Also fix two other `typeFields`/`fields` consumers surfaced by the Plan A review (they broke when the seed stopped writing `ticket_type_fields` and fields became per-type):
+  - `tickets.routes.ts` ~line 67: `requiredFieldIds` is derived from the now-empty `vocab.typeFields`, so **required-field enforcement silently no-ops**. Rebuild it from the ticket type's own fields — `vocab.fieldsByType.get(typeId)` filtered by `field.required`.
+  - `tickets.routes.ts` ~line 80: `vocab.fields.find(f => f.type === 'status')` now picks the first of five per-type status fields. Resolve the status field per type via `vocab.fieldByTypeKey.get(\`${typeId}:status\`)` (or the type's `fieldsByType` entry with `type === 'status'`).
 
 - [ ] **Step 5: Run api tests — pass.** `pnpm --filter @tickets/api test build-value-rows tickets`
 
@@ -154,7 +157,7 @@ test('unions options across types for a shared key', () => {
 
 - [ ] **Step 3: Implement `buildLogicalFields`** — iterate `vocab.fields` grouped by key; for each key pick the min-id row as the representative (carry `key,label,type,system`), and union `vocab.optionsByFieldId` across every field row with that key, deduping by `value`. Return sorted by the representative id. (Mirror `apps/web/src/components/all-tickets/shared-fields.ts` union logic.)
 
-- [ ] **Step 4: Wire into the board route.** Find it: `git grep -n "board" apps/api/src/routes`. Replace the `fields:` payload it currently builds from scheme fields with `buildLogicalFields(vocab)`. Leave `assembleTickets` untouched (its `values` are already key-shaped).
+- [ ] **Step 4: Wire into the board route** (it lives in `apps/api/src/routes/projects.routes.ts` — the `boardPayload` builder). Replace `fields: vocab.fields` (now per-type duplicates) with `fields: buildLogicalFields(vocab)`. Also handle the `typeFields: vocab.typeFields` field it returns: `vocab.typeFields` is **empty** after Plan A (seed stopped writing `ticket_type_fields`), and the web reads `board.typeFields` for its field-forms — re-derive the type→field associations from `vocab.fieldsByType` (emit, per type, the field keys + required flags) so the payload stays populated, or drop it only if you also confirm no web consumer needs it (`new-ticket-dialog.tsx`, `detail-fields.tsx`, `ticket-detail.tsx`, `settings/*` read it — Task 6 covers those). Leave `assembleTickets` untouched (its `values` are already key-shaped).
 
 - [ ] **Step 5: Run — passes**, plus an `inject` probe of `GET /api/projects/:key/board` asserting `fields` has one `priority` entry with unioned options.
 

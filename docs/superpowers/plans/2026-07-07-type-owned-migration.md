@@ -157,7 +157,13 @@ Expected: `347` (matches the active-ticket backfill; archived may add more).
 Run: `pnpm --filter @tickets/db exec drizzle-kit generate`
 Open the SQL and confirm it: drops `fields.scheme_id`, `link_types.scheme_id`; `ALTER … SET NOT NULL` on the type-owned columns; `DROP TABLE ticket_type_fields`; swaps the uniques. **Because the live copy already has the columns populated (Task 3), the NOT NULL will succeed.**
 
-- [ ] **Step 5: Verify the contract on the migrated dev copy**
+- [ ] **Step 5: Pre-check no duplicate `(ticket_type_id, key)` before applying the contract.** During Plans A/B the new unique isn't enforced yet (rows have `scheme_id = NULL` under the old `(scheme_id, key)` unique), so a stray double-seed/double-run could have created duplicate `(ticket_type_id, key)` fields or link types that would make the constraint swap fail. Assert zero duplicates on the migrated copy first:
+```bash
+POSTGRES_DATABASE=tickets_tozf pnpm exec tsx -e "import {createDbClient} from './src/client'; const {sql}=createDbClient({max:1}); const f=await sql\`select ticket_type_id,key,count(*) from fields group by 1,2 having count(*)>1\`; const l=await sql\`select ticket_type_id,key,count(*) from link_types group by 1,2 having count(*)>1\`; console.log(JSON.stringify({dupFields:f.length,dupLinks:l.length})); await sql.end();"
+```
+Expected: `{ dupFields:0, dupLinks:0 }`. If non-zero, stop and de-dup before contracting.
+
+- [ ] **Step 6: Verify the contract on the migrated dev copy**
 ```bash
 POSTGRES_DATABASE=tickets_tozf pnpm db:migrate      # applies the contract
 POSTGRES_DATABASE=tickets_tozf pnpm exec tsx src/migrate-fields-links/verify.ts
@@ -196,6 +202,8 @@ docker compose exec -T postgres pg_restore -U postgres -d tickets < "$SCRATCH/pr
 ```
 
 - [ ] **Step 4: Rebuild the api image so deployed code matches the final schema**
+
+**ORDERING GATE (mandatory):** this rebuild MUST happen only AFTER the migrated dump is restored into docker (Step 3). The Plan-A vocab loads fields/links exclusively via `ticket_type_id`, so an api built on this code against un-migrated (scheme-owned) data would return **zero** fields/links — every board blank. Migrate-then-rebuild, never rebuild-then-migrate.
 ```bash
 docker compose up -d --build api
 ```
