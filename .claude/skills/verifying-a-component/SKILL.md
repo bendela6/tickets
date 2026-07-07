@@ -15,11 +15,11 @@ Verification is measurement of OBSERVABLE OUTCOMES, never inspection of how the 
 
 ## The recipe — interactive components only (add):
 
-4. Drive real interaction (real browser / user-event, per adapter): keyboard reachability, tab order matches visual order, Enter/Space (or arrows) activate, focus trap + restore for overlays. Assert `activeElement` and emitted callbacks (mocked). Note: a11y engines do NOT catch keyboard/focus bugs — these must be driven.
+4. Drive real interaction (a real browser or simulated user events, per adapter): keyboard reachability, tab order matches visual order, Enter/Space (or arrows) activate, focus trap + restore for overlays. Assert `activeElement` and emitted callbacks (mocked). Note: a11y engines do NOT catch keyboard/focus bugs — these must be driven.
 
 ## Programmatic gate (definition of done)
 
-Every manifest cell covered; behavior + a11y + visual all green; interactive components keyboard-operable. Any uncovered manifest cell FAILS the run (a missing measurement is a result, never a skip).
+Every coverage-manifest cell (from mapping-component-states) covered; behavior + a11y + visual all green; interactive components keyboard-operable. Any uncovered manifest cell FAILS the run (a missing measurement is a result, never a skip).
 
 ## Refactor-proof litmus
 
