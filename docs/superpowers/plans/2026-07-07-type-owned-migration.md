@@ -124,7 +124,7 @@ PGPASSWORD=... psql -h localhost -p 5532 -U postgres tickets_tozf < "$SCRATCH/li
 POSTGRES_DATABASE=tickets_tozf pnpm exec tsx src/migrate-fields-links/run.ts
 POSTGRES_DATABASE=tickets_tozf pnpm exec tsx src/migrate-fields-links/verify.ts
 ```
-Expected verify: `{ badValueField:0, orphanValue:0, badLinkOwner:0, badLinkTarget:0, badViewKey:0 }`.
+Expected verify: `{ badValueField:0, orphanValue:0, badLinkOwner:0, badLinkTarget:0, badViewKey:0, strayFields:0, strayLinks:0 }` (strayFields/strayLinks = 0 confirms run.ts deleted the old scheme-owned rows, so the Task 4 contract's `SET NOT NULL` will succeed).
 
 - [ ] **Step 4: Spot-check the backfilled fields survived**
 ```bash
@@ -155,7 +155,7 @@ Expected: `347` (matches the active-ticket backfill; archived may add more).
 - [ ] **Step 4: Generate the contract migration**
 
 Run: `pnpm --filter @tickets/db exec drizzle-kit generate`
-Open the SQL and confirm it: drops `fields.scheme_id`, `link_types.scheme_id`; `ALTER … SET NOT NULL` on the type-owned columns; `DROP TABLE ticket_type_fields`; swaps the uniques. **Because the live copy already has the columns populated (Task 3), the NOT NULL will succeed.**
+Open the SQL and confirm it: drops `fields.scheme_id`, `link_types.scheme_id`; `ALTER … SET NOT NULL` on the type-owned columns; `DROP TABLE ticket_type_fields`; swaps the uniques. **The `SET NOT NULL` succeeds because `run.ts` (Task 2) already DELETED the old scheme-owned rows that had `ticket_type_id IS NULL` — confirm `strayFields:0`/`strayLinks:0` in the Task 3 verify before contracting.** (The generated migration is pure DDL; the old-row deletion lives in the data-migration script, not here.)
 
 - [ ] **Step 5: Pre-check no duplicate `(ticket_type_id, key)` before applying the contract.** During Plans A/B the new unique isn't enforced yet (rows have `scheme_id = NULL` under the old `(scheme_id, key)` unique), so a stray double-seed/double-run could have created duplicate `(ticket_type_id, key)` fields or link types that would make the constraint swap fail. Assert zero duplicates on the migrated copy first:
 ```bash
