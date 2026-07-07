@@ -11,7 +11,7 @@ const builtinColumnSchema = v.looseObject({
 const fieldColumnSchema = v.looseObject({
   //
   source: v.literal('field'),
-  fieldId: v.pipe(v.number(), v.integer()),
+  fieldKey: v.pipe(v.string(), v.minLength(1)),
   width: v.optional(v.number()),
   hidden: v.optional(v.boolean()),
 });
@@ -25,7 +25,7 @@ const builtinSortSchema = v.looseObject({
 const fieldSortSchema = v.looseObject({
   //
   source: v.literal('field'),
-  fieldId: v.pipe(v.number(), v.integer()),
+  fieldKey: v.pipe(v.string(), v.minLength(1)),
   dir: v.picklist(['asc', 'desc']),
 });
 
@@ -38,18 +38,13 @@ const viewConfigSchema = v.looseObject({
   filters: v.optional(v.record(v.string(), v.unknown())),
 });
 
-// Shape-check a view config and make sure every fieldId it references —
-// anywhere, including filters and forward-compat extras — points at an
-// existing, unarchived field of the view's project.
+// Shape-check a view config and make sure every fieldKey it references —
+// anywhere, including filters and forward-compat extras — points at a
+// known logical field key of the view's project.
 export function validateViewConfig(vocab: ProjectVocab, config: Record<string, unknown>): void {
   parseBody(viewConfigSchema, config);
 
-  const checkFieldId = (fieldId: number) => {
-    const field = vocab.fieldById.get(fieldId);
-    if (!field || field.archivedAt) {
-      throw new HttpError(400, `unknown or archived field id ${fieldId}`);
-    }
-  };
+  const known = new Set(vocab.fieldKeys.map((f) => f.key));
 
   const walk = (node: unknown) => {
     if (Array.isArray(node)) {
@@ -62,8 +57,10 @@ export function validateViewConfig(vocab: ProjectVocab, config: Record<string, u
       return;
     }
     for (const [key, value] of Object.entries(node)) {
-      if (key === 'fieldId' && typeof value === 'number') {
-        checkFieldId(value);
+      if (key === 'fieldKey' && typeof value === 'string') {
+        if (!known.has(value)) {
+          throw new HttpError(400, `unknown field key "${value}"`);
+        }
       } else {
         walk(value);
       }
