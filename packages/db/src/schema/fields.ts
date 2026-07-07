@@ -11,6 +11,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { fieldTypeEnum } from './enums';
 import { projects } from './projects';
+import { schemes } from './schemes';
 
 export const fields = pgTable(
   'fields',
@@ -19,6 +20,7 @@ export const fields = pgTable(
     projectId: integer('project_id')
       .notNull()
       .references(() => projects.id),
+    schemeId: integer('scheme_id').references(() => schemes.id),
     key: text('key').notNull(),
     label: text('label').notNull(),
     type: fieldTypeEnum('type').notNull(),
