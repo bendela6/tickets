@@ -3,11 +3,11 @@ import type { Db } from '@tickets/db';
 import {
   fieldOptions,
   fields,
+  linkTypeTargetTypes,
   linkTypes,
   schemes,
   statusTransitions,
   statuses,
-  ticketTypeFields,
   ticketTypes,
 } from '@tickets/db';
 
@@ -84,13 +84,24 @@ export async function cloneScheme(db: Db, sourceSchemeId: number, input: { key: 
       );
     }
 
-    // fields → options
-    const srcFields = await tx.select().from(fields).where(eq(fields.schemeId, sourceSchemeId));
+    // fields (per type) → options
+    const srcFields = srcTypes.length
+      ? await tx.select().from(fields).where(inArray(fields.ticketTypeId, srcTypes.map((t) => t.id)))
+      : [];
     const fieldIdMap = new Map<number, number>();
     for (const f of srcFields) {
       const [n] = await tx
         .insert(fields)
-        .values({ schemeId: dst.id, key: f.key, label: f.label, type: f.type, system: f.system, config: f.config })
+        .values({
+          ticketTypeId: typeIdMap.get(f.ticketTypeId!)!,
+          key: f.key,
+          label: f.label,
+          type: f.type,
+          system: f.system,
+          required: f.required,
+          position: f.position,
+          config: f.config,
+        })
         .returning();
       fieldIdMap.set(f.id, n!.id);
     }
@@ -101,32 +112,33 @@ export async function cloneScheme(db: Db, sourceSchemeId: number, input: { key: 
       await tx.insert(fieldOptions).values(remapClonedRows(srcOptions, 'fieldId', fieldIdMap));
     }
 
-    // ticket_type_fields (two FKs — remap both)
-    const srcTTF = srcTypes.length
-      ? await tx.select().from(ticketTypeFields).where(inArray(ticketTypeFields.ticketTypeId, srcTypes.map((t) => t.id)))
+    // link types (per type) + targets
+    const srcLinks = srcTypes.length
+      ? await tx.select().from(linkTypes).where(inArray(linkTypes.ticketTypeId, srcTypes.map((t) => t.id)))
       : [];
-    if (srcTTF.length) {
-      await tx.insert(ticketTypeFields).values(
-        srcTTF.map((r) => ({
-          ticketTypeId: typeIdMap.get(r.ticketTypeId)!,
-          fieldId: fieldIdMap.get(r.fieldId)!,
-          position: r.position,
-          required: r.required,
-        })),
-      );
-    }
-
-    // link types
-    const srcLinks = await tx.select().from(linkTypes).where(eq(linkTypes.schemeId, sourceSchemeId));
-    if (srcLinks.length) {
-      await tx.insert(linkTypes).values(
-        srcLinks.map((l) => ({
-          schemeId: dst.id,
+    const linkIdMap = new Map<number, number>();
+    for (const l of srcLinks) {
+      const [n] = await tx
+        .insert(linkTypes)
+        .values({
+          ticketTypeId: typeIdMap.get(l.ticketTypeId!)!,
           key: l.key,
           label: l.label,
           inverseLabel: l.inverseLabel,
           directional: l.directional,
           position: l.position,
+        })
+        .returning();
+      linkIdMap.set(l.id, n!.id);
+    }
+    const srcTargets = srcLinks.length
+      ? await tx.select().from(linkTypeTargetTypes).where(inArray(linkTypeTargetTypes.linkTypeId, srcLinks.map((l) => l.id)))
+      : [];
+    if (srcTargets.length) {
+      await tx.insert(linkTypeTargetTypes).values(
+        srcTargets.map((r) => ({
+          linkTypeId: linkIdMap.get(r.linkTypeId)!,
+          targetTypeId: typeIdMap.get(r.targetTypeId)!,
         })),
       );
     }
