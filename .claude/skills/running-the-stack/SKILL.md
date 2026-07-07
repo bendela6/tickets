@@ -14,7 +14,7 @@ description: Use when starting, restarting, deploying, or screenshotting the app
 | API (docker) | http://localhost:4600 | dev web proxies `/api` here |
 | Docker postgres | not published to host | inspect: `docker compose exec postgres psql -U postgres tickets` |
 | Dev postgres | host port 5532 | per `.env`; a different database than docker's |
-| Gallery | `/gallery` on either web | primitives showcase; what verifying-against-design measures |
+| Gallery | `/gallery` on either web | primitives showcase; what verifying-a-component measures |
 
 ## Commands
 
