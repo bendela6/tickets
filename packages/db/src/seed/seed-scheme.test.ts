@@ -7,7 +7,7 @@ import { afterAll, beforeAll, expect, test } from 'vitest';
 import type { Db } from '../client';
 import { environment } from '../environment';
 import * as schema from '../schema';
-import { fieldOptions, fields, linkTypeTargetTypes, linkTypes, ticketTypeFields, ticketTypes } from '../schema';
+import { fieldOptions, fields, linkTypeTargetTypes, linkTypes, ticketTypes } from '../schema';
 import { seedScheme } from './seed-scheme';
 import { SOFTWARE_SCHEME } from './software-scheme';
 
@@ -59,10 +59,6 @@ test('options are duplicated per type-field', async () => {
     const opts = await db.select().from(fieldOptions).where(eq(fieldOptions.fieldId, f.id));
     expect(opts.map((o) => o.value)).toEqual(['urgent', 'high', 'medium', 'low', 'trivial']);
   }
-});
-
-test('no ticket_type_fields rows are written', async () => {
-  expect((await db.select().from(ticketTypeFields)).length).toBe(0);
 });
 
 test('link types are owned per type with targets present', async () => {

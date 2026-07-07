@@ -10,16 +10,16 @@ import {
   unique,
 } from 'drizzle-orm/pg-core';
 import { fieldTypeEnum } from './enums';
-import { schemes } from './schemes';
 import { ticketTypes } from './ticket-types';
 
 export const fields = pgTable(
   'fields',
   {
     id: serial('id').primaryKey(),
-    schemeId: integer('scheme_id').references(() => schemes.id),
-    ticketTypeId: integer('ticket_type_id').references(() => ticketTypes.id),
-    position: integer('position'),
+    ticketTypeId: integer('ticket_type_id')
+      .notNull()
+      .references(() => ticketTypes.id),
+    position: integer('position').notNull(),
     required: boolean('required').notNull().default(false),
     key: text('key').notNull(),
     label: text('label').notNull(),
@@ -34,5 +34,5 @@ export const fields = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [unique('fields_scheme_key').on(table.schemeId, table.key)],
+  (table) => [unique('fields_ticket_type_key').on(table.ticketTypeId, table.key)],
 );

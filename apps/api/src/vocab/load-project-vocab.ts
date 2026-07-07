@@ -8,7 +8,6 @@ import {
   projects,
   statusTransitions,
   statuses,
-  ticketTypeFields,
   ticketTypes,
   views,
 } from '@tickets/db';
@@ -85,22 +84,10 @@ export async function loadProjectVocab(db: Db, selector: { key?: string; id?: nu
   const transitionRows = await db.select().from(statusTransitions);
 
   const fieldIds = fieldRows.map((row) => row.id);
-  const [optionRows, typeFieldRows] = await Promise.all([
+  const optionRows =
     fieldIds.length > 0
-      ? db.select().from(fieldOptions).where(inArray(fieldOptions.fieldId, fieldIds))
-      : Promise.resolve([]),
-    typeRows.length > 0
-      ? db
-          .select()
-          .from(ticketTypeFields)
-          .where(
-            inArray(
-              ticketTypeFields.ticketTypeId,
-              typeRows.map((row) => row.id),
-            ),
-          )
-      : Promise.resolve([]),
-  ]);
+      ? await db.select().from(fieldOptions).where(inArray(fieldOptions.fieldId, fieldIds))
+      : [];
 
   const statusIds = new Set(statusRows.map((row) => row.id));
   const projectTransitions = transitionRows.filter((row) => statusIds.has(row.toStatusId));
@@ -138,7 +125,6 @@ export async function loadProjectVocab(db: Db, selector: { key?: string; id?: nu
     transitions: projectTransitions,
     fields: fieldRows,
     options: optionRows,
-    typeFields: typeFieldRows,
     linkTypes: linkTypeRows,
     views: viewRows,
     typeByKey: new Map(typeRows.map((row) => [row.key, row])),
