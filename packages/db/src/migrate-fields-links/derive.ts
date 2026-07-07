@@ -173,7 +173,7 @@ export function deriveTypeLinks(
           label: link.label,
           inverseLabel: link.inverseLabel,
           directional: link.directional,
-          targetTypeIds: sortedAllTypeIds,
+          targetTypeIds: [...sortedAllTypeIds],
         });
       }
       continue;
