@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import type { ProjectVocab } from '../vocab/load-project-vocab';
-import { buildLogicalFields } from './logical-fields';
+import { buildLogicalFields, buildLogicalTypeFields } from './logical-fields';
 
 const TASK_TYPE_ID = 1;
 const BUG_TYPE_ID = 2;
@@ -153,4 +153,132 @@ test('an archived row for a key does not contribute options to the union', () =>
   const out = buildLogicalFields(vocab);
   const severity = out.find((f) => f.key === 'severity')!;
   expect(severity.options.map((o) => o.value)).toEqual(['minor']);
+});
+
+// --- buildLogicalTypeFields ---
+//
+// vocab.fieldsByType is already sorted by position by loadProjectVocab, so
+// these fixtures hand buildLogicalTypeFields pre-sorted buckets (it doesn't
+// re-sort itself), mirroring the real upstream contract.
+function boardVocabFrom(
+  types: { id: number; key: string }[],
+  fieldsByType: [number, unknown[]][],
+  fields: unknown[],
+): ProjectVocab {
+  return {
+    types,
+    fieldsByType: new Map(fieldsByType),
+    fields,
+    optionsByFieldId: new Map(),
+  } as unknown as ProjectVocab;
+}
+
+test('every derived typeFields[].fieldId exists in the logical fields[].id', () => {
+  const taskPriorityRow = {
+    id: 401,
+    ticketTypeId: TASK_TYPE_ID,
+    key: 'priority',
+    label: 'Priority',
+    type: 'select',
+    system: false,
+    archivedAt: null,
+    position: 0,
+    required: true,
+  };
+  const bugPriorityRow = {
+    id: 402,
+    ticketTypeId: BUG_TYPE_ID,
+    key: 'priority',
+    label: 'Priority',
+    type: 'select',
+    system: false,
+    archivedAt: null,
+    position: 0,
+    required: false,
+  };
+  const vocab = boardVocabFrom(
+    [
+      { id: TASK_TYPE_ID, key: 'task' },
+      { id: BUG_TYPE_ID, key: 'bug' },
+    ],
+    [
+      [TASK_TYPE_ID, [taskPriorityRow]],
+      [BUG_TYPE_ID, [bugPriorityRow]],
+    ],
+    [taskPriorityRow, bugPriorityRow],
+  );
+
+  const fields = buildLogicalFields(vocab);
+  const typeFields = buildLogicalTypeFields(vocab, fields);
+
+  const fieldIds = new Set(fields.map((f) => f.id));
+  expect(typeFields.length).toBe(2);
+  for (const tf of typeFields) {
+    expect(fieldIds.has(tf.fieldId)).toBe(true);
+  }
+});
+
+test('emits typeFields per type in position order with the correct required flag', () => {
+  const priorityRow = {
+    id: 410,
+    ticketTypeId: TASK_TYPE_ID,
+    key: 'priority',
+    label: 'Priority',
+    type: 'select',
+    system: false,
+    archivedAt: null,
+    position: 1,
+    required: true,
+  };
+  const notesRow = {
+    id: 411,
+    ticketTypeId: TASK_TYPE_ID,
+    key: 'notes',
+    label: 'Notes',
+    type: 'text',
+    system: false,
+    archivedAt: null,
+    position: 0,
+    required: false,
+  };
+  const vocab = boardVocabFrom(
+    [{ id: TASK_TYPE_ID, key: 'task' }],
+    [[TASK_TYPE_ID, [notesRow, priorityRow]]],
+    [notesRow, priorityRow],
+  );
+
+  const fields = buildLogicalFields(vocab);
+  const typeFields = buildLogicalTypeFields(vocab, fields);
+
+  const notesField = fields.find((f) => f.key === 'notes')!;
+  const priorityField = fields.find((f) => f.key === 'priority')!;
+  expect(typeFields).toEqual([
+    { ticketTypeId: TASK_TYPE_ID, fieldId: notesField.id, position: 0, required: false },
+    { ticketTypeId: TASK_TYPE_ID, fieldId: priorityField.id, position: 1, required: true },
+  ]);
+});
+
+test('a key whose only row is archived contributes no typeFields row', () => {
+  const archivedRow = {
+    id: 420,
+    ticketTypeId: TASK_TYPE_ID,
+    key: 'legacy',
+    label: 'Legacy',
+    type: 'text',
+    system: false,
+    archivedAt: '2026-01-01T00:00:00Z',
+    position: 0,
+    required: false,
+  };
+  const vocab = boardVocabFrom(
+    [{ id: TASK_TYPE_ID, key: 'task' }],
+    [[TASK_TYPE_ID, [archivedRow]]],
+    [archivedRow],
+  );
+
+  const fields = buildLogicalFields(vocab);
+  const typeFields = buildLogicalTypeFields(vocab, fields);
+
+  expect(fields.some((f) => f.key === 'legacy')).toBe(false);
+  expect(typeFields).toEqual([]);
 });

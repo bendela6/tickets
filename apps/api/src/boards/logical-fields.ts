@@ -44,3 +44,37 @@ export function buildLogicalFields(vocab: ProjectVocab): LogicalField[] {
   out.sort((a, b) => a.id - b.id);
   return out;
 }
+
+export type LogicalTypeField = {
+  ticketTypeId: number;
+  fieldId: number;
+  position: FieldRow['position'];
+  required: FieldRow['required'];
+};
+
+// vocab.typeFields is empty now (ticket_type_fields stopped being written
+// once fields became type-owned) — re-derive the type→field associations
+// from vocab.fieldsByType, in each type's field position order, with
+// fieldId pointed at the logical id so it resolves against the deduped
+// `logicalFields` passed in (see buildLogicalFields above). A type's own
+// field row governs whether it currently has the field: only its
+// non-archived rows are emitted, and every such row's key is guaranteed to
+// be in `logicalFields` (buildLogicalFields only drops all-archived keys),
+// so there's no dangling-fieldId case to guard against.
+export function buildLogicalTypeFields(
+  vocab: ProjectVocab,
+  logicalFields: LogicalField[],
+): LogicalTypeField[] {
+  const fieldIdByKey = new Map(logicalFields.map((field) => [field.key, field.id]));
+
+  return vocab.types.flatMap((type) =>
+    (vocab.fieldsByType.get(type.id) ?? [])
+      .filter((field) => !field.archivedAt)
+      .map((field) => ({
+        ticketTypeId: type.id,
+        fieldId: fieldIdByKey.get(field.key)!,
+        position: field.position,
+        required: field.required,
+      })),
+  );
+}
