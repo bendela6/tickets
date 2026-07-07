@@ -1,14 +1,5 @@
 import type { Db } from '../client';
-import {
-  fieldOptions,
-  fields,
-  linkTypes,
-  schemes,
-  statusTransitions,
-  statuses,
-  ticketTypeFields,
-  ticketTypes,
-} from '../schema';
+import { fieldOptions, fields, linkTypeTargetTypes, linkTypes, schemes, statusTransitions, statuses, ticketTypes } from '../schema';
 import { buildTransitions } from './build-transitions';
 import type { SchemeDef } from './scheme-types';
 import { KIND_COLORS } from './software-scheme';
@@ -21,38 +12,14 @@ export async function seedScheme(db: Db, def: SchemeDef) {
       .returning();
     if (!scheme) throw new Error('scheme insert returned no row');
 
-    // fields (+ options)
-    const fieldIdByKey: Record<string, number> = {};
-    for (const f of def.fields) {
-      const [row] = await tx
-        .insert(fields)
-        .values({
-          schemeId: scheme.id,
-          key: f.key,
-          label: f.label,
-          type: f.type,
-          system: f.system ?? false,
-          config: f.config ?? {},
-        })
-        .returning();
-      if (!row) throw new Error(`field insert failed: ${f.key}`);
-      fieldIdByKey[f.key] = row.id;
-      if (f.options && f.options.length > 0) {
-        await tx.insert(fieldOptions).values(
-          f.options.map((o, i) => ({
-            fieldId: row.id,
-            value: o.value,
-            label: o.label,
-            position: i,
-            config: o.color ? { color: o.color } : {},
-          })),
-        );
-      }
-    }
+    const fieldCatalog = new Map(def.fields.map((f) => [f.key, f]));
+    const linkCatalog = new Map(def.linkTypes.map((l) => [l.key, l]));
 
-    // types + per-type statuses + attachments
     const typeIdByKey: Record<string, number> = {};
     const statusIdByTypeKey: Record<string, Record<string, number>> = {};
+    const fieldIdByTypeKey: Record<string, Record<string, number>> = {};
+
+    // pass 1: types + statuses + transitions + per-type fields (+options)
     for (const [position, t] of def.types.entries()) {
       const [typeRow] = await tx
         .insert(ticketTypes)
@@ -67,6 +34,7 @@ export async function seedScheme(db: Db, def: SchemeDef) {
       if (!typeRow) throw new Error(`type insert failed: ${t.key}`);
       typeIdByKey[t.key] = typeRow.id;
 
+      // statuses
       const byStatusKey: Record<string, number> = {};
       for (const [sPos, st] of t.statuses.entries()) {
         const [statusRow] = await tx
@@ -97,28 +65,91 @@ export async function seedScheme(db: Db, def: SchemeDef) {
         );
       }
 
+      // per-type fields (materialize a copy of each referenced catalog field)
       const required = new Set(t.requiredFieldKeys ?? []);
-      await tx.insert(ticketTypeFields).values(
-        t.fieldKeys.map((key, i) => {
-          const fieldId = fieldIdByKey[key];
-          if (fieldId === undefined) throw new Error(`type ${t.key} references unknown field ${key}`);
-          return { ticketTypeId: typeRow.id, fieldId, position: i, required: required.has(key) };
-        }),
-      );
+      const byFieldKey: Record<string, number> = {};
+      for (const [i, key] of t.fieldKeys.entries()) {
+        const f = fieldCatalog.get(key);
+        if (!f) throw new Error(`type ${t.key} references unknown field ${key}`);
+        const [row] = await tx
+          .insert(fields)
+          .values({
+            ticketTypeId: typeRow.id,
+            key: f.key,
+            label: f.label,
+            type: f.type,
+            system: f.system ?? false,
+            required: required.has(key),
+            position: i,
+            config: f.config ?? {},
+          })
+          .returning();
+        if (!row) throw new Error(`field insert failed: ${t.key}/${key}`);
+        byFieldKey[key] = row.id;
+        if (f.options && f.options.length > 0) {
+          await tx.insert(fieldOptions).values(
+            f.options.map((o, oi) => ({
+              fieldId: row.id,
+              value: o.value,
+              label: o.label,
+              position: oi,
+              config: o.color ? { color: o.color } : {},
+            })),
+          );
+        }
+      }
+      fieldIdByTypeKey[t.key] = byFieldKey;
     }
 
-    // link types
-    await tx.insert(linkTypes).values(
-      def.linkTypes.map((lt, i) => ({
-        schemeId: scheme.id,
-        key: lt.key,
-        label: lt.label,
-        inverseLabel: lt.inverseLabel,
-        directional: lt.directional,
-        position: i,
-      })),
-    );
+    // pass 2: per-type link types (+ target rows) — needs all type ids resolved
+    const allTypeKeys = def.types.map((t) => t.key);
+    for (const t of def.types) {
+      const owned = t.linkKeys ?? allCatalogLinks(linkCatalog, allTypeKeys);
+      for (const [i, decl] of owned.entries()) {
+        const lt = linkCatalog.get(decl.key);
+        if (!lt) throw new Error(`type ${t.key} references unknown link ${decl.key}`);
+        const [row] = await tx
+          .insert(linkTypes)
+          .values({
+            ticketTypeId: typeIdByKey[t.key]!,
+            key: lt.key,
+            label: lt.label,
+            inverseLabel: lt.inverseLabel,
+            directional: lt.directional,
+            position: i,
+          })
+          .returning();
+        if (!row) throw new Error(`link insert failed: ${t.key}/${decl.key}`);
+        const targetIds = decl.targetTypeKeys.map((k) => {
+          const id = typeIdByKey[k];
+          if (id === undefined) throw new Error(`link ${t.key}/${decl.key} unknown target ${k}`);
+          return id;
+        });
+        if (targetIds.length > 0) {
+          await tx
+            .insert(linkTypeTargetTypes)
+            .values(targetIds.map((targetTypeId) => ({ linkTypeId: row.id, targetTypeId })));
+        }
+      }
+    }
 
-    return { schemeId: scheme.id, typeIdByKey, fieldIdByKey, statusIdByTypeKey };
+    // TEMP: removed in Task 4 — ensureSoftwareScheme still reads seedScheme(...).fieldIdByKey
+    // (scheme-wide) to resolve seedProject's default-view field ids. Flatten the per-type map
+    // (last-write-wins across types) so that caller keeps compiling until Task 4 rewires it to
+    // fieldIdByTypeKey / key-based view columns.
+    const fieldIdByKey: Record<string, number> = {};
+    for (const byFieldKey of Object.values(fieldIdByTypeKey)) {
+      Object.assign(fieldIdByKey, byFieldKey);
+    }
+
+    return { schemeId: scheme.id, typeIdByKey, fieldIdByTypeKey, statusIdByTypeKey, fieldIdByKey };
   });
+}
+
+// default: a type owns every catalog link, targeting all types
+function allCatalogLinks(
+  linkCatalog: Map<string, { key: string }>,
+  allTypeKeys: string[],
+): { key: string; targetTypeKeys: string[] }[] {
+  return [...linkCatalog.keys()].map((key) => ({ key, targetTypeKeys: allTypeKeys }));
 }
