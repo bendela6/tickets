@@ -6,6 +6,7 @@ import { ticketLinks, tickets } from '@tickets/db';
 import { HttpError } from '../errors';
 import { writeEvent } from '../events/write-event';
 import { checkLinkCycle } from '../links/check-link-cycle';
+import { resolveLinkForCreate } from '../links/resolve-link-for-create';
 import { parseBody } from '../utils/parse-body';
 import { parseId } from '../utils/parse-id';
 import { loadProjectVocab } from '../vocab/load-project-vocab';
@@ -27,11 +28,11 @@ export function registerLinksRoutes(app: FastifyInstance, context: { db: Db }) {
       throw new HttpError(422, 'a ticket cannot link to itself');
     }
     const endpoints = await db
-      .select({ id: tickets.id, projectId: tickets.projectId })
+      .select({ id: tickets.id, projectId: tickets.projectId, typeId: tickets.typeId })
       .from(tickets)
       .where(eq(tickets.id, body.sourceTicketId));
     const targets = await db
-      .select({ id: tickets.id, projectId: tickets.projectId })
+      .select({ id: tickets.id, projectId: tickets.projectId, typeId: tickets.typeId })
       .from(tickets)
       .where(eq(tickets.id, body.targetTicketId));
     const source = endpoints[0];
@@ -43,10 +44,7 @@ export function registerLinksRoutes(app: FastifyInstance, context: { db: Db }) {
       throw new HttpError(422, 'links cannot cross projects');
     }
     const vocab = await loadProjectVocab(db, { id: source.projectId });
-    const linkType = vocab.linkTypeByKey.get(body.linkTypeKey);
-    if (!linkType || linkType.archivedAt) {
-      throw new HttpError(400, `unknown link type "${body.linkTypeKey}"`);
-    }
+    const linkType = resolveLinkForCreate(vocab, source.typeId, target.typeId, body.linkTypeKey);
     const duplicate = await db
       .select({ id: ticketLinks.id })
       .from(ticketLinks)

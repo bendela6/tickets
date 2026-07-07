@@ -158,12 +158,6 @@ export async function loadProjectVocab(db: Db, selector: { key?: string; id?: nu
         )
         .map((row) => [row.ticketTypeId as number, row]),
     ),
-    // Deprecated: ambiguous now that fields/link types are type-owned (the
-    // same key can repeat across types) — last-write-wins across type rows.
-    // Kept only so today's consumers keep compiling; Plan B moves them onto
-    // `fieldByTypeKey`/`linkTypesByType` and then deletes these two maps.
-    fieldByKey: new Map(fieldRows.map((row) => [row.key, row])),
-    linkTypeByKey: new Map(linkTypeRows.map((row) => [row.key, row])),
     fieldById: new Map(fieldRows.map((row) => [row.id, row])),
     optionById: new Map(optionRows.map((row) => [row.id, row])),
     optionsByFieldId: optionRows.reduce((byField, row) => {
