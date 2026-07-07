@@ -5,6 +5,8 @@ export type StatusDef = {
   initial?: boolean;
 };
 
+export type TypeLinkDef = { key: string; targetTypeKeys: string[] };
+
 export type TypeDef = {
   key: string;
   label: string;
@@ -13,6 +15,7 @@ export type TypeDef = {
   fieldKeys: string[];
   requiredFieldKeys?: string[];
   allowedChildTypes?: string[];
+  linkKeys?: TypeLinkDef[];
 };
 
 export type OptionDef = { value: string; label: string; color?: string };
