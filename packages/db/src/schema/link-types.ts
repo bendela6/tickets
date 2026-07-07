@@ -1,5 +1,6 @@
 import { boolean, integer, pgTable, serial, text, timestamp, unique } from 'drizzle-orm/pg-core';
 import { projects } from './projects';
+import { schemes } from './schemes';
 
 // Data-driven relation vocabulary: blocks / relates-to / duplicates / …
 export const linkTypes = pgTable(
@@ -9,6 +10,7 @@ export const linkTypes = pgTable(
     projectId: integer('project_id')
       .notNull()
       .references(() => projects.id),
+    schemeId: integer('scheme_id').references(() => schemes.id),
     key: text('key').notNull(),
     label: text('label').notNull(),
     inverseLabel: text('inverse_label').notNull(),
