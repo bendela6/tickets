@@ -1,6 +1,6 @@
 ---
 name: mapping-component-states
-description: Use before implementing or verifying a UI component, when enumerating which variants and states a component must cover, or when a component ships with states left untested.
+description: Use when enumerating which variants and states a component must cover, before implementing or verifying it, or when a component ships with states left untested.
 ---
 
 ## Overview
