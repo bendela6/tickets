@@ -2,72 +2,32 @@
 // Color" swatches match the resolved token hex values in
 // apps/web/src/styles/tokens/*.tokens.json.
 //
-// This mirrors — rather than imports — the one-level `{group.name}` alias
-// resolution in build-tokens.mjs. That script only exports
-// `emitInstrumentCss` (CSS text lines for instrument.css), not a plain
-// name -> hex map, so re-deriving the tiny resolve step here is simpler
-// than building maps just to feed them through a CSS emitter and regex
-// the hex back out of the output.
+// Alias resolution (the one-level `{group.name}` lookup against primitives)
+// lives in build-tokens.mjs's `resolveTokenMaps()` — imported here rather
+// than re-derived, so there is exactly one resolver for the whole token
+// pipeline.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { resolveTokenMaps } from './build-tokens.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.join(__dirname, '..', '..', '..');
-const tokensDir = path.join(__dirname, '..', 'src', 'styles', 'tokens');
 const designHtmlPath = path.join(repoRoot, 'docs', 'design', 'design-system.html');
 
-const ALIAS_RE = /^\{([^}]+)\}$/;
-
-function readJson(fileName) {
-  return JSON.parse(readFileSync(path.join(tokensDir, fileName), 'utf8'));
-}
-
-// Primitives are keyed by group ("p"); lookup key is `p.<name>`.
-function flattenPrimitives(doc) {
-  const map = {};
-  for (const [group, entries] of Object.entries(doc)) {
-    for (const [name, token] of Object.entries(entries)) {
-      map[`${group}.${name}`] = token.$value;
-    }
+// resolveTokenMaps() returns `name -> { value, type }`; this check only
+// needs the resolved hex value.
+function toHexMap(map) {
+  const hex = {};
+  for (const [name, { value }] of Object.entries(map)) {
+    hex[name] = value;
   }
-  return map;
-}
-
-// Semantic tokens flatten to `name -> $value` (an alias string or a raw hex).
-function flattenSemantic(doc) {
-  const map = {};
-  for (const entries of Object.values(doc)) {
-    for (const [name, token] of Object.entries(entries)) {
-      map[name] = token.$value;
-    }
-  }
-  return map;
-}
-
-// Resolve `{group.name}` alias references (one level) against primitives.
-function resolveAliases(semanticMap, primitivesMap) {
-  const resolved = {};
-  for (const [name, value] of Object.entries(semanticMap)) {
-    const match = ALIAS_RE.exec(value);
-    if (match) {
-      const aliasKey = match[1];
-      if (!(aliasKey in primitivesMap)) {
-        throw new Error(`Unresolved alias {${aliasKey}} for token "${name}"`);
-      }
-      resolved[name] = primitivesMap[aliasKey];
-    } else {
-      resolved[name] = value;
-    }
-  }
-  return resolved;
+  return hex;
 }
 
 function buildResolvedTokenMaps() {
-  const primitivesMap = flattenPrimitives(readJson('primitives.tokens.json'));
-  const light = resolveAliases(flattenSemantic(readJson('semantic.light.tokens.json')), primitivesMap);
-  const dark = resolveAliases(flattenSemantic(readJson('semantic.dark.tokens.json')), primitivesMap);
-  return { light, dark };
+  const { light, dark } = resolveTokenMaps();
+  return { light: toHexMap(light), dark: toHexMap(dark) };
 }
 
 // design-system.html swatch label -> semantic token name.
@@ -89,7 +49,10 @@ const LABEL_TO_TOKEN = {
 
 // Matches `>label</div><div ...>#HEX</div>` swatch pairs, e.g.
 //   ...sans-serif">bg.app</div><div style="...">#F7F6F2</div>
-const SWATCH_RE = />([a-z.]+)<\/div><div[^>]*>(#[0-9A-Fa-f]{6})<\/div>/g;
+// Tolerates whitespace (including newlines) between the label's closing
+// `</div>` and the hex swatch's opening `<div`, since design-system.html
+// re-exports aren't guaranteed to keep them on one line.
+const SWATCH_RE = />([a-z.]+)<\/div>\s*<div[^>]*>(#[0-9A-Fa-f]{6})<\/div>/g;
 
 function parseCard(html) {
   const map = {};
@@ -178,6 +141,10 @@ function main() {
       ok = false;
     }
     if (ok) checked += 1;
+  }
+
+  if (checked === 0) {
+    throw new Error('parsed zero swatches — check markup/regex');
   }
 
   if (mismatches.length > 0) {

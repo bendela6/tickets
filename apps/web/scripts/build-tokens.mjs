@@ -87,7 +87,12 @@ function shadowVarLines(names, indent = '  ') {
     .join('');
 }
 
-function buildTokenMaps() {
+// Resolve the primitive + semantic (light/dark) token JSON into
+// `name -> { value, type }` maps. This is the single source of truth for
+// token resolution — every script that needs resolved token hex (the CSS
+// build, the design-doc parity check) calls this rather than re-deriving
+// its own copy of the alias-resolution logic.
+export function resolveTokenMaps() {
   const primitivesDoc = readJson('primitives.tokens.json');
   const lightDoc = readJson('semantic.light.tokens.json');
   const darkDoc = readJson('semantic.dark.tokens.json');
@@ -105,7 +110,19 @@ function buildTokenMaps() {
 // can get at the same generated CSS text without re-deriving it and without
 // touching instrument.css.
 export function emitInstrumentCss({ light, dark }) {
-  const names = Object.keys(light);
+  const lightNames = Object.keys(light);
+  const darkNames = Object.keys(dark);
+  if (lightNames.length !== darkNames.length || !lightNames.every((name) => name in dark)) {
+    const lightSet = new Set(lightNames);
+    const darkSet = new Set(darkNames);
+    const asymmetric = [
+      ...lightNames.filter((name) => !darkSet.has(name)).map((name) => `${name} (light only)`),
+      ...darkNames.filter((name) => !lightSet.has(name)).map((name) => `${name} (dark only)`),
+    ];
+    throw new Error(`light/dark token sets diverge: ${asymmetric.join(', ')}`);
+  }
+
+  const names = lightNames;
   const colorNames = names.filter((name) => light[name].type !== 'shadow');
   const shadowNames = names.filter((name) => light[name].type === 'shadow');
 
@@ -136,6 +153,9 @@ function spliceRegion(css, { start, end }, body, indent = '  ') {
     throw new Error(`Marker not found in instrument.css: ${start}`);
   }
   const afterStart = startIdx + start.length;
+  if (css.indexOf(start, afterStart) !== -1) {
+    throw new Error(`Duplicate start marker found in instrument.css (corruption?): ${start}`);
+  }
   const endIdx = css.indexOf(end, afterStart);
   if (endIdx === -1) {
     throw new Error(`Marker not found in instrument.css: ${end}`);
@@ -144,7 +164,7 @@ function spliceRegion(css, { start, end }, body, indent = '  ') {
 }
 
 function build() {
-  const { light, dark } = buildTokenMaps();
+  const { light, dark } = resolveTokenMaps();
   const regions = emitInstrumentCss({ light, dark });
 
   let css = readFileSync(cssFile, 'utf8');

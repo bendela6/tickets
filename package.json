@@ -10,7 +10,8 @@
     "dev": "turbo dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck",
+    "verify:tokens": "pnpm --filter @tickets/web tokens:verify"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
