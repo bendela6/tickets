@@ -8,6 +8,7 @@ import { writeEvent } from '../events/write-event';
 import { buildValueRows } from '../tickets/build-value-rows';
 import { checkParent } from '../tickets/check-parent';
 import { checkTransition } from '../tickets/check-transition';
+import { initialStatusFor } from '../tickets/resolve-status';
 import { nextTicketNumber } from '../tickets/next-ticket-number';
 import { renderValue } from '../tickets/render-value';
 import { parseBody } from '../utils/parse-body';
@@ -79,9 +80,8 @@ export function registerTicketsRoutes(app: FastifyInstance, context: { db: Db })
     const values = { ...body.values };
     if (statusField && values[statusField.key] === undefined) {
       const initial =
-        vocab.statuses.find(
-          (status) => (status.config as { initial?: boolean }).initial === true,
-        ) ?? vocab.statuses[0];
+        initialStatusFor(vocab, type.id) ??
+        vocab.statuses.find((status) => status.ticketTypeId === type.id);
       if (initial) {
         values[statusField.key] = initial.key;
       }
@@ -112,7 +112,7 @@ export function registerTicketsRoutes(app: FastifyInstance, context: { db: Db })
         throw new HttpError(500, 'ticket insert returned no row');
       }
       for (const [fieldKey, value] of Object.entries(values)) {
-        const rows = buildValueRows(vocab, fieldKey, value);
+        const rows = buildValueRows(vocab, fieldKey, value, type.id);
         const field = vocab.fieldByKey.get(fieldKey);
         if (field?.type === 'status' && rows[0]?.statusId) {
           checkTransition(vocab, {
@@ -196,7 +196,7 @@ export function registerTicketsRoutes(app: FastifyInstance, context: { db: Db })
           throw new HttpError(400, `unknown field "${fieldKey}"`);
         }
         const current = await currentFieldValue(tx, vocab, id, field.id);
-        const nextRows = buildValueRows(vocab, fieldKey, value);
+        const nextRows = buildValueRows(vocab, fieldKey, value, typeId);
 
         if (field.type === 'status') {
           const nextStatusId = nextRows[0]?.statusId;

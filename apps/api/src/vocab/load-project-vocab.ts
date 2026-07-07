@@ -89,6 +89,19 @@ export async function loadProjectVocab(db: Db, selector: { key?: string; id?: nu
     typeById: new Map(typeRows.map((row) => [row.id, row])),
     statusByKey: new Map(statusRows.map((row) => [row.key, row])),
     statusById: new Map(statusRows.map((row) => [row.id, row])),
+    statusByTypeKey: new Map(
+      statusRows
+        .filter((row) => row.ticketTypeId != null)
+        .map((row) => [`${row.ticketTypeId}:${row.key}`, row]),
+    ),
+    initialStatusByTypeId: new Map(
+      statusRows
+        .filter(
+          (row) =>
+            row.ticketTypeId != null && (row.config as { initial?: boolean }).initial === true,
+        )
+        .map((row) => [row.ticketTypeId as number, row]),
+    ),
     fieldByKey: new Map(fieldRows.map((row) => [row.key, row])),
     fieldById: new Map(fieldRows.map((row) => [row.id, row])),
     optionById: new Map(optionRows.map((row) => [row.id, row])),

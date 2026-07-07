@@ -1,5 +1,6 @@
 import { HttpError } from '../errors';
 import type { ProjectVocab } from '../vocab/load-project-vocab';
+import { resolveStatus } from './resolve-status';
 
 type ValueRow = {
   fieldId: number;
@@ -14,7 +15,12 @@ type ValueRow = {
 
 // Turns one incoming { fieldKey: value } pair into ticket_values row fragments.
 // null clears the field (zero rows). multi_select produces one row per option.
-export function buildValueRows(vocab: ProjectVocab, fieldKey: string, value: unknown): ValueRow[] {
+export function buildValueRows(
+  vocab: ProjectVocab,
+  fieldKey: string,
+  value: unknown,
+  typeId?: number,
+): ValueRow[] {
   const field = vocab.fieldByKey.get(fieldKey);
   if (!field || field.archivedAt) {
     throw new HttpError(400, `unknown field "${fieldKey}"`);
@@ -73,10 +79,10 @@ export function buildValueRows(vocab: ProjectVocab, fieldKey: string, value: unk
     if (typeof value !== 'string') {
       throw new HttpError(400, `field "${fieldKey}" expects a status key`);
     }
-    const status = vocab.statusByKey.get(value);
-    if (!status || status.archivedAt) {
-      throw new HttpError(400, `unknown status "${value}"`);
+    if (typeId === undefined) {
+      throw new HttpError(500, 'status resolution requires a ticket type');
     }
+    const status = resolveStatus(vocab, typeId, value);
     return [{ fieldId: field.id, statusId: status.id }];
   }
   throw new HttpError(400, `unsupported field type "${field.type}"`);
