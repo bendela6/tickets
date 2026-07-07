@@ -10,15 +10,15 @@ import {
   unique,
 } from 'drizzle-orm/pg-core';
 import { fieldTypeEnum } from './enums';
-import { projects } from './projects';
 import { schemes } from './schemes';
 
 export const fields = pgTable(
   'fields',
   {
     id: serial('id').primaryKey(),
-    projectId: integer('project_id').references(() => projects.id),
-    schemeId: integer('scheme_id').references(() => schemes.id),
+    schemeId: integer('scheme_id')
+      .notNull()
+      .references(() => schemes.id),
     key: text('key').notNull(),
     label: text('label').notNull(),
     type: fieldTypeEnum('type').notNull(),
@@ -32,5 +32,5 @@ export const fields = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [unique('fields_project_key').on(table.projectId, table.key)],
+  (table) => [unique('fields_scheme_key').on(table.schemeId, table.key)],
 );

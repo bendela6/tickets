@@ -81,9 +81,7 @@ export function registerVocabularyRoutes(app: FastifyInstance, context: { db: Db
       const inserted = await tx
         .insert(fields)
         .values({
-          ...(vocab.project.schemeId != null
-            ? { schemeId: vocab.project.schemeId }
-            : { projectId: vocab.project.id }),
+          schemeId: vocab.project.schemeId,
           key: body.key,
           label: body.label,
           type: body.type,
@@ -271,9 +269,7 @@ export function registerVocabularyRoutes(app: FastifyInstance, context: { db: Db
     const inserted = await db
       .insert(linkTypes)
       .values({
-        ...(vocab.project.schemeId != null
-          ? { schemeId: vocab.project.schemeId }
-          : { projectId: vocab.project.id }),
+        schemeId: vocab.project.schemeId,
         key: body.key,
         label: body.label,
         inverseLabel: body.inverseLabel,

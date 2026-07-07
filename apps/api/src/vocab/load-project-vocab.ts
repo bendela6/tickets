@@ -27,20 +27,13 @@ export async function loadProjectVocab(db: Db, selector: { key?: string; id?: nu
     throw new HttpError(404, `unknown project "${selector.key ?? selector.id}"`);
   }
 
-  // Config lives on the bound scheme; fall back to legacy per-project rows for
-  // projects not yet migrated (scheme_id null). Statuses are type-owned.
+  // Config lives on the bound scheme; statuses are owned by their type.
   const schemeId = project.schemeId;
 
   const [typeRows, fieldRows, linkTypeRows, viewRows] = await Promise.all([
-    schemeId != null
-      ? db.select().from(ticketTypes).where(eq(ticketTypes.schemeId, schemeId))
-      : db.select().from(ticketTypes).where(eq(ticketTypes.projectId, project.id)),
-    schemeId != null
-      ? db.select().from(fields).where(eq(fields.schemeId, schemeId))
-      : db.select().from(fields).where(eq(fields.projectId, project.id)),
-    schemeId != null
-      ? db.select().from(linkTypes).where(eq(linkTypes.schemeId, schemeId))
-      : db.select().from(linkTypes).where(eq(linkTypes.projectId, project.id)),
+    db.select().from(ticketTypes).where(eq(ticketTypes.schemeId, schemeId)),
+    db.select().from(fields).where(eq(fields.schemeId, schemeId)),
+    db.select().from(linkTypes).where(eq(linkTypes.schemeId, schemeId)),
     db.select().from(views).where(eq(views.projectId, project.id)),
   ]);
 
@@ -48,9 +41,7 @@ export async function loadProjectVocab(db: Db, selector: { key?: string; id?: nu
   const statusRows =
     typeIds.length > 0
       ? await db.select().from(statuses).where(inArray(statuses.ticketTypeId, typeIds))
-      : schemeId != null
-        ? []
-        : await db.select().from(statuses).where(eq(statuses.projectId, project.id));
+      : [];
 
   const transitionRows = await db.select().from(statusTransitions);
 
