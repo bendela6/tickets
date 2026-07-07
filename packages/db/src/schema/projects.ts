@@ -6,6 +6,8 @@ export const projects = pgTable('projects', {
   key: text('key').notNull().unique(),
   name: text('name').notNull(),
   ticketPrefix: text('ticket_prefix').notNull(),
-  schemeId: integer('scheme_id').references(() => schemes.id),
+  schemeId: integer('scheme_id')
+    .notNull()
+    .references(() => schemes.id),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),
 });
