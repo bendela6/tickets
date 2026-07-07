@@ -3,7 +3,7 @@ import * as v from 'valibot';
 import { eq, inArray } from 'drizzle-orm';
 import type { Db } from '@tickets/db';
 import { ensureSoftwareScheme, projects, seedProject, ticketEvents, tickets, users } from '@tickets/db';
-import { buildLogicalFields } from '../boards/logical-fields';
+import { buildLogicalFields, buildLogicalTypeFields } from '../boards/logical-fields';
 import { assembleTickets } from '../tickets/assemble-tickets';
 import { parseBody } from '../utils/parse-body';
 import { loadProjectVocab } from '../vocab/load-project-vocab';
@@ -23,32 +23,7 @@ function boardPayload(db: Db) {
       db.select().from(users),
     ]);
     const fields = buildLogicalFields(vocab);
-    const fieldIdByKey = new Map(fields.map((field) => [field.key, field.id]));
-
-    // vocab.typeFields is empty now (ticket_type_fields stopped being
-    // written once fields became type-owned) — re-derive the type→field
-    // associations from vocab.fieldsByType, in each type's field position
-    // order, with fieldId pointed at the logical id so it resolves against
-    // the deduped `fields` above. A type's own field row governs whether it
-    // currently has the field: only its non-archived rows are emitted, and
-    // any such row's key is guaranteed to be in fieldIdByKey (buildLogicalFields
-    // only drops all-archived keys).
-    const typeFields = vocab.types.flatMap((type) =>
-      (vocab.fieldsByType.get(type.id) ?? [])
-        .filter((field) => !field.archivedAt)
-        .flatMap((field) => {
-          const fieldId = fieldIdByKey.get(field.key);
-          if (fieldId == null) return [];
-          return [
-            {
-              ticketTypeId: type.id,
-              fieldId,
-              position: field.position,
-              required: field.required,
-            },
-          ];
-        }),
-    );
+    const typeFields = buildLogicalTypeFields(vocab, fields);
 
     return {
       project: vocab.project,
