@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import * as v from 'valibot';
 import { eq, inArray } from 'drizzle-orm';
 import type { Db } from '@tickets/db';
-import { projects, seedProject, ticketEvents, tickets, users } from '@tickets/db';
+import { ensureSoftwareScheme, projects, seedProject, ticketEvents, tickets, users } from '@tickets/db';
 import { assembleTickets } from '../tickets/assemble-tickets';
 import { parseBody } from '../utils/parse-body';
 import { loadProjectVocab } from '../vocab/load-project-vocab';
@@ -52,7 +52,8 @@ export function registerProjectsRoutes(app: FastifyInstance, context: { db: Db }
 
   const createProject = async (request: FastifyRequest, reply: FastifyReply) => {
     const body = parseBody(createProjectSchema, request.body);
-    const seeded = await seedProject(db, body);
+    const { schemeId, fieldIdByKey } = await ensureSoftwareScheme(db);
+    const seeded = await seedProject(db, { ...body, schemeId, fieldIdByKey });
     reply.status(201).send(seeded.project);
   };
 

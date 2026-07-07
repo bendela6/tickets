@@ -7,7 +7,6 @@
     "db:generate": "turbo run db:generate",
     "db:migrate": "pnpm --filter @tickets/db db:migrate",
     "db:seed": "pnpm --filter @tickets/db db:seed",
-    "db:import": "pnpm --filter @tickets/db db:import",
     "dev": "turbo dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

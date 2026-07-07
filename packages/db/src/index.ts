@@ -8,4 +8,5 @@ export {
 } from './client';
 export { environment, connectionUrl } from './environment';
 export { seedProject } from './seed/seed-project';
+export { ensureSoftwareScheme } from './seed/ensure-software-scheme';
 export { ensureUser } from './seed/ensure-user';
