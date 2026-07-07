@@ -116,3 +116,17 @@ export async function loadProjectVocab(db: Db, selector: { key?: string; id?: nu
 }
 
 export type ProjectVocab = Awaited<ReturnType<typeof loadProjectVocab>>;
+
+// The workflow edge matching a from→to move for a type (null fromStatusId =
+// entry). Carries `config.guard`, consulted by the guard check on the write path.
+export function transitionEdge(
+  vocab: ProjectVocab,
+  input: { fromStatusId: number | null; toStatusId: number; typeId: number },
+) {
+  return vocab.transitions.find(
+    (e) =>
+      (e.ticketTypeId === null || e.ticketTypeId === input.typeId) &&
+      e.fromStatusId === input.fromStatusId &&
+      e.toStatusId === input.toStatusId,
+  );
+}
