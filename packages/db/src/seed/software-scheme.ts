@@ -21,6 +21,7 @@ const types: TypeDef[] = [
     key: 'epic',
     label: 'Epic',
     color: '#8f7ae8',
+    allowedChildTypes: ['task', 'bug', 'spike'],
     statuses: [
       s('backlog', 'Backlog', 'todo', true),
       s('in-progress', 'In progress', 'active'),
@@ -44,6 +45,7 @@ const types: TypeDef[] = [
     key: 'task',
     label: 'Task',
     color: '#3987e5',
+    allowedChildTypes: ['subtask'],
     statuses: [
       s('backlog', 'Backlog', 'todo', true),
       s('todo', 'To do', 'todo'),
@@ -74,6 +76,7 @@ const types: TypeDef[] = [
     key: 'bug',
     label: 'Bug',
     color: '#d03b3b',
+    allowedChildTypes: ['subtask'],
     statuses: [
       s('triage', 'Triage', 'todo', true),
       s('todo', 'To do', 'todo'),
@@ -105,6 +108,7 @@ const types: TypeDef[] = [
     key: 'subtask',
     label: 'Subtask',
     color: '#898781',
+    allowedChildTypes: [],
     statuses: [
       s('todo', 'To do', 'todo', true),
       s('in-progress', 'In progress', 'active'),
@@ -120,6 +124,7 @@ const types: TypeDef[] = [
     key: 'spike',
     label: 'Spike',
     color: '#fab219',
+    allowedChildTypes: ['subtask'],
     statuses: [
       s('todo', 'To do', 'todo', true),
       s('in-progress', 'In progress', 'active'),
