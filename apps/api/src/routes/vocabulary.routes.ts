@@ -2,34 +2,30 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import * as v from 'valibot';
 import { count, eq, sql } from 'drizzle-orm';
 import type { Db } from '@tickets/db';
-import {
-  fieldOptions,
-  fields,
-  linkTypes,
-  statusTransitions,
-  statuses,
-  ticketTypeFields,
-} from '@tickets/db';
+import { fieldOptions, fields, statusTransitions, statuses } from '@tickets/db';
 import { HttpError } from '../errors';
 import { parseBody } from '../utils/parse-body';
 import { parseId } from '../utils/parse-id';
+import { createFieldForType } from '../vocab/create-field';
+import { createLinkTypeForType } from '../vocab/create-link-type';
 import { loadProjectVocab } from '../vocab/load-project-vocab';
 
 const createFieldSchema = v.object({
   //
   key: v.pipe(v.string(), v.minLength(1)),
   label: v.pipe(v.string(), v.minLength(1)),
-  type: v.picklist(['text', 'number', 'date', 'boolean', 'json', 'select', 'multi_select']),
+  type: v.picklist([
+    'text',
+    'number',
+    'date',
+    'boolean',
+    'json',
+    'select',
+    'multi_select',
+    'status',
+  ]),
+  required: v.optional(v.boolean()),
   config: v.optional(v.record(v.string(), v.unknown())),
-  attach: v.optional(
-    v.array(
-      v.object({
-        //
-        typeKey: v.pipe(v.string(), v.minLength(1)),
-        required: v.optional(v.boolean()),
-      }),
-    ),
-  ),
 });
 
 const patchArchivableSchema = v.object({
@@ -68,48 +64,16 @@ const createLinkTypeSchema = v.object({
   label: v.pipe(v.string(), v.minLength(1)),
   inverseLabel: v.pipe(v.string(), v.minLength(1)),
   directional: v.boolean(),
+  targetTypeKeys: v.array(v.pipe(v.string(), v.minLength(1))),
 });
 
 export function registerVocabularyRoutes(app: FastifyInstance, context: { db: Db }) {
   const { db } = context;
 
   const createField = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { key } = request.params as { key: string };
+    const typeId = parseId((request.params as { typeId: string }).typeId);
     const body = parseBody(createFieldSchema, request.body);
-    const vocab = await loadProjectVocab(db, { key });
-    const created = await db.transaction(async (tx) => {
-      const inserted = await tx
-        .insert(fields)
-        .values({
-          schemeId: vocab.project.schemeId,
-          key: body.key,
-          label: body.label,
-          type: body.type,
-          config: body.config ?? {},
-        })
-        .returning();
-      const field = inserted[0];
-      if (!field) {
-        throw new HttpError(500, 'field insert returned no row');
-      }
-      for (const attachment of body.attach ?? []) {
-        const type = vocab.typeByKey.get(attachment.typeKey);
-        if (!type) {
-          throw new HttpError(400, `unknown ticket type "${attachment.typeKey}"`);
-        }
-        const positionRows = await tx
-          .select({ value: count() })
-          .from(ticketTypeFields)
-          .where(eq(ticketTypeFields.ticketTypeId, type.id));
-        await tx.insert(ticketTypeFields).values({
-          ticketTypeId: type.id,
-          fieldId: field.id,
-          position: positionRows[0]?.value ?? 0,
-          required: attachment.required ?? false,
-        });
-      }
-      return field;
-    });
+    const created = await createFieldForType(db, typeId, body);
     reply.status(201).send(created);
   };
 
@@ -263,24 +227,13 @@ export function registerVocabularyRoutes(app: FastifyInstance, context: { db: Db
   };
 
   const createLinkType = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { key } = request.params as { key: string };
+    const typeId = parseId((request.params as { typeId: string }).typeId);
     const body = parseBody(createLinkTypeSchema, request.body);
-    const vocab = await loadProjectVocab(db, { key });
-    const inserted = await db
-      .insert(linkTypes)
-      .values({
-        schemeId: vocab.project.schemeId,
-        key: body.key,
-        label: body.label,
-        inverseLabel: body.inverseLabel,
-        directional: body.directional,
-        position: vocab.linkTypes.length,
-      })
-      .returning();
-    reply.status(201).send(inserted[0]);
+    const created = await createLinkTypeForType(db, typeId, body);
+    reply.status(201).send(created);
   };
 
-  app.post('/api/projects/:key/fields', createField);
+  app.post('/api/types/:typeId/fields', createField);
   app.patch('/api/fields/:id', patchField);
   app.post('/api/fields/:id/options', createOption);
   app.patch('/api/options/:id', patchOption);
@@ -288,5 +241,5 @@ export function registerVocabularyRoutes(app: FastifyInstance, context: { db: Db
   app.patch('/api/statuses/:id', patchStatus);
   app.post('/api/projects/:key/status-transitions', createTransition);
   app.delete('/api/status-transitions/:id', deleteTransition);
-  app.post('/api/projects/:key/link-types', createLinkType);
+  app.post('/api/types/:typeId/link-types', createLinkType);
 }
