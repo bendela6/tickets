@@ -12,10 +12,10 @@ Legacy `globals.css` is unlayered; Tailwind utilities live in `@layer`. Any lega
 ## The recipe — porting one screen
 
 1. **Inventory the reach first.** Before touching the screen, list the globals.css selectors that can hit it: the class selectors the screen uses, and every element selector in the file. Element selectors go on a tracked retirement list — they leak into redesigned screens, so they are the highest-value deletions in the whole migration.
-2. **Port with primitives.** Rebuild the screen from `apps/web/src/ui` per the `implementing-from-design` skill. New CSS never goes into globals.css.
+2. **Port with primitives.** Rebuild the screen from `apps/web/src/ui` per the `implementing-a-component` skill. New CSS never goes into globals.css.
 3. **Delete, don't strand.** Remove the screen's now-dead globals.css rules in the same task. Before deleting any rule, grep its class name repo-wide — a rule shared with a not-yet-ported screen stays, recorded in the retirement list with its remaining users.
 4. **Retire element selectors the moment their last dependent screen is ported.** Check the retirement list every migration; an element selector with zero legacy users left is deleted immediately.
-5. **Regression pass, both sides.** The ported screen goes through `verifying-against-design`. Every remaining legacy screen that shared a deleted rule gets a load-and-click-through smoke check — legacy screens have no spec to measure against, so smoke is the bar.
+5. **Regression pass, both sides.** The ported screen goes through `verifying-a-component`. Every remaining legacy screen that shared a deleted rule gets a load-and-click-through smoke check — legacy screens have no spec to measure against, so smoke is the bar.
 6. **Commit per screen:** `feat(web): port <screen> to instrument`, listing deleted rules and retirement-list changes in the body.
 
 ## Quick diagnosis
