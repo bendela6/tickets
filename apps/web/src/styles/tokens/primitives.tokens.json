@@ -1,1 +1,396 @@
-{"p":{"accent":{"$type":"color","$value":"#4e46c6"},"accent-dark":{"$type":"color","$value":"#918aec"}}}
+{
+  "p": {
+    "app": {
+      "$type": "color",
+      "$value": "#f7f6f2"
+    },
+    "raised": {
+      "$type": "color",
+      "$value": "#ffffff"
+    },
+    "inset": {
+      "$type": "color",
+      "$value": "#eceae3"
+    },
+    "hairline": {
+      "$type": "color",
+      "$value": "#e0ddd5"
+    },
+    "control": {
+      "$type": "color",
+      "$value": "#c9c5ba"
+    },
+    "ink": {
+      "$type": "color",
+      "$value": "#25231d"
+    },
+    "ink-2": {
+      "$type": "color",
+      "$value": "#5d5a50"
+    },
+    "ink-3": {
+      "$type": "color",
+      "$value": "#918d80"
+    },
+    "accent": {
+      "$type": "color",
+      "$value": "#4e46c6"
+    },
+    "accent-hover": {
+      "$type": "color",
+      "$value": "#4238b5"
+    },
+    "accent-subtle": {
+      "$type": "color",
+      "$value": "#e9e7fa"
+    },
+    "danger": {
+      "$type": "color",
+      "$value": "#c0382e"
+    },
+    "danger-hover": {
+      "$type": "color",
+      "$value": "#a82f26"
+    },
+    "danger-subtle": {
+      "$type": "color",
+      "$value": "#f8e7e5"
+    },
+    "kind-todo": {
+      "$type": "color",
+      "$value": "#6e6a5e"
+    },
+    "kind-todo-subtle": {
+      "$type": "color",
+      "$value": "#ebeae3"
+    },
+    "kind-active": {
+      "$type": "color",
+      "$value": "#2e6fcc"
+    },
+    "kind-active-subtle": {
+      "$type": "color",
+      "$value": "#e4edf9"
+    },
+    "kind-blocked": {
+      "$type": "color",
+      "$value": "#c25425"
+    },
+    "kind-blocked-subtle": {
+      "$type": "color",
+      "$value": "#f8e9df"
+    },
+    "kind-done": {
+      "$type": "color",
+      "$value": "#2e7d4f"
+    },
+    "kind-done-subtle": {
+      "$type": "color",
+      "$value": "#e2f0e7"
+    },
+    "kind-dropped": {
+      "$type": "color",
+      "$value": "#9b968a"
+    },
+    "kind-dropped-subtle": {
+      "$type": "color",
+      "$value": "#efeee8"
+    },
+    "shadow-sm": {
+      "$type": "shadow",
+      "$value": "0 1px 2px rgba(28, 26, 20, 0.06)"
+    },
+    "shadow-lg": {
+      "$type": "shadow",
+      "$value": "0 16px 40px rgba(28, 26, 20, 0.16), 0 4px 10px rgba(28, 26, 20, 0.08)"
+    },
+    "opt-red": {
+      "$type": "color",
+      "$value": "#a03028"
+    },
+    "opt-red-subtle": {
+      "$type": "color",
+      "$value": "#fae3e1"
+    },
+    "opt-orange": {
+      "$type": "color",
+      "$value": "#a44e14"
+    },
+    "opt-orange-subtle": {
+      "$type": "color",
+      "$value": "#fae7da"
+    },
+    "opt-yellow": {
+      "$type": "color",
+      "$value": "#8a6a10"
+    },
+    "opt-yellow-subtle": {
+      "$type": "color",
+      "$value": "#f5ebce"
+    },
+    "opt-green": {
+      "$type": "color",
+      "$value": "#2e7042"
+    },
+    "opt-green-subtle": {
+      "$type": "color",
+      "$value": "#dff0e2"
+    },
+    "opt-teal": {
+      "$type": "color",
+      "$value": "#176d5c"
+    },
+    "opt-teal-subtle": {
+      "$type": "color",
+      "$value": "#d9f0ea"
+    },
+    "opt-cyan": {
+      "$type": "color",
+      "$value": "#14687e"
+    },
+    "opt-cyan-subtle": {
+      "$type": "color",
+      "$value": "#dbeef6"
+    },
+    "opt-blue": {
+      "$type": "color",
+      "$value": "#2a5dae"
+    },
+    "opt-blue-subtle": {
+      "$type": "color",
+      "$value": "#e0eaf9"
+    },
+    "opt-indigo": {
+      "$type": "color",
+      "$value": "#4a44b0"
+    },
+    "opt-indigo-subtle": {
+      "$type": "color",
+      "$value": "#e6e6fa"
+    },
+    "opt-purple": {
+      "$type": "color",
+      "$value": "#7b3fa0"
+    },
+    "opt-purple-subtle": {
+      "$type": "color",
+      "$value": "#f0e3f7"
+    },
+    "opt-pink": {
+      "$type": "color",
+      "$value": "#a63368"
+    },
+    "opt-pink-subtle": {
+      "$type": "color",
+      "$value": "#fae1ec"
+    },
+    "opt-gray": {
+      "$type": "color",
+      "$value": "#5c594f"
+    },
+    "opt-gray-subtle": {
+      "$type": "color",
+      "$value": "#eae9e4"
+    },
+    "app-dark": {
+      "$type": "color",
+      "$value": "#1b1a17"
+    },
+    "raised-dark": {
+      "$type": "color",
+      "$value": "#252320"
+    },
+    "inset-dark": {
+      "$type": "color",
+      "$value": "#141310"
+    },
+    "hairline-dark": {
+      "$type": "color",
+      "$value": "#343128"
+    },
+    "control-dark": {
+      "$type": "color",
+      "$value": "#4c483d"
+    },
+    "ink-dark": {
+      "$type": "color",
+      "$value": "#edebe3"
+    },
+    "ink-2-dark": {
+      "$type": "color",
+      "$value": "#a6a296"
+    },
+    "ink-3-dark": {
+      "$type": "color",
+      "$value": "#79756a"
+    },
+    "accent-dark": {
+      "$type": "color",
+      "$value": "#918aec"
+    },
+    "accent-hover-dark": {
+      "$type": "color",
+      "$value": "#a29cf1"
+    },
+    "accent-subtle-dark": {
+      "$type": "color",
+      "$value": "#2c2a4a"
+    },
+    "on-accent-dark": {
+      "$type": "color",
+      "$value": "#16143c"
+    },
+    "danger-dark": {
+      "$type": "color",
+      "$value": "#e26a5f"
+    },
+    "danger-hover-dark": {
+      "$type": "color",
+      "$value": "#e9847a"
+    },
+    "danger-subtle-dark": {
+      "$type": "color",
+      "$value": "#41231f"
+    },
+    "on-danger-dark": {
+      "$type": "color",
+      "$value": "#2b0f0b"
+    },
+    "kind-todo-dark": {
+      "$type": "color",
+      "$value": "#8a8678"
+    },
+    "kind-todo-subtle-dark": {
+      "$type": "color",
+      "$value": "#26251f"
+    },
+    "kind-active-dark": {
+      "$type": "color",
+      "$value": "#6ba4ee"
+    },
+    "kind-active-subtle-dark": {
+      "$type": "color",
+      "$value": "#1e2a3f"
+    },
+    "kind-blocked-dark": {
+      "$type": "color",
+      "$value": "#e08b56"
+    },
+    "kind-blocked-subtle-dark": {
+      "$type": "color",
+      "$value": "#392317"
+    },
+    "kind-done-dark": {
+      "$type": "color",
+      "$value": "#57b383"
+    },
+    "kind-done-subtle-dark": {
+      "$type": "color",
+      "$value": "#1b2e22"
+    },
+    "kind-dropped-dark": {
+      "$type": "color",
+      "$value": "#6b675c"
+    },
+    "kind-dropped-subtle-dark": {
+      "$type": "color",
+      "$value": "#211f1c"
+    },
+    "shadow-sm-dark": {
+      "$type": "shadow",
+      "$value": "0 1px 2px rgba(0, 0, 0, 0.4)"
+    },
+    "shadow-lg-dark": {
+      "$type": "shadow",
+      "$value": "0 16px 40px rgba(0, 0, 0, 0.55), 0 4px 10px rgba(0, 0, 0, 0.4)"
+    },
+    "opt-red-dark": {
+      "$type": "color",
+      "$value": "#f0968d"
+    },
+    "opt-red-subtle-dark": {
+      "$type": "color",
+      "$value": "#46231f"
+    },
+    "opt-orange-dark": {
+      "$type": "color",
+      "$value": "#efa36c"
+    },
+    "opt-orange-subtle-dark": {
+      "$type": "color",
+      "$value": "#45291a"
+    },
+    "opt-yellow-dark": {
+      "$type": "color",
+      "$value": "#dfc060"
+    },
+    "opt-yellow-subtle-dark": {
+      "$type": "color",
+      "$value": "#3e3316"
+    },
+    "opt-green-dark": {
+      "$type": "color",
+      "$value": "#7fcb97"
+    },
+    "opt-green-subtle-dark": {
+      "$type": "color",
+      "$value": "#1e3626"
+    },
+    "opt-teal-dark": {
+      "$type": "color",
+      "$value": "#6cc9b4"
+    },
+    "opt-teal-subtle-dark": {
+      "$type": "color",
+      "$value": "#16342e"
+    },
+    "opt-cyan-dark": {
+      "$type": "color",
+      "$value": "#74c4dc"
+    },
+    "opt-cyan-subtle-dark": {
+      "$type": "color",
+      "$value": "#173139"
+    },
+    "opt-blue-dark": {
+      "$type": "color",
+      "$value": "#8bb4ef"
+    },
+    "opt-blue-subtle-dark": {
+      "$type": "color",
+      "$value": "#1d2c44"
+    },
+    "opt-indigo-dark": {
+      "$type": "color",
+      "$value": "#a5a0f0"
+    },
+    "opt-indigo-subtle-dark": {
+      "$type": "color",
+      "$value": "#26254a"
+    },
+    "opt-purple-dark": {
+      "$type": "color",
+      "$value": "#c591e8"
+    },
+    "opt-purple-subtle-dark": {
+      "$type": "color",
+      "$value": "#332240"
+    },
+    "opt-pink-dark": {
+      "$type": "color",
+      "$value": "#ee94bc"
+    },
+    "opt-pink-subtle-dark": {
+      "$type": "color",
+      "$value": "#40222f"
+    },
+    "opt-gray-dark": {
+      "$type": "color",
+      "$value": "#a5a195"
+    },
+    "opt-gray-subtle-dark": {
+      "$type": "color",
+      "$value": "#2a2924"
+    }
+  }
+}
