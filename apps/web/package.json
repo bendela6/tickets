@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "tokens:build": "node scripts/build-tokens.mjs"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",

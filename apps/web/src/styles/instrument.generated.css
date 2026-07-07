@@ -1,0 +1,14 @@
+:root {
+  --ins-accent: #4e46c6;
+}
+
+[data-theme='dark'] {
+  --ins-accent: #918aec;
+}
+
+@theme inline {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-accent: var(--ins-accent);
+}
