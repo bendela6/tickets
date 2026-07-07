@@ -1,5 +1,6 @@
 export { userKindEnum, statusKindEnum, fieldTypeEnum } from './enums';
 export { projects } from './projects';
+export { schemes } from './schemes';
 export { users } from './users';
 export { ticketTypes } from './ticket-types';
 export { statuses } from './statuses';
