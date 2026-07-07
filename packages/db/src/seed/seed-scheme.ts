@@ -133,16 +133,7 @@ export async function seedScheme(db: Db, def: SchemeDef) {
       }
     }
 
-    // TEMP: removed in Task 4 — ensureSoftwareScheme still reads seedScheme(...).fieldIdByKey
-    // (scheme-wide) to resolve seedProject's default-view field ids. Flatten the per-type map
-    // (last-write-wins across types) so that caller keeps compiling until Task 4 rewires it to
-    // fieldIdByTypeKey / key-based view columns.
-    const fieldIdByKey: Record<string, number> = {};
-    for (const byFieldKey of Object.values(fieldIdByTypeKey)) {
-      Object.assign(fieldIdByKey, byFieldKey);
-    }
-
-    return { schemeId: scheme.id, typeIdByKey, fieldIdByTypeKey, statusIdByTypeKey, fieldIdByKey };
+    return { schemeId: scheme.id, typeIdByKey, fieldIdByTypeKey, statusIdByTypeKey };
   });
 }
 

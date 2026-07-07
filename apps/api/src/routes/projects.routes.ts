@@ -52,8 +52,8 @@ export function registerProjectsRoutes(app: FastifyInstance, context: { db: Db }
 
   const createProject = async (request: FastifyRequest, reply: FastifyReply) => {
     const body = parseBody(createProjectSchema, request.body);
-    const { schemeId, fieldIdByKey } = await ensureSoftwareScheme(db);
-    const seeded = await seedProject(db, { ...body, schemeId, fieldIdByKey });
+    const { schemeId } = await ensureSoftwareScheme(db);
+    const seeded = await seedProject(db, { ...body, schemeId });
     reply.status(201).send(seeded.project);
   };
 
