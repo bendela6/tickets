@@ -1,10 +1,12 @@
 // Zero-dependency style-context hardcoded-color scan.
 //
-// Flags style-context hex — Tailwind arbitrary values (`[#hex]` in
-// className strings), hex inside inline `style=`/`style={{...}}`, and
-// color declarations in hand-written `.css`. It intentionally does NOT
-// flag data constants (e.g. a persisted-API-hex PALETTE table) or hex
-// inside `*.test.*` fixtures/assertions — those aren't styling.
+// Flags style-context hex and rgb()/hsl() — Tailwind arbitrary values
+// (any `[...#hex...]` or `[...rgb(/hsl(...]` bracketed utility, e.g.
+// `bg-[#hex]`, `text-[color:#hex]`, `[--brand:#hex]`), hex/rgb()/hsl()
+// inside inline `style=`/`style={{...}}`, and color declarations in
+// hand-written `.css`. It intentionally does NOT flag data constants
+// (e.g. a persisted-API-hex PALETTE table) or hex inside `*.test.*`
+// fixtures/assertions — those aren't styling.
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -157,21 +159,43 @@ function lineAt(rawText, index) {
 }
 
 // Returns a list of `{ index }` hit positions for a .ts/.tsx file: Tailwind
-// arbitrary color values anywhere, plus plain hex confined to style regions.
+// arbitrary color values anywhere, plus plain hex/rgb()/hsl() confined to
+// style regions.
 function scanTsLike(strippedText) {
   const hitIndexes = new Set();
 
-  const bracketRe = /\[#[0-9a-fA-F]{3,8}\]/g;
+  // Any hex literal inside a bracketed Tailwind arbitrary value — not just
+  // `[#hex]` but also `[color:#hex]`, `[--brand:#hex]`, etc. Bounded to a
+  // single line (`[^\]\n]*`, not `[^\]]*`): Tailwind arbitrary-value
+  // brackets are always written on one line, so this stays a tight match
+  // on real bracket contents instead of running on past the `[` of an
+  // unrelated multi-line array/object literal (e.g. a PALETTE data table)
+  // looking for the next `]`.
+  const bracketRe = /\[[^\]\n]*#[0-9a-fA-F]{3,8}/g;
   let m;
   while ((m = bracketRe.exec(strippedText))) {
     hitIndexes.add(m.index);
   }
 
+  // Any rgb()/hsl() call inside a bracketed Tailwind arbitrary value.
+  const bracketFuncRe = /\[[^\]\n]*(rgb|hsl)a?\(/g;
+  while ((m = bracketFuncRe.exec(strippedText))) {
+    hitIndexes.add(m.index);
+  }
+
   const styleRegions = findStyleRegions(strippedText);
+
   const hexRe = /#[0-9a-fA-F]{3,8}/g;
   while ((m = hexRe.exec(strippedText))) {
     const idx = m.index;
     if (strippedText[idx - 1] === '[' && strippedText[idx + m[0].length] === ']') continue; // already a bracket hit
+    const inStyle = styleRegions.some(([s, e]) => idx >= s && idx < e);
+    if (inStyle) hitIndexes.add(idx);
+  }
+
+  const funcRe = /(rgb|hsl)a?\(/g;
+  while ((m = funcRe.exec(strippedText))) {
+    const idx = m.index;
     const inStyle = styleRegions.some(([s, e]) => idx >= s && idx < e);
     if (inStyle) hitIndexes.add(idx);
   }
@@ -204,6 +228,11 @@ function scanFile(file) {
 function main() {
   const files = walk(srcDir, []).filter((f) => !isExcluded(path.relative(process.cwd(), f)));
 
+  if (files.length === 0) {
+    console.error('error: scanned zero files — check srcDir/EXCLUDE_RES/walk() before trusting this gate');
+    process.exit(1);
+  }
+
   let hitCount = 0;
   for (const file of files) {
     const relPath = toPosix(path.relative(process.cwd(), file));
@@ -216,7 +245,7 @@ function main() {
   if (hitCount > 0) {
     process.exit(1);
   }
-  console.log('ok: no style-context hardcoded values');
+  console.log(`ok: no style-context hardcoded values (${files.length} files scanned)`);
 }
 
 main();
