@@ -6,7 +6,6 @@ export { ticketTypes } from './ticket-types';
 export { statuses } from './statuses';
 export { statusTransitions } from './status-transitions';
 export { fields } from './fields';
-export { ticketTypeFields } from './ticket-type-fields';
 export { fieldOptions } from './field-options';
 export { views } from './views';
 export { tickets } from './tickets';

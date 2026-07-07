@@ -52,9 +52,9 @@ export type LogicalTypeField = {
   required: FieldRow['required'];
 };
 
-// vocab.typeFields is empty now (ticket_type_fields stopped being written
-// once fields became type-owned) — re-derive the type→field associations
-// from vocab.fieldsByType, in each type's field position order, with
+// ticket_type_fields is gone now that fields are type-owned — derive the
+// type→field associations from vocab.fieldsByType, in each type's field
+// position order, with
 // fieldId pointed at the logical id so it resolves against the deduped
 // `logicalFields` passed in (see buildLogicalFields above). A type's own
 // field row governs whether it currently has the field: only its

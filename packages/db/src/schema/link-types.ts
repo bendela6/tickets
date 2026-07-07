@@ -1,5 +1,4 @@
 import { boolean, integer, pgTable, serial, text, timestamp, unique } from 'drizzle-orm/pg-core';
-import { schemes } from './schemes';
 import { ticketTypes } from './ticket-types';
 
 // Data-driven relation vocabulary: blocks / relates-to / duplicates / …
@@ -7,8 +6,9 @@ export const linkTypes = pgTable(
   'link_types',
   {
     id: serial('id').primaryKey(),
-    schemeId: integer('scheme_id').references(() => schemes.id),
-    ticketTypeId: integer('ticket_type_id').references(() => ticketTypes.id),
+    ticketTypeId: integer('ticket_type_id')
+      .notNull()
+      .references(() => ticketTypes.id),
     key: text('key').notNull(),
     label: text('label').notNull(),
     inverseLabel: text('inverse_label').notNull(),
@@ -16,5 +16,5 @@ export const linkTypes = pgTable(
     position: integer('position').notNull(),
     archivedAt: timestamp('archived_at', { withTimezone: true, mode: 'string' }),
   },
-  (table) => [unique('link_types_scheme_key').on(table.schemeId, table.key)],
+  (table) => [unique('link_types_ticket_type_key').on(table.ticketTypeId, table.key)],
 );
