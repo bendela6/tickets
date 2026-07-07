@@ -169,7 +169,9 @@ export async function loadProjectVocab(db: Db, selector: { key?: string; id?: nu
     // Per-type field/link-type ownership (Plan A foundation).
     fieldByTypeKey: new Map(fieldRows.map((row) => [`${row.ticketTypeId}:${row.key}`, row])),
     fieldsByType: fieldsByTypeMap,
-    fieldKeys: dedupeByKey(fieldRows).map((row) => ({
+    // Logical key list: non-archived rows only (a key backed solely by
+    // archived rows doesn't exist as a column — matches buildLogicalFields).
+    fieldKeys: dedupeByKey(fieldRows.filter((row) => !row.archivedAt)).map((row) => ({
       key: row.key,
       label: row.label,
       type: row.type,

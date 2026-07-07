@@ -65,7 +65,7 @@ export function registerTicketsRoutes(app: FastifyInstance, context: { db: Db })
 
     // required gates creation: every required field the type owns needs a value
     const requiredFields = (vocab.fieldsByType.get(type.id) ?? []).filter(
-      (field) => field.required,
+      (field) => field.required && !field.archivedAt,
     );
     for (const field of requiredFields) {
       const value = body.values[field.key];

@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import postgres from 'postgres';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
@@ -230,5 +230,41 @@ describe('board read', () => {
     expect(boardTicket).toBeTruthy();
     expect(boardTicket!.values.priority).toBe('urgent');
     expect(boardTicket!.values.assignee).toBe('claude-opus-4-8');
+  });
+});
+
+describe('required-field enforcement ignores archived fields', () => {
+  // Reachable in production via PATCH /api/fields/:id, which can set
+  // archived=true without the caller also clearing required — see
+  // vocabulary.routes.ts patchField. If required-derivation didn't exclude
+  // archived fields, ticket creation for this type would become permanently
+  // impossible: enforcement would demand a value for a field that
+  // buildValueRows rejects as "unknown field" once archived. This test
+  // mutates task's "priority" field directly (mirroring the "link
+  // guardrails" test's direct-DB-mutation style above) and runs last in the
+  // file so it doesn't disturb the task-priority values earlier tests rely on.
+  test('an archived-but-required field does not block creating a ticket of its type', async () => {
+    const taskTypeId = typeIdByKey.task!;
+    const [taskPriorityField] = await db
+      .select()
+      .from(fields)
+      .where(and(eq(fields.ticketTypeId, taskTypeId), eq(fields.key, 'priority')));
+    expect(taskPriorityField).toBeTruthy();
+
+    await db
+      .update(fields)
+      .set({ required: true, archivedAt: sql`now()` })
+      .where(eq(fields.id, taskPriorityField!.id));
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${projectKey}/tickets`,
+      payload: {
+        actorId,
+        typeKey: 'task',
+        values: { title: 'Task created despite archived+required priority' },
+      },
+    });
+    expect(response.statusCode, response.body).toBe(201);
   });
 });
