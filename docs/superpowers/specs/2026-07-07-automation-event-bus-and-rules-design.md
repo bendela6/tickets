@@ -53,9 +53,13 @@ this spec.
   `app.ts`, validated with valibot.
 - Comments are inserted + event-written together in `comments.routes.ts`.
 - Status changes are gated by `checkTransition` (`apps/api/src/tickets/`).
-- `users` has a `kind` enum; a seeded system user will own automated actions.
-- **`apps/api` has no test runner.** `apps/web` uses vitest. This spec adds
-  vitest to `apps/api`.
+- `users` has a `kind` enum (`human` | `agent`); the automation actor reuses
+  `agent` with the name `Automation`.
+- **Test style is pure-function unit tests, no DB harness.** `apps/api` and
+  `packages/db` already run vitest (`check-parent.test.ts`,
+  `check-transition` logic, `build-value-rows`, etc.) — the pattern is to
+  extract the decision logic as a pure function and unit-test it; nothing hits
+  Postgres in a test. This spec follows that pattern (see Testing).
 
 ## Architecture
 
@@ -247,14 +251,22 @@ skills (`mapping-component-states`, `implementing-a-component`,
 
 ## Testing
 
-Add **vitest to `apps/api`** (mirror the web setup). Coverage:
+vitest already runs in `apps/api` and `packages/db`. Follow the house style —
+extract decision logic as pure functions and unit-test them; do **not** stand up
+a DB test harness (the repo has none).
 
-- **Unit** — condition evaluator across every `op`; each action executor against
-  a fake transaction; the depth-cap loop guard; backoff scheduling.
-- **Integration** — seed a rule → hit a real API mutation → run one dispatcher
-  tick → assert the action landed and a `rule_execution` row was logged. Cover
-  three paths: happy path, an illegal `change_status` (→ `failed`, logged), and a
-  self-triggering rule hitting the depth cap (→ `skipped`).
+- **Pure-unit (automated)** — the condition evaluator across every `op`; the
+  rule-matching selector (`selectMatchingRules`); the action runner driven by
+  **injected effect functions** (spies for `addComment`/`applyFieldValue`/
+  `sendWebhook` — no DB); comment/webhook template rendering; the depth-cap loop
+  guard; and backoff scheduling. This covers all branching logic.
+- **End-to-end (manual, documented)** — the thin DB layer (fan-out/execute
+  queries, effect implementations) is verified by a scripted manual run using the
+  `running-the-stack` skill: create a rule via the API, PATCH a ticket, and
+  observe the action land plus a `rule_execution` row appear. Exercise three
+  paths: happy path; an illegal `change_status` (→ `failed`, logged); and a
+  self-triggering rule hitting the depth cap (→ `skipped`). Standing up an
+  automated DB integration harness is deferred to a later spec.
 
 ## Out of scope (this spec)
 
