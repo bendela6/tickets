@@ -17,9 +17,7 @@ export const fields = pgTable(
   'fields',
   {
     id: serial('id').primaryKey(),
-    projectId: integer('project_id')
-      .notNull()
-      .references(() => projects.id),
+    projectId: integer('project_id').references(() => projects.id),
     schemeId: integer('scheme_id').references(() => schemes.id),
     key: text('key').notNull(),
     label: text('label').notNull(),

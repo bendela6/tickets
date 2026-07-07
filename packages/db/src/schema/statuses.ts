@@ -8,9 +8,7 @@ export const statuses = pgTable(
   'statuses',
   {
     id: serial('id').primaryKey(),
-    projectId: integer('project_id')
-      .notNull()
-      .references(() => projects.id),
+    projectId: integer('project_id').references(() => projects.id),
     ticketTypeId: integer('ticket_type_id').references(() => ticketTypes.id),
     key: text('key').notNull(),
     label: text('label').notNull(),
