@@ -11,7 +11,14 @@ type RadioGroupProps = {
   className?: string;
 };
 
-export function RadioGroup({ name, label, value, options, onValueChange, className }: RadioGroupProps) {
+export function RadioGroup({
+  name,
+  label,
+  value,
+  options,
+  onValueChange,
+  className,
+}: RadioGroupProps) {
   return (
     <fieldset className={cn('m-0 flex items-center gap-4 border-0 p-0', className)}>
       <legend className="sr-only">{label}</legend>

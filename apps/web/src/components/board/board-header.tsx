@@ -98,7 +98,7 @@ export function BoardHeader({
   ).length;
 
   return (
-    <div className="mb-3.5 flex shrink-0 items-center gap-3">
+    <div className="mb-3.5 flex shrink-0 flex-wrap items-center gap-3 gap-y-2">
       <span className="rounded-[5px] bg-inset px-1.75 py-0.75 font-mono text-meta font-medium text-ink">
         {board.project.ticketPrefix}
       </span>
@@ -118,7 +118,7 @@ export function BoardHeader({
             placeholder="Search titles…"
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
-            className="h-8 w-50"
+            className="h-8 w-full md:w-50"
           />
           <Popover>
             <PopoverTrigger asChild>

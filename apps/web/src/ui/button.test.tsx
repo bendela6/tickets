@@ -34,14 +34,22 @@ test('sizes match design height/padding/radius/font-size', () => {
   rerender(<Button size="regular">r</Button>);
   expect(screen.getByRole('button')).toHaveClass('h-9', 'px-3.5', 'rounded-[8px]', 'text-[13px]');
   rerender(<Button size="touch">t</Button>);
-  expect(screen.getByRole('button')).toHaveClass('h-11', 'px-[18px]', 'rounded-[10px]', 'text-[14px]');
+  expect(screen.getByRole('button')).toHaveClass(
+    'h-11',
+    'px-[18px]',
+    'rounded-[10px]',
+    'text-[14px]',
+  );
   rerender(<Button size="icon" aria-label="more" />);
   expect(screen.getByRole('button')).toHaveClass('h-8', 'w-8', 'p-0', 'rounded-[8px]');
 });
 
 test('focus halo is 3px accent-subtle, danger-subtle for destructive', () => {
   const { rerender } = render(<Button variant="primary">New</Button>);
-  expect(screen.getByRole('button')).toHaveClass('focus-visible:ring-[3px]', 'focus-visible:ring-accent-subtle');
+  expect(screen.getByRole('button')).toHaveClass(
+    'focus-visible:ring-[3px]',
+    'focus-visible:ring-accent-subtle',
+  );
   rerender(<Button variant="destructive">Archive</Button>);
   const danger = screen.getByRole('button');
   expect(danger).toHaveClass('focus-visible:ring-danger-subtle');

@@ -9,7 +9,15 @@ const kindClasses: Record<StatusKind, string> = {
   dropped: 'bg-kind-dropped-subtle text-kind-dropped',
 };
 
-export function StatusBadge({ kind, label, className }: { kind: StatusKind; label: string; className?: string }) {
+export function StatusBadge({
+  kind,
+  label,
+  className,
+}: {
+  kind: StatusKind;
+  label: string;
+  className?: string;
+}) {
   return (
     <span
       className={cn(

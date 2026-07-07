@@ -264,6 +264,13 @@ test('renders key, title, fields, subtasks, links and comments from the board', 
   expect(screen.getByText('Mara K')).toBeInTheDocument();
 });
 
+test('drawer is a full-width sheet below md and 620px from md up', async () => {
+  await renderDrawer();
+  const aside = screen.getByRole('complementary', { name: 'Ticket detail' });
+  expect(aside.className).toContain('w-full');
+  expect(aside.className).toContain('md:w-155');
+});
+
 test('escape closes the drawer', async () => {
   const { onClose } = await renderDrawer();
   fireEvent.keyDown(document, { key: 'Escape' });

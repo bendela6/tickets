@@ -40,7 +40,13 @@ export function DialogTitle({ children, className }: { children: ReactNode; clas
   );
 }
 
-export function DialogDescription({ children, className }: { children: ReactNode; className?: string }) {
+export function DialogDescription({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
     <RadixDialog.Description className={cn('mt-1.5 font-sans text-ui text-ink-2', className)}>
       {children}

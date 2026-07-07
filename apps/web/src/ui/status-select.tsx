@@ -36,7 +36,10 @@ export function StatusSelect({
   className,
 }: StatusSelectProps) {
   const [open, setOpen] = useState(false);
-  const kindByKey = useMemo(() => new Map(statuses.map((status) => [status.key, status.kind])), [statuses]);
+  const kindByKey = useMemo(
+    () => new Map(statuses.map((status) => [status.key, status.kind])),
+    [statuses],
+  );
   const current = statuses.find((status) => status.key === value) ?? null;
 
   const shown = useMemo(() => {
@@ -48,7 +51,10 @@ export function StatusSelect({
   }, [statuses, legalTargets, value]);
 
   const hiddenCount = statuses.length - shown.length;
-  const options: ComboOption[] = shown.map((status) => ({ value: status.key, label: status.label }));
+  const options: ComboOption[] = shown.map((status) => ({
+    value: status.key,
+    label: status.label,
+  }));
   const groups = KIND_ORDER.filter((group) => shown.some((status) => status.kind === group.key));
 
   return (
@@ -96,7 +102,11 @@ export function StatusSelect({
               </span>
             );
           }}
-          footer={hiddenCount > 0 ? `${hiddenCount} ${hiddenCount === 1 ? 'status' : 'statuses'} hidden by workflow` : undefined}
+          footer={
+            hiddenCount > 0
+              ? `${hiddenCount} ${hiddenCount === 1 ? 'status' : 'statuses'} hidden by workflow`
+              : undefined
+          }
         />
       </PopoverContent>
     </Popover>

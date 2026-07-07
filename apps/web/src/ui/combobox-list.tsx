@@ -49,7 +49,9 @@ export function ComboboxList({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const matched = q ? options.filter((option) => option.label.toLowerCase().includes(q)) : options;
+    const matched = q
+      ? options.filter((option) => option.label.toLowerCase().includes(q))
+      : options;
     if (!groupOf || !groups) {
       return matched;
     }
@@ -81,7 +83,9 @@ export function ComboboxList({
     }
   }
 
-  const activeId = filtered[activeIndex] ? `${listId}-opt-${filtered[activeIndex].value}` : undefined;
+  const activeId = filtered[activeIndex]
+    ? `${listId}-opt-${filtered[activeIndex].value}`
+    : undefined;
 
   let lastGroup: string | null = null;
 
@@ -151,13 +155,19 @@ export function ComboboxList({
                 ) : (
                   <span>{option.label}</span>
                 )}
-                {selected ? <span className="font-sans text-meta font-medium text-accent">✓</span> : null}
+                {selected ? (
+                  <span className="font-sans text-meta font-medium text-accent">✓</span>
+                ) : null}
               </button>
             </li>
           );
         })}
       </ul>
-      {footer ? <div className="border-t border-hairline px-3 py-1.75 font-sans text-[11px] text-ink-3">{footer}</div> : null}
+      {footer ? (
+        <div className="border-t border-hairline px-3 py-1.75 font-sans text-[11px] text-ink-3">
+          {footer}
+        </div>
+      ) : null}
     </div>
   );
 }

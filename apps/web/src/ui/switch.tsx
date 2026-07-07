@@ -8,7 +8,12 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   ref,
 ) {
   return (
-    <label className={cn('group inline-flex cursor-pointer items-center gap-2 font-sans text-ui text-ink has-disabled:cursor-not-allowed', className)}>
+    <label
+      className={cn(
+        'group inline-flex cursor-pointer items-center gap-2 font-sans text-ui text-ink has-disabled:cursor-not-allowed',
+        className,
+      )}
+    >
       <span className="relative inline-flex">
         <input
           ref={ref}

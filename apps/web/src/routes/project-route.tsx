@@ -38,9 +38,9 @@ function ProjectLayout() {
           </Link>
         </div>
       ) : (
-        // Instrument board area — deliberately NOT inside .wrap (legacy
-        // globals.css scoping); design main padding is 22px 28px 0.
-        <div className="flex h-full min-h-0 flex-col px-7 pt-5.5">
+        // Instrument board area; design main padding is 22px 28px 0 on
+        // desktop, tightened below md for 390px screens.
+        <div className="flex h-full min-h-0 flex-col px-4 pt-4 md:px-7 md:pt-5.5">
           <ViewTabs
             projectKey={projectKey}
             board={board}

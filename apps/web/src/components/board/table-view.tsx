@@ -327,7 +327,7 @@ export function TableView({
     <div className="flex min-h-0 flex-1 flex-col overflow-auto rounded-t-[12px] border border-hairline bg-raised">
       <div
         role="row"
-        className="sticky top-0 z-10 grid h-9 shrink-0 items-center border-b border-hairline bg-app px-1"
+        className="sticky top-0 z-10 grid h-9 min-w-170 shrink-0 items-center border-b border-hairline bg-app px-1"
         style={{ gridTemplateColumns }}
       >
         {visible.map(({ column, index }) => {
@@ -364,7 +364,7 @@ export function TableView({
             role="row"
             onClick={() => onOpenTicket(ticket.number)}
             className={cn(
-              'group relative grid shrink-0 cursor-pointer items-center border-b border-hairline px-1 hover:bg-app',
+              'group relative grid min-w-170 shrink-0 cursor-pointer items-center border-b border-hairline px-1 hover:bg-app',
               config.density === 'compact' ? 'h-8' : 'h-10.5',
             )}
             style={{ gridTemplateColumns }}

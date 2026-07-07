@@ -101,7 +101,7 @@ export function ProjectsHome() {
   const [creating, setCreating] = useState(false);
 
   return (
-    <div className="px-8 py-7">
+    <div className="px-4 py-5 md:px-8 md:py-7">
       <div className="mb-5.5 flex items-baseline gap-3.5">
         <h1 className="font-sans text-[22px] font-semibold text-ink">Projects</h1>
         <span className="font-mono text-meta text-ink-3">

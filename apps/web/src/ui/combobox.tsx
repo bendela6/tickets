@@ -52,7 +52,10 @@ export function Combobox({
             ) : (
               <span className="truncate text-ink-3">{placeholder}</span>
             )}
-            <span aria-hidden className="pointer-events-none absolute right-2 text-[10px] text-ink-3">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute right-2 text-[10px] text-ink-3"
+            >
               ▾
             </span>
           </button>

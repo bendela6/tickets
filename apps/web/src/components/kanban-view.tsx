@@ -217,7 +217,11 @@ export function KanbanView({
         )}
       >
         <div className="flex items-center gap-2">
-          <TicketKey prefix={board.project.ticketPrefix} number={ticket.number} className="text-[11px]" />
+          <TicketKey
+            prefix={board.project.ticketPrefix}
+            number={ticket.number}
+            className="text-[11px]"
+          />
           {priorityOption ? (
             <OptionChip
               label={priorityOption.label}
@@ -254,7 +258,7 @@ export function KanbanView({
   };
 
   return (
-    <div className="relative flex flex-1 gap-3.5 overflow-auto pb-5">
+    <div className="relative flex flex-1 gap-3.5 overflow-x-auto overflow-y-auto pb-5">
       {columns.map((status) => {
         const cards = cardsByStatusKey.get(status.key) ?? [];
         const mode = columnMode(status);
@@ -263,7 +267,7 @@ export function KanbanView({
             key={status.id}
             aria-label={status.label}
             className={cn(
-              'flex w-[252px] flex-none flex-col rounded-[12px] bg-inset',
+              'flex w-[85vw] flex-none flex-col rounded-[12px] bg-inset md:w-63',
               mode === 'illegal' && 'opacity-50',
             )}
             onDragOver={

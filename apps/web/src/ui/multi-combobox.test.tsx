@@ -21,7 +21,14 @@ test('toggles a selection on and keeps the panel open', async () => {
 
 test('select all picks every option', async () => {
   const onChange = vi.fn();
-  render(<MultiCombobox options={OPTIONS} value={['frontend']} onChange={onChange} placeholder="Labels" />);
+  render(
+    <MultiCombobox
+      options={OPTIONS}
+      value={['frontend']}
+      onChange={onChange}
+      placeholder="Labels"
+    />,
+  );
   await userEvent.click(screen.getByRole('button', { name: /labels/i }));
   await userEvent.click(await screen.findByRole('button', { name: /select all/i }));
   expect(onChange).toHaveBeenCalledWith(['frontend', 'api', 'infra']);

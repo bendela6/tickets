@@ -72,7 +72,8 @@ export function FieldWidget({
     );
   }
   if (field.type === 'number') {
-    const shown = numberDraft !== undefined ? numberDraft : typeof value === 'number' ? value : null;
+    const shown =
+      numberDraft !== undefined ? numberDraft : typeof value === 'number' ? value : null;
     return (
       <span
         className="inline-flex"
@@ -80,7 +81,10 @@ export function FieldWidget({
           if (event.currentTarget.contains(event.relatedTarget)) {
             return; // focus moved within the control (input ↔ steppers)
           }
-          if (numberDraft !== undefined && numberDraft !== (typeof value === 'number' ? value : null)) {
+          if (
+            numberDraft !== undefined &&
+            numberDraft !== (typeof value === 'number' ? value : null)
+          ) {
             onChange(numberDraft);
           }
           setNumberDraft(undefined);
