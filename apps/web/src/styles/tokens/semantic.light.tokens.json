@@ -1,1 +1,204 @@
-{"ins":{"accent":{"$type":"color","$value":"{p.accent}"}}}
+{
+  "ins": {
+    "app": {
+      "$type": "color",
+      "$value": "{p.app}"
+    },
+    "raised": {
+      "$type": "color",
+      "$value": "{p.raised}"
+    },
+    "inset": {
+      "$type": "color",
+      "$value": "{p.inset}"
+    },
+    "hairline": {
+      "$type": "color",
+      "$value": "{p.hairline}"
+    },
+    "control": {
+      "$type": "color",
+      "$value": "{p.control}"
+    },
+    "ink": {
+      "$type": "color",
+      "$value": "{p.ink}"
+    },
+    "ink-2": {
+      "$type": "color",
+      "$value": "{p.ink-2}"
+    },
+    "ink-3": {
+      "$type": "color",
+      "$value": "{p.ink-3}"
+    },
+    "accent": {
+      "$type": "color",
+      "$value": "{p.accent}"
+    },
+    "accent-hover": {
+      "$type": "color",
+      "$value": "{p.accent-hover}"
+    },
+    "accent-subtle": {
+      "$type": "color",
+      "$value": "{p.accent-subtle}"
+    },
+    "on-accent": {
+      "$type": "color",
+      "$value": "{p.raised}"
+    },
+    "danger": {
+      "$type": "color",
+      "$value": "{p.danger}"
+    },
+    "danger-hover": {
+      "$type": "color",
+      "$value": "{p.danger-hover}"
+    },
+    "danger-subtle": {
+      "$type": "color",
+      "$value": "{p.danger-subtle}"
+    },
+    "on-danger": {
+      "$type": "color",
+      "$value": "{p.raised}"
+    },
+    "kind-todo": {
+      "$type": "color",
+      "$value": "{p.kind-todo}"
+    },
+    "kind-todo-subtle": {
+      "$type": "color",
+      "$value": "{p.kind-todo-subtle}"
+    },
+    "kind-active": {
+      "$type": "color",
+      "$value": "{p.kind-active}"
+    },
+    "kind-active-subtle": {
+      "$type": "color",
+      "$value": "{p.kind-active-subtle}"
+    },
+    "kind-blocked": {
+      "$type": "color",
+      "$value": "{p.kind-blocked}"
+    },
+    "kind-blocked-subtle": {
+      "$type": "color",
+      "$value": "{p.kind-blocked-subtle}"
+    },
+    "kind-done": {
+      "$type": "color",
+      "$value": "{p.kind-done}"
+    },
+    "kind-done-subtle": {
+      "$type": "color",
+      "$value": "{p.kind-done-subtle}"
+    },
+    "kind-dropped": {
+      "$type": "color",
+      "$value": "{p.kind-dropped}"
+    },
+    "kind-dropped-subtle": {
+      "$type": "color",
+      "$value": "{p.kind-dropped-subtle}"
+    },
+    "shadow-sm": {
+      "$type": "shadow",
+      "$value": "{p.shadow-sm}"
+    },
+    "shadow-lg": {
+      "$type": "shadow",
+      "$value": "{p.shadow-lg}"
+    },
+    "opt-red": {
+      "$type": "color",
+      "$value": "{p.opt-red}"
+    },
+    "opt-red-subtle": {
+      "$type": "color",
+      "$value": "{p.opt-red-subtle}"
+    },
+    "opt-orange": {
+      "$type": "color",
+      "$value": "{p.opt-orange}"
+    },
+    "opt-orange-subtle": {
+      "$type": "color",
+      "$value": "{p.opt-orange-subtle}"
+    },
+    "opt-yellow": {
+      "$type": "color",
+      "$value": "{p.opt-yellow}"
+    },
+    "opt-yellow-subtle": {
+      "$type": "color",
+      "$value": "{p.opt-yellow-subtle}"
+    },
+    "opt-green": {
+      "$type": "color",
+      "$value": "{p.opt-green}"
+    },
+    "opt-green-subtle": {
+      "$type": "color",
+      "$value": "{p.opt-green-subtle}"
+    },
+    "opt-teal": {
+      "$type": "color",
+      "$value": "{p.opt-teal}"
+    },
+    "opt-teal-subtle": {
+      "$type": "color",
+      "$value": "{p.opt-teal-subtle}"
+    },
+    "opt-cyan": {
+      "$type": "color",
+      "$value": "{p.opt-cyan}"
+    },
+    "opt-cyan-subtle": {
+      "$type": "color",
+      "$value": "{p.opt-cyan-subtle}"
+    },
+    "opt-blue": {
+      "$type": "color",
+      "$value": "{p.opt-blue}"
+    },
+    "opt-blue-subtle": {
+      "$type": "color",
+      "$value": "{p.opt-blue-subtle}"
+    },
+    "opt-indigo": {
+      "$type": "color",
+      "$value": "{p.opt-indigo}"
+    },
+    "opt-indigo-subtle": {
+      "$type": "color",
+      "$value": "{p.opt-indigo-subtle}"
+    },
+    "opt-purple": {
+      "$type": "color",
+      "$value": "{p.opt-purple}"
+    },
+    "opt-purple-subtle": {
+      "$type": "color",
+      "$value": "{p.opt-purple-subtle}"
+    },
+    "opt-pink": {
+      "$type": "color",
+      "$value": "{p.opt-pink}"
+    },
+    "opt-pink-subtle": {
+      "$type": "color",
+      "$value": "{p.opt-pink-subtle}"
+    },
+    "opt-gray": {
+      "$type": "color",
+      "$value": "{p.opt-gray}"
+    },
+    "opt-gray-subtle": {
+      "$type": "color",
+      "$value": "{p.opt-gray-subtle}"
+    }
+  }
+}
