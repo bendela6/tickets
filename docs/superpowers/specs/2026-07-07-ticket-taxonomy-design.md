@@ -1,4 +1,4 @@
-# Ticket taxonomy: types, statuses, priorities, fields
+# Ticket scheme: types, statuses, priorities, fields
 
 **Date:** 2026-07-07
 **Status:** Draft (pending review)
@@ -46,6 +46,49 @@ This supersedes the current seed vocabulary (10 project-wide statuses,
 4. **Granularity needs decision rules.** Every priority/severity level is defined
    by *what puts a ticket there*, so classification is a one-second call, not a
    judgement between look-alike labels.
+5. **Structure is a reusable Scheme, separate from projects.** Types +
+   statuses + transitions + fields are defined once in a named **Scheme**; a
+   project *binds* to one (shared, live) or *forks* a copy to customize. This
+   replaces per-project inline config.
+
+---
+
+## 0. Scheme — reusable structure, separate from projects
+
+The set of types, their statuses/transitions, and field definitions is a
+**Scheme**: a named, project-independent bundle. A **project references a
+Scheme** instead of owning its structure inline.
+
+- **Bind (share):** `projects.scheme_id` points at a Scheme. Many projects
+  may share one — editing the Scheme changes every bound project. The four
+  software projects (TASK/APP/GW/TIX) share a single **"Software"** Scheme.
+- **Fork (copy & modify):** a **clone** operation deep-copies a Scheme (all
+  types, statuses, transitions, fields, options, attachments, link types) into a
+  new Scheme with fresh ids; the project is pointed at the clone and diverges
+  freely.
+
+Ownership after the change:
+
+| Table | Owned by (was → now) |
+| --- | --- |
+| `schemes` *(new)* | — (top-level) |
+| `ticket_types` | project → **scheme** |
+| `statuses` | project → **type** (`ticket_type_id`; reaches scheme via its type) |
+| `fields` | project → **scheme** |
+| `link_types` | project → **scheme** |
+| `status_transitions` · `field_options` · `ticket_type_fields` | unchanged — they reference type/field/status ids that now live under a scheme |
+| `views` | **project** (unchanged); the Scheme carries a default-view blueprint used to seed a project's first board |
+| `tickets` · `ticket_values` | **project** (unchanged); `type_id`/`status_id`/`field_id`/`option_id` keep referencing the same rows, which now belong to a scheme |
+
+Bundling is **whole-scheme** (one `scheme_id` per project), not Jira-style
+separate workflow/field/type schemes — chosen for one mental model over maximal
+mix-and-match. Saved **views stay per-project** (personal board arrangements);
+the Scheme only supplies a default-view blueprint at bind/fork time.
+
+**Rebinding caveat:** a project's Scheme is chosen at creation (bind or fork).
+Re-pointing an existing project to a *different, incompatible* Scheme would
+orphan its tickets' `type_id`/`status_id` and needs a remap migration — out of
+scope; treat Scheme choice as create-time.
 
 ---
 
@@ -275,7 +318,7 @@ absent because that is the **Bug** type.
 The [approved Assignee spec](2026-07-05-assignee-field-design.md) already
 defines `assignee` as a **`select` of Claude model tiers**
 (`claude-fable-5` / `claude-opus-4-8` / `claude-sonnet-5` / `claude-haiku-4-5`),
-carrying a planning instruction in `config.description`. This taxonomy **reuses
+carrying a planning instruction in `config.description`. This scheme **reuses
 it unchanged** and only **extends its attachment** to the new types (Epic, Bug,
 Spike in addition to Task/Subtask). Consequences:
 
@@ -362,40 +405,71 @@ in seed):
 
 ## Schema changes required
 
-The vocabulary is mostly seed/config, but four extensions are needed:
+The vocabulary content is seed/config, but the **Scheme layer** re-scopes the
+structural tables. Changes:
 
-1. **`statuses.ticket_type_id`** — statuses become owned by a type (nullable FK
-   to `ticket_types`, scoped within the project). `status_transitions` already
-   carries `ticket_type_id`. Rollups/filters keep reading `kind`.
-2. **Type-aware hierarchy** — replace the depth-1 check with the parent→child
-   type rules in [Hierarchy](#6-hierarchy) (API validation; the allowed pairs
-   can live in `ticket_types.config` or a small rules table).
-3. **Transition guards** — the API status-change path enforces the two guards in
+1. **New `schemes` table** — `id`, `key` (unique), `name`, `description`,
+   `config` jsonb (holds the default-view blueprint), `created_at`,
+   `archived_at`. A named, reusable structure.
+2. **Re-scope structural tables from project → scheme:**
+   - `ticket_types.project_id` → **`ticket_types.scheme_id`** (FK → `schemes`;
+     unique `(scheme_id, key)`).
+   - `fields.project_id` → **`fields.scheme_id`** (unique `(scheme_id, key)`).
+   - `link_types.project_id` → **`link_types.scheme_id`** (unique
+     `(scheme_id, key)`).
+3. **`statuses` become type-owned:** drop `statuses.project_id`, add
+   **`statuses.ticket_type_id`** (FK → `ticket_types`), unique
+   `(ticket_type_id, key)`. Statuses reach their scheme through their type.
+   `status_transitions` already carries `ticket_type_id`. Rollups/filters keep
+   reading `kind`.
+4. **`projects.scheme_id`** — FK → `schemes` (which structure the project uses;
+   many projects may share one).
+5. **Clone service** (no schema) — deep-copy a scheme and all child rows
+   (`ticket_types` → `statuses`/`status_transitions`, `fields` →
+   `field_options`, `ticket_type_fields`, `link_types`) with id remapping, for
+   fork-and-modify.
+6. **Type-aware hierarchy** — replace the depth-1 check with the parent→child
+   type rules in [Hierarchy](#6-hierarchy). Allowed children stored in
+   `ticket_types.config.allowedChildTypes`; enforced in API.
+7. **Transition guards** — stored in `status_transitions.config`; the API
+   status-change path enforces the two guards in
    [Transitions](#3-transitions-the-workflow-graph) (PR set before `Merged`;
    closing comment before `Fixed`/`Won't fix`/`Cancelled`).
-4. **Field set changes** — remove the `epic` field; rename/convert `area`
-   (free text) → `component` (select); add `kind`, `component`, `labels`,
-   `steps`, `environment`, `pr`, `findings`, `target_date`, `estimate` to the
-   seed and attach per the matrix. Add the `caused-by` link type.
 
-No new `field_type` enum value and no new status `kind` are required.
+Unchanged: `status_transitions`, `field_options`, `ticket_type_fields`, `views`
+(project-scoped), `tickets`/`ticket_values` (`type_id`/`status_id`/`field_id`/
+`option_id` keep referencing the same rows). **No new `field_type` value and no
+new status `kind`.** The `epic` field is removed and `area` → `component` as
+part of the [field set](#5-fields) (seed data, not schema).
 
 ## Migration considerations
 
-Not solved in this spec; to be planned separately. Key mappings when moving the
-four existing projects (TASK/APP/GW/TIX) onto this vocabulary:
+Planned separately (the Migration plan). Shape:
 
-- **Statuses:** map the old 10 project-wide statuses onto the per-type sets by
-  `kind` (e.g. old `investigating`/`brainstorming`/`designing`/`in-progress` →
-  `In progress`; `review` → `In review`; `fixed` → `Done`/`Fixed`;
-  `open`/`investigated` → `Backlog`/`To do`; `dropped` → `Cancelled`/`Won't
-  fix`). Duplicate the statuses per type and re-point `ticket_values.status_id`.
-- **Epic field → hierarchy:** for each distinct `epic` field value, create an
-  Epic ticket and re-parent its members; then drop the field.
-- **`area` → `component`:** seed component options from existing distinct `area`
-  strings; copy values.
-- **Types:** existing `task` stays `Task`; `subtask` stays `Subtask`; classify
-  existing bug-like tickets into `Bug`. New `Epic`/`Spike` created as needed.
+1. **Create the "Software" Scheme** from the new seed (5 types, per-type
+   statuses + transitions, new field set + options, link types incl.
+   `caused-by`).
+2. **Bind all four projects** (TASK/APP/GW/TIX) to it — set
+   `projects.scheme_id`.
+3. **Remap every existing ticket** onto the new scheme, old id → new id by
+   semantic mapping:
+   - **Statuses** by `kind` + intent: old `investigating`/`brainstorming`/
+     `designing`/`in-progress` → `In progress`; `review` → `In review`;
+     `fixed` → `Done` (or `Fixed` for Bugs); `open`/`investigated` →
+     `Backlog`/`To do`; `blocked` → `Blocked`; `dropped` →
+     `Cancelled`/`Won't fix`. Re-point `ticket_values.status_id` to the new
+     type-owned status row.
+   - **Types:** existing `task` → `Task`, `subtask` → `Subtask`; reclassify
+     bug-like tickets to `Bug`; create `Epic`/`Spike` as needed.
+   - **Epic field → hierarchy:** for each distinct old `epic` value, create an
+     `Epic` ticket and re-parent its members; then drop the `epic` field.
+   - **`area` → `component`:** seed `component` options from distinct `area`
+     strings; copy values; drop `area`.
+   - Re-point `ticket_values.field_id`/`option_id` to the shared scheme's rows.
+4. **Delete** the old per-project inline config rows once every ticket is
+   remapped and verified.
+
+Migration is transactional and idempotent-per-project.
 
 ## Out of scope (deliberately omitted — YAGNI)
 
@@ -414,10 +488,15 @@ four existing projects (TASK/APP/GW/TIX) onto this vocabulary:
 
 ## Types (glossary)
 
+- **scheme** — a named, reusable bundle of types + statuses + transitions +
+  fields + link types (table `schemes`); a project binds to one (shared) or
+  forks a copy. Formerly the per-project inline config.
+- **clone / fork** — a deep-copy of a scheme with id remapping, so a project can
+  diverge from a shared structure.
 - **kind** — one of `todo` | `active` | `blocked` | `done` | `dropped`; the
   hardcoded cross-type semantic every status maps to.
-- **type** — a ticket type (Epic/Task/Bug/Subtask/Spike); owns its statuses,
-  transitions, and field set.
+- **type** — a ticket type (Epic/Task/Bug/Subtask/Spike); belongs to a scheme;
+  owns its statuses, transitions, and field set.
 - **status** — a per-type workflow state, carrying exactly one `kind`.
 - **transition** — an allowed edge between two statuses of the same type; may
   carry a guard.
