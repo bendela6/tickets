@@ -60,6 +60,10 @@
       "$type": "color",
       "$value": "#6e6a5e"
     },
+    "kind-todo-hover": {
+      "$type": "color",
+      "$value": "#58554b"
+    },
     "kind-todo-subtle": {
       "$type": "color",
       "$value": "#ebeae3"
@@ -67,6 +71,10 @@
     "kind-active": {
       "$type": "color",
       "$value": "#2e6fcc"
+    },
+    "kind-active-hover": {
+      "$type": "color",
+      "$value": "#265dab"
     },
     "kind-active-subtle": {
       "$type": "color",
@@ -76,6 +84,10 @@
       "$type": "color",
       "$value": "#c25425"
     },
+    "kind-blocked-hover": {
+      "$type": "color",
+      "$value": "#a0451e"
+    },
     "kind-blocked-subtle": {
       "$type": "color",
       "$value": "#f8e9df"
@@ -83,6 +95,10 @@
     "kind-done": {
       "$type": "color",
       "$value": "#2e7d4f"
+    },
+    "kind-done-hover": {
+      "$type": "color",
+      "$value": "#235f3c"
     },
     "kind-done-subtle": {
       "$type": "color",
@@ -92,9 +108,17 @@
       "$type": "color",
       "$value": "#9b968a"
     },
+    "kind-dropped-hover": {
+      "$type": "color",
+      "$value": "#888274"
+    },
     "kind-dropped-subtle": {
       "$type": "color",
       "$value": "#efeee8"
+    },
+    "on-kind-dropped": {
+      "$type": "color",
+      "$value": "#21201c"
     },
     "shadow-sm": {
       "$type": "shadow",
@@ -108,6 +132,10 @@
       "$type": "color",
       "$value": "#a03028"
     },
+    "opt-red-hover": {
+      "$type": "color",
+      "$value": "#7f2620"
+    },
     "opt-red-subtle": {
       "$type": "color",
       "$value": "#fae3e1"
@@ -115,6 +143,10 @@
     "opt-orange": {
       "$type": "color",
       "$value": "#a44e14"
+    },
+    "opt-orange-hover": {
+      "$type": "color",
+      "$value": "#803d10"
     },
     "opt-orange-subtle": {
       "$type": "color",
@@ -124,6 +156,10 @@
       "$type": "color",
       "$value": "#8a6a10"
     },
+    "opt-yellow-hover": {
+      "$type": "color",
+      "$value": "#654e0c"
+    },
     "opt-yellow-subtle": {
       "$type": "color",
       "$value": "#f5ebce"
@@ -131,6 +167,10 @@
     "opt-green": {
       "$type": "color",
       "$value": "#2e7042"
+    },
+    "opt-green-hover": {
+      "$type": "color",
+      "$value": "#225331"
     },
     "opt-green-subtle": {
       "$type": "color",
@@ -140,6 +180,10 @@
       "$type": "color",
       "$value": "#176d5c"
     },
+    "opt-teal-hover": {
+      "$type": "color",
+      "$value": "#104b40"
+    },
     "opt-teal-subtle": {
       "$type": "color",
       "$value": "#d9f0ea"
@@ -147,6 +191,10 @@
     "opt-cyan": {
       "$type": "color",
       "$value": "#14687e"
+    },
+    "opt-cyan-hover": {
+      "$type": "color",
+      "$value": "#0e4b5b"
     },
     "opt-cyan-subtle": {
       "$type": "color",
@@ -156,6 +204,10 @@
       "$type": "color",
       "$value": "#2a5dae"
     },
+    "opt-blue-hover": {
+      "$type": "color",
+      "$value": "#224b8d"
+    },
     "opt-blue-subtle": {
       "$type": "color",
       "$value": "#e0eaf9"
@@ -163,6 +215,10 @@
     "opt-indigo": {
       "$type": "color",
       "$value": "#4a44b0"
+    },
+    "opt-indigo-hover": {
+      "$type": "color",
+      "$value": "#3e3993"
     },
     "opt-indigo-subtle": {
       "$type": "color",
@@ -172,6 +228,10 @@
       "$type": "color",
       "$value": "#7b3fa0"
     },
+    "opt-purple-hover": {
+      "$type": "color",
+      "$value": "#643383"
+    },
     "opt-purple-subtle": {
       "$type": "color",
       "$value": "#f0e3f7"
@@ -180,6 +240,10 @@
       "$type": "color",
       "$value": "#a63368"
     },
+    "opt-pink-hover": {
+      "$type": "color",
+      "$value": "#872954"
+    },
     "opt-pink-subtle": {
       "$type": "color",
       "$value": "#fae1ec"
@@ -187,6 +251,10 @@
     "opt-gray": {
       "$type": "color",
       "$value": "#5c594f"
+    },
+    "opt-gray-hover": {
+      "$type": "color",
+      "$value": "#46443c"
     },
     "opt-gray-subtle": {
       "$type": "color",
@@ -260,37 +328,73 @@
       "$type": "color",
       "$value": "#8a8678"
     },
+    "kind-todo-hover-dark": {
+      "$type": "color",
+      "$value": "#9d9a8e"
+    },
     "kind-todo-subtle-dark": {
       "$type": "color",
       "$value": "#26251f"
+    },
+    "on-kind-todo-dark": {
+      "$type": "color",
+      "$value": "#161513"
     },
     "kind-active-dark": {
       "$type": "color",
       "$value": "#6ba4ee"
     },
+    "kind-active-hover-dark": {
+      "$type": "color",
+      "$value": "#90bbf2"
+    },
     "kind-active-subtle-dark": {
       "$type": "color",
       "$value": "#1e2a3f"
+    },
+    "on-kind-active-dark": {
+      "$type": "color",
+      "$value": "#061b37"
     },
     "kind-blocked-dark": {
       "$type": "color",
       "$value": "#e08b56"
     },
+    "kind-blocked-hover-dark": {
+      "$type": "color",
+      "$value": "#e6a378"
+    },
     "kind-blocked-subtle-dark": {
       "$type": "color",
       "$value": "#392317"
+    },
+    "on-kind-blocked-dark": {
+      "$type": "color",
+      "$value": "#341a09"
     },
     "kind-done-dark": {
       "$type": "color",
       "$value": "#57b383"
     },
+    "kind-done-hover-dark": {
+      "$type": "color",
+      "$value": "#73c098"
+    },
     "kind-done-subtle-dark": {
       "$type": "color",
       "$value": "#1b2e22"
     },
+    "on-kind-done-dark": {
+      "$type": "color",
+      "$value": "#132a1e"
+    },
     "kind-dropped-dark": {
       "$type": "color",
       "$value": "#6b675c"
+    },
+    "kind-dropped-hover-dark": {
+      "$type": "color",
+      "$value": "#817c6f"
     },
     "kind-dropped-subtle-dark": {
       "$type": "color",
@@ -308,89 +412,177 @@
       "$type": "color",
       "$value": "#f0968d"
     },
+    "opt-red-hover-dark": {
+      "$type": "color",
+      "$value": "#f5b7b1"
+    },
     "opt-red-subtle-dark": {
       "$type": "color",
       "$value": "#46231f"
+    },
+    "on-opt-red-dark": {
+      "$type": "color",
+      "$value": "#360b07"
     },
     "opt-orange-dark": {
       "$type": "color",
       "$value": "#efa36c"
     },
+    "opt-orange-hover-dark": {
+      "$type": "color",
+      "$value": "#f3ba91"
+    },
     "opt-orange-subtle-dark": {
       "$type": "color",
       "$value": "#45291a"
+    },
+    "on-opt-orange-dark": {
+      "$type": "color",
+      "$value": "#371b06"
     },
     "opt-yellow-dark": {
       "$type": "color",
       "$value": "#dfc060"
     },
+    "opt-yellow-hover-dark": {
+      "$type": "color",
+      "$value": "#e6cd82"
+    },
     "opt-yellow-subtle-dark": {
       "$type": "color",
       "$value": "#3e3316"
+    },
+    "on-opt-yellow-dark": {
+      "$type": "color",
+      "$value": "#33290a"
     },
     "opt-green-dark": {
       "$type": "color",
       "$value": "#7fcb97"
     },
+    "opt-green-hover-dark": {
+      "$type": "color",
+      "$value": "#9cd7af"
+    },
     "opt-green-subtle-dark": {
       "$type": "color",
       "$value": "#1e3626"
+    },
+    "on-opt-green-dark": {
+      "$type": "color",
+      "$value": "#122c1a"
     },
     "opt-teal-dark": {
       "$type": "color",
       "$value": "#6cc9b4"
     },
+    "opt-teal-hover-dark": {
+      "$type": "color",
+      "$value": "#8ad4c3"
+    },
     "opt-teal-subtle-dark": {
       "$type": "color",
       "$value": "#16342e"
+    },
+    "on-opt-teal-dark": {
+      "$type": "color",
+      "$value": "#102d26"
     },
     "opt-cyan-dark": {
       "$type": "color",
       "$value": "#74c4dc"
     },
+    "opt-cyan-hover-dark": {
+      "$type": "color",
+      "$value": "#95d2e4"
+    },
     "opt-cyan-subtle-dark": {
       "$type": "color",
       "$value": "#173139"
+    },
+    "on-opt-cyan-dark": {
+      "$type": "color",
+      "$value": "#0c2831"
     },
     "opt-blue-dark": {
       "$type": "color",
       "$value": "#8bb4ef"
     },
+    "opt-blue-hover-dark": {
+      "$type": "color",
+      "$value": "#afcbf4"
+    },
     "opt-blue-subtle-dark": {
       "$type": "color",
       "$value": "#1d2c44"
+    },
+    "on-opt-blue-dark": {
+      "$type": "color",
+      "$value": "#071a36"
     },
     "opt-indigo-dark": {
       "$type": "color",
       "$value": "#a5a0f0"
     },
+    "opt-indigo-hover-dark": {
+      "$type": "color",
+      "$value": "#c6c3f6"
+    },
     "opt-indigo-subtle-dark": {
       "$type": "color",
       "$value": "#26254a"
+    },
+    "on-opt-indigo-dark": {
+      "$type": "color",
+      "$value": "#0b0835"
     },
     "opt-purple-dark": {
       "$type": "color",
       "$value": "#c591e8"
     },
+    "opt-purple-hover-dark": {
+      "$type": "color",
+      "$value": "#d7b3ef"
+    },
     "opt-purple-subtle-dark": {
       "$type": "color",
       "$value": "#332240"
+    },
+    "on-opt-purple-dark": {
+      "$type": "color",
+      "$value": "#230b33"
     },
     "opt-pink-dark": {
       "$type": "color",
       "$value": "#ee94bc"
     },
+    "opt-pink-hover-dark": {
+      "$type": "color",
+      "$value": "#f4b7d2"
+    },
     "opt-pink-subtle-dark": {
       "$type": "color",
       "$value": "#40222f"
+    },
+    "on-opt-pink-dark": {
+      "$type": "color",
+      "$value": "#35081c"
     },
     "opt-gray-dark": {
       "$type": "color",
       "$value": "#a5a195"
     },
+    "opt-gray-hover-dark": {
+      "$type": "color",
+      "$value": "#b8b5ab"
+    },
     "opt-gray-subtle-dark": {
       "$type": "color",
       "$value": "#2a2924"
+    },
+    "on-opt-gray-dark": {
+      "$type": "color",
+      "$value": "#21201c"
     }
   }
 }
