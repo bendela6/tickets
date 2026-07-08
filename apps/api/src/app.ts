@@ -4,6 +4,7 @@ import { HttpError } from './errors';
 import { registerCommentsRoutes } from './routes/comments.routes';
 import { registerLinksRoutes } from './routes/links.routes';
 import { registerProjectsRoutes } from './routes/projects.routes';
+import { registerSchemaRoutes } from './routes/schema.routes';
 import { registerSchemesRoutes } from './routes/schemes.routes';
 import { registerTicketsRoutes } from './routes/tickets.routes';
 import { registerUsersRoutes } from './routes/users.routes';
@@ -23,6 +24,7 @@ export function buildApp(context: { db: Db }) {
   });
 
   registerProjectsRoutes(app, context);
+  registerSchemaRoutes(app, context);
   registerSchemesRoutes(app, context);
   registerTicketsRoutes(app, context);
   registerCommentsRoutes(app, context);
