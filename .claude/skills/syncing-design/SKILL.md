@@ -30,5 +30,5 @@ Code is canonical; the Claude Design project is a composition surface regenerate
 ## Rules
 
 - Never wholesale-replace the project; the structural diff decides the plan, and unchanged components are not rewritten.
-- The design project is a snapshot: after components or tokens change in code, it is stale until the next push. Re-push after each merged phase, alongside the `deploy-web.sh` phase-boundary deploy.
+- The design project is a snapshot: after components or tokens change in code, it is stale until the next push. Re-push after each merged phase, alongside the `deploy-web.sh` phase-boundary deploy (rebuilds and redeploys the single `app` container to `:4610`).
 - One `finalize_plan` per sync; writes outside the finalized paths are rejected by design, not an error to engineer around.
