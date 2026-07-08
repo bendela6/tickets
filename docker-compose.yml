@@ -15,10 +15,10 @@ services:
       timeout: 3s
       retries: 20
 
-  api:
+  app:
     build:
       context: .
-      target: api
+      target: app
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
@@ -28,19 +28,11 @@ services:
       API_HOST: 0.0.0.0
       API_PORT: 4600
     ports:
-      - '4600:4600'
+      - '4610:80'
+      - '127.0.0.1:4983:4983'   # drizzle studio server, host-localhost only
     depends_on:
       postgres:
         condition: service_healthy
-
-  web:
-    build:
-      context: .
-      target: web
-    ports:
-      - '4610:80'
-    depends_on:
-      - api
 
 volumes:
   tickets-pgdata:
