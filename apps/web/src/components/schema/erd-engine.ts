@@ -1,6 +1,6 @@
 import type { SchemaGraph, TableMeta, GroupMeta } from './erd-types';
 
-type Edge = { src: string; tgt: string; rowKey: string; nul: boolean; el?: SVGGElement };
+type Edge = { src: string; tgt: string; tgtCol: string; rowKey: string; nul: boolean; el?: SVGGElement };
 const NS = 'http://www.w3.org/2000/svg';
 
 const el = (tag: string, cls?: string) => {
@@ -46,7 +46,7 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
         const r = card.querySelector<HTMLElement>(`[data-row="${cssEscape(rk)}"]`);
         if (r) rowEl.set(rk, r);
         if (c.fk && tableByName.has(c.fk.table)) {
-          edges.push({ src: name, tgt: c.fk.table, rowKey: rk, nul: !c.notNull });
+          edges.push({ src: name, tgt: c.fk.table, tgtCol: c.fk.column, rowKey: rk, nul: !c.notNull });
         }
       }
     }
@@ -119,7 +119,12 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
       const sc = rel(cardEl.get(e.src)!.getBoundingClientRect(), base);
       const tc = rel(cardEl.get(e.tgt)!.getBoundingClientRect(), base);
       const srow = rel(rowEl.get(e.rowKey)!.getBoundingClientRect(), base);
-      const trow = rel(rowEl.get(`${e.tgt}.id`)!.getBoundingClientRect(), base);
+      const targetTable = tableByName.get(e.tgt);
+      const tRowEl = rowEl.get(`${e.tgt}.${e.tgtCol}`)
+        ?? (targetTable?.primaryKey[0] ? rowEl.get(`${e.tgt}.${targetTable.primaryKey[0]}`) : undefined)
+        ?? (targetTable?.columns[0] ? rowEl.get(`${e.tgt}.${targetTable.columns[0].name}`) : undefined);
+      if (!tRowEl) continue;
+      const trow = rel(tRowEl.getBoundingClientRect(), base);
       // exit toward the gutter nearest the target (or right for self/adjacent)
       const sSide: 1 | -1 = t >= s ? 1 : -1;
       const tSide: 1 | -1 = t > s ? -1 : t < s ? 1 : 1;
@@ -132,7 +137,7 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
         tg: t + (tSide === 1 ? 1 : 0),
       });
     }
-    const laneOffset = (key: number, list: Plan[], p: Plan, gap: number) => {
+    const laneOffset = (list: Plan[], p: Plan, gap: number) => {
       const idx = list.indexOf(p);
       return (idx - (list.length - 1) / 2) * gap;
     };
@@ -146,11 +151,11 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
     const bottomUsers = plans.filter((p) => p.sg !== p.tg);
 
     for (const p of plans) {
-      const sGX = gutter[p.sg]! + laneOffset(p.sg, perGutter.get(p.sg)!, p, 7);
+      const sGX = gutter[p.sg]! + laneOffset(perGutter.get(p.sg)!, p, 7);
       const pts: { x: number; y: number }[] = [{ x: p.sx, y: p.sy }, { x: sGX, y: p.sy }];
       if (p.sg !== p.tg) {
-        const by = bottomY + laneOffset(-1, bottomUsers, p, 6);
-        const tGX = gutter[p.tg]! + laneOffset(p.tg, perGutter.get(p.tg)!, p, 7);
+        const by = bottomY + laneOffset(bottomUsers, p, 6);
+        const tGX = gutter[p.tg]! + laneOffset(perGutter.get(p.tg)!, p, 7);
         pts.push({ x: sGX, y: by }, { x: tGX, y: by }, { x: tGX, y: p.ty });
       } else {
         pts.push({ x: sGX, y: p.ty });
