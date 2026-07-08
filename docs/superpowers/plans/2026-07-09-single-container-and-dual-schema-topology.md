@@ -1,149 +1,40 @@
-# Single-container deploy + dual-schema dev topology — Implementation Plan
+# Single-container deploy + two-database dev topology — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Give the tickets stack its own two-schema database (`tickets` prod / `tickets_dev` dev) in `tickets-postgres-1`, collapse the deployed services into one nginx-fronted container (api + studio internal), and drive dev with `mprocs` — modeled on `../items-core`.
+**Goal:** Give the tickets stack its own dev database (`tickets_dev`) alongside prod (`tickets`) in a single `tickets-postgres` server, collapse the deployed services into one nginx-fronted container (API + Studio internal), and drive dev with `mprocs` — modeled on `../items-core`.
 
-**Architecture:** DB access already funnels through `createDbClient`; the schema is selected there via the connection `search_path`, so no table definitions change. The deployed stack becomes a single image running nginx + node API + Drizzle Studio under supervisord, with only nginx exposed. A one-time guarded SQL script renames the existing prod `public` schema to `tickets`.
+**Architecture:** Dev and prod are **two separate databases in one Postgres server**, selected by `POSTGRES_DATABASE` (already read by `@tickets/db`). Each database uses the default `public` schema, so the existing generated migrations apply verbatim — no schema rename, no search_path, no migration edits. The deployed stack becomes a single image running nginx + node API + Drizzle Studio under supervisord, with only nginx exposed.
 
 **Tech Stack:** pnpm/turbo monorepo · Fastify-style API on `tsx` · Drizzle ORM + drizzle-kit (postgres-js driver) · Postgres 17 · nginx + supervisord (alpine) · mprocs.
+
+## Why this shape (design note)
+
+An earlier draft put prod and dev in two *schemas* of one database and switched via `search_path`. That is blocked: the committed migration SQL hardcodes `"public"` for all enums (`CREATE TYPE "public"."field_type"`) and all 24 FKs (`REFERENCES "public"."tickets"`), so a fresh migration into a non-`public` schema fails. Two databases (each on `public`) sidesteps this completely and needs no migration changes. Prod database `tickets` is left exactly as it is today.
 
 ## Global Constraints
 
 - Node `>=20`; pnpm `9.15.0`; turbo `~2.9.6` (has `turbo watch`).
-- Conventional commits, scoped: `feat(db):`, `feat(deploy):`, `chore(dev):`, etc. One commit per task.
-- Schema identifiers use underscores: `tickets_dev` (never `tickets-dev`).
-- Ports (fixed vocabulary): host web `4610` · internal api `4600` · internal studio `4983` · vite dev `4620` · dev postgres `5532` · in-container postgres `5432`.
+- Conventional commits, scoped: `feat(db):`, `feat(deploy):`, `chore(dev):`. One commit per task.
+- A concurrent workstream may share this working tree: **never `git add -A`/`git add .`** — commit with explicit path-scoped form (`git commit <paths> -m …`).
+- Dev/prod isolation is by **database name**, not schema: prod `POSTGRES_DATABASE=tickets`, dev `POSTGRES_DATABASE=tickets_dev`. Both use the `public` schema. No search_path, no schema rename.
+- Ports (fixed): host web `4610` · internal api `4600` · internal studio `4983` · vite dev `4620` · dev postgres `5532` · in-container postgres `5432`.
 - New dependencies go through the **add-package** skill before install (applies to `mprocs`).
-- The deployed container is driven purely by compose `environment:` vars (`.dockerignore` excludes `.env`, so no dev-schema leak). Prod schema = `tickets`, dev schema = `tickets_dev`.
-- Postgres connection URL stays credential-only; schema is applied via `connection.options`, never baked into the URL.
+- The deployed container is driven purely by compose `environment:` vars (`.dockerignore` excludes `.env`, verified — no dev override leaks into the image).
+- Node's `process.loadEnvFile` (used by `@tickets/db/src/environment.ts`) loads the root `.env`; set dev values there rather than relying on shell overrides.
 
 ---
 
-### Task 1: Schema-aware DB layer (`@tickets/db`)
+### Task 1: Publish `tickets-postgres` on 5532; retire the items-core dependency
 
-Select the Postgres schema per-environment through one chokepoint, and keep each schema's migration journal independent.
-
-**Files:**
-- Modify: `packages/db/src/environment.ts`
-- Modify: `packages/db/src/client.ts`
-- Modify: `packages/db/src/migrate.ts`
-
-**Interfaces:**
-- Produces: `environment.postgres.schema: string` (default `'tickets'`); `createDbClient()` returns a client whose sessions run with `search_path=<schema>`; `migrate.ts` creates the schema and stores `__drizzle_migrations` inside it.
-
-- [ ] **Step 1: Add the `schema` knob to environment**
-
-In `packages/db/src/environment.ts`, add `schema` to the `postgres` block (leave `connectionUrl` unchanged):
-
-```ts
-export const environment = {
-  postgres: {
-    host: process.env.POSTGRES_HOST ?? 'localhost',
-    port: Number(process.env.POSTGRES_PORT ?? 5432),
-    user: process.env.POSTGRES_USER ?? 'postgres',
-    password: process.env.POSTGRES_PASSWORD ?? 'postgres',
-    database: process.env.POSTGRES_DATABASE ?? 'tickets',
-    schema: process.env.POSTGRES_SCHEMA ?? 'tickets',
-  },
-};
-```
-
-- [ ] **Step 2: Apply `search_path` in the client**
-
-Rewrite `packages/db/src/client.ts` to import `environment` and pass the schema as a startup option. (`connection.options` = libpq-style `-c search_path=…`, the most reliable way to pin the schema across every pooled connection.)
-
-```ts
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import { connectionUrl, environment } from './environment';
-import * as schema from './schema';
-
-export function createDbClient({ max = 10 }: { max?: number } = {}) {
-  const sql = postgres(connectionUrl, {
-    max,
-    connection: { options: `-c search_path=${environment.postgres.schema}` },
-  });
-  const db = drizzle(sql, { schema });
-  return { db, sql };
-}
-
-export type DbClient = ReturnType<typeof createDbClient>;
-export type Db = DbClient['db'];
-export type DbTransaction = Parameters<Parameters<Db['transaction']>[0]>[0];
-export type DbExecutor = Db | DbTransaction;
-```
-
-- [ ] **Step 3: Create the schema + per-schema journal in migrate**
-
-Rewrite `packages/db/src/migrate.ts`:
-
-```ts
-import { resolve } from 'node:path';
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import { createDbClient } from './client';
-import { environment } from './environment';
-
-const { db, sql } = createDbClient({ max: 1 });
-const { schema } = environment.postgres;
-
-// search_path points at <schema>, which may not exist yet — create it explicitly
-// (schema-qualified, so it works regardless of search_path) before migrating.
-await sql.unsafe(`CREATE SCHEMA IF NOT EXISTS "${schema}"`);
-await migrate(db, {
-  migrationsFolder: resolve(import.meta.dirname, '../drizzle'),
-  migrationsSchema: schema,
-});
-await sql.end();
-console.log(`migrations applied to schema "${schema}"`);
-```
-
-- [ ] **Step 4: Verify schema targeting against the live dev postgres (probe schema)**
-
-Run (uses whatever answers `:5532` right now; creates and drops a throwaway schema, disturbs nothing):
-
-```bash
-POSTGRES_SCHEMA=tix_probe pnpm --filter @tickets/db db:migrate
-```
-Expected last line: `migrations applied to schema "tix_probe"`
-
-```bash
-docker exec -i items-core-postgres-1 psql -U postgres -d tickets -c '\dt tix_probe.*'
-```
-Expected: the app tables **plus** `tix_probe.__drizzle_migrations`.
-
-- [ ] **Step 5: Verify re-migrate is a no-op, then clean up**
-
-```bash
-POSTGRES_SCHEMA=tix_probe pnpm --filter @tickets/db db:migrate
-```
-Expected: same success line, **no new tables created** (drizzle reports nothing to apply).
-
-```bash
-docker exec -i items-core-postgres-1 psql -U postgres -d tickets -c 'DROP SCHEMA tix_probe CASCADE'
-```
-Expected: `DROP SCHEMA`.
-
-- [ ] **Step 6: Typecheck + commit**
-
-```bash
-pnpm --filter @tickets/db typecheck
-git add packages/db/src/environment.ts packages/db/src/client.ts packages/db/src/migrate.ts
-git commit -m "feat(db): select postgres schema via search_path, per-schema migrations"
-```
-
----
-
-### Task 2: Publish `tickets-postgres` on 5532; retire the items-core dependency
-
-Point dev at the tickets stack's own database. `tickets_dev` and prod share one Postgres instance and one database (`tickets`), separated only by schema.
+Point dev tooling at the tickets stack's own Postgres server (currently unpublished). The dev database is created in Task 2.
 
 **Files:**
 - Modify: `docker-compose.yml` (postgres service only, in this task)
 
 - [ ] **Step 1: Publish the postgres port**
 
-In `docker-compose.yml`, add a `ports` mapping to the `postgres` service (keep the healthcheck and volume):
+In `docker-compose.yml`, add a `ports` mapping to the `postgres` service (keep healthcheck + volume):
 
 ```yaml
   postgres:
@@ -169,54 +60,110 @@ In `docker-compose.yml`, add a `ports` mapping to the `postgres` service (keep t
 docker stop items-core-postgres-1
 docker compose up -d postgres
 ```
-Expected: `tickets-postgres-1` recreated (volume `tickets-pgdata` preserved), now healthy.
+Expected: `tickets-postgres-1` recreated (volume `tickets-pgdata` preserved), healthy.
 
-- [ ] **Step 3: Verify host reachability + existing prod data**
-
-```bash
-docker exec -i tickets-postgres-1 psql -U postgres -d tickets -c "select table_schema,count(*) from information_schema.tables where table_schema not in ('pg_catalog','information_schema') group by 1;"
-```
-Expected: `public | 18` and `drizzle | 1` (prod data intact; cutover happens later in Task 5).
+- [ ] **Step 3: Verify host reachability + existing prod data intact**
 
 ```bash
-PGPASSWORD=postgres psql -h 127.0.0.1 -p 5532 -U postgres -d tickets -c 'select 1' 2>/dev/null || echo "install psql or use docker exec — reachability already proven by the api container"
+docker exec -i tickets-postgres-1 psql -U postgres -d tickets -c "select count(*) from information_schema.tables where table_schema='public';"
 ```
-Expected: `1` (or the fallback note — host reachability is confirmed either way by Step 2's healthy container with a published port).
+Expected: `18` (prod tables untouched, still in `public`).
+
+```bash
+docker exec -i tickets-postgres-1 psql -U postgres -c "\l" | grep -E "tickets"
+```
+Expected: database `tickets` present (dev `tickets_dev` not yet — Task 2 creates it).
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add docker-compose.yml
-git commit -m "chore(deploy): publish tickets-postgres on 5532 for host dev tooling"
+git commit docker-compose.yml -m "chore(deploy): publish tickets-postgres on 5532 for host dev tooling"
 ```
+
+---
+
+### Task 2: Create + seed the `tickets_dev` database; point dev env at it
+
+Milestone: a self-owned dev database, fully migrated and seeded, isolated from prod.
+
+**Files:**
+- Modify: `.env` (root — set `POSTGRES_DATABASE`)
+- Modify: `.env.example` (if present — document `tickets` vs `tickets_dev`)
+
+**Interfaces:**
+- Consumes: the published postgres on `127.0.0.1:5532` (Task 1); `pnpm --filter @tickets/db db:migrate` / `db:seed` (existing scripts, unchanged).
+
+- [ ] **Step 1: Create the dev database**
+
+```bash
+docker exec -i tickets-postgres-1 psql -U postgres -c "CREATE DATABASE tickets_dev"
+```
+Expected: `CREATE DATABASE` (if it already exists, drop first with `DROP DATABASE tickets_dev` — dev data is disposable).
+
+- [ ] **Step 2: Point dev `.env` at the dev database**
+
+In the root `.env`, set (the key already exists — change its value):
+
+```
+POSTGRES_DATABASE=tickets_dev
+```
+
+Confirm the rest of `.env` reads `POSTGRES_HOST=127.0.0.1`, `POSTGRES_PORT=5532`. If `.env.example` exists, set its `POSTGRES_DATABASE` to `tickets` with a comment: `# tickets (prod) | tickets_dev (local dev)`.
+
+- [ ] **Step 3: Migrate + seed the dev database**
+
+```bash
+pnpm --filter @tickets/db db:migrate
+```
+Expected: `migrations applied` (reads `tickets_dev` from `.env`; runs the existing `public`-schema migrations cleanly).
+
+```bash
+pnpm --filter @tickets/db db:seed items-core "Items Core" TASK
+```
+Expected: `seeded project items-core …`.
+
+- [ ] **Step 4: Verify isolation**
+
+```bash
+docker exec -i tickets-postgres-1 psql -U postgres -d tickets_dev -c "\dt" | grep -c "table"
+docker exec -i tickets-postgres-1 psql -U postgres -d tickets_dev -c "select key from projects;"
+```
+Expected: dev tables present; `items-core` project listed. Prod database `tickets` is unaffected (separate database).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git commit .env.example -m "chore(dev): document POSTGRES_DATABASE (tickets | tickets_dev)"
+```
+(`.env` is gitignored — not committed. If `.env.example` does not exist, skip the commit and note it in the report.)
 
 ---
 
 ### Task 3: Unified Drizzle Studio config + `db:studio`
 
-One Studio that browses whichever schema `POSTGRES_SCHEMA` names (items-core pattern), reused by dev and by the deployed container.
+One Studio that browses whichever database `POSTGRES_DATABASE` names (items-core pattern), reused by dev and by the deployed container.
 
 **Files:**
 - Create: `drizzle.studio.config.ts` (repo root)
-- Modify: `packages/db/package.json` (the `db:studio` script added earlier this session)
+- Modify: `packages/db/package.json` (the `db:studio` script — currently `drizzle-kit studio`)
 
 **Interfaces:**
 - Consumes: `POSTGRES_*` env, loaded from the root `.env` when present (dev) or from process env (container).
-- Produces: `pnpm --filter @tickets/db db:studio` serves Studio over the active schema.
+- Produces: `pnpm --filter @tickets/db db:studio` serves Studio over the active database.
 
 - [ ] **Step 1: Write the unified studio config**
 
-Create `drizzle.studio.config.ts` at the repo root. It loads the root `.env` itself (walking up from cwd, matching `environment.ts`, because drizzle-kit does not load `.env`), and filters Studio to the active schema:
+Create `drizzle.studio.config.ts` at the repo root. drizzle-kit does not read `.env`, so load it here the same way `packages/db/src/environment.ts` does (walk up from cwd):
 
 ```ts
 import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { defineConfig } from 'drizzle-kit';
 
-// Standalone studio config (`pnpm db:studio`) — browses the POSTGRES_SCHEMA
-// schema by introspecting the live DB. drizzle-kit doesn't read .env, so load
-// it here the same way packages/db/src/environment.ts does. NOT used for
-// generate/migrate; packages/db/drizzle.config.ts owns those.
+// Standalone studio config (`pnpm db:studio`) — browses the POSTGRES_DATABASE
+// database. drizzle-kit doesn't read .env, so load it here the same way
+// packages/db/src/environment.ts does. NOT used for generate/migrate;
+// packages/db/drizzle.config.ts owns those.
 let current = resolve(process.cwd());
 for (let depth = 0; depth < 5; depth++) {
   const candidate = join(current, '.env');
@@ -229,11 +176,8 @@ for (let depth = 0; depth < 5; depth++) {
   current = parent;
 }
 
-const schema = process.env.POSTGRES_SCHEMA ?? 'tickets';
-
 export default defineConfig({
   dialect: 'postgresql',
-  schemaFilter: [schema],
   dbCredentials: {
     host: process.env.POSTGRES_HOST ?? '127.0.0.1',
     port: Number(process.env.POSTGRES_PORT ?? 5432),
@@ -246,64 +190,47 @@ export default defineConfig({
 
 - [ ] **Step 2: Point `db:studio` at the unified config**
 
-In `packages/db/package.json`, change the `db:studio` script to reference the root config (runs from `packages/db`, so the `.env` walk finds the root `.env`):
+In `packages/db/package.json`, change the `db:studio` script (runs from `packages/db`, so the `.env` walk finds the root `.env`):
 
 ```json
     "db:studio": "drizzle-kit studio --config ../../drizzle.studio.config.ts",
 ```
 
-- [ ] **Step 3: Verify Studio serves the probe/dev schema**
+- [ ] **Step 3: Verify Studio serves the dev database**
 
 ```bash
-POSTGRES_SCHEMA=public pnpm --filter @tickets/db db:studio &
+pnpm --filter @tickets/db db:studio &
 sleep 6
 curl -s -o /dev/null -w "studio -> HTTP %{http_code}\n" http://127.0.0.1:4983
 ```
-Expected: `Drizzle Studio is up and running…` in the logs and `studio -> HTTP 404` (server up). Stop it:
-
-```bash
-# find and kill the studio listener on 4983 (Windows: netstat -ano | grep :4983 then taskkill //PID <pid> //F)
-```
+Expected: log shows `Drizzle Studio is up and running…`; `studio -> HTTP 404` (server up). Stop it (Windows: `netstat -ano | grep :4983` then `taskkill //PID <pid> //F`).
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add drizzle.studio.config.ts packages/db/package.json
-git commit -m "feat(db): unified drizzle studio config over the active schema"
+git commit drizzle.studio.config.ts packages/db/package.json -m "feat(db): unified drizzle studio config over the active database"
 ```
 
 ---
 
-### Task 4: `mprocs` dev flow (milestone: `pnpm dev` works against `tickets_dev`)
+### Task 4: `mprocs` dev flow (milestone: `pnpm dev` runs against `tickets_dev`)
 
 **Files:**
 - Create: `mprocs.yaml` (repo root)
 - Modify: `package.json` (root — `dev` script + `mprocs` devDependency)
-- Modify: `.env` (add `POSTGRES_SCHEMA`)
-- Modify: `.env.example` (if present — document `POSTGRES_SCHEMA`)
 
 - [ ] **Step 1: Add `mprocs` via the add-package skill**
 
-Invoke the **add-package** skill to add `mprocs` as a **root devDependency**. Do not hand-edit `package.json` dependencies for this — the skill presents candidates and installs.
+Invoke the **add-package** skill to add `mprocs` as a **root devDependency**. Do not hand-edit dependency lists — the skill presents candidates and installs.
 
-- [ ] **Step 2: Set the dev schema in `.env`**
-
-Append to the root `.env`:
-
-```
-POSTGRES_SCHEMA=tickets_dev
-```
-
-If `.env.example` exists, add the same key with a comment documenting `tickets` (prod) vs `tickets_dev` (dev).
-
-- [ ] **Step 3: Write `mprocs.yaml`**
+- [ ] **Step 2: Write `mprocs.yaml`**
 
 Create `mprocs.yaml` at the repo root:
 
 ```yaml
 # Dev process dashboard, launched by `pnpm dev`.
 # keys: up/down select pane, `r` restart, `x` stop, `q` quit.
-# All panes target the tickets_dev schema on 127.0.0.1:5532 (see .env).
+# All panes target the tickets_dev database on 127.0.0.1:5532 (see .env).
 procs:
   api:
     shell: pnpm --filter @tickets/api dev
@@ -315,7 +242,7 @@ procs:
     shell: turbo watch typecheck
 ```
 
-- [ ] **Step 4: Point root `dev` at mprocs**
+- [ ] **Step 3: Point root `dev` at mprocs**
 
 In root `package.json`, change:
 
@@ -323,24 +250,7 @@ In root `package.json`, change:
     "dev": "mprocs",
 ```
 
-- [ ] **Step 5: Create + seed the dev schema**
-
-```bash
-pnpm --filter @tickets/db db:migrate
-```
-Expected: `migrations applied to schema "tickets_dev"` (reads `POSTGRES_SCHEMA=tickets_dev` from `.env`).
-
-```bash
-pnpm --filter @tickets/db db:seed items-core "Items Core" TASK
-```
-Expected: `seeded project …`.
-
-```bash
-docker exec -i tickets-postgres-1 psql -U postgres -d tickets -c '\dt tickets_dev.*'
-```
-Expected: app tables + `__drizzle_migrations` in `tickets_dev`; `public` still holds the untouched prod tables.
-
-- [ ] **Step 6: Verify the dashboard end-to-end**
+- [ ] **Step 4: Verify the dashboard end-to-end**
 
 ```bash
 pnpm dev
@@ -348,93 +258,20 @@ pnpm dev
 Expected: mprocs dashboard with `api` (`:4600`), `web` (`:4620`), `studio`, `watchers` panes. In another shell:
 
 ```bash
-curl -s -o /dev/null -w "web  -> HTTP %{http_code}\n" http://127.0.0.1:4620
-curl -s -o /dev/null -w "api  -> HTTP %{http_code}\n" http://127.0.0.1:4620/api/projects
+curl -s -o /dev/null -w "web -> HTTP %{http_code}\n" http://127.0.0.1:4620
+curl -s -w "\n" http://127.0.0.1:4620/api/projects
 ```
-Expected: web `200`; `/api/projects` returns `200` with the seeded `items-core` project (proves vite → host api → `tickets_dev`). Quit mprocs with `q`.
+Expected: web `200`; `/api/projects` returns the seeded `items-core` project (proves vite → host api → `tickets_dev`). Quit with `q`.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add mprocs.yaml package.json pnpm-lock.yaml .env.example
-git commit -m "chore(dev): mprocs dev dashboard targeting tickets_dev"
-```
-(`.env` is gitignored — not committed.)
-
----
-
-### Task 5: Guarded prod cutover script (`public` → `tickets`)
-
-One-time, idempotent, safe on a fresh DB. Sentinel = `public.tickets` table.
-
-**Files:**
-- Create: `scripts/cutover-public-to-tickets.sql`
-
-- [ ] **Step 1: Write the guarded cutover**
-
-Create `scripts/cutover-public-to-tickets.sql`:
-
-```sql
--- One-time, idempotent cutover: move the legacy prod schema from `public` to
--- `tickets`. Runs on every deploy but only acts once: it fires only when a
--- `public.tickets` table exists AND no `tickets` schema exists yet. Fresh DBs
--- (no public.tickets) and already-cutover DBs both fall through to the no-op.
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.schemata WHERE schema_name = 'tickets')
-     AND EXISTS (SELECT 1 FROM information_schema.tables
-                 WHERE table_schema = 'public' AND table_name = 'tickets') THEN
-    EXECUTE 'ALTER SCHEMA public RENAME TO tickets';
-    EXECUTE 'CREATE SCHEMA public';
-    IF EXISTS (SELECT 1 FROM information_schema.tables
-               WHERE table_schema = 'drizzle' AND table_name = '__drizzle_migrations') THEN
-      EXECUTE 'ALTER TABLE drizzle.__drizzle_migrations SET SCHEMA tickets';
-    END IF;
-    RAISE NOTICE 'cutover: public renamed to tickets, journal moved';
-  ELSE
-    RAISE NOTICE 'cutover: skipped (tickets schema present or no public.tickets)';
-  END IF;
-END $$;
-```
-
-- [ ] **Step 2: Verify on a scratch database (prod-shaped)**
-
-Build a scratch DB that mirrors prod (tables in `public`, journal in `drizzle`), then cut over:
-
-```bash
-docker exec -i tickets-postgres-1 psql -U postgres -c 'DROP DATABASE IF EXISTS cutover_probe; CREATE DATABASE cutover_probe'
-POSTGRES_DATABASE=cutover_probe POSTGRES_SCHEMA=public pnpm --filter @tickets/db db:migrate
-docker exec -i tickets-postgres-1 psql -U postgres -d cutover_probe -c "ALTER TABLE public.__drizzle_migrations SET SCHEMA drizzle" 2>/dev/null || true
-docker exec -i tickets-postgres-1 psql -U postgres -d cutover_probe < scripts/cutover-public-to-tickets.sql
-```
-Expected: `NOTICE: cutover: public renamed to tickets, journal moved`.
-
-```bash
-docker exec -i tickets-postgres-1 psql -U postgres -d cutover_probe -c "select table_schema,count(*) from information_schema.tables where table_schema in ('public','tickets') group by 1;"
-```
-Expected: `tickets` holds the app tables; `public` is empty (0 rows for public).
-
-- [ ] **Step 3: Verify idempotency, then drop the scratch DB**
-
-```bash
-docker exec -i tickets-postgres-1 psql -U postgres -d cutover_probe < scripts/cutover-public-to-tickets.sql
-```
-Expected: `NOTICE: cutover: skipped (tickets schema present or no public.tickets)`.
-
-```bash
-docker exec -i tickets-postgres-1 psql -U postgres -c 'DROP DATABASE cutover_probe'
-```
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add scripts/cutover-public-to-tickets.sql
-git commit -m "feat(deploy): guarded one-time public->tickets schema cutover"
+git commit mprocs.yaml package.json pnpm-lock.yaml -m "chore(dev): mprocs dev dashboard targeting tickets_dev"
 ```
 
 ---
 
-### Task 6: nginx routing — `/`, `/api/`, `/studio/` (studio = attempt + fallback)
+### Task 5: nginx routing — `/`, `/api/`, `/studio/` (studio = attempt + fallback)
 
 `/` and `/api/` are solid; `/studio/` is the highest-risk piece (drizzle's UI shell lives at `local.drizzle.studio` and prefers TLS — the local http deploy may not satisfy it). Implement the attempt, verify, and if it fights back apply the fully-specified fallback in Step 4.
 
@@ -489,13 +326,13 @@ Expected: `syntax is ok` / `test is successful`.
 
 - [ ] **Step 3: Smoke-test the studio proxy against a running host studio**
 
-Full same-origin verification happens in Task 8 (inside the container). Here, just confirm the UI shell is reachable through the proxy path with a host studio up:
+Full same-origin verification happens in Task 7 (inside the container). Here, confirm the UI shell is reachable through the proxy path with a host studio up:
 
 ```bash
-POSTGRES_SCHEMA=public pnpm --filter @tickets/db db:studio &   # host studio on :4983
+pnpm --filter @tickets/db db:studio &   # host studio on :4983
 sleep 6
-docker run --rm --network host -v "$(pwd)/docker/nginx.conf:/etc/nginx/http.d/default.conf:ro" -d --name nginx-probe nginx:alpine
-curl -s -o /dev/null -w "studio ui -> HTTP %{http_code}\n" -H 'Host: 127.0.0.1' http://127.0.0.1/studio/
+docker run --rm --network host -d --name nginx-probe -v "$(pwd)/docker/nginx.conf:/etc/nginx/http.d/default.conf:ro" nginx:alpine
+curl -s -o /dev/null -w "studio ui -> HTTP %{http_code}\n" http://127.0.0.1/studio/
 docker rm -f nginx-probe
 # stop the host studio (netstat/taskkill on :4983)
 ```
@@ -505,22 +342,23 @@ Expected: a `2xx`/`3xx` from `local.drizzle.studio`. **If this returns errors th
 
 If same-origin proxying can't be made to work over local http:
 1. Delete the two `/studio` `location` blocks from `docker/nginx.conf` (keep `/api/` and `/`).
-2. In Task 7's `supervisord.conf`, omit the `[program:studio]` block.
-3. Document the recipe in the plan's companion note / README: run studio on demand against the deployed DB with
-   `docker compose exec -e POSTGRES_SCHEMA=tickets app pnpm db:studio` then open the printed `local.drizzle.studio?port=4983` URL (add `-p 4983:4983` temporarily if needed).
+2. In Task 6's `supervisord.conf`, omit the `[program:studio]` block.
+3. Document the recipe: run studio on demand against the deployed DB with
+   `docker compose exec app pnpm db:studio` then open the printed `local.drizzle.studio?port=4983` URL.
 
 Record in the commit message which path (proxy or fallback) was taken.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add docker/nginx.conf
-git commit -m "feat(deploy): nginx routes / + /api + /studio under one server"
+git commit docker/nginx.conf -m "feat(deploy): nginx routes / + /api + /studio under one server"
 ```
 
 ---
 
-### Task 7: supervisord + entrypoint
+### Task 6: supervisord + entrypoint
+
+No cutover — prod database `tickets` already exists (created by the postgres image) and stays on `public`. The entrypoint just migrates and supervises.
 
 **Files:**
 - Create: `docker/supervisord.conf`
@@ -528,7 +366,7 @@ git commit -m "feat(deploy): nginx routes / + /api + /studio under one server"
 
 - [ ] **Step 1: Write supervisord program set**
 
-Create `docker/supervisord.conf` (omit `[program:studio]` if Task 6 took the fallback):
+Create `docker/supervisord.conf` (omit `[program:studio]` if Task 5 took the fallback):
 
 ```ini
 [supervisord]
@@ -562,7 +400,7 @@ stderr_logfile=/dev/stderr
 stderr_logfile_maxbytes=0
 ```
 
-- [ ] **Step 2: Write the entrypoint (cutover → migrate → supervise)**
+- [ ] **Step 2: Write the entrypoint (migrate → supervise)**
 
 Create `docker/entrypoint.sh`:
 
@@ -570,43 +408,38 @@ Create `docker/entrypoint.sh`:
 #!/bin/sh
 set -e
 
-DB_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}"
-
-# 1. one-time, idempotent public->tickets cutover (no-op after first run / fresh DB)
-psql "$DB_URL" -v ON_ERROR_STOP=1 -f /app/scripts/cutover-public-to-tickets.sql
-
-# 2. migrate the active schema (POSTGRES_SCHEMA=tickets in the deployed env)
+# migrate the prod database (POSTGRES_DATABASE=tickets in the deployed env)
 pnpm --filter @tickets/db db:migrate
 
-# 3. hand off to the process supervisor
+# hand off to the process supervisor
 exec supervisord -c /etc/supervisor/conf.d/tickets.conf
 ```
 
 - [ ] **Step 3: Make it executable**
 
 ```bash
-git update-index --add --chmod=+x docker/entrypoint.sh 2>/dev/null || chmod +x docker/entrypoint.sh
+chmod +x docker/entrypoint.sh
+git update-index --add --chmod=+x docker/entrypoint.sh 2>/dev/null || true
 ```
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add docker/supervisord.conf docker/entrypoint.sh
-git commit -m "feat(deploy): supervisord + entrypoint (cutover, migrate, supervise)"
+git commit docker/supervisord.conf docker/entrypoint.sh -m "feat(deploy): supervisord + entrypoint (migrate, supervise)"
 ```
 
-(No standalone runtime test here — verified as part of the container in Task 8.)
+(No standalone runtime test here — verified as part of the container in Task 7.)
 
 ---
 
-### Task 8: Combined `app` image + compose collapse (milestone: full deployed stack on :4610)
+### Task 7: Combined `app` image + compose collapse (milestone: full deployed stack on :4610)
 
 **Files:**
 - Rewrite: `Dockerfile` (replace `api` / `web` targets with one `app` target; keep `deps`)
 - Rewrite: `docker-compose.yml` (services `postgres` + `app`)
 
 **Interfaces:**
-- Consumes: `docker/nginx.conf`, `docker/supervisord.conf`, `docker/entrypoint.sh`, `scripts/cutover-public-to-tickets.sql` (Tasks 5–7).
+- Consumes: `docker/nginx.conf`, `docker/supervisord.conf`, `docker/entrypoint.sh` (Tasks 5–6).
 
 - [ ] **Step 1: Rewrite the Dockerfile**
 
@@ -629,7 +462,7 @@ FROM deps AS web-build
 RUN pnpm --filter @tickets/web build
 
 FROM node:22-alpine AS app
-RUN apk add --no-cache nginx supervisor postgresql-client && corepack enable
+RUN apk add --no-cache nginx supervisor && corepack enable
 WORKDIR /app
 # full workspace (node_modules incl. drizzle-kit + tsx) from deps
 COPY --from=deps /app /app
@@ -675,7 +508,6 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DATABASE: tickets
-      POSTGRES_SCHEMA: tickets
       API_HOST: 0.0.0.0
       API_PORT: 4600
     ports:
@@ -688,23 +520,22 @@ volumes:
   tickets-pgdata:
 ```
 
-- [ ] **Step 3: Build + bring up; watch the cutover + migrate run once**
+- [ ] **Step 3: Build + bring up; watch migrate run**
 
 ```bash
 docker compose up -d --build
-docker compose logs app | grep -E "cutover|migrations applied"
+docker compose logs app | grep -E "migrations applied"
 ```
-Expected: `cutover: public renamed to tickets…` (first run) and `migrations applied to schema "tickets"`.
+Expected: `migrations applied` (against prod database `tickets`; a no-op since prod is already migrated).
 
-- [ ] **Step 4: Verify everything is served under nginx and prod schema is `tickets`**
+- [ ] **Step 4: Verify everything is served under nginx**
 
 ```bash
 curl -s -o /dev/null -w "web    -> HTTP %{http_code}\n" http://127.0.0.1:4610/
 curl -s -o /dev/null -w "api    -> HTTP %{http_code}\n" http://127.0.0.1:4610/api/projects
 curl -s -o /dev/null -w "studio -> HTTP %{http_code}\n" http://127.0.0.1:4610/studio/
-docker exec -i tickets-postgres-1 psql -U postgres -d tickets -c "select table_schema,count(*) from information_schema.tables where table_schema in ('public','tickets') group by 1;"
 ```
-Expected: web `200`; api `200` (returns the prod projects); studio `200`/`3xx` (or omitted if fallback); tables now under `tickets`, `public` empty.
+Expected: web `200`; api `200` (prod projects); studio `200`/`3xx` (or omitted if fallback).
 
 - [ ] **Step 5: Verify api + studio are NOT reachable except through nginx**
 
@@ -721,29 +552,29 @@ pnpm typecheck
 pnpm --filter @tickets/web test
 pnpm --filter @tickets/api test
 ```
-Expected: all pass. (`app.test.ts` builds its own ephemeral DB in `public` and is independent of `POSTGRES_SCHEMA`.)
+Expected: all pass. (`app.test.ts` builds its own ephemeral DB and is independent of `POSTGRES_DATABASE`.)
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add Dockerfile docker-compose.yml
-git commit -m "feat(deploy): single nginx-fronted container (api + studio internal)"
+git commit Dockerfile docker-compose.yml -m "feat(deploy): single nginx-fronted container (api + studio internal)"
 ```
 
 ---
 
 ## Self-Review
 
-**Spec coverage:**
-- Part 1 (search_path schema switch) → Task 1. ✓
-- Part 2 (per-schema migrations journal) → Task 1 (Step 3). ✓
-- Part 3 (guarded prod cutover) → Task 5 + Task 7 entrypoint. ✓
-- Part 4 (combined container: nginx + supervisor + node) → Tasks 6, 7, 8. ✓
-- Part 5 (compose: published postgres + app) → Task 2 (postgres) + Task 8 (collapse). ✓
-- Part 6 (mprocs dev flow, studio config, .env) → Tasks 3, 4. ✓
-- Decisions #4 (5532), #5 (studio locked to localhost), #6 (fallback) → Task 2, Task 6 Steps 1/4. ✓
-- Verification + risks (isolated integration test) → Task 8 Step 6. ✓
+**Spec coverage (revised — two databases):**
+- Own dev database `tickets_dev` alongside prod `tickets` → Tasks 1, 2. ✓
+- Env switch by `POSTGRES_DATABASE` (no search_path, no cutover) → Tasks 2, 7. ✓
+- Unified studio over the active database → Task 3. ✓
+- mprocs dev flow → Task 4. ✓
+- Combined container: nginx + api + studio, only nginx exposed → Tasks 5, 6, 7. ✓
+- Studio locked to localhost + fallback → Task 5. ✓
+- Regression (isolated integration test) → Task 7 Step 6. ✓
 
-**Placeholder scan:** No TBD/TODO; every config and script is shown in full. The only conditional is Task 6 Step 4 (fallback), which is itself fully specified.
+**Removed vs the first draft:** the `search_path`/`POSTGRES_SCHEMA` db-layer change and the guarded `public → tickets` cutover script — both unnecessary and unsafe under separate databases. Prod database `tickets` is never rewritten.
 
-**Type/name consistency:** `environment.postgres.schema` (Task 1) is consumed by `migrate.ts` (Task 1) and `drizzle.studio.config.ts` reads `POSTGRES_SCHEMA` (Task 3); `POSTGRES_SCHEMA` env name is consistent across `.env` (Task 4), compose (Task 2/8), and entrypoint (Task 7). Ports match the Global Constraints table throughout. `docker/nginx.conf`, `docker/supervisord.conf`, `docker/entrypoint.sh`, `scripts/cutover-public-to-tickets.sql` paths are identical everywhere referenced.
+**Placeholder scan:** none; every config/script shown in full. The only conditional is Task 5 Step 4 (fallback), itself fully specified.
+
+**Type/name consistency:** `POSTGRES_DATABASE` is the single switch across `.env` (Task 2), studio config (Task 3), and compose (Task 1/7); prod=`tickets`, dev=`tickets_dev` everywhere. `docker/nginx.conf`, `docker/supervisord.conf`, `docker/entrypoint.sh` paths are identical wherever referenced. `db:migrate`/`db:seed`/`db:studio` scripts are used as they exist in `packages/db` (migrate.ts unchanged).
