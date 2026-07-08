@@ -1,7 +1,7 @@
 /* apps/web/src/components/schema/erd.css — scoped under .erd (preflight is OFF) */
 .erd { position: relative; min-width: max-content; padding: 24px 40px 96px; font-size: 14px; }
-.erd-groups, .erd-wires { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
-.erd-group-box {
+.erd .erd-groups, .erd .erd-wires { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.erd .erd-group-box {
   position: absolute;
   border: 1px solid color-mix(in srgb, var(--gc) 22%, var(--color-hairline));
   border-radius: 12px;
@@ -9,15 +9,15 @@
   transition: opacity 130ms ease;
 }
 .erd-focusing .erd-group-box { opacity: 0.55; }
-.erd-group-head { padding: 8px 14px; }
-.erd-g-label {
+.erd .erd-group-head { padding: 8px 14px; }
+.erd .erd-g-label {
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 10.5px; font-weight: 600; letter-spacing: 0.09em;
   text-transform: uppercase; color: var(--gc); white-space: nowrap;
 }
-.erd-cols { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 96px; }
-.erd-col { display: flex; flex-direction: column; gap: 28px; width: 284px; flex: none; }
-.erd-card {
+.erd .erd-cols { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 96px; }
+.erd .erd-col { display: flex; flex-direction: column; gap: 28px; width: 284px; flex: none; }
+.erd .erd-card {
   background: var(--color-raised);
   border: 1px solid var(--color-hairline);
   border-radius: 8px;
@@ -27,24 +27,24 @@
 }
 .erd-focusing .erd-card { opacity: 0.45; }
 .erd-focusing .erd-card.erd-lit { opacity: 1; box-shadow: var(--ins-shadow-sm), 0 0 0 1.5px var(--cc); }
-.erd-card-head { padding: 8px 12px 7px; background: var(--cc-s); border-bottom: 1px solid var(--color-hairline); }
-.erd-card-title { font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; font-weight: 600; color: var(--color-ink); }
-.erd-rows { padding: 5px 0; }
-.erd-row {
+.erd .erd-card-head { padding: 8px 12px 7px; background: var(--cc-s); border-bottom: 1px solid var(--color-hairline); }
+.erd .erd-card-title { font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; font-weight: 600; color: var(--color-ink); }
+.erd .erd-rows { padding: 5px 0; }
+.erd .erd-row {
   display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 6px;
   padding: 2.5px 12px 2.5px 8px; font-family: var(--font-mono, ui-monospace, monospace); font-size: 12px;
 }
-.erd-row.erd-hot { background: var(--color-inset); }
-.erd-badges { display: flex; gap: 2px; }
-.erd-badge { font-size: 8.5px; font-weight: 600; letter-spacing: 0.04em; padding: 0 3px; border-radius: 3px; line-height: 14px; }
-.erd-pk { background: var(--color-inset); color: var(--color-ink-2); border: 1px solid var(--color-control); }
-.erd-fk-badge { color: var(--cc); border: 1px solid color-mix(in srgb, var(--cc) 45%, transparent); }
-.erd-name { color: var(--color-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.erd-row.erd-nul .erd-name { color: var(--color-ink-2); }
-.erd-type { font-size: 10.5px; color: var(--color-ink-3); white-space: nowrap; }
-.erd-notes { border-top: 1px solid var(--color-hairline); padding: 5px 12px 6px; display: flex; flex-direction: column; gap: 1px; }
-.erd-note { font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; color: var(--color-ink-3); white-space: nowrap; }
-.erd-edge { transition: opacity 130ms ease; }
+.erd .erd-row.erd-hot { background: var(--color-inset); }
+.erd .erd-badges { display: flex; gap: 2px; }
+.erd .erd-badge { font-size: 8.5px; font-weight: 600; letter-spacing: 0.04em; padding: 0 3px; border-radius: 3px; line-height: 14px; }
+.erd .erd-pk { background: var(--color-inset); color: var(--color-ink-2); border: 1px solid var(--color-control); }
+.erd .erd-fk-badge { color: var(--cc); border: 1px solid color-mix(in srgb, var(--cc) 45%, transparent); }
+.erd .erd-name { color: var(--color-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.erd .erd-row.erd-nul .erd-name { color: var(--color-ink-2); }
+.erd .erd-type { font-size: 10.5px; color: var(--color-ink-3); white-space: nowrap; }
+.erd .erd-notes { border-top: 1px solid var(--color-hairline); padding: 5px 12px 6px; display: flex; flex-direction: column; gap: 1px; }
+.erd .erd-note { font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; color: var(--color-ink-3); white-space: nowrap; }
+.erd .erd-edge { transition: opacity 130ms ease; }
 .erd-focusing .erd-edge { opacity: 0.1; }
 .erd-focusing .erd-edge.erd-lit { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .erd * { transition: none !important; } }
