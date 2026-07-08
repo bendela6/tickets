@@ -32,7 +32,6 @@ export const environment = {
     user: process.env.POSTGRES_USER ?? 'postgres',
     password: process.env.POSTGRES_PASSWORD ?? 'postgres',
     database: process.env.POSTGRES_DATABASE ?? 'tickets',
-    schema: process.env.POSTGRES_SCHEMA ?? 'tickets',
   },
 };
 
