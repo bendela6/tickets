@@ -5,7 +5,9 @@ procs:
   api:
     shell: pnpm --filter @tickets/api dev
   web:
-    shell: WEB_DEV_PORT=4620 pnpm --filter @tickets/web dev
+    shell: pnpm --filter @tickets/web dev
+    env:
+      WEB_DEV_PORT: "4620"
   studio:
     shell: pnpm db:studio
   watchers:
