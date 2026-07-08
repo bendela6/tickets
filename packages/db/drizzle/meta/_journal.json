@@ -50,6 +50,13 @@
       "when": 1783465301315,
       "tag": "0006_flippant_jazinda",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1783539579161,
+      "tag": "0007_mushy_thunderbolts",
+      "breakpoints": true
     }
   ]
 }

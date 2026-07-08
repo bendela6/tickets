@@ -1,5 +1,15 @@
 import type { Db } from '../client';
-import { fieldOptions, fields, linkTypeTargetTypes, linkTypes, schemes, statusTransitions, statuses, ticketTypes } from '../schema';
+import {
+  fieldOptions,
+  fields,
+  linkTypeTargetTypes,
+  linkTypes,
+  schemes,
+  statusTransitions,
+  statuses,
+  ticketTypeChildTypes,
+  ticketTypes,
+} from '../schema';
 import { buildTransitions } from './build-transitions';
 import type { SchemeDef } from './scheme-types';
 import { KIND_COLORS } from './software-scheme';
@@ -131,6 +141,22 @@ export async function seedScheme(db: Db, def: SchemeDef) {
             .values(targetIds.map((targetTypeId) => ({ linkTypeId: row.id, targetTypeId })));
         }
       }
+    }
+
+    // pass 3: parent→child type rules — promote allowedChildTypes into rows
+    // (kept in ticket_types.config too, which check-parent still reads for now)
+    for (const t of def.types) {
+      const childKeys = t.allowedChildTypes ?? [];
+      if (childKeys.length === 0) continue;
+      await tx.insert(ticketTypeChildTypes).values(
+        childKeys.map((childKey) => {
+          const childId = typeIdByKey[childKey];
+          if (childId === undefined) {
+            throw new Error(`type ${t.key} allowedChildTypes references unknown type ${childKey}`);
+          }
+          return { parentTypeId: typeIdByKey[t.key]!, childTypeId: childId };
+        }),
+      );
     }
 
     return { schemeId: scheme.id, typeIdByKey, fieldIdByTypeKey, statusIdByTypeKey };
