@@ -164,8 +164,10 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
 
       const g = document.createElementNS(NS, 'g');
       g.setAttribute('class', 'erd-edge');
-      g.setAttribute('fill', 'none');
-      g.setAttribute('stroke', `var(--ins-opt-${groupByKey.get(tableByName.get(p.e.tgt)!.group)!.color})`);
+      // colors via inline style, not presentation attributes: some engines don't
+      // resolve var() inside SVG presentation attributes, but inline style is real CSS.
+      g.style.fill = 'none';
+      g.style.stroke = `var(--ins-opt-${groupByKey.get(tableByName.get(p.e.tgt)!.group)!.color})`;
       g.setAttribute('stroke-width', '1.5');
       const path = document.createElementNS(NS, 'path');
       path.setAttribute('d', roundedPath(pts));
@@ -179,7 +181,7 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
         circ.setAttribute('cx', String(p.sx + sd * 16));
         circ.setAttribute('cy', String(p.sy));
         circ.setAttribute('r', '3.2');
-        circ.setAttribute('fill', 'var(--color-app)');
+        circ.style.fill = 'var(--color-app)';
         g.appendChild(circ);
       }
       const td = Math.sign(pts[pts.length - 2]!.x - p.tx) || 1;
