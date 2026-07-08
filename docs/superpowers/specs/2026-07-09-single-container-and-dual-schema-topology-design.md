@@ -1,8 +1,20 @@
 # Single-container deploy + dual-schema dev topology
 
 **Date:** 2026-07-09
-**Status:** Approved design, pending spec review
+**Status:** Approved; **revised during execution — see revision note**
 **Branch:** `redesign`
+
+> **REVISION (2026-07-09, during execution):** The two-*schema* + `search_path`
+> approach below is **superseded**. The committed migration SQL hardcodes
+> `"public"` for all enums and FKs, so a fresh migration into a non-`public`
+> schema fails. Decision (confirmed with user): use **two separate databases in
+> one Postgres server** — prod `tickets` (unchanged, on `public`) and dev
+> `tickets_dev` (new, on `public`) — switched by the existing `POSTGRES_DATABASE`
+> env var. This **drops** Part 1's `search_path`/`POSTGRES_SCHEMA` change and
+> **deletes** Part 3's `public → tickets` cutover entirely. The single-container
+> deploy (Parts 4–6) is unchanged except the entrypoint no longer runs a cutover.
+> The authoritative task list is the implementation plan:
+> `docs/superpowers/plans/2026-07-09-single-container-and-dual-schema-topology.md`.
 
 ## Summary
 
