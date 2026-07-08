@@ -17,3 +17,15 @@ export { ticketEvents } from './ticket-events';
 export { linkTypes } from './link-types';
 export { linkTypeTargetTypes } from './link-type-target-types';
 export { ticketLinks } from './ticket-links';
+
+export { allTables } from './registry';
+export { SCHEMA_GROUPS, type SchemaGroup } from './schema-groups';
+export {
+  describeSchema,
+  resolveGroupKey,
+  type SchemaGraph,
+  type TableMeta,
+  type ColumnMeta,
+  type UniqueMeta,
+  type GroupMeta,
+} from './describe-schema';
