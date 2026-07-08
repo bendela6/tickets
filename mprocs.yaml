@@ -1,0 +1,12 @@
+# Dev process dashboard, launched by `pnpm dev`.
+# keys: up/down select pane, `r` restart, `x` stop, `q` quit.
+# All panes target the tickets_dev database on 127.0.0.1:5532 (see .env).
+procs:
+  api:
+    shell: pnpm --filter @tickets/api dev
+  web:
+    shell: WEB_DEV_PORT=4620 pnpm --filter @tickets/web dev
+  studio:
+    shell: pnpm db:studio
+  watchers:
+    shell: turbo watch typecheck
