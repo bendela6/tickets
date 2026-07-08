@@ -8,7 +8,7 @@
     "db:migrate": "pnpm --filter @tickets/db db:migrate",
     "db:seed": "pnpm --filter @tickets/db db:seed",
     "db:studio": "pnpm --filter @tickets/db db:studio",
-    "dev": "turbo dev",
+    "dev": "mprocs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "turbo typecheck",
@@ -16,6 +16,7 @@
     "verify:tokens": "pnpm --filter @tickets/web tokens:verify"
   },
   "devDependencies": {
+    "mprocs": "^0.9.6",
     "prettier": "^3.6.2",
     "turbo": "~2.9.6"
   },
