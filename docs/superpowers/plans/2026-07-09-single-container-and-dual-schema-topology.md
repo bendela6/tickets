@@ -360,13 +360,15 @@ git commit docker/nginx.conf -m "feat(deploy): nginx routes / + /api + /studio u
 
 No cutover — prod database `tickets` already exists (created by the postgres image) and stays on `public`. The entrypoint just migrates and supervises.
 
+Studio note (decided during execution): the nginx same-origin `/studio` proxy was removed (unworkable with a SPA at `/` over plain http). Instead studio is reached in the deployed stack via a **host-localhost-published port** (`127.0.0.1:4983`, Task 7 compose). For that port-publish to work, the in-container studio must bind `0.0.0.0` (not its default `127.0.0.1`), hence the explicit `--host 0.0.0.0 --port 4983` below.
+
 **Files:**
 - Create: `docker/supervisord.conf`
 - Create: `docker/entrypoint.sh`
 
 - [ ] **Step 1: Write supervisord program set**
 
-Create `docker/supervisord.conf` (omit `[program:studio]` if Task 5 took the fallback):
+Create `docker/supervisord.conf`:
 
 ```ini
 [supervisord]
@@ -383,7 +385,7 @@ stderr_logfile=/dev/stderr
 stderr_logfile_maxbytes=0
 
 [program:studio]
-command=pnpm --filter @tickets/db db:studio
+command=pnpm --filter @tickets/db exec drizzle-kit studio --config drizzle.studio.config.ts --host 0.0.0.0 --port 4983
 directory=/app
 autorestart=true
 stdout_logfile=/dev/stdout
@@ -512,6 +514,7 @@ services:
       API_PORT: 4600
     ports:
       - '4610:80'
+      - '127.0.0.1:4983:4983'   # drizzle studio server, host-localhost only
     depends_on:
       postgres:
         condition: service_healthy
@@ -519,6 +522,8 @@ services:
 volumes:
   tickets-pgdata:
 ```
+
+The API stays internal (no port); nginx fronts it. Studio is published only on `127.0.0.1:4983` (not `0.0.0.0`), so it's reachable from the host machine but not the network. Open it with `https://local.drizzle.studio?port=4983` (the browser's localhost mixed-content exemption lets the https UI shell talk to the http studio server on your loopback).
 
 - [ ] **Step 3: Build + bring up; watch migrate run**
 
@@ -533,17 +538,16 @@ Expected: `migrations applied` (against prod database `tickets`; a no-op since p
 ```bash
 curl -s -o /dev/null -w "web    -> HTTP %{http_code}\n" http://127.0.0.1:4610/
 curl -s -o /dev/null -w "api    -> HTTP %{http_code}\n" http://127.0.0.1:4610/api/projects
-curl -s -o /dev/null -w "studio -> HTTP %{http_code}\n" http://127.0.0.1:4610/studio/
+curl -s -o /dev/null -w "studio -> HTTP %{http_code}\n" http://127.0.0.1:4983/
 ```
-Expected: web `200`; api `200` (prod projects); studio `200`/`3xx` (or omitted if fallback).
+Expected: web `200`; api `200` (prod projects); studio `404` (the drizzle-kit studio server returns 404 on `GET /` when up — the real UI is `https://local.drizzle.studio?port=4983`).
 
-- [ ] **Step 5: Verify api + studio are NOT reachable except through nginx**
+- [ ] **Step 5: Verify the API is NOT reachable except through nginx (studio IS, on localhost)**
 
 ```bash
-curl -s -o /dev/null -w "direct api    -> %{http_code}\n" http://127.0.0.1:4600/ || echo "api not exposed (good)"
-curl -s -o /dev/null -w "direct studio -> %{http_code}\n" http://127.0.0.1:4983/ || echo "studio not exposed (good)"
+curl -s -o /dev/null -w "direct api -> %{http_code}\n" http://127.0.0.1:4600/ || echo "api not exposed (good)"
 ```
-Expected: both connection-refused (only `:4610` and `:5532` are published).
+Expected: connection-refused — the API has no published port (only reachable as `/api` through nginx on `:4610`). Studio is intentionally published on `127.0.0.1:4983` (host-localhost only, verified in Step 4). Published host ports are only `:4610` (web+api via nginx), `:4983` (studio, localhost), and `:5532` (postgres).
 
 - [ ] **Step 6: Regression suite**
 
