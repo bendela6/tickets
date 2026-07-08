@@ -10,7 +10,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/migrate.ts",
     "db:seed": "tsx src/run-seed.ts",
-    "db:studio": "drizzle-kit studio --config ../../drizzle.studio.config.ts",
+    "db:studio": "drizzle-kit studio --config drizzle.studio.config.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },
