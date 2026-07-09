@@ -1,5 +1,5 @@
 # Multi-stage build for the tickets stack — one runtime image:
-# nginx (front) + node API + drizzle studio, under supervisord.
+# nginx (front) + node API + pgweb (self-hosted DB browser), under supervisord.
 
 FROM node:22-alpine AS deps
 RUN corepack enable
@@ -19,6 +19,8 @@ RUN pnpm --filter @tickets/web build
 
 FROM deps AS app
 RUN apk add --no-cache nginx supervisor
+# self-hosted DB browser (static Go binary, baked in → works offline)
+COPY --from=sosedoff/pgweb:latest /usr/bin/pgweb /usr/bin/pgweb
 # built SPA bundle
 COPY --from=web-build /app/apps/web/dist /usr/share/nginx/html
 # infra
