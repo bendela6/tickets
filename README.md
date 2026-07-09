@@ -38,8 +38,8 @@ published loopback-only on `127.0.0.1:5532`, holding both the `tickets`
 running nginx on [http://127.0.0.1:4610](http://127.0.0.1:4610) that serves
 the built web SPA and reverse-proxies `/api` to an internal node API
 (`127.0.0.1:4600`, not published to the host), plus Drizzle Studio at
-[http://localhost:4984](http://localhost:4984) (nginx-served on a dedicated
-port; redirects to `/studio`). `pnpm dev` (mprocs) uses its
+[http://localhost:4610/studio](http://localhost:4610/studio) (same port, served
+by nginx). `pnpm dev` (mprocs) uses its
 own ports (api `:4600`, web `:4620`) against `tickets_dev` on the same
 postgres, so dev and the deployed container can run side by side.
 
