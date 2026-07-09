@@ -29,7 +29,7 @@ services:
       API_PORT: 4600
     ports:
       - '4610:80'
-      - '127.0.0.1:4983:4983'   # drizzle studio server, host-localhost only
+      - '127.0.0.1:4984:4984'   # drizzle studio via nginx (medialib-style); open localhost:4984
     depends_on:
       postgres:
         condition: service_healthy
