@@ -12,7 +12,7 @@ description: Use when starting, restarting, deploying, or screenshotting the app
 | Deployed app (docker, single container `app`) | http://localhost:4610 | nginx serves the built web SPA and reverse-proxies `/api` to an internal node API (`127.0.0.1:4600` inside the container — not published to the host) |
 | Dev web (vite) | http://localhost:4620 | `strictPort` — fails hard if 4620 is taken; part of `pnpm dev` (mprocs) |
 | Dev API (tsx watch) | http://localhost:4600 | part of `pnpm dev` (mprocs); dev web proxies `/api` here |
-| Drizzle Studio (docker) | http://localhost:4610/studio | same port as the app; nginx serves the UI shell and routes the studio data protocol (`POST /`) to the internal studio server (`127.0.0.1:4983`). Browses prod `tickets` |
+| DB browser (docker) | http://localhost:4610/studio | self-hosted **pgweb** (`--prefix studio`, internal `127.0.0.1:4983`), locked to prod `tickets`. Baked into the image → works offline. (Dev's mprocs `studio` pane still uses drizzle-kit studio, which needs internet.) |
 | Postgres (docker) | `127.0.0.1:5532` | ONE server, TWO databases: `tickets` (prod, used by the deployed app) and `tickets_dev` (dev, used by local tooling); loopback-only. Inspect: `docker exec -it tickets-postgres-1 psql -U postgres -d tickets` (or `-d tickets_dev`) |
 | Gallery | `/gallery` on either web | primitives showcase; what verifying-a-component measures |
 
@@ -30,5 +30,5 @@ description: Use when starting, restarting, deploying, or screenshotting the app
 - **Dev web with `pnpm dev` down → `/api` proxy ECONNREFUSED.** Vite proxies to `127.0.0.1:4600`; the mprocs api pane must be running.
 - **Port 4620 busy → vite exits** (strictPort). Kill the stale dev server; don't switch ports — the verify pipeline and docs assume 4620.
 - **One postgres, two databases.** `tickets` is prod (deployed app), `tickets_dev` is dev (local tooling) — same server, same `127.0.0.1:5532`. Double-check `POSTGRES_DATABASE` before running migrations/seeds against a fresh `.env`; never point local tooling at `tickets` by accident.
-- **One published port in the deployed stack: `:4610`.** It serves web (`/`), `/api`, and `/studio` — api and the studio server are internal to the container. Studio shares the origin via **method routing**: `GET /` = SPA, `POST /` = the studio data protocol (drizzle's UI POSTs to the origin root and has no base-path option). This works only because the web app never POSTs to `/` (all its writes are under `/api/`); if that changes, studio needs its own port again.
+- **One published port in the deployed stack: `:4610`.** It serves web (`/`), `/api`, and `/studio` (pgweb) — the api and pgweb are internal to the container, proxied by nginx. pgweb is a self-hosted Postgres browser (static Go binary baked into the image), so `/studio` needs no internet. (Earlier this used proxied Drizzle Studio, whose hosted UI required internet + an origin-root method-routing hack — replaced by pgweb.)
 - Screenshot/measurement sessions should target **4620** (live source) unless explicitly reviewing the deployed build.
