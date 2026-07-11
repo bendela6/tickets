@@ -118,6 +118,25 @@ body {
 .zone:active {
   cursor: grabbing;
 }
+/* resize affordance: a corner grip that appears on hover (resizing works on all
+   edges — the grip is the discoverability hint) */
+.zone::after {
+  content: '';
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--zone-border);
+  border-bottom: 2px solid var(--zone-border);
+  border-bottom-right-radius: 5px;
+  opacity: 0;
+  transition: opacity 0.12s;
+  pointer-events: none;
+}
+.zone:hover::after {
+  opacity: 1;
+}
 .zone-selected {
   border-style: solid;
   border-color: color-mix(in srgb, var(--accent) 55%, var(--zone-border));
