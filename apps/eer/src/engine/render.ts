@@ -4,18 +4,14 @@
 
 import { edgeEndpoints, edgeSides, PORT_GAP } from './geometry';
 import { entityIdsInGroup, subgroupIdsOf, zoneIdOf } from './groups';
+import { entityColor } from './palette';
 import { computeRoutes, orthoPolyPath, simpleOrtho, smoothPath } from './routing';
 import type { EdgeEls, EngineState, Entity, Point, Relationship, Side } from './types';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-// Categorical palette (dataviz dark theme, validated against #0b0d12). Edges are
-// coloured by SOURCE entity so hue follows the entity, not its position.
-const EDGE_PALETTE = ['#3987e5', '#199e70', '#c98500', '#008300', '#9085e9', '#e66767', '#d55181', '#d95926'];
-
 export function edgeColor(state: EngineState, entityId: string): string {
-  const i = state.model.entities.findIndex((e) => e.id === entityId);
-  return EDGE_PALETTE[(i < 0 ? 0 : i) % EDGE_PALETTE.length]!;
+  return entityColor(state.model, entityId);
 }
 
 export function buildScene(state: EngineState): void {
