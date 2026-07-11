@@ -62,15 +62,30 @@ export function entityRect(e) {
   return { x: e.x, y: e.y, w: e._w, h: e._h, cx: e.x + e._w / 2, cy: e.y + e._h / 2 };
 }
 
-// Which side (L/R) each end of a relationship exits from — the facing sides, by
-// relative card position. Self-references leave and re-enter on the right.
+// Which side (L/R) each end of a relationship exits from. Pick the L/R × L/R
+// combination whose two ports are closest — facing sides for side-by-side cards,
+// the SAME side for vertically-stacked cards (shortest path, no wrap-around).
+// Self-references leave and re-enter on the right.
 export function edgeSides(model, rel) {
   if (rel.source === rel.target) return { s: 'R', t: 'R' };
   const A = model.entityById.get(rel.source);
   const B = model.entityById.get(rel.target);
-  const aCx = A.x + A._w / 2;
-  const bCx = B.x + B._w / 2;
-  return bCx >= aCx ? { s: 'R', t: 'L' } : { s: 'L', t: 'R' };
+  const ai = fieldIndex(A, rel.sourceField);
+  const bi = fieldIndex(B, rel.targetField);
+  let best = { s: 'R', t: 'L' };
+  let bestD = Infinity;
+  for (const s of ['L', 'R']) {
+    for (const t of ['L', 'R']) {
+      const p1 = portWorldPos(A, ai, s);
+      const p2 = portWorldPos(B, bi, t);
+      const d = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+      if (d < bestD) {
+        bestD = d;
+        best = { s, t };
+      }
+    }
+  }
+  return best;
 }
 
 // World-space endpoints of a relationship: the two field ports it connects.
