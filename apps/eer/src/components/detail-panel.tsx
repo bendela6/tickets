@@ -408,6 +408,7 @@ function EmptyState({ model }: { model: Model | null }) {
     ['wheel', 'zoom toward the cursor'],
     ['middle-drag', 'pan the canvas'],
     ['left-drag', 'move an entity, subgroup, or zone'],
+    ['drag edge', 'resize a zone or subgroup'],
     ['click', 'entity → focus its relationships'],
     ['click', 'a zone → show only its connections'],
     ['hover', 'a field → light its edges'],

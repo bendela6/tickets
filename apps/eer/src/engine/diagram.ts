@@ -26,6 +26,34 @@ import type { CheckResult, EngineState, GroupBounds, Model, RoutingMode, SearchR
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const DRAG_THRESHOLD = 3;
+const RESIZE_EDGE = 8; // screen px: grab distance from a group edge to resize it
+const IN_PAD = 8; // world px: children keep this inset inside their group box
+const IN_LABEL = 30; // world px: children stay below the group label
+
+interface EdgeMask {
+  l: boolean;
+  r: boolean;
+  t: boolean;
+  b: boolean;
+}
+
+function edgeMaskFor(el: HTMLElement, e: MouseEvent): EdgeMask | null {
+  const r = el.getBoundingClientRect();
+  const m: EdgeMask = {
+    l: e.clientX - r.left <= RESIZE_EDGE,
+    r: r.right - e.clientX <= RESIZE_EDGE,
+    t: e.clientY - r.top <= RESIZE_EDGE,
+    b: r.bottom - e.clientY <= RESIZE_EDGE,
+  };
+  return m.l || m.r || m.t || m.b ? m : null;
+}
+
+function cursorFor(m: EdgeMask): string {
+  if ((m.l && m.t) || (m.r && m.b)) return 'nwse-resize';
+  if ((m.r && m.t) || (m.l && m.b)) return 'nesw-resize';
+  if (m.l || m.r) return 'ew-resize';
+  return 'ns-resize';
+}
 
 export interface DiagramOptions {
   onSelect?: (selection: Selection) => void;
@@ -272,7 +300,7 @@ export class EerDiagram {
     };
     vp.addEventListener('wheel', onWheel, { passive: false });
 
-    let mode: 'pan' | 'drag' | 'group' | 'idle' | null = null;
+    let mode: 'pan' | 'drag' | 'group' | 'resize' | 'idle' | null = null;
     let start = { x: 0, y: 0 };
     let startPan = { x: 0, y: 0 };
     let startEntity = { x: 0, y: 0 };
@@ -283,6 +311,42 @@ export class EerDiagram {
     // carries its subgroup boxes); each snapshots its start position.
     let groupEntStart: { id: string; x: number; y: number }[] = [];
     let groupBoxStart: { el: HTMLElement; obj: GroupBounds; x: number; y: number }[] = [];
+    // A subgroup drag is confined to its parent zone (world-space limits).
+    let dragLimit: { x1: number; y1: number; x2: number; y2: number } | null = null;
+    // Group resize: the grabbed edge(s), start bounds, and the clamping extents.
+    let resize: {
+      el: HTMLElement;
+      obj: GroupBounds;
+      mask: EdgeMask;
+      s0: { x: number; y: number; w: number; h: number };
+      content: { minX: number; minY: number; maxX: number; maxY: number } | null;
+      parent: GroupBounds | null;
+    } | null = null;
+    let hoverZone: HTMLElement | null = null;
+
+    // Union of a group's children (cards, and subgroup boxes for a zone) — the
+    // box may never be resized smaller than this.
+    const contentBoundsOf = (gid: string) => {
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      for (const id of entityIdsInGroup(state.model, gid)) {
+        const en = state.model.entityById.get(id)!;
+        minX = Math.min(minX, en.x);
+        minY = Math.min(minY, en.y);
+        maxX = Math.max(maxX, en.x + en._w);
+        maxY = Math.max(maxY, en.y + en._h);
+      }
+      for (const sb of state.model._groupBounds) {
+        if (sb.parent !== gid) continue;
+        minX = Math.min(minX, sb.x);
+        minY = Math.min(minY, sb.y);
+        maxX = Math.max(maxX, sb.x + sb.w);
+        maxY = Math.max(maxY, sb.y + sb.h);
+      }
+      return isFinite(minX) ? { minX, minY, maxX, maxY } : null;
+    };
 
     const onDown = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -302,26 +366,47 @@ export class EerDiagram {
           startEntity = { x: en?.x ?? 0, y: en?.y ?? 0 };
           moved = false;
         } else if (zone) {
-          mode = 'group';
           groupId = zone.dataset.group ?? null;
           start = { x: e.clientX, y: e.clientY };
           moved = false;
-          // Entities: a zone carries its subgroups' cards too; a subgroup its own.
-          const entIds = groupId ? entityIdsInGroup(state.model, groupId) : new Set<string>();
-          groupEntStart = state.model.entities
-            .filter((en) => entIds.has(en.id))
-            .map((en) => ({ id: en.id, x: en.x, y: en.y }));
-          // Boxes: the grabbed box plus (for a zone) every subgroup box inside it.
-          const boxIds = groupId ? [groupId, ...subgroupIdsOf(state.model, groupId)] : [];
-          groupBoxStart = boxIds
-            .map((bid) => {
-              const obj = state.model._groupBounds.find((b) => b.id === bid);
-              const el = [...state.els.groupLayer.children].find(
-                (c) => (c as HTMLElement).dataset.group === bid,
-              ) as HTMLElement | undefined;
-              return obj && el ? { el, obj, x: obj.x, y: obj.y } : null;
-            })
-            .filter((v): v is { el: HTMLElement; obj: GroupBounds; x: number; y: number } => v != null);
+          const gb = state.model._groupBounds.find((b) => b.id === groupId);
+          const mask = edgeMaskFor(zone, e);
+          if (mask && gb && groupId) {
+            // Grabbed near an edge → resize this box.
+            mode = 'resize';
+            resize = {
+              el: zone,
+              obj: gb,
+              mask,
+              s0: { x: gb.x, y: gb.y, w: gb.w, h: gb.h },
+              content: contentBoundsOf(groupId),
+              parent: gb.parent ? (state.model._groupBounds.find((b) => b.id === gb.parent) ?? null) : null,
+            };
+          } else {
+            mode = 'group';
+            // Entities: a zone carries its subgroups' cards too; a subgroup its own.
+            const entIds = groupId ? entityIdsInGroup(state.model, groupId) : new Set<string>();
+            groupEntStart = state.model.entities
+              .filter((en) => entIds.has(en.id))
+              .map((en) => ({ id: en.id, x: en.x, y: en.y }));
+            // Boxes: the grabbed box plus (for a zone) every subgroup box inside it.
+            const boxIds = groupId ? [groupId, ...subgroupIdsOf(state.model, groupId)] : [];
+            groupBoxStart = boxIds
+              .map((bid) => {
+                const obj = state.model._groupBounds.find((b) => b.id === bid);
+                const el = [...state.els.groupLayer.children].find(
+                  (c) => (c as HTMLElement).dataset.group === bid,
+                ) as HTMLElement | undefined;
+                return obj && el ? { el, obj, x: obj.x, y: obj.y } : null;
+              })
+              .filter((v): v is { el: HTMLElement; obj: GroupBounds; x: number; y: number } => v != null);
+            // A subgroup may only move within its parent zone.
+            dragLimit = null;
+            if (gb?.parent) {
+              const p = state.model._groupBounds.find((b) => b.id === gb.parent);
+              if (p) dragLimit = { x1: p.x + IN_PAD, y1: p.y + IN_LABEL, x2: p.x + p.w - IN_PAD, y2: p.y + p.h - IN_PAD };
+            }
+          }
         } else {
           mode = 'idle';
           start = { x: e.clientX, y: e.clientY };
@@ -333,7 +418,21 @@ export class EerDiagram {
     vp.addEventListener('mousedown', onDown);
 
     const onMove = (e: MouseEvent) => {
-      if (!mode) return;
+      if (!mode) {
+        // Idle hover: show a resize cursor near a group box edge.
+        const t = e.target as HTMLElement | null;
+        const zone = t && typeof t.closest === 'function' ? (t.closest('.zone') as HTMLElement | null) : null;
+        if (hoverZone && hoverZone !== zone) {
+          hoverZone.style.cursor = '';
+          hoverZone = null;
+        }
+        if (zone) {
+          const mask = edgeMaskFor(zone, e);
+          zone.style.cursor = mask ? cursorFor(mask) : '';
+          hoverZone = zone;
+        }
+        return;
+      }
       const dx = e.clientX - start.x;
       const dy = e.clientY - start.y;
       if (mode === 'pan') {
@@ -346,13 +445,25 @@ export class EerDiagram {
         if (en) {
           en.x = startEntity.x + dx / state.view.zoom;
           en.y = startEntity.y + dy / state.view.zoom;
+          // A card stays inside its group box (min-after-max keeps left/top priority).
+          const b = state.model._groupBounds.find((g) => g.id === en.group);
+          if (b) {
+            en.x = Math.max(Math.min(en.x, b.x + b.w - IN_PAD - en._w), b.x + IN_PAD);
+            en.y = Math.max(Math.min(en.y, b.y + b.h - IN_PAD - en._h), b.y + IN_LABEL);
+          }
           positionEntity(state, dragId);
           drawEdgesForEntity(state, dragId, true);
         }
       } else if (mode === 'group') {
         if (Math.abs(dx) + Math.abs(dy) > DRAG_THRESHOLD) moved = true;
-        const wdx = dx / state.view.zoom;
-        const wdy = dy / state.view.zoom;
+        let wdx = dx / state.view.zoom;
+        let wdy = dy / state.view.zoom;
+        // A subgroup is confined to its parent zone.
+        const grabbed = groupBoxStart[0];
+        if (dragLimit && grabbed) {
+          wdx = Math.max(Math.min(wdx, dragLimit.x2 - (grabbed.x + grabbed.obj.w)), dragLimit.x1 - grabbed.x);
+          wdy = Math.max(Math.min(wdy, dragLimit.y2 - (grabbed.y + grabbed.obj.h)), dragLimit.y1 - grabbed.y);
+        }
         for (const gs of groupEntStart) {
           const en = state.model.entityById.get(gs.id);
           if (!en) continue;
@@ -367,6 +478,40 @@ export class EerDiagram {
           gb.obj.y = gb.y + wdy;
         }
         drawAllEdges(state, true);
+      } else if (mode === 'resize' && resize) {
+        if (Math.abs(dx) + Math.abs(dy) > DRAG_THRESHOLD) moved = true;
+        const wdx = dx / state.view.zoom;
+        const wdy = dy / state.view.zoom;
+        const { s0, mask, content, parent, obj, el } = resize;
+        let x1 = s0.x + (mask.l ? wdx : 0);
+        let y1 = s0.y + (mask.t ? wdy : 0);
+        let x2 = s0.x + s0.w + (mask.r ? wdx : 0);
+        let y2 = s0.y + s0.h + (mask.b ? wdy : 0);
+        // Never cut children off.
+        if (content) {
+          if (mask.l) x1 = Math.min(x1, content.minX - IN_PAD);
+          if (mask.t) y1 = Math.min(y1, content.minY - IN_LABEL);
+          if (mask.r) x2 = Math.max(x2, content.maxX + IN_PAD);
+          if (mask.b) y2 = Math.max(y2, content.maxY + IN_PAD);
+        }
+        // A subgroup box stays inside its parent zone.
+        if (parent) {
+          if (mask.l) x1 = Math.max(x1, parent.x + IN_PAD);
+          if (mask.t) y1 = Math.max(y1, parent.y + IN_LABEL);
+          if (mask.r) x2 = Math.min(x2, parent.x + parent.w - IN_PAD);
+          if (mask.b) y2 = Math.min(y2, parent.y + parent.h - IN_PAD);
+        }
+        // Minimum usable size.
+        if (x2 - x1 < 140) mask.l ? (x1 = x2 - 140) : (x2 = x1 + 140);
+        if (y2 - y1 < 80) mask.t ? (y1 = y2 - 80) : (y2 = y1 + 80);
+        obj.x = x1;
+        obj.y = y1;
+        obj.w = x2 - x1;
+        obj.h = y2 - y1;
+        el.style.left = x1 + 'px';
+        el.style.top = y1 + 'px';
+        el.style.width = x2 - x1 + 'px';
+        el.style.height = y2 - y1 + 'px';
       } else if (mode === 'idle') {
         if (Math.abs(dx) + Math.abs(dy) > DRAG_THRESHOLD) {
           moved = true;
@@ -388,6 +533,10 @@ export class EerDiagram {
         this.selectGroup(groupId);
       } else if (mode === 'group' && moved && state.view.routing !== 'curved') {
         drawAllEdges(state);
+      } else if (mode === 'resize') {
+        // Group boxes are routing obstacles — reroute around the new bounds.
+        if (moved) drawAllEdges(state);
+        else if (groupId) this.selectGroup(groupId);
       } else if (mode === 'idle' && !moved) {
         this.clearSelection();
       }
@@ -396,6 +545,8 @@ export class EerDiagram {
       groupId = null;
       groupEntStart = [];
       groupBoxStart = [];
+      dragLimit = null;
+      resize = null;
     };
     window.addEventListener('mouseup', onUp);
 
