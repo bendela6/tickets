@@ -36,6 +36,9 @@ export interface Group {
   id: string;
   label: string;
   order: number;
+  // When set, this group is a subgroup nested inside the zone with this id.
+  // One level of nesting only (a subgroup's parent is always a top-level zone).
+  parent: string | null;
 }
 
 export interface EdgeKind {
@@ -65,6 +68,8 @@ export interface GroupBounds {
   y: number;
   w: number;
   h: number;
+  parent: string | null;
+  level: number; // 0 = zone, 1 = subgroup
 }
 
 export interface Model {

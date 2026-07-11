@@ -49,13 +49,15 @@ export function TopBar(props: TopBarProps) {
       <div className="flex flex-wrap items-center gap-1.5">
         <SearchBox engine={engine} />
 
-        {model && model.groups.length > 0 && (
+        {model && model.groups.some((g) => !g.parent) && (
           <ToggleGroup label="Zones">
-            {model.groups.map((g) => (
-              <Chip key={g.id} on={!props.hiddenGroups.has(g.id)} onClick={() => props.onToggleGroup(g.id)}>
-                {g.label}
-              </Chip>
-            ))}
+            {model.groups
+              .filter((g) => !g.parent)
+              .map((g) => (
+                <Chip key={g.id} on={!props.hiddenGroups.has(g.id)} onClick={() => props.onToggleGroup(g.id)}>
+                  {g.label}
+                </Chip>
+              ))}
           </ToggleGroup>
         )}
 

@@ -2,6 +2,7 @@
 // interaction (pan/zoom/drag/group/focus/routing/checks). React hosts it via a ref
 // and subscribes to onSelect to drive the detail panel; it never touches this DOM.
 
+import { entityIdsInGroup, subgroupIdsOf } from './groups';
 import { packLayout, visibleBounds } from './layout';
 import {
   applyTransform,
@@ -21,7 +22,7 @@ import {
   setRouting,
 } from './render';
 import { runChecks } from './checks';
-import type { CheckResult, EngineState, Model, RoutingMode, SearchResult, Selection } from './types';
+import type { CheckResult, EngineState, GroupBounds, Model, RoutingMode, SearchResult, Selection } from './types';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const DRAG_THRESHOLD = 3;
@@ -51,6 +52,7 @@ export class EerDiagram {
   private opts: DiagramOptions;
   private disposers: (() => void)[] = [];
   private sceneDisposers: (() => void)[] = [];
+  private destroyed = false;
 
   constructor(viewport: HTMLElement, mount: HTMLElement, opts: DiagramOptions = {}) {
     this.opts = opts;
@@ -98,6 +100,17 @@ export class EerDiagram {
     this.wireScene();
     // Fit after layout has settled (grid/scrollbars finalize a frame late).
     requestAnimationFrame(() => requestAnimationFrame(() => this.fit()));
+    // The first pack can run before webfonts load, so text is measured with
+    // fallback metrics. Re-pack once fonts are ready so card widths are correct.
+    const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
+    if (fonts?.ready) {
+      void fonts.ready.then(() => {
+        if (this.destroyed || this.state.model !== model) return;
+        packLayout(model);
+        relayout(this.state);
+        this.fit();
+      });
+    }
   }
 
   // ---- public actions ----
@@ -216,6 +229,7 @@ export class EerDiagram {
   }
 
   destroy(): void {
+    this.destroyed = true;
     for (const d of this.sceneDisposers) d();
     for (const d of this.disposers) d();
     this.sceneDisposers = [];
@@ -265,9 +279,10 @@ export class EerDiagram {
     let dragId: string | null = null;
     let moved = false;
     let groupId: string | null = null;
-    let groupStart: { id: string; x: number; y: number }[] = [];
-    let zoneEl: HTMLElement | null = null;
-    let zoneBounds: { obj: { x: number; y: number }; x: number; y: number } | null = null;
+    // A group drag moves its entities and one-or-more zone boxes (a zone also
+    // carries its subgroup boxes); each snapshots its start position.
+    let groupEntStart: { id: string; x: number; y: number }[] = [];
+    let groupBoxStart: { el: HTMLElement; obj: GroupBounds; x: number; y: number }[] = [];
 
     const onDown = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -289,14 +304,24 @@ export class EerDiagram {
         } else if (zone) {
           mode = 'group';
           groupId = zone.dataset.group ?? null;
-          zoneEl = zone;
           start = { x: e.clientX, y: e.clientY };
           moved = false;
-          groupStart = state.model.entities
-            .filter((en) => en.group === groupId)
+          // Entities: a zone carries its subgroups' cards too; a subgroup its own.
+          const entIds = groupId ? entityIdsInGroup(state.model, groupId) : new Set<string>();
+          groupEntStart = state.model.entities
+            .filter((en) => entIds.has(en.id))
             .map((en) => ({ id: en.id, x: en.x, y: en.y }));
-          const gb = state.model._groupBounds.find((b) => b.id === groupId);
-          zoneBounds = gb ? { obj: gb, x: gb.x, y: gb.y } : null;
+          // Boxes: the grabbed box plus (for a zone) every subgroup box inside it.
+          const boxIds = groupId ? [groupId, ...subgroupIdsOf(state.model, groupId)] : [];
+          groupBoxStart = boxIds
+            .map((bid) => {
+              const obj = state.model._groupBounds.find((b) => b.id === bid);
+              const el = [...state.els.groupLayer.children].find(
+                (c) => (c as HTMLElement).dataset.group === bid,
+              ) as HTMLElement | undefined;
+              return obj && el ? { el, obj, x: obj.x, y: obj.y } : null;
+            })
+            .filter((v): v is { el: HTMLElement; obj: GroupBounds; x: number; y: number } => v != null);
         } else {
           mode = 'idle';
           start = { x: e.clientX, y: e.clientY };
@@ -328,18 +353,18 @@ export class EerDiagram {
         if (Math.abs(dx) + Math.abs(dy) > DRAG_THRESHOLD) moved = true;
         const wdx = dx / state.view.zoom;
         const wdy = dy / state.view.zoom;
-        for (const gs of groupStart) {
+        for (const gs of groupEntStart) {
           const en = state.model.entityById.get(gs.id);
           if (!en) continue;
           en.x = gs.x + wdx;
           en.y = gs.y + wdy;
           positionEntity(state, gs.id);
         }
-        if (zoneEl && zoneBounds) {
-          zoneEl.style.left = zoneBounds.x + wdx + 'px';
-          zoneEl.style.top = zoneBounds.y + wdy + 'px';
-          zoneBounds.obj.x = zoneBounds.x + wdx;
-          zoneBounds.obj.y = zoneBounds.y + wdy;
+        for (const gb of groupBoxStart) {
+          gb.el.style.left = gb.x + wdx + 'px';
+          gb.el.style.top = gb.y + wdy + 'px';
+          gb.obj.x = gb.x + wdx;
+          gb.obj.y = gb.y + wdy;
         }
         drawAllEdges(state, true);
       } else if (mode === 'idle') {
@@ -369,7 +394,8 @@ export class EerDiagram {
       mode = null;
       dragId = null;
       groupId = null;
-      zoneEl = null;
+      groupEntStart = [];
+      groupBoxStart = [];
     };
     window.addEventListener('mouseup', onUp);
 
