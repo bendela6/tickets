@@ -131,22 +131,27 @@ export function loadModel(raw: unknown): LoadResult {
   const relById = new Map<string, Relationship>();
   const usedKinds = new Set<string>();
   const normRels: Relationship[] = relationships.map((rel: any, i: number) => {
-    const id: string = rel.id || `rel_${i}_${rel.source}_${rel.sourceField}__${rel.target}_${rel.targetField}`;
-    const src = entityById.get(rel.source);
-    const tgt = entityById.get(rel.target);
-    if (!rel.source || !src) errors.push(`Relationship "${id}" references unknown source entity "${rel.source}".`);
-    if (!rel.target || !tgt) errors.push(`Relationship "${id}" references unknown target entity "${rel.target}".`);
+    // Endpoints may be flat (source/sourceField) or objects ({ entity, field }).
+    const srcEntity: string = rel.source && typeof rel.source === 'object' ? rel.source.entity : rel.source;
+    const srcField: string = rel.source && typeof rel.source === 'object' ? rel.source.field : rel.sourceField;
+    const tgtEntity: string = rel.target && typeof rel.target === 'object' ? rel.target.entity : rel.target;
+    const tgtField: string = rel.target && typeof rel.target === 'object' ? rel.target.field : rel.targetField;
+    const id: string = rel.id || `rel_${i}_${srcEntity}_${srcField}__${tgtEntity}_${tgtField}`;
+    const src = entityById.get(srcEntity);
+    const tgt = entityById.get(tgtEntity);
+    if (!srcEntity || !src) errors.push(`Relationship "${id}" references unknown source entity "${srcEntity}".`);
+    if (!tgtEntity || !tgt) errors.push(`Relationship "${id}" references unknown target entity "${tgtEntity}".`);
 
     let srcRole: Role = null;
     let tgtRole: Role = null;
     if (src) {
-      const sf = src.fields.find((f) => f.name === rel.sourceField);
-      if (!sf) errors.push(`Relationship "${id}" — source field "${rel.source}.${rel.sourceField}" does not exist.`);
+      const sf = src.fields.find((f) => f.name === srcField);
+      if (!sf) errors.push(`Relationship "${id}" — source field "${srcEntity}.${srcField}" does not exist.`);
       else srcRole = sf.role;
     }
     if (tgt) {
-      const tf = tgt.fields.find((f) => f.name === rel.targetField);
-      if (!tf) errors.push(`Relationship "${id}" — target field "${rel.target}.${rel.targetField}" does not exist.`);
+      const tf = tgt.fields.find((f) => f.name === tgtField);
+      if (!tf) errors.push(`Relationship "${id}" — target field "${tgtEntity}.${tgtField}" does not exist.`);
       else tgtRole = tf.role;
     }
 
@@ -161,10 +166,10 @@ export function loadModel(raw: unknown): LoadResult {
 
     const nr: Relationship = {
       id,
-      source: rel.source,
-      sourceField: rel.sourceField,
-      target: rel.target,
-      targetField: rel.targetField,
+      source: srcEntity,
+      sourceField: srcField,
+      target: tgtEntity,
+      targetField: tgtField,
       cardinality: card.value,
       cardinalityInferred: card.inferred,
       kind: rel.kind || null,
@@ -179,7 +184,7 @@ export function loadModel(raw: unknown): LoadResult {
 
   const view = r.view || {};
   const model: Model = {
-    meta: r.meta || {},
+    meta: r.meta || { title: r.title, description: r.description },
     view: {
       zoom: typeof view.zoom === 'number' ? view.zoom : 1,
       routing: normalizeRouting(view.routing),

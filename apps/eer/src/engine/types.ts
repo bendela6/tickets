@@ -92,9 +92,6 @@ export interface EdgeEls {
   hit: SVGPathElement;
   casing: SVGPathElement;
   path: SVGPathElement;
-  lblBg: SVGRectElement;
-  lblT: SVGTextElement;
-  labelBase: Point;
 }
 
 export type Focus =
