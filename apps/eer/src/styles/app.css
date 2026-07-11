@@ -182,12 +182,15 @@ body {
 }
 
 /* ---- Cards ---- */
+/* Each card carries --entity-c (set by build-scene, same hue as its outgoing
+   edges and detail-panel dot). The header tint + top strip make that hue
+   legible on the table itself; fallbacks keep un-stamped cards neutral. */
 .card {
   position: absolute;
   top: 0;
   left: 0;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--entity-c, var(--border)) 28%, var(--border));
   border-radius: 9px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   overflow: visible;
@@ -203,9 +206,10 @@ body {
   align-items: center;
   gap: 0.4rem;
   padding: 0 0.6rem;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-2);
+  border-bottom: 1px solid color-mix(in srgb, var(--entity-c, var(--border)) 22%, var(--border));
+  background: color-mix(in srgb, var(--entity-c, var(--surface-2)) 13%, var(--surface-2));
   border-radius: 9px 9px 0 0;
+  box-shadow: inset 0 2px 0 var(--entity-c, transparent);
   cursor: grab;
 }
 .card-hd:active {

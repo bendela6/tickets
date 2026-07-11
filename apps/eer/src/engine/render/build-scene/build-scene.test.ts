@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { nestedRaw } from '../../../test/models';
 import { cleanupScene, makeScene } from '../../../test/scene';
+import { entityColor } from '../entity-color';
 import type { EngineState } from '../../model/types';
 
 let state: EngineState;
@@ -42,6 +43,14 @@ describe('buildScene', () => {
         expect(row.querySelectorAll('.port.left').length).toBe(1);
         expect(row.querySelectorAll('.port.right').length).toBe(1);
       }
+    }
+  });
+
+  it('stamps each card with its entity color', () => {
+    state = makeScene();
+    for (const e of state.model.entities) {
+      const card = state.els.cards.get(e.id)!;
+      expect(card.style.getPropertyValue('--entity-c')).toBe(entityColor(state.model, e.id));
     }
   });
 

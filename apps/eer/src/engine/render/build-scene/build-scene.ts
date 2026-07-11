@@ -4,6 +4,7 @@
 
 import { drawAllEdges } from '../draw-all-edges';
 import { edgeColor } from '../edge-color';
+import { entityColor } from '../entity-color';
 import { positionEntity } from '../position-entity';
 import type { EdgeEls, EngineState, Entity } from '../../model/types';
 
@@ -68,7 +69,7 @@ export function buildScene(state: EngineState): void {
 
   state.els.cards = new Map<string, HTMLElement>();
   for (const e of state.model.entities) {
-    const card = buildCard(e);
+    const card = buildCard(e, entityColor(state.model, e.id));
     cardLayer.appendChild(card);
     state.els.cards.set(e.id, card);
     positionEntity(state, e.id);
@@ -77,12 +78,13 @@ export function buildScene(state: EngineState): void {
   drawAllEdges(state);
 }
 
-function buildCard(e: Entity): HTMLElement {
+function buildCard(e: Entity, color: string): HTMLElement {
   const card = document.createElement('div');
   card.className = 'card';
   card.dataset.entity = e.id;
   card.dataset.group = e.group;
   card.style.width = e._w + 'px';
+  card.style.setProperty('--entity-c', color);
 
   const hd = document.createElement('div');
   hd.className = 'card-hd';
