@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import type { EerDiagram } from '../engine/diagram';
+import { entityIdsInGroup } from '../engine/groups';
 import type { Entity, Model, Relationship, Selection } from '../engine/types';
 import { cn } from '../ui/cn';
 
@@ -110,8 +111,11 @@ function EntityDetail({ engine, model, id }: { engine: EerDiagram | null; model:
 
 function GroupDetail({ engine, model, id }: { engine: EerDiagram | null; model: Model; id: string }) {
   const group = model.groups.find((g) => g.id === id);
-  const ents = model.entities.filter((e) => e.group === id);
-  const idset = new Set(ents.map((e) => e.id));
+  const isSub = group?.parent != null;
+  const parentZone = isSub ? model.groups.find((g) => g.id === group?.parent) : undefined;
+  const idset = entityIdsInGroup(model, id);
+  const ents = model.entities.filter((e) => idset.has(e.id));
+  const subgroups = model.groups.filter((g) => g.parent === id);
   const rels = model.relationships.filter((r) => idset.has(r.source) || idset.has(r.target));
   const external = rels.filter((r) => !(idset.has(r.source) && idset.has(r.target)));
   const internal = rels.length - external.length;
@@ -120,7 +124,9 @@ function GroupDetail({ engine, model, id }: { engine: EerDiagram | null; model: 
     <div>
       <h2 className="mb-0.5 font-mono text-base font-medium">{group?.label ?? id}</h2>
       <Sub>
-        zone · {ents.length} tables · {rels.length} relationships ({internal} internal)
+        {isSub ? `subgroup of ${parentZone?.label ?? group?.parent}` : 'zone'}
+        {!isSub && subgroups.length > 0 && ` · ${subgroups.length} subgroups`} · {ents.length} tables ·{' '}
+        {rels.length} relationships ({internal} internal)
       </Sub>
 
       <SectionTitle>Tables</SectionTitle>
@@ -135,12 +141,21 @@ function GroupDetail({ engine, model, id }: { engine: EerDiagram | null; model: 
           }}
         >
           <span className="truncate font-mono text-muted">{e.label}</span>
-          <span className="ml-auto shrink-0 text-[0.68rem] text-dim">{e.fields.length} fields</span>
+          {e.group !== id && (
+            <span className="ml-auto shrink-0 text-[0.64rem] text-dim">
+              {model.groups.find((g) => g.id === e.group)?.label ?? e.group}
+            </span>
+          )}
+          <span className={cn('shrink-0 text-[0.68rem] text-dim', e.group === id && 'ml-auto')}>
+            {e.fields.length} fields
+          </span>
         </button>
       ))}
 
-      <SectionTitle>Connections to other zones ({external.length})</SectionTitle>
-      {external.length === 0 && <div className="leading-relaxed text-muted">None — this zone is self-contained.</div>}
+      <SectionTitle>
+        {isSub ? `Connections beyond this group` : `Connections to other zones`} ({external.length})
+      </SectionTitle>
+      {external.length === 0 && <div className="leading-relaxed text-muted">None — this group is self-contained.</div>}
       {external.map((r) => {
         const outward = idset.has(r.source);
         const here = outward ? r.source : r.target;

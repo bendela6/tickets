@@ -69,8 +69,21 @@ export function loadModel(raw: unknown): LoadResult {
     if (!g.id) errors.push(`groups[${i}] is missing "id".`);
     else if (groupIds.has(g.id)) errors.push(`Duplicate group id "${g.id}".`);
     else groupIds.add(g.id);
-    return { id: g.id, label: g.label || g.id, order: g.order ?? i };
+    return { id: g.id, label: g.label || g.id, order: g.order ?? i, parent: g.parent ?? null };
   });
+  // Resolve nesting: a parent must exist and itself be top-level (one level deep).
+  const groupById = new Map(normGroups.map((g) => [g.id, g]));
+  for (const g of normGroups) {
+    if (g.parent == null) continue;
+    const p = groupById.get(g.parent);
+    if (!p) {
+      warnings.push(`Group "${g.id}" references unknown parent "${g.parent}"; treated as top-level.`);
+      g.parent = null;
+    } else if (p.parent != null) {
+      warnings.push(`Group "${g.id}" nests under subgroup "${g.parent}"; only one level is supported — flattened.`);
+      g.parent = null;
+    }
+  }
   normGroups.sort((a, b) => a.order - b.order);
 
   // ---- entities ----

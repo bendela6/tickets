@@ -3,6 +3,7 @@
 // focus/hover only toggle classes, never coordinates (no reflow, no drift).
 
 import { edgeEndpoints, edgeSides, PORT_GAP } from './geometry';
+import { entityIdsInGroup, subgroupIdsOf, zoneIdOf } from './groups';
 import { computeRoutes, orthoPolyPath, simpleOrtho, smoothPath } from './routing';
 import type { EdgeEls, EngineState, Entity, Point, Relationship, Side } from './types';
 
@@ -25,8 +26,9 @@ export function buildScene(state: EngineState): void {
   groupLayer.className = 'layer groups';
   for (const b of state.model._groupBounds) {
     const z = document.createElement('div');
-    z.className = 'zone';
+    z.className = b.level > 0 ? 'zone zone-sub' : 'zone';
     z.dataset.group = b.id;
+    if (b.parent) z.dataset.parent = b.parent;
     z.style.left = b.x + 'px';
     z.style.top = b.y + 'px';
     z.style.width = b.w + 'px';
@@ -234,7 +236,7 @@ export function focusEntity(state: EngineState, id: string): void {
 }
 
 export function focusGroup(state: EngineState, groupId: string): void {
-  const inGroup = new Set(state.model.entities.filter((e) => e.group === groupId).map((e) => e.id));
+  const inGroup = entityIdsInGroup(state.model, groupId);
   const related = new Set<string>(inGroup);
   const relEdges = new Set<string>();
   for (const rel of state.model.relationships) {
@@ -245,9 +247,13 @@ export function focusGroup(state: EngineState, groupId: string): void {
     }
   }
   applyDim(state, related, relEdges);
+  // The focused group is selected; a zone keeps its own subgroup boxes lit (they
+  // are part of it), everything else dims.
+  const lit = new Set<string>([groupId, ...subgroupIdsOf(state.model, groupId)]);
   for (const z of state.els.groupLayer.children) {
-    z.classList.toggle('zone-selected', (z as HTMLElement).dataset.group === groupId);
-    z.classList.toggle('zone-dim', (z as HTMLElement).dataset.group !== groupId);
+    const gid = (z as HTMLElement).dataset.group ?? '';
+    z.classList.toggle('zone-selected', gid === groupId);
+    z.classList.toggle('zone-dim', !lit.has(gid));
   }
   state.focus = { type: 'group', id: groupId };
 }
@@ -299,20 +305,21 @@ export function clearFieldHighlight(state: EngineState): void {
 // ---- Visibility (filters) ----
 
 export function applyVisibility(state: EngineState): void {
-  const hiddenGroups = state.hidden.groups;
+  const hiddenGroups = state.hidden.groups; // holds zone ids (chips are zone-level)
   const hiddenKinds = state.hidden.kinds;
+  const zoneHidden = (groupId: string) => hiddenGroups.has(zoneIdOf(state.model, groupId));
   for (const [id, card] of state.els.cards) {
     const e = state.model.entityById.get(id)!;
-    card.classList.toggle('hidden', hiddenGroups.has(e.group));
+    card.classList.toggle('hidden', zoneHidden(e.group));
   }
   for (const z of state.els.groupLayer.children) {
-    z.classList.toggle('hidden', hiddenGroups.has((z as HTMLElement).dataset.group ?? ''));
+    z.classList.toggle('hidden', zoneHidden((z as HTMLElement).dataset.group ?? ''));
   }
   for (const rel of state.model.relationships) {
     const els = state.els.edgeEls.get(rel.id)!;
     const A = state.model.entityById.get(rel.source)!;
     const B = state.model.entityById.get(rel.target)!;
-    const hide = hiddenGroups.has(A.group) || hiddenGroups.has(B.group) || (rel.kind ? hiddenKinds.has(rel.kind) : false);
+    const hide = zoneHidden(A.group) || zoneHidden(B.group) || (rel.kind ? hiddenKinds.has(rel.kind) : false);
     els.g.classList.toggle('hidden', hide);
   }
   markConnectedPorts(state);
@@ -341,6 +348,12 @@ export function relayout(state: EngineState): void {
   });
   state.els.svg.style.width = state.model._content.w + 'px';
   state.els.svg.style.height = state.model._content.h + 'px';
-  for (const e of state.model.entities) positionEntity(state, e.id);
+  for (const e of state.model.entities) {
+    // Re-apply width: packLayout may have re-measured (e.g. once webfonts load),
+    // and the card's CSS width must track e._w or ports drift off the dots.
+    const card = state.els.cards.get(e.id);
+    if (card) card.style.width = e._w + 'px';
+    positionEntity(state, e.id);
+  }
   drawAllEdges(state);
 }
