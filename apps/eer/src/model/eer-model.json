@@ -1508,5 +1508,8 @@
       "targetField": "item_id",
       "kind": "fk"
     }
-  ]
+  ],
+  "view": {
+    "routing": "avoid"
+  }
 }
