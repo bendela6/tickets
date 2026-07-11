@@ -1,4 +1,4 @@
-import type { CheckResult } from '../../engine/types';
+import type { CheckResult } from '../../engine/model/types';
 import { cn } from '../../ui/cn';
 
 interface ChecksOverlayProps {

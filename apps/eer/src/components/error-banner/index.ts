@@ -1,1 +1,1 @@
-export * from './error-banner';
+export { ErrorBanner } from './error-banner';

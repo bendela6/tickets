@@ -1,8 +1,8 @@
-import { type ReactNode, useState } from 'react';
-
-import type { EerDiagram } from '../../engine/eer-diagram';
-import type { Model, RoutingMode, SearchResult } from '../../engine/types';
-import { cn } from '../../ui/cn';
+import type { EerDiagram } from '../../engine/diagram/eer-diagram';
+import type { Model, RoutingMode } from '../../engine/model/types';
+import { Chip } from './chip';
+import { SearchBox } from './search-box';
+import { ToggleGroup } from './toggle-group';
 
 const ROUTING_LABEL: Record<RoutingMode, string> = {
   curved: 'Lines: curved',
@@ -85,93 +85,5 @@ export function TopBar(props: TopBarProps) {
         </button>
       </div>
     </header>
-  );
-}
-
-function ToggleGroup({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex flex-wrap items-center gap-1">
-      <span className="mr-0.5 text-[0.68rem] uppercase tracking-[0.05em] text-dim">{label}</span>
-      {children}
-    </div>
-  );
-}
-
-function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[0.72rem]',
-        on ? 'border-border-2 text-ink' : 'border-border text-muted line-through opacity-45',
-      )}
-    >
-      <span className={cn('h-2 w-2 rounded-full', on ? 'bg-accent' : 'bg-dim')} />
-      {children}
-    </button>
-  );
-}
-
-function SearchBox({ engine }: { engine: EerDiagram | null }) {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [open, setOpen] = useState(false);
-
-  const run = (q: string) => {
-    setQuery(q);
-    const r = engine?.search(q) ?? [];
-    setResults(r);
-    setOpen(r.length > 0);
-  };
-
-  const pick = (m: SearchResult) => {
-    engine?.focusFromSearch(m.entityId, m.field);
-    setOpen(false);
-    setQuery('');
-  };
-
-  return (
-    <div className="relative">
-      <input
-        type="text"
-        name="eer-search"
-        value={query}
-        placeholder="Search entities / fields…"
-        autoComplete="off"
-        spellCheck={false}
-        className="w-[190px] rounded-md border border-border bg-surface px-2.5 py-1.5 text-[0.78rem] text-ink outline-none placeholder:text-dim focus:border-border-2"
-        onChange={(e) => run(e.target.value)}
-        onFocus={() => setOpen(results.length > 0)}
-        onBlur={() => window.setTimeout(() => setOpen(false), 120)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && results[0]) pick(results[0]);
-          if (e.key === 'Escape') {
-            setOpen(false);
-            setQuery('');
-          }
-        }}
-      />
-      {open && (
-        <div className="absolute left-0 top-[110%] z-30 max-h-[340px] min-w-[230px] overflow-auto rounded-lg border border-border-2 bg-surface-2 p-1 shadow-[0_12px_34px_rgba(0,0,0,0.5)]">
-          {results.map((m, i) => (
-            <button
-              key={i}
-              type="button"
-              className="block w-full rounded-md px-2 py-1.5 text-left text-[0.78rem] hover:bg-surface-3"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                pick(m);
-              }}
-            >
-              <span className="font-mono">{m.label}</span>
-              <span className="ml-1.5 text-[0.68rem] text-dim">
-                {m.kind === 'field' ? `${m.entityLabel} · field` : 'entity'}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
   );
 }
