@@ -251,13 +251,13 @@ body {
   max-width: 46%;
 }
 
-/* ---- Ports + stems ---- */
+/* ---- Ports (pin-bars) + stems ---- */
 .port {
   position: absolute;
   top: 50%;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
+  width: 5px;
+  height: 14px;
+  border-radius: 2.5px;
   background: var(--edge);
   border: 1px solid var(--surface);
   transform: translate(-50%, -50%);
@@ -310,7 +310,7 @@ body {
 .edge-casing {
   fill: none;
   stroke: var(--bg);
-  stroke-width: 6;
+  stroke-width: 4.5;
   stroke-linecap: round;
 }
 .edge-path {
@@ -320,6 +320,14 @@ body {
 }
 .edge-path.dashed {
   stroke-dasharray: 5 4;
+}
+/* Crow's-foot / tick heads at the endpoints — solid even when the line is dashed. */
+.edge-head {
+  fill: none;
+  stroke: var(--edge-c, var(--edge));
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .edge-hit {
   fill: none;
@@ -333,6 +341,12 @@ body {
   stroke: var(--edge-c, var(--edge-hot));
   stroke-width: 2.8;
   filter: brightness(1.25) drop-shadow(0 0 3px var(--edge-c, var(--edge-hot)));
+}
+.edge.hot .edge-head,
+.edge.active .edge-head {
+  stroke: var(--edge-c, var(--edge-hot));
+  stroke-width: 2.4;
+  filter: brightness(1.25);
 }
 
 /* ---- Focus / dim ---- */

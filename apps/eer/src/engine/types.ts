@@ -59,6 +59,9 @@ export interface Relationship {
   label: string | null;
   // routing fills this (avoid/ortho modes):
   _route?: Point[] | null;
+  // pin-slot y-offsets so edges sharing a port fan out along the pin bar:
+  _srcSlot?: number;
+  _tgtSlot?: number;
 }
 
 export interface GroupBounds {
@@ -84,6 +87,8 @@ export interface Model {
   relById: Map<string, Relationship>;
   _groupBounds: GroupBounds[];
   _content: { w: number; h: number };
+  // per-port (entity|field|side) half-height of the pin bar spanning its slots:
+  _pinSpan?: Map<string, number>;
 }
 
 export interface LoadResult {
@@ -97,6 +102,7 @@ export interface EdgeEls {
   hit: SVGPathElement;
   casing: SVGPathElement;
   path: SVGPathElement;
+  head: SVGPathElement; // crow's-foot / tick endpoint decorations
 }
 
 export type Focus =

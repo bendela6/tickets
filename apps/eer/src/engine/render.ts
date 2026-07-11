@@ -2,7 +2,7 @@
 // edge geometry, focus/dim classes). Positions come only from layout + geometry;
 // focus/hover only toggle classes, never coordinates (no reflow, no drift).
 
-import { edgeEndpoints, edgeSides, PORT_GAP } from './geometry';
+import { computePinSlots, edgeEndpoints, edgeSides, PORT_GAP } from './geometry';
 import { entityIdsInGroup, subgroupIdsOf, zoneIdOf } from './groups';
 import { entityColor } from './palette';
 import { computeRoutes, orthoPolyPath, simpleOrtho, smoothPath } from './routing';
@@ -59,9 +59,11 @@ export function buildScene(state: EngineState): void {
     const path = document.createElementNS(SVG_NS, 'path') as SVGPathElement;
     path.setAttribute('class', 'edge-path');
     if (state.model.kindStyle.get(rel.kind ?? '') === 'dashed') path.classList.add('dashed');
-    g.append(hit, casing, path);
+    const head = document.createElementNS(SVG_NS, 'path') as SVGPathElement;
+    head.setAttribute('class', 'edge-head');
+    g.append(hit, casing, path, head);
     svg.appendChild(g);
-    state.els.edgeEls.set(rel.id, { g, hit, casing, path });
+    state.els.edgeEls.set(rel.id, { g, hit, casing, path, head });
   }
 
   const cardLayer = document.createElement('div');
@@ -140,9 +142,29 @@ export function positionEntity(state: EngineState, id: string): void {
 // ---- Edges ----
 
 export function drawAllEdges(state: EngineState, live?: boolean): void {
-  if (!live && state.view.routing !== 'curved') computeRoutes(state.model);
+  if (!live) {
+    computePinSlots(state.model); // fan shared ports before routing/drawing uses the endpoints
+    if (state.view.routing !== 'curved') computeRoutes(state.model);
+  }
   for (const rel of state.model.relationships) drawEdge(state, rel, live ?? false);
   markConnectedPorts(state);
+  if (!live) sizePins(state);
+}
+
+// Grow each pin bar to span the connections fanned onto it (model._pinSpan).
+function sizePins(state: EngineState): void {
+  const els = state.els.cardLayer;
+  for (const p of els.querySelectorAll('.port')) (p as HTMLElement).style.height = '';
+  const span = state.model._pinSpan;
+  if (!span) return;
+  for (const [key, off] of span) {
+    if (off <= 0) continue;
+    const parts = key.split('|');
+    const p = els.querySelector(
+      `.port.${parts[2] === 'L' ? 'left' : 'right'}[data-entity="${cssEsc(parts[0]!)}"][data-field="${cssEsc(parts[1]!)}"]`,
+    ) as HTMLElement | null;
+    if (p) p.style.height = 2 * off + 11 + 'px';
+  }
 }
 
 export function drawEdgesForEntity(state: EngineState, id: string, live?: boolean): void {
@@ -171,6 +193,44 @@ function drawEdge(state: EngineState, rel: Relationship, live: boolean): void {
   els.path.setAttribute('d', d);
   els.casing.setAttribute('d', d);
   els.hit.setAttribute('d', d);
+  els.head.setAttribute('d', headPath(rel, p1, p2, s, t, self));
+}
+
+// ---- Endpoint heads (crow's-foot / tick), ERD cardinality notation ----
+
+const HEAD_LEN = 8; // reaches ~the card edge from the port
+const HEAD_SPREAD = 4;
+
+type EndKind = 'one' | 'many';
+
+// Which end is the "many" side, from the edge's cardinality.
+function endKinds(card: string): [EndKind, EndKind] {
+  switch (card) {
+    case '1-n':
+      return ['one', 'many'];
+    case 'n-1':
+      return ['many', 'one'];
+    case 'n-m':
+      return ['many', 'many'];
+    default: // 1-1
+      return ['one', 'one'];
+  }
+}
+
+// A head at port p on side `side`: a crow's-foot fanning toward the card for the
+// "many" end. The "one" end has no head — its amber pin bar is the marker.
+function headSub(p: Point, side: Side, kind: EndKind): string {
+  if (kind !== 'many') return '';
+  const toCard = side === 'R' ? -1 : 1; // direction from the port toward its card
+  const s = HEAD_SPREAD;
+  const cx = p.x + toCard * HEAD_LEN;
+  return `M${p.x} ${p.y}L${cx} ${p.y - s}M${p.x} ${p.y}L${cx} ${p.y}M${p.x} ${p.y}L${cx} ${p.y + s}`;
+}
+
+function headPath(rel: Relationship, p1: Point, p2: Point, s: Side, t: Side, self: boolean): string {
+  if (self) return '';
+  const [ks, kt] = endKinds(rel.cardinality);
+  return headSub(p1, s, ks) + headSub(p2, t, kt);
 }
 
 export function markConnectedPorts(state: EngineState): void {
@@ -179,8 +239,10 @@ export function markConnectedPorts(state: EngineState): void {
     const els = state.els.edgeEls.get(rel.id)!;
     if (els.g.classList.contains('hidden')) continue;
     const { s, t } = edgeSides(state.model, rel);
-    portEl(state, rel.source, rel.sourceField, s)?.classList.add('connected');
-    portEl(state, rel.target, rel.targetField, t)?.classList.add('connected');
+    // The pin bar sits on the "one" end only; the "many" end shows a crow's-foot.
+    const [ks, kt] = endKinds(rel.cardinality);
+    if (ks === 'one') portEl(state, rel.source, rel.sourceField, s)?.classList.add('connected');
+    if (kt === 'one') portEl(state, rel.target, rel.targetField, t)?.classList.add('connected');
   }
 }
 
