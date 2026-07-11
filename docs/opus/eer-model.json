@@ -1,0 +1,253 @@
+{
+  "meta": {
+    "title": "Opus event-sourcing EER",
+    "description": "The event-sourcing schema from docs/opus/2-schema.md: the log (events, commands), reliable delivery (outbox), projections (ticket_activity, ticket_values, ticket_snapshots), and the existing tables they reference. Edit this file and reload to change the diagram — no code changes."
+  },
+  "view": { "zoom": 1, "routing": "curved" },
+
+  "kinds": [
+    { "id": "fk", "label": "FK constraint", "style": "solid" },
+    { "id": "soft", "label": "Denormalized / no constraint", "style": "dashed" }
+  ],
+
+  "groups": [
+    { "id": "log", "label": "Event log & idempotency", "order": 1 },
+    { "id": "delivery", "label": "Reliable delivery", "order": 2 },
+    { "id": "projections", "label": "Projections", "order": 3 },
+    { "id": "existing", "label": "Existing schema — referenced", "order": 4 }
+  ],
+
+  "entities": [
+    {
+      "id": "events",
+      "label": "events",
+      "group": "log",
+      "description": "The log. Generalizes ticket_events. No unique on command_id — idempotency is the commands ledger, because one command emits many events. id is the global commit cursor consumers poll.",
+      "fields": [
+        { "name": "id", "type": "bigserial", "role": "pk", "title": "Global cursor", "description": "Global commit cursor consumers poll." },
+        { "name": "aggregate_type", "type": "text", "description": "'ticket' | 'config' — names the stream with aggregate_id." },
+        { "name": "aggregate_id", "type": "integer", "description": "Id within the stream." },
+        { "name": "seq", "type": "integer", "description": "Per-stream 1..n — order + optimistic concurrency." },
+        { "name": "kind", "type": "text", "description": "Registry-validated event kind." },
+        { "name": "version", "type": "integer", "description": "Payload schema version (default 1)." },
+        { "name": "payload", "type": "jsonb", "description": "After-only." },
+        { "name": "actor_id", "type": "integer", "role": "fk", "ref": "users", "refField": "id", "description": "Who caused the event." },
+        { "name": "at", "type": "timestamptz", "description": "ISO-8601, server-assigned; display/sort only." },
+        { "name": "command_id", "type": "uuid", "role": "fk", "ref": "commands", "refField": "id", "description": "Trace; NON-unique here. Ties to the commands ledger." },
+        { "name": "correlation_id", "type": "uuid", "description": "Groups one command's N events; default = command_id." },
+        { "name": "caused_by", "type": "bigint", "role": "fk", "ref": "events", "refField": "id", "description": "Parent event id (automations); null for human/API." },
+        { "name": "depth", "type": "integer", "description": "0 = human/API; +1 per automation hop." },
+        { "name": "project_id", "type": "integer", "role": "fk", "ref": "projects", "refField": "id", "description": "Denorm for partition/retention/ACL; null for config streams." }
+      ]
+    },
+    {
+      "id": "commands",
+      "label": "commands",
+      "group": "log",
+      "description": "Idempotency ledger. One row per accepted command. A retried command_id collides here and the whole command is a no-op.",
+      "fields": [
+        { "name": "id", "type": "uuid", "role": "pk", "description": "Client-supplied commandId." },
+        { "name": "aggregate_type", "type": "text" },
+        { "name": "aggregate_id", "type": "integer" },
+        { "name": "actor_id", "type": "integer", "role": "fk", "ref": "users", "refField": "id" },
+        { "name": "at", "type": "timestamptz" },
+        { "name": "result", "type": "jsonb", "description": "Optional cached response for safe retries." }
+      ]
+    },
+    {
+      "id": "outbox",
+      "label": "outbox",
+      "group": "delivery",
+      "description": "Reliable delivery. One row per event, written in the same transaction. A single worker drains it in id order, so consumers can't miss mid-transaction events.",
+      "fields": [
+        { "name": "event_id", "type": "bigint", "role": "pk", "ref": "events", "refField": "id", "description": "PK and FK — one outbox row per event." },
+        { "name": "created_at", "type": "timestamptz" },
+        { "name": "picked_at", "type": "timestamptz", "description": "Null until a worker claims it." },
+        { "name": "done_at", "type": "timestamptz", "description": "Null until delivered." }
+      ]
+    },
+    {
+      "id": "ticket_activity",
+      "label": "ticket_activity",
+      "group": "projections",
+      "description": "Feed projection. Denormalized so source events stay after-only. Written inline in the command txn (v1).",
+      "fields": [
+        { "name": "id", "type": "bigserial", "role": "pk" },
+        { "name": "ticket_id", "type": "integer", "role": "fk", "ref": "tickets", "refField": "id" },
+        { "name": "event_id", "type": "bigint", "role": "fk", "ref": "events", "refField": "id", "description": "Unique — one activity row per event." },
+        { "name": "project_id", "type": "integer", "role": "fk", "ref": "projects", "refField": "id" },
+        { "name": "kind", "type": "text" },
+        { "name": "actor_id", "type": "integer", "role": "fk", "ref": "users", "refField": "id" },
+        { "name": "at", "type": "timestamptz" },
+        { "name": "correlation_id", "type": "uuid" },
+        { "name": "summary", "type": "jsonb", "description": "{ fieldId?, before?, after?, ... }" }
+      ]
+    },
+    {
+      "id": "ticket_values",
+      "label": "ticket_values",
+      "group": "projections",
+      "description": "Hardened projection. Adds value_user_id, drops status_id, and enforces exactly-one-value + correct cardinality in the DB (closes the NULL-distinct duplicate-row hole).",
+      "fields": [
+        { "name": "id", "type": "serial", "role": "pk" },
+        { "name": "ticket_id", "type": "integer", "role": "fk", "ref": "tickets", "refField": "id" },
+        { "name": "field_id", "type": "integer", "role": "fk", "ref": "fields", "refField": "id" },
+        { "name": "value_text", "type": "text" },
+        { "name": "value_number", "type": "numeric" },
+        { "name": "value_date", "type": "timestamptz" },
+        { "name": "value_bool", "type": "boolean" },
+        { "name": "value_json", "type": "jsonb" },
+        { "name": "option_id", "type": "integer", "role": "fk", "ref": "field_options", "refField": "id" },
+        { "name": "value_user_id", "type": "integer", "role": "fk", "ref": "users", "refField": "id", "description": "NEW (P3). A workflow status is an option field, not a status_id." }
+      ]
+    },
+    {
+      "id": "ticket_snapshots",
+      "label": "ticket_snapshots",
+      "group": "projections",
+      "description": "Tier B rebuild economy. Fold checkpoints so a hot ticket doesn't replay from seq = 1.",
+      "fields": [
+        { "name": "ticket_id", "type": "integer", "role": "pk", "ref": "tickets", "refField": "id", "description": "Composite PK with through_seq." },
+        { "name": "through_seq", "type": "integer", "role": "pk", "description": "Composite PK with ticket_id." },
+        { "name": "state", "type": "jsonb" }
+      ]
+    },
+
+    {
+      "id": "tickets",
+      "label": "tickets",
+      "group": "existing",
+      "description": "Pure skeleton — everything user-visible lives in ticket_values. updated_at doubles as the optimistic-lock token.",
+      "fields": [
+        { "name": "id", "type": "serial", "role": "pk" },
+        { "name": "project_id", "type": "integer", "role": "fk", "ref": "projects", "refField": "id" },
+        { "name": "type_id", "type": "integer", "role": "fk", "ref": "ticket_types", "refField": "id" },
+        { "name": "parent_id", "type": "integer", "role": "fk", "ref": "tickets", "refField": "id", "description": "Depth-1 hierarchy; enforced in the API." },
+        { "name": "number", "type": "integer", "description": "Display number (TASK-042); max+1 under SELECT ... FOR UPDATE." },
+        { "name": "created_by", "type": "integer", "role": "fk", "ref": "users", "refField": "id" },
+        { "name": "archived_at", "type": "timestamptz" },
+        { "name": "created_at", "type": "timestamptz" },
+        { "name": "updated_at", "type": "timestamptz", "description": "Optimistic-lock token — always compare as text." }
+      ]
+    },
+    {
+      "id": "users",
+      "label": "users",
+      "group": "existing",
+      "description": "Humans and agents; every mutation is attributed to one.",
+      "fields": [
+        { "name": "id", "type": "serial", "role": "pk" },
+        { "name": "name", "type": "text", "description": "Unique." },
+        { "name": "email", "type": "text" },
+        { "name": "kind", "type": "user_kind", "description": "Enum: human | agent." },
+        { "name": "archived_at", "type": "timestamptz" },
+        { "name": "created_at", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "fields",
+      "label": "fields",
+      "group": "existing",
+      "description": "Field definitions. Slim enum (string, number, boolean, date, datetime, option, user, json); formats & cardinality ride in config. System fields are seeded and type-locked.",
+      "fields": [
+        { "name": "id", "type": "serial", "role": "pk" },
+        { "name": "ticket_type_id", "type": "integer", "role": "fk", "ref": "ticket_types", "refField": "id" },
+        { "name": "position", "type": "integer" },
+        { "name": "required", "type": "boolean" },
+        { "name": "key", "type": "text" },
+        { "name": "label", "type": "text" },
+        { "name": "type", "type": "field_type", "description": "Enum: string | number | boolean | date | datetime | option | user | json." },
+        { "name": "system", "type": "boolean" },
+        { "name": "config", "type": "jsonb", "description": "format / multiple / transitions." },
+        { "name": "archived_at", "type": "timestamptz" },
+        { "name": "created_at", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "field_options",
+      "label": "field_options",
+      "group": "existing",
+      "description": "Options for option / multi-option fields. A workflow status is an option; its lifecycle kind (todo/active/done) rides in config.",
+      "fields": [
+        { "name": "id", "type": "serial", "role": "pk" },
+        { "name": "field_id", "type": "integer", "role": "fk", "ref": "fields", "refField": "id" },
+        { "name": "value", "type": "text" },
+        { "name": "label", "type": "text" },
+        { "name": "config", "type": "jsonb" },
+        { "name": "position", "type": "integer" },
+        { "name": "archived_at", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "projects",
+      "label": "projects",
+      "group": "existing",
+      "description": "One row per project (key, name, ticket prefix).",
+      "fields": [
+        { "name": "id", "type": "serial", "role": "pk" },
+        { "name": "key", "type": "text", "description": "Unique." },
+        { "name": "name", "type": "text" },
+        { "name": "ticket_prefix", "type": "text" },
+        { "name": "scheme_id", "type": "integer", "role": "fk", "ref": "schemes", "refField": "id" },
+        { "name": "created_at", "type": "timestamptz" }
+      ]
+    },
+    {
+      "id": "ticket_types",
+      "label": "ticket_types",
+      "group": "existing",
+      "description": "Per-project ticket types (seeded: task, subtask).",
+      "fields": [
+        { "name": "id", "type": "serial", "role": "pk" },
+        { "name": "project_id", "type": "integer", "role": "fk", "ref": "projects", "refField": "id" },
+        { "name": "key", "type": "text" },
+        { "name": "name", "type": "text" }
+      ]
+    },
+    {
+      "id": "schemes",
+      "label": "schemes",
+      "group": "existing",
+      "description": "Reusable field/link/type scheme shared across projects.",
+      "fields": [
+        { "name": "id", "type": "serial", "role": "pk" },
+        { "name": "key", "type": "text", "description": "Unique." },
+        { "name": "name", "type": "text" }
+      ]
+    }
+  ],
+
+  "relationships": [
+    { "id": "ev_actor", "source": "events", "sourceField": "actor_id", "target": "users", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
+    { "id": "ev_command", "source": "events", "sourceField": "command_id", "target": "commands", "targetField": "id", "cardinality": "n-1", "kind": "soft", "label": "trace" },
+    { "id": "ev_caused", "source": "events", "sourceField": "caused_by", "target": "events", "targetField": "id", "cardinality": "n-1", "kind": "fk", "label": "causes" },
+    { "id": "ev_project", "source": "events", "sourceField": "project_id", "target": "projects", "targetField": "id", "cardinality": "n-1", "kind": "soft" },
+
+    { "id": "cmd_actor", "source": "commands", "sourceField": "actor_id", "target": "users", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
+
+    { "id": "ob_event", "source": "outbox", "sourceField": "event_id", "target": "events", "targetField": "id", "cardinality": "1-1", "kind": "fk" },
+
+    { "id": "ta_ticket", "source": "ticket_activity", "sourceField": "ticket_id", "target": "tickets", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
+    { "id": "ta_event", "source": "ticket_activity", "sourceField": "event_id", "target": "events", "targetField": "id", "cardinality": "1-1", "kind": "fk" },
+    { "id": "ta_project", "source": "ticket_activity", "sourceField": "project_id", "target": "projects", "targetField": "id", "cardinality": "n-1", "kind": "soft" },
+    { "id": "ta_actor", "source": "ticket_activity", "sourceField": "actor_id", "target": "users", "targetField": "id", "cardinality": "n-1", "kind": "soft" },
+
+    { "id": "tv_ticket", "source": "ticket_values", "sourceField": "ticket_id", "target": "tickets", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
+    { "id": "tv_field", "source": "ticket_values", "sourceField": "field_id", "target": "fields", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
+    { "id": "tv_option", "source": "ticket_values", "sourceField": "option_id", "target": "field_options", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
+    { "id": "tv_user", "source": "ticket_values", "sourceField": "value_user_id", "target": "users", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
+
+    { "id": "ts_ticket", "source": "ticket_snapshots", "sourceField": "ticket_id", "target": "tickets", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
+
+    { "id": "tk_project", "source": "tickets", "sourceField": "project_id", "target": "projects", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
+    { "id": "tk_type", "source": "tickets", "sourceField": "type_id", "target": "ticket_types", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
+    { "id": "tk_parent", "source": "tickets", "sourceField": "parent_id", "target": "tickets", "targetField": "id", "cardinality": "n-1", "kind": "fk", "label": "parent" },
+    { "id": "tk_creator", "source": "tickets", "sourceField": "created_by", "target": "users", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
+
+    { "id": "fld_type", "source": "fields", "sourceField": "ticket_type_id", "target": "ticket_types", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
+    { "id": "fo_field", "source": "field_options", "sourceField": "field_id", "target": "fields", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
+
+    { "id": "tt_project", "source": "ticket_types", "sourceField": "project_id", "target": "projects", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
+    { "id": "pr_scheme", "source": "projects", "sourceField": "scheme_id", "target": "schemes", "targetField": "id", "cardinality": "n-1", "kind": "fk" }
+  ]
+}
