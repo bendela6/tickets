@@ -17,13 +17,23 @@ function pathEndpoints(d: string): { start: Point; end: Point } {
   };
 }
 
-function domPortWorld(state: EngineState, portEl: Element | null): Point | null {
+// The pin bar's world rect: centre x, plus the vertical span an endpoint may land
+// anywhere within (edges sharing a pin fan out along it).
+function domPortBar(state: EngineState, portEl: Element | null): { x: number; yLo: number; yHi: number } | null {
   if (!portEl) return null;
   const vp = state.els.viewport.getBoundingClientRect();
   const r = portEl.getBoundingClientRect();
-  const sx = r.left + r.width / 2 - vp.left;
-  const sy = r.top + r.height / 2 - vp.top;
-  return { x: (sx - state.view.panX) / state.view.zoom, y: (sy - state.view.panY) / state.view.zoom };
+  const z = state.view.zoom;
+  const cx = r.left + r.width / 2 - vp.left;
+  return {
+    x: (cx - state.view.panX) / z,
+    yLo: (r.top - vp.top - state.view.panY) / z,
+    yHi: (r.bottom - vp.top - state.view.panY) / z,
+  };
+}
+
+function offBar(bar: { x: number; yLo: number; yHi: number }, p: Point): boolean {
+  return Math.abs(p.x - bar.x) > DOM_EPS || p.y < bar.yLo - DOM_EPS || p.y > bar.yHi + DOM_EPS;
 }
 
 function dist(a: Point, b: Point): number {
@@ -52,10 +62,10 @@ function checkEndpoints(state: EngineState): CheckResult {
     const { start, end } = pathEndpoints(els.path.getAttribute('d') || '');
     if (dist(start, p1) > EPS) problems.push(`${rel.id}: path start off source port`);
     if (dist(end, p2) > EPS) problems.push(`${rel.id}: path end off target port`);
-    const sc = domPortWorld(state, srcPort);
-    const tc = domPortWorld(state, tgtPort);
-    if (sc && dist(sc, p1) > DOM_EPS) problems.push(`${rel.id}: source dot ${dist(sc, p1).toFixed(1)}px off endpoint`);
-    if (tc && dist(tc, p2) > DOM_EPS) problems.push(`${rel.id}: target dot ${dist(tc, p2).toFixed(1)}px off endpoint`);
+    const sb = domPortBar(state, srcPort);
+    const tb = domPortBar(state, tgtPort);
+    if (sb && offBar(sb, p1)) problems.push(`${rel.id}: source endpoint off its pin bar`);
+    if (tb && offBar(tb, p2)) problems.push(`${rel.id}: target endpoint off its pin bar`);
   }
   return result('Every edge endpoint lands on a real port', problems, state.model.relationships.length + ' edges');
 }

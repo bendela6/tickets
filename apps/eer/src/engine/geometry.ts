@@ -92,12 +92,72 @@ export function edgeSides(model: Model, rel: Relationship): { s: Side; t: Side }
   return best;
 }
 
-// World-space endpoints of a relationship: the two field ports it connects.
+// World-space endpoints of a relationship: the two field ports it connects, each
+// shifted by its pin slot so edges sharing a port fan out along the bar.
 export function edgeEndpoints(model: Model, rel: Relationship): EdgeEndpoints {
   const A = model.entityById.get(rel.source)!;
   const B = model.entityById.get(rel.target)!;
   const ai = fieldIndex(A, rel.sourceField);
   const bi = fieldIndex(B, rel.targetField);
   const { s, t } = edgeSides(model, rel);
-  return { p1: portWorldPos(A, ai, s), p2: portWorldPos(B, bi, t), s, t, self: rel.source === rel.target, A, B };
+  const p1 = portWorldPos(A, ai, s);
+  const p2 = portWorldPos(B, bi, t);
+  p1.y += rel._srcSlot ?? 0;
+  p2.y += rel._tgtSlot ?? 0;
+  return { p1, p2, s, t, self: rel.source === rel.target, A, B };
+}
+
+export const SLOT_GAP = 8; // spacing between fanned connections — must exceed the casing width
+const MAX_FAN = 48; // cap a pin bar's total span so heavily-referenced PKs stay compact
+
+export function portKey(entity: string, field: string, side: Side): string {
+  return entity + '|' + field + '|' + side;
+}
+
+// Assign each edge-end a y-offset along its port so multiple lines into the same
+// pin don't stack. Ends are ordered by where the other end sits, which keeps the
+// fan from crossing itself. Records each port's half-span in model._pinSpan so the
+// renderer can size the visible bar.
+export function computePinSlots(model: Model): void {
+  interface End {
+    rel: Relationship;
+    which: 'src' | 'tgt';
+    otherY: number;
+  }
+  const ports = new Map<string, End[]>();
+  for (const rel of model.relationships) {
+    rel._srcSlot = 0;
+    rel._tgtSlot = 0;
+    if (rel.source === rel.target) continue;
+    const A = model.entityById.get(rel.source);
+    const B = model.entityById.get(rel.target);
+    if (!A || !B) continue;
+    const ai = fieldIndex(A, rel.sourceField);
+    const bi = fieldIndex(B, rel.targetField);
+    const { s, t } = edgeSides(model, rel);
+    const pA = portWorldPos(A, ai, s);
+    const pB = portWorldPos(B, bi, t);
+    const ks = portKey(rel.source, rel.sourceField, s);
+    const kt = portKey(rel.target, rel.targetField, t);
+    (ports.get(ks) ?? ports.set(ks, []).get(ks)!).push({ rel, which: 'src', otherY: pB.y });
+    (ports.get(kt) ?? ports.set(kt, []).get(kt)!).push({ rel, which: 'tgt', otherY: pA.y });
+  }
+
+  const span = new Map<string, number>();
+  for (const [key, arr] of ports) {
+    if (arr.length < 2) {
+      span.set(key, 0);
+      continue;
+    }
+    arr.sort((a, b) => a.otherY - b.otherY);
+    const n = arr.length;
+    const gap = Math.min(SLOT_GAP, MAX_FAN / (n - 1)); // tighten only when a pin is very busy
+    arr.forEach((e, i) => {
+      const off = (i - (n - 1) / 2) * gap;
+      if (e.which === 'src') e.rel._srcSlot = off;
+      else e.rel._tgtSlot = off;
+    });
+    span.set(key, ((n - 1) / 2) * gap);
+  }
+  model._pinSpan = span;
 }
