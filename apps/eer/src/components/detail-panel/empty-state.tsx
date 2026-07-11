@@ -1,0 +1,52 @@
+import type { Model } from '../../engine/model/types';
+import { Badge } from './badge';
+import { Kbd } from './kbd';
+import { Section } from './section';
+import { Stat } from './stat';
+
+export function EmptyState({ model }: { model: Model | null }) {
+  const rows: [string, string][] = [
+    ['wheel', 'zoom toward the cursor'],
+    ['middle-drag', 'pan the canvas'],
+    ['left-drag', 'move an entity, subgroup, or zone'],
+    ['drag edge', 'resize a zone or subgroup'],
+    ['click', 'entity → focus its relationships'],
+    ['click', 'a zone → show only its connections'],
+    ['hover', 'a field → light its edges'],
+    ['click', 'an edge → isolate that path'],
+    ['Esc', 'empty click → clear focus'],
+  ];
+  const zones = model?.groups.filter((g) => !g.parent).length ?? 0;
+  const subgroups = model?.groups.filter((g) => g.parent).length ?? 0;
+
+  return (
+    <div>
+      <div className="border-b border-border px-4 pb-3 pt-3.5">
+        <Badge tone="entity">Overview</Badge>
+        <h2 className="mt-1.5 font-mono text-[0.98rem] font-medium text-ink">{model?.meta.title ?? 'EER viewer'}</h2>
+        <div className="mt-1 text-[0.7rem] text-dim">Click an entity, zone, or edge to inspect it.</div>
+      </div>
+
+      <div className="px-4 pb-5 pt-3">
+        {model && (
+          <div className="mb-4 flex gap-1.5">
+            <Stat value={model.entities.length} label="tables" />
+            <Stat value={model.relationships.length} label="edges" />
+            <Stat value={zones} label="zones" />
+            {subgroups > 0 && <Stat value={subgroups} label="groups" />}
+          </div>
+        )}
+
+        <Section title="Controls" />
+        <div className="flex flex-col gap-2 text-[0.74rem] leading-relaxed text-muted">
+          {rows.map(([k, label], i) => (
+            <div key={i} className="flex items-baseline gap-2">
+              <Kbd>{k}</Kbd>
+              <span>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

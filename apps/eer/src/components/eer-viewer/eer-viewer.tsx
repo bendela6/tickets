@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { EerDiagram } from '../../engine/eer-diagram';
-import { loadModel } from '../../engine/load-model';
-import type { CheckResult, Model, RoutingMode, Selection } from '../../engine/types';
+import { EerDiagram } from '../../engine/diagram/eer-diagram';
+import { loadModel } from '../../engine/model/load-model';
+import type { CheckResult, Model, RoutingMode, Selection } from '../../engine/model/types';
 import defaultModelJson from '../../model/eer-model.json';
 import { ChecksOverlay } from '../checks-overlay';
 import { DetailPanel } from '../detail-panel';

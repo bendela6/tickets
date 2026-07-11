@@ -1,9 +1,9 @@
 // A real DOM scene for render-layer tests (jsdom): loads a fixture, packs it, and
 // builds the scene exactly like the engine does — without the interaction wiring.
 
-import { applyTransform } from '../engine/apply-transform';
-import { buildScene } from '../engine/build-scene';
-import type { EngineState } from '../engine/types';
+import { applyTransform } from '../engine/render/apply-transform';
+import { buildScene } from '../engine/render/build-scene';
+import type { EngineState } from '../engine/model/types';
 import { buildModel, twoZoneRaw } from './models';
 
 export function makeScene(raw: unknown = twoZoneRaw()): EngineState {

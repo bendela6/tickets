@@ -1,1 +1,1 @@
-export * from './eer-viewer';
+export { EerViewer } from './eer-viewer';

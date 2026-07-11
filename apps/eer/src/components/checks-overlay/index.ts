@@ -1,1 +1,1 @@
-export * from './checks-overlay';
+export { ChecksOverlay } from './checks-overlay';

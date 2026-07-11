@@ -1,9 +1,9 @@
 // Small model fixtures shared by engine/component tests. `buildModel` returns a
 // loaded + packed model, ready for geometry/routing/scene work.
 
-import { loadModel } from '../engine/load-model';
-import { packLayout } from '../engine/pack-layout';
-import type { Model } from '../engine/types';
+import { loadModel } from '../engine/model/load-model';
+import { packLayout } from '../engine/layout/pack-layout';
+import type { Model } from '../engine/model/types';
 
 export const pkField = { name: 'id', type: 'int', role: 'pk' };
 export const fkTo = (ref: string, name = ref + '_id') => ({ name, type: 'int', role: 'fk', ref, refField: 'id' });
