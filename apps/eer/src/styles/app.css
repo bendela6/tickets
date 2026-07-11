@@ -96,6 +96,11 @@ body {
 .layer.cards {
   z-index: 2;
 }
+/* while an edge is isolated, lift the whole edge layer above the cards so the
+   active edge overlaps everything (the rest are dimmed to near-invisible). */
+.edges.edge-top {
+  z-index: 3;
+}
 
 /* ---- Zones ---- */
 .zone {
@@ -302,24 +307,11 @@ body {
   pointer-events: stroke;
   cursor: pointer;
 }
-.edge-label-bg {
-  fill: var(--surface-2);
-  stroke: var(--border);
-}
-.edge-label-text {
-  fill: var(--muted);
-  font-family: var(--mono);
-  font-size: 10px;
-}
 .edge.hot .edge-path,
 .edge.active .edge-path {
   stroke: var(--edge-c, var(--edge-hot));
   stroke-width: 2.8;
   filter: brightness(1.25) drop-shadow(0 0 3px var(--edge-c, var(--edge-hot)));
-}
-.edge.hot .edge-label-text,
-.edge.active .edge-label-text {
-  fill: var(--text);
 }
 
 /* ---- Focus / dim ---- */

@@ -1,253 +1,258 @@
 {
-  "meta": {
-    "title": "Opus event-sourcing EER",
-    "description": "The event-sourcing schema from docs/opus/2-schema.md: the log (events, commands), reliable delivery (outbox), projections (ticket_activity, ticket_values, ticket_snapshots), and the existing tables they reference. Edit this file and reload to change the diagram — no code changes."
-  },
-  "view": { "zoom": 1, "routing": "curved" },
-
-  "kinds": [
-    { "id": "fk", "label": "FK constraint", "style": "solid" },
-    { "id": "soft", "label": "Denormalized / no constraint", "style": "dashed" }
-  ],
-
+  "title": "Items platform — EER model",
+  "description": "Sample model for the JSON-driven EER viewer. Edit this file and reload the viewer.",
   "groups": [
-    { "id": "log", "label": "Event log & idempotency", "order": 1 },
-    { "id": "delivery", "label": "Reliable delivery", "order": 2 },
-    { "id": "projections", "label": "Projections", "order": 3 },
-    { "id": "existing", "label": "Existing schema — referenced", "order": 4 }
+    { "id": "ws", "label": "Workspace", "order": 0 },
+    { "id": "st", "label": "Structure", "order": 1 },
+    { "id": "rc", "label": "Records", "order": 2 },
+    { "id": "hi", "label": "History", "order": 3 }
   ],
-
   "entities": [
-    {
-      "id": "events",
-      "label": "events",
-      "group": "log",
-      "description": "The log. Generalizes ticket_events. No unique on command_id — idempotency is the commands ledger, because one command emits many events. id is the global commit cursor consumers poll.",
-      "fields": [
-        { "name": "id", "type": "bigserial", "role": "pk", "title": "Global cursor", "description": "Global commit cursor consumers poll." },
-        { "name": "aggregate_type", "type": "text", "description": "'ticket' | 'config' — names the stream with aggregate_id." },
-        { "name": "aggregate_id", "type": "integer", "description": "Id within the stream." },
-        { "name": "seq", "type": "integer", "description": "Per-stream 1..n — order + optimistic concurrency." },
-        { "name": "kind", "type": "text", "description": "Registry-validated event kind." },
-        { "name": "version", "type": "integer", "description": "Payload schema version (default 1)." },
-        { "name": "payload", "type": "jsonb", "description": "After-only." },
-        { "name": "actor_id", "type": "integer", "role": "fk", "ref": "users", "refField": "id", "description": "Who caused the event." },
-        { "name": "at", "type": "timestamptz", "description": "ISO-8601, server-assigned; display/sort only." },
-        { "name": "command_id", "type": "uuid", "role": "fk", "ref": "commands", "refField": "id", "description": "Trace; NON-unique here. Ties to the commands ledger." },
-        { "name": "correlation_id", "type": "uuid", "description": "Groups one command's N events; default = command_id." },
-        { "name": "caused_by", "type": "bigint", "role": "fk", "ref": "events", "refField": "id", "description": "Parent event id (automations); null for human/API." },
-        { "name": "depth", "type": "integer", "description": "0 = human/API; +1 per automation hop." },
-        { "name": "project_id", "type": "integer", "role": "fk", "ref": "projects", "refField": "id", "description": "Denorm for partition/retention/ACL; null for config streams." }
-      ]
-    },
-    {
-      "id": "commands",
-      "label": "commands",
-      "group": "log",
-      "description": "Idempotency ledger. One row per accepted command. A retried command_id collides here and the whole command is a no-op.",
-      "fields": [
-        { "name": "id", "type": "uuid", "role": "pk", "description": "Client-supplied commandId." },
-        { "name": "aggregate_type", "type": "text" },
-        { "name": "aggregate_id", "type": "integer" },
-        { "name": "actor_id", "type": "integer", "role": "fk", "ref": "users", "refField": "id" },
-        { "name": "at", "type": "timestamptz" },
-        { "name": "result", "type": "jsonb", "description": "Optional cached response for safe retries." }
-      ]
-    },
-    {
-      "id": "outbox",
-      "label": "outbox",
-      "group": "delivery",
-      "description": "Reliable delivery. One row per event, written in the same transaction. A single worker drains it in id order, so consumers can't miss mid-transaction events.",
-      "fields": [
-        { "name": "event_id", "type": "bigint", "role": "pk", "ref": "events", "refField": "id", "description": "PK and FK — one outbox row per event." },
-        { "name": "created_at", "type": "timestamptz" },
-        { "name": "picked_at", "type": "timestamptz", "description": "Null until a worker claims it." },
-        { "name": "done_at", "type": "timestamptz", "description": "Null until delivered." }
-      ]
-    },
-    {
-      "id": "ticket_activity",
-      "label": "ticket_activity",
-      "group": "projections",
-      "description": "Feed projection. Denormalized so source events stay after-only. Written inline in the command txn (v1).",
-      "fields": [
-        { "name": "id", "type": "bigserial", "role": "pk" },
-        { "name": "ticket_id", "type": "integer", "role": "fk", "ref": "tickets", "refField": "id" },
-        { "name": "event_id", "type": "bigint", "role": "fk", "ref": "events", "refField": "id", "description": "Unique — one activity row per event." },
-        { "name": "project_id", "type": "integer", "role": "fk", "ref": "projects", "refField": "id" },
-        { "name": "kind", "type": "text" },
-        { "name": "actor_id", "type": "integer", "role": "fk", "ref": "users", "refField": "id" },
-        { "name": "at", "type": "timestamptz" },
-        { "name": "correlation_id", "type": "uuid" },
-        { "name": "summary", "type": "jsonb", "description": "{ fieldId?, before?, after?, ... }" }
-      ]
-    },
-    {
-      "id": "ticket_values",
-      "label": "ticket_values",
-      "group": "projections",
-      "description": "Hardened projection. Adds value_user_id, drops status_id, and enforces exactly-one-value + correct cardinality in the DB (closes the NULL-distinct duplicate-row hole).",
-      "fields": [
-        { "name": "id", "type": "serial", "role": "pk" },
-        { "name": "ticket_id", "type": "integer", "role": "fk", "ref": "tickets", "refField": "id" },
-        { "name": "field_id", "type": "integer", "role": "fk", "ref": "fields", "refField": "id" },
-        { "name": "value_text", "type": "text" },
-        { "name": "value_number", "type": "numeric" },
-        { "name": "value_date", "type": "timestamptz" },
-        { "name": "value_bool", "type": "boolean" },
-        { "name": "value_json", "type": "jsonb" },
-        { "name": "option_id", "type": "integer", "role": "fk", "ref": "field_options", "refField": "id" },
-        { "name": "value_user_id", "type": "integer", "role": "fk", "ref": "users", "refField": "id", "description": "NEW (P3). A workflow status is an option field, not a status_id." }
-      ]
-    },
-    {
-      "id": "ticket_snapshots",
-      "label": "ticket_snapshots",
-      "group": "projections",
-      "description": "Tier B rebuild economy. Fold checkpoints so a hot ticket doesn't replay from seq = 1.",
-      "fields": [
-        { "name": "ticket_id", "type": "integer", "role": "pk", "ref": "tickets", "refField": "id", "description": "Composite PK with through_seq." },
-        { "name": "through_seq", "type": "integer", "role": "pk", "description": "Composite PK with ticket_id." },
-        { "name": "state", "type": "jsonb" }
-      ]
-    },
-
-    {
-      "id": "tickets",
-      "label": "tickets",
-      "group": "existing",
-      "description": "Pure skeleton — everything user-visible lives in ticket_values. updated_at doubles as the optimistic-lock token.",
-      "fields": [
-        { "name": "id", "type": "serial", "role": "pk" },
-        { "name": "project_id", "type": "integer", "role": "fk", "ref": "projects", "refField": "id" },
-        { "name": "type_id", "type": "integer", "role": "fk", "ref": "ticket_types", "refField": "id" },
-        { "name": "parent_id", "type": "integer", "role": "fk", "ref": "tickets", "refField": "id", "description": "Depth-1 hierarchy; enforced in the API." },
-        { "name": "number", "type": "integer", "description": "Display number (TASK-042); max+1 under SELECT ... FOR UPDATE." },
-        { "name": "created_by", "type": "integer", "role": "fk", "ref": "users", "refField": "id" },
-        { "name": "archived_at", "type": "timestamptz" },
-        { "name": "created_at", "type": "timestamptz" },
-        { "name": "updated_at", "type": "timestamptz", "description": "Optimistic-lock token — always compare as text." }
-      ]
-    },
     {
       "id": "users",
       "label": "users",
-      "group": "existing",
-      "description": "Humans and agents; every mutation is attributed to one.",
+      "group": "ws",
+      "description": "Actors for mutations and comments (humans and agents).",
       "fields": [
-        { "name": "id", "type": "serial", "role": "pk" },
-        { "name": "name", "type": "text", "description": "Unique." },
-        { "name": "email", "type": "text" },
-        { "name": "kind", "type": "user_kind", "description": "Enum: human | agent." },
-        { "name": "archived_at", "type": "timestamptz" },
-        { "name": "created_at", "type": "timestamptz" }
-      ]
-    },
-    {
-      "id": "fields",
-      "label": "fields",
-      "group": "existing",
-      "description": "Field definitions. Slim enum (string, number, boolean, date, datetime, option, user, json); formats & cardinality ride in config. System fields are seeded and type-locked.",
-      "fields": [
-        { "name": "id", "type": "serial", "role": "pk" },
-        { "name": "ticket_type_id", "type": "integer", "role": "fk", "ref": "ticket_types", "refField": "id" },
-        { "name": "position", "type": "integer" },
-        { "name": "required", "type": "boolean" },
-        { "name": "key", "type": "text" },
-        { "name": "label", "type": "text" },
-        { "name": "type", "type": "field_type", "description": "Enum: string | number | boolean | date | datetime | option | user | json." },
-        { "name": "system", "type": "boolean" },
-        { "name": "config", "type": "jsonb", "description": "format / multiple / transitions." },
-        { "name": "archived_at", "type": "timestamptz" },
-        { "name": "created_at", "type": "timestamptz" }
-      ]
-    },
-    {
-      "id": "field_options",
-      "label": "field_options",
-      "group": "existing",
-      "description": "Options for option / multi-option fields. A workflow status is an option; its lifecycle kind (todo/active/done) rides in config.",
-      "fields": [
-        { "name": "id", "type": "serial", "role": "pk" },
-        { "name": "field_id", "type": "integer", "role": "fk", "ref": "fields", "refField": "id" },
-        { "name": "value", "type": "text" },
-        { "name": "label", "type": "text" },
-        { "name": "config", "type": "jsonb" },
-        { "name": "position", "type": "integer" },
-        { "name": "archived_at", "type": "timestamptz" }
+        { "name": "id", "type": "serial", "title": "Id", "description": "Primary key.", "role": "pk" },
+        { "name": "name", "type": "text", "title": "Name", "description": "Display name; unique.", "meta": "unique" },
+        { "name": "email", "type": "text", "title": "Email", "description": "Optional contact." },
+        { "name": "kind", "type": "enum", "title": "Kind", "description": "human or agent.", "meta": "human | agent" },
+        { "name": "archived_at", "type": "timestamptz", "title": "Archived at", "description": "Soft-delete; null = active." }
       ]
     },
     {
       "id": "projects",
       "label": "projects",
-      "group": "existing",
-      "description": "One row per project (key, name, ticket prefix).",
+      "group": "ws",
+      "description": "Workspace container bound to a structure scheme.",
       "fields": [
-        { "name": "id", "type": "serial", "role": "pk" },
-        { "name": "key", "type": "text", "description": "Unique." },
-        { "name": "name", "type": "text" },
-        { "name": "ticket_prefix", "type": "text" },
-        { "name": "scheme_id", "type": "integer", "role": "fk", "ref": "schemes", "refField": "id" },
-        { "name": "created_at", "type": "timestamptz" }
+        { "name": "id", "type": "serial", "title": "Id", "description": "Primary key.", "role": "pk" },
+        { "name": "key", "type": "text", "title": "Key", "description": "URL-safe project slug.", "meta": "unique" },
+        { "name": "name", "type": "text", "title": "Name", "description": "Display name." },
+        { "name": "item_prefix", "type": "text", "title": "Item prefix", "description": "Display prefix, e.g. TASK → TASK-42." },
+        { "name": "scheme_id", "type": "int", "title": "Scheme", "description": "Structure pack this project uses.", "role": "fk", "ref": "schemes" },
+        { "name": "created_at", "type": "timestamptz", "title": "Created at", "description": "When the project was created." }
       ]
     },
     {
-      "id": "ticket_types",
-      "label": "ticket_types",
-      "group": "existing",
-      "description": "Per-project ticket types (seeded: task, subtask).",
+      "id": "views",
+      "label": "views",
+      "group": "ws",
+      "description": "Saved board/table lenses (columns, filters, sort).",
       "fields": [
-        { "name": "id", "type": "serial", "role": "pk" },
-        { "name": "project_id", "type": "integer", "role": "fk", "ref": "projects", "refField": "id" },
-        { "name": "key", "type": "text" },
-        { "name": "name", "type": "text" }
+        { "name": "id", "type": "serial", "title": "Id", "description": "Primary key.", "role": "pk" },
+        { "name": "project_id", "type": "int", "title": "Project", "description": "Owning project.", "role": "fk", "ref": "projects" },
+        { "name": "name", "type": "text", "title": "Name", "description": "View title in the UI." },
+        { "name": "position", "type": "int", "title": "Position", "description": "Order in the view list." },
+        { "name": "config", "type": "jsonb", "title": "Config", "description": "Columns, filters, sort; field refs by id." },
+        { "name": "archived_at", "type": "timestamptz", "title": "Archived at", "description": "Soft-delete." }
       ]
     },
     {
       "id": "schemes",
       "label": "schemes",
-      "group": "existing",
-      "description": "Reusable field/link/type scheme shared across projects.",
+      "group": "st",
+      "description": "Structure pack root: types, field library, option sets.",
       "fields": [
-        { "name": "id", "type": "serial", "role": "pk" },
-        { "name": "key", "type": "text", "description": "Unique." },
-        { "name": "name", "type": "text" }
+        { "name": "id", "type": "serial", "title": "Id", "description": "Primary key.", "role": "pk" },
+        { "name": "key", "type": "text", "title": "Key", "description": "Stable scheme identifier.", "meta": "unique" },
+        { "name": "name", "type": "text", "title": "Name", "description": "Display name." },
+        { "name": "config", "type": "jsonb", "title": "Config", "description": "Defaults (e.g. default view blueprint)." },
+        { "name": "archived_at", "type": "timestamptz", "title": "Archived at", "description": "Soft-delete." }
+      ]
+    },
+    {
+      "id": "item_types",
+      "label": "item_types",
+      "group": "st",
+      "description": "Kinds of items within a scheme (task, bug, document, …).",
+      "fields": [
+        { "name": "id", "type": "serial", "title": "Id", "description": "Primary key.", "role": "pk" },
+        { "name": "scheme_id", "type": "int", "title": "Scheme", "description": "Owning structure pack.", "role": "fk", "ref": "schemes" },
+        { "name": "key", "type": "text", "title": "Key", "description": "Stable type key, e.g. task." },
+        { "name": "label", "type": "text", "title": "Label", "description": "UI label, e.g. Task." },
+        { "name": "position", "type": "int", "title": "Position", "description": "Order in pickers." },
+        { "name": "config", "type": "jsonb", "title": "Config", "description": "Icon, product copy, UI hints." },
+        { "name": "archived_at", "type": "timestamptz", "title": "Archived at", "description": "Soft-delete." }
+      ]
+    },
+    {
+      "id": "item_type_fields",
+      "label": "item_type_fields",
+      "group": "st",
+      "style": "jn",
+      "badge": "JOIN",
+      "description": "Places a library field on a type (M2M).",
+      "wide": "wide",
+      "fields": [
+        { "name": "item_type_id", "type": "int", "title": "Item type", "description": "Type that shows this field.", "role": "fk", "ref": "item_types" },
+        { "name": "field_id", "type": "int", "title": "Field", "description": "Shared field definition.", "role": "fk", "ref": "fields" },
+        { "name": "position", "type": "int", "title": "Position", "description": "Order on forms for this type." },
+        { "name": "required", "type": "boolean", "title": "Required", "description": "Must have a value on create/update." },
+        { "name": "config_override", "type": "jsonb", "title": "Config override", "description": "Per-type overrides." }
+      ]
+    },
+    {
+      "id": "fields",
+      "label": "fields",
+      "group": "st",
+      "description": "Scheme-scoped field library (reusable across types).",
+      "fields": [
+        { "name": "id", "type": "serial", "title": "Id", "description": "Primary key.", "role": "pk" },
+        { "name": "scheme_id", "type": "int", "title": "Scheme", "description": "Owning structure pack.", "role": "fk", "ref": "schemes" },
+        { "name": "key", "type": "text", "title": "Key", "description": "Stable key, unique per scheme.", "meta": "unique/scheme" },
+        { "name": "label", "type": "text", "title": "Label", "description": "UI label." },
+        { "name": "type", "type": "enum", "title": "Type", "description": "string | number | boolean | date | datetime | option | user | json." },
+        { "name": "system", "type": "boolean", "title": "System", "description": "Seeded/locked field (e.g. title, status)." },
+        { "name": "config", "type": "jsonb", "title": "Config", "description": "Format, multiple, workflow flags." },
+        { "name": "option_set_id", "type": "int", "title": "Option set", "description": "Shared choices when type is option.", "role": "fk", "ref": "option_sets" },
+        { "name": "archived_at", "type": "timestamptz", "title": "Archived at", "description": "Soft-delete." }
+      ]
+    },
+    {
+      "id": "option_sets",
+      "label": "option_sets",
+      "group": "st",
+      "description": "Named lists of options shared by option fields.",
+      "fields": [
+        { "name": "id", "type": "serial", "title": "Id", "description": "Primary key.", "role": "pk" },
+        { "name": "scheme_id", "type": "int", "title": "Scheme", "description": "Owning structure pack.", "role": "fk", "ref": "schemes" },
+        { "name": "key", "type": "text", "title": "Key", "description": "Stable set key, e.g. status." },
+        { "name": "name", "type": "text", "title": "Name", "description": "Display name for the list." }
+      ]
+    },
+    {
+      "id": "options",
+      "label": "options",
+      "group": "st",
+      "description": "Values in an option set (e.g. todo / active / done).",
+      "fields": [
+        { "name": "id", "type": "serial", "title": "Id", "description": "Primary key.", "role": "pk" },
+        { "name": "option_set_id", "type": "int", "title": "Option set", "description": "Parent list.", "role": "fk", "ref": "option_sets" },
+        { "name": "value", "type": "text", "title": "Value", "description": "Stable machine value." },
+        { "name": "label", "type": "text", "title": "Label", "description": "UI label." },
+        { "name": "position", "type": "int", "title": "Position", "description": "Order in pickers." },
+        { "name": "config", "type": "jsonb", "title": "Config", "description": "kind, color, icon." },
+        { "name": "archived_at", "type": "timestamptz", "title": "Archived at", "description": "Soft-delete." }
+      ]
+    },
+    {
+      "id": "items",
+      "label": "items",
+      "group": "rc",
+      "badge": "SPINE",
+      "wide": "wide",
+      "description": "Record spine (generic work/knowledge object in a project).",
+      "fields": [
+        { "name": "id", "type": "serial", "title": "Id", "description": "Primary key.", "role": "pk" },
+        { "name": "project_id", "type": "int", "title": "Project", "description": "Home project.", "role": "fk", "ref": "projects" },
+        { "name": "type_id", "type": "int", "title": "Type", "description": "Item type (task, doc, …).", "role": "fk", "ref": "item_types" },
+        { "name": "parent_id", "type": "int", "title": "Parent", "description": "Optional parent item (tree).", "role": "fk", "ref": "items" },
+        { "name": "number", "type": "int", "title": "Number", "description": "Per-project display number.", "meta": "unique/project" },
+        { "name": "created_by", "type": "int", "title": "Created by", "description": "Author user.", "role": "fk", "ref": "users" },
+        { "name": "archived_at", "type": "timestamptz", "title": "Archived at", "description": "Soft-delete." },
+        { "name": "created_at", "type": "timestamptz", "title": "Created at", "description": "Creation time." },
+        { "name": "updated_at", "type": "timestamptz", "title": "Updated at", "description": "Optimistic-lock token." }
+      ]
+    },
+    {
+      "id": "item_values",
+      "label": "item_values",
+      "group": "rc",
+      "wide": "xwide",
+      "description": "EAV values for item fields (one typed column used per field type).",
+      "fields": [
+        { "name": "id", "type": "serial", "title": "Id", "description": "Primary key.", "role": "pk" },
+        { "name": "item_id", "type": "int", "title": "Item", "description": "Owning item.", "role": "fk", "ref": "items" },
+        { "name": "field_id", "type": "int", "title": "Field", "description": "Field definition.", "role": "fk", "ref": "fields" },
+        { "name": "value_text", "type": "text", "title": "Text value", "description": "For string-like fields." },
+        { "name": "value_number", "type": "numeric", "title": "Number value", "description": "For number fields." },
+        { "name": "value_date", "type": "timestamptz", "title": "Date value", "description": "For date/datetime fields." },
+        { "name": "value_bool", "type": "boolean", "title": "Boolean value", "description": "For boolean fields." },
+        { "name": "value_json", "type": "jsonb", "title": "JSON value", "description": "For json / compound fields." },
+        { "name": "option_id", "type": "int", "title": "Option", "description": "For option fields (incl. status).", "role": "fk", "ref": "options" },
+        { "name": "value_user_id", "type": "int", "title": "User", "description": "For user fields.", "role": "fk", "ref": "users" }
+      ]
+    },
+    {
+      "id": "comments",
+      "label": "comments",
+      "group": "rc",
+      "description": "Discussion threads on an item.",
+      "fields": [
+        { "name": "id", "type": "serial", "title": "Id", "description": "Primary key.", "role": "pk" },
+        { "name": "item_id", "type": "int", "title": "Item", "description": "Item being discussed.", "role": "fk", "ref": "items" },
+        { "name": "author_id", "type": "int", "title": "Author", "description": "Comment author.", "role": "fk", "ref": "users" },
+        { "name": "parent_id", "type": "int", "title": "Parent comment", "description": "Reply parent; null = top-level.", "role": "fk", "ref": "comments" },
+        { "name": "body", "type": "text", "title": "Body", "description": "Markdown body." },
+        { "name": "created_at", "type": "timestamptz", "title": "Created at", "description": "When posted." }
+      ]
+    },
+    {
+      "id": "events",
+      "label": "events",
+      "group": "hi",
+      "wide": "xwide",
+      "description": "Global append-only event log (outbox order).",
+      "fields": [
+        { "name": "id", "type": "bigserial", "title": "Id", "description": "Global cursor / outbox order.", "role": "pk" },
+        { "name": "aggregate_type", "type": "text", "title": "Aggregate type", "description": "item | field | type | project | …" },
+        { "name": "aggregate_id", "type": "int", "title": "Aggregate id", "description": "Entity id within that type." },
+        { "name": "seq", "type": "int", "title": "Sequence", "description": "Order within the stream." },
+        { "name": "kind", "type": "text", "title": "Kind", "description": "e.g. item.field_changed." },
+        { "name": "payload", "type": "jsonb", "title": "Payload", "description": "Event data." },
+        { "name": "actor_id", "type": "int", "title": "Actor", "description": "Who caused it.", "role": "fk", "ref": "users" },
+        { "name": "at", "type": "timestamptz", "title": "At", "description": "When it happened." },
+        { "name": "correlation_id", "type": "uuid", "title": "Correlation id", "description": "Groups multi-event commands." },
+        { "name": "project_id", "type": "int", "title": "Project id", "description": "Denorm for partition / ACL." }
+      ]
+    },
+    {
+      "id": "item_activity",
+      "label": "item_activity",
+      "group": "hi",
+      "wide": "xwide",
+      "description": "Per-item activity feed projection (UI diffs).",
+      "fields": [
+        { "name": "id", "type": "bigserial", "title": "Id", "description": "Primary key.", "role": "pk" },
+        { "name": "item_id", "type": "int", "title": "Item", "description": "Item the activity belongs to.", "role": "fk", "ref": "items" },
+        { "name": "event_id", "type": "bigint", "title": "Event", "description": "Source event.", "role": "fk", "ref": "events" },
+        { "name": "kind", "type": "text", "title": "Kind", "description": "Copied event kind." },
+        { "name": "actor_id", "type": "int", "title": "Actor", "description": "Who did it.", "role": "fk", "ref": "users" },
+        { "name": "at", "type": "timestamptz", "title": "At", "description": "When." },
+        { "name": "summary", "type": "jsonb", "title": "Summary", "description": "UI payload, e.g. before/after." }
       ]
     }
   ],
-
   "relationships": [
-    { "id": "ev_actor", "source": "events", "sourceField": "actor_id", "target": "users", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
-    { "id": "ev_command", "source": "events", "sourceField": "command_id", "target": "commands", "targetField": "id", "cardinality": "n-1", "kind": "soft", "label": "trace" },
-    { "id": "ev_caused", "source": "events", "sourceField": "caused_by", "target": "events", "targetField": "id", "cardinality": "n-1", "kind": "fk", "label": "causes" },
-    { "id": "ev_project", "source": "events", "sourceField": "project_id", "target": "projects", "targetField": "id", "cardinality": "n-1", "kind": "soft" },
-
-    { "id": "cmd_actor", "source": "commands", "sourceField": "actor_id", "target": "users", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
-
-    { "id": "ob_event", "source": "outbox", "sourceField": "event_id", "target": "events", "targetField": "id", "cardinality": "1-1", "kind": "fk" },
-
-    { "id": "ta_ticket", "source": "ticket_activity", "sourceField": "ticket_id", "target": "tickets", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
-    { "id": "ta_event", "source": "ticket_activity", "sourceField": "event_id", "target": "events", "targetField": "id", "cardinality": "1-1", "kind": "fk" },
-    { "id": "ta_project", "source": "ticket_activity", "sourceField": "project_id", "target": "projects", "targetField": "id", "cardinality": "n-1", "kind": "soft" },
-    { "id": "ta_actor", "source": "ticket_activity", "sourceField": "actor_id", "target": "users", "targetField": "id", "cardinality": "n-1", "kind": "soft" },
-
-    { "id": "tv_ticket", "source": "ticket_values", "sourceField": "ticket_id", "target": "tickets", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
-    { "id": "tv_field", "source": "ticket_values", "sourceField": "field_id", "target": "fields", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
-    { "id": "tv_option", "source": "ticket_values", "sourceField": "option_id", "target": "field_options", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
-    { "id": "tv_user", "source": "ticket_values", "sourceField": "value_user_id", "target": "users", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
-
-    { "id": "ts_ticket", "source": "ticket_snapshots", "sourceField": "ticket_id", "target": "tickets", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
-
-    { "id": "tk_project", "source": "tickets", "sourceField": "project_id", "target": "projects", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
-    { "id": "tk_type", "source": "tickets", "sourceField": "type_id", "target": "ticket_types", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
-    { "id": "tk_parent", "source": "tickets", "sourceField": "parent_id", "target": "tickets", "targetField": "id", "cardinality": "n-1", "kind": "fk", "label": "parent" },
-    { "id": "tk_creator", "source": "tickets", "sourceField": "created_by", "target": "users", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
-
-    { "id": "fld_type", "source": "fields", "sourceField": "ticket_type_id", "target": "ticket_types", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
-    { "id": "fo_field", "source": "field_options", "sourceField": "field_id", "target": "fields", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
-
-    { "id": "tt_project", "source": "ticket_types", "sourceField": "project_id", "target": "projects", "targetField": "id", "cardinality": "n-1", "kind": "fk" },
-    { "id": "pr_scheme", "source": "projects", "sourceField": "scheme_id", "target": "schemes", "targetField": "id", "cardinality": "n-1", "kind": "fk" }
-  ]
+    { "id": "r-scheme-project", "source": { "entity": "schemes", "field": "id" }, "target": { "entity": "projects", "field": "scheme_id" }, "kind": "fk", "label": "scheme", "cardinality": "1-n" },
+    { "id": "r-project-view", "source": { "entity": "projects", "field": "id" }, "target": { "entity": "views", "field": "project_id" }, "kind": "fk", "cardinality": "1-n" },
+    { "id": "r-project-item", "source": { "entity": "projects", "field": "id" }, "target": { "entity": "items", "field": "project_id" }, "kind": "fk", "label": "owns", "cardinality": "1-n" },
+    { "id": "r-user-item", "source": { "entity": "users", "field": "id" }, "target": { "entity": "items", "field": "created_by" }, "kind": "fk", "label": "created_by", "cardinality": "1-n" },
+    { "id": "r-user-comment", "source": { "entity": "users", "field": "id" }, "target": { "entity": "comments", "field": "author_id" }, "kind": "fk", "label": "author", "cardinality": "1-n" },
+    { "id": "r-user-event", "source": { "entity": "users", "field": "id" }, "target": { "entity": "events", "field": "actor_id" }, "kind": "fk", "label": "actor", "cardinality": "1-n" },
+    { "id": "r-scheme-type", "source": { "entity": "schemes", "field": "id" }, "target": { "entity": "item_types", "field": "scheme_id" }, "kind": "fk", "cardinality": "1-n" },
+    { "id": "r-scheme-field", "source": { "entity": "schemes", "field": "id" }, "target": { "entity": "fields", "field": "scheme_id" }, "kind": "fk", "cardinality": "1-n" },
+    { "id": "r-scheme-optset", "source": { "entity": "schemes", "field": "id" }, "target": { "entity": "option_sets", "field": "scheme_id" }, "kind": "fk", "cardinality": "1-n" },
+    { "id": "r-type-itf", "source": { "entity": "item_types", "field": "id" }, "target": { "entity": "item_type_fields", "field": "item_type_id" }, "kind": "m2m", "label": "M2M", "cardinality": "1-n" },
+    { "id": "r-field-itf", "source": { "entity": "fields", "field": "id" }, "target": { "entity": "item_type_fields", "field": "field_id" }, "kind": "m2m", "label": "M2M", "cardinality": "1-n" },
+    { "id": "r-field-optset", "source": { "entity": "fields", "field": "option_set_id" }, "target": { "entity": "option_sets", "field": "id" }, "kind": "fk", "label": "option_set", "cardinality": "n-1" },
+    { "id": "r-optset-opt", "source": { "entity": "option_sets", "field": "id" }, "target": { "entity": "options", "field": "option_set_id" }, "kind": "fk", "cardinality": "1-n" },
+    { "id": "r-type-item", "source": { "entity": "item_types", "field": "id" }, "target": { "entity": "items", "field": "type_id" }, "kind": "fk", "label": "type", "cardinality": "1-n" },
+    { "id": "r-item-val", "source": { "entity": "items", "field": "id" }, "target": { "entity": "item_values", "field": "item_id" }, "kind": "fk", "cardinality": "1-n" },
+    { "id": "r-field-val", "source": { "entity": "fields", "field": "id" }, "target": { "entity": "item_values", "field": "field_id" }, "kind": "fk", "cardinality": "1-n" },
+    { "id": "r-opt-val", "source": { "entity": "options", "field": "id" }, "target": { "entity": "item_values", "field": "option_id" }, "kind": "fk", "cardinality": "1-n" },
+    { "id": "r-item-comment", "source": { "entity": "items", "field": "id" }, "target": { "entity": "comments", "field": "item_id" }, "kind": "fk", "cardinality": "1-n" },
+    { "id": "r-item-event", "source": { "entity": "items", "field": "id" }, "target": { "entity": "events", "field": "aggregate_id" }, "kind": "fk", "label": "stream", "cardinality": "1-n" },
+    { "id": "r-event-activity", "source": { "entity": "events", "field": "id" }, "target": { "entity": "item_activity", "field": "event_id" }, "kind": "fk", "cardinality": "1-n" },
+    { "id": "r-item-activity", "source": { "entity": "items", "field": "id" }, "target": { "entity": "item_activity", "field": "item_id" }, "kind": "fk", "cardinality": "1-n" }
+  ],
+  "view": {
+    "nodeGapX": 56,
+    "nodeGapY": 52,
+    "zoneGap": 120,
+    "portGap": 8,
+    "portSize": 8
+  }
 }

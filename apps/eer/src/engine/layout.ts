@@ -4,12 +4,12 @@
 import { LAYOUT_MARGIN, measureEntity } from './geometry';
 import type { Entity, GroupBounds, Model } from './types';
 
-const GROUP_PAD = 26;
-const GROUP_LABEL_H = 28;
-const CARD_VGAP = 26;
-const CARD_HGAP = 40;
-const GROUP_GAP = 74;
-const TARGET_COL_H = 900;
+const GROUP_PAD = 40;
+const GROUP_LABEL_H = 30;
+const CARD_VGAP = 72;
+const CARD_HGAP = 120;
+const GROUP_GAP = 220;
+const TARGET_COL_H = 1100;
 
 export function packLayout(model: Model): Model {
   model.entities.forEach(measureEntity);

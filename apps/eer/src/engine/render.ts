@@ -3,7 +3,7 @@
 // focus/hover only toggle classes, never coordinates (no reflow, no drift).
 
 import { edgeEndpoints, edgeSides, PORT_GAP } from './geometry';
-import { computeRoutes, orthoPolyPath, polyMidpoint, simpleOrtho, smoothPath } from './routing';
+import { computeRoutes, orthoPolyPath, simpleOrtho, smoothPath } from './routing';
 import type { EdgeEls, EngineState, Entity, Point, Relationship, Side } from './types';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -61,17 +61,9 @@ export function buildScene(state: EngineState): void {
     const path = document.createElementNS(SVG_NS, 'path') as SVGPathElement;
     path.setAttribute('class', 'edge-path');
     if (state.model.kindStyle.get(rel.kind ?? '') === 'dashed') path.classList.add('dashed');
-    const lblBg = document.createElementNS(SVG_NS, 'rect') as SVGRectElement;
-    lblBg.setAttribute('class', 'edge-label-bg');
-    lblBg.setAttribute('rx', '4');
-    const lblT = document.createElementNS(SVG_NS, 'text') as SVGTextElement;
-    lblT.setAttribute('class', 'edge-label-text');
-    lblT.setAttribute('text-anchor', 'middle');
-    lblT.setAttribute('dominant-baseline', 'central');
-    lblT.textContent = rel.cardinality;
-    g.append(hit, casing, path, lblBg, lblT);
+    g.append(hit, casing, path);
     svg.appendChild(g);
-    state.els.edgeEls.set(rel.id, { g, hit, casing, path, lblBg, lblT, labelBase: { x: 0, y: 0 } });
+    state.els.edgeEls.set(rel.id, { g, hit, casing, path });
   }
 
   const cardLayer = document.createElement('div');
@@ -152,7 +144,6 @@ export function positionEntity(state: EngineState, id: string): void {
 export function drawAllEdges(state: EngineState, live?: boolean): void {
   if (!live && state.view.routing !== 'curved') computeRoutes(state.model);
   for (const rel of state.model.relationships) drawEdge(state, rel, live ?? false);
-  declutterLabels(state);
   markConnectedPorts(state);
 }
 
@@ -160,7 +151,6 @@ export function drawEdgesForEntity(state: EngineState, id: string, live?: boolea
   for (const rel of state.model.relationships) {
     if (rel.source === id || rel.target === id) drawEdge(state, rel, live ?? false);
   }
-  declutterLabels(state);
   markConnectedPorts(state);
 }
 
@@ -171,59 +161,18 @@ function drawEdge(state: EngineState, rel: Relationship, live: boolean): void {
   const mode = state.view.routing;
 
   let d: string;
-  let labelPt: Point;
   if (self) {
     d = loopPath(p1, p2, A);
-    labelPt = { x: A.x + A._w + PORT_GAP + 52, y: (p1.y + p2.y) / 2 };
   } else if (mode === 'curved') {
     d = curvePath(p1, p2, s, t);
-    labelPt = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
   } else {
     const pts = !live && rel._route ? rel._route : simpleOrtho(p1, p2, s, t);
     d = mode === 'ortho' ? orthoPolyPath(pts) : smoothPath(pts);
-    labelPt = polyMidpoint(pts);
   }
 
   els.path.setAttribute('d', d);
   els.casing.setAttribute('d', d);
   els.hit.setAttribute('d', d);
-
-  els.labelBase = labelPt;
-  const tw = rel.cardinality.length * 6.4 + 10;
-  els.lblT.setAttribute('x', String(labelPt.x));
-  els.lblT.setAttribute('y', String(labelPt.y));
-  els.lblBg.setAttribute('x', String(labelPt.x - tw / 2));
-  els.lblBg.setAttribute('y', String(labelPt.y - 7.5));
-  els.lblBg.setAttribute('width', String(tw));
-  els.lblBg.setAttribute('height', '15');
-}
-
-function declutterLabels(state: EngineState): void {
-  const items: { els: EdgeEls; x: number; y: number; w: number }[] = [];
-  for (const rel of state.model.relationships) {
-    const els = state.els.edgeEls.get(rel.id)!;
-    if (els.g.classList.contains('hidden')) continue;
-    items.push({ els, x: els.labelBase.x, y: els.labelBase.y, w: rel.cardinality.length * 6.4 + 10 });
-  }
-  items.sort((a, b) => a.x - b.x || a.y - b.y);
-  const placed: { x: number; y: number; w: number }[] = [];
-  for (const it of items) {
-    let y = it.y;
-    let guard = 0;
-    let moved = true;
-    while (moved && guard++ < 60) {
-      moved = false;
-      for (const p of placed) {
-        if (Math.abs(p.x - it.x) < (p.w + it.w) / 2 && Math.abs(p.y - y) < 16) {
-          y = p.y + 16;
-          moved = true;
-        }
-      }
-    }
-    placed.push({ x: it.x, y, w: it.w });
-    it.els.lblT.setAttribute('y', String(y));
-    it.els.lblBg.setAttribute('y', String(y - 7.5));
-  }
 }
 
 export function markConnectedPorts(state: EngineState): void {
@@ -265,6 +214,7 @@ export function clearFocus(state: EngineState): void {
   for (const [, card] of state.els.cards) card.classList.remove('dim', 'focus', 'selected');
   for (const [, els] of state.els.edgeEls) els.g.classList.remove('dim', 'active', 'hot');
   for (const z of state.els.groupLayer.children) z.classList.remove('zone-selected', 'zone-dim');
+  state.els.svg.classList.remove('edge-top');
   state.focus = null;
 }
 
@@ -307,6 +257,7 @@ export function isolateEdge(state: EngineState, relId: string): void {
   if (!rel) return;
   applyDim(state, new Set([rel.source, rel.target]), new Set([relId]));
   raiseEdge(state, relId);
+  state.els.svg.classList.add('edge-top'); // lift the isolated edge above the cards
   state.focus = { type: 'edge', id: relId };
 }
 
@@ -316,6 +267,7 @@ export function raiseEdge(state: EngineState, relId: string): void {
 }
 
 function applyDim(state: EngineState, related: Set<string>, relEdges: Set<string>): void {
+  state.els.svg.classList.remove('edge-top'); // only edge-isolate lifts edges above cards
   for (const [id, card] of state.els.cards) {
     card.classList.toggle('dim', !related.has(id));
     card.classList.toggle('focus', related.has(id));
