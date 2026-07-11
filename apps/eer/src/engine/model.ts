@@ -37,6 +37,11 @@ export function inferCardinality(rel: { cardinality?: unknown }, srcRole: Role, 
   if (srcRole === 'pk' && tgtRole === 'fk') return { value: '1-n', inferred: true };
   if (srcRole === 'fk' && tgtRole === 'pk') return { value: 'n-1', inferred: true };
   if (srcRole === 'fk' && tgtRole === 'fk') return { value: 'n-m', inferred: true };
+  // Identifying relationship: the child's primary key IS the reference (shared PK) — 1-1.
+  if (srcRole === 'pk' && tgtRole === 'pk') return { value: '1-1', inferred: true };
+  // Exactly one keyed endpoint: the keyed side is the "one", the untagged side the "many".
+  if (srcRole === 'pk' && !tgtRole) return { value: '1-n', inferred: true };
+  if (!srcRole && tgtRole === 'pk') return { value: 'n-1', inferred: true };
   return { value: '1-n', inferred: true, fallback: true };
 }
 
