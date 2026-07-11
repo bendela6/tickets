@@ -262,7 +262,7 @@ body {
   border: 1px solid var(--surface);
   transform: translate(-50%, -50%);
   z-index: 3;
-  opacity: 0.28;
+  opacity: 0; /* only ports with a connector (.connected) are shown */
   transition:
     opacity 0.12s,
     background 0.12s;
