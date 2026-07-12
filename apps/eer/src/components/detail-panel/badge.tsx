@@ -5,10 +5,10 @@ import { cn } from '../../ui/cn';
 export type Tone = 'entity' | 'zone' | 'subgroup' | 'edge';
 
 const toneClass: Record<Tone, string> = {
-  entity: 'bg-accent/15 text-accent',
-  zone: 'bg-zone/18 text-zone-ink',
-  subgroup: 'bg-fk/15 text-fk',
-  edge: 'bg-pk/15 text-pk',
+  entity: 'bg-blue-400/15 text-blue-400',
+  zone: 'bg-violet-400/18 text-violet-300',
+  subgroup: 'bg-green-400/15 text-green-400',
+  edge: 'bg-yellow-400/15 text-yellow-400',
 };
 
 export function Badge({ tone, children }: { tone: Tone; children: ReactNode }) {

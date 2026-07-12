@@ -39,18 +39,18 @@ it('renders parity card DOM: header, rows, badges, port pairs', async () => {
       <EntityCards />
     </Loaded>,
   );
-  const card = container.querySelector('.card[data-entity="users"]') as HTMLElement;
+  const card = container.querySelector('[data-card][data-entity="users"]') as HTMLElement;
   expect(card.querySelector('span')!.textContent).toBe('users'); // header title is the card's first span
   expect(card.style.getPropertyValue('--card-x')).toMatch(/px$/);
   expect(card.style.getPropertyValue('--entity-c')).toBeTruthy();
-  const rows = card.querySelectorAll('.field');
+  const rows = card.querySelectorAll('[data-index]');
   expect(rows.length).toBe(3);
   const pk = rows[0] as HTMLElement;
-  expect(pk.classList.contains('role-pk')).toBe(true);
+  expect(pk.dataset.role === 'pk').toBe(true);
   expect(pk.dataset.index).toBe('0');
-  expect(pk.querySelectorAll('.port.left').length).toBe(1);
-  expect(pk.querySelectorAll('.port.right').length).toBe(1);
-  expect((pk.querySelector('.port.left') as HTMLElement).dataset.side).toBe('L');
+  expect(pk.querySelectorAll('[data-side="L"]').length).toBe(1);
+  expect(pk.querySelectorAll('[data-side="R"]').length).toBe(1);
+  expect((pk.querySelector('[data-side="L"]') as HTMLElement).dataset.side).toBe('L');
 });
 
 it('focus dims non-related and rings the selected card', async () => {
@@ -60,11 +60,11 @@ it('focus dims non-related and rings the selected card', async () => {
     </Loaded>,
   );
   await act(async () => actions.selectEntity('users'));
-  const users = container.querySelector('.card[data-entity="users"]')!;
-  const tags = container.querySelector('.card[data-entity="tags"]')!;
-  expect(users.classList.contains('selected')).toBe(true);
-  expect(users.classList.contains('focus')).toBe(true);
-  expect(tags.classList.contains('dim')).toBe(true);
+  const users = container.querySelector('[data-card][data-entity="users"]')!;
+  const tags = container.querySelector('[data-card][data-entity="tags"]')!;
+  expect(users.hasAttribute('data-selected')).toBe(true);
+  expect(users.hasAttribute('data-focus')).toBe(true);
+  expect(tags.hasAttribute('data-dim')).toBe(true);
 });
 
 it('connected one-end ports get .connected; fan spans size the pin bar', async () => {
@@ -76,8 +76,8 @@ it('connected one-end ports get .connected; fan spans size the pin bar', async (
   );
   // users.id is the "one" end of both r-a and r-b (1-n, inferred) — its fanned
   // port is connected and its pin bar grows past the base height.
-  const port = container.querySelector('.port.left[data-entity="users"][data-field="id"]') as HTMLElement;
-  expect(port.classList.contains('connected')).toBe(true);
+  const port = container.querySelector('[data-side="L"][data-entity="users"][data-field="id"]') as HTMLElement;
+  expect(port.hasAttribute('data-connected')).toBe(true);
   expect(port.style.getPropertyValue('--port-height')).not.toBe(''); // 2 ends share the pin → span > 0
 });
 
@@ -87,11 +87,11 @@ it('field hover highlights + dispatches; hiding a zone hides its cards', async (
       <EntityCards />
     </Loaded>,
   );
-  const row = container.querySelector('.field[data-entity="users"][data-field="id"]') as HTMLElement;
+  const row = container.querySelector('[data-index][data-entity="users"][data-field="id"]') as HTMLElement;
   fireEvent.mouseEnter(row);
-  expect(row.classList.contains('hot')).toBe(true);
+  expect(row.hasAttribute('data-hot')).toBe(true);
   fireEvent.mouseLeave(row);
-  expect(row.classList.contains('hot')).toBe(false);
+  expect(row.hasAttribute('data-hot')).toBe(false);
   await act(async () => actions.toggleGroup('z1'));
-  expect(container.querySelector('.card[data-entity="users"]')!.classList.contains('hidden')).toBe(true);
+  expect(container.querySelector('[data-card][data-entity="users"]')!.classList.contains('hidden')).toBe(true);
 });

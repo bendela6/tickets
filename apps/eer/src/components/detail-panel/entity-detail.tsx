@@ -65,14 +65,14 @@ export function EntityDetail({
           {e.fields.map((f) => {
             const note = f.description || f.title;
             return (
-              <div key={f.name} className="border-b border-border/50 py-1.5 last:border-0">
+              <div key={f.name} className="border-b border-gray-600/50 py-1.5 last:border-0">
                 <div className="flex items-center gap-1.5">
                   <RoleTag role={f.role} />
-                  <span className={cn('font-mono text-sm', { 'text-pk': f.role === 'pk', 'text-ink': f.role !== 'pk' })}>{f.name}</span>
+                  <span className={cn('font-mono text-sm', { 'text-yellow-400': f.role === 'pk', 'text-gray-50': f.role !== 'pk' })}>{f.name}</span>
                   {f.ref && (
                     <button
                       type="button"
-                      className="ml-1 rounded bg-surface-2 px-1 py-px font-mono text-2xs text-fk hover:bg-surface-3"
+                      className="ml-1 rounded bg-gray-800 px-1 py-px font-mono text-2xs text-green-400 hover:bg-gray-700"
                       onClick={() => {
                         actions.selectEntity(f.ref!);
                         actions.centerOn(f.ref!);
@@ -81,9 +81,9 @@ export function EntityDetail({
                       → {f.ref}.{f.refField ?? 'id'}
                     </button>
                   )}
-                  <span className="ml-auto shrink-0 font-mono text-xs text-dim">{f.type}</span>
+                  <span className="ml-auto shrink-0 font-mono text-xs text-gray-400">{f.type}</span>
                 </div>
-                {note && <div className="mt-0.5 pl-7 text-xs leading-snug text-muted">{note}</div>}
+                {note && <div className="mt-0.5 pl-7 text-xs leading-snug text-gray-200">{note}</div>}
               </div>
             );
           })}

@@ -18,8 +18,8 @@ describe('EerViewer', () => {
     // title appears in the top bar h1 (and again in the overview panel)
     expect(await screen.findByRole('heading', { level: 1, name: TITLE }, { timeout: 20000 })).toBeInTheDocument();
     // the real engine built the canvas scene
-    expect(document.querySelector('.world .card')).not.toBeNull();
-    expect(document.querySelector('.world svg.edges g.edge')).not.toBeNull();
+    expect(document.querySelector('[data-world] [data-card]')).not.toBeNull();
+    expect(document.querySelector('[data-world] svg[data-edges] g[data-rel]')).not.toBeNull();
     unmount();
   }, 30000);
 
@@ -29,6 +29,6 @@ describe('EerViewer', () => {
     expect(screen.getByText('Click an entity, zone, or edge to inspect it.')).toBeInTheDocument();
     expect(screen.getByText('Controls')).toBeInTheDocument();
     unmount();
-    expect(document.querySelector('.world')).toBeNull();
+    expect(document.querySelector('[data-world]')).toBeNull();
   }, 30000);
 });

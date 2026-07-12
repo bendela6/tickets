@@ -10,8 +10,8 @@
 //
 // Mount contract: the effect below attaches its listeners exactly once (its deps
 // are stable), on whatever `viewportRef.current` is at that first run — so the
-// .viewport element must already be mounted by then. Diagram guarantees this by
-// rendering the .viewport div unconditionally, before any model-gated content.
+// [data-viewport] element must already be mounted by then. Diagram guarantees this
+// by rendering the viewport div unconditionally, before any model-gated content.
 
 import { useEffect, useRef, type RefObject } from 'react';
 
@@ -89,16 +89,16 @@ export function useDiagramGestures(viewportRef: RefObject<HTMLDivElement | null>
 
     const onDown = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      const card = target.closest('.card') as HTMLElement | null;
+      const card = target.closest('[data-card]') as HTMLElement | null;
       if (e.button === 1) {
         e.preventDefault();
         mode = 'pan';
         start = { x: e.clientX, y: e.clientY };
         startPan = { x: viewRef.current.panX, y: viewRef.current.panY };
       } else if (e.button === 0) {
-        const zone = target.closest('.zone') as HTMLElement | null;
+        const zone = target.closest('[data-zone]') as HTMLElement | null;
         const m = modelRef.current;
-        if (card && !target.closest('.port')) {
+        if (card && !target.closest('[data-side]')) {
           mode = 'drag';
           dragId = card.dataset.entity ?? null;
           const en = m?.entityById.get(dragId ?? '');
@@ -153,7 +153,7 @@ export function useDiagramGestures(viewportRef: RefObject<HTMLDivElement | null>
       if (!mode) {
         // Idle hover: show a resize cursor near a group box edge (transient UI, not state).
         const t = e.target as HTMLElement | null;
-        const zone = t && typeof t.closest === 'function' ? (t.closest('.zone') as HTMLElement | null) : null;
+        const zone = t && typeof t.closest === 'function' ? (t.closest('[data-zone]') as HTMLElement | null) : null;
         if (hoverZone && hoverZone !== zone) {
           delete hoverZone.dataset.resizeCursor;
           hoverZone = null;

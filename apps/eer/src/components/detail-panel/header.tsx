@@ -20,14 +20,14 @@ export function Header({
   description?: string | null;
 }) {
   return (
-    <div className="sticky top-0 z-10 border-b border-border bg-surface px-4 pb-3 pt-3.5">
+    <div className="sticky top-0 z-10 border-b border-gray-600 bg-gray-900 px-4 pb-3 pt-3.5">
       <div className="mb-1.5 flex items-center gap-2">
         <Badge tone={tone}>{badge}</Badge>
         {titleColor && <Dot color={titleColor} />}
       </div>
-      <h2 className="font-mono text-lg font-medium leading-tight text-ink">{title}</h2>
-      <div className="mt-1 text-xs text-dim">{sub}</div>
-      {description && <p className="mt-2 text-sm leading-relaxed text-muted">{description}</p>}
+      <h2 className="font-mono text-lg font-medium leading-tight text-gray-50">{title}</h2>
+      <div className="mt-1 text-xs text-gray-400">{sub}</div>
+      {description && <p className="mt-2 text-sm leading-relaxed text-gray-200">{description}</p>}
     </div>
   );
 }

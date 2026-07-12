@@ -11,20 +11,20 @@ export function ChecksOverlay({ results, onClose }: ChecksOverlayProps) {
     <div
       className={cn(
         'absolute bottom-3.5 right-3.5 z-40 w-80 px-3 py-3',
-        'rounded-lg border border-border-2 bg-surface-2 text-sm shadow-overlay',
+        'rounded-lg border border-gray-500 bg-gray-800 text-sm shadow-xl',
       )}
     >
       <h3 className="mb-2 flex items-center justify-between text-base">
         Self-check
-        <button type="button" className="text-lg text-muted hover:text-ink" onClick={onClose} aria-label="Close">
+        <button type="button" className="text-lg text-gray-200 hover:text-gray-50" onClick={onClose} aria-label="Close">
           ×
         </button>
       </h3>
       {results.map((r, i) => (
         <div key={i} className="flex items-baseline gap-2 py-1">
-          <span className={cn('shrink-0 font-bold', { 'text-ok': r.pass, 'text-danger': !r.pass })}>{r.pass ? '✓' : '✗'}</span>
-          <span className="text-muted">
-            <b className="font-medium text-ink">{r.name}</b>
+          <span className={cn('shrink-0 font-bold', { 'text-green-400': r.pass, 'text-red-400': !r.pass })}>{r.pass ? '✓' : '✗'}</span>
+          <span className="text-gray-200">
+            <b className="font-medium text-gray-50">{r.name}</b>
             {' — '}
             {r.pass ? `${r.scope} ok` : `${r.problems.length} problem(s): ${r.problems.slice(0, 4).join('; ')}`}
           </span>

@@ -12,7 +12,7 @@ export interface RunChecksArgs {
   model: Model;
   geometry: EdgeGeometry;
   view: { zoom: number; panX: number; panY: number };
-  root: HTMLElement; // the .viewport element — cards/edges are queried under it
+  root: HTMLElement; // the [data-viewport] element — cards/edges are queried under it
 }
 
 const EPS = 0.5; // analytic path vs analytic port
@@ -57,14 +57,14 @@ function checkEndpoints({ model, geometry, view, root }: RunChecksArgs): CheckRe
   for (const rel of model.relationships) {
     const { p1, p2, s, t } = edgeEndpoints(model, rel, geometry.slots.get(rel.id));
     const srcPort = root.querySelector(
-      `.port[data-entity="${cssEsc(rel.source)}"][data-field="${cssEsc(rel.sourceField)}"][data-side="${s}"]`,
+      `[data-entity="${cssEsc(rel.source)}"][data-field="${cssEsc(rel.sourceField)}"][data-side="${s}"]`,
     );
     const tgtPort = root.querySelector(
-      `.port[data-entity="${cssEsc(rel.target)}"][data-field="${cssEsc(rel.targetField)}"][data-side="${t}"]`,
+      `[data-entity="${cssEsc(rel.target)}"][data-field="${cssEsc(rel.targetField)}"][data-side="${t}"]`,
     );
     if (!srcPort) problems.push(`${rel.id}: no source port element`);
     if (!tgtPort) problems.push(`${rel.id}: no target port element`);
-    const pathEl = root.querySelector(`.edge[data-rel="${cssEsc(rel.id)}"] .edge-path`);
+    const pathEl = root.querySelector(`[data-rel="${cssEsc(rel.id)}"] [data-path]`);
     const { start, end } = pathEndpoints(pathEl?.getAttribute('d') || '');
     if (dist(start, p1) > EPS) problems.push(`${rel.id}: path start off source port`);
     if (dist(end, p2) > EPS) problems.push(`${rel.id}: path end off target port`);
@@ -80,11 +80,11 @@ function checkPortPairs({ model, root }: RunChecksArgs): CheckResult {
   const problems: string[] = [];
   let fields = 0;
   for (const e of model.entities) {
-    const card = root.querySelector(`.card[data-entity="${cssEsc(e.id)}"]`)!;
+    const card = root.querySelector(`[data-card][data-entity="${cssEsc(e.id)}"]`)!;
     for (const f of e.fields) {
       fields++;
-      const l = card.querySelectorAll(`.port.left[data-field="${cssEsc(f.name)}"]`).length;
-      const r = card.querySelectorAll(`.port.right[data-field="${cssEsc(f.name)}"]`).length;
+      const l = card.querySelectorAll(`[data-side="L"][data-field="${cssEsc(f.name)}"]`).length;
+      const r = card.querySelectorAll(`[data-side="R"][data-field="${cssEsc(f.name)}"]`).length;
       if (l !== 1) problems.push(`${e.id}.${f.name}: ${l} left ports`);
       if (r !== 1) problems.push(`${e.id}.${f.name}: ${r} right ports`);
     }
@@ -94,8 +94,8 @@ function checkPortPairs({ model, root }: RunChecksArgs): CheckResult {
 
 // The legacy version dispatched real focus/highlight calls and read state.model
 // coordinates back; a pure function can't toggle React state synchronously, so this
-// injects the same highlight classes directly via classList — the invariant under
-// test is "highlight classes never change geometry", not how they got applied.
+// injects the same highlight data-attributes directly — the invariant under test
+// is "highlight state never changes geometry", not how it got applied.
 function checkNoReflow({ model, root }: RunChecksArgs): CheckResult {
   const problems: string[] = [];
   const sampleWorld = model.entities.map((e) => portWorldPos(e, 0, 'R'));
@@ -103,24 +103,25 @@ function checkNoReflow({ model, root }: RunChecksArgs): CheckResult {
   const first = model.entities[0]!;
   const firstField = first.fields[0]!;
   const samplePort = root.querySelector(
-    `.port.right[data-entity="${cssEsc(first.id)}"][data-field="${cssEsc(firstField.name)}"]`,
+    `[data-side="R"][data-entity="${cssEsc(first.id)}"][data-field="${cssEsc(firstField.name)}"]`,
   );
   const sampleBefore = samplePort?.getBoundingClientRect();
 
-  const cardEl = root.querySelector(`.card[data-entity="${cssEsc(first.id)}"]`);
+  const cardEl = root.querySelector(`[data-card][data-entity="${cssEsc(first.id)}"]`);
   const firstRel = model.relationships.find((r) => r.source === first.id || r.target === first.id);
-  const edgeEl = firstRel ? root.querySelector(`.edge[data-rel="${cssEsc(firstRel.id)}"]`) : null;
+  const edgeEl = firstRel ? root.querySelector(`[data-rel="${cssEsc(firstRel.id)}"]`) : null;
 
-  // A live selection may already carry these classes (focused card, isolated
-  // edge) — snapshot per class, per element, and remove only what the probe adds
-  // so a legitimate selection survives the self-check (legacy saved/restored
+  // A live selection may already carry these attributes (focused card, isolated
+  // edge) — snapshot per attribute, per element, and remove only what the probe
+  // adds so a legitimate selection survives the self-check (legacy saved/restored
   // focus state for the same reason).
-  const hadFocus = cardEl?.classList.contains('focus') ?? false;
-  const hadSelected = cardEl?.classList.contains('selected') ?? false;
-  const hadHot = edgeEl?.classList.contains('hot') ?? false;
+  const hadFocus = cardEl?.hasAttribute('data-focus') ?? false;
+  const hadSelected = cardEl?.hasAttribute('data-selected') ?? false;
+  const hadHot = edgeEl?.hasAttribute('data-hot') ?? false;
 
-  cardEl?.classList.add('focus', 'selected');
-  edgeEl?.classList.add('hot');
+  cardEl?.setAttribute('data-focus', '');
+  cardEl?.setAttribute('data-selected', '');
+  edgeEl?.setAttribute('data-hot', '');
 
   try {
     model.entities.forEach((e, i) => {
@@ -133,9 +134,9 @@ function checkNoReflow({ model, root }: RunChecksArgs): CheckResult {
       if (moved) problems.push(`${first.id} sample port DOM rect shifted`);
     }
   } finally {
-    if (!hadFocus) cardEl?.classList.remove('focus');
-    if (!hadSelected) cardEl?.classList.remove('selected');
-    if (!hadHot) edgeEl?.classList.remove('hot');
+    if (!hadFocus) cardEl?.removeAttribute('data-focus');
+    if (!hadSelected) cardEl?.removeAttribute('data-selected');
+    if (!hadHot) edgeEl?.removeAttribute('data-hot');
   }
 
   return result('Hover/focus never moves a node', problems, model.entities.length + ' nodes');

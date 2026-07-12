@@ -8,13 +8,13 @@ import { BODY_PAD_TOP, CARD_BORDER, CARD_MAX_W, CARD_MIN_W, HEADER_H, LAYOUT_MAR
 describe('metrics ↔ Tailwind utility pairings (pinned)', () => {
   it('matches the card box model rules', () => {
     expect(HEADER_H).toBe(34); // card header h-8.5
-    expect(ROW_H).toBe(22); // .field h-5.5
-    expect(CARD_BORDER).toBe(1); // .card border
-    expect(BODY_PAD_TOP).toBe(3); // card body py-0.75
+    expect(ROW_H).toBe(22); // [data-index] h-5.5
+    expect(CARD_BORDER).toBe(1); // [data-card] border
+    expect(BODY_PAD_TOP).toBe(4); // card body py-1
   });
 
   it('matches the port offset rules', () => {
-    expect(PORT_GAP).toBe(8); // .port -left-2 / left-full ml-2
+    expect(PORT_GAP).toBe(8); // [data-side] -left-2 / left-full ml-2
   });
 });
 
