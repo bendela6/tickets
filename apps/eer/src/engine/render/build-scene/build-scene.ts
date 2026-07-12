@@ -5,6 +5,7 @@
 import { drawAllEdges } from '../draw-all-edges';
 import { edgeColor } from '../edge-color';
 import { entityColor } from '../entity-color';
+import { groupColor } from '../group-color';
 import { positionEntity } from '../position-entity';
 import type { EdgeEls, EngineState, Entity } from '../../model/types';
 
@@ -21,6 +22,7 @@ export function buildScene(state: EngineState): void {
     z.className = b.level > 0 ? 'zone zone-sub' : 'zone';
     z.dataset.group = b.id;
     if (b.parent) z.dataset.parent = b.parent;
+    z.style.setProperty('--group-c', groupColor(state.model, b.id));
     z.style.left = b.x + 'px';
     z.style.top = b.y + 'px';
     z.style.width = b.w + 'px';
@@ -47,7 +49,7 @@ export function buildScene(state: EngineState): void {
     g.setAttribute('class', 'edge');
     g.dataset.rel = rel.id;
     g.dataset.kind = rel.kind || '';
-    g.style.setProperty('--edge-c', edgeColor(state, rel.source));
+    g.style.setProperty('--edge-c', edgeColor(state, rel.target));
     const hit = document.createElementNS(SVG_NS, 'path') as SVGPathElement;
     hit.setAttribute('class', 'edge-hit');
     const casing = document.createElementNS(SVG_NS, 'path') as SVGPathElement;

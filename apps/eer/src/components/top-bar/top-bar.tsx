@@ -1,5 +1,6 @@
 import type { EerDiagram } from '../../engine/diagram/eer-diagram';
 import type { Model, RoutingMode } from '../../engine/model/types';
+import { groupColor } from '../../engine/render/group-color';
 import { Chip } from './chip';
 import { SearchBox } from './search-box';
 import { ToggleGroup } from './toggle-group';
@@ -54,7 +55,12 @@ export function TopBar(props: TopBarProps) {
             {model.groups
               .filter((g) => !g.parent)
               .map((g) => (
-                <Chip key={g.id} on={!props.hiddenGroups.has(g.id)} onClick={() => props.onToggleGroup(g.id)}>
+                <Chip
+                  key={g.id}
+                  on={!props.hiddenGroups.has(g.id)}
+                  color={groupColor(model, g.id)}
+                  onClick={() => props.onToggleGroup(g.id)}
+                >
                   {g.label}
                 </Chip>
               ))}

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { nestedRaw } from '../../../test/models';
 import { cleanupScene, makeScene } from '../../../test/scene';
 import { entityColor } from '../entity-color';
+import { groupColor } from '../group-color';
 import type { EngineState } from '../../model/types';
 
 let state: EngineState;
@@ -43,6 +44,14 @@ describe('buildScene', () => {
         expect(row.querySelectorAll('.port.left').length).toBe(1);
         expect(row.querySelectorAll('.port.right').length).toBe(1);
       }
+    }
+  });
+
+  it('stamps each zone with its group color, subgroups included', () => {
+    state = makeScene(nestedRaw());
+    const zones = [...state.els.groupLayer.querySelectorAll('.zone')] as HTMLElement[];
+    for (const z of zones) {
+      expect(z.style.getPropertyValue('--group-c')).toBe(groupColor(state.model, z.dataset.group!));
     }
   });
 
