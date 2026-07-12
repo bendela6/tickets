@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { nestedRaw } from '../../../test/models';
 import { cleanupScene, makeScene } from '../../../test/scene';
-import { GROUP_PALETTE } from '../group-color';
+import { GROUP_PALETTE } from '../../colors/group-color';
 import { setColors } from './set-colors';
 import type { EngineState } from '../../model/types';
 

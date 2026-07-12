@@ -10,23 +10,22 @@ let state: EngineState;
 afterEach(() => cleanupScene(state));
 
 describe('edgeColor', () => {
-  it('returns the entity color from the state model for every entity', () => {
+  it('returns the entity color from the model for every entity', () => {
     state = makeScene();
     for (const e of state.model.entities) {
-      expect(edgeColor(state, e.id)).toBe(entityColor(state.model, e.id));
+      expect(edgeColor(state.model, e.id)).toBe(entityColor(state.model, e.id));
     }
   });
 
-  it('colors each built edge group with its FK-side (target) entity color', () => {
+  it('applies overrides when provided', () => {
     state = makeScene();
-    for (const rel of state.model.relationships) {
-      const g = state.els.edgeEls.get(rel.id)!.g;
-      expect(g.style.getPropertyValue('--edge-c')).toBe(edgeColor(state, rel.target));
-    }
+    const entity = state.model.entities[0]!;
+    const overrides = new Map([[entity.id, '#ff0000']]);
+    expect(edgeColor(state.model, entity.id, overrides)).toBe(entityColor(state.model, entity.id, overrides));
   });
 
   it('falls back to the first palette entry for an unknown id', () => {
     state = makeScene();
-    expect(edgeColor(state, 'no-such-entity')).toBe(GROUP_PALETTE[0]);
+    expect(edgeColor(state.model, 'no-such-entity')).toBe(GROUP_PALETTE[0]);
   });
 });

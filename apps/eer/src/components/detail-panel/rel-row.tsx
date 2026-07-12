@@ -1,4 +1,4 @@
-import { entityColor } from '../../engine/render/entity-color';
+import { entityColor } from '../../engine/colors/entity-color';
 import type { Model } from '../../engine/model/types';
 import { Card } from './card';
 import { Dot } from './dot';

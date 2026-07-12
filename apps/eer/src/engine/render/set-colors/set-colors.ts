@@ -1,9 +1,9 @@
 // Swap in a new colour-override map and restamp every zone, card and edge hue
 // custom property in place — colour never affects geometry, so nothing moves.
 
-import { edgeColor } from '../edge-color';
-import { entityColor } from '../entity-color';
-import { groupColor } from '../group-color';
+import { edgeColor } from '../../colors/edge-color';
+import { entityColor } from '../../colors/entity-color';
+import { groupColor } from '../../colors/group-color';
 import type { EngineState } from '../../model/types';
 
 export function setColors(state: EngineState, colors: ReadonlyMap<string, string> | undefined): void {
@@ -15,6 +15,6 @@ export function setColors(state: EngineState, colors: ReadonlyMap<string, string
     card.style.setProperty('--entity-c', entityColor(state.model, id, colors));
   }
   for (const rel of state.model.relationships) {
-    state.els.edgeEls.get(rel.id)?.g.style.setProperty('--edge-c', edgeColor(state, rel.target));
+    state.els.edgeEls.get(rel.id)?.g.style.setProperty('--edge-c', edgeColor(state.model, rel.target, colors));
   }
 }

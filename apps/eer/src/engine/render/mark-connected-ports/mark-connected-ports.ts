@@ -1,9 +1,9 @@
 // Light exactly the pins that carry a visible connector. The pin bar sits on the
 // "one" end only; the "many" end shows a crow's-foot instead.
 
-import { cssEsc } from '../css-esc';
+import { cssEsc } from '../../dom/css-esc';
 import { edgeSides } from '../../geometry/edge-sides';
-import { endKinds } from '../end-kinds';
+import { endKinds } from '../../model/end-kinds';
 import type { EngineState, Side } from '../../model/types';
 
 export function markConnectedPorts(state: EngineState): void {

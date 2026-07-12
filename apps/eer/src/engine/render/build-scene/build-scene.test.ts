@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { nestedRaw } from '../../../test/models';
 import { cleanupScene, makeScene } from '../../../test/scene';
-import { entityColor } from '../entity-color';
-import { groupColor } from '../group-color';
+import { entityColor } from '../../colors/entity-color';
+import { groupColor } from '../../colors/group-color';
 import type { EngineState } from '../../model/types';
 
 let state: EngineState;

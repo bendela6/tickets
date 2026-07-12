@@ -2,8 +2,8 @@
 // child (subgroup or table) shows its inherited colour dimmed until its override
 // box is ticked, after which parent changes no longer touch it.
 
-import { entityColor } from '../../engine/render/entity-color';
-import { groupColor } from '../../engine/render/group-color';
+import { entityColor } from '../../engine/colors/entity-color';
+import { groupColor } from '../../engine/colors/group-color';
 import type { Model } from '../../engine/model/types';
 import { cn } from '../../ui/cn';
 

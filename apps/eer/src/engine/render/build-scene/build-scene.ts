@@ -3,9 +3,9 @@
 // geometry; focus/hover later only toggle classes, never coordinates.
 
 import { drawAllEdges } from '../draw-all-edges';
-import { edgeColor } from '../edge-color';
-import { entityColor } from '../entity-color';
-import { groupColor } from '../group-color';
+import { edgeColor } from '../../colors/edge-color';
+import { entityColor } from '../../colors/entity-color';
+import { groupColor } from '../../colors/group-color';
 import { positionEntity } from '../position-entity';
 import type { EdgeEls, EngineState, Entity } from '../../model/types';
 
@@ -49,7 +49,7 @@ export function buildScene(state: EngineState): void {
     g.setAttribute('class', 'edge');
     g.dataset.rel = rel.id;
     g.dataset.kind = rel.kind || '';
-    g.style.setProperty('--edge-c', edgeColor(state, rel.target));
+    g.style.setProperty('--edge-c', edgeColor(state.model, rel.target, state.colors));
     const hit = document.createElementNS(SVG_NS, 'path') as SVGPathElement;
     hit.setAttribute('class', 'edge-hit');
     const casing = document.createElementNS(SVG_NS, 'path') as SVGPathElement;
