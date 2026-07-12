@@ -32,10 +32,10 @@ export function ColorsForm({ model, colors, onChange }: ColorsFormProps) {
     return (
       <label
         key={id}
-        className={cn(
-          'flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.75 hover:bg-surface-2',
-          depth === 2 ? 'ml-7' : 'ml-2.5',
-        )}
+        className={cn('flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.75 hover:bg-surface-2', {
+          'ml-7': depth === 2,
+          'ml-2.5': depth === 1,
+        })}
       >
         <input
           type="checkbox"
@@ -52,7 +52,7 @@ export function ColorsForm({ model, colors, onChange }: ColorsFormProps) {
           onChange={(ev) => patch(id, ev.target.value)}
           aria-label={`${label} colour`}
         />
-        <span className={cn('truncate font-mono text-sm', overridden ? 'text-ink' : 'text-muted')}>{label}</span>
+        <span className={cn('truncate font-mono text-sm', { 'text-ink': overridden, 'text-muted': !overridden })}>{label}</span>
       </label>
     );
   };

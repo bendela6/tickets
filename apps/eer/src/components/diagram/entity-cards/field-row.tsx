@@ -26,14 +26,15 @@ function Port({
     <span
       className={cn(
         'port absolute top-1/2 z-3 h-3.5 w-1.25 -translate-x-1/2 -translate-y-1/2 rounded-xs border border-surface bg-edge opacity-0 transition-(--transition-port) duration-120 before:absolute before:top-1/2 before:h-px before:-translate-y-1/2 before:bg-edge',
-        side === 'L'
-          ? 'left -left-2 before:left-1/2 before:w-2'
-          : 'right left-full ml-2 before:right-1/2 before:w-2',
-        connected.has(key) && 'connected opacity-100',
-        f.role === 'pk' && 'bg-pk before:bg-pk',
-        f.role === 'fk' && 'bg-fk before:bg-fk',
-        hot && 'bg-edge-hot shadow-port-glow before:bg-edge-hot',
-        off > 0 && 'h-(--port-height)',
+        {
+          'left -left-2 before:left-1/2 before:w-2': side === 'L',
+          'right left-full ml-2 before:right-1/2 before:w-2': side === 'R',
+          'connected opacity-100': connected.has(key),
+          'bg-pk before:bg-pk': f.role === 'pk',
+          'bg-fk before:bg-fk': f.role === 'fk',
+          'bg-edge-hot shadow-port-glow before:bg-edge-hot': hot,
+          'h-(--port-height)': off > 0,
+        },
       )}
       data-entity={e.id}
       data-field={f.name}
@@ -60,11 +61,10 @@ export function FieldRow({
   const [hot, setHot] = useState(false);
   return (
     <div
-      className={cn(
-        'field relative flex h-5.5 cursor-default items-center gap-1.5 px-2.5 text-sm hover:bg-surface-2',
-        f.role && `role-${f.role}`,
-        hot && 'hot',
-      )}
+      className={cn('field relative flex h-5.5 cursor-default items-center gap-1.5 px-2.5 text-sm hover:bg-surface-2', {
+        [`role-${f.role}`]: !!f.role,
+        'hot': hot,
+      })}
       data-entity={e.id}
       data-field={f.name}
       data-index={String(index)}
@@ -78,23 +78,21 @@ export function FieldRow({
       }}
     >
       <span
-        className={cn(
-          'badge w-5 shrink-0 text-center font-mono text-3xs font-semibold tracking-wide text-dim',
-          f.role === 'pk' && 'text-pk',
-          f.role === 'fk' && 'text-fk',
-        )}
+        className={cn('w-5 shrink-0 text-center font-mono text-3xs font-semibold tracking-wide text-dim', {
+          'text-pk': f.role === 'pk',
+          'text-fk': f.role === 'fk',
+        })}
       >
         {f.role ? f.role.toUpperCase() : ''}
       </span>
       <span
-        className={cn(
-          'fname truncate whitespace-nowrap font-mono text-ink',
-          f.role === 'pk' && 'text-pk',
-        )}
+        className={cn('truncate whitespace-nowrap font-mono text-ink', {
+          'text-pk': f.role === 'pk',
+        })}
       >
         {f.name}
       </span>
-      <span className="ftype ml-auto max-w-1/2 truncate whitespace-nowrap font-mono text-xs text-dim">
+      <span className="ml-auto max-w-1/2 truncate whitespace-nowrap font-mono text-xs text-dim">
         {f.type || ''}
       </span>
       <Port e={e} f={f} side="L" connected={connected} pinSpan={pinSpan} hot={hot} />

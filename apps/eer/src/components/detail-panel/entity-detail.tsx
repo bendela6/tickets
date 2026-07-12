@@ -68,7 +68,7 @@ export function EntityDetail({
               <div key={f.name} className="border-b border-border/50 py-1.5 last:border-0">
                 <div className="flex items-center gap-1.5">
                   <RoleTag role={f.role} />
-                  <span className={cn('font-mono text-sm', f.role === 'pk' ? 'text-pk' : 'text-ink')}>{f.name}</span>
+                  <span className={cn('font-mono text-sm', { 'text-pk': f.role === 'pk', 'text-ink': f.role !== 'pk' })}>{f.name}</span>
                   {f.ref && (
                     <button
                       type="button"

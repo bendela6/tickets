@@ -40,7 +40,7 @@ it('renders parity card DOM: header, rows, badges, port pairs', async () => {
     </Loaded>,
   );
   const card = container.querySelector('.card[data-entity="users"]') as HTMLElement;
-  expect(card.querySelector('.card-title')!.textContent).toBe('users');
+  expect(card.querySelector('span')!.textContent).toBe('users'); // header title is the card's first span
   expect(card.style.getPropertyValue('--card-x')).toMatch(/px$/);
   expect(card.style.getPropertyValue('--entity-c')).toBeTruthy();
   const rows = card.querySelectorAll('.field');

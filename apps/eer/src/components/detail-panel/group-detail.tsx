@@ -78,7 +78,7 @@ export function GroupDetail({
                 {model.groups.find((g) => g.id === e.group)?.label ?? e.group}
               </span>
             )}
-            <span className={cn('shrink-0 text-xs text-dim', e.group === id && 'ml-auto')}>
+            <span className={cn('shrink-0 text-xs text-dim', { 'ml-auto': e.group === id })}>
               {e.fields.length} fields
             </span>
           </button>

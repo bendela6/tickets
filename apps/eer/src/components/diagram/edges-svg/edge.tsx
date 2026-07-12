@@ -41,13 +41,12 @@ export const Edge = memo(function Edge({ rel, active, dim, forcedHot, hidden }: 
   const dashed = model.kindStyle.get(rel.kind ?? '') === 'dashed';
   const hot = (forcedHot || hover) && !dim;
   const emphasized = hot || active;
-  const cls = cn(
-    'edge',
-    hot && 'hot',
-    active && 'active',
-    dim && 'dim opacity-12',
-    hidden && 'hidden',
-  );
+  const cls = cn('edge', {
+    'hot': hot,
+    'active': active,
+    'dim opacity-12': dim,
+    'hidden': hidden,
+  });
   return (
     <g
       className={cls}
@@ -66,20 +65,19 @@ export const Edge = memo(function Edge({ rel, active, dim, forcedHot, hidden }: 
       onMouseLeave={() => setHover(false)}
       onClick={() => dispatch({ type: 'ISOLATE_EDGE', id: rel.id })}
     >
-      <path className="edge-hit cursor-pointer fill-none stroke-transparent" pointerEvents="stroke" strokeWidth={14} d={d} />
-      <path className="edge-casing fill-none stroke-bg" strokeLinecap="round" strokeWidth={4.5} d={d} />
+      <path className="cursor-pointer fill-none stroke-transparent" pointerEvents="stroke" strokeWidth={14} d={d} />
+      <path className="fill-none stroke-bg" strokeLinecap="round" strokeWidth={4.5} d={d} />
       <path
-        className={cn(
-          'edge-path fill-none stroke-(--edge-c)',
-          dashed && 'dashed',
-          emphasized && 'brightness-125 drop-shadow-(--edge-glow)',
-        )}
+        className={cn('edge-path fill-none stroke-(--edge-c)', {
+          'dashed': dashed,
+          'brightness-125 drop-shadow-(--edge-glow)': emphasized,
+        })}
         strokeWidth={emphasized ? 2.8 : 1.8}
         strokeDasharray={dashed ? '5 4' : undefined}
         d={d}
       />
       <path
-        className={cn('edge-head fill-none stroke-(--edge-c)', emphasized && 'brightness-125')}
+        className={cn('fill-none stroke-(--edge-c)', { 'brightness-125': emphasized })}
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={emphasized ? 2.4 : 1.6}

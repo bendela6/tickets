@@ -17,7 +17,7 @@ export function ChecksOverlay({ results, onClose }: ChecksOverlayProps) {
       </h3>
       {results.map((r, i) => (
         <div key={i} className="flex items-baseline gap-2 py-1">
-          <span className={cn('shrink-0 font-bold', r.pass ? 'text-ok' : 'text-danger')}>{r.pass ? '✓' : '✗'}</span>
+          <span className={cn('shrink-0 font-bold', { 'text-ok': r.pass, 'text-danger': !r.pass })}>{r.pass ? '✓' : '✗'}</span>
           <span className="text-muted">
             <b className="font-medium text-ink">{r.name}</b>
             {' — '}

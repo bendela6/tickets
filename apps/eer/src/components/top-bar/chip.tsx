@@ -18,16 +18,17 @@ export function Chip({
     <button
       type="button"
       onClick={onClick}
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-sm',
-        on ? 'border-border-2 text-ink' : 'border-border text-muted line-through opacity-45',
-      )}
+      className={cn('inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-sm', {
+        'border-border-2 text-ink': on,
+        'border-border text-muted line-through opacity-45': !on,
+      })}
     >
       <span
-        className={cn(
-          'h-2 w-2 rounded-full',
-          on ? (color ? 'bg-(--chip-color)' : 'bg-accent') : 'bg-dim',
-        )}
+        className={cn('h-2 w-2 rounded-full', {
+          'bg-(--chip-color)': on && !!color,
+          'bg-accent': on && !color,
+          'bg-dim': !on,
+        })}
         style={on && color ? runtimeStyle({ '--chip-color': color }) : undefined}
       />
       {children}
