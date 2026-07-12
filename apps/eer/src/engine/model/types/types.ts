@@ -134,6 +134,9 @@ export interface EngineState {
   selection: string | null;
   focus: Focus;
   hidden: { groups: Set<string>; kinds: Set<string> };
+  // User colour overrides keyed by zone/subgroup/entity id; unset ids inherit
+  // (entity ← group ← zone ← palette). See group-color / set-colors.
+  colors?: ReadonlyMap<string, string>;
   applyTransform: () => void;
 }
 

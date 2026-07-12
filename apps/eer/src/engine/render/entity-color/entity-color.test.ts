@@ -21,4 +21,16 @@ describe('entityColor', () => {
   it('falls back to the first palette entry for an unknown id', () => {
     expect(entityColor(buildModel(), 'no-such-entity')).toBe(GROUP_PALETTE[0]);
   });
+
+  it('inherits a group override, but its own override wins', () => {
+    const model = buildModel();
+    const groupOnly = new Map([['z2', '#123456']]);
+    expect(entityColor(model, 'orders', groupOnly)).toBe('#123456');
+    const both = new Map([
+      ['z2', '#123456'],
+      ['orders', '#abcdef'],
+    ]);
+    expect(entityColor(model, 'orders', both)).toBe('#abcdef');
+    expect(entityColor(model, 'tags', both)).toBe('#123456');
+  });
 });

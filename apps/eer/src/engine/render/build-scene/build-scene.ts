@@ -22,7 +22,7 @@ export function buildScene(state: EngineState): void {
     z.className = b.level > 0 ? 'zone zone-sub' : 'zone';
     z.dataset.group = b.id;
     if (b.parent) z.dataset.parent = b.parent;
-    z.style.setProperty('--group-c', groupColor(state.model, b.id));
+    z.style.setProperty('--group-c', groupColor(state.model, b.id, state.colors));
     z.style.left = b.x + 'px';
     z.style.top = b.y + 'px';
     z.style.width = b.w + 'px';
@@ -71,7 +71,7 @@ export function buildScene(state: EngineState): void {
 
   state.els.cards = new Map<string, HTMLElement>();
   for (const e of state.model.entities) {
-    const card = buildCard(e, entityColor(state.model, e.id));
+    const card = buildCard(e, entityColor(state.model, e.id, state.colors));
     cardLayer.appendChild(card);
     state.els.cards.set(e.id, card);
     positionEntity(state, e.id);

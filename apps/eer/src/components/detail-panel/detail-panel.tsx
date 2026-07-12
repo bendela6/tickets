@@ -9,15 +9,23 @@ interface DetailPanelProps {
   engine: EerDiagram | null;
   model: Model | null;
   selection: Selection;
+  colors?: ReadonlyMap<string, string>;
+  onColorsChange?: (next: ReadonlyMap<string, string>) => void;
 }
 
-export function DetailPanel({ engine, model, selection }: DetailPanelProps) {
+export function DetailPanel({ engine, model, selection, colors, onColorsChange }: DetailPanelProps) {
   return (
     <aside className="w-[320px] overflow-auto border-l border-border bg-surface text-[0.8rem]">
-      {model && selection.type === 'entity' && <EntityDetail engine={engine} model={model} id={selection.id} />}
-      {model && selection.type === 'group' && <GroupDetail engine={engine} model={model} id={selection.id} />}
-      {model && selection.type === 'edge' && <EdgeDetail engine={engine} model={model} id={selection.id} />}
-      {(!model || selection.type === 'none') && <EmptyState model={model} />}
+      {model && selection.type === 'entity' && (
+        <EntityDetail engine={engine} model={model} id={selection.id} colors={colors} />
+      )}
+      {model && selection.type === 'group' && (
+        <GroupDetail engine={engine} model={model} id={selection.id} colors={colors} />
+      )}
+      {model && selection.type === 'edge' && <EdgeDetail engine={engine} model={model} id={selection.id} colors={colors} />}
+      {(!model || selection.type === 'none') && (
+        <EmptyState model={model} colors={colors} onColorsChange={onColorsChange} />
+      )}
     </aside>
   );
 }

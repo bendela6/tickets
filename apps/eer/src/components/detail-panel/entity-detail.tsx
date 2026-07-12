@@ -28,12 +28,22 @@ function relationshipsFor(model: Model, id: string): RelView[] {
   return out;
 }
 
-export function EntityDetail({ engine, model, id }: { engine: EerDiagram | null; model: Model; id: string }) {
+export function EntityDetail({
+  engine,
+  model,
+  id,
+  colors,
+}: {
+  engine: EerDiagram | null;
+  model: Model;
+  id: string;
+  colors?: ReadonlyMap<string, string>;
+}) {
   const e = model.entityById.get(id);
   if (!e) return null;
   const group = model.groups.find((g) => g.id === e.group);
   const rels = relationshipsFor(model, id);
-  const color = entityColor(model, id);
+  const color = entityColor(model, id, colors);
 
   return (
     <div>
@@ -86,6 +96,7 @@ export function EntityDetail({ engine, model, id }: { engine: EerDiagram | null;
           <RelRow
             key={r.id}
             model={model}
+            colors={colors}
             cardinality={r.cardinality}
             here={r.here}
             dir={r.dir}

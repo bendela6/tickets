@@ -24,6 +24,7 @@ export function EerViewer() {
   const [routing, setRouting] = useState<RoutingMode>('curved');
   const [hiddenGroups, setHiddenGroups] = useState<ReadonlySet<string>>(new Set());
   const [hiddenKinds, setHiddenKinds] = useState<ReadonlySet<string>>(new Set());
+  const [colors, setColors] = useState<ReadonlyMap<string, string>>(new Map());
   const [checks, setChecks] = useState<CheckResult[] | null>(null);
   const [diagnostics, setDiagnostics] = useState<Diagnostics>({ errors: [], warnings: [] });
 
@@ -82,6 +83,11 @@ export function EerViewer() {
     setHiddenGroups(next);
   };
 
+  const changeColors = (next: ReadonlyMap<string, string>) => {
+    engine?.setColors(next);
+    setColors(next);
+  };
+
   const toggleKind = (id: string) => {
     const next = new Set(hiddenKinds);
     const hide = !next.has(id);
@@ -100,6 +106,7 @@ export function EerViewer() {
         onCycleRouting={cycleRouting}
         hiddenGroups={hiddenGroups}
         hiddenKinds={hiddenKinds}
+        colors={colors}
         onToggleGroup={toggleGroup}
         onToggleKind={toggleKind}
         onFit={() => engine?.fit()}
@@ -118,7 +125,7 @@ export function EerViewer() {
           {checks && <ChecksOverlay results={checks} onClose={() => setChecks(null)} />}
         </div>
 
-        <DetailPanel engine={engine} model={model} selection={selection} />
+        <DetailPanel engine={engine} model={model} selection={selection} colors={colors} onColorsChange={changeColors} />
       </div>
     </div>
   );
