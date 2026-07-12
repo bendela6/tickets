@@ -1,15 +1,19 @@
 // Quality checks — the spec's verification section as runnable assertions against
-// the live scene (DOM + geometry, not screenshot judgement).
+// the live scene (DOM under `root` + geometry, not screenshot judgement).
 
-import { clearFieldHighlight } from '../../focus/clear-field-highlight';
-import { clearFocus } from '../../focus/clear-focus';
 import { cssEsc } from '../../dom/css-esc';
 import { edgeEndpoints } from '../../geometry/edge-endpoints';
-import { focusEntity } from '../../focus/focus-entity';
-import { highlightField } from '../../focus/highlight-field';
 import { loadModel } from '../../model/load-model';
 import { portWorldPos } from '../../geometry/port-world-pos';
-import type { CheckResult, EngineState, Point } from '../../model/types';
+import type { EdgeGeometry } from '../../routing/edge-geometry';
+import type { CheckResult, Model, Point } from '../../model/types';
+
+export interface RunChecksArgs {
+  model: Model;
+  geometry: EdgeGeometry;
+  view: { zoom: number; panX: number; panY: number };
+  root: HTMLElement; // the .viewport element — cards/edges are queried under it
+}
 
 const EPS = 0.5; // analytic path vs analytic port
 const DOM_EPS = 1.5; // analytic endpoint vs rendered port dot
@@ -24,16 +28,16 @@ function pathEndpoints(d: string): { start: Point; end: Point } {
 
 // The pin bar's world rect: centre x, plus the vertical span an endpoint may land
 // anywhere within (edges sharing a pin fan out along it).
-function domPortBar(state: EngineState, portEl: Element | null): { x: number; yLo: number; yHi: number } | null {
+function domPortBar(root: HTMLElement, view: RunChecksArgs['view'], portEl: Element | null): { x: number; yLo: number; yHi: number } | null {
   if (!portEl) return null;
-  const vp = state.els.viewport.getBoundingClientRect();
+  const vp = root.getBoundingClientRect();
   const r = portEl.getBoundingClientRect();
-  const z = state.view.zoom;
+  const z = view.zoom;
   const cx = r.left + r.width / 2 - vp.left;
   return {
-    x: (cx - state.view.panX) / z,
-    yLo: (r.top - vp.top - state.view.panY) / z,
-    yHi: (r.bottom - vp.top - state.view.panY) / z,
+    x: (cx - view.panX) / z,
+    yLo: (r.top - vp.top - view.panY) / z,
+    yHi: (r.bottom - vp.top - view.panY) / z,
   };
 }
 
@@ -48,35 +52,35 @@ function result(name: string, problems: string[], scope: string): CheckResult {
   return { name, pass: problems.length === 0, scope, problems };
 }
 
-function checkEndpoints(state: EngineState): CheckResult {
+function checkEndpoints({ model, geometry, view, root }: RunChecksArgs): CheckResult {
   const problems: string[] = [];
-  for (const rel of state.model.relationships) {
-    const els = state.els.edgeEls.get(rel.id)!;
-    const { p1, p2, s, t } = edgeEndpoints(state.model, rel);
-    const srcPort = state.els.cardLayer.querySelector(
+  for (const rel of model.relationships) {
+    const { p1, p2, s, t } = edgeEndpoints(model, rel, geometry.slots.get(rel.id));
+    const srcPort = root.querySelector(
       `.port[data-entity="${cssEsc(rel.source)}"][data-field="${cssEsc(rel.sourceField)}"][data-side="${s}"]`,
     );
-    const tgtPort = state.els.cardLayer.querySelector(
+    const tgtPort = root.querySelector(
       `.port[data-entity="${cssEsc(rel.target)}"][data-field="${cssEsc(rel.targetField)}"][data-side="${t}"]`,
     );
     if (!srcPort) problems.push(`${rel.id}: no source port element`);
     if (!tgtPort) problems.push(`${rel.id}: no target port element`);
-    const { start, end } = pathEndpoints(els.path.getAttribute('d') || '');
+    const pathEl = root.querySelector(`.edge[data-rel="${cssEsc(rel.id)}"] .edge-path`);
+    const { start, end } = pathEndpoints(pathEl?.getAttribute('d') || '');
     if (dist(start, p1) > EPS) problems.push(`${rel.id}: path start off source port`);
     if (dist(end, p2) > EPS) problems.push(`${rel.id}: path end off target port`);
-    const sb = domPortBar(state, srcPort);
-    const tb = domPortBar(state, tgtPort);
+    const sb = domPortBar(root, view, srcPort);
+    const tb = domPortBar(root, view, tgtPort);
     if (sb && offBar(sb, p1)) problems.push(`${rel.id}: source endpoint off its pin bar`);
     if (tb && offBar(tb, p2)) problems.push(`${rel.id}: target endpoint off its pin bar`);
   }
-  return result('Every edge endpoint lands on a real port', problems, state.model.relationships.length + ' edges');
+  return result('Every edge endpoint lands on a real port', problems, model.relationships.length + ' edges');
 }
 
-function checkPortPairs(state: EngineState): CheckResult {
+function checkPortPairs({ model, root }: RunChecksArgs): CheckResult {
   const problems: string[] = [];
   let fields = 0;
-  for (const e of state.model.entities) {
-    const card = state.els.cards.get(e.id)!;
+  for (const e of model.entities) {
+    const card = root.querySelector(`.card[data-entity="${cssEsc(e.id)}"]`)!;
     for (const f of e.fields) {
       fields++;
       const l = card.querySelectorAll(`.port.left[data-field="${cssEsc(f.name)}"]`).length;
@@ -88,29 +92,44 @@ function checkPortPairs(state: EngineState): CheckResult {
   return result('Exactly one L + one R port per field', problems, fields + ' fields');
 }
 
-function checkNoReflow(state: EngineState): CheckResult {
+// The legacy version dispatched real focus/highlight calls and read state.model
+// coordinates back; a pure function can't toggle React state synchronously, so this
+// injects the same highlight classes directly via classList — the invariant under
+// test is "highlight classes never change geometry", not how they got applied.
+function checkNoReflow({ model, root }: RunChecksArgs): CheckResult {
   const problems: string[] = [];
-  const snap = state.model.entities.map((e) => ({ id: e.id, x: e.x, y: e.y }));
-  const sampleWorld = state.model.entities.map((e) => portWorldPos(e, 0, 'R'));
+  const sampleWorld = model.entities.map((e) => portWorldPos(e, 0, 'R'));
 
-  const savedSel = state.selection;
-  const savedFocus = state.focus;
-  const first = state.model.entities[0]!;
-  focusEntity(state, first.id);
-  highlightField(state, first.id, first.fields[0]!.name);
+  const first = model.entities[0]!;
+  const firstField = first.fields[0]!;
+  const samplePort = root.querySelector(
+    `.port.right[data-entity="${cssEsc(first.id)}"][data-field="${cssEsc(firstField.name)}"]`,
+  );
+  const sampleBefore = samplePort?.getBoundingClientRect();
 
-  state.model.entities.forEach((e, i) => {
-    if (e.x !== snap[i]!.x || e.y !== snap[i]!.y) problems.push(`${e.id} moved`);
-    const now = portWorldPos(e, 0, 'R');
-    if (dist(now, sampleWorld[i]!) > EPS) problems.push(`${e.id} port shifted`);
-  });
+  const cardEl = root.querySelector(`.card[data-entity="${cssEsc(first.id)}"]`);
+  const firstRel = model.relationships.find((r) => r.source === first.id || r.target === first.id);
+  const edgeEl = firstRel ? root.querySelector(`.edge[data-rel="${cssEsc(firstRel.id)}"]`) : null;
 
-  clearFieldHighlight(state);
-  clearFocus(state);
-  if (savedFocus && savedFocus.type === 'entity') focusEntity(state, savedFocus.id);
-  state.selection = savedSel;
+  cardEl?.classList.add('focus', 'selected');
+  edgeEl?.classList.add('hot');
 
-  return result('Hover/focus never moves a node', problems, snap.length + ' nodes');
+  try {
+    model.entities.forEach((e, i) => {
+      const now = portWorldPos(e, 0, 'R');
+      if (dist(now, sampleWorld[i]!) > EPS) problems.push(`${e.id} port shifted`);
+    });
+    const sampleAfter = samplePort?.getBoundingClientRect();
+    if (sampleBefore && sampleAfter) {
+      const moved = Math.abs(sampleBefore.left - sampleAfter.left) > DOM_EPS || Math.abs(sampleBefore.top - sampleAfter.top) > DOM_EPS;
+      if (moved) problems.push(`${first.id} sample port DOM rect shifted`);
+    }
+  } finally {
+    cardEl?.classList.remove('focus', 'selected');
+    edgeEl?.classList.remove('hot');
+  }
+
+  return result('Hover/focus never moves a node', problems, model.entities.length + ' nodes');
 }
 
 function checkBrokenRefsSurface(): CheckResult {
@@ -124,6 +143,6 @@ function checkBrokenRefsSurface(): CheckResult {
   return result('Broken references surface as errors', caught ? [] : ['validator did not flag missing entity'], '1 injected break');
 }
 
-export function runChecks(state: EngineState): CheckResult[] {
-  return [checkEndpoints(state), checkPortPairs(state), checkNoReflow(state), checkBrokenRefsSurface()];
+export function runChecks(args: RunChecksArgs): CheckResult[] {
+  return [checkEndpoints(args), checkPortPairs(args), checkNoReflow(args), checkBrokenRefsSurface()];
 }
