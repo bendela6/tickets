@@ -47,6 +47,22 @@ it('all four checks pass on a healthy scene (modulo jsdom zero-rects)', async ()
   expect(results.filter((r) => r.name !== 'Every edge endpoint lands on a real port').every((r) => r.pass)).toBe(true);
 });
 
+it('no-reflow probe preserves pre-existing focus/selected/hot classes', async () => {
+  const { model, root } = await checkedScene();
+  // Simulate a live selection: the first card (users) is focused+selected and its
+  // edge (u-o) is hot — exactly the classes the no-reflow probe injects.
+  const card = root.querySelector('.card[data-entity="users"]')!;
+  const edge = root.querySelector('.edge[data-rel="u-o"]')!;
+  card.classList.add('focus', 'selected');
+  edge.classList.add('hot');
+  const results = runChecks({ model, geometry: computeEdgeGeometry(model, 'avoid'), view: { zoom: 1, panX: 0, panY: 0 }, root });
+  expect(results.find((r) => r.name === 'Hover/focus never moves a node')!.pass).toBe(true);
+  // The probe must only remove classes IT added — the live selection survives.
+  expect(card.classList.contains('focus')).toBe(true);
+  expect(card.classList.contains('selected')).toBe(true);
+  expect(edge.classList.contains('hot')).toBe(true);
+});
+
 it('failure injection: a missing port and a corrupted path are reported', async () => {
   const { model, root } = await checkedScene();
   root.querySelector('.port.left[data-entity="users"][data-field="name"]')!.remove();
