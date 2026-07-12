@@ -10,7 +10,7 @@ export interface Bounds {
   maxY: number;
 }
 
-export function visibleBounds(model: Model, hiddenGroups: Set<string>): Bounds {
+export function visibleBounds(model: Model, hiddenGroups: ReadonlySet<string>): Bounds {
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
