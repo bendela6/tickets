@@ -1,6 +1,6 @@
-import type { EerDiagram } from '../../engine/diagram/eer-diagram';
-import type { Model, RoutingMode } from '../../engine/model/types';
 import { groupColor } from '../../engine/colors/group-color';
+import type { RoutingMode } from '../../engine/model/types';
+import { useDiagramActions, useDiagramModelOrNull, useDiagramUi, useDiagramView } from '../../state/diagram-context';
 import { Chip } from './chip';
 import { SearchBox } from './search-box';
 import { ToggleGroup } from './toggle-group';
@@ -21,22 +21,19 @@ const btn =
   'hover:text-ink hover:border-border-2 hover:bg-surface-2';
 
 interface TopBarProps {
-  engine: EerDiagram | null;
-  model: Model | null;
-  routing: RoutingMode;
-  onCycleRouting: () => void;
-  hiddenGroups: ReadonlySet<string>;
-  hiddenKinds: ReadonlySet<string>;
-  colors?: ReadonlyMap<string, string>;
-  onToggleGroup: (id: string) => void;
-  onToggleKind: (id: string) => void;
-  onFit: () => void;
-  onRearrange: () => void;
   onSelfCheck: () => void;
 }
 
-export function TopBar(props: TopBarProps) {
-  const { engine, model } = props;
+export function TopBar({ onSelfCheck }: TopBarProps) {
+  const model = useDiagramModelOrNull();
+  const view = useDiagramView();
+  const ui = useDiagramUi();
+  const actions = useDiagramActions();
+
+  const cycleRouting = () => {
+    const order: RoutingMode[] = ['curved', 'avoid', 'ortho'];
+    actions.setRouting(order[(order.indexOf(view.routing) + 1) % order.length]!);
+  };
 
   return (
     <header className="z-10 flex flex-wrap items-center gap-x-[0.9rem] gap-y-2 border-b border-border bg-[rgba(12,14,20,0.96)] px-4 py-2.5">
@@ -49,7 +46,7 @@ export function TopBar(props: TopBarProps) {
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
-        <SearchBox engine={engine} />
+        <SearchBox />
 
         {model && model.groups.some((g) => !g.parent) && (
           <ToggleGroup label="Zones">
@@ -58,9 +55,9 @@ export function TopBar(props: TopBarProps) {
               .map((g) => (
                 <Chip
                   key={g.id}
-                  on={!props.hiddenGroups.has(g.id)}
-                  color={groupColor(model, g.id, props.colors)}
-                  onClick={() => props.onToggleGroup(g.id)}
+                  on={!ui.hidden.groups.has(g.id)}
+                  color={groupColor(model, g.id, ui.colors)}
+                  onClick={() => actions.toggleGroup(g.id)}
                 >
                   {g.label}
                 </Chip>
@@ -71,23 +68,23 @@ export function TopBar(props: TopBarProps) {
         {model && model.kinds.length > 0 && (
           <ToggleGroup label="Edges">
             {model.kinds.map((k) => (
-              <Chip key={k.id} on={!props.hiddenKinds.has(k.id)} onClick={() => props.onToggleKind(k.id)}>
+              <Chip key={k.id} on={!ui.hidden.kinds.has(k.id)} onClick={() => actions.toggleKind(k.id)}>
                 {k.label}
               </Chip>
             ))}
           </ToggleGroup>
         )}
 
-        <button type="button" className={btn} title={ROUTING_TIP[props.routing]} onClick={props.onCycleRouting}>
-          {ROUTING_LABEL[props.routing]}
+        <button type="button" className={btn} title={ROUTING_TIP[view.routing]} onClick={cycleRouting}>
+          {ROUTING_LABEL[view.routing]}
         </button>
-        <button type="button" className={btn} title="Fit the diagram to the viewport" onClick={props.onFit}>
+        <button type="button" className={btn} title="Fit the diagram to the viewport" onClick={() => actions.fit()}>
           Fit
         </button>
-        <button type="button" className={btn} title="Re-pack entities by zone" onClick={props.onRearrange}>
+        <button type="button" className={btn} title="Re-pack entities by zone" onClick={() => actions.rearrange()}>
           Rearrange
         </button>
-        <button type="button" className={btn} title="Run the quality checks" onClick={props.onSelfCheck}>
+        <button type="button" className={btn} title="Run the quality checks" onClick={onSelfCheck}>
           Self-check
         </button>
       </div>

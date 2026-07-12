@@ -1,6 +1,6 @@
-import type { EerDiagram } from '../../engine/diagram/eer-diagram';
 import { entityColor } from '../../engine/colors/entity-color';
 import type { Model, Relationship } from '../../engine/model/types';
+import { useDiagramActions } from '../../state/diagram-context';
 import { Card } from './card';
 import { Dot } from './dot';
 import { Header } from './header';
@@ -8,21 +8,20 @@ import { rowClass } from './rel-row';
 import { Section } from './section';
 
 export function EdgeDetail({
-  engine,
   model,
   id,
   colors,
 }: {
-  engine: EerDiagram | null;
   model: Model;
   id: string;
   colors?: ReadonlyMap<string, string>;
 }) {
+  const actions = useDiagramActions();
   const rel: Relationship | undefined = model.relById.get(id);
   if (!rel) return null;
   const goto = (entityId: string) => {
-    engine?.selectEntity(entityId);
-    engine?.centerOn(entityId);
+    actions.selectEntity(entityId);
+    actions.centerOn(entityId);
   };
   const endpoint = (entityId: string, field: string, role: string) => (
     <button type="button" className={rowClass} onClick={() => goto(entityId)}>

@@ -1,6 +1,6 @@
-import type { EerDiagram } from '../../engine/diagram/eer-diagram';
 import { entityColor } from '../../engine/colors/entity-color';
 import type { Model } from '../../engine/model/types';
+import { useDiagramActions } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
 import { Empty } from './empty';
 import { Header } from './header';
@@ -29,16 +29,15 @@ function relationshipsFor(model: Model, id: string): RelView[] {
 }
 
 export function EntityDetail({
-  engine,
   model,
   id,
   colors,
 }: {
-  engine: EerDiagram | null;
   model: Model;
   id: string;
   colors?: ReadonlyMap<string, string>;
 }) {
+  const actions = useDiagramActions();
   const e = model.entityById.get(id);
   if (!e) return null;
   const group = model.groups.find((g) => g.id === e.group);
@@ -75,8 +74,8 @@ export function EntityDetail({
                       type="button"
                       className="ml-1 rounded bg-surface-2 px-1 py-px font-mono text-[0.62rem] text-fk hover:bg-surface-3"
                       onClick={() => {
-                        engine?.selectEntity(f.ref!);
-                        engine?.centerOn(f.ref!);
+                        actions.selectEntity(f.ref!);
+                        actions.centerOn(f.ref!);
                       }}
                     >
                       → {f.ref}.{f.refField ?? 'id'}
@@ -103,8 +102,8 @@ export function EntityDetail({
             otherEntity={r.otherEntity}
             otherField={r.otherField}
             onClick={() => {
-              engine?.isolateSilent(r.id);
-              engine?.centerOn(r.otherEntity);
+              actions.isolateSilent(r.id);
+              actions.centerOn(r.otherEntity);
             }}
           />
         ))}

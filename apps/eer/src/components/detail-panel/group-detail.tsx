@@ -1,7 +1,7 @@
-import type { EerDiagram } from '../../engine/diagram/eer-diagram';
 import { entityColor } from '../../engine/colors/entity-color';
 import { entityIdsInGroup } from '../../engine/groups/entity-ids-in-group';
 import type { Model } from '../../engine/model/types';
+import { useDiagramActions } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
 import { Dot } from './dot';
 import { Empty } from './empty';
@@ -10,16 +10,15 @@ import { RelRow, rowClass } from './rel-row';
 import { Section } from './section';
 
 export function GroupDetail({
-  engine,
   model,
   id,
   colors,
 }: {
-  engine: EerDiagram | null;
   model: Model;
   id: string;
   colors?: ReadonlyMap<string, string>;
 }) {
+  const actions = useDiagramActions();
   const group = model.groups.find((g) => g.id === id);
   const isSub = group?.parent != null;
   const parentZone = isSub ? model.groups.find((g) => g.id === group?.parent) : undefined;
@@ -52,7 +51,7 @@ export function GroupDetail({
             {subgroups.map((sg) => {
               const n = model.entities.filter((e) => e.group === sg.id).length;
               return (
-                <button key={sg.id} type="button" className={rowClass} onClick={() => engine?.selectGroup(sg.id)}>
+                <button key={sg.id} type="button" className={rowClass} onClick={() => actions.selectGroup(sg.id)}>
                   <span className="truncate font-mono text-ink">{sg.label}</span>
                   <span className="ml-auto shrink-0 text-[0.66rem] text-dim">{n} tables</span>
                 </button>
@@ -68,8 +67,8 @@ export function GroupDetail({
             type="button"
             className={rowClass}
             onClick={() => {
-              engine?.selectEntity(e.id);
-              engine?.centerOn(e.id);
+              actions.selectEntity(e.id);
+              actions.centerOn(e.id);
             }}
           >
             <Dot color={entityColor(model, e.id, colors)} />
@@ -102,7 +101,7 @@ export function GroupDetail({
               dir={outward ? 'out' : 'in'}
               otherEntity={otherEntity}
               otherField={otherField}
-              onClick={() => engine?.isolateSilent(r.id)}
+              onClick={() => actions.isolateSilent(r.id)}
             />
           );
         })}
