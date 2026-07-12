@@ -12,7 +12,7 @@ export function DetailPanel() {
   const colors = ui.colors;
 
   return (
-    <aside className="w-[320px] overflow-auto border-l border-border bg-surface text-[0.8rem]">
+    <aside className="w-80 shrink-0 overflow-auto border-l border-border bg-surface text-base">
       {model && selection.type === 'entity' && <EntityDetail model={model} id={selection.id} colors={colors} />}
       {model && selection.type === 'group' && <GroupDetail model={model} id={selection.id} colors={colors} />}
       {model && selection.type === 'edge' && <EdgeDetail model={model} id={selection.id} colors={colors} />}

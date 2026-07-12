@@ -14,7 +14,7 @@ export function EntityCards() {
   const hidden = useHiddenIds();
   const connected = useMemo(() => connectedPorts(model, hidden.edges), [model, hidden.edges]);
   return (
-    <div className="layer cards">
+    <div className="layer cards absolute left-0 top-0 z-2">
       {model.entities.map((e) => {
         const related = focusSets?.entities.has(e.id) ?? false;
         return (

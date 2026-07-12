@@ -7,7 +7,7 @@ export function RoleTag({ role }: { role: Entity['fields'][number]['role'] }) {
   return (
     <span
       className={cn(
-        'inline-block w-7 shrink-0 rounded text-center font-mono text-[0.54rem] font-semibold leading-[0.95rem]',
+        'inline-block w-7 shrink-0 rounded text-center font-mono text-3xs font-semibold leading-4',
         role === 'pk' ? 'bg-pk/15 text-pk' : 'bg-fk/15 text-fk',
       )}
     >

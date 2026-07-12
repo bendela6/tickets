@@ -15,9 +15,9 @@ function Viewer() {
   const actions = useDiagramActions();
   const [checks, setChecks] = useState<CheckResult[] | null>(null);
   return (
-    <div className="grid h-screen grid-rows-[auto_1fr]">
+    <div className="flex h-screen flex-col">
       <TopBar onSelfCheck={() => setChecks(actions.runChecks())} />
-      <div className="grid min-h-0 grid-cols-[1fr_auto]">
+      <div className="flex min-h-0 flex-1">
         <Diagram>
           <ErrorBanner errors={diagnostics.errors} warnings={diagnostics.warnings} onDismiss={dismiss} />
           {checks && <ChecksOverlay results={checks} onClose={() => setChecks(null)} />}

@@ -7,6 +7,7 @@ Interactive **EER model viewer** — a React + TypeScript + Tailwind app (same s
 pnpm --filter @tickets/eer dev     # http://localhost:4630  (also launched by `pnpm dev`)
 pnpm --filter @tickets/eer build
 pnpm --filter @tickets/eer typecheck
+pnpm --filter @tickets/eer verify:tailwind
 ```
 
 ## Architecture
@@ -24,8 +25,8 @@ the DOM:
   memoized once and reached via `useDiagramActions()`.
 - `src/engine/` — the framework-agnostic diagram engine (TypeScript), one
   function/module per folder with its own test: `model/` (validate + normalize the
-  JSON model), `geometry/` (card sizing + port positions, mirrors the CSS box
-  model), `layout/` (deterministic group packing, fit/center math), `routing/` (A\*
+  JSON model), `geometry/` (card sizing + port positions, mirrors the rendered
+  Tailwind box model), `layout/` (deterministic group packing, fit/center math), `routing/` (A\*
   obstacle-avoiding orthogonal router: curved / avoid / ortho), `colors/` (zone →
   entity → edge colour inheritance), `focus/` (focus-set selectors: related-to-
   entity, related-to-group, connected ports, field edges), `search/` (ranked model
@@ -40,6 +41,22 @@ the DOM:
 - `src/components/` (`top-bar/`, `detail-panel/`, `checks-overlay/`,
   `error-banner/`) — React + Tailwind chrome that reads context and calls
   `DiagramActions`.
+
+## Styling boundary
+
+All authored presentation lives in Tailwind utilities backed by named theme
+tokens. `src/styles/tailwind.css` contains only the Tailwind import, `@theme`
+tokens (type scale, tracking, radii, shadows, transition-property sets), and
+`@custom-variant` lines; it has no application selectors. Static values are
+tokens or standard-scale utilities — arbitrary values (`h-[34px]`,
+`text-[0.82rem]`) are banned. Runtime diagram geometry and user-selected colors
+enter components as typed CSS custom properties (per-element `color-mix()`
+recipes are built by `src/ui/color-mix.ts`, since a var() inside a `:root`
+token resolves at `:root`), and utilities consume them with the `(--var)`
+syntax, e.g. `w-(--card-width)`. Direct style declarations, additional
+stylesheets, CSS-in-JS, CSSOM injection, and arbitrary-value utilities are all
+rejected by `verify:tailwind`, which runs automatically before build,
+typecheck, and tests.
 
 ## The model
 
