@@ -1,0 +1,2350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Items platform — ER model</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+  <script src="https://unpkg.com/cytoscape-node-html-label@1.2.2/dist/cytoscape-node-html-label.js"></script>
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --surface: #12151c;
+      --surface-2: #181c26;
+      --border: #2c3344;
+      --text: #eef0f4;
+      --muted: #8b93a7;
+      --dim: #5c657a;
+      --pk: #f5c542;
+      --fk: #3ecf8e;
+      --ws: #5b9dff;
+      --st: #2dd4bf;
+      --rc: #fbbf24;
+      --hi: #c4b5fd;
+      --m2m: #60a5fa;
+      --accent: #7aa2ff;
+      /* Font scale (1 = default). Card sizes grow with scale. */
+      --fs: 1;
+      --card-title: calc(14px * var(--fs));
+      --card-col: calc(11.5px * var(--fs));
+      --card-col-type: calc(10.5px * var(--fs));
+      --card-note: calc(11px * var(--fs));
+      --card-badge: calc(10px * var(--fs));
+      --card-hd-h: calc(30px * var(--fs));
+      --card-field-pad: calc(3px * var(--fs)) calc(10px * var(--fs));
+      --card-w: calc(188px * var(--fs));
+      --card-w-wide: calc(210px * var(--fs));
+      --card-w-xwide: calc(232px * var(--fs));
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    .app { display: grid; grid-template-rows: auto 1fr; height: 100%; }
+    .top {
+      display: flex; flex-wrap: wrap; gap: 0.65rem 1rem;
+      align-items: center; justify-content: space-between;
+      padding: 0.75rem 1.1rem; border-bottom: 1px solid var(--border);
+      background: rgba(12, 14, 20, 0.95); backdrop-filter: blur(12px); z-index: 5;
+    }
+    .brand h1 { margin: 0; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.02em; }
+    .brand p { margin: 0.15rem 0 0; font-size: 0.8rem; color: var(--muted); }
+    .controls { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+    .search {
+      display: flex; align-items: center; gap: 0.35rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.35rem 0.6rem; min-width: 160px;
+    }
+    .search input {
+      border: 0; outline: 0; background: transparent; color: var(--text);
+      font: inherit; font-size: 0.84rem; width: 100%;
+    }
+    .search input::placeholder { color: var(--dim); }
+    .btn {
+      appearance: none; border: 1px solid var(--border); background: var(--surface);
+      color: var(--muted); font: inherit; font-size: 0.76rem; font-weight: 500;
+      padding: 0.38rem 0.65rem; border-radius: 8px; cursor: pointer;
+    }
+    .btn:hover { color: var(--text); border-color: #3d4660; background: var(--surface-2); }
+    .btn.active {
+      color: var(--text);
+      border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+      background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+    }
+    .btn-group {
+      display: flex; flex-wrap: wrap; gap: 0.3rem; padding: 0.2rem;
+      border-radius: 10px; border: 1px solid var(--border); background: rgba(0,0,0,0.25);
+    }
+    .btn.ws.active { color: #dbeafe; border-color: color-mix(in srgb, var(--ws) 50%, transparent); background: color-mix(in srgb, var(--ws) 16%, var(--surface)); }
+    .btn.st.active { color: #ccfbf1; border-color: color-mix(in srgb, var(--st) 50%, transparent); background: color-mix(in srgb, var(--st) 14%, var(--surface)); }
+    .btn.rc.active { color: #fef3c7; border-color: color-mix(in srgb, var(--rc) 50%, transparent); background: color-mix(in srgb, var(--rc) 14%, var(--surface)); }
+    .btn.hi.active { color: #ede9fe; border-color: color-mix(in srgb, var(--hi) 50%, transparent); background: color-mix(in srgb, var(--hi) 14%, var(--surface)); }
+
+    .font-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.25rem 0.55rem;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 500;
+      user-select: none;
+    }
+    .font-ctrl label { white-space: nowrap; }
+    .font-ctrl input[type="range"] {
+      width: 90px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .font-ctrl .fs-val {
+      min-width: 2.4rem;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.78rem;
+      color: var(--text);
+      text-align: right;
+    }
+    .font-ctrl .btn-icon {
+      width: 1.6rem;
+      height: 1.6rem;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .main {
+      display: grid; grid-template-columns: 1fr minmax(280px, 340px);
+      min-height: 0; height: 100%;
+    }
+    @media (max-width: 900px) {
+      .main { grid-template-columns: 1fr; grid-template-rows: 1fr 42vh; }
+    }
+    #cy {
+      min-height: 0;
+      overscroll-behavior: none; /* don't scroll the page while zooming */
+      touch-action: none;
+      background:
+        radial-gradient(ellipse at 20% 0%, #152038 0%, transparent 45%),
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px),
+        var(--surface);
+      background-size: auto, 24px 24px, 24px 24px, auto;
+    }
+
+    /* Previous card node style */
+    .er-card {
+      width: var(--card-w); border-radius: 8px; overflow: visible;
+      border: 1.25px solid #2c3344; background: #0e1118;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      font-family: "IBM Plex Mono", ui-monospace, monospace; text-align: left;
+      pointer-events: none;
+    }
+    .er-card.w-wide { width: var(--card-w-wide); }
+    .er-card.w-xwide { width: var(--card-w-xwide); }
+    .er-card .hd {
+      height: var(--card-hd-h); display: flex; align-items: center; justify-content: space-between;
+      padding: 0 calc(12px * var(--fs)); font-size: var(--card-title); font-weight: 600;
+      font-family: "IBM Plex Sans", system-ui, sans-serif; color: #eef0f4;
+      border-radius: 8px 8px 0 0;
+    }
+    .er-card .hd .badge {
+      font-size: var(--card-badge); font-weight: 600; letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.55); font-family: "IBM Plex Sans", system-ui, sans-serif;
+    }
+    .er-card.ws .hd { background: #1a3a66; }
+    .er-card.st .hd { background: #0f3f3c; }
+    .er-card.jn .hd { background: #243044; }
+    .er-card.rc .hd { background: #4a3410; }
+    .er-card.hi .hd { background: #3b2a6d; }
+    .er-card.ws { border-color: #3b82f6; }
+    .er-card.st { border-color: #14b8a6; }
+    .er-card.jn { border-color: #60a5fa; border-style: dashed; }
+    .er-card.rc { border-color: #f59e0b; }
+    .er-card.hi { border-color: #a78bfa; }
+    .er-card .bd { padding: calc(3px * var(--fs)) 0 calc(4px * var(--fs)); border-top: 1px solid #232836; }
+    /* Minimal node rows — fields capture hover for edge highlight */
+    .er-card .field {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 6px;
+      padding: var(--card-field-pad);
+      padding-left: calc(12px * var(--fs));
+      padding-right: calc(12px * var(--fs));
+      border-bottom: 1px solid #1a1f2a;
+      position: relative;
+      pointer-events: auto; /* hover field → highlight connected lines */
+      cursor: pointer;
+    }
+    .er-card .field:last-child { border-bottom: 0; }
+    .er-card .field:hover,
+    .er-card .field.hl-field {
+      background: rgba(122, 162, 255, 0.14);
+      box-shadow: inset 0 0 0 1px rgba(122, 162, 255, 0.35);
+    }
+    .er-card .field-name {
+      font-size: var(--card-col); font-weight: 500; color: #c5cddc;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+    }
+    .er-card .field-name.pk { color: #f5c542; }
+    .er-card .field-name.fk { color: #3ecf8e; }
+    .er-card .field-type {
+      font-size: var(--card-col-type); color: #6b7280; flex-shrink: 0;
+    }
+    .er-card .field.hl-field .field-name,
+    .er-card .field:hover .field-name { color: #dbe7ff; }
+    .er-card.hot {
+      box-shadow: 0 0 0 2px #7aa2ff, 0 6px 18px rgba(122,162,255,0.28);
+      opacity: 1;
+    }
+    .er-card.selected {
+      box-shadow: 0 0 0 2.5px #fff, 0 8px 22px rgba(255,255,255,0.14);
+      opacity: 1;
+    }
+    /* HTML labels don't inherit cy node opacity — dim unrelated cards here */
+    .er-card.faded {
+      opacity: 0.14;
+      filter: grayscale(0.35);
+      box-shadow: none;
+    }
+    .er-card.neighbor:not(.faded) {
+      box-shadow: 0 0 0 1.5px rgba(122,162,255,0.55), 0 4px 14px rgba(122,162,255,0.12);
+      opacity: 1;
+    }
+
+    .panel {
+      border-left: 1px solid var(--border); background: rgba(12,14,20,0.97);
+      overflow: auto; min-height: 0;
+    }
+    @media (max-width: 900px) {
+      .main { grid-template-columns: 1fr; grid-template-rows: 1fr 42vh; }
+      .panel { border-left: 0; border-top: 1px solid var(--border); }
+    }
+    .main { display: grid; grid-template-columns: 1fr minmax(280px, 340px); min-height: 0; height: 100%; }
+    #cy { min-height: 0; }
+    .panel-inner { padding: 1rem 1.1rem 1.5rem; }
+    .panel-empty { color: var(--muted); font-size: 0.88rem; }
+    .panel-empty ul { margin: 0.5rem 0 0; padding-left: 1.1rem; color: var(--dim); font-size: 0.82rem; }
+    .panel-empty kbd {
+      font-family: "IBM Plex Mono", monospace; font-size: 0.72rem;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 4px; padding: 0.05em 0.35em; color: var(--text);
+    }
+    .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.6rem; }
+    .panel-head h2 { margin: 0; font-size: 1.2rem; font-weight: 600; font-family: "IBM Plex Mono", monospace; }
+    .badge-p {
+      font-size: 0.65rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 0.2rem 0.45rem; border-radius: 999px; border: 1px solid var(--border); color: var(--muted);
+    }
+    .badge-p.ws { color: var(--ws); border-color: color-mix(in srgb, var(--ws) 40%, transparent); }
+    .badge-p.st { color: var(--st); border-color: color-mix(in srgb, var(--st) 40%, transparent); }
+    .badge-p.rc { color: var(--rc); border-color: color-mix(in srgb, var(--rc) 40%, transparent); }
+    .badge-p.hi { color: var(--hi); border-color: color-mix(in srgb, var(--hi) 40%, transparent); }
+    .badge-p.jn { color: var(--m2m); border-color: color-mix(in srgb, var(--m2m) 40%, transparent); }
+    .panel-desc { margin: 0 0 0.85rem; font-size: 0.9rem; color: var(--muted); }
+    .section-title {
+      margin: 0.9rem 0 0.35rem; font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim);
+    }
+    .col-list {
+      list-style: none; margin: 0; padding: 0; border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+    }
+    .col-list li {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      column-gap: 0.5rem;
+      row-gap: 0.2rem;
+      padding: 0.6rem 0.7rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .col-list li:last-child { border-bottom: 0; }
+    .col-list .tag {
+      font-family: "IBM Plex Mono", monospace; font-size: 0.65rem; font-weight: 600;
+      color: var(--dim); grid-row: 1 / -1; padding-top: 0.2rem;
+    }
+    .col-list .tag.pk { color: var(--pk); }
+    .col-list .tag.fk { color: var(--fk); }
+    .col-list .name-row {
+      grid-column: 2;
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 0.6rem;
+    }
+    .col-list .name { font-family: "IBM Plex Mono", monospace; font-size: 0.88rem; font-weight: 500; }
+    .col-list .name.pk { color: var(--pk); }
+    .col-list .name.fk { color: var(--fk); }
+    .col-list .type {
+      font-family: "IBM Plex Mono", monospace; font-size: 0.75rem; color: var(--accent);
+    }
+    .col-list .title {
+      grid-column: 2;
+      font-size: 0.84rem; font-weight: 500; color: var(--text);
+    }
+    .col-list .desc {
+      grid-column: 2;
+      font-size: 0.78rem; color: var(--muted); line-height: 1.4;
+    }
+    .col-list .meta {
+      grid-column: 2;
+      font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; color: var(--dim);
+    }
+    .rel-list { display: flex; flex-direction: column; gap: 0.35rem; }
+    .rel-chip {
+      appearance: none; border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); font: inherit; font-size: 0.74rem; font-family: "IBM Plex Mono", monospace;
+      padding: 0.4rem 0.55rem; border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; gap: 0.45rem; text-align: left; width: 100%;
+    }
+    .rel-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--surface-2); }
+    .rel-chip .swatch {
+      width: 10px; height: 10px; border-radius: 999px; flex-shrink: 0;
+      background: var(--accent);
+    }
+    .rel-chip .dir {
+      color: var(--dim); font-size: 0.65rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.04em; min-width: 1.6rem;
+    }
+    .rel-chip .rel-name { flex: 1; min-width: 0; }
+    .rel-chip .rel-label { color: var(--dim); font-size: 0.68rem; }
+    .edge-hint {
+      margin: 0.35rem 0 0; font-size: 0.75rem; color: var(--dim); line-height: 1.35;
+    }
+    .toast {
+      position: fixed; left: 50%; bottom: 1.25rem;
+      transform: translateX(-50%) translateY(120%);
+      background: #1e293b; border: 1px solid var(--border); color: var(--text);
+      font-size: 0.8rem; padding: 0.5rem 0.9rem; border-radius: 8px;
+      opacity: 0; transition: 0.25s; z-index: 50; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="brand">
+        <h1>Items platform — ER model</h1>
+        <p>Wheel zoom · left-drag tables · middle-pan · field dots · edges = cardinality</p>
+      </div>
+      <div class="controls">
+        <label class="search">
+          <span aria-hidden="true">⌕</span>
+          <input id="search" type="search" placeholder="Find table…" autocomplete="off" />
+        </label>
+        <div class="btn-group" id="zoneFilters">
+          <button type="button" class="btn ws active" data-zone="ws">Workspace</button>
+          <button type="button" class="btn st active" data-zone="st">Structure</button>
+          <button type="button" class="btn rc active" data-zone="rc">Records</button>
+          <button type="button" class="btn hi active" data-zone="hi">History</button>
+        </div>
+        <div class="font-ctrl" title="Node font size">
+          <button type="button" class="btn btn-icon" id="fontDown" aria-label="Smaller font">A−</button>
+          <label for="fontRange">Font</label>
+          <input id="fontRange" type="range" min="0.75" max="1.75" step="0.05" value="1" />
+          <span class="fs-val" id="fontVal">100%</span>
+          <button type="button" class="btn btn-icon" id="fontUp" aria-label="Larger font">A+</button>
+        </div>
+        <button type="button" class="btn active" id="toggleM2m">M2M</button>
+        <button type="button" class="btn active" id="toggleFk">FK</button>
+        <button type="button" class="btn" id="toggleRoutes" title="Bezier (default) vs orthogonal taxi">Curve routes</button>
+        <button type="button" class="btn" id="rearrangeBtn" title="Pack tables and groups with margins">Rearrange</button>
+        <button type="button" class="btn" id="fitBtn">Fit</button>
+        <button type="button" class="btn" id="resetBtn">Reset layout</button>
+      </div>
+    </header>
+    <div class="main">
+      <div id="cy"></div>
+      <aside class="panel">
+        <div class="panel-inner" id="panelBody"></div>
+      </aside>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    if (typeof cytoscape === "undefined") {
+      document.getElementById("cy").innerHTML = '<p style="padding:2rem;color:#f87171">Could not load Cytoscape CDN.</p>';
+      throw new Error("cytoscape missing");
+    }
+    // Register HTML labels extension (UMD)
+    (function () {
+      const plugin = window.cytoscapeNodeHtmlLabel || window["cytoscape-node-html-label"];
+      if (plugin && cytoscape.use) {
+        try { cytoscape.use(plugin); } catch (e) { /* ok */ }
+      }
+    })();
+
+    const GROUPS = {
+      ws: { id: "g-ws", label: "WORKSPACE" },
+      st: { id: "g-st", label: "STRUCTURE" },
+      rc: { id: "g-rc", label: "RECORDS" },
+      hi: { id: "g-hi", label: "HISTORY" },
+    };
+
+    /** Column shape: name, type, title?, description?, kind? (pk|fk), ref? */
+    const col = (name, type, title, description, extra = {}) => ({
+      name, type, title, description, ...extra,
+    });
+
+    const TABLES = [
+      { id: "users", zone: "ws", style: "ws", label: "users",
+        desc: "Actors for mutations and comments (humans and agents).",
+        cols: [
+          col("id", "serial", "Id", "Primary key.", { kind: "pk" }),
+          col("name", "text", "Name", "Display name; unique.", { meta: "unique" }),
+          col("email", "text", "Email", "Optional contact; future auth hook."),
+          col("kind", "enum", "Kind", "human or agent.", { meta: "human | agent" }),
+          col("archived_at", "timestamptz", "Archived at", "Soft-delete; null = active."),
+        ]},
+      { id: "projects", zone: "ws", style: "ws", label: "projects",
+        desc: "Workspace container bound to a structure scheme.",
+        cols: [
+          col("id", "serial", "Id", "Primary key.", { kind: "pk" }),
+          col("key", "text", "Key", "URL-safe project slug.", { meta: "unique" }),
+          col("name", "text", "Name", "Display name."),
+          col("item_prefix", "text", "Item prefix", "Display prefix, e.g. TASK → TASK-42."),
+          col("scheme_id", "int", "Scheme", "Structure pack this project uses.", { kind: "fk", ref: "schemes" }),
+          col("created_at", "timestamptz", "Created at", "When the project was created."),
+        ]},
+      { id: "views", zone: "ws", style: "ws", label: "views",
+        desc: "Saved board/table lenses (columns, filters, sort).",
+        cols: [
+          col("id", "serial", "Id", "Primary key.", { kind: "pk" }),
+          col("project_id", "int", "Project", "Owning project.", { kind: "fk", ref: "projects" }),
+          col("name", "text", "Name", "View title in the UI."),
+          col("position", "int", "Position", "Order in the view list."),
+          col("config", "jsonb", "Config", "Columns, filters, sort; field refs by id."),
+          col("archived_at", "timestamptz", "Archived at", "Soft-delete."),
+        ]},
+      { id: "schemes", zone: "st", style: "st", label: "schemes",
+        desc: "Structure pack root: types, field library, option sets.",
+        cols: [
+          col("id", "serial", "Id", "Primary key.", { kind: "pk" }),
+          col("key", "text", "Key", "Stable scheme identifier.", { meta: "unique" }),
+          col("name", "text", "Name", "Display name."),
+          col("config", "jsonb", "Config", "Defaults (e.g. default view blueprint)."),
+          col("archived_at", "timestamptz", "Archived at", "Soft-delete."),
+        ]},
+      { id: "item_types", zone: "st", style: "st", label: "item_types",
+        desc: "Kinds of items within a scheme (task, bug, document, …).",
+        cols: [
+          col("id", "serial", "Id", "Primary key.", { kind: "pk" }),
+          col("scheme_id", "int", "Scheme", "Owning structure pack.", { kind: "fk", ref: "schemes" }),
+          col("key", "text", "Key", "Stable type key, e.g. task."),
+          col("label", "text", "Label", "UI label, e.g. Task."),
+          col("position", "int", "Position", "Order in pickers."),
+          col("config", "jsonb", "Config", "Icon, product copy, UI hints."),
+          col("archived_at", "timestamptz", "Archived at", "Soft-delete."),
+        ]},
+      { id: "item_type_child_types", zone: "st", style: "jn", label: "item_type_child_types",
+        desc: "Which child types may hang under a parent type (hierarchy rules).",
+        cols: [
+          col("parent_type_id", "int", "Parent type", "Type of the parent item.", { kind: "fk", ref: "item_types" }),
+          col("child_type_id", "int", "Child type", "Type allowed as child.", { kind: "fk", ref: "item_types" }),
+        ]},
+      { id: "item_type_fields", zone: "st", style: "jn", label: "item_type_fields", badge: "JOIN", wide: "wide",
+        desc: "Places a library field on a type (M2M). Definition stays on fields.",
+        cols: [
+          col("item_type_id", "int", "Item type", "Type that shows this field.", { kind: "fk", ref: "item_types" }),
+          col("field_id", "int", "Field", "Shared field definition.", { kind: "fk", ref: "fields" }),
+          col("position", "int", "Position", "Order on forms for this type."),
+          col("required", "boolean", "Required", "Must have a value on create/update."),
+          col("config_override", "jsonb", "Config override", "Per-type overrides (allowlist, transitions, …)."),
+        ]},
+      { id: "fields", zone: "st", style: "st", label: "fields",
+        desc: "Scheme-scoped field library (reusable across types).",
+        cols: [
+          col("id", "serial", "Id", "Primary key.", { kind: "pk" }),
+          col("scheme_id", "int", "Scheme", "Owning structure pack.", { kind: "fk", ref: "schemes" }),
+          col("key", "text", "Key", "Stable key, unique per scheme.", { meta: "unique/scheme" }),
+          col("label", "text", "Label", "UI label."),
+          col("type", "enum", "Type", "string | number | boolean | date | datetime | option | user | json."),
+          col("system", "boolean", "System", "Seeded/locked field (e.g. title, status)."),
+          col("config", "jsonb", "Config", "Format, multiple, workflow flags, UI hints."),
+          col("option_set_id", "int", "Option set", "Shared choices when type is option.", { kind: "fk", ref: "option_sets" }),
+          col("archived_at", "timestamptz", "Archived at", "Soft-delete."),
+        ]},
+      { id: "option_sets", zone: "st", style: "st", label: "option_sets",
+        desc: "Shared option lists; many option fields can reuse one set.",
+        cols: [
+          col("id", "serial", "Id", "Primary key.", { kind: "pk" }),
+          col("scheme_id", "int", "Scheme", "Owning structure pack.", { kind: "fk", ref: "schemes" }),
+          col("key", "text", "Key", "Stable set key, e.g. status."),
+          col("name", "text", "Name", "Display name for the list."),
+        ]},
+      { id: "options", zone: "st", style: "st", label: "options",
+        desc: "One choice in an option set (e.g. a status value).",
+        cols: [
+          col("id", "serial", "Id", "Primary key; stored on item_values.option_id.", { kind: "pk" }),
+          col("option_set_id", "int", "Option set", "Parent list.", { kind: "fk", ref: "option_sets" }),
+          col("value", "text", "Value", "Stable machine value."),
+          col("label", "text", "Label", "UI label."),
+          col("position", "int", "Position", "Order in pickers."),
+          col("config", "jsonb", "Config", "kind (todo/active/done), color, icon."),
+          col("archived_at", "timestamptz", "Archived at", "Soft-delete."),
+        ]},
+      { id: "option_transitions", zone: "st", style: "jn", label: "option_transitions", wide: "wide",
+        desc: "Workflow graph: which option may move to which (on a workflow field).",
+        cols: [
+          col("id", "serial", "Id", "Primary key.", { kind: "pk" }),
+          col("field_id", "int", "Field", "Workflow option field these edges apply to.", { kind: "fk", ref: "fields" }),
+          col("from_option_id", "int", "From option", "Source option; null = valid start.", { kind: "fk", ref: "options" }),
+          col("to_option_id", "int", "To option", "Destination option.", { kind: "fk", ref: "options" }),
+          col("item_type_id", "int", "Item type", "Optional; null = all types using the field.", { kind: "fk", ref: "item_types" }),
+          col("config", "jsonb", "Config", "Future guards / metadata."),
+        ]},
+      { id: "link_types", zone: "st", style: "st", label: "link_types",
+        desc: "Named relation vocabulary owned by a source type.",
+        cols: [
+          col("id", "serial", "Id", "Primary key.", { kind: "pk" }),
+          col("item_type_id", "int", "Source type", "Type that owns this link type.", { kind: "fk", ref: "item_types" }),
+          col("key", "text", "Key", "e.g. blocks."),
+          col("label", "text", "Label", "Forward label."),
+          col("inverse_label", "text", "Inverse label", "Label from the target side."),
+          col("directional", "boolean", "Directional", "Whether direction matters (cycle checks)."),
+          col("position", "int", "Position", "Order in UI."),
+          col("archived_at", "timestamptz", "Archived at", "Soft-delete."),
+        ]},
+      { id: "link_type_target_types", zone: "st", style: "jn", label: "link_type_target_types", wide: "wide",
+        desc: "Which item types may be targets of a given link type.",
+        cols: [
+          col("link_type_id", "int", "Link type", "The relation definition.", { kind: "fk", ref: "link_types" }),
+          col("target_type_id", "int", "Target type", "Allowed target item type.", { kind: "fk", ref: "item_types" }),
+        ]},
+      { id: "items", zone: "rc", style: "rc", label: "items", badge: "SPINE", wide: "wide",
+        desc: "Record spine (generic work/knowledge object in a project).",
+        cols: [
+          col("id", "serial", "Id", "Primary key.", { kind: "pk" }),
+          col("project_id", "int", "Project", "Home project.", { kind: "fk", ref: "projects" }),
+          col("type_id", "int", "Type", "Item type (task, doc, …).", { kind: "fk", ref: "item_types" }),
+          col("parent_id", "int", "Parent", "Optional parent item (tree).", { kind: "fk", ref: "items" }),
+          col("number", "int", "Number", "Per-project display number.", { meta: "unique/project" }),
+          col("created_by", "int", "Created by", "Author user.", { kind: "fk", ref: "users" }),
+          col("archived_at", "timestamptz", "Archived at", "Soft-delete."),
+          col("created_at", "timestamptz", "Created at", "Creation time."),
+          col("updated_at", "timestamptz", "Updated at", "Optimistic-lock token."),
+        ]},
+      { id: "item_values", zone: "rc", style: "rc", label: "item_values", wide: "xwide",
+        desc: "EAV storage: one row (or N for multi) per field value on an item.",
+        cols: [
+          col("id", "serial", "Id", "Primary key.", { kind: "pk" }),
+          col("item_id", "int", "Item", "Owning item.", { kind: "fk", ref: "items" }),
+          col("field_id", "int", "Field", "Field definition (shared library id).", { kind: "fk", ref: "fields" }),
+          col("value_text", "text", "Text value", "For string-like fields."),
+          col("value_number", "numeric", "Number value", "For number fields."),
+          col("value_date", "timestamptz", "Date value", "For date/datetime fields."),
+          col("value_bool", "boolean", "Boolean value", "For boolean fields."),
+          col("value_json", "jsonb", "JSON value", "For json / compound fields."),
+          col("option_id", "int", "Option", "For option fields (incl. status).", { kind: "fk", ref: "options" }),
+          col("value_user_id", "int", "User", "For user fields.", { kind: "fk", ref: "users" }),
+        ]},
+      { id: "comments", zone: "rc", style: "rc", label: "comments",
+        desc: "Discussion threads on an item.",
+        cols: [
+          col("id", "serial", "Id", "Primary key.", { kind: "pk" }),
+          col("item_id", "int", "Item", "Item being discussed.", { kind: "fk", ref: "items" }),
+          col("author_id", "int", "Author", "Comment author.", { kind: "fk", ref: "users" }),
+          col("parent_id", "int", "Parent comment", "Reply parent; null = top-level.", { kind: "fk", ref: "comments" }),
+          col("body", "text", "Body", "Markdown body."),
+          col("created_at", "timestamptz", "Created at", "When posted."),
+        ]},
+      { id: "comment_reactions", zone: "rc", style: "rc", label: "comment_reactions", wide: "wide",
+        desc: "Emoji reactions on comments.",
+        cols: [
+          col("id", "serial", "Id", "Primary key.", { kind: "pk" }),
+          col("comment_id", "int", "Comment", "Target comment.", { kind: "fk", ref: "comments" }),
+          col("user_id", "int", "User", "Who reacted.", { kind: "fk", ref: "users" }),
+          col("emoji", "text", "Emoji", "Reaction glyph."),
+          col("created_at", "timestamptz", "Created at", "When reacted."),
+        ]},
+      { id: "item_links", zone: "rc", style: "rc", label: "item_links", wide: "wide",
+        desc: "Typed edges between two items.",
+        cols: [
+          col("id", "serial", "Id", "Primary key.", { kind: "pk" }),
+          col("link_type_id", "int", "Link type", "Relation kind.", { kind: "fk", ref: "link_types" }),
+          col("source_item_id", "int", "Source item", "From item.", { kind: "fk", ref: "items" }),
+          col("target_item_id", "int", "Target item", "To item.", { kind: "fk", ref: "items" }),
+          col("created_at", "timestamptz", "Created at", "When linked."),
+        ]},
+      { id: "events", zone: "hi", style: "hi", label: "events", badge: "GLOBAL", wide: "xwide",
+        desc: "Global append-only log for every aggregate stream.",
+        cols: [
+          col("id", "bigserial", "Id", "Global cursor / outbox order.", { kind: "pk" }),
+          col("aggregate_type", "text", "Aggregate type", "item | field | type | project | …"),
+          col("aggregate_id", "int", "Aggregate id", "Entity id within that type."),
+          col("seq", "int", "Sequence", "Order within the stream; concurrency."),
+          col("kind", "text", "Kind", "e.g. item.field_changed."),
+          col("version", "int", "Version", "Payload schema version for upcasts."),
+          col("payload", "jsonb", "Payload", "Event data (value-only for fields)."),
+          col("actor_id", "int", "Actor", "Who caused it.", { kind: "fk", ref: "users" }),
+          col("at", "timestamptz", "At", "When it happened."),
+          col("command_id", "uuid", "Command id", "Links to commands ledger / retries."),
+          col("correlation_id", "uuid", "Correlation id", "Groups multi-event commands."),
+          col("caused_by", "bigint", "Caused by", "Parent event id (automations)."),
+          col("depth", "int", "Depth", "Automation chain depth."),
+          col("project_id", "int", "Project id", "Denorm for partition / ACL."),
+        ]},
+      { id: "commands", zone: "hi", style: "hi", label: "commands",
+        desc: "One row per accepted command; dedupes multi-event retries.",
+        cols: [
+          col("id", "uuid", "Id", "Client commandId; primary key.", { kind: "pk" }),
+          col("aggregate_type", "text", "Aggregate type", "Usually item."),
+          col("aggregate_id", "int", "Aggregate id", "Target entity."),
+          col("actor_id", "int", "Actor", "Who issued the command.", { kind: "fk", ref: "users" }),
+          col("at", "timestamptz", "At", "When accepted."),
+          col("result", "jsonb", "Result", "Optional cached response for retries."),
+        ]},
+      { id: "outbox", zone: "hi", style: "hi", label: "outbox",
+        desc: "Reliable after-commit handoff to consumers.",
+        cols: [
+          col("event_id", "bigint", "Event", "Event to deliver.", { kind: "pk", ref: "events" }),
+          col("created_at", "timestamptz", "Created at", "When enqueued."),
+          col("picked_at", "timestamptz", "Picked at", "When a worker claimed it."),
+          col("done_at", "timestamptz", "Done at", "When delivery finished."),
+        ]},
+      { id: "item_activity", zone: "hi", style: "hi", label: "item_activity", wide: "xwide",
+        desc: "Per-item activity feed projection (UI diffs).",
+        cols: [
+          col("id", "bigserial", "Id", "Primary key.", { kind: "pk" }),
+          col("item_id", "int", "Item", "Item the activity belongs to.", { kind: "fk", ref: "items" }),
+          col("event_id", "bigint", "Event", "Source event.", { kind: "fk", ref: "events" }),
+          col("project_id", "int", "Project", "Denorm project."),
+          col("kind", "text", "Kind", "Copied event kind."),
+          col("actor_id", "int", "Actor", "Who did it.", { kind: "fk", ref: "users" }),
+          col("at", "timestamptz", "At", "When."),
+          col("correlation_id", "uuid", "Correlation", "Group multi-field saves."),
+          col("summary", "jsonb", "Summary", "UI payload, e.g. before/after for fields."),
+        ]},
+    ];
+
+    /**
+     * Edges attach to fields (sourceField / targetField), not table centers.
+     * Convention: parent/PK table → child table; child holds the FK.
+     * Ambiguous multi-FK pairs set fields explicitly.
+     */
+    const EDGES = [
+      { source: "schemes", target: "projects", kind: "fk", label: "scheme", sourceField: "id", targetField: "scheme_id" },
+      { source: "projects", target: "views", kind: "fk", sourceField: "id", targetField: "project_id" },
+      { source: "projects", target: "items", kind: "fk", label: "owns", sourceField: "id", targetField: "project_id" },
+      { source: "users", target: "items", kind: "fk", label: "created_by", sourceField: "id", targetField: "created_by" },
+      { source: "users", target: "comments", kind: "fk", label: "author", sourceField: "id", targetField: "author_id" },
+      { source: "users", target: "comment_reactions", kind: "fk", sourceField: "id", targetField: "user_id" },
+      { source: "users", target: "events", kind: "fk", label: "actor", sourceField: "id", targetField: "actor_id" },
+      { source: "users", target: "commands", kind: "fk", sourceField: "id", targetField: "actor_id" },
+      { source: "schemes", target: "item_types", kind: "fk", sourceField: "id", targetField: "scheme_id" },
+      { source: "schemes", target: "fields", kind: "fk", sourceField: "id", targetField: "scheme_id" },
+      { source: "schemes", target: "option_sets", kind: "fk", sourceField: "id", targetField: "scheme_id" },
+      { source: "item_types", target: "item_type_fields", kind: "m2m", label: "M2M", sourceField: "id", targetField: "item_type_id" },
+      { source: "fields", target: "item_type_fields", kind: "m2m", label: "M2M", sourceField: "id", targetField: "field_id" },
+      { source: "fields", target: "option_sets", kind: "m2m", label: "option_set", sourceField: "option_set_id", targetField: "id" },
+      { source: "option_sets", target: "options", kind: "fk", sourceField: "id", targetField: "option_set_id" },
+      { source: "fields", target: "option_transitions", kind: "fk", sourceField: "id", targetField: "field_id" },
+      { source: "options", target: "option_transitions", kind: "fk", label: "from", id: "ot-from", sourceField: "id", targetField: "from_option_id" },
+      { source: "options", target: "option_transitions", kind: "fk", label: "to", id: "ot-to", sourceField: "id", targetField: "to_option_id" },
+      { source: "item_types", target: "option_transitions", kind: "fk", sourceField: "id", targetField: "item_type_id" },
+      { source: "item_types", target: "item_type_child_types", kind: "fk", label: "parent", id: "ch1", sourceField: "id", targetField: "parent_type_id" },
+      { source: "item_types", target: "item_type_child_types", kind: "fk", label: "child", id: "ch2", sourceField: "id", targetField: "child_type_id" },
+      { source: "item_types", target: "link_types", kind: "fk", sourceField: "id", targetField: "item_type_id" },
+      { source: "link_types", target: "link_type_target_types", kind: "fk", sourceField: "id", targetField: "link_type_id" },
+      { source: "item_types", target: "link_type_target_types", kind: "fk", label: "target", id: "lttt", sourceField: "id", targetField: "target_type_id" },
+      { source: "item_types", target: "items", kind: "fk", label: "type", sourceField: "id", targetField: "type_id" },
+      { source: "items", target: "item_values", kind: "fk", sourceField: "id", targetField: "item_id" },
+      { source: "fields", target: "item_values", kind: "fk", sourceField: "id", targetField: "field_id" },
+      { source: "options", target: "item_values", kind: "fk", label: "option_id", sourceField: "id", targetField: "option_id" },
+      { source: "items", target: "comments", kind: "fk", sourceField: "id", targetField: "item_id" },
+      { source: "comments", target: "comment_reactions", kind: "fk", sourceField: "id", targetField: "comment_id" },
+      { source: "items", target: "item_links", kind: "fk", label: "source", id: "ils", sourceField: "id", targetField: "source_item_id" },
+      { source: "items", target: "item_links", kind: "fk", label: "target", id: "ilt", targetField: "target_item_id", sourceField: "id" },
+      { source: "link_types", target: "item_links", kind: "fk", sourceField: "id", targetField: "link_type_id" },
+      // Conceptual stream (events.aggregate_id) — not a pure FK edge
+      { source: "items", target: "events", kind: "fk", label: "stream", id: "istream", sourceField: "id", targetField: "aggregate_id" },
+      { source: "events", target: "outbox", kind: "fk", sourceField: "id", targetField: "event_id" },
+      { source: "events", target: "item_activity", kind: "fk", sourceField: "id", targetField: "event_id" },
+      { source: "items", target: "item_activity", kind: "fk", sourceField: "id", targetField: "item_id" },
+    ];
+
+    const byId = Object.fromEntries(TABLES.map((t) => [t.id, t]));
+    const zoneName = { ws: "Workspace", st: "Structure", rc: "Records", hi: "History", jn: "Join" };
+
+    const POS = {
+      // Workspace
+      users: [100, 120],
+      projects: [100, 300],
+      views: [100, 500],
+      // Structure
+      schemes: [480, 90],
+      item_types: [720, 90],
+      item_type_child_types: [720, 300],
+      item_type_fields: [960, 190],
+      fields: [1200, 90],
+      option_sets: [1200, 340],
+      options: [1440, 300],
+      option_transitions: [1200, 560],
+      link_types: [720, 480],
+      link_type_target_types: [960, 480],
+      // Records
+      items: [140, 780],
+      item_values: [420, 780],
+      comments: [140, 1080],
+      comment_reactions: [420, 1080],
+      item_links: [700, 920],
+      // History
+      events: [1100, 780],
+      commands: [1000, 1120],
+      outbox: [1240, 1120],
+      item_activity: [1100, 1320],
+    };
+
+    let fontScale = 1;
+    try {
+      const saved = localStorage.getItem("er-font-scale");
+      if (saved) fontScale = Math.min(1.75, Math.max(0.75, parseFloat(saved) || 1));
+    } catch (_) {}
+
+    function cardW(t) {
+      const base = t.wide === "xwide" ? 232 : t.wide === "wide" ? 210 : 188;
+      return Math.round(base * fontScale);
+    }
+    /**
+     * Compact node height estimate (fallback before DOM measure).
+     * Must match .er-card: hd 30 + body pad ~10 + ~22px per field row.
+     */
+    function cardH(t) {
+      return Math.round((30 + 12 + t.cols.length * 22) * fontScale);
+    }
+
+    /** Cache of measured card sizes { id: { w, h } } from real DOM. */
+    let measuredSize = {};
+
+    /** Actual size used for layout / cy node box. Prefer measured DOM. */
+    function nodeSize(t) {
+      const m = measuredSize[t.id];
+      if (m) return m;
+      return { w: cardW(t), h: cardH(t) };
+    }
+
+    /**
+     * Render cards off-screen and measure true width/height.
+     * HTML labels were taller than cardH(), which caused visual overlaps after pack.
+     */
+    function measureAllCards() {
+      const host = document.createElement("div");
+      host.setAttribute("aria-hidden", "true");
+      host.style.cssText =
+        "position:absolute;left:-99999px;top:0;visibility:hidden;pointer-events:none;";
+      // Ensure CSS vars apply (font scale)
+      document.body.appendChild(host);
+      const next = {};
+      for (const t of TABLES) {
+        host.innerHTML = cardHtml(t, {});
+        const el = host.firstElementChild;
+        // force layout
+        const w = Math.ceil(el.getBoundingClientRect().width);
+        const h = Math.ceil(el.getBoundingClientRect().height);
+        // small safety pad so packing never kisses
+        next[t.id] = { w: w + 2, h: h + 2 };
+      }
+      host.remove();
+      measuredSize = next;
+      return measuredSize;
+    }
+
+    function applyFontScale(scale, { fit } = {}) {
+      fontScale = Math.round(Math.min(1.75, Math.max(0.75, scale)) * 100) / 100;
+      document.documentElement.style.setProperty("--fs", String(fontScale));
+      const range = document.getElementById("fontRange");
+      const val = document.getElementById("fontVal");
+      if (range) range.value = String(fontScale);
+      if (val) val.textContent = Math.round(fontScale * 100) + "%";
+      try { localStorage.setItem("er-font-scale", String(fontScale)); } catch (_) {}
+      if (typeof cy !== "undefined") {
+        cy.batch(() => {
+          cy.nodes(".table").forEach((n) => {
+            const t = byId[n.id()];
+            if (!t) return;
+            n.data("w", cardW(t));
+            n.data("h", cardH(t));
+          });
+        });
+        cy.style().update();
+        // Re-pack so larger/smaller cards don't overlap
+        rearrange({ fit: !!fit });
+      }
+    }
+    function esc(s) {
+      return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+    function cardHtml(t, state) {
+      const w = t.wide === "xwide" ? "w-xwide" : t.wide === "wide" ? "w-wide" : "";
+      const st = [
+        state.selected && "selected",
+        state.hot && "hot",
+        state.neighbor && "neighbor",
+        state.faded && "faded",
+      ].filter(Boolean).join(" ");
+      const hlFields = new Set(
+        String(state.hlFields || "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      );
+      // Minimal on node: name + type + connector dots (L/R via CSS)
+      const fields = t.cols.map((c) => {
+        const nameCls = ["field-name", c.kind || ""].filter(Boolean).join(" ");
+        const rowCls = [
+          "field",
+          c.kind === "pk" && "pk-field",
+          c.kind === "fk" && "fk-field",
+          hlFields.has(c.name) && "hl-field",
+        ].filter(Boolean).join(" ");
+        return `<div class="${rowCls}" data-field="${esc(c.name)}">
+          <span class="${nameCls}">${esc(c.name)}</span>
+          <span class="field-type">${esc(c.type || "")}</span>
+        </div>`;
+      }).join("");
+      const badge = t.badge ? `<span class="badge">${esc(t.badge)}</span>` : "";
+      return `<div class="er-card ${t.style} ${w} ${st}" data-table="${esc(t.id)}"><div class="hd"><span>${esc(t.label)}</span>${badge}</div><div class="bd">${fields}</div></div>`;
+    }
+
+    function pkName(tableId) {
+      const t = byId[tableId];
+      const pk = t?.cols?.find((c) => c.kind === "pk");
+      return pk?.name || "id";
+    }
+
+    function portId(tableId, field, side) {
+      return tableId + "::" + field + "::" + side;
+    }
+    function stubId(tableId, field, side) {
+      return tableId + "::" + field + "::" + side + "::stub";
+    }
+    function stemId(tableId, field, side) {
+      return "stem::" + tableId + "::" + field + "::" + side;
+    }
+
+    /** Infer ER cardinality for an edge definition. */
+    function inferCardinality(e) {
+      if (e.cardinality) return e.cardinality;
+      const srcT = byId[e.source];
+      const tgtT = byId[e.target];
+      const sf = e.sourceField || pkName(e.source);
+      const tf = e.targetField || pkName(e.target);
+      const srcCol = srcT?.cols?.find((c) => c.name === sf);
+      const tgtCol = tgtT?.cols?.find((c) => c.name === tf);
+      const srcFk = srcCol?.kind === "fk";
+      const tgtFk = tgtCol?.kind === "fk";
+      // M2M join spokes are still 1–n from entity → join row
+      if (e.kind === "m2m" && (e.label === "M2M" || tgtT?.style === "jn" || srcT?.style === "jn")) {
+        if (srcFk && !tgtFk) return "n-1";
+        if (!srcFk && tgtFk) return "1-n";
+        return "n-m";
+      }
+      if (srcFk && !tgtFk) return "n-1";
+      if (!srcFk && tgtFk) return "1-n";
+      if (srcFk && tgtFk) return "n-m";
+      return "1-n";
+    }
+
+    function facingLR(fromTableId, toTableId) {
+      const a = cy.getElementById(fromTableId).position();
+      const b = cy.getElementById(toTableId).position();
+      return b.x >= a.x ? "R" : "L";
+    }
+
+    function tableOfPort(ele) {
+      if (!ele || ele.empty()) return "";
+      if (ele.hasClass("table")) return ele.id();
+      if (ele.hasClass("port")) return ele.data("tableId") || "";
+      return ele.id();
+    }
+
+    /** Port diameter (matches CSS field dots). */
+    const PORT_SIZE = 8;
+    /** Gap between node edge and the near side of the port: o--[node]--o */
+    const PORT_GAP = 8;
+
+    /**
+     * Place stubs (on card edge) + ports (outside) for o--[card]--o.
+     * Static straight stem edges connect stub → port.
+     */
+    function layoutPorts() {
+      cy.batch(() => {
+        TABLES.forEach((t) => {
+          const n = cy.getElementById(t.id);
+          if (n.empty()) return;
+          const p = n.position();
+          const w = n.data("w") || cardW(t);
+          const h = n.data("h") || cardH(t);
+          const hd = Math.max(26, Math.min(h * 0.22, 34 * fontScale));
+          const body = Math.max(1, h - hd);
+          const nCols = Math.max(1, t.cols.length);
+          const xEdge = w / 2; // stub sits on the card border
+          const xOut = w / 2 + PORT_GAP + PORT_SIZE / 2; // port outside with 8px gap
+          t.cols.forEach((c, i) => {
+            const yOff = -h / 2 + hd + ((i + 0.5) / nCols) * body;
+            ["L", "R"].forEach((side) => {
+              const sign = side === "L" ? -1 : 1;
+              const stub = cy.getElementById(stubId(t.id, c.name, side));
+              const port = cy.getElementById(portId(t.id, c.name, side));
+              if (stub.nonempty()) stub.position({ x: p.x + sign * xEdge, y: p.y + yOff });
+              if (port.nonempty()) port.position({ x: p.x + sign * xOut, y: p.y + yOff });
+            });
+          });
+        });
+      });
+    }
+
+    /** Point each relation edge at the facing L/R ports for its fields. */
+    function rewireEdgesToPorts() {
+      cy.batch(() => {
+        cy.edges(".rel").forEach((e) => {
+          const srcTable = e.data("srcTable");
+          const tgtTable = e.data("tgtTable");
+          const sf = e.data("sourceField");
+          const tf = e.data("targetField");
+          if (!srcTable || !tgtTable || !sf || !tf) return;
+          const srcSide = facingLR(srcTable, tgtTable);
+          const tgtSide = facingLR(tgtTable, srcTable);
+          const srcPort = portId(srcTable, sf, srcSide);
+          const tgtPort = portId(tgtTable, tf, tgtSide);
+          if (cy.getElementById(srcPort).empty() || cy.getElementById(tgtPort).empty()) return;
+          if (e.data("source") !== srcPort || e.data("target") !== tgtPort) {
+            e.move({ source: srcPort, target: tgtPort });
+          }
+        });
+      });
+    }
+
+    function updateEdgeFieldAnchors() {
+      layoutPorts();
+      rewireEdgesToPorts();
+    }
+
+    /** Mark field rows + port dots that are endpoints of highlighted edges. */
+    function syncFieldRowHighlights() {
+      const map = new Map();
+      const hotPorts = new Set();
+      cy.edges(".highlight").forEach((e) => {
+        const s = e.data("srcTable") || tableOfPort(e.source());
+        const t = e.data("tgtTable") || tableOfPort(e.target());
+        if (!map.has(s)) map.set(s, new Set());
+        if (!map.has(t)) map.set(t, new Set());
+        map.get(s).add(e.data("sourceField") || "");
+        map.get(t).add(e.data("targetField") || "");
+        hotPorts.add(e.source().id());
+        hotPorts.add(e.target().id());
+      });
+      cy.batch(() => {
+        cy.nodes(".table").forEach((n) => {
+          const set = map.get(n.id());
+          const next = set ? [...set].filter(Boolean).join(",") : "";
+          if (n.data("_hlFields") !== next) n.data("_hlFields", next);
+        });
+        cy.nodes(".port").forEach((p) => {
+          if (hotPorts.has(p.id())) p.addClass("port-hot");
+          else p.removeClass("port-hot");
+        });
+      });
+    }
+
+    function buildElements() {
+      const groups = Object.entries(GROUPS).map(([zone, g]) => ({
+        data: { id: g.id, label: g.label, zone },
+        classes: "group " + zone,
+        grabbable: true,
+        selectable: false,
+      }));
+      const nodes = TABLES.map((t) => ({
+        data: {
+          id: t.id,
+          parent: GROUPS[t.zone].id,
+          zone: t.zone,
+          w: cardW(t),
+          h: cardH(t),
+          _hlFields: "",
+        },
+        classes: "table " + t.style,
+        grabbable: true,
+      }));
+      // Stubs (on card edge) + ports (outside) + static stem edges between them.
+      // parent = zone group (not table) so compound recentering never drifts nodes.
+      const ports = [];
+      const stubs = [];
+      const stems = [];
+      TABLES.forEach((t) => {
+        t.cols.forEach((c) => {
+          ["L", "R"].forEach((side) => {
+            const base = {
+              parent: GROUPS[t.zone].id,
+              tableId: t.id,
+              field: c.name,
+              side,
+              fkind: c.kind || "",
+              zone: t.zone,
+            };
+            stubs.push({
+              data: { id: stubId(t.id, c.name, side), ...base },
+              classes: "stub",
+              grabbable: false,
+              selectable: false,
+            });
+            ports.push({
+              data: { id: portId(t.id, c.name, side), ...base },
+              classes: "port" + (c.kind === "pk" ? " port-pk" : c.kind === "fk" ? " port-fk" : ""),
+              grabbable: false,
+              selectable: false,
+            });
+            stems.push({
+              data: {
+                id: stemId(t.id, c.name, side),
+                source: stubId(t.id, c.name, side),
+                target: portId(t.id, c.name, side),
+                tableId: t.id,
+                field: c.name,
+                side,
+                zone: t.zone,
+              },
+              classes: "stem",
+              grabbable: false,
+              selectable: false,
+            });
+          });
+        });
+      });
+      const edges = EDGES.map((e, i) => {
+        const sf = e.sourceField || pkName(e.source);
+        const tf = e.targetField || pkName(e.target);
+        const card = inferCardinality({ ...e, sourceField: sf, targetField: tf });
+        // Temporary ends = tables; rewireEdgesToPorts moves to ports after layout
+        return {
+          data: {
+            id: e.id || `e${i}-${e.source}-${e.target}`,
+            source: e.source,
+            target: e.target,
+            srcTable: e.source,
+            tgtTable: e.target,
+            kind: e.kind,
+            label: e.label || "",
+            sourceField: sf,
+            targetField: tf,
+            cardinality: card,
+            dlabel: card, // only cardinality on the line
+            hlColor: "#7aa2ff",
+            cp: 28 + (i % 9) * 10,
+          },
+          classes:
+            "rel " +
+            (e.kind === "m2m" ? "m2m" : "fk") +
+            (e.source === e.target || e.loop ? " loop" : ""),
+        };
+      });
+      return [...groups, ...nodes, ...stubs, ...ports, ...stems, ...edges];
+    }
+
+    /** Distinct colors for simultaneous related edges (easier to tell lines apart). */
+    const EDGE_PALETTE = [
+      "#7aa2ff", "#2dd4bf", "#fbbf24", "#f472b6",
+      "#a78bfa", "#34d399", "#fb923c", "#38bdf8",
+      "#e879f9", "#4ade80", "#f87171", "#67e8f9",
+    ];
+
+    const cy = cytoscape({
+      container: document.getElementById("cy"),
+      elements: buildElements(),
+      minZoom: 0.15,
+      maxZoom: 3,
+      // Wheel zoom handled explicitly below (more reliable than cy default alone)
+      wheelSensitivity: 0.35,
+      boxSelectionEnabled: false,
+      // Left: drag nodes/groups. Middle: pan screen (custom handler). No left-pan.
+      userPanningEnabled: false,
+      userZoomingEnabled: true,
+      autoungrabify: false,
+      autounselectify: false,
+      layout: { name: "preset" },
+      style: [
+        {
+          selector: "node.group",
+          style: {
+            shape: "round-rectangle",
+            "background-opacity": 0.5,
+            "background-color": "#12151c",
+            "border-width": 1.5,
+            "border-style": "dashed",
+            padding: "44px",
+            label: "data(label)",
+            "font-family": "IBM Plex Sans, system-ui, sans-serif",
+            "font-size": 13,
+            "font-weight": 600,
+            "text-valign": "top",
+            "text-halign": "left",
+            "text-margin-y": -4,
+            "text-margin-x": 10,
+            "overlay-opacity": 0,
+            "overlay-padding": 8,
+          },
+        },
+        { selector: "node.group.ws", style: { "border-color": "#5b9dff", color: "#5b9dff", "background-color": "#0c1528" } },
+        { selector: "node.group.st", style: { "border-color": "#2dd4bf", color: "#2dd4bf", "background-color": "#0a1615" } },
+        { selector: "node.group.rc", style: { "border-color": "#fbbf24", color: "#fbbf24", "background-color": "#161008" } },
+        { selector: "node.group.hi", style: { "border-color": "#c4b5fd", color: "#c4b5fd", "background-color": "#120e20" } },
+        {
+          selector: "node.table",
+          style: {
+            shape: "round-rectangle",
+            width: "data(w)",
+            height: "data(h)",
+            "background-opacity": 0,
+            "border-width": 0,
+            label: "",
+            "overlay-opacity": 0,
+            padding: 0,
+          },
+        },
+        {
+          /* Invisible anchor on the card border — stem draws from here to the outer port */
+          selector: "node.stub",
+          style: {
+            shape: "ellipse",
+            width: 2,
+            height: 2,
+            "background-opacity": 0,
+            "border-width": 0,
+            label: "",
+            "overlay-opacity": 0,
+            events: "no",
+            "z-index": 5,
+          },
+        },
+        {
+          selector: "node.port",
+          style: {
+            shape: "ellipse",
+            width: PORT_SIZE,
+            height: PORT_SIZE,
+            "background-color": "#2a3142",
+            "border-width": 1.75,
+            "border-color": "#9aa3b2",
+            label: "",
+            "overlay-opacity": 0,
+            events: "no",
+            "z-index": 20,
+          },
+        },
+        {
+          selector: "node.port.port-pk",
+          style: {
+            "background-color": "#3a3210",
+            "border-color": "#f5c542",
+          },
+        },
+        {
+          selector: "node.port.port-fk",
+          style: {
+            "background-color": "#0f2e22",
+            "border-color": "#3ecf8e",
+          },
+        },
+        {
+          selector: "node.port.port-hot",
+          style: {
+            "background-color": "#7aa2ff",
+            "border-color": "#dbeafe",
+            width: PORT_SIZE + 2,
+            height: PORT_SIZE + 2,
+          },
+        },
+        {
+          selector: "node.port.faded, node.stub.faded",
+          style: { opacity: 0.12 },
+        },
+        { selector: "node.faded", style: { opacity: 0.12 } },
+        { selector: "node.hidden-zone", style: { display: "none" } },
+        {
+          selector: "edge.rel",
+          style: {
+            width: 1.8,
+            "curve-style": "bezier",
+            "control-point-step-size": 40,
+            "line-color": "#6b7280",
+            "target-arrow-color": "#6b7280",
+            "target-arrow-shape": "triangle",
+            "arrow-scale": 0.9,
+            "source-endpoint": "outside-to-node",
+            "target-endpoint": "outside-to-node",
+            "source-distance-from-node": 0,
+            "target-distance-from-node": 0,
+            // Only cardinality (1-n, n-1, …) — no field/path names
+            label: "data(cardinality)",
+            "font-size": 11,
+            "font-family": "IBM Plex Mono, monospace",
+            "font-weight": 600,
+            color: "#9aa3b2",
+            "text-background-color": "#0b0d12",
+            "text-background-opacity": 0.9,
+            "text-background-padding": 3,
+            "text-border-width": 1,
+            "text-border-color": "#2c3344",
+            "text-border-opacity": 1,
+            "text-rotation": "none",
+            "text-margin-y": 0,
+            opacity: 0.8,
+            "z-index": 1,
+            "overlay-padding": 8,
+            "overlay-opacity": 0,
+          },
+        },
+        {
+          selector: "edge.rel.m2m",
+          style: {
+            "line-color": "#3b82f6",
+            "target-arrow-color": "#3b82f6",
+            "line-style": "dashed",
+            width: 2,
+            color: "#93c5fd",
+          },
+        },
+        {
+          selector: "edge.rel.highlight",
+          style: {
+            width: 3.25,
+            "line-color": "data(hlColor)",
+            "target-arrow-color": "data(hlColor)",
+            opacity: 1,
+            "z-index": 999,
+            color: "#eef0f4",
+            "text-background-color": "#12151c",
+            "text-border-color": "data(hlColor)",
+            "font-size": 12,
+            "font-weight": 700,
+            "underlay-color": "data(hlColor)",
+            "underlay-opacity": 0.18,
+            "underlay-padding": 4,
+          },
+        },
+        {
+          selector: "edge.rel.m2m.highlight",
+          style: {
+            "line-style": "dashed",
+            width: 3.5,
+          },
+        },
+        {
+          selector: "edge.rel.solo",
+          style: {
+            width: 4,
+            "z-index": 1000,
+            "font-size": 13,
+          },
+        },
+        { selector: "edge.rel.faded", style: { display: "none" } },
+        { selector: "edge.rel.hidden-type, edge.rel.hidden-zone, edge.stem.hidden-zone", style: { display: "none" } },
+        {
+          selector: "edge.rel.loop",
+          style: {
+            "curve-style": "bezier",
+            "loop-direction": "-45deg",
+            "loop-sweep": "-50deg",
+            "control-point-step-size": 50,
+          },
+        },
+        {
+          selector: "edge.rel.route-taxi",
+          style: {
+            "curve-style": "taxi",
+            "taxi-direction": "auto",
+            "taxi-turn": 40,
+            "taxi-turn-min-distance": 20,
+            "source-endpoint": "outside-to-node",
+            "target-endpoint": "outside-to-node",
+          },
+        },
+        {
+          /* Static straight stem: card edge (stub) → outer port dot */
+          selector: "edge.stem",
+          style: {
+            width: 1.75,
+            "curve-style": "straight",
+            "line-color": "#7a8499",
+            "target-arrow-shape": "none",
+            "source-arrow-shape": "none",
+            label: "",
+            "source-endpoint": "outside-to-node",
+            "target-endpoint": "outside-to-node",
+            events: "no",
+            opacity: 0.95,
+            "z-index": 12,
+          },
+        },
+        {
+          selector: "edge.stem.stem-hot",
+          style: {
+            "line-color": "#7aa2ff",
+            width: 2.5,
+            opacity: 1,
+          },
+        },
+        {
+          selector: "edge.stem.faded",
+          style: { opacity: 0.08 },
+        },
+      ],
+    });
+
+    // HTML card labels (previous node style)
+    if (typeof cy.nodeHtmlLabel === "function") {
+      cy.nodeHtmlLabel([{
+        query: "node.table",
+        halign: "center",
+        valign: "center",
+        halignBox: "center",
+        valignBox: "center",
+        tpl(data) {
+          const t = byId[data.id];
+          if (!t) return "";
+          // Prefer data-driven UI flags (force label re-render on highlight change)
+          return cardHtml(t, {
+            selected: !!data._sel,
+            hot: !!data._hot,
+            neighbor: !!data._nei,
+            faded: !!data._faded,
+            hlFields: data._hlFields || "",
+          });
+        },
+      }]);
+    }
+
+    /** Layout margins (node–node and zone–zone). */
+    const LAYOUT = {
+      nodeGapX: 56,
+      nodeGapY: 52,
+      zoneGap: 140, // between group content boxes (group pad ~44 each side)
+      zonePad: 16,
+      // Preferred pack width per zone (wrap to next row)
+      zoneMaxW: { ws: 240, st: 1100, rc: 780, hi: 780 },
+      zoneOrder: ["ws", "st", "rc", "hi"],
+    };
+
+    /** Sort tables in a zone by seed POS so rearrange keeps a sensible order. */
+    function tablesInZone(zone) {
+      return TABLES.filter((t) => t.zone === zone).sort((a, b) => {
+        const pa = POS[a.id] || [0, 0];
+        const pb = POS[b.id] || [0, 0];
+        if (pa[1] !== pb[1]) return pa[1] - pb[1];
+        return pa[0] - pb[0];
+      });
+    }
+
+    /**
+     * Pack tables of one zone into a rectangle (relative coords, top-left origin).
+     * Uses measured DOM sizes so HTML cards never visually overlap.
+     */
+    function packZone(zone) {
+      const list = tablesInZone(zone);
+      const maxW = LAYOUT.zoneMaxW[zone] || 800;
+      const gapX = LAYOUT.nodeGapX;
+      const gapY = LAYOUT.nodeGapY;
+      let x = 0;
+      let y = 0;
+      let rowH = 0;
+      const pos = {}; // id -> {x,y} relative centers
+
+      for (const t of list) {
+        const { w, h } = nodeSize(t);
+        if (x > 0 && x + w > maxW) {
+          x = 0;
+          y += rowH + gapY;
+          rowH = 0;
+        }
+        pos[t.id] = { x: x + w / 2, y: y + h / 2 };
+        x += w + gapX;
+        rowH = Math.max(rowH, h);
+      }
+
+      // Deterministic column stack fallback if still overlapping (shouldn't after measure)
+      resolveOverlapsInSet(
+        list.map((t) => t.id),
+        pos,
+        gapX,
+        gapY,
+        80,
+      );
+
+      // If anything still overlaps, force a vertical stack (guaranteed no overlap)
+      if (hasOverlaps(list.map((t) => t.id), pos, gapX, gapY)) {
+        let yy = 0;
+        let maxWLocal = 0;
+        for (const t of list) {
+          const { w, h } = nodeSize(t);
+          pos[t.id] = { x: w / 2, y: yy + h / 2 };
+          yy += h + gapY;
+          maxWLocal = Math.max(maxWLocal, w);
+        }
+      }
+
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const t of list) {
+        const p = pos[t.id];
+        const { w, h } = nodeSize(t);
+        minX = Math.min(minX, p.x - w / 2);
+        minY = Math.min(minY, p.y - h / 2);
+        maxX = Math.max(maxX, p.x + w / 2);
+        maxY = Math.max(maxY, p.y + h / 2);
+      }
+      if (!list.length) {
+        minX = 0; minY = 0; maxX = 0; maxY = 0;
+      }
+      for (const t of list) {
+        pos[t.id].x -= minX;
+        pos[t.id].y -= minY;
+      }
+      return {
+        pos,
+        w: Math.max(0, maxX - minX),
+        h: Math.max(0, maxY - minY),
+      };
+    }
+
+    function hasOverlaps(ids, pos, gapX, gapY) {
+      for (let i = 0; i < ids.length; i++) {
+        for (let j = i + 1; j < ids.length; j++) {
+          const a = byId[ids[i]];
+          const b = byId[ids[j]];
+          const sa = nodeSize(a);
+          const sb = nodeSize(b);
+          const pa = pos[ids[i]];
+          const pb = pos[ids[j]];
+          const ox = (sa.w + sb.w) / 2 + gapX - Math.abs(pb.x - pa.x);
+          const oy = (sa.h + sb.h) / 2 + gapY - Math.abs(pb.y - pa.y);
+          if (ox > 0 && oy > 0) return true;
+        }
+      }
+      return false;
+    }
+
+    /** Push overlapping nodes apart. Mutates pos map of centers. */
+    function resolveOverlapsInSet(ids, pos, gapX, gapY, iterations = 80) {
+      const nodes = ids.map((id) => {
+        const t = byId[id];
+        const s = nodeSize(t);
+        return { id, w: s.w, h: s.h, p: pos[id] };
+      });
+      for (let iter = 0; iter < iterations; iter++) {
+        let moved = false;
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const a = nodes[i];
+            const b = nodes[j];
+            const dx = b.p.x - a.p.x;
+            const dy = b.p.y - a.p.y;
+            const minDx = (a.w + b.w) / 2 + gapX;
+            const minDy = (a.h + b.h) / 2 + gapY;
+            const ox = minDx - Math.abs(dx);
+            const oy = minDy - Math.abs(dy);
+            if (ox > 0 && oy > 0) {
+              // Prefer vertical separation (keeps columns stable)
+              if (oy <= ox || Math.abs(dx) < 1) {
+                const push = (dy === 0 ? 1 : Math.sign(dy)) * (oy / 2 + 0.5);
+                a.p.y -= push;
+                b.p.y += push;
+              } else {
+                const push = (dx === 0 ? 1 : Math.sign(dx)) * (ox / 2 + 0.5);
+                a.p.x -= push;
+                b.p.x += push;
+              }
+              moved = true;
+            }
+          }
+        }
+        if (!moved) break;
+      }
+    }
+
+    /**
+     * Compute absolute center positions for all tables:
+     * pack each zone, then place zones in a 2×2 grid with zone margins.
+     *   ws | st
+     *   rc | hi
+     */
+    function computePackedPositions() {
+      const packs = {};
+      for (const z of LAYOUT.zoneOrder) packs[z] = packZone(z);
+
+      const zg = LAYOUT.zoneGap;
+      const pad = LAYOUT.zonePad;
+      const col0w = Math.max(packs.ws.w, packs.rc.w);
+      const row0h = Math.max(packs.ws.h, packs.st.h);
+
+      const origin = {
+        ws: { x: pad, y: pad },
+        st: { x: pad + col0w + zg, y: pad },
+        rc: { x: pad, y: pad + row0h + zg },
+        hi: { x: pad + col0w + zg, y: pad + row0h + zg },
+      };
+
+      const absolute = {};
+      for (const z of LAYOUT.zoneOrder) {
+        const o = origin[z];
+        const pack = packs[z];
+        for (const [id, p] of Object.entries(pack.pos)) {
+          absolute[id] = { x: o.x + p.x, y: o.y + p.y };
+        }
+      }
+
+      // Global safety pass across all tables (catches cross-zone issues)
+      resolveOverlapsInSet(
+        TABLES.map((t) => t.id),
+        absolute,
+        LAYOUT.nodeGapX,
+        LAYOUT.nodeGapY,
+        100,
+      );
+
+      return absolute;
+    }
+
+    /**
+     * Fan edges apart so they don't stack on the same path.
+     * Uses angle-rank around each node + multi-edge pair index.
+     * @param {cytoscape.Collection} [only] optional edge subset (e.g. focused links)
+     * @param {{ step?: number }} [opts]
+     */
+    function separateEdges(only, opts = {}) {
+      const step = opts.step ?? 40;
+      const edges = (only && only.nonempty ? only : cy.edges(".rel"))
+        .filter((e) => e.hasClass("rel") && !e.hasClass("hidden-type") && !e.hasClass("hidden-zone"))
+        .toArray();
+      if (!edges.length) return;
+
+      const angleOf = (edge) => {
+        const sid = edge.data("srcTable") || tableOfPort(edge.source());
+        const tid = edge.data("tgtTable") || tableOfPort(edge.target());
+        const s = cy.getElementById(sid).position();
+        const t = cy.getElementById(tid).position();
+        return Math.atan2(t.y - s.y, t.x - s.x);
+      };
+      const hash = (str) => {
+        let h = 0;
+        for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+        return Math.abs(h);
+      };
+
+      const outRank = new Map();
+      const inRank = new Map();
+      const bySrc = new Map();
+      const byTgt = new Map();
+      edges.forEach((e) => {
+        const s = e.data("srcTable") || tableOfPort(e.source());
+        const t = e.data("tgtTable") || tableOfPort(e.target());
+        if (!bySrc.has(s)) bySrc.set(s, []);
+        if (!byTgt.has(t)) byTgt.set(t, []);
+        bySrc.get(s).push(e);
+        byTgt.get(t).push(e);
+      });
+      bySrc.forEach((list) => {
+        list.sort((a, b) => angleOf(a) - angleOf(b) || a.id().localeCompare(b.id()));
+        list.forEach((e, i) => outRank.set(e.id(), i - (list.length - 1) / 2));
+      });
+      byTgt.forEach((list) => {
+        list.sort((a, b) => angleOf(a) - angleOf(b) || a.id().localeCompare(b.id()));
+        list.forEach((e, i) => inRank.set(e.id(), i - (list.length - 1) / 2));
+      });
+
+      // Multi-edges between the same pair
+      const pairCount = new Map();
+      const pairIndex = new Map();
+      const pairSeen = new Map();
+      edges.forEach((e) => {
+        const a = e.data("srcTable") || tableOfPort(e.source());
+        const b = e.data("tgtTable") || tableOfPort(e.target());
+        const key = a < b ? a + "|" + b : b + "|" + a;
+        pairCount.set(key, (pairCount.get(key) || 0) + 1);
+      });
+      edges.forEach((e) => {
+        const a = e.data("srcTable") || tableOfPort(e.source());
+        const b = e.data("tgtTable") || tableOfPort(e.target());
+        const key = a < b ? a + "|" + b : b + "|" + a;
+        const seen = pairSeen.get(key) || 0;
+        pairSeen.set(key, seen + 1);
+        pairIndex.set(e.id(), seen - ((pairCount.get(key) || 1) - 1) / 2);
+      });
+
+      const maxOff = opts.maxOffset ?? 110;
+      // Precompute offsets, then de-dupe so clamps don't re-stack
+      const planned = edges.map((e, globalI) => {
+        const o = outRank.get(e.id()) || 0;
+        const inn = inRank.get(e.id()) || 0;
+        const p = pairIndex.get(e.id()) || 0;
+        let offset = o * step + p * step * 1.35 + inn * step * 0.25;
+        offset += (hash(e.id()) % 9) - 4;
+        if (Math.abs(offset) < 10) {
+          offset = ((globalI % 2) ? 1 : -1) * (16 + (globalI % 6) * 7);
+        }
+        offset = Math.max(-maxOff, Math.min(maxOff, offset));
+        return { e, o, inn, p, offset: Math.round(offset) };
+      });
+      planned.sort((a, b) => a.offset - b.offset || a.e.id().localeCompare(b.e.id()));
+      for (let i = 1; i < planned.length; i++) {
+        const minGap = Math.max(14, Math.round(step * 0.35));
+        if (planned[i].offset - planned[i - 1].offset < minGap) {
+          planned[i].offset = planned[i - 1].offset + minGap;
+        }
+      }
+      // If we spilled past maxOff, shift the whole set back toward center
+      if (planned.length) {
+        const last = planned[planned.length - 1].offset;
+        const first = planned[0].offset;
+        if (last > maxOff || first < -maxOff) {
+          const shift = -Math.round((first + last) / 2);
+          planned.forEach((row) => { row.offset += shift; });
+        }
+      }
+
+      cy.batch(() => {
+        planned.forEach(({ e, offset }) => {
+          e.data("cp", offset);
+        });
+      });
+      updateEdgeFieldAnchors(only && only.nonempty ? only : null);
+      cy.style().update();
+      cy.forceRender();
+    }
+
+    function rearrange({ fit = true, toastMsg } = {}) {
+      // 1) Measure real HTML card sizes under current font scale
+      measureAllCards();
+
+      // 2) Sync cytoscape node boxes to measured sizes
+      cy.batch(() => {
+        cy.nodes(".table").forEach((n) => {
+          const t = byId[n.id()];
+          if (!t) return;
+          const s = nodeSize(t);
+          n.data("w", s.w);
+          n.data("h", s.h);
+        });
+      });
+      cy.style().update();
+
+      // 3) Pack with measured sizes + margins
+      const pos = computePackedPositions();
+      cy.batch(() => {
+        cy.nodes(".table").forEach((n) => {
+          const p = pos[n.id()];
+          if (p) n.position(p);
+        });
+      });
+
+      // 4) Post-place: resolve using live bounding boxes if any still collide
+      resolveLiveOverlaps();
+
+      // 5) Fan edges so paths don't stack on top of each other
+      separateEdges(null, { step: 42 });
+
+      cy.forceRender();
+      if (fit) {
+        const visible = cy.nodes(".table:visible");
+        cy.fit(visible.nonempty() ? visible : cy.nodes(".table"), 72);
+      }
+      cy.forceRender();
+      if (toastMsg) toast(toastMsg);
+    }
+
+    /**
+     * After nodes are placed, push apart any that still overlap in model space
+     * using the measured sizes (HTML label footprint).
+     */
+    function resolveLiveOverlaps() {
+      const gapX = LAYOUT.nodeGapX;
+      const gapY = LAYOUT.nodeGapY;
+      const ids = TABLES.map((t) => t.id);
+      for (let iter = 0; iter < 60; iter++) {
+        let moved = false;
+        for (let i = 0; i < ids.length; i++) {
+          for (let j = i + 1; j < ids.length; j++) {
+            const na = cy.getElementById(ids[i]);
+            const nb = cy.getElementById(ids[j]);
+            if (na.empty() || nb.empty()) continue;
+            if (na.hasClass("hidden-zone") || nb.hasClass("hidden-zone")) continue;
+            const sa = nodeSize(byId[ids[i]]);
+            const sb = nodeSize(byId[ids[j]]);
+            const pa = na.position();
+            const pb = nb.position();
+            const dx = pb.x - pa.x;
+            const dy = pb.y - pa.y;
+            const ox = (sa.w + sb.w) / 2 + gapX - Math.abs(dx);
+            const oy = (sa.h + sb.h) / 2 + gapY - Math.abs(dy);
+            if (ox > 0 && oy > 0) {
+              if (oy <= ox || Math.abs(dx) < 1) {
+                const push = (dy === 0 ? 1 : Math.sign(dy)) * (oy / 2 + 1);
+                na.position({ x: pa.x, y: pa.y - push });
+                nb.position({ x: pb.x, y: pb.y + push });
+              } else {
+                const push = (dx === 0 ? 1 : Math.sign(dx)) * (ox / 2 + 1);
+                na.position({ x: pa.x - push, y: pa.y });
+                nb.position({ x: pb.x + push, y: pb.y });
+              }
+              moved = true;
+            }
+          }
+        }
+        if (!moved) break;
+      }
+    }
+
+    function applyPositions() {
+      cy.batch(() => {
+        cy.nodes(".table").forEach((n) => {
+          const p = POS[n.id()];
+          if (p) n.position({ x: p[0], y: p[1] });
+        });
+      });
+      rearrange({ fit: true });
+    }
+    applyPositions();
+
+    function toast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => el.classList.remove("show"), 1300);
+    }
+
+    /** Push focus classes into node data so HTML card labels re-render. */
+    function syncLabelUi() {
+      syncFieldRowHighlights();
+      cy.batch(() => {
+        cy.nodes(".table").forEach((n) => {
+          const sel = n.selected();
+          const faded = n.hasClass("faded");
+          const nei = n.hasClass("neighbor");
+          const hot = n.hasClass("hover") || sel;
+          // Only write when changed to avoid extra churn
+          if (n.data("_sel") !== (sel ? 1 : 0)) n.data("_sel", sel ? 1 : 0);
+          if (n.data("_faded") !== (faded ? 1 : 0)) n.data("_faded", faded ? 1 : 0);
+          if (n.data("_nei") !== (nei ? 1 : 0)) n.data("_nei", nei ? 1 : 0);
+          if (n.data("_hot") !== (hot ? 1 : 0)) n.data("_hot", hot ? 1 : 0);
+        });
+      });
+      cy.forceRender();
+    }
+
+    function edgePathLabel(edge) {
+      const src = edge.data("srcTable") || tableOfPort(edge.source());
+      const tgt = edge.data("tgtTable") || tableOfPort(edge.target());
+      const sf = edge.data("sourceField") || pkName(src);
+      const tf = edge.data("targetField") || pkName(tgt);
+      const card = edge.data("cardinality") || "?";
+      return `${src}.${sf} → ${tgt}.${tf}  ·  ${card}`;
+    }
+
+    function tablePorts(tableId) {
+      return cy.nodes(".port").filter((p) => p.data("tableId") === tableId);
+    }
+
+    function fieldPorts(tableId, fieldName) {
+      return cy.getElementById(portId(tableId, fieldName, "L"))
+        .union(cy.getElementById(portId(tableId, fieldName, "R")));
+    }
+
+    function fieldStems(tableId, fieldName) {
+      return cy.getElementById(stemId(tableId, fieldName, "L"))
+        .union(cy.getElementById(stemId(tableId, fieldName, "R")));
+    }
+
+    function tableEdges(tableId) {
+      // Relation edges dock to field ports (not the table body, not stems)
+      return tablePorts(tableId).connectedEdges().filter(".rel");
+    }
+
+    function fieldEdges(tableId, fieldName) {
+      return fieldPorts(tableId, fieldName).connectedEdges().filter(".rel");
+    }
+
+    function clearHighlight() {
+      // Visual only — never re-layout on hover/clear (that was shifting nodes down)
+      cy.elements().removeClass("hover neighbor highlight faded solo port-hot stem-hot");
+      cy.nodes(".table").forEach((n) => n.data("_hlFields", ""));
+      cy.nodes(".group").style("opacity", 1);
+      syncLabelUi();
+    }
+
+    /**
+     * Hover a field row → highlight only relation lines docked to that field's ports.
+     */
+    function highlightField(tableId, fieldName) {
+      cy.elements().removeClass("hover neighbor highlight faded solo port-hot stem-hot");
+      cy.nodes(".group").style("opacity", 1);
+
+      const ports = fieldPorts(tableId, fieldName);
+      const stems = fieldStems(tableId, fieldName);
+      const relatedEdges = fieldEdges(tableId, fieldName);
+      const relatedTables = cy.collection().union(cy.getElementById(tableId));
+      relatedEdges.forEach((e) => {
+        const s = e.data("srcTable");
+        const t = e.data("tgtTable");
+        if (s) relatedTables.merge(cy.getElementById(s));
+        if (t) relatedTables.merge(cy.getElementById(t));
+      });
+
+      cy.nodes(".table").difference(relatedTables).addClass("faded");
+      cy.nodes(".port, .stub").forEach((p) => {
+        const tid = p.data("tableId");
+        if (tid && cy.getElementById(tid).hasClass("faded")) p.addClass("faded");
+        else p.removeClass("faded");
+      });
+      cy.edges(".rel").difference(relatedEdges).addClass("faded");
+      cy.edges(".stem").difference(stems).addClass("faded");
+
+      cy.getElementById(tableId).addClass("hover");
+      relatedTables.difference(cy.getElementById(tableId)).addClass("neighbor");
+      relatedEdges.forEach((e, i) => {
+        e.data("hlColor", EDGE_PALETTE[i % EDGE_PALETTE.length]);
+        e.addClass("highlight");
+      });
+      ports.addClass("port-hot");
+      stems.addClass("stem-hot");
+
+      cy.nodes(".group").forEach((g) => {
+        const hasRelated = g.children(".table").some((c) => !c.hasClass("faded"));
+        g.style("opacity", hasRelated ? 1 : 0.22);
+      });
+
+      // Mark this field on the card
+      cy.batch(() => {
+        cy.nodes(".table").forEach((n) => {
+          n.data("_hlFields", n.id() === tableId ? fieldName : "");
+        });
+      });
+      syncLabelUi();
+    }
+
+    /**
+     * Color related edges; labels stay cardinality-only.
+     * Do NOT call separateEdges here — hover must not move nodes/ports.
+     */
+    function styleRelatedEdges(relatedEdges) {
+      const list = relatedEdges.toArray().sort((a, b) => a.id().localeCompare(b.id()));
+      list.forEach((e, i) => {
+        e.data("hlColor", EDGE_PALETTE[i % EDGE_PALETTE.length]);
+        e.removeClass("faded solo").addClass("highlight");
+      });
+    }
+
+    /**
+     * Focus mode via field-port edges: related tables + cardinality lines.
+     */
+    function highlightNeighborhood(nodeId) {
+      cy.elements().removeClass("hover neighbor highlight faded solo");
+      cy.nodes(".group").style("opacity", 1);
+
+      const node = cy.getElementById(nodeId);
+      if (node.empty() || node.hasClass("group") || node.hasClass("port")) return;
+
+      const relatedEdges = tableEdges(nodeId);
+      const relatedTables = cy.collection().union(node);
+      relatedEdges.forEach((e) => {
+        const s = e.data("srcTable");
+        const t = e.data("tgtTable");
+        if (s) relatedTables.merge(cy.getElementById(s));
+        if (t) relatedTables.merge(cy.getElementById(t));
+      });
+
+      cy.nodes(".table").difference(relatedTables).addClass("faded");
+      cy.nodes(".port, .stub").forEach((p) => {
+        const tid = p.data("tableId");
+        if (tid && cy.getElementById(tid).hasClass("faded")) p.addClass("faded");
+        else p.removeClass("faded");
+      });
+      cy.edges(".rel").difference(relatedEdges).addClass("faded");
+      // Keep stems visible on related tables; fade others
+      cy.edges(".stem").forEach((s) => {
+        const tid = s.data("tableId");
+        if (tid && cy.getElementById(tid).hasClass("faded")) s.addClass("faded");
+        else s.removeClass("faded");
+      });
+
+      node.addClass("hover");
+      relatedTables.difference(node).addClass("neighbor");
+      styleRelatedEdges(relatedEdges);
+
+      cy.nodes(".group").forEach((g) => {
+        const kids = g.children(".table");
+        const hasRelated = kids.some((c) => !c.hasClass("faded"));
+        g.style("opacity", hasRelated ? 1 : 0.22);
+      });
+
+      syncLabelUi();
+    }
+
+    /** Focus a single edge — only its two tables stay bright. */
+    function highlightEdge(edge, { announce } = {}) {
+      cy.elements().removeClass("hover neighbor highlight faded solo port-hot stem-hot");
+      cy.nodes(".group").style("opacity", 1);
+
+      const srcT = edge.data("srcTable") || tableOfPort(edge.source());
+      const tgtT = edge.data("tgtTable") || tableOfPort(edge.target());
+      const ends = cy.getElementById(srcT).union(cy.getElementById(tgtT)).filter(".table");
+
+      cy.nodes(".table").difference(ends).addClass("faded");
+      cy.nodes(".port, .stub").forEach((p) => {
+        const tid = p.data("tableId");
+        if (tid && cy.getElementById(tid).hasClass("faded")) p.addClass("faded");
+        else p.removeClass("faded");
+      });
+      cy.edges(".rel").difference(edge).addClass("faded");
+      cy.edges(".stem").forEach((s) => {
+        const tid = s.data("tableId");
+        if (tid && cy.getElementById(tid).hasClass("faded")) s.addClass("faded");
+        else s.removeClass("faded");
+      });
+
+      ends.addClass("neighbor");
+      edge.data("hlColor", "#7aa2ff");
+      edge.addClass("highlight solo");
+      edge.connectedNodes(".port").addClass("port-hot");
+
+      cy.nodes(".group").forEach((g) => {
+        const hasRelated = g.children(".table").some((c) => !c.hasClass("faded"));
+        g.style("opacity", hasRelated ? 1 : 0.22);
+      });
+
+      syncLabelUi();
+      if (announce) toast(edgePathLabel(edge) + " · " + (edge.data("cardinality") || ""));
+    }
+
+    function selectNode(id, pan) {
+      cy.nodes(".table").unselect();
+      const n = cy.getElementById(id);
+      if (n.empty() || !n.hasClass("table")) return;
+      n.select();
+      renderPanel(id);
+      highlightNeighborhood(id);
+      if (pan) {
+        cy.animate(
+          { center: { eles: n }, zoom: Math.min(1.2, Math.max(cy.zoom(), 0.85)) },
+          { duration: 260 },
+        );
+      }
+      toast(id + " · " + tableEdges(id).length + " links");
+      cy.forceRender();
+    }
+
+    function renderPanel(id) {
+      const body = document.getElementById("panelBody");
+      const t = byId[id];
+      if (!t) {
+        body.innerHTML = `<div class="panel-empty">
+          <p><strong>Select a table</strong> for full field detail</p>
+          <ul>
+            <li><strong>Cards</strong> — name + type only</li>
+            <li><strong>Sidebar</strong> — title, description, PK/FK, refs</li>
+            <li><strong>Left-drag</strong> — move tables or group frames</li>
+            <li><strong>Middle-drag</strong> — pan the screen</li>
+            <li><strong>Field dots</strong> — lines dock to L/R connectors</li>
+            <li><strong>Edge label</strong> — cardinality only (1-n, n-1, 1-1, n-m)</li>
+            <li><kbd>Esc</kbd> or background click clears</li>
+          </ul>
+        </div>`;
+        return;
+      }
+      const n = cy.getElementById(id);
+      const edges = tableEdges(id).filter((e) => !e.hasClass("hidden-type") && !e.hasClass("hidden-zone"));
+      const edgeList = edges.toArray().sort((a, b) => a.id().localeCompare(b.id()));
+      const g = t.style === "jn" ? "jn" : t.zone;
+      body.innerHTML = `
+        <div class="panel-head">
+          <h2>${t.label}</h2>
+          <span class="badge-p ${g}">${zoneName[g] || t.zone}</span>
+        </div>
+        <p class="panel-desc">${t.desc || ""}</p>
+        <div class="section-title">Links (${edgeList.length})</div>
+        <p class="edge-hint">Lines dock to field connector dots. Label on the canvas is cardinality only.</p>
+        <div class="rel-list">
+          ${edgeList.map((edge, i) => {
+            const color = EDGE_PALETTE[i % EDGE_PALETTE.length];
+            const out = edge.data("srcTable") === id;
+            const other = out ? edge.data("tgtTable") : edge.data("srcTable");
+            const myField = out ? edge.data("sourceField") : edge.data("targetField");
+            const otherField = out ? edge.data("targetField") : edge.data("sourceField");
+            const card = edge.data("cardinality") || "?";
+            const path = out
+              ? `${myField} → ${other}.${otherField}`
+              : `${other}.${otherField} → ${myField}`;
+            return `<button type="button" class="rel-chip" data-edge="${esc(edge.id())}" data-jump="${esc(other)}">
+              <span class="swatch" style="background:${color}"></span>
+              <span class="dir">${out ? "out" : "in"}</span>
+              <span class="rel-name">${esc(path)}</span>
+              <span class="rel-label">${esc(card)}</span>
+            </button>`;
+          }).join("")}
+        </div>
+        <div class="section-title">Fields</div>
+        <ul class="col-list">
+          ${t.cols.map((c) => {
+            const tag = c.kind === "pk" ? "PK" : c.kind === "fk" ? "FK" : "·";
+            const tagCls = c.kind === "pk" || c.kind === "fk" ? c.kind : "";
+            const nameCls = ["name", c.kind || ""].filter(Boolean).join(" ");
+            const metaBits = [];
+            if (c.ref) metaBits.push("→ " + c.ref);
+            if (c.meta) metaBits.push(c.meta);
+            const meta = metaBits.length
+              ? `<div class="meta">${esc(metaBits.join(" · "))}</div>`
+              : "";
+            const title = c.title
+              ? `<div class="title">${esc(c.title)}</div>`
+              : "";
+            const desc = c.description
+              ? `<div class="desc">${esc(c.description)}</div>`
+              : "";
+            return `<li>
+              <span class="tag ${tagCls}">${tag}</span>
+              <div class="name-row">
+                <span class="${nameCls}">${esc(c.name)}</span>
+                <span class="type">${esc(c.type || "")}</span>
+              </div>
+              ${title}${desc}${meta}
+            </li>`;
+          }).join("")}
+        </ul>`;
+      body.querySelectorAll("[data-edge]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const eid = btn.getAttribute("data-edge");
+          const edge = cy.getElementById(eid);
+          if (edge.nonempty()) highlightEdge(edge, { announce: true });
+        });
+        btn.addEventListener("dblclick", () => {
+          selectNode(btn.getAttribute("data-jump"), true);
+        });
+      });
+    }
+
+    cy.on("mouseover", "node.table", (e) => {
+      // Don't override field-hover (HTML field has pointer-events)
+      if (e.originalEvent && e.originalEvent.target && e.originalEvent.target.closest &&
+          e.originalEvent.target.closest(".field[data-field]")) return;
+      highlightNeighborhood(e.target.id());
+    });
+    cy.on("mouseout", "node.table", (e) => {
+      if (e.originalEvent && e.originalEvent.relatedTarget &&
+          e.originalEvent.relatedTarget.closest &&
+          e.originalEvent.relatedTarget.closest(".field[data-field]")) return;
+      const sel = cy.$("node.table:selected");
+      if (sel.nonempty()) highlightNeighborhood(sel.id());
+      else clearHighlight();
+    });
+    cy.on("tap", "node.table", (e) => {
+      e.stopPropagation();
+      selectNode(e.target.id(), false);
+    });
+    cy.on("tap", (e) => {
+      if (e.target === cy) {
+        cy.nodes().unselect();
+        clearHighlight();
+        renderPanel(null);
+      }
+    });
+    // Edge hover: isolate that one path so you can see exactly where it goes
+    cy.on("mouseover", "edge.rel", (e) => {
+      const edge = e.target;
+      if (edge.hasClass("hidden-type") || edge.hasClass("hidden-zone") || edge.hasClass("faded")) return;
+      highlightEdge(edge, { announce: false });
+    });
+    cy.on("mouseout", "edge.rel", () => {
+      const sel = cy.$("node.table:selected");
+      if (sel.nonempty()) highlightNeighborhood(sel.id());
+      else clearHighlight();
+    });
+    cy.on("tap", "edge.rel", (e) => {
+      e.stopPropagation();
+      const edge = e.target;
+      if (edge.hasClass("hidden-type") || edge.hasClass("hidden-zone")) return;
+      cy.nodes(".table").unselect();
+      const src = edge.data("srcTable") || tableOfPort(edge.source());
+      if (src) renderPanel(src);
+      highlightEdge(edge, { announce: true });
+    });
+
+    // Field hover (HTML card rows) → highlight lines docked to that field
+    (function setupFieldHover() {
+      const el = document.getElementById("cy");
+      let active = null; // { tableId, field }
+
+      el.addEventListener(
+        "pointerover",
+        (ev) => {
+          const fieldEl = ev.target && ev.target.closest && ev.target.closest(".field[data-field]");
+          if (!fieldEl) return;
+          const card = fieldEl.closest(".er-card[data-table]");
+          if (!card) return;
+          const tableId = card.getAttribute("data-table");
+          const field = fieldEl.getAttribute("data-field");
+          if (!tableId || !field) return;
+          if (active && active.tableId === tableId && active.field === field) return;
+          active = { tableId, field };
+          highlightField(tableId, field);
+        },
+        true,
+      );
+
+      el.addEventListener(
+        "pointerout",
+        (ev) => {
+          const fieldEl = ev.target && ev.target.closest && ev.target.closest(".field[data-field]");
+          if (!fieldEl) return;
+          const to = ev.relatedTarget;
+          if (to && fieldEl.contains(to)) return;
+          // Leaving this field
+          if (active && fieldEl.getAttribute("data-field") === active.field) {
+            active = null;
+            const sel = cy.$("node.table:selected");
+            if (sel.nonempty()) highlightNeighborhood(sel.id());
+            else clearHighlight();
+          }
+        },
+        true,
+      );
+    })();
+
+    // Left mouse: drag tables & groups. Middle mouse: pan the screen only.
+    cy.nodes(".table").grabify();
+    cy.nodes(".group").grabify();
+    cy.nodes(".port, .stub").ungrabify();
+    cy.on("tap", "node.group", (e) => {
+      e.stopPropagation();
+    });
+    cy.on("drag", "node.table", () => {
+      // Keep this table's ports glued while dragging (ports are not compound children)
+      layoutPorts();
+      cy.forceRender();
+    });
+    cy.on("drag", "node.group", () => {
+      layoutPorts();
+      cy.forceRender();
+    });
+    cy.on("dragfree", "node.table, node.group", () => {
+      layoutPorts();
+      rewireEdgesToPorts();
+      // Edge fan only after drop — never on hover
+      separateEdges(null, { step: 42 });
+    });
+
+    (function setupWheelZoomAndMiddlePan() {
+      const el = cy.container();
+      let pan = null; // { lastX, lastY }
+
+      // Mouse wheel / trackpad → zoom toward cursor
+      el.addEventListener(
+        "wheel",
+        (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const rect = el.getBoundingClientRect();
+          const renderedPos = {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+          };
+
+          // Normalize delta (mouse wheel vs trackpad)
+          let dy = e.deltaY;
+          if (e.deltaMode === 1) dy *= 16; // lines
+          if (e.deltaMode === 2) dy *= rect.height; // pages
+
+          // Zoom factor: scroll up = zoom in
+          const intensity = e.ctrlKey ? 0.012 : 0.0018; // ctrl+wheel (pinch) is stronger
+          const factor = Math.pow(10, -dy * intensity);
+          const z0 = cy.zoom();
+          const z1 = Math.min(cy.maxZoom(), Math.max(cy.minZoom(), z0 * factor));
+          if (z1 === z0) return;
+
+          cy.zoom({
+            level: z1,
+            renderedPosition: renderedPos,
+          });
+          cy.forceRender();
+        },
+        { passive: false },
+      );
+
+      el.addEventListener(
+        "mousedown",
+        (e) => {
+          if (e.button !== 1) return; // middle only — never moves nodes
+          e.preventDefault();
+          e.stopPropagation();
+          pan = { lastX: e.clientX, lastY: e.clientY };
+          el.style.cursor = "grabbing";
+          el.style.userSelect = "none";
+        },
+        true,
+      );
+
+      window.addEventListener("mousemove", (e) => {
+        if (!pan) return;
+        const dx = e.clientX - pan.lastX;
+        const dy = e.clientY - pan.lastY;
+        pan.lastX = e.clientX;
+        pan.lastY = e.clientY;
+        cy.panBy({ x: dx, y: dy });
+      });
+
+      window.addEventListener("mouseup", (e) => {
+        if (e.button !== 1 || !pan) return;
+        pan = null;
+        el.style.cursor = "";
+        el.style.userSelect = "";
+      });
+
+      el.addEventListener("auxclick", (e) => {
+        if (e.button === 1) e.preventDefault();
+      });
+      el.addEventListener("mousedown", (e) => {
+        if (e.button === 1) e.preventDefault();
+      });
+    })();
+
+    const activeZones = new Set(["ws", "st", "rc", "hi"]);
+    function applyZoneFilter() {
+      cy.nodes(".table, .group, .port, .stub").forEach((n) => {
+        const z = n.data("zone");
+        if (activeZones.has(z)) n.removeClass("hidden-zone");
+        else n.addClass("hidden-zone");
+      });
+      cy.edges(".rel").forEach((e) => {
+        const s = cy.getElementById(e.data("srcTable"));
+        const t = cy.getElementById(e.data("tgtTable"));
+        if (s.hasClass("hidden-zone") || t.hasClass("hidden-zone")) e.addClass("hidden-zone");
+        else e.removeClass("hidden-zone");
+      });
+      cy.edges(".stem").forEach((e) => {
+        const tid = e.data("tableId");
+        const t = cy.getElementById(tid);
+        if (t.empty() || t.hasClass("hidden-zone")) e.addClass("hidden-zone");
+        else e.removeClass("hidden-zone");
+      });
+      cy.forceRender();
+    }
+
+    document.getElementById("zoneFilters").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-zone]");
+      if (!btn) return;
+      const z = btn.dataset.zone;
+      if (activeZones.has(z)) {
+        if (activeZones.size === 1) return;
+        activeZones.delete(z);
+        btn.classList.remove("active");
+      } else {
+        activeZones.add(z);
+        btn.classList.add("active");
+      }
+      applyZoneFilter();
+    });
+
+    let showM2m = true, showFk = true;
+    function applyEdgeTypeFilter() {
+      cy.edges(".rel").forEach((e) => {
+        const k = e.data("kind");
+        const hide = (k === "m2m" && !showM2m) || (k === "fk" && !showFk);
+        if (hide) e.addClass("hidden-type");
+        else e.removeClass("hidden-type");
+      });
+    }
+    document.getElementById("toggleM2m").onclick = (ev) => {
+      showM2m = !showM2m;
+      ev.currentTarget.classList.toggle("active", showM2m);
+      applyEdgeTypeFilter();
+    };
+    document.getElementById("toggleFk").onclick = (ev) => {
+      showFk = !showFk;
+      ev.currentTarget.classList.toggle("active", showFk);
+      applyEdgeTypeFilter();
+    };
+
+    // Default: bezier. Toggle → orthogonal taxi. Both use outside-to-node.
+    let useTaxiRoutes = false;
+    function applyRouteStyle() {
+      cy.edges(".rel").forEach((e) => {
+        if (useTaxiRoutes) e.addClass("route-taxi");
+        else e.removeClass("route-taxi");
+      });
+      cy.style().update();
+      cy.forceRender();
+    }
+    document.getElementById("toggleRoutes").onclick = (ev) => {
+      useTaxiRoutes = !useTaxiRoutes;
+      ev.currentTarget.classList.toggle("active", useTaxiRoutes);
+      ev.currentTarget.textContent = useTaxiRoutes ? "Taxi routes" : "Curve routes";
+      applyRouteStyle();
+      toast(useTaxiRoutes ? "Orthogonal taxi" : "Bezier curves");
+    };
+
+    document.getElementById("fontRange").addEventListener("input", (e) => {
+      applyFontScale(parseFloat(e.target.value));
+    });
+    document.getElementById("fontDown").onclick = () => applyFontScale(fontScale - 0.1);
+    document.getElementById("fontUp").onclick = () => applyFontScale(fontScale + 0.1);
+
+    document.getElementById("fitBtn").onclick = () => { cy.fit(cy.nodes(".table"), 50); cy.forceRender(); };
+    document.getElementById("rearrangeBtn").onclick = () => {
+      rearrange({ fit: true, toastMsg: "Rearranged with margins" });
+    };
+    document.getElementById("resetBtn").onclick = () => {
+      showM2m = true; showFk = true;
+      document.getElementById("toggleM2m").classList.add("active");
+      document.getElementById("toggleFk").classList.add("active");
+      ["ws","st","rc","hi"].forEach((z) => activeZones.add(z));
+      document.querySelectorAll("#zoneFilters .btn").forEach((b) => b.classList.add("active"));
+      applyZoneFilter();
+      applyEdgeTypeFilter();
+      rearrange({ fit: true, toastMsg: "Layout reset" });
+      cy.nodes().unselect();
+      clearHighlight();
+      renderPanel(null);
+      document.getElementById("search").value = "";
+    };
+
+    document.getElementById("search").addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      const q = e.target.value.trim().toLowerCase();
+      if (!q) return;
+      const hit = TABLES.find((t) =>
+        t.id.includes(q) || t.label.toLowerCase().includes(q) ||
+        (t.desc && t.desc.toLowerCase().includes(q)) ||
+        t.cols.some((c) =>
+          c.name.toLowerCase().includes(q) ||
+          (c.type && c.type.toLowerCase().includes(q)) ||
+          (c.title && c.title.toLowerCase().includes(q)) ||
+          (c.description && c.description.toLowerCase().includes(q))));
+      if (hit) selectNode(hit.id, true);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        cy.nodes().unselect();
+        clearHighlight();
+        renderPanel(null);
+      }
+      if (e.key === "+" || e.key === "=") {
+        if (e.target.matches("input, textarea")) return;
+        applyFontScale(fontScale + 0.1);
+      }
+      if (e.key === "-" || e.key === "_") {
+        if (e.target.matches("input, textarea")) return;
+        applyFontScale(fontScale - 0.1);
+      }
+    });
+
+    applyFontScale(fontScale);
+    renderPanel(null);
+  </script>
+</body>
+</html>
