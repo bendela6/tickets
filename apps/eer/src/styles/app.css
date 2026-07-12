@@ -39,8 +39,6 @@
   --edge: #6c7997;
   --edge-hot: #7aa2ff;
   --soft: #8b93a7;
-  --zone: rgba(122, 162, 255, 0.05);
-  --zone-border: rgba(122, 162, 255, 0.16);
   --danger: #f87171;
   --ok: #3ecf8e;
   --mono: ui-monospace, 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
@@ -103,10 +101,14 @@ body {
 }
 
 /* ---- Zones ---- */
+/* Each zone carries --group-c (set by build-scene; subgroups inherit their parent
+   zone's hue) and is washed with it at low opacity — the shaded-out version of
+   the colour its tables wear. Fallbacks keep un-stamped zones accent-neutral. */
 .zone {
   position: absolute;
-  border: 1px dashed var(--zone-border);
-  background: var(--zone);
+  --zc: var(--group-c, var(--accent));
+  border: 1px dashed color-mix(in srgb, var(--zc) 30%, transparent);
+  background: color-mix(in srgb, var(--zc) 6%, transparent);
   border-radius: 14px;
   pointer-events: auto;
   cursor: grab;
@@ -127,8 +129,8 @@ body {
   bottom: 4px;
   width: 10px;
   height: 10px;
-  border-right: 2px solid var(--zone-border);
-  border-bottom: 2px solid var(--zone-border);
+  border-right: 2px solid color-mix(in srgb, var(--zc) 45%, transparent);
+  border-bottom: 2px solid color-mix(in srgb, var(--zc) 45%, transparent);
   border-bottom-right-radius: 5px;
   opacity: 0;
   transition: opacity 0.12s;
@@ -139,8 +141,8 @@ body {
 }
 .zone-selected {
   border-style: solid;
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--zone-border));
-  background: color-mix(in srgb, var(--accent) 9%, var(--zone));
+  border-color: color-mix(in srgb, var(--zc) 65%, transparent);
+  background: color-mix(in srgb, var(--zc) 11%, transparent);
 }
 .zone-dim {
   opacity: 0.4;
@@ -151,7 +153,7 @@ body {
   left: 12px;
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--muted);
+  color: color-mix(in srgb, var(--zc) 60%, var(--muted));
   letter-spacing: 0.02em;
   text-transform: uppercase;
   pointer-events: none;
@@ -163,8 +165,8 @@ body {
 /* ---- Subgroups (nested clusters) ---- */
 .zone-sub {
   border-style: solid;
-  border-color: var(--border);
-  background: rgba(122, 162, 255, 0.04);
+  border-color: color-mix(in srgb, var(--zc) 24%, var(--border));
+  background: color-mix(in srgb, var(--zc) 4%, transparent);
   border-radius: 10px;
 }
 .zone-sub .zone-label {
@@ -174,11 +176,11 @@ body {
   font-weight: 500;
   letter-spacing: 0.01em;
   text-transform: none;
-  color: var(--soft);
+  color: color-mix(in srgb, var(--zc) 40%, var(--soft));
 }
 .zone-sub.zone-selected {
-  border-color: color-mix(in srgb, var(--accent) 60%, var(--border-2));
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--zc) 55%, var(--border-2));
+  background: color-mix(in srgb, var(--zc) 8%, transparent);
 }
 
 /* ---- Cards ---- */
