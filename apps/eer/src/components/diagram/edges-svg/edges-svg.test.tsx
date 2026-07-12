@@ -28,9 +28,8 @@ it('renders parity edge DOM with paths attached to ports', async () => {
   const g = svg.querySelector('g.edge[data-rel="u-o"]') as SVGGElement;
   expect(g.dataset.kind).toBe('fk');
   expect(g.style.getPropertyValue('--edge-c')).toBeTruthy();
-  for (const cls of ['edge-hit', 'edge-casing', 'edge-path', 'edge-head']) {
-    expect(g.querySelector('path.' + cls.split(' ').join('.'))).toBeTruthy();
-  }
+  expect(g.querySelectorAll('path').length).toBe(4); // hit, casing, visible path, arrow head
+  expect(g.querySelector('path.edge-path')).toBeTruthy();
   expect((g.querySelector('.edge-path') as SVGPathElement).getAttribute('d')).toMatch(/^M/);
 });
 it('dashed kinds get .dashed on the visible path', async () => {

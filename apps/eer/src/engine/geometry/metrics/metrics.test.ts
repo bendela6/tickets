@@ -7,10 +7,10 @@ import { BODY_PAD_TOP, CARD_BORDER, CARD_MAX_W, CARD_MIN_W, HEADER_H, LAYOUT_MAR
 // pinned here so editing either side means acknowledging the geometry change.
 describe('metrics ↔ Tailwind utility pairings (pinned)', () => {
   it('matches the card box model rules', () => {
-    expect(HEADER_H).toBe(34); // .card-hd h-8.5
+    expect(HEADER_H).toBe(34); // card header h-8.5
     expect(ROW_H).toBe(22); // .field h-5.5
     expect(CARD_BORDER).toBe(1); // .card border
-    expect(BODY_PAD_TOP).toBe(3); // .card-body py-0.75
+    expect(BODY_PAD_TOP).toBe(3); // card body py-0.75
   });
 
   it('matches the port offset rules', () => {
