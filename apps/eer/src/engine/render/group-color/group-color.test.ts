@@ -29,4 +29,21 @@ describe('groupColor', () => {
   it('falls back to the first palette entry for an unknown id', () => {
     expect(groupColor(buildModel(), 'no-such-group')).toBe(GROUP_PALETTE[0]);
   });
+
+  it('a zone override wins and flows down to its subgroups', () => {
+    const model = buildModel(nestedRaw());
+    const overrides = new Map([['z', '#123456']]);
+    expect(groupColor(model, 'z', overrides)).toBe('#123456');
+    expect(groupColor(model, 's', overrides)).toBe('#123456');
+  });
+
+  it('a subgroup override beats its parent zone override', () => {
+    const model = buildModel(nestedRaw());
+    const overrides = new Map([
+      ['z', '#123456'],
+      ['s', '#abcdef'],
+    ]);
+    expect(groupColor(model, 's', overrides)).toBe('#abcdef');
+    expect(groupColor(model, 'z', overrides)).toBe('#123456');
+  });
 });

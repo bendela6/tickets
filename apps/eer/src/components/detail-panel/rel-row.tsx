@@ -9,6 +9,7 @@ export const rowClass =
 
 export function RelRow({
   model,
+  colors,
   cardinality,
   here,
   dir,
@@ -17,6 +18,7 @@ export function RelRow({
   onClick,
 }: {
   model: Model;
+  colors?: ReadonlyMap<string, string>;
   cardinality: string;
   here: string;
   dir: 'out' | 'in';
@@ -29,7 +31,7 @@ export function RelRow({
       <Card>{cardinality}</Card>
       <span className="truncate font-mono text-muted">{here}</span>
       <span className="shrink-0 text-dim">{dir === 'out' ? '→' : '←'}</span>
-      <Dot color={entityColor(model, otherEntity)} />
+      <Dot color={entityColor(model, otherEntity, colors)} />
       <span className="truncate font-mono text-ink">{otherEntity}</span>
       <span className="truncate font-mono text-dim">.{otherField}</span>
     </button>

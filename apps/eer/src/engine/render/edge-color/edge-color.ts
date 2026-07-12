@@ -5,5 +5,5 @@ import { entityColor } from '../entity-color';
 import type { EngineState } from '../../model/types';
 
 export function edgeColor(state: EngineState, entityId: string): string {
-  return entityColor(state.model, entityId);
+  return entityColor(state.model, entityId, state.colors);
 }

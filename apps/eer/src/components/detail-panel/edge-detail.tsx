@@ -7,7 +7,17 @@ import { Header } from './header';
 import { rowClass } from './rel-row';
 import { Section } from './section';
 
-export function EdgeDetail({ engine, model, id }: { engine: EerDiagram | null; model: Model; id: string }) {
+export function EdgeDetail({
+  engine,
+  model,
+  id,
+  colors,
+}: {
+  engine: EerDiagram | null;
+  model: Model;
+  id: string;
+  colors?: ReadonlyMap<string, string>;
+}) {
   const rel: Relationship | undefined = model.relById.get(id);
   if (!rel) return null;
   const goto = (entityId: string) => {
@@ -16,7 +26,7 @@ export function EdgeDetail({ engine, model, id }: { engine: EerDiagram | null; m
   };
   const endpoint = (entityId: string, field: string, role: string) => (
     <button type="button" className={rowClass} onClick={() => goto(entityId)}>
-      <Dot color={entityColor(model, entityId)} />
+      <Dot color={entityColor(model, entityId, colors)} />
       <span className="font-mono text-ink">{entityId}</span>
       <span className="font-mono text-dim">.{field}</span>
       <span className="ml-auto shrink-0 text-[0.6rem] uppercase tracking-[0.06em] text-dim">{role}</span>

@@ -9,7 +9,17 @@ import { Header } from './header';
 import { RelRow, rowClass } from './rel-row';
 import { Section } from './section';
 
-export function GroupDetail({ engine, model, id }: { engine: EerDiagram | null; model: Model; id: string }) {
+export function GroupDetail({
+  engine,
+  model,
+  id,
+  colors,
+}: {
+  engine: EerDiagram | null;
+  model: Model;
+  id: string;
+  colors?: ReadonlyMap<string, string>;
+}) {
   const group = model.groups.find((g) => g.id === id);
   const isSub = group?.parent != null;
   const parentZone = isSub ? model.groups.find((g) => g.id === group?.parent) : undefined;
@@ -62,7 +72,7 @@ export function GroupDetail({ engine, model, id }: { engine: EerDiagram | null; 
               engine?.centerOn(e.id);
             }}
           >
-            <Dot color={entityColor(model, e.id)} />
+            <Dot color={entityColor(model, e.id, colors)} />
             <span className="truncate font-mono text-ink">{e.label}</span>
             {e.group !== id && (
               <span className="ml-auto mr-1 shrink-0 text-[0.62rem] text-dim">
@@ -86,6 +96,7 @@ export function GroupDetail({ engine, model, id }: { engine: EerDiagram | null; 
             <RelRow
               key={r.id}
               model={model}
+              colors={colors}
               cardinality={r.cardinality}
               here={here}
               dir={outward ? 'out' : 'in'}

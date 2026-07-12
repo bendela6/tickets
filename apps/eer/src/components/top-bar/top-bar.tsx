@@ -27,6 +27,7 @@ interface TopBarProps {
   onCycleRouting: () => void;
   hiddenGroups: ReadonlySet<string>;
   hiddenKinds: ReadonlySet<string>;
+  colors?: ReadonlyMap<string, string>;
   onToggleGroup: (id: string) => void;
   onToggleKind: (id: string) => void;
   onFit: () => void;
@@ -58,7 +59,7 @@ export function TopBar(props: TopBarProps) {
                 <Chip
                   key={g.id}
                   on={!props.hiddenGroups.has(g.id)}
-                  color={groupColor(model, g.id)}
+                  color={groupColor(model, g.id, props.colors)}
                   onClick={() => props.onToggleGroup(g.id)}
                 >
                   {g.label}

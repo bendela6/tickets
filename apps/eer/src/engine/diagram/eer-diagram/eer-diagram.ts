@@ -19,6 +19,7 @@ import { positionEntity } from '../../render/position-entity';
 import { raiseEdge } from '../../focus/raise-edge';
 import { relayout } from '../../render/relayout';
 import { runChecks } from '../../checks/run-checks';
+import { setColors } from '../../render/set-colors';
 import { setRouting } from '../../render/set-routing';
 import { subgroupIdsOf } from '../../groups/subgroup-ids-of';
 import { visibleBounds } from '../../layout/visible-bounds';
@@ -123,6 +124,7 @@ export class EerDiagram {
     this.state.selection = null;
     this.state.focus = null;
     this.state.hidden = { groups: new Set(), kinds: new Set() };
+    this.state.colors = undefined;
     packLayout(model);
     buildScene(this.state);
     this.wireScene();
@@ -145,6 +147,10 @@ export class EerDiagram {
 
   setRouting(mode: RoutingMode): void {
     setRouting(this.state, mode);
+  }
+
+  setColors(colors: ReadonlyMap<string, string> | undefined): void {
+    setColors(this.state, colors);
   }
 
   fit(): void {
