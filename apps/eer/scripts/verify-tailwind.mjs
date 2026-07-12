@@ -7,6 +7,9 @@ import ts from 'typescript';
 const appRoot = fileURLToPath(new URL('..', import.meta.url));
 const sourceRoot = path.join(appRoot, 'src');
 const failures = [];
+// Matches .prettierrc.json printWidth — longer class lists must be split into
+// grouped cn() arguments (one concern per line).
+const maxClassString = 100;
 const cssomMethods = new Set(['addRule', 'insertRule', 'removeProperty', 'replaceSync', 'setProperty']);
 const allowedCssImports = new Set([
   './styles/tailwind.css',
@@ -40,8 +43,33 @@ function propertyName(node) {
 function verifySource(file, source) {
   const scriptKind = file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
   const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, scriptKind);
+  const reportedLongStrings = new Set();
+
+  function checkClassStringLength(root) {
+    const collect = (child) => {
+      if (
+        (ts.isStringLiteral(child) || ts.isNoSubstitutionTemplateLiteral(child)) &&
+        child.text.length > maxClassString &&
+        !reportedLongStrings.has(child.getStart())
+      ) {
+        reportedLongStrings.add(child.getStart());
+        failures.push(
+          `${relative(file)}:${tree.getLineAndCharacterOfPosition(child.getStart()).line + 1} class string over ${maxClassString} chars — split into grouped cn() lines`,
+        );
+      }
+      ts.forEachChild(child, collect);
+    };
+    ts.forEachChild(root, collect);
+  }
 
   function visit(node) {
+    if (
+      (ts.isJsxAttribute(node) && node.name.getText(tree) === 'className') ||
+      (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'cn')
+    ) {
+      checkClassStringLength(node);
+    }
+
     if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
       const target = node.moduleSpecifier.text;
       if (target.endsWith('.css') && !allowedCssImports.has(target)) {
@@ -152,9 +180,16 @@ function verifySource(file, source) {
 const files = await walk(sourceRoot);
 const stylesheets = files.filter((file) => /\.(?:css|less|sass|scss|styl)$/u.test(file));
 const expectedStylesheet = path.join(sourceRoot, 'styles', 'tailwind.css');
+// debug.scss is a dev-only helper (dd* dotted-outline classes) that sits
+// deliberately outside the Tailwind boundary; nothing in the app may depend on it.
+const debugStylesheet = path.join(sourceRoot, 'styles', 'debug.scss');
+const allowedStylesheets = new Set([expectedStylesheet, debugStylesheet]);
+const unexpected = stylesheets.filter((file) => !allowedStylesheets.has(file));
 
-if (stylesheets.length !== 1 || stylesheets[0] !== expectedStylesheet) {
-  failures.push(`expected only src/styles/tailwind.css; found ${stylesheets.map(relative).join(', ') || 'none'}`);
+if (unexpected.length > 0 || !stylesheets.includes(expectedStylesheet)) {
+  failures.push(
+    `expected only src/styles/tailwind.css (+ optional src/styles/debug.scss); found ${stylesheets.map(relative).join(', ') || 'none'}`,
+  );
 }
 
 if (stylesheets.includes(expectedStylesheet)) {
