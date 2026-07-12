@@ -36,7 +36,7 @@ export interface DiagramActions {
   focusFromSearch(entityId: string, field?: string): void;
   clearSelection(): void;
   search(q: string): SearchResult[];
-  runChecks(): CheckResult[]; // wired in T14/T15; until then returns []
+  runChecks(): CheckResult[];
   load(model: Model): void; // dispatch LOAD + double-rAF fit
   repackAndFit(): void; // REPACK + fit (fonts.ready)
 }
@@ -84,7 +84,10 @@ export function DiagramProvider({ children }: { children: ReactNode }) {
       centerOn,
       rearrange: () => {
         dispatch({ type: 'REARRANGE' });
-        fit();
+        // fit() reads stateRef.current, which only reflects the just-dispatched
+        // repack once React has rendered it (dispatch is async) — double-rAF defer,
+        // same as load(), so we frame the freshly packed model, not the stale one.
+        requestAnimationFrame(() => requestAnimationFrame(fit));
       },
       setRouting: (mode: RoutingMode) => dispatch({ type: 'SET_ROUTING', routing: mode }),
       setColors: (colors) => dispatch({ type: 'SET_COLORS', colors }),
@@ -113,7 +116,9 @@ export function DiagramProvider({ children }: { children: ReactNode }) {
       },
       repackAndFit: () => {
         dispatch({ type: 'REPACK' });
-        fit();
+        // Same stale-stateRef hazard as rearrange() above — defer to the freshly
+        // packed model instead of fitting the pre-repack one.
+        requestAnimationFrame(() => requestAnimationFrame(fit));
       },
     };
   }, []);

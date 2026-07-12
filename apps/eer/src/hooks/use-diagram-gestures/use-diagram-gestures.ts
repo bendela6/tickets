@@ -7,6 +7,11 @@
 // inside the effect, exactly like the legacy handler: it is transient bookkeeping,
 // not render state. The latest model/view are read through refs updated each render
 // (dispatch/actions are stable, so the effect attaches its listeners once).
+//
+// Mount contract: the effect below attaches its listeners exactly once (its deps
+// are stable), on whatever `viewportRef.current` is at that first run — so the
+// .viewport element must already be mounted by then. Diagram guarantees this by
+// rendering the .viewport div unconditionally, before any model-gated content.
 
 import { useEffect, useRef, type RefObject } from 'react';
 
