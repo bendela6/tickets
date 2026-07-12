@@ -111,6 +111,14 @@ function checkNoReflow({ model, root }: RunChecksArgs): CheckResult {
   const firstRel = model.relationships.find((r) => r.source === first.id || r.target === first.id);
   const edgeEl = firstRel ? root.querySelector(`.edge[data-rel="${cssEsc(firstRel.id)}"]`) : null;
 
+  // A live selection may already carry these classes (focused card, isolated
+  // edge) — snapshot per class, per element, and remove only what the probe adds
+  // so a legitimate selection survives the self-check (legacy saved/restored
+  // focus state for the same reason).
+  const hadFocus = cardEl?.classList.contains('focus') ?? false;
+  const hadSelected = cardEl?.classList.contains('selected') ?? false;
+  const hadHot = edgeEl?.classList.contains('hot') ?? false;
+
   cardEl?.classList.add('focus', 'selected');
   edgeEl?.classList.add('hot');
 
@@ -125,8 +133,9 @@ function checkNoReflow({ model, root }: RunChecksArgs): CheckResult {
       if (moved) problems.push(`${first.id} sample port DOM rect shifted`);
     }
   } finally {
-    cardEl?.classList.remove('focus', 'selected');
-    edgeEl?.classList.remove('hot');
+    if (!hadFocus) cardEl?.classList.remove('focus');
+    if (!hadSelected) cardEl?.classList.remove('selected');
+    if (!hadHot) edgeEl?.classList.remove('hot');
   }
 
   return result('Hover/focus never moves a node', problems, model.entities.length + ' nodes');
