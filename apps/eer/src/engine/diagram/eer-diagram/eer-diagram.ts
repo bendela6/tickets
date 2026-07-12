@@ -7,6 +7,7 @@ import { applyVisibility } from '../../focus/apply-visibility';
 import { buildScene } from '../../render/build-scene';
 import { clearFieldHighlight } from '../../focus/clear-field-highlight';
 import { clearFocus } from '../../focus/clear-focus';
+import { computeEdgeGeometry } from '../../routing/edge-geometry';
 import { drawAllEdges } from '../../render/draw-all-edges';
 import { drawEdgesForEntity } from '../../render/draw-edges-for-entity';
 import { entityIdsInGroup } from '../../groups/entity-ids-in-group';
@@ -240,7 +241,12 @@ export class EerDiagram {
   }
 
   runChecks(): CheckResult[] {
-    return runChecks(this.state);
+    return runChecks({
+      model: this.state.model,
+      geometry: computeEdgeGeometry(this.state.model, this.state.view.routing),
+      view: this.state.view,
+      root: this.state.els.viewport,
+    });
   }
 
   search(q: string): SearchResult[] {
