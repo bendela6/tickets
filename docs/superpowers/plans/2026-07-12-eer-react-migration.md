@@ -2278,6 +2278,8 @@ are the only DOM owners.
 1. **Pin-fan refresh after curved-mode drags:** legacy skipped recomputing pin fans on mouseup in curved mode (stale fan order until the next full redraw); the React geometry memo always recomputes on gesture end. Strictly fresher — accepted.
 2. **Zone box ↔ bounds sync:** legacy `relayout` matched zone DOM to `_groupBounds` by array index (documented quirk); React keys `ZoneBox` by group id, eliminating the quirk.
 3. **`raiseEdge` on hover** now leaves paint order to render order (raised edge rendered last) instead of DOM `appendChild`; identical visual result.
+4. **REARRANGE clears the panel selection:** raw legacy kept an entity panel selection through rearrange; the React reducer's `REARRANGE` case resets `panelSelection` to `{ type: 'none' }` along with focus. A normalization, brief-specified.
+5. **Group-focus → entity/edge-focus clears stale zone classes:** legacy left `zone-selected`/`zone-dim` on the DOM until Escape once focus moved off the group; React derives those classes from `ui.focus` every render, so switching focus to an entity or edge clears them immediately. Strictly a fix.
 
 ## Self-review checklist (for the plan executor)
 
