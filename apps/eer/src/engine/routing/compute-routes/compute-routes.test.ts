@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildModel } from '../../../test/models';
+import { computePinSlots, pinSlots } from '../../geometry/compute-pin-slots';
 import { edgeEndpoints } from '../../geometry/edge-endpoints';
-import { computeRoutes } from './compute-routes';
+import { computeRoutes, routeEdges } from './compute-routes';
 import type { Point } from '../../model/types';
 
 // Axis-aligned segment vs rect overlap (strict, so a 2px-shrunk rect gives tolerance).
@@ -70,5 +71,20 @@ describe('computeRoutes', () => {
     self._route = [{ x: 0, y: 0 }]; // stale garbage that must be cleared
     computeRoutes(model);
     expect(self._route).toBeNull();
+  });
+
+  it('routeEdges is pure and matches the legacy wrapper output', () => {
+    const model = buildModel();
+    const { slots } = pinSlots(model);
+    const snap = JSON.stringify(model.relationships.map((r) => [r._srcSlot, r._tgtSlot, r._route ?? 'unset']));
+    const res = routeEdges(model, slots);
+    expect(JSON.stringify(model.relationships.map((r) => [r._srcSlot, r._tgtSlot, r._route ?? 'unset']))).toBe(snap);
+    expect(res.slots).not.toBe(slots); // adjusted copy, never the caller's map
+    // wrapper writes the same routes onto the rels:
+    computePinSlots(model);
+    computeRoutes(model);
+    for (const rel of model.relationships) {
+      expect(rel._route ?? null).toEqual(res.routes.get(rel.id) ?? null);
+    }
   });
 });
