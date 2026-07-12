@@ -82,6 +82,7 @@ export class EerDiagram {
   private disposers: (() => void)[] = [];
   private sceneDisposers: (() => void)[] = [];
   private destroyed = false;
+  private loadToken = 0;
 
   constructor(viewport: HTMLElement, mount: HTMLElement, opts: DiagramOptions = {}) {
     this.opts = opts;
@@ -119,13 +120,13 @@ export class EerDiagram {
   }
 
   load(model: Model): void {
-    this.state.model = model;
+    const token = ++this.loadToken;
+    this.state.model = packLayout(model);
     this.state.view = { zoom: 1, panX: 0, panY: 0, routing: model.view.routing };
     this.state.selection = null;
     this.state.focus = null;
     this.state.hidden = { groups: new Set(), kinds: new Set() };
     this.state.colors = undefined;
-    packLayout(model);
     buildScene(this.state);
     this.wireScene();
     // Fit after layout has settled (grid/scrollbars finalize a frame late).
@@ -135,8 +136,8 @@ export class EerDiagram {
     const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
     if (fonts?.ready) {
       void fonts.ready.then(() => {
-        if (this.destroyed || this.state.model !== model) return;
-        packLayout(model);
+        if (this.destroyed || token !== this.loadToken) return;
+        this.state.model = packLayout(this.state.model);
         relayout(this.state);
         this.fit();
       });
@@ -171,7 +172,7 @@ export class EerDiagram {
   rearrange(): void {
     clearFocus(this.state);
     this.emit();
-    packLayout(this.state.model);
+    this.state.model = packLayout(this.state.model);
     relayout(this.state);
     this.fit();
   }
