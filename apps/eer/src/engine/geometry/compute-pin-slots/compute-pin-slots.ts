@@ -12,16 +12,31 @@ import type { Model, Relationship } from '../../model/types';
 export const SLOT_GAP = 8; // spacing between fanned connections — must exceed the casing width
 const MAX_FAN = 48; // cap a pin bar's total span so heavily-referenced PKs stay compact
 
-export function computePinSlots(model: Model): void {
+export interface EdgeSlots {
+  src: number;
+  tgt: number;
+}
+
+export interface PinSlotResult {
+  slots: Map<string, EdgeSlots>;
+  pinSpan: Map<string, number>;
+}
+
+export function pinSlots(model: Model): PinSlotResult {
   interface End {
     rel: Relationship;
     which: 'src' | 'tgt';
     otherY: number;
   }
   const ports = new Map<string, End[]>();
+  const slots = new Map<string, EdgeSlots>();
+
+  // Initialize all relationships with default slot values
   for (const rel of model.relationships) {
-    rel._srcSlot = 0;
-    rel._tgtSlot = 0;
+    slots.set(rel.id, { src: 0, tgt: 0 });
+  }
+
+  for (const rel of model.relationships) {
     if (rel.source === rel.target) continue;
     const A = model.entityById.get(rel.source);
     const B = model.entityById.get(rel.target);
@@ -48,10 +63,24 @@ export function computePinSlots(model: Model): void {
     const gap = Math.min(SLOT_GAP, MAX_FAN / (n - 1)); // tighten only when a pin is very busy
     arr.forEach((e, i) => {
       const off = (i - (n - 1) / 2) * gap;
-      if (e.which === 'src') e.rel._srcSlot = off;
-      else e.rel._tgtSlot = off;
+      const slotEntry = slots.get(e.rel.id)!;
+      if (e.which === 'src') {
+        slotEntry.src = off;
+      } else {
+        slotEntry.tgt = off;
+      }
     });
     span.set(key, ((n - 1) / 2) * gap);
   }
-  model._pinSpan = span;
+  return { slots, pinSpan: span };
+}
+
+export function computePinSlots(model: Model): void {
+  const { slots, pinSpan } = pinSlots(model);
+  for (const rel of model.relationships) {
+    const s = slots.get(rel.id);
+    rel._srcSlot = s?.src ?? 0;
+    rel._tgtSlot = s?.tgt ?? 0;
+  }
+  model._pinSpan = pinSpan;
 }
