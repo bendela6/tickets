@@ -31,6 +31,15 @@ describe('edgeEndpoints', () => {
     expect(fanned.p2).toEqual({ x: bare.p2.x, y: bare.p2.y - 4 });
   });
 
+  it('applies explicit slot offsets over the rel fields', () => {
+    const model = buildModel();
+    const rel = model.relById.get('u-o')!;
+    const base = edgeEndpoints(model, rel, { src: 0, tgt: 0 });
+    const fanned = edgeEndpoints(model, rel, { src: 4, tgt: -4 });
+    expect(fanned.p1.y).toBe(base.p1.y + 4);
+    expect(fanned.p2.y).toBe(base.p2.y - 4);
+  });
+
   it('flags a self-loop and returns the same entity at both ends', () => {
     const model = buildModel();
     const ends = edgeEndpoints(model, model.relById.get('self')!);
