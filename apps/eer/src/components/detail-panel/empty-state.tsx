@@ -32,8 +32,8 @@ export function EmptyState({
     <div>
       <div className="border-b border-border px-4 pb-3 pt-3.5">
         <Badge tone="entity">Overview</Badge>
-        <h2 className="mt-1.5 font-mono text-[0.98rem] font-medium text-ink">{model?.meta.title ?? 'EER viewer'}</h2>
-        <div className="mt-1 text-[0.7rem] text-dim">Click an entity, zone, or edge to inspect it.</div>
+        <h2 className="mt-1.5 font-mono text-lg font-medium text-ink">{model?.meta.title ?? 'EER viewer'}</h2>
+        <div className="mt-1 text-xs text-dim">Click an entity, zone, or edge to inspect it.</div>
       </div>
 
       <div className="px-4 pb-5 pt-3">
@@ -54,7 +54,7 @@ export function EmptyState({
         )}
 
         <Section title="Controls" />
-        <div className="flex flex-col gap-2 text-[0.74rem] leading-relaxed text-muted">
+        <div className="flex flex-col gap-2 text-sm leading-relaxed text-muted">
           {rows.map(([k, label], i) => (
             <div key={i} className="flex items-baseline gap-2">
               <Kbd>{k}</Kbd>

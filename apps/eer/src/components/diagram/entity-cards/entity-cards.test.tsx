@@ -41,7 +41,7 @@ it('renders parity card DOM: header, rows, badges, port pairs', async () => {
   );
   const card = container.querySelector('.card[data-entity="users"]') as HTMLElement;
   expect(card.querySelector('.card-title')!.textContent).toBe('users');
-  expect(card.style.transform).toMatch(/translate\(/);
+  expect(card.style.getPropertyValue('--card-x')).toMatch(/px$/);
   expect(card.style.getPropertyValue('--entity-c')).toBeTruthy();
   const rows = card.querySelectorAll('.field');
   expect(rows.length).toBe(3);
@@ -78,7 +78,7 @@ it('connected one-end ports get .connected; fan spans size the pin bar', async (
   // port is connected and its pin bar grows past the base height.
   const port = container.querySelector('.port.left[data-entity="users"][data-field="id"]') as HTMLElement;
   expect(port.classList.contains('connected')).toBe(true);
-  expect(port.style.height).not.toBe(''); // 2 ends share the pin → span > 0
+  expect(port.style.getPropertyValue('--port-height')).not.toBe(''); // 2 ends share the pin → span > 0
 });
 
 it('field hover highlights + dispatches; hiding a zone hides its cards', async () => {

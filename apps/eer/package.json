@@ -4,9 +4,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "build": "pnpm verify:tailwind && vite build",
+    "typecheck": "pnpm verify:tailwind && tsc -p tsconfig.json",
+    "test": "pnpm verify:tailwind && vitest run",
+    "verify:tailwind": "node scripts/verify-tailwind.mjs"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",

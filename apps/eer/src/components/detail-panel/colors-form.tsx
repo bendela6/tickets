@@ -10,8 +10,8 @@ import { cn } from '../../ui/cn';
 const swatchClass =
   'h-4 w-6 shrink-0 cursor-pointer rounded border border-border bg-transparent p-0 ' +
   'disabled:cursor-default disabled:opacity-25 ' +
-  '[&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-sm [&::-webkit-color-swatch]:border-0 ' +
-  '[&::-moz-color-swatch]:rounded-sm [&::-moz-color-swatch]:border-0';
+  'swatch-wrapper:p-0 webkit-swatch:rounded-sm webkit-swatch:border-0 ' +
+  'moz-swatch:rounded-sm moz-swatch:border-0';
 
 interface ColorsFormProps {
   model: Model;
@@ -33,7 +33,7 @@ export function ColorsForm({ model, colors, onChange }: ColorsFormProps) {
       <label
         key={id}
         className={cn(
-          'flex cursor-pointer items-center gap-1.5 rounded px-1 py-[0.2rem] hover:bg-surface-2',
+          'flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.75 hover:bg-surface-2',
           depth === 2 ? 'ml-7' : 'ml-2.5',
         )}
       >
@@ -52,7 +52,7 @@ export function ColorsForm({ model, colors, onChange }: ColorsFormProps) {
           onChange={(ev) => patch(id, ev.target.value)}
           aria-label={`${label} colour`}
         />
-        <span className={cn('truncate font-mono text-[0.72rem]', overridden ? 'text-ink' : 'text-muted')}>{label}</span>
+        <span className={cn('truncate font-mono text-sm', overridden ? 'text-ink' : 'text-muted')}>{label}</span>
       </label>
     );
   };
@@ -68,7 +68,7 @@ export function ColorsForm({ model, colors, onChange }: ColorsFormProps) {
         .filter((g) => !g.parent)
         .map((z) => (
           <div key={z.id} className="mb-2 flex flex-col gap-px">
-            <div className="flex items-center gap-1.5 px-1 py-[0.2rem]">
+            <div className="flex items-center gap-1.5 px-1 py-0.75">
               <input
                 type="color"
                 className={swatchClass}
@@ -76,11 +76,11 @@ export function ColorsForm({ model, colors, onChange }: ColorsFormProps) {
                 onChange={(ev) => patch(z.id, ev.target.value)}
                 aria-label={`${z.label} colour`}
               />
-              <span className="truncate text-[0.68rem] font-semibold uppercase tracking-[0.05em] text-ink">{z.label}</span>
+              <span className="truncate text-xs font-semibold uppercase tracking-wider text-ink">{z.label}</span>
               {colors.has(z.id) && (
                 <button
                   type="button"
-                  className="ml-auto shrink-0 rounded px-1 text-[0.66rem] text-dim hover:bg-surface-2 hover:text-ink"
+                  className="ml-auto shrink-0 rounded px-1 text-xs text-dim hover:bg-surface-2 hover:text-ink"
                   title="Back to the palette colour"
                   onClick={() => patch(z.id, null)}
                 >

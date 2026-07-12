@@ -22,7 +22,7 @@ it('renders parity edge DOM with paths attached to ports', async () => {
     </Loaded>,
   );
   const svg = container.querySelector('svg.edges') as SVGSVGElement;
-  expect(svg.style.width).not.toBe('');
+  expect(svg.getAttribute('width')).not.toBeNull();
   const gs = svg.querySelectorAll('g.edge');
   expect(gs.length).toBe(3);
   const g = svg.querySelector('g.edge[data-rel="u-o"]') as SVGGElement;

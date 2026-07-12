@@ -38,11 +38,11 @@ it('click on a card selects; drag past threshold moves it', async () => {
   expect(container.querySelector('.card[data-entity="users"]')!.classList.contains('selected')).toBe(true);
 
   await act(async () => actions.clearSelection());
-  const before = (container.querySelector('.card[data-entity="users"]') as HTMLElement).style.transform;
+  const before = (container.querySelector('.card[data-entity="users"]') as HTMLElement).style.getPropertyValue('--card-x');
   fireEvent.mouseDown(container.querySelector('.card[data-entity="users"]')!, { button: 0, clientX: 10, clientY: 10 });
   fireEvent.mouseMove(window, { clientX: 60, clientY: 40 });
   fireEvent.mouseUp(window);
-  const after = (container.querySelector('.card[data-entity="users"]') as HTMLElement).style.transform;
+  const after = (container.querySelector('.card[data-entity="users"]') as HTMLElement).style.getPropertyValue('--card-x');
   expect(after).not.toBe(before);
   expect(container.querySelector('.card[data-entity="users"]')!.classList.contains('selected')).toBe(false);
 });
@@ -56,22 +56,22 @@ it('empty-space click clears selection; drag pans', async () => {
   expect(container.querySelector('.card.selected')).toBeNull();
 
   const world = container.querySelector('.world') as HTMLElement;
-  const t0 = world.style.transform;
+  const t0 = world.style.getPropertyValue('--world-pan-x');
   fireEvent.mouseDown(vp, { button: 0, clientX: 5, clientY: 5 });
   fireEvent.mouseMove(window, { clientX: 105, clientY: 55 });
   fireEvent.mouseUp(window);
-  expect(world.style.transform).not.toBe(t0);
+  expect(world.style.getPropertyValue('--world-pan-x')).not.toBe(t0);
 });
 
 it('middle-button drag pans the world', async () => {
   const { container } = await renderDiagram(<Scene />);
   const vp = container.querySelector('.viewport') as HTMLElement;
   const world = container.querySelector('.world') as HTMLElement;
-  const t0 = world.style.transform;
+  const t0 = world.style.getPropertyValue('--world-pan-x');
   fireEvent.mouseDown(vp, { button: 1, clientX: 20, clientY: 20 });
   fireEvent.mouseMove(window, { clientX: 80, clientY: 60 });
   fireEvent.mouseUp(window);
-  expect(world.style.transform).not.toBe(t0);
+  expect(world.style.getPropertyValue('--world-pan-x')).not.toBe(t0);
 });
 
 it('zone click focuses the group', async () => {
@@ -90,7 +90,7 @@ it('wheel zooms toward the cursor within [0.15, 3]', async () => {
   const vp = container.querySelector('.viewport') as HTMLElement;
   const world = container.querySelector('.world') as HTMLElement;
   fireEvent.wheel(vp, { deltaY: -500, clientX: 100, clientY: 100 });
-  expect(world.style.transform).toMatch(/scale\((?!1\))/); // zoomed away from 1
+  expect(world.style.getPropertyValue('--world-zoom')).not.toBe('1');
 });
 
 it('Escape clears the selection', async () => {

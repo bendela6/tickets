@@ -2,21 +2,19 @@ import { describe, expect, it } from 'vitest';
 
 import { BODY_PAD_TOP, CARD_BORDER, CARD_MAX_W, CARD_MIN_W, HEADER_H, LAYOUT_MARGIN, PORT_GAP, ROW_H, STUB } from './metrics';
 
-// The documented contract: these constants MUST match app.css, because
-// portWorldPos mirrors the CSS box model. The stylesheet can't be read here
-// (vitest resolves css imports — even ?raw — to empty strings), so each paired
-// value is pinned to its CSS rule instead: editing either side means updating
-// both, and this test is where that pairing is acknowledged.
-describe('metrics ↔ app.css pairings (pinned)', () => {
+// The documented contract: these constants MUST match the component utilities,
+// because portWorldPos mirrors the rendered box model. Each paired value is
+// pinned here so editing either side means acknowledging the geometry change.
+describe('metrics ↔ Tailwind utility pairings (pinned)', () => {
   it('matches the card box model rules', () => {
-    expect(HEADER_H).toBe(34); // .card-hd { height: 34px }
-    expect(ROW_H).toBe(22); // .field { height: 22px }
-    expect(CARD_BORDER).toBe(1); // .card { border: 1px solid var(--border) }
-    expect(BODY_PAD_TOP).toBe(3); // .card-body { padding: 3px 0 }
+    expect(HEADER_H).toBe(34); // .card-hd h-8.5
+    expect(ROW_H).toBe(22); // .field h-5.5
+    expect(CARD_BORDER).toBe(1); // .card border
+    expect(BODY_PAD_TOP).toBe(3); // .card-body py-0.75
   });
 
   it('matches the port offset rules', () => {
-    expect(PORT_GAP).toBe(8); // .port.left { left: -8px } / .port.right { left: calc(100% + 8px) }
+    expect(PORT_GAP).toBe(8); // .port -left-2 / left-full ml-2
   });
 });
 

@@ -1,0 +1,66 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-bg: #0b0d12;
+  --color-surface: #12151c;
+  --color-surface-2: #181c26;
+  --color-surface-3: #1e2431;
+  --color-border: #2c3344;
+  --color-border-2: #3d4660;
+  --color-ink: #eef0f4;
+  --color-muted: #8b93a7;
+  --color-dim: #5c657a;
+  --color-pk: #f5c542;
+  --color-fk: #3ecf8e;
+  --color-accent: #7aa2ff;
+  --color-edge: #6c7997;
+  --color-edge-hot: var(--color-accent);
+  --color-soft: var(--color-muted);
+  --color-danger: #f87171;
+  --color-ok: #3ecf8e;
+  --color-zone: #9085e9;
+  --color-zone-ink: #b0a8f2;
+  --color-danger-border: color-mix(in srgb, var(--color-danger) 55%, var(--color-border));
+  --color-danger-surface: color-mix(in srgb, var(--color-danger) 14%, var(--color-surface));
+  --font-mono: ui-monospace, 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Compact type scale; steps land on whole pixels at the 16px root, matching measure-entity's 13/12/11px canvas fonts. */
+  --text-*: initial;
+  --text-3xs: 0.5625rem;
+  --text-2xs: 0.625rem;
+  --text-xs: 0.6875rem;
+  --text-sm: 0.75rem;
+  --text-base: 0.8125rem;
+  --text-lg: 1rem;
+
+  --tracking-*: initial;
+  --tracking-tight: -0.01em;
+  --tracking-wide: 0.02em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.08em;
+
+  --radius-card: 9px;
+  --radius-zone: 14px;
+  --radius-zone-sub: 10px;
+
+  --shadow-card: 0 6px 18px rgb(0 0 0 / 0.35);
+  --shadow-card-selected: 0 0 0 1px var(--color-accent), 0 8px 22px rgb(0 0 0 / 0.45);
+  --shadow-overlay: 0 12px 34px rgb(0 0 0 / 0.5);
+  --shadow-port-glow: 0 0 0 3px color-mix(in srgb, var(--color-edge-hot) 30%, transparent);
+
+  --container-banner: min(680px, 90vw);
+
+  /* Transition property sets; transform/translate are deliberately excluded so drag and pan stay immediate. */
+  --transition-card: box-shadow, border-color, opacity;
+  --transition-zone: opacity, border-color, background-color;
+  --transition-port: opacity, background-color;
+
+  --dot-grid: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.05) 1px, transparent 0);
+  --dot-grid-size: 26px 26px;
+}
+
+/* Native color-input internals, one variant per engine: a combined selector list would be dropped whole by the other engine. */
+@custom-variant swatch-wrapper (&::-webkit-color-swatch-wrapper);
+@custom-variant webkit-swatch (&::-webkit-color-swatch);
+@custom-variant moz-swatch (&::-moz-color-swatch);

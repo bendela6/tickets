@@ -155,12 +155,13 @@ export function useDiagramGestures(viewportRef: RefObject<HTMLDivElement | null>
         const t = e.target as HTMLElement | null;
         const zone = t && typeof t.closest === 'function' ? (t.closest('.zone') as HTMLElement | null) : null;
         if (hoverZone && hoverZone !== zone) {
-          hoverZone.style.cursor = '';
+          delete hoverZone.dataset.resizeCursor;
           hoverZone = null;
         }
         if (zone) {
           const mask = edgeMaskFor(zone, e);
-          zone.style.cursor = mask ? cursorFor(mask) : '';
+          if (mask) zone.dataset.resizeCursor = cursorFor(mask);
+          else delete zone.dataset.resizeCursor;
           hoverZone = zone;
         }
         return;

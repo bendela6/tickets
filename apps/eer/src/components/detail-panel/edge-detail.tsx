@@ -28,7 +28,7 @@ export function EdgeDetail({
       <Dot color={entityColor(model, entityId, colors)} />
       <span className="font-mono text-ink">{entityId}</span>
       <span className="font-mono text-dim">.{field}</span>
-      <span className="ml-auto shrink-0 text-[0.6rem] uppercase tracking-[0.06em] text-dim">{role}</span>
+      <span className="ml-auto shrink-0 text-2xs uppercase tracking-wider text-dim">{role}</span>
     </button>
   );
 

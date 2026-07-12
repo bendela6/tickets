@@ -17,7 +17,7 @@ const ROUTING_TIP: Record<RoutingMode, string> = {
 };
 
 const btn =
-  'border border-border bg-surface text-muted text-[0.74rem] font-medium px-2.5 py-1.5 rounded-md whitespace-nowrap ' +
+  'border border-border bg-surface text-muted text-sm font-medium px-2.5 py-1.5 rounded-md whitespace-nowrap ' +
   'hover:text-ink hover:border-border-2 hover:bg-surface-2';
 
 interface TopBarProps {
@@ -36,10 +36,10 @@ export function TopBar({ onSelfCheck }: TopBarProps) {
   };
 
   return (
-    <header className="z-10 flex flex-wrap items-center gap-x-[0.9rem] gap-y-2 border-b border-border bg-[rgba(12,14,20,0.96)] px-4 py-2.5">
+    <header className="z-10 flex flex-wrap items-center gap-x-3.5 gap-y-2 border-b border-border bg-bg/95 px-4 py-2.5">
       <div className="mr-auto">
-        <h1 className="text-[0.98rem] font-semibold tracking-[-0.01em]">{model?.meta.title ?? 'EER model viewer'}</h1>
-        <p className="mt-0.5 max-w-[52ch] truncate text-[0.72rem] text-muted">
+        <h1 className="text-lg font-semibold tracking-tight">{model?.meta.title ?? 'EER model viewer'}</h1>
+        <p className="mt-0.5 max-w-sm truncate text-sm text-muted">
           {model?.meta.description ??
             (model ? `${model.entities.length} entities · ${model.relationships.length} relationships` : 'loading…')}
         </p>

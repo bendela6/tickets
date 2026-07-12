@@ -12,7 +12,10 @@ export function Diagram({ children }: { children?: ReactNode }) {
   const model = useDiagramModelOrNull();
   useDiagramGestures(viewportRef);
   return (
-    <div ref={viewportRef} className="viewport">
+    <div
+      ref={viewportRef}
+      className="viewport relative min-w-0 flex-1 cursor-default overflow-hidden bg-bg bg-(image:--dot-grid) bg-size-(--dot-grid-size)"
+    >
       {model && (
         <World>
           <ZoneBoxes />

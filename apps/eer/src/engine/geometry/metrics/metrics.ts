@@ -1,9 +1,10 @@
 // Metrics — the shared card/port geometry constants. portWorldPos() mirrors the
-// CSS box model exactly, so these MUST match app.css (.card-hd height, .field
-// height, .card border, .card-body padding, port offsets).
+// rendered box model exactly, so these MUST match the Tailwind utilities on the
+// entity-card components (header height, field height, border, body padding,
+// and port offsets).
 
-export const HEADER_H = 34; // .card-hd height (must match app.css)
-export const ROW_H = 22; // .field height
+export const HEADER_H = 34; // .card-hd h-8.5
+export const ROW_H = 22; // .field h-5.5
 export const PORT_GAP = 8; // dot distance from card edge
 export const CARD_BORDER = 1; // .card border-width
 export const BODY_PAD_TOP = 3; // .card-body padding-top

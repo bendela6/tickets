@@ -7,7 +7,7 @@ import '@fontsource/ibm-plex-sans/500.css';
 import '@fontsource/ibm-plex-sans/600.css';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
-import './styles/app.css';
+import './styles/tailwind.css';
 
 // The viewer is a dark-only tool; mark the root so tokens resolve.
 document.documentElement.dataset.theme = 'dark';

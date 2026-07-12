@@ -23,13 +23,14 @@ it('applies the view transform and updates on SET_VIEW', async () => {
     </>,
   );
   const world = container.querySelector('.world') as HTMLElement;
-  expect(world.style.transform).toMatch(/translate\(.+\) scale\(/);
+  expect(world.style.getPropertyValue('--world-pan-x')).toMatch(/px$/);
+  expect(world.style.getPropertyValue('--world-zoom')).toBe('1');
   await act(async () => actions.setRouting('curved')); // unrelated slice → transform unchanged
-  const before = world.style.transform;
+  const before = world.style.getPropertyValue('--world-pan-x');
   // jsdom gives the viewport a 0×0 rect, and actions.centerOn bails out early
   // when no <div ref={viewportRef}> is mounted (none is, in this render) — so it
   // is a no-op here. Dispatch SET_VIEW directly to prove the transform tracks
   // view state, keeping the original assertion's intent.
   await act(async () => dispatchRef!({ type: 'SET_VIEW', view: { panX: 50 } }));
-  expect(world.style.transform).not.toBe(before);
+  expect(world.style.getPropertyValue('--world-pan-x')).not.toBe(before);
 });
