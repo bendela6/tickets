@@ -58,7 +58,16 @@ function packBlocks(
   return { right, bottom };
 }
 
-export function packLayout(model: Model): Model {
+export function packLayout(input: Model): Model {
+  const entities = input.entities.map((e) => ({ ...e }));
+  const model: Model = {
+    ...input,
+    entities,
+    entityById: new Map(entities.map((e) => [e.id, e])),
+    _groupBounds: [],
+    _content: { w: 0, h: 0 },
+  };
+
   model.entities.forEach(measureEntity);
 
   const indexOf = new Map<string, number>();

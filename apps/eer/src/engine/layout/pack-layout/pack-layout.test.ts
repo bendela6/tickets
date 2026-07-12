@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { nestedRaw } from '../../../test/models';
+import { nestedRaw, twoZoneRaw } from '../../../test/models';
 import { loadModel } from '../../model/load-model';
 import type { Model } from '../../model/types';
 import { packLayout } from './pack-layout';
@@ -80,5 +80,16 @@ describe('packLayout', () => {
     expect(model.entities.map((e) => ({ id: e.id, x: e.x, y: e.y, w: e._w, h: e._h }))).toEqual(snapEnts);
     expect(model._groupBounds).toEqual(snapBounds);
     expect(model._content).toEqual(snapContent);
+  });
+
+  it('returns a new packed model without mutating the input', () => {
+    const { model } = loadModel(twoZoneRaw());
+    const before = JSON.stringify(model!.entities.map((e) => [e.id, e.x, e.y, e._w, e._h]));
+    const packed = packLayout(model!);
+    expect(packed).not.toBe(model);
+    expect(JSON.stringify(model!.entities.map((e) => [e.id, e.x, e.y, e._w, e._h]))).toBe(before);
+    expect(packed.entities[0]).not.toBe(model!.entities[0]);
+    expect(packed.entityById.get('users')).toBe(packed.entities.find((e) => e.id === 'users'));
+    expect(packed._groupBounds.length).toBeGreaterThan(0);
   });
 });
