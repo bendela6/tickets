@@ -1,7 +1,7 @@
 // Fetch ?model= (or the bundled default), validate, LOAD, and re-pack once
 // webfonts are ready so measured card widths are correct (legacy load()).
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { loadModel } from '../../engine/model/load-model';
 import defaultModelJson from '../../model/eer-model.json';
@@ -15,11 +15,8 @@ export interface Diagnostics {
 export function useModelLoader(): { diagnostics: Diagnostics; dismiss: () => void } {
   const actions = useDiagramActions();
   const [diagnostics, setDiagnostics] = useState<Diagnostics>({ errors: [], warnings: [] });
-  const ran = useRef(false);
 
   useEffect(() => {
-    if (ran.current) return; // StrictMode double-invoke guard
-    ran.current = true;
     let cancelled = false;
 
     const apply = (raw: unknown) => {

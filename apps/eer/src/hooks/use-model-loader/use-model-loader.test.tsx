@@ -1,3 +1,4 @@
+import { StrictMode } from 'react';
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -41,6 +42,16 @@ function renderHost() {
   );
 }
 
+function renderHostStrict() {
+  return render(
+    <StrictMode>
+      <DiagramProvider>
+        <Host />
+      </DiagramProvider>
+    </StrictMode>,
+  );
+}
+
 // Drain the loader's double-rAF fit + any fonts.ready microtask so its state
 // updates land inside act and never leak a "not wrapped in act" warning.
 async function flush() {
@@ -75,6 +86,24 @@ describe('useModelLoader', () => {
     renderHost();
     await waitFor(() => expect(screen.getByTestId('warns').textContent).toContain('unknown parent'));
     expect(Number(screen.getByTestId('n').textContent)).toBeGreaterThan(0);
+    await flush();
+  });
+
+  it('loads a fetched ?model= under StrictMode double-invoke', async () => {
+    // Regression: a `ran` ref guard would let mount 1 start the fetch, have
+    // its cleanup flip that closure's `cancelled` true, then mount 2 bail
+    // out on `ran.current` without re-fetching — model never loads.
+    const raw = {
+      groups: [{ id: 'z', label: 'Z' }],
+      entities: [{ id: 'a', group: 'z', fields: [{ name: 'id', type: 'int', role: 'pk' }] }],
+      relationships: [],
+    };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(raw) }));
+    window.history.pushState({}, '', '/?model=/strict.json');
+
+    renderHostStrict();
+    await waitFor(() => expect(Number(screen.getByTestId('n').textContent)).toBeGreaterThan(0));
+    expect(screen.getByTestId('errs').textContent).toBe('');
     await flush();
   });
 
