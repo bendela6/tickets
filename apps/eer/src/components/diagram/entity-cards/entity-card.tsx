@@ -20,7 +20,10 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
   const e = p.entity;
   const frame = p.color || 'var(--color-border)';
   const cls = cn(
-    'card absolute left-0 top-0 w-(--card-width) translate-x-(--card-x) translate-y-(--card-y) select-none overflow-visible rounded-card border border-(--card-border) bg-surface shadow-card transition-(--transition-card) duration-120',
+    'card absolute left-0 top-0 select-none overflow-visible',
+    'w-(--card-width) translate-x-(--card-x) translate-y-(--card-y)',
+    'rounded-card border border-(--card-border) bg-surface shadow-card',
+    'transition-(--transition-card) duration-120',
     {
       'dim opacity-22': p.dim,
       'focus border-border-2': p.focus,
@@ -44,7 +47,12 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
         '--card-hd-accent': `inset 0 2px 0 ${p.color || 'transparent'}`,
       })}
     >
-      <div className="flex h-8.5 cursor-grab items-center gap-1.5 rounded-t-card border-b border-(--card-hd-border) bg-(--card-hd-bg) px-2.5 shadow-(--card-hd-accent) active:cursor-grabbing">
+      <div
+        className={cn(
+          'flex h-8.5 cursor-grab items-center gap-1.5 px-2.5 active:cursor-grabbing',
+          'rounded-t-card border-b border-(--card-hd-border) bg-(--card-hd-bg) shadow-(--card-hd-accent)',
+        )}
+      >
         <span className="font-mono text-base font-medium text-ink">{e.label}</span>
       </div>
       <div className="py-0.75">

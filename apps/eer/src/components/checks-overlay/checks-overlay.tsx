@@ -8,7 +8,12 @@ interface ChecksOverlayProps {
 
 export function ChecksOverlay({ results, onClose }: ChecksOverlayProps) {
   return (
-    <div className="absolute bottom-3.5 right-3.5 z-40 w-80 rounded-lg border border-border-2 bg-surface-2 px-3 py-3 text-sm shadow-overlay">
+    <div
+      className={cn(
+        'absolute bottom-3.5 right-3.5 z-40 w-80 px-3 py-3',
+        'rounded-lg border border-border-2 bg-surface-2 text-sm shadow-overlay',
+      )}
+    >
       <h3 className="mb-2 flex items-center justify-between text-base">
         Self-check
         <button type="button" className="text-lg text-muted hover:text-ink" onClick={onClose} aria-label="Close">

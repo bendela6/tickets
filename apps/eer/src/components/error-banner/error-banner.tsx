@@ -1,3 +1,5 @@
+import { cn } from '../../ui/cn';
+
 interface ErrorBannerProps {
   errors: string[];
   warnings: string[];
@@ -7,7 +9,12 @@ interface ErrorBannerProps {
 export function ErrorBanner({ errors, warnings, onDismiss }: ErrorBannerProps) {
   if (errors.length === 0 && warnings.length === 0) return null;
   return (
-    <div className="absolute left-1/2 top-3 z-50 max-w-banner -translate-x-1/2 rounded-lg border border-danger-border bg-danger-surface px-4 py-3 shadow-overlay">
+    <div
+      className={cn(
+        'absolute left-1/2 top-3 z-50 max-w-banner -translate-x-1/2 px-4 py-3',
+        'rounded-lg border border-danger-border bg-danger-surface shadow-overlay',
+      )}
+    >
       <button
         type="button"
         className="absolute right-2.5 top-2 text-lg text-muted hover:text-ink"

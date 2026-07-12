@@ -25,7 +25,10 @@ function Port({
   return (
     <span
       className={cn(
-        'port absolute top-1/2 z-3 h-3.5 w-1.25 -translate-x-1/2 -translate-y-1/2 rounded-xs border border-surface bg-edge opacity-0 transition-(--transition-port) duration-120 before:absolute before:top-1/2 before:h-px before:-translate-y-1/2 before:bg-edge',
+        'port absolute top-1/2 z-3 h-3.5 w-1.25 -translate-x-1/2 -translate-y-1/2',
+        'rounded-xs border border-surface bg-edge opacity-0',
+        'transition-(--transition-port) duration-120',
+        'before:absolute before:top-1/2 before:h-px before:-translate-y-1/2 before:bg-edge',
         {
           'left -left-2 before:left-1/2 before:w-2': side === 'L',
           'right left-full ml-2 before:right-1/2 before:w-2': side === 'R',

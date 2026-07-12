@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { useDiagramGestures } from '../../../hooks/use-diagram-gestures';
 import { useDiagramModelOrNull, useViewportRef } from '../../../state/diagram-context';
+import { cn } from '../../../ui/cn';
 import { EdgesSvg } from '../edges-svg';
 import { EntityCards } from '../entity-cards';
 import { World } from '../world';
@@ -14,7 +15,10 @@ export function Diagram({ children }: { children?: ReactNode }) {
   return (
     <div
       ref={viewportRef}
-      className="viewport relative min-w-0 flex-1 cursor-default overflow-hidden bg-bg bg-(image:--dot-grid) bg-size-(--dot-grid-size)"
+      className={cn(
+        'viewport relative min-w-0 flex-1 cursor-default overflow-hidden',
+        'bg-bg bg-(image:--dot-grid) bg-size-(--dot-grid-size)',
+      )}
     >
       {model && (
         <World>
