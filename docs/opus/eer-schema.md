@@ -1,6 +1,6 @@
 # EER model JSON schema
 
-The [EER viewer](eer-viewer.html) is driven **entirely** by a JSON file. Nothing about the
+The EER viewer ([`apps/eer`](../../apps/eer)) is driven **entirely** by a JSON file. Nothing about the
 diagram — entities, fields, edges, groups — is hardcoded in the renderer. Author a model by
 writing this shape; reload the page to see it. Point the viewer at a different file with
 `?model=<path-or-url>` (default: [`eer-model.json`](eer-model.json)).
