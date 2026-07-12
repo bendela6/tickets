@@ -19,24 +19,15 @@ order. Shapes live in exactly one place; every other file links, never restates.
 | 2 | [`2-schema.md`](2-schema.md) | the tables |
 | 3 | [`3-runtime.md`](3-runtime.md) | write path, projections, consumers, ops |
 | 4 | [`4-migration-plan.md`](4-migration-plan.md) | phased rollout |
-| — | [`eer-viewer.html`](eer-viewer.html) | interactive EER diagram of this schema |
+| — | [`../../apps/eer`](../../apps/eer) | interactive EER diagram of this schema |
 
 ## EER viewer
 
-An interactive entity–relationship viewer for this schema. It is **entirely
-JSON-driven** — the diagram is built from [`eer-model.json`](eer-model.json); the
-renderer hardcodes no entities, fields, or edges. Zero dependencies, plain
-`<script type="module">`, no build step.
-
-**Run it** — `fetch` needs http, so serve the folder:
-
-```sh
-cd docs/opus && npx serve      # or: python -m http.server 8080
-# open http://localhost:<port>/eer-viewer.html
-```
-
-Point it at another model with `?model=<path-or-url>` (default `eer-model.json`).
-Opening via `file://` fails on purpose with a "serve this folder" message.
+An interactive entity–relationship viewer for this schema lives in
+[`apps/eer`](../../apps/eer) (`pnpm --filter @tickets/eer dev` →
+http://localhost:4630). It is **entirely JSON-driven** — the diagram is built
+from [`eer-model.json`](eer-model.json); the renderer hardcodes no entities,
+fields, or edges. Point it at another model with `?model=<url>`.
 
 **Author a model** — edit `eer-model.json` (or a copy) and reload. The full format,
 validation rules, and cardinality inference are documented in
@@ -48,14 +39,6 @@ validation rules, and cardinality inference are documented in
 
 Broken references (an entity in an unknown group, an edge to a missing field, …)
 surface as a visible error banner rather than a silent blank diagram.
-
-**Controls** — `wheel` zoom toward cursor · `middle-drag` pan · `left-drag` move an
-entity · `click` entity to focus its relationships · `hover` a field to light its
-edges · `click` an edge to isolate that path · `Esc` / empty-click to clear. **Fit**,
-**Rearrange**, a **Lines** mode cycle (curved → avoid → ortho: direct béziers,
-curves routed around cards, or horizontal/vertical), zone/edge-kind filters, and
-search are in the top bar. **Self-check** runs the built-in quality assertions
-(`window.__eerChecks()` from the console).
 
 ## Scope
 

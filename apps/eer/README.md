@@ -1,7 +1,7 @@
 # @tickets/eer
 
 Interactive **EER model viewer** — a React + TypeScript + Tailwind app (same stack as
-`apps/web`). Ported from the standalone `docs/opus/eer-viewer` prototype.
+`apps/web`). Ported from the standalone `docs/opus/eer-viewer` prototype (since deleted).
 
 ```sh
 pnpm --filter @tickets/eer dev     # http://localhost:4630  (also launched by `pnpm dev`)
