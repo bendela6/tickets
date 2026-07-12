@@ -6,6 +6,7 @@
 // Everything below computeRoutes() is that one pipeline's private machinery:
 // lane separation, channel ordering, and port-slot reordering.
 
+import type { EdgeSlots } from '../../geometry/compute-pin-slots';
 import { edgeEndpoints } from '../../geometry/edge-endpoints';
 import { edgeSides } from '../../geometry/edge-sides';
 import { STUB } from '../../geometry/metrics';
@@ -26,13 +27,34 @@ interface Card {
   h: number;
 }
 
-export function computeRoutes(model: Model): void {
+export interface RouteResult {
+  routes: Map<string, Point[] | null>; // relId → routed polyline (null = self-loop)
+  slots: Map<string, EdgeSlots>; // input slots, possibly adjusted by port-slot reordering
+}
+
+// PURE — never writes to model or its relationships. All _route/_srcSlot/_tgtSlot
+// state lives in local maps (routes, slotsW) for the duration of the call.
+export function routeEdges(model: Model, slots: ReadonlyMap<string, EdgeSlots>): RouteResult {
+  const slotsW = new Map([...slots].map(([k, v]) => [k, { ...v }]));
+  const routes = new Map<string, Point[] | null>();
   const cards: Card[] = model.entities.map((e) => ({ id: e.id, x: e.x, y: e.y, w: e._w, h: e._h }));
   for (const rel of model.relationships) {
-    rel._route = rel.source === rel.target ? null : routePolyline(model, rel, cards);
+    routes.set(rel.id, rel.source === rel.target ? null : routePolyline(model, rel, cards, slotsW));
   }
-  const hEntries = separateLanes(model, cards);
-  reorderPortSlots(model, hEntries);
+  const hEntries = separateLanes(model, cards, routes);
+  reorderPortSlots(model, hEntries, routes, slotsW);
+  return { routes, slots: slotsW };
+}
+
+export function computeRoutes(model: Model): void {
+  const slots = new Map(model.relationships.map((r) => [r.id, { src: r._srcSlot ?? 0, tgt: r._tgtSlot ?? 0 }]));
+  const { routes, slots: adjusted } = routeEdges(model, slots);
+  for (const rel of model.relationships) {
+    rel._route = routes.get(rel.id) ?? null;
+    const s = adjusted.get(rel.id);
+    rel._srcSlot = s?.src ?? 0;
+    rel._tgtSlot = s?.tgt ?? 0;
+  }
 }
 
 // ---- Lane separation ----------------------------------------------------------
@@ -45,10 +67,10 @@ export function computeRoutes(model: Model): void {
 const LANE_STEP = 9; // spacing between separated parallel runs — exceeds the casing width
 const MIN_SEP = LANE_STEP - 0.5; // minimum separation between overlapping parallel runs
 
-function separateLanes(model: Model, cards: Card[]): ChannelEntry[] {
-  separateAxis(model, cards, true); // vertical runs → spread along x
+function separateLanes(model: Model, cards: Card[], routes: Map<string, Point[] | null>): ChannelEntry[] {
+  separateAxis(model, cards, true, routes); // vertical runs → spread along x
   // horizontal entries (incl. port stubs) feed the port-slot clash veto
-  return separateAxis(model, cards, false); // horizontal runs → spread along y
+  return separateAxis(model, cards, false, routes); // horizontal runs → spread along y
 }
 
 interface LaneSeg {
@@ -61,10 +83,15 @@ interface LaneSeg {
   fixed?: boolean; // port stubs: they claim their lane but can never move
 }
 
-function separateAxis(model: Model, cards: Card[], vertical: boolean): ChannelEntry[] {
+function separateAxis(
+  model: Model,
+  cards: Card[],
+  vertical: boolean,
+  routes: Map<string, Point[] | null>,
+): ChannelEntry[] {
   const segs: LaneSeg[] = [];
   for (const rel of model.relationships) {
-    const pts = rel._route;
+    const pts = routes.get(rel.id);
     if (!pts || pts.length < 2) continue;
     for (let i = 0; i < pts.length - 1; i++) {
       // Horizontal port stubs (first + last segment) stay glued to the pins —
@@ -272,10 +299,15 @@ interface PortEnd {
   slot: number;
 }
 
-function reorderPortSlots(model: Model, hEntries: ChannelEntry[]): void {
+function reorderPortSlots(
+  model: Model,
+  hEntries: ChannelEntry[],
+  routes: Map<string, Point[] | null>,
+  slotsW: Map<string, EdgeSlots>,
+): void {
   const groups = new Map<string, PortEnd[]>();
   for (const rel of model.relationships) {
-    const pts = rel._route;
+    const pts = routes.get(rel.id);
     if (!pts || rel.source === rel.target) continue;
     const { s, t } = edgeSides(model, rel);
     const add = (key: string, end: PortEnd) => {
@@ -283,8 +315,9 @@ function reorderPortSlots(model: Model, hEntries: ChannelEntry[]): void {
       if (!arr) groups.set(key, (arr = []));
       arr.push(end);
     };
-    add(rel.source + '|' + rel.sourceField + '|' + s, { rel, which: 'src', pts, slot: rel._srcSlot ?? 0 });
-    add(rel.target + '|' + rel.targetField + '|' + t, { rel, which: 'tgt', pts, slot: rel._tgtSlot ?? 0 });
+    const slot = slotsW.get(rel.id);
+    add(rel.source + '|' + rel.sourceField + '|' + s, { rel, which: 'src', pts, slot: slot?.src ?? 0 });
+    add(rel.target + '|' + rel.targetField + '|' + t, { rel, which: 'tgt', pts, slot: slot?.tgt ?? 0 });
   }
 
   // Identify each horizontal stub entry by its edge end, so the clash veto can
@@ -351,12 +384,13 @@ function reorderPortSlots(model: Model, hEntries: ChannelEntry[]): void {
       const slot = offsets[idx]!;
       const d = slot - x.e.slot;
       if (Math.abs(d) < 0.01) return;
+      const s = slotsW.get(x.e.rel.id)!;
       if (x.e.which === 'src') {
-        x.e.rel._srcSlot = slot;
+        s.src = slot;
         x.e.pts[0]!.y += d;
         x.e.pts[1]!.y += d;
       } else {
-        x.e.rel._tgtSlot = slot;
+        s.tgt = slot;
         x.e.pts[x.e.pts.length - 1]!.y += d;
         x.e.pts[x.e.pts.length - 2]!.y += d;
       }
@@ -400,8 +434,8 @@ function segHitsGroup(model: Model, rel: Relationship, x1: number, y1: number, x
   return false;
 }
 
-function routePolyline(model: Model, rel: Relationship, cards: Card[]): Point[] {
-  const { p1, p2, s, t } = edgeEndpoints(model, rel);
+function routePolyline(model: Model, rel: Relationship, cards: Card[], slotsW: Map<string, EdgeSlots>): Point[] {
+  const { p1, p2, s, t } = edgeEndpoints(model, rel, slotsW.get(rel.id));
   const a1: Point = { x: p1.x + (s === 'R' ? STUB : -STUB), y: p1.y };
   const b1: Point = { x: p2.x + (t === 'R' ? STUB : -STUB), y: p2.y };
 
