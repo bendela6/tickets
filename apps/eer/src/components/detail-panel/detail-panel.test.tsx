@@ -1,21 +1,24 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import type { Selection } from '../../engine/model/types';
-import { buildModel, twoZoneRaw } from '../../test/models';
+import type { DiagramActions } from '../../state/diagram-provider';
+import { twoZoneRaw } from '../../test/models';
+import { renderDiagram } from '../../test/render';
 import { DetailPanel } from './detail-panel';
 
 afterEach(cleanup);
 
-const model = buildModel(twoZoneRaw());
-
-function renderPanel(selection: Selection) {
-  return render(<DetailPanel engine={null} model={model} selection={selection} />);
+// DetailPanel now reads model + panelSelection from the provider, so drive the
+// selection through the same actions the app uses instead of a `selection` prop.
+async function renderPanel(select?: (a: DiagramActions) => void) {
+  const result = await renderDiagram(<DetailPanel />, twoZoneRaw());
+  if (select) await act(async () => select(result.actions));
+  return result;
 }
 
 describe('DetailPanel', () => {
-  it('renders the overview with the controls list when nothing is selected', () => {
-    renderPanel({ type: 'none' });
+  it('renders the overview with the controls list when nothing is selected', async () => {
+    await renderPanel();
     expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.getByText('Controls')).toBeInTheDocument();
     expect(screen.getByText('wheel')).toBeInTheDocument();
@@ -23,8 +26,8 @@ describe('DetailPanel', () => {
     expect(screen.getByRole('heading', { name: 'Fixture' })).toBeInTheDocument();
   });
 
-  it('renders field rows and relationships for a selected entity', () => {
-    const { container } = renderPanel({ type: 'entity', id: 'users' });
+  it('renders field rows and relationships for a selected entity', async () => {
+    const { container } = await renderPanel((a) => a.selectEntity('users'));
     expect(screen.getByRole('heading', { name: 'users' })).toBeInTheDocument();
     expect(container.textContent).toContain('Zone One · 3 fields · 2 relationships');
     // fields: id / name / manager_id ('id' also appears in relationship rows)
@@ -38,8 +41,8 @@ describe('DetailPanel', () => {
     expect(screen.getByText('.manager_id')).toBeInTheDocument();
   });
 
-  it('lists member tables for a selected group', () => {
-    const { container } = renderPanel({ type: 'group', id: 'z2' });
+  it('lists member tables for a selected group', async () => {
+    const { container } = await renderPanel((a) => a.selectGroup('z2'));
     expect(screen.getByText('Zone')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Zone Two' })).toBeInTheDocument();
     expect(container.textContent).toContain('2 tables');
@@ -51,8 +54,8 @@ describe('DetailPanel', () => {
     expect(screen.getByText('users')).toBeInTheDocument();
   });
 
-  it('shows both endpoints for a selected edge', () => {
-    renderPanel({ type: 'edge', id: 'u-o' });
+  it('shows both endpoints for a selected edge', async () => {
+    await renderPanel((a) => a.isolate('u-o'));
     expect(screen.getByText('Relationship')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'users → orders' })).toBeInTheDocument();
     expect(screen.getByText('source')).toBeInTheDocument();

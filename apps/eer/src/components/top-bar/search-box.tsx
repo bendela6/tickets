@@ -1,22 +1,23 @@
 import { useState } from 'react';
 
-import type { EerDiagram } from '../../engine/diagram/eer-diagram';
 import type { SearchResult } from '../../engine/model/types';
+import { useDiagramActions } from '../../state/diagram-context';
 
-export function SearchBox({ engine }: { engine: EerDiagram | null }) {
+export function SearchBox() {
+  const actions = useDiagramActions();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [open, setOpen] = useState(false);
 
   const run = (q: string) => {
     setQuery(q);
-    const r = engine?.search(q) ?? [];
+    const r = actions.search(q);
     setResults(r);
     setOpen(r.length > 0);
   };
 
   const pick = (m: SearchResult) => {
-    engine?.focusFromSearch(m.entityId, m.field);
+    actions.focusFromSearch(m.entityId, m.field);
     setOpen(false);
     setQuery('');
   };

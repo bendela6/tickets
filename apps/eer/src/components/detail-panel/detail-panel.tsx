@@ -1,30 +1,23 @@
-import type { EerDiagram } from '../../engine/diagram/eer-diagram';
-import type { Model, Selection } from '../../engine/model/types';
+import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../state/diagram-context';
 import { EdgeDetail } from './edge-detail';
 import { EmptyState } from './empty-state';
 import { EntityDetail } from './entity-detail';
 import { GroupDetail } from './group-detail';
 
-interface DetailPanelProps {
-  engine: EerDiagram | null;
-  model: Model | null;
-  selection: Selection;
-  colors?: ReadonlyMap<string, string>;
-  onColorsChange?: (next: ReadonlyMap<string, string>) => void;
-}
+export function DetailPanel() {
+  const model = useDiagramModelOrNull();
+  const ui = useDiagramUi();
+  const actions = useDiagramActions();
+  const selection = ui.panelSelection;
+  const colors = ui.colors;
 
-export function DetailPanel({ engine, model, selection, colors, onColorsChange }: DetailPanelProps) {
   return (
     <aside className="w-[320px] overflow-auto border-l border-border bg-surface text-[0.8rem]">
-      {model && selection.type === 'entity' && (
-        <EntityDetail engine={engine} model={model} id={selection.id} colors={colors} />
-      )}
-      {model && selection.type === 'group' && (
-        <GroupDetail engine={engine} model={model} id={selection.id} colors={colors} />
-      )}
-      {model && selection.type === 'edge' && <EdgeDetail engine={engine} model={model} id={selection.id} colors={colors} />}
+      {model && selection.type === 'entity' && <EntityDetail model={model} id={selection.id} colors={colors} />}
+      {model && selection.type === 'group' && <GroupDetail model={model} id={selection.id} colors={colors} />}
+      {model && selection.type === 'edge' && <EdgeDetail model={model} id={selection.id} colors={colors} />}
       {(!model || selection.type === 'none') && (
-        <EmptyState model={model} colors={colors} onColorsChange={onColorsChange} />
+        <EmptyState model={model} colors={colors} onColorsChange={actions.setColors} />
       )}
     </aside>
   );
