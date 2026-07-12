@@ -3,7 +3,7 @@
 // polyline (drag feedback uses the cheap direct shape).
 
 import { edgeEndpoints } from '../../geometry/edge-endpoints';
-import { endKinds, type EndKind } from '../end-kinds';
+import { endKinds, type EndKind } from '../../model/end-kinds';
 import { PORT_GAP } from '../../geometry/metrics';
 import { orthoPolyPath } from '../../routing/ortho-poly-path';
 import { simpleOrtho } from '../../routing/simple-ortho';

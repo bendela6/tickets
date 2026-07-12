@@ -1,5 +1,5 @@
 import type { EerDiagram } from '../../engine/diagram/eer-diagram';
-import { entityColor } from '../../engine/render/entity-color';
+import { entityColor } from '../../engine/colors/entity-color';
 import { entityIdsInGroup } from '../../engine/groups/entity-ids-in-group';
 import type { Model } from '../../engine/model/types';
 import { cn } from '../../ui/cn';

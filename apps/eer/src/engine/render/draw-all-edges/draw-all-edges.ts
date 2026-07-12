@@ -3,7 +3,7 @@
 
 import { computePinSlots } from '../../geometry/compute-pin-slots';
 import { computeRoutes } from '../../routing/compute-routes';
-import { cssEsc } from '../css-esc';
+import { cssEsc } from '../../dom/css-esc';
 import { drawEdge } from '../draw-edge';
 import { markConnectedPorts } from '../mark-connected-ports';
 import type { EngineState } from '../../model/types';

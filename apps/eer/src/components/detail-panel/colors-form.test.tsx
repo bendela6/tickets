@@ -2,8 +2,8 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { buildModel } from '../../test/models';
-import { entityColor } from '../../engine/render/entity-color';
-import { groupColor } from '../../engine/render/group-color';
+import { entityColor } from '../../engine/colors/entity-color';
+import { groupColor } from '../../engine/colors/group-color';
 import { ColorsForm } from './colors-form';
 
 afterEach(cleanup);

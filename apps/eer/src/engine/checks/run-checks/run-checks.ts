@@ -3,7 +3,7 @@
 
 import { clearFieldHighlight } from '../../focus/clear-field-highlight';
 import { clearFocus } from '../../focus/clear-focus';
-import { cssEsc } from '../../render/css-esc';
+import { cssEsc } from '../../dom/css-esc';
 import { edgeEndpoints } from '../../geometry/edge-endpoints';
 import { focusEntity } from '../../focus/focus-entity';
 import { highlightField } from '../../focus/highlight-field';

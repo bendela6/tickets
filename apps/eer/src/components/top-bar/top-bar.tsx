@@ -1,6 +1,6 @@
 import type { EerDiagram } from '../../engine/diagram/eer-diagram';
 import type { Model, RoutingMode } from '../../engine/model/types';
-import { groupColor } from '../../engine/render/group-color';
+import { groupColor } from '../../engine/colors/group-color';
 import { Chip } from './chip';
 import { SearchBox } from './search-box';
 import { ToggleGroup } from './toggle-group';
