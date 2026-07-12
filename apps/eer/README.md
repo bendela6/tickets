@@ -11,19 +11,35 @@ pnpm --filter @tickets/eer typecheck
 
 ## Architecture
 
-The diagram is performance-sensitive (edges redraw on every drag frame; focus/hover
-must never reflow), so it stays **imperative** and is wrapped in React:
+React owns the scene; `src/engine/` is pure calculation with no DOM/React imports —
+a `DiagramProvider` reducer holds the model/view/ui, components render straight
+from context, and a gesture hook dispatches into the reducer instead of mutating
+the DOM:
 
-- `src/engine/` — the framework-agnostic diagram engine (TypeScript):
-  - `model.ts` — validate + normalize the JSON model
-  - `geometry.ts` — card sizing + port positions (mirrors the CSS box model)
-  - `layout.ts` — deterministic group packing
-  - `routing.ts` — A\* obstacle-avoiding orthogonal router (avoid / ortho line modes)
-  - `render.ts` — builds the DOM/SVG scene; edges, ports, focus/dim classes
-  - `checks.ts` — the runnable quality assertions (Self-check button)
-  - `diagram.ts` — `EerDiagram` controller: interactions, fit/center, search, events
-- `src/components/` — React + Tailwind chrome (top bar, detail panel, overlays) that
-  drives the engine via a ref and re-renders from its `onSelect` callback.
+- `src/state/` — `DiagramProvider` (`diagram-provider.tsx`) owns a `useReducer`
+  (`diagram-reducer.ts`: model + view + ui) and derives edge geometry (frozen
+  mid-gesture, exactly like the legacy live redraw); slice contexts
+  (`diagram-context.ts`) so components only re-render for the slice they read; the
+  imperative surface (`DiagramActions`: fit/rearrange/search/runChecks/…) is
+  memoized once and reached via `useDiagramActions()`.
+- `src/engine/` — the framework-agnostic diagram engine (TypeScript), one
+  function/module per folder with its own test: `model/` (validate + normalize the
+  JSON model), `geometry/` (card sizing + port positions, mirrors the CSS box
+  model), `layout/` (deterministic group packing, fit/center math), `routing/` (A\*
+  obstacle-avoiding orthogonal router: curved / avoid / ortho), `colors/` (zone →
+  entity → edge colour inheritance), `focus/` (focus-set selectors: related-to-
+  entity, related-to-group, connected ports, field edges), `search/` (ranked model
+  search), `checks/` (the runnable quality assertions behind Self-check).
+- `src/components/diagram/` — renders the DOM/SVG scene from context: `diagram/`
+  (the `.viewport` shell, mounted unconditionally so the gesture hook always has
+  an element to bind to), `world/`, `zone-boxes/`, `entity-cards/`, `edges-svg/`.
+- `src/hooks/use-diagram-gestures/` — the interaction state machine (pan/zoom,
+  entity drag, group drag, group resize, click-select, keyboard), ported from the
+  legacy imperative engine's `wireGlobal`; dispatches into the reducer instead of
+  mutating DOM.
+- `src/components/` (`top-bar/`, `detail-panel/`, `checks-overlay/`,
+  `error-banner/`) — React + Tailwind chrome that reads context and calls
+  `DiagramActions`.
 
 ## The model
 
@@ -37,4 +53,5 @@ is documented in [`docs/opus/eer-schema.md`](../../docs/opus/eer-schema.md).
 `click` entity → focus its relationships · `click` a zone → show only its connections ·
 `hover` a field → light its edges · `click` an edge → isolate it · `Esc` clear.
 Top bar: search, zone/edge filters, **Lines** mode (curved → avoid → ortho), Fit,
-Rearrange, and **Self-check** (also `window.__eer.runChecks()` in dev).
+Rearrange, and **Self-check** (also `window.__eer.actions.runChecks()` in dev — the
+dev handle also exposes `getState()`, `getGeometry()`, and `dispatch()`).
