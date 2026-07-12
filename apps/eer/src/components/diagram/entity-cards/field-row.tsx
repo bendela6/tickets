@@ -25,23 +25,24 @@ function Port({
   return (
     <span
       className={cn(
-        'port absolute top-1/2 z-3 h-3.5 w-1.25 -translate-x-1/2 -translate-y-1/2',
-        'rounded-xs border border-surface bg-edge opacity-0',
-        'transition-(--transition-port) duration-120',
-        'before:absolute before:top-1/2 before:h-px before:-translate-y-1/2 before:bg-edge',
+        'absolute top-1/2 z-3 h-3.5 w-1.25 -translate-x-1/2 -translate-y-1/2',
+        'rounded-xs border border-gray-900 bg-gray-300 opacity-0',
+        'transition-(--transition-paint) duration-120',
+        'before:absolute before:top-1/2 before:h-px before:-translate-y-1/2 before:bg-gray-300',
         {
-          'left -left-2 before:left-1/2 before:w-2': side === 'L',
-          'right left-full ml-2 before:right-1/2 before:w-2': side === 'R',
-          'connected opacity-100': connected.has(key),
-          'bg-pk before:bg-pk': f.role === 'pk',
-          'bg-fk before:bg-fk': f.role === 'fk',
-          'bg-edge-hot shadow-port-glow before:bg-edge-hot': hot,
+          '-left-2 before:left-1/2 before:w-2': side === 'L',
+          'left-full ml-2 before:right-1/2 before:w-2': side === 'R',
+          'opacity-100': connected.has(key),
+          'bg-yellow-400 before:bg-yellow-400': f.role === 'pk',
+          'bg-green-400 before:bg-green-400': f.role === 'fk',
+          'bg-blue-400 ring-3 ring-blue-400/30 before:bg-blue-400': hot,
           'h-(--port-height)': off > 0,
         },
       )}
       data-entity={e.id}
       data-field={f.name}
       data-side={side}
+      data-connected={connected.has(key) ? '' : undefined}
       style={off > 0 ? runtimeStyle({ '--port-height': `${2 * off + 11}px` }) : undefined}
     />
   );
@@ -64,13 +65,12 @@ export function FieldRow({
   const [hot, setHot] = useState(false);
   return (
     <div
-      className={cn('field relative flex h-5.5 cursor-default items-center gap-1.5 px-2.5 text-sm hover:bg-surface-2', {
-        [`role-${f.role}`]: !!f.role,
-        'hot': hot,
-      })}
+      className="relative flex h-5.5 cursor-default items-center gap-1.5 px-2.5 text-sm hover:bg-gray-800"
       data-entity={e.id}
       data-field={f.name}
       data-index={String(index)}
+      data-role={f.role || undefined}
+      data-hot={hot ? '' : undefined}
       onMouseEnter={() => {
         setHot(true);
         dispatch({ type: 'HIGHLIGHT_FIELD', entityId: e.id, field: f.name });
@@ -81,21 +81,21 @@ export function FieldRow({
       }}
     >
       <span
-        className={cn('w-5 shrink-0 text-center font-mono text-3xs font-semibold tracking-wide text-dim', {
-          'text-pk': f.role === 'pk',
-          'text-fk': f.role === 'fk',
+        className={cn('w-5 shrink-0 text-center font-mono text-3xs font-semibold tracking-wide text-gray-400', {
+          'text-yellow-400': f.role === 'pk',
+          'text-green-400': f.role === 'fk',
         })}
       >
         {f.role ? f.role.toUpperCase() : ''}
       </span>
       <span
-        className={cn('truncate whitespace-nowrap font-mono text-ink', {
-          'text-pk': f.role === 'pk',
+        className={cn('truncate whitespace-nowrap font-mono text-gray-50', {
+          'text-yellow-400': f.role === 'pk',
         })}
       >
         {f.name}
       </span>
-      <span className="ml-auto max-w-1/2 truncate whitespace-nowrap font-mono text-xs text-dim">
+      <span className="ml-auto max-w-1/2 truncate whitespace-nowrap font-mono text-xs text-gray-400">
         {f.type || ''}
       </span>
       <Port e={e} f={f} side="L" connected={connected} pinSpan={pinSpan} hot={hot} />

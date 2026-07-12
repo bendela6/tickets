@@ -22,7 +22,7 @@ it('applies the view transform and updates on SET_VIEW', async () => {
       </World>
     </>,
   );
-  const world = container.querySelector('.world') as HTMLElement;
+  const world = container.querySelector('[data-world]') as HTMLElement;
   expect(world.style.getPropertyValue('--world-pan-x')).toMatch(/px$/);
   expect(world.style.getPropertyValue('--world-zoom')).toBe('1');
   await act(async () => actions.setRouting('curved')); // unrelated slice → transform unchanged

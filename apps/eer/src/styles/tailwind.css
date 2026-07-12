@@ -1,27 +1,76 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-bg: #0b0d12;
-  --color-surface: #12151c;
-  --color-surface-2: #181c26;
-  --color-surface-3: #1e2431;
-  --color-border: #2c3344;
-  --color-border-2: #3d4660;
-  --color-ink: #eef0f4;
-  --color-muted: #8b93a7;
-  --color-dim: #5c657a;
-  --color-pk: #f5c542;
-  --color-fk: #3ecf8e;
-  --color-accent: #7aa2ff;
-  --color-edge: #6c7997;
-  --color-edge-hot: var(--color-accent);
-  --color-soft: var(--color-muted);
-  --color-danger: #f87171;
-  --color-ok: #3ecf8e;
-  --color-zone: #9085e9;
-  --color-zone-ink: #b0a8f2;
-  --color-danger-border: color-mix(in srgb, var(--color-danger) 55%, var(--color-border));
-  --color-danger-surface: color-mix(in srgb, var(--color-danger) 14%, var(--color-surface));
+  /* Palette — plain color families, full 50–950 ramps; the 400s anchor the design's hues. */
+  /* gray keeps the original ten grays exactly (100 is interpolated); other ramps are generated around their 400. */
+  --color-*: initial;
+  --color-gray-50: #eef0f4;
+  --color-gray-100: #bcc2cf;
+  --color-gray-200: #8b93a7;
+  --color-gray-300: #6c7997;
+  --color-gray-400: #5c657a;
+  --color-gray-500: #3d4660;
+  --color-gray-600: #2c3344;
+  --color-gray-700: #1e2431;
+  --color-gray-800: #181c26;
+  --color-gray-900: #12151c;
+  --color-gray-950: #0b0d12;
+  --color-yellow-50: #fbf9f4;
+  --color-yellow-100: #f7f2e4;
+  --color-yellow-200: #f5e7c2;
+  --color-yellow-300: #f4dc99;
+  --color-yellow-400: #f5c542;
+  --color-yellow-500: #f5c43d;
+  --color-yellow-600: #f2b50d;
+  --color-yellow-700: #bd8e0f;
+  --color-yellow-800: #8f6d0f;
+  --color-yellow-900: #674f0e;
+  --color-yellow-950: #42330b;
+  --color-green-50: #f5faf8;
+  --color-green-100: #e7f4ee;
+  --color-green-200: #caecdd;
+  --color-green-300: #a9e5ca;
+  --color-green-400: #3ecf8e;
+  --color-green-500: #5cd69f;
+  --color-green-600: #33cc87;
+  --color-green-700: #2ca06c;
+  --color-green-800: #247a53;
+  --color-green-900: #1d593e;
+  --color-green-950: #143928;
+  --color-blue-50: #f4f6fb;
+  --color-blue-100: #e2e9f8;
+  --color-blue-200: #bfd0f8;
+  --color-blue-300: #94b3f9;
+  --color-blue-400: #7aa2ff;
+  --color-blue-500: #3370ff;
+  --color-blue-600: #004dff;
+  --color-blue-700: #053fc7;
+  --color-blue-800: #083396;
+  --color-blue-900: #09276d;
+  --color-blue-950: #081a45;
+  --color-red-50: #fbf4f4;
+  --color-red-100: #f7e3e3;
+  --color-red-200: #f5c1c1;
+  --color-red-300: #f59999;
+  --color-red-400: #f87171;
+  --color-red-500: #f53d3d;
+  --color-red-600: #f30c0c;
+  --color-red-700: #be0e0e;
+  --color-red-800: #900f0f;
+  --color-red-900: #680d0d;
+  --color-red-950: #420b0b;
+  --color-violet-50: #f5f5fa;
+  --color-violet-100: #e7e6f5;
+  --color-violet-200: #ccc7ef;
+  --color-violet-300: #b0a8f2;
+  --color-violet-400: #9085e9;
+  --color-violet-500: #6252e0;
+  --color-violet-600: #3a27d8;
+  --color-violet-700: #3223a9;
+  --color-violet-800: #291e80;
+  --color-violet-900: #20185d;
+  --color-violet-950: #16113b;
+
   --font-mono: ui-monospace, 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
   --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
@@ -40,24 +89,17 @@
   --tracking-wider: 0.05em;
   --tracking-widest: 0.08em;
 
-  --radius-card: 9px;
-  --radius-zone: 14px;
-  --radius-zone-sub: 10px;
+  /* Scale overrides — cards round at lg, subgroup zones at xl, zones at 2xl. */
+  --radius-lg: 9px;
+  --radius-xl: 10px;
+  --radius-2xl: 14px;
 
-  --shadow-card: 0 6px 18px rgb(0 0 0 / 0.35);
-  --shadow-card-selected: 0 0 0 1px var(--color-accent), 0 8px 22px rgb(0 0 0 / 0.45);
-  --shadow-overlay: 0 12px 34px rgb(0 0 0 / 0.5);
-  --shadow-port-glow: 0 0 0 3px color-mix(in srgb, var(--color-edge-hot) 30%, transparent);
+  --shadow-md: 0 6px 18px rgb(0 0 0 / 0.35);
+  --shadow-lg: 0 8px 22px rgb(0 0 0 / 0.45);
+  --shadow-xl: 0 12px 34px rgb(0 0 0 / 0.5);
 
-  --container-banner: min(680px, 90vw);
-
-  /* Transition property sets; transform/translate are deliberately excluded so drag and pan stay immediate. */
-  --transition-card: box-shadow, border-color, opacity;
-  --transition-zone: opacity, border-color, background-color;
-  --transition-port: opacity, background-color;
-
-  --dot-grid: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.05) 1px, transparent 0);
-  --dot-grid-size: 26px 26px;
+  /* Paint-only transition set; transform/translate are deliberately excluded so drag and pan stay immediate. */
+  --transition-paint: opacity, border-color, background-color, box-shadow;
 }
 
 /* Native color-input internals, one variant per engine: a combined selector list would be dropped whole by the other engine. */

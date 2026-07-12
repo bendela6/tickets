@@ -27,8 +27,10 @@ export function EdgesSvg() {
   }, [model, ui.raisedEdge]);
   return (
     <svg
-      className={cn('edges pointer-events-none absolute left-0 top-0 z-1 overflow-visible', {
-        'edge-top z-3': ui.focus?.type === 'edge',
+      data-edges=""
+      data-top={ui.focus?.type === 'edge' ? '' : undefined}
+      className={cn('pointer-events-none absolute left-0 top-0 z-1 overflow-visible', {
+        'z-3': ui.focus?.type === 'edge',
       })}
       width={model._content.w}
       height={model._content.h}

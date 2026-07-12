@@ -79,7 +79,7 @@ it('search + isolateSilent behave like the legacy engine', async () => {
 // fit() synchronously right after dispatch, so fit() read stateRef.current from
 // BEFORE the repack (React hasn't re-rendered yet). After dragging a card far
 // away, that framed the dragged (pre-repack) bounds instead of the freshly
-// packed diagram. <Diagram/>'s .viewport binds viewportRef so fit() actually
+// packed diagram. <Diagram/>'s [data-viewport] binds viewportRef so fit() actually
 // dispatches SET_VIEW; jsdom's clientWidth/clientHeight are 0, which is fine —
 // pan still depends on the model's bounds, so a wrong (stale) model still
 // produces a detectably wrong pan.

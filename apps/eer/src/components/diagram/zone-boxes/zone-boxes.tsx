@@ -19,10 +19,10 @@ export function ZoneBoxes() {
         const subgroup = b.level > 0;
         const c = groupColor(model, b.id, ui.colors);
         const cls = cn(
-          'zone pointer-events-auto absolute cursor-grab active:cursor-grabbing',
+          'pointer-events-auto absolute cursor-grab active:cursor-grabbing',
           'left-(--zone-left) top-(--zone-top) h-(--zone-height) w-(--zone-width)',
-          'rounded-zone border border-dashed border-(--zone-border) bg-(--zone-bg)',
-          'transition-(--transition-zone) duration-120',
+          'rounded-2xl border border-dashed border-(--zone-border) bg-(--zone-bg)',
+          'transition-(--transition-paint) duration-120',
           'data-[resize-cursor=ew-resize]:cursor-ew-resize data-[resize-cursor=ns-resize]:cursor-ns-resize',
           'data-[resize-cursor=nesw-resize]:cursor-nesw-resize',
           'data-[resize-cursor=nwse-resize]:cursor-nwse-resize',
@@ -30,9 +30,9 @@ export function ZoneBoxes() {
           'after:rounded-br-md after:border-b-2 after:border-r-2 after:border-(--zone-handle)',
           'after:opacity-0 after:transition-opacity after:duration-120 hover:after:opacity-100',
           {
-            'zone-sub rounded-zone-sub border-solid': subgroup,
-            'zone-selected border-solid': selected,
-            'zone-dim opacity-40': !!lit && !lit.has(b.id),
+            'rounded-xl border-solid': subgroup,
+            'border-solid': selected,
+            'opacity-40': !!lit && !lit.has(b.id),
             'hidden': hidden.groups.has(b.id),
           },
         );
@@ -40,8 +40,11 @@ export function ZoneBoxes() {
           <div
             key={b.id}
             className={cls}
+            data-zone=""
             data-group={b.id}
             data-parent={b.parent ?? undefined}
+            data-selected={selected ? '' : undefined}
+            data-dim={lit && !lit.has(b.id) ? '' : undefined}
             style={runtimeStyle({
               '--zone-left': `${b.x}px`,
               '--zone-top': `${b.y}px`,
@@ -50,23 +53,24 @@ export function ZoneBoxes() {
               '--group-c': c,
               '--zone-border': selected
                 ? subgroup
-                  ? mix(c, 55, 'var(--color-border-2)')
+                  ? mix(c, 55, 'var(--color-gray-500)')
                   : mix(c, 65)
                 : subgroup
-                  ? mix(c, 24, 'var(--color-border)')
+                  ? mix(c, 24, 'var(--color-gray-600)')
                   : mix(c, 30),
               '--zone-bg': mix(c, selected ? (subgroup ? 8 : 11) : subgroup ? 4 : 6),
               '--zone-handle': mix(c, 45),
-              '--zone-ink': subgroup ? mix(c, 40, 'var(--color-soft)') : mix(c, 60, 'var(--color-muted)'),
+              '--zone-ink': subgroup ? mix(c, 40, 'var(--color-gray-200)') : mix(c, 60, 'var(--color-gray-200)'),
             })}
           >
             <div
+              data-zone-label=""
               className={cn(
-                'zone-label pointer-events-none absolute left-3 top-2',
+                'pointer-events-none absolute left-3 top-2',
                 'text-sm font-semibold uppercase tracking-wide text-(--zone-ink)',
                 {
                   'left-2.5 top-1.5 text-2xs font-medium normal-case': subgroup,
-                  'text-ink': selected,
+                  'text-gray-50': selected,
                 },
               )}
             >

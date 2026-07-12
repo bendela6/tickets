@@ -1,6 +1,7 @@
 import { groupColor } from '../../engine/colors/group-color';
 import type { RoutingMode } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi, useDiagramView } from '../../state/diagram-context';
+import { cn } from '../../ui/cn';
 import { Chip } from './chip';
 import { SearchBox } from './search-box';
 import { ToggleGroup } from './toggle-group';
@@ -16,9 +17,11 @@ const ROUTING_TIP: Record<RoutingMode, string> = {
   ortho: 'Horizontal / vertical only',
 };
 
-const btn =
-  'border border-border bg-surface text-muted text-sm font-medium px-2.5 py-1.5 rounded-md whitespace-nowrap ' +
-  'hover:text-ink hover:border-border-2 hover:bg-surface-2';
+const btn = cn(
+  'rounded-md border border-gray-600 bg-gray-900 px-2.5 py-1.5',
+  'text-sm font-medium whitespace-nowrap text-gray-200',
+  'hover:border-gray-500 hover:bg-gray-800 hover:text-gray-50',
+);
 
 interface TopBarProps {
   onSelfCheck: () => void;
@@ -36,10 +39,15 @@ export function TopBar({ onSelfCheck }: TopBarProps) {
   };
 
   return (
-    <header className="z-10 flex flex-wrap items-center gap-x-3.5 gap-y-2 border-b border-border bg-bg/95 px-4 py-2.5">
+    <header
+      className={cn(
+        'z-10 flex flex-wrap items-center gap-x-3.5 gap-y-2 px-4 py-2.5',
+        'border-b border-gray-600 bg-gray-950/95',
+      )}
+    >
       <div className="mr-auto">
         <h1 className="text-lg font-semibold tracking-tight">{model?.meta.title ?? 'EER model viewer'}</h1>
-        <p className="mt-0.5 max-w-sm truncate text-sm text-muted">
+        <p className="mt-0.5 max-w-sm truncate text-sm text-gray-200">
           {model?.meta.description ??
             (model ? `${model.entities.length} entities · ${model.relationships.length} relationships` : 'loading…')}
         </p>

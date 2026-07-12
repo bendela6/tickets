@@ -7,16 +7,16 @@ import { Diagram } from './diagram';
 
 afterEach(cleanup);
 
-// The .viewport binds the gesture listeners on first commit, so it must mount
+// The [data-viewport] binds the gesture listeners on first commit, so it must mount
 // before any model is loaded — only the World subtree is gated on the model.
-it('mounts the .viewport unconditionally, before any model loads', () => {
+it('mounts the [data-viewport] unconditionally, before any model loads', () => {
   const { container } = render(
     <DiagramProvider>
       <Diagram />
     </DiagramProvider>,
   );
-  expect(container.querySelector('.viewport')).not.toBeNull();
-  expect(container.querySelector('.world')).toBeNull();
+  expect(container.querySelector('[data-viewport]')).not.toBeNull();
+  expect(container.querySelector('[data-world]')).toBeNull();
 });
 
 it('composes the full scene from the loaded fixture and hosts overlay children', async () => {
@@ -32,10 +32,10 @@ it('composes the full scene from the loaded fixture and hosts overlay children',
     await new Promise((r) => setTimeout(r, 0));
   });
 
-  const viewport = container.querySelector('.viewport')!;
-  expect(viewport.querySelectorAll('.world .card')).toHaveLength(3);
-  expect(viewport.querySelectorAll('svg.edges g.edge')).toHaveLength(3);
-  expect(viewport.querySelectorAll('.world .zone')).toHaveLength(2);
+  const viewport = container.querySelector('[data-viewport]')!;
+  expect(viewport.querySelectorAll('[data-world] [data-card]')).toHaveLength(3);
+  expect(viewport.querySelectorAll('svg[data-edges] g[data-rel]')).toHaveLength(3);
+  expect(viewport.querySelectorAll('[data-world] [data-zone]')).toHaveLength(2);
 
   const overlay = container.querySelector('[data-testid="overlay"]')!;
   expect(viewport.contains(overlay)).toBe(true);

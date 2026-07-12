@@ -23,7 +23,7 @@ function Loaded({ children }: { children: ReactNode }) {
 // <Diagram> arrives in T15 — compose the scene inline here.
 async function checkedScene() {
   const { container } = await renderDiagram(
-    <div className="viewport">
+    <div data-viewport="">
       <Loaded>
         <World>
           <ZoneBoxes />
@@ -34,7 +34,7 @@ async function checkedScene() {
     </div>,
   );
   const model = buildModel(); // same fixture the helper loaded — packLayout is deterministic
-  const root = container.querySelector('.viewport') as HTMLElement;
+  const root = container.querySelector('[data-viewport]') as HTMLElement;
   return { model, root, container };
 }
 
@@ -47,26 +47,27 @@ it('all four checks pass on a healthy scene (modulo jsdom zero-rects)', async ()
   expect(results.filter((r) => r.name !== 'Every edge endpoint lands on a real port').every((r) => r.pass)).toBe(true);
 });
 
-it('no-reflow probe preserves pre-existing focus/selected/hot classes', async () => {
+it('no-reflow probe preserves pre-existing focus/selected/hot state', async () => {
   const { model, root } = await checkedScene();
   // Simulate a live selection: the first card (users) is focused+selected and its
-  // edge (u-o) is hot — exactly the classes the no-reflow probe injects.
-  const card = root.querySelector('.card[data-entity="users"]')!;
-  const edge = root.querySelector('.edge[data-rel="u-o"]')!;
-  card.classList.add('focus', 'selected');
-  edge.classList.add('hot');
+  // edge (u-o) is hot — exactly the attributes the no-reflow probe injects.
+  const card = root.querySelector('[data-card][data-entity="users"]')!;
+  const edge = root.querySelector('[data-rel="u-o"]')!;
+  card.setAttribute('data-focus', '');
+  card.setAttribute('data-selected', '');
+  edge.setAttribute('data-hot', '');
   const results = runChecks({ model, geometry: computeEdgeGeometry(model, 'avoid'), view: { zoom: 1, panX: 0, panY: 0 }, root });
   expect(results.find((r) => r.name === 'Hover/focus never moves a node')!.pass).toBe(true);
-  // The probe must only remove classes IT added — the live selection survives.
-  expect(card.classList.contains('focus')).toBe(true);
-  expect(card.classList.contains('selected')).toBe(true);
-  expect(edge.classList.contains('hot')).toBe(true);
+  // The probe must only remove attributes IT added — the live selection survives.
+  expect(card.hasAttribute('data-focus')).toBe(true);
+  expect(card.hasAttribute('data-selected')).toBe(true);
+  expect(edge.hasAttribute('data-hot')).toBe(true);
 });
 
 it('failure injection: a missing port and a corrupted path are reported', async () => {
   const { model, root } = await checkedScene();
-  root.querySelector('.port.left[data-entity="users"][data-field="name"]')!.remove();
-  root.querySelector('.edge[data-rel="u-o"] .edge-path')!.setAttribute('d', 'M 0 0 L 1 1');
+  root.querySelector('[data-side="L"][data-entity="users"][data-field="name"]')!.remove();
+  root.querySelector('[data-rel="u-o"] [data-path]')!.setAttribute('d', 'M 0 0 L 1 1');
   const results = runChecks({ model, geometry: computeEdgeGeometry(model, 'avoid'), view: { zoom: 1, panX: 0, panY: 0 }, root });
   expect(results.find((r) => r.name === 'Exactly one L + one R port per field')!.problems.join()).toContain('users.name');
   expect(results.find((r) => r.name === 'Every edge endpoint lands on a real port')!.problems.join()).toContain('u-o: path start off source port');

@@ -7,8 +7,8 @@ export function RoleTag({ role }: { role: Entity['fields'][number]['role'] }) {
   return (
     <span
       className={cn('inline-block w-7 shrink-0 rounded text-center font-mono text-3xs font-semibold leading-4', {
-        'bg-pk/15 text-pk': role === 'pk',
-        'bg-fk/15 text-fk': role !== 'pk',
+        'bg-yellow-400/15 text-yellow-400': role === 'pk',
+        'bg-green-400/15 text-green-400': role !== 'pk',
       })}
     >
       {role.toUpperCase()}

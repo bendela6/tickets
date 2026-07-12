@@ -44,12 +44,14 @@ the DOM:
 
 ## Styling boundary
 
-All authored presentation lives in Tailwind utilities backed by named theme
+All authored presentation lives in Tailwind utilities backed by generic theme
 tokens. `src/styles/tailwind.css` contains only the Tailwind import, `@theme`
-tokens (type scale, tracking, radii, shadows, transition-property sets), and
-`@custom-variant` lines; it has no application selectors. Static values are
-tokens or standard-scale utilities — arbitrary values (`h-[34px]`,
-`text-[0.82rem]`) are banned. Runtime diagram geometry and user-selected colors
+tokens, and `@custom-variant` lines; it has no application selectors. Tokens
+are scale-shaped, never usage-named: colors are plain families with full
+50–950 ramps (`gray-*`, `blue-*`, … — the 400s anchor the design's hues),
+radii/shadows override standard steps (`lg`, `xl`, …), and there is no
+`--radius-card`-style variable — component-specific values live in the
+component. Arbitrary values (`h-[34px]`, `text-[0.82rem]`) are banned. Runtime diagram geometry and user-selected colors
 enter components as typed CSS custom properties (per-element `color-mix()`
 recipes are built by `src/ui/color-mix.ts`, since a var() inside a `:root`
 token resolves at `:root`), and utilities consume them with the `(--var)`

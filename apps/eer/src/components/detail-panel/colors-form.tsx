@@ -8,7 +8,7 @@ import type { Model } from '../../engine/model/types';
 import { cn } from '../../ui/cn';
 
 const swatchClass =
-  'h-4 w-6 shrink-0 cursor-pointer rounded border border-border bg-transparent p-0 ' +
+  'h-4 w-6 shrink-0 cursor-pointer rounded border border-gray-600 bg-transparent p-0 ' +
   'disabled:cursor-default disabled:opacity-25 ' +
   'swatch-wrapper:p-0 webkit-swatch:rounded-sm webkit-swatch:border-0 ' +
   'moz-swatch:rounded-sm moz-swatch:border-0';
@@ -32,14 +32,14 @@ export function ColorsForm({ model, colors, onChange }: ColorsFormProps) {
     return (
       <label
         key={id}
-        className={cn('flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.75 hover:bg-surface-2', {
+        className={cn('flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.75 hover:bg-gray-800', {
           'ml-7': depth === 2,
           'ml-2.5': depth === 1,
         })}
       >
         <input
           type="checkbox"
-          className="h-3 w-3 shrink-0 cursor-pointer accent-accent"
+          className="h-3 w-3 shrink-0 cursor-pointer accent-blue-400"
           title="Override the inherited colour"
           checked={overridden}
           onChange={(ev) => patch(id, ev.target.checked ? effective : null)}
@@ -52,7 +52,7 @@ export function ColorsForm({ model, colors, onChange }: ColorsFormProps) {
           onChange={(ev) => patch(id, ev.target.value)}
           aria-label={`${label} colour`}
         />
-        <span className={cn('truncate font-mono text-sm', { 'text-ink': overridden, 'text-muted': !overridden })}>{label}</span>
+        <span className={cn('truncate font-mono text-sm', { 'text-gray-50': overridden, 'text-gray-200': !overridden })}>{label}</span>
       </label>
     );
   };
@@ -76,11 +76,11 @@ export function ColorsForm({ model, colors, onChange }: ColorsFormProps) {
                 onChange={(ev) => patch(z.id, ev.target.value)}
                 aria-label={`${z.label} colour`}
               />
-              <span className="truncate text-xs font-semibold uppercase tracking-wider text-ink">{z.label}</span>
+              <span className="truncate text-xs font-semibold uppercase tracking-wider text-gray-50">{z.label}</span>
               {colors.has(z.id) && (
                 <button
                   type="button"
-                  className="ml-auto shrink-0 rounded px-1 text-xs text-dim hover:bg-surface-2 hover:text-ink"
+                  className="ml-auto shrink-0 rounded px-1 text-xs text-gray-400 hover:bg-gray-800 hover:text-gray-50"
                   title="Back to the palette colour"
                   onClick={() => patch(z.id, null)}
                 >

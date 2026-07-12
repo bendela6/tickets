@@ -7,8 +7,9 @@ export function World({ children }: { children: ReactNode }) {
   const v = useDiagramView();
   return (
     <div
+      data-world=""
       className={cn(
-        'world absolute left-0 top-0 origin-top-left will-change-transform',
+        'absolute left-0 top-0 origin-top-left will-change-transform',
         'translate-x-(--world-pan-x) translate-y-(--world-pan-y) scale-(--world-zoom)',
       )}
       style={runtimeStyle({
