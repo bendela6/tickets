@@ -76,10 +76,10 @@ describe('packLayout', () => {
     const snapEnts = model.entities.map((e) => ({ id: e.id, x: e.x, y: e.y, w: e._w, h: e._h }));
     const snapBounds = model._groupBounds.map((b) => ({ ...b }));
     const snapContent = { ...model._content };
-    packLayout(model);
-    expect(model.entities.map((e) => ({ id: e.id, x: e.x, y: e.y, w: e._w, h: e._h }))).toEqual(snapEnts);
-    expect(model._groupBounds).toEqual(snapBounds);
-    expect(model._content).toEqual(snapContent);
+    const repacked = packLayout(model);
+    expect(repacked.entities.map((e) => ({ id: e.id, x: e.x, y: e.y, w: e._w, h: e._h }))).toEqual(snapEnts);
+    expect(repacked._groupBounds).toEqual(snapBounds);
+    expect(repacked._content).toEqual(snapContent);
   });
 
   it('returns a new packed model without mutating the input', () => {

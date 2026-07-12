@@ -42,7 +42,7 @@ export function EerViewer() {
       setDiagnostics({ errors: result.errors, warnings: result.warnings });
       if (!result.errors.length && result.model) {
         engine.load(result.model);
-        setModel(result.model);
+        setModel(engine.model);
         setRouting(result.model.view.routing);
       }
     };
