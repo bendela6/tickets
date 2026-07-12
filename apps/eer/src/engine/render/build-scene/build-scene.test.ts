@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { nestedRaw } from '../../../test/models';
 import { cleanupScene, makeScene } from '../../../test/scene';
+import { edgeColor } from '../../colors/edge-color';
 import { entityColor } from '../../colors/entity-color';
 import { groupColor } from '../../colors/group-color';
 import type { EngineState } from '../../model/types';
@@ -60,6 +61,14 @@ describe('buildScene', () => {
     for (const e of state.model.entities) {
       const card = state.els.cards.get(e.id)!;
       expect(card.style.getPropertyValue('--entity-c')).toBe(entityColor(state.model, e.id));
+    }
+  });
+
+  it('stamps each edge with its target entity color', () => {
+    state = makeScene();
+    for (const rel of state.model.relationships) {
+      const edgeEl = state.els.edgeEls.get(rel.id)!;
+      expect(edgeEl.g.style.getPropertyValue('--edge-c')).toBe(edgeColor(state.model, rel.target, state.colors));
     }
   });
 
