@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { buildModel, fkTo, pkField } from '../../../test/models';
 import { edgeSides } from '../edge-sides';
 import { portKey } from '../port-key';
-import { computePinSlots, SLOT_GAP } from './compute-pin-slots';
+import { computePinSlots, pinSlots, SLOT_GAP } from './compute-pin-slots';
 
 // One pk referenced by two FKs from a second zone: users.id becomes a shared pin
 // with two edge-ends; each FK's own port stays a single-edge pin.
@@ -60,5 +60,21 @@ describe('computePinSlots', () => {
     const self = model.relById.get('self')!;
     expect(self._srcSlot).toBe(0);
     expect(self._tgtSlot).toBe(0);
+  });
+
+  it('pinSlots returns fan offsets without mutating the model', () => {
+    const model = buildModel(); // twoZoneRaw: users.id feeds u-o and self → shared port fans
+    const before = JSON.stringify(model.relationships.map((r) => [r._srcSlot, r._tgtSlot]));
+    const { slots, pinSpan } = pinSlots(model);
+    expect(JSON.stringify(model.relationships.map((r) => [r._srcSlot, r._tgtSlot]))).toBe(before);
+    expect(model._pinSpan).toBeUndefined();
+    expect(slots.size).toBe(model.relationships.length);
+    // legacy wrapper writes the same numbers onto the model:
+    computePinSlots(model);
+    for (const rel of model.relationships) {
+      expect(rel._srcSlot).toBe(slots.get(rel.id)!.src);
+      expect(rel._tgtSlot).toBe(slots.get(rel.id)!.tgt);
+    }
+    expect([...(model._pinSpan ?? new Map())]).toEqual([...pinSpan]);
   });
 });
