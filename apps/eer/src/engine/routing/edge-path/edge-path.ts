@@ -1,8 +1,8 @@
 // Pure path selection for one relationship: pick the shape for the current routing
 // mode and return its `d` plus crow's-foot head `d`, instead of writing to SVG
 // elements. `live` skips the routed polyline (drag feedback uses the cheap direct
-// shape). Mirrors `render/draw-edge/draw-edge.ts` — kept in sync by hand until the
-// legacy engine is retired (T16).
+// shape). This is now the only path-selection implementation — the legacy
+// imperative engine's DOM-writing equivalent was deleted in T16.
 
 import { edgeEndpoints } from '../../geometry/edge-endpoints';
 import { endKinds, type EndKind } from '../../model/end-kinds';

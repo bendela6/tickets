@@ -15,6 +15,12 @@ describe('computeEdgeGeometry', () => {
     const g = computeEdgeGeometry(model, 'avoid');
     expect(g.routes.get('u-o')).toBeTruthy();
     expect(g.routes.get('self')).toBeNull();
-    expect(model._pinSpan).toBeUndefined(); // pure: model untouched
+  });
+
+  it('is pure: the model is untouched', () => {
+    const model = buildModel();
+    const before = JSON.stringify(model, (_, v: unknown) => (v instanceof Map ? [...v] : v));
+    computeEdgeGeometry(model, 'avoid');
+    expect(JSON.stringify(model, (_, v: unknown) => (v instanceof Map ? [...v] : v))).toBe(before);
   });
 });

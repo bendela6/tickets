@@ -57,11 +57,6 @@ export interface Relationship {
   cardinalityInferred: boolean;
   kind: string | null;
   label: string | null;
-  // routing fills this (avoid/ortho modes):
-  _route?: Point[] | null;
-  // pin-slot y-offsets so edges sharing a port fan out along the pin bar:
-  _srcSlot?: number;
-  _tgtSlot?: number;
 }
 
 export interface GroupBounds {
@@ -87,22 +82,12 @@ export interface Model {
   relById: Map<string, Relationship>;
   _groupBounds: GroupBounds[];
   _content: { w: number; h: number };
-  // per-port (entity|field|side) half-height of the pin bar spanning its slots:
-  _pinSpan?: Map<string, number>;
 }
 
 export interface LoadResult {
   model: Model | null;
   errors: string[];
   warnings: string[];
-}
-
-export interface EdgeEls {
-  g: SVGGElement;
-  hit: SVGPathElement;
-  casing: SVGPathElement;
-  path: SVGPathElement;
-  head: SVGPathElement; // crow's-foot / tick endpoint decorations
 }
 
 export type Focus =
@@ -116,29 +101,6 @@ export type Selection =
   | { type: 'entity'; id: string }
   | { type: 'group'; id: string }
   | { type: 'edge'; id: string };
-
-export interface EngineEls {
-  viewport: HTMLElement;
-  world: HTMLElement;
-  groupLayer: HTMLElement;
-  svg: SVGSVGElement;
-  cardLayer: HTMLElement;
-  cards: Map<string, HTMLElement>;
-  edgeEls: Map<string, EdgeEls>;
-}
-
-export interface EngineState {
-  model: Model;
-  view: { zoom: number; panX: number; panY: number; routing: RoutingMode };
-  els: EngineEls;
-  selection: string | null;
-  focus: Focus;
-  hidden: { groups: Set<string>; kinds: Set<string> };
-  // User colour overrides keyed by zone/subgroup/entity id; unset ids inherit
-  // (entity ← group ← zone ← palette). See group-color / set-colors.
-  colors?: ReadonlyMap<string, string>;
-  applyTransform: () => void;
-}
 
 export interface CheckResult {
   name: string;

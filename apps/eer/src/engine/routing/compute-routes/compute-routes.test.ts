@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildModel } from '../../../test/models';
-import { computePinSlots, pinSlots } from '../../geometry/compute-pin-slots';
+import { pinSlots } from '../../geometry/compute-pin-slots';
 import { edgeEndpoints } from '../../geometry/edge-endpoints';
-import { computeRoutes, routeEdges } from './compute-routes';
+import { routeEdges } from './compute-routes';
 import type { Point } from '../../model/types';
 
 // Axis-aligned segment vs rect overlap (strict, so a 2px-shrunk rect gives tolerance).
@@ -14,13 +14,14 @@ function segHitsRect(a: Point, b: Point, x: number, y: number, w: number, h: num
   return a.x > x && a.x < x2 && Math.min(a.y, b.y) < y2 && Math.max(a.y, b.y) > y;
 }
 
-describe('computeRoutes', () => {
+describe('routeEdges', () => {
   it('gives every non-self relationship an axis-aligned route of at least 2 points', () => {
     const model = buildModel();
-    computeRoutes(model);
+    const { slots } = pinSlots(model);
+    const { routes } = routeEdges(model, slots);
     for (const rel of model.relationships) {
       if (rel.source === rel.target) continue;
-      const pts = rel._route!;
+      const pts = routes.get(rel.id)!;
       expect(pts, rel.id).toBeTruthy();
       expect(pts.length, rel.id).toBeGreaterThanOrEqual(2);
       for (let i = 1; i < pts.length; i++) {
@@ -33,11 +34,13 @@ describe('computeRoutes', () => {
 
   it('anchors each route at the edge endpoints', () => {
     const model = buildModel();
-    computeRoutes(model);
+    const { slots } = pinSlots(model);
+    const { routes, slots: adjusted } = routeEdges(model, slots);
     for (const rel of model.relationships) {
       if (rel.source === rel.target) continue;
-      const pts = rel._route!;
-      const { p1, p2 } = edgeEndpoints(model, rel); // after routing — slots may have been reordered
+      const pts = routes.get(rel.id)!;
+      // after routing — slots may have been reordered
+      const { p1, p2 } = edgeEndpoints(model, rel, adjusted.get(rel.id));
       const first = pts[0]!;
       const last = pts[pts.length - 1]!;
       expect(Math.abs(first.x - p1.x), rel.id).toBeLessThanOrEqual(0.5);
@@ -49,9 +52,10 @@ describe('computeRoutes', () => {
 
   it('routes around every card body except the edge’s own endpoints', () => {
     const model = buildModel();
-    computeRoutes(model);
+    const { slots } = pinSlots(model);
+    const { routes } = routeEdges(model, slots);
     for (const rel of model.relationships) {
-      const pts = rel._route;
+      const pts = routes.get(rel.id);
       if (!pts) continue;
       const obstacles = model.entities.filter((e) => e.id !== rel.source && e.id !== rel.target);
       for (let i = 1; i < pts.length; i++) {
@@ -65,26 +69,24 @@ describe('computeRoutes', () => {
     }
   });
 
-  it('nulls the route of a self-loop', () => {
-    const model = buildModel();
-    const self = model.relById.get('self')!;
-    self._route = [{ x: 0, y: 0 }]; // stale garbage that must be cleared
-    computeRoutes(model);
-    expect(self._route).toBeNull();
-  });
-
-  it('routeEdges is pure and matches the legacy wrapper output', () => {
+  it('maps a self-loop route to null', () => {
     const model = buildModel();
     const { slots } = pinSlots(model);
-    const snap = JSON.stringify(model.relationships.map((r) => [r._srcSlot, r._tgtSlot, r._route ?? 'unset']));
-    const res = routeEdges(model, slots);
-    expect(JSON.stringify(model.relationships.map((r) => [r._srcSlot, r._tgtSlot, r._route ?? 'unset']))).toBe(snap);
-    expect(res.slots).not.toBe(slots); // adjusted copy, never the caller's map
-    // wrapper writes the same routes onto the rels:
-    computePinSlots(model);
-    computeRoutes(model);
+    const { routes } = routeEdges(model, slots);
+    expect(routes.get('self')).toBeNull();
+  });
+
+  it('is pure — repeated calls with the same inputs agree and never mutate the model', () => {
+    const model = buildModel();
+    const { slots } = pinSlots(model);
+    const modelSnap = JSON.stringify(model, (_, v: unknown) => (v instanceof Map ? [...v] : v));
+    const res1 = routeEdges(model, slots);
+    expect(JSON.stringify(model, (_, v: unknown) => (v instanceof Map ? [...v] : v))).toBe(modelSnap);
+    expect(res1.slots).not.toBe(slots); // adjusted copy, never the caller's map
+
+    const res2 = routeEdges(model, slots);
     for (const rel of model.relationships) {
-      expect(rel._route ?? null).toEqual(res.routes.get(rel.id) ?? null);
+      expect(res2.routes.get(rel.id) ?? null).toEqual(res1.routes.get(rel.id) ?? null);
     }
   });
 });
