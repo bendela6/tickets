@@ -5,6 +5,7 @@ import { edgeSides } from '../edge-sides';
 import { fieldIndex } from '../field-index';
 import { portWorldPos } from '../port-world-pos';
 import type { Entity, Model, Point, Relationship, Side } from '../../model/types';
+import type { EdgeSlots } from '../compute-pin-slots';
 
 export interface EdgeEndpoints {
   p1: Point;
@@ -16,7 +17,7 @@ export interface EdgeEndpoints {
   B: Entity;
 }
 
-export function edgeEndpoints(model: Model, rel: Relationship): EdgeEndpoints {
+export function edgeEndpoints(model: Model, rel: Relationship, slot?: EdgeSlots): EdgeEndpoints {
   const A = model.entityById.get(rel.source)!;
   const B = model.entityById.get(rel.target)!;
   const ai = fieldIndex(A, rel.sourceField);
@@ -24,7 +25,7 @@ export function edgeEndpoints(model: Model, rel: Relationship): EdgeEndpoints {
   const { s, t } = edgeSides(model, rel);
   const p1 = portWorldPos(A, ai, s);
   const p2 = portWorldPos(B, bi, t);
-  p1.y += rel._srcSlot ?? 0;
-  p2.y += rel._tgtSlot ?? 0;
+  p1.y += slot ? slot.src : (rel._srcSlot ?? 0);
+  p2.y += slot ? slot.tgt : (rel._tgtSlot ?? 0);
   return { p1, p2, s, t, self: rel.source === rel.target, A, B };
 }
