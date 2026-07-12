@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { buildModel, fkTo, pkField } from '../../../test/models';
 import { edgeSides } from '../edge-sides';
 import { portKey } from '../port-key';
-import { computePinSlots, pinSlots, SLOT_GAP } from './compute-pin-slots';
+import { pinSlots, SLOT_GAP } from './compute-pin-slots';
 
 // One pk referenced by two FKs from a second zone: users.id becomes a shared pin
 // with two edge-ends; each FK's own port stays a single-edge pin.
@@ -25,56 +25,50 @@ function sharedPinRaw() {
   };
 }
 
-describe('computePinSlots', () => {
+describe('pinSlots', () => {
   it('fans a shared pin symmetrically, SLOT_GAP apart, ordered by the far end', () => {
     const model = buildModel(sharedPinRaw());
-    computePinSlots(model);
-    const rA = model.relById.get('r-a')!;
-    const rB = model.relById.get('r-b')!;
+    const { slots } = pinSlots(model);
+    const sA = slots.get('r-a')!;
+    const sB = slots.get('r-b')!;
     // a is packed above b, so r-a takes the upper slot.
     expect(model.entityById.get('a')!.y).toBeLessThan(model.entityById.get('b')!.y);
-    expect(rA._srcSlot).toBe(-SLOT_GAP / 2);
-    expect(rB._srcSlot).toBe(SLOT_GAP / 2);
-    expect(rA._srcSlot! + rB._srcSlot!).toBe(0); // symmetric around the pin centre
+    expect(sA.src).toBe(-SLOT_GAP / 2);
+    expect(sB.src).toBe(SLOT_GAP / 2);
+    expect(sA.src + sB.src).toBe(0); // symmetric around the pin centre
   });
 
   it('gives single-edge pins slot 0', () => {
     const model = buildModel(sharedPinRaw());
-    computePinSlots(model);
-    expect(model.relById.get('r-a')!._tgtSlot).toBe(0);
-    expect(model.relById.get('r-b')!._tgtSlot).toBe(0);
+    const { slots } = pinSlots(model);
+    expect(slots.get('r-a')!.tgt).toBe(0);
+    expect(slots.get('r-b')!.tgt).toBe(0);
   });
 
-  it('records each port half-span in model._pinSpan', () => {
+  it('records each port half-span in the returned pinSpan map', () => {
     const model = buildModel(sharedPinRaw());
-    computePinSlots(model);
+    const { pinSpan } = pinSlots(model);
     const rA = model.relById.get('r-a')!;
     const { s, t } = edgeSides(model, rA);
-    expect(model._pinSpan!.get(portKey('users', 'id', s))).toBe(SLOT_GAP / 2); // 2 ends
-    expect(model._pinSpan!.get(portKey('a', 'users_id', t))).toBe(0); // 1 end
+    expect(pinSpan.get(portKey('users', 'id', s))).toBe(SLOT_GAP / 2); // 2 ends
+    expect(pinSpan.get(portKey('a', 'users_id', t))).toBe(0); // 1 end
   });
 
   it('resets self-loop slots to zero (they never join a fan)', () => {
     const model = buildModel(); // twoZoneRaw carries the users→users self-loop
-    computePinSlots(model);
-    const self = model.relById.get('self')!;
-    expect(self._srcSlot).toBe(0);
-    expect(self._tgtSlot).toBe(0);
+    const { slots } = pinSlots(model);
+    const self = slots.get('self')!;
+    expect(self.src).toBe(0);
+    expect(self.tgt).toBe(0);
   });
 
-  it('pinSlots returns fan offsets without mutating the model', () => {
+  it('does not mutate the model', () => {
     const model = buildModel(); // twoZoneRaw: users.id feeds u-o and self → shared port fans
-    const before = JSON.stringify(model.relationships.map((r) => [r._srcSlot, r._tgtSlot]));
+    const before = JSON.stringify(model, (_, v: unknown) => (v instanceof Map ? [...v] : v));
     const { slots, pinSpan } = pinSlots(model);
-    expect(JSON.stringify(model.relationships.map((r) => [r._srcSlot, r._tgtSlot]))).toBe(before);
-    expect(model._pinSpan).toBeUndefined();
+    const after = JSON.stringify(model, (_, v: unknown) => (v instanceof Map ? [...v] : v));
+    expect(after).toBe(before);
     expect(slots.size).toBe(model.relationships.length);
-    // legacy wrapper writes the same numbers onto the model:
-    computePinSlots(model);
-    for (const rel of model.relationships) {
-      expect(rel._srcSlot).toBe(slots.get(rel.id)!.src);
-      expect(rel._tgtSlot).toBe(slots.get(rel.id)!.tgt);
-    }
-    expect([...(model._pinSpan ?? new Map())]).toEqual([...pinSpan]);
+    expect(pinSpan.size).toBeGreaterThan(0);
   });
 });

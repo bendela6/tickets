@@ -25,7 +25,7 @@ export function edgeEndpoints(model: Model, rel: Relationship, slot?: EdgeSlots)
   const { s, t } = edgeSides(model, rel);
   const p1 = portWorldPos(A, ai, s);
   const p2 = portWorldPos(B, bi, t);
-  p1.y += slot ? slot.src : (rel._srcSlot ?? 0);
-  p2.y += slot ? slot.tgt : (rel._tgtSlot ?? 0);
+  p1.y += slot?.src ?? 0;
+  p2.y += slot?.tgt ?? 0;
   return { p1, p2, s, t, self: rel.source === rel.target, A, B };
 }

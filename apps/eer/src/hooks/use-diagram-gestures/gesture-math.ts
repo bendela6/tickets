@@ -1,6 +1,7 @@
-// Pure gesture geometry — ported verbatim from the legacy EerDiagram interaction
-// code (eer-diagram.ts). No DOM writes, no dispatch: given inputs, return numbers.
-// The hook (use-diagram-gestures) drives these and turns results into dispatches.
+// Pure gesture geometry — ported verbatim from the legacy imperative diagram
+// engine's interaction code (now deleted, see git history pre-T16). No DOM writes,
+// no dispatch: given inputs, return numbers. The hook (use-diagram-gestures) drives
+// these and turns results into dispatches.
 
 import { entityIdsInGroup } from '../../engine/groups/entity-ids-in-group';
 import type { Entity, GroupBounds, Model } from '../../engine/model/types';

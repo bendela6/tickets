@@ -1,31 +1,27 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { cleanupScene, makeScene } from '../../../test/scene';
+import { buildModel } from '../../../test/models';
 import { entityColor } from '../entity-color';
 import { GROUP_PALETTE } from '../group-color';
 import { edgeColor } from './edge-color';
-import type { EngineState } from '../../model/types';
-
-let state: EngineState;
-afterEach(() => cleanupScene(state));
 
 describe('edgeColor', () => {
   it('returns the entity color from the model for every entity', () => {
-    state = makeScene();
-    for (const e of state.model.entities) {
-      expect(edgeColor(state.model, e.id)).toBe(entityColor(state.model, e.id));
+    const model = buildModel();
+    for (const e of model.entities) {
+      expect(edgeColor(model, e.id)).toBe(entityColor(model, e.id));
     }
   });
 
   it('applies overrides when provided', () => {
-    state = makeScene();
-    const entity = state.model.entities[0]!;
+    const model = buildModel();
+    const entity = model.entities[0]!;
     const overrides = new Map([[entity.id, '#ff0000']]);
-    expect(edgeColor(state.model, entity.id, overrides)).toBe(entityColor(state.model, entity.id, overrides));
+    expect(edgeColor(model, entity.id, overrides)).toBe(entityColor(model, entity.id, overrides));
   });
 
   it('falls back to the first palette entry for an unknown id', () => {
-    state = makeScene();
-    expect(edgeColor(state.model, 'no-such-entity')).toBe(GROUP_PALETTE[0]);
+    const model = buildModel();
+    expect(edgeColor(model, 'no-such-entity')).toBe(GROUP_PALETTE[0]);
   });
 });

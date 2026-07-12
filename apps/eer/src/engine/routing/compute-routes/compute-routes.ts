@@ -3,7 +3,7 @@
 // source port to target port through the gaps; the renderer draws those waypoints
 // either smoothed (avoid) or as sharp H/V segments (ortho). "curved" ignores this.
 //
-// Everything below computeRoutes() is that one pipeline's private machinery:
+// Everything below routeEdges() is that one pipeline's private machinery:
 // lane separation, channel ordering, and port-slot reordering.
 
 import type { EdgeSlots } from '../../geometry/compute-pin-slots';
@@ -32,8 +32,8 @@ export interface RouteResult {
   slots: Map<string, EdgeSlots>; // input slots, possibly adjusted by port-slot reordering
 }
 
-// PURE — never writes to model or its relationships. All _route/_srcSlot/_tgtSlot
-// state lives in local maps (routes, slotsW) for the duration of the call.
+// PURE — never writes to model or its relationships; all routing state lives in
+// local maps (routes, slotsW) for the duration of the call.
 export function routeEdges(model: Model, slots: ReadonlyMap<string, EdgeSlots>): RouteResult {
   const slotsW = new Map([...slots].map(([k, v]) => [k, { ...v }]));
   const routes = new Map<string, Point[] | null>();
@@ -44,17 +44,6 @@ export function routeEdges(model: Model, slots: ReadonlyMap<string, EdgeSlots>):
   const hEntries = separateLanes(model, cards, routes);
   reorderPortSlots(model, hEntries, routes, slotsW);
   return { routes, slots: slotsW };
-}
-
-export function computeRoutes(model: Model): void {
-  const slots = new Map(model.relationships.map((r) => [r.id, { src: r._srcSlot ?? 0, tgt: r._tgtSlot ?? 0 }]));
-  const { routes, slots: adjusted } = routeEdges(model, slots);
-  for (const rel of model.relationships) {
-    rel._route = routes.get(rel.id) ?? null;
-    const s = adjusted.get(rel.id);
-    rel._srcSlot = s?.src ?? 0;
-    rel._tgtSlot = s?.tgt ?? 0;
-  }
 }
 
 // ---- Lane separation ----------------------------------------------------------

@@ -4,7 +4,7 @@
 
 import { describe, expectTypeOf, it } from 'vitest';
 
-import type { Cardinality, Focus, Relationship, RoutingMode, Selection, Side } from './types';
+import type { Cardinality, Focus, RoutingMode, Selection, Side } from './types';
 
 describe('types', () => {
   it('keeps the closed unions the engine switches over', () => {
@@ -21,10 +21,5 @@ describe('types', () => {
 
   it('allows Focus to be cleared with null', () => {
     expectTypeOf<null>().toMatchTypeOf<Focus>();
-  });
-
-  it('keeps routing/pin-slot fields optional on Relationship (loader fills them later)', () => {
-    expectTypeOf<Relationship['_route']>().toEqualTypeOf<Relationship['_route'] | undefined>();
-    expectTypeOf<Relationship['_srcSlot']>().toEqualTypeOf<number | undefined>();
   });
 });

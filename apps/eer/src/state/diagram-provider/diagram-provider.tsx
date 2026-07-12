@@ -118,7 +118,7 @@ export function DiagramProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // DEV handle for browser verification (replaces window.__eer = EerDiagram).
+  // DEV handle for browser verification (replaces window.__eer = the legacy diagram class).
   useEffect(() => {
     if (import.meta.env.DEV) {
       (window as unknown as { __eer: unknown }).__eer = {

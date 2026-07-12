@@ -1,6 +1,7 @@
-// Ported from EerDiagram.wireGlobal (eer-diagram.ts:290-572). The interaction
-// state machine — pan/zoom, entity drag, group drag, group resize, click-select,
-// keyboard — as a hook that dispatches into the reducer instead of mutating DOM.
+// Ported from the legacy imperative diagram engine's wireGlobal (now deleted, see
+// git history pre-T16). The interaction state machine — pan/zoom, entity drag,
+// group drag, group resize, click-select, keyboard — as a hook that dispatches
+// into the reducer instead of mutating DOM.
 //
 // Per-gesture scratch (mode, start points, snapshots) lives in closure `let`s
 // inside the effect, exactly like the legacy handler: it is transient bookkeeping,
@@ -225,7 +226,7 @@ export function useDiagramGestures(viewportRef: RefObject<HTMLDivElement | null>
         actions.clearSelection();
       }
       // A moved entity/group/resize froze the geometry memo (SET_GESTURE); release
-      // it so routes recompute — replaces the legacy conditional drawAllEdges.
+      // it so routes recompute — replaces the legacy engine's conditional edge redraw.
       if (moved && (mode === 'drag' || mode === 'group' || mode === 'resize')) {
         dispatch({ type: 'SET_GESTURE', gesture: { kind: 'idle' } });
       }

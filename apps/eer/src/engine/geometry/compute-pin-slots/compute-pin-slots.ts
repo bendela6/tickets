@@ -1,7 +1,7 @@
 // Assign each edge-end a y-offset along its port so multiple lines into the same
 // pin don't stack. Ends are ordered by where the other end sits, which keeps the
-// fan from crossing itself. Records each port's half-span in model._pinSpan so the
-// renderer can size the visible bar.
+// fan from crossing itself. Records each port's half-span in the returned pinSpan
+// map so the renderer can size the visible bar.
 
 import { edgeSides } from '../edge-sides';
 import { fieldIndex } from '../field-index';
@@ -73,14 +73,4 @@ export function pinSlots(model: Model): PinSlotResult {
     span.set(key, ((n - 1) / 2) * gap);
   }
   return { slots, pinSpan: span };
-}
-
-export function computePinSlots(model: Model): void {
-  const { slots, pinSpan } = pinSlots(model);
-  for (const rel of model.relationships) {
-    const s = slots.get(rel.id);
-    rel._srcSlot = s?.src ?? 0;
-    rel._tgtSlot = s?.tgt ?? 0;
-  }
-  model._pinSpan = pinSpan;
 }

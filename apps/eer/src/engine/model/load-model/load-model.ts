@@ -168,7 +168,6 @@ export function loadModel(raw: unknown): LoadResult {
       cardinalityInferred: card.inferred,
       kind: rel.kind || null,
       label: rel.label || null,
-      _route: null,
     };
     relById.set(id, nr);
     return nr;

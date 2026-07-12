@@ -20,24 +20,22 @@ describe('edgeEndpoints', () => {
     expect(ends.p2).toEqual(portWorldPos(orders, fieldIndex(orders, 'users_id'), t));
   });
 
-  it('adds the pin slot offsets to the endpoint ys (x untouched)', () => {
+  it('defaults to a zero offset when no slot is given', () => {
     const model = buildModel();
     const rel = model.relById.get('u-o')!;
     const bare = edgeEndpoints(model, rel);
-    rel._srcSlot = 6;
-    rel._tgtSlot = -4;
-    const fanned = edgeEndpoints(model, rel);
-    expect(fanned.p1).toEqual({ x: bare.p1.x, y: bare.p1.y + 6 });
-    expect(fanned.p2).toEqual({ x: bare.p2.x, y: bare.p2.y - 4 });
+    const zeroed = edgeEndpoints(model, rel, { src: 0, tgt: 0 });
+    expect(bare.p1).toEqual(zeroed.p1);
+    expect(bare.p2).toEqual(zeroed.p2);
   });
 
-  it('applies explicit slot offsets over the rel fields', () => {
+  it('applies explicit slot offsets to the endpoint ys (x untouched)', () => {
     const model = buildModel();
     const rel = model.relById.get('u-o')!;
     const base = edgeEndpoints(model, rel, { src: 0, tgt: 0 });
     const fanned = edgeEndpoints(model, rel, { src: 4, tgt: -4 });
-    expect(fanned.p1.y).toBe(base.p1.y + 4);
-    expect(fanned.p2.y).toBe(base.p2.y - 4);
+    expect(fanned.p1).toEqual({ x: base.p1.x, y: base.p1.y + 4 });
+    expect(fanned.p2).toEqual({ x: base.p2.x, y: base.p2.y - 4 });
   });
 
   it('flags a self-loop and returns the same entity at both ends', () => {
