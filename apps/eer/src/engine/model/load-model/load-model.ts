@@ -208,6 +208,12 @@ export function loadModel(raw: unknown): LoadResult {
     for (const f of e.fields) {
       if (f.role !== 'fk' || !f.ref || !entityById.has(f.ref)) continue;
       const sourceField = f.refField ?? 'id';
+      // `ref` resolving isn't enough — the ref'd entity must still carry the
+      // named refField itself, or the derived rel's sourceField would point at
+      // nothing (e.g. a file hand-edited after a pk rename, without updating
+      // every dependent's refField). hasField already warned about this case
+      // above for explicit rels; derivation must honour it too.
+      if (!hasField(entityById.get(f.ref), sourceField)) continue;
       if (coveredPairs.has(pairKey(f.ref, sourceField, e.id, f.name))) continue;
       const id = `e-${f.ref}.${sourceField}->${e.id}.${f.name}`;
       const derived: Relationship = {
