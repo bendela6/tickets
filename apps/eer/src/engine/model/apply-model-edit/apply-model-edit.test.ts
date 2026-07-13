@@ -201,23 +201,42 @@ describe('applyModelEdit', () => {
       expect(removed.relationships.some((r) => r.target === 'tags' && r.targetField === 'owner_id')).toBe(false);
     });
 
-    // Corrected contract: "valid" only requires both endpoints' entity+field to
-    // exist — role is irrelevant. So a rel already sitting in `relationships`
-    // (whether hand-authored or derived by an earlier call) survives a field's
-    // role changing underneath it, exactly like it would survive any other edit
-    // that leaves entity+field intact. Only a rename/removal (next test) invalidates it.
-    it('clearing an fk role but keeping the field name leaves its already-derived rel standing', () => {
+    // A derived rel is derivable-shaped (derived id scheme, kind fk, no label,
+    // '1-n'), so it is never kept verbatim — it re-derives from the CURRENT
+    // fields on every edit. Clearing the backing field's fk role (keeping the
+    // name) therefore removes the edge; authored data (two tests down) doesn't.
+    it('clearing an fk role (keeping the field name) removes its derived relationship', () => {
       const m1 = buildModel();
       const tags = m1.entityById.get('tags')!;
       const withFk = applyModelEdit(m1, {
         kind: 'upsertEntity',
         entity: { id: 'tags', label: tags.label, group: tags.group, description: null, fields: [editPk(), editFk('owner_id', 'users')] },
       });
+      expect(withFk.relationships.some((r) => r.source === 'users' && r.target === 'tags' && r.targetField === 'owner_id')).toBe(true);
+
       const cleared = applyModelEdit(withFk, {
         kind: 'upsertEntity',
         entity: { id: 'tags', label: tags.label, group: tags.group, description: null, fields: [editPk(), editPlain('owner_id', 'int')] },
       });
-      expect(cleared.relationships.some((r) => r.target === 'tags' && r.targetField === 'owner_id')).toBe(true);
+      expect(cleared.relationships.some((r) => r.target === 'tags' && r.targetField === 'owner_id')).toBe(false);
+    });
+
+    it('a labelled fk-kind rel survives clearing its backing field role — kept verbatim while endpoints stay valid', () => {
+      const raw = {
+        groups: [{ id: 'g', label: 'G' }],
+        entities: [
+          { id: 'a', group: 'g', fields: [pkField] },
+          { id: 'b', group: 'g', fields: [pkField, { name: 'a_id', type: 'int', role: 'fk', ref: 'a', refField: 'id' }] },
+        ],
+        relationships: [{ id: 'lbl', source: 'a', sourceField: 'id', target: 'b', targetField: 'a_id', kind: 'fk', label: 'owns' }],
+      };
+      const m1 = buildModel(raw);
+      const cleared = applyModelEdit(m1, {
+        kind: 'upsertEntity',
+        entity: { id: 'b', label: 'b', group: 'g', description: null, fields: [editPk(), editPlain('a_id', 'int')] },
+      });
+      expect(cleared.relationships).toHaveLength(1); // and no label-less twin appears either
+      expect(cleared.relationships[0]).toMatchObject({ id: 'lbl', label: 'owns', kind: 'fk' });
     });
 
     it('renaming an fk field drops the stale rel and derives a fresh one under the new name', () => {
