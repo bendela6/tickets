@@ -3,9 +3,11 @@
 
 import { CARDINALITIES, inferCardinality } from '../infer-cardinality';
 import type {
+  Constraint,
   EdgeKind,
   Entity,
   Field,
+  FkAction,
   Group,
   LineStyle,
   LoadResult,
@@ -13,6 +15,7 @@ import type {
   Relationship,
   Role,
   RoutingMode,
+  TableIndex,
 } from '../types';
 
 function normalizeRouting(v: unknown): RoutingMode {
@@ -36,6 +39,50 @@ function pairKey(aEntity: string, aField: string, bEntity: string, bField: strin
   const b: [string, string] = [bEntity, bField];
   const [lo, hi] = JSON.stringify(a) <= JSON.stringify(b) ? [a, b] : [b, a];
   return JSON.stringify([lo, hi]);
+}
+
+const FK_ACTIONS: FkAction[] = ['cascade', 'restrict', 'set null', 'set default', 'no action'];
+
+function fkAction(v: unknown): FkAction | null {
+  return typeof v === 'string' && FK_ACTIONS.includes(v as FkAction) ? (v as FkAction) : null;
+}
+
+function normalizeConstraint(c: any, i: number, entityId: string, errors: string[]): Constraint {
+  const id = typeof c.id === 'string' && c.id ? c.id : 'c' + (i + 1);
+  const name = typeof c.name === 'string' && c.name ? c.name : null;
+  const columns: string[] = Array.isArray(c.columns) ? c.columns.filter((x: unknown) => typeof x === 'string') : [];
+  if (c.kind === 'check') return { id, kind: 'check', name, expression: typeof c.expression === 'string' ? c.expression : '' };
+  if (c.kind === 'fk') {
+    if (typeof c.refTable !== 'string') errors.push(`Entity "${entityId}" constraint "${id}" is missing "refTable".`);
+    const refColumns: string[] = Array.isArray(c.refColumns)
+      ? c.refColumns.filter((x: unknown) => typeof x === 'string')
+      : [];
+    return {
+      id, kind: 'fk', name, columns,
+      refTable: typeof c.refTable === 'string' ? c.refTable : '',
+      refColumns, onDelete: fkAction(c.onDelete), onUpdate: fkAction(c.onUpdate),
+    };
+  }
+  if (c.kind === 'unique') return { id, kind: 'unique', name, columns };
+  return { id, kind: 'pk', name, columns };
+}
+
+// Legacy files describe keys with per-field roles. One PK from every role:'pk'
+// field, and one FK per field carrying a ref — regardless of role, because a
+// shared-primary-key reference is role 'pk' AND a ref.
+function synthesizeLegacyConstraints(fields: Field[]): Constraint[] {
+  const out: Constraint[] = [];
+  const pkCols = fields.filter((f) => f.role === 'pk').map((f) => f.name);
+  let n = 1;
+  if (pkCols.length) out.push({ id: 'c' + n++, kind: 'pk', name: null, columns: pkCols });
+  for (const f of fields) {
+    if (!f.ref) continue;
+    out.push({
+      id: 'c' + n++, kind: 'fk', name: null, columns: [f.name],
+      refTable: f.ref, refColumns: [f.refField ?? 'id'], onDelete: null, onUpdate: null,
+    });
+  }
+  return out;
 }
 
 export function loadModel(raw: unknown): LoadResult {
@@ -101,9 +148,22 @@ export function loadModel(raw: unknown): LoadResult {
         refField: f.refField || null,
         title: f.title || null,
         description: f.description || null,
+        nullable: f.nullable !== false,
+        default: typeof f.default === 'string' ? f.default : null,
       };
     });
     if (fields.length === 0) errors.push(`Entity "${e.id}" has no fields.`);
+
+    const rawConstraints = Array.isArray(e.constraints) ? e.constraints : null;
+    const constraints: Constraint[] = rawConstraints
+      ? rawConstraints.map((c: any, ci: number) => normalizeConstraint(c, ci, e.id, errors))
+      : synthesizeLegacyConstraints(fields);
+    const indexes: TableIndex[] = (Array.isArray(e.indexes) ? e.indexes : []).map((ix: any, ii: number) => ({
+      id: typeof ix.id === 'string' && ix.id ? ix.id : 'i' + (ii + 1),
+      name: typeof ix.name === 'string' ? ix.name : '',
+      columns: Array.isArray(ix.columns) ? ix.columns.filter((c: unknown) => typeof c === 'string') : [],
+      unique: ix.unique === true,
+    }));
 
     const ne: Entity = {
       id: e.id,
@@ -111,6 +171,8 @@ export function loadModel(raw: unknown): LoadResult {
       group: e.group,
       description: e.description || null,
       fields,
+      constraints,
+      indexes,
       x: 0,
       y: 0,
       _w: 0,
