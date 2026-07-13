@@ -9,7 +9,8 @@ import { Modal } from '../modal';
 import { AddChooser } from './add-chooser';
 import { EditorContext, type EditorModal } from './editor-context';
 import { GroupModal } from './group-modal';
-import { ModelModal, NewModelModal } from './model-modal';
+import { ModelModal } from './model-modal';
+import { NewModelModal } from './new-model-modal';
 
 export function EditorModals({ children }: { children: ReactNode }) {
   const [modal, setModal] = useState<EditorModal | null>(null);

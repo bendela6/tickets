@@ -76,7 +76,8 @@ export type DiagramAction =
   | { type: 'CLEAR_SELECTION' }
   | { type: 'APPLY_MODEL_EDIT'; edit: ModelEdit }
   | { type: 'MARK_SAVED' }
-  | { type: 'CLEAR_EDIT_ERROR' };
+  | { type: 'CLEAR_EDIT_ERROR' }
+  | { type: 'CLEAR_MODEL_ID' };
 
 function toggled(set: ReadonlySet<string>, id: string): Set<string> {
   const next = new Set(set);
@@ -218,5 +219,11 @@ export function diagramReducer(state: DiagramState, action: DiagramAction): Diag
       return { ...state, ui: { ...state.ui, dirty: false } };
     case 'CLEAR_EDIT_ERROR':
       return state.ui.editError ? { ...state, ui: { ...state.ui, editError: null } } : state;
+    case 'CLEAR_MODEL_ID':
+      // Deleting the loaded model's file must stop Save from being able to
+      // resurrect it — clear the save-back id only; the diagram itself (model,
+      // dirty, selection, …) stays exactly as it was so the screen doesn't
+      // flash empty out from under the user.
+      return state.ui.modelId === null ? state : { ...state, ui: { ...state.ui, modelId: null } };
   }
 }

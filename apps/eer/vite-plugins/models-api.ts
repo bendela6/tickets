@@ -98,6 +98,10 @@ export async function handleModelsRequest(
     return { status: 200, body: JSON.parse(await readFile(file, 'utf8')) };
   }
   if (method === 'PUT') {
+    // A save to a slug with no file on disk is a client bug (e.g. Save fired
+    // after the model was deleted), not an implicit create — 404 instead of
+    // silently writing a new file back into existence.
+    if (!existsSync(file)) return { status: 404, body: { error: 'Not found.' } };
     const v = validate(body);
     if (v.error) return v.error;
     await atomicWrite(dir, slug, JSON.stringify(v.raw, null, 2));

@@ -43,6 +43,7 @@ export interface DiagramActions {
   applyModelEdit(edit: ModelEdit): void;
   markSaved(): void;
   clearEditError(): void;
+  clearModelId(): void; // drop the save-back id without unloading the diagram
 }
 
 const EMPTY_GEOMETRY: EdgeGeometry = { slots: new Map(), pinSpan: new Map(), routes: new Map() };
@@ -127,6 +128,7 @@ export function DiagramProvider({ children }: { children: ReactNode }) {
       applyModelEdit: (edit: ModelEdit) => dispatch({ type: 'APPLY_MODEL_EDIT', edit }),
       markSaved: () => dispatch({ type: 'MARK_SAVED' }),
       clearEditError: () => dispatch({ type: 'CLEAR_EDIT_ERROR' }),
+      clearModelId: () => dispatch({ type: 'CLEAR_MODEL_ID' }),
     };
   }, []);
 

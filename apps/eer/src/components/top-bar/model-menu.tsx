@@ -41,7 +41,10 @@ export function ModelMenu() {
     });
     return () => {
       cancelled = true;
-      latestReq.current = null; // unmounting invalidates any in-flight model fetch too
+      // Runs on unmount AND before every re-run of this effect (i.e. on each
+      // ui.modelId change) — either way, any model fetch still in flight from
+      // the previous id is now stale and must not be applied.
+      latestReq.current = null;
     };
   }, [ui.modelId]);
 
