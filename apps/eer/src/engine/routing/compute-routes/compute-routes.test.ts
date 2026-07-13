@@ -185,3 +185,57 @@ it('a hub fanned to three stacked targets gets a distinct lane per edge', () => 
   const { routes } = routeEdges(model, slots);
   expect(overlappingPairs(routes)).toEqual([]);
 });
+
+it('packs a corridor with more parallel runs than clean lanes, forcing a separated-but-blocked lane', () => {
+  // Ten sources stacked well below a shared wall, all fanning into one target
+  // above it — the same "climb past a wall into the target" shape as the port-
+  // stub test above, but with far more parallel verticals than the wall's gap
+  // (x 100–340) has room for as distinct, unblocked lanes. Once the clear
+  // lanes on both sides of the wall are exhausted, later (shorter) runs can
+  // find lanes that are separated from every placed run but only by landing
+  // back inside the wall's own footprint — the fallback tier this test
+  // targets. Without it, those runs stay put at their shared A* lane (the
+  // target's approach column) and stack directly on top of each other.
+  const N = 10;
+  const raw = {
+    groups: [{ id: 'z', label: 'Z', order: 0 }],
+    entities: [
+      ...Array.from({ length: N }, (_, i) => ({ id: 'a' + i, group: 'z', fields: [pkField] })),
+      { id: 't', group: 'z', fields: [pkField, ...Array.from({ length: N }, (_, i) => fkTo('a' + i))] },
+      { id: 'wall', group: 'z', fields: [pkField] },
+    ],
+    relationships: Array.from({ length: N }, (_, i) => ({
+      id: 'h-' + i,
+      source: 'a' + i,
+      sourceField: 'id',
+      target: 't',
+      targetField: 'a' + i + '_id',
+    })),
+  };
+  const model = buildModel(raw);
+  for (let i = 0; i < N; i++) {
+    Object.assign(model.entityById.get('a' + i)!, { x: 0, y: 360 + i * 80, _w: 140, _h: 60 });
+  }
+  Object.assign(model.entityById.get('t')!, { x: 400, y: 0, _w: 140, _h: 100 });
+  Object.assign(model.entityById.get('wall')!, { x: 100, y: 120, _w: 240, _h: 200 });
+  const { slots } = pinSlots(model);
+  const { routes } = routeEdges(model, slots);
+
+  // No two overlapping collinear runs ever stack, even under this much lane
+  // pressure — the outcome the fallback tier exists to guarantee.
+  expect(overlappingPairs(routes)).toEqual([]);
+
+  // And the pressure was real: with only 240px of wall and ~9px lanes, some
+  // run's assigned vertical must have landed inside the wall's own footprint
+  // (separated from its neighbours, but genuinely card-blocked) rather than
+  // finding a fully clear lane on either side of it.
+  const wall = model.entityById.get('wall')!;
+  let sawWallCrossing = false;
+  for (const pts of routes.values()) {
+    if (!pts) continue;
+    for (let i = 1; i < pts.length; i++) {
+      if (segHitsRect(pts[i - 1]!, pts[i]!, wall.x, wall.y, wall._w, wall._h)) sawWallCrossing = true;
+    }
+  }
+  expect(sawWallCrossing).toBe(true);
+});
