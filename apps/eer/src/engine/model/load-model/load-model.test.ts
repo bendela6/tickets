@@ -251,13 +251,17 @@ describe('loadModel — relationships derive from constraints', () => {
   // being flattened to a plain solid 'fk' (see derive-relationships.ts).
   // 39 constraints - 0 unresolvable = 40 (item_type_fields also carries a
   // composite-looking pair via two separate single-column fk fields, each
-  // deriving its own edge).
-  it('derives exactly one edge per fk constraint for the real seed model (40; 3 keep their authored m2m kind)', () => {
+  // deriving its own edge), plus 1 authored `kind:'fk'` relationship with NO
+  // backing constraint at all ('istream' — items.events.aggregate_id is a
+  // polymorphic reference, no `ref` on the field) kept verbatim rather than
+  // dropped just because its kind reads 'fk' — 41 total.
+  it('derives exactly one edge per fk constraint for the real seed model (41; 3 keep their authored m2m kind, 1 is an unbacked authored fk kept verbatim)', () => {
     const { model, errors } = loadModel(seedRaw);
     expect(errors).toEqual([]);
-    expect(model!.relationships).toHaveLength(40);
-    expect(model!.relationships.filter((r) => r.kind === 'fk')).toHaveLength(37);
+    expect(model!.relationships).toHaveLength(41);
+    expect(model!.relationships.filter((r) => r.kind === 'fk')).toHaveLength(38);
     expect(model!.relationships.filter((r) => r.kind === 'm2m')).toHaveLength(3);
+    expect(model!.relById.get('istream')).toMatchObject({ label: 'stream', kind: 'fk' });
 
     const ids = new Set(model!.relationships.map((r) => r.id));
     for (const expected of [
@@ -269,9 +273,9 @@ describe('loadModel — relationships derive from constraints', () => {
       expect(ids.has(expected)).toBe(true);
     // The reversed m2m rel ('fields.option_set_id -> option_sets.id') covered
     // this same pair under the old scheme; it must not also survive alongside
-    // the derived edge (would inflate the count past 40 / collide in relById).
+    // the derived edge (would inflate the count past 41 / collide in relById).
     expect(ids.has('e-option_sets.id->fields.option_set_id')).toBe(false);
-    expect(model!.relById.size).toBe(40);
+    expect(model!.relById.size).toBe(41);
   });
 });
 

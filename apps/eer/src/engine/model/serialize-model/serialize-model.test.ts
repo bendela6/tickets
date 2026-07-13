@@ -155,6 +155,16 @@ describe('serializeModel', () => {
   // plain solid fk permanently. The assertions below are pinned to the ABSOLUTE
   // counts (not "m2 has as many labels as m1", which a naive fix could satisfy
   // vacuously at 0 === 0 if load dropped every label too).
+  //
+  // CRITICAL, reviewer-found (second bug): 'istream' carries a label too, but
+  // it has NO backing fk constraint at all (items.events.aggregate_id is a
+  // polymorphic reference, no `ref` on the field) — so it has no derived twin
+  // to be folded onto. A prior version of deriveRelationships dropped any
+  // authored relationship whose own kind read 'fk', unconditionally, once it
+  // had no derived twin — silently erasing 'istream' (and its label) on
+  // load, and serialize-model then had nothing left to write, so the very
+  // next Save permanently erased the edge from the file. 18 (not 17) is the
+  // correct label count; 'istream' must both load and round-trip.
   it('roundtrips the real seed model: same derived edge set, same labels/kinds, same titles after an edit + save + reload', () => {
     const { model: m1, errors: e1 } = loadModel(seedRaw);
     expect(e1).toEqual([]);
@@ -168,24 +178,66 @@ describe('serializeModel', () => {
     expect(m2!.relationships.map(tuple).sort()).toEqual(m1!.relationships.map(tuple).sort());
 
     const labelled = (rels: Relationship[]) => rels.filter((r) => r.label !== null).length;
-    expect(labelled(m1!.relationships)).toBe(17);
-    expect(labelled(m2!.relationships)).toBe(17);
+    expect(labelled(m1!.relationships)).toBe(18);
+    expect(labelled(m2!.relationships)).toBe(18);
     const m2mKind = (rels: Relationship[]) => rels.filter((r) => r.kind === 'm2m').length;
     expect(m2mKind(m1!.relationships)).toBe(3);
     expect(m2mKind(m2!.relationships)).toBe(3);
 
+    // 'istream' — unbacked, kept verbatim — must survive both load and the
+    // save -> load round trip, id and label intact.
+    expect(m1!.relById.get('istream')).toMatchObject({ label: 'stream', kind: 'fk' });
+    expect(m2!.relById.get('istream')).toMatchObject({ label: 'stream', kind: 'fk' });
+
     expect(m2!.entities.map((e) => e.label).sort()).toEqual(m1!.entities.map((e) => e.label).sort());
 
-    // A bare derived fk edge (no label, kind still 'fk', inferred cardinality)
-    // is never written — it regenerates from its constraint. But 14 of the
-    // fk-kind edges carry a label the constraint alone can't reproduce, so
-    // those ARE written (kind:'fk' — a label doesn't change the kind), plus
-    // the 3 m2m-kind edges — 17 relationships written in total.
-    const savedRels = raw2.relationships as { kind?: string; label?: string }[];
-    expect(savedRels).toHaveLength(17);
+    // A bare derived fk edge (no label, kind still 'fk', inferred cardinality,
+    // and actually backed by a constraint) is never written — it regenerates
+    // from its constraint. But 14 of the fk-kind edges carry a label the
+    // constraint alone can't reproduce, so those ARE written (kind:'fk' — a
+    // label doesn't change the kind), plus 'istream' (labelled, and has no
+    // backing constraint to regenerate it from regardless), plus the 3
+    // m2m-kind edges — 18 relationships written in total.
+    const savedRels = raw2.relationships as { id: string; kind?: string; label?: string }[];
+    expect(savedRels).toHaveLength(18);
+    expect(savedRels.some((r) => r.id === 'istream' && r.label === 'stream')).toBe(true);
     const savedFk = savedRels.filter((r) => r.kind === 'fk');
-    expect(savedFk).toHaveLength(14);
+    expect(savedFk).toHaveLength(15);
     expect(savedFk.every((r) => !!r.label)).toBe(true);
     expect(savedRels.filter((r) => r.kind === 'm2m')).toHaveLength(3);
+  });
+
+  // The task's second requirement, isolated: an authored `kind:'fk'`
+  // relationship with NO label and no backing constraint must ALSO survive a
+  // save -> load round trip. Its shape (kind 'fk', no label, an inferred —
+  // not explicitly authored — cardinality) is indistinguishable from a bare
+  // derived edge's by looking at the relationship alone; only checking
+  // whether its endpoint pair is actually backed by a real fk constraint
+  // (see `deriveConstraintEdges`) tells them apart. Omitting it on save would
+  // erase it — there is no constraint left to regenerate it from.
+  it('an authored fk-kind relationship with no label and no backing constraint survives a save -> load round trip', () => {
+    const raw0 = {
+      groups: [{ id: 'g', label: 'G', order: 0 }],
+      entities: [
+        { id: 'items', group: 'g', fields: [pkField] },
+        {
+          id: 'events', group: 'g',
+          fields: [pkField, { name: 'aggregate_id', type: 'int' }], // no ref: polymorphic
+        },
+      ],
+      relationships: [
+        { id: 'poly', source: 'items', sourceField: 'id', target: 'events', targetField: 'aggregate_id', kind: 'fk' },
+      ],
+    };
+    const { model: m1, errors: e1 } = loadModel(raw0);
+    expect(e1).toEqual([]);
+    expect(m1!.relById.get('poly')).toMatchObject({ kind: 'fk', label: null });
+
+    const out = serializeModel(m1!, new Map());
+    expect((out.relationships as { id: string }[]).some((r) => r.id === 'poly')).toBe(true);
+
+    const { model: m2, errors: e2 } = loadModel(out);
+    expect(e2).toEqual([]);
+    expect(m2!.relById.get('poly')).toMatchObject({ kind: 'fk', label: null });
   });
 });
