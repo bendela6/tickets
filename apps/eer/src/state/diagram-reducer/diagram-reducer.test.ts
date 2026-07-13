@@ -36,6 +36,20 @@ it('LOAD without a modelId resets a stale ui.modelId — Save must not overwrite
   expect(withoutId.ui.modelId).toBeNull();
 });
 
+it('CLEAR_MODEL_ID nulls ui.modelId only — model, dirty, and selection are untouched', () => {
+  let s = diagramReducer(initialDiagramState, { type: 'LOAD', model: buildModel(), modelId: 'alpha' });
+  s = diagramReducer(s, { type: 'SELECT_ENTITY', id: 'users' });
+  s = diagramReducer(s, { type: 'SET_POSITIONS', entities: [{ id: 'users', x: 10, y: 20 }], boxes: [] });
+  expect(s.ui.modelId).toBe('alpha');
+  expect(s.ui.dirty).toBe(true);
+
+  const cleared = diagramReducer(s, { type: 'CLEAR_MODEL_ID' });
+  expect(cleared.ui.modelId).toBeNull();
+  expect(cleared.model).toBe(s.model); // same reference — diagram left alone
+  expect(cleared.ui.dirty).toBe(true);
+  expect(cleared.ui.focus).toEqual({ type: 'entity', id: 'users' });
+});
+
 it('SET_POSITIONS shares structure: untouched entities keep identity', () => {
   const s = loaded();
   const before = s.model!;

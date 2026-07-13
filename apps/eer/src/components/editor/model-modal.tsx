@@ -1,29 +1,23 @@
-// Edit the current model's title/description, or delete it outright — and,
-// since both share the tiny seededRaw() bootstrap fixture, the New-model form
-// too. Delete-model fallback (documented in the task report): reload the
-// model list and switch to the first remaining model; if none remain, leave
-// the current (now-orphaned) model on screen and show an inline notice rather
-// than clearing the diagram out from under the user.
+// Edit the current model's title/description, or delete it outright.
+// Delete-model fallback (documented in the task report): reload the model
+// list and switch to the first remaining model; if none remain — or the
+// fallback model fails to load — clear ui.modelId (CLEAR_MODEL_ID) so a
+// leftover Save click can't resurrect the file just deleted, and keep the
+// current (now-orphaned) model on screen with an inline notice rather than
+// clearing the diagram out from under the user.
+//
+// NewModelModal lives in ./new-model-modal.tsx (split out to keep both files
+// near the ~120-line guideline) — see that file for seededRaw() too.
 
 import { useState } from 'react';
 
-import { createModel, deleteModel, getModel, listModels } from '../../api/models-client';
+import { deleteModel, getModel, listModels } from '../../api/models-client';
 import { applyModelEdit as tryApplyModelEdit } from '../../engine/model/apply-model-edit';
 import { loadModel } from '../../engine/model/load-model';
 import type { Model } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
 import { Modal } from '../modal';
-
-export function seededRaw(title: string): Record<string, unknown> {
-  return {
-    meta: { title, description: '' },
-    view: { routing: 'avoid' },
-    kinds: [{ id: 'fk', label: 'FK constraint' }],
-    groups: [{ id: 'main', label: 'Main', order: 0 }],
-    entities: [{ id: 'table_1', label: 'table_1', group: 'main', fields: [{ name: 'id', type: 'serial', role: 'pk' }] }],
-  };
-}
 
 const field = cn('w-full rounded-md border border-gray-600 bg-gray-900 px-2 py-1', 'text-sm text-gray-50');
 const label = 'flex flex-col gap-1 text-xs text-gray-400';
@@ -71,11 +65,27 @@ function ModelModalForm({ model, onClose }: { model: Model; onClose: () => void 
     if (next) {
       const raw = await getModel(next.id);
       const result = loadModel(raw);
-      if (result.model) actions.load(result.model, next.id);
+      // Same validity check as ModelMenu's selectModel(): a model with errors
+      // is still a (possibly empty/garbage) object here, never null — errors
+      // must be checked explicitly, not just truthiness of result.model.
+      if (!result.errors.length && result.model) {
+        actions.load(result.model, next.id);
+        setBusy(false);
+        onClose();
+        return;
+      }
+      // A fallback model exists but failed to load — do NOT close (that would
+      // silently strand the deleted id in ui.modelId, letting a later Save
+      // resurrect the file). Clear the id instead and stay open with a notice.
+      actions.clearModelId();
+      setBusy(false);
+      setNotice('Model deleted, but the next model failed to load — pick another from the menu.');
+      return;
     }
+    // No models remain — same resurrection risk if ui.modelId were left set.
+    actions.clearModelId();
     setBusy(false);
-    if (next) onClose();
-    else setNotice('Model deleted. No other models remain — create a new one to continue.');
+    setNotice('Model deleted. No other models remain — create a new one to continue.');
   };
 
   return (
@@ -112,63 +122,6 @@ function ModelModalForm({ model, onClose }: { model: Model; onClose: () => void 
         </button>
       </div>
       {notice && <p className="text-xs text-yellow-400">{notice}</p>}
-    </Modal>
-  );
-}
-
-export function NewModelModal({ onClose }: { onClose: () => void }) {
-  const actions = useDiagramActions();
-  const [title, setTitle] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
-
-  const create = async () => {
-    const trimmed = title.trim();
-    if (!trimmed) return;
-    setCreating(true);
-    const result = await createModel(seededRaw(trimmed));
-    setCreating(false);
-    if ('error' in result) {
-      setError(result.error);
-      return;
-    }
-    const { model } = loadModel(seededRaw(trimmed));
-    if (model) actions.load(model, result.id);
-    onClose();
-  };
-
-  return (
-    <Modal title="New model" onClose={onClose}>
-      {error && (
-        <div className={errorRow}>
-          <span>{error}</span>
-          <button type="button" className="shrink-0" onClick={() => setError(null)} aria-label="Dismiss error">
-            ×
-          </button>
-        </div>
-      )}
-      <label className={label}>
-        Title
-        <input
-          className={field}
-          value={title}
-          autoFocus
-          onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') void create();
-          }}
-        />
-      </label>
-      <div className="flex justify-end pt-2">
-        <button
-          type="button"
-          className="rounded-md bg-blue-600 px-3 py-2 text-sm text-gray-50 hover:bg-blue-500 disabled:opacity-50"
-          disabled={!title.trim() || creating}
-          onClick={() => void create()}
-        >
-          Create
-        </button>
-      </div>
     </Modal>
   );
 }

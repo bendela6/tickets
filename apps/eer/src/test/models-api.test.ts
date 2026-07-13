@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -55,6 +55,13 @@ describe('models api', () => {
     const res = await handleModelsRequest(d, 'GET', '/', null);
     expect(res.status).toBe(200);
     expect(res.body as { id: string; title: string }[]).toEqual([{ id: 't', title: 'T' }]);
+  });
+
+  it('PUT on a non-existent slug 404s and does not create the file (save-after-delete must not resurrect it)', async () => {
+    const d = dir();
+    const res = await handleModelsRequest(d, 'PUT', '/does-not-exist', VALID);
+    expect(res.status).toBe(404);
+    expect(existsSync(join(d, 'does-not-exist.json'))).toBe(false);
   });
 
   it('handles concurrent PUTs to the same slug without a torn write', async () => {
