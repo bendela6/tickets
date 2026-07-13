@@ -15,7 +15,7 @@ describe('edgePath', () => {
     const model = buildModel();
     for (const mode of ['curved', 'avoid', 'ortho'] as const) {
       const g = computeEdgeGeometry(model, mode);
-      const rel = model.relById.get('u-o')!;
+      const rel = model.relById.get('rel:orders:c2')!;
       const { p1, p2 } = edgeEndpoints(model, rel, g.slots.get(rel.id));
       const { start, end } = endpointsOf(edgePath(model, rel, mode, g, false).d);
       expect(Math.hypot(start.x - p1.x, start.y - p1.y)).toBeLessThan(0.5);
@@ -26,7 +26,7 @@ describe('edgePath', () => {
   it('self-loop bulges right of the card and has no head', () => {
     const model = buildModel();
     const g = computeEdgeGeometry(model, 'curved');
-    const out = edgePath(model, model.relById.get('self')!, 'curved', g, false);
+    const out = edgePath(model, model.relById.get('rel:users:c2')!, 'curved', g, false);
     expect(out.head).toBe('');
     expect(out.d.startsWith('M ')).toBe(true);
   });
@@ -34,14 +34,14 @@ describe('edgePath', () => {
   it('live=true falls back to the cheap direct shape (never throws without routes)', () => {
     const model = buildModel();
     const g = computeEdgeGeometry(model, 'avoid');
-    const rel = model.relById.get('u-o')!;
+    const rel = model.relById.get('rel:orders:c2')!;
     expect(edgePath(model, rel, 'avoid', g, true).d.length).toBeGreaterThan(0);
     expect(edgePath(model, rel, 'avoid', { ...g, routes: new Map() }, false).d.length).toBeGreaterThan(0);
   });
 
   it('many end gets a crow-foot head', () => {
-    const model = buildModel(); // u-o is 1-n → target end is the many side
+    const model = buildModel(); // rel:orders:c2 is 1-n → target end is the many side
     const g = computeEdgeGeometry(model, 'curved');
-    expect(edgePath(model, model.relById.get('u-o')!, 'curved', g, false).head).toContain('M');
+    expect(edgePath(model, model.relById.get('rel:orders:c2')!, 'curved', g, false).head).toContain('M');
   });
 });

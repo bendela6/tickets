@@ -244,7 +244,13 @@ describe('applyModelEdit', () => {
       expect(cleared.relationships.some((r) => r.target === 'tags' && r.targetField === 'owner_id')).toBe(false);
     });
 
-    it('a labelled fk-kind rel survives clearing its backing field role — kept verbatim while endpoints stay valid', () => {
+    // A hand-authored `kind: 'fk'` relationship is no longer "authored data" at
+    // all — relationships ARE the foreign keys now (see derive-relationships.ts)
+    // — so a label carried on a kind:'fk' rel does NOT protect it from being
+    // dropped in favour of (or, here, the absence of) the derived edge. Wanting
+    // a custom label/cardinality on an fk-shaped edge going forward means
+    // authoring it under a different `kind`.
+    it('a labelled fk-kind rel is dropped, not kept verbatim, once its backing constraint is gone', () => {
       const raw = {
         groups: [{ id: 'g', label: 'G' }],
         entities: [
@@ -254,38 +260,34 @@ describe('applyModelEdit', () => {
         relationships: [{ id: 'lbl', source: 'a', sourceField: 'id', target: 'b', targetField: 'a_id', kind: 'fk', label: 'owns' }],
       };
       const m1 = buildModel(raw);
+      expect(m1.relationships).toEqual([expect.objectContaining({ id: 'rel:b:c2' })]); // 'lbl' never survived loadModel either
       const cleared = applyModelEdit(m1, {
         kind: 'upsertEntity',
         entity: { id: 'b', label: 'b', group: 'g', description: null, fields: [editPk(), editPlain('a_id', 'int')] },
       });
-      expect(cleared.relationships).toHaveLength(1); // and no label-less twin appears either
-      expect(cleared.relationships[0]).toMatchObject({ id: 'lbl', label: 'owns', kind: 'fk' });
+      expect(cleared.relationships).toEqual([]); // no backing fk constraint left, and 'lbl' was never eligible to be kept
     });
 
-    // The reviewer's finding: serialize-model already keeps a derivable-shaped
-    // rel whose backing field isn't tagged role:'fk' (isFullyReDerivable checks
-    // shape AND role:'fk'), so such a rel can be loaded from a file. But the old
-    // deriveRelationships discarded EVERY derivable-shaped rel unconditionally
-    // (isDerivableShaped alone), expecting the derive loop to put it back — the
-    // loop only fires for role:'fk' fields, so it never did, and an UNRELATED
-    // edit (here, renaming a group) silently deleted it. b.a_id mirrors the real
-    // seed's outbox.event_id: ref/refField intact, but not tagged 'fk'.
-    it('a derivable-shaped rel whose backing field lacks role fk survives an unrelated edit', () => {
+    // Derivation is fully determined by the (id-stable) constraint, so an
+    // unrelated edit (renaming a group, which rebuilds every entity/constraint
+    // untouched) reproduces the exact same derived id — no "kept verbatim"
+    // bookkeeping needed. b.a_id mirrors the real seed's outbox.event_id:
+    // ref/refField set, but no role at all (still fk-worthy — see
+    // synthesizeLegacyConstraints, which keys off `ref` alone).
+    it('a constraint-backed rel re-derives the identical id across an unrelated edit, even with no field role at all', () => {
       const raw = {
         groups: [{ id: 'g', label: 'G' }],
         entities: [
           { id: 'a', group: 'g', fields: [pkField] },
           { id: 'b', group: 'g', fields: [{ name: 'a_id', type: 'int', ref: 'a', refField: 'id' }] }, // no role at all
         ],
-        // Id is EXACTLY the derived scheme — isDerivableShaped is true — even
-        // though nothing derived it (b.a_id isn't role:'fk').
-        relationships: [{ id: 'e-a.id->b.a_id', source: 'a', sourceField: 'id', target: 'b', targetField: 'a_id', kind: 'fk' }],
+        relationships: [],
       };
       const m1 = buildModel(raw);
-      expect(m1.relationships).toEqual([expect.objectContaining({ id: 'e-a.id->b.a_id', cardinality: '1-n' })]);
+      expect(m1.relationships).toEqual([expect.objectContaining({ id: 'rel:b:c1', cardinality: '1-n' })]);
 
       const renamed = applyModelEdit(m1, { kind: 'upsertGroup', group: { id: 'g', label: 'G Renamed', parent: null } });
-      expect(renamed.relationships.some((r) => r.id === 'e-a.id->b.a_id')).toBe(true);
+      expect(renamed.relationships.some((r) => r.id === 'rel:b:c1')).toBe(true);
     });
 
     it('renaming an fk field drops the stale rel and derives a fresh one under the new name', () => {
@@ -324,19 +326,23 @@ describe('applyModelEdit', () => {
       expect(renamed.relationships.some((r) => r.source === 'users' && r.sourceField === 'id')).toBe(false);
     });
 
-    it('keeps a hand-authored fk-kind rel verbatim (id/label/cardinality) across an unrelated edit', () => {
-      // twoZoneRaw's rels are all kind:'fk', hand-authored ids ('u-o','t-o','self')
-      // that coincide with valid fk fields — the old design blew these away and
-      // rederived fresh (differently-shaped) ids on every single edit.
+    it('re-derives the identical relationship ids across an unrelated edit (twoZoneRaw, all kind:\'fk\')', () => {
+      // twoZoneRaw's rels are all kind:'fk' — every one of them is always
+      // superseded by its derived twin (same source/target/fields, id
+      // 'rel:<entity>:<constraintId>'), not kept verbatim by id/label — so an
+      // unrelated edit reproduces the exact same derived list.
       const m1 = buildModel();
       const before = [...m1.relationships].sort((a, b) => a.id.localeCompare(b.id));
       const m2 = applyModelEdit(m1, { kind: 'setMeta', title: 'T', description: 'D' });
       const after = [...m2.relationships].sort((a, b) => a.id.localeCompare(b.id));
       expect(after).toEqual(before);
-      expect(after.map((r) => r.id)).toEqual(['self', 't-o', 'u-o']);
+      expect(after.map((r) => r.id)).toEqual(['rel:orders:c2', 'rel:orders:c3', 'rel:users:c2']);
     });
 
-    it('does not double-derive a pair already covered by an explicit rel authored in the reverse direction', () => {
+    // A derived edge always wins over an authored one covering the same pair —
+    // "relationships ARE the foreign keys" — regardless of the authored rel's
+    // kind, label, or which direction it was hand-authored in.
+    it('a derived edge wins over an explicit rel authored in the reverse direction for the same pair', () => {
       const raw = {
         groups: [{ id: 'g', label: 'G' }],
         entities: [
@@ -352,7 +358,7 @@ describe('applyModelEdit', () => {
         (r) => (r.source === 'a' && r.target === 'b') || (r.source === 'b' && r.target === 'a'),
       );
       expect(covering).toHaveLength(1);
-      expect(covering[0]!.id).toBe('reversed');
+      expect(covering[0]!.id).toBe('rel:b:c2');
     });
 
     it('rebuilds relById to match relationships exactly, even for edits that touch no entities', () => {

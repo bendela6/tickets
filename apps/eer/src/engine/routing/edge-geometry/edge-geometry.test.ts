@@ -13,8 +13,8 @@ describe('computeEdgeGeometry', () => {
   it('avoid mode: a route per non-self relationship, self is null', () => {
     const model = buildModel();
     const g = computeEdgeGeometry(model, 'avoid');
-    expect(g.routes.get('u-o')).toBeTruthy();
-    expect(g.routes.get('self')).toBeNull();
+    expect(g.routes.get('rel:orders:c2')).toBeTruthy();
+    expect(g.routes.get('rel:users:c2')).toBeNull();
   });
 
   it('is pure: the model is untouched', () => {

@@ -1,6 +1,7 @@
 // Compute + cache card width/height. Width is chosen by measuring text but FORCED
 // as the card's CSS width, so ports stay aligned regardless of font-load timing.
 
+import { columnRoles } from '../../model/column-roles';
 import { CARD_MAX_W, CARD_MIN_W, HEADER_H, ROW_H } from '../metrics';
 import type { Entity } from '../../model/types';
 
@@ -16,11 +17,13 @@ function measureText(s: string, font: string): number {
 
 export function measureEntity(e: Entity): Entity {
   const label = e.label || e.id;
+  const roles = columnRoles(e);
   let w = measureText(label, '500 13px ' + MONO) + 32;
   for (const f of e.fields) {
     const nameW = measureText(f.name, '500 12px ' + MONO);
     const typeW = measureText(f.type || '', '400 11px ' + MONO);
-    const badgeW = f.role ? 28 : 8;
+    const role = roles.get(f.name);
+    const badgeW = role && (role.pk || role.fk) ? 28 : 8;
     const rowW = badgeW + nameW + 20 + typeW + 26;
     if (rowW > w) w = rowW;
   }

@@ -44,7 +44,8 @@ describe('DetailPanel', () => {
     expect(screen.getByText('name')).toBeInTheDocument();
     expect(screen.getByText('manager_id')).toBeInTheDocument();
     expect(screen.getByText('PK')).toBeInTheDocument();
-    // relationships: u-o points at orders, self points back at users
+    // relationships: rel:orders:c2 (users -> orders.users_id) points at orders,
+    // rel:users:c2 (self-loop) points back at users
     expect(screen.getByText('orders')).toBeInTheDocument();
     expect(screen.getByText('.users_id')).toBeInTheDocument();
     expect(screen.getByText('.manager_id')).toBeInTheDocument();
@@ -65,7 +66,7 @@ describe('DetailPanel', () => {
     // 'orders' shows up in the tables list and again in the external rel row
     expect(screen.getAllByText('orders').length).toBeGreaterThan(0);
     expect(screen.getByText('tags')).toBeInTheDocument();
-    // one external connection (u-o to users), t-o is internal
+    // one external connection (rel:orders:c2 to users), rel:orders:c3 is internal
     expect(container.textContent).toContain('2 relationships (1 internal)');
     expect(screen.getByText('users')).toBeInTheDocument();
   });
@@ -78,7 +79,7 @@ describe('DetailPanel', () => {
   });
 
   it('shows both endpoints for a selected edge', async () => {
-    await renderPanel((a) => a.isolate('u-o'));
+    await renderPanel((a) => a.isolate('rel:orders:c2'));
     expect(screen.getByText('Relationship')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'users → orders' })).toBeInTheDocument();
     expect(screen.getByText('source')).toBeInTheDocument();

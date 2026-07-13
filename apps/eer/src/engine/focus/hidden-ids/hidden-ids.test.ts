@@ -8,9 +8,9 @@ describe('hiddenIds', () => {
     const h = hiddenIds(model, new Set(['z1']), new Set());
     expect(h.entities).toEqual(new Set(['users']));
     expect(h.groups).toEqual(new Set(['z1']));
-    expect(h.edges).toEqual(new Set(['u-o', 'self']));
+    expect(h.edges).toEqual(new Set(['rel:orders:c2', 'rel:users:c2']));
     const k = hiddenIds(model, new Set(), new Set(['fk']));
     expect(k.entities.size).toBe(0);
-    expect(k.edges).toEqual(new Set(['u-o', 't-o', 'self']));
+    expect(k.edges).toEqual(new Set(['rel:orders:c2', 'rel:orders:c3', 'rel:users:c2']));
   });
 });

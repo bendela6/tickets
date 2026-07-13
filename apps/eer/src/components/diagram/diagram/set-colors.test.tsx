@@ -22,9 +22,9 @@ it('setColors restamps zone/entity/edge custom properties; an empty map restores
 
   const zone = () => container.querySelector('[data-zone][data-group="z1"]') as HTMLElement;
   const card = () => container.querySelector('[data-card][data-entity="users"]') as HTMLElement;
-  // 'self' relationship's source is 'users' (member of z1) — its --edge-c is
-  // reached through entity → zone inheritance too.
-  const edge = () => container.querySelector('g[data-rel="self"]') as SVGGElement;
+  // 'rel:users:c2' (users.manager_id self-loop)'s source is 'users' (member of
+  // z1) — its --edge-c is reached through entity → zone inheritance too.
+  const edge = () => container.querySelector('g[data-rel="rel:users:c2"]') as SVGGElement;
 
   const palette = GROUP_PALETTE[0]!; // z1 is the first declared zone
 

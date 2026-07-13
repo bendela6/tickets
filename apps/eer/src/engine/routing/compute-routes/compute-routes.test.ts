@@ -108,7 +108,7 @@ describe('routeEdges', () => {
     const model = buildModel();
     const { slots } = pinSlots(model);
     const { routes } = routeEdges(model, slots);
-    expect(routes.get('self')).toBeNull();
+    expect(routes.get('rel:users:c2')).toBeNull();
   });
 
   it('is pure — repeated calls with the same inputs agree and never mutate the model', () => {

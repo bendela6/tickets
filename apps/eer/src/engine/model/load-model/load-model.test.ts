@@ -95,8 +95,8 @@ describe('loadModel — validation', () => {
   });
 });
 
-describe('loadModel — fk-derived relationships', () => {
-  it('derives a relationship from an fk field when relationships is empty', () => {
+describe('loadModel — relationships derive from constraints', () => {
+  it('derives a relationship from an fk constraint when relationships is empty', () => {
     const raw = {
       groups: [{ id: 'g', label: 'G' }],
       entities: [
@@ -116,8 +116,9 @@ describe('loadModel — fk-derived relationships', () => {
     expect(errors).toEqual([]);
     expect(model!.relationships).toHaveLength(1);
     const rel = model!.relationships[0]!;
+    // 'rel:orders:c2' — orders' 2nd synthesised constraint (c1 is its pk).
     expect(rel).toMatchObject({
-      id: 'e-users.id->orders.user_id',
+      id: 'rel:orders:c2',
       source: 'users',
       sourceField: 'id',
       target: 'orders',
@@ -127,10 +128,13 @@ describe('loadModel — fk-derived relationships', () => {
       cardinalityInferred: true,
       label: null,
     });
-    expect(model!.relById.get('e-users.id->orders.user_id')).toBe(rel);
+    expect(model!.relById.get('rel:orders:c2')).toBe(rel);
   });
 
-  it('does not duplicate an fk field that already has a matching explicit relationship', () => {
+  // A pair the constraint would ALSO derive is always won by the derived edge —
+  // "relationships ARE the foreign keys" — regardless of whatever custom id or
+  // kind a stale hand-authored relationship for the same pair carries.
+  it('an explicit relationship covering the same pair as a real fk constraint is dropped in favour of the derived one', () => {
     const raw = {
       groups: [{ id: 'g', label: 'G' }],
       entities: [
@@ -149,10 +153,10 @@ describe('loadModel — fk-derived relationships', () => {
     const { model, errors } = loadModel(raw);
     expect(errors).toEqual([]);
     expect(model!.relationships).toHaveLength(1);
-    expect(model!.relationships[0]!.id).toBe('custom-id');
+    expect(model!.relationships[0]!.id).toBe('rel:orders:c2');
   });
 
-  it('does not duplicate an fk field whose pair is covered by an explicit rel authored in the reverse direction', () => {
+  it('an explicit relationship authored in the reverse direction is also dropped in favour of the derived one', () => {
     const raw = {
       groups: [{ id: 'g', label: 'G' }],
       entities: [
@@ -172,10 +176,10 @@ describe('loadModel — fk-derived relationships', () => {
     const { model, errors } = loadModel(raw);
     expect(errors).toEqual([]);
     expect(model!.relationships).toHaveLength(1);
-    expect(model!.relationships[0]!.id).toBe('reversed');
+    expect(model!.relationships[0]!.id).toBe('rel:b:c2');
   });
 
-  it('does not let a broken explicit rel (bad field) suppress a genuine derivation for the same entities', () => {
+  it('a broken explicit rel (bad field) — a different pair from the real fk — does not suppress the genuine derivation', () => {
     const raw = {
       groups: [{ id: 'g', label: 'G' }],
       entities: [
@@ -189,13 +193,14 @@ describe('loadModel — fk-derived relationships', () => {
           ],
         },
       ],
-      // References a field that doesn't exist on "a" — invalid, so it must not
-      // count as covering the real a.id<->b.a_id pair.
+      // References a field that doesn't exist on "a" — kind is unset (not 'fk'),
+      // and its pair ("a.nonexistent" <-> "b.a_id") differs from the real
+      // derivable pair ("a.id" <-> "b.a_id"), so it survives alongside it.
       relationships: [{ id: 'broken', source: 'a', sourceField: 'nonexistent', target: 'b', targetField: 'a_id' }],
     };
     const { model, errors } = loadModel(raw);
     expect(errors.length).toBeGreaterThan(0);
-    expect(model!.relationships.map((r) => r.id).sort()).toEqual(['broken', 'e-a.id->b.a_id']);
+    expect(model!.relationships.map((r) => r.id).sort()).toEqual(['broken', 'rel:b:c2']);
   });
 
   it('does not derive when the fk field has no ref, or the ref is unknown', () => {
@@ -235,28 +240,33 @@ describe('loadModel — fk-derived relationships', () => {
     expect(model!.relationships).toEqual([]);
   });
 
-  // Pinned against the real bundled seed model: 37 hand-authored (34 fk-kind +
-  // 3 m2m-kind, one of the m2m rels — fields.option_set_id -> option_sets.id —
-  // covering a pair that's ALSO a real fk field, just authored in reverse) plus
-  // 4 fk fields with no explicit rel in either direction (self-loops on items and
-  // comments, item_values.value_user_id, item_activity.actor_id). Before the
-  // unordered-pair fix this double-counted the reversed m2m pair as 42 (37 + 5).
-  it('derives exactly the genuinely-undrawn fk edges for the real seed model (37 explicit + 4 derived = 41)', () => {
+  // Pinned against the real bundled seed model: every one of its 39 legacy
+  // fk-role/ref fields synthesises an fk constraint (Task 2), and every
+  // constraint now derives its own edge — including the 3 that used to be
+  // hand-authored as kind:'m2m' (all 3 of the seed's m2m rels cover a pair a
+  // real fk field also covers, so all 3 are dropped in favour of the derived
+  // edge; see derive-relationships.ts). 39 constraints - 0 unresolvable = 40
+  // (item_type_fields also carries a composite-looking pair via two separate
+  // single-column fk fields, each deriving its own edge).
+  it('derives exactly one edge per fk constraint for the real seed model (40, all kind fk)', () => {
     const { model, errors } = loadModel(seedRaw);
     expect(errors).toEqual([]);
-    expect(model!.relationships).toHaveLength(41);
+    expect(model!.relationships).toHaveLength(40);
+    expect(model!.relationships.every((r) => r.kind === 'fk')).toBe(true);
 
     const ids = new Set(model!.relationships.map((r) => r.id));
     for (const expected of [
-      'e-comments.id->comments.parent_id',
-      'e-items.id->items.parent_id',
-      'e-users.id->item_activity.actor_id',
-      'e-users.id->item_values.value_user_id',
+      'rel:comments:c4', // comments.parent_id (self-loop)
+      'rel:items:c4', // items.parent_id (self-loop)
+      'rel:item_activity:c4', // item_activity.actor_id -> users.id
+      'rel:item_values:c5', // item_values.value_user_id -> users.id
     ])
       expect(ids.has(expected)).toBe(true);
-    // The reversed m2m rel ('fields.option_set_id -> option_sets.id', kind m2m)
-    // already covers this pair; it must NOT also get a derived fk-kind twin.
+    // The reversed m2m rel ('fields.option_set_id -> option_sets.id') covered
+    // this same pair under the old scheme; it must not also survive alongside
+    // the derived edge (would inflate the count past 40 / collide in relById).
     expect(ids.has('e-option_sets.id->fields.option_set_id')).toBe(false);
+    expect(model!.relById.size).toBe(40);
   });
 });
 
