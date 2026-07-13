@@ -3,7 +3,7 @@
 // its params, and emits a formatted string back. `custom…` keeps enums/domains
 // (and any hand-written type) editable.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { PG_TYPES, formatType, parseType, type PgTypeGroup } from '../../engine/model/pg-types';
 import { cn } from '../../ui/cn';
@@ -21,29 +21,45 @@ export function TypeCell({ value, onChange }: { value: string; onChange: (t: str
   // ever feeding the result back in). Without this bit of local state, the
   // custom text input would never appear: `value` is still "int", which is a
   // known type, so parsed.custom stays false. It resyncs from the prop
-  // whenever `value` actually changes (row reorder, external update, mount).
+  // whenever `value` actually changes (row reorder, external update, mount) —
+  // but NOT when the incoming `value` is merely our own last emission echoed
+  // back (the real app re-renders this cell with the just-typed value on every
+  // keystroke). Without that distinction, typing a custom name that transiently
+  // or finally collides with a catalogue type (e.g. "jsonb_data" passing through
+  // "jsonb") would flip `parsed.custom` to false, snap the picker back to the
+  // catalogue option, and unmount the free-text input mid-keystroke.
   const [customMode, setCustomMode] = useState(parsed.custom);
-  useEffect(() => setCustomMode(parsed.custom), [value, parsed.custom]);
+  const lastEmitted = useRef<string | null>(null);
+  useEffect(() => {
+    if (value === lastEmitted.current) return; // our own echo — not an external change
+    setCustomMode(parsed.custom);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, parsed.custom]);
 
   const base = customMode ? CUSTOM : parsed.base;
   const spec = PG_TYPES.find((t) => t.name === parsed.base);
   const arity = customMode ? 0 : (spec?.params ?? 0);
 
+  const emit = (next: string) => {
+    lastEmitted.current = next;
+    onChange(next);
+  };
+
   const setBase = (next: string) => {
     if (next === CUSTOM) {
       setCustomMode(true);
-      onChange(parsed.custom ? parsed.base : '');
+      emit(parsed.custom ? parsed.base : '');
       return;
     }
     setCustomMode(false);
     const nextSpec = PG_TYPES.find((t) => t.name === next);
-    onChange(formatType(next, parsed.params.slice(0, nextSpec?.params ?? 0)));
+    emit(formatType(next, parsed.params.slice(0, nextSpec?.params ?? 0)));
   };
 
   const setParam = (i: number, v: string) => {
     const params = [...parsed.params];
     params[i] = v;
-    onChange(formatType(parsed.base, params.slice(0, arity)));
+    emit(formatType(parsed.base, params.slice(0, arity)));
   };
 
   return (
@@ -65,7 +81,7 @@ export function TypeCell({ value, onChange }: { value: string; onChange: (t: str
           className={cn(cell, 'w-24')}
           aria-label="custom type"
           value={parsed.base}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => emit(e.target.value)}
         />
       )}
       {Array.from({ length: arity }, (_, i) => (
