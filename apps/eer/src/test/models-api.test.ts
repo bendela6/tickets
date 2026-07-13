@@ -1,7 +1,7 @@
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { handleModelsRequest } from '../../vite-plugins/models-api';
 
@@ -11,7 +11,18 @@ const VALID = JSON.stringify({
   entities: [{ id: 'e', group: 'z', fields: [{ name: 'id', type: 'serial', role: 'pk' }] }],
 });
 
-const dir = () => mkdtempSync(join(tmpdir(), 'eer-models-'));
+// Track every mkdtempSync dir so it can be removed after its test — otherwise
+// each run leaves scratch directories behind in the OS tmpdir.
+const createdDirs: string[] = [];
+const dir = () => {
+  const d = mkdtempSync(join(tmpdir(), 'eer-models-'));
+  createdDirs.push(d);
+  return d;
+};
+
+afterEach(() => {
+  for (const d of createdDirs.splice(0)) rmSync(d, { recursive: true, force: true });
+});
 
 describe('models api', () => {
   it('lists, creates, gets, saves and deletes models', async () => {
@@ -35,5 +46,43 @@ describe('models api', () => {
     expect((await handleModelsRequest(d, 'POST', '/', '{"groups":[]}')).status).toBe(422);
     await handleModelsRequest(d, 'POST', '/', VALID);
     expect((await handleModelsRequest(d, 'POST', '/', VALID)).status).toBe(409);
+  });
+
+  it('skips unparsable files when listing instead of failing the whole request', async () => {
+    const d = dir();
+    await handleModelsRequest(d, 'POST', '/', VALID);
+    writeFileSync(join(d, 'broken.json'), '{oops', 'utf8');
+    const res = await handleModelsRequest(d, 'GET', '/', null);
+    expect(res.status).toBe(200);
+    expect(res.body as { id: string; title: string }[]).toEqual([{ id: 't', title: 'T' }]);
+  });
+
+  it('handles concurrent PUTs to the same slug without a torn write', async () => {
+    const d = dir();
+    await handleModelsRequest(d, 'POST', '/', VALID);
+    const payloadA = JSON.stringify({
+      meta: { title: 'T' },
+      groups: [{ id: 'z', label: 'Z' }],
+      entities: [{ id: 'e', group: 'z', fields: [{ name: 'id', type: 'serial', role: 'pk' }] }],
+      note: 'A',
+    });
+    const payloadB = JSON.stringify({
+      meta: { title: 'T' },
+      groups: [{ id: 'z', label: 'Z' }],
+      entities: [{ id: 'e', group: 'z', fields: [{ name: 'id', type: 'serial', role: 'pk' }] }],
+      note: 'B',
+    });
+    const [r1, r2] = await Promise.all([
+      handleModelsRequest(d, 'PUT', '/t', payloadA),
+      handleModelsRequest(d, 'PUT', '/t', payloadB),
+    ]);
+    expect(r1.status).toBe(200);
+    expect(r2.status).toBe(200);
+    // Must parse cleanly (no torn write from a shared tmp path) and match
+    // exactly one full payload, not an interleaved mix of the two.
+    const onDisk = JSON.parse(readFileSync(join(d, 't.json'), 'utf8')) as { note: string };
+    expect(['A', 'B']).toContain(onDisk.note);
+    const winner = onDisk.note === 'A' ? payloadA : payloadB;
+    expect(onDisk).toEqual(JSON.parse(winner));
   });
 });
