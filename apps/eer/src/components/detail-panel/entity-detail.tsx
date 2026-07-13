@@ -2,6 +2,7 @@ import { entityColor } from '../../engine/colors/entity-color';
 import type { Model } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
+import { useEditor } from '../editor';
 import { Empty } from './empty';
 import { Header } from './header';
 import { RelRow } from './rel-row';
@@ -38,6 +39,7 @@ export function EntityDetail({
   colors?: ReadonlyMap<string, string>;
 }) {
   const actions = useDiagramActions();
+  const { openModal } = useEditor();
   const e = model.entityById.get(id);
   if (!e) return null;
   const group = model.groups.find((g) => g.id === e.group);
@@ -57,6 +59,7 @@ export function EntityDetail({
           </>
         }
         description={e.description}
+        onEdit={() => openModal({ kind: 'table', id })}
       />
 
       <div className="px-4 pb-5">

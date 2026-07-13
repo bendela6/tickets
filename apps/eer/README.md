@@ -71,6 +71,46 @@ Driven entirely by JSON — `src/model/eer-model.json` (the opus event-sourcing 
 Point the viewer at another model with `?model=<url>` (fetched over http). The format
 is documented in [`docs/opus/eer-schema.md`](../../docs/opus/eer-schema.md).
 
+## Editor
+
+Dev-only model editing on top of the read-only diagram, backed by a file API
+that doesn't exist in the built app:
+
+- **Models API** — `vite-plugins/models-api.ts` is a Vite dev-server middleware
+  (`configureServer`, not shipped in `build`) serving `GET/POST /api/models`
+  and `GET/PUT/DELETE /api/models/:id` against JSON files in `apps/eer/models/`
+  (one file per model, named `<slug>.json`; `src/api/models-client.ts` is the
+  fetch wrapper, and hides itself once the endpoint 404s, i.e. in a production
+  build). The one file checked into the repo, `models/items-platform.json`, is
+  the seed model — never save over it with scratch/test data.
+- **Model menu** (top bar) — a `<select>` of every model the API lists, plus
+  **New** (title → seeded starter model → created + loaded), **Edit model**
+  (rename/describe/delete the current model), and **Save** (serializes the
+  live model + colour overrides back to its file; the dot next to Save tracks
+  `ui.dirty`, and switching models with unsaved changes prompts to discard).
+- **Modals** — `src/components/editor/` (`EditorModals`, mounted once in
+  `eer-viewer.tsx`, owns "which modal is open for which id" via
+  `useEditor().openModal({kind, id?})`/`closeModal()`, reachable from any
+  descendant without prop-drilling): **+ Add** opens a chooser for a new
+  zone / subgroup / table (`AddChooser` → `GroupModal`/`TableModal` in create
+  mode, no `id`); **Edit** — on the detail panel's entity/group header — opens
+  the same `TableModal`/`GroupModal` in edit mode (`id` set, existing
+  fields/colour prefilled). Each routed modal is remounted (keyed on
+  `kind:id`) whenever its target changes, so switching straight from editing
+  one table/group to another never leaves stale draft state behind.
+- **Connections are derived, not authored** — there is no separate connection/
+  edge editor. An edge exists because some field has `role: 'fk'` plus a `ref`
+  (and optional `refField`, defaulting to `'id'`); toggling a field's role to
+  FK and picking a reference table (`FieldGrid`, inside `TableModal`) is what
+  draws it, and clearing either removes it (`apply-model-edit`'s
+  `deriveRelationships`).
+- **Layout + colour persistence** — dragging a card/zone or overriding a
+  colour (per-entity/group swatch in `TableModal`/`GroupModal`, or the
+  overview's `ColorsForm`) only changes in-memory state until **Save**;
+  `serializeModel` writes both the current `x`/`y`/box geometry and the colour
+  override map into the same model JSON, so a reload of a saved model
+  reproduces layout and colours exactly, not just data.
+
 ## Controls
 
 `wheel` zoom · `middle-drag` pan · `left-drag` move an entity or a whole zone ·

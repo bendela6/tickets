@@ -44,6 +44,7 @@ function GroupModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   const [isSub, setIsSub] = useState(existing ? existing.parent != null : false);
   const topZones = model.groups.filter((g) => !g.parent && g.id !== id);
   const [parent, setParent] = useState<string | null>(existing?.parent ?? topZones[0]?.id ?? null);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const groupId = isEdit ? existing!.id : slugify(name);
   const memberCount = id ? model.entities.filter((e) => e.group === id).length : 0;
@@ -53,6 +54,14 @@ function GroupModalForm({ model, id, onClose }: { model: Model; id?: string; onC
     .join(' and ');
 
   const save = () => {
+    // Same upsert-is-an-overwrite hazard as TableModal: in CREATE mode only,
+    // a slugified name colliding with an existing group's id would silently
+    // clobber it — block it here before it reaches the engine.
+    if (!isEdit && model.groups.some((g) => g.id === groupId)) {
+      setLocalError(`A group with id "${groupId}" already exists.`);
+      return;
+    }
+    setLocalError(null);
     const edit = {
       kind: 'upsertGroup' as const,
       group: { id: groupId, label: name.trim(), parent: isSub ? parent : null },
@@ -77,10 +86,15 @@ function GroupModalForm({ model, id, onClose }: { model: Model; id?: string; onC
 
   return (
     <Modal title={isEdit ? `Edit ${existing!.label}` : 'New group'} onClose={onClose}>
-      {ui.editError && (
+      {(localError || ui.editError) && (
         <div className={errorRow}>
-          <span>{ui.editError}</span>
-          <button type="button" className="shrink-0" onClick={actions.clearEditError} aria-label="Dismiss error">
+          <span>{localError ?? ui.editError}</span>
+          <button
+            type="button"
+            className="shrink-0"
+            onClick={() => (localError ? setLocalError(null) : actions.clearEditError())}
+            aria-label="Dismiss error"
+          >
             ×
           </button>
         </div>

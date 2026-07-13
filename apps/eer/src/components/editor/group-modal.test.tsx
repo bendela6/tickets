@@ -80,23 +80,26 @@ describe('GroupModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('surfaces an invalid edit as a dismissible error and keeps the modal open', async () => {
+  it('create mode blocks Save with a dismissible message when the slugified id collides with an existing group', async () => {
+    // upsertGroup is an upsert — creating a group named exactly "z1" (an
+    // existing zone id) would silently clobber it without this guard. Before
+    // the guard existed, this same input instead reached apply-model-edit's
+    // "cannot be its own parent" check via a self-referencing parent select
+    // (still covered directly at the engine level by apply-model-edit.test.ts)
+    // — the collision guard now fires first, with a more accurate message.
     const onClose = vi.fn();
-    await renderDiagram(<GroupModal onClose={onClose} />, twoZoneRaw());
+    const { actions } = await renderDiagram(<GroupModal onClose={onClose} />, twoZoneRaw());
+    const spy = vi.spyOn(actions, 'applyModelEdit');
 
-    // Naming the new group "z1" and parenting it to the existing zone "z1"
-    // dispatches upsertGroup({id:'z1', parent:'z1'}) — a group can't be its own
-    // parent, so apply-model-edit throws and the reducer sets ui.editError.
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'z1' } });
-    fireEvent.click(screen.getByLabelText('Subgroup'));
-    fireEvent.change(screen.getByRole('combobox', { name: 'Parent zone' }), { target: { value: 'z1' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
-    expect(await screen.findByText(/cannot be its own parent/)).toBeInTheDocument();
+    expect(await screen.findByText(/A group with id "z1" already exists/)).toBeInTheDocument();
+    expect(spy).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText('Dismiss error'));
-    expect(screen.queryByText(/cannot be its own parent/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/A group with id "z1" already exists/)).not.toBeInTheDocument();
   });
 });

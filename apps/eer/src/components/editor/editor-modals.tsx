@@ -17,9 +17,9 @@ export function EditorModals({ children }: { children: ReactNode }) {
   const closeModal = () => setModal(null);
 
   // DEV handle for browser verification — same idiom as diagram-provider's
-  // window.__eer. No UI entry point reaches GroupModal's edit mode yet (that's
-  // a detail-panel "Edit" affordance, out of this task's file scope), so this
-  // is how a manual smoke test (or a future task) opens any modal by hand, e.g.
+  // window.__eer. The detail panel's "Edit" button is the normal entry point
+  // into GroupModal/TableModal's edit mode now, but this remains the way a
+  // manual smoke test opens any modal by hand, e.g.
   // window.__editor.openModal({ kind: 'group', id: 'some-zone' }).
   useEffect(() => {
     if (import.meta.env.DEV) {
@@ -33,8 +33,12 @@ export function EditorModals({ children }: { children: ReactNode }) {
       {modal?.kind === 'model' && <ModelModal onClose={closeModal} />}
       {modal?.kind === 'new-model' && <NewModelModal onClose={closeModal} />}
       {modal?.kind === 'add' && <AddChooser onClose={closeModal} />}
-      {modal?.kind === 'group' && <GroupModal id={modal.id} onClose={closeModal} />}
-      {modal?.kind === 'table' && <TableModal id={modal.id} onClose={closeModal} />}
+      {/* `key` forces a remount whenever the target id changes — GroupModal/TableModal
+          seed their draft state with useState(existing?.field ?? …) once, at mount, so
+          without this, opening the modal for A then (without a full unmount in between)
+          for B would keep showing A's fields. */}
+      {modal?.kind === 'group' && <GroupModal key={`group:${modal.id ?? 'new'}`} id={modal.id} onClose={closeModal} />}
+      {modal?.kind === 'table' && <TableModal key={`table:${modal.id ?? 'new'}`} id={modal.id} onClose={closeModal} />}
     </EditorContext.Provider>
   );
 }
