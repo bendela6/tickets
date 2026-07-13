@@ -16,7 +16,7 @@ const tuple = (r: Pick<Relationship, 'source' | 'sourceField' | 'target' | 'targ
   `${r.source}.${r.sourceField}->${r.target}.${r.targetField}:${r.kind}`;
 
 describe('serializeModel', () => {
-  it('roundtrips: loading the serialized form reproduces entities, fields, colors, layout and relationship ids', () => {
+  it('roundtrips: loading the serialized form reproduces entities, fields, colors, layout and the derived relationship set', () => {
     const m1 = buildModel();
     const colors = new Map([['z1', '#123456']]);
     const raw = serializeModel(m1, colors);
@@ -28,14 +28,13 @@ describe('serializeModel', () => {
     expect(packed.colors.get('z1')).toBe('#123456');
     expect(packed.entityById.get('users')!.x).toBe(m1.entityById.get('users')!.x); // layout survived
     expect(packed.relationships.map(tuple).sort()).toEqual(m1.relationships.map(tuple).sort());
-    // twoZoneRaw's fk-kind rels ('u-o', 't-o', 'self') carry hand-authored ids
-    // that happen to coincide with a valid fk field — isFullyReDerivable's
-    // id-scheme check means they serialize explicitly, so their ids must
-    // survive the round trip unchanged too, not just their endpoint shape.
+    // twoZoneRaw's rels are all kind:'fk' (derived from constraints) — their ids
+    // ('rel:<entity>:<constraintId>') are fully determined by the entities'
+    // constraints, so they must regenerate identically after a round trip too.
     expect(packed.relationships.map((r) => r.id).sort()).toEqual(m1.relationships.map((r) => r.id).sort());
   });
 
-  it('keeps an fk-kind relationship whose id is not the derived scheme, and keeps other kinds too', () => {
+  it('never writes a kind:fk relationship to the file — it regenerates from its backing constraint on load', () => {
     const raw0 = {
       groups: [{ id: 'g', label: 'G', order: 0 }],
       entities: [
@@ -49,107 +48,105 @@ describe('serializeModel', () => {
       ],
     };
     const m1 = buildModel(raw0);
+    // 'a-b-fk' never survived loadModel in the first place — it's superseded by
+    // its derived twin (rel:b:c2) — so there is nothing kind:'fk' left to write.
+    expect(m1.relationships.map((r) => r.kind).sort()).toEqual(['fk', 'nm']);
     const out = serializeModel(m1, new Map());
-    // 'a-b-fk' looks derivable in every OTHER respect (unlabelled, 1-n, backed by a
-    // matching fk field) but its id ('a-b-fk') is not the derived scheme
-    // ('e-a.id->b.a_id') — a hand-authored id, however plain-looking, is authored
-    // data, so it must serialize explicitly rather than being silently dropped and
-    // resurrected under a different id on the next load (see the dedicated
-    // round-trip test below).
-    expect((out.relationships as { id: string }[]).map((r) => r.id).sort()).toEqual(['a-b-fk', 'a-c-nm']);
+    expect((out.relationships as { id: string; kind?: string }[]).map((r) => r.kind ?? null)).toEqual(['nm']);
+    expect((out.relationships as { id: string }[]).map((r) => r.id)).toEqual(['a-c-nm']);
   });
 
-  it('omits an fk-kind relationship whose id IS the derived scheme', () => {
+  it('an authored non-fk (n-m) relationship survives serialize -> load verbatim, including a custom id and label', () => {
     const raw0 = {
       groups: [{ id: 'g', label: 'G', order: 0 }],
       entities: [
         { id: 'a', group: 'g', fields: [pkField] },
-        { id: 'b', group: 'g', fields: [pkField, { name: 'a_id', type: 'int', role: 'fk', ref: 'a', refField: 'id' }] },
+        { id: 'b', group: 'g', fields: [pkField] },
       ],
-      relationships: [{ id: 'e-a.id->b.a_id', source: 'a', sourceField: 'id', target: 'b', targetField: 'a_id', kind: 'fk' }],
+      relationships: [
+        {
+          id: 'documented-link',
+          source: 'a', sourceField: 'id', target: 'b', targetField: 'id',
+          kind: 'nm', label: 'related to', cardinality: 'n-m',
+        },
+      ],
     };
     const m1 = buildModel(raw0);
     const out = serializeModel(m1, new Map());
-    expect(out.relationships).toEqual([]);
-  });
-
-  // The exact shape the reviewer's finding hinges on: unlabelled, 1-n, kind 'fk',
-  // backed by a matching fk field — everything isFullyReDerivable used to check —
-  // but with a hand-authored id. Before the id-scheme check was added, this rel
-  // was (wrongly) dropped from the saved file and came back on load re-derived
-  // under 'e-a.id->b.a_id' instead of its real id: a silent rename, not just a
-  // dropped-then-reappeared rel.
-  it('a custom-id, unlabelled, 1-n fk-kind rel backed by a matching fk field survives serialize -> load with its id intact', () => {
-    const raw0 = {
-      groups: [{ id: 'g', label: 'G', order: 0 }],
-      entities: [
-        { id: 'a', group: 'g', fields: [pkField] },
-        { id: 'b', group: 'g', fields: [pkField, { name: 'a_id', type: 'int', role: 'fk', ref: 'a', refField: 'id' }] },
-      ],
-      relationships: [{ id: 'owns-custom-id', source: 'a', sourceField: 'id', target: 'b', targetField: 'a_id', kind: 'fk' }],
-    };
-    const m1 = buildModel(raw0);
-    const out = serializeModel(m1, new Map());
-    expect((out.relationships as { id: string }[]).map((r) => r.id)).toEqual(['owns-custom-id']);
+    expect(out.relationships).toEqual([
+      { id: 'documented-link', source: 'a', sourceField: 'id', target: 'b', targetField: 'id', kind: 'nm', label: 'related to', cardinality: 'n-m' },
+    ]);
 
     const { model: m2, errors } = loadModel(out);
     expect(errors).toEqual([]);
-    expect(m2!.relationships).toHaveLength(1);
-    expect(m2!.relationships[0]!.id).toBe('owns-custom-id'); // not resurrected under the derived id
+    expect(m2!.relationships.some((r) => r.id === 'documented-link' && r.label === 'related to')).toBe(true);
   });
 
-  it('keeps a labelled fk-kind rel explicit even though a matching fk field exists', () => {
+  it('emits an entity\'s constraints and indexes verbatim, omitting null names and null fk actions', () => {
     const raw0 = {
       groups: [{ id: 'g', label: 'G', order: 0 }],
       entities: [
-        { id: 'a', group: 'g', fields: [pkField] },
-        { id: 'b', group: 'g', fields: [pkField, { name: 'a_id', type: 'int', role: 'fk', ref: 'a', refField: 'id' }] },
+        {
+          id: 'a', group: 'g',
+          fields: [
+            { name: 'id', type: 'int' },
+            { name: 'code', type: 'text', nullable: false, default: "'x'" },
+          ],
+          constraints: [
+            { id: 'c1', kind: 'pk', columns: ['id'] },
+            { id: 'c2', kind: 'unique', name: 'a_code_key', columns: ['code'] },
+            { id: 'c3', kind: 'check', expression: "code <> ''" },
+          ],
+          indexes: [{ id: 'i1', name: 'idx_a_code', columns: ['code'], unique: false }],
+        },
       ],
-      relationships: [{ id: 'a-b-fk', source: 'a', sourceField: 'id', target: 'b', targetField: 'a_id', kind: 'fk', label: 'owns' }],
     };
-    const m1 = buildModel(raw0);
-    const out = serializeModel(m1, new Map());
-    expect((out.relationships as { id: string; label?: string }[]).map((r) => r.id)).toEqual(['a-b-fk']);
-    expect((out.relationships as { label?: string }[])[0]!.label).toBe('owns');
+    const { model: m1, errors } = loadModel(raw0);
+    expect(errors).toEqual([]);
+    const out = serializeModel(m1!, new Map());
+    const entity = (out.entities as any[])[0];
+
+    expect(entity.constraints).toEqual([
+      { id: 'c1', kind: 'pk', columns: ['id'] },
+      { id: 'c2', kind: 'unique', name: 'a_code_key', columns: ['code'] },
+      { id: 'c3', kind: 'check', expression: "code <> ''" },
+    ]);
+    expect(entity.indexes).toEqual([{ id: 'i1', name: 'idx_a_code', columns: ['code'], unique: false }]);
+    expect(entity.fields[0]).not.toHaveProperty('nullable'); // default nullable (true) is omitted
+    expect(entity.fields[0]).not.toHaveProperty('default');
+    expect(entity.fields[1]).toMatchObject({ nullable: false, default: "'x'" });
   });
 
-  it('keeps an unlabelled fk-kind rel explicit when its cardinality is not the default 1-n', () => {
+  it('omits an fk constraint\'s null name/onDelete/onUpdate but keeps them when set', () => {
     const raw0 = {
       groups: [{ id: 'g', label: 'G', order: 0 }],
       entities: [
-        { id: 'a', group: 'g', fields: [pkField] },
-        { id: 'b', group: 'g', fields: [pkField, { name: 'a_id', type: 'int', role: 'fk', ref: 'a', refField: 'id' }] },
+        { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int' }], constraints: [{ id: 'c1', kind: 'pk', columns: ['id'] }] },
+        {
+          id: 'b', group: 'g',
+          fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }],
+          constraints: [
+            { id: 'c1', kind: 'pk', columns: ['id'] },
+            { id: 'c2', kind: 'fk', columns: ['a_id'], refTable: 'a', refColumns: ['id'], onDelete: 'cascade' },
+          ],
+        },
       ],
-      // Hand-set to '1-1' (e.g. an identifying relationship) rather than the '1-n' a plain fk field would derive.
-      relationships: [{ id: 'a-b-fk', source: 'a', sourceField: 'id', target: 'b', targetField: 'a_id', kind: 'fk', cardinality: '1-1' }],
     };
-    const m1 = buildModel(raw0);
-    const out = serializeModel(m1, new Map());
-    expect((out.relationships as { id: string; cardinality: string }[]).map((r) => r.id)).toEqual(['a-b-fk']);
-    expect((out.relationships as { cardinality: string }[])[0]!.cardinality).toBe('1-1');
-  });
-
-  it('keeps an unlabelled, 1-n fk-kind rel explicit when no matching fk-role field backs it', () => {
-    const raw0 = {
-      groups: [{ id: 'g', label: 'G', order: 0 }],
-      entities: [
-        { id: 'a', group: 'g', fields: [pkField] },
-        // b.a_id is untagged (no role) — mirrors the real seed model's event-stream
-        // reference (items.id -> events.aggregate_id), which is deliberately explicit.
-        { id: 'b', group: 'g', fields: [pkField, { name: 'a_id', type: 'int' }] },
-      ],
-      relationships: [{ id: 'a-b-fk', source: 'a', sourceField: 'id', target: 'b', targetField: 'a_id', kind: 'fk' }],
-    };
-    const m1 = buildModel(raw0);
-    const out = serializeModel(m1, new Map());
-    expect((out.relationships as { id: string }[]).map((r) => r.id)).toEqual(['a-b-fk']);
+    const { model: m1, errors } = loadModel(raw0);
+    expect(errors).toEqual([]);
+    const out = serializeModel(m1!, new Map());
+    const b = (out.entities as any[]).find((e) => e.id === 'b');
+    expect(b.constraints).toEqual([
+      { id: 'c1', kind: 'pk', columns: ['id'] },
+      { id: 'c2', kind: 'fk', columns: ['a_id'], refTable: 'a', refColumns: ['id'], onDelete: 'cascade' },
+    ]);
   });
 
   // Rule: load seed -> no-op edit -> serialize -> load must reproduce the exact
-  // same relationships (id, label, cardinality, kind), not just equivalent
-  // endpoints — the whole point of preserving hand-authored fk-kind rels verbatim
-  // instead of blowing them away and rederiving a label-less copy.
-  it('roundtrips the real seed model byte-honestly: same id/label/cardinality/kind for every relationship after an edit + save + reload', () => {
+  // same derived edge set (same source/target/fields/id) and the same authored
+  // labels — the whole point of deriving fk edges from constraints instead of
+  // hand-copying a rel list around.
+  it('roundtrips the real seed model: same derived edge set, same labels, same titles after an edit + save + reload', () => {
     const { model: m1, errors: e1 } = loadModel(seedRaw);
     expect(e1).toEqual([]);
 
@@ -158,14 +155,16 @@ describe('serializeModel', () => {
     const { model: m2, errors: e2 } = loadModel(raw2);
     expect(e2).toEqual([]);
 
-    const relTuple = (r: Relationship) => [r.id, r.label, r.cardinality, r.kind] as const;
-    const sortKey = (t: readonly [string, string | null, string, string | null]) => t[0];
-    expect(m2!.relationships.map(relTuple).sort((a, b) => sortKey(a).localeCompare(sortKey(b)))).toEqual(
-      m1!.relationships.map(relTuple).sort((a, b) => sortKey(a).localeCompare(sortKey(b))),
-    );
+    expect(m2!.relationships.map((r) => r.id).sort()).toEqual(m1!.relationships.map((r) => r.id).sort());
+    expect(m2!.relationships.map(tuple).sort()).toEqual(m1!.relationships.map(tuple).sort());
 
     const labelled = (rels: Relationship[]) => rels.filter((r) => r.label !== null).length;
-    expect(labelled(m1!.relationships)).toBe(18);
-    expect(labelled(m2!.relationships)).toBe(18);
+    expect(labelled(m1!.relationships)).toBe(labelled(m2!.relationships));
+
+    expect(m2!.entities.map((e) => e.label).sort()).toEqual(m1!.entities.map((e) => e.label).sort());
+    // No kind:'fk' relationship is ever written to the file — the real seed's
+    // 37 authored 'fk'-kind rels are all superseded by their derived twins.
+    const savedFk = (raw2.relationships as { kind?: string }[]).filter((r) => r.kind === 'fk');
+    expect(savedFk).toEqual([]);
   });
 });

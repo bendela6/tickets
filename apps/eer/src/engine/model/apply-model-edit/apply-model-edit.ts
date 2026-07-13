@@ -155,18 +155,27 @@ function upsertEntity(
     nullable: f.nullable,
     default: f.default,
   }));
-  // The editor doesn't expose constraint editing yet (EditField only carries
-  // legacy role/ref/refField — Task 5/6 add real constraint editing), so the
-  // saved entity's pk/fk constraints must be re-synthesised from the CURRENT
-  // fields on every save, the same way load-model's legacy path does. Without
-  // this, badges/edges (which read constraints, not fields, since Task 3)
-  // would freeze at whatever the entity's constraints were before this edit.
-  const constraints = synthesizeConstraintsFromFields(e.fields);
-
   const existing = model.entityById.get(e.id);
   let entity: Entity;
   if (existing) {
-    entity = measureEntity({ ...existing, label: e.label, group: e.group, description: e.description, fields, constraints });
+    // The editor doesn't expose constraint editing yet (EditField only carries
+    // legacy role/ref/refField — Task 5/6 add real constraint editing). Only
+    // the pk/fk constraints are re-derived from the CURRENT fields on every
+    // save (badges/edges read constraints, not fields, since Task 3, so an
+    // added/removed/renamed pk or fk field must still take effect); unique,
+    // check, and every index are the schema's own data — the role/ref-only
+    // editor can't express them yet, so a no-op field save must not silently
+    // drop a composite unique constraint, a check constraint, or an index.
+    const constraints = regeneratePkFkConstraints(e.fields, existing.constraints);
+    entity = measureEntity({
+      ...existing,
+      label: e.label,
+      group: e.group,
+      description: e.description,
+      fields,
+      constraints,
+      indexes: existing.indexes,
+    });
   } else {
     const box = model._groupBounds.find((b) => b.id === e.group);
     const x = box ? box.x + SPAWN_OFFSET : SPAWN_OFFSET;
@@ -177,7 +186,7 @@ function upsertEntity(
       group: e.group,
       description: e.description,
       fields,
-      constraints,
+      constraints: synthesizeConstraintsFromFields(e.fields),
       indexes: [],
       x,
       y,
@@ -195,7 +204,8 @@ function upsertEntity(
 // ref (regardless of role — a shared-primary-key reference is role 'pk' AND a
 // ref). Kept as a small local copy rather than importing load-model's private
 // helper, since EditField and the raw-JSON field shape it synthesises from
-// aren't the same type.
+// aren't the same type. Only used for a brand-new entity, which has no prior
+// constraints to preserve or reuse ids from.
 function synthesizeConstraintsFromFields(fields: EditField[]): Constraint[] {
   const out: Constraint[] = [];
   const pkCols = fields.filter((f) => f.role === 'pk').map((f) => f.name);
@@ -208,6 +218,55 @@ function synthesizeConstraintsFromFields(fields: EditField[]): Constraint[] {
       refTable: f.ref, refColumns: [f.refField ?? 'id'], onDelete: null, onUpdate: null,
     });
   }
+  return out;
+}
+
+// For an EXISTING entity: keep its `unique`/`check` constraints exactly as
+// stored (the role/ref-only editor can't express or edit them — see the call
+// site), and re-derive ONLY `pk`/`fk` from the current fields, the same rule
+// synthesizeConstraintsFromFields above uses for a new entity. Ids are reused
+// whenever the "same" constraint still exists — the pk constraint's id always
+// carries over (there's only ever one), and an fk constraint's id carries over
+// when a field with that same name still has a ref — so an edit that doesn't
+// touch a given pk/fk field reproduces the identical constraint id, and
+// therefore the identical derived relationship id (`rel:<entity>:<constraintId>`,
+// see derive-relationships.ts): no edge churn on an unrelated save.
+function regeneratePkFkConstraints(fields: EditField[], existing: Constraint[]): Constraint[] {
+  const preserved = existing.filter((c) => c.kind === 'unique' || c.kind === 'check');
+  const takenIds = new Set(existing.map((c) => c.id));
+  const prevPk = existing.find((c) => c.kind === 'pk');
+  const prevFkByColumn = new Map(
+    existing.filter((c) => c.kind === 'fk').map((c) => [c.columns[0], c] as const),
+  );
+
+  function freshId(): string {
+    let n = 1;
+    while (takenIds.has('c' + n)) n++;
+    const id = 'c' + n;
+    takenIds.add(id);
+    return id;
+  }
+
+  const out: Constraint[] = [...preserved];
+
+  const pkCols = fields.filter((f) => f.role === 'pk').map((f) => f.name);
+  if (pkCols.length) out.push({ id: prevPk ? prevPk.id : freshId(), kind: 'pk', name: prevPk?.name ?? null, columns: pkCols });
+
+  for (const f of fields) {
+    if (!f.ref) continue;
+    const prevFk = prevFkByColumn.get(f.name);
+    out.push({
+      id: prevFk ? prevFk.id : freshId(),
+      kind: 'fk',
+      name: prevFk?.name ?? null,
+      columns: [f.name],
+      refTable: f.ref,
+      refColumns: [f.refField ?? 'id'],
+      onDelete: prevFk?.onDelete ?? null,
+      onUpdate: prevFk?.onUpdate ?? null,
+    });
+  }
+
   return out;
 }
 

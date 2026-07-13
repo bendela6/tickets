@@ -396,6 +396,94 @@ describe('applyModelEdit', () => {
     });
   });
 
+  describe('upsertEntity — preserves constraints/indexes the editor cannot yet express', () => {
+    // The role/ref-only editor has no UI for unique/check constraints or
+    // indexes (Task 6+ adds it) — a description-only save must not silently
+    // drop them, even though upsertEntity still regenerates pk/fk from fields.
+    it('keeps an entity\'s unique constraint, check constraint, and index intact across a description-only edit', () => {
+      const raw = {
+        groups: [{ id: 'g', label: 'G' }],
+        entities: [
+          {
+            id: 'a', group: 'g',
+            fields: [{ name: 'id', type: 'int' }, { name: 'email', type: 'text' }],
+            constraints: [
+              { id: 'c1', kind: 'pk', columns: ['id'] },
+              { id: 'c2', kind: 'unique', columns: ['email'] },
+              { id: 'c3', kind: 'check', expression: "email <> ''" },
+            ],
+            indexes: [{ id: 'i1', name: 'idx_a_email', columns: ['email'], unique: false }],
+          },
+        ],
+      };
+      const { model: m1, errors } = loadModel(raw);
+      expect(errors).toEqual([]);
+
+      const m2 = applyModelEdit(m1!, {
+        kind: 'upsertEntity',
+        entity: { id: 'a', label: 'a', group: 'g', description: 'updated', fields: [editPk('id'), editPlain('email')] },
+      });
+      const after = m2.entityById.get('a')!;
+      expect(after.description).toBe('updated');
+      expect(after.constraints).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: 'c2', kind: 'unique', columns: ['email'] }),
+          expect.objectContaining({ id: 'c3', kind: 'check', expression: "email <> ''" }),
+        ]),
+      );
+      expect(after.indexes).toEqual([{ id: 'i1', name: 'idx_a_email', columns: ['email'], unique: false }]);
+    });
+
+    it('reuses the pk constraint\'s id and updates its columns when a field\'s role changes from null to pk', () => {
+      const raw = {
+        groups: [{ id: 'g', label: 'G' }],
+        entities: [
+          {
+            id: 'a', group: 'g',
+            fields: [{ name: 'id', type: 'int' }, { name: 'code', type: 'text' }],
+            constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }],
+          },
+        ],
+      };
+      const { model: m1, errors } = loadModel(raw);
+      expect(errors).toEqual([]);
+
+      const m2 = applyModelEdit(m1!, {
+        kind: 'upsertEntity',
+        entity: { id: 'a', label: 'a', group: 'g', description: null, fields: [editPk('id'), editPk('code', 'text')] },
+      });
+      const pk = m2.entityById.get('a')!.constraints.find((c) => c.kind === 'pk')!;
+      expect(pk.id).toBe('pk1'); // same constraint, not a fresh one
+      expect(pk.columns).toEqual(['id', 'code']);
+    });
+
+    it('reproduces the identical derived relationship id for an unchanged fk field across an unrelated edit (no edge churn)', () => {
+      const raw = {
+        groups: [{ id: 'g', label: 'G' }],
+        entities: [
+          { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int' }], constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }] },
+          {
+            id: 'b', group: 'g',
+            fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }],
+            constraints: [
+              { id: 'pk2', kind: 'pk', columns: ['id'] },
+              { id: 'fk9', kind: 'fk', columns: ['a_id'], refTable: 'a', refColumns: ['id'] },
+            ],
+          },
+        ],
+      };
+      const { model: m1, errors } = loadModel(raw);
+      expect(errors).toEqual([]);
+      expect(m1!.relationships.map((r) => r.id)).toEqual(['rel:b:fk9']);
+
+      const m2 = applyModelEdit(m1!, {
+        kind: 'upsertEntity',
+        entity: { id: 'b', label: 'b', group: 'g', description: 'unrelated change', fields: [editPk('id'), editFk('a_id', 'a')] },
+      });
+      expect(m2.relationships.map((r) => r.id)).toEqual(['rel:b:fk9']); // no churn
+    });
+  });
+
   describe('fkRefsTo', () => {
     it('lists every {entityId, field} whose fk field references the given entity', () => {
       const m1 = buildModel(); // users ← orders.users_id, users ← users.manager_id (self), tags ← orders.tag_id
