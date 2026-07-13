@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 
-import { buildModel } from '../../test/models';
+import { buildModel, twoZoneRaw } from '../../test/models';
 import { diagramReducer, initialDiagramState, type DiagramState } from './diagram-reducer';
 
 function loaded(): DiagramState {
@@ -13,6 +13,16 @@ it('LOAD packs the model and resets view/ui', () => {
   expect(s.model!._groupBounds.length).toBeGreaterThan(0);
   expect(s.view).toEqual({ zoom: 1, panX: 0, panY: 0, routing: 'avoid' }); // twoZoneRaw view.routing
   expect(s.ui.focus).toBeNull();
+  expect(s.ui.dirty).toBe(false);
+  expect(s.ui.modelId).toBeNull();
+});
+
+it('LOAD seeds colors from the model, stores the model id, and clears dirty', () => {
+  const raw = { ...twoZoneRaw(), colors: { z1: '#ff0000' } };
+  const s = diagramReducer(initialDiagramState, { type: 'LOAD', model: buildModel(raw), modelId: 'model-1' });
+  expect(s.ui.colors.get('z1')).toBe('#ff0000');
+  expect(s.ui.modelId).toBe('model-1');
+  expect(s.ui.dirty).toBe(false);
 });
 
 it('SET_POSITIONS shares structure: untouched entities keep identity', () => {
@@ -85,4 +95,63 @@ it('FOCUS_FROM_SEARCH sets focus + field highlight', () => {
   const s = diagramReducer(loaded(), { type: 'FOCUS_FROM_SEARCH', entityId: 'users', field: 'id' });
   expect(s.ui.focus).toEqual({ type: 'entity', id: 'users' });
   expect(s.ui.fieldHighlight).toEqual({ entityId: 'users', field: 'id' });
+});
+
+it('APPLY_MODEL_EDIT rewrites the model immutably and sets dirty', () => {
+  const s = loaded();
+  const s2 = diagramReducer(s, {
+    type: 'APPLY_MODEL_EDIT',
+    edit: { kind: 'setMeta', title: 'New title', description: 'New description' },
+  });
+  expect(s2.model!.meta.title).toBe('New title');
+  expect(s2.ui.dirty).toBe(true);
+  expect(s.model!.meta.title).not.toBe('New title'); // old state untouched
+  expect(s.ui.dirty).toBe(false);
+});
+
+it('SET_COLORS, SET_POSITIONS, and RESIZE_GROUP set dirty; MARK_SAVED clears it', () => {
+  let s = loaded();
+  expect(s.ui.dirty).toBe(false);
+
+  s = diagramReducer(s, { type: 'SET_COLORS', colors: new Map([['z1', '#00ff00']]) });
+  expect(s.ui.dirty).toBe(true);
+  s = diagramReducer(s, { type: 'MARK_SAVED' });
+  expect(s.ui.dirty).toBe(false);
+
+  s = diagramReducer(s, { type: 'SET_POSITIONS', entities: [{ id: 'users', x: 10, y: 20 }], boxes: [] });
+  expect(s.ui.dirty).toBe(true);
+  s = diagramReducer(s, { type: 'MARK_SAVED' });
+  expect(s.ui.dirty).toBe(false);
+
+  const boxId = s.model!._groupBounds[0]!.id;
+  s = diagramReducer(s, { type: 'RESIZE_GROUP', id: boxId, x: 1, y: 2, w: 300, h: 200 });
+  expect(s.ui.dirty).toBe(true);
+  s = diagramReducer(s, { type: 'MARK_SAVED' });
+  expect(s.ui.dirty).toBe(false);
+});
+
+it('an invalid APPLY_MODEL_EDIT leaves model and dirty untouched and sets editError', () => {
+  const s = loaded();
+  const s2 = diagramReducer(s, { type: 'APPLY_MODEL_EDIT', edit: { kind: 'deleteGroup', id: 'ghost' } });
+  expect(s2.model).toBe(s.model); // unchanged (same reference) — reducer must not throw
+  expect(s2.ui.editError).toMatch(/ghost/);
+  expect(s2.ui.dirty).toBe(false);
+});
+
+it('a failed edit error is cleared by the next successful edit, by LOAD, or by CLEAR_EDIT_ERROR', () => {
+  const failed = diagramReducer(loaded(), { type: 'APPLY_MODEL_EDIT', edit: { kind: 'deleteGroup', id: 'ghost' } });
+  expect(failed.ui.editError).not.toBeNull();
+
+  const afterSuccess = diagramReducer(failed, {
+    type: 'APPLY_MODEL_EDIT',
+    edit: { kind: 'setMeta', title: 'T', description: 'D' },
+  });
+  expect(afterSuccess.ui.editError).toBeNull();
+
+  const afterLoad = diagramReducer(failed, { type: 'LOAD', model: buildModel() });
+  expect(afterLoad.ui.editError).toBeNull();
+
+  const afterClear = diagramReducer(failed, { type: 'CLEAR_EDIT_ERROR' });
+  expect(afterClear.ui.editError).toBeNull();
+  expect(afterClear.model).toBe(failed.model);
 });
