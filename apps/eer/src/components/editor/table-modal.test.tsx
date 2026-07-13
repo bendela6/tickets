@@ -311,4 +311,110 @@ describe('TableModal', () => {
     expect(rel).toBeDefined();
     expect(rel).toMatchObject({ source: 'users', sourceField: 'id', kind: 'fk' });
   });
+
+  // Task 8: the indexes editor is wired into the modal under the constraints
+  // editor, and — unlike the earlier verbatim passthrough — a Save must now
+  // dispatch whatever <IndexesEditor/> produced.
+  it('adding an index through the modal and saving dispatches the indexes the editor produced', async () => {
+    const onClose = vi.fn();
+    const { actions } = await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
+    const spy = vi.spyOn(actions, 'applyModelEdit');
+
+    fireEvent.click(screen.getByRole('button', { name: /add index/i }));
+    fireEvent.change(screen.getByLabelText('Index 1 name'), { target: { value: 'idx_tags_id' } });
+    fireEvent.click(screen.getByLabelText('Index 1 column id'));
+    fireEvent.click(screen.getByLabelText('Index 1 unique'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const [edit] = spy.mock.calls[0]!;
+    expect((edit as { entity: { indexes: unknown[] } }).entity.indexes).toEqual([
+      { id: 'i1', name: 'idx_tags_id', columns: ['id'], unique: true },
+    ]);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  // Reviewer-carried finding from the constraints editor task: no test round-
+  // tripped a CHECK constraint or a COMPOSITE UNIQUE through the modal, and
+  // the engine does no kind-specific filtering — so it *should* just work,
+  // but that's exactly the class of bug that has bitten this project twice
+  // (see the "no-op Save preserves title" test above). This fixture carries
+  // every kind at once — a composite PK, a composite UNIQUE with the OPPOSITE
+  // column order (proving order isn't silently normalized), a CHECK, an FK
+  // with ON DELETE CASCADE, and an index — on one entity, opens it in the
+  // real modal, changes only the description, and proves the dispatched edit
+  // — and the model that edit produces — carry every one of them unchanged.
+  function richRaw() {
+    return {
+      groups: [{ id: 'z', label: 'Zone', order: 0 }],
+      entities: [
+        { id: 'parent', group: 'z', fields: [{ name: 'id', type: 'int' }] },
+        {
+          id: 'child',
+          group: 'z',
+          description: 'original description',
+          fields: [
+            { name: 'a', type: 'int' },
+            { name: 'b', type: 'int' },
+            { name: 'parent_id', type: 'int' },
+          ],
+          constraints: [
+            { id: 'c1', kind: 'pk', name: null, columns: ['a', 'b'] },
+            { id: 'c2', kind: 'unique', name: 'uq_b_a', columns: ['b', 'a'] },
+            { id: 'c3', kind: 'check', name: 'ck_a_positive', expression: 'a > 0' },
+            {
+              id: 'c4',
+              kind: 'fk',
+              name: null,
+              columns: ['parent_id'],
+              refTable: 'parent',
+              refColumns: ['id'],
+              onDelete: 'cascade',
+              onUpdate: null,
+            },
+          ],
+          indexes: [{ id: 'i1', name: 'idx_child_b', columns: ['b'], unique: false }],
+        },
+      ],
+    };
+  }
+
+  it('a description-only Save preserves a composite PK, a composite UNIQUE (order significant), a CHECK, an FK with ON DELETE CASCADE, and an index — deep-equal, through the real modal', async () => {
+    const raw = richRaw();
+    const model = buildModel(raw);
+    const before = model.entityById.get('child')!;
+    // Sanity: this really is the rich, every-kind-at-once shape the test needs.
+    expect(before.constraints).toEqual([
+      { id: 'c1', kind: 'pk', name: null, columns: ['a', 'b'] },
+      { id: 'c2', kind: 'unique', name: 'uq_b_a', columns: ['b', 'a'] },
+      { id: 'c3', kind: 'check', name: 'ck_a_positive', expression: 'a > 0' },
+      { id: 'c4', kind: 'fk', name: null, columns: ['parent_id'], refTable: 'parent', refColumns: ['id'], onDelete: 'cascade', onUpdate: null },
+    ]);
+    expect(before.indexes).toEqual([{ id: 'i1', name: 'idx_child_b', columns: ['b'], unique: false }]);
+
+    const onClose = vi.fn();
+    const { actions } = await renderDiagram(<TableModal id="child" onClose={onClose} />, raw);
+    const spy = vi.spyOn(actions, 'applyModelEdit');
+
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'updated description' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const [edit] = spy.mock.calls[0]! as [ModelEdit];
+    const dispatched = (edit as { entity: { description: unknown; constraints: unknown; indexes: unknown } }).entity;
+    expect(dispatched.description).toBe('updated description');
+    expect(dispatched.constraints).toEqual(before.constraints);
+    expect(dispatched.indexes).toEqual(before.indexes);
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    // Not just the dispatched payload — genuinely run it through the engine
+    // too, so a bug in upsertEntity's own handling of these shapes (as
+    // distinct from the modal's) can't hide behind an untested edit object.
+    const applied = applyModelEdit(model, edit);
+    const appliedEntity = applied.entityById.get('child')!;
+    expect(appliedEntity.description).toBe('updated description');
+    expect(appliedEntity.constraints).toEqual(before.constraints);
+    expect(appliedEntity.indexes).toEqual(before.indexes);
+  });
 });
