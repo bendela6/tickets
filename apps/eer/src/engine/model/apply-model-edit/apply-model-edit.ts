@@ -32,6 +32,11 @@ export interface EditField {
   refField: string | null;
   title: string | null;
   description: string | null;
+  // Neither has an editable column in FieldGrid yet (constraints/indexes own
+  // this data going forward — see task-2-brief) — carried through untouched so
+  // a no-op Save can't destroy it. Same passthrough reasoning as `title`.
+  nullable: boolean;
+  default: string | null;
 }
 
 export type ModelEdit =
@@ -160,6 +165,8 @@ function upsertEntity(
     refField: f.refField,
     title: f.title,
     description: f.description,
+    nullable: f.nullable,
+    default: f.default,
   }));
 
   const existing = model.entityById.get(e.id);
@@ -170,7 +177,19 @@ function upsertEntity(
     const box = model._groupBounds.find((b) => b.id === e.group);
     const x = box ? box.x + SPAWN_OFFSET : SPAWN_OFFSET;
     const y = box ? box.y + SPAWN_OFFSET : SPAWN_OFFSET;
-    entity = measureEntity({ id: e.id, label: e.label, group: e.group, description: e.description, fields, x, y, _w: 0, _h: 0 });
+    entity = measureEntity({
+      id: e.id,
+      label: e.label,
+      group: e.group,
+      description: e.description,
+      fields,
+      constraints: [],
+      indexes: [],
+      x,
+      y,
+      _w: 0,
+      _h: 0,
+    });
   }
 
   const entities = existing ? model.entities.map((x) => (x.id === e.id ? entity : x)) : [...model.entities, entity];

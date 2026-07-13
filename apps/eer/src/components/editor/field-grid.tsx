@@ -72,7 +72,10 @@ export function FieldGrid({ model, ownId, fields, onChange }: FieldGridProps) {
   const remove = (index: number) => onChange(fields.filter((_, i) => i !== index));
 
   const addField = () =>
-    onChange([...fields, { name: '', type: 'text', role: null, ref: null, refField: null, title: null, description: null }]);
+    onChange([
+      ...fields,
+      { name: '', type: 'text', role: null, ref: null, refField: null, title: null, description: null, nullable: true, default: null },
+    ]);
 
   return (
     <div className="flex flex-col gap-2">

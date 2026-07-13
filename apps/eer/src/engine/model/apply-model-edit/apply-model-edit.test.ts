@@ -6,7 +6,17 @@ import { loadModel } from '../load-model';
 import { applyModelEdit, fkRefsTo, type EditField } from './apply-model-edit';
 import seedRaw from '../../../../models/items-platform.json';
 
-const editPk = (name = 'id', type = 'int'): EditField => ({ name, type, role: 'pk', ref: null, refField: null, title: null, description: null });
+const editPk = (name = 'id', type = 'int'): EditField => ({
+  name,
+  type,
+  role: 'pk',
+  ref: null,
+  refField: null,
+  title: null,
+  description: null,
+  nullable: true,
+  default: null,
+});
 const editPlain = (name: string, type = 'text'): EditField => ({
   name,
   type,
@@ -15,6 +25,8 @@ const editPlain = (name: string, type = 'text'): EditField => ({
   refField: null,
   title: null,
   description: null,
+  nullable: true,
+  default: null,
 });
 const editFk = (name: string, ref: string, refField = 'id', type = 'int'): EditField => ({
   name,
@@ -24,6 +36,8 @@ const editFk = (name: string, ref: string, refField = 'id', type = 'int'): EditF
   refField,
   title: null,
   description: null,
+  nullable: true,
+  default: null,
 });
 
 describe('applyModelEdit', () => {
@@ -430,7 +444,17 @@ describe('applyModelEdit', () => {
 
     it('upsertEntity fk field with no ref throws', () => {
       const m1 = buildModel();
-      const badFk: EditField = { name: 'x_id', type: 'int', role: 'fk', ref: null, refField: null, title: null, description: null };
+      const badFk: EditField = {
+        name: 'x_id',
+        type: 'int',
+        role: 'fk',
+        ref: null,
+        refField: null,
+        title: null,
+        description: null,
+        nullable: true,
+        default: null,
+      };
       expect(() =>
         applyModelEdit(m1, {
           kind: 'upsertEntity',

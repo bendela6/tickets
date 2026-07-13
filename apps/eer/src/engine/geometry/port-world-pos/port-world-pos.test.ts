@@ -11,6 +11,8 @@ const e: Entity = {
   group: 'g',
   description: null,
   fields: [],
+  constraints: [],
+  indexes: [],
   x: 100,
   y: 50,
   _w: 200,

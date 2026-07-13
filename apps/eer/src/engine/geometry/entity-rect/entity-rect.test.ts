@@ -9,6 +9,8 @@ const e: Entity = {
   group: 'g',
   description: null,
   fields: [],
+  constraints: [],
+  indexes: [],
   x: 40,
   y: 60,
   _w: 180,

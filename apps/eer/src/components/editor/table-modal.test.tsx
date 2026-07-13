@@ -70,8 +70,8 @@ describe('TableModal', () => {
     const [edit] = spy.mock.calls[0]!;
     expect(edit).toMatchObject({ kind: 'upsertEntity', entity: { id: 'tags' } });
     expect((edit as { entity: { fields: unknown[] } }).entity.fields).toEqual([
-      { name: 'id', type: 'int', role: 'pk', ref: null, refField: null, title: null, description: null },
-      { name: 'label', type: 'text', role: null, ref: null, refField: null, title: null, description: null },
+      { name: 'id', type: 'int', role: 'pk', ref: null, refField: null, title: null, description: null, nullable: true, default: null },
+      { name: 'label', type: 'text', role: null, ref: null, refField: null, title: null, description: null, nullable: true, default: null },
     ]);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
