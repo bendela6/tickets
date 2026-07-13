@@ -91,6 +91,14 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   const entityId = isEdit ? existing!.id : slugify(name);
 
   const save = () => {
+    // upsertEntity is an upsert by design (editing relies on it), so in CREATE
+    // mode only, a slugified name that collides with an existing table's id
+    // would silently overwrite it instead of erroring — block it here before
+    // it ever reaches the engine.
+    if (!isEdit && model.entityById.has(entityId)) {
+      setLocalError(`A table with id "${entityId}" already exists.`);
+      return;
+    }
     const err = validateDraft(fields);
     if (err) {
       setLocalError(err);

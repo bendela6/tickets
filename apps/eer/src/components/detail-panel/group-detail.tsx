@@ -3,6 +3,7 @@ import { entityIdsInGroup } from '../../engine/groups/entity-ids-in-group';
 import type { Model } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
+import { useEditor } from '../editor';
 import { Dot } from './dot';
 import { Empty } from './empty';
 import { Header } from './header';
@@ -19,6 +20,7 @@ export function GroupDetail({
   colors?: ReadonlyMap<string, string>;
 }) {
   const actions = useDiagramActions();
+  const { openModal } = useEditor();
   const group = model.groups.find((g) => g.id === id);
   const isSub = group?.parent != null;
   const parentZone = isSub ? model.groups.find((g) => g.id === group?.parent) : undefined;
@@ -42,6 +44,7 @@ export function GroupDetail({
             {internal} internal)
           </>
         }
+        onEdit={() => openModal({ kind: 'group', id })}
       />
 
       <div className="px-4 pb-5">

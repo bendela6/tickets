@@ -72,6 +72,29 @@ describe('TableModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('an fk row with ref set and refField left null saves successfully (refField defaults to "id")', async () => {
+    // Regression: the seed fixtures always set refField explicitly, so nothing
+    // previously exercised apply-model-edit's `f.refField ?? 'id'` default via
+    // this form. "orders" has a plain "id" field on its ref target ("tags"),
+    // so leaving Field 3's ref-field unset must still resolve and save clean.
+    const onClose = vi.fn();
+    const { actions } = await renderDiagram(<TableModal id="orders" onClose={onClose} />, twoZoneRaw());
+    const spy = vi.spyOn(actions, 'applyModelEdit');
+
+    // Field 3 ("tag_id") already has ref="tags", refField="id" from the fixture
+    // — clear refField back to unset ("–") without touching ref or role.
+    fireEvent.change(screen.getByLabelText('Field 3 reference field'), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const [edit] = spy.mock.calls[0]!;
+    expect((edit as { entity: { fields: { name: string; ref: string | null; refField: string | null }[] } }).entity.fields).toContainEqual(
+      expect.objectContaining({ name: 'tag_id', ref: 'tags', refField: null }),
+    );
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText(/references unknown field/)).not.toBeInTheDocument();
+  });
+
   it('duplicate field names block Save with a visible message and do not dispatch', async () => {
     const onClose = vi.fn();
     const { actions } = await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
@@ -129,5 +152,20 @@ describe('TableModal', () => {
     expect(screen.getByText('New table')).toBeInTheDocument();
     expect((screen.getByLabelText('Field 1 name') as HTMLInputElement).value).toBe('id');
     expect(screen.queryByRole('button', { name: 'Delete' })).toBeDisabled();
+  });
+
+  it('create mode blocks Save with a visible message when the slugified id collides with an existing table', async () => {
+    // upsertEntity is an upsert — creating "Users" (slug "users") while "users"
+    // already exists would silently clobber it without this guard.
+    const onClose = vi.fn();
+    const { actions } = await renderDiagram(<TableModal onClose={onClose} />, twoZoneRaw());
+    const spy = vi.spyOn(actions, 'applyModelEdit');
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Users' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+
+    expect(await screen.findByText(/A table with id "users" already exists/)).toBeInTheDocument();
+    expect(spy).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
   });
 });
