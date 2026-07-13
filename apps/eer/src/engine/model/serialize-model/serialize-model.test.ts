@@ -146,7 +146,16 @@ describe('serializeModel', () => {
   // same derived edge set (same source/target/fields/id) and the same authored
   // labels — the whole point of deriving fk edges from constraints instead of
   // hand-copying a rel list around.
-  it('roundtrips the real seed model: same derived edge set, same labels, same titles after an edit + save + reload', () => {
+  //
+  // CRITICAL, reviewer-found: a prior version dropped every authored kind:'fk'
+  // relationship's label in favour of its bare derived twin, and serialize-
+  // model then wrote ZERO relationships at all (every kind:'fk' rel was
+  // treated as fully re-derivable, unconditionally) — so the first Save after
+  // load erased all 17 backed labels and demoted all 3 m2m-kind edges to a
+  // plain solid fk permanently. The assertions below are pinned to the ABSOLUTE
+  // counts (not "m2 has as many labels as m1", which a naive fix could satisfy
+  // vacuously at 0 === 0 if load dropped every label too).
+  it('roundtrips the real seed model: same derived edge set, same labels/kinds, same titles after an edit + save + reload', () => {
     const { model: m1, errors: e1 } = loadModel(seedRaw);
     expect(e1).toEqual([]);
 
@@ -159,12 +168,24 @@ describe('serializeModel', () => {
     expect(m2!.relationships.map(tuple).sort()).toEqual(m1!.relationships.map(tuple).sort());
 
     const labelled = (rels: Relationship[]) => rels.filter((r) => r.label !== null).length;
-    expect(labelled(m1!.relationships)).toBe(labelled(m2!.relationships));
+    expect(labelled(m1!.relationships)).toBe(17);
+    expect(labelled(m2!.relationships)).toBe(17);
+    const m2mKind = (rels: Relationship[]) => rels.filter((r) => r.kind === 'm2m').length;
+    expect(m2mKind(m1!.relationships)).toBe(3);
+    expect(m2mKind(m2!.relationships)).toBe(3);
 
     expect(m2!.entities.map((e) => e.label).sort()).toEqual(m1!.entities.map((e) => e.label).sort());
-    // No kind:'fk' relationship is ever written to the file — the real seed's
-    // 37 authored 'fk'-kind rels are all superseded by their derived twins.
-    const savedFk = (raw2.relationships as { kind?: string }[]).filter((r) => r.kind === 'fk');
-    expect(savedFk).toEqual([]);
+
+    // A bare derived fk edge (no label, kind still 'fk', inferred cardinality)
+    // is never written — it regenerates from its constraint. But 14 of the
+    // fk-kind edges carry a label the constraint alone can't reproduce, so
+    // those ARE written (kind:'fk' — a label doesn't change the kind), plus
+    // the 3 m2m-kind edges — 17 relationships written in total.
+    const savedRels = raw2.relationships as { kind?: string; label?: string }[];
+    expect(savedRels).toHaveLength(17);
+    const savedFk = savedRels.filter((r) => r.kind === 'fk');
+    expect(savedFk).toHaveLength(14);
+    expect(savedFk.every((r) => !!r.label)).toBe(true);
+    expect(savedRels.filter((r) => r.kind === 'm2m')).toHaveLength(3);
   });
 });

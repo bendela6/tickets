@@ -3,14 +3,27 @@
 // (+constraints+indexes), and relationships. Underscore-prefixed derived state
 // is never serialized.
 //
-// Relationships ARE the foreign keys now (see derive-relationships.ts): every
-// `kind: 'fk'` relationship is, by construction, reproduced byte-for-byte by
-// deriveRelationships from the entity's `constraints` on the very next load —
-// there is no such thing as a hand-authored kind:'fk' rel any more, so we never
-// write one to the file. Only non-fk relationships (documentation edges such
-// as `kind: 'nm'`) are authored data and survive serialize -> load verbatim.
+// Relationships ARE the foreign keys now (see derive-relationships.ts): a
+// BARE `kind: 'fk'` relationship — no label, no non-fk kind, an inferred
+// cardinality — is, by construction, reproduced byte-for-byte by
+// deriveRelationships from the entity's `constraints` on the very next load,
+// so it's never written to the file. But deriveRelationships also folds
+// authored data (a label, a non-fk kind such as 'nm'/'m2m', an explicit
+// cardinality) onto a derived edge when an authored relationship covers the
+// same endpoint pair — and THAT data is not reproducible from the constraint
+// alone, so any relationship carrying it must still be written, even when its
+// `kind` reads 'fk'. Only a fully-bare derived fk edge is omitted.
 
-import type { Constraint, Model, TableIndex } from '../types';
+import type { Constraint, Model, Relationship, TableIndex } from '../types';
+
+// Safe to omit entirely: a bare derived fk edge (no label, kind still 'fk', an
+// inferred — not explicitly authored — cardinality) reproduces byte-for-byte
+// from its backing constraint on the very next load. Anything else (a label,
+// a non-fk kind, or an explicitly-declared cardinality) is authored data that
+// the constraint alone can't regenerate, and must be written.
+function isFullyDerivable(r: Relationship): boolean {
+  return r.kind === 'fk' && !r.label && r.cardinalityInferred;
+}
 
 function serializeConstraint(c: Constraint): Record<string, unknown> {
   const base: Record<string, unknown> = { id: c.id, kind: c.kind, ...(c.name ? { name: c.name } : {}) };
@@ -65,10 +78,12 @@ export function serializeModel(model: Model, colors: ReadonlyMap<string, string>
       constraints: e.constraints.map(serializeConstraint),
       indexes: e.indexes.map(serializeIndex),
     })),
-    // kind:'fk' relationships regenerate from constraints on load (see the
-    // header comment) — only authored non-fk relationships are written.
+    // A bare derived fk edge regenerates from its constraint on load (see the
+    // header comment) and is omitted; anything carrying authored data a
+    // constraint can't reproduce (label / non-fk kind / explicit cardinality)
+    // is written, even when its kind still reads 'fk'.
     relationships: model.relationships
-      .filter((r) => r.kind !== 'fk')
+      .filter((r) => !isFullyDerivable(r))
       .map((r) => ({
         id: r.id,
         source: r.source,
