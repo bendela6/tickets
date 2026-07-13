@@ -25,17 +25,16 @@ function Port({
   return (
     <span
       className={cn(
-        'absolute top-1/2 z-3 h-4 w-1 -translate-x-1/2 -translate-y-1/2',
-        'rounded-xs border border-gray-900 bg-gray-300 opacity-0',
+        'absolute top-1/2 z-3 h-4 w-1 -translate-y-1/2',
+        'bg-gray-300',
         'transition-(--transition-paint) duration-120',
-        'before:absolute before:top-1/2 before:h-px before:-translate-y-1/2 before:bg-gray-300',
+        connected.has(key) ? 'opacity-100' : 'opacity-0',
         {
-          '-left-2 before:left-1/2 before:w-2': side === 'L',
-          'left-full ml-2 before:right-1/2 before:w-2': side === 'R',
-          'opacity-100': connected.has(key),
-          'bg-yellow-400 before:bg-yellow-400': f.role === 'pk',
-          'bg-green-400 before:bg-green-400': f.role === 'fk',
-          'bg-blue-400 ring-3 ring-blue-400/30 before:bg-blue-400': hot,
+          'right-full rounded-l-xs': side === 'L',
+          'left-full rounded-r-xs': side === 'R',
+          'bg-yellow-400': f.role === 'pk',
+          'bg-green-400': f.role === 'fk',
+          'bg-blue-400 ring-3 ring-blue-400/30': hot,
           'h-(--port-height)': off > 0,
         },
       )}
@@ -80,22 +79,27 @@ export function FieldRow({
         dispatch({ type: 'CLEAR_FIELD_HIGHLIGHT' });
       }}
     >
+      {f.role && (
+        <span
+          className={cn(
+            'shrink-0 text-center font-mono text-3xs font-semibold tracking-wide text-gray-400',
+            {
+              'text-yellow-400': f.role === 'pk',
+              'text-green-400': f.role === 'fk',
+            },
+          )}
+        >
+          {f.role ? f.role.toUpperCase() : ''}
+        </span>
+      )}
       <span
-        className={cn('w-5 shrink-0 text-center font-mono text-3xs font-semibold tracking-wide text-gray-400', {
-          'text-yellow-400': f.role === 'pk',
-          'text-green-400': f.role === 'fk',
-        })}
-      >
-        {f.role ? f.role.toUpperCase() : ''}
-      </span>
-      <span
-        className={cn('truncate whitespace-nowrap font-mono text-gray-50', {
+        className={cn('truncate font-mono text-gray-50', {
           'text-yellow-400': f.role === 'pk',
         })}
       >
         {f.name}
       </span>
-      <span className="ml-auto max-w-1/2 truncate whitespace-nowrap font-mono text-xs text-gray-400">
+      <span className="ml-auto max-w-1/2 truncate font-mono text-xs text-gray-400">
         {f.type || ''}
       </span>
       <Port e={e} f={f} side="L" connected={connected} pinSpan={pinSpan} hot={hot} />

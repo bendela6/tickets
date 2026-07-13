@@ -39,17 +39,19 @@ export function edgePath(
 
 // ---- Endpoint heads (crow's-foot / tick), ERD cardinality notation ----
 
-const HEAD_LEN = 8; // reaches ~the card edge from the port
+const HEAD_LEN = 8; // how far the crow's-foot apex sits out along the line
 const HEAD_SPREAD = 4;
 
-// A head at port p on side `side`: a crow's-foot fanning toward the card for the
-// "many" end. The "one" end has no head — its amber pin bar is the marker.
+// A head at port p on side `side`: a crow's-foot whose apex rides the line and
+// whose toes land on the pin bar, for the "many" end. The pin hugs the card
+// edge, so the foot must fan outward — toward the card it would vanish under
+// the card. The "one" end has no head — its amber pin bar is the marker.
 function headSub(p: Point, side: Side, kind: EndKind): string {
   if (kind !== 'many') return '';
-  const toCard = side === 'R' ? -1 : 1; // direction from the port toward its card
+  const out = side === 'R' ? 1 : -1; // direction from the pin away from its card
   const s = HEAD_SPREAD;
-  const cx = p.x + toCard * HEAD_LEN;
-  return `M${p.x} ${p.y}L${cx} ${p.y - s}M${p.x} ${p.y}L${cx} ${p.y}M${p.x} ${p.y}L${cx} ${p.y + s}`;
+  const ax = p.x + out * HEAD_LEN;
+  return `M${ax} ${p.y}L${p.x} ${p.y - s}M${ax} ${p.y}L${p.x} ${p.y}M${ax} ${p.y}L${p.x} ${p.y + s}`;
 }
 
 function headPath(rel: Relationship, p1: Point, p2: Point, s: Side, t: Side, self: boolean): string {

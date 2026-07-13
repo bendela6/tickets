@@ -14,7 +14,7 @@ describe('metrics ↔ Tailwind utility pairings (pinned)', () => {
   });
 
   it('matches the port offset rules', () => {
-    expect(PORT_GAP).toBe(8); // [data-side] -left-2 / left-full ml-2
+    expect(PORT_GAP).toBe(2); // [data-side] w-1 at right-full / left-full — bar centre 2px outside the row
   });
 });
 
