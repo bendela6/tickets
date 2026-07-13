@@ -93,3 +93,24 @@ describe('loadModel — validation', () => {
     expect(model!.relById.get('r')).toMatchObject({ source: 'a', sourceField: 'id', target: 'b', targetField: 'a_id' });
   });
 });
+
+describe('loadModel — colors and saved layout', () => {
+  it('reads optional colors, entity x/y and group bounds into the model', () => {
+    const raw = {
+      colors: { z1: '#112233', users: '#445566' },
+      groups: [{ id: 'z1', label: 'Z', order: 0, bounds: { x: 5, y: 6, w: 700, h: 500 } }],
+      entities: [{ id: 'users', group: 'z1', x: 40, y: 50, fields: [{ name: 'id', type: 'int', role: 'pk' }] }],
+    };
+    const { model, errors } = loadModel(raw);
+    expect(errors).toEqual([]);
+    expect(model!.colors.get('z1')).toBe('#112233');
+    expect(model!._savedLayout!.entities.get('users')).toEqual({ x: 40, y: 50 });
+    expect(model!._savedLayout!.groups.get('z1')).toEqual({ x: 5, y: 6, w: 700, h: 500 });
+  });
+
+  it('defaults colors to an empty map and savedLayout to undefined', () => {
+    const { model } = loadModel({ groups: [{ id: 'z', label: 'Z' }], entities: [{ id: 'e', group: 'z', fields: [{ name: 'id' }] }] });
+    expect(model!.colors.size).toBe(0);
+    expect(model!._savedLayout).toBeUndefined();
+  });
+});

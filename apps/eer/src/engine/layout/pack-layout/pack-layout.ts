@@ -156,5 +156,39 @@ export function packLayout(input: Model): Model {
     ch = Math.max(ch, b.y + b.h);
   }
   model._content = { w: cw + LAYOUT_MARGIN, h: ch + LAYOUT_MARGIN };
+
+  // Hand-arranged positions from the file win over the packed defaults — re-apply
+  // them last so reload/repack never drifts a diagram the user has laid out.
+  const saved = model._savedLayout;
+  if (saved) {
+    for (const [id, p] of saved.entities) {
+      const e = model.entityById.get(id);
+      if (e) {
+        e.x = p.x;
+        e.y = p.y;
+      }
+    }
+    for (const [id, b] of saved.groups) {
+      const g = model._groupBounds.find((x) => x.id === id);
+      if (g) {
+        g.x = b.x;
+        g.y = b.y;
+        g.w = b.w;
+        g.h = b.h;
+      }
+    }
+    let w = model._content.w;
+    let h = model._content.h;
+    for (const e of model.entities) {
+      w = Math.max(w, e.x + e._w + 80);
+      h = Math.max(h, e.y + e._h + 80);
+    }
+    for (const g of model._groupBounds) {
+      w = Math.max(w, g.x + g.w + 80);
+      h = Math.max(h, g.y + g.h + 80);
+    }
+    model._content = { w, h };
+  }
+
   return model;
 }

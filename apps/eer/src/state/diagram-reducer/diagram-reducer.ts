@@ -108,10 +108,12 @@ export function diagramReducer(state: DiagramState, action: DiagramAction): Diag
     case 'REPACK':
       return state.model ? { ...state, model: packLayout(state.model) } : state;
     case 'REARRANGE':
+      // Toolbar "Rearrange" must actually move cards — a saved layout would
+      // otherwise snap everything straight back, making the button a no-op.
       return state.model
         ? {
             ...state,
-            model: packLayout(state.model),
+            model: packLayout({ ...state.model, _savedLayout: undefined }),
             ui: { ...state.ui, focus: null, panelSelection: { type: 'none' }, fieldHighlight: null, raisedEdge: null },
           }
         : state;

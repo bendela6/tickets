@@ -65,6 +65,14 @@ it('REARRANGE clears focus, REPACK keeps it', () => {
   expect(cleared.ui.focus).toBeNull();
 });
 
+it('REARRANGE clears a saved layout so the button still moves cards', () => {
+  let s = loaded();
+  s = { ...s, model: { ...s.model!, _savedLayout: { entities: new Map([['users', { x: 1, y: 2 }]]), groups: new Map() } } };
+  const rearranged = diagramReducer(s, { type: 'REARRANGE' });
+  expect(rearranged.model!._savedLayout).toBeUndefined();
+  expect(rearranged.model!.entityById.get('users')!.x).not.toBe(1);
+});
+
 it('TOGGLE_GROUP / TOGGLE_KIND flip set membership immutably', () => {
   let s = loaded();
   s = diagramReducer(s, { type: 'TOGGLE_GROUP', id: 'z1' });
