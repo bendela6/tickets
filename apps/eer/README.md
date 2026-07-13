@@ -98,12 +98,35 @@ that doesn't exist in the built app:
   fields/colour prefilled). Each routed modal is remounted (keyed on
   `kind:id`) whenever its target changes, so switching straight from editing
   one table/group to another never leaves stale draft state behind.
+- **Real relational schema, not a role hint** — each table (`Entity`) owns
+  `columns` (name, Postgres `type`, `nullable`, `default`, plus display
+  `title`/`description`), `constraints` (`pk` | `unique` | `check` | `fk` —
+  all but `check` can span multiple columns; an `fk` also carries `refTable`,
+  `refColumns`, and optional `onDelete`/`onUpdate` actions), and `indexes`
+  (name, columns, `unique`). PK/FK badges on the card are never stored
+  directly — they're derived from a table's constraints (`columnRoles`), so
+  they can't disagree with the schema.
 - **Connections are derived, not authored** — there is no separate connection/
-  edge editor. An edge exists because some field has `role: 'fk'` plus a `ref`
-  (and optional `refField`, defaulting to `'id'`); toggling a field's role to
-  FK and picking a reference table (`FieldGrid`, inside `TableModal`) is what
-  draws it, and clearing either removes it (`apply-model-edit`'s
-  `deriveRelationships`).
+  edge editor. **A `fk` constraint is what draws an edge**: `TableModal`'s
+  constraints editor (add/edit/remove a constraint, composite columns via a
+  multi-select, `refTable`/`refColumns` picked from existing tables, an
+  `onDelete`/`onUpdate` action select) is where you author it, and
+  `deriveRelationships` regenerates one edge per resolvable `fk` constraint on
+  every edit — add a `fk` constraint and the edge appears; remove it, rename
+  its column, or repoint `refTable` and the edge updates or disappears with it.
+  An edge's cardinality is derived too: `1-1` when the fk's columns are
+  exactly covered by a `pk`/`unique` constraint on the referencing table,
+  `1-n` otherwise. The columns grid's type picker (`TypeCell`) offers the
+  Postgres catalogue (`pg-types.ts`: numeric/text/temporal/boolean/uuid/json/
+  binary, with `varchar(n)`/`numeric(p,s)` parameters) plus a free-text
+  "custom" escape hatch for anything not in it (enums, domains, `citext`,
+  hand-written types) — a column's `type` is always stored as a plain string,
+  so custom types round-trip untouched.
+- **Legacy files still load** — a model authored in the old shape (per-field
+  `role: 'pk'|'fk'` plus `ref`/`refField`) is accepted and normalised into
+  `constraints` on read (`load-model.ts`'s `synthesizeLegacyConstraints`); it
+  is never round-tripped back into that shape — the next Save writes the
+  current `columns`/`constraints`/`indexes` shape instead.
 - **Layout + colour persistence** — dragging a card/zone or overriding a
   colour (per-entity/group swatch in `TableModal`/`GroupModal`, or the
   overview's `ColorsForm`) only changes in-memory state until **Save**;
