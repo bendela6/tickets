@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { buildModel, nestedRaw, pkField } from '../../../test/models';
 import { CARD_MAX_W, CARD_MIN_W, HEADER_H, ROW_H } from '../../geometry/metrics';
+import { columnRoles } from '../column-roles';
 import { loadModel } from '../load-model';
 import { applyModelEdit, fkRefsTo, type EditField } from './apply-model-edit';
 import seedRaw from '../../../../models/items-platform.json';
@@ -185,6 +186,102 @@ describe('applyModelEdit', () => {
     it('throws for an unknown entity id', () => {
       const m1 = buildModel();
       expect(() => applyModelEdit(m1, { kind: 'deleteEntity', id: 'ghost' })).toThrow(/ghost/);
+    });
+
+    // CRITICAL, reviewer-found (round 2): deleteEntity used to clear only the
+    // legacy field.ref, never the fk CONSTRAINT pointing at the deleted table.
+    // Since upsertEntity now passes constraints through verbatim (no
+    // re-synthesis), a stale fk constraint was never scrubbed: the surviving
+    // table kept an FK badge for that column (columnRoles reads constraints,
+    // not field.ref), the dangling constraint serialized straight back to the
+    // file, and reload was silent about it.
+    it('deleting a table removes fk constraints on surviving tables that reference it, not just legacy field.ref', () => {
+      const raw = {
+        groups: [{ id: 'g', label: 'G' }],
+        entities: [
+          { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int' }], constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }] },
+          {
+            id: 'b', group: 'g',
+            fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }],
+            constraints: [
+              { id: 'pk2', kind: 'pk', columns: ['id'] },
+              { id: 'fk1', kind: 'fk', columns: ['a_id'], refTable: 'a', refColumns: ['id'] },
+            ],
+          },
+        ],
+      };
+      const m1 = buildModel(raw);
+      expect(m1.relationships.map((r) => r.id)).toEqual(['rel:b:fk1']);
+
+      const m2 = applyModelEdit(m1, { kind: 'deleteEntity', id: 'a' });
+      const b = m2.entityById.get('b')!;
+      expect(b.constraints.some((c) => c.kind === 'fk' && c.refTable === 'a')).toBe(false);
+      expect(columnRoles(b).get('a_id')).toMatchObject({ fk: false }); // no FK badge left on the column
+      expect(m2.relationships.some((r) => r.source === 'a' || r.target === 'a')).toBe(false);
+      expect(fkRefsTo(m2, 'a')).toEqual([]);
+      // pk/other constraints on the surviving table are untouched
+      expect(b.constraints.some((c) => c.kind === 'pk' && c.id === 'pk2')).toBe(true);
+    });
+
+    it('re-creating a table under the deleted id does not resurrect the dropped edge', () => {
+      const raw = {
+        groups: [{ id: 'g', label: 'G' }],
+        entities: [
+          { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int' }], constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }] },
+          {
+            id: 'b', group: 'g',
+            fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }],
+            constraints: [
+              { id: 'pk2', kind: 'pk', columns: ['id'] },
+              { id: 'fk1', kind: 'fk', columns: ['a_id'], refTable: 'a', refColumns: ['id'] },
+            ],
+          },
+        ],
+      };
+      const m1 = buildModel(raw);
+      const deleted = applyModelEdit(m1, { kind: 'deleteEntity', id: 'a' });
+      const recreated = applyModelEdit(deleted, {
+        kind: 'upsertEntity',
+        entity: {
+          id: 'a',
+          label: 'A',
+          group: 'g',
+          description: null,
+          fields: [editField('id', 'int')],
+          constraints: [{ id: 'pk1', kind: 'pk', name: null, columns: ['id'] }],
+          indexes: [],
+        },
+      });
+      expect(recreated.relationships.some((r) => r.source === 'a' || r.target === 'a')).toBe(false);
+      expect(recreated.entityById.get('b')!.constraints.some((c) => c.kind === 'fk' && c.refTable === 'a')).toBe(false);
+    });
+
+    it('fkRefsTo(model, id) agrees with what deleteEntity actually clears — the delete-confirm copy is honest', () => {
+      const raw = {
+        groups: [{ id: 'g', label: 'G' }],
+        entities: [
+          { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int' }], constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }] },
+          {
+            id: 'b', group: 'g',
+            fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }],
+            constraints: [
+              { id: 'pk2', kind: 'pk', columns: ['id'] },
+              { id: 'fk1', kind: 'fk', columns: ['a_id'], refTable: 'a', refColumns: ['id'] },
+            ],
+          },
+        ],
+      };
+      const m1 = buildModel(raw);
+      const before = fkRefsTo(m1, 'a');
+      expect(before).toEqual([{ entityId: 'b', field: 'a_id' }]);
+
+      const m2 = applyModelEdit(m1, { kind: 'deleteEntity', id: 'a' });
+      // Everything fkRefsTo promised as "referencing a" must actually be cleared now.
+      for (const ref of before) {
+        const e = m2.entityById.get(ref.entityId)!;
+        expect(e.constraints.some((c) => c.kind === 'fk' && c.refTable === 'a' && c.columns.join(', ') === ref.field)).toBe(false);
+      }
+      expect(fkRefsTo(m2, 'a')).toEqual([]);
     });
 
     it('drops explicit non-fk relationships whose endpoint no longer exists', () => {

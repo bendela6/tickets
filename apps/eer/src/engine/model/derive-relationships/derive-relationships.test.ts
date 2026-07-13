@@ -93,6 +93,34 @@ describe('deriveRelationships', () => {
     ]);
   });
 
+  // MINOR, reviewer-found (round 2): when two authored rels cover the same
+  // endpoint pair, only the first-in-file becomes the derived edge's donor —
+  // but the second must not just vanish. It carries a label/kind that isn't
+  // re-derivable from anything, so it's kept as its own relationship instead.
+  it('keeps a second authored relationship on the same pair as its own entry, instead of dropping it', () => {
+    const model = loadModel(
+      raw(
+        [
+          { id: 'c1', kind: 'pk', columns: ['id'] },
+          { id: 'c2', kind: 'fk', columns: ['user_id'], refTable: 'users', refColumns: ['id'] },
+        ],
+        {
+          kinds: [{ id: 'nm', label: 'Many-to-many', style: 'dashed' }],
+          relationships: [
+            { id: 'primary', source: 'users', sourceField: 'id', target: 'orders', targetField: 'user_id', kind: 'fk', label: 'owner' },
+            { id: 'secondary', source: 'users', sourceField: 'id', target: 'orders', targetField: 'user_id', kind: 'nm', label: 'watcher' },
+          ],
+        },
+      ),
+    ).model!;
+    const rels = deriveRelationships(model);
+    expect(rels).toHaveLength(2);
+    const derived = rels.find((r) => r.id === 'rel:orders:c2')!;
+    expect(derived).toMatchObject({ label: 'owner', kind: 'fk' }); // first authored rel donates onto the derived edge
+    const second = rels.find((r) => r.id === 'secondary')!;
+    expect(second).toMatchObject({ label: 'watcher', kind: 'nm' }); // second kept verbatim, not dropped
+  });
+
   it('keeps a non-fk authored relationship and puts it first', () => {
     const model = loadModel(
       raw(
