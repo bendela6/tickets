@@ -1,6 +1,6 @@
-// The table modal's field editor. Pure controlled grid: `table-modal.tsx` owns
-// the draft array and all validation; this component only renders rows and
-// reports whole-array patches back up via onChange.
+// The table modal's column editor. Pure controlled grid: `table-modal.tsx`
+// owns the draft array and all validation; this component only renders rows
+// and reports whole-array patches back up via onChange.
 //
 // There is no Role / Ref-table / Ref-field column here any more. Connections
 // used to be derived from a field's role:'fk' + ref (toggle a row to FK, pick
@@ -12,9 +12,16 @@
 // authored table's keys and every edge attached to them on the very next
 // Save. A real constraints editor is a later task; until then, keys and
 // references are display-only, set by the file, not this grid.
+//
+// The type cell is no longer free text — TypeCell is a real Postgres type
+// picker (grouped <select> + param inputs + a custom… escape hatch); columns
+// are still STORED as plain strings ("varchar(255)"), TypeCell is just the
+// codec around that string. `nullable`/`default` are new editable columns
+// (previously carried through untouched — see EditField's own field comment).
 
 import type { EditField } from '../../engine/model/apply-model-edit';
 import { cn } from '../../ui/cn';
+import { TypeCell } from './type-cell';
 
 const cellInput = cn('w-full rounded border border-gray-600 bg-gray-900 px-1 py-1', 'font-mono text-xs text-gray-50');
 const iconBtn = cn(
@@ -25,25 +32,27 @@ const colHead = 'text-2xs font-semibold uppercase tracking-wide text-gray-400';
 // One width per column, shared by the header cell and its inputs so they stay
 // aligned. They grow into the wide modal, so the grid never scrolls sideways.
 const COL = {
-  name: 'w-40 grow',
-  type: 'w-24 grow',
-  note: 'w-40 grow',
+  name: 'w-32 grow',
+  type: 'w-40 grow',
+  nullable: 'w-10 shrink-0',
+  default: 'w-24 grow',
+  note: 'w-32 grow',
 } as const;
 
-interface FieldGridProps {
-  fields: EditField[];
-  onChange: (fields: EditField[]) => void;
+interface ColumnsGridProps {
+  columns: EditField[];
+  onChange: (columns: EditField[]) => void;
 }
 
-export function FieldGrid({ fields, onChange }: FieldGridProps) {
+export function ColumnsGrid({ columns, onChange }: ColumnsGridProps) {
   const patch = (index: number, next: Partial<EditField>) => {
-    onChange(fields.map((f, i) => (i === index ? { ...f, ...next } : f)));
+    onChange(columns.map((c, i) => (i === index ? { ...c, ...next } : c)));
   };
 
   const move = (index: number, dir: -1 | 1) => {
     const j = index + dir;
-    if (j < 0 || j >= fields.length) return;
-    const next = fields.slice();
+    if (j < 0 || j >= columns.length) return;
+    const next = columns.slice();
     const here = next[index]!;
     const there = next[j]!;
     next[index] = there;
@@ -51,10 +60,10 @@ export function FieldGrid({ fields, onChange }: FieldGridProps) {
     onChange(next);
   };
 
-  const remove = (index: number) => onChange(fields.filter((_, i) => i !== index));
+  const remove = (index: number) => onChange(columns.filter((_, i) => i !== index));
 
-  const addField = () =>
-    onChange([...fields, { name: '', type: 'text', title: null, description: null, nullable: true, default: null }]);
+  const addColumn = () =>
+    onChange([...columns, { name: '', type: 'text', title: null, description: null, nullable: true, default: null }]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -63,43 +72,61 @@ export function FieldGrid({ fields, onChange }: FieldGridProps) {
           <div className="flex items-center gap-2 border-b border-gray-600 bg-gray-900 px-2 py-1">
             <span className={cn(colHead, COL.name)}>Name</span>
             <span className={cn(colHead, COL.type)}>Type</span>
+            <span className={cn(colHead, COL.nullable)}>Null</span>
+            <span className={cn(colHead, COL.default)}>Default</span>
             <span className={cn(colHead, COL.note)}>Note</span>
             <span className="w-20 shrink-0" aria-hidden />
           </div>
-          {fields.map((f, i) => (
+          {columns.map((c, i) => (
             <div key={i} className="flex items-center gap-2 border-b border-gray-600/50 px-2 py-1 last:border-0">
               <input
                 className={cn(cellInput, COL.name)}
-                aria-label={`Field ${i + 1} name`}
-                value={f.name}
+                aria-label={`Column ${i + 1} name`}
+                value={c.name}
                 onChange={(e) => patch(i, { name: e.target.value })}
               />
+              <div className={cn('flex items-center', COL.type)}>
+                <TypeCell value={c.type} onChange={(type) => patch(i, { type })} />
+              </div>
               <input
-                className={cn(cellInput, COL.type)}
-                aria-label={`Field ${i + 1} type`}
-                value={f.type}
-                onChange={(e) => patch(i, { type: e.target.value })}
+                type="checkbox"
+                className={cn(COL.nullable, 'shrink-0')}
+                aria-label={`Column ${i + 1} nullable`}
+                checked={c.nullable}
+                onChange={(e) => patch(i, { nullable: e.target.checked })}
+              />
+              <input
+                className={cn(cellInput, COL.default)}
+                aria-label={`Column ${i + 1} default`}
+                value={c.default ?? ''}
+                onChange={(e) => patch(i, { default: e.target.value ? e.target.value : null })}
               />
               <input
                 className={cn(cellInput, COL.note)}
-                aria-label={`Field ${i + 1} note`}
-                value={f.description ?? ''}
+                aria-label={`Column ${i + 1} note`}
+                value={c.description ?? ''}
                 onChange={(e) => patch(i, { description: e.target.value })}
               />
               <div className="flex shrink-0 items-center gap-1">
-                <button type="button" className={iconBtn} aria-label={`Move field ${i + 1} up`} disabled={i === 0} onClick={() => move(i, -1)}>
+                <button
+                  type="button"
+                  className={iconBtn}
+                  aria-label={`Move column ${i + 1} up`}
+                  disabled={i === 0}
+                  onClick={() => move(i, -1)}
+                >
                   ↑
                 </button>
                 <button
                   type="button"
                   className={iconBtn}
-                  aria-label={`Move field ${i + 1} down`}
-                  disabled={i === fields.length - 1}
+                  aria-label={`Move column ${i + 1} down`}
+                  disabled={i === columns.length - 1}
                   onClick={() => move(i, 1)}
                 >
                   ↓
                 </button>
-                <button type="button" className={iconBtn} aria-label={`Remove field ${i + 1}`} onClick={() => remove(i)}>
+                <button type="button" className={iconBtn} aria-label={`Remove column ${i + 1}`} onClick={() => remove(i)}>
                   ✕
                 </button>
               </div>
@@ -112,9 +139,9 @@ export function FieldGrid({ fields, onChange }: FieldGridProps) {
         <button
           type="button"
           className="rounded-md border border-gray-600 px-2 py-1 text-xs text-gray-200 hover:bg-gray-800"
-          onClick={addField}
+          onClick={addColumn}
         >
-          Add field
+          Add column
         </button>
         <p className="text-2xs text-gray-400">Keys and references come from the table's constraints — not editable here yet.</p>
       </div>

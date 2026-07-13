@@ -29,29 +29,29 @@ describe('TableModal', () => {
     // twoZoneRaw's "orders": id (pk), users_id (fk -> users), tag_id (fk -> tags).
     await renderDiagram(<TableModal id="orders" onClose={() => {}} />, twoZoneRaw());
 
-    expect((screen.getByLabelText('Field 1 name') as HTMLInputElement).value).toBe('id');
-    expect((screen.getByLabelText('Field 2 name') as HTMLInputElement).value).toBe('users_id');
-    expect((screen.getByLabelText('Field 3 name') as HTMLInputElement).value).toBe('tag_id');
-    expect(screen.queryByLabelText('Field 4 name')).not.toBeInTheDocument();
+    expect((screen.getByLabelText('Column 1 name') as HTMLInputElement).value).toBe('id');
+    expect((screen.getByLabelText('Column 2 name') as HTMLInputElement).value).toBe('users_id');
+    expect((screen.getByLabelText('Column 3 name') as HTMLInputElement).value).toBe('tag_id');
+    expect(screen.queryByLabelText('Column 4 name')).not.toBeInTheDocument();
   });
 
-  // The field grid has no Role / Ref-table / Ref-field columns any more — keys
-  // and references come from the table's constraints, not editable here yet
-  // (see field-grid.tsx's header comment).
-  it('has no role or reference-table controls in the field grid', async () => {
+  // The columns grid has no Role / Ref-table / Ref-field columns any more —
+  // keys and references come from the table's constraints, not editable here
+  // yet (see columns-grid.tsx's header comment).
+  it('has no role or reference-table controls in the columns grid', async () => {
     await renderDiagram(<TableModal id="users" onClose={() => {}} />, twoZoneRaw());
-    expect(screen.queryByLabelText('Field 2 role')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('Field 2 reference table')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('Field 2 reference field')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Column 2 role')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Column 2 reference table')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Column 2 reference field')).not.toBeInTheDocument();
   });
 
-  it('Add field + Save dispatches ONE upsertEntity whose fields include the new row', async () => {
+  it('Add column + Save dispatches ONE upsertEntity whose fields include the new row', async () => {
     const onClose = vi.fn();
     const { actions } = await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
     const spy = vi.spyOn(actions, 'applyModelEdit');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add field' }));
-    fireEvent.change(screen.getByLabelText('Field 2 name'), { target: { value: 'label' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add column' }));
+    fireEvent.change(screen.getByLabelText('Column 2 name'), { target: { value: 'label' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(spy).toHaveBeenCalledTimes(1);
@@ -62,6 +62,38 @@ describe('TableModal', () => {
       { name: 'label', type: 'text', title: null, description: null, nullable: true, default: null },
     ]);
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('adds a column with a picked type, nullable and default, and saves them', async () => {
+    const onClose = vi.fn();
+    const { actions } = await renderDiagram(<TableModal id="users" onClose={onClose} />, twoZoneRaw());
+    const spy = vi.spyOn(actions, 'applyModelEdit');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add column' }));
+
+    const rows = screen.getAllByLabelText(/^Column \d+ name$/);
+    const i = rows.length; // the new row is the last one, 1-indexed labels
+    fireEvent.change(screen.getByLabelText(`Column ${i} name`), { target: { value: 'note' } });
+
+    const typeSelects = screen.getAllByLabelText('type');
+    fireEvent.change(typeSelects[i - 1]!, { target: { value: 'varchar' } });
+    const params = screen.getAllByLabelText('type parameter 1');
+    fireEvent.change(params[params.length - 1]!, { target: { value: '64' } });
+
+    fireEvent.click(screen.getByLabelText(`Column ${i} nullable`)); // ticked by default → untick
+    fireEvent.change(screen.getByLabelText(`Column ${i} default`), { target: { value: "'draft'" } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const [edit] = spy.mock.calls[0]!;
+    expect((edit as { entity: { fields: unknown[] } }).entity.fields.at(-1)).toEqual({
+      name: 'note',
+      type: 'varchar(64)',
+      nullable: false,
+      default: "'draft'",
+      title: null,
+      description: null,
+    });
   });
 
   // CRITICAL 2, case (c): Save must carry the entity's OWN current constraints
@@ -87,8 +119,8 @@ describe('TableModal', () => {
     const { actions } = await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
     const spy = vi.spyOn(actions, 'applyModelEdit');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add field' }));
-    fireEvent.change(screen.getByLabelText('Field 2 name'), { target: { value: 'id' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add column' }));
+    fireEvent.change(screen.getByLabelText('Column 2 name'), { target: { value: 'id' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(await screen.findByText(/Duplicate field name/)).toBeInTheDocument();
@@ -121,7 +153,9 @@ describe('TableModal', () => {
       twoZoneRaw(),
     );
 
-    const checkbox = screen.getByRole('checkbox');
+    // The columns grid now has its own per-row "nullable" checkboxes, so the
+    // colour override checkbox needs a name to disambiguate.
+    const checkbox = screen.getByRole('checkbox', { name: /override colour/i });
     expect(checkbox).not.toBeChecked();
     expect(uiRef?.colors.has('users')).toBe(false);
 
@@ -137,7 +171,7 @@ describe('TableModal', () => {
     await renderDiagram(<TableModal onClose={() => {}} />, twoZoneRaw());
 
     expect(screen.getByText('New table')).toBeInTheDocument();
-    expect((screen.getByLabelText('Field 1 name') as HTMLInputElement).value).toBe('id');
+    expect((screen.getByLabelText('Column 1 name') as HTMLInputElement).value).toBe('id');
     expect(screen.queryByRole('button', { name: 'Delete' })).toBeDisabled();
   });
 
