@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { nestedRaw, twoZoneRaw } from '../../../test/models';
+import { buildModel, nestedRaw, twoZoneRaw } from '../../../test/models';
 import { loadModel } from '../../model/load-model';
 import type { Model } from '../../model/types';
 import { packLayout } from './pack-layout';
@@ -91,5 +91,21 @@ describe('packLayout', () => {
     expect(packed.entities[0]).not.toBe(model!.entities[0]);
     expect(packed.entityById.get('users')).toBe(packed.entities.find((e) => e.id === 'users'));
     expect(packed._groupBounds.length).toBeGreaterThan(0);
+  });
+
+  it('re-applies a saved layout over the packed positions', () => {
+    const model = buildModel(); // packs everything
+    model._savedLayout = {
+      entities: new Map([['users', { x: 1111, y: 222 }]]),
+      groups: new Map([['z1', { x: 900, y: 10, w: 640, h: 480 }]]),
+    };
+    // packLayout returns a new model rather than mutating its input (see the
+    // "without mutating the input" test above) — read the saved positions off
+    // the returned model, not the pre-repack one.
+    const repacked = packLayout(model);
+    expect(repacked.entityById.get('users')!.x).toBe(1111);
+    const z1 = repacked._groupBounds.find((b) => b.id === 'z1')!;
+    expect({ x: z1.x, y: z1.y, w: z1.w, h: z1.h }).toEqual({ x: 900, y: 10, w: 640, h: 480 });
+    expect(repacked._content.w).toBeGreaterThanOrEqual(1111); // content covers moved card
   });
 });

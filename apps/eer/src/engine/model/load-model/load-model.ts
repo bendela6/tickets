@@ -175,6 +175,22 @@ export function loadModel(raw: unknown): LoadResult {
 
   for (const k of usedKinds) if (!kindStyle.has(k)) kindStyle.set(k, 'solid');
 
+  // ---- colors (id → hex overrides; zones, subgroups, or entities) ----
+  const colors = new Map<string, string>();
+  if (r.colors && typeof r.colors === 'object')
+    for (const [k, v] of Object.entries(r.colors as Record<string, unknown>))
+      if (typeof v === 'string') colors.set(k, v);
+
+  // ---- saved layout (hand-arranged x/y and group bounds persisted in the file) ----
+  const savedEntities = new Map<string, { x: number; y: number }>();
+  for (const e of entities || [])
+    if (typeof e.x === 'number' && typeof e.y === 'number') savedEntities.set(e.id, { x: e.x, y: e.y });
+  const savedGroups = new Map<string, { x: number; y: number; w: number; h: number }>();
+  for (const g of groups || [])
+    if (g.bounds && ['x', 'y', 'w', 'h'].every((k) => typeof g.bounds[k] === 'number'))
+      savedGroups.set(g.id, { x: g.bounds.x, y: g.bounds.y, w: g.bounds.w, h: g.bounds.h });
+  const savedLayout = savedEntities.size || savedGroups.size ? { entities: savedEntities, groups: savedGroups } : undefined;
+
   const view = r.view || {};
   const model: Model = {
     meta: r.meta || { title: r.title, description: r.description },
@@ -184,6 +200,8 @@ export function loadModel(raw: unknown): LoadResult {
     },
     kinds: normKinds,
     kindStyle,
+    colors,
+    _savedLayout: savedLayout,
     groups: normGroups,
     entities: normEntities,
     entityById,

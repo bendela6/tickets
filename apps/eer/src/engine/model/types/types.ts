@@ -70,11 +70,18 @@ export interface GroupBounds {
   level: number; // 0 = zone, 1 = subgroup
 }
 
+export interface SavedLayout {
+  entities: Map<string, { x: number; y: number }>;
+  groups: Map<string, { x: number; y: number; w: number; h: number }>;
+}
+
 export interface Model {
   meta: { title?: string; description?: string };
   view: { zoom: number; routing: RoutingMode };
   kinds: EdgeKind[];
   kindStyle: Map<string, LineStyle>;
+  colors: ReadonlyMap<string, string>; // saved colour overrides (id → hex); ui seeds from this
+  _savedLayout?: SavedLayout; // hand-arranged positions from the file; pack re-applies them
   groups: Group[];
   entities: Entity[];
   entityById: Map<string, Entity>;
