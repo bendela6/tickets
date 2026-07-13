@@ -1,6 +1,10 @@
 // Model → raw JSON file shape. Inverse of load-model for everything the editor
 // touches: meta, kinds, colours, groups+bounds, entities+positions+fields, and
-// relationships. Underscore-prefixed derived state is never serialized.
+// relationships. Underscore-prefixed derived state is never serialized. Fk-kind
+// relationships are derived from fk-role fields (see apply-model-edit /
+// load-model), so they're skipped here — load-model reconstructs them from the
+// fields themselves, and writing them out too would just be redundant, drifting
+// data for load-model's dedupe-by-endpoint-tuple to reconcile.
 
 import type { Model } from '../types';
 
@@ -34,15 +38,17 @@ export function serializeModel(model: Model, colors: ReadonlyMap<string, string>
         ...(f.description ? { description: f.description } : {}),
       })),
     })),
-    relationships: model.relationships.map((r) => ({
-      id: r.id,
-      source: r.source,
-      sourceField: r.sourceField,
-      target: r.target,
-      targetField: r.targetField,
-      ...(r.kind ? { kind: r.kind } : {}),
-      ...(r.label ? { label: r.label } : {}),
-      cardinality: r.cardinality,
-    })),
+    relationships: model.relationships
+      .filter((r) => r.kind !== 'fk')
+      .map((r) => ({
+        id: r.id,
+        source: r.source,
+        sourceField: r.sourceField,
+        target: r.target,
+        targetField: r.targetField,
+        ...(r.kind ? { kind: r.kind } : {}),
+        ...(r.label ? { label: r.label } : {}),
+        cardinality: r.cardinality,
+      })),
   };
 }

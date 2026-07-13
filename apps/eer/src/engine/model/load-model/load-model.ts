@@ -175,6 +175,36 @@ export function loadModel(raw: unknown): LoadResult {
 
   for (const k of usedKinds) if (!kindStyle.has(k)) kindStyle.set(k, 'solid');
 
+  // ---- fk-derived relationships ----
+  // serializeModel skips kind:'fk' relationships (they're redundant with the fk
+  // fields that produced them), so reconstruct one per fk-role field whose ref
+  // resolves — unless the file already lists that exact source/sourceField→
+  // target/targetField pair explicitly (legacy files still hand-author these).
+  const explicitPairs = new Set(normRels.map((r) => `${r.source} ${r.sourceField} ${r.target} ${r.targetField}`));
+  for (const e of normEntities) {
+    for (const f of e.fields) {
+      if (f.role !== 'fk' || !f.ref || !entityById.has(f.ref)) continue;
+      const sourceField = f.refField ?? 'id';
+      const pairKey = `${f.ref} ${sourceField} ${e.id} ${f.name}`;
+      if (explicitPairs.has(pairKey)) continue;
+      explicitPairs.add(pairKey);
+      const id = `e-${f.ref}.${sourceField}->${e.id}.${f.name}`;
+      const derived: Relationship = {
+        id,
+        source: f.ref,
+        sourceField,
+        target: e.id,
+        targetField: f.name,
+        cardinality: '1-n',
+        cardinalityInferred: true,
+        kind: 'fk',
+        label: null,
+      };
+      normRels.push(derived);
+      relById.set(id, derived);
+    }
+  }
+
   // ---- colors (id → hex overrides; zones, subgroups, or entities) ----
   const colors = new Map<string, string>();
   if (r.colors && typeof r.colors === 'object')

@@ -94,6 +94,76 @@ describe('loadModel — validation', () => {
   });
 });
 
+describe('loadModel — fk-derived relationships', () => {
+  it('derives a relationship from an fk field when relationships is empty', () => {
+    const raw = {
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        { id: 'users', group: 'g', fields: [{ name: 'id', type: 'int', role: 'pk' }] },
+        {
+          id: 'orders',
+          group: 'g',
+          fields: [
+            { name: 'id', type: 'int', role: 'pk' },
+            { name: 'user_id', type: 'int', role: 'fk', ref: 'users', refField: 'id' },
+          ],
+        },
+      ],
+      relationships: [],
+    };
+    const { model, errors } = loadModel(raw);
+    expect(errors).toEqual([]);
+    expect(model!.relationships).toHaveLength(1);
+    const rel = model!.relationships[0]!;
+    expect(rel).toMatchObject({
+      id: 'e-users.id->orders.user_id',
+      source: 'users',
+      sourceField: 'id',
+      target: 'orders',
+      targetField: 'user_id',
+      kind: 'fk',
+      cardinality: '1-n',
+      cardinalityInferred: true,
+      label: null,
+    });
+    expect(model!.relById.get('e-users.id->orders.user_id')).toBe(rel);
+  });
+
+  it('does not duplicate an fk field that already has a matching explicit relationship', () => {
+    const raw = {
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        { id: 'users', group: 'g', fields: [{ name: 'id', type: 'int', role: 'pk' }] },
+        {
+          id: 'orders',
+          group: 'g',
+          fields: [
+            { name: 'id', type: 'int', role: 'pk' },
+            { name: 'user_id', type: 'int', role: 'fk', ref: 'users', refField: 'id' },
+          ],
+        },
+      ],
+      relationships: [{ id: 'custom-id', source: 'users', sourceField: 'id', target: 'orders', targetField: 'user_id' }],
+    };
+    const { model, errors } = loadModel(raw);
+    expect(errors).toEqual([]);
+    expect(model!.relationships).toHaveLength(1);
+    expect(model!.relationships[0]!.id).toBe('custom-id');
+  });
+
+  it('does not derive when the fk field has no ref, or the ref is unknown', () => {
+    const raw = {
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int', role: 'pk' }, { name: 'b_id', type: 'int', role: 'fk' }] },
+      ],
+      relationships: [],
+    };
+    const { model } = loadModel(raw);
+    expect(model!.relationships).toEqual([]);
+  });
+});
+
 describe('loadModel — colors and saved layout', () => {
   it('reads optional colors, entity x/y and group bounds into the model', () => {
     const raw = {
