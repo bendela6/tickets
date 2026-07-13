@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildModel } from '../../../test/models';
+import { buildModel, fkTo, pkField } from '../../../test/models';
 import { pinSlots } from '../../geometry/compute-pin-slots';
 import { edgeEndpoints } from '../../geometry/edge-endpoints';
+import { STUB } from '../../geometry/metrics';
 import { routeEdges } from './compute-routes';
 import type { Point } from '../../model/types';
 
@@ -66,6 +67,40 @@ describe('routeEdges', () => {
           ).toBe(false);
         }
       }
+    }
+  });
+
+  it('keeps port stubs at full length when lane separation shifts their verticals', () => {
+    const raw = {
+      groups: [{ id: 'z', label: 'Z', order: 0 }],
+      entities: [
+        { id: 'a', group: 'z', fields: [pkField] },
+        { id: 'b', group: 'z', fields: [pkField] },
+        { id: 'wall', group: 'z', fields: [pkField] },
+        { id: 't', group: 'z', fields: [pkField, fkTo('a'), fkTo('b')] },
+      ],
+      relationships: [
+        { id: 'a-t', source: 'a', sourceField: 'id', target: 't', targetField: 'a_id' },
+        { id: 'b-t', source: 'b', sourceField: 'id', target: 't', targetField: 'b_id' },
+      ],
+    };
+    const model = buildModel(raw);
+    // Stack both sources below-left of the target with a wall above them: both
+    // verticals must climb the corridor just left of t with overlapping spans,
+    // so lane separation has to shift one — toward t is the first lane candidate.
+    Object.assign(model.entityById.get('a')!, { x: 0, y: 360, _w: 140, _h: 60 });
+    Object.assign(model.entityById.get('b')!, { x: 0, y: 480, _w: 140, _h: 60 });
+    Object.assign(model.entityById.get('wall')!, { x: 100, y: 120, _w: 240, _h: 200 });
+    Object.assign(model.entityById.get('t')!, { x: 400, y: 0, _w: 140, _h: 100 });
+    const { slots } = pinSlots(model);
+    const { routes } = routeEdges(model, slots);
+    for (const rel of model.relationships) {
+      const pts = routes.get(rel.id)!;
+      const last = pts[pts.length - 1]!;
+      const beforeLast = pts[pts.length - 2]!;
+      expect(Math.abs(beforeLast.y - last.y), `${rel.id} tail must stay horizontal`).toBeLessThan(0.01);
+      expect(Math.abs(beforeLast.x - last.x), `${rel.id} target stub length`).toBeGreaterThanOrEqual(STUB - 0.5);
+      expect(Math.abs(pts[1]!.x - pts[0]!.x), `${rel.id} source stub length`).toBeGreaterThanOrEqual(STUB - 0.5);
     }
   });
 

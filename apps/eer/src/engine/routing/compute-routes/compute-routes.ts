@@ -10,6 +10,7 @@ import type { EdgeSlots } from '../../geometry/compute-pin-slots';
 import { edgeEndpoints } from '../../geometry/edge-endpoints';
 import { edgeSides } from '../../geometry/edge-sides';
 import { STUB } from '../../geometry/metrics';
+import { enforcePortStub } from '../enforce-port-stub';
 import { simpleOrtho } from '../simple-ortho';
 import { simplifyPolyline } from '../simplify-polyline';
 import { zoneIdOf } from '../../groups/zone-id-of';
@@ -121,6 +122,7 @@ function separateAxis(
     outer: for (let j = 0; j <= 12; j++) {
       for (const c of j === 0 ? [s.key] : [s.key + j * LANE_STEP, s.key - j * LANE_STEP]) {
         if (near.some((p) => Math.abs(p.coord - c) < MIN_SEP)) continue;
+        if (vertical && shrinksPortStub(s, c)) continue;
         if (j > 0 && shiftBlocked(model, cards, s, c - s.key, vertical)) continue;
         coord = c;
         break outer;
@@ -134,6 +136,22 @@ function separateAxis(
 
   orderChannels(model, cards, entries, vertical);
   return entries;
+}
+
+// A vertical that directly feeds a port stub drags the stub's inner endpoint
+// with it when it shifts (the points are shared) — so a lane toward the card
+// silently shortens the straight approach the crow's-foot heads rely on. Reject
+// any candidate lane that would leave less than the full STUB at either end.
+function shrinksPortStub(s: LaneSeg, c: number): boolean {
+  const pts = s.pts;
+  const ports: Point[] = [];
+  if (s.i === 1) ports.push(pts[0]!);
+  if (s.i === pts.length - 3) ports.push(pts[pts.length - 1]!);
+  for (const p of ports) {
+    const dir = Math.sign(s.key - p.x) || 1;
+    if ((c - p.x) * dir < STUB - 0.5) return true;
+  }
+  return false;
 }
 
 function applyShift(s: LaneSeg, d: number, vertical: boolean): void {
@@ -515,7 +533,13 @@ function routePolyline(model: Model, rel: Relationship, cards: Card[], slotsW: M
   const grid: Point[] = [];
   for (let n = goal; n !== -1; n = prev[n]!) grid.push({ x: X[(n / H) | 0]!, y: Y[n % H]! });
   grid.reverse();
-  return simplifyPolyline([p1, ...grid, p2]);
+  // Simplify can eat the stub waypoints when the grid path doubled back onto
+  // them — rebuild any degenerate port approach so heads keep a straight run-in.
+  const blocked = (x1: number, y1: number, x2: number, y2: number) => segBlocked(x1, y1, x2, y2, obstacles);
+  let pts = simplifyPolyline([p1, ...grid, p2]);
+  pts = enforcePortStub(pts, t, 'end', blocked);
+  pts = enforcePortStub(pts, s, 'start', blocked);
+  return pts;
 }
 
 function segBlocked(x1: number, y1: number, x2: number, y2: number, obstacles: Card[]): boolean {
