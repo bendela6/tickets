@@ -5,12 +5,12 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 
-import { Modal } from '../modal';
 import { AddChooser } from './add-chooser';
 import { EditorContext, type EditorModal } from './editor-context';
 import { GroupModal } from './group-modal';
 import { ModelModal } from './model-modal';
 import { NewModelModal } from './new-model-modal';
+import { TableModal } from './table-modal';
 
 export function EditorModals({ children }: { children: ReactNode }) {
   const [modal, setModal] = useState<EditorModal | null>(null);
@@ -34,11 +34,7 @@ export function EditorModals({ children }: { children: ReactNode }) {
       {modal?.kind === 'new-model' && <NewModelModal onClose={closeModal} />}
       {modal?.kind === 'add' && <AddChooser onClose={closeModal} />}
       {modal?.kind === 'group' && <GroupModal id={modal.id} onClose={closeModal} />}
-      {modal?.kind === 'table' && (
-        <Modal title="Table" onClose={closeModal}>
-          <p className="text-sm text-gray-200">Table editor lands next.</p>
-        </Modal>
-      )}
+      {modal?.kind === 'table' && <TableModal id={modal.id} onClose={closeModal} />}
     </EditorContext.Provider>
   );
 }
