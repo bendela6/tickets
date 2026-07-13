@@ -2,17 +2,31 @@
 // touches: meta, kinds, colours, groups+bounds, entities+positions+fields, and
 // relationships. Underscore-prefixed derived state is never serialized. A
 // relationship is omitted ONLY when load-model is guaranteed to reconstruct it
-// byte-for-byte: kind 'fk', no label, plain '1-n' cardinality, and a same-direction
-// fk-role field to derive it from. Everything else — a labelled fk rel, one with a
-// hand-set cardinality (e.g. the '1-1' of an identifying, shared-pk relationship),
-// or one with no backing fk field at all (e.g. an untagged event-stream reference) —
-// serializes explicitly, so save→load survives it byte-honestly instead of quietly
-// dropping it.
+// byte-for-byte: kind 'fk', no label, plain '1-n' cardinality, an id that is
+// ITSELF the derived scheme (not just a coincidentally-matching backing field —
+// a hand-authored id, however plain-looking, is authored data), and a
+// same-direction fk-role field to derive it from. Everything else — a labelled
+// fk rel, one with a hand-set cardinality (e.g. the '1-1' of an identifying,
+// shared-pk relationship), one with a custom id, or one with no backing fk
+// field at all (e.g. an untagged event-stream reference) — serializes
+// explicitly, so save→load survives it byte-honestly instead of quietly
+// dropping it (or worse, silently renaming it).
 
+import { isDerivableShaped } from '../is-derivable-shaped';
 import type { Model, Relationship } from '../types';
 
+// A relationship is safe to drop from the file only when BOTH (a) its shape
+// carries nothing beyond what fk-field derivation would produce — same check
+// apply-model-edit uses to decide what's safe to discard on every edit, see
+// isDerivableShaped — AND (b) the field load-model would derive it FROM still
+// backs it exactly. Checking only (b), as this used to, let a hand-authored id
+// (e.g. 'owns-custom-id') through whenever its backing field happened to
+// match: load-model has no way to know that custom id, so it resurrected the
+// rel under the derived one on the next load, silently renaming it. Sharing
+// isDerivableShaped with apply-model-edit means the two "is this rel doing
+// anything a human/tool couldn't reproduce" checks can't drift apart again.
 function isFullyReDerivable(model: Model, r: Relationship): boolean {
-  if (r.kind !== 'fk' || r.label !== null || r.cardinality !== '1-n') return false;
+  if (!isDerivableShaped(r)) return false;
   const target = model.entityById.get(r.target);
   const field = target?.fields.find((f) => f.name === r.targetField);
   return !!field && field.role === 'fk' && field.ref === r.source && (field.refField ?? 'id') === r.sourceField;

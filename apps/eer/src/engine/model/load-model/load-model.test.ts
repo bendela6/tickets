@@ -210,6 +210,31 @@ describe('loadModel — fk-derived relationships', () => {
     expect(model!.relationships).toEqual([]);
   });
 
+  // The ref'd entity existing isn't enough — it must still carry the named
+  // refField. This models a file hand-edited after a pk rename (e.g. 'a.id' ->
+  // 'a.key') where a dependent's fk field was never updated: `ref` still
+  // resolves to a real entity, but `refField` ('id') no longer exists on it.
+  // Deriving anyway would emit a relationship whose sourceField exists nowhere.
+  it('does not derive when the fk field\'s refField does not exist on the ref\'d entity', () => {
+    const raw = {
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        { id: 'a', group: 'g', fields: [{ name: 'key', type: 'int', role: 'pk' }] }, // no 'id' field
+        {
+          id: 'b',
+          group: 'g',
+          fields: [
+            { name: 'id', type: 'int', role: 'pk' },
+            { name: 'a_id', type: 'int', role: 'fk', ref: 'a', refField: 'id' }, // stale: refers to 'a.id'
+          ],
+        },
+      ],
+      relationships: [],
+    };
+    const { model } = loadModel(raw);
+    expect(model!.relationships).toEqual([]);
+  });
+
   // Pinned against the real bundled seed model: 37 hand-authored (34 fk-kind +
   // 3 m2m-kind, one of the m2m rels — fields.option_set_id -> option_sets.id —
   // covering a pair that's ALSO a real fk field, just authored in reverse) plus

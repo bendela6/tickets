@@ -6,14 +6,17 @@
 // endpoints (entity + field, both sides) still resolve AND that carries anything
 // derivation couldn't reproduce (custom id, label, or hand-set cardinality —
 // see isDerivableShaped), kept verbatim; PLUS one derived rel for each fk-role
-// field whose {(ref,refField),(entity,field)} endpoint pair isn't already
-// covered — in either direction — by one of those kept rels. Derivable-shaped
-// rels are never kept: they re-derive from the CURRENT fields each time, so a
-// no-op edit reproduces identical objects while clearing a field's fk role
-// (even keeping its name) genuinely removes its edge.
+// field whose ref'd entity still carries the named refField (renaming/removing
+// that field leaves `ref` resolving fine while `refField` goes stale — no rel
+// is derived from it) and whose {(ref,refField),(entity,field)} endpoint pair
+// isn't already covered — in either direction — by one of those kept rels.
+// Derivable-shaped rels are never kept: they re-derive from the CURRENT fields
+// each time, so a no-op edit reproduces identical objects while clearing a
+// field's fk role (even keeping its name) genuinely removes its edge.
 
 import { measureEntity } from '../../geometry/measure-entity';
 import { LAYOUT_MARGIN } from '../../geometry/metrics';
+import { isDerivableShaped } from '../is-derivable-shaped';
 import type { Entity, Field, Group, GroupBounds, Model, Relationship } from '../types';
 
 export interface EditField {
@@ -201,21 +204,6 @@ function isValidRelationship(model: Model, r: Relationship): boolean {
   return hasField(model.entityById.get(r.source), r.sourceField) && hasField(model.entityById.get(r.target), r.targetField);
 }
 
-// Byte-for-byte what deriveRelationships would emit for an fk field: derived id
-// scheme, kind 'fk', no label, default '1-n'. Such rels carry no hand-authored
-// data, so they are never kept verbatim — they re-derive from the CURRENT fields
-// on every edit, which is what makes clearing a field's fk role (while keeping
-// its name) remove the edge. Anything with a custom id, a label, or a hand-set
-// cardinality is treated as authored and kept while its endpoints stay valid.
-function isDerivableShaped(r: Relationship): boolean {
-  return (
-    r.kind === 'fk' &&
-    r.label === null &&
-    r.cardinality === '1-n' &&
-    r.id === `e-${r.source}.${r.sourceField}->${r.target}.${r.targetField}`
-  );
-}
-
 // Every still-valid, non-derivable-shaped explicit relationship — ANY kind, kept
 // verbatim (id, label, cardinality untouched) — plus one derived rel per fk-role
 // field whose endpoint pair isn't already covered by one of those kept rels.
@@ -230,6 +218,12 @@ function deriveRelationships(model: Model): Relationship[] {
     for (const f of e.fields) {
       if (f.role !== 'fk' || !f.ref || !model.entityById.has(f.ref)) continue;
       const sourceField = f.refField ?? 'id';
+      // The ref'd entity existing isn't enough — it must still carry the named
+      // refField itself. Renaming/removing that field (e.g. a pk rename) leaves
+      // `ref` resolving fine while `refField` goes stale; deriving anyway would
+      // emit a rel whose sourceField doesn't exist anywhere, which downstream
+      // geometry resolves to fieldIndex -1 instead of failing loudly.
+      if (!model.entityById.get(f.ref)!.fields.some((x) => x.name === sourceField)) continue;
       if (coveredPairs.has(pairKey(f.ref, sourceField, e.id, f.name))) continue;
       derived.push({
         id: `e-${f.ref}.${sourceField}->${e.id}.${f.name}`,

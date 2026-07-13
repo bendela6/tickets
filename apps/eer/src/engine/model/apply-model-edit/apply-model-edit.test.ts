@@ -254,6 +254,27 @@ describe('applyModelEdit', () => {
       expect(renamed.relationships.some((r) => r.source === 'users' && r.target === 'tags' && r.targetField === 'owner_ref')).toBe(true);
     });
 
+    // Renaming the REFERENCED side's field (rather than the fk-owning side, the
+    // case above) is the gap the reviewer found: `orders.users_id` still says
+    // ref:'users', refField:'id' after the rename below, but 'users' no longer
+    // has a field called 'id' at all. `ref` resolving was treated as enough to
+    // derive from — it isn't; the derived rel's sourceField must itself exist,
+    // or downstream geometry resolves fieldIndex -1 and mis-anchors the port
+    // instead of the derivation simply refusing to produce a dangling edge.
+    it('renaming a referenced pk drops the now-dangling derived rel instead of deriving one with a nonexistent sourceField', () => {
+      const m1 = buildModel(); // orders.users_id (fk, refField 'id') -> users.id (pk)
+      const users = m1.entityById.get('users')!;
+      const renamed = applyModelEdit(m1, {
+        kind: 'upsertEntity',
+        // 'id' renamed to 'key'; manager_id dropped entirely so this edit isolates
+        // the cross-entity case from the (separately-covered) same-entity one.
+        entity: { id: 'users', label: users.label, group: users.group, description: null, fields: [editPk('key'), editPlain('name')] },
+      });
+      expect(renamed.entityById.get('users')!.fields.map((f) => f.name)).toEqual(['key', 'name']);
+      expect(renamed.relationships.some((r) => r.target === 'orders' && r.targetField === 'users_id')).toBe(false);
+      expect(renamed.relationships.some((r) => r.source === 'users' && r.sourceField === 'id')).toBe(false);
+    });
+
     it('keeps a hand-authored fk-kind rel verbatim (id/label/cardinality) across an unrelated edit', () => {
       // twoZoneRaw's rels are all kind:'fk', hand-authored ids ('u-o','t-o','self')
       // that coincide with valid fk fields — the old design blew these away and
@@ -301,6 +322,22 @@ describe('applyModelEdit', () => {
       const edited = applyModelEdit(model!, { kind: 'setMeta', title: model!.meta.title ?? '', description: model!.meta.description ?? '' });
       expect(edited.relById.size).toBe(edited.relationships.length);
       for (const r of edited.relationships) expect(edited.relById.get(r.id)).toEqual(r);
+    });
+
+    // Rule invariant: derivation must never emit a relationship whose
+    // sourceField/targetField don't actually resolve on their entities. Geometry
+    // indexes fields by name and silently falls back to fieldIndex -1 for a miss
+    // (mis-anchoring the port one row off) rather than crashing, so this can only
+    // be caught by checking the model directly — pinned against the real seed
+    // model so a future field rename that reintroduces the gap fails loudly here.
+    it('every relationship\'s sourceField/targetField resolve on their entities, for the real seed model after an edit', () => {
+      const { model, errors } = loadModel(seedRaw);
+      expect(errors).toEqual([]);
+      const edited = applyModelEdit(model!, { kind: 'setMeta', title: model!.meta.title ?? '', description: model!.meta.description ?? '' });
+      for (const r of edited.relationships) {
+        expect(edited.entityById.get(r.source)?.fields.some((f) => f.name === r.sourceField)).toBe(true);
+        expect(edited.entityById.get(r.target)?.fields.some((f) => f.name === r.targetField)).toBe(true);
+      }
     });
   });
 
