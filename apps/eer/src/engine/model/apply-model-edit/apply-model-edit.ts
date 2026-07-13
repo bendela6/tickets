@@ -1,8 +1,15 @@
 // Structural model edits — groups/tables/meta — the pure heart of the model
 // editor. Every branch returns a brand-new Model via spread + rebuilt maps; the
 // input is never mutated (the future editor reducer relies on that). Relationships
-// are not hand-edited: after every edit they are rebuilt from scratch as explicit
-// non-fk rels (with valid endpoints) plus one derived rel per fk-role field.
+// are not hand-edited directly, but editing is non-destructive: after every edit,
+// `relationships` = every explicit relationship (any kind — including hand-authored
+// fk-kind ones, kept verbatim with their original id/label/cardinality) whose
+// endpoints (entity + field, both sides) still resolve, PLUS one derived rel for
+// each fk-role field whose {(ref,refField),(entity,field)} endpoint pair isn't
+// already covered — in either direction — by one of those kept rels. A rel that
+// was itself derived by a previous call is just another entry in the input's
+// `relationships` array, so re-running this on a no-op edit reproduces the same
+// ids: it gets kept verbatim rather than re-derived under a fresh id.
 
 import { measureEntity } from '../../geometry/measure-entity';
 import { LAYOUT_MARGIN } from '../../geometry/metrics';
@@ -46,16 +53,26 @@ export function applyModelEdit(model: Model, edit: ModelEdit): Model {
   }
 }
 
-// Every {entityId, field} elsewhere in the model whose fk field references
+// Every {entityId, field} elsewhere in the model whose field references
 // `entityId` — delete-confirm copy ("N fields reference this table") reads this.
+// Matches on `ref` alone (not `role === 'fk'`) because that's what deleteEntity
+// itself clears; a field can't dangle a ref to a deleted entity regardless of
+// whether its role was correctly tagged 'fk'.
 export function fkRefsTo(model: Model, entityId: string): { entityId: string; field: string }[] {
   const refs: { entityId: string; field: string }[] = [];
-  for (const e of model.entities)
-    for (const f of e.fields) if (f.role === 'fk' && f.ref === entityId) refs.push({ entityId: e.id, field: f.name });
+  for (const e of model.entities) for (const f of e.fields) if (f.ref === entityId) refs.push({ entityId: e.id, field: f.name });
   return refs;
 }
 
 function upsertGroup(model: Model, g: { id: string; label: string; parent: string | null }): Model {
+  if (g.parent != null) {
+    if (g.parent === g.id) throw new Error(`Group "${g.id}" cannot be its own parent.`);
+    const parent = model.groups.find((x) => x.id === g.parent);
+    if (!parent) throw new Error(`Unknown parent group "${g.parent}".`);
+    if (parent.parent != null)
+      throw new Error(`Group "${g.parent}" is itself a subgroup; subgroup nesting is one level only.`);
+  }
+
   const isNew = !model.groups.some((x) => x.id === g.id);
 
   if (!isNew) {
@@ -66,7 +83,7 @@ function upsertGroup(model: Model, g: { id: string; label: string; parent: strin
     return { ...model, groups, _groupBounds };
   }
 
-  const order = model.groups.filter((x) => x.parent === g.parent).length;
+  const order = model.groups.length ? Math.max(...model.groups.map((x) => x.order)) + 1 : 0;
   const group: Group = { id: g.id, label: g.label, order, parent: g.parent };
   const box: GroupBounds = {
     id: g.id,
@@ -93,11 +110,33 @@ function deleteGroup(model: Model, id: string): Model {
   };
 }
 
+// Duplicate names, and fk rows that can never resolve, are rejected up front
+// rather than silently producing an unresolvable field or relationship later.
+// `upsertId`'s own (about-to-be-saved) field list stands in for `entityById`
+// when a field self-references the entity being upserted (e.g. a fresh `users`
+// row with a `manager_id` fk pointing at its own not-yet-existing `id`).
+function validateEditFields(model: Model, upsertId: string, fields: EditField[]): void {
+  const seen = new Set<string>();
+  for (const f of fields) {
+    if (seen.has(f.name)) throw new Error(`Duplicate field name "${f.name}".`);
+    seen.add(f.name);
+
+    if (f.role !== 'fk') continue;
+    if (!f.ref) throw new Error(`Field "${f.name}" has role "fk" but no "ref".`);
+    const targetFields = f.ref === upsertId ? fields : model.entityById.get(f.ref)?.fields;
+    if (!targetFields) throw new Error(`Field "${f.name}" references unknown entity "${f.ref}".`);
+    const refField = f.refField ?? 'id';
+    if (!targetFields.some((tf) => tf.name === refField))
+      throw new Error(`Field "${f.name}" references unknown field "${f.ref}.${refField}".`);
+  }
+}
+
 function upsertEntity(
   model: Model,
   e: { id: string; label: string; group: string; description: string | null; fields: EditField[] },
 ): Model {
   if (!model.groups.some((g) => g.id === e.group)) throw new Error(`Unknown group "${e.group}".`);
+  validateEditFields(model, e.id, e.fields);
 
   // The editor form has no "title" input — it stays null for anything that
   // passes through here, whether the entity is new or already had titled fields.
@@ -138,28 +177,57 @@ function deleteEntity(model: Model, id: string): Model {
   return { ...model, entities };
 }
 
-// Explicit non-fk rels with endpoints that still resolve, plus one derived rel
-// per fk-role field — the single source of truth for `relationships` after any edit.
+function hasField(entity: Entity | undefined, name: string): boolean {
+  return !!entity && entity.fields.some((f) => f.name === name);
+}
+
+// A relationship's endpoint pair is the UNORDERED set {(entityA,fieldA),(entityB,fieldB)}
+// — a rel and its mirror image (source/target swapped) cover the same pair. Sorting
+// the two endpoints before stringifying makes the key direction-independent; nesting
+// inside JSON.stringify (rather than joining with a hand-picked delimiter) sidesteps
+// any risk of an id/field name colliding with the separator itself.
+function pairKey(aEntity: string, aField: string, bEntity: string, bField: string): string {
+  const a: [string, string] = [aEntity, aField];
+  const b: [string, string] = [bEntity, bField];
+  const [lo, hi] = JSON.stringify(a) <= JSON.stringify(b) ? [a, b] : [b, a];
+  return JSON.stringify([lo, hi]);
+}
+
+// A relationship is still valid once both its endpoints — entity AND named field on
+// that entity, on both sides — resolve in the current model. Renaming or deleting a
+// field (or its entity) invalidates any explicit rel that pointed at it.
+function isValidRelationship(model: Model, r: Relationship): boolean {
+  return hasField(model.entityById.get(r.source), r.sourceField) && hasField(model.entityById.get(r.target), r.targetField);
+}
+
+// Every still-valid explicit relationship — ANY kind, kept verbatim (id, label,
+// cardinality untouched) — plus one derived rel per fk-role field whose endpoint
+// pair isn't already covered by one of those kept rels. This is non-destructive:
+// hand-authored fk-kind rels (with a label/custom cardinality) survive edits
+// instead of being blown away and replaced by a fresh label-less derivation.
 function deriveRelationships(model: Model): Relationship[] {
-  const explicit = model.relationships.filter(
-    (r) => r.kind !== 'fk' && model.entityById.has(r.source) && model.entityById.has(r.target),
-  );
+  const kept = model.relationships.filter((r) => isValidRelationship(model, r));
+  const coveredPairs = new Set(kept.map((r) => pairKey(r.source, r.sourceField, r.target, r.targetField)));
+
   const derived: Relationship[] = [];
   for (const e of model.entities)
-    for (const f of e.fields)
-      if (f.role === 'fk' && f.ref && model.entityById.has(f.ref))
-        derived.push({
-          id: `e-${f.ref}.${f.refField ?? 'id'}->${e.id}.${f.name}`,
-          source: f.ref,
-          sourceField: f.refField ?? 'id',
-          target: e.id,
-          targetField: f.name,
-          cardinality: '1-n',
-          cardinalityInferred: true,
-          kind: 'fk',
-          label: null,
-        });
-  return [...explicit, ...derived];
+    for (const f of e.fields) {
+      if (f.role !== 'fk' || !f.ref || !model.entityById.has(f.ref)) continue;
+      const sourceField = f.refField ?? 'id';
+      if (coveredPairs.has(pairKey(f.ref, sourceField, e.id, f.name))) continue;
+      derived.push({
+        id: `e-${f.ref}.${sourceField}->${e.id}.${f.name}`,
+        source: f.ref,
+        sourceField,
+        target: e.id,
+        targetField: f.name,
+        cardinality: '1-n',
+        cardinalityInferred: true,
+        kind: 'fk',
+        label: null,
+      });
+    }
+  return [...kept, ...derived];
 }
 
 // Shared tail for every edit: rebuild entityById, re-derive relationships +

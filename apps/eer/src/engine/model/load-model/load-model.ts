@@ -21,6 +21,23 @@ function normalizeRouting(v: unknown): RoutingMode {
   return 'curved';
 }
 
+function hasField(entity: Entity | undefined, name: string): boolean {
+  return !!entity && entity.fields.some((f) => f.name === name);
+}
+
+// A relationship's endpoint pair is the UNORDERED set {(entityA,fieldA),(entityB,fieldB)}
+// — a rel authored in either direction (e.g. a reversed m2m rel standing in for what
+// would otherwise be a plain fk edge) covers the same pair. Sorting the two endpoints
+// before stringifying makes the key direction-independent; nesting inside
+// JSON.stringify (rather than joining with a hand-picked delimiter) sidesteps any risk
+// of an id/field name colliding with the separator itself.
+function pairKey(aEntity: string, aField: string, bEntity: string, bField: string): string {
+  const a: [string, string] = [aEntity, aField];
+  const b: [string, string] = [bEntity, bField];
+  const [lo, hi] = JSON.stringify(a) <= JSON.stringify(b) ? [a, b] : [b, a];
+  return JSON.stringify([lo, hi]);
+}
+
 export function loadModel(raw: unknown): LoadResult {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -176,18 +193,22 @@ export function loadModel(raw: unknown): LoadResult {
   for (const k of usedKinds) if (!kindStyle.has(k)) kindStyle.set(k, 'solid');
 
   // ---- fk-derived relationships ----
-  // serializeModel skips kind:'fk' relationships (they're redundant with the fk
-  // fields that produced them), so reconstruct one per fk-role field whose ref
-  // resolves — unless the file already lists that exact source/sourceField→
-  // target/targetField pair explicitly (legacy files still hand-author these).
-  const explicitPairs = new Set(normRels.map((r) => `${r.source} ${r.sourceField} ${r.target} ${r.targetField}`));
+  // serializeModel only skips a kind:'fk' rel when it's fully re-derivable (see its
+  // own rules), so reconstruct one per fk-role field whose ref resolves — unless the
+  // file already covers that endpoint pair with an explicit relationship, in EITHER
+  // direction (legacy files sometimes hand-author the reverse direction, e.g. a m2m
+  // rel standing in for what would otherwise be a plain fk edge — that must suppress
+  // the derivation too, not just an exact-direction match).
+  const coveredPairs = new Set(
+    normRels
+      .filter((r) => hasField(entityById.get(r.source), r.sourceField) && hasField(entityById.get(r.target), r.targetField))
+      .map((r) => pairKey(r.source, r.sourceField, r.target, r.targetField)),
+  );
   for (const e of normEntities) {
     for (const f of e.fields) {
       if (f.role !== 'fk' || !f.ref || !entityById.has(f.ref)) continue;
       const sourceField = f.refField ?? 'id';
-      const pairKey = `${f.ref} ${sourceField} ${e.id} ${f.name}`;
-      if (explicitPairs.has(pairKey)) continue;
-      explicitPairs.add(pairKey);
+      if (coveredPairs.has(pairKey(f.ref, sourceField, e.id, f.name))) continue;
       const id = `e-${f.ref}.${sourceField}->${e.id}.${f.name}`;
       const derived: Relationship = {
         id,

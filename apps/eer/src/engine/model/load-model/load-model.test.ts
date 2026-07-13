@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { loadModel } from './load-model';
+import seedRaw from '../../../../models/items-platform.json';
 
 describe('loadModel — cardinality warnings', () => {
   const model = {
@@ -151,6 +152,52 @@ describe('loadModel — fk-derived relationships', () => {
     expect(model!.relationships[0]!.id).toBe('custom-id');
   });
 
+  it('does not duplicate an fk field whose pair is covered by an explicit rel authored in the reverse direction', () => {
+    const raw = {
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int', role: 'pk' }] },
+        {
+          id: 'b',
+          group: 'g',
+          fields: [
+            { name: 'id', type: 'int', role: 'pk' },
+            { name: 'a_id', type: 'int', role: 'fk', ref: 'a', refField: 'id' },
+          ],
+        },
+      ],
+      // Reverse of the derivation's natural (ref -> owner) direction.
+      relationships: [{ id: 'reversed', source: 'b', sourceField: 'a_id', target: 'a', targetField: 'id', kind: 'm2m', label: 'rev' }],
+    };
+    const { model, errors } = loadModel(raw);
+    expect(errors).toEqual([]);
+    expect(model!.relationships).toHaveLength(1);
+    expect(model!.relationships[0]!.id).toBe('reversed');
+  });
+
+  it('does not let a broken explicit rel (bad field) suppress a genuine derivation for the same entities', () => {
+    const raw = {
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int', role: 'pk' }] },
+        {
+          id: 'b',
+          group: 'g',
+          fields: [
+            { name: 'id', type: 'int', role: 'pk' },
+            { name: 'a_id', type: 'int', role: 'fk', ref: 'a', refField: 'id' },
+          ],
+        },
+      ],
+      // References a field that doesn't exist on "a" — invalid, so it must not
+      // count as covering the real a.id<->b.a_id pair.
+      relationships: [{ id: 'broken', source: 'a', sourceField: 'nonexistent', target: 'b', targetField: 'a_id' }],
+    };
+    const { model, errors } = loadModel(raw);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(model!.relationships.map((r) => r.id).sort()).toEqual(['broken', 'e-a.id->b.a_id']);
+  });
+
   it('does not derive when the fk field has no ref, or the ref is unknown', () => {
     const raw = {
       groups: [{ id: 'g', label: 'G' }],
@@ -161,6 +208,30 @@ describe('loadModel — fk-derived relationships', () => {
     };
     const { model } = loadModel(raw);
     expect(model!.relationships).toEqual([]);
+  });
+
+  // Pinned against the real bundled seed model: 37 hand-authored (34 fk-kind +
+  // 3 m2m-kind, one of the m2m rels — fields.option_set_id -> option_sets.id —
+  // covering a pair that's ALSO a real fk field, just authored in reverse) plus
+  // 4 fk fields with no explicit rel in either direction (self-loops on items and
+  // comments, item_values.value_user_id, item_activity.actor_id). Before the
+  // unordered-pair fix this double-counted the reversed m2m pair as 42 (37 + 5).
+  it('derives exactly the genuinely-undrawn fk edges for the real seed model (37 explicit + 4 derived = 41)', () => {
+    const { model, errors } = loadModel(seedRaw);
+    expect(errors).toEqual([]);
+    expect(model!.relationships).toHaveLength(41);
+
+    const ids = new Set(model!.relationships.map((r) => r.id));
+    for (const expected of [
+      'e-comments.id->comments.parent_id',
+      'e-items.id->items.parent_id',
+      'e-users.id->item_activity.actor_id',
+      'e-users.id->item_values.value_user_id',
+    ])
+      expect(ids.has(expected)).toBe(true);
+    // The reversed m2m rel ('fields.option_set_id -> option_sets.id', kind m2m)
+    // already covers this pair; it must NOT also get a derived fk-kind twin.
+    expect(ids.has('e-option_sets.id->fields.option_set_id')).toBe(false);
   });
 });
 

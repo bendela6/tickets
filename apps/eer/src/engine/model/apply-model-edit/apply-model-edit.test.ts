@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { buildModel, nestedRaw, pkField } from '../../../test/models';
 import { CARD_MAX_W, CARD_MIN_W, HEADER_H, ROW_H } from '../../geometry/metrics';
+import { loadModel } from '../load-model';
 import { applyModelEdit, fkRefsTo, type EditField } from './apply-model-edit';
+import seedRaw from '../../../../models/items-platform.json';
 
 const editPk = (name = 'id', type = 'int'): EditField => ({ name, type, role: 'pk', ref: null, refField: null, description: null });
 const editPlain = (name: string, type = 'text'): EditField => ({ name, type, role: null, ref: null, refField: null, description: null });
@@ -183,7 +185,7 @@ describe('applyModelEdit', () => {
   });
 
   describe('relationship derivation', () => {
-    it('an fk field derives its relationship; clearing the role removes it', () => {
+    it('an fk field derives its relationship; removing the field drops it', () => {
       const m1 = buildModel();
       const tags = m1.entityById.get('tags')!;
       const withFk = applyModelEdit(m1, {
@@ -192,11 +194,76 @@ describe('applyModelEdit', () => {
       });
       expect(withFk.relationships.some((r) => r.source === 'users' && r.target === 'tags' && r.targetField === 'owner_id')).toBe(true);
 
+      const removed = applyModelEdit(withFk, {
+        kind: 'upsertEntity',
+        entity: { id: 'tags', label: tags.label, group: tags.group, description: null, fields: [editPk()] }, // owner_id field gone entirely
+      });
+      expect(removed.relationships.some((r) => r.target === 'tags' && r.targetField === 'owner_id')).toBe(false);
+    });
+
+    // Corrected contract: "valid" only requires both endpoints' entity+field to
+    // exist — role is irrelevant. So a rel already sitting in `relationships`
+    // (whether hand-authored or derived by an earlier call) survives a field's
+    // role changing underneath it, exactly like it would survive any other edit
+    // that leaves entity+field intact. Only a rename/removal (next test) invalidates it.
+    it('clearing an fk role but keeping the field name leaves its already-derived rel standing', () => {
+      const m1 = buildModel();
+      const tags = m1.entityById.get('tags')!;
+      const withFk = applyModelEdit(m1, {
+        kind: 'upsertEntity',
+        entity: { id: 'tags', label: tags.label, group: tags.group, description: null, fields: [editPk(), editFk('owner_id', 'users')] },
+      });
       const cleared = applyModelEdit(withFk, {
         kind: 'upsertEntity',
         entity: { id: 'tags', label: tags.label, group: tags.group, description: null, fields: [editPk(), editPlain('owner_id', 'int')] },
       });
-      expect(cleared.relationships.some((r) => r.target === 'tags' && r.targetField === 'owner_id')).toBe(false);
+      expect(cleared.relationships.some((r) => r.target === 'tags' && r.targetField === 'owner_id')).toBe(true);
+    });
+
+    it('renaming an fk field drops the stale rel and derives a fresh one under the new name', () => {
+      const m1 = buildModel();
+      const tags = m1.entityById.get('tags')!;
+      const withFk = applyModelEdit(m1, {
+        kind: 'upsertEntity',
+        entity: { id: 'tags', label: tags.label, group: tags.group, description: null, fields: [editPk(), editFk('owner_id', 'users')] },
+      });
+      const renamed = applyModelEdit(withFk, {
+        kind: 'upsertEntity',
+        entity: { id: 'tags', label: tags.label, group: tags.group, description: null, fields: [editPk(), editFk('owner_ref', 'users')] },
+      });
+      expect(renamed.relationships.some((r) => r.targetField === 'owner_id')).toBe(false);
+      expect(renamed.relationships.some((r) => r.source === 'users' && r.target === 'tags' && r.targetField === 'owner_ref')).toBe(true);
+    });
+
+    it('keeps a hand-authored fk-kind rel verbatim (id/label/cardinality) across an unrelated edit', () => {
+      // twoZoneRaw's rels are all kind:'fk', hand-authored ids ('u-o','t-o','self')
+      // that coincide with valid fk fields — the old design blew these away and
+      // rederived fresh (differently-shaped) ids on every single edit.
+      const m1 = buildModel();
+      const before = [...m1.relationships].sort((a, b) => a.id.localeCompare(b.id));
+      const m2 = applyModelEdit(m1, { kind: 'setMeta', title: 'T', description: 'D' });
+      const after = [...m2.relationships].sort((a, b) => a.id.localeCompare(b.id));
+      expect(after).toEqual(before);
+      expect(after.map((r) => r.id)).toEqual(['self', 't-o', 'u-o']);
+    });
+
+    it('does not double-derive a pair already covered by an explicit rel authored in the reverse direction', () => {
+      const raw = {
+        groups: [{ id: 'g', label: 'G' }],
+        entities: [
+          { id: 'a', group: 'g', fields: [pkField] },
+          { id: 'b', group: 'g', fields: [pkField, { name: 'a_id', type: 'int', role: 'fk', ref: 'a', refField: 'id' }] },
+        ],
+        // Authored in reverse: source is the fk-owning side, target is the referenced side.
+        relationships: [{ id: 'reversed', source: 'b', sourceField: 'a_id', target: 'a', targetField: 'id', kind: 'm2m', label: 'rev' }],
+      };
+      const m1 = buildModel(raw);
+      const m2 = applyModelEdit(m1, { kind: 'setMeta', title: 'T', description: 'D' });
+      const covering = m2.relationships.filter(
+        (r) => (r.source === 'a' && r.target === 'b') || (r.source === 'b' && r.target === 'a'),
+      );
+      expect(covering).toHaveLength(1);
+      expect(covering[0]!.id).toBe('reversed');
     });
 
     it('rebuilds relById to match relationships exactly, even for edits that touch no entities', () => {
@@ -205,6 +272,16 @@ describe('applyModelEdit', () => {
       expect(m2.relById.size).toBe(m2.relationships.length);
       for (const r of m2.relationships) expect(m2.relById.get(r.id)).toEqual(r);
       expect(m2.relById).not.toBe(m1.relById);
+    });
+
+    // Rule invariant, pinned against the real bundled seed model (not just the
+    // small test fixture) so it can't drift unnoticed as that file grows.
+    it('relById.size === relationships.length for the real seed model, after an edit', () => {
+      const { model, errors } = loadModel(seedRaw);
+      expect(errors).toEqual([]);
+      const edited = applyModelEdit(model!, { kind: 'setMeta', title: model!.meta.title ?? '', description: model!.meta.description ?? '' });
+      expect(edited.relById.size).toBe(edited.relationships.length);
+      for (const r of edited.relationships) expect(edited.relById.get(r.id)).toEqual(r);
     });
   });
 
@@ -217,6 +294,20 @@ describe('applyModelEdit', () => {
       ]);
       expect(fkRefsTo(m1, 'tags')).toEqual([{ entityId: 'orders', field: 'tag_id' }]);
       expect(fkRefsTo(m1, 'orders')).toEqual([]);
+    });
+
+    it('matches on `ref` alone, regardless of role — the same test deleteEntity uses to clear fields', () => {
+      const raw = {
+        groups: [{ id: 'g', label: 'G' }],
+        entities: [
+          { id: 'a', group: 'g', fields: [pkField] },
+          // `ref` set but role is not 'fk' — an inconsistent-but-possible loaded shape.
+          { id: 'b', group: 'g', fields: [pkField, { name: 'a_id', type: 'int', role: null, ref: 'a', refField: 'id' }] },
+        ],
+        relationships: [],
+      };
+      const m1 = buildModel(raw);
+      expect(fkRefsTo(m1, 'a')).toEqual([{ entityId: 'b', field: 'a_id' }]);
     });
   });
 
@@ -234,6 +325,86 @@ describe('applyModelEdit', () => {
     it('deleteGroup of an unknown id throws', () => {
       const m1 = buildModel();
       expect(() => applyModelEdit(m1, { kind: 'deleteGroup', id: 'ghost' })).toThrow(/ghost/);
+    });
+
+    it('upsertEntity with duplicate field names throws', () => {
+      const m1 = buildModel();
+      expect(() =>
+        applyModelEdit(m1, {
+          kind: 'upsertEntity',
+          entity: { id: 'new', label: 'New', group: 'z1', description: null, fields: [editPk(), editPlain('id', 'text')] },
+        }),
+      ).toThrow(/duplicate/i);
+    });
+
+    it('upsertEntity fk field with no ref throws', () => {
+      const m1 = buildModel();
+      const badFk: EditField = { name: 'x_id', type: 'int', role: 'fk', ref: null, refField: null, description: null };
+      expect(() =>
+        applyModelEdit(m1, {
+          kind: 'upsertEntity',
+          entity: { id: 'new', label: 'New', group: 'z1', description: null, fields: [editPk(), badFk] },
+        }),
+      ).toThrow(/x_id/);
+    });
+
+    it('upsertEntity fk field referencing an unknown entity throws', () => {
+      const m1 = buildModel();
+      expect(() =>
+        applyModelEdit(m1, {
+          kind: 'upsertEntity',
+          entity: { id: 'new', label: 'New', group: 'z1', description: null, fields: [editPk(), editFk('x_id', 'ghost')] },
+        }),
+      ).toThrow(/ghost/);
+    });
+
+    it('upsertEntity fk field referencing an unknown field on a known entity throws', () => {
+      const m1 = buildModel();
+      expect(() =>
+        applyModelEdit(m1, {
+          kind: 'upsertEntity',
+          entity: { id: 'new', label: 'New', group: 'z1', description: null, fields: [editPk(), editFk('x_id', 'users', 'ghost_field')] },
+        }),
+      ).toThrow(/ghost_field/);
+    });
+
+    it('upsertEntity allows a new entity whose fk field self-references its own not-yet-existing row', () => {
+      const m1 = buildModel();
+      const m2 = applyModelEdit(m1, {
+        kind: 'upsertEntity',
+        entity: { id: 'nodes', label: 'Nodes', group: 'z1', description: null, fields: [editPk(), editFk('parent_id', 'nodes')] },
+      });
+      expect(m2.entityById.has('nodes')).toBe(true);
+      expect(m2.relationships.some((r) => r.source === 'nodes' && r.target === 'nodes' && r.targetField === 'parent_id')).toBe(true);
+    });
+
+    it('upsertGroup with parent equal to its own id throws', () => {
+      const m1 = buildModel();
+      expect(() => applyModelEdit(m1, { kind: 'upsertGroup', group: { id: 'z1', label: 'Zone One', parent: 'z1' } })).toThrow(/z1/);
+    });
+
+    it('upsertGroup with an unknown parent throws', () => {
+      const m1 = buildModel();
+      expect(() =>
+        applyModelEdit(m1, { kind: 'upsertGroup', group: { id: 'sub1', label: 'Sub One', parent: 'ghost' } }),
+      ).toThrow(/ghost/);
+    });
+
+    it('upsertGroup whose parent is itself a subgroup throws (nesting is one level)', () => {
+      const m1 = buildModel(nestedRaw()); // zone 'z' with subgroup 's'
+      expect(() =>
+        applyModelEdit(m1, { kind: 'upsertGroup', group: { id: 'deeper', label: 'Deeper', parent: 's' } }),
+      ).toThrow(/s/);
+    });
+
+    it('a new group gets order = max(existing orders) + 1, not a same-parent sibling count', () => {
+      const m1 = buildModel(); // z1 order 0, z2 order 1
+      const withSub = applyModelEdit(m1, { kind: 'upsertGroup', group: { id: 'sub1', label: 'Sub One', parent: 'z1' } });
+      expect(withSub.groups.find((g) => g.id === 'sub1')!.order).toBe(2);
+      // A same-parent sibling count for a new top-level zone would collide with
+      // sub1's order (2 existing top-level zones -> 2, same as sub1) — max+1 doesn't.
+      const withZone = applyModelEdit(withSub, { kind: 'upsertGroup', group: { id: 'z3', label: 'Zone Three', parent: null } });
+      expect(withZone.groups.find((g) => g.id === 'z3')!.order).toBe(3);
     });
   });
 
