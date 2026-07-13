@@ -12,25 +12,23 @@
 // explicitly, so save→load survives it byte-honestly instead of quietly
 // dropping it (or worse, silently renaming it).
 
-import { isDerivableShaped } from '../is-derivable-shaped';
-import type { Model, Relationship } from '../types';
+import { isFullyReDerivable } from '../is-derivable-shaped';
+import type { Model } from '../types';
 
 // A relationship is safe to drop from the file only when BOTH (a) its shape
 // carries nothing beyond what fk-field derivation would produce — same check
-// apply-model-edit uses to decide what's safe to discard on every edit, see
-// isDerivableShaped — AND (b) the field load-model would derive it FROM still
-// backs it exactly. Checking only (b), as this used to, let a hand-authored id
-// (e.g. 'owns-custom-id') through whenever its backing field happened to
-// match: load-model has no way to know that custom id, so it resurrected the
-// rel under the derived one on the next load, silently renaming it. Sharing
-// isDerivableShaped with apply-model-edit means the two "is this rel doing
-// anything a human/tool couldn't reproduce" checks can't drift apart again.
-function isFullyReDerivable(model: Model, r: Relationship): boolean {
-  if (!isDerivableShaped(r)) return false;
-  const target = model.entityById.get(r.target);
-  const field = target?.fields.find((f) => f.name === r.targetField);
-  return !!field && field.role === 'fk' && field.ref === r.source && (field.refField ?? 'id') === r.sourceField;
-}
+// apply-model-edit uses to decide what's safe to discard on every edit — AND
+// (b) the field load-model would derive it FROM still backs it exactly.
+// Checking only (b), as this used to, let a hand-authored id (e.g.
+// 'owns-custom-id') through whenever its backing field happened to match:
+// load-model has no way to know that custom id, so it resurrected the rel
+// under the derived one on the next load, silently renaming it.
+// isFullyReDerivable (and isDerivableShaped underneath it) is shared with
+// apply-model-edit so the two "is this rel doing anything a human/tool
+// couldn't reproduce" checks can't drift apart again — see that module's own
+// comment for the bug that let a derivable-shaped-but-not-fully-re-derivable
+// rel (backing field's ref/refField intact, but not tagged role:'fk') vanish
+// silently on an unrelated edit before this was shared.
 
 export function serializeModel(model: Model, colors: ReadonlyMap<string, string>): Record<string, unknown> {
   const bounds = new Map(model._groupBounds.map((b) => [b.id, { x: b.x, y: b.y, w: b.w, h: b.h }]));

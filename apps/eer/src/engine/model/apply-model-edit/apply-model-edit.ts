@@ -3,20 +3,25 @@
 // input is never mutated (the future editor reducer relies on that). Relationships
 // are not hand-edited directly, but editing is non-destructive for hand-authored
 // data: after every edit, `relationships` = every explicit relationship whose
-// endpoints (entity + field, both sides) still resolve AND that carries anything
-// derivation couldn't reproduce (custom id, label, or hand-set cardinality —
-// see isDerivableShaped), kept verbatim; PLUS one derived rel for each fk-role
-// field whose ref'd entity still carries the named refField (renaming/removing
-// that field leaves `ref` resolving fine while `refField` goes stale — no rel
-// is derived from it) and whose {(ref,refField),(entity,field)} endpoint pair
-// isn't already covered — in either direction — by one of those kept rels.
-// Derivable-shaped rels are never kept: they re-derive from the CURRENT fields
-// each time, so a no-op edit reproduces identical objects while clearing a
-// field's fk role (even keeping its name) genuinely removes its edge.
+// endpoints (entity + field, both sides) still resolve AND that either (a)
+// carries anything derivation couldn't reproduce (custom id, label, or
+// hand-set cardinality — see isDerivableShaped) or (b) is derivable-shaped but
+// NOT fully re-derivable (see isFullyReDerivable) — its backing field's
+// ref/refField still match but it isn't tagged role:'fk', so the derive loop
+// below will never regenerate it — kept verbatim in both cases; PLUS one
+// derived rel for each fk-role field whose ref'd entity still carries the
+// named refField (renaming/removing that field leaves `ref` resolving fine
+// while `refField` goes stale — no rel is derived from it) and whose
+// {(ref,refField),(entity,field)} endpoint pair isn't already covered — in
+// either direction — by one of those kept rels. A fully-re-derivable rel is
+// never kept: it re-derives from the CURRENT fields each time, so a no-op edit
+// reproduces an identical object while clearing a field's fk role (even
+// keeping its name, and clearing its ref alongside — see field-grid.tsx)
+// genuinely removes its edge.
 
 import { measureEntity } from '../../geometry/measure-entity';
 import { LAYOUT_MARGIN } from '../../geometry/metrics';
-import { isDerivableShaped } from '../is-derivable-shaped';
+import { hasBackingField, isDerivableShaped, isFullyReDerivable } from '../is-derivable-shaped';
 import type { Entity, Field, Group, GroupBounds, Model, Relationship } from '../types';
 
 export interface EditField {
@@ -25,6 +30,7 @@ export interface EditField {
   role: 'pk' | 'fk' | null;
   ref: string | null;
   refField: string | null;
+  title: string | null;
   description: string | null;
 }
 
@@ -142,15 +148,17 @@ function upsertEntity(
   if (!model.groups.some((g) => g.id === e.group)) throw new Error(`Unknown group "${e.group}".`);
   validateEditFields(model, e.id, e.fields);
 
-  // The editor form has no "title" input — it stays null for anything that
-  // passes through here, whether the entity is new or already had titled fields.
+  // The editor form has no "title" input, but EditField still carries title
+  // through as an untouched passthrough (table-modal's toEditField reads it in,
+  // FieldGrid never exposes it as an editable column) — so a no-op Save must
+  // not destroy titles the file already had. See EditField's own field comment.
   const fields: Field[] = e.fields.map((f) => ({
     name: f.name,
     type: f.type,
     role: f.role,
     ref: f.ref,
     refField: f.refField,
-    title: null,
+    title: f.title,
     description: f.description,
   }));
 
@@ -210,7 +218,20 @@ function isValidRelationship(model: Model, r: Relationship): boolean {
 // Non-destructive for authored data (labels/custom cardinality/custom ids survive
 // edits), while derivable-shaped rels track their backing field's current state.
 function deriveRelationships(model: Model): Relationship[] {
-  const kept = model.relationships.filter((r) => !isDerivableShaped(r) && isValidRelationship(model, r));
+  const kept = model.relationships.filter((r) => {
+    if (!isValidRelationship(model, r)) return false;
+    if (!isDerivableShaped(r)) return true;
+    // Derivable-shaped: dropping it here is only safe when the derive loop
+    // below will actually put an equivalent one back (isFullyReDerivable — its
+    // backing field is tagged role:'fk'), or when nothing backs it at all
+    // anymore (ref/refField cleared or repointed — hasBackingField false). A
+    // field whose ref/refField still match but ISN'T tagged 'fk' (e.g. a
+    // shared-pk identifying reference, like the seed's outbox.event_id: role
+    // 'pk', ref 'events') falls through both: the derive loop only fires for
+    // role:'fk' fields, so unconditionally discarding here (the old bug) would
+    // silently drop real data on the very next unrelated edit.
+    return hasBackingField(model, r) && !isFullyReDerivable(model, r);
+  });
   const coveredPairs = new Set(kept.map((r) => pairKey(r.source, r.sourceField, r.target, r.targetField)));
 
   const derived: Relationship[] = [];

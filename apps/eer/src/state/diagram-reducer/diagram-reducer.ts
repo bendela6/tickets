@@ -128,11 +128,14 @@ export function diagramReducer(state: DiagramState, action: DiagramAction): Diag
     case 'REARRANGE':
       // Toolbar "Rearrange" must actually move cards — a saved layout would
       // otherwise snap everything straight back, making the button a no-op.
+      // It's a real layout change like SET_POSITIONS/RESIZE_GROUP, so it must
+      // set dirty too — otherwise switching models right after silently
+      // discards the new layout with no unsaved-changes confirm.
       return state.model
         ? {
             ...state,
             model: packLayout({ ...state.model, _savedLayout: undefined }),
-            ui: { ...state.ui, focus: null, panelSelection: { type: 'none' }, fieldHighlight: null, raisedEdge: null },
+            ui: { ...state.ui, focus: null, panelSelection: { type: 'none' }, fieldHighlight: null, raisedEdge: null, dirty: true },
           }
         : state;
     case 'SET_VIEW':
