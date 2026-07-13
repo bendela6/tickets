@@ -1,15 +1,16 @@
 // Structural model edits — groups/tables/meta — the pure heart of the model
 // editor. Every branch returns a brand-new Model via spread + rebuilt maps; the
 // input is never mutated (the future editor reducer relies on that). Relationships
-// are not hand-edited directly, but editing is non-destructive: after every edit,
-// `relationships` = every explicit relationship (any kind — including hand-authored
-// fk-kind ones, kept verbatim with their original id/label/cardinality) whose
-// endpoints (entity + field, both sides) still resolve, PLUS one derived rel for
-// each fk-role field whose {(ref,refField),(entity,field)} endpoint pair isn't
-// already covered — in either direction — by one of those kept rels. A rel that
-// was itself derived by a previous call is just another entry in the input's
-// `relationships` array, so re-running this on a no-op edit reproduces the same
-// ids: it gets kept verbatim rather than re-derived under a fresh id.
+// are not hand-edited directly, but editing is non-destructive for hand-authored
+// data: after every edit, `relationships` = every explicit relationship whose
+// endpoints (entity + field, both sides) still resolve AND that carries anything
+// derivation couldn't reproduce (custom id, label, or hand-set cardinality —
+// see isDerivableShaped), kept verbatim; PLUS one derived rel for each fk-role
+// field whose {(ref,refField),(entity,field)} endpoint pair isn't already
+// covered — in either direction — by one of those kept rels. Derivable-shaped
+// rels are never kept: they re-derive from the CURRENT fields each time, so a
+// no-op edit reproduces identical objects while clearing a field's fk role
+// (even keeping its name) genuinely removes its edge.
 
 import { measureEntity } from '../../geometry/measure-entity';
 import { LAYOUT_MARGIN } from '../../geometry/metrics';
@@ -200,13 +201,28 @@ function isValidRelationship(model: Model, r: Relationship): boolean {
   return hasField(model.entityById.get(r.source), r.sourceField) && hasField(model.entityById.get(r.target), r.targetField);
 }
 
-// Every still-valid explicit relationship — ANY kind, kept verbatim (id, label,
-// cardinality untouched) — plus one derived rel per fk-role field whose endpoint
-// pair isn't already covered by one of those kept rels. This is non-destructive:
-// hand-authored fk-kind rels (with a label/custom cardinality) survive edits
-// instead of being blown away and replaced by a fresh label-less derivation.
+// Byte-for-byte what deriveRelationships would emit for an fk field: derived id
+// scheme, kind 'fk', no label, default '1-n'. Such rels carry no hand-authored
+// data, so they are never kept verbatim — they re-derive from the CURRENT fields
+// on every edit, which is what makes clearing a field's fk role (while keeping
+// its name) remove the edge. Anything with a custom id, a label, or a hand-set
+// cardinality is treated as authored and kept while its endpoints stay valid.
+function isDerivableShaped(r: Relationship): boolean {
+  return (
+    r.kind === 'fk' &&
+    r.label === null &&
+    r.cardinality === '1-n' &&
+    r.id === `e-${r.source}.${r.sourceField}->${r.target}.${r.targetField}`
+  );
+}
+
+// Every still-valid, non-derivable-shaped explicit relationship — ANY kind, kept
+// verbatim (id, label, cardinality untouched) — plus one derived rel per fk-role
+// field whose endpoint pair isn't already covered by one of those kept rels.
+// Non-destructive for authored data (labels/custom cardinality/custom ids survive
+// edits), while derivable-shaped rels track their backing field's current state.
 function deriveRelationships(model: Model): Relationship[] {
-  const kept = model.relationships.filter((r) => isValidRelationship(model, r));
+  const kept = model.relationships.filter((r) => !isDerivableShaped(r) && isValidRelationship(model, r));
   const coveredPairs = new Set(kept.map((r) => pairKey(r.source, r.sourceField, r.target, r.targetField)));
 
   const derived: Relationship[] = [];
