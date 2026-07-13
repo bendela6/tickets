@@ -154,7 +154,7 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   const refs = id ? fkRefsTo(model, id) : [];
 
   return (
-    <Modal title={isEdit ? `Edit ${existing!.label}` : 'New table'} onClose={onClose}>
+    <Modal title={isEdit ? `Edit ${existing!.label}` : 'New table'} onClose={onClose} size="wide">
       {(localError || ui.editError) && (
         <div className={errorRow}>
           <span>{localError ?? ui.editError}</span>

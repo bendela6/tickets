@@ -10,10 +10,12 @@ import { cn } from '../../ui/cn';
 export interface ModalProps {
   title: string;
   onClose: () => void;
+  // 'wide' fits a form that would otherwise scroll sideways (the field grid).
+  size?: 'default' | 'wide';
   children: ReactNode;
 }
 
-export function Modal({ title, onClose, children }: ModalProps) {
+export function Modal({ title, onClose, size = 'default', children }: ModalProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -40,8 +42,9 @@ export function Modal({ title, onClose, children }: ModalProps) {
         aria-labelledby={titleId}
         tabIndex={-1}
         className={cn(
-          'flex max-h-full w-full max-w-md flex-col gap-3 overflow-auto',
+          'flex max-h-full w-full flex-col gap-3 overflow-auto',
           'rounded-lg border border-gray-500 bg-gray-800 px-4 py-4 shadow-xl',
+          { 'max-w-md': size === 'default', 'max-w-5xl': size === 'wide' },
         )}
         onClick={stopInside}
       >

@@ -16,7 +16,17 @@ const iconBtn = cn(
   'flex h-6 w-6 shrink-0 items-center justify-center rounded text-gray-400',
   'hover:bg-gray-800 hover:text-gray-50 disabled:pointer-events-none disabled:opacity-30',
 );
-const colHead = 'shrink-0 text-2xs font-semibold uppercase tracking-wide text-gray-400';
+const colHead = 'text-2xs font-semibold uppercase tracking-wide text-gray-400';
+// One width per column, shared by the header cell and its inputs so they stay
+// aligned. They grow into the wide modal, so the grid never scrolls sideways.
+const COL = {
+  name: 'w-40 grow',
+  type: 'w-24 grow',
+  role: 'w-16 shrink-0',
+  ref: 'w-32 grow',
+  refField: 'w-32 grow',
+  note: 'w-40 grow',
+} as const;
 
 interface FieldGridProps {
   model: Model;
@@ -67,14 +77,14 @@ export function FieldGrid({ model, ownId, fields, onChange }: FieldGridProps) {
   return (
     <div className="flex flex-col gap-2">
       <div className="overflow-x-auto rounded-md border border-gray-600">
-        <div className="min-w-max">
+        <div>
           <div className="flex items-center gap-2 border-b border-gray-600 bg-gray-900 px-2 py-1">
-            <span className={cn(colHead, 'w-28')}>Name</span>
-            <span className={cn(colHead, 'w-20')}>Type</span>
-            <span className={cn(colHead, 'w-14')}>Role</span>
-            <span className={cn(colHead, 'w-28')}>Ref table</span>
-            <span className={cn(colHead, 'w-28')}>Ref field</span>
-            <span className={cn(colHead, 'w-32')}>Note</span>
+            <span className={cn(colHead, COL.name)}>Name</span>
+            <span className={cn(colHead, COL.type)}>Type</span>
+            <span className={cn(colHead, COL.role)}>Role</span>
+            <span className={cn(colHead, COL.ref)}>Ref table</span>
+            <span className={cn(colHead, COL.refField)}>Ref field</span>
+            <span className={cn(colHead, COL.note)}>Note</span>
             <span className="w-20 shrink-0" aria-hidden />
           </div>
           {fields.map((f, i) => {
@@ -83,19 +93,19 @@ export function FieldGrid({ model, ownId, fields, onChange }: FieldGridProps) {
             return (
               <div key={i} className="flex items-center gap-2 border-b border-gray-600/50 px-2 py-1 last:border-0">
                 <input
-                  className={cn(cellInput, 'w-28')}
+                  className={cn(cellInput, COL.name)}
                   aria-label={`Field ${i + 1} name`}
                   value={f.name}
                   onChange={(e) => patch(i, { name: e.target.value })}
                 />
                 <input
-                  className={cn(cellInput, 'w-20')}
+                  className={cn(cellInput, COL.type)}
                   aria-label={`Field ${i + 1} type`}
                   value={f.type}
                   onChange={(e) => patch(i, { type: e.target.value })}
                 />
                 <select
-                  className={cn(cellSelect, 'w-14')}
+                  className={cn(cellSelect, COL.role)}
                   aria-label={`Field ${i + 1} role`}
                   value={f.role ?? ''}
                   onChange={(e) => setRole(i, (e.target.value || null) as Role)}
@@ -105,7 +115,7 @@ export function FieldGrid({ model, ownId, fields, onChange }: FieldGridProps) {
                   <option value="fk">FK</option>
                 </select>
                 <select
-                  className={cn(cellSelect, 'w-28')}
+                  className={cn(cellSelect, COL.ref)}
                   aria-label={`Field ${i + 1} reference table`}
                   value={f.ref ?? ''}
                   disabled={!isFk}
@@ -119,7 +129,7 @@ export function FieldGrid({ model, ownId, fields, onChange }: FieldGridProps) {
                   ))}
                 </select>
                 <select
-                  className={cn(cellSelect, 'w-28')}
+                  className={cn(cellSelect, COL.refField)}
                   aria-label={`Field ${i + 1} reference field`}
                   value={f.refField ?? ''}
                   disabled={!isFk || !f.ref}
@@ -133,7 +143,7 @@ export function FieldGrid({ model, ownId, fields, onChange }: FieldGridProps) {
                   ))}
                 </select>
                 <input
-                  className={cn(cellInput, 'w-32')}
+                  className={cn(cellInput, COL.note)}
                   aria-label={`Field ${i + 1} note`}
                   value={f.description ?? ''}
                   onChange={(e) => patch(i, { description: e.target.value })}
