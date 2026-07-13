@@ -1,26 +1,25 @@
 // Create/edit a table (entity) — name, group, description, a colour override
 // (edit mode only, same reasoning as GroupModal: a brand-new entity's id might
 // never be saved, so there's nothing yet to key a colour override to), the
-// field grid, the constraints editor, and a guarded delete. Fields AND
-// constraints are local drafts (EditField[] / Constraint[]); Save pre-
-// validates then dispatches ONE upsertEntity for the whole entity —
-// applyModelEdit's own validation is the backstop (duplicate names, dangling
-// fk refs, unknown columns, fk arity, >1 pk, …), surfaced via ui.editError if
-// this component's own checks miss something the engine still rejects.
-// `indexes` has no editor yet (a later task) so it still passes through
-// verbatim — see the constraints comment on `save` below for why that
-// distinction matters.
+// field grid, the constraints editor, the indexes editor, and a guarded
+// delete. Fields, constraints AND indexes are all local drafts (EditField[] /
+// Constraint[] / TableIndex[]); Save pre-validates then dispatches ONE
+// upsertEntity for the whole entity — applyModelEdit's own validation is the
+// backstop (duplicate names, dangling fk refs, unknown columns, fk arity, >1
+// pk, …), surfaced via ui.editError if this component's own checks miss
+// something the engine still rejects.
 
 import { useState } from 'react';
 
 import { entityColor } from '../../engine/colors/entity-color';
 import { applyModelEdit as tryApplyModelEdit, fkRefsTo, type EditField } from '../../engine/model/apply-model-edit';
-import type { Column, Constraint, Entity, Model } from '../../engine/model/types';
+import type { Column, Constraint, Entity, Model, TableIndex } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
 import { Modal } from '../modal';
 import { ColumnsGrid } from './columns-grid';
 import { ConstraintsEditor } from './constraints-editor';
+import { IndexesEditor } from './indexes-editor';
 
 const field = cn('w-full rounded-md border border-gray-600 bg-gray-900 px-2 py-1', 'text-sm text-gray-50');
 const label = 'flex flex-col gap-1 text-xs text-gray-400';
@@ -109,6 +108,7 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   const [description, setDescription] = useState(existing?.description ?? '');
   const [fields, setFields] = useState<EditField[]>(existing ? existing.columns.map(toEditField) : [DEFAULT_PK]);
   const [constraints, setConstraints] = useState<Constraint[]>(existing ? existing.constraints : [DEFAULT_PK_CONSTRAINT]);
+  const [indexes, setIndexes] = useState<TableIndex[]>(existing ? existing.indexes : []);
   const [localError, setLocalError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
@@ -149,10 +149,10 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
         // from fields (see columns-grid.tsx's header comment for why that
         // used to be dangerous).
         constraints,
-        // Verbatim passthrough — the indexes editor is a later task, so a
-        // Save must never touch these: an existing table keeps exactly what
-        // it already had; a brand-new one has none yet.
-        indexes: isEdit ? existing!.indexes : [],
+        // The draft state <IndexesEditor/> owns below — same reasoning as
+        // constraints above: a brand-new table starts with none, an existing
+        // one starts from its own current indexes.
+        indexes,
       },
     };
     actions.applyModelEdit(edit);
@@ -235,6 +235,11 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
           constraints={constraints}
           onChange={setConstraints}
         />
+      </div>
+
+      <div className={label}>
+        <span>Indexes</span>
+        <IndexesEditor columns={fields.map((f) => f.name)} indexes={indexes} onChange={setIndexes} />
       </div>
 
       <div className="flex flex-col gap-2 pt-2">
