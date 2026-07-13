@@ -6,34 +6,9 @@ import { loadModel } from '../load-model';
 import { applyModelEdit, fkRefsTo, type EditField } from './apply-model-edit';
 import seedRaw from '../../../../models/items-platform.json';
 
-const editPk = (name = 'id', type = 'int'): EditField => ({
+const editField = (name: string, type = 'text'): EditField => ({
   name,
   type,
-  role: 'pk',
-  ref: null,
-  refField: null,
-  title: null,
-  description: null,
-  nullable: true,
-  default: null,
-});
-const editPlain = (name: string, type = 'text'): EditField => ({
-  name,
-  type,
-  role: null,
-  ref: null,
-  refField: null,
-  title: null,
-  description: null,
-  nullable: true,
-  default: null,
-});
-const editFk = (name: string, ref: string, refField = 'id', type = 'int'): EditField => ({
-  name,
-  type,
-  role: 'fk',
-  ref,
-  refField,
   title: null,
   description: null,
   nullable: true,
@@ -125,7 +100,18 @@ describe('applyModelEdit', () => {
       const box = m1._groupBounds.find((b) => b.id === 'z2')!;
       const m2 = applyModelEdit(m1, {
         kind: 'upsertEntity',
-        entity: { id: 'shipments', label: 'Shipments', group: 'z2', description: null, fields: [editPk(), editFk('orders_id', 'orders')] },
+        entity: {
+          id: 'shipments',
+          label: 'Shipments',
+          group: 'z2',
+          description: null,
+          fields: [editField('id', 'int'), editField('orders_id', 'int')],
+          constraints: [
+            { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
+            { id: 'c2', kind: 'fk', name: null, columns: ['orders_id'], refTable: 'orders', refColumns: ['id'], onDelete: null, onUpdate: null },
+          ],
+          indexes: [],
+        },
       });
       const e = m2.entityById.get('shipments')!;
       expect(e.x).toBe(box.x + 50);
@@ -141,7 +127,15 @@ describe('applyModelEdit', () => {
       const boxless = { ...m1, _groupBounds: m1._groupBounds.filter((b) => b.id !== 'z2') };
       const m2 = applyModelEdit(boxless, {
         kind: 'upsertEntity',
-        entity: { id: 'shipments', label: 'Shipments', group: 'z2', description: null, fields: [editPk()] },
+        entity: {
+          id: 'shipments',
+          label: 'Shipments',
+          group: 'z2',
+          description: null,
+          fields: [editField('id', 'int')],
+          constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }],
+          indexes: [],
+        },
       });
       const e = m2.entityById.get('shipments')!;
       expect(e.x).toBe(50);
@@ -160,7 +154,9 @@ describe('applyModelEdit', () => {
           label: 'Orders v2',
           group: before.group,
           description: 'updated',
-          fields: [editPk(), editFk('users_id', 'users'), editFk('tag_id', 'tags'), editPlain('note')],
+          fields: [editField('id', 'int'), editField('users_id', 'int'), editField('tag_id', 'int'), editField('note')],
+          constraints: before.constraints,
+          indexes: before.indexes,
         },
       });
       const after = m2.entityById.get('orders')!;
@@ -208,49 +204,90 @@ describe('applyModelEdit', () => {
   });
 
   describe('relationship derivation', () => {
-    it('an fk field derives its relationship; removing the field drops it', () => {
+    it('adding an fk constraint via upsertEntity derives its relationship; removing the constraint drops it', () => {
       const m1 = buildModel();
       const tags = m1.entityById.get('tags')!;
       const withFk = applyModelEdit(m1, {
         kind: 'upsertEntity',
-        entity: { id: 'tags', label: tags.label, group: tags.group, description: null, fields: [editPk(), editFk('owner_id', 'users')] },
+        entity: {
+          id: 'tags',
+          label: tags.label,
+          group: tags.group,
+          description: null,
+          fields: [editField('id', 'int'), editField('owner_id', 'int')],
+          constraints: [
+            { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
+            { id: 'c2', kind: 'fk', name: null, columns: ['owner_id'], refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
+          ],
+          indexes: [],
+        },
       });
       expect(withFk.relationships.some((r) => r.source === 'users' && r.target === 'tags' && r.targetField === 'owner_id')).toBe(true);
 
       const removed = applyModelEdit(withFk, {
         kind: 'upsertEntity',
-        entity: { id: 'tags', label: tags.label, group: tags.group, description: null, fields: [editPk()] }, // owner_id field gone entirely
+        entity: {
+          id: 'tags',
+          label: tags.label,
+          group: tags.group,
+          description: null,
+          fields: [editField('id', 'int')], // owner_id field gone entirely
+          constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }], // fk constraint gone too
+          indexes: [],
+        },
       });
       expect(removed.relationships.some((r) => r.target === 'tags' && r.targetField === 'owner_id')).toBe(false);
     });
 
-    // A derived rel is derivable-shaped (derived id scheme, kind fk, no label,
-    // '1-n'), so it is never kept verbatim — it re-derives from the CURRENT
-    // fields on every edit. Clearing the backing field's fk role (keeping the
-    // name) therefore removes the edge; authored data (two tests down) doesn't.
-    it('clearing an fk role (keeping the field name) removes its derived relationship', () => {
+    // Fields no longer drive derivation at all — a prior version re-derived
+    // pk/fk constraints from EditField.role/ref on every upsertEntity, so
+    // clearing a field's role (even keeping its name) removed the edge. Now
+    // constraints are the ONLY thing upsertEntity ever looks at (passed
+    // through verbatim by its caller — see the module's header comment), so
+    // the edge only disappears when the CONSTRAINT is dropped, regardless of
+    // what happens to the field alongside it.
+    it('removing just the fk constraint (fields left unchanged) removes the derived relationship', () => {
       const m1 = buildModel();
       const tags = m1.entityById.get('tags')!;
       const withFk = applyModelEdit(m1, {
         kind: 'upsertEntity',
-        entity: { id: 'tags', label: tags.label, group: tags.group, description: null, fields: [editPk(), editFk('owner_id', 'users')] },
+        entity: {
+          id: 'tags',
+          label: tags.label,
+          group: tags.group,
+          description: null,
+          fields: [editField('id', 'int'), editField('owner_id', 'int')],
+          constraints: [
+            { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
+            { id: 'c2', kind: 'fk', name: null, columns: ['owner_id'], refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
+          ],
+          indexes: [],
+        },
       });
       expect(withFk.relationships.some((r) => r.source === 'users' && r.target === 'tags' && r.targetField === 'owner_id')).toBe(true);
 
       const cleared = applyModelEdit(withFk, {
         kind: 'upsertEntity',
-        entity: { id: 'tags', label: tags.label, group: tags.group, description: null, fields: [editPk(), editPlain('owner_id', 'int')] },
+        entity: {
+          id: 'tags',
+          label: tags.label,
+          group: tags.group,
+          description: null,
+          fields: [editField('id', 'int'), editField('owner_id', 'int')], // field untouched
+          constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }], // only the fk constraint removed
+          indexes: [],
+        },
       });
       expect(cleared.relationships.some((r) => r.target === 'tags' && r.targetField === 'owner_id')).toBe(false);
     });
 
-    // A hand-authored `kind: 'fk'` relationship is no longer "authored data" at
-    // all — relationships ARE the foreign keys now (see derive-relationships.ts)
-    // — so a label carried on a kind:'fk' rel does NOT protect it from being
-    // dropped in favour of (or, here, the absence of) the derived edge. Wanting
-    // a custom label/cardinality on an fk-shaped edge going forward means
-    // authoring it under a different `kind`.
-    it('a labelled fk-kind rel is dropped, not kept verbatim, once its backing constraint is gone', () => {
+    // A hand-authored `kind: 'fk'` relationship is no longer "authored data" in
+    // its own right — relationships ARE the foreign keys now (see
+    // derive-relationships.ts) — a label on a kind:'fk' rel over the same pair
+    // as a derived edge merges ONTO that derived edge (see the "a derived edge
+    // wins" test below); it never survives as an independent entry once its
+    // backing fk constraint is gone entirely, which is what this test covers.
+    it('a labelled fk-kind rel is dropped, not kept as an independent entry, once its backing constraint is gone', () => {
       const raw = {
         groups: [{ id: 'g', label: 'G' }],
         entities: [
@@ -260,12 +297,20 @@ describe('applyModelEdit', () => {
         relationships: [{ id: 'lbl', source: 'a', sourceField: 'id', target: 'b', targetField: 'a_id', kind: 'fk', label: 'owns' }],
       };
       const m1 = buildModel(raw);
-      expect(m1.relationships).toEqual([expect.objectContaining({ id: 'rel:b:c2' })]); // 'lbl' never survived loadModel either
+      expect(m1.relationships).toEqual([expect.objectContaining({ id: 'rel:b:c2' })]); // 'lbl' never survives as its own entry
       const cleared = applyModelEdit(m1, {
         kind: 'upsertEntity',
-        entity: { id: 'b', label: 'b', group: 'g', description: null, fields: [editPk(), editPlain('a_id', 'int')] },
+        entity: {
+          id: 'b',
+          label: 'b',
+          group: 'g',
+          description: null,
+          fields: [editField('id', 'int'), editField('a_id', 'int')],
+          constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }], // fk constraint dropped
+          indexes: [],
+        },
       });
-      expect(cleared.relationships).toEqual([]); // no backing fk constraint left, and 'lbl' was never eligible to be kept
+      expect(cleared.relationships).toEqual([]); // no backing fk constraint left, so nothing to merge 'lbl' onto either
     });
 
     // Derivation is fully determined by the (id-stable) constraint, so an
@@ -290,36 +335,68 @@ describe('applyModelEdit', () => {
       expect(renamed.relationships.some((r) => r.id === 'rel:b:c1')).toBe(true);
     });
 
-    it('renaming an fk field drops the stale rel and derives a fresh one under the new name', () => {
+    it('renaming an fk field (constraint columns updated alongside it) drops the stale rel and derives a fresh one under the new name', () => {
       const m1 = buildModel();
       const tags = m1.entityById.get('tags')!;
       const withFk = applyModelEdit(m1, {
         kind: 'upsertEntity',
-        entity: { id: 'tags', label: tags.label, group: tags.group, description: null, fields: [editPk(), editFk('owner_id', 'users')] },
+        entity: {
+          id: 'tags',
+          label: tags.label,
+          group: tags.group,
+          description: null,
+          fields: [editField('id', 'int'), editField('owner_id', 'int')],
+          constraints: [
+            { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
+            { id: 'c2', kind: 'fk', name: null, columns: ['owner_id'], refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
+          ],
+          indexes: [],
+        },
       });
       const renamed = applyModelEdit(withFk, {
         kind: 'upsertEntity',
-        entity: { id: 'tags', label: tags.label, group: tags.group, description: null, fields: [editPk(), editFk('owner_ref', 'users')] },
+        entity: {
+          id: 'tags',
+          label: tags.label,
+          group: tags.group,
+          description: null,
+          fields: [editField('id', 'int'), editField('owner_ref', 'int')],
+          constraints: [
+            { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
+            { id: 'c2', kind: 'fk', name: null, columns: ['owner_ref'], refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
+          ],
+          indexes: [],
+        },
       });
       expect(renamed.relationships.some((r) => r.targetField === 'owner_id')).toBe(false);
       expect(renamed.relationships.some((r) => r.source === 'users' && r.target === 'tags' && r.targetField === 'owner_ref')).toBe(true);
     });
 
     // Renaming the REFERENCED side's field (rather than the fk-owning side, the
-    // case above) is the gap the reviewer found: `orders.users_id` still says
-    // ref:'users', refField:'id' after the rename below, but 'users' no longer
-    // has a field called 'id' at all. `ref` resolving was treated as enough to
-    // derive from — it isn't; the derived rel's sourceField must itself exist,
-    // or downstream geometry resolves fieldIndex -1 and mis-anchors the port
-    // instead of the derivation simply refusing to produce a dangling edge.
+    // case above) is the gap the reviewer found: a stale fk constraint
+    // elsewhere in the model can still point (by column name) at a field that
+    // no longer exists on the renamed target. `ref` resolving used to be
+    // treated as enough to derive from — it isn't; the derived rel's
+    // sourceField must itself exist, or downstream geometry resolves
+    // fieldIndex -1 and mis-anchors the port instead of the derivation simply
+    // refusing to produce a dangling edge.
     it('renaming a referenced pk drops the now-dangling derived rel instead of deriving one with a nonexistent sourceField', () => {
-      const m1 = buildModel(); // orders.users_id (fk, refField 'id') -> users.id (pk)
+      const m1 = buildModel(); // orders.users_id (fk, refColumns ['id']) -> users.id (pk)
       const users = m1.entityById.get('users')!;
       const renamed = applyModelEdit(m1, {
         kind: 'upsertEntity',
-        // 'id' renamed to 'key'; manager_id dropped entirely so this edit isolates
-        // the cross-entity case from the (separately-covered) same-entity one.
-        entity: { id: 'users', label: users.label, group: users.group, description: null, fields: [editPk('key'), editPlain('name')] },
+        // 'id' renamed to 'key'; manager_id (and its self-fk constraint)
+        // dropped entirely so this edit isolates the cross-entity case from
+        // the (separately-covered) same-entity one.
+        entity: {
+          id: 'users',
+          label: users.label,
+          group: users.group,
+          description: null,
+          fields: [editField('key', 'int'), editField('name')],
+          constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['key'] }],
+          indexes: [],
+        },
       });
       expect(renamed.entityById.get('users')!.fields.map((f) => f.name)).toEqual(['key', 'name']);
       expect(renamed.relationships.some((r) => r.target === 'orders' && r.targetField === 'users_id')).toBe(false);
@@ -340,9 +417,11 @@ describe('applyModelEdit', () => {
     });
 
     // A derived edge always wins over an authored one covering the same pair —
-    // "relationships ARE the foreign keys" — regardless of the authored rel's
-    // kind, label, or which direction it was hand-authored in.
-    it('a derived edge wins over an explicit rel authored in the reverse direction for the same pair', () => {
+    // "relationships ARE the foreign keys" — its id/shape can't be displaced.
+    // But an authored rel over that same pair is still a donor: its label and
+    // non-fk kind merge onto the derived edge (see derive-relationships.ts),
+    // regardless of which direction it was hand-authored in.
+    it('a derived edge wins over an explicit rel authored in the reverse direction for the same pair, but still donates its label/kind', () => {
       const raw = {
         groups: [{ id: 'g', label: 'G' }],
         entities: [
@@ -358,7 +437,9 @@ describe('applyModelEdit', () => {
         (r) => (r.source === 'a' && r.target === 'b') || (r.source === 'b' && r.target === 'a'),
       );
       expect(covering).toHaveLength(1);
-      expect(covering[0]!.id).toBe('rel:b:c2');
+      expect(covering[0]!.id).toBe('rel:b:c2'); // derived id/shape wins
+      expect(covering[0]!.label).toBe('rev'); // but the authored label still survives
+      expect(covering[0]!.kind).toBe('m2m'); // and its non-fk kind
     });
 
     it('rebuilds relById to match relationships exactly, even for edits that touch no entities', () => {
@@ -394,13 +475,31 @@ describe('applyModelEdit', () => {
         expect(edited.entityById.get(r.target)?.fields.some((f) => f.name === r.targetField)).toBe(true);
       }
     });
+
+    // CRITICAL, reviewer-found: 17 of the real seed's 37 authored relationships
+    // carry a label that DOES have a backing fk constraint to merge onto (one
+    // more, 'istream'/"stream", is itself unbacked — items.events.aggregate_id
+    // has no fk field at all, a polymorphic reference — and is dropped the
+    // same way an unbacked kind:'fk' rel always was, before and after this
+    // fix; that's pre-existing, unrelated behaviour, not this bug), and 3
+    // carry a non-fk ('m2m', rendered dashed) kind. A prior version of
+    // deriveRelationships dropped EVERY authored kind:'fk' relationship in
+    // favour of its bare derived twin (label: null), and excluded an 'm2m' rel
+    // from the kept-verbatim authored set whenever its pair happened to
+    // coincide with a derived fk edge (which is exactly how the seed encodes
+    // its 3 m2m annotations) — turning all 17 labels and all 3 dashed m2m
+    // edges into a plain, unlabelled fk on the very next load. Pinned against
+    // the real bundled seed so it can't silently regress.
+    it('the real seed keeps all 17 backed authored labels and all 3 m2m-kind relationships', () => {
+      const { model, errors } = loadModel(seedRaw);
+      expect(errors).toEqual([]);
+      expect(model!.relationships.filter((r) => r.label).length).toBe(17);
+      expect(model!.relationships.filter((r) => r.kind === 'm2m').length).toBe(3);
+    });
   });
 
-  describe('upsertEntity — preserves constraints/indexes the editor cannot yet express', () => {
-    // The role/ref-only editor has no UI for unique/check constraints or
-    // indexes (Task 6+ adds it) — a description-only save must not silently
-    // drop them, even though upsertEntity still regenerates pk/fk from fields.
-    it('keeps an entity\'s unique constraint, check constraint, and index intact across a description-only edit', () => {
+  describe('upsertEntity — constraints/indexes pass through verbatim (never re-derived from fields)', () => {
+    it('preserves an entity\'s constraints (pk/unique/check) and index intact across a description-only edit', () => {
       const raw = {
         groups: [{ id: 'g', label: 'G' }],
         entities: [
@@ -418,53 +517,39 @@ describe('applyModelEdit', () => {
       };
       const { model: m1, errors } = loadModel(raw);
       expect(errors).toEqual([]);
+      const before = m1!.entityById.get('a')!;
 
       const m2 = applyModelEdit(m1!, {
         kind: 'upsertEntity',
-        entity: { id: 'a', label: 'a', group: 'g', description: 'updated', fields: [editPk('id'), editPlain('email')] },
+        entity: {
+          id: 'a',
+          label: 'a',
+          group: 'g',
+          description: 'updated',
+          fields: [editField('id', 'int'), editField('email', 'text')],
+          constraints: before.constraints,
+          indexes: before.indexes,
+        },
       });
       const after = m2.entityById.get('a')!;
       expect(after.description).toBe('updated');
-      expect(after.constraints).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ id: 'c2', kind: 'unique', columns: ['email'] }),
-          expect.objectContaining({ id: 'c3', kind: 'check', expression: "email <> ''" }),
-        ]),
-      );
+      expect(after.constraints).toEqual(before.constraints);
       expect(after.indexes).toEqual([{ id: 'i1', name: 'idx_a_email', columns: ['email'], unique: false }]);
     });
 
-    it('reuses the pk constraint\'s id and updates its columns when a field\'s role changes from null to pk', () => {
-      const raw = {
-        groups: [{ id: 'g', label: 'G' }],
-        entities: [
-          {
-            id: 'a', group: 'g',
-            fields: [{ name: 'id', type: 'int' }, { name: 'code', type: 'text' }],
-            constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }],
-          },
-        ],
-      };
-      const { model: m1, errors } = loadModel(raw);
-      expect(errors).toEqual([]);
-
-      const m2 = applyModelEdit(m1!, {
-        kind: 'upsertEntity',
-        entity: { id: 'a', label: 'a', group: 'g', description: null, fields: [editPk('id'), editPk('code', 'text')] },
-      });
-      const pk = m2.entityById.get('a')!.constraints.find((c) => c.kind === 'pk')!;
-      expect(pk.id).toBe('pk1'); // same constraint, not a fresh one
-      expect(pk.columns).toEqual(['id', 'code']);
-    });
-
-    it('reproduces the identical derived relationship id for an unchanged fk field across an unrelated edit (no edge churn)', () => {
+    // CRITICAL 2, case (a): a table authored with REAL constraints and no
+    // legacy roles at all — the exact shape a prior version's
+    // regeneratePkFkConstraints wiped, because such a table has no field
+    // role/ref to regenerate keys from, so a description-only Save zeroed its
+    // constraints to `[]` and deleted every edge attached to it.
+    it('keeps a pk + fk constraint pair, and the derived relationship id, across a description-only edit', () => {
       const raw = {
         groups: [{ id: 'g', label: 'G' }],
         entities: [
           { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int' }], constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }] },
           {
             id: 'b', group: 'g',
-            fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }],
+            fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }], // no role/ref anywhere
             constraints: [
               { id: 'pk2', kind: 'pk', columns: ['id'] },
               { id: 'fk9', kind: 'fk', columns: ['a_id'], refTable: 'a', refColumns: ['id'] },
@@ -476,16 +561,68 @@ describe('applyModelEdit', () => {
       expect(errors).toEqual([]);
       expect(m1!.relationships.map((r) => r.id)).toEqual(['rel:b:fk9']);
 
+      const before = m1!.entityById.get('b')!;
       const m2 = applyModelEdit(m1!, {
         kind: 'upsertEntity',
-        entity: { id: 'b', label: 'b', group: 'g', description: 'unrelated change', fields: [editPk('id'), editFk('a_id', 'a')] },
+        entity: {
+          id: 'b',
+          label: 'b',
+          group: 'g',
+          description: 'unrelated change',
+          fields: [editField('id', 'int'), editField('a_id', 'int')],
+          constraints: before.constraints,
+          indexes: before.indexes,
+        },
       });
+      expect(m2.entityById.get('b')!.constraints).toEqual(before.constraints); // both constraints survived
       expect(m2.relationships.map((r) => r.id)).toEqual(['rel:b:fk9']); // no churn
+    });
+
+    // CRITICAL 2, case (b): same, for a composite fk (multiple columns) — a
+    // shape regeneratePkFkConstraints could never even express (it only ever
+    // built single-column fk constraints, keyed by `columns[0]`), so it was
+    // unrecoverable once wiped.
+    it('keeps a composite fk constraint, and its derived relationship, across a description-only edit', () => {
+      const raw = {
+        groups: [{ id: 'g', label: 'G' }],
+        entities: [
+          {
+            id: 'a', group: 'g',
+            fields: [{ name: 'k1', type: 'int' }, { name: 'k2', type: 'int' }],
+            constraints: [{ id: 'pk1', kind: 'pk', columns: ['k1', 'k2'] }],
+          },
+          {
+            id: 'b', group: 'g',
+            fields: [{ name: 'a1', type: 'int' }, { name: 'a2', type: 'int' }],
+            constraints: [{ id: 'fk1', kind: 'fk', columns: ['a1', 'a2'], refTable: 'a', refColumns: ['k1', 'k2'] }],
+          },
+        ],
+      };
+      const { model: m1, errors } = loadModel(raw);
+      expect(errors).toEqual([]);
+      expect(m1!.relationships).toHaveLength(1);
+      const relId = m1!.relationships[0]!.id;
+
+      const before = m1!.entityById.get('b')!;
+      const m2 = applyModelEdit(m1!, {
+        kind: 'upsertEntity',
+        entity: {
+          id: 'b',
+          label: 'b',
+          group: 'g',
+          description: 'unrelated change',
+          fields: [editField('a1', 'int'), editField('a2', 'int')],
+          constraints: before.constraints,
+          indexes: before.indexes,
+        },
+      });
+      expect(m2.entityById.get('b')!.constraints).toEqual(before.constraints); // composite fk survived intact
+      expect(m2.relationships.map((r) => r.id)).toEqual([relId]); // no churn
     });
   });
 
   describe('fkRefsTo', () => {
-    it('lists every {entityId, field} whose fk field references the given entity', () => {
+    it('lists every {entityId, field} whose fk constraint references the given entity', () => {
       const m1 = buildModel(); // users ← orders.users_id, users ← users.manager_id (self), tags ← orders.tag_id
       expect(fkRefsTo(m1, 'users').sort((a, b) => a.entityId.localeCompare(b.entityId))).toEqual([
         { entityId: 'orders', field: 'users_id' },
@@ -495,7 +632,27 @@ describe('applyModelEdit', () => {
       expect(fkRefsTo(m1, 'orders')).toEqual([]);
     });
 
-    it('matches on `ref` alone, regardless of role — the same test deleteEntity uses to clear fields', () => {
+    it('reports a composite fk constraint as its columns joined, not truncated to the first one', () => {
+      const raw = {
+        groups: [{ id: 'g', label: 'G' }],
+        entities: [
+          {
+            id: 'a', group: 'g',
+            fields: [{ name: 'k1', type: 'int' }, { name: 'k2', type: 'int' }],
+            constraints: [{ id: 'pk1', kind: 'pk', columns: ['k1', 'k2'] }],
+          },
+          {
+            id: 'b', group: 'g',
+            fields: [{ name: 'a1', type: 'int' }, { name: 'a2', type: 'int' }],
+            constraints: [{ id: 'fk1', kind: 'fk', columns: ['a1', 'a2'], refTable: 'a', refColumns: ['k1', 'k2'] }],
+          },
+        ],
+      };
+      const m1 = buildModel(raw);
+      expect(fkRefsTo(m1, 'a')).toEqual([{ entityId: 'b', field: 'a1, a2' }]);
+    });
+
+    it('finds an fk constraint synthesized from legacy role/ref fields, regardless of role', () => {
       const raw = {
         groups: [{ id: 'g', label: 'G' }],
         entities: [
@@ -516,7 +673,7 @@ describe('applyModelEdit', () => {
       expect(() =>
         applyModelEdit(m1, {
           kind: 'upsertEntity',
-          entity: { id: 'new', label: 'New', group: 'ghost-group', description: null, fields: [editPk()] },
+          entity: { id: 'new', label: 'New', group: 'ghost-group', description: null, fields: [], constraints: [], indexes: [] },
         }),
       ).toThrow(/ghost-group/);
     });
@@ -531,57 +688,35 @@ describe('applyModelEdit', () => {
       expect(() =>
         applyModelEdit(m1, {
           kind: 'upsertEntity',
-          entity: { id: 'new', label: 'New', group: 'z1', description: null, fields: [editPk(), editPlain('id', 'text')] },
+          entity: {
+            id: 'new',
+            label: 'New',
+            group: 'z1',
+            description: null,
+            fields: [editField('id', 'int'), editField('id', 'text')],
+            constraints: [],
+            indexes: [],
+          },
         }),
       ).toThrow(/duplicate/i);
     });
 
-    it('upsertEntity fk field with no ref throws', () => {
-      const m1 = buildModel();
-      const badFk: EditField = {
-        name: 'x_id',
-        type: 'int',
-        role: 'fk',
-        ref: null,
-        refField: null,
-        title: null,
-        description: null,
-        nullable: true,
-        default: null,
-      };
-      expect(() =>
-        applyModelEdit(m1, {
-          kind: 'upsertEntity',
-          entity: { id: 'new', label: 'New', group: 'z1', description: null, fields: [editPk(), badFk] },
-        }),
-      ).toThrow(/x_id/);
-    });
-
-    it('upsertEntity fk field referencing an unknown entity throws', () => {
-      const m1 = buildModel();
-      expect(() =>
-        applyModelEdit(m1, {
-          kind: 'upsertEntity',
-          entity: { id: 'new', label: 'New', group: 'z1', description: null, fields: [editPk(), editFk('x_id', 'ghost')] },
-        }),
-      ).toThrow(/ghost/);
-    });
-
-    it('upsertEntity fk field referencing an unknown field on a known entity throws', () => {
-      const m1 = buildModel();
-      expect(() =>
-        applyModelEdit(m1, {
-          kind: 'upsertEntity',
-          entity: { id: 'new', label: 'New', group: 'z1', description: null, fields: [editPk(), editFk('x_id', 'users', 'ghost_field')] },
-        }),
-      ).toThrow(/ghost_field/);
-    });
-
-    it('upsertEntity allows a new entity whose fk field self-references its own not-yet-existing row', () => {
+    it('a new entity can self-reference its own not-yet-existing row via an explicit fk constraint', () => {
       const m1 = buildModel();
       const m2 = applyModelEdit(m1, {
         kind: 'upsertEntity',
-        entity: { id: 'nodes', label: 'Nodes', group: 'z1', description: null, fields: [editPk(), editFk('parent_id', 'nodes')] },
+        entity: {
+          id: 'nodes',
+          label: 'Nodes',
+          group: 'z1',
+          description: null,
+          fields: [editField('id', 'int'), editField('parent_id', 'int')],
+          constraints: [
+            { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
+            { id: 'c2', kind: 'fk', name: null, columns: ['parent_id'], refTable: 'nodes', refColumns: ['id'], onDelete: null, onUpdate: null },
+          ],
+          indexes: [],
+        },
       });
       expect(m2.entityById.has('nodes')).toBe(true);
       expect(m2.relationships.some((r) => r.source === 'nodes' && r.target === 'nodes' && r.targetField === 'parent_id')).toBe(true);
@@ -626,11 +761,30 @@ describe('applyModelEdit', () => {
     applyModelEdit(m1, { kind: 'upsertGroup', group: { id: 'z1', label: 'Zone One Renamed', parent: null } });
     applyModelEdit(m1, {
       kind: 'upsertEntity',
-      entity: { id: 'tags', label: 'Tags', group: 'z2', description: null, fields: [editPk(), editFk('owner_id', 'users')] },
+      entity: {
+        id: 'tags',
+        label: 'Tags',
+        group: 'z2',
+        description: null,
+        fields: [editField('id', 'int'), editField('owner_id', 'int')],
+        constraints: [
+          { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
+          { id: 'c2', kind: 'fk', name: null, columns: ['owner_id'], refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
+        ],
+        indexes: [],
+      },
     });
     applyModelEdit(m1, {
       kind: 'upsertEntity',
-      entity: { id: 'new_table', label: 'New', group: 'z1', description: null, fields: [editPk()] },
+      entity: {
+        id: 'new_table',
+        label: 'New',
+        group: 'z1',
+        description: null,
+        fields: [editField('id', 'int')],
+        constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }],
+        indexes: [],
+      },
     });
     applyModelEdit(m1, { kind: 'deleteEntity', id: 'tags' });
     expect(() => applyModelEdit(m1, { kind: 'deleteGroup', id: 'z1' })).toThrow(); // invalid edits must not mutate either

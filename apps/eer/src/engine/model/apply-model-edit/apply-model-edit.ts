@@ -5,32 +5,51 @@
 // from the (freshly rebuilt) entities' constraints on every edit — see
 // derive-relationships.ts for the one-edge-per-fk-constraint rule and how it
 // keeps authored non-fk relationships verbatim.
+//
+// upsertEntity takes `constraints`/`indexes` VERBATIM from its caller instead of
+// re-deriving pk/fk from field role/ref (a prior version did that, and wiped a
+// real-`constraints`-authored table's keys — and every edge attached to
+// them — the moment it was saved with no field-role change to trigger on,
+// because such a table has no role/ref at all to regenerate from). The field
+// grid has no key-editing UI any more (see field-grid.tsx) — a real constraints
+// editor is a later task; until then, an edit can only carry a table's
+// constraints/indexes through unchanged, never author new ones (except a brand
+// new table's default `id` pk, built once at creation).
 
 import { measureEntity } from '../../geometry/measure-entity';
 import { LAYOUT_MARGIN } from '../../geometry/metrics';
 import { deriveRelationships } from '../derive-relationships';
-import type { Constraint, Entity, Field, Group, GroupBounds, Model } from '../types';
+import type { Constraint, Entity, Field, Group, GroupBounds, Model, TableIndex } from '../types';
 
 export interface EditField {
   name: string;
   type: string;
-  role: 'pk' | 'fk' | null;
-  ref: string | null;
-  refField: string | null;
   title: string | null;
   description: string | null;
-  // Neither has an editable column in FieldGrid yet (constraints/indexes own
-  // this data going forward — see task-2-brief) — carried through untouched so
-  // a no-op Save can't destroy it. Same passthrough reasoning as `title`.
+  // Neither has an editable column in FieldGrid yet — carried through
+  // untouched so a no-op Save can't destroy it. Same passthrough reasoning as
+  // `title`.
   nullable: boolean;
   default: string | null;
+}
+
+export interface EditEntity {
+  id: string;
+  label: string;
+  group: string;
+  description: string | null;
+  fields: EditField[];
+  // Verbatim — see the header comment. The editor cannot yet create or edit a
+  // constraint/index; it only ever passes a table's own current ones through.
+  constraints: Constraint[];
+  indexes: TableIndex[];
 }
 
 export type ModelEdit =
   | { kind: 'setMeta'; title: string; description: string }
   | { kind: 'upsertGroup'; group: { id: string; label: string; parent: string | null } }
   | { kind: 'deleteGroup'; id: string }
-  | { kind: 'upsertEntity'; entity: { id: string; label: string; group: string; description: string | null; fields: EditField[] } }
+  | { kind: 'upsertEntity'; entity: EditEntity }
   | { kind: 'deleteEntity'; id: string };
 
 // A brand-new group's box: parked to the right of everything laid out so far.
@@ -55,14 +74,17 @@ export function applyModelEdit(model: Model, edit: ModelEdit): Model {
   }
 }
 
-// Every {entityId, field} elsewhere in the model whose field references
-// `entityId` — delete-confirm copy ("N fields reference this table") reads this.
-// Matches on `ref` alone (not `role === 'fk'`) because that's what deleteEntity
-// itself clears; a field can't dangle a ref to a deleted entity regardless of
-// whether its role was correctly tagged 'fk'.
+// Every {entityId, field} elsewhere in the model with an fk CONSTRAINT
+// pointing at `entityId` — delete-confirm copy ("N fields reference this
+// table") reads this. Constraints are the source of truth for what
+// references what now (see derive-relationships.ts); `field` is the
+// constraint's own columns, joined, so a composite fk still reads as one row
+// rather than being silently truncated to its first column.
 export function fkRefsTo(model: Model, entityId: string): { entityId: string; field: string }[] {
   const refs: { entityId: string; field: string }[] = [];
-  for (const e of model.entities) for (const f of e.fields) if (f.ref === entityId) refs.push({ entityId: e.id, field: f.name });
+  for (const e of model.entities)
+    for (const c of e.constraints)
+      if (c.kind === 'fk' && c.refTable === entityId) refs.push({ entityId: e.id, field: c.columns.join(', ') });
   return refs;
 }
 
@@ -112,44 +134,34 @@ function deleteGroup(model: Model, id: string): Model {
   };
 }
 
-// Duplicate names, and fk rows that can never resolve, are rejected up front
-// rather than silently producing an unresolvable field or relationship later.
-// `upsertId`'s own (about-to-be-saved) field list stands in for `entityById`
-// when a field self-references the entity being upserted (e.g. a fresh `users`
-// row with a `manager_id` fk pointing at its own not-yet-existing `id`).
-function validateEditFields(model: Model, upsertId: string, fields: EditField[]): void {
+// Duplicate names are rejected up front rather than silently producing an
+// unresolvable field later. Key/reference validation is gone along with
+// EditField's role/ref/refField — the field grid can't author a constraint, so
+// there's nothing here to validate; see the module header comment.
+function validateEditFields(fields: EditField[]): void {
   const seen = new Set<string>();
   for (const f of fields) {
     if (seen.has(f.name)) throw new Error(`Duplicate field name "${f.name}".`);
     seen.add(f.name);
-
-    if (f.role !== 'fk') continue;
-    if (!f.ref) throw new Error(`Field "${f.name}" has role "fk" but no "ref".`);
-    const targetFields = f.ref === upsertId ? fields : model.entityById.get(f.ref)?.fields;
-    if (!targetFields) throw new Error(`Field "${f.name}" references unknown entity "${f.ref}".`);
-    const refField = f.refField ?? 'id';
-    if (!targetFields.some((tf) => tf.name === refField))
-      throw new Error(`Field "${f.name}" references unknown field "${f.ref}.${refField}".`);
   }
 }
 
-function upsertEntity(
-  model: Model,
-  e: { id: string; label: string; group: string; description: string | null; fields: EditField[] },
-): Model {
+function upsertEntity(model: Model, e: EditEntity): Model {
   if (!model.groups.some((g) => g.id === e.group)) throw new Error(`Unknown group "${e.group}".`);
-  validateEditFields(model, e.id, e.fields);
+  validateEditFields(e.fields);
 
   // The editor form has no "title" input, but EditField still carries title
   // through as an untouched passthrough (table-modal's toEditField reads it in,
   // FieldGrid never exposes it as an editable column) — so a no-op Save must
   // not destroy titles the file already had. See EditField's own field comment.
+  // role/ref/refField are gone from EditField (constraints now own that data —
+  // see the module header comment); the resulting Field carries neutral nulls.
   const fields: Field[] = e.fields.map((f) => ({
     name: f.name,
     type: f.type,
-    role: f.role,
-    ref: f.ref,
-    refField: f.refField,
+    role: null,
+    ref: null,
+    refField: null,
     title: f.title,
     description: f.description,
     nullable: f.nullable,
@@ -158,23 +170,14 @@ function upsertEntity(
   const existing = model.entityById.get(e.id);
   let entity: Entity;
   if (existing) {
-    // The editor doesn't expose constraint editing yet (EditField only carries
-    // legacy role/ref/refField — Task 5/6 add real constraint editing). Only
-    // the pk/fk constraints are re-derived from the CURRENT fields on every
-    // save (badges/edges read constraints, not fields, since Task 3, so an
-    // added/removed/renamed pk or fk field must still take effect); unique,
-    // check, and every index are the schema's own data — the role/ref-only
-    // editor can't express them yet, so a no-op field save must not silently
-    // drop a composite unique constraint, a check constraint, or an index.
-    const constraints = regeneratePkFkConstraints(e.fields, existing.constraints);
     entity = measureEntity({
       ...existing,
       label: e.label,
       group: e.group,
       description: e.description,
       fields,
-      constraints,
-      indexes: existing.indexes,
+      constraints: e.constraints,
+      indexes: e.indexes,
     });
   } else {
     const box = model._groupBounds.find((b) => b.id === e.group);
@@ -186,8 +189,8 @@ function upsertEntity(
       group: e.group,
       description: e.description,
       fields,
-      constraints: synthesizeConstraintsFromFields(e.fields),
-      indexes: [],
+      constraints: e.constraints,
+      indexes: e.indexes,
       x,
       y,
       _w: 0,
@@ -197,77 +200,6 @@ function upsertEntity(
 
   const entities = existing ? model.entities.map((x) => (x.id === e.id ? entity : x)) : [...model.entities, entity];
   return { ...model, entities };
-}
-
-// Mirrors load-model's synthesizeLegacyConstraints: one pk constraint from every
-// role:'pk' field (declaration order), one fk constraint per field carrying a
-// ref (regardless of role — a shared-primary-key reference is role 'pk' AND a
-// ref). Kept as a small local copy rather than importing load-model's private
-// helper, since EditField and the raw-JSON field shape it synthesises from
-// aren't the same type. Only used for a brand-new entity, which has no prior
-// constraints to preserve or reuse ids from.
-function synthesizeConstraintsFromFields(fields: EditField[]): Constraint[] {
-  const out: Constraint[] = [];
-  const pkCols = fields.filter((f) => f.role === 'pk').map((f) => f.name);
-  let n = 1;
-  if (pkCols.length) out.push({ id: 'c' + n++, kind: 'pk', name: null, columns: pkCols });
-  for (const f of fields) {
-    if (!f.ref) continue;
-    out.push({
-      id: 'c' + n++, kind: 'fk', name: null, columns: [f.name],
-      refTable: f.ref, refColumns: [f.refField ?? 'id'], onDelete: null, onUpdate: null,
-    });
-  }
-  return out;
-}
-
-// For an EXISTING entity: keep its `unique`/`check` constraints exactly as
-// stored (the role/ref-only editor can't express or edit them — see the call
-// site), and re-derive ONLY `pk`/`fk` from the current fields, the same rule
-// synthesizeConstraintsFromFields above uses for a new entity. Ids are reused
-// whenever the "same" constraint still exists — the pk constraint's id always
-// carries over (there's only ever one), and an fk constraint's id carries over
-// when a field with that same name still has a ref — so an edit that doesn't
-// touch a given pk/fk field reproduces the identical constraint id, and
-// therefore the identical derived relationship id (`rel:<entity>:<constraintId>`,
-// see derive-relationships.ts): no edge churn on an unrelated save.
-function regeneratePkFkConstraints(fields: EditField[], existing: Constraint[]): Constraint[] {
-  const preserved = existing.filter((c) => c.kind === 'unique' || c.kind === 'check');
-  const takenIds = new Set(existing.map((c) => c.id));
-  const prevPk = existing.find((c) => c.kind === 'pk');
-  const prevFkByColumn = new Map(
-    existing.filter((c) => c.kind === 'fk').map((c) => [c.columns[0], c] as const),
-  );
-
-  function freshId(): string {
-    let n = 1;
-    while (takenIds.has('c' + n)) n++;
-    const id = 'c' + n;
-    takenIds.add(id);
-    return id;
-  }
-
-  const out: Constraint[] = [...preserved];
-
-  const pkCols = fields.filter((f) => f.role === 'pk').map((f) => f.name);
-  if (pkCols.length) out.push({ id: prevPk ? prevPk.id : freshId(), kind: 'pk', name: prevPk?.name ?? null, columns: pkCols });
-
-  for (const f of fields) {
-    if (!f.ref) continue;
-    const prevFk = prevFkByColumn.get(f.name);
-    out.push({
-      id: prevFk ? prevFk.id : freshId(),
-      kind: 'fk',
-      name: prevFk?.name ?? null,
-      columns: [f.name],
-      refTable: f.ref,
-      refColumns: [f.refField ?? 'id'],
-      onDelete: prevFk?.onDelete ?? null,
-      onUpdate: prevFk?.onUpdate ?? null,
-    });
-  }
-
-  return out;
 }
 
 function deleteEntity(model: Model, id: string): Model {

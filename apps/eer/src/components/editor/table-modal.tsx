@@ -11,7 +11,7 @@ import { useState } from 'react';
 
 import { entityColor } from '../../engine/colors/entity-color';
 import { applyModelEdit as tryApplyModelEdit, fkRefsTo, type EditField } from '../../engine/model/apply-model-edit';
-import type { Entity, Field, Model } from '../../engine/model/types';
+import type { Constraint, Entity, Field, Model } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
 import { Modal } from '../modal';
@@ -31,14 +31,14 @@ function slugify(name: string): string {
 
 // `title` has no editable column in FieldGrid (the grid's "note" column is
 // `description`) — it's carried through untouched so a no-op Save can't
-// destroy it (see apply-model-edit's EditField and upsertEntity).
+// destroy it (see apply-model-edit's EditField and upsertEntity). role/ref/
+// refField are gone: the field grid can't edit keys any more (see its own
+// header comment) — constraints are what own that data now, passed through
+// separately by `save` below, verbatim.
 function toEditField(f: Field): EditField {
   return {
     name: f.name,
     type: f.type,
-    role: f.role,
-    ref: f.ref,
-    refField: f.refField,
     title: f.title,
     description: f.description ?? '',
     nullable: f.nullable,
@@ -49,21 +49,16 @@ function toEditField(f: Field): EditField {
 const DEFAULT_PK: EditField = {
   name: 'id',
   type: 'serial',
-  role: 'pk',
-  ref: null,
-  refField: null,
   title: null,
   description: null,
   nullable: true,
   default: null,
 };
 
-// A field with an fk role but no ref is caught here with a nicer message than
-// the engine's — engine validation is still the backstop for anything this
-// misses. refField is deliberately NOT required: a null refField defaults to
-// "id" (apply-model-edit's own validateEditFields does `f.refField ?? 'id'`),
-// and real seed data relies on that default — requiring it here would block
-// Save on perfectly valid, already-loaded fk fields.
+// A brand-new table's default primary key — the one constraint the editor
+// still authors itself, since a fresh table needs SOME key to exist at all.
+const DEFAULT_PK_CONSTRAINT: Constraint = { id: 'c1', kind: 'pk', name: null, columns: ['id'] };
+
 function validateDraft(fields: EditField[]): string | null {
   const seen = new Set<string>();
   for (const f of fields) {
@@ -71,7 +66,6 @@ function validateDraft(fields: EditField[]): string | null {
     if (!name) return 'Every field needs a name.';
     if (seen.has(name)) return `Duplicate field name "${name}".`;
     seen.add(name);
-    if (f.role === 'fk' && !f.ref) return `Field "${name || '(unnamed)'}" needs a reference table.`;
   }
   return null;
 }
@@ -139,19 +133,18 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
         fields: fields.map((f) => ({
           name: f.name.trim(),
           type: f.type.trim(),
-          role: f.role,
-          // NOT stripped by role here — a role:'pk' (or null) field can
-          // legitimately carry a `ref` (e.g. the seed's outbox.event_id: a
-          // shared-pk identifying reference). FieldGrid's setRole already
-          // clears ref/refField the moment a USER actively moves a row's role
-          // away from 'fk' — that's the only place this should ever happen.
-          ref: f.ref,
-          refField: f.refField,
           title: f.title,
           description: f.description && f.description.trim() ? f.description.trim() : null,
           nullable: f.nullable,
           default: f.default,
         })),
+        // Verbatim passthrough — the field grid can't author or edit a
+        // constraint yet (see field-grid.tsx's header comment), so a Save must
+        // never re-derive keys from fields: an existing table keeps exactly
+        // what it already had; a brand-new one gets a default `id` pk and
+        // nothing else.
+        constraints: isEdit ? existing!.constraints : [DEFAULT_PK_CONSTRAINT],
+        indexes: isEdit ? existing!.indexes : [],
       },
     };
     actions.applyModelEdit(edit);
@@ -221,7 +214,7 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
 
       <div className={label}>
         <span>Fields</span>
-        <FieldGrid model={model} ownId={entityId} fields={fields} onChange={setFields} />
+        <FieldGrid fields={fields} onChange={setFields} />
       </div>
 
       <div className="flex flex-col gap-2 pt-2">

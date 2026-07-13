@@ -242,17 +242,22 @@ describe('loadModel — relationships derive from constraints', () => {
 
   // Pinned against the real bundled seed model: every one of its 39 legacy
   // fk-role/ref fields synthesises an fk constraint (Task 2), and every
-  // constraint now derives its own edge — including the 3 that used to be
-  // hand-authored as kind:'m2m' (all 3 of the seed's m2m rels cover a pair a
-  // real fk field also covers, so all 3 are dropped in favour of the derived
-  // edge; see derive-relationships.ts). 39 constraints - 0 unresolvable = 40
-  // (item_type_fields also carries a composite-looking pair via two separate
-  // single-column fk fields, each deriving its own edge).
-  it('derives exactly one edge per fk constraint for the real seed model (40, all kind fk)', () => {
+  // constraint now derives its own edge — including the 3 that are hand-
+  // authored as kind:'m2m' (all 3 of the seed's m2m rels cover a pair a real
+  // fk field also covers). The derived edge's id/shape always wins over its
+  // authored twin — no separate 'e-...' authored entry survives alongside it
+  // — but the authored data merges ONTO the derived edge rather than being
+  // discarded: those 3 keep their 'm2m' kind (rendered dashed) instead of
+  // being flattened to a plain solid 'fk' (see derive-relationships.ts).
+  // 39 constraints - 0 unresolvable = 40 (item_type_fields also carries a
+  // composite-looking pair via two separate single-column fk fields, each
+  // deriving its own edge).
+  it('derives exactly one edge per fk constraint for the real seed model (40; 3 keep their authored m2m kind)', () => {
     const { model, errors } = loadModel(seedRaw);
     expect(errors).toEqual([]);
     expect(model!.relationships).toHaveLength(40);
-    expect(model!.relationships.every((r) => r.kind === 'fk')).toBe(true);
+    expect(model!.relationships.filter((r) => r.kind === 'fk')).toHaveLength(37);
+    expect(model!.relationships.filter((r) => r.kind === 'm2m')).toHaveLength(3);
 
     const ids = new Set(model!.relationships.map((r) => r.id));
     for (const expected of [
