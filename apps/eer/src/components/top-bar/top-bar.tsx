@@ -2,6 +2,7 @@ import { groupColor } from '../../engine/colors/group-color';
 import type { RoutingMode } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi, useDiagramView } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
+import { useEditor } from '../editor';
 import { btn } from './button-class';
 import { Chip } from './chip';
 import { ModelMenu } from './model-menu';
@@ -28,6 +29,7 @@ export function TopBar({ onSelfCheck }: TopBarProps) {
   const view = useDiagramView();
   const ui = useDiagramUi();
   const actions = useDiagramActions();
+  const { openModal } = useEditor();
 
   const cycleRouting = () => {
     const order: RoutingMode[] = ['curved', 'avoid', 'ortho'];
@@ -52,6 +54,16 @@ export function TopBar({ onSelfCheck }: TopBarProps) {
       <div className="flex flex-wrap items-center gap-2">
         <ModelMenu />
         <SearchBox />
+
+        <button
+          type="button"
+          className={btn}
+          disabled={!model}
+          title="Add a zone, subgroup, or table"
+          onClick={() => openModal({ kind: 'add' })}
+        >
+          + Add
+        </button>
 
         {model && model.groups.some((g) => !g.parent) && (
           <ToggleGroup label="Zones">

@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getModel, listModels, saveModel } from '../../api/models-client';
@@ -9,7 +10,16 @@ import { DiagramProvider } from '../../state/diagram-provider';
 import type { DiagramUi } from '../../state/diagram-reducer';
 import { buildModel, twoZoneRaw } from '../../test/models';
 import { renderDiagram } from '../../test/render';
+import { EditorModals } from '../editor';
 import { ModelMenu } from './model-menu';
+
+// ModelMenu's New/Edit-model buttons call useEditor(), which throws without an
+// <EditorModals/> ancestor — renderDiagram alone only provides <DiagramProvider/>,
+// so tests here layer this small wrapper on top (per the task brief: "if the
+// editor context needs its own wrapper, add a small test helper").
+function renderWithEditor(ui: ReactNode, raw?: unknown) {
+  return renderDiagram(<EditorModals>{ui}</EditorModals>, raw);
+}
 
 vi.mock('../../api/models-client');
 
@@ -67,7 +77,7 @@ describe('ModelMenu', () => {
   });
 
   it('lists model titles from the API', async () => {
-    await renderDiagram(<ModelMenu />, twoZoneRaw());
+    await renderWithEditor(<ModelMenu />, twoZoneRaw());
     await flush();
 
     expect(screen.getByRole('option', { name: 'Model A' })).toBeInTheDocument();
@@ -76,7 +86,7 @@ describe('ModelMenu', () => {
 
   it('selecting a model fetches it and loads it into the provider', async () => {
     vi.mocked(getModel).mockResolvedValue(secondRaw());
-    await renderDiagram(
+    await renderWithEditor(
       <>
         <Probe />
         <ModelMenu />
@@ -104,7 +114,7 @@ describe('ModelMenu', () => {
       if (id === 'model-b') return modelB.promise;
       throw new Error(`unexpected id: ${id}`);
     });
-    const { actions } = await renderDiagram(
+    const { actions } = await renderWithEditor(
       <>
         <Probe />
         <ModelMenu />
@@ -136,7 +146,7 @@ describe('ModelMenu', () => {
 
   it('shows an inline confirm before discarding unsaved changes, and only loads on Discard', async () => {
     vi.mocked(getModel).mockResolvedValue(secondRaw());
-    const { actions } = await renderDiagram(
+    const { actions } = await renderWithEditor(
       <>
         <Probe />
         <ModelMenu />
@@ -172,7 +182,7 @@ describe('ModelMenu', () => {
 
   it('Save serializes the current model and marks it saved once the API confirms', async () => {
     vi.mocked(saveModel).mockResolvedValue(true);
-    const { actions } = await renderDiagram(
+    const { actions } = await renderWithEditor(
       <>
         <Probe />
         <ModelMenu />
@@ -194,7 +204,7 @@ describe('ModelMenu', () => {
   it('disables Save and never calls saveModel when no model id is loaded (e.g. the bundled default)', async () => {
     // renderDiagram's initial load() omits the modelId arg, exactly like loading
     // the bundled default model — ui.modelId stays null (see diagram-reducer LOAD).
-    await renderDiagram(
+    await renderWithEditor(
       <>
         <Probe />
         <ModelMenu />
@@ -215,7 +225,9 @@ describe('ModelMenu', () => {
     vi.mocked(listModels).mockResolvedValue(null);
     render(
       <DiagramProvider>
-        <ModelMenu />
+        <EditorModals>
+          <ModelMenu />
+        </EditorModals>
       </DiagramProvider>,
     );
     await flush();
