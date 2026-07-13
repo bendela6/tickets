@@ -1,11 +1,15 @@
 // Create/edit a table (entity) — name, group, description, a colour override
 // (edit mode only, same reasoning as GroupModal: a brand-new entity's id might
 // never be saved, so there's nothing yet to key a colour override to), the
-// field grid, and a guarded delete. Fields are a local EditField[] draft;
-// Save pre-validates then dispatches ONE upsertEntity for the whole entity —
+// field grid, the constraints editor, and a guarded delete. Fields AND
+// constraints are local drafts (EditField[] / Constraint[]); Save pre-
+// validates then dispatches ONE upsertEntity for the whole entity —
 // applyModelEdit's own validation is the backstop (duplicate names, dangling
-// fk refs, …), surfaced via ui.editError if this component's own checks miss
-// something the engine still rejects.
+// fk refs, unknown columns, fk arity, >1 pk, …), surfaced via ui.editError if
+// this component's own checks miss something the engine still rejects.
+// `indexes` has no editor yet (a later task) so it still passes through
+// verbatim — see the constraints comment on `save` below for why that
+// distinction matters.
 
 import { useState } from 'react';
 
@@ -16,6 +20,7 @@ import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../st
 import { cn } from '../../ui/cn';
 import { Modal } from '../modal';
 import { ColumnsGrid } from './columns-grid';
+import { ConstraintsEditor } from './constraints-editor';
 
 const field = cn('w-full rounded-md border border-gray-600 bg-gray-900 px-2 py-1', 'text-sm text-gray-50');
 const label = 'flex flex-col gap-1 text-xs text-gray-400';
@@ -33,8 +38,9 @@ function slugify(name: string): string {
 // `description`) — it's carried through untouched so a no-op Save can't
 // destroy it (see apply-model-edit's EditField and upsertEntity). role/ref/
 // refField are gone: the columns grid can't edit keys any more (see its own
-// header comment) — constraints are what own that data now, passed through
-// separately by `save` below, verbatim.
+// header comment) — constraints are what own that data now, edited
+// separately below by <ConstraintsEditor/> and dispatched from its own draft
+// state (not re-derived from fields).
 function toEditField(f: Column): EditField {
   return {
     name: f.name,
@@ -102,6 +108,7 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   const [group, setGroup] = useState(existing?.group ?? defaultGroup);
   const [description, setDescription] = useState(existing?.description ?? '');
   const [fields, setFields] = useState<EditField[]>(existing ? existing.columns.map(toEditField) : [DEFAULT_PK]);
+  const [constraints, setConstraints] = useState<Constraint[]>(existing ? existing.constraints : [DEFAULT_PK_CONSTRAINT]);
   const [localError, setLocalError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
@@ -138,12 +145,13 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
           nullable: f.nullable,
           default: f.default,
         })),
-        // Verbatim passthrough — the field grid can't author or edit a
-        // constraint yet (see columns-grid.tsx's header comment), so a Save must
-        // never re-derive keys from fields: an existing table keeps exactly
-        // what it already had; a brand-new one gets a default `id` pk and
-        // nothing else.
-        constraints: isEdit ? existing!.constraints : [DEFAULT_PK_CONSTRAINT],
+        // The draft state <ConstraintsEditor/> owns below — not re-derived
+        // from fields (see columns-grid.tsx's header comment for why that
+        // used to be dangerous).
+        constraints,
+        // Verbatim passthrough — the indexes editor is a later task, so a
+        // Save must never touch these: an existing table keeps exactly what
+        // it already had; a brand-new one has none yet.
         indexes: isEdit ? existing!.indexes : [],
       },
     };
@@ -215,6 +223,18 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
       <div className={label}>
         <span>Fields</span>
         <ColumnsGrid columns={fields} onChange={setFields} />
+      </div>
+
+      <div className={label}>
+        <span>Constraints</span>
+        <p className="text-2xs text-gray-400">A FOREIGN KEY is what draws an edge between two tables.</p>
+        <ConstraintsEditor
+          model={model}
+          ownId={entityId}
+          columns={fields.map((f) => f.name)}
+          constraints={constraints}
+          onChange={setConstraints}
+        />
       </div>
 
       <div className="flex flex-col gap-2 pt-2">
