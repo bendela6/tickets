@@ -165,7 +165,7 @@ describe('applyModelEdit', () => {
       expect(after.y).toBe(before.y);
       expect(after.label).toBe('Orders v2');
       expect(after.description).toBe('updated');
-      expect(after.fields).toHaveLength(4);
+      expect(after.columns).toHaveLength(4);
       expect(after._h).toBe(HEADER_H + 4 * ROW_H);
       expect(before._h).toBe(HEADER_H + 3 * ROW_H); // input untouched
     });
@@ -176,9 +176,13 @@ describe('applyModelEdit', () => {
       const m1 = buildModel(); // users ← orders.users_id (fk)
       const m2 = applyModelEdit(m1, { kind: 'deleteEntity', id: 'users' });
       expect(m2.entityById.has('users')).toBe(false);
-      const f = m2.entityById.get('orders')!.fields.find((x) => x.name === 'users_id')!;
-      expect(f.role).toBeNull();
-      expect(f.ref).toBeNull();
+      const orders = m2.entityById.get('orders')!;
+      // No Column carries role/ref any more (see types.ts) — the fk-ness of
+      // orders.users_id lives entirely in its constraint, so "cleared" means
+      // the constraint pointing at "users" is gone and the column's FK badge
+      // (columnRoles reads constraints) follows suit.
+      expect(orders.constraints.some((c) => c.kind === 'fk' && c.refTable === 'users')).toBe(false);
+      expect(columnRoles(orders).get('users_id')).toMatchObject({ fk: false });
       expect(m2.relationships.some((r) => r.source === 'users' || r.target === 'users')).toBe(false);
       expect(m1.entityById.has('users')).toBe(true); // input untouched
     });
@@ -495,7 +499,7 @@ describe('applyModelEdit', () => {
           indexes: [],
         },
       });
-      expect(renamed.entityById.get('users')!.fields.map((f) => f.name)).toEqual(['key', 'name']);
+      expect(renamed.entityById.get('users')!.columns.map((f) => f.name)).toEqual(['key', 'name']);
       expect(renamed.relationships.some((r) => r.target === 'orders' && r.targetField === 'users_id')).toBe(false);
       expect(renamed.relationships.some((r) => r.source === 'users' && r.sourceField === 'id')).toBe(false);
     });
@@ -568,8 +572,8 @@ describe('applyModelEdit', () => {
       expect(errors).toEqual([]);
       const edited = applyModelEdit(model!, { kind: 'setMeta', title: model!.meta.title ?? '', description: model!.meta.description ?? '' });
       for (const r of edited.relationships) {
-        expect(edited.entityById.get(r.source)?.fields.some((f) => f.name === r.sourceField)).toBe(true);
-        expect(edited.entityById.get(r.target)?.fields.some((f) => f.name === r.targetField)).toBe(true);
+        expect(edited.entityById.get(r.source)?.columns.some((f) => f.name === r.sourceField)).toBe(true);
+        expect(edited.entityById.get(r.target)?.columns.some((f) => f.name === r.targetField)).toBe(true);
       }
     });
 

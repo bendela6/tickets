@@ -11,7 +11,7 @@ import { useState } from 'react';
 
 import { entityColor } from '../../engine/colors/entity-color';
 import { applyModelEdit as tryApplyModelEdit, fkRefsTo, type EditField } from '../../engine/model/apply-model-edit';
-import type { Constraint, Entity, Field, Model } from '../../engine/model/types';
+import type { Column, Constraint, Entity, Model } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
 import { Modal } from '../modal';
@@ -35,7 +35,7 @@ function slugify(name: string): string {
 // refField are gone: the field grid can't edit keys any more (see its own
 // header comment) — constraints are what own that data now, passed through
 // separately by `save` below, verbatim.
-function toEditField(f: Field): EditField {
+function toEditField(f: Column): EditField {
   return {
     name: f.name,
     type: f.type,
@@ -101,7 +101,7 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   const [name, setName] = useState(existing?.label ?? '');
   const [group, setGroup] = useState(existing?.group ?? defaultGroup);
   const [description, setDescription] = useState(existing?.description ?? '');
-  const [fields, setFields] = useState<EditField[]>(existing ? existing.fields.map(toEditField) : [DEFAULT_PK]);
+  const [fields, setFields] = useState<EditField[]>(existing ? existing.columns.map(toEditField) : [DEFAULT_PK]);
   const [localError, setLocalError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 

@@ -1,30 +1,27 @@
 import { describe, expect, it } from 'vitest';
 
 import { CARD_MAX_W, CARD_MIN_W, HEADER_H, ROW_H } from '../metrics';
-import type { Entity, Field } from '../../model/types';
+import type { Column, Entity } from '../../model/types';
 import { measureEntity } from './measure-entity';
 
 // jsdom has no canvas, so text measuring falls back to 7px/char — assert bounds
 // and monotonicity, never exact pixel widths.
 
-const field = (name: string, type = 'int', role: Field['role'] = null): Field => ({
+const field = (name: string, type = 'int'): Column => ({
   name,
   type,
-  role,
-  ref: null,
-  refField: null,
   title: null,
   description: null,
   nullable: true,
   default: null,
 });
 
-const entity = (fields: Field[], label = 'e'): Entity => ({
+const entity = (columns: Column[], label = 'e'): Entity => ({
   id: 'e',
   label,
   group: 'g',
   description: null,
-  fields,
+  columns,
   constraints: [],
   indexes: [],
   x: 0,

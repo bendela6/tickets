@@ -1,6 +1,6 @@
 import { entityColor } from '../../engine/colors/entity-color';
 import { columnRoles } from '../../engine/model/column-roles';
-import type { Model } from '../../engine/model/types';
+import type { Entity, Model } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
 import { useEditor } from '../editor';
@@ -17,6 +17,21 @@ interface RelView {
   here: string;
   otherEntity: string;
   otherField: string;
+}
+
+// The column's fk-constraint target, if any: the column sits in some fk
+// constraint's `columns` at index i, and refers to that constraint's
+// `refColumns[i]` on `refTable`. Replaces the old per-field `ref`/`refField` —
+// there is no such data on a Column any more (see types.ts); constraints are
+// the only place a reference lives now (see column-roles.ts).
+function fkTarget(e: Entity, fieldName: string): { table: string; field: string } | null {
+  for (const c of e.constraints) {
+    if (c.kind !== 'fk') continue;
+    const i = c.columns.indexOf(fieldName);
+    if (i === -1) continue;
+    return { table: c.refTable, field: c.refColumns[i] ?? 'id' };
+  }
+  return null;
 }
 
 function relationshipsFor(model: Model, id: string): RelView[] {
@@ -57,7 +72,7 @@ export function EntityDetail({
         titleColor={color}
         sub={
           <>
-            {group?.label ?? e.group} · {e.fields.length} fields · {rels.length} relationships
+            {group?.label ?? e.group} · {e.columns.length} fields · {rels.length} relationships
           </>
         }
         description={e.description}
@@ -65,27 +80,28 @@ export function EntityDetail({
       />
 
       <div className="px-4 pb-5">
-        <Section title="Fields" count={e.fields.length} />
+        <Section title="Fields" count={e.columns.length} />
         <div className="flex flex-col">
-          {e.fields.map((f) => {
+          {e.columns.map((f) => {
             const note = f.description || f.title;
             const role = roles.get(f.name);
             const badge = role?.pk ? 'pk' : role?.fk ? 'fk' : null;
+            const fk = fkTarget(e, f.name);
             return (
               <div key={f.name} className="border-b border-gray-600/50 py-2 last:border-0">
                 <div className="flex items-center gap-2">
                   <RoleTag role={badge} />
                   <span className={cn('font-mono text-sm', { 'text-yellow-400': badge === 'pk', 'text-gray-50': badge !== 'pk' })}>{f.name}</span>
-                  {f.ref && (
+                  {fk && (
                     <button
                       type="button"
                       className="ml-1 rounded bg-gray-800 px-1 py-px font-mono text-2xs text-green-400 hover:bg-gray-700"
                       onClick={() => {
-                        actions.selectEntity(f.ref!);
-                        actions.centerOn(f.ref!);
+                        actions.selectEntity(fk.table);
+                        actions.centerOn(fk.table);
                       }}
                     >
-                      → {f.ref}.{f.refField ?? 'id'}
+                      → {fk.table}.{fk.field}
                     </button>
                   )}
                   <span className="ml-auto shrink-0 font-mono text-xs text-gray-400">{f.type}</span>

@@ -1,8 +1,17 @@
 // Cardinality of a relationship: taken verbatim when the JSON provides a valid
 // one, otherwise inferred from the endpoint roles. `fallback` marks the truly
 // ambiguous cases the loader should warn about.
+//
+// `Role` here is NOT the removed `Field.role` — the Column type carries no
+// role at all any more (see types.ts / column-roles.ts, which derive PK/FK
+// badges from constraints instead). This is purely load-model's own legacy
+// concept: the raw JSON's per-field `role` key, read directly off the file
+// (never stored on a Column) and passed in here just to infer an unauthored
+// relationship's cardinality the same way the old loader did.
 
-import type { Cardinality, Role } from '../types';
+import type { Cardinality } from '../types';
+
+export type Role = 'pk' | 'fk' | null;
 
 const CARDINALITIES: Cardinality[] = ['1-1', '1-n', 'n-1', 'n-m'];
 

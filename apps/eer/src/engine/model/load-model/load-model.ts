@@ -2,19 +2,18 @@
 // returns a normalized model plus errors (block rendering) and warnings (allow it).
 
 import { deriveRelationships } from '../derive-relationships';
-import { CARDINALITIES, inferCardinality } from '../infer-cardinality';
+import { CARDINALITIES, inferCardinality, type Role } from '../infer-cardinality';
 import type {
+  Column,
   Constraint,
   EdgeKind,
   Entity,
-  Field,
   FkAction,
   Group,
   LineStyle,
   LoadResult,
   Model,
   Relationship,
-  Role,
   RoutingMode,
   TableIndex,
 } from '../types';
@@ -53,13 +52,15 @@ function normalizeConstraint(c: any, i: number, entityId: string, errors: string
 
 // Legacy files describe keys with per-field roles. One PK from every role:'pk'
 // field, and one FK per field carrying a ref — regardless of role, because a
-// shared-primary-key reference is role 'pk' AND a ref.
-function synthesizeLegacyConstraints(fields: Field[]): Constraint[] {
+// shared-primary-key reference is role 'pk' AND a ref. Reads the RAW json
+// fields (role/ref/refField never make it onto the normalized Column — see
+// the module header note by the entities loop below).
+function synthesizeLegacyConstraints(rawFields: any[]): Constraint[] {
   const out: Constraint[] = [];
-  const pkCols = fields.filter((f) => f.role === 'pk').map((f) => f.name);
+  const pkCols = rawFields.filter((f) => f.role === 'pk').map((f) => f.name);
   let n = 1;
   if (pkCols.length) out.push({ id: 'c' + n++, kind: 'pk', name: null, columns: pkCols });
-  for (const f of fields) {
+  for (const f of rawFields) {
     if (!f.ref) continue;
     out.push({
       id: 'c' + n++, kind: 'fk', name: null, columns: [f.name],
@@ -112,36 +113,48 @@ export function loadModel(raw: unknown): LoadResult {
 
   // ---- entities ----
   const entityById = new Map<string, Entity>();
+  // Legacy per-field `role`/`ref`/`refField` are read straight off the raw
+  // JSON below (Task 2's synthesizeLegacyConstraints still needs them to
+  // synthesize pk/fk constraints for old-shaped files) but are never stored on
+  // the normalized Column any more — Column has no such fields (see types.ts).
+  // `legacyRoles` keeps just enough of that raw data around, per entity/field,
+  // so the relationships pass further down can still infer an unauthored
+  // relationship's cardinality exactly as before; `legacyRefs` keeps enough to
+  // run the same dangling-ref warnings the old per-field loop used to.
+  const legacyRoles = new Map<string, Map<string, Role>>();
+  const legacyRefs: { entityId: string; fieldName: string; ref: string; refField: string | null }[] = [];
   const normEntities: Entity[] = (entities || []).map((e: any) => {
     if (!e.id) errors.push(`entities[?] is missing "id".`);
     else if (entityById.has(e.id)) errors.push(`Duplicate entity id "${e.id}".`);
     if (e.group && !groupIds.has(e.group)) errors.push(`Entity "${e.id}" references unknown group "${e.group}".`);
     if (!e.group) errors.push(`Entity "${e.id}" is missing "group".`);
 
+    const rawFields: any[] = Array.isArray(e.fields) ? e.fields : [];
     const seen = new Set<string>();
-    const fields: Field[] = (Array.isArray(e.fields) ? e.fields : []).map((f: any, fi: number) => {
+    const roles = new Map<string, Role>();
+    const columns: Column[] = rawFields.map((f: any, fi: number) => {
       if (!f.name) errors.push(`Entity "${e.id}" field[${fi}] is missing "name".`);
       else if (seen.has(f.name)) errors.push(`Entity "${e.id}" has duplicate field "${f.name}".`);
       else seen.add(f.name);
       const role: Role = f.role === 'pk' || f.role === 'fk' ? f.role : null;
+      roles.set(f.name, role);
+      if (f.ref) legacyRefs.push({ entityId: e.id, fieldName: f.name, ref: f.ref, refField: f.refField || null });
       return {
         name: f.name,
         type: f.type || '',
-        role,
-        ref: f.ref || null,
-        refField: f.refField || null,
         title: f.title || null,
         description: f.description || null,
         nullable: f.nullable !== false,
         default: typeof f.default === 'string' ? f.default : null,
       };
     });
-    if (fields.length === 0) errors.push(`Entity "${e.id}" has no fields.`);
+    legacyRoles.set(e.id, roles);
+    if (columns.length === 0) errors.push(`Entity "${e.id}" has no fields.`);
 
     const rawConstraints = Array.isArray(e.constraints) ? e.constraints : null;
     const constraints: Constraint[] = rawConstraints
       ? rawConstraints.map((c: any, ci: number) => normalizeConstraint(c, ci, e.id, errors))
-      : synthesizeLegacyConstraints(fields);
+      : synthesizeLegacyConstraints(rawFields);
     const indexes: TableIndex[] = (Array.isArray(e.indexes) ? e.indexes : []).map((ix: any, ii: number) => ({
       id: typeof ix.id === 'string' && ix.id ? ix.id : 'i' + (ii + 1),
       name: typeof ix.name === 'string' ? ix.name : '',
@@ -154,7 +167,7 @@ export function loadModel(raw: unknown): LoadResult {
       label: e.label || e.id,
       group: e.group,
       description: e.description || null,
-      fields,
+      columns,
       constraints,
       indexes,
       x: 0,
@@ -166,14 +179,11 @@ export function loadModel(raw: unknown): LoadResult {
     return ne;
   });
 
-  for (const e of normEntities) {
-    for (const f of e.fields) {
-      if (!f.ref) continue;
-      const target = entityById.get(f.ref);
-      if (!target) warnings.push(`Field "${e.id}.${f.name}" ref points at unknown entity "${f.ref}".`);
-      else if (f.refField && !target.fields.some((tf) => tf.name === f.refField))
-        warnings.push(`Field "${e.id}.${f.name}" ref "${f.ref}.${f.refField}" — no such field.`);
-    }
+  for (const lr of legacyRefs) {
+    const target = entityById.get(lr.ref);
+    if (!target) warnings.push(`Field "${lr.entityId}.${lr.fieldName}" ref points at unknown entity "${lr.ref}".`);
+    else if (lr.refField && !target.columns.some((tf) => tf.name === lr.refField))
+      warnings.push(`Field "${lr.entityId}.${lr.fieldName}" ref "${lr.ref}.${lr.refField}" — no such field.`);
   }
 
   // ---- kinds ----
@@ -201,14 +211,14 @@ export function loadModel(raw: unknown): LoadResult {
     let srcRole: Role = null;
     let tgtRole: Role = null;
     if (src) {
-      const sf = src.fields.find((f) => f.name === srcField);
+      const sf = src.columns.find((f) => f.name === srcField);
       if (!sf) errors.push(`Relationship "${id}" — source field "${srcEntity}.${srcField}" does not exist.`);
-      else srcRole = sf.role;
+      else srcRole = legacyRoles.get(srcEntity)?.get(srcField) ?? null;
     }
     if (tgt) {
-      const tf = tgt.fields.find((f) => f.name === tgtField);
+      const tf = tgt.columns.find((f) => f.name === tgtField);
       if (!tf) errors.push(`Relationship "${id}" — target field "${tgtEntity}.${tgtField}" does not exist.`);
-      else tgtRole = tf.role;
+      else tgtRole = legacyRoles.get(tgtEntity)?.get(tgtField) ?? null;
     }
 
     if (rel.cardinality && !CARDINALITIES.includes(rel.cardinality))

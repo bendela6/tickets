@@ -63,7 +63,7 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
         <span className="font-mono text-base font-medium text-gray-50">{e.label}</span>
       </div>
       <div className="py-1">
-        {e.fields.map((f, i) => (
+        {e.columns.map((f, i) => (
           <FieldRow
             key={f.name}
             entity={e}

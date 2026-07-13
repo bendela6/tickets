@@ -70,7 +70,7 @@ export function deriveConstraintEdges(model: Model): Relationship[] {
       if (c.kind !== 'fk') continue;
       const target = model.entityById.get(c.refTable);
       if (!target) continue;
-      const names = new Set(target.fields.map((f) => f.name));
+      const names = new Set(target.columns.map((f) => f.name));
       if (!c.refColumns.length || !c.columns.length) continue;
       if (!c.refColumns.every((n) => names.has(n))) continue;
       derived.push({

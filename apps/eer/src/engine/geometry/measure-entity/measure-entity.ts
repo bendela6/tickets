@@ -19,7 +19,7 @@ export function measureEntity(e: Entity): Entity {
   const label = e.label || e.id;
   const roles = columnRoles(e);
   let w = measureText(label, '500 13px ' + MONO) + 32;
-  for (const f of e.fields) {
+  for (const f of e.columns) {
     const nameW = measureText(f.name, '500 12px ' + MONO);
     const typeW = measureText(f.type || '', '400 11px ' + MONO);
     const role = roles.get(f.name);
@@ -28,6 +28,6 @@ export function measureEntity(e: Entity): Entity {
     if (rowW > w) w = rowW;
   }
   e._w = Math.max(CARD_MIN_W, Math.min(CARD_MAX_W, Math.round(w)));
-  e._h = HEADER_H + e.fields.length * ROW_H;
+  e._h = HEADER_H + e.columns.length * ROW_H;
   return e;
 }

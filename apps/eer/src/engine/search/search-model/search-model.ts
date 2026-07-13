@@ -12,7 +12,7 @@ export function searchModel(model: Model, q: string): SearchResult[] {
       entityLabel: e.label,
       search: (e.label + ' ' + e.id).toLowerCase(),
     });
-    for (const f of e.fields) {
+    for (const f of e.columns) {
       idx.push({
         kind: 'field',
         label: f.name,

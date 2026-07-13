@@ -6,10 +6,10 @@ import { columnRoles } from './column-roles';
 const entity = (constraints: Entity['constraints']): Entity =>
   ({
     id: 't', label: 't', group: 'z', description: null,
-    fields: [
-      { name: 'a', type: 'int', role: null, ref: null, refField: null, title: null, description: null, nullable: false, default: null },
-      { name: 'b', type: 'int', role: null, ref: null, refField: null, title: null, description: null, nullable: false, default: null },
-      { name: 'c', type: 'int', role: null, ref: null, refField: null, title: null, description: null, nullable: true, default: null },
+    columns: [
+      { name: 'a', type: 'int', title: null, description: null, nullable: false, default: null },
+      { name: 'b', type: 'int', title: null, description: null, nullable: false, default: null },
+      { name: 'c', type: 'int', title: null, description: null, nullable: true, default: null },
     ],
     constraints, indexes: [], x: 0, y: 0, _w: 0, _h: 0,
   }) as Entity;

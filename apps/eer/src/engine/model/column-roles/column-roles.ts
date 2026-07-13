@@ -12,7 +12,7 @@ export interface ColumnRole {
 
 export function columnRoles(entity: Entity): Map<string, ColumnRole> {
   const roles = new Map<string, ColumnRole>();
-  for (const f of entity.fields) roles.set(f.name, { pk: false, fk: false, unique: false });
+  for (const f of entity.columns) roles.set(f.name, { pk: false, fk: false, unique: false });
 
   for (const c of entity.constraints) {
     if (c.kind === 'pk') {

@@ -4,5 +4,5 @@
 import type { Entity } from '../../model/types';
 
 export function fieldIndex(e: Entity, name: string): number {
-  return e.fields.findIndex((f) => f.name === name);
+  return e.columns.findIndex((f) => f.name === name);
 }

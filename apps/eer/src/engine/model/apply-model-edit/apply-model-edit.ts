@@ -19,7 +19,7 @@
 import { measureEntity } from '../../geometry/measure-entity';
 import { LAYOUT_MARGIN } from '../../geometry/metrics';
 import { deriveRelationships } from '../derive-relationships';
-import type { Constraint, Entity, Field, Group, GroupBounds, Model, TableIndex } from '../types';
+import type { Column, Constraint, Entity, Group, GroupBounds, Model, TableIndex } from '../types';
 
 export interface EditField {
   name: string;
@@ -154,14 +154,12 @@ function upsertEntity(model: Model, e: EditEntity): Model {
   // through as an untouched passthrough (table-modal's toEditField reads it in,
   // FieldGrid never exposes it as an editable column) — so a no-op Save must
   // not destroy titles the file already had. See EditField's own field comment.
-  // role/ref/refField are gone from EditField (constraints now own that data —
-  // see the module header comment); the resulting Field carries neutral nulls.
-  const fields: Field[] = e.fields.map((f) => ({
+  // EditField has no role/ref/refField to carry — constraints own that data
+  // now (see the module header comment); the resulting Column is just the
+  // plain name/type/title/description/nullable/default shape.
+  const columns: Column[] = e.fields.map((f) => ({
     name: f.name,
     type: f.type,
-    role: null,
-    ref: null,
-    refField: null,
     title: f.title,
     description: f.description,
     nullable: f.nullable,
@@ -175,7 +173,7 @@ function upsertEntity(model: Model, e: EditEntity): Model {
       label: e.label,
       group: e.group,
       description: e.description,
-      fields,
+      columns,
       constraints: e.constraints,
       indexes: e.indexes,
     });
@@ -188,7 +186,7 @@ function upsertEntity(model: Model, e: EditEntity): Model {
       label: e.label,
       group: e.group,
       description: e.description,
-      fields,
+      columns,
       constraints: e.constraints,
       indexes: e.indexes,
       x,
@@ -203,28 +201,25 @@ function upsertEntity(model: Model, e: EditEntity): Model {
 }
 
 // Deleting a table must scrub every OTHER table's fk CONSTRAINT pointing at it
-// — not just the legacy field.ref — or the constraint survives (fkRefsTo,
-// serialize-model, and the FK badge in columnRoles all read constraints, not
-// field.ref, now). A surviving stale fk constraint desyncs fkRefsTo (which
-// reports "N references" honestly) from what delete actually clears, gets
-// written back out to the file on save, and — because upsertEntity passes
-// constraints through verbatim — resurrects a phantom edge the moment a table
-// with the deleted id is re-created. Only fk constraints whose refTable is the
-// deleted entity are dropped; indexes/unique/check/pk are untouched.
+// — constraints are the only place a reference lives now (Column carries no
+// ref of its own; see types.ts) — or the constraint survives (fkRefsTo,
+// serialize-model, and the FK badge in columnRoles all read constraints).
+// A surviving stale fk constraint desyncs fkRefsTo (which reports "N
+// references" honestly) from what delete actually clears, gets written back
+// out to the file on save, and — because upsertEntity passes constraints
+// through verbatim — resurrects a phantom edge the moment a table with the
+// deleted id is re-created. Only fk constraints whose refTable is the deleted
+// entity are dropped; indexes/unique/check/pk (and columns) are untouched.
 function deleteEntity(model: Model, id: string): Model {
   if (!model.entityById.has(id)) throw new Error(`Unknown entity "${id}".`);
   const entities = model.entities
     .filter((e) => e.id !== id)
     .map((e) => {
-      const hasStaleRef = e.fields.some((f) => f.ref === id);
       const hasStaleFk = e.constraints.some((c) => c.kind === 'fk' && c.refTable === id);
-      if (!hasStaleRef && !hasStaleFk) return e;
+      if (!hasStaleFk) return e;
       return {
         ...e,
-        fields: hasStaleRef
-          ? e.fields.map((f) => (f.ref === id ? { ...f, role: null, ref: null, refField: null } : f))
-          : e.fields,
-        constraints: hasStaleFk ? e.constraints.filter((c) => !(c.kind === 'fk' && c.refTable === id)) : e.constraints,
+        constraints: e.constraints.filter((c) => !(c.kind === 'fk' && c.refTable === id)),
       };
     });
   return { ...model, entities };

@@ -82,7 +82,7 @@ export function GroupDetail({
               </span>
             )}
             <span className={cn('shrink-0 text-xs text-gray-400', { 'ml-auto': e.group === id })}>
-              {e.fields.length} fields
+              {e.columns.length} fields
             </span>
           </button>
         ))}

@@ -81,7 +81,7 @@ function checkPortPairs({ model, root }: RunChecksArgs): CheckResult {
   let fields = 0;
   for (const e of model.entities) {
     const card = root.querySelector(`[data-card][data-entity="${cssEsc(e.id)}"]`)!;
-    for (const f of e.fields) {
+    for (const f of e.columns) {
       fields++;
       const l = card.querySelectorAll(`[data-side="L"][data-field="${cssEsc(f.name)}"]`).length;
       const r = card.querySelectorAll(`[data-side="R"][data-field="${cssEsc(f.name)}"]`).length;
@@ -101,7 +101,7 @@ function checkNoReflow({ model, root }: RunChecksArgs): CheckResult {
   const sampleWorld = model.entities.map((e) => portWorldPos(e, 0, 'R'));
 
   const first = model.entities[0]!;
-  const firstField = first.fields[0]!;
+  const firstField = first.columns[0]!;
   const samplePort = root.querySelector(
     `[data-side="R"][data-entity="${cssEsc(first.id)}"][data-field="${cssEsc(firstField.name)}"]`,
   );

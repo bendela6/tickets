@@ -8,7 +8,7 @@ const e: Entity = {
   label: 'e',
   group: 'g',
   description: null,
-  fields: [],
+  columns: [],
   constraints: [],
   indexes: [],
   x: 40,
