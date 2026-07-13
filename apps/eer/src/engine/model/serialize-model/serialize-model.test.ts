@@ -215,6 +215,108 @@ describe('serializeModel', () => {
   // whether its endpoint pair is actually backed by a real fk constraint
   // (see `deriveConstraintEdges`) tells them apart. Omitting it on save would
   // erase it — there is no constraint left to regenerate it from.
+  // CRITICAL, reviewer-found (round 2): a prior version wrote
+  // `cardinality: r.cardinality` unconditionally, even when it was INFERRED
+  // (never explicitly authored in the file). On reload, an explicit
+  // `cardinality` key makes load-model set cardinalityInferred: false, and
+  // derive-relationships then PINS that stale value over the freshly re-
+  // derived one — one Save permanently freezes cardinality. Measured against
+  // the real seed: 18 of 41 relationships flipped cardinalityInferred
+  // true->false after a single roundtrip. The fix only writes `cardinality`
+  // when cardinalityInferred is explicitly false (the file declared it).
+  it('cardinalityInferred survives a save -> load roundtrip unchanged — no true->false flips', () => {
+    const { model: m1, errors: e1 } = loadModel(seedRaw);
+    expect(e1).toEqual([]);
+    const inferredBefore = m1!.relationships.filter((r) => r.cardinalityInferred).length;
+    expect(inferredBefore).toBeGreaterThan(0);
+
+    const raw2 = serializeModel(m1!, m1!.colors);
+    const { model: m2, errors: e2 } = loadModel(raw2);
+    expect(e2).toEqual([]);
+    const inferredAfter = m2!.relationships.filter((r) => r.cardinalityInferred).length;
+
+    expect(inferredAfter).toBe(inferredBefore);
+  });
+
+  // Same bug, isolated to the concrete case the reviewer measured: adding a
+  // UNIQUE constraint covering a labelled edge's fk column(s) must re-derive
+  // that edge's cardinality to '1-1' — even after the model has already been
+  // through one save/reload cycle. Before the fix, the first roundtrip
+  // permanently pinned the edge at '1-n' and the UNIQUE constraint was
+  // silently ignored by derivation.
+  it('adding a UNIQUE constraint after a save/reload cycle still re-derives cardinality to 1-1 for a labelled edge', () => {
+    const { model: m1, errors: e1 } = loadModel(seedRaw);
+    expect(e1).toEqual([]);
+    const raw2 = serializeModel(m1!, m1!.colors);
+    const { model: m2, errors: e2 } = loadModel(raw2);
+    expect(e2).toEqual([]);
+
+    // schemes.id -> projects.scheme_id, labelled "scheme" — inferred 1-n
+    // before the schema change.
+    const before = m2!.relationships.find((r) => r.target === 'projects' && r.targetField === 'scheme_id')!;
+    expect(before).toMatchObject({ label: 'scheme', cardinality: '1-n', cardinalityInferred: true });
+
+    const projects = m2!.entityById.get('projects')!;
+    const withUnique = applyModelEdit(m2!, {
+      kind: 'upsertEntity',
+      entity: {
+        id: 'projects',
+        label: projects.label,
+        group: projects.group,
+        description: projects.description,
+        fields: projects.fields.map((f) => ({
+          name: f.name,
+          type: f.type,
+          title: f.title,
+          description: f.description,
+          nullable: f.nullable,
+          default: f.default,
+        })),
+        constraints: [...projects.constraints, { id: 'u1', kind: 'unique', name: null, columns: ['scheme_id'] }],
+        indexes: projects.indexes,
+      },
+    });
+
+    const after = withUnique.relationships.find((r) => r.target === 'projects' && r.targetField === 'scheme_id')!;
+    expect(after.cardinality).toBe('1-1');
+    expect(after.label).toBe('scheme'); // label still donated correctly alongside the re-derived cardinality
+  });
+
+  // MINOR, reviewer-found (round 2): two authored rels on the same endpoint
+  // pair used to lose the second one silently — only the first's label/kind
+  // (the derived edge's one donor slot) survived, in memory and on save. The
+  // fix keeps the second as its own relationship; this pins it through both a
+  // plain load and a full save -> load roundtrip (the harder case: the
+  // kept-verbatim second rel is written to the file BEFORE the enriched
+  // derived edge, so re-reading it must not let it steal the donor slot back
+  // by array order alone).
+  it('two authored relationships on the same endpoint pair both survive load and a save -> load roundtrip', () => {
+    const raw0 = {
+      groups: [{ id: 'g', label: 'G', order: 0 }],
+      kinds: [{ id: 'nm', label: 'Many-to-many', style: 'dashed' }],
+      entities: [
+        { id: 'a', group: 'g', fields: [pkField] },
+        { id: 'b', group: 'g', fields: [pkField, { name: 'a_id', type: 'int', role: 'fk', ref: 'a', refField: 'id' }] },
+      ],
+      relationships: [
+        { id: 'primary', source: 'a', sourceField: 'id', target: 'b', targetField: 'a_id', kind: 'fk', label: 'owner' },
+        { id: 'secondary', source: 'a', sourceField: 'id', target: 'b', targetField: 'a_id', kind: 'nm', label: 'watcher' },
+      ],
+    };
+    const { model: m1, errors: e1 } = loadModel(raw0);
+    expect(e1).toEqual([]);
+    expect(m1!.relationships).toHaveLength(2);
+    expect(m1!.relById.get('rel:b:c2')).toMatchObject({ label: 'owner', kind: 'fk' });
+    expect(m1!.relById.get('secondary')).toMatchObject({ label: 'watcher', kind: 'nm' });
+
+    const raw2 = serializeModel(m1!, new Map());
+    const { model: m2, errors: e2 } = loadModel(raw2);
+    expect(e2).toEqual([]);
+    expect(m2!.relationships).toHaveLength(2);
+    expect(m2!.relById.get('rel:b:c2')).toMatchObject({ label: 'owner', kind: 'fk' });
+    expect(m2!.relById.get('secondary')).toMatchObject({ label: 'watcher', kind: 'nm' });
+  });
+
   it('an authored fk-kind relationship with no label and no backing constraint survives a save -> load round trip', () => {
     const raw0 = {
       groups: [{ id: 'g', label: 'G', order: 0 }],

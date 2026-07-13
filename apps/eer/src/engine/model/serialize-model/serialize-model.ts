@@ -22,7 +22,7 @@
 // endpoint pair is actually backed by a real fk constraint (see
 // `deriveConstraintEdges`), not merely shaped like one.
 
-import { deriveConstraintEdges, pairKey } from '../derive-relationships';
+import { deriveConstraintEdges, looksDerived, pairKey } from '../derive-relationships';
 import type { Constraint, Model, Relationship, TableIndex } from '../types';
 
 // Safe to omit entirely: a bare derived fk edge (no label, kind still 'fk', an
@@ -32,7 +32,20 @@ import type { Constraint, Model, Relationship, TableIndex } from '../types';
 // cardinality, or no backing constraint at all) is data the constraint alone
 // can't regenerate, and must be written.
 function isFullyDerivable(r: Relationship, constraintBackedPairs: ReadonlySet<string>): boolean {
-  return r.kind === 'fk' && !r.label && r.cardinalityInferred && constraintBackedPairs.has(pairKey(r));
+  // `looksDerived` (same id-scheme test derive-relationships itself uses)
+  // rules out a second authored relationship that merely shares its endpoint
+  // pair with a derived edge (kept verbatim — see derive-relationships.ts —
+  // because a derived edge can only fold in ONE donor's label/kind). Without
+  // it, such a rel would look identical to the real derived edge by shape
+  // alone whenever it's unlabelled/kind-fk/inferred, and get wrongly omitted
+  // here — losing it (and the fact there were two edges on that pair) for good.
+  return (
+    looksDerived(r) &&
+    r.kind === 'fk' &&
+    !r.label &&
+    r.cardinalityInferred &&
+    constraintBackedPairs.has(pairKey(r))
+  );
 }
 
 function serializeConstraint(c: Constraint): Record<string, unknown> {
@@ -103,7 +116,14 @@ export function serializeModel(model: Model, colors: ReadonlyMap<string, string>
         targetField: r.targetField,
         ...(r.kind ? { kind: r.kind } : {}),
         ...(r.label ? { label: r.label } : {}),
-        cardinality: r.cardinality,
+        // Only write cardinality when the file explicitly declared it
+        // (cardinalityInferred === false). Writing an INFERRED cardinality
+        // unconditionally froze it forever: on reload, an explicit key makes
+        // load-model set cardinalityInferred: false, and derive-relationships
+        // then pins that stale value over the freshly re-derived one — a
+        // single Save permanently disables re-derivation for that edge (see
+        // the module header / reviewer finding).
+        ...(r.cardinalityInferred === false ? { cardinality: r.cardinality } : {}),
       })),
   };
 }

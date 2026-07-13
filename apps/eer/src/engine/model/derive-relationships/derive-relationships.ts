@@ -40,7 +40,12 @@ const sameSet = (a: string[], b: string[]): boolean =>
 //    dropped, or "relationships ARE the foreign keys" breaks: removing an fk
 //    constraint (or renaming its column) would leave a phantom edge behind
 //    forever instead of the edge disappearing along with its constraint.
-const looksDerived = (r: { id: string; target: string }): boolean => r.id.startsWith(`rel:${r.target}:`);
+// Exported so serialize-model can use the exact same test to recognize an
+// actual derived (or derived-and-enriched) edge apart from an authored
+// relationship that merely shares its endpoint pair (e.g. a second authored
+// rel on a pair that already has a derived twin, kept verbatim per the
+// `authored` filter below) — see serialize-model's `isFullyDerivable`.
+export const looksDerived = (r: { id: string; target: string }): boolean => r.id.startsWith(`rel:${r.target}:`);
 
 // 1-1 when each parent row can match at most one child row: the child's fk
 // columns are its whole primary key, or are covered by a unique constraint.
@@ -91,13 +96,33 @@ export function deriveRelationships(model: Model): Relationship[] {
   // Every authored relationship whose endpoints still resolve, keyed by its
   // unordered endpoint pair — regardless of its own kind, so an authored
   // kind:'fk' rel (carrying only a label) is just as eligible a donor as an
-  // authored kind:'nm'/'m2m' one. First match wins; real models don't author
-  // two relationships over the same pair, and if they did, "some" data
-  // surviving beats an arbitrary tie-break rule nobody could predict.
+  // authored kind:'nm'/'m2m' one. If a second authored rel covers the same
+  // pair, it is NOT a second donor (a derived edge can only carry one
+  // label/kind/cardinality) — it is kept verbatim as its own relationship
+  // instead (see `authored` below), so two hand-authored rels over one pair
+  // both survive rather than the second silently vanishing.
   const resolvedAuthored = model.relationships.filter(
     (r) => model.entityById.has(r.source) && model.entityById.has(r.target),
   );
   const authoredByPair = new Map<string, Relationship>();
+  // Pass 1: a relationship that IS the current derived-and-enriched edge
+  // (id-shaped `rel:<target>:...`, fed back in as "authored" by finalize()'s
+  // every-edit re-derivation) always wins the donor slot when present, no
+  // matter where it lands in the array relative to some OTHER authored rel
+  // sharing its pair. Without this, a kept-verbatim second rel — which
+  // serialize-model writes BEFORE the enriched edge (see `authored` below,
+  // returned first) — would get read back from the file ahead of it on the
+  // very next load and steal the donor slot by array order alone, silently
+  // swapping (and, past a second roundtrip, permanently losing) the original
+  // donor's label/kind.
+  for (const r of resolvedAuthored) {
+    if (!looksDerived(r)) continue;
+    const key = pairKey(r);
+    if (!authoredByPair.has(key)) authoredByPair.set(key, r);
+  }
+  // Pass 2: any pair with no looksDerived candidate (the common case — a
+  // fresh, never-yet-derived load) falls back to first-in-array, same as
+  // before.
   for (const r of resolvedAuthored) {
     const key = pairKey(r);
     if (!authoredByPair.has(key)) authoredByPair.set(key, r);
@@ -116,17 +141,29 @@ export function deriveRelationships(model: Model): Relationship[] {
     };
   });
 
-  // Authored relationships that don't cover any derived pair are kept
-  // verbatim, first — whatever their `kind`. Most of these are documentation
-  // edges (kind 'nm'/'m2m') with no backing fk constraint at all, but an
-  // authored `kind:'fk'` relationship belongs here too whenever no constraint
-  // backs it (e.g. a polymorphic reference column with no `ref`): there is no
-  // derived twin for it to be folded onto, so dropping it just because its
-  // kind reads 'fk' would silently delete the edge. Excluded from this,
-  // though: anything id-shaped like a derived edge for its own target whose
-  // pair isn't covered any more — that's a previous round's derived edge
-  // whose backing constraint just changed out from under it, not authored
-  // data (see `looksDerived`).
-  const authored = resolvedAuthored.filter((r) => !derivedPairs.has(pairKey(r)) && !looksDerived(r));
+  // Authored relationships kept verbatim — whatever their `kind`. This is two
+  // groups:
+  //  - those that don't cover any derived pair at all. Most of these are
+  //    documentation edges (kind 'nm'/'m2m') with no backing fk constraint,
+  //    but an authored `kind:'fk'` relationship belongs here too whenever no
+  //    constraint backs it (e.g. a polymorphic reference column with no
+  //    `ref`): there is no derived twin for it to be folded onto, so dropping
+  //    it just because its kind reads 'fk' would silently delete the edge.
+  //  - those that DO cover a derived pair but lost the donor slot to an
+  //    earlier authored rel over the same pair (see `authoredByPair` above).
+  //    A derived edge can only carry one folded-in label/kind/cardinality, so
+  //    a second (or third) authored rel on the same pair isn't re-derivable
+  //    from anything — it must be kept as its own relationship, or it's
+  //    silently erased in memory and, via serialize-model, from the file.
+  // Excluded from both, though: anything id-shaped like a derived edge for its
+  // own target whose pair isn't covered any more — that's a previous round's
+  // derived edge whose backing constraint just changed out from under it, not
+  // authored data (see `looksDerived`).
+  const authored = resolvedAuthored.filter((r) => {
+    if (looksDerived(r)) return false;
+    const key = pairKey(r);
+    if (!derivedPairs.has(key)) return true;
+    return authoredByPair.get(key) !== r; // donor already folded into enrichedDerived; a non-donor survives verbatim
+  });
   return [...authored, ...enrichedDerived];
 }
