@@ -125,3 +125,63 @@ describe('routeEdges', () => {
     }
   });
 });
+
+// Two segments "overlap" when they are collinear (same axis + same cross-coord
+// within the casing width) and their spans intersect for more than a point.
+// The pin fan at a shared port separates slots by < casing, so endpoints that
+// touch at a port are excluded by the 6px span-trim.
+function overlappingPairs(routes: Map<string, Point[] | null>): string[] {
+  interface Run { rel: string; axis: 'h' | 'v'; cross: number; lo: number; hi: number }
+  const runs: Run[] = [];
+  for (const [rel, pts] of routes) {
+    if (!pts) continue;
+    for (let i = 1; i < pts.length; i++) {
+      const a = pts[i - 1]!;
+      const b = pts[i]!;
+      if (Math.abs(a.y - b.y) < 0.01 && Math.abs(a.x - b.x) > 12) {
+        runs.push({ rel, axis: 'h', cross: a.y, lo: Math.min(a.x, b.x) + 6, hi: Math.max(a.x, b.x) - 6 });
+      } else if (Math.abs(a.x - b.x) < 0.01 && Math.abs(a.y - b.y) > 12) {
+        runs.push({ rel, axis: 'v', cross: a.x, lo: Math.min(a.y, b.y) + 6, hi: Math.max(a.y, b.y) - 6 });
+      }
+    }
+  }
+  const bad: string[] = [];
+  for (let i = 0; i < runs.length; i++) {
+    for (let j = i + 1; j < runs.length; j++) {
+      const p = runs[i]!;
+      const q = runs[j]!;
+      if (p.rel === q.rel || p.axis !== q.axis) continue;
+      if (Math.abs(p.cross - q.cross) >= 4.5) continue; // casing width — visually merged below this
+      if (p.lo < q.hi && q.lo < p.hi) bad.push(`${p.rel} ∥ ${q.rel} @ ${p.axis}=${Math.round(p.cross)}`);
+    }
+  }
+  return bad;
+}
+
+it.fails('a hub fanned to three stacked targets gets a distinct lane per edge', () => {
+  const raw = {
+    groups: [{ id: 'z', label: 'Z', order: 0 }],
+    entities: [
+      { id: 'hub', group: 'z', fields: [pkField] },
+      { id: 'ta', group: 'z', fields: [pkField, fkTo('hub')] },
+      { id: 'tb', group: 'z', fields: [pkField, fkTo('hub')] },
+      { id: 'tc', group: 'z', fields: [pkField, fkTo('hub')] },
+    ],
+    relationships: [
+      { id: 'h-a', source: 'hub', sourceField: 'id', target: 'ta', targetField: 'hub_id' },
+      { id: 'h-b', source: 'hub', sourceField: 'id', target: 'tb', targetField: 'hub_id' },
+      { id: 'h-c', source: 'hub', sourceField: 'id', target: 'tc', targetField: 'hub_id' },
+    ],
+  };
+  const model = buildModel(raw);
+  // Hub on the left, three targets stacked close together just to its right — the
+  // gap is too narrow for separateAxis to give every vertical run its own lane, so
+  // the stay-put fallback stacks them onto a shared jog instead.
+  Object.assign(model.entityById.get('hub')!, { x: 0, y: 300, _w: 140, _h: 60 });
+  Object.assign(model.entityById.get('ta')!, { x: 170, y: 0, _w: 140, _h: 80 });
+  Object.assign(model.entityById.get('tb')!, { x: 170, y: 90, _w: 140, _h: 80 });
+  Object.assign(model.entityById.get('tc')!, { x: 170, y: 180, _w: 140, _h: 80 });
+  const { slots } = pinSlots(model);
+  const { routes } = routeEdges(model, slots);
+  expect(overlappingPairs(routes)).toEqual([]);
+});
