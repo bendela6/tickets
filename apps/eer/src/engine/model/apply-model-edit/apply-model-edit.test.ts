@@ -477,23 +477,25 @@ describe('applyModelEdit', () => {
     });
 
     // CRITICAL, reviewer-found: 17 of the real seed's 37 authored relationships
-    // carry a label that DOES have a backing fk constraint to merge onto (one
-    // more, 'istream'/"stream", is itself unbacked — items.events.aggregate_id
-    // has no fk field at all, a polymorphic reference — and is dropped the
-    // same way an unbacked kind:'fk' rel always was, before and after this
-    // fix; that's pre-existing, unrelated behaviour, not this bug), and 3
-    // carry a non-fk ('m2m', rendered dashed) kind. A prior version of
-    // deriveRelationships dropped EVERY authored kind:'fk' relationship in
-    // favour of its bare derived twin (label: null), and excluded an 'm2m' rel
-    // from the kept-verbatim authored set whenever its pair happened to
-    // coincide with a derived fk edge (which is exactly how the seed encodes
-    // its 3 m2m annotations) — turning all 17 labels and all 3 dashed m2m
-    // edges into a plain, unlabelled fk on the very next load. Pinned against
+    // carry a label that DOES have a backing fk constraint to merge onto, plus
+    // 'istream'/"stream" (18 total) — items.events.aggregate_id has no fk
+    // field at all, a polymorphic reference, so 'istream' has no derived twin
+    // to merge onto and must be kept verbatim instead (see
+    // derive-relationships.ts); and 3 carry a non-fk ('m2m', rendered dashed)
+    // kind. A prior version of deriveRelationships dropped EVERY authored
+    // kind:'fk' relationship in favour of its bare derived twin (label: null)
+    // — or, for one with no derived twin at all like 'istream', dropped it
+    // entirely — and excluded an 'm2m' rel from the kept-verbatim authored set
+    // whenever its pair happened to coincide with a derived fk edge (which is
+    // exactly how the seed encodes its 3 m2m annotations) — turning all 17
+    // backed labels and all 3 dashed m2m edges into a plain, unlabelled fk,
+    // and silently erasing 'istream', on the very next load. Pinned against
     // the real bundled seed so it can't silently regress.
-    it('the real seed keeps all 17 backed authored labels and all 3 m2m-kind relationships', () => {
+    it('the real seed keeps all 18 authored labels (17 backed + istream, unbacked) and all 3 m2m-kind relationships', () => {
       const { model, errors } = loadModel(seedRaw);
       expect(errors).toEqual([]);
-      expect(model!.relationships.filter((r) => r.label).length).toBe(17);
+      expect(model!.relationships.filter((r) => r.label).length).toBe(18);
+      expect(model!.relById.get('istream')).toMatchObject({ label: 'stream', kind: 'fk' });
       expect(model!.relationships.filter((r) => r.kind === 'm2m').length).toBe(3);
     });
   });

@@ -74,6 +74,25 @@ describe('deriveRelationships', () => {
     expect(deriveRelationships(model)).toEqual([]);
   });
 
+  it('keeps an authored kind:"fk" relationship verbatim when no fk constraint backs its endpoints (e.g. a polymorphic reference)', () => {
+    // 'orders' has no fk constraint at all for 'user_id' (e.g. a polymorphic
+    // column with no `ref`) — so the authored kind:'fk' relationship has no
+    // derived twin to be folded onto, and must survive verbatim rather than
+    // being dropped just because its kind reads 'fk'.
+    const model = loadModel(
+      raw([{ id: 'c1', kind: 'pk', columns: ['id'] }], {
+        relationships: [
+          { id: 'poly', source: 'users', sourceField: 'id', target: 'orders', targetField: 'user_id',
+            kind: 'fk', label: 'polymorphic ref' },
+        ],
+      }),
+    ).model!;
+    const rels = deriveRelationships(model);
+    expect(rels).toEqual([
+      expect.objectContaining({ id: 'poly', label: 'polymorphic ref', kind: 'fk' }),
+    ]);
+  });
+
   it('keeps a non-fk authored relationship and puts it first', () => {
     const model = loadModel(
       raw(
