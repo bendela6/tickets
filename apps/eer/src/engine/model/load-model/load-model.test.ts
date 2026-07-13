@@ -280,3 +280,93 @@ describe('loadModel — colors and saved layout', () => {
     expect(model!._savedLayout).toBeUndefined();
   });
 });
+
+describe('loadModel — constraints and indexes', () => {
+  it('synthesises constraints from legacy role/ref fields', () => {
+    const raw = {
+      groups: [{ id: 'z', label: 'Z' }],
+      entities: [
+        { id: 'users', group: 'z', fields: [{ name: 'id', type: 'serial', role: 'pk' }] },
+        {
+          id: 'orders',
+          group: 'z',
+          fields: [
+            { name: 'id', type: 'serial', role: 'pk' },
+            { name: 'user_id', type: 'int', role: 'fk', ref: 'users', refField: 'id' },
+          ],
+        },
+      ],
+    };
+    const { model, errors } = loadModel(raw);
+    expect(errors).toEqual([]);
+    const orders = model!.entityById.get('orders')!;
+    expect(orders.constraints).toEqual([
+      { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
+      {
+        id: 'c2', kind: 'fk', name: null, columns: ['user_id'],
+        refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null,
+      },
+    ]);
+    expect(orders.indexes).toEqual([]);
+    expect(orders.fields[1]!.nullable).toBe(true);
+    expect(orders.fields[1]!.default).toBeNull();
+  });
+
+  it('treats a ref on a non-fk field as a foreign key (shared-pk reference)', () => {
+    const raw = {
+      groups: [{ id: 'z', label: 'Z' }],
+      entities: [
+        { id: 'events', group: 'z', fields: [{ name: 'id', type: 'bigserial', role: 'pk' }] },
+        {
+          id: 'outbox', group: 'z',
+          fields: [{ name: 'event_id', type: 'bigint', role: 'pk', ref: 'events', refField: 'id' }],
+        },
+      ],
+    };
+    const outbox = loadModel(raw).model!.entityById.get('outbox')!;
+    expect(outbox.constraints).toEqual([
+      { id: 'c1', kind: 'pk', name: null, columns: ['event_id'] },
+      {
+        id: 'c2', kind: 'fk', name: null, columns: ['event_id'],
+        refTable: 'events', refColumns: ['id'], onDelete: null, onUpdate: null,
+      },
+    ]);
+  });
+
+  it('reads explicit constraints, indexes, nullable and default verbatim', () => {
+    const raw = {
+      groups: [{ id: 'z', label: 'Z' }],
+      entities: [
+        { id: 'a', group: 'z', fields: [{ name: 'id', type: 'int' }] },
+        {
+          id: 'items', group: 'z',
+          fields: [
+            { name: 'id', type: 'bigserial', nullable: false },
+            { name: 'a_id', type: 'int', nullable: false },
+            { name: 'key', type: 'text', default: "'draft'" },
+          ],
+          constraints: [
+            { id: 'c1', kind: 'pk', columns: ['id'] },
+            { id: 'c2', kind: 'unique', name: 'items_a_key', columns: ['a_id', 'key'] },
+            { id: 'c3', kind: 'fk', columns: ['a_id'], refTable: 'a', refColumns: ['id'], onDelete: 'cascade' },
+            { id: 'c4', kind: 'check', expression: 'char_length(key) > 0' },
+          ],
+          indexes: [{ id: 'i1', name: 'idx_items_a', columns: ['a_id'], unique: false }],
+        },
+      ],
+    };
+    const { model, errors } = loadModel(raw);
+    expect(errors).toEqual([]);
+    const items = model!.entityById.get('items')!;
+    expect(items.constraints).toHaveLength(4);
+    expect(items.constraints[1]).toEqual({ id: 'c2', kind: 'unique', name: 'items_a_key', columns: ['a_id', 'key'] });
+    expect(items.constraints[2]).toEqual({
+      id: 'c3', kind: 'fk', name: null, columns: ['a_id'],
+      refTable: 'a', refColumns: ['id'], onDelete: 'cascade', onUpdate: null,
+    });
+    expect(items.constraints[3]).toEqual({ id: 'c4', kind: 'check', name: null, expression: 'char_length(key) > 0' });
+    expect(items.indexes).toEqual([{ id: 'i1', name: 'idx_items_a', columns: ['a_id'], unique: false }]);
+    expect(items.fields[0]!.nullable).toBe(false);
+    expect(items.fields[2]!.default).toBe("'draft'");
+  });
+});

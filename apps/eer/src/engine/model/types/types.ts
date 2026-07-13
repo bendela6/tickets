@@ -4,6 +4,28 @@ export type Role = 'pk' | 'fk' | null;
 export type Cardinality = '1-1' | '1-n' | 'n-1' | 'n-m';
 export type LineStyle = 'solid' | 'dashed';
 
+export type FkAction = 'cascade' | 'restrict' | 'set null' | 'set default' | 'no action';
+export type Constraint =
+  | { id: string; kind: 'pk'; name: string | null; columns: string[] }
+  | { id: string; kind: 'unique'; name: string | null; columns: string[] }
+  | { id: string; kind: 'check'; name: string | null; expression: string }
+  | {
+      id: string;
+      kind: 'fk';
+      name: string | null;
+      columns: string[];
+      refTable: string;
+      refColumns: string[];
+      onDelete: FkAction | null;
+      onUpdate: FkAction | null;
+    };
+export interface TableIndex {
+  id: string;
+  name: string;
+  columns: string[];
+  unique: boolean;
+}
+
 export interface Point {
   x: number;
   y: number;
@@ -17,6 +39,8 @@ export interface Field {
   refField: string | null;
   title: string | null;
   description: string | null;
+  nullable: boolean;
+  default: string | null;
 }
 
 export interface Entity {
@@ -25,6 +49,8 @@ export interface Entity {
   group: string;
   description: string | null;
   fields: Field[];
+  constraints: Constraint[];
+  indexes: TableIndex[];
   // layout fills these:
   x: number;
   y: number;
