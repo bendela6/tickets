@@ -3,6 +3,9 @@
     "title": "Items platform — ER model",
     "description": "Extracted from docs/grok/er-model.html."
   },
+  "view": {
+    "routing": "avoid"
+  },
   "kinds": [
     {
       "id": "fk",
@@ -15,66 +18,63 @@
       "style": "dashed"
     }
   ],
+  "colors": {},
   "groups": [
     {
       "id": "ws",
       "label": "WORKSPACE",
-      "order": 0,
-      "parent": null
+      "order": 0
     },
     {
       "id": "st",
       "label": "STRUCTURE",
-      "order": 1,
-      "parent": null
-    },
-    {
-      "id": "it",
-      "label": "Item types",
-      "parent": "st",
-      "order": 10
-    },
-    {
-      "id": "op",
-      "label": "Options",
-      "parent": "st",
-      "order": 11
-    },
-    {
-      "id": "lt",
-      "label": "Link types",
-      "parent": "st",
-      "order": 12
+      "order": 1
     },
     {
       "id": "rc",
       "label": "RECORDS",
-      "order": 2,
-      "parent": null
-    },
-    {
-      "id": "im",
-      "label": "Items",
-      "parent": "rc",
-      "order": 20
-    },
-    {
-      "id": "cm",
-      "label": "Comments",
-      "parent": "rc",
-      "order": 21
+      "order": 2
     },
     {
       "id": "hi",
       "label": "HISTORY",
-      "order": 3,
-      "parent": null
+      "order": 3
+    },
+    {
+      "id": "it",
+      "label": "Item types",
+      "order": 10,
+      "parent": "st"
+    },
+    {
+      "id": "op",
+      "label": "Options",
+      "order": 11,
+      "parent": "st"
+    },
+    {
+      "id": "lt",
+      "label": "Link types",
+      "order": 12,
+      "parent": "st"
+    },
+    {
+      "id": "im",
+      "label": "Items",
+      "order": 20,
+      "parent": "rc"
+    },
+    {
+      "id": "cm",
+      "label": "Comments",
+      "order": 21,
+      "parent": "rc"
     },
     {
       "id": "es",
       "label": "Event stream",
-      "parent": "hi",
-      "order": 30
+      "order": 30,
+      "parent": "hi"
     }
   ],
   "entities": [
@@ -83,11 +83,12 @@
       "label": "users",
       "group": "ws",
       "description": "Actors for mutations and comments (humans and agents).",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "serial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key."
         },
@@ -115,18 +116,29 @@
           "title": "Archived at",
           "description": "Soft-delete; null = active."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "projects",
       "label": "projects",
       "group": "ws",
       "description": "Workspace container bound to a structure scheme.",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "serial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key."
         },
@@ -151,8 +163,6 @@
         {
           "name": "scheme_id",
           "type": "int",
-          "role": "fk",
-          "ref": "schemes",
           "title": "Scheme",
           "description": "Structure pack this project uses."
         },
@@ -162,26 +172,46 @@
           "title": "Created at",
           "description": "When the project was created."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "scheme_id"
+          ],
+          "refTable": "schemes",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "views",
       "label": "views",
       "group": "ws",
       "description": "Saved board/table lenses (columns, filters, sort).",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "serial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key."
         },
         {
           "name": "project_id",
           "type": "int",
-          "role": "fk",
-          "ref": "projects",
           "title": "Project",
           "description": "Owning project."
         },
@@ -209,18 +239,40 @@
           "title": "Archived at",
           "description": "Soft-delete."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "project_id"
+          ],
+          "refTable": "projects",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "schemes",
       "label": "schemes",
       "group": "st",
       "description": "Structure pack root: types, field library, option sets.",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "serial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key."
         },
@@ -248,26 +300,35 @@
           "title": "Archived at",
           "description": "Soft-delete."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "item_types",
       "label": "item_types",
       "group": "it",
       "description": "Kinds of items within a scheme (task, bug, document, …).",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "serial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key."
         },
         {
           "name": "scheme_id",
           "type": "int",
-          "role": "fk",
-          "ref": "schemes",
           "title": "Scheme",
           "description": "Owning structure pack."
         },
@@ -301,51 +362,93 @@
           "title": "Archived at",
           "description": "Soft-delete."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "scheme_id"
+          ],
+          "refTable": "schemes",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "item_type_child_types",
       "label": "item_type_child_types",
       "group": "it",
       "description": "Which child types may hang under a parent type (hierarchy rules).",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "parent_type_id",
           "type": "int",
-          "role": "fk",
-          "ref": "item_types",
           "title": "Parent type",
           "description": "Type of the parent item."
         },
         {
           "name": "child_type_id",
           "type": "int",
-          "role": "fk",
-          "ref": "item_types",
           "title": "Child type",
           "description": "Type allowed as child."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "fk",
+          "columns": [
+            "parent_type_id"
+          ],
+          "refTable": "item_types",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "child_type_id"
+          ],
+          "refTable": "item_types",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "item_type_fields",
       "label": "item_type_fields",
       "group": "it",
       "description": "Places a library field on a type (M2M). Definition stays on fields.",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "item_type_id",
           "type": "int",
-          "role": "fk",
-          "ref": "item_types",
           "title": "Item type",
           "description": "Type that shows this field."
         },
         {
           "name": "field_id",
           "type": "int",
-          "role": "fk",
-          "ref": "fields",
           "title": "Field",
           "description": "Shared field definition."
         },
@@ -367,26 +470,50 @@
           "title": "Config override",
           "description": "Per-type overrides (allowlist, transitions, …)."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "fk",
+          "columns": [
+            "item_type_id"
+          ],
+          "refTable": "item_types",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "field_id"
+          ],
+          "refTable": "fields",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "fields",
       "label": "fields",
       "group": "st",
       "description": "Scheme-scoped field library (reusable across types).",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "serial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key."
         },
         {
           "name": "scheme_id",
           "type": "int",
-          "role": "fk",
-          "ref": "schemes",
           "title": "Scheme",
           "description": "Owning structure pack."
         },
@@ -423,8 +550,6 @@
         {
           "name": "option_set_id",
           "type": "int",
-          "role": "fk",
-          "ref": "option_sets",
           "title": "Option set",
           "description": "Shared choices when type is option."
         },
@@ -434,26 +559,57 @@
           "title": "Archived at",
           "description": "Soft-delete."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "scheme_id"
+          ],
+          "refTable": "schemes",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "option_set_id"
+          ],
+          "refTable": "option_sets",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "option_sets",
       "label": "option_sets",
       "group": "op",
       "description": "Shared option lists; many option fields can reuse one set.",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "serial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key."
         },
         {
           "name": "scheme_id",
           "type": "int",
-          "role": "fk",
-          "ref": "schemes",
           "title": "Scheme",
           "description": "Owning structure pack."
         },
@@ -469,26 +625,46 @@
           "title": "Name",
           "description": "Display name for the list."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "scheme_id"
+          ],
+          "refTable": "schemes",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "options",
       "label": "options",
       "group": "op",
       "description": "One choice in an option set (e.g. a status value).",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "serial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key; stored on item_values.option_id."
         },
         {
           "name": "option_set_id",
           "type": "int",
-          "role": "fk",
-          "ref": "option_sets",
           "title": "Option set",
           "description": "Parent list."
         },
@@ -522,50 +698,64 @@
           "title": "Archived at",
           "description": "Soft-delete."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "option_set_id"
+          ],
+          "refTable": "option_sets",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "option_transitions",
       "label": "option_transitions",
       "group": "op",
       "description": "Workflow graph: which option may move to which (on a workflow field).",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "serial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key."
         },
         {
           "name": "field_id",
           "type": "int",
-          "role": "fk",
-          "ref": "fields",
           "title": "Field",
           "description": "Workflow option field these edges apply to."
         },
         {
           "name": "from_option_id",
           "type": "int",
-          "role": "fk",
-          "ref": "options",
           "title": "From option",
           "description": "Source option; null = valid start."
         },
         {
           "name": "to_option_id",
           "type": "int",
-          "role": "fk",
-          "ref": "options",
           "title": "To option",
           "description": "Destination option."
         },
         {
           "name": "item_type_id",
           "type": "int",
-          "role": "fk",
-          "ref": "item_types",
           "title": "Item type",
           "description": "Optional; null = all types using the field."
         },
@@ -575,26 +765,79 @@
           "title": "Config",
           "description": "Future guards / metadata."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "field_id"
+          ],
+          "refTable": "fields",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "from_option_id"
+          ],
+          "refTable": "options",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c4",
+          "kind": "fk",
+          "columns": [
+            "to_option_id"
+          ],
+          "refTable": "options",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c5",
+          "kind": "fk",
+          "columns": [
+            "item_type_id"
+          ],
+          "refTable": "item_types",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "link_types",
       "label": "link_types",
       "group": "lt",
       "description": "Named relation vocabulary owned by a source type.",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "serial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key."
         },
         {
           "name": "item_type_id",
           "type": "int",
-          "role": "fk",
-          "ref": "item_types",
           "title": "Source type",
           "description": "Type that owns this link type."
         },
@@ -634,66 +877,105 @@
           "title": "Archived at",
           "description": "Soft-delete."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "item_type_id"
+          ],
+          "refTable": "item_types",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "link_type_target_types",
       "label": "link_type_target_types",
       "group": "lt",
       "description": "Which item types may be targets of a given link type.",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "link_type_id",
           "type": "int",
-          "role": "fk",
-          "ref": "link_types",
           "title": "Link type",
           "description": "The relation definition."
         },
         {
           "name": "target_type_id",
           "type": "int",
-          "role": "fk",
-          "ref": "item_types",
           "title": "Target type",
           "description": "Allowed target item type."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "fk",
+          "columns": [
+            "link_type_id"
+          ],
+          "refTable": "link_types",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "target_type_id"
+          ],
+          "refTable": "item_types",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "items",
       "label": "items",
       "group": "im",
       "description": "Record spine (generic work/knowledge object in a project).",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "serial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key."
         },
         {
           "name": "project_id",
           "type": "int",
-          "role": "fk",
-          "ref": "projects",
           "title": "Project",
           "description": "Home project."
         },
         {
           "name": "type_id",
           "type": "int",
-          "role": "fk",
-          "ref": "item_types",
           "title": "Type",
           "description": "Item type (task, doc, …)."
         },
         {
           "name": "parent_id",
           "type": "int",
-          "role": "fk",
-          "ref": "items",
           "title": "Parent",
           "description": "Optional parent item (tree)."
         },
@@ -706,8 +988,6 @@
         {
           "name": "created_by",
           "type": "int",
-          "role": "fk",
-          "ref": "users",
           "title": "Created by",
           "description": "Author user."
         },
@@ -729,34 +1009,85 @@
           "title": "Updated at",
           "description": "Optimistic-lock token."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "project_id"
+          ],
+          "refTable": "projects",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "type_id"
+          ],
+          "refTable": "item_types",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c4",
+          "kind": "fk",
+          "columns": [
+            "parent_id"
+          ],
+          "refTable": "items",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c5",
+          "kind": "fk",
+          "columns": [
+            "created_by"
+          ],
+          "refTable": "users",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "item_values",
       "label": "item_values",
       "group": "im",
       "description": "EAV storage: one row (or N for multi) per field value on an item.",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "serial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key."
         },
         {
           "name": "item_id",
           "type": "int",
-          "role": "fk",
-          "ref": "items",
           "title": "Item",
           "description": "Owning item."
         },
         {
           "name": "field_id",
           "type": "int",
-          "role": "fk",
-          "ref": "fields",
           "title": "Field",
           "description": "Field definition (shared library id)."
         },
@@ -793,55 +1124,100 @@
         {
           "name": "option_id",
           "type": "int",
-          "role": "fk",
-          "ref": "options",
           "title": "Option",
           "description": "For option fields (incl. status)."
         },
         {
           "name": "value_user_id",
           "type": "int",
-          "role": "fk",
-          "ref": "users",
           "title": "User",
           "description": "For user fields."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "item_id"
+          ],
+          "refTable": "items",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "field_id"
+          ],
+          "refTable": "fields",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c4",
+          "kind": "fk",
+          "columns": [
+            "option_id"
+          ],
+          "refTable": "options",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c5",
+          "kind": "fk",
+          "columns": [
+            "value_user_id"
+          ],
+          "refTable": "users",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "comments",
       "label": "comments",
       "group": "cm",
       "description": "Discussion threads on an item.",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "serial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key."
         },
         {
           "name": "item_id",
           "type": "int",
-          "role": "fk",
-          "ref": "items",
           "title": "Item",
           "description": "Item being discussed."
         },
         {
           "name": "author_id",
           "type": "int",
-          "role": "fk",
-          "ref": "users",
           "title": "Author",
           "description": "Comment author."
         },
         {
           "name": "parent_id",
           "type": "int",
-          "role": "fk",
-          "ref": "comments",
           "title": "Parent comment",
           "description": "Reply parent; null = top-level."
         },
@@ -857,34 +1233,74 @@
           "title": "Created at",
           "description": "When posted."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "item_id"
+          ],
+          "refTable": "items",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "author_id"
+          ],
+          "refTable": "users",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c4",
+          "kind": "fk",
+          "columns": [
+            "parent_id"
+          ],
+          "refTable": "comments",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "comment_reactions",
       "label": "comment_reactions",
       "group": "cm",
       "description": "Emoji reactions on comments.",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "serial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key."
         },
         {
           "name": "comment_id",
           "type": "int",
-          "role": "fk",
-          "ref": "comments",
           "title": "Comment",
           "description": "Target comment."
         },
         {
           "name": "user_id",
           "type": "int",
-          "role": "fk",
-          "ref": "users",
           "title": "User",
           "description": "Who reacted."
         },
@@ -900,42 +1316,69 @@
           "title": "Created at",
           "description": "When reacted."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "comment_id"
+          ],
+          "refTable": "comments",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "user_id"
+          ],
+          "refTable": "users",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "item_links",
       "label": "item_links",
       "group": "im",
       "description": "Typed edges between two items.",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "serial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key."
         },
         {
           "name": "link_type_id",
           "type": "int",
-          "role": "fk",
-          "ref": "link_types",
           "title": "Link type",
           "description": "Relation kind."
         },
         {
           "name": "source_item_id",
           "type": "int",
-          "role": "fk",
-          "ref": "items",
           "title": "Source item",
           "description": "From item."
         },
         {
           "name": "target_item_id",
           "type": "int",
-          "role": "fk",
-          "ref": "items",
           "title": "Target item",
           "description": "To item."
         },
@@ -945,18 +1388,62 @@
           "title": "Created at",
           "description": "When linked."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "link_type_id"
+          ],
+          "refTable": "link_types",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "source_item_id"
+          ],
+          "refTable": "items",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c4",
+          "kind": "fk",
+          "columns": [
+            "target_item_id"
+          ],
+          "refTable": "items",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "events",
       "label": "events",
       "group": "es",
       "description": "Global append-only log for every aggregate stream.",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "bigserial",
-          "role": "pk",
           "title": "Id",
           "description": "Global cursor / outbox order."
         },
@@ -999,8 +1486,6 @@
         {
           "name": "actor_id",
           "type": "int",
-          "role": "fk",
-          "ref": "users",
           "title": "Actor",
           "description": "Who caused it."
         },
@@ -1040,18 +1525,40 @@
           "title": "Project id",
           "description": "Denorm for partition / ACL."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "actor_id"
+          ],
+          "refTable": "users",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "commands",
       "label": "commands",
       "group": "hi",
       "description": "One row per accepted command; dedupes multi-event retries.",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "uuid",
-          "role": "pk",
           "title": "Id",
           "description": "Client commandId; primary key."
         },
@@ -1070,8 +1577,6 @@
         {
           "name": "actor_id",
           "type": "int",
-          "role": "fk",
-          "ref": "users",
           "title": "Actor",
           "description": "Who issued the command."
         },
@@ -1087,19 +1592,40 @@
           "title": "Result",
           "description": "Optional cached response for retries."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "actor_id"
+          ],
+          "refTable": "users",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "outbox",
       "label": "outbox",
       "group": "es",
       "description": "Reliable after-commit handoff to consumers.",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "event_id",
           "type": "bigint",
-          "role": "pk",
-          "ref": "events",
           "title": "Event",
           "description": "Event to deliver."
         },
@@ -1121,34 +1647,52 @@
           "title": "Done at",
           "description": "When delivery finished."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "event_id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "event_id"
+          ],
+          "refTable": "events",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
       "id": "item_activity",
       "label": "item_activity",
       "group": "es",
       "description": "Per-item activity feed projection (UI diffs).",
+      "x": 0,
+      "y": 0,
       "fields": [
         {
           "name": "id",
           "type": "bigserial",
-          "role": "pk",
           "title": "Id",
           "description": "Primary key."
         },
         {
           "name": "item_id",
           "type": "int",
-          "role": "fk",
-          "ref": "items",
           "title": "Item",
           "description": "Item the activity belongs to."
         },
         {
           "name": "event_id",
           "type": "bigint",
-          "role": "fk",
-          "ref": "events",
           "title": "Event",
           "description": "Source event."
         },
@@ -1167,8 +1711,6 @@
         {
           "name": "actor_id",
           "type": "int",
-          "role": "fk",
-          "ref": "users",
           "title": "Actor",
           "description": "Who did it."
         },
@@ -1190,291 +1732,53 @@
           "title": "Summary",
           "description": "UI payload, e.g. before/after for fields."
         }
-      ]
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "item_id"
+          ],
+          "refTable": "items",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "event_id"
+          ],
+          "refTable": "events",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c4",
+          "kind": "fk",
+          "columns": [
+            "actor_id"
+          ],
+          "refTable": "users",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     }
   ],
   "relationships": [
-    {
-      "id": "e-schemes.id->projects.scheme_id",
-      "source": "schemes",
-      "sourceField": "id",
-      "target": "projects",
-      "targetField": "scheme_id",
-      "kind": "fk",
-      "label": "scheme"
-    },
-    {
-      "id": "e-projects.id->views.project_id",
-      "source": "projects",
-      "sourceField": "id",
-      "target": "views",
-      "targetField": "project_id",
-      "kind": "fk"
-    },
-    {
-      "id": "e-projects.id->items.project_id",
-      "source": "projects",
-      "sourceField": "id",
-      "target": "items",
-      "targetField": "project_id",
-      "kind": "fk",
-      "label": "owns"
-    },
-    {
-      "id": "e-users.id->items.created_by",
-      "source": "users",
-      "sourceField": "id",
-      "target": "items",
-      "targetField": "created_by",
-      "kind": "fk",
-      "label": "created_by"
-    },
-    {
-      "id": "e-users.id->comments.author_id",
-      "source": "users",
-      "sourceField": "id",
-      "target": "comments",
-      "targetField": "author_id",
-      "kind": "fk",
-      "label": "author"
-    },
-    {
-      "id": "e-users.id->comment_reactions.user_id",
-      "source": "users",
-      "sourceField": "id",
-      "target": "comment_reactions",
-      "targetField": "user_id",
-      "kind": "fk"
-    },
-    {
-      "id": "e-users.id->events.actor_id",
-      "source": "users",
-      "sourceField": "id",
-      "target": "events",
-      "targetField": "actor_id",
-      "kind": "fk",
-      "label": "actor"
-    },
-    {
-      "id": "e-users.id->commands.actor_id",
-      "source": "users",
-      "sourceField": "id",
-      "target": "commands",
-      "targetField": "actor_id",
-      "kind": "fk"
-    },
-    {
-      "id": "e-schemes.id->item_types.scheme_id",
-      "source": "schemes",
-      "sourceField": "id",
-      "target": "item_types",
-      "targetField": "scheme_id",
-      "kind": "fk"
-    },
-    {
-      "id": "e-schemes.id->fields.scheme_id",
-      "source": "schemes",
-      "sourceField": "id",
-      "target": "fields",
-      "targetField": "scheme_id",
-      "kind": "fk"
-    },
-    {
-      "id": "e-schemes.id->option_sets.scheme_id",
-      "source": "schemes",
-      "sourceField": "id",
-      "target": "option_sets",
-      "targetField": "scheme_id",
-      "kind": "fk"
-    },
-    {
-      "id": "e-item_types.id->item_type_fields.item_type_id",
-      "source": "item_types",
-      "sourceField": "id",
-      "target": "item_type_fields",
-      "targetField": "item_type_id",
-      "kind": "m2m",
-      "label": "M2M"
-    },
-    {
-      "id": "e-fields.id->item_type_fields.field_id",
-      "source": "fields",
-      "sourceField": "id",
-      "target": "item_type_fields",
-      "targetField": "field_id",
-      "kind": "m2m",
-      "label": "M2M"
-    },
-    {
-      "id": "e-fields.option_set_id->option_sets.id",
-      "source": "fields",
-      "sourceField": "option_set_id",
-      "target": "option_sets",
-      "targetField": "id",
-      "kind": "m2m",
-      "label": "option_set"
-    },
-    {
-      "id": "e-option_sets.id->options.option_set_id",
-      "source": "option_sets",
-      "sourceField": "id",
-      "target": "options",
-      "targetField": "option_set_id",
-      "kind": "fk"
-    },
-    {
-      "id": "e-fields.id->option_transitions.field_id",
-      "source": "fields",
-      "sourceField": "id",
-      "target": "option_transitions",
-      "targetField": "field_id",
-      "kind": "fk"
-    },
-    {
-      "id": "ot-from",
-      "source": "options",
-      "sourceField": "id",
-      "target": "option_transitions",
-      "targetField": "from_option_id",
-      "kind": "fk",
-      "label": "from"
-    },
-    {
-      "id": "ot-to",
-      "source": "options",
-      "sourceField": "id",
-      "target": "option_transitions",
-      "targetField": "to_option_id",
-      "kind": "fk",
-      "label": "to"
-    },
-    {
-      "id": "e-item_types.id->option_transitions.item_type_id",
-      "source": "item_types",
-      "sourceField": "id",
-      "target": "option_transitions",
-      "targetField": "item_type_id",
-      "kind": "fk"
-    },
-    {
-      "id": "ch1",
-      "source": "item_types",
-      "sourceField": "id",
-      "target": "item_type_child_types",
-      "targetField": "parent_type_id",
-      "kind": "fk",
-      "label": "parent"
-    },
-    {
-      "id": "ch2",
-      "source": "item_types",
-      "sourceField": "id",
-      "target": "item_type_child_types",
-      "targetField": "child_type_id",
-      "kind": "fk",
-      "label": "child"
-    },
-    {
-      "id": "e-item_types.id->link_types.item_type_id",
-      "source": "item_types",
-      "sourceField": "id",
-      "target": "link_types",
-      "targetField": "item_type_id",
-      "kind": "fk"
-    },
-    {
-      "id": "e-link_types.id->link_type_target_types.link_type_id",
-      "source": "link_types",
-      "sourceField": "id",
-      "target": "link_type_target_types",
-      "targetField": "link_type_id",
-      "kind": "fk"
-    },
-    {
-      "id": "lttt",
-      "source": "item_types",
-      "sourceField": "id",
-      "target": "link_type_target_types",
-      "targetField": "target_type_id",
-      "kind": "fk",
-      "label": "target"
-    },
-    {
-      "id": "e-item_types.id->items.type_id",
-      "source": "item_types",
-      "sourceField": "id",
-      "target": "items",
-      "targetField": "type_id",
-      "kind": "fk",
-      "label": "type"
-    },
-    {
-      "id": "e-items.id->item_values.item_id",
-      "source": "items",
-      "sourceField": "id",
-      "target": "item_values",
-      "targetField": "item_id",
-      "kind": "fk"
-    },
-    {
-      "id": "e-fields.id->item_values.field_id",
-      "source": "fields",
-      "sourceField": "id",
-      "target": "item_values",
-      "targetField": "field_id",
-      "kind": "fk"
-    },
-    {
-      "id": "e-options.id->item_values.option_id",
-      "source": "options",
-      "sourceField": "id",
-      "target": "item_values",
-      "targetField": "option_id",
-      "kind": "fk",
-      "label": "option_id"
-    },
-    {
-      "id": "e-items.id->comments.item_id",
-      "source": "items",
-      "sourceField": "id",
-      "target": "comments",
-      "targetField": "item_id",
-      "kind": "fk"
-    },
-    {
-      "id": "e-comments.id->comment_reactions.comment_id",
-      "source": "comments",
-      "sourceField": "id",
-      "target": "comment_reactions",
-      "targetField": "comment_id",
-      "kind": "fk"
-    },
-    {
-      "id": "ils",
-      "source": "items",
-      "sourceField": "id",
-      "target": "item_links",
-      "targetField": "source_item_id",
-      "kind": "fk",
-      "label": "source"
-    },
-    {
-      "id": "ilt",
-      "source": "items",
-      "sourceField": "id",
-      "target": "item_links",
-      "targetField": "target_item_id",
-      "kind": "fk",
-      "label": "target"
-    },
-    {
-      "id": "e-link_types.id->item_links.link_type_id",
-      "source": "link_types",
-      "sourceField": "id",
-      "target": "item_links",
-      "targetField": "link_type_id",
-      "kind": "fk"
-    },
     {
       "id": "istream",
       "source": "items",
@@ -1485,31 +1789,157 @@
       "label": "stream"
     },
     {
-      "id": "e-events.id->outbox.event_id",
-      "source": "events",
+      "id": "rel:projects:c2",
+      "source": "schemes",
       "sourceField": "id",
-      "target": "outbox",
-      "targetField": "event_id",
-      "kind": "fk"
+      "target": "projects",
+      "targetField": "scheme_id",
+      "kind": "fk",
+      "label": "scheme"
     },
     {
-      "id": "e-events.id->item_activity.event_id",
-      "source": "events",
+      "id": "rel:item_type_child_types:c1",
+      "source": "item_types",
       "sourceField": "id",
-      "target": "item_activity",
-      "targetField": "event_id",
-      "kind": "fk"
+      "target": "item_type_child_types",
+      "targetField": "parent_type_id",
+      "kind": "fk",
+      "label": "parent"
     },
     {
-      "id": "e-items.id->item_activity.item_id",
+      "id": "rel:item_type_child_types:c2",
+      "source": "item_types",
+      "sourceField": "id",
+      "target": "item_type_child_types",
+      "targetField": "child_type_id",
+      "kind": "fk",
+      "label": "child"
+    },
+    {
+      "id": "rel:item_type_fields:c1",
+      "source": "item_types",
+      "sourceField": "id",
+      "target": "item_type_fields",
+      "targetField": "item_type_id",
+      "kind": "m2m",
+      "label": "M2M"
+    },
+    {
+      "id": "rel:item_type_fields:c2",
+      "source": "fields",
+      "sourceField": "id",
+      "target": "item_type_fields",
+      "targetField": "field_id",
+      "kind": "m2m",
+      "label": "M2M"
+    },
+    {
+      "id": "rel:fields:c3",
+      "source": "option_sets",
+      "sourceField": "id",
+      "target": "fields",
+      "targetField": "option_set_id",
+      "kind": "m2m",
+      "label": "option_set"
+    },
+    {
+      "id": "rel:option_transitions:c3",
+      "source": "options",
+      "sourceField": "id",
+      "target": "option_transitions",
+      "targetField": "from_option_id",
+      "kind": "fk",
+      "label": "from"
+    },
+    {
+      "id": "rel:option_transitions:c4",
+      "source": "options",
+      "sourceField": "id",
+      "target": "option_transitions",
+      "targetField": "to_option_id",
+      "kind": "fk",
+      "label": "to"
+    },
+    {
+      "id": "rel:link_type_target_types:c2",
+      "source": "item_types",
+      "sourceField": "id",
+      "target": "link_type_target_types",
+      "targetField": "target_type_id",
+      "kind": "fk",
+      "label": "target"
+    },
+    {
+      "id": "rel:items:c2",
+      "source": "projects",
+      "sourceField": "id",
+      "target": "items",
+      "targetField": "project_id",
+      "kind": "fk",
+      "label": "owns"
+    },
+    {
+      "id": "rel:items:c3",
+      "source": "item_types",
+      "sourceField": "id",
+      "target": "items",
+      "targetField": "type_id",
+      "kind": "fk",
+      "label": "type"
+    },
+    {
+      "id": "rel:items:c5",
+      "source": "users",
+      "sourceField": "id",
+      "target": "items",
+      "targetField": "created_by",
+      "kind": "fk",
+      "label": "created_by"
+    },
+    {
+      "id": "rel:item_values:c4",
+      "source": "options",
+      "sourceField": "id",
+      "target": "item_values",
+      "targetField": "option_id",
+      "kind": "fk",
+      "label": "option_id"
+    },
+    {
+      "id": "rel:comments:c3",
+      "source": "users",
+      "sourceField": "id",
+      "target": "comments",
+      "targetField": "author_id",
+      "kind": "fk",
+      "label": "author"
+    },
+    {
+      "id": "rel:item_links:c3",
       "source": "items",
       "sourceField": "id",
-      "target": "item_activity",
-      "targetField": "item_id",
-      "kind": "fk"
+      "target": "item_links",
+      "targetField": "source_item_id",
+      "kind": "fk",
+      "label": "source"
+    },
+    {
+      "id": "rel:item_links:c4",
+      "source": "items",
+      "sourceField": "id",
+      "target": "item_links",
+      "targetField": "target_item_id",
+      "kind": "fk",
+      "label": "target"
+    },
+    {
+      "id": "rel:events:c2",
+      "source": "users",
+      "sourceField": "id",
+      "target": "events",
+      "targetField": "actor_id",
+      "kind": "fk",
+      "label": "actor"
     }
-  ],
-  "view": {
-    "routing": "avoid"
-  }
+  ]
 }
