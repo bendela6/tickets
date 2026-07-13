@@ -3,6 +3,7 @@ import type { RoutingMode } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi, useDiagramView } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
 import { Chip } from './chip';
+import { ModelMenu } from './model-menu';
 import { SearchBox } from './search-box';
 import { ToggleGroup } from './toggle-group';
 
@@ -54,6 +55,7 @@ export function TopBar({ onSelfCheck }: TopBarProps) {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
+        <ModelMenu />
         <SearchBox />
 
         {model && model.groups.some((g) => !g.parent) && (
