@@ -119,16 +119,22 @@ function separateAxis(
   for (const s of movable) {
     const near = placed.filter((p) => p.lo <= s.hi + 1 && p.hi >= s.lo - 1);
     let coord: number | null = null;
-    outer: for (let j = 0; j <= 12; j++) {
+    let fallback: number | null = null; // separated but card-blocked — still beats overlap
+    outer: for (let j = 0; j <= 24; j++) {
       for (const c of j === 0 ? [s.key] : [s.key + j * LANE_STEP, s.key - j * LANE_STEP]) {
         if (near.some((p) => Math.abs(p.coord - c) < MIN_SEP)) continue;
         if (vertical && shrinksPortStub(s, c)) continue;
-        if (j > 0 && shiftBlocked(model, cards, s, c - s.key, vertical)) continue;
+        if (j > 0 && shiftBlocked(model, cards, s, c - s.key, vertical)) {
+          fallback ??= c;
+          continue;
+        }
         coord = c;
         break outer;
       }
     }
-    if (coord == null) coord = s.key; // every lane taken or blocked — stay put
+    // Never stack two runs on one lane: a separated-but-blocked lane reads far
+    // better than two lines drawn on top of each other.
+    if (coord == null) coord = fallback ?? s.key;
     applyShift(s, coord - s.key, vertical);
     placed.push({ lo: s.lo, hi: s.hi, coord });
     entries.push({ s, coord });

@@ -158,7 +158,7 @@ function overlappingPairs(routes: Map<string, Point[] | null>): string[] {
   return bad;
 }
 
-it.fails('a hub fanned to three stacked targets gets a distinct lane per edge', () => {
+it('a hub fanned to three stacked targets gets a distinct lane per edge', () => {
   const raw = {
     groups: [{ id: 'z', label: 'Z', order: 0 }],
     entities: [
