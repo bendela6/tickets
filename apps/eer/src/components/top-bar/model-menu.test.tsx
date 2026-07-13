@@ -46,6 +46,18 @@ async function flush() {
   });
 }
 
+// A promise plus externally-callable resolve/reject, so a test can control
+// exactly when — and in what order — two in-flight getModel() calls settle.
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (err: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
 describe('ModelMenu', () => {
   beforeEach(() => {
     vi.mocked(listModels).mockResolvedValue([
@@ -77,6 +89,47 @@ describe('ModelMenu', () => {
     await flush();
 
     expect(getModel).toHaveBeenCalledWith('model-b');
+    expect(modelRef?.meta.title).toBe('Second model');
+    expect(uiRef?.modelId).toBe('model-b');
+  });
+
+  it('applies the latest selection, not a stale one that resolves after it', async () => {
+    // Model A is picked first but its fetch resolves LAST; Model B is picked
+    // second but its fetch resolves FIRST — the out-of-order response a slow
+    // network / server can produce for rapid A→B reselection.
+    const modelA = deferred<unknown>();
+    const modelB = deferred<unknown>();
+    vi.mocked(getModel).mockImplementation((id: string) => {
+      if (id === 'model-a') return modelA.promise;
+      if (id === 'model-b') return modelB.promise;
+      throw new Error(`unexpected id: ${id}`);
+    });
+    const { actions } = await renderDiagram(
+      <>
+        <Probe />
+        <ModelMenu />
+      </>,
+      twoZoneRaw(),
+    );
+    await flush();
+    const load = vi.spyOn(actions, 'load');
+
+    const select = screen.getByRole('combobox', { name: 'Model' });
+    fireEvent.change(select, { target: { value: 'model-a' } });
+    fireEvent.change(select, { target: { value: 'model-b' } });
+    expect(getModel).toHaveBeenNthCalledWith(1, 'model-a');
+    expect(getModel).toHaveBeenNthCalledWith(2, 'model-b');
+
+    // Resolve out of order: the newer (model-b) request settles first...
+    modelB.resolve(secondRaw());
+    await flush();
+    // ...then the older (model-a) request finally settles, with different data.
+    modelA.resolve({ ...secondRaw(), meta: { title: 'First model (stale)' } });
+    await flush();
+
+    // The stale model-a response must be ignored: exactly one load, for model-b.
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(load).toHaveBeenLastCalledWith(expect.anything(), 'model-b');
     expect(modelRef?.meta.title).toBe('Second model');
     expect(uiRef?.modelId).toBe('model-b');
   });
@@ -136,6 +189,26 @@ describe('ModelMenu', () => {
 
     expect(saveModel).toHaveBeenCalledWith('model-a', serializeModel(modelRef!, uiRef!.colors));
     expect(uiRef?.dirty).toBe(false); // markSaved() ran after the resolved save
+  });
+
+  it('disables Save and never calls saveModel when no model id is loaded (e.g. the bundled default)', async () => {
+    // renderDiagram's initial load() omits the modelId arg, exactly like loading
+    // the bundled default model — ui.modelId stays null (see diagram-reducer LOAD).
+    await renderDiagram(
+      <>
+        <Probe />
+        <ModelMenu />
+      </>,
+      twoZoneRaw(),
+    );
+    await flush();
+    expect(uiRef?.modelId).toBeNull();
+
+    const save = screen.getByRole('button', { name: 'Save' });
+    expect(save).toBeDisabled();
+
+    fireEvent.click(save);
+    expect(saveModel).not.toHaveBeenCalled();
   });
 
   it('hides the whole menu when listModels() resolves null', async () => {

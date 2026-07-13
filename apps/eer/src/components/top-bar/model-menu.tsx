@@ -3,19 +3,14 @@
 // listModels() resolves null — that's the production-build signal (see
 // models-client) that the API doesn't exist at all.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { getModel, listModels, saveModel, type ModelSummary } from '../../api/models-client';
 import { loadModel } from '../../engine/model/load-model';
 import { serializeModel } from '../../engine/model/serialize-model';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
-
-const btn = cn(
-  'rounded-md border border-gray-600 bg-gray-900 px-3 py-2',
-  'text-sm font-medium whitespace-nowrap text-gray-200',
-  'hover:border-gray-500 hover:bg-gray-800 hover:text-gray-50',
-);
+import { btn } from './button-class';
 
 const selectClass = cn('rounded-md border border-gray-600 bg-gray-900 px-2 py-1', 'text-sm text-gray-50');
 
@@ -27,6 +22,12 @@ export function ModelMenu() {
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // The id of the most recently *requested* model — set synchronously before
+  // each getModel() fetch. Responses are only applied while they're still the
+  // latest request: an older fetch that resolves after a newer one (or after
+  // unmount) is stale and must not clobber what the user has since selected.
+  const latestReq = useRef<string | null>(null);
+
   useEffect(() => {
     let cancelled = false;
     void listModels().then((list) => {
@@ -34,19 +35,23 @@ export function ModelMenu() {
     });
     return () => {
       cancelled = true;
+      latestReq.current = null; // unmounting invalidates any in-flight model fetch too
     };
   }, []);
 
   if (models === null) return null;
 
   const selectModel = (id: string) => {
+    latestReq.current = id;
     void getModel(id)
       .then((raw) => {
+        if (latestReq.current !== id) return; // superseded by a newer selection, or unmounted
         const result = loadModel(raw);
         if (!result.errors.length && result.model) actions.load(result.model, id);
         else console.error(`Model "${id}" failed validation:`, result.errors.join(' '));
       })
       .catch((err: unknown) => {
+        if (latestReq.current !== id) return;
         console.error(`Could not load model "${id}":`, err);
       });
   };
