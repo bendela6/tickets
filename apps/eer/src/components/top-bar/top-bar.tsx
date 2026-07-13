@@ -2,6 +2,7 @@ import { groupColor } from '../../engine/colors/group-color';
 import type { RoutingMode } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi, useDiagramView } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
+import { btn } from './button-class';
 import { Chip } from './chip';
 import { ModelMenu } from './model-menu';
 import { SearchBox } from './search-box';
@@ -17,12 +18,6 @@ const ROUTING_TIP: Record<RoutingMode, string> = {
   avoid: 'Curves routed around cards',
   ortho: 'Horizontal / vertical only',
 };
-
-const btn = cn(
-  'rounded-md border border-gray-600 bg-gray-900 px-3 py-2',
-  'text-sm font-medium whitespace-nowrap text-gray-200',
-  'hover:border-gray-500 hover:bg-gray-800 hover:text-gray-50',
-);
 
 interface TopBarProps {
   onSelfCheck: () => void;
