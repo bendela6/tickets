@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { loadModel } from './load-model';
+import { serializeModel } from '../serialize-model';
 import seedRaw from '../../../../models/items-platform.json';
 
 describe('loadModel — cardinality warnings', () => {
@@ -45,6 +46,138 @@ describe('loadModel — cardinality warnings', () => {
     const { model: m } = loadModel(model);
     expect(m!.relById.get('istream')!.cardinality).toBe('1-n');
     expect(m!.relById.get('e-outbox')!.cardinality).toBe('1-1');
+  });
+});
+
+// These pin the fix that made cardinality inference read the endpoints'
+// derived CONSTRAINT roles (columnRoles: pk/fk booleans) instead of the
+// legacy per-field `role` key. A constraints-authored file (an explicit
+// `constraints` array, no `role`/`ref` anywhere) has no legacy roles at all —
+// before the fix, every authored relationship without an explicit
+// `cardinality` fell into the "ambiguous" fallback (1-n + a warning),
+// regardless of what its constraints actually said.
+describe('loadModel — cardinality inferred from CONSTRAINTS, not legacy roles', () => {
+  it('(a) infers 1-n from a pk/fk constraint pair — no legacy role/ref key anywhere in the file', () => {
+    const raw = {
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        {
+          id: 'users', group: 'g',
+          fields: [{ name: 'id', type: 'serial' }],
+          constraints: [{ id: 'c1', kind: 'pk', columns: ['id'] }],
+        },
+        {
+          id: 'orders', group: 'g',
+          fields: [{ name: 'id', type: 'serial' }, { name: 'user_id', type: 'int' }],
+          constraints: [
+            { id: 'c1', kind: 'pk', columns: ['id'] },
+            { id: 'c2', kind: 'fk', columns: ['user_id'], refTable: 'users', refColumns: ['id'] },
+          ],
+        },
+      ],
+      relationships: [{ id: 'r1', source: 'users', sourceField: 'id', target: 'orders', targetField: 'user_id' }],
+    };
+    const { model, errors, warnings } = loadModel(raw);
+    expect(errors).toEqual([]);
+    // The pair is also backed by a real fk constraint, so its final
+    // cardinality would read 1-n from derive-relationships' own
+    // cardinalityOf() regardless — the warning is the honest signal that
+    // inferCardinality itself resolved this from constraints rather than
+    // hitting the ambiguous fallback (which is what happens today, since
+    // there's no legacy `role` key anywhere for the old code to read).
+    expect(warnings).toEqual([]);
+    const rel = model!.relationships.find((r) => r.source === 'users' && r.target === 'orders')!;
+    expect(rel.cardinality).toBe('1-n');
+  });
+
+  it('(b) infers n-m for an fk<->fk pair with no shared backing constraint — the m2m case the seed relies on', () => {
+    const raw = {
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        { id: 'a', group: 'g', fields: [{ name: 'id', type: 'serial' }], constraints: [{ id: 'c1', kind: 'pk', columns: ['id'] }] },
+        { id: 'b', group: 'g', fields: [{ name: 'id', type: 'serial' }], constraints: [{ id: 'c1', kind: 'pk', columns: ['id'] }] },
+        {
+          id: 'junction', group: 'g',
+          fields: [{ name: 'a_id', type: 'int' }, { name: 'b_id', type: 'int' }],
+          constraints: [
+            { id: 'c1', kind: 'fk', columns: ['a_id'], refTable: 'a', refColumns: ['id'] },
+            { id: 'c2', kind: 'fk', columns: ['b_id'], refTable: 'b', refColumns: ['id'] },
+          ],
+        },
+      ],
+      // junction.a_id <-> junction.b_id: neither column is anyone's pk, and no
+      // single fk constraint links them to EACH OTHER (each's fk constraint
+      // points at a/b respectively) — so this edge isn't covered by any
+      // derived pair and survives verbatim, cardinality straight from
+      // inferCardinality (not masked by derive-relationships).
+      relationships: [
+        { id: 'm2m-edge', source: 'junction', sourceField: 'a_id', target: 'junction', targetField: 'b_id', kind: 'm2m', label: 'M2M' },
+      ],
+    };
+    const { model, errors, warnings } = loadModel(raw);
+    expect(errors).toEqual([]);
+    expect(warnings).toEqual([]);
+    expect(model!.relById.get('m2m-edge')!.cardinality).toBe('n-m');
+  });
+
+  it('(c) infers 1-1 for a pk<->pk pair (identifying / shared key) with no backing fk constraint', () => {
+    const raw = {
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        { id: 'events', group: 'g', fields: [{ name: 'id', type: 'bigserial' }], constraints: [{ id: 'c1', kind: 'pk', columns: ['id'] }] },
+        // 'audit' shares events' key (an identifying relationship) but no fk
+        // constraint is modelled at all — keeps this edge unbacked, so the
+        // value comes straight from inferCardinality rather than being masked
+        // by derive-relationships' own cardinalityOf.
+        { id: 'audit', group: 'g', fields: [{ name: 'event_id', type: 'bigint' }], constraints: [{ id: 'c1', kind: 'pk', columns: ['event_id'] }] },
+      ],
+      relationships: [{ id: 'e-audit', source: 'events', sourceField: 'id', target: 'audit', targetField: 'event_id' }],
+    };
+    const { model, errors, warnings } = loadModel(raw);
+    expect(errors).toEqual([]);
+    expect(warnings).toEqual([]);
+    expect(model!.relById.get('e-audit')!.cardinality).toBe('1-1');
+  });
+});
+
+// Regression guard for the real bundled seed (still legacy per-field
+// role/ref-authored today). The fix must not change a single value here —
+// pinning the exact multiset makes any future regression visible instead of
+// silently averaging out.
+describe('loadModel — real seed regression (pinned cardinality multiset)', () => {
+  it('(d) loads with 0 errors/warnings, 41 relationships, 18 labels, 3 m2m, and this exact cardinality multiset', () => {
+    const { model, errors, warnings } = loadModel(seedRaw);
+    expect(errors).toEqual([]);
+    expect(warnings).toEqual([]);
+    expect(model!.relationships).toHaveLength(41);
+    expect(model!.relationships.filter((r) => r.label)).toHaveLength(18);
+    expect(model!.relationships.filter((r) => r.kind === 'm2m')).toHaveLength(3);
+
+    const counts: Record<string, number> = {};
+    for (const r of model!.relationships) counts[r.cardinality] = (counts[r.cardinality] ?? 0) + 1;
+    expect(counts).toEqual({ '1-n': 40, '1-1': 1 });
+  });
+
+  // T9: serializeModel never writes legacy `role`/`ref` (only `constraints`),
+  // so serialize -> reload produces the constraints-only shape an upcoming
+  // task will rewrite the seed into. Before the fix, every entity's fields
+  // lose their legacy role on the second load, so every authored relationship
+  // without an explicit cardinality trips the ambiguous fallback and warns —
+  // even though most VALUES happen to come out unchanged anyway (masked by
+  // derive-relationships' own cardinalityOf override for constraint-backed
+  // pairs). 0 warnings is the bar; equal-by-id cardinality is the belt.
+  it('(e) serialize -> reload (constraints-only shape) yields the SAME cardinality per relationship, with 0 warnings', () => {
+    const { model: m1, errors: e1, warnings: w1 } = loadModel(seedRaw);
+    expect(e1).toEqual([]);
+    expect(w1).toEqual([]);
+
+    const raw2 = serializeModel(m1!, m1!.colors);
+    const { model: m2, errors: e2, warnings: w2 } = loadModel(raw2);
+    expect(e2).toEqual([]);
+    expect(w2).toEqual([]);
+
+    const byId = (rels: { id: string; cardinality: string }[]) => new Map(rels.map((r) => [r.id, r.cardinality]));
+    expect(byId(m2!.relationships)).toEqual(byId(m1!.relationships));
   });
 });
 
