@@ -1,12 +1,22 @@
 // Model → raw JSON file shape. Inverse of load-model for everything the editor
 // touches: meta, kinds, colours, groups+bounds, entities+positions+fields, and
-// relationships. Underscore-prefixed derived state is never serialized. Fk-kind
-// relationships are derived from fk-role fields (see apply-model-edit /
-// load-model), so they're skipped here — load-model reconstructs them from the
-// fields themselves, and writing them out too would just be redundant, drifting
-// data for load-model's dedupe-by-endpoint-tuple to reconcile.
+// relationships. Underscore-prefixed derived state is never serialized. A
+// relationship is omitted ONLY when load-model is guaranteed to reconstruct it
+// byte-for-byte: kind 'fk', no label, plain '1-n' cardinality, and a same-direction
+// fk-role field to derive it from. Everything else — a labelled fk rel, one with a
+// hand-set cardinality (e.g. the '1-1' of an identifying, shared-pk relationship),
+// or one with no backing fk field at all (e.g. an untagged event-stream reference) —
+// serializes explicitly, so save→load survives it byte-honestly instead of quietly
+// dropping it.
 
-import type { Model } from '../types';
+import type { Model, Relationship } from '../types';
+
+function isFullyReDerivable(model: Model, r: Relationship): boolean {
+  if (r.kind !== 'fk' || r.label !== null || r.cardinality !== '1-n') return false;
+  const target = model.entityById.get(r.target);
+  const field = target?.fields.find((f) => f.name === r.targetField);
+  return !!field && field.role === 'fk' && field.ref === r.source && (field.refField ?? 'id') === r.sourceField;
+}
 
 export function serializeModel(model: Model, colors: ReadonlyMap<string, string>): Record<string, unknown> {
   const bounds = new Map(model._groupBounds.map((b) => [b.id, { x: b.x, y: b.y, w: b.w, h: b.h }]));
@@ -39,7 +49,7 @@ export function serializeModel(model: Model, colors: ReadonlyMap<string, string>
       })),
     })),
     relationships: model.relationships
-      .filter((r) => r.kind !== 'fk')
+      .filter((r) => !isFullyReDerivable(model, r))
       .map((r) => ({
         id: r.id,
         source: r.source,
