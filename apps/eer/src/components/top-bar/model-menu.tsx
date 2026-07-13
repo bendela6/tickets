@@ -10,6 +10,7 @@ import { loadModel } from '../../engine/model/load-model';
 import { serializeModel } from '../../engine/model/serialize-model';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
+import { useEditor } from '../editor';
 import { btn } from './button-class';
 
 const selectClass = cn('rounded-md border border-gray-600 bg-gray-900 px-2 py-1', 'text-sm text-gray-50');
@@ -18,6 +19,7 @@ export function ModelMenu() {
   const model = useDiagramModelOrNull();
   const ui = useDiagramUi();
   const actions = useDiagramActions();
+  const { openModal } = useEditor();
   const [models, setModels] = useState<ModelSummary[] | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -28,6 +30,10 @@ export function ModelMenu() {
   // unmount) is stale and must not clobber what the user has since selected.
   const latestReq = useRef<string | null>(null);
 
+  // Re-fetched whenever the loaded model's id changes, not just on mount — New
+  // and Delete (model-modal.tsx) both change ui.modelId out from under this
+  // list without going through ModelMenu at all, so without this the dropdown
+  // would keep showing a model that no longer exists (or miss one just created).
   useEffect(() => {
     let cancelled = false;
     void listModels().then((list) => {
@@ -37,7 +43,7 @@ export function ModelMenu() {
       cancelled = true;
       latestReq.current = null; // unmounting invalidates any in-flight model fetch too
     };
-  }, []);
+  }, [ui.modelId]);
 
   if (models === null) return null;
 
@@ -108,8 +114,18 @@ export function ModelMenu() {
         </div>
       )}
 
-      <button type="button" className={btn} disabled title="lands with modals">
+      <button type="button" className={btn} onClick={() => openModal({ kind: 'new-model' })}>
         New
+      </button>
+
+      <button
+        type="button"
+        className={btn}
+        disabled={!model}
+        title={model ? 'Edit title & description, or delete this model' : undefined}
+        onClick={() => openModal({ kind: 'model' })}
+      >
+        Edit model
       </button>
 
       <button
