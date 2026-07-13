@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { columnRoles, type ColumnRole } from '../../../engine/model/column-roles';
 import { portKey } from '../../../engine/geometry/port-key';
 import { useDiagramDispatch } from '../../../state/diagram-context';
-import type { Entity, Field, Side } from '../../../engine/model/types';
+import type { Column, Entity, Side } from '../../../engine/model/types';
 import { cn } from '../../../ui/cn';
 import { runtimeStyle } from '../../../ui/runtime-style';
 
@@ -16,7 +16,7 @@ function Port({
   hot,
 }: {
   e: Entity;
-  f: Field;
+  f: Column;
   role: ColumnRole | undefined;
   side: Side;
   connected: ReadonlySet<string>;
@@ -58,7 +58,7 @@ export function FieldRow({
   pinSpan,
 }: {
   entity: Entity;
-  field: Field;
+  field: Column;
   index: number;
   connected: ReadonlySet<string>;
   pinSpan: ReadonlyMap<string, number>;

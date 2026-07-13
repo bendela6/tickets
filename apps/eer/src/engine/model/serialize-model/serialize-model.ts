@@ -89,11 +89,9 @@ export function serializeModel(model: Model, colors: ReadonlyMap<string, string>
       ...(e.description ? { description: e.description } : {}),
       x: e.x,
       y: e.y,
-      fields: e.fields.map((f) => ({
+      fields: e.columns.map((f) => ({
         name: f.name,
         type: f.type,
-        ...(f.role ? { role: f.role } : {}),
-        ...(f.ref ? { ref: f.ref, refField: f.refField ?? 'id' } : {}),
         ...(f.title ? { title: f.title } : {}),
         ...(f.description ? { description: f.description } : {}),
         ...(f.nullable === false ? { nullable: false } : {}),

@@ -1,6 +1,5 @@
 export type RoutingMode = 'curved' | 'avoid' | 'ortho';
 export type Side = 'L' | 'R';
-export type Role = 'pk' | 'fk' | null;
 export type Cardinality = '1-1' | '1-n' | 'n-1' | 'n-m';
 export type LineStyle = 'solid' | 'dashed';
 
@@ -31,12 +30,9 @@ export interface Point {
   y: number;
 }
 
-export interface Field {
+export interface Column {
   name: string;
   type: string;
-  role: Role;
-  ref: string | null;
-  refField: string | null;
   title: string | null;
   description: string | null;
   nullable: boolean;
@@ -48,7 +44,7 @@ export interface Entity {
   label: string;
   group: string;
   description: string | null;
-  fields: Field[];
+  columns: Column[];
   constraints: Constraint[];
   indexes: TableIndex[];
   // layout fills these:

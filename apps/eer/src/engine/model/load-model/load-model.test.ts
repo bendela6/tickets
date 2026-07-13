@@ -327,8 +327,8 @@ describe('loadModel — constraints and indexes', () => {
       },
     ]);
     expect(orders.indexes).toEqual([]);
-    expect(orders.fields[1]!.nullable).toBe(true);
-    expect(orders.fields[1]!.default).toBeNull();
+    expect(orders.columns[1]!.nullable).toBe(true);
+    expect(orders.columns[1]!.default).toBeNull();
   });
 
   it('treats a ref on a non-fk field as a foreign key (shared-pk reference)', () => {
@@ -385,7 +385,7 @@ describe('loadModel — constraints and indexes', () => {
     });
     expect(items.constraints[3]).toEqual({ id: 'c4', kind: 'check', name: null, expression: 'char_length(key) > 0' });
     expect(items.indexes).toEqual([{ id: 'i1', name: 'idx_items_a', columns: ['a_id'], unique: false }]);
-    expect(items.fields[0]!.nullable).toBe(false);
-    expect(items.fields[2]!.default).toBe("'draft'");
+    expect(items.columns[0]!.nullable).toBe(false);
+    expect(items.columns[2]!.default).toBe("'draft'");
   });
 });

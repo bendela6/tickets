@@ -195,9 +195,19 @@ describe('TableModal', () => {
 
     const before = loadModel(seedRaw).model!;
     const beforeEntity = before.entityById.get('outbox')!;
-    const originalField = beforeEntity.fields.find((f) => f.name === 'event_id')!;
-    // Sanity: this is genuinely the role-pk-with-ref, titled shape the fix targets.
-    expect(originalField).toMatchObject({ role: 'pk', ref: 'events', title: 'Event', description: 'Event to deliver.' });
+    const originalField = beforeEntity.columns.find((f) => f.name === 'event_id')!;
+    // Sanity: this is genuinely the titled shape the fix targets, and the
+    // legacy role:'pk'+ref:'events' the raw file carries for this column has
+    // synthesized into a real pk constraint AND a real fk constraint (a
+    // shared-primary-key reference) — not stored on the Column itself any
+    // more (see types.ts / load-model's synthesizeLegacyConstraints).
+    expect(originalField).toMatchObject({ title: 'Event', description: 'Event to deliver.' });
+    expect(beforeEntity.constraints).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: 'pk', columns: ['event_id'] }),
+        expect.objectContaining({ kind: 'fk', columns: ['event_id'], refTable: 'events' }),
+      ]),
+    );
     const beforeRel = before.relationships.find((r) => r.target === 'outbox' && r.targetField === 'event_id')!;
     expect(beforeRel).toBeDefined();
 
@@ -206,21 +216,21 @@ describe('TableModal', () => {
     // title/description survive; the entity's constraints (and therefore the
     // derived relationship for event_id -> events) are carried through
     // verbatim rather than re-derived from fields.
-    expect(appliedEntity.fields.find((f) => f.name === 'event_id')!.title).toBe('Event');
+    expect(appliedEntity.columns.find((f) => f.name === 'event_id')!.title).toBe('Event');
     expect(appliedEntity.constraints).toEqual(beforeEntity.constraints);
     expect(applied.relationships.some((r) => r.id === beforeRel.id)).toBe(true);
 
     const raw2 = serializeModel(applied, before.colors);
     const { model: reloaded, errors } = loadModel(raw2);
     expect(errors).toEqual([]);
-    expect(reloaded!.entityById.get('outbox')!.fields.find((f) => f.name === 'event_id')!.title).toBe('Event');
+    expect(reloaded!.entityById.get('outbox')!.columns.find((f) => f.name === 'event_id')!.title).toBe('Event');
     expect(reloaded!.relationships.some((r) => r.id === beforeRel.id)).toBe(true);
 
     // Every other field on the entity (plain, titled, no ref) survives too.
     const otherNames = ['created_at', 'picked_at', 'done_at'];
     for (const name of otherNames) {
-      const orig = beforeEntity.fields.find((f) => f.name === name)!;
-      const reloadedField = reloaded!.entityById.get('outbox')!.fields.find((f) => f.name === name)!;
+      const orig = beforeEntity.columns.find((f) => f.name === name)!;
+      const reloadedField = reloaded!.entityById.get('outbox')!.columns.find((f) => f.name === name)!;
       expect(reloadedField.title).toBe(orig.title);
       expect(reloadedField.description).toBe(orig.description);
     }

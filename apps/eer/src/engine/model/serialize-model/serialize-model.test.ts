@@ -24,7 +24,7 @@ describe('serializeModel', () => {
     expect(errors).toEqual([]);
     const packed = packLayout(m2!);
     expect(packed.entities.map((e) => e.id)).toEqual(m1.entities.map((e) => e.id));
-    expect(packed.entityById.get('orders')!.fields).toEqual(m1.entityById.get('orders')!.fields);
+    expect(packed.entityById.get('orders')!.columns).toEqual(m1.entityById.get('orders')!.columns);
     expect(packed.colors.get('z1')).toBe('#123456');
     expect(packed.entityById.get('users')!.x).toBe(m1.entityById.get('users')!.x); // layout survived
     expect(packed.relationships.map(tuple).sort()).toEqual(m1.relationships.map(tuple).sort());
@@ -264,7 +264,7 @@ describe('serializeModel', () => {
         label: projects.label,
         group: projects.group,
         description: projects.description,
-        fields: projects.fields.map((f) => ({
+        fields: projects.columns.map((f) => ({
           name: f.name,
           type: f.type,
           title: f.title,
