@@ -2,6 +2,7 @@
 // the live scene (DOM under `root` + geometry, not screenshot judgement).
 
 import { cssEsc } from '../../dom/css-esc';
+import { sameSet } from '../../model/derive-relationships';
 import { edgeEndpoints } from '../../geometry/edge-endpoints';
 import { loadModel } from '../../model/load-model';
 import { portWorldPos } from '../../geometry/port-world-pos';
@@ -142,6 +143,27 @@ function checkNoReflow({ model, root }: RunChecksArgs): CheckResult {
   return result('Hover/focus never moves a node', problems, model.entities.length + ' nodes');
 }
 
+// Postgres requires a foreign key to reference a unique-constrained column
+// set — not just any existing columns. A model can load and diagram fine
+// with an fk pointed at a plain (non-key) column; Postgres itself would
+// reject that DDL, so this self-check surfaces the same rule against the
+// live model rather than waiting for a real database to say no.
+function checkFkReferencesAKey({ model }: RunChecksArgs): CheckResult {
+  const problems: string[] = [];
+  for (const e of model.entities) {
+    for (const c of e.constraints) {
+      if (c.kind !== 'fk') continue;
+      const target = model.entityById.get(c.refTable);
+      if (!target) continue;
+      const covered = target.constraints.some(
+        (tc) => (tc.kind === 'pk' || tc.kind === 'unique') && sameSet(tc.columns, c.refColumns),
+      );
+      if (!covered) problems.push(`${e.id}(${c.columns.join(', ')}) → ${c.refTable}(${c.refColumns.join(', ')})`);
+    }
+  }
+  return result('Every foreign key references a key', problems, `${model.entities.length} tables`);
+}
+
 function checkBrokenRefsSurface(): CheckResult {
   const broken = {
     groups: [{ id: 'g', label: 'G' }],
@@ -154,5 +176,11 @@ function checkBrokenRefsSurface(): CheckResult {
 }
 
 export function runChecks(args: RunChecksArgs): CheckResult[] {
-  return [checkEndpoints(args), checkPortPairs(args), checkNoReflow(args), checkBrokenRefsSurface()];
+  return [
+    checkEndpoints(args),
+    checkPortPairs(args),
+    checkNoReflow(args),
+    checkFkReferencesAKey(args),
+    checkBrokenRefsSurface(),
+  ];
 }

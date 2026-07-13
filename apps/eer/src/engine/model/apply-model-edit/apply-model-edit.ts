@@ -134,21 +134,88 @@ function deleteGroup(model: Model, id: string): Model {
   };
 }
 
-// Duplicate names are rejected up front rather than silently producing an
-// unresolvable field later. Key/reference validation is gone along with
-// EditField's role/ref/refField — the field grid can't author a constraint, so
-// there's nothing here to validate; see the module header comment.
+// Duplicate/blank names are rejected up front rather than silently producing
+// an unresolvable column later.
 function validateEditFields(fields: EditField[]): void {
   const seen = new Set<string>();
   for (const f of fields) {
-    if (seen.has(f.name)) throw new Error(`Duplicate field name "${f.name}".`);
+    if (!f.name.trim()) throw new Error('Column name must not be blank.');
+    if (seen.has(f.name)) throw new Error(`Duplicate column name "${f.name}".`);
     seen.add(f.name);
+  }
+}
+
+// The field grid has no key-editing UI (see the module header comment), but a
+// real constraints/indexes editor is coming — and even a verbatim passthrough
+// can carry a structurally broken schema in (a hand-built ModelEdit, a future
+// constraints UI with a bug, …). These are the real Postgres-shaped rules a
+// table's constraints/indexes must satisfy against ITS OWN edited column list
+// (and, for fk, the target entity's), checked at the one point an edit is
+// actually authored — before columnRoles/deriveRelationships/serialize-model
+// ever have to guess at a broken shape.
+function validateConstraints(model: Model, e: EditEntity): void {
+  const ownColumns = new Set(e.fields.map((f) => f.name));
+  // A brand-new entity may self-reference its own not-yet-existing row (see
+  // the "self-reference" test in apply-model-edit.test.ts) — refTable === e.id
+  // resolves against the columns being authored in THIS edit, not whatever
+  // (nonexistent) entity might already be in the model under that id.
+  const targetColumns = (refTable: string): Set<string> | null => {
+    if (refTable === e.id) return ownColumns;
+    const target = model.entityById.get(refTable);
+    return target ? new Set(target.columns.map((c) => c.name)) : null;
+  };
+
+  let pkCount = 0;
+  const constraintNames = new Set<string>();
+  for (const c of e.constraints) {
+    if (c.name) {
+      if (constraintNames.has(c.name)) throw new Error(`Duplicate constraint name "${c.name}".`);
+      constraintNames.add(c.name);
+    }
+
+    if (c.kind === 'check') {
+      if (!c.expression.trim()) throw new Error(`Check constraint "${c.id}" must have a non-blank expression.`);
+      continue;
+    }
+
+    if (c.columns.length === 0) throw new Error(`Constraint "${c.id}" must reference at least one column.`);
+    for (const col of c.columns) {
+      if (!ownColumns.has(col)) throw new Error(`Constraint "${c.id}" references unknown column "${col}".`);
+    }
+
+    if (c.kind === 'pk') {
+      pkCount++;
+      if (pkCount > 1) throw new Error(`Table "${e.id}" may have only one primary key constraint.`);
+    }
+
+    if (c.kind === 'fk') {
+      const refCols = targetColumns(c.refTable);
+      if (!refCols) throw new Error(`Foreign key constraint "${c.id}" references unknown table "${c.refTable}".`);
+      if (c.columns.length !== c.refColumns.length)
+        throw new Error(`Foreign key constraint "${c.id}" must reference the same number of columns as it defines.`);
+      for (const col of c.refColumns) {
+        if (!refCols.has(col)) throw new Error(`Foreign key constraint "${c.id}" references unknown column "${col}".`);
+      }
+    }
+  }
+
+  const indexNames = new Set<string>();
+  for (const ix of e.indexes) {
+    if (ix.name) {
+      if (indexNames.has(ix.name)) throw new Error(`Duplicate index name "${ix.name}".`);
+      indexNames.add(ix.name);
+    }
+    if (ix.columns.length === 0) throw new Error(`Index "${ix.id}" must reference at least one column.`);
+    for (const col of ix.columns) {
+      if (!ownColumns.has(col)) throw new Error(`Index "${ix.id}" references unknown column "${col}".`);
+    }
   }
 }
 
 function upsertEntity(model: Model, e: EditEntity): Model {
   if (!model.groups.some((g) => g.id === e.group)) throw new Error(`Unknown group "${e.group}".`);
   validateEditFields(e.fields);
+  validateConstraints(model, e);
 
   // The editor form has no "title" input, but EditField still carries title
   // through as an untouched passthrough (table-modal's toEditField reads it in,
