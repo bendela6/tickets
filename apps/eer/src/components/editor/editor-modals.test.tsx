@@ -35,7 +35,7 @@ describe('EditorModals routing', () => {
     );
 
     await act(async () => editorRef!.openModal({ kind: 'table', id: 'users' }));
-    expect((screen.getByLabelText('Field 2 name') as HTMLInputElement).value).toBe('name');
+    expect((screen.getByLabelText('Column 2 name') as HTMLInputElement).value).toBe('name');
 
     // Both calls in one batch — see the comment above for why this is the
     // actual repro path, not just "click close, then click open".
@@ -45,8 +45,8 @@ describe('EditorModals routing', () => {
     });
 
     expect(screen.getByText('Edit orders')).toBeInTheDocument();
-    expect((screen.getByLabelText('Field 2 name') as HTMLInputElement).value).toBe('users_id');
-    expect((screen.getByLabelText('Field 1 name') as HTMLInputElement).value).toBe('id');
+    expect((screen.getByLabelText('Column 2 name') as HTMLInputElement).value).toBe('users_id');
+    expect((screen.getByLabelText('Column 1 name') as HTMLInputElement).value).toBe('id');
   });
 
   it('remounts the group modal per target id — B never shows a stale draft of A', async () => {

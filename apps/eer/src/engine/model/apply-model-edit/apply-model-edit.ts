@@ -11,7 +11,7 @@
 // real-`constraints`-authored table's keys — and every edge attached to
 // them — the moment it was saved with no field-role change to trigger on,
 // because such a table has no role/ref at all to regenerate from). The field
-// grid has no key-editing UI any more (see field-grid.tsx) — a real constraints
+// grid has no key-editing UI any more (see columns-grid.tsx) — a real constraints
 // editor is a later task; until then, an edit can only carry a table's
 // constraints/indexes through unchanged, never author new ones (except a brand
 // new table's default `id` pk, built once at creation).
@@ -26,9 +26,6 @@ export interface EditField {
   type: string;
   title: string | null;
   description: string | null;
-  // Neither has an editable column in FieldGrid yet — carried through
-  // untouched so a no-op Save can't destroy it. Same passthrough reasoning as
-  // `title`.
   nullable: boolean;
   default: string | null;
 }
@@ -219,8 +216,8 @@ function upsertEntity(model: Model, e: EditEntity): Model {
 
   // The editor form has no "title" input, but EditField still carries title
   // through as an untouched passthrough (table-modal's toEditField reads it in,
-  // FieldGrid never exposes it as an editable column) — so a no-op Save must
-  // not destroy titles the file already had. See EditField's own field comment.
+  // ColumnsGrid never exposes it as an editable column) — so a no-op Save must
+  // not destroy titles the file already had.
   // EditField has no role/ref/refField to carry — constraints own that data
   // now (see the module header comment); the resulting Column is just the
   // plain name/type/title/description/nullable/default shape.

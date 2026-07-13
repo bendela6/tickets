@@ -15,7 +15,7 @@ import type { Column, Constraint, Entity, Model } from '../../engine/model/types
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
 import { Modal } from '../modal';
-import { FieldGrid } from './field-grid';
+import { ColumnsGrid } from './columns-grid';
 
 const field = cn('w-full rounded-md border border-gray-600 bg-gray-900 px-2 py-1', 'text-sm text-gray-50');
 const label = 'flex flex-col gap-1 text-xs text-gray-400';
@@ -29,10 +29,10 @@ function slugify(name: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-// `title` has no editable column in FieldGrid (the grid's "note" column is
+// `title` has no editable column in ColumnsGrid (the grid's "note" column is
 // `description`) — it's carried through untouched so a no-op Save can't
 // destroy it (see apply-model-edit's EditField and upsertEntity). role/ref/
-// refField are gone: the field grid can't edit keys any more (see its own
+// refField are gone: the columns grid can't edit keys any more (see its own
 // header comment) — constraints are what own that data now, passed through
 // separately by `save` below, verbatim.
 function toEditField(f: Column): EditField {
@@ -139,7 +139,7 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
           default: f.default,
         })),
         // Verbatim passthrough — the field grid can't author or edit a
-        // constraint yet (see field-grid.tsx's header comment), so a Save must
+        // constraint yet (see columns-grid.tsx's header comment), so a Save must
         // never re-derive keys from fields: an existing table keeps exactly
         // what it already had; a brand-new one gets a default `id` pk and
         // nothing else.
@@ -214,7 +214,7 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
 
       <div className={label}>
         <span>Fields</span>
-        <FieldGrid fields={fields} onChange={setFields} />
+        <ColumnsGrid columns={fields} onChange={setFields} />
       </div>
 
       <div className="flex flex-col gap-2 pt-2">
