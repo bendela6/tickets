@@ -15,10 +15,29 @@ function slugify(title: string): string {
   return title.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-').replaceAll(/^-+|-+$/g, '') || 'model';
 }
 
+// Concurrent renames that both target the same destination can transiently
+// fail (observed on Windows as EPERM/EBUSY — two writers replacing the same
+// path race at the OS level even though each has its own source file). The
+// source is already fully written by this point, so retrying is always safe.
+async function renameWithRetry(src: string, dest: string, attemptsLeft = 5): Promise<void> {
+  try {
+    await rename(src, dest);
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (attemptsLeft <= 0 || (code !== 'EPERM' && code !== 'EBUSY' && code !== 'EACCES')) throw err;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    await renameWithRetry(src, dest, attemptsLeft - 1);
+  }
+}
+
 async function atomicWrite(dir: string, slug: string, json: string): Promise<void> {
-  const tmp = join(dir, `.${slug}.tmp`);
+  // Tmp name is unique per call so concurrent writers to the same slug never
+  // share a tmp path — otherwise one write's tmp file can be clobbered by
+  // another's, or renamed away out from under it (ENOENT) before it gets to
+  // rename its own.
+  const tmp = join(dir, `.${slug}.${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}.tmp`);
   await writeFile(tmp, json, 'utf8');
-  await rename(tmp, join(dir, `${slug}.json`));
+  await renameWithRetry(tmp, join(dir, `${slug}.json`));
 }
 
 function validate(body: string | null): { raw?: Record<string, unknown>; error?: { status: number; body: unknown } } {
@@ -45,12 +64,19 @@ export async function handleModelsRequest(
   if (!slug) {
     if (method === 'GET') {
       const files = (await readdir(dir)).filter((f) => f.endsWith('.json'));
-      const list = await Promise.all(
+      const entries = await Promise.all(
         files.map(async (f) => {
-          const raw = JSON.parse(await readFile(join(dir, f), 'utf8')) as { meta?: { title?: string } };
-          return { id: f.replace(/\.json$/, ''), title: raw.meta?.title ?? f };
+          // One unreadable/malformed file must not take down the whole
+          // listing — skip it and let the rest of the models show up.
+          try {
+            const raw = JSON.parse(await readFile(join(dir, f), 'utf8')) as { meta?: { title?: string } };
+            return { id: f.replace(/\.json$/, ''), title: raw.meta?.title ?? f };
+          } catch {
+            return null;
+          }
         }),
       );
+      const list = entries.filter((e): e is { id: string; title: string } => e !== null);
       return { status: 200, body: list.sort((a, b) => a.id.localeCompare(b.id)) };
     }
     if (method === 'POST') {
@@ -101,6 +127,7 @@ export function modelsApiPlugin(dir = join(process.cwd(), 'models')): Plugin {
             })
             .catch((err: unknown) => {
               res.statusCode = 500;
+              res.setHeader('content-type', 'application/json');
               res.end(JSON.stringify({ error: String(err) }));
             });
         });
