@@ -1,34 +1,35 @@
 // Model → raw JSON file shape. Inverse of load-model for everything the editor
-// touches: meta, kinds, colours, groups+bounds, entities+positions+fields, and
-// relationships. Underscore-prefixed derived state is never serialized. A
-// relationship is omitted ONLY when load-model is guaranteed to reconstruct it
-// byte-for-byte: kind 'fk', no label, plain '1-n' cardinality, an id that is
-// ITSELF the derived scheme (not just a coincidentally-matching backing field —
-// a hand-authored id, however plain-looking, is authored data), and a
-// same-direction fk-role field to derive it from. Everything else — a labelled
-// fk rel, one with a hand-set cardinality (e.g. the '1-1' of an identifying,
-// shared-pk relationship), one with a custom id, or one with no backing fk
-// field at all (e.g. an untagged event-stream reference) — serializes
-// explicitly, so save→load survives it byte-honestly instead of quietly
-// dropping it (or worse, silently renaming it).
+// touches: meta, kinds, colours, groups+bounds, entities+positions+fields
+// (+constraints+indexes), and relationships. Underscore-prefixed derived state
+// is never serialized.
+//
+// Relationships ARE the foreign keys now (see derive-relationships.ts): every
+// `kind: 'fk'` relationship is, by construction, reproduced byte-for-byte by
+// deriveRelationships from the entity's `constraints` on the very next load —
+// there is no such thing as a hand-authored kind:'fk' rel any more, so we never
+// write one to the file. Only non-fk relationships (documentation edges such
+// as `kind: 'nm'`) are authored data and survive serialize -> load verbatim.
 
-import { isFullyReDerivable } from '../is-derivable-shaped';
-import type { Model } from '../types';
+import type { Constraint, Model, TableIndex } from '../types';
 
-// A relationship is safe to drop from the file only when BOTH (a) its shape
-// carries nothing beyond what fk-field derivation would produce — same check
-// apply-model-edit uses to decide what's safe to discard on every edit — AND
-// (b) the field load-model would derive it FROM still backs it exactly.
-// Checking only (b), as this used to, let a hand-authored id (e.g.
-// 'owns-custom-id') through whenever its backing field happened to match:
-// load-model has no way to know that custom id, so it resurrected the rel
-// under the derived one on the next load, silently renaming it.
-// isFullyReDerivable (and isDerivableShaped underneath it) is shared with
-// apply-model-edit so the two "is this rel doing anything a human/tool
-// couldn't reproduce" checks can't drift apart again — see that module's own
-// comment for the bug that let a derivable-shaped-but-not-fully-re-derivable
-// rel (backing field's ref/refField intact, but not tagged role:'fk') vanish
-// silently on an unrelated edit before this was shared.
+function serializeConstraint(c: Constraint): Record<string, unknown> {
+  const base: Record<string, unknown> = { id: c.id, kind: c.kind, ...(c.name ? { name: c.name } : {}) };
+  if (c.kind === 'check') return { ...base, expression: c.expression };
+  if (c.kind === 'fk')
+    return {
+      ...base,
+      columns: c.columns,
+      refTable: c.refTable,
+      refColumns: c.refColumns,
+      ...(c.onDelete ? { onDelete: c.onDelete } : {}),
+      ...(c.onUpdate ? { onUpdate: c.onUpdate } : {}),
+    };
+  return { ...base, columns: c.columns }; // 'pk' | 'unique'
+}
+
+function serializeIndex(ix: TableIndex): Record<string, unknown> {
+  return { id: ix.id, name: ix.name, columns: ix.columns, unique: ix.unique };
+}
 
 export function serializeModel(model: Model, colors: ReadonlyMap<string, string>): Record<string, unknown> {
   const bounds = new Map(model._groupBounds.map((b) => [b.id, { x: b.x, y: b.y, w: b.w, h: b.h }]));
@@ -58,10 +59,16 @@ export function serializeModel(model: Model, colors: ReadonlyMap<string, string>
         ...(f.ref ? { ref: f.ref, refField: f.refField ?? 'id' } : {}),
         ...(f.title ? { title: f.title } : {}),
         ...(f.description ? { description: f.description } : {}),
+        ...(f.nullable === false ? { nullable: false } : {}),
+        ...(f.default != null ? { default: f.default } : {}),
       })),
+      constraints: e.constraints.map(serializeConstraint),
+      indexes: e.indexes.map(serializeIndex),
     })),
+    // kind:'fk' relationships regenerate from constraints on load (see the
+    // header comment) — only authored non-fk relationships are written.
     relationships: model.relationships
-      .filter((r) => !isFullyReDerivable(model, r))
+      .filter((r) => r.kind !== 'fk')
       .map((r) => ({
         id: r.id,
         source: r.source,
