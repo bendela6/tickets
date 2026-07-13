@@ -1,6 +1,7 @@
 // Model loading — pure validation + normalization. No DOM. Given raw JSON it
 // returns a normalized model plus errors (block rendering) and warnings (allow it).
 
+import { deriveRelationships } from '../derive-relationships';
 import { CARDINALITIES, inferCardinality } from '../infer-cardinality';
 import type {
   Constraint,
@@ -22,23 +23,6 @@ function normalizeRouting(v: unknown): RoutingMode {
   if (v === 'avoid') return 'avoid';
   if (v === 'ortho' || v === 'orthogonal') return 'ortho';
   return 'curved';
-}
-
-function hasField(entity: Entity | undefined, name: string): boolean {
-  return !!entity && entity.fields.some((f) => f.name === name);
-}
-
-// A relationship's endpoint pair is the UNORDERED set {(entityA,fieldA),(entityB,fieldB)}
-// — a rel authored in either direction (e.g. a reversed m2m rel standing in for what
-// would otherwise be a plain fk edge) covers the same pair. Sorting the two endpoints
-// before stringifying makes the key direction-independent; nesting inside
-// JSON.stringify (rather than joining with a hand-picked delimiter) sidesteps any risk
-// of an id/field name colliding with the separator itself.
-function pairKey(aEntity: string, aField: string, bEntity: string, bField: string): string {
-  const a: [string, string] = [aEntity, aField];
-  const b: [string, string] = [bEntity, bField];
-  const [lo, hi] = JSON.stringify(a) <= JSON.stringify(b) ? [a, b] : [b, a];
-  return JSON.stringify([lo, hi]);
 }
 
 const FK_ACTIONS: FkAction[] = ['cascade', 'restrict', 'set null', 'set default', 'no action'];
@@ -201,7 +185,6 @@ export function loadModel(raw: unknown): LoadResult {
   });
 
   // ---- relationships ----
-  const relById = new Map<string, Relationship>();
   const usedKinds = new Set<string>();
   const normRels: Relationship[] = relationships.map((rel: any, i: number) => {
     // Endpoints may be flat (source/sourceField) or objects ({ entity, field }).
@@ -248,51 +231,23 @@ export function loadModel(raw: unknown): LoadResult {
       kind: rel.kind || null,
       label: rel.label || null,
     };
-    relById.set(id, nr);
     return nr;
   });
 
   for (const k of usedKinds) if (!kindStyle.has(k)) kindStyle.set(k, 'solid');
 
-  // ---- fk-derived relationships ----
-  // serializeModel only skips a kind:'fk' rel when it's fully re-derivable (see its
-  // own rules), so reconstruct one per fk-role field whose ref resolves — unless the
-  // file already covers that endpoint pair with an explicit relationship, in EITHER
-  // direction (legacy files sometimes hand-author the reverse direction, e.g. a m2m
-  // rel standing in for what would otherwise be a plain fk edge — that must suppress
-  // the derivation too, not just an exact-direction match).
-  const coveredPairs = new Set(
-    normRels
-      .filter((r) => hasField(entityById.get(r.source), r.sourceField) && hasField(entityById.get(r.target), r.targetField))
-      .map((r) => pairKey(r.source, r.sourceField, r.target, r.targetField)),
-  );
-  for (const e of normEntities) {
-    for (const f of e.fields) {
-      if (f.role !== 'fk' || !f.ref || !entityById.has(f.ref)) continue;
-      const sourceField = f.refField ?? 'id';
-      // `ref` resolving isn't enough — the ref'd entity must still carry the
-      // named refField itself, or the derived rel's sourceField would point at
-      // nothing (e.g. a file hand-edited after a pk rename, without updating
-      // every dependent's refField). hasField already warned about this case
-      // above for explicit rels; derivation must honour it too.
-      if (!hasField(entityById.get(f.ref), sourceField)) continue;
-      if (coveredPairs.has(pairKey(f.ref, sourceField, e.id, f.name))) continue;
-      const id = `e-${f.ref}.${sourceField}->${e.id}.${f.name}`;
-      const derived: Relationship = {
-        id,
-        source: f.ref,
-        sourceField,
-        target: e.id,
-        targetField: f.name,
-        cardinality: '1-n',
-        cardinalityInferred: true,
-        kind: 'fk',
-        label: null,
-      };
-      normRels.push(derived);
-      relById.set(id, derived);
-    }
-  }
+  // ---- relationships: constraints are the source of truth ----
+  // normRels above is the authored/explicit list (ids + cardinality already
+  // normalised); deriveRelationships folds in one edge per fk constraint,
+  // dropping any explicit kind:'fk' rel in favour of its derived replacement
+  // (see derive-relationships.ts) so a table's constraints can never disagree
+  // with the edges drawn for it.
+  const finalRelationships = deriveRelationships({
+    entities: normEntities,
+    entityById,
+    relationships: normRels,
+  } as Model);
+  const relById = new Map(finalRelationships.map((r) => [r.id, r]));
 
   // ---- colors (id → hex overrides; zones, subgroups, or entities) ----
   const colors = new Map<string, string>();
@@ -324,7 +279,7 @@ export function loadModel(raw: unknown): LoadResult {
     groups: normGroups,
     entities: normEntities,
     entityById,
-    relationships: normRels,
+    relationships: finalRelationships,
     relById,
     _groupBounds: [],
     _content: { w: 0, h: 0 },

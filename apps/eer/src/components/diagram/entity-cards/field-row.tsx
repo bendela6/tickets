@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { columnRoles, type ColumnRole } from '../../../engine/model/column-roles';
 import { portKey } from '../../../engine/geometry/port-key';
 import { useDiagramDispatch } from '../../../state/diagram-context';
 import type { Entity, Field, Side } from '../../../engine/model/types';
@@ -8,6 +9,7 @@ import { runtimeStyle } from '../../../ui/runtime-style';
 function Port({
   e,
   f,
+  role,
   side,
   connected,
   pinSpan,
@@ -15,6 +17,7 @@ function Port({
 }: {
   e: Entity;
   f: Field;
+  role: ColumnRole | undefined;
   side: Side;
   connected: ReadonlySet<string>;
   pinSpan: ReadonlyMap<string, number>;
@@ -32,8 +35,8 @@ function Port({
         {
           'right-full rounded-l-xs': side === 'L',
           'left-full rounded-r-xs': side === 'R',
-          'bg-yellow-400': f.role === 'pk',
-          'bg-green-400': f.role === 'fk',
+          'bg-yellow-400': !!role?.pk,
+          'bg-green-400': !role?.pk && !!role?.fk,
           'bg-blue-400 ring-3 ring-blue-400/30': hot,
           'h-(--port-height)': off > 0,
         },
@@ -62,13 +65,15 @@ export function FieldRow({
 }) {
   const dispatch = useDiagramDispatch();
   const [hot, setHot] = useState(false);
+  const role = columnRoles(e).get(f.name);
+  const badge = role?.pk ? 'pk' : role?.fk ? 'fk' : null;
   return (
     <div
       className="relative flex h-6 cursor-default items-center gap-2 px-3 text-sm hover:bg-gray-800"
       data-entity={e.id}
       data-field={f.name}
       data-index={String(index)}
-      data-role={f.role || undefined}
+      data-role={badge || undefined}
       data-hot={hot ? '' : undefined}
       onMouseEnter={() => {
         setHot(true);
@@ -79,22 +84,22 @@ export function FieldRow({
         dispatch({ type: 'CLEAR_FIELD_HIGHLIGHT' });
       }}
     >
-      {f.role && (
+      {badge && (
         <span
           className={cn(
             'shrink-0 text-center font-mono text-3xs font-semibold tracking-wide text-gray-400',
             {
-              'text-yellow-400': f.role === 'pk',
-              'text-green-400': f.role === 'fk',
+              'text-yellow-400': badge === 'pk',
+              'text-green-400': badge === 'fk',
             },
           )}
         >
-          {f.role ? f.role.toUpperCase() : ''}
+          {badge.toUpperCase()}
         </span>
       )}
       <span
         className={cn('truncate font-mono text-gray-50', {
-          'text-yellow-400': f.role === 'pk',
+          'text-yellow-400': badge === 'pk',
         })}
       >
         {f.name}
@@ -102,8 +107,8 @@ export function FieldRow({
       <span className="ml-auto max-w-1/2 truncate font-mono text-xs text-gray-400">
         {f.type || ''}
       </span>
-      <Port e={e} f={f} side="L" connected={connected} pinSpan={pinSpan} hot={hot} />
-      <Port e={e} f={f} side="R" connected={connected} pinSpan={pinSpan} hot={hot} />
+      <Port e={e} f={f} role={role} side="L" connected={connected} pinSpan={pinSpan} hot={hot} />
+      <Port e={e} f={f} role={role} side="R" connected={connected} pinSpan={pinSpan} hot={hot} />
     </div>
   );
 }

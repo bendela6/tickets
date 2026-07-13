@@ -25,7 +25,7 @@ it('renders parity edge DOM with paths attached to ports', async () => {
   expect(svg.getAttribute('width')).not.toBeNull();
   const gs = svg.querySelectorAll('g[data-rel]');
   expect(gs.length).toBe(3);
-  const g = svg.querySelector('g[data-rel="u-o"]') as SVGGElement;
+  const g = svg.querySelector('g[data-rel="rel:orders:c2"]') as SVGGElement;
   expect(g.dataset.kind).toBe('fk');
   expect(g.style.getPropertyValue('--edge-c')).toBeTruthy();
   expect(g.querySelectorAll('path').length).toBe(4); // hit, casing, visible path, arrow head
@@ -35,6 +35,13 @@ it('renders parity edge DOM with paths attached to ports', async () => {
 it('dashed kinds get .dashed on the visible path', async () => {
   const raw = twoZoneRaw();
   raw.relationships[1]!.kind = 'nm'; // t-o becomes many-to-many (dashed style)
+  // A derived fk edge always wins over an authored duplicate for the same pair
+  // (see derive-relationships.ts), and a derived edge is always kind:'fk' —
+  // so strip tag_id's own fk-ness here, leaving the authored 'nm' rel as the
+  // only edge for this pair, to actually exercise dashed-kind rendering.
+  const tagField = raw.entities[1]!.fields[2] as unknown as { role: string | null; ref: string | null };
+  tagField.role = null;
+  tagField.ref = null;
   const { container } = await renderDiagram(
     <Loaded>
       <EdgesSvg />
@@ -49,13 +56,13 @@ it('isolate: endpoints lit, others dim, svg lifts, raised edge renders last', as
       <EdgesSvg />
     </Loaded>,
   );
-  await act(async () => actions.isolate('u-o'));
+  await act(async () => actions.isolate('rel:orders:c2'));
   const svg = container.querySelector('svg[data-edges]')!;
   expect(svg.hasAttribute('data-top')).toBe(true);
-  expect(svg.querySelector('g[data-rel="u-o"]')!.hasAttribute('data-active')).toBe(true);
-  expect(svg.querySelector('g[data-rel="t-o"]')!.hasAttribute('data-dim')).toBe(true);
+  expect(svg.querySelector('g[data-rel="rel:orders:c2"]')!.hasAttribute('data-active')).toBe(true);
+  expect(svg.querySelector('g[data-rel="rel:orders:c3"]')!.hasAttribute('data-dim')).toBe(true);
   const order = [...svg.querySelectorAll('g[data-rel]')].map((g) => (g as SVGGElement).dataset.rel);
-  expect(order[order.length - 1]).toBe('u-o');
+  expect(order[order.length - 1]).toBe('rel:orders:c2');
 });
 it('edge hover marks hot and raises; click isolates', async () => {
   const { container, actions } = await renderDiagram(
@@ -63,7 +70,7 @@ it('edge hover marks hot and raises; click isolates', async () => {
       <EdgesSvg />
     </Loaded>,
   );
-  const g = container.querySelector('g[data-rel="t-o"]') as SVGGElement;
+  const g = container.querySelector('g[data-rel="rel:orders:c3"]') as SVGGElement;
   fireEvent.mouseEnter(g);
   expect(g.hasAttribute('data-hot')).toBe(true);
   fireEvent.mouseLeave(g);
@@ -81,8 +88,8 @@ it('field highlight heats attached edges; hidden kind hides the edge', async () 
     </Loaded>,
   );
   await act(async () => actions.focusFromSearch('users', 'id'));
-  expect(container.querySelector('g[data-rel="u-o"]')!.hasAttribute('data-hot')).toBe(true);
+  expect(container.querySelector('g[data-rel="rel:orders:c2"]')!.hasAttribute('data-hot')).toBe(true);
   await act(async () => actions.clearSelection());
   await act(async () => actions.toggleKind('fk'));
-  expect(container.querySelector('g[data-rel="u-o"]')!.classList.contains('hidden')).toBe(true);
+  expect(container.querySelector('g[data-rel="rel:orders:c2"]')!.classList.contains('hidden')).toBe(true);
 });

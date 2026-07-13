@@ -50,9 +50,9 @@ it('all four checks pass on a healthy scene (modulo jsdom zero-rects)', async ()
 it('no-reflow probe preserves pre-existing focus/selected/hot state', async () => {
   const { model, root } = await checkedScene();
   // Simulate a live selection: the first card (users) is focused+selected and its
-  // edge (u-o) is hot — exactly the attributes the no-reflow probe injects.
+  // edge (rel:orders:c2) is hot — exactly the attributes the no-reflow probe injects.
   const card = root.querySelector('[data-card][data-entity="users"]')!;
-  const edge = root.querySelector('[data-rel="u-o"]')!;
+  const edge = root.querySelector('[data-rel="rel:orders:c2"]')!;
   card.setAttribute('data-focus', '');
   card.setAttribute('data-selected', '');
   edge.setAttribute('data-hot', '');
@@ -67,8 +67,8 @@ it('no-reflow probe preserves pre-existing focus/selected/hot state', async () =
 it('failure injection: a missing port and a corrupted path are reported', async () => {
   const { model, root } = await checkedScene();
   root.querySelector('[data-side="L"][data-entity="users"][data-field="name"]')!.remove();
-  root.querySelector('[data-rel="u-o"] [data-path]')!.setAttribute('d', 'M 0 0 L 1 1');
+  root.querySelector('[data-rel="rel:orders:c2"] [data-path]')!.setAttribute('d', 'M 0 0 L 1 1');
   const results = runChecks({ model, geometry: computeEdgeGeometry(model, 'avoid'), view: { zoom: 1, panX: 0, panY: 0 }, root });
   expect(results.find((r) => r.name === 'Exactly one L + one R port per field')!.problems.join()).toContain('users.name');
-  expect(results.find((r) => r.name === 'Every edge endpoint lands on a real port')!.problems.join()).toContain('u-o: path start off source port');
+  expect(results.find((r) => r.name === 'Every edge endpoint lands on a real port')!.problems.join()).toContain('rel:orders:c2: path start off source port');
 });

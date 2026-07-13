@@ -9,7 +9,7 @@ import { edgeEndpoints } from './edge-endpoints';
 describe('edgeEndpoints', () => {
   it('lands both endpoints exactly on the ports of the resolved sides', () => {
     const model = buildModel();
-    const rel = model.relById.get('u-o')!;
+    const rel = model.relById.get('rel:orders:c2')!;
     const users = model.entityById.get('users')!;
     const orders = model.entityById.get('orders')!;
     const { s, t } = edgeSides(model, rel);
@@ -22,7 +22,7 @@ describe('edgeEndpoints', () => {
 
   it('defaults to a zero offset when no slot is given', () => {
     const model = buildModel();
-    const rel = model.relById.get('u-o')!;
+    const rel = model.relById.get('rel:orders:c2')!;
     const bare = edgeEndpoints(model, rel);
     const zeroed = edgeEndpoints(model, rel, { src: 0, tgt: 0 });
     expect(bare.p1).toEqual(zeroed.p1);
@@ -31,7 +31,7 @@ describe('edgeEndpoints', () => {
 
   it('applies explicit slot offsets to the endpoint ys (x untouched)', () => {
     const model = buildModel();
-    const rel = model.relById.get('u-o')!;
+    const rel = model.relById.get('rel:orders:c2')!;
     const base = edgeEndpoints(model, rel, { src: 0, tgt: 0 });
     const fanned = edgeEndpoints(model, rel, { src: 4, tgt: -4 });
     expect(fanned.p1).toEqual({ x: base.p1.x, y: base.p1.y + 4 });
@@ -40,7 +40,7 @@ describe('edgeEndpoints', () => {
 
   it('flags a self-loop and returns the same entity at both ends', () => {
     const model = buildModel();
-    const ends = edgeEndpoints(model, model.relById.get('self')!);
+    const ends = edgeEndpoints(model, model.relById.get('rel:users:c2')!);
     expect(ends.self).toBe(true);
     expect(ends.A).toBe(ends.B);
   });

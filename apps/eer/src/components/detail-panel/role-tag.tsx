@@ -1,7 +1,6 @@
-import type { Entity } from '../../engine/model/types';
 import { cn } from '../../ui/cn';
 
-export function RoleTag({ role }: { role: Entity['fields'][number]['role'] }) {
+export function RoleTag({ role }: { role: 'pk' | 'fk' | null }) {
   if (!role)
     return <span className="inline-block w-7 shrink-0" aria-hidden />;
   return (

@@ -1,28 +1,15 @@
 // Structural model edits — groups/tables/meta — the pure heart of the model
 // editor. Every branch returns a brand-new Model via spread + rebuilt maps; the
 // input is never mutated (the future editor reducer relies on that). Relationships
-// are not hand-edited directly, but editing is non-destructive for hand-authored
-// data: after every edit, `relationships` = every explicit relationship whose
-// endpoints (entity + field, both sides) still resolve AND that either (a)
-// carries anything derivation couldn't reproduce (custom id, label, or
-// hand-set cardinality — see isDerivableShaped) or (b) is derivable-shaped but
-// NOT fully re-derivable (see isFullyReDerivable) — its backing field's
-// ref/refField still match but it isn't tagged role:'fk', so the derive loop
-// below will never regenerate it — kept verbatim in both cases; PLUS one
-// derived rel for each fk-role field whose ref'd entity still carries the
-// named refField (renaming/removing that field leaves `ref` resolving fine
-// while `refField` goes stale — no rel is derived from it) and whose
-// {(ref,refField),(entity,field)} endpoint pair isn't already covered — in
-// either direction — by one of those kept rels. A fully-re-derivable rel is
-// never kept: it re-derives from the CURRENT fields each time, so a no-op edit
-// reproduces an identical object while clearing a field's fk role (even
-// keeping its name, and clearing its ref alongside — see field-grid.tsx)
-// genuinely removes its edge.
+// are not hand-edited directly: `finalize` re-derives the whole relationship list
+// from the (freshly rebuilt) entities' constraints on every edit — see
+// derive-relationships.ts for the one-edge-per-fk-constraint rule and how it
+// keeps authored non-fk relationships verbatim.
 
 import { measureEntity } from '../../geometry/measure-entity';
 import { LAYOUT_MARGIN } from '../../geometry/metrics';
-import { hasBackingField, isDerivableShaped, isFullyReDerivable } from '../is-derivable-shaped';
-import type { Entity, Field, Group, GroupBounds, Model, Relationship } from '../types';
+import { deriveRelationships } from '../derive-relationships';
+import type { Constraint, Entity, Field, Group, GroupBounds, Model } from '../types';
 
 export interface EditField {
   name: string;
@@ -168,11 +155,18 @@ function upsertEntity(
     nullable: f.nullable,
     default: f.default,
   }));
+  // The editor doesn't expose constraint editing yet (EditField only carries
+  // legacy role/ref/refField — Task 5/6 add real constraint editing), so the
+  // saved entity's pk/fk constraints must be re-synthesised from the CURRENT
+  // fields on every save, the same way load-model's legacy path does. Without
+  // this, badges/edges (which read constraints, not fields, since Task 3)
+  // would freeze at whatever the entity's constraints were before this edit.
+  const constraints = synthesizeConstraintsFromFields(e.fields);
 
   const existing = model.entityById.get(e.id);
   let entity: Entity;
   if (existing) {
-    entity = measureEntity({ ...existing, label: e.label, group: e.group, description: e.description, fields });
+    entity = measureEntity({ ...existing, label: e.label, group: e.group, description: e.description, fields, constraints });
   } else {
     const box = model._groupBounds.find((b) => b.id === e.group);
     const x = box ? box.x + SPAWN_OFFSET : SPAWN_OFFSET;
@@ -183,7 +177,7 @@ function upsertEntity(
       group: e.group,
       description: e.description,
       fields,
-      constraints: [],
+      constraints,
       indexes: [],
       x,
       y,
@@ -196,6 +190,27 @@ function upsertEntity(
   return { ...model, entities };
 }
 
+// Mirrors load-model's synthesizeLegacyConstraints: one pk constraint from every
+// role:'pk' field (declaration order), one fk constraint per field carrying a
+// ref (regardless of role — a shared-primary-key reference is role 'pk' AND a
+// ref). Kept as a small local copy rather than importing load-model's private
+// helper, since EditField and the raw-JSON field shape it synthesises from
+// aren't the same type.
+function synthesizeConstraintsFromFields(fields: EditField[]): Constraint[] {
+  const out: Constraint[] = [];
+  const pkCols = fields.filter((f) => f.role === 'pk').map((f) => f.name);
+  let n = 1;
+  if (pkCols.length) out.push({ id: 'c' + n++, kind: 'pk', name: null, columns: pkCols });
+  for (const f of fields) {
+    if (!f.ref) continue;
+    out.push({
+      id: 'c' + n++, kind: 'fk', name: null, columns: [f.name],
+      refTable: f.ref, refColumns: [f.refField ?? 'id'], onDelete: null, onUpdate: null,
+    });
+  }
+  return out;
+}
+
 function deleteEntity(model: Model, id: string): Model {
   if (!model.entityById.has(id)) throw new Error(`Unknown entity "${id}".`);
   const entities = model.entities
@@ -206,78 +221,6 @@ function deleteEntity(model: Model, id: string): Model {
         : e,
     );
   return { ...model, entities };
-}
-
-function hasField(entity: Entity | undefined, name: string): boolean {
-  return !!entity && entity.fields.some((f) => f.name === name);
-}
-
-// A relationship's endpoint pair is the UNORDERED set {(entityA,fieldA),(entityB,fieldB)}
-// — a rel and its mirror image (source/target swapped) cover the same pair. Sorting
-// the two endpoints before stringifying makes the key direction-independent; nesting
-// inside JSON.stringify (rather than joining with a hand-picked delimiter) sidesteps
-// any risk of an id/field name colliding with the separator itself.
-function pairKey(aEntity: string, aField: string, bEntity: string, bField: string): string {
-  const a: [string, string] = [aEntity, aField];
-  const b: [string, string] = [bEntity, bField];
-  const [lo, hi] = JSON.stringify(a) <= JSON.stringify(b) ? [a, b] : [b, a];
-  return JSON.stringify([lo, hi]);
-}
-
-// A relationship is still valid once both its endpoints — entity AND named field on
-// that entity, on both sides — resolve in the current model. Renaming or deleting a
-// field (or its entity) invalidates any explicit rel that pointed at it.
-function isValidRelationship(model: Model, r: Relationship): boolean {
-  return hasField(model.entityById.get(r.source), r.sourceField) && hasField(model.entityById.get(r.target), r.targetField);
-}
-
-// Every still-valid, non-derivable-shaped explicit relationship — ANY kind, kept
-// verbatim (id, label, cardinality untouched) — plus one derived rel per fk-role
-// field whose endpoint pair isn't already covered by one of those kept rels.
-// Non-destructive for authored data (labels/custom cardinality/custom ids survive
-// edits), while derivable-shaped rels track their backing field's current state.
-function deriveRelationships(model: Model): Relationship[] {
-  const kept = model.relationships.filter((r) => {
-    if (!isValidRelationship(model, r)) return false;
-    if (!isDerivableShaped(r)) return true;
-    // Derivable-shaped: dropping it here is only safe when the derive loop
-    // below will actually put an equivalent one back (isFullyReDerivable — its
-    // backing field is tagged role:'fk'), or when nothing backs it at all
-    // anymore (ref/refField cleared or repointed — hasBackingField false). A
-    // field whose ref/refField still match but ISN'T tagged 'fk' (e.g. a
-    // shared-pk identifying reference, like the seed's outbox.event_id: role
-    // 'pk', ref 'events') falls through both: the derive loop only fires for
-    // role:'fk' fields, so unconditionally discarding here (the old bug) would
-    // silently drop real data on the very next unrelated edit.
-    return hasBackingField(model, r) && !isFullyReDerivable(model, r);
-  });
-  const coveredPairs = new Set(kept.map((r) => pairKey(r.source, r.sourceField, r.target, r.targetField)));
-
-  const derived: Relationship[] = [];
-  for (const e of model.entities)
-    for (const f of e.fields) {
-      if (f.role !== 'fk' || !f.ref || !model.entityById.has(f.ref)) continue;
-      const sourceField = f.refField ?? 'id';
-      // The ref'd entity existing isn't enough — it must still carry the named
-      // refField itself. Renaming/removing that field (e.g. a pk rename) leaves
-      // `ref` resolving fine while `refField` goes stale; deriving anyway would
-      // emit a rel whose sourceField doesn't exist anywhere, which downstream
-      // geometry resolves to fieldIndex -1 instead of failing loudly.
-      if (!model.entityById.get(f.ref)!.fields.some((x) => x.name === sourceField)) continue;
-      if (coveredPairs.has(pairKey(f.ref, sourceField, e.id, f.name))) continue;
-      derived.push({
-        id: `e-${f.ref}.${sourceField}->${e.id}.${f.name}`,
-        source: f.ref,
-        sourceField,
-        target: e.id,
-        targetField: f.name,
-        cardinality: '1-n',
-        cardinalityInferred: true,
-        kind: 'fk',
-        label: null,
-      });
-    }
-  return [...kept, ...derived];
 }
 
 // Shared tail for every edit: rebuild entityById, re-derive relationships +

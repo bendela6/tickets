@@ -1,4 +1,5 @@
 import { entityColor } from '../../engine/colors/entity-color';
+import { columnRoles } from '../../engine/model/column-roles';
 import type { Model } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
@@ -45,6 +46,7 @@ export function EntityDetail({
   const group = model.groups.find((g) => g.id === e.group);
   const rels = relationshipsFor(model, id);
   const color = entityColor(model, id, colors);
+  const roles = columnRoles(e);
 
   return (
     <div>
@@ -67,11 +69,13 @@ export function EntityDetail({
         <div className="flex flex-col">
           {e.fields.map((f) => {
             const note = f.description || f.title;
+            const role = roles.get(f.name);
+            const badge = role?.pk ? 'pk' : role?.fk ? 'fk' : null;
             return (
               <div key={f.name} className="border-b border-gray-600/50 py-2 last:border-0">
                 <div className="flex items-center gap-2">
-                  <RoleTag role={f.role} />
-                  <span className={cn('font-mono text-sm', { 'text-yellow-400': f.role === 'pk', 'text-gray-50': f.role !== 'pk' })}>{f.name}</span>
+                  <RoleTag role={badge} />
+                  <span className={cn('font-mono text-sm', { 'text-yellow-400': badge === 'pk', 'text-gray-50': badge !== 'pk' })}>{f.name}</span>
                   {f.ref && (
                     <button
                       type="button"

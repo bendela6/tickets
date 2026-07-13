@@ -5,7 +5,7 @@ import { fieldEdges } from './field-edges';
 describe('fieldEdges', () => {
   it('edges touching one field on either end', () => {
     const model = buildModel();
-    expect(fieldEdges(model, 'users', 'id')).toEqual(new Set(['u-o', 'self']));
+    expect(fieldEdges(model, 'users', 'id')).toEqual(new Set(['rel:orders:c2', 'rel:users:c2']));
     expect(fieldEdges(model, 'users', 'name').size).toBe(0);
   });
 });

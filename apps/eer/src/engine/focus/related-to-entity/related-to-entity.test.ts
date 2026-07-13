@@ -7,6 +7,6 @@ describe('relatedToEntity', () => {
     const model = buildModel();
     const r = relatedToEntity(model, 'users');
     expect(r.entities).toEqual(new Set(['users', 'orders']));
-    expect(r.edges).toEqual(new Set(['u-o', 'self']));
+    expect(r.edges).toEqual(new Set(['rel:orders:c2', 'rel:users:c2']));
   });
 });

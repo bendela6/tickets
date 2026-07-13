@@ -19,8 +19,8 @@ function sharedPinRaw() {
       { id: 'b', group: 'z2', fields: [pkField, fkTo('users')] },
     ],
     relationships: [
-      { id: 'r-a', source: 'users', sourceField: 'id', target: 'a', targetField: 'users_id' },
-      { id: 'r-b', source: 'users', sourceField: 'id', target: 'b', targetField: 'users_id' },
+      { id: 'rel:a:c2', source: 'users', sourceField: 'id', target: 'a', targetField: 'users_id' },
+      { id: 'rel:b:c2', source: 'users', sourceField: 'id', target: 'b', targetField: 'users_id' },
     ],
   };
 }
@@ -29,9 +29,9 @@ describe('pinSlots', () => {
   it('fans a shared pin symmetrically, SLOT_GAP apart, ordered by the far end', () => {
     const model = buildModel(sharedPinRaw());
     const { slots } = pinSlots(model);
-    const sA = slots.get('r-a')!;
-    const sB = slots.get('r-b')!;
-    // a is packed above b, so r-a takes the upper slot.
+    const sA = slots.get('rel:a:c2')!;
+    const sB = slots.get('rel:b:c2')!;
+    // a is packed above b, so rel:a:c2 takes the upper slot.
     expect(model.entityById.get('a')!.y).toBeLessThan(model.entityById.get('b')!.y);
     expect(sA.src).toBe(-SLOT_GAP / 2);
     expect(sB.src).toBe(SLOT_GAP / 2);
@@ -41,14 +41,14 @@ describe('pinSlots', () => {
   it('gives single-edge pins slot 0', () => {
     const model = buildModel(sharedPinRaw());
     const { slots } = pinSlots(model);
-    expect(slots.get('r-a')!.tgt).toBe(0);
-    expect(slots.get('r-b')!.tgt).toBe(0);
+    expect(slots.get('rel:a:c2')!.tgt).toBe(0);
+    expect(slots.get('rel:b:c2')!.tgt).toBe(0);
   });
 
   it('records each port half-span in the returned pinSpan map', () => {
     const model = buildModel(sharedPinRaw());
     const { pinSpan } = pinSlots(model);
-    const rA = model.relById.get('r-a')!;
+    const rA = model.relById.get('rel:a:c2')!;
     const { s, t } = edgeSides(model, rA);
     expect(pinSpan.get(portKey('users', 'id', s))).toBe(SLOT_GAP / 2); // 2 ends
     expect(pinSpan.get(portKey('a', 'users_id', t))).toBe(0); // 1 end
@@ -57,13 +57,13 @@ describe('pinSlots', () => {
   it('resets self-loop slots to zero (they never join a fan)', () => {
     const model = buildModel(); // twoZoneRaw carries the users→users self-loop
     const { slots } = pinSlots(model);
-    const self = slots.get('self')!;
+    const self = slots.get('rel:users:c2')!;
     expect(self.src).toBe(0);
     expect(self.tgt).toBe(0);
   });
 
   it('does not mutate the model', () => {
-    const model = buildModel(); // twoZoneRaw: users.id feeds u-o and self → shared port fans
+    const model = buildModel(); // twoZoneRaw: users.id feeds rel:orders:c2 and rel:users:c2 (self) → shared port fans
     const before = JSON.stringify(model, (_, v: unknown) => (v instanceof Map ? [...v] : v));
     const { slots, pinSpan } = pinSlots(model);
     const after = JSON.stringify(model, (_, v: unknown) => (v instanceof Map ? [...v] : v));
