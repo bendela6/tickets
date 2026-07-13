@@ -33,10 +33,30 @@ function slugify(name: string): string {
 // `description`) — it's carried through untouched so a no-op Save can't
 // destroy it (see apply-model-edit's EditField and upsertEntity).
 function toEditField(f: Field): EditField {
-  return { name: f.name, type: f.type, role: f.role, ref: f.ref, refField: f.refField, title: f.title, description: f.description ?? '' };
+  return {
+    name: f.name,
+    type: f.type,
+    role: f.role,
+    ref: f.ref,
+    refField: f.refField,
+    title: f.title,
+    description: f.description ?? '',
+    nullable: f.nullable,
+    default: f.default,
+  };
 }
 
-const DEFAULT_PK: EditField = { name: 'id', type: 'serial', role: 'pk', ref: null, refField: null, title: null, description: null };
+const DEFAULT_PK: EditField = {
+  name: 'id',
+  type: 'serial',
+  role: 'pk',
+  ref: null,
+  refField: null,
+  title: null,
+  description: null,
+  nullable: true,
+  default: null,
+};
 
 // A field with an fk role but no ref is caught here with a nicer message than
 // the engine's — engine validation is still the backstop for anything this
@@ -129,6 +149,8 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
           refField: f.refField,
           title: f.title,
           description: f.description && f.description.trim() ? f.description.trim() : null,
+          nullable: f.nullable,
+          default: f.default,
         })),
       },
     };

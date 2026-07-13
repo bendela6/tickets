@@ -15,6 +15,8 @@ const field = (name: string, type = 'int', role: Field['role'] = null): Field =>
   refField: null,
   title: null,
   description: null,
+  nullable: true,
+  default: null,
 });
 
 const entity = (fields: Field[], label = 'e'): Entity => ({
@@ -23,6 +25,8 @@ const entity = (fields: Field[], label = 'e'): Entity => ({
   group: 'g',
   description: null,
   fields,
+  constraints: [],
+  indexes: [],
   x: 0,
   y: 0,
   _w: 0,
