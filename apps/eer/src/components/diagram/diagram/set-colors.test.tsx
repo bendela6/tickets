@@ -10,7 +10,7 @@ afterEach(cleanup);
 // The legacy set-colors test died with the imperative engine; nothing since has
 // asserted actions.setColors restamps the scene. Covers the inheritance chain:
 // a zone override cascades to its member cards' --entity-c and, through the
-// FK-side (target) entity, to an edge's --edge-c too.
+// PK-side (source) entity, to an edge's --edge-c too.
 it('setColors restamps zone/entity/edge custom properties; an empty map restores the palette', async () => {
   const { container, actions } = await renderDiagram(<Diagram />);
   // load() schedules a double-rAF fit — drain it before touching the DOM (same
@@ -22,7 +22,7 @@ it('setColors restamps zone/entity/edge custom properties; an empty map restores
 
   const zone = () => container.querySelector('[data-zone][data-group="z1"]') as HTMLElement;
   const card = () => container.querySelector('[data-card][data-entity="users"]') as HTMLElement;
-  // 'self' relationship's target is 'users' (member of z1) — its --edge-c is
+  // 'self' relationship's source is 'users' (member of z1) — its --edge-c is
   // reached through entity → zone inheritance too.
   const edge = () => container.querySelector('g[data-rel="self"]') as SVGGElement;
 
@@ -36,7 +36,7 @@ it('setColors restamps zone/entity/edge custom properties; an empty map restores
 
   expect(zone().style.getPropertyValue('--group-c')).toBe('#ff0000');
   expect(card().style.getPropertyValue('--entity-c')).toBe('#ff0000'); // entity ← zone override
-  expect(edge().style.getPropertyValue('--edge-c')).toBe('#ff0000'); // edge ← FK-side (target) entity
+  expect(edge().style.getPropertyValue('--edge-c')).toBe('#ff0000'); // edge ← PK-side (source) entity
 
   await act(async () => actions.setColors(new Map()));
 
