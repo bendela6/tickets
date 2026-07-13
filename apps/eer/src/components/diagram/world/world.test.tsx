@@ -34,3 +34,16 @@ it('applies the view transform and updates on SET_VIEW', async () => {
   await act(async () => dispatchRef!({ type: 'SET_VIEW', view: { panX: 50 } }));
   expect(world.style.getPropertyValue('--world-pan-x')).not.toBe(before);
 });
+
+// Pinned like the metrics ↔ utility pairings: will-change on the scaled world
+// makes Chrome keep compositing the stale zoom-1 raster after a wheel-zoom
+// gesture, so cards and edges stay blurry until the next discrete re-paint.
+it('never hints will-change on the scaled world', async () => {
+  const { container } = await renderDiagram(
+    <World>
+      <span />
+    </World>,
+  );
+  const world = container.querySelector('[data-world]') as HTMLElement;
+  expect(world.className).not.toContain('will-change');
+});

@@ -9,7 +9,9 @@ export function World({ children }: { children: ReactNode }) {
     <div
       data-world=""
       className={cn(
-        'absolute left-0 top-0 origin-top-left will-change-transform',
+        // No will-change here: it pins the compositor raster scale, so zooming
+        // stretches the zoom-1 bitmap forever instead of re-painting crisply.
+        'absolute left-0 top-0 origin-top-left',
         'translate-x-(--world-pan-x) translate-y-(--world-pan-y) scale-(--world-zoom)',
       )}
       style={runtimeStyle({
