@@ -22,15 +22,17 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
   return (
     <div
       className={cn(
-        'absolute left-0 top-0 select-none overflow-visible',
+        'select-none overflow-visible',
+        'absolute left-0 top-0',
         'w-(--card-width) translate-x-(--card-x) translate-y-(--card-y)',
-        'rounded-lg border border-(--card-border) bg-gray-900 shadow-md',
+        'border border-(--card-border) rounded-lg',
+        'bg-gray-900 shadow-md',
         'transition-(--transition-paint) duration-120',
         {
           'opacity-22': p.dim,
           'border-gray-500': p.focus,
           'border-blue-400 ring-1 ring-blue-400 shadow-lg': p.selected,
-          'hidden': p.hidden,
+          hidden: p.hidden,
         },
       )}
       data-card=""
@@ -47,13 +49,15 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
         '--card-border': mix(frame, 28, 'var(--color-gray-600)'),
         '--card-hd-border': mix(frame, 22, 'var(--color-gray-600)'),
         '--card-hd-bg': mix(p.color || 'var(--color-gray-800)', 13, 'var(--color-gray-800)'),
-        '--card-hd-accent': `inset 0 2px 0 ${p.color || 'transparent'}`,
       })}
     >
       <div
         className={cn(
-          'flex h-9 cursor-grab items-center gap-2 px-3 active:cursor-grabbing',
-          'rounded-t-lg border-b border-(--card-hd-border) bg-(--card-hd-bg) shadow-(--card-hd-accent)',
+          'rounded-t-lg cursor-grab active:cursor-grabbing',
+          'flex items-center gap-2',
+          'h-9 px-3',
+          'border-b border-(--card-hd-border)',
+          'bg-(--card-hd-bg)',
         )}
       >
         <span className="font-mono text-base font-medium text-gray-50">{e.label}</span>
