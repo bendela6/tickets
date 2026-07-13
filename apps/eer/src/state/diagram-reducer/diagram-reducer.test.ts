@@ -108,6 +108,17 @@ it('REARRANGE clears a saved layout so the button still moves cards', () => {
   expect(rearranged.model!.entityById.get('users')!.x).not.toBe(1);
 });
 
+// Reviewer-found: REARRANGE moves every card but left ui.dirty untouched, so
+// switching models right after a rearrange silently discarded the new layout
+// with no unsaved-changes confirm — the same layout change SET_POSITIONS and
+// RESIZE_GROUP already mark dirty for.
+it('REARRANGE sets dirty — a rearranged layout is an unsaved change like any other', () => {
+  const s = loaded();
+  expect(s.ui.dirty).toBe(false);
+  const rearranged = diagramReducer(s, { type: 'REARRANGE' });
+  expect(rearranged.ui.dirty).toBe(true);
+});
+
 it('TOGGLE_GROUP / TOGGLE_KIND flip set membership immutably', () => {
   let s = loaded();
   s = diagramReducer(s, { type: 'TOGGLE_GROUP', id: 'z1' });

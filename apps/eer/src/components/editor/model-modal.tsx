@@ -63,20 +63,30 @@ function ModelModalForm({ model, onClose }: { model: Model; onClose: () => void 
     const list = await listModels();
     const next = list && list.length > 0 ? list[0] : null;
     if (next) {
-      const raw = await getModel(next.id);
-      const result = loadModel(raw);
-      // Same validity check as ModelMenu's selectModel(): a model with errors
-      // is still a (possibly empty/garbage) object here, never null — errors
-      // must be checked explicitly, not just truthiness of result.model.
-      if (!result.errors.length && result.model) {
-        actions.load(result.model, next.id);
-        setBusy(false);
-        onClose();
-        return;
+      // getModel throws on a network failure or a non-ok response (unlike
+      // deleteModel/listModels, which degrade to false/null) — uncaught here,
+      // that throw would escape as an unhandled rejection (handleDelete is
+      // fire-and-forgot via `void`) and leave `busy` stuck forever. Treat it
+      // the same as "failed to load" below: don't strand ui.modelId, stay open.
+      try {
+        const raw = await getModel(next.id);
+        const result = loadModel(raw);
+        // Same validity check as ModelMenu's selectModel(): a model with errors
+        // is still a (possibly empty/garbage) object here, never null — errors
+        // must be checked explicitly, not just truthiness of result.model.
+        if (!result.errors.length && result.model) {
+          actions.load(result.model, next.id);
+          setBusy(false);
+          onClose();
+          return;
+        }
+      } catch {
+        // fall through to the shared "failed to load" handling below.
       }
-      // A fallback model exists but failed to load — do NOT close (that would
-      // silently strand the deleted id in ui.modelId, letting a later Save
-      // resurrect the file). Clear the id instead and stay open with a notice.
+      // A fallback model exists but failed to load (or threw) — do NOT close
+      // (that would silently strand the deleted id in ui.modelId, letting a
+      // later Save resurrect the file). Clear the id instead and stay open
+      // with a notice.
       actions.clearModelId();
       setBusy(false);
       setNotice('Model deleted, but the next model failed to load — pick another from the menu.');

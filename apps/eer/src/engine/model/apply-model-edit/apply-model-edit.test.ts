@@ -6,14 +6,23 @@ import { loadModel } from '../load-model';
 import { applyModelEdit, fkRefsTo, type EditField } from './apply-model-edit';
 import seedRaw from '../../../../models/items-platform.json';
 
-const editPk = (name = 'id', type = 'int'): EditField => ({ name, type, role: 'pk', ref: null, refField: null, description: null });
-const editPlain = (name: string, type = 'text'): EditField => ({ name, type, role: null, ref: null, refField: null, description: null });
+const editPk = (name = 'id', type = 'int'): EditField => ({ name, type, role: 'pk', ref: null, refField: null, title: null, description: null });
+const editPlain = (name: string, type = 'text'): EditField => ({
+  name,
+  type,
+  role: null,
+  ref: null,
+  refField: null,
+  title: null,
+  description: null,
+});
 const editFk = (name: string, ref: string, refField = 'id', type = 'int'): EditField => ({
   name,
   type,
   role: 'fk',
   ref,
   refField,
+  title: null,
   description: null,
 });
 
@@ -239,6 +248,32 @@ describe('applyModelEdit', () => {
       expect(cleared.relationships[0]).toMatchObject({ id: 'lbl', label: 'owns', kind: 'fk' });
     });
 
+    // The reviewer's finding: serialize-model already keeps a derivable-shaped
+    // rel whose backing field isn't tagged role:'fk' (isFullyReDerivable checks
+    // shape AND role:'fk'), so such a rel can be loaded from a file. But the old
+    // deriveRelationships discarded EVERY derivable-shaped rel unconditionally
+    // (isDerivableShaped alone), expecting the derive loop to put it back — the
+    // loop only fires for role:'fk' fields, so it never did, and an UNRELATED
+    // edit (here, renaming a group) silently deleted it. b.a_id mirrors the real
+    // seed's outbox.event_id: ref/refField intact, but not tagged 'fk'.
+    it('a derivable-shaped rel whose backing field lacks role fk survives an unrelated edit', () => {
+      const raw = {
+        groups: [{ id: 'g', label: 'G' }],
+        entities: [
+          { id: 'a', group: 'g', fields: [pkField] },
+          { id: 'b', group: 'g', fields: [{ name: 'a_id', type: 'int', ref: 'a', refField: 'id' }] }, // no role at all
+        ],
+        // Id is EXACTLY the derived scheme — isDerivableShaped is true — even
+        // though nothing derived it (b.a_id isn't role:'fk').
+        relationships: [{ id: 'e-a.id->b.a_id', source: 'a', sourceField: 'id', target: 'b', targetField: 'a_id', kind: 'fk' }],
+      };
+      const m1 = buildModel(raw);
+      expect(m1.relationships).toEqual([expect.objectContaining({ id: 'e-a.id->b.a_id', cardinality: '1-n' })]);
+
+      const renamed = applyModelEdit(m1, { kind: 'upsertGroup', group: { id: 'g', label: 'G Renamed', parent: null } });
+      expect(renamed.relationships.some((r) => r.id === 'e-a.id->b.a_id')).toBe(true);
+    });
+
     it('renaming an fk field drops the stale rel and derives a fresh one under the new name', () => {
       const m1 = buildModel();
       const tags = m1.entityById.get('tags')!;
@@ -395,7 +430,7 @@ describe('applyModelEdit', () => {
 
     it('upsertEntity fk field with no ref throws', () => {
       const m1 = buildModel();
-      const badFk: EditField = { name: 'x_id', type: 'int', role: 'fk', ref: null, refField: null, description: null };
+      const badFk: EditField = { name: 'x_id', type: 'int', role: 'fk', ref: null, refField: null, title: null, description: null };
       expect(() =>
         applyModelEdit(m1, {
           kind: 'upsertEntity',

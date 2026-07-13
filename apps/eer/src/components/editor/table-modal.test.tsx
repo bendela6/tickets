@@ -1,11 +1,15 @@
 import { cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { applyModelEdit, type ModelEdit } from '../../engine/model/apply-model-edit';
+import { loadModel } from '../../engine/model/load-model';
+import { serializeModel } from '../../engine/model/serialize-model';
 import { useDiagramUi } from '../../state/diagram-context';
 import type { DiagramUi } from '../../state/diagram-reducer';
 import { twoZoneRaw } from '../../test/models';
 import { renderDiagram } from '../../test/render';
 import { TableModal } from './table-modal';
+import seedRaw from '../../../models/items-platform.json';
 
 afterEach(cleanup);
 
@@ -66,8 +70,8 @@ describe('TableModal', () => {
     const [edit] = spy.mock.calls[0]!;
     expect(edit).toMatchObject({ kind: 'upsertEntity', entity: { id: 'tags' } });
     expect((edit as { entity: { fields: unknown[] } }).entity.fields).toEqual([
-      { name: 'id', type: 'int', role: 'pk', ref: null, refField: null, description: null },
-      { name: 'label', type: 'text', role: null, ref: null, refField: null, description: null },
+      { name: 'id', type: 'int', role: 'pk', ref: null, refField: null, title: null, description: null },
+      { name: 'label', type: 'text', role: null, ref: null, refField: null, title: null, description: null },
     ]);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -167,5 +171,52 @@ describe('TableModal', () => {
     expect(await screen.findByText(/A table with id "users" already exists/)).toBeInTheDocument();
     expect(spy).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  // Reviewer-found silent data loss (two Importants): (1) toEditField dropped
+  // `title`, and upsertEntity hard-wrote `title: null` for every field, so a
+  // no-op Save destroyed all 140 titled fields the real seed has. (2) the save
+  // mapping stripped `ref`/`refField` for any non-'fk'-role field, so the
+  // seed's outbox.event_id (role 'pk', ref 'events' — a shared-pk identifying
+  // reference) lost its ref on every save. This exercises the exact round trip
+  // the UI does — toEditField -> upsertEntity edit -> applyModelEdit ->
+  // serializeModel -> load — against the real bundled seed, not a trimmed
+  // fixture, so it can't drift unnoticed as the seed grows.
+  it('a no-op Save preserves title/ref/refField/description byte-identically (real seed, outbox.event_id)', async () => {
+    const onClose = vi.fn();
+    const { actions } = await renderDiagram(<TableModal id="outbox" onClose={onClose} />, seedRaw);
+    const spy = vi.spyOn(actions, 'applyModelEdit');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
+    const [edit] = spy.mock.calls[0]!;
+
+    const before = loadModel(seedRaw).model!;
+    const originalField = before.entityById.get('outbox')!.fields.find((f) => f.name === 'event_id')!;
+    // Sanity: this is genuinely the role-pk-with-ref, titled shape the fix targets.
+    expect(originalField).toMatchObject({ role: 'pk', ref: 'events', title: 'Event', description: 'Event to deliver.' });
+
+    const applied = applyModelEdit(before, edit as ModelEdit);
+    const appliedField = applied.entityById.get('outbox')!.fields.find((f) => f.name === 'event_id')!;
+    expect(appliedField).toEqual(originalField);
+
+    const raw2 = serializeModel(applied, before.colors);
+    const { model: reloaded, errors } = loadModel(raw2);
+    expect(errors).toEqual([]);
+    const reloadedField = reloaded!.entityById.get('outbox')!.fields.find((f) => f.name === 'event_id')!;
+    // serializeModel fills a null refField in with its "id" default when `ref`
+    // is set (see its own comment) — the only field this round trip is
+    // expected to normalize; everything else, title/ref/role/description
+    // included, must come back exactly as it was.
+    expect(reloadedField).toEqual({ ...originalField, refField: 'id' });
+
+    // Every other field on the entity (plain, titled, no ref) survives too.
+    const otherNames = ['created_at', 'picked_at', 'done_at'];
+    for (const name of otherNames) {
+      const orig = before.entityById.get('outbox')!.fields.find((f) => f.name === name)!;
+      expect(reloaded!.entityById.get('outbox')!.fields.find((f) => f.name === name)).toEqual(orig);
+    }
   });
 });

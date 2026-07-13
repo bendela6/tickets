@@ -29,11 +29,14 @@ function slugify(name: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+// `title` has no editable column in FieldGrid (the grid's "note" column is
+// `description`) — it's carried through untouched so a no-op Save can't
+// destroy it (see apply-model-edit's EditField and upsertEntity).
 function toEditField(f: Field): EditField {
-  return { name: f.name, type: f.type, role: f.role, ref: f.ref, refField: f.refField, description: f.description ?? '' };
+  return { name: f.name, type: f.type, role: f.role, ref: f.ref, refField: f.refField, title: f.title, description: f.description ?? '' };
 }
 
-const DEFAULT_PK: EditField = { name: 'id', type: 'serial', role: 'pk', ref: null, refField: null, description: null };
+const DEFAULT_PK: EditField = { name: 'id', type: 'serial', role: 'pk', ref: null, refField: null, title: null, description: null };
 
 // A field with an fk role but no ref is caught here with a nicer message than
 // the engine's — engine validation is still the backstop for anything this
@@ -117,8 +120,14 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
           name: f.name.trim(),
           type: f.type.trim(),
           role: f.role,
-          ref: f.role === 'fk' ? f.ref : null,
-          refField: f.role === 'fk' ? f.refField : null,
+          // NOT stripped by role here — a role:'pk' (or null) field can
+          // legitimately carry a `ref` (e.g. the seed's outbox.event_id: a
+          // shared-pk identifying reference). FieldGrid's setRole already
+          // clears ref/refField the moment a USER actively moves a row's role
+          // away from 'fk' — that's the only place this should ever happen.
+          ref: f.ref,
+          refField: f.refField,
+          title: f.title,
           description: f.description && f.description.trim() ? f.description.trim() : null,
         })),
       },
