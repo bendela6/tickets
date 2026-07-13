@@ -49,13 +49,17 @@ function verifySource(file, source) {
     const collect = (child) => {
       if (
         (ts.isStringLiteral(child) || ts.isNoSubstitutionTemplateLiteral(child)) &&
-        child.text.length > maxClassString &&
         !reportedLongStrings.has(child.getStart())
       ) {
-        reportedLongStrings.add(child.getStart());
-        failures.push(
-          `${relative(file)}:${tree.getLineAndCharacterOfPosition(child.getStart()).line + 1} class string over ${maxClassString} chars — split into grouped cn() lines`,
-        );
+        const line = () => tree.getLineAndCharacterOfPosition(child.getStart()).line + 1;
+        if (child.text.length > maxClassString) {
+          reportedLongStrings.add(child.getStart());
+          failures.push(`${relative(file)}:${line()} class string over ${maxClassString} chars — split into grouped cn() lines`);
+        } else if (/-\d+\.\d+(?![\w.])/u.test(child.text)) {
+          // Spacing steps stay on integers (h-9, px-3) — no h-8.5 / py-0.75.
+          reportedLongStrings.add(child.getStart());
+          failures.push(`${relative(file)}:${line()} uses a fractional spacing step — round to an integer utility`);
+        }
       }
       ts.forEachChild(child, collect);
     };

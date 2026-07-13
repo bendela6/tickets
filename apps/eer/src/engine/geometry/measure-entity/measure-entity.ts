@@ -16,12 +16,12 @@ function measureText(s: string, font: string): number {
 
 export function measureEntity(e: Entity): Entity {
   const label = e.label || e.id;
-  let w = measureText(label, '500 13px ' + MONO) + 28;
+  let w = measureText(label, '500 13px ' + MONO) + 32;
   for (const f of e.fields) {
     const nameW = measureText(f.name, '500 12px ' + MONO);
     const typeW = measureText(f.type || '', '400 11px ' + MONO);
-    const badgeW = f.role ? 24 : 6;
-    const rowW = badgeW + nameW + 18 + typeW + 22;
+    const badgeW = f.role ? 28 : 8;
+    const rowW = badgeW + nameW + 20 + typeW + 26;
     if (rowW > w) w = rowW;
   }
   e._w = Math.max(CARD_MIN_W, Math.min(CARD_MAX_W, Math.round(w)));

@@ -41,8 +41,8 @@ export function EdgeDetail({
         sub={
           <>
             <Card>{rel.cardinality}</Card>
-            <span className="ml-1.5">{rel.kind ?? 'edge'}</span>
-            {rel.cardinalityInferred && <span className="ml-1.5 text-gray-400">· inferred from roles</span>}
+            <span className="ml-2">{rel.kind ?? 'edge'}</span>
+            {rel.cardinalityInferred && <span className="ml-2 text-gray-400">· inferred from roles</span>}
           </>
         }
         description={rel.label}

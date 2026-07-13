@@ -52,7 +52,7 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
     >
       <div
         className={cn(
-          'flex h-8.5 cursor-grab items-center gap-2 px-3 active:cursor-grabbing',
+          'flex h-9 cursor-grab items-center gap-2 px-3 active:cursor-grabbing',
           'rounded-t-lg border-b border-(--card-hd-border) bg-(--card-hd-bg) shadow-(--card-hd-accent)',
         )}
       >

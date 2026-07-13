@@ -10,7 +10,7 @@ export function ChecksOverlay({ results, onClose }: ChecksOverlayProps) {
   return (
     <div
       className={cn(
-        'absolute bottom-3.5 right-3.5 z-40 w-80 px-3 py-3',
+        'absolute bottom-4 right-4 z-40 w-80 px-3 py-3',
         'rounded-lg border border-gray-500 bg-gray-800 text-sm shadow-xl',
       )}
     >

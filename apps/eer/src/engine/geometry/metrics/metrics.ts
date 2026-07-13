@@ -3,8 +3,8 @@
 // entity-card components (header height, field height, border, body padding,
 // and port offsets).
 
-export const HEADER_H = 34; // card header h-8.5
-export const ROW_H = 22; // .field h-5.5
+export const HEADER_H = 36; // card header h-9
+export const ROW_H = 24; // field row h-6
 export const PORT_GAP = 8; // dot distance from card edge
 export const CARD_BORDER = 1; // .card border-width
 export const BODY_PAD_TOP = 4; // card body py-1

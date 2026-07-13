@@ -7,8 +7,8 @@ import { BODY_PAD_TOP, CARD_BORDER, CARD_MAX_W, CARD_MIN_W, HEADER_H, LAYOUT_MAR
 // pinned here so editing either side means acknowledging the geometry change.
 describe('metrics ↔ Tailwind utility pairings (pinned)', () => {
   it('matches the card box model rules', () => {
-    expect(HEADER_H).toBe(34); // card header h-8.5
-    expect(ROW_H).toBe(22); // [data-index] h-5.5
+    expect(HEADER_H).toBe(36); // card header h-9
+    expect(ROW_H).toBe(24); // field row h-6
     expect(CARD_BORDER).toBe(1); // [data-card] border
     expect(BODY_PAD_TOP).toBe(4); // card body py-1
   });

@@ -65,8 +65,8 @@ export function EntityDetail({
           {e.fields.map((f) => {
             const note = f.description || f.title;
             return (
-              <div key={f.name} className="border-b border-gray-600/50 py-1.5 last:border-0">
-                <div className="flex items-center gap-1.5">
+              <div key={f.name} className="border-b border-gray-600/50 py-2 last:border-0">
+                <div className="flex items-center gap-2">
                   <RoleTag role={f.role} />
                   <span className={cn('font-mono text-sm', { 'text-yellow-400': f.role === 'pk', 'text-gray-50': f.role !== 'pk' })}>{f.name}</span>
                   {f.ref && (
@@ -83,7 +83,7 @@ export function EntityDetail({
                   )}
                   <span className="ml-auto shrink-0 font-mono text-xs text-gray-400">{f.type}</span>
                 </div>
-                {note && <div className="mt-0.5 pl-7 text-xs leading-snug text-gray-200">{note}</div>}
+                {note && <div className="mt-1 pl-7 text-xs leading-snug text-gray-200">{note}</div>}
               </div>
             );
           })}

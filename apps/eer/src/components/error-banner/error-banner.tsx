@@ -23,18 +23,18 @@ export function ErrorBanner({ errors, warnings, onDismiss }: ErrorBannerProps) {
     >
       <button
         type="button"
-        className="absolute right-2.5 top-2 text-lg text-gray-200 hover:text-gray-50"
+        className="absolute right-3 top-2 text-lg text-gray-200 hover:text-gray-50"
         onClick={onDismiss}
         aria-label="Dismiss"
       >
         ×
       </button>
       {errors.length > 0 ? (
-        <h3 className="mb-1.5 text-base text-red-400">{errors.length} error(s) — the model cannot render</h3>
+        <h3 className="mb-2 text-base text-red-400">{errors.length} error(s) — the model cannot render</h3>
       ) : (
-        <h3 className="mb-1.5 text-base text-yellow-400">{warnings.length} warning(s)</h3>
+        <h3 className="mb-2 text-base text-yellow-400">{warnings.length} warning(s)</h3>
       )}
-      <ul className="ml-4.5 list-disc text-sm leading-relaxed text-gray-50">
+      <ul className="ml-5 list-disc text-sm leading-relaxed text-gray-50">
         {errors.map((e, i) => (
           <li key={`e${i}`}>{e}</li>
         ))}
