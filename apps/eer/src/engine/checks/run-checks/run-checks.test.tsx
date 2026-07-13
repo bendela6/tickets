@@ -38,13 +38,54 @@ async function checkedScene() {
   return { model, root, container };
 }
 
-it('all four checks pass on a healthy scene (modulo jsdom zero-rects)', async () => {
+it('all five checks pass on a healthy scene (modulo jsdom zero-rects)', async () => {
   const { model, root } = await checkedScene();
   const results = runChecks({ model, geometry: computeEdgeGeometry(model, 'avoid'), view: { zoom: 1, panX: 0, panY: 0 }, root });
-  expect(results).toHaveLength(4);
+  expect(results).toHaveLength(5);
   // jsdom zero-rects make the DOM-bar comparison unreliable (old suite had the same caveat),
   // so exempt only the endpoint check's DOM half from the pass assertion:
   expect(results.filter((r) => r.name !== 'Every edge endpoint lands on a real port').every((r) => r.pass)).toBe(true);
+});
+
+// Postgres requires a foreign key's refColumns to be exactly a pk or unique
+// constraint's column set on the target table — not just "some columns that
+// exist". orders.user_name -> users.name is a schema an app can load and
+// diagram fine, but Postgres itself would reject the FK: users.name carries
+// no pk/unique constraint at all.
+it('flags a foreign key whose target columns are not a primary key or unique', async () => {
+  const raw = {
+    groups: [{ id: 'z', label: 'Z' }],
+    entities: [
+      {
+        id: 'users', group: 'z',
+        fields: [{ name: 'id', type: 'int' }, { name: 'name', type: 'text' }],
+        constraints: [{ id: 'c1', kind: 'pk', columns: ['id'] }],
+      },
+      {
+        id: 'orders', group: 'z',
+        fields: [{ name: 'id', type: 'int' }, { name: 'user_name', type: 'text' }],
+        constraints: [{ id: 'c1', kind: 'fk', columns: ['user_name'], refTable: 'users', refColumns: ['name'] }],
+      },
+    ],
+  };
+  const { container } = await renderDiagram(
+    <div data-viewport="">
+      <Loaded>
+        <World>
+          <ZoneBoxes />
+          <EdgesSvg />
+          <EntityCards />
+        </World>
+      </Loaded>
+    </div>,
+    raw,
+  );
+  const model = buildModel(raw);
+  const root = container.querySelector('[data-viewport]') as HTMLElement;
+  const results = runChecks({ model, geometry: computeEdgeGeometry(model, 'avoid'), view: { zoom: 1, panX: 0, panY: 0 }, root });
+  const check = results.find((c) => /foreign key/i.test(c.name))!;
+  expect(check.pass).toBe(false);
+  expect(check.problems.join(' ')).toMatch(/users\(name\)/);
 });
 
 it('no-reflow probe preserves pre-existing focus/selected/hot state', async () => {

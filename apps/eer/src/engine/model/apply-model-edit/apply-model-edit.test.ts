@@ -4,7 +4,8 @@ import { buildModel, nestedRaw, pkField } from '../../../test/models';
 import { CARD_MAX_W, CARD_MIN_W, HEADER_H, ROW_H } from '../../geometry/metrics';
 import { columnRoles } from '../column-roles';
 import { loadModel } from '../load-model';
-import { applyModelEdit, fkRefsTo, type EditField } from './apply-model-edit';
+import { applyModelEdit, fkRefsTo, type EditEntity, type EditField, type ModelEdit } from './apply-model-edit';
+import type { Constraint } from '../types';
 import seedRaw from '../../../../models/items-platform.json';
 
 const editField = (name: string, type = 'text'): EditField => ({
@@ -852,6 +853,197 @@ describe('applyModelEdit', () => {
       // sub1's order (2 existing top-level zones -> 2, same as sub1) — max+1 doesn't.
       const withZone = applyModelEdit(withSub, { kind: 'upsertGroup', group: { id: 'z3', label: 'Zone Three', parent: null } });
       expect(withZone.groups.find((g) => g.id === 'z3')!.order).toBe(3);
+    });
+  });
+
+  // Constraints/indexes pass through upsertEntity verbatim (see the module
+  // header comment) — but "verbatim" doesn't mean "unchecked": a real
+  // Postgres-shaped schema still has to be internally consistent (no
+  // dangling column refs, no more than one pk, an fk's arity matching, …) or
+  // downstream code (columnRoles, deriveRelationships, serialize-model) has
+  // to guess at a broken shape. These rules catch that at the one point an
+  // edit is actually authored, before it ever reaches the model.
+  describe('constraint validation', () => {
+    // users(id pk, name, manager_id fk->users.id), orders(id pk, users_id fk->users.id, tag_id fk->tags.id), tags(id pk) — see twoZoneRaw.
+    const base = () => buildModel();
+    const edit = (over: Partial<EditEntity>): ModelEdit => ({
+      kind: 'upsertEntity',
+      entity: {
+        id: 'orders',
+        label: 'orders',
+        group: 'z2',
+        description: null,
+        fields: [editField('id', 'int'), editField('users_id', 'int')],
+        constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }],
+        indexes: [],
+        ...over,
+      } as EditEntity,
+    });
+
+    it('rejects duplicate column names', () => {
+      expect(() =>
+        applyModelEdit(
+          base(),
+          edit({ fields: [editField('id', 'int'), editField('id', 'int')] }),
+        ),
+      ).toThrow(/Duplicate column name "id"/);
+    });
+
+    it('rejects a blank column name', () => {
+      expect(() =>
+        applyModelEdit(base(), edit({ fields: [editField('id', 'int'), editField('   ', 'int')] })),
+      ).toThrow(/column name/i);
+    });
+
+    it('rejects a second primary key', () => {
+      expect(() =>
+        applyModelEdit(
+          base(),
+          edit({
+            constraints: [
+              { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
+              { id: 'c2', kind: 'pk', name: null, columns: ['users_id'] },
+            ],
+          }),
+        ),
+      ).toThrow(/one primary key/i);
+    });
+
+    it('rejects a constraint naming a column the table does not have', () => {
+      expect(() =>
+        applyModelEdit(base(), edit({ constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['nope'] }] })),
+      ).toThrow(/unknown column "nope"/i);
+    });
+
+    it('rejects an index naming a column the table does not have', () => {
+      expect(() =>
+        applyModelEdit(base(), edit({ indexes: [{ id: 'i1', name: 'idx', columns: ['nope'], unique: false }] })),
+      ).toThrow(/unknown column "nope"/i);
+    });
+
+    it('rejects an empty column list', () => {
+      expect(() =>
+        applyModelEdit(base(), edit({ constraints: [{ id: 'c1', kind: 'unique', name: null, columns: [] }] })),
+      ).toThrow(/at least one column/i);
+    });
+
+    it('rejects an fk to an unknown table or column, and an arity mismatch', () => {
+      const fk = (over: Record<string, unknown>) =>
+        edit({
+          constraints: [
+            {
+              id: 'c1',
+              kind: 'fk',
+              name: null,
+              columns: ['users_id'],
+              refTable: 'users',
+              refColumns: ['id'],
+              onDelete: null,
+              onUpdate: null,
+              ...over,
+            } as Constraint,
+          ],
+        });
+      expect(() => applyModelEdit(base(), fk({ refTable: 'nope' }))).toThrow(/unknown table "nope"/i);
+      expect(() => applyModelEdit(base(), fk({ refColumns: ['nope'] }))).toThrow(/unknown column "nope"/i);
+      expect(() => applyModelEdit(base(), fk({ columns: ['id', 'users_id'] }))).toThrow(/same number of columns/i);
+    });
+
+    it('rejects an empty check expression and duplicate constraint/index names', () => {
+      expect(() =>
+        applyModelEdit(base(), edit({ constraints: [{ id: 'c1', kind: 'check', name: null, expression: '  ' }] })),
+      ).toThrow(/expression/i);
+      expect(() =>
+        applyModelEdit(
+          base(),
+          edit({
+            constraints: [
+              { id: 'c1', kind: 'unique', name: 'dup', columns: ['id'] },
+              { id: 'c2', kind: 'unique', name: 'dup', columns: ['users_id'] },
+            ],
+          }),
+        ),
+      ).toThrow(/Duplicate constraint name "dup"/);
+      expect(() =>
+        applyModelEdit(
+          base(),
+          edit({
+            indexes: [
+              { id: 'i1', name: 'dup', columns: ['id'], unique: false },
+              { id: 'i2', name: 'dup', columns: ['users_id'], unique: false },
+            ],
+          }),
+        ),
+      ).toThrow(/Duplicate index name "dup"/);
+    });
+
+    it('accepts a valid fk with an ON DELETE action and derives its relationship', () => {
+      const next = applyModelEdit(
+        base(),
+        edit({
+          constraints: [
+            { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
+            {
+              id: 'c2',
+              kind: 'fk',
+              name: 'orders_user_fk',
+              columns: ['users_id'],
+              refTable: 'users',
+              refColumns: ['id'],
+              onDelete: 'cascade',
+              onUpdate: null,
+            },
+          ],
+        }),
+      );
+      expect(next.relationships.some((r) => r.id === 'rel:orders:c2')).toBe(true);
+    });
+
+    it('accepts a valid composite fk', () => {
+      const raw = {
+        groups: [{ id: 'g', label: 'G' }],
+        entities: [
+          {
+            id: 'a',
+            group: 'g',
+            fields: [{ name: 'k1', type: 'int' }, { name: 'k2', type: 'int' }],
+            constraints: [{ id: 'pk1', kind: 'pk', columns: ['k1', 'k2'] }],
+          },
+          {
+            id: 'b',
+            group: 'g',
+            fields: [{ name: 'id', type: 'int' }, { name: 'a1', type: 'int' }, { name: 'a2', type: 'int' }],
+            constraints: [{ id: 'pk2', kind: 'pk', columns: ['id'] }],
+          },
+        ],
+      };
+      const m1 = buildModel(raw);
+      const b = m1.entityById.get('b')!;
+      const m2 = applyModelEdit(m1, {
+        kind: 'upsertEntity',
+        entity: {
+          id: 'b',
+          label: b.label,
+          group: b.group,
+          description: null,
+          fields: [editField('id', 'int'), editField('a1', 'int'), editField('a2', 'int')],
+          constraints: [
+            { id: 'pk2', kind: 'pk', name: null, columns: ['id'] },
+            {
+              id: 'fk1',
+              kind: 'fk',
+              name: null,
+              columns: ['a1', 'a2'],
+              refTable: 'a',
+              refColumns: ['k1', 'k2'],
+              onDelete: 'cascade',
+              onUpdate: null,
+            },
+          ],
+          indexes: [],
+        },
+      });
+      expect(m2.relationships.some((r) => r.id === 'rel:b:fk1')).toBe(true);
     });
   });
 

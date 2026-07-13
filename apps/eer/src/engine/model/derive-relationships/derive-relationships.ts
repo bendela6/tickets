@@ -22,7 +22,10 @@ import type { Cardinality, Entity, Model, Relationship } from '../types';
 export const pairKey = (r: { source: string; sourceField: string; target: string; targetField: string }): string =>
   [`${r.source}.${r.sourceField}`, `${r.target}.${r.targetField}`].sort().join('|');
 
-const sameSet = (a: string[], b: string[]): boolean =>
+// Set equality, order-insensitive — shared with run-checks.ts's "every fk
+// references a key" self-check (Postgres requires an fk's refColumns to be
+// EXACTLY a pk or unique constraint's column set, no more/less, any order).
+export const sameSet = (a: string[], b: string[]): boolean =>
   a.length === b.length && [...a].sort().join(',') === [...b].sort().join(',');
 
 // A derived edge's id is always `rel:<target-entity-id>:<constraint-id>` (see
