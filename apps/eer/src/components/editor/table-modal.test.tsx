@@ -269,4 +269,46 @@ describe('TableModal', () => {
       expect(reloadedField.description).toBe(orig.description);
     }
   });
+
+  // The centrepiece payoff: a FOREIGN KEY authored through the ConstraintsEditor
+  // (wired into this modal under the columns grid) is now the ONLY way to draw
+  // an edge between two tables — this exercises the whole path, from clicking
+  // "+ FK" through Save's dispatched upsertEntity, to the derived relationship
+  // (deriveRelationships) an edge is drawn from.
+  it('adding an FK constraint through the modal and saving dispatches it, and the model derives an edge for it', async () => {
+    // "tags" (twoZoneRaw): just an `id` pk, no fk of its own — a clean slate.
+    const onClose = vi.fn();
+    const { actions } = await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
+    const spy = vi.spyOn(actions, 'applyModelEdit');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add column' }));
+    fireEvent.change(screen.getByLabelText('Column 2 name'), { target: { value: 'owner_id' } });
+
+    // tags already carries a synthesized `c1` pk constraint, so the new fk
+    // added here lands at index 1 — "Constraint 2".
+    fireEvent.click(screen.getByRole('button', { name: '+ FK' }));
+    fireEvent.click(screen.getByLabelText('Constraint 2 column owner_id'));
+    fireEvent.change(screen.getByLabelText('Constraint 2 target table'), { target: { value: 'users' } });
+    fireEvent.click(screen.getByLabelText('Constraint 2 target column id'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const [edit] = spy.mock.calls[0]! as [ModelEdit];
+    const entity = (edit as { entity: { constraints: unknown[] } }).entity;
+    expect(entity.constraints).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: 'fk', columns: ['owner_id'], refTable: 'users', refColumns: ['id'] }),
+      ]),
+    );
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    // The user-visible payoff: applying that same edit against the model
+    // derives a real relationship users.id -> tags.owner_id — an edge.
+    const before = buildModel(twoZoneRaw());
+    const applied = applyModelEdit(before, edit);
+    const rel = applied.relationships.find((r) => r.target === 'tags' && r.targetField === 'owner_id');
+    expect(rel).toBeDefined();
+    expect(rel).toMatchObject({ source: 'users', sourceField: 'id', kind: 'fk' });
+  });
 });
