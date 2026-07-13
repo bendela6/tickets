@@ -33,7 +33,7 @@ export function SearchBox() {
         autoComplete="off"
         spellCheck={false}
         className={cn(
-          'w-48 rounded-md border border-gray-600 bg-gray-900 px-2.5 py-1.5 text-base text-gray-50',
+          'w-48 rounded-md border border-gray-600 bg-gray-900 px-3 py-2 text-base text-gray-50',
           'outline-none placeholder:text-gray-400 focus:border-gray-500',
         )}
         onChange={(e) => run(e.target.value)}
@@ -58,14 +58,14 @@ export function SearchBox() {
             <button
               key={i}
               type="button"
-              className="block w-full rounded-md px-2 py-1.5 text-left text-base hover:bg-gray-700"
+              className="block w-full rounded-md px-2 py-2 text-left text-base hover:bg-gray-700"
               onMouseDown={(e) => {
                 e.preventDefault();
                 pick(m);
               }}
             >
               <span className="font-mono">{m.label}</span>
-              <span className="ml-1.5 text-xs text-gray-400">
+              <span className="ml-2 text-xs text-gray-400">
                 {m.kind === 'field' ? `${m.entityLabel} · field` : 'entity'}
               </span>
             </button>

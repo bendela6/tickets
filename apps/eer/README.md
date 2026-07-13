@@ -60,7 +60,8 @@ stylesheets, CSS-in-JS, CSSOM injection, and arbitrary-value utilities are all
 rejected by `verify:tailwind`, which runs automatically before build,
 typecheck, and tests. It also caps class strings at 100 chars (the prettier
 printWidth) — longer lists must be split into grouped `cn()` lines, one
-concern per line. The one sanctioned exception is `src/styles/debug.scss`, a
+concern per line — and rejects fractional spacing steps (`h-8.5`): sizes stay
+on integer utilities. The one sanctioned exception is `src/styles/debug.scss`, a
 dev-only helper of `dd*` dotted-outline classes; nothing in the app may depend
 on it.
 

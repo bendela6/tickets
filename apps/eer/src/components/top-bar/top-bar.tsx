@@ -18,7 +18,7 @@ const ROUTING_TIP: Record<RoutingMode, string> = {
 };
 
 const btn = cn(
-  'rounded-md border border-gray-600 bg-gray-900 px-2.5 py-1.5',
+  'rounded-md border border-gray-600 bg-gray-900 px-3 py-2',
   'text-sm font-medium whitespace-nowrap text-gray-200',
   'hover:border-gray-500 hover:bg-gray-800 hover:text-gray-50',
 );
@@ -41,19 +41,19 @@ export function TopBar({ onSelfCheck }: TopBarProps) {
   return (
     <header
       className={cn(
-        'z-10 flex flex-wrap items-center gap-x-3.5 gap-y-2 px-4 py-2.5',
+        'z-10 flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3',
         'border-b border-gray-600 bg-gray-950/95',
       )}
     >
       <div className="mr-auto">
         <h1 className="text-lg font-semibold tracking-tight">{model?.meta.title ?? 'EER model viewer'}</h1>
-        <p className="mt-0.5 max-w-sm truncate text-sm text-gray-200">
+        <p className="mt-1 max-w-sm truncate text-sm text-gray-200">
           {model?.meta.description ??
             (model ? `${model.entities.length} entities · ${model.relationships.length} relationships` : 'loading…')}
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-2">
         <SearchBox />
 
         {model && model.groups.some((g) => !g.parent) && (

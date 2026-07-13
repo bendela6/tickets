@@ -32,9 +32,9 @@ export function ColorsForm({ model, colors, onChange }: ColorsFormProps) {
     return (
       <label
         key={id}
-        className={cn('flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.75 hover:bg-gray-800', {
+        className={cn('flex cursor-pointer items-center gap-2 rounded px-1 py-1 hover:bg-gray-800', {
           'ml-7': depth === 2,
-          'ml-2.5': depth === 1,
+          'ml-3': depth === 1,
         })}
       >
         <input
@@ -68,7 +68,7 @@ export function ColorsForm({ model, colors, onChange }: ColorsFormProps) {
         .filter((g) => !g.parent)
         .map((z) => (
           <div key={z.id} className="mb-2 flex flex-col gap-px">
-            <div className="flex items-center gap-1.5 px-1 py-0.75">
+            <div className="flex items-center gap-2 px-1 py-1">
               <input
                 type="color"
                 className={swatchClass}

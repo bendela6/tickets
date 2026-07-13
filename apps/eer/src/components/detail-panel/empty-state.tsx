@@ -30,15 +30,15 @@ export function EmptyState({
 
   return (
     <div>
-      <div className="border-b border-gray-600 px-4 pb-3 pt-3.5">
+      <div className="border-b border-gray-600 px-4 pb-3 pt-4">
         <Badge tone="entity">Overview</Badge>
-        <h2 className="mt-1.5 font-mono text-lg font-medium text-gray-50">{model?.meta.title ?? 'EER viewer'}</h2>
+        <h2 className="mt-2 font-mono text-lg font-medium text-gray-50">{model?.meta.title ?? 'EER viewer'}</h2>
         <div className="mt-1 text-xs text-gray-400">Click an entity, zone, or edge to inspect it.</div>
       </div>
 
       <div className="px-4 pb-5 pt-3">
         {model && (
-          <div className="mb-4 flex gap-1.5">
+          <div className="mb-4 flex gap-2">
             <Stat value={model.entities.length} label="tables" />
             <Stat value={model.relationships.length} label="edges" />
             <Stat value={zones} label="zones" />

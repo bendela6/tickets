@@ -4,7 +4,7 @@ export function Section({ title, count }: { title: string; count?: number }) {
   return (
     <div
       className={cn(
-        'mb-1.5 mt-4 flex items-baseline gap-1.5',
+        'mb-2 mt-4 flex items-baseline gap-2',
         'text-2xs font-semibold uppercase tracking-widest text-gray-400',
       )}
     >

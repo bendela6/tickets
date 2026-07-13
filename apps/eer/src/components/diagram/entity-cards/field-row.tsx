@@ -25,7 +25,7 @@ function Port({
   return (
     <span
       className={cn(
-        'absolute top-1/2 z-3 h-3.5 w-1.25 -translate-x-1/2 -translate-y-1/2',
+        'absolute top-1/2 z-3 h-4 w-1 -translate-x-1/2 -translate-y-1/2',
         'rounded-xs border border-gray-900 bg-gray-300 opacity-0',
         'transition-(--transition-paint) duration-120',
         'before:absolute before:top-1/2 before:h-px before:-translate-y-1/2 before:bg-gray-300',
@@ -65,7 +65,7 @@ export function FieldRow({
   const [hot, setHot] = useState(false);
   return (
     <div
-      className="relative flex h-5.5 cursor-default items-center gap-1.5 px-2.5 text-sm hover:bg-gray-800"
+      className="relative flex h-6 cursor-default items-center gap-2 px-3 text-sm hover:bg-gray-800"
       data-entity={e.id}
       data-field={f.name}
       data-index={String(index)}

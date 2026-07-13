@@ -26,7 +26,7 @@ export function ZoneBoxes() {
           'data-[resize-cursor=ew-resize]:cursor-ew-resize data-[resize-cursor=ns-resize]:cursor-ns-resize',
           'data-[resize-cursor=nesw-resize]:cursor-nesw-resize',
           'data-[resize-cursor=nwse-resize]:cursor-nwse-resize',
-          'after:pointer-events-none after:absolute after:bottom-1 after:right-1 after:h-2.5 after:w-2.5',
+          'after:pointer-events-none after:absolute after:bottom-1 after:right-1 after:h-3 after:w-3',
           'after:rounded-br-md after:border-b-2 after:border-r-2 after:border-(--zone-handle)',
           'after:opacity-0 after:transition-opacity after:duration-120 hover:after:opacity-100',
           {
@@ -69,7 +69,7 @@ export function ZoneBoxes() {
                 'pointer-events-none absolute left-3 top-2',
                 'text-sm font-semibold uppercase tracking-wide text-(--zone-ink)',
                 {
-                  'left-2.5 top-1.5 text-2xs font-medium normal-case': subgroup,
+                  'text-2xs font-medium normal-case': subgroup,
                   'text-gray-50': selected,
                 },
               )}
