@@ -51,8 +51,8 @@ export const Edge = memo(function Edge({ rel, active, dim, forcedHot, hidden }: 
       data-active={active ? '' : undefined}
       data-dim={dim ? '' : undefined}
       style={runtimeStyle({
-        '--edge-c': entityColor(model, rel.target, ui.colors),
-        '--edge-glow': `0 0 3px ${entityColor(model, rel.target, ui.colors)}`,
+        '--edge-c': entityColor(model, rel.source, ui.colors),
+        '--edge-glow': `0 0 3px ${entityColor(model, rel.source, ui.colors)}`,
       })}
       onMouseEnter={() => {
         if (!dim) {

@@ -1,5 +1,5 @@
-// Edge colour = an entity's colour. Edges are coloured by their FK-side (target)
-// entity — the table that holds the key.
+// Edge colour = an entity's colour. Edges are coloured by their PK-side (source)
+// entity — the table being referenced.
 
 import { entityColor } from '../entity-color';
 import type { Model } from '../../model/types';
