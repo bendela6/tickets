@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 
-import { buildModel, twoZoneRaw } from '../../test/models';
+import { buildModel, nestedRaw, twoZoneRaw } from '../../test/models';
 import { diagramReducer, initialDiagramState, type DiagramState } from './diagram-reducer';
 
 function loaded(): DiagramState {
@@ -23,6 +23,17 @@ it('LOAD seeds colors from the model, stores the model id, and clears dirty', ()
   expect(s.ui.colors.get('z1')).toBe('#ff0000');
   expect(s.ui.modelId).toBe('model-1');
   expect(s.ui.dirty).toBe(false);
+});
+
+it('LOAD without a modelId resets a stale ui.modelId — Save must not overwrite the wrong file', () => {
+  const withId = diagramReducer(initialDiagramState, { type: 'LOAD', model: buildModel(), modelId: 'alpha' });
+  expect(withId.ui.modelId).toBe('alpha');
+
+  // A subsequent LOAD with no modelId (e.g. "New model") must clear it, not
+  // inherit 'alpha' from the previous state — otherwise Save silently targets
+  // the old file.
+  const withoutId = diagramReducer(withId, { type: 'LOAD', model: buildModel(nestedRaw()) });
+  expect(withoutId.ui.modelId).toBeNull();
 });
 
 it('SET_POSITIONS shares structure: untouched entities keep identity', () => {
@@ -136,6 +147,24 @@ it('an invalid APPLY_MODEL_EDIT leaves model and dirty untouched and sets editEr
   expect(s2.model).toBe(s.model); // unchanged (same reference) — reducer must not throw
   expect(s2.ui.editError).toMatch(/ghost/);
   expect(s2.ui.dirty).toBe(false);
+});
+
+it('a failed APPLY_MODEL_EDIT preserves an existing dirty:true instead of resetting it', () => {
+  // Start from a state that is already dirty from a real edit, so the next
+  // assertion can tell "left alone" apart from "happens to be false".
+  const dirty = diagramReducer(loaded(), {
+    type: 'APPLY_MODEL_EDIT',
+    edit: { kind: 'setMeta', title: 'New title', description: 'New description' },
+  });
+  expect(dirty.ui.dirty).toBe(true);
+
+  const s2 = diagramReducer(dirty, {
+    type: 'APPLY_MODEL_EDIT',
+    edit: { kind: 'upsertEntity', entity: { id: 'x', label: 'x', group: 'no-such-group', description: null, fields: [] } },
+  });
+  expect(s2.model).toBe(dirty.model); // unchanged reference — reducer must not throw
+  expect(s2.ui.dirty).toBe(true); // preserved, not reset to false
+  expect(s2.ui.editError).toMatch(/no-such-group/);
 });
 
 it('a failed edit error is cleared by the next successful edit, by LOAD, or by CLEAR_EDIT_ERROR', () => {
