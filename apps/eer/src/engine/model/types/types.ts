@@ -170,13 +170,6 @@ export type Selection =
   | { type: 'group'; id: string }
   | { type: 'edge'; id: string };
 
-export interface CheckResult {
-  name: string;
-  pass: boolean;
-  scope: string;
-  problems: string[];
-}
-
 export interface SearchResult {
   kind: 'entity' | 'field';
   label: string;

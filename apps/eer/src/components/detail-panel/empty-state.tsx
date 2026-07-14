@@ -1,19 +1,10 @@
 import type { Model } from '../../engine/model/types';
 import { Badge } from './badge';
-import { ColorsForm } from './colors-form';
 import { Kbd } from './kbd';
 import { Section } from './section';
 import { Stat } from './stat';
 
-export function EmptyState({
-  model,
-  colors = new Map<string, string>(),
-  onColorsChange,
-}: {
-  model: Model | null;
-  colors?: ReadonlyMap<string, string>;
-  onColorsChange?: (next: ReadonlyMap<string, string>) => void;
-}) {
+export function EmptyState({ model }: { model: Model | null }) {
   const rows: [string, string][] = [
     ['wheel', 'zoom toward the cursor'],
     ['middle-drag', 'pan the canvas'],
@@ -44,13 +35,6 @@ export function EmptyState({
             <Stat value={zones} label="zones" />
             {subgroups > 0 && <Stat value={subgroups} label="groups" />}
           </div>
-        )}
-
-        {model && onColorsChange && (
-          <>
-            <Section title="Colors" />
-            <ColorsForm model={model} colors={colors} onChange={onColorsChange} />
-          </>
         )}
 
         <Section title="Controls" />

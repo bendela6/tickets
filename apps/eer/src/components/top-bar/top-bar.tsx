@@ -20,11 +20,7 @@ const ROUTING_TIP: Record<RoutingMode, string> = {
   ortho: 'Horizontal / vertical only',
 };
 
-interface TopBarProps {
-  onSelfCheck: () => void;
-}
-
-export function TopBar({ onSelfCheck }: TopBarProps) {
+export function TopBar() {
   const model = useDiagramModelOrNull();
   const view = useDiagramView();
   const ui = useDiagramUi();
@@ -100,9 +96,6 @@ export function TopBar({ onSelfCheck }: TopBarProps) {
         </button>
         <button type="button" className={btn} title="Re-pack entities by zone" onClick={() => actions.rearrange()}>
           Rearrange
-        </button>
-        <button type="button" className={btn} title="Run the quality checks" onClick={onSelfCheck}>
-          Self-check
         </button>
 
         {import.meta.env.DEV && (
