@@ -12,6 +12,9 @@ export default defineConfig({
       // The export-drizzle gate test loads generated source off disk via
       // drizzle-kit/api and dynamic import() — needs real Node, not jsdom.
       ['src/engine/model/export-drizzle/**', 'node'],
+      // The real-schema round-trip gate loads generated source off disk and
+      // shells out to tsc — needs real Node, not jsdom.
+      ['src/test/gate/**', 'node'],
     ],
   },
 });

@@ -349,7 +349,15 @@ export function exportDrizzle(model: Model): string {
   function emitFk(c: Extract<Constraint, { kind: 'fk' }>, entityId: string): string {
     const target = model.entityById.get(c.refTable);
     if (!target) throw new Error(`exportDrizzle: fk constraint on "${entityId}" references unknown table "${c.refTable}".`);
-    const targetVar = tableVarNames.get(target.id)!;
+    // Self-referencing FK (e.g. tickets.parent_id -> tickets.id): referencing
+    // the OUTER `export const tickets = ...` from within its own extras
+    // callback is a circular type reference under `--strict` (TS7022/7024 —
+    // "implicitly has type 'any' ... referenced ... in its own initializer").
+    // The extras callback's own `t` parameter is typed straight off the
+    // column map (the pgTable call's FIRST argument), independent of the
+    // table const's inferred type, so `t.<refCol>` names the identical
+    // runtime column with no circularity — no AnyPgColumn cast needed.
+    const targetVar = target.id === entityId ? 't' : tableVarNames.get(target.id)!;
     const cols = c.columns.map((cn) => colRef(entityId, cn)).join(', ');
     const refCols = c.refColumns
       .map((cn) => {
