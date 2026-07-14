@@ -2,9 +2,12 @@
 // Thin entry point: read the restored legacy database, write it into the
 // (already-migrated) target database, close both connections, log counts.
 import { createDbClient } from '../client';
+import { assertNotProductionDatabase } from './guard-not-production';
 import { importLegacy } from './import-legacy';
 import { createLegacyClient } from './legacy-client';
 import { readLegacy } from './read-legacy';
+
+assertNotProductionDatabase();
 
 const target = createDbClient({ max: 1 });
 const legacyClient = createLegacyClient();
