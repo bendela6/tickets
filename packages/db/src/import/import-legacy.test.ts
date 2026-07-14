@@ -113,4 +113,30 @@ describe('importLegacy (requires a freshly migrated tickets_dev)', () => {
     );
     expect(Number(rows[0]!.next)).toBeGreaterThan(635);
   });
+
+  // Regression guard for the "toISOString() coercion" bug: postgres.js
+  // parses timestamptz into a JS `Date` (millisecond precision) by default,
+  // and Date -> ISO string round-tripping cannot recover the microseconds
+  // Postgres actually stores. legacy-client.ts now overrides oids 1184/1114
+  // so readLegacy() hands back the exact wire string, and import-legacy.ts
+  // writes it straight through with no coercion in between. Cast the
+  // written column `::text` here (rather than reading it back through
+  // drizzle/postgres.js, which would reparse it into a Date on this
+  // connection too) so the assertion checks what is actually stored on
+  // disk, byte for byte.
+  it('preserves comment.createdAt and item.createdAt to full microsecond precision', async () => {
+    const commentSample = legacy.comments.find((c) => /\.\d{4,6}[+-]\d{2}/.test(c.createdAt));
+    expect(commentSample).toBeDefined();
+    const [commentRow] = await db.execute<{ created_at: string }>(
+      raw`SELECT created_at::text AS created_at FROM comments WHERE id = ${commentSample!.id}`,
+    );
+    expect(commentRow!.created_at).toBe(commentSample!.createdAt);
+
+    const itemSample = legacy.tickets.find((t) => /\.\d{4,6}[+-]\d{2}/.test(t.createdAt));
+    expect(itemSample).toBeDefined();
+    const [itemRow] = await db.execute<{ created_at: string }>(
+      raw`SELECT created_at::text AS created_at FROM items WHERE id = ${itemSample!.id}`,
+    );
+    expect(itemRow!.created_at).toBe(itemSample!.createdAt);
+  });
 });
