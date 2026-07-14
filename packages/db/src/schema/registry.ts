@@ -1,6 +1,7 @@
 // packages/db/src/schema/registry.ts
 import { comments } from './comments';
 import { commentReactions } from './comment-reactions';
+import { fieldTypeEnum, statusKindEnum, userKindEnum } from './enums';
 import { fieldOptions } from './field-options';
 import { fields } from './fields';
 import { linkTypeTargetTypes } from './link-type-target-types';
@@ -26,3 +27,6 @@ export const allTables = [
   projects, users, views,
   tickets, comments, commentReactions, ticketEvents, ticketValues, ticketLinks,
 ];
+
+// Every pgEnum in the schema. The conformance test checks these against the model.
+export const allEnums = [userKindEnum, statusKindEnum, fieldTypeEnum];

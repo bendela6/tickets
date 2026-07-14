@@ -59,3 +59,26 @@ describe('resolveGroupKey', () => {
     expect(resolveGroupKey('tickets', SCHEMA_GROUPS)).toBe('records');
   });
 });
+
+describe('describeSchema — SQL truth', () => {
+  const graph = describeSchema();
+  const byName = new Map(graph.tables.map((t) => [t.name, t]));
+
+  it('exposes indexes with their partial predicate', () => {
+    const tv = byName.get('ticket_values')!;
+    const single = tv.indexes.find((i) => i.name === 'ticket_values_single')!;
+    expect(single.unique).toBe(true);
+    expect(single.where).toMatch(/option_id IS NULL/i);
+  });
+
+  it('exposes check constraints', () => {
+    // no checks in the current schema; the array must still exist
+    expect(Array.isArray(byName.get('tickets')!.checks)).toBe(true);
+  });
+
+  it('exposes the declared enums', () => {
+    const names = graph.enums.map((e) => e.name).sort();
+    expect(names).toContain('field_type');
+    expect(names).toContain('user_kind');
+  });
+});
