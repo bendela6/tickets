@@ -28,8 +28,50 @@ const digest = (raw: unknown) => {
   };
 };
 
+// Task 1 (eer model DDL enrichment) intentionally moves the seed past the
+// legacy fixture in three ways: composite PKs on the three join tables
+// (item_type_child_types, item_type_fields, link_type_target_types) now
+// double as badges alongside their existing fk badge; options gets a new
+// `kind` column; and a new events.caused_by self-FK (unlabelled) both adds an
+// edge and — via item_activity's new UNIQUE(event_id) constraint — flips
+// events.id->item_activity.event_id from 1-n to 1-1. This layers exactly
+// those known deltas onto the legacy digest before comparing, so the
+// assertion still catches any OTHER, unintended divergence.
+const applyTask1Deltas = (d: ReturnType<typeof digest>): ReturnType<typeof digest> => ({
+  ...d,
+  edges: d.edges
+    .filter((e) => e !== 'events.id->item_activity.event_id:1-n')
+    .concat(['events.id->events.caused_by:1-n', 'events.id->item_activity.event_id:1-1'])
+    .sort(),
+  titles: [...d.titles, 'options.kind=Kind'].sort(),
+  badges: d.badges
+    .filter(
+      (b) =>
+        ![
+          'events.caused_by:',
+          'item_type_child_types.child_type_id:fk',
+          'item_type_child_types.parent_type_id:fk',
+          'item_type_fields.field_id:fk',
+          'item_type_fields.item_type_id:fk',
+          'link_type_target_types.link_type_id:fk',
+          'link_type_target_types.target_type_id:fk',
+        ].includes(b),
+    )
+    .concat([
+      'events.caused_by:fk',
+      'item_type_child_types.child_type_id:pkfk',
+      'item_type_child_types.parent_type_id:pkfk',
+      'item_type_fields.field_id:pkfk',
+      'item_type_fields.item_type_id:pkfk',
+      'link_type_target_types.link_type_id:pkfk',
+      'link_type_target_types.target_type_id:pkfk',
+      'options.kind:',
+    ])
+    .sort(),
+});
+
 describe('seed rewrite', () => {
-  it('the new seed is equivalent to the legacy one: same edges, cardinalities, badges and titles', () => {
-    expect(digest(newRaw)).toEqual(digest(legacyRaw));
+  it('the new seed is equivalent to the legacy one, plus the known Task 1 DDL-enrichment deltas: same edges, cardinalities, badges and titles otherwise', () => {
+    expect(digest(newRaw)).toEqual(applyTask1Deltas(digest(legacyRaw)));
   });
 });
