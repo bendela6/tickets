@@ -496,6 +496,55 @@ describe('exportDrizzle — semantic verification via a real drizzle module', ()
 
     expect(preview).toBe(table.uniques[0]!.name);
   });
+
+  // Task 12 review, Finding 3 (the same "preview lies" bug, one component
+  // over): an fk's generated name is `<table>_<cols>_<targetTable>_<targetCols>_fk`,
+  // and drizzle's ForeignKey.getName() keys off the TARGET's PHYSICAL table
+  // name (pgTable's first argument), never the schema-qualified id. Finding 1
+  // stripped the schema from the OWNING table only; a cross-schema fk left the
+  // refTable component schema-qualified, so the card used to show
+  // "orders_customer_id_billing.customers_id_fk" while the real drizzle object
+  // is named "orders_customer_id_customers_id_fk". Proved against the REAL
+  // computed name, same as Finding 1's parity test above.
+  it('the placeholder for an unnamed fk whose TARGET is in a non-public schema equals what real drizzle assigns', async () => {
+    const m = buildRawModel([
+      {
+        id: 'billing.customers',
+        schema: 'billing',
+        columns: [pkCol()],
+        constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }],
+      },
+      {
+        id: 'orders',
+        columns: [pkCol(), { name: 'customer_id', type: 'integer' }],
+        constraints: [
+          { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
+          {
+            id: 'c2',
+            kind: 'fk',
+            name: null,
+            columns: ['customer_id'],
+            refSchema: 'billing',
+            refTable: 'billing.customers',
+            refColumns: ['id'],
+            onDelete: null,
+            onUpdate: null,
+          },
+        ],
+      },
+    ]);
+    const orders = m.entityById.get('orders')!;
+    const fk = orders.constraints.find((c) => c.kind === 'fk')!;
+
+    const preview = generatedConstraintName(orders, fk, orders.constraints);
+
+    const src = exportDrizzle(m);
+    const generated = await loadGeneratedModule(src);
+    const desc = describeDrizzle(generated, []);
+    const table = desc.tables.find((t) => t.name === 'orders')!;
+
+    expect(preview).toBe(table.foreignKeys[0]!.name);
+  });
 });
 
 describe('exportDrizzle — the two-table gate (Step 5)', () => {
