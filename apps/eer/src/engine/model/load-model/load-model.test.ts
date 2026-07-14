@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { columnRoles } from '../column-roles';
 import { loadModel } from './load-model';
 import { serializeModel } from '../serialize-model';
 import seedRaw from '../../../../models/items-platform.json';
@@ -140,10 +141,105 @@ describe('loadModel — cardinality inferred from CONSTRAINTS, not legacy roles'
   });
 });
 
-// Regression guard for the real bundled seed (still legacy per-field
-// role/ref-authored today). The fix must not change a single value here —
-// pinning the exact multiset makes any future regression visible instead of
-// silently averaging out.
+// Closes the schema seam: the file format's entity key was renamed
+// `fields` -> `columns` (matching the model's Entity.columns), but load-model
+// used to only recognise `fields` — so a model authored NATURALLY in the new
+// shape (columns + constraints, no `fields` anywhere) tripped the confusing
+// "has no fields" error. `columns` is now the canonical key; `fields` is kept
+// forever as a legacy alias so every pre-rewrite file keeps loading unchanged.
+describe('loadModel — "columns" is canonical, "fields" is a permanent legacy alias', () => {
+  it('a NEW-shape entity (columns + constraints, no "fields" key anywhere) loads with 0 errors and derives the right edges/badges', () => {
+    const raw = {
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        {
+          id: 'users', group: 'g',
+          columns: [{ name: 'id', type: 'serial' }],
+          constraints: [{ id: 'c1', kind: 'pk', columns: ['id'] }],
+        },
+        {
+          id: 'orders', group: 'g',
+          columns: [{ name: 'id', type: 'serial' }, { name: 'user_id', type: 'int' }],
+          constraints: [
+            { id: 'c1', kind: 'pk', columns: ['id'] },
+            { id: 'c2', kind: 'fk', columns: ['user_id'], refTable: 'users', refColumns: ['id'] },
+          ],
+        },
+      ],
+      relationships: [],
+    };
+    const { model, errors, warnings } = loadModel(raw);
+    expect(errors).toEqual([]);
+    expect(warnings).toEqual([]);
+    expect(model!.relationships).toHaveLength(1);
+    expect(model!.relationships[0]).toMatchObject({
+      source: 'users', sourceField: 'id', target: 'orders', targetField: 'user_id',
+      kind: 'fk', cardinality: '1-n',
+    });
+    expect(columnRoles(model!.entityById.get('users')!).get('id')).toMatchObject({ pk: true });
+    expect(columnRoles(model!.entityById.get('orders')!).get('user_id')).toMatchObject({ fk: true });
+  });
+
+  it('an entity with no "columns" (and no "fields") is rejected with the new wording', () => {
+    const { errors } = loadModel({
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [{ id: 'a', group: 'g', columns: [] }],
+    });
+    expect(errors).toContain('Entity "a" has no columns.');
+  });
+
+  it('when a file carries both keys, "columns" wins over the legacy "fields"', () => {
+    const raw = {
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [{ id: 'a', group: 'g', columns: [{ name: 'real', type: 'int' }], fields: [{ name: 'stale', type: 'int' }] }],
+    };
+    const { model, errors } = loadModel(raw);
+    expect(errors).toEqual([]);
+    expect(model!.entityById.get('a')!.columns.map((c) => c.name)).toEqual(['real']);
+  });
+
+  // The other half of the seam: back-compat is a hard requirement, so a file
+  // still authored in the pre-rewrite shape (`fields` + per-field
+  // `role`/`ref`/`refField`, no `constraints` array at all) must keep loading
+  // exactly as before — synthesising its pk/fk constraints and deriving the
+  // same edges.
+  it('legacy alias: a "fields" + role/ref-authored entity still loads, synthesising constraints and deriving edges', () => {
+    const raw = {
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        { id: 'users', group: 'g', fields: [{ name: 'id', type: 'serial', role: 'pk' }] },
+        {
+          id: 'orders', group: 'g',
+          fields: [
+            { name: 'id', type: 'serial', role: 'pk' },
+            { name: 'user_id', type: 'int', role: 'fk', ref: 'users', refField: 'id' },
+          ],
+        },
+      ],
+      relationships: [],
+    };
+    const { model, errors, warnings } = loadModel(raw);
+    expect(errors).toEqual([]);
+    expect(warnings).toEqual([]);
+    expect(model!.entityById.get('orders')!.constraints).toEqual([
+      { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
+      {
+        id: 'c2', kind: 'fk', name: null, columns: ['user_id'],
+        refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null,
+      },
+    ]);
+    expect(model!.relationships).toHaveLength(1);
+    expect(model!.relationships[0]).toMatchObject({
+      source: 'users', sourceField: 'id', target: 'orders', targetField: 'user_id',
+      kind: 'fk', cardinality: '1-n',
+    });
+  });
+});
+
+// Regression guard for the real bundled seed (now rewritten into the
+// canonical `columns` + `constraints` shape). The fix must not change a
+// single value here — pinning the exact multiset makes any future regression
+// visible instead of silently averaging out.
 describe('loadModel — real seed regression (pinned cardinality multiset)', () => {
   it('(d) loads with 0 errors/warnings, 41 relationships, 18 labels, 3 m2m, and this exact cardinality multiset', () => {
     const { model, errors, warnings } = loadModel(seedRaw);
@@ -159,9 +255,10 @@ describe('loadModel — real seed regression (pinned cardinality multiset)', () 
   });
 
   // T9: serializeModel never writes legacy `role`/`ref` (only `constraints`),
-  // so serialize -> reload produces the constraints-only shape an upcoming
-  // task will rewrite the seed into. Before the fix, every entity's fields
-  // lose their legacy role on the second load, so every authored relationship
+  // so serialize -> reload produces the constraints-only (now also
+  // `columns`-keyed) shape the seed itself has been rewritten into. Before the
+  // fix, every entity's fields lose their legacy role on the second load, so
+  // every authored relationship
   // without an explicit cardinality trips the ambiguous fallback and warns —
   // even though most VALUES happen to come out unchanged anyway (masked by
   // derive-relationships' own cardinalityOf override for constraint-backed
