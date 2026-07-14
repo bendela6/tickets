@@ -55,14 +55,14 @@ export function TopBar() {
           type="button"
           className={btn}
           disabled={!model}
-          title="Add a zone, subgroup, or table"
+          title="Add a group or table"
           onClick={() => openModal({ kind: 'add' })}
         >
           + Add
         </button>
 
         {model && model.groups.some((g) => !g.parent) && (
-          <ToggleGroup label="Zones">
+          <ToggleGroup label="Groups">
             {model.groups
               .filter((g) => !g.parent)
               .map((g) => (
@@ -94,7 +94,7 @@ export function TopBar() {
         <button type="button" className={btn} title="Fit the diagram to the viewport" onClick={() => actions.fit()}>
           Fit
         </button>
-        <button type="button" className={btn} title="Re-pack entities by zone" onClick={() => actions.rearrange()}>
+        <button type="button" className={btn} title="Re-pack entities by group" onClick={() => actions.rearrange()}>
           Rearrange
         </button>
 

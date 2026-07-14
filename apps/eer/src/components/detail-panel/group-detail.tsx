@@ -23,7 +23,7 @@ export function GroupDetail({
   const { openModal } = useEditor();
   const group = model.groups.find((g) => g.id === id);
   const isSub = group?.parent != null;
-  const parentZone = isSub ? model.groups.find((g) => g.id === group?.parent) : undefined;
+  const parentGroup = isSub ? model.groups.find((g) => g.id === group?.parent) : undefined;
   const idset = entityIdsInGroup(model, id);
   const ents = model.entities.filter((e) => idset.has(e.id));
   const subgroups = model.groups.filter((g) => g.parent === id);
@@ -34,12 +34,12 @@ export function GroupDetail({
   return (
     <div>
       <Header
-        tone={isSub ? 'subgroup' : 'zone'}
-        badge={isSub ? 'Subgroup' : 'Zone'}
+        tone={isSub ? 'subgroup' : 'group'}
+        badge={isSub ? 'Subgroup' : 'Group'}
         title={group?.label ?? id}
         sub={
           <>
-            {isSub ? `of ${parentZone?.label ?? group?.parent}` : `${ents.length} tables`}
+            {isSub ? `of ${parentGroup?.label ?? group?.parent}` : `${ents.length} tables`}
             {!isSub && subgroups.length > 0 && ` · ${subgroups.length} subgroups`} · {rels.length} relationships (
             {internal} internal)
           </>
@@ -87,7 +87,7 @@ export function GroupDetail({
           </button>
         ))}
 
-        <Section title={isSub ? 'Connections beyond this group' : 'Connections to other zones'} count={external.length} />
+        <Section title={isSub ? 'Connections beyond this group' : 'Connections to other groups'} count={external.length} />
         {external.length === 0 && <Empty>None — this group is self-contained.</Empty>}
         {external.map((r) => {
           const outward = idset.has(r.source);

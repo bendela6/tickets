@@ -89,11 +89,11 @@ function validateDraft(fields: EditField[]): string | null {
   return null;
 }
 
-// Zones first, each followed by its subgroups (indented) — entities can live
-// directly in a zone or in one of its subgroups.
+// Root groups first, each followed by its subgroups (indented) — entities can
+// live directly in a group or in one of its subgroups.
 function groupOptions(model: Model): { id: string; label: string }[] {
-  const zones = model.groups.filter((g) => !g.parent);
-  return zones.flatMap((z) => [
+  const roots = model.groups.filter((g) => !g.parent);
+  return roots.flatMap((z) => [
     { id: z.id, label: z.label },
     ...model.groups.filter((g) => g.parent === z.id).map((sg) => ({ id: sg.id, label: `— ${sg.label}` })),
   ]);
