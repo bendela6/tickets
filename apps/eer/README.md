@@ -103,7 +103,8 @@ that doesn't exist in the built app:
   `title`/`description`), `constraints` (`pk` | `unique` | `check` | `fk` —
   all but `check` can span multiple columns; an `fk` also carries `refTable`,
   `refColumns`, and optional `onDelete`/`onUpdate` actions), and `indexes`
-  (name, columns, `unique`). PK/FK badges on the card are never stored
+  (name, columns, `unique`, method, an optional partial `WHERE`, and
+  per-column order/nulls/opClass). PK/FK badges on the card are never stored
   directly — they're derived from a table's constraints (`columnRoles`), so
   they can't disagree with the schema.
 - **Connections are derived, not authored** — there is no separate connection/
@@ -116,12 +117,15 @@ that doesn't exist in the built app:
   its column, or repoint `refTable` and the edge updates or disappears with it.
   An edge's cardinality is derived too: `1-1` when the fk's columns are
   exactly covered by a `pk`/`unique` constraint on the referencing table,
-  `1-n` otherwise. The columns grid's type picker (`TypeCell`) offers the
-  Postgres catalogue (`pg-types.ts`: numeric/text/temporal/boolean/uuid/json/
-  binary, with `varchar(n)`/`numeric(p,s)` parameters) plus a free-text
-  "custom" escape hatch for anything not in it (enums, domains, `citext`,
-  hand-written types) — a column's `type` is always stored as a plain string,
-  so custom types round-trip untouched.
+  `1-n` otherwise. The columns grid's type picker (`TypeCell`) draws its
+  catalogue from drizzle's own column-builder registry (`pg-types.ts` /
+  `descriptors.ts`) — every type drizzle 0.45 can build, grouped
+  (numeric/text/temporal/boolean/uuid/json/network/geometric/vector), with
+  inline parameters (`varchar(n)`, `numeric(p,s)`), an `[]` array-dimension
+  toggle, and the model's declared enums surfaced as their own selectable
+  group. There is no free-text escape hatch: a type the catalogue doesn't
+  recognise (e.g. hand-edited into a model file) parses as an invalid
+  selection that the picker flags and that blocks export until it's fixed.
 - **Legacy files still load** — a model authored in the old shape (per-field
   `role: 'pk'|'fk'` plus `ref`/`refField`) is accepted and normalised into
   `constraints` on read (`load-model.ts`'s `synthesizeLegacyConstraints`); it
@@ -133,6 +137,53 @@ that doesn't exist in the built app:
   `serializeModel` writes both the current `x`/`y`/box geometry and the colour
   override map into the same model JSON, so a reload of a saved model
   reproduces layout and colours exactly, not just data.
+
+## drizzle round-trip
+
+The diagram round-trips losslessly to a drizzle-orm Postgres schema. Import
+introspects a drizzle schema module at runtime; export regenerates drizzle
+TypeScript from the model. This is proven, not asserted: a gate test
+(`src/test/gate/roundtrip.gate.test.ts`) imports the real `@tickets/db`
+schema (18 tables, 3 enums), exports it, re-imports the generated file, and
+asserts (a) our canonical descriptor (`describeDrizzle`) is deep-equal
+before/after and (b) `drizzle-kit` itself generates an EMPTY migration
+between the two schemas — i.e. Postgres cannot tell them apart — and that the
+generated file typechecks under `tsc --strict`. A second gate runs the same
+four assertions over a hand-written kitchen-sink fixture that exercises the
+full type/constraint/index/enum/namespace vocabulary the real schema doesn't
+happen to touch.
+
+**Using it** — the top bar's **Import** and **Export** buttons (dev only,
+`import.meta.env.DEV`). Import is always a dry run: "Re-scan" fetches and
+diffs a module path (default `packages/db/src/schema/index.ts`) against the
+current model and shows a report — tables added/changed/removed, each with
+its canvas effect — and applies nothing until you click **Apply import**; the
+report is the consent. Export shows a preview of the generated source and a
+**Write file** button.
+
+**In scope**: tables, columns (including identity and generated-stored
+columns, arrays), constraints (pk/unique/check/fk with `onDelete`/`onUpdate`,
+composite, `NULLS NOT DISTINCT`), indexes (method, partial `WHERE`,
+per-column order/nulls/opClass), enums, and `pgSchema` namespaces.
+
+**What blocks export**: an unknown column type (see the type picker above),
+or a construct that cannot be reproduced from runtime introspection —
+TypeScript-only sugar that never reaches SQL. The reader introspects a
+*running* schema (`getTableConfig`), so it sees only what reaches Postgres:
+`relations()`, `.$defaultFn()` and `.$onUpdate()` leave a runtime trace and
+are **detected and reported** at import (not silently dropped), blocking
+export until resolved; `$type<>()` and a column's `mode: 'string'` are pure
+compile-time casts with no runtime footprint, so they are **documented as
+unrepresentable** rather than detected. The real `@tickets/db` schema uses
+none of these today.
+
+**Where export writes** — a reviewable `.ts` file into `apps/eer/exports/`
+only (filename-sanitised, atomic write). It never writes to `packages/db`:
+adopting generated output as the real schema is a deliberate, separate human
+step, not something this tool does.
+
+Import/export are dev-server routes (`vite-plugins/drizzle-api.ts`) and are
+absent from a production build.
 
 ## Controls
 
