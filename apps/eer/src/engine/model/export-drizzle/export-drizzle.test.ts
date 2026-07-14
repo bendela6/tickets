@@ -58,10 +58,85 @@ describe('exportDrizzle — pure unit tests', () => {
       },
     ]);
     const src = exportDrizzle(m);
-    expect(src).toContain(`id: serial('id'),`);
+    // A single-column, unnamed pk is inline (see the dedicated pk-shape tests
+    // below) — never a table-level primaryKey({...}) construct.
+    expect(src).toContain(`id: serial('id').primaryKey(),`);
     expect(src).toContain(`email: text('email').notNull(),`);
     expect(src).toContain(`hits: integer('hits').default(sql\`0\`),`);
-    expect(src).toContain(`primaryKey({ columns: [t.id] })`);
+    expect(src).not.toContain('primaryKey({');
+  });
+
+  describe('primary key shape (Finding 1: inline vs. table-level)', () => {
+    it('emits an inline .primaryKey() for a single-column, unnamed pk', () => {
+      const m = buildRawModel([
+        {
+          id: 'users',
+          columns: [pkCol()],
+          constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }],
+        },
+      ]);
+      const src = exportDrizzle(m);
+      expect(src).toContain(`id: serial('id').primaryKey(),`);
+      // No table-level construct at all — there's nothing else on this table.
+      expect(src).not.toMatch(/\(t\) =>/);
+      expect(src).not.toContain('primaryKey({');
+    });
+
+    it('emits a table-level primaryKey({ name, columns }) for a single-column pk that HAS a captured name', () => {
+      const m = buildRawModel([
+        {
+          id: 'users',
+          columns: [pkCol()],
+          constraints: [{ id: 'c1', kind: 'pk', name: 'users_id_pk', columns: ['id'] }],
+        },
+      ]);
+      const src = exportDrizzle(m);
+      expect(src).toContain(`id: serial('id'),`);
+      expect(src).not.toContain('.primaryKey()');
+      expect(src).toContain(`primaryKey({ name: 'users_id_pk', columns: [t.id] })`);
+    });
+
+    it('emits a table-level primaryKey({ columns }) for a composite (multi-column) pk, even when unnamed', () => {
+      const m = buildRawModel([
+        {
+          id: 'memberships',
+          columns: [pkCol(), { name: 'seq', type: 'integer' }],
+          constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id', 'seq'] }],
+        },
+      ]);
+      const src = exportDrizzle(m);
+      expect(src).toContain(`id: serial('id'),`);
+      expect(src).not.toContain('.primaryKey()');
+      expect(src).toContain(`primaryKey({ columns: [t.id, t.seq] })`);
+    });
+  });
+
+  describe('boolean default shape (Finding 2: bare literal vs. sql`...`)', () => {
+    it('emits a bare .default(true)/.default(false) for a boolean column, never sql`...`', () => {
+      const m = buildRawModel([
+        {
+          id: 'fields',
+          columns: [
+            pkCol(),
+            { name: 'required', type: 'boolean', nullable: false, default: 'true' },
+            { name: 'system', type: 'boolean', nullable: false, default: 'false' },
+          ],
+        },
+      ]);
+      const src = exportDrizzle(m);
+      expect(src).toContain(`required: boolean('required').notNull().default(true),`);
+      expect(src).toContain(`system: boolean('system').notNull().default(false),`);
+      expect(src).not.toContain('sql`true`');
+      expect(src).not.toContain('sql`false`');
+    });
+
+    it('still emits a non-boolean default of the text "true" through sql`...` (no cross-type guessing)', () => {
+      const m = buildRawModel([
+        { id: 'notes', columns: [pkCol(), { name: 'label', type: 'text', nullable: false, default: 'true' }] },
+      ]);
+      const src = exportDrizzle(m);
+      expect(src).toContain(`label: text('label').notNull().default(sql\`true\`),`);
+    });
   });
 
   it('emits array dimensions per the model, sized and nested', () => {
@@ -266,8 +341,11 @@ describe('exportDrizzle — pure unit tests', () => {
       },
     ]);
     const src = exportDrizzle(m);
+    // 'id' is also this table's sole, unnamed pk column -> inline .primaryKey(),
+    // ahead of the identity chain (the common drizzle idiom:
+    // `.primaryKey().generatedAlwaysAsIdentity()`).
     expect(src).toContain(
-      `id: integer('id').generatedAlwaysAsIdentity({ name: 'seqs_id_seq', increment: 1, minValue: 1, maxValue: 1000, startWith: 1, cache: 1, cycle: false }),`,
+      `id: integer('id').primaryKey().generatedAlwaysAsIdentity({ name: 'seqs_id_seq', increment: 1, minValue: 1, maxValue: 1000, startWith: 1, cache: 1, cycle: false }),`,
     );
     expect(src).toContain(`fullName: text('full_name').generatedAlwaysAs(sql\`first || ' ' || last\`),`);
   });

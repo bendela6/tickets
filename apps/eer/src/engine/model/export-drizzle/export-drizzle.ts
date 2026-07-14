@@ -138,11 +138,15 @@ export function exportDrizzle(model: Model): string {
         if (!d) throw new Error(`exportDrizzle: column "${e.id}.${c.name}" type "${parsed.base}" has no drizzle descriptor.`);
         builderImports.add(d.builder);
       }
-      if (c.default != null) needSql = true;
+      // A boolean default of exactly "true"/"false" is emitted as a bare JS
+      // literal (see isBareBooleanDefaultText) — no `sql` import needed for it.
+      if (c.default != null && !isBareBooleanDefaultText(c)) needSql = true;
       if (c.generated) needSql = true;
     }
     for (const c of e.constraints) {
-      if (c.kind === 'pk') needPrimaryKey = true;
+      // A single-column, unnamed pk is emitted inline (`.primaryKey()` on the
+      // column) — see pkIsInline — so it never needs the `primaryKey` import.
+      if (c.kind === 'pk' && !pkIsInline(c)) needPrimaryKey = true;
       if (c.kind === 'unique') needUnique = true;
       if (c.kind === 'check') needCheck = true;
       if (c.kind === 'fk') needForeignKey = true;
@@ -246,7 +250,44 @@ export function exportDrizzle(model: Model): string {
     return entries.length > 0 ? `{ ${entries.join(', ')} }` : null;
   }
 
-  function emitColumn(c: Column, entityId: string): string {
+  // A primary key with exactly one column and no captured name is emitted
+  // INLINE (`.primaryKey()` on the column) rather than as a table-level
+  // `primaryKey({ columns: [...] })`. These are NOT equivalent: Postgres
+  // names an inline PK `<table>_pkey` but a table-level one gets a
+  // drizzle-computed name (e.g. `<table>_<col>_pk`), and drizzle-kit's own
+  // `generateDrizzleJson` represents them differently (inline sets the
+  // column's `primaryKey: true` and leaves `compositePrimaryKeys` empty;
+  // table-level does the reverse) — so emitting the wrong shape fails the
+  // round-trip gate even though nothing about the *columns* changed. A
+  // multi-column PK has no inline form at all (drizzle doesn't expose one),
+  // and a *named* single-column PK must stay table-level to carry that name.
+  function pkIsInline(c: Extract<Constraint, { kind: 'pk' }>): boolean {
+    return c.columns.length === 1 && !c.name;
+  }
+
+  // A default is normally re-emitted through `` sql`…` `` unconditionally
+  // (see the module header): once a default is flattened to stored SQL text,
+  // a string default and a SQL-expression default look identical, so there's
+  // no safe way to guess which one it was. The one closed-domain exception is
+  // a **boolean** column whose stored default text is exactly "true" or
+  // "false" — a two-value domain with nothing to guess. It exists because
+  // `generateDrizzleJson` (drizzle-kit's own snapshot generator) stores a
+  // bare `.default(false)` as a native JSON boolean but stores ANY
+  // `` sql`…` `` default — even one whose rendered text is literally "false"
+  // — as the JSON STRING "false"; diffing `false !== "false"` then reports a
+  // migration even though the emitted DDL (`"col" boolean DEFAULT false NOT
+  // NULL`) is byte-identical. Do NOT generalise this to strings/numbers/JSON:
+  // a stored default of e.g. "0" is genuinely ambiguous between the JS
+  // number `0` and the SQL text `0`, and guessing wrong there silently emits
+  // a file that doesn't compile to what the model actually described.
+  function isBareBooleanDefaultText(c: Column): boolean {
+    if (c.default !== 'true' && c.default !== 'false') return false;
+    const parsed = parseType(c.type);
+    if (enumNames.has(parsed.base)) return false;
+    return descriptorFor(parsed.base)?.builder === 'boolean';
+  }
+
+  function emitColumn(c: Column, entityId: string, isInlinePk: boolean): string {
     const colKey = colKeyByEntity.get(entityId)!;
     const propKey = colKey.get(c.name)!;
     const parsed = parseType(c.type);
@@ -264,12 +305,15 @@ export function exportDrizzle(model: Model): string {
 
     let src = `${builderExpr}(${quote(c.name)}${optionsSrc ? `, ${optionsSrc}` : ''})`;
     if (!c.nullable) src += '.notNull()';
+    if (isInlinePk) src += '.primaryKey()';
     if (c.identity) {
       const method = c.identity.always ? 'generatedAlwaysAsIdentity' : 'generatedByDefaultAsIdentity';
       const opts = identityOptions(c.identity);
       src += `.${method}(${opts ?? ''})`;
     }
-    if (c.default != null) src += `.default(${sqlTemplate(c.default)})`;
+    if (c.default != null) {
+      src += isBareBooleanDefaultText(c) ? `.default(${c.default})` : `.default(${sqlTemplate(c.default)})`;
+    }
     if (c.generated) src += `.generatedAlwaysAs(${sqlTemplate(c.generated.expression)})`;
     for (const dim of parsed.arrays) src += dim.size != null ? `.array(${dim.size})` : '.array()';
 
@@ -346,12 +390,19 @@ export function exportDrizzle(model: Model): string {
   }
 
   function emitTable(e: Entity): string {
-    const columnLines = e.columns.map((c) => `    ${emitColumn(c, e.id)}`).join('\n');
+    // At most one 'pk' constraint per table; if it qualifies (see
+    // pkIsInline), its sole column gets `.primaryKey()` inline below instead
+    // of a table-level construct further down.
+    const pkConstraint = e.constraints.find((c): c is Extract<Constraint, { kind: 'pk' }> => c.kind === 'pk');
+    const inlinePkColumn = pkConstraint && pkIsInline(pkConstraint) ? pkConstraint.columns[0] : null;
+
+    const columnLines = e.columns.map((c) => `    ${emitColumn(c, e.id, c.name === inlinePkColumn)}`).join('\n');
 
     const constructs: string[] = [];
     for (const c of e.constraints) {
-      if (c.kind === 'pk') constructs.push(emitPk(c, e.id));
-      else if (c.kind === 'unique') constructs.push(emitUnique(c, e.id));
+      if (c.kind === 'pk') {
+        if (!pkIsInline(c)) constructs.push(emitPk(c, e.id));
+      } else if (c.kind === 'unique') constructs.push(emitUnique(c, e.id));
       else if (c.kind === 'check') constructs.push(emitCheck(c, e.id));
       else if (c.kind === 'fk') constructs.push(emitFk(c, e.id));
     }
