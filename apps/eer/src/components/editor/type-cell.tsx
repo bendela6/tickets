@@ -1,107 +1,119 @@
-// The type picker. Types are stored as strings ("varchar(255)"), so this cell is
-// a codec around a <select>: it parses the incoming string, renders the base +
-// its params, and emits a formatted string back. `custom…` keeps unrecognised
-// spellings (enums, domains, anything not in the drizzle-derived catalogue)
-// editable as free text.
+// The type picker's trigger + inline controls. Types are stored as strings
+// ("varchar(255)"), so this cell is a codec around that string: it parses the
+// incoming value, renders a button showing the current type (opening
+// <TypePicker/> to change it), param inputs grown from the picked type's
+// descriptor, and an `[]` array toggle.
 //
-// NOTE: this is a stopgap. `parseType` no longer reports a `custom` flag — a
-// name the catalogue doesn't know now parses as `known: false` instead, since
-// there is no free-text escape hatch left in the type model itself. This cell
-// still offers one at the UI layer (treating `!known` the way it treated
-// `custom`) because Task 11 replaces this component wholesale with a real
-// picker; until then, keep it compiling and behaving as before.
+// There is NO free-text path any more — the old custom-mode ref hack (kept
+// alive through Tasks 1-10 so this file would keep compiling while the type
+// model grew a `known: false` state instead of a `custom` flag) is gone.
+// `parseType` no longer reports `custom`; a name the catalogue doesn't know
+// AND that isn't one of the model's declared enums renders as an INVALID
+// selection (red trigger, picker forced open, pinned unselectable option at
+// the top of the list) rather than an editable text field. The only way out
+// is picking a real type.
 
 import { useEffect, useRef, useState } from 'react';
 
-import { PG_TYPES, formatType, parseType, type PgTypeGroup } from '../../engine/model/pg-types';
+import { descriptorFor, formatType, parseType, type ArrayDimension } from '../../engine/model/pg-types';
+import type { EnumDecl } from '../../engine/model/types';
 import { cn } from '../../ui/cn';
+import { TypePicker } from './type-picker';
 
-const CUSTOM = '__custom__';
-const GROUPS: PgTypeGroup[] = [
-  'numeric', 'text', 'boolean', 'temporal', 'uuid', 'json', 'network', 'geometric', 'vector',
-];
 const cell = cn('rounded border border-gray-600 bg-gray-900 px-1 py-1', 'font-mono text-xs text-gray-50');
+const invalidCell = cn('rounded border border-red-600 bg-red-950 px-1 py-1', 'font-mono text-xs text-red-400');
+const paramInput = cn(cell, 'w-12');
 
-export function TypeCell({ value, onChange }: { value: string; onChange: (t: string) => void }) {
+export interface TypeCellProps {
+  value: string;
+  onChange: (t: string) => void;
+  // The model's declared enums — a value matching one of these is a valid
+  // pick even though the pg-types catalogue itself has never heard of it.
+  // Optional: a bare <TypeCell/> with no model in scope just has no enums.
+  enums?: EnumDecl[];
+}
+
+export function TypeCell({ value, onChange, enums = [] }: TypeCellProps) {
   const parsed = parseType(value);
-  // `!parsed.known` alone can't drive the custom-mode UI: picking "custom…"
-  // for a currently-known type (e.g. "integer") emits onChange('') — a value
-  // that, in a real caller, doesn't reach this component as a new `value` prop
-  // until the NEXT render (dispatch is async, and tests may spy on onChange
-  // without ever feeding the result back in). Without this bit of local state,
-  // the custom text input would never appear: `value` is still "integer",
-  // which is a known type, so `!parsed.known` stays false. It resyncs from the
-  // prop whenever `value` actually changes (row reorder, external update,
-  // mount) — but NOT when the incoming `value` is merely our own last emission
-  // echoed back (the real app re-renders this cell with the just-typed value
-  // on every keystroke). Without that distinction, typing a custom name that
-  // transiently or finally collides with a catalogue type (e.g. "jsonb_data"
-  // passing through "jsonb") would flip `known` to true, snap the picker back
-  // to the catalogue option, and unmount the free-text input mid-keystroke.
-  const [customMode, setCustomMode] = useState(!parsed.known);
-  const lastEmitted = useRef<string | null>(null);
+  const isEnum = enums.some((e) => e.name === parsed.base);
+  const valid = parsed.known || isEnum;
+
+  const [manualOpen, setManualOpen] = useState(false);
+  // An invalid value forces the picker open — there is no sensible "closed"
+  // display for a type that can't export, and no other way to resolve it.
+  const open = manualOpen || !valid;
+
+  const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (value === lastEmitted.current) return; // our own echo — not an external change
-    setCustomMode(!parsed.known);
-  }, [value, parsed.known]);
+    if (!open) return;
+    const onDocMouseDown = (e: MouseEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) setManualOpen(false);
+    };
+    document.addEventListener('mousedown', onDocMouseDown);
+    return () => document.removeEventListener('mousedown', onDocMouseDown);
+  }, [open]);
 
-  const base = customMode ? CUSTOM : parsed.base;
-  const spec = PG_TYPES.find((t) => t.sqlName === parsed.base);
-  const arity = customMode ? 0 : (spec?.params.length ?? 0);
+  const spec = descriptorFor(parsed.base);
+  const arity = valid ? (spec?.params.length ?? 0) : 0;
+  const isArray = parsed.arrays.length > 0;
 
-  const emit = (next: string) => {
-    lastEmitted.current = next;
-    onChange(next);
-  };
-
-  const setBase = (next: string) => {
-    if (next === CUSTOM) {
-      setCustomMode(true);
-      emit(!parsed.known ? parsed.base : '');
-      return;
-    }
-    setCustomMode(false);
-    const nextSpec = PG_TYPES.find((t) => t.sqlName === next);
-    emit(formatType(next, parsed.params.slice(0, nextSpec?.params.length ?? 0)));
+  const pick = (base: string) => {
+    const nextSpec = descriptorFor(base);
+    const params = nextSpec ? parsed.params.slice(0, nextSpec.params.length) : [];
+    onChange(formatType(base, params, parsed.arrays));
+    setManualOpen(false);
   };
 
   const setParam = (i: number, v: string) => {
     const params = [...parsed.params];
     params[i] = v;
-    emit(formatType(parsed.base, params.slice(0, arity)));
+    onChange(formatType(parsed.base, params.slice(0, arity), parsed.arrays));
   };
 
+  const toggleArray = (checked: boolean) => {
+    const arrays: ArrayDimension[] = checked ? [{ size: null }] : [];
+    onChange(formatType(parsed.base, parsed.params, arrays));
+  };
+
+  const display = valid ? (spec?.displayName ?? parsed.base) : parsed.base;
+
   return (
-    <div className="flex grow items-center gap-1">
-      <select className={cn(cell, 'grow')} aria-label="type" value={base} onChange={(e) => setBase(e.target.value)}>
-        {GROUPS.map((g) => (
-          <optgroup key={g} label={g}>
-            {PG_TYPES.filter((t) => t.group === g).map((t) => (
-              <option key={t.sqlName} value={t.sqlName}>
-                {t.displayName}
-              </option>
-            ))}
-          </optgroup>
-        ))}
-        <option value={CUSTOM}>custom…</option>
-      </select>
-      {customMode && (
-        <input
-          className={cn(cell, 'w-24')}
-          aria-label="custom type"
-          value={parsed.base}
-          onChange={(e) => emit(e.target.value)}
-        />
-      )}
+    <div ref={containerRef} className="relative flex grow items-center gap-1">
+      <button
+        type="button"
+        className={cn(valid ? cell : invalidCell, 'grow truncate text-left')}
+        aria-label="type"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setManualOpen((o) => !o)}
+      >
+        {display}
+      </button>
+
       {Array.from({ length: arity }, (_, i) => (
         <input
-          key={i}
-          className={cn(cell, 'w-12')}
-          aria-label={`type parameter ${i + 1}`}
+          key={spec!.params[i]!.name}
+          className={paramInput}
+          aria-label={spec!.params[i]!.name}
           value={parsed.params[i] ?? ''}
           onChange={(e) => setParam(i, e.target.value)}
         />
       ))}
+
+      <label className="flex shrink-0 items-center gap-1 text-2xs text-gray-400">
+        <input type="checkbox" aria-label="[]" checked={isArray} onChange={(e) => toggleArray(e.target.checked)} />
+        []
+      </label>
+
+      {open && (
+        <TypePicker
+          value={parsed.base}
+          enums={enums}
+          unknownBase={valid ? null : parsed.base}
+          onPick={pick}
+          onClose={() => setManualOpen(false)}
+        />
+      )}
     </div>
   );
 }
