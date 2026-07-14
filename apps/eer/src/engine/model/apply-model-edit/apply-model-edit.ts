@@ -287,6 +287,14 @@ function validateConstraints(model: Model, e: EditEntity): void {
 
     if (c.kind === 'check') {
       if (!c.expression.trim()) throw new ModelEditError(`Check constraint "${c.id}" must have a non-blank expression.`, 'constraints');
+      // Unlike pk/unique/fk (which Postgres/drizzle really do auto-name when
+      // left blank — see generated-constraint-name.ts), a CHECK constraint has
+      // NO auto-generated name: drizzle's own check() builder requires one
+      // (export-drizzle.ts's emitCheck THROWS on a blank name rather than
+      // guessing one). A blank check name must be rejected here too, or it
+      // sails through Save only to blow up later at export (Task 12 review,
+      // Finding 2).
+      if (!c.name || !c.name.trim()) throw new ModelEditError(`Check constraint "${c.id}" must have a name.`, 'constraints');
       continue;
     }
 

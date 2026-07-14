@@ -15,11 +15,17 @@
 // THIS card) instead of only a generic banner at the top of the modal. The
 // engine's own check remains the sole thing that actually blocks Save.
 //
-// A constraint's `name` input shows the name Postgres/drizzle would assign
-// if left blank — greyed, via `placeholder` (see generated-constraint-name.ts
-// for exactly which mechanism decides each kind's name, matching what
-// export-drizzle.ts actually emits) — never written to the model: a blank
-// name stays blank (`e.target.value || null`), same as before.
+// A pk/unique/fk constraint's `name` input shows the name Postgres/drizzle
+// would assign if left blank — greyed, via `placeholder` (see
+// generated-constraint-name.ts for exactly which mechanism decides each
+// kind's name, matching what export-drizzle.ts actually emits) — never
+// written to the model: a blank name stays blank (`e.target.value || null`),
+// same as before. A CHECK constraint has NO such auto-name (drizzle's check()
+// requires one — export-drizzle's emitCheck throws on a blank one), so its
+// card never shows that greyed preview (a placeholder implying "safe to
+// leave blank" would be a lie there) — instead a blank CHECK name is a real,
+// required-field mistake, surfaced the same way as every other in-card error
+// below (Task 12 review, Finding 2).
 //
 // Composite fk columns/refColumns march in ColumnMultiSelect's own tick
 // order (surfaced now as numbered chips), and a target-table change always
@@ -69,7 +75,15 @@ function blank(kind: Constraint['kind'], id: string): Constraint {
 function cardError(c: Constraint, all: Constraint[], ownColumns: string[]): string | null {
   if (c.name && all.some((o) => o.id !== c.id && o.name === c.name)) return `Duplicate constraint name "${c.name}".`;
 
-  if (c.kind === 'check') return c.expression.trim() ? null : 'Check constraint must have a non-blank expression.';
+  if (c.kind === 'check') {
+    if (!c.expression.trim()) return 'Check constraint must have a non-blank expression.';
+    // Unlike pk/unique/fk, drizzle's check() has no auto-generated name (its
+    // `name` arg is mandatory — see export-drizzle.ts's emitCheck) — so a
+    // blank name here is a real mistake, not something safe to leave for
+    // Postgres/drizzle to fill in.
+    if (!c.name || !c.name.trim()) return 'Check constraint must have a name.';
+    return null;
+  }
 
   if (c.columns.length === 0) return 'Must reference at least one column.';
   for (const col of c.columns) if (!ownColumns.includes(col)) return `Unknown column "${col}".`;
@@ -100,6 +114,12 @@ export function ConstraintsEditor({ model, ownId, columns, constraints, onChange
   const targetColumns = (refTable: string): string[] =>
     refTable === ownId ? columns : (model.entityById.get(refTable)?.columns.map((c) => c.name) ?? []);
 
+  // The entity this constraint belongs to, for generatedConstraintName's own
+  // schema-stripping (see its header comment) — falls back to a bare
+  // {id, schema: null} for a brand-new table not in the model yet (create
+  // mode never has a schema to strip in the first place; see table-modal.tsx).
+  const ownEntity = model.entityById.get(ownId) ?? { id: ownId, schema: null };
+
   return (
     <div className="flex flex-col gap-2">
       {constraints.map((c, i) => {
@@ -109,8 +129,13 @@ export function ConstraintsEditor({ model, ownId, columns, constraints, onChange
         // shape where the CHIPS themselves (not just the name) are the
         // mistake (frame 1e).
         const arityMismatch = c.kind === 'fk' && err != null && err.startsWith('Foreign key must reference');
-        const nameErr = err != null && err.startsWith('Duplicate constraint name');
-        const preview = generatedConstraintName(ownId, c, constraints);
+        const nameErr = err != null && (err.startsWith('Duplicate constraint name') || err.startsWith('Check constraint must have a name'));
+        // A CHECK has no auto-name at all (see the module header) — never
+        // compute/show the "informational only" preview generatedConstraintName
+        // still returns for a check (that value exists purely for that
+        // function's own tests); the plain "name" fallback below plus the red
+        // border above is what actually flags a blank one as a mistake.
+        const preview = c.kind === 'check' ? null : generatedConstraintName(ownEntity, c, constraints);
 
         return (
           <div key={c.id} className={card}>

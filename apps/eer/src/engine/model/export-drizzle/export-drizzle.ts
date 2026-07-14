@@ -46,7 +46,15 @@ function uniqueIdentifier(base: string, used: Set<string>): string {
 // Entity.id is `name`, or `schema.name` when schema isn't public (tableId in
 // import-drizzle.ts). Strip the schema prefix back off to recover the
 // physical table name drizzle needs as pgTable's first argument.
-function physicalTableName(e: Entity): string {
+//
+// Exported so generated-constraint-name.ts (the greyed placeholder shown for
+// a blank pk/unique/fk name in constraints-editor.tsx) can derive the SAME
+// physical name this exporter uses, rather than re-deriving its own copy —
+// drizzle's own naming conventions (uniqueKeyName, ForeignKey.getName(), …)
+// key off the physical table name only, never the schema-qualified id, so a
+// placeholder built from the raw Entity.id would show a schema prefix the
+// real generated name never has (Task 12 review, Finding 1).
+export function physicalTableName(e: Pick<Entity, 'id' | 'schema'>): string {
   if (e.schema && e.schema !== 'public' && e.id.startsWith(`${e.schema}.`)) return e.id.slice(e.schema.length + 1);
   return e.id;
 }

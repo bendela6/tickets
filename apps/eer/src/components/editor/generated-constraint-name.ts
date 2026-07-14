@@ -40,28 +40,44 @@
 // Returns null when there isn't enough on the draft yet to compute anything
 // meaningful (no columns ticked, or an fk with no target table/columns
 // chosen) — callers fall back to a plain "name" placeholder in that case.
+//
+// Takes the OWNING ENTITY, not a bare id: drizzle's own naming conventions
+// (uniqueKeyName, ForeignKey.getName(), the bare single-column-pk convention)
+// key off the PHYSICAL table name only — pgTable's first argument — never
+// the schema-qualified `Entity.id` (e.g. "billing.orders"). Reuses
+// export-drizzle.ts's own `physicalTableName` (rather than re-deriving the
+// schema-stripping logic here) so the two can never silently diverge — see
+// export-drizzle.test.ts's parity test, which asserts this preview equals
+// what a real drizzle module actually assigns for a schema-qualified table
+// (Task 12 review, Finding 1).
 
-import type { Constraint } from '../../engine/model/types';
+import { physicalTableName } from '../../engine/model/export-drizzle/export-drizzle';
+import type { Constraint, Entity } from '../../engine/model/types';
 
-export function generatedConstraintName(tableId: string, constraint: Constraint, siblings: Constraint[]): string | null {
+export function generatedConstraintName(
+  entity: Pick<Entity, 'id' | 'schema'>,
+  constraint: Constraint,
+  siblings: Constraint[],
+): string | null {
+  const tableName = physicalTableName(entity);
   switch (constraint.kind) {
     case 'pk':
       if (constraint.columns.length === 0) return null;
-      return constraint.columns.length === 1 ? `${tableId}_pkey` : `${tableId}_${constraint.columns.join('_')}_pk`;
+      return constraint.columns.length === 1 ? `${tableName}_pkey` : `${tableName}_${constraint.columns.join('_')}_pk`;
 
     case 'unique':
       if (constraint.columns.length === 0) return null;
-      return `${tableId}_${constraint.columns.join('_')}_unique`;
+      return `${tableName}_${constraint.columns.join('_')}_unique`;
 
     case 'fk':
       if (constraint.columns.length === 0 || !constraint.refTable || constraint.refColumns.length === 0) return null;
-      return `${tableId}_${constraint.columns.join('_')}_${constraint.refTable}_${constraint.refColumns.join('_')}_fk`;
+      return `${tableName}_${constraint.columns.join('_')}_${constraint.refTable}_${constraint.refColumns.join('_')}_fk`;
 
     case 'check': {
       const unnamedChecks = siblings.filter((c) => c.kind === 'check' && !c.name);
       const position = unnamedChecks.findIndex((c) => c.id === constraint.id);
       const index = position < 0 ? unnamedChecks.length : position;
-      return index === 0 ? `${tableId}_check` : `${tableId}_check${index}`;
+      return index === 0 ? `${tableName}_check` : `${tableName}_check${index}`;
     }
   }
 }

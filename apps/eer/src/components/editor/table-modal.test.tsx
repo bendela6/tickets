@@ -153,6 +153,34 @@ describe('TableModal', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  // Task 12 review, Finding 2 (IMPORTANT): a CHECK constraint has no
+  // auto-generated name (unlike pk/unique/fk — see generated-constraint-
+  // name.ts), and export-drizzle's emitCheck THROWS on a blank one. Before
+  // this fix, validateConstraints only rejected a blank check EXPRESSION, so
+  // a blank-named check with a real expression sailed through live
+  // validation and Save — the same "Task-10 machinery" (liveEngineError/
+  // blocked, driven by ModelEditError.field) the duplicate-field-name case
+  // above exercises must block this live too, with no click needed.
+  it('a blank-named CHECK constraint disables Save live (no click needed) and does not dispatch', async () => {
+    const onClose = vi.fn();
+    const { actions } = await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
+    const spy = vi.spyOn(actions, 'applyModelEdit');
+
+    fireEvent.click(screen.getByRole('tab', { name: /constraints/i }));
+    fireEvent.click(screen.getByRole('button', { name: '+ check' }));
+    fireEvent.change(screen.getByLabelText('Constraint 2 expression'), { target: { value: 'id > 0' } });
+    // Name deliberately left blank.
+
+    // Two copies of the message: the modal's top banner (the live engine
+    // error) AND the constraints tab's own in-card mirror — same shape as
+    // the "duplicate constraint name" case in constraints-editor.test.tsx.
+    expect(screen.getAllByText(/must have a name/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Save' })); // disabled — no-op
+    expect(spy).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it('delete confirm lists the referencing fields, then dispatches deleteEntity + clearSelection', async () => {
     const onClose = vi.fn();
     const { actions } = await renderDiagram(<TableModal id="users" onClose={onClose} />, twoZoneRaw());
