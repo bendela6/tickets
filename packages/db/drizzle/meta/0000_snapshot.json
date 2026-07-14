@@ -1,9 +1,154 @@
 {
-  "id": "00191d43-204d-43e8-bd54-569591ba5ed6",
+  "id": "5a3fa9c7-e4bf-481a-aa9a-95dd020b974a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.commands": {
+      "name": "commands",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "aggregate_type": {
+          "name": "aggregate_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aggregate_id": {
+          "name": "aggregate_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actor_id": {
+          "name": "actor_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "at": {
+          "name": "at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "result": {
+          "name": "result",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "commands_actor_id_users_id_fk": {
+          "name": "commands_actor_id_users_id_fk",
+          "tableFrom": "commands",
+          "tableTo": "users",
+          "columnsFrom": [
+            "actor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.comment_reactions": {
+      "name": "comment_reactions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "comment_id": {
+          "name": "comment_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "emoji": {
+          "name": "emoji",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "comment_reactions_comment_id_comments_id_fk": {
+          "name": "comment_reactions_comment_id_comments_id_fk",
+          "tableFrom": "comment_reactions",
+          "tableTo": "comments",
+          "columnsFrom": [
+            "comment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "comment_reactions_user_id_users_id_fk": {
+          "name": "comment_reactions_user_id_users_id_fk",
+          "tableFrom": "comment_reactions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "comment_reactions_unique": {
+          "name": "comment_reactions_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "comment_id",
+            "user_id",
+            "emoji"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.comments": {
       "name": "comments",
       "schema": "",
@@ -14,8 +159,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "ticket_id": {
-          "name": "ticket_id",
+        "item_id": {
+          "name": "item_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -25,6 +170,12 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         },
         "body": {
           "name": "body",
@@ -41,11 +192,11 @@
         }
       },
       "indexes": {
-        "comments_ticket": {
-          "name": "comments_ticket",
+        "comments_item": {
+          "name": "comments_item",
           "columns": [
             {
-              "expression": "ticket_id",
+              "expression": "item_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -58,12 +209,16 @@
         }
       },
       "foreignKeys": {
-        "comments_ticket_id_tickets_id_fk": {
-          "name": "comments_ticket_id_tickets_id_fk",
+        "comments_item_id_items_id_fk": {
+          "name": "comments_item_id_items_id_fk",
           "tableFrom": "comments",
-          "tableTo": "tickets",
-          "columnsFrom": ["ticket_id"],
-          "columnsTo": ["id"],
+          "tableTo": "items",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -71,8 +226,25 @@
           "name": "comments_author_id_users_id_fk",
           "tableFrom": "comments",
           "tableTo": "users",
-          "columnsFrom": ["author_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "author_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "comments_parent_id_comments_id_fk": {
+          "name": "comments_parent_id_comments_id_fk",
+          "tableFrom": "comments",
+          "tableTo": "comments",
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -83,72 +255,244 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.field_options": {
-      "name": "field_options",
+    "public.events": {
+      "name": "events",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "bigserial",
           "primaryKey": true,
           "notNull": true
         },
-        "field_id": {
-          "name": "field_id",
+        "aggregate_type": {
+          "name": "aggregate_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aggregate_id": {
+          "name": "aggregate_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "value": {
-          "name": "value",
+        "seq": {
+          "name": "seq",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "label": {
-          "name": "label",
-          "type": "text",
+        "version": {
+          "name": "version",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": 1
         },
-        "config": {
-          "name": "config",
+        "payload": {
+          "name": "payload",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
           "default": "'{}'::jsonb"
         },
-        "position": {
-          "name": "position",
+        "actor_id": {
+          "name": "actor_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "archived_at": {
-          "name": "archived_at",
+        "at": {
+          "name": "at",
           "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "command_id": {
+          "name": "command_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "correlation_id": {
+          "name": "correlation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "caused_by": {
+          "name": "caused_by",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "depth": {
+          "name": "depth",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "events_correlation": {
+          "name": "events_correlation",
+          "columns": [
+            {
+              "expression": "correlation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "events_command": {
+          "name": "events_command",
+          "columns": [
+            {
+              "expression": "aggregate_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "aggregate_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "command_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "events_caused_by": {
+          "name": "events_caused_by",
+          "columns": [
+            {
+              "expression": "caused_by",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "events_project_at": {
+          "name": "events_project_at",
+          "columns": [
+            {
+              "expression": "project_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "events_stream_at": {
+          "name": "events_stream_at",
+          "columns": [
+            {
+              "expression": "aggregate_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "aggregate_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
-        "field_options_field_id_fields_id_fk": {
-          "name": "field_options_field_id_fields_id_fk",
-          "tableFrom": "field_options",
-          "tableTo": "fields",
-          "columnsFrom": ["field_id"],
-          "columnsTo": ["id"],
+        "events_actor_id_users_id_fk": {
+          "name": "events_actor_id_users_id_fk",
+          "tableFrom": "events",
+          "tableTo": "users",
+          "columnsFrom": [
+            "actor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "events_caused_by_events_id_fk": {
+          "name": "events_caused_by_events_id_fk",
+          "tableFrom": "events",
+          "tableTo": "events",
+          "columnsFrom": [
+            "caused_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "field_options_field_value": {
-          "name": "field_options_field_value",
+        "events_stream_seq": {
+          "name": "events_stream_seq",
           "nullsNotDistinct": false,
-          "columns": ["field_id", "value"]
+          "columns": [
+            "aggregate_type",
+            "aggregate_id",
+            "seq"
+          ]
         }
       },
       "policies": {},
@@ -165,8 +509,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "project_id": {
-          "name": "project_id",
+        "scheme_id": {
+          "name": "scheme_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -204,348 +548,99 @@
           "notNull": true,
           "default": "'{}'::jsonb"
         },
+        "option_set_id": {
+          "name": "option_set_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "archived_at": {
           "name": "archived_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "fields_project_id_projects_id_fk": {
-          "name": "fields_project_id_projects_id_fk",
+        "fields_scheme_id_schemes_id_fk": {
+          "name": "fields_scheme_id_schemes_id_fk",
           "tableFrom": "fields",
-          "tableTo": "projects",
-          "columnsFrom": ["project_id"],
-          "columnsTo": ["id"],
+          "tableTo": "schemes",
+          "columnsFrom": [
+            "scheme_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fields_option_set_id_option_sets_id_fk": {
+          "name": "fields_option_set_id_option_sets_id_fk",
+          "tableFrom": "fields",
+          "tableTo": "option_sets",
+          "columnsFrom": [
+            "option_set_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "fields_project_key": {
-          "name": "fields_project_key",
+        "fields_scheme_key": {
+          "name": "fields_scheme_key",
           "nullsNotDistinct": false,
-          "columns": ["project_id", "key"]
+          "columns": [
+            "scheme_id",
+            "key"
+          ]
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "fields_option_set_required": {
+          "name": "fields_option_set_required",
+          "value": "type <> 'option' OR option_set_id IS NOT NULL"
+        }
+      },
       "isRLSEnabled": false
     },
-    "public.link_types": {
-      "name": "link_types",
+    "public.item_activity": {
+      "name": "item_activity",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "bigserial",
           "primaryKey": true,
+          "notNull": true
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "bigint",
+          "primaryKey": false,
           "notNull": true
         },
         "project_id": {
           "name": "project_id",
           "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "key": {
-          "name": "key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "label": {
-          "name": "label",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "inverse_label": {
-          "name": "inverse_label",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "directional": {
-          "name": "directional",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "archived_at": {
-          "name": "archived_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "link_types_project_id_projects_id_fk": {
-          "name": "link_types_project_id_projects_id_fk",
-          "tableFrom": "link_types",
-          "tableTo": "projects",
-          "columnsFrom": ["project_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "link_types_project_key": {
-          "name": "link_types_project_key",
-          "nullsNotDistinct": false,
-          "columns": ["project_id", "key"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.projects": {
-      "name": "projects",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "key": {
-          "name": "key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "ticket_prefix": {
-          "name": "ticket_prefix",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "projects_key_unique": {
-          "name": "projects_key_unique",
-          "nullsNotDistinct": false,
-          "columns": ["key"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.status_transitions": {
-      "name": "status_transitions",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "from_status_id": {
-          "name": "from_status_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "to_status_id": {
-          "name": "to_status_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "ticket_type_id": {
-          "name": "ticket_type_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "config": {
-          "name": "config",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::jsonb"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "status_transitions_from_status_id_statuses_id_fk": {
-          "name": "status_transitions_from_status_id_statuses_id_fk",
-          "tableFrom": "status_transitions",
-          "tableTo": "statuses",
-          "columnsFrom": ["from_status_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "status_transitions_to_status_id_statuses_id_fk": {
-          "name": "status_transitions_to_status_id_statuses_id_fk",
-          "tableFrom": "status_transitions",
-          "tableTo": "statuses",
-          "columnsFrom": ["to_status_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "status_transitions_ticket_type_id_ticket_types_id_fk": {
-          "name": "status_transitions_ticket_type_id_ticket_types_id_fk",
-          "tableFrom": "status_transitions",
-          "tableTo": "ticket_types",
-          "columnsFrom": ["ticket_type_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "status_transitions_edge": {
-          "name": "status_transitions_edge",
-          "nullsNotDistinct": true,
-          "columns": ["from_status_id", "to_status_id", "ticket_type_id"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.statuses": {
-      "name": "statuses",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "project_id": {
-          "name": "project_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "key": {
-          "name": "key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "label": {
-          "name": "label",
-          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
         "kind": {
           "name": "kind",
-          "type": "status_kind",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "config": {
-          "name": "config",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::jsonb"
-        },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "archived_at": {
-          "name": "archived_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "statuses_project_id_projects_id_fk": {
-          "name": "statuses_project_id_projects_id_fk",
-          "tableFrom": "statuses",
-          "tableTo": "projects",
-          "columnsFrom": ["project_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "statuses_project_key": {
-          "name": "statuses_project_key",
-          "nullsNotDistinct": false,
-          "columns": ["project_id", "key"]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.ticket_events": {
-      "name": "ticket_events",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "ticket_id": {
-          "name": "ticket_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -555,39 +650,52 @@
           "primaryKey": false,
           "notNull": true
         },
-        "kind": {
-          "name": "kind",
-          "type": "text",
+        "at": {
+          "name": "at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         },
-        "payload": {
-          "name": "payload",
+        "correlation_id": {
+          "name": "correlation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "summary": {
+          "name": "summary",
           "type": "jsonb",
           "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::jsonb"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
+          "notNull": true
         }
       },
       "indexes": {
-        "ticket_events_ticket_created": {
-          "name": "ticket_events_ticket_created",
+        "item_activity_item_at": {
+          "name": "item_activity_item_at",
           "columns": [
             {
-              "expression": "ticket_id",
+              "expression": "item_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
-              "expression": "created_at",
+              "expression": "at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "item_activity_correlation": {
+          "name": "item_activity_correlation",
+          "columns": [
+            {
+              "expression": "correlation_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -600,33 +708,62 @@
         }
       },
       "foreignKeys": {
-        "ticket_events_ticket_id_tickets_id_fk": {
-          "name": "ticket_events_ticket_id_tickets_id_fk",
-          "tableFrom": "ticket_events",
-          "tableTo": "tickets",
-          "columnsFrom": ["ticket_id"],
-          "columnsTo": ["id"],
+        "item_activity_item_id_items_id_fk": {
+          "name": "item_activity_item_id_items_id_fk",
+          "tableFrom": "item_activity",
+          "tableTo": "items",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "ticket_events_actor_id_users_id_fk": {
-          "name": "ticket_events_actor_id_users_id_fk",
-          "tableFrom": "ticket_events",
+        "item_activity_event_id_events_id_fk": {
+          "name": "item_activity_event_id_events_id_fk",
+          "tableFrom": "item_activity",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "item_activity_actor_id_users_id_fk": {
+          "name": "item_activity_actor_id_users_id_fk",
+          "tableFrom": "item_activity",
           "tableTo": "users",
-          "columnsFrom": ["actor_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "actor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "item_activity_event": {
+          "name": "item_activity_event",
+          "nullsNotDistinct": false,
+          "columns": [
+            "event_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.ticket_links": {
-      "name": "ticket_links",
+    "public.item_links": {
+      "name": "item_links",
       "schema": "",
       "columns": {
         "id": {
@@ -641,14 +778,14 @@
           "primaryKey": false,
           "notNull": true
         },
-        "source_ticket_id": {
-          "name": "source_ticket_id",
+        "source_item_id": {
+          "name": "source_item_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "target_ticket_id": {
-          "name": "target_ticket_id",
+        "target_item_id": {
+          "name": "target_item_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -662,11 +799,11 @@
         }
       },
       "indexes": {
-        "ticket_links_source": {
-          "name": "ticket_links_source",
+        "item_links_source": {
+          "name": "item_links_source",
           "columns": [
             {
-              "expression": "source_ticket_id",
+              "expression": "source_item_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -677,11 +814,11 @@
           "method": "btree",
           "with": {}
         },
-        "ticket_links_target": {
-          "name": "ticket_links_target",
+        "item_links_target": {
+          "name": "item_links_target",
           "columns": [
             {
-              "expression": "target_ticket_id",
+              "expression": "target_item_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -694,57 +831,133 @@
         }
       },
       "foreignKeys": {
-        "ticket_links_link_type_id_link_types_id_fk": {
-          "name": "ticket_links_link_type_id_link_types_id_fk",
-          "tableFrom": "ticket_links",
+        "item_links_link_type_id_link_types_id_fk": {
+          "name": "item_links_link_type_id_link_types_id_fk",
+          "tableFrom": "item_links",
           "tableTo": "link_types",
-          "columnsFrom": ["link_type_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "link_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "ticket_links_source_ticket_id_tickets_id_fk": {
-          "name": "ticket_links_source_ticket_id_tickets_id_fk",
-          "tableFrom": "ticket_links",
-          "tableTo": "tickets",
-          "columnsFrom": ["source_ticket_id"],
-          "columnsTo": ["id"],
+        "item_links_source_item_id_items_id_fk": {
+          "name": "item_links_source_item_id_items_id_fk",
+          "tableFrom": "item_links",
+          "tableTo": "items",
+          "columnsFrom": [
+            "source_item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "ticket_links_target_ticket_id_tickets_id_fk": {
-          "name": "ticket_links_target_ticket_id_tickets_id_fk",
-          "tableFrom": "ticket_links",
-          "tableTo": "tickets",
-          "columnsFrom": ["target_ticket_id"],
-          "columnsTo": ["id"],
+        "item_links_target_item_id_items_id_fk": {
+          "name": "item_links_target_item_id_items_id_fk",
+          "tableFrom": "item_links",
+          "tableTo": "items",
+          "columnsFrom": [
+            "target_item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "ticket_links_edge": {
-          "name": "ticket_links_edge",
+        "item_links_unique": {
+          "name": "item_links_unique",
           "nullsNotDistinct": false,
-          "columns": ["link_type_id", "source_ticket_id", "target_ticket_id"]
+          "columns": [
+            "link_type_id",
+            "source_item_id",
+            "target_item_id"
+          ]
         }
       },
       "policies": {},
       "checkConstraints": {
-        "ticket_links_no_self": {
-          "name": "ticket_links_no_self",
-          "value": "source_ticket_id <> target_ticket_id"
+        "item_links_no_self": {
+          "name": "item_links_no_self",
+          "value": "source_item_id <> target_item_id"
         }
       },
       "isRLSEnabled": false
     },
-    "public.ticket_type_fields": {
-      "name": "ticket_type_fields",
+    "public.item_type_child_types": {
+      "name": "item_type_child_types",
       "schema": "",
       "columns": {
-        "ticket_type_id": {
-          "name": "ticket_type_id",
+        "parent_type_id": {
+          "name": "parent_type_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "child_type_id": {
+          "name": "child_type_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "item_type_child_types_parent_type_id_item_types_id_fk": {
+          "name": "item_type_child_types_parent_type_id_item_types_id_fk",
+          "tableFrom": "item_type_child_types",
+          "tableTo": "item_types",
+          "columnsFrom": [
+            "parent_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "item_type_child_types_child_type_id_item_types_id_fk": {
+          "name": "item_type_child_types_child_type_id_item_types_id_fk",
+          "tableFrom": "item_type_child_types",
+          "tableTo": "item_types",
+          "columnsFrom": [
+            "child_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "item_type_child_types_parent_type_id_child_type_id_pk": {
+          "name": "item_type_child_types_parent_type_id_child_type_id_pk",
+          "columns": [
+            "parent_type_id",
+            "child_type_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.item_type_fields": {
+      "name": "item_type_fields",
+      "schema": "",
+      "columns": {
+        "item_type_id": {
+          "name": "item_type_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -767,33 +980,72 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
+        },
+        "config_override": {
+          "name": "config_override",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "itf_type_position": {
+          "name": "itf_type_position",
+          "columns": [
+            {
+              "expression": "item_type_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "position",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
-        "ticket_type_fields_ticket_type_id_ticket_types_id_fk": {
-          "name": "ticket_type_fields_ticket_type_id_ticket_types_id_fk",
-          "tableFrom": "ticket_type_fields",
-          "tableTo": "ticket_types",
-          "columnsFrom": ["ticket_type_id"],
-          "columnsTo": ["id"],
+        "item_type_fields_item_type_id_item_types_id_fk": {
+          "name": "item_type_fields_item_type_id_item_types_id_fk",
+          "tableFrom": "item_type_fields",
+          "tableTo": "item_types",
+          "columnsFrom": [
+            "item_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "ticket_type_fields_field_id_fields_id_fk": {
-          "name": "ticket_type_fields_field_id_fields_id_fk",
-          "tableFrom": "ticket_type_fields",
+        "item_type_fields_field_id_fields_id_fk": {
+          "name": "item_type_fields_field_id_fields_id_fk",
+          "tableFrom": "item_type_fields",
           "tableTo": "fields",
-          "columnsFrom": ["field_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "field_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
-        "ticket_type_fields_ticket_type_id_field_id_pk": {
-          "name": "ticket_type_fields_ticket_type_id_field_id_pk",
-          "columns": ["ticket_type_id", "field_id"]
+        "item_type_fields_item_type_id_field_id_pk": {
+          "name": "item_type_fields_item_type_id_field_id_pk",
+          "columns": [
+            "item_type_id",
+            "field_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -801,8 +1053,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.ticket_types": {
-      "name": "ticket_types",
+    "public.item_types": {
+      "name": "item_types",
       "schema": "",
       "columns": {
         "id": {
@@ -811,8 +1063,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "project_id": {
-          "name": "project_id",
+        "scheme_id": {
+          "name": "scheme_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -829,6 +1081,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "config": {
           "name": "config",
           "type": "jsonb",
@@ -836,52 +1094,46 @@
           "notNull": true,
           "default": "'{}'::jsonb"
         },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
         "archived_at": {
           "name": "archived_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "ticket_types_project_id_projects_id_fk": {
-          "name": "ticket_types_project_id_projects_id_fk",
-          "tableFrom": "ticket_types",
-          "tableTo": "projects",
-          "columnsFrom": ["project_id"],
-          "columnsTo": ["id"],
+        "item_types_scheme_id_schemes_id_fk": {
+          "name": "item_types_scheme_id_schemes_id_fk",
+          "tableFrom": "item_types",
+          "tableTo": "schemes",
+          "columnsFrom": [
+            "scheme_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "ticket_types_project_key": {
-          "name": "ticket_types_project_key",
+        "item_types_scheme_key": {
+          "name": "item_types_scheme_key",
           "nullsNotDistinct": false,
-          "columns": ["project_id", "key"]
+          "columns": [
+            "scheme_id",
+            "key"
+          ]
         }
       },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.ticket_values": {
-      "name": "ticket_values",
+    "public.item_values": {
+      "name": "item_values",
       "schema": "",
       "columns": {
         "id": {
@@ -890,8 +1142,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "ticket_id": {
-          "name": "ticket_id",
+        "item_id": {
+          "name": "item_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -938,19 +1190,19 @@
           "primaryKey": false,
           "notNull": false
         },
-        "status_id": {
-          "name": "status_id",
+        "value_user_id": {
+          "name": "value_user_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
         }
       },
       "indexes": {
-        "ticket_values_single": {
-          "name": "ticket_values_single",
+        "iv_scalar": {
+          "name": "iv_scalar",
           "columns": [
             {
-              "expression": "ticket_id",
+              "expression": "item_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -963,16 +1215,72 @@
             }
           ],
           "isUnique": true,
-          "where": "option_id IS NULL",
+          "where": "option_id IS NULL AND value_user_id IS NULL",
           "concurrently": false,
           "method": "btree",
           "with": {}
         },
-        "ticket_values_ticket": {
-          "name": "ticket_values_ticket",
+        "iv_option": {
+          "name": "iv_option",
           "columns": [
             {
-              "expression": "ticket_id",
+              "expression": "item_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "field_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "option_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "option_id IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "iv_user": {
+          "name": "iv_user",
+          "columns": [
+            {
+              "expression": "item_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "field_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "value_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "value_user_id IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "iv_item": {
+          "name": "iv_item",
+          "columns": [
+            {
+              "expression": "item_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -983,8 +1291,71 @@
           "method": "btree",
           "with": {}
         },
-        "ticket_values_field_option": {
-          "name": "ticket_values_field_option",
+        "iv_field_text": {
+          "name": "iv_field_text",
+          "columns": [
+            {
+              "expression": "field_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "value_text",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "iv_field_number": {
+          "name": "iv_field_number",
+          "columns": [
+            {
+              "expression": "field_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "value_number",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "iv_field_date": {
+          "name": "iv_field_date",
+          "columns": [
+            {
+              "expression": "field_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "value_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "iv_field_option": {
+          "name": "iv_field_option",
           "columns": [
             {
               "expression": "field_id",
@@ -1004,23 +1375,8 @@
           "method": "btree",
           "with": {}
         },
-        "ticket_values_status": {
-          "name": "ticket_values_status",
-          "columns": [
-            {
-              "expression": "status_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "ticket_values_field_text": {
-          "name": "ticket_values_field_text",
+        "iv_field_user": {
+          "name": "iv_field_user",
           "columns": [
             {
               "expression": "field_id",
@@ -1029,7 +1385,7 @@
               "nulls": "last"
             },
             {
-              "expression": "value_text",
+              "expression": "value_user_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1042,57 +1398,72 @@
         }
       },
       "foreignKeys": {
-        "ticket_values_ticket_id_tickets_id_fk": {
-          "name": "ticket_values_ticket_id_tickets_id_fk",
-          "tableFrom": "ticket_values",
-          "tableTo": "tickets",
-          "columnsFrom": ["ticket_id"],
-          "columnsTo": ["id"],
+        "item_values_item_id_items_id_fk": {
+          "name": "item_values_item_id_items_id_fk",
+          "tableFrom": "item_values",
+          "tableTo": "items",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "ticket_values_field_id_fields_id_fk": {
-          "name": "ticket_values_field_id_fields_id_fk",
-          "tableFrom": "ticket_values",
+        "item_values_field_id_fields_id_fk": {
+          "name": "item_values_field_id_fields_id_fk",
+          "tableFrom": "item_values",
           "tableTo": "fields",
-          "columnsFrom": ["field_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "field_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "ticket_values_option_id_field_options_id_fk": {
-          "name": "ticket_values_option_id_field_options_id_fk",
-          "tableFrom": "ticket_values",
-          "tableTo": "field_options",
-          "columnsFrom": ["option_id"],
-          "columnsTo": ["id"],
+        "item_values_option_id_options_id_fk": {
+          "name": "item_values_option_id_options_id_fk",
+          "tableFrom": "item_values",
+          "tableTo": "options",
+          "columnsFrom": [
+            "option_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "ticket_values_status_id_statuses_id_fk": {
-          "name": "ticket_values_status_id_statuses_id_fk",
-          "tableFrom": "ticket_values",
-          "tableTo": "statuses",
-          "columnsFrom": ["status_id"],
-          "columnsTo": ["id"],
+        "item_values_value_user_id_users_id_fk": {
+          "name": "item_values_value_user_id_users_id_fk",
+          "tableFrom": "item_values",
+          "tableTo": "users",
+          "columnsFrom": [
+            "value_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "ticket_values_ticket_field_option": {
-          "name": "ticket_values_ticket_field_option",
-          "nullsNotDistinct": false,
-          "columns": ["ticket_id", "field_id", "option_id"]
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "iv_one_value": {
+          "name": "iv_one_value",
+          "value": "num_nonnulls(value_text, value_number, value_date, value_bool, value_json, option_id, value_user_id) = 1"
         }
       },
-      "policies": {},
-      "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.tickets": {
-      "name": "tickets",
+    "public.items": {
+      "name": "items",
       "schema": "",
       "columns": {
         "id": {
@@ -1153,8 +1524,8 @@
         }
       },
       "indexes": {
-        "tickets_project_type": {
-          "name": "tickets_project_type",
+        "items_project_type": {
+          "name": "items_project_type",
           "columns": [
             {
               "expression": "project_id",
@@ -1174,8 +1545,8 @@
           "method": "btree",
           "with": {}
         },
-        "tickets_parent": {
-          "name": "tickets_parent",
+        "items_parent": {
+          "name": "items_parent",
           "columns": [
             {
               "expression": "parent_id",
@@ -1191,49 +1562,665 @@
         }
       },
       "foreignKeys": {
-        "tickets_project_id_projects_id_fk": {
-          "name": "tickets_project_id_projects_id_fk",
-          "tableFrom": "tickets",
+        "items_project_id_projects_id_fk": {
+          "name": "items_project_id_projects_id_fk",
+          "tableFrom": "items",
           "tableTo": "projects",
-          "columnsFrom": ["project_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "project_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tickets_type_id_ticket_types_id_fk": {
-          "name": "tickets_type_id_ticket_types_id_fk",
-          "tableFrom": "tickets",
-          "tableTo": "ticket_types",
-          "columnsFrom": ["type_id"],
-          "columnsTo": ["id"],
+        "items_type_id_item_types_id_fk": {
+          "name": "items_type_id_item_types_id_fk",
+          "tableFrom": "items",
+          "tableTo": "item_types",
+          "columnsFrom": [
+            "type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tickets_parent_id_tickets_id_fk": {
-          "name": "tickets_parent_id_tickets_id_fk",
-          "tableFrom": "tickets",
-          "tableTo": "tickets",
-          "columnsFrom": ["parent_id"],
-          "columnsTo": ["id"],
+        "items_parent_id_items_id_fk": {
+          "name": "items_parent_id_items_id_fk",
+          "tableFrom": "items",
+          "tableTo": "items",
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tickets_created_by_users_id_fk": {
-          "name": "tickets_created_by_users_id_fk",
-          "tableFrom": "tickets",
+        "items_created_by_users_id_fk": {
+          "name": "items_created_by_users_id_fk",
+          "tableFrom": "items",
           "tableTo": "users",
-          "columnsFrom": ["created_by"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "tickets_project_number": {
-          "name": "tickets_project_number",
+        "items_project_number": {
+          "name": "items_project_number",
           "nullsNotDistinct": false,
-          "columns": ["project_id", "number"]
+          "columns": [
+            "project_id",
+            "number"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.link_type_target_types": {
+      "name": "link_type_target_types",
+      "schema": "",
+      "columns": {
+        "link_type_id": {
+          "name": "link_type_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "target_type_id": {
+          "name": "target_type_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "link_type_target_types_link_type_id_link_types_id_fk": {
+          "name": "link_type_target_types_link_type_id_link_types_id_fk",
+          "tableFrom": "link_type_target_types",
+          "tableTo": "link_types",
+          "columnsFrom": [
+            "link_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "link_type_target_types_target_type_id_item_types_id_fk": {
+          "name": "link_type_target_types_target_type_id_item_types_id_fk",
+          "tableFrom": "link_type_target_types",
+          "tableTo": "item_types",
+          "columnsFrom": [
+            "target_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "link_type_target_types_link_type_id_target_type_id_pk": {
+          "name": "link_type_target_types_link_type_id_target_type_id_pk",
+          "columns": [
+            "link_type_id",
+            "target_type_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.link_types": {
+      "name": "link_types",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "item_type_id": {
+          "name": "item_type_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inverse_label": {
+          "name": "inverse_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "directional": {
+          "name": "directional",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "link_types_item_type_id_item_types_id_fk": {
+          "name": "link_types_item_type_id_item_types_id_fk",
+          "tableFrom": "link_types",
+          "tableTo": "item_types",
+          "columnsFrom": [
+            "item_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "link_types_type_key": {
+          "name": "link_types_type_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "item_type_id",
+            "key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.option_sets": {
+      "name": "option_sets",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "scheme_id": {
+          "name": "scheme_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "option_sets_scheme_id_schemes_id_fk": {
+          "name": "option_sets_scheme_id_schemes_id_fk",
+          "tableFrom": "option_sets",
+          "tableTo": "schemes",
+          "columnsFrom": [
+            "scheme_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "option_sets_scheme_key": {
+          "name": "option_sets_scheme_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "scheme_id",
+            "key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.option_transitions": {
+      "name": "option_transitions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "field_id": {
+          "name": "field_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "from_option_id": {
+          "name": "from_option_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "to_option_id": {
+          "name": "to_option_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "item_type_id": {
+          "name": "item_type_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "config": {
+          "name": "config",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "option_transitions_field_id_fields_id_fk": {
+          "name": "option_transitions_field_id_fields_id_fk",
+          "tableFrom": "option_transitions",
+          "tableTo": "fields",
+          "columnsFrom": [
+            "field_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "option_transitions_from_option_id_options_id_fk": {
+          "name": "option_transitions_from_option_id_options_id_fk",
+          "tableFrom": "option_transitions",
+          "tableTo": "options",
+          "columnsFrom": [
+            "from_option_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "option_transitions_to_option_id_options_id_fk": {
+          "name": "option_transitions_to_option_id_options_id_fk",
+          "tableFrom": "option_transitions",
+          "tableTo": "options",
+          "columnsFrom": [
+            "to_option_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "option_transitions_item_type_id_item_types_id_fk": {
+          "name": "option_transitions_item_type_id_item_types_id_fk",
+          "tableFrom": "option_transitions",
+          "tableTo": "item_types",
+          "columnsFrom": [
+            "item_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "option_transitions_edge": {
+          "name": "option_transitions_edge",
+          "nullsNotDistinct": true,
+          "columns": [
+            "field_id",
+            "from_option_id",
+            "to_option_id",
+            "item_type_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.options": {
+      "name": "options",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "option_set_id": {
+          "name": "option_set_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "status_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "config": {
+          "name": "config",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "options_option_set_id_option_sets_id_fk": {
+          "name": "options_option_set_id_option_sets_id_fk",
+          "tableFrom": "options",
+          "tableTo": "option_sets",
+          "columnsFrom": [
+            "option_set_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "options_set_value": {
+          "name": "options_set_value",
+          "nullsNotDistinct": false,
+          "columns": [
+            "option_set_id",
+            "value"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.outbox": {
+      "name": "outbox",
+      "schema": "",
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "picked_at": {
+          "name": "picked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "done_at": {
+          "name": "done_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "outbox_pending": {
+          "name": "outbox_pending",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "done_at IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "outbox_event_id_events_id_fk": {
+          "name": "outbox_event_id_events_id_fk",
+          "tableFrom": "outbox",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.projects": {
+      "name": "projects",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "item_prefix": {
+          "name": "item_prefix",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "scheme_id": {
+          "name": "scheme_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "projects_scheme_id_schemes_id_fk": {
+          "name": "projects_scheme_id_schemes_id_fk",
+          "tableFrom": "projects",
+          "tableTo": "schemes",
+          "columnsFrom": [
+            "scheme_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "projects_key_unique": {
+          "name": "projects_key_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.schemes": {
+      "name": "schemes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "config": {
+          "name": "config",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "schemes_key_unique": {
+          "name": "schemes_key_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "key"
+          ]
         }
       },
       "policies": {},
@@ -1274,13 +2261,6 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
         }
       },
       "indexes": {},
@@ -1290,7 +2270,9 @@
         "users_name_unique": {
           "name": "users_name_unique",
           "nullsNotDistinct": false,
-          "columns": ["name"]
+          "columns": [
+            "name"
+          ]
         }
       },
       "policies": {},
@@ -1319,6 +2301,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "config": {
           "name": "config",
           "type": "jsonb",
@@ -1326,24 +2314,11 @@
           "notNull": true,
           "default": "'{}'::jsonb"
         },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
         "archived_at": {
           "name": "archived_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
         }
       },
       "indexes": {},
@@ -1352,8 +2327,12 @@
           "name": "views_project_id_projects_id_fk",
           "tableFrom": "views",
           "tableTo": "projects",
-          "columnsFrom": ["project_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "project_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1369,17 +2348,35 @@
     "public.field_type": {
       "name": "field_type",
       "schema": "public",
-      "values": ["text", "number", "date", "boolean", "json", "select", "multi_select", "status"]
+      "values": [
+        "string",
+        "number",
+        "boolean",
+        "date",
+        "datetime",
+        "option",
+        "user",
+        "json"
+      ]
     },
     "public.status_kind": {
       "name": "status_kind",
       "schema": "public",
-      "values": ["todo", "active", "blocked", "done", "dropped"]
+      "values": [
+        "todo",
+        "active",
+        "blocked",
+        "done",
+        "dropped"
+      ]
     },
     "public.user_kind": {
       "name": "user_kind",
       "schema": "public",
-      "values": ["human", "agent"]
+      "values": [
+        "human",
+        "agent"
+      ]
     }
   },
   "schemas": {},
