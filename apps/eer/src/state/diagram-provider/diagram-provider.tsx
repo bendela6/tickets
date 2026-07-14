@@ -4,11 +4,10 @@
 
 import { useEffect, useMemo, useReducer, useRef, type ReactNode } from 'react';
 
-import { runChecks } from '../../engine/checks/run-checks';
 import { centerOnPoint, fitView } from '../../engine/layout/fit-view';
 import { visibleBounds } from '../../engine/layout/visible-bounds';
 import type { ModelEdit } from '../../engine/model/apply-model-edit';
-import type { CheckResult, Model, RoutingMode, SearchResult } from '../../engine/model/types';
+import type { Model, RoutingMode, SearchResult } from '../../engine/model/types';
 import { computeEdgeGeometry, type EdgeGeometry } from '../../engine/routing/edge-geometry';
 import { searchModel } from '../../engine/search/search-model';
 import {
@@ -37,7 +36,6 @@ export interface DiagramActions {
   focusFromSearch(entityId: string, field?: string): void;
   clearSelection(): void;
   search(q: string): SearchResult[];
-  runChecks(): CheckResult[];
   load(model: Model, modelId?: string): void; // dispatch LOAD + double-rAF fit
   repackAndFit(): void; // REPACK + fit (fonts.ready)
   applyModelEdit(edit: ModelEdit): void;
@@ -108,12 +106,6 @@ export function DiagramProvider({ children }: { children: ReactNode }) {
       },
       clearSelection: () => dispatch({ type: 'CLEAR_SELECTION' }),
       search: (q: string): SearchResult[] => (stateRef.current.model ? searchModel(stateRef.current.model, q) : []),
-      runChecks: (): CheckResult[] => {
-        const s = stateRef.current;
-        const vp = viewportRef.current;
-        if (!s.model || !vp) return [];
-        return runChecks({ model: s.model, geometry: geometryRef.current, view: s.view, root: vp });
-      },
       load: (model: Model, modelId?: string) => {
         dispatch({ type: 'LOAD', model, modelId });
         // Fit after layout settles (grid/scrollbars finalize a frame late) — legacy double-rAF.
