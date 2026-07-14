@@ -32,4 +32,17 @@ describe('seed rewrite', () => {
   it('the new seed is equivalent to the legacy one: same edges, cardinalities, badges and titles', () => {
     expect(digest(newRaw)).toEqual(digest(legacyRaw));
   });
+
+  it('the seed has no unknown types and no bare "enum" columns', () => {
+    const { model, warnings } = loadModel(newRaw);
+    expect(warnings.filter((w) => /unknown type/.test(w))).toEqual([]);
+    for (const e of model!.entities) {
+      for (const c of e.columns) expect(c.type).not.toBe('enum');
+    }
+  });
+
+  it('declares the enums its columns use', () => {
+    const { model } = loadModel(newRaw);
+    expect(model!.enums.map((e) => e.name)).toEqual(['user_kind', 'field_type']);
+  });
 });
