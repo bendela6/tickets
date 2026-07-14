@@ -10,6 +10,7 @@ import {
   itemValues, items, linkTypeTargetTypes, linkTypes, optionSets, optionTransitions, options,
   projects, schemes, users, views,
 } from '../schema';
+import { importHistory } from './import-history';
 import { mapStructure } from './map-structure';
 import type { Legacy } from './read-legacy';
 
@@ -398,6 +399,12 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
                       COALESCE((SELECT MAX(id) FROM ${raw.identifier(table)}), 0) + 1, false)
       `);
     }
+
+    // --- 14. history: the legacy ticket_events audit trail, imported as
+    // version-0 (lossy, display-only) rows plus one item.imported baseline
+    // per item. Must run last — it reads the item_values and fields just
+    // written above. ---
+    await importHistory(tx, legacy, { fieldIdByLegacyId });
 
     return { schemeId, fieldIdByLegacyId, optionIdByLegacyOptionId, optionIdByLegacyStatusId, userIdByAgentName };
   });

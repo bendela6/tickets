@@ -3,8 +3,8 @@ import { eq, inArray, sql as raw } from 'drizzle-orm';
 import { createDbClient, type Db } from '../client';
 import {
   comments, commentReactions, fields, itemLinks, itemTypeChildTypes, itemTypeFields, itemTypes,
-  itemValues, items, linkTypeTargetTypes, linkTypes, optionSets, optionTransitions, options,
-  projects, schemes, users, views,
+  itemValues, items, linkTypeTargetTypes, linkTypes, optionTransitions, options, projects, users,
+  views,
 } from '../schema';
 import { createLegacyClient } from './legacy-client';
 import { importLegacy, type ImportResult } from './import-legacy';
@@ -39,6 +39,16 @@ describe('importLegacy (requires a freshly migrated tickets_dev)', () => {
       await close();
       return;
     }
+
+    // NOTE: fields/option_sets/options/schemes/users/events are deliberately
+    // NOT deleted here — import-history.test.ts (Task 11) reads all of them
+    // (fields for its orphan check, events for everything, users
+    // transitively via events.actor_id). vitest runs one test *file* to full
+    // completion — including this afterAll — before the next file starts
+    // (fileParallelism: false), so deleting them here would empty them out
+    // from under import-history.test.ts before it ever gets to assert
+    // anything. Its afterAll deletes those five instead, once both files are
+    // done with them.
     await db.delete(itemLinks).where(inArray(itemLinks.id, legacy.ticketLinks.map((l) => l.id)));
     await db.delete(commentReactions).where(inArray(commentReactions.id, legacy.commentReactions.map((r) => r.id)));
     await db.delete(comments).where(inArray(comments.id, legacy.comments.map((c) => c.id)));
@@ -56,18 +66,7 @@ describe('importLegacy (requires a freshly migrated tickets_dev)', () => {
 
     await db.delete(optionTransitions).where(inArray(optionTransitions.fieldId, [...result.fieldIdByLegacyId.values()]));
     await db.delete(itemTypes).where(inArray(itemTypes.id, typeIds));
-    await db.delete(fields).where(eq(fields.schemeId, result.schemeId));
-
-    const setRows = await db.select({ id: optionSets.id }).from(optionSets).where(eq(optionSets.schemeId, result.schemeId));
-    const setIds = setRows.map((s) => s.id);
-    if (setIds.length) await db.delete(options).where(inArray(options.optionSetId, setIds));
-    await db.delete(optionSets).where(eq(optionSets.schemeId, result.schemeId));
-
     await db.delete(projects).where(inArray(projects.id, legacy.projects.map((p) => p.id)));
-    await db.delete(schemes).where(eq(schemes.id, result.schemeId));
-
-    const userIds = [...legacy.users.map((u) => u.id), ...result.userIdByAgentName.values()];
-    await db.delete(users).where(inArray(users.id, userIds));
 
     await close();
   });
@@ -95,6 +94,10 @@ describe('importLegacy (requires a freshly migrated tickets_dev)', () => {
     expect(rows).toHaveLength(7);
     expect(rows.filter((u) => u.name === 'claude')).toHaveLength(1);
     expect(rows.some((u) => u.name === 'claude-sonnet-5' && u.kind === 'agent')).toBe(true);
+    // `migration` is one of the 3 original legacy users (id 3, kind agent) —
+    // importHistory reuses it as the item.imported baseline's actor rather
+    // than creating a new one.
+    expect(rows.some((u) => u.name === 'migration' && u.kind === 'agent')).toBe(true);
   });
 
   it('stores status as an option value with a lifecycle kind', async () => {
