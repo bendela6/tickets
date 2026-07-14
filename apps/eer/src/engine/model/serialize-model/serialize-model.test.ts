@@ -264,6 +264,7 @@ describe('serializeModel', () => {
         label: projects.label,
         group: projects.group,
         description: projects.description,
+        schema: projects.schema,
         fields: projects.columns.map((f) => ({
           name: f.name,
           type: f.type,

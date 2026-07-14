@@ -26,7 +26,8 @@
 import { measureEntity } from '../../geometry/measure-entity';
 import { LAYOUT_MARGIN } from '../../geometry/metrics';
 import { deriveRelationships } from '../derive-relationships';
-import type { Column, Constraint, Entity, Generated, Group, GroupBounds, Identity, Model, TableIndex } from '../types';
+import { formatType, parseType } from '../pg-types';
+import type { Column, Constraint, EnumDecl, Entity, Generated, Group, GroupBounds, Identity, Model, TableIndex } from '../types';
 
 export interface EditField {
   name: string;
@@ -52,6 +53,12 @@ export interface EditEntity {
   label: string;
   group: string;
   description: string | null;
+  // No editor UI sets this yet (see table-modal's toEditField/save) — carried
+  // verbatim off the existing entity by the caller, same reasoning as
+  // identity/generated on EditField: defaulting an absent value to null here
+  // would silently strip a schema-qualified table's schema on its very next
+  // no-op Save.
+  schema: string | null;
   fields: EditField[];
   // Verbatim — see the header comment. The editor cannot yet create or edit a
   // constraint/index; it only ever passes a table's own current ones through.
@@ -64,7 +71,10 @@ export type ModelEdit =
   | { kind: 'upsertGroup'; group: { id: string; label: string; parent: string | null } }
   | { kind: 'deleteGroup'; id: string }
   | { kind: 'upsertEntity'; entity: EditEntity }
-  | { kind: 'deleteEntity'; id: string };
+  | { kind: 'deleteEntity'; id: string }
+  | { kind: 'upsertEnum'; enum: EnumDecl }
+  | { kind: 'renameEnum'; from: string; to: string }
+  | { kind: 'deleteEnum'; name: string };
 
 // A brand-new group's box: parked to the right of everything laid out so far.
 const NEW_GROUP_W = 360;
@@ -85,6 +95,12 @@ export function applyModelEdit(model: Model, edit: ModelEdit): Model {
       return finalize(upsertEntity(model, edit.entity));
     case 'deleteEntity':
       return finalize(deleteEntity(model, edit.id));
+    case 'upsertEnum':
+      return finalize(upsertEnum(model, edit.enum));
+    case 'renameEnum':
+      return finalize(renameEnum(model, edit.from, edit.to));
+    case 'deleteEnum':
+      return finalize(deleteEnum(model, edit.name));
   }
 }
 
@@ -100,6 +116,61 @@ export function fkRefsTo(model: Model, entityId: string): { entityId: string; fi
     for (const c of e.constraints)
       if (c.kind === 'fk' && c.refTable === entityId) refs.push({ entityId: e.id, field: c.columns.join(', ') });
   return refs;
+}
+
+// Every {entityId, column} elsewhere in the model whose TYPE parses to this
+// enum's name as its base (array dimensions and params stripped) — the same
+// dependency deleteEnum refuses to break, and renameEnum re-points wholesale.
+export function enumRefsTo(model: Model, name: string): { entityId: string; column: string }[] {
+  const out: { entityId: string; column: string }[] = [];
+  for (const e of model.entities) {
+    for (const c of e.columns) {
+      if (parseType(c.type).base === name) out.push({ entityId: e.id, column: c.name });
+    }
+  }
+  return out;
+}
+
+function upsertEnum(model: Model, next: EnumDecl): Model {
+  if (!next.name.trim()) throw new Error('Enum name must not be blank.');
+  const isNew = !model.enums.some((e) => e.name === next.name);
+  const enums = isNew ? [...model.enums, next] : model.enums.map((e) => (e.name === next.name ? next : e));
+  return { ...model, enums };
+}
+
+// Rewrites the enum's own declaration AND every column typed to it —
+// otherwise a rename would desync the enum from every column still spelling
+// its OLD name, the same "derived value regenerated from a lossy source"
+// shape every other guard in this file exists to prevent. Array dimensions
+// and any params survive: only the base name changes.
+function renameEnum(model: Model, from: string, to: string): Model {
+  if (!model.enums.some((e) => e.name === from)) throw new Error(`Unknown enum "${from}".`);
+  if (!to.trim()) throw new Error('Enum name must not be blank.');
+  if (from !== to && model.enums.some((e) => e.name === to)) throw new Error(`Enum "${to}" already exists.`);
+
+  const enums = model.enums.map((e) => (e.name === from ? { ...e, name: to } : e));
+  const entities = model.entities.map((e) => ({
+    ...e,
+    columns: e.columns.map((c) => {
+      const p = parseType(c.type);
+      if (p.base !== from) return c;
+      return { ...c, type: formatType(to, p.params, p.arrays) };
+    }),
+  }));
+  return { ...model, enums, entities };
+}
+
+// Same refusal shape as validateInboundReferences above: reject the edit and
+// name every dependent, rather than deleting the enum out from under columns
+// that would be left pointing at a type the file no longer declares.
+function deleteEnum(model: Model, name: string): Model {
+  if (!model.enums.some((e) => e.name === name)) throw new Error(`Unknown enum "${name}".`);
+  const refs = enumRefsTo(model, name);
+  if (refs.length > 0) {
+    const list = refs.map((r) => `${r.entityId}.${r.column}`).join(', ');
+    throw new Error(`Cannot delete enum "${name}": still used by ${list}.`);
+  }
+  return { ...model, enums: model.enums.filter((e) => e.name !== name) };
 }
 
 function upsertGroup(model: Model, g: { id: string; label: string; parent: string | null }): Model {
@@ -291,6 +362,7 @@ function upsertEntity(model: Model, e: EditEntity): Model {
       label: e.label,
       group: e.group,
       description: e.description,
+      schema: e.schema,
       columns,
       constraints: e.constraints,
       indexes: e.indexes,
@@ -304,7 +376,7 @@ function upsertEntity(model: Model, e: EditEntity): Model {
       label: e.label,
       group: e.group,
       description: e.description,
-      schema: null,
+      schema: e.schema,
       columns,
       constraints: e.constraints,
       indexes: e.indexes,

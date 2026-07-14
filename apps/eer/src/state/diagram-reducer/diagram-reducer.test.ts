@@ -185,7 +185,7 @@ it('a failed APPLY_MODEL_EDIT preserves an existing dirty:true instead of resett
 
   const s2 = diagramReducer(dirty, {
     type: 'APPLY_MODEL_EDIT',
-    edit: { kind: 'upsertEntity', entity: { id: 'x', label: 'x', group: 'no-such-group', description: null, fields: [], constraints: [], indexes: [] } },
+    edit: { kind: 'upsertEntity', entity: { id: 'x', label: 'x', group: 'no-such-group', description: null, schema: null, fields: [], constraints: [], indexes: [] } },
   });
   expect(s2.model).toBe(dirty.model); // unchanged reference — reducer must not throw
   expect(s2.ui.dirty).toBe(true); // preserved, not reset to false

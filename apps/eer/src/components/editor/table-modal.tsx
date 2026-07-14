@@ -145,6 +145,11 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
         label: name.trim(),
         group,
         description: description.trim() ? description.trim() : null,
+        // No UI to change a table's schema yet — carry the existing one
+        // through verbatim (null for a brand-new table), same reasoning as
+        // identity/generated above: a default here would silently strip a
+        // schema-qualified table's schema on its very next no-op Save.
+        schema: existing?.schema ?? null,
         fields: fields.map((f) => ({
           name: f.name.trim(),
           type: f.type.trim(),
