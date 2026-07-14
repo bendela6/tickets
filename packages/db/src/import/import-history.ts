@@ -35,12 +35,11 @@ const FIELD_ID_KINDS = new Set(['status-changed', 'value-changed']);
 // *ticket_type* id for "epic"), and no field named "epic" exists in the
 // current 46-row legacy fields snapshot either — epic membership is tracked
 // structurally via items.parent_id today, not a scalar field, so the
-// concept this row recorded has no surviving successor field at all. Best-
-// effort categorisation target for this one otherwise-unmappable row; see
-// task-11-report.md for the full reasoning.
-const LEGACY_FIELD_KEY_ALIASES: Record<string, string> = {
-  epic: 'labels',
-};
+// concept this row recorded has no surviving successor field at all. There
+// is no honest new-field id to write here, so `fieldId` is OMITTED from the
+// imported payload rather than guessed at (see the "never fabricate" note
+// below) — `fieldKey: "epic"` still passes through untouched, an accurate,
+// legible record of what the legacy system called it.
 
 function remapPayload(
   ev: LegacyEvent,
@@ -53,28 +52,38 @@ function remapPayload(
     throw new Error(`ticket_event ${ev.id} (${ev.kind}) has a non-numeric fieldId in its payload`);
   }
 
-  // The direct legacy-id path only covers ids present in the *current*
-  // legacy fields table (Task 10's fieldIdByLegacyId, sourced from
-  // map-structure's fieldKeyByLegacyId). Some status-changed/value-changed
-  // rows predate that table's current generation — the legacy fields table
-  // was itself recreated at some point in the old system's life, so the id
-  // baked into an old event payload can point at a row that no longer
-  // exists anywhere, not even under a different key. Fall back to the
-  // payload's own fieldKey, which the legacy writer always stamped
-  // alongside fieldId and which — unlike the numeric id — is stable across
-  // the rebuild (map-structure.ts preserves keys 1:1); and if even that key
-  // is itself retired, fall back once more to the documented alias above.
+  // Resolution order, explicit:
+  //
+  // 1. The direct legacy-id map (Task 10's fieldIdByLegacyId, sourced from
+  //    map-structure's fieldKeyByLegacyId) — covers ids present in the
+  //    *current* legacy fields table.
+  // 2. Fall back to the payload's own fieldKey, which the legacy writer
+  //    always stamped alongside fieldId and which — unlike the numeric id —
+  //    is stable across the rebuild (map-structure.ts preserves keys 1:1).
+  //    This is not a rare edge case: in the real data ALL 45 status-changed
+  //    events, plus 1 of 2 description value-changed events, carry a legacy
+  //    fieldId that predates the current legacy fields table generation (the
+  //    table was recreated at some point in the old system's life) and only
+  //    resolve via this fallback.
+  // 3. Never fabricate: if neither the id nor the key resolves to a real
+  //    field (e.g. ticket_event 1293's "epic", which has no surviving
+  //    successor field at all — see above), OMIT fieldId from the imported
+  //    payload rather than guess. These rows import at version 0
+  //    (lossy/display-only, never folded into state), so a payload that
+  //    honestly says "fieldKey: epic, no fieldId" is safe; a payload that
+  //    silently points fieldId at some unrelated field is not, and nothing
+  //    downstream would ever catch the error.
   let fieldId = fieldIdByLegacyId.get(legacyFieldId);
   if (fieldId === undefined) {
     const fieldKey = ev.payload.fieldKey;
     if (typeof fieldKey === 'string') {
-      fieldId = fieldIdByKey.get(fieldKey) ?? fieldIdByKey.get(LEGACY_FIELD_KEY_ALIASES[fieldKey] ?? '');
+      fieldId = fieldIdByKey.get(fieldKey);
     }
   }
+
   if (fieldId === undefined) {
-    throw new Error(
-      `ticket_event ${ev.id} (${ev.kind}) references unknown field (legacy field id ${legacyFieldId}, fieldKey ${JSON.stringify(ev.payload.fieldKey)})`,
-    );
+    const { fieldId: _omit, ...rest } = ev.payload;
+    return rest;
   }
 
   // fieldKey passes through untouched — it was never legacy-id-scoped.
