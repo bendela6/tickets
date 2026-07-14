@@ -147,8 +147,9 @@ export const softwareScheme: SchemeDef = {
     { fieldKey: 'status', fromValue: null, toValue: 'todo',        typeKey: 'spike' },
     { fieldKey: 'status', fromValue: null, toValue: 'todo',        typeKey: 'subtask' },
     // Everything else is unrestricted for now: an empty edge set for a
-    // (field, type) pair means "any transition allowed", matching today's
-    // status_transitions semantics.
+    // (field, type) pair means "any transition allowed" — the option_transitions
+    // table (this scheme's equivalent of the old, now-removed status_transitions
+    // table) has no rows constraining it.
   ],
   linkTypes: [
     { key: 'blocks',     label: 'Blocks',     inverseLabel: 'Blocked by',   directional: true,  ownerTypeKey: 'task', targetTypeKeys: ['task', 'bug', 'epic', 'spike', 'subtask'] },
