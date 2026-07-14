@@ -314,7 +314,7 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
           aria-labelledby={tabButtonId(TAB_ID_BASE, 'columns')}
           className={label}
         >
-          <ColumnsGrid columns={fields} onChange={setFields} />
+          <ColumnsGrid columns={fields} onChange={setFields} enums={model.enums} />
         </div>
       )}
 

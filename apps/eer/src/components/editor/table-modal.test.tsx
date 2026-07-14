@@ -84,10 +84,13 @@ describe('TableModal', () => {
     const i = rows.length; // the new row is the last one, 1-indexed labels
     fireEvent.change(screen.getByLabelText(`Column ${i} name`), { target: { value: 'note' } });
 
-    const typeSelects = screen.getAllByLabelText('type');
-    fireEvent.change(typeSelects[i - 1]!, { target: { value: 'varchar' } });
-    const params = screen.getAllByLabelText('type parameter 1');
-    fireEvent.change(params[params.length - 1]!, { target: { value: '64' } });
+    // Type is picked, never typed: open the new row's trigger, pick "varchar"
+    // from the panel (its own param carries the descriptor's own name, "n",
+    // not a positional "type parameter 1" — see type-picker.tsx).
+    const typeTriggers = screen.getAllByLabelText('type');
+    fireEvent.click(typeTriggers[i - 1]!);
+    fireEvent.click(screen.getByRole('option', { name: /^varchar\b/ }));
+    fireEvent.change(screen.getByLabelText('n'), { target: { value: '64' } });
 
     fireEvent.click(screen.getByLabelText(`Column ${i} nullable`)); // ticked by default → untick
     fireEvent.change(screen.getByLabelText(`Column ${i} default`), { target: { value: "'draft'" } });

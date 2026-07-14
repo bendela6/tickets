@@ -15,12 +15,16 @@
 // plain column shape (name/type/nullable/default/note).
 //
 // The type cell is no longer free text — TypeCell is a real Postgres type
-// picker (grouped <select> + param inputs + a custom… escape hatch); columns
-// are still STORED as plain strings ("varchar(255)"), TypeCell is just the
-// codec around that string. `nullable`/`default` are new editable columns
-// (previously carried through untouched — see EditField's own field comment).
+// picker (grouped, filterable, model enums in their own section, no free-text
+// path at all); columns are still STORED as plain strings ("varchar(255)"),
+// TypeCell is just the codec around that string. `nullable`/`default` are new
+// editable columns (previously carried through untouched — see EditField's
+// own field comment). `enums` is threaded down from the model (table-modal's
+// own context) rather than TypeCell reaching into global state itself, so
+// this grid stays a pure controlled component driven only by props.
 
 import type { EditField } from '../../engine/model/apply-model-edit';
+import type { EnumDecl } from '../../engine/model/types';
 import { cn } from '../../ui/cn';
 import { TypeCell } from './type-cell';
 
@@ -43,9 +47,10 @@ const COL = {
 interface ColumnsGridProps {
   columns: EditField[];
   onChange: (columns: EditField[]) => void;
+  enums?: EnumDecl[];
 }
 
-export function ColumnsGrid({ columns, onChange }: ColumnsGridProps) {
+export function ColumnsGrid({ columns, onChange, enums = [] }: ColumnsGridProps) {
   const patch = (index: number, next: Partial<EditField>) => {
     onChange(columns.map((c, i) => (i === index ? { ...c, ...next } : c)));
   };
@@ -90,7 +95,7 @@ export function ColumnsGrid({ columns, onChange }: ColumnsGridProps) {
                 onChange={(e) => patch(i, { name: e.target.value })}
               />
               <div className={cn('flex items-center', COL.type)}>
-                <TypeCell value={c.type} onChange={(type) => patch(i, { type })} />
+                <TypeCell value={c.type} onChange={(type) => patch(i, { type })} enums={enums} />
               </div>
               <input
                 type="checkbox"
