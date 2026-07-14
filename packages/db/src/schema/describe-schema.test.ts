@@ -7,7 +7,7 @@ describe('describeSchema', () => {
   const graph = describeSchema();
   const byName = new Map(graph.tables.map((t) => [t.name, t]));
 
-  it('includes the post-0007 tables', () => {
+  it('includes comment_reactions, item_type_child_types, and comments', () => {
     expect(byName.has('comment_reactions')).toBe(true);
     expect(byName.has('item_type_child_types')).toBe(true);
     expect(byName.has('comments')).toBe(true);

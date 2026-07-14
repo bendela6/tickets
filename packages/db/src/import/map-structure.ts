@@ -173,12 +173,6 @@ export function mapStructure(legacy: Legacy): StructurePlan {
     }
   }
 
-  // `labels` is a multi_select with zero legacy options — still needs an
-  // (empty) option set since fields.type='option' requires option_set_id.
-  if (!optionSets.some((s) => s.key === 'labels') && fieldsByKey.has('labels')) {
-    optionSets.push({ key: 'labels', name: humanizeLabel('labels'), options: [] });
-  }
-
   // --- Rule 5: the shared status set — union of all 34 statuses keyed by
   // `key`, ordered by first appearance, each carrying its lifecycle kind. ---
   const statusOptions: StructurePlan['optionSets'][number]['options'] = [];
@@ -290,11 +284,19 @@ export function mapStructure(legacy: Legacy): StructurePlan {
         throw new Error(`Status transition ${t.id} references unknown from_status_id ${t.fromStatusId}`);
       }
     }
+    let typeKey: string | null = null;
+    if (t.ticketTypeId !== null) {
+      typeKey = typeKeyById.get(t.ticketTypeId) ?? null;
+      if (typeKey === null) {
+        throw new Error(`Status transition ${t.id} references unknown ticket_type_id ${t.ticketTypeId}`);
+      }
+    }
+
     return {
       fieldKey: 'status',
       fromValue,
       toValue,
-      typeKey: t.ticketTypeId === null ? null : (typeKeyById.get(t.ticketTypeId) ?? null),
+      typeKey,
     };
   });
 
