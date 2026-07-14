@@ -4,13 +4,18 @@
 import { columnRoles, type ColumnRole } from '../column-roles';
 import { deriveRelationships } from '../derive-relationships';
 import { CARDINALITIES, inferCardinality } from '../infer-cardinality';
+import { formatType, parseType } from '../pg-types';
 import type {
   Column,
   Constraint,
   EdgeKind,
+  EnumDecl,
   Entity,
   FkAction,
+  Generated,
   Group,
+  Identity,
+  IndexColumn,
   LineStyle,
   LoadResult,
   Model,
@@ -31,6 +36,46 @@ function fkAction(v: unknown): FkAction | null {
   return typeof v === 'string' && FK_ACTIONS.includes(v as FkAction) ? (v as FkAction) : null;
 }
 
+// Legacy files describe an index column as a bare column name (string[]).
+// The canonical shape is IndexColumn[] — a column name (or raw SQL, when
+// isExpression) plus ordering/opClass. Normalised forever, same as the
+// `fields` -> `columns` migration.
+function normalizeIndexColumn(c: unknown): IndexColumn {
+  if (typeof c === 'string') {
+    return { expression: c, isExpression: false, order: null, nulls: null, opClass: null };
+  }
+  const o = c as Record<string, unknown>;
+  return {
+    expression: typeof o.expression === 'string' ? o.expression : '',
+    isExpression: o.isExpression === true,
+    order: o.order === 'asc' || o.order === 'desc' ? o.order : null,
+    nulls: o.nulls === 'first' || o.nulls === 'last' ? o.nulls : null,
+    opClass: typeof o.opClass === 'string' ? o.opClass : null,
+  };
+}
+
+function normalizeIdentity(v: unknown): Identity | null {
+  if (!v || typeof v !== 'object') return null;
+  const o = v as Record<string, unknown>;
+  const str = (k: string) => (typeof o[k] === 'string' ? (o[k] as string) : null);
+  return {
+    always: o.always === true,
+    name: str('name'),
+    increment: str('increment'),
+    minValue: str('minValue'),
+    maxValue: str('maxValue'),
+    startWith: str('startWith'),
+    cache: str('cache'),
+    cycle: typeof o.cycle === 'boolean' ? o.cycle : null,
+  };
+}
+
+function normalizeGenerated(v: unknown): Generated | null {
+  if (!v || typeof v !== 'object') return null;
+  const o = v as Record<string, unknown>;
+  return typeof o.expression === 'string' ? { expression: o.expression, stored: true } : null;
+}
+
 function normalizeConstraint(c: any, i: number, entityId: string, errors: string[]): Constraint {
   const id = typeof c.id === 'string' && c.id ? c.id : 'c' + (i + 1);
   const name = typeof c.name === 'string' && c.name ? c.name : null;
@@ -43,11 +88,12 @@ function normalizeConstraint(c: any, i: number, entityId: string, errors: string
       : [];
     return {
       id, kind: 'fk', name, columns,
+      refSchema: typeof c.refSchema === 'string' ? c.refSchema : null,
       refTable: typeof c.refTable === 'string' ? c.refTable : '',
       refColumns, onDelete: fkAction(c.onDelete), onUpdate: fkAction(c.onUpdate),
     };
   }
-  if (c.kind === 'unique') return { id, kind: 'unique', name, columns };
+  if (c.kind === 'unique') return { id, kind: 'unique', name, columns, nullsNotDistinct: c.nullsNotDistinct === true };
   return { id, kind: 'pk', name, columns };
 }
 
@@ -65,7 +111,7 @@ function synthesizeLegacyConstraints(rawColumns: any[]): Constraint[] {
     if (!f.ref) continue;
     out.push({
       id: 'c' + n++, kind: 'fk', name: null, columns: [f.name],
-      refTable: f.ref, refColumns: [f.refField ?? 'id'], onDelete: null, onUpdate: null,
+      refSchema: null, refTable: f.ref, refColumns: [f.refField ?? 'id'], onDelete: null, onUpdate: null,
     });
   }
   return out;
@@ -112,6 +158,16 @@ export function loadModel(raw: unknown): LoadResult {
   }
   normGroups.sort((a, b) => a.order - b.order);
 
+  // ---- enums (the JSON twin of pgEnum) ----
+  // Parsed before the entities loop so a column typed to a declared enum's
+  // name doesn't trip the unknown-type warning below.
+  const enums: EnumDecl[] = (Array.isArray(r.enums) ? r.enums : []).map((e: any) => ({
+    name: typeof e.name === 'string' ? e.name : '',
+    values: Array.isArray(e.values) ? e.values.filter((v: unknown) => typeof v === 'string') : [],
+    schema: typeof e.schema === 'string' ? e.schema : null,
+  }));
+  const enumNames = new Set(enums.map((e) => e.name));
+
   // ---- entities ----
   const entityById = new Map<string, Entity>();
   // Legacy per-field `role`/`ref`/`refField` are read straight off the raw
@@ -139,13 +195,22 @@ export function loadModel(raw: unknown): LoadResult {
       else if (seen.has(f.name)) errors.push(`Entity "${e.id}" has duplicate field "${f.name}".`);
       else seen.add(f.name);
       if (f.ref) legacyRefs.push({ entityId: e.id, fieldName: f.name, ref: f.ref, refField: f.refField || null });
+
+      const parsed = parseType(f.type || '');
+      const type = f.type ? formatType(parsed.base, parsed.params, parsed.arrays) : '';
+      if (type && !parsed.known && !enumNames.has(parsed.base)) {
+        warnings.push(`Column "${e.id}.${f.name}" has unknown type "${parsed.base}".`);
+      }
+
       return {
         name: f.name,
-        type: f.type || '',
+        type,
         title: f.title || null,
         description: f.description || null,
         nullable: f.nullable !== false,
         default: typeof f.default === 'string' ? f.default : null,
+        identity: normalizeIdentity(f.identity),
+        generated: normalizeGenerated(f.generated),
       };
     });
     if (columns.length === 0) errors.push(`Entity "${e.id}" has no columns.`);
@@ -157,8 +222,11 @@ export function loadModel(raw: unknown): LoadResult {
     const indexes: TableIndex[] = (Array.isArray(e.indexes) ? e.indexes : []).map((ix: any, ii: number) => ({
       id: typeof ix.id === 'string' && ix.id ? ix.id : 'i' + (ii + 1),
       name: typeof ix.name === 'string' ? ix.name : '',
-      columns: Array.isArray(ix.columns) ? ix.columns.filter((c: unknown) => typeof c === 'string') : [],
+      columns: Array.isArray(ix.columns) ? ix.columns.map(normalizeIndexColumn) : [],
       unique: ix.unique === true,
+      method: typeof ix.method === 'string' ? ix.method : null,
+      only: ix.only === true,
+      where: typeof ix.where === 'string' ? ix.where : null,
     }));
 
     const ne: Entity = {
@@ -166,6 +234,7 @@ export function loadModel(raw: unknown): LoadResult {
       label: e.label || e.id,
       group: e.group,
       description: e.description || null,
+      schema: typeof e.schema === 'string' ? e.schema : null,
       columns,
       constraints,
       indexes,
@@ -330,6 +399,7 @@ export function loadModel(raw: unknown): LoadResult {
     groups: normGroups,
     entities: normEntities,
     entityById,
+    enums,
     relationships: finalRelationships,
     relById,
     _groupBounds: [],

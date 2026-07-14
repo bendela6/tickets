@@ -58,7 +58,8 @@ describe('TableModal', () => {
     const [edit] = spy.mock.calls[0]!;
     expect(edit).toMatchObject({ kind: 'upsertEntity', entity: { id: 'tags' } });
     expect((edit as { entity: { fields: unknown[] } }).entity.fields).toEqual([
-      { name: 'id', type: 'int', title: null, description: null, nullable: true, default: null },
+      // "int" normalises to drizzle-canonical "integer" on load (see pg-types).
+      { name: 'id', type: 'integer', title: null, description: null, nullable: true, default: null },
       { name: 'label', type: 'text', title: null, description: null, nullable: true, default: null },
     ]);
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -330,7 +331,10 @@ describe('TableModal', () => {
     expect(spy).toHaveBeenCalledTimes(1);
     const [edit] = spy.mock.calls[0]!;
     expect((edit as { entity: { indexes: unknown[] } }).entity.indexes).toEqual([
-      { id: 'i1', name: 'idx_tags_id', columns: ['id'], unique: true },
+      {
+        id: 'i1', name: 'idx_tags_id', unique: true, method: null, only: false, where: null,
+        columns: [{ expression: 'id', isExpression: false, order: null, nulls: null, opClass: null }],
+      },
     ]);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -387,11 +391,19 @@ describe('TableModal', () => {
     // Sanity: this really is the rich, every-kind-at-once shape the test needs.
     expect(before.constraints).toEqual([
       { id: 'c1', kind: 'pk', name: null, columns: ['a', 'b'] },
-      { id: 'c2', kind: 'unique', name: 'uq_b_a', columns: ['b', 'a'] },
+      { id: 'c2', kind: 'unique', name: 'uq_b_a', columns: ['b', 'a'], nullsNotDistinct: false },
       { id: 'c3', kind: 'check', name: 'ck_a_positive', expression: 'a > 0' },
-      { id: 'c4', kind: 'fk', name: null, columns: ['parent_id'], refTable: 'parent', refColumns: ['id'], onDelete: 'cascade', onUpdate: null },
+      {
+        id: 'c4', kind: 'fk', name: null, columns: ['parent_id'], refSchema: null,
+        refTable: 'parent', refColumns: ['id'], onDelete: 'cascade', onUpdate: null,
+      },
     ]);
-    expect(before.indexes).toEqual([{ id: 'i1', name: 'idx_child_b', columns: ['b'], unique: false }]);
+    expect(before.indexes).toEqual([
+      {
+        id: 'i1', name: 'idx_child_b', unique: false, method: null, only: false, where: null,
+        columns: [{ expression: 'b', isExpression: false, order: null, nulls: null, opClass: null }],
+      },
+    ]);
 
     const onClose = vi.fn();
     const { actions } = await renderDiagram(<TableModal id="child" onClose={onClose} />, raw);

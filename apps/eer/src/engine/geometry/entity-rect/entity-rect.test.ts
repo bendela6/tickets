@@ -8,6 +8,7 @@ const e: Entity = {
   label: 'e',
   group: 'g',
   description: null,
+  schema: null,
   columns: [],
   constraints: [],
   indexes: [],

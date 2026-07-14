@@ -6,28 +6,57 @@ export type LineStyle = 'solid' | 'dashed';
 export type FkAction = 'cascade' | 'restrict' | 'set null' | 'set default' | 'no action';
 export type Constraint =
   | { id: string; kind: 'pk'; name: string | null; columns: string[] }
-  | { id: string; kind: 'unique'; name: string | null; columns: string[] }
+  | { id: string; kind: 'unique'; name: string | null; columns: string[]; nullsNotDistinct: boolean }
   | { id: string; kind: 'check'; name: string | null; expression: string }
   | {
       id: string;
       kind: 'fk';
       name: string | null;
       columns: string[];
+      refSchema: string | null;
       refTable: string;
       refColumns: string[];
       onDelete: FkAction | null;
       onUpdate: FkAction | null;
     };
+
+export interface IndexColumn {
+  expression: string; // a column name, or raw SQL when isExpression
+  isExpression: boolean;
+  order: 'asc' | 'desc' | null;
+  nulls: 'first' | 'last' | null;
+  opClass: string | null;
+}
+
 export interface TableIndex {
   id: string;
   name: string;
-  columns: string[];
+  columns: IndexColumn[];
   unique: boolean;
+  method: string | null; // 'btree' | 'gin' | 'gist' | 'hash' | 'brin'
+  only: boolean; // ONLY, as exposed by getTableConfig
+  where: string | null; // partial-index predicate, rendered SQL text
 }
 
 export interface Point {
   x: number;
   y: number;
+}
+
+export interface Identity {
+  always: boolean;
+  name: string | null;
+  increment: string | null;
+  minValue: string | null;
+  maxValue: string | null;
+  startWith: string | null;
+  cache: string | null;
+  cycle: boolean | null;
+}
+
+export interface Generated {
+  expression: string;
+  stored: true; // Postgres only has STORED
 }
 
 export interface Column {
@@ -37,6 +66,14 @@ export interface Column {
   description: string | null;
   nullable: boolean;
   default: string | null;
+  identity: Identity | null;
+  generated: Generated | null;
+}
+
+export interface EnumDecl {
+  name: string;
+  values: string[];
+  schema: string | null;
 }
 
 export interface Entity {
@@ -44,6 +81,7 @@ export interface Entity {
   label: string;
   group: string;
   description: string | null;
+  schema: string | null; // null = public
   columns: Column[];
   constraints: Constraint[];
   indexes: TableIndex[];
@@ -107,6 +145,7 @@ export interface Model {
   groups: Group[];
   entities: Entity[];
   entityById: Map<string, Entity>;
+  enums: EnumDecl[];
   relationships: Relationship[];
   relById: Map<string, Relationship>;
   _groupBounds: GroupBounds[];

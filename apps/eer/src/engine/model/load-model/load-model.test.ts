@@ -224,7 +224,7 @@ describe('loadModel — "columns" is canonical, "fields" is a permanent legacy a
     expect(model!.entityById.get('orders')!.constraints).toEqual([
       { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
       {
-        id: 'c2', kind: 'fk', name: null, columns: ['user_id'],
+        id: 'c2', kind: 'fk', name: null, columns: ['user_id'], refSchema: null,
         refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null,
       },
     ]);
@@ -241,10 +241,19 @@ describe('loadModel — "columns" is canonical, "fields" is a permanent legacy a
 // single value here — pinning the exact multiset makes any future regression
 // visible instead of silently averaging out.
 describe('loadModel — real seed regression (pinned cardinality multiset)', () => {
-  it('(d) loads with 0 errors/warnings, 41 relationships, 18 labels, 3 m2m, and this exact cardinality multiset', () => {
+  // The seed still spells two columns' type as the placeholder "enum" (task 9
+  // rewrites the seed onto real drizzle types) — Task 2's unknown-type warning
+  // is new, correct diagnostic output for those two, not a regression; every
+  // other warning-affecting behaviour stays at 0.
+  const SEED_TYPE_WARNINGS = [
+    'Column "users.kind" has unknown type "enum".',
+    'Column "fields.type" has unknown type "enum".',
+  ];
+
+  it('(d) loads with 0 errors, 2 known unknown-type warnings, 41 relationships, 18 labels, 3 m2m, and this exact cardinality multiset', () => {
     const { model, errors, warnings } = loadModel(seedRaw);
     expect(errors).toEqual([]);
-    expect(warnings).toEqual([]);
+    expect(warnings).toEqual(SEED_TYPE_WARNINGS);
     expect(model!.relationships).toHaveLength(41);
     expect(model!.relationships.filter((r) => r.label)).toHaveLength(18);
     expect(model!.relationships.filter((r) => r.kind === 'm2m')).toHaveLength(3);
@@ -263,15 +272,15 @@ describe('loadModel — real seed regression (pinned cardinality multiset)', () 
   // even though most VALUES happen to come out unchanged anyway (masked by
   // derive-relationships' own cardinalityOf override for constraint-backed
   // pairs). 0 warnings is the bar; equal-by-id cardinality is the belt.
-  it('(e) serialize -> reload (constraints-only shape) yields the SAME cardinality per relationship, with 0 warnings', () => {
+  it('(e) serialize -> reload (constraints-only shape) yields the SAME cardinality per relationship, with the same 2 unknown-type warnings', () => {
     const { model: m1, errors: e1, warnings: w1 } = loadModel(seedRaw);
     expect(e1).toEqual([]);
-    expect(w1).toEqual([]);
+    expect(w1).toEqual(SEED_TYPE_WARNINGS);
 
     const raw2 = serializeModel(m1!, m1!.colors);
     const { model: m2, errors: e2, warnings: w2 } = loadModel(raw2);
     expect(e2).toEqual([]);
-    expect(w2).toEqual([]);
+    expect(w2).toEqual(SEED_TYPE_WARNINGS);
 
     const byId = (rels: { id: string; cardinality: string }[]) => new Map(rels.map((r) => [r.id, r.cardinality]));
     expect(byId(m2!.relationships)).toEqual(byId(m1!.relationships));
@@ -627,7 +636,7 @@ describe('loadModel — constraints and indexes', () => {
     expect(orders.constraints).toEqual([
       { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
       {
-        id: 'c2', kind: 'fk', name: null, columns: ['user_id'],
+        id: 'c2', kind: 'fk', name: null, columns: ['user_id'], refSchema: null,
         refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null,
       },
     ]);
@@ -651,7 +660,7 @@ describe('loadModel — constraints and indexes', () => {
     expect(outbox.constraints).toEqual([
       { id: 'c1', kind: 'pk', name: null, columns: ['event_id'] },
       {
-        id: 'c2', kind: 'fk', name: null, columns: ['event_id'],
+        id: 'c2', kind: 'fk', name: null, columns: ['event_id'], refSchema: null,
         refTable: 'events', refColumns: ['id'], onDelete: null, onUpdate: null,
       },
     ]);
@@ -683,14 +692,115 @@ describe('loadModel — constraints and indexes', () => {
     expect(errors).toEqual([]);
     const items = model!.entityById.get('items')!;
     expect(items.constraints).toHaveLength(4);
-    expect(items.constraints[1]).toEqual({ id: 'c2', kind: 'unique', name: 'items_a_key', columns: ['a_id', 'key'] });
+    expect(items.constraints[1]).toEqual({ id: 'c2', kind: 'unique', name: 'items_a_key', columns: ['a_id', 'key'], nullsNotDistinct: false });
     expect(items.constraints[2]).toEqual({
-      id: 'c3', kind: 'fk', name: null, columns: ['a_id'],
+      id: 'c3', kind: 'fk', name: null, columns: ['a_id'], refSchema: null,
       refTable: 'a', refColumns: ['id'], onDelete: 'cascade', onUpdate: null,
     });
     expect(items.constraints[3]).toEqual({ id: 'c4', kind: 'check', name: null, expression: 'char_length(key) > 0' });
-    expect(items.indexes).toEqual([{ id: 'i1', name: 'idx_items_a', columns: ['a_id'], unique: false }]);
+    expect(items.indexes).toEqual([
+      {
+        id: 'i1', name: 'idx_items_a', unique: false, method: null, only: false, where: null,
+        columns: [{ expression: 'a_id', isExpression: false, order: null, nulls: null, opClass: null }],
+      },
+    ]);
     expect(items.columns[0]!.nullable).toBe(false);
     expect(items.columns[2]!.default).toBe("'draft'");
+  });
+});
+
+describe('drizzle-shaped model', () => {
+  const base = {
+    groups: [{ id: 'g', label: 'G' }],
+    entities: [
+      {
+        id: 't', label: 't', group: 'g',
+        columns: [{ name: 'id', type: 'int' }, { name: 'body', type: 'text' }],
+        constraints: [{ id: 'c1', kind: 'pk', columns: ['id'] }],
+      },
+    ],
+  };
+
+  it('normalises legacy index columns from string[] to IndexColumn[]', () => {
+    const { model } = loadModel({
+      ...base,
+      entities: [{ ...base.entities[0], indexes: [{ id: 'i1', name: 'idx', columns: ['body'], unique: false }] }],
+    });
+    expect(model!.entities[0]!.indexes[0]!.columns).toEqual([
+      { expression: 'body', isExpression: false, order: null, nulls: null, opClass: null },
+    ]);
+  });
+
+  it('keeps a full index column with ordering, opClass, method, only and where', () => {
+    const { model } = loadModel({
+      ...base,
+      entities: [
+        {
+          ...base.entities[0],
+          indexes: [
+            {
+              id: 'i1', name: 'idx', unique: true, method: 'btree', only: false,
+              where: "body <> ''",
+              columns: [{ expression: 'body', isExpression: false, order: 'desc', nulls: 'last', opClass: 'text_ops' }],
+            },
+          ],
+        },
+      ],
+    });
+    const ix = model!.entities[0]!.indexes[0]!;
+    expect(ix.method).toBe('btree');
+    expect(ix.where).toBe("body <> ''");
+    expect(ix.only).toBe(false);
+    expect(ix.columns[0]).toEqual({ expression: 'body', isExpression: false, order: 'desc', nulls: 'last', opClass: 'text_ops' });
+  });
+
+  it('normalises legacy type aliases onto drizzle-canonical names', () => {
+    const { model } = loadModel(base);
+    expect(model!.entities[0]!.columns[0]!.type).toBe('integer'); // was "int"
+  });
+
+  it('warns on an unknown type but keeps the text verbatim', () => {
+    const { model, warnings } = loadModel({
+      ...base,
+      entities: [{ ...base.entities[0], columns: [{ name: 'id', type: 'legacy_money' }] }],
+    });
+    expect(model!.entities[0]!.columns[0]!.type).toBe('legacy_money');
+    expect(warnings.join(' ')).toContain('legacy_money');
+  });
+
+  it('does not warn on a type declared as a model enum', () => {
+    const { warnings } = loadModel({
+      ...base,
+      enums: [{ name: 'user_kind', values: ['human', 'agent'] }],
+      entities: [{ ...base.entities[0], columns: [{ name: 'id', type: 'user_kind' }] }],
+    });
+    expect(warnings.join(' ')).not.toContain('user_kind');
+  });
+
+  it('loads enums, nullsNotDistinct, refSchema, identity, generated and entity schema', () => {
+    const { model } = loadModel({
+      ...base,
+      enums: [{ name: 'k', values: ['a', 'b'], schema: null }],
+      entities: [
+        {
+          id: 't', label: 't', group: 'g', schema: 'billing',
+          columns: [
+            { name: 'id', type: 'integer', identity: { always: true } },
+            { name: 'total', type: 'integer', generated: { expression: 'qty * price', stored: true } },
+          ],
+          constraints: [
+            { id: 'c1', kind: 'unique', columns: ['id'], nullsNotDistinct: true },
+            { id: 'c2', kind: 'fk', columns: ['id'], refSchema: 'public', refTable: 't', refColumns: ['id'] },
+          ],
+        },
+      ],
+    });
+    const e = model!.entities[0]!;
+    expect(model!.enums).toEqual([{ name: 'k', values: ['a', 'b'], schema: null }]);
+    expect(e.schema).toBe('billing');
+    expect(e.columns[0]!.identity!.always).toBe(true);
+    expect(e.columns[1]!.generated).toEqual({ expression: 'qty * price', stored: true });
+    expect(e.constraints[0]).toMatchObject({ kind: 'unique', nullsNotDistinct: true });
+    expect(e.constraints[1]).toMatchObject({ kind: 'fk', refSchema: 'public' });
   });
 });

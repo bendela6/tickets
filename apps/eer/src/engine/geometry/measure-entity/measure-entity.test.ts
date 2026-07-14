@@ -14,6 +14,8 @@ const field = (name: string, type = 'int'): Column => ({
   description: null,
   nullable: true,
   default: null,
+  identity: null,
+  generated: null,
 });
 
 const entity = (columns: Column[], label = 'e'): Entity => ({
@@ -21,6 +23,7 @@ const entity = (columns: Column[], label = 'e'): Entity => ({
   label,
   group: 'g',
   description: null,
+  schema: null,
   columns,
   constraints: [],
   indexes: [],

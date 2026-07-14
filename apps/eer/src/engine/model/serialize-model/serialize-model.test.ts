@@ -272,7 +272,7 @@ describe('serializeModel', () => {
           nullable: f.nullable,
           default: f.default,
         })),
-        constraints: [...projects.constraints, { id: 'u1', kind: 'unique', name: null, columns: ['scheme_id'] }],
+        constraints: [...projects.constraints, { id: 'u1', kind: 'unique', name: null, columns: ['scheme_id'], nullsNotDistinct: false }],
         indexes: projects.indexes,
       },
     });
@@ -341,5 +341,38 @@ describe('serializeModel', () => {
     const { model: m2, errors: e2 } = loadModel(out);
     expect(e2).toEqual([]);
     expect(m2!.relById.get('poly')).toMatchObject({ kind: 'fk', label: null });
+  });
+
+  it('round-trips every new field through save → load', () => {
+    const raw = {
+      meta: { title: 'x' },
+      enums: [{ name: 'k', values: ['a', 'b'], schema: null }],
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        {
+          id: 't', label: 't', group: 'g', schema: null,
+          columns: [
+            { name: 'id', type: 'serial' },
+            { name: 'k', type: 'k' },
+            { name: 'tags', type: 'text[]' },
+          ],
+          constraints: [
+            { id: 'c1', kind: 'pk', columns: ['id'] },
+            { id: 'c2', kind: 'unique', columns: ['k'], nullsNotDistinct: true },
+          ],
+          indexes: [
+            {
+              id: 'i1', name: 'idx', unique: false, method: 'gin', only: false, where: 'k IS NOT NULL',
+              columns: [{ expression: 'lower(k)', isExpression: true, order: 'asc', nulls: 'first', opClass: null }],
+            },
+          ],
+        },
+      ],
+    };
+    const first = loadModel(raw).model!;
+    const second = loadModel(JSON.parse(JSON.stringify(serializeModel(first, new Map())))).model!;
+    expect(second.entities[0]!.indexes).toEqual(first.entities[0]!.indexes);
+    expect(second.entities[0]!.constraints).toEqual(first.entities[0]!.constraints);
+    expect(second.enums).toEqual(first.enums);
   });
 });

@@ -5,7 +5,7 @@ import { CARD_MAX_W, CARD_MIN_W, HEADER_H, ROW_H } from '../../geometry/metrics'
 import { columnRoles } from '../column-roles';
 import { loadModel } from '../load-model';
 import { applyModelEdit, fkRefsTo, type EditEntity, type EditField, type ModelEdit } from './apply-model-edit';
-import type { Column, Constraint } from '../types';
+import type { Column, Constraint, IndexColumn } from '../types';
 import seedRaw from '../../../../models/items-platform.json';
 
 const editField = (name: string, type = 'text'): EditField => ({
@@ -16,6 +16,10 @@ const editField = (name: string, type = 'text'): EditField => ({
   nullable: true,
   default: null,
 });
+
+// Plain (non-expression) index columns — this test file only ever needs the
+// simple "just a column name" case.
+const idxCol = (expression: string): IndexColumn => ({ expression, isExpression: false, order: null, nulls: null, opClass: null });
 
 describe('applyModelEdit', () => {
   describe('setMeta', () => {
@@ -110,7 +114,7 @@ describe('applyModelEdit', () => {
           fields: [editField('id', 'int'), editField('orders_id', 'int')],
           constraints: [
             { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
-            { id: 'c2', kind: 'fk', name: null, columns: ['orders_id'], refTable: 'orders', refColumns: ['id'], onDelete: null, onUpdate: null },
+            { id: 'c2', kind: 'fk', name: null, columns: ['orders_id'], refSchema: null, refTable: 'orders', refColumns: ['id'], onDelete: null, onUpdate: null },
           ],
           indexes: [],
         },
@@ -319,7 +323,7 @@ describe('applyModelEdit', () => {
           fields: [editField('id', 'int'), editField('owner_id', 'int')],
           constraints: [
             { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
-            { id: 'c2', kind: 'fk', name: null, columns: ['owner_id'], refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
+            { id: 'c2', kind: 'fk', name: null, columns: ['owner_id'], refSchema: null, refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
           ],
           indexes: [],
         },
@@ -361,7 +365,7 @@ describe('applyModelEdit', () => {
           fields: [editField('id', 'int'), editField('owner_id', 'int')],
           constraints: [
             { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
-            { id: 'c2', kind: 'fk', name: null, columns: ['owner_id'], refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
+            { id: 'c2', kind: 'fk', name: null, columns: ['owner_id'], refSchema: null, refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
           ],
           indexes: [],
         },
@@ -450,7 +454,7 @@ describe('applyModelEdit', () => {
           fields: [editField('id', 'int'), editField('owner_id', 'int')],
           constraints: [
             { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
-            { id: 'c2', kind: 'fk', name: null, columns: ['owner_id'], refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
+            { id: 'c2', kind: 'fk', name: null, columns: ['owner_id'], refSchema: null, refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
           ],
           indexes: [],
         },
@@ -465,7 +469,7 @@ describe('applyModelEdit', () => {
           fields: [editField('id', 'int'), editField('owner_ref', 'int')],
           constraints: [
             { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
-            { id: 'c2', kind: 'fk', name: null, columns: ['owner_ref'], refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
+            { id: 'c2', kind: 'fk', name: null, columns: ['owner_ref'], refSchema: null, refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
           ],
           indexes: [],
         },
@@ -645,7 +649,7 @@ describe('applyModelEdit', () => {
       const after = m2.entityById.get('a')!;
       expect(after.description).toBe('updated');
       expect(after.constraints).toEqual(before.constraints);
-      expect(after.indexes).toEqual([{ id: 'i1', name: 'idx_a_email', columns: ['email'], unique: false }]);
+      expect(after.indexes).toEqual(before.indexes);
     });
 
     // CRITICAL 2, case (a): a table authored with REAL constraints and no
@@ -824,7 +828,7 @@ describe('applyModelEdit', () => {
           fields: [editField('id', 'int'), editField('parent_id', 'int')],
           constraints: [
             { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
-            { id: 'c2', kind: 'fk', name: null, columns: ['parent_id'], refTable: 'nodes', refColumns: ['id'], onDelete: null, onUpdate: null },
+            { id: 'c2', kind: 'fk', name: null, columns: ['parent_id'], refSchema: null, refTable: 'nodes', refColumns: ['id'], onDelete: null, onUpdate: null },
           ],
           indexes: [],
         },
@@ -924,13 +928,13 @@ describe('applyModelEdit', () => {
 
     it('rejects an index naming a column the table does not have', () => {
       expect(() =>
-        applyModelEdit(base(), edit({ indexes: [{ id: 'i1', name: 'idx', columns: ['nope'], unique: false }] })),
+        applyModelEdit(base(), edit({ indexes: [{ id: 'i1', name: 'idx', columns: [idxCol('nope')], unique: false, method: null, only: false, where: null }] })),
       ).toThrow(/unknown column "nope"/i);
     });
 
     it('rejects an empty column list', () => {
       expect(() =>
-        applyModelEdit(base(), edit({ constraints: [{ id: 'c1', kind: 'unique', name: null, columns: [] }] })),
+        applyModelEdit(base(), edit({ constraints: [{ id: 'c1', kind: 'unique', name: null, columns: [], nullsNotDistinct: false }] })),
       ).toThrow(/at least one column/i);
     });
 
@@ -943,6 +947,7 @@ describe('applyModelEdit', () => {
               kind: 'fk',
               name: null,
               columns: ['users_id'],
+              refSchema: null,
               refTable: 'users',
               refColumns: ['id'],
               onDelete: null,
@@ -965,8 +970,8 @@ describe('applyModelEdit', () => {
           base(),
           edit({
             constraints: [
-              { id: 'c1', kind: 'unique', name: 'dup', columns: ['id'] },
-              { id: 'c2', kind: 'unique', name: 'dup', columns: ['users_id'] },
+              { id: 'c1', kind: 'unique', name: 'dup', columns: ['id'], nullsNotDistinct: false },
+              { id: 'c2', kind: 'unique', name: 'dup', columns: ['users_id'], nullsNotDistinct: false },
             ],
           }),
         ),
@@ -976,8 +981,8 @@ describe('applyModelEdit', () => {
           base(),
           edit({
             indexes: [
-              { id: 'i1', name: 'dup', columns: ['id'], unique: false },
-              { id: 'i2', name: 'dup', columns: ['users_id'], unique: false },
+              { id: 'i1', name: 'dup', columns: [idxCol('id')], unique: false, method: null, only: false, where: null },
+              { id: 'i2', name: 'dup', columns: [idxCol('users_id')], unique: false, method: null, only: false, where: null },
             ],
           }),
         ),
@@ -995,6 +1000,7 @@ describe('applyModelEdit', () => {
               kind: 'fk',
               name: 'orders_user_fk',
               columns: ['users_id'],
+              refSchema: null,
               refTable: 'users',
               refColumns: ['id'],
               onDelete: 'cascade',
@@ -1041,6 +1047,7 @@ describe('applyModelEdit', () => {
               kind: 'fk',
               name: null,
               columns: ['a1', 'a2'],
+              refSchema: null,
               refTable: 'a',
               refColumns: ['k1', 'k2'],
               onDelete: 'cascade',
@@ -1197,7 +1204,7 @@ describe('applyModelEdit', () => {
         fields: [editField('id', 'int'), editField('owner_id', 'int')],
         constraints: [
           { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
-          { id: 'c2', kind: 'fk', name: null, columns: ['owner_id'], refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
+          { id: 'c2', kind: 'fk', name: null, columns: ['owner_id'], refSchema: null, refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
         ],
         indexes: [],
       },
