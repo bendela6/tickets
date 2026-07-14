@@ -18,6 +18,12 @@ const GROUPS: PgTypeGroup[] = [
   'numeric', 'text', 'boolean', 'temporal', 'uuid', 'json', 'network', 'geometric', 'vector',
 ];
 
+// Every sqlName the built-in catalogue already owns — an enum sharing one of
+// these names (e.g. a model enum literally called `text`) is excluded from
+// the enum section below rather than rendered a second time; the built-in
+// row wins.
+const CATALOGUE_NAMES = new Set(PG_TYPES.map((t) => t.sqlName));
+
 // A row the keyboard cursor can land on — built-in types and enums, NOT the
 // pinned invalid entry (it is display-only, never selectable).
 interface SelectableRow {
@@ -64,7 +70,10 @@ export function TypePicker({ value, enums, unknownBase, onPick, onClose }: TypeP
   );
 
   const filteredEnums = useMemo(
-    () => enums.filter((e) => q === '' || e.name.toLowerCase().includes(q)),
+    () =>
+      enums.filter(
+        (e) => !CATALOGUE_NAMES.has(e.name) && (q === '' || e.name.toLowerCase().includes(q)),
+      ),
     [enums, q],
   );
 
@@ -83,6 +92,21 @@ export function TypePicker({ value, enums, unknownBase, onPick, onClose }: TypeP
     0,
   );
   const [cursor, setCursor] = useState(initialCursor);
+
+  // Whenever the visible/selectable rows change (typically: the filter
+  // narrowed or widened the list), re-clamp the cursor into range. Without
+  // this, a cursor left pointing past the end of a since-shrunk list
+  // highlights nothing and makes Enter a silent no-op. Prefer landing back on
+  // the current value's row if it's still visible; otherwise the top row.
+  useEffect(() => {
+    setCursor((prev) => {
+      if (selectable.length === 0) return 0;
+      if (prev >= 0 && prev < selectable.length) return prev;
+      const valueIdx = selectable.findIndex((r) => r.base === value);
+      return valueIdx >= 0 ? valueIdx : 0;
+    });
+  }, [selectable, value]);
+
   const cursorKey = selectable[cursor]?.key;
 
   const move = (delta: number) => {

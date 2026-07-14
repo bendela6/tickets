@@ -130,4 +130,29 @@ describe('TypePicker', () => {
     fireEvent.click(screen.getByRole('option', { name: 'user_kind' }));
     expect(onPick).toHaveBeenCalledWith('user_kind');
   });
+
+  it('re-clamps the keyboard cursor after filtering shrinks the list, so Enter is never a silent no-op', () => {
+    const onPick = vi.fn();
+    renderPicker({ value: 'smallint', onPick });
+    const panel = screen.getByRole('listbox');
+    // Walk the cursor 5 rows down the full (unfiltered) numeric group:
+    // smallint -> integer -> bigint -> smallserial -> serial -> bigserial.
+    for (let i = 0; i < 5; i++) fireEvent.keyDown(panel, { key: 'ArrowDown' });
+    // Filtering to the "text" group shrinks the list to 3 rows (text, varchar,
+    // char) — well below the cursor's old index of 5.
+    fireEvent.change(screen.getByLabelText('Filter types…'), { target: { value: 'text' } });
+    fireEvent.keyDown(panel, { key: 'Enter' });
+    // Enter must still pick a real, currently-visible row — never a silent
+    // no-op just because the cursor used to point further down a longer list.
+    expect(onPick).toHaveBeenCalledTimes(1);
+    expect(onPick).toHaveBeenCalledWith('text');
+  });
+
+  it('de-dupes an enum whose name collides with a built-in catalogue type — rendered once, not twice', () => {
+    const enums: EnumDecl[] = [{ name: 'text', values: ['a', 'b'], schema: null }];
+    renderPicker({ enums });
+    expect(screen.getAllByRole('option', { name: 'text' })).toHaveLength(1);
+    // It's the built-in row that survives, not the enum section's.
+    expect(screen.queryByRole('group', { name: /enums in this model/i })).toBeNull();
+  });
 });
