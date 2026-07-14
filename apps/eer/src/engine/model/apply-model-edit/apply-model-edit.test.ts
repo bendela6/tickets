@@ -689,7 +689,11 @@ describe('applyModelEdit', () => {
             constraints: [
               { id: 'c1', kind: 'pk', columns: ['id'] },
               { id: 'c2', kind: 'unique', columns: ['email'] },
-              { id: 'c3', kind: 'check', expression: "email <> ''" },
+              // A check now requires a name (Task 12 review, Finding 2 — see
+              // validateConstraints) — this test is about verbatim constraint
+              // passthrough, not check validation, so the fixture just needs
+              // a real name rather than exercising that rule.
+              { id: 'c3', kind: 'check', name: 'ck_a_email', expression: "email <> ''" },
             ],
             indexes: [{ id: 'i1', name: 'idx_a_email', columns: ['email'], unique: false }],
           },
@@ -1037,6 +1041,21 @@ describe('applyModelEdit', () => {
       expect(() => applyModelEdit(base(), fk({ columns: ['id', 'users_id'] }))).toThrow(/same number of columns/i);
     });
 
+    // Task 12 review, Finding 2 (IMPORTANT): drizzle's check() has no
+    // auto-generated name (the name arg is mandatory — see export-drizzle.ts's
+    // emitCheck, which throws on a blank one) — unlike pk/unique/fk, which
+    // Postgres/drizzle really do name for you when left blank. A blank check
+    // name used to sail through validateConstraints (only the EXPRESSION was
+    // checked), so a user could Save it here and only find out at export time.
+    it('rejects a check constraint with a blank name (drizzle has no auto-name for one)', () => {
+      expect(() =>
+        applyModelEdit(base(), edit({ constraints: [{ id: 'c1', kind: 'check', name: null, expression: 'total > 0' }] })),
+      ).toThrow(/must have a name/i);
+      expect(() =>
+        applyModelEdit(base(), edit({ constraints: [{ id: 'c1', kind: 'check', name: '   ', expression: 'total > 0' }] })),
+      ).toThrow(/must have a name/i);
+    });
+
     it('rejects an empty check expression and duplicate constraint/index names', () => {
       expect(() =>
         applyModelEdit(base(), edit({ constraints: [{ id: 'c1', kind: 'check', name: null, expression: '  ' }] })),
@@ -1232,6 +1251,9 @@ describe('applyModelEdit', () => {
       ).toBe('constraints');
       expect(
         fieldOf(() => applyModelEdit(base(), edit({ constraints: [{ id: 'c1', kind: 'check', name: null, expression: '  ' }] }))),
+      ).toBe('constraints');
+      expect(
+        fieldOf(() => applyModelEdit(base(), edit({ constraints: [{ id: 'c1', kind: 'check', name: null, expression: 'total > 0' }] }))),
       ).toBe('constraints');
       expect(
         fieldOf(() =>

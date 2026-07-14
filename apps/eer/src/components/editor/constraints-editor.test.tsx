@@ -193,4 +193,21 @@ describe('ConstraintsEditor', () => {
     expect(screen.getByText(/non-blank expression/i)).toBeInTheDocument();
     expect(screen.getByLabelText('Constraint 1 expression').className).toMatch(/red/);
   });
+
+  // Task 12 review, Finding 2 (IMPORTANT): unlike pk/unique/fk (where Postgres
+  // or drizzle really does assign a name when one is left blank — see
+  // generated-constraint-name.ts), a CHECK constraint has NO auto-name at all
+  // (export-drizzle's emitCheck throws on a blank one). A greyed placeholder
+  // implying "safe to leave blank" would be a lie here, so a CHECK card must
+  // instead treat the name as a required field — same red-border-at-the-
+  // mistake idiom as the blank-expression case above, not a passive hint.
+  it('a blank CHECK name is a required-field mistake, not a safe-to-leave-blank preview', () => {
+    setup([{ id: 'c1', kind: 'check', name: null, expression: 'total > 0' }]);
+    expect(screen.getByText(/must have a name/i)).toBeInTheDocument();
+    const nameInput = screen.getByLabelText('Constraint 1 name') as HTMLInputElement;
+    expect(nameInput.className).toMatch(/red/);
+    // No greyed auto-name preview — the placeholder must not look like a real
+    // generated name (contrast the pk/unique/fk previews tested above).
+    expect(nameInput.placeholder).not.toMatch(/_check/);
+  });
 });

@@ -6,6 +6,7 @@
 import { generateDrizzleJson, generateMigration } from 'drizzle-kit/api';
 import { describe, expect, it } from 'vitest';
 
+import { generatedConstraintName } from '../../../components/editor/generated-constraint-name';
 import { loadGeneratedModule } from '../../../test/helpers/load-generated-module';
 import { importDrizzle } from '../import-drizzle';
 import { loadModel } from '../load-model';
@@ -456,6 +457,44 @@ describe('exportDrizzle — semantic verification via a real drizzle module', ()
       unique: true,
       where: 'is_active',
     });
+  });
+
+  // Task 12 review, Finding 1 (IMPORTANT): generatedConstraintName's greyed
+  // placeholder (constraints-editor.tsx) is used with the raw Entity.id,
+  // which is SCHEMA-QUALIFIED for a non-public table (e.g. "billing.orders")
+  // — but drizzle names an unnamed constraint off the PHYSICAL table name
+  // only (pgTable's first argument, stripped of the schema prefix — see
+  // export-drizzle.ts's own physicalTableName()). So the card used to show
+  // "billing.orders_number_unique" while the real drizzle object (and the
+  // exporter's own generated source, once loaded and run) is actually named
+  // "orders_number_unique". Proved here against the REAL computed name (via
+  // loadGeneratedModule + describeDrizzle), not just the generated source
+  // text — table-level unique names are never printed in the emitted DDL at
+  // all (drizzle computes them at schema-definition time), so only running
+  // the real module can reveal what name a blank one actually gets.
+  it('the placeholder for an unnamed constraint on a schema-qualified table equals what exportDrizzle (+ real drizzle) actually assigns', async () => {
+    const m = buildRawModel([
+      {
+        id: 'billing.orders',
+        schema: 'billing',
+        columns: [pkCol(), { name: 'number', type: 'text' }],
+        constraints: [
+          { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
+          { id: 'c2', kind: 'unique', name: null, columns: ['number'], nullsNotDistinct: false },
+        ],
+      },
+    ]);
+    const entity = m.entityById.get('billing.orders')!;
+    const uniqueConstraint = entity.constraints.find((c) => c.kind === 'unique')!;
+
+    const preview = generatedConstraintName(entity, uniqueConstraint, entity.constraints);
+
+    const src = exportDrizzle(m);
+    const generated = await loadGeneratedModule(src);
+    const desc = describeDrizzle(generated, []);
+    const table = desc.tables.find((t) => t.name === 'orders')!;
+
+    expect(preview).toBe(table.uniques[0]!.name);
   });
 });
 
