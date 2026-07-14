@@ -15,6 +15,8 @@ const editField = (name: string, type = 'text'): EditField => ({
   description: null,
   nullable: true,
   default: null,
+  identity: null,
+  generated: null,
 });
 
 // Plain (non-expression) index columns — this test file only ever needs the
@@ -173,6 +175,50 @@ describe('applyModelEdit', () => {
       expect(after.columns).toHaveLength(4);
       expect(after._h).toBe(HEADER_H + 4 * ROW_H);
       expect(before._h).toBe(HEADER_H + 3 * ROW_H); // input untouched
+    });
+
+    // CRITICAL, reviewer-found (Task 2 follow-up): identity/generated used to
+    // be restored by looking up `priorColumnsByName.get(f.name)` — keyed on
+    // the column's NEW name against the PRIOR entity's columns. Renaming a
+    // column (a supported edit) finds no match under the new name, so
+    // identity/generated silently reset to null even though the caller never
+    // asked to clear them. The draft (EditField) is the source of truth for
+    // a column now — identity/generated travel ON the edit payload itself,
+    // exactly like every other column field, and upsertEntity takes them
+    // verbatim instead of reconstructing them by name lookup.
+    it('carries identity/generated verbatim on the EditField payload, surviving a column rename', () => {
+      const raw = {
+        groups: [{ id: 'g', label: 'G' }],
+        entities: [
+          {
+            id: 'a', group: 'g',
+            fields: [{ name: 'id', type: 'int', identity: { always: true } }],
+            constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }],
+          },
+        ],
+      };
+      const { model: m1, errors } = loadModel(raw);
+      expect(errors).toEqual([]);
+      const before = m1!.entityById.get('a')!.columns[0]!;
+      expect(before.identity).toMatchObject({ always: true }); // sanity: loadModel actually set it
+
+      const m2 = applyModelEdit(m1!, {
+        kind: 'upsertEntity',
+        entity: {
+          id: 'a',
+          label: 'a',
+          group: 'g',
+          description: null,
+          // 'id' renamed to 'uid' — the caller hands identity/generated over
+          // explicitly on the renamed EditField, same as it already does for title.
+          fields: [{ ...editField('uid', 'int'), identity: before.identity, generated: before.generated }],
+          constraints: [{ id: 'pk1', kind: 'pk', name: null, columns: ['uid'] }],
+          indexes: [],
+        },
+      });
+      const after = m2.entityById.get('a')!.columns[0]!;
+      expect(after.name).toBe('uid');
+      expect(after.identity).toEqual(before.identity); // must survive the rename, not reset to null
     });
   });
 
@@ -1165,6 +1211,8 @@ describe('applyModelEdit', () => {
         description: c.description,
         nullable: c.nullable,
         default: c.default,
+        identity: c.identity,
+        generated: c.generated,
       });
       expect(() =>
         applyModelEdit(model!, {

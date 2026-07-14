@@ -59,8 +59,8 @@ describe('TableModal', () => {
     expect(edit).toMatchObject({ kind: 'upsertEntity', entity: { id: 'tags' } });
     expect((edit as { entity: { fields: unknown[] } }).entity.fields).toEqual([
       // "int" normalises to drizzle-canonical "integer" on load (see pg-types).
-      { name: 'id', type: 'integer', title: null, description: null, nullable: true, default: null },
-      { name: 'label', type: 'text', title: null, description: null, nullable: true, default: null },
+      { name: 'id', type: 'integer', title: null, description: null, nullable: true, default: null, identity: null, generated: null },
+      { name: 'label', type: 'text', title: null, description: null, nullable: true, default: null, identity: null, generated: null },
     ]);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -94,6 +94,8 @@ describe('TableModal', () => {
       default: "'draft'",
       title: null,
       description: null,
+      identity: null,
+      generated: null,
     });
   });
 

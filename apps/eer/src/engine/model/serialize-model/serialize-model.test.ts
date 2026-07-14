@@ -271,6 +271,8 @@ describe('serializeModel', () => {
           description: f.description,
           nullable: f.nullable,
           default: f.default,
+          identity: f.identity,
+          generated: f.generated,
         })),
         constraints: [...projects.constraints, { id: 'u1', kind: 'unique', name: null, columns: ['scheme_id'], nullsNotDistinct: false }],
         indexes: projects.indexes,

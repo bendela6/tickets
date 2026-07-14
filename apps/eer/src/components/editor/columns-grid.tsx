@@ -64,7 +64,10 @@ export function ColumnsGrid({ columns, onChange }: ColumnsGridProps) {
   const remove = (index: number) => onChange(columns.filter((_, i) => i !== index));
 
   const addColumn = () =>
-    onChange([...columns, { name: '', type: 'text', title: null, description: null, nullable: true, default: null }]);
+    onChange([
+      ...columns,
+      { name: '', type: 'text', title: null, description: null, nullable: true, default: null, identity: null, generated: null },
+    ]);
 
   return (
     <div className="flex flex-col gap-2">

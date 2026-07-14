@@ -39,7 +39,11 @@ function slugify(name: string): string {
 // refField are gone: the columns grid can't edit keys any more (see its own
 // header comment) — constraints are what own that data now, edited
 // separately below by <ConstraintsEditor/> and dispatched from its own draft
-// state (not re-derived from fields).
+// state (not re-derived from fields). identity/generated have no ColumnsGrid
+// UI either, so they're copied straight from the existing Column, same as
+// title — upsertEntity now takes them verbatim off the EditField instead of
+// reconstructing them by name lookup (a rename used to silently drop them;
+// see apply-model-edit's own comment).
 function toEditField(f: Column): EditField {
   return {
     name: f.name,
@@ -48,6 +52,8 @@ function toEditField(f: Column): EditField {
     description: f.description ?? '',
     nullable: f.nullable,
     default: f.default,
+    identity: f.identity,
+    generated: f.generated,
   };
 }
 
@@ -58,6 +64,8 @@ const DEFAULT_PK: EditField = {
   description: null,
   nullable: true,
   default: null,
+  identity: null,
+  generated: null,
 };
 
 // A brand-new table's default primary key — the one constraint the editor
@@ -144,6 +152,8 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
           description: f.description && f.description.trim() ? f.description.trim() : null,
           nullable: f.nullable,
           default: f.default,
+          identity: f.identity,
+          generated: f.generated,
         })),
         // The draft state <ConstraintsEditor/> owns below — not re-derived
         // from fields (see columns-grid.tsx's header comment for why that
