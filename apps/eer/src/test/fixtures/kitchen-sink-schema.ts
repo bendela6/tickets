@@ -4,8 +4,10 @@
 // schema (packages/db/src/schema/index.ts) never happens to use: varchar/char
 // LENGTHS, a numeric with PRECISION+SCALE, foreign keys with onDelete AND
 // onUpdate both set, a non-default index METHOD (gin), a partial index
-// .where(), per-column .asc()/.desc()/.nullsFirst()/.nullsLast()/.op(), and an
-// identity column with non-default sequence options.
+// .where(), per-column .asc()/.desc()/.nullsFirst()/.nullsLast()/.op(), an
+// identity column with non-default sequence options, and a Postgres SCHEMA
+// NAMESPACE (pgSchema) — a table and an enum living outside public, plus a
+// cross-schema foreign key in each direction.
 //
 // Why this file exists: the real-schema gate (roundtrip.gate.test.ts's first
 // test) proves nothing about any of the above — the real schema simply
@@ -27,6 +29,7 @@ import {
   integer,
   numeric,
   pgEnum,
+  pgSchema,
   pgTable,
   primaryKey,
   serial,
@@ -131,3 +134,58 @@ export const sequencesDemo = pgTable('sequences_demo', {
     }),
   label: text('label'),
 });
+
+// ---- namespaces: a Postgres SCHEMA other than public (pgSchema) ----
+//
+// Entity.schema / EnumDecl.schema / fk refSchema / the schema-qualified
+// entity id (`schema.name`, see tableId() in import-drizzle.ts) and the
+// exporter's own pgSchema-const emission are all real, load-bearing
+// machinery — but neither gate fixture had ever put a `pgSchema` in front of
+// the round-trip, so a regression there could pass both gates silently. This
+// section exercises: a table living IN a non-public schema (analytics.events),
+// an enum declared IN that schema (analyticsEventTypeEnum — checked against
+// drizzle-orm/pg-core's PgSchema.enum(), which exists in 0.45.2), a
+// cross-schema fk FROM the namespaced table back to public (events -> public
+// widgets), and the reverse direction (a public table -> the namespaced
+// table: event_notes -> analytics.events).
+export const analyticsSchema = pgSchema('analytics');
+
+export const analyticsEventTypeEnum = analyticsSchema.enum('event_type', ['click', 'view', 'purchase']);
+
+// analytics.events: lives in the non-public "analytics" schema; its own
+// column is typed to an enum ALSO declared in that schema; its fk points
+// back OUT to public.widgets (id) — the cross-schema direction that must
+// survive as refSchema: 'public' (not null, and not 'analytics').
+export const events = analyticsSchema.table(
+  'events',
+  {
+    id: serial('id').primaryKey(),
+    widgetId: integer('widget_id').notNull(),
+    type: analyticsEventTypeEnum('type').notNull(),
+  },
+  (t) => [
+    foreignKey({
+      name: 'events_widget_fk',
+      columns: [t.widgetId],
+      foreignColumns: [widgets.id],
+    }).onDelete('cascade'),
+  ],
+);
+
+// event_notes: an ordinary PUBLIC table whose fk points INTO the "analytics"
+// schema (analytics.events.id) — the reverse cross-schema direction.
+export const eventNotes = pgTable(
+  'event_notes',
+  {
+    id: serial('id').primaryKey(),
+    eventId: integer('event_id').notNull(),
+    note: text('note'),
+  },
+  (t) => [
+    foreignKey({
+      name: 'event_notes_event_fk',
+      columns: [t.eventId],
+      foreignColumns: [events.id],
+    }).onDelete('cascade'),
+  ],
+);

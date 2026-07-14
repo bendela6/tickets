@@ -126,8 +126,9 @@ it('round-trips the kitchen-sink fixture with nothing lost', async () => {
   const { model, report } = await runRoundtripGate(kitchenSinkSchema as Record<string, unknown>);
 
   expect(report.blocksExport).toBe(false);
-  expect(model.entities).toHaveLength(4); // widgets, accounts, memberships, sequences_demo
-  expect(model.enums).toHaveLength(1); // status
+  // widgets, accounts, memberships, sequences_demo, analytics.events, event_notes
+  expect(model.entities).toHaveLength(6);
+  expect(model.enums).toHaveLength(2); // status, analytics.event_type
 }, 30_000);
 
 it('the kitchen-sink generated file typechecks', async () => {
