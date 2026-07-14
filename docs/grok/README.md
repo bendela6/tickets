@@ -1,5 +1,15 @@
 # Grok design docs — SSOT
 
+> **⚠️ SUPERSEDED (2026-07-14)** — the plan of record is
+> [`docs/superpowers/specs/2026-07-14-items-platform-schema-and-import-design.md`](../superpowers/specs/2026-07-14-items-platform-schema-and-import-design.md),
+> which builds to [`apps/eer/models/items-platform.json`](../../apps/eer/models/items-platform.json)
+> — itself extracted from this tree's [`er-model.html`](er-model.html).
+> The `item*` rename, the drop of `statuses`, reusable M2M fields and the global `events`
+> table all **survive** here and are carried into the spec. What does **not**: the
+> greenfield "test data OK to wipe" delivery model (the data is real — 635 items — and is
+> imported, not discarded), and the open question on per-type status subsets (**answered**:
+> an allowlist in `item_type_fields.config_override`).
+
 Design notes for the tickets monorepo. **Do not edit `docs/opus/` from this workstream** (owner handles that separately).
 
 ## Scope: what we are doing now
