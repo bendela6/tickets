@@ -1,8 +1,12 @@
 // packages/db/src/schema/describe-schema.ts
 import { getTableName } from 'drizzle-orm';
-import { getTableConfig, uniqueKeyName } from 'drizzle-orm/pg-core';
-import { allTables } from './registry';
+import type { SQL } from 'drizzle-orm';
+import { PgDialect, getTableConfig, uniqueKeyName } from 'drizzle-orm/pg-core';
+import { allEnums, allTables } from './registry';
 import { SCHEMA_GROUPS, type SchemaGroup } from './schema-groups';
+
+const dialect = new PgDialect();
+const renderSql = (sql: SQL | unknown): string => dialect.sqlToQuery(sql as SQL).sql;
 
 export type ColumnMeta = {
   name: string;
@@ -12,15 +16,26 @@ export type ColumnMeta = {
   fk: { table: string; column: string } | null;
 };
 export type UniqueMeta = { name: string; columns: string[] };
+export type CheckMeta = { name: string; expression: string };
+export type IndexMeta = {
+  name: string;
+  columns: string[];
+  unique: boolean;
+  method: string | null;
+  where: string | null;
+};
 export type TableMeta = {
   name: string;
   group: string;
   columns: ColumnMeta[];
   primaryKey: string[];
   uniques: UniqueMeta[];
+  checks: CheckMeta[];
+  indexes: IndexMeta[];
 };
 export type GroupMeta = { key: string; label: string; color: string; tables: string[] };
-export type SchemaGraph = { tables: TableMeta[]; groups: GroupMeta[] };
+export type EnumMeta = { name: string; values: string[] };
+export type SchemaGraph = { tables: TableMeta[]; groups: GroupMeta[]; enums: EnumMeta[] };
 
 const normalizeType = (t: string): string =>
   t === 'timestamp with time zone' ? 'timestamptz' : t;
@@ -67,6 +82,24 @@ export function describeSchema(): SchemaGraph {
       fk: fkByColumn.get(c.name) ?? null,
     }));
 
+    const checks: CheckMeta[] = cfg.checks.map((c) => ({
+      name: c.name,
+      expression: renderSql(c.value),
+    }));
+
+    const indexes: IndexMeta[] = cfg.indexes.map((ix) => {
+      const c = ix.config;
+      return {
+        name: c.name ?? '',
+        columns: (c.columns ?? []).map((col) =>
+          'name' in col ? (col as { name: string }).name : renderSql(col),
+        ),
+        unique: c.unique === true,
+        method: c.method ?? null,
+        where: c.where ? renderSql(c.where) : null,
+      };
+    });
+
     return {
       name,
       group: resolveGroupKey(name, SCHEMA_GROUPS),
@@ -79,6 +112,8 @@ export function describeSchema(): SchemaGraph {
         name: u.name ?? uniqueKeyName(table, u.columns.map((c) => c.name)),
         columns: u.columns.map((c) => c.name),
       })),
+      checks,
+      indexes,
     };
   });
 
@@ -96,5 +131,7 @@ export function describeSchema(): SchemaGraph {
     tables: [...g.tables],
   }));
 
-  return { tables: metas, groups };
+  const enums: EnumMeta[] = allEnums.map((e) => ({ name: e.enumName, values: [...e.enumValues] }));
+
+  return { tables: metas, groups, enums };
 }
