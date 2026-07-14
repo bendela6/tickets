@@ -69,6 +69,7 @@ function cardinalityOf(entity: Entity, columns: string[]): Cardinality {
 export function deriveConstraintEdges(model: Model): Relationship[] {
   const derived: Relationship[] = [];
   for (const e of model.entities) {
+    const ownNames = new Set(e.columns.map((f) => f.name));
     for (const c of e.constraints) {
       if (c.kind !== 'fk') continue;
       const target = model.entityById.get(c.refTable);
@@ -76,6 +77,7 @@ export function deriveConstraintEdges(model: Model): Relationship[] {
       const names = new Set(target.columns.map((f) => f.name));
       if (!c.refColumns.length || !c.columns.length) continue;
       if (!c.refColumns.every((n) => names.has(n))) continue;
+      if (!c.columns.every((n) => ownNames.has(n))) continue; // own column dangling — see load-model's matching warning
       derived.push({
         id: `rel:${e.id}:${c.id}`,
         source: c.refTable,

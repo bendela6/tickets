@@ -278,6 +278,81 @@ describe('loadModel — real seed regression (pinned cardinality multiset)', () 
   });
 });
 
+// IMPORTANT, whole-branch review: the canonical `constraints` shape used to
+// validate WEAKER than the legacy `fields` role/ref shape it replaced —
+// normalizeConstraint never checked that an fk's refTable resolved, or that
+// its columns/refColumns actually existed on the respective tables. That
+// asymmetry is exactly why a file corrupted by apply-model-edit missing an
+// inbound-fk guard (see apply-model-edit.test.ts) could load clean: 0 errors,
+// 0 warnings. These pin the fix — a WARNING (the file still loads, matching
+// the legacy behaviour), not an error, for each of the three ways a
+// constraints-shaped fk can dangle.
+describe('loadModel — dangling fk CONSTRAINTS warn (canonical shape, not just legacy ref)', () => {
+  it('(i) an fk to an unknown table warns and produces no phantom edge', () => {
+    const raw = {
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        {
+          id: 'b', group: 'g',
+          fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }],
+          constraints: [
+            { id: 'pk1', kind: 'pk', columns: ['id'] },
+            { id: 'fk1', kind: 'fk', columns: ['a_id'], refTable: 'ghost', refColumns: ['id'] },
+          ],
+        },
+      ],
+    };
+    const { model, errors, warnings } = loadModel(raw);
+    expect(errors).toEqual([]);
+    expect(warnings.some((w) => w.includes('"b"') && w.includes('"fk1"') && w.includes('unknown table "ghost"'))).toBe(true);
+    expect(model!.relationships).toEqual([]);
+  });
+
+  it('(ii) an fk to an unknown column on a real target table warns and produces no phantom edge', () => {
+    const raw = {
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int' }], constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }] },
+        {
+          id: 'b', group: 'g',
+          fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }],
+          constraints: [
+            { id: 'pk2', kind: 'pk', columns: ['id'] },
+            { id: 'fk1', kind: 'fk', columns: ['a_id'], refTable: 'a', refColumns: ['nope'] },
+          ],
+        },
+      ],
+    };
+    const { model, errors, warnings } = loadModel(raw);
+    expect(errors).toEqual([]);
+    expect(
+      warnings.some((w) => w.includes('"b"') && w.includes('"fk1"') && w.includes('unknown column "nope" on table "a"')),
+    ).toBe(true);
+    expect(model!.relationships).toEqual([]);
+  });
+
+  it('(iii) an fk naming an unknown OWN column warns and produces no phantom edge', () => {
+    const raw = {
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int' }], constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }] },
+        {
+          id: 'b', group: 'g',
+          fields: [{ name: 'id', type: 'int' }],
+          constraints: [
+            { id: 'pk2', kind: 'pk', columns: ['id'] },
+            { id: 'fk1', kind: 'fk', columns: ['nope'], refTable: 'a', refColumns: ['id'] },
+          ],
+        },
+      ],
+    };
+    const { model, errors, warnings } = loadModel(raw);
+    expect(errors).toEqual([]);
+    expect(warnings.some((w) => w.includes('"b"') && w.includes('"fk1"') && w.includes('unknown own column "nope"'))).toBe(true);
+    expect(model!.relationships).toEqual([]);
+  });
+});
+
 describe('loadModel — validation', () => {
   it('rejects a non-object root', () => {
     expect(loadModel(null).errors.length).toBeGreaterThan(0);

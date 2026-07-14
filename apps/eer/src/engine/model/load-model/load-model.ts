@@ -195,6 +195,37 @@ export function loadModel(raw: unknown): LoadResult {
       warnings.push(`Field "${lr.entityId}.${lr.fieldName}" ref "${lr.ref}.${lr.refField}" — no such field.`);
   }
 
+  // The legacy `ref` shape above gets a dangling-reference warning; the
+  // canonical `constraints` shape it was replaced by never did — an fk
+  // constraint's refTable/refColumns/columns were taken on faith. That
+  // asymmetry let a corrupt-but-canonical file (e.g. a column rename that
+  // left some OTHER table's fk constraint pointing at a name that no longer
+  // exists) load with 0 warnings, silently dropping the edge (and its label)
+  // for good. derive-relationships already skips any fk it can't resolve
+  // (deriveConstraintEdges), so this is purely diagnostic — a WARNING, not an
+  // error, mirroring the legacy check's own severity: a stale/broken fk must
+  // not block the whole file from loading.
+  for (const e of normEntities) {
+    const ownCols = new Set(e.columns.map((c) => c.name));
+    for (const c of e.constraints) {
+      if (c.kind !== 'fk') continue;
+      for (const col of c.columns) {
+        if (!ownCols.has(col))
+          warnings.push(`Entity "${e.id}" constraint "${c.id}" references unknown own column "${col}".`);
+      }
+      const target = entityById.get(c.refTable);
+      if (!target) {
+        warnings.push(`Entity "${e.id}" constraint "${c.id}" references unknown table "${c.refTable}".`);
+        continue;
+      }
+      const targetCols = new Set(target.columns.map((tc) => tc.name));
+      for (const col of c.refColumns) {
+        if (!targetCols.has(col))
+          warnings.push(`Entity "${e.id}" constraint "${c.id}" references unknown column "${col}" on table "${c.refTable}".`);
+      }
+    }
+  }
+
   // ---- kinds ----
   const kindStyle = new Map<string, LineStyle>();
   const normKinds: EdgeKind[] = (Array.isArray(r.kinds) ? r.kinds : []).map((k: any) => {
