@@ -287,6 +287,10 @@ describe('TableModal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add column' }));
     fireEvent.change(screen.getByLabelText('Column 2 name'), { target: { value: 'owner_id' } });
 
+    // Task 10: the constraints editor now only mounts while its own tab is
+    // active — the "+ FK" button doesn't exist in the DOM until then.
+    fireEvent.click(screen.getByRole('tab', { name: /constraints/i }));
+
     // tags already carries a synthesized `c1` pk constraint, so the new fk
     // added here lands at index 1 — "Constraint 2".
     fireEvent.click(screen.getByRole('button', { name: '+ FK' }));
@@ -323,6 +327,9 @@ describe('TableModal', () => {
     const { actions } = await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
     const spy = vi.spyOn(actions, 'applyModelEdit');
 
+    // Task 10: the indexes editor now only mounts while its own tab is
+    // active — "add index" doesn't exist in the DOM until then.
+    fireEvent.click(screen.getByRole('tab', { name: /indexes/i }));
     fireEvent.click(screen.getByRole('button', { name: /add index/i }));
     fireEvent.change(screen.getByLabelText('Index 1 name'), { target: { value: 'idx_tags_id' } });
     fireEvent.click(screen.getByLabelText('Index 1 column id'));
@@ -430,5 +437,82 @@ describe('TableModal', () => {
     expect(appliedEntity.description).toBe('updated description');
     expect(appliedEntity.constraints).toEqual(before.constraints);
     expect(appliedEntity.indexes).toEqual(before.indexes);
+  });
+
+  // Task 10: the modal is now tabbed (Columns / Constraints / Indexes), each
+  // with its own draft-owning panel, but the draft state itself still lives
+  // in TableModalForm (not the tabs) — so switching tabs must never lose an
+  // edit typed into a field the user just left.
+  describe('tabs', () => {
+    it('keeps an unsaved column-name edit when switching away to another tab and back', async () => {
+      await renderDiagram(<TableModal id="users" onClose={() => {}} />, twoZoneRaw());
+
+      fireEvent.change(screen.getByLabelText('Column 1 name'), { target: { value: 'id_x' } });
+      fireEvent.click(screen.getByRole('tab', { name: /constraints/i }));
+      fireEvent.click(screen.getByRole('tab', { name: /columns/i }));
+
+      expect((screen.getByLabelText('Column 1 name') as HTMLInputElement).value).toBe('id_x');
+    });
+
+    it('shows only the active tab\'s panel, switching which editor is mounted', async () => {
+      await renderDiagram(<TableModal id="tags" onClose={() => {}} />, twoZoneRaw());
+
+      expect(screen.getByRole('tab', { name: /columns/i })).toHaveAttribute('aria-selected', 'true');
+      expect(screen.queryByRole('button', { name: '+ FK' })).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('tab', { name: /constraints/i }));
+      expect(screen.getByRole('tab', { name: /constraints/i })).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByRole('button', { name: '+ FK' })).toBeInTheDocument();
+      expect(screen.queryByLabelText('Column 1 name')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('tab', { name: /indexes/i }));
+      expect(screen.getByRole('button', { name: /add index/i })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: '+ FK' })).not.toBeInTheDocument();
+    });
+
+    // The load-bearing behaviour: a validation error must be visible on the
+    // tab that owns it even while a DIFFERENT tab is active, so it can't hide
+    // from the user. Duplicate column names are this component's own
+    // pre-dispatch check (validateDraft) — the Columns tab's case.
+    it('surfaces a red error count on the Columns tab, visible even while Constraints is active, and disables Save', async () => {
+      const onClose = vi.fn();
+      await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
+
+      fireEvent.click(screen.getByRole('button', { name: 'Add column' }));
+      fireEvent.change(screen.getByLabelText('Column 2 name'), { target: { value: 'id' } }); // duplicates Column 1's "id"
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      expect(await screen.findByText(/Duplicate field name/)).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('tab', { name: /constraints/i }));
+
+      const columnsTab = screen.getByRole('tab', { name: /columns/i });
+      expect(columnsTab).toHaveTextContent('1');
+      expect(columnsTab).toHaveAttribute('aria-selected', 'false');
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    // The Constraints-tab half of the same wiring: this time the blocking
+    // error comes from the ENGINE's own upsertEntity validation (surfaced via
+    // ui.editError), not this component's local validateDraft — an
+    // incomplete FK (no columns picked yet) is rejected before it ever
+    // reaches the model.
+    it('surfaces a red error count on the Constraints tab when the engine rejects an incomplete FK', async () => {
+      const onClose = vi.fn();
+      await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
+
+      fireEvent.click(screen.getByRole('tab', { name: /constraints/i }));
+      fireEvent.click(screen.getByRole('button', { name: '+ FK' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      expect(await screen.findByText(/must reference at least one column/i)).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('tab', { name: /indexes/i }));
+
+      const constraintsTab = screen.getByRole('tab', { name: /constraints/i });
+      expect(constraintsTab).toHaveTextContent('1');
+      expect(constraintsTab).toHaveAttribute('aria-selected', 'false');
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+      expect(onClose).not.toHaveBeenCalled();
+    });
   });
 });

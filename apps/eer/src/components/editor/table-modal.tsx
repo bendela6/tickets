@@ -20,6 +20,21 @@ import { Modal } from '../modal';
 import { ColumnsGrid } from './columns-grid';
 import { ConstraintsEditor } from './constraints-editor';
 import { IndexesEditor } from './indexes-editor';
+import { Tabs, tabButtonId, tabPanelId, type TabItem } from './tabs';
+
+type TabId = 'columns' | 'constraints' | 'indexes';
+
+// Which tab an error message belongs to, so Save's blocking reason is never
+// hidden behind an inactive tab (frames 1a-1c). Order matters: index errors
+// ("Index \"x\" references unknown column \"y\".") and constraint/column
+// errors both say "column", so the "index" check must run first or an index
+// error would misclassify as Constraints.
+function tabForErrorMessage(message: string): TabId | null {
+  if (/index/i.test(message)) return 'indexes';
+  if (/column name|field name|field needs a name/i.test(message)) return 'columns';
+  if (/constraint|primary key|foreign key/i.test(message)) return 'constraints';
+  return null;
+}
 
 const field = cn('w-full rounded-md border border-gray-600 bg-gray-900 px-2 py-1', 'text-sm text-gray-50');
 const label = 'flex flex-col gap-1 text-xs text-gray-400';
@@ -56,6 +71,9 @@ function toEditField(f: Column): EditField {
     generated: f.generated,
   };
 }
+
+// A single fixed modal on screen at once, so a static id namespace is fine.
+const TAB_ID_BASE = 'table-modal';
 
 const DEFAULT_PK: EditField = {
   name: 'id',
@@ -119,8 +137,18 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   const [indexes, setIndexes] = useState<TableIndex[]>(existing ? existing.indexes : []);
   const [localError, setLocalError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabId>('columns');
 
   const entityId = isEdit ? existing!.id : slugify(name);
+
+  // Which tab (if any) the CURRENTLY visible blocking error belongs to — a
+  // duplicate column name blocks Save via `localError` (this component's own
+  // pre-dispatch check, below); anything the engine itself rejects (a bad
+  // constraint/index shape) surfaces via `ui.editError` once Save has
+  // actually dispatched. Either way, the offending tab gets a red count even
+  // while some OTHER tab is active — that's the whole point (see tabs.tsx).
+  const errorTab = tabForErrorMessage(localError ?? ui.editError ?? '');
+  const blocked = localError != null || ui.editError != null;
 
   const save = () => {
     // upsertEntity is an upsert by design (editing relies on it), so in CREATE
@@ -189,6 +217,18 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
     onClose();
   };
 
+  // The error's own count (however many are queued behind the message that's
+  // actually visible right now — always 1: both localError and ui.editError
+  // hold a single message, not a list) replaces the tab's normal item count,
+  // never the other way around — a red "1" must never be mistaken for "this
+  // table has exactly one column".
+  const tabCount = (id: TabId, itemCount: number) => (errorTab === id ? 1 : itemCount);
+  const tabs: TabItem<TabId>[] = [
+    { id: 'columns', label: 'Columns', count: tabCount('columns', fields.length), hasError: errorTab === 'columns' },
+    { id: 'constraints', label: 'Constraints', count: tabCount('constraints', constraints.length), hasError: errorTab === 'constraints' },
+    { id: 'indexes', label: 'Indexes', count: tabCount('indexes', indexes.length), hasError: errorTab === 'indexes' },
+  ];
+
   const refs = id ? fkRefsTo(model, id) : [];
 
   return (
@@ -235,27 +275,47 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
 
       {isEdit && <ColorRow model={model} id={existing!.id} colors={ui.colors} onChange={actions.setColors} />}
 
-      <div className={label}>
-        <span>Columns</span>
-        <ColumnsGrid columns={fields} onChange={setFields} />
-      </div>
+      <Tabs tabs={tabs} activeId={activeTab} onSelect={setActiveTab} idBase={TAB_ID_BASE} />
 
-      <div className={label}>
-        <span>Constraints</span>
-        <p className="text-2xs text-gray-400">A FOREIGN KEY is what draws an edge between two tables.</p>
-        <ConstraintsEditor
-          model={model}
-          ownId={entityId}
-          columns={fields.map((f) => f.name)}
-          constraints={constraints}
-          onChange={setConstraints}
-        />
-      </div>
+      {activeTab === 'columns' && (
+        <div
+          role="tabpanel"
+          id={tabPanelId(TAB_ID_BASE, 'columns')}
+          aria-labelledby={tabButtonId(TAB_ID_BASE, 'columns')}
+          className={label}
+        >
+          <ColumnsGrid columns={fields} onChange={setFields} />
+        </div>
+      )}
 
-      <div className={label}>
-        <span>Indexes</span>
-        <IndexesEditor columns={fields.map((f) => f.name)} indexes={indexes} onChange={setIndexes} />
-      </div>
+      {activeTab === 'constraints' && (
+        <div
+          role="tabpanel"
+          id={tabPanelId(TAB_ID_BASE, 'constraints')}
+          aria-labelledby={tabButtonId(TAB_ID_BASE, 'constraints')}
+          className={label}
+        >
+          <p className="text-2xs text-gray-400">A FOREIGN KEY is what draws an edge between two tables.</p>
+          <ConstraintsEditor
+            model={model}
+            ownId={entityId}
+            columns={fields.map((f) => f.name)}
+            constraints={constraints}
+            onChange={setConstraints}
+          />
+        </div>
+      )}
+
+      {activeTab === 'indexes' && (
+        <div
+          role="tabpanel"
+          id={tabPanelId(TAB_ID_BASE, 'indexes')}
+          aria-labelledby={tabButtonId(TAB_ID_BASE, 'indexes')}
+          className={label}
+        >
+          <IndexesEditor columns={fields.map((f) => f.name)} indexes={indexes} onChange={setIndexes} />
+        </div>
+      )}
 
       <div className="flex flex-col gap-2 pt-2">
         {confirmingDelete && (
@@ -288,7 +348,7 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
           <button
             type="button"
             className="rounded-md bg-blue-600 px-3 py-2 text-sm text-gray-50 hover:bg-blue-500 disabled:opacity-50"
-            disabled={!name.trim()}
+            disabled={!name.trim() || blocked}
             onClick={save}
           >
             {isEdit ? 'Save' : 'Create'}
