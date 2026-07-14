@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, ne } from 'drizzle-orm';
+import type { Sql } from 'postgres';
 import { createDbClient, type Db } from '../client';
 import {
   comments, commentReactions, events, fields, itemLinks, itemTypeChildTypes, itemTypeFields,
@@ -22,6 +23,7 @@ import { verifyImport, type VerifyReport } from './verify-import';
 // assertions below are unchanged from the task-12 brief.
 describe('verifyImport (run after the import tasks)', () => {
   let db: Db;
+  let legacySql: Sql;
   let report: VerifyReport;
   let close: () => Promise<void>;
   let legacy: Legacy;
@@ -31,6 +33,7 @@ describe('verifyImport (run after the import tasks)', () => {
     const target = createDbClient({ max: 1 });
     const legacyClient = createLegacyClient();
     db = target.db;
+    legacySql = legacyClient.sql;
     close = async () => { await target.sql.end(); await legacyClient.sql.end(); };
     legacy = await readLegacy(legacyClient.sql);
     result = await importLegacy(db, legacy);
@@ -86,13 +89,102 @@ describe('verifyImport (run after the import tasks)', () => {
     expect(report.itemDiffs).toEqual([]);
   });
 
-  it('matches every row count', () => {
+  it('reports zero item skeleton, comment, and item link differences', () => {
+    expect(report.skeletonDiffs).toEqual([]);
+    expect(report.commentDiffs).toEqual([]);
+    expect(report.linkDiffs).toEqual([]);
+  });
+
+  it('matches every row count, including views', () => {
     for (const c of report.counts) {
       expect(c, `${c.table}: legacy ${c.legacy} vs imported ${c.imported}`).toMatchObject({ ok: true });
     }
+    expect(report.counts.some((c) => c.table === 'views')).toBe(true);
   });
 
   it('passes overall', () => {
     expect(report.ok).toBe(true);
+  });
+
+  // Proves the newly-added surfaces actually bite: corrupt one row on each
+  // one, confirm verifyImport both flags it AND flips `ok` to false, then
+  // restore and confirm a clean report again. Each test cleans up after
+  // itself so later tests in this describe block still see a healthy
+  // database (order matters here — vitest runs `it`s within a file in
+  // declaration order by default).
+  describe('newly-covered surfaces actually get caught when corrupted', () => {
+    it('flags and recovers from a corrupted item type_id (skeleton)', async () => {
+      const [sample] = await db.select({ id: items.id, typeId: items.typeId }).from(items).limit(1);
+      expect(sample).toBeDefined();
+      const [otherType] = await db
+        .select({ id: itemTypes.id })
+        .from(itemTypes)
+        .where(ne(itemTypes.id, sample!.typeId))
+        .limit(1);
+      expect(otherType).toBeDefined();
+
+      await db.update(items).set({ typeId: otherType!.id }).where(eq(items.id, sample!.id));
+      const corrupted = await verifyImport(db, legacySql);
+      expect(corrupted.ok).toBe(false);
+      expect(
+        corrupted.skeletonDiffs.some((d) => d.itemId === sample!.id && d.field === 'type_key'),
+      ).toBe(true);
+
+      await db.update(items).set({ typeId: sample!.typeId }).where(eq(items.id, sample!.id));
+      const restored = await verifyImport(db, legacySql);
+      expect(restored.ok).toBe(true);
+    });
+
+    it('flags and recovers from a corrupted item link target', async () => {
+      const [sampleLink] = await db
+        .select({
+          id: itemLinks.id,
+          linkTypeId: itemLinks.linkTypeId,
+          sourceItemId: itemLinks.sourceItemId,
+          targetItemId: itemLinks.targetItemId,
+        })
+        .from(itemLinks)
+        .limit(1);
+      expect(sampleLink).toBeDefined();
+
+      const usedTargets = new Set(
+        (
+          await db
+            .select({ targetItemId: itemLinks.targetItemId })
+            .from(itemLinks)
+            .where(and(eq(itemLinks.linkTypeId, sampleLink!.linkTypeId), eq(itemLinks.sourceItemId, sampleLink!.sourceItemId)))
+        ).map((r) => r.targetItemId),
+      );
+      const candidates = await db.select({ id: items.id }).from(items).limit(50);
+      const newTarget = candidates.find((i) => i.id !== sampleLink!.sourceItemId && !usedTargets.has(i.id));
+      expect(newTarget).toBeDefined();
+
+      await db.update(itemLinks).set({ targetItemId: newTarget!.id }).where(eq(itemLinks.id, sampleLink!.id));
+      const corrupted = await verifyImport(db, legacySql);
+      expect(corrupted.ok).toBe(false);
+      expect(
+        corrupted.linkDiffs.some((d) => d.linkId === sampleLink!.id && d.field === 'target_item_id'),
+      ).toBe(true);
+
+      await db.update(itemLinks).set({ targetItemId: sampleLink!.targetItemId }).where(eq(itemLinks.id, sampleLink!.id));
+      const restored = await verifyImport(db, legacySql);
+      expect(restored.ok).toBe(true);
+    });
+
+    it('flags and recovers from a corrupted comment body', async () => {
+      const [sampleComment] = await db.select({ id: comments.id, body: comments.body }).from(comments).limit(1);
+      expect(sampleComment).toBeDefined();
+
+      await db.update(comments).set({ body: '__verify-import corruption test__' }).where(eq(comments.id, sampleComment!.id));
+      const corrupted = await verifyImport(db, legacySql);
+      expect(corrupted.ok).toBe(false);
+      expect(
+        corrupted.commentDiffs.some((d) => d.commentId === sampleComment!.id && d.field === 'body'),
+      ).toBe(true);
+
+      await db.update(comments).set({ body: sampleComment!.body }).where(eq(comments.id, sampleComment!.id));
+      const restored = await verifyImport(db, legacySql);
+      expect(restored.ok).toBe(true);
+    });
   });
 });
