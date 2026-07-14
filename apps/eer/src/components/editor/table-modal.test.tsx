@@ -24,6 +24,14 @@ function Probe() {
   return null;
 }
 
+// <Tabs/> swaps a tab's count between the neutral and red-error class purely
+// via className (no aria/data attribute — see tabs.tsx) — this reaches past
+// the digit (which can coincide with a genuine item count) to assert the
+// error styling directly.
+function tabCountSpan(tab: HTMLElement): HTMLElement | null {
+  return tab.querySelector('span:last-child');
+}
+
 describe('TableModal', () => {
   it('renders a row per existing field', async () => {
     // twoZoneRaw's "orders": id (pk), users_id (fk -> users), tag_id (fk -> tags).
@@ -117,16 +125,23 @@ describe('TableModal', () => {
     expect((edit as { entity: { indexes: unknown } }).entity.indexes).toEqual(current.indexes);
   });
 
-  it('duplicate field names block Save with a visible message and do not dispatch', async () => {
+  // Migrated off a Save-click: Save is now disabled the moment the draft goes
+  // bad (live, every render — see table-modal.tsx's `draftError`/`blocked`),
+  // so a disabled native <button> never fires its click handler at all
+  // (browsers and jsdom both skip dispatch to disabled form controls) — the
+  // old "click Save, then find the error banner the click handler set" shape
+  // could never reach the handler any more. The live blocked state (button
+  // disabled, no dispatch) is the correct thing to assert now.
+  it('duplicate field names disable Save live (no click needed) and do not dispatch', async () => {
     const onClose = vi.fn();
     const { actions } = await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
     const spy = vi.spyOn(actions, 'applyModelEdit');
 
     fireEvent.click(screen.getByRole('button', { name: 'Add column' }));
     fireEvent.change(screen.getByLabelText('Column 2 name'), { target: { value: 'id' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(await screen.findByText(/Duplicate field name/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Save' })); // disabled — no-op
     expect(spy).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -178,7 +193,11 @@ describe('TableModal', () => {
     expect(screen.queryByRole('button', { name: 'Delete' })).toBeDisabled();
   });
 
-  it('create mode blocks Save with a visible message when the slugified id collides with an existing table', async () => {
+  // Migrated off a Create-click for the same reason as the duplicate-field-
+  // name test above: the id collision is now detected live (`idCollision` is
+  // computed every render off `entityId`, not just inside the click
+  // handler), so Create is already disabled before it's ever clicked.
+  it('create mode disables Create live when the slugified id collides with an existing table', async () => {
     // upsertEntity is an upsert — creating "Users" (slug "users") while "users"
     // already exists would silently clobber it without this guard.
     const onClose = vi.fn();
@@ -186,9 +205,9 @@ describe('TableModal', () => {
     const spy = vi.spyOn(actions, 'applyModelEdit');
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Users' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
-    expect(await screen.findByText(/A table with id "users" already exists/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Create' })); // disabled — no-op
     expect(spy).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -470,22 +489,28 @@ describe('TableModal', () => {
       expect(screen.queryByRole('button', { name: '+ FK' })).not.toBeInTheDocument();
     });
 
-    // The load-bearing behaviour: a validation error must be visible on the
-    // tab that owns it even while a DIFFERENT tab is active, so it can't hide
-    // from the user. Duplicate column names are this component's own
-    // pre-dispatch check (validateDraft) — the Columns tab's case.
+    // Task 10 follow-up (review findings): the tab that lights up red is now
+    // decided by `ModelEditError.field`, a structured tag apply-model-edit.ts
+    // attaches to every validation throw — never by pattern-matching the
+    // thrown message's prose — and it's computed LIVE, every render, off the
+    // current draft (table-modal.tsx's `buildEdit` + a synchronous, discard-
+    // the-result `tryApplyModelEdit` call), not just after a failed Save
+    // click. A disabled native <button> never fires its click handler at all
+    // (browsers and jsdom both skip dispatch to disabled controls), so these
+    // two tests no longer drive the error via a Save click — Save is already
+    // disabled by the time the assertions run.
     it('surfaces a red error count on the Columns tab, visible even while Constraints is active, and disables Save', async () => {
       const onClose = vi.fn();
       await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
 
       fireEvent.click(screen.getByRole('button', { name: 'Add column' }));
       fireEvent.change(screen.getByLabelText('Column 2 name'), { target: { value: 'id' } }); // duplicates Column 1's "id"
-      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-      expect(await screen.findByText(/Duplicate field name/)).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole('tab', { name: /constraints/i }));
 
       const columnsTab = screen.getByRole('tab', { name: /columns/i });
+      // tags now has 2 fields ('id', duplicate 'id') — a real count of 2, so
+      // seeing '1' here proves it's the fabricated error count, not the real one.
       expect(columnsTab).toHaveTextContent('1');
       expect(columnsTab).toHaveAttribute('aria-selected', 'false');
       expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
@@ -493,24 +518,98 @@ describe('TableModal', () => {
     });
 
     // The Constraints-tab half of the same wiring: this time the blocking
-    // error comes from the ENGINE's own upsertEntity validation (surfaced via
-    // ui.editError), not this component's local validateDraft — an
-    // incomplete FK (no columns picked yet) is rejected before it ever
-    // reaches the model.
+    // error comes from the ENGINE's own upsertEntity validation (a
+    // ModelEditError tagged 'constraints'), not this component's local
+    // validateDraft — an incomplete FK (no columns picked yet) is rejected
+    // before it ever reaches the model, and before Save is ever clicked.
     it('surfaces a red error count on the Constraints tab when the engine rejects an incomplete FK', async () => {
       const onClose = vi.fn();
       await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
 
       fireEvent.click(screen.getByRole('tab', { name: /constraints/i }));
       fireEvent.click(screen.getByRole('button', { name: '+ FK' }));
-      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-      expect(await screen.findByText(/must reference at least one column/i)).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole('tab', { name: /indexes/i }));
 
       const constraintsTab = screen.getByRole('tab', { name: /constraints/i });
+      // tags' own constraints are now [c1 pk, c2 blank fk] — a real count of
+      // 2, so '1' proves it's the fabricated error count.
       expect(constraintsTab).toHaveTextContent('1');
       expect(constraintsTab).toHaveAttribute('aria-selected', 'false');
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    // CRITICAL, reviewer-found: the wrong tab used to light up for this exact
+    // case. `child` (below) carries constraint c4, an fk pointing at
+    // `parent.id` — removing `parent`'s OWN "id" column throws from
+    // validateInboundReferences ("Cannot remove column \"id\": table \"child\"
+    // has a foreign key (c4) referencing it."), a message that contains the
+    // words "foreign key". A prose-matching regex (the pre-fix
+    // tabForErrorMessage) routed anything matching /foreign key/i to the
+    // Constraints tab — but `parent` has ZERO constraints of its own, and the
+    // fix is to undo the column removal, in the Columns tab. This is the
+    // scenario Finding 1 is about. Must fail against the pre-fix regex code
+    // (verified RED — see task report).
+    it('removing a column that another table\'s FK references lights the Columns tab (not Constraints), live, and disables Save', async () => {
+      const raw = {
+        groups: [{ id: 'z', label: 'Zone', order: 0 }],
+        entities: [
+          { id: 'parent', group: 'z', fields: [{ name: 'id', type: 'int' }, { name: 'name', type: 'text' }] },
+          {
+            id: 'child',
+            group: 'z',
+            fields: [{ name: 'id', type: 'int' }, { name: 'parent_id', type: 'int' }],
+            constraints: [
+              { id: 'c2', kind: 'pk', columns: ['id'] },
+              { id: 'c4', kind: 'fk', columns: ['parent_id'], refTable: 'parent', refColumns: ['id'] },
+            ],
+          },
+        ],
+      };
+      const onClose = vi.fn();
+      await renderDiagram(<TableModal id="parent" onClose={onClose} />, raw);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Remove column 1' })); // removes parent.id
+
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+
+      const columnsTab = screen.getByRole('tab', { name: /columns/i });
+      const constraintsTab = screen.getByRole('tab', { name: /constraints/i });
+      // parent now has 1 field left ('name') — the real count is 1, same
+      // digit as the fabricated error sentinel, so assert `hasError`'s own
+      // red styling directly rather than relying on the digit.
+      expect(tabCountSpan(columnsTab)?.className).toMatch(/red/);
+      expect(columnsTab).toHaveTextContent('1');
+      // Constraints must show its OWN real, unerrored count — parent has no
+      // constraints of its own at all (zero), not a fabricated "1".
+      expect(constraintsTab).toHaveTextContent('0');
+      expect(tabCountSpan(constraintsTab)?.className).not.toMatch(/red/);
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    // A duplicate index name is rejected by the engine's own index pass
+    // (validateConstraints' index loop) — tagged 'indexes', lighting the
+    // Indexes tab, live, with no Save click.
+    it('a duplicate index name lights the Indexes tab, live, with no Save click', async () => {
+      const onClose = vi.fn();
+      await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
+
+      fireEvent.click(screen.getByRole('tab', { name: /indexes/i }));
+      fireEvent.click(screen.getByRole('button', { name: /add index/i }));
+      fireEvent.change(screen.getByLabelText('Index 1 name'), { target: { value: 'dup' } });
+      fireEvent.click(screen.getByLabelText('Index 1 column id'));
+      fireEvent.click(screen.getByRole('button', { name: /add index/i }));
+      fireEvent.change(screen.getByLabelText('Index 2 name'), { target: { value: 'dup' } });
+      fireEvent.click(screen.getByLabelText('Index 2 column id'));
+
+      fireEvent.click(screen.getByRole('tab', { name: /columns/i }));
+
+      const indexesTab = screen.getByRole('tab', { name: /indexes/i });
+      // Two indexes now exist (real count 2), so seeing '1' proves it's the
+      // fabricated error count, not the real one.
+      expect(indexesTab).toHaveTextContent('1');
+      expect(tabCountSpan(indexesTab)?.className).toMatch(/red/);
       expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
       expect(onClose).not.toHaveBeenCalled();
     });
