@@ -1,5 +1,15 @@
 # Event Sourcing — Design Set
 
+> **⚠️ SUPERSEDED (2026-07-14)** — the plan of record is
+> [`docs/superpowers/specs/2026-07-14-items-platform-schema-and-import-design.md`](../superpowers/specs/2026-07-14-items-platform-schema-and-import-design.md),
+> which builds to [`apps/eer/models/items-platform.json`](../../apps/eer/models/items-platform.json).
+> This tree is kept for its **DDL and its runtime design**, which the spec cites and reuses:
+> the `events` / `commands` / `outbox` tables ([`2-schema.md`](2-schema.md)), the hardened
+> EAV constraints, the registry and command path ([`3-runtime.md`](3-runtime.md)).
+> Where it disagrees with the model, the **model wins** — notably it keeps the `ticket*`
+> noun, puts options under a field with transitions in jsonb, and places the `imported`
+> baseline event at `seq = 1` (which would break replay).
+
 _Consolidated, decided design for event-sourcing the ticket aggregate. Five files, layered — read in
 order. Shapes live in exactly one place; every other file links, never restates._
 

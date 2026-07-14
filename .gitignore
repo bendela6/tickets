@@ -5,3 +5,6 @@ dist/
 *.log
 .idea/
 *.dump
+
+# db backups (never commit)
+backups/
