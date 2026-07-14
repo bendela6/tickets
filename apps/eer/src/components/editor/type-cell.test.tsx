@@ -26,9 +26,9 @@ function ControlledTypeCell({ initial, onEmit }: { initial: string; onEmit?: (v:
 describe('TypeCell', () => {
   it('selects the base type and emits it', () => {
     const onChange = vi.fn();
-    render(<TypeCell value="int" onChange={onChange} />);
+    render(<TypeCell value="integer" onChange={onChange} />);
     const select = screen.getByLabelText('type');
-    expect(select).toHaveValue('int');
+    expect(select).toHaveValue('integer');
     fireEvent.change(select, { target: { value: 'text' } });
     expect(onChange).toHaveBeenCalledWith('text');
   });
@@ -115,10 +115,10 @@ describe('TypeCell', () => {
     render(<ControlledTypeCell initial="citext" />);
     expect(screen.getByLabelText('custom type')).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('type'), { target: { value: 'int' } });
+    fireEvent.change(screen.getByLabelText('type'), { target: { value: 'integer' } });
 
     expect(screen.queryByLabelText('custom type')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('type')).toHaveValue('int');
+    expect(screen.getByLabelText('type')).toHaveValue('integer');
   });
 
   it('resyncs out of custom mode when the value prop changes externally (grid reuses the row)', () => {
@@ -127,10 +127,10 @@ describe('TypeCell', () => {
     expect(screen.getByLabelText('custom type')).toBeInTheDocument();
 
     // The grid reuses this cell for a different column; TypeCell never emitted
-    // "int" itself, so this must resync even though customMode was true.
-    rerender(<TypeCell value="int" onChange={onChange} />);
+    // "integer" itself, so this must resync even though customMode was true.
+    rerender(<TypeCell value="integer" onChange={onChange} />);
 
     expect(screen.queryByLabelText('custom type')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('type')).toHaveValue('int');
+    expect(screen.getByLabelText('type')).toHaveValue('integer');
   });
 });
