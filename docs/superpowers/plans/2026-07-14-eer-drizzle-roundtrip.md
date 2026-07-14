@@ -1101,33 +1101,61 @@ it('throws rather than exporting a model with an unknown type', () => {
 
 - [ ] **Step 3: Implement.**
 
-- [ ] **Step 4: Stand the gate up early, on a small fixture**
+- [ ] **Step 4: Write the `loadGeneratedModule` test helper**
 
-Still in `export-drizzle.test.ts` — the full 18-table gate is Task 7, but the mechanism must work
-now, on two tables:
+Create `apps/eer/src/test/helpers/load-generated-module.ts` (Node-project only — it touches the
+filesystem, so it must never be imported from a jsdom test):
+
+```ts
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+// Writes generated drizzle source to a temp .ts and imports it, so a test can
+// introspect the REAL module the exporter produced rather than trust its text.
+// Vitest transpiles the import, so this also proves the file parses.
+export async function loadGeneratedModule(source: string): Promise<Record<string, unknown>> {
+  const dir = await mkdtemp(join(tmpdir(), 'eer-gen-'));
+  const file = join(dir, 'schema.generated.ts');
+  await writeFile(file, source, 'utf8');
+  try {
+    return (await import(/* @vite-ignore */ pathToFileURL(file).href)) as Record<string, unknown>;
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+```
+
+- [ ] **Step 5: Stand the gate up early, on a small fixture**
+
+Create `apps/eer/src/test/fixtures/tiny-schema.ts` — a hand-written two-table drizzle schema (one
+enum, a composite FK with `ON DELETE CASCADE`, a partial unique index, a CHECK, a `serial` PK) — and
+assert the round-trip in `export-drizzle.test.ts`. This test lives in the **Node** vitest project.
 
 ```ts
 import { generateDrizzleJson, generateMigration } from 'drizzle-kit/api';
 
 it('round-trips a two-table schema through drizzle-kit with an empty migration', async () => {
-  const original = await import('../../../test/fixtures/tiny-schema');   // hand-written drizzle
+  const original = await import('../../../test/fixtures/tiny-schema');
   const { model } = importDrizzle(describeDrizzle(original, []), null);
-  const source = exportDrizzle(model);
 
-  const regenerated = await loadGeneratedModule(source);   // write to a temp .ts, import it
-  const before = await generateDrizzleJson(original);
-  const after = await generateDrizzleJson(regenerated);
+  const regenerated = await loadGeneratedModule(exportDrizzle(model));
 
-  expect(await generateMigration(before, after)).toEqual([]);   // Postgres cannot tell them apart
+  const migration = await generateMigration(
+    await generateDrizzleJson(original),
+    await generateDrizzleJson(regenerated),
+  );
+  expect(migration).toEqual([]);   // Postgres cannot tell the two schemas apart
 });
 ```
 
-- [ ] **Step 5: Run the tests.** Expected: PASS, empty migration.
+- [ ] **Step 6: Run the tests.** Expected: PASS, empty migration.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add apps/eer/src/engine/model/export-drizzle apps/eer/src/test/fixtures
+git add apps/eer/src/engine/model/export-drizzle apps/eer/src/test/fixtures apps/eer/src/test/helpers
 git commit -m "feat(eer): export the model as drizzle TypeScript; proven by an empty drizzle-kit migration"
 ```
 
@@ -1175,9 +1203,28 @@ it('round-trips @tickets/db with nothing lost', async () => {
 });
 
 it('the generated file typechecks', async () => {
-  // tsc --noEmit over the written file; fails the test on any error
+  const source = exportDrizzle(importDrizzle(describeDrizzle(realSchema as Record<string, unknown>, []), null).model);
+  const dir = await mkdtemp(join(tmpdir(), 'eer-tsc-'));
+  const file = join(dir, 'schema.generated.ts');
+  await writeFile(file, source, 'utf8');
+
+  const { status, stdout } = spawnSync(
+    'npx',
+    ['tsc', '--noEmit', '--strict', '--module', 'esnext', '--moduleResolution', 'bundler', '--skipLibCheck', file],
+    { encoding: 'utf8', shell: true },
+  );
+
+  expect(stdout).toBe('');       // tsc prints errors to stdout
+  expect(status).toBe(0);
 });
 ```
+
+**Importing the real schema:** `apps/eer` has no dependency on `@tickets/db`, and the package root
+(`src/index.ts`) is import-unsafe (it pulls `client.ts` and `environment.ts`). Import the schema
+**barrel** by relative path, as the snippet above does. If `tsc` rejects the cross-package relative
+import, add a `@tickets/db-schema` path alias to `apps/eer/tsconfig.json` and the matching `resolve.alias`
+in `vite.config.ts` / `vitest.config.ts` — do **not** add a runtime dependency on `@tickets/db`, and
+do **not** import the package root.
 
 - [ ] **Step 2: Run it.** Expected: FAIL first (that is the point — it names every remaining gap).
 
