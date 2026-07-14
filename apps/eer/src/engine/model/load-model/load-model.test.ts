@@ -241,19 +241,15 @@ describe('loadModel — "columns" is canonical, "fields" is a permanent legacy a
 // single value here — pinning the exact multiset makes any future regression
 // visible instead of silently averaging out.
 describe('loadModel — real seed regression (pinned cardinality multiset)', () => {
-  // The seed still spells two columns' type as the placeholder "enum" (task 9
-  // rewrites the seed onto real drizzle types) — Task 2's unknown-type warning
-  // is new, correct diagnostic output for those two, not a regression; every
-  // other warning-affecting behaviour stays at 0.
-  const SEED_TYPE_WARNINGS = [
-    'Column "users.kind" has unknown type "enum".',
-    'Column "fields.type" has unknown type "enum".',
-  ];
+  // Task 9 rewrote the seed onto real drizzle-canonical types (and declared
+  // `enums` for the two columns that used to spell the placeholder "enum") —
+  // 0 warnings is now the bar, same as every other warning-affecting
+  // behaviour.
 
-  it('(d) loads with 0 errors, 2 known unknown-type warnings, 41 relationships, 18 labels, 3 m2m, and this exact cardinality multiset', () => {
+  it('(d) loads with 0 errors, 0 warnings, 41 relationships, 18 labels, 3 m2m, and this exact cardinality multiset', () => {
     const { model, errors, warnings } = loadModel(seedRaw);
     expect(errors).toEqual([]);
-    expect(warnings).toEqual(SEED_TYPE_WARNINGS);
+    expect(warnings).toEqual([]);
     expect(model!.relationships).toHaveLength(41);
     expect(model!.relationships.filter((r) => r.label)).toHaveLength(18);
     expect(model!.relationships.filter((r) => r.kind === 'm2m')).toHaveLength(3);
@@ -272,15 +268,15 @@ describe('loadModel — real seed regression (pinned cardinality multiset)', () 
   // even though most VALUES happen to come out unchanged anyway (masked by
   // derive-relationships' own cardinalityOf override for constraint-backed
   // pairs). 0 warnings is the bar; equal-by-id cardinality is the belt.
-  it('(e) serialize -> reload (constraints-only shape) yields the SAME cardinality per relationship, with the same 2 unknown-type warnings', () => {
+  it('(e) serialize -> reload (constraints-only shape) yields the SAME cardinality per relationship, with 0 warnings', () => {
     const { model: m1, errors: e1, warnings: w1 } = loadModel(seedRaw);
     expect(e1).toEqual([]);
-    expect(w1).toEqual(SEED_TYPE_WARNINGS);
+    expect(w1).toEqual([]);
 
     const raw2 = serializeModel(m1!, m1!.colors);
     const { model: m2, errors: e2, warnings: w2 } = loadModel(raw2);
     expect(e2).toEqual([]);
-    expect(w2).toEqual(SEED_TYPE_WARNINGS);
+    expect(w2).toEqual([]);
 
     const byId = (rels: { id: string; cardinality: string }[]) => new Map(rels.map((r) => [r.id, r.cardinality]));
     expect(byId(m2!.relationships)).toEqual(byId(m1!.relationships));
