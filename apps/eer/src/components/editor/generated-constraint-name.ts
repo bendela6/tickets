@@ -26,7 +26,8 @@
 //    constructor the moment the table is defined): `<table>_<cols>_unique`.
 //  - fk: always table-level (`foreignKey({ columns, foreignColumns })`) —
 //    DRIZZLE computes it (foreign-keys.ts ForeignKey.getName()):
-//    `<table>_<cols>_<targetTable>_<targetCols>_fk`.
+//    `<table>_<cols>_<targetTable>_<targetCols>_fk`, where BOTH the owning
+//    and the target table names are the PHYSICAL (schema-stripped) names.
 //  - check: drizzle's own `check(name, expr)` builder has NO default at
 //    all — `name` is a mandatory first argument (pg-core/checks.ts) — and
 //    export-drizzle's `emitCheck` THROWS on a blank name rather than
@@ -69,9 +70,18 @@ export function generatedConstraintName(
       if (constraint.columns.length === 0) return null;
       return `${tableName}_${constraint.columns.join('_')}_unique`;
 
-    case 'fk':
+    case 'fk': {
       if (constraint.columns.length === 0 || !constraint.refTable || constraint.refColumns.length === 0) return null;
-      return `${tableName}_${constraint.columns.join('_')}_${constraint.refTable}_${constraint.refColumns.join('_')}_fk`;
+      // The TARGET table's name component is subject to the same schema-prefix
+      // rule as the owning table (Task 12 review, Finding 3): drizzle's
+      // ForeignKey.getName() keys off the target's PHYSICAL table name (the
+      // pgTable first argument), never the schema-qualified id — so
+      // "billing.customers" must be stripped to "customers" here too, or the
+      // preview lies for a cross-schema fk. Same helper, so the two can't
+      // diverge; refTable is the target Entity.id, refSchema its schema.
+      const refName = physicalTableName({ id: constraint.refTable, schema: constraint.refSchema });
+      return `${tableName}_${constraint.columns.join('_')}_${refName}_${constraint.refColumns.join('_')}_fk`;
+    }
 
     case 'check': {
       const unnamedChecks = siblings.filter((c) => c.kind === 'check' && !c.name);
