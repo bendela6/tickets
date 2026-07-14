@@ -2,11 +2,11 @@ import type { ReactNode } from 'react';
 
 import { cn } from '../../ui/cn';
 
-export type Tone = 'entity' | 'zone' | 'subgroup' | 'edge';
+export type Tone = 'entity' | 'group' | 'subgroup' | 'edge';
 
 const toneClass: Record<Tone, string> = {
   entity: 'bg-blue-400/15 text-blue-400',
-  zone: 'bg-violet-400/18 text-violet-300',
+  group: 'bg-violet-400/18 text-violet-300',
   subgroup: 'bg-green-400/15 text-green-400',
   edge: 'bg-yellow-400/15 text-yellow-400',
 };

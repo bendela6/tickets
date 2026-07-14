@@ -1,7 +1,9 @@
-// Create/edit a zone or subgroup. Colour is shown only in edit mode: it writes
-// straight through actions.setColors (the same override map ColorsForm uses),
-// live on every change — a brand-new group has nothing to override yet, so a
-// create-mode swatch would key a colour to an id that might never be saved.
+// Create/edit a group. A group is a subgroup exactly when it has a parent —
+// that's the only distinction, surfaced as a single Parent selector (no parent =
+// a root group). Colour is shown only in edit mode: it writes straight through
+// actions.setColors (the same override map ColorsForm uses), live on every
+// change — a brand-new group has nothing to override yet, so a create-mode
+// swatch would key a colour to an id that might never be saved.
 
 import { useState } from 'react';
 
@@ -41,9 +43,11 @@ function GroupModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   const isEdit = existing != null;
 
   const [name, setName] = useState(existing?.label ?? '');
-  const [isSub, setIsSub] = useState(existing ? existing.parent != null : false);
-  const topZones = model.groups.filter((g) => !g.parent && g.id !== id);
-  const [parent, setParent] = useState<string | null>(existing?.parent ?? topZones[0]?.id ?? null);
+  // A group with no parent is a root group; set a parent and it's a subgroup.
+  // Only root groups can be parents (one level of nesting) — and a group can't
+  // parent itself.
+  const rootGroups = model.groups.filter((g) => !g.parent && g.id !== id);
+  const [parent, setParent] = useState<string | null>(existing?.parent ?? null);
   const [localError, setLocalError] = useState<string | null>(null);
 
   const groupId = isEdit ? existing!.id : slugify(name);
@@ -64,7 +68,7 @@ function GroupModalForm({ model, id, onClose }: { model: Model; id?: string; onC
     setLocalError(null);
     const edit = {
       kind: 'upsertGroup' as const,
-      group: { id: groupId, label: name.trim(), parent: isSub ? parent : null },
+      group: { id: groupId, label: name.trim(), parent },
     };
     actions.applyModelEdit(edit);
     try {
@@ -110,31 +114,22 @@ function GroupModalForm({ model, id, onClose }: { model: Model; id?: string; onC
         <input className={cn(field, 'text-gray-400')} value={groupId} disabled readOnly />
       </label>
 
-      <fieldset className={label}>
-        <legend className="mb-1">Kind</legend>
-        <label className="flex items-center gap-2 text-sm text-gray-50">
-          <input type="radio" name="kind" checked={!isSub} onChange={() => setIsSub(false)} />
-          Zone
-        </label>
-        <label className="flex items-center gap-2 text-sm text-gray-50">
-          <input type="radio" name="kind" checked={isSub} disabled={topZones.length === 0} onChange={() => setIsSub(true)} />
-          Subgroup
-        </label>
-        {isSub && (
-          <select
-            aria-label="Parent zone"
-            className={cn(field, 'mt-1')}
-            value={parent ?? ''}
-            onChange={(e) => setParent(e.target.value)}
-          >
-            {topZones.map((z) => (
-              <option key={z.id} value={z.id}>
-                {z.label}
-              </option>
-            ))}
-          </select>
-        )}
-      </fieldset>
+      <label className={label}>
+        Parent
+        <select
+          aria-label="Parent group"
+          className={field}
+          value={parent ?? ''}
+          onChange={(e) => setParent(e.target.value || null)}
+        >
+          <option value="">— none (root group) —</option>
+          {rootGroups.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.label}
+            </option>
+          ))}
+        </select>
+      </label>
 
       {id && <ColorRow model={model} id={id} colors={ui.colors} onChange={actions.setColors} />}
 

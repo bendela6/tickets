@@ -38,7 +38,7 @@ describe('TopBar', () => {
     );
     expect(screen.getByRole('heading', { name: 'EER model viewer' })).toBeInTheDocument();
     expect(screen.getByText('loading…')).toBeInTheDocument();
-    expect(screen.queryByText('Zones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Groups')).not.toBeInTheDocument();
   });
 
   it('renders the model title plus zone and kind chips', async () => {

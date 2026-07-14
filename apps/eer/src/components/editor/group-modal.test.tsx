@@ -36,6 +36,23 @@ describe('GroupModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('picking a Parent makes the new group a subgroup; there is no separate kind control', async () => {
+    const { actions } = await renderDiagram(<GroupModal onClose={() => {}} />, twoZoneRaw());
+    const spy = vi.spyOn(actions, 'applyModelEdit');
+    // The only thing that makes a group a subgroup is choosing a parent — there
+    // is no Zone/Subgroup radio any more.
+    expect(screen.queryByText('Kind')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Nested' } });
+    fireEvent.change(screen.getByLabelText('Parent group'), { target: { value: 'z1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+
+    expect(spy).toHaveBeenCalledWith({
+      kind: 'upsertGroup',
+      group: { id: 'nested', label: 'Nested', parent: 'z1' },
+    });
+  });
+
   it('delete is disabled with the blocking reason in its title when the group has tables', async () => {
     await renderDiagram(<GroupModal id="z2" onClose={() => {}} />, twoZoneRaw());
 
