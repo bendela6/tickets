@@ -1,6 +1,6 @@
 # EER ↔ drizzle: a lossless round-trip
 
-**Date:** 2026-07-14 · **Revision:** 2 (amended after Grok + Sol validation) · **Status:** design, awaiting approval · **App:** `apps/eer`
+**Date:** 2026-07-14 · **Revision:** 3 (amended after Grok + Sol validation, then reconciled with the UI spec) · **Status:** design, awaiting approval · **App:** `apps/eer`
 
 ## The ask
 
@@ -114,7 +114,6 @@ name)`** throughout:
 | `Model.enums` | the JSON twin of `pgEnum(name, values)` |
 | `UniqueConstraint.nullsNotDistinct` | changes uniqueness under NULLs; the real schema uses it |
 | `TableIndex.method` / `.where` / `.only` / per-column `order`, `nulls`, `opClass` / expression columns | exactly the SQL-affecting fields `getTableConfig` exposes (verified keys: `name, columns, unique, only, method, where`; per-column: `name, keyAsName, type, indexConfig`) |
-| `Entity.stale` | a table the last import no longer found (see *Unresolved state*) |
 
 Anything drizzle can express that this list omits is **out of scope and reported at import** — never
 silently dropped. Gate test B is what proves the omissions don't matter for the real schema.
@@ -139,19 +138,60 @@ number, or JSON. One representation, one emission path, no guessing.
 Drizzle auto-names `comment_reactions_comment_id_comments_id_fk`. The importer records the resolved
 name so export reproduces it exactly and migrations don't churn.
 
-## Unresolved state (stale tables, unknown types)
+## The UI
+
+**Spec of record:** the Claude Design doc *EER Modal Spec* (project `dc519bc9-8288-4ed6-bdd5-70d53ac8622d`),
+18 frames: table editor (columns / constraints / indexes / type picker), its states (validation,
+refusal, empty, 45-column scroll, unknown type), model settings + enum manager, import report, export
+preview, and the three small modals.
+
+Load-bearing decisions taken from it:
+
+- The table editor is **one wide (1024px) modal with three tabs** — Columns / Constraints / Indexes —
+  each showing a mono count. Errors aggregate onto the tab as a red count, so nothing hides behind an
+  inactive tab. Switching tabs never loses unsaved edits.
+- The modal takes its **natural height and the backdrop scrolls** (already shipped, commit `0ece040`).
+  The only sanctioned inner scroll is horizontal, on a wide table or the export preview.
+- Composite-key column chips are **numbered in pick order** and never re-sorted — order is semantic.
+- Constraint name inputs show the name Postgres would generate, greyed, until overridden.
+- FOREIGN KEY is the only blue-badged constraint card: it is the one that draws a canvas edge.
+- Type is **only ever picked, never typed**. Enums sit in their own violet section, never mixed into
+  the built-ins. An unknown type pins to the top of the picker, red and unselectable.
+- Refusals (deleting an FK-targeted column, deleting an in-use enum) appear **under the thing you
+  touched**, name the exact table/constraint, and link to it — they are refusals, not warnings.
+- Enum values are numbered, draggable chips (DDL order is semantic). **Renaming an enum cascades** to
+  every column pointing at it.
+- Import is always a **dry run**: a report of added / changed / removed, applied only on confirm.
+
+Four corrections to the design, each verified against drizzle 0.45.2 (see *The type catalogue*):
+
+1. The picker's `box`, `path`, `polygon`, `circle` and `varbit` **do not exist as drizzle builders** —
+   nor does `bytea`, which the *current* catalogue offers. They cannot round-trip and are dropped.
+2. The picker is **missing `serial` / `bigserial` / `smallserial`**, which is what 16 columns of the
+   real schema use. They are added.
+3. The report's "kept verbatim — re-emitted on export unchanged" promise is **not implementable** for
+   `$type<Foo>()`: it is compile-time only and invisible to `getTableConfig`. That section becomes
+   *"cannot be reproduced — resolve before exporting"* and blocks export (below).
+4. Export writes a review file, not `packages/db/src/schema` (below).
+
+The design shows no affordance for identity columns, index `ONLY`, or per-column `opClass`. That is
+accepted: they are covered by *Preserve-through-edit*, not by an editor.
+
+## Unresolved state (removed tables, unknown types)
 
 Revision 1 contradicted itself: it kept vanished tables in the model *and* exported the whole model —
-so the next export would resurrect them. Explicit rules:
+so the next export would resurrect them. The UI spec resolves this better than revision 2 did: since
+import is a dry run with an explicit **Apply**, the report *is* the consent.
 
-- A table the import no longer finds is marked **stale**, not deleted. Deletion stays the user's call.
+- A table the import no longer finds is listed under **− REMOVED**, with what it costs on the canvas
+  ("its card and 2 edges leave"). Apply deletes it. Cancel changes nothing. There is no stale state.
 - A column type nothing recognises loads with a warning and keeps its string verbatim (no silent
   rewrite), and renders in the picker as an **invalid** selection.
 - **Saving the model JSON is always allowed.** Unresolved state is not a reason to lose work.
-- **Exporting to drizzle is blocked** while any stale table or unknown type exists. The export button
-  says which.
-- The import report separates *informational* (added/changed tables) from *export-blocking*
-  (stale, unknown type, unsupported construct).
+- **Exporting to drizzle is blocked** while any unknown type or unreproducible construct exists. The
+  export button says which.
+- The import report separates *informational* (added / changed / removed) from *export-blocking*
+  (unknown type, unreproducible construct).
 
 ## Preserve-through-edit (the highest-risk rule)
 
@@ -210,7 +250,12 @@ Policy:
 - **`customType` is excluded** — it is a meta-factory, not a SQL type.
 - **`decimal` is not in the registry** (it is an alias export of `numeric`); it lives in the alias map.
 - Multi-word SQL names (`timestamp with time zone`, `double precision`) are the catalogue's canonical
-  names.
+  names. The picker may *display* the shorthand (`timestamptz`, `timetz`) — display name and stored
+  SQL name are separate fields on the descriptor.
+- **The registry is the whole picker.** A type drizzle cannot build cannot round-trip, so it is not
+  offered. That removes `bytea` (in today's catalogue) and `box` / `path` / `polygon` / `circle` /
+  `varbit` (in the UI spec's picker) — none of them are drizzle builders in 0.45.2. It adds the
+  `serial` family, which the UI spec omitted and 16 columns of the real schema use.
 
 A builder's SQL name is only readable from a *built column*, so each builder gets a **descriptor**
 that says how to instantiate it, how to parse its SQL text back to parameters, and how to emit it as
@@ -243,11 +288,19 @@ a type turns the suite red rather than leaving a silent hole in the picker.
 **In:** tables, columns, constraints (pk/unique/check/fk with actions), indexes (method, partial,
 ordering, opClass, expressions), enums, namespaces, identity and generated columns, arrays.
 
-**Out, but reported at import:** views, materialised views, sequences, RLS policies, roles, and
-TypeScript-only sugar that never reaches SQL — `relations()`, `$type<Foo>()`, `.$defaultFn()`,
-`.$onUpdate()`, and `mode: 'string'` (every timestamp in `@tickets/db` uses it). `$type` and `mode`
-are invisible at runtime, so they are documented as unrepresentable rather than detected;
-`defaultFn`/`onUpdateFn` are detected directly.
+**Out, reported at import, and export-blocking:** views, materialised views, sequences, RLS policies,
+roles, and TypeScript-only sugar that never reaches SQL — `relations()`, `$type<Foo>()`,
+`.$defaultFn()`, `.$onUpdate()`. We do not pretend to preserve what we cannot see: rather than
+re-emitting them "verbatim" (impossible for `$type`, which is compile-time only), the import reports
+them and **export is blocked** until they are resolved. That keeps "no gap" literally true — we never
+write a file that lost something.
+
+`defaultFn` / `onUpdateFn` are detected directly on the column object. `$type` and `mode: 'string'`
+are invisible at runtime and are documented as unrepresentable rather than detected.
+
+Verified: the real schema contains **no** `relations()`, `$type`, `$defaultFn`, `$onUpdate` or
+`generatedAlwaysAs` — the only TS-only sugar is `mode: 'string'` on 23 timestamps, which the export
+house style below reproduces. So this list is empty for `@tickets/db` today.
 
 **Export house style** (does not affect SQL, so the gate is unaffected): timestamp and date columns
 are emitted with `mode: 'string'`, matching the repo's existing convention.
@@ -272,13 +325,16 @@ round-trip contract they are no longer optional.
    across three round-trips.
 4. **Pure unit tests** for both transforms: every construct in the table above, plus sized/nested
    arrays, partial indexes, `nullsNotDistinct`, composite FKs with actions, identity, generated.
-5. **Merge tests** — re-import preserves zones, colours, positions, titles; added/stale tables are
-   reported; export is blocked while stale.
-6. **Catalogue drift test** — every builder in `getPgColumnBuilders()` has a descriptor.
+5. **Merge tests** — re-import preserves zones, colours, positions, titles; added / changed / removed
+   tables are reported; Cancel changes nothing, Apply deletes the removed ones.
+6. **Catalogue drift test** — every builder in `getPgColumnBuilders()` has a descriptor, and the
+   picker offers nothing outside the registry (the `bytea` / `box` / `varbit` regression).
 7. **Alias + unknown-type tests** — legacy files load; an unknown type warns, survives untouched, and
    blocks export.
 8. **Escaping tests** — a default/CHECK/predicate containing a backtick or `${` generates valid TS.
-9. **E2E** — import the real schema, see the zones; pick an enum type, make it an array, save, reload.
+9. **Enum rename cascades** — renaming an enum re-points every column using it; deleting one that is
+   in use is refused, naming the dependent columns.
+10. **E2E** — import the real schema, see the zones; pick an enum type, make it an array, save, reload.
 
 ## Risks
 
@@ -368,7 +424,6 @@ interface Entity {
   columns: Column[];
   constraints: Constraint[];
   indexes: TableIndex[];
-  stale: boolean;                // + last import no longer found this table; blocks export
   x: number; y: number; _w: number; _h: number;   // layout fills these
 }
 
@@ -455,12 +510,18 @@ interface UnsupportedConstruct {
 // ---- import result ----
 
 interface ImportReport {
-  addedTables: string[];
-  changedTables: string[];
-  staleTables: string[];         // reported and marked, NOT deleted
+  addedTables: ChangeRow[];
+  changedTables: ChangeRow[];
+  removedTables: ChangeRow[];    // deleted on Apply — the report is the consent
   unknownTypes: { table: string; column: string; type: string }[];
-  unsupported: UnsupportedConstruct[];
-  blocksExport: boolean;         // any stale table, unknown type, or blocking construct
+  unsupported: UnsupportedConstruct[];   // cannot be reproduced; blocks export
+  blocksExport: boolean;
+}
+
+interface ChangeRow {
+  table: string;
+  detail: string;                // '+2 columns (gift, gift_message) · total numeric(12,2) → numeric(10,2)'
+  canvasEffect: string;          // 'draws a new card + edge' | 'its card and 2 edges leave the canvas'
 }
 
 // ---- the type catalogue ----
