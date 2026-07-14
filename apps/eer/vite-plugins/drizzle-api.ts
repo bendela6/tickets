@@ -17,7 +17,7 @@
 // serve` but never for `vite build` — so the production bundle has no
 // filesystem or ssrLoadModule surface at all (same mechanism models-api.ts
 // relies on).
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, realpathSync } from 'node:fs';
 import { rename, writeFile } from 'node:fs/promises';
 import { isAbsolute, join, relative, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -43,9 +43,28 @@ export interface ModuleLoader {
   ssrLoadModule(id: string): Promise<Record<string, unknown>>;
 }
 
+// path.relative() is what makes this a real path-boundary check rather than
+// a bare string prefix: relative('C:/root', 'C:/root-evil/x') is
+// '..\root-evil\x' (starts with '..' -> outside), never a same-prefix false
+// positive like a naive target.startsWith(root) would give for a sibling
+// directory named `${root}-evil`.
 function isInside(root: string, target: string): boolean {
   const rel = relative(root, target);
   return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
+}
+
+// realpath a path for the containment check, falling back to the path
+// as-given when it can't be resolved (most commonly ENOENT — the path
+// doesn't exist yet, e.g. a bad/typo'd module request, or a synthetic root in
+// a unit test that never touches disk). Swallowing broadly here is
+// deliberate: whatever the failure mode, "can't prove where this points" must
+// degrade to the pre-existing lexical check, never to a thrown 500.
+function realpathOrSelf(p: string): string {
+  try {
+    return realpathSync(p);
+  } catch {
+    return p;
+  }
 }
 
 export function resolveModulePath(
@@ -57,7 +76,19 @@ export function resolveModulePath(
     return { error: { status: 400, body: { error: 'Module path must end in .ts.' } } };
   }
   const abs = resolve(root, rel);
-  if (!isInside(root, abs)) {
+
+  // Containment is checked on *real* paths, not the lexical ones above. A
+  // symlink (or, unprivileged on Windows, a directory junction) planted
+  // inside the workspace and aimed outside it resolves lexically inside root
+  // but its realpath does not — this is the standard way a lexical-only
+  // check gets defeated. Both sides go through realpath (not just abs):
+  // macOS/Windows can hand back a symlinked or 8.3-short-named root, and
+  // comparing a realpath'd target against a non-realpath'd root would
+  // false-reject legitimate requests.
+  const realRoot = realpathOrSelf(root);
+  const realAbs = realpathOrSelf(abs);
+
+  if (!isInside(realRoot, realAbs)) {
     return { error: { status: 400, body: { error: 'Module path must resolve inside the workspace.' } } };
   }
   return { path: abs };
@@ -68,7 +99,7 @@ export function resolveModulePath(
 // hex, so it's resolved here, once, at the read boundary. An unknown name
 // (typo, future palette addition not yet wired here) falls back to gray
 // rather than failing the whole schema read.
-const INSTRUMENT_PALETTE: Record<string, string> = {
+export const INSTRUMENT_PALETTE: Record<string, string> = {
   red: '#a03028',
   orange: '#a44e14',
   yellow: '#8a6a10',

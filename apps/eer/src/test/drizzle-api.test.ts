@@ -2,9 +2,10 @@
 // /api/drizzle/export (POST). Mirrors models-api.test.ts's approach — the
 // request handlers are unit-tested directly; the vite plugin (drizzleApiPlugin)
 // is a thin connect-middleware adapter around them and isn't separately tested.
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import * as realSchema from '../../../../packages/db/src/schema/index';
@@ -12,11 +13,14 @@ import {
   DEFAULT_MODULE,
   handleExportRequest,
   handleSchemaRequest,
+  INSTRUMENT_PALETTE,
   mapSchemaGroups,
   resolveModulePath,
 } from '../../vite-plugins/drizzle-api';
 
-const ROOT = 'C:/workspace'; // synthetic — resolveModulePath only does string math, never touches disk
+const ROOT = 'C:/workspace'; // synthetic, does not exist on disk — resolveModulePath
+// falls back to pure lexical resolution whenever realpath can't touch a path
+// (root or target), so these string-math assertions still hold post-realpath.
 
 // Track every mkdtempSync dir so it can be removed after its test.
 const createdDirs: string[] = [];
@@ -143,5 +147,86 @@ describe('handleExportRequest', () => {
     const d = dir();
     const res = await handleExportRequest(d, '{not json');
     expect(res.status).toBe(400);
+  });
+});
+
+// ---- Finding 1: symlink containment (realpath, not lexical) --------------
+//
+// The lexical isInside() check validates a symlink's own location inside the
+// workspace, not where it actually points. A symlink (or, unprivileged on
+// Windows, a directory junction) planted inside the root and aimed outside
+// it must still be rejected once resolveModulePath resolves real paths.
+describe('resolveModulePath — symlink escape (finding 1)', () => {
+  // Try a junction first: on Windows this needs no elevated privilege and
+  // works for directories; on POSIX the 'junction' type argument is simply
+  // ignored and a normal symlink is created (also unprivileged for a regular
+  // user). Falls back to an explicit 'dir' symlink, then gives up.
+  function makeEscapeLink(root: string, target: string): 'junction' | 'symlink' | null {
+    const linkPath = join(root, 'escape.ts');
+    try {
+      symlinkSync(target, linkPath, 'junction');
+      return 'junction';
+    } catch {
+      try {
+        symlinkSync(target, linkPath, 'dir');
+        return 'symlink';
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  it('rejects a module path through a symlink whose real target resolves outside the workspace root', (ctx) => {
+    const root = dir();
+    const outside = dir(); // sibling tmp dir — never nested under root
+
+    const created = makeEscapeLink(root, outside);
+    ctx.skip(
+      !created,
+      'could not create a symlink or an unprivileged junction on this machine/account (EPERM on both) — skipping the finding-1 symlink-escape regression test',
+    );
+
+    const r = resolveModulePath(root, 'escape.ts');
+    expect('error' in r).toBe(true);
+    if ('error' in r) expect(r.error.status).toBe(400);
+  });
+});
+
+// ---- Finding 2: INSTRUMENT_PALETTE drift guard ----------------------------
+//
+// INSTRUMENT_PALETTE hand-copies the --ins-opt-* light-mode hex values out of
+// apps/web/src/styles/instrument.css. There is no shared source, so this test
+// is the only thing standing between an Instrument palette change and a
+// silently desynced drizzle-import zone colour. Mirrors the drift-test
+// pattern in pg-types.test.ts (guarding the type catalogue against a drizzle
+// upgrade) — a source-of-truth change should turn this red, not slip by.
+const HERE = dirname(fileURLToPath(import.meta.url)); // apps/eer/src/test
+const INSTRUMENT_CSS_PATH = resolve(HERE, '../../../../apps/web/src/styles/instrument.css');
+
+function readLightModeOptPalette(): Record<string, string> {
+  const css = readFileSync(INSTRUMENT_CSS_PATH, 'utf8');
+  const rootStart = css.indexOf(':root {');
+  if (rootStart === -1) throw new Error(':root block not found in instrument.css');
+  const rootEnd = css.indexOf('\n}', rootStart);
+  const lightBlock = css.slice(rootStart, rootEnd);
+
+  // Matches only the base "--ins-opt-<name>: #hex;" declarations — the [a-z]+
+  // capture can't cross the hyphen before "-hover"/"-subtle", and
+  // "--ins-on-opt-*" never contains "--ins-opt-" as a substring — so those
+  // variants are structurally excluded, not filtered after the fact.
+  const found: Record<string, string> = {};
+  const re = /--ins-opt-([a-z]+):\s*(#[0-9a-fA-F]{6})\s*;/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(lightBlock))) found[m[1]!] = m[2]!.toLowerCase();
+  return found;
+}
+
+describe('INSTRUMENT_PALETTE (finding 2 — drift guard)', () => {
+  it('matches the --ins-opt-* light-mode hex values in instrument.css', () => {
+    const found = readLightModeOptPalette();
+    // Sanity check the parser actually found the whole named set, so a CSS
+    // markup change can't silently make this assertion vacuous.
+    expect(Object.keys(found).sort()).toEqual(Object.keys(INSTRUMENT_PALETTE).sort());
+    expect(found).toEqual(INSTRUMENT_PALETTE);
   });
 });
