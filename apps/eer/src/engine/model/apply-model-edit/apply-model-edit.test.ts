@@ -4,7 +4,8 @@ import { buildModel, nestedRaw, pkField } from '../../../test/models';
 import { CARD_MAX_W, CARD_MIN_W, HEADER_H, ROW_H } from '../../geometry/metrics';
 import { columnRoles } from '../column-roles';
 import { loadModel } from '../load-model';
-import { applyModelEdit, fkRefsTo, type EditEntity, type EditField, type ModelEdit } from './apply-model-edit';
+import { serializeModel } from '../serialize-model';
+import { applyModelEdit, enumRefsTo, fkRefsTo, type EditEntity, type EditField, type ModelEdit } from './apply-model-edit';
 import type { Column, Constraint, IndexColumn } from '../types';
 import seedRaw from '../../../../models/items-platform.json';
 
@@ -113,6 +114,7 @@ describe('applyModelEdit', () => {
           label: 'Shipments',
           group: 'z2',
           description: null,
+          schema: null,
           fields: [editField('id', 'int'), editField('orders_id', 'int')],
           constraints: [
             { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
@@ -140,6 +142,7 @@ describe('applyModelEdit', () => {
           label: 'Shipments',
           group: 'z2',
           description: null,
+          schema: null,
           fields: [editField('id', 'int')],
           constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }],
           indexes: [],
@@ -162,6 +165,7 @@ describe('applyModelEdit', () => {
           label: 'Orders v2',
           group: before.group,
           description: 'updated',
+          schema: null,
           fields: [editField('id', 'int'), editField('users_id', 'int'), editField('tag_id', 'int'), editField('note')],
           constraints: before.constraints,
           indexes: before.indexes,
@@ -192,6 +196,7 @@ describe('applyModelEdit', () => {
         entities: [
           {
             id: 'a', group: 'g',
+            schema: null,
             fields: [{ name: 'id', type: 'int', identity: { always: true } }],
             constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }],
           },
@@ -211,6 +216,7 @@ describe('applyModelEdit', () => {
           description: null,
           // 'id' renamed to 'uid' — the caller hands identity/generated over
           // explicitly on the renamed EditField, same as it already does for title.
+          schema: null,
           fields: [{ ...editField('uid', 'int'), identity: before.identity, generated: before.generated }],
           constraints: [{ id: 'pk1', kind: 'pk', name: null, columns: ['uid'] }],
           indexes: [],
@@ -257,6 +263,7 @@ describe('applyModelEdit', () => {
           { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int' }], constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }] },
           {
             id: 'b', group: 'g',
+            schema: null,
             fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }],
             constraints: [
               { id: 'pk2', kind: 'pk', columns: ['id'] },
@@ -285,6 +292,7 @@ describe('applyModelEdit', () => {
           { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int' }], constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }] },
           {
             id: 'b', group: 'g',
+            schema: null,
             fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }],
             constraints: [
               { id: 'pk2', kind: 'pk', columns: ['id'] },
@@ -302,6 +310,7 @@ describe('applyModelEdit', () => {
           label: 'A',
           group: 'g',
           description: null,
+          schema: null,
           fields: [editField('id', 'int')],
           constraints: [{ id: 'pk1', kind: 'pk', name: null, columns: ['id'] }],
           indexes: [],
@@ -318,6 +327,7 @@ describe('applyModelEdit', () => {
           { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int' }], constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }] },
           {
             id: 'b', group: 'g',
+            schema: null,
             fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }],
             constraints: [
               { id: 'pk2', kind: 'pk', columns: ['id'] },
@@ -366,6 +376,7 @@ describe('applyModelEdit', () => {
           label: tags.label,
           group: tags.group,
           description: null,
+          schema: null,
           fields: [editField('id', 'int'), editField('owner_id', 'int')],
           constraints: [
             { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
@@ -383,6 +394,7 @@ describe('applyModelEdit', () => {
           label: tags.label,
           group: tags.group,
           description: null,
+          schema: null,
           fields: [editField('id', 'int')], // owner_id field gone entirely
           constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }], // fk constraint gone too
           indexes: [],
@@ -408,6 +420,7 @@ describe('applyModelEdit', () => {
           label: tags.label,
           group: tags.group,
           description: null,
+          schema: null,
           fields: [editField('id', 'int'), editField('owner_id', 'int')],
           constraints: [
             { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
@@ -425,6 +438,7 @@ describe('applyModelEdit', () => {
           label: tags.label,
           group: tags.group,
           description: null,
+          schema: null,
           fields: [editField('id', 'int'), editField('owner_id', 'int')], // field untouched
           constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }], // only the fk constraint removed
           indexes: [],
@@ -457,6 +471,7 @@ describe('applyModelEdit', () => {
           label: 'b',
           group: 'g',
           description: null,
+          schema: null,
           fields: [editField('id', 'int'), editField('a_id', 'int')],
           constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }], // fk constraint dropped
           indexes: [],
@@ -497,6 +512,7 @@ describe('applyModelEdit', () => {
           label: tags.label,
           group: tags.group,
           description: null,
+          schema: null,
           fields: [editField('id', 'int'), editField('owner_id', 'int')],
           constraints: [
             { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
@@ -512,6 +528,7 @@ describe('applyModelEdit', () => {
           label: tags.label,
           group: tags.group,
           description: null,
+          schema: null,
           fields: [editField('id', 'int'), editField('owner_ref', 'int')],
           constraints: [
             { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
@@ -553,6 +570,7 @@ describe('applyModelEdit', () => {
             label: users.label,
             group: users.group,
             description: null,
+            schema: null,
             fields: [editField('key', 'int'), editField('name')],
             constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['key'] }],
             indexes: [],
@@ -666,6 +684,7 @@ describe('applyModelEdit', () => {
         entities: [
           {
             id: 'a', group: 'g',
+            schema: null,
             fields: [{ name: 'id', type: 'int' }, { name: 'email', type: 'text' }],
             constraints: [
               { id: 'c1', kind: 'pk', columns: ['id'] },
@@ -687,6 +706,7 @@ describe('applyModelEdit', () => {
           label: 'a',
           group: 'g',
           description: 'updated',
+          schema: null,
           fields: [editField('id', 'int'), editField('email', 'text')],
           constraints: before.constraints,
           indexes: before.indexes,
@@ -710,6 +730,7 @@ describe('applyModelEdit', () => {
           { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int' }], constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }] },
           {
             id: 'b', group: 'g',
+            schema: null,
             fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }], // no role/ref anywhere
             constraints: [
               { id: 'pk2', kind: 'pk', columns: ['id'] },
@@ -730,6 +751,7 @@ describe('applyModelEdit', () => {
           label: 'b',
           group: 'g',
           description: 'unrelated change',
+          schema: null,
           fields: [editField('id', 'int'), editField('a_id', 'int')],
           constraints: before.constraints,
           indexes: before.indexes,
@@ -749,11 +771,13 @@ describe('applyModelEdit', () => {
         entities: [
           {
             id: 'a', group: 'g',
+            schema: null,
             fields: [{ name: 'k1', type: 'int' }, { name: 'k2', type: 'int' }],
             constraints: [{ id: 'pk1', kind: 'pk', columns: ['k1', 'k2'] }],
           },
           {
             id: 'b', group: 'g',
+            schema: null,
             fields: [{ name: 'a1', type: 'int' }, { name: 'a2', type: 'int' }],
             constraints: [{ id: 'fk1', kind: 'fk', columns: ['a1', 'a2'], refTable: 'a', refColumns: ['k1', 'k2'] }],
           },
@@ -772,6 +796,7 @@ describe('applyModelEdit', () => {
           label: 'b',
           group: 'g',
           description: 'unrelated change',
+          schema: null,
           fields: [editField('a1', 'int'), editField('a2', 'int')],
           constraints: before.constraints,
           indexes: before.indexes,
@@ -799,11 +824,13 @@ describe('applyModelEdit', () => {
         entities: [
           {
             id: 'a', group: 'g',
+            schema: null,
             fields: [{ name: 'k1', type: 'int' }, { name: 'k2', type: 'int' }],
             constraints: [{ id: 'pk1', kind: 'pk', columns: ['k1', 'k2'] }],
           },
           {
             id: 'b', group: 'g',
+            schema: null,
             fields: [{ name: 'a1', type: 'int' }, { name: 'a2', type: 'int' }],
             constraints: [{ id: 'fk1', kind: 'fk', columns: ['a1', 'a2'], refTable: 'a', refColumns: ['k1', 'k2'] }],
           },
@@ -834,7 +861,7 @@ describe('applyModelEdit', () => {
       expect(() =>
         applyModelEdit(m1, {
           kind: 'upsertEntity',
-          entity: { id: 'new', label: 'New', group: 'ghost-group', description: null, fields: [], constraints: [], indexes: [] },
+          entity: { id: 'new', label: 'New', group: 'ghost-group', description: null, schema: null, fields: [], constraints: [], indexes: [] },
         }),
       ).toThrow(/ghost-group/);
     });
@@ -854,6 +881,7 @@ describe('applyModelEdit', () => {
             label: 'New',
             group: 'z1',
             description: null,
+            schema: null,
             fields: [editField('id', 'int'), editField('id', 'text')],
             constraints: [],
             indexes: [],
@@ -871,6 +899,7 @@ describe('applyModelEdit', () => {
           label: 'Nodes',
           group: 'z1',
           description: null,
+          schema: null,
           fields: [editField('id', 'int'), editField('parent_id', 'int')],
           constraints: [
             { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
@@ -930,6 +959,7 @@ describe('applyModelEdit', () => {
         label: 'orders',
         group: 'z2',
         description: null,
+        schema: null,
         fields: [editField('id', 'int'), editField('users_id', 'int')],
         constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }],
         indexes: [],
@@ -1065,12 +1095,14 @@ describe('applyModelEdit', () => {
           {
             id: 'a',
             group: 'g',
+            schema: null,
             fields: [{ name: 'k1', type: 'int' }, { name: 'k2', type: 'int' }],
             constraints: [{ id: 'pk1', kind: 'pk', columns: ['k1', 'k2'] }],
           },
           {
             id: 'b',
             group: 'g',
+            schema: null,
             fields: [{ name: 'id', type: 'int' }, { name: 'a1', type: 'int' }, { name: 'a2', type: 'int' }],
             constraints: [{ id: 'pk2', kind: 'pk', columns: ['id'] }],
           },
@@ -1085,6 +1117,7 @@ describe('applyModelEdit', () => {
           label: b.label,
           group: b.group,
           description: null,
+          schema: null,
           fields: [editField('id', 'int'), editField('a1', 'int'), editField('a2', 'int')],
           constraints: [
             { id: 'pk2', kind: 'pk', name: null, columns: ['id'] },
@@ -1124,6 +1157,7 @@ describe('applyModelEdit', () => {
         { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int' }, { name: 'name', type: 'text' }], constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }] },
         {
           id: 'b', group: 'g',
+          schema: null,
           fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }],
           constraints: [
             { id: 'pk2', kind: 'pk', columns: ['id'] },
@@ -1147,6 +1181,7 @@ describe('applyModelEdit', () => {
             // 'id' renamed to 'uid' — and its own pk constraint updated
             // alongside it, so validateConstraints' OWN-constraint check
             // passes; only the INBOUND check (b.fk1) should still block this.
+            schema: null,
             fields: [editField('uid', 'int'), editField('name')],
             constraints: [{ id: 'pk1', kind: 'pk', name: null, columns: ['uid'] }],
             indexes: [],
@@ -1168,6 +1203,7 @@ describe('applyModelEdit', () => {
             description: null,
             // 'id' dropped entirely; 'name' promoted to pk so the OWN-constraint
             // check passes — only the inbound fk (b.fk1 -> a.id) should block it.
+            schema: null,
             fields: [editField('name')],
             constraints: [{ id: 'pk1', kind: 'pk', name: null, columns: ['name'] }],
             indexes: [],
@@ -1185,6 +1221,7 @@ describe('applyModelEdit', () => {
           label: 'a',
           group: 'g',
           description: null,
+          schema: null,
           fields: [editField('id', 'int'), editField('full_name')],
           constraints: [{ id: 'pk1', kind: 'pk', name: null, columns: ['id'] }],
           indexes: [],
@@ -1222,6 +1259,7 @@ describe('applyModelEdit', () => {
             label: schemes.label,
             group: schemes.group,
             description: schemes.description,
+            schema: schemes.schema,
             fields: schemes.columns.map(toField),
             constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['uid'] }],
             indexes: schemes.indexes,
@@ -1249,6 +1287,7 @@ describe('applyModelEdit', () => {
         label: 'Tags',
         group: 'z2',
         description: null,
+        schema: null,
         fields: [editField('id', 'int'), editField('owner_id', 'int')],
         constraints: [
           { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
@@ -1264,6 +1303,7 @@ describe('applyModelEdit', () => {
         label: 'New',
         group: 'z1',
         description: null,
+        schema: null,
         fields: [editField('id', 'int')],
         constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }],
         indexes: [],
@@ -1273,5 +1313,167 @@ describe('applyModelEdit', () => {
     expect(() => applyModelEdit(m1, { kind: 'deleteGroup', id: 'z1' })).toThrow(); // invalid edits must not mutate either
 
     expect(JSON.stringify(m1, (_, v: unknown) => (v instanceof Map ? [...v] : v))).toBe(snapshot);
+  });
+
+  // CRITICAL, this task's whole point: the table modal rebuilds constraints/
+  // indexes from its own drafts (see the module header comment), so any field
+  // the UI does not render — identity, generated, an index's method/only/
+  // where/opClass, a unique's nullsNotDistinct, the entity's own schema — must
+  // come back byte-identical from an open-and-save that changes nothing. Every
+  // past regression in this app had the same shape: a derived value got
+  // regenerated from a lossy draft instead of carried through verbatim. This
+  // pins the fixed point directly against serializeModel's OWN output, so a
+  // regression here fails the same way a real save-reload would.
+  describe('upsertEntity — a no-op upsert is a fixed point for everything the UI cannot author', () => {
+    const rawWithEverything = () => ({
+      meta: { title: 'Fixture', description: '' },
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        {
+          id: 't', label: 'T', group: 'g', schema: 'billing',
+          columns: [
+            { name: 'id', type: 'integer', identity: { always: true } },
+            { name: 'total', type: 'integer', generated: { expression: 'qty * price', stored: true } },
+            { name: 'k', type: 'text' },
+          ],
+          constraints: [
+            { id: 'c1', kind: 'pk', columns: ['id'] },
+            { id: 'c2', kind: 'unique', columns: ['k'], nullsNotDistinct: true },
+          ],
+          indexes: [
+            {
+              id: 'i1', name: 'idx_t_k', unique: false, method: 'gin', only: false, where: 'k IS NOT NULL',
+              columns: [{ expression: 'k', isExpression: false, order: null, nulls: null, opClass: 'gin_trgm_ops' }],
+            },
+          ],
+        },
+      ],
+    });
+
+    it('an unchanged upsert is a fixed point — nothing the UI cannot author is lost', () => {
+      const { model, errors } = loadModel(rawWithEverything());
+      expect(errors).toEqual([]);
+      const before = JSON.stringify(serializeModel(model!, new Map()));
+
+      const e = model!.entities[0]!;
+      const next = applyModelEdit(model!, {
+        kind: 'upsertEntity',
+        entity: {
+          id: e.id,
+          label: e.label,
+          group: e.group,
+          description: e.description,
+          schema: e.schema,
+          fields: e.columns.map((c) => ({ ...c, description: c.description ?? '' })),
+          constraints: e.constraints,
+          indexes: e.indexes,
+        },
+      });
+
+      expect(JSON.stringify(serializeModel(next, new Map()))).toBe(before);
+    });
+  });
+
+  // Pure engine ops backing the (not-yet-built) enum editor — see
+  // apply-model-edit.ts's own comments for why delete refuses rather than
+  // orphaning a column's type, and why rename must rewrite every column
+  // alongside the declaration instead of just the declaration.
+  describe('enum edits', () => {
+    const rawWithEnum = () => ({
+      groups: [{ id: 'g', label: 'G' }],
+      enums: [{ name: 'user_kind', values: ['human', 'agent'], schema: null }],
+      entities: [
+        {
+          id: 'users', label: 'Users', group: 'g',
+          columns: [
+            { name: 'id', type: 'integer' },
+            { name: 'kind', type: 'user_kind' },
+            { name: 'kinds', type: 'user_kind[]' },
+          ],
+          constraints: [{ id: 'c1', kind: 'pk', columns: ['id'] }],
+        },
+      ],
+    });
+
+    describe('enumRefsTo', () => {
+      it('lists every {entityId, column} whose type parses to this enum as its base', () => {
+        const model = loadModel(rawWithEnum()).model!;
+        expect(enumRefsTo(model, 'user_kind')).toEqual([
+          { entityId: 'users', column: 'kind' },
+          { entityId: 'users', column: 'kinds' },
+        ]);
+        expect(enumRefsTo(model, 'no_such_enum')).toEqual([]);
+      });
+    });
+
+    describe('upsertEnum', () => {
+      it('adds a brand-new enum', () => {
+        const model = loadModel(rawWithEnum()).model!;
+        const next = applyModelEdit(model, { kind: 'upsertEnum', enum: { name: 'order_status', values: ['open', 'closed'], schema: null } });
+        expect(next.enums.map((e) => e.name).sort()).toEqual(['order_status', 'user_kind']);
+      });
+
+      it('replaces an existing enum\'s values by name, in place', () => {
+        const model = loadModel(rawWithEnum()).model!;
+        const next = applyModelEdit(model, { kind: 'upsertEnum', enum: { name: 'user_kind', values: ['human', 'agent', 'bot'], schema: null } });
+        expect(next.enums).toEqual([{ name: 'user_kind', values: ['human', 'agent', 'bot'], schema: null }]);
+      });
+
+      it('rejects a blank enum name', () => {
+        const model = loadModel(rawWithEnum()).model!;
+        expect(() => applyModelEdit(model, { kind: 'upsertEnum', enum: { name: '  ', values: [], schema: null } })).toThrow(/blank/i);
+      });
+    });
+
+    describe('deleteEnum', () => {
+      it('refuses to delete an enum a column still uses, naming the dependents', () => {
+        const model = loadModel(rawWithEnum()).model!;
+        expect(() => applyModelEdit(model, { kind: 'deleteEnum', name: 'user_kind' })).toThrow(/users\.kind/);
+      });
+
+      it('leaves the model untouched when the delete is refused', () => {
+        const model = loadModel(rawWithEnum()).model!;
+        expect(() => applyModelEdit(model, { kind: 'deleteEnum', name: 'user_kind' })).toThrow();
+        expect(model.enums).toEqual([{ name: 'user_kind', values: ['human', 'agent'], schema: null }]);
+      });
+
+      it('deletes an enum no column references', () => {
+        const model = loadModel(rawWithEnum()).model!;
+        const withExtra = applyModelEdit(model, { kind: 'upsertEnum', enum: { name: 'unused', values: ['a'], schema: null } });
+        const next = applyModelEdit(withExtra, { kind: 'deleteEnum', name: 'unused' });
+        expect(next.enums.map((e) => e.name)).toEqual(['user_kind']);
+      });
+
+      it('throws for an unknown enum name', () => {
+        const model = loadModel(rawWithEnum()).model!;
+        expect(() => applyModelEdit(model, { kind: 'deleteEnum', name: 'ghost' })).toThrow(/ghost/);
+      });
+    });
+
+    describe('renameEnum', () => {
+      it('renaming an enum re-points every column using it', () => {
+        const model = loadModel(rawWithEnum()).model!;
+        const next = applyModelEdit(model, { kind: 'renameEnum', from: 'user_kind', to: 'actor_kind' });
+        expect(next.enums.map((e) => e.name)).toEqual(['actor_kind']);
+        expect(next.entityById.get('users')!.columns.find((c) => c.name === 'kind')!.type).toBe('actor_kind');
+      });
+
+      it('preserves array dimensions on a renamed column', () => {
+        const model = loadModel(rawWithEnum()).model!;
+        const next = applyModelEdit(model, { kind: 'renameEnum', from: 'user_kind', to: 'actor_kind' });
+        expect(next.entityById.get('users')!.columns.find((c) => c.name === 'kinds')!.type).toBe('actor_kind[]');
+      });
+
+      it('throws for an unknown enum name', () => {
+        const model = loadModel(rawWithEnum()).model!;
+        expect(() => applyModelEdit(model, { kind: 'renameEnum', from: 'ghost', to: 'x' })).toThrow(/ghost/);
+      });
+
+      it('rejects renaming onto an already-existing enum name', () => {
+        const model = loadModel(rawWithEnum()).model!;
+        const withExtra = applyModelEdit(model, { kind: 'upsertEnum', enum: { name: 'other', values: ['a'], schema: null } });
+        expect(() => applyModelEdit(withExtra, { kind: 'renameEnum', from: 'user_kind', to: 'other' })).toThrow(/other/);
+      });
+    });
   });
 });
