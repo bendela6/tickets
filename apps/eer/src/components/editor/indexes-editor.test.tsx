@@ -56,4 +56,60 @@ describe('IndexesEditor', () => {
     fireEvent.click(screen.getByLabelText('Remove index 1'));
     expect((onChange.mock.calls[0]![0] as TableIndex[]).map((i) => i.id)).toEqual(['i2']);
   });
+
+  it('numbers composite-index chips in pick order, not options order', () => {
+    setup([{ id: 'i1', name: 'idx', columns: [col('users_id'), col('id')], unique: false, method: null, only: false, where: null }]);
+    const usersChip = screen.getByLabelText('Index 1 column users_id').closest('label')!;
+    const idChip = screen.getByLabelText('Index 1 column id').closest('label')!;
+    expect(usersChip.textContent).toContain('1');
+    expect(idChip.textContent).toContain('2');
+  });
+
+  it('each picked column gets its own ASC/DESC toggle that cycles on click', () => {
+    const onChange = setup([{ id: 'i1', name: 'idx', columns: [col('id')], unique: false, method: null, only: false, where: null }]);
+    const orderBtn = screen.getByLabelText('Index 1 column id order');
+    fireEvent.click(orderBtn);
+    expect((onChange.mock.calls[0]![0] as TableIndex[])[0]!.columns[0]).toMatchObject({ order: 'asc' });
+  });
+
+  it('each picked column gets its own NULLS FIRST/LAST select', () => {
+    const onChange = setup([{ id: 'i1', name: 'idx', columns: [col('id')], unique: false, method: null, only: false, where: null }]);
+    fireEvent.change(screen.getByLabelText('Index 1 column id nulls'), { target: { value: 'last' } });
+    expect((onChange.mock.calls[0]![0] as TableIndex[])[0]!.columns[0]).toMatchObject({ nulls: 'last' });
+  });
+
+  it('has a method select offering btree, hash, gin, gist, brin', () => {
+    const onChange = setup([{ id: 'i1', name: 'idx', columns: [col('id')], unique: false, method: null, only: false, where: null }]);
+    const select = screen.getByLabelText('Index 1 method') as HTMLSelectElement;
+    const values = [...select.options].map((o) => o.value);
+    expect(values).toEqual(expect.arrayContaining(['btree', 'hash', 'gin', 'gist', 'brin']));
+    fireEvent.change(select, { target: { value: 'gin' } });
+    expect((onChange.mock.calls[0]![0] as TableIndex[])[0]).toMatchObject({ method: 'gin' });
+  });
+
+  it('a WHERE input makes the index partial; empty shows "— full index" greyed', () => {
+    const onChange = setup([{ id: 'i1', name: 'idx', columns: [col('id')], unique: false, method: null, only: false, where: null }]);
+    const whereInput = screen.getByLabelText('Index 1 where') as HTMLInputElement;
+    expect(whereInput.placeholder).toMatch(/full index/i);
+    fireEvent.change(whereInput, { target: { value: 'active = true' } });
+    expect((onChange.mock.calls[0]![0] as TableIndex[])[0]).toMatchObject({ where: 'active = true' });
+  });
+
+  it('the unique checkbox is captioned as a separate thing from a UNIQUE constraint', () => {
+    setup([{ id: 'i1', name: 'idx', columns: [col('id')], unique: false, method: null, only: false, where: null }]);
+    expect(screen.getByText(/separate from a unique constraint/i)).toBeInTheDocument();
+  });
+
+  it('flags a duplicate index name at the mistake: red border + an in-card message on both cards', () => {
+    setup([
+      { id: 'i1', name: 'dup', columns: [col('id')], unique: false, method: null, only: false, where: null },
+      { id: 'i2', name: 'dup', columns: [col('users_id')], unique: false, method: null, only: false, where: null },
+    ]);
+    expect(screen.getAllByText(/duplicate index name/i)).toHaveLength(2);
+  });
+
+  it('flags an index with no columns at the mistake: red-tinted picker + an in-card message', () => {
+    setup([{ id: 'i1', name: 'idx', columns: [], unique: false, method: null, only: false, where: null }]);
+    expect(screen.getByText(/at least one column/i)).toBeInTheDocument();
+  });
 });

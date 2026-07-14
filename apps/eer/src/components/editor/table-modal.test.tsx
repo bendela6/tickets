@@ -306,8 +306,8 @@ describe('TableModal', () => {
   // The centrepiece payoff: a FOREIGN KEY authored through the ConstraintsEditor
   // (wired into this modal under the columns grid) is now the ONLY way to draw
   // an edge between two tables — this exercises the whole path, from clicking
-  // "+ FK" through Save's dispatched upsertEntity, to the derived relationship
-  // (deriveRelationships) an edge is drawn from.
+  // "+ foreign key" through Save's dispatched upsertEntity, to the derived
+  // relationship (deriveRelationships) an edge is drawn from.
   it('adding an FK constraint through the modal and saving dispatches it, and the model derives an edge for it', async () => {
     // "tags" (twoZoneRaw): just an `id` pk, no fk of its own — a clean slate.
     const onClose = vi.fn();
@@ -318,12 +318,12 @@ describe('TableModal', () => {
     fireEvent.change(screen.getByLabelText('Column 2 name'), { target: { value: 'owner_id' } });
 
     // Task 10: the constraints editor now only mounts while its own tab is
-    // active — the "+ FK" button doesn't exist in the DOM until then.
+    // active — the "+ foreign key" button doesn't exist in the DOM until then.
     fireEvent.click(screen.getByRole('tab', { name: /constraints/i }));
 
     // tags already carries a synthesized `c1` pk constraint, so the new fk
     // added here lands at index 1 — "Constraint 2".
-    fireEvent.click(screen.getByRole('button', { name: '+ FK' }));
+    fireEvent.click(screen.getByRole('button', { name: '+ foreign key' }));
     fireEvent.click(screen.getByLabelText('Constraint 2 column owner_id'));
     fireEvent.change(screen.getByLabelText('Constraint 2 target table'), { target: { value: 'users' } });
     fireEvent.click(screen.getByLabelText('Constraint 2 target column id'));
@@ -488,16 +488,16 @@ describe('TableModal', () => {
       await renderDiagram(<TableModal id="tags" onClose={() => {}} />, twoZoneRaw());
 
       expect(screen.getByRole('tab', { name: /columns/i })).toHaveAttribute('aria-selected', 'true');
-      expect(screen.queryByRole('button', { name: '+ FK' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: '+ foreign key' })).not.toBeInTheDocument();
 
       fireEvent.click(screen.getByRole('tab', { name: /constraints/i }));
       expect(screen.getByRole('tab', { name: /constraints/i })).toHaveAttribute('aria-selected', 'true');
-      expect(screen.getByRole('button', { name: '+ FK' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '+ foreign key' })).toBeInTheDocument();
       expect(screen.queryByLabelText('Column 1 name')).not.toBeInTheDocument();
 
       fireEvent.click(screen.getByRole('tab', { name: /indexes/i }));
       expect(screen.getByRole('button', { name: /add index/i })).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: '+ FK' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: '+ foreign key' })).not.toBeInTheDocument();
     });
 
     // Task 10 follow-up (review findings): the tab that lights up red is now
@@ -538,7 +538,7 @@ describe('TableModal', () => {
       await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
 
       fireEvent.click(screen.getByRole('tab', { name: /constraints/i }));
-      fireEvent.click(screen.getByRole('button', { name: '+ FK' }));
+      fireEvent.click(screen.getByRole('button', { name: '+ foreign key' }));
 
       fireEvent.click(screen.getByRole('tab', { name: /indexes/i }));
 
