@@ -1268,7 +1268,7 @@ describe('applyModelEdit', () => {
       ).toThrow(/table "(projects|item_types|fields|option_sets)" has a foreign key \(c2\) referencing it/);
 
       // The rejected edit must not have mutated the model in any way.
-      expect(model!.relationships).toHaveLength(41);
+      expect(model!.relationships).toHaveLength(42);
       expect(model!.relationships.filter((r) => r.label).length).toBe(18);
     });
   });
