@@ -27,14 +27,25 @@ interface IndexesEditorProps {
   onChange: (next: TableIndex[]) => void;
 }
 
-// This editor only ever authors a plain column reference (no expression,
-// ordering, opClass, method/only/where yet — see IndexColumn/TableIndex in
-// types.ts) — a simple string list is all the UI needs, converted at the
-// boundary so the model can still carry the fuller drizzle-shaped index a
-// hand-authored or imported file may already have.
+// This editor only ever TICKS/UNTICKS a plain column reference (no expression,
+// ordering, opClass, method/only/where UI yet — see IndexColumn/TableIndex in
+// types.ts), but the model may already carry a fuller drizzle-shaped
+// IndexColumn on any of them (hand-authored/imported, or set by a future
+// editor) — so ColumnMultiSelect's onChange (the whole tick-ordered array of
+// column NAMES) is merged against the PRIOR columns, not rebuilt from
+// scratch: a still-ticked name keeps its existing IndexColumn object
+// verbatim (preserving order/nulls/opClass/isExpression), a newly-ticked name
+// gets a fresh default one, and an unticked name is dropped. A prior version
+// flattened every entry into a bare default column on every change, so
+// ticking (or unticking) any ONE column of a composite index silently wiped
+// order/nulls/opClass from every OTHER, untouched column of that same index.
 const toNames = (cols: IndexColumn[]): string[] => cols.map((c) => c.expression);
-const toIndexColumns = (names: string[]): IndexColumn[] =>
-  names.map((expression) => ({ expression, isExpression: false, order: null, nulls: null, opClass: null }));
+const toIndexColumns = (names: string[], prior: IndexColumn[]): IndexColumn[] => {
+  const priorByExpression = new Map(prior.map((c) => [c.expression, c] as const));
+  return names.map(
+    (expression) => priorByExpression.get(expression) ?? { expression, isExpression: false, order: null, nulls: null, opClass: null },
+  );
+};
 
 export function IndexesEditor({ columns, indexes, onChange }: IndexesEditorProps) {
   const add = () =>
@@ -58,7 +69,7 @@ export function IndexesEditor({ columns, indexes, onChange }: IndexesEditorProps
             <ColumnMultiSelect
               options={columns}
               value={toNames(ix.columns)}
-              onChange={(v) => patch(i, { columns: toIndexColumns(v) })}
+              onChange={(v) => patch(i, { columns: toIndexColumns(v, ix.columns) })}
               label={`Index ${n} column`}
             />
             <label className="flex items-center gap-1 text-2xs text-gray-400">

@@ -26,7 +26,7 @@
 import { measureEntity } from '../../geometry/measure-entity';
 import { LAYOUT_MARGIN } from '../../geometry/metrics';
 import { deriveRelationships } from '../derive-relationships';
-import type { Column, Constraint, Entity, Group, GroupBounds, Model, TableIndex } from '../types';
+import type { Column, Constraint, Entity, Generated, Group, GroupBounds, Identity, Model, TableIndex } from '../types';
 
 export interface EditField {
   name: string;
@@ -35,6 +35,16 @@ export interface EditField {
   description: string | null;
   nullable: boolean;
   default: string | null;
+  // The draft (EditField) is the source of truth for a column now — the
+  // caller (table-modal's toEditField) copies these straight from the
+  // existing Column, same as title/description. They used to be
+  // reconstructed here by looking up the PRIOR entity's column of the same
+  // NAME — which silently dropped them on a rename (the new name has no
+  // match among the prior columns). Carrying them on the payload itself
+  // means a rename can no longer lose them: upsertEntity below takes them
+  // verbatim, exactly like constraints/indexes.
+  identity: Identity | null;
+  generated: Generated | null;
 }
 
 export interface EditEntity {
@@ -255,14 +265,15 @@ function upsertEntity(model: Model, e: EditEntity): Model {
   // The editor form has no "title" input, but EditField still carries title
   // through as an untouched passthrough (table-modal's toEditField reads it in,
   // ColumnsGrid never exposes it as an editable column) — so a no-op Save must
-  // not destroy titles the file already had.
-  // EditField has no role/ref/refField, identity or generated to carry —
-  // constraints own the key data now (see the module header comment), and
-  // this editor has no identity/generated UI yet — so those two carry
-  // through from the entity's PRIOR column of the same name, the same
-  // "don't destroy what the form can't edit" reasoning as title.
+  // not destroy titles the file already had. identity/generated are the same
+  // kind of passthrough (this editor has no UI for them yet) — but unlike
+  // title, they are taken verbatim from the EditField itself, not
+  // reconstructed by looking up the PRIOR entity's column of the same NAME.
+  // A prior version did that lookup, which broke the moment a column was
+  // renamed (a supported edit): the new name has no match among the prior
+  // columns, so identity/generated silently reset to null. The draft is the
+  // source of truth for a column now — see EditField's own comment.
   const existing = model.entityById.get(e.id);
-  const priorColumnsByName = new Map((existing?.columns ?? []).map((c) => [c.name, c]));
   const columns: Column[] = e.fields.map((f) => ({
     name: f.name,
     type: f.type,
@@ -270,8 +281,8 @@ function upsertEntity(model: Model, e: EditEntity): Model {
     description: f.description,
     nullable: f.nullable,
     default: f.default,
-    identity: priorColumnsByName.get(f.name)?.identity ?? null,
-    generated: priorColumnsByName.get(f.name)?.generated ?? null,
+    identity: f.identity,
+    generated: f.generated,
   }));
   let entity: Entity;
   if (existing) {
