@@ -12,7 +12,7 @@
 import { useState } from 'react';
 
 import { entityColor } from '../../engine/colors/entity-color';
-import { applyModelEdit as tryApplyModelEdit, fkRefsTo, type EditField } from '../../engine/model/apply-model-edit';
+import { applyModelEdit as tryApplyModelEdit, fkRefsTo, ModelEditError, type EditField, type ModelEdit } from '../../engine/model/apply-model-edit';
 import type { Column, Constraint, Entity, Model, TableIndex } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
@@ -20,6 +20,9 @@ import { Modal } from '../modal';
 import { ColumnsGrid } from './columns-grid';
 import { ConstraintsEditor } from './constraints-editor';
 import { IndexesEditor } from './indexes-editor';
+import { Tabs, tabButtonId, tabPanelId, type TabItem } from './tabs';
+
+type TabId = 'columns' | 'constraints' | 'indexes';
 
 const field = cn('w-full rounded-md border border-gray-600 bg-gray-900 px-2 py-1', 'text-sm text-gray-50');
 const label = 'flex flex-col gap-1 text-xs text-gray-400';
@@ -56,6 +59,9 @@ function toEditField(f: Column): EditField {
     generated: f.generated,
   };
 }
+
+// A single fixed modal on screen at once, so a static id namespace is fine.
+const TAB_ID_BASE = 'table-modal';
 
 const DEFAULT_PK: EditField = {
   name: 'id',
@@ -119,57 +125,107 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   const [indexes, setIndexes] = useState<TableIndex[]>(existing ? existing.indexes : []);
   const [localError, setLocalError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabId>('columns');
 
   const entityId = isEdit ? existing!.id : slugify(name);
 
+  // The exact upsertEntity edit Save would dispatch, built from the current
+  // draft state — shared by the live validity check below AND save() itself,
+  // so there is only ever ONE place that assembles this shape.
+  const buildEdit = (): ModelEdit => ({
+    kind: 'upsertEntity',
+    entity: {
+      id: entityId,
+      label: name.trim(),
+      group,
+      description: description.trim() ? description.trim() : null,
+      // No UI to change a table's schema yet — carry the existing one
+      // through verbatim (null for a brand-new table), same reasoning as
+      // identity/generated above: a default here would silently strip a
+      // schema-qualified table's schema on its very next no-op Save.
+      schema: existing?.schema ?? null,
+      fields: fields.map((f) => ({
+        name: f.name.trim(),
+        type: f.type.trim(),
+        title: f.title,
+        description: f.description && f.description.trim() ? f.description.trim() : null,
+        nullable: f.nullable,
+        default: f.default,
+        identity: f.identity,
+        generated: f.generated,
+      })),
+      // The draft state <ConstraintsEditor/> owns below — not re-derived
+      // from fields (see columns-grid.tsx's header comment for why that
+      // used to be dangerous).
+      constraints,
+      // The draft state <IndexesEditor/> owns below — same reasoning as
+      // constraints above: a brand-new table starts with none, an existing
+      // one starts from its own current indexes.
+      indexes,
+    },
+  });
+
+  // In CREATE mode only, a slugified name colliding with an existing table's
+  // id would silently overwrite it (upsertEntity is an upsert by design) —
+  // this is the one blocking condition the engine itself has no way to
+  // check (it doesn't know which id came from a fresh slugify vs. a real
+  // edit), so it's still computed here, live, same as everything else below.
+  const idCollision = !isEdit && model.entityById.has(entityId);
+  // The human-readable reason for idCollision, computed live so it can reach
+  // the banner below before Save/Create is ever clicked — save() reuses this
+  // exact string rather than re-deriving its own copy.
+  const idCollisionError = idCollision ? `A table with id "${entityId}" already exists.` : null;
+  // This component's own pre-dispatch column check (blank/duplicate names) —
+  // kept as its own local rule (not just the engine's identical check inside
+  // validateEditFields) so its message stays this component's own wording
+  // ("field", matching the ColumnsGrid's own vocabulary) regardless of how
+  // the engine phrases the same rule.
+  const draftError = validateDraft(fields);
+
+  // LIVE validity — every render, not just after a failed Save click (a
+  // known-bad draft must block Save before the user ever presses it; see the
+  // module header comment). Runs the exact edit Save would dispatch through
+  // the engine's own synchronous validation and discards the result — this
+  // is a pure check, nothing is mutated or dispatched. A `ModelEditError`
+  // carries `.field`, the tab whose editor the user actually fixes it on —
+  // this is the ONLY thing that decides which tab lights up red; no prose
+  // is ever inspected (see apply-model-edit.ts's own header comment on
+  // ModelEditError for why that used to misroute).
+  let liveEngineError: ModelEditError | null = null;
+  try {
+    tryApplyModelEdit(model, buildEdit());
+  } catch (err) {
+    if (err instanceof ModelEditError) liveEngineError = err;
+  }
+  // The engine error's own message, captured alongside `.field` above — the
+  // ONLY thing routing still keys on is `.field` (see the comment above); this
+  // is purely so the banner below has words to show, not a second routing input.
+  const liveError = liveEngineError?.message ?? null;
+
+  const errorTab: TabId | null = draftError ? 'columns' : (liveEngineError?.field ?? null);
+  const blocked = liveEngineError != null || draftError != null || idCollision || localError != null || ui.editError != null;
+  // Frame 1e (design spec): Save visibly blocked must always come WITH A
+  // REASON — `blocked` above disables Save/Create before any click, so
+  // `localError`/`ui.editError` (only ever set from inside save(), post-
+  // dispatch) are no longer sufficient on their own: a live-blocked draft
+  // would show a disabled button and a red tab count but no explanation.
+  // This is the SAME priority order save() below resolves the local checks
+  // in (idCollision, then draftError), plus the live engine message, plus
+  // the post-dispatch backstop.
+  const bannerMessage = draftError ?? idCollisionError ?? liveError ?? localError ?? ui.editError;
+
   const save = () => {
-    // upsertEntity is an upsert by design (editing relies on it), so in CREATE
-    // mode only, a slugified name that collides with an existing table's id
-    // would silently overwrite it instead of erroring — block it here before
-    // it ever reaches the engine.
-    if (!isEdit && model.entityById.has(entityId)) {
-      setLocalError(`A table with id "${entityId}" already exists.`);
+    if (idCollision) {
+      setLocalError(idCollisionError);
       return;
     }
-    const err = validateDraft(fields);
-    if (err) {
-      setLocalError(err);
+    if (draftError) {
+      setLocalError(draftError);
       return;
     }
     setLocalError(null);
 
-    const edit = {
-      kind: 'upsertEntity' as const,
-      entity: {
-        id: entityId,
-        label: name.trim(),
-        group,
-        description: description.trim() ? description.trim() : null,
-        // No UI to change a table's schema yet — carry the existing one
-        // through verbatim (null for a brand-new table), same reasoning as
-        // identity/generated above: a default here would silently strip a
-        // schema-qualified table's schema on its very next no-op Save.
-        schema: existing?.schema ?? null,
-        fields: fields.map((f) => ({
-          name: f.name.trim(),
-          type: f.type.trim(),
-          title: f.title,
-          description: f.description && f.description.trim() ? f.description.trim() : null,
-          nullable: f.nullable,
-          default: f.default,
-          identity: f.identity,
-          generated: f.generated,
-        })),
-        // The draft state <ConstraintsEditor/> owns below — not re-derived
-        // from fields (see columns-grid.tsx's header comment for why that
-        // used to be dangerous).
-        constraints,
-        // The draft state <IndexesEditor/> owns below — same reasoning as
-        // constraints above: a brand-new table starts with none, an existing
-        // one starts from its own current indexes.
-        indexes,
-      },
-    };
+    const edit = buildEdit();
     actions.applyModelEdit(edit);
     try {
       // The reducer runs the identical pure edit but only reflects the outcome
@@ -179,6 +235,8 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
       onClose();
     } catch {
       // Invalid: ui.editError renders below on the next render; stay open.
+      // (In practice `blocked` above already keeps Save disabled whenever
+      // this would throw, so this is defense-in-depth, not the primary path.)
     }
   };
 
@@ -189,13 +247,25 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
     onClose();
   };
 
+  // The error's own count (however many are queued behind the message that's
+  // actually visible right now — always 1: draftError/liveEngineError only
+  // ever hold a single message, not a list) replaces the tab's normal item count,
+  // never the other way around — a red "1" must never be mistaken for "this
+  // table has exactly one column".
+  const tabCount = (id: TabId, itemCount: number) => (errorTab === id ? 1 : itemCount);
+  const tabs: TabItem<TabId>[] = [
+    { id: 'columns', label: 'Columns', count: tabCount('columns', fields.length), hasError: errorTab === 'columns' },
+    { id: 'constraints', label: 'Constraints', count: tabCount('constraints', constraints.length), hasError: errorTab === 'constraints' },
+    { id: 'indexes', label: 'Indexes', count: tabCount('indexes', indexes.length), hasError: errorTab === 'indexes' },
+  ];
+
   const refs = id ? fkRefsTo(model, id) : [];
 
   return (
     <Modal title={isEdit ? `Edit ${existing!.label}` : 'New table'} onClose={onClose} size="wide">
-      {(localError || ui.editError) && (
+      {bannerMessage && (
         <div className={errorRow}>
-          <span>{localError ?? ui.editError}</span>
+          <span>{bannerMessage}</span>
           <button
             type="button"
             className="shrink-0"
@@ -235,27 +305,47 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
 
       {isEdit && <ColorRow model={model} id={existing!.id} colors={ui.colors} onChange={actions.setColors} />}
 
-      <div className={label}>
-        <span>Columns</span>
-        <ColumnsGrid columns={fields} onChange={setFields} />
-      </div>
+      <Tabs tabs={tabs} activeId={activeTab} onSelect={setActiveTab} idBase={TAB_ID_BASE} />
 
-      <div className={label}>
-        <span>Constraints</span>
-        <p className="text-2xs text-gray-400">A FOREIGN KEY is what draws an edge between two tables.</p>
-        <ConstraintsEditor
-          model={model}
-          ownId={entityId}
-          columns={fields.map((f) => f.name)}
-          constraints={constraints}
-          onChange={setConstraints}
-        />
-      </div>
+      {activeTab === 'columns' && (
+        <div
+          role="tabpanel"
+          id={tabPanelId(TAB_ID_BASE, 'columns')}
+          aria-labelledby={tabButtonId(TAB_ID_BASE, 'columns')}
+          className={label}
+        >
+          <ColumnsGrid columns={fields} onChange={setFields} enums={model.enums} />
+        </div>
+      )}
 
-      <div className={label}>
-        <span>Indexes</span>
-        <IndexesEditor columns={fields.map((f) => f.name)} indexes={indexes} onChange={setIndexes} />
-      </div>
+      {activeTab === 'constraints' && (
+        <div
+          role="tabpanel"
+          id={tabPanelId(TAB_ID_BASE, 'constraints')}
+          aria-labelledby={tabButtonId(TAB_ID_BASE, 'constraints')}
+          className={label}
+        >
+          <p className="text-2xs text-gray-400">A FOREIGN KEY is what draws an edge between two tables.</p>
+          <ConstraintsEditor
+            model={model}
+            ownId={entityId}
+            columns={fields.map((f) => f.name)}
+            constraints={constraints}
+            onChange={setConstraints}
+          />
+        </div>
+      )}
+
+      {activeTab === 'indexes' && (
+        <div
+          role="tabpanel"
+          id={tabPanelId(TAB_ID_BASE, 'indexes')}
+          aria-labelledby={tabButtonId(TAB_ID_BASE, 'indexes')}
+          className={label}
+        >
+          <IndexesEditor columns={fields.map((f) => f.name)} indexes={indexes} onChange={setIndexes} />
+        </div>
+      )}
 
       <div className="flex flex-col gap-2 pt-2">
         {confirmingDelete && (
@@ -288,7 +378,7 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
           <button
             type="button"
             className="rounded-md bg-blue-600 px-3 py-2 text-sm text-gray-50 hover:bg-blue-500 disabled:opacity-50"
-            disabled={!name.trim()}
+            disabled={!name.trim() || blocked}
             onClick={save}
           >
             {isEdit ? 'Save' : 'Create'}

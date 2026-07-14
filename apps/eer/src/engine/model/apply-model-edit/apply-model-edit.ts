@@ -29,6 +29,32 @@ import { deriveRelationships } from '../derive-relationships';
 import { formatType, parseType } from '../pg-types';
 import type { Column, Constraint, EnumDecl, Entity, Generated, Group, GroupBounds, Identity, Model, TableIndex } from '../types';
 
+// Tags a validation throw with the modal TAB whose editor a user actually
+// fixes it on — 'columns' (this entity's own field list — including any
+// edit that would orphan an INBOUND fk sitting on some OTHER table, since
+// the fix there is still a column edit: undo the rename/removal),
+// 'constraints', or 'indexes'. table-modal.tsx reads `.field` directly,
+// live (every render, pre-dispatch — see its own header comment), to light
+// the right tab's error count without ever having to guess from the
+// message's prose. A prior version guessed from prose via a regex
+// (tabForErrorMessage) — cheap to write, but a message that happens to
+// contain another tab's keyword (validateInboundReferences' "Cannot remove
+// column ... has a foreign key ... referencing it" contains "foreign key")
+// silently misrouted to the wrong tab, and a future reword of any message
+// below would silently break the routing with zero test failures, since
+// nothing pinned the regex to the message text. `field` is ADDITIVE — every
+// message string below is unchanged from its plain-Error original, since
+// other callers/tests still match on the text.
+export class ModelEditError extends Error {
+  constructor(
+    message: string,
+    readonly field: 'columns' | 'constraints' | 'indexes',
+  ) {
+    super(message);
+    this.name = 'ModelEditError';
+  }
+}
+
 export interface EditField {
   name: string;
   type: string;
@@ -224,8 +250,8 @@ function deleteGroup(model: Model, id: string): Model {
 function validateEditFields(fields: EditField[]): void {
   const seen = new Set<string>();
   for (const f of fields) {
-    if (!f.name.trim()) throw new Error('Column name must not be blank.');
-    if (seen.has(f.name)) throw new Error(`Duplicate column name "${f.name}".`);
+    if (!f.name.trim()) throw new ModelEditError('Column name must not be blank.', 'columns');
+    if (seen.has(f.name)) throw new ModelEditError(`Duplicate column name "${f.name}".`, 'columns');
     seen.add(f.name);
   }
 }
@@ -255,32 +281,40 @@ function validateConstraints(model: Model, e: EditEntity): void {
   const constraintNames = new Set<string>();
   for (const c of e.constraints) {
     if (c.name) {
-      if (constraintNames.has(c.name)) throw new Error(`Duplicate constraint name "${c.name}".`);
+      if (constraintNames.has(c.name)) throw new ModelEditError(`Duplicate constraint name "${c.name}".`, 'constraints');
       constraintNames.add(c.name);
     }
 
     if (c.kind === 'check') {
-      if (!c.expression.trim()) throw new Error(`Check constraint "${c.id}" must have a non-blank expression.`);
+      if (!c.expression.trim()) throw new ModelEditError(`Check constraint "${c.id}" must have a non-blank expression.`, 'constraints');
+      // Unlike pk/unique/fk (which Postgres/drizzle really do auto-name when
+      // left blank — see generated-constraint-name.ts), a CHECK constraint has
+      // NO auto-generated name: drizzle's own check() builder requires one
+      // (export-drizzle.ts's emitCheck THROWS on a blank name rather than
+      // guessing one). A blank check name must be rejected here too, or it
+      // sails through Save only to blow up later at export (Task 12 review,
+      // Finding 2).
+      if (!c.name || !c.name.trim()) throw new ModelEditError(`Check constraint "${c.id}" must have a name.`, 'constraints');
       continue;
     }
 
-    if (c.columns.length === 0) throw new Error(`Constraint "${c.id}" must reference at least one column.`);
+    if (c.columns.length === 0) throw new ModelEditError(`Constraint "${c.id}" must reference at least one column.`, 'constraints');
     for (const col of c.columns) {
-      if (!ownColumns.has(col)) throw new Error(`Constraint "${c.id}" references unknown column "${col}".`);
+      if (!ownColumns.has(col)) throw new ModelEditError(`Constraint "${c.id}" references unknown column "${col}".`, 'constraints');
     }
 
     if (c.kind === 'pk') {
       pkCount++;
-      if (pkCount > 1) throw new Error(`Table "${e.id}" may have only one primary key constraint.`);
+      if (pkCount > 1) throw new ModelEditError(`Table "${e.id}" may have only one primary key constraint.`, 'constraints');
     }
 
     if (c.kind === 'fk') {
       const refCols = targetColumns(c.refTable);
-      if (!refCols) throw new Error(`Foreign key constraint "${c.id}" references unknown table "${c.refTable}".`);
+      if (!refCols) throw new ModelEditError(`Foreign key constraint "${c.id}" references unknown table "${c.refTable}".`, 'constraints');
       if (c.columns.length !== c.refColumns.length)
-        throw new Error(`Foreign key constraint "${c.id}" must reference the same number of columns as it defines.`);
+        throw new ModelEditError(`Foreign key constraint "${c.id}" must reference the same number of columns as it defines.`, 'constraints');
       for (const col of c.refColumns) {
-        if (!refCols.has(col)) throw new Error(`Foreign key constraint "${c.id}" references unknown column "${col}".`);
+        if (!refCols.has(col)) throw new ModelEditError(`Foreign key constraint "${c.id}" references unknown column "${col}".`, 'constraints');
       }
     }
   }
@@ -288,15 +322,15 @@ function validateConstraints(model: Model, e: EditEntity): void {
   const indexNames = new Set<string>();
   for (const ix of e.indexes) {
     if (ix.name) {
-      if (indexNames.has(ix.name)) throw new Error(`Duplicate index name "${ix.name}".`);
+      if (indexNames.has(ix.name)) throw new ModelEditError(`Duplicate index name "${ix.name}".`, 'indexes');
       indexNames.add(ix.name);
     }
-    if (ix.columns.length === 0) throw new Error(`Index "${ix.id}" must reference at least one column.`);
+    if (ix.columns.length === 0) throw new ModelEditError(`Index "${ix.id}" must reference at least one column.`, 'indexes');
     for (const col of ix.columns) {
       // An expression index column is raw SQL, not a column name — nothing to
       // check it against.
       if (!col.isExpression && !ownColumns.has(col.expression))
-        throw new Error(`Index "${ix.id}" references unknown column "${col.expression}".`);
+        throw new ModelEditError(`Index "${ix.id}" references unknown column "${col.expression}".`, 'indexes');
     }
   }
 }
@@ -320,7 +354,14 @@ function validateInboundReferences(model: Model, e: EditEntity): void {
       if (c.kind !== 'fk' || c.refTable !== e.id) continue;
       for (const col of c.refColumns) {
         if (!ownColumns.has(col)) {
-          throw new Error(`Cannot remove column "${col}": table "${other.id}" has a foreign key (${c.id}) referencing it.`);
+          // 'columns', not 'constraints': `other` (not the entity being
+          // edited) owns the fk constraint — the fix here is to undo the
+          // rename/removal on THIS entity's Columns tab, not to touch any
+          // constraint of its own. The message still contains the words
+          // "foreign key" (mirroring Postgres' own wording for this error),
+          // which a substring-matching regex would have routed to
+          // Constraints — exactly the bug `field` exists to prevent.
+          throw new ModelEditError(`Cannot remove column "${col}": table "${other.id}" has a foreign key (${c.id}) referencing it.`, 'columns');
         }
       }
     }

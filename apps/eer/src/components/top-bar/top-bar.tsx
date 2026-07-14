@@ -104,6 +104,28 @@ export function TopBar({ onSelfCheck }: TopBarProps) {
         <button type="button" className={btn} title="Run the quality checks" onClick={onSelfCheck}>
           Self-check
         </button>
+
+        {import.meta.env.DEV && (
+          <>
+            <button
+              type="button"
+              className={btn}
+              title="Dry-run a scan of a drizzle schema module against this model"
+              onClick={() => openModal({ kind: 'import' })}
+            >
+              Import
+            </button>
+            <button
+              type="button"
+              className={btn}
+              disabled={!model}
+              title="Preview and write this model out as a drizzle schema module"
+              onClick={() => openModal({ kind: 'export' })}
+            >
+              Export
+            </button>
+          </>
+        )}
       </div>
     </header>
   );

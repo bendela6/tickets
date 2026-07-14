@@ -19,6 +19,28 @@
     }
   ],
   "colors": {},
+  "enums": [
+    {
+      "name": "user_kind",
+      "values": [
+        "human",
+        "agent"
+      ]
+    },
+    {
+      "name": "field_type",
+      "values": [
+        "string",
+        "number",
+        "boolean",
+        "date",
+        "datetime",
+        "option",
+        "user",
+        "json"
+      ]
+    }
+  ],
   "groups": [
     {
       "id": "ws",
@@ -176,7 +198,7 @@
         },
         {
           "name": "archived_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Archived at",
           "description": "Soft-delete; null = active.",
           "nullable": true
@@ -240,14 +262,14 @@
         },
         {
           "name": "scheme_id",
-          "type": "int",
+          "type": "integer",
           "title": "Scheme",
           "description": "Structure pack this project uses.",
           "nullable": false
         },
         {
           "name": "created_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Created at",
           "description": "When the project was created.",
           "nullable": false
@@ -301,7 +323,7 @@
         },
         {
           "name": "project_id",
-          "type": "int",
+          "type": "integer",
           "title": "Project",
           "description": "Owning project.",
           "nullable": false
@@ -315,7 +337,7 @@
         },
         {
           "name": "position",
-          "type": "int",
+          "type": "integer",
           "title": "Position",
           "description": "Order in the view list.",
           "nullable": false
@@ -329,7 +351,7 @@
         },
         {
           "name": "archived_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Archived at",
           "description": "Soft-delete.",
           "nullable": true
@@ -395,7 +417,7 @@
         },
         {
           "name": "archived_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Archived at",
           "description": "Soft-delete.",
           "nullable": true
@@ -438,7 +460,7 @@
         },
         {
           "name": "scheme_id",
-          "type": "int",
+          "type": "integer",
           "title": "Scheme",
           "description": "Owning structure pack.",
           "nullable": false
@@ -459,7 +481,7 @@
         },
         {
           "name": "position",
-          "type": "int",
+          "type": "integer",
           "title": "Position",
           "description": "Order in pickers.",
           "nullable": false
@@ -473,7 +495,7 @@
         },
         {
           "name": "archived_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Archived at",
           "description": "Soft-delete.",
           "nullable": true
@@ -521,14 +543,14 @@
       "columns": [
         {
           "name": "parent_type_id",
-          "type": "int",
+          "type": "integer",
           "title": "Parent type",
           "description": "Type of the parent item.",
           "nullable": false
         },
         {
           "name": "child_type_id",
-          "type": "int",
+          "type": "integer",
           "title": "Child type",
           "description": "Type allowed as child.",
           "nullable": false
@@ -579,21 +601,21 @@
       "columns": [
         {
           "name": "item_type_id",
-          "type": "int",
+          "type": "integer",
           "title": "Item type",
           "description": "Type that shows this field.",
           "nullable": false
         },
         {
           "name": "field_id",
-          "type": "int",
+          "type": "integer",
           "title": "Field",
           "description": "Shared field definition.",
           "nullable": false
         },
         {
           "name": "position",
-          "type": "int",
+          "type": "integer",
           "title": "Position",
           "description": "Order on forms for this type.",
           "nullable": false
@@ -681,7 +703,7 @@
         },
         {
           "name": "scheme_id",
-          "type": "int",
+          "type": "integer",
           "title": "Scheme",
           "description": "Owning structure pack.",
           "nullable": false
@@ -723,14 +745,14 @@
         },
         {
           "name": "option_set_id",
-          "type": "int",
+          "type": "integer",
           "title": "Option set",
           "description": "Shared choices when type is option.",
           "nullable": true
         },
         {
           "name": "archived_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Archived at",
           "description": "Soft-delete.",
           "nullable": true
@@ -802,7 +824,7 @@
         },
         {
           "name": "scheme_id",
-          "type": "int",
+          "type": "integer",
           "title": "Scheme",
           "description": "Owning structure pack.",
           "nullable": false
@@ -871,7 +893,7 @@
         },
         {
           "name": "option_set_id",
-          "type": "int",
+          "type": "integer",
           "title": "Option set",
           "description": "Parent list.",
           "nullable": false
@@ -892,7 +914,7 @@
         },
         {
           "name": "position",
-          "type": "int",
+          "type": "integer",
           "title": "Position",
           "description": "Order in pickers.",
           "nullable": false
@@ -913,7 +935,7 @@
         },
         {
           "name": "archived_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Archived at",
           "description": "Soft-delete.",
           "nullable": true
@@ -968,28 +990,28 @@
         },
         {
           "name": "field_id",
-          "type": "int",
+          "type": "integer",
           "title": "Field",
           "description": "Workflow option field these edges apply to.",
           "nullable": false
         },
         {
           "name": "from_option_id",
-          "type": "int",
+          "type": "integer",
           "title": "From option",
           "description": "Source option; null = valid start.",
           "nullable": true
         },
         {
           "name": "to_option_id",
-          "type": "int",
+          "type": "integer",
           "title": "To option",
           "description": "Destination option.",
           "nullable": false
         },
         {
           "name": "item_type_id",
-          "type": "int",
+          "type": "integer",
           "title": "Item type",
           "description": "Optional; null = all types using the field.",
           "nullable": true
@@ -1086,7 +1108,7 @@
         },
         {
           "name": "item_type_id",
-          "type": "int",
+          "type": "integer",
           "title": "Source type",
           "description": "Type that owns this link type.",
           "nullable": false
@@ -1121,14 +1143,14 @@
         },
         {
           "name": "position",
-          "type": "int",
+          "type": "integer",
           "title": "Position",
           "description": "Order in UI.",
           "nullable": false
         },
         {
           "name": "archived_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Archived at",
           "description": "Soft-delete.",
           "nullable": true
@@ -1176,14 +1198,14 @@
       "columns": [
         {
           "name": "link_type_id",
-          "type": "int",
+          "type": "integer",
           "title": "Link type",
           "description": "The relation definition.",
           "nullable": false
         },
         {
           "name": "target_type_id",
-          "type": "int",
+          "type": "integer",
           "title": "Target type",
           "description": "Allowed target item type.",
           "nullable": false
@@ -1241,56 +1263,56 @@
         },
         {
           "name": "project_id",
-          "type": "int",
+          "type": "integer",
           "title": "Project",
           "description": "Home project.",
           "nullable": false
         },
         {
           "name": "type_id",
-          "type": "int",
+          "type": "integer",
           "title": "Type",
           "description": "Item type (task, doc, …).",
           "nullable": false
         },
         {
           "name": "parent_id",
-          "type": "int",
+          "type": "integer",
           "title": "Parent",
           "description": "Optional parent item (tree).",
           "nullable": true
         },
         {
           "name": "number",
-          "type": "int",
+          "type": "integer",
           "title": "Number",
           "description": "Per-project display number. (unique/project)",
           "nullable": false
         },
         {
           "name": "created_by",
-          "type": "int",
+          "type": "integer",
           "title": "Created by",
           "description": "Author user.",
           "nullable": false
         },
         {
           "name": "archived_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Archived at",
           "description": "Soft-delete.",
           "nullable": true
         },
         {
           "name": "created_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Created at",
           "description": "Creation time.",
           "nullable": false
         },
         {
           "name": "updated_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Updated at",
           "description": "Optimistic-lock token.",
           "nullable": false
@@ -1406,14 +1428,14 @@
         },
         {
           "name": "item_id",
-          "type": "int",
+          "type": "integer",
           "title": "Item",
           "description": "Owning item.",
           "nullable": false
         },
         {
           "name": "field_id",
-          "type": "int",
+          "type": "integer",
           "title": "Field",
           "description": "Field definition (shared library id).",
           "nullable": false
@@ -1434,7 +1456,7 @@
         },
         {
           "name": "value_date",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Date value",
           "description": "For date/datetime fields.",
           "nullable": true
@@ -1455,14 +1477,14 @@
         },
         {
           "name": "option_id",
-          "type": "int",
+          "type": "integer",
           "title": "Option",
           "description": "For option fields (incl. status).",
           "nullable": true
         },
         {
           "name": "value_user_id",
-          "type": "int",
+          "type": "integer",
           "title": "User",
           "description": "For user fields.",
           "nullable": true
@@ -1685,21 +1707,21 @@
         },
         {
           "name": "item_id",
-          "type": "int",
+          "type": "integer",
           "title": "Item",
           "description": "Item being discussed.",
           "nullable": false
         },
         {
           "name": "author_id",
-          "type": "int",
+          "type": "integer",
           "title": "Author",
           "description": "Comment author.",
           "nullable": false
         },
         {
           "name": "parent_id",
-          "type": "int",
+          "type": "integer",
           "title": "Parent comment",
           "description": "Reply parent; null = top-level.",
           "nullable": true
@@ -1713,7 +1735,7 @@
         },
         {
           "name": "created_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Created at",
           "description": "When posted.",
           "nullable": false
@@ -1793,14 +1815,14 @@
         },
         {
           "name": "comment_id",
-          "type": "int",
+          "type": "integer",
           "title": "Comment",
           "description": "Target comment.",
           "nullable": false
         },
         {
           "name": "user_id",
-          "type": "int",
+          "type": "integer",
           "title": "User",
           "description": "Who reacted.",
           "nullable": false
@@ -1814,7 +1836,7 @@
         },
         {
           "name": "created_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Created at",
           "description": "When reacted.",
           "nullable": false
@@ -1881,28 +1903,28 @@
         },
         {
           "name": "link_type_id",
-          "type": "int",
+          "type": "integer",
           "title": "Link type",
           "description": "Relation kind.",
           "nullable": false
         },
         {
           "name": "source_item_id",
-          "type": "int",
+          "type": "integer",
           "title": "Source item",
           "description": "From item.",
           "nullable": false
         },
         {
           "name": "target_item_id",
-          "type": "int",
+          "type": "integer",
           "title": "Target item",
           "description": "To item.",
           "nullable": false
         },
         {
           "name": "created_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Created at",
           "description": "When linked.",
           "nullable": false
@@ -2018,14 +2040,14 @@
         },
         {
           "name": "aggregate_id",
-          "type": "int",
+          "type": "integer",
           "title": "Aggregate id",
           "description": "Entity id within that type.",
           "nullable": false
         },
         {
           "name": "seq",
-          "type": "int",
+          "type": "integer",
           "title": "Sequence",
           "description": "Order within the stream; concurrency.",
           "nullable": false
@@ -2039,7 +2061,7 @@
         },
         {
           "name": "version",
-          "type": "int",
+          "type": "integer",
           "title": "Version",
           "description": "Payload schema version for upcasts.",
           "nullable": false
@@ -2053,14 +2075,14 @@
         },
         {
           "name": "actor_id",
-          "type": "int",
+          "type": "integer",
           "title": "Actor",
           "description": "Who caused it.",
           "nullable": false
         },
         {
           "name": "at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "At",
           "description": "When it happened.",
           "nullable": false
@@ -2088,14 +2110,14 @@
         },
         {
           "name": "depth",
-          "type": "int",
+          "type": "integer",
           "title": "Depth",
           "description": "Automation chain depth.",
           "nullable": false
         },
         {
           "name": "project_id",
-          "type": "int",
+          "type": "integer",
           "title": "Project id",
           "description": "Denorm for partition / ACL.",
           "nullable": true
@@ -2246,21 +2268,21 @@
         },
         {
           "name": "aggregate_id",
-          "type": "int",
+          "type": "integer",
           "title": "Aggregate id",
           "description": "Target entity.",
           "nullable": false
         },
         {
           "name": "actor_id",
-          "type": "int",
+          "type": "integer",
           "title": "Actor",
           "description": "Who issued the command.",
           "nullable": false
         },
         {
           "name": "at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "At",
           "description": "When accepted.",
           "nullable": false
@@ -2312,21 +2334,21 @@
         },
         {
           "name": "created_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Created at",
           "description": "When enqueued.",
           "nullable": false
         },
         {
           "name": "picked_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Picked at",
           "description": "When a worker claimed it.",
           "nullable": true
         },
         {
           "name": "done_at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "Done at",
           "description": "When delivery finished.",
           "nullable": true
@@ -2384,7 +2406,7 @@
         },
         {
           "name": "item_id",
-          "type": "int",
+          "type": "integer",
           "title": "Item",
           "description": "Item the activity belongs to.",
           "nullable": false
@@ -2398,7 +2420,7 @@
         },
         {
           "name": "project_id",
-          "type": "int",
+          "type": "integer",
           "title": "Project",
           "description": "Denorm project.",
           "nullable": false
@@ -2412,14 +2434,14 @@
         },
         {
           "name": "actor_id",
-          "type": "int",
+          "type": "integer",
           "title": "Actor",
           "description": "Who did it.",
           "nullable": false
         },
         {
           "name": "at",
-          "type": "timestamptz",
+          "type": "timestamp with time zone",
           "title": "At",
           "description": "When.",
           "nullable": false

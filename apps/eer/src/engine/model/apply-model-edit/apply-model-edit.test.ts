@@ -5,7 +5,7 @@ import { CARD_MAX_W, CARD_MIN_W, HEADER_H, ROW_H } from '../../geometry/metrics'
 import { columnRoles } from '../column-roles';
 import { loadModel } from '../load-model';
 import { serializeModel } from '../serialize-model';
-import { applyModelEdit, enumRefsTo, fkRefsTo, type EditEntity, type EditField, type ModelEdit } from './apply-model-edit';
+import { applyModelEdit, enumRefsTo, fkRefsTo, ModelEditError, type EditEntity, type EditField, type ModelEdit } from './apply-model-edit';
 import type { Column, Constraint, IndexColumn } from '../types';
 import seedRaw from '../../../../models/items-platform.json';
 
@@ -689,7 +689,11 @@ describe('applyModelEdit', () => {
             constraints: [
               { id: 'c1', kind: 'pk', columns: ['id'] },
               { id: 'c2', kind: 'unique', columns: ['email'] },
-              { id: 'c3', kind: 'check', expression: "email <> ''" },
+              // A check now requires a name (Task 12 review, Finding 2 — see
+              // validateConstraints) — this test is about verbatim constraint
+              // passthrough, not check validation, so the fixture just needs
+              // a real name rather than exercising that rule.
+              { id: 'c3', kind: 'check', name: 'ck_a_email', expression: "email <> ''" },
             ],
             indexes: [{ id: 'i1', name: 'idx_a_email', columns: ['email'], unique: false }],
           },
@@ -1037,6 +1041,21 @@ describe('applyModelEdit', () => {
       expect(() => applyModelEdit(base(), fk({ columns: ['id', 'users_id'] }))).toThrow(/same number of columns/i);
     });
 
+    // Task 12 review, Finding 2 (IMPORTANT): drizzle's check() has no
+    // auto-generated name (the name arg is mandatory — see export-drizzle.ts's
+    // emitCheck, which throws on a blank one) — unlike pk/unique/fk, which
+    // Postgres/drizzle really do name for you when left blank. A blank check
+    // name used to sail through validateConstraints (only the EXPRESSION was
+    // checked), so a user could Save it here and only find out at export time.
+    it('rejects a check constraint with a blank name (drizzle has no auto-name for one)', () => {
+      expect(() =>
+        applyModelEdit(base(), edit({ constraints: [{ id: 'c1', kind: 'check', name: null, expression: 'total > 0' }] })),
+      ).toThrow(/must have a name/i);
+      expect(() =>
+        applyModelEdit(base(), edit({ constraints: [{ id: 'c1', kind: 'check', name: '   ', expression: 'total > 0' }] })),
+      ).toThrow(/must have a name/i);
+    });
+
     it('rejects an empty check expression and duplicate constraint/index names', () => {
       expect(() =>
         applyModelEdit(base(), edit({ constraints: [{ id: 'c1', kind: 'check', name: null, expression: '  ' }] })),
@@ -1137,6 +1156,154 @@ describe('applyModelEdit', () => {
         },
       });
       expect(m2.relationships.some((r) => r.id === 'rel:b:fk1')).toBe(true);
+    });
+  });
+
+  // Coupling guard (Task 10 review finding): table-modal.tsx routes a
+  // blocked Save's red tab count off `ModelEditError.field` alone — never by
+  // pattern-matching the thrown message's prose. These pin `.field` for one
+  // representative case per validation rule, directly against the structured
+  // tag, so a future reword of any message below can change the text freely
+  // without silently misrouting the UI (the old prose-regex approach could
+  // not make that guarantee — see apply-model-edit.ts's own header comment on
+  // ModelEditError, and the "wrong tab" case pinned in table-modal.test.tsx).
+  describe('ModelEditError.field pins the tab a user fixes each error on (not its prose)', () => {
+    const fieldOf = (fn: () => unknown): string => {
+      try {
+        fn();
+      } catch (err) {
+        if (err instanceof ModelEditError) return err.field;
+        throw err;
+      }
+      throw new Error('expected to throw');
+    };
+
+    const base = () => buildModel();
+    const edit = (over: Partial<EditEntity>): ModelEdit => ({
+      kind: 'upsertEntity',
+      entity: {
+        id: 'orders',
+        label: 'orders',
+        group: 'z2',
+        description: null,
+        schema: null,
+        fields: [editField('id', 'int'), editField('users_id', 'int')],
+        constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }],
+        indexes: [],
+        ...over,
+      } as EditEntity,
+    });
+
+    it('"columns": blank column name, duplicate column name', () => {
+      expect(fieldOf(() => applyModelEdit(base(), edit({ fields: [editField('id', 'int'), editField('  ')] })))).toBe('columns');
+      expect(fieldOf(() => applyModelEdit(base(), edit({ fields: [editField('id', 'int'), editField('id', 'int')] })))).toBe('columns');
+    });
+
+    // The Critical finding: validateInboundReferences' message contains the
+    // words "foreign key" (Postgres' own wording for this error), which a
+    // substring regex misrouted to Constraints — but the fk constraint
+    // belongs to the OTHER table, not this one, and the actual fix is a
+    // column edit here. Pinned directly against `.field`, not the message.
+    it('"columns": removing a column another table\'s fk constraint references (validateInboundReferences)', () => {
+      const raw = {
+        groups: [{ id: 'g', label: 'G' }],
+        entities: [
+          { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int' }, { name: 'name', type: 'text' }], constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }] },
+          {
+            id: 'b', group: 'g',
+            fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }],
+            constraints: [
+              { id: 'pk2', kind: 'pk', columns: ['id'] },
+              { id: 'fk1', kind: 'fk', columns: ['a_id'], refTable: 'a', refColumns: ['id'] },
+            ],
+          },
+        ],
+      };
+      const m1 = buildModel(raw);
+      expect(
+        fieldOf(() =>
+          applyModelEdit(m1, {
+            kind: 'upsertEntity',
+            entity: {
+              id: 'a', label: 'a', group: 'g', description: null, schema: null,
+              fields: [editField('name')], // 'id' removed
+              constraints: [{ id: 'pk1', kind: 'pk', name: null, columns: ['name'] }],
+              indexes: [],
+            },
+          }),
+        ),
+      ).toBe('columns');
+    });
+
+    it('"constraints": duplicate constraint name, blank CHECK expression, fk arity mismatch, >1 primary key', () => {
+      expect(
+        fieldOf(() =>
+          applyModelEdit(
+            base(),
+            edit({
+              constraints: [
+                { id: 'c1', kind: 'unique', name: 'dup', columns: ['id'], nullsNotDistinct: false },
+                { id: 'c2', kind: 'unique', name: 'dup', columns: ['users_id'], nullsNotDistinct: false },
+              ],
+            }),
+          ),
+        ),
+      ).toBe('constraints');
+      expect(
+        fieldOf(() => applyModelEdit(base(), edit({ constraints: [{ id: 'c1', kind: 'check', name: null, expression: '  ' }] }))),
+      ).toBe('constraints');
+      expect(
+        fieldOf(() => applyModelEdit(base(), edit({ constraints: [{ id: 'c1', kind: 'check', name: null, expression: 'total > 0' }] }))),
+      ).toBe('constraints');
+      expect(
+        fieldOf(() =>
+          applyModelEdit(
+            base(),
+            edit({
+              constraints: [
+                {
+                  id: 'c1', kind: 'fk', name: null, columns: ['id', 'users_id'], refSchema: null,
+                  refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null,
+                },
+              ],
+            }),
+          ),
+        ),
+      ).toBe('constraints');
+      expect(
+        fieldOf(() =>
+          applyModelEdit(
+            base(),
+            edit({
+              constraints: [
+                { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
+                { id: 'c2', kind: 'pk', name: null, columns: ['users_id'] },
+              ],
+            }),
+          ),
+        ),
+      ).toBe('constraints');
+    });
+
+    it('"indexes": duplicate index name, unknown index column', () => {
+      expect(
+        fieldOf(() =>
+          applyModelEdit(
+            base(),
+            edit({
+              indexes: [
+                { id: 'i1', name: 'dup', columns: [idxCol('id')], unique: false, method: null, only: false, where: null },
+                { id: 'i2', name: 'dup', columns: [idxCol('users_id')], unique: false, method: null, only: false, where: null },
+              ],
+            }),
+          ),
+        ),
+      ).toBe('indexes');
+      expect(
+        fieldOf(() =>
+          applyModelEdit(base(), edit({ indexes: [{ id: 'i1', name: 'idx', columns: [idxCol('nope')], unique: false, method: null, only: false, where: null }] })),
+        ),
+      ).toBe('indexes');
     });
   });
 
