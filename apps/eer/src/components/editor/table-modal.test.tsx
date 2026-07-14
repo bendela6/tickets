@@ -140,6 +140,10 @@ describe('TableModal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add column' }));
     fireEvent.change(screen.getByLabelText('Column 2 name'), { target: { value: 'id' } });
 
+    // Frame 1e (design spec): Save visibly blocked WITH A REASON — the
+    // banner must show the "why" live, not only after a (now-impossible)
+    // Save click on a disabled button.
+    expect(screen.getByText(/Duplicate field name/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Save' })); // disabled — no-op
     expect(spy).not.toHaveBeenCalled();
@@ -206,6 +210,10 @@ describe('TableModal', () => {
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Users' } });
 
+    // Same "blocked WITH A REASON" requirement as the duplicate-field-name
+    // case above — the id collision is this component's own local check, so
+    // its reason must show live too, not just disable the button silently.
+    expect(screen.getByText(/A table with id "users" already exists/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Create' })); // disabled — no-op
     expect(spy).not.toHaveBeenCalled();
@@ -530,6 +538,11 @@ describe('TableModal', () => {
       fireEvent.click(screen.getByRole('button', { name: '+ FK' }));
 
       fireEvent.click(screen.getByRole('tab', { name: /indexes/i }));
+
+      // Frame 1e: this is the ENGINE-level (ModelEditError) case, not this
+      // component's own draftError — its .message must reach the banner too,
+      // live, from whichever tab happens to be active, same as the tab count.
+      expect(screen.getByText(/must reference at least one column/i)).toBeInTheDocument();
 
       const constraintsTab = screen.getByRole('tab', { name: /constraints/i });
       // tags' own constraints are now [c1 pk, c2 blank fk] — a real count of
