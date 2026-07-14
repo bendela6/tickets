@@ -56,12 +56,12 @@ function normalizeConstraint(c: any, i: number, entityId: string, errors: string
 // shared-primary-key reference is role 'pk' AND a ref. Reads the RAW json
 // fields (role/ref/refField never make it onto the normalized Column — see
 // the module header note by the entities loop below).
-function synthesizeLegacyConstraints(rawFields: any[]): Constraint[] {
+function synthesizeLegacyConstraints(rawColumns: any[]): Constraint[] {
   const out: Constraint[] = [];
-  const pkCols = rawFields.filter((f) => f.role === 'pk').map((f) => f.name);
+  const pkCols = rawColumns.filter((f) => f.role === 'pk').map((f) => f.name);
   let n = 1;
   if (pkCols.length) out.push({ id: 'c' + n++, kind: 'pk', name: null, columns: pkCols });
-  for (const f of rawFields) {
+  for (const f of rawColumns) {
     if (!f.ref) continue;
     out.push({
       id: 'c' + n++, kind: 'fk', name: null, columns: [f.name],
@@ -128,9 +128,13 @@ export function loadModel(raw: unknown): LoadResult {
     if (e.group && !groupIds.has(e.group)) errors.push(`Entity "${e.id}" references unknown group "${e.group}".`);
     if (!e.group) errors.push(`Entity "${e.id}" is missing "group".`);
 
-    const rawFields: any[] = Array.isArray(e.fields) ? e.fields : [];
+    // `columns` is the canonical file key; `fields` is the legacy alias every
+    // pre-rewrite file (and hand-authored fixture) still uses — accepted
+    // forever for back-compat. When a file somehow carries both, `columns`
+    // wins.
+    const rawColumns: any[] = Array.isArray(e.columns) ? e.columns : Array.isArray(e.fields) ? e.fields : [];
     const seen = new Set<string>();
-    const columns: Column[] = rawFields.map((f: any, fi: number) => {
+    const columns: Column[] = rawColumns.map((f: any, fi: number) => {
       if (!f.name) errors.push(`Entity "${e.id}" field[${fi}] is missing "name".`);
       else if (seen.has(f.name)) errors.push(`Entity "${e.id}" has duplicate field "${f.name}".`);
       else seen.add(f.name);
@@ -144,12 +148,12 @@ export function loadModel(raw: unknown): LoadResult {
         default: typeof f.default === 'string' ? f.default : null,
       };
     });
-    if (columns.length === 0) errors.push(`Entity "${e.id}" has no fields.`);
+    if (columns.length === 0) errors.push(`Entity "${e.id}" has no columns.`);
 
     const rawConstraints = Array.isArray(e.constraints) ? e.constraints : null;
     const constraints: Constraint[] = rawConstraints
       ? rawConstraints.map((c: any, ci: number) => normalizeConstraint(c, ci, e.id, errors))
-      : synthesizeLegacyConstraints(rawFields);
+      : synthesizeLegacyConstraints(rawColumns);
     const indexes: TableIndex[] = (Array.isArray(e.indexes) ? e.indexes : []).map((ix: any, ii: number) => ({
       id: typeof ix.id === 'string' && ix.id ? ix.id : 'i' + (ii + 1),
       name: typeof ix.name === 'string' ? ix.name : '',

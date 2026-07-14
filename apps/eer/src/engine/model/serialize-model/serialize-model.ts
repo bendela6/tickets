@@ -1,7 +1,8 @@
 // Model → raw JSON file shape. Inverse of load-model for everything the editor
-// touches: meta, kinds, colours, groups+bounds, entities+positions+fields
+// touches: meta, kinds, colours, groups+bounds, entities+positions+columns
 // (+constraints+indexes), and relationships. Underscore-prefixed derived state
-// is never serialized.
+// is never serialized. Emits the canonical `columns` key (load-model still
+// accepts the legacy `fields` alias on read, for back-compat with old files).
 //
 // Relationships ARE the foreign keys now (see derive-relationships.ts): a
 // BARE `kind: 'fk'` relationship — no label, no non-fk kind, an inferred
@@ -89,7 +90,7 @@ export function serializeModel(model: Model, colors: ReadonlyMap<string, string>
       ...(e.description ? { description: e.description } : {}),
       x: e.x,
       y: e.y,
-      fields: e.columns.map((f) => ({
+      columns: e.columns.map((f) => ({
         name: f.name,
         type: f.type,
         ...(f.title ? { title: f.title } : {}),

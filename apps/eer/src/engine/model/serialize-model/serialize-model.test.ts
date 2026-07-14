@@ -112,9 +112,9 @@ describe('serializeModel', () => {
       { id: 'c3', kind: 'check', expression: "code <> ''" },
     ]);
     expect(entity.indexes).toEqual([{ id: 'i1', name: 'idx_a_code', columns: ['code'], unique: false }]);
-    expect(entity.fields[0]).not.toHaveProperty('nullable'); // default nullable (true) is omitted
-    expect(entity.fields[0]).not.toHaveProperty('default');
-    expect(entity.fields[1]).toMatchObject({ nullable: false, default: "'x'" });
+    expect(entity.columns[0]).not.toHaveProperty('nullable'); // default nullable (true) is omitted
+    expect(entity.columns[0]).not.toHaveProperty('default');
+    expect(entity.columns[1]).toMatchObject({ nullable: false, default: "'x'" });
   });
 
   it('omits an fk constraint\'s null name/onDelete/onUpdate but keeps them when set', () => {

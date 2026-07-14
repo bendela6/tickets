@@ -85,7 +85,7 @@
       "description": "Actors for mutations and comments (humans and agents).",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "serial",
@@ -135,7 +135,7 @@
       "description": "Workspace container bound to a structure scheme.",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "serial",
@@ -202,7 +202,7 @@
       "description": "Saved board/table lenses (columns, filters, sort).",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "serial",
@@ -269,7 +269,7 @@
       "description": "Structure pack root: types, field library, option sets.",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "serial",
@@ -319,7 +319,7 @@
       "description": "Kinds of items within a scheme (task, bug, document, …).",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "serial",
@@ -392,7 +392,7 @@
       "description": "Which child types may hang under a parent type (hierarchy rules).",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "parent_type_id",
           "type": "int",
@@ -439,7 +439,7 @@
       "description": "Places a library field on a type (M2M). Definition stays on fields.",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "item_type_id",
           "type": "int",
@@ -504,7 +504,7 @@
       "description": "Scheme-scoped field library (reusable across types).",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "serial",
@@ -600,7 +600,7 @@
       "description": "Shared option lists; many option fields can reuse one set.",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "serial",
@@ -655,7 +655,7 @@
       "description": "One choice in an option set (e.g. a status value).",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "serial",
@@ -728,7 +728,7 @@
       "description": "Workflow graph: which option may move to which (on a workflow field).",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "serial",
@@ -828,7 +828,7 @@
       "description": "Named relation vocabulary owned by a source type.",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "serial",
@@ -907,7 +907,7 @@
       "description": "Which item types may be targets of a given link type.",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "link_type_id",
           "type": "int",
@@ -954,7 +954,7 @@
       "description": "Record spine (generic work/knowledge object in a project).",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "serial",
@@ -1072,7 +1072,7 @@
       "description": "EAV storage: one row (or N for multi) per field value on an item.",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "serial",
@@ -1196,7 +1196,7 @@
       "description": "Discussion threads on an item.",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "serial",
@@ -1285,7 +1285,7 @@
       "description": "Emoji reactions on comments.",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "serial",
@@ -1357,7 +1357,7 @@
       "description": "Typed edges between two items.",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "serial",
@@ -1440,7 +1440,7 @@
       "description": "Global append-only log for every aggregate stream.",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "bigserial",
@@ -1555,7 +1555,7 @@
       "description": "One row per accepted command; dedupes multi-event retries.",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "uuid",
@@ -1622,7 +1622,7 @@
       "description": "Reliable after-commit handoff to consumers.",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "event_id",
           "type": "bigint",
@@ -1677,7 +1677,7 @@
       "description": "Per-item activity feed projection (UI diffs).",
       "x": 0,
       "y": 0,
-      "fields": [
+      "columns": [
         {
           "name": "id",
           "type": "bigserial",
