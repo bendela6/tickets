@@ -15,6 +15,7 @@ import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import type { DbTransaction } from '../client';
 import { events, fields, itemValues, users } from '../schema';
+import { inChunks } from './in-chunks';
 import { mapKind } from './kind-map';
 import type { Legacy, LegacyEvent } from './read-legacy';
 
@@ -197,5 +198,5 @@ export async function importHistory(tx: DbTransaction, legacy: Legacy, ids: Impo
     });
   }
 
-  if (rows.length) await tx.insert(events).values(rows);
+  if (rows.length) await inChunks(rows, (chunk) => tx.insert(events).values(chunk));
 }
