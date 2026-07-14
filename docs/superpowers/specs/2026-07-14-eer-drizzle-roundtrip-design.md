@@ -1,6 +1,6 @@
 # EER ↔ drizzle: a lossless round-trip
 
-**Date:** 2026-07-14 · **Status:** design, awaiting approval · **App:** `apps/eer`
+**Date:** 2026-07-14 · **Revision:** 2 (amended after Grok + Sol validation) · **Status:** design, awaiting approval · **App:** `apps/eer`
 
 ## The ask
 
@@ -9,10 +9,15 @@
 Today `apps/eer` models tables as columns + constraints + indexes, and the type picker offers a
 hand-written list of 21 Postgres types plus a free-text `custom…` escape hatch. The escape hatch is
 the symptom: the model's vocabulary is *approximately* Postgres, so nothing guarantees a diagram can
-be turned into a drizzle schema, or vice versa.
+become a drizzle schema, or the reverse.
 
 This design replaces "approximately Postgres" with a **checkable round-trip contract** against
 drizzle, and deletes `custom…` on the way.
+
+Revision 2 fixes a fatal detector bug, names the concrete gate APIs, and closes the
+under-specification the two validation passes found. Every runtime claim below was verified against
+the installed **drizzle-orm 0.45.2** and the real `packages/db` schema; the probe results are quoted
+inline.
 
 ## The contract
 
@@ -21,258 +26,430 @@ enums**):
 
 ```
 @tickets/db schema  ──import──▶  Model  ──export──▶  schema.generated.ts
-                                                            │
-                                                        re-import
-                                                            ▼
-        assert deepEqual(describe(original), describe(regenerated))
-        assert drizzleKitSql(original) === drizzleKitSql(regenerated)
+        │                                                    │
+        └──────────────── both sides ────────────────────────┘
+                              ▼
+   A. deepEqual(describe(original), describe(regenerated))      ← our canonical descriptor
+   B. generateMigration(snapshot(original), snapshot(regen)) === []   ← drizzle-kit's own opinion
 ```
+
+Both gates are concrete, verified APIs:
+
+- **A** is a canonical descriptor we write (`describe()`, below). Raw `getTableConfig` output cannot
+  be deep-equalled — it contains functions and back-references to table objects.
+- **B** uses `drizzle-kit/api`, which is installed and exports
+  `generateDrizzleJson`, `generateMigration`, `upPgSnapshot` (verified). An empty migration between
+  the two snapshots means Postgres cannot tell them apart. No live database, no CLI scraping.
 
 Equality is **semantic, not textual**. `serial().primaryKey()` (inline) and a table-level
 `primaryKey({ columns: [id] })` produce the same database; the model normalises to table-level
 constraints, so a regenerated file is not byte-identical to a hand-written one. What must be
 identical is what reaches Postgres.
 
-Anything the model cannot hold is **reported at import, never silently dropped** (see *Scope*).
+### `describe()` — the canonical descriptor
+
+One function, used on both sides of the gate. It must:
+
+- render every SQL fragment (defaults, CHECK bodies, generated expressions, index predicates and
+  expression columns) through the same pg dialect, so `sql` chunk objects become stable text;
+- preserve order where order is semantic — composite key columns, FK column pairs, index columns,
+  enum values;
+- sort where order is not — tables, constraints, indexes (by name);
+- cover schemas, enums, identity options, generated expressions, all constraints and the full index
+  configuration;
+- exclude functions and object identity.
 
 ## Why introspection, not parsing
 
 Drizzle ships `getTableConfig()`, which returns a table's resolved columns, primary keys, unique
-constraints, checks, foreign keys and indexes. Verified against `packages/db`: it yields SQL types,
-`notNull`, defaults (as `sql` chunks such as `now()`), named composite uniques, named FKs with
-`onDelete`/`onUpdate`, and btree indexes. `isPgEnum` + `enumValues` yield the enums.
+constraints, checks, foreign keys and indexes; `isPgEnum` yields the enums. Verified against
+`packages/db`: SQL types, `notNull`, defaults (as `sql` chunks such as `now()`), named composite
+uniques, a `nullsNotDistinct` unique (`status_transitions_edge`), a CHECK (`ticket_links_no_self`),
+a partial unique index (`ticket_values_single`), and named FKs with `onDelete`/`onUpdate`.
 
-So the drizzle → UI direction needs **no TypeScript parsing at all**. We load the schema module and
-introspect the objects it exports. The UI → drizzle direction is code generation, and the gate test
-above is what keeps the generator honest.
+So drizzle → UI needs **no TypeScript parsing**. We load the schema module and introspect the
+objects it exports. UI → drizzle is code generation, and the gate above is what keeps the generator
+honest.
 
-`packages/db/src/schema/index.ts` is import-safe (no client, no env access) — the package root
-(`src/index.ts`) is not, because it pulls in `client.ts`. The reader targets the schema barrel.
+`packages/db/src/schema/index.ts` is import-safe (no client, no env). The package root
+(`src/index.ts`) is not — it pulls in `client.ts`. The reader targets the schema barrel.
+
+## Runtime-default detection (the bug revision 1 had)
+
+Revision 1 said `.$defaultFn()` is detectable as "`hasDefault` with no `default`". **That is wrong**,
+and it would have failed the gate on day one. Probe, `users.id`, declared `serial().primaryKey()`:
+
+```
+hasDefault: true   default: undefined   defaultFn: undefined   columnType: 'PgSerial'
+```
+
+`@tickets/db` has **16 serial columns**. The revision-1 heuristic would have reported all of them as
+unsupported runtime defaults.
+
+**The rule:** inspect `column.defaultFn` and `column.onUpdateFn` directly — both exist on the column
+object and are `undefined` unless `.$defaultFn()` / `.$onUpdate()` was called. A column whose default
+comes from its *type* (`serial`, `bigserial`, `smallserial`), from an identity, or from a generated
+expression is never a runtime default. `UnsupportedConstruct.kind` therefore carries both
+`default-fn` and `on-update`.
+
+## Schema-qualified identity
+
+Names alone are ambiguous once `pgSchema()` is in play. Database-object identity is **`(schema,
+name)`** throughout:
+
+- `Entity.schema` and `EnumDecl.schema` (drizzle's enum object exposes a `schema` field — verified);
+- foreign keys carry `refSchema` alongside `refTable`;
+- re-import matches tables by `(schema, name)`, not by name;
+- an entity's model id is `name` when the schema is null/`public` (keeps every existing model file
+  working) and `schema.name` otherwise.
 
 ## What the model must grow
 
-The current `Column` (name/type/nullable/default/title/description) and `Constraint`
-(pk/unique/check/fk) get us most of the way. To reach SQL truth the model adds:
-
 | Addition | Why |
 | --- | --- |
-| `Entity.schema` | drizzle's `pgSchema('x').table(...)` namespace (the real schema is all `public`, but the model must be able to say so) |
-| `Column.identity` | `GENERATED ALWAYS/BY DEFAULT AS IDENTITY` |
+| `Entity.schema`, `EnumDecl.schema`, FK `refSchema` | schema-qualified identity |
+| `Column.identity` | `GENERATED ALWAYS/BY DEFAULT AS IDENTITY`, with drizzle's full sequence options |
 | `Column.generated` | `GENERATED ALWAYS AS (expr) STORED` |
-| arrays | carried in the type string as Postgres prints it: `text[]`, `integer[2]` |
+| array **dimensions** | `text[]`, `integer[2]`, `integer[2][]` — a boolean cannot hold this |
 | `Model.enums` | the JSON twin of `pgEnum(name, values)` |
-| `UniqueConstraint.nullsNotDistinct` | changes uniqueness semantics under NULLs |
-| `TableIndex.method` / `.where` / per-column ordering / expression columns | `USING gin`, partial indexes, `DESC NULLS LAST`, `lower(email)` |
+| `UniqueConstraint.nullsNotDistinct` | changes uniqueness under NULLs; the real schema uses it |
+| `TableIndex.method` / `.where` / `.only` / per-column `order`, `nulls`, `opClass` / expression columns | exactly the SQL-affecting fields `getTableConfig` exposes (verified keys: `name, columns, unique, only, method, where`; per-column: `name, keyAsName, type, indexConfig`) |
+| `Entity.stale` | a table the last import no longer found (see *Unresolved state*) |
 
-Defaults stay **SQL text** (`now()`, `'{}'::jsonb`). The importer flattens drizzle's `sql` chunk
-objects to text; the exporter re-emits them as `sql\`…\`` (or a plain literal when the default is one).
+Anything drizzle can express that this list omits is **out of scope and reported at import** — never
+silently dropped. Gate test B is what proves the omissions don't matter for the real schema.
 
-**Constraint names are captured, not re-derived.** Drizzle auto-names
-`comment_reactions_comment_id_comments_id_fk`; the importer records the resolved name so export
-reproduces it exactly and migrations don't churn.
+> Note on the validation feedback: Sol listed index `concurrently` and `with` as SQL-affecting fields
+> we must model. They are **not** exposed by `getTableConfig` in 0.45.2 — the config keys are
+> `name, columns, unique, only, method, where`. `opClass` and column ordering live per-column inside
+> `indexConfig`. We model what is exposed; the gate catches anything we got wrong.
+
+## SQL text is SQL text
+
+Every SQL fragment — defaults, CHECK bodies, generated expressions, index predicates, expression
+index columns — is stored as **rendered SQL text**, produced by the reader through the pg dialect.
+
+Export always re-emits them through `` sql`…` ``, escaping backticks and `${`. Revision 1 said the
+exporter would "emit a plain literal when the default is one"; that is unimplementable, because once
+flattened to a string you cannot distinguish the SQL literal `'x'` from a JS string default, a
+number, or JSON. One representation, one emission path, no guessing.
+
+## Constraint names are captured, not re-derived
+
+Drizzle auto-names `comment_reactions_comment_id_comments_id_fk`. The importer records the resolved
+name so export reproduces it exactly and migrations don't churn.
+
+## Unresolved state (stale tables, unknown types)
+
+Revision 1 contradicted itself: it kept vanished tables in the model *and* exported the whole model —
+so the next export would resurrect them. Explicit rules:
+
+- A table the import no longer finds is marked **stale**, not deleted. Deletion stays the user's call.
+- A column type nothing recognises loads with a warning and keeps its string verbatim (no silent
+  rewrite), and renders in the picker as an **invalid** selection.
+- **Saving the model JSON is always allowed.** Unresolved state is not a reason to lose work.
+- **Exporting to drizzle is blocked** while any stale table or unknown type exists. The export button
+  says which.
+- The import report separates *informational* (added/changed tables) from *export-blocking*
+  (stale, unknown type, unsupported construct).
+
+## Preserve-through-edit (the highest-risk rule)
+
+The table modal rebuilds constraints and indexes from editor drafts. Every field the UI does not
+author — `where`, `only`, `method`, `opClass`, `nullsNotDistinct`, `identity`, `generated`, captured
+constraint names — must survive an open-and-save untouched.
+
+This is the failure mode this codebase has hit repeatedly (edges losing labels, constraints being
+regenerated from stale hints). It gets a dedicated regression test: import the real schema, open and
+save every table's modal unchanged, and assert `describe(model)` is a fixed point across three
+round-trips.
+
+Authoring UI for these fields is a **later** decision. The contract for this work is: **import
+preserves them, edit does not destroy them, export emits them.**
 
 ## The transforms
 
-Two pure engine modules, unit-testable with no DOM and no drizzle import:
+Two pure engine modules — no DOM, no drizzle import, unit-testable:
 
 - `engine/model/import-drizzle` — `(SchemaDescription, Model | null) → { model, report }`
 - `engine/model/export-drizzle` — `Model → string` (drizzle TypeScript source)
 
 Only a thin **reader** touches drizzle on the Node side: a dev-server route in
 `apps/eer/vite-plugins/` that `ssrLoadModule`s the schema path, walks the exports with
-`getTableConfig` / `isPgEnum`, and returns a plain-JSON `SchemaDescription`. Export writes a `.ts`
-file the user reviews before committing — it never overwrites hand-written schema files unprompted.
+`getTableConfig` / `isPgEnum`, renders SQL chunks to text, and returns a plain-JSON
+`SchemaDescription`.
 
-The type catalogue is the one place `drizzle-orm` is imported **in the browser**: `engine/model/pg-types`
-enumerates `pg-core`'s column builders and reads each one's `getSQLType()`. Measured cost: 87 KB
-minified (~25 KB gzip), zero Node builtins. `getSQLType()` alone doesn't say which types take
-parameters or how to group them (an unparameterised `bit` returns `bit(undefined)`), so each builder
-is paired with a small annotation (group + param arity). A test asserts **every builder drizzle
-exports is annotated** — a drizzle upgrade that adds a type turns the suite red instead of leaving a
-silent gap in the picker.
+`SchemaDescription` carries **group metadata** (`SCHEMA_GROUPS` from `packages/db`: key, label,
+colour, member tables), because the pure importer has no other way to reach it — revision 1 promised
+zone seeding the declared transform could not perform. Tables in no group land in a default
+`ungrouped` zone. `SCHEMA_GROUPS` colours are Instrument colour *names* (`indigo`, `teal`); the
+reader resolves them to hex, falling back to the palette when a name is unknown.
 
-## Re-import merges; it does not clobber
+### Reader / writer boundary (dev only)
 
-The diagram holds things drizzle has no home for: zones, colours, positions, column titles and
-descriptions, authored edge labels. Import therefore **merges into the existing model**, matched by
-table name and column name:
+- Routes exist only under `vite dev`; the production build has no filesystem surface.
+- Import path: request-supplied, but **must** resolve inside the workspace root and end in `.ts`;
+  default `packages/db/src/schema/index.ts`. A module that fails to load returns a 422 with the
+  error, not a crash.
+- Export path: confined to `apps/eer/exports/`, filename sanitised, written atomically, overwrite
+  only within that directory. Export never writes to `packages/db`.
 
-- unchanged tables keep zone, colour, position, titles, descriptions, labels;
-- new tables are reported and land in a default zone;
-- vanished tables are **reported, not deleted** — removal stays the user's call.
+## The type catalogue
 
-`packages/db/src/schema/schema-groups.ts` already assigns every table to a group with a label and a
-colour. A first import seeds the diagram's zones from it.
+`apps/eer` gains a **declared** `drizzle-orm` dependency (it is imported directly in browser code and
+in the vite middleware; relying on workspace hoisting is not acceptable). Measured browser cost of
+`pg-core`: 87 KB minified (~25 KB gzip), zero Node builtins.
+
+Builder discovery is deterministic: `getPgColumnBuilders()` returns exactly **32** builders
+(verified). It is *not* exported from `drizzle-orm/pg-core` — the import path is
+`drizzle-orm/pg-core/columns/all`. (Grok's validation named the wrong path; the count and the
+`customType` observation were right.)
+
+Policy:
+
+- **`customType` is excluded** — it is a meta-factory, not a SQL type.
+- **`decimal` is not in the registry** (it is an alias export of `numeric`); it lives in the alias map.
+- Multi-word SQL names (`timestamp with time zone`, `double precision`) are the catalogue's canonical
+  names.
+
+A builder's SQL name is only readable from a *built column*, so each builder gets a **descriptor**
+that says how to instantiate it, how to parse its SQL text back to parameters, and how to emit it as
+TypeScript. Arity alone (`params: 0 | 1 | 2`) is not enough: `timestamp(3) with time zone`,
+`interval day to second(3)`, vector dimensions and geometry modes all have their own grammar.
+
+A **drift test** asserts every builder in the registry has a descriptor — a drizzle upgrade that adds
+a type turns the suite red rather than leaving a silent hole in the picker.
 
 ## The type picker (the original complaint)
 
-- Catalogue = drizzle's builders (~32 types), grouped, with inline params (`varchar(255)`, `numeric(10,2)`).
+- Catalogue = the descriptors above, grouped, with inline params.
 - Declared enums appear as their own group.
-- An `[]` checkbox makes any type an array.
-- **`custom…` is deleted.** A type in a file that nothing recognises loads with a warning, keeps its
-  string (no silent rewrite), and renders in the picker as an invalid selection the user must fix
-  before saving. This also lets `type-cell.tsx` drop the custom-mode workaround that previously ate
+- Array dimensions are authored with an `[]` control (sized and nested dimensions supported).
+- **`custom…` is deleted.** `type-cell.tsx` drops the custom-mode workaround that previously ate
   typed text.
-- `load-model` gains an alias map so existing files keep working: `int`/`int4` → `integer`,
-  `int8` → `bigint`, `bool` → `boolean`, `decimal` → `numeric`, `timestamptz` →
-  `timestamp with time zone`, `serial4` → `serial`, and so on.
-- The seed (`models/items-platform.json`) is rewritten once into drizzle-canonical names. The existing
-  `seed-equivalence.test.ts` fixture proves no relationship, cardinality, label, badge or title moved.
+- `load-model` gains an alias map: `int`/`int4` → `integer`, `int8` → `bigint`, `bool` → `boolean`,
+  `decimal` → `numeric`, `timestamptz` → `timestamp with time zone`, `serial4` → `serial`, …
+- **Index columns migrate** from `string[]` to `IndexColumn[]` at load, the way `fields` → `columns`
+  migrated: `["ticket_id"]` → `[{ expression: "ticket_id", isExpression: false }]`. The indexes
+  editor, `apply-model-edit` and `serialize-model` move with it.
+- The seed (`models/items-platform.json`) is rewritten once. It has **two columns typed bare
+  `"enum"`** (`users.kind`, `fields.type`) which no alias can rescue — the rewrite declares real
+  model enums from their documented values (`human | agent`, `string | number | …`) and points the
+  columns at them. `seed-equivalence.test.ts` proves no relationship, cardinality, label, badge or
+  title moved.
 
 ## Scope
 
-**In:** tables, columns, constraints (pk/unique/check/fk with actions), indexes, enums, namespaces,
-identity and generated columns, arrays.
+**In:** tables, columns, constraints (pk/unique/check/fk with actions), indexes (method, partial,
+ordering, opClass, expressions), enums, namespaces, identity and generated columns, arrays.
 
 **Out, but reported at import:** views, materialised views, sequences, RLS policies, roles, and
-TS-only sugar that never reaches SQL — `relations()`, `$type<Foo>()`, `.$defaultFn()`, `.$onUpdate()`.
-`.$defaultFn()` is detectable (`hasDefault` with no `default`); `$type` is compile-time only and
-invisible at runtime, so it is documented as unrepresentable rather than detected.
+TypeScript-only sugar that never reaches SQL — `relations()`, `$type<Foo>()`, `.$defaultFn()`,
+`.$onUpdate()`, and `mode: 'string'` (every timestamp in `@tickets/db` uses it). `$type` and `mode`
+are invisible at runtime, so they are documented as unrepresentable rather than detected;
+`defaultFn`/`onUpdateFn` are detected directly.
 
-The gate test asserts the real schema needs none of these. The day it does, the user gets a report
-line — not a silent loss.
+**Export house style** (does not affect SQL, so the gate is unaffected): timestamp and date columns
+are emitted with `mode: 'string'`, matching the repo's existing convention.
+
+## Relationship to existing code
+
+`packages/db` already has `describeSchema()` — a deliberately thin introspection feeding the web
+app's `/schema` ERD. It stays. The eer reader is the full-fidelity one; the two are **not** merged,
+and neither depends on the other. This is a conscious duplication of ~30 lines of `getTableConfig`
+walking, in exchange for the ERD page not being coupled to the editor's model.
+
+This design **supersedes §9 of `2026-07-13-eer-real-db-modelling-design.md`**, which YAGNI'd index
+methods, partial and expression indexes, namespaces, generated columns and DDL export. Under a
+round-trip contract they are no longer optional.
 
 ## Testing
 
-1. **Gate** — the round-trip above, over all 18 tables and 3 enums, asserting `getTableConfig`
-   deep-equality and identical drizzle-kit SQL.
-2. **Generated file typechecks** — `tsc` over `schema.generated.ts` as part of the test, so the
-   generator can't emit code that merely looks right.
-3. **Pure unit tests** for both transforms: every construct in the table above, plus arrays, partial
-   indexes, `nullsNotDistinct`, composite FKs with actions, identity columns.
-4. **Merge tests** — re-import preserves zones/colours/positions/titles; new and removed tables are
-   reported.
-5. **Catalogue drift test** — every drizzle builder is annotated.
-6. **Alias + unknown-type tests** — legacy files load; an unknown type warns and survives untouched.
-7. **E2E** — pick an enum type, tick `[]`, save, reload; import the real schema and see the zones.
+1. **Gate A + B** — the round-trip above, over all 18 tables and 3 enums.
+2. **Generated file typechecks** — `tsc` over `schema.generated.ts` inside the test, so the generator
+   cannot emit code that merely looks right.
+3. **Preserve-through-edit** — open+save every table unchanged; `describe(model)` is a fixed point
+   across three round-trips.
+4. **Pure unit tests** for both transforms: every construct in the table above, plus sized/nested
+   arrays, partial indexes, `nullsNotDistinct`, composite FKs with actions, identity, generated.
+5. **Merge tests** — re-import preserves zones, colours, positions, titles; added/stale tables are
+   reported; export is blocked while stale.
+6. **Catalogue drift test** — every builder in `getPgColumnBuilders()` has a descriptor.
+7. **Alias + unknown-type tests** — legacy files load; an unknown type warns, survives untouched, and
+   blocks export.
+8. **Escaping tests** — a default/CHECK/predicate containing a backtick or `${` generates valid TS.
+9. **E2E** — import the real schema, see the zones; pick an enum type, make it an array, save, reload.
 
 ## Risks
 
-- **Drizzle's introspection API is not a stability contract.** `getTableConfig` is exported but its
-  shape can shift between minors. The gate test is the tripwire: a drizzle bump that changes the
-  shape fails loudly.
-- **Browser-side `drizzle-orm` import.** 87 KB minified is real weight in a diagram app. Accepted
-  deliberately (the alternative — codegen with a drift test — was considered and declined).
-- **Semantic, not textual, equality.** A regenerated schema file will not diff cleanly against a
-  hand-written one. Export writes to a review path; adopting it as the source of truth is a separate
-  decision, not part of this work.
+- **`getTableConfig` is not a stability contract.** Its shape can shift between drizzle minors. Gate
+  B (drizzle-kit's own snapshot) is the tripwire, and it fails loudly.
+- **Browser-side `drizzle-orm`.** 87 KB minified in a diagram app, accepted deliberately; the
+  alternative (codegen + drift test) was considered and declined.
+- **Semantic, not textual, equality.** A regenerated file will not diff cleanly against a
+  hand-written one. Export writes to a review path; adopting generated output as the source of truth
+  is a separate decision, not part of this work.
+- **Scope.** This is a large piece of work: model migration (index columns), a new reader, two
+  transforms, a rewritten catalogue, a seed rewrite, and new UI. It should be planned as phases with
+  the gate test standing up early against a small hand-built fixture, not left to the end.
 
 ## Types
 
-Every named type used above, defined here.
+The runtime model lives in `apps/eer/src/engine/model/types/types.ts`. This section gives the
+**accurate current shape of every type this design touches**, with additions marked `+`, followed by
+the wire and report types in full.
 
 ```ts
-// ---- the model (existing, with this design's additions marked +) ----
+// ---- existing types this design changes (verbatim shape, + = new field) ----
 
+type RoutingMode = 'curved' | 'avoid' | 'ortho';
+type Cardinality = '1-1' | '1-n' | 'n-1' | 'n-m';
+type LineStyle = 'solid' | 'dashed';
 type FkAction = 'cascade' | 'restrict' | 'set null' | 'set default' | 'no action';
 
 interface Column {
   name: string;
-  type: string;              // SQL text as Postgres prints it: 'varchar(255)', 'text[]'
+  type: string;                  // SQL text as Postgres prints it: 'varchar(255)', 'integer[2][]'
+  title: string | null;          // UI-only, shown on the card
+  description: string | null;    // UI-only
   nullable: boolean;
-  default: string | null;    // SQL text: "now()", "'{}'::jsonb"
-  title?: string | null;        // UI-only: shown on the card
-  description?: string | null;  // UI-only
-  identity?: Identity | null;   // +
-  generated?: Generated | null; // +
+  default: string | null;        // rendered SQL text: "now()", "'{}'::jsonb"
+  identity: Identity | null;     // +
+  generated: Generated | null;   // +
 }
 
-interface Identity { always: boolean }                    // +
-interface Generated { expression: string; stored: true }  // + Postgres only has STORED
+interface Identity {                          // + drizzle's full sequence option set
+  always: boolean;
+  name: string | null;
+  increment: string | null;
+  minValue: string | null;
+  maxValue: string | null;
+  startWith: string | null;
+  cache: string | null;
+  cycle: boolean | null;
+}
+
+interface Generated { expression: string; stored: true }   // + Postgres only has STORED
 
 type Constraint =
   | { id: string; kind: 'pk'; name: string | null; columns: string[] }
   | { id: string; kind: 'unique'; name: string | null; columns: string[];
-      nullsNotDistinct?: boolean }                                        // +
+      nullsNotDistinct: boolean }                                          // +
   | { id: string; kind: 'check'; name: string | null; expression: string }
-  | { id: string; kind: 'fk'; name: string | null; columns: string[]; refTable: string;
-      refColumns: string[]; onDelete: FkAction | null; onUpdate: FkAction | null };
+  | { id: string; kind: 'fk'; name: string | null; columns: string[];
+      refSchema: string | null;                                            // +
+      refTable: string; refColumns: string[];
+      onDelete: FkAction | null; onUpdate: FkAction | null };
 
-interface IndexColumn {                                   // +
-  expression: string;                                     // a column name, or raw SQL
+interface IndexColumn {          // + (index columns were `string[]`)
+  expression: string;            // a column name, or raw SQL when isExpression
   isExpression: boolean;
-  order?: 'asc' | 'desc';
-  nulls?: 'first' | 'last';
+  order: 'asc' | 'desc' | null;
+  nulls: 'first' | 'last' | null;
+  opClass: string | null;
 }
 
 interface TableIndex {
   id: string;
   name: string;
-  columns: IndexColumn[];                                 // + (was string[])
+  columns: IndexColumn[];        // + (was string[])
   unique: boolean;
-  method?: string;                                        // + 'btree' | 'gin' | ...
-  where?: string | null;                                  // + partial-index predicate SQL
+  method: string | null;         // + 'btree' | 'gin' | 'gist' | 'hash' | 'brin'
+  only: boolean;                 // + ONLY, as exposed by getTableConfig
+  where: string | null;          // + partial-index predicate, rendered SQL text
 }
 
 interface Entity {
-  id: string;
+  id: string;                    // `name`, or `schema.name` when schema is not public
   label: string;
-  group: string;             // UI-only: the zone it sits in
-  schema?: string | null;    // + Postgres namespace; null/absent = public
+  group: string;                 // UI-only: the zone it sits in
+  description: string | null;
+  schema: string | null;         // + null = public
   columns: Column[];
   constraints: Constraint[];
   indexes: TableIndex[];
-  color?: string | null;     // UI-only
-  x?: number; y?: number;    // UI-only
+  stale: boolean;                // + last import no longer found this table; blocks export
+  x: number; y: number; _w: number; _h: number;   // layout fills these
 }
 
-interface EnumDecl { name: string; values: string[] }     // +
+interface EnumDecl { name: string; values: string[]; schema: string | null }   // +
 
 interface Model {
-  meta: { title: string; description?: string };
-  view: { routing: 'avoid' | 'direct' };
-  groups: Group[];           // UI-only: zones and subgroups
+  meta: { title?: string; description?: string };
+  view: { zoom: number; routing: RoutingMode };
+  kinds: EdgeKind[];
+  kindStyle: Map<string, LineStyle>;
+  colors: ReadonlyMap<string, string>;   // id → hex; zones and entities both live here
+  _savedLayout?: SavedLayout;
+  groups: Group[];
   entities: Entity[];
-  enums: EnumDecl[];         // +
-  relationships: Relationship[];  // derived from fk constraints; see derive-relationships
+  entityById: Map<string, Entity>;
+  enums: EnumDecl[];                     // +
+  relationships: Relationship[];         // derived from fk constraints
+  relById: Map<string, Relationship>;
+  _groupBounds: GroupBounds[];
+  _content: { w: number; h: number };
 }
 
-interface Group { id: string; label: string; parent?: string | null; order: number; color?: string | null }
+interface Group { id: string; label: string; order: number; parent: string | null }
+interface EdgeKind { id: string; label: string; style: LineStyle }
 
 interface Relationship {
-  id: string;                // 'rel:<entityId>:<constraintId>' for derived edges
-  source: string; target: string;
-  sourceField?: string; targetField?: string;
-  cardinality: '1-1' | '1-n' | 'n-m';
-  label?: string;
-  kind?: string;
+  id: string;                    // 'rel:<entityId>:<constraintId>' for derived edges
+  source: string; sourceField: string;
+  target: string; targetField: string;
+  cardinality: Cardinality;
+  cardinalityInferred: boolean;
+  kind: string | null;
+  label: string | null;
 }
 
-// ---- the wire format between the Node-side reader and the pure transforms ----
+interface GroupBounds { id: string; label: string; x: number; y: number; w: number; h: number;
+                        parent: string | null; level: number }
+interface SavedLayout {
+  entities: Map<string, { x: number; y: number }>;
+  groups: Map<string, { x: number; y: number; w: number; h: number }>;
+}
+
+// ---- wire format: Node-side reader → pure transforms ----
 
 interface SchemaDescription {
   tables: TableDescription[];
   enums: EnumDecl[];
+  groups: SchemaGroupDescription[];      // from SCHEMA_GROUPS, colours resolved to hex
   unsupported: UnsupportedConstruct[];
 }
 
+interface SchemaGroupDescription { key: string; label: string; color: string; tables: string[] }
+
 interface TableDescription {
-  name: string;
   schema: string | null;
+  name: string;
   columns: ColumnDescription[];
   primaryKey: { name: string | null; columns: string[] } | null;
   uniques: { name: string; columns: string[]; nullsNotDistinct: boolean }[];
   checks: { name: string; expression: string }[];
-  foreignKeys: {
-    name: string; columns: string[]; refTable: string; refColumns: string[];
-    onDelete: FkAction | null; onUpdate: FkAction | null;
-  }[];
-  indexes: { name: string; columns: IndexColumn[]; unique: boolean; method: string; where: string | null }[];
+  foreignKeys: { name: string; columns: string[]; refSchema: string | null; refTable: string;
+                 refColumns: string[]; onDelete: FkAction | null; onUpdate: FkAction | null }[];
+  indexes: { name: string; columns: IndexColumn[]; unique: boolean; method: string | null;
+             only: boolean; where: string | null }[];
 }
 
 interface ColumnDescription {
   name: string;
-  sqlType: string;           // straight from drizzle's getSQLType()
+  sqlType: string;               // straight from a built column's getSQLType()
   notNull: boolean;
-  default: string | null;    // sql chunks flattened to text
+  default: string | null;        // sql chunks rendered to text through the pg dialect
   identity: Identity | null;
   generated: Generated | null;
 }
 
 interface UnsupportedConstruct {
-  kind: 'view' | 'materialized-view' | 'sequence' | 'policy' | 'role' | 'default-fn' | 'relations';
-  where: string;             // 'comments.body' or 'ticketRelations'
-  detail: string;            // what it is, and what happens on export
+  kind: 'view' | 'materialized-view' | 'sequence' | 'policy' | 'role'
+      | 'default-fn' | 'on-update' | 'relations';
+  where: string;                 // 'comments.body' or 'ticketRelations'
+  detail: string;                // what it is, and what happens on export
+  blocksExport: boolean;
 }
 
 // ---- import result ----
@@ -280,8 +457,10 @@ interface UnsupportedConstruct {
 interface ImportReport {
   addedTables: string[];
   changedTables: string[];
-  removedTables: string[];   // reported, NOT deleted
+  staleTables: string[];         // reported and marked, NOT deleted
+  unknownTypes: { table: string; column: string; type: string }[];
   unsupported: UnsupportedConstruct[];
+  blocksExport: boolean;         // any stale table, unknown type, or blocking construct
 }
 
 // ---- the type catalogue ----
@@ -289,17 +468,23 @@ interface ImportReport {
 type PgTypeGroup = 'numeric' | 'text' | 'temporal' | 'boolean' | 'uuid' | 'json'
                  | 'binary' | 'network' | 'geometric' | 'vector';
 
-interface PgType {
-  name: string;              // the SQL name drizzle's getSQLType() reports
-  builder: string;           // the drizzle pg-core export it came from
+interface PgTypeDescriptor {
+  builder: string;               // the getPgColumnBuilders() key it came from
+  sqlName: string;               // 'timestamp with time zone', 'double precision'
   group: PgTypeGroup;
-  params: 0 | 1 | 2;         // varchar(n) = 1, numeric(p,s) = 2
+  params: PgTypeParam[];         // ordered; drives both the picker's inputs and emission
+  emit(params: string[], arrays: ArrayDimension[]): string;   // → drizzle TS source
+  parse(sqlText: string): string[] | null;                    // SQL text → params, null if no match
 }
+
+interface PgTypeParam { name: string; kind: 'int' | 'enum' | 'text'; options?: string[] }
+
+interface ArrayDimension { size: number | null }   // integer[2][] → [{size:2},{size:null}]
 
 interface ParsedType {
   base: string;
   params: string[];
-  array: boolean;            // + trailing '[]'
-  known: boolean;            // + false = unknown type; picker shows it as invalid
+  arrays: ArrayDimension[];
+  known: boolean;                // false = unknown type: invalid in the picker, blocks export
 }
 ```
