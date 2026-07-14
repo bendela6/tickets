@@ -385,13 +385,26 @@ export function exportDrizzle(model: Model): string {
     return src;
   }
 
+  // Defect found via the kitchen-sink gate (task-7-report.md): drizzle-orm's
+  // OWN `IndexBuilderOn.using()` hardcodes `only: true` on the config it
+  // builds — there is no drizzle builder call that sets a non-default method
+  // AND leaves `only` false; `.using(method, cols)` is the ONLY way to name a
+  // method at all. So a real, hand-authored non-btree-method index (e.g.
+  // `index(...).using('gin', ...)`) is captured by describeDrizzle with
+  // `only: true` as an inescapable side effect of the upstream builder — and
+  // the previous branch order here (`only` checked before `method`) took the
+  // `.onOnly(cols)` path for it, which has no way to carry a method at all,
+  // silently downgrading every such index to plain btree on export. `method`
+  // must be checked FIRST: emitting `.using(method, cols)` reproduces the
+  // method AND (per the same drizzle quirk) reproduces `only: true` for free,
+  // matching what describeDrizzle captured either way.
   function emitIndex(ix: TableIndex, entityId: string): string {
     const fn = ix.unique ? 'uniqueIndex' : 'index';
     const nameArg = ix.name ? quote(ix.name) : '';
     const colsSrc = ix.columns.map((c) => emitIndexColumn(c, entityId)).join(', ');
     let src: string;
-    if (ix.only) src = `${fn}(${nameArg}).onOnly(${colsSrc})`;
-    else if (ix.method && ix.method !== 'btree') src = `${fn}(${nameArg}).using(${quote(ix.method)}, ${colsSrc})`;
+    if (ix.method && ix.method !== 'btree') src = `${fn}(${nameArg}).using(${quote(ix.method)}, ${colsSrc})`;
+    else if (ix.only) src = `${fn}(${nameArg}).onOnly(${colsSrc})`;
     else src = `${fn}(${nameArg}).on(${colsSrc})`;
     if (ix.where) src += `.where(${sqlTemplate(ix.where)})`;
     return src;
