@@ -171,6 +171,10 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   // check (it doesn't know which id came from a fresh slugify vs. a real
   // edit), so it's still computed here, live, same as everything else below.
   const idCollision = !isEdit && model.entityById.has(entityId);
+  // The human-readable reason for idCollision, computed live so it can reach
+  // the banner below before Save/Create is ever clicked — save() reuses this
+  // exact string rather than re-deriving its own copy.
+  const idCollisionError = idCollision ? `A table with id "${entityId}" already exists.` : null;
   // This component's own pre-dispatch column check (blank/duplicate names) —
   // kept as its own local rule (not just the engine's identical check inside
   // validateEditFields) so its message stays this component's own wording
@@ -193,13 +197,26 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   } catch (err) {
     if (err instanceof ModelEditError) liveEngineError = err;
   }
+  // The engine error's own message, captured alongside `.field` above — the
+  // ONLY thing routing still keys on is `.field` (see the comment above); this
+  // is purely so the banner below has words to show, not a second routing input.
+  const liveError = liveEngineError?.message ?? null;
 
   const errorTab: TabId | null = draftError ? 'columns' : (liveEngineError?.field ?? null);
   const blocked = liveEngineError != null || draftError != null || idCollision || localError != null || ui.editError != null;
+  // Frame 1e (design spec): Save visibly blocked must always come WITH A
+  // REASON — `blocked` above disables Save/Create before any click, so
+  // `localError`/`ui.editError` (only ever set from inside save(), post-
+  // dispatch) are no longer sufficient on their own: a live-blocked draft
+  // would show a disabled button and a red tab count but no explanation.
+  // This is the SAME priority order save() below resolves the local checks
+  // in (idCollision, then draftError), plus the live engine message, plus
+  // the post-dispatch backstop.
+  const bannerMessage = draftError ?? idCollisionError ?? liveError ?? localError ?? ui.editError;
 
   const save = () => {
     if (idCollision) {
-      setLocalError(`A table with id "${entityId}" already exists.`);
+      setLocalError(idCollisionError);
       return;
     }
     if (draftError) {
@@ -246,9 +263,9 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
 
   return (
     <Modal title={isEdit ? `Edit ${existing!.label}` : 'New table'} onClose={onClose} size="wide">
-      {(localError || ui.editError) && (
+      {bannerMessage && (
         <div className={errorRow}>
-          <span>{localError ?? ui.editError}</span>
+          <span>{bannerMessage}</span>
           <button
             type="button"
             className="shrink-0"
