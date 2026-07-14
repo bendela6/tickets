@@ -8,3 +8,6 @@ dist/
 
 # db backups (never commit)
 backups/
+
+# eer drizzle-export dev route writes reviewable .ts files here (never commit)
+apps/eer/exports/

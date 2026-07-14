@@ -5,18 +5,25 @@ import { describe, expect, it } from 'vitest';
 import { describeSchema } from './describe-schema';
 import { loadModel, topLevelGroup } from './model';
 
-// model type name -> the type string drizzle's getSQLType() produces
+// model type name -> the type string drizzle's getSQLType() produces.
+//
+// The two sides spell the same types differently, so this is not an identity
+// map: the model stores canonical Postgres SQL names (what apps/eer's type
+// catalogue emits, e.g. "timestamp with time zone"), while drizzle's
+// getSQLType() prints its own shorthand ("timestamptz"). A key that stops
+// matching the model fails loudly via the `unmapped model type` assertion
+// below rather than silently skipping the column.
 const TYPE_MAP: Record<string, string> = {
   serial: 'serial',
   bigserial: 'bigserial',
-  int: 'integer',
+  integer: 'integer',
   bigint: 'bigint',
   text: 'text',
   numeric: 'numeric',
   boolean: 'boolean',
   jsonb: 'jsonb',
   uuid: 'uuid',
-  timestamptz: 'timestamptz',
+  'timestamp with time zone': 'timestamptz',
   user_kind: 'user_kind',
   status_kind: 'status_kind',
   field_type: 'field_type',

@@ -18,6 +18,7 @@ import type { Model } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
 import { Modal } from '../modal';
+import { EnumsEditor } from './enums-editor';
 
 const field = cn('w-full rounded-md border border-gray-600 bg-gray-900 px-2 py-1', 'text-sm text-gray-50');
 const label = 'flex flex-col gap-1 text-xs text-gray-400';
@@ -117,6 +118,11 @@ function ModelModalForm({ model, onClose }: { model: Model; onClose: () => void 
         Description
         <textarea className={field} rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
       </label>
+
+      <div className={label}>
+        Enums
+        <EnumsEditor model={model} onApplyEdit={actions.applyModelEdit} />
+      </div>
 
       <div className="flex items-center justify-between pt-2">
         <button

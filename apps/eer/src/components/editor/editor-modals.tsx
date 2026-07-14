@@ -7,7 +7,9 @@ import { useEffect, useState, type ReactNode } from 'react';
 
 import { AddChooser } from './add-chooser';
 import { EditorContext, type EditorModal } from './editor-context';
+import { ExportModal } from './export-modal';
 import { GroupModal } from './group-modal';
+import { ImportModal } from './import-modal';
 import { ModelModal } from './model-modal';
 import { NewModelModal } from './new-model-modal';
 import { TableModal } from './table-modal';
@@ -33,6 +35,8 @@ export function EditorModals({ children }: { children: ReactNode }) {
       {modal?.kind === 'model' && <ModelModal onClose={closeModal} />}
       {modal?.kind === 'new-model' && <NewModelModal onClose={closeModal} />}
       {modal?.kind === 'add' && <AddChooser onClose={closeModal} />}
+      {modal?.kind === 'import' && <ImportModal onClose={closeModal} />}
+      {modal?.kind === 'export' && <ExportModal onClose={closeModal} />}
       {/* `key` forces a remount whenever the target id changes — GroupModal/TableModal
           seed their draft state with useState(existing?.field ?? …) once, at mount, so
           without this, opening the modal for A then (without a full unmount in between)

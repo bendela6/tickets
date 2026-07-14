@@ -74,4 +74,19 @@ describe('seed rewrite', () => {
   it('the new seed is equivalent to the legacy one, plus the known Task 1 DDL-enrichment deltas: same edges, cardinalities, badges and titles otherwise', () => {
     expect(digest(newRaw)).toEqual(applyTask1Deltas(digest(legacyRaw)));
   });
+
+  it('the seed has no unknown types and no bare "enum" columns', () => {
+    const { model, warnings } = loadModel(newRaw);
+    expect(warnings.filter((w) => /unknown type/.test(w))).toEqual([]);
+    for (const e of model!.entities) {
+      for (const c of e.columns) expect(c.type).not.toBe('enum');
+    }
+  });
+
+  it('declares the enums its columns use', () => {
+    const { model } = loadModel(newRaw);
+    // status_kind arrived with the items-platform schema rebuild: a workflow
+    // status is an option field, and options.kind carries its lifecycle.
+    expect(model!.enums.map((e) => e.name)).toEqual(['user_kind', 'status_kind', 'field_type']);
+  });
 });
