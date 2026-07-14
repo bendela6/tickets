@@ -10,7 +10,9 @@ import {
   itemValues, items, linkTypeTargetTypes, linkTypes, optionSets, optionTransitions, options,
   projects, schemes, users, views,
 } from '../schema';
+import { assertNotProductionDatabase } from './guard-not-production';
 import { importHistory } from './import-history';
+import { inChunks } from './in-chunks';
 import { mapStructure } from './map-structure';
 import type { Legacy } from './read-legacy';
 
@@ -51,6 +53,7 @@ function remapViewConfigFieldIds(value: unknown, fieldIdByLegacyId: Map<number, 
 }
 
 export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult> {
+  assertNotProductionDatabase();
   const plan = mapStructure(legacy);
 
   return db.transaction(async (tx) => {
@@ -58,9 +61,8 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
     // explicitly numbered past the legacy max (never rely on the serial
     // sequence here — it hasn't been advanced past the explicit ids yet). ---
     if (legacy.users.length) {
-      await tx.insert(users).values(
-        legacy.users.map((u) => ({ id: u.id, name: u.name, kind: u.kind })),
-      );
+      await inChunks(legacy.users, (chunk) =>
+        tx.insert(users).values(chunk.map((u) => ({ id: u.id, name: u.name, kind: u.kind }))));
     }
     const nextUserId = legacy.users.reduce((max, u) => Math.max(max, u.id), 0) + 1;
     const userIdByAgentName = new Map<string, number>();
@@ -70,7 +72,7 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
         name,
         kind: 'agent' as const,
       }));
-      await tx.insert(users).values(agentRows);
+      await inChunks(agentRows, (chunk) => tx.insert(users).values(chunk));
       for (const r of agentRows) userIdByAgentName.set(r.name, r.id);
     }
 
@@ -90,20 +92,22 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
       if (!row) throw new Error(`option_set insert returned no row for "${set.key}"`);
       optionSetIdByKey.set(set.key, row.id);
       if (!set.options.length) continue; // labels/component start empty
-      const inserted = await tx
-        .insert(options)
-        .values(
-          set.options.map((o) => ({
-            optionSetId: row.id,
-            value: o.value,
-            label: o.label,
-            position: o.position,
-            kind: o.kind,
-            config: o.config,
-          })),
-        )
-        .returning();
-      for (const o of inserted) optionIdByKey.set(`${set.key}:${o.value}`, o.id);
+      await inChunks(set.options, async (chunk) => {
+        const inserted = await tx
+          .insert(options)
+          .values(
+            chunk.map((o) => ({
+              optionSetId: row.id,
+              value: o.value,
+              label: o.label,
+              position: o.position,
+              kind: o.kind,
+              config: o.config,
+            })),
+          )
+          .returning();
+        for (const o of inserted) optionIdByKey.set(`${set.key}:${o.value}`, o.id);
+      });
     }
 
     const optionIdByLegacyOptionId = new Map<number, number>();
@@ -150,129 +154,155 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
     // ticket_type_id references (link_types, placements' typeKey) resolve
     // directly against the new item_types ids. ---
     if (legacy.ticketTypes.length) {
-      await tx.insert(itemTypes).values(
-        legacy.ticketTypes.map((t) => ({
-          id: t.id,
-          schemeId,
-          key: t.key,
-          label: t.label,
-          position: t.position,
-          config: (t.config ?? {}) as Record<string, unknown>,
-          archivedAt: t.archivedAt,
-        })),
-      );
+      await inChunks(legacy.ticketTypes, (chunk) =>
+        tx.insert(itemTypes).values(
+          chunk.map((t) => ({
+            id: t.id,
+            schemeId,
+            key: t.key,
+            label: t.label,
+            position: t.position,
+            config: (t.config ?? {}) as Record<string, unknown>,
+            archivedAt: t.archivedAt,
+          })),
+        ));
     }
     const typeIdByKey = new Map(legacy.ticketTypes.map((t) => [t.key, t.id]));
 
     if (legacy.ticketTypeChildTypes.length) {
-      await tx.insert(itemTypeChildTypes).values(
-        legacy.ticketTypeChildTypes.map((c) => ({ parentTypeId: c.parentTypeId, childTypeId: c.childTypeId })),
-      );
+      await inChunks(legacy.ticketTypeChildTypes, (chunk) =>
+        tx.insert(itemTypeChildTypes).values(
+          chunk.map((c) => ({ parentTypeId: c.parentTypeId, childTypeId: c.childTypeId })),
+        ));
     }
 
     if (plan.placements.length) {
-      await tx.insert(itemTypeFields).values(
-        plan.placements.map((p) => {
-          const itemTypeId = typeIdByKey.get(p.typeKey);
-          const fieldId = fieldIdByKey.get(p.fieldKey);
-          if (itemTypeId === undefined) throw new Error(`placement references unknown type key "${p.typeKey}"`);
-          if (fieldId === undefined) throw new Error(`placement references unknown field key "${p.fieldKey}"`);
-          const field = fieldByKey.get(p.fieldKey);
-          const allowed = p.allowedOptionValues?.map((v) => {
-            const id = optionIdByKey.get(`${field?.optionSetKey}:${v}`);
-            if (id === undefined) throw new Error(`placement allowlist references unknown option "${field?.optionSetKey}:${v}"`);
-            return id;
-          });
-          return {
-            itemTypeId,
-            fieldId,
-            position: p.position,
-            required: p.required,
-            configOverride: allowed ? { allowedOptionIds: allowed } : null,
-          };
-        }),
-      );
+      const placementRows = plan.placements.map((p) => {
+        const itemTypeId = typeIdByKey.get(p.typeKey);
+        const fieldId = fieldIdByKey.get(p.fieldKey);
+        if (itemTypeId === undefined) throw new Error(`placement references unknown type key "${p.typeKey}"`);
+        if (fieldId === undefined) throw new Error(`placement references unknown field key "${p.fieldKey}"`);
+        const field = fieldByKey.get(p.fieldKey);
+        const allowed = p.allowedOptionValues?.map((v) => {
+          const id = optionIdByKey.get(`${field?.optionSetKey}:${v}`);
+          if (id === undefined) throw new Error(`placement allowlist references unknown option "${field?.optionSetKey}:${v}"`);
+          return id;
+        });
+        return {
+          itemTypeId,
+          fieldId,
+          position: p.position,
+          required: p.required,
+          configOverride: allowed ? { allowedOptionIds: allowed } : null,
+        };
+      });
+      await inChunks(placementRows, (chunk) => tx.insert(itemTypeFields).values(chunk));
     }
 
     // --- 6. option_transitions: new ids (fine — nothing references them). ---
     if (plan.transitions.length) {
-      await tx.insert(optionTransitions).values(
-        plan.transitions.map((tr) => {
-          const field = fieldByKey.get(tr.fieldKey);
-          if (!field) throw new Error(`transition references unknown field key "${tr.fieldKey}"`);
-          const toOptionId = optionIdByKey.get(`${field.optionSetKey}:${tr.toValue}`);
-          if (toOptionId === undefined) throw new Error(`transition references unknown option "${field.optionSetKey}:${tr.toValue}"`);
-          const fromOptionId = tr.fromValue ? optionIdByKey.get(`${field.optionSetKey}:${tr.fromValue}`) : null;
-          if (tr.fromValue && fromOptionId === undefined) throw new Error(`transition references unknown option "${field.optionSetKey}:${tr.fromValue}"`);
-          return {
-            fieldId: fieldIdByKey.get(tr.fieldKey)!,
-            fromOptionId: fromOptionId ?? null,
-            toOptionId,
-            itemTypeId: tr.typeKey ? (typeIdByKey.get(tr.typeKey) ?? null) : null,
-          };
-        }),
-      );
+      const transitionRows = plan.transitions.map((tr) => {
+        const field = fieldByKey.get(tr.fieldKey);
+        if (!field) throw new Error(`transition references unknown field key "${tr.fieldKey}"`);
+        const toOptionId = optionIdByKey.get(`${field.optionSetKey}:${tr.toValue}`);
+        if (toOptionId === undefined) throw new Error(`transition references unknown option "${field.optionSetKey}:${tr.toValue}"`);
+        const fromOptionId = tr.fromValue ? optionIdByKey.get(`${field.optionSetKey}:${tr.fromValue}`) : null;
+        if (tr.fromValue && fromOptionId === undefined) throw new Error(`transition references unknown option "${field.optionSetKey}:${tr.fromValue}"`);
+        return {
+          fieldId: fieldIdByKey.get(tr.fieldKey)!,
+          fromOptionId: fromOptionId ?? null,
+          toOptionId,
+          itemTypeId: tr.typeKey ? (typeIdByKey.get(tr.typeKey) ?? null) : null,
+        };
+      });
+      await inChunks(transitionRows, (chunk) => tx.insert(optionTransitions).values(chunk));
     }
 
     // --- 7. link_types (explicit ids, ticketTypeId -> itemTypeId is a
     // no-op since ids are preserved) + link_type_target_types. ---
     if (legacy.linkTypes.length) {
-      await tx.insert(linkTypes).values(
-        legacy.linkTypes.map((lt) => ({
-          id: lt.id,
-          itemTypeId: lt.ticketTypeId,
-          key: lt.key,
-          label: lt.label,
-          inverseLabel: lt.inverseLabel,
-          directional: lt.directional,
-          position: lt.position,
-          archivedAt: lt.archivedAt,
-        })),
-      );
+      await inChunks(legacy.linkTypes, (chunk) =>
+        tx.insert(linkTypes).values(
+          chunk.map((lt) => ({
+            id: lt.id,
+            itemTypeId: lt.ticketTypeId,
+            key: lt.key,
+            label: lt.label,
+            inverseLabel: lt.inverseLabel,
+            directional: lt.directional,
+            position: lt.position,
+            archivedAt: lt.archivedAt,
+          })),
+        ));
     }
     if (legacy.linkTypeTargetTypes.length) {
-      await tx.insert(linkTypeTargetTypes).values(
-        legacy.linkTypeTargetTypes.map((r) => ({ linkTypeId: r.linkTypeId, targetTypeId: r.targetTypeId })),
-      );
+      await inChunks(legacy.linkTypeTargetTypes, (chunk) =>
+        tx.insert(linkTypeTargetTypes).values(
+          chunk.map((r) => ({ linkTypeId: r.linkTypeId, targetTypeId: r.targetTypeId })),
+        ));
     }
 
     // --- 8. projects (explicit ids). schemeId is the *new* scheme's id —
     // the legacy schemeId column is not carried over. ---
     if (legacy.projects.length) {
-      await tx.insert(projects).values(
-        legacy.projects.map((p) => ({
-          id: p.id,
-          key: p.key,
-          name: p.name,
-          itemPrefix: p.ticketPrefix,
-          schemeId,
-          createdAt: p.createdAt,
-        })),
-      );
+      await inChunks(legacy.projects, (chunk) =>
+        tx.insert(projects).values(
+          chunk.map((p) => ({
+            id: p.id,
+            key: p.key,
+            name: p.name,
+            itemPrefix: p.ticketPrefix,
+            schemeId,
+            createdAt: p.createdAt,
+          })),
+        ));
     }
 
-    // --- 9. items (explicit ids). Parents before children: sort by
-    // parentId NULLS FIRST. Since a ticket can only reference a parent that
-    // already existed (lower id), sorting by (parentId, id-implicit) this
-    // way guarantees every parent is inserted before its children even
-    // across multi-level chains. ---
-    const orderedTickets = legacy.tickets
-      .slice()
-      .sort((a, b) => (a.parentId ?? -1) - (b.parentId ?? -1));
-    if (orderedTickets.length) {
-      await tx.insert(items).values(
-        orderedTickets.map((t) => ({
-          id: t.id,
-          projectId: t.projectId,
-          typeId: t.typeId,
-          parentId: t.parentId,
-          number: t.number,
-          createdBy: t.createdBy,
-          archivedAt: t.archivedAt,
-          createdAt: t.createdAt,
-          updatedAt: t.updatedAt,
-        })),
+    // --- 9. items (explicit ids). Insert every item with parent_id NULL
+    // first, then a second pass of chunked UPDATEs sets the real parent_id.
+    //
+    // This is NOT "sort so parents precede children within one statement" —
+    // that only ever worked by accident. In the real data,
+    // `SELECT count(*) FROM tickets WHERE parent_id > id` on tickets_legacy
+    // returns 254 of 635: reparenting to a newer item is common, so no
+    // single ordering of one INSERT statement can guarantee every parent
+    // precedes its children (some chains have no valid order at all). The
+    // insert used to be a no-op sort that happened to work only because it
+    // was ONE multi-row statement — Postgres defers FK checks to statement
+    // end, so row order within it was irrelevant. Once that insert is
+    // chunked (bind-parameter ceiling — see in-chunks.ts), FK checks fire
+    // per statement instead, and a forward reference within a later chunk
+    // would violate items_parent_id_items_id_fk.
+    //
+    // NULL-then-UPDATE sidesteps the ordering problem entirely: every
+    // inserted row already exists by the time any UPDATE runs, so no
+    // ordering constraint is needed at all, for chains of any depth or
+    // shape. ---
+    if (legacy.tickets.length) {
+      await inChunks(legacy.tickets, (chunk) =>
+        tx.insert(items).values(
+          chunk.map((t) => ({
+            id: t.id,
+            projectId: t.projectId,
+            typeId: t.typeId,
+            parentId: null,
+            number: t.number,
+            createdBy: t.createdBy,
+            archivedAt: t.archivedAt,
+            createdAt: t.createdAt,
+            updatedAt: t.updatedAt,
+          })),
+        ));
+
+      const itemsWithParent = legacy.tickets.filter(
+        (t): t is typeof t & { parentId: number } => t.parentId !== null,
       );
+      await inChunks(itemsWithParent, (chunk) =>
+        tx.execute(raw`
+          UPDATE items AS i SET parent_id = v.parent_id
+          FROM (VALUES ${raw.join(chunk.map((t) => raw`(${t.id}::int, ${t.parentId}::int)`), raw`, `)}) AS v(id, parent_id)
+          WHERE i.id = v.id
+        `));
     }
 
     // --- 10. item_values (explicit ids). status_id -> option_id; the
@@ -281,8 +311,7 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
     // (scalar columns, option_id, value_user_id) ends up non-null per row —
     // the DB's iv_one_value CHECK is the final word on that. ---
     if (legacy.ticketValues.length) {
-      await tx.insert(itemValues).values(
-        legacy.ticketValues.map((v) => {
+      const valueRows = legacy.ticketValues.map((v) => {
           const fieldId = fieldIdByLegacyId.get(v.fieldId);
           if (fieldId === undefined) {
             throw new Error(`ticket_value ${v.id} references unknown field id ${v.fieldId}`);
@@ -333,62 +362,75 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
             valueBool: v.valueBool,
             valueJson: v.valueJson,
           };
-        }),
-      );
+        });
+      await inChunks(valueRows, (chunk) => tx.insert(itemValues).values(chunk));
     }
 
-    // --- 11. comments (explicit ids, parents first — same proof as items),
-    // comment_reactions, item_links (all explicit ids). ---
-    const orderedComments = legacy.comments
-      .slice()
-      .sort((a, b) => (a.parentId ?? -1) - (b.parentId ?? -1));
-    if (orderedComments.length) {
-      await tx.insert(comments).values(
-        orderedComments.map((c) => ({
-          id: c.id,
-          itemId: c.ticketId,
-          authorId: c.authorId,
-          parentId: c.parentId,
-          body: c.body,
-          createdAt: c.createdAt,
-        })),
+    // --- 11. comments (explicit ids). Same NULL-then-UPDATE treatment as
+    // items above, and for the identical reason: the old "sort by parentId"
+    // was never a real ordering guarantee, only a no-op that happened to
+    // work because the insert was one unchunked statement. ---
+    if (legacy.comments.length) {
+      await inChunks(legacy.comments, (chunk) =>
+        tx.insert(comments).values(
+          chunk.map((c) => ({
+            id: c.id,
+            itemId: c.ticketId,
+            authorId: c.authorId,
+            parentId: null,
+            body: c.body,
+            createdAt: c.createdAt,
+          })),
+        ));
+
+      const commentsWithParent = legacy.comments.filter(
+        (c): c is typeof c & { parentId: number } => c.parentId !== null,
       );
+      await inChunks(commentsWithParent, (chunk) =>
+        tx.execute(raw`
+          UPDATE comments AS c SET parent_id = v.parent_id
+          FROM (VALUES ${raw.join(chunk.map((c) => raw`(${c.id}::int, ${c.parentId}::int)`), raw`, `)}) AS v(id, parent_id)
+          WHERE c.id = v.id
+        `));
     }
     if (legacy.commentReactions.length) {
-      await tx.insert(commentReactions).values(
-        legacy.commentReactions.map((r) => ({
-          id: r.id,
-          commentId: r.commentId,
-          userId: r.userId,
-          emoji: r.emoji,
-          createdAt: r.createdAt,
-        })),
-      );
+      await inChunks(legacy.commentReactions, (chunk) =>
+        tx.insert(commentReactions).values(
+          chunk.map((r) => ({
+            id: r.id,
+            commentId: r.commentId,
+            userId: r.userId,
+            emoji: r.emoji,
+            createdAt: r.createdAt,
+          })),
+        ));
     }
     if (legacy.ticketLinks.length) {
-      await tx.insert(itemLinks).values(
-        legacy.ticketLinks.map((l) => ({
-          id: l.id,
-          linkTypeId: l.linkTypeId,
-          sourceItemId: l.sourceTicketId,
-          targetItemId: l.targetTicketId,
-          createdAt: l.createdAt,
-        })),
-      );
+      await inChunks(legacy.ticketLinks, (chunk) =>
+        tx.insert(itemLinks).values(
+          chunk.map((l) => ({
+            id: l.id,
+            linkTypeId: l.linkTypeId,
+            sourceItemId: l.sourceTicketId,
+            targetItemId: l.targetTicketId,
+            createdAt: l.createdAt,
+          })),
+        ));
     }
 
     // --- 12. views (explicit ids); remap any numeric fieldId in config. ---
     if (legacy.views.length) {
-      await tx.insert(views).values(
-        legacy.views.map((v) => ({
-          id: v.id,
-          projectId: v.projectId,
-          name: v.name,
-          position: v.position,
-          config: remapViewConfigFieldIds(v.config, fieldIdByLegacyId) as Record<string, unknown>,
-          archivedAt: v.archivedAt,
-        })),
-      );
+      await inChunks(legacy.views, (chunk) =>
+        tx.insert(views).values(
+          chunk.map((v) => ({
+            id: v.id,
+            projectId: v.projectId,
+            name: v.name,
+            position: v.position,
+            config: remapViewConfigFieldIds(v.config, fieldIdByLegacyId) as Record<string, unknown>,
+            archivedAt: v.archivedAt,
+          })),
+        ));
     }
 
     // --- 13. reset every serial sequence so the next ordinary insert never
