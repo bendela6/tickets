@@ -35,4 +35,23 @@ describe('readLegacy (requires tickets_legacy restored — see Task 8 Step 1)', 
   it('carries status kinds', () => {
     expect(legacy.statuses.every((s) => s.kind !== null)).toBe(true);
   });
+
+  // postgres.js parses timestamptz/timestamp (oids 1184/1114) into a JS Date
+  // by default, which only holds millisecond precision — Postgres stores
+  // microseconds. legacy-client.ts overrides both oids so the raw wire
+  // string comes back untouched. If that override regresses, these values
+  // become `Date` instances again and the Legacy* `string` types go back to
+  // being a lie.
+  it('returns timestamps as raw strings, not parsed Date objects', () => {
+    expect(typeof legacy.comments[0]!.createdAt).toBe('string');
+    expect(typeof legacy.tickets[0]!.createdAt).toBe('string');
+  });
+
+  it('preserves sub-millisecond precision on timestamps (proves Date was never in the loop)', () => {
+    // A `Date`-round-tripped value maxes out at 3 fractional digits
+    // (`.197`); the raw wire string carries Postgres's full 6
+    // (`.197523`). Every one of the 139 legacy comments has this shape.
+    const microsecondPrecision = /\.\d{4,6}[+-]\d{2}(:\d{2})?$/;
+    expect(legacy.comments.every((c) => microsecondPrecision.test(c.createdAt))).toBe(true);
+  });
 });

@@ -35,20 +35,6 @@ const SEQUENCED = [
 // as a fallback). Remap any such reference to the new field id; fieldKey
 // strings pass through untouched since field keys are stable across the
 // rebuild (map-structure.ts preserves them 1:1).
-// read-legacy.ts's Legacy* types declare timestamp columns as `string`, but
-// postgres.js parses timestamp/timestamptz/date columns into JS Date objects
-// at runtime by default — the type annotation describes the post-transform
-// shape Task 9 assumed, not what the driver actually hands back. drizzle's
-// `mode: 'string'` timestamp columns need a real string, so normalize here
-// rather than widen the Legacy types (every other reader — map-structure —
-// never touches these columns).
-function toIso(v: unknown): string {
-  return v instanceof Date ? v.toISOString() : String(v);
-}
-function toIsoOrNull(v: unknown): string | null {
-  return v === null || v === undefined ? null : toIso(v);
-}
-
 function remapViewConfigFieldIds(value: unknown, fieldIdByLegacyId: Map<number, number>): unknown {
   if (Array.isArray(value)) {
     return value.map((v) => remapViewConfigFieldIds(v, fieldIdByLegacyId));
@@ -171,7 +157,7 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
           label: t.label,
           position: t.position,
           config: (t.config ?? {}) as Record<string, unknown>,
-          archivedAt: toIsoOrNull(t.archivedAt),
+          archivedAt: t.archivedAt,
         })),
       );
     }
@@ -239,7 +225,7 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
           inverseLabel: lt.inverseLabel,
           directional: lt.directional,
           position: lt.position,
-          archivedAt: toIsoOrNull(lt.archivedAt),
+          archivedAt: lt.archivedAt,
         })),
       );
     }
@@ -259,7 +245,7 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
           name: p.name,
           itemPrefix: p.ticketPrefix,
           schemeId,
-          createdAt: toIso(p.createdAt),
+          createdAt: p.createdAt,
         })),
       );
     }
@@ -281,9 +267,9 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
           parentId: t.parentId,
           number: t.number,
           createdBy: t.createdBy,
-          archivedAt: toIsoOrNull(t.archivedAt),
-          createdAt: toIso(t.createdAt),
-          updatedAt: toIso(t.updatedAt),
+          archivedAt: t.archivedAt,
+          createdAt: t.createdAt,
+          updatedAt: t.updatedAt,
         })),
       );
     }
@@ -342,7 +328,7 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
             ...base,
             valueText: v.valueText,
             valueNumber: v.valueNumber,
-            valueDate: toIsoOrNull(v.valueDate),
+            valueDate: v.valueDate,
             valueBool: v.valueBool,
             valueJson: v.valueJson,
           };
@@ -363,7 +349,7 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
           authorId: c.authorId,
           parentId: c.parentId,
           body: c.body,
-          createdAt: toIso(c.createdAt),
+          createdAt: c.createdAt,
         })),
       );
     }
@@ -374,7 +360,7 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
           commentId: r.commentId,
           userId: r.userId,
           emoji: r.emoji,
-          createdAt: toIso(r.createdAt),
+          createdAt: r.createdAt,
         })),
       );
     }
@@ -385,7 +371,7 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
           linkTypeId: l.linkTypeId,
           sourceItemId: l.sourceTicketId,
           targetItemId: l.targetTicketId,
-          createdAt: toIso(l.createdAt),
+          createdAt: l.createdAt,
         })),
       );
     }
@@ -399,7 +385,7 @@ export async function importLegacy(db: Db, legacy: Legacy): Promise<ImportResult
           name: v.name,
           position: v.position,
           config: remapViewConfigFieldIds(v.config, fieldIdByLegacyId) as Record<string, unknown>,
-          archivedAt: toIsoOrNull(v.archivedAt),
+          archivedAt: v.archivedAt,
         })),
       );
     }
