@@ -1,0 +1,111 @@
+import { describe, expect, it } from 'vitest';
+
+import { buildModel, nestedRaw, twoZoneRaw } from '../../../test/models';
+import { loadModel } from '../../model/load-model';
+import type { Model } from '../../model/types';
+import { packLayout } from './pack-layout';
+
+function packed(): Model {
+  const { model, errors } = loadModel(nestedRaw());
+  if (!model || errors.length) throw new Error('fixture invalid: ' + errors.join('; '));
+  return packLayout(model);
+}
+
+interface Box {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+const contains = (outer: Box, inner: Box) =>
+  inner.x >= outer.x && inner.y >= outer.y && inner.x + inner.w <= outer.x + outer.w && inner.y + inner.h <= outer.y + outer.h;
+const overlaps = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+const cardBox = (m: Model, id: string): Box => {
+  const e = m.entityById.get(id)!;
+  return { x: e.x, y: e.y, w: e._w, h: e._h };
+};
+
+describe('packLayout', () => {
+  it('emits zone bounds at level 0 and subgroup bounds at level 1 with parent set', () => {
+    const model = packed();
+    const zone = model._groupBounds.find((b) => b.id === 'z')!;
+    const sub = model._groupBounds.find((b) => b.id === 's')!;
+    expect(zone).toMatchObject({ level: 0, parent: null });
+    expect(sub).toMatchObject({ level: 1, parent: 'z' });
+  });
+
+  it('nests the subgroup box fully inside its zone box', () => {
+    const model = packed();
+    const zone = model._groupBounds.find((b) => b.id === 'z')!;
+    const sub = model._groupBounds.find((b) => b.id === 's')!;
+    expect(contains(zone, sub)).toBe(true);
+    expect(sub.w).toBeGreaterThan(0);
+    expect(sub.h).toBeGreaterThan(0);
+  });
+
+  it('places subgroup members inside the subgroup box', () => {
+    const model = packed();
+    const sub = model._groupBounds.find((b) => b.id === 's')!;
+    expect(contains(sub, cardBox(model, 'm1'))).toBe(true);
+    expect(contains(sub, cardBox(model, 'm2'))).toBe(true);
+  });
+
+  it('keeps a loose card inside the zone but clear of the subgroup', () => {
+    const model = packed();
+    const zone = model._groupBounds.find((b) => b.id === 'z')!;
+    const sub = model._groupBounds.find((b) => b.id === 's')!;
+    const loose = cardBox(model, 'loose');
+    expect(contains(zone, loose)).toBe(true);
+    expect(overlaps(sub, loose)).toBe(false);
+  });
+
+  it('sizes _content to cover every group box', () => {
+    const model = packed();
+    for (const b of model._groupBounds) {
+      expect(b.x).toBeGreaterThanOrEqual(0);
+      expect(b.y).toBeGreaterThanOrEqual(0);
+      expect(b.x + b.w).toBeLessThanOrEqual(model._content.w);
+      expect(b.y + b.h).toBeLessThanOrEqual(model._content.h);
+    }
+  });
+
+  it('is deterministic: re-packing the same model reproduces identical geometry', () => {
+    // The header promises stable re-runs — Rearrange and the font-ready re-pack
+    // rely on it (nothing may drift when packLayout runs again on live state).
+    const model = packed();
+    const snapEnts = model.entities.map((e) => ({ id: e.id, x: e.x, y: e.y, w: e._w, h: e._h }));
+    const snapBounds = model._groupBounds.map((b) => ({ ...b }));
+    const snapContent = { ...model._content };
+    const repacked = packLayout(model);
+    expect(repacked.entities.map((e) => ({ id: e.id, x: e.x, y: e.y, w: e._w, h: e._h }))).toEqual(snapEnts);
+    expect(repacked._groupBounds).toEqual(snapBounds);
+    expect(repacked._content).toEqual(snapContent);
+  });
+
+  it('returns a new packed model without mutating the input', () => {
+    const { model } = loadModel(twoZoneRaw());
+    const before = JSON.stringify(model!.entities.map((e) => [e.id, e.x, e.y, e._w, e._h]));
+    const packed = packLayout(model!);
+    expect(packed).not.toBe(model);
+    expect(JSON.stringify(model!.entities.map((e) => [e.id, e.x, e.y, e._w, e._h]))).toBe(before);
+    expect(packed.entities[0]).not.toBe(model!.entities[0]);
+    expect(packed.entityById.get('users')).toBe(packed.entities.find((e) => e.id === 'users'));
+    expect(packed._groupBounds.length).toBeGreaterThan(0);
+  });
+
+  it('re-applies a saved layout over the packed positions', () => {
+    const model = buildModel(); // packs everything
+    model._savedLayout = {
+      entities: new Map([['users', { x: 1111, y: 222 }]]),
+      groups: new Map([['z1', { x: 900, y: 10, w: 640, h: 480 }]]),
+    };
+    // packLayout returns a new model rather than mutating its input (see the
+    // "without mutating the input" test above) — read the saved positions off
+    // the returned model, not the pre-repack one.
+    const repacked = packLayout(model);
+    expect(repacked.entityById.get('users')!.x).toBe(1111);
+    const z1 = repacked._groupBounds.find((b) => b.id === 'z1')!;
+    expect({ x: z1.x, y: z1.y, w: z1.w, h: z1.h }).toEqual({ x: 900, y: 10, w: 640, h: 480 });
+    expect(repacked._content.w).toBeGreaterThanOrEqual(1111); // content covers moved card
+  });
+});
