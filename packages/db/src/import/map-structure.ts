@@ -22,6 +22,10 @@ export type StructurePlan = {
   // legacy option/status id -> `${optionSetKey}:${value}`
   optionKeyByLegacyOptionId: Map<number, string>;
   optionKeyByLegacyStatusId: Map<number, string>;
+  // legacy assignee field_options id -> agent name (assignee is a `user`
+  // field, not an option field — its legacy option ids resolve to a users
+  // row's name instead of an option set entry).
+  agentNameByLegacyOptionId: Map<number, string>;
 };
 
 const LEGACY_TYPE_TO_NEW: Record<string, FieldType> = {
@@ -83,6 +87,18 @@ export function mapStructure(legacy: Legacy): StructurePlan {
         `Field key "${key}" has differing option-value lists across ticket types: ${[...distinctValueLists].join(' | ')}`,
       );
     }
+    const labels = new Set(rows.map((r) => r.label));
+    if (labels.size > 1) {
+      throw new Error(
+        `Field key "${key}" has differing labels across ticket types: ${[...labels].join(' | ')}`,
+      );
+    }
+    const configs = new Set(rows.map((r) => JSON.stringify(r.config ?? {})));
+    if (configs.size > 1) {
+      throw new Error(
+        `Field key "${key}" has differing config across ticket types: ${[...configs].join(' | ')}`,
+      );
+    }
   }
 
   // --- Rule 1: assert invariants on statuses (same key -> same kind everywhere) ---
@@ -105,6 +121,7 @@ export function mapStructure(legacy: Legacy): StructurePlan {
   // type's field_options (identical across types per the assertion above). ---
   const optionSets: StructurePlan['optionSets'] = [];
   const optionKeyByLegacyOptionId = new Map<number, string>();
+  const agentNameByLegacyOptionId = new Map<number, string>();
   const agentUserNames: string[] = [];
 
   for (const [key, rows] of fieldsByKey) {
@@ -113,14 +130,24 @@ export function mapStructure(legacy: Legacy): StructurePlan {
     if (key === 'assignee') {
       // Rule 2: assignee is upgraded to a `user` field — its option values
       // become agent user names to create in Task 10, not an option set.
-      const first = rows.slice().sort((a, b) => a.id - b.id)[0]!;
-      const opts = (optionsByFieldId.get(first.id) ?? []).slice().sort((a, b) => a.position - b.position);
-      for (const o of opts) {
-        if (!agentUserNames.includes(o.value)) agentUserNames.push(o.value);
+      // The legacy schema is type-owned: every ticket type has its own
+      // `assignee` field row with its own field_options ids (same 4 values,
+      // 5 distinct id sets — asserted equal above). A ticket_values row can
+      // reference any type's copy, so every row's ids must resolve, not just
+      // one type's.
+      for (const r of rows) {
+        const opts = (optionsByFieldId.get(r.id) ?? []).slice().sort((a, b) => a.position - b.position);
+        for (const o of opts) {
+          if (!agentUserNames.includes(o.value)) agentUserNames.push(o.value);
+          agentNameByLegacyOptionId.set(o.id, o.value);
+        }
       }
       continue;
     }
 
+    // The option *set*'s contents come from a single representative row —
+    // the values are identical across every type-owned row for this key
+    // (asserted above), so building from one row is correct and intentional.
     const first = rows.slice().sort((a, b) => a.id - b.id)[0]!;
     const opts = (optionsByFieldId.get(first.id) ?? []).slice().sort((a, b) => a.position - b.position);
     optionSets.push({
@@ -134,8 +161,15 @@ export function mapStructure(legacy: Legacy): StructurePlan {
         config: o.config ?? {},
       })),
     });
-    for (const o of opts) {
-      optionKeyByLegacyOptionId.set(o.id, `${key}:${o.value}`);
+    // But the id -> key map must cover every type-owned row's field_options
+    // ids, not just the representative row's — each type owns distinct
+    // option ids for the same values, and ticket_values rows reference
+    // whichever type's copy they were created under.
+    for (const r of rows) {
+      const rowOpts = optionsByFieldId.get(r.id) ?? [];
+      for (const o of rowOpts) {
+        optionKeyByLegacyOptionId.set(o.id, `${key}:${o.value}`);
+      }
     }
   }
 
@@ -273,5 +307,6 @@ export function mapStructure(legacy: Legacy): StructurePlan {
     fieldKeyByLegacyId,
     optionKeyByLegacyOptionId,
     optionKeyByLegacyStatusId,
+    agentNameByLegacyOptionId,
   };
 }
