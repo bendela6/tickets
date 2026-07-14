@@ -150,31 +150,36 @@
           "name": "id",
           "type": "serial",
           "title": "Id",
-          "description": "Primary key."
+          "description": "Primary key.",
+          "nullable": false
         },
         {
           "name": "name",
           "type": "text",
           "title": "Name",
-          "description": "Display name; unique. (unique)"
+          "description": "Display name; unique. (unique)",
+          "nullable": false
         },
         {
           "name": "email",
           "type": "text",
           "title": "Email",
-          "description": "Optional contact; future auth hook."
+          "description": "Optional contact; future auth hook.",
+          "nullable": true
         },
         {
           "name": "kind",
-          "type": "enum",
+          "type": "user_kind",
           "title": "Kind",
-          "description": "human or agent. (human | agent)"
+          "description": "human or agent. (human | agent)",
+          "nullable": false
         },
         {
           "name": "archived_at",
           "type": "timestamptz",
           "title": "Archived at",
-          "description": "Soft-delete; null = active."
+          "description": "Soft-delete; null = active.",
+          "nullable": true
         }
       ],
       "constraints": [
@@ -184,6 +189,15 @@
           "columns": [
             "id"
           ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "users_name_unique",
+          "columns": [
+            "name"
+          ],
+          "nullsNotDistinct": false
         }
       ],
       "indexes": []
@@ -200,37 +214,43 @@
           "name": "id",
           "type": "serial",
           "title": "Id",
-          "description": "Primary key."
+          "description": "Primary key.",
+          "nullable": false
         },
         {
           "name": "key",
           "type": "text",
           "title": "Key",
-          "description": "URL-safe project slug. (unique)"
+          "description": "URL-safe project slug. (unique)",
+          "nullable": false
         },
         {
           "name": "name",
           "type": "text",
           "title": "Name",
-          "description": "Display name."
+          "description": "Display name.",
+          "nullable": false
         },
         {
           "name": "item_prefix",
           "type": "text",
           "title": "Item prefix",
-          "description": "Display prefix, e.g. TASK → TASK-42."
+          "description": "Display prefix, e.g. TASK → TASK-42.",
+          "nullable": false
         },
         {
           "name": "scheme_id",
           "type": "int",
           "title": "Scheme",
-          "description": "Structure pack this project uses."
+          "description": "Structure pack this project uses.",
+          "nullable": false
         },
         {
           "name": "created_at",
           "type": "timestamptz",
           "title": "Created at",
-          "description": "When the project was created."
+          "description": "When the project was created.",
+          "nullable": false
         }
       ],
       "constraints": [
@@ -251,6 +271,15 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "projects_key_unique",
+          "columns": [
+            "key"
+          ],
+          "nullsNotDistinct": false
         }
       ],
       "indexes": []
@@ -267,37 +296,43 @@
           "name": "id",
           "type": "serial",
           "title": "Id",
-          "description": "Primary key."
+          "description": "Primary key.",
+          "nullable": false
         },
         {
           "name": "project_id",
           "type": "int",
           "title": "Project",
-          "description": "Owning project."
+          "description": "Owning project.",
+          "nullable": false
         },
         {
           "name": "name",
           "type": "text",
           "title": "Name",
-          "description": "View title in the UI."
+          "description": "View title in the UI.",
+          "nullable": false
         },
         {
           "name": "position",
           "type": "int",
           "title": "Position",
-          "description": "Order in the view list."
+          "description": "Order in the view list.",
+          "nullable": false
         },
         {
           "name": "config",
           "type": "jsonb",
           "title": "Config",
-          "description": "Columns, filters, sort; field refs by id."
+          "description": "Columns, filters, sort; field refs by id.",
+          "nullable": false
         },
         {
           "name": "archived_at",
           "type": "timestamptz",
           "title": "Archived at",
-          "description": "Soft-delete."
+          "description": "Soft-delete.",
+          "nullable": true
         }
       ],
       "constraints": [
@@ -334,31 +369,36 @@
           "name": "id",
           "type": "serial",
           "title": "Id",
-          "description": "Primary key."
+          "description": "Primary key.",
+          "nullable": false
         },
         {
           "name": "key",
           "type": "text",
           "title": "Key",
-          "description": "Stable scheme identifier. (unique)"
+          "description": "Stable scheme identifier. (unique)",
+          "nullable": false
         },
         {
           "name": "name",
           "type": "text",
           "title": "Name",
-          "description": "Display name."
+          "description": "Display name.",
+          "nullable": false
         },
         {
           "name": "config",
           "type": "jsonb",
           "title": "Config",
-          "description": "Defaults (e.g. default view blueprint)."
+          "description": "Defaults (e.g. default view blueprint).",
+          "nullable": false
         },
         {
           "name": "archived_at",
           "type": "timestamptz",
           "title": "Archived at",
-          "description": "Soft-delete."
+          "description": "Soft-delete.",
+          "nullable": true
         }
       ],
       "constraints": [
@@ -368,6 +408,15 @@
           "columns": [
             "id"
           ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "schemes_key_unique",
+          "columns": [
+            "key"
+          ],
+          "nullsNotDistinct": false
         }
       ],
       "indexes": []
@@ -384,43 +433,50 @@
           "name": "id",
           "type": "serial",
           "title": "Id",
-          "description": "Primary key."
+          "description": "Primary key.",
+          "nullable": false
         },
         {
           "name": "scheme_id",
           "type": "int",
           "title": "Scheme",
-          "description": "Owning structure pack."
+          "description": "Owning structure pack.",
+          "nullable": false
         },
         {
           "name": "key",
           "type": "text",
           "title": "Key",
-          "description": "Stable type key, e.g. task."
+          "description": "Stable type key, e.g. task.",
+          "nullable": false
         },
         {
           "name": "label",
           "type": "text",
           "title": "Label",
-          "description": "UI label, e.g. Task."
+          "description": "UI label, e.g. Task.",
+          "nullable": false
         },
         {
           "name": "position",
           "type": "int",
           "title": "Position",
-          "description": "Order in pickers."
+          "description": "Order in pickers.",
+          "nullable": false
         },
         {
           "name": "config",
           "type": "jsonb",
           "title": "Config",
-          "description": "Icon, product copy, UI hints."
+          "description": "Icon, product copy, UI hints.",
+          "nullable": false
         },
         {
           "name": "archived_at",
           "type": "timestamptz",
           "title": "Archived at",
-          "description": "Soft-delete."
+          "description": "Soft-delete.",
+          "nullable": true
         }
       ],
       "constraints": [
@@ -441,6 +497,16 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "item_types_scheme_key",
+          "columns": [
+            "scheme_id",
+            "key"
+          ],
+          "nullsNotDistinct": false
         }
       ],
       "indexes": []
@@ -457,13 +523,15 @@
           "name": "parent_type_id",
           "type": "int",
           "title": "Parent type",
-          "description": "Type of the parent item."
+          "description": "Type of the parent item.",
+          "nullable": false
         },
         {
           "name": "child_type_id",
           "type": "int",
           "title": "Child type",
-          "description": "Type allowed as child."
+          "description": "Type allowed as child.",
+          "nullable": false
         }
       ],
       "constraints": [
@@ -488,6 +556,15 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "p1",
+          "kind": "pk",
+          "name": null,
+          "columns": [
+            "parent_type_id",
+            "child_type_id"
+          ]
         }
       ],
       "indexes": []
@@ -504,31 +581,36 @@
           "name": "item_type_id",
           "type": "int",
           "title": "Item type",
-          "description": "Type that shows this field."
+          "description": "Type that shows this field.",
+          "nullable": false
         },
         {
           "name": "field_id",
           "type": "int",
           "title": "Field",
-          "description": "Shared field definition."
+          "description": "Shared field definition.",
+          "nullable": false
         },
         {
           "name": "position",
           "type": "int",
           "title": "Position",
-          "description": "Order on forms for this type."
+          "description": "Order on forms for this type.",
+          "nullable": false
         },
         {
           "name": "required",
           "type": "boolean",
           "title": "Required",
-          "description": "Must have a value on create/update."
+          "description": "Must have a value on create/update.",
+          "nullable": false
         },
         {
           "name": "config_override",
           "type": "jsonb",
           "title": "Config override",
-          "description": "Per-type overrides (allowlist, transitions, …)."
+          "description": "Per-type overrides (allowlist, transitions, …).",
+          "nullable": true
         }
       ],
       "constraints": [
@@ -553,9 +635,34 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "p1",
+          "kind": "pk",
+          "name": null,
+          "columns": [
+            "item_type_id",
+            "field_id"
+          ]
         }
       ],
-      "indexes": []
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "itf_type_position",
+          "columns": [
+            {
+              "expression": "item_type_id"
+            },
+            {
+              "expression": "position"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
     },
     {
       "id": "fields",
@@ -569,55 +676,64 @@
           "name": "id",
           "type": "serial",
           "title": "Id",
-          "description": "Primary key."
+          "description": "Primary key.",
+          "nullable": false
         },
         {
           "name": "scheme_id",
           "type": "int",
           "title": "Scheme",
-          "description": "Owning structure pack."
+          "description": "Owning structure pack.",
+          "nullable": false
         },
         {
           "name": "key",
           "type": "text",
           "title": "Key",
-          "description": "Stable key, unique per scheme. (unique/scheme)"
+          "description": "Stable key, unique per scheme. (unique/scheme)",
+          "nullable": false
         },
         {
           "name": "label",
           "type": "text",
           "title": "Label",
-          "description": "UI label."
+          "description": "UI label.",
+          "nullable": false
         },
         {
           "name": "type",
-          "type": "enum",
+          "type": "field_type",
           "title": "Type",
-          "description": "string | number | boolean | date | datetime | option | user | json."
+          "description": "string | number | boolean | date | datetime | option | user | json.",
+          "nullable": false
         },
         {
           "name": "system",
           "type": "boolean",
           "title": "System",
-          "description": "Seeded/locked field (e.g. title, status)."
+          "description": "Seeded/locked field (e.g. title, status).",
+          "nullable": false
         },
         {
           "name": "config",
           "type": "jsonb",
           "title": "Config",
-          "description": "Format, multiple, workflow flags, UI hints."
+          "description": "Format, multiple, workflow flags, UI hints.",
+          "nullable": false
         },
         {
           "name": "option_set_id",
           "type": "int",
           "title": "Option set",
-          "description": "Shared choices when type is option."
+          "description": "Shared choices when type is option.",
+          "nullable": true
         },
         {
           "name": "archived_at",
           "type": "timestamptz",
           "title": "Archived at",
-          "description": "Soft-delete."
+          "description": "Soft-delete.",
+          "nullable": true
         }
       ],
       "constraints": [
@@ -649,6 +765,22 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "fields_scheme_key",
+          "columns": [
+            "scheme_id",
+            "key"
+          ],
+          "nullsNotDistinct": false
+        },
+        {
+          "id": "k1",
+          "kind": "check",
+          "name": "fields_option_set_required",
+          "expression": "type <> 'option' OR option_set_id IS NOT NULL"
         }
       ],
       "indexes": []
@@ -665,25 +797,29 @@
           "name": "id",
           "type": "serial",
           "title": "Id",
-          "description": "Primary key."
+          "description": "Primary key.",
+          "nullable": false
         },
         {
           "name": "scheme_id",
           "type": "int",
           "title": "Scheme",
-          "description": "Owning structure pack."
+          "description": "Owning structure pack.",
+          "nullable": false
         },
         {
           "name": "key",
           "type": "text",
           "title": "Key",
-          "description": "Stable set key, e.g. status."
+          "description": "Stable set key, e.g. status.",
+          "nullable": false
         },
         {
           "name": "name",
           "type": "text",
           "title": "Name",
-          "description": "Display name for the list."
+          "description": "Display name for the list.",
+          "nullable": false
         }
       ],
       "constraints": [
@@ -704,6 +840,16 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "option_sets_scheme_key",
+          "columns": [
+            "scheme_id",
+            "key"
+          ],
+          "nullsNotDistinct": false
         }
       ],
       "indexes": []
@@ -720,43 +866,57 @@
           "name": "id",
           "type": "serial",
           "title": "Id",
-          "description": "Primary key; stored on item_values.option_id."
+          "description": "Primary key; stored on item_values.option_id.",
+          "nullable": false
         },
         {
           "name": "option_set_id",
           "type": "int",
           "title": "Option set",
-          "description": "Parent list."
+          "description": "Parent list.",
+          "nullable": false
         },
         {
           "name": "value",
           "type": "text",
           "title": "Value",
-          "description": "Stable machine value."
+          "description": "Stable machine value.",
+          "nullable": false
         },
         {
           "name": "label",
           "type": "text",
           "title": "Label",
-          "description": "UI label."
+          "description": "UI label.",
+          "nullable": false
         },
         {
           "name": "position",
           "type": "int",
           "title": "Position",
-          "description": "Order in pickers."
+          "description": "Order in pickers.",
+          "nullable": false
+        },
+        {
+          "name": "kind",
+          "type": "status_kind",
+          "nullable": true,
+          "title": "Kind",
+          "description": "Lifecycle semantic for workflow options; null for non-workflow options. (todo | active | blocked | done | dropped)"
         },
         {
           "name": "config",
           "type": "jsonb",
           "title": "Config",
-          "description": "kind (todo/active/done), color, icon."
+          "description": "kind (todo/active/done), color, icon.",
+          "nullable": false
         },
         {
           "name": "archived_at",
           "type": "timestamptz",
           "title": "Archived at",
-          "description": "Soft-delete."
+          "description": "Soft-delete.",
+          "nullable": true
         }
       ],
       "constraints": [
@@ -777,6 +937,16 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "options_set_value",
+          "columns": [
+            "option_set_id",
+            "value"
+          ],
+          "nullsNotDistinct": false
         }
       ],
       "indexes": []
@@ -793,37 +963,43 @@
           "name": "id",
           "type": "serial",
           "title": "Id",
-          "description": "Primary key."
+          "description": "Primary key.",
+          "nullable": false
         },
         {
           "name": "field_id",
           "type": "int",
           "title": "Field",
-          "description": "Workflow option field these edges apply to."
+          "description": "Workflow option field these edges apply to.",
+          "nullable": false
         },
         {
           "name": "from_option_id",
           "type": "int",
           "title": "From option",
-          "description": "Source option; null = valid start."
+          "description": "Source option; null = valid start.",
+          "nullable": true
         },
         {
           "name": "to_option_id",
           "type": "int",
           "title": "To option",
-          "description": "Destination option."
+          "description": "Destination option.",
+          "nullable": false
         },
         {
           "name": "item_type_id",
           "type": "int",
           "title": "Item type",
-          "description": "Optional; null = all types using the field."
+          "description": "Optional; null = all types using the field.",
+          "nullable": true
         },
         {
           "name": "config",
           "type": "jsonb",
           "title": "Config",
-          "description": "Future guards / metadata."
+          "description": "Future guards / metadata.",
+          "nullable": false
         }
       ],
       "constraints": [
@@ -877,6 +1053,18 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "option_transitions_edge",
+          "columns": [
+            "field_id",
+            "from_option_id",
+            "to_option_id",
+            "item_type_id"
+          ],
+          "nullsNotDistinct": true
         }
       ],
       "indexes": []
@@ -893,49 +1081,57 @@
           "name": "id",
           "type": "serial",
           "title": "Id",
-          "description": "Primary key."
+          "description": "Primary key.",
+          "nullable": false
         },
         {
           "name": "item_type_id",
           "type": "int",
           "title": "Source type",
-          "description": "Type that owns this link type."
+          "description": "Type that owns this link type.",
+          "nullable": false
         },
         {
           "name": "key",
           "type": "text",
           "title": "Key",
-          "description": "e.g. blocks."
+          "description": "e.g. blocks.",
+          "nullable": false
         },
         {
           "name": "label",
           "type": "text",
           "title": "Label",
-          "description": "Forward label."
+          "description": "Forward label.",
+          "nullable": false
         },
         {
           "name": "inverse_label",
           "type": "text",
           "title": "Inverse label",
-          "description": "Label from the target side."
+          "description": "Label from the target side.",
+          "nullable": false
         },
         {
           "name": "directional",
           "type": "boolean",
           "title": "Directional",
-          "description": "Whether direction matters (cycle checks)."
+          "description": "Whether direction matters (cycle checks).",
+          "nullable": false
         },
         {
           "name": "position",
           "type": "int",
           "title": "Position",
-          "description": "Order in UI."
+          "description": "Order in UI.",
+          "nullable": false
         },
         {
           "name": "archived_at",
           "type": "timestamptz",
           "title": "Archived at",
-          "description": "Soft-delete."
+          "description": "Soft-delete.",
+          "nullable": true
         }
       ],
       "constraints": [
@@ -956,6 +1152,16 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "link_types_type_key",
+          "columns": [
+            "item_type_id",
+            "key"
+          ],
+          "nullsNotDistinct": false
         }
       ],
       "indexes": []
@@ -972,13 +1178,15 @@
           "name": "link_type_id",
           "type": "int",
           "title": "Link type",
-          "description": "The relation definition."
+          "description": "The relation definition.",
+          "nullable": false
         },
         {
           "name": "target_type_id",
           "type": "int",
           "title": "Target type",
-          "description": "Allowed target item type."
+          "description": "Allowed target item type.",
+          "nullable": false
         }
       ],
       "constraints": [
@@ -1003,6 +1211,15 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "p1",
+          "kind": "pk",
+          "name": null,
+          "columns": [
+            "link_type_id",
+            "target_type_id"
+          ]
         }
       ],
       "indexes": []
@@ -1019,55 +1236,64 @@
           "name": "id",
           "type": "serial",
           "title": "Id",
-          "description": "Primary key."
+          "description": "Primary key.",
+          "nullable": false
         },
         {
           "name": "project_id",
           "type": "int",
           "title": "Project",
-          "description": "Home project."
+          "description": "Home project.",
+          "nullable": false
         },
         {
           "name": "type_id",
           "type": "int",
           "title": "Type",
-          "description": "Item type (task, doc, …)."
+          "description": "Item type (task, doc, …).",
+          "nullable": false
         },
         {
           "name": "parent_id",
           "type": "int",
           "title": "Parent",
-          "description": "Optional parent item (tree)."
+          "description": "Optional parent item (tree).",
+          "nullable": true
         },
         {
           "name": "number",
           "type": "int",
           "title": "Number",
-          "description": "Per-project display number. (unique/project)"
+          "description": "Per-project display number. (unique/project)",
+          "nullable": false
         },
         {
           "name": "created_by",
           "type": "int",
           "title": "Created by",
-          "description": "Author user."
+          "description": "Author user.",
+          "nullable": false
         },
         {
           "name": "archived_at",
           "type": "timestamptz",
           "title": "Archived at",
-          "description": "Soft-delete."
+          "description": "Soft-delete.",
+          "nullable": true
         },
         {
           "name": "created_at",
           "type": "timestamptz",
           "title": "Created at",
-          "description": "Creation time."
+          "description": "Creation time.",
+          "nullable": false
         },
         {
           "name": "updated_at",
           "type": "timestamptz",
           "title": "Updated at",
-          "description": "Optimistic-lock token."
+          "description": "Optimistic-lock token.",
+          "nullable": false
         }
       ],
       "constraints": [
@@ -1121,9 +1347,47 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "items_project_number",
+          "columns": [
+            "project_id",
+            "number"
+          ],
+          "nullsNotDistinct": false
         }
       ],
-      "indexes": []
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "items_project_type",
+          "columns": [
+            {
+              "expression": "project_id"
+            },
+            {
+              "expression": "type_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i2",
+          "name": "items_parent",
+          "columns": [
+            {
+              "expression": "parent_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
     },
     {
       "id": "item_values",
@@ -1137,61 +1401,71 @@
           "name": "id",
           "type": "serial",
           "title": "Id",
-          "description": "Primary key."
+          "description": "Primary key.",
+          "nullable": false
         },
         {
           "name": "item_id",
           "type": "int",
           "title": "Item",
-          "description": "Owning item."
+          "description": "Owning item.",
+          "nullable": false
         },
         {
           "name": "field_id",
           "type": "int",
           "title": "Field",
-          "description": "Field definition (shared library id)."
+          "description": "Field definition (shared library id).",
+          "nullable": false
         },
         {
           "name": "value_text",
           "type": "text",
           "title": "Text value",
-          "description": "For string-like fields."
+          "description": "For string-like fields.",
+          "nullable": true
         },
         {
           "name": "value_number",
           "type": "numeric",
           "title": "Number value",
-          "description": "For number fields."
+          "description": "For number fields.",
+          "nullable": true
         },
         {
           "name": "value_date",
           "type": "timestamptz",
           "title": "Date value",
-          "description": "For date/datetime fields."
+          "description": "For date/datetime fields.",
+          "nullable": true
         },
         {
           "name": "value_bool",
           "type": "boolean",
           "title": "Boolean value",
-          "description": "For boolean fields."
+          "description": "For boolean fields.",
+          "nullable": true
         },
         {
           "name": "value_json",
           "type": "jsonb",
           "title": "JSON value",
-          "description": "For json / compound fields."
+          "description": "For json / compound fields.",
+          "nullable": true
         },
         {
           "name": "option_id",
           "type": "int",
           "title": "Option",
-          "description": "For option fields (incl. status)."
+          "description": "For option fields (incl. status).",
+          "nullable": true
         },
         {
           "name": "value_user_id",
           "type": "int",
           "title": "User",
-          "description": "For user fields."
+          "description": "For user fields.",
+          "nullable": true
         }
       ],
       "constraints": [
@@ -1245,9 +1519,154 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "k1",
+          "kind": "check",
+          "name": "iv_one_value",
+          "expression": "num_nonnulls(value_text, value_number, value_date, value_bool, value_json, option_id, value_user_id) = 1"
         }
       ],
-      "indexes": []
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "iv_scalar",
+          "columns": [
+            {
+              "expression": "item_id"
+            },
+            {
+              "expression": "field_id"
+            }
+          ],
+          "unique": true,
+          "method": "btree",
+          "where": "option_id IS NULL AND value_user_id IS NULL"
+        },
+        {
+          "id": "i2",
+          "name": "iv_option",
+          "columns": [
+            {
+              "expression": "item_id"
+            },
+            {
+              "expression": "field_id"
+            },
+            {
+              "expression": "option_id"
+            }
+          ],
+          "unique": true,
+          "method": "btree",
+          "where": "option_id IS NOT NULL"
+        },
+        {
+          "id": "i3",
+          "name": "iv_user",
+          "columns": [
+            {
+              "expression": "item_id"
+            },
+            {
+              "expression": "field_id"
+            },
+            {
+              "expression": "value_user_id"
+            }
+          ],
+          "unique": true,
+          "method": "btree",
+          "where": "value_user_id IS NOT NULL"
+        },
+        {
+          "id": "i4",
+          "name": "iv_item",
+          "columns": [
+            {
+              "expression": "item_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i5",
+          "name": "iv_field_text",
+          "columns": [
+            {
+              "expression": "field_id"
+            },
+            {
+              "expression": "value_text"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i6",
+          "name": "iv_field_number",
+          "columns": [
+            {
+              "expression": "field_id"
+            },
+            {
+              "expression": "value_number"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i7",
+          "name": "iv_field_date",
+          "columns": [
+            {
+              "expression": "field_id"
+            },
+            {
+              "expression": "value_date"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i8",
+          "name": "iv_field_option",
+          "columns": [
+            {
+              "expression": "field_id"
+            },
+            {
+              "expression": "option_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i9",
+          "name": "iv_field_user",
+          "columns": [
+            {
+              "expression": "field_id"
+            },
+            {
+              "expression": "value_user_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
     },
     {
       "id": "comments",
@@ -1261,37 +1680,43 @@
           "name": "id",
           "type": "serial",
           "title": "Id",
-          "description": "Primary key."
+          "description": "Primary key.",
+          "nullable": false
         },
         {
           "name": "item_id",
           "type": "int",
           "title": "Item",
-          "description": "Item being discussed."
+          "description": "Item being discussed.",
+          "nullable": false
         },
         {
           "name": "author_id",
           "type": "int",
           "title": "Author",
-          "description": "Comment author."
+          "description": "Comment author.",
+          "nullable": false
         },
         {
           "name": "parent_id",
           "type": "int",
           "title": "Parent comment",
-          "description": "Reply parent; null = top-level."
+          "description": "Reply parent; null = top-level.",
+          "nullable": true
         },
         {
           "name": "body",
           "type": "text",
           "title": "Body",
-          "description": "Markdown body."
+          "description": "Markdown body.",
+          "nullable": false
         },
         {
           "name": "created_at",
           "type": "timestamptz",
           "title": "Created at",
-          "description": "When posted."
+          "description": "When posted.",
+          "nullable": false
         }
       ],
       "constraints": [
@@ -1336,7 +1761,20 @@
           ]
         }
       ],
-      "indexes": []
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "comments_item",
+          "columns": [
+            {
+              "expression": "item_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
     },
     {
       "id": "comment_reactions",
@@ -1350,31 +1788,36 @@
           "name": "id",
           "type": "serial",
           "title": "Id",
-          "description": "Primary key."
+          "description": "Primary key.",
+          "nullable": false
         },
         {
           "name": "comment_id",
           "type": "int",
           "title": "Comment",
-          "description": "Target comment."
+          "description": "Target comment.",
+          "nullable": false
         },
         {
           "name": "user_id",
           "type": "int",
           "title": "User",
-          "description": "Who reacted."
+          "description": "Who reacted.",
+          "nullable": false
         },
         {
           "name": "emoji",
           "type": "text",
           "title": "Emoji",
-          "description": "Reaction glyph."
+          "description": "Reaction glyph.",
+          "nullable": false
         },
         {
           "name": "created_at",
           "type": "timestamptz",
           "title": "Created at",
-          "description": "When reacted."
+          "description": "When reacted.",
+          "nullable": false
         }
       ],
       "constraints": [
@@ -1406,6 +1849,17 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "comment_reactions_unique",
+          "columns": [
+            "comment_id",
+            "user_id",
+            "emoji"
+          ],
+          "nullsNotDistinct": false
         }
       ],
       "indexes": []
@@ -1422,31 +1876,36 @@
           "name": "id",
           "type": "serial",
           "title": "Id",
-          "description": "Primary key."
+          "description": "Primary key.",
+          "nullable": false
         },
         {
           "name": "link_type_id",
           "type": "int",
           "title": "Link type",
-          "description": "Relation kind."
+          "description": "Relation kind.",
+          "nullable": false
         },
         {
           "name": "source_item_id",
           "type": "int",
           "title": "Source item",
-          "description": "From item."
+          "description": "From item.",
+          "nullable": false
         },
         {
           "name": "target_item_id",
           "type": "int",
           "title": "Target item",
-          "description": "To item."
+          "description": "To item.",
+          "nullable": false
         },
         {
           "name": "created_at",
           "type": "timestamptz",
           "title": "Created at",
-          "description": "When linked."
+          "description": "When linked.",
+          "nullable": false
         }
       ],
       "constraints": [
@@ -1489,9 +1948,51 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "item_links_unique",
+          "columns": [
+            "link_type_id",
+            "source_item_id",
+            "target_item_id"
+          ],
+          "nullsNotDistinct": false
+        },
+        {
+          "id": "k1",
+          "kind": "check",
+          "name": "item_links_no_self",
+          "expression": "source_item_id <> target_item_id"
         }
       ],
-      "indexes": []
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "item_links_source",
+          "columns": [
+            {
+              "expression": "source_item_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i2",
+          "name": "item_links_target",
+          "columns": [
+            {
+              "expression": "target_item_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
     },
     {
       "id": "events",
@@ -1505,85 +2006,99 @@
           "name": "id",
           "type": "bigserial",
           "title": "Id",
-          "description": "Global cursor / outbox order."
+          "description": "Global cursor / outbox order.",
+          "nullable": false
         },
         {
           "name": "aggregate_type",
           "type": "text",
           "title": "Aggregate type",
-          "description": "item | field | type | project | …"
+          "description": "item | field | type | project | …",
+          "nullable": false
         },
         {
           "name": "aggregate_id",
           "type": "int",
           "title": "Aggregate id",
-          "description": "Entity id within that type."
+          "description": "Entity id within that type.",
+          "nullable": false
         },
         {
           "name": "seq",
           "type": "int",
           "title": "Sequence",
-          "description": "Order within the stream; concurrency."
+          "description": "Order within the stream; concurrency.",
+          "nullable": false
         },
         {
           "name": "kind",
           "type": "text",
           "title": "Kind",
-          "description": "e.g. item.field_changed."
+          "description": "e.g. item.field_changed.",
+          "nullable": false
         },
         {
           "name": "version",
           "type": "int",
           "title": "Version",
-          "description": "Payload schema version for upcasts."
+          "description": "Payload schema version for upcasts.",
+          "nullable": false
         },
         {
           "name": "payload",
           "type": "jsonb",
           "title": "Payload",
-          "description": "Event data (value-only for fields)."
+          "description": "Event data (value-only for fields).",
+          "nullable": false
         },
         {
           "name": "actor_id",
           "type": "int",
           "title": "Actor",
-          "description": "Who caused it."
+          "description": "Who caused it.",
+          "nullable": false
         },
         {
           "name": "at",
           "type": "timestamptz",
           "title": "At",
-          "description": "When it happened."
+          "description": "When it happened.",
+          "nullable": false
         },
         {
           "name": "command_id",
           "type": "uuid",
           "title": "Command id",
-          "description": "Links to commands ledger / retries."
+          "description": "Links to commands ledger / retries.",
+          "nullable": false
         },
         {
           "name": "correlation_id",
           "type": "uuid",
           "title": "Correlation id",
-          "description": "Groups multi-event commands."
+          "description": "Groups multi-event commands.",
+          "nullable": false
         },
         {
           "name": "caused_by",
           "type": "bigint",
           "title": "Caused by",
-          "description": "Parent event id (automations)."
+          "description": "Parent event id (automations).",
+          "nullable": true
         },
         {
           "name": "depth",
           "type": "int",
           "title": "Depth",
-          "description": "Automation chain depth."
+          "description": "Automation chain depth.",
+          "nullable": false
         },
         {
           "name": "project_id",
           "type": "int",
           "title": "Project id",
-          "description": "Denorm for partition / ACL."
+          "description": "Denorm for partition / ACL.",
+          "nullable": true
         }
       ],
       "constraints": [
@@ -1604,9 +2119,108 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "events_stream_seq",
+          "columns": [
+            "aggregate_type",
+            "aggregate_id",
+            "seq"
+          ],
+          "nullsNotDistinct": false
+        },
+        {
+          "id": "f9",
+          "kind": "fk",
+          "name": null,
+          "columns": [
+            "caused_by"
+          ],
+          "refTable": "events",
+          "refColumns": [
+            "id"
+          ]
         }
       ],
-      "indexes": []
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "events_correlation",
+          "columns": [
+            {
+              "expression": "correlation_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i2",
+          "name": "events_command",
+          "columns": [
+            {
+              "expression": "aggregate_type"
+            },
+            {
+              "expression": "aggregate_id"
+            },
+            {
+              "expression": "command_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i3",
+          "name": "events_caused_by",
+          "columns": [
+            {
+              "expression": "caused_by"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i4",
+          "name": "events_project_at",
+          "columns": [
+            {
+              "expression": "project_id"
+            },
+            {
+              "expression": "at"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i5",
+          "name": "events_stream_at",
+          "columns": [
+            {
+              "expression": "aggregate_type"
+            },
+            {
+              "expression": "aggregate_id"
+            },
+            {
+              "expression": "at"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
     },
     {
       "id": "commands",
@@ -1620,37 +2234,43 @@
           "name": "id",
           "type": "uuid",
           "title": "Id",
-          "description": "Client commandId; primary key."
+          "description": "Client commandId; primary key.",
+          "nullable": false
         },
         {
           "name": "aggregate_type",
           "type": "text",
           "title": "Aggregate type",
-          "description": "Usually item."
+          "description": "Usually item.",
+          "nullable": false
         },
         {
           "name": "aggregate_id",
           "type": "int",
           "title": "Aggregate id",
-          "description": "Target entity."
+          "description": "Target entity.",
+          "nullable": false
         },
         {
           "name": "actor_id",
           "type": "int",
           "title": "Actor",
-          "description": "Who issued the command."
+          "description": "Who issued the command.",
+          "nullable": false
         },
         {
           "name": "at",
           "type": "timestamptz",
           "title": "At",
-          "description": "When accepted."
+          "description": "When accepted.",
+          "nullable": false
         },
         {
           "name": "result",
           "type": "jsonb",
           "title": "Result",
-          "description": "Optional cached response for retries."
+          "description": "Optional cached response for retries.",
+          "nullable": true
         }
       ],
       "constraints": [
@@ -1687,25 +2307,29 @@
           "name": "event_id",
           "type": "bigint",
           "title": "Event",
-          "description": "Event to deliver."
+          "description": "Event to deliver.",
+          "nullable": false
         },
         {
           "name": "created_at",
           "type": "timestamptz",
           "title": "Created at",
-          "description": "When enqueued."
+          "description": "When enqueued.",
+          "nullable": false
         },
         {
           "name": "picked_at",
           "type": "timestamptz",
           "title": "Picked at",
-          "description": "When a worker claimed it."
+          "description": "When a worker claimed it.",
+          "nullable": true
         },
         {
           "name": "done_at",
           "type": "timestamptz",
           "title": "Done at",
-          "description": "When delivery finished."
+          "description": "When delivery finished.",
+          "nullable": true
         }
       ],
       "constraints": [
@@ -1728,7 +2352,20 @@
           ]
         }
       ],
-      "indexes": []
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "outbox_pending",
+          "columns": [
+            {
+              "expression": "event_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": "done_at IS NULL"
+        }
+      ]
     },
     {
       "id": "item_activity",
@@ -1742,55 +2379,64 @@
           "name": "id",
           "type": "bigserial",
           "title": "Id",
-          "description": "Primary key."
+          "description": "Primary key.",
+          "nullable": false
         },
         {
           "name": "item_id",
           "type": "int",
           "title": "Item",
-          "description": "Item the activity belongs to."
+          "description": "Item the activity belongs to.",
+          "nullable": false
         },
         {
           "name": "event_id",
           "type": "bigint",
           "title": "Event",
-          "description": "Source event."
+          "description": "Source event.",
+          "nullable": false
         },
         {
           "name": "project_id",
           "type": "int",
           "title": "Project",
-          "description": "Denorm project."
+          "description": "Denorm project.",
+          "nullable": false
         },
         {
           "name": "kind",
           "type": "text",
           "title": "Kind",
-          "description": "Copied event kind."
+          "description": "Copied event kind.",
+          "nullable": false
         },
         {
           "name": "actor_id",
           "type": "int",
           "title": "Actor",
-          "description": "Who did it."
+          "description": "Who did it.",
+          "nullable": false
         },
         {
           "name": "at",
           "type": "timestamptz",
           "title": "At",
-          "description": "When."
+          "description": "When.",
+          "nullable": false
         },
         {
           "name": "correlation_id",
           "type": "uuid",
           "title": "Correlation",
-          "description": "Group multi-field saves."
+          "description": "Group multi-field saves.",
+          "nullable": false
         },
         {
           "name": "summary",
           "type": "jsonb",
           "title": "Summary",
-          "description": "UI payload, e.g. before/after for fields."
+          "description": "UI payload, e.g. before/after for fields.",
+          "nullable": false
         }
       ],
       "constraints": [
@@ -1833,9 +2479,81 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "item_activity_event",
+          "columns": [
+            "event_id"
+          ],
+          "nullsNotDistinct": false
         }
       ],
-      "indexes": []
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "item_activity_item_at",
+          "columns": [
+            {
+              "expression": "item_id"
+            },
+            {
+              "expression": "at"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i2",
+          "name": "item_activity_correlation",
+          "columns": [
+            {
+              "expression": "correlation_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
+    }
+  ],
+  "enums": [
+    {
+      "name": "user_kind",
+      "values": [
+        "human",
+        "agent"
+      ],
+      "schema": null
+    },
+    {
+      "name": "status_kind",
+      "values": [
+        "todo",
+        "active",
+        "blocked",
+        "done",
+        "dropped"
+      ],
+      "schema": null
+    },
+    {
+      "name": "field_type",
+      "values": [
+        "string",
+        "number",
+        "boolean",
+        "date",
+        "datetime",
+        "option",
+        "user",
+        "json"
+      ],
+      "schema": null
     }
   ],
   "relationships": [
