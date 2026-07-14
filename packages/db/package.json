@@ -11,6 +11,7 @@
     "db:migrate": "tsx src/migrate.ts",
     "db:seed": "tsx src/run-seed.ts",
     "db:studio": "drizzle-kit studio --config drizzle.studio.config.ts",
+    "db:restore-legacy": "bash -c 'set -e; docker exec tickets-postgres-1 psql -U postgres -c \"DROP DATABASE IF EXISTS tickets_legacy;\"; docker exec tickets-postgres-1 psql -U postgres -c \"CREATE DATABASE tickets_legacy;\"; docker exec -i tickets-postgres-1 pg_restore -U postgres -d tickets_legacy --no-owner < \"${LEGACY_DUMP:?set LEGACY_DUMP to the backup dump path}\"'",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },
