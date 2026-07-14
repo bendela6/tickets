@@ -9,7 +9,7 @@ describe('describeSchema', () => {
 
   it('includes the post-0007 tables', () => {
     expect(byName.has('comment_reactions')).toBe(true);
-    expect(byName.has('ticket_type_child_types')).toBe(true);
+    expect(byName.has('item_type_child_types')).toBe(true);
     expect(byName.has('comments')).toBe(true);
   });
 
@@ -28,7 +28,7 @@ describe('describeSchema', () => {
   });
 
   it('derives a composite primary key', () => {
-    const cct = byName.get('ticket_type_child_types')!;
+    const cct = byName.get('item_type_child_types')!;
     expect([...cct.primaryKey].sort()).toEqual(['child_type_id', 'parent_type_id']);
     expect(cct.columns.find((c) => c.name === 'parent_type_id')!.pk).toBe(true);
   });
@@ -45,7 +45,7 @@ describe('describeSchema', () => {
   });
 
   it('exposes groups with their table lists', () => {
-    const records = graph.groups.find((g) => g.key === 'records')!;
+    const records = graph.groups.find((g) => g.key === 'rc')!;
     expect(records.color).toBe('orange');
     expect(records.tables).toContain('comment_reactions');
   });
@@ -56,7 +56,7 @@ describe('resolveGroupKey', () => {
     expect(() => resolveGroupKey('nope', SCHEMA_GROUPS)).toThrow(/no group/i);
   });
   it('resolves a known table', () => {
-    expect(resolveGroupKey('tickets', SCHEMA_GROUPS)).toBe('records');
+    expect(resolveGroupKey('items', SCHEMA_GROUPS)).toBe('rc');
   });
 });
 
@@ -65,15 +65,15 @@ describe('describeSchema — SQL truth', () => {
   const byName = new Map(graph.tables.map((t) => [t.name, t]));
 
   it('exposes indexes with their partial predicate', () => {
-    const tv = byName.get('ticket_values')!;
-    const single = tv.indexes.find((i) => i.name === 'ticket_values_single')!;
+    const iv = byName.get('item_values')!;
+    const single = iv.indexes.find((i) => i.name === 'iv_scalar')!;
     expect(single.unique).toBe(true);
     expect(single.where).toMatch(/option_id IS NULL/i);
   });
 
   it('exposes check constraints', () => {
-    // no checks in the current schema; the array must still exist
-    expect(Array.isArray(byName.get('tickets')!.checks)).toBe(true);
+    // items carries no check constraints; the array must still exist
+    expect(Array.isArray(byName.get('items')!.checks)).toBe(true);
   });
 
   it('exposes the declared enums', () => {

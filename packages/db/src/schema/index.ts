@@ -1,24 +1,28 @@
 export { userKindEnum, statusKindEnum, fieldTypeEnum } from './enums';
-export { projects } from './projects';
-export { schemes } from './schemes';
 export { users } from './users';
-export { ticketTypes } from './ticket-types';
-export { ticketTypeChildTypes } from './ticket-type-child-types';
-export { statuses } from './statuses';
-export { statusTransitions } from './status-transitions';
-export { fields } from './fields';
-export { fieldOptions } from './field-options';
+export { projects } from './projects';
 export { views } from './views';
-export { tickets } from './tickets';
-export { ticketValues } from './ticket-values';
-export { comments } from './comments';
-export { commentReactions } from './comment-reactions';
-export { ticketEvents } from './ticket-events';
+export { schemes } from './schemes';
+export { itemTypes } from './item-types';
+export { itemTypeChildTypes } from './item-type-child-types';
+export { itemTypeFields } from './item-type-fields';
+export { fields } from './fields';
+export { optionSets } from './option-sets';
+export { options } from './options';
+export { optionTransitions } from './option-transitions';
 export { linkTypes } from './link-types';
 export { linkTypeTargetTypes } from './link-type-target-types';
-export { ticketLinks } from './ticket-links';
+export { items } from './items';
+export { itemValues } from './item-values';
+export { comments } from './comments';
+export { commentReactions } from './comment-reactions';
+export { itemLinks } from './item-links';
+export { events } from './events';
+export { commands } from './commands';
+export { outbox } from './outbox';
+export { itemActivity } from './item-activity';
 
-export { allTables } from './registry';
+export { allTables, allEnums } from './registry';
 export { SCHEMA_GROUPS, type SchemaGroup } from './schema-groups';
 export {
   describeSchema,

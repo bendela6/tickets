@@ -1,38 +1,32 @@
 import { sql } from 'drizzle-orm';
 import {
-  boolean,
-  integer,
-  jsonb,
-  pgTable,
-  serial,
-  text,
-  timestamp,
-  unique,
+  boolean, check, integer, jsonb, pgTable, serial, text, timestamp, unique,
 } from 'drizzle-orm/pg-core';
 import { fieldTypeEnum } from './enums';
-import { ticketTypes } from './ticket-types';
+import { optionSets } from './option-sets';
+import { schemes } from './schemes';
 
+// A scheme-scoped shared definition. Placement (position/required/overrides)
+// lives on item_type_fields — definition vs placement.
 export const fields = pgTable(
   'fields',
   {
     id: serial('id').primaryKey(),
-    ticketTypeId: integer('ticket_type_id')
+    schemeId: integer('scheme_id')
       .notNull()
-      .references(() => ticketTypes.id),
-    position: integer('position').notNull(),
-    required: boolean('required').notNull().default(false),
+      .references(() => schemes.id),
     key: text('key').notNull(),
     label: text('label').notNull(),
     type: fieldTypeEnum('type').notNull(),
-    // system fields are seeded, undeletable, and type-locked — enforced in the API
     system: boolean('system').notNull().default(false),
     config: jsonb('config')
       .notNull()
       .default(sql`'{}'::jsonb`),
+    optionSetId: integer('option_set_id').references(() => optionSets.id),
     archivedAt: timestamp('archived_at', { withTimezone: true, mode: 'string' }),
-    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })
-      .notNull()
-      .defaultNow(),
   },
-  (table) => [unique('fields_ticket_type_key').on(table.ticketTypeId, table.key)],
+  (t) => [
+    unique('fields_scheme_key').on(t.schemeId, t.key),
+    check('fields_option_set_required', sql`type <> 'option' OR option_set_id IS NOT NULL`),
+  ],
 );
