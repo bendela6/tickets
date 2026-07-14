@@ -5,7 +5,7 @@
 // simpler than ConstraintsEditor — apply-model-edit's validateConstraints
 // index pass (duplicate names, unknown columns) is still the backstop.
 
-import type { TableIndex } from '../../engine/model/types';
+import type { IndexColumn, TableIndex } from '../../engine/model/types';
 import { cn } from '../../ui/cn';
 import { ColumnMultiSelect } from './column-multi-select';
 
@@ -27,8 +27,18 @@ interface IndexesEditorProps {
   onChange: (next: TableIndex[]) => void;
 }
 
+// This editor only ever authors a plain column reference (no expression,
+// ordering, opClass, method/only/where yet — see IndexColumn/TableIndex in
+// types.ts) — a simple string list is all the UI needs, converted at the
+// boundary so the model can still carry the fuller drizzle-shaped index a
+// hand-authored or imported file may already have.
+const toNames = (cols: IndexColumn[]): string[] => cols.map((c) => c.expression);
+const toIndexColumns = (names: string[]): IndexColumn[] =>
+  names.map((expression) => ({ expression, isExpression: false, order: null, nulls: null, opClass: null }));
+
 export function IndexesEditor({ columns, indexes, onChange }: IndexesEditorProps) {
-  const add = () => onChange([...indexes, { id: nextId(indexes), name: '', columns: [], unique: false }]);
+  const add = () =>
+    onChange([...indexes, { id: nextId(indexes), name: '', columns: [], unique: false, method: null, only: false, where: null }]);
   const patch = (i: number, next: Partial<TableIndex>) => onChange(indexes.map((ix, j) => (j === i ? { ...ix, ...next } : ix)));
   const remove = (i: number) => onChange(indexes.filter((_, j) => j !== i));
 
@@ -47,8 +57,8 @@ export function IndexesEditor({ columns, indexes, onChange }: IndexesEditorProps
             />
             <ColumnMultiSelect
               options={columns}
-              value={ix.columns}
-              onChange={(v) => patch(i, { columns: v })}
+              value={toNames(ix.columns)}
+              onChange={(v) => patch(i, { columns: toIndexColumns(v) })}
               label={`Index ${n} column`}
             />
             <label className="flex items-center gap-1 text-2xs text-gray-400">

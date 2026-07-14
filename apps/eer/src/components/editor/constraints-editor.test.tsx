@@ -44,21 +44,21 @@ describe('ConstraintsEditor', () => {
 
   it('an fk row lists the target table’s columns once a table is chosen', () => {
     const onChange = setup([
-      { id: 'c1', kind: 'fk', name: null, columns: ['users_id'], refTable: '', refColumns: [], onDelete: null, onUpdate: null },
+      { id: 'c1', kind: 'fk', name: null, columns: ['users_id'], refSchema: null, refTable: '', refColumns: [], onDelete: null, onUpdate: null },
     ]);
     fireEvent.change(screen.getByLabelText('Constraint 1 target table'), { target: { value: 'users' } });
     expect((onChange.mock.calls[0]![0] as Constraint[])[0]).toMatchObject({ refTable: 'users', refColumns: [] });
     cleanup();
 
     setup([
-      { id: 'c1', kind: 'fk', name: null, columns: ['users_id'], refTable: 'users', refColumns: [], onDelete: null, onUpdate: null },
+      { id: 'c1', kind: 'fk', name: null, columns: ['users_id'], refSchema: null, refTable: 'users', refColumns: [], onDelete: null, onUpdate: null },
     ]);
     expect(screen.getByLabelText('Constraint 1 target column id')).toBeInTheDocument();
   });
 
   it('sets an fk action', () => {
     const onChange = setup([
-      { id: 'c1', kind: 'fk', name: null, columns: ['users_id'], refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
+      { id: 'c1', kind: 'fk', name: null, columns: ['users_id'], refSchema: null, refTable: 'users', refColumns: ['id'], onDelete: null, onUpdate: null },
     ]);
     fireEvent.change(screen.getByLabelText('Constraint 1 on delete'), { target: { value: 'cascade' } });
     expect((onChange.mock.calls[0]![0] as Constraint[])[0]).toMatchObject({ onDelete: 'cascade' });
@@ -75,7 +75,7 @@ describe('ConstraintsEditor', () => {
   it('removes a row', () => {
     const onChange = setup([
       { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
-      { id: 'c2', kind: 'unique', name: null, columns: ['users_id'] },
+      { id: 'c2', kind: 'unique', name: null, columns: ['users_id'], nullsNotDistinct: false },
     ]);
     fireEvent.click(screen.getByLabelText('Remove constraint 1'));
     const next = onChange.mock.calls[0]![0] as Constraint[];

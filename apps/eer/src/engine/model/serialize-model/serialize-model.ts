@@ -24,7 +24,7 @@
 // `deriveConstraintEdges`), not merely shaped like one.
 
 import { deriveConstraintEdges, looksDerived, pairKey } from '../derive-relationships';
-import type { Constraint, Model, Relationship, TableIndex } from '../types';
+import type { Constraint, IndexColumn, Model, Relationship, TableIndex } from '../types';
 
 // Safe to omit entirely: a bare derived fk edge (no label, kind still 'fk', an
 // inferred — not explicitly authored — cardinality) AND actually backed by a
@@ -56,16 +56,40 @@ function serializeConstraint(c: Constraint): Record<string, unknown> {
     return {
       ...base,
       columns: c.columns,
+      ...(c.refSchema ? { refSchema: c.refSchema } : {}),
       refTable: c.refTable,
       refColumns: c.refColumns,
       ...(c.onDelete ? { onDelete: c.onDelete } : {}),
       ...(c.onUpdate ? { onUpdate: c.onUpdate } : {}),
     };
-  return { ...base, columns: c.columns }; // 'pk' | 'unique'
+  if (c.kind === 'unique') return { ...base, columns: c.columns, ...(c.nullsNotDistinct ? { nullsNotDistinct: true } : {}) };
+  return { ...base, columns: c.columns }; // 'pk'
+}
+
+// A plain column reference with no ordering/opClass round-trips as a bare
+// string — the shape every pre-Task-2 file already uses — so an index with
+// nothing new to say about its columns stays byte-stable across a save.
+function serializeIndexColumn(c: IndexColumn): unknown {
+  if (!c.isExpression && c.order === null && c.nulls === null && c.opClass === null) return c.expression;
+  return {
+    expression: c.expression,
+    ...(c.isExpression ? { isExpression: true } : {}),
+    ...(c.order ? { order: c.order } : {}),
+    ...(c.nulls ? { nulls: c.nulls } : {}),
+    ...(c.opClass ? { opClass: c.opClass } : {}),
+  };
 }
 
 function serializeIndex(ix: TableIndex): Record<string, unknown> {
-  return { id: ix.id, name: ix.name, columns: ix.columns, unique: ix.unique };
+  return {
+    id: ix.id,
+    name: ix.name,
+    columns: ix.columns.map(serializeIndexColumn),
+    unique: ix.unique,
+    ...(ix.method ? { method: ix.method } : {}),
+    ...(ix.only ? { only: true } : {}),
+    ...(ix.where ? { where: ix.where } : {}),
+  };
 }
 
 export function serializeModel(model: Model, colors: ReadonlyMap<string, string>): Record<string, unknown> {
@@ -76,6 +100,7 @@ export function serializeModel(model: Model, colors: ReadonlyMap<string, string>
     view: { routing: model.view.routing },
     kinds: model.kinds.map((k) => ({ id: k.id, label: k.label, style: k.style })),
     colors: Object.fromEntries(colors),
+    ...(model.enums.length ? { enums: model.enums } : {}),
     groups: model.groups.map((g) => ({
       id: g.id,
       label: g.label,
@@ -88,6 +113,7 @@ export function serializeModel(model: Model, colors: ReadonlyMap<string, string>
       label: e.label,
       group: e.group,
       ...(e.description ? { description: e.description } : {}),
+      ...(e.schema ? { schema: e.schema } : {}),
       x: e.x,
       y: e.y,
       columns: e.columns.map((f) => ({
@@ -97,6 +123,8 @@ export function serializeModel(model: Model, colors: ReadonlyMap<string, string>
         ...(f.description ? { description: f.description } : {}),
         ...(f.nullable === false ? { nullable: false } : {}),
         ...(f.default != null ? { default: f.default } : {}),
+        ...(f.identity ? { identity: f.identity } : {}),
+        ...(f.generated ? { generated: f.generated } : {}),
       })),
       constraints: e.constraints.map(serializeConstraint),
       indexes: e.indexes.map(serializeIndex),

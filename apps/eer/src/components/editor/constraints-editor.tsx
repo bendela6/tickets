@@ -32,11 +32,11 @@ function blank(kind: Constraint['kind'], id: string): Constraint {
     case 'pk':
       return { id, kind: 'pk', name: null, columns: [] };
     case 'unique':
-      return { id, kind: 'unique', name: null, columns: [] };
+      return { id, kind: 'unique', name: null, columns: [], nullsNotDistinct: false };
     case 'check':
       return { id, kind: 'check', name: null, expression: '' };
     case 'fk':
-      return { id, kind: 'fk', name: null, columns: [], refTable: '', refColumns: [], onDelete: null, onUpdate: null };
+      return { id, kind: 'fk', name: null, columns: [], refSchema: null, refTable: '', refColumns: [], onDelete: null, onUpdate: null };
   }
 }
 

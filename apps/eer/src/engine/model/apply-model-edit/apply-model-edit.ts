@@ -212,7 +212,10 @@ function validateConstraints(model: Model, e: EditEntity): void {
     }
     if (ix.columns.length === 0) throw new Error(`Index "${ix.id}" must reference at least one column.`);
     for (const col of ix.columns) {
-      if (!ownColumns.has(col)) throw new Error(`Index "${ix.id}" references unknown column "${col}".`);
+      // An expression index column is raw SQL, not a column name — nothing to
+      // check it against.
+      if (!col.isExpression && !ownColumns.has(col.expression))
+        throw new Error(`Index "${ix.id}" references unknown column "${col.expression}".`);
     }
   }
 }
@@ -253,9 +256,13 @@ function upsertEntity(model: Model, e: EditEntity): Model {
   // through as an untouched passthrough (table-modal's toEditField reads it in,
   // ColumnsGrid never exposes it as an editable column) — so a no-op Save must
   // not destroy titles the file already had.
-  // EditField has no role/ref/refField to carry — constraints own that data
-  // now (see the module header comment); the resulting Column is just the
-  // plain name/type/title/description/nullable/default shape.
+  // EditField has no role/ref/refField, identity or generated to carry —
+  // constraints own the key data now (see the module header comment), and
+  // this editor has no identity/generated UI yet — so those two carry
+  // through from the entity's PRIOR column of the same name, the same
+  // "don't destroy what the form can't edit" reasoning as title.
+  const existing = model.entityById.get(e.id);
+  const priorColumnsByName = new Map((existing?.columns ?? []).map((c) => [c.name, c]));
   const columns: Column[] = e.fields.map((f) => ({
     name: f.name,
     type: f.type,
@@ -263,8 +270,9 @@ function upsertEntity(model: Model, e: EditEntity): Model {
     description: f.description,
     nullable: f.nullable,
     default: f.default,
+    identity: priorColumnsByName.get(f.name)?.identity ?? null,
+    generated: priorColumnsByName.get(f.name)?.generated ?? null,
   }));
-  const existing = model.entityById.get(e.id);
   let entity: Entity;
   if (existing) {
     entity = measureEntity({
@@ -285,6 +293,7 @@ function upsertEntity(model: Model, e: EditEntity): Model {
       label: e.label,
       group: e.group,
       description: e.description,
+      schema: null,
       columns,
       constraints: e.constraints,
       indexes: e.indexes,
