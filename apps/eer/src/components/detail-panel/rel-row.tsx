@@ -1,0 +1,39 @@
+import { entityColor } from '../../engine/colors/entity-color';
+import type { Model } from '../../engine/model/types';
+import { Card } from './card';
+import { Dot } from './dot';
+
+// The row style shared by every clickable list row in the panel.
+export const rowClass =
+  'flex w-full cursor-pointer items-center gap-2 rounded-md border border-transparent px-2 py-2 text-left text-sm hover:border-gray-500 hover:bg-gray-800';
+
+export function RelRow({
+  model,
+  colors,
+  cardinality,
+  here,
+  dir,
+  otherEntity,
+  otherField,
+  onClick,
+}: {
+  model: Model;
+  colors?: ReadonlyMap<string, string>;
+  cardinality: string;
+  here: string;
+  dir: 'out' | 'in';
+  otherEntity: string;
+  otherField: string;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" className={rowClass} onClick={onClick}>
+      <Card>{cardinality}</Card>
+      <span className="truncate font-mono text-gray-200">{here}</span>
+      <span className="shrink-0 text-gray-400">{dir === 'out' ? '→' : '←'}</span>
+      <Dot color={entityColor(model, otherEntity, colors)} />
+      <span className="truncate font-mono text-gray-50">{otherEntity}</span>
+      <span className="truncate font-mono text-gray-400">.{otherField}</span>
+    </button>
+  );
+}

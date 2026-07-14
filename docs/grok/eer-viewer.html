@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EER model viewer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+  <script src="https://unpkg.com/cytoscape-node-html-label@1.2.2/dist/cytoscape-node-html-label.js"></script>
+  <style>
+    :root {
+      --bg: #0b0d12; --surface: #12151c; --surface-2: #181c26; --border: #2c3344;
+      --text: #eef0f4; --muted: #8b93a7; --dim: #5c657a; --accent: #7aa2ff;
+      --pk: #f5c542; --fk: #3ecf8e;
+      --fs: 1;
+      --card-title: calc(14px * var(--fs));
+      --card-col: calc(11.5px * var(--fs));
+      --card-col-type: calc(10.5px * var(--fs));
+      --card-badge: calc(10px * var(--fs));
+      --card-hd-h: calc(30px * var(--fs));
+      --card-field-pad: calc(3px * var(--fs)) calc(10px * var(--fs));
+      --card-w: calc(188px * var(--fs));
+      --card-w-wide: calc(210px * var(--fs));
+      --card-w-xwide: calc(232px * var(--fs));
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.45;
+    }
+    .app { display: grid; grid-template-rows: auto 1fr; height: 100%; }
+    .top {
+      display: flex; flex-wrap: wrap; gap: 0.65rem 1rem;
+      align-items: center; justify-content: space-between;
+      padding: 0.75rem 1.1rem; border-bottom: 1px solid var(--border);
+      background: rgba(12, 14, 20, 0.95); z-index: 5;
+    }
+    .brand h1 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+    .brand p { margin: 0.15rem 0 0; font-size: 0.78rem; color: var(--muted); }
+    .controls { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+    .search {
+      display: flex; align-items: center; gap: 0.35rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.35rem 0.6rem; min-width: 150px;
+    }
+    .search input {
+      border: 0; outline: 0; background: transparent; color: var(--text);
+      font: inherit; font-size: 0.84rem; width: 100%;
+    }
+    .btn {
+      appearance: none; border: 1px solid var(--border); background: var(--surface);
+      color: var(--muted); font: inherit; font-size: 0.76rem; font-weight: 500;
+      padding: 0.38rem 0.65rem; border-radius: 8px; cursor: pointer;
+    }
+    .btn:hover { color: var(--text); border-color: #3d4660; background: var(--surface-2); }
+    .btn.active {
+      color: var(--text);
+      border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+      background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+    }
+    .btn-group {
+      display: flex; flex-wrap: wrap; gap: 0.3rem; padding: 0.2rem;
+      border-radius: 10px; border: 1px solid var(--border); background: rgba(0,0,0,0.25);
+    }
+    .model-url {
+      display: flex; align-items: center; gap: 0.35rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.3rem 0.5rem; min-width: 180px; max-width: 280px;
+    }
+    .model-url input {
+      border: 0; outline: 0; background: transparent; color: var(--text);
+      font: inherit; font-size: 0.78rem; font-family: "IBM Plex Mono", monospace; width: 100%;
+    }
+    .main {
+      display: grid; grid-template-columns: 1fr minmax(280px, 340px);
+      min-height: 0; height: 100%;
+    }
+    #cy {
+      min-height: 0; overscroll-behavior: none; touch-action: none;
+      background:
+        radial-gradient(ellipse at 20% 0%, #152038 0%, transparent 45%),
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px),
+        var(--surface);
+      background-size: auto, 24px 24px, 24px 24px, auto;
+    }
+    .panel {
+      border-left: 1px solid var(--border); background: rgba(12,14,20,0.97);
+      overflow: auto; min-height: 0;
+    }
+    .panel-inner { padding: 1rem 1.1rem 1.5rem; }
+    .panel-empty { color: var(--muted); font-size: 0.88rem; }
+    .panel-empty ul { margin: 0.5rem 0 0; padding-left: 1.1rem; color: var(--dim); font-size: 0.82rem; }
+    .panel-empty kbd {
+      font-family: "IBM Plex Mono", monospace; font-size: 0.72rem;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 4px; padding: 0.05em 0.35em; color: var(--text);
+    }
+    .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.6rem; }
+    .panel-head h2 { margin: 0; font-size: 1.15rem; font-weight: 600; font-family: "IBM Plex Mono", monospace; }
+    .badge-p {
+      font-size: 0.65rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 0.2rem 0.45rem; border-radius: 999px; border: 1px solid var(--border); color: var(--muted);
+    }
+    .panel-desc { margin: 0 0 0.85rem; font-size: 0.9rem; color: var(--muted); }
+    .section-title {
+      margin: 0.9rem 0 0.35rem; font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim);
+    }
+    .col-list {
+      list-style: none; margin: 0; padding: 0; border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+    }
+    .col-list li {
+      display: grid; grid-template-columns: 28px 1fr; column-gap: 0.5rem; row-gap: 0.15rem;
+      padding: 0.55rem 0.65rem; border-bottom: 1px solid var(--border); background: var(--surface);
+    }
+    .col-list li:last-child { border-bottom: 0; }
+    .col-list .tag {
+      font-family: "IBM Plex Mono", monospace; font-size: 0.65rem; font-weight: 600;
+      color: var(--dim); grid-row: 1 / -1; padding-top: 0.15rem;
+    }
+    .col-list .tag.pk { color: var(--pk); }
+    .col-list .tag.fk { color: var(--fk); }
+    .col-list .name-row { grid-column: 2; display: flex; flex-wrap: wrap; gap: 0.35rem 0.55rem; align-items: baseline; }
+    .col-list .name { font-family: "IBM Plex Mono", monospace; font-size: 0.86rem; font-weight: 500; }
+    .col-list .name.pk { color: var(--pk); }
+    .col-list .name.fk { color: var(--fk); }
+    .col-list .type { font-family: "IBM Plex Mono", monospace; font-size: 0.74rem; color: var(--accent); }
+    .col-list .title { grid-column: 2; font-size: 0.82rem; font-weight: 500; }
+    .col-list .desc { grid-column: 2; font-size: 0.76rem; color: var(--muted); line-height: 1.35; }
+    .col-list .meta { grid-column: 2; font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; color: var(--dim); }
+    .rel-list { display: flex; flex-direction: column; gap: 0.35rem; }
+    .rel-chip {
+      appearance: none; border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); font: inherit; font-size: 0.74rem; font-family: "IBM Plex Mono", monospace;
+      padding: 0.4rem 0.55rem; border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; gap: 0.45rem; text-align: left; width: 100%;
+    }
+    .rel-chip:hover { border-color: var(--accent); color: var(--accent); }
+    .rel-chip .swatch { width: 10px; height: 10px; border-radius: 999px; flex-shrink: 0; }
+    .rel-chip .dir { color: var(--dim); font-size: 0.65rem; font-weight: 600; min-width: 1.6rem; text-transform: uppercase; }
+    .rel-chip .rel-name { flex: 1; min-width: 0; }
+    .rel-chip .rel-label { color: var(--dim); font-size: 0.68rem; }
+    .edge-hint { margin: 0.25rem 0 0.45rem; font-size: 0.75rem; color: var(--dim); }
+    .toast {
+      position: fixed; left: 50%; bottom: 1.25rem;
+      transform: translateX(-50%) translateY(120%);
+      background: #1e293b; border: 1px solid var(--border); color: var(--text);
+      font-size: 0.8rem; padding: 0.5rem 0.9rem; border-radius: 8px;
+      opacity: 0; transition: 0.25s; z-index: 50; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .boot-error {
+      padding: 2rem; color: #f87171; max-width: 40rem; line-height: 1.5;
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+    }
+    .boot-error code { font-family: "IBM Plex Mono", monospace; font-size: 0.85em; color: #fca5a5; }
+
+    /* Entity cards (HTML labels) */
+    .er-card {
+      width: var(--card-w); border-radius: 8px; overflow: visible;
+      border: 1.25px solid #2c3344; background: #0e1118;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      font-family: "IBM Plex Mono", ui-monospace, monospace; text-align: left;
+      pointer-events: none;
+    }
+    .er-card.w-wide { width: var(--card-w-wide); }
+    .er-card.w-xwide { width: var(--card-w-xwide); }
+    .er-card .hd {
+      height: var(--card-hd-h); display: flex; align-items: center; justify-content: space-between;
+      padding: 0 calc(12px * var(--fs)); font-size: var(--card-title); font-weight: 600;
+      font-family: "IBM Plex Sans", system-ui, sans-serif; color: #eef0f4;
+      border-radius: 8px 8px 0 0;
+    }
+    .er-card .hd .badge {
+      font-size: var(--card-badge); font-weight: 600; letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.55); font-family: "IBM Plex Sans", system-ui, sans-serif;
+    }
+    .er-card.ws .hd { background: #1a3a66; }
+    .er-card.st .hd { background: #0f3f3c; }
+    .er-card.jn .hd { background: #243044; }
+    .er-card.rc .hd { background: #4a3410; }
+    .er-card.hi .hd { background: #3b2a6d; }
+    .er-card.ws { border-color: #3b82f6; }
+    .er-card.st { border-color: #14b8a6; }
+    .er-card.jn { border-color: #60a5fa; border-style: dashed; }
+    .er-card.rc { border-color: #f59e0b; }
+    .er-card.hi { border-color: #a78bfa; }
+    .er-card .bd { padding: calc(3px * var(--fs)) 0 calc(4px * var(--fs)); border-top: 1px solid #232836; }
+    .er-card .field {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 6px;
+      padding: var(--card-field-pad);
+      border-bottom: 1px solid #1a1f2a;
+      pointer-events: auto; cursor: pointer;
+    }
+    .er-card .field:last-child { border-bottom: 0; }
+    .er-card .field:hover, .er-card .field.hl-field {
+      background: rgba(122, 162, 255, 0.14);
+      box-shadow: inset 0 0 0 1px rgba(122, 162, 255, 0.35);
+    }
+    .er-card .field-name {
+      font-size: var(--card-col); font-weight: 500; color: #c5cddc;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+    }
+    .er-card .field-name.pk { color: #f5c542; }
+    .er-card .field-name.fk { color: #3ecf8e; }
+    .er-card .field-type { font-size: var(--card-col-type); color: #6b7280; flex-shrink: 0; }
+    .er-card .field:hover .field-name, .er-card .field.hl-field .field-name { color: #dbe7ff; }
+    .er-card.hot { box-shadow: 0 0 0 2px #7aa2ff, 0 6px 18px rgba(122,162,255,0.28); opacity: 1; }
+    .er-card.selected { box-shadow: 0 0 0 2.5px #fff, 0 8px 22px rgba(255,255,255,0.14); opacity: 1; }
+    .er-card.faded { opacity: 0.14; filter: grayscale(0.35); box-shadow: none; }
+    .er-card.neighbor:not(.faded) {
+      box-shadow: 0 0 0 1.5px rgba(122,162,255,0.55); opacity: 1;
+    }
+    @media (max-width: 900px) {
+      .main { grid-template-columns: 1fr; grid-template-rows: 1fr 42vh; }
+      .panel { border-left: 0; border-top: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="brand">
+        <h1 id="docTitle">EER model viewer</h1>
+        <p>JSON-driven · wheel zoom · middle-pan · left-drag · field hover · cardinality labels</p>
+      </div>
+      <div class="controls">
+        <label class="model-url" title="JSON model URL or path">
+          <span aria-hidden="true">JSON</span>
+          <input id="modelUrl" type="text" value="eer-model.sample.json" spellcheck="false" />
+        </label>
+        <button type="button" class="btn" id="loadBtn">Load</button>
+        <label class="search">
+          <span aria-hidden="true">⌕</span>
+          <input id="search" type="search" placeholder="Find entity…" autocomplete="off" />
+        </label>
+        <div class="btn-group" id="zoneFilters"></div>
+        <button type="button" class="btn active" id="toggleM2m">M2M</button>
+        <button type="button" class="btn active" id="toggleFk">FK</button>
+        <button type="button" class="btn" id="rearrangeBtn">Rearrange</button>
+        <button type="button" class="btn" id="fitBtn">Fit</button>
+      </div>
+    </header>
+    <div class="main">
+      <div id="cy"></div>
+      <aside class="panel"><div class="panel-inner" id="panelBody"></div></aside>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+(function () {
+  "use strict";
+
+  if (typeof cytoscape === "undefined") {
+    document.getElementById("cy").innerHTML =
+      '<div class="boot-error">Could not load Cytoscape from CDN.</div>';
+    return;
+  }
+  (function () {
+    const plugin = window.cytoscapeNodeHtmlLabel || window["cytoscape-node-html-label"];
+    if (plugin && cytoscape.use) {
+      try { cytoscape.use(plugin); } catch (_) {}
+    }
+  })();
+
+  const EDGE_PALETTE = [
+    "#7aa2ff", "#2dd4bf", "#fbbf24", "#f472b6",
+    "#a78bfa", "#34d399", "#fb923c", "#38bdf8",
+  ];
+  const GROUP_COLORS = {
+    ws: { border: "#5b9dff", bg: "#0c1528", card: "ws" },
+    st: { border: "#2dd4bf", bg: "#0a1615", card: "st" },
+    rc: { border: "#fbbf24", bg: "#161008", card: "rc" },
+    hi: { border: "#c4b5fd", bg: "#120e20", card: "hi" },
+    jn: { border: "#60a5fa", bg: "#12151c", card: "jn" },
+  };
+
+  let model = null;
+  let entities = [];
+  let byId = {};
+  let groups = [];
+  let relationships = [];
+  let cy = null;
+  let fontScale = 1;
+  let PORT_GAP = 8;
+  let PORT_SIZE = 8;
+  let showM2m = true;
+  let showFk = true;
+  const activeZones = new Set();
+
+  const params = new URLSearchParams(location.search);
+  const defaultUrl = params.get("model") || "eer-model.sample.json";
+  document.getElementById("modelUrl").value = defaultUrl;
+
+  function esc(s) {
+    return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+  function toast(msg) {
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.classList.remove("show"), 1400);
+  }
+  function portId(e, f, side) { return e + "::" + f + "::" + side; }
+  function stubId(e, f, side) { return e + "::" + f + "::" + side + "::stub"; }
+  function stemId(e, f, side) { return "stem::" + e + "::" + f + "::" + side; }
+
+  function cardW(ent) {
+    const base = ent.wide === "xwide" ? 232 : ent.wide === "wide" ? 210 : 188;
+    return Math.round(base * fontScale);
+  }
+  function cardH(ent) {
+    return Math.round((30 + 12 + (ent.fields?.length || 0) * 22) * fontScale);
+  }
+  function nodeSize(ent) {
+    return { w: cardW(ent), h: cardH(ent) };
+  }
+
+  function cardHtml(ent, state) {
+    const w = ent.wide === "xwide" ? "w-xwide" : ent.wide === "wide" ? "w-wide" : "";
+    const style = ent.style || (ent.group || "ws");
+    const st = [
+      state.selected && "selected",
+      state.hot && "hot",
+      state.neighbor && "neighbor",
+      state.faded && "faded",
+    ].filter(Boolean).join(" ");
+    const hl = new Set(String(state.hlFields || "").split(",").filter(Boolean));
+    const fields = (ent.fields || []).map((c) => {
+      const role = c.role || "";
+      const nameCls = ["field-name", role].filter(Boolean).join(" ");
+      const rowCls = ["field", hl.has(c.name) && "hl-field"].filter(Boolean).join(" ");
+      return `<div class="${rowCls}" data-field="${esc(c.name)}">
+        <span class="${nameCls}">${esc(c.name)}</span>
+        <span class="field-type">${esc(c.type || "")}</span>
+      </div>`;
+    }).join("");
+    const badge = ent.badge ? `<span class="badge">${esc(ent.badge)}</span>` : "";
+    return `<div class="er-card ${style} ${w} ${st}" data-table="${esc(ent.id)}">
+      <div class="hd"><span>${esc(ent.label || ent.id)}</span>${badge}</div>
+      <div class="bd">${fields}</div>
+    </div>`;
+  }
+
+  function inferCardinality(rel, srcEnt, tgtEnt) {
+    if (rel.cardinality) return rel.cardinality;
+    const sf = rel.source?.field;
+    const tf = rel.target?.field;
+    const srcCol = srcEnt?.fields?.find((c) => c.name === sf);
+    const tgtCol = tgtEnt?.fields?.find((c) => c.name === tf);
+    const srcFk = srcCol?.role === "fk";
+    const tgtFk = tgtCol?.role === "fk";
+    if (rel.kind === "m2m") {
+      if (srcFk && !tgtFk) return "n-1";
+      if (!srcFk && tgtFk) return "1-n";
+      return "n-m";
+    }
+    if (srcFk && !tgtFk) return "n-1";
+    if (!srcFk && tgtFk) return "1-n";
+    if (srcFk && tgtFk) return "n-m";
+    return "1-n";
+  }
+
+  function validateModel(raw) {
+    const errors = [];
+    if (!raw || typeof raw !== "object") return ["Root must be a JSON object."];
+    if (!Array.isArray(raw.entities) || !raw.entities.length) errors.push("entities[] is required and must be non-empty.");
+    if (!Array.isArray(raw.relationships)) errors.push("relationships[] is required (may be empty).");
+    const eids = new Set((raw.entities || []).map((e) => e.id));
+    for (const e of raw.entities || []) {
+      if (!e.id) errors.push("Entity missing id.");
+      if (!Array.isArray(e.fields)) errors.push(`Entity ${e.id || "?"} missing fields[].`);
+    }
+    for (const r of raw.relationships || []) {
+      const se = r.source?.entity, sf = r.source?.field;
+      const te = r.target?.entity, tf = r.target?.field;
+      if (!se || !sf || !te || !tf) {
+        errors.push(`Relationship ${r.id || "?"} needs source/target entity+field.`);
+        continue;
+      }
+      if (!eids.has(se)) errors.push(`Relationship ${r.id || "?"}: unknown source entity "${se}".`);
+      if (!eids.has(te)) errors.push(`Relationship ${r.id || "?"}: unknown target entity "${te}".`);
+      const sEnt = (raw.entities || []).find((x) => x.id === se);
+      const tEnt = (raw.entities || []).find((x) => x.id === te);
+      if (sEnt && !sEnt.fields?.some((f) => f.name === sf))
+        errors.push(`Relationship ${r.id || "?"}: source field "${sf}" not on ${se}.`);
+      if (tEnt && !tEnt.fields?.some((f) => f.name === tf))
+        errors.push(`Relationship ${r.id || "?"}: target field "${tf}" not on ${te}.`);
+    }
+    return errors;
+  }
+
+  function normalizeModel(raw) {
+    const gs = Array.isArray(raw.groups) && raw.groups.length
+      ? [...raw.groups].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      : [{ id: "default", label: "Model", order: 0 }];
+    const ents = raw.entities.map((e) => ({
+      ...e,
+      group: e.group || gs[0].id,
+      fields: e.fields || [],
+      style: e.style || (e.group || gs[0].id),
+    }));
+    const map = Object.fromEntries(ents.map((e) => [e.id, e]));
+    const rels = (raw.relationships || []).map((r, i) => {
+      const src = map[r.source.entity];
+      const tgt = map[r.target.entity];
+      return {
+        id: r.id || `r${i}`,
+        srcTable: r.source.entity,
+        tgtTable: r.target.entity,
+        sourceField: r.source.field,
+        targetField: r.target.field,
+        kind: r.kind || "fk",
+        label: r.label || "",
+        cardinality: inferCardinality(r, src, tgt),
+      };
+    });
+    return {
+      title: raw.title || "EER model",
+      description: raw.description || "",
+      groups: gs,
+      entities: ents,
+      relationships: rels,
+      view: raw.view || {},
+    };
+  }
+
+  async function loadModel(url) {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status} loading ${url}`);
+    const raw = await res.json();
+    const errs = validateModel(raw);
+    if (errs.length) throw new Error(errs.join("\n"));
+    return normalizeModel(raw);
+  }
+
+  function buildElements() {
+    const gNodes = groups.map((g) => ({
+      data: { id: "g-" + g.id, label: (g.label || g.id).toUpperCase(), zone: g.id },
+      classes: "group " + g.id,
+      grabbable: true,
+      selectable: false,
+    }));
+    const tables = entities.map((t) => ({
+      data: {
+        id: t.id,
+        parent: "g-" + t.group,
+        zone: t.group,
+        w: cardW(t),
+        h: cardH(t),
+        _hlFields: "",
+        _sel: 0, _hot: 0, _nei: 0, _faded: 0,
+      },
+      classes: "table " + (t.style || t.group),
+      grabbable: true,
+    }));
+    const stubs = [];
+    const ports = [];
+    const stems = [];
+    entities.forEach((t) => {
+      t.fields.forEach((c) => {
+        ["L", "R"].forEach((side) => {
+          const base = { parent: "g-" + t.group, tableId: t.id, field: c.name, side, zone: t.group, fkind: c.role || "" };
+          stubs.push({
+            data: { id: stubId(t.id, c.name, side), ...base },
+            classes: "stub", grabbable: false, selectable: false,
+          });
+          ports.push({
+            data: { id: portId(t.id, c.name, side), ...base },
+            classes: "port" + (c.role === "pk" ? " port-pk" : c.role === "fk" ? " port-fk" : ""),
+            grabbable: false, selectable: false,
+          });
+          stems.push({
+            data: {
+              id: stemId(t.id, c.name, side),
+              source: stubId(t.id, c.name, side),
+              target: portId(t.id, c.name, side),
+              tableId: t.id, field: c.name, side, zone: t.group,
+            },
+            classes: "stem",
+          });
+        });
+      });
+    });
+    const edges = relationships.map((r) => ({
+      data: {
+        id: r.id,
+        source: r.srcTable,
+        target: r.tgtTable,
+        srcTable: r.srcTable,
+        tgtTable: r.tgtTable,
+        sourceField: r.sourceField,
+        targetField: r.targetField,
+        kind: r.kind,
+        label: r.label,
+        cardinality: r.cardinality,
+        hlColor: "#7aa2ff",
+      },
+      classes: "rel " + (r.kind === "m2m" ? "m2m" : "fk"),
+    }));
+    return [...gNodes, ...tables, ...stubs, ...ports, ...stems, ...edges];
+  }
+
+  function facingLR(fromId, toId) {
+    const a = cy.getElementById(fromId).position();
+    const b = cy.getElementById(toId).position();
+    return b.x >= a.x ? "R" : "L";
+  }
+  function tableOfPort(ele) {
+    if (!ele || ele.empty()) return "";
+    if (ele.hasClass("table")) return ele.id();
+    if (ele.hasClass("port")) return ele.data("tableId") || "";
+    return ele.id();
+  }
+
+  function layoutPorts() {
+    cy.batch(() => {
+      entities.forEach((t) => {
+        const n = cy.getElementById(t.id);
+        if (n.empty()) return;
+        const p = n.position();
+        const w = n.data("w") || cardW(t);
+        const h = n.data("h") || cardH(t);
+        const hd = Math.max(26, Math.min(h * 0.22, 34 * fontScale));
+        const body = Math.max(1, h - hd);
+        const nCols = Math.max(1, t.fields.length);
+        const xEdge = w / 2;
+        const xOut = w / 2 + PORT_GAP + PORT_SIZE / 2;
+        t.fields.forEach((c, i) => {
+          const yOff = -h / 2 + hd + ((i + 0.5) / nCols) * body;
+          ["L", "R"].forEach((side) => {
+            const sign = side === "L" ? -1 : 1;
+            const stub = cy.getElementById(stubId(t.id, c.name, side));
+            const port = cy.getElementById(portId(t.id, c.name, side));
+            if (stub.nonempty()) stub.position({ x: p.x + sign * xEdge, y: p.y + yOff });
+            if (port.nonempty()) port.position({ x: p.x + sign * xOut, y: p.y + yOff });
+          });
+        });
+      });
+    });
+  }
+
+  function rewireEdgesToPorts() {
+    cy.batch(() => {
+      cy.edges(".rel").forEach((e) => {
+        const srcTable = e.data("srcTable");
+        const tgtTable = e.data("tgtTable");
+        const sf = e.data("sourceField");
+        const tf = e.data("targetField");
+        if (!srcTable || !tgtTable || !sf || !tf) return;
+        const srcPort = portId(srcTable, sf, facingLR(srcTable, tgtTable));
+        const tgtPort = portId(tgtTable, tf, facingLR(tgtTable, srcTable));
+        if (cy.getElementById(srcPort).empty() || cy.getElementById(tgtPort).empty()) return;
+        e.move({ source: srcPort, target: tgtPort });
+      });
+    });
+  }
+
+  function packLayout() {
+    const gapX = model.view.nodeGapX || 56;
+    const gapY = model.view.nodeGapY || 52;
+    const zoneGap = model.view.zoneGap || 120;
+    const zoneOrder = groups.map((g) => g.id);
+    const packs = {};
+    zoneOrder.forEach((zid) => {
+      const list = entities.filter((e) => e.group === zid);
+      let x = 0, y = 0, rowH = 0, maxW = 720;
+      if (list.length <= 3) maxW = 240;
+      const pos = {};
+      list.forEach((t) => {
+        const { w, h } = nodeSize(t);
+        if (x > 0 && x + w > maxW) { x = 0; y += rowH + gapY; rowH = 0; }
+        pos[t.id] = { x: x + w / 2, y: y + h / 2 };
+        x += w + gapX;
+        rowH = Math.max(rowH, h);
+      });
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      list.forEach((t) => {
+        const p = pos[t.id];
+        const { w, h } = nodeSize(t);
+        minX = Math.min(minX, p.x - w / 2);
+        minY = Math.min(minY, p.y - h / 2);
+        maxX = Math.max(maxX, p.x + w / 2);
+        maxY = Math.max(maxY, p.y + h / 2);
+      });
+      if (!list.length) { minX = minY = maxX = maxY = 0; }
+      list.forEach((t) => { pos[t.id].x -= minX; pos[t.id].y -= minY; });
+      packs[zid] = { pos, w: Math.max(0, maxX - minX), h: Math.max(0, maxY - minY) };
+    });
+    // 2-column grid of zones
+    const cols = 2;
+    const colW = [];
+    const rowH = [];
+    zoneOrder.forEach((zid, i) => {
+      const c = i % cols, r = Math.floor(i / cols);
+      colW[c] = Math.max(colW[c] || 0, packs[zid].w);
+      rowH[r] = Math.max(rowH[r] || 0, packs[zid].h);
+    });
+    const absolute = {};
+    zoneOrder.forEach((zid, i) => {
+      const c = i % cols, r = Math.floor(i / cols);
+      let ox = 16, oy = 16;
+      for (let cc = 0; cc < c; cc++) ox += (colW[cc] || 0) + zoneGap;
+      for (let rr = 0; rr < r; rr++) oy += (rowH[rr] || 0) + zoneGap;
+      Object.entries(packs[zid].pos).forEach(([id, p]) => {
+        absolute[id] = { x: ox + p.x, y: oy + p.y };
+      });
+    });
+    return absolute;
+  }
+
+  function rearrange({ fit = true } = {}) {
+    cy.batch(() => {
+      entities.forEach((t) => {
+        const n = cy.getElementById(t.id);
+        if (n.empty()) return;
+        const s = nodeSize(t);
+        n.data("w", s.w);
+        n.data("h", s.h);
+      });
+    });
+    const pos = packLayout();
+    cy.batch(() => {
+      Object.entries(pos).forEach(([id, p]) => {
+        const n = cy.getElementById(id);
+        if (n.nonempty()) n.position(p);
+      });
+    });
+    layoutPorts();
+    rewireEdgesToPorts();
+    cy.style().update();
+    if (fit) cy.fit(cy.nodes(".table"), 64);
+    cy.forceRender();
+  }
+
+  function tablePorts(tableId) {
+    return cy.nodes(".port").filter((p) => p.data("tableId") === tableId);
+  }
+  function fieldPorts(tableId, field) {
+    return cy.getElementById(portId(tableId, field, "L"))
+      .union(cy.getElementById(portId(tableId, field, "R")));
+  }
+  function fieldStems(tableId, field) {
+    return cy.getElementById(stemId(tableId, field, "L"))
+      .union(cy.getElementById(stemId(tableId, field, "R")));
+  }
+  function tableEdges(tableId) {
+    return tablePorts(tableId).connectedEdges().filter(".rel");
+  }
+  function fieldEdges(tableId, field) {
+    return fieldPorts(tableId, field).connectedEdges().filter(".rel");
+  }
+
+  function syncLabelUi() {
+    cy.batch(() => {
+      cy.nodes(".table").forEach((n) => {
+        const sel = n.selected();
+        const faded = n.hasClass("faded");
+        const nei = n.hasClass("neighbor");
+        const hot = n.hasClass("hover") || sel;
+        n.data("_sel", sel ? 1 : 0);
+        n.data("_faded", faded ? 1 : 0);
+        n.data("_nei", nei ? 1 : 0);
+        n.data("_hot", hot ? 1 : 0);
+      });
+    });
+    cy.forceRender();
+  }
+
+  function syncFieldHighlights() {
+    const map = new Map();
+    const hotPorts = new Set();
+    cy.edges(".rel.highlight").forEach((e) => {
+      const s = e.data("srcTable");
+      const t = e.data("tgtTable");
+      if (!map.has(s)) map.set(s, new Set());
+      if (!map.has(t)) map.set(t, new Set());
+      map.get(s).add(e.data("sourceField"));
+      map.get(t).add(e.data("targetField"));
+      hotPorts.add(e.source().id());
+      hotPorts.add(e.target().id());
+    });
+    cy.batch(() => {
+      cy.nodes(".table").forEach((n) => {
+        const set = map.get(n.id());
+        n.data("_hlFields", set ? [...set].filter(Boolean).join(",") : n.data("_hlFields") || "");
+      });
+      cy.nodes(".port").forEach((p) => {
+        if (hotPorts.has(p.id())) p.addClass("port-hot");
+        else p.removeClass("port-hot");
+      });
+    });
+  }
+
+  function clearHighlight() {
+    cy.elements().removeClass("hover neighbor highlight faded solo port-hot stem-hot");
+    cy.nodes(".table").forEach((n) => n.data("_hlFields", ""));
+    cy.nodes(".group").style("opacity", 1);
+    syncLabelUi();
+  }
+
+  function styleRelatedEdges(relatedEdges) {
+    relatedEdges.toArray().sort((a, b) => a.id().localeCompare(b.id())).forEach((e, i) => {
+      e.data("hlColor", EDGE_PALETTE[i % EDGE_PALETTE.length]);
+      e.removeClass("faded solo").addClass("highlight");
+    });
+  }
+
+  function fadeUnrelated(relatedTables, relatedEdges) {
+    cy.nodes(".table").difference(relatedTables).addClass("faded");
+    cy.nodes(".port, .stub").forEach((p) => {
+      const tid = p.data("tableId");
+      if (tid && cy.getElementById(tid).hasClass("faded")) p.addClass("faded");
+      else p.removeClass("faded");
+    });
+    cy.edges(".rel").difference(relatedEdges).addClass("faded");
+    cy.edges(".stem").forEach((s) => {
+      const tid = s.data("tableId");
+      if (tid && cy.getElementById(tid).hasClass("faded")) s.addClass("faded");
+      else s.removeClass("faded");
+    });
+    cy.nodes(".group").forEach((g) => {
+      const has = g.children(".table").some((c) => !c.hasClass("faded"));
+      g.style("opacity", has ? 1 : 0.22);
+    });
+  }
+
+  function highlightNeighborhood(nodeId) {
+    cy.elements().removeClass("hover neighbor highlight faded solo port-hot stem-hot");
+    cy.nodes(".group").style("opacity", 1);
+    const node = cy.getElementById(nodeId);
+    if (node.empty() || !node.hasClass("table")) return;
+    const relatedEdges = tableEdges(nodeId);
+    const relatedTables = cy.collection().union(node);
+    relatedEdges.forEach((e) => {
+      relatedTables.merge(cy.getElementById(e.data("srcTable")));
+      relatedTables.merge(cy.getElementById(e.data("tgtTable")));
+    });
+    fadeUnrelated(relatedTables, relatedEdges);
+    node.addClass("hover");
+    relatedTables.difference(node).addClass("neighbor");
+    styleRelatedEdges(relatedEdges);
+    syncFieldHighlights();
+    syncLabelUi();
+  }
+
+  function highlightField(tableId, field) {
+    cy.elements().removeClass("hover neighbor highlight faded solo port-hot stem-hot");
+    cy.nodes(".group").style("opacity", 1);
+    const ports = fieldPorts(tableId, field);
+    const stems = fieldStems(tableId, field);
+    const relatedEdges = fieldEdges(tableId, field);
+    const relatedTables = cy.collection().union(cy.getElementById(tableId));
+    relatedEdges.forEach((e) => {
+      relatedTables.merge(cy.getElementById(e.data("srcTable")));
+      relatedTables.merge(cy.getElementById(e.data("tgtTable")));
+    });
+    fadeUnrelated(relatedTables, relatedEdges);
+    cy.getElementById(tableId).addClass("hover");
+    relatedTables.difference(cy.getElementById(tableId)).addClass("neighbor");
+    styleRelatedEdges(relatedEdges);
+    ports.addClass("port-hot");
+    stems.addClass("stem-hot");
+    cy.nodes(".table").forEach((n) => n.data("_hlFields", n.id() === tableId ? field : ""));
+    syncLabelUi();
+  }
+
+  function highlightEdge(edge) {
+    cy.elements().removeClass("hover neighbor highlight faded solo port-hot stem-hot");
+    cy.nodes(".group").style("opacity", 1);
+    const srcT = edge.data("srcTable");
+    const tgtT = edge.data("tgtTable");
+    const ends = cy.getElementById(srcT).union(cy.getElementById(tgtT));
+    fadeUnrelated(ends, edge);
+    ends.addClass("neighbor");
+    edge.data("hlColor", "#7aa2ff");
+    edge.addClass("highlight solo");
+    edge.connectedNodes(".port").addClass("port-hot");
+    syncFieldHighlights();
+    syncLabelUi();
+  }
+
+  function edgePathLabel(edge) {
+    return `${edge.data("srcTable")}.${edge.data("sourceField")} → ${edge.data("tgtTable")}.${edge.data("targetField")} · ${edge.data("cardinality")}`;
+  }
+
+  function selectNode(id, pan) {
+    cy.nodes(".table").unselect();
+    const n = cy.getElementById(id);
+    if (n.empty()) return;
+    n.select();
+    renderPanel(id);
+    highlightNeighborhood(id);
+    if (pan) {
+      cy.animate({ center: { eles: n }, zoom: Math.min(1.15, Math.max(cy.zoom(), 0.85)) }, { duration: 240 });
+    }
+    toast(id + " · " + tableEdges(id).length + " links");
+  }
+
+  function renderPanel(id) {
+    const body = document.getElementById("panelBody");
+    const t = byId[id];
+    if (!t) {
+      body.innerHTML = `<div class="panel-empty">
+        <p><strong>Select an entity</strong></p>
+        <ul>
+          <li>Model is loaded from <strong>JSON</strong></li>
+          <li><strong>Wheel</strong> — zoom toward cursor</li>
+          <li><strong>Middle-drag</strong> — pan</li>
+          <li><strong>Left-drag</strong> — move entities</li>
+          <li><strong>Hover field</strong> — highlight its lines</li>
+          <li><strong>Click entity</strong> — focus neighborhood</li>
+          <li>Edge labels = cardinality only</li>
+          <li><kbd>Esc</kbd> clears focus</li>
+        </ul>
+      </div>`;
+      return;
+    }
+    const edges = tableEdges(id).filter((e) => !e.hasClass("hidden-type") && !e.hasClass("hidden-zone"));
+    const edgeList = edges.toArray().sort((a, b) => a.id().localeCompare(b.id()));
+    const gLabel = groups.find((g) => g.id === t.group)?.label || t.group;
+    body.innerHTML = `
+      <div class="panel-head">
+        <h2>${esc(t.label || t.id)}</h2>
+        <span class="badge-p">${esc(gLabel)}</span>
+      </div>
+      <p class="panel-desc">${esc(t.description || "")}</p>
+      <div class="section-title">Links (${edgeList.length})</div>
+      <p class="edge-hint">Lines dock to field ports. Canvas label is cardinality only.</p>
+      <div class="rel-list">
+        ${edgeList.map((edge, i) => {
+          const color = EDGE_PALETTE[i % EDGE_PALETTE.length];
+          const out = edge.data("srcTable") === id;
+          const other = out ? edge.data("tgtTable") : edge.data("srcTable");
+          const myF = out ? edge.data("sourceField") : edge.data("targetField");
+          const otF = out ? edge.data("targetField") : edge.data("sourceField");
+          const path = out ? `${myF} → ${other}.${otF}` : `${other}.${otF} → ${myF}`;
+          return `<button type="button" class="rel-chip" data-edge="${esc(edge.id())}" data-jump="${esc(other)}">
+            <span class="swatch" style="background:${color}"></span>
+            <span class="dir">${out ? "out" : "in"}</span>
+            <span class="rel-name">${esc(path)}</span>
+            <span class="rel-label">${esc(edge.data("cardinality"))}</span>
+          </button>`;
+        }).join("")}
+      </div>
+      <div class="section-title">Fields</div>
+      <ul class="col-list">
+        ${(t.fields || []).map((c) => {
+          const tag = c.role === "pk" ? "PK" : c.role === "fk" ? "FK" : "·";
+          const tagCls = c.role === "pk" || c.role === "fk" ? c.role : "";
+          const meta = [c.ref ? "→ " + c.ref : "", c.meta || ""].filter(Boolean).join(" · ");
+          return `<li>
+            <span class="tag ${tagCls}">${tag}</span>
+            <div class="name-row">
+              <span class="name ${tagCls}">${esc(c.name)}</span>
+              <span class="type">${esc(c.type || "")}</span>
+            </div>
+            ${c.title ? `<div class="title">${esc(c.title)}</div>` : ""}
+            ${c.description ? `<div class="desc">${esc(c.description)}</div>` : ""}
+            ${meta ? `<div class="meta">${esc(meta)}</div>` : ""}
+          </li>`;
+        }).join("")}
+      </ul>`;
+    body.querySelectorAll("[data-edge]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const edge = cy.getElementById(btn.getAttribute("data-edge"));
+        if (edge.nonempty()) { highlightEdge(edge); toast(edgePathLabel(edge)); }
+      });
+      btn.addEventListener("dblclick", () => selectNode(btn.getAttribute("data-jump"), true));
+    });
+  }
+
+  function applyZoneFilter() {
+    cy.nodes(".table, .group, .port, .stub").forEach((n) => {
+      const z = n.data("zone");
+      if (activeZones.has(z)) n.removeClass("hidden-zone");
+      else n.addClass("hidden-zone");
+    });
+    cy.edges(".rel").forEach((e) => {
+      const s = cy.getElementById(e.data("srcTable"));
+      const t = cy.getElementById(e.data("tgtTable"));
+      if (s.hasClass("hidden-zone") || t.hasClass("hidden-zone")) e.addClass("hidden-zone");
+      else e.removeClass("hidden-zone");
+    });
+    cy.edges(".stem").forEach((e) => {
+      const t = cy.getElementById(e.data("tableId"));
+      if (t.empty() || t.hasClass("hidden-zone")) e.addClass("hidden-zone");
+      else e.removeClass("hidden-zone");
+    });
+    cy.forceRender();
+  }
+
+  function applyEdgeTypeFilter() {
+    cy.edges(".rel").forEach((e) => {
+      const k = e.data("kind");
+      const hide = (k === "m2m" && !showM2m) || (k === "fk" && !showFk);
+      if (hide) e.addClass("hidden-type");
+      else e.removeClass("hidden-type");
+    });
+  }
+
+  function buildZoneFilters() {
+    const host = document.getElementById("zoneFilters");
+    host.innerHTML = groups.map((g) =>
+      `<button type="button" class="btn active" data-zone="${esc(g.id)}">${esc(g.label || g.id)}</button>`
+    ).join("");
+    host.onclick = (e) => {
+      const btn = e.target.closest("[data-zone]");
+      if (!btn) return;
+      const z = btn.dataset.zone;
+      if (activeZones.has(z)) {
+        if (activeZones.size === 1) return;
+        activeZones.delete(z);
+        btn.classList.remove("active");
+      } else {
+        activeZones.add(z);
+        btn.classList.add("active");
+      }
+      applyZoneFilter();
+    };
+  }
+
+  function cyStyle() {
+    return [
+      {
+        selector: "node.group",
+        style: {
+          shape: "round-rectangle",
+          "background-opacity": 0.5,
+          "background-color": "#12151c",
+          "border-width": 1.5,
+          "border-style": "dashed",
+          padding: "44px",
+          label: "data(label)",
+          "font-family": "IBM Plex Sans, system-ui, sans-serif",
+          "font-size": 13,
+          "font-weight": 600,
+          "text-valign": "top",
+          "text-halign": "left",
+          "text-margin-y": -4,
+          "text-margin-x": 10,
+          "overlay-opacity": 0,
+        },
+      },
+      ...Object.entries(GROUP_COLORS).map(([k, v]) => ({
+        selector: "node.group." + k,
+        style: { "border-color": v.border, color: v.border, "background-color": v.bg },
+      })),
+      {
+        selector: "node.table",
+        style: {
+          shape: "round-rectangle",
+          width: "data(w)",
+          height: "data(h)",
+          "background-opacity": 0,
+          "border-width": 0,
+          label: "",
+          "overlay-opacity": 0,
+          padding: 0,
+        },
+      },
+      {
+        selector: "node.stub",
+        style: {
+          shape: "ellipse", width: 2, height: 2,
+          "background-opacity": 0, "border-width": 0, label: "",
+          events: "no", "overlay-opacity": 0, "z-index": 5,
+        },
+      },
+      {
+        selector: "node.port",
+        style: {
+          shape: "ellipse", width: PORT_SIZE, height: PORT_SIZE,
+          "background-color": "#2a3142", "border-width": 1.75, "border-color": "#9aa3b2",
+          label: "", events: "no", "overlay-opacity": 0, "z-index": 20,
+        },
+      },
+      { selector: "node.port.port-pk", style: { "background-color": "#3a3210", "border-color": "#f5c542" } },
+      { selector: "node.port.port-fk", style: { "background-color": "#0f2e22", "border-color": "#3ecf8e" } },
+      {
+        selector: "node.port.port-hot",
+        style: {
+          "background-color": "#7aa2ff", "border-color": "#dbeafe",
+          width: PORT_SIZE + 2, height: PORT_SIZE + 2,
+        },
+      },
+      { selector: "node.port.faded, node.stub.faded", style: { opacity: 0.12 } },
+      { selector: "node.faded", style: { opacity: 0.12 } },
+      { selector: "node.hidden-zone", style: { display: "none" } },
+      {
+        selector: "edge.rel",
+        style: {
+          width: 1.8, "curve-style": "bezier", "control-point-step-size": 40,
+          "line-color": "#6b7280", "target-arrow-color": "#6b7280",
+          "target-arrow-shape": "triangle", "arrow-scale": 0.9,
+          "source-endpoint": "outside-to-node", "target-endpoint": "outside-to-node",
+          label: "data(cardinality)",
+          "font-size": 11, "font-family": "IBM Plex Mono, monospace", "font-weight": 600,
+          color: "#9aa3b2",
+          "text-background-color": "#0b0d12", "text-background-opacity": 0.9,
+          "text-background-padding": 3,
+          "text-border-width": 1, "text-border-color": "#2c3344", "text-border-opacity": 1,
+          opacity: 0.8, "z-index": 1, "overlay-padding": 8, "overlay-opacity": 0,
+        },
+      },
+      {
+        selector: "edge.rel.m2m",
+        style: {
+          "line-color": "#3b82f6", "target-arrow-color": "#3b82f6",
+          "line-style": "dashed", width: 2, color: "#93c5fd",
+        },
+      },
+      {
+        selector: "edge.rel.highlight",
+        style: {
+          width: 3.25, "line-color": "data(hlColor)", "target-arrow-color": "data(hlColor)",
+          opacity: 1, "z-index": 999, color: "#eef0f4",
+          "text-border-color": "data(hlColor)", "font-size": 12, "font-weight": 700,
+          "underlay-color": "data(hlColor)", "underlay-opacity": 0.18, "underlay-padding": 4,
+        },
+      },
+      { selector: "edge.rel.solo", style: { width: 4, "z-index": 1000 } },
+      { selector: "edge.rel.faded", style: { display: "none" } },
+      { selector: "edge.rel.hidden-type, edge.rel.hidden-zone, edge.stem.hidden-zone", style: { display: "none" } },
+      {
+        selector: "edge.stem",
+        style: {
+          width: 1.75, "curve-style": "straight", "line-color": "#7a8499",
+          "target-arrow-shape": "none", "source-arrow-shape": "none", label: "",
+          "source-endpoint": "outside-to-node", "target-endpoint": "outside-to-node",
+          events: "no", opacity: 0.95, "z-index": 12,
+        },
+      },
+      { selector: "edge.stem.stem-hot", style: { "line-color": "#7aa2ff", width: 2.5, opacity: 1 } },
+      { selector: "edge.stem.faded", style: { opacity: 0.08 } },
+    ];
+  }
+
+  function wireEvents() {
+    cy.on("mouseover", "node.table", (e) => {
+      const t = e.originalEvent?.target;
+      if (t?.closest?.(".field[data-field]")) return;
+      highlightNeighborhood(e.target.id());
+    });
+    cy.on("mouseout", "node.table", (e) => {
+      const t = e.originalEvent?.relatedTarget;
+      if (t?.closest?.(".field[data-field]")) return;
+      const sel = cy.$("node.table:selected");
+      if (sel.nonempty()) highlightNeighborhood(sel.id());
+      else clearHighlight();
+    });
+    cy.on("tap", "node.table", (e) => {
+      e.stopPropagation();
+      selectNode(e.target.id(), false);
+    });
+    cy.on("tap", (e) => {
+      if (e.target === cy) {
+        cy.nodes().unselect();
+        clearHighlight();
+        renderPanel(null);
+      }
+    });
+    cy.on("mouseover", "edge.rel", (e) => {
+      const edge = e.target;
+      if (edge.hasClass("hidden-type") || edge.hasClass("hidden-zone") || edge.hasClass("faded")) return;
+      highlightEdge(edge);
+    });
+    cy.on("mouseout", "edge.rel", () => {
+      const sel = cy.$("node.table:selected");
+      if (sel.nonempty()) highlightNeighborhood(sel.id());
+      else clearHighlight();
+    });
+    cy.on("tap", "edge.rel", (e) => {
+      e.stopPropagation();
+      const edge = e.target;
+      if (edge.hasClass("hidden-type") || edge.hasClass("hidden-zone")) return;
+      cy.nodes(".table").unselect();
+      renderPanel(edge.data("srcTable"));
+      highlightEdge(edge);
+      toast(edgePathLabel(edge));
+    });
+    cy.on("tap", "node.group", (e) => e.stopPropagation());
+    cy.on("drag", "node.table, node.group", () => { layoutPorts(); cy.forceRender(); });
+    cy.on("dragfree", "node.table, node.group", () => {
+      layoutPorts();
+      rewireEdgesToPorts();
+    });
+
+    const el = cy.container();
+    el.addEventListener("pointerover", (ev) => {
+      const fieldEl = ev.target?.closest?.(".field[data-field]");
+      if (!fieldEl) return;
+      const card = fieldEl.closest(".er-card[data-table]");
+      if (!card) return;
+      highlightField(card.getAttribute("data-table"), fieldEl.getAttribute("data-field"));
+    }, true);
+    el.addEventListener("pointerout", (ev) => {
+      const fieldEl = ev.target?.closest?.(".field[data-field]");
+      if (!fieldEl) return;
+      if (ev.relatedTarget && fieldEl.contains(ev.relatedTarget)) return;
+      const sel = cy.$("node.table:selected");
+      if (sel.nonempty()) highlightNeighborhood(sel.id());
+      else clearHighlight();
+    }, true);
+
+    // wheel zoom
+    el.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = el.getBoundingClientRect();
+      const renderedPos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      let dy = e.deltaY;
+      if (e.deltaMode === 1) dy *= 16;
+      if (e.deltaMode === 2) dy *= rect.height;
+      const intensity = e.ctrlKey ? 0.012 : 0.0018;
+      const factor = Math.pow(10, -dy * intensity);
+      const z0 = cy.zoom();
+      const z1 = Math.min(cy.maxZoom(), Math.max(cy.minZoom(), z0 * factor));
+      if (z1 === z0) return;
+      cy.zoom({ level: z1, renderedPosition: renderedPos });
+      cy.forceRender();
+    }, { passive: false });
+
+    // middle pan
+    let pan = null;
+    el.addEventListener("mousedown", (e) => {
+      if (e.button !== 1) return;
+      e.preventDefault();
+      e.stopPropagation();
+      pan = { lastX: e.clientX, lastY: e.clientY };
+      el.style.cursor = "grabbing";
+    }, true);
+    window.addEventListener("mousemove", (e) => {
+      if (!pan) return;
+      cy.panBy({ x: e.clientX - pan.lastX, y: e.clientY - pan.lastY });
+      pan.lastX = e.clientX;
+      pan.lastY = e.clientY;
+    });
+    window.addEventListener("mouseup", (e) => {
+      if (e.button === 1) { pan = null; el.style.cursor = ""; }
+    });
+    el.addEventListener("auxclick", (e) => { if (e.button === 1) e.preventDefault(); });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        cy.nodes().unselect();
+        clearHighlight();
+        renderPanel(null);
+      }
+    });
+  }
+
+  function initCy() {
+    if (cy) { cy.destroy(); cy = null; }
+    cy = cytoscape({
+      container: document.getElementById("cy"),
+      elements: buildElements(),
+      minZoom: 0.15,
+      maxZoom: 3,
+      wheelSensitivity: 0.35,
+      boxSelectionEnabled: false,
+      userPanningEnabled: false,
+      userZoomingEnabled: true,
+      layout: { name: "preset" },
+      style: cyStyle(),
+    });
+    cy.nodes(".table").grabify();
+    cy.nodes(".group").grabify();
+    cy.nodes(".port, .stub").ungrabify();
+
+    if (typeof cy.nodeHtmlLabel === "function") {
+      cy.nodeHtmlLabel([{
+        query: "node.table",
+        halign: "center", valign: "center",
+        halignBox: "center", valignBox: "center",
+        tpl(data) {
+          const t = byId[data.id];
+          if (!t) return "";
+          return cardHtml(t, {
+            selected: !!data._sel,
+            hot: !!data._hot,
+            neighbor: !!data._nei,
+            faded: !!data._faded,
+            hlFields: data._hlFields || "",
+          });
+        },
+      }]);
+    }
+
+    wireEvents();
+    groups.forEach((g) => activeZones.add(g.id));
+    buildZoneFilters();
+    rearrange({ fit: true });
+    applyEdgeTypeFilter();
+    applyZoneFilter();
+    renderPanel(null);
+  }
+
+  async function boot(url) {
+    try {
+      model = await loadModel(url);
+      entities = model.entities;
+      byId = Object.fromEntries(entities.map((e) => [e.id, e]));
+      groups = model.groups;
+      relationships = model.relationships;
+      PORT_GAP = model.view.portGap ?? 8;
+      PORT_SIZE = model.view.portSize ?? 8;
+      document.getElementById("docTitle").textContent = model.title;
+      document.title = model.title + " — EER viewer";
+      initCy();
+      toast("Loaded " + url);
+    } catch (err) {
+      console.error(err);
+      document.getElementById("cy").innerHTML =
+        `<div class="boot-error"><strong>Failed to load model</strong><br/><br/>
+        ${esc(err.message)}<br/><br/>
+        Open via a local static server so <code>fetch</code> can load JSON, e.g.:<br/>
+        <code>npx --yes serve docs/grok</code><br/>
+        then visit <code>/eer-viewer.html</code>.<br/><br/>
+        Or pass <code>?model=your-model.json</code>.</div>`;
+    }
+  }
+
+  document.getElementById("loadBtn").onclick = () => {
+    boot(document.getElementById("modelUrl").value.trim() || defaultUrl);
+  };
+  document.getElementById("modelUrl").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("loadBtn").click();
+  });
+  document.getElementById("fitBtn").onclick = () => {
+    if (cy) { cy.fit(cy.nodes(".table"), 50); cy.forceRender(); }
+  };
+  document.getElementById("rearrangeBtn").onclick = () => {
+    if (cy) { rearrange({ fit: true }); toast("Rearranged"); }
+  };
+  document.getElementById("toggleM2m").onclick = (ev) => {
+    showM2m = !showM2m;
+    ev.currentTarget.classList.toggle("active", showM2m);
+    applyEdgeTypeFilter();
+  };
+  document.getElementById("toggleFk").onclick = (ev) => {
+    showFk = !showFk;
+    ev.currentTarget.classList.toggle("active", showFk);
+    applyEdgeTypeFilter();
+  };
+  document.getElementById("search").addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" || !cy) return;
+    const q = e.target.value.trim().toLowerCase();
+    if (!q) return;
+    const hit = entities.find((t) =>
+      t.id.toLowerCase().includes(q) ||
+      (t.label || "").toLowerCase().includes(q) ||
+      (t.description || "").toLowerCase().includes(q) ||
+      t.fields.some((f) =>
+        f.name.toLowerCase().includes(q) ||
+        (f.title || "").toLowerCase().includes(q) ||
+        (f.description || "").toLowerCase().includes(q)));
+    if (hit) selectNode(hit.id, true);
+  });
+
+  boot(defaultUrl);
+})();
+  </script>
+</body>
+</html>
