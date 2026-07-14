@@ -33,7 +33,6 @@ export function TypeCell({ value, onChange }: { value: string; onChange: (t: str
   useEffect(() => {
     if (value === lastEmitted.current) return; // our own echo — not an external change
     setCustomMode(parsed.custom);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, parsed.custom]);
 
   const base = customMode ? CUSTOM : parsed.base;

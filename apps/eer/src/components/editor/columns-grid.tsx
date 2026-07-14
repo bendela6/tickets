@@ -10,8 +10,9 @@
 // re-deriving them from field role/ref (see apply-model-edit's header
 // comment) — re-deriving them here would silently wipe a real constraints-
 // authored table's keys and every edge attached to them on the very next
-// Save. A real constraints editor is a later task; until then, keys and
-// references are display-only, set by the file, not this grid.
+// Save. Keys and references are authored separately now, by
+// <ConstraintsEditor/> (see table-modal.tsx) — this grid only ever owns the
+// plain column shape (name/type/nullable/default/note).
 //
 // The type cell is no longer free text — TypeCell is a real Postgres type
 // picker (grouped <select> + param inputs + a custom… escape hatch); columns
@@ -143,7 +144,6 @@ export function ColumnsGrid({ columns, onChange }: ColumnsGridProps) {
         >
           Add column
         </button>
-        <p className="text-2xs text-gray-400">Keys and references come from the table's constraints — not editable here yet.</p>
       </div>
     </div>
   );

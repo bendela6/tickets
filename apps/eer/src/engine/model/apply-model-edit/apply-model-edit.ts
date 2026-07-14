@@ -11,10 +11,17 @@
 // real-`constraints`-authored table's keys — and every edge attached to
 // them — the moment it was saved with no field-role change to trigger on,
 // because such a table has no role/ref at all to regenerate from). The field
-// grid has no key-editing UI any more (see columns-grid.tsx) — a real constraints
-// editor is a later task; until then, an edit can only carry a table's
-// constraints/indexes through unchanged, never author new ones (except a brand
-// new table's default `id` pk, built once at creation).
+// grid itself has no key-editing UI (see columns-grid.tsx) — constraints/
+// indexes are authored separately, by <ConstraintsEditor/>/<IndexesEditor/>,
+// and passed through here as their own draft state, verbatim.
+//
+// "Verbatim" only covers the edited entity's OWN shape, though — it does not
+// exempt an edit from checking what ELSE in the model points at it. Renaming
+// or removing one of its columns can silently orphan an INBOUND fk constraint
+// sitting on some other table (deleteEntity already scrubs those on a full
+// delete — see its own header comment — the same invariant applies here, just
+// enforced before-the-fact instead of cleaned up after): validateInboundReferences
+// below rejects such an edit rather than writing a dangling fk to the file.
 
 import { measureEntity } from '../../geometry/measure-entity';
 import { LAYOUT_MARGIN } from '../../geometry/metrics';
@@ -142,14 +149,15 @@ function validateEditFields(fields: EditField[]): void {
   }
 }
 
-// The field grid has no key-editing UI (see the module header comment), but a
-// real constraints/indexes editor is coming — and even a verbatim passthrough
-// can carry a structurally broken schema in (a hand-built ModelEdit, a future
-// constraints UI with a bug, …). These are the real Postgres-shaped rules a
-// table's constraints/indexes must satisfy against ITS OWN edited column list
-// (and, for fk, the target entity's), checked at the one point an edit is
-// actually authored — before columnRoles/deriveRelationships/serialize-model
-// ever have to guess at a broken shape.
+// The field grid has no key-editing UI itself (see the module header
+// comment) — constraints/indexes come from <ConstraintsEditor/>/
+// <IndexesEditor/>'s own draft state — and even a verbatim passthrough can
+// carry a structurally broken schema in (a hand-built ModelEdit, a UI bug,
+// …). These are the real Postgres-shaped rules a table's constraints/indexes
+// must satisfy against ITS OWN edited column list (and, for fk, the target
+// entity's), checked at the one point an edit is actually authored — before
+// columnRoles/deriveRelationships/serialize-model ever have to guess at a
+// broken shape.
 function validateConstraints(model: Model, e: EditEntity): void {
   const ownColumns = new Set(e.fields.map((f) => f.name));
   // A brand-new entity may self-reference its own not-yet-existing row (see
@@ -209,10 +217,37 @@ function validateConstraints(model: Model, e: EditEntity): void {
   }
 }
 
+// validateConstraints (above) only checks the edited entity's OWN
+// constraints against ITS OWN edited column list — it has no way to notice
+// that renaming or dropping one of those columns just orphaned an INBOUND fk
+// constraint sitting on some OTHER table. deleteEntity scrubs those on a full
+// delete (see its own header comment); a column rename/removal via
+// upsertEntity used to have no equivalent guard at all, so the fix here was
+// silently accepted, the reference's own refColumns went dangling in the
+// file, and the derived edge (and any label on it) vanished for good on the
+// very next load. Reject the edit instead, naming the referencing table,
+// its constraint, and the column that would go missing — consistent with
+// every other guard in this file, so it surfaces via ui.editError.
+function validateInboundReferences(model: Model, e: EditEntity): void {
+  const ownColumns = new Set(e.fields.map((f) => f.name));
+  for (const other of model.entities) {
+    if (other.id === e.id) continue; // self-references are covered by validateConstraints above
+    for (const c of other.constraints) {
+      if (c.kind !== 'fk' || c.refTable !== e.id) continue;
+      for (const col of c.refColumns) {
+        if (!ownColumns.has(col)) {
+          throw new Error(`Cannot remove column "${col}": table "${other.id}" has a foreign key (${c.id}) referencing it.`);
+        }
+      }
+    }
+  }
+}
+
 function upsertEntity(model: Model, e: EditEntity): Model {
   if (!model.groups.some((g) => g.id === e.group)) throw new Error(`Unknown group "${e.group}".`);
   validateEditFields(e.fields);
   validateConstraints(model, e);
+  validateInboundReferences(model, e);
 
   // The editor form has no "title" input, but EditField still carries title
   // through as an untouched passthrough (table-modal's toEditField reads it in,

@@ -36,8 +36,8 @@ describe('TableModal', () => {
   });
 
   // The columns grid has no Role / Ref-table / Ref-field columns any more —
-  // keys and references come from the table's constraints, not editable here
-  // yet (see columns-grid.tsx's header comment).
+  // keys and references are authored separately, by <ConstraintsEditor/>
+  // (see columns-grid.tsx's header comment).
   it('has no role or reference-table controls in the columns grid', async () => {
     await renderDiagram(<TableModal id="users" onClose={() => {}} />, twoZoneRaw());
     expect(screen.queryByLabelText('Column 2 role')).not.toBeInTheDocument();

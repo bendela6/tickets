@@ -5,7 +5,7 @@ import { CARD_MAX_W, CARD_MIN_W, HEADER_H, ROW_H } from '../../geometry/metrics'
 import { columnRoles } from '../column-roles';
 import { loadModel } from '../load-model';
 import { applyModelEdit, fkRefsTo, type EditEntity, type EditField, type ModelEdit } from './apply-model-edit';
-import type { Constraint } from '../types';
+import type { Column, Constraint } from '../types';
 import seedRaw from '../../../../models/items-platform.json';
 
 const editField = (name: string, type = 'text'): EditField => ({
@@ -475,34 +475,41 @@ describe('applyModelEdit', () => {
     });
 
     // Renaming the REFERENCED side's field (rather than the fk-owning side, the
-    // case above) is the gap the reviewer found: a stale fk constraint
-    // elsewhere in the model can still point (by column name) at a field that
-    // no longer exists on the renamed target. `ref` resolving used to be
-    // treated as enough to derive from — it isn't; the derived rel's
-    // sourceField must itself exist, or downstream geometry resolves
-    // fieldIndex -1 and mis-anchors the port instead of the derivation simply
-    // refusing to produce a dangling edge.
-    it('renaming a referenced pk drops the now-dangling derived rel instead of deriving one with a nonexistent sourceField', () => {
+    // case above) used to be the gap a reviewer found: a stale fk constraint
+    // elsewhere in the model could still point (by column name) at a field
+    // that no longer exists on the renamed target, silently dropping the
+    // edge instead of ever raising an error. That gap is now closed one
+    // layer up — validateInboundReferences (see the "rejects edits that
+    // orphan an INBOUND foreign key" describe block below) rejects this edit
+    // outright, before derive-relationships ever runs, so the dangling
+    // sourceField this test used to produce can no longer happen via
+    // upsertEntity at all. derive-relationships' own guard (never derive an
+    // edge whose sourceField doesn't resolve) stays as defense-in-depth for
+    // any OTHER path that can still hand it a broken model (a hand-built
+    // Model, a bug elsewhere) — see derive-relationships.test.ts's "skips an
+    // fk whose target table or column does not exist" for that guard pinned
+    // directly.
+    it('renaming a referenced pk is rejected (inbound fk still points at the old name), leaving the model unchanged', () => {
       const m1 = buildModel(); // orders.users_id (fk, refColumns ['id']) -> users.id (pk)
       const users = m1.entityById.get('users')!;
-      const renamed = applyModelEdit(m1, {
-        kind: 'upsertEntity',
-        // 'id' renamed to 'key'; manager_id (and its self-fk constraint)
-        // dropped entirely so this edit isolates the cross-entity case from
-        // the (separately-covered) same-entity one.
-        entity: {
-          id: 'users',
-          label: users.label,
-          group: users.group,
-          description: null,
-          fields: [editField('key', 'int'), editField('name')],
-          constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['key'] }],
-          indexes: [],
-        },
-      });
-      expect(renamed.entityById.get('users')!.columns.map((f) => f.name)).toEqual(['key', 'name']);
-      expect(renamed.relationships.some((r) => r.target === 'orders' && r.targetField === 'users_id')).toBe(false);
-      expect(renamed.relationships.some((r) => r.source === 'users' && r.sourceField === 'id')).toBe(false);
+      expect(() =>
+        applyModelEdit(m1, {
+          kind: 'upsertEntity',
+          // 'id' renamed to 'key'; manager_id (and its self-fk constraint)
+          // dropped entirely so this edit isolates the cross-entity case from
+          // the (separately-covered) same-entity one.
+          entity: {
+            id: 'users',
+            label: users.label,
+            group: users.group,
+            description: null,
+            fields: [editField('key', 'int'), editField('name')],
+            constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['key'] }],
+            indexes: [],
+          },
+        }),
+      ).toThrow(/table "orders" has a foreign key \(c2\) referencing it/);
+      expect(m1.entityById.get('users')).toBe(users); // input untouched
     });
 
     it('re-derives the identical relationship ids across an unrelated edit (twoZoneRaw, all kind:\'fk\')', () => {
@@ -1044,6 +1051,132 @@ describe('applyModelEdit', () => {
         },
       });
       expect(m2.relationships.some((r) => r.id === 'rel:b:fk1')).toBe(true);
+    });
+  });
+
+  // CRITICAL, whole-branch review: validateConstraints only checks the
+  // edited entity's OWN constraints against its own edited column list — it
+  // never looked at whether some OTHER table's fk constraint points at a
+  // column the edit is about to rename or drop. deleteEntity scrubs inbound
+  // fk constraints on a full delete (see its own header comment), but a
+  // column rename/removal via upsertEntity had no equivalent guard: the
+  // reference's own refColumns went dangling in the file, its derived edge
+  // (and any label on it) silently vanished, and reload was clean — 0
+  // errors, 0 warnings. These pin the fix: upsertEntity now rejects an edit
+  // that would orphan an inbound fk, leaving the model untouched.
+  describe('upsertEntity — rejects edits that orphan an INBOUND foreign key', () => {
+    const inboundRaw = () => ({
+      groups: [{ id: 'g', label: 'G' }],
+      entities: [
+        { id: 'a', group: 'g', fields: [{ name: 'id', type: 'int' }, { name: 'name', type: 'text' }], constraints: [{ id: 'pk1', kind: 'pk', columns: ['id'] }] },
+        {
+          id: 'b', group: 'g',
+          fields: [{ name: 'id', type: 'int' }, { name: 'a_id', type: 'int' }],
+          constraints: [
+            { id: 'pk2', kind: 'pk', columns: ['id'] },
+            { id: 'fk1', kind: 'fk', columns: ['a_id'], refTable: 'a', refColumns: ['id'] },
+          ],
+        },
+      ],
+    });
+
+    it('(a) renaming a referenced column throws and leaves the model unchanged, even with the edited table\'s OWN pk fixed to match', () => {
+      const m1 = buildModel(inboundRaw());
+      const before = m1.entityById.get('a')!;
+      expect(() =>
+        applyModelEdit(m1, {
+          kind: 'upsertEntity',
+          entity: {
+            id: 'a',
+            label: 'a',
+            group: 'g',
+            description: null,
+            // 'id' renamed to 'uid' — and its own pk constraint updated
+            // alongside it, so validateConstraints' OWN-constraint check
+            // passes; only the INBOUND check (b.fk1) should still block this.
+            fields: [editField('uid', 'int'), editField('name')],
+            constraints: [{ id: 'pk1', kind: 'pk', name: null, columns: ['uid'] }],
+            indexes: [],
+          },
+        }),
+      ).toThrow(/table "b" has a foreign key \(fk1\) referencing it/);
+      expect(m1.entityById.get('a')).toBe(before); // input untouched
+    });
+
+    it('(b) deleting a referenced column throws, even with the edited table\'s OWN pk moved off it', () => {
+      const m1 = buildModel(inboundRaw());
+      expect(() =>
+        applyModelEdit(m1, {
+          kind: 'upsertEntity',
+          entity: {
+            id: 'a',
+            label: 'a',
+            group: 'g',
+            description: null,
+            // 'id' dropped entirely; 'name' promoted to pk so the OWN-constraint
+            // check passes — only the inbound fk (b.fk1 -> a.id) should block it.
+            fields: [editField('name')],
+            constraints: [{ id: 'pk1', kind: 'pk', name: null, columns: ['name'] }],
+            indexes: [],
+          },
+        }),
+      ).toThrow(/Cannot remove column "id"/);
+    });
+
+    it('(c) renaming a NON-referenced column still works', () => {
+      const m1 = buildModel(inboundRaw());
+      const m2 = applyModelEdit(m1, {
+        kind: 'upsertEntity',
+        entity: {
+          id: 'a',
+          label: 'a',
+          group: 'g',
+          description: null,
+          fields: [editField('id', 'int'), editField('full_name')],
+          constraints: [{ id: 'pk1', kind: 'pk', name: null, columns: ['id'] }],
+          indexes: [],
+        },
+      });
+      expect(m2.entityById.get('a')!.columns.map((c) => c.name)).toEqual(['id', 'full_name']);
+      expect(m2.relationships.some((r) => r.source === 'a' && r.target === 'b')).toBe(true); // edge survives
+    });
+
+    // (d) the seed-scale reproduction from the whole-branch review: rename
+    // schemes.id -> uid (fixing schemes' own pk alongside it, so only the
+    // inbound check is in play) — projects/item_types/fields/option_sets each
+    // hold an fk (c2) pointing at schemes(id). The edit must be rejected
+    // outright, and the ORIGINAL seed model must still carry all 41 edges and
+    // 18 labels — no silent 41 -> 37 edge loss, no dangling fk written anywhere.
+    it('(d) real seed: renaming schemes.id -> uid is rejected; the model keeps all 41 edges and 18 labels', () => {
+      const { model, errors } = loadModel(seedRaw);
+      expect(errors).toEqual([]);
+      const schemes = model!.entityById.get('schemes')!;
+      const toField = (c: Column): EditField => ({
+        name: c.name === 'id' ? 'uid' : c.name,
+        type: c.type,
+        title: c.title,
+        description: c.description,
+        nullable: c.nullable,
+        default: c.default,
+      });
+      expect(() =>
+        applyModelEdit(model!, {
+          kind: 'upsertEntity',
+          entity: {
+            id: 'schemes',
+            label: schemes.label,
+            group: schemes.group,
+            description: schemes.description,
+            fields: schemes.columns.map(toField),
+            constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['uid'] }],
+            indexes: schemes.indexes,
+          },
+        }),
+      ).toThrow(/table "(projects|item_types|fields|option_sets)" has a foreign key \(c2\) referencing it/);
+
+      // The rejected edit must not have mutated the model in any way.
+      expect(model!.relationships).toHaveLength(41);
+      expect(model!.relationships.filter((r) => r.label).length).toBe(18);
     });
   });
 

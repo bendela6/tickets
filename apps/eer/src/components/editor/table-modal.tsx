@@ -221,7 +221,7 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
       {isEdit && <ColorRow model={model} id={existing!.id} colors={ui.colors} onChange={actions.setColors} />}
 
       <div className={label}>
-        <span>Fields</span>
+        <span>Columns</span>
         <ColumnsGrid columns={fields} onChange={setFields} />
       </div>
 
