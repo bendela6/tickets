@@ -38,6 +38,26 @@ describe('Modal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  // The backdrop, not the panel, is the scroll container — so a tall dialog is
+  // scrolled as a whole rather than scrolling its body. That puts a centring
+  // wrapper between the backdrop and the panel; clicking IT is still "outside".
+  it('scrolls on the backdrop, not the panel, and closes on a click in the centring gutter', () => {
+    const onClose = vi.fn();
+    render(
+      <Modal title="Example modal" onClose={onClose}>
+        <p>Body</p>
+      </Modal>,
+    );
+    const panel = screen.getByRole('dialog');
+    expect(panel.className).not.toMatch(/overflow|max-h-/);
+
+    const backdrop = panel.parentElement?.parentElement as HTMLElement;
+    expect(backdrop.className).toMatch(/overflow-y-auto/);
+
+    fireEvent.click(panel.parentElement as Element);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('does not call onClose when a click lands inside the panel', () => {
     const onClose = vi.fn();
     render(

@@ -2,6 +2,12 @@
 // testable standalone. A fixed overlay backdrop centers a bordered panel; Esc
 // and a backdrop click both close, a click inside the panel does not (the
 // panel's own onClick stops the event before it bubbles to the backdrop).
+//
+// The BACKDROP scrolls, not the panel: the panel takes its natural height and a
+// tall form (the table editor's columns + constraints + indexes) is scrolled as
+// a whole. Centring lives on an inner `min-h-full` flex row — putting
+// `items-center` on the scroll container itself would clip the panel's top edge
+// once it outgrows the viewport (overflow can't scroll past a flex centre).
 
 import { useEffect, useId, useRef, type MouseEvent, type ReactNode } from 'react';
 
@@ -34,29 +40,36 @@ export function Modal({ title, onClose, size = 'default', children }: ModalProps
   const stopInside = (e: MouseEvent) => e.stopPropagation();
 
   return (
-    <div className={cn('fixed inset-0 z-50 flex items-center justify-center', 'bg-gray-950/60 p-4')} onClick={onClose}>
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        tabIndex={-1}
-        className={cn(
-          'flex max-h-full w-full flex-col gap-3 overflow-auto',
-          'rounded-lg border border-gray-500 bg-gray-800 px-4 py-4 shadow-xl',
-          { 'max-w-md': size === 'default', 'max-w-5xl': size === 'wide' },
-        )}
-        onClick={stopInside}
-      >
-        <div className="flex items-center justify-between gap-3">
-          <h2 id={titleId} className="text-base font-medium text-gray-50">
-            {title}
-          </h2>
-          <button type="button" className="text-lg text-gray-200 hover:text-gray-50" onClick={onClose} aria-label="Close">
-            ×
-          </button>
+    <div className={cn('fixed inset-0 z-50 overflow-y-auto bg-gray-950/60')} onClick={onClose}>
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          tabIndex={-1}
+          className={cn(
+            'flex w-full flex-col gap-3',
+            'rounded-lg border border-gray-500 bg-gray-800 px-4 py-4 shadow-xl',
+            { 'max-w-md': size === 'default', 'max-w-5xl': size === 'wide' },
+          )}
+          onClick={stopInside}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <h2 id={titleId} className="text-base font-medium text-gray-50">
+              {title}
+            </h2>
+            <button
+              type="button"
+              className="text-lg text-gray-200 hover:text-gray-50"
+              onClick={onClose}
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+          {children}
         </div>
-        {children}
       </div>
     </div>
   );

@@ -23,58 +23,118 @@
     {
       "id": "ws",
       "label": "WORKSPACE",
-      "order": 0
+      "order": 0,
+      "bounds": {
+        "x": 80,
+        "y": 80,
+        "w": 286,
+        "h": 770
+      }
     },
     {
       "id": "st",
       "label": "STRUCTURE",
-      "order": 1
+      "order": 1,
+      "bounds": {
+        "x": 586,
+        "y": 80,
+        "w": 1046,
+        "h": 1080
+      }
     },
     {
       "id": "rc",
       "label": "RECORDS",
-      "order": 2
+      "order": 2,
+      "bounds": {
+        "x": 1852,
+        "y": 80,
+        "w": 677,
+        "h": 924
+      }
     },
     {
       "id": "hi",
       "label": "HISTORY",
-      "order": 3
+      "order": 3,
+      "bounds": {
+        "x": 2749,
+        "y": 80,
+        "w": 616,
+        "h": 996
+      }
     },
     {
       "id": "it",
       "label": "Item types",
       "order": 10,
-      "parent": "st"
+      "parent": "st",
+      "bounds": {
+        "x": 626,
+        "y": 378,
+        "w": 242,
+        "h": 574
+      }
     },
     {
       "id": "op",
       "label": "Options",
       "order": 11,
-      "parent": "st"
+      "parent": "st",
+      "bounds": {
+        "x": 988,
+        "y": 474,
+        "w": 242,
+        "h": 646
+      }
     },
     {
       "id": "lt",
       "label": "Link types",
       "order": 12,
-      "parent": "st"
+      "parent": "st",
+      "bounds": {
+        "x": 1350,
+        "y": 150,
+        "w": 242,
+        "h": 408
+      }
     },
     {
       "id": "im",
       "label": "Items",
       "order": 20,
-      "parent": "rc"
+      "parent": "rc",
+      "bounds": {
+        "x": 1892,
+        "y": 150,
+        "w": 242,
+        "h": 814
+      }
     },
     {
       "id": "cm",
       "label": "Comments",
       "order": 21,
-      "parent": "rc"
+      "parent": "rc",
+      "bounds": {
+        "x": 2254,
+        "y": 150,
+        "w": 235,
+        "h": 432
+      }
     },
     {
       "id": "es",
       "label": "Event stream",
       "order": 30,
-      "parent": "hi"
+      "parent": "hi",
+      "bounds": {
+        "x": 2789,
+        "y": 150,
+        "w": 235,
+        "h": 886
+      }
     }
   ],
   "entities": [
@@ -83,8 +143,8 @@
       "label": "users",
       "group": "ws",
       "description": "Actors for mutations and comments (humans and agents).",
-      "x": 0,
-      "y": 0,
+      "x": 120,
+      "y": 150,
       "columns": [
         {
           "name": "id",
@@ -133,8 +193,8 @@
       "label": "projects",
       "group": "ws",
       "description": "Workspace container bound to a structure scheme.",
-      "x": 0,
-      "y": 0,
+      "x": 120,
+      "y": 378,
       "columns": [
         {
           "name": "id",
@@ -200,8 +260,8 @@
       "label": "views",
       "group": "ws",
       "description": "Saved board/table lenses (columns, filters, sort).",
-      "x": 0,
-      "y": 0,
+      "x": 120,
+      "y": 630,
       "columns": [
         {
           "name": "id",
@@ -267,8 +327,8 @@
       "label": "schemes",
       "group": "st",
       "description": "Structure pack root: types, field library, option sets.",
-      "x": 0,
-      "y": 0,
+      "x": 626,
+      "y": 150,
       "columns": [
         {
           "name": "id",
@@ -317,8 +377,8 @@
       "label": "item_types",
       "group": "it",
       "description": "Kinds of items within a scheme (task, bug, document, …).",
-      "x": 0,
-      "y": 0,
+      "x": 644,
+      "y": 422,
       "columns": [
         {
           "name": "id",
@@ -390,8 +450,8 @@
       "label": "item_type_child_types",
       "group": "it",
       "description": "Which child types may hang under a parent type (hierarchy rules).",
-      "x": 0,
-      "y": 0,
+      "x": 644,
+      "y": 660,
       "columns": [
         {
           "name": "parent_type_id",
@@ -437,8 +497,8 @@
       "label": "item_type_fields",
       "group": "it",
       "description": "Places a library field on a type (M2M). Definition stays on fields.",
-      "x": 0,
-      "y": 0,
+      "x": 644,
+      "y": 778,
       "columns": [
         {
           "name": "item_type_id",
@@ -502,8 +562,8 @@
       "label": "fields",
       "group": "st",
       "description": "Scheme-scoped field library (reusable across types).",
-      "x": 0,
-      "y": 0,
+      "x": 988,
+      "y": 150,
       "columns": [
         {
           "name": "id",
@@ -598,8 +658,8 @@
       "label": "option_sets",
       "group": "op",
       "description": "Shared option lists; many option fields can reuse one set.",
-      "x": 0,
-      "y": 0,
+      "x": 1006,
+      "y": 518,
       "columns": [
         {
           "name": "id",
@@ -653,8 +713,8 @@
       "label": "options",
       "group": "op",
       "description": "One choice in an option set (e.g. a status value).",
-      "x": 0,
-      "y": 0,
+      "x": 1006,
+      "y": 684,
       "columns": [
         {
           "name": "id",
@@ -726,8 +786,8 @@
       "label": "option_transitions",
       "group": "op",
       "description": "Workflow graph: which option may move to which (on a workflow field).",
-      "x": 0,
-      "y": 0,
+      "x": 1006,
+      "y": 922,
       "columns": [
         {
           "name": "id",
@@ -826,8 +886,8 @@
       "label": "link_types",
       "group": "lt",
       "description": "Named relation vocabulary owned by a source type.",
-      "x": 0,
-      "y": 0,
+      "x": 1368,
+      "y": 194,
       "columns": [
         {
           "name": "id",
@@ -905,8 +965,8 @@
       "label": "link_type_target_types",
       "group": "lt",
       "description": "Which item types may be targets of a given link type.",
-      "x": 0,
-      "y": 0,
+      "x": 1368,
+      "y": 456,
       "columns": [
         {
           "name": "link_type_id",
@@ -952,8 +1012,8 @@
       "label": "items",
       "group": "im",
       "description": "Record spine (generic work/knowledge object in a project).",
-      "x": 0,
-      "y": 0,
+      "x": 1910,
+      "y": 194,
       "columns": [
         {
           "name": "id",
@@ -1070,8 +1130,8 @@
       "label": "item_values",
       "group": "im",
       "description": "EAV storage: one row (or N for multi) per field value on an item.",
-      "x": 0,
-      "y": 0,
+      "x": 1910,
+      "y": 480,
       "columns": [
         {
           "name": "id",
@@ -1194,8 +1254,8 @@
       "label": "comments",
       "group": "cm",
       "description": "Discussion threads on an item.",
-      "x": 0,
-      "y": 0,
+      "x": 2272,
+      "y": 194,
       "columns": [
         {
           "name": "id",
@@ -1283,8 +1343,8 @@
       "label": "comment_reactions",
       "group": "cm",
       "description": "Emoji reactions on comments.",
-      "x": 0,
-      "y": 0,
+      "x": 2272,
+      "y": 408,
       "columns": [
         {
           "name": "id",
@@ -1355,8 +1415,8 @@
       "label": "item_links",
       "group": "im",
       "description": "Typed edges between two items.",
-      "x": 0,
-      "y": 0,
+      "x": 1910,
+      "y": 790,
       "columns": [
         {
           "name": "id",
@@ -1438,8 +1498,8 @@
       "label": "events",
       "group": "es",
       "description": "Global append-only log for every aggregate stream.",
-      "x": 0,
-      "y": 0,
+      "x": 2807,
+      "y": 194,
       "columns": [
         {
           "name": "id",
@@ -1553,8 +1613,8 @@
       "label": "commands",
       "group": "hi",
       "description": "One row per accepted command; dedupes multi-event retries.",
-      "x": 0,
-      "y": 0,
+      "x": 3144,
+      "y": 150,
       "columns": [
         {
           "name": "id",
@@ -1620,8 +1680,8 @@
       "label": "outbox",
       "group": "es",
       "description": "Reliable after-commit handoff to consumers.",
-      "x": 0,
-      "y": 0,
+      "x": 2807,
+      "y": 600,
       "columns": [
         {
           "name": "event_id",
@@ -1675,8 +1735,8 @@
       "label": "item_activity",
       "group": "es",
       "description": "Per-item activity feed projection (UI diffs).",
-      "x": 0,
-      "y": 0,
+      "x": 2807,
+      "y": 766,
       "columns": [
         {
           "name": "id",
