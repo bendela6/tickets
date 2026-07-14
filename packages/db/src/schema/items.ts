@@ -1,19 +1,13 @@
 import {
-  index,
-  integer,
-  pgTable,
-  serial,
-  timestamp,
-  unique,
-  type AnyPgColumn,
+  index, integer, pgTable, serial, timestamp, unique, type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
+import { itemTypes } from './item-types';
 import { projects } from './projects';
-import { ticketTypes } from './ticket-types';
 import { users } from './users';
 
-// Pure skeleton — everything user-visible lives in ticket_values.
-export const tickets = pgTable(
-  'tickets',
+// Pure skeleton — everything user-visible lives in item_values.
+export const items = pgTable(
+  'items',
   {
     id: serial('id').primaryKey(),
     projectId: integer('project_id')
@@ -21,10 +15,8 @@ export const tickets = pgTable(
       .references(() => projects.id),
     typeId: integer('type_id')
       .notNull()
-      .references(() => ticketTypes.id),
-    // depth-1 hierarchy: subtasks are child tickets; enforced in the API
-    parentId: integer('parent_id').references((): AnyPgColumn => tickets.id),
-    // display number (TASK-042); assigned max+1 under SELECT … FOR UPDATE on the project row
+      .references(() => itemTypes.id),
+    parentId: integer('parent_id').references((): AnyPgColumn => items.id),
     number: integer('number').notNull(),
     createdBy: integer('created_by')
       .notNull()
@@ -38,9 +30,9 @@ export const tickets = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [
-    unique('tickets_project_number').on(table.projectId, table.number),
-    index('tickets_project_type').on(table.projectId, table.typeId),
-    index('tickets_parent').on(table.parentId),
+  (t) => [
+    unique('items_project_number').on(t.projectId, t.number),
+    index('items_project_type').on(t.projectId, t.typeId),
+    index('items_parent').on(t.parentId),
   ],
 );
