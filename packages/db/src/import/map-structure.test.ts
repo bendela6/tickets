@@ -6,11 +6,12 @@ import { mapStructure, type StructurePlan } from './map-structure';
 describe('mapStructure', () => {
   let close: () => Promise<void>;
   let plan: StructurePlan;
+  let legacy: Legacy;
 
   beforeAll(async () => {
     const { sql } = createLegacyClient();
     close = () => sql.end();
-    const legacy: Legacy = await readLegacy(sql);
+    legacy = await readLegacy(sql);
     plan = mapStructure(legacy);
   });
   afterAll(async () => { await close(); });
@@ -83,6 +84,33 @@ describe('mapStructure', () => {
 
   it('maps every legacy status id and option id', () => {
     expect(plan.optionKeyByLegacyStatusId.size).toBe(34);
-    expect(plan.optionKeyByLegacyOptionId.size).toBeGreaterThan(0);
+    // The legacy schema is type-owned: each option-typed field key has one
+    // `fields` row per ticket type (5), and each of those rows owns its own
+    // `field_options` rows with distinct ids — even though the option
+    // *values* are identical across types. The map must cover every one of
+    // those type-owned duplicate rows' ids, not just one representative row
+    // per key. Real data: component 316 + environment 3 + estimate 8 +
+    // kind 6 + priority 25 + severity 5 + labels 0 = 363 (assignee excluded
+    // — it resolves through agentNameByLegacyOptionId instead).
+    expect(plan.optionKeyByLegacyOptionId.size).toBe(363);
+    // assignee is upgraded to a `user` field: its 5 type-owned field rows x
+    // 4 agent names = 20 legacy option ids, each resolving to an agent name.
+    expect(plan.agentNameByLegacyOptionId.size).toBe(20);
+  });
+
+  it('resolves every option-valued ticket_values row through one of the two option-id maps', () => {
+    // This is the invariant that actually protects the import: every legacy
+    // ticket_values row with a non-null option_id must resolve through
+    // either optionKeyByLegacyOptionId (ordinary option fields) or
+    // agentNameByLegacyOptionId (assignee, upgraded to a user field). A
+    // single id missing from both maps means Task 10 would silently drop
+    // that row's value on import.
+    const unresolved = legacy.ticketValues.filter(
+      (tv) =>
+        tv.optionId !== null &&
+        !plan.optionKeyByLegacyOptionId.has(tv.optionId) &&
+        !plan.agentNameByLegacyOptionId.has(tv.optionId),
+    );
+    expect(unresolved.map((tv) => ({ id: tv.id, fieldId: tv.fieldId, optionId: tv.optionId }))).toEqual([]);
   });
 });
