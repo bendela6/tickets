@@ -2,9 +2,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { eq, inArray, sql as raw } from 'drizzle-orm';
 import { createDbClient, type Db } from '../client';
 import {
-  comments, commentReactions, fields, itemLinks, itemTypeChildTypes, itemTypeFields, itemTypes,
-  itemValues, items, linkTypeTargetTypes, linkTypes, optionTransitions, options, projects, users,
-  views,
+  comments, commentReactions, events, fields, itemLinks, itemTypeChildTypes, itemTypeFields,
+  itemTypes, itemValues, items, linkTypeTargetTypes, linkTypes, optionSets, optionTransitions,
+  options, projects, schemes, users, views,
 } from '../schema';
 import { createLegacyClient } from './legacy-client';
 import { importLegacy, type ImportResult } from './import-legacy';
@@ -40,15 +40,12 @@ describe('importLegacy (requires a freshly migrated tickets_dev)', () => {
       return;
     }
 
-    // NOTE: fields/option_sets/options/schemes/users/events are deliberately
-    // NOT deleted here — import-history.test.ts (Task 11) reads all of them
-    // (fields for its orphan check, events for everything, users
-    // transitively via events.actor_id). vitest runs one test *file* to full
-    // completion — including this afterAll — before the next file starts
-    // (fileParallelism: false), so deleting them here would empty them out
-    // from under import-history.test.ts before it ever gets to assert
-    // anything. Its afterAll deletes those five instead, once both files are
-    // done with them.
+    // This file now owns a complete, self-contained import (it no longer
+    // shares data with import-history.test.ts, which runs its own import in
+    // its own beforeAll) — so it owns cleaning up every row that import
+    // produced, children before parents, so the whole-suite run stays
+    // idempotent on an immediate second `pnpm test` with no DB reset.
+    await db.delete(events);
     await db.delete(itemLinks).where(inArray(itemLinks.id, legacy.ticketLinks.map((l) => l.id)));
     await db.delete(commentReactions).where(inArray(commentReactions.id, legacy.commentReactions.map((r) => r.id)));
     await db.delete(comments).where(inArray(comments.id, legacy.comments.map((c) => c.id)));
@@ -67,6 +64,23 @@ describe('importLegacy (requires a freshly migrated tickets_dev)', () => {
     await db.delete(optionTransitions).where(inArray(optionTransitions.fieldId, [...result.fieldIdByLegacyId.values()]));
     await db.delete(itemTypes).where(inArray(itemTypes.id, typeIds));
     await db.delete(projects).where(inArray(projects.id, legacy.projects.map((p) => p.id)));
+
+    // fields/option_sets/options/schemes: scoped to the one 'software' scheme
+    // this import created (fields.option_set_id -> option_sets.id, so fields
+    // must go first).
+    await db.delete(fields).where(eq(fields.schemeId, result.schemeId));
+    const setRows = await db.select({ id: optionSets.id }).from(optionSets).where(eq(optionSets.schemeId, result.schemeId));
+    const setIds = setRows.map((s) => s.id);
+    if (setIds.length) await db.delete(options).where(inArray(options.optionSetId, setIds));
+    await db.delete(optionSets).where(eq(optionSets.schemeId, result.schemeId));
+    await db.delete(schemes).where(eq(schemes.id, result.schemeId));
+
+    // users: exactly the rows this import created (the 3 legacy users,
+    // 'migration' among them, plus the agent users importHistory/importLegacy
+    // added) — nothing else in this file writes to `users`.
+    await db.delete(users).where(
+      inArray(users.id, [...legacy.users.map((u) => u.id), ...result.userIdByAgentName.values()]),
+    );
 
     await close();
   });
