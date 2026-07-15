@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, expect, it } from 'vitest';
 import * as v from 'valibot';
 import { eq } from 'drizzle-orm';
-import { commands, events } from '@tickets/db';
+import { commands, events, schemes } from '@tickets/db';
 import { resetDb, seedFixture, testDb } from '../test/db';
 import { defineEvent } from '../event/registry';
 import { defineCommand } from './registry';
@@ -43,4 +43,34 @@ it('is idempotent: a replayed commandId returns the stored result and does not r
   const second = await runCommand(testDb, ping, env(fx.actorId), { n: 99 }); // different input, same id
   expect(second).toEqual(first); // stored result, handler never ran again
   expect(await testDb.select().from(events).where(eq(events.kind, 'probe.pinged'))).toHaveLength(1);
+});
+
+// A handler can trip a *different* unique constraint (not the commands ledger
+// PK). That must propagate as the real DB error, not get misclassified as the
+// 409 "command already in flight" — every Postgres unique-violation message
+// contains "duplicate key value violates unique constraint", so a message-only
+// check would wrongly swallow this too.
+const clashScheme = defineCommand({
+  kind: 'probe.clash-scheme',
+  input: v.object({ key: v.string() }),
+  aggregate: () => ({ type: 'probe', id: 2 }),
+  async handler(tx, input) {
+    await tx.insert(schemes).values({ key: input.key, name: 'first' });
+    await tx.insert(schemes).values({ key: input.key, name: 'second' }); // duplicate schemes_key_unique
+    return { ok: true };
+  },
+});
+
+it('propagates a non-PK unique violation from the handler instead of masking it as 409', async () => {
+  const fx = await seedFixture();
+  let caught: unknown;
+  try {
+    await runCommand(testDb, clashScheme, env(fx.actorId), { key: 'dup-key' });
+  } catch (err) {
+    caught = err;
+  }
+  expect(caught).toBeDefined();
+  const asHttpError = caught as { statusCode?: number; message?: string };
+  expect(asHttpError.statusCode).not.toBe(409);
+  expect(asHttpError.message ?? '').not.toMatch(/in flight/);
 });
