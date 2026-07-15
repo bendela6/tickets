@@ -3,6 +3,8 @@ import type { Db } from '@tickets/db';
 import { parseEnvelope } from '../command/envelope';
 import { runCommand } from '../command/run-command';
 import { itemCreate } from '../command/item/create';
+import { itemUpdate } from '../command/item/update';
+import { parseId } from '../utils/parse-id';
 
 export function registerItemsRoutes(app: FastifyInstance, ctx: { db: Db }) {
   const { db } = ctx;
@@ -12,5 +14,12 @@ export function registerItemsRoutes(app: FastifyInstance, ctx: { db: Db }) {
     const envelope = parseEnvelope(request.body);
     const result = await runCommand(db, itemCreate, envelope, { projectKey: key, ...(request.body as object) });
     reply.status(201).send(result);
+  });
+
+  app.patch('/api/items/:id', async (request, reply) => {
+    const id = parseId((request.params as { id: string }).id);
+    const envelope = parseEnvelope(request.body);
+    const result = await runCommand(db, itemUpdate, envelope, { id, ...(request.body as object) });
+    reply.send(result);
   });
 }
