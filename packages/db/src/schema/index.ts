@@ -1,4 +1,11 @@
-export { userKindEnum, statusKindEnum, fieldTypeEnum } from './enums';
+export {
+  userKindEnum,
+  statusKindEnum,
+  fieldTypeEnum,
+  sessionKindEnum,
+  sessionStatusEnum,
+  runnerKindEnum,
+} from './enums';
 export { projects } from './projects';
 export { schemes } from './schemes';
 export { users } from './users';
@@ -17,6 +24,9 @@ export { ticketEvents } from './ticket-events';
 export { linkTypes } from './link-types';
 export { linkTypeTargetTypes } from './link-type-target-types';
 export { ticketLinks } from './ticket-links';
+export { aiWorkspaces } from './ai-workspaces';
+export { aiSessions } from './ai-sessions';
+export { aiSessionOutput } from './ai-session-output';
 
 export { allTables } from './registry';
 export { SCHEMA_GROUPS, type SchemaGroup } from './schema-groups';
