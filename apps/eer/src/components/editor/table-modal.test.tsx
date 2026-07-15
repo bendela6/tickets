@@ -251,6 +251,42 @@ describe('TableModal', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it('edits via a single Name field seeded from the table id — no separate Id field', async () => {
+    await renderDiagram(<TableModal id="orders" onClose={() => {}} />, twoZoneRaw());
+    expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('orders');
+    expect(screen.queryByLabelText('Id')).not.toBeInTheDocument();
+  });
+
+  it('changing the Name of an existing table saves the content then rekeys with renameEntity', async () => {
+    const onClose = vi.fn();
+    const { actions } = await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
+    const spy = vi.spyOn(actions, 'applyModelEdit');
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'labels' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    // Content first (under the OLD id), rekey last — so the rename can fix the
+    // table's own self-fks, which the draft still spells with the old id.
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy.mock.calls[0]![0]).toMatchObject({ kind: 'upsertEntity', entity: { id: 'tags', label: 'tags' } });
+    expect(spy.mock.calls[1]![0]).toEqual({ kind: 'renameEntity', from: 'tags', to: 'labels' });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('renaming onto another table\'s id is blocked live with a reason (renameEntity would clobber it)', async () => {
+    const onClose = vi.fn();
+    const { actions } = await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
+    const spy = vi.spyOn(actions, 'applyModelEdit');
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'orders' } });
+
+    expect(screen.getByText(/A table with id "orders" already exists/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Save' })); // disabled — no-op
+    expect(spy).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   // Create mode's brand-new table gets exactly one default pk constraint on
   // its default `id` field, and no indexes — the one constraint the editor
   // still authors itself, since a fresh table needs SOME key to exist at all.

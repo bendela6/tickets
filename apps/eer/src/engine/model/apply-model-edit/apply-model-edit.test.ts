@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildModel, nestedRaw, pkField } from '../../../test/models';
+import { buildModel, nestedRaw, pkField, twoZoneRaw } from '../../../test/models';
 import { CARD_MAX_W, CARD_MIN_W, HEADER_H, ROW_H } from '../../geometry/metrics';
 import { columnRoles } from '../column-roles';
 import { loadModel } from '../load-model';
@@ -225,6 +225,48 @@ describe('applyModelEdit', () => {
       const after = m2.entityById.get('a')!.columns[0]!;
       expect(after.name).toBe('uid');
       expect(after.identity).toEqual(before.identity); // must survive the rename, not reset to null
+    });
+  });
+
+  describe('renameEntity', () => {
+    it('rekeys the id + label, repoints every inbound fk, and re-derives the edge under the new id', () => {
+      // twoZoneRaw: orders.users_id → users, users.manager_id → users (self).
+      const m1 = buildModel(twoZoneRaw());
+      const m2 = applyModelEdit(m1, { kind: 'renameEntity', from: 'users', to: 'people' });
+
+      expect(m2.entityById.has('people')).toBe(true);
+      expect(m2.entityById.has('users')).toBe(false);
+      expect(m2.entityById.get('people')!.label).toBe('people'); // label is pinned to id for tables
+
+      // self fk and the inbound fk from orders both repointed; nothing left at the old id
+      expect(m2.entityById.get('people')!.constraints.some((c) => c.kind === 'fk' && c.refTable === 'people')).toBe(true);
+      const orders = m2.entityById.get('orders')!;
+      expect(orders.constraints.some((c) => c.kind === 'fk' && c.refTable === 'people')).toBe(true);
+      expect(orders.constraints.some((c) => c.kind === 'fk' && c.refTable === 'users')).toBe(false);
+
+      // the derived edge is regenerated under the new id; no relationship dangles at 'users'
+      expect(m2.relationships.some((r) => r.source === 'people' && r.target === 'orders')).toBe(true);
+      expect(m2.relationships.every((r) => r.source !== 'users' && r.target !== 'users')).toBe(true);
+
+      expect(m1.entityById.has('users')).toBe(true); // input untouched
+    });
+
+    it('moves a colour override keyed by the old id to the new id', () => {
+      const m1 = buildModel({ ...twoZoneRaw(), colors: { users: '#abcdef' } });
+      expect(m1.colors.get('users')).toBe('#abcdef'); // guard: fixture actually seeds the override
+      const m2 = applyModelEdit(m1, { kind: 'renameEntity', from: 'users', to: 'people' });
+      expect(m2.colors.get('people')).toBe('#abcdef');
+      expect(m2.colors.has('users')).toBe(false);
+    });
+
+    it('rejects a rename that collides with an existing table id', () => {
+      const m1 = buildModel(twoZoneRaw());
+      expect(() => applyModelEdit(m1, { kind: 'renameEntity', from: 'users', to: 'orders' })).toThrow(/already exists/);
+    });
+
+    it('throws for an unknown source table', () => {
+      const m1 = buildModel(twoZoneRaw());
+      expect(() => applyModelEdit(m1, { kind: 'renameEntity', from: 'ghost', to: 'x' })).toThrow(/Unknown entity/);
     });
   });
 

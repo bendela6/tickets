@@ -110,11 +110,6 @@ function GroupModalForm({ model, id, onClose }: { model: Model; id?: string; onC
       </label>
 
       <label className={label}>
-        Id
-        <input className={cn(field, 'text-gray-400')} value={groupId} disabled readOnly />
-      </label>
-
-      <label className={label}>
         Parent
         <select
           aria-label="Parent group"

@@ -74,12 +74,10 @@ describe('GroupModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('shows the id read-only when editing an existing group', async () => {
+  it('edits via a single Name field — the identifier is no longer shown as its own field', async () => {
     await renderDiagram(<GroupModal id="z1" onClose={() => {}} />, twoZoneRaw());
-    const idField = screen.getByLabelText('Id') as HTMLInputElement;
-    expect(idField.value).toBe('z1');
-    expect(idField).toBeDisabled();
     expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('Zone One');
+    expect(screen.queryByLabelText('Id')).not.toBeInTheDocument();
   });
 
   it('editing an existing group renames it in place, keeping its original id', async () => {
