@@ -3,6 +3,7 @@ import { and, count, desc, eq } from 'drizzle-orm';
 import type { Db } from '@tickets/db';
 import { events, users } from '@tickets/db';
 import { buildBoard } from '../read/board';
+import { buildExport } from '../read/export';
 import { parseId } from '../utils/parse-id';
 
 export function registerBoardRoutes(app: FastifyInstance, ctx: { db: Db }) {
@@ -11,6 +12,11 @@ export function registerBoardRoutes(app: FastifyInstance, ctx: { db: Db }) {
   app.get('/api/projects/:key/board', async (request, reply) => {
     const { key } = request.params as { key: string };
     reply.send(await buildBoard(db, key));
+  });
+
+  app.get('/api/projects/:key/export', async (request, reply) => {
+    const { key } = request.params as { key: string };
+    reply.send(await buildExport(db, key));
   });
 
   // item event history (reads the events log; imported version:0 rows show as history)
