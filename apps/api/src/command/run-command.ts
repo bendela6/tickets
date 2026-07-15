@@ -34,7 +34,9 @@ export async function runCommand<S extends v.GenericSchema, TResult>(
         envelope,
         aggregateId: agg.id ?? 0,
         projectId: null,
-        emit: (def, payload) => writeEvent(tx, ctx, def, payload),
+        emit: async (def, payload) => {
+          await writeEvent(tx, ctx, def, payload);
+        },
       };
       const result = await cmd.handler(tx, input, ctx);
       // 5. commit: store the result and the final aggregateId
