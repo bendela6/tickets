@@ -5,6 +5,7 @@ import { runCommand } from '../command/run-command';
 import { fieldCreate, fieldUpdate } from '../command/config/field';
 import { optionCreate, optionUpdate } from '../command/config/option';
 import { transitionCreate, transitionDelete } from '../command/config/transition';
+import { linkTypeCreate } from '../command/config/link-type';
 import { parseId } from '../utils/parse-id';
 
 export function registerVocabularyRoutes(app: FastifyInstance, ctx: { db: Db }) {
@@ -50,5 +51,12 @@ export function registerVocabularyRoutes(app: FastifyInstance, ctx: { db: Db }) 
     const envelope = parseEnvelope(request.body);
     const result = await runCommand(db, transitionDelete, envelope, { id });
     reply.send(result);
+  });
+
+  app.post('/api/types/:typeId/link-types', async (request, reply) => {
+    const typeId = parseId((request.params as { typeId: string }).typeId);
+    const envelope = parseEnvelope(request.body);
+    const result = await runCommand(db, linkTypeCreate, envelope, { ...(request.body as object), itemTypeId: typeId });
+    reply.status(201).send(result);
   });
 }
