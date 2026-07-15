@@ -89,14 +89,18 @@ function validateDraft(fields: EditField[]): string | null {
   return null;
 }
 
-// Root groups first, each followed by its subgroups (indented) — entities can
-// live directly in a group or in one of its subgroups.
+// Every group in tree order (roots first, each followed by its descendants,
+// indented by depth) — an entity can live in a group at any nesting level.
 function groupOptions(model: Model): { id: string; label: string }[] {
-  const roots = model.groups.filter((g) => !g.parent);
-  return roots.flatMap((z) => [
-    { id: z.id, label: z.label },
-    ...model.groups.filter((g) => g.parent === z.id).map((sg) => ({ id: sg.id, label: `— ${sg.label}` })),
-  ]);
+  const out: { id: string; label: string }[] = [];
+  const walk = (parentId: string | null, depth: number) => {
+    for (const g of model.groups.filter((x) => (x.parent ?? null) === parentId).sort((a, b) => a.order - b.order)) {
+      out.push({ id: g.id, label: `${'— '.repeat(depth)}${g.label}` });
+      walk(g.id, depth + 1);
+    }
+  };
+  walk(null, 0);
+  return out;
 }
 
 // <EditorModals/> only opens this modal once a model is loaded, but bail

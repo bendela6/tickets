@@ -1,3 +1,8 @@
+// Group nesting is unbounded as a product feature; this is only a
+// runaway/corruption backstop (a cyclic or absurdly deep parent chain in a
+// hand-edited file). load-model detaches anything past it to the root.
+export const MAX_GROUP_DEPTH = 12;
+
 export type RoutingMode = 'curved' | 'avoid' | 'ortho';
 export type Side = 'L' | 'R';
 export type Cardinality = '1-1' | '1-n' | 'n-1' | 'n-m';
@@ -96,8 +101,9 @@ export interface Group {
   id: string;
   label: string;
   order: number;
-  // When set, this group is a subgroup nested inside the zone with this id.
-  // One level of nesting only (a subgroup's parent is always a top-level zone).
+  // When set, this group is nested inside the group with this id. Nesting is
+  // unbounded — a parent may itself be nested — the chain just has to stay
+  // acyclic (enforced at load and on edit).
   parent: string | null;
 }
 
@@ -127,7 +133,7 @@ export interface GroupBounds {
   w: number;
   h: number;
   parent: string | null;
-  level: number; // 0 = zone, 1 = subgroup
+  level: number; // nesting depth: 0 = root zone, 1 = subgroup, 2+ = deeper
 }
 
 export interface SavedLayout {

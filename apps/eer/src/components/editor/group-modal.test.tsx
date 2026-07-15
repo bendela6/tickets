@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { pkField, twoZoneRaw } from '../../test/models';
+import { nestedRaw, pkField, twoZoneRaw } from '../../test/models';
 import { renderDiagram } from '../../test/render';
 import { GroupModal } from './group-modal';
 
@@ -51,6 +51,27 @@ describe('GroupModal', () => {
       kind: 'upsertGroup',
       group: { id: 'nested', label: 'Nested', parent: 'z1' },
     });
+  });
+
+  it('offers any group as a parent (nesting is unbounded), so a new group can nest under a subgroup', async () => {
+    // nestedRaw: zone z → subgroup s. A brand-new group may parent under either.
+    const { actions } = await renderDiagram(<GroupModal onClose={() => {}} />, nestedRaw());
+    const spy = vi.spyOn(actions, 'applyModelEdit');
+    const select = screen.getByLabelText('Parent group') as HTMLSelectElement;
+    expect([...select.options].map((o) => o.value)).toContain('s'); // the subgroup itself is a valid parent now
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Deeper' } });
+    fireEvent.change(select, { target: { value: 's' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+    expect(spy).toHaveBeenCalledWith({ kind: 'upsertGroup', group: { id: 'deeper', label: 'Deeper', parent: 's' } });
+  });
+
+  it('excludes the group itself and its descendants from the parent options (no cycles)', async () => {
+    // Editing zone z (which has descendant s): neither z nor s may be its parent.
+    await renderDiagram(<GroupModal id="z" onClose={() => {}} />, nestedRaw());
+    const values = [...(screen.getByLabelText('Parent group') as HTMLSelectElement).options].map((o) => o.value);
+    expect(values).not.toContain('z');
+    expect(values).not.toContain('s');
   });
 
   it('delete is disabled with the blocking reason in its title when the group has tables', async () => {

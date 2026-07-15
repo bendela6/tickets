@@ -970,11 +970,18 @@ describe('applyModelEdit', () => {
       ).toThrow(/ghost/);
     });
 
-    it('upsertGroup whose parent is itself a subgroup throws (nesting is one level)', () => {
+    it('upsertGroup can nest a group under a subgroup (nesting is unbounded)', () => {
       const m1 = buildModel(nestedRaw()); // zone 'z' with subgroup 's'
+      const m2 = applyModelEdit(m1, { kind: 'upsertGroup', group: { id: 'deeper', label: 'Deeper', parent: 's' } });
+      expect(m2.groups.find((g) => g.id === 'deeper')!.parent).toBe('s');
+    });
+
+    it('upsertGroup rejects nesting a group under its own descendant (would cycle)', () => {
+      // z -> s (nestedRaw). Re-parenting z under s would make z its own ancestor.
+      const m1 = buildModel(nestedRaw());
       expect(() =>
-        applyModelEdit(m1, { kind: 'upsertGroup', group: { id: 'deeper', label: 'Deeper', parent: 's' } }),
-      ).toThrow(/s/);
+        applyModelEdit(m1, { kind: 'upsertGroup', group: { id: 'z', label: 'Zone', parent: 's' } }),
+      ).toThrow(/descendant/);
     });
 
     it('a new group gets order = max(existing orders) + 1, not a same-parent sibling count', () => {

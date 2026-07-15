@@ -26,6 +26,35 @@ function slugify(name: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+// Groups valid as a parent for `selfId`, in tree order (roots first, each
+// followed by its children indented by depth) — everything EXCEPT `selfId` and
+// its descendants, which would form a cycle. `selfId` is undefined when
+// creating a brand-new group (nothing to exclude yet).
+function orderedParentOptions(model: Model, selfId?: string): { id: string; label: string }[] {
+  const blocked = new Set<string>();
+  if (selfId) {
+    blocked.add(selfId);
+    for (let grew = true; grew; ) {
+      grew = false;
+      for (const g of model.groups) {
+        if (g.parent != null && blocked.has(g.parent) && !blocked.has(g.id)) {
+          blocked.add(g.id);
+          grew = true;
+        }
+      }
+    }
+  }
+  const out: { id: string; label: string }[] = [];
+  const walk = (parentId: string | null, depth: number) => {
+    for (const g of model.groups.filter((x) => (x.parent ?? null) === parentId).sort((a, b) => a.order - b.order)) {
+      if (!blocked.has(g.id)) out.push({ id: g.id, label: `${'— '.repeat(depth)}${g.label}` });
+      walk(g.id, depth + 1);
+    }
+  };
+  walk(null, 0);
+  return out;
+}
+
 // <EditorModals/> only opens this modal once a model is loaded, but the very
 // first render of a test harness (or a boundary re-load race in the real app)
 // can catch model still null — bail rather than crash. The hooks that need a
@@ -44,9 +73,11 @@ function GroupModalForm({ model, id, onClose }: { model: Model; id?: string; onC
 
   const [name, setName] = useState(existing?.label ?? '');
   // A group with no parent is a root group; set a parent and it's a subgroup.
-  // Only root groups can be parents (one level of nesting) — and a group can't
-  // parent itself.
-  const rootGroups = model.groups.filter((g) => !g.parent && g.id !== id);
+  // Nesting is unbounded (a subgroup can parent another), so any group is a
+  // valid parent EXCEPT this group itself and its own descendants — nesting a
+  // group under one of its descendants would form a cycle. Options are listed
+  // in tree order, indented by depth, so the hierarchy reads at a glance.
+  const parentOptions = orderedParentOptions(model, id);
   const [parent, setParent] = useState<string | null>(existing?.parent ?? null);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -118,9 +149,9 @@ function GroupModalForm({ model, id, onClose }: { model: Model; id?: string; onC
           onChange={(e) => setParent(e.target.value || null)}
         >
           <option value="">— none (root group) —</option>
-          {rootGroups.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.label}
+          {parentOptions.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.label}
             </option>
           ))}
         </select>

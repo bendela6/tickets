@@ -27,6 +27,7 @@ import { measureEntity } from '../../geometry/measure-entity';
 import { LAYOUT_MARGIN } from '../../geometry/metrics';
 import { deriveRelationships } from '../derive-relationships';
 import { formatType, parseType } from '../pg-types';
+import { MAX_GROUP_DEPTH } from '../types';
 import type { Column, Constraint, EnumDecl, Entity, Generated, Group, GroupBounds, Identity, Model, TableIndex } from '../types';
 
 // Tags a validation throw with the modal TAB whose editor a user actually
@@ -207,8 +208,18 @@ function upsertGroup(model: Model, g: { id: string; label: string; parent: strin
     if (g.parent === g.id) throw new Error(`Group "${g.id}" cannot be its own parent.`);
     const parent = model.groups.find((x) => x.id === g.parent);
     if (!parent) throw new Error(`Unknown parent group "${g.parent}".`);
-    if (parent.parent != null)
-      throw new Error(`Group "${g.parent}" is itself a subgroup; subgroup nesting is one level only.`);
+    // Nesting is unbounded, but the parent chain must stay acyclic: walking up
+    // from the chosen parent must never reach g itself (that would make g its
+    // own ancestor). The depth cap is only a runaway backstop, same as load-model.
+    const seen = new Set<string>([g.id]);
+    let cur: Group | undefined = parent;
+    let depth = 0;
+    while (cur) {
+      if (seen.has(cur.id)) throw new Error(`Group "${g.id}" cannot nest under its own descendant "${g.parent}".`);
+      seen.add(cur.id);
+      if (++depth > MAX_GROUP_DEPTH) throw new Error(`Group nesting exceeds ${MAX_GROUP_DEPTH} levels.`);
+      cur = cur.parent != null ? model.groups.find((x) => x.id === cur!.parent) : undefined;
+    }
   }
 
   const isNew = !model.groups.some((x) => x.id === g.id);
