@@ -13,7 +13,12 @@ export async function runCommand<S extends v.GenericSchema, TResult>(
   envelope: CommandEnvelope,
   rawInput: unknown,
 ): Promise<TResult> {
-  const input = v.parse(cmd.input, rawInput);
+  let input: v.InferOutput<S>;
+  try {
+    input = v.parse(cmd.input, rawInput);
+  } catch {
+    throw new HttpError(400, 'invalid command input');
+  }
   const agg = cmd.aggregate(input);
   try {
     return await db.transaction(async (tx) => {
