@@ -4,6 +4,7 @@ import { parseEnvelope } from '../command/envelope';
 import { runCommand } from '../command/run-command';
 import { fieldCreate, fieldUpdate } from '../command/config/field';
 import { optionCreate, optionUpdate } from '../command/config/option';
+import { transitionCreate, transitionDelete } from '../command/config/transition';
 import { parseId } from '../utils/parse-id';
 
 export function registerVocabularyRoutes(app: FastifyInstance, ctx: { db: Db }) {
@@ -34,6 +35,20 @@ export function registerVocabularyRoutes(app: FastifyInstance, ctx: { db: Db }) 
     const id = parseId((request.params as { id: string }).id);
     const envelope = parseEnvelope(request.body);
     const result = await runCommand(db, optionUpdate, envelope, { ...(request.body as object), id });
+    reply.send(result);
+  });
+
+  app.post('/api/fields/:id/transitions', async (request, reply) => {
+    const fieldId = parseId((request.params as { id: string }).id);
+    const envelope = parseEnvelope(request.body);
+    const result = await runCommand(db, transitionCreate, envelope, { ...(request.body as object), fieldId });
+    reply.status(201).send(result);
+  });
+
+  app.delete('/api/transitions/:id', async (request, reply) => {
+    const id = parseId((request.params as { id: string }).id);
+    const envelope = parseEnvelope(request.body);
+    const result = await runCommand(db, transitionDelete, envelope, { id });
     reply.send(result);
   });
 }
