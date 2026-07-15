@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="width:1440px;height:860px;border:1px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;background:var(--bg);color:var(--f1);box-shadow:var(--shlg);{{tok}}">
+
+  <!-- Sidebar -->
+  <aside style="width:236px;flex:none;border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px 12px 12px">
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 14px"><span style="width:9px;height:9px;background:var(--ac);border-radius:2px"></span><span style="font:600 15px 'IBM Plex Mono',monospace">tickets</span><span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">acme</span></div>
+    <div style="height:32px;border:1px solid var(--bd);border-radius:8px;background:var(--rs);display:flex;align-items:center;padding:0 10px;gap:7px;margin-bottom:8px"><span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f3)">⌕</span><span style="font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f3);flex:1">Search…</span><span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3);border:1px solid var(--bd);border-radius:4px;padding:1px 4px">⌘K</span></div>
+    <button style="height:34px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer;margin-bottom:14px">＋ New ticket</button>
+    <nav style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2);cursor:pointer" style-hover="background:var(--in);color:var(--f1)">⌂<span style="flex:1">Home</span></div>
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2);cursor:pointer" style-hover="background:var(--in);color:var(--f1)">▤<span style="flex:1">All tickets</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">218</span></div>
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif">✳<span style="flex:1">Sessions</span><span style="height:17px;padding:0 6px;border-radius:5px;background:var(--kb);color:var(--onkb);font:600 10px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">1</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">6</span></div>
+    </nav>
+    <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3);padding:16px 9px 6px">PROJECTS</div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="font:500 10px 'IBM Plex Mono',monospace;background:var(--in);border-radius:4px;padding:2px 5px">CORE</span><span style="flex:1">Items Core</span></div>
+      <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="font:500 10px 'IBM Plex Mono',monospace;background:var(--in);border-radius:4px;padding:2px 5px">WEB</span><span style="flex:1">Storefront Web</span></div>
+      <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="font:500 10px 'IBM Plex Mono',monospace;background:var(--in);border-radius:4px;padding:2px 5px">OPS</span><span style="flex:1">Infra</span></div>
+    </div>
+    <span style="flex:1"></span>
+    <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2);margin-bottom:8px">⚙<span style="flex:1">Settings</span></div>
+    <div style="border-top:1px solid var(--bd);padding-top:10px;display:flex;align-items:center;gap:9px;padding-left:8px"><span style="width:24px;height:24px;border-radius:50%;background:#DBEEF6;color:#14687E;display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Sans',sans-serif">MK</span><span style="font:500 12px 'IBM Plex Sans',sans-serif">Mara K.</span></div>
+  </aside>
+
+  <!-- Main -->
+  <main style="flex:1;min-width:0;padding:24px 28px;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+      <h1 style="font:600 22px 'IBM Plex Sans',sans-serif;margin:0">Sessions</h1>
+      <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3)">6 sessions · 2 running · 1 idle · 2 exited</span>
+      <span style="height:22px;padding:0 9px;border-radius:6px;background:var(--kb);color:var(--onkb);font:600 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:5px;animation:aipulse 1.8s ease-out infinite"><span style="width:7px;height:7px;background:var(--onkb);transform:rotate(45deg);border-radius:1px"></span>1 awaiting input</span>
+      <span style="flex:1"></span>
+      <button style="height:34px;padding:0 14px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">＋ New session</button>
+    </div>
+
+    <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+      <div style="flex:1;display:flex;align-items:center;justify-content:center">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:18px;max-width:560px">
+          <span style="width:44px;height:44px;border-radius:11px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:500 22px 'IBM Plex Mono',monospace">✳</span>
+          <div style="font:600 22px 'IBM Plex Sans',sans-serif">Start a session</div>
+          <div style="font:400 13px/1.55 'IBM Plex Sans',sans-serif;color:var(--f2);text-align:center;max-width:420px;text-wrap:pretty">A session is one live run in a workspace. Open a real terminal, or put an agent to work and watch every step.</div>
+          <div style="display:flex;gap:12px">
+            <div style="width:238px;border:1px solid var(--bd);border-radius:12px;background:var(--rs);padding:16px;display:flex;flex-direction:column;gap:10px;cursor:pointer" style-hover="border-color:var(--bs)">
+              <span style="width:30px;height:30px;border-radius:8px;background:var(--f1);color:var(--bg);display:inline-flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono',monospace">&gt;_</span>
+              <div><div style="font:600 14px 'IBM Plex Sans',sans-serif">Terminal</div><div style="font:400 12px/1.5 'IBM Plex Sans',sans-serif;color:var(--f2);margin-top:3px">A real shell, streamed to the browser. You see exactly what a CLI shows.</div></div>
+            </div>
+            <div style="width:238px;border:1px solid var(--bd);border-radius:12px;background:var(--rs);padding:16px;display:flex;flex-direction:column;gap:10px;cursor:pointer" style-hover="border-color:var(--bs)">
+              <span style="width:30px;height:30px;border-radius:8px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:500 15px 'IBM Plex Mono',monospace">✳</span>
+              <div><div style="font:600 14px 'IBM Plex Sans',sans-serif">Agent</div><div style="font:400 12px/1.5 'IBM Plex Sans',sans-serif;color:var(--f2);margin-top:3px">A structured run — messages, tool calls, diffs, cost. Can dispatch other agents.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isList}}" hint-placeholder-val="{{true}}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span style="height:28px;padding:0 11px;border-radius:7px;border:1px solid var(--bs);background:var(--rs);font:500 12px 'IBM Plex Sans',sans-serif;color:var(--f1);display:inline-flex;align-items:center;gap:6px">Kind: all <span style="font-size:9px;color:var(--f3)">▾</span></span>
+        <span style="height:28px;padding:0 11px;border-radius:7px;border:1px solid var(--bd);background:var(--rs);font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center;gap:6px">Status <span style="font-size:9px;color:var(--f3)">▾</span></span>
+        <span style="height:28px;padding:0 11px;border-radius:7px;border:1px solid var(--bd);background:var(--rs);font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center;gap:6px">Workspace <span style="font-size:9px;color:var(--f3)">▾</span></span>
+        <span style="height:28px;padding:0 11px;border-radius:7px;border:1px solid var(--bd);background:var(--rs);font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center;gap:6px">Agent <span style="font-size:9px;color:var(--f3)">▾</span></span>
+        <span style="flex:1"></span>
+        <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">children shown under their parent</span>
+      </div>
+      <div style="flex:1;overflow:auto;border:1px solid var(--bd);border-radius:12px;background:var(--rs)">
+        <div style="display:grid;grid-template-columns:52px 44px 1fr 148px 150px 110px 96px 128px 64px 62px;align-items:center;height:36px;border-bottom:1px solid var(--bd);background:var(--bg);font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);padding:0 12px">
+          <span></span><span>#</span><span>Session</span><span>Agent</span><span>Workspace</span><span>Ticket</span><span>Age</span><span>Status</span><span style="text-align:right">Cost</span><span></span>
+        </div>
+        <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+          <div style="display:grid;grid-template-columns:52px 44px 1fr 148px 150px 110px 96px 128px 64px 62px;align-items:center;height:46px;border-bottom:1px solid var(--bd);padding:0 12px;cursor:pointer;background:{{r.bg}}" style-hover="background:var(--bg)">
+            <span style="display:flex;align-items:center;padding-left:{{r.ind}}px">
+              <span style="display:{{r.connD}};width:12px;height:22px;border-left:1.5px solid var(--bs);border-bottom:1.5px solid var(--bs);border-radius:0 0 0 6px;margin:-22px 4px 0 -14px;flex:none"></span>
+              <span style="width:18px;height:18px;border-radius:5px;background:{{r.gBg}};color:{{r.gFg}};display:inline-flex;align-items:center;justify-content:center;font:{{r.gFont}};flex:none">{{r.glyph}}</span>
+            </span>
+            <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">{{r.num}}</span>
+            <span style="font:{{r.titleFont}};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:10px">{{r.title}}</span>
+            <span style="display:flex;align-items:center;gap:6px;min-width:0">
+              <span style="display:{{r.avD}};width:16px;height:16px;border-radius:4px;background:var(--acs);color:var(--ac);align-items:center;justify-content:center;font:600 7px 'IBM Plex Mono',monospace;flex:none">{{r.av}}</span>
+              <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:{{r.agC}};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{r.agent}}</span>
+            </span>
+            <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{r.ws}}</span>
+            <span><span style="display:{{r.tickD}};height:20px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);background:var(--rs);font:500 11px 'IBM Plex Mono',monospace;color:var(--ac);align-items:center">→ {{r.ticket}}</span><span style="display:{{r.dashD}};font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">—</span></span>
+            <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">{{r.age}}</span>
+            <span><span style="height:22px;padding:0 8px;border-radius:6px;background:{{r.pBg}};color:{{r.pFg}};font:{{r.pFont}};display:inline-flex;align-items:center;gap:5px;animation:{{r.pAnim}}"><span style="width:{{r.dW}}px;height:{{r.dH}}px;border-radius:{{r.dR}};border:{{r.dBd}};background:{{r.dBg}};transform:{{r.dT}};animation:{{r.dAnim}};display:inline-flex;align-items:center;justify-content:center;font:600 8px 'IBM Plex Sans',sans-serif;color:{{r.dInC}};flex:none;box-sizing:border-box">{{r.dIn}}</span>{{r.pLabel}}<span style="display:{{r.sufD}};font:500 11px 'IBM Plex Mono',monospace;color:{{r.sufC}}">{{r.suf}}</span></span></span>
+            <span style="font:500 11px 'IBM Plex Mono',monospace;color:{{r.costC}};text-align:right">{{r.cost}}</span>
+            <span style="display:flex;justify-content:flex-end;gap:4px"><span style="width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3)" style-hover="background:var(--in)">⋯</span></span>
+          </div>
+        </sc-for>
+        <div style="display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;font:400 11px 'IBM Plex Mono',monospace;color:var(--f3);background:var(--bg)">
+          <span>#47 dispatched 3 children — one Architect fanned out onto three tickets</span>
+          <span style="flex:1"></span>
+          <span>total today · $2.97</span>
+        </div>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1460,&quot;height&quot;:880},&quot;tok&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;list&quot;,&quot;empty&quot;],&quot;default&quot;:&quot;list&quot;,&quot;tsType&quot;:&quot;'list' | 'empty'&quot;}}">
+const PILL = {
+  running:  { pBg:'var(--kas)', pFg:'var(--ka)', pFont:"500 11px 'IBM Plex Sans',sans-serif", pAnim:'none', pLabel:'running',
+              dW:10, dH:10, dR:'50%', dBd:'1.5px solid var(--ka)', dBg:'linear-gradient(90deg,var(--ka) 50%,transparent 50%)', dT:'none', dAnim:'autospin 1.4s linear infinite', dIn:'', dInC:'transparent' },
+  idle:     { pBg:'var(--kds)', pFg:'var(--kd)', pFont:"500 11px 'IBM Plex Sans',sans-serif", pAnim:'none', pLabel:'idle',
+              dW:10, dH:10, dR:'50%', dBd:'1.5px solid var(--kd)', dBg:'transparent', dT:'none', dAnim:'none', dIn:'•', dInC:'var(--kd)' },
+  awaiting: { pBg:'var(--kb)', pFg:'var(--onkb)', pFont:"600 11px 'IBM Plex Sans',sans-serif", pAnim:'aipulse 1.8s ease-out infinite', pLabel:'awaiting input',
+              dW:7, dH:7, dR:'1px', dBd:'none', dBg:'var(--onkb)', dT:'rotate(45deg)', dAnim:'none', dIn:'', dInC:'transparent' },
+  exited0:  { pBg:'var(--in)', pFg:'var(--f2)', pFont:"500 11px 'IBM Plex Sans',sans-serif", pAnim:'none', pLabel:'exited',
+              dW:8, dH:8, dR:'2px', dBd:'1.5px solid var(--f2)', dBg:'transparent', dT:'none', dAnim:'none', dIn:'', dInC:'transparent', suf:'0', sufC:'var(--kd)' },
+  exited1:  { pBg:'var(--in)', pFg:'var(--f2)', pFont:"500 11px 'IBM Plex Sans',sans-serif", pAnim:'none', pLabel:'exited',
+              dW:8, dH:8, dR:'2px', dBd:'1.5px solid var(--f2)', dBg:'transparent', dT:'none', dAnim:'none', dIn:'', dInC:'transparent', suf:'1', sufC:'var(--dg)' },
+};
+
+class Component extends DCLogic {
+  renderVals() {
+    const variant = this.props.variant ?? 'list';
+    const data = [
+      { num:'#47', title:'Break down Configurable Views', kind:'agent', av:'AR', agent:'Architect', ws:'~/work/tickets', ticket:'', age:'2h', cost:'$0.42', st:'idle', child:false },
+      { num:'#48', title:'Calendar renderer', kind:'agent', av:'CO', agent:'Coder', ws:'~/work/tickets', ticket:'TIX-152', age:'40m', cost:'$1.06', st:'running', child:true },
+      { num:'#49', title:'Timeline renderer', kind:'agent', av:'CO', agent:'Coder', ws:'~/work/tickets', ticket:'TIX-153', age:'35m', cost:'$0.88', st:'awaiting', child:true },
+      { num:'#50', title:'View config API', kind:'agent', av:'CO', agent:'Coder', ws:'~/work/tickets', ticket:'TIX-154', age:'1h', cost:'$0.61', st:'exited0', child:true },
+      { num:'#46', title:'pnpm test --filter web', kind:'terminal', av:'', agent:'—', ws:'~/work/tickets', ticket:'', age:'3h', cost:'', st:'exited1', child:false },
+      { num:'#45', title:'shell', kind:'terminal', av:'', agent:'—', ws:'~/work/tickets', ticket:'', age:'5h', cost:'', st:'running', child:false },
+    ];
+    const rows = data.map(d => {
+      const p = PILL[d.st];
+      const term = d.kind === 'terminal';
+      return {
+        ...p,
+        num: d.num, title: d.title, ws: d.ws, age: d.age,
+        titleFont: (d.st === 'awaiting' ? "600" : "500") + " 13px 'IBM Plex Sans',sans-serif",
+        bg: d.st === 'awaiting' ? 'var(--kbs)' : 'transparent',
+        ind: d.child ? 22 : 0,
+        connD: d.child ? 'inline-block' : 'none',
+        gBg: term ? 'var(--f1)' : 'var(--acs)',
+        gFg: term ? 'var(--bg)' : 'var(--ac)',
+        gFont: term ? "600 8px 'IBM Plex Mono',monospace" : "500 10px 'IBM Plex Mono',monospace",
+        glyph: term ? '>_' : '✳',
+        avD: term ? 'none' : 'inline-flex',
+        av: d.av, agent: d.agent,
+        agC: term ? 'var(--f3)' : 'var(--f1)',
+        tickD: d.ticket ? 'inline-flex' : 'none',
+        dashD: d.ticket ? 'none' : 'inline-block',
+        ticket: d.ticket,
+        cost: d.cost || '—',
+        costC: d.cost ? 'var(--f1)' : 'var(--f3)',
+        sufD: p.suf ? 'inline-block' : 'none',
+        suf: p.suf || '', sufC: p.sufC || 'var(--f3)',
+      };
+    });
+    return { rows, isList: variant !== 'empty', isEmpty: variant === 'empty' };
+  }
+}
+</script>
+</body>
+</html>
