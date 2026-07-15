@@ -74,3 +74,18 @@ it('propagates a non-PK unique violation from the handler instead of masking it 
   expect(asHttpError.statusCode).not.toBe(409);
   expect(asHttpError.message ?? '').not.toMatch(/in flight/);
 });
+
+it('rejects input that fails the command schema with a 400 HttpError, not a raw ValiError/500', async () => {
+  const fx = await seedFixture();
+  let caught: unknown;
+  try {
+    // `n` is required and must be a number — omit it entirely.
+    await runCommand(testDb, ping, env(fx.actorId), {});
+  } catch (err) {
+    caught = err;
+  }
+  expect(caught).toBeDefined();
+  expect(caught).not.toHaveProperty('issues'); // not a raw valibot ValiError
+  const asHttpError = caught as { statusCode?: number };
+  expect(asHttpError.statusCode).toBe(400);
+});

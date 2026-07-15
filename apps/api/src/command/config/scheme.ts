@@ -14,6 +14,20 @@ export const schemeForkInput = v.object({
   name: v.pipe(v.string(), v.minLength(1)),
 });
 
+// item_type_fields.configOverride can carry `allowedOptionIds`, a per-type
+// status/option allowlist expressed as SOURCE option ids. Options are
+// re-inserted under fresh ids during a fork (see optionMap below), so this
+// must be remapped too — otherwise the forked placement's allowlist points
+// at options that don't exist in the destination scheme, and
+// optionsForField() intersects to an empty set at item-create time.
+function remapConfigOverride(co: unknown, optionMap: Map<number, number>): unknown {
+  if (co && typeof co === 'object' && Array.isArray((co as { allowedOptionIds?: unknown }).allowedOptionIds)) {
+    const src = co as { allowedOptionIds: number[] };
+    return { ...src, allowedOptionIds: src.allowedOptionIds.map((id) => optionMap.get(id) ?? id) };
+  }
+  return co;
+}
+
 export const schemeFork = defineCommand({
   kind: 'scheme.fork',
   input: schemeForkInput,
@@ -56,7 +70,7 @@ export const schemeFork = defineCommand({
     const typeIds = srcTypes.map((t) => t.id);
     const srcPlacements = typeIds.length ? await tx.select().from(itemTypeFields).where(inArray(itemTypeFields.itemTypeId, typeIds)) : [];
     if (srcPlacements.length) {
-      await tx.insert(itemTypeFields).values(srcPlacements.map((p) => ({ itemTypeId: typeMap.get(p.itemTypeId)!, fieldId: fieldMap.get(p.fieldId)!, position: p.position, required: p.required, configOverride: p.configOverride })));
+      await tx.insert(itemTypeFields).values(srcPlacements.map((p) => ({ itemTypeId: typeMap.get(p.itemTypeId)!, fieldId: fieldMap.get(p.fieldId)!, position: p.position, required: p.required, configOverride: remapConfigOverride(p.configOverride, optionMap) })));
     }
     // item_type_child_types
     const srcChildren = typeIds.length ? await tx.select().from(itemTypeChildTypes).where(inArray(itemTypeChildTypes.parentTypeId, typeIds)) : [];

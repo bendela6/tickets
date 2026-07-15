@@ -47,6 +47,50 @@ it('forks a scheme with all types, fields, and options copied under fresh ids', 
   expect((await testDb.select().from(events).where(eq(events.kind, 'scheme.forked')))).toHaveLength(1);
 });
 
+it('remaps configOverride.allowedOptionIds to destination option ids, not source ones', async () => {
+  const fx = await seedFixture();
+
+  const res = await runCommand(testDb, schemeFork, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
+    sourceSchemeId: fx.schemeId, key: 'software-fork-3', name: 'Software (fork 3)',
+  });
+
+  const dstTypes = await testDb.select().from(itemTypes).where(eq(itemTypes.schemeId, res.schemeId));
+  const dstTypeIds = dstTypes.map((t) => t.id);
+  const dstOptionSets = await testDb.select().from(optionSets).where(eq(optionSets.schemeId, res.schemeId));
+  const dstOptionSetIds = dstOptionSets.map((s) => s.id);
+  const dstOptions = dstOptionSetIds.length
+    ? await testDb.select().from(options).where(inArray(options.optionSetId, dstOptionSetIds))
+    : [];
+  const dstOptionIdSet = new Set(dstOptions.map((o) => o.id));
+
+  const srcOptionSets = await testDb.select().from(optionSets).where(eq(optionSets.schemeId, fx.schemeId));
+  const srcOptionSetIds = srcOptionSets.map((s) => s.id);
+  const srcOptions = srcOptionSetIds.length
+    ? await testDb.select().from(options).where(inArray(options.optionSetId, srcOptionSetIds))
+    : [];
+  const srcOptionIdSet = new Set(srcOptions.map((o) => o.id));
+
+  const dstPlacements = dstTypeIds.length
+    ? await testDb.select().from(itemTypeFields).where(inArray(itemTypeFields.itemTypeId, dstTypeIds))
+    : [];
+  const placementsWithAllowlist = dstPlacements.filter(
+    (p) => p.configOverride && Array.isArray((p.configOverride as { allowedOptionIds?: unknown }).allowedOptionIds)
+      && (p.configOverride as { allowedOptionIds: number[] }).allowedOptionIds.length > 0,
+  );
+  // Sanity: the seeded software scheme has status placements with a
+  // non-empty allowlist — if this is ever zero the assertions below would
+  // pass vacuously.
+  expect(placementsWithAllowlist.length).toBeGreaterThan(0);
+
+  for (const p of placementsWithAllowlist) {
+    const ids = (p.configOverride as { allowedOptionIds: number[] }).allowedOptionIds;
+    for (const id of ids) {
+      expect(dstOptionIdSet.has(id)).toBe(true);
+      expect(srcOptionIdSet.has(id)).toBe(false);
+    }
+  }
+});
+
 it('remaps every FK across all 9 child levels of a fork, not just types/fields', async () => {
   const fx = await seedFixture();
   const srcTypes = await testDb.select().from(itemTypes).where(eq(itemTypes.schemeId, fx.schemeId));
