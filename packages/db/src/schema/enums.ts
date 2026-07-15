@@ -24,3 +24,24 @@ export const fieldTypeEnum = pgEnum('field_type', [
   'multi_select',
   'status',
 ]);
+
+// ── AI sessions ──────────────────────────────────────────────────────────────
+
+// A session is one of two kinds; only `agent` is provider-adapted.
+export const sessionKindEnum = pgEnum('session_kind', ['terminal', 'agent']);
+
+// The lifecycle a running session moves through. `awaiting_input` (blocked on a
+// permission decision) is the only state that demands a human — E3.
+export const sessionStatusEnum = pgEnum('session_status', [
+  //
+  'starting',
+  'running',
+  'idle',
+  'awaiting_input',
+  'interrupted',
+  'exited',
+  'failed',
+]);
+
+// Where a session's process runs. E1 implements `local` only.
+export const runnerKindEnum = pgEnum('runner_kind', ['local', 'container']);

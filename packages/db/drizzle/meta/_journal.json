@@ -57,6 +57,13 @@
       "when": 1783539579161,
       "tag": "0007_mushy_thunderbolts",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784151590317,
+      "tag": "0008_stale_lilandra",
+      "breakpoints": true
     }
   ]
 }

@@ -49,4 +49,10 @@ export const SCHEMA_GROUPS: SchemaGroup[] = [
       'ticket_links',
     ],
   },
+  {
+    key: 'ai',
+    label: 'AI sessions',
+    color: 'purple',
+    tables: ['ai_workspaces', 'ai_sessions', 'ai_session_output'],
+  },
 ];

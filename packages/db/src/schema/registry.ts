@@ -1,4 +1,7 @@
 // packages/db/src/schema/registry.ts
+import { aiSessionOutput } from './ai-session-output';
+import { aiSessions } from './ai-sessions';
+import { aiWorkspaces } from './ai-workspaces';
 import { comments } from './comments';
 import { commentReactions } from './comment-reactions';
 import { fieldOptions } from './field-options';
@@ -25,4 +28,5 @@ export const allTables = [
   fields, fieldOptions, statuses, statusTransitions, linkTypes, linkTypeTargetTypes,
   projects, users, views,
   tickets, comments, commentReactions, ticketEvents, ticketValues, ticketLinks,
+  aiWorkspaces, aiSessions, aiSessionOutput,
 ];
