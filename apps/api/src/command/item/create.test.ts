@@ -4,6 +4,7 @@ import { events, itemValues, items } from '@tickets/db';
 import { resetDb, seedFixture, testDb } from '../../test/db';
 import { runCommand } from '../run-command';
 import { itemCreate } from './create';
+import { fieldUpdate } from '../config/field';
 
 beforeEach(resetDb);
 afterAll(resetDb);
@@ -41,4 +42,26 @@ it('rejects a missing required field', async () => {
       values: {}, // no title
     }),
   ).rejects.toThrow(/required/);
+});
+
+it('does not block creation on a required field that has been archived', async () => {
+  const fx = await seedFixture();
+  // "title" is placed required on task in the seed (packages/db/src/seed/software-scheme.ts).
+  const titleFieldId = fx.fieldIdByKey.get('title');
+  expect(titleFieldId).toBeDefined();
+
+  await runCommand(testDb, fieldUpdate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
+    id: titleFieldId!,
+    archived: true,
+  });
+
+  // create.ts gate is `if (placement?.required && !field.archivedAt)` — an archived required field must be excluded.
+  const result = await runCommand(testDb, itemCreate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
+    projectKey: fx.projectKey,
+    typeKey: 'task',
+    values: {}, // no title, but title is archived so it should not block creation
+  });
+
+  const itemRows = await testDb.select().from(items).where(eq(items.id, result.id));
+  expect(itemRows).toHaveLength(1);
 });
