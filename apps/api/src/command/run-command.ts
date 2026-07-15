@@ -46,9 +46,24 @@ export async function runCommand<S extends v.GenericSchema, TResult>(
     });
   } catch (err) {
     // concurrent double-submit of the same commandId collides on the PK
-    if (err instanceof Error && /commands_pkey|duplicate key/i.test(err.message)) {
+    if (isCommandsPkeyCollision(err)) {
       throw new HttpError(409, 'command already in flight — retry');
     }
     throw err;
   }
+}
+
+// drizzle's postgres-js driver wraps every failed query in a DrizzleQueryError
+// whose own `.message` is just "Failed query: ..." — the constraint name never
+// appears there. The real node-postgres error (code, constraint_name) is
+// preserved on `.cause`. Check both the caught error and its cause so this
+// only matches a genuine PK collision on the commands ledger, never any other
+// unique-violation a handler happens to trip (e.g. items_project_number,
+// options_set_value, schemes_key_unique all raise the same 23505 code).
+function isCommandsPkeyCollision(err: unknown): boolean {
+  for (const e of [err, (err as { cause?: unknown } | undefined)?.cause]) {
+    const pg = e as { code?: string; constraint_name?: string } | undefined;
+    if (pg?.code === '23505' && pg?.constraint_name === 'commands_pkey') return true;
+  }
+  return false;
 }
