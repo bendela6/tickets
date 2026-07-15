@@ -273,6 +273,20 @@ describe('TableModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('setting a Schema moves the table into it — saves content then rekeys the id to schema.name', async () => {
+    const onClose = vi.fn();
+    const { actions } = await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
+    const spy = vi.spyOn(actions, 'applyModelEdit');
+
+    fireEvent.change(screen.getByLabelText('Schema'), { target: { value: 'billing' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy.mock.calls[0]![0]).toMatchObject({ kind: 'upsertEntity', entity: { id: 'tags', schema: 'billing' } });
+    expect(spy.mock.calls[1]![0]).toEqual({ kind: 'renameEntity', from: 'tags', to: 'billing.tags' });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('renaming onto another table\'s id is blocked live with a reason (renameEntity would clobber it)', async () => {
     const onClose = vi.fn();
     const { actions } = await renderDiagram(<TableModal id="tags" onClose={onClose} />, twoZoneRaw());
