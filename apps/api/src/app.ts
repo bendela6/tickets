@@ -1,12 +1,12 @@
 import fastify from 'fastify';
 import type { Db } from '@tickets/db';
 import { HttpError } from './errors';
-import { registerCommentsRoutes } from './routes/comments.routes';
+import { registerBoardRoutes } from './routes/board.routes';
+import { registerItemsRoutes } from './routes/items.routes';
 import { registerLinksRoutes } from './routes/links.routes';
 import { registerProjectsRoutes } from './routes/projects.routes';
 import { registerSchemaRoutes } from './routes/schema.routes';
 import { registerSchemesRoutes } from './routes/schemes.routes';
-import { registerTicketsRoutes } from './routes/tickets.routes';
 import { registerUsersRoutes } from './routes/users.routes';
 import { registerViewsRoutes } from './routes/views.routes';
 import { registerVocabularyRoutes } from './routes/vocabulary.routes';
@@ -24,14 +24,14 @@ export function buildApp(context: { db: Db }) {
   });
 
   registerProjectsRoutes(app, context);
-  registerSchemaRoutes(app, context);
-  registerSchemesRoutes(app, context);
-  registerTicketsRoutes(app, context);
-  registerCommentsRoutes(app, context);
-  registerLinksRoutes(app, context);
   registerUsersRoutes(app, context);
-  registerViewsRoutes(app, context);
+  registerItemsRoutes(app, context);
+  registerLinksRoutes(app, context);
+  registerBoardRoutes(app, context);
   registerVocabularyRoutes(app, context);
+  registerSchemesRoutes(app, context);
+  registerViewsRoutes(app, context);
+  registerSchemaRoutes(app);
 
   return app;
 }
