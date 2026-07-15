@@ -8,9 +8,10 @@ import { createContext, useContext } from 'react';
 export type EditorModal =
   | { kind: 'model' } // edit meta / delete current model
   | { kind: 'new-model' } // title input → createModel(seededRaw(title)) → load it
-  | { kind: 'add' } // chooser: group / table → opens the group/table modal in create mode
+  | { kind: 'add' } // chooser: group / table / enum → opens the matching modal in create mode
   | { kind: 'group'; id?: string }
   | { kind: 'table'; id?: string }
+  | { kind: 'enum'; name?: string } // create/edit one enum (keyed by name, not id)
   | { kind: 'import' } // dev-only: scan a drizzle module, dry-run report, Apply loads the merged model
   | { kind: 'export' }; // dev-only: preview generated drizzle source, Write file via the export route
 

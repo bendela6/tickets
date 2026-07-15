@@ -127,6 +127,7 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   const physicalOf = (id: string, schema: string | null) =>
     schema && schema !== 'public' && id.startsWith(`${schema}.`) ? id.slice(schema.length + 1) : id;
   const [name, setName] = useState(existing ? physicalOf(existing.id, existing.schema) : '');
+  const [schema, setSchema] = useState<string | null>(existing?.schema ?? null);
   const [group, setGroup] = useState(existing?.group ?? defaultGroup);
   const [description, setDescription] = useState(existing?.description ?? '');
   const [fields, setFields] = useState<EditField[]>(existing ? existing.columns.map(toEditField) : [DEFAULT_PK]);
@@ -137,12 +138,17 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   const [activeTab, setActiveTab] = useState<TabId>('columns');
 
   // The identifier the Name field currently describes — re-qualified with the
-  // (verbatim-carried) schema. On create this IS the new table's id; on edit
-  // it's the rename TARGET, compared against existing.id to decide whether Save
-  // also has to rekey (see save()).
-  const schema = existing?.schema ?? null;
+  // selected schema. On create this IS the new table's id; on edit it's the
+  // rename TARGET, compared against existing.id to decide whether Save also has
+  // to rekey (see save()). Changing the Schema selector therefore renames the
+  // table the same way changing the Name does — the id is `schema.name` for a
+  // non-public schema, so it moves, and the rekey rides the same renameEntity path.
+  // Normalised schema for id/edit logic (blank or "public" → null = the public
+  // schema, which is never prefixed onto the id); the raw `schema` state backs
+  // the input so mid-typing whitespace doesn't leak into the id.
+  const schemaNorm = schema && schema.trim() && schema.trim() !== 'public' ? schema.trim() : null;
   const slug = slugify(name);
-  const targetId = schema && schema !== 'public' ? `${schema}.${slug}` : slug;
+  const targetId = schemaNorm ? `${schemaNorm}.${slug}` : slug;
   // The id the upsert writes under: the table's CURRENT id (unchanged even
   // when the name field is mid-rename) — the rename is a separate edit applied
   // AFTER the upsert, so the content save never has to reason about the new id.
@@ -159,11 +165,11 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
       label: currentId, // label is pinned to the identifier — the Name field IS the id
       group,
       description: description.trim() ? description.trim() : null,
-      // No UI to change a table's schema yet — carry the existing one
-      // through verbatim (null for a brand-new table), same reasoning as
-      // identity/generated above: a default here would silently strip a
-      // schema-qualified table's schema on its very next no-op Save.
-      schema: existing?.schema ?? null,
+      // The Schema field below owns this now (null = public). The upsert writes
+      // it under the current id; if the schema changed, targetId changed too, so
+      // save() also dispatches a renameEntity that moves the id to `schema.name`
+      // — the two land the schema on both the field and the id.
+      schema: schemaNorm,
       fields: fields.map((f) => ({
         name: f.name.trim(),
         type: f.type.trim(),
@@ -308,6 +314,16 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
       <label className={label}>
         Name
         <input className={field} value={name} autoFocus onChange={(e) => setName(e.target.value)} />
+      </label>
+
+      <label className={label}>
+        Schema
+        <input
+          className={field}
+          value={schema ?? ''}
+          placeholder="public"
+          onChange={(e) => setSchema(e.target.value || null)}
+        />
       </label>
 
       <label className={label}>

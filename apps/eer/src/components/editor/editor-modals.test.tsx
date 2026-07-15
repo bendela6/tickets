@@ -1,4 +1,4 @@
-import { act, cleanup, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { twoZoneRaw } from '../../test/models';
@@ -47,6 +47,20 @@ describe('EditorModals routing', () => {
     expect(screen.getByText('Edit orders')).toBeInTheDocument();
     expect((screen.getByLabelText('Column 2 name') as HTMLInputElement).value).toBe('users_id');
     expect((screen.getByLabelText('Column 1 name') as HTMLInputElement).value).toBe('id');
+  });
+
+  it('the "+ Add" chooser offers an Enum entry that opens the enum modal', async () => {
+    await renderDiagram(
+      <EditorModals>
+        <EditorGrab />
+      </EditorModals>,
+      twoZoneRaw(),
+    );
+
+    await act(async () => editorRef!.openModal({ kind: 'add' }));
+    fireEvent.click(screen.getByRole('button', { name: /Enum/ }));
+
+    expect(screen.getByText('New enum')).toBeInTheDocument();
   });
 
   it('remounts the group modal per target id — B never shows a stale draft of A', async () => {
