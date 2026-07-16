@@ -1,5 +1,5 @@
 import { and, eq, inArray } from 'drizzle-orm';
-import type { Db } from '@tickets/db';
+import type { DbExecutor } from '@tickets/db';
 import { itemValues, items } from '@tickets/db';
 import { defineAutomation } from '../registry';
 import { loadSchemeVocab, type SchemeVocab } from '../../vocab/load-scheme-vocab';
@@ -8,7 +8,7 @@ import { itemUpdate } from '../../command/item/update';
 const RESOLVED = new Set(['done', 'dropped']);
 
 // The workflow option kind currently set on an item (null if unset).
-async function statusKind(db: Db, vocab: SchemeVocab, itemId: number, wfId: number) {
+async function statusKind(db: DbExecutor, vocab: SchemeVocab, itemId: number, wfId: number) {
   const rows = await db.select().from(itemValues).where(and(eq(itemValues.itemId, itemId), eq(itemValues.fieldId, wfId)));
   const optId = rows[0]?.optionId ?? null;
   return optId === null ? null : (vocab.optionById.get(optId)?.kind ?? null);
@@ -24,10 +24,7 @@ export const parentRollup = defineAutomation({
     const vocab = await loadSchemeVocab(tx, { id: item.projectId });
     const wf = vocab.workflowField(item.typeId);
     if (!wf || payload.fieldKey !== wf.key) return false;
-    // `when` is declared with tx: DbExecutor for future flexibility, but in current
-    // usage it is always invoked with the root db handle (see run-automations.ts),
-    // never a transaction — safe to narrow to Db here.
-    const kind = await statusKind(tx as Db, vocab, item.id, wf.id);
+    const kind = await statusKind(tx, vocab, item.id, wf.id);
     return kind !== null && RESOLVED.has(kind);
   },
   async run(event, ctx) {
