@@ -44,4 +44,13 @@ describe('terminalDisplay', () => {
   it('falls back to plain Running with no command', () => {
     expect(terminalDisplay('live', 'live', true)).toMatchObject({ label: 'Running' });
   });
+  it('truncates long commands with an ellipsis', () => {
+    const longCommand = 'npm run build -- --some-flag --another-flag --and-yet-another-flag';
+    const { label } = terminalDisplay('live', 'live', true, longCommand);
+    expect(label.startsWith('Running: ')).toBe(true);
+    const commandPart = label.slice('Running: '.length);
+    expect(commandPart.length).toBeLessThanOrEqual(41);
+    expect(label.endsWith('…')).toBe(true);
+    expect(label).not.toContain(longCommand);
+  });
 });

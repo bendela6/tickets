@@ -32,8 +32,8 @@ export function toMntPath(winPath: string): string {
 
 // Shared bash rcfile: source ~/.bashrc, then PS0 emits C, PROMPT_COMMAND emits
 // D with the exit code ($? captured first). Verified: no echo, real exit codes.
-function writeBashRc(id: number): string {
-  const rc = join(tmpdir(), `ti-shellint-${id}.sh`);
+function writeBashRc(): string {
+  const rc = join(tmpdir(), 'ti-shellint.sh');
   writeFileSync(
     rc,
     `[ -f ~/.bashrc ] && . ~/.bashrc\n` +
@@ -47,7 +47,7 @@ const bash: ShellIntegration = {
   id: 'bash',
   precise: true,
   matches: (c) => ['bash', 'sh'].includes(basename(c)),
-  apply: (spec) => ({ command: spec.command, args: ['--rcfile', writeBashRc(spec.id), '-i'], env: spec.env ?? {} }),
+  apply: (spec) => ({ command: spec.command, args: ['--rcfile', writeBashRc(), '-i'], env: spec.env ?? {} }),
 };
 
 // WSL: same bash rcfile, referenced by its /mnt path; keep any distro args
@@ -58,7 +58,7 @@ const wsl: ShellIntegration = {
   matches: (c) => basename(c) === 'wsl',
   apply: (spec) => ({
     command: spec.command,
-    args: [...(spec.args ?? []), '--', 'bash', '--rcfile', toMntPath(writeBashRc(spec.id)), '-i'],
+    args: [...(spec.args ?? []), '--', 'bash', '--rcfile', toMntPath(writeBashRc()), '-i'],
     env: spec.env ?? {},
   }),
 };

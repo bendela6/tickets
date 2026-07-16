@@ -33,7 +33,7 @@ describe('integrationFor', () => {
   });
   it('bash.apply injects a --rcfile and emits D with $?', () => {
     const out = integrationFor('/usr/bin/bash')!.apply({ id: 2, command: '/usr/bin/bash' });
-    expect(out.args).toEqual(['--rcfile', expect.stringContaining('ti-shellint-2'), '-i']);
+    expect(out.args).toEqual(['--rcfile', expect.stringContaining('ti-shellint.sh'), '-i']);
   });
   it('wsl.apply runs bash with the rcfile via its /mnt path, keeping any distro args', () => {
     const out = integrationFor('wsl.exe')!.apply({ id: 3, command: 'wsl.exe', args: ['-d', 'Ubuntu'] });
