@@ -115,7 +115,7 @@ export function createOutboxWorker(
     start() {
       if (running) return;
       running = true;
-      onOutboxNotify(() => { void drainOnce(); });
+      onOutboxNotify(() => { drainOnce().catch((err) => console.error('outbox notify drain failed', err)); });
       void loop();
     },
     async stop() {
