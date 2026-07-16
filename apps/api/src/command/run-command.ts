@@ -4,6 +4,7 @@ import type { Db } from '@tickets/db';
 import { commands } from '@tickets/db';
 import { HttpError } from '../errors';
 import { writeEvent } from '../event/write';
+import { notifyOutbox } from '../outbox/notify';
 import type { CommandDef, CommandContext } from './registry';
 import type { CommandEnvelope } from './envelope';
 
@@ -21,7 +22,7 @@ export async function runCommand<S extends v.GenericSchema, TResult>(
   }
   const agg = cmd.aggregate(input);
   try {
-    return await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       // 1. ledger check — a replayed commandId returns the stored result verbatim
       const existing = await tx.select().from(commands).where(eq(commands.id, envelope.commandId));
       if (existing[0]) {
@@ -51,6 +52,8 @@ export async function runCommand<S extends v.GenericSchema, TResult>(
         .where(eq(commands.id, envelope.commandId));
       return result;
     });
+    notifyOutbox();
+    return result;
   } catch (err) {
     // concurrent double-submit of the same commandId collides on the PK
     if (isCommandsPkeyCollision(err)) {
