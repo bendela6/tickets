@@ -28,4 +28,14 @@ describe('terminalDisplay', () => {
       status: 'failed',
     });
   });
+  it('shows Disconnected when the socket has ended but the persisted status is still live-ish', () => {
+    expect(terminalDisplay('ended', 'live', false)).toMatchObject({
+      label: 'Disconnected',
+      status: 'disconnected',
+    });
+    expect(terminalDisplay('ended', 'starting', false)).toMatchObject({
+      label: 'Disconnected',
+      status: 'disconnected',
+    });
+  });
 });

@@ -38,9 +38,9 @@ export function buildApp(context: {
       // API restart (their pty/agent process is gone) — reconcile once at
       // boot. Only for the real supervisor: tests that inject a fake one keep
       // their seeded rows untouched.
-      void store.reconcileOrphaned().then((n) => {
-        if (n > 0) app.log.info({ reconciled: n }, 'marked orphaned sessions disconnected');
-      });
+      void store.reconcileOrphaned()
+        .then((n) => { if (n > 0) app.log.info({ reconciled: n }, 'marked orphaned sessions disconnected'); })
+        .catch((err) => app.log.error({ err }, 'orphan reconcile failed'));
       return createSupervisor({
         runner: createLocalRunner(),
         store,

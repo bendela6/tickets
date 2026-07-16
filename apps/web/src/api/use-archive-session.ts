@@ -7,7 +7,10 @@ function useSessionAction(action: 'archive' | 'unarchive') {
   return useMutation({
     mutationFn: (id: number) =>
       fetchJson<AiSession>(`/api/ai/sessions/${id}/${action}`, { method: 'POST' }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['ai', 'sessions'] }),
+    onSuccess: (_data, id) => {
+      void qc.invalidateQueries({ queryKey: ['ai', 'sessions'] });
+      void qc.invalidateQueries({ queryKey: ['ai', 'session', id] });
+    },
   });
 }
 
