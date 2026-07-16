@@ -76,10 +76,16 @@ export function PromptComposer({
           <Button size="compact" variant="secondary" onClick={onInterrupt}>
             ■ Stop
           </Button>
-        ) : null}
-        <Button size="compact" variant="primary" onClick={onSend} disabled={disabled || !value.trim()}>
-          Send
-        </Button>
+        ) : (
+          <Button
+            size="compact"
+            variant="primary"
+            onClick={onSend}
+            disabled={disabled || !value.trim()}
+          >
+            Send
+          </Button>
+        )}
       </div>
     </div>
   );
