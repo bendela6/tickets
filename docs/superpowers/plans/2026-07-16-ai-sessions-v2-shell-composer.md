@@ -311,8 +311,6 @@ import { describe, expect, it } from 'vitest';
 import type { AgentEvent } from '../../api/types';
 import { deriveUsage } from './derive-usage';
 
-const result = (usage?: AgentEvent extends { type: 'result' } ? never : never) => usage; // typing helper unused
-
 describe('deriveUsage', () => {
   it('returns nulls/zeroes with no result events', () => {
     expect(deriveUsage([{ type: 'assistant_text', text: 'hi' } as AgentEvent])).toEqual({
