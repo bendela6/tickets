@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 import { count, eq, sql } from 'drizzle-orm';
-import { fields, itemTypeFields, itemTypes } from '@tickets/db';
+import { fields, itemTypeFields, itemTypes, optionSets } from '@tickets/db';
 import { HttpError } from '../../errors';
 import { defineCommand } from '../registry';
 import { fieldCreated, fieldPlaced, fieldUpdated } from './events';
@@ -25,8 +25,13 @@ export const fieldCreate = defineCommand({
     const typeRows = await tx.select().from(itemTypes).where(eq(itemTypes.id, input.itemTypeId));
     const type = typeRows[0];
     if (!type) throw new HttpError(400, 'unknown item type');
-    if (input.type === 'option' && input.optionSetId === undefined) {
-      throw new HttpError(400, 'an option field needs an optionSetId');
+    let optionSetId = input.optionSetId ?? null;
+    if (input.type === 'option' && optionSetId === null) {
+      // derive a unique key per scheme from the field key
+      const created = await tx.insert(optionSets)
+        .values({ schemeId: type.schemeId, key: `${input.key}-set`, name: input.label })
+        .returning();
+      optionSetId = created[0]!.id;
     }
     // create the scheme-library field
     const inserted = await tx
@@ -37,12 +42,12 @@ export const fieldCreate = defineCommand({
         label: input.label,
         type: input.type,
         config: input.config ?? {},
-        optionSetId: input.optionSetId ?? null,
+        optionSetId,
       })
       .returning();
     const field = inserted[0]!;
     ctx.aggregateId = field.id;
-    await ctx.emit(fieldCreated, { schemeId: type.schemeId, key: field.key, label: field.label, type: field.type });
+    await ctx.emit(fieldCreated, { schemeId: type.schemeId, key: field.key, label: field.label, type: field.type, optionSetId: field.optionSetId });
     // place it on the type at the next position
     const position = (await tx.select({ n: count() }).from(itemTypeFields).where(eq(itemTypeFields.itemTypeId, type.id)))[0]?.n ?? 0;
     await tx.insert(itemTypeFields).values({
