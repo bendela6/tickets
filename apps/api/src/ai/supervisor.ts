@@ -286,10 +286,11 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
         rows: spec.rows ?? 24,
       });
       const rs = newSession(spec.id, 'terminal', handle);
+      rs.status = 'live';
       rs.onEnd = spec.onEnd;
       sessions.set(spec.id, rs);
-      void store.markRunning(spec.id);
-      broadcast(rs, { type: 'status', status: 'running' });
+      void store.setStatus(spec.id, 'live');
+      broadcast(rs, { type: 'status', status: 'live' });
       consumeTerminal(rs);
     },
 

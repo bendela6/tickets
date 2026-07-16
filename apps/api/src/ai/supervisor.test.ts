@@ -66,6 +66,7 @@ function makePty() {
 function makeStore(log?: string[]) {
   const out: OutputChunk[] = [];
   const finished: { status: string; exitCode: number | null }[] = [];
+  const statuses: string[] = [];
   let loadGate: Promise<void> | null = null;
   const store: SessionStore = {
     async appendOutput(_id, chunks) {
@@ -94,15 +95,21 @@ function makeStore(log?: string[]) {
     },
     async decidePermissionRequest() {},
     async markRunning() {},
-    async setStatus() {},
+    async setStatus(_id, status) {
+      statuses.push(status);
+    },
     async finishSession(_id, status, exitCode) {
       finished.push({ status, exitCode });
+    },
+    async reconcileOrphaned() {
+      return 0;
     },
   };
   return {
     store,
     out,
     finished,
+    statuses,
     setLoadGate: (p: Promise<void> | null) => (loadGate = p),
   };
 }
@@ -208,6 +215,20 @@ describe('supervisor', () => {
 
     // Sees 1 (replayed) and 2 (buffered live), each exactly once, in order.
     expect(outputs(late.frames)).toEqual([1, 2]);
+  });
+
+  it('a started terminal persists and broadcasts live (not running)', async () => {
+    const helper = makeStore();
+    const pty = makePty();
+    const sup = createSupervisor({ runner: { spawnPty: () => pty.handle }, store: helper.store, schedule: syncSchedule });
+    sup.start({ id: 1, command: 'sh', cwd: '/w' });
+
+    expect(helper.statuses).toContain('live');
+
+    const { sub, frames } = makeSub();
+    await sup.attach(1, sub, 0);
+    const status = frames.find((f) => f.type === 'status');
+    expect(status).toEqual({ type: 'status', status: 'live', exitCode: null });
   });
 
   it('detach removes the subscriber but does NOT kill the process', async () => {

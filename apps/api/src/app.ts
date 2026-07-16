@@ -32,10 +32,20 @@ export function buildApp(context: {
   // production it wraps the node-pty LocalRunner over the DB-backed store.
   const supervisor =
     context.supervisor ??
-    createSupervisor({
-      runner: createLocalRunner(),
-      store: createDbSessionStore(context.db),
-    });
+    (() => {
+      const store = createDbSessionStore(context.db);
+      // Sessions left running/live/etc. with no ended_at were orphaned by an
+      // API restart (their pty/agent process is gone) — reconcile once at
+      // boot. Only for the real supervisor: tests that inject a fake one keep
+      // their seeded rows untouched.
+      void store.reconcileOrphaned().then((n) => {
+        if (n > 0) app.log.info({ reconciled: n }, 'marked orphaned sessions disconnected');
+      });
+      return createSupervisor({
+        runner: createLocalRunner(),
+        store,
+      });
+    })();
 
   // The agent provider registry (code registry, not DB rows). Injectable so
   // tests supply a fake provider; production ships the Claude adapter.

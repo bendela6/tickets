@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, lt, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, isNull, lt, sql } from 'drizzle-orm';
 import type { Db } from '@tickets/db';
 import { aiMessages, aiPermissionRequests, aiSessionOutput, aiSessions } from '@tickets/db';
 import type { AgentEvent } from './types';
@@ -148,6 +148,27 @@ export function createDbSessionStore(db: Db): SessionStore {
         .update(aiSessions)
         .set({ status, exitCode, endedAt: sql`now()`, updatedAt: sql`now()` })
         .where(eq(aiSessions.id, sessionId));
+    },
+
+    async reconcileOrphaned(): Promise<number> {
+      const rows = await db
+        .update(aiSessions)
+        .set({ status: 'disconnected', endedAt: sql`now()`, updatedAt: sql`now()` })
+        .where(
+          and(
+            isNull(aiSessions.endedAt),
+            inArray(aiSessions.status, [
+              'starting',
+              'running',
+              'live',
+              'idle',
+              'awaiting_input',
+              'interrupted',
+            ]),
+          ),
+        )
+        .returning({ id: aiSessions.id });
+      return rows.length;
     },
   };
 }
