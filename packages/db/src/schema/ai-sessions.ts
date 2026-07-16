@@ -8,6 +8,7 @@ import {
   timestamp,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
+import { aiAgents } from './ai-agents';
 import { aiWorkspaces } from './ai-workspaces';
 import { sessionKindEnum, sessionStatusEnum } from './enums';
 import { tickets } from './tickets';
@@ -17,7 +18,6 @@ import { users } from './users';
 // parent_session_id exist from E1 but stay null until E2/E3 — that is what makes
 // the later slices additive rather than migrations of live data.
 //
-// agent_id has no FK yet: ai_agents is created in E2, which adds the constraint.
 export const aiSessions = pgTable(
   'ai_sessions',
   {
@@ -27,8 +27,7 @@ export const aiSessions = pgTable(
     workspaceId: integer('workspace_id')
       .notNull()
       .references(() => aiWorkspaces.id),
-    // FK added in E2 when ai_agents exists.
-    agentId: integer('agent_id'),
+    agentId: integer('agent_id').references((): AnyPgColumn => aiAgents.id),
     ticketId: integer('ticket_id').references(() => tickets.id),
     parentSessionId: integer('parent_session_id').references((): AnyPgColumn => aiSessions.id),
     status: sessionStatusEnum('status').notNull().default('starting'),

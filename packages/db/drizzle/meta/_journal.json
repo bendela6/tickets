@@ -64,6 +64,13 @@
       "when": 1784151590317,
       "tag": "0008_stale_lilandra",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1784193188241,
+      "tag": "0009_watery_the_leader",
+      "breakpoints": true
     }
   ]
 }

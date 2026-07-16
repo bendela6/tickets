@@ -45,3 +45,25 @@ export const sessionStatusEnum = pgEnum('session_status', [
 
 // Where a session's process runs. E1 implements `local` only.
 export const runnerKindEnum = pgEnum('runner_kind', ['local', 'container']);
+
+// How a persona decides whether a tool call needs a human — mirrors the Claude
+// Agent SDK's PermissionMode. E2 ships agents in `bypassPermissions` (autonomy
+// now); the approval flow that uses `default` is E3.
+export const permissionModeEnum = pgEnum('permission_mode', [
+  //
+  'default',
+  'acceptEdits',
+  'bypassPermissions',
+  'plan',
+  'dontAsk',
+  'auto',
+]);
+
+// A pending permission request is a `canUseTool` promise in the supervisor
+// waiting on a human; the terminal transitions are the human's decision (E3).
+export const permissionStatusEnum = pgEnum('permission_status', [
+  //
+  'pending',
+  'allowed',
+  'denied',
+]);

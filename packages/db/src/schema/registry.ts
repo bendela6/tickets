@@ -1,4 +1,7 @@
 // packages/db/src/schema/registry.ts
+import { aiAgents } from './ai-agents';
+import { aiMessages } from './ai-messages';
+import { aiPermissionRequests } from './ai-permission-requests';
 import { aiSessionOutput } from './ai-session-output';
 import { aiSessions } from './ai-sessions';
 import { aiWorkspaces } from './ai-workspaces';
@@ -29,4 +32,5 @@ export const allTables = [
   projects, users, views,
   tickets, comments, commentReactions, ticketEvents, ticketValues, ticketLinks,
   aiWorkspaces, aiSessions, aiSessionOutput,
+  aiAgents, aiMessages, aiPermissionRequests,
 ];
