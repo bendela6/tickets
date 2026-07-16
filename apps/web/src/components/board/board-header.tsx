@@ -106,7 +106,7 @@ export function BoardHeader({
         {board.project.name}
       </h1>
       <span className="font-mono text-meta text-ink-3">
-        {ticketCount} tickets · {donePercent}% done
+        {ticketCount} items · {donePercent}% done
       </span>
       <span className="flex-1" />
 

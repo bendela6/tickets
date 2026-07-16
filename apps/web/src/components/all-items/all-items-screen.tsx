@@ -460,7 +460,7 @@ export function AllItemsScreen() {
           All items
         </h1>
         <span className="font-mono text-meta text-ink-3">
-          {totalCount} tickets · {entries.length} projects
+          {totalCount} items · {entries.length} projects
         </span>
         <span className="flex-1" />
         <Input
@@ -606,12 +606,12 @@ export function AllItemsScreen() {
               ⌕
             </span>
             <span className="font-sans text-[16px] font-semibold text-ink">
-              {totalCount > 0 ? 'No tickets match these filters' : 'No tickets yet'}
+              {totalCount > 0 ? 'No items match these filters' : 'No items yet'}
             </span>
             <span className="max-w-85 text-center font-sans text-ui text-ink-2">
               {totalCount > 0
-                ? `Filters are hiding all ${totalCount} tickets across ${entries.length} projects.`
-                : 'Nothing here yet — create a ticket in any project.'}
+                ? `Filters are hiding all ${totalCount} items across ${entries.length} projects.`
+                : 'Nothing here yet — create an item in any project.'}
             </span>
           </div>
         ) : (

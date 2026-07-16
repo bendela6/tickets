@@ -201,7 +201,7 @@ export function KanbanView({
         role="button"
         tabIndex={0}
         draggable={userId !== null}
-        title={userId === null ? 'Pick a user in the header to move tickets' : undefined}
+        title={userId === null ? 'Pick a user in the header to move items' : undefined}
         onClick={() => onOpenTicket(ticket.number)}
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') {

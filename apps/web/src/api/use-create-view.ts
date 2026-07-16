@@ -1,16 +1,22 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { fetchJson } from './client';
+import { apiMutate } from './client';
 import type { View } from './types';
 
 export function useCreateView() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { projectKey: string; name: string; config?: Record<string, unknown> }) => {
-      const { projectKey, ...body } = input;
-      return fetchJson<View>(`/api/projects/${encodeURIComponent(projectKey)}/views`, {
+    mutationFn: (input: {
+      projectKey: string;
+      actorId: number;
+      name: string;
+      config?: Record<string, unknown>;
+    }) => {
+      const { projectKey, actorId, ...body } = input;
+      return apiMutate<View>(`/api/projects/${encodeURIComponent(projectKey)}/views`, {
         method: 'POST',
-        body: JSON.stringify(body),
+        actorId,
+        body,
       });
     },
     onSuccess: async () => {

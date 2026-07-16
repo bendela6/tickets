@@ -1,15 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { fetchJson } from './client';
+import { apiMutate } from './client';
 import type { CreateUserInput, User } from './types';
 
 export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateUserInput) => {
-      return fetchJson<User>('/api/users', {
+      const { actorId, ...body } = input;
+      return apiMutate<User>('/api/users', {
         method: 'POST',
-        body: JSON.stringify(input),
+        actorId,
+        body,
       });
     },
     onSuccess: async () => {

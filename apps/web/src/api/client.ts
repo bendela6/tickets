@@ -42,6 +42,6 @@ export function apiMutate<T>(
   path: string,
   opts: { method: 'POST' | 'PATCH' | 'DELETE'; actorId: number; body?: Record<string, unknown> },
 ): Promise<T> {
-  const body = { commandId: crypto.randomUUID(), actorId: opts.actorId, ...(opts.body ?? {}) };
+  const body = { ...(opts.body ?? {}), commandId: crypto.randomUUID(), actorId: opts.actorId };
   return fetchJson<T>(path, { method: opts.method, body: JSON.stringify(body) });
 }

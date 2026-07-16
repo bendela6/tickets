@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { useBoard } from '../api/use-board';
+import { useCurrentUser } from '../state/current-user-context';
 import { useViewConfig } from '../state/use-view-config';
 import { compareTickets } from '../utils/compare-tickets';
 import { evaluateFilters } from '../utils/evaluate-filters';
@@ -27,7 +28,8 @@ export function BoardScreen() {
   const board = boardQuery.data;
   const indexes = useMemo(() => (board ? indexBoard(board) : null), [board]);
   const view = board?.views.find((candidate) => candidate.id === Number(params.viewId));
-  const { config, update } = useViewConfig(board, view);
+  const { userId } = useCurrentUser();
+  const { config, update } = useViewConfig(board, view, userId);
   const [creating, setCreating] = useState(false);
 
   if (!board || !indexes) {

@@ -5,8 +5,14 @@ import { normalizeViewConfig, type ViewConfig } from '../utils/view-config';
 
 // The view's config with optimistic local edits: every change renders
 // immediately and is PATCHed to the view debounced, so table layout survives
-// refresh on any machine.
-export function useViewConfig(board: Board | undefined, view: View | undefined) {
+// refresh on any machine. `userId` is the current actor — when it's null
+// (no user picked yet) the local edit still applies, but the debounced PATCH
+// is skipped rather than firing with a null actor.
+export function useViewConfig(
+  board: Board | undefined,
+  view: View | undefined,
+  userId: number | null,
+) {
   const patchView = usePatchView();
   const serverConfig = useMemo(
     () =>
@@ -45,7 +51,10 @@ export function useViewConfig(board: Board | undefined, view: View | undefined) 
       clearTimeout(timer.current);
     }
     timer.current = setTimeout(() => {
-      patchView.mutate({ viewId: view.id, config: next });
+      if (userId === null) {
+        return;
+      }
+      patchView.mutate({ viewId: view.id, actorId: userId, config: next });
     }, 600);
   };
 

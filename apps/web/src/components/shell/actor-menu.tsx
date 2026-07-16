@@ -82,10 +82,16 @@ export function ActorMenu() {
             </Button>
             <Button
               variant="primary"
-              disabled={nameDraft.trim() === ''}
+              disabled={nameDraft.trim() === '' || userId === null}
               loading={createUser.isPending}
               onClick={async () => {
-                const created = await createUser.mutateAsync({ name: nameDraft.trim() });
+                if (userId === null) {
+                  return;
+                }
+                const created = await createUser.mutateAsync({
+                  actorId: userId,
+                  name: nameDraft.trim(),
+                });
                 setUserId(created.id);
                 setCreating(false);
                 setNameDraft('');
