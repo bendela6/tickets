@@ -6,138 +6,84 @@ import type { ReactNode } from 'react';
 import type { Board } from '../api/types';
 import { CurrentUserProvider } from '../state/current-user-context';
 import { indexBoard } from '../utils/index-board';
-import { NewTicketDialog, SubtaskQuickCreate } from './new-ticket-dialog';
+import { NewItemDialog, SubtaskQuickCreate } from './new-item-dialog';
 
 const { navigateMock } = vi.hoisted(() => ({ navigateMock: vi.fn() }));
 vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigateMock }));
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function makeBoard(overrides: Partial<Board> = {}): Board {
   const createdAt = '2026-01-01T00:00:00.000Z';
   return {
-    project: { id: 1, key: 'core', name: 'Items Core', ticketPrefix: 'CORE', createdAt },
-    users: [{ id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null, createdAt }],
+    project: { id: 1, key: 'core', name: 'Items Core', schemeId: 1, itemPrefix: 'CORE', createdAt },
+    users: [{ id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null }],
     types: [
-      {
-        id: 1,
-        projectId: 1,
-        key: 'task',
-        label: 'Task',
-        config: {},
-        position: 1,
-        archivedAt: null,
-        createdAt,
-      },
-      {
-        id: 2,
-        projectId: 1,
-        key: 'bug',
-        label: 'Bug',
-        config: { color: '#a03028' },
-        position: 2,
-        archivedAt: null,
-        createdAt,
-      },
-      {
-        id: 3,
-        projectId: 1,
-        key: 'subtask',
-        label: 'Subtask',
-        config: {},
-        position: 3,
-        archivedAt: null,
-        createdAt,
-      },
+      { id: 1, schemeId: 1, key: 'task', label: 'Task', config: {}, archivedAt: null },
+      { id: 2, schemeId: 1, key: 'bug', label: 'Bug', config: { color: '#a03028' }, archivedAt: null },
+      { id: 3, schemeId: 1, key: 'subtask', label: 'Subtask', config: {}, archivedAt: null },
     ],
-    typeFields: [
-      { ticketTypeId: 1, fieldId: 11, position: 1, required: true },
-      { ticketTypeId: 1, fieldId: 10, position: 2, required: false },
-      { ticketTypeId: 2, fieldId: 11, position: 1, required: true },
-      { ticketTypeId: 2, fieldId: 12, position: 2, required: true },
-      { ticketTypeId: 2, fieldId: 13, position: 3, required: false },
-      { ticketTypeId: 2, fieldId: 10, position: 4, required: false },
-      { ticketTypeId: 3, fieldId: 11, position: 1, required: true },
-    ],
-    statuses: [
-      {
-        id: 1,
-        projectId: 1,
-        key: 'backlog',
-        label: 'Backlog',
-        kind: 'todo',
-        config: { initial: true },
-        position: 1,
-        archivedAt: null,
-        createdAt,
-      },
-      {
-        id: 2,
-        projectId: 1,
-        key: 'in-review',
-        label: 'In review',
-        kind: 'active',
-        config: {},
-        position: 2,
-        archivedAt: null,
-        createdAt,
-      },
-    ],
-    transitions: [],
     fields: [
       {
         id: 10,
-        projectId: 1,
+        schemeId: 1,
         key: 'status',
         label: 'Status',
-        type: 'status',
-        system: true,
-        config: {},
+        type: 'option',
+        config: { workflow: true },
+        optionSetId: 100,
         archivedAt: null,
-        createdAt,
-        options: [],
       },
       {
         id: 11,
-        projectId: 1,
+        schemeId: 1,
         key: 'title',
         label: 'Title',
-        type: 'text',
-        system: true,
+        type: 'string',
         config: {},
+        optionSetId: null,
         archivedAt: null,
-        createdAt,
-        options: [],
       },
       {
         id: 12,
-        projectId: 1,
+        schemeId: 1,
         key: 'severity',
         label: 'Severity',
-        type: 'select',
-        system: false,
+        type: 'option',
         config: {},
+        optionSetId: 200,
         archivedAt: null,
-        createdAt,
-        options: [
-          { id: 1, value: 'low', label: 'Low', config: {}, position: 1, archivedAt: null },
-          { id: 2, value: 'high', label: 'High', config: {}, position: 2, archivedAt: null },
-        ],
       },
       {
         id: 13,
-        projectId: 1,
+        schemeId: 1,
         key: 'description',
         label: 'Description',
-        type: 'text',
-        system: true,
-        config: { widget: 'markdown' },
+        type: 'string',
+        config: { format: 'markdown' },
+        optionSetId: null,
         archivedAt: null,
-        createdAt,
-        options: [],
       },
     ],
+    placements: [
+      { itemTypeId: 1, fieldId: 11, position: 1, required: true, configOverride: null },
+      { itemTypeId: 1, fieldId: 10, position: 2, required: false, configOverride: null },
+      { itemTypeId: 2, fieldId: 11, position: 1, required: true, configOverride: null },
+      { itemTypeId: 2, fieldId: 12, position: 2, required: true, configOverride: null },
+      { itemTypeId: 2, fieldId: 13, position: 3, required: false, configOverride: null },
+      { itemTypeId: 2, fieldId: 10, position: 4, required: false, configOverride: null },
+      { itemTypeId: 3, fieldId: 11, position: 1, required: true, configOverride: null },
+    ],
+    options: [
+      { id: 1000, optionSetId: 100, value: 'backlog', label: 'Backlog', position: 1, kind: 'todo', config: {}, archivedAt: null },
+      { id: 1001, optionSetId: 100, value: 'in-review', label: 'In review', position: 2, kind: 'active', config: {}, archivedAt: null },
+      { id: 2000, optionSetId: 200, value: 'low', label: 'Low', position: 1, kind: null, config: {}, archivedAt: null },
+      { id: 2001, optionSetId: 200, value: 'high', label: 'High', position: 2, kind: null, config: {}, archivedAt: null },
+    ],
+    transitions: [],
     linkTypes: [],
     views: [],
-    tickets: [
+    items: [
       {
         id: 100,
         number: 128,
@@ -147,7 +93,7 @@ function makeBoard(overrides: Partial<Board> = {}): Board {
         archivedAt: null,
         createdAt,
         updatedAt: createdAt,
-        values: { status: 'backlog', title: 'Parent ticket' },
+        values: { status: 'backlog', title: 'Parent item' },
         comments: [],
         links: [],
       },
@@ -170,7 +116,7 @@ function renderWithProviders(node: ReactNode) {
 function renderDialog(board: Board) {
   const onClose = vi.fn();
   renderWithProviders(
-    <NewTicketDialog
+    <NewItemDialog
       projectKey="CORE"
       board={board}
       indexes={indexBoard(board)}
@@ -202,14 +148,14 @@ afterEach(() => {
 
 test('step 1 lists creatable types with field counts; subtask is not pickable', () => {
   renderDialog(makeBoard());
-  expect(screen.getByText('New ticket')).toBeInTheDocument();
+  expect(screen.getByText('New item')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /task/i })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /bug.*4 fields.*2 required/i })).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /subtask/i })).not.toBeInTheDocument();
-  expect(screen.getByText(/Created from a parent ticket’s Subtasks section/)).toBeInTheDocument();
+  expect(screen.getByText(/Created from a parent item’s Subtasks section/)).toBeInTheDocument();
 });
 
-test('pick type → fill title → required gate → submit POSTs body and opens the ticket', async () => {
+test('pick type → fill title → required gate → submit POSTs body and opens the item', async () => {
   const fetchMock = mockCreateFetch({ id: 500, number: 136 });
   const { onClose } = renderDialog(makeBoard());
 
@@ -222,19 +168,22 @@ test('pick type → fill title → required gate → submit POSTs body and opens
   );
 
   // severity is required for bugs — the first submit is blocked inline
-  await userEvent.click(screen.getByRole('button', { name: 'Create ticket' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Create item' }));
   expect(await screen.findByText('Required for bugs')).toBeInTheDocument();
   expect(fetchMock).not.toHaveBeenCalled();
 
   await userEvent.click(screen.getByRole('button', { name: '—' }));
   await userEvent.click(await screen.findByRole('option', { name: 'High' }));
 
-  await userEvent.click(screen.getByRole('button', { name: 'Create ticket' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Create item' }));
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
   const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-  expect(url).toBe('/api/projects/CORE/tickets');
+  expect(url).toBe('/api/projects/CORE/items');
   expect(init.method).toBe('POST');
-  expect(JSON.parse(String(init.body))).toEqual({
+  const { commandId, ...rest } = JSON.parse(String(init.body)) as Record<string, unknown>;
+  expect(typeof commandId).toBe('string');
+  expect(commandId).toMatch(UUID_RE);
+  expect(rest).toEqual({
     actorId: 7,
     typeKey: 'bug',
     values: {
@@ -270,7 +219,7 @@ test('SubtaskQuickCreate posts a subtask under the parent on Enter', async () =>
       projectKey="CORE"
       board={board}
       indexes={indexBoard(board)}
-      parent={board.tickets[0]!}
+      parent={board.items[0]!}
       onCreated={onCreated}
     />,
   );
@@ -282,9 +231,12 @@ test('SubtaskQuickCreate posts a subtask under the parent on Enter', async () =>
 
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
   const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-  expect(url).toBe('/api/projects/CORE/tickets');
+  expect(url).toBe('/api/projects/CORE/items');
   expect(init.method).toBe('POST');
-  expect(JSON.parse(String(init.body))).toEqual({
+  const { commandId, ...rest } = JSON.parse(String(init.body)) as Record<string, unknown>;
+  expect(typeof commandId).toBe('string');
+  expect(commandId).toMatch(UUID_RE);
+  expect(rest).toEqual({
     actorId: 7,
     typeKey: 'subtask',
     parentId: 100,

@@ -2,12 +2,12 @@ import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import type {
   Board,
-  BoardTicket,
-  CreatedTicket,
+  CreatedItem,
   Field,
+  Item,
+  ItemType,
+  ItemTypeField,
   Project,
-  TicketType,
-  TypeField,
 } from '../api/types';
 import { useCreateItem } from '../api/use-create-item';
 import { FieldWidget } from '../registry/field-widget';
@@ -26,22 +26,20 @@ import { TypeBadge } from '../ui/type-badge';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
 
-// Subtasks are created from a parent ticket's Subtasks section (SubtaskQuickCreate
+// Subtasks are created from a parent item's Subtasks section (SubtaskQuickCreate
 // below), never from the global picker — the picker shows them as a disabled row.
 const SUBTASK_KEY = 'subtask';
 
-type TypeFieldRow = { typeField: TypeField; field: Field };
+type PlacementRow = { placement: ItemTypeField; field: Field };
 
-// The type's form, resolved through board.typeFields (type → ordered field ids)
-// and indexes.fieldById; archived fields drop out just like the legacy dialog.
-function rowsForType(board: Board, indexes: BoardIndexes, type: TicketType): TypeFieldRow[] {
-  return board.typeFields
-    .filter((row) => row.ticketTypeId === type.id)
-    .sort((left, right) => left.position - right.position)
-    .flatMap((typeField) => {
-      const field = indexes.fieldById.get(typeField.fieldId);
-      return field && !field.archivedAt ? [{ typeField, field }] : [];
-    });
+// The type's form, resolved through indexes.placementsByType (type → ordered
+// field placements) and indexes.fieldById; archived fields drop out just like
+// the legacy dialog.
+function rowsForType(indexes: BoardIndexes, type: ItemType): PlacementRow[] {
+  return (indexes.placementsByType.get(type.id) ?? []).flatMap((placement) => {
+    const field = indexes.fieldById.get(placement.fieldId);
+    return field && !field.archivedAt ? [{ placement, field }] : [];
+  });
 }
 
 // 36px icon tile on each type card: type.config.color lands on the nearest
@@ -60,7 +58,7 @@ const iconColorClasses: Record<OptionColor, string> = {
   gray: 'bg-opt-gray-subtle text-opt-gray',
 };
 
-function TypeIcon({ type, dashed }: { type: TicketType; dashed?: boolean }) {
+function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
   const colored = typeof type.config.color === 'string' && type.config.color.length > 0;
   return (
     <span
@@ -83,7 +81,7 @@ function ProjectChip({ project }: { project: Project }) {
   return (
     <span className="inline-flex h-7 shrink-0 items-center gap-1.75 rounded-[7px] border border-hairline px-2.5 font-sans text-ui font-medium text-ink">
       <span className="rounded-sm bg-inset px-1.25 py-0.5 font-mono text-label font-medium">
-        {project.ticketPrefix}
+        {project.itemPrefix}
       </span>
       {project.name}
     </span>
@@ -108,7 +106,7 @@ function CloseButton() {
   );
 }
 
-export function NewTicketDialog({
+export function NewItemDialog({
   projectKey,
   board,
   indexes,
@@ -123,14 +121,11 @@ export function NewTicketDialog({
 }) {
   const navigate = useNavigate();
   const { userId } = useCurrentUser();
-  const createTicket = useCreateItem();
+  const createItem = useCreateItem();
   const titleRef = useRef<HTMLInputElement>(null);
 
   const selectable = useMemo(
-    () =>
-      board.types
-        .filter((type) => !type.archivedAt && type.key !== SUBTASK_KEY)
-        .sort((left, right) => left.position - right.position),
+    () => board.types.filter((type) => !type.archivedAt && type.key !== SUBTASK_KEY),
     [board.types],
   );
   const subtaskType =
@@ -139,7 +134,7 @@ export function NewTicketDialog({
   const [pickedTypeId, setPickedTypeId] = useState<number | null>(null);
   const [title, setTitle] = useState('');
   const [fieldValues, setFieldValues] = useState<Record<string, unknown>>({});
-  const [statusKey, setStatusKey] = useState<string | null>(null);
+  const [statusValue, setStatusValue] = useState<string | null>(null);
   const [missingKeys, setMissingKeys] = useState<ReadonlySet<string>>(new Set());
   const [apiError, setApiError] = useState('');
 
@@ -151,30 +146,37 @@ export function NewTicketDialog({
         ? (selectable[0] ?? null)
         : null;
 
-  const rows = type ? rowsForType(board, indexes, type) : [];
+  const rows = type ? rowsForType(indexes, type) : [];
   const titleRow = rows.find((row) => row.field.key === 'title') ?? null;
   const markdownRows = rows.filter(
-    (row) => row.field.type === 'text' && row.field.config.widget === 'markdown',
+    (row) => row.field.type === 'string' && row.field.config.format === 'markdown',
   );
   const gridRows = rows.filter(
-    (row) => row !== titleRow && row.field.type !== 'status' && !markdownRows.includes(row),
+    (row) => row !== titleRow && row.field.config.workflow !== true && !markdownRows.includes(row),
   );
 
-  // Creation legality: entry edges (ticket = null). Default to the workflow's
-  // marked-initial status, else the first legal entry status.
-  const entryStatuses = legalStatusTargets(board, indexes, null);
-  const defaultStatusKey =
-    entryStatuses.find((status) => status.config.initial)?.key ?? entryStatuses[0]?.key ?? null;
-  const effectiveStatusKey = statusKey ?? defaultStatusKey;
-  const activeStatuses = [...board.statuses]
-    .filter((status) => !status.archivedAt)
-    .sort((left, right) => left.position - right.position);
+  // Creation legality: entry edges (item = null). The workflow field's
+  // options double as the status list; default to the initial option
+  // (first todo-kind, else first) — mirrors the server's vocab.initialOption.
+  const workflowField = type ? indexes.workflowField(type.id) : undefined;
+  const entryStatuses = type ? legalStatusTargets(board, indexes, null, type.id) : [];
+  const typeStatusOptions =
+    type && workflowField ? indexes.optionsForField(type.id, workflowField) : [];
+  const initialOption =
+    typeStatusOptions.find((option) => option.kind === 'todo') ?? typeStatusOptions[0];
+  const defaultStatusValue = initialOption?.value ?? entryStatuses[0]?.value ?? null;
+  const effectiveStatusValue = statusValue ?? defaultStatusValue;
+  const statusOptions = typeStatusOptions.map((option) => ({
+    key: option.value,
+    label: option.label,
+    kind: option.kind ?? 'todo',
+  }));
 
   const reset = () => {
     setPickedTypeId(null);
     setTitle('');
     setFieldValues({});
-    setStatusKey(null);
+    setStatusValue(null);
     setMissingKeys(new Set());
     setApiError('');
   };
@@ -184,7 +186,7 @@ export function NewTicketDialog({
     onClose();
   };
 
-  const pick = (next: TicketType) => {
+  const pick = (next: ItemType) => {
     setFieldValues({});
     setMissingKeys(new Set());
     setApiError('');
@@ -204,13 +206,13 @@ export function NewTicketDialog({
   };
 
   const submit = async () => {
-    if (!type || userId === null || title.trim().length === 0 || createTicket.isPending) {
+    if (!type || userId === null || title.trim().length === 0 || createItem.isPending) {
       return;
     }
     setApiError('');
     const missing = new Set<string>();
-    for (const { typeField, field } of [...gridRows, ...markdownRows]) {
-      if (!typeField.required) {
+    for (const { placement, field } of [...gridRows, ...markdownRows]) {
+      if (!placement.required) {
         continue;
       }
       const value = fieldValues[field.key];
@@ -224,11 +226,11 @@ export function NewTicketDialog({
     }
     const values: Record<string, unknown> = { ...fieldValues };
     values[titleRow?.field.key ?? 'title'] = title.trim();
-    if (indexes.statusField && effectiveStatusKey !== null) {
-      values[indexes.statusField.key] = effectiveStatusKey;
+    if (workflowField && effectiveStatusValue !== null) {
+      values[workflowField.key] = effectiveStatusValue;
     }
     try {
-      const created = await createTicket.mutateAsync({
+      const created = await createItem.mutateAsync({
         projectKey,
         actorId: userId,
         typeKey: type.key,
@@ -286,7 +288,7 @@ export function NewTicketDialog({
         {type === null ? (
           <>
             <header className="flex items-center gap-2.5 border-b border-hairline px-5 py-4">
-              <DialogTitle>New ticket</DialogTitle>
+              <DialogTitle>New item</DialogTitle>
               <span className="font-sans text-ui text-ink-2">in</span>
               <ProjectChip project={board.project} />
               <span className="flex-1" />
@@ -294,8 +296,8 @@ export function NewTicketDialog({
             </header>
             <div className="flex flex-col gap-2.5 px-5 py-4.5">
               {selectable.map((candidate, index) => {
-                const candidateRows = rowsForType(board, indexes, candidate);
-                const requiredCount = candidateRows.filter((row) => row.typeField.required).length;
+                const candidateRows = rowsForType(indexes, candidate);
+                const requiredCount = candidateRows.filter((row) => row.placement.required).length;
                 return (
                   <button
                     key={candidate.id}
@@ -336,7 +338,7 @@ export function NewTicketDialog({
                       {subtaskType.label}
                     </span>
                     <span className="font-sans text-meta text-ink-3">
-                      Created from a parent ticket&rsquo;s Subtasks section — not from here
+                      Created from a parent item&rsquo;s Subtasks section — not from here
                     </span>
                   </span>
                 </div>
@@ -344,8 +346,8 @@ export function NewTicketDialog({
             </div>
             <footer className="border-t border-hairline bg-app px-5 py-3">
               <p className="m-0 font-sans text-meta text-ink-2">
-                🔒 Type is permanent — it decides this ticket&rsquo;s form and can&rsquo;t be
-                changed after creation.
+                🔒 Type is permanent — it decides this item&rsquo;s form and can&rsquo;t be changed
+                after creation.
               </p>
             </footer>
           </>
@@ -384,15 +386,16 @@ export function NewTicketDialog({
               />
               {gridRows.length > 0 ? (
                 <div className="grid shrink-0 grid-cols-2 gap-x-4 gap-y-3">
-                  {gridRows.map(({ typeField, field }) => (
+                  {gridRows.map(({ placement, field }) => (
                     <div key={field.id} className="flex min-w-0 flex-col gap-1.25">
-                      <FieldLabel required={typeField.required}>{field.label}</FieldLabel>
+                      <FieldLabel required={placement.required}>{field.label}</FieldLabel>
                       <FieldWidget
                         field={field}
                         value={fieldValues[field.key]}
                         board={board}
                         indexes={indexes}
                         ticket={null}
+                        typeId={type.id}
                         onChange={setValue(field.key)}
                       />
                       {missingKeys.has(field.key) ? (
@@ -404,15 +407,16 @@ export function NewTicketDialog({
                   ))}
                 </div>
               ) : null}
-              {markdownRows.map(({ typeField, field }) => (
+              {markdownRows.map(({ placement, field }) => (
                 <div key={field.id} className="flex shrink-0 flex-col gap-1.25">
-                  <FieldLabel required={typeField.required}>{field.label}</FieldLabel>
+                  <FieldLabel required={placement.required}>{field.label}</FieldLabel>
                   <FieldWidget
                     field={field}
                     value={fieldValues[field.key]}
                     board={board}
                     indexes={indexes}
                     ticket={null}
+                    typeId={type.id}
                     onChange={setValue(field.key)}
                   />
                   {missingKeys.has(field.key) ? (
@@ -424,17 +428,13 @@ export function NewTicketDialog({
               ))}
             </div>
             <footer className="flex items-center gap-2.5 border-t border-hairline bg-inset px-5 py-3.5">
-              {indexes.statusField ? (
+              {workflowField ? (
                 <div className="w-48 shrink-0">
                   <StatusSelect
-                    statuses={activeStatuses.map((status) => ({
-                      key: status.key,
-                      label: status.label,
-                      kind: status.kind,
-                    }))}
-                    legalTargets={entryStatuses.map((status) => status.key)}
-                    value={effectiveStatusKey}
-                    onChange={setStatusKey}
+                    statuses={statusOptions}
+                    legalTargets={entryStatuses.map((status) => status.value)}
+                    value={effectiveStatusValue}
+                    onChange={setStatusValue}
                   />
                 </div>
               ) : null}
@@ -454,11 +454,11 @@ export function NewTicketDialog({
               </Button>
               <Button
                 variant="primary"
-                loading={createTicket.isPending}
+                loading={createItem.isPending}
                 disabled={title.trim().length === 0 || userId === null}
                 onClick={() => void submit()}
               >
-                Create ticket
+                Create item
               </Button>
             </footer>
           </>
@@ -468,7 +468,7 @@ export function NewTicketDialog({
   );
 }
 
-// Fast path from a parent ticket's Subtasks section (design §subtask quick
+// Fast path from a parent item's Subtasks section (design §subtask quick
 // create): title + compact type select + Add; ↵ creates. Everything else
 // inherits defaults — the server assigns the workflow's entry status.
 export function SubtaskQuickCreate({
@@ -481,19 +481,13 @@ export function SubtaskQuickCreate({
   projectKey: string;
   board: Board;
   indexes: BoardIndexes;
-  parent: BoardTicket;
-  onCreated: (created: CreatedTicket) => void;
+  parent: Item;
+  onCreated: (created: CreatedItem) => void;
 }) {
   const { userId } = useCurrentUser();
-  const createTicket = useCreateItem();
+  const createItem = useCreateItem();
 
-  const types = useMemo(
-    () =>
-      board.types
-        .filter((type) => !type.archivedAt)
-        .sort((left, right) => left.position - right.position),
-    [board.types],
-  );
+  const types = useMemo(() => board.types.filter((type) => !type.archivedAt), [board.types]);
   const defaultTypeKey =
     types.find((type) => type.key === SUBTASK_KEY)?.key ?? types[0]?.key ?? SUBTASK_KEY;
   const [typeKey, setTypeKey] = useState<string | null>(null);
@@ -503,13 +497,13 @@ export function SubtaskQuickCreate({
   // Hint only — the server owns numbering; siblings count via the same index
   // the parent detail uses.
   const siblingCount = indexes.childrenByParent.get(parent.id)?.length ?? 0;
-  const nextNumber = board.tickets.reduce((max, ticket) => Math.max(max, ticket.number), 0) + 1;
+  const nextNumber = board.items.reduce((max, item) => Math.max(max, item.number), 0) + 1;
 
   const create = async () => {
-    if (userId === null || title.trim().length === 0 || createTicket.isPending) {
+    if (userId === null || title.trim().length === 0 || createItem.isPending) {
       return;
     }
-    const created = await createTicket.mutateAsync({
+    const created = await createItem.mutateAsync({
       projectKey,
       actorId: userId,
       typeKey: effectiveTypeKey,
@@ -546,7 +540,7 @@ export function SubtaskQuickCreate({
         className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-[14px] text-ink outline-none placeholder:text-ink-3"
       />
       <span aria-hidden className="hidden shrink-0 font-mono text-[10px] text-ink-3 sm:inline">
-        ↵ creates {board.project.ticketPrefix}-{nextNumber}
+        ↵ creates {board.project.itemPrefix}-{nextNumber}
       </span>
       <Combobox
         size="compact"
@@ -557,7 +551,7 @@ export function SubtaskQuickCreate({
       />
       <Button
         size="compact"
-        loading={createTicket.isPending}
+        loading={createItem.isPending}
         disabled={userId === null || title.trim().length === 0}
         onClick={() => void create()}
       >
