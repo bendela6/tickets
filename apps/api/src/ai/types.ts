@@ -8,9 +8,11 @@ export type SessionKind = 'terminal' | 'agent';
 export type SessionStatus =
   | 'starting'
   | 'running'
+  | 'live' // terminal is up and attached to a pty (E1)
   | 'idle' // agent finished a turn, awaiting a prompt (E2)
   | 'awaiting_input' // blocked on a permission decision (E3)
   | 'interrupted' // API restarted underneath it; may be resumable
+  | 'disconnected' // orphaned by an API restart; reconciled on boot
   | 'exited'
   | 'failed';
 
@@ -155,4 +157,8 @@ export interface SessionStore {
     status: SessionStatus,
     exitCode: number | null,
   ): Promise<void>;
+  // Flip any session left running/live/idle/etc. with no ended_at to
+  // 'disconnected' and stamp ended_at — called once at boot to clean up
+  // sessions orphaned by an API restart. Returns the number of rows affected.
+  reconcileOrphaned(): Promise<number>;
 }

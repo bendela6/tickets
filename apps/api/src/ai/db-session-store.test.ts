@@ -151,6 +151,43 @@ describe('DbSessionStore', () => {
     expect(decided!.decidedAt).not.toBeNull();
   });
 
+  test('reconcileOrphaned flips live-ish orphans to disconnected and stamps ended_at', async () => {
+    const [ws] = await db
+      .insert(aiWorkspaces)
+      .values({ name: 'reconcile-ws', path: '/tmp/reconcile' })
+      .returning({ id: aiWorkspaces.id });
+    const [live] = await db
+      .insert(aiSessions)
+      .values({ kind: 'terminal', title: 'orphaned live', workspaceId: ws!.id, status: 'live' })
+      .returning({ id: aiSessions.id });
+    const [done] = await db
+      .insert(aiSessions)
+      .values({
+        kind: 'terminal',
+        title: 'already exited',
+        workspaceId: ws!.id,
+        status: 'exited',
+        endedAt: new Date().toISOString(),
+      })
+      .returning({ id: aiSessions.id });
+
+    const n = await store.reconcileOrphaned();
+    expect(n).toBeGreaterThanOrEqual(1);
+
+    const [a] = await db
+      .select({ status: aiSessions.status, endedAt: aiSessions.endedAt })
+      .from(aiSessions)
+      .where(eq(aiSessions.id, live!.id));
+    expect(a!.status).toBe('disconnected');
+    expect(a!.endedAt).not.toBeNull();
+
+    const [b] = await db
+      .select({ status: aiSessions.status, endedAt: aiSessions.endedAt })
+      .from(aiSessions)
+      .where(eq(aiSessions.id, done!.id));
+    expect(b!.status).toBe('exited'); // untouched
+  });
+
   test('setCost and setStatus update the session row without stamping ended_at', async () => {
     // Fresh session — the lifecycle test above already stamped ended_at on the
     // shared one.

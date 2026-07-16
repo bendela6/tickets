@@ -114,6 +114,9 @@ function makeStore(log?: string[]) {
     async finishSession(_id, s) {
       statuses.push(s);
     },
+    async reconcileOrphaned() {
+      return 0;
+    },
   };
   return { store, messages, statuses, permissions, decisions, getCost: () => cost };
 }
