@@ -90,6 +90,14 @@ export interface OutputChunk {
   data: string;
 }
 
+// One persisted agent message: the seq (shared with the wire frame) and the
+// normalized event. The store derives the ai_messages row columns from the
+// event and reconstructs the event from the row on replay.
+export interface PersistedMessage {
+  seq: number;
+  event: AgentEvent;
+}
+
 export interface SessionStore {
   // Persist a batch of already-sequenced chunks. Resolves once durable.
   appendOutput(sessionId: SessionId, chunks: OutputChunk[]): Promise<void>;
@@ -102,8 +110,21 @@ export interface SessionStore {
   ): Promise<{ chunks: OutputChunk[]; oldestSeq: number | null }>;
   // Drop all but the newest `keep` chunks for a session.
   pruneOutput(sessionId: SessionId, keep: number): Promise<void>;
+  // Agent analogue of appendOutput/loadOutputSince: one ai_messages row per
+  // event, same seq/persist-before-broadcast discipline. oldestSeq lets replay
+  // flag a truncated message history exactly like terminal scrollback.
+  appendMessages(sessionId: SessionId, messages: PersistedMessage[]): Promise<void>;
+  loadMessagesSince(
+    sessionId: SessionId,
+    afterSeq: number,
+  ): Promise<{ messages: PersistedMessage[]; oldestSeq: number | null }>;
+  // Surface accumulated spend on the session row (agent runs cost real money).
+  setCost(sessionId: SessionId, costUsd: number): Promise<void>;
   // Mark a session running (on start).
   markRunning(sessionId: SessionId): Promise<void>;
+  // Non-terminal status transition (running↔idle↔awaiting_input) without setting
+  // ended_at — used by agent turns. finishSession is still the terminal one.
+  setStatus(sessionId: SessionId, status: SessionStatus): Promise<void>;
   // Terminal transition: status + exit code + ended_at (on process exit/failure).
   finishSession(
     sessionId: SessionId,
