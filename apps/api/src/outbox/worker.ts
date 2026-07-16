@@ -6,6 +6,7 @@ import { DEPTH_CAP } from '../automation/constants';
 import type { AutomationDef } from '../automation/registry';
 import { runAutomations } from '../automation/run-automations';
 import { projectEvent } from '../projection/item-activity';
+import { clearOutboxNotify, onOutboxNotify } from './notify';
 
 const BATCH = 50;
 const LEASE = '30 seconds';
@@ -114,10 +115,12 @@ export function createOutboxWorker(
     start() {
       if (running) return;
       running = true;
+      onOutboxNotify(() => { void drainOnce(); });
       void loop();
     },
     async stop() {
       running = false;
+      clearOutboxNotify();
       if (timer) clearTimeout(timer);
     },
     drainOnce,
