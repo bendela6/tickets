@@ -6,7 +6,9 @@ import { useStopAiSession } from '../../api/use-stop-ai-session';
 import { Button } from '../../ui/button';
 import { SessionStatusPill } from '../../ui/session-status-pill';
 import { buildMessageStream, type SeqEvent } from './build-message-stream';
+import { CostMeter } from './cost-meter';
 import { MessageStream } from './message-stream';
+import { AGENT_MODELS, PromptComposer } from './prompt-composer';
 import { useSessionSocket } from './use-session-socket';
 
 type Entry = { kind: 'user'; id: number; text: string } | { kind: 'event'; seq: number; event: AgentEvent };
@@ -23,6 +25,8 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
   const seenSeq = useRef<Set<number>>(new Set());
   const userId = useRef(0);
   const [draft, setDraft] = useState('');
+  const [model, setModel] = useState(AGENT_MODELS[0]!.value);
+  const [effort, setEffort] = useState('medium');
 
   const socket = useSessionSocket(sessionId, {
     onMessage: (seq, event) => {
@@ -70,15 +74,8 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
           {data?.title ?? `agent session #${sessionId}`}
         </span>
         <span className="flex-1" />
-        <span className="font-mono text-meta text-ink-3" title="spend so far">
-          ${cost.toFixed(4)}
-        </span>
+        <CostMeter costUsd={cost} />
         <SessionStatusPill status={status} exitCode={socket.exitCode ?? data?.exitCode ?? null} />
-        {running ? (
-          <Button size="compact" variant="secondary" onClick={() => socket.interrupt()}>
-            Interrupt
-          </Button>
-        ) : null}
         <Button
           size="compact"
           variant="destructive"
@@ -105,24 +102,17 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
       </div>
 
       <div className="border-t border-hairline px-6 py-3">
-        <div className="mx-auto flex max-w-3xl items-end gap-2">
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault();
-                send();
-              }
-            }}
-            rows={2}
-            placeholder="Message the agent…  (⌘/Ctrl+Enter to send)"
-            className="min-h-9.5 flex-1 resize-y rounded-[8px] border border-control bg-raised px-3 py-2 font-sans text-ui text-ink placeholder:text-ink-3 focus:border-accent focus:outline-none focus:ring-[3px] focus:ring-accent-subtle"
-          />
-          <Button variant="primary" onClick={send} disabled={!draft.trim()}>
-            Send
-          </Button>
-        </div>
+        <PromptComposer
+          value={draft}
+          onChange={setDraft}
+          onSend={send}
+          onInterrupt={() => socket.interrupt()}
+          running={running}
+          model={model}
+          onModelChange={setModel}
+          effort={effort}
+          onEffortChange={setEffort}
+        />
       </div>
     </div>
   );

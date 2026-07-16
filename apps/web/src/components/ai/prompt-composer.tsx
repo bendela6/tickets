@@ -1,0 +1,86 @@
+import { Button } from '../../ui/button';
+import { Combobox } from '../../ui/combobox';
+import type { ComboOption } from '../../ui/combobox-list';
+
+// Models the Claude provider offers (mirror of apps/api CLAUDE_MODELS). The
+// switcher is compact and lives in the composer per screen 10.
+export const AGENT_MODELS: ComboOption[] = [
+  { value: 'claude-opus-4-8', label: 'Opus 4.8' },
+  { value: 'claude-sonnet-5', label: 'Sonnet 5' },
+  { value: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5' },
+];
+
+export const EFFORT_LEVELS: ComboOption[] = [
+  { value: 'low', label: 'low' },
+  { value: 'medium', label: 'medium' },
+  { value: 'high', label: 'high' },
+];
+
+// The agent session footer: a multiline prompt, model + effort switchers, and a
+// Stop/interrupt control that is present ONLY while a turn is running.
+export function PromptComposer({
+  value,
+  onChange,
+  onSend,
+  onInterrupt,
+  running,
+  disabled,
+  model,
+  onModelChange,
+  effort,
+  onEffortChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onSend: () => void;
+  onInterrupt: () => void;
+  running: boolean;
+  disabled?: boolean;
+  model: string;
+  onModelChange: (model: string) => void;
+  effort: string;
+  onEffortChange: (effort: string) => void;
+}) {
+  return (
+    <div className="mx-auto flex max-w-3xl flex-col gap-2">
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            onSend();
+          }
+        }}
+        rows={2}
+        placeholder="Message the agent…  (⌘/Ctrl+Enter to send)"
+        className="min-h-9.5 resize-y rounded-[8px] border border-control bg-raised px-3 py-2 font-sans text-ui text-ink placeholder:text-ink-3 focus:border-accent focus:outline-none focus:ring-[3px] focus:ring-accent-subtle"
+      />
+      <div className="flex items-center gap-2">
+        <Combobox
+          options={AGENT_MODELS}
+          value={model}
+          onChange={(v) => onModelChange(v ?? model)}
+          size="compact"
+          className="w-40"
+        />
+        <Combobox
+          options={EFFORT_LEVELS}
+          value={effort}
+          onChange={(v) => onEffortChange(v ?? effort)}
+          size="compact"
+          className="w-28"
+        />
+        <span className="flex-1" />
+        {running ? (
+          <Button size="compact" variant="secondary" onClick={onInterrupt}>
+            ■ Stop
+          </Button>
+        ) : null}
+        <Button size="compact" variant="primary" onClick={onSend} disabled={disabled || !value.trim()}>
+          Send
+        </Button>
+      </div>
+    </div>
+  );
+}
