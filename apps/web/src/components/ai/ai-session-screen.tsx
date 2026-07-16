@@ -5,7 +5,7 @@ import { Terminal } from '@xterm/xterm';
 import { useAiSession } from '../../api/use-ai-session';
 import { useCreateAiSession } from '../../api/use-create-ai-session';
 import { useStopAiSession } from '../../api/use-stop-ai-session';
-import { Button } from '../../ui/button';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
 import { SessionStatusPill } from '../../ui/session-status-pill';
 import { TerminalFrame } from './terminal-frame';
 import { currentThemeName, terminalTheme } from './terminal-theme';
@@ -136,14 +136,29 @@ export function AiSessionScreen({ sessionId }: { sessionId: number }) {
             <div className="flex items-center gap-2">
               <SessionStatusPill status={status} exitCode={exitCode} />
               {socket.conn !== 'ended' ? (
-                <Button
-                  size="compact"
-                  variant="destructive"
-                  loading={stop.isPending}
-                  onClick={() => stop.mutate(sessionId)}
-                >
-                  Stop
-                </Button>
+                <Menu>
+                  <MenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Session actions"
+                      className="inline-flex size-6 items-center justify-center rounded-md border border-hairline bg-raised font-sans text-ink-2 hover:border-control"
+                    >
+                      ⋯
+                    </button>
+                  </MenuTrigger>
+                  <MenuContent align="end">
+                    <MenuItem
+                      destructive
+                      onSelect={() => {
+                        if (window.confirm('End this session? The process will be stopped.')) {
+                          stop.mutate(sessionId);
+                        }
+                      }}
+                    >
+                      End session
+                    </MenuItem>
+                  </MenuContent>
+                </Menu>
               ) : null}
             </div>
           }
