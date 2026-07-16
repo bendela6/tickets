@@ -117,6 +117,7 @@ function makeBoard(): Board {
     // only backlog → in-review is a legal move
     transitions: [{ id: 1, fieldId: 10, itemTypeId: null, fromOptionId: 1, toOptionId: 2, config: null }],
     linkTypes: [],
+    targetTypes: [],
     views: [],
     childTypes: [],
     items: [

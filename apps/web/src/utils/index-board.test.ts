@@ -19,7 +19,7 @@ function board(): Board {
       { id: 1001, optionSetId: 100, value: 'wip', label: 'WIP', position: 2, kind: 'active', config: {}, archivedAt: null },
       { id: 1002, optionSetId: 100, value: 'done', label: 'Done', position: 3, kind: 'done', config: {}, archivedAt: null },
     ],
-    transitions: [], linkTypes: [], views: [], childTypes: [], users: [{ id: 7, name: 'A', email: null, kind: 'human', archivedAt: null }],
+    transitions: [], linkTypes: [], targetTypes: [], views: [], childTypes: [], users: [{ id: 7, name: 'A', email: null, kind: 'human', archivedAt: null }],
     items: [
       { id: 500, number: 1, typeId: 1, parentId: null, createdBy: 7, archivedAt: null, createdAt: 'x', updatedAt: 'x', values: { status: 'todo', title: 'P' }, comments: [], links: [] },
       { id: 501, number: 2, typeId: 1, parentId: 500, createdBy: 7, archivedAt: null, createdAt: 'x', updatedAt: 'x', values: {}, comments: [], links: [] },

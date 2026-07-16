@@ -91,6 +91,7 @@ function makeBoard(): Board {
         archivedAt: null,
       },
     ],
+    targetTypes: [],
     views: [],
     childTypes: [],
     items: [

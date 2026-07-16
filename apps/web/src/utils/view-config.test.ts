@@ -34,6 +34,7 @@ function makeBoard(): Board {
       },
     ],
     linkTypes: [],
+    targetTypes: [],
     views: [],
     childTypes: [],
     items: [],

@@ -38,6 +38,7 @@ export interface Transition {
 }
 
 export interface LinkType { id: number; itemTypeId: number; key: string; label: string; inverseLabel: string; directional: boolean; position: number; archivedAt: string | null; }
+export interface LinkTypeTargetType { linkTypeId: number; targetTypeId: number; }
 export interface View { id: number; projectId: number; name: string; config: Record<string, unknown>; }
 export interface ItemTypeChildType { parentTypeId: number; childTypeId: number; }
 
@@ -59,6 +60,7 @@ export interface Board {
   options: Option[];
   transitions: Transition[];
   linkTypes: LinkType[];
+  targetTypes: LinkTypeTargetType[];
   views: View[];
   users: User[];
   childTypes: ItemTypeChildType[];

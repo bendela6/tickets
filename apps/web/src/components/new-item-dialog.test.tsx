@@ -82,6 +82,7 @@ function makeBoard(overrides: Partial<Board> = {}): Board {
     ],
     transitions: [],
     linkTypes: [],
+    targetTypes: [],
     views: [],
     childTypes: [],
     items: [
