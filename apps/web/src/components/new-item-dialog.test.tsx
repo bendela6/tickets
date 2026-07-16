@@ -19,9 +19,9 @@ function makeBoard(overrides: Partial<Board> = {}): Board {
     project: { id: 1, key: 'core', name: 'Items Core', schemeId: 1, itemPrefix: 'CORE', createdAt },
     users: [{ id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null }],
     types: [
-      { id: 1, schemeId: 1, key: 'task', label: 'Task', config: {}, archivedAt: null },
-      { id: 2, schemeId: 1, key: 'bug', label: 'Bug', config: { color: '#a03028' }, archivedAt: null },
-      { id: 3, schemeId: 1, key: 'subtask', label: 'Subtask', config: {}, archivedAt: null },
+      { id: 1, schemeId: 1, key: 'task', label: 'Task', position: 1, config: {}, archivedAt: null },
+      { id: 2, schemeId: 1, key: 'bug', label: 'Bug', position: 2, config: { color: '#a03028' }, archivedAt: null },
+      { id: 3, schemeId: 1, key: 'subtask', label: 'Subtask', position: 3, config: {}, archivedAt: null },
     ],
     fields: [
       {

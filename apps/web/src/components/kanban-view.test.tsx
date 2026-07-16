@@ -18,6 +18,7 @@ function makeBoard(): Board {
         schemeId: 1,
         key: 'task',
         label: 'Task',
+        position: 1,
         config: {},
         archivedAt: null,
       },

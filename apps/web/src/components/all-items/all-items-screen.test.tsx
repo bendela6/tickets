@@ -28,7 +28,7 @@ function field(
 }
 
 function taskType(id: number, schemeId: number): ItemType {
-  return { id, schemeId, key: 'task', label: 'Task', config: {}, archivedAt: null };
+  return { id, schemeId, key: 'task', label: 'Task', position: 1, config: {}, archivedAt: null };
 }
 
 const workflowOptions = (base: number, optionSetId: number): Option[] => [
