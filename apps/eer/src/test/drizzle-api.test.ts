@@ -93,12 +93,12 @@ describe('handleSchemaRequest', () => {
     expect(called).toBe(false);
   });
 
-  it('describes the real @tickets/db schema end to end (18 tables)', async () => {
+  it('describes the real @tickets/db schema end to end (24 tables)', async () => {
     const loader = { ssrLoadModule: () => Promise.resolve(realSchema as unknown as Record<string, unknown>) };
     const res = await handleSchemaRequest(loader, ROOT, null);
     expect(res.status).toBe(200);
     const body = res.body as { tables: unknown[]; groups: { key: string; color: string }[] };
-    expect(body.tables).toHaveLength(18);
+    expect(body.tables).toHaveLength(24);
     // group colours are resolved to hex, not left as Instrument names
     for (const g of body.groups) expect(g.color).toMatch(/^#[0-9a-f]{6}$/i);
   });
