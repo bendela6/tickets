@@ -1,4 +1,4 @@
-import { eq, inArray, or } from 'drizzle-orm';
+import { asc, eq, inArray, or } from 'drizzle-orm';
 import type { DbExecutor } from '@tickets/db';
 import { comments, itemLinks, itemValues, items } from '@tickets/db';
 import { renderValue } from '../values/render-value';
@@ -10,7 +10,7 @@ export async function assembleItems(db: DbExecutor, vocab: SchemeVocab) {
   const ids = itemRows.map((r) => r.id);
 
   const [valueRows, commentRows, linkRows] = await Promise.all([
-    db.select().from(itemValues).where(inArray(itemValues.itemId, ids)),
+    db.select().from(itemValues).where(inArray(itemValues.itemId, ids)).orderBy(asc(itemValues.id)),
     db.select().from(comments).where(inArray(comments.itemId, ids)),
     db.select().from(itemLinks).where(or(inArray(itemLinks.sourceItemId, ids), inArray(itemLinks.targetItemId, ids))),
   ]);

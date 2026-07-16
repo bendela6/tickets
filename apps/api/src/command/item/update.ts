@@ -55,6 +55,11 @@ export const itemUpdate = defineCommand({
 
       const nextRows = buildValueRows(vocab, typeId, fieldKey, value);
 
+      // no-op: same value set — skip write + emit entirely
+      const sig = (rows: { optionId?: number | null; valueUserId?: number | null; valueText?: string | null; valueNumber?: string | null; valueDate?: string | null; valueBool?: boolean | null; valueJson?: unknown }[]) =>
+        JSON.stringify(rows.map((r) => [r.optionId ?? null, r.valueUserId ?? null, r.valueText ?? null, r.valueNumber ?? null, r.valueDate ?? null, r.valueBool ?? null, r.valueJson ?? null]).sort());
+      if (sig(currentRows) === sig(nextRows)) continue;
+
       // workflow field: transition legality + guard
       if (wf && field.id === wf.id) {
         const toOptionId = nextRows[0]?.optionId;
