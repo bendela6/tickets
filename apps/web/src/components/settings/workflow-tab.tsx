@@ -9,6 +9,7 @@ import {
 import { hexToOptionColor } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
+import { Checkbox } from '../../ui/checkbox';
 import { cn } from '../../ui/cn';
 import { Combobox } from '../../ui/combobox';
 import type { ComboOption } from '../../ui/combobox-list';
@@ -302,8 +303,20 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
   }));
   const fromOptions: ComboOption[] = [{ value: ENTRY, label: 'Entry — new item' }, ...toOptions];
 
+  // Guard picker offers the selected type's placed fields, keyed by field
+  // KEY (not id) — the server matches guard.requiresField against the
+  // field's key (see runTransitionGuard's fieldByTypeKey lookup).
+  const guardFieldOptions: ComboOption[] = (
+    activeTypeId !== null ? (indexes.placementsByType.get(activeTypeId) ?? []) : []
+  )
+    .map((placement) => indexes.fieldById.get(placement.fieldId))
+    .filter((field): field is NonNullable<typeof field> => field !== undefined && field.archivedAt === null)
+    .map((field) => ({ value: field.key, label: field.label }));
+
   const [edgeFrom, setEdgeFrom] = useState<string | null>(null);
   const [edgeTo, setEdgeTo] = useState<string | null>(null);
+  const [edgeRequiresComment, setEdgeRequiresComment] = useState(false);
+  const [edgeRequiresField, setEdgeRequiresField] = useState<string | null>(null);
 
   function transitionLabel(t: Transition): string {
     const from = t.fromOptionId !== null ? indexes.optionById.get(t.fromOptionId) : undefined;
@@ -314,15 +327,24 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
   async function submitEdge() {
     if (disabled || userId === null || workflowField === undefined || activeTypeId === null) return;
     if (edgeFrom === null || edgeTo === null) return;
+    // Only send `config` when a guard input was actually set — an empty
+    // `{}`/`{guard:{}}` would still be a truthy config on the server.
+    const guard: { requiresComment?: boolean; requiresField?: string } = {};
+    if (edgeRequiresComment) guard.requiresComment = true;
+    if (edgeRequiresField !== null) guard.requiresField = edgeRequiresField;
+    const hasGuard = Object.keys(guard).length > 0;
     await createTransition.mutateAsync({
       actorId: userId,
       fieldId: workflowField.id,
       fromOptionId: edgeFrom === ENTRY ? null : Number(edgeFrom),
       toOptionId: Number(edgeTo),
       itemTypeId: activeTypeId,
+      ...(hasGuard ? { config: { guard } } : {}),
     });
     setEdgeFrom(null);
     setEdgeTo(null);
+    setEdgeRequiresComment(false);
+    setEdgeRequiresField(null);
   }
 
   async function removeEdge(t: Transition) {
@@ -515,6 +537,16 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                           {t.itemTypeId === null ? (
                             <span className="font-mono text-label text-ink-3">all types</span>
                           ) : null}
+                          {t.config?.guard?.requiresComment ? (
+                            <span className="font-mono text-label text-ink-3">requires comment</span>
+                          ) : null}
+                          {t.config?.guard?.requiresField ? (
+                            <span className="font-mono text-label text-ink-3">
+                              requires{' '}
+                              {indexes.fieldByKey.get(t.config.guard.requiresField)?.label ??
+                                t.config.guard.requiresField}
+                            </span>
+                          ) : null}
                           <span className="flex-1" />
                           <button
                             type="button"
@@ -556,6 +588,22 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                       options={toOptions}
                       value={edgeTo}
                       onChange={setEdgeTo}
+                      disabled={disabled}
+                    />
+                    <Checkbox
+                      label="Requires a comment"
+                      checked={edgeRequiresComment}
+                      onChange={(event) => setEdgeRequiresComment(event.target.checked)}
+                      disabled={disabled}
+                    />
+                    <Combobox
+                      size="compact"
+                      className="w-44"
+                      placeholder="Requires field"
+                      options={guardFieldOptions}
+                      value={edgeRequiresField}
+                      onChange={setEdgeRequiresField}
+                      clearable
                       disabled={disabled}
                     />
                     <Button
