@@ -168,6 +168,16 @@ describe('supervisor', () => {
     expect(appendIdx(2)).toBeLessThan(sendIdx(2));
   });
 
+  it('re-sends integrated activity to a client that attaches after start', async () => {
+    const { store } = makeStore();
+    const pty = makePty();
+    const sup = createSupervisor({ runner: { spawnPty: () => pty.handle }, store, schedule: syncSchedule });
+    sup.start({ id: 1, command: 'powershell.exe', cwd: '/w' }); // pwsh → precise integration
+    const { sub, frames } = makeSub();
+    await sup.attach(1, sub, 0);
+    expect(frames).toContainEqual(expect.objectContaining({ type: 'activity', integrated: true }));
+  });
+
   it('marks a terminal failed instead of throwing when the PTY cannot spawn', async () => {
     const { store, finished } = makeStore();
     const sup = createSupervisor({
