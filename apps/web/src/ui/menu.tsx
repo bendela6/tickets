@@ -44,7 +44,7 @@ export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(function MenuI
       ref={ref}
       className={cn(
         'flex cursor-pointer items-center justify-between gap-6 rounded-ctrl px-2 py-1.5 outline-none select-none',
-        'data-[highlighted]:bg-inset',
+        'data-[highlighted]:bg-inset data-disabled:pointer-events-none data-disabled:opacity-50',
         destructive ? 'text-danger data-[highlighted]:bg-danger-subtle' : 'text-ink',
         className,
       )}
