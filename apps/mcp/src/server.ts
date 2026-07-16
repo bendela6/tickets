@@ -4,6 +4,7 @@ import { getActor, type ToolContext } from './actor';
 import { environment } from './environment';
 import { registerAddComment } from './tools/add-comment';
 import { registerCreateTicket } from './tools/create-ticket';
+import { registerDispatchAgent } from './tools/dispatch-agent';
 import { registerGetBoard } from './tools/get-board';
 import { registerGetTicket } from './tools/get-ticket';
 import { registerLinkTickets } from './tools/link-tickets';
@@ -37,6 +38,7 @@ registerUpdateTicket(server, context);
 registerAddComment(server, context);
 registerLinkTickets(server, context);
 registerRemoveLink(server, context);
+registerDispatchAgent(server, context);
 
 await server.connect(new StdioServerTransport());
 // stdout belongs to the protocol — log to stderr only

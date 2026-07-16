@@ -30,6 +30,7 @@ internal ids.
 | [`add_comment`](add-comment.md) | write | Add a markdown comment |
 | [`link_tickets`](link-tickets.md) | write | Relate two tickets ("source *linkType* target") |
 | [`remove_link`](remove-link.md) | write | Remove an existing relation |
+| [`dispatch_agent`](dispatch-agent.md) | write | Put an agent persona on a ticket — runs it in an isolated worktree, comments the result back |
 
 ## Registration
 
