@@ -149,6 +149,7 @@ export function AiSessionScreen({ sessionId }: { sessionId: number }) {
                   <MenuContent align="end">
                     <MenuItem
                       destructive
+                      disabled={stop.isPending}
                       onSelect={() => {
                         if (window.confirm('End this session? The process will be stopped.')) {
                           stop.mutate(sessionId);

@@ -7,8 +7,10 @@ import { terminalsOf } from '../ai/select-sessions';
 
 export function TerminalsPanel({
   onNavigateSession,
+  onNavigate,
 }: {
   onNavigateSession: (sessionId: number) => void;
+  onNavigate?: () => void;
 }) {
   const sessions = useAiSessions();
   const workspaces = useAiWorkspaces();
@@ -34,7 +36,7 @@ export function TerminalsPanel({
       {rows.length === 0 ? (
         <p className="px-1 font-sans text-meta text-ink-3">No terminal sessions yet.</p>
       ) : (
-        <SessionList sessions={rows} workspaceName={workspaceName} />
+        <SessionList sessions={rows} workspaceName={workspaceName} onNavigate={onNavigate} />
       )}
       <NewSessionDialog open={creating} onOpenChange={setCreating} onCreated={onNavigateSession} />
     </div>

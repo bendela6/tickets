@@ -20,12 +20,12 @@ export function ModePanel({
   return (
     <div className="flex min-h-0 flex-1 flex-col px-3 pb-3 pt-3.5">
       {mode === 'terminals' ? (
-        <TerminalsPanel onNavigateSession={onNavigateSession} />
+        <TerminalsPanel onNavigateSession={onNavigateSession} onNavigate={onNavigate} />
       ) : mode === 'agents' ? (
-        <AgentsPanel />
-      ) : (
+        <AgentsPanel onNavigate={onNavigate} />
+      ) : mode === 'tasks' ? (
         <TasksPanel activeProjectKey={activeProjectKey} onNewTicket={onNewTicket} onNavigate={onNavigate} />
-      )}
+      ) : null}
     </div>
   );
 }
