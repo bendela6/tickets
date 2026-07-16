@@ -37,3 +37,11 @@ export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> 
   }
   return JSON.parse(text) as T;
 }
+
+export function apiMutate<T>(
+  path: string,
+  opts: { method: 'POST' | 'PATCH' | 'DELETE'; actorId: number; body?: Record<string, unknown> },
+): Promise<T> {
+  const body = { commandId: crypto.randomUUID(), actorId: opts.actorId, ...(opts.body ?? {}) };
+  return fetchJson<T>(path, { method: opts.method, body: JSON.stringify(body) });
+}
