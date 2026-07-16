@@ -106,4 +106,53 @@ describe('DbSessionStore', () => {
     await store.appendOutput(sessionId, []);
     expect(before.length).toBe(1); // still there, no throw
   });
+
+  test('appendMessages/loadMessagesSince round-trips normalized events', async () => {
+    await store.appendMessages(sessionId, [
+      { seq: 1, event: { type: 'session_started', providerSessionId: 'sess_x' } },
+      { seq: 2, event: { type: 'assistant_text', text: 'hello' } },
+      { seq: 3, event: { type: 'tool_use', id: 'tu_1', name: 'Read', input: { f: 'a.ts' } } },
+    ]);
+
+    const all = await store.loadMessagesSince(sessionId, 0);
+    expect(all.oldestSeq).toBe(1);
+    expect(all.messages.map((m) => [m.seq, m.event.type])).toEqual([
+      [1, 'session_started'],
+      [2, 'assistant_text'],
+      [3, 'tool_use'],
+    ]);
+    // The full event is reconstructed verbatim from the stored jsonb.
+    expect(all.messages[2]!.event).toEqual({
+      type: 'tool_use',
+      id: 'tu_1',
+      name: 'Read',
+      input: { f: 'a.ts' },
+    });
+
+    const since = await store.loadMessagesSince(sessionId, 2);
+    expect(since.messages.map((m) => m.seq)).toEqual([3]);
+  });
+
+  test('setCost and setStatus update the session row without stamping ended_at', async () => {
+    // Fresh session — the lifecycle test above already stamped ended_at on the
+    // shared one.
+    const [ws] = await db
+      .insert(aiWorkspaces)
+      .values({ name: 'cost-ws', path: '/tmp/cost' })
+      .returning({ id: aiWorkspaces.id });
+    const [fresh] = await db
+      .insert(aiSessions)
+      .values({ kind: 'agent', title: 'cost session', workspaceId: ws!.id })
+      .returning({ id: aiSessions.id });
+
+    await store.setCost(fresh!.id, 1.2345);
+    await store.setStatus(fresh!.id, 'idle');
+    const [row] = await db
+      .select({ costUsd: aiSessions.costUsd, status: aiSessions.status, endedAt: aiSessions.endedAt })
+      .from(aiSessions)
+      .where(eq(aiSessions.id, fresh!.id));
+    expect(Number(row!.costUsd)).toBeCloseTo(1.2345, 4);
+    expect(row!.status).toBe('idle');
+    expect(row!.endedAt).toBeNull();
+  });
 });

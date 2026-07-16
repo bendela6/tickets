@@ -66,15 +66,21 @@ export function registerAiSocket(app: FastifyInstance, context: { supervisor: Su
             case 'resize':
               if (attached) supervisor.resize(id, frame.cols, frame.rows);
               return;
+            case 'prompt':
+              // Agent: start a follow-up turn.
+              if (attached) supervisor.prompt(id, frame.text);
+              return;
+            case 'permission':
+              // Agent: resolve a parked canUseTool promise (E3 UI).
+              if (attached) supervisor.respondToPermission(id, frame.requestId, frame.result, frame.reason);
+              return;
             case 'interrupt':
-              // Terminal semantics: deliver Ctrl-C (ETX) to the foreground
-              // process. It does NOT kill the shell — that is DELETE /sessions.
-              // The agent-turn interrupt is wired in E2.
-              if (attached) supervisor.write(id, '\x03');
+              // Kind-aware: Ctrl-C to a terminal's foreground process, or
+              // run.interrupt() for an agent turn. Neither kills the session —
+              // that is DELETE /sessions.
+              if (attached) supervisor.interrupt(id);
               return;
             default:
-              // prompt / permission are agent frames — the terminal handler
-              // ignores them until E2/E3.
               return;
           }
         });

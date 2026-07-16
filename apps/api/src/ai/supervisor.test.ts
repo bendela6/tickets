@@ -84,7 +84,13 @@ function makeStore(log?: string[]) {
     async pruneOutput(_id, keep) {
       if (out.length > keep) out.splice(0, out.length - keep);
     },
+    async appendMessages() {},
+    async loadMessagesSince() {
+      return { messages: [], oldestSeq: null };
+    },
+    async setCost() {},
     async markRunning() {},
+    async setStatus() {},
     async finishSession(_id, status, exitCode) {
       finished.push({ status, exitCode });
     },

@@ -1,7 +1,31 @@
 import { and, asc, desc, eq, gt, lt, sql } from 'drizzle-orm';
 import type { Db } from '@tickets/db';
-import { aiSessionOutput, aiSessions } from '@tickets/db';
-import type { OutputChunk, SessionId, SessionStatus, SessionStore } from './types';
+import { aiMessages, aiSessionOutput, aiSessions } from '@tickets/db';
+import type { AgentEvent } from './types';
+import type { OutputChunk, PersistedMessage, SessionId, SessionStatus, SessionStore } from './types';
+
+// Derive the queryable ai_messages columns from an AgentEvent. The full event is
+// stored in `content` (jsonb) and reconstructed verbatim on replay; role/kind/
+// tool ids are projected out for filtering and subagent attribution.
+function messageRow(event: AgentEvent) {
+  const role =
+    event.type === 'tool_result'
+      ? 'tool'
+      : event.type === 'assistant_text' || event.type === 'thinking' || event.type === 'tool_use'
+        ? 'assistant'
+        : 'system';
+  const toolUseId =
+    event.type === 'tool_use'
+      ? event.id
+      : event.type === 'tool_result'
+        ? event.toolUseId
+        : null;
+  const parentToolUseId =
+    event.type === 'assistant_text' || event.type === 'tool_use'
+      ? (event.parentToolUseId ?? null)
+      : null;
+  return { role, kind: event.type, toolUseId, parentToolUseId, content: event };
+}
 
 // The production SessionStore: the supervisor's persist/replay/lifecycle calls
 // backed by drizzle. Behaviour is verified against a real Postgres in
@@ -47,10 +71,51 @@ export function createDbSessionStore(db: Db): SessionStore {
         .where(and(eq(aiSessionOutput.sessionId, sessionId), lt(aiSessionOutput.seq, oldestKept)));
     },
 
+    async appendMessages(sessionId: SessionId, messages: PersistedMessage[]): Promise<void> {
+      if (messages.length === 0) return;
+      await db.insert(aiMessages).values(
+        messages.map((m) => ({ sessionId, seq: m.seq, ...messageRow(m.event) })),
+      );
+    },
+
+    async loadMessagesSince(sessionId: SessionId, afterSeq: number) {
+      const rows = await db
+        .select({ seq: aiMessages.seq, content: aiMessages.content })
+        .from(aiMessages)
+        .where(and(eq(aiMessages.sessionId, sessionId), gt(aiMessages.seq, afterSeq)))
+        .orderBy(asc(aiMessages.seq));
+
+      const [oldest] = await db
+        .select({ seq: sql<number | null>`min(${aiMessages.seq})` })
+        .from(aiMessages)
+        .where(eq(aiMessages.sessionId, sessionId));
+
+      const messages: PersistedMessage[] = rows.map((r) => ({
+        seq: r.seq,
+        event: r.content as AgentEvent,
+      }));
+      const oldestSeq = oldest?.seq == null ? null : Number(oldest.seq);
+      return { messages, oldestSeq };
+    },
+
+    async setCost(sessionId: SessionId, costUsd: number): Promise<void> {
+      await db
+        .update(aiSessions)
+        .set({ costUsd: costUsd.toFixed(4), updatedAt: sql`now()` })
+        .where(eq(aiSessions.id, sessionId));
+    },
+
     async markRunning(sessionId: SessionId): Promise<void> {
       await db
         .update(aiSessions)
         .set({ status: 'running', updatedAt: sql`now()` })
+        .where(eq(aiSessions.id, sessionId));
+    },
+
+    async setStatus(sessionId: SessionId, status: SessionStatus): Promise<void> {
+      await db
+        .update(aiSessions)
+        .set({ status, updatedAt: sql`now()` })
         .where(eq(aiSessions.id, sessionId));
     },
 

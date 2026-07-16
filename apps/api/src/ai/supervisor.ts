@@ -1,24 +1,29 @@
+import type { AgentRun } from './agent-types';
 import type {
+  AgentEvent,
   OutputChunk,
+  PersistedMessage,
   PtyHandle,
   Runner,
   ServerFrame,
   SessionId,
+  SessionKind,
   SessionStatus,
   SessionStore,
   Subscriber,
 } from './types';
 
 // The one stateful thing in an otherwise stateless API: a singleton holding a
-// Map of live sessions. It owns every child process and is NOT coupled to any
-// browser connection — sockets attach and detach from a session that outlives
-// them, so closing the tab does not kill the process.
+// Map of live sessions. It owns every child process / agent run and is NOT
+// coupled to any browser connection — sockets attach and detach from a session
+// that outlives them, so closing the tab does not kill the process.
 //
-// The load-bearing invariant: output is persisted BEFORE it is broadcast. `seq`
-// is the single source of truth shared by the stored rows and the wire frames,
-// so a client that has seen seq=N can always be brought current from the store
-// alone. Getting this backwards makes reconnect lossy in a way that is very
-// hard to see in testing — hence the dedicated unit tests.
+// The load-bearing invariant: a record is persisted BEFORE it is broadcast.
+// `seq` is the single source of truth shared by the stored rows and the wire
+// frames, so a client that has seen seq=N can always be brought current from the
+// store alone. This holds identically for terminal output chunks and agent
+// message events — the only per-kind difference is which store method persists
+// and which frame carries the payload.
 
 export interface StartSpec {
   id: SessionId;
@@ -30,41 +35,68 @@ export interface StartSpec {
   rows?: number;
 }
 
+export interface StartAgentSpec {
+  id: SessionId;
+  run: AgentRun;
+  maxBudgetUsd?: number;
+}
+
 export interface Supervisor {
   start(spec: StartSpec): void;
+  startAgent(spec: StartAgentSpec): void;
   attach(sessionId: SessionId, sub: Subscriber, lastSeq: number): Promise<void>;
   detach(sessionId: SessionId, sub: Subscriber): void;
   write(sessionId: SessionId, data: string): void;
   resize(sessionId: SessionId, cols: number, rows: number): void;
+  // Agent-only: start a follow-up turn.
+  prompt(sessionId: SessionId, text: string): void;
+  // Kind-aware: Ctrl-C for a terminal, run.interrupt() for an agent.
+  interrupt(sessionId: SessionId): void;
+  // Agent-only: resolve a parked permission request (E3 wires the UI).
+  respondToPermission(
+    sessionId: SessionId,
+    requestId: string,
+    result: 'allow' | 'deny',
+    reason?: string,
+  ): void;
   stop(sessionId: SessionId): void;
   has(sessionId: SessionId): boolean;
-  // Force-flush pending output (used by the exit path and integration tests).
   flush(sessionId: SessionId): Promise<void>;
 }
 
 export interface SupervisorOptions {
   runner: Runner;
   store: SessionStore;
-  // Keep at most this many output chunks per session before pruning the oldest.
   outputCap?: number;
-  // Batch window for coalescing PTY chunks into one persist. Injectable so tests
-  // can flush deterministically (schedule that runs the callback synchronously).
   schedule?: (fn: () => void) => void;
 }
 
+// A sequenced record awaiting persist/broadcast — output for terminals, a
+// normalized event for agents. Same seq space either way.
+type SeqRecord =
+  | { seq: number; kind: 'output'; data: string }
+  | { seq: number; kind: 'message'; event: AgentEvent };
+
 interface RunningSession {
   id: SessionId;
+  kind: SessionKind;
   status: SessionStatus;
   exitCode: number | null;
-  handle: PtyHandle;
-  seq: number; // highest seq assigned so far
-  buffer: OutputChunk[]; // sequenced-but-not-yet-persisted
+  handle: PtyHandle | AgentRun;
+  seq: number;
+  buffer: SeqRecord[];
   flushing: Promise<void> | null;
   flushScheduled: boolean;
   subscribers: Set<Subscriber>;
-  // Attaching subscribers buffer live frames here until they've caught up on
-  // replay, so no live frame is dropped during the async load.
   pending: Map<Subscriber, ServerFrame[]>;
+  costUsd: number;
+  maxBudgetUsd?: number;
+}
+
+function recordToFrame(record: SeqRecord): ServerFrame {
+  return record.kind === 'output'
+    ? { type: 'output', seq: record.seq, data: record.data }
+    : { type: 'message', seq: record.seq, event: record.event };
 }
 
 export function createSupervisor(options: SupervisorOptions): Supervisor {
@@ -82,17 +114,26 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     rs.flushScheduled = false;
     const pending = rs.buffer.splice(0);
     if (pending.length === 0) return;
-    // Persist BEFORE broadcast.
-    await store.appendOutput(rs.id, pending);
-    for (const chunk of pending) {
-      broadcast(rs, { type: 'output', seq: chunk.seq, data: chunk.data });
+    // Persist BEFORE broadcast — the load-bearing invariant.
+    if (rs.kind === 'terminal') {
+      const chunks: OutputChunk[] = pending.map((r) =>
+        r.kind === 'output' ? { seq: r.seq, data: r.data } : { seq: r.seq, data: '' },
+      );
+      await store.appendOutput(rs.id, chunks);
+    } else {
+      const messages: PersistedMessage[] = pending.flatMap((r) =>
+        r.kind === 'message' ? [{ seq: r.seq, event: r.event }] : [],
+      );
+      await store.appendMessages(rs.id, messages);
     }
-    if (rs.seq > outputCap) {
+    for (const record of pending) broadcast(rs, recordToFrame(record));
+    // Only terminal scrollback is capped (a chatty process); agent turns are
+    // bounded by the budget cap instead.
+    if (rs.kind === 'terminal' && rs.seq > outputCap) {
       await store.pruneOutput(rs.id, outputCap);
     }
   }
 
-  // Serialize flushes so appends stay ordered and persist-before-broadcast holds.
   function flush(rs: RunningSession): Promise<void> {
     const run = (rs.flushing ?? Promise.resolve()).then(() => flushSession(rs));
     rs.flushing = run.catch(() => {});
@@ -107,34 +148,112 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     });
   }
 
+  // Non-terminal transition: persist any pending records first so the client
+  // sees the message that caused the transition before the status frame.
+  async function transition(rs: RunningSession, status: SessionStatus): Promise<void> {
+    await flush(rs);
+    rs.status = status;
+    await store.setStatus(rs.id, status);
+    broadcast(rs, { type: 'status', status });
+  }
+
   async function finish(
     rs: RunningSession,
     status: SessionStatus,
     exitCode: number | null,
   ): Promise<void> {
-    await flush(rs); // drain any remaining output first
+    await flush(rs);
     rs.status = status;
     rs.exitCode = exitCode;
     await store.finishSession(rs.id, status, exitCode);
     broadcast(rs, { type: 'status', status, exitCode });
   }
 
-  function consume(rs: RunningSession): void {
+  function newSession(id: SessionId, kind: SessionKind, handle: PtyHandle | AgentRun): RunningSession {
+    return {
+      id,
+      kind,
+      status: 'running',
+      exitCode: null,
+      handle,
+      seq: 0,
+      buffer: [],
+      flushing: null,
+      flushScheduled: false,
+      subscribers: new Set(),
+      pending: new Map(),
+      costUsd: 0,
+    };
+  }
+
+  function consumeTerminal(rs: RunningSession): void {
+    const handle = rs.handle as PtyHandle;
     void (async () => {
       try {
-        for await (const data of rs.handle.output) {
-          rs.buffer.push({ seq: ++rs.seq, data });
+        for await (const data of handle.output) {
+          rs.buffer.push({ seq: ++rs.seq, kind: 'output', data });
           scheduleFlush(rs);
         }
-        const { exitCode } = await rs.handle.exit;
+        const { exitCode } = await handle.exit;
         await finish(rs, 'exited', exitCode);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        // Surface the failure as an output chunk so the user can read it.
-        rs.buffer.push({ seq: ++rs.seq, data: `\r\n[session error] ${message}\r\n` });
+        rs.buffer.push({ seq: ++rs.seq, kind: 'output', data: `\r\n[session error] ${message}\r\n` });
         await finish(rs, 'failed', null);
       }
     })();
+  }
+
+  function consumeAgent(rs: RunningSession): void {
+    const run = rs.handle as AgentRun;
+    void (async () => {
+      try {
+        for await (const event of run.events) {
+          rs.buffer.push({ seq: ++rs.seq, kind: 'message', event });
+          scheduleFlush(rs);
+          if (event.type === 'permission_request') {
+            await transition(rs, 'awaiting_input');
+          } else if (event.type === 'result') {
+            rs.costUsd += event.costUsd;
+            await flush(rs);
+            await store.setCost(rs.id, rs.costUsd);
+            await transition(rs, 'idle');
+            if (rs.maxBudgetUsd != null && rs.costUsd >= rs.maxBudgetUsd) {
+              broadcast(rs, {
+                type: 'notice',
+                message: `budget cap reached — $${rs.costUsd.toFixed(2)} of $${rs.maxBudgetUsd.toFixed(2)}`,
+              });
+              run.interrupt().catch(() => {});
+            }
+          } else if (event.type === 'error') {
+            await transition(rs, 'failed');
+          }
+        }
+        await finish(rs, rs.status === 'failed' ? 'failed' : 'exited', null);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        rs.buffer.push({ seq: ++rs.seq, kind: 'message', event: { type: 'error', message } });
+        await finish(rs, 'failed', null);
+      }
+    })();
+  }
+
+  async function replay(
+    rs: RunningSession,
+    lastSeq: number,
+  ): Promise<{ frames: ServerFrame[]; oldestSeq: number | null }> {
+    if (rs.kind === 'terminal') {
+      const { chunks, oldestSeq } = await store.loadOutputSince(rs.id, lastSeq);
+      return {
+        frames: chunks.map((c) => ({ type: 'output', seq: c.seq, data: c.data })),
+        oldestSeq,
+      };
+    }
+    const { messages, oldestSeq } = await store.loadMessagesSince(rs.id, lastSeq);
+    return {
+      frames: messages.map((m) => ({ type: 'message', seq: m.seq, event: m.event })),
+      oldestSeq,
+    };
   }
 
   return {
@@ -147,55 +266,52 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
         cols: spec.cols ?? 80,
         rows: spec.rows ?? 24,
       });
-      const rs: RunningSession = {
-        id: spec.id,
-        status: 'running',
-        exitCode: null,
-        handle,
-        seq: 0,
-        buffer: [],
-        flushing: null,
-        flushScheduled: false,
-        subscribers: new Set(),
-        pending: new Map(),
-      };
+      const rs = newSession(spec.id, 'terminal', handle);
       sessions.set(spec.id, rs);
       void store.markRunning(spec.id);
       broadcast(rs, { type: 'status', status: 'running' });
-      consume(rs);
+      consumeTerminal(rs);
+    },
+
+    startAgent(spec) {
+      const rs = newSession(spec.id, 'agent', spec.run);
+      rs.maxBudgetUsd = spec.maxBudgetUsd;
+      sessions.set(spec.id, rs);
+      void store.markRunning(spec.id);
+      broadcast(rs, { type: 'status', status: 'running' });
+      consumeAgent(rs);
     },
 
     async attach(sessionId, sub, lastSeq) {
       const rs = sessions.get(sessionId);
       if (!rs) {
-        // Unknown or evicted session: tell the client it's over, don't hang.
         sub.send({ type: 'status', status: 'exited' });
         sub.close?.();
         return;
       }
-      // Buffer live frames for this subscriber during the async replay load.
       const buffered: ServerFrame[] = [];
       rs.pending.set(sub, buffered);
       try {
-        const { chunks, oldestSeq } = await store.loadOutputSince(sessionId, lastSeq);
+        const { frames, oldestSeq } = await replay(rs, lastSeq);
         if (oldestSeq !== null && oldestSeq > lastSeq + 1) {
           sub.send({
             type: 'notice',
-            message: `scrollback truncated — earlier output pruned (resumes at ${oldestSeq})`,
+            message: `history truncated — earlier records pruned (resumes at ${oldestSeq})`,
           });
         }
         let maxReplayed = lastSeq;
-        for (const chunk of chunks) {
-          sub.send({ type: 'output', seq: chunk.seq, data: chunk.data });
-          if (chunk.seq > maxReplayed) maxReplayed = chunk.seq;
+        for (const frame of frames) {
+          sub.send(frame);
+          const seq = 'seq' in frame ? frame.seq : lastSeq;
+          if (seq > maxReplayed) maxReplayed = seq;
         }
         sub.send({ type: 'replay_done' });
         sub.send({ type: 'status', status: rs.status, exitCode: rs.exitCode });
-        // Promote to live, replaying buffered frames not already covered.
-        // No await between here and subscribers.add, so no frame can slip past.
         rs.pending.delete(sub);
         for (const frame of buffered) {
-          if (frame.type === 'output' && frame.seq <= maxReplayed) continue;
+          if ((frame.type === 'output' || frame.type === 'message') && frame.seq <= maxReplayed) {
+            continue;
+          }
           sub.send(frame);
         }
         rs.subscribers.add(sub);
@@ -210,20 +326,47 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       if (!rs) return;
       rs.subscribers.delete(sub);
       rs.pending.delete(sub);
-      // Deliberately does NOT kill the process — the session outlives the socket.
     },
 
     write(sessionId, data) {
-      sessions.get(sessionId)?.handle.write(data);
+      const rs = sessions.get(sessionId);
+      if (rs?.kind === 'terminal') (rs.handle as PtyHandle).write(data);
     },
 
     resize(sessionId, cols, rows) {
-      sessions.get(sessionId)?.handle.resize(cols, rows);
+      const rs = sessions.get(sessionId);
+      if (rs?.kind === 'terminal') (rs.handle as PtyHandle).resize(cols, rows);
+    },
+
+    prompt(sessionId, text) {
+      const rs = sessions.get(sessionId);
+      if (rs?.kind !== 'agent') return;
+      void (rs.handle as AgentRun).send(text).then(() => transition(rs, 'running'));
+    },
+
+    interrupt(sessionId) {
+      const rs = sessions.get(sessionId);
+      if (!rs) return;
+      if (rs.kind === 'terminal') {
+        (rs.handle as PtyHandle).write('\x03');
+      } else {
+        void (rs.handle as AgentRun).interrupt();
+      }
+    },
+
+    respondToPermission(sessionId, requestId, result, reason) {
+      const rs = sessions.get(sessionId);
+      if (rs?.kind !== 'agent') return;
+      void (rs.handle as AgentRun)
+        .respondToPermission(requestId, result, reason)
+        .then(() => transition(rs, 'running'));
     },
 
     stop(sessionId) {
-      sessions.get(sessionId)?.handle.kill();
-      // The consume loop's exit handler finalizes status.
+      const rs = sessions.get(sessionId);
+      if (!rs) return;
+      if (rs.kind === 'terminal') (rs.handle as PtyHandle).kill();
+      else (rs.handle as AgentRun).close();
     },
 
     has(sessionId) {

@@ -32,6 +32,7 @@ const fakeSupervisor: Supervisor = {
   start: (spec) => {
     started.push(spec);
   },
+  startAgent: () => {},
   stop: (id) => {
     stopped.push(id);
   },
@@ -39,6 +40,9 @@ const fakeSupervisor: Supervisor = {
   detach: () => {},
   write: () => {},
   resize: () => {},
+  prompt: () => {},
+  interrupt: () => {},
+  respondToPermission: () => {},
   has: (id) => started.some((s) => s.id === id) && !stopped.includes(id),
   flush: async () => {},
 };
