@@ -116,7 +116,7 @@ export function AiSessionScreen({ sessionId }: { sessionId: number }) {
       <div className="flex items-center gap-2">
         <button
           type="button"
-          onClick={() => void navigate({ to: '/ai' })}
+          onClick={() => void navigate({ to: '/terminals' })}
           className="font-sans text-meta text-ink-3 hover:text-ink-2"
         >
           ← sessions

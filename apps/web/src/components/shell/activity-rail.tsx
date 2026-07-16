@@ -5,7 +5,7 @@ import { cn } from '../../ui/cn';
 import { ActorMenu } from './actor-menu';
 import type { Mode } from './mode-for-path';
 
-const ITEMS: { mode: Mode; to: string; glyph: string; label: string }[] = [
+const ITEMS: { mode: Mode; to: '/' | '/terminals' | '/agents'; glyph: string; label: string }[] = [
   { mode: 'tasks', to: '/', glyph: '▦', label: 'Tasks' },
   { mode: 'terminals', to: '/terminals', glyph: '▷_', label: 'Terminals' },
   { mode: 'agents', to: '/agents', glyph: '✳', label: 'Agents' },

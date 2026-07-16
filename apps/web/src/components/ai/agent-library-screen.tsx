@@ -33,7 +33,7 @@ export function AgentLibraryScreen() {
       <div className="flex items-center gap-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 font-mono text-meta text-ink-3">
-            <Link to="/ai" className="hover:text-ink-2">
+            <Link to="/agents" className="hover:text-ink-2">
               Sessions
             </Link>
             <span>/</span>
@@ -65,7 +65,7 @@ export function AgentLibraryScreen() {
               agent={agent}
               sessionCount={sessionCount.get(agent.id) ?? 0}
               onEdit={() =>
-                void navigate({ to: '/ai/agents/$agentId', params: { agentId: String(agent.id) } })
+                void navigate({ to: '/agents/personas/$agentId', params: { agentId: String(agent.id) } })
               }
             />
           ))}

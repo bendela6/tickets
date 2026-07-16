@@ -77,7 +77,7 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
       <div className="flex items-center gap-2.5 border-b border-hairline px-6 py-3">
         <button
           type="button"
-          onClick={() => void navigate({ to: '/ai' })}
+          onClick={() => void navigate({ to: '/agents' })}
           className="font-sans text-meta text-ink-3 hover:text-ink-2"
         >
           ← sessions
