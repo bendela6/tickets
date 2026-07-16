@@ -71,6 +71,13 @@
       "when": 1784193188241,
       "tag": "0009_watery_the_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1784212513300,
+      "tag": "0010_sturdy_amphibian",
+      "breakpoints": true
     }
   ]
 }

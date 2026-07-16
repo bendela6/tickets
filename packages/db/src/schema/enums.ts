@@ -35,10 +35,12 @@ export const sessionKindEnum = pgEnum('session_kind', ['terminal', 'agent']);
 export const sessionStatusEnum = pgEnum('session_status', [
   //
   'starting',
+  'live',
   'running',
   'idle',
   'awaiting_input',
   'interrupted',
+  'disconnected',
   'exited',
   'failed',
 ]);
