@@ -63,6 +63,7 @@ function makeCoreBoard(): Board {
     transitions: [],
     linkTypes: [],
     views: [],
+    childTypes: [],
     items: [
       {
         id: 100,
@@ -130,6 +131,7 @@ function makeAppBoard(): Board {
     transitions: [],
     linkTypes: [],
     views: [],
+    childTypes: [],
     items: [
       {
         id: 200,

@@ -39,6 +39,7 @@ export interface Transition {
 
 export interface LinkType { id: number; itemTypeId: number; key: string; label: string; inverseLabel: string; directional: boolean; position: number; archivedAt: string | null; }
 export interface View { id: number; projectId: number; name: string; config: Record<string, unknown>; }
+export interface ItemTypeChildType { parentTypeId: number; childTypeId: number; }
 
 export interface Comment { id: number; itemId: number; authorId: number; parentId: number | null; body: string; createdAt: string; }
 export interface ItemLink { id: number; linkTypeId: number; sourceItemId: number; targetItemId: number; createdAt: string; }
@@ -60,6 +61,7 @@ export interface Board {
   linkTypes: LinkType[];
   views: View[];
   users: User[];
+  childTypes: ItemTypeChildType[];
   items: Item[];
 }
 

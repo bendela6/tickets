@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import type { ReactNode } from 'react';
@@ -26,6 +26,7 @@ function makeBoard(overrides: Partial<Board> = {}): Board {
     transitions: [],
     linkTypes: [],
     views: [],
+    childTypes: [],
     items: [],
     ...overrides,
   };
@@ -165,6 +166,51 @@ test('toggling a child-type chip fires useSetChildTypes — PUTs the updated chi
   const [, init2] = fetchMock.mock.calls[1] as [string, RequestInit];
   const { childTypeIds } = JSON.parse(String(init2.body)) as Record<string, unknown>;
   expect(childTypeIds).toEqual([]);
+});
+
+test('seeds the chip editor from board.childTypes and does not wipe existing nesting rules on toggle', async () => {
+  const fetchMock = mockFetch();
+  const board: Board = {
+    ...makeBoard(),
+    types: [
+      { id: 1, schemeId: 5, key: 'epic', label: 'Epic', position: 1, config: { color: '#4E46C6' }, archivedAt: null },
+      { id: 2, schemeId: 5, key: 'task', label: 'Task', position: 2, config: {}, archivedAt: null },
+      { id: 4, schemeId: 5, key: 'bug', label: 'Bug', position: 3, config: {}, archivedAt: null },
+      { id: 5, schemeId: 5, key: 'spike', label: 'Spike', position: 4, config: {}, archivedAt: null },
+      { id: 3, schemeId: 5, key: 'old', label: 'Old', position: 5, config: {}, archivedAt: '2026-01-02T00:00:00.000Z' },
+    ],
+    // epic already allows task + bug; the editor must render both as selected.
+    childTypes: [
+      { parentTypeId: 1, childTypeId: 2 },
+      { parentTypeId: 1, childTypeId: 4 },
+    ],
+  };
+  renderTab(board);
+
+  // Scope to Epic's own card — "Spike"/"Task"/"Bug" chips also appear on
+  // each other type's card as candidates, so an unscoped query is ambiguous.
+  const epicCard = screen.getByText('epic').closest('section')!;
+  const taskChip = within(epicCard).getByRole('button', { name: 'Task', hidden: true, pressed: true });
+  const bugChip = within(epicCard).getByRole('button', { name: 'Bug', hidden: true, pressed: true });
+  expect(taskChip).toBeInTheDocument();
+  expect(bugChip).toBeInTheDocument();
+
+  // Toggling a THIRD type on must PUT the full intended set — the existing
+  // task + bug rows plus spike — not just the single clicked chip.
+  await userEvent.click(within(epicCard).getByRole('button', { name: 'Spike', hidden: true }));
+
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  expect(url).toBe('/api/types/1/child-types');
+  expect(init.method).toBe('PUT');
+  const { commandId, ...rest } = JSON.parse(String(init.body)) as Record<string, unknown>;
+  expect(typeof commandId).toBe('string');
+  expect(commandId).toMatch(UUID_RE);
+  expect(rest).toEqual({
+    actorId: 7,
+    childTypeIds: expect.arrayContaining([2, 4, 5]),
+  });
+  expect((rest.childTypeIds as number[]).length).toBe(3);
 });
 
 test('disables create/edit/archive actions when there is no current user', () => {
