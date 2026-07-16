@@ -11,7 +11,7 @@ import { FilterChips } from './board/filter-chips';
 import { KpiStrip } from './board/kpi-strip';
 import { TableView } from './board/table-view';
 import { KanbanView } from './kanban-view';
-import { NewTicketDialog } from './new-ticket-dialog';
+import { NewItemDialog } from './new-item-dialog';
 import { TicketDrawer } from './ticket-drawer';
 
 // The board area of a view route: header, filter chips, KPI strip, then the
@@ -121,7 +121,7 @@ export function BoardScreen() {
           onClose={() => setSearch({ t: undefined })}
         />
       ) : null}
-      <NewTicketDialog
+      <NewItemDialog
         projectKey={projectKey}
         board={board}
         indexes={indexes}
