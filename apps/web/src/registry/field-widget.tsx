@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Board, BoardTicket, Field } from '../api/types';
+import type { Board, Field, Item } from '../api/types';
 import { MarkdownEditor } from '../components/markdown-editor';
 import { Checkbox } from '../ui/checkbox';
 import { Combobox } from '../ui/combobox';
@@ -8,23 +8,26 @@ import { DatePicker } from '../ui/date-picker';
 import { Input } from '../ui/input';
 import { MultiCombobox } from '../ui/multi-combobox';
 import { NumberInput } from '../ui/number-input';
-import { StatusSelect } from '../ui/status-select';
 import { Textarea } from '../ui/textarea';
 import type { BoardIndexes } from '../utils/index-board';
-import { legalStatusTargets } from '../utils/legal-status-targets';
-import { hexToOptionColor } from './option-color';
+import { hexToOptionColor, kindColor } from './option-color';
 
-function toComboOptions(field: Field, indexes: BoardIndexes): ComboOption[] {
-  const options = indexes.optionsByFieldId.get(field.id) ?? [];
+function toComboOptions(typeId: number, field: Field, indexes: BoardIndexes): ComboOption[] {
+  const options = indexes.optionsForField(typeId, field);
   return options.map((option) => ({
     value: option.value,
     label: option.label,
-    color: hexToOptionColor(option.config.color),
+    color: field.config.workflow === true ? kindColor(option.kind) : hexToOptionColor(option.config.color),
   }));
 }
 
 // The editable counterpart of getCellContent: one widget per storage type,
-// refined by fields.config.widget. Controlled: (value, onChange).
+// refined by fields.config.format/multiple. Controlled: (value, onChange).
+// The workflow field (config.workflow===true) is just an option field here —
+// its color source is kindColor instead of hexToOptionColor; the kind-grouped
+// picker with legal-target narrowing (StatusSelect + legalStatusTargets)
+// lives in the callers that own status transitions (drawer header, board
+// status cell), not in this generic widget.
 export function FieldWidget({
   field,
   value,
@@ -32,6 +35,7 @@ export function FieldWidget({
   board,
   indexes,
   ticket,
+  typeId,
   onChange,
 }: {
   field: Field;
@@ -39,15 +43,17 @@ export function FieldWidget({
   disabled?: boolean;
   board: Board;
   indexes: BoardIndexes;
-  ticket: BoardTicket | null;
+  ticket: Item | null;
+  typeId: number;
   onChange: (next: unknown) => void;
 }) {
   const [jsonDraft, setJsonDraft] = useState<string | null>(null);
   // undefined = not editing; commit number edits when focus leaves the control
   // so stepper clicks and typing don't fire one PATCH per keystroke.
   const [numberDraft, setNumberDraft] = useState<number | null | undefined>(undefined);
+  void ticket; // reserved: transition-aware editing (legal targets) lives with the status control, not here
 
-  if (field.type === 'text' && field.config.widget === 'markdown') {
+  if (field.type === 'string' && field.config.format === 'markdown') {
     return (
       <MarkdownEditor
         value={typeof value === 'string' ? value : ''}
@@ -56,7 +62,7 @@ export function FieldWidget({
       />
     );
   }
-  if (field.type === 'text') {
+  if (field.type === 'string') {
     return (
       <Input
         defaultValue={typeof value === 'string' ? value : ''}
@@ -94,7 +100,7 @@ export function FieldWidget({
       </span>
     );
   }
-  if (field.type === 'date') {
+  if (field.type === 'date' || field.type === 'datetime') {
     return (
       <DatePicker
         value={typeof value === 'string' ? value : null}
@@ -157,10 +163,23 @@ export function FieldWidget({
       />
     );
   }
-  if (field.type === 'select') {
+  if (field.type === 'option') {
+    const options = toComboOptions(typeId, field, indexes);
+    if (field.config.multiple === true) {
+      const selected = Array.isArray(value) ? (value as string[]) : [];
+      return (
+        <MultiCombobox
+          options={options}
+          value={selected}
+          disabled={disabled}
+          placeholder="—"
+          onChange={(next) => onChange(next.length > 0 ? next : null)}
+        />
+      );
+    }
     return (
       <Combobox
-        options={toComboOptions(field, indexes)}
+        options={options}
         value={typeof value === 'string' ? value : null}
         disabled={disabled}
         clearable
@@ -169,34 +188,23 @@ export function FieldWidget({
       />
     );
   }
-  if (field.type === 'multi_select') {
-    const selected = Array.isArray(value) ? (value as string[]) : [];
+  if (field.type === 'user') {
+    const users = board.users.filter((user) => !user.archivedAt);
+    const options: ComboOption[] = users.map((user) => ({ value: String(user.id), label: user.name }));
+    const currentId =
+      typeof value === 'number'
+        ? value
+        : value && typeof value === 'object' && 'id' in (value as Record<string, unknown>)
+          ? Number((value as { id: number }).id)
+          : null;
     return (
-      <MultiCombobox
-        options={toComboOptions(field, indexes)}
-        value={selected}
+      <Combobox
+        options={options}
+        value={currentId === null ? null : String(currentId)}
         disabled={disabled}
-        placeholder="—"
-        onChange={(next) => onChange(next.length > 0 ? next : null)}
-      />
-    );
-  }
-  if (field.type === 'status') {
-    const targets = legalStatusTargets(board, indexes, ticket);
-    const active = [...board.statuses]
-      .filter((status) => !status.archivedAt)
-      .sort((left, right) => left.position - right.position);
-    return (
-      <StatusSelect
-        statuses={active.map((status) => ({
-          key: status.key,
-          label: status.label,
-          kind: status.kind,
-        }))}
-        legalTargets={targets.map((status) => status.key)}
-        value={typeof value === 'string' ? value : null}
-        disabled={disabled}
-        onChange={(next) => onChange(next)}
+        clearable
+        placeholder="Unassigned"
+        onChange={(next) => onChange(next === null ? null : Number(next))}
       />
     );
   }
