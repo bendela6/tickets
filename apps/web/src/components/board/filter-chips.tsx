@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { Board, Field } from '../../api/types';
-import { hexToOptionColor } from '../../registry/option-color';
+import type { Board, Field, Option } from '../../api/types';
+import { hexToOptionColor, kindColor } from '../../registry/option-color';
 import { Button } from '../../ui/button';
 import type { ComboOption } from '../../ui/combobox-list';
 import { Combobox } from '../../ui/combobox';
@@ -10,6 +10,13 @@ import { OptionChip, type OptionColor } from '../../ui/option-chip';
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { FilterRule } from '../../utils/view-config';
+
+// Field-level options list, unscoped by type (filters are project-wide, not
+// bound to one item type's allowlist) — the type-scoped equivalent is
+// indexes.optionsForField.
+function optionsInSet(field: Field, indexes: BoardIndexes): Option[] {
+  return field.optionSetId === null ? [] : (indexes.optionsBySetId.get(field.optionSetId) ?? []);
+}
 
 const KINDS = ['todo', 'active', 'blocked', 'done', 'dropped'];
 
@@ -31,10 +38,7 @@ const OP_LABELS: Record<FilterRule['op'], string> = {
 };
 
 function isOptionish(field: Field | null): boolean {
-  return (
-    field !== null &&
-    (field.type === 'select' || field.type === 'multi_select' || field.type === 'status')
-  );
+  return field !== null && field.type === 'option';
 }
 
 /** Value chips for one rule: option/status labels with their palette color. */
@@ -59,21 +63,19 @@ function RuleValues({ rule, indexes }: { rule: FilterRule; indexes: BoardIndexes
             />
           );
         }
-        if (field?.type === 'status') {
-          const status = indexes.statusByKey.get(value);
+        if (field?.config.workflow === true) {
+          const option = indexes.optionByValue(field, value);
           return (
             <OptionChip
               key={value}
-              label={status?.label ?? value}
-              color={hexToOptionColor(status?.config.color)}
+              label={option?.label ?? value}
+              color={kindColor(option?.kind ?? null)}
               className="h-4.5"
             />
           );
         }
         const option = field
-          ? (indexes.optionsByFieldId.get(field.id) ?? []).find(
-              (candidate) => candidate.value === value,
-            )
+          ? optionsInSet(field, indexes).find((candidate) => candidate.value === value)
           : undefined;
         return (
           <OptionChip
@@ -116,7 +118,9 @@ function AddFilter({
       ? [
           { value: 'any-of', label: 'is any of' },
           { value: 'none-of', label: 'is none of' },
-          ...(selectedField?.type === 'status' ? [{ value: 'kinds', label: 'kind of' }] : []),
+          ...(selectedField?.config.workflow === true
+            ? [{ value: 'kinds', label: 'kind of' }]
+            : []),
         ]
       : [{ value: 'contains', label: 'contains' }]),
     { value: 'empty', label: 'is empty' },
@@ -125,17 +129,15 @@ function AddFilter({
 
   const valueOptions: ComboOption[] = !selectedField
     ? []
-    : selectedField.type === 'status'
+    : selectedField.config.workflow === true
       ? op === 'kinds'
         ? KINDS.map((kind) => ({ value: kind, label: kind, color: KIND_COLORS[kind] ?? 'gray' }))
-        : board.statuses
-            .filter((status) => !status.archivedAt)
-            .map((status) => ({
-              value: status.key,
-              label: status.label,
-              color: hexToOptionColor(status.config.color),
-            }))
-      : (indexes.optionsByFieldId.get(selectedField.id) ?? []).map((option) => ({
+        : optionsInSet(selectedField, indexes).map((option) => ({
+            value: option.value,
+            label: option.label,
+            color: kindColor(option.kind),
+          }))
+      : optionsInSet(selectedField, indexes).map((option) => ({
           value: option.value,
           label: option.label,
           color: hexToOptionColor(option.config.color),
