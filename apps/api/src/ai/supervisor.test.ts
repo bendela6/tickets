@@ -89,6 +89,10 @@ function makeStore(log?: string[]) {
       return { messages: [], oldestSeq: null };
     },
     async setCost() {},
+    async createPermissionRequest() {
+      return 1;
+    },
+    async decidePermissionRequest() {},
     async markRunning() {},
     async setStatus() {},
     async finishSession(_id, status, exitCode) {
