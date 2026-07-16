@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import type { AgentEvent } from '../../api/types';
 import { useAiSession } from '../../api/use-ai-session';
@@ -7,7 +7,7 @@ import { Button } from '../../ui/button';
 import { SessionStatusPill } from '../../ui/session-status-pill';
 import { buildMessageStream, type SeqEvent } from './build-message-stream';
 import { CostMeter } from './cost-meter';
-import { MessageStream } from './message-stream';
+import { MessageStream, type RespondFn } from './message-stream';
 import { AGENT_MODELS, PromptComposer } from './prompt-composer';
 import { useSessionSocket } from './use-session-socket';
 
@@ -37,6 +37,14 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
   });
   const sendPromptRef = useRef(socket.sendPrompt);
   sendPromptRef.current = socket.sendPrompt;
+  const sendPermissionRef = useRef(socket.sendPermission);
+  sendPermissionRef.current = socket.sendPermission;
+  // Stable so the timeline memo isn't invalidated every render.
+  const respond = useCallback(
+    (requestId: string, result: 'allow' | 'deny', reason?: string) =>
+      sendPermissionRef.current(requestId, result, reason),
+    [],
+  );
 
   const data = session.data;
   const status = socket.status ?? data?.status ?? 'starting';
@@ -44,7 +52,7 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
 
   // Split the timeline into user bubbles and runs of agent events (each run
   // becomes one MessageStream).
-  const rendered = useMemo(() => renderTimeline(entries), [entries]);
+  const rendered = useMemo(() => renderTimeline(entries, respond), [entries, respond]);
 
   function send() {
     const text = draft.trim();
@@ -120,12 +128,12 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
 
 // Accumulate consecutive agent events into MessageStream runs; render user
 // entries as bubbles between them.
-function renderTimeline(entries: Entry[]) {
-  const out: React.ReactNode[] = [];
+function renderTimeline(entries: Entry[], onRespond: RespondFn) {
+  const out: ReactNode[] = [];
   let run: SeqEvent[] = [];
   const flush = (key: string) => {
     if (run.length === 0) return;
-    out.push(<MessageStream key={key} blocks={buildMessageStream(run)} />);
+    out.push(<MessageStream key={key} blocks={buildMessageStream(run)} onRespond={onRespond} />);
     run = [];
   };
   for (const entry of entries) {

@@ -365,6 +365,25 @@ function GalleryScreen() {
               </div>
             </Section>
 
+            <Section title="AI session — approval card (blocking)">
+              <div className="w-full max-w-2xl">
+                <MessageStream
+                  blocks={buildMessageStream([
+                    {
+                      seq: 1,
+                      event: {
+                        type: 'permission_request',
+                        id: 'p1',
+                        toolName: 'Bash',
+                        input: { command: 'rm -rf node_modules && pnpm install' },
+                      },
+                    },
+                  ])}
+                  onRespond={() => {}}
+                />
+              </div>
+            </Section>
+
             <Section title="AI session — cost meter (uncapped · capped · over)">
               <CostMeter costUsd={1.06} />
               <CostMeter costUsd={0.88} capUsd={5} />

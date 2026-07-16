@@ -147,6 +147,8 @@ export function useSessionSocket(
     sendInput: (data: string) => send({ type: 'input', data }),
     sendResize: (cols: number, rows: number) => send({ type: 'resize', cols, rows }),
     sendPrompt: (text: string) => send({ type: 'prompt', text }),
+    sendPermission: (requestId: string, result: 'allow' | 'deny', reason?: string) =>
+      send({ type: 'permission', requestId, result, reason }),
     interrupt: () => send({ type: 'interrupt' }),
   };
 }
