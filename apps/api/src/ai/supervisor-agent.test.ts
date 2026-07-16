@@ -18,6 +18,7 @@ function makeAgentRun() {
   let ended = false;
   let interrupted = false;
   const sent: string[] = [];
+  const permissionResponses: { id: string; result: string; reason?: string }[] = [];
   const wake = () => {
     const n = notify;
     notify = null;
@@ -39,7 +40,9 @@ function makeAgentRun() {
     send: async (t) => {
       sent.push(t);
     },
-    respondToPermission: async () => {},
+    respondToPermission: async (id, result, reason) => {
+      permissionResponses.push({ id, result, reason });
+    },
     interrupt: async () => {
       interrupted = true;
       ended = true;
@@ -61,6 +64,7 @@ function makeAgentRun() {
       wake();
     },
     sent,
+    permissionResponses,
     get interrupted() {
       return interrupted;
     },
@@ -70,6 +74,9 @@ function makeAgentRun() {
 function makeStore(log?: string[]) {
   const messages: PersistedMessage[] = [];
   const statuses: SessionStatus[] = [];
+  const permissions: { id: number; toolName: string }[] = [];
+  const decisions: { id: number; status: string; reason?: string }[] = [];
+  let permId = 0;
   let cost = 0;
   const store: SessionStore = {
     async appendOutput() {},
@@ -92,6 +99,14 @@ function makeStore(log?: string[]) {
     async setCost(_id, c) {
       cost = c;
     },
+    async createPermissionRequest(_id, toolName) {
+      const id = ++permId;
+      permissions.push({ id, toolName });
+      return id;
+    },
+    async decidePermissionRequest(id, status, reason) {
+      decisions.push({ id, status, reason });
+    },
     async markRunning() {},
     async setStatus(_id, s) {
       statuses.push(s);
@@ -100,7 +115,7 @@ function makeStore(log?: string[]) {
       statuses.push(s);
     },
   };
-  return { store, messages, statuses, getCost: () => cost };
+  return { store, messages, statuses, permissions, decisions, getCost: () => cost };
 }
 
 const deadRunner: Runner = {
@@ -226,6 +241,33 @@ describe('supervisor — agent sessions', () => {
 
     expect(agent.sent).toEqual(['do more']);
     expect(statuses).toContain('running');
+  });
+
+  it('persists a permission request and records the decision on respond (TIX-209)', async () => {
+    const helper = makeStore();
+    const agent = makeAgentRun();
+    const sup = createSupervisor({ runner: deadRunner, store: helper.store, schedule: syncSchedule });
+    sup.startAgent({ id: 1, run: agent.run });
+    const { sub } = makeSub();
+    await sup.attach(1, sub, 0);
+
+    agent.emit({ type: 'permission_request', id: 'perm_1', toolName: 'Bash', input: { command: 'ls' } });
+    await tick();
+    await sup.flush(1);
+    await tick();
+
+    // A pending request row was created; the session is awaiting a human.
+    expect(helper.permissions).toEqual([{ id: 1, toolName: 'Bash' }]);
+    expect(helper.statuses).toContain('awaiting_input');
+
+    // Approving resolves the AgentRun promise and records the decision.
+    sup.respondToPermission(1, 'perm_1', 'allow', 'looks safe');
+    await tick();
+    expect(agent.permissionResponses).toEqual([
+      { id: 'perm_1', result: 'allow', reason: 'looks safe' },
+    ]);
+    expect(helper.decisions).toEqual([{ id: 1, status: 'allowed', reason: 'looks safe' }]);
+    expect(helper.statuses).toContain('running');
   });
 
   it('calls onEnd exactly once when the run finishes (worktree teardown)', async () => {

@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gt, lt, sql } from 'drizzle-orm';
 import type { Db } from '@tickets/db';
-import { aiMessages, aiSessionOutput, aiSessions } from '@tickets/db';
+import { aiMessages, aiPermissionRequests, aiSessionOutput, aiSessions } from '@tickets/db';
 import type { AgentEvent } from './types';
 import type { OutputChunk, PersistedMessage, SessionId, SessionStatus, SessionStore } from './types';
 
@@ -103,6 +103,26 @@ export function createDbSessionStore(db: Db): SessionStore {
         .update(aiSessions)
         .set({ costUsd: costUsd.toFixed(4), updatedAt: sql`now()` })
         .where(eq(aiSessions.id, sessionId));
+    },
+
+    async createPermissionRequest(sessionId, toolName, input) {
+      const [row] = await db
+        .insert(aiPermissionRequests)
+        .values({ sessionId, toolName, input: input as object })
+        .returning({ id: aiPermissionRequests.id });
+      return row!.id;
+    },
+
+    async decidePermissionRequest(id, status, reason, decidedBy) {
+      await db
+        .update(aiPermissionRequests)
+        .set({
+          status,
+          decisionReason: reason ?? null,
+          decidedBy: decidedBy ?? null,
+          decidedAt: sql`now()`,
+        })
+        .where(eq(aiPermissionRequests.id, id));
     },
 
     async markRunning(sessionId: SessionId): Promise<void> {

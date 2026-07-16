@@ -97,6 +97,9 @@ interface RunningSession {
   maxBudgetUsd?: number;
   onEnd?: () => void | Promise<void>;
   ended: boolean;
+  // Maps a provider permission id → the ai_permission_requests row awaiting a
+  // human decision (TIX-209).
+  permissionRows: Map<string, number>;
 }
 
 function recordToFrame(record: SeqRecord): ServerFrame {
@@ -195,6 +198,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       pending: new Map(),
       costUsd: 0,
       ended: false,
+      permissionRows: new Map(),
     };
   }
 
@@ -224,6 +228,9 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
           rs.buffer.push({ seq: ++rs.seq, kind: 'message', event });
           scheduleFlush(rs);
           if (event.type === 'permission_request') {
+            // Persist the pending request (the parked promise) then block on it.
+            const rowId = await store.createPermissionRequest(rs.id, event.toolName, event.input);
+            rs.permissionRows.set(event.id, rowId);
             await transition(rs, 'awaiting_input');
           } else if (event.type === 'result') {
             rs.costUsd += event.costUsd;
@@ -371,6 +378,12 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     respondToPermission(sessionId, requestId, result, reason) {
       const rs = sessions.get(sessionId);
       if (rs?.kind !== 'agent') return;
+      // Record the human's decision against the persisted request row.
+      const rowId = rs.permissionRows.get(requestId);
+      if (rowId != null) {
+        rs.permissionRows.delete(requestId);
+        void store.decidePermissionRequest(rowId, result === 'allow' ? 'allowed' : 'denied', reason);
+      }
       void (rs.handle as AgentRun)
         .respondToPermission(requestId, result, reason)
         .then(() => transition(rs, 'running'));

@@ -120,6 +120,19 @@ export interface SessionStore {
   ): Promise<{ messages: PersistedMessage[]; oldestSeq: number | null }>;
   // Surface accumulated spend on the session row (agent runs cost real money).
   setCost(sessionId: SessionId, costUsd: number): Promise<void>;
+  // A pending ai_permission_requests row IS a parked canUseTool promise (TIX-209).
+  // Returns the row id so the decision can be recorded against it.
+  createPermissionRequest(
+    sessionId: SessionId,
+    toolName: string,
+    input: unknown,
+  ): Promise<number>;
+  decidePermissionRequest(
+    id: number,
+    status: 'allowed' | 'denied',
+    reason?: string,
+    decidedBy?: number,
+  ): Promise<void>;
   // Mark a session running (on start).
   markRunning(sessionId: SessionId): Promise<void>;
   // Non-terminal status transition (running↔idle↔awaiting_input) without setting

@@ -5,7 +5,7 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import type { Db } from '@tickets/db';
-import { aiSessions, aiWorkspaces, environment } from '@tickets/db';
+import { aiPermissionRequests, aiSessions, aiWorkspaces, environment } from '@tickets/db';
 import { createDbSessionStore } from './db-session-store';
 
 // Real-Postgres test for the SessionStore adapter — same scratch-db-per-run
@@ -131,6 +131,24 @@ describe('DbSessionStore', () => {
 
     const since = await store.loadMessagesSince(sessionId, 2);
     expect(since.messages.map((m) => m.seq)).toEqual([3]);
+  });
+
+  test('permission requests: create pending, then record the decision', async () => {
+    const id = await store.createPermissionRequest(sessionId, 'Bash', { command: 'rm -rf x' });
+    const [pending] = await db
+      .select()
+      .from(aiPermissionRequests)
+      .where(eq(aiPermissionRequests.id, id));
+    expect(pending).toMatchObject({ toolName: 'Bash', status: 'pending', decidedAt: null });
+    expect(pending!.input).toEqual({ command: 'rm -rf x' });
+
+    await store.decidePermissionRequest(id, 'denied', 'too destructive');
+    const [decided] = await db
+      .select()
+      .from(aiPermissionRequests)
+      .where(eq(aiPermissionRequests.id, id));
+    expect(decided).toMatchObject({ status: 'denied', decisionReason: 'too destructive' });
+    expect(decided!.decidedAt).not.toBeNull();
   });
 
   test('setCost and setStatus update the session row without stamping ended_at', async () => {
