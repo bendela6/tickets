@@ -5,7 +5,7 @@ const cfg = (kind: string, aggregateType: string, payload: v.GenericSchema) =>
   defineEvent({ kind, aggregateType, version: 1, payload });
 
 export const fieldCreated = cfg('field.created', 'field',
-  v.object({ schemeId: v.number(), key: v.string(), label: v.string(), type: v.string() }));
+  v.object({ schemeId: v.number(), key: v.string(), label: v.string(), type: v.string(), optionSetId: v.nullable(v.number()) }));
 export const fieldPlaced = cfg('field.placed', 'field',
   v.object({ itemTypeId: v.number(), position: v.number(), required: v.boolean() }));
 export const fieldUpdated = cfg('field.updated', 'field',
