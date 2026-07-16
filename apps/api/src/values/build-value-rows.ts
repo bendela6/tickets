@@ -30,8 +30,8 @@ export function buildValueRows(
       return [{ fieldId: field.id, valueText: value }];
     }
     case 'number': {
-      if (typeof value !== 'number' || Number.isNaN(value))
-        throw new HttpError(400, `field "${fieldKey}" expects a number`);
+      if (typeof value !== 'number' || !Number.isFinite(value))
+        throw new HttpError(400, `field "${fieldKey}" expects a finite number`);
       return [{ fieldId: field.id, valueNumber: String(value) }];
     }
     case 'boolean': {
@@ -40,8 +40,12 @@ export function buildValueRows(
     }
     case 'date':
     case 'datetime': {
-      if (typeof value !== 'string' || Number.isNaN(Date.parse(value)))
-        throw new HttpError(400, `field "${fieldKey}" expects an ISO ${field.type} string`);
+      const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+      const ISO_DATETIME = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:?\d{2})?$/;
+      const ok = typeof value === 'string'
+        && (field.type === 'date' ? ISO_DATE.test(value) : ISO_DATETIME.test(value))
+        && !Number.isNaN(Date.parse(value));
+      if (!ok) throw new HttpError(400, `field "${fieldKey}" expects an ISO ${field.type} string`);
       return [{ fieldId: field.id, valueDate: value }];
     }
     case 'json': {
@@ -64,11 +68,16 @@ export function buildValueRows(
         );
       }
       const available = vocab.optionsForField(typeId, field.id);
-      return (requested as string[]).map((optValue) => {
+      const built = (requested as string[]).map((optValue) => {
         const option = available.find((o) => o.value === optValue && !o.archivedAt);
         if (!option) throw new HttpError(400, `field "${fieldKey}" has no option "${optValue}"`);
         return { fieldId: field.id, optionId: option.id };
       });
+      if (multiple) {
+        const ids = built.map((r) => r.optionId);
+        if (new Set(ids).size !== ids.length) throw new HttpError(400, `field "${fieldKey}" has duplicate options`);
+      }
+      return built;
     }
     default:
       throw new HttpError(400, `unsupported field type "${field.type}"`);
