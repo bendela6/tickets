@@ -323,6 +323,14 @@ export type AgentEvent =
   | { type: 'result'; costUsd: number; durationMs: number; isError: boolean }
   | { type: 'error'; message: string };
 
+export type PermissionMode =
+  | 'default'
+  | 'acceptEdits'
+  | 'bypassPermissions'
+  | 'plan'
+  | 'dontAsk'
+  | 'auto';
+
 export interface AiAgent {
   id: number;
   userId: number;
@@ -333,11 +341,54 @@ export interface AiAgent {
   systemPrompt: string | null;
   allowedTools: string[];
   disallowedTools: string[];
-  permissionMode: string;
+  permissionMode: PermissionMode;
   mcpServers: Record<string, unknown>;
   effort: string | null;
   defaultWorkspaceId: number | null;
   config: Record<string, unknown>;
   archivedAt: string | null;
   createdAt: string;
+}
+
+export interface ProviderCapabilities {
+  permissions: boolean;
+  resume: boolean;
+  mcp: boolean;
+  subagents: boolean;
+}
+
+export interface ModelInfo {
+  id: string;
+  label: string;
+  contextWindow: number;
+}
+
+export interface AiProvider {
+  key: string;
+  capabilities: ProviderCapabilities;
+  models: ModelInfo[];
+}
+
+export interface CreateAiAgentInput {
+  key: string;
+  name: string;
+  providerKey: string;
+  model: string;
+  systemPrompt?: string;
+  allowedTools?: string[];
+  permissionMode?: PermissionMode;
+  effort?: string;
+  defaultWorkspaceId?: number;
+}
+
+export interface PatchAiAgentInput {
+  id: number;
+  name?: string;
+  model?: string;
+  systemPrompt?: string | null;
+  allowedTools?: string[];
+  permissionMode?: PermissionMode;
+  effort?: string | null;
+  defaultWorkspaceId?: number | null;
+  archived?: boolean;
 }

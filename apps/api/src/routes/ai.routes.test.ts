@@ -224,6 +224,14 @@ describe('AI routes', () => {
     expect(res.statusCode).toBe(404);
   });
 
+  test('lists providers with their capabilities and models', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/ai/providers' });
+    expect(res.statusCode).toBe(200);
+    const claude = res.json().find((p: { key: string }) => p.key === 'claude');
+    expect(claude.capabilities).toMatchObject({ permissions: true, resume: true });
+    expect(claude.models.map((m: { id: string }) => m.id)).toContain('claude-opus-4-8');
+  });
+
   test('creating an agent creates a users(kind=agent) row in the same transaction', async () => {
     const res = await app.inject({
       method: 'POST',
