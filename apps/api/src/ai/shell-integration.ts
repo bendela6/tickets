@@ -23,30 +23,55 @@ function basename(command: string): string {
   return last.toLowerCase().replace(/\.exe$/, '');
 }
 
-// bash/sh: a temp rcfile sources the user's ~/.bashrc, then sets PS0 (emit C
-// before each command) and PROMPT_COMMAND (emit D at each prompt). Verified: no
-// setup text echoes; silent commands are bracketed C→D.
+// Windows path -> WSL mount path: C:\a\b -> /mnt/c/a/b
+export function toMntPath(winPath: string): string {
+  const m = /^([A-Za-z]):[\\/](.*)$/.exec(winPath);
+  if (!m) return winPath.replace(/\\/g, '/');
+  return `/mnt/${m[1]!.toLowerCase()}/${m[2]!.replace(/\\/g, '/')}`;
+}
+
+// Shared bash rcfile: source ~/.bashrc, then PS0 emits C, PROMPT_COMMAND emits
+// D with the exit code ($? captured first). Verified: no echo, real exit codes.
+function writeBashRc(id: number): string {
+  const rc = join(tmpdir(), `ti-shellint-${id}.sh`);
+  writeFileSync(
+    rc,
+    `[ -f ~/.bashrc ] && . ~/.bashrc\n` +
+      `PS0=$'${ESC}]133;C${ESC}\\\\'\n` +
+      `PROMPT_COMMAND='__ec=$?; printf "${ESC}]133;D;%s${ESC}\\\\" "$__ec";'"\${PROMPT_COMMAND:-}"\n`,
+  );
+  return rc;
+}
+
 const bash: ShellIntegration = {
   id: 'bash',
   precise: true,
   matches: (c) => ['bash', 'sh'].includes(basename(c)),
-  apply: (spec) => {
-    const rc = join(tmpdir(), `ti-shellint-${spec.id}.sh`);
-    writeFileSync(
-      rc,
-      `[ -f ~/.bashrc ] && . ~/.bashrc\n` +
-        `PS0=$'${ESC}]133;C${ESC}\\\\'\n` +
-        `PROMPT_COMMAND='printf "${ESC}]133;D${ESC}\\\\";'"\${PROMPT_COMMAND:-}"\n`,
-    );
-    return { command: spec.command, args: ['--rcfile', rc, '-i'], env: spec.env ?? {} };
-  },
+  apply: (spec) => ({ command: spec.command, args: ['--rcfile', writeBashRc(spec.id), '-i'], env: spec.env ?? {} }),
 };
 
-// pwsh: prompt fn emits D+A; a PSReadLine Enter handler emits C before accepting
-// the line. Injected via -NoExit -Command so nothing echoes.
+// WSL: same bash rcfile, referenced by its /mnt path; keep any distro args
+// (e.g. -d Ubuntu) the caller passed, then `-- bash --rcfile <mnt> -i`.
+const wsl: ShellIntegration = {
+  id: 'wsl',
+  precise: true,
+  matches: (c) => basename(c) === 'wsl',
+  apply: (spec) => ({
+    command: spec.command,
+    args: [...(spec.args ?? []), '--', 'bash', '--rcfile', toMntPath(writeBashRc(spec.id)), '-i'],
+    env: spec.env ?? {},
+  }),
+};
+
+// pwsh: prompt emits D;<$LASTEXITCODE> + A; the Enter handler emits C with the
+// typed command (from the PSReadLine buffer). Injected via -NoExit -Command.
 const PWSH_INIT =
-  `function prompt { $e=[char]27; "$e]133;D$e\\$e]133;A$e\\PS $($executionContext.SessionState.Path.CurrentLocation)> " }; ` +
-  `Set-PSReadLineKeyHandler -Chord Enter -ScriptBlock { [Console]::Write([char]27+']133;C'+[char]27+'\\'); [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine() }`;
+  `function prompt { $e=[char]27; $ec=if($LASTEXITCODE -ne $null){$LASTEXITCODE}elseif($?){0}else{1}; ` +
+  `"$e]133;D;$ec$e\\$e]133;A$e\\PS $($executionContext.SessionState.Path.CurrentLocation)> " }; ` +
+  `Set-PSReadLineKeyHandler -Chord Enter -ScriptBlock { ` +
+  `$c=$null;[Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$c,[ref]$null); ` +
+  `[Console]::Write([char]27+']133;C;'+$c+[char]27+'\\'); ` +
+  `[Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine() }`;
 
 const pwsh: ShellIntegration = {
   id: 'pwsh',
@@ -59,8 +84,8 @@ const pwsh: ShellIntegration = {
   }),
 };
 
-// Extensible: add zsh (precise, ZDOTDIR), cmd (coarse, /K prompt), WSL, … here.
-const REGISTRY: ShellIntegration[] = [bash, pwsh];
+// Extensible: add zsh (ZDOTDIR), cmd (coarse /K prompt), more distros, … here.
+const REGISTRY: ShellIntegration[] = [pwsh, bash, wsl];
 
 export function integrationFor(command: string): ShellIntegration | null {
   return REGISTRY.find((i) => i.matches(command)) ?? null;
