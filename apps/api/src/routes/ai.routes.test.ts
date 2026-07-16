@@ -7,7 +7,7 @@ import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { eq } from 'drizzle-orm';
 import type { Db } from '@tickets/db';
-import { aiAgents, environment, users } from '@tickets/db';
+import { aiAgents, aiSessions, aiWorkspaces, environment, users } from '@tickets/db';
 import type { AgentRun } from '../ai/agent-types';
 import { createProviderRegistry } from '../ai/provider-registry';
 import type { StartAgentSpec, StartSpec, Supervisor } from '../ai/supervisor';
@@ -427,6 +427,37 @@ describe('AI routes', () => {
 
     const all = await app.inject({ method: 'GET', url: '/api/ai/sessions?archived=true' });
     expect(all.json().map((s: { id: number }) => s.id)).toContain(arch.id);
+  });
+
+  test('archiving a session the supervisor does not own finalizes it to disconnected', async () => {
+    // Inserted directly (not via start()/startAgent()), so the fake
+    // supervisor's has() reports false — exercising the "not live" branch
+    // (as opposed to the createTerminalSession() rows used elsewhere, which
+    // the fake supervisor tracks as live until stopped).
+    const [workspace] = await db
+      .insert(aiWorkspaces)
+      .values({ name: `ws-orphan-${Date.now()}-${Math.random()}`, path: tmpdir(), runner: 'local' })
+      .returning({ id: aiWorkspaces.id });
+    const [orphan] = await db
+      .insert(aiSessions)
+      .values({
+        kind: 'terminal',
+        title: 'orphaned session',
+        workspaceId: workspace!.id,
+        status: 'live',
+        endedAt: null,
+      })
+      .returning({ id: aiSessions.id });
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/ai/sessions/${orphan!.id}/archive`,
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body).toMatchObject({ status: 'disconnected' });
+    expect(body.archivedAt).not.toBeNull();
+    expect(body.endedAt).not.toBeNull();
   });
 
   test('unarchive brings a session back into the list', async () => {

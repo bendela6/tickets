@@ -10,7 +10,7 @@ import { DialogContent, DialogDescription, DialogRoot, DialogTitle } from '../..
 import { SessionStatusPill } from '../../ui/session-status-pill';
 import { Textarea } from '../../ui/textarea';
 
-const LIVE: SessionStatus[] = ['starting', 'running', 'idle', 'awaiting_input'];
+const LIVE: SessionStatus[] = ['starting', 'running', 'idle', 'awaiting_input', 'live'];
 
 // The ticket-detail touchpoint (screen 04): when an agent is working the ticket,
 // a live session pill + link; and a "＋ Put an agent on this" action that

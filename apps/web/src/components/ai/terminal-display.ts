@@ -12,6 +12,9 @@ export function terminalDisplay(
   if (status === 'exited') return { status: 'exited', label: 'Exited', pulse: false };
   if (status === 'disconnected') return { status: 'disconnected', label: 'Disconnected', pulse: false };
   if (status === 'failed') return { status: 'failed', label: "Couldn't start", pulse: false };
+  if (conn === 'ended' && (status === 'live' || status === 'starting')) {
+    return { status: 'disconnected', label: 'Disconnected', pulse: false };
+  }
   if (conn === 'connecting') return { status: 'starting', label: 'Connecting', pulse: false };
   if (conn === 'reconnecting') return { status: 'starting', label: 'Reconnecting', pulse: false };
   if (status === 'live') {
