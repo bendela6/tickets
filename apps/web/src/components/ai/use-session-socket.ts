@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import type { SessionStatus } from '../../api/types';
+import type { AgentEvent, SessionStatus } from '../../api/types';
 import type { ConnState } from './terminal-frame';
 
-// Server → client frames (mirror of apps/api ServerFrame; terminal subset).
+// Server → client frames (mirror of apps/api ServerFrame). Terminal sessions use
+// `output`; agent sessions use `message`.
 type ServerFrame =
   | { type: 'output'; seq: number; data: string }
+  | { type: 'message'; seq: number; event: AgentEvent }
   | { type: 'status'; status: SessionStatus; exitCode?: number | null }
   | { type: 'replay_done' }
   | { type: 'notice'; message: string };
@@ -29,7 +31,7 @@ function socketUrl(sessionId: number): string {
 // exactly what we missed and nothing is duplicated or lost.
 export function useSessionSocket(
   sessionId: number,
-  handlers: { onData: (data: string) => void },
+  handlers: { onData?: (data: string) => void; onMessage?: (seq: number, event: AgentEvent) => void },
 ) {
   const [conn, setConn] = useState<ConnState>('connecting');
   const [status, setStatus] = useState<SessionStatus | null>(null);
@@ -42,9 +44,11 @@ export function useSessionSocket(
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const endedRef = useRef(false);
   const disposedRef = useRef(false);
-  // Keep the latest onData without re-running the connect effect.
+  // Keep the latest handlers without re-running the connect effect.
   const onDataRef = useRef(handlers.onData);
   onDataRef.current = handlers.onData;
+  const onMessageRef = useRef(handlers.onMessage);
+  onMessageRef.current = handlers.onMessage;
 
   useEffect(() => {
     disposedRef.current = false;
@@ -79,7 +83,11 @@ export function useSessionSocket(
         switch (frame.type) {
           case 'output':
             lastSeqRef.current = frame.seq;
-            onDataRef.current(frame.data);
+            onDataRef.current?.(frame.data);
+            return;
+          case 'message':
+            lastSeqRef.current = frame.seq;
+            onMessageRef.current?.(frame.seq, frame.event);
             return;
           case 'status':
             setStatus(frame.status);
@@ -138,6 +146,7 @@ export function useSessionSocket(
     truncated,
     sendInput: (data: string) => send({ type: 'input', data }),
     sendResize: (cols: number, rows: number) => send({ type: 'resize', cols, rows }),
+    sendPrompt: (text: string) => send({ type: 'prompt', text }),
     interrupt: () => send({ type: 'interrupt' }),
   };
 }

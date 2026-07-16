@@ -302,9 +302,42 @@ export interface CreateAiWorkspaceInput {
 
 export interface CreateAiSessionInput {
   kind?: SessionKind;
-  workspaceId: number;
+  workspaceId?: number;
+  agentId?: number;
   title?: string;
   command?: string;
+  maxBudgetUsd?: number;
   cols?: number;
   rows?: number;
+}
+
+// Mirror of the API's normalized agent event union (apps/api ai/types.ts). The
+// UI only ever sees these — never which provider produced them.
+export type AgentEvent =
+  | { type: 'session_started'; providerSessionId: string }
+  | { type: 'assistant_text'; text: string; parentToolUseId?: string }
+  | { type: 'thinking'; text: string }
+  | { type: 'tool_use'; id: string; name: string; input: unknown; parentToolUseId?: string }
+  | { type: 'tool_result'; toolUseId: string; content: unknown; isError: boolean }
+  | { type: 'permission_request'; id: string; toolName: string; input: unknown }
+  | { type: 'result'; costUsd: number; durationMs: number; isError: boolean }
+  | { type: 'error'; message: string };
+
+export interface AiAgent {
+  id: number;
+  userId: number;
+  key: string;
+  name: string;
+  providerKey: string;
+  model: string;
+  systemPrompt: string | null;
+  allowedTools: string[];
+  disallowedTools: string[];
+  permissionMode: string;
+  mcpServers: Record<string, unknown>;
+  effort: string | null;
+  defaultWorkspaceId: number | null;
+  config: Record<string, unknown>;
+  archivedAt: string | null;
+  createdAt: string;
 }
