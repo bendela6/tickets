@@ -1027,7 +1027,7 @@ export const itemUnlinked = defineEvent({
 // apps/api/src/command/item/helpers.ts
 import { and, count, eq, sql } from 'drizzle-orm';
 import type { DbExecutor } from '@tickets/db';
-import { comments, itemValues, items } from '@tickets/db';
+import { comments, itemTypeChildTypes, itemValues, items } from '@tickets/db';
 import { HttpError } from '../../errors';
 import type { SchemeVocab } from '../../vocab/load-scheme-vocab';
 
@@ -1070,8 +1070,14 @@ export async function checkParent(
   }
   const parentType = vocab.typeById.get(parent.typeId);
   const childType = vocab.typeById.get(input.childTypeId);
-  const allowed = (parentType?.config as { allowedChildTypes?: string[] })?.allowedChildTypes ?? [];
-  if (!childType || !allowed.includes(childType.key)) {
+  // Allowed parent→child pairs live in the item_type_child_types table on the
+  // new schema (NOT itemTypes.config, which only holds {color}).
+  const allowedRows = await tx
+    .select({ childTypeId: itemTypeChildTypes.childTypeId })
+    .from(itemTypeChildTypes)
+    .where(eq(itemTypeChildTypes.parentTypeId, parent.typeId));
+  const allowed = new Set(allowedRows.map((r) => r.childTypeId));
+  if (!childType || !allowed.has(input.childTypeId)) {
     throw new HttpError(422, `a ${childType?.key ?? 'child'} cannot be nested under a ${parentType?.key ?? 'parent'}`);
   }
 }
