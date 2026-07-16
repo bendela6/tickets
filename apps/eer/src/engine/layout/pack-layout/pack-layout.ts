@@ -3,7 +3,7 @@
 
 import { measureEntity } from '../../geometry/measure-entity';
 import { LAYOUT_MARGIN } from '../../geometry/metrics';
-import type { Entity, GroupBounds, Model } from '../../model/types';
+import type { Entity, Group, GroupBounds, Model } from '../../model/types';
 
 const GROUP_PAD = 40;
 const GROUP_LABEL_H = 30;
@@ -80,55 +80,69 @@ export function packLayout(input: Model): Model {
   const zones = model.groups.filter((g) => !g.parent).sort((a, b) => a.order - b.order);
 
   const groupBounds: GroupBounds[] = [];
+
+  const cardBlock = (e: Entity): Block => ({
+    w: e._w,
+    h: e._h,
+    key: indexOf.get(e.id) ?? 0,
+    place: (x, y) => {
+      e.x = x;
+      e.y = y;
+    },
+  });
+
+  const childGroupsOf = (id: string): Group[] => model.groups.filter((g) => g.parent === id).sort((a, b) => a.order - b.order);
+
+  // A subgroup (nesting level >= 1) stacks its own loose cards and nested
+  // subgroup blocks into one tight column, then becomes a single block its
+  // parent packs — the recursion is what makes nesting unbounded. Returns null
+  // for a subgroup with nothing to show (no cards, no non-empty descendants):
+  // an empty box is not drawn, same as the flat version skipped empty ones.
+  function subgroupBlock(g: Group, level: number): Block | null {
+    const children: Block[] = [
+      ...(entsByGroup.get(g.id) ?? []).map(cardBlock),
+      ...childGroupsOf(g.id)
+        .map((sg) => subgroupBlock(sg, level + 1))
+        .filter((b): b is Block => b !== null),
+    ];
+    if (children.length === 0) return null;
+    children.sort((a, b) => a.key - b.key);
+
+    // Stack in one column, measuring the inner extent; place() applies the
+    // absolute offset (and recurses into nested subgroup blocks).
+    let iy = 0;
+    let iw = 0;
+    const placed = children.map((b) => {
+      const row = { b, ly: iy };
+      iy += b.h + SUB_VGAP;
+      iw = Math.max(iw, b.w);
+      return row;
+    });
+    const blockW = iw + SUB_PAD * 2;
+    const blockH = iy - SUB_VGAP + SUB_LABEL_H + SUB_PAD * 2;
+    const key = Math.min(...children.map((b) => b.key));
+    return {
+      w: blockW,
+      h: blockH,
+      key,
+      place: (x, y) => {
+        // This box paints behind its children — push its bounds FIRST.
+        groupBounds.push({ id: g.id, label: g.label, x, y, w: blockW, h: blockH, parent: g.parent, level });
+        const ox = x + SUB_PAD;
+        const oy = y + SUB_LABEL_H + SUB_PAD;
+        for (const { b, ly } of placed) b.place(ox, oy + ly);
+      },
+    };
+  }
+
   let gx = LAYOUT_MARGIN;
-
   for (const zone of zones) {
-    const blocks: Block[] = [];
-
-    // Loose cards sitting directly in the zone (not in any subgroup).
-    for (const e of entsByGroup.get(zone.id) ?? []) {
-      blocks.push({
-        w: e._w,
-        h: e._h,
-        key: indexOf.get(e.id) ?? 0,
-        place: (x, y) => {
-          e.x = x;
-          e.y = y;
-        },
-      });
-    }
-
-    // Each subgroup packs its members into one tight column, then becomes a block.
-    const subGroups = model.groups.filter((g) => g.parent === zone.id).sort((a, b) => a.order - b.order);
-    for (const sg of subGroups) {
-      const members = entsByGroup.get(sg.id) ?? [];
-      if (members.length === 0) continue;
-      let iy = 0;
-      let iw = 0;
-      for (const e of members) {
-        e.x = 0; // local origin; absolute offset applied in place()
-        e.y = iy;
-        iy += e._h + SUB_VGAP;
-        iw = Math.max(iw, e._w);
-      }
-      const innerH = iy - SUB_VGAP;
-      const blockW = iw + SUB_PAD * 2;
-      const blockH = innerH + SUB_LABEL_H + SUB_PAD * 2;
-      const key = Math.min(...members.map((e) => indexOf.get(e.id) ?? 0));
-      blocks.push({
-        w: blockW,
-        h: blockH,
-        key,
-        place: (x, y) => {
-          for (const e of members) {
-            e.x += x + SUB_PAD;
-            e.y += y + SUB_LABEL_H + SUB_PAD;
-          }
-          groupBounds.push({ id: sg.id, label: sg.label, x, y, w: blockW, h: blockH, parent: zone.id, level: 1 });
-        },
-      });
-    }
-
+    const blocks: Block[] = [
+      ...(entsByGroup.get(zone.id) ?? []).map(cardBlock),
+      ...childGroupsOf(zone.id)
+        .map((sg) => subgroupBlock(sg, 1))
+        .filter((b): b is Block => b !== null),
+    ];
     blocks.sort((a, b) => a.key - b.key);
 
     // Push the zone bounds first (so it paints behind its subgroups), then pack —

@@ -26,7 +26,7 @@ describe('EerViewer', () => {
   it('shows the detail panel overview and tears the scene down on unmount', async () => {
     const { unmount } = render(<EerViewer />);
     await screen.findByRole('heading', { level: 1, name: TITLE }, { timeout: 20000 });
-    expect(screen.getByText('Click an entity, zone, or edge to inspect it.')).toBeInTheDocument();
+    expect(screen.getByText('Click an entity, group, or edge to inspect it.')).toBeInTheDocument();
     expect(screen.getByText('Controls')).toBeInTheDocument();
     unmount();
     expect(document.querySelector('[data-world]')).toBeNull();

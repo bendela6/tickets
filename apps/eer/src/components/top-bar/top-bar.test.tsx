@@ -32,17 +32,17 @@ describe('TopBar', () => {
     render(
       <DiagramProvider>
         <EditorModals>
-          <TopBar onSelfCheck={() => {}} />
+          <TopBar />
         </EditorModals>
       </DiagramProvider>,
     );
     expect(screen.getByRole('heading', { name: 'EER model viewer' })).toBeInTheDocument();
     expect(screen.getByText('loading…')).toBeInTheDocument();
-    expect(screen.queryByText('Zones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Groups')).not.toBeInTheDocument();
   });
 
   it('renders the model title plus zone and kind chips', async () => {
-    await renderWithEditor(<TopBar onSelfCheck={() => {}} />, twoZoneRaw());
+    await renderWithEditor(<TopBar />, twoZoneRaw());
     expect(screen.getByRole('heading', { name: 'Fixture' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Zone One' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Zone Two' })).toBeInTheDocument();
@@ -54,7 +54,7 @@ describe('TopBar', () => {
     await renderWithEditor(
       <>
         <UiGrab />
-        <TopBar onSelfCheck={() => {}} />
+        <TopBar />
       </>,
       twoZoneRaw(),
     );
@@ -64,22 +64,19 @@ describe('TopBar', () => {
     expect(uiRef!.hidden.kinds.has('nm')).toBe(true);
   });
 
-  it('Fit / Rearrange dispatch their actions; Self-check calls its handler', async () => {
-    const onSelfCheck = vi.fn();
-    const { actions } = await renderWithEditor(<TopBar onSelfCheck={onSelfCheck} />, twoZoneRaw());
+  it('Fit / Rearrange dispatch their actions', async () => {
+    const { actions } = await renderWithEditor(<TopBar />, twoZoneRaw());
     const fit = vi.spyOn(actions, 'fit');
     const rearrange = vi.spyOn(actions, 'rearrange');
     fireEvent.click(screen.getByRole('button', { name: 'Fit' }));
     expect(fit).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole('button', { name: 'Rearrange' }));
     expect(rearrange).toHaveBeenCalledTimes(1);
-    fireEvent.click(screen.getByRole('button', { name: 'Self-check' }));
-    expect(onSelfCheck).toHaveBeenCalledTimes(1);
   });
 
   it('the routing button reflects view.routing and cycles on click', async () => {
     // twoZoneRaw loads with routing='avoid'; one click advances avoid → ortho.
-    await renderWithEditor(<TopBar onSelfCheck={() => {}} />, twoZoneRaw());
+    await renderWithEditor(<TopBar />, twoZoneRaw());
     fireEvent.click(screen.getByRole('button', { name: 'Lines: avoid' }));
     expect(screen.getByRole('button', { name: 'Lines: ortho' })).toBeInTheDocument();
   });

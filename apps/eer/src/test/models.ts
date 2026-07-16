@@ -58,6 +58,24 @@ export function nestedRaw() {
   };
 }
 
+// Three nesting levels: zone `z` → subgroup `s` → sub-subgroup `d`, one card at
+// each level. Exercises unbounded (deeper-than-one-level) group nesting.
+export function deepNestedRaw() {
+  return {
+    groups: [
+      { id: 'z', label: 'Zone', order: 0 },
+      { id: 's', label: 'Sub', parent: 'z', order: 1 },
+      { id: 'd', label: 'Deep', parent: 's', order: 2 },
+    ],
+    entities: [
+      { id: 'z_card', group: 'z', fields: [pkField] },
+      { id: 's_card', group: 's', fields: [pkField] },
+      { id: 'd_card', group: 'd', fields: [pkField] },
+    ],
+    relationships: [],
+  };
+}
+
 export function buildModel(raw: unknown = twoZoneRaw()): Model {
   const { model, errors } = loadModel(raw);
   if (!model || errors.length) throw new Error('fixture model invalid: ' + errors.join('; '));

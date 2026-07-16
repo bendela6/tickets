@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="width:1440px;height:900px;border:1px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;background:var(--bg);color:var(--f1);box-shadow:var(--shlg);{{tok}}">
+
+  <aside style="width:236px;flex:none;border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px 12px 12px">
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 14px"><span style="width:9px;height:9px;background:var(--ac);border-radius:2px"></span><span style="font:600 15px 'IBM Plex Mono',monospace">tickets</span><span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">acme</span></div>
+    <nav style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">⌂<span style="flex:1">Home</span></div>
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">▤<span style="flex:1">All tickets</span></div>
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif">✳<span style="flex:1">Sessions</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">6</span></div>
+    </nav>
+    <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3);padding:16px 9px 6px">SESSION #47 — TREE</div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:7px;height:30px;padding:0 9px;border-radius:7px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="width:14px;height:14px;border-radius:4px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:500 8px 'IBM Plex Mono',monospace;flex:none">✳</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">#47 Break down Config…</span><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--kd);flex:none;box-sizing:border-box"></span></div>
+      <div style="display:flex;align-items:center;gap:7px;height:30px;padding:0 9px 0 22px;border-radius:7px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="width:14px;height:14px;border-radius:4px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:500 8px 'IBM Plex Mono',monospace;flex:none">✳</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">#48 Calendar renderer</span><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--ka);background:linear-gradient(90deg,var(--ka) 50%,transparent 50%);flex:none;animation:autospin 1.4s linear infinite"></span></div>
+      <div style="display:flex;align-items:center;gap:7px;height:30px;padding:0 9px 0 22px;border-radius:7px;background:var(--in);font:500 12px 'IBM Plex Sans',sans-serif"><span style="width:14px;height:14px;border-radius:4px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:500 8px 'IBM Plex Mono',monospace;flex:none">✳</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">#49 Timeline renderer</span><span style="width:7px;height:7px;background:{{sideDotBg}};border:{{sideDotBd}};border-radius:{{sideDotR}};transform:{{sideDotT}};flex:none;box-sizing:border-box;animation:{{sideDotAnim}}"></span></div>
+      <div style="display:flex;align-items:center;gap:7px;height:30px;padding:0 9px 0 22px;border-radius:7px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="width:14px;height:14px;border-radius:4px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:500 8px 'IBM Plex Mono',monospace;flex:none">✳</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">#50 View config API</span><span style="width:6px;height:6px;border:1.5px solid var(--f3);border-radius:1.5px;flex:none;box-sizing:content-box"></span></div>
+    </div>
+    <span style="flex:1"></span>
+    <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">⚙<span style="flex:1">Settings</span></div>
+  </aside>
+
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <!-- session header -->
+    <div style="display:flex;align-items:center;gap:10px;height:56px;padding:0 20px;border-bottom:1px solid var(--bd);background:var(--rs);flex:none">
+      <span style="width:24px;height:24px;border-radius:6px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:500 13px 'IBM Plex Mono',monospace;flex:none">✳</span>
+      <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3)">#49</span>
+      <span style="font:600 15px 'IBM Plex Sans',sans-serif;white-space:nowrap">Timeline renderer</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="width:18px;height:18px;border-radius:5px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 8px 'IBM Plex Mono',monospace">CO</span>Coder</span>
+      <span style="height:22px;padding:0 8px;border-radius:6px;background:var(--in);font:500 11px 'IBM Plex Mono',monospace;color:var(--f2);display:inline-flex;align-items:center">claude-opus-4-8</span>
+      <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3)">~/work/tickets</span>
+      <span style="height:20px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);background:var(--rs);font:500 11px 'IBM Plex Mono',monospace;color:var(--ac);display:inline-flex;align-items:center">→ TIX-153</span>
+      <span style="height:23px;padding:0 9px;border-radius:6px;background:{{pBg}};color:{{pFg}};font:{{pFont}};display:inline-flex;align-items:center;gap:6px;animation:{{pAnim}}"><span style="width:{{dW}}px;height:{{dH}}px;border-radius:{{dR}};border:{{dBd}};background:{{dBg}};transform:{{dT}};animation:{{dAnim}};flex:none;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;font:600 8px 'IBM Plex Sans',sans-serif;color:{{dInC}}">{{dIn}}</span>{{pLabel}}</span>
+      <span style="flex:1"></span>
+      <span style="height:24px;padding:0 10px;border-radius:6px;border:1px solid var(--bd);background:var(--rs);display:inline-flex;align-items:center;gap:7px">
+        <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--f1)">$0.88</span>
+        <span style="width:38px;height:4px;border-radius:2px;background:var(--in);overflow:hidden;display:inline-flex"><span style="width:18%;background:var(--ac)"></span></span>
+        <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">/ $5.00</span>
+      </span>
+      <sc-if value="{{showStop}}" hint-placeholder-val="{{true}}">
+        <button style="height:30px;padding:0 12px;border-radius:7px;border:1px solid var(--dg);background:transparent;color:var(--dg);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;background:var(--dg);border-radius:2px"></span>Stop</button>
+      </sc-if>
+      <sc-if value="{{showRetry}}" hint-placeholder-val="{{false}}">
+        <button style="height:30px;padding:0 12px;border-radius:7px;border:none;background:var(--ac);color:var(--oac);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer">↻ Retry</button>
+      </sc-if>
+      <span style="width:30px;height:30px;border-radius:7px;border:1px solid var(--bd);display:inline-flex;align-items:center;justify-content:center;color:var(--f2);cursor:pointer">⋯</span>
+    </div>
+
+    <!-- stream -->
+    <div ref="{{streamRef}}" style="flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column">
+      <div style="margin-top:auto;padding:22px 0">
+      <div style="max-width:760px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;gap:12px;width:100%;box-sizing:border-box">
+
+        <div style="display:flex;gap:10px">
+          <span style="width:24px;height:24px;border-radius:50%;background:#DBEEF6;color:#14687E;display:inline-flex;align-items:center;justify-content:center;font:600 9px 'IBM Plex Sans',sans-serif;flex:none">MK</span>
+          <div style="flex:1;border:1px solid var(--bd);border-radius:10px;background:var(--rs);padding:10px 13px">
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:3px"><span style="font:500 12px 'IBM Plex Sans',sans-serif">Mara K.</span><span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">dispatched by #47 Architect · 35m ago</span></div>
+            <div style="font:400 13px/1.55 'IBM Plex Sans',sans-serif">Implement the timeline renderer for Configurable Views per TIX-153. Reuse the board's logical-field resolution. Run typecheck before you finish.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px">
+          <span style="width:24px;height:24px;border-radius:6px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 9px 'IBM Plex Mono',monospace;flex:none">CO</span>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:baseline;gap:8px"><span style="font:500 12px 'IBM Plex Sans',sans-serif">Coder</span><span style="height:13px;padding:0 4px;border-radius:3px;background:var(--acs);color:var(--ac);font:500 8px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;align-self:center">AGENT</span><span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">turn 3 · 34m ago</span></div>
+            <div style="font:400 13px/1.55 'IBM Plex Sans',sans-serif">I'll add the timeline renderer. Let me look at how the board view resolves its columns first.</div>
+            <div style="display:flex;align-items:center;gap:8px;height:28px;padding:0 10px;border:1px dashed var(--bs);border-radius:8px;color:var(--f3);font:400 12px 'IBM Plex Sans',sans-serif;cursor:pointer;align-self:flex-start"><span style="font:400 11px 'IBM Plex Mono',monospace">✦</span><span style="font-style:italic">Thinking</span><span style="font:400 10px 'IBM Plex Mono',monospace">4.2s</span><span style="font-size:9px">▸</span></div>
+            <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;border:1px solid var(--bd);border-radius:9px;background:var(--rs)">
+              <span style="width:11px;height:11px;border-radius:50%;background:var(--kd);display:inline-flex;align-items:center;justify-content:center;color:var(--onpos);font:600 6px 'IBM Plex Sans',sans-serif;flex:none">✓</span>
+              <span style="font:600 12px 'IBM Plex Mono',monospace">Grep</span>
+              <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">pattern: "logical-fields" → 3 files</span>
+              <span style="font-size:9px;color:var(--f3)">▸</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;border:1px solid var(--bd);border-radius:9px;background:var(--rs)">
+              <span style="width:11px;height:11px;border-radius:50%;background:var(--kd);display:inline-flex;align-items:center;justify-content:center;color:var(--onpos);font:600 6px 'IBM Plex Sans',sans-serif;flex:none">✓</span>
+              <span style="font:600 12px 'IBM Plex Mono',monospace">Read</span>
+              <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">apps/api/src/boards/logical-fields.ts</span>
+              <span style="font-size:9px;color:var(--f3)">▸</span>
+            </div>
+
+            <div style="border-left:2px solid var(--bs);padding-left:12px;display:flex;flex-direction:column;gap:7px;margin:2px 0">
+              <div style="display:flex;align-items:center;gap:7px">
+                <span style="width:16px;height:16px;border-radius:4px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 7px 'IBM Plex Mono',monospace;flex:none">EX</span>
+                <span style="font:500 12px 'IBM Plex Sans',sans-serif">Explore</span>
+                <span style="height:15px;padding:0 5px;border-radius:3px;border:1px solid var(--bd);color:var(--f3);font:500 9px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">SUBAGENT</span>
+                <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">3 tool calls · 22s</span>
+                <span style="font-size:9px;color:var(--f3)">▾</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;height:28px;padding:0 10px;border:1px solid var(--bd);border-radius:8px;background:var(--rs)">
+                <span style="width:11px;height:11px;border-radius:50%;background:var(--kd);display:inline-flex;align-items:center;justify-content:center;color:var(--onpos);font:600 6px 'IBM Plex Sans',sans-serif;flex:none">✓</span>
+                <span style="font:600 11px 'IBM Plex Mono',monospace">Glob</span>
+                <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">apps/web/src/views/*.tsx → 6 files</span>
+              </div>
+              <div style="font:400 12px/1.5 'IBM Plex Sans',sans-serif;color:var(--f2)">Board and calendar both resolve columns through <span style="font:400 11px 'IBM Plex Mono',monospace;background:var(--in);padding:1px 5px;border-radius:4px">useLogicalFields</span>; timeline can reuse it unchanged.</div>
+            </div>
+
+            <div style="border:1px solid var(--bd);border-radius:9px;background:var(--rs);overflow:hidden">
+              <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;border-bottom:1px solid var(--bd)">
+                <span style="width:11px;height:11px;border-radius:50%;background:var(--kd);display:inline-flex;align-items:center;justify-content:center;color:var(--onpos);font:600 6px 'IBM Plex Sans',sans-serif;flex:none">✓</span>
+                <span style="font:600 12px 'IBM Plex Mono',monospace">Edit</span>
+                <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">apps/web/src/views/timeline.tsx</span>
+                <span style="height:17px;padding:0 6px;border-radius:4px;background:var(--kds);color:var(--kd);font:500 10px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">+9</span>
+                <span style="height:17px;padding:0 6px;border-radius:4px;background:var(--dgs);color:var(--dg);font:500 10px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">−2</span>
+                <span style="font-size:9px;color:var(--f3)">▾</span>
+              </div>
+              <div style="font:400 11px/1.7 'IBM Plex Mono',monospace;padding:8px 0;background:var(--bg)">
+                <div style="padding:0 12px;color:var(--f3)">@@ -41,6 +41,13 @@ export function TimelineView(props)</div>
+                <div style="padding:0 12px;color:var(--f2)">&nbsp;&nbsp;const cols = useLogicalFields(project);</div>
+                <div style="padding:0 12px;background:var(--dgs);color:var(--dg)">−&nbsp;const range = getRange(props.range);</div>
+                <div style="padding:0 12px;background:var(--kds);color:var(--kd)">+&nbsp;const range = getRange(String(props.range));</div>
+                <div style="padding:0 12px;background:var(--kds);color:var(--kd)">+&nbsp;const rows = groupByEpic(items, cols);</div>
+                <div style="padding:0 12px;background:var(--kds);color:var(--kd)">+&nbsp;const lanes = rows.map(toLane(range));</div>
+                <div style="padding:0 12px;color:var(--f2)">&nbsp;&nbsp;return renderLanes(lanes, range);</div>
+              </div>
+            </div>
+
+            <div style="border:1px solid var(--dg);border-radius:9px;background:var(--rs);overflow:hidden">
+              <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;border-bottom:1px solid var(--bd)">
+                <span style="width:9px;height:9px;background:var(--dg);transform:rotate(45deg);border-radius:1.5px;flex:none"></span>
+                <span style="font:600 12px 'IBM Plex Mono',monospace">Bash</span>
+                <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">pnpm typecheck</span>
+                <span style="height:17px;padding:0 6px;border-radius:4px;background:var(--dgs);color:var(--dg);font:500 10px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">exit 2</span>
+              </div>
+              <div style="font:400 11px/1.6 'IBM Plex Mono',monospace;padding:8px 12px;background:var(--bg);color:var(--dg)">TS2345: Argument of type 'Date' is not assignable to parameter of type 'string'. — views/timeline.tsx:47</div>
+            </div>
+
+            <div style="font:400 13px/1.55 'IBM Plex Sans',sans-serif">Typecheck failed — the range needs to be a string. Fixing, then I'll clear the stale view cache and rerun.</div>
+
+            <!-- state tails -->
+            <sc-if value="{{isAwaiting}}" hint-placeholder-val="{{true}}">
+              <div style="border:1.5px solid var(--kb);border-radius:12px;background:var(--kbs);box-shadow:var(--shlg);animation:aipulse 1.8s ease-out infinite;margin-top:4px">
+                <div style="display:flex;align-items:center;gap:8px;padding:11px 14px">
+                  <span style="width:10px;height:10px;background:var(--kb);transform:rotate(45deg);border-radius:1.5px;flex:none"></span>
+                  <span style="font:600 13px 'IBM Plex Sans',sans-serif">Approval required</span>
+                  <span style="height:20px;padding:0 8px;border-radius:5px;background:var(--rs);border:1px solid var(--bd);font:600 11px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">Bash</span>
+                  <span style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--f2)">not on Coder's allowlist</span>
+                  <span style="flex:1"></span>
+                  <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--kb)">waiting 4m</span>
+                </div>
+                <div style="margin:0 14px;border-radius:8px;background:var(--tbg);padding:9px 12px;font:400 12px/1.6 'IBM Plex Mono',monospace;color:var(--tfg)"><span style="color:var(--t1)">rm -rf</span> apps/web/src/views/.cache</div>
+                <div style="display:flex;align-items:center;gap:8px;padding:12px 14px">
+                  <span style="height:32px;padding:0 16px;border-radius:8px;background:var(--kb);color:var(--onkb);font:500 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;cursor:pointer">Allow</span>
+                  <span style="height:32px;padding:0 14px;border-radius:8px;border:1px solid var(--bs);background:var(--rs);font:500 13px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;cursor:pointer">Deny</span>
+                  <span style="flex:1;height:32px;border:1px dashed var(--bs);border-radius:8px;display:inline-flex;align-items:center;padding:0 11px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f3)">Deny with a reason (optional)…</span>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:7px;font:400 11px 'IBM Plex Mono',monospace;color:var(--f3);padding:2px 0 0 2px"><span style="width:7px;height:7px;background:var(--kb);transform:rotate(45deg);border-radius:1px"></span>run paused — nothing below will happen until you decide</div>
+            </sc-if>
+
+            <sc-if value="{{isRunning}}" hint-placeholder-val="{{false}}">
+              <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;border:1px solid var(--bd);border-radius:9px;background:var(--rs)">
+                <span style="width:10px;height:10px;border-radius:50%;border:1.5px solid var(--ka);background:linear-gradient(90deg,var(--ka) 50%,transparent 50%);animation:autospin 1.4s linear infinite;flex:none"></span>
+                <span style="font:600 12px 'IBM Plex Mono',monospace">Bash</span>
+                <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">pnpm typecheck</span>
+                <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--ka)">12s</span>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{isIdle}}" hint-placeholder-val="{{false}}">
+              <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;border:1px solid var(--bd);border-radius:9px;background:var(--rs)">
+                <span style="width:11px;height:11px;border-radius:50%;background:var(--kd);display:inline-flex;align-items:center;justify-content:center;color:var(--onpos);font:600 6px 'IBM Plex Sans',sans-serif;flex:none">✓</span>
+                <span style="font:600 12px 'IBM Plex Mono',monospace">Bash</span>
+                <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">pnpm typecheck → 0 errors</span>
+                <span style="font-size:9px;color:var(--f3)">▸</span>
+              </div>
+              <div style="font:400 13px/1.55 'IBM Plex Sans',sans-serif">Done — timeline renderer lands with epic lanes and range clamping; typecheck is clean. I commented the summary on <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ac)">TIX-153</span> and moved it to In review. Want me to add tests for the clamping edge cases?</div>
+            </sc-if>
+
+            <sc-if value="{{isFailed}}" hint-placeholder-val="{{false}}">
+              <div style="border:1.5px solid var(--dg);border-radius:12px;background:var(--dgs);padding:13px 14px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="width:10px;height:10px;background:var(--dg);transform:rotate(45deg);border-radius:1.5px;flex:none"></span>
+                  <span style="font:600 13px 'IBM Plex Sans',sans-serif;color:var(--dg)">Session failed</span>
+                  <span style="flex:1"></span>
+                  <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--dg)">turn 4 · 31m ago</span>
+                </div>
+                <div style="font:400 12px/1.6 'IBM Plex Mono',monospace;color:var(--dg);background:var(--rs);border-radius:8px;padding:8px 11px;border:1px solid var(--bd)">provider error 529: overloaded — retried 3× with backoff, gave up after 90s</div>
+                <div style="display:flex;gap:8px">
+                  <span style="height:30px;padding:0 13px;border-radius:7px;background:var(--dg);color:#FFF;font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;cursor:pointer">↻ Retry turn</span>
+                  <span style="height:30px;padding:0 12px;border-radius:7px;border:1px solid var(--bs);background:var(--rs);color:var(--f1);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;cursor:pointer">Copy transcript</span>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- composer -->
+    <div style="flex:none;padding:14px 0 18px;border-top:1px solid var(--bd);background:var(--bg)">
+      <div style="max-width:760px;margin:0 auto;padding:0 24px">
+        <div style="border:1px solid {{compBd}};border-radius:12px;background:var(--rs);overflow:hidden;opacity:{{compOp}}">
+          <div style="padding:11px 13px;font:400 13px/1.5 'IBM Plex Sans',sans-serif;color:var(--f3);min-height:34px">{{composerHint}}</div>
+          <div style="display:flex;align-items:center;gap:7px;padding:8px 10px;border-top:1px solid var(--bd);background:var(--bg)">
+            <span style="height:24px;padding:0 8px;border-radius:6px;background:var(--in);font:500 11px 'IBM Plex Mono',monospace;color:var(--f2);display:inline-flex;align-items:center;gap:5px">claude-opus-4-8 <span style="font-size:8px;color:var(--f3)">▾</span></span>
+            <span style="display:inline-flex;padding:2px;border:1px solid var(--bd);border-radius:6px;background:var(--in)">
+              <span style="height:18px;padding:0 7px;border-radius:4px;font:500 10px 'IBM Plex Mono',monospace;color:var(--f3);display:inline-flex;align-items:center">low</span>
+              <span style="height:18px;padding:0 7px;border-radius:4px;background:var(--rs);box-shadow:var(--shsm);font:500 10px 'IBM Plex Mono',monospace;color:var(--f1);display:inline-flex;align-items:center">med</span>
+              <span style="height:18px;padding:0 7px;border-radius:4px;font:500 10px 'IBM Plex Mono',monospace;color:var(--f3);display:inline-flex;align-items:center">high</span>
+            </span>
+            <span style="flex:1"></span>
+            <sc-if value="{{showComposerStop}}" hint-placeholder-val="{{false}}">
+              <span style="height:28px;padding:0 11px;border-radius:7px;border:1px solid var(--dg);color:var(--dg);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px;cursor:pointer"><span style="width:8px;height:8px;background:var(--dg);border-radius:2px"></span>Stop</span>
+            </sc-if>
+            <span style="height:28px;padding:0 12px;border-radius:7px;background:{{sendBg}};color:{{sendFg}};font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px">Send ↵</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1460,&quot;height&quot;:920},&quot;tok&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;awaiting&quot;,&quot;running&quot;,&quot;idle&quot;,&quot;failed&quot;],&quot;default&quot;:&quot;awaiting&quot;,&quot;tsType&quot;:&quot;'awaiting' | 'running' | 'idle' | 'failed'&quot;}}">
+const ST = {
+  awaiting: {
+    pBg:'var(--kb)', pFg:'var(--onkb)', pFont:"600 12px 'IBM Plex Sans',sans-serif", pAnim:'aipulse 1.8s ease-out infinite', pLabel:'awaiting input',
+    dW:8, dH:8, dR:'1px', dBd:'none', dBg:'var(--onkb)', dT:'rotate(45deg)', dAnim:'none', dIn:'', dInC:'transparent',
+    sideDotBg:'var(--kb)', sideDotBd:'none', sideDotR:'1px', sideDotT:'rotate(45deg)', sideDotAnim:'aiblink 1.4s steps(1) infinite',
+    showStop:true, showRetry:false, showComposerStop:false,
+    composerHint:'Blocked — decide on the approval above to continue…',
+    compBd:'var(--bd)', compOp:.6, sendBg:'var(--in)', sendFg:'var(--f3)',
+  },
+  running: {
+    pBg:'var(--kas)', pFg:'var(--ka)', pFont:"500 12px 'IBM Plex Sans',sans-serif", pAnim:'none', pLabel:'running',
+    dW:10, dH:10, dR:'50%', dBd:'1.5px solid var(--ka)', dBg:'linear-gradient(90deg,var(--ka) 50%,transparent 50%)', dT:'none', dAnim:'autospin 1.4s linear infinite', dIn:'', dInC:'transparent',
+    sideDotBg:'linear-gradient(90deg,var(--ka) 50%,transparent 50%)', sideDotBd:'1.5px solid var(--ka)', sideDotR:'50%', sideDotT:'none', sideDotAnim:'autospin 1.4s linear infinite',
+    showStop:true, showRetry:false, showComposerStop:true,
+    composerHint:'Coder is working — queue a follow-up, or Stop to interrupt…',
+    compBd:'var(--bs)', compOp:1, sendBg:'var(--in)', sendFg:'var(--f3)',
+  },
+  idle: {
+    pBg:'var(--kds)', pFg:'var(--kd)', pFont:"500 12px 'IBM Plex Sans',sans-serif", pAnim:'none', pLabel:'idle',
+    dW:10, dH:10, dR:'50%', dBd:'1.5px solid var(--kd)', dBg:'transparent', dT:'none', dAnim:'none', dIn:'•', dInC:'var(--kd)',
+    sideDotBg:'transparent', sideDotBd:'1.5px solid var(--kd)', sideDotR:'50%', sideDotT:'none', sideDotAnim:'none',
+    showStop:false, showRetry:false, showComposerStop:false,
+    composerHint:'Coder finished a turn — message it to continue. ⏎ to send, ⇧⏎ for a new line…',
+    compBd:'var(--bs)', compOp:1, sendBg:'var(--ac)', sendFg:'var(--oac)',
+  },
+  failed: {
+    pBg:'var(--dgs)', pFg:'var(--dg)', pFont:"500 12px 'IBM Plex Sans',sans-serif", pAnim:'none', pLabel:'failed',
+    dW:9, dH:9, dR:'1.5px', dBd:'none', dBg:'var(--dg)', dT:'rotate(45deg)', dAnim:'none', dIn:'', dInC:'transparent',
+    sideDotBg:'var(--dg)', sideDotBd:'none', sideDotR:'1.5px', sideDotT:'rotate(45deg)', sideDotAnim:'none',
+    showStop:false, showRetry:true, showComposerStop:false,
+    composerHint:'The last turn failed — Retry re-sends it with the same context…',
+    compBd:'var(--bd)', compOp:.6, sendBg:'var(--in)', sendFg:'var(--f3)',
+  },
+};
+
+class Component extends DCLogic {
+  streamRef = React.createRef();
+  componentDidMount() {
+    const el = this.streamRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+  renderVals() {
+    const s = ST[this.props.state] ? this.props.state : 'awaiting';
+    return {
+      streamRef: this.streamRef,
+      ...ST[s],
+      isAwaiting: s === 'awaiting',
+      isRunning: s === 'running',
+      isIdle: s === 'idle',
+      isFailed: s === 'failed',
+    };
+  }
+}
+</script>
+</body>
+</html>

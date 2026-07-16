@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildModel, nestedRaw, twoZoneRaw } from '../../../test/models';
+import { buildModel, deepNestedRaw, nestedRaw, twoZoneRaw } from '../../../test/models';
 import { loadModel } from '../../model/load-model';
 import type { Model } from '../../model/types';
 import { packLayout } from './pack-layout';
@@ -57,6 +57,24 @@ describe('packLayout', () => {
     const loose = cardBox(model, 'loose');
     expect(contains(zone, loose)).toBe(true);
     expect(overlaps(sub, loose)).toBe(false);
+  });
+
+  it('nests recursively to any depth: each box contains the next, with increasing level', () => {
+    const { model, errors } = loadModel(deepNestedRaw()); // z → s → d
+    if (!model || errors.length) throw new Error('fixture invalid: ' + errors.join('; '));
+    const m = packLayout(model);
+    const z = m._groupBounds.find((b) => b.id === 'z')!;
+    const s = m._groupBounds.find((b) => b.id === 's')!;
+    const d = m._groupBounds.find((b) => b.id === 'd')!;
+    expect(z).toMatchObject({ level: 0, parent: null });
+    expect(s).toMatchObject({ level: 1, parent: 'z' });
+    expect(d).toMatchObject({ level: 2, parent: 's' });
+    // strict box-in-box-in-box containment
+    expect(contains(z, s)).toBe(true);
+    expect(contains(s, d)).toBe(true);
+    // the deepest card lands inside the deepest box (and so, transitively, the zone)
+    expect(contains(d, cardBox(m, 'd_card'))).toBe(true);
+    expect(contains(z, cardBox(m, 'd_card'))).toBe(true);
   });
 
   it('sizes _content to cover every group box', () => {
