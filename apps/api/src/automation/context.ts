@@ -7,6 +7,7 @@ import { AUTOMATION_NS } from './constants';
 import type { StoredEvent } from './registry';
 
 export interface AutomationContext {
+  db: Db;
   dispatch<S extends v.GenericSchema, R>(
     command: CommandDef<S, R>,
     input: v.InferOutput<S>,
@@ -24,6 +25,7 @@ export function makeAutomationContext(
   systemActorId: number,
 ): AutomationContext {
   return {
+    db,
     dispatch(command, input, key = '') {
       const commandId = uuidv5(`${event.id}:${automationId}:${key}`, AUTOMATION_NS);
       return runCommand(db, command, {
