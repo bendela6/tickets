@@ -14,6 +14,18 @@ export type SessionStatus =
   | 'exited'
   | 'failed';
 
+// Frames the client sends over the socket. The transport carries the full union
+// from the overview spec; E1 exercises attach/input/resize/interrupt (the
+// terminal subset). `prompt`/`permission` are accepted by the type but ignored
+// by the terminal handler until E2/E3 wire the agent path.
+export type ClientFrame =
+  | { type: 'attach'; lastSeq: number }
+  | { type: 'input'; data: string } // terminal keystrokes
+  | { type: 'resize'; cols: number; rows: number } // terminal
+  | { type: 'prompt'; text: string } // agent (E2)
+  | { type: 'permission'; requestId: string; result: 'allow' | 'deny'; reason?: string } // E3
+  | { type: 'interrupt' };
+
 // Frames the server pushes to an attached socket. E1 uses the terminal subset;
 // `message` (AgentEvent) is added in E2.
 export type ServerFrame =

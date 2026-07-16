@@ -1,5 +1,6 @@
 import fastify from 'fastify';
 import type { Db } from '@tickets/db';
+import { registerAiSocket } from './ai/ai-socket';
 import { createDbSessionStore } from './ai/db-session-store';
 import { createLocalRunner } from './ai/local-runner';
 import { createSupervisor, type Supervisor } from './ai/supervisor';
@@ -47,6 +48,7 @@ export function buildApp(context: { db: Db; supervisor?: Supervisor }) {
   registerViewsRoutes(app, context);
   registerVocabularyRoutes(app, context);
   registerAiRoutes(app, { db: context.db, supervisor });
+  registerAiSocket(app, { supervisor });
 
   return app;
 }
