@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { BoardTicket } from '../api/types';
+import type { Item } from '../api/types';
 import { useCreateComment } from '../api/use-create-comment';
 import { renderMarkdown } from '../lib/render-markdown';
 import { useCurrentUser } from '../state/current-user-context';
@@ -10,14 +10,8 @@ import type { BoardIndexes } from '../utils/index-board';
 import { MarkdownEditor } from './markdown-editor';
 
 // Comment stream + markdown composer. The section heading (or drawer tab)
-// belongs to TicketDetail; this renders just the thread.
-export function DetailComments({
-  indexes,
-  ticket,
-}: {
-  indexes: BoardIndexes;
-  ticket: BoardTicket;
-}) {
+// belongs to ItemDetail; this renders just the thread.
+export function DetailComments({ indexes, item }: { indexes: BoardIndexes; item: Item }) {
   const { userId } = useCurrentUser();
   const createComment = useCreateComment();
   // The editor commits its draft on blur; the Comment button's click lands
@@ -26,7 +20,7 @@ export function DetailComments({
   // Remount the composer after a successful post so its draft clears.
   const [composerKey, setComposerKey] = useState(0);
 
-  const comments = [...ticket.comments].sort((left, right) =>
+  const comments = [...item.comments].sort((left, right) =>
     left.createdAt.localeCompare(right.createdAt),
   );
   const me = userId !== null ? indexes.userById.get(userId) : undefined;
@@ -36,8 +30,8 @@ export function DetailComments({
       return;
     }
     await createComment.mutateAsync({
-      ticketId: ticket.id,
-      authorId: userId,
+      itemId: item.id,
+      actorId: userId,
       body: body.trim(),
     });
     setBody('');

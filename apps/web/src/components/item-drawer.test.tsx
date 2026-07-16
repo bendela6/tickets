@@ -10,124 +10,79 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { Board } from '../api/types';
 import { CurrentUserProvider } from '../state/current-user-context';
+import { ToastProvider } from '../ui/toast';
 import { indexBoard } from '../utils/index-board';
-import { TicketDrawer } from './ticket-drawer';
+import { ItemDrawer } from './item-drawer';
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const createdAt = '2026-01-01T00:00:00.000Z';
 
 function makeBoard(): Board {
   return {
-    project: { id: 1, key: 'core', name: 'Items Core', ticketPrefix: 'CORE', createdAt },
+    project: { id: 1, key: 'core', name: 'Items Core', schemeId: 1, itemPrefix: 'CORE', createdAt },
     users: [
-      { id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null, createdAt },
-      { id: 8, name: 'claude-worker', email: null, kind: 'agent', archivedAt: null, createdAt },
+      { id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null },
+      { id: 8, name: 'claude-worker', email: null, kind: 'agent', archivedAt: null },
     ],
-    types: [
-      {
-        id: 1,
-        projectId: 1,
-        key: 'bug',
-        label: 'Bug',
-        config: {},
-        position: 1,
-        archivedAt: null,
-        createdAt,
-      },
-    ],
-    typeFields: [
-      { ticketTypeId: 1, fieldId: 11, position: 1, required: true },
-      { ticketTypeId: 1, fieldId: 10, position: 2, required: true },
-      { ticketTypeId: 1, fieldId: 12, position: 3, required: false },
-      { ticketTypeId: 1, fieldId: 13, position: 4, required: false },
-    ],
-    statuses: [
-      {
-        id: 1,
-        projectId: 1,
-        key: 'backlog',
-        label: 'Backlog',
-        kind: 'todo',
-        config: {},
-        position: 1,
-        archivedAt: null,
-        createdAt,
-      },
-      {
-        id: 2,
-        projectId: 1,
-        key: 'in-review',
-        label: 'In review',
-        kind: 'active',
-        config: {},
-        position: 2,
-        archivedAt: null,
-        createdAt,
-      },
-    ],
-    transitions: [],
+    types: [{ id: 1, schemeId: 1, key: 'bug', label: 'Bug', config: {}, archivedAt: null }],
     fields: [
       {
         id: 10,
-        projectId: 1,
+        schemeId: 1,
         key: 'status',
         label: 'Status',
-        type: 'status',
-        system: true,
-        config: {},
+        type: 'option',
+        config: { workflow: true },
+        optionSetId: 100,
         archivedAt: null,
-        createdAt,
-        options: [],
       },
       {
         id: 11,
-        projectId: 1,
+        schemeId: 1,
         key: 'title',
         label: 'Title',
-        type: 'text',
-        system: true,
+        type: 'string',
         config: {},
+        optionSetId: null,
         archivedAt: null,
-        createdAt,
-        options: [],
       },
       {
         id: 12,
-        projectId: 1,
+        schemeId: 1,
         key: 'priority',
         label: 'Priority',
-        type: 'select',
-        system: false,
+        type: 'option',
         config: {},
+        optionSetId: 200,
         archivedAt: null,
-        createdAt,
-        options: [
-          {
-            id: 1,
-            value: 'p0',
-            label: 'P0 · critical',
-            config: { color: '#a03028' },
-            position: 1,
-            archivedAt: null,
-          },
-        ],
       },
       {
         id: 13,
-        projectId: 1,
+        schemeId: 1,
         key: 'description',
         label: 'Description',
-        type: 'text',
-        system: true,
-        config: { widget: 'markdown' },
+        type: 'string',
+        config: { format: 'markdown' },
+        optionSetId: null,
         archivedAt: null,
-        createdAt,
-        options: [],
       },
     ],
+    placements: [
+      { itemTypeId: 1, fieldId: 11, position: 1, required: true, configOverride: null },
+      { itemTypeId: 1, fieldId: 10, position: 2, required: true, configOverride: null },
+      { itemTypeId: 1, fieldId: 12, position: 3, required: false, configOverride: null },
+      { itemTypeId: 1, fieldId: 13, position: 4, required: false, configOverride: null },
+    ],
+    options: [
+      { id: 1000, optionSetId: 100, value: 'backlog', label: 'Backlog', position: 1, kind: 'todo', config: {}, archivedAt: null },
+      { id: 1001, optionSetId: 100, value: 'in-review', label: 'In review', position: 2, kind: 'active', config: {}, archivedAt: null },
+      { id: 2000, optionSetId: 200, value: 'p0', label: 'P0 · critical', position: 1, kind: null, config: { color: '#a03028' }, archivedAt: null },
+    ],
+    transitions: [],
     linkTypes: [
       {
         id: 1,
-        projectId: 1,
+        itemTypeId: 1,
         key: 'blocks',
         label: 'blocks',
         inverseLabel: 'is blocked by',
@@ -137,7 +92,7 @@ function makeBoard(): Board {
       },
     ],
     views: [],
-    tickets: [
+    items: [
       {
         id: 100,
         number: 128,
@@ -156,13 +111,14 @@ function makeBoard(): Board {
         comments: [
           {
             id: 1,
-            ticketId: 100,
+            itemId: 100,
             authorId: 7,
+            parentId: null,
             body: 'Repro’d on staging with 300 rows.',
             createdAt,
           },
         ],
-        links: [{ id: 1, linkTypeId: 1, sourceTicketId: 100, targetTicketId: 102 }],
+        links: [{ id: 1, linkTypeId: 1, sourceItemId: 100, targetItemId: 102, createdAt }],
       },
       {
         id: 101,
@@ -197,23 +153,23 @@ function makeBoard(): Board {
 async function renderDrawer() {
   const board = makeBoard();
   const indexes = indexBoard(board);
-  const ticket = indexes.ticketByNumber.get(128);
-  if (!ticket) {
-    throw new Error('fixture ticket missing');
+  const item = indexes.itemByNumber.get(128);
+  if (!item) {
+    throw new Error('fixture item missing');
   }
   const onClose = vi.fn();
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  // TicketDetail uses router links/navigation, so the drawer mounts inside a
+  // ItemDetail uses router links/navigation, so the drawer mounts inside a
   // minimal memory router.
   const rootRoute = createRootRoute({
     component: () => (
-      <TicketDrawer
+      <ItemDrawer
         projectKey="core"
         board={board}
         indexes={indexes}
-        ticket={ticket}
+        item={item}
         onClose={onClose}
       />
     ),
@@ -225,11 +181,13 @@ async function renderDrawer() {
   render(
     <QueryClientProvider client={client}>
       <CurrentUserProvider>
-        <RouterProvider router={router} />
+        <ToastProvider>
+          <RouterProvider router={router} />
+        </ToastProvider>
       </CurrentUserProvider>
     </QueryClientProvider>,
   );
-  await screen.findByRole('complementary', { name: 'Ticket detail' });
+  await screen.findByRole('complementary', { name: 'Item detail' });
   return { onClose };
 }
 
@@ -256,7 +214,7 @@ test('renders key, title, fields, subtasks, links and comments from the board', 
   expect(screen.getByText('Repro harness for virtualizer offsets')).toBeInTheDocument();
   expect(screen.getByText('0/1 done')).toBeInTheDocument();
   expect(screen.getByText('In review')).toBeInTheDocument();
-  // links: direction chip + other ticket
+  // links: direction chip + other item
   expect(screen.getByText('blocks →')).toBeInTheDocument();
   expect(screen.getByText('CORE-131')).toBeInTheDocument();
   // comments tab content
@@ -266,7 +224,7 @@ test('renders key, title, fields, subtasks, links and comments from the board', 
 
 test('drawer is a full-width sheet below md and 620px from md up', async () => {
   await renderDrawer();
-  const aside = screen.getByRole('complementary', { name: 'Ticket detail' });
+  const aside = screen.getByRole('complementary', { name: 'Item detail' });
   expect(aside.className).toContain('w-full');
   expect(aside.className).toContain('md:w-155');
 });
@@ -277,7 +235,7 @@ test('escape closes the drawer', async () => {
   expect(onClose).toHaveBeenCalledTimes(1);
 });
 
-test('editing the title PATCHes with actor and expectedUpdatedAt', async () => {
+test('editing the title PATCHes /api/items/:id with a commandId envelope', async () => {
   localStorage.setItem('tickets-user-id', '7');
   const fetchMock = vi.fn().mockResolvedValue({
     ok: true,
@@ -293,11 +251,40 @@ test('editing the title PATCHes with actor and expectedUpdatedAt', async () => {
   fireEvent.blur(input);
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
   const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-  expect(url).toBe('/api/tickets/100');
+  expect(url).toBe('/api/items/100');
   expect(init.method).toBe('PATCH');
-  expect(JSON.parse(String(init.body))).toMatchObject({
+  const { commandId, ...rest } = JSON.parse(String(init.body)) as Record<string, unknown>;
+  expect(typeof commandId).toBe('string');
+  expect(commandId).toMatch(UUID_RE);
+  expect(rest).toEqual({
     actorId: 7,
     expectedUpdatedAt: createdAt,
     values: { title: 'Fix virtualizer offset cache' },
+  });
+});
+
+test('changing the status select PATCHes the workflow field key', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const fetchMock = vi.fn().mockResolvedValue({
+    ok: true,
+    text: () => Promise.resolve(JSON.stringify({ id: 100, updatedAt: 'later' })),
+  });
+  vi.stubGlobal('fetch', fetchMock);
+  await renderDrawer();
+
+  await userEvent.click(screen.getByRole('button', { name: 'Backlog' }));
+  await userEvent.click(await screen.findByRole('option', { name: /in review/i }));
+
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+  const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  expect(url).toBe('/api/items/100');
+  expect(init.method).toBe('PATCH');
+  const { commandId, ...rest } = JSON.parse(String(init.body)) as Record<string, unknown>;
+  expect(typeof commandId).toBe('string');
+  expect(commandId).toMatch(UUID_RE);
+  expect(rest).toEqual({
+    actorId: 7,
+    expectedUpdatedAt: createdAt,
+    values: { status: 'in-review' },
   });
 });

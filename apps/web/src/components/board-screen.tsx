@@ -11,8 +11,8 @@ import { FilterChips } from './board/filter-chips';
 import { KpiStrip } from './board/kpi-strip';
 import { TableView } from './board/table-view';
 import { KanbanView } from './kanban-view';
+import { ItemDrawer } from './item-drawer';
 import { NewItemDialog } from './new-item-dialog';
-import { TicketDrawer } from './ticket-drawer';
 
 // The board area of a view route: header, filter chips, KPI strip, then the
 // mode-selected renderer (table or kanban). Ad-hoc state rides the URL
@@ -113,11 +113,11 @@ export function BoardScreen() {
         />
       )}
       {openTicket ? (
-        <TicketDrawer
+        <ItemDrawer
           projectKey={projectKey}
           board={board}
           indexes={indexes}
-          ticket={openTicket}
+          item={openTicket}
           onClose={() => setSearch({ t: undefined })}
         />
       ) : null}

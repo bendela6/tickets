@@ -1,17 +1,18 @@
-import type { BoardTicket } from '../api/types';
+import type { Item } from '../api/types';
 import type { BoardIndexes } from './index-board';
 
 // Progress = children with done-kind status / children not dropped-kind.
-export function childProgress(ticket: BoardTicket, indexes: BoardIndexes) {
-  const children = indexes.childrenByParent.get(ticket.id) ?? [];
-  const statusField = indexes.statusField;
+// Each child resolves its own workflow field — types aren't required to share one.
+export function childProgress(item: Item, indexes: BoardIndexes) {
+  const children = indexes.childrenByParent.get(item.id) ?? [];
   let done = 0;
   let total = 0;
   let blocked = 0;
   for (const child of children) {
-    const key = statusField ? child.values[statusField.key] : undefined;
-    const status = typeof key === 'string' ? indexes.statusByKey.get(key) : undefined;
-    const kind = status?.kind ?? 'todo';
+    const wf = indexes.workflowField(child.typeId);
+    const raw = wf ? child.values[wf.key] : undefined;
+    const option = wf && typeof raw === 'string' ? indexes.optionByValue(wf, raw) : undefined;
+    const kind = option?.kind ?? 'todo';
     if (kind === 'blocked') {
       blocked += 1;
     }

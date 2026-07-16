@@ -1,22 +1,22 @@
 import { useEffect } from 'react';
-import type { Board, BoardTicket } from '../api/types';
+import type { Board, Item } from '../api/types';
 import type { BoardIndexes } from '../utils/index-board';
-import { TicketDetail } from './ticket-detail';
+import { ItemDetail } from './item-detail';
 
 // Right-side peek panel over the board: scrim + fixed full-height drawer
 // (620px from md up, full-screen sheet below md per the mobile design).
 // Esc closes; the board behind stays mounted.
-export function TicketDrawer({
+export function ItemDrawer({
   projectKey,
   board,
   indexes,
-  ticket,
+  item,
   onClose,
 }: {
   projectKey: string;
   board: Board;
   indexes: BoardIndexes;
-  ticket: BoardTicket;
+  item: Item;
   onClose: () => void;
 }) {
   useEffect(() => {
@@ -33,16 +33,16 @@ export function TicketDrawer({
     <>
       <div aria-hidden className="fixed inset-0 z-40 bg-black/20" onClick={onClose} />
       <aside
-        aria-label="Ticket detail"
+        aria-label="Item detail"
         className="fixed inset-y-0 right-0 z-40 flex w-full flex-col border-l border-hairline bg-raised font-sans text-ink shadow-lg md:w-155 md:max-w-[calc(100vw-3rem)]"
       >
-        {/* Keyed so switching tickets in-place resets edit drafts and tab state. */}
-        <TicketDetail
-          key={ticket.id}
+        {/* Keyed so switching items in-place resets edit drafts and tab state. */}
+        <ItemDetail
+          key={item.id}
           projectKey={projectKey}
           board={board}
           indexes={indexes}
-          ticket={ticket}
+          item={item}
           variant="drawer"
           onClose={onClose}
         />
