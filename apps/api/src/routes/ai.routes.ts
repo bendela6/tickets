@@ -177,10 +177,11 @@ export function registerAiRoutes(
   // ── Sessions ───────────────────────────────────────────────────────────────
 
   const listSessions = async (request: FastifyRequest, reply: FastifyReply) => {
-    const query = request.query as { status?: string; kind?: string };
+    const query = request.query as { status?: string; kind?: string; archived?: string };
     const conditions = [];
     if (query.status) conditions.push(eq(aiSessions.status, query.status as never));
     if (query.kind) conditions.push(eq(aiSessions.kind, query.kind as never));
+    if (query.archived !== 'true') conditions.push(isNull(aiSessions.archivedAt));
     const rows = await db
       .select()
       .from(aiSessions)
@@ -294,6 +295,38 @@ export function registerAiRoutes(
         .where(eq(aiSessions.id, id));
     }
     reply.send({ ok: true, id });
+  };
+
+  const archiveSession = async (request: FastifyRequest, reply: FastifyReply) => {
+    const id = parseId((request.params as { id: string }).id);
+    const [session] = await db.select().from(aiSessions).where(eq(aiSessions.id, id));
+    if (!session) throw new HttpError(404, 'session not found');
+    if (supervisor.has(id)) {
+      supervisor.stop(id); // its exit handler finalizes status + ended_at
+    } else if (!session.endedAt) {
+      await db
+        .update(aiSessions)
+        .set({ status: 'disconnected', endedAt: sql`now()`, updatedAt: sql`now()` })
+        .where(eq(aiSessions.id, id));
+    }
+    await db
+      .update(aiSessions)
+      .set({ archivedAt: sql`now()`, updatedAt: sql`now()` })
+      .where(eq(aiSessions.id, id));
+    const [row] = await db.select().from(aiSessions).where(eq(aiSessions.id, id));
+    reply.send(row);
+  };
+
+  const unarchiveSession = async (request: FastifyRequest, reply: FastifyReply) => {
+    const id = parseId((request.params as { id: string }).id);
+    const [session] = await db.select().from(aiSessions).where(eq(aiSessions.id, id));
+    if (!session) throw new HttpError(404, 'session not found');
+    await db
+      .update(aiSessions)
+      .set({ archivedAt: null, updatedAt: sql`now()` })
+      .where(eq(aiSessions.id, id));
+    const [row] = await db.select().from(aiSessions).where(eq(aiSessions.id, id));
+    reply.send(row);
   };
 
   // ── Dispatch (TIX-208) — put an agent on a ticket ───────────────────────────
@@ -495,5 +528,7 @@ export function registerAiRoutes(
   app.post('/api/ai/sessions', createSession);
   app.get('/api/ai/sessions/:id', getSession);
   app.delete('/api/ai/sessions/:id', stopSession);
+  app.post('/api/ai/sessions/:id/archive', archiveSession);
+  app.post('/api/ai/sessions/:id/unarchive', unarchiveSession);
   app.post('/api/ai/dispatch', dispatch);
 }

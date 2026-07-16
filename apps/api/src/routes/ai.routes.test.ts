@@ -100,6 +100,26 @@ afterAll(async () => {
   await admin.end();
 });
 
+// Creates a workspace + terminal session via the real routes (own workspace per
+// call so tests don't collide). The fake supervisor marks it "live" (has(id) ===
+// true) until stopped, matching a real just-started terminal session.
+async function createTerminalSession() {
+  const workspaceId = (
+    await app.inject({
+      method: 'POST',
+      url: '/api/ai/workspaces',
+      payload: { name: `ws-term-${Date.now()}-${Math.random()}`, path: tmpdir() },
+    })
+  ).json().id;
+  return (
+    await app.inject({
+      method: 'POST',
+      url: '/api/ai/sessions',
+      payload: { kind: 'terminal', workspaceId },
+    })
+  ).json();
+}
+
 describe('AI routes', () => {
   test('creates, lists, and archives workspaces', async () => {
     const created = await app.inject({
@@ -393,5 +413,27 @@ describe('AI routes', () => {
       payload: { kind: 'agent', agentId: ghost!.id, workspaceId },
     });
     expect(res.statusCode).toBe(400);
+  });
+
+  test('excludes archived sessions from the list unless ?archived=true', async () => {
+    const live = await createTerminalSession();
+    const arch = await createTerminalSession();
+    await app.inject({ method: 'POST', url: `/api/ai/sessions/${arch.id}/archive` });
+
+    const def = await app.inject({ method: 'GET', url: '/api/ai/sessions' });
+    const ids = def.json().map((s: { id: number }) => s.id);
+    expect(ids).toContain(live.id);
+    expect(ids).not.toContain(arch.id);
+
+    const all = await app.inject({ method: 'GET', url: '/api/ai/sessions?archived=true' });
+    expect(all.json().map((s: { id: number }) => s.id)).toContain(arch.id);
+  });
+
+  test('unarchive brings a session back into the list', async () => {
+    const s = await createTerminalSession();
+    await app.inject({ method: 'POST', url: `/api/ai/sessions/${s.id}/archive` });
+    await app.inject({ method: 'POST', url: `/api/ai/sessions/${s.id}/unarchive` });
+    const def = await app.inject({ method: 'GET', url: '/api/ai/sessions' });
+    expect(def.json().map((r: { id: number }) => r.id)).toContain(s.id);
   });
 });
