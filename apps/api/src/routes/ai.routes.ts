@@ -1,16 +1,36 @@
+import { resolve } from 'node:path';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import * as v from 'valibot';
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import type { Db } from '@tickets/db';
-import { aiAgents, aiSessions, aiWorkspaces, users } from '@tickets/db';
+import { aiAgents, aiSessions, aiWorkspaces, comments, tickets, users } from '@tickets/db';
 import { buildRunSpec } from '../ai/agent-run-spec';
+import { dispatchComment } from '../ai/dispatch-comment';
 import type { ProviderRegistry } from '../ai/provider-registry';
 import { assertWorkspaceDir } from '../ai/workspace-fs';
 import { resolveSessionCommand } from '../ai/session-command';
 import type { Supervisor } from '../ai/supervisor';
+import { worktreeName, type WorktreeManager } from '../ai/worktree';
+import { writeEvent } from '../events/write-event';
 import { HttpError } from '../errors';
 import { parseBody } from '../utils/parse-body';
 import { parseId } from '../utils/parse-id';
+
+// Cap on concurrent dispatched runs so a fan-out can't spawn unbounded worktrees
+// + agent processes (TIX-208).
+const MAX_CONCURRENT_DISPATCHES = 4;
+
+const dispatchSchema = v.object({
+  agentId: v.pipe(v.number(), v.integer()),
+  ticketId: v.pipe(v.number(), v.integer()),
+  prompt: v.pipe(v.string(), v.minLength(1)),
+  parentSessionId: v.optional(v.pipe(v.number(), v.integer())),
+  workspaceId: v.optional(v.pipe(v.number(), v.integer())),
+  maxBudgetUsd: v.optional(v.number()),
+  // Who initiated the dispatch (a human, or a parent agent's user). Defaults to
+  // the dispatched agent's own user for attribution.
+  actorId: v.optional(v.pipe(v.number(), v.integer())),
+});
 
 const permissionModeSchema = v.picklist([
   'default',
@@ -91,9 +111,16 @@ const createSessionSchema = v.object({
 
 export function registerAiRoutes(
   app: FastifyInstance,
-  context: { db: Db; supervisor: Supervisor; providers: ProviderRegistry },
+  context: {
+    db: Db;
+    supervisor: Supervisor;
+    providers: ProviderRegistry;
+    worktrees: WorktreeManager;
+  },
 ) {
-  const { db, supervisor, providers } = context;
+  const { db, supervisor, providers, worktrees } = context;
+  // Per-app dispatch concurrency counter.
+  let activeDispatches = 0;
 
   // ── Workspaces ─────────────────────────────────────────────────────────────
 
@@ -269,6 +296,102 @@ export function registerAiRoutes(
     reply.send({ ok: true, id });
   };
 
+  // ── Dispatch (TIX-208) — put an agent on a ticket ───────────────────────────
+
+  const dispatch = async (request: FastifyRequest, reply: FastifyReply) => {
+    const body = parseBody(dispatchSchema, request.body);
+    if (activeDispatches >= MAX_CONCURRENT_DISPATCHES) {
+      throw new HttpError(429, `dispatch limit reached (${MAX_CONCURRENT_DISPATCHES} concurrent)`);
+    }
+    const [agent] = await db.select().from(aiAgents).where(eq(aiAgents.id, body.agentId));
+    if (!agent) throw new HttpError(404, 'agent not found');
+    const [ticket] = await db.select({ id: tickets.id }).from(tickets).where(eq(tickets.id, body.ticketId));
+    if (!ticket) throw new HttpError(404, 'ticket not found');
+    const workspaceId = body.workspaceId ?? agent.defaultWorkspaceId;
+    if (workspaceId == null) throw new HttpError(400, 'no workspace — set the agent default or pass workspaceId');
+    const provider = providers.get(agent.providerKey);
+    if (!provider) throw new HttpError(400, `unknown provider "${agent.providerKey}"`);
+    const workspace = await loadRunnableWorkspace(workspaceId);
+
+    // Child session first, so its id names the worktree.
+    const [session] = await db
+      .insert(aiSessions)
+      .values({
+        kind: 'agent',
+        title: `${agent.name} · ${body.ticketId}`,
+        workspaceId: workspace.id,
+        agentId: agent.id,
+        parentSessionId: body.parentSessionId ?? null,
+        ticketId: body.ticketId,
+        status: 'starting',
+        cwd: workspace.path,
+      })
+      .returning();
+
+    // Isolated git worktree so parallel dispatches don't collide. Best-effort:
+    // a non-git workspace just runs in place.
+    let worktreePath: string | null = null;
+    let cwd = workspace.path;
+    try {
+      const branch = worktreeName(session!.id, `t${body.ticketId}`);
+      const path = resolve(workspace.path, '..', `${workspace.name}-s${session!.id}`);
+      const created = await worktrees.create({ repoPath: workspace.path, branch, path });
+      worktreePath = created.path;
+      cwd = created.path;
+      await db
+        .update(aiSessions)
+        .set({ cwd, worktreePath })
+        .where(eq(aiSessions.id, session!.id));
+    } catch {
+      // not a git repo / worktree unavailable — run in the workspace dir
+    }
+
+    const actorId = body.actorId ?? agent.userId;
+    // Record the dispatch on the ticket right away (the "an agent is on this"
+    // signal), then comment the outcome when it finishes.
+    await writeEvent(db, {
+      ticketId: body.ticketId,
+      actorId,
+      kind: 'agent_dispatched',
+      payload: { sessionId: session!.id, agentId: agent.id },
+    });
+
+    activeDispatches += 1;
+    const run = provider.start(buildRunSpec(agent, cwd, { maxBudgetUsd: body.maxBudgetUsd }));
+    supervisor.startAgent({
+      id: session!.id,
+      run,
+      maxBudgetUsd: body.maxBudgetUsd,
+      onEnd: async () => {
+        activeDispatches = Math.max(0, activeDispatches - 1);
+        if (worktreePath) await worktrees.remove(worktreePath).catch(() => {});
+        const [final] = await db
+          .select({ status: aiSessions.status, costUsd: aiSessions.costUsd })
+          .from(aiSessions)
+          .where(eq(aiSessions.id, session!.id));
+        if (!final) return;
+        await db.transaction(async (tx) => {
+          const [comment] = await tx
+            .insert(comments)
+            .values({
+              ticketId: body.ticketId,
+              authorId: agent.userId,
+              body: dispatchComment(agent.name, final.status, final.costUsd, session!.id),
+            })
+            .returning({ id: comments.id });
+          await writeEvent(tx, {
+            ticketId: body.ticketId,
+            actorId: agent.userId,
+            kind: 'commented',
+            payload: { commentId: comment!.id },
+          });
+        });
+      },
+    });
+    supervisor.prompt(session!.id, body.prompt);
+    reply.status(201).send(session);
+  };
+
   // ── Providers (code registry, read-only) ───────────────────────────────────
 
   const listProviders = async (_request: FastifyRequest, reply: FastifyReply) => {
@@ -372,4 +495,5 @@ export function registerAiRoutes(
   app.post('/api/ai/sessions', createSession);
   app.get('/api/ai/sessions/:id', getSession);
   app.delete('/api/ai/sessions/:id', stopSession);
+  app.post('/api/ai/dispatch', dispatch);
 }

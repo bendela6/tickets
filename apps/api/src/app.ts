@@ -6,6 +6,7 @@ import { createLocalRunner } from './ai/local-runner';
 import { createProviderRegistry, type ProviderRegistry } from './ai/provider-registry';
 import { createClaudeProvider } from './ai/providers/claude-provider';
 import { createSupervisor, type Supervisor } from './ai/supervisor';
+import { createLocalWorktreeManager, type WorktreeManager } from './ai/worktree';
 import { HttpError } from './errors';
 import { registerAiRoutes } from './routes/ai.routes';
 import { registerCommentsRoutes } from './routes/comments.routes';
@@ -22,6 +23,7 @@ export function buildApp(context: {
   db: Db;
   supervisor?: Supervisor;
   providers?: ProviderRegistry;
+  worktrees?: WorktreeManager;
 }) {
   const app = fastify({ logger: false });
 
@@ -38,6 +40,10 @@ export function buildApp(context: {
   // The agent provider registry (code registry, not DB rows). Injectable so
   // tests supply a fake provider; production ships the Claude adapter.
   const providers = context.providers ?? createProviderRegistry([createClaudeProvider()]);
+
+  // Git worktree manager for isolating dispatched runs (TIX-206/208). Injectable
+  // so tests exercise dispatch without touching a real repo.
+  const worktrees = context.worktrees ?? createLocalWorktreeManager();
 
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof HttpError) {
@@ -57,7 +63,7 @@ export function buildApp(context: {
   registerUsersRoutes(app, context);
   registerViewsRoutes(app, context);
   registerVocabularyRoutes(app, context);
-  registerAiRoutes(app, { db: context.db, supervisor, providers });
+  registerAiRoutes(app, { db: context.db, supervisor, providers, worktrees });
   registerAiSocket(app, { supervisor });
 
   return app;
