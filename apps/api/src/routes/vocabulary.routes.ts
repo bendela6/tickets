@@ -3,6 +3,7 @@ import type { Db } from '@tickets/db';
 import { parseEnvelope } from '../command/envelope';
 import { runCommand } from '../command/run-command';
 import { fieldCreate, fieldUpdate } from '../command/config/field';
+import { fieldPlace, fieldUnplace } from '../command/config/placement';
 import { optionCreate, optionUpdate } from '../command/config/option';
 import { transitionCreate, transitionDelete } from '../command/config/transition';
 import { linkTypeCreate } from '../command/config/link-type';
@@ -59,6 +60,19 @@ export function registerVocabularyRoutes(app: FastifyInstance, ctx: { db: Db }) 
     const envelope = parseEnvelope(request.body);
     const result = await runCommand(db, linkTypeCreate, envelope, { ...(request.body as object), itemTypeId: typeId });
     reply.status(201).send(result);
+  });
+
+  app.post('/api/types/:typeId/fields/:fieldId/placement', async (request, reply) => {
+    const p = request.params as { typeId: string; fieldId: string };
+    const envelope = parseEnvelope(request.body);
+    const result = await runCommand(db, fieldPlace, envelope, { ...(request.body as object), itemTypeId: parseId(p.typeId), fieldId: parseId(p.fieldId) });
+    reply.status(201).send(result);
+  });
+  app.delete('/api/types/:typeId/fields/:fieldId/placement', async (request, reply) => {
+    const p = request.params as { typeId: string; fieldId: string };
+    const envelope = parseEnvelope(request.body);
+    const result = await runCommand(db, fieldUnplace, envelope, { itemTypeId: parseId(p.typeId), fieldId: parseId(p.fieldId) });
+    reply.send(result);
   });
 
   app.post('/api/types', async (request, reply) => {
