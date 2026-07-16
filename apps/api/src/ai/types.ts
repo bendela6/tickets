@@ -26,10 +26,25 @@ export type ClientFrame =
   | { type: 'permission'; requestId: string; result: 'allow' | 'deny'; reason?: string } // E3
   | { type: 'interrupt' };
 
-// Frames the server pushes to an attached socket. E1 uses the terminal subset;
-// `message` (AgentEvent) is added in E2.
+// The normalized agent event union. EVERY provider maps its native output into
+// this; the persistence layer and the UI only ever see AgentEvent and never
+// learn which provider produced it. One row of ai_messages per event.
+export type AgentEvent =
+  | { type: 'session_started'; providerSessionId: string }
+  | { type: 'assistant_text'; text: string; parentToolUseId?: string }
+  | { type: 'thinking'; text: string }
+  | { type: 'tool_use'; id: string; name: string; input: unknown; parentToolUseId?: string }
+  | { type: 'tool_result'; toolUseId: string; content: unknown; isError: boolean }
+  | { type: 'permission_request'; id: string; toolName: string; input: unknown }
+  | { type: 'result'; costUsd: number; durationMs: number; isError: boolean }
+  | { type: 'error'; message: string };
+
+// Frames the server pushes to an attached socket. Terminal sessions use
+// `output`; agent sessions use `message` (a normalized AgentEvent). Both share
+// `status`/`replay_done`/`notice`.
 export type ServerFrame =
   | { type: 'output'; seq: number; data: string }
+  | { type: 'message'; seq: number; event: AgentEvent }
   | { type: 'status'; status: SessionStatus; exitCode?: number | null }
   | { type: 'replay_done' }
   | { type: 'notice'; message: string };
