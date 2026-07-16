@@ -1,4 +1,9 @@
-@layer theme, base, components, utilities;
+/* `xterm` is declared FIRST so it is the lowest-priority layer: xterm.css is
+   third-party UNLAYERED CSS and unlayered CSS outranks every layered rule —
+   left as-is it would beat Instrument. Wrapping it in the bottom layer keeps the
+   terminal's own canvas styles while letting any app utility win on conflict. */
+@layer xterm, theme, base, components, utilities;
+@import '@xterm/xterm/css/xterm.css' layer(xterm);
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(base);
 @import 'tailwindcss/utilities.css' layer(utilities);
