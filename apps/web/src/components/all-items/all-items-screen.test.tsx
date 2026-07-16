@@ -8,103 +8,62 @@ import {
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
-import type { Board, Field, Status, TicketType } from '../../api/types';
+import type { Board, Field, ItemType, Option } from '../../api/types';
 import { CurrentUserProvider } from '../../state/current-user-context';
-import { AllTicketsScreen } from './all-tickets-screen';
+import { ToastProvider } from '../../ui/toast';
+import { AllItemsScreen } from './all-items-screen';
 
 const createdAt = '2026-01-01T00:00:00.000Z';
 
-function status(
-  id: number,
-  projectId: number,
-  key: string,
-  label: string,
-  kind: Status['kind'],
-  position: number,
-): Status {
-  return { id, projectId, key, label, kind, config: {}, position, archivedAt: null, createdAt };
-}
-
 function field(
   id: number,
-  projectId: number,
+  schemeId: number,
   key: string,
   label: string,
   type: Field['type'],
-  options: Field['options'] = [],
+  optionSetId: number | null = null,
+  config: Field['config'] = {},
 ): Field {
-  return {
-    id,
-    projectId,
-    key,
-    label,
-    type,
-    system: false,
-    config: {},
-    archivedAt: null,
-    createdAt,
-    options,
-  };
+  return { id, schemeId, key, label, type, config, optionSetId, archivedAt: null };
 }
 
-function taskType(id: number, projectId: number): TicketType {
-  return {
-    id,
-    projectId,
-    key: 'task',
-    label: 'Task',
-    config: {},
-    position: 1,
-    archivedAt: null,
-    createdAt,
-  };
+function taskType(id: number, schemeId: number): ItemType {
+  return { id, schemeId, key: 'task', label: 'Task', config: {}, archivedAt: null };
 }
 
-const severityOptions = (base: number): Field['options'] => [
-  {
-    id: base,
-    value: 'sev1',
-    label: 'Sev 1',
-    config: { color: '#a03028' },
-    position: 1,
-    archivedAt: null,
-  },
-  {
-    id: base + 1,
-    value: 'sev2',
-    label: 'Sev 2',
-    config: { color: '#a44e14' },
-    position: 2,
-    archivedAt: null,
-  },
+const workflowOptions = (base: number, optionSetId: number): Option[] => [
+  { id: base, optionSetId, value: 'backlog', label: 'Backlog', position: 1, kind: 'todo', config: {}, archivedAt: null },
+  { id: base + 1, optionSetId, value: 'doing', label: 'Doing', position: 2, kind: 'active', config: {}, archivedAt: null },
 ];
 
-// Two projects with different prefixes; 'severity' (select) is shared —
-// same key + type in both — while 'flavor' exists only in Items Core.
+const severityOptions = (base: number, optionSetId: number): Option[] => [
+  { id: base, optionSetId, value: 'sev1', label: 'Sev 1', position: 1, kind: null, config: { color: '#a03028' }, archivedAt: null },
+  { id: base + 1, optionSetId, value: 'sev2', label: 'Sev 2', position: 2, kind: null, config: { color: '#a44e14' }, archivedAt: null },
+];
+
+// Two projects with different prefixes; 'severity' (option) is shared —
+// same key + type + shape in both — while 'flavor' exists only in Items Core.
 function makeCoreBoard(): Board {
   return {
-    project: { id: 1, key: 'core', name: 'Items Core', ticketPrefix: 'CORE', createdAt },
-    users: [{ id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null, createdAt }],
+    project: { id: 1, key: 'core', name: 'Items Core', schemeId: 1, itemPrefix: 'CORE', createdAt },
+    users: [{ id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null }],
     types: [taskType(1, 1)],
-    typeFields: [
-      { ticketTypeId: 1, fieldId: 11, position: 1, required: true },
-      { ticketTypeId: 1, fieldId: 10, position: 2, required: true },
-      { ticketTypeId: 1, fieldId: 12, position: 3, required: false },
-    ],
-    statuses: [
-      status(1, 1, 'backlog', 'Backlog', 'todo', 1),
-      status(2, 1, 'doing', 'Doing', 'active', 2),
-    ],
-    transitions: [],
     fields: [
-      field(10, 1, 'status', 'Status', 'status'),
-      field(11, 1, 'title', 'Title', 'text'),
-      field(12, 1, 'severity', 'Severity', 'select', severityOptions(1)),
-      field(13, 1, 'flavor', 'Flavor', 'text'),
+      field(10, 1, 'status', 'Status', 'option', 100, { workflow: true }),
+      field(11, 1, 'title', 'Title', 'string'),
+      field(12, 1, 'severity', 'Severity', 'option', 101),
+      field(13, 1, 'flavor', 'Flavor', 'string'),
     ],
+    placements: [
+      { itemTypeId: 1, fieldId: 11, position: 1, required: true, configOverride: null },
+      { itemTypeId: 1, fieldId: 10, position: 2, required: true, configOverride: null },
+      { itemTypeId: 1, fieldId: 12, position: 3, required: false, configOverride: null },
+    ],
+    options: [...workflowOptions(1000, 100), ...severityOptions(1, 101)],
+    transitions: [],
     linkTypes: [],
     views: [],
-    tickets: [
+    items: [
       {
         id: 100,
         number: 1,
@@ -151,24 +110,27 @@ function makeCoreBoard(): Board {
 
 function makeAppBoard(): Board {
   return {
-    project: { id: 2, key: 'app', name: 'Items App', ticketPrefix: 'APP', createdAt },
-    users: [{ id: 9, name: 'Jae R', email: null, kind: 'human', archivedAt: null, createdAt }],
+    project: { id: 2, key: 'app', name: 'Items App', schemeId: 2, itemPrefix: 'APP', createdAt },
+    users: [{ id: 9, name: 'Jae R', email: null, kind: 'human', archivedAt: null }],
     types: [taskType(5, 2)],
-    typeFields: [
-      { ticketTypeId: 5, fieldId: 21, position: 1, required: true },
-      { ticketTypeId: 5, fieldId: 20, position: 2, required: true },
-      { ticketTypeId: 5, fieldId: 22, position: 3, required: false },
-    ],
-    statuses: [status(21, 2, 'todo', 'To do', 'todo', 1)],
-    transitions: [],
     fields: [
-      field(20, 2, 'status', 'Status', 'status'),
-      field(21, 2, 'title', 'Title', 'text'),
-      field(22, 2, 'severity', 'Severity', 'select', severityOptions(5)),
+      field(20, 2, 'status', 'Status', 'option', 200, { workflow: true }),
+      field(21, 2, 'title', 'Title', 'string'),
+      field(22, 2, 'severity', 'Severity', 'option', 201),
     ],
+    placements: [
+      { itemTypeId: 5, fieldId: 21, position: 1, required: true, configOverride: null },
+      { itemTypeId: 5, fieldId: 20, position: 2, required: true, configOverride: null },
+      { itemTypeId: 5, fieldId: 22, position: 3, required: false, configOverride: null },
+    ],
+    options: [
+      { id: 2000, optionSetId: 200, value: 'todo', label: 'To do', position: 1, kind: 'todo', config: {}, archivedAt: null },
+      ...severityOptions(5, 201),
+    ],
+    transitions: [],
     linkTypes: [],
     views: [],
-    tickets: [
+    items: [
       {
         id: 200,
         number: 1,
@@ -189,7 +151,7 @@ function makeAppBoard(): Board {
 function stubFetch(core: Board, app: Board) {
   const respond = (body: unknown) =>
     Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify(body)) });
-  const fetchMock = vi.fn((input: RequestInfo | URL) => {
+  const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     if (url === '/api/projects') {
       return respond({ data: [core.project, app.project] });
@@ -199,6 +161,9 @@ function stubFetch(core: Board, app: Board) {
     }
     if (url === '/api/projects/app/board') {
       return respond(app);
+    }
+    if (init?.method === 'PATCH' && url.startsWith('/api/items/')) {
+      return respond({ id: Number(url.slice('/api/items/'.length)), updatedAt: 'later' });
     }
     return Promise.resolve({
       ok: false,
@@ -217,7 +182,7 @@ async function renderScreen() {
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   // The drawer's ItemDetail uses router links, so mount inside a memory router.
-  const rootRoute = createRootRoute({ component: () => <AllTicketsScreen /> });
+  const rootRoute = createRootRoute({ component: () => <AllItemsScreen /> });
   const router = createRouter({
     routeTree: rootRoute,
     history: createMemoryHistory({ initialEntries: ['/'] }),
@@ -225,7 +190,9 @@ async function renderScreen() {
   render(
     <QueryClientProvider client={client}>
       <CurrentUserProvider>
-        <RouterProvider router={router} />
+        <ToastProvider>
+          <RouterProvider router={router} />
+        </ToastProvider>
       </CurrentUserProvider>
     </QueryClientProvider>,
   );
@@ -250,7 +217,7 @@ test('groups rows under both project headers', async () => {
   expect(screen.getByText('APP-1')).toBeInTheDocument();
   // subtasks are not top-level rows
   expect(screen.queryByText('Subtask of the redirect fix')).not.toBeInTheDocument();
-  // header meta counts top-level tickets and loaded projects
+  // header meta counts top-level items and loaded projects
   expect(screen.getByText('3 tickets · 2 projects')).toBeInTheDocument();
   expect(screen.getByText('3 of 3 match filters')).toBeInTheDocument();
 });
@@ -286,10 +253,57 @@ test('filtering by a shared field narrows rows across projects', async () => {
   expect(screen.queryByText('Items App')).not.toBeInTheDocument();
 });
 
+test('inline status edit PATCHes /api/items/:id with a commandId envelope', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const fetchMock = stubFetch(makeCoreBoard(), makeAppBoard());
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  const rootRoute = createRootRoute({ component: () => <AllItemsScreen /> });
+  const router = createRouter({
+    routeTree: rootRoute,
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  render(
+    <QueryClientProvider client={client}>
+      <CurrentUserProvider>
+        <ToastProvider>
+          <RouterProvider router={router} />
+        </ToastProvider>
+      </CurrentUserProvider>
+    </QueryClientProvider>,
+  );
+  await screen.findByText('CORE-1');
+  await userEvent.click(screen.getByRole('button', { name: 'Backlog' }));
+  await userEvent.click(await screen.findByRole('option', { name: /doing/i }));
+
+  await waitFor(() => {
+    const patchCall = fetchMock.mock.calls.find(
+      ([input, init]) =>
+        String(input) === '/api/items/100' && (init as RequestInit | undefined)?.method === 'PATCH',
+    );
+    expect(patchCall).toBeDefined();
+  });
+  const patchCall = fetchMock.mock.calls.find(
+    ([input, init]) =>
+      String(input) === '/api/items/100' && (init as RequestInit | undefined)?.method === 'PATCH',
+  )!;
+  const init = patchCall[1] as RequestInit;
+  // the mutation envelope carries a random commandId — destructure it out
+  // before comparing the rest of the PATCH body.
+  const { commandId, ...rest } = JSON.parse(String(init.body)) as Record<string, unknown>;
+  expect(typeof commandId).toBe('string');
+  expect(rest).toEqual({
+    actorId: 7,
+    expectedUpdatedAt: createdAt,
+    values: { status: 'doing' },
+  });
+});
+
 test('clicking a row opens the ticket drawer with that project’s board', async () => {
   await renderScreen();
   fireEvent.click(screen.getByText('Ship mobile nav'));
-  const drawer = await screen.findByRole('complementary', { name: 'Ticket detail' });
+  const drawer = await screen.findByRole('complementary', { name: 'Item detail' });
   expect(within(drawer).getByText('APP-1')).toBeInTheDocument();
   expect(within(drawer).getByRole('button', { name: /ship mobile nav/i })).toBeInTheDocument();
 });

@@ -30,10 +30,7 @@ const OP_LABELS: Record<FilterRule['op'], string> = {
 };
 
 function isOptionish(field: SharedField | null): boolean {
-  return (
-    field !== null &&
-    (field.type === 'select' || field.type === 'multi_select' || field.type === 'status')
-  );
+  return field !== null && field.type === 'option';
 }
 
 /** Value chips for one rule, resolved through the shared field's option union. */
@@ -108,7 +105,7 @@ function AddFilter({
       ? [
           { value: 'any-of', label: 'is any of' },
           { value: 'none-of', label: 'is none of' },
-          ...(selectedField?.type === 'status' ? [{ value: 'kinds', label: 'kind of' }] : []),
+          ...(selectedField?.workflow === true ? [{ value: 'kinds', label: 'kind of' }] : []),
         ]
       : [{ value: 'contains', label: 'contains' }]),
     { value: 'empty', label: 'is empty' },

@@ -90,7 +90,7 @@ export function AppShell({
         </Link>
         <Link to="/all" className={navItemClasses(Boolean(matchRoute({ to: '/all' })))}>
           <span aria-hidden>▤</span>
-          <span className="flex-1">All tickets</span>
+          <span className="flex-1">All items</span>
           <span className="font-mono text-[11px] text-ink-3">{allCount || ''}</span>
         </Link>
       </nav>

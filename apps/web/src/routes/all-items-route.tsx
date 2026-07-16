@@ -1,20 +1,20 @@
 import { createRoute } from '@tanstack/react-router';
-import { AllTicketsScreen } from '../components/all-tickets/all-tickets-screen';
+import { AllItemsScreen } from '../components/all-items/all-items-screen';
 import { AppShell } from '../components/shell/app-shell';
 import { rootRoute } from './root-route';
 
 // Global cross-project view — no active project, so the shell highlights the
-// "All tickets" nav item instead of a project row.
-function AllTicketsPage() {
+// "All items" nav item instead of a project row.
+function AllItemsPage() {
   return (
     <AppShell>
-      <AllTicketsScreen />
+      <AllItemsScreen />
     </AppShell>
   );
 }
 
-export const allTicketsRoute = createRoute({
+export const allItemsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/all',
-  component: AllTicketsPage,
+  component: AllItemsPage,
 });

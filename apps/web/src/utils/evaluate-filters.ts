@@ -1,4 +1,4 @@
-import type { BoardTicket } from '../api/types';
+import type { Item } from '../api/types';
 import type { BoardIndexes } from './index-board';
 import type { FilterRule } from './view-config';
 
@@ -25,13 +25,13 @@ function asValueList(value: unknown): string[] {
 export function evaluateFilters(
   rules: FilterRule[],
   query: string,
-  ticket: BoardTicket,
+  item: Item,
   indexes: BoardIndexes,
 ): boolean {
   if (query.length > 0) {
     const haystack = [
-      String(ticket.number),
-      ...Object.values(ticket.values).map((value) => String(value ?? '')),
+      String(item.number),
+      ...Object.values(item.values).map((value) => String(value ?? '')),
     ]
       .join(' ')
       .toLowerCase();
@@ -44,7 +44,7 @@ export function evaluateFilters(
     if (!field) {
       continue;
     }
-    const raw = ticket.values[field.key];
+    const raw = item.values[field.key];
     if (rule.op === 'empty') {
       if (!isEmptyValue(raw)) {
         return false;
@@ -68,8 +68,10 @@ export function evaluateFilters(
       continue;
     }
     if (rule.op === 'kinds') {
-      const status = typeof raw === 'string' ? indexes.statusByKey.get(raw) : undefined;
-      if (!status || !rule.values.includes(status.kind)) {
+      // Kind lives on the option the workflow field's value resolves to —
+      // no more standalone Status row/kind on the ticket.
+      const option = typeof raw === 'string' ? indexes.optionByValue(field, raw) : undefined;
+      if (!option || option.kind === null || !rule.values.includes(option.kind)) {
         return false;
       }
       continue;
