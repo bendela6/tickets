@@ -26,4 +26,14 @@ describe('activity-scanner', () => {
     expect(s.push('out\x1b]133;C;np').clean).toBe('out'); // held back
     expect(s.push('m\x1b\\done')).toEqual({ clean: 'done', event: { busy: true, command: 'npm' } });
   });
+  it('keeps the exit code when D and A arrive together (pwsh prompt)', () => {
+    const s = createActivityScanner();
+    expect(s.push('\x1b]133;D;3\x1b\\\x1b]133;A\x1b\\PS> ')).toEqual({ clean: 'PS> ', event: { busy: false, exitCode: 3 } });
+  });
+  it('holds back a long command split across chunks without leaking bytes', () => {
+    const s = createActivityScanner();
+    const long = 'npm run some:very-long-script -- --with --many --args and paths';
+    expect(s.push('out\x1b]133;C;' + long.slice(0, 40)).clean).toBe('out'); // partial held
+    expect(s.push(long.slice(40) + '\x1b\\done')).toEqual({ clean: 'done', event: { busy: true, command: long } });
+  });
 });
