@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import type { Board } from '../../api/types';
+import { CurrentUserProvider } from '../../state/current-user-context';
 import { SettingsScreen } from './settings-screen';
 
 function makeBoard(overrides: Partial<Board> = {}): Board {
@@ -51,7 +52,11 @@ function renderWithProviders(node: ReactNode) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  render(<QueryClientProvider client={client}>{node}</QueryClientProvider>);
+  render(
+    <QueryClientProvider client={client}>
+      <CurrentUserProvider>{node}</CurrentUserProvider>
+    </QueryClientProvider>,
+  );
 }
 
 afterEach(() => {
