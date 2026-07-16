@@ -5,6 +5,8 @@ export interface CommandEnvelope {
   commandId: string;
   actorId: number;
   correlationId?: string;
+  causedBy?: number;
+  depth?: number;
 }
 
 // Non-strict: the same body also carries the command's own payload fields.
