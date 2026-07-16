@@ -3,7 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import { events, itemTypeFields } from '@tickets/db';
 import { resetDb, seedFixture, testDb } from '../../test/db';
 import { runCommand } from '../run-command';
-import { fieldPlace, fieldUnplace } from './placement';
+import { fieldPlace, fieldUnplace, placementUpdate } from './placement';
 
 beforeEach(resetDb);
 afterAll(resetDb);
@@ -29,4 +29,19 @@ it('unplaces a field from a type (leaving the library field intact) and emits fi
   const rows = await testDb.select().from(itemTypeFields).where(and(eq(itemTypeFields.itemTypeId, task), eq(itemTypeFields.fieldId, estimate)));
   expect(rows).toHaveLength(0);
   expect((await testDb.select().from(events).where(eq(events.kind, 'field.unplaced')))).toHaveLength(1);
+});
+
+it('updates required + the per-type option allowlist', async () => {
+  const fx = await seedFixture();
+  const task = fx.typeIdByKey.get('task')!;
+  const priority = fx.fieldIdByKey.get('priority')!; // placed on task in the seed
+  const urgent = fx.optionIdByKey.get('priority:urgent')!;
+  const high = fx.optionIdByKey.get('priority:high')!;
+  await runCommand(testDb, placementUpdate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
+    itemTypeId: task, fieldId: priority, required: true, allowedOptionIds: [urgent, high],
+  });
+  const row = (await testDb.select().from(itemTypeFields).where(and(eq(itemTypeFields.itemTypeId, task), eq(itemTypeFields.fieldId, priority))))[0]!;
+  expect(row.required).toBe(true);
+  expect((row.configOverride as { allowedOptionIds?: number[] }).allowedOptionIds!.sort()).toEqual([urgent, high].sort());
+  expect((await testDb.select().from(events).where(eq(events.kind, 'placement.updated')))).toHaveLength(1);
 });
