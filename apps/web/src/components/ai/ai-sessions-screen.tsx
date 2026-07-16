@@ -7,6 +7,7 @@ import { Button } from '../../ui/button';
 import { SessionKindGlyph } from '../../ui/session-kind-glyph';
 import { SessionStatusPill } from '../../ui/session-status-pill';
 import { formatAge } from '../../utils/format-age';
+import { buildSessionTree, type SessionTreeNode } from './build-session-tree';
 import { NewSessionDialog } from './new-session-dialog';
 
 function summarize(sessions: AiSession[]): string {
@@ -33,6 +34,7 @@ export function AiSessionsScreen() {
   }, [workspaces.data]);
 
   const rows = sessions.data ?? [];
+  const tree = useMemo(() => buildSessionTree(rows), [rows]);
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-5 px-6 py-7">
@@ -77,26 +79,8 @@ export function AiSessionsScreen() {
             <span>Workspace</span>
             <span className="text-right">Age</span>
           </div>
-          {rows.map((session) => (
-            <Link
-              key={session.id}
-              to="/ai/$sessionId"
-              params={{ sessionId: String(session.id) }}
-              className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-x-4 border-b border-hairline px-4 py-2.5 last:border-b-0 hover:bg-inset"
-            >
-              <SessionKindGlyph kind={session.kind} />
-              <span className="truncate font-sans text-ui text-ink">{session.title}</span>
-              <SessionStatusPill status={session.status} exitCode={session.exitCode} />
-              <span className="truncate font-sans text-meta text-ink-2">
-                {workspaceName(session.workspaceId)}
-              </span>
-              <span
-                className="text-right font-mono text-meta text-ink-3"
-                title={session.createdAt}
-              >
-                {formatAge(session.createdAt)}
-              </span>
-            </Link>
+          {tree.map((node) => (
+            <SessionTreeRow key={node.session.id} node={node} depth={0} workspaceName={workspaceName} />
           ))}
         </div>
       )}
@@ -109,5 +93,61 @@ export function AiSessionsScreen() {
         }}
       />
     </div>
+  );
+}
+
+// One row of the dispatch tree: a dispatched child indents one level under its
+// parent with a connector, and shows a chip for the ticket it is working.
+function SessionTreeRow({
+  node,
+  depth,
+  workspaceName,
+}: {
+  node: SessionTreeNode;
+  depth: number;
+  workspaceName: (id: number) => string;
+}) {
+  const { session } = node;
+  return (
+    <>
+      <Link
+        to="/ai/$sessionId"
+        params={{ sessionId: String(session.id) }}
+        className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-x-4 border-b border-hairline py-2.5 pr-4 last:border-b-0 hover:bg-inset"
+        style={{ paddingLeft: 16 + depth * 22 }}
+      >
+        <span className="flex items-center gap-1.5">
+          {depth > 0 ? (
+            <span aria-hidden className="font-mono text-meta text-ink-3">
+              └
+            </span>
+          ) : null}
+          <SessionKindGlyph kind={session.kind} />
+        </span>
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="truncate font-sans text-ui text-ink">{session.title}</span>
+          {session.ticketId != null ? (
+            <span className="shrink-0 rounded-[4px] border border-hairline px-1.5 font-mono text-[10px] text-accent">
+              → #{session.ticketId}
+            </span>
+          ) : null}
+        </span>
+        <SessionStatusPill status={session.status} exitCode={session.exitCode} />
+        <span className="truncate font-sans text-meta text-ink-2">
+          {workspaceName(session.workspaceId)}
+        </span>
+        <span className="text-right font-mono text-meta text-ink-3" title={session.createdAt}>
+          {formatAge(session.createdAt)}
+        </span>
+      </Link>
+      {node.children.map((child) => (
+        <SessionTreeRow
+          key={child.session.id}
+          node={child}
+          depth={depth + 1}
+          workspaceName={workspaceName}
+        />
+      ))}
+    </>
   );
 }
