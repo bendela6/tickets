@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiMutate } from './client';
-import type { Comment, CreateCommentInput } from './types';
+import type { PatchItemInput, PatchItemResult } from './types';
 
-export function useCreateComment() {
+export function usePatchItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: CreateCommentInput) => {
+    mutationFn: (input: PatchItemInput) => {
       const { itemId, actorId, ...rest } = input;
-      return apiMutate<Comment>(`/api/items/${itemId}/comments`, { method: 'POST', actorId, body: rest });
+      return apiMutate<PatchItemResult>(`/api/items/${itemId}`, { method: 'PATCH', actorId, body: rest });
     },
     onSuccess: async () => { await qc.invalidateQueries({ queryKey: ['board'] }); },
   });

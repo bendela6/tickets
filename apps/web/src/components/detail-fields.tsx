@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import type { Board, BoardTicket } from '../api/types';
-import { usePatchTicket } from '../api/use-patch-ticket';
+import { usePatchItem } from '../api/use-patch-item';
 import { FieldWidget } from '../registry/field-widget';
 import { useCurrentUser } from '../state/current-user-context';
 import type { BoardIndexes } from '../utils/index-board';
@@ -25,7 +25,7 @@ export function DetailFields({
   layout: 'grid' | 'rail';
 }) {
   const { userId } = useCurrentUser();
-  const patch = usePatchTicket();
+  const patch = usePatchItem();
   const queryClient = useQueryClient();
 
   const typeFields = board.typeFields

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Board, BoardTicket } from '../api/types';
-import { useCreateTicket } from '../api/use-create-ticket';
-import { usePatchTicket } from '../api/use-patch-ticket';
+import { useCreateItem } from '../api/use-create-item';
+import { usePatchItem } from '../api/use-patch-item';
 import { useCurrentUser } from '../state/current-user-context';
 import { cn } from '../ui/cn';
 import { KindGlyph, type StatusKind } from '../ui/kind-glyph';
@@ -36,8 +36,8 @@ export function DetailChildren({
   onOpenTicket: (ticketNumber: number) => void;
 }) {
   const { userId } = useCurrentUser();
-  const createTicket = useCreateTicket();
-  const patch = usePatchTicket();
+  const createTicket = useCreateItem();
+  const patch = usePatchItem();
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
 

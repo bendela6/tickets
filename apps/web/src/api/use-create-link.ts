@@ -1,19 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-
-import { fetchJson } from './client';
-import type { CreateLinkInput, TicketLink } from './types';
+import { apiMutate } from './client';
+import type { CreateLinkInput, ItemLink } from './types';
 
 export function useCreateLink() {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateLinkInput) => {
-      return fetchJson<TicketLink>('/api/links', {
-        method: 'POST',
-        body: JSON.stringify(input),
-      });
+      const { actorId, ...rest } = input;
+      return apiMutate<ItemLink>('/api/links', { method: 'POST', actorId, body: rest });
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['board'] });
-    },
+    onSuccess: async () => { await qc.invalidateQueries({ queryKey: ['board'] }); },
   });
 }

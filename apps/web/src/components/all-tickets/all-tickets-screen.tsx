@@ -2,7 +2,7 @@ import { useState, type FormEvent, type ReactNode } from 'react';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { fetchJson } from '../../api/client';
 import type { Board, BoardTicket, StatusKind } from '../../api/types';
-import { usePatchTicket } from '../../api/use-patch-ticket';
+import { usePatchItem } from '../../api/use-patch-item';
 import { useProjects } from '../../api/use-projects';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
@@ -90,12 +90,12 @@ function isPastDate(value: string, now: Date): boolean {
 /**
  * Inline status cell ported from board/table-view: the select shows THIS
  * ticket's board's statuses filtered by ITS workflow, and the PATCH goes
- * through use-patch-ticket, which invalidates every ['board'] query — so the
+ * through use-patch-item, which invalidates every ['board'] query — so the
  * edit lands on the right project no matter which group row it sits in.
  */
 function StatusCell({ entry, ticket }: { entry: ProjectEntry; ticket: BoardTicket }) {
   const { userId } = useCurrentUser();
-  const patch = usePatchTicket();
+  const patch = usePatchItem();
   const queryClient = useQueryClient();
   const statusField = entry.indexes.statusField;
   if (!statusField) {
