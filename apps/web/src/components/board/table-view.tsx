@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import type { Board, BoardTicket } from '../../api/types';
+import type { Board, Item } from '../../api/types';
 import { usePatchItem } from '../../api/use-patch-item';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
@@ -39,13 +39,13 @@ function columnWidth(column: ViewColumn, indexes: BoardIndexes): string {
     return 'minmax(240px, 1fr)';
   }
   switch (field.type) {
-    case 'status':
-      return '138px';
-    case 'select':
-      return '110px';
-    case 'multi_select':
-      return '150px';
+    case 'option':
+      if (field.config.workflow === true) {
+        return '138px';
+      }
+      return field.config.multiple === true ? '150px' : '110px';
     case 'date':
+    case 'datetime':
       return '96px';
     case 'number':
       return '72px';
@@ -64,26 +64,28 @@ function StatusCell({
 }: {
   board: Board;
   indexes: BoardIndexes;
-  ticket: BoardTicket;
+  ticket: Item;
 }) {
   const { userId } = useCurrentUser();
   const patch = usePatchItem();
   const queryClient = useQueryClient();
-  const statusField = indexes.statusField;
-  if (!statusField) {
+  const workflowField = indexes.workflowField(ticket.typeId);
+  if (!workflowField) {
     return null;
   }
-  const raw = ticket.values[statusField.key];
-  const statuses = board.statuses
-    .filter((status) => !status.archivedAt)
-    .sort((left, right) => left.position - right.position)
-    .map((status) => ({ key: status.key, label: status.label, kind: status.kind }));
+  const raw = ticket.values[workflowField.key];
+  const statuses = indexes
+    .optionsForField(ticket.typeId, workflowField)
+    .filter((option) => !option.archivedAt)
+    .map((option) => ({ key: option.value, label: option.label, kind: option.kind ?? 'todo' }));
   return (
     <StatusSelect
       size="compact"
       statuses={statuses}
       value={typeof raw === 'string' ? raw : null}
-      legalTargets={legalStatusTargets(board, indexes, ticket).map((status) => status.key)}
+      legalTargets={legalStatusTargets(board, indexes, ticket, ticket.typeId).map(
+        (option) => option.value,
+      )}
       disabled={userId === null}
       onChange={(next) => {
         if (userId === null || next === raw) {
@@ -91,10 +93,10 @@ function StatusCell({
         }
         patch.mutate(
           {
-            ticketId: ticket.id,
+            itemId: ticket.id,
             actorId: userId,
             expectedUpdatedAt: ticket.updatedAt,
-            values: { [statusField.key]: next },
+            values: { [workflowField.key]: next },
           },
           { onError: () => void queryClient.invalidateQueries({ queryKey: ['board'] }) },
         );
@@ -104,7 +106,7 @@ function StatusCell({
 }
 
 /** Subtask rollup: 36×4 bar + n/m, or a dash when the ticket has no children. */
-function ProgressCell({ ticket, indexes }: { ticket: BoardTicket; indexes: BoardIndexes }) {
+function ProgressCell({ ticket, indexes }: { ticket: Item; indexes: BoardIndexes }) {
   const { any, done, total } = childProgress(ticket, indexes);
   if (!any || total === 0) {
     return <span className="font-sans text-ui text-ink-3">—</span>;
@@ -123,7 +125,7 @@ function ProgressCell({ ticket, indexes }: { ticket: BoardTicket; indexes: Board
 }
 
 /** Hover-revealed row actions: open the ticket page, or archive via ⋯ menu. */
-function RowActions({ projectKey, ticket }: { projectKey: string; ticket: BoardTicket }) {
+function RowActions({ projectKey, ticket }: { projectKey: string; ticket: Item }) {
   const { userId } = useCurrentUser();
   const patch = usePatchItem();
   const actionClasses =
@@ -156,7 +158,7 @@ function RowActions({ projectKey, ticket }: { projectKey: string; ticket: BoardT
                 return;
               }
               patch.mutate({
-                ticketId: ticket.id,
+                itemId: ticket.id,
                 actorId: userId,
                 expectedUpdatedAt: ticket.updatedAt,
                 archived: true,
@@ -233,7 +235,7 @@ export function TableView({
   board: Board;
   indexes: BoardIndexes;
   config: ViewConfig;
-  rows: BoardTicket[];
+  rows: Item[];
   projectKey: string;
   filtered: boolean;
   filterCount: number;
@@ -275,11 +277,11 @@ export function TableView({
     });
   };
 
-  const cell = (column: ViewColumn, ticket: BoardTicket, key: number) => {
+  const cell = (column: ViewColumn, ticket: Item, key: number) => {
     if (column.source === 'number') {
       return (
         <span key={key} className="px-3">
-          <TicketKey prefix={board.project.ticketPrefix} number={ticket.number} />
+          <TicketKey prefix={board.project.itemPrefix} number={ticket.number} />
         </span>
       );
     }
@@ -302,7 +304,7 @@ export function TableView({
     if (!field) {
       return <span key={key} />;
     }
-    if (field.type === 'status') {
+    if (field.type === 'option' && field.config.workflow === true) {
       return (
         <span key={key} className="px-2" onClick={(event) => event.stopPropagation()}>
           <StatusCell board={board} indexes={indexes} ticket={ticket} />
@@ -318,7 +320,7 @@ export function TableView({
     }
     return (
       <span key={key} className="min-w-0 truncate px-2 font-sans text-ui text-ink-2">
-        {getCellContent(field, ticket.values[field.key], indexes)}
+        {getCellContent(field, ticket.values[field.key], indexes, ticket.typeId)}
       </span>
     );
   };

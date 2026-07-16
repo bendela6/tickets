@@ -44,15 +44,20 @@ export function BoardScreen() {
   const adHocRules = search.f;
   const effectiveRules = adHocRules ?? config.filters.rules;
   const query = search.q ?? '';
-  const topLevel = board.tickets.filter((ticket) => !ticket.archivedAt && ticket.parentId === null);
+  const topLevel = board.items.filter((ticket) => !ticket.archivedAt && ticket.parentId === null);
   const rows = topLevel
     .filter((ticket) => evaluateFilters(effectiveRules, query, ticket, indexes))
     .sort(compareTickets(indexes, config.sort));
-  const openTicket = search.t !== undefined ? (indexes.ticketByNumber.get(search.t) ?? null) : null;
+  const openTicket = search.t !== undefined ? (indexes.itemByNumber.get(search.t) ?? null) : null;
 
   const doneCount = topLevel.filter((ticket) => {
-    const raw = indexes.statusField ? ticket.values[indexes.statusField.key] : undefined;
-    return typeof raw === 'string' && indexes.statusByKey.get(raw)?.kind === 'done';
+    const workflowField = indexes.workflowField(ticket.typeId);
+    const raw = workflowField ? ticket.values[workflowField.key] : undefined;
+    return (
+      typeof raw === 'string' &&
+      workflowField &&
+      indexes.optionByValue(workflowField, raw)?.kind === 'done'
+    );
   }).length;
   const donePercent = topLevel.length > 0 ? Math.round((doneCount / topLevel.length) * 100) : 0;
 

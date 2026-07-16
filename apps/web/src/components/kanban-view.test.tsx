@@ -10,108 +10,103 @@ import { KanbanView } from './kanban-view';
 function makeBoard(): Board {
   const createdAt = '2026-01-01T00:00:00.000Z';
   return {
-    project: { id: 1, key: 'core', name: 'Items Core', ticketPrefix: 'CORE', createdAt },
-    users: [{ id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null, createdAt }],
+    project: { id: 1, key: 'core', name: 'Items Core', schemeId: 1, itemPrefix: 'CORE', createdAt },
+    users: [{ id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null }],
     types: [
       {
         id: 1,
-        projectId: 1,
+        schemeId: 1,
         key: 'task',
         label: 'Task',
         config: {},
-        position: 1,
         archivedAt: null,
-        createdAt,
       },
     ],
-    typeFields: [],
-    statuses: [
-      {
-        id: 1,
-        projectId: 1,
-        key: 'backlog',
-        label: 'Backlog',
-        kind: 'todo',
-        config: {},
-        position: 1,
-        archivedAt: null,
-        createdAt,
-      },
-      {
-        id: 2,
-        projectId: 1,
-        key: 'in-review',
-        label: 'In review',
-        kind: 'active',
-        config: {},
-        position: 2,
-        archivedAt: null,
-        createdAt,
-      },
-      {
-        id: 3,
-        projectId: 1,
-        key: 'shipped',
-        label: 'Shipped',
-        kind: 'done',
-        config: {},
-        position: 3,
-        archivedAt: null,
-        createdAt,
-      },
-    ],
-    // only backlog → in-review is a legal move
-    transitions: [{ id: 1, fromStatusId: 1, toStatusId: 2, ticketTypeId: null, config: {} }],
     fields: [
       {
         id: 10,
-        projectId: 1,
+        schemeId: 1,
         key: 'status',
         label: 'Status',
-        type: 'status',
-        system: true,
-        config: {},
+        type: 'option',
+        config: { workflow: true },
+        optionSetId: 1,
         archivedAt: null,
-        createdAt,
-        options: [],
       },
       {
         id: 11,
-        projectId: 1,
+        schemeId: 1,
         key: 'title',
         label: 'Title',
-        type: 'text',
-        system: true,
+        type: 'string',
         config: {},
+        optionSetId: null,
         archivedAt: null,
-        createdAt,
-        options: [],
       },
       {
         id: 12,
-        projectId: 1,
+        schemeId: 1,
         key: 'priority',
         label: 'Priority',
-        type: 'select',
-        system: false,
+        type: 'option',
         config: {},
+        optionSetId: 2,
         archivedAt: null,
-        createdAt,
-        options: [
-          {
-            id: 1,
-            value: 'p2',
-            label: 'P2',
-            config: { color: '#fab219' },
-            position: 1,
-            archivedAt: null,
-          },
-        ],
       },
     ],
+    placements: [
+      { itemTypeId: 1, fieldId: 10, position: 1, required: true, configOverride: null },
+      { itemTypeId: 1, fieldId: 11, position: 2, required: true, configOverride: null },
+      { itemTypeId: 1, fieldId: 12, position: 3, required: false, configOverride: null },
+    ],
+    // one shared status set (optionSetId 1); priority is its own set (2)
+    options: [
+      {
+        id: 1,
+        optionSetId: 1,
+        value: 'backlog',
+        label: 'Backlog',
+        position: 1,
+        kind: 'todo',
+        config: {},
+        archivedAt: null,
+      },
+      {
+        id: 2,
+        optionSetId: 1,
+        value: 'in-review',
+        label: 'In review',
+        position: 2,
+        kind: 'active',
+        config: {},
+        archivedAt: null,
+      },
+      {
+        id: 3,
+        optionSetId: 1,
+        value: 'shipped',
+        label: 'Shipped',
+        position: 3,
+        kind: 'done',
+        config: {},
+        archivedAt: null,
+      },
+      {
+        id: 4,
+        optionSetId: 2,
+        value: 'p2',
+        label: 'P2',
+        position: 1,
+        kind: null,
+        config: { color: '#fab219' },
+        archivedAt: null,
+      },
+    ],
+    // only backlog → in-review is a legal move
+    transitions: [{ id: 1, fieldId: 10, itemTypeId: null, fromOptionId: 1, toOptionId: 2, config: null }],
     linkTypes: [],
     views: [],
-    tickets: [
+    items: [
       {
         id: 100,
         number: 121,
@@ -154,7 +149,7 @@ function renderKanban() {
         <KanbanView
           board={board}
           indexes={indexBoard(board)}
-          rows={board.tickets}
+          rows={board.items}
           projectKey="CORE"
           onOpenTicket={onOpenTicket}
         />
@@ -169,7 +164,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test('renders one column per status and groups tickets into their column', () => {
+test('renders one column per workflow option and groups items by values[status]', () => {
   renderKanban();
   const backlog = screen.getByRole('region', { name: 'Backlog' });
   const review = screen.getByRole('region', { name: 'In review' });
@@ -181,6 +176,22 @@ test('renders one column per status and groups tickets into their column', () =>
   // column counts
   expect(within(backlog).getByText('1')).toBeInTheDocument();
   expect(within(shipped).getByText('0')).toBeInTheDocument();
+});
+
+test('column glyph tint follows the option kind', () => {
+  renderKanban();
+  const backlog = screen.getByRole('region', { name: 'Backlog' });
+  const review = screen.getByRole('region', { name: 'In review' });
+  const shipped = screen.getByRole('region', { name: 'Shipped' });
+  expect(backlog.querySelector('.text-kind-todo')).not.toBeNull();
+  expect(review.querySelector('.text-kind-active')).not.toBeNull();
+  expect(shipped.querySelector('.text-kind-done')).not.toBeNull();
+});
+
+test('card shows the type badge', () => {
+  renderKanban();
+  const backlog = screen.getByRole('region', { name: 'Backlog' });
+  expect(within(backlog).getByText('Task')).toBeInTheDocument();
 });
 
 test('clicking a card opens the ticket', async () => {
@@ -210,9 +221,12 @@ test('dropping on a legal column PATCHes the status', async () => {
   fireEvent.drop(screen.getByRole('region', { name: 'In review' }));
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
   const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-  expect(url).toBe('/api/tickets/100');
+  expect(url).toBe('/api/items/100');
   expect(init.method).toBe('PATCH');
-  expect(JSON.parse(String(init.body))).toMatchObject({
+  // the mutation envelope carries a random commandId — destructure it out
+  const { commandId, ...rest } = JSON.parse(String(init.body)) as Record<string, unknown>;
+  expect(typeof commandId).toBe('string');
+  expect(rest).toMatchObject({
     actorId: 7,
     expectedUpdatedAt: '2026-01-01T00:00:00.000Z',
     values: { status: 'in-review' },
