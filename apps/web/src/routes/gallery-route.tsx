@@ -17,6 +17,8 @@ import { NumberInput } from '../ui/number-input';
 import { OptionChip, type OptionColor } from '../ui/option-chip';
 import { RadioGroup } from '../ui/radio-group';
 import { RelativeDate } from '../ui/relative-date';
+import { SessionKindGlyph } from '../ui/session-kind-glyph';
+import { SessionStatusPill, type SessionStatus } from '../ui/session-status-pill';
 import { StatusBadge } from '../ui/status-badge';
 import { StatusSelect, type StatusOption } from '../ui/status-select';
 import { Switch } from '../ui/switch';
@@ -33,6 +35,16 @@ const KINDS: { kind: StatusKind; label: string }[] = [
   { kind: 'blocked', label: 'Blocked' },
   { kind: 'done', label: 'Shipped' },
   { kind: 'dropped', label: "Won't do" },
+];
+
+const SESSION_STATUSES: SessionStatus[] = [
+  'starting',
+  'running',
+  'idle',
+  'awaiting_input',
+  'interrupted',
+  'exited',
+  'failed',
 ];
 
 const OPTION_COLORS: OptionColor[] = [
@@ -295,6 +307,22 @@ function GalleryScreen() {
               {KINDS.map((entry) => (
                 <StatusBadge key={entry.kind} kind={entry.kind} label={entry.label} />
               ))}
+            </Section>
+
+            <Section title="AI session — status pills">
+              {SESSION_STATUSES.map((status) => (
+                <SessionStatusPill
+                  key={status}
+                  status={status}
+                  exitCode={status === 'exited' ? 0 : undefined}
+                />
+              ))}
+              <SessionStatusPill status="exited" exitCode={1} />
+            </Section>
+
+            <Section title="AI session — kind glyphs">
+              <SessionKindGlyph kind="terminal" />
+              <SessionKindGlyph kind="agent" />
             </Section>
 
             <Section title="Option chips — 11-color palette">
