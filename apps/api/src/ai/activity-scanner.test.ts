@@ -30,10 +30,12 @@ describe('activity-scanner', () => {
     const s = createActivityScanner();
     expect(s.push('\x1b]133;D;3\x1b\\\x1b]133;A\x1b\\PS> ')).toEqual({ clean: 'PS> ', event: { busy: false, exitCode: 3 } });
   });
-  it('holds back a long command split across chunks without leaking bytes', () => {
+  it('holds back a long command split across chunks without leaking bytes (past the old 64 cap)', () => {
     const s = createActivityScanner();
-    const long = 'npm run some:very-long-script -- --with --many --args and paths';
-    expect(s.push('out\x1b]133;C;' + long.slice(0, 40)).clean).toBe('out'); // partial held
-    expect(s.push(long.slice(40) + '\x1b\\done')).toEqual({ clean: 'done', event: { busy: true, command: long } });
+    // 90 chars — the held-back tail (ESC]133;C; + 80) exceeds the old 64-char cap.
+    const long = 'npm run some:very-long-script -- --with --many --args --and --more /paths/here/too extra';
+    expect(long.length).toBeGreaterThan(80);
+    expect(s.push('out\x1b]133;C;' + long.slice(0, 80)).clean).toBe('out'); // partial held, not leaked
+    expect(s.push(long.slice(80) + '\x1b\\done')).toEqual({ clean: 'done', event: { busy: true, command: long } });
   });
 });
