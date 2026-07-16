@@ -38,4 +38,10 @@ describe('terminalDisplay', () => {
       status: 'disconnected',
     });
   });
+  it('shows the running command when provided', () => {
+    expect(terminalDisplay('live', 'live', true, 'npm test')).toMatchObject({ label: 'Running: npm test' });
+  });
+  it('falls back to plain Running with no command', () => {
+    expect(terminalDisplay('live', 'live', true)).toMatchObject({ label: 'Running' });
+  });
 });

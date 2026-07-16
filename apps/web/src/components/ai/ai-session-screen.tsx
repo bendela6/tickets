@@ -20,7 +20,8 @@ export function AiSessionScreen({ sessionId }: { sessionId: number }) {
   const stop = useStopAiSession();
   const createSession = useCreateAiSession();
   const archiveSession = useArchiveSession();
-  const activity = useTerminalActivity();
+  // Output-pulse fallback for sessions without shell integration (OSC 133).
+  const fallback = useTerminalActivity();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -91,7 +92,7 @@ export function AiSessionScreen({ sessionId }: { sessionId: number }) {
       const term = termRef.current;
       if (term) term.write(data);
       else pendingRef.current.push(data);
-      activity.ping();
+      fallback.ping();
     },
   });
   sendInputRef.current = socket.sendInput;
@@ -105,7 +106,11 @@ export function AiSessionScreen({ sessionId }: { sessionId: number }) {
   const data = session.data;
   const status = socket.status ?? data?.status ?? 'starting';
   const exitCode = socket.exitCode ?? data?.exitCode ?? null;
-  const display = terminalDisplay(socket.conn, status, activity.busy);
+  // Shell-integrated sessions get precise busy/command from the server's OSC
+  // 133 activity frames; other shells fall back to the output-pulse heuristic.
+  const busy = socket.integrated ? (socket.activity?.busy ?? false) : fallback.busy;
+  const cmd = socket.integrated ? socket.activity?.command : undefined;
+  const display = terminalDisplay(socket.conn, status, busy, cmd);
 
   function handleRestart() {
     if (!data) return;

@@ -13,7 +13,16 @@ type ServerFrame =
   | { type: 'message'; seq: number; event: AgentEvent }
   | { type: 'status'; status: SessionStatus; exitCode?: number | null }
   | { type: 'replay_done' }
-  | { type: 'notice'; message: string };
+  | { type: 'notice'; message: string }
+  | { type: 'activity'; busy: boolean; command?: string; exitCode?: number; integrated?: boolean };
+
+// Shell-integrated (OSC 133) activity, mirrored from the server `activity`
+// frame. Only populated once `integrated` has latched true.
+export interface SessionActivity {
+  busy: boolean;
+  command?: string;
+  exitCode?: number;
+}
 
 // Close code the server uses for an unknown/dead session — do NOT reconnect.
 const UNKNOWN_SESSION_CODE = 4404;
@@ -41,6 +50,11 @@ export function useSessionSocket(
   const [status, setStatus] = useState<SessionStatus | null>(null);
   const [exitCode, setExitCode] = useState<number | null>(null);
   const [truncated, setTruncated] = useState(false);
+  // Whether this session has shell integration (OSC 133): once true (learned
+  // from the attach frame's `integrated` flag), it never resets — only the
+  // attach frame carries it, so a later frame lacking it must not un-latch.
+  const [integrated, setIntegrated] = useState(false);
+  const [activity, setActivity] = useState<SessionActivity | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
   const lastSeqRef = useRef(0);
@@ -110,6 +124,10 @@ export function useSessionSocket(
           case 'notice':
             setTruncated(true);
             return;
+          case 'activity':
+            setIntegrated((v) => v || Boolean(frame.integrated));
+            setActivity({ busy: frame.busy, command: frame.command, exitCode: frame.exitCode });
+            return;
         }
       });
 
@@ -148,6 +166,8 @@ export function useSessionSocket(
     status,
     exitCode,
     truncated,
+    integrated,
+    activity,
     sendInput: (data: string) => send({ type: 'input', data }),
     sendResize: (cols: number, rows: number) => send({ type: 'resize', cols, rows }),
     sendPrompt: (text: string) => send({ type: 'prompt', text }),
