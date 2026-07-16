@@ -3,10 +3,13 @@ import { useNavigate } from '@tanstack/react-router';
 import type { AgentEvent } from '../../api/types';
 import { useAiSession } from '../../api/use-ai-session';
 import { useStopAiSession } from '../../api/use-stop-ai-session';
-import { Button } from '../../ui/button';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
 import { SessionStatusPill } from '../../ui/session-status-pill';
+import { contextWindowFor } from './agent-models';
 import { buildMessageStream, type SeqEvent } from './build-message-stream';
+import { ContextMeter } from './context-meter';
 import { CostMeter } from './cost-meter';
+import { deriveUsage } from './derive-usage';
 import { MessageStream, type RespondFn } from './message-stream';
 import { AGENT_MODELS, PromptComposer } from './prompt-composer';
 import { useSessionSocket } from './use-session-socket';
@@ -49,6 +52,10 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
   const data = session.data;
   const status = socket.status ?? data?.status ?? 'starting';
   const cost = data?.costUsd ? Number(data.costUsd) : agentCost(entries);
+  const usage = useMemo(
+    () => deriveUsage(entries.flatMap((e) => (e.kind === 'event' ? [e.event] : []))),
+    [entries],
+  );
 
   // Split the timeline into user bubbles and runs of agent events (each run
   // becomes one MessageStream).
@@ -82,16 +89,37 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
           {data?.title ?? `agent session #${sessionId}`}
         </span>
         <span className="flex-1" />
+        <ContextMeter
+          contextTokens={usage.contextTokens}
+          contextWindow={contextWindowFor(model)}
+          tokensOut={usage.tokensOut}
+          cacheReadTokens={usage.cacheReadTokens}
+        />
         <CostMeter costUsd={cost} />
         <SessionStatusPill status={status} exitCode={socket.exitCode ?? data?.exitCode ?? null} />
-        <Button
-          size="compact"
-          variant="destructive"
-          loading={stop.isPending}
-          onClick={() => stop.mutate(sessionId)}
-        >
-          Stop
-        </Button>
+        <Menu>
+          <MenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Session actions"
+              className="inline-flex size-6 items-center justify-center rounded-md border border-hairline bg-raised font-sans text-ink-2 hover:border-control"
+            >
+              ⋯
+            </button>
+          </MenuTrigger>
+          <MenuContent align="end">
+            <MenuItem
+              destructive
+              onSelect={() => {
+                if (window.confirm('End this session? The process will be stopped.')) {
+                  stop.mutate(sessionId);
+                }
+              }}
+            >
+              End session
+            </MenuItem>
+          </MenuContent>
+        </Menu>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
