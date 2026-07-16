@@ -1,6 +1,7 @@
 import fastify from 'fastify';
 import type { Db } from '@tickets/db';
 import { HttpError } from './errors';
+import { registerActivityRoutes } from './routes/activity.routes';
 import { registerBoardRoutes } from './routes/board.routes';
 import { registerItemsRoutes } from './routes/items.routes';
 import { registerLinksRoutes } from './routes/links.routes';
@@ -26,6 +27,7 @@ export function buildApp(context: { db: Db }) {
   registerProjectsRoutes(app, context);
   registerUsersRoutes(app, context);
   registerItemsRoutes(app, context);
+  registerActivityRoutes(app, context);
   registerLinksRoutes(app, context);
   registerBoardRoutes(app, context);
   registerVocabularyRoutes(app, context);
