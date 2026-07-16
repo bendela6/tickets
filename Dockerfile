@@ -3,6 +3,11 @@
 
 FROM node:22-alpine AS deps
 RUN corepack enable
+# node-pty (the AI-session PTY runner) is a native addon. On alpine/musl it may
+# have no prebuilt binary and fall back to compiling from source via node-gyp,
+# which needs python3 + a C++ toolchain. Installing these lets `pnpm install`
+# build it deterministically regardless of prebuild availability.
+RUN apk add --no-cache python3 make g++
 WORKDIR /app
 # manifests first so the install layer caches until dependencies change
 # .npmrc carries the tslib public-hoist needed by radix-ui transitives at build time
