@@ -248,3 +248,63 @@ export interface CreateUserInput {
   name: string;
   kind?: UserKind;
 }
+
+// ── AI sessions (E1) ─────────────────────────────────────────────────────────
+
+export type SessionKind = 'terminal' | 'agent';
+export type SessionStatus =
+  | 'starting'
+  | 'running'
+  | 'idle'
+  | 'awaiting_input'
+  | 'interrupted'
+  | 'exited'
+  | 'failed';
+export type RunnerKind = 'local' | 'container';
+
+export interface AiWorkspace {
+  id: number;
+  name: string;
+  path: string;
+  runner: RunnerKind;
+  containerName: string | null;
+  gitRemote: string | null;
+  defaultBranch: string | null;
+  config: Record<string, unknown>;
+  archivedAt: string | null;
+  createdAt: string;
+}
+
+export interface AiSession {
+  id: number;
+  kind: SessionKind;
+  title: string;
+  workspaceId: number;
+  agentId: number | null;
+  ticketId: number | null;
+  parentSessionId: number | null;
+  status: SessionStatus;
+  providerSessionId: string | null;
+  cwd: string | null;
+  worktreePath: string | null;
+  exitCode: number | null;
+  costUsd: string | null;
+  startedBy: number | null;
+  createdAt: string;
+  updatedAt: string;
+  endedAt: string | null;
+}
+
+export interface CreateAiWorkspaceInput {
+  name: string;
+  path: string;
+}
+
+export interface CreateAiSessionInput {
+  kind?: SessionKind;
+  workspaceId: number;
+  title?: string;
+  command?: string;
+  cols?: number;
+  rows?: number;
+}

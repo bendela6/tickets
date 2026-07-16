@@ -93,6 +93,10 @@ export function AppShell({
           <span className="flex-1">All tickets</span>
           <span className="font-mono text-[11px] text-ink-3">{allCount || ''}</span>
         </Link>
+        <Link to="/ai" className={navItemClasses(Boolean(matchRoute({ to: '/ai' })))}>
+          <span aria-hidden>▷_</span>
+          <span className="flex-1">AI sessions</span>
+        </Link>
       </nav>
 
       <div className="px-2.25 pb-1.5 pt-4 font-mono text-[10px] font-medium tracking-[0.09em] text-ink-3">
