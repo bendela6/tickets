@@ -1,9 +1,9 @@
 import * as v from 'valibot';
 import { count, eq, sql } from 'drizzle-orm';
-import { itemTypes } from '@tickets/db';
+import { itemTypeChildTypes, itemTypes } from '@tickets/db';
 import { HttpError } from '../../errors';
 import { defineCommand } from '../registry';
-import { typeCreated, typeUpdated } from './events';
+import { typeChildTypesSet, typeCreated, typeUpdated } from './events';
 
 export const typeCreateInput = v.object({
   schemeId: v.pipe(v.number(), v.integer()),
@@ -54,5 +54,30 @@ export const typeUpdate = defineCommand({
     ctx.aggregateId = input.id;
     await ctx.emit(typeUpdated, { changes });
     return { id: input.id };
+  },
+});
+
+export const typeSetChildTypesInput = v.object({
+  typeId: v.pipe(v.number(), v.integer()),
+  childTypeIds: v.array(v.pipe(v.number(), v.integer())),
+});
+
+export const typeSetChildTypes = defineCommand({
+  kind: 'type.setChildTypes',
+  input: typeSetChildTypesInput,
+  aggregate: (input) => ({ type: 'type', id: input.typeId }),
+  async handler(tx, input, ctx) {
+    const parent = (await tx.select().from(itemTypes).where(eq(itemTypes.id, input.typeId)))[0];
+    if (!parent) throw new HttpError(404, 'type not found');
+    // replace: delete all child rows for this parent, then insert the new set
+    await tx.delete(itemTypeChildTypes).where(eq(itemTypeChildTypes.parentTypeId, input.typeId));
+    if (input.childTypeIds.length > 0) {
+      await tx.insert(itemTypeChildTypes).values(
+        input.childTypeIds.map((childTypeId) => ({ parentTypeId: input.typeId, childTypeId })),
+      );
+    }
+    ctx.aggregateId = input.typeId;
+    await ctx.emit(typeChildTypesSet, { childTypeIds: input.childTypeIds });
+    return { typeId: input.typeId };
   },
 });

@@ -6,7 +6,7 @@ import { fieldCreate, fieldUpdate } from '../command/config/field';
 import { optionCreate, optionUpdate } from '../command/config/option';
 import { transitionCreate, transitionDelete } from '../command/config/transition';
 import { linkTypeCreate } from '../command/config/link-type';
-import { typeCreate, typeUpdate } from '../command/config/type';
+import { typeCreate, typeSetChildTypes, typeUpdate } from '../command/config/type';
 import { parseId } from '../utils/parse-id';
 
 export function registerVocabularyRoutes(app: FastifyInstance, ctx: { db: Db }) {
@@ -70,6 +70,12 @@ export function registerVocabularyRoutes(app: FastifyInstance, ctx: { db: Db }) 
     const id = parseId((request.params as { id: string }).id);
     const envelope = parseEnvelope(request.body);
     const result = await runCommand(db, typeUpdate, envelope, { ...(request.body as object), id });
+    reply.send(result);
+  });
+  app.put('/api/types/:id/child-types', async (request, reply) => {
+    const id = parseId((request.params as { id: string }).id);
+    const envelope = parseEnvelope(request.body);
+    const result = await runCommand(db, typeSetChildTypes, envelope, { ...(request.body as object), typeId: id });
     reply.send(result);
   });
 }
