@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
-  bigint, bigserial, index, integer, jsonb, pgTable, text, timestamp, unique, uuid,
+  bigint, bigserial, check, index, integer, jsonb, pgTable, text, timestamp, unique, uuid,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { users } from './users';
@@ -38,5 +38,6 @@ export const events = pgTable(
     index('events_caused_by').on(t.causedBy),
     index('events_project_at').on(t.projectId, t.at),
     index('events_stream_at').on(t.aggregateType, t.aggregateId, t.at),
+    check('events_item_project', sql`aggregate_type <> 'item' OR project_id IS NOT NULL`),
   ],
 );

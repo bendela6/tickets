@@ -2164,6 +2164,12 @@
           "refColumns": [
             "id"
           ]
+        },
+        {
+          "id": "k1",
+          "kind": "check",
+          "name": "events_item_project",
+          "expression": "aggregate_type <> 'item' OR project_id IS NOT NULL"
         }
       ],
       "indexes": [
@@ -2351,6 +2357,20 @@
           "type": "timestamp with time zone",
           "title": "Done at",
           "description": "When delivery finished.",
+          "nullable": true
+        },
+        {
+          "name": "attempts",
+          "type": "integer",
+          "title": "Attempts",
+          "description": "Delivery attempts so far; a poison row is retired at 5.",
+          "nullable": false
+        },
+        {
+          "name": "last_error",
+          "type": "text",
+          "title": "Last error",
+          "description": "Message from the most recent failed delivery.",
           "nullable": true
         }
       ],

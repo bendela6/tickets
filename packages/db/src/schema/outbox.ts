@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { bigint, index, pgTable, timestamp } from 'drizzle-orm/pg-core';
+import { bigint, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { events } from './events';
 
 // One row per event, written in the same transaction. A single worker drains it
@@ -15,6 +15,8 @@ export const outbox = pgTable(
       .defaultNow(),
     pickedAt: timestamp('picked_at', { withTimezone: true, mode: 'string' }),
     doneAt: timestamp('done_at', { withTimezone: true, mode: 'string' }),
+    attempts: integer('attempts').notNull().default(0),
+    lastError: text('last_error'),
   },
   (t) => [index('outbox_pending').on(t.eventId).where(sql`done_at IS NULL`)],
 );
