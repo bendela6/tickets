@@ -175,6 +175,51 @@ test('adding an edge fires useCreateTransition — POST /api/fields/:id/transiti
   expect(rest).toEqual({ actorId: 7, fromOptionId: 400, toOptionId: 401, itemTypeId: 1 });
 });
 
+test('adding an edge with "requires a comment" checked sends config: { guard: { requiresComment: true } }', async () => {
+  const fetchMock = mockFetch();
+  renderTab(makeBoard());
+
+  const transitionsRegion = screen.getByRole('region', { name: 'Transitions' });
+  await userEvent.click(within(transitionsRegion).getByRole('button', { name: 'From option' }));
+  await userEvent.click(await screen.findByRole('option', { name: 'To do' }));
+  await userEvent.click(within(transitionsRegion).getByRole('button', { name: 'To option' }));
+  await userEvent.click(await screen.findByRole('option', { name: 'In progress' }));
+  await userEvent.click(within(transitionsRegion).getByRole('checkbox', { name: 'Requires a comment' }));
+  await userEvent.click(within(transitionsRegion).getByRole('button', { name: 'Add edge' }));
+
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  expect(url).toBe('/api/fields/20/transitions');
+  expect(init.method).toBe('POST');
+  const { commandId, ...rest } = JSON.parse(String(init.body)) as Record<string, unknown>;
+  expect(typeof commandId).toBe('string');
+  expect(commandId).toMatch(UUID_RE);
+  expect(rest).toEqual({
+    actorId: 7,
+    fromOptionId: 400,
+    toOptionId: 401,
+    itemTypeId: 1,
+    config: { guard: { requiresComment: true } },
+  });
+});
+
+test('adding an edge with no guard inputs set sends a body with no `config` key', async () => {
+  const fetchMock = mockFetch();
+  renderTab(makeBoard());
+
+  const transitionsRegion = screen.getByRole('region', { name: 'Transitions' });
+  await userEvent.click(within(transitionsRegion).getByRole('button', { name: 'From option' }));
+  await userEvent.click(await screen.findByRole('option', { name: 'To do' }));
+  await userEvent.click(within(transitionsRegion).getByRole('button', { name: 'To option' }));
+  await userEvent.click(await screen.findByRole('option', { name: 'In progress' }));
+  await userEvent.click(within(transitionsRegion).getByRole('button', { name: 'Add edge' }));
+
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+  expect('config' in body).toBe(false);
+});
+
 test('deleting an edge fires useDeleteTransition — DELETE /api/transitions/:id', async () => {
   const fetchMock = mockFetch();
   renderTab(makeBoard());
