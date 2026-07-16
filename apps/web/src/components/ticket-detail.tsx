@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Board, BoardTicket } from '../api/types';
-import { usePatchTicket } from '../api/use-patch-ticket';
+import { usePatchItem } from '../api/use-patch-item';
 import { useCurrentUser } from '../state/current-user-context';
 import { Button } from '../ui/button';
 import { cn } from '../ui/cn';
@@ -113,7 +113,7 @@ export function TicketDetail({
 }) {
   const navigate = useNavigate();
   const { userId } = useCurrentUser();
-  const patch = usePatchTicket();
+  const patch = usePatchItem();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<'comments' | 'activity'>('comments');
   const [copied, setCopied] = useState(false);

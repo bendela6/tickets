@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import type { Board, BoardTicket } from '../../api/types';
-import { usePatchTicket } from '../../api/use-patch-ticket';
+import { usePatchItem } from '../../api/use-patch-item';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
@@ -67,7 +67,7 @@ function StatusCell({
   ticket: BoardTicket;
 }) {
   const { userId } = useCurrentUser();
-  const patch = usePatchTicket();
+  const patch = usePatchItem();
   const queryClient = useQueryClient();
   const statusField = indexes.statusField;
   if (!statusField) {
@@ -125,7 +125,7 @@ function ProgressCell({ ticket, indexes }: { ticket: BoardTicket; indexes: Board
 /** Hover-revealed row actions: open the ticket page, or archive via ⋯ menu. */
 function RowActions({ projectKey, ticket }: { projectKey: string; ticket: BoardTicket }) {
   const { userId } = useCurrentUser();
-  const patch = usePatchTicket();
+  const patch = usePatchItem();
   const actionClasses =
     'flex size-7.5 items-center justify-center rounded-[7px] border border-hairline bg-raised font-sans text-ui text-ink-2 shadow-sm hover:text-ink';
   return (

@@ -9,7 +9,7 @@ import type {
   TicketType,
   TypeField,
 } from '../api/types';
-import { useCreateTicket } from '../api/use-create-ticket';
+import { useCreateItem } from '../api/use-create-item';
 import { FieldWidget } from '../registry/field-widget';
 import { hexToOptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
@@ -123,7 +123,7 @@ export function NewTicketDialog({
 }) {
   const navigate = useNavigate();
   const { userId } = useCurrentUser();
-  const createTicket = useCreateTicket();
+  const createTicket = useCreateItem();
   const titleRef = useRef<HTMLInputElement>(null);
 
   const selectable = useMemo(
@@ -485,7 +485,7 @@ export function SubtaskQuickCreate({
   onCreated: (created: CreatedTicket) => void;
 }) {
   const { userId } = useCurrentUser();
-  const createTicket = useCreateTicket();
+  const createTicket = useCreateItem();
 
   const types = useMemo(
     () =>

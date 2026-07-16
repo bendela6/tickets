@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { BoardTicket, TicketEvent } from '../api/types';
-import { useTicketEvents } from '../api/use-ticket-events';
+import { useItemActivity } from '../api/use-item-activity';
 import { Avatar } from '../ui/avatar';
 import { RelativeDate } from '../ui/relative-date';
 import type { BoardIndexes } from '../utils/index-board';
@@ -57,7 +57,7 @@ export function DetailActivity({
   ticket: BoardTicket;
   indexes: BoardIndexes;
 }) {
-  const events = useTicketEvents(ticket.id);
+  const events = useItemActivity(ticket.id);
 
   if (events.isError) {
     return <p className="m-0 font-sans text-meta text-danger">{(events.error as Error).message}</p>;

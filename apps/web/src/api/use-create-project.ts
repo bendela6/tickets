@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { fetchJson } from './client';
-import type { Project } from './types';
+import type { CreateProjectInput, Project } from './types';
 
 export function useCreateProject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { key: string; name: string; ticketPrefix: string }) => {
+    mutationFn: (input: CreateProjectInput) => {
       return fetchJson<Project>('/api/projects', {
         method: 'POST',
         body: JSON.stringify(input),
