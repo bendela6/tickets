@@ -1,4 +1,5 @@
 import { createRouter } from '@tanstack/react-router';
+import { aiAgentsRoute } from './routes/ai-agents-route';
 import { aiRoute } from './routes/ai-route';
 import { aiSessionRoute } from './routes/ai-session-route';
 import { allTicketsRoute } from './routes/all-tickets-route';
@@ -16,6 +17,7 @@ const routeTree = rootRoute.addChildren([
   indexRoute,
   allTicketsRoute,
   aiRoute,
+  aiAgentsRoute,
   aiSessionRoute,
   galleryRoute,
   schemaRoute,

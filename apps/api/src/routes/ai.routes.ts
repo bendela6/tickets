@@ -263,6 +263,18 @@ export function registerAiRoutes(
     reply.send({ ok: true, id });
   };
 
+  // ── Providers (code registry, read-only) ───────────────────────────────────
+
+  const listProviders = async (_request: FastifyRequest, reply: FastifyReply) => {
+    reply.send(
+      providers.list().map((p) => ({
+        key: p.key,
+        capabilities: p.capabilities,
+        models: p.models(),
+      })),
+    );
+  };
+
   // ── Agents (personas) ──────────────────────────────────────────────────────
 
   const listAgents = async (_request: FastifyRequest, reply: FastifyReply) => {
@@ -346,6 +358,7 @@ export function registerAiRoutes(
   app.get('/api/ai/workspaces', listWorkspaces);
   app.post('/api/ai/workspaces', createWorkspace);
   app.patch('/api/ai/workspaces/:id', patchWorkspace);
+  app.get('/api/ai/providers', listProviders);
   app.get('/api/ai/agents', listAgents);
   app.post('/api/ai/agents', createAgent);
   app.patch('/api/ai/agents/:id', patchAgent);

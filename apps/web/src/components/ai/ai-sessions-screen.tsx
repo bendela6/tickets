@@ -43,6 +43,12 @@ export function AiSessionsScreen() {
             <p className="mt-0.5 font-mono text-meta text-ink-3">{summarize(rows)}</p>
           ) : null}
         </div>
+        <Link
+          to="/ai/agents"
+          className="font-sans text-meta text-ink-2 hover:text-ink"
+        >
+          Agents →
+        </Link>
         <Button variant="primary" onClick={() => setCreating(true)}>
           ＋ New terminal session
         </Button>
