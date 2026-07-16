@@ -61,7 +61,7 @@ export function useCreateOption() {
   });
 }
 export function useUpdateOption() {
-  return useConfigMutation((i: { actorId: number; id: number; label?: string; config?: Record<string, unknown>; archived?: boolean }) => {
+  return useConfigMutation((i: { actorId: number; id: number; label?: string; kind?: string | null; config?: Record<string, unknown>; archived?: boolean }) => {
     const { actorId, id, ...body } = i;
     return apiMutate(`/api/options/${id}`, { method: 'PATCH', actorId, body });
   });
