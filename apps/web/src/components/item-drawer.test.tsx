@@ -24,7 +24,7 @@ function makeBoard(): Board {
       { id: 7, name: 'Mara K', email: null, kind: 'human', archivedAt: null },
       { id: 8, name: 'claude-worker', email: null, kind: 'agent', archivedAt: null },
     ],
-    types: [{ id: 1, schemeId: 1, key: 'bug', label: 'Bug', config: {}, archivedAt: null }],
+    types: [{ id: 1, schemeId: 1, key: 'bug', label: 'Bug', position: 1, config: {}, archivedAt: null }],
     fields: [
       {
         id: 10,

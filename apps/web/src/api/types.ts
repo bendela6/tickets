@@ -4,7 +4,7 @@ export type UserKind = 'human' | 'agent';
 export interface User { id: number; name: string; email: string | null; kind: UserKind; archivedAt: string | null; }
 
 export interface ItemType {
-  id: number; schemeId: number; key: string; label: string;
+  id: number; schemeId: number; key: string; label: string; position: number;
   config: { color?: string } & Record<string, unknown>;
   archivedAt: string | null;
 }
