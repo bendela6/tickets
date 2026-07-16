@@ -132,3 +132,25 @@ clients ignore unknown frames; no other frame changes.
   pill; persisting busy so the session **list** shows Running (this spec keeps the list
   lifecycle-only — no new column); WSL/zsh entries can be added to the registry when needed
   (the seam is here). No change to the agent path or dispatch.
+
+---
+
+## Addendum (2026-07-17): probe results — per-shell capabilities
+
+Probed PowerShell 7/5.1, Git-bash, WSL Ubuntu against real PTYs. Verdict → target
+**pwsh + bash + wsl** as precise; carry command text + exit code where available.
+
+| Signal | PowerShell (7/5.1) | Git-bash | WSL Ubuntu | cmd.exe |
+|---|---|---|---|---|
+| running vs idle (C/D) | ✅ prompt fn + PSReadLine Enter | ✅ PS0 + PROMPT_COMMAND | ✅ (== bash) | ⚠️ prompt-only |
+| silent command detected | ✅ | ✅ | ✅ | ❌ |
+| exit code | ✅ `$LASTEXITCODE` | ✅ real (`false`→1) | ✅ real (`(exit 5)`→5) | ❌ |
+| command text | ✅ clean (PSReadLine buffer) | ⚠️ noisy (DEBUG trap) | ⚠️ (== bash) | ❌ |
+| spawn | pwsh.exe/powershell.exe | full path bash.exe | `wsl.exe -d Ubuntu -- bash …` | cmd.exe |
+| inject (no echo) | `-NoExit -Command` | `--rcfile <win temp>` | `--rcfile /mnt/c/<win temp>` | `/K prompt` |
+
+**Design changes:** the `activity` frame carries `{ busy, command?, exitCode?, integrated? }`;
+registry adds **wsl** (injects the bash rcfile via its `/mnt/<drive>` path — verified);
+pwsh emits `C;<command>` (from the PSReadLine buffer) + `D;<$LASTEXITCODE>`; bash/wsl emit
+`D;<$?>` (real exit codes), command text skipped (noisy). cmd/unknown → output-pulse
+fallback. Pill shows **Running: `<command>`** (pwsh) / **Running** (bash/wsl) / **Ready**.
