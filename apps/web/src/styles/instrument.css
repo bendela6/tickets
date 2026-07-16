@@ -306,6 +306,26 @@
   --text-meta--line-height: 1.4;
   --text-ui: 13px;
   --text-ui--line-height: 1.45;
+  /* AI session status pill motion (screen 10): a slow spinner for in-flight
+     work and a calm attention pulse for "awaiting input". */
+  --animate-ai-spin: ai-spin 1.4s linear infinite;
+  --animate-ai-pulse: ai-pulse 1.8s ease-out infinite;
+}
+
+@keyframes ai-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ai-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.62;
+  }
 }
 
 /* Markdown prose (design §11, docs/design/design-system.html): the rendered
