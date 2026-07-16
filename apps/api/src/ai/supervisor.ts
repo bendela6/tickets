@@ -106,6 +106,9 @@ interface RunningSession {
   // them into activity events; null when the shell has no registered
   // integration (coarse activity is not tracked in that case).
   scanner?: ReturnType<typeof createActivityScanner> | null;
+  // Last known activity busy state (integrated terminals only), re-sent to a
+  // client that attaches after start() so it learns the session is integrated.
+  busy: boolean;
 }
 
 function recordToFrame(record: SeqRecord): ServerFrame {
@@ -206,6 +209,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       ended: false,
       permissionRows: new Map(),
       scanner: null,
+      busy: false,
     };
   }
 
@@ -218,7 +222,10 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
           if (rs.scanner) {
             const { clean, event } = rs.scanner.push(data);
             text = clean;
-            if (event) broadcast(rs, { type: 'activity', ...event });
+            if (event) {
+              rs.busy = event.busy;
+              broadcast(rs, { type: 'activity', ...event });
+            }
           }
           if (text) {
             rs.buffer.push({ seq: ++rs.seq, kind: 'output', data: text });
@@ -359,6 +366,10 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
         }
         sub.send({ type: 'replay_done' });
         sub.send({ type: 'status', status: rs.status, exitCode: rs.exitCode });
+        // Re-send integration state so a client attaching after start() learns
+        // this terminal has precise activity (the start() broadcast had no
+        // subscribers yet). Without this the client would stay on the pulse.
+        if (rs.scanner) sub.send({ type: 'activity', busy: rs.busy, integrated: true });
         rs.pending.delete(sub);
         for (const frame of buffered) {
           if ((frame.type === 'output' || frame.type === 'message') && frame.seq <= maxReplayed) {
