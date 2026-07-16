@@ -168,6 +168,23 @@ describe('supervisor', () => {
     expect(appendIdx(2)).toBeLessThan(sendIdx(2));
   });
 
+  it('marks a terminal failed instead of throwing when the PTY cannot spawn', async () => {
+    const { store, finished } = makeStore();
+    const sup = createSupervisor({
+      runner: {
+        spawnPty: () => {
+          throw new Error('Cannot create process, error code: 87');
+        },
+      },
+      store,
+      schedule: syncSchedule,
+    });
+    // A spawn failure must not bubble out of start() (createSession would 500).
+    expect(() => sup.start({ id: 1, command: 'nope', cwd: '/w' })).not.toThrow();
+    await tick();
+    expect(finished).toContainEqual({ status: 'failed', exitCode: null });
+  });
+
   it('assigns monotonic seq and replays missed output in order on reconnect', async () => {
     const { store } = makeStore();
     const pty = makePty();
