@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { expect, test } from 'vitest';
+import { expect, it, test } from 'vitest';
 import { SessionStatusPill } from './session-status-pill';
 
 test('renders the status label with its pill styling', () => {
@@ -28,4 +28,21 @@ test('exited shows a non-zero exit code in the danger colour', () => {
 test('omits the code chip when there is no exit code', () => {
   render(<SessionStatusPill status="exited" />);
   expect(screen.getByText('exited').closest('span')?.querySelector('.font-mono')).toBeNull();
+});
+
+it('labels the new terminal states', () => {
+  render(<SessionStatusPill status="live" kind="terminal" />);
+  expect(screen.getByText('Live')).toBeInTheDocument();
+});
+it('reads failed as "Couldn\'t start" for a terminal', () => {
+  render(<SessionStatusPill status="failed" kind="terminal" />);
+  expect(screen.getByText("Couldn't start")).toBeInTheDocument();
+});
+it('keeps the agent/default wording for failed', () => {
+  render(<SessionStatusPill status="failed" />);
+  expect(screen.getByText('failed')).toBeInTheDocument();
+});
+it('honours an explicit label override', () => {
+  render(<SessionStatusPill status="running" label="Running" />);
+  expect(screen.getByText('Running')).toBeInTheDocument();
 });

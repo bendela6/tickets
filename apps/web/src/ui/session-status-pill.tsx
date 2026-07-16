@@ -1,3 +1,4 @@
+import type { SessionKind } from '../api/types';
 import { cn } from './cn';
 
 export type SessionStatus =
@@ -7,7 +8,9 @@ export type SessionStatus =
   | 'awaiting_input'
   | 'interrupted'
   | 'exited'
-  | 'failed';
+  | 'failed'
+  | 'live'
+  | 'disconnected';
 
 // Reuses the run-status pill visual language: a coloured pill + a shape-coded
 // dot, so state reads at a glance and is not carried by colour alone. The one
@@ -24,6 +27,16 @@ const PILL: Record<SessionStatus, { className: string; label: string }> = {
   interrupted: { className: 'bg-kind-dropped-subtle text-kind-dropped', label: 'interrupted' },
   exited: { className: 'bg-inset text-ink-2', label: 'exited' },
   failed: { className: 'bg-danger-subtle text-danger', label: 'failed' },
+  live: { className: 'bg-kind-active-subtle text-kind-active', label: 'Live' },
+  disconnected: { className: 'bg-kind-dropped-subtle text-kind-dropped', label: 'Disconnected' },
+};
+
+// Terminal sessions have their own vocabulary for a subset of statuses —
+// this overrides the shared PILL label when `kind="terminal"`.
+const TERMINAL_LABELS: Partial<Record<SessionStatus, string>> = {
+  starting: 'Connecting',
+  live: 'Live',
+  failed: "Couldn't start",
 };
 
 function StatusDot({ status }: { status: SessionStatus }) {
@@ -71,19 +84,32 @@ function StatusDot({ status }: { status: SessionStatus }) {
           ✕
         </span>
       );
+    // Alive & attached — a steady filled dot.
+    case 'live':
+      return <span aria-hidden className="size-2 shrink-0 rounded-full bg-current" />;
+    // Lost the process — a hollow ring.
+    case 'disconnected':
+      return (
+        <span aria-hidden className="size-2.5 shrink-0 rounded-full border-[1.5px] border-current opacity-70" />
+      );
   }
 }
 
 export function SessionStatusPill({
   status,
   exitCode,
+  kind,
+  label,
   className,
 }: {
   status: SessionStatus;
   exitCode?: number | null;
+  kind?: SessionKind;
+  label?: string;
   className?: string;
 }) {
   const pill = PILL[status];
+  const text = label ?? (kind === 'terminal' ? TERMINAL_LABELS[status] : undefined) ?? pill.label;
   return (
     <span
       className={cn(
@@ -93,7 +119,7 @@ export function SessionStatusPill({
       )}
     >
       <StatusDot status={status} />
-      {pill.label}
+      {text}
       {status === 'exited' && exitCode != null ? (
         <span className={cn('font-mono', exitCode === 0 ? 'text-kind-done' : 'text-danger')}>
           {exitCode}
