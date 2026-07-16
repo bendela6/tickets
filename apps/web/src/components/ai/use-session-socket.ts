@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import type { AgentEvent, SessionStatus } from '../../api/types';
 import type { ConnState } from './terminal-frame';
 
+// Re-exported so callers (e.g. terminal-display.ts) can depend on the socket
+// module without reaching into terminal-frame directly.
+export type { ConnState };
+
 // Server → client frames (mirror of apps/api ServerFrame). Terminal sessions use
 // `output`; agent sessions use `message`.
 type ServerFrame =
