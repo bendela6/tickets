@@ -65,6 +65,7 @@ function makeBoard(overrides: Partial<Board> = {}): Board {
       { id: 501, fieldId: 20, itemTypeId: 1, fromOptionId: 400, toOptionId: 401, config: null },
     ],
     linkTypes: [],
+    targetTypes: [],
     views: [],
     childTypes: [],
     items: [],

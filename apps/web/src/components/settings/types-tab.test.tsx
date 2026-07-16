@@ -25,6 +25,7 @@ function makeBoard(overrides: Partial<Board> = {}): Board {
     options: [],
     transitions: [],
     linkTypes: [],
+    targetTypes: [],
     views: [],
     childTypes: [],
     items: [],

@@ -62,6 +62,7 @@ function makeCoreBoard(): Board {
     options: [...workflowOptions(1000, 100), ...severityOptions(1, 101)],
     transitions: [],
     linkTypes: [],
+    targetTypes: [],
     views: [],
     childTypes: [],
     items: [
@@ -130,6 +131,7 @@ function makeAppBoard(): Board {
     ],
     transitions: [],
     linkTypes: [],
+    targetTypes: [],
     views: [],
     childTypes: [],
     items: [
