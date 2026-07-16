@@ -50,7 +50,7 @@ export function ActivityRail({ mode, onNavigate }: { mode: Mode | null; onNaviga
       >
         ◐
       </button>
-      <ActorMenu />
+      <ActorMenu compact />
     </aside>
   );
 }

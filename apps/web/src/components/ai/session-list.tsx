@@ -11,15 +11,23 @@ import { buildSessionTree, type SessionTreeNode } from './build-session-tree';
 export function SessionList({
   sessions,
   workspaceName,
+  onNavigate,
 }: {
   sessions: AiSession[];
   workspaceName: (id: number) => string;
+  onNavigate?: () => void;
 }) {
   const tree = useMemo(() => buildSessionTree(sessions), [sessions]);
   return (
     <div className="flex flex-col gap-0.5">
       {tree.map((node) => (
-        <SessionRow key={node.session.id} node={node} depth={0} workspaceName={workspaceName} />
+        <SessionRow
+          key={node.session.id}
+          node={node}
+          depth={0}
+          workspaceName={workspaceName}
+          onNavigate={onNavigate}
+        />
       ))}
     </div>
   );
@@ -29,10 +37,12 @@ function SessionRow({
   node,
   depth,
   workspaceName,
+  onNavigate,
 }: {
   node: SessionTreeNode;
   depth: number;
   workspaceName: (id: number) => string;
+  onNavigate?: () => void;
 }) {
   const { session } = node;
   return (
@@ -43,6 +53,7 @@ function SessionRow({
         title={`${workspaceName(session.workspaceId)} · ${formatAge(session.createdAt)}`}
         className="flex items-center gap-2 rounded-[7px] px-2 py-1.5 hover:bg-inset"
         style={{ paddingLeft: 8 + depth * 16 }}
+        onClick={onNavigate}
       >
         {depth > 0 ? (
           <span aria-hidden className="font-mono text-meta text-ink-3">
@@ -59,7 +70,13 @@ function SessionRow({
         <SessionStatusPill status={session.status} exitCode={session.exitCode} />
       </Link>
       {node.children.map((child) => (
-        <SessionRow key={child.session.id} node={child} depth={depth + 1} workspaceName={workspaceName} />
+        <SessionRow
+          key={child.session.id}
+          node={child}
+          depth={depth + 1}
+          workspaceName={workspaceName}
+          onNavigate={onNavigate}
+        />
       ))}
     </>
   );

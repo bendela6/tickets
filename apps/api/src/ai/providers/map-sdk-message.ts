@@ -70,6 +70,9 @@ export function mapSdkMessage(msg: SDKMessage): AgentEvent[] {
       });
 
     case 'result': {
+      // The SDK types `usage` as required and structured, but we read it here
+      // defensively/optionally and default each token field to 0 below, so an
+      // older or malformed payload degrades to zeroed usage instead of throwing.
       const raw = (msg as unknown as { usage?: Record<string, number> }).usage;
       const usage = raw
         ? {

@@ -5,7 +5,7 @@ import { useAiWorkspaces } from '../../api/use-ai-workspaces';
 import { SessionList } from '../ai/session-list';
 import { agentsOf } from '../ai/select-sessions';
 
-export function AgentsPanel() {
+export function AgentsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
   const sessions = useAiSessions();
   const workspaces = useAiWorkspaces();
   const workspaceName = useMemo(() => {
@@ -25,7 +25,7 @@ export function AgentsPanel() {
       {rows.length === 0 ? (
         <p className="px-1 font-sans text-meta text-ink-3">No agent sessions yet.</p>
       ) : (
-        <SessionList sessions={rows} workspaceName={workspaceName} />
+        <SessionList sessions={rows} workspaceName={workspaceName} onNavigate={onNavigate} />
       )}
     </div>
   );
