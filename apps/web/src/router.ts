@@ -1,5 +1,5 @@
 import { createRouter } from '@tanstack/react-router';
-import { allTicketsRoute } from './routes/all-tickets-route';
+import { allItemsRoute } from './routes/all-items-route';
 import { galleryRoute } from './routes/gallery-route';
 import { indexRoute } from './routes/index-route';
 import { projectIndexRoute } from './routes/project-index-route';
@@ -11,7 +11,7 @@ import { viewRoute } from './routes/view-route';
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
-  allTicketsRoute,
+  allItemsRoute,
   galleryRoute,
   schemaRoute,
   projectRoute.addChildren([projectIndexRoute, viewRoute, ticketPageRoute]),

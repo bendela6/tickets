@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { fetchJson } from '../../api/client';
-import type { Board, BoardTicket, StatusKind } from '../../api/types';
+import type { Board, Field, Item, StatusKind } from '../../api/types';
 import { usePatchItem } from '../../api/use-patch-item';
 import { useProjects } from '../../api/use-projects';
 import { getCellContent } from '../../registry/get-cell-content';
@@ -47,7 +47,7 @@ import {
   type SharedField,
 } from './shared-fields';
 
-type Row = { entry: ProjectEntry; ticket: BoardTicket };
+type Row = { entry: ProjectEntry; ticket: Item };
 
 const KIND_ORDER: { kind: StatusKind; label: string; textClass: string }[] = [
   { kind: 'todo', label: 'To do', textClass: 'text-kind-todo' },
@@ -70,11 +70,13 @@ function indexesFor(board: Board): BoardIndexes {
 }
 
 function kindOf(row: Row): StatusKind {
-  const statusField = row.entry.indexes.statusField;
-  const raw = statusField ? row.ticket.values[statusField.key] : undefined;
-  return (
-    (typeof raw === 'string' ? row.entry.indexes.statusByKey.get(raw)?.kind : undefined) ?? 'todo'
-  );
+  const workflowField = row.entry.indexes.workflowField(row.ticket.typeId);
+  const raw = workflowField ? row.ticket.values[workflowField.key] : undefined;
+  const option =
+    workflowField && typeof raw === 'string'
+      ? row.entry.indexes.optionByValue(workflowField, raw)
+      : undefined;
+  return option?.kind ?? 'todo';
 }
 
 function isPastDate(value: string, now: Date): boolean {
@@ -89,30 +91,30 @@ function isPastDate(value: string, now: Date): boolean {
 
 /**
  * Inline status cell ported from board/table-view: the select shows THIS
- * ticket's board's statuses filtered by ITS workflow, and the PATCH goes
+ * item's board's workflow options filtered by ITS type, and the PATCH goes
  * through use-patch-item, which invalidates every ['board'] query — so the
  * edit lands on the right project no matter which group row it sits in.
  */
-function StatusCell({ entry, ticket }: { entry: ProjectEntry; ticket: BoardTicket }) {
+function StatusCell({ entry, ticket }: { entry: ProjectEntry; ticket: Item }) {
   const { userId } = useCurrentUser();
   const patch = usePatchItem();
   const queryClient = useQueryClient();
-  const statusField = entry.indexes.statusField;
-  if (!statusField) {
+  const workflowField = entry.indexes.workflowField(ticket.typeId);
+  if (!workflowField) {
     return null;
   }
-  const raw = ticket.values[statusField.key];
-  const statuses = entry.board.statuses
-    .filter((status) => !status.archivedAt)
-    .sort((left, right) => left.position - right.position)
-    .map((status) => ({ key: status.key, label: status.label, kind: status.kind }));
+  const raw = ticket.values[workflowField.key];
+  const statuses = entry.indexes
+    .optionsForField(ticket.typeId, workflowField)
+    .filter((option) => !option.archivedAt)
+    .map((option) => ({ key: option.value, label: option.label, kind: option.kind ?? 'todo' }));
   return (
     <StatusSelect
       size="compact"
       statuses={statuses}
       value={typeof raw === 'string' ? raw : null}
-      legalTargets={legalStatusTargets(entry.board, entry.indexes, ticket).map(
-        (status) => status.key,
+      legalTargets={legalStatusTargets(entry.board, entry.indexes, ticket, ticket.typeId).map(
+        (option) => option.value,
       )}
       disabled={userId === null}
       onChange={(next) => {
@@ -121,10 +123,10 @@ function StatusCell({ entry, ticket }: { entry: ProjectEntry; ticket: BoardTicke
         }
         patch.mutate(
           {
-            ticketId: ticket.id,
+            itemId: ticket.id,
             actorId: userId,
             expectedUpdatedAt: ticket.updatedAt,
-            values: { [statusField.key]: next },
+            values: { [workflowField.key]: next },
           },
           { onError: () => void queryClient.invalidateQueries({ queryKey: ['board'] }) },
         );
@@ -133,24 +135,19 @@ function StatusCell({ entry, ticket }: { entry: ProjectEntry; ticket: BoardTicke
   );
 }
 
-function AssigneeCell({
-  entry,
-  fieldId,
-  value,
-}: {
-  entry: ProjectEntry;
-  fieldId: number;
-  value: unknown;
-}) {
-  if (typeof value !== 'string' || value === '') {
+/** 'user'-typed field cell: value is a user id (or {id,name}); resolves through the board's users. */
+function AssigneeCell({ entry, value }: { entry: ProjectEntry; value: unknown }) {
+  const userId =
+    typeof value === 'number'
+      ? value
+      : value !== null && typeof value === 'object' && typeof (value as { id?: unknown }).id === 'number'
+        ? (value as { id: number }).id
+        : null;
+  const user = userId === null ? undefined : entry.indexes.userById.get(userId);
+  if (!user) {
     return <span className="font-sans text-ui text-ink-3">—</span>;
   }
-  const option = (entry.indexes.optionsByFieldId.get(fieldId) ?? []).find(
-    (candidate) => candidate.value === value,
-  );
-  const label = option?.label ?? value;
-  const user = entry.board.users.find((candidate) => candidate.name === label);
-  return <Avatar name={label} kind={user?.kind ?? 'human'} size="md" />;
+  return <Avatar name={user.name} kind={user.kind} size="md" />;
 }
 
 function segmentClasses(active: boolean, withBorder: boolean) {
@@ -213,14 +210,14 @@ function SaveViewDialog({
   );
 }
 
-// The ALL TICKETS screen per docs/design/02-all-tickets.html lines 35–184:
+// The ALL ITEMS screen per docs/design/02-all-tickets.html lines 35–184:
 // header (title · mono meta · title search · Columns · density), global view
 // tabs with an unsaved dot + Group menu, shared-field filter chips, the KPI
 // strip, and a table grouped by project (or status kind) whose rows resolve
 // every cell through their own project's board and indexes. There is no
 // cross-project API — each project's board is fetched with the same query key
 // as useBoard and aggregated client-side.
-export function AllTicketsScreen() {
+export function AllItemsScreen() {
   const projectsQuery = useProjects();
   const projects = projectsQuery.data?.data ?? [];
   const boardQueries = useQueries({
@@ -251,7 +248,7 @@ export function AllTicketsScreen() {
   const loading =
     projectsQuery.isLoading || (projects.length > 0 && boardQueries.every((q) => !q.data));
   if (loading) {
-    return <p className="px-8 py-7 font-sans text-ui text-ink-3">Loading all tickets…</p>;
+    return <p className="px-8 py-7 font-sans text-ui text-ink-3">Loading all items…</p>;
   }
 
   const { shared, unshared } = computeSharedFields(entries);
@@ -264,7 +261,7 @@ export function AllTicketsScreen() {
   const activeView = views.find((view) => view.id === activeId) ?? DEFAULT_GLOBAL_VIEW;
   const dirty = !sameConfig(config, activeView.config);
 
-  // Rows: every loaded board's top-level, unarchived tickets, filtered per
+  // Rows: every loaded board's top-level, unarchived items, filtered per
   // project (rules translate field keys → that board's field ids) and searched
   // on the title value only.
   const q = query.trim().toLowerCase();
@@ -272,7 +269,7 @@ export function AllTicketsScreen() {
   const allRows: Row[] = [];
   for (const entry of entries) {
     const boardRules = toBoardRules(config.filters, entry.indexes);
-    for (const ticket of entry.board.tickets) {
+    for (const ticket of entry.board.items) {
       if (ticket.archivedAt || ticket.parentId !== null) {
         continue;
       }
@@ -317,7 +314,7 @@ export function AllTicketsScreen() {
         header: (
           <>
             <span className="rounded-[4px] bg-inset px-1.5 py-0.5 font-mono text-[11px] font-medium text-ink">
-              {entry.project.ticketPrefix}
+              {entry.project.itemPrefix}
             </span>
             <span className="font-sans text-ui font-medium text-ink">{entry.project.name}</span>
             <span className="font-mono text-[11px] text-ink-3">{rows.length} shown</span>
@@ -405,7 +402,7 @@ export function AllTicketsScreen() {
     : null;
   const selectedTicket =
     selectedEntry && selected
-      ? (selectedEntry.indexes.ticketById.get(selected.ticketId) ?? null)
+      ? (selectedEntry.indexes.itemById.get(selected.ticketId) ?? null)
       : null;
 
   const cell = (id: string, row: Row): ReactNode => {
@@ -424,11 +421,11 @@ export function AllTicketsScreen() {
         </span>
       );
     }
-    const field = row.entry.indexes.fieldByKey.get(id);
+    const field: Field | undefined = row.entry.indexes.fieldByKey.get(id);
     if (!field) {
       return null;
     }
-    if (field.type === 'status') {
+    if (field.config.workflow === true) {
       return (
         <span onClick={(event) => event.stopPropagation()}>
           <StatusCell entry={row.entry} ticket={row.ticket} />
@@ -437,9 +434,9 @@ export function AllTicketsScreen() {
     }
     const value = row.ticket.values[field.key];
     if (isAssigneeish(field)) {
-      return <AssigneeCell entry={row.entry} fieldId={field.id} value={value} />;
+      return <AssigneeCell entry={row.entry} value={value} />;
     }
-    if (field.type === 'date' && typeof value === 'string' && value !== '') {
+    if ((field.type === 'date' || field.type === 'datetime') && typeof value === 'string' && value !== '') {
       const kind = kindOf(row);
       return (
         <RelativeDate
@@ -450,7 +447,7 @@ export function AllTicketsScreen() {
     }
     return (
       <span className="min-w-0 truncate font-sans text-ui text-ink-2">
-        {getCellContent(field, value, row.entry.indexes)}
+        {getCellContent(field, value, row.entry.indexes, row.ticket.typeId)}
       </span>
     );
   };
@@ -460,7 +457,7 @@ export function AllTicketsScreen() {
       {/* Header: title · meta · search · columns · density */}
       <div className="mb-3.5 flex shrink-0 flex-wrap items-center gap-3.5 gap-y-2">
         <h1 className="m-0 font-sans text-[22px] leading-tight font-semibold text-ink">
-          All tickets
+          All items
         </h1>
         <span className="font-mono text-meta text-ink-3">
           {totalCount} tickets · {entries.length} projects
@@ -637,7 +634,7 @@ export function AllTicketsScreen() {
                   style={{ gridTemplateColumns }}
                 >
                   <span className="px-3">
-                    <TicketKey prefix={row.entry.project.ticketPrefix} number={row.ticket.number} />
+                    <TicketKey prefix={row.entry.project.itemPrefix} number={row.ticket.number} />
                   </span>
                   <span className="truncate px-2 font-sans text-ui text-ink">
                     {String(row.ticket.values.title ?? '')}

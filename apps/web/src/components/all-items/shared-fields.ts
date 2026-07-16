@@ -1,5 +1,5 @@
 import type { Board, FieldType, Project } from '../../api/types';
-import { hexToOptionColor } from '../../registry/option-color';
+import { hexToOptionColor, kindColor } from '../../registry/option-color';
 import type { OptionColor } from '../../ui/option-chip';
 import type { BoardIndexes } from '../../utils/index-board';
 
@@ -9,7 +9,11 @@ export type SharedField = {
   key: string;
   label: string;
   type: FieldType;
-  /** Union of value options across projects (statuses for status fields), first label/color wins. */
+  /** True when every project defines this key as its workflow field. */
+  workflow: boolean;
+  /** True when every project defines this key as accepting multiple values. */
+  multiple: boolean;
+  /** Union of value options across projects (workflow options for the workflow field), first label/color wins. */
   options: { value: string; label: string; color: OptionColor }[];
 };
 
@@ -21,10 +25,10 @@ export type UnsharedField = {
 };
 
 /**
- * A field is SHARED when the same key exists — unarchived and with the same
- * type — in EVERY loaded project's board. Global columns and filters operate
- * on shared fields only; anything else is listed as unavailable with its
- * project coverage.
+ * A field is SHARED when the same key exists — unarchived, same type, and
+ * same workflow-ness — in EVERY loaded project's board. Global columns and
+ * filters operate on shared fields only; anything else is listed as
+ * unavailable with its project coverage.
  */
 export function computeSharedFields(entries: ProjectEntry[]): {
   shared: SharedField[];
@@ -32,19 +36,32 @@ export function computeSharedFields(entries: ProjectEntry[]): {
 } {
   const seen = new Map<
     string,
-    { label: string; type: FieldType; count: number; sameType: boolean }
+    {
+      label: string;
+      type: FieldType;
+      workflow: boolean;
+      multiple: boolean;
+      count: number;
+      sameShape: boolean;
+    }
   >();
   for (const entry of entries) {
     for (const field of entry.board.fields) {
       if (field.archivedAt) {
         continue;
       }
+      const workflow = field.config.workflow === true;
+      const multiple = field.config.multiple === true;
       const existing = seen.get(field.key);
       if (!existing) {
-        seen.set(field.key, { label: field.label, type: field.type, count: 1, sameType: true });
+        seen.set(field.key, { label: field.label, type: field.type, workflow, multiple, count: 1, sameShape: true });
       } else {
         existing.count += 1;
-        existing.sameType = existing.sameType && existing.type === field.type;
+        existing.sameShape =
+          existing.sameShape &&
+          existing.type === field.type &&
+          existing.workflow === workflow &&
+          existing.multiple === multiple;
       }
     }
   }
@@ -52,11 +69,13 @@ export function computeSharedFields(entries: ProjectEntry[]): {
   const shared: SharedField[] = [];
   const unshared: UnsharedField[] = [];
   for (const [key, info] of seen) {
-    if (entries.length > 0 && info.count === entries.length && info.sameType) {
+    if (entries.length > 0 && info.count === entries.length && info.sameShape) {
       shared.push({
         key,
         label: info.label,
         type: info.type,
+        workflow: info.workflow,
+        multiple: info.multiple,
         options: unionOptions(key, info.type, entries),
       });
     } else {
@@ -66,41 +85,23 @@ export function computeSharedFields(entries: ProjectEntry[]): {
   return { shared, unshared };
 }
 
-function unionOptions(
-  key: string,
-  type: FieldType,
-  entries: ProjectEntry[],
-): SharedField['options'] {
+function unionOptions(key: string, type: FieldType, entries: ProjectEntry[]): SharedField['options'] {
+  if (type !== 'option') {
+    return [];
+  }
   const union = new Map<string, { value: string; label: string; color: OptionColor }>();
   for (const entry of entries) {
-    if (type === 'status') {
-      const statuses = [...entry.board.statuses]
-        .filter((status) => !status.archivedAt)
-        .sort((left, right) => left.position - right.position);
-      for (const status of statuses) {
-        if (!union.has(status.key)) {
-          union.set(status.key, {
-            value: status.key,
-            label: status.label,
-            color: hexToOptionColor(status.config.color),
-          });
-        }
-      }
-      continue;
-    }
-    if (type !== 'select' && type !== 'multi_select') {
-      continue;
-    }
     const field = entry.indexes.fieldByKey.get(key);
-    if (!field) {
+    if (!field || field.optionSetId === null) {
       continue;
     }
-    for (const option of entry.indexes.optionsByFieldId.get(field.id) ?? []) {
+    const isWorkflow = field.config.workflow === true;
+    for (const option of entry.indexes.optionsBySetId.get(field.optionSetId) ?? []) {
       if (!union.has(option.value)) {
         union.set(option.value, {
           value: option.value,
           label: option.label,
-          color: hexToOptionColor(option.config.color),
+          color: isWorkflow ? kindColor(option.kind) : hexToOptionColor(option.config.color),
         });
       }
     }
@@ -113,18 +114,21 @@ const PRIORITY_PATTERN = /prio|priority|severity/i;
 const DUE_PATTERN = /due/i;
 
 export function isAssigneeish(field: Pick<SharedField, 'key' | 'label' | 'type'>): boolean {
-  return field.type === 'select' && ASSIGNEE_PATTERN.test(`${field.key} ${field.label}`);
+  return field.type === 'user' && ASSIGNEE_PATTERN.test(`${field.key} ${field.label}`);
 }
 
 function isDefaultColumn(field: SharedField): boolean {
-  if (field.type === 'status') {
+  if (field.workflow) {
     return true;
   }
-  if (field.type === 'select') {
-    const haystack = `${field.key} ${field.label}`;
-    return PRIORITY_PATTERN.test(haystack) || ASSIGNEE_PATTERN.test(haystack);
+  const haystack = `${field.key} ${field.label}`;
+  if (field.type === 'option') {
+    return PRIORITY_PATTERN.test(haystack);
   }
-  return field.type === 'date' && DUE_PATTERN.test(`${field.key} ${field.label}`);
+  if (field.type === 'user') {
+    return ASSIGNEE_PATTERN.test(haystack);
+  }
+  return (field.type === 'date' || field.type === 'datetime') && DUE_PATTERN.test(haystack);
 }
 
 // Key and Title are fixed; everything else is a toggleable column id:
@@ -138,8 +142,9 @@ export function canonicalColumns(shared: SharedField[]): string[] {
 }
 
 // Mirrors screen 02's default table: Key/Title/Type/Status/Priority/Asgn/Due/Subs
-// — status plus conventionally named select/date fields, matched by pattern
-// because the schema is user-defined (same heuristics as the kanban cards).
+// — the workflow field plus conventionally named option/user/date fields,
+// matched by pattern because the scheme is user-defined (same heuristics as
+// the kanban cards).
 export function defaultColumns(shared: SharedField[]): string[] {
   const wanted = shared.filter((field) => field.key !== 'title' && isDefaultColumn(field));
   return ['type', ...wanted.map((field) => field.key), 'subs'];
@@ -161,18 +166,20 @@ export function columnWidthFor(id: string, sharedByKey: Map<string, SharedField>
     return '64px';
   }
   switch (field.type) {
-    case 'status':
-      return '140px';
-    case 'select':
-      return '92px';
-    case 'multi_select':
-      return '150px';
+    case 'option':
+      if (field.workflow) {
+        return '140px';
+      }
+      return field.multiple ? '150px' : '92px';
     case 'date':
+    case 'datetime':
       return '96px';
     case 'number':
       return '72px';
     case 'boolean':
       return '56px';
+    case 'user':
+      return '90px';
     default:
       return '160px';
   }
