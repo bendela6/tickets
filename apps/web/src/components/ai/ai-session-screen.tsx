@@ -2,20 +2,25 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
+import { useArchiveSession } from '../../api/use-archive-session';
 import { useAiSession } from '../../api/use-ai-session';
 import { useCreateAiSession } from '../../api/use-create-ai-session';
 import { useStopAiSession } from '../../api/use-stop-ai-session';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
 import { SessionStatusPill } from '../../ui/session-status-pill';
+import { terminalDisplay } from './terminal-display';
 import { TerminalFrame } from './terminal-frame';
 import { currentThemeName, terminalTheme } from './terminal-theme';
 import { useSessionSocket } from './use-session-socket';
+import { useTerminalActivity } from './use-terminal-activity';
 
 export function AiSessionScreen({ sessionId }: { sessionId: number }) {
   const navigate = useNavigate();
   const session = useAiSession(sessionId);
   const stop = useStopAiSession();
   const createSession = useCreateAiSession();
+  const archiveSession = useArchiveSession();
+  const activity = useTerminalActivity();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -86,6 +91,7 @@ export function AiSessionScreen({ sessionId }: { sessionId: number }) {
       const term = termRef.current;
       if (term) term.write(data);
       else pendingRef.current.push(data);
+      activity.ping();
     },
   });
   sendInputRef.current = socket.sendInput;
@@ -99,6 +105,7 @@ export function AiSessionScreen({ sessionId }: { sessionId: number }) {
   const data = session.data;
   const status = socket.status ?? data?.status ?? 'starting';
   const exitCode = socket.exitCode ?? data?.exitCode ?? null;
+  const display = terminalDisplay(socket.conn, status, activity.busy);
 
   function handleRestart() {
     if (!data) return;
@@ -134,19 +141,24 @@ export function AiSessionScreen({ sessionId }: { sessionId: number }) {
           onRestart={handleRestart}
           actions={
             <div className="flex items-center gap-2">
-              <SessionStatusPill status={status} exitCode={exitCode} />
-              {socket.conn !== 'ended' ? (
-                <Menu>
-                  <MenuTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label="Session actions"
-                      className="inline-flex size-6 items-center justify-center rounded-md border border-hairline bg-raised font-sans text-ink-2 hover:border-control"
-                    >
-                      ⋯
-                    </button>
-                  </MenuTrigger>
-                  <MenuContent align="end">
+              <SessionStatusPill
+                status={display.status}
+                label={display.label}
+                kind="terminal"
+                exitCode={exitCode}
+              />
+              <Menu>
+                <MenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Session actions"
+                    className="inline-flex size-6 items-center justify-center rounded-md border border-hairline bg-raised font-sans text-ink-2 hover:border-control"
+                  >
+                    ⋯
+                  </button>
+                </MenuTrigger>
+                <MenuContent align="end">
+                  {socket.conn !== 'ended' ? (
                     <MenuItem
                       destructive
                       disabled={stop.isPending}
@@ -158,9 +170,15 @@ export function AiSessionScreen({ sessionId }: { sessionId: number }) {
                     >
                       End session
                     </MenuItem>
-                  </MenuContent>
-                </Menu>
-              ) : null}
+                  ) : null}
+                  <MenuItem
+                    disabled={archiveSession.isPending}
+                    onSelect={() => archiveSession.mutate(sessionId)}
+                  >
+                    Archive
+                  </MenuItem>
+                </MenuContent>
+              </Menu>
             </div>
           }
         >
