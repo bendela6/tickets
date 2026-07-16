@@ -14,6 +14,16 @@ export function providerLabel(key: string): string {
   return PROVIDER_LABEL[key] ?? key;
 }
 
+// The AGENT marker shown next to an agent's name — same language the assignee
+// dropdown uses so a persona reads as an agent everywhere it appears as a user.
+export function AgentBadge() {
+  return (
+    <span className="inline-flex h-4 items-center rounded-[4px] bg-accent-subtle px-1.5 font-mono text-[9px] font-medium text-accent">
+      AGENT
+    </span>
+  );
+}
+
 // A permission mode reads as either "runs on its own" (bypass/auto) or "checks
 // with a human" (default/acceptEdits/dontAsk) — colour it so the autonomy level
 // is legible at a glance.

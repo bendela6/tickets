@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import type { AiAgent } from '../../api/types';
 import { useAiAgents } from '../../api/use-ai-agents';
 import { useAiProviders } from '../../api/use-ai-providers';
@@ -12,6 +12,7 @@ import { AgentEditor } from './agent-editor';
 // editor, "New agent" opens an empty one. Session counts are derived from the
 // sessions list (assigned-ticket counts land with the profile view, TIX-205).
 export function AgentLibraryScreen() {
+  const navigate = useNavigate();
   const agents = useAiAgents();
   const providers = useAiProviders();
   const sessions = useAiSessions();
@@ -63,7 +64,9 @@ export function AgentLibraryScreen() {
               key={agent.id}
               agent={agent}
               sessionCount={sessionCount.get(agent.id) ?? 0}
-              onEdit={() => setEditing(agent)}
+              onEdit={() =>
+                void navigate({ to: '/ai/agents/$agentId', params: { agentId: String(agent.id) } })
+              }
             />
           ))}
         </div>
