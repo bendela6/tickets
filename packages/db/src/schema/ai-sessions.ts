@@ -46,6 +46,7 @@ export const aiSessions = pgTable(
       .notNull()
       .defaultNow(),
     endedAt: timestamp('ended_at', { withTimezone: true, mode: 'string' }),
+    archivedAt: timestamp('archived_at', { withTimezone: true, mode: 'string' }),
   },
   (table) => [
     index('ai_sessions_status_created').on(table.status, table.createdAt),
