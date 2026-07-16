@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Board, BoardTicket } from '../api/types';
+import { ApiError } from '../api/api-error';
+import type { Board, Item } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
 import { useCurrentUser } from '../state/current-user-context';
 import { Button } from '../ui/button';
@@ -9,6 +10,7 @@ import { cn } from '../ui/cn';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../ui/menu';
 import { RelativeDate } from '../ui/relative-date';
 import { StatusSelect } from '../ui/status-select';
+import { useToast } from '../ui/toast';
 import { TypeBadge } from '../ui/type-badge';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
@@ -96,18 +98,18 @@ function InlineTitle({
 // One detail model, two hosts: the drawer (peek) renders a single scroll
 // stack; the dedicated page re-flows the same sections into a main column
 // plus a right rail (field form + activity feed).
-export function TicketDetail({
+export function ItemDetail({
   projectKey,
   board,
   indexes,
-  ticket,
+  item,
   variant,
   onClose,
 }: {
   projectKey: string;
   board: Board;
   indexes: BoardIndexes;
-  ticket: BoardTicket;
+  item: Item;
   variant: 'drawer' | 'page';
   onClose?: () => void;
 }) {
@@ -115,36 +117,37 @@ export function TicketDetail({
   const { userId } = useCurrentUser();
   const patch = usePatchItem();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [tab, setTab] = useState<'comments' | 'activity'>('comments');
   const [copied, setCopied] = useState(false);
 
-  const prefix = board.project.ticketPrefix;
-  const type = indexes.typeById.get(ticket.typeId);
-  const parent = ticket.parentId !== null ? indexes.ticketById.get(ticket.parentId) : null;
-  const creator = indexes.userById.get(ticket.createdBy);
-  const statusField = indexes.statusField;
-  const rawStatus = statusField ? ticket.values[statusField.key] : undefined;
-  const title = String(ticket.values['title'] ?? '');
+  const prefix = board.project.itemPrefix;
+  const type = indexes.typeById.get(item.typeId);
+  const parent = item.parentId !== null ? indexes.itemById.get(item.parentId) : null;
+  const creator = indexes.userById.get(item.createdBy);
+  const workflowField = indexes.workflowField(item.typeId);
+  const rawStatus = workflowField ? item.values[workflowField.key] : undefined;
+  const title = String(item.values['title'] ?? '');
 
   const typeFieldKeys = new Set(
-    board.typeFields
-      .filter((row) => row.ticketTypeId === ticket.typeId)
-      .map((row) => indexes.fieldById.get(row.fieldId)?.key),
+    (indexes.placementsByType.get(item.typeId) ?? []).map(
+      (placement) => indexes.fieldById.get(placement.fieldId)?.key,
+    ),
   );
   const descriptionField = typeFieldKeys.has('description')
     ? indexes.fieldByKey.get('description')
     : undefined;
 
-  const openTicket = (ticketNumber: number) => {
+  const openItem = (itemNumber: number) => {
     if (variant === 'page') {
       void navigate({
         to: '/p/$projectKey/t/$number',
-        params: { projectKey, number: String(ticketNumber) },
+        params: { projectKey, number: String(itemNumber) },
       });
     } else {
       void navigate({
         to: '.',
-        search: (previous: Record<string, unknown>) => ({ ...previous, t: ticketNumber }),
+        search: (previous: Record<string, unknown>) => ({ ...previous, t: itemNumber }),
       });
     }
   };
@@ -158,9 +161,9 @@ export function TicketDetail({
     }
     patch.mutate(
       {
-        ticketId: ticket.id,
+        itemId: item.id,
         actorId: userId,
-        expectedUpdatedAt: ticket.updatedAt,
+        expectedUpdatedAt: item.updatedAt,
         values,
       },
       saveMutationOptions,
@@ -172,22 +175,45 @@ export function TicketDetail({
     }
     patch.mutate(
       {
-        ticketId: ticket.id,
+        itemId: item.id,
         actorId: userId,
-        expectedUpdatedAt: ticket.updatedAt,
-        archived: ticket.archivedAt === null,
+        expectedUpdatedAt: item.updatedAt,
+        archived: item.archivedAt === null,
       },
       saveMutationOptions,
     );
   };
 
-  const statusOptions = [...board.statuses]
-    .filter((status) => !status.archivedAt)
-    .sort((left, right) => left.position - right.position)
-    .map((status) => ({ key: status.key, label: status.label, kind: status.kind }));
-  const legalKeys = legalStatusTargets(board, indexes, ticket).map((status) => status.key);
+  const legalStatusOptions = legalStatusTargets(board, indexes, item, item.typeId);
+  const statusOptions = legalStatusOptions.map((option) => ({
+    key: option.value,
+    label: option.label,
+    kind: option.kind ?? 'todo',
+  }));
+  const legalKeys = legalStatusOptions.map((option) => option.value);
+  const setStatus = (next: string) => {
+    if (userId === null || !workflowField) {
+      return;
+    }
+    patch.mutate(
+      {
+        itemId: item.id,
+        actorId: userId,
+        expectedUpdatedAt: item.updatedAt,
+        values: { [workflowField.key]: next },
+      },
+      {
+        onError: (error) => {
+          void queryClient.invalidateQueries({ queryKey: ['board'] });
+          if (error instanceof ApiError && error.status === 422) {
+            toast({ title: error.message });
+          }
+        },
+      },
+    );
+  };
 
-  const archivedChip = ticket.archivedAt ? (
+  const archivedChip = item.archivedAt ? (
     <span className="shrink-0 rounded-ctrl bg-inset px-1.75 py-0.75 font-sans text-label font-medium text-ink-3">
       archived
     </span>
@@ -202,7 +228,7 @@ export function TicketDetail({
       </MenuTrigger>
       <MenuContent align="end">
         <MenuItem disabled={userId === null} onSelect={toggleArchived}>
-          {ticket.archivedAt ? 'Unarchive' : 'Archive'}
+          {item.archivedAt ? 'Unarchive' : 'Archive'}
         </MenuItem>
       </MenuContent>
     </Menu>
@@ -211,7 +237,7 @@ export function TicketDetail({
   const breadcrumb = parent ? (
     <button
       type="button"
-      onClick={() => openTicket(parent.number)}
+      onClick={() => openItem(parent.number)}
       className="flex w-fit min-w-0 items-center gap-1.5 bg-transparent p-0 text-left font-sans text-meta font-medium text-accent hover:underline"
     >
       <span aria-hidden>‹</span>
@@ -227,8 +253,8 @@ export function TicketDetail({
       <div className={cn('mb-2', SECTION_LABEL)}>Description</div>
       <MarkdownEditor
         value={
-          typeof ticket.values[descriptionField.key] === 'string'
-            ? (ticket.values[descriptionField.key] as string)
+          typeof item.values[descriptionField.key] === 'string'
+            ? (item.values[descriptionField.key] as string)
             : ''
         }
         disabled={userId === null || patch.isPending}
@@ -238,27 +264,27 @@ export function TicketDetail({
   ) : null;
 
   const childrenSection =
-    ticket.parentId === null ? (
+    item.parentId === null ? (
       <DetailChildren
         projectKey={projectKey}
         board={board}
         indexes={indexes}
-        ticket={ticket}
-        onOpenTicket={openTicket}
+        item={item}
+        onOpenItem={openItem}
       />
     ) : null;
 
   const linksSection = (
-    <DetailLinks board={board} indexes={indexes} ticket={ticket} onOpenTicket={openTicket} />
+    <DetailLinks board={board} indexes={indexes} item={item} onOpenItem={openItem} />
   );
 
   if (variant === 'drawer') {
     return (
       <>
         <div className="flex shrink-0 items-center gap-2.25 border-b border-hairline px-5 py-3.5">
-          <KeyChip prefix={prefix} number={ticket.number} />
+          <KeyChip prefix={prefix} number={item.number} />
           <TypeBadge label={type?.label ?? '?'} />
-          {statusField ? (
+          {workflowField ? (
             <StatusSelect
               size="compact"
               className="w-auto"
@@ -266,14 +292,14 @@ export function TicketDetail({
               legalTargets={legalKeys}
               value={typeof rawStatus === 'string' ? rawStatus : null}
               disabled={userId === null}
-              onChange={(next) => saveValues({ [statusField.key]: next })}
+              onChange={setStatus}
             />
           ) : null}
           {archivedChip}
           <span className="flex-1" />
           <Link
             to="/p/$projectKey/t/$number"
-            params={{ projectKey, number: String(ticket.number) }}
+            params={{ projectKey, number: String(item.number) }}
             className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border border-control bg-raised px-2.5 font-sans text-[12px] font-medium text-ink hover:bg-inset"
           >
             Open page ↗
@@ -291,7 +317,7 @@ export function TicketDetail({
             className="text-[18px] leading-[1.35]"
             onSave={(next) => saveValues({ title: next })}
           />
-          <DetailFields board={board} indexes={indexes} ticket={ticket} layout="grid" />
+          <DetailFields board={board} indexes={indexes} item={item} layout="grid" />
           {descriptionSection}
           {childrenSection}
           {linksSection}
@@ -313,18 +339,16 @@ export function TicketDetail({
                 >
                   {name}{' '}
                   {name === 'comments' ? (
-                    <span className="font-mono text-[11px] text-ink-3">
-                      {ticket.comments.length}
-                    </span>
+                    <span className="font-mono text-[11px] text-ink-3">{item.comments.length}</span>
                   ) : null}
                 </button>
               ))}
             </div>
             <div className="pt-3">
               {tab === 'comments' ? (
-                <DetailComments indexes={indexes} ticket={ticket} />
+                <DetailComments indexes={indexes} item={item} />
               ) : (
-                <DetailActivity ticket={ticket} indexes={indexes} />
+                <DetailActivity item={item} indexes={indexes} />
               )}
             </div>
           </section>
@@ -347,7 +371,7 @@ export function TicketDetail({
           ▸
         </span>
         <span className="shrink-0 font-mono text-meta font-medium text-ink">
-          {prefix}-{ticket.number}
+          {prefix}-{item.number}
         </span>
         {archivedChip}
         <span className="flex-1" />
@@ -368,15 +392,12 @@ export function TicketDetail({
           <div>
             {breadcrumb ? <div className="mb-2.5">{breadcrumb}</div> : null}
             <div className="mb-2.5 flex items-center gap-2.25">
-              <KeyChip prefix={prefix} number={ticket.number} />
+              <KeyChip prefix={prefix} number={item.number} />
               <TypeBadge label={type?.label ?? '?'} />
               <span className="font-mono text-label text-ink-3">
                 created{' '}
-                <RelativeDate
-                  value={ticket.createdAt}
-                  className="font-mono text-[11px] text-ink-3"
-                />{' '}
-                by {creator?.name ?? `user ${ticket.createdBy}`}
+                <RelativeDate value={item.createdAt} className="font-mono text-[11px] text-ink-3" />{' '}
+                by {creator?.name ?? `user ${item.createdBy}`}
               </span>
             </div>
             <InlineTitle
@@ -391,17 +412,17 @@ export function TicketDetail({
           {linksSection}
           <section>
             <div className={cn('mb-3', SECTION_LABEL)}>Comments</div>
-            <DetailComments indexes={indexes} ticket={ticket} />
+            <DetailComments indexes={indexes} item={item} />
           </section>
         </div>
         <div className="flex w-80 shrink-0 flex-col gap-5">
           <section className="flex flex-col gap-3 rounded-panel border border-hairline bg-raised p-4">
             <div className={SECTION_LABEL}>Fields — {type?.label ?? '?'} form</div>
-            <DetailFields board={board} indexes={indexes} ticket={ticket} layout="rail" />
+            <DetailFields board={board} indexes={indexes} item={item} layout="rail" />
           </section>
           <section>
             <div className={cn('mb-2.5', SECTION_LABEL)}>Activity</div>
-            <DetailActivity ticket={ticket} indexes={indexes} />
+            <DetailActivity item={item} indexes={indexes} />
           </section>
         </div>
       </div>

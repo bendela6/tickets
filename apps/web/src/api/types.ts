@@ -37,7 +37,7 @@ export interface Transition {
   config: { guard?: { requiresComment?: boolean; requiresField?: string } } | null;
 }
 
-export interface LinkType { id: number; itemTypeId: number; key: string; label: string; inverseLabel: string; directional: boolean; }
+export interface LinkType { id: number; itemTypeId: number; key: string; label: string; inverseLabel: string; directional: boolean; position: number; archivedAt: string | null; }
 export interface View { id: number; projectId: number; name: string; config: Record<string, unknown>; }
 
 export interface Comment { id: number; itemId: number; authorId: number; parentId: number | null; body: string; createdAt: string; }

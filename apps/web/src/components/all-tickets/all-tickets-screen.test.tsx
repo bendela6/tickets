@@ -216,7 +216,7 @@ async function renderScreen() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  // The drawer's TicketDetail uses router links, so mount inside a memory router.
+  // The drawer's ItemDetail uses router links, so mount inside a memory router.
   const rootRoute = createRootRoute({ component: () => <AllTicketsScreen /> });
   const router = createRouter({
     routeTree: rootRoute,

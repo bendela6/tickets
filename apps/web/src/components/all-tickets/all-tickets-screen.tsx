@@ -22,7 +22,7 @@ import { evaluateFilters } from '../../utils/evaluate-filters';
 import { indexBoard, type BoardIndexes } from '../../utils/index-board';
 import { legalStatusTargets } from '../../utils/legal-status-targets';
 import { KpiTiles } from '../board/kpi-strip';
-import { TicketDrawer } from '../ticket-drawer';
+import { ItemDrawer } from '../item-drawer';
 import { ColumnsPopover } from './columns-popover';
 import { GlobalFilterChips } from './global-filter-chips';
 import {
@@ -655,11 +655,11 @@ export function AllTicketsScreen() {
       </div>
 
       {selectedEntry && selectedTicket ? (
-        <TicketDrawer
+        <ItemDrawer
           projectKey={selectedEntry.project.key}
           board={selectedEntry.board}
           indexes={selectedEntry.indexes}
-          ticket={selectedTicket}
+          item={selectedTicket}
           onClose={() => setSelected(null)}
         />
       ) : null}

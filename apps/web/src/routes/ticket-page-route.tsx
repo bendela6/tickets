@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { createRoute } from '@tanstack/react-router';
 import { useBoard } from '../api/use-board';
-import { TicketDetail } from '../components/ticket-detail';
+import { ItemDetail } from '../components/item-detail';
 import { indexBoard } from '../utils/index-board';
 import { projectRoute } from './project-route';
 
@@ -13,20 +13,20 @@ function TicketPageScreen() {
   if (!board || !indexes) {
     return null;
   }
-  const ticket = indexes.ticketByNumber.get(Number(number));
-  if (!ticket) {
+  const item = indexes.itemByNumber.get(Number(number));
+  if (!item) {
     return (
-      <p className="py-4 font-sans text-ui text-danger">No ticket #{number} in this project.</p>
+      <p className="py-4 font-sans text-ui text-danger">No item #{number} in this project.</p>
     );
   }
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <TicketDetail
-        key={ticket.id}
+      <ItemDetail
+        key={item.id}
         projectKey={projectKey}
         board={board}
         indexes={indexes}
-        ticket={ticket}
+        item={item}
         variant="page"
       />
     </div>

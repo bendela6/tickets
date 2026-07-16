@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Board, BoardTicket } from '../api/types';
+import type { Board, Item } from '../api/types';
 import { useCreateLink } from '../api/use-create-link';
 import { useDeleteLink } from '../api/use-delete-link';
 import { useCurrentUser } from '../state/current-user-context';
@@ -13,7 +13,7 @@ import type { BoardIndexes } from '../utils/index-board';
 
 // Direction is folded into the chip text: outgoing "label →", incoming
 // "← inverseLabel", non-directional "label ↔". Incoming blocks (i.e. this
-// ticket is blocked) gets the blocked kind color per the design.
+// item is blocked) gets the blocked kind color per the design.
 function directionLabel(
   linkType: Board['linkTypes'][number],
   outgoing: boolean,
@@ -30,19 +30,19 @@ function directionLabel(
 export function DetailLinks({
   board,
   indexes,
-  ticket,
-  onOpenTicket,
+  item,
+  onOpenItem,
 }: {
   board: Board;
   indexes: BoardIndexes;
-  ticket: BoardTicket;
-  onOpenTicket: (ticketNumber: number) => void;
+  item: Item;
+  onOpenItem: (itemNumber: number) => void;
 }) {
   const { userId } = useCurrentUser();
   const createLink = useCreateLink();
   const deleteLink = useDeleteLink();
 
-  const prefix = board.project.ticketPrefix;
+  const prefix = board.project.itemPrefix;
   const linkTypes = [...board.linkTypes]
     .filter((linkType) => !linkType.archivedAt)
     .sort((left, right) => left.position - right.position);
@@ -67,9 +67,9 @@ export function DetailLinks({
       return;
     }
     const digits = numberDraft.trim().match(/(\d+)\s*$/)?.[1];
-    const other = digits ? indexes.ticketByNumber.get(Number(digits)) : undefined;
+    const other = digits ? indexes.itemByNumber.get(Number(digits)) : undefined;
     if (!other) {
-      setError(`no ticket #${numberDraft.trim()}`);
+      setError(`no item #${numberDraft.trim()}`);
       return;
     }
     if (userId === null) {
@@ -80,8 +80,8 @@ export function DetailLinks({
       await createLink.mutateAsync({
         actorId: userId,
         linkTypeKey,
-        sourceTicketId: direction === 'out' ? ticket.id : other.id,
-        targetTicketId: direction === 'out' ? other.id : ticket.id,
+        sourceItemId: direction === 'out' ? item.id : other.id,
+        targetItemId: direction === 'out' ? other.id : item.id,
       });
       setNumberDraft('');
     } catch (linkError) {
@@ -103,14 +103,14 @@ export function DetailLinks({
         </button>
       </div>
       <div className="flex flex-col gap-1.5">
-        {ticket.links.length === 0 ? (
+        {item.links.length === 0 ? (
           <p className="m-0 font-sans text-meta text-ink-3">No links.</p>
         ) : (
-          ticket.links.map((link) => {
+          item.links.map((link) => {
             const linkType = board.linkTypes.find((candidate) => candidate.id === link.linkTypeId);
-            const outgoing = link.sourceTicketId === ticket.id;
-            const otherId = outgoing ? link.targetTicketId : link.sourceTicketId;
-            const other = indexes.ticketById.get(otherId);
+            const outgoing = link.sourceItemId === item.id;
+            const otherId = outgoing ? link.targetItemId : link.sourceItemId;
+            const other = indexes.itemById.get(otherId);
             if (!linkType || !other) {
               return null;
             }
@@ -133,7 +133,7 @@ export function DetailLinks({
                 <button
                   type="button"
                   className="shrink-0"
-                  onClick={() => onOpenTicket(other.number)}
+                  onClick={() => onOpenItem(other.number)}
                 >
                   <TicketKey
                     prefix={prefix}
@@ -183,7 +183,7 @@ export function DetailLinks({
             size="compact"
             className="w-28"
             placeholder={`${prefix}-131`}
-            aria-label="Ticket number"
+            aria-label="Item number"
             value={numberDraft}
             disabled={userId === null}
             onChange={(event) => setNumberDraft(event.target.value)}
