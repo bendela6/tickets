@@ -1,6 +1,6 @@
 import { inArray } from 'drizzle-orm';
 import type { Db } from '@tickets/db';
-import { itemTypeFields, options } from '@tickets/db';
+import { itemTypeChildTypes, itemTypeFields, options } from '@tickets/db';
 import { loadSchemeVocab } from '../vocab/load-scheme-vocab';
 import { assembleItems } from './assemble-items';
 
@@ -9,9 +9,10 @@ import { assembleItems } from './assemble-items';
 export async function buildBoard(db: Db, key: string) {
   const vocab = await loadSchemeVocab(db, { key });
   const typeIds = vocab.types.map((t) => t.id);
-  const [placements, allOptions] = await Promise.all([
+  const [placements, allOptions, childTypes] = await Promise.all([
     typeIds.length ? db.select().from(itemTypeFields).where(inArray(itemTypeFields.itemTypeId, typeIds)) : [],
     db.select().from(options).where(inArray(options.optionSetId, [...new Set([...vocab.fieldById.values()].map((f) => f.optionSetId).filter((x): x is number => x != null))])),
+    typeIds.length ? db.select().from(itemTypeChildTypes).where(inArray(itemTypeChildTypes.parentTypeId, typeIds)) : [],
   ]);
   const items = await assembleItems(db, vocab);
   return {
@@ -24,6 +25,7 @@ export async function buildBoard(db: Db, key: string) {
     linkTypes: [...vocab.linkTypeByTypeKey.values()],
     views: vocab.views,
     users: [...vocab.usersById.values()],
+    childTypes,
     items,
   };
 }

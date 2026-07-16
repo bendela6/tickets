@@ -28,6 +28,7 @@ function board(): Board {
     transitions: [],
     linkTypes: [],
     views: [],
+    childTypes: [],
     users: [{ id: 7, name: 'Ada', email: null, kind: 'human', archivedAt: null }],
     items: [
       {

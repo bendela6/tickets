@@ -62,14 +62,11 @@ function ColorSwatches({
   );
 }
 
-// Toggling a chip PUTs the *whole* new set to /api/types/:id/child-types.
-//
-// GAP: neither the board payload nor any GET route exposes the current
-// item_type_child_types rows for a type (only the write-side PUT exists —
-// see apps/api/src/routes/vocabulary.routes.ts). So this editor has nothing
-// to seed its "currently allowed" state from; selections are local-only,
-// start empty each session, and a toggle here is a genuine overwrite of
-// whatever is in the DB, not a diff against it. Flagged in the task report.
+// Toggling a chip PUTs the *whole* new set to /api/types/:id/child-types
+// (type.setChildTypes is a full delete+reinsert replace, not a diff). The
+// selections state below is seeded from `board.childTypes` on mount, so a
+// toggle sends the existing allowed set plus/minus the one clicked, instead
+// of just the single chip — see `childSelections` init in TypesTab.
 function ChildTypeChips({
   candidates,
   selected,
@@ -177,8 +174,16 @@ export function TypesTab({ board }: SettingsTabProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editDraft, setEditDraft] = useState<Draft>({ label: '', color: SWATCHES[0]! });
 
-  // typeId -> locally-selected child type ids (see ChildTypeChips' gap note).
-  const [childSelections, setChildSelections] = useState<Record<number, number[]>>({});
+  // typeId -> locally-selected child type ids, seeded from the board's
+  // current item_type_child_types rows so a toggle diffs against what's
+  // actually in the DB instead of overwriting it.
+  const [childSelections, setChildSelections] = useState<Record<number, number[]>>(() => {
+    const byParent: Record<number, number[]> = {};
+    for (const row of board.childTypes) {
+      (byParent[row.parentTypeId] ??= []).push(row.childTypeId);
+    }
+    return byParent;
+  });
 
   const disabled = userId === null;
 

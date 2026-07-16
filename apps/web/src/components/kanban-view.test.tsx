@@ -118,6 +118,7 @@ function makeBoard(): Board {
     transitions: [{ id: 1, fieldId: 10, itemTypeId: null, fromOptionId: 1, toOptionId: 2, config: null }],
     linkTypes: [],
     views: [],
+    childTypes: [],
     items: [
       {
         id: 100,

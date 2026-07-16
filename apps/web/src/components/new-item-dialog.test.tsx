@@ -83,6 +83,7 @@ function makeBoard(overrides: Partial<Board> = {}): Board {
     transitions: [],
     linkTypes: [],
     views: [],
+    childTypes: [],
     items: [
       {
         id: 100,

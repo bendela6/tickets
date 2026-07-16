@@ -92,6 +92,7 @@ function makeBoard(): Board {
       },
     ],
     views: [],
+    childTypes: [],
     items: [
       {
         id: 100,
