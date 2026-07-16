@@ -259,7 +259,9 @@ export type SessionStatus =
   | 'awaiting_input'
   | 'interrupted'
   | 'exited'
-  | 'failed';
+  | 'failed'
+  | 'live'
+  | 'disconnected';
 export type RunnerKind = 'local' | 'container';
 
 export interface AiWorkspace {
@@ -293,6 +295,7 @@ export interface AiSession {
   createdAt: string;
   updatedAt: string;
   endedAt: string | null;
+  archivedAt: string | null;
 }
 
 export interface CreateAiWorkspaceInput {

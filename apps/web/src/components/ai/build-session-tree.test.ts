@@ -21,6 +21,7 @@ function session(id: number, parentSessionId: number | null): AiSession {
     createdAt: '2026-07-16T00:00:00Z',
     updatedAt: '2026-07-16T00:00:00Z',
     endedAt: null,
+    archivedAt: null,
   };
 }
 
