@@ -53,11 +53,22 @@ function makeBoard(): Board {
         optionSetId: 2,
         archivedAt: null,
       },
+      {
+        id: 13,
+        schemeId: 1,
+        key: 'assignee',
+        label: 'Assignee',
+        type: 'user',
+        config: {},
+        optionSetId: null,
+        archivedAt: null,
+      },
     ],
     placements: [
       { itemTypeId: 1, fieldId: 10, position: 1, required: true, configOverride: null },
       { itemTypeId: 1, fieldId: 11, position: 2, required: true, configOverride: null },
       { itemTypeId: 1, fieldId: 12, position: 3, required: false, configOverride: null },
+      { itemTypeId: 1, fieldId: 13, position: 4, required: false, configOverride: null },
     ],
     // one shared status set (optionSetId 1); priority is its own set (2)
     options: [
@@ -116,7 +127,12 @@ function makeBoard(): Board {
         archivedAt: null,
         createdAt,
         updatedAt: createdAt,
-        values: { status: 'backlog', title: 'Keyboard nav for board mode', priority: 'p2' },
+        values: {
+          status: 'backlog',
+          title: 'Keyboard nav for board mode',
+          priority: 'p2',
+          assignee: 7,
+        },
         comments: [],
         links: [],
       },
@@ -192,6 +208,14 @@ test('card shows the type badge', () => {
   renderKanban();
   const backlog = screen.getByRole('region', { name: 'Backlog' });
   expect(within(backlog).getByText('Task')).toBeInTheDocument();
+});
+
+// Regression: the assignee field is type 'user', not 'option' — the card
+// footer must resolve it through indexes.userById rather than the option set.
+test('card shows the assignee avatar for a user-typed field', () => {
+  renderKanban();
+  const backlog = screen.getByRole('region', { name: 'Backlog' });
+  expect(within(backlog).getByTitle('Mara K')).toBeInTheDocument();
 });
 
 test('clicking a card opens the ticket', async () => {

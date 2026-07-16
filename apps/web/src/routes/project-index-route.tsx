@@ -11,9 +11,7 @@ export const projectIndexRoute = createRoute({
     const board = await fetchJson<Board>(
       `/api/projects/${encodeURIComponent(params.projectKey)}/board`,
     );
-    const firstView = board.views
-      .filter((view) => !view.archivedAt)
-      .sort((left, right) => left.position - right.position)[0];
+    const firstView = [...board.views].sort((left, right) => left.id - right.id)[0];
     if (firstView) {
       throw redirect({
         to: '/p/$projectKey/v/$viewId',

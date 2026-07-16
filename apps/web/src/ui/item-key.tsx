@@ -1,8 +1,8 @@
 import { cn } from './cn';
 
-type TicketKeyProps = { prefix: string; number: number; muted?: boolean; className?: string };
+type ItemKeyProps = { prefix: string; number: number; muted?: boolean; className?: string };
 
-export function TicketKey({ prefix, number, muted, className }: TicketKeyProps) {
+export function ItemKey({ prefix, number, muted, className }: ItemKeyProps) {
   return (
     <span
       className={cn(

@@ -8,7 +8,7 @@ import { Button } from '../../ui/button';
 import { cn } from '../../ui/cn';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
 import { StatusSelect } from '../../ui/status-select';
-import { TicketKey } from '../../ui/ticket-key';
+import { ItemKey } from '../../ui/item-key';
 import { TypeBadge } from '../../ui/type-badge';
 import { childProgress } from '../../utils/child-progress';
 import type { BoardIndexes } from '../../utils/index-board';
@@ -281,7 +281,7 @@ export function TableView({
     if (column.source === 'number') {
       return (
         <span key={key} className="px-3">
-          <TicketKey prefix={board.project.itemPrefix} number={ticket.number} />
+          <ItemKey prefix={board.project.itemPrefix} number={ticket.number} />
         </span>
       );
     }

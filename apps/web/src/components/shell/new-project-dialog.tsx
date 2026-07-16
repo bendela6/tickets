@@ -15,18 +15,18 @@ export function NewProjectDialog({
 }) {
   const navigate = useNavigate();
   const createProject = useCreateProject();
-  const [draft, setDraft] = useState({ key: '', name: '', ticketPrefix: '' });
+  const [draft, setDraft] = useState({ key: '', name: '', itemPrefix: '' });
   const valid =
-    draft.key.trim() !== '' && draft.name.trim() !== '' && draft.ticketPrefix.trim() !== '';
+    draft.key.trim() !== '' && draft.name.trim() !== '' && draft.itemPrefix.trim() !== '';
 
   async function submit() {
     const created = await createProject.mutateAsync({
       key: draft.key.trim(),
       name: draft.name.trim(),
-      ticketPrefix: draft.ticketPrefix.trim().toUpperCase(),
+      itemPrefix: draft.itemPrefix.trim().toUpperCase(),
     });
     onOpenChange(false);
-    setDraft({ key: '', name: '', ticketPrefix: '' });
+    setDraft({ key: '', name: '', itemPrefix: '' });
     void navigate({ to: '/p/$projectKey', params: { projectKey: created.key } });
   }
 
@@ -62,8 +62,8 @@ export function NewProjectDialog({
                 id="np-prefix"
                 className="mt-1 font-mono uppercase"
                 placeholder="GW"
-                value={draft.ticketPrefix}
-                onChange={(event) => setDraft({ ...draft, ticketPrefix: event.target.value })}
+                value={draft.itemPrefix}
+                onChange={(event) => setDraft({ ...draft, itemPrefix: event.target.value })}
               />
             </div>
           </div>

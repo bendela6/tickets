@@ -10,7 +10,7 @@ import { cn } from '../ui/cn';
 import { KindGlyph } from '../ui/kind-glyph';
 import { OptionChip } from '../ui/option-chip';
 import { RelativeDate } from '../ui/relative-date';
-import { TicketKey } from '../ui/ticket-key';
+import { ItemKey } from '../ui/item-key';
 import { TypeBadge } from '../ui/type-badge';
 import { childProgress } from '../utils/child-progress';
 import type { BoardIndexes } from '../utils/index-board';
@@ -93,7 +93,7 @@ export function KanbanView({
     [board.fields],
   );
   const assigneeField = useMemo(
-    () => findFieldByPattern(board.fields, ['option'], /assignee|owner/i),
+    () => findFieldByPattern(board.fields, ['user'], /assignee|owner/i),
     [board.fields],
   );
   const dueField = useMemo(
@@ -174,16 +174,17 @@ export function KanbanView({
             .find((option) => option.value === priorityRaw) ?? null)
         : null;
 
+    // 'user'-typed field value: a user id (or {id,name}); resolve through the board's users.
     const assigneeRaw = assigneeField ? ticket.values[assigneeField.key] : undefined;
-    const assigneeOption =
-      assigneeField && typeof assigneeRaw === 'string' && assigneeRaw !== ''
-        ? (indexes
-            .optionsForField(ticket.typeId, assigneeField)
-            .find((option) => option.value === assigneeRaw) ?? null)
-        : null;
-    const assigneeUser = assigneeOption
-      ? board.users.find((user) => user.name === assigneeOption.label)
-      : undefined;
+    const assigneeUserId =
+      typeof assigneeRaw === 'number'
+        ? assigneeRaw
+        : assigneeRaw !== null &&
+            typeof assigneeRaw === 'object' &&
+            typeof (assigneeRaw as { id?: unknown }).id === 'number'
+          ? (assigneeRaw as { id: number }).id
+          : null;
+    const assigneeUser = assigneeUserId === null ? undefined : indexes.userById.get(assigneeUserId);
 
     const dueRaw = dueField ? ticket.values[dueField.key] : undefined;
     const due = typeof dueRaw === 'string' && dueRaw !== '' ? dueRaw : null;
@@ -192,7 +193,7 @@ export function KanbanView({
       due !== null && kind !== 'done' && kind !== 'dropped' && isPastDate(due, new Date());
 
     const progress = childProgress(ticket, indexes);
-    const hasFooter = assigneeOption !== null || due !== null || progress.total > 0;
+    const hasFooter = assigneeUser !== undefined || due !== null || progress.total > 0;
 
     return (
       <div
@@ -222,7 +223,7 @@ export function KanbanView({
         )}
       >
         <div className="flex items-center gap-2">
-          <TicketKey
+          <ItemKey
             prefix={board.project.itemPrefix}
             number={ticket.number}
             className="text-[11px]"
@@ -244,8 +245,8 @@ export function KanbanView({
         </div>
         {hasFooter ? (
           <div className="flex items-center gap-2.25">
-            {assigneeOption ? (
-              <Avatar name={assigneeOption.label} kind={assigneeUser?.kind ?? 'human'} size="sm" />
+            {assigneeUser ? (
+              <Avatar name={assigneeUser.name} kind={assigneeUser.kind} size="sm" />
             ) : null}
             {due !== null ? (
               <RelativeDate value={due} overdue={overdue} className="text-[11px]" />

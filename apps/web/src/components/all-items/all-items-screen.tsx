@@ -15,7 +15,7 @@ import { KindGlyph } from '../../ui/kind-glyph';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
 import { RelativeDate } from '../../ui/relative-date';
 import { StatusSelect } from '../../ui/status-select';
-import { TicketKey } from '../../ui/ticket-key';
+import { ItemKey } from '../../ui/item-key';
 import { TypeBadge } from '../../ui/type-badge';
 import { childProgress } from '../../utils/child-progress';
 import { evaluateFilters } from '../../utils/evaluate-filters';
@@ -634,7 +634,7 @@ export function AllItemsScreen() {
                   style={{ gridTemplateColumns }}
                 >
                   <span className="px-3">
-                    <TicketKey prefix={row.entry.project.itemPrefix} number={row.ticket.number} />
+                    <ItemKey prefix={row.entry.project.itemPrefix} number={row.ticket.number} />
                   </span>
                   <span className="truncate px-2 font-sans text-ui text-ink">
                     {String(row.ticket.values.title ?? '')}

@@ -5,41 +5,37 @@ import { normalizeViewConfig } from './view-config';
 function makeBoard(): Board {
   const createdAt = '2026-01-01T00:00:00.000Z';
   return {
-    project: { id: 1, key: 'core', name: 'Items Core', ticketPrefix: 'CORE', createdAt },
+    project: { id: 1, key: 'core', name: 'Items Core', schemeId: 1, itemPrefix: 'CORE', createdAt },
     users: [],
     types: [],
-    typeFields: [],
-    statuses: [],
+    placements: [],
+    options: [],
     transitions: [],
     fields: [
       {
         id: 10,
-        projectId: 1,
+        schemeId: 1,
         key: 'title',
         label: 'Title',
-        type: 'text',
-        system: true,
+        type: 'string',
         config: {},
+        optionSetId: null,
         archivedAt: null,
-        createdAt,
-        options: [],
       },
       {
         id: 35,
-        projectId: 1,
+        schemeId: 1,
         key: 'priority',
         label: 'Priority',
-        type: 'select',
-        system: false,
+        type: 'option',
         config: {},
+        optionSetId: 1,
         archivedAt: null,
-        createdAt,
-        options: [],
       },
     ],
     linkTypes: [],
     views: [],
-    tickets: [],
+    items: [],
   };
 }
 

@@ -7,7 +7,7 @@ import { useCurrentUser } from '../state/current-user-context';
 import { cn } from '../ui/cn';
 import { KindGlyph, type StatusKind } from '../ui/kind-glyph';
 import { StatusSelect } from '../ui/status-select';
-import { TicketKey } from '../ui/ticket-key';
+import { ItemKey } from '../ui/item-key';
 import { childProgress } from '../utils/child-progress';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
@@ -117,7 +117,7 @@ export function DetailChildren({
               <span aria-hidden className={cn('inline-flex shrink-0', KIND_TEXT[kind])}>
                 <KindGlyph kind={kind} />
               </span>
-              <TicketKey
+              <ItemKey
                 prefix={prefix}
                 number={child.number}
                 muted={settled}
