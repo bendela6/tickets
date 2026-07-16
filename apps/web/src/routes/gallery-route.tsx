@@ -16,7 +16,9 @@ import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '../ui/m
 import { NumberInput } from '../ui/number-input';
 import { OptionChip, type OptionColor } from '../ui/option-chip';
 import { buildMessageStream, type SeqEvent } from '../components/ai/build-message-stream';
+import { CostMeter } from '../components/ai/cost-meter';
 import { MessageStream } from '../components/ai/message-stream';
+import { AGENT_MODELS, PromptComposer } from '../components/ai/prompt-composer';
 import { RadioGroup } from '../ui/radio-group';
 import { RelativeDate } from '../ui/relative-date';
 import { SessionKindGlyph } from '../ui/session-kind-glyph';
@@ -363,6 +365,18 @@ function GalleryScreen() {
               </div>
             </Section>
 
+            <Section title="AI session — cost meter (uncapped · capped · over)">
+              <CostMeter costUsd={1.06} />
+              <CostMeter costUsd={0.88} capUsd={5} />
+              <CostMeter costUsd={5.2} capUsd={5} />
+            </Section>
+
+            <Section title="AI session — prompt composer">
+              <div className="w-full max-w-2xl">
+                <ComposerDemo />
+              </div>
+            </Section>
+
             <Section title="Option chips — 11-color palette">
               {OPTION_COLORS.map((color) => (
                 <OptionChip key={color} color={color} label={color} />
@@ -401,6 +415,35 @@ function GalleryScreen() {
         </div>
       </ToastProvider>
     </TooltipProvider>
+  );
+}
+
+function ComposerDemo() {
+  const [value, setValue] = useState('');
+  const [model, setModel] = useState(AGENT_MODELS[0]!.value);
+  const [effort, setEffort] = useState('medium');
+  const [running, setRunning] = useState(true);
+  return (
+    <div className="flex w-full flex-col gap-2">
+      <PromptComposer
+        value={value}
+        onChange={setValue}
+        onSend={() => setValue('')}
+        onInterrupt={() => setRunning(false)}
+        running={running}
+        model={model}
+        onModelChange={setModel}
+        effort={effort}
+        onEffortChange={setEffort}
+      />
+      <button
+        type="button"
+        onClick={() => setRunning((r) => !r)}
+        className="self-start font-sans text-meta text-accent hover:underline"
+      >
+        toggle running (Stop shows only while running)
+      </button>
+    </div>
   );
 }
 
