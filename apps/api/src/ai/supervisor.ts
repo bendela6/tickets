@@ -277,14 +277,25 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
 
   return {
     start(spec) {
-      const handle = runner.spawnPty({
-        cwd: spec.cwd,
-        command: spec.command,
-        args: spec.args ?? [],
-        env: spec.env ?? {},
-        cols: spec.cols ?? 80,
-        rows: spec.rows ?? 24,
-      });
+      let handle: PtyHandle;
+      try {
+        handle = runner.spawnPty({
+          cwd: spec.cwd,
+          command: spec.command,
+          args: spec.args ?? [],
+          env: spec.env ?? {},
+          cols: spec.cols ?? 80,
+          rows: spec.rows ?? 24,
+        });
+      } catch {
+        // The PTY could not be created — an unresolvable command, or (on Windows
+        // ConPTY) no attachable console. Record "Couldn't start" instead of
+        // throwing, so createSession never 500s and the row doesn't hang in
+        // `starting`.
+        void store.finishSession(spec.id, 'failed', null);
+        if (spec.onEnd) void Promise.resolve(spec.onEnd()).catch(() => {});
+        return;
+      }
       const rs = newSession(spec.id, 'terminal', handle);
       rs.status = 'live';
       rs.onEnd = spec.onEnd;
