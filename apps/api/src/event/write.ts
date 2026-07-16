@@ -4,11 +4,10 @@ import { events, outbox } from '@tickets/db';
 import { eventKind, type EventDef } from './registry';
 import { nextSeq } from './seq';
 
-// Inline shape matching Task 3's `CommandEnvelope` (apps/api/src/command/envelope.ts,
-// not yet created). Structurally compatible — nothing here needs to change once that
-// file exists.
+// Inline shape matching `CommandEnvelope` (apps/api/src/command/envelope.ts).
+// Structurally compatible — kept inline so this module has no cross-import.
 export interface EmitContext {
-  envelope: { commandId: string; actorId: number; correlationId?: string };
+  envelope: { commandId: string; actorId: number; correlationId?: string; causedBy?: number; depth?: number };
   aggregateId: number;
   projectId: number | null;
 }
@@ -36,7 +35,8 @@ export async function writeEvent<S extends v.GenericSchema>(
       actorId: ctx.envelope.actorId,
       commandId: ctx.envelope.commandId,
       correlationId: ctx.envelope.correlationId ?? ctx.envelope.commandId,
-      depth: 0,
+      causedBy: ctx.envelope.causedBy ?? null,
+      depth: ctx.envelope.depth ?? 0,
       projectId: ctx.projectId,
     })
     .returning({ id: events.id });

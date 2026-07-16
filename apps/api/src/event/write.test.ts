@@ -5,6 +5,7 @@ import { events, outbox } from '@tickets/db';
 import { resetDb, seedFixture, testDb } from '../test/db';
 import { defineEvent, type EventDef } from './registry';
 import { writeEvent, type EmitContext } from './write';
+import { itemArchived } from '../command/item/events';
 
 beforeEach(resetDb);
 afterAll(resetDb);
@@ -62,4 +63,23 @@ it('rejects an event object that was never registered', async () => {
   await expect(
     testDb.transaction((tx) => writeEvent(tx, ctx(fx.actorId), rogue, {})),
   ).rejects.toThrow(/not registered/);
+});
+
+it('persists causedBy and depth from the envelope', async () => {
+  const fx = await seedFixture();
+  const causeId = await testDb.transaction(async (tx) =>
+    writeEvent(tx, {
+      envelope: { commandId: crypto.randomUUID(), actorId: fx.actorId },
+      aggregateId: 1, projectId: fx.projectId,
+    }, itemArchived, {}),
+  );
+  const chainedId = await testDb.transaction(async (tx) =>
+    writeEvent(tx, {
+      envelope: { commandId: crypto.randomUUID(), actorId: fx.actorId, causedBy: causeId, depth: 3 },
+      aggregateId: 1, projectId: fx.projectId,
+    }, itemArchived, {}),
+  );
+  const row = (await testDb.select().from(events).where(eq(events.id, chainedId)))[0]!;
+  expect(row.causedBy).toBe(causeId);
+  expect(row.depth).toBe(3);
 });
