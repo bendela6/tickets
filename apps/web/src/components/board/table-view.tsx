@@ -138,14 +138,14 @@ function RowActions({ projectKey, ticket }: { projectKey: string; ticket: Item }
       <Link
         to="/p/$projectKey/t/$number"
         params={{ projectKey, number: String(ticket.number) }}
-        title="Open ticket page"
+        title="Open item page"
         className={actionClasses}
       >
         ↗
       </Link>
       <Menu>
         <MenuTrigger asChild>
-          <button type="button" aria-label="Ticket actions" className={actionClasses}>
+          <button type="button" aria-label="Item actions" className={actionClasses}>
             ⋯
           </button>
         </MenuTrigger>
@@ -192,12 +192,12 @@ function EmptyState({
         ⌕
       </span>
       <span className="font-sans text-[16px] font-semibold text-ink">
-        {filtered ? 'No tickets match these filters' : 'No tickets yet'}
+        {filtered ? 'No items match these filters' : 'No items yet'}
       </span>
       <span className="max-w-85 text-center font-sans text-ui text-ink-2">
         {filtered
-          ? `${filterCount === 1 ? '1 filter is' : `${filterCount} filters are`} hiding all ${total} tickets in this project.`
-          : 'This project is brand new. Create the first ticket, or point an agent at it.'}
+          ? `${filterCount === 1 ? '1 filter is' : `${filterCount} filters are`} hiding all ${total} items in this project.`
+          : 'This project is brand new. Create the first item, or point an agent at it.'}
       </span>
       <div className="mt-1.5 flex gap-2">
         {filtered ? (
@@ -206,7 +206,7 @@ function EmptyState({
           </Button>
         ) : (
           <Button size="regular" className="h-8" onClick={onNewTicket}>
-            ＋ New ticket
+            ＋ New item
           </Button>
         )}
       </div>

@@ -218,7 +218,7 @@ test('groups rows under both project headers', async () => {
   // subtasks are not top-level rows
   expect(screen.queryByText('Subtask of the redirect fix')).not.toBeInTheDocument();
   // header meta counts top-level items and loaded projects
-  expect(screen.getByText('3 tickets · 2 projects')).toBeInTheDocument();
+  expect(screen.getByText('3 items · 2 projects')).toBeInTheDocument();
   expect(screen.getByText('3 of 3 match filters')).toBeInTheDocument();
 });
 

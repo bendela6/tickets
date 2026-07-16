@@ -105,7 +105,7 @@ export function ProjectsHome() {
       <div className="mb-5.5 flex items-baseline gap-3.5">
         <h1 className="font-sans text-[22px] font-semibold text-ink">Projects</h1>
         <span className="font-mono text-meta text-ink-3">
-          {projectList.length} projects · {totalTickets} tickets · {openTickets} open
+          {projectList.length} projects · {totalTickets} items · {openTickets} open
         </span>
         <span className="flex-1" />
         <Button variant="secondary" size="compact" onClick={() => setCreating(true)}>

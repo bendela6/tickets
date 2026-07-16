@@ -17,3 +17,17 @@ test('apiMutate injects a uuid commandId + actorId into the JSON body', async ()
   expect(typeof sent.commandId).toBe('string');
   expect((sent.commandId as string)).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
 });
+
+test('apiMutate: a stray actorId in the body cannot override the envelope actorId', async () => {
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: () => Promise.resolve(JSON.stringify({ id: 1 })) });
+  vi.stubGlobal('fetch', fetchMock);
+  await apiMutate<{ id: number }>('/api/items/1', {
+    method: 'PATCH',
+    actorId: 7,
+    body: { actorId: 999, archived: true },
+  });
+  const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  const sent = JSON.parse(String(init.body)) as Record<string, unknown>;
+  expect(sent.actorId).toBe(7);
+  expect(sent.archived).toBe(true);
+});

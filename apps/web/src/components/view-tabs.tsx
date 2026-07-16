@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import type { Board } from '../api/types';
 import { useCreateView } from '../api/use-create-view';
+import { useCurrentUser } from '../state/current-user-context';
 import { cn } from '../ui/cn';
 import { Input } from '../ui/input';
 
@@ -21,6 +22,7 @@ export function ViewTabs({
 }) {
   const navigate = useNavigate();
   const createView = useCreateView();
+  const { userId } = useCurrentUser();
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
 
@@ -54,13 +56,15 @@ export function ViewTabs({
           placeholder="view name"
           aria-label="New view name"
           value={draft}
+          disabled={userId === null}
           className="mx-1 w-36"
           onBlur={() => setAdding(false)}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={async (event) => {
-            if (event.key === 'Enter' && draft.trim().length > 0) {
+            if (event.key === 'Enter' && draft.trim().length > 0 && userId !== null) {
               const created = await createView.mutateAsync({
                 projectKey,
+                actorId: userId,
                 name: draft.trim(),
               });
               setAdding(false);

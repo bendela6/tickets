@@ -78,8 +78,8 @@ export interface PatchItemResult { id: number; updatedAt: string; }
 export interface CreateCommentInput { itemId: number; actorId: number; body: string; parentId?: number | null; }
 export interface CreateLinkInput { actorId: number; linkTypeKey: string; sourceItemId: number; targetItemId: number; }
 export interface DeleteLinkInput { linkId: number; actorId: number; }
-export interface CreateUserInput { name: string; kind?: UserKind; }
-export interface CreateProjectInput { key: string; name: string; itemPrefix: string; }
+export interface CreateUserInput { actorId: number; name: string; kind?: UserKind; }
+export interface CreateProjectInput { actorId: number; key: string; name: string; itemPrefix: string; }
 
 export interface ListMeta { total?: number }
 export interface UsersResponse { data: User[] }

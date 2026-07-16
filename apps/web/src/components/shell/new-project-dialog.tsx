@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useCreateProject } from '../../api/use-create-project';
+import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 import { FieldLabel } from '../../ui/field-label';
@@ -15,12 +16,17 @@ export function NewProjectDialog({
 }) {
   const navigate = useNavigate();
   const createProject = useCreateProject();
+  const { userId } = useCurrentUser();
   const [draft, setDraft] = useState({ key: '', name: '', itemPrefix: '' });
   const valid =
     draft.key.trim() !== '' && draft.name.trim() !== '' && draft.itemPrefix.trim() !== '';
 
   async function submit() {
+    if (userId === null) {
+      return;
+    }
     const created = await createProject.mutateAsync({
+      actorId: userId,
       key: draft.key.trim(),
       name: draft.name.trim(),
       itemPrefix: draft.itemPrefix.trim().toUpperCase(),
@@ -74,7 +80,7 @@ export function NewProjectDialog({
           </Button>
           <Button
             variant="primary"
-            disabled={!valid}
+            disabled={!valid || userId === null}
             loading={createProject.isPending}
             onClick={() => void submit()}
           >
