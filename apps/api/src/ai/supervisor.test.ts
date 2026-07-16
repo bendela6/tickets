@@ -346,4 +346,20 @@ describe('supervisor', () => {
     expect(out).toContain('o');
     expect(out).toContain('p');
   });
+
+  it('emits no output frame (and does not bump seq) for a chunk that is entirely a marker', async () => {
+    const { store } = makeStore();
+    const pty = makePty();
+    const sup = createSupervisor({ runner: { spawnPty: () => pty.handle }, store, schedule: syncSchedule });
+    sup.start({ id: 1, command: 'powershell.exe', cwd: '/w' });
+    const { sub, frames } = makeSub();
+    await sup.attach(1, sub, 0);
+    pty.push('\x1b]133;C\x1b\\');
+    await tick();
+    await sup.flush(1);
+    await tick();
+    const acts = frames.filter((f) => f.type === 'activity');
+    expect(acts).toEqual(expect.arrayContaining([expect.objectContaining({ busy: true })]));
+    expect(outputs(frames)).toEqual([]);
+  });
 });
