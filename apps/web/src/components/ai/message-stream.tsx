@@ -1,22 +1,32 @@
 import { useState, type ReactNode } from 'react';
+import { Button } from '../../ui/button';
 import { cn } from '../../ui/cn';
 import type { StreamBlock, ToolResult } from './build-message-stream';
+
+export type RespondFn = (requestId: string, result: 'allow' | 'deny', reason?: string) => void;
 
 // The structured agent chat (screen 10): a column of blocks rendered from the
 // normalized event stream. Tool calls collapse to name + one-line input and
 // expand to full input/result; Edit/Write show a diff; a Task call nests its
-// subagent's blocks in an indented group.
-export function MessageStream({ blocks }: { blocks: StreamBlock[] }) {
+// subagent's blocks in an indented group. `onRespond` wires the blocking
+// approval card back to the socket.
+export function MessageStream({
+  blocks,
+  onRespond,
+}: {
+  blocks: StreamBlock[];
+  onRespond?: RespondFn;
+}) {
   return (
     <div className="flex flex-col gap-2.5">
       {blocks.map((block) => (
-        <Block key={`${block.kind}-${block.seq}`} block={block} />
+        <Block key={`${block.kind}-${block.seq}`} block={block} onRespond={onRespond} />
       ))}
     </div>
   );
 }
 
-function Block({ block }: { block: StreamBlock }) {
+function Block({ block, onRespond }: { block: StreamBlock; onRespond?: RespondFn }) {
   switch (block.kind) {
     case 'text':
       return (
@@ -29,7 +39,7 @@ function Block({ block }: { block: StreamBlock }) {
     case 'subagent':
       return (
         <SubagentGroup name={block.name} input={block.input} result={block.result}>
-          <MessageStream blocks={block.children} />
+          <MessageStream blocks={block.children} onRespond={onRespond} />
         </SubagentGroup>
       );
     case 'result':
@@ -51,17 +61,110 @@ function Block({ block }: { block: StreamBlock }) {
         </div>
       );
     case 'permission':
-      // The full approve/deny card is E3; E2 surfaces the pending request.
       return (
-        <div className="flex items-center gap-2 rounded-[9px] border border-kind-blocked bg-kind-blocked-subtle px-3 py-2">
-          <span aria-hidden className="size-2.5 rotate-45 rounded-[1px] bg-kind-blocked" />
-          <span className="font-sans text-meta font-medium text-ink">Approval required</span>
-          <span className="rounded-[5px] border border-hairline bg-raised px-1.5 font-mono text-[11px] text-ink-2">
-            {block.toolName}
-          </span>
-        </div>
+        <ApprovalCard
+          requestId={block.id}
+          toolName={block.toolName}
+          input={block.input}
+          onRespond={onRespond}
+        />
       );
   }
+}
+
+// The blocking approval card (screen 10): the run is STOPPED waiting on a human,
+// so this is the loudest thing on screen — a pulsing bordered card showing the
+// tool + its exact input (a diff for Edit/Write), Allow / Deny with an optional
+// deny reason. Clicking sends the `permission` frame.
+function ApprovalCard({
+  requestId,
+  toolName,
+  input,
+  onRespond,
+}: {
+  requestId: string;
+  toolName: string;
+  input: unknown;
+  onRespond?: RespondFn;
+}) {
+  const [denying, setDenying] = useState(false);
+  const [reason, setReason] = useState('');
+  const [decided, setDecided] = useState<'allow' | 'deny' | null>(null);
+  const diff = DIFF_TOOLS.has(toolName) ? diffLines(input) : null;
+
+  function respond(result: 'allow' | 'deny') {
+    setDecided(result);
+    onRespond?.(requestId, result, result === 'deny' ? reason.trim() || undefined : undefined);
+  }
+
+  return (
+    <div
+      className={cn(
+        'overflow-hidden rounded-panel border-[1.5px] border-kind-blocked bg-kind-blocked-subtle shadow-lg',
+        decided === null && 'animate-ai-pulse',
+      )}
+    >
+      <div className="flex items-center gap-2 px-3.5 py-2.5">
+        <span aria-hidden className="size-2.5 shrink-0 rotate-45 rounded-[1px] bg-kind-blocked" />
+        <span className="font-sans text-ui font-semibold text-ink">Approval required</span>
+        <span className="rounded-[5px] border border-hairline bg-raised px-1.5 font-mono text-[11px] text-ink-2">
+          {toolName}
+        </span>
+        <span className="flex-1" />
+        {decided ? (
+          <span className="font-mono text-meta text-ink-3">
+            {decided === 'allow' ? 'allowed' : 'denied'}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="border-t border-kind-blocked/40 bg-app">
+        {diff ? (
+          <DiffBody lines={diff.lines} />
+        ) : (
+          <pre className="overflow-x-auto px-3.5 py-2 font-mono text-[11px] leading-relaxed text-ink-2">
+            {pretty(input)}
+          </pre>
+        )}
+      </div>
+
+      {decided === null ? (
+        <div className="flex flex-col gap-2 px-3.5 py-2.5">
+          {denying ? (
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={2}
+              autoFocus
+              placeholder="Why deny? (optional — sent back to the agent)"
+              className="resize-y rounded-[8px] border border-control bg-raised px-2.5 py-1.5 font-sans text-meta text-ink placeholder:text-ink-3 focus:border-accent focus:outline-none focus:ring-[3px] focus:ring-accent-subtle"
+            />
+          ) : null}
+          <div className="flex items-center justify-end gap-2">
+            {denying ? (
+              <>
+                <Button size="compact" variant="ghost" onClick={() => setDenying(false)}>
+                  Cancel
+                </Button>
+                <Button size="compact" variant="destructive" onClick={() => respond('deny')}>
+                  Confirm deny
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button size="compact" variant="secondary" onClick={() => setDenying(true)}>
+                  Deny
+                </Button>
+                <Button size="compact" variant="primary" onClick={() => respond('allow')}>
+                  Allow
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function ThinkingBlock({ text }: { text: string }) {
