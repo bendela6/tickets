@@ -60,7 +60,8 @@ export type ServerFrame =
   | { type: 'message'; seq: number; event: AgentEvent }
   | { type: 'status'; status: SessionStatus; exitCode?: number | null }
   | { type: 'replay_done' }
-  | { type: 'notice'; message: string };
+  | { type: 'notice'; message: string }
+  | { type: 'activity'; busy: boolean; command?: string; exitCode?: number; integrated?: boolean };
 
 // A connected socket. The supervisor never holds the transport directly — it
 // holds Subscribers, so it is testable with a plain object.

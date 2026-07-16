@@ -1,4 +1,6 @@
 import type { AgentRun } from './agent-types';
+import { createActivityScanner } from './activity-scanner';
+import { integrationFor } from './shell-integration';
 import type {
   AgentEvent,
   OutputChunk,
@@ -100,6 +102,10 @@ interface RunningSession {
   // Maps a provider permission id → the ai_permission_requests row awaiting a
   // human decision (TIX-209).
   permissionRows: Map<string, number>;
+  // Strips OSC 133 shell-integration markers from terminal output and turns
+  // them into activity events; null when the shell has no registered
+  // integration (coarse activity is not tracked in that case).
+  scanner?: ReturnType<typeof createActivityScanner> | null;
 }
 
 function recordToFrame(record: SeqRecord): ServerFrame {
@@ -199,6 +205,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       costUsd: 0,
       ended: false,
       permissionRows: new Map(),
+      scanner: null,
     };
   }
 
@@ -207,8 +214,16 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     void (async () => {
       try {
         for await (const data of handle.output) {
-          rs.buffer.push({ seq: ++rs.seq, kind: 'output', data });
-          scheduleFlush(rs);
+          let text = data;
+          if (rs.scanner) {
+            const { clean, event } = rs.scanner.push(data);
+            text = clean;
+            if (event) broadcast(rs, { type: 'activity', ...event });
+          }
+          if (text) {
+            rs.buffer.push({ seq: ++rs.seq, kind: 'output', data: text });
+            scheduleFlush(rs);
+          }
         }
         const { exitCode } = await handle.exit;
         await finish(rs, 'exited', exitCode);
@@ -277,13 +292,15 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
 
   return {
     start(spec) {
+      const integ = integrationFor(spec.command);
+      const sp = integ ? integ.apply({ id: spec.id, command: spec.command, args: spec.args, env: spec.env }) : null;
       let handle: PtyHandle;
       try {
         handle = runner.spawnPty({
           cwd: spec.cwd,
-          command: spec.command,
-          args: spec.args ?? [],
-          env: spec.env ?? {},
+          command: sp?.command ?? spec.command,
+          args: sp?.args ?? spec.args ?? [],
+          env: sp?.env ?? spec.env ?? {},
           cols: spec.cols ?? 80,
           rows: spec.rows ?? 24,
         });
@@ -299,9 +316,11 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       const rs = newSession(spec.id, 'terminal', handle);
       rs.status = 'live';
       rs.onEnd = spec.onEnd;
+      rs.scanner = integ?.precise ? createActivityScanner() : null;
       sessions.set(spec.id, rs);
       void store.setStatus(spec.id, 'live');
       broadcast(rs, { type: 'status', status: 'live' });
+      if (integ?.precise) broadcast(rs, { type: 'activity', busy: false, integrated: true });
       consumeTerminal(rs);
     },
 

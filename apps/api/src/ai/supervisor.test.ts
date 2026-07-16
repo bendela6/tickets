@@ -313,4 +313,27 @@ describe('supervisor', () => {
     expect(late.frames.some((f) => f.type === 'notice')).toBe(true); // truncation notice
     expect(outputs(late.frames)).toEqual([2, 3]);
   });
+
+  it('emits activity (busy+command+exit) from OSC 133 and strips markers', async () => {
+    const { store } = makeStore();
+    const pty = makePty();
+    const sup = createSupervisor({ runner: { spawnPty: () => pty.handle }, store, schedule: syncSchedule });
+    sup.start({ id: 1, command: 'powershell.exe', cwd: '/w' });
+    const { sub, frames } = makeSub();
+    await sup.attach(1, sub, 0);
+    pty.push('o\x1b]133;C;npm test\x1b\\');
+    pty.push('\x1b]133;D;2\x1b\\p');
+    await tick();
+    await sup.flush(1);
+    await tick();
+    const acts = frames.filter((f) => f.type === 'activity');
+    expect(acts).toEqual(expect.arrayContaining([
+      expect.objectContaining({ busy: true, command: 'npm test' }),
+      expect.objectContaining({ busy: false, exitCode: 2 }),
+    ]));
+    const out = frames.filter((f) => f.type === 'output').map((f) => f.data).join('');
+    expect(out).not.toMatch(/133/);
+    expect(out).toContain('o');
+    expect(out).toContain('p');
+  });
 });
