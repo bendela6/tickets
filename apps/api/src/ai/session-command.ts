@@ -23,7 +23,7 @@ export function resolveSessionCommand(
 
 function defaultShell(platform: NodeJS.Platform, env: NodeJS.ProcessEnv): SessionCommand {
   if (platform === 'win32') {
-    return { command: env.ComSpec ?? 'powershell.exe', args: [] };
+    return { command: 'powershell.exe', args: [] };
   }
   return { command: env.SHELL ?? '/bin/bash', args: [] };
 }

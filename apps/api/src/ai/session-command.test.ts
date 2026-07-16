@@ -25,9 +25,9 @@ describe('resolveSessionCommand', () => {
     });
   });
 
-  it('falls back to %ComSpec%, then powershell.exe on Windows', () => {
+  it('defaults to powershell.exe on Windows regardless of %ComSpec%', () => {
     expect(resolveSessionCommand(undefined, 'win32', { ComSpec: 'C:\\cmd.exe' })).toEqual({
-      command: 'C:\\cmd.exe',
+      command: 'powershell.exe',
       args: [],
     });
     expect(resolveSessionCommand(undefined, 'win32', {})).toEqual({
