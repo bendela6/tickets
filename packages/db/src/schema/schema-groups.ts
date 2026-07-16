@@ -53,6 +53,13 @@ export const SCHEMA_GROUPS: SchemaGroup[] = [
     key: 'ai',
     label: 'AI sessions',
     color: 'purple',
-    tables: ['ai_workspaces', 'ai_sessions', 'ai_session_output'],
+    tables: [
+      'ai_workspaces',
+      'ai_agents',
+      'ai_sessions',
+      'ai_messages',
+      'ai_session_output',
+      'ai_permission_requests',
+    ],
   },
 ];

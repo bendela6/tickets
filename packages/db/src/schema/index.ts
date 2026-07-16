@@ -5,6 +5,8 @@ export {
   sessionKindEnum,
   sessionStatusEnum,
   runnerKindEnum,
+  permissionModeEnum,
+  permissionStatusEnum,
 } from './enums';
 export { projects } from './projects';
 export { schemes } from './schemes';
@@ -27,6 +29,9 @@ export { ticketLinks } from './ticket-links';
 export { aiWorkspaces } from './ai-workspaces';
 export { aiSessions } from './ai-sessions';
 export { aiSessionOutput } from './ai-session-output';
+export { aiAgents } from './ai-agents';
+export { aiMessages } from './ai-messages';
+export { aiPermissionRequests } from './ai-permission-requests';
 
 export { allTables } from './registry';
 export { SCHEMA_GROUPS, type SchemaGroup } from './schema-groups';
