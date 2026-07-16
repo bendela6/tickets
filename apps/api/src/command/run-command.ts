@@ -21,47 +21,58 @@ export async function runCommand<S extends v.GenericSchema, TResult>(
     throw new HttpError(400, 'invalid command input');
   }
   const agg = cmd.aggregate(input);
-  try {
-    const result = await db.transaction(async (tx) => {
-      // 1. ledger check — a replayed commandId returns the stored result verbatim
-      const existing = await tx.select().from(commands).where(eq(commands.id, envelope.commandId));
-      if (existing[0]) {
-        return existing[0].result as TResult;
-      }
-      // 2. insert the ledger row (aggregateId 0 for creates; corrected at commit)
-      await tx.insert(commands).values({
-        id: envelope.commandId,
-        aggregateType: agg.type,
-        aggregateId: agg.id ?? 0,
-        actorId: envelope.actorId,
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const result = await db.transaction(async (tx) => {
+        // 1. ledger check — a replayed commandId returns the stored result verbatim
+        const existing = await tx.select().from(commands).where(eq(commands.id, envelope.commandId));
+        if (existing[0]) {
+          return existing[0].result as TResult;
+        }
+        // 2. insert the ledger row (aggregateId 0 for creates; corrected at commit)
+        await tx.insert(commands).values({
+          id: envelope.commandId,
+          aggregateType: agg.type,
+          aggregateId: agg.id ?? 0,
+          actorId: envelope.actorId,
+        });
+        // 3-4. run the handler; ctx.emit writes typed events + outbox
+        const ctx: CommandContext = {
+          envelope,
+          aggregateId: agg.id ?? 0,
+          projectId: null,
+          emit: async (def, payload) => {
+            await writeEvent(tx, ctx, def, payload);
+          },
+        };
+        const result = await cmd.handler(tx, input, ctx);
+        // 5. commit: store the result and the final aggregateId
+        await tx
+          .update(commands)
+          .set({ result: result as unknown, aggregateId: ctx.aggregateId })
+          .where(eq(commands.id, envelope.commandId));
+        return result;
       });
-      // 3-4. run the handler; ctx.emit writes typed events + outbox
-      const ctx: CommandContext = {
-        envelope,
-        aggregateId: agg.id ?? 0,
-        projectId: null,
-        emit: async (def, payload) => {
-          await writeEvent(tx, ctx, def, payload);
-        },
-      };
-      const result = await cmd.handler(tx, input, ctx);
-      // 5. commit: store the result and the final aggregateId
-      await tx
-        .update(commands)
-        .set({ result: result as unknown, aggregateId: ctx.aggregateId })
-        .where(eq(commands.id, envelope.commandId));
+      notifyOutbox();
       return result;
-    });
-    notifyOutbox();
-    return result;
-  } catch (err) {
-    // concurrent double-submit of the same commandId collides on the PK
-    if (isCommandsPkeyCollision(err)) {
-      throw new HttpError(409, 'command already in flight — retry');
+    } catch (err) {
+      // concurrent double-submit of the same commandId collides on the PK
+      if (isCommandsPkeyCollision(err)) {
+        throw new HttpError(409, 'command already in flight — retry');
+      }
+      // concurrent commands on the same aggregate stream can race on nextSeq;
+      // the whole command re-runs in a fresh transaction — the ledger row from
+      // the failed attempt was rolled back with it, so a retry is clean.
+      if (isStreamSeqCollision(err)) {
+        if (attempt < MAX_SEQ_RETRIES) continue;
+        throw new HttpError(409, 'event stream contended — retry');
+      }
+      throw err;
     }
-    throw err;
   }
 }
+
+const MAX_SEQ_RETRIES = 3;
 
 // drizzle's postgres-js driver wraps every failed query in a DrizzleQueryError
 // whose own `.message` is just "Failed query: ..." — the constraint name never
@@ -74,6 +85,17 @@ function isCommandsPkeyCollision(err: unknown): boolean {
   for (const e of [err, (err as { cause?: unknown } | undefined)?.cause]) {
     const pg = e as { code?: string; constraint_name?: string } | undefined;
     if (pg?.code === '23505' && pg?.constraint_name === 'commands_pkey') return true;
+  }
+  return false;
+}
+
+// Same shape as isCommandsPkeyCollision, but for the events(aggregate_type,
+// aggregate_id, seq) unique constraint: two concurrent commands on the same
+// aggregate stream can both compute the same nextSeq() before either commits.
+function isStreamSeqCollision(err: unknown): boolean {
+  for (const e of [err, (err as { cause?: unknown } | undefined)?.cause]) {
+    const pg = e as { code?: string; constraint_name?: string } | undefined;
+    if (pg?.code === '23505' && pg?.constraint_name === 'events_stream_seq') return true;
   }
   return false;
 }
