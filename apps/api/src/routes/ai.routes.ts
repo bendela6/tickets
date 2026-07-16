@@ -78,6 +78,10 @@ const createSessionSchema = v.object({
   // Optional for agent sessions when the agent has a default workspace.
   workspaceId: v.optional(v.pipe(v.number(), v.integer())),
   agentId: v.optional(v.pipe(v.number(), v.integer())),
+  // Dispatch wiring (TIX-206): a child session records its parent and the ticket
+  // it is working.
+  parentSessionId: v.optional(v.pipe(v.number(), v.integer())),
+  ticketId: v.optional(v.pipe(v.number(), v.integer())),
   title: v.optional(v.pipe(v.string(), v.minLength(1))),
   command: v.optional(v.string()),
   maxBudgetUsd: v.optional(v.number()),
@@ -198,6 +202,8 @@ export function registerAiRoutes(
           title: body.title ?? agent.name,
           workspaceId: workspace.id,
           agentId: agent.id,
+          parentSessionId: body.parentSessionId ?? null,
+          ticketId: body.ticketId ?? null,
           status: 'starting',
           cwd: workspace.path,
         })

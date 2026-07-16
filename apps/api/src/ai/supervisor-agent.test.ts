@@ -228,6 +228,25 @@ describe('supervisor — agent sessions', () => {
     expect(statuses).toContain('running');
   });
 
+  it('calls onEnd exactly once when the run finishes (worktree teardown)', async () => {
+    const { store } = makeStore();
+    const agent = makeAgentRun();
+    const sup = createSupervisor({ runner: deadRunner, store, schedule: syncSchedule });
+    let cleanups = 0;
+    sup.startAgent({ id: 1, run: agent.run, onEnd: () => void cleanups++ });
+    const { sub } = makeSub();
+    await sup.attach(1, sub, 0);
+
+    agent.emit({ type: 'assistant_text', text: 'done' });
+    await tick();
+    agent.end();
+    await tick();
+    await sup.flush(1);
+    await tick();
+
+    expect(cleanups).toBe(1);
+  });
+
   it('replays exactly the missed messages, once, on reconnect', async () => {
     const { store } = makeStore();
     const agent = makeAgentRun();
