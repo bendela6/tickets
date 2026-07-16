@@ -19,37 +19,29 @@ forever because the in-memory supervisor is empty but the DB is never reconciled
 
 ## Decisions (locked)
 
-- **Activity detail:** *Live + activity pulse*, upgraded to **foreground-process
-  detection** (see below) after the follow-up ask "indicator if some process is running
-  inside the terminal". The server reads the PTY's foreground process (node-pty's
-  `IPty.process`) so we can honestly say **Ready** (at the shell prompt) vs **Running:
-  `<name>`** (a program is in the foreground) — in the list *and* the open terminal — with
-  an output-based pulse layered on for "actively producing output right now".
+- **Activity detail:** *Live + output pulse.* The list shows lifecycle only. The OPEN
+  terminal screen adds a **Running** (busy) vs **Ready** (idle) signal inferred from recent
+  PTY output — a client-side pulse off the output stream, no server change.
 - **Archive rules:** *Archive ends it first.* Archiving a live session ends the PTY, then
   hides it; archived sessions leave the list behind a "Show archived" toggle; unarchive
   restores.
 
-### Foreground-process detection
+### Why not the foreground process name (verified)
 
-node-pty exposes `IPty.process` — the title of the tty's active foreground process. At a
-shell prompt it reads as the shell (`bash`/`zsh`/`pwsh`/`cmd`); while a command runs it
-reads as that program (`npm`, `vim`, `node`, `claude`, …). We poll it per live terminal
-(~1s) and derive:
+The follow-up ask ("indicator if some process is running inside the terminal") was
+investigated with throwaway spikes against a real PTY on Windows:
 
-- **idle / "Ready"** — foreground process is the shell (or matches the session's launch
-  command's shell) and no output in the last ~1s.
-- **running / "Running: `<name>`"** — foreground process differs from the shell; surface the
-  name. An **output pulse** (output within ~1s) renders a subtle active dot on top, so a
-  long-lived TUI like `claude` reads as `claude` steady when waiting and `claude ●` while it
-  streams.
+- **`IPty.process`** — returns the `name` we pass to `spawn` (`"xterm-color"`) and never
+  tracks the foreground child on Windows/ConPTY. Rejected: not doable on the dev platform.
+- **OSC 133 shell integration** (the shell emits a prompt marker) — **verified working on
+  Windows**: a 3s command left a clean ~4s gap between prompt markers, so idle-vs-running
+  and the command name/exit code are recoverable cross-platform. But it requires injecting a
+  shell-specific prompt marker (pwsh/bash/zsh differ), which is exactly the per-shell config
+  the **profiles subsystem (C)** will own.
 
-**Caveats (honest limits):**
-- `IPty.process` is reliable on Linux (the deploy target / container). On Windows dev
-  (ConPTY) it is best-effort and may not always track children; the output pulse is the
-  fallback there.
-- For an interactive tool like Claude Code running *as a raw terminal*, we can show it's the
-  foreground program and pulse on output, but we cannot read its internal idle-vs-thinking
-  state — that precision is exactly what an **agent** session gives you. Noted, not solved.
+**Decision:** ship the *output pulse* now (works everywhere, zero shell config); defer
+accurate **"Running: `<name>`"** via OSC 133 shell integration to the profiles work. The
+spike proved it's doable, so C can adopt it without re-litigating feasibility.
 
 ## Status model
 
@@ -70,13 +62,13 @@ Add two enum values to `session_status`: **`live`**, **`disconnected`**. Agents 
 **Terminal screen display (client)** combines the persisted status with live socket signal:
 
 - socket `conn === 'connecting'` → "Connecting"; `'reconnecting'` → "Reconnecting".
-- status `live` + foreground process ≠ shell → **"Running: `<name>`"** (+ pulse dot when
-  output is flowing); at the prompt → **"Ready"**.
+- status `live` + PTY produced output within ~1s → **"Running"** (with a pulse dot); at rest
+  → **"Ready"**.
 - otherwise the persisted-status label above.
 
-**The list rows have no socket**, but the server persists the current foreground program
-(see below), so a row can still show **Running: `<name>`** vs **Ready** (refreshed on the 4s
-list poll — slight lag is acceptable) alongside the lifecycle label.
+**The list rows have no socket**, so they show the persisted lifecycle label only (Live /
+Disconnected / Exited / Couldn't start / Connecting). No pulse in the list — that's the
+honest limit until shell integration lands and can persist the running command.
 
 Agent pill mapping is unchanged.
 
@@ -95,30 +87,14 @@ Exposed as `store.reconcileOrphaned()` and called once where the app wires the s
 (app.ts). Any session the supervisor genuinely still owns doesn't exist yet at boot (the map
 is built as sessions start), so this is safe: nothing live is running at process start.
 
-## Foreground-process plumbing
-
-- **`PtyHandle`** (`apps/api/src/ai/types.ts`) gains `process(): string` — the local runner
-  returns node-pty's `proc.process`; fakes in tests return a stub they can drive.
-- **Supervisor:** per live terminal, a ~1s poll reads `handle.process()` and tracks
-  `{ foreground: string | null, busy: boolean }` on the `RunningSession` (foreground = the
-  program name when it differs from the session's shell, else null; busy = output within the
-  window). On a **change**, it (a) broadcasts a new `activity` frame and (b) persists the
-  foreground via `store.setForeground(id, name | null)` — writes happen only on transitions,
-  not every poll. The poll is cleared in `finish()`.
-- **New `ServerFrame`:** `{ type: 'activity'; foreground: string | null; busy: boolean }`.
-  Purely additive to the frame union; existing clients ignore unknown frames.
-- The shell base name comes from the session's launch command (or the workspace default
-  shell); comparison is on the process basename, case-insensitively.
-
 ## Archive
 
-Mirror the existing workspace/agent pattern.
+Mirror the existing workspace/agent pattern (both already use `archived_at` + an `isNull`
+list filter + a PATCH `archived` boolean).
 
-- **DB:** add nullable `archived_at` timestamp AND nullable `foreground_process` text to
-  `ai_sessions`.
+- **DB:** add nullable `archived_at` timestamp to `ai_sessions`.
 - **Store:** `setArchived(sessionId, archived: boolean)` (sets/clears `archived_at`);
-  `setForeground(sessionId, name: string | null)` (sets `foreground_process`);
-  `reconcileOrphaned()` (the startup UPDATE above, and clears `foreground_process`).
+  `reconcileOrphaned()` (the startup UPDATE above).
 - **Routes:**
   - `GET /api/ai/sessions` — exclude `archived_at IS NOT NULL` unless `?archived=true`.
   - `POST /api/ai/sessions/:id/archive` — if `supervisor.has(id)`, `supervisor.stop(id)`
@@ -129,8 +105,8 @@ Mirror the existing workspace/agent pattern.
 ## Supervisor change
 
 Terminal `start()` persists **`live`** instead of `running` and broadcasts
-`{ type: 'status', status: 'live' }`. Add `store` support: reuse `setStatus(id, 'live')`
-(drop the terminal-specific `markRunning` call). Agent `startAgent()` is unchanged.
+`{ type: 'status', status: 'live' }` (reuse `store.setStatus(id, 'live')`, dropping the
+terminal `markRunning` call). Agent `startAgent()` is unchanged. No new frame, no poll.
 
 ## Web
 
@@ -140,39 +116,39 @@ Terminal `start()` persists **`live`** instead of `running` and broadcasts
   mapping (table above); default (no kind / agent) keeps today's mapping. New tones: `live`
   → running/green tone; `disconnected` → warn/amber; terminal `failed` → danger "Couldn't
   start".
-  - `AiSession` also gains `foregroundProcess: string | null`.
-- **Activity frame:** `use-session-socket` handles the new `activity` frame and exposes
-  `{ foreground, busy }`. The terminal screen composes the display status from
-  `(conn, status, foreground, busy)` → a pure `terminalDisplay(...)` helper returning the
-  pill label + tone + pulse, so the mapping is unit-tested without a socket.
+- **Output pulse (terminal screen only):** a pure `useTerminalActivity()` hook — fed each
+  output chunk (the screen already receives them via the socket's `onData`), returns `busy`
+  true for ~1s after the last chunk (timer-based, cleared on unmount). A pure
+  `terminalDisplay(conn, status, busy)` returns the pill label + tone + pulse for the whole
+  matrix, so the mapping is unit-tested without a socket.
 - **List + panels:** `useAiSessions({ archived })` param; Terminals/Agents panels get a
-  "Show archived" toggle (off by default) and pass it through. `SessionList` terminal rows
-  show **Running: `<name>`** vs **Ready** from `session.foregroundProcess`, plus an
-  **Archive**/**Unarchive** affordance (hover action). The session header ⋯ menu gains
+  "Show archived" toggle (off by default) and pass it through. Each `SessionList` row gets
+  an **Archive**/**Unarchive** affordance (hover action). The session header ⋯ menu gains
   **Archive** beside End session.
 - `useArchiveSession` / `useUnarchiveSession` mutations invalidate `['ai','sessions']`.
 
 ## Testing
 
 - **db:** migration applies on the scratch DB (existing harness); `archived_at` present;
-  enum has the new values.
-- **api:** terminal start persists `live`; `reconcileOrphaned` flips orphans to
-  `disconnected` and stamps `ended_at`; list excludes archived unless `?archived=true`;
-  archive of a live session calls `supervisor.stop` then sets `archived_at`; unarchive
-  clears it.
-- **api:** foreground poll emits an `activity` frame + `setForeground` on a
-  shell→program→shell transition (fake PtyHandle whose `process()` the test drives); no
-  write while it stays put.
-- **web:** `SessionStatusPill` label/tone per (kind,status) incl. the terminal table;
-  `terminalDisplay(conn,status,foreground,busy)` returns the right label/tone/pulse across
-  Ready / Running:name / Connecting / Reconnecting / Disconnected / Exited.
+  enum has the new `live`/`disconnected` values.
+- **api:** terminal start persists `live` (not `running`); `reconcileOrphaned` flips orphans
+  to `disconnected` and stamps `ended_at`, leaves already-`exited` rows untouched; list
+  excludes archived unless `?archived=true`; archive of a live session calls
+  `supervisor.stop` then sets `archived_at`; unarchive clears it.
+- **web:** `SessionStatusPill` label/tone per (kind,status) incl. the terminal table (agent
+  mapping unchanged = regression guard); `terminalDisplay(conn,status,busy)` returns the
+  right label/tone/pulse across Ready / Running / Connecting / Reconnecting / Disconnected /
+  Exited / Couldn't-start; `useTerminalActivity` goes busy on a chunk and clears after the
+  window (fake timers).
 - Full suites stay green; typecheck + build green.
+- **Manual smoke (dev stack):** open a terminal, run `sleep 3` → pill pulses **Running**
+  then settles **Ready**; restart the API under a live terminal → it flips to
+  **Disconnected** (not stuck "running"); Archive hides it, Show-archived reveals it,
+  Unarchive restores.
 
 ## Non-goals
 
-- Shell-integration (OSC 133) prompt/command markers — foreground detection uses
-  `IPty.process`, the output pulse uses output timing.
-- Reading an interactive tool's internal idle/thinking state from a raw terminal (that's the
-  agent session's job).
-- No change to the agent status model or dispatch. The socket frame union gains one additive
-  `activity` frame; no existing frame changes.
+- **Foreground command name / accurate idle-vs-running** ("Running: `npm`") — deferred to
+  the profiles subsystem via OSC 133 shell integration (feasibility already verified).
+- Shell-integration prompt injection of any kind in this task.
+- No change to the agent status model, the socket frame union, or dispatch.
