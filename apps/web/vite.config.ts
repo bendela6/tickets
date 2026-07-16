@@ -12,6 +12,9 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:4600',
+        // Proxy WebSocket upgrades too (the AI session socket lives under /api).
+        // Without this the upgrade is proxied as a plain GET and never opens.
+        ws: true,
       },
     },
   },
