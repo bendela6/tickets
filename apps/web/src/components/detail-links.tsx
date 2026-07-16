@@ -8,7 +8,7 @@ import { cn } from '../ui/cn';
 import { Combobox } from '../ui/combobox';
 import type { ComboOption } from '../ui/combobox-list';
 import { Input } from '../ui/input';
-import { TicketKey } from '../ui/ticket-key';
+import { ItemKey } from '../ui/item-key';
 import type { BoardIndexes } from '../utils/index-board';
 
 // Direction is folded into the chip text: outgoing "label →", incoming
@@ -135,7 +135,7 @@ export function DetailLinks({
                   className="shrink-0"
                   onClick={() => onOpenItem(other.number)}
                 >
-                  <TicketKey
+                  <ItemKey
                     prefix={prefix}
                     number={other.number}
                     className="text-[11px] hover:text-accent"

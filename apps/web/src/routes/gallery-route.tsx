@@ -21,7 +21,7 @@ import { StatusBadge } from '../ui/status-badge';
 import { StatusSelect, type StatusOption } from '../ui/status-select';
 import { Switch } from '../ui/switch';
 import { Textarea } from '../ui/textarea';
-import { TicketKey } from '../ui/ticket-key';
+import { ItemKey } from '../ui/item-key';
 import { ToastProvider, useToast } from '../ui/toast';
 import { Tooltip, TooltipProvider } from '../ui/tooltip';
 import { TypeBadge } from '../ui/type-badge';
@@ -307,8 +307,8 @@ function GalleryScreen() {
               <TypeBadge label="Task" />
               <TypeBadge label="Bug" />
               <TypeBadge label="Subtask" />
-              <TicketKey prefix="CORE" number={128} />
-              <TicketKey prefix="WEB" number={9} muted />
+              <ItemKey prefix="CORE" number={128} />
+              <ItemKey prefix="WEB" number={9} muted />
               <Avatar name="Mara K." kind="human" />
               <Avatar name="Mara K." kind="human" size="md" />
               <Avatar name="claude-worker" kind="agent" />

@@ -16,7 +16,7 @@ function navItemClasses(active: boolean) {
 
 // The application frame per docs/design/01-shell-home.html: fixed 236px
 // sidebar (nav, projects, actor footer) + scrollable main. Below md the
-// sidebar collapses into a top bar (☰ menu · logo · ＋ new ticket) and the
+// sidebar collapses into a top bar (☰ menu · logo · ＋ new item) and the
 // same sidebar content opens as a slide-over panel. Screens render their own
 // padding inside `children`.
 export function AppShell({
@@ -80,7 +80,7 @@ export function AppShell({
         onClick={handleNewTicket}
         className="mb-3.5 h-8.5 rounded-[8px] bg-accent font-sans text-ui font-medium text-on-accent hover:bg-accent-hover"
       >
-        ＋ New ticket
+        ＋ New item
       </button>
 
       <nav className="flex flex-col gap-0.5">
@@ -109,7 +109,7 @@ export function AppShell({
               className={navItemClasses(project.key === activeProjectKey)}
             >
               <span className="rounded-[4px] bg-inset px-1.25 py-0.5 font-mono text-[10px] font-medium text-ink-2">
-                {project.ticketPrefix}
+                {project.itemPrefix}
               </span>
               <span className="flex-1 truncate">{project.name}</span>
               <span className="inline-flex h-0.75 w-6.5 overflow-hidden rounded-[2px] bg-hairline">
@@ -152,7 +152,7 @@ export function AppShell({
 
   return (
     <div className="flex h-screen flex-col bg-app font-sans text-ink md:flex-row">
-      {/* Mobile top bar (below md): menu · logo · spacer · new ticket. */}
+      {/* Mobile top bar (below md): menu · logo · spacer · new item. */}
       <div className="flex h-12 shrink-0 items-center gap-1.5 border-b border-hairline bg-app px-2 md:hidden">
         <button
           type="button"
@@ -169,7 +169,7 @@ export function AppShell({
         <span className="flex-1" />
         <button
           type="button"
-          aria-label="New ticket"
+          aria-label="New item"
           onClick={handleNewTicket}
           className="inline-flex size-9 items-center justify-center rounded-[8px] bg-accent font-sans text-[16px] text-on-accent hover:bg-accent-hover"
         >

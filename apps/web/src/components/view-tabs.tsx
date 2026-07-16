@@ -4,11 +4,12 @@ import type { Board } from '../api/types';
 import { useCreateView } from '../api/use-create-view';
 import { cn } from '../ui/cn';
 import { Input } from '../ui/input';
-import { relativeLabel } from '../ui/relative-date';
 
 // Underline view tabs per docs/design/03-project-board.html lines 99–106:
 // active = medium ink with a 2px accent underline overlapping the hairline,
-// idle = regular ink-2; "＋" creates a view inline.
+// idle = regular ink-2; "＋" creates a view inline. board.views arrives
+// pre-filtered to unarchived views; sorted by id (creation order) since the
+// view record carries no explicit position.
 export function ViewTabs({
   projectKey,
   board,
@@ -23,9 +24,7 @@ export function ViewTabs({
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
 
-  const views = board.views
-    .filter((view) => !view.archivedAt)
-    .sort((left, right) => left.position - right.position);
+  const views = [...board.views].sort((left, right) => left.id - right.id);
   const active = views.find((view) => view.id === activeViewId) ?? null;
 
   return (
@@ -87,11 +86,7 @@ export function ViewTabs({
         </button>
       )}
       <span className="flex-1" />
-      {active ? (
-        <span className="py-2 font-mono text-[11px] text-ink-3">
-          view saved · created {relativeLabel(active.createdAt, new Date())}
-        </span>
-      ) : null}
+      {active ? <span className="py-2 font-mono text-[11px] text-ink-3">view saved</span> : null}
     </div>
   );
 }
