@@ -314,6 +314,45 @@ describe('AI routes', () => {
     expect(agentStarted.at(-1)).toMatchObject({ id: session.id, maxBudgetUsd: 5 });
   });
 
+  test('a dispatched agent session records parent_session_id', async () => {
+    const workspaceId = (
+      await app.inject({
+        method: 'POST',
+        url: '/api/ai/workspaces',
+        payload: { name: 'dispatch-ws', path: tmpdir() },
+      })
+    ).json().id;
+    const agent = (
+      await app.inject({
+        method: 'POST',
+        url: '/api/ai/agents',
+        payload: {
+          key: 'dispatchee',
+          name: 'Dispatchee',
+          providerKey: 'claude',
+          model: 'claude-opus-4-8',
+          defaultWorkspaceId: workspaceId,
+        },
+      })
+    ).json();
+    // A parent session to hang the child off.
+    const parent = (
+      await app.inject({
+        method: 'POST',
+        url: '/api/ai/sessions',
+        payload: { kind: 'agent', agentId: agent.id },
+      })
+    ).json();
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/ai/sessions',
+      payload: { kind: 'agent', agentId: agent.id, parentSessionId: parent.id },
+    });
+    expect(res.statusCode).toBe(201);
+    expect(res.json()).toMatchObject({ parentSessionId: parent.id });
+  });
+
   test('an agent session without a workspace (no default, none passed) is a 400', async () => {
     const agent = (
       await app.inject({

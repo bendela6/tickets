@@ -33,12 +33,16 @@ export interface StartSpec {
   env?: Record<string, string>;
   cols?: number;
   rows?: number;
+  // Called once when the session reaches a terminal state (exit/failure) — used
+  // to tear down a dispatched run's git worktree (TIX-206).
+  onEnd?: () => void | Promise<void>;
 }
 
 export interface StartAgentSpec {
   id: SessionId;
   run: AgentRun;
   maxBudgetUsd?: number;
+  onEnd?: () => void | Promise<void>;
 }
 
 export interface Supervisor {
@@ -91,6 +95,8 @@ interface RunningSession {
   pending: Map<Subscriber, ServerFrame[]>;
   costUsd: number;
   maxBudgetUsd?: number;
+  onEnd?: () => void | Promise<void>;
+  ended: boolean;
 }
 
 function recordToFrame(record: SeqRecord): ServerFrame {
@@ -167,6 +173,11 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     rs.exitCode = exitCode;
     await store.finishSession(rs.id, status, exitCode);
     broadcast(rs, { type: 'status', status, exitCode });
+    // Fire the teardown hook exactly once (worktree cleanup for a dispatch).
+    if (!rs.ended) {
+      rs.ended = true;
+      if (rs.onEnd) await Promise.resolve(rs.onEnd()).catch(() => {});
+    }
   }
 
   function newSession(id: SessionId, kind: SessionKind, handle: PtyHandle | AgentRun): RunningSession {
@@ -183,6 +194,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       subscribers: new Set(),
       pending: new Map(),
       costUsd: 0,
+      ended: false,
     };
   }
 
@@ -267,6 +279,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
         rows: spec.rows ?? 24,
       });
       const rs = newSession(spec.id, 'terminal', handle);
+      rs.onEnd = spec.onEnd;
       sessions.set(spec.id, rs);
       void store.markRunning(spec.id);
       broadcast(rs, { type: 'status', status: 'running' });
@@ -276,6 +289,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     startAgent(spec) {
       const rs = newSession(spec.id, 'agent', spec.run);
       rs.maxBudgetUsd = spec.maxBudgetUsd;
+      rs.onEnd = spec.onEnd;
       sessions.set(spec.id, rs);
       void store.markRunning(spec.id);
       broadcast(rs, { type: 'status', status: 'running' });
