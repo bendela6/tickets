@@ -9,6 +9,11 @@ import { itemComment } from './item/comment';
 beforeEach(resetDb);
 afterAll(resetDb);
 
+// NOTE: testDb is created with `{ max: 1 }` (see ../test/db.ts), so these 6
+// concurrent commands serialize at the connection level and never actually
+// race on nextSeq() — this test only verifies the success-path invariant
+// (no 500s, unique seqs). It is NOT a deterministic regression test for the
+// stream-seq retry; that lives in run-command-retry.test.ts.
 it('concurrent comments on one item all succeed (no 500 from a seq collision)', async () => {
   const fx = await seedFixture();
   const item = await runCommand(testDb, itemCreate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
