@@ -132,6 +132,31 @@ export function AppShell({
 
       <span className="flex-1" />
 
+      {(() => {
+        const settingsProjectKey = activeProjectKey ?? projectList[0]?.key;
+        if (!settingsProjectKey) {
+          return (
+            <div
+              className={cn(navItemClasses(false), 'mb-2 cursor-default opacity-60')}
+              title="Settings — create a project first"
+            >
+              <span aria-hidden>⚙</span>
+              <span className="flex-1">Settings</span>
+            </div>
+          );
+        }
+        const onSettings = Boolean(matchRoute({ to: '/p/$projectKey/settings' }));
+        return (
+          <Link
+            to="/p/$projectKey/settings"
+            params={{ projectKey: settingsProjectKey }}
+            className={cn(navItemClasses(onSettings), 'mb-2')}
+          >
+            <span aria-hidden>⚙</span>
+            <span className="flex-1">Settings</span>
+          </Link>
+        );
+      })()}
       <div className="flex items-center gap-2 border-t border-hairline pt-2.5">
         <ActorMenu />
         <button
