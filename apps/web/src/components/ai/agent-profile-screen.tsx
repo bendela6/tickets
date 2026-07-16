@@ -39,7 +39,7 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
     return (
       <div className="mx-auto max-w-4xl px-6 py-7">
         <p className="font-sans text-ui text-ink-2">Agent not found.</p>
-        <Link to="/ai/agents" className="font-sans text-meta text-accent hover:underline">
+        <Link to="/agents/personas" className="font-sans text-meta text-accent hover:underline">
           ← Agents
         </Link>
       </div>
@@ -63,7 +63,7 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
         <Avatar name={agent.name} kind="agent" size="md" className="size-11 text-[15px]" />
         <div className="flex-1">
           <div className="flex items-center gap-2 font-mono text-meta text-ink-3">
-            <Link to="/ai/agents" className="hover:text-ink-2">
+            <Link to="/agents/personas" className="hover:text-ink-2">
               Agents
             </Link>
             <span>/</span>

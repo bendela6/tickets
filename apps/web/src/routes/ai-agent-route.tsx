@@ -14,6 +14,6 @@ function AiAgentPage() {
 
 export const aiAgentRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/ai/agents/$agentId',
+  path: '/agents/personas/$agentId',
   component: AiAgentPage,
 });
