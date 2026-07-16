@@ -11,7 +11,9 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:4600',
+        // Defaults to the standard dev API; override with API_PROXY_TARGET to
+        // point at an isolated stack (e.g. a second worktree on another port).
+        target: process.env.API_PROXY_TARGET ?? 'http://127.0.0.1:4600',
         // Proxy WebSocket upgrades too (the AI session socket lives under /api).
         // Without this the upgrade is proxied as a plain GET and never opens.
         ws: true,
