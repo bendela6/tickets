@@ -29,3 +29,17 @@ export const viewCreated = cfg('view.created', 'view',
   v.object({ projectId: v.number(), name: v.string() }));
 export const viewUpdated = cfg('view.updated', 'view',
   v.object({ changes: v.record(v.string(), v.unknown()) }));
+export const typeCreated = cfg('type.created', 'type',
+  v.object({ schemeId: v.number(), key: v.string(), label: v.string() }));
+export const typeUpdated = cfg('type.updated', 'type',
+  v.object({ changes: v.record(v.string(), v.unknown()) }));
+export const typeChildTypesSet = cfg('type.child_types_set', 'type',
+  v.object({ childTypeIds: v.array(v.number()) }));
+export const fieldUnplaced = cfg('field.unplaced', 'field',
+  v.object({ itemTypeId: v.number() }));
+export const placementUpdated = cfg('placement.updated', 'field',
+  v.object({ itemTypeId: v.number(), changes: v.record(v.string(), v.unknown()) }));
+export const linkTypeUpdated = cfg('link_type.updated', 'link_type',
+  v.object({ changes: v.record(v.string(), v.unknown()) }));
+export const linkTypeTargetTypesSet = cfg('link_type.target_types_set', 'link_type',
+  v.object({ targetTypeIds: v.array(v.number()) }));
