@@ -1,7 +1,9 @@
-// Create/edit a zone or subgroup. Colour is shown only in edit mode: it writes
-// straight through actions.setColors (the same override map ColorsForm uses),
-// live on every change — a brand-new group has nothing to override yet, so a
-// create-mode swatch would key a colour to an id that might never be saved.
+// Create/edit a group. A group is a subgroup exactly when it has a parent —
+// that's the only distinction, surfaced as a single Parent selector (no parent =
+// a root group). Colour is shown only in edit mode: it writes straight through
+// actions.setColors (the same override map ColorsForm uses), live on every
+// change — a brand-new group has nothing to override yet, so a create-mode
+// swatch would key a colour to an id that might never be saved.
 
 import { useState } from 'react';
 
@@ -24,6 +26,35 @@ function slugify(name: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+// Groups valid as a parent for `selfId`, in tree order (roots first, each
+// followed by its children indented by depth) — everything EXCEPT `selfId` and
+// its descendants, which would form a cycle. `selfId` is undefined when
+// creating a brand-new group (nothing to exclude yet).
+function orderedParentOptions(model: Model, selfId?: string): { id: string; label: string }[] {
+  const blocked = new Set<string>();
+  if (selfId) {
+    blocked.add(selfId);
+    for (let grew = true; grew; ) {
+      grew = false;
+      for (const g of model.groups) {
+        if (g.parent != null && blocked.has(g.parent) && !blocked.has(g.id)) {
+          blocked.add(g.id);
+          grew = true;
+        }
+      }
+    }
+  }
+  const out: { id: string; label: string }[] = [];
+  const walk = (parentId: string | null, depth: number) => {
+    for (const g of model.groups.filter((x) => (x.parent ?? null) === parentId).sort((a, b) => a.order - b.order)) {
+      if (!blocked.has(g.id)) out.push({ id: g.id, label: `${'— '.repeat(depth)}${g.label}` });
+      walk(g.id, depth + 1);
+    }
+  };
+  walk(null, 0);
+  return out;
+}
+
 // <EditorModals/> only opens this modal once a model is loaded, but the very
 // first render of a test harness (or a boundary re-load race in the real app)
 // can catch model still null — bail rather than crash. The hooks that need a
@@ -41,9 +72,13 @@ function GroupModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   const isEdit = existing != null;
 
   const [name, setName] = useState(existing?.label ?? '');
-  const [isSub, setIsSub] = useState(existing ? existing.parent != null : false);
-  const topZones = model.groups.filter((g) => !g.parent && g.id !== id);
-  const [parent, setParent] = useState<string | null>(existing?.parent ?? topZones[0]?.id ?? null);
+  // A group with no parent is a root group; set a parent and it's a subgroup.
+  // Nesting is unbounded (a subgroup can parent another), so any group is a
+  // valid parent EXCEPT this group itself and its own descendants — nesting a
+  // group under one of its descendants would form a cycle. Options are listed
+  // in tree order, indented by depth, so the hierarchy reads at a glance.
+  const parentOptions = orderedParentOptions(model, id);
+  const [parent, setParent] = useState<string | null>(existing?.parent ?? null);
   const [localError, setLocalError] = useState<string | null>(null);
 
   const groupId = isEdit ? existing!.id : slugify(name);
@@ -64,7 +99,7 @@ function GroupModalForm({ model, id, onClose }: { model: Model; id?: string; onC
     setLocalError(null);
     const edit = {
       kind: 'upsertGroup' as const,
-      group: { id: groupId, label: name.trim(), parent: isSub ? parent : null },
+      group: { id: groupId, label: name.trim(), parent },
     };
     actions.applyModelEdit(edit);
     try {
@@ -106,35 +141,21 @@ function GroupModalForm({ model, id, onClose }: { model: Model; id?: string; onC
       </label>
 
       <label className={label}>
-        Id
-        <input className={cn(field, 'text-gray-400')} value={groupId} disabled readOnly />
+        Parent
+        <select
+          aria-label="Parent group"
+          className={field}
+          value={parent ?? ''}
+          onChange={(e) => setParent(e.target.value || null)}
+        >
+          <option value="">— none (root group) —</option>
+          {parentOptions.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.label}
+            </option>
+          ))}
+        </select>
       </label>
-
-      <fieldset className={label}>
-        <legend className="mb-1">Kind</legend>
-        <label className="flex items-center gap-2 text-sm text-gray-50">
-          <input type="radio" name="kind" checked={!isSub} onChange={() => setIsSub(false)} />
-          Zone
-        </label>
-        <label className="flex items-center gap-2 text-sm text-gray-50">
-          <input type="radio" name="kind" checked={isSub} disabled={topZones.length === 0} onChange={() => setIsSub(true)} />
-          Subgroup
-        </label>
-        {isSub && (
-          <select
-            aria-label="Parent zone"
-            className={cn(field, 'mt-1')}
-            value={parent ?? ''}
-            onChange={(e) => setParent(e.target.value)}
-          >
-            {topZones.map((z) => (
-              <option key={z.id} value={z.id}>
-                {z.label}
-              </option>
-            ))}
-          </select>
-        )}
-      </fieldset>
 
       {id && <ColorRow model={model} id={id} colors={ui.colors} onChange={actions.setColors} />}
 

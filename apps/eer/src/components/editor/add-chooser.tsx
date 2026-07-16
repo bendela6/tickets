@@ -1,9 +1,8 @@
-// Chooser step of the "+ Add" flow: zone / subgroup / table, each opening the
-// group or table modal in create mode. Design note (see task report): the
-// EditorModal union's `group` variant carries only an optional edit-mode id,
-// so "Zone" and "Subgroup" both open the same create-mode GroupModal — its own
-// kind radio (defaulting to zone) is where the user actually picks one. This
-// keeps the union verbatim rather than widening it for a cosmetic default.
+// Chooser step of the "+ Add" flow: group, table, or enum — each opening its
+// modal in create mode. A group is a group whether or not it has a parent —
+// root vs subgroup is chosen by the Parent selector inside GroupModal, so there
+// is one "Group" entry here, not separate Zone/Subgroup ones. An enum is a
+// model-level type (no group needed), so its entry is always enabled.
 
 import { useDiagramModelOrNull } from '../../state/diagram-context';
 import { cn } from '../../ui/cn';
@@ -18,34 +17,27 @@ const option = cn(
 export function AddChooser({ onClose }: { onClose: () => void }) {
   const model = useDiagramModelOrNull();
   const { openModal } = useEditor();
-  const hasZone = !!model?.groups.some((g) => !g.parent);
   const hasGroup = !!model?.groups.length;
 
   return (
     <Modal title="Add to the model" onClose={onClose}>
       <button type="button" className={option} onClick={() => openModal({ kind: 'group' })}>
-        <span className="text-sm font-medium text-gray-50">Zone</span>
-        <span className="text-xs text-gray-400">A top-level group of tables</span>
-      </button>
-      <button
-        type="button"
-        className={option}
-        disabled={!hasZone}
-        title={hasZone ? undefined : 'Create a zone first'}
-        onClick={() => openModal({ kind: 'group' })}
-      >
-        <span className="text-sm font-medium text-gray-50">Subgroup</span>
-        <span className="text-xs text-gray-400">Nested inside a zone</span>
+        <span className="text-sm font-medium text-gray-50">Group</span>
+        <span className="text-xs text-gray-400">A group of tables (nest it under another to make a subgroup)</span>
       </button>
       <button
         type="button"
         className={option}
         disabled={!hasGroup}
-        title={hasGroup ? undefined : 'Create a zone first'}
+        title={hasGroup ? undefined : 'Create a group first'}
         onClick={() => openModal({ kind: 'table' })}
       >
         <span className="text-sm font-medium text-gray-50">Table</span>
         <span className="text-xs text-gray-400">A new entity</span>
+      </button>
+      <button type="button" className={option} onClick={() => openModal({ kind: 'enum' })}>
+        <span className="text-sm font-medium text-gray-50">Enum</span>
+        <span className="text-xs text-gray-400">A named set of values columns can use as a type</span>
       </button>
     </Modal>
   );

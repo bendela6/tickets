@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="width:880px;display:flex;flex-direction:column;gap:14px;{{tok}}">
+
+  <!-- state 1 · no agent yet -->
+  <div style="border:1px solid var(--bd);border-radius:12px;background:var(--rs);box-shadow:var(--shsm);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:9px;padding:13px 18px;border-bottom:1px solid var(--bd)">
+      <span style="font:500 12px 'IBM Plex Mono',monospace;background:var(--in);border-radius:5px;padding:3px 7px;color:var(--f1)">TIX-155</span>
+      <span style="height:20px;padding:0 8px;border-radius:5px;border:1px solid var(--bd);font:500 11px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center;gap:5px"><span style="width:5px;height:5px;background:var(--f3);border-radius:50%"></span>Task</span>
+      <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">items-core</span>
+      <span style="flex:1"></span>
+      <span style="height:28px;padding:0 11px;border-radius:7px;border:1px dashed var(--bs);background:var(--bg);color:var(--f2);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px;cursor:pointer" style-hover="border-color:var(--ac);color:var(--ac)"><span style="width:14px;height:14px;border-radius:4px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:500 8px 'IBM Plex Mono',monospace">✳</span>＋ Put an agent on this</span>
+      <span style="width:28px;height:28px;border-radius:7px;border:1px solid var(--bd);display:inline-flex;align-items:center;justify-content:center;color:var(--f2)">⋯</span>
+    </div>
+    <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px">
+      <div style="font:600 18px/1.35 'IBM Plex Sans',sans-serif;color:var(--f1)">Saved-view sharing across projects</div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <span style="height:24px;padding:0 9px;border-radius:6px;background:var(--kts);color:var(--kt);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--kt)"></span>Backlog</span>
+        <span style="display:inline-flex;align-items:center;gap:7px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="width:18px;height:18px;border-radius:50%;border:1.5px dashed var(--bs);display:inline-flex"></span>Unassigned</span>
+        <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">picking the action opens New session pre-filled with this ticket</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- state 2 · an agent is working it -->
+  <div style="border:1px solid var(--bd);border-radius:12px;background:var(--rs);box-shadow:var(--shsm);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:9px;padding:13px 18px;border-bottom:1px solid var(--bd)">
+      <span style="font:500 12px 'IBM Plex Mono',monospace;background:var(--in);border-radius:5px;padding:3px 7px;color:var(--f1)">TIX-153</span>
+      <span style="height:20px;padding:0 8px;border-radius:5px;border:1px solid var(--bd);font:500 11px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center;gap:5px"><span style="width:5px;height:5px;background:var(--f3);border-radius:50%"></span>Task</span>
+      <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">items-core</span>
+      <span style="flex:1"></span>
+      <span style="height:28px;padding:0 5px 0 10px;border-radius:7px;border:1px solid var(--kb);background:var(--kbs);display:inline-flex;align-items:center;gap:8px;cursor:pointer">
+        <span style="display:inline-flex;align-items:center;gap:6px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f1)"><span style="width:16px;height:16px;border-radius:4px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 7px 'IBM Plex Mono',monospace">CO</span>Coder · <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">#49</span></span>
+        <span style="height:20px;padding:0 7px;border-radius:5px;background:var(--kb);color:var(--onkb);font:600 10px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:4px;animation:aipulse 1.8s ease-out infinite"><span style="width:6px;height:6px;background:var(--onkb);transform:rotate(45deg);border-radius:1px"></span>awaiting input</span>
+        <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--ac)">open ↗</span>
+      </span>
+      <span style="width:28px;height:28px;border-radius:7px;border:1px solid var(--bd);display:inline-flex;align-items:center;justify-content:center;color:var(--f2)">⋯</span>
+    </div>
+    <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px">
+      <div style="font:600 18px/1.35 'IBM Plex Sans',sans-serif;color:var(--f1)">Timeline renderer</div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <span style="height:24px;padding:0 9px;border-radius:6px;background:var(--kas);color:var(--ka);font:500 12px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--ka);background:linear-gradient(90deg,var(--ka) 50%,transparent 50%)"></span>In progress</span>
+        <span style="display:inline-flex;align-items:center;gap:7px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f1)"><span style="width:18px;height:18px;border-radius:5px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 8px 'IBM Plex Mono',monospace">CO</span>Coder <span style="height:14px;padding:0 5px;border-radius:3px;background:var(--acs);color:var(--ac);font:500 9px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">AGENT</span></span>
+        <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">assignee = the persona · pill = its live session, dispatched by #47</span>
+      </div>
+      <div style="display:flex;gap:10px;border-top:1px solid var(--bd);padding-top:12px">
+        <span style="width:24px;height:24px;border-radius:7px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 9px 'IBM Plex Mono',monospace;flex:none">CO</span>
+        <div style="flex:1">
+          <div style="display:flex;align-items:baseline;gap:7px;margin-bottom:2px"><span style="font:500 13px 'IBM Plex Sans',sans-serif;color:var(--f1)">Coder</span><span style="height:14px;padding:0 5px;border-radius:3px;background:var(--acs);color:var(--ac);font:500 9px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;align-self:center">AGENT</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">from session #49 · 40m ago</span></div>
+          <div style="font:400 13px/1.5 'IBM Plex Sans',sans-serif;color:var(--f1)">Started on the timeline renderer; reusing <span style="font:400 12px 'IBM Plex Mono',monospace;background:var(--in);padding:1px 5px;border-radius:4px">useLogicalFields</span> from the board. Will comment again when typecheck is clean.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:520},&quot;tok&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;}}"></script>
+</body>
+</html>

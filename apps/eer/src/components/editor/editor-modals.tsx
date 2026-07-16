@@ -7,6 +7,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 
 import { AddChooser } from './add-chooser';
 import { EditorContext, type EditorModal } from './editor-context';
+import { EnumModal } from './enum-modal';
 import { ExportModal } from './export-modal';
 import { GroupModal } from './group-modal';
 import { ImportModal } from './import-modal';
@@ -43,6 +44,7 @@ export function EditorModals({ children }: { children: ReactNode }) {
           for B would keep showing A's fields. */}
       {modal?.kind === 'group' && <GroupModal key={`group:${modal.id ?? 'new'}`} id={modal.id} onClose={closeModal} />}
       {modal?.kind === 'table' && <TableModal key={`table:${modal.id ?? 'new'}`} id={modal.id} onClose={closeModal} />}
+      {modal?.kind === 'enum' && <EnumModal key={`enum:${modal.name ?? 'new'}`} name={modal.name} onClose={closeModal} />}
     </EditorContext.Provider>
   );
 }

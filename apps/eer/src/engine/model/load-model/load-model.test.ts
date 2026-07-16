@@ -377,7 +377,7 @@ describe('loadModel — validation', () => {
     expect(errors.some((e) => e.includes('"a.nope" does not exist'))).toBe(true);
   });
 
-  it('flattens too-deep nesting with a warning (one level only)', () => {
+  it('preserves arbitrarily deep nesting (a subgroup can parent another)', () => {
     const { model, warnings } = loadModel({
       groups: [
         { id: 'z', label: 'Z' },
@@ -387,8 +387,25 @@ describe('loadModel — validation', () => {
       entities: [{ id: 'a', group: 'deep', fields: [{ name: 'id', role: 'pk' }] }],
       relationships: [],
     });
-    expect(warnings.some((w) => w.includes('one level'))).toBe(true);
-    expect(model!.groups.find((g) => g.id === 'deep')!.parent).toBeNull();
+    expect(warnings.filter((w) => /nest|level|cycle/.test(w))).toEqual([]);
+    expect(model!.groups.find((g) => g.id === 'deep')!.parent).toBe('s');
+    expect(model!.groups.find((g) => g.id === 's')!.parent).toBe('z');
+  });
+
+  it('detaches a group whose parent chain forms a cycle, with a warning', () => {
+    const { model, warnings } = loadModel({
+      groups: [
+        { id: 'a', label: 'A', parent: 'b' },
+        { id: 'b', label: 'B', parent: 'a' },
+      ],
+      entities: [{ id: 'e', group: 'a', fields: [{ name: 'id', role: 'pk' }] }],
+      relationships: [],
+    });
+    expect(warnings.some((w) => w.includes('cycle'))).toBe(true);
+    // at least one link in the cycle is cut so no group is its own ancestor
+    const a = model!.groups.find((g) => g.id === 'a')!;
+    const b = model!.groups.find((g) => g.id === 'b')!;
+    expect(a.parent === null || b.parent === null).toBe(true);
   });
 
   it('accepts object-shaped endpoints ({ entity, field })', () => {

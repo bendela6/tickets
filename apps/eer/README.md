@@ -21,7 +21,7 @@ the DOM:
   (`diagram-reducer.ts`: model + view + ui) and derives edge geometry (frozen
   mid-gesture, exactly like the legacy live redraw); slice contexts
   (`diagram-context.ts`) so components only re-render for the slice they read; the
-  imperative surface (`DiagramActions`: fit/rearrange/search/runChecks/…) is
+  imperative surface (`DiagramActions`: fit/rearrange/search/…) is
   memoized once and reached via `useDiagramActions()`.
 - `src/engine/` — the framework-agnostic diagram engine (TypeScript), one
   function/module per folder with its own test: `model/` (validate + normalize the
@@ -29,8 +29,8 @@ the DOM:
   Tailwind box model), `layout/` (deterministic group packing, fit/center math), `routing/` (A\*
   obstacle-avoiding orthogonal router: curved / avoid / ortho), `colors/` (zone →
   entity → edge colour inheritance), `focus/` (focus-set selectors: related-to-
-  entity, related-to-group, connected ports, field edges), `search/` (ranked model
-  search), `checks/` (the runnable quality assertions behind Self-check).
+  entity, related-to-group, connected ports, field edges), and `search/` (ranked
+  model search).
 - `src/components/diagram/` — renders the DOM/SVG scene from context: `diagram/`
   (the `.viewport` shell, mounted unconditionally so the gesture hook always has
   an element to bind to), `world/`, `zone-boxes/`, `entity-cards/`, `edges-svg/`.
@@ -132,8 +132,8 @@ that doesn't exist in the built app:
   is never round-tripped back into that shape — the next Save writes the
   current `columns`/`constraints`/`indexes` shape instead.
 - **Layout + colour persistence** — dragging a card/zone or overriding a
-  colour (per-entity/group swatch in `TableModal`/`GroupModal`, or the
-  overview's `ColorsForm`) only changes in-memory state until **Save**;
+  colour (per-entity swatch in `TableModal`, per-zone/subgroup swatches in
+  `GroupModal`) only changes in-memory state until **Save**;
   `serializeModel` writes both the current `x`/`y`/box geometry and the colour
   override map into the same model JSON, so a reload of a saved model
   reproduces layout and colours exactly, not just data.
@@ -191,5 +191,6 @@ absent from a production build.
 `click` entity → focus its relationships · `click` a zone → show only its connections ·
 `hover` a field → light its edges · `click` an edge → isolate it · `Esc` clear.
 Top bar: search, zone/edge filters, **Lines** mode (curved → avoid → ortho), Fit,
-Rearrange, and **Self-check** (also `window.__eer.actions.runChecks()` in dev — the
-dev handle also exposes `getState()`, `getGeometry()`, and `dispatch()`).
+and Rearrange. The right-hand detail panel collapses (chevron) and resizes (drag
+its left edge). In dev, `window.__eer` exposes `getState()`, `getGeometry()`,
+`dispatch()`, and `actions`.
