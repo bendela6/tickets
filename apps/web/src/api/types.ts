@@ -1,250 +1,86 @@
-export interface Project {
-  id: number;
-  key: string;
-  name: string;
-  ticketPrefix: string;
-  createdAt: string;
-}
+export interface Project { id: number; key: string; name: string; schemeId: number; itemPrefix: string; createdAt: string; }
 
 export type UserKind = 'human' | 'agent';
+export interface User { id: number; name: string; email: string | null; kind: UserKind; archivedAt: string | null; }
 
-export interface User {
-  id: number;
-  name: string;
-  email: string | null;
-  kind: UserKind;
+export interface ItemType {
+  id: number; schemeId: number; key: string; label: string;
+  config: { color?: string } & Record<string, unknown>;
   archivedAt: string | null;
-  createdAt: string;
 }
 
-export interface TicketTypeConfig {
-  color?: string;
-}
-
-export interface TicketType {
-  id: number;
-  projectId: number;
-  key: string;
-  label: string;
-  config: TicketTypeConfig;
-  position: number;
+export type FieldType = 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'option' | 'user' | 'json';
+export interface Field {
+  id: number; schemeId: number; key: string; label: string; type: FieldType;
+  config: { multiple?: boolean; workflow?: boolean; format?: string } & Record<string, unknown>;
+  optionSetId: number | null;
   archivedAt: string | null;
-  createdAt: string;
 }
 
-export interface TypeField {
-  ticketTypeId: number;
-  fieldId: number;
-  position: number;
-  required: boolean;
+// A field placed on a type.
+export interface ItemTypeField {
+  itemTypeId: number; fieldId: number; position: number; required: boolean;
+  configOverride: { allowedOptionIds?: number[] } | null;
 }
 
 export type StatusKind = 'todo' | 'active' | 'blocked' | 'done' | 'dropped';
-
-export interface StatusConfig {
-  color?: string;
-  initial?: boolean;
-  description?: string;
-}
-
-export interface Status {
-  id: number;
-  projectId: number;
-  key: string;
-  label: string;
-  kind: StatusKind;
-  config: StatusConfig;
-  position: number;
+export interface Option {
+  id: number; optionSetId: number; value: string; label: string; position: number;
+  kind: StatusKind | null;                       // null for non-workflow options
+  config: { color?: string; icon?: string } & Record<string, unknown>;
   archivedAt: string | null;
-  createdAt: string;
 }
 
 export interface Transition {
-  id: number;
-  fromStatusId: number;
-  toStatusId: number;
-  ticketTypeId: number | null;
-  config: Record<string, unknown>;
+  id: number; fieldId: number; itemTypeId: number | null;
+  fromOptionId: number | null; toOptionId: number;
+  config: { guard?: { requiresComment?: boolean; requiresField?: string } } | null;
 }
 
-export type FieldType =
-  'text' | 'number' | 'date' | 'boolean' | 'json' | 'select' | 'multi_select' | 'status';
+export interface LinkType { id: number; itemTypeId: number; key: string; label: string; inverseLabel: string; directional: boolean; }
+export interface View { id: number; projectId: number; name: string; config: Record<string, unknown>; }
 
-export interface FieldConfig {
-  widget?: string;
-  description?: string;
-}
+export interface Comment { id: number; itemId: number; authorId: number; parentId: number | null; body: string; createdAt: string; }
+export interface ItemLink { id: number; linkTypeId: number; sourceItemId: number; targetItemId: number; createdAt: string; }
 
-export interface FieldOptionConfig {
-  color?: string;
-}
-
-export interface FieldOption {
-  id: number;
-  value: string;
-  label: string;
-  config: FieldOptionConfig;
-  position: number;
-  archivedAt: string | null;
-}
-
-export interface Field {
-  id: number;
-  projectId: number;
-  key: string;
-  label: string;
-  type: FieldType;
-  system: boolean;
-  config: FieldConfig;
-  archivedAt: string | null;
-  createdAt: string;
-  options: FieldOption[];
-}
-
-export interface LinkType {
-  id: number;
-  projectId: number;
-  key: string;
-  label: string;
-  inverseLabel: string;
-  directional: boolean;
-  position: number;
-  archivedAt: string | null;
-}
-
-export interface View {
-  id: number;
-  projectId: number;
-  name: string;
-  config: Record<string, unknown>;
-  position: number;
-  archivedAt: string | null;
-  createdAt: string;
-}
-
-export interface TicketComment {
-  id: number;
-  ticketId: number;
-  authorId: number;
-  body: string;
-  createdAt: string;
-}
-
-export interface TicketLink {
-  id: number;
-  linkTypeId: number;
-  sourceTicketId: number;
-  targetTicketId: number;
-}
-
-export interface BoardTicket {
-  id: number;
-  number: number;
-  typeId: number;
-  parentId: number | null;
-  createdBy: number;
-  archivedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  values: Record<string, unknown>;
-  comments: TicketComment[];
-  links: TicketLink[];
+export interface Item {
+  id: number; number: number; typeId: number; parentId: number | null;
+  createdBy: number; archivedAt: string | null; createdAt: string; updatedAt: string;
+  values: Record<string, unknown>;               // fieldKey -> rendered (option value string, {id,name}, scalar, or array)
+  comments: Comment[]; links: ItemLink[];
 }
 
 export interface Board {
   project: Project;
-  users: User[];
-  types: TicketType[];
-  typeFields: TypeField[];
-  statuses: Status[];
-  transitions: Transition[];
+  types: ItemType[];
   fields: Field[];
+  placements: ItemTypeField[];
+  options: Option[];
+  transitions: Transition[];
   linkTypes: LinkType[];
   views: View[];
-  tickets: BoardTicket[];
+  users: User[];
+  items: Item[];
 }
 
-export interface ListMeta {
-  skip: number;
-  take: number;
-  total: number;
-  sort: string | null;
+export interface ActivityEntry {
+  id: number; itemId: number; eventId: number; kind: string;
+  actorId: number; at: string; correlationId: string; summary: Record<string, unknown>;
 }
 
-export interface TicketEvent {
-  id: number;
-  ticketId: number;
-  actorId: number;
-  actorName: string | null;
-  kind: string;
-  payload: Record<string, unknown>;
-  createdAt: string;
-}
+// The envelope every mutation body carries.
+export interface CommandEnvelope { commandId: string; actorId: number; }
 
-export interface TicketEventsResponse {
-  data: TicketEvent[];
-  meta: ListMeta;
-}
+export interface CreateItemInput { projectKey: string; actorId: number; typeKey: string; parentId?: number | null; values: Record<string, unknown>; }
+export interface PatchItemInput { itemId: number; actorId: number; expectedUpdatedAt: string; parentId?: number | null; archived?: boolean; values?: Record<string, unknown>; }
+export interface CreatedItem { id: number; number: number; typeId: number; parentId: number | null; createdBy: number; archivedAt: string | null; createdAt: string; updatedAt: string; }
+export interface PatchItemResult { id: number; updatedAt: string; }
+export interface CreateCommentInput { itemId: number; actorId: number; body: string; parentId?: number | null; }
+export interface CreateLinkInput { actorId: number; linkTypeKey: string; sourceItemId: number; targetItemId: number; }
+export interface DeleteLinkInput { linkId: number; actorId: number; }
+export interface CreateUserInput { name: string; kind?: UserKind; }
+export interface CreateProjectInput { key: string; name: string; itemPrefix: string; }
 
-export interface UsersResponse {
-  data: User[];
-  meta: ListMeta;
-}
-
-export interface CreatedTicket {
-  id: number;
-  projectId: number;
-  number: number;
-  typeId: number;
-  parentId: number | null;
-  createdBy: number;
-  archivedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PatchTicketResult {
-  id: number;
-  updatedAt: string;
-}
-
-export interface CreateTicketInput {
-  projectKey: string;
-  actorId: number;
-  typeKey: string;
-  parentId?: number | null;
-  values: Record<string, unknown>;
-}
-
-export interface PatchTicketInput {
-  ticketId: number;
-  actorId: number;
-  expectedUpdatedAt: string;
-  typeKey?: string;
-  parentId?: number | null;
-  archived?: boolean;
-  values?: Record<string, unknown>;
-}
-
-export interface CreateCommentInput {
-  ticketId: number;
-  authorId: number;
-  body: string;
-}
-
-export interface CreateLinkInput {
-  actorId: number;
-  linkTypeKey: string;
-  sourceTicketId: number;
-  targetTicketId: number;
-}
-
-export interface DeleteLinkInput {
-  linkId: number;
-  actorId: number;
-}
-
-export interface CreateUserInput {
-  name: string;
-  kind?: UserKind;
-}
+export interface ListMeta { total?: number }
+export interface UsersResponse { data: User[] }
+export interface ProjectsResponse { data: Project[] }
