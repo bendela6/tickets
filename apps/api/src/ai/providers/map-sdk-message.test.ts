@@ -83,4 +83,59 @@ describe('mapSdkMessage', () => {
       ),
     ).toEqual([{ type: 'result', costUsd: 0.42, durationMs: 1234, isError: false }]);
   });
+
+  it('maps result usage into the result event', () => {
+    const events = mapSdkMessage({
+      type: 'result',
+      subtype: 'success',
+      total_cost_usd: 0.12,
+      duration_ms: 3400,
+      is_error: false,
+      usage: {
+        input_tokens: 72000,
+        output_tokens: 1500,
+        cache_read_input_tokens: 60000,
+        cache_creation_input_tokens: 200,
+      },
+    } as never);
+    expect(events).toEqual([
+      {
+        type: 'result',
+        costUsd: 0.12,
+        durationMs: 3400,
+        isError: false,
+        usage: {
+          inputTokens: 72000,
+          outputTokens: 1500,
+          cacheReadTokens: 60000,
+          cacheCreationTokens: 200,
+        },
+      },
+    ]);
+  });
+
+  it('omits usage when the result carries none', () => {
+    const events = mapSdkMessage({
+      type: 'result',
+      subtype: 'success',
+      total_cost_usd: 0.01,
+      duration_ms: 10,
+      is_error: false,
+    } as never);
+    expect(events[0]).not.toHaveProperty('usage');
+  });
+
+  it('defaults missing usage token fields to 0', () => {
+    const events = mapSdkMessage({
+      type: 'result',
+      subtype: 'success',
+      total_cost_usd: 0,
+      duration_ms: 0,
+      is_error: false,
+      usage: { output_tokens: 42 },
+    } as never);
+    expect(events[0]).toMatchObject({
+      usage: { inputTokens: 0, outputTokens: 42, cacheReadTokens: 0, cacheCreationTokens: 0 },
+    });
+  });
 });

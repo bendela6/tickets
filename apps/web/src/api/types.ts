@@ -320,7 +320,18 @@ export type AgentEvent =
   | { type: 'tool_use'; id: string; name: string; input: unknown; parentToolUseId?: string }
   | { type: 'tool_result'; toolUseId: string; content: unknown; isError: boolean }
   | { type: 'permission_request'; id: string; toolName: string; input: unknown }
-  | { type: 'result'; costUsd: number; durationMs: number; isError: boolean }
+  | {
+      type: 'result';
+      costUsd: number;
+      durationMs: number;
+      isError: boolean;
+      usage?: {
+        inputTokens: number;
+        outputTokens: number;
+        cacheReadTokens: number;
+        cacheCreationTokens: number;
+      };
+    }
   | { type: 'error'; message: string };
 
 export type PermissionMode =

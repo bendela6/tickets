@@ -69,15 +69,26 @@ export function mapSdkMessage(msg: SDKMessage): AgentEvent[] {
         return [];
       });
 
-    case 'result':
+    case 'result': {
+      const raw = (msg as unknown as { usage?: Record<string, number> }).usage;
+      const usage = raw
+        ? {
+            inputTokens: raw.input_tokens ?? 0,
+            outputTokens: raw.output_tokens ?? 0,
+            cacheReadTokens: raw.cache_read_input_tokens ?? 0,
+            cacheCreationTokens: raw.cache_creation_input_tokens ?? 0,
+          }
+        : undefined;
       return [
         {
           type: 'result',
           costUsd: msg.total_cost_usd,
           durationMs: msg.duration_ms,
           isError: msg.is_error,
+          ...(usage ? { usage } : {}),
         },
       ];
+    }
 
     default:
       return [];
