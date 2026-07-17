@@ -8,18 +8,30 @@ import newRaw from '../../models/items-platform.json';
 import { columnRoles } from '../engine/model/column-roles';
 import { loadModel } from '../engine/model/load-model';
 
-const digest = (raw: unknown) => {
+// `only` scopes the digest to a set of entity ids. The terminal/agent split
+// added entirely new schemas (core.workdirs, terminal.*, agent.*) that the
+// legacy fixture never had — this test proves the REWRITE of the pre-existing
+// tables preserved their shape, so the new tables are out of its scope (their
+// shape is guarded by model-conformance + the round-trip gate). Passing the
+// legacy entity-id set keeps the comparison to the tables both sides share.
+const digest = (raw: unknown, only?: Set<string>) => {
   const { model, errors } = loadModel(raw);
   expect(errors).toEqual([]);
   const m = model!;
+  const keep = (id: string) => !only || only.has(id);
   return {
-    entities: m.entities.map((e) => e.id).sort(),
+    entities: m.entities.map((e) => e.id).filter(keep).sort(),
     edges: m.relationships
+      .filter((r) => keep(r.source) && keep(r.target))
       .map((r) => `${r.source}.${r.sourceField}->${r.target}.${r.targetField}:${r.cardinality}`)
       .sort(),
-    labels: m.relationships.filter((r) => r.label).map((r) => r.label).sort(),
-    titles: m.entities.flatMap((e) => e.columns.filter((c) => c.title).map((c) => `${e.id}.${c.name}=${c.title!}`)).sort(),
+    labels: m.relationships.filter((r) => r.label && keep(r.source) && keep(r.target)).map((r) => r.label).sort(),
+    titles: m.entities
+      .filter((e) => keep(e.id))
+      .flatMap((e) => e.columns.filter((c) => c.title).map((c) => `${e.id}.${c.name}=${c.title!}`))
+      .sort(),
     badges: m.entities
+      .filter((e) => keep(e.id))
       .flatMap((e) => {
         const roles = columnRoles(e);
         return e.columns.map((c) => `${e.id}.${c.name}:${roles.get(c.name)!.pk ? 'pk' : ''}${roles.get(c.name)!.fk ? 'fk' : ''}`);
@@ -27,6 +39,9 @@ const digest = (raw: unknown) => {
       .sort(),
   };
 };
+
+// The legacy fixture's entity set — the tables the equivalence check covers.
+const legacyIds = new Set((legacyRaw as { entities: { id: string }[] }).entities.map((e) => e.id));
 
 // The eer model moves past the legacy fixture in two intentional waves, both
 // layered here so the assertion still catches any OTHER, unintended divergence.
@@ -78,7 +93,7 @@ const applyTask1Deltas = (d: ReturnType<typeof digest>): ReturnType<typeof diges
 
 describe('seed rewrite', () => {
   it('the new seed is equivalent to the legacy one, plus the known Task 1 DDL-enrichment deltas: same edges, cardinalities, badges and titles otherwise', () => {
-    expect(digest(newRaw)).toEqual(applyTask1Deltas(digest(legacyRaw)));
+    expect(digest(newRaw, legacyIds)).toEqual(applyTask1Deltas(digest(legacyRaw)));
   });
 
   it('the seed has no unknown types and no bare "enum" columns', () => {
