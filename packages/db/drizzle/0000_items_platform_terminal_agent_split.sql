@@ -1,6 +1,81 @@
+CREATE SCHEMA "agent";
+--> statement-breakpoint
+CREATE SCHEMA "core";
+--> statement-breakpoint
+CREATE SCHEMA "terminal";
+--> statement-breakpoint
+CREATE TYPE "agent"."session_status" AS ENUM('starting', 'running', 'idle', 'awaiting_input', 'interrupted', 'exited', 'failed');--> statement-breakpoint
 CREATE TYPE "public"."field_type" AS ENUM('string', 'number', 'boolean', 'date', 'datetime', 'option', 'user', 'json');--> statement-breakpoint
+CREATE TYPE "agent"."permission_mode" AS ENUM('default', 'acceptEdits', 'bypassPermissions', 'plan', 'dontAsk');--> statement-breakpoint
+CREATE TYPE "agent"."permission_status" AS ENUM('pending', 'allowed', 'denied');--> statement-breakpoint
+CREATE TYPE "core"."runner_kind" AS ENUM('local', 'container');--> statement-breakpoint
 CREATE TYPE "public"."status_kind" AS ENUM('todo', 'active', 'blocked', 'done', 'dropped');--> statement-breakpoint
+CREATE TYPE "terminal"."session_status" AS ENUM('starting', 'live', 'disconnected', 'exited', 'failed');--> statement-breakpoint
 CREATE TYPE "public"."user_kind" AS ENUM('human', 'agent');--> statement-breakpoint
+CREATE TABLE "agent"."agents" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"user_id" integer NOT NULL,
+	"key" text NOT NULL,
+	"name" text NOT NULL,
+	"provider_key" text NOT NULL,
+	"model" text NOT NULL,
+	"system_prompt" text,
+	"allowed_tools" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"disallowed_tools" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"permission_mode" "agent"."permission_mode" DEFAULT 'bypassPermissions' NOT NULL,
+	"mcp_servers" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"effort" text,
+	"default_workdir_id" integer,
+	"config" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"archived_at" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "agent_agents_key" UNIQUE("key")
+);
+--> statement-breakpoint
+CREATE TABLE "agent"."messages" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"session_id" integer NOT NULL,
+	"seq" integer NOT NULL,
+	"role" text NOT NULL,
+	"kind" text NOT NULL,
+	"content" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"tool_use_id" text,
+	"parent_tool_use_id" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "agent_messages_session_seq" UNIQUE("session_id","seq")
+);
+--> statement-breakpoint
+CREATE TABLE "agent"."permission_requests" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"session_id" integer NOT NULL,
+	"tool_name" text NOT NULL,
+	"input" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"status" "agent"."permission_status" DEFAULT 'pending' NOT NULL,
+	"decision_reason" text,
+	"decided_by" integer,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"decided_at" timestamp with time zone
+);
+--> statement-breakpoint
+CREATE TABLE "agent"."sessions" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"title" text NOT NULL,
+	"workdir_id" integer NOT NULL,
+	"agent_id" integer,
+	"item_id" integer,
+	"parent_session_id" integer,
+	"status" "agent"."session_status" DEFAULT 'starting' NOT NULL,
+	"provider_session_id" text,
+	"cwd" text,
+	"worktree_path" text,
+	"cost_usd" numeric(10, 4),
+	"started_by" integer,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"ended_at" timestamp with time zone,
+	"archived_at" timestamp with time zone
+);
+--> statement-breakpoint
 CREATE TABLE "commands" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"aggregate_type" text NOT NULL,
@@ -43,7 +118,8 @@ CREATE TABLE "events" (
 	"caused_by" bigint,
 	"depth" integer DEFAULT 0 NOT NULL,
 	"project_id" integer,
-	CONSTRAINT "events_stream_seq" UNIQUE("aggregate_type","aggregate_id","seq")
+	CONSTRAINT "events_stream_seq" UNIQUE("aggregate_type","aggregate_id","seq"),
+	CONSTRAINT "events_item_project" CHECK (aggregate_type <> 'item' OR project_id IS NOT NULL)
 );
 --> statement-breakpoint
 CREATE TABLE "fields" (
@@ -188,7 +264,9 @@ CREATE TABLE "outbox" (
 	"event_id" bigint PRIMARY KEY NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"picked_at" timestamp with time zone,
-	"done_at" timestamp with time zone
+	"done_at" timestamp with time zone,
+	"attempts" integer DEFAULT 0 NOT NULL,
+	"last_error" text
 );
 --> statement-breakpoint
 CREATE TABLE "projects" (
@@ -210,6 +288,28 @@ CREATE TABLE "schemes" (
 	CONSTRAINT "schemes_key_unique" UNIQUE("key")
 );
 --> statement-breakpoint
+CREATE TABLE "terminal"."output" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"session_id" integer NOT NULL,
+	"seq" integer NOT NULL,
+	"data" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "terminal"."sessions" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"title" text NOT NULL,
+	"workdir_id" integer NOT NULL,
+	"cwd" text,
+	"status" "terminal"."session_status" DEFAULT 'starting' NOT NULL,
+	"exit_code" integer,
+	"started_by" integer,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"ended_at" timestamp with time zone,
+	"archived_at" timestamp with time zone
+);
+--> statement-breakpoint
 CREATE TABLE "users" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
@@ -228,6 +328,30 @@ CREATE TABLE "views" (
 	"archived_at" timestamp with time zone
 );
 --> statement-breakpoint
+CREATE TABLE "core"."workdirs" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"project_id" integer,
+	"name" text NOT NULL,
+	"path" text NOT NULL,
+	"runner" "core"."runner_kind" DEFAULT 'local' NOT NULL,
+	"container_name" text,
+	"git_remote" text,
+	"default_branch" text,
+	"config" jsonb,
+	"archived_at" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+ALTER TABLE "agent"."agents" ADD CONSTRAINT "agents_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "agent"."agents" ADD CONSTRAINT "agents_default_workdir_id_workdirs_id_fk" FOREIGN KEY ("default_workdir_id") REFERENCES "core"."workdirs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "agent"."messages" ADD CONSTRAINT "messages_session_id_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "agent"."sessions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "agent"."permission_requests" ADD CONSTRAINT "permission_requests_session_id_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "agent"."sessions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "agent"."permission_requests" ADD CONSTRAINT "permission_requests_decided_by_users_id_fk" FOREIGN KEY ("decided_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "agent"."sessions" ADD CONSTRAINT "sessions_workdir_id_workdirs_id_fk" FOREIGN KEY ("workdir_id") REFERENCES "core"."workdirs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "agent"."sessions" ADD CONSTRAINT "sessions_agent_id_agents_id_fk" FOREIGN KEY ("agent_id") REFERENCES "agent"."agents"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "agent"."sessions" ADD CONSTRAINT "sessions_item_id_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "agent"."sessions" ADD CONSTRAINT "sessions_parent_session_id_sessions_id_fk" FOREIGN KEY ("parent_session_id") REFERENCES "agent"."sessions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "agent"."sessions" ADD CONSTRAINT "sessions_started_by_users_id_fk" FOREIGN KEY ("started_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "commands" ADD CONSTRAINT "commands_actor_id_users_id_fk" FOREIGN KEY ("actor_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "comment_reactions" ADD CONSTRAINT "comment_reactions_comment_id_comments_id_fk" FOREIGN KEY ("comment_id") REFERENCES "public"."comments"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "comment_reactions" ADD CONSTRAINT "comment_reactions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -268,7 +392,13 @@ ALTER TABLE "option_transitions" ADD CONSTRAINT "option_transitions_item_type_id
 ALTER TABLE "options" ADD CONSTRAINT "options_option_set_id_option_sets_id_fk" FOREIGN KEY ("option_set_id") REFERENCES "public"."option_sets"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "outbox" ADD CONSTRAINT "outbox_event_id_events_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "projects" ADD CONSTRAINT "projects_scheme_id_schemes_id_fk" FOREIGN KEY ("scheme_id") REFERENCES "public"."schemes"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "terminal"."output" ADD CONSTRAINT "output_session_id_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "terminal"."sessions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "terminal"."sessions" ADD CONSTRAINT "sessions_workdir_id_workdirs_id_fk" FOREIGN KEY ("workdir_id") REFERENCES "core"."workdirs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "terminal"."sessions" ADD CONSTRAINT "sessions_started_by_users_id_fk" FOREIGN KEY ("started_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "views" ADD CONSTRAINT "views_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "core"."workdirs" ADD CONSTRAINT "workdirs_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "agent_sessions_status_created" ON "agent"."sessions" USING btree ("status","created_at");--> statement-breakpoint
+CREATE INDEX "agent_sessions_parent" ON "agent"."sessions" USING btree ("parent_session_id");--> statement-breakpoint
 CREATE INDEX "comments_item" ON "comments" USING btree ("item_id");--> statement-breakpoint
 CREATE INDEX "events_correlation" ON "events" USING btree ("correlation_id");--> statement-breakpoint
 CREATE INDEX "events_command" ON "events" USING btree ("aggregate_type","aggregate_id","command_id");--> statement-breakpoint
@@ -291,4 +421,5 @@ CREATE INDEX "iv_field_option" ON "item_values" USING btree ("field_id","option_
 CREATE INDEX "iv_field_user" ON "item_values" USING btree ("field_id","value_user_id");--> statement-breakpoint
 CREATE INDEX "items_project_type" ON "items" USING btree ("project_id","type_id");--> statement-breakpoint
 CREATE INDEX "items_parent" ON "items" USING btree ("parent_id");--> statement-breakpoint
-CREATE INDEX "outbox_pending" ON "outbox" USING btree ("event_id") WHERE done_at IS NULL;
+CREATE INDEX "outbox_pending" ON "outbox" USING btree ("event_id") WHERE done_at IS NULL;--> statement-breakpoint
+CREATE INDEX "terminal_sessions_status_created" ON "terminal"."sessions" USING btree ("status","created_at");

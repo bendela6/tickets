@@ -61,11 +61,11 @@ export const SCHEMA_GROUPS: SchemaGroup[] = [
     key: 'ai',
     label: 'AI sessions',
     color: 'purple',
-    // The legacy public `ai_*` tables — no schema yet, pending removal once
-    // the split model lands (Task 11+), so they stay hand-listed.
-    tables: ['ai_agents', 'ai_sessions', 'ai_messages', 'ai_session_output', 'ai_permission_requests'],
-    // workdirs (core), terminal.sessions/output, agent.sessions/messages/
-    // permission_requests/agents all derive membership from here.
+    // Nothing hand-listed: the legacy public `ai_*` tables are gone (Task 11)
+    // and every table here now carries a real pgSchema. workdirs (core),
+    // terminal.sessions/output and agent.sessions/messages/
+    // permission_requests/agents all derive membership from `schemas`.
+    tables: [],
     schemas: ['core', 'terminal', 'agent'],
   },
 ];

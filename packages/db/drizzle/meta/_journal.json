@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1784029932893,
-      "tag": "0000_natural_elektra",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1784195130411,
-      "tag": "0001_yielding_slapstick",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1784276264375,
-      "tag": "0002_mute_wasp",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1784278423722,
-      "tag": "0003_far_raza",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1784279857371,
-      "tag": "0004_glorious_beast",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1784281248846,
-      "tag": "0005_old_marvex",
+      "when": 1784292386524,
+      "tag": "0000_items_platform_terminal_agent_split",
       "breakpoints": true
     }
   ]

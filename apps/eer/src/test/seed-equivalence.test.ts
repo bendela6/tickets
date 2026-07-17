@@ -86,7 +86,19 @@ describe('seed rewrite', () => {
   it('declares the enums its columns use', () => {
     const { model } = loadModel(newRaw);
     // status_kind arrived with the items-platform schema rebuild: a workflow
-    // status is an option field, and options.kind carries its lifecycle.
-    expect(model!.enums.map((e) => e.name)).toEqual(['user_kind', 'status_kind', 'field_type']);
+    // status is an option field, and options.kind carries its lifecycle. The
+    // last five arrived with the terminal/agent split; they are compared
+    // qualified because `session_status` is two different enums — one per
+    // subsystem, each carrying only its own reachable states.
+    expect(model!.enums.map((e) => (e.schema ? `${e.schema}.${e.name}` : e.name))).toEqual([
+      'user_kind',
+      'status_kind',
+      'field_type',
+      'core.runner_kind',
+      'terminal.session_status',
+      'agent.session_status',
+      'agent.permission_mode',
+      'agent.permission_status',
+    ]);
   });
 });

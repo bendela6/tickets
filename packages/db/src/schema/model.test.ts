@@ -6,11 +6,35 @@ describe('items-platform model', () => {
   const model = loadModel();
   const byId = new Map(model.entities.map((e) => [e.id, e]));
 
-  it('has all 22 entities', () => {
-    expect(model.entities).toHaveLength(22);
+  it('has all 29 entities — 22 product tables plus the split', () => {
+    expect(model.entities).toHaveLength(29);
     expect(byId.has('item_values')).toBe(true);
     expect(byId.has('option_transitions')).toBe(true);
     expect(byId.has('outbox')).toBe(true);
+  });
+
+  it('identifies a namespaced entity by its qualified name and carries its schema', () => {
+    // terminal.sessions and agent.sessions share the bare name `sessions`;
+    // the qualified id is what keeps them two entities rather than one.
+    expect(byId.get('terminal.sessions')!.schema).toBe('terminal');
+    expect(byId.get('agent.sessions')!.schema).toBe('agent');
+    expect(byId.get('core.workdirs')!.schema).toBe('core');
+    // The 22 product tables stay in public until Plan 2 moves them.
+    expect(byId.get('items')!.schema ?? null).toBeNull();
+  });
+
+  it('keeps terminal and agent independent — no fk crosses between them', () => {
+    // The invariant the whole split exists to buy, asserted on the SSOT itself
+    // (packages/db has its own drizzle-side independence test).
+    for (const [id, entity] of byId) {
+      const from = entity.schema;
+      if (from !== 'terminal' && from !== 'agent') continue;
+      const other = from === 'terminal' ? 'agent.' : 'terminal.';
+      for (const c of entity.constraints) {
+        if (c.kind !== 'fk') continue;
+        expect(c.refTable.startsWith(other), `${id}.${c.columns[0]} -> ${c.refTable}`).toBe(false);
+      }
+    }
   });
 
   it('declares every column as explicitly nullable or not', () => {
@@ -21,13 +45,38 @@ describe('items-platform model', () => {
     }
   });
 
-  it('declares the three enums', () => {
-    const names = model.enums.map((e) => e.name).sort();
-    expect(names).toEqual(['field_type', 'status_kind', 'user_kind']);
+  it('declares the eight enums, qualified by schema', () => {
+    const names = model.enums
+      .map((e) => (e.schema ? `${e.schema}.${e.name}` : e.name))
+      .sort();
+    expect(names).toEqual([
+      'agent.permission_mode',
+      'agent.permission_status',
+      'agent.session_status',
+      'core.runner_kind',
+      'field_type',
+      'status_kind',
+      'terminal.session_status',
+      'user_kind',
+    ]);
     const fieldType = model.enums.find((e) => e.name === 'field_type')!;
     expect(fieldType.values).toEqual([
       'string', 'number', 'boolean', 'date', 'datetime', 'option', 'user', 'json',
     ]);
+  });
+
+  it('splits session_status per kind so neither can hold the other\'s states', () => {
+    // The nine-value merged enum was the wrong model; each side now carries
+    // only reachable states. live/disconnected are PTY facts; running/idle/
+    // awaiting_input are agent-turn facts.
+    const terminal = model.enums.find((e) => e.schema === 'terminal' && e.name === 'session_status')!;
+    const agent = model.enums.find((e) => e.schema === 'agent' && e.name === 'session_status')!;
+    expect(terminal.values).toEqual(['starting', 'live', 'disconnected', 'exited', 'failed']);
+    expect(agent.values).toEqual([
+      'starting', 'running', 'idle', 'awaiting_input', 'interrupted', 'exited', 'failed',
+    ]);
+    expect(terminal.values).not.toContain('running');
+    expect(agent.values).not.toContain('live');
   });
 
   it('gives options a nullable kind column (the model amendment)', () => {

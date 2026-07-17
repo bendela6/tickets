@@ -2,7 +2,7 @@
 // The drizzle schema and apps/eer/models/items-platform.json must agree, in BOTH
 // directions. A stray table in drizzle fails as loudly as a missing one.
 import { describe, expect, it } from 'vitest';
-import { describeSchema } from './describe-schema';
+import { describeSchema, qualifiedName } from './describe-schema';
 import { loadModel, topLevelGroup } from './model';
 
 // model type name -> the type string drizzle's getSQLType() produces.
@@ -20,6 +20,9 @@ const TYPE_MAP: Record<string, string> = {
   bigint: 'bigint',
   text: 'text',
   numeric: 'numeric',
+  // agent.sessions.cost_usd is the only precision-carrying numeric; drizzle
+  // prints the parameters, so the parameterised spelling is its own key.
+  'numeric(10, 4)': 'numeric(10, 4)',
   boolean: 'boolean',
   jsonb: 'jsonb',
   uuid: 'uuid',
@@ -27,65 +30,43 @@ const TYPE_MAP: Record<string, string> = {
   user_kind: 'user_kind',
   status_kind: 'status_kind',
   field_type: 'field_type',
+  // Enum columns: getSQLType() prints the BARE enum name with no schema, so
+  // terminal.sessions.status and agent.sessions.status both read
+  // `session_status`. The schema each resolves to is pinned by the enum
+  // assertions below, not here.
+  runner_kind: 'runner_kind',
+  session_status: 'session_status',
+  permission_mode: 'permission_mode',
+  permission_status: 'permission_status',
 };
 
 const normalizeExpression = (s: string): string =>
   s.replace(/"/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
 
-// MID-MIGRATION EXEMPTION — remove in Task 11 of
-// docs/superpowers/plans/2026-07-17-terminal-agent-split.md.
+// Nothing is exempt. Every table and every enum is compared in both
+// directions: the model is the SSOT and drizzle must match it exactly.
 //
-// The ai_* tables and their enums arrived with the main merge and are exempt
-// from conformance until the split lands. Adding them to the SSOT in this shape
-// would be waste: Tasks 3-5 replace them with core.workdirs + terminal.* +
-// agent.*, and Task 11 authors that final shape into the model and deletes this
-// list. Nothing else is exempt — every product table is still gated in both
-// directions.
-// NOTE on bare-name matching: `sessions` covers BOTH terminal.sessions (Task 4)
-// and agent.sessions (Task 5) — describeSchema reports a table's bare name with
-// no schema prefix, so one entry exempts both. `messages`, `permission_requests`
-// and `agents` are agent.* only (no terminal-side or legacy-side collision).
-const PENDING_SPLIT_TABLES = new Set([
-  'workdirs',
-  'ai_sessions',
-  'ai_session_output',
-  'ai_agents',
-  'ai_messages',
-  'ai_permission_requests',
-  'sessions',
-  'output',
-  'messages',
-  'permission_requests',
-  'agents',
-]);
-// `session_status`, `permission_mode` and `permission_status` are each
-// bare-name-shared by TWO enums now (legacy public + terminal, or legacy
-// public + agent) — one entry here exempts every same-named enum regardless
-// of schema, so Task 5 needs no additions here.
-const PENDING_SPLIT_ENUMS = new Set([
-  'session_kind',
-  'session_status',
-  'runner_kind',
-  'permission_mode',
-  'permission_status',
-]);
-
+// Identity on both sides is the SCHEMA-QUALIFIED name (`terminal.sessions`,
+// bare `items` for public) — the model's own convention, see qualifiedName().
+// A bare name would silently collapse terminal.sessions and agent.sessions
+// into one map entry and stop comparing one of them altogether.
 describe('drizzle ⇔ items-platform.json', () => {
   const model = loadModel();
   const graph = describeSchema();
   const modelById = new Map(model.entities.map((e) => [e.id, e]));
   const tableByName = new Map(
-    graph.tables.filter((t) => !PENDING_SPLIT_TABLES.has(t.name)).map((t) => [t.name, t]),
+    graph.tables.map((t) => [qualifiedName(t.schema, t.name), t]),
   );
+
+  it('every table has a distinct qualified identity', () => {
+    // Guards the two maps above: a duplicate key would silently drop a table
+    // from every it.each below instead of failing.
+    expect(tableByName.size).toBe(graph.tables.length);
+    expect(modelById.size).toBe(model.entities.length);
+  });
 
   it('has exactly the model\'s tables — no more, no less', () => {
     expect([...tableByName.keys()].sort()).toEqual([...modelById.keys()].sort());
-  });
-
-  it('the split exemption stays honest — every exempt table really is in drizzle', () => {
-    // If a name here stops existing, the list is stale and must shrink.
-    const inDrizzle = new Set(graph.tables.map((t) => t.name));
-    for (const name of PENDING_SPLIT_TABLES) expect(inDrizzle).toContain(name);
   });
 
   it.each([...modelById.keys()])('%s: sits in the schema the model gives it', (id) => {
@@ -128,9 +109,12 @@ describe('drizzle ⇔ items-platform.json', () => {
       .filter((c) => c.kind === 'fk')
       .map((c) => `${c.columns[0]} -> ${c.refTable}.${c.refColumns[0]}`)
       .sort();
+    // The model spells refTable with the same qualified identity as an entity
+    // id, so an fk pointing at terminal.sessions can't pass as one pointing at
+    // agent.sessions.
     const drizzleFks = table.columns
       .filter((c) => c.fk)
-      .map((c) => `${c.name} -> ${c.fk!.table}.${c.fk!.column}`)
+      .map((c) => `${c.name} -> ${qualifiedName(c.fk!.schema, c.fk!.table)}.${c.fk!.column}`)
       .sort();
     expect(drizzleFks).toEqual(modelFks);
   });
@@ -185,13 +169,15 @@ describe('drizzle ⇔ items-platform.json', () => {
     expect(actual).toEqual(expected);
   });
 
-  it('enums match', () => {
+  it('enums match — name, schema and values, in both directions', () => {
+    // Qualified, because `session_status` is TWO different enums:
+    // terminal.session_status and agent.session_status carry different values
+    // and neither may drift into the other's schema.
     const expected = model.enums
-      .map((e) => `${e.name}(${e.values.join(',')})`)
+      .map((e) => `${qualifiedName(e.schema ?? null, e.name)}(${e.values.join(',')})`)
       .sort();
     const actual = graph.enums
-      .filter((e) => !PENDING_SPLIT_ENUMS.has(e.name))
-      .map((e) => `${e.name}(${e.values.join(',')})`)
+      .map((e) => `${qualifiedName(e.schema, e.name)}(${e.values.join(',')})`)
       .sort();
     expect(actual).toEqual(expected);
   });

@@ -230,8 +230,8 @@ describe('agent.* schema constraints (against real Postgres)', () => {
         allowedTools: ['Read', 'Grep'],
       })
       .returning();
-    // Defaults land as written — permission_mode is set by migration
-    // 0005_old_marvex.sql (`DEFAULT 'bypassPermissions'`), not application code.
+    // Defaults land as written — permission_mode is set by the baseline
+    // migration (`DEFAULT 'bypassPermissions'`), not application code.
     expect(agent!.permissionMode).toBe('bypassPermissions');
     expect(agent!.allowedTools).toEqual(['Read', 'Grep']);
 

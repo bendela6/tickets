@@ -29,6 +29,17 @@
       "schema": null
     },
     {
+      "name": "status_kind",
+      "values": [
+        "todo",
+        "active",
+        "blocked",
+        "done",
+        "dropped"
+      ],
+      "schema": null
+    },
+    {
       "name": "field_type",
       "values": [
         "string",
@@ -41,6 +52,58 @@
         "json"
       ],
       "schema": null
+    },
+    {
+      "name": "runner_kind",
+      "values": [
+        "local",
+        "container"
+      ],
+      "schema": "core"
+    },
+    {
+      "name": "session_status",
+      "values": [
+        "starting",
+        "live",
+        "disconnected",
+        "exited",
+        "failed"
+      ],
+      "schema": "terminal"
+    },
+    {
+      "name": "session_status",
+      "values": [
+        "starting",
+        "running",
+        "idle",
+        "awaiting_input",
+        "interrupted",
+        "exited",
+        "failed"
+      ],
+      "schema": "agent"
+    },
+    {
+      "name": "permission_mode",
+      "values": [
+        "default",
+        "acceptEdits",
+        "bypassPermissions",
+        "plan",
+        "dontAsk"
+      ],
+      "schema": "agent"
+    },
+    {
+      "name": "permission_status",
+      "values": [
+        "pending",
+        "allowed",
+        "denied"
+      ],
+      "schema": "agent"
     }
   ],
   "groups": [
@@ -158,6 +221,17 @@
         "y": 150,
         "w": 320,
         "h": 886
+      }
+    },
+    {
+      "id": "ai",
+      "label": "AI SESSIONS",
+      "order": 4,
+      "bounds": {
+        "x": 4131,
+        "y": 80,
+        "w": 1248,
+        "h": 1450
       }
     }
   ],
@@ -2563,41 +2637,907 @@
           "where": null
         }
       ]
-    }
-  ],
-  "enums": [
-    {
-      "name": "user_kind",
-      "values": [
-        "human",
-        "agent"
-      ],
-      "schema": null
     },
     {
-      "name": "status_kind",
-      "values": [
-        "todo",
-        "active",
-        "blocked",
-        "done",
-        "dropped"
+      "id": "core.workdirs",
+      "label": "workdirs",
+      "group": "ai",
+      "description": "A directory a session runs in. Optionally linked to a project; a standalone workdir (scratch clone, unrelated repo) has no project.",
+      "schema": "core",
+      "x": 4171,
+      "y": 150,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "project_id",
+          "type": "integer",
+          "title": "Project",
+          "description": "Owning project; null for a standalone workdir. A session in a project-linked workdir can comment back on an item.",
+          "nullable": true
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "title": "Name",
+          "description": "Display name.",
+          "nullable": false
+        },
+        {
+          "name": "path",
+          "type": "text",
+          "title": "Path",
+          "description": "Absolute directory path on the runner.",
+          "nullable": false
+        },
+        {
+          "name": "runner",
+          "type": "runner_kind",
+          "title": "Runner",
+          "description": "Where the process runs. (local | container)",
+          "nullable": false
+        },
+        {
+          "name": "container_name",
+          "type": "text",
+          "title": "Container",
+          "description": "Container to exec in; null for the local runner.",
+          "nullable": true
+        },
+        {
+          "name": "git_remote",
+          "type": "text",
+          "title": "Git remote",
+          "description": "Origin URL, when the directory is a clone.",
+          "nullable": true
+        },
+        {
+          "name": "default_branch",
+          "type": "text",
+          "title": "Default branch",
+          "description": "Branch new worktrees fork from.",
+          "nullable": true
+        },
+        {
+          "name": "config",
+          "type": "jsonb",
+          "title": "Config",
+          "description": "Runner-shaped extras (env, mounts).",
+          "nullable": true
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete.",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "Insert time.",
+          "nullable": false
+        }
       ],
-      "schema": null
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "project_id"
+          ],
+          "refTable": "projects",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     },
     {
-      "name": "field_type",
-      "values": [
-        "string",
-        "number",
-        "boolean",
-        "date",
-        "datetime",
-        "option",
-        "user",
-        "json"
+      "id": "terminal.sessions",
+      "label": "sessions",
+      "group": "ai",
+      "description": "A PTY session. Independent of agent.sessions — no column here references the agent schema.",
+      "schema": "terminal",
+      "x": 4171,
+      "y": 560,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key. A separate id space from agent.sessions.",
+          "nullable": false
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "title": "Title",
+          "description": "Shown in the terminal list.",
+          "nullable": false
+        },
+        {
+          "name": "workdir_id",
+          "type": "integer",
+          "title": "Workdir",
+          "description": "Directory the PTY starts in.",
+          "nullable": false
+        },
+        {
+          "name": "cwd",
+          "type": "text",
+          "title": "Cwd",
+          "description": "Working directory override within the workdir.",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "session_status",
+          "title": "Status",
+          "description": "PTY lifecycle. (starting | live | disconnected | exited | failed)",
+          "nullable": false
+        },
+        {
+          "name": "exit_code",
+          "type": "integer",
+          "title": "Exit code",
+          "description": "Process exit status; a PTY fact with no agent analogue.",
+          "nullable": true
+        },
+        {
+          "name": "started_by",
+          "type": "integer",
+          "title": "Started by",
+          "description": "Who opened it.",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "Insert time.",
+          "nullable": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "title": "Updated at",
+          "description": "Last status change.",
+          "nullable": false
+        },
+        {
+          "name": "ended_at",
+          "type": "timestamp with time zone",
+          "title": "Ended at",
+          "description": "When the process exited.",
+          "nullable": true
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete.",
+          "nullable": true
+        }
       ],
-      "schema": null
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "workdir_id"
+          ],
+          "refTable": "core.workdirs",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "started_by"
+          ],
+          "refTable": "users",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "terminal_sessions_status_created",
+          "columns": [
+            {
+              "expression": "status"
+            },
+            {
+              "expression": "created_at"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
+    },
+    {
+      "id": "terminal.output",
+      "label": "output",
+      "group": "ai",
+      "description": "Raw PTY scrollback, one row per chunk. `seq` is the SSOT a reconnecting browser replays from.",
+      "schema": "terminal",
+      "x": 4171,
+      "y": 970,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "session_id",
+          "type": "integer",
+          "title": "Session",
+          "description": "Owning terminal session.",
+          "nullable": false
+        },
+        {
+          "name": "seq",
+          "type": "integer",
+          "title": "Seq",
+          "description": "Monotonic per session; persist-before-broadcast ordering.",
+          "nullable": false
+        },
+        {
+          "name": "data",
+          "type": "text",
+          "title": "Data",
+          "description": "Raw bytes as written by the PTY.",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "Insert time.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "session_id"
+          ],
+          "refTable": "terminal.sessions",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "agent.agents",
+      "label": "agents",
+      "group": "ai",
+      "description": "The persona library. Each agent owns a users row with kind='agent', which is what makes it assignable and attributable.",
+      "schema": "agent",
+      "x": 4571,
+      "y": 150,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "integer",
+          "title": "User",
+          "description": "The users row this persona acts as.",
+          "nullable": false
+        },
+        {
+          "name": "key",
+          "type": "text",
+          "title": "Key",
+          "description": "Stable slug.",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "title": "Name",
+          "description": "Display name.",
+          "nullable": false
+        },
+        {
+          "name": "provider_key",
+          "type": "text",
+          "title": "Provider",
+          "description": "Selects a code-registered AgentProvider, not a DB row.",
+          "nullable": false
+        },
+        {
+          "name": "model",
+          "type": "text",
+          "title": "Model",
+          "description": "Provider model id.",
+          "nullable": false
+        },
+        {
+          "name": "system_prompt",
+          "type": "text",
+          "title": "System prompt",
+          "description": "Prepended to every run.",
+          "nullable": true
+        },
+        {
+          "name": "allowed_tools",
+          "type": "jsonb",
+          "title": "Allowed tools",
+          "description": "Provider-shaped allow list.",
+          "nullable": false
+        },
+        {
+          "name": "disallowed_tools",
+          "type": "jsonb",
+          "title": "Disallowed tools",
+          "description": "Provider-shaped deny list.",
+          "nullable": false
+        },
+        {
+          "name": "permission_mode",
+          "type": "permission_mode",
+          "title": "Permission mode",
+          "description": "How a tool call decides it needs a human. (default | acceptEdits | bypassPermissions | plan | dontAsk)",
+          "nullable": false
+        },
+        {
+          "name": "mcp_servers",
+          "type": "jsonb",
+          "title": "MCP servers",
+          "description": "MCP server config passed to the run.",
+          "nullable": false
+        },
+        {
+          "name": "effort",
+          "type": "text",
+          "title": "Effort",
+          "description": "Provider reasoning-effort hint.",
+          "nullable": true
+        },
+        {
+          "name": "default_workdir_id",
+          "type": "integer",
+          "title": "Default workdir",
+          "description": "Pre-selected directory for new sessions.",
+          "nullable": true
+        },
+        {
+          "name": "config",
+          "type": "jsonb",
+          "title": "Config",
+          "description": "Provider-shaped extras.",
+          "nullable": false
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete.",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "Insert time.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "user_id"
+          ],
+          "refTable": "users",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "default_workdir_id"
+          ],
+          "refTable": "core.workdirs",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "agent_agents_key",
+          "columns": [
+            "key"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "agent.sessions",
+      "label": "sessions",
+      "group": "ai",
+      "description": "An agent run. Independent of terminal.sessions — no column here references the terminal schema. No `kind` (this schema only holds agent runs) and no `exit_code` (a run has a result, not a process status).",
+      "schema": "agent",
+      "x": 4571,
+      "y": 650,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key. A separate id space from terminal.sessions.",
+          "nullable": false
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "title": "Title",
+          "description": "Shown in the agent list.",
+          "nullable": false
+        },
+        {
+          "name": "workdir_id",
+          "type": "integer",
+          "title": "Workdir",
+          "description": "Directory the run executes in.",
+          "nullable": false
+        },
+        {
+          "name": "agent_id",
+          "type": "integer",
+          "title": "Agent",
+          "description": "Persona driving the run.",
+          "nullable": true
+        },
+        {
+          "name": "item_id",
+          "type": "integer",
+          "title": "Item",
+          "description": "Ticket the run is working on.",
+          "nullable": true
+        },
+        {
+          "name": "parent_session_id",
+          "type": "integer",
+          "title": "Parent session",
+          "description": "Self-reference: the dispatch tree. A terminal never parents anything, so this lives only here.",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "session_status",
+          "title": "Status",
+          "description": "Agent-turn lifecycle. (starting | running | idle | awaiting_input | interrupted | exited | failed)",
+          "nullable": false
+        },
+        {
+          "name": "provider_session_id",
+          "type": "text",
+          "title": "Provider session",
+          "description": "Id for resuming the run with the provider.",
+          "nullable": true
+        },
+        {
+          "name": "cwd",
+          "type": "text",
+          "title": "Cwd",
+          "description": "Working directory override within the workdir.",
+          "nullable": true
+        },
+        {
+          "name": "worktree_path",
+          "type": "text",
+          "title": "Worktree path",
+          "description": "Git worktree the run was given.",
+          "nullable": true
+        },
+        {
+          "name": "cost_usd",
+          "type": "numeric(10, 4)",
+          "title": "Cost (USD)",
+          "description": "Accumulated provider spend.",
+          "nullable": true
+        },
+        {
+          "name": "started_by",
+          "type": "integer",
+          "title": "Started by",
+          "description": "Who dispatched it.",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "Insert time.",
+          "nullable": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "title": "Updated at",
+          "description": "Last status change.",
+          "nullable": false
+        },
+        {
+          "name": "ended_at",
+          "type": "timestamp with time zone",
+          "title": "Ended at",
+          "description": "When the run finished.",
+          "nullable": true
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "workdir_id"
+          ],
+          "refTable": "core.workdirs",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "agent_id"
+          ],
+          "refTable": "agent.agents",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c4",
+          "kind": "fk",
+          "columns": [
+            "item_id"
+          ],
+          "refTable": "items",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c5",
+          "kind": "fk",
+          "columns": [
+            "parent_session_id"
+          ],
+          "refTable": "agent.sessions",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c6",
+          "kind": "fk",
+          "columns": [
+            "started_by"
+          ],
+          "refTable": "users",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "agent_sessions_status_created",
+          "columns": [
+            {
+              "expression": "status"
+            },
+            {
+              "expression": "created_at"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i2",
+          "name": "agent_sessions_parent",
+          "columns": [
+            {
+              "expression": "parent_session_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
+    },
+    {
+      "id": "agent.messages",
+      "label": "messages",
+      "group": "ai",
+      "description": "One row per AgentEvent — the agent analogue of terminal.output, same seq / persist-before-broadcast discipline.",
+      "schema": "agent",
+      "x": 4571,
+      "y": 1150,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "session_id",
+          "type": "integer",
+          "title": "Session",
+          "description": "Owning agent session.",
+          "nullable": false
+        },
+        {
+          "name": "seq",
+          "type": "integer",
+          "title": "Seq",
+          "description": "Monotonic per session; the replay cursor.",
+          "nullable": false
+        },
+        {
+          "name": "role",
+          "type": "text",
+          "title": "Role",
+          "description": "Who produced it (user | assistant | system).",
+          "nullable": false
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "title": "Kind",
+          "description": "AgentEvent.type (assistant_text | thinking | tool_use | …). Free text by design — the vocabulary grows in app code, not in a migration.",
+          "nullable": false
+        },
+        {
+          "name": "content",
+          "type": "jsonb",
+          "title": "Content",
+          "description": "Provider-shaped payload.",
+          "nullable": false
+        },
+        {
+          "name": "tool_use_id",
+          "type": "text",
+          "title": "Tool use id",
+          "description": "Correlates a tool call with its result.",
+          "nullable": true
+        },
+        {
+          "name": "parent_tool_use_id",
+          "type": "text",
+          "title": "Parent tool use id",
+          "description": "Attributes subagent output to the right nested pane.",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "Insert time.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "session_id"
+          ],
+          "refTable": "agent.sessions",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "agent_messages_session_seq",
+          "columns": [
+            "session_id",
+            "seq"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "agent.permission_requests",
+      "label": "permission_requests",
+      "group": "ai",
+      "description": "A pending row IS a `canUseTool` promise parked in the supervisor: the session sits in `awaiting_input` until a human decides.",
+      "schema": "agent",
+      "x": 4971,
+      "y": 150,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "session_id",
+          "type": "integer",
+          "title": "Session",
+          "description": "Session blocked on this decision.",
+          "nullable": false
+        },
+        {
+          "name": "tool_name",
+          "type": "text",
+          "title": "Tool",
+          "description": "Tool the agent asked to use.",
+          "nullable": false
+        },
+        {
+          "name": "input",
+          "type": "jsonb",
+          "title": "Input",
+          "description": "Arguments the tool was called with.",
+          "nullable": false
+        },
+        {
+          "name": "status",
+          "type": "permission_status",
+          "title": "Status",
+          "description": "Decision state. (pending | allowed | denied)",
+          "nullable": false
+        },
+        {
+          "name": "decision_reason",
+          "type": "text",
+          "title": "Decision reason",
+          "description": "Why the human allowed or denied it.",
+          "nullable": true
+        },
+        {
+          "name": "decided_by",
+          "type": "integer",
+          "title": "Decided by",
+          "description": "Who decided.",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "When the agent asked.",
+          "nullable": false
+        },
+        {
+          "name": "decided_at",
+          "type": "timestamp with time zone",
+          "title": "Decided at",
+          "description": "When the human answered.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "session_id"
+          ],
+          "refTable": "agent.sessions",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "decided_by"
+          ],
+          "refTable": "users",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
     }
   ],
   "relationships": [

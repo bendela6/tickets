@@ -6,11 +6,7 @@ export {
   userKindEnum,
   statusKindEnum,
   fieldTypeEnum,
-  sessionKindEnum,
-  sessionStatusEnum,
   runnerKindEnum,
-  legacyPermissionModeEnum,
-  legacyPermissionStatusEnum,
   terminalStatusEnum,
   agentStatusEnum,
   permissionModeEnum,
@@ -39,11 +35,6 @@ export { commands } from './commands';
 export { outbox } from './outbox';
 export { itemActivity } from './item-activity';
 export { workdirs } from './workdirs';
-export { aiSessions } from './ai-sessions';
-export { aiSessionOutput } from './ai-session-output';
-export { aiAgents } from './ai-agents';
-export { aiMessages } from './ai-messages';
-export { aiPermissionRequests } from './ai-permission-requests';
 export { terminalSessions, terminalOutput } from './terminal-sessions';
 export { agentSessions } from './agent-sessions';
 export { agentMessages } from './agent-messages';
@@ -55,6 +46,7 @@ export { SCHEMA_GROUPS, type SchemaGroup } from './schema-groups';
 export {
   describeSchema,
   resolveGroupKey,
+  qualifiedName,
   type SchemaGraph,
   type TableMeta,
   type ColumnMeta,

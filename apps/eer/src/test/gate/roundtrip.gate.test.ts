@@ -106,14 +106,22 @@ async function assertGeneratedFileTypechecks(schemaModule: Record<string, unknow
   }
 }
 
-// ---- gate 1: the real 34-table @tickets/db schema ----
+// ---- gate 1: the real 29-table @tickets/db schema ----
 
 it('round-trips @tickets/db with nothing lost', async () => {
   const { model, report } = await runRoundtripGate(realSchema as Record<string, unknown>);
 
   expect(report.blocksExport).toBe(false);
-  expect(model.entities).toHaveLength(34);
-  expect(model.enums).toHaveLength(12);
+  // 29 tables / 8 enums after Task 11 deleted the 5 legacy public ai_* tables
+  // and their 4 enums. The round trip carries each table's and enum's `schema`
+  // through export -> import: terminal.sessions and agent.sessions survive as
+  // two distinct entities sharing one bare name.
+  expect(model.entities).toHaveLength(29);
+  expect(model.enums).toHaveLength(8);
+  expect(model.entities.filter((e) => e.schema === 'terminal')).toHaveLength(2);
+  expect(model.entities.filter((e) => e.schema === 'agent')).toHaveLength(4);
+  expect(model.entities.filter((e) => e.schema === 'core')).toHaveLength(1);
+  expect(model.entities.filter((e) => !e.schema)).toHaveLength(22);
 }, 30_000);
 
 it('the generated file typechecks', async () => {

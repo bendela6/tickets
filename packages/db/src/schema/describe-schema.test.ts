@@ -17,15 +17,33 @@ describe('describeSchema', () => {
   it('derives a single-column FK', () => {
     const cr = byName.get('comment_reactions')!;
     const commentId = cr.columns.find((c) => c.name === 'comment_id')!;
-    expect(commentId.fk).toEqual({ table: 'comments', column: 'id' });
+    expect(commentId.fk).toEqual({ schema: null, table: 'comments', column: 'id' });
     expect(commentId.notNull).toBe(true);
   });
 
   it('derives a nullable self-FK', () => {
     const comments = byName.get('comments')!;
     const parentId = comments.columns.find((c) => c.name === 'parent_id')!;
-    expect(parentId.fk).toEqual({ table: 'comments', column: 'id' });
+    expect(parentId.fk).toEqual({ schema: null, table: 'comments', column: 'id' });
     expect(parentId.notNull).toBe(false);
+  });
+
+  it('reports the REFERENCED table\'s schema, not the referencing table\'s', () => {
+    // terminal.sessions.workdir_id crosses into `core`. Without the referenced
+    // side's own schema, an fk to `sessions` could not be told apart from an
+    // fk to the other subsystem's `sessions`.
+    const ts = graph.tables.find((t) => t.schema === 'terminal' && t.name === 'sessions')!;
+    expect(ts.columns.find((c) => c.name === 'workdir_id')!.fk).toEqual({
+      schema: 'core', table: 'workdirs', column: 'id',
+    });
+    const out = graph.tables.find((t) => t.schema === 'terminal' && t.name === 'output')!;
+    expect(out.columns.find((c) => c.name === 'session_id')!.fk).toEqual({
+      schema: 'terminal', table: 'sessions', column: 'id',
+    });
+    const am = graph.tables.find((t) => t.schema === 'agent' && t.name === 'messages')!;
+    expect(am.columns.find((c) => c.name === 'session_id')!.fk).toEqual({
+      schema: 'agent', table: 'sessions', column: 'id',
+    });
   });
 
   it('derives a composite primary key', () => {

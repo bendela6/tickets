@@ -3,24 +3,15 @@ import { agentAgents } from './agent-agents';
 import { agentMessages } from './agent-messages';
 import { agentPermissionRequests } from './agent-permission-requests';
 import { agentSessions } from './agent-sessions';
-import { aiAgents } from './ai-agents';
-import { aiMessages } from './ai-messages';
-import { aiPermissionRequests } from './ai-permission-requests';
-import { aiSessionOutput } from './ai-session-output';
-import { aiSessions } from './ai-sessions';
 import { commands } from './commands';
 import { commentReactions } from './comment-reactions';
 import { comments } from './comments';
 import {
   agentStatusEnum,
   fieldTypeEnum,
-  legacyPermissionModeEnum,
-  legacyPermissionStatusEnum,
   permissionModeEnum,
   permissionStatusEnum,
   runnerKindEnum,
-  sessionKindEnum,
-  sessionStatusEnum,
   statusKindEnum,
   terminalStatusEnum,
   userKindEnum,
@@ -55,8 +46,7 @@ export const allTables = [
   optionSets, options, optionTransitions, linkTypes, linkTypeTargetTypes,
   items, itemValues, comments, commentReactions, itemLinks,
   events, commands, outbox, itemActivity,
-  workdirs, aiSessions, aiSessionOutput,
-  aiAgents, aiMessages, aiPermissionRequests,
+  workdirs,
   terminalSessions, terminalOutput,
   agentSessions, agentMessages, agentPermissionRequests, agentAgents,
 ];
@@ -67,11 +57,7 @@ export const allEnums = [
   userKindEnum,
   statusKindEnum,
   fieldTypeEnum,
-  sessionKindEnum,
-  sessionStatusEnum,
   runnerKindEnum,
-  legacyPermissionModeEnum,
-  legacyPermissionStatusEnum,
   terminalStatusEnum,
   agentStatusEnum,
   permissionModeEnum,
