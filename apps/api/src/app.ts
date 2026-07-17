@@ -24,6 +24,7 @@ import { createLocalRunner } from './terminal/local-runner';
 import { registerTerminalRoutes } from './terminal/routes';
 import { registerTerminalSocket } from './terminal/socket';
 import { createTerminalStore } from './terminal/store';
+import { registerWorkdirRoutes } from './workdir/routes';
 
 export function buildApp(context: {
   db: Db;
@@ -106,6 +107,10 @@ export function buildApp(context: {
   registerSchemesRoutes(app, context);
   registerViewsRoutes(app, context);
   registerSchemaRoutes(app);
+  // Workdirs mount independently of both drivers: `core.workdirs` is a core
+  // concept both subsystems consume, so neither may own its CRUD — mounting it
+  // inside one would silently make unmounting that one break the other.
+  registerWorkdirRoutes(app, { db: context.db });
   registerAgentRoutes(app, { db: context.db, driver: agentDriver, providers });
   registerAgentDispatchRoute(app, { db: context.db, driver: agentDriver, providers, worktrees });
   registerAgentSocket(app, { driver: agentDriver });
