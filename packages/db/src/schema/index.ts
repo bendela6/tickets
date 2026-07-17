@@ -1,3 +1,9 @@
+// terminalSchema/agentSchema are declared in ./schemas for Tasks 4-5 to import
+// directly, but stay unexported here until a real table uses them — drizzle-kit
+// only emits CREATE SCHEMA for schemas it sees exported from this entry point,
+// and the eer round-trip gate would (rightly) flag an empty schema the SSOT
+// model doesn't know about yet.
+export { coreSchema } from './schemas';
 export {
   userKindEnum,
   statusKindEnum,
@@ -30,7 +36,7 @@ export { events } from './events';
 export { commands } from './commands';
 export { outbox } from './outbox';
 export { itemActivity } from './item-activity';
-export { aiWorkspaces } from './ai-workspaces';
+export { workdirs } from './workdirs';
 export { aiSessions } from './ai-sessions';
 export { aiSessionOutput } from './ai-session-output';
 export { aiAgents } from './ai-agents';

@@ -1,4 +1,5 @@
 import { pgEnum } from 'drizzle-orm/pg-core';
+import { coreSchema } from './schemas';
 
 export const userKindEnum = pgEnum('user_kind', ['human', 'agent']);
 
@@ -48,7 +49,7 @@ export const sessionStatusEnum = pgEnum('session_status', [
 ]);
 
 // Where a session's process runs. E1 implements `local` only.
-export const runnerKindEnum = pgEnum('runner_kind', ['local', 'container']);
+export const runnerKindEnum = coreSchema.enum('runner_kind', ['local', 'container']);
 
 // How a persona decides whether a tool call needs a human — mirrors the Claude
 // Agent SDK's PermissionMode. E2 ships agents in `bypassPermissions` (autonomy

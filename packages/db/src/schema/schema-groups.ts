@@ -50,7 +50,7 @@ export const SCHEMA_GROUPS: SchemaGroup[] = [
     label: 'AI sessions',
     color: 'purple',
     tables: [
-      'ai_workspaces',
+      'workdirs',
       'ai_agents',
       'ai_sessions',
       'ai_messages',

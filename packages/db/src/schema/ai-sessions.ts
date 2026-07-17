@@ -9,10 +9,10 @@ import {
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { aiAgents } from './ai-agents';
-import { aiWorkspaces } from './ai-workspaces';
 import { sessionKindEnum, sessionStatusEnum } from './enums';
 import { items } from './items';
 import { users } from './users';
+import { workdirs } from './workdirs';
 
 // The spine shared by both session kinds. agent_id, item_id, and
 // parent_session_id exist from E1 but stay null until E2/E3 — that is what makes
@@ -24,9 +24,9 @@ export const aiSessions = pgTable(
     id: serial('id').primaryKey(),
     kind: sessionKindEnum('kind').notNull(),
     title: text('title').notNull(),
-    workspaceId: integer('workspace_id')
+    workdirId: integer('workdir_id')
       .notNull()
-      .references(() => aiWorkspaces.id),
+      .references(() => workdirs.id),
     agentId: integer('agent_id').references((): AnyPgColumn => aiAgents.id),
     itemId: integer('item_id').references(() => items.id),
     parentSessionId: integer('parent_session_id').references((): AnyPgColumn => aiSessions.id),

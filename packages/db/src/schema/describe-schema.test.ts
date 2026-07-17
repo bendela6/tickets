@@ -97,12 +97,12 @@ describe('schemaOf', () => {
 
 describe('describeSchema schemas', () => {
   it('carries a schema field on every table', () => {
-    // Everything is still in public at this point in the split; Tasks 3-5 move
-    // the AI tables out and this starts reporting real names.
+    // Task 3 moved `workdirs` into `core`; Tasks 4-5 move the rest of the AI
+    // tables out. Everything else is still in public at this point in the split.
     const graph = describeSchema();
     for (const table of graph.tables) {
       expect(table).toHaveProperty('schema');
-      expect(table.schema).toBeNull();
+      expect(table.schema).toBe(table.name === 'workdirs' ? 'core' : null);
     }
   });
 });

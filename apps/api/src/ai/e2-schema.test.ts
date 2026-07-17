@@ -10,9 +10,9 @@ import {
   aiMessages,
   aiPermissionRequests,
   aiSessions,
-  aiWorkspaces,
   environment,
   users,
+  workdirs,
 } from '@tickets/db';
 
 // Round-trips the E2 `ai` tables against a real Postgres (same scratch-db-per-run
@@ -56,9 +56,9 @@ describe('E2 ai schema', () => {
       .returning({ id: users.id });
 
     const [ws] = await db
-      .insert(aiWorkspaces)
+      .insert(workdirs)
       .values({ name: 'e2-ws', path: '/tmp/e2' })
-      .returning({ id: aiWorkspaces.id });
+      .returning({ id: workdirs.id });
 
     const [agent] = await db
       .insert(aiAgents)
@@ -81,7 +81,7 @@ describe('E2 ai schema', () => {
       .values({
         kind: 'agent',
         title: 'plan the work',
-        workspaceId: ws!.id,
+        workdirId: ws!.id,
         agentId: agent!.id,
         status: 'running',
       })
@@ -118,14 +118,14 @@ describe('E2 ai schema', () => {
 
   test('the session→agent FK rejects a dangling agent id', async () => {
     const [ws] = await db
-      .insert(aiWorkspaces)
+      .insert(workdirs)
       .values({ name: 'e2-ws-2', path: '/tmp/e2b' })
-      .returning({ id: aiWorkspaces.id });
+      .returning({ id: workdirs.id });
     await expect(
       db.insert(aiSessions).values({
         kind: 'agent',
         title: 'bad',
-        workspaceId: ws!.id,
+        workdirId: ws!.id,
         agentId: 999_999,
         status: 'starting',
       }),
