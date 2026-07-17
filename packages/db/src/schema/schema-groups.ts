@@ -1,12 +1,24 @@
 // packages/db/src/schema/schema-groups.ts
 
 // A declared ownership group. `color` is an instrument option hue name.
-// `tables` lists sql table names in render order. Order of groups = layout order.
+// `tables` lists bare sql table names in render order, for tables that have
+// no real Postgres schema yet (still `public`) — order of groups = layout
+// order. `schemas` lists real Postgres schema names wholly owned by this
+// group: membership for any table living in one of those schemas is DERIVED
+// from `getTableConfig(table).schema`, not hand-listed, so a table can't be
+// added to `terminal`/`agent`/etc. and silently fall out of its group the way
+// a forgotten `tables` entry could. See resolveGroupKey in describe-schema.ts.
+//
+// Only `core`/`terminal`/`agent` are real schemas today — the 22
+// items-platform tables still live in `public` pending a later plan, which is
+// why `tables` still exists instead of every group deriving purely from
+// pgSchema.
 export type SchemaGroup = {
   key: string;
   label: string;
   color: string;
   tables: string[];
+  schemas?: string[];
 };
 
 export const SCHEMA_GROUPS: SchemaGroup[] = [
@@ -49,18 +61,11 @@ export const SCHEMA_GROUPS: SchemaGroup[] = [
     key: 'ai',
     label: 'AI sessions',
     color: 'purple',
-    tables: [
-      'workdirs',
-      'ai_agents',
-      'ai_sessions',
-      'ai_messages',
-      'ai_session_output',
-      'ai_permission_requests',
-      'sessions',
-      'output',
-      'agents',
-      'messages',
-      'permission_requests',
-    ],
+    // The legacy public `ai_*` tables — no schema yet, pending removal once
+    // the split model lands (Task 11+), so they stay hand-listed.
+    tables: ['ai_agents', 'ai_sessions', 'ai_messages', 'ai_session_output', 'ai_permission_requests'],
+    // workdirs (core), terminal.sessions/output, agent.sessions/messages/
+    // permission_requests/agents all derive membership from here.
+    schemas: ['core', 'terminal', 'agent'],
   },
 ];
