@@ -7,7 +7,7 @@ import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { eq } from 'drizzle-orm';
 import type { Db } from '@tickets/db';
-import { aiAgents, aiSessions, aiWorkspaces, environment, users } from '@tickets/db';
+import { aiAgents, aiSessions, environment, users, workdirs } from '@tickets/db';
 import type { AgentRun } from '../ai/agent-types';
 import { createProviderRegistry } from '../ai/provider-registry';
 import type { StartAgentSpec, StartSpec, Supervisor } from '../ai/supervisor';
@@ -435,15 +435,15 @@ describe('AI routes', () => {
     // (as opposed to the createTerminalSession() rows used elsewhere, which
     // the fake supervisor tracks as live until stopped).
     const [workspace] = await db
-      .insert(aiWorkspaces)
+      .insert(workdirs)
       .values({ name: `ws-orphan-${Date.now()}-${Math.random()}`, path: tmpdir(), runner: 'local' })
-      .returning({ id: aiWorkspaces.id });
+      .returning({ id: workdirs.id });
     const [orphan] = await db
       .insert(aiSessions)
       .values({
         kind: 'terminal',
         title: 'orphaned session',
-        workspaceId: workspace!.id,
+        workdirId: workspace!.id,
         status: 'live',
         endedAt: null,
       })

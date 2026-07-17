@@ -4,7 +4,7 @@ import * as v from 'valibot';
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import type { Db } from '@tickets/db';
 import { v4 as uuidv4 } from 'uuid';
-import { aiAgents, aiSessions, aiWorkspaces, items, users } from '@tickets/db';
+import { aiAgents, aiSessions, items, users, workdirs } from '@tickets/db';
 import { buildRunSpec } from '../ai/agent-run-spec';
 import { dispatchComment } from '../ai/dispatch-comment';
 import type { ProviderRegistry } from '../ai/provider-registry';
@@ -129,16 +129,16 @@ export function registerAiRoutes(
   const listWorkspaces = async (_request: FastifyRequest, reply: FastifyReply) => {
     const rows = await db
       .select()
-      .from(aiWorkspaces)
-      .where(isNull(aiWorkspaces.archivedAt))
-      .orderBy(desc(aiWorkspaces.createdAt));
+      .from(workdirs)
+      .where(isNull(workdirs.archivedAt))
+      .orderBy(desc(workdirs.createdAt));
     reply.send(rows);
   };
 
   const createWorkspace = async (request: FastifyRequest, reply: FastifyReply) => {
     const body = parseBody(createWorkspaceSchema, request.body);
     const inserted = await db
-      .insert(aiWorkspaces)
+      .insert(workdirs)
       .values({
         name: body.name,
         path: body.path,
@@ -155,10 +155,10 @@ export function registerAiRoutes(
   const patchWorkspace = async (request: FastifyRequest, reply: FastifyReply) => {
     const id = parseId((request.params as { id: string }).id);
     const body = parseBody(patchWorkspaceSchema, request.body);
-    const [existing] = await db.select().from(aiWorkspaces).where(eq(aiWorkspaces.id, id));
+    const [existing] = await db.select().from(workdirs).where(eq(workdirs.id, id));
     if (!existing) throw new HttpError(404, 'workspace not found');
     const updated = await db
-      .update(aiWorkspaces)
+      .update(workdirs)
       .set({
         ...(body.name !== undefined ? { name: body.name } : {}),
         ...(body.path !== undefined ? { path: body.path } : {}),
@@ -171,7 +171,7 @@ export function registerAiRoutes(
           ? { archivedAt: body.archived ? sql`now()` : null }
           : {}),
       })
-      .where(eq(aiWorkspaces.id, id))
+      .where(eq(workdirs.id, id))
       .returning();
     reply.send(updated[0]);
   };
@@ -189,7 +189,7 @@ export function registerAiRoutes(
       .from(aiSessions)
       .where(conditions.length ? and(...conditions) : undefined)
       .orderBy(desc(aiSessions.createdAt));
-    reply.send(rows);
+    reply.send(rows.map(toSessionJson));
   };
 
   // Load + validate a workspace before we insert a row or spawn anything: a bad
@@ -197,14 +197,24 @@ export function registerAiRoutes(
   const loadRunnableWorkspace = async (workspaceId: number) => {
     const [workspace] = await db
       .select()
-      .from(aiWorkspaces)
-      .where(eq(aiWorkspaces.id, workspaceId));
+      .from(workdirs)
+      .where(eq(workdirs.id, workspaceId));
     if (!workspace) throw new HttpError(404, 'workspace not found');
     if (workspace.runner === 'container') {
       throw new HttpError(400, 'container runner is not supported until E2');
     }
     await assertWorkspaceDir(workspace.path);
     return workspace;
+  };
+
+  // aiSessions stores the FK as `workdirId` (core.workdirs replaced
+  // ai_workspaces in Task 3), but the HTTP contract still speaks `workspaceId`
+  // until Task 7/9 rename the surface — translate at the boundary so the web
+  // app needs no changes.
+  type AiSessionRow = typeof aiSessions.$inferSelect;
+  const toSessionJson = (row: AiSessionRow) => {
+    const { workdirId, ...rest } = row;
+    return { ...rest, workspaceId: workdirId };
   };
 
   const createSession = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -230,7 +240,7 @@ export function registerAiRoutes(
         .values({
           kind: 'agent',
           title: body.title ?? agent.name,
-          workspaceId: workspace.id,
+          workdirId: workspace.id,
           agentId: agent.id,
           parentSessionId: body.parentSessionId ?? null,
           itemId: body.itemId ?? null,
@@ -243,7 +253,7 @@ export function registerAiRoutes(
         buildRunSpec(agent, workspace.path, { maxBudgetUsd: body.maxBudgetUsd }),
       );
       supervisor.startAgent({ id: session!.id, run, maxBudgetUsd: body.maxBudgetUsd });
-      reply.status(201).send(session);
+      reply.status(201).send(toSessionJson(session!));
       return;
     }
 
@@ -256,7 +266,7 @@ export function registerAiRoutes(
       .values({
         kind: 'terminal',
         title: body.title ?? cmd.command,
-        workspaceId: workspace.id,
+        workdirId: workspace.id,
         status: 'starting',
         cwd: workspace.path,
       })
@@ -271,14 +281,14 @@ export function registerAiRoutes(
       rows: body.rows,
     });
 
-    reply.status(201).send(session);
+    reply.status(201).send(toSessionJson(session!));
   };
 
   const getSession = async (request: FastifyRequest, reply: FastifyReply) => {
     const id = parseId((request.params as { id: string }).id);
     const [session] = await db.select().from(aiSessions).where(eq(aiSessions.id, id));
     if (!session) throw new HttpError(404, 'session not found');
-    reply.send(session);
+    reply.send(toSessionJson(session));
   };
 
   const stopSession = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -316,7 +326,7 @@ export function registerAiRoutes(
       .set({ archivedAt: sql`now()`, updatedAt: sql`now()` })
       .where(eq(aiSessions.id, id));
     const [row] = await db.select().from(aiSessions).where(eq(aiSessions.id, id));
-    reply.send(row);
+    reply.send(toSessionJson(row!));
   };
 
   const unarchiveSession = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -328,7 +338,7 @@ export function registerAiRoutes(
       .set({ archivedAt: null, updatedAt: sql`now()` })
       .where(eq(aiSessions.id, id));
     const [row] = await db.select().from(aiSessions).where(eq(aiSessions.id, id));
-    reply.send(row);
+    reply.send(toSessionJson(row!));
   };
 
   // ── Dispatch (TIX-208) — put an agent on a ticket ───────────────────────────
@@ -354,7 +364,7 @@ export function registerAiRoutes(
       .values({
         kind: 'agent',
         title: `${agent.name} · ${body.itemId}`,
-        workspaceId: workspace.id,
+        workdirId: workspace.id,
         agentId: agent.id,
         parentSessionId: body.parentSessionId ?? null,
         itemId: body.itemId,
@@ -410,7 +420,7 @@ export function registerAiRoutes(
       },
     });
     supervisor.prompt(session!.id, body.prompt);
-    reply.status(201).send(session);
+    reply.status(201).send(toSessionJson(session!));
   };
 
   // ── Providers (code registry, read-only) ───────────────────────────────────

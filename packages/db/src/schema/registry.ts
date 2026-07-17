@@ -4,7 +4,6 @@ import { aiMessages } from './ai-messages';
 import { aiPermissionRequests } from './ai-permission-requests';
 import { aiSessionOutput } from './ai-session-output';
 import { aiSessions } from './ai-sessions';
-import { aiWorkspaces } from './ai-workspaces';
 import { commands } from './commands';
 import { commentReactions } from './comment-reactions';
 import { comments } from './comments';
@@ -37,6 +36,7 @@ import { projects } from './projects';
 import { schemes } from './schemes';
 import { users } from './users';
 import { views } from './views';
+import { workdirs } from './workdirs';
 
 // Every pgTable in the schema. The conformance test forces this to equal the
 // entity set in apps/eer/models/items-platform.json.
@@ -46,7 +46,7 @@ export const allTables = [
   optionSets, options, optionTransitions, linkTypes, linkTypeTargetTypes,
   items, itemValues, comments, commentReactions, itemLinks,
   events, commands, outbox, itemActivity,
-  aiWorkspaces, aiSessions, aiSessionOutput,
+  workdirs, aiSessions, aiSessionOutput,
   aiAgents, aiMessages, aiPermissionRequests,
 ];
 

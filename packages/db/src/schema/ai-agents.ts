@@ -9,9 +9,9 @@ import {
   unique,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
-import { aiWorkspaces } from './ai-workspaces';
 import { permissionModeEnum } from './enums';
 import { users } from './users';
+import { workdirs } from './workdirs';
 
 // The persona library. Each agent OWNS a users row with kind='agent' (user_id) —
 // that is what makes a persona assignable to a ticket and attributable in events
@@ -42,7 +42,7 @@ export const aiAgents = pgTable(
       .notNull()
       .default(sql`'{}'::jsonb`),
     effort: text('effort'),
-    defaultWorkspaceId: integer('default_workspace_id').references(() => aiWorkspaces.id),
+    defaultWorkspaceId: integer('default_workspace_id').references(() => workdirs.id),
     config: jsonb('config')
       .notNull()
       .default(sql`'{}'::jsonb`),

@@ -5,7 +5,7 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import type { Db } from '@tickets/db';
-import { aiPermissionRequests, aiSessions, aiWorkspaces, environment } from '@tickets/db';
+import { aiPermissionRequests, aiSessions, environment, workdirs } from '@tickets/db';
 import { createDbSessionStore } from './db-session-store';
 
 // Real-Postgres test for the SessionStore adapter — same scratch-db-per-run
@@ -34,12 +34,12 @@ beforeAll(async () => {
   });
 
   const [ws] = await db
-    .insert(aiWorkspaces)
+    .insert(workdirs)
     .values({ name: 'test-ws', path: '/tmp/ws' })
-    .returning({ id: aiWorkspaces.id });
+    .returning({ id: workdirs.id });
   const [session] = await db
     .insert(aiSessions)
-    .values({ kind: 'terminal', title: 'test session', workspaceId: ws!.id })
+    .values({ kind: 'terminal', title: 'test session', workdirId: ws!.id })
     .returning({ id: aiSessions.id });
   sessionId = session!.id;
   store = createDbSessionStore(db);
@@ -153,19 +153,19 @@ describe('DbSessionStore', () => {
 
   test('reconcileOrphaned flips live-ish orphans to disconnected and stamps ended_at', async () => {
     const [ws] = await db
-      .insert(aiWorkspaces)
+      .insert(workdirs)
       .values({ name: 'reconcile-ws', path: '/tmp/reconcile' })
-      .returning({ id: aiWorkspaces.id });
+      .returning({ id: workdirs.id });
     const [live] = await db
       .insert(aiSessions)
-      .values({ kind: 'terminal', title: 'orphaned live', workspaceId: ws!.id, status: 'live' })
+      .values({ kind: 'terminal', title: 'orphaned live', workdirId: ws!.id, status: 'live' })
       .returning({ id: aiSessions.id });
     const [done] = await db
       .insert(aiSessions)
       .values({
         kind: 'terminal',
         title: 'already exited',
-        workspaceId: ws!.id,
+        workdirId: ws!.id,
         status: 'exited',
         endedAt: new Date().toISOString(),
       })
@@ -192,12 +192,12 @@ describe('DbSessionStore', () => {
     // Fresh session — the lifecycle test above already stamped ended_at on the
     // shared one.
     const [ws] = await db
-      .insert(aiWorkspaces)
+      .insert(workdirs)
       .values({ name: 'cost-ws', path: '/tmp/cost' })
-      .returning({ id: aiWorkspaces.id });
+      .returning({ id: workdirs.id });
     const [fresh] = await db
       .insert(aiSessions)
-      .values({ kind: 'agent', title: 'cost session', workspaceId: ws!.id })
+      .values({ kind: 'agent', title: 'cost session', workdirId: ws!.id })
       .returning({ id: aiSessions.id });
 
     await store.setCost(fresh!.id, 1.2345);

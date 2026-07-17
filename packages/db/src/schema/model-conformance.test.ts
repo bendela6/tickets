@@ -42,7 +42,7 @@ const normalizeExpression = (s: string): string =>
 // list. Nothing else is exempt — every product table is still gated in both
 // directions.
 const PENDING_SPLIT_TABLES = new Set([
-  'ai_workspaces',
+  'workdirs',
   'ai_sessions',
   'ai_session_output',
   'ai_agents',
