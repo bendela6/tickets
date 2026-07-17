@@ -15,8 +15,14 @@ import type { StatusKind } from '../ui/kind-glyph';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '../ui/menu';
 import { NumberInput } from '../ui/number-input';
 import { OptionChip, type OptionColor } from '../ui/option-chip';
+import { buildMessageStream, type SeqEvent } from '../components/ai/build-message-stream';
+import { CostMeter } from '../components/ai/cost-meter';
+import { MessageStream } from '../components/ai/message-stream';
+import { AGENT_MODELS, PromptComposer } from '../components/ai/prompt-composer';
 import { RadioGroup } from '../ui/radio-group';
 import { RelativeDate } from '../ui/relative-date';
+import { SessionKindGlyph } from '../ui/session-kind-glyph';
+import { SessionStatusPill, type SessionStatus } from '../ui/session-status-pill';
 import { StatusBadge } from '../ui/status-badge';
 import { StatusSelect, type StatusOption } from '../ui/status-select';
 import { Switch } from '../ui/switch';
@@ -33,6 +39,46 @@ const KINDS: { kind: StatusKind; label: string }[] = [
   { kind: 'blocked', label: 'Blocked' },
   { kind: 'done', label: 'Shipped' },
   { kind: 'dropped', label: "Won't do" },
+];
+
+const SAMPLE_STREAM: SeqEvent[] = [
+  { seq: 1, event: { type: 'thinking', text: 'Board and calendar both resolve columns through useLogicalFields; the timeline can reuse it unchanged.' } },
+  { seq: 2, event: { type: 'assistant_text', text: 'Reusing the logical-fields hook for the timeline renderer.' } },
+  { seq: 3, event: { type: 'tool_use', id: 't1', name: 'Read', input: { file_path: 'apps/web/src/views/timeline.tsx' } } },
+  { seq: 4, event: { type: 'tool_result', toolUseId: 't1', content: 'export function TimelineView(props) { … }', isError: false } },
+  {
+    seq: 5,
+    event: {
+      type: 'tool_use',
+      id: 't2',
+      name: 'Edit',
+      input: {
+        file_path: 'apps/web/src/views/timeline.tsx',
+        old_string: 'const range = getRange(props.range);',
+        new_string: 'const range = getRange(String(props.range));\nconst rows = groupByEpic(items, cols);\nconst lanes = rows.map(toLane(range));',
+      },
+    },
+  },
+  { seq: 6, event: { type: 'tool_result', toolUseId: 't2', content: 'ok', isError: false } },
+  { seq: 7, event: { type: 'tool_use', id: 't3', name: 'Bash', input: { command: 'pnpm typecheck' } } },
+  { seq: 8, event: { type: 'tool_result', toolUseId: 't3', content: "TS2345: Argument of type 'Date' is not assignable to parameter of type 'string'. — views/timeline.tsx:47", isError: true } },
+  { seq: 9, event: { type: 'tool_use', id: 'task1', name: 'Task', input: { description: 'explore renderers' } } },
+  { seq: 10, event: { type: 'assistant_text', text: 'Both renderers share the lane grouping.', parentToolUseId: 'task1' } },
+  { seq: 11, event: { type: 'tool_use', id: 't4', name: 'Grep', input: { pattern: 'useLogicalFields' }, parentToolUseId: 'task1' } },
+  { seq: 12, event: { type: 'tool_result', toolUseId: 't4', content: '3 matches', isError: false } },
+  { seq: 13, event: { type: 'tool_result', toolUseId: 'task1', content: 'done', isError: false } },
+  { seq: 14, event: { type: 'assistant_text', text: 'Typecheck failed — the range needs to be a string. Fixing, then I’ll rerun.' } },
+  { seq: 15, event: { type: 'result', costUsd: 1.06, durationMs: 34200, isError: false } },
+];
+
+const SESSION_STATUSES: SessionStatus[] = [
+  'starting',
+  'running',
+  'idle',
+  'awaiting_input',
+  'interrupted',
+  'exited',
+  'failed',
 ];
 
 const OPTION_COLORS: OptionColor[] = [
@@ -297,6 +343,59 @@ function GalleryScreen() {
               ))}
             </Section>
 
+            <Section title="AI session — status pills">
+              {SESSION_STATUSES.map((status) => (
+                <SessionStatusPill
+                  key={status}
+                  status={status}
+                  exitCode={status === 'exited' ? 0 : undefined}
+                />
+              ))}
+              <SessionStatusPill status="exited" exitCode={1} />
+            </Section>
+
+            <Section title="AI session — kind glyphs">
+              <SessionKindGlyph kind="terminal" />
+              <SessionKindGlyph kind="agent" />
+            </Section>
+
+            <Section title="AI session — agent message stream">
+              <div className="w-full max-w-2xl">
+                <MessageStream blocks={buildMessageStream(SAMPLE_STREAM)} />
+              </div>
+            </Section>
+
+            <Section title="AI session — approval card (blocking)">
+              <div className="w-full max-w-2xl">
+                <MessageStream
+                  blocks={buildMessageStream([
+                    {
+                      seq: 1,
+                      event: {
+                        type: 'permission_request',
+                        id: 'p1',
+                        toolName: 'Bash',
+                        input: { command: 'rm -rf node_modules && pnpm install' },
+                      },
+                    },
+                  ])}
+                  onRespond={() => {}}
+                />
+              </div>
+            </Section>
+
+            <Section title="AI session — cost meter (uncapped · capped · over)">
+              <CostMeter costUsd={1.06} />
+              <CostMeter costUsd={0.88} capUsd={5} />
+              <CostMeter costUsd={5.2} capUsd={5} />
+            </Section>
+
+            <Section title="AI session — prompt composer">
+              <div className="w-full max-w-2xl">
+                <ComposerDemo />
+              </div>
+            </Section>
+
             <Section title="Option chips — 11-color palette">
               {OPTION_COLORS.map((color) => (
                 <OptionChip key={color} color={color} label={color} />
@@ -335,6 +434,35 @@ function GalleryScreen() {
         </div>
       </ToastProvider>
     </TooltipProvider>
+  );
+}
+
+function ComposerDemo() {
+  const [value, setValue] = useState('');
+  const [model, setModel] = useState(AGENT_MODELS[0]!.value);
+  const [effort, setEffort] = useState('medium');
+  const [running, setRunning] = useState(true);
+  return (
+    <div className="flex w-full flex-col gap-2">
+      <PromptComposer
+        value={value}
+        onChange={setValue}
+        onSend={() => setValue('')}
+        onInterrupt={() => setRunning(false)}
+        running={running}
+        model={model}
+        onModelChange={setModel}
+        effort={effort}
+        onEffortChange={setEffort}
+      />
+      <button
+        type="button"
+        onClick={() => setRunning((r) => !r)}
+        className="self-start font-sans text-meta text-accent hover:underline"
+      >
+        toggle running (Stop shows only while running)
+      </button>
+    </div>
   );
 }
 

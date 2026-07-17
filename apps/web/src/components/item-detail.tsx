@@ -20,6 +20,7 @@ import { DetailComments } from './detail-comments';
 import { DetailFields } from './detail-fields';
 import { DetailLinks } from './detail-links';
 import { MarkdownEditor } from './markdown-editor';
+import { TicketDispatch } from './ai/ticket-dispatch';
 
 const SECTION_LABEL = 'font-sans text-label font-medium uppercase text-ink-2';
 const ICON_BUTTON =
@@ -375,6 +376,7 @@ export function ItemDetail({
         </span>
         {archivedChip}
         <span className="flex-1" />
+        <TicketDispatch itemId={item.id} actorId={userId ?? undefined} />
         <Button
           size="compact"
           onClick={() => {

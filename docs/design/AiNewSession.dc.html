@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="width:1440px;height:780px;border:1px solid var(--bd);border-radius:12px;overflow:hidden;background:var(--bg);color:var(--f1);box-shadow:var(--shlg);position:relative;{{tok}}">
+
+  <!-- dimmed sessions list behind -->
+  <div style="position:absolute;inset:0;display:flex;opacity:.5">
+    <aside style="width:236px;flex:none;border-right:1px solid var(--bd);padding:14px 12px">
+      <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 14px"><span style="width:9px;height:9px;background:var(--ac);border-radius:2px"></span><span style="font:600 15px 'IBM Plex Mono',monospace">tickets</span></div>
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif">✳<span>Sessions</span></div>
+    </aside>
+    <main style="flex:1;padding:24px 28px">
+      <h1 style="font:600 22px 'IBM Plex Sans',sans-serif;margin:0 0 16px">Sessions</h1>
+      <div style="border:1px solid var(--bd);border-radius:12px;background:var(--rs);height:280px"></div>
+    </main>
+  </div>
+  <div style="position:absolute;inset:0;background:rgba(20,18,14,.30)"></div>
+
+  <!-- dialog -->
+  <div style="position:absolute;top:70px;left:50%;transform:translateX(-50%);width:{{dlgW}}px;background:var(--rs);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--shlg);display:flex;flex-direction:column;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--bd)">
+      <span style="font:600 16px 'IBM Plex Sans',sans-serif;flex:1">New session</span>
+      <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">{{stepLabel}}</span>
+      <span style="width:28px;height:28px;border-radius:7px;border:1px solid var(--bd);display:inline-flex;align-items:center;justify-content:center;color:var(--f2);cursor:pointer">×</span>
+    </div>
+
+    <!-- STEP 1 · KIND -->
+    <sc-if value="{{isKind}}" hint-placeholder-val="{{true}}">
+      <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="font:400 13px/1.5 'IBM Plex Sans',sans-serif;color:var(--f2)">What kind of session? The two are not interchangeable — a terminal is a screen, an agent is a structured run.</div>
+        <div style="display:flex;gap:12px">
+          <div style="flex:1;border:1px solid var(--bd);border-radius:12px;background:var(--rs);padding:16px;display:flex;flex-direction:column;gap:10px;cursor:pointer" style-hover="border-color:var(--bs)">
+            <span style="width:32px;height:32px;border-radius:8px;background:var(--f1);color:var(--bg);display:inline-flex;align-items:center;justify-content:center;font:600 12px 'IBM Plex Mono',monospace">&gt;_</span>
+            <div><div style="font:600 14px 'IBM Plex Sans',sans-serif">Terminal</div><div style="font:400 12px/1.5 'IBM Plex Sans',sans-serif;color:var(--f2);margin-top:3px">A real shell (PTY) streamed to the browser. You see and type exactly what a CLI shows.</div></div>
+            <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">xterm · scrollback · exit code</span>
+          </div>
+          <div style="flex:1;border:1.5px solid var(--ac);border-radius:12px;background:var(--rs);padding:16px;display:flex;flex-direction:column;gap:10px;cursor:pointer;box-shadow:0 0 0 3px var(--acs);position:relative">
+            <span style="position:absolute;top:13px;right:13px;width:16px;height:16px;border-radius:50%;background:var(--ac);color:var(--oac);display:inline-flex;align-items:center;justify-content:center;font:600 8px 'IBM Plex Sans',sans-serif">✓</span>
+            <span style="width:32px;height:32px;border-radius:8px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:500 16px 'IBM Plex Mono',monospace">✳</span>
+            <div><div style="font:600 14px 'IBM Plex Sans',sans-serif">Agent</div><div style="font:400 12px/1.5 'IBM Plex Sans',sans-serif;color:var(--f2);margin-top:3px">A structured run — assistant messages, tool calls, diffs, cost. Can be attached to a ticket.</div></div>
+            <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">personas · approvals · dispatch</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:14px 20px;border-top:1px solid var(--bd);background:var(--bg)">
+        <span style="flex:1"></span>
+        <button style="height:34px;padding:0 14px;border-radius:8px;border:none;background:transparent;color:var(--f2);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">Cancel</button>
+        <button style="height:34px;padding:0 16px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">Continue</button>
+      </div>
+    </sc-if>
+
+    <!-- STEP 2 · AGENT BRANCH -->
+    <sc-if value="{{isAgent}}" hint-placeholder-val="{{false}}">
+      <div style="padding:18px 20px;display:flex;flex-direction:column;gap:16px;max-height:560px;overflow:auto">
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Agent</span>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+            <div style="border:1.5px solid var(--ac);border-radius:10px;background:var(--rs);padding:10px;display:flex;align-items:center;gap:8px;box-shadow:0 0 0 3px var(--acs);cursor:pointer">
+              <span style="width:26px;height:26px;border-radius:7px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace;flex:none">CO</span>
+              <div style="min-width:0"><div style="font:600 12px 'IBM Plex Sans',sans-serif">Coder</div><div style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">claude-opus-4-8</div></div>
+            </div>
+            <div style="border:1px solid var(--bd);border-radius:10px;background:var(--rs);padding:10px;display:flex;align-items:center;gap:8px;cursor:pointer" style-hover="border-color:var(--bs)">
+              <span style="width:26px;height:26px;border-radius:7px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace;flex:none">AR</span>
+              <div style="min-width:0"><div style="font:600 12px 'IBM Plex Sans',sans-serif">Architect</div><div style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">plan mode</div></div>
+            </div>
+            <div style="border:1px solid var(--bd);border-radius:10px;background:var(--rs);padding:10px;display:flex;align-items:center;gap:8px;cursor:pointer" style-hover="border-color:var(--bs)">
+              <span style="width:26px;height:26px;border-radius:7px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace;flex:none">BR</span>
+              <div style="min-width:0"><div style="font:600 12px 'IBM Plex Sans',sans-serif">Backend Reviewer</div><div style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">read-only</div></div>
+            </div>
+            <div style="border:1px solid var(--bd);border-radius:10px;background:var(--rs);padding:10px;display:flex;align-items:center;gap:8px;cursor:pointer;opacity:.85" style-hover="border-color:var(--bs)">
+              <span style="width:26px;height:26px;border-radius:7px;background:var(--in);color:var(--f2);display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace;flex:none">TR</span>
+              <div style="min-width:0"><div style="font:600 12px 'IBM Plex Sans',sans-serif">Triager</div><div style="font:400 10px 'IBM Plex Mono',monospace;color:var(--kb);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">degraded · local</div></div>
+            </div>
+            <div style="border:1px dashed var(--bs);border-radius:10px;background:var(--bg);padding:10px;display:flex;align-items:center;gap:8px;cursor:pointer;grid-column:span 2">
+              <span style="width:26px;height:26px;border-radius:7px;border:1px dashed var(--bs);color:var(--f3);display:inline-flex;align-items:center;justify-content:center;font:400 13px 'IBM Plex Sans',sans-serif;flex:none">＋</span>
+              <div><div style="font:500 12px 'IBM Plex Sans',sans-serif;color:var(--f2)">One-off</div><div style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">pick provider + model inline, no persona saved</div></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Workspace</span>
+            <div style="height:34px;border:1px solid var(--bs);border-radius:8px;background:var(--rs);display:flex;align-items:center;padding:0 11px;gap:7px;font:400 13px 'IBM Plex Mono',monospace"><span style="color:var(--f3)">dir</span>~/work/tickets<span style="flex:1"></span><span style="font-size:9px;color:var(--f3)">▾</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Attach to ticket <span style="text-transform:none;font:400 11px 'IBM Plex Sans',sans-serif;color:var(--f3)">optional</span></span>
+            <div style="height:34px;border:1px solid var(--bs);border-radius:8px;background:var(--rs);display:flex;align-items:center;padding:0 11px;gap:7px;font:400 13px 'IBM Plex Sans',sans-serif"><span style="font:500 12px 'IBM Plex Mono',monospace;background:var(--in);border-radius:4px;padding:2px 6px">TIX-153</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--f2)">Timeline renderer</span><span style="flex:1"></span><span style="font-size:9px;color:var(--f3)">▾</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Opening prompt</span>
+          <div style="border:1px solid var(--bs);border-radius:10px;background:var(--rs);padding:11px 13px;font:400 13px/1.55 'IBM Plex Sans',sans-serif;min-height:64px;color:var(--f1)">Implement the timeline renderer for Configurable Views per TIX-153. Reuse the board's logical-field resolution. Run typecheck before you finish.</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:14px 20px;border-top:1px solid var(--bd);background:var(--bg)">
+        <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">runs autonomously · tool allowlist from persona · budget cap $5.00</span>
+        <span style="flex:1"></span>
+        <button style="height:34px;padding:0 14px;border-radius:8px;border:none;background:transparent;color:var(--f2);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">← Back</button>
+        <button style="height:34px;padding:0 16px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">Start session</button>
+      </div>
+    </sc-if>
+
+    <!-- STEP 2 · TERMINAL BRANCH -->
+    <sc-if value="{{isTerminal}}" hint-placeholder-val="{{false}}">
+      <div style="padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="width:24px;height:24px;border-radius:6px;background:var(--f1);color:var(--bg);display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace">&gt;_</span>
+          <span style="font:500 13px 'IBM Plex Sans',sans-serif">Terminal session</span>
+          <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">a real PTY in the workspace</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Workspace</span>
+          <div style="height:34px;border:1px solid var(--bs);border-radius:8px;background:var(--rs);display:flex;align-items:center;padding:0 11px;gap:7px;font:400 13px 'IBM Plex Mono',monospace"><span style="color:var(--f3)">dir</span>~/work/tickets<span style="flex:1"></span><span style="font-size:9px;color:var(--f3)">▾</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Command <span style="text-transform:none;font:400 11px 'IBM Plex Sans',sans-serif;color:var(--f3)">optional — defaults to your shell</span></span>
+          <div style="height:34px;border:1px solid var(--bs);border-radius:8px;background:var(--rs);display:flex;align-items:center;padding:0 11px;font:400 13px 'IBM Plex Mono',monospace;color:var(--f3)">zsh</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:14px 20px;border-top:1px solid var(--bd);background:var(--bg)">
+        <span style="flex:1"></span>
+        <button style="height:34px;padding:0 14px;border-radius:8px;border:none;background:transparent;color:var(--f2);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">← Back</button>
+        <button style="height:34px;padding:0 16px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">Open terminal</button>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1460,&quot;height&quot;:800},&quot;tok&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;step&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;kind&quot;,&quot;agent&quot;,&quot;terminal&quot;],&quot;default&quot;:&quot;kind&quot;,&quot;tsType&quot;:&quot;'kind' | 'agent' | 'terminal'&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const step = this.props.step ?? 'kind';
+    return {
+      isKind: step === 'kind',
+      isAgent: step === 'agent',
+      isTerminal: step === 'terminal',
+      dlgW: step === 'kind' ? 560 : (step === 'agent' ? 640 : 520),
+      stepLabel: step === 'kind' ? 'step 1 of 2 — kind' : 'step 2 of 2 — configure',
+    };
+  }
+}
+</script>
+</body>
+</html>

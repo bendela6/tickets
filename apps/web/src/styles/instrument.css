@@ -1,4 +1,9 @@
-@layer theme, base, components, utilities;
+/* `xterm` is declared FIRST so it is the lowest-priority layer: xterm.css is
+   third-party UNLAYERED CSS and unlayered CSS outranks every layered rule —
+   left as-is it would beat Instrument. Wrapping it in the bottom layer keeps the
+   terminal's own canvas styles while letting any app utility win on conflict. */
+@layer xterm, theme, base, components, utilities;
+@import '@xterm/xterm/css/xterm.css' layer(xterm);
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(base);
 @import 'tailwindcss/utilities.css' layer(utilities);
@@ -306,6 +311,26 @@
   --text-meta--line-height: 1.4;
   --text-ui: 13px;
   --text-ui--line-height: 1.45;
+  /* AI session status pill motion (screen 10): a slow spinner for in-flight
+     work and a calm attention pulse for "awaiting input". */
+  --animate-ai-spin: ai-spin 1.4s linear infinite;
+  --animate-ai-pulse: ai-pulse 1.8s ease-out infinite;
+}
+
+@keyframes ai-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ai-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.62;
+  }
 }
 
 /* Markdown prose (design §11, docs/design/design-system.html): the rendered

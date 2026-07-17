@@ -88,3 +88,161 @@ export interface CreateProjectInput { actorId: number; key: string; name: string
 export interface ListMeta { total?: number }
 export interface UsersResponse { data: User[] }
 export interface ProjectsResponse { data: Project[] }
+
+// ── AI sessions (E1) ─────────────────────────────────────────────────────────
+
+export type SessionKind = 'terminal' | 'agent';
+export type SessionStatus =
+  | 'starting'
+  | 'running'
+  | 'idle'
+  | 'awaiting_input'
+  | 'interrupted'
+  | 'exited'
+  | 'failed'
+  | 'live'
+  | 'disconnected';
+export type RunnerKind = 'local' | 'container';
+
+export interface AiWorkspace {
+  id: number;
+  name: string;
+  path: string;
+  runner: RunnerKind;
+  containerName: string | null;
+  gitRemote: string | null;
+  defaultBranch: string | null;
+  config: Record<string, unknown>;
+  archivedAt: string | null;
+  createdAt: string;
+}
+
+export interface AiSession {
+  id: number;
+  kind: SessionKind;
+  title: string;
+  workspaceId: number;
+  agentId: number | null;
+  itemId: number | null;
+  parentSessionId: number | null;
+  status: SessionStatus;
+  providerSessionId: string | null;
+  cwd: string | null;
+  worktreePath: string | null;
+  exitCode: number | null;
+  costUsd: string | null;
+  startedBy: number | null;
+  createdAt: string;
+  updatedAt: string;
+  endedAt: string | null;
+  archivedAt: string | null;
+}
+
+export interface CreateAiWorkspaceInput {
+  name: string;
+  path: string;
+}
+
+export interface CreateAiSessionInput {
+  kind?: SessionKind;
+  workspaceId?: number;
+  agentId?: number;
+  title?: string;
+  command?: string;
+  maxBudgetUsd?: number;
+  cols?: number;
+  rows?: number;
+}
+
+// Mirror of the API's normalized agent event union (apps/api ai/types.ts). The
+// UI only ever sees these — never which provider produced them.
+export type AgentEvent =
+  | { type: 'session_started'; providerSessionId: string }
+  | { type: 'assistant_text'; text: string; parentToolUseId?: string }
+  | { type: 'thinking'; text: string }
+  | { type: 'tool_use'; id: string; name: string; input: unknown; parentToolUseId?: string }
+  | { type: 'tool_result'; toolUseId: string; content: unknown; isError: boolean }
+  | { type: 'permission_request'; id: string; toolName: string; input: unknown }
+  | {
+      type: 'result';
+      costUsd: number;
+      durationMs: number;
+      isError: boolean;
+      usage?: {
+        inputTokens: number;
+        outputTokens: number;
+        cacheReadTokens: number;
+        cacheCreationTokens: number;
+      };
+    }
+  | { type: 'error'; message: string };
+
+export type PermissionMode =
+  | 'default'
+  | 'acceptEdits'
+  | 'bypassPermissions'
+  | 'plan'
+  | 'dontAsk'
+  | 'auto';
+
+export interface AiAgent {
+  id: number;
+  userId: number;
+  key: string;
+  name: string;
+  providerKey: string;
+  model: string;
+  systemPrompt: string | null;
+  allowedTools: string[];
+  disallowedTools: string[];
+  permissionMode: PermissionMode;
+  mcpServers: Record<string, unknown>;
+  effort: string | null;
+  defaultWorkspaceId: number | null;
+  config: Record<string, unknown>;
+  archivedAt: string | null;
+  createdAt: string;
+}
+
+export interface ProviderCapabilities {
+  permissions: boolean;
+  resume: boolean;
+  mcp: boolean;
+  subagents: boolean;
+}
+
+export interface ModelInfo {
+  id: string;
+  label: string;
+  contextWindow: number;
+}
+
+export interface AiProvider {
+  key: string;
+  capabilities: ProviderCapabilities;
+  models: ModelInfo[];
+}
+
+export interface CreateAiAgentInput {
+  key: string;
+  name: string;
+  providerKey: string;
+  model: string;
+  systemPrompt?: string;
+  allowedTools?: string[];
+  permissionMode?: PermissionMode;
+  effort?: string;
+  defaultWorkspaceId?: number;
+}
+
+export interface PatchAiAgentInput {
+  id: number;
+  name?: string;
+  model?: string;
+  systemPrompt?: string | null;
+  allowedTools?: string[];
+  permissionMode?: PermissionMode;
+  effort?: string | null;
+  defaultWorkspaceId?: number | null;
+  archived?: boolean;
+}

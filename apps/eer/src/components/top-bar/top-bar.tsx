@@ -20,11 +20,7 @@ const ROUTING_TIP: Record<RoutingMode, string> = {
   ortho: 'Horizontal / vertical only',
 };
 
-interface TopBarProps {
-  onSelfCheck: () => void;
-}
-
-export function TopBar({ onSelfCheck }: TopBarProps) {
+export function TopBar() {
   const model = useDiagramModelOrNull();
   const view = useDiagramView();
   const ui = useDiagramUi();
@@ -59,14 +55,14 @@ export function TopBar({ onSelfCheck }: TopBarProps) {
           type="button"
           className={btn}
           disabled={!model}
-          title="Add a zone, subgroup, or table"
+          title="Add a group or table"
           onClick={() => openModal({ kind: 'add' })}
         >
           + Add
         </button>
 
         {model && model.groups.some((g) => !g.parent) && (
-          <ToggleGroup label="Zones">
+          <ToggleGroup label="Groups">
             {model.groups
               .filter((g) => !g.parent)
               .map((g) => (
@@ -98,11 +94,8 @@ export function TopBar({ onSelfCheck }: TopBarProps) {
         <button type="button" className={btn} title="Fit the diagram to the viewport" onClick={() => actions.fit()}>
           Fit
         </button>
-        <button type="button" className={btn} title="Re-pack entities by zone" onClick={() => actions.rearrange()}>
+        <button type="button" className={btn} title="Re-pack entities by group" onClick={() => actions.rearrange()}>
           Rearrange
-        </button>
-        <button type="button" className={btn} title="Run the quality checks" onClick={onSelfCheck}>
-          Self-check
         </button>
 
         {import.meta.env.DEV && (

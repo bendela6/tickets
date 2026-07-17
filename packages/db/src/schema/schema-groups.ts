@@ -45,4 +45,17 @@ export const SCHEMA_GROUPS: SchemaGroup[] = [
     color: 'teal',
     tables: ['events', 'commands', 'outbox', 'item_activity'],
   },
+  {
+    key: 'ai',
+    label: 'AI sessions',
+    color: 'purple',
+    tables: [
+      'ai_workspaces',
+      'ai_agents',
+      'ai_sessions',
+      'ai_messages',
+      'ai_session_output',
+      'ai_permission_requests',
+    ],
+  },
 ];

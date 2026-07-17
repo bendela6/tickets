@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body { margin:0; background:#E9E8E3; font-family:'IBM Plex Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+a { color:#4E46C6; text-decoration:none; } a:hover { text-decoration:underline; }
+@keyframes autospin { to { transform:rotate(360deg); } }
+@keyframes aiblink { 0%,49% { opacity:1; } 50%,100% { opacity:0; } }
+@keyframes aipulse { 0% { box-shadow:0 0 0 0 rgba(210,110,60,.42); } 70% { box-shadow:0 0 0 7px rgba(210,110,60,0); } 100% { box-shadow:0 0 0 0 rgba(210,110,60,0); } }
+</style>
+</helmet>
+
+<div style="padding:48px 40px 96px;display:flex;flex-direction:column;gap:44px;align-items:flex-start">
+
+  <header style="max-width:880px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="width:10px;height:10px;background:#4E46C6;border-radius:2px"></span>
+      <span style="font:600 18px 'IBM Plex Mono',monospace;color:#25231D">tickets</span>
+      <span style="font:400 12px 'IBM Plex Mono',monospace;color:#918D80">screen 10 — AI sessions · terminal + agents · dispatch</span>
+    </div>
+    <h1 style="font:600 26px/1.25 'IBM Plex Sans',sans-serif;color:#25231D;margin:0 0 12px;max-width:780px">AI sessions — agents do real work on the board, and you can always see it</h1>
+    <p style="font:400 13px/1.6 'IBM Plex Sans',sans-serif;color:#5D5A50;margin:0;text-wrap:pretty">Three nouns, kept distinct everywhere: a <strong style="font-weight:600;color:#25231D">Session</strong> is one live run — kind <strong style="font-weight:600;color:#25231D">terminal</strong> (a real PTY, a screen) or <strong style="font-weight:600;color:#25231D">agent</strong> (a structured run the app renders richly). An <strong style="font-weight:600;color:#25231D">Agent</strong> is a reusable persona that is also a user — square avatar, AGENT badge, owns tickets, writes comments. A <strong style="font-weight:600;color:#25231D">Workspace</strong> is the directory a session runs in. The headline: an agent session can <strong style="font-weight:600;color:#25231D">dispatch</strong> other agents onto tickets, so the sessions list is a tree. Reuses Instrument tokens plus the Automations run-pill and Connections provider-card language; nine new components below, then screens A–G in light + dark, desktop + mobile. <strong style="font-weight:600;color:#25231D">awaiting input</strong> is the system's only solid-fill pill — a run stopped on a human must be unmissable — and cost is never hidden.</p>
+  </header>
+
+  <!-- ============ NEW COMPONENTS ============ -->
+  <section data-screen-label="New components" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">NINE NEW INSTRUMENT COMPONENTS — SESSION STATUS PILL · KIND GLYPH · TERMINAL FRAME + ANSI-16 · MESSAGE STREAM BLOCKS · APPROVAL CARD · PROMPT COMPOSER · COST METER · AGENT CARD · SESSION TREE ROW</div>
+    <div style="display:flex;flex-wrap:wrap;gap:20px">
+      <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <div style="flex:1 1 620px;min-width:520px;background:var(--bg);border:1px solid var(--bd);border-radius:14px;padding:22px;color:var(--f1);{{tokLight}}">
+        <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--f3);margin-bottom:18px">LIGHT</div>
+        <dc-import name="AiGallery" hint-size="100%,1750px"></dc-import>
+      </div>
+      </sc-if>
+      <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <div style="flex:1 1 620px;min-width:520px;background:var(--bg);border:1px solid var(--bd);border-radius:14px;padding:22px;color:var(--f1);{{tokDark}}">
+        <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--f3);margin-bottom:18px">DARK</div>
+        <dc-import name="AiGallery" hint-size="100%,1750px"></dc-import>
+      </div>
+      </sc-if>
+    </div>
+  </section>
+
+  <!-- ============ A · SESSIONS LIST ============ -->
+  <section data-screen-label="A · Sessions list — light" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">A · SESSIONS LIST /ai · LIGHT — the tree: #47 Architect fanned out onto three tickets · awaiting-input row tinted + solid pill · terminals show “—” for agent</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiList" tok="{{tokLight}}" hint-size="1440px,860px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="A · Sessions list — dark" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">A · SESSIONS LIST · DARK</div>
+    <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiList" tok="{{tokDark}}" hint-size="1440px,860px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="A · Sessions empty state" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">A · EMPTY STATE — “START A SESSION”, THE TWO KINDS AS CARDS · LIGHT + DARK</div>
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+        <dc-import name="AiList" tok="{{tokLight}}" variant="empty" hint-size="1440px,860px"></dc-import>
+      </sc-if>
+      <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+        <dc-import name="AiList" tok="{{tokDark}}" variant="empty" hint-size="1440px,860px"></dc-import>
+      </sc-if>
+    </div>
+  </section>
+
+  <!-- ============ B · NEW SESSION ============ -->
+  <section data-screen-label="B · New session — kind picker" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">B · NEW SESSION · STEP 1 — PICK THE KIND (TERMINAL / AGENT) · LIGHT</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiNewSession" tok="{{tokLight}}" step="kind" hint-size="1440px,780px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="B · New session — agent branch" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">B · NEW SESSION · STEP 2, AGENT BRANCH — persona picker + one-off · workspace · optional ticket · opening prompt · DARK</div>
+    <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiNewSession" tok="{{tokDark}}" step="agent" hint-size="1440px,780px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="B · New session — terminal branch" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">B · NEW SESSION · STEP 2, TERMINAL BRANCH — workspace + optional command (defaults to shell) · LIGHT</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiNewSession" tok="{{tokLight}}" step="terminal" hint-size="1440px,780px"></dc-import>
+    </sc-if>
+  </section>
+
+  <!-- ============ C · TERMINAL SESSION ============ -->
+  <section data-screen-label="C · Terminal — live, light" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">C · TERMINAL SESSION /ai/46 · LIVE · LIGHT — Instrument ANSI palette on the light term.bg · cursor blinking · Stop is the only danger action</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiTerminal" tok="{{tokLight}}" state="live" hint-size="1440px,780px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="C · Terminal — reconnecting, light" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">C · TERMINAL · RECONNECTING · LIGHT — non-alarming banner, output buffered, scrollback dimmed</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiTerminal" tok="{{tokLight}}" state="reconnecting" hint-size="1440px,780px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="C · Terminal — exited, dark" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">C · TERMINAL · EXITED (1) · DARK — exit code in the footer, scrollback still readable, Restart in the header</div>
+    <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiTerminal" tok="{{tokDark}}" state="exited" hint-size="1440px,780px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="C · Terminal — interrupted, dark" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">C · TERMINAL · INTERRUPTED · DARK — “the server restarted; this terminal is gone” + Restart · buffered scrollback behind</div>
+    <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiTerminal" tok="{{tokDark}}" state="interrupted" hint-size="1440px,780px"></dc-import>
+    </sc-if>
+  </section>
+
+  <!-- ============ D · AGENT SESSION ============ -->
+  <section data-screen-label="D · Agent session — awaiting input, light" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">D · AGENT SESSION /ai/49 · AWAITING INPUT · LIGHT — the headline screen: full stream (thinking, tool cards, diff, error, subagent group) blocked mid-stream on the approval card · composer frozen</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiAgentSession" tok="{{tokLight}}" state="awaiting" hint-size="1440px,900px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="D · Agent session — running, dark" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">D · AGENT SESSION · RUNNING · DARK — Bash in flight · composer shows Stop · cost meter ticking</div>
+    <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiAgentSession" tok="{{tokDark}}" state="running" hint-size="1440px,900px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="D · Agent session — idle, light" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">D · AGENT SESSION · IDLE · LIGHT — turn finished, ticket moved to In review · composer invites the next prompt</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiAgentSession" tok="{{tokLight}}" state="idle" hint-size="1440px,900px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="D · Agent session — failed, dark" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">D · AGENT SESSION · FAILED · DARK — provider error block with the message + Retry turn</div>
+    <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiAgentSession" tok="{{tokDark}}" state="failed" hint-size="1440px,900px"></dc-import>
+    </sc-if>
+  </section>
+
+  <!-- ============ E · AGENT LIBRARY ============ -->
+  <section data-screen-label="E · Agent library — grid, light" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">E · AGENT LIBRARY · SETTINGS › WORKSPACE › AGENTS · LIGHT — four personas + New agent · Triager wears its degradation honestly</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiAgents" tok="{{tokLight}}" view="grid" hint-size="1440px,820px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="E · Agent library — grid, dark" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">E · AGENT LIBRARY · DARK</div>
+    <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiAgents" tok="{{tokDark}}" view="grid" hint-size="1440px,820px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="E · Agent editor — Coder, light" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">E · AGENT EDITOR · LIGHT — Coder: provider cards (Connections language) · model · system prompt · tool allowlist chips · permission mode · MCP · default workspace</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiAgents" tok="{{tokLight}}" view="editor" hint-size="1440px,820px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="E · Agent editor — capability-degraded, dark" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">E · AGENT EDITOR · CAPABILITY-DEGRADED · DARK — Triager on local (Ollama): approvals + resume disabled and explained, never dead controls pretending to work</div>
+    <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiAgents" tok="{{tokDark}}" view="editor" degraded="{{true}}" hint-size="1440px,820px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="E · Agent profile — Coder, light" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">E · AGENT PROFILE · LIGHT — the persona as a user: stats, recent sessions, open tickets assigned to it</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="AiAgents" tok="{{tokLight}}" view="profile" hint-size="1440px,820px"></dc-import>
+    </sc-if>
+  </section>
+
+  <!-- ============ F · DISPATCH TOUCHPOINTS ============ -->
+  <section data-screen-label="F · Dispatch touchpoints on ticket detail" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">F · DISPATCH TOUCHPOINTS ON TICKET DETAIL (04) — “＋ Put an agent on this” · live session pill + link in the ticket header while an agent works it · LIGHT + DARK</div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+      <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+        <dc-import name="AiTicketTouch" tok="{{tokLight}}" hint-size="880px,520px"></dc-import>
+      </sc-if>
+      <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+        <dc-import name="AiTicketTouch" tok="{{tokDark}}" hint-size="880px,520px"></dc-import>
+      </sc-if>
+    </div>
+  </section>
+
+  <!-- ============ G · MOBILE ============ -->
+  <section data-screen-label="G · Mobile — AI sessions" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">G · MOBILE · 390 — sessions as stacked cards, children indented · agent stream full-screen, composer docked · approval as a sheet that demands a decision · terminal read-only with an explicit “show keyboard”</div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+      <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+        <div style="{{tokLight}}"><dc-import name="AiMobile" view="list" hint-size="390px,760px"></dc-import></div>
+        <div style="{{tokLight}}"><dc-import name="AiMobile" view="agent" hint-size="390px,760px"></dc-import></div>
+        <div style="{{tokLight}}"><dc-import name="AiMobile" view="sheet" hint-size="390px,760px"></dc-import></div>
+        <div style="{{tokLight}}"><dc-import name="AiMobile" view="terminal" hint-size="390px,760px"></dc-import></div>
+      </sc-if>
+      <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+        <div style="{{tokDark}}"><dc-import name="AiMobile" view="list" hint-size="390px,760px"></dc-import></div>
+        <div style="{{tokDark}}"><dc-import name="AiMobile" view="sheet" hint-size="390px,760px"></dc-import></div>
+        <div style="{{tokDark}}"><dc-import name="AiMobile" view="terminal" hint-size="390px,760px"></dc-import></div>
+      </sc-if>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:900},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;both&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;both&quot;,&quot;tsType&quot;:&quot;'both' | 'light' | 'dark'&quot;,&quot;section&quot;:&quot;Preview&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const t = this.props.theme ?? 'both';
+    const term_L = ";--tbg:#FBFAF7;--tfg:#33312A;--tsel:#E9E7FA;--tcur:#4E46C6;--t0:#33312A;--t1:#C0382E;--t2:#2E7D4F;--t3:#8A6A10;--t4:#2E6FCC;--t5:#7B3FA0;--t6:#14687E;--t7:#B9B5AA;--t8:#918D80;--t9:#E05A4F;--t10:#3F9E68;--t11:#C29A2E;--t12:#5A92E0;--t13:#A063C8;--t14:#2E93AC;--t15:#F7F6F2";
+    const term_D = ";--tbg:#12110E;--tfg:#D9D6CA;--tsel:#2C2A4A;--tcur:#918AEC;--t0:#343128;--t1:#E26A5F;--t2:#57B383;--t3:#DFC060;--t4:#6BA4EE;--t5:#C591E8;--t6:#74C4DC;--t7:#A6A296;--t8:#79756A;--t9:#F0968D;--t10:#7FCB97;--t11:#EAD388;--t12:#8BB4EF;--t13:#D8B3F0;--t14:#9BD7E8;--t15:#EDEBE3";
+    const tokLight = "--bg:#F7F6F2;--rs:#FFFFFF;--in:#ECEAE3;--bd:#E0DDD5;--bs:#C9C5BA;--f1:#25231D;--f2:#5D5A50;--f3:#918D80;--ac:#4E46C6;--ach:#4238B5;--acs:#E9E7FA;--oac:#FFFFFF;--kt:#6E6A5E;--kts:#EBEAE3;--ka:#2E6FCC;--kas:#E4EDF9;--kb:#C25425;--kbs:#F8E9DF;--kd:#2E7D4F;--kds:#E2F0E7;--kx:#9B968A;--kxs:#EFEEE8;--dg:#C0382E;--dgs:#F8E7E5;--onpos:#FFFFFF;--onkb:#FFFFFF;--shsm:0 1px 2px rgba(28,26,20,.06);--shlg:0 16px 40px rgba(28,26,20,.16),0 4px 10px rgba(28,26,20,.08)" + term_L;
+    const tokDark = "--bg:#1B1A17;--rs:#252320;--in:#2C2A25;--bd:#343128;--bs:#4C483D;--f1:#EDEBE3;--f2:#A6A296;--f3:#79756A;--ac:#918AEC;--ach:#A29CF1;--acs:#2C2A4A;--oac:#16143C;--kt:#8A8678;--kts:#2C2A25;--ka:#6BA4EE;--kas:#1E2A3F;--kb:#E08B56;--kbs:#392317;--kd:#57B383;--kds:#1E3626;--kx:#79756A;--kxs:#2C2A25;--dg:#E26A5F;--dgs:#41231F;--onpos:#10201A;--onkb:#331A0D;--shsm:0 1px 2px rgba(0,0,0,.4);--shlg:0 16px 40px rgba(0,0,0,.55),0 4px 10px rgba(0,0,0,.4)" + term_D;
+    return { showLight: t !== 'dark', showDark: t !== 'light', tokLight, tokDark };
+  }
+}
+</script>
+</body>
+</html>

@@ -89,14 +89,18 @@ function validateDraft(fields: EditField[]): string | null {
   return null;
 }
 
-// Zones first, each followed by its subgroups (indented) — entities can live
-// directly in a zone or in one of its subgroups.
+// Every group in tree order (roots first, each followed by its descendants,
+// indented by depth) — an entity can live in a group at any nesting level.
 function groupOptions(model: Model): { id: string; label: string }[] {
-  const zones = model.groups.filter((g) => !g.parent);
-  return zones.flatMap((z) => [
-    { id: z.id, label: z.label },
-    ...model.groups.filter((g) => g.parent === z.id).map((sg) => ({ id: sg.id, label: `— ${sg.label}` })),
-  ]);
+  const out: { id: string; label: string }[] = [];
+  const walk = (parentId: string | null, depth: number) => {
+    for (const g of model.groups.filter((x) => (x.parent ?? null) === parentId).sort((a, b) => a.order - b.order)) {
+      out.push({ id: g.id, label: `${'— '.repeat(depth)}${g.label}` });
+      walk(g.id, depth + 1);
+    }
+  };
+  walk(null, 0);
+  return out;
 }
 
 // <EditorModals/> only opens this modal once a model is loaded, but bail
@@ -117,7 +121,13 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   const options = groupOptions(model);
   const defaultGroup = options[0]?.id ?? '';
 
-  const [name, setName] = useState(existing?.label ?? '');
+  // The single Name field IS the table's identifier (its SQL name). For a
+  // schema-qualified table the id is `schema.name`; the field edits only the
+  // name part, so seed it from the physical name and re-qualify on the way out.
+  const physicalOf = (id: string, schema: string | null) =>
+    schema && schema !== 'public' && id.startsWith(`${schema}.`) ? id.slice(schema.length + 1) : id;
+  const [name, setName] = useState(existing ? physicalOf(existing.id, existing.schema) : '');
+  const [schema, setSchema] = useState<string | null>(existing?.schema ?? null);
   const [group, setGroup] = useState(existing?.group ?? defaultGroup);
   const [description, setDescription] = useState(existing?.description ?? '');
   const [fields, setFields] = useState<EditField[]>(existing ? existing.columns.map(toEditField) : [DEFAULT_PK]);
@@ -127,7 +137,23 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('columns');
 
-  const entityId = isEdit ? existing!.id : slugify(name);
+  // The identifier the Name field currently describes — re-qualified with the
+  // selected schema. On create this IS the new table's id; on edit it's the
+  // rename TARGET, compared against existing.id to decide whether Save also has
+  // to rekey (see save()). Changing the Schema selector therefore renames the
+  // table the same way changing the Name does — the id is `schema.name` for a
+  // non-public schema, so it moves, and the rekey rides the same renameEntity path.
+  // Normalised schema for id/edit logic (blank or "public" → null = the public
+  // schema, which is never prefixed onto the id); the raw `schema` state backs
+  // the input so mid-typing whitespace doesn't leak into the id.
+  const schemaNorm = schema && schema.trim() && schema.trim() !== 'public' ? schema.trim() : null;
+  const slug = slugify(name);
+  const targetId = schemaNorm ? `${schemaNorm}.${slug}` : slug;
+  // The id the upsert writes under: the table's CURRENT id (unchanged even
+  // when the name field is mid-rename) — the rename is a separate edit applied
+  // AFTER the upsert, so the content save never has to reason about the new id.
+  const currentId = existing?.id ?? targetId;
+  const willRename = isEdit && targetId !== existing!.id;
 
   // The exact upsertEntity edit Save would dispatch, built from the current
   // draft state — shared by the live validity check below AND save() itself,
@@ -135,15 +161,15 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   const buildEdit = (): ModelEdit => ({
     kind: 'upsertEntity',
     entity: {
-      id: entityId,
-      label: name.trim(),
+      id: currentId,
+      label: currentId, // label is pinned to the identifier — the Name field IS the id
       group,
       description: description.trim() ? description.trim() : null,
-      // No UI to change a table's schema yet — carry the existing one
-      // through verbatim (null for a brand-new table), same reasoning as
-      // identity/generated above: a default here would silently strip a
-      // schema-qualified table's schema on its very next no-op Save.
-      schema: existing?.schema ?? null,
+      // The Schema field below owns this now (null = public). The upsert writes
+      // it under the current id; if the schema changed, targetId changed too, so
+      // save() also dispatches a renameEntity that moves the id to `schema.name`
+      // — the two land the schema on both the field and the id.
+      schema: schemaNorm,
       fields: fields.map((f) => ({
         name: f.name.trim(),
         type: f.type.trim(),
@@ -170,11 +196,13 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
   // this is the one blocking condition the engine itself has no way to
   // check (it doesn't know which id came from a fresh slugify vs. a real
   // edit), so it's still computed here, live, same as everything else below.
-  const idCollision = !isEdit && model.entityById.has(entityId);
+  // Renaming an existing table onto another table's id is the same hazard
+  // (renameEntity would throw), so the collision check covers both.
+  const idCollision = willRename ? model.entityById.has(targetId) : !isEdit && model.entityById.has(targetId);
   // The human-readable reason for idCollision, computed live so it can reach
   // the banner below before Save/Create is ever clicked — save() reuses this
   // exact string rather than re-deriving its own copy.
-  const idCollisionError = idCollision ? `A table with id "${entityId}" already exists.` : null;
+  const idCollisionError = idCollision ? `A table with id "${targetId}" already exists.` : null;
   // This component's own pre-dispatch column check (blank/duplicate names) —
   // kept as its own local rule (not just the engine's identical check inside
   // validateEditFields) so its message stays this component's own wording
@@ -225,13 +253,19 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
     }
     setLocalError(null);
 
-    const edit = buildEdit();
-    actions.applyModelEdit(edit);
+    // Save the content FIRST (under the current id), then rekey with a
+    // renameEntity edit — that order lets the rename fix the table's own
+    // self-referencing fks, which the draft still spells with the OLD id, so
+    // upsertEntity never has to reason about the pending new name.
+    const edits: ModelEdit[] = [buildEdit()];
+    if (willRename) edits.push({ kind: 'renameEntity', from: existing!.id, to: targetId });
+    for (const edit of edits) actions.applyModelEdit(edit);
     try {
-      // The reducer runs the identical pure edit but only reflects the outcome
-      // on the NEXT render (dispatch is async) — re-run it here, synchronously,
-      // against the same pre-dispatch model, to decide whether to close now.
-      tryApplyModelEdit(model, edit);
+      // The reducer runs the identical pure edits but only reflects the outcome
+      // on the NEXT render (dispatch is async) — re-run them here, synchronously
+      // and in the same order, to decide whether to close now.
+      let m = model;
+      for (const edit of edits) m = tryApplyModelEdit(m, edit);
       onClose();
     } catch {
       // Invalid: ui.editError renders below on the next render; stay open.
@@ -283,8 +317,13 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
       </label>
 
       <label className={label}>
-        Id
-        <input className={cn(field, 'text-gray-400')} value={entityId} disabled readOnly />
+        Schema
+        <input
+          className={field}
+          value={schema ?? ''}
+          placeholder="public"
+          onChange={(e) => setSchema(e.target.value || null)}
+        />
       </label>
 
       <label className={label}>
@@ -328,7 +367,7 @@ function TableModalForm({ model, id, onClose }: { model: Model; id?: string; onC
           <p className="text-2xs text-gray-400">A FOREIGN KEY is what draws an edge between two tables.</p>
           <ConstraintsEditor
             model={model}
-            ownId={entityId}
+            ownId={currentId}
             columns={fields.map((f) => f.name)}
             constraints={constraints}
             onChange={setConstraints}
