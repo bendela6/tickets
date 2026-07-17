@@ -112,13 +112,39 @@ export function registerAgentRoutes(
     reply.send(session);
   };
 
+  // End the run without hiding it. Stop and archive are two different acts:
+  // stopping closes the run and finalizes the row, and the session stays in
+  // the list as `interrupted`/`exited` for the user to read the transcript;
+  // archiving is what takes it off the list. Folding the two together would
+  // mean a session could only be ended by making it disappear — and would
+  // leave `interrupted`/`exited` reachable only via a route that immediately
+  // hides the row. (`archived_at` stays NULL here; see archiveSession below,
+  // which is this body plus the archive UPDATE.)
+  const stopSession = async (request: FastifyRequest, reply: FastifyReply) => {
+    const id = parseId((request.params as { id: string }).id);
+    const [session] = await db.select().from(agentSessions).where(eq(agentSessions.id, id));
+    if (!session) throw new HttpError(404, 'session not found');
+    if (driver.has(id)) {
+      driver.stop(id);
+    } else if (!session.endedAt) {
+      await db
+        .update(agentSessions)
+        .set({ status: 'interrupted', endedAt: sql`now()`, updatedAt: sql`now()` })
+        .where(eq(agentSessions.id, id));
+    }
+    const [row] = await db.select().from(agentSessions).where(eq(agentSessions.id, id));
+    reply.send(row);
+  };
+
   const archiveSession = async (request: FastifyRequest, reply: FastifyReply) => {
     const id = parseId((request.params as { id: string }).id);
     const [session] = await db.select().from(agentSessions).where(eq(agentSessions.id, id));
     if (!session) throw new HttpError(404, 'session not found');
     if (driver.has(id)) {
-      // Live: the driver closes the run; its exit handler writes the session
-      // status + ended_at, so we do not race it here.
+      // Live: the driver closes the run. Its exit handler writes the session
+      // status + ended_at asynchronously, so the row this route returns may
+      // still read a running status — the socket's exit frame and the next
+      // GET carry the final one.
       driver.stop(id);
     } else if (!session.endedAt) {
       // Not live (e.g. the API restarted under it): finalize the row directly.
@@ -242,6 +268,7 @@ export function registerAgentRoutes(
   app.get('/api/agent/sessions', listSessions);
   app.post('/api/agent/sessions', createSession);
   app.get('/api/agent/sessions/:id', getSession);
+  app.post('/api/agent/sessions/:id/stop', stopSession);
   app.post('/api/agent/sessions/:id/archive', archiveSession);
   app.post('/api/agent/sessions/:id/unarchive', unarchiveSession);
 }

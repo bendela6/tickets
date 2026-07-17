@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
-import { useArchiveTerminalSession } from '../../api/use-archive-terminal-session';
+import { useArchiveTerminalSession, useStopTerminalSession } from '../../api/use-archive-terminal-session';
 import { useCreateTerminalSession } from '../../api/use-create-terminal-session';
 import { useTerminalSession } from '../../api/use-terminal-session';
 import type { TerminalStatus } from '../../api/types';
@@ -22,6 +22,7 @@ export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
   const navigate = useNavigate();
   const session = useTerminalSession(sessionId);
   const createSession = useCreateTerminalSession();
+  const stopSession = useStopTerminalSession();
   const archiveSession = useArchiveTerminalSession();
   // Output-pulse fallback for sessions without shell integration (OSC 133).
   const fallback = useTerminalActivity();
@@ -172,13 +173,16 @@ export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
                   </button>
                 </MenuTrigger>
                 <MenuContent align="end">
+                  {/* Ending stops the PTY and leaves the session listed as
+                      exited, to read its output; archiving is the separate act
+                      that hides it. */}
                   {socket.conn !== 'ended' ? (
                     <MenuItem
                       destructive
-                      disabled={archiveSession.isPending}
+                      disabled={stopSession.isPending}
                       onSelect={() => {
                         if (window.confirm('End this session? The process will be stopped.')) {
-                          archiveSession.mutate(sessionId);
+                          stopSession.mutate(sessionId);
                         }
                       }}
                     >

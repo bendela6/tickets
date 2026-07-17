@@ -72,13 +72,39 @@ export function registerTerminalRoutes(
     reply.send(session);
   };
 
+  // End the session without hiding it. Stop and archive are two different
+  // acts: stopping kills the PTY and finalizes the row, and the session stays
+  // in the list as `exited`/`disconnected` for the user to read the output;
+  // archiving is what takes it off the list. Folding the two together would
+  // mean a session could only be ended by making it disappear — and would
+  // leave the terminal enum's `exited` reachable only via a route that
+  // immediately hides the row. (`archived_at` stays NULL here; see
+  // archiveSession below, which is this body plus the archive UPDATE.)
+  const stopSession = async (request: FastifyRequest, reply: FastifyReply) => {
+    const id = parseId((request.params as { id: string }).id);
+    const [session] = await db.select().from(terminalSessions).where(eq(terminalSessions.id, id));
+    if (!session) throw new HttpError(404, 'session not found');
+    if (driver.has(id)) {
+      driver.stop(id);
+    } else if (!session.endedAt) {
+      await db
+        .update(terminalSessions)
+        .set({ status: 'disconnected', endedAt: sql`now()`, updatedAt: sql`now()` })
+        .where(eq(terminalSessions.id, id));
+    }
+    const [row] = await db.select().from(terminalSessions).where(eq(terminalSessions.id, id));
+    reply.send(row);
+  };
+
   const archiveSession = async (request: FastifyRequest, reply: FastifyReply) => {
     const id = parseId((request.params as { id: string }).id);
     const [session] = await db.select().from(terminalSessions).where(eq(terminalSessions.id, id));
     if (!session) throw new HttpError(404, 'session not found');
     if (driver.has(id)) {
-      // Live: the driver kills the PTY; its exit handler writes the terminal
-      // status + ended_at, so we do not race it here.
+      // Live: the driver kills the PTY. Its exit handler writes the terminal
+      // status + ended_at asynchronously, so the row this route returns may
+      // still read `live` — the socket's exit frame and the next GET carry
+      // the final status.
       driver.stop(id);
     } else if (!session.endedAt) {
       // Not live (e.g. the API restarted under it): finalize the row directly.
@@ -110,6 +136,7 @@ export function registerTerminalRoutes(
   app.get('/api/terminal/sessions', listSessions);
   app.post('/api/terminal/sessions', createSession);
   app.get('/api/terminal/sessions/:id', getSession);
+  app.post('/api/terminal/sessions/:id/stop', stopSession);
   app.post('/api/terminal/sessions/:id/archive', archiveSession);
   app.post('/api/terminal/sessions/:id/unarchive', unarchiveSession);
 }

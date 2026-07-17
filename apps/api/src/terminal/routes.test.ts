@@ -198,6 +198,44 @@ describe('terminal routes', () => {
     expect(all.json().map((s: { id: number }) => s.id)).toContain(arch.id);
   });
 
+  test('stopping a live session kills the PTY but leaves it in the list', async () => {
+    // The distinction stop exists for: ending a session must not hide it.
+    const s = await createTerminalSession();
+    const res = await app.inject({ method: 'POST', url: `/api/terminal/sessions/${s.id}/stop` });
+    expect(res.statusCode).toBe(200);
+    expect(stopped).toContain(s.id);
+    expect(res.json().archivedAt).toBeNull();
+
+    const listed = await app.inject({ method: 'GET', url: '/api/terminal/sessions' });
+    expect(listed.json().map((x: { id: number }) => x.id)).toContain(s.id);
+  });
+
+  test('stopping a session the driver does not own finalizes it to disconnected, unarchived', async () => {
+    const [wd] = await db
+      .insert(workdirs)
+      .values({ name: `wd-stop-${Date.now()}-${Math.random()}`, path: tmpdir(), runner: 'local' })
+      .returning({ id: workdirs.id });
+    const [orphan] = await db
+      .insert(terminalSessions)
+      .values({ title: 'orphan to stop', workdirId: wd!.id, status: 'live', endedAt: null })
+      .returning({ id: terminalSessions.id });
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/terminal/sessions/${orphan!.id}/stop`,
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body).toMatchObject({ status: 'disconnected' });
+    expect(body.endedAt).not.toBeNull();
+    expect(body.archivedAt).toBeNull();
+  });
+
+  test('404s when stopping an unknown session', async () => {
+    const res = await app.inject({ method: 'POST', url: '/api/terminal/sessions/999999/stop' });
+    expect(res.statusCode).toBe(404);
+  });
+
   test('archiving a live session stops it via the driver first', async () => {
     const s = await createTerminalSession();
     const res = await app.inject({ method: 'POST', url: `/api/terminal/sessions/${s.id}/archive` });
