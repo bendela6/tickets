@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useBoard } from '../../api/use-board';
+import { useForkScheme, useUpdateProject } from '../../api/use-admin';
+import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { cn } from '../../ui/cn';
 import { indexBoard } from '../../utils/index-board';
@@ -31,6 +33,30 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
   const board = boardQuery.data;
   const indexes = useMemo(() => (board ? indexBoard(board) : null), [board]);
   const [tab, setTab] = useState<TabKey>('types');
+  const { userId } = useCurrentUser();
+  const forkScheme = useForkScheme();
+  const updateProject = useUpdateProject();
+
+  async function handleFork() {
+    if (userId === null || !board) return;
+    const confirmed = window.confirm(
+      `Fork the shared scheme so future changes only affect "${board.project.name}"? Other projects on this scheme are unaffected.`,
+    );
+    if (!confirmed) return;
+    // Derive a fresh, collision-free scheme key/name from the project's own
+    // key/name — a timestamp suffix lets the same project fork more than
+    // once without tripping the schemes.key unique constraint.
+    const suffix = Date.now().toString(36);
+    const key = `${board.project.key.toLowerCase()}-${suffix}`;
+    const name = `${board.project.name} (forked)`;
+    const forked = (await forkScheme.mutateAsync({
+      actorId: userId,
+      sourceSchemeId: board.project.schemeId,
+      key,
+      name,
+    })) as { schemeId: number };
+    await updateProject.mutateAsync({ actorId: userId, id: board.project.id, schemeId: forked.schemeId });
+  }
 
   if (boardQuery.isLoading) {
     return <p className="px-8 py-7 font-sans text-ui text-ink-3">Loading {projectKey} settings…</p>;
@@ -47,13 +73,19 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* scheme banner — Fork action is wired in Task 14 */}
+      {/* scheme banner */}
       <div className="flex flex-none items-center gap-3 border-b border-hairline bg-inset px-6 py-3">
         <p className="m-0 flex-1 font-sans text-ui text-ink-2">
           Editing the shared scheme <span className="font-medium text-ink">#{board.project.schemeId}</span> —
           changes affect all projects on this scheme.
         </p>
-        <Button variant="secondary" size="compact" disabled title="Wired in a later task">
+        <Button
+          variant="secondary"
+          size="compact"
+          disabled={userId === null || forkScheme.isPending || updateProject.isPending}
+          title={userId === null ? 'Sign in to fork the scheme' : undefined}
+          onClick={handleFork}
+        >
           Fork for this project
         </Button>
       </div>

@@ -1,11 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import type { Board } from '../../api/types';
 import { CurrentUserProvider } from '../../state/current-user-context';
 import { SettingsScreen } from './settings-screen';
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function makeBoard(overrides: Partial<Board> = {}): Board {
   const createdAt = '2026-01-01T00:00:00.000Z';
@@ -50,6 +52,26 @@ function mockBoardFetch(board: Board) {
   return fetchMock;
 }
 
+// Routes each request by URL: board reads always return `board`; the fork
+// and repoint mutations return their own canned responses so the fork flow
+// (POST fork -> PATCH project -> board refetch) can be driven end to end.
+function mockRoutedFetch(board: Board, forkedSchemeId: number) {
+  const fetchMock = vi.fn((url: string, _init?: RequestInit) => {
+    if (url.endsWith('/board')) {
+      return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify(board)) });
+    }
+    if (url.endsWith('/fork')) {
+      return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify({ schemeId: forkedSchemeId })) });
+    }
+    if (url.startsWith('/api/projects/')) {
+      return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify({ id: board.project.id })) });
+    }
+    return Promise.reject(new Error(`unexpected fetch: ${url}`));
+  });
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
+
 function renderWithProviders(node: ReactNode) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -63,6 +85,7 @@ function renderWithProviders(node: ReactNode) {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  localStorage.clear();
 });
 
 test('renders the four tabs and the scheme banner once the board loads', async () => {
@@ -95,4 +118,55 @@ test('switching tabs renders the corresponding placeholder panel', async () => {
 
   await userEvent.click(screen.getByRole('tab', { name: /Links/ }));
   expect(screen.getByRole('heading', { name: 'Links' })).toBeInTheDocument();
+});
+
+test('clicking Fork forks the scheme then repoints the project to the forked scheme', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const board = makeBoard();
+  const fetchMock = mockRoutedFetch(board, 42);
+  vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
+
+  renderWithProviders(<SettingsScreen projectKey="CORE" />);
+  await screen.findByRole('tab', { name: /Types/ });
+
+  const forkButton = screen.getByRole('button', { name: /Fork for this project/i });
+  expect(forkButton).not.toBeDisabled();
+  await userEvent.click(forkButton);
+
+  expect(confirm).toHaveBeenCalledTimes(1);
+
+  await waitFor(() => {
+    expect(fetchMock.mock.calls.some(([url]) => url === '/api/schemes/5/fork')).toBe(true);
+  });
+  const forkCall = fetchMock.mock.calls.find(([url]) => url === '/api/schemes/5/fork')!;
+  const [, forkInit] = forkCall as [string, RequestInit];
+  expect(forkInit.method).toBe('POST');
+  const { commandId: forkCommandId, ...forkRest } = JSON.parse(String(forkInit.body)) as Record<string, unknown>;
+  expect(forkCommandId).toMatch(UUID_RE);
+  expect(forkRest).toEqual({ actorId: 7, key: expect.any(String), name: expect.any(String) });
+
+  await waitFor(() => {
+    expect(fetchMock.mock.calls.some(([url]) => url === '/api/projects/1')).toBe(true);
+  });
+  const patchCall = fetchMock.mock.calls.find(([url]) => url === '/api/projects/1')!;
+  const [, patchInit] = patchCall as [string, RequestInit];
+  expect(patchInit.method).toBe('PATCH');
+  const { commandId: patchCommandId, ...patchRest } = JSON.parse(String(patchInit.body)) as Record<string, unknown>;
+  expect(patchCommandId).toMatch(UUID_RE);
+  expect(patchRest).toEqual({ actorId: 7, schemeId: 42 });
+});
+
+test('declining the confirm dialog does not call the fork endpoint', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const board = makeBoard();
+  const fetchMock = mockRoutedFetch(board, 42);
+  vi.stubGlobal('confirm', vi.fn().mockReturnValue(false));
+
+  renderWithProviders(<SettingsScreen projectKey="CORE" />);
+  await screen.findByRole('tab', { name: /Types/ });
+
+  await userEvent.click(screen.getByRole('button', { name: /Fork for this project/i }));
+
+  expect(confirm).toHaveBeenCalledTimes(1);
+  expect(fetchMock.mock.calls.some(([url]) => url === '/api/schemes/5/fork')).toBe(false);
 });
