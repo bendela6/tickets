@@ -117,14 +117,26 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
         </nav>
 
         <div role="tabpanel" className="min-w-0 flex-1 overflow-y-auto">
+          {/*
+            Keyed on the scheme id: each panel seeds local state (chip
+            selections, the selected-type picker, etc.) from the board on
+            mount, keyed by *type* ids. Forking re-inserts every type under
+            fresh ids (see schemeFork in
+            apps/api/src/command/config/scheme.ts) and repoints the project
+            without navigating away, so without this key the panels would
+            keep their stale, now-mismatched selections after the board
+            refetch — silently re-seeding from a scheme that no longer
+            applies. The key forces a clean remount so each panel re-derives
+            its state from the *new* board.
+          */}
           {tab === 'types' ? (
-            <TypesTab {...tabProps} />
+            <TypesTab key={board.project.schemeId} {...tabProps} />
           ) : tab === 'fields' ? (
-            <FieldsTab {...tabProps} />
+            <FieldsTab key={board.project.schemeId} {...tabProps} />
           ) : tab === 'workflow' ? (
-            <WorkflowTab {...tabProps} />
+            <WorkflowTab key={board.project.schemeId} {...tabProps} />
           ) : (
-            <LinksTab {...tabProps} />
+            <LinksTab key={board.project.schemeId} {...tabProps} />
           )}
         </div>
       </div>
