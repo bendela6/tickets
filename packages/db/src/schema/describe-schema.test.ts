@@ -75,13 +75,13 @@ describe('describeSchema', () => {
     // every terminal.*/agent.* table (never hand-listed) would silently stop
     // being rendered.
     const core = graph.groups.find((g) => g.key === 'core')!;
-    expect(core.tables).toContain('workdirs');
+    expect(core.tables).toContain('core.workdirs');
     const terminal = graph.groups.find((g) => g.key === 'terminal')!;
-    expect(terminal.tables).toContain('output');
+    expect(terminal.tables).toContain('terminal.output');
     const agent = graph.groups.find((g) => g.key === 'agent')!;
-    expect(agent.tables).toContain('agents');
-    expect(agent.tables).toContain('messages');
-    expect(agent.tables).toContain('permission_requests');
+    expect(agent.tables).toContain('agent.agents');
+    expect(agent.tables).toContain('agent.messages');
+    expect(agent.tables).toContain('agent.permission_requests');
   });
 
   it('the two subsystems are separate groups, not one AI bucket', () => {
@@ -90,9 +90,33 @@ describe('describeSchema', () => {
     // same-named `sessions` table lands in exactly one of them.
     const terminal = graph.groups.find((g) => g.key === 'terminal')!;
     const agent = graph.groups.find((g) => g.key === 'agent')!;
-    expect(terminal.tables).toContain('sessions');
-    expect(agent.tables).toContain('sessions');
+    expect(terminal.tables).toContain('terminal.sessions');
+    expect(agent.tables).toContain('agent.sessions');
+    expect(terminal.tables).not.toContain('agent.sessions');
+    expect(agent.tables).not.toContain('terminal.sessions');
     expect(graph.groups.map((g) => g.label)).not.toContain('AI sessions');
+  });
+
+  it('names tables in a group qualified, so the two `sessions` stay distinct', () => {
+    // The ERD renderer resolves every one of these names against graph.tables.
+    // A bare "sessions" appearing in two groups would resolve to the same
+    // table twice — one subsystem drawn double, the other not at all.
+    const named = graph.groups.flatMap((g) => g.tables);
+    expect(named).not.toContain('sessions');
+    expect(new Set(named).size).toBe(named.length);
+    // public tables stay bare — qualification only kicks in off `public`
+    expect(named).toContain('items');
+  });
+
+  it('gives each same-named table its own ordering slot', () => {
+    // The `order` map is keyed by qualified name; a bare key would hand
+    // terminal.sessions and agent.sessions ONE shared slot, the second
+    // overwriting the first's position and leaving the two sorting as equals.
+    const slots = graph.tables
+      .filter((t) => t.name === 'sessions')
+      .map((t) => graph.tables.indexOf(t));
+    expect(slots).toHaveLength(2);
+    expect(slots[0]).not.toBe(slots[1]);
   });
 });
 
