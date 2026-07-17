@@ -271,6 +271,45 @@ describe('agent routes', () => {
     expect(all.json().map((s: { id: number }) => s.id)).toContain(arch.id);
   });
 
+  test('stopping a live session closes the run but leaves it in the list', async () => {
+    // The distinction stop exists for: ending a session must not hide it.
+    const workdirId = await createWorkdir('stop-wd');
+    const agent = await createAgent('Stopper', workdirId);
+    const s = (
+      await app.inject({ method: 'POST', url: '/api/agent/sessions', payload: { agentId: agent.id } })
+    ).json();
+    const res = await app.inject({ method: 'POST', url: `/api/agent/sessions/${s.id}/stop` });
+    expect(res.statusCode).toBe(200);
+    expect(stopped).toContain(s.id);
+    expect(res.json().archivedAt).toBeNull();
+
+    const listed = await app.inject({ method: 'GET', url: '/api/agent/sessions' });
+    expect(listed.json().map((x: { id: number }) => x.id)).toContain(s.id);
+  });
+
+  test('stopping a session the driver does not own finalizes it to interrupted, unarchived', async () => {
+    const [wd] = await db
+      .insert(workdirs)
+      .values({ name: `wd-stop-${Date.now()}-${Math.random()}`, path: tmpdir(), runner: 'local' })
+      .returning({ id: workdirs.id });
+    const [orphan] = await db
+      .insert(agentSessions)
+      .values({ title: 'orphan to stop', workdirId: wd!.id, status: 'running', endedAt: null })
+      .returning({ id: agentSessions.id });
+
+    const res = await app.inject({ method: 'POST', url: `/api/agent/sessions/${orphan!.id}/stop` });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body).toMatchObject({ status: 'interrupted' });
+    expect(body.endedAt).not.toBeNull();
+    expect(body.archivedAt).toBeNull();
+  });
+
+  test('404s when stopping an unknown session', async () => {
+    const res = await app.inject({ method: 'POST', url: '/api/agent/sessions/999999/stop' });
+    expect(res.statusCode).toBe(404);
+  });
+
   test('archiving a live session stops it via the driver first', async () => {
     const workdirId = await createWorkdir('archive-wd');
     const agent = await createAgent('Archiver', workdirId);

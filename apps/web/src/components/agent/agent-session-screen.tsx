@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import type { AgentEvent, AgentSessionStatus } from '../../api/types';
 import { useAgentSession } from '../../api/use-agent-session';
-import { useArchiveAgentSession } from '../../api/use-archive-agent-session';
+import { useArchiveAgentSession, useStopAgentSession } from '../../api/use-archive-agent-session';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
 import { SessionStatusPill } from '../../ui/session-status-pill';
 import { useSessionSocket } from '../session/use-session-socket';
@@ -25,6 +25,7 @@ type Entry = { kind: 'user'; id: number; text: string } | { kind: 'event'; seq: 
 export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
   const navigate = useNavigate();
   const session = useAgentSession(sessionId);
+  const stopSession = useStopAgentSession();
   const archiveSession = useArchiveAgentSession();
 
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -75,6 +76,10 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
   }
 
   const running = status === 'running' || status === 'starting';
+  // The run is over: no process left to stop, so the menu offers Archive
+  // rather than a destructive "End session" that would stop nothing. Mirrors
+  // the terminal screen's socket.conn === 'ended' branch.
+  const ended = status === 'exited' || status === 'failed' || status === 'interrupted';
 
   return (
     <div className="flex h-full flex-col">
@@ -112,17 +117,28 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
             </button>
           </MenuTrigger>
           <MenuContent align="end">
-            <MenuItem
-              destructive
-              disabled={archiveSession.isPending}
-              onSelect={() => {
-                if (window.confirm('End this session? The process will be stopped.')) {
-                  archiveSession.mutate(sessionId);
-                }
-              }}
-            >
-              End session
-            </MenuItem>
+            {/* Ending stops the run and leaves the session listed, to read its
+                transcript; archiving is the separate act that hides it. */}
+            {!ended ? (
+              <MenuItem
+                destructive
+                disabled={stopSession.isPending}
+                onSelect={() => {
+                  if (window.confirm('End this session? The process will be stopped.')) {
+                    stopSession.mutate(sessionId);
+                  }
+                }}
+              >
+                End session
+              </MenuItem>
+            ) : (
+              <MenuItem
+                disabled={archiveSession.isPending}
+                onSelect={() => archiveSession.mutate(sessionId)}
+              >
+                Archive
+              </MenuItem>
+            )}
           </MenuContent>
         </Menu>
       </div>

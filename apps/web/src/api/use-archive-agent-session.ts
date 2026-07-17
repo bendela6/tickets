@@ -2,10 +2,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchJson } from './client';
 import type { AgentSession } from './types';
 
-// Archiving a live agent session also stops it (the driver closes the run as
-// part of the archive route) — there is no separate stop/DELETE endpoint any
-// more.
-function useSessionAction(action: 'archive' | 'unarchive') {
+// Three separate acts, deliberately not folded together: `stop` closes the run
+// and finalizes the row but leaves the session in the list to read; `archive`
+// takes it off the list (stopping it first if it is still live); `unarchive`
+// brings it back.
+function useSessionAction(action: 'stop' | 'archive' | 'unarchive') {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) =>
@@ -17,5 +18,6 @@ function useSessionAction(action: 'archive' | 'unarchive') {
   });
 }
 
+export const useStopAgentSession = () => useSessionAction('stop');
 export const useArchiveAgentSession = () => useSessionAction('archive');
 export const useUnarchiveAgentSession = () => useSessionAction('unarchive');

@@ -69,7 +69,7 @@ export function registerAgentSocket(app: FastifyInstance, context: { driver: Age
               if (attached) driver.respondToPermission(id, frame.requestId, frame.result, frame.reason);
               return;
             case 'interrupt':
-              // run.interrupt(), not a process kill — that is the archive route.
+              // run.interrupt(), not a process kill — that is the stop route.
               if (attached) driver.interrupt(id);
               return;
             default:

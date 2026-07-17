@@ -2,9 +2,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchJson } from './client';
 import type { TerminalSession } from './types';
 
-// Archiving a live terminal also stops it (the driver kills the PTY as part
-// of the archive route) — there is no separate stop/DELETE endpoint any more.
-function useSessionAction(action: 'archive' | 'unarchive') {
+// Three separate acts, deliberately not folded together: `stop` kills the PTY
+// and finalizes the row but leaves the session in the list to read; `archive`
+// takes it off the list (stopping it first if it is still live); `unarchive`
+// brings it back.
+function useSessionAction(action: 'stop' | 'archive' | 'unarchive') {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) =>
@@ -16,5 +18,6 @@ function useSessionAction(action: 'archive' | 'unarchive') {
   });
 }
 
+export const useStopTerminalSession = () => useSessionAction('stop');
 export const useArchiveTerminalSession = () => useSessionAction('archive');
 export const useUnarchiveTerminalSession = () => useSessionAction('unarchive');

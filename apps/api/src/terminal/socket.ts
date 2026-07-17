@@ -68,7 +68,7 @@ export function registerTerminalSocket(app: FastifyInstance, context: { driver: 
               return;
             case 'interrupt':
               // Ctrl-C to the foreground process. Does NOT kill the session —
-              // that is the archive route.
+              // that is the stop route.
               if (attached) driver.interrupt(id);
               return;
             default:
