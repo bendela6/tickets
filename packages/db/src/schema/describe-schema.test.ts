@@ -50,6 +50,20 @@ describe('describeSchema', () => {
     expect(records.color).toBe('orange');
     expect(records.tables).toContain('comment_reactions');
   });
+
+  it('group table lists include schema-derived tables, not just hand-listed ones', () => {
+    // The ERD renderer iterates GroupMeta.tables to lay out cards — if this
+    // list only reflected SCHEMA_GROUPS' raw `tables` array, workdirs and
+    // every terminal.*/agent.* table (never hand-listed) would silently stop
+    // being rendered.
+    const ai = graph.groups.find((g) => g.key === 'ai')!;
+    expect(ai.tables).toContain('workdirs');
+    expect(ai.tables).toContain('output');
+    expect(ai.tables).toContain('agents');
+    expect(ai.tables).toContain('messages');
+    expect(ai.tables).toContain('permission_requests');
+    expect(ai.tables.filter((t) => t === 'sessions')).toHaveLength(2);
+  });
 });
 
 describe('resolveGroupKey', () => {
@@ -58,6 +72,21 @@ describe('resolveGroupKey', () => {
   });
   it('resolves a known table', () => {
     expect(resolveGroupKey('items', SCHEMA_GROUPS)).toBe('rc');
+  });
+});
+
+describe('resolveGroupKey — schema-derived membership', () => {
+  it('resolves a schema-owned table with no `tables` entry at all', () => {
+    // workdirs lives in schema `core` and is not listed under any group's
+    // `tables` array — it only resolves because the `ai` group claims
+    // `schemas: ['core', ...]`. This is what stops SCHEMA_GROUPS and the
+    // real schema from drifting apart for terminal/agent/core tables.
+    expect(resolveGroupKey('workdirs', SCHEMA_GROUPS, 'core')).toBe('ai');
+    expect(resolveGroupKey('sessions', SCHEMA_GROUPS, 'terminal')).toBe('ai');
+    expect(resolveGroupKey('sessions', SCHEMA_GROUPS, 'agent')).toBe('ai');
+  });
+  it('throws when a schema is owned by no group', () => {
+    expect(() => resolveGroupKey('x', SCHEMA_GROUPS, 'nope')).toThrow(/no group/i);
   });
 });
 
