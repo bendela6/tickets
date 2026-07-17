@@ -1,14 +1,11 @@
 import type { AgentEvent } from './types';
 
 // How a persona decides whether a tool call needs a human — mirrors the Claude
-// Agent SDK's PermissionMode. Same set as the DB permission_mode enum.
-export type PermissionMode =
-  | 'default'
-  | 'acceptEdits'
-  | 'bypassPermissions'
-  | 'plan'
-  | 'dontAsk'
-  | 'auto';
+// Agent SDK's PermissionMode. Same set as the DB permission_mode enum, which
+// has FIVE values — no `auto`. The pre-split public API accepted a sixth
+// value, `auto`, that the DB enum never had; dropped here rather than carried
+// forward as dead surface (see task-8-report.md for the full reasoning).
+export type PermissionMode = 'default' | 'acceptEdits' | 'bypassPermissions' | 'plan' | 'dontAsk';
 
 export interface ModelInfo {
   id: string; // e.g. 'claude-opus-4-8'
@@ -26,7 +23,7 @@ export interface ProviderCapabilities {
   subagents: boolean;
 }
 
-// What the supervisor hands a provider to start an agent turn.
+// What the driver hands a provider to start an agent turn.
 export interface RunSpec {
   cwd: string;
   model: string;
@@ -42,9 +39,9 @@ export interface RunSpec {
   config?: Record<string, unknown>;
 }
 
-// A live handle the supervisor holds for an agent session — the AgentRun analogue
-// of PtyHandle. `events` is the normalized stream; `send` starts a follow-up
-// turn; `respondToPermission` unblocks a parked canUseTool promise (E3).
+// A live handle the driver holds for an agent session. `events` is the
+// normalized stream; `send` starts a follow-up turn; `respondToPermission`
+// unblocks a parked canUseTool promise.
 export interface AgentRun {
   events: AsyncIterable<AgentEvent>;
   send(text: string): Promise<void>;
