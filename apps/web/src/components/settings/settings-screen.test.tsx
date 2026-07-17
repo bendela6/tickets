@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { ReactNode } from 'react';
@@ -72,15 +72,18 @@ function mockRoutedFetch(board: Board, forkedSchemeId: number) {
   return fetchMock;
 }
 
-function renderWithProviders(node: ReactNode) {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
+function renderWithProviders(node: ReactNode, client?: QueryClient) {
+  const qc =
+    client ??
+    new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
   render(
-    <QueryClientProvider client={client}>
+    <QueryClientProvider client={qc}>
       <CurrentUserProvider>{node}</CurrentUserProvider>
     </QueryClientProvider>,
   );
+  return qc;
 }
 
 afterEach(() => {
@@ -169,4 +172,66 @@ test('declining the confirm dialog does not call the fork endpoint', async () =>
 
   expect(confirm).toHaveBeenCalledTimes(1);
   expect(fetchMock.mock.calls.some(([url]) => url === '/api/schemes/5/fork')).toBe(false);
+});
+
+// Regression test for the fork-wipes-copied-rules bug: `TypesTab` seeds a
+// `childSelections` state map keyed by *type* id from `board.childTypes` on
+// mount. `schemeFork` re-inserts every type under FRESH ids (see
+// `apps/api/src/command/config/scheme.ts`), so after the board refetch that
+// follows a fork+repoint, the panel must re-seed from the NEW board rather
+// than keep stale selections keyed by the old (now-foreign) type ids —
+// otherwise the chips render unselected even though the DB has the copied
+// rows, and the next click PUTs a single-element set that wipes them via
+// `type.setChildTypes`'s delete-all-then-insert replace. Without the
+// `key={board.project.schemeId}` remount in settings-screen.tsx, this test
+// fails: the panel keeps looking up `childSelections[1]` (the old parent id)
+// instead of `childSelections[101]` and the chip never shows as selected.
+test('re-seeds the child-type chip editor from a fresh board after the scheme changes, instead of keeping stale selections', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const boardA = makeBoard({
+    types: [
+      { id: 1, schemeId: 5, key: 'epic', label: 'Epic', position: 1, config: {}, archivedAt: null },
+      { id: 2, schemeId: 5, key: 'task', label: 'Task', position: 2, config: {}, archivedAt: null },
+    ],
+    childTypes: [{ parentTypeId: 1, childTypeId: 2 }],
+  });
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: () => Promise.resolve(JSON.stringify(boardA)) });
+  vi.stubGlobal('fetch', fetchMock);
+
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  renderWithProviders(<SettingsScreen projectKey="CORE" />, client);
+
+  await screen.findByRole('tab', { name: /Types/ });
+  const epicCardBefore = screen.getByText('epic').closest('section')!;
+  expect(
+    within(epicCardBefore).getByRole('button', { name: 'Task', hidden: true, pressed: true }),
+  ).toBeInTheDocument();
+
+  // Simulate what a successful fork produces: the board refetch (queryKey
+  // ['board', 'CORE']) comes back with a new schemeId and the copied
+  // types/child-type rows re-inserted under fresh ids — the parent that was
+  // id 1 is now id 101, its allowed child that was id 2 is now id 102.
+  const boardB: Board = {
+    ...boardA,
+    project: { ...boardA.project, schemeId: 6 },
+    types: [
+      { id: 101, schemeId: 6, key: 'epic', label: 'Epic', position: 1, config: {}, archivedAt: null },
+      { id: 102, schemeId: 6, key: 'task', label: 'Task', position: 2, config: {}, archivedAt: null },
+    ],
+    childTypes: [{ parentTypeId: 101, childTypeId: 102 }],
+  };
+  client.setQueryData(['board', 'CORE'], boardB);
+
+  // The scheme banner id flipping to #6 is the signal that the board
+  // refetch (with the fresh, fork-produced type ids) has landed.
+  await screen.findByText('#6');
+
+  await waitFor(() => {
+    const epicCardAfter = screen.getByText('epic').closest('section')!;
+    expect(
+      within(epicCardAfter).getByRole('button', { name: 'Task', hidden: true, pressed: true }),
+    ).toBeInTheDocument();
+  });
 });
