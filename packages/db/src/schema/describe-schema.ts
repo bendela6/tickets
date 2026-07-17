@@ -40,6 +40,9 @@ export type TableMeta = {
   checks: CheckMeta[];
   indexes: IndexMeta[];
 };
+// `tables` holds QUALIFIED names (see qualifiedName) — the ERD renderer keys
+// its card/row/column maps by these, and a bare "sessions" would name two
+// different tables.
 export type GroupMeta = { key: string; label: string; color: string; tables: string[] };
 export type EnumMeta = { name: string; values: string[]; schema: string | null };
 export type SchemaGraph = { tables: TableMeta[]; groups: GroupMeta[]; enums: EnumMeta[] };
@@ -192,6 +195,12 @@ export function describeSchema(): SchemaGraph {
   // `tables` entry to draw a position from) are placed after them, in
   // registry declaration order, so they can't collide with a hand-listed
   // table's slot.
+  //
+  // Keyed by QUALIFIED name: a bare key would give terminal.sessions and
+  // agent.sessions one shared slot, so whichever was seen second would
+  // overwrite the first's position and the two would sort as equals. A
+  // `SchemaGroup.tables` entry is always a public table, so it keys as its
+  // bare name either way.
   const order = new Map<string, number>();
   SCHEMA_GROUPS.forEach((g, gi) =>
     g.tables.forEach((t, ti) => order.set(t, gi * 1000 + ti)),
@@ -200,22 +209,28 @@ export function describeSchema(): SchemaGraph {
   for (const table of allTables) {
     const cfg = getTableConfig(table);
     const schema = cfg.schema ?? null;
-    if (schema === null || order.has(cfg.name)) continue;
+    const id = qualifiedName(schema, cfg.name);
+    if (schema === null || order.has(id)) continue;
     const gi = SCHEMA_GROUPS.findIndex((g) => g.schemas?.includes(schema));
     if (gi === -1) continue;
-    order.set(cfg.name, gi * 1000 + schemaTableSlot++);
+    order.set(id, gi * 1000 + schemaTableSlot++);
   }
-  metas.sort((a, b) => (order.get(a.name) ?? 0) - (order.get(b.name) ?? 0));
+  const slotOf = (m: TableMeta) => order.get(qualifiedName(m.schema, m.name)) ?? 0;
+  metas.sort((a, b) => slotOf(a) - slotOf(b));
 
   // Derived from resolved membership (not the raw config) so schema-owned
   // tables — never listed in `SchemaGroup.tables` — still show up here; the
   // ERD renderer (apps/web/src/components/schema/erd-engine.ts) iterates
-  // this array to lay out each group's cards.
+  // this array to lay out each group's cards, looking each name up in
+  // `tables`. Qualified, therefore: emitting a bare "sessions" in both the
+  // terminal and the agent group would have the renderer resolve BOTH to
+  // whichever table its own map happened to keep, drawing one subsystem's
+  // card twice and never drawing the other's.
   const groups: GroupMeta[] = SCHEMA_GROUPS.map((g) => ({
     key: g.key,
     label: g.label,
     color: g.color,
-    tables: metas.filter((m) => m.group === g.key).map((m) => m.name),
+    tables: metas.filter((m) => m.group === g.key).map((m) => qualifiedName(m.schema, m.name)),
   }));
 
   const enums: EnumMeta[] = allEnums.map((e) => ({
