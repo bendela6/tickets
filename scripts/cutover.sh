@@ -79,8 +79,13 @@ fi
 
 # 6. Swap (live only) — atomic rename; app is stopped so no active connections
 echo "== GO/NO-GO: verify-import must have printed 'PASS: 0 differences'. =="
-read -r -p "Type 'swap' to rename ${PROD}->tickets_old and tickets_new->${PROD}: " ok
-[ "$ok" = "swap" ] || { echo "aborted before swap; prod untouched."; exit 1; }
+if [ "$DRY" -eq 0 ]; then
+  read -r -p "Type 'swap' to rename ${PROD}->tickets_old and tickets_new->${PROD}: " ok
+  [ "$ok" = "swap" ] || { echo "aborted before swap; prod untouched."; exit 1; }
+else
+  echo "+ [dry-run] would prompt to confirm the swap here"
+fi
+psql_prod "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$PROD' AND pid <> pg_backend_pid();"
 psql_prod "ALTER DATABASE $PROD RENAME TO tickets_old;"
 psql_prod "ALTER DATABASE tickets_new RENAME TO $PROD;"
 
