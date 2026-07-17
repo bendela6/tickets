@@ -1,11 +1,11 @@
 import { resolve } from 'node:path';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import type { Db } from '@tickets/db';
-import { agentPermissionRequests, agentSessions, environment, workdirs } from '@tickets/db';
+import { agentAgents, agentPermissionRequests, agentSessions, environment, users, workdirs } from '@tickets/db';
 import { createAgentStore } from './store';
 
 // Real-Postgres test for the AgentStore adapter — same scratch-db-per-run
@@ -99,12 +99,11 @@ describe('AgentStore', () => {
   });
 
   test('append with no frames is a no-op', async () => {
-    const before = await db
-      .select({ id: agentSessions.id })
-      .from(agentSessions)
-      .where(and(eq(agentSessions.id, sessionId)));
+    const before = await store.replay(sessionId, 0);
     await store.append(sessionId, []);
-    expect(before.length).toBe(1); // still there, no throw
+    const after = await store.replay(sessionId, 0);
+    expect(after.frames).toEqual(before.frames);
+    expect(after.oldestSeq).toBe(before.oldestSeq);
   });
 
   test('permission requests: create pending, then record the decision', async () => {
@@ -191,5 +190,53 @@ describe('AgentStore', () => {
       .from(agentSessions)
       .where(eq(agentSessions.id, done!.id));
     expect(c!.status).toBe('exited'); // untouched
+  });
+});
+
+// Two DB-constraint behaviours from the deleted apps/api/src/ai/e2-schema.test.ts
+// that were never re-ported to the agent.* schema — packages/db/src/schema/
+// agent-schema.test.ts does NOT cover these: it only calls getTableConfig and
+// checks column names, it never opens a database. Same scratch-db-per-run
+// harness as the rest of this file.
+describe('agent.* schema constraints (against real Postgres)', () => {
+  test('the agent.sessions -> agent.agents FK rejects a dangling agent id', async () => {
+    const [wd] = await db
+      .insert(workdirs)
+      .values({ name: 'fk-wd', path: '/tmp/fk' })
+      .returning({ id: workdirs.id });
+    await expect(
+      db.insert(agentSessions).values({
+        title: 'bad',
+        workdirId: wd!.id,
+        agentId: 999_999,
+        status: 'starting',
+      }),
+    ).rejects.toThrow();
+  });
+
+  test('agent.agents defaults: permission_mode defaults to bypassPermissions, allowed_tools jsonb round-trips', async () => {
+    const [agentUser] = await db
+      .insert(users)
+      .values({ name: 'Architect', kind: 'agent' })
+      .returning({ id: users.id });
+    const [agent] = await db
+      .insert(agentAgents)
+      .values({
+        userId: agentUser!.id,
+        key: 'architect',
+        name: 'Architect',
+        providerKey: 'claude',
+        model: 'claude-opus-4-8',
+        allowedTools: ['Read', 'Grep'],
+      })
+      .returning();
+    // Defaults land as written — permission_mode is set by migration
+    // 0005_old_marvex.sql (`DEFAULT 'bypassPermissions'`), not application code.
+    expect(agent!.permissionMode).toBe('bypassPermissions');
+    expect(agent!.allowedTools).toEqual(['Read', 'Grep']);
+
+    const [reread] = await db.select().from(agentAgents).where(eq(agentAgents.id, agent!.id));
+    expect(reread!.permissionMode).toBe('bypassPermissions');
+    expect(reread!.allowedTools).toEqual(['Read', 'Grep']);
   });
 });

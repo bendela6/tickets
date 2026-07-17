@@ -26,7 +26,8 @@ const fakeStore = (): SessionStore<Frame> & { rows: Frame[] } => {
 };
 
 // A synchronous schedule makes flush timing deterministic under test — the
-// same technique apps/api/src/ai/supervisor.test.ts uses (`syncSchedule`).
+// same technique apps/api/src/agent/driver.test.ts and
+// apps/api/src/terminal/driver.test.ts use (`syncSchedule`).
 const syncSchedule = (fn: () => void) => fn();
 
 const tick = async (n = 12) => {
