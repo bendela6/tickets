@@ -28,22 +28,26 @@ const digest = (raw: unknown) => {
   };
 };
 
-// Task 1 (eer model DDL enrichment) intentionally moves the seed past the
-// legacy fixture in three ways: composite PKs on the three join tables
+// The eer model moves past the legacy fixture in two intentional waves, both
+// layered here so the assertion still catches any OTHER, unintended divergence.
+//
+// Task 1 (DDL enrichment): composite PKs on the three join tables
 // (item_type_child_types, item_type_fields, link_type_target_types) now
 // double as badges alongside their existing fk badge; options gets a new
 // `kind` column; and a new events.caused_by self-FK (unlabelled) both adds an
 // edge and — via item_activity's new UNIQUE(event_id) constraint — flips
-// events.id->item_activity.event_id from 1-n to 1-1. This layers exactly
-// those known deltas onto the legacy digest before comparing, so the
-// assertion still catches any OTHER, unintended divergence.
+// events.id->item_activity.event_id from 1-n to 1-1.
+//
+// SP3 (event runtime): the outbox worker gained retry bookkeeping — two new
+// untyped columns outbox.attempts and outbox.last_error (titles "Attempts" /
+// "Last error"), neither a pk or fk, so they add plain badges + titles only.
 const applyTask1Deltas = (d: ReturnType<typeof digest>): ReturnType<typeof digest> => ({
   ...d,
   edges: d.edges
     .filter((e) => e !== 'events.id->item_activity.event_id:1-n')
     .concat(['events.id->events.caused_by:1-n', 'events.id->item_activity.event_id:1-1'])
     .sort(),
-  titles: [...d.titles, 'options.kind=Kind'].sort(),
+  titles: [...d.titles, 'options.kind=Kind', 'outbox.attempts=Attempts', 'outbox.last_error=Last error'].sort(),
   badges: d.badges
     .filter(
       (b) =>
@@ -66,6 +70,8 @@ const applyTask1Deltas = (d: ReturnType<typeof digest>): ReturnType<typeof diges
       'link_type_target_types.link_type_id:pkfk',
       'link_type_target_types.target_type_id:pkfk',
       'options.kind:',
+      'outbox.attempts:',
+      'outbox.last_error:',
     ])
     .sort(),
 });
