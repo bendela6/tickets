@@ -100,3 +100,9 @@ export function useForkScheme() {
     return apiMutate(`/api/schemes/${sourceSchemeId}/fork`, { method: 'POST', actorId, body });
   });
 }
+export function useUpdateProject() {
+  return useConfigMutation((i: { actorId: number; id: number; schemeId?: number; name?: string }) => {
+    const { actorId, id, ...body } = i;
+    return apiMutate(`/api/projects/${id}`, { method: 'PATCH', actorId, body });
+  });
+}
