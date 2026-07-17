@@ -1,6 +1,18 @@
-import type { Channel, CreateChannelOptions, SeqFrame, SessionId, SessionStore } from './types';
+import type { Channel, ControlFrames, CreateChannelOptions, SeqFrame, SessionId, SessionStore } from './types';
 
-export type { Channel, CreateChannelOptions, SeqFrame, SessionId, SessionStore, Send } from './types';
+export type { Channel, ControlFrames, CreateChannelOptions, SeqFrame, SessionId, SessionStore, Send } from './types';
+
+// Byte-identical to what this module emitted before `controlFrames` became
+// injectable (finding: session-core must not mint wire-protocol frames with
+// no type-level link to a caller's own union). A caller with its own
+// `ServerFrame`-shaped union overrides this via `CreateChannelOptions`.
+export const defaultControlFrames: ControlFrames = {
+  replayDone: () => ({ type: 'replay_done' }),
+  truncated: (oldestSeq: number) => ({
+    type: 'notice',
+    message: `history truncated — earlier records pruned (resumes at ${oldestSeq})`,
+  }),
+};
 
 // Per-session bookkeeping a channel keeps privately. None of it is driver
 // state (no handle, no kind, no status) — just what's needed to buffer,
@@ -25,6 +37,7 @@ export function createChannel<F extends SeqFrame = SeqFrame>(
   options: CreateChannelOptions = {},
 ): Channel<F> {
   const schedule = options.schedule ?? ((fn: () => void) => setTimeout(fn, 8));
+  const controlFrames = options.controlFrames ?? defaultControlFrames;
   const sessions = new Map<SessionId, ChannelSession<F>>();
 
   function stateFor(sessionId: SessionId): ChannelSession<F> {
@@ -73,7 +86,7 @@ export function createChannel<F extends SeqFrame = SeqFrame>(
       scheduleFlush(sessionId, s);
     },
 
-    broadcast(sessionId, frame) {
+    notify(sessionId, frame) {
       deliver(stateFor(sessionId), frame);
     },
 
@@ -84,19 +97,16 @@ export function createChannel<F extends SeqFrame = SeqFrame>(
       try {
         const { frames, oldestSeq } = await store.replay(sessionId, lastSeq);
         if (oldestSeq !== null && oldestSeq > lastSeq + 1) {
-          send({
-            type: 'notice',
-            message: `history truncated — earlier records pruned (resumes at ${oldestSeq})`,
-          });
+          send(controlFrames.truncated(oldestSeq));
         }
         let maxReplayed = lastSeq;
         for (const frame of frames) {
           send(frame);
           if (frame.seq > maxReplayed) maxReplayed = frame.seq;
         }
-        send({ type: 'replay_done' });
+        send(controlFrames.replayDone());
         s.pending.delete(send);
-        // Frames that arrived (via publish or broadcast) while the replay
+        // Frames that arrived (via publish or notify) while the replay
         // above was in flight. Anything with a seq already covered by the
         // replay is a duplicate — skip it; everything else (a later seq, or
         // a seq-less out-of-band frame) is delivered exactly once, in order.
@@ -117,6 +127,10 @@ export function createChannel<F extends SeqFrame = SeqFrame>(
 
     flush(sessionId) {
       return flush(sessionId);
+    },
+
+    close(sessionId) {
+      sessions.delete(sessionId);
     },
   };
 }

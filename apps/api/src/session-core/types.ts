@@ -27,10 +27,17 @@ export interface SeqFrame {
 export interface SessionStore<F extends SeqFrame = SeqFrame> {
   // Persist a batch of already-sequenced frames. Resolves once durable — a
   // channel always awaits this before broadcasting a single one of them.
+  // Never called concurrently for the same sessionId: the channel's flush
+  // chain (`flushing`) serializes every call per session, so an
+  // implementation needs no locking of its own to stay ordered.
   append(sessionId: SessionId, frames: F[]): Promise<void>;
-  // Frames with seq > afterSeq, ascending, plus the oldest seq still stored
-  // (so the channel can flag a truncated replay on reconnect) — oldestSeq is
-  // null when nothing is stored for this session.
+  // `frames`: those with seq > afterSeq, ascending. `oldestSeq`: the oldest
+  // seq still stored for this session OVERALL — independent of afterSeq, and
+  // NOT the oldest seq among the returned `frames` (which are already
+  // filtered to seq > afterSeq, so their own oldest is afterSeq-relative and
+  // usually larger). This lets the channel flag a truncated replay when the
+  // client's lastSeq falls before what's actually still stored. Null when
+  // nothing is stored for this session.
   replay(sessionId: SessionId, afterSeq: number): Promise<{ frames: F[]; oldestSeq: number | null }>;
 }
 
@@ -44,10 +51,11 @@ export type Send = (frame: unknown) => void;
 
 export interface Channel<F extends SeqFrame = SeqFrame> {
   // Register a subscriber for a session: replay every persisted frame after
-  // lastSeq (deduped against anything broadcast mid-replay), emit a
-  // truncation notice if history was pruned, send replay_done, then stream
-  // subsequent publish()/broadcast() calls live. Resolves to a detach
-  // function — calling it removes the subscriber and nothing else.
+  // lastSeq (deduped against anything delivered mid-replay via `publish` or
+  // `notify`), emit a truncation notice if history was pruned, send
+  // replay_done, then stream subsequent publish()/notify() calls live.
+  // Resolves to a detach function — calling it removes the subscriber and
+  // nothing else.
   attach(sessionId: SessionId, lastSeq: number, send: Send): Promise<() => void>;
   // Enqueue a frame for a session: persisted (via the store) before it
   // reaches a single subscriber, in seq order. Batched and flushed on the
@@ -57,15 +65,45 @@ export interface Channel<F extends SeqFrame = SeqFrame> {
   // immediately, with NO persistence and no seq bookkeeping. For frames that
   // are not part of the replayable history — a status transition, a
   // one-off notice — but that still must not be dropped for a subscriber
-  // that is mid-attach (the same race `publish` protects against).
-  broadcast(sessionId: SessionId, frame: unknown): void;
+  // that is mid-attach (the same race `publish` protects against). Named
+  // `notify` rather than `broadcast` deliberately: this module's whole
+  // purpose is persist-BEFORE-broadcast, and `publish` is the one that
+  // actually broadcasts (after persisting) — a second method also called
+  // "broadcast" but meaning deliver-without-persisting was a standing trap.
+  notify(sessionId: SessionId, frame: unknown): void;
   // Force the pending publish() buffer to persist+broadcast now, bypassing
   // the schedule debounce. Resolves once durable and delivered.
   flush(sessionId: SessionId): Promise<void>;
+  // Drop all per-session bookkeeping (buffer, subscribers, pending-attach
+  // state) for sessionId. Nothing here notifies attached subscribers first —
+  // callers own session lifecycle and should detach() them (or accept they
+  // simply stop receiving anything further). Nothing in session-core calls
+  // this on its own; a driver calls it once it knows a session is truly done
+  // (e.g. archived) so per-session state does not accumulate forever.
+  close(sessionId: SessionId): void;
+}
+
+// Control frames a channel mints itself, injectable so session-core never
+// hardcodes a wire-protocol shape. Defaults below reproduce today's literals
+// byte-for-byte; a caller with its own frame union (see `ServerFrame` in
+// apps/api/src/ai/types.ts) can override either to match it exactly, with a
+// real type-level link instead of session-core silently duplicating strings
+// it has no import relationship to.
+export interface ControlFrames {
+  // Sent once, after every replayed frame and before any live frame.
+  replayDone(): unknown;
+  // Sent when the replay is missing history the client's lastSeq implies it
+  // should have (oldestSeq > lastSeq + 1) — oldestSeq is the oldest seq
+  // still actually stored, per SessionStore.replay.
+  truncated(oldestSeq: number): unknown;
 }
 
 export interface CreateChannelOptions {
   // How a scheduled flush is invoked; defaults to a short setTimeout. Tests
   // pass a synchronous function to make batching deterministic.
   schedule?: (fn: () => void) => void;
+  // Overrides the control frames `attach` sends. Defaults reproduce today's
+  // `{ type: 'replay_done' }` / `{ type: 'notice', message: '...' }` shapes
+  // exactly — see `channel.ts`'s `defaultControlFrames`.
+  controlFrames?: ControlFrames;
 }
