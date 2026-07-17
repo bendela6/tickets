@@ -5,6 +5,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import type { Board } from '../../api/types';
 import { CurrentUserProvider } from '../../state/current-user-context';
+import { ToastProvider } from '../../ui/toast';
 import { SettingsScreen } from './settings-screen';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -80,7 +81,9 @@ function renderWithProviders(node: ReactNode, client?: QueryClient) {
     });
   render(
     <QueryClientProvider client={qc}>
-      <CurrentUserProvider>{node}</CurrentUserProvider>
+      <CurrentUserProvider>
+        <ToastProvider>{node}</ToastProvider>
+      </CurrentUserProvider>
     </QueryClientProvider>,
   );
   return qc;
@@ -234,4 +237,38 @@ test('re-seeds the child-type chip editor from a fresh board after the scheme ch
       within(epicCardAfter).getByRole('button', { name: 'Task', hidden: true, pressed: true }),
     ).toBeInTheDocument();
   });
+});
+
+// Regression test for the unhandled-rejection bug: `handleFork` awaited the
+// fork POST and the repoint PATCH with no try/catch, so a rejection (either
+// call) was an unhandled promise rejection with zero user feedback.
+test('surfaces a toast and does not throw when the fork request fails', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const board = makeBoard();
+  const fetchMock = vi.fn((url: string, _init?: RequestInit) => {
+    if (url.endsWith('/board')) {
+      return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify(board)) });
+    }
+    if (url.endsWith('/fork')) {
+      return Promise.resolve({ ok: false, status: 500, text: () => Promise.resolve('{"error":"scheme fork failed"}') });
+    }
+    return Promise.reject(new Error(`unexpected fetch: ${url}`));
+  });
+  vi.stubGlobal('fetch', fetchMock);
+  vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
+
+  renderWithProviders(<SettingsScreen projectKey="CORE" />);
+  await screen.findByRole('tab', { name: /Types/ });
+
+  await userEvent.click(screen.getByRole('button', { name: /Fork for this project/i }));
+
+  expect(await screen.findByText(/Fork failed/i)).toBeInTheDocument();
+  // The repoint PATCH must never fire once the fork itself has failed — the
+  // board GET also starts with /api/projects/, so match on method+id
+  // specifically rather than the shared URL prefix.
+  expect(
+    fetchMock.mock.calls.some(
+      ([url, init]) => url === '/api/projects/1' && (init as RequestInit | undefined)?.method === 'PATCH',
+    ),
+  ).toBe(false);
 });
