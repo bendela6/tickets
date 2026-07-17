@@ -17,8 +17,9 @@ import type { StartSpec, TerminalDriver } from './driver';
 // discriminator, no agentId/providerKey/dispatch — a terminal session always
 // carries a bare workdirId. Uses a scratch Postgres (same pattern as the rest
 // of the api tests) but injects a FAKE driver for most cases, so it proves
-// the workdirs/sessions wiring — path + runner validation, insert, archive —
-// without spawning a real PTY. The real driver (over a fake Runner) is
+// the sessions wiring — path + runner validation, insert, archive, stop —
+// without spawning a real PTY. The workdir CRUD these tests lean on to make a
+// workdir belongs to neither subsystem and is tested in workdir/routes.test.ts. The real driver (over a fake Runner) is
 // exercised separately below to prove the spawn-failure -> `failed` path end
 // to end through HTTP, and is covered unit-wise by driver.test.ts.
 const { host, port, user, password } = environment.postgres;
@@ -95,20 +96,6 @@ async function createTerminalSession() {
 }
 
 describe('terminal routes', () => {
-  test('creates, lists workdirs', async () => {
-    const created = await app.inject({
-      method: 'POST',
-      url: '/api/workdirs',
-      payload: { name: 'wd-a', path: tmpdir() },
-    });
-    expect(created.statusCode).toBe(201);
-    const wd = created.json();
-    expect(wd).toMatchObject({ name: 'wd-a', path: tmpdir(), runner: 'local' });
-
-    const list = await app.inject({ method: 'GET', url: '/api/workdirs' });
-    expect(list.json().map((w: { name: string }) => w.name)).toContain('wd-a');
-  });
-
   test('creates a terminal session against a workdir', async () => {
     const wd = await app.inject({
       method: 'POST',

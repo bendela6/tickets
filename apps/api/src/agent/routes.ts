@@ -6,9 +6,9 @@ import { agentAgents, agentSessions, users } from '@tickets/db';
 import { HttpError } from '../errors';
 import { parseBody } from '../utils/parse-body';
 import { parseId } from '../utils/parse-id';
+import { loadRunnableWorkdir } from '../workdir/load-workdir';
 import { buildRunSpec } from './agent-run-spec';
 import type { AgentDriver } from './driver';
-import { loadRunnableWorkdir } from './load-workdir';
 import type { ProviderRegistry } from './provider-registry';
 
 const permissionModeSchema = v.picklist(['default', 'acceptEdits', 'bypassPermissions', 'plan', 'dontAsk']);

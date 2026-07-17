@@ -10,10 +10,10 @@ import { itemComment } from '../command/item/comment';
 import { runCommand } from '../command/run-command';
 import { HttpError } from '../errors';
 import { parseBody } from '../utils/parse-body';
+import { loadRunnableWorkdir } from '../workdir/load-workdir';
 import { buildRunSpec } from './agent-run-spec';
 import { dispatchComment } from './dispatch-comment';
 import type { AgentDriver } from './driver';
-import { loadRunnableWorkdir } from './load-workdir';
 import type { ProviderRegistry } from './provider-registry';
 import { worktreeName, type WorktreeManager } from './worktree';
 
