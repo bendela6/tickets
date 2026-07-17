@@ -1,10 +1,10 @@
 import type { AgentRun } from './agent-types';
 import { createActivityScanner } from './activity-scanner';
+import { createChannel } from '../session-core/channel';
+import type { Channel, SessionStore as CoreSessionStore } from '../session-core/types';
 import { integrationFor } from './shell-integration';
 import type {
   AgentEvent,
-  OutputChunk,
-  PersistedMessage,
   PtyHandle,
   Runner,
   ServerFrame,
@@ -20,12 +20,13 @@ import type {
 // coupled to any browser connection — sockets attach and detach from a session
 // that outlives them, so closing the tab does not kill the process.
 //
-// The load-bearing invariant: a record is persisted BEFORE it is broadcast.
+// The load-bearing invariant — a record is persisted BEFORE it is broadcast,
 // `seq` is the single source of truth shared by the stored rows and the wire
-// frames, so a client that has seen seq=N can always be brought current from the
-// store alone. This holds identically for terminal output chunks and agent
-// message events — the only per-kind difference is which store method persists
-// and which frame carries the payload.
+// frames, and a reconnecting client is replayed exactly the frames it missed
+// — lives in session-core's `Channel`, which is generic over the frame shape.
+// This module is the terminal/agent-aware ADAPTER around it: it decides,
+// per session kind, which frame shape to publish and which store method
+// persists it. session-core itself never learns the difference.
 
 export interface StartSpec {
   id: SessionId;
@@ -77,11 +78,12 @@ export interface SupervisorOptions {
   schedule?: (fn: () => void) => void;
 }
 
-// A sequenced record awaiting persist/broadcast — output for terminals, a
-// normalized event for agents. Same seq space either way.
-type SeqRecord =
-  | { seq: number; kind: 'output'; data: string }
-  | { seq: number; kind: 'message'; event: AgentEvent };
+// The one frame shape session-core's channel moves for this supervisor: a
+// terminal output chunk or a normalized agent message, each already carrying
+// its seq and already shaped exactly like the ServerFrame variant a
+// subscriber expects. session-core treats this as an opaque `F`; only this
+// adapter knows the two cases exist.
+type ChannelFrame = Extract<ServerFrame, { type: 'output' | 'message' }>;
 
 interface RunningSession {
   id: SessionId;
@@ -90,11 +92,7 @@ interface RunningSession {
   exitCode: number | null;
   handle: PtyHandle | AgentRun;
   seq: number;
-  buffer: SeqRecord[];
-  flushing: Promise<void> | null;
-  flushScheduled: boolean;
-  subscribers: Set<Subscriber>;
-  pending: Map<Subscriber, ServerFrame[]>;
+  subscriberDetachers: Map<Subscriber, () => void>;
   costUsd: number;
   maxBudgetUsd?: number;
   onEnd?: () => void | Promise<void>;
@@ -111,68 +109,66 @@ interface RunningSession {
   busy: boolean;
 }
 
-function recordToFrame(record: SeqRecord): ServerFrame {
-  return record.kind === 'output'
-    ? { type: 'output', seq: record.seq, data: record.data }
-    : { type: 'message', seq: record.seq, event: record.event };
-}
-
 export function createSupervisor(options: SupervisorOptions): Supervisor {
   const { runner, store } = options;
   const outputCap = options.outputCap ?? 20_000;
-  const schedule = options.schedule ?? ((fn) => setTimeout(fn, 8));
   const sessions = new Map<SessionId, RunningSession>();
 
-  function broadcast(rs: RunningSession, frame: ServerFrame): void {
-    for (const sub of rs.subscribers) sub.send(frame);
-    for (const buf of rs.pending.values()) buf.push(frame);
+  // The session-core adapter: routes the generic append/replay contract to
+  // this driver's two persistence shapes, keyed off the RunningSession kind
+  // recorded when the session started. Neither branch is visible to
+  // session-core — it only ever calls `append`/`replay` and gets an opaque F
+  // back.
+  const channelStore: CoreSessionStore<ChannelFrame> = {
+    async append(sessionId, frames) {
+      const kind = sessions.get(sessionId)?.kind;
+      if (kind === 'agent') {
+        await store.appendMessages(
+          sessionId,
+          frames.map((f) => ({ seq: f.seq, event: (f as Extract<ChannelFrame, { type: 'message' }>).event })),
+        );
+      } else {
+        await store.appendOutput(
+          sessionId,
+          frames.map((f) => ({ seq: f.seq, data: (f as Extract<ChannelFrame, { type: 'output' }>).data })),
+        );
+        // Only terminal scrollback is capped (a chatty process); agent turns
+        // are bounded by the budget cap instead. Pruning is a driver concern
+        // (outputCap), so it lives in this adapter rather than session-core.
+        const rs = sessions.get(sessionId);
+        if (rs && rs.seq > outputCap) await store.pruneOutput(sessionId, outputCap);
+      }
+    },
+    async replay(sessionId, afterSeq) {
+      const kind = sessions.get(sessionId)?.kind;
+      if (kind === 'agent') {
+        const { messages, oldestSeq } = await store.loadMessagesSince(sessionId, afterSeq);
+        const frames: ChannelFrame[] = messages.map((m) => ({ type: 'message', seq: m.seq, event: m.event }));
+        return { frames, oldestSeq };
+      }
+      const { chunks, oldestSeq } = await store.loadOutputSince(sessionId, afterSeq);
+      const frames: ChannelFrame[] = chunks.map((c) => ({ type: 'output', seq: c.seq, data: c.data }));
+      return { frames, oldestSeq };
+    },
+  };
+
+  const channel: Channel<ChannelFrame> = createChannel(channelStore, { schedule: options.schedule });
+
+  function publishOutput(rs: RunningSession, data: string): void {
+    channel.publish(rs.id, { type: 'output', seq: ++rs.seq, data });
   }
 
-  async function flushSession(rs: RunningSession): Promise<void> {
-    rs.flushScheduled = false;
-    const pending = rs.buffer.splice(0);
-    if (pending.length === 0) return;
-    // Persist BEFORE broadcast — the load-bearing invariant.
-    if (rs.kind === 'terminal') {
-      const chunks: OutputChunk[] = pending.map((r) =>
-        r.kind === 'output' ? { seq: r.seq, data: r.data } : { seq: r.seq, data: '' },
-      );
-      await store.appendOutput(rs.id, chunks);
-    } else {
-      const messages: PersistedMessage[] = pending.flatMap((r) =>
-        r.kind === 'message' ? [{ seq: r.seq, event: r.event }] : [],
-      );
-      await store.appendMessages(rs.id, messages);
-    }
-    for (const record of pending) broadcast(rs, recordToFrame(record));
-    // Only terminal scrollback is capped (a chatty process); agent turns are
-    // bounded by the budget cap instead.
-    if (rs.kind === 'terminal' && rs.seq > outputCap) {
-      await store.pruneOutput(rs.id, outputCap);
-    }
+  function publishMessage(rs: RunningSession, event: AgentEvent): void {
+    channel.publish(rs.id, { type: 'message', seq: ++rs.seq, event });
   }
 
-  function flush(rs: RunningSession): Promise<void> {
-    const run = (rs.flushing ?? Promise.resolve()).then(() => flushSession(rs));
-    rs.flushing = run.catch(() => {});
-    return run;
-  }
-
-  function scheduleFlush(rs: RunningSession): void {
-    if (rs.flushScheduled) return;
-    rs.flushScheduled = true;
-    schedule(() => {
-      void flush(rs);
-    });
-  }
-
-  // Non-terminal transition: persist any pending records first so the client
+  // Non-terminal transition: flush any pending records first so the client
   // sees the message that caused the transition before the status frame.
   async function transition(rs: RunningSession, status: SessionStatus): Promise<void> {
-    await flush(rs);
+    await channel.flush(rs.id);
     rs.status = status;
     await store.setStatus(rs.id, status);
-    broadcast(rs, { type: 'status', status });
+    channel.broadcast(rs.id, { type: 'status', status });
   }
 
   async function finish(
@@ -180,11 +176,11 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     status: SessionStatus,
     exitCode: number | null,
   ): Promise<void> {
-    await flush(rs);
+    await channel.flush(rs.id);
     rs.status = status;
     rs.exitCode = exitCode;
     await store.finishSession(rs.id, status, exitCode);
-    broadcast(rs, { type: 'status', status, exitCode });
+    channel.broadcast(rs.id, { type: 'status', status, exitCode });
     // Fire the teardown hook exactly once (worktree cleanup for a dispatch).
     if (!rs.ended) {
       rs.ended = true;
@@ -200,11 +196,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       exitCode: null,
       handle,
       seq: 0,
-      buffer: [],
-      flushing: null,
-      flushScheduled: false,
-      subscribers: new Set(),
-      pending: new Map(),
+      subscriberDetachers: new Map(),
       costUsd: 0,
       ended: false,
       permissionRows: new Map(),
@@ -224,19 +216,16 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
             text = clean;
             if (event) {
               rs.busy = event.busy;
-              broadcast(rs, { type: 'activity', ...event });
+              channel.broadcast(rs.id, { type: 'activity', ...event });
             }
           }
-          if (text) {
-            rs.buffer.push({ seq: ++rs.seq, kind: 'output', data: text });
-            scheduleFlush(rs);
-          }
+          if (text) publishOutput(rs, text);
         }
         const { exitCode } = await handle.exit;
         await finish(rs, 'exited', exitCode);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        rs.buffer.push({ seq: ++rs.seq, kind: 'output', data: `\r\n[session error] ${message}\r\n` });
+        publishOutput(rs, `\r\n[session error] ${message}\r\n`);
         await finish(rs, 'failed', null);
       }
     })();
@@ -247,8 +236,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     void (async () => {
       try {
         for await (const event of run.events) {
-          rs.buffer.push({ seq: ++rs.seq, kind: 'message', event });
-          scheduleFlush(rs);
+          publishMessage(rs, event);
           if (event.type === 'permission_request') {
             // Persist the pending request (the parked promise) then block on it.
             const rowId = await store.createPermissionRequest(rs.id, event.toolName, event.input);
@@ -256,11 +244,11 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
             await transition(rs, 'awaiting_input');
           } else if (event.type === 'result') {
             rs.costUsd += event.costUsd;
-            await flush(rs);
+            await channel.flush(rs.id);
             await store.setCost(rs.id, rs.costUsd);
             await transition(rs, 'idle');
             if (rs.maxBudgetUsd != null && rs.costUsd >= rs.maxBudgetUsd) {
-              broadcast(rs, {
+              channel.broadcast(rs.id, {
                 type: 'notice',
                 message: `budget cap reached — $${rs.costUsd.toFixed(2)} of $${rs.maxBudgetUsd.toFixed(2)}`,
               });
@@ -273,28 +261,10 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
         await finish(rs, rs.status === 'failed' ? 'failed' : 'exited', null);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        rs.buffer.push({ seq: ++rs.seq, kind: 'message', event: { type: 'error', message } });
+        publishMessage(rs, { type: 'error', message });
         await finish(rs, 'failed', null);
       }
     })();
-  }
-
-  async function replay(
-    rs: RunningSession,
-    lastSeq: number,
-  ): Promise<{ frames: ServerFrame[]; oldestSeq: number | null }> {
-    if (rs.kind === 'terminal') {
-      const { chunks, oldestSeq } = await store.loadOutputSince(rs.id, lastSeq);
-      return {
-        frames: chunks.map((c) => ({ type: 'output', seq: c.seq, data: c.data })),
-        oldestSeq,
-      };
-    }
-    const { messages, oldestSeq } = await store.loadMessagesSince(rs.id, lastSeq);
-    return {
-      frames: messages.map((m) => ({ type: 'message', seq: m.seq, event: m.event })),
-      oldestSeq,
-    };
   }
 
   return {
@@ -326,8 +296,8 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       rs.scanner = integ?.precise ? createActivityScanner() : null;
       sessions.set(spec.id, rs);
       void store.setStatus(spec.id, 'live');
-      broadcast(rs, { type: 'status', status: 'live' });
-      if (integ?.precise) broadcast(rs, { type: 'activity', busy: false, integrated: true });
+      channel.broadcast(spec.id, { type: 'status', status: 'live' });
+      if (integ?.precise) channel.broadcast(spec.id, { type: 'activity', busy: false, integrated: true });
       consumeTerminal(rs);
     },
 
@@ -337,7 +307,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       rs.onEnd = spec.onEnd;
       sessions.set(spec.id, rs);
       void store.markRunning(spec.id);
-      broadcast(rs, { type: 'status', status: 'running' });
+      channel.broadcast(spec.id, { type: 'status', status: 'running' });
       consumeAgent(rs);
     },
 
@@ -348,47 +318,28 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
         sub.close?.();
         return;
       }
-      const buffered: ServerFrame[] = [];
-      rs.pending.set(sub, buffered);
-      try {
-        const { frames, oldestSeq } = await replay(rs, lastSeq);
-        if (oldestSeq !== null && oldestSeq > lastSeq + 1) {
-          sub.send({
-            type: 'notice',
-            message: `history truncated — earlier records pruned (resumes at ${oldestSeq})`,
-          });
-        }
-        let maxReplayed = lastSeq;
-        for (const frame of frames) {
-          sub.send(frame);
-          const seq = 'seq' in frame ? frame.seq : lastSeq;
-          if (seq > maxReplayed) maxReplayed = seq;
-        }
-        sub.send({ type: 'replay_done' });
-        sub.send({ type: 'status', status: rs.status, exitCode: rs.exitCode });
-        // Re-send integration state so a client attaching after start() learns
-        // this terminal has precise activity (the start() broadcast had no
-        // subscribers yet). Without this the client would stay on the pulse.
-        if (rs.scanner) sub.send({ type: 'activity', busy: rs.busy, integrated: true });
-        rs.pending.delete(sub);
-        for (const frame of buffered) {
-          if ((frame.type === 'output' || frame.type === 'message') && frame.seq <= maxReplayed) {
-            continue;
-          }
-          sub.send(frame);
-        }
-        rs.subscribers.add(sub);
-      } catch (err) {
-        rs.pending.delete(sub);
-        throw err;
-      }
+      const send = (frame: unknown) => sub.send(frame as ServerFrame);
+      const detach = await channel.attach(sessionId, lastSeq, send);
+      // Current status (and integration state) is driver-owned, not part of
+      // the replayable seq stream — sent directly, right after the channel
+      // has finished replay and gone live, so it lands after replay_done and
+      // before any subsequent live frame.
+      sub.send({ type: 'status', status: rs.status, exitCode: rs.exitCode });
+      // Re-send integration state so a client attaching after start() learns
+      // this terminal has precise activity (the start() broadcast had no
+      // subscribers yet). Without this the client would stay on the pulse.
+      if (rs.scanner) sub.send({ type: 'activity', busy: rs.busy, integrated: true });
+      rs.subscriberDetachers.set(sub, detach);
     },
 
     detach(sessionId, sub) {
       const rs = sessions.get(sessionId);
       if (!rs) return;
-      rs.subscribers.delete(sub);
-      rs.pending.delete(sub);
+      const detach = rs.subscriberDetachers.get(sub);
+      if (detach) {
+        detach();
+        rs.subscriberDetachers.delete(sub);
+      }
     },
 
     write(sessionId, data) {
@@ -443,8 +394,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     },
 
     flush(sessionId) {
-      const rs = sessions.get(sessionId);
-      return rs ? flush(rs) : Promise.resolve();
+      return sessions.has(sessionId) ? channel.flush(sessionId) : Promise.resolve();
     },
   };
 }
