@@ -3,7 +3,7 @@
 // directions. A stray table in drizzle fails as loudly as a missing one.
 import { describe, expect, it } from 'vitest';
 import { describeSchema, qualifiedName } from './describe-schema';
-import { loadModel, topLevelGroup } from './model';
+import { loadModel, topLevelGroup, type EerEntity } from './model';
 
 // model type name -> the type string drizzle's getSQLType() produces.
 //
@@ -13,6 +13,11 @@ import { loadModel, topLevelGroup } from './model';
 // getSQLType() prints its own shorthand ("timestamptz"). A key that stops
 // matching the model fails loudly via the `unmapped model type` assertion
 // below rather than silently skipping the column.
+//
+// Enum types are NOT listed here — they are resolved dynamically by
+// qualifiedModelType() below, because a bare enum name is ambiguous
+// (terminal.session_status and agent.session_status both spell "session_status")
+// and this static map has no per-row schema to disambiguate with.
 const TYPE_MAP: Record<string, string> = {
   serial: 'serial',
   bigserial: 'bigserial',
@@ -27,18 +32,46 @@ const TYPE_MAP: Record<string, string> = {
   jsonb: 'jsonb',
   uuid: 'uuid',
   'timestamp with time zone': 'timestamptz',
-  user_kind: 'user_kind',
-  status_kind: 'status_kind',
-  field_type: 'field_type',
-  // Enum columns: getSQLType() prints the BARE enum name with no schema, so
-  // terminal.sessions.status and agent.sessions.status both read
-  // `session_status`. The schema each resolves to is pinned by the enum
-  // assertions below, not here.
-  runner_kind: 'runner_kind',
-  session_status: 'session_status',
-  permission_mode: 'permission_mode',
-  permission_status: 'permission_status',
 };
+
+// model.enums grouped by bare name — a bare name can have more than one entry
+// (terminal.session_status vs agent.session_status), which is exactly why a
+// column's enum type can't be resolved by name alone.
+function groupEnumsByName(enums: ReturnType<typeof loadModel>['enums']) {
+  const byName = new Map<string, typeof enums>();
+  for (const e of enums) byName.set(e.name, [...(byName.get(e.name) ?? []), e]);
+  return byName;
+}
+
+// Resolves a model column's type to its drizzle-comparable spelling. For a
+// non-enum type this is just the TYPE_MAP translation (spelling only). For an
+// enum type, this derives the qualified identity — `schema.name` — from the
+// model's OWN enum declarations (each carries `name` + `schema`), not from
+// any hardcoded assumption: when a bare enum name has exactly one declared
+// enum, that enum's schema is unambiguous; when it has more than one (as
+// session_status does), the one belonging to the SAME schema as the column's
+// owning entity is the only reading that makes the model internally
+// consistent, so that's the tie-breaker. Either way this reuses
+// qualifiedName() — the same convention describeSchema() applies to the
+// drizzle side — so the two sides compare identically instead of colliding
+// on the bare name.
+function qualifiedModelType(
+  entity: EerEntity,
+  typeName: string,
+  enumsByName: Map<string, ReturnType<typeof loadModel>['enums']>,
+): string | undefined {
+  const candidates = enumsByName.get(typeName);
+  if (!candidates) return TYPE_MAP[typeName];
+  if (candidates.length === 1) return qualifiedName(candidates[0]!.schema ?? null, typeName);
+  const own = candidates.find((e) => (e.schema ?? null) === (entity.schema ?? null));
+  if (!own) {
+    throw new Error(
+      `ambiguous enum type "${typeName}" on ${entity.id}: no enum by that name is declared in schema ` +
+        `"${entity.schema ?? 'public'}" (candidates: ${candidates.map((e) => e.schema ?? 'public').join(', ')})`,
+    );
+  }
+  return qualifiedName(own.schema ?? null, typeName);
+}
 
 const normalizeExpression = (s: string): string =>
   s.replace(/"/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -57,6 +90,7 @@ describe('drizzle ⇔ items-platform.json', () => {
   const tableByName = new Map(
     graph.tables.map((t) => [qualifiedName(t.schema, t.name), t]),
   );
+  const enumsByName = groupEnumsByName(model.enums);
 
   it('every table has a distinct qualified identity', () => {
     // Guards the two maps above: a duplicate key would silently drop a table
@@ -88,7 +122,7 @@ describe('drizzle ⇔ items-platform.json', () => {
     const table = tableByName.get(id)!;
     for (const column of entity.columns) {
       const actual = table.columns.find((c) => c.name === column.name)!;
-      const expectedType = TYPE_MAP[column.type];
+      const expectedType = qualifiedModelType(entity, column.type, enumsByName);
       expect(expectedType, `unmapped model type "${column.type}"`).toBeDefined();
       expect(actual.type, `${id}.${column.name} type`).toBe(expectedType);
       expect(actual.notNull, `${id}.${column.name} nullability`).toBe(!column.nullable);
@@ -172,7 +206,11 @@ describe('drizzle ⇔ items-platform.json', () => {
   it('enums match — name, schema and values, in both directions', () => {
     // Qualified, because `session_status` is TWO different enums:
     // terminal.session_status and agent.session_status carry different values
-    // and neither may drift into the other's schema.
+    // and neither may drift into the other's schema. This only pins that both
+    // enums EXIST with the right schema/values — it says nothing about which
+    // columns bind to which enum. That's covered separately by the "types and
+    // nullability match" test above, which qualifies each column's enum type
+    // via qualifiedModelType()/enumIdentity() before comparing.
     const expected = model.enums
       .map((e) => `${qualifiedName(e.schema ?? null, e.name)}(${e.values.join(',')})`)
       .sort();
