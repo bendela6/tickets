@@ -232,7 +232,6 @@ set -euo pipefail
 
 PG=tickets-postgres-1                 # postgres container (all DBs live here)
 PROD=tickets                          # live production database
-SRC=tickets_legacy                    # import source (a restore of the dump)
 REHEARSAL_DB=tickets_rehearsal
 BACKUP_DIR="backups"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -253,7 +252,12 @@ run() {  # echo, then run (or just echo under --dry-run)
   echo "+ $*"
   if [ "$DRY" -eq 0 ]; then eval "$@"; fi
 }
-psql_prod() { run "docker exec $PG psql -U postgres -v ON_ERROR_STOP=1 \"$@\""; }
+psql_prod() {  # run one SQL statement in the prod postgres container (no eval)
+  echo "+ docker exec $PG psql -U postgres -v ON_ERROR_STOP=1 -c \"$1\""
+  if [ "$DRY" -eq 0 ]; then
+    docker exec "$PG" psql -U postgres -v ON_ERROR_STOP=1 -c "$1"
+  fi
+}
 
 echo "== SP4c cutover (mode=$MODE dry-run=$DRY) =="
 
@@ -270,15 +274,19 @@ run "docker exec $PG pg_dump -U postgres -Fc $PROD > $DUMP"
 run "LEGACY_DUMP=$DUMP pnpm --filter @tickets/db db:restore-legacy"
 
 # 4. Build the target DB (drop+create, migrate, import) — never named 'tickets'
-psql_prod "-c 'DROP DATABASE IF EXISTS $TARGET;'"
-psql_prod "-c 'CREATE DATABASE $TARGET;'"
+psql_prod "DROP DATABASE IF EXISTS $TARGET;"
+psql_prod "CREATE DATABASE $TARGET;"
 run "POSTGRES_DATABASE=$TARGET pnpm --filter @tickets/db db:migrate"
 run "POSTGRES_DATABASE=$TARGET pnpm --filter @tickets/db db:import"
 
 # 5. Verify: 0-diff oracle + NULL project_id preflight (both must pass)
 run "POSTGRES_DATABASE=$TARGET pnpm --filter @tickets/db db:verify-import"
-NULLS="$(docker exec $PG psql -U postgres -tAc \
-  \"SELECT count(*) FROM events WHERE aggregate_type='item' AND project_id IS NULL\" $TARGET)"
+if [ "$DRY" -eq 0 ]; then
+  NULLS="$(docker exec $PG psql -U postgres -tAc \
+    "SELECT count(*) FROM events WHERE aggregate_type='item' AND project_id IS NULL" $TARGET)"
+else
+  NULLS="0"
+fi
 echo "preflight: item events with NULL project_id = ${NULLS:-?}"
 if [ "$DRY" -eq 0 ] && [ "${NULLS:-1}" != "0" ]; then
   echo "ABORT: item events with NULL project_id — the events_item_project CHECK would fail." >&2
@@ -293,10 +301,15 @@ fi
 
 # 6. Swap (live only) — atomic rename; app is stopped so no active connections
 echo "== GO/NO-GO: verify-import must have printed 'PASS: 0 differences'. =="
-read -r -p "Type 'swap' to rename ${PROD}->tickets_old and tickets_new->${PROD}: " ok
-[ "$ok" = "swap" ] || { echo "aborted before swap; prod untouched."; exit 1; }
-psql_prod "-c 'ALTER DATABASE $PROD RENAME TO tickets_old;'"
-psql_prod "-c 'ALTER DATABASE tickets_new RENAME TO $PROD;'"
+if [ "$DRY" -eq 0 ]; then
+  read -r -p "Type 'swap' to rename ${PROD}->tickets_old and tickets_new->${PROD}: " ok
+  [ "$ok" = "swap" ] || { echo "aborted before swap; prod untouched."; exit 1; }
+else
+  echo "+ [dry-run] would prompt to confirm the swap here"
+fi
+psql_prod "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$PROD' AND pid <> pg_backend_pid();"
+psql_prod "ALTER DATABASE $PROD RENAME TO tickets_old;"
+psql_prod "ALTER DATABASE tickets_new RENAME TO $PROD;"
 
 # 7. Deploy — entrypoint guard sees the new schema; db:migrate is a no-op
 run "docker compose up -d --build app"
