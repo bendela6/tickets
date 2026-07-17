@@ -1,7 +1,7 @@
 // packages/db/src/schema/describe-schema.ts
 import { getTableName } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
-import { PgDialect, getTableConfig, uniqueKeyName } from 'drizzle-orm/pg-core';
+import { PgDialect, getTableConfig, uniqueKeyName, type PgTable } from 'drizzle-orm/pg-core';
 import { allEnums, allTables } from './registry';
 import { SCHEMA_GROUPS, type SchemaGroup } from './schema-groups';
 
@@ -26,6 +26,10 @@ export type IndexMeta = {
 };
 export type TableMeta = {
   name: string;
+  // The Postgres schema the table lives in. null = public — matching the SSOT
+  // model's `schema: string | null`, so conformance can compare the two sides
+  // without normalising.
+  schema: string | null;
   group: string;
   columns: ColumnMeta[];
   primaryKey: string[];
@@ -49,6 +53,12 @@ export function resolveGroupKey(tableName: string, groups: SchemaGroup[]): strin
     throw new Error(`table "${tableName}" is in multiple groups: ${owners.map((g) => g.key).join(', ')}`);
   }
   return owners[0]!.key;
+}
+
+// A table's Postgres schema, or null for public. drizzle leaves `schema`
+// undefined on a plain pgTable and sets it on one built from a pgSchema.
+export function schemaOf(table: PgTable): string | null {
+  return getTableConfig(table).schema ?? null;
 }
 
 export function describeSchema(): SchemaGraph {
@@ -102,6 +112,7 @@ export function describeSchema(): SchemaGraph {
 
     return {
       name,
+      schema: cfg.schema ?? null,
       group: resolveGroupKey(name, SCHEMA_GROUPS),
       columns,
       primaryKey: [...pkNames],

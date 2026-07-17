@@ -1,6 +1,7 @@
 // packages/db/src/schema/describe-schema.test.ts
 import { describe, expect, it } from 'vitest';
-import { describeSchema, resolveGroupKey } from './describe-schema';
+import { pgSchema, pgTable, serial } from 'drizzle-orm/pg-core';
+import { describeSchema, resolveGroupKey, schemaOf } from './describe-schema';
 import { SCHEMA_GROUPS } from './schema-groups';
 
 describe('describeSchema', () => {
@@ -80,5 +81,28 @@ describe('describeSchema — SQL truth', () => {
     const names = graph.enums.map((e) => e.name).sort();
     expect(names).toContain('field_type');
     expect(names).toContain('user_kind');
+  });
+});
+
+describe('schemaOf', () => {
+  const demo = pgSchema('demo');
+  const plain = pgTable('plain', { id: serial('id').primaryKey() });
+  const scoped = demo.table('scoped', { id: serial('id').primaryKey() });
+
+  it('reports null for a public table and the name for a namespaced one', () => {
+    expect(schemaOf(plain)).toBeNull();
+    expect(schemaOf(scoped)).toBe('demo');
+  });
+});
+
+describe('describeSchema schemas', () => {
+  it('carries a schema field on every table', () => {
+    // Everything is still in public at this point in the split; Tasks 3-5 move
+    // the AI tables out and this starts reporting real names.
+    const graph = describeSchema();
+    for (const table of graph.tables) {
+      expect(table).toHaveProperty('schema');
+      expect(table.schema).toBeNull();
+    }
   });
 });

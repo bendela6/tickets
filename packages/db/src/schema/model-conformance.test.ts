@@ -75,6 +75,14 @@ describe('drizzle ⇔ items-platform.json', () => {
     for (const name of PENDING_SPLIT_TABLES) expect(inDrizzle).toContain(name);
   });
 
+  it.each([...modelById.keys()])('%s: sits in the schema the model gives it', (id) => {
+    const entity = modelById.get(id)!;
+    const table = tableByName.get(id)!;
+    // Both sides spell public as null, so this compares directly. Without this
+    // assertion conformance would pass with every table in the wrong schema.
+    expect(table.schema).toBe(entity.schema ?? null);
+  });
+
   it.each([...modelById.keys()])('%s: columns match', (id) => {
     const entity = modelById.get(id)!;
     const table = tableByName.get(id)!;
