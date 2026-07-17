@@ -1,8 +1,8 @@
 import type { AgentRun } from './agent-types';
-import { createActivityScanner } from './activity-scanner';
 import { createChannel } from '../session-core/channel';
 import type { Channel, SessionStore as CoreSessionStore } from '../session-core/types';
-import { integrationFor } from './shell-integration';
+import { createActivityScanner } from '../terminal/activity-scanner';
+import { integrationFor } from '../terminal/shell-integration';
 import type {
   AgentEvent,
   PtyHandle,

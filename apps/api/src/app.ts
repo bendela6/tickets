@@ -2,7 +2,7 @@ import fastify from 'fastify';
 import type { Db } from '@tickets/db';
 import { registerAiSocket } from './ai/ai-socket';
 import { createDbSessionStore } from './ai/db-session-store';
-import { createLocalRunner } from './ai/local-runner';
+import { createLocalRunner as createLegacyLocalRunner } from './ai/local-runner';
 import { createProviderRegistry, type ProviderRegistry } from './ai/provider-registry';
 import { createClaudeProvider } from './ai/providers/claude-provider';
 import { createSupervisor, type Supervisor } from './ai/supervisor';
@@ -19,12 +19,18 @@ import { registerSchemesRoutes } from './routes/schemes.routes';
 import { registerUsersRoutes } from './routes/users.routes';
 import { registerViewsRoutes } from './routes/views.routes';
 import { registerVocabularyRoutes } from './routes/vocabulary.routes';
+import { createTerminalDriver, type TerminalDriver } from './terminal/driver';
+import { createLocalRunner } from './terminal/local-runner';
+import { registerTerminalRoutes } from './terminal/routes';
+import { registerTerminalSocket } from './terminal/socket';
+import { createTerminalStore } from './terminal/store';
 
 export function buildApp(context: {
   db: Db;
   supervisor?: Supervisor;
   providers?: ProviderRegistry;
   worktrees?: WorktreeManager;
+  terminalDriver?: TerminalDriver;
 }) {
   const app = fastify({ logger: false });
 
@@ -43,7 +49,7 @@ export function buildApp(context: {
         .then((n) => { if (n > 0) app.log.info({ reconciled: n }, 'marked orphaned sessions disconnected'); })
         .catch((err) => app.log.error({ err }, 'orphan reconcile failed'));
       return createSupervisor({
-        runner: createLocalRunner(),
+        runner: createLegacyLocalRunner(),
         store,
       });
     })();
@@ -55,6 +61,29 @@ export function buildApp(context: {
   // Git worktree manager for isolating dispatched runs (TIX-206/208). Injectable
   // so tests exercise dispatch without touching a real repo.
   const worktrees = context.worktrees ?? createLocalWorktreeManager();
+
+  // The Terminal Driver: a full independent sibling of the Session
+  // Supervisor above — it owns terminal.* PTYs over the terminal schema and
+  // knows nothing about agents/providers/messages/permissions/cost/dispatch.
+  // Injectable so tests can drive a fake runner or a fake driver entirely; in
+  // production it wraps the node-pty LocalRunner over the DB-backed
+  // TerminalStore.
+  const terminalDriver =
+    context.terminalDriver ??
+    (() => {
+      const store = createTerminalStore(context.db);
+      // Sessions left starting/live with no ended_at were orphaned by an API
+      // restart (their pty process is gone) — reconcile once at boot. Only
+      // for the real driver: tests that inject a fake one keep their seeded
+      // rows untouched.
+      void store.reconcileOrphaned()
+        .then((n) => { if (n > 0) app.log.info({ reconciled: n }, 'marked orphaned terminal sessions disconnected'); })
+        .catch((err) => app.log.error({ err }, 'terminal orphan reconcile failed'));
+      return createTerminalDriver({
+        runner: createLocalRunner(),
+        store,
+      });
+    })();
 
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof HttpError) {
@@ -77,6 +106,8 @@ export function buildApp(context: {
   registerSchemaRoutes(app);
   registerAiRoutes(app, { db: context.db, supervisor, providers, worktrees });
   registerAiSocket(app, { supervisor });
+  registerTerminalRoutes(app, { db: context.db, driver: terminalDriver });
+  registerTerminalSocket(app, { driver: terminalDriver });
 
   return app;
 }
