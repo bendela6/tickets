@@ -3,7 +3,7 @@ import { AppShell } from '../components/shell/app-shell';
 import { rootRoute } from './root-route';
 
 // The list lives in the mode panel; the main area is a hint until a session is
-// opened via /ai/$sessionId.
+// opened via /terminals/$sessionId.
 function TerminalsPage() {
   return (
     <AppShell>
