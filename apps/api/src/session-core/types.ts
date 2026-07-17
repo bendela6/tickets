@@ -23,7 +23,7 @@ export interface SeqFrame {
 // never touches a table. Session lifecycle (status, cost, permissions, …) is
 // deliberately NOT part of this interface: it is a driver concern, not a
 // session-core one, so the driver persists it directly and uses
-// `Channel.flush`/`Channel.broadcast` only for ordering and delivery.
+// `Channel.flush`/`Channel.notify` only for ordering and delivery.
 export interface SessionStore<F extends SeqFrame = SeqFrame> {
   // Persist a batch of already-sequenced frames. Resolves once durable — a
   // channel always awaits this before broadcasting a single one of them.
@@ -43,7 +43,7 @@ export interface SessionStore<F extends SeqFrame = SeqFrame> {
 
 // A subscriber never sees only F — it also sees the control frames the
 // channel produces itself (replay_done, a truncation notice) and whatever a
-// driver pushes out-of-band via `broadcast` (e.g. a status transition, which
+// driver pushes out-of-band via `notify` (e.g. a status transition, which
 // is an opaque string as far as session-core is concerned). Kept as
 // `unknown` rather than a closed union so session-core never has to learn a
 // new frame shape as drivers evolve.
