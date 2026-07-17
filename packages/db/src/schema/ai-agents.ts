@@ -9,7 +9,7 @@ import {
   unique,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
-import { permissionModeEnum } from './enums';
+import { legacyPermissionModeEnum } from './enums';
 import { users } from './users';
 import { workdirs } from './workdirs';
 
@@ -37,7 +37,7 @@ export const aiAgents = pgTable(
     disallowedTools: jsonb('disallowed_tools')
       .notNull()
       .default(sql`'[]'::jsonb`),
-    permissionMode: permissionModeEnum('permission_mode').notNull().default('bypassPermissions'),
+    permissionMode: legacyPermissionModeEnum('permission_mode').notNull().default('bypassPermissions'),
     mcpServers: jsonb('mcp_servers')
       .notNull()
       .default(sql`'{}'::jsonb`),

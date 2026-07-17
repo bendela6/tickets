@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { integer, jsonb, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 import { aiSessions } from './ai-sessions';
-import { permissionStatusEnum } from './enums';
+import { legacyPermissionStatusEnum } from './enums';
 import { users } from './users';
 
 // A pending row IS a `canUseTool` promise parked in the supervisor, waiting on a
@@ -17,7 +17,7 @@ export const aiPermissionRequests = pgTable('ai_permission_requests', {
   input: jsonb('input')
     .notNull()
     .default(sql`'{}'::jsonb`),
-  status: permissionStatusEnum('status').notNull().default('pending'),
+  status: legacyPermissionStatusEnum('status').notNull().default('pending'),
   decisionReason: text('decision_reason'),
   decidedBy: integer('decided_by').references(() => users.id),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })

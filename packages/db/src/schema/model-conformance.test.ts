@@ -41,6 +41,10 @@ const normalizeExpression = (s: string): string =>
 // agent.*, and Task 11 authors that final shape into the model and deletes this
 // list. Nothing else is exempt — every product table is still gated in both
 // directions.
+// NOTE on bare-name matching: `sessions` covers BOTH terminal.sessions (Task 4)
+// and agent.sessions (Task 5) — describeSchema reports a table's bare name with
+// no schema prefix, so one entry exempts both. `messages`, `permission_requests`
+// and `agents` are agent.* only (no terminal-side or legacy-side collision).
 const PENDING_SPLIT_TABLES = new Set([
   'workdirs',
   'ai_sessions',
@@ -50,7 +54,14 @@ const PENDING_SPLIT_TABLES = new Set([
   'ai_permission_requests',
   'sessions',
   'output',
+  'messages',
+  'permission_requests',
+  'agents',
 ]);
+// `session_status`, `permission_mode` and `permission_status` are each
+// bare-name-shared by TWO enums now (legacy public + terminal, or legacy
+// public + agent) — one entry here exempts every same-named enum regardless
+// of schema, so Task 5 needs no additions here.
 const PENDING_SPLIT_ENUMS = new Set([
   'session_kind',
   'session_status',

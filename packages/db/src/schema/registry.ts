@@ -1,4 +1,8 @@
 // packages/db/src/schema/registry.ts
+import { agentAgents } from './agent-agents';
+import { agentMessages } from './agent-messages';
+import { agentPermissionRequests } from './agent-permission-requests';
+import { agentSessions } from './agent-sessions';
 import { aiAgents } from './ai-agents';
 import { aiMessages } from './ai-messages';
 import { aiPermissionRequests } from './ai-permission-requests';
@@ -8,7 +12,10 @@ import { commands } from './commands';
 import { commentReactions } from './comment-reactions';
 import { comments } from './comments';
 import {
+  agentStatusEnum,
   fieldTypeEnum,
+  legacyPermissionModeEnum,
+  legacyPermissionStatusEnum,
   permissionModeEnum,
   permissionStatusEnum,
   runnerKindEnum,
@@ -51,6 +58,7 @@ export const allTables = [
   workdirs, aiSessions, aiSessionOutput,
   aiAgents, aiMessages, aiPermissionRequests,
   terminalSessions, terminalOutput,
+  agentSessions, agentMessages, agentPermissionRequests, agentAgents,
 ];
 
 // Every enum must also be exported from index.ts — drizzle omits the CREATE TYPE
@@ -62,7 +70,10 @@ export const allEnums = [
   sessionKindEnum,
   sessionStatusEnum,
   runnerKindEnum,
+  legacyPermissionModeEnum,
+  legacyPermissionStatusEnum,
+  terminalStatusEnum,
+  agentStatusEnum,
   permissionModeEnum,
   permissionStatusEnum,
-  terminalStatusEnum,
 ];
