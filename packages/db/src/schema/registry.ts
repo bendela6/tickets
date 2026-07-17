@@ -15,6 +15,7 @@ import {
   sessionKindEnum,
   sessionStatusEnum,
   statusKindEnum,
+  terminalStatusEnum,
   userKindEnum,
 } from './enums';
 import { events } from './events';
@@ -34,6 +35,7 @@ import { options } from './options';
 import { outbox } from './outbox';
 import { projects } from './projects';
 import { schemes } from './schemes';
+import { terminalOutput, terminalSessions } from './terminal-sessions';
 import { users } from './users';
 import { views } from './views';
 import { workdirs } from './workdirs';
@@ -48,6 +50,7 @@ export const allTables = [
   events, commands, outbox, itemActivity,
   workdirs, aiSessions, aiSessionOutput,
   aiAgents, aiMessages, aiPermissionRequests,
+  terminalSessions, terminalOutput,
 ];
 
 // Every enum must also be exported from index.ts — drizzle omits the CREATE TYPE
@@ -61,4 +64,5 @@ export const allEnums = [
   runnerKindEnum,
   permissionModeEnum,
   permissionStatusEnum,
+  terminalStatusEnum,
 ];

@@ -104,8 +104,45 @@ export function exportDrizzle(model: Model): string {
   // ---- name assignment (one JS identifier namespace for every top-level export) ----
   const usedIdentifiers = new Set<string>();
 
+  // Two enums CAN legitimately share a bare name across schemas (e.g.
+  // terminal.session_status / agent.session_status) — see the terminal/agent
+  // split. Key everything that must stay 1:1 with a *specific* enum by its
+  // schema-qualified id, the same way tableVarNames keys off Entity.id rather
+  // than the bare table name, or two same-named enums collapse onto one JS
+  // identifier (an "Identifier has already been declared" parse error) and
+  // silently lose track of which enum a column actually referenced.
+  function enumId(en: Pick<EnumDecl, 'schema' | 'name'>): string {
+    return en.schema && en.schema !== 'public' ? `${en.schema}.${en.name}` : en.name;
+  }
+
+  const enumsByBareName = new Map<string, EnumDecl[]>();
+  for (const en of model.enums) {
+    const list = enumsByBareName.get(en.name) ?? [];
+    list.push(en);
+    enumsByBareName.set(en.name, list);
+  }
+
+  // A column's stored type is the enum's BARE name only (drizzle's
+  // getSQLType() for an enum column returns just `enumName`, with no schema —
+  // see describe-drizzle.ts). When more than one enum shares that bare name,
+  // resolve to the one declared in the column's OWN table's schema (a
+  // `terminal.sessions` column named "session_status" means the `terminal`
+  // enum, not `agent`'s); fall back to a public/global enum of that name, then
+  // to the first match, for configurations this repo doesn't have yet.
+  function resolveEnumForColumn(entitySchema: string | null, bareName: string): EnumDecl {
+    const candidates = enumsByBareName.get(bareName) ?? [];
+    if (candidates.length === 0) {
+      throw new Error(`exportDrizzle: no enum named "${bareName}" is declared on the model.`);
+    }
+    if (candidates.length === 1) return candidates[0]!;
+    const normSchema = entitySchema && entitySchema !== 'public' ? entitySchema : null;
+    const sameSchema = candidates.find((c) => (c.schema ?? null) === normSchema);
+    if (sameSchema) return sameSchema;
+    return candidates.find((c) => !c.schema || c.schema === 'public') ?? candidates[0]!;
+  }
+
   const enumVarNames = new Map<string, string>();
-  for (const en of model.enums) enumVarNames.set(en.name, uniqueIdentifier(`${toIdentifier(en.name)}Enum`, usedIdentifiers));
+  for (const en of model.enums) enumVarNames.set(enumId(en), uniqueIdentifier(`${toIdentifier(en.name)}Enum`, usedIdentifiers));
 
   const tableVarNames = new Map<string, string>();
   for (const e of model.entities) {
@@ -332,7 +369,7 @@ export function exportDrizzle(model: Model): string {
     return isBareBooleanDefaultText(c) || isBareNumberDefaultText(c);
   }
 
-  function emitColumn(c: Column, entityId: string, isInlinePk: boolean): string {
+  function emitColumn(c: Column, entityId: string, entitySchema: string | null, isInlinePk: boolean): string {
     const colKey = colKeyByEntity.get(entityId)!;
     const propKey = colKey.get(c.name)!;
     const parsed = parseType(c.type);
@@ -340,7 +377,7 @@ export function exportDrizzle(model: Model): string {
     let builderExpr: string;
     let optionsSrc: string | null;
     if (enumNames.has(parsed.base)) {
-      builderExpr = enumVarNames.get(parsed.base)!;
+      builderExpr = enumVarNames.get(enumId(resolveEnumForColumn(entitySchema, parsed.base)))!;
       optionsSrc = null;
     } else {
       const d = descriptorFor(parsed.base)!;
@@ -462,7 +499,7 @@ export function exportDrizzle(model: Model): string {
     const pkConstraint = e.constraints.find((c): c is Extract<Constraint, { kind: 'pk' }> => c.kind === 'pk');
     const inlinePkColumn = pkConstraint && pkIsInline(pkConstraint) ? pkConstraint.columns[0] : null;
 
-    const columnLines = e.columns.map((c) => `    ${emitColumn(c, e.id, c.name === inlinePkColumn)}`).join('\n');
+    const columnLines = e.columns.map((c) => `    ${emitColumn(c, e.id, e.schema, c.name === inlinePkColumn)}`).join('\n');
 
     const constructs: string[] = [];
     for (const c of e.constraints) {
@@ -484,7 +521,7 @@ export function exportDrizzle(model: Model): string {
   }
 
   function emitEnum(en: EnumDecl): string {
-    const varName = enumVarNames.get(en.name)!;
+    const varName = enumVarNames.get(enumId(en))!;
     const fn = en.schema && en.schema !== 'public' ? `${schemaVarNames.get(en.schema)}.enum` : 'pgEnum';
     return `export const ${varName} = ${fn}(${quote(en.name)}, [${en.values.map(quote).join(', ')}]);`;
   }

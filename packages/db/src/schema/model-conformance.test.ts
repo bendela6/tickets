@@ -48,6 +48,8 @@ const PENDING_SPLIT_TABLES = new Set([
   'ai_agents',
   'ai_messages',
   'ai_permission_requests',
+  'sessions',
+  'output',
 ]);
 const PENDING_SPLIT_ENUMS = new Set([
   'session_kind',
