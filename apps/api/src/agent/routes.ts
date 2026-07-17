@@ -6,12 +6,28 @@ import { agentAgents, agentSessions, users } from '@tickets/db';
 import { HttpError } from '../errors';
 import { parseBody } from '../utils/parse-body';
 import { parseId } from '../utils/parse-id';
+import { parseQuery } from '../utils/parse-query';
 import { loadRunnableWorkdir } from '../workdir/load-workdir';
 import { buildRunSpec } from './agent-run-spec';
 import type { AgentDriver } from './driver';
 import type { ProviderRegistry } from './provider-registry';
 
 const permissionModeSchema = v.picklist(['default', 'acceptEdits', 'bypassPermissions', 'plan', 'dontAsk']);
+
+// `agent.session_status`, in full. `?status=` is user input and reaches a
+// WHERE clause: unvalidated, a bogus value went to Postgres as an enum literal
+// and came back as invalid-enum-input — a 500 for what is a bad request.
+// These are the agent's OWN statuses; the terminal schema's enum shares the
+// name and neither may drift into the other.
+const statusSchema = v.picklist([
+  'starting',
+  'running',
+  'idle',
+  'awaiting_input',
+  'interrupted',
+  'exited',
+  'failed',
+]);
 
 const createAgentSchema = v.object({
   key: v.pipe(v.string(), v.minLength(1)),
@@ -65,7 +81,7 @@ export function registerAgentRoutes(
   const listSessions = async (request: FastifyRequest, reply: FastifyReply) => {
     const query = request.query as { status?: string; archived?: string };
     const conditions = [];
-    if (query.status) conditions.push(eq(agentSessions.status, query.status as never));
+    if (query.status) conditions.push(eq(agentSessions.status, parseQuery(statusSchema, query.status)));
     if (query.archived !== 'true') conditions.push(isNull(agentSessions.archivedAt));
     const rows = await db
       .select()

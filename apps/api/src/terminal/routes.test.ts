@@ -184,6 +184,22 @@ describe('terminal routes', () => {
     expect(res.statusCode).toBe(404);
   });
 
+  test('filters by ?status= and 400s on a value outside the terminal enum', async () => {
+    const s = await createTerminalSession();
+    const ok = await app.inject({ method: 'GET', url: '/api/terminal/sessions?status=starting' });
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json().map((x: { id: number }) => x.id)).toContain(s.id);
+
+    // Unvalidated, this reached Postgres as an enum literal and came back as
+    // invalid-enum-input — a 500 for a bad request.
+    const bad = await app.inject({ method: 'GET', url: '/api/terminal/sessions?status=bogus' });
+    expect(bad.statusCode).toBe(400);
+
+    // `running` is a real status — in the AGENT enum. Not this one.
+    const wrongEnum = await app.inject({ method: 'GET', url: '/api/terminal/sessions?status=running' });
+    expect(wrongEnum.statusCode).toBe(400);
+  });
+
   test('excludes archived sessions from the list unless ?archived=true', async () => {
     const live = await createTerminalSession();
     const arch = await createTerminalSession();
