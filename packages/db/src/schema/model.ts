@@ -40,12 +40,16 @@ export type EerEntity = {
   id: string;
   label: string;
   group: string;
+  // The Postgres schema, mirroring apps/eer's Entity.schema. Absent or null
+  // means public — the field is only serialised once it has been set, so
+  // conformance reads it as `entity.schema ?? null`.
+  schema?: string | null;
   columns: EerColumn[];
   constraints: EerConstraint[];
   indexes: EerIndex[];
 };
 
-export type EerEnum = { name: string; values: string[] };
+export type EerEnum = { name: string; values: string[]; schema?: string | null };
 export type EerGroup = { id: string; label: string; order: number; parent?: string };
 
 export type EerModel = {
