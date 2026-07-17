@@ -96,8 +96,20 @@ export const placementUpdate = defineCommand({
     if (input.required !== undefined) { set.required = input.required; changes.required = input.required; }
     if (input.position !== undefined) { set.position = input.position; changes.position = input.position; }
     if (input.allowedOptionIds !== undefined) {
-      const co = { ...((existing.configOverride as Record<string, unknown> | null) ?? {}), allowedOptionIds: input.allowedOptionIds };
-      set.configOverride = co; changes.allowedOptionIds = input.allowedOptionIds;
+      // Both optionsForField() implementations (web + api) do
+      // `allow ? all.filter(...) : all` — and `[]` is truthy, so storing an
+      // empty array filters to ZERO options while the Fields tab's "Clear"
+      // control claims "all options allowed". Treat an empty array as
+      // "clear the override" instead of "allow nothing", so it falls
+      // through to the same "all options" behavior the UI advertises.
+      const currentOverride = { ...((existing.configOverride as Record<string, unknown> | null) ?? {}) };
+      if (input.allowedOptionIds.length === 0) {
+        delete currentOverride.allowedOptionIds;
+        set.configOverride = Object.keys(currentOverride).length > 0 ? currentOverride : null;
+      } else {
+        set.configOverride = { ...currentOverride, allowedOptionIds: input.allowedOptionIds };
+      }
+      changes.allowedOptionIds = input.allowedOptionIds;
     }
     if (Object.keys(set).length > 0) {
       await tx.update(itemTypeFields).set(set)

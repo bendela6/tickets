@@ -82,3 +82,36 @@ it('renumbers the remaining placements to a dense 0..n-1 run after unplacing a m
   const placedRow = afterPlace.find((row) => row.fieldId === estimate)!;
   expect(placedRow.position).toBe(9);
 });
+
+// Regression test for the truthy-empty-array bug: optionsForField() (both
+// the web and api implementations) does `allow ? all.filter(...) : all` —
+// and `[]` is truthy, so PATCHing `allowedOptionIds: []` (what the Fields
+// tab's MultiCombobox "Clear" control sends) used to store an empty
+// allowlist, filtering that type/field to ZERO legal options, while the
+// control itself renders the "All options allowed" placeholder. Without the
+// clear-on-empty fix, the second assertion below fails: configOverride
+// still carries `allowedOptionIds: []` instead of having the key removed.
+it('treats an empty allowedOptionIds PATCH as clearing the override, not as an empty allowlist', async () => {
+  const fx = await seedFixture();
+  const task = fx.typeIdByKey.get('task')!;
+  const priority = fx.fieldIdByKey.get('priority')!; // placed on task in the seed, no override
+  const urgent = fx.optionIdByKey.get('priority:urgent')!;
+  const high = fx.optionIdByKey.get('priority:high')!;
+
+  await runCommand(testDb, placementUpdate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
+    itemTypeId: task, fieldId: priority, allowedOptionIds: [urgent, high],
+  });
+  const afterSet = (await testDb.select().from(itemTypeFields).where(and(eq(itemTypeFields.itemTypeId, task), eq(itemTypeFields.fieldId, priority))))[0]!;
+  expect((afterSet.configOverride as { allowedOptionIds?: number[] }).allowedOptionIds).toEqual(
+    expect.arrayContaining([urgent, high]),
+  );
+
+  await runCommand(testDb, placementUpdate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
+    itemTypeId: task, fieldId: priority, allowedOptionIds: [],
+  });
+  const afterClear = (await testDb.select().from(itemTypeFields).where(and(eq(itemTypeFields.itemTypeId, task), eq(itemTypeFields.fieldId, priority))))[0]!;
+  const overrideKeys = afterClear.configOverride === null ? [] : Object.keys(afterClear.configOverride as Record<string, unknown>);
+  expect(overrideKeys).not.toContain('allowedOptionIds');
+
+  expect((await testDb.select().from(events).where(eq(events.kind, 'placement.updated')))).toHaveLength(2);
+});
