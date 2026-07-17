@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import { and, count, eq } from 'drizzle-orm';
+import { and, asc, count, eq } from 'drizzle-orm';
 import { fields, itemTypeFields, itemTypes } from '@tickets/db';
 import { HttpError } from '../../errors';
 import { defineCommand } from '../registry';
@@ -50,6 +50,25 @@ export const fieldUnplace = defineCommand({
       .where(and(eq(itemTypeFields.itemTypeId, input.itemTypeId), eq(itemTypeFields.fieldId, input.fieldId)))
       .returning();
     if (!deleted[0]) throw new HttpError(404, 'placement not found');
+
+    // Renumber the remaining placements on this type to a dense 0..n-1 run
+    // (ordered by their current position), so a leftover gap can't collide
+    // with a later count-based position from fieldPlace/fieldCreate. Without
+    // this, unplacing a middle row leaves a gap (e.g. 0,1,3,4); the next
+    // placement lands at count=4, colliding with the existing row at
+    // position 4 — and since move() in the Fields tab swaps by *value*, the
+    // tie can never be broken through the UI again.
+    const remaining = await tx.select().from(itemTypeFields)
+      .where(eq(itemTypeFields.itemTypeId, input.itemTypeId))
+      .orderBy(asc(itemTypeFields.position));
+    for (let i = 0; i < remaining.length; i++) {
+      const row = remaining[i]!;
+      if (row.position !== i) {
+        await tx.update(itemTypeFields).set({ position: i })
+          .where(and(eq(itemTypeFields.itemTypeId, input.itemTypeId), eq(itemTypeFields.fieldId, row.fieldId)));
+      }
+    }
+
     ctx.aggregateId = input.fieldId;
     await ctx.emit(fieldUnplaced, { itemTypeId: input.itemTypeId });
     return { itemTypeId: input.itemTypeId, fieldId: input.fieldId };
@@ -77,8 +96,20 @@ export const placementUpdate = defineCommand({
     if (input.required !== undefined) { set.required = input.required; changes.required = input.required; }
     if (input.position !== undefined) { set.position = input.position; changes.position = input.position; }
     if (input.allowedOptionIds !== undefined) {
-      const co = { ...((existing.configOverride as Record<string, unknown> | null) ?? {}), allowedOptionIds: input.allowedOptionIds };
-      set.configOverride = co; changes.allowedOptionIds = input.allowedOptionIds;
+      // Both optionsForField() implementations (web + api) do
+      // `allow ? all.filter(...) : all` — and `[]` is truthy, so storing an
+      // empty array filters to ZERO options while the Fields tab's "Clear"
+      // control claims "all options allowed". Treat an empty array as
+      // "clear the override" instead of "allow nothing", so it falls
+      // through to the same "all options" behavior the UI advertises.
+      const currentOverride = { ...((existing.configOverride as Record<string, unknown> | null) ?? {}) };
+      if (input.allowedOptionIds.length === 0) {
+        delete currentOverride.allowedOptionIds;
+        set.configOverride = Object.keys(currentOverride).length > 0 ? currentOverride : null;
+      } else {
+        set.configOverride = { ...currentOverride, allowedOptionIds: input.allowedOptionIds };
+      }
+      changes.allowedOptionIds = input.allowedOptionIds;
     }
     if (Object.keys(set).length > 0) {
       await tx.update(itemTypeFields).set(set)

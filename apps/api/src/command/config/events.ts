@@ -23,6 +23,8 @@ export const schemeForked = cfg('scheme.forked', 'scheme',
   v.object({ sourceSchemeId: v.number(), key: v.string(), name: v.string() }));
 export const projectCreated = cfg('project.created', 'project',
   v.object({ key: v.string(), name: v.string(), itemPrefix: v.string(), schemeId: v.number() }));
+export const projectUpdated = cfg('project.updated', 'project',
+  v.object({ changes: v.record(v.string(), v.unknown()) }));
 export const userCreated = cfg('user.created', 'user',
   v.object({ name: v.string(), kind: v.string() }));
 export const viewCreated = cfg('view.created', 'view',
