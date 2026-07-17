@@ -60,7 +60,7 @@ describe('DetailPanel', () => {
 
   it('lists member tables for a selected group', async () => {
     const { container } = await renderPanel((a) => a.selectGroup('z2'));
-    expect(screen.getByText('Zone')).toBeInTheDocument();
+    expect(screen.getByText('Group')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Zone Two' })).toBeInTheDocument();
     expect(container.textContent).toContain('2 tables');
     // 'orders' shows up in the tables list and again in the external rel row

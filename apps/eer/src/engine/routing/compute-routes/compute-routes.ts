@@ -13,7 +13,6 @@ import { STUB } from '../../geometry/metrics';
 import { enforcePortStub } from '../enforce-port-stub';
 import { simpleOrtho } from '../simple-ortho';
 import { simplifyPolyline } from '../simplify-polyline';
-import { zoneIdOf } from '../../groups/zone-id-of';
 import type { Model, Point, Relationship } from '../../model/types';
 
 const MARG = 16; // grid lane offset outside each card
@@ -436,10 +435,28 @@ function segHitsCard(x1: number, y1: number, x2: number, y2: number, cards: Card
   return false;
 }
 
+// Every group box an endpoint sits inside — its own group and every ancestor up
+// to the root zone — must stay permeable, or a deeply-nested card's line can't
+// cross the intermediate boxes to reach it. (At one level of nesting this is
+// exactly {group, its zone}; the walk generalizes it to any depth.)
+function openBoxIds(model: Model, aGroup: string, bGroup: string): Set<string> {
+  const open = new Set<string>();
+  for (const start of [aGroup, bGroup]) {
+    const seen = new Set<string>();
+    let g = model.groups.find((x) => x.id === start);
+    while (g && !seen.has(g.id)) {
+      open.add(g.id);
+      seen.add(g.id);
+      g = g.parent != null ? model.groups.find((x) => x.id === g!.parent) : undefined;
+    }
+  }
+  return open;
+}
+
 function segHitsGroup(model: Model, rel: Relationship, x1: number, y1: number, x2: number, y2: number): boolean {
   const A = model.entityById.get(rel.source)!;
   const B = model.entityById.get(rel.target)!;
-  const open = new Set<string>([A.group, zoneIdOf(model, A.group), B.group, zoneIdOf(model, B.group)]);
+  const open = openBoxIds(model, A.group, B.group);
   for (const b of model._groupBounds) {
     if (open.has(b.id)) continue;
     if (rectHit(x1, y1, x2, y2, b.x, b.y, b.w, b.h)) return true;
@@ -456,7 +473,7 @@ function routePolyline(model: Model, rel: Relationship, cards: Card[], slotsW: M
   // every other zone/subgroup box is an obstacle, so lines route around groups too.
   const A = model.entityById.get(rel.source)!;
   const B = model.entityById.get(rel.target)!;
-  const openGroups = new Set<string>([A.group, zoneIdOf(model, A.group), B.group, zoneIdOf(model, B.group)]);
+  const openGroups = openBoxIds(model, A.group, B.group);
   const groupObs: Card[] = model._groupBounds
     .filter((b) => !openGroups.has(b.id))
     .map((b) => ({ id: 'grp:' + b.id, x: b.x, y: b.y, w: b.w, h: b.h }));

@@ -1,4 +1,13 @@
-export { userKindEnum, statusKindEnum, fieldTypeEnum } from './enums';
+export {
+  userKindEnum,
+  statusKindEnum,
+  fieldTypeEnum,
+  sessionKindEnum,
+  sessionStatusEnum,
+  runnerKindEnum,
+  permissionModeEnum,
+  permissionStatusEnum,
+} from './enums';
 export { users } from './users';
 export { projects } from './projects';
 export { views } from './views';
@@ -21,6 +30,12 @@ export { events } from './events';
 export { commands } from './commands';
 export { outbox } from './outbox';
 export { itemActivity } from './item-activity';
+export { aiWorkspaces } from './ai-workspaces';
+export { aiSessions } from './ai-sessions';
+export { aiSessionOutput } from './ai-session-output';
+export { aiAgents } from './ai-agents';
+export { aiMessages } from './ai-messages';
+export { aiPermissionRequests } from './ai-permission-requests';
 
 export { allTables, allEnums } from './registry';
 export { SCHEMA_GROUPS, type SchemaGroup } from './schema-groups';

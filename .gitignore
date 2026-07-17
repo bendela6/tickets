@@ -11,3 +11,6 @@ backups/
 
 # eer drizzle-export dev route writes reviewable .ts files here (never commit)
 apps/eer/exports/
+
+# Superpowers scratch (brainstorm mockups, SDD ledger)
+.superpowers/

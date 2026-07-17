@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="width:1440px;height:780px;border:1px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;background:var(--bg);color:var(--f1);box-shadow:var(--shlg);{{tok}}">
+
+  <aside style="width:236px;flex:none;border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px 12px 12px">
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 14px"><span style="width:9px;height:9px;background:var(--ac);border-radius:2px"></span><span style="font:600 15px 'IBM Plex Mono',monospace">tickets</span><span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">acme</span></div>
+    <nav style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">⌂<span style="flex:1">Home</span></div>
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">▤<span style="flex:1">All tickets</span></div>
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif">✳<span style="flex:1">Sessions</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">6</span></div>
+    </nav>
+    <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3);padding:16px 9px 6px">OPEN SESSIONS</div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:7px;height:30px;padding:0 9px;border-radius:7px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="width:14px;height:14px;border-radius:4px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:500 8px 'IBM Plex Mono',monospace;flex:none">✳</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">#49 Timeline renderer</span><span style="width:7px;height:7px;background:var(--kb);transform:rotate(45deg);border-radius:1px;flex:none;animation:aiblink 1.4s steps(1) infinite"></span></div>
+      <div style="display:flex;align-items:center;gap:7px;height:30px;padding:0 9px;border-radius:7px;background:var(--in);font:500 12px 'IBM Plex Sans',sans-serif"><span style="width:14px;height:14px;border-radius:4px;background:var(--f1);color:var(--bg);display:inline-flex;align-items:center;justify-content:center;font:600 6px 'IBM Plex Mono',monospace;flex:none">&gt;_</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">#46 pnpm test --filter web</span></div>
+      <div style="display:flex;align-items:center;gap:7px;height:30px;padding:0 9px;border-radius:7px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="width:14px;height:14px;border-radius:4px;background:var(--f1);color:var(--bg);display:inline-flex;align-items:center;justify-content:center;font:600 6px 'IBM Plex Mono',monospace;flex:none">&gt;_</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">#45 shell</span><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--ka);background:linear-gradient(90deg,var(--ka) 50%,transparent 50%);flex:none;animation:autospin 1.4s linear infinite"></span></div>
+    </div>
+    <span style="flex:1"></span>
+    <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">⚙<span style="flex:1">Settings</span></div>
+  </aside>
+
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <!-- session header -->
+    <div style="display:flex;align-items:center;gap:10px;height:56px;padding:0 20px;border-bottom:1px solid var(--bd);background:var(--rs);flex:none">
+      <span style="width:24px;height:24px;border-radius:6px;background:var(--f1);color:var(--bg);display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace;flex:none">&gt;_</span>
+      <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3)">#46</span>
+      <span style="font:600 15px 'IBM Plex Sans',sans-serif">pnpm test --filter web</span>
+      <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3)">~/work/tickets</span>
+      <span style="height:23px;padding:0 9px;border-radius:6px;background:{{pBg}};color:{{pFg}};font:{{pFont}};display:inline-flex;align-items:center;gap:6px;animation:{{pAnim}}"><span style="width:{{dW}}px;height:{{dH}}px;border-radius:{{dR}};border:{{dBd}};background:{{dBg}};transform:{{dT}};animation:{{dAnim}};flex:none;box-sizing:border-box"></span>{{pLabel}}<span style="display:{{sufD}};font:500 11px 'IBM Plex Mono',monospace;color:{{sufC}}">{{suf}}</span></span>
+      <span style="display:inline-flex;align-items:center;gap:5px;font:500 11px 'IBM Plex Sans',sans-serif;color:{{connC}}"><span style="width:7px;height:7px;border-radius:50%;background:{{connBg}};border:{{connBd}};box-sizing:border-box;animation:{{connAnim}}"></span>{{connLabel}}</span>
+      <span style="flex:1"></span>
+      <sc-if value="{{showStop}}" hint-placeholder-val="{{true}}">
+        <button style="height:30px;padding:0 12px;border-radius:7px;border:1px solid var(--dg);background:transparent;color:var(--dg);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;background:var(--dg);border-radius:2px"></span>Stop</button>
+      </sc-if>
+      <sc-if value="{{showRestart}}" hint-placeholder-val="{{false}}">
+        <button style="height:30px;padding:0 12px;border-radius:7px;border:none;background:var(--ac);color:var(--oac);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer">↻ Restart</button>
+      </sc-if>
+      <span style="width:30px;height:30px;border-radius:7px;border:1px solid var(--bd);display:inline-flex;align-items:center;justify-content:center;color:var(--f2);cursor:pointer">⋯</span>
+    </div>
+
+    <!-- reconnect banner -->
+    <sc-if value="{{isReconnecting}}" hint-placeholder-val="{{false}}">
+      <div style="display:flex;align-items:center;gap:9px;padding:9px 20px;background:var(--kas);border-bottom:1px solid var(--bd);flex:none">
+        <span style="width:10px;height:10px;border-radius:50%;border:1.5px solid var(--ka);background:linear-gradient(90deg,var(--ka) 50%,transparent 50%);animation:autospin 1.4s linear infinite;flex:none"></span>
+        <span style="font:500 12px 'IBM Plex Sans',sans-serif;color:var(--ka)">Connection dropped — reconnecting (attempt 2).</span>
+        <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--ka);opacity:.8">The process is still running; output is buffered and will catch up.</span>
+      </div>
+    </sc-if>
+
+    <!-- terminal frame -->
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;margin:16px 20px 20px;border:1px solid var(--bd);border-radius:12px;overflow:hidden;background:var(--rs)">
+      <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-bottom:1px solid var(--bd);background:var(--bg);flex:none">
+        <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--f1)">~/work/tickets</span>
+        <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">zsh · pid 48112</span>
+        <span style="flex:1"></span>
+        <span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3)">⌘F search · select to copy</span>
+      </div>
+      <div style="flex:1;min-height:0;background:var(--tbg);padding:12px 14px;font:400 12.5px/1.7 'IBM Plex Mono',monospace;color:var(--tfg);position:relative;overflow:hidden">
+        <div style="opacity:{{bodyOp}}">
+          <div><span style="color:var(--t2)">❯</span> pnpm test --filter web</div>
+          <div><span style="color:var(--t8)">&gt; @tickets/web@0.14.2 test</span></div>
+          <div><span style="color:var(--t8)">&gt; vitest run</span></div>
+          <div>&nbsp;</div>
+          <div><span style="color:var(--t6)">RUN</span> v3.1.4 <span style="color:var(--t8)">~/work/tickets/apps/web</span></div>
+          <div><span style="color:var(--t2)">✓</span> src/views/board.test.tsx <span style="color:var(--t8)">(14 tests) 812ms</span></div>
+          <div><span style="color:var(--t2)">✓</span> src/views/calendar.test.tsx <span style="color:var(--t8)">(11 tests) 604ms</span></div>
+          <div><span style="color:var(--t2)">✓</span> src/fields/registry.test.ts <span style="color:var(--t8)">(23 tests) 388ms</span></div>
+          <div><span style="color:var(--t1)">❯</span> src/views/timeline.test.tsx <span style="color:var(--t8)">(9 tests | </span><span style="color:var(--t1)">2 failed</span><span style="color:var(--t8)">) 1.42s</span></div>
+          <div>&nbsp;&nbsp;<span style="color:var(--t1)">× renders epic lanes from logical fields</span></div>
+          <div>&nbsp;&nbsp;<span style="color:var(--t1)">× clamps bars to the visible range</span></div>
+          <div>&nbsp;</div>
+          <div><span style="color:var(--t15);background:var(--t1);padding:0 5px"> FAIL </span> src/views/timeline.test.tsx &gt; clamps bars to the visible range</div>
+          <div><span style="color:var(--t1)">AssertionError</span>: expected 'Invalid Date' to be '2026-07-14'</div>
+          <div><span style="color:var(--t8)">&nbsp;&nbsp;at</span> <span style="color:var(--t6)">src/views/timeline.tsx:47:19</span></div>
+          <div><span style="color:var(--t8)">&nbsp;&nbsp;at</span> <span style="color:var(--t8)">node_modules/.pnpm/vitest@3.1.4/dist/chunk-runtime.js:1201:11</span></div>
+          <div>&nbsp;</div>
+          <div><span style="color:var(--t8)">Test Files</span>&nbsp;&nbsp;<span style="color:var(--t1)">1 failed</span> <span style="color:var(--t8)">|</span> <span style="color:var(--t2)">3 passed</span> <span style="color:var(--t8)">(4)</span></div>
+          <div><span style="color:var(--t8)">&nbsp;&nbsp;&nbsp;&nbsp; Tests</span>&nbsp;&nbsp;<span style="color:var(--t1)">2 failed</span> <span style="color:var(--t8)">|</span> <span style="color:var(--t2)">55 passed</span> <span style="color:var(--t8)">(57)</span></div>
+          <sc-if value="{{isLive}}" hint-placeholder-val="{{false}}">
+            <div><span style="color:var(--t3)">⠸</span> rerunning failed specs… <span style="color:var(--t8)">watch mode</span></div>
+            <div>█▓▒░&nbsp;<span style="color:var(--t6)">42%</span> <span style="color:var(--t8)">| 218/512 modules</span><span style="display:inline-block;width:7px;height:14px;background:var(--tcur);vertical-align:-2px;margin-left:3px;animation:aiblink 1.1s steps(1) infinite"></span></div>
+          </sc-if>
+          <sc-if value="{{isExited}}" hint-placeholder-val="{{false}}">
+            <div>&nbsp;</div>
+            <div><span style="color:var(--t8)">ELIFECYCLE&nbsp; Command failed with exit code 1.</span></div>
+          </sc-if>
+        </div>
+        <sc-if value="{{isInterrupted}}" hint-placeholder-val="{{false}}">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(20,18,14,.35)">
+            <div style="background:var(--rs);border:1px solid var(--bd);border-radius:12px;box-shadow:var(--shlg);padding:22px 26px;display:flex;flex-direction:column;align-items:center;gap:10px;max-width:380px;text-align:center">
+              <span style="width:34px;height:34px;border-radius:9px;background:var(--in);color:var(--f2);display:inline-flex;align-items:center;justify-content:center;font:400 16px 'IBM Plex Sans',sans-serif">⏻</span>
+              <span style="font:600 15px 'IBM Plex Sans',sans-serif;color:var(--f1)">The server restarted — this terminal is gone</span>
+              <span style="font:400 12.5px/1.55 'IBM Plex Sans',sans-serif;color:var(--f2)">A PTY can't survive a restart. The scrollback below is the last buffered output; start a fresh terminal in the same workspace.</span>
+              <button style="height:32px;padding:0 14px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer;margin-top:4px">↻ Restart terminal</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;height:28px;padding:0 12px;border-top:1px solid var(--bd);background:var(--bg);font:400 10px 'IBM Plex Mono',monospace;color:var(--f3);flex:none">
+        <span>scrollback truncated — oldest 4,000 lines pruned</span>
+        <span style="flex:1"></span>
+        <sc-if value="{{isExited}}" hint-placeholder-val="{{false}}">
+          <span style="height:18px;padding:0 7px;border-radius:5px;background:var(--dgs);color:var(--dg);font:500 10px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border:1.5px solid var(--dg);border-radius:1.5px;box-sizing:content-box"></span>exit 1 · 3h ago</span>
+        </sc-if>
+        <span>UTF-8 · 168×42</span>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1460,&quot;height&quot;:800},&quot;tok&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;reconnecting&quot;,&quot;exited&quot;,&quot;interrupted&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;'live' | 'reconnecting' | 'exited' | 'interrupted'&quot;}}">
+const STATES = {
+  live: {
+    pBg:'var(--kas)', pFg:'var(--ka)', pFont:"500 12px 'IBM Plex Sans',sans-serif", pAnim:'none', pLabel:'running',
+    dW:10, dH:10, dR:'50%', dBd:'1.5px solid var(--ka)', dBg:'linear-gradient(90deg,var(--ka) 50%,transparent 50%)', dT:'none', dAnim:'autospin 1.4s linear infinite',
+    sufD:'none', suf:'', sufC:'var(--f3)',
+    connLabel:'live', connC:'var(--kd)', connBg:'var(--kd)', connBd:'none', connAnim:'none',
+    showStop:true, showRestart:false, bodyOp:1,
+  },
+  reconnecting: {
+    pBg:'var(--kas)', pFg:'var(--ka)', pFont:"500 12px 'IBM Plex Sans',sans-serif", pAnim:'none', pLabel:'running',
+    dW:10, dH:10, dR:'50%', dBd:'1.5px solid var(--ka)', dBg:'linear-gradient(90deg,var(--ka) 50%,transparent 50%)', dT:'none', dAnim:'autospin 1.4s linear infinite',
+    sufD:'none', suf:'', sufC:'var(--f3)',
+    connLabel:'reconnecting…', connC:'var(--kb)', connBg:'var(--kb)', connBd:'none', connAnim:'aiblink 1.2s steps(1) infinite',
+    showStop:true, showRestart:false, bodyOp:0.6,
+  },
+  exited: {
+    pBg:'var(--in)', pFg:'var(--f2)', pFont:"500 12px 'IBM Plex Sans',sans-serif", pAnim:'none', pLabel:'exited',
+    dW:8, dH:8, dR:'2px', dBd:'1.5px solid var(--f2)', dBg:'transparent', dT:'none', dAnim:'none',
+    sufD:'inline-block', suf:'1', sufC:'var(--dg)',
+    connLabel:'ended', connC:'var(--f3)', connBg:'transparent', connBd:'1.5px solid var(--f3)', connAnim:'none',
+    showStop:false, showRestart:true, bodyOp:1,
+  },
+  interrupted: {
+    pBg:'var(--in)', pFg:'var(--f3)', pFont:"500 12px 'IBM Plex Sans',sans-serif", pAnim:'none', pLabel:'interrupted',
+    dW:10, dH:10, dR:'50%', dBd:'1.5px dashed var(--f3)', dBg:'transparent', dT:'none', dAnim:'none',
+    sufD:'none', suf:'', sufC:'var(--f3)',
+    connLabel:'ended', connC:'var(--f3)', connBg:'transparent', connBd:'1.5px solid var(--f3)', connAnim:'none',
+    showStop:false, showRestart:true, bodyOp:0.45,
+  },
+};
+
+class Component extends DCLogic {
+  renderVals() {
+    const state = STATES[this.props.state] ? this.props.state : 'live';
+    return {
+      ...STATES[state],
+      isLive: state === 'live',
+      isReconnecting: state === 'reconnecting',
+      isExited: state === 'exited',
+      isInterrupted: state === 'interrupted',
+    };
+  }
+}
+</script>
+</body>
+</html>

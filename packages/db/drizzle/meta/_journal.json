@@ -15,6 +15,13 @@
       "when": 1784195130411,
       "tag": "0001_yielding_slapstick",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784276264375,
+      "tag": "0002_mute_wasp",
+      "breakpoints": true
     }
   ]
 }

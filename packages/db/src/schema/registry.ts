@@ -1,8 +1,23 @@
 // packages/db/src/schema/registry.ts
+import { aiAgents } from './ai-agents';
+import { aiMessages } from './ai-messages';
+import { aiPermissionRequests } from './ai-permission-requests';
+import { aiSessionOutput } from './ai-session-output';
+import { aiSessions } from './ai-sessions';
+import { aiWorkspaces } from './ai-workspaces';
 import { commands } from './commands';
 import { commentReactions } from './comment-reactions';
 import { comments } from './comments';
-import { fieldTypeEnum, statusKindEnum, userKindEnum } from './enums';
+import {
+  fieldTypeEnum,
+  permissionModeEnum,
+  permissionStatusEnum,
+  runnerKindEnum,
+  sessionKindEnum,
+  sessionStatusEnum,
+  statusKindEnum,
+  userKindEnum,
+} from './enums';
 import { events } from './events';
 import { fields } from './fields';
 import { itemActivity } from './item-activity';
@@ -31,6 +46,19 @@ export const allTables = [
   optionSets, options, optionTransitions, linkTypes, linkTypeTargetTypes,
   items, itemValues, comments, commentReactions, itemLinks,
   events, commands, outbox, itemActivity,
+  aiWorkspaces, aiSessions, aiSessionOutput,
+  aiAgents, aiMessages, aiPermissionRequests,
 ];
 
-export const allEnums = [userKindEnum, statusKindEnum, fieldTypeEnum];
+// Every enum must also be exported from index.ts — drizzle omits the CREATE TYPE
+// for an enum it cannot see there.
+export const allEnums = [
+  userKindEnum,
+  statusKindEnum,
+  fieldTypeEnum,
+  sessionKindEnum,
+  sessionStatusEnum,
+  runnerKindEnum,
+  permissionModeEnum,
+  permissionStatusEnum,
+];

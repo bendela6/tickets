@@ -5,6 +5,7 @@ import { columnRoles, type ColumnRole } from '../column-roles';
 import { deriveRelationships } from '../derive-relationships';
 import { CARDINALITIES, inferCardinality } from '../infer-cardinality';
 import { formatType, parseType } from '../pg-types';
+import { MAX_GROUP_DEPTH } from '../types';
 import type {
   Column,
   Constraint,
@@ -143,17 +144,36 @@ export function loadModel(raw: unknown): LoadResult {
     else groupIds.add(g.id);
     return { id: g.id, label: g.label || g.id, order: g.order ?? i, parent: g.parent ?? null };
   });
-  // Resolve nesting: a parent must exist and itself be top-level (one level deep).
+  // Resolve nesting: a parent must exist, and the parent chain must be acyclic
+  // and finite. Nesting is otherwise unbounded (any group may nest under any
+  // other) — the depth cap is only a runaway/corruption backstop, never a
+  // product limit. A group that fails either check is detached to the root.
   const groupById = new Map(normGroups.map((g) => [g.id, g]));
   for (const g of normGroups) {
-    if (g.parent == null) continue;
-    const p = groupById.get(g.parent);
-    if (!p) {
+    if (g.parent != null && !groupById.has(g.parent)) {
       warnings.push(`Group "${g.id}" references unknown parent "${g.parent}"; treated as top-level.`);
       g.parent = null;
-    } else if (p.parent != null) {
-      warnings.push(`Group "${g.id}" nests under subgroup "${g.parent}"; only one level is supported — flattened.`);
-      g.parent = null;
+    }
+  }
+  for (const g of normGroups) {
+    if (g.parent == null) continue;
+    const seen = new Set<string>([g.id]);
+    let cur: Group | undefined = groupById.get(g.parent);
+    let depth = 0;
+    while (cur) {
+      depth++;
+      if (seen.has(cur.id)) {
+        warnings.push(`Group "${g.id}" is part of a parent cycle; detached to the root.`);
+        g.parent = null;
+        break;
+      }
+      if (depth > MAX_GROUP_DEPTH) {
+        warnings.push(`Group "${g.id}" nests deeper than ${MAX_GROUP_DEPTH} levels; detached to the root.`);
+        g.parent = null;
+        break;
+      }
+      seen.add(cur.id);
+      cur = cur.parent != null ? groupById.get(cur.parent) : undefined;
     }
   }
   normGroups.sort((a, b) => a.order - b.order);

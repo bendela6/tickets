@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="width:1440px;height:820px;border:1px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;background:var(--bg);color:var(--f1);box-shadow:var(--shlg);{{tok}}">
+
+  <aside style="width:236px;flex:none;border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px 12px 12px">
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 14px"><span style="width:9px;height:9px;background:var(--ac);border-radius:2px"></span><span style="font:600 15px 'IBM Plex Mono',monospace">tickets</span><span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">acme</span></div>
+    <nav style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">⌂<span style="flex:1">Home</span></div>
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">▤<span style="flex:1">All tickets</span></div>
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">✳<span style="flex:1">Sessions</span></div>
+    </nav>
+    <span style="flex:1"></span>
+    <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif;margin-bottom:8px">⚙<span style="flex:1">Settings</span></div>
+  </aside>
+
+  <!-- settings secondary nav -->
+  <div style="width:212px;flex:none;border-right:1px solid var(--bd);padding:22px 12px;display:flex;flex-direction:column;gap:2px;background:var(--bg)">
+    <div style="font:600 16px 'IBM Plex Sans',sans-serif;padding:0 9px 12px">Settings</div>
+    <div style="display:flex;align-items:center;gap:7px;padding:0 9px 8px"><span style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3)">PROJECT</span><span style="height:20px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);font:500 11px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:4px">CORE <span style="font-size:8px;color:var(--f3)">▾</span></span></div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Fields<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">9</span></div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Statuses<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">7</span></div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Automations<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">4</span></div>
+    <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3);padding:16px 9px 6px">WORKSPACE</div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Projects<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">4</span></div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Users<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">7</span></div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif">Agents<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">4</span></div>
+    <div style="display:flex;align-items:center;gap:8px;height:30px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)">Connections<span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">4</span></div>
+  </div>
+
+  <!-- ============ GRID ============ -->
+  <sc-if value="{{isGrid}}" hint-placeholder-val="{{true}}">
+    <main style="flex:1;min-width:0;padding:22px 26px;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <h1 style="font:600 20px 'IBM Plex Sans',sans-serif;margin:0">Agents</h1>
+        <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3)">4 personas · they are also users — they own tickets and write comments</span>
+        <span style="flex:1"></span>
+        <button style="height:32px;padding:0 12px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">＋ New agent</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-content:start">
+        <div style="border:1px solid var(--bd);border-radius:12px;background:var(--rs);padding:15px;display:flex;flex-direction:column;gap:11px;cursor:pointer" style-hover="border-color:var(--bs)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="width:36px;height:36px;border-radius:9px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 13px 'IBM Plex Mono',monospace;flex:none">AR</span>
+            <div style="min-width:0;flex:1"><div style="font:600 14px 'IBM Plex Sans',sans-serif">Architect</div><div style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">Claude · claude-opus-4-8</div></div>
+            <span style="width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3)" style-hover="background:var(--in)">⋯</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span style="height:19px;padding:0 7px;border-radius:5px;border:1px solid var(--ka);color:var(--ka);font:500 10px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;border:1.5px solid var(--ka);background:linear-gradient(90deg,var(--ka) 50%,transparent 50%);box-sizing:border-box"></span>plan mode</span>
+            <span style="height:19px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);color:var(--f2);font:500 10px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">Read · Grep · Glob</span>
+          </div>
+          <div style="border-top:1px solid var(--bd);padding-top:9px;font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">8 sessions · 0 tickets · can dispatch</div>
+        </div>
+        <div style="border:1px solid var(--bd);border-radius:12px;background:var(--rs);padding:15px;display:flex;flex-direction:column;gap:11px;cursor:pointer" style-hover="border-color:var(--bs)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="width:36px;height:36px;border-radius:9px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 13px 'IBM Plex Mono',monospace;flex:none">CO</span>
+            <div style="min-width:0;flex:1"><div style="font:600 14px 'IBM Plex Sans',sans-serif">Coder</div><div style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">Claude · claude-opus-4-8</div></div>
+            <span style="width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3)" style-hover="background:var(--in)">⋯</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span style="height:19px;padding:0 7px;border-radius:5px;border:1px solid var(--kb);color:var(--kb);font:500 10px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:4px"><span style="width:5px;height:5px;background:var(--kb);transform:rotate(45deg);border-radius:1px"></span>auto-accept edits</span>
+            <span style="height:19px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);color:var(--f2);font:500 10px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">5 tools</span>
+          </div>
+          <div style="border-top:1px solid var(--bd);padding-top:9px;font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">31 sessions · assigned to 3 open tickets</div>
+        </div>
+        <div style="border:1px solid var(--bd);border-radius:12px;background:var(--rs);padding:15px;display:flex;flex-direction:column;gap:11px;cursor:pointer" style-hover="border-color:var(--bs)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="width:36px;height:36px;border-radius:9px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 13px 'IBM Plex Mono',monospace;flex:none">BR</span>
+            <div style="min-width:0;flex:1"><div style="font:600 14px 'IBM Plex Sans',sans-serif">Backend Reviewer</div><div style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">Claude · claude-sonnet-5</div></div>
+            <span style="width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3)" style-hover="background:var(--in)">⋯</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span style="height:19px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);color:var(--f2);font:500 10px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;border:1.5px solid var(--f2);box-sizing:border-box"></span>read-only</span>
+            <span style="height:19px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);color:var(--f2);font:500 10px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">Read · Grep · Glob</span>
+          </div>
+          <div style="border-top:1px solid var(--bd);padding-top:9px;font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">12 sessions · 0 tickets</div>
+        </div>
+        <div style="border:1px solid var(--bd);border-radius:12px;background:var(--rs);padding:15px;display:flex;flex-direction:column;gap:11px;cursor:pointer" style-hover="border-color:var(--bs)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="width:36px;height:36px;border-radius:9px;background:var(--in);color:var(--f2);display:inline-flex;align-items:center;justify-content:center;font:600 13px 'IBM Plex Mono',monospace;flex:none">TR</span>
+            <div style="min-width:0;flex:1"><div style="font:600 14px 'IBM Plex Sans',sans-serif">Triager</div><div style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">local (Ollama) · llama-3.3</div></div>
+            <span style="width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3)" style-hover="background:var(--in)">⋯</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span style="height:19px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);color:var(--f2);font:500 10px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;border:1.5px solid var(--f2);box-sizing:border-box"></span>read-only</span>
+            <span style="height:19px;padding:0 7px;border-radius:5px;background:var(--kbs);color:var(--kb);font:500 10px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center">no approvals · no resume</span>
+          </div>
+          <div style="border-top:1px solid var(--bd);padding-top:9px;font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">2 sessions · 0 tickets</div>
+        </div>
+        <div style="border:1px dashed var(--bs);border-radius:12px;background:var(--bg);padding:15px;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;min-height:120px;color:var(--f3);font:500 13px 'IBM Plex Sans',sans-serif">＋ New agent</div>
+      </div>
+    </main>
+  </sc-if>
+
+  <!-- ============ EDITOR ============ -->
+  <sc-if value="{{isEditor}}" hint-placeholder-val="{{false}}">
+    <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:10px;padding:16px 26px;border-bottom:1px solid var(--bd);background:var(--rs);flex:none">
+        <span style="font:400 16px 'IBM Plex Sans',sans-serif;color:var(--f2);cursor:pointer">←</span>
+        <span style="width:26px;height:26px;border-radius:7px;background:{{edAvBg}};color:{{edAvFg}};display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace">{{edAv}}</span>
+        <span style="font:600 16px 'IBM Plex Sans',sans-serif;flex:1">{{edName}}</span>
+        <button style="height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--bd);background:var(--rs);color:var(--dg);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer">Archive</button>
+        <button style="height:32px;padding:0 14px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">Save</button>
+      </div>
+      <div style="flex:1;overflow:auto;padding:20px 26px">
+        <sc-if value="{{degraded}}" hint-placeholder-val="{{false}}">
+          <div style="display:flex;align-items:flex-start;gap:9px;padding:11px 14px;border:1px solid var(--kb);border-radius:10px;background:var(--kbs);margin-bottom:16px;max-width:880px">
+            <span style="width:9px;height:9px;background:var(--kb);transform:rotate(45deg);border-radius:1.5px;flex:none;margin-top:3px"></span>
+            <div style="font:400 12.5px/1.55 'IBM Plex Sans',sans-serif;color:var(--f1)"><strong style="font-weight:600">This provider can't do everything.</strong> Local (Ollama) sessions can't pause for tool approvals and can't resume after a restart. The controls below are disabled — not hidden — so the trade-off stays visible.</div>
+          </div>
+        </sc-if>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px 24px;max-width:880px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Name</span>
+            <div style="height:34px;border:1px solid var(--bs);border-radius:8px;background:var(--rs);display:flex;align-items:center;padding:0 11px;font:400 14px 'IBM Plex Sans',sans-serif">{{edName}}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Model</span>
+            <div style="height:34px;border:1px solid var(--bs);border-radius:8px;background:var(--rs);display:flex;align-items:center;padding:0 11px;gap:7px;font:400 13px 'IBM Plex Mono',monospace">{{edModel}}<span style="flex:1"></span><span style="font-size:9px;color:var(--f3)">▾</span></div>
+          </div>
+          <div style="grid-column:span 2;display:flex;flex-direction:column;gap:6px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Provider</span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <div style="width:150px;border:{{pvClBd}};border-radius:10px;background:var(--rs);padding:10px;display:flex;flex-direction:column;gap:7px;cursor:pointer;box-shadow:{{pvClSh}};position:relative">
+                <span style="display:{{pvClCk}};position:absolute;top:9px;right:9px;width:15px;height:15px;border-radius:50%;background:var(--ac);color:var(--oac);align-items:center;justify-content:center;font:600 8px 'IBM Plex Sans',sans-serif">✓</span>
+                <span style="width:26px;height:26px;border-radius:7px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace">CL</span>
+                <div style="font:600 12px 'IBM Plex Sans',sans-serif">Claude</div>
+                <span style="height:16px;padding:0 6px;border-radius:4px;background:var(--in);color:var(--f3);font:500 9px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;align-self:flex-start">full capability</span>
+              </div>
+              <div style="width:150px;border:1px solid var(--bd);border-radius:10px;background:var(--rs);padding:10px;display:flex;flex-direction:column;gap:7px;cursor:pointer" style-hover="border-color:var(--bs)">
+                <span style="width:26px;height:26px;border-radius:7px;background:var(--kds);color:var(--kd);display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace">CX</span>
+                <div style="font:600 12px 'IBM Plex Sans',sans-serif">Codex</div>
+                <span style="height:16px;padding:0 6px;border-radius:4px;background:var(--in);color:var(--f3);font:500 9px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;align-self:flex-start">no resume</span>
+              </div>
+              <div style="width:150px;border:1px solid var(--bd);border-radius:10px;background:var(--rs);padding:10px;display:flex;flex-direction:column;gap:7px;cursor:pointer" style-hover="border-color:var(--bs)">
+                <span style="width:26px;height:26px;border-radius:7px;background:var(--kas);color:var(--ka);display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace">GE</span>
+                <div style="font:600 12px 'IBM Plex Sans',sans-serif">Gemini</div>
+                <span style="height:16px;padding:0 6px;border-radius:4px;background:var(--in);color:var(--f3);font:500 9px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;align-self:flex-start">full capability</span>
+              </div>
+              <div style="width:150px;border:1px solid var(--bd);border-radius:10px;background:var(--rs);padding:10px;display:flex;flex-direction:column;gap:7px;cursor:pointer" style-hover="border-color:var(--bs)">
+                <span style="width:26px;height:26px;border-radius:7px;background:var(--kbs);color:var(--kb);display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace">GR</span>
+                <div style="font:600 12px 'IBM Plex Sans',sans-serif">Grok</div>
+                <span style="height:16px;padding:0 6px;border-radius:4px;background:var(--in);color:var(--f3);font:500 9px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;align-self:flex-start">no approvals</span>
+              </div>
+              <div style="width:150px;border:{{pvLoBd}};border-radius:10px;background:var(--rs);padding:10px;display:flex;flex-direction:column;gap:7px;cursor:pointer;box-shadow:{{pvLoSh}};position:relative">
+                <span style="display:{{pvLoCk}};position:absolute;top:9px;right:9px;width:15px;height:15px;border-radius:50%;background:var(--ac);color:var(--oac);align-items:center;justify-content:center;font:600 8px 'IBM Plex Sans',sans-serif">✓</span>
+                <span style="width:26px;height:26px;border-radius:7px;background:var(--in);color:var(--f1);display:inline-flex;align-items:center;justify-content:center;font:600 11px 'IBM Plex Mono',monospace">&lt;/&gt;</span>
+                <div style="font:600 12px 'IBM Plex Sans',sans-serif">Local (Ollama)</div>
+                <span style="height:16px;padding:0 6px;border-radius:4px;background:var(--kbs);color:var(--kb);font:500 9px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;align-self:flex-start">degraded</span>
+              </div>
+            </div>
+          </div>
+          <div style="grid-column:span 2;display:flex;flex-direction:column;gap:6px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">System prompt</span>
+            <div style="border:1px solid var(--bs);border-radius:10px;background:var(--rs);padding:11px 13px;font:400 13px/1.6 'IBM Plex Mono',monospace;color:var(--f1);min-height:66px">{{edPrompt}}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Tool allowlist</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span style="height:24px;padding:0 10px;border-radius:999px;background:var(--acs);color:var(--ac);font:500 12px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:5px">Read ✓</span>
+              <span style="height:24px;padding:0 10px;border-radius:999px;background:{{twBg}};color:{{twFg}};font:500 12px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:5px">Write {{twCk}}</span>
+              <span style="height:24px;padding:0 10px;border-radius:999px;background:{{twBg}};color:{{twFg}};font:500 12px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:5px">Edit {{twCk}}</span>
+              <span style="height:24px;padding:0 10px;border-radius:999px;background:{{twBg}};color:{{twFg}};font:500 12px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:5px">Bash {{twCk}}</span>
+              <span style="height:24px;padding:0 10px;border-radius:999px;background:var(--acs);color:var(--ac);font:500 12px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:5px">Grep ✓</span>
+              <span style="height:24px;padding:0 10px;border-radius:999px;border:1px solid var(--bd);color:var(--f3);font:500 12px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">Glob</span>
+              <span style="height:24px;padding:0 10px;border-radius:999px;border:1px solid var(--bd);color:var(--f3);font:500 12px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">WebSearch</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Permission mode</span>
+            <div style="display:inline-flex;padding:3px;border:1px solid var(--bd);border-radius:9px;background:var(--in);align-self:flex-start;flex-wrap:wrap">
+              <span style="height:26px;padding:0 11px;border-radius:6px;font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2);display:inline-flex;align-items:center">plan</span>
+              <span style="height:26px;padding:0 11px;border-radius:6px;background:{{pmRoBg}};box-shadow:{{pmRoSh}};font:{{pmRoFont}};color:{{pmRoFg}};display:inline-flex;align-items:center">read-only</span>
+              <span style="height:26px;padding:0 11px;border-radius:6px;font:400 12px 'IBM Plex Sans',sans-serif;color:{{pmApC}};display:inline-flex;align-items:center;gap:5px;opacity:{{pmApOp}}">approve edits<span style="display:{{pmApLock}};font:400 10px 'IBM Plex Sans',sans-serif">🔒</span></span>
+              <span style="height:26px;padding:0 11px;border-radius:6px;background:{{pmAaBg}};box-shadow:{{pmAaSh}};font:{{pmAaFont}};color:{{pmAaFg}};display:inline-flex;align-items:center">auto-accept edits</span>
+            </div>
+            <span style="display:{{pmNoteD}};font:400 11px 'IBM Plex Sans',sans-serif;color:var(--kb)">approve edits needs approvals — this provider can't pause a run</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">MCP servers</span>
+            <div style="display:flex;align-items:center;gap:7px;height:36px;padding:0 9px;border:1px solid var(--bd);border-radius:9px;background:var(--rs)">
+              <span style="font:500 12px 'IBM Plex Mono',monospace">tickets-mcp</span>
+              <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">stdio · 12 tools</span>
+              <span style="flex:1"></span>
+              <span style="width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3);cursor:pointer" style-hover="background:var(--in);color:var(--dg)">×</span>
+            </div>
+            <div style="display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 11px;border:1px dashed var(--bs);border-radius:9px;color:var(--f3);font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer;align-self:flex-start">＋ Add server</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2)">Default workspace</span>
+            <div style="height:34px;border:1px solid var(--bs);border-radius:8px;background:var(--rs);display:flex;align-items:center;padding:0 11px;gap:7px;font:400 13px 'IBM Plex Mono',monospace"><span style="color:var(--f3)">dir</span>~/work/tickets<span style="flex:1"></span><span style="font-size:9px;color:var(--f3)">▾</span></div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:6px;opacity:{{resOp}}">
+              <span style="width:32px;height:18px;border-radius:999px;background:{{resBg}};position:relative;display:inline-block"><span style="position:absolute;top:2px;{{resSide}}:2px;width:14px;height:14px;border-radius:50%;background:{{resKnob}}"></span></span>
+              <span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f2)">Resume sessions after a server restart</span>
+              <span style="display:{{resLock}};height:15px;padding:0 5px;border-radius:4px;background:var(--kbs);color:var(--kb);font:500 9px 'IBM Plex Mono',monospace;align-items:center">UNAVAILABLE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </sc-if>
+
+  <!-- ============ PROFILE ============ -->
+  <sc-if value="{{isProfile}}" hint-placeholder-val="{{false}}">
+    <main style="flex:1;min-width:0;overflow:auto;padding:22px 26px">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+        <span style="width:48px;height:48px;border-radius:12px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 17px 'IBM Plex Mono',monospace;flex:none">CO</span>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font:600 20px 'IBM Plex Sans',sans-serif">Coder</span><span style="height:16px;padding:0 6px;border-radius:4px;background:var(--acs);color:var(--ac);font:500 9px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center">AGENT</span></div>
+          <div style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3);margin-top:2px">Claude · claude-opus-4-8 · auto-accept edits · Read/Write/Edit/Bash/Grep</div>
+        </div>
+        <button style="height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--bs);background:var(--rs);color:var(--f1);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">Edit agent</button>
+        <button style="height:32px;padding:0 12px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">＋ New session</button>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:18px">
+        <div style="flex:1;border:1px solid var(--bd);border-radius:11px;background:var(--rs);padding:13px 15px"><div style="font:600 18px 'IBM Plex Mono',monospace">31</div><div style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--f3);margin-top:2px">sessions all-time</div></div>
+        <div style="flex:1;border:1px solid var(--bd);border-radius:11px;background:var(--rs);padding:13px 15px"><div style="font:600 18px 'IBM Plex Mono',monospace">3</div><div style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--f3);margin-top:2px">open tickets assigned</div></div>
+        <div style="flex:1;border:1px solid var(--bd);border-radius:11px;background:var(--rs);padding:13px 15px"><div style="font:600 18px 'IBM Plex Mono',monospace">$14.20</div><div style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--f3);margin-top:2px">spend this week</div></div>
+        <div style="flex:1;border:1px solid var(--bd);border-radius:11px;background:var(--rs);padding:13px 15px"><div style="font:600 18px 'IBM Plex Mono',monospace">92%</div><div style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--f3);margin-top:2px">turns without a human unblock</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px">
+        <div>
+          <div style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);margin-bottom:8px">Recent sessions</div>
+          <div style="border:1px solid var(--bd);border-radius:11px;background:var(--rs);overflow:hidden">
+            <div style="display:flex;align-items:center;gap:9px;height:40px;padding:0 12px;border-bottom:1px solid var(--bd)">
+              <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">#48</span><span style="font:500 13px 'IBM Plex Sans',sans-serif;flex:1">Calendar renderer</span>
+              <span style="height:20px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);font:500 10px 'IBM Plex Mono',monospace;color:var(--ac);display:inline-flex;align-items:center">→ TIX-152</span>
+              <span style="height:21px;padding:0 8px;border-radius:5px;background:var(--kas);color:var(--ka);font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:50%;border:1.5px solid var(--ka);background:linear-gradient(90deg,var(--ka) 50%,transparent 50%);animation:autospin 1.4s linear infinite"></span>running</span>
+              <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">$1.06</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:9px;height:40px;padding:0 12px;border-bottom:1px solid var(--bd);background:var(--kbs)">
+              <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">#49</span><span style="font:600 13px 'IBM Plex Sans',sans-serif;flex:1">Timeline renderer</span>
+              <span style="height:20px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);font:500 10px 'IBM Plex Mono',monospace;color:var(--ac);display:inline-flex;align-items:center">→ TIX-153</span>
+              <span style="height:21px;padding:0 8px;border-radius:5px;background:var(--kb);color:var(--onkb);font:600 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:5px;animation:aipulse 1.8s ease-out infinite"><span style="width:6px;height:6px;background:var(--onkb);transform:rotate(45deg);border-radius:1px"></span>awaiting input</span>
+              <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">$0.88</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:9px;height:40px;padding:0 12px">
+              <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">#50</span><span style="font:500 13px 'IBM Plex Sans',sans-serif;flex:1">View config API</span>
+              <span style="height:20px;padding:0 7px;border-radius:5px;border:1px solid var(--bd);font:500 10px 'IBM Plex Mono',monospace;color:var(--ac);display:inline-flex;align-items:center">→ TIX-154</span>
+              <span style="height:21px;padding:0 8px;border-radius:5px;background:var(--in);color:var(--f2);font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border:1.5px solid var(--f2);border-radius:2px;box-sizing:content-box"></span>exited <span style="font:500 10px 'IBM Plex Mono',monospace;color:var(--kd)">0</span></span>
+              <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">$0.61</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);margin-bottom:8px">Open tickets assigned to Coder</div>
+          <div style="border:1px solid var(--bd);border-radius:11px;background:var(--rs);overflow:hidden">
+            <div style="display:flex;align-items:center;gap:9px;height:40px;padding:0 12px;border-bottom:1px solid var(--bd)"><span style="font:500 11px 'IBM Plex Mono',monospace">TIX-152</span><span style="font:400 13px 'IBM Plex Sans',sans-serif;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Calendar renderer</span><span style="height:21px;padding:0 8px;border-radius:5px;background:var(--kas);color:var(--ka);font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--ka);background:linear-gradient(90deg,var(--ka) 50%,transparent 50%)"></span>In progress</span></div>
+            <div style="display:flex;align-items:center;gap:9px;height:40px;padding:0 12px;border-bottom:1px solid var(--bd)"><span style="font:500 11px 'IBM Plex Mono',monospace">TIX-153</span><span style="font:400 13px 'IBM Plex Sans',sans-serif;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Timeline renderer</span><span style="height:21px;padding:0 8px;border-radius:5px;background:var(--kbs);color:var(--kb);font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:5px"><span style="width:6px;height:6px;background:var(--kb);transform:rotate(45deg);border-radius:1px"></span>Blocked</span></div>
+            <div style="display:flex;align-items:center;gap:9px;height:40px;padding:0 12px"><span style="font:500 11px 'IBM Plex Mono',monospace">TIX-154</span><span style="font:400 13px 'IBM Plex Sans',sans-serif;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">View config API</span><span style="height:21px;padding:0 8px;border-radius:5px;background:var(--kas);color:var(--ka);font:500 11px 'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--ka);background:linear-gradient(90deg,var(--ka) 50%,transparent 50%)"></span>In review</span></div>
+          </div>
+          <div style="font:400 11px/1.5 'IBM Plex Mono',monospace;color:var(--f3);margin-top:8px">assignee dropdowns list Coder like any user — square avatar, AGENT badge</div>
+        </div>
+      </div>
+    </main>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1460,&quot;height&quot;:840},&quot;tok&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;grid&quot;,&quot;editor&quot;,&quot;profile&quot;],&quot;default&quot;:&quot;grid&quot;,&quot;tsType&quot;:&quot;'grid' | 'editor' | 'profile'&quot;},&quot;degraded&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const view = ['grid','editor','profile'].includes(this.props.view) ? this.props.view : 'grid';
+    const degraded = !!this.props.degraded;
+    const sel = "1.5px solid var(--ac)", selSh = "0 0 0 3px var(--acs)";
+    return {
+      isGrid: view === 'grid',
+      isEditor: view === 'editor',
+      isProfile: view === 'profile',
+      degraded,
+      edName: degraded ? 'Triager' : 'Coder',
+      edAv: degraded ? 'TR' : 'CO',
+      edAvBg: degraded ? 'var(--in)' : 'var(--acs)',
+      edAvFg: degraded ? 'var(--f2)' : 'var(--ac)',
+      edModel: degraded ? 'llama-3.3' : 'claude-opus-4-8',
+      edPrompt: degraded
+        ? 'You triage new tickets. Read the description, set type and priority, and leave one comment explaining the call. Never edit code.'
+        : 'You implement scoped tickets end-to-end. Prefer small diffs. Always run typecheck and the affected tests before declaring a turn done.',
+      pvClBd: degraded ? '1px solid var(--bd)' : sel,
+      pvClSh: degraded ? 'none' : selSh,
+      pvClCk: degraded ? 'none' : 'inline-flex',
+      pvLoBd: degraded ? sel : '1px solid var(--bd)',
+      pvLoSh: degraded ? selSh : 'none',
+      pvLoCk: degraded ? 'inline-flex' : 'none',
+      twBg: degraded ? 'transparent' : 'var(--acs)',
+      twFg: degraded ? 'var(--f3)' : 'var(--ac)',
+      twCk: degraded ? '' : '✓',
+      pmRoBg: degraded ? 'var(--rs)' : 'transparent',
+      pmRoSh: degraded ? 'var(--shsm)' : 'none',
+      pmRoFont: (degraded ? '500' : '400') + " 12px 'IBM Plex Sans',sans-serif",
+      pmRoFg: degraded ? 'var(--f1)' : 'var(--f2)',
+      pmAaBg: degraded ? 'transparent' : 'var(--rs)',
+      pmAaSh: degraded ? 'none' : 'var(--shsm)',
+      pmAaFont: (degraded ? '400' : '500') + " 12px 'IBM Plex Sans',sans-serif",
+      pmAaFg: degraded ? 'var(--f3)' : 'var(--f1)',
+      pmApC: degraded ? 'var(--f3)' : 'var(--f2)',
+      pmApOp: degraded ? .55 : 1,
+      pmApLock: degraded ? 'inline' : 'none',
+      pmNoteD: degraded ? 'block' : 'none',
+      resOp: degraded ? .65 : 1,
+      resBg: degraded ? 'var(--bs)' : 'var(--ac)',
+      resSide: degraded ? 'left' : 'right',
+      resKnob: degraded ? 'var(--rs)' : '#fff',
+      resLock: degraded ? 'inline-flex' : 'none',
+    };
+  }
+}
+</script>
+</body>
+</html>

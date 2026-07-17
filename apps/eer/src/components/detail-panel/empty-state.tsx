@@ -1,31 +1,22 @@
 import type { Model } from '../../engine/model/types';
 import { Badge } from './badge';
-import { ColorsForm } from './colors-form';
 import { Kbd } from './kbd';
 import { Section } from './section';
 import { Stat } from './stat';
 
-export function EmptyState({
-  model,
-  colors = new Map<string, string>(),
-  onColorsChange,
-}: {
-  model: Model | null;
-  colors?: ReadonlyMap<string, string>;
-  onColorsChange?: (next: ReadonlyMap<string, string>) => void;
-}) {
+export function EmptyState({ model }: { model: Model | null }) {
   const rows: [string, string][] = [
     ['wheel', 'zoom toward the cursor'],
     ['middle-drag', 'pan the canvas'],
-    ['left-drag', 'move an entity, subgroup, or zone'],
-    ['drag edge', 'resize a zone or subgroup'],
+    ['left-drag', 'move an entity, group, or subgroup'],
+    ['drag edge', 'resize a group or subgroup'],
     ['click', 'entity → focus its relationships'],
-    ['click', 'a zone → show only its connections'],
+    ['click', 'a group → show only its connections'],
     ['hover', 'a field → light its edges'],
     ['click', 'an edge → isolate that path'],
     ['Esc', 'empty click → clear focus'],
   ];
-  const zones = model?.groups.filter((g) => !g.parent).length ?? 0;
+  const groups = model?.groups.filter((g) => !g.parent).length ?? 0;
   const subgroups = model?.groups.filter((g) => g.parent).length ?? 0;
 
   return (
@@ -33,7 +24,7 @@ export function EmptyState({
       <div className="border-b border-gray-600 px-4 pb-3 pt-4">
         <Badge tone="entity">Overview</Badge>
         <h2 className="mt-2 font-mono text-lg font-medium text-gray-50">{model?.meta.title ?? 'EER viewer'}</h2>
-        <div className="mt-1 text-xs text-gray-400">Click an entity, zone, or edge to inspect it.</div>
+        <div className="mt-1 text-xs text-gray-400">Click an entity, group, or edge to inspect it.</div>
       </div>
 
       <div className="px-4 pb-5 pt-3">
@@ -41,16 +32,9 @@ export function EmptyState({
           <div className="mb-4 flex gap-2">
             <Stat value={model.entities.length} label="tables" />
             <Stat value={model.relationships.length} label="edges" />
-            <Stat value={zones} label="zones" />
-            {subgroups > 0 && <Stat value={subgroups} label="groups" />}
+            <Stat value={groups} label="groups" />
+            {subgroups > 0 && <Stat value={subgroups} label="subgroups" />}
           </div>
-        )}
-
-        {model && onColorsChange && (
-          <>
-            <Section title="Colors" />
-            <ColorsForm model={model} colors={colors} onChange={onColorsChange} />
-          </>
         )}
 
         <Section title="Controls" />
