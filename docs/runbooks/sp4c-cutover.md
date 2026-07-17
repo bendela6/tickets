@@ -36,11 +36,11 @@ It renames `tickets -> tickets_old`, `tickets_new -> tickets`, and deploys.
 Before the swap: `docker compose start app` — prod (`tickets`) is untouched.
 
 After the swap:
-    docker exec tickets-postgres-1 psql -U postgres -c "ALTER DATABASE tickets RENAME TO tickets_new;"
-    docker exec tickets-postgres-1 psql -U postgres -c "ALTER DATABASE tickets_old RENAME TO tickets;"
+    docker exec tickets-postgres-1 psql -U postgres -v ON_ERROR_STOP=1 -c "ALTER DATABASE tickets RENAME TO tickets_new;"
+    docker exec tickets-postgres-1 psql -U postgres -v ON_ERROR_STOP=1 -c "ALTER DATABASE tickets_old RENAME TO tickets;"
 then redeploy the prior image. `tickets_old` is the point-in-time backup; keep it
 until the cutover is confirmed healthy, then:
-    docker exec tickets-postgres-1 psql -U postgres -c "DROP DATABASE tickets_old;"
+    docker exec tickets-postgres-1 psql -U postgres -v ON_ERROR_STOP=1 -c "DROP DATABASE tickets_old;"
 
 ## Known limitation
 MCP tools remain runtime-broken after cutover (SP4b not yet done) — they still
