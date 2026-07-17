@@ -1,43 +1,52 @@
+// drizzle-kit only emits CREATE SCHEMA for schemas it sees exported from this
+// entry point. terminalSchema graduated in Task 4; agentSchema graduates here
+// in Task 5 — both now own real tables.
+export { coreSchema, terminalSchema, agentSchema } from './schemas';
 export {
   userKindEnum,
   statusKindEnum,
   fieldTypeEnum,
-  sessionKindEnum,
-  sessionStatusEnum,
   runnerKindEnum,
+  terminalStatusEnum,
+  agentStatusEnum,
   permissionModeEnum,
   permissionStatusEnum,
 } from './enums';
-export { projects } from './projects';
-export { schemes } from './schemes';
 export { users } from './users';
-export { ticketTypes } from './ticket-types';
-export { ticketTypeChildTypes } from './ticket-type-child-types';
-export { statuses } from './statuses';
-export { statusTransitions } from './status-transitions';
-export { fields } from './fields';
-export { fieldOptions } from './field-options';
+export { projects } from './projects';
 export { views } from './views';
-export { tickets } from './tickets';
-export { ticketValues } from './ticket-values';
-export { comments } from './comments';
-export { commentReactions } from './comment-reactions';
-export { ticketEvents } from './ticket-events';
+export { schemes } from './schemes';
+export { itemTypes } from './item-types';
+export { itemTypeChildTypes } from './item-type-child-types';
+export { itemTypeFields } from './item-type-fields';
+export { fields } from './fields';
+export { optionSets } from './option-sets';
+export { options } from './options';
+export { optionTransitions } from './option-transitions';
 export { linkTypes } from './link-types';
 export { linkTypeTargetTypes } from './link-type-target-types';
-export { ticketLinks } from './ticket-links';
-export { aiWorkspaces } from './ai-workspaces';
-export { aiSessions } from './ai-sessions';
-export { aiSessionOutput } from './ai-session-output';
-export { aiAgents } from './ai-agents';
-export { aiMessages } from './ai-messages';
-export { aiPermissionRequests } from './ai-permission-requests';
+export { items } from './items';
+export { itemValues } from './item-values';
+export { comments } from './comments';
+export { commentReactions } from './comment-reactions';
+export { itemLinks } from './item-links';
+export { events } from './events';
+export { commands } from './commands';
+export { outbox } from './outbox';
+export { itemActivity } from './item-activity';
+export { workdirs } from './workdirs';
+export { terminalSessions, terminalOutput } from './terminal-sessions';
+export { agentSessions } from './agent-sessions';
+export { agentMessages } from './agent-messages';
+export { agentPermissionRequests } from './agent-permission-requests';
+export { agentAgents } from './agent-agents';
 
-export { allTables } from './registry';
+export { allTables, allEnums } from './registry';
 export { SCHEMA_GROUPS, type SchemaGroup } from './schema-groups';
 export {
   describeSchema,
   resolveGroupKey,
+  qualifiedName,
   type SchemaGraph,
   type TableMeta,
   type ColumnMeta,

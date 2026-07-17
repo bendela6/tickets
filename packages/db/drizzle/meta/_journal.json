@@ -5,78 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1783125676089,
-      "tag": "0000_bizarre_korg",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1783425296732,
-      "tag": "0001_stormy_orphan",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1783425821970,
-      "tag": "0002_panoramic_falcon",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1783426007376,
-      "tag": "0003_smart_warbound",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1783438259302,
-      "tag": "0004_lean_matthew_murdock",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1783451608220,
-      "tag": "0005_unknown_mastermind",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1783465301315,
-      "tag": "0006_flippant_jazinda",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1783539579161,
-      "tag": "0007_mushy_thunderbolts",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1784151590317,
-      "tag": "0008_stale_lilandra",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1784193188241,
-      "tag": "0009_watery_the_leader",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1784212513300,
-      "tag": "0010_sturdy_amphibian",
+      "when": 1784292386524,
+      "tag": "0000_items_platform_terminal_agent_split",
       "breakpoints": true
     }
   ]

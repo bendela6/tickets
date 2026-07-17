@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import type { BoardTicket, TicketEvent } from '../api/types';
-import { useTicketEvents } from '../api/use-ticket-events';
+import type { ActivityEntry, Item } from '../api/types';
+import { useItemActivity } from '../api/use-item-activity';
 import { Avatar } from '../ui/avatar';
 import { RelativeDate } from '../ui/relative-date';
 import type { BoardIndexes } from '../utils/index-board';
@@ -17,73 +17,78 @@ function ValueChip({ value }: { value: unknown }) {
   );
 }
 
-// One compact line per event: who did what, from → to where it applies.
-function describe(event: TicketEvent): ReactNode {
-  const payload = event.payload;
-  if (event.kind === 'status-changed' || event.kind === 'value-changed') {
-    const fieldKey = typeof payload.fieldKey === 'string' ? payload.fieldKey : 'value';
+// One compact line per entry: what happened, read from the SP3 projection's
+// self-contained summary (apps/api/src/projection/item-activity.ts
+// summarize()) — field_changed stores the raw {fieldKey,from,to} payload,
+// comment.added stores {commentId,excerpt}, item.created stores
+// {typeKey,number,title}; the rest (reparented/archived/restored/linked/
+// unlinked) store their event payload verbatim.
+function describe(entry: ActivityEntry): ReactNode {
+  const summary = entry.summary;
+  if (entry.kind === 'item.created') {
+    return 'created';
+  }
+  if (entry.kind === 'item.field_changed') {
+    const fieldKey =
+      typeof summary.field === 'string'
+        ? summary.field
+        : typeof summary.fieldKey === 'string'
+          ? summary.fieldKey
+          : 'value';
     return (
       <>
-        {event.kind === 'status-changed' ? 'moved' : `set ${fieldKey}`}{' '}
-        <ValueChip value={payload.from} /> → <ValueChip value={payload.to} />
+        {fieldKey}: <ValueChip value={summary.from} /> → <ValueChip value={summary.to} />
       </>
     );
   }
-  if (event.kind === 'link-added' || event.kind === 'link-removed') {
-    const linkTypeKey = typeof payload.linkTypeKey === 'string' ? payload.linkTypeKey : '';
-    return `${event.kind === 'link-added' ? 'added link' : 'removed link'} ${linkTypeKey}`.trim();
+  if (entry.kind === 'comment.added') {
+    return typeof summary.excerpt === 'string' && summary.excerpt.length > 0
+      ? summary.excerpt
+      : 'commented';
   }
-  if (event.kind === 'created') {
-    return 'created this ticket';
+  if (entry.kind === 'item.linked' || entry.kind === 'item.unlinked') {
+    const linkTypeKey = typeof summary.linkTypeKey === 'string' ? summary.linkTypeKey : '';
+    return `${entry.kind === 'item.linked' ? 'linked' : 'unlinked'} ${linkTypeKey}`.trim();
   }
-  if (event.kind === 'commented') {
-    return 'commented';
+  if (entry.kind === 'item.archived' || entry.kind === 'item.restored') {
+    return entry.kind === 'item.archived' ? 'archived' : 'restored';
   }
-  if (event.kind === 'archived' || event.kind === 'unarchived') {
-    return `${event.kind} this ticket`;
-  }
-  if (event.kind === 'parent-changed') {
+  if (entry.kind === 'item.reparented') {
     return 'changed the parent';
   }
-  return event.kind;
+  // fallback: a readable form of the raw kind, e.g. 'item.field_changed'
+  return entry.kind.replace(/[._]/g, ' ');
 }
 
 // Fetches on mount — the drawer only mounts this when its Activity tab is
 // active, the full page keeps it in the right rail permanently.
-export function DetailActivity({
-  ticket,
-  indexes,
-}: {
-  ticket: BoardTicket;
-  indexes: BoardIndexes;
-}) {
-  const events = useTicketEvents(ticket.id);
+export function DetailActivity({ item, indexes }: { item: Item; indexes: BoardIndexes }) {
+  const activity = useItemActivity(item.id);
 
-  if (events.isError) {
-    return <p className="m-0 font-sans text-meta text-danger">{(events.error as Error).message}</p>;
+  if (activity.isError) {
+    return (
+      <p className="m-0 font-sans text-meta text-danger">{(activity.error as Error).message}</p>
+    );
   }
-  if (!events.data) {
+  if (!activity.data) {
     return <p className="m-0 font-sans text-meta text-ink-3">Loading…</p>;
   }
-  if (events.data.data.length === 0) {
+  if (activity.data.length === 0) {
     return <p className="m-0 font-sans text-meta text-ink-3">No activity yet.</p>;
   }
 
   return (
     <div className="flex flex-col gap-2.75">
-      {events.data.data.map((event) => {
-        const actor = indexes.userById.get(event.actorId);
-        const name = event.actorName ?? actor?.name ?? `user ${event.actorId}`;
+      {activity.data.map((entry) => {
+        const actor = indexes.userById.get(entry.actorId);
+        const name = actor?.name ?? `user ${entry.actorId}`;
         return (
-          <div key={event.id} className="flex items-start gap-2.25">
+          <div key={entry.id} className="flex items-start gap-2.25">
             <Avatar name={name} kind={actor?.kind ?? 'human'} size="sm" className="mt-0.5" />
             <span className="min-w-0 flex-1 font-sans text-meta leading-normal text-ink-2">
-              <span className="font-medium text-ink">{name}</span> {describe(event)}
+              <span className="font-medium text-ink">{name}</span> {describe(entry)}
             </span>
-            <RelativeDate
-              value={event.createdAt}
-              className="shrink-0 font-mono text-[10px] text-ink-3"
-            />
+            <RelativeDate value={entry.at} className="shrink-0 font-mono text-[10px] text-ink-3" />
           </div>
         );
       })}

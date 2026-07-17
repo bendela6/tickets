@@ -23,7 +23,7 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
     >
       <div className="flex items-center gap-2.5">
         <span className="rounded-[5px] bg-inset px-1.75 py-0.75 font-mono text-meta font-medium text-ink">
-          {project.ticketPrefix}
+          {project.itemPrefix}
         </span>
         <span className="flex-1 truncate font-sans text-[15px] font-semibold text-ink">
           {project.name}
@@ -105,7 +105,7 @@ export function ProjectsHome() {
       <div className="mb-5.5 flex items-baseline gap-3.5">
         <h1 className="font-sans text-[22px] font-semibold text-ink">Projects</h1>
         <span className="font-mono text-meta text-ink-3">
-          {projectList.length} projects · {totalTickets} tickets · {openTickets} open
+          {projectList.length} projects · {totalTickets} items · {openTickets} open
         </span>
         <span className="flex-1" />
         <Button variant="secondary" size="compact" onClick={() => setCreating(true)}>

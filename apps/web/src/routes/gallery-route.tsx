@@ -15,10 +15,10 @@ import type { StatusKind } from '../ui/kind-glyph';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '../ui/menu';
 import { NumberInput } from '../ui/number-input';
 import { OptionChip, type OptionColor } from '../ui/option-chip';
-import { buildMessageStream, type SeqEvent } from '../components/ai/build-message-stream';
-import { CostMeter } from '../components/ai/cost-meter';
-import { MessageStream } from '../components/ai/message-stream';
-import { AGENT_MODELS, PromptComposer } from '../components/ai/prompt-composer';
+import { buildMessageStream, type SeqEvent } from '../components/agent/build-message-stream';
+import { CostMeter } from '../components/agent/cost-meter';
+import { MessageStream } from '../components/agent/message-stream';
+import { AGENT_MODELS, PromptComposer } from '../components/agent/prompt-composer';
 import { RadioGroup } from '../ui/radio-group';
 import { RelativeDate } from '../ui/relative-date';
 import { SessionKindGlyph } from '../ui/session-kind-glyph';
@@ -27,7 +27,7 @@ import { StatusBadge } from '../ui/status-badge';
 import { StatusSelect, type StatusOption } from '../ui/status-select';
 import { Switch } from '../ui/switch';
 import { Textarea } from '../ui/textarea';
-import { TicketKey } from '../ui/ticket-key';
+import { ItemKey } from '../ui/item-key';
 import { ToastProvider, useToast } from '../ui/toast';
 import { Tooltip, TooltipProvider } from '../ui/tooltip';
 import { TypeBadge } from '../ui/type-badge';
@@ -406,8 +406,8 @@ function GalleryScreen() {
               <TypeBadge label="Task" />
               <TypeBadge label="Bug" />
               <TypeBadge label="Subtask" />
-              <TicketKey prefix="CORE" number={128} />
-              <TicketKey prefix="WEB" number={9} muted />
+              <ItemKey prefix="CORE" number={128} />
+              <ItemKey prefix="WEB" number={9} muted />
               <Avatar name="Mara K." kind="human" />
               <Avatar name="Mara K." kind="human" size="md" />
               <Avatar name="claude-worker" kind="agent" />

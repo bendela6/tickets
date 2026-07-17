@@ -1,6 +1,18 @@
-import type { SchemaGraph, TableMeta, GroupMeta } from './erd-types';
+import { qualifiedName, type SchemaGraph, type TableMeta, type GroupMeta } from './erd-types';
 
+// Every id below (`src`, `tgt`, and the table half of `rowKey`) is a QUALIFIED
+// table name — bare in public, `schema.table` otherwise. A bare name is not an
+// identity: terminal.sessions and agent.sessions are two different tables in
+// two independent subsystems that happen to share the word "sessions".
 type Edge = { src: string; tgt: string; tgtCol: string; rowKey: string; nul: boolean; el?: SVGGElement };
+
+// `rowKey` is `<qualified table>.<column>` — so it can carry two dots
+// ("terminal.sessions.status"). The column is always the last segment.
+const rowKeyOf = (tableId: string, column: string) => `${tableId}.${column}`;
+const splitRowKey = (key: string): [table: string, column: string] => {
+  const i = key.lastIndexOf('.');
+  return [key.slice(0, i), key.slice(i + 1)];
+};
 const NS = 'http://www.w3.org/2000/svg';
 
 const el = (tag: string, cls?: string) => {
@@ -23,7 +35,7 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
   const cols = el('div', 'erd-cols');
   container.append(groupsLayer, svg, cols);
 
-  const tableByName = new Map(graph.tables.map((t) => [t.name, t]));
+  const tableById = new Map(graph.tables.map((t) => [qualifiedName(t.schema, t.name), t]));
   const groupByKey = new Map(graph.groups.map((g) => [g.key, g]));
   const cardEl = new Map<string, HTMLElement>();
   const rowEl = new Map<string, HTMLElement>();
@@ -34,19 +46,20 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
   graph.groups.forEach((group, ci) => {
     const col = el('div', 'erd-col');
     cols.append(col);
-    for (const name of group.tables) {
-      const t = tableByName.get(name);
+    for (const id of group.tables) {
+      const t = tableById.get(id);
       if (!t) continue;
-      colOf.set(name, ci);
+      colOf.set(id, ci);
       const card = buildCard(t, group);
-      cardEl.set(name, card);
+      cardEl.set(id, card);
       col.append(card);
       for (const c of t.columns) {
-        const rk = `${name}.${c.name}`;
+        const rk = rowKeyOf(id, c.name);
         const r = card.querySelector<HTMLElement>(`[data-row="${cssEscape(rk)}"]`);
         if (r) rowEl.set(rk, r);
-        if (c.fk && tableByName.has(c.fk.table)) {
-          edges.push({ src: name, tgt: c.fk.table, tgtCol: c.fk.column, rowKey: rk, nul: !c.notNull });
+        const tgt = c.fk && qualifiedName(c.fk.schema, c.fk.table);
+        if (tgt && tableById.has(tgt)) {
+          edges.push({ src: id, tgt, tgtCol: c.fk!.column, rowKey: rk, nul: !c.notNull });
         }
       }
     }
@@ -119,10 +132,10 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
       const sc = rel(cardEl.get(e.src)!.getBoundingClientRect(), base);
       const tc = rel(cardEl.get(e.tgt)!.getBoundingClientRect(), base);
       const srow = rel(rowEl.get(e.rowKey)!.getBoundingClientRect(), base);
-      const targetTable = tableByName.get(e.tgt);
-      const tRowEl = rowEl.get(`${e.tgt}.${e.tgtCol}`)
-        ?? (targetTable?.primaryKey[0] ? rowEl.get(`${e.tgt}.${targetTable.primaryKey[0]}`) : undefined)
-        ?? (targetTable?.columns[0] ? rowEl.get(`${e.tgt}.${targetTable.columns[0].name}`) : undefined);
+      const targetTable = tableById.get(e.tgt);
+      const tRowEl = rowEl.get(rowKeyOf(e.tgt, e.tgtCol))
+        ?? (targetTable?.primaryKey[0] ? rowEl.get(rowKeyOf(e.tgt, targetTable.primaryKey[0])) : undefined)
+        ?? (targetTable?.columns[0] ? rowEl.get(rowKeyOf(e.tgt, targetTable.columns[0].name)) : undefined);
       if (!tRowEl) continue;
       const trow = rel(tRowEl.getBoundingClientRect(), base);
       // exit toward the gutter nearest the target (or right for self/adjacent)
@@ -167,7 +180,7 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
       // colors via inline style, not presentation attributes: some engines don't
       // resolve var() inside SVG presentation attributes, but inline style is real CSS.
       g.style.fill = 'none';
-      g.style.stroke = `var(--ins-opt-${groupByKey.get(tableByName.get(p.e.tgt)!.group)!.color})`;
+      g.style.stroke = `var(--ins-opt-${groupByKey.get(tableById.get(p.e.tgt)!.group)!.color})`;
       g.setAttribute('stroke-width', '1.5');
       const path = document.createElementNS(NS, 'path');
       path.setAttribute('d', roundedPath(pts));
@@ -217,7 +230,7 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
     const card = target.closest<HTMLElement>('[data-table]');
     if (row) {
       const key = row.dataset.row!;
-      const [tbl, col] = key.split('.');
+      const [tbl, col] = splitRowKey(key);
       const hit = col === 'id'
         ? edges.filter((e) => e.tgt === tbl)
         : edges.filter((e) => e.rowKey === key);
@@ -245,12 +258,15 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
 }
 
 function buildCard(t: TableMeta, group: GroupMeta): HTMLElement {
+  // The card is titled and keyed by the qualified name, so a reader can tell
+  // terminal.sessions from agent.sessions — and so can every lookup here.
+  const id = qualifiedName(t.schema, t.name);
   const card = el('article', 'erd-card');
-  card.dataset.table = t.name;
+  card.dataset.table = id;
   card.style.setProperty('--cc', `var(--ins-opt-${group.color})`);
   card.style.setProperty('--cc-s', `var(--ins-opt-${group.color}-subtle)`);
   const head = el('header', 'erd-card-head');
-  head.append(txt('erd-card-title', t.name));
+  head.append(txt('erd-card-title', id));
   card.append(head);
   const rows = el('div', 'erd-rows');
   for (const c of t.columns) {
@@ -258,13 +274,14 @@ function buildCard(t: TableMeta, group: GroupMeta): HTMLElement {
     if (!c.notNull) cls.push('erd-nul');
     if (c.fk) cls.push('erd-fk');
     const row = el('div', cls.join(' '));
-    row.dataset.row = `${t.name}.${c.name}`;
+    row.dataset.row = rowKeyOf(id, c.name);
+    const fkTarget = c.fk && qualifiedName(c.fk.schema, c.fk.table);
     const badges = el('span', 'erd-badges');
     if (c.pk) badges.append(txt('erd-badge erd-pk', 'PK'));
     if (c.fk) badges.append(txt('erd-badge erd-fk-badge', 'FK'));
     row.append(badges, txt('erd-name', c.name));
-    row.append(txt('erd-type', c.fk ? `→ ${c.fk.table}${c.notNull ? '' : '?'}` : c.type + (c.notNull ? '' : '?')));
-    if (c.fk) row.title = `${t.name}.${c.name} → ${c.fk.table}.${c.fk.column}${c.notNull ? '' : ' (nullable)'}`;
+    row.append(txt('erd-type', fkTarget ? `→ ${fkTarget}${c.notNull ? '' : '?'}` : c.type + (c.notNull ? '' : '?')));
+    if (c.fk) row.title = `${id}.${c.name} → ${fkTarget}.${c.fk.column}${c.notNull ? '' : ' (nullable)'}`;
     rows.append(row);
   }
   card.append(rows);

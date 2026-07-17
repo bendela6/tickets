@@ -1,20 +1,16 @@
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import * as v from 'valibot';
+import type { FastifyInstance } from 'fastify';
 import type { Db } from '@tickets/db';
-import { cloneScheme } from '../schemes/clone-scheme';
-import { parseBody } from '../utils/parse-body';
+import { parseEnvelope } from '../command/envelope';
+import { runCommand } from '../command/run-command';
+import { schemeFork } from '../command/config/scheme';
 import { parseId } from '../utils/parse-id';
 
-const forkSchema = v.object({
-  key: v.pipe(v.string(), v.minLength(1)),
-  name: v.pipe(v.string(), v.minLength(1)),
-});
-
-export function registerSchemesRoutes(app: FastifyInstance, context: { db: Db }) {
-  app.post('/api/schemes/:id/fork', async (request: FastifyRequest, reply: FastifyReply) => {
+export function registerSchemesRoutes(app: FastifyInstance, ctx: { db: Db }) {
+  const { db } = ctx;
+  app.post('/api/schemes/:id/fork', async (request, reply) => {
     const id = parseId((request.params as { id: string }).id);
-    const body = parseBody(forkSchema, request.body);
-    const result = await cloneScheme(context.db, id, body);
+    const envelope = parseEnvelope(request.body);
+    const result = await runCommand(db, schemeFork, envelope, { ...(request.body as object), sourceSchemeId: id });
     reply.status(201).send(result);
   });
 }

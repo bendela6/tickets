@@ -59,6 +59,13 @@ export function physicalTableName(e: Pick<Entity, 'id' | 'schema'>): string {
   return e.id;
 }
 
+// Builders whose drizzle JS type is `number`, so a plain numeric default can be
+// emitted as a bare JS literal. Deliberately NOT the whole `numeric` group:
+// `numeric`/`decimal` are typed `string` in drizzle, `bigint` depends on its
+// `mode`, and the serials' defaults are type-borne rather than explicit.
+const BARE_NUMBER_BUILDERS = new Set(['smallint', 'integer', 'real', 'doublePrecision']);
+const NUMERIC_LITERAL = /^-?(?:\d+|\d*\.\d+)$/;
+
 // ---- string / SQL escaping -------------------------------------------
 
 function quote(s: string): string {
@@ -97,8 +104,45 @@ export function exportDrizzle(model: Model): string {
   // ---- name assignment (one JS identifier namespace for every top-level export) ----
   const usedIdentifiers = new Set<string>();
 
+  // Two enums CAN legitimately share a bare name across schemas (e.g.
+  // terminal.session_status / agent.session_status) — see the terminal/agent
+  // split. Key everything that must stay 1:1 with a *specific* enum by its
+  // schema-qualified id, the same way tableVarNames keys off Entity.id rather
+  // than the bare table name, or two same-named enums collapse onto one JS
+  // identifier (an "Identifier has already been declared" parse error) and
+  // silently lose track of which enum a column actually referenced.
+  function enumId(en: Pick<EnumDecl, 'schema' | 'name'>): string {
+    return en.schema && en.schema !== 'public' ? `${en.schema}.${en.name}` : en.name;
+  }
+
+  const enumsByBareName = new Map<string, EnumDecl[]>();
+  for (const en of model.enums) {
+    const list = enumsByBareName.get(en.name) ?? [];
+    list.push(en);
+    enumsByBareName.set(en.name, list);
+  }
+
+  // A column's stored type is the enum's BARE name only (drizzle's
+  // getSQLType() for an enum column returns just `enumName`, with no schema —
+  // see describe-drizzle.ts). When more than one enum shares that bare name,
+  // resolve to the one declared in the column's OWN table's schema (a
+  // `terminal.sessions` column named "session_status" means the `terminal`
+  // enum, not `agent`'s); fall back to a public/global enum of that name, then
+  // to the first match, for configurations this repo doesn't have yet.
+  function resolveEnumForColumn(entitySchema: string | null, bareName: string): EnumDecl {
+    const candidates = enumsByBareName.get(bareName) ?? [];
+    if (candidates.length === 0) {
+      throw new Error(`exportDrizzle: no enum named "${bareName}" is declared on the model.`);
+    }
+    if (candidates.length === 1) return candidates[0]!;
+    const normSchema = entitySchema && entitySchema !== 'public' ? entitySchema : null;
+    const sameSchema = candidates.find((c) => (c.schema ?? null) === normSchema);
+    if (sameSchema) return sameSchema;
+    return candidates.find((c) => !c.schema || c.schema === 'public') ?? candidates[0]!;
+  }
+
   const enumVarNames = new Map<string, string>();
-  for (const en of model.enums) enumVarNames.set(en.name, uniqueIdentifier(`${toIdentifier(en.name)}Enum`, usedIdentifiers));
+  for (const en of model.enums) enumVarNames.set(enumId(en), uniqueIdentifier(`${toIdentifier(en.name)}Enum`, usedIdentifiers));
 
   const tableVarNames = new Map<string, string>();
   for (const e of model.entities) {
@@ -146,9 +190,10 @@ export function exportDrizzle(model: Model): string {
         if (!d) throw new Error(`exportDrizzle: column "${e.id}.${c.name}" type "${parsed.base}" has no drizzle descriptor.`);
         builderImports.add(d.builder);
       }
-      // A boolean default of exactly "true"/"false" is emitted as a bare JS
-      // literal (see isBareBooleanDefaultText) — no `sql` import needed for it.
-      if (c.default != null && !isBareBooleanDefaultText(c)) needSql = true;
+      // A boolean "true"/"false", or a plain numeric literal on a number-typed
+      // column, is emitted as a bare JS literal (see isBareLiteralDefault) — no
+      // `sql` import needed for it.
+      if (c.default != null && !isBareLiteralDefault(c)) needSql = true;
       if (c.generated) needSql = true;
     }
     for (const c of e.constraints) {
@@ -284,10 +329,24 @@ export function exportDrizzle(model: Model): string {
   // `` sql`…` `` default — even one whose rendered text is literally "false"
   // — as the JSON STRING "false"; diffing `false !== "false"` then reports a
   // migration even though the emitted DDL (`"col" boolean DEFAULT false NOT
-  // NULL`) is byte-identical. Do NOT generalise this to strings/numbers/JSON:
-  // a stored default of e.g. "0" is genuinely ambiguous between the JS
-  // number `0` and the SQL text `0`, and guessing wrong there silently emits
-  // a file that doesn't compile to what the model actually described.
+  // NULL`) is byte-identical.
+  //
+  // The same drizzle-kit quirk, and so the same exception, applies to a column
+  // whose drizzle JS type is `number` and whose stored default text is a plain
+  // numeric literal: `.default(1)` snapshots as the number 1 while
+  // `` .default(sql`1`) `` snapshots as the string "1", and `1 !== "1"` reports
+  // a phantom migration for identical DDL (`"version" integer DEFAULT 1`).
+  // Both spellings compile to the same `DEFAULT 1`, so there is nothing to
+  // guess — the only thing not recovered is which source form was written,
+  // which nothing depends on.
+  //
+  // The guard is deliberately narrower than "the numeric group". It does NOT
+  // cover string-typed columns (text/varchar/json — where a stored "0" IS
+  // genuinely ambiguous between the JS number `0` and the SQL text `0`, and
+  // guessing wrong emits a file that doesn't compile to what the model
+  // described), nor `numeric`/`decimal` (drizzle's JS type is `string`), nor
+  // `bigint` (JS type depends on its `mode`), nor the serials (their default
+  // is type-borne, never explicit).
   function isBareBooleanDefaultText(c: Column): boolean {
     if (c.default !== 'true' && c.default !== 'false') return false;
     const parsed = parseType(c.type);
@@ -295,7 +354,22 @@ export function exportDrizzle(model: Model): string {
     return descriptorFor(parsed.base)?.builder === 'boolean';
   }
 
-  function emitColumn(c: Column, entityId: string, isInlinePk: boolean): string {
+  function isBareNumberDefaultText(c: Column): boolean {
+    if (c.default == null || !NUMERIC_LITERAL.test(c.default)) return false;
+    const parsed = parseType(c.type);
+    if (enumNames.has(parsed.base)) return false;
+    if (parsed.arrays.length > 0) return false; // an array column's default is never a scalar literal
+    const builder = descriptorFor(parsed.base)?.builder;
+    return builder != null && BARE_NUMBER_BUILDERS.has(builder);
+  }
+
+  // A default emitted as a bare JS literal needs no `sql` import and no
+  // `` sql`…` `` wrapper.
+  function isBareLiteralDefault(c: Column): boolean {
+    return isBareBooleanDefaultText(c) || isBareNumberDefaultText(c);
+  }
+
+  function emitColumn(c: Column, entityId: string, entitySchema: string | null, isInlinePk: boolean): string {
     const colKey = colKeyByEntity.get(entityId)!;
     const propKey = colKey.get(c.name)!;
     const parsed = parseType(c.type);
@@ -303,7 +377,7 @@ export function exportDrizzle(model: Model): string {
     let builderExpr: string;
     let optionsSrc: string | null;
     if (enumNames.has(parsed.base)) {
-      builderExpr = enumVarNames.get(parsed.base)!;
+      builderExpr = enumVarNames.get(enumId(resolveEnumForColumn(entitySchema, parsed.base)))!;
       optionsSrc = null;
     } else {
       const d = descriptorFor(parsed.base)!;
@@ -320,7 +394,7 @@ export function exportDrizzle(model: Model): string {
       src += `.${method}(${opts ?? ''})`;
     }
     if (c.default != null) {
-      src += isBareBooleanDefaultText(c) ? `.default(${c.default})` : `.default(${sqlTemplate(c.default)})`;
+      src += isBareLiteralDefault(c) ? `.default(${c.default})` : `.default(${sqlTemplate(c.default)})`;
     }
     if (c.generated) src += `.generatedAlwaysAs(${sqlTemplate(c.generated.expression)})`;
     for (const dim of parsed.arrays) src += dim.size != null ? `.array(${dim.size})` : '.array()';
@@ -425,7 +499,7 @@ export function exportDrizzle(model: Model): string {
     const pkConstraint = e.constraints.find((c): c is Extract<Constraint, { kind: 'pk' }> => c.kind === 'pk');
     const inlinePkColumn = pkConstraint && pkIsInline(pkConstraint) ? pkConstraint.columns[0] : null;
 
-    const columnLines = e.columns.map((c) => `    ${emitColumn(c, e.id, c.name === inlinePkColumn)}`).join('\n');
+    const columnLines = e.columns.map((c) => `    ${emitColumn(c, e.id, e.schema, c.name === inlinePkColumn)}`).join('\n');
 
     const constructs: string[] = [];
     for (const c of e.constraints) {
@@ -447,7 +521,7 @@ export function exportDrizzle(model: Model): string {
   }
 
   function emitEnum(en: EnumDecl): string {
-    const varName = enumVarNames.get(en.name)!;
+    const varName = enumVarNames.get(enumId(en))!;
     const fn = en.schema && en.schema !== 'public' ? `${schemaVarNames.get(en.schema)}.enum` : 'pgEnum';
     return `export const ${varName} = ${fn}(${quote(en.name)}, [${en.values.map(quote).join(', ')}]);`;
   }

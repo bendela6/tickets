@@ -100,13 +100,13 @@ export function BoardHeader({
   return (
     <div className="mb-3.5 flex shrink-0 flex-wrap items-center gap-3 gap-y-2">
       <span className="rounded-[5px] bg-inset px-1.75 py-0.75 font-mono text-meta font-medium text-ink">
-        {board.project.ticketPrefix}
+        {board.project.itemPrefix}
       </span>
       <h1 className="m-0 font-sans text-[22px] leading-tight font-semibold text-ink">
         {board.project.name}
       </h1>
       <span className="font-mono text-meta text-ink-3">
-        {ticketCount} tickets · {donePercent}% done
+        {ticketCount} items · {donePercent}% done
       </span>
       <span className="flex-1" />
 

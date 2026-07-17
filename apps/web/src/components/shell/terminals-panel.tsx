@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
-import { useAiSessions } from '../../api/use-ai-sessions';
-import { useAiWorkspaces } from '../../api/use-ai-workspaces';
-import { NewSessionDialog } from '../ai/new-session-dialog';
-import { SessionList } from '../ai/session-list';
-import { terminalsOf } from '../ai/select-sessions';
+import { useTerminalSessions } from '../../api/use-terminal-sessions';
+import { useWorkdirs } from '../../api/use-workdirs';
+import { NewSessionDialog } from '../terminal/new-session-dialog';
+import { SessionList } from '../terminal/session-list';
 
 export function TerminalsPanel({
   onNavigateSession,
@@ -13,14 +12,14 @@ export function TerminalsPanel({
   onNavigate?: () => void;
 }) {
   const [archived, setArchived] = useState(false);
-  const sessions = useAiSessions({ archived });
-  const workspaces = useAiWorkspaces();
+  const sessions = useTerminalSessions({ archived });
+  const workdirs = useWorkdirs();
   const [creating, setCreating] = useState(false);
-  const workspaceName = useMemo(() => {
-    const byId = new Map((workspaces.data ?? []).map((w) => [w.id, w] as const));
+  const workdirName = useMemo(() => {
+    const byId = new Map((workdirs.data ?? []).map((w) => [w.id, w] as const));
     return (id: number) => byId.get(id)?.name ?? byId.get(id)?.path ?? '—';
-  }, [workspaces.data]);
-  const rows = terminalsOf(sessions.data ?? []);
+  }, [workdirs.data]);
+  const rows = sessions.data ?? [];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -50,7 +49,7 @@ export function TerminalsPanel({
       ) : (
         <SessionList
           sessions={rows}
-          workspaceName={workspaceName}
+          workdirName={workdirName}
           onNavigate={onNavigate}
           archived={archived}
         />

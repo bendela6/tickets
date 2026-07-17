@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useCreateProject } from '../../api/use-create-project';
+import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 import { FieldLabel } from '../../ui/field-label';
@@ -15,18 +16,23 @@ export function NewProjectDialog({
 }) {
   const navigate = useNavigate();
   const createProject = useCreateProject();
-  const [draft, setDraft] = useState({ key: '', name: '', ticketPrefix: '' });
+  const { userId } = useCurrentUser();
+  const [draft, setDraft] = useState({ key: '', name: '', itemPrefix: '' });
   const valid =
-    draft.key.trim() !== '' && draft.name.trim() !== '' && draft.ticketPrefix.trim() !== '';
+    draft.key.trim() !== '' && draft.name.trim() !== '' && draft.itemPrefix.trim() !== '';
 
   async function submit() {
+    if (userId === null) {
+      return;
+    }
     const created = await createProject.mutateAsync({
+      actorId: userId,
       key: draft.key.trim(),
       name: draft.name.trim(),
-      ticketPrefix: draft.ticketPrefix.trim().toUpperCase(),
+      itemPrefix: draft.itemPrefix.trim().toUpperCase(),
     });
     onOpenChange(false);
-    setDraft({ key: '', name: '', ticketPrefix: '' });
+    setDraft({ key: '', name: '', itemPrefix: '' });
     void navigate({ to: '/p/$projectKey', params: { projectKey: created.key } });
   }
 
@@ -62,8 +68,8 @@ export function NewProjectDialog({
                 id="np-prefix"
                 className="mt-1 font-mono uppercase"
                 placeholder="GW"
-                value={draft.ticketPrefix}
-                onChange={(event) => setDraft({ ...draft, ticketPrefix: event.target.value })}
+                value={draft.itemPrefix}
+                onChange={(event) => setDraft({ ...draft, itemPrefix: event.target.value })}
               />
             </div>
           </div>
@@ -74,7 +80,7 @@ export function NewProjectDialog({
           </Button>
           <Button
             variant="primary"
-            disabled={!valid}
+            disabled={!valid || userId === null}
             loading={createProject.isPending}
             onClick={() => void submit()}
           >

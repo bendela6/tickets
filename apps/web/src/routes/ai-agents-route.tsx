@@ -1,5 +1,5 @@
 import { createRoute } from '@tanstack/react-router';
-import { AgentLibraryScreen } from '../components/ai/agent-library-screen';
+import { AgentLibraryScreen } from '../components/agent/agent-library-screen';
 import { AppShell } from '../components/shell/app-shell';
 import { rootRoute } from './root-route';
 

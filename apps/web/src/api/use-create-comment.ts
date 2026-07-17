@@ -1,20 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-
-import { fetchJson } from './client';
-import type { CreateCommentInput, TicketComment } from './types';
+import { apiMutate } from './client';
+import type { Comment, CreateCommentInput } from './types';
 
 export function useCreateComment() {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateCommentInput) => {
-      const { ticketId, ...body } = input;
-      return fetchJson<TicketComment>(`/api/tickets/${ticketId}/comments`, {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
+      const { itemId, actorId, ...rest } = input;
+      return apiMutate<Comment>(`/api/items/${itemId}/comments`, { method: 'POST', actorId, body: rest });
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['board'] });
-    },
+    onSuccess: async () => { await qc.invalidateQueries({ queryKey: ['board'] }); },
   });
 }

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { useBoard } from '../api/use-board';
+import { useCurrentUser } from '../state/current-user-context';
 import { useViewConfig } from '../state/use-view-config';
 import { compareTickets } from '../utils/compare-tickets';
 import { evaluateFilters } from '../utils/evaluate-filters';
@@ -11,8 +12,8 @@ import { FilterChips } from './board/filter-chips';
 import { KpiStrip } from './board/kpi-strip';
 import { TableView } from './board/table-view';
 import { KanbanView } from './kanban-view';
-import { NewTicketDialog } from './new-ticket-dialog';
-import { TicketDrawer } from './ticket-drawer';
+import { ItemDrawer } from './item-drawer';
+import { NewItemDialog } from './new-item-dialog';
 
 // The board area of a view route: header, filter chips, KPI strip, then the
 // mode-selected renderer (table or kanban). Ad-hoc state rides the URL
@@ -27,7 +28,8 @@ export function BoardScreen() {
   const board = boardQuery.data;
   const indexes = useMemo(() => (board ? indexBoard(board) : null), [board]);
   const view = board?.views.find((candidate) => candidate.id === Number(params.viewId));
-  const { config, update } = useViewConfig(board, view);
+  const { userId } = useCurrentUser();
+  const { config, update } = useViewConfig(board, view, userId);
   const [creating, setCreating] = useState(false);
 
   if (!board || !indexes) {
@@ -44,15 +46,20 @@ export function BoardScreen() {
   const adHocRules = search.f;
   const effectiveRules = adHocRules ?? config.filters.rules;
   const query = search.q ?? '';
-  const topLevel = board.tickets.filter((ticket) => !ticket.archivedAt && ticket.parentId === null);
+  const topLevel = board.items.filter((ticket) => !ticket.archivedAt && ticket.parentId === null);
   const rows = topLevel
     .filter((ticket) => evaluateFilters(effectiveRules, query, ticket, indexes))
     .sort(compareTickets(indexes, config.sort));
-  const openTicket = search.t !== undefined ? (indexes.ticketByNumber.get(search.t) ?? null) : null;
+  const openTicket = search.t !== undefined ? (indexes.itemByNumber.get(search.t) ?? null) : null;
 
   const doneCount = topLevel.filter((ticket) => {
-    const raw = indexes.statusField ? ticket.values[indexes.statusField.key] : undefined;
-    return typeof raw === 'string' && indexes.statusByKey.get(raw)?.kind === 'done';
+    const workflowField = indexes.workflowField(ticket.typeId);
+    const raw = workflowField ? ticket.values[workflowField.key] : undefined;
+    return (
+      typeof raw === 'string' &&
+      workflowField &&
+      indexes.optionByValue(workflowField, raw)?.kind === 'done'
+    );
   }).length;
   const donePercent = topLevel.length > 0 ? Math.round((doneCount / topLevel.length) * 100) : 0;
 
@@ -113,15 +120,15 @@ export function BoardScreen() {
         />
       )}
       {openTicket ? (
-        <TicketDrawer
+        <ItemDrawer
           projectKey={projectKey}
           board={board}
           indexes={indexes}
-          ticket={openTicket}
+          item={openTicket}
           onClose={() => setSearch({ t: undefined })}
         />
       ) : null}
-      <NewTicketDialog
+      <NewItemDialog
         projectKey={projectKey}
         board={board}
         indexes={indexes}

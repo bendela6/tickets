@@ -241,22 +241,28 @@ describe('loadModel — "columns" is canonical, "fields" is a permanent legacy a
 // single value here — pinning the exact multiset makes any future regression
 // visible instead of silently averaging out.
 describe('loadModel — real seed regression (pinned cardinality multiset)', () => {
-  // Task 9 rewrote the seed onto real drizzle-canonical types (and declared
-  // `enums` for the two columns that used to spell the placeholder "enum") —
-  // 0 warnings is now the bar, same as every other warning-affecting
-  // behaviour.
+  // The seed is written in drizzle-canonical types and declares `enums` for
+  // the two columns that used to spell the placeholder "enum" (users.kind ->
+  // user_kind, fields.type -> field_type), so no unknown-type warning fires —
+  // 0 warnings is the bar, same as every other warning-affecting behaviour.
+  // 42 relationships, not 41: the schema rebuild added events.caused_by.
+  // 56, not 42: the terminal/agent split added 7 entities carrying 14 fks
+  // (workdirs 1, terminal.sessions 2, terminal.output 1, agent.agents 2,
+  // agent.sessions 5, agent.messages 1, agent.permission_requests 2). All 14
+  // are plain derived edges with no authored label, so the label count holds
+  // at 18 and every new edge lands in the 1-n bucket.
 
-  it('(d) loads with 0 errors, 0 warnings, 41 relationships, 18 labels, 3 m2m, and this exact cardinality multiset', () => {
+  it('(d) loads with 0 errors, 0 warnings, 56 relationships, 18 labels, 3 m2m, and this exact cardinality multiset', () => {
     const { model, errors, warnings } = loadModel(seedRaw);
     expect(errors).toEqual([]);
     expect(warnings).toEqual([]);
-    expect(model!.relationships).toHaveLength(41);
+    expect(model!.relationships).toHaveLength(56);
     expect(model!.relationships.filter((r) => r.label)).toHaveLength(18);
     expect(model!.relationships.filter((r) => r.kind === 'm2m')).toHaveLength(3);
 
     const counts: Record<string, number> = {};
     for (const r of model!.relationships) counts[r.cardinality] = (counts[r.cardinality] ?? 0) + 1;
-    expect(counts).toEqual({ '1-n': 40, '1-1': 1 });
+    expect(counts).toEqual({ '1-n': 54, '1-1': 2 });
   });
 
   // T9: serializeModel never writes legacy `role`/`ref` (only `constraints`),
@@ -581,12 +587,19 @@ describe('loadModel — relationships derive from constraints', () => {
   // deriving its own edge), plus 1 authored `kind:'fk'` relationship with NO
   // backing constraint at all ('istream' — items.events.aggregate_id is a
   // polymorphic reference, no `ref` on the field) kept verbatim rather than
-  // dropped just because its kind reads 'fk' — 41 total.
-  it('derives exactly one edge per fk constraint for the real seed model (41; 3 keep their authored m2m kind, 1 is an unbacked authored fk kept verbatim)', () => {
+  // dropped just because its kind reads 'fk' — 41 total. Task 1 (eer model
+  // DDL enrichment) adds one more fk constraint (events.caused_by -> events.id,
+  // a self-FK with no authored label) — 42 total, 39 plain 'fk'. Task 11 (the
+  // terminal/agent split) adds 14 more fk constraints across 7 new entities —
+  // 56 total, 53 plain 'fk'. Two of them are schema-qualified self/cross
+  // references (agent.sessions.parent_session_id -> agent.sessions,
+  // terminal.output.session_id -> terminal.sessions): they resolve because
+  // refTable carries the same qualified id as the entity.
+  it('derives exactly one edge per fk constraint for the real seed model (56; 3 keep their authored m2m kind, 1 is an unbacked authored fk kept verbatim)', () => {
     const { model, errors } = loadModel(seedRaw);
     expect(errors).toEqual([]);
-    expect(model!.relationships).toHaveLength(41);
-    expect(model!.relationships.filter((r) => r.kind === 'fk')).toHaveLength(38);
+    expect(model!.relationships).toHaveLength(56);
+    expect(model!.relationships.filter((r) => r.kind === 'fk')).toHaveLength(53);
     expect(model!.relationships.filter((r) => r.kind === 'm2m')).toHaveLength(3);
     expect(model!.relById.get('istream')).toMatchObject({ label: 'stream', kind: 'fk' });
 
@@ -600,9 +613,9 @@ describe('loadModel — relationships derive from constraints', () => {
       expect(ids.has(expected)).toBe(true);
     // The reversed m2m rel ('fields.option_set_id -> option_sets.id') covered
     // this same pair under the old scheme; it must not also survive alongside
-    // the derived edge (would inflate the count past 41 / collide in relById).
+    // the derived edge (would inflate the count past 56 / collide in relById).
     expect(ids.has('e-option_sets.id->fields.option_set_id')).toBe(false);
-    expect(model!.relById.size).toBe(41);
+    expect(model!.relById.size).toBe(56);
   });
 });
 

@@ -1,19 +1,18 @@
 import { useMemo, useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import { useAiSessions } from '../../api/use-ai-sessions';
-import { useAiWorkspaces } from '../../api/use-ai-workspaces';
-import { SessionList } from '../ai/session-list';
-import { agentsOf } from '../ai/select-sessions';
+import { useAgentSessions } from '../../api/use-agent-sessions';
+import { useWorkdirs } from '../../api/use-workdirs';
+import { SessionList } from '../agent/session-list';
 
 export function AgentsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
   const [archived, setArchived] = useState(false);
-  const sessions = useAiSessions({ archived });
-  const workspaces = useAiWorkspaces();
-  const workspaceName = useMemo(() => {
-    const byId = new Map((workspaces.data ?? []).map((w) => [w.id, w] as const));
+  const sessions = useAgentSessions({ archived });
+  const workdirs = useWorkdirs();
+  const workdirName = useMemo(() => {
+    const byId = new Map((workdirs.data ?? []).map((w) => [w.id, w] as const));
     return (id: number) => byId.get(id)?.name ?? byId.get(id)?.path ?? '—';
-  }, [workspaces.data]);
-  const rows = agentsOf(sessions.data ?? []);
+  }, [workdirs.data]);
+  const rows = sessions.data ?? [];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -39,7 +38,7 @@ export function AgentsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
       ) : (
         <SessionList
           sessions={rows}
-          workspaceName={workspaceName}
+          workdirName={workdirName}
           onNavigate={onNavigate}
           archived={archived}
         />

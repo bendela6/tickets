@@ -1,4 +1,4 @@
-import type { BoardTicket } from '../../api/types';
+import type { Item } from '../../api/types';
 import { cn } from '../../ui/cn';
 import { KindGlyph, type StatusKind } from '../../ui/kind-glyph';
 import type { BoardIndexes } from '../../utils/index-board';
@@ -57,7 +57,7 @@ export function KpiStrip({
   indexes,
   onHide,
 }: {
-  tickets: BoardTicket[];
+  tickets: Item[];
   indexes: BoardIndexes;
   onHide: () => void;
 }) {
@@ -69,9 +69,12 @@ export function KpiStrip({
     dropped: 0,
   };
   for (const ticket of tickets) {
-    const raw = indexes.statusField ? ticket.values[indexes.statusField.key] : undefined;
+    const workflowField = indexes.workflowField(ticket.typeId);
+    const raw = workflowField ? ticket.values[workflowField.key] : undefined;
     const kind =
-      (typeof raw === 'string' ? indexes.statusByKey.get(raw)?.kind : undefined) ?? 'todo';
+      (typeof raw === 'string' && workflowField
+        ? indexes.optionByValue(workflowField, raw)?.kind
+        : undefined) ?? 'todo';
     counts[kind] += 1;
   }
   return <KpiTiles counts={counts} onHide={onHide} />;

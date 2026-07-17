@@ -54,7 +54,14 @@ describe('exportDrizzle — pure unit tests', () => {
     const m = buildRawModel([
       {
         id: 'users',
-        columns: [pkCol(), { name: 'email', type: 'text', nullable: false }, { name: 'hits', type: 'integer', default: '0' }],
+        columns: [
+          pkCol(),
+          { name: 'email', type: 'text', nullable: false },
+          // An expression default — the case that genuinely must survive as
+          // `` sql`…` ``. (A bare *numeric literal* on a number-typed column is
+          // the one exception; see the numeric-default block below.)
+          { name: 'seen_at', type: 'timestamp with time zone', default: 'now()' },
+        ],
         constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }],
       },
     ]);
@@ -63,7 +70,7 @@ describe('exportDrizzle — pure unit tests', () => {
     // below) — never a table-level primaryKey({...}) construct.
     expect(src).toContain(`id: serial('id').primaryKey(),`);
     expect(src).toContain(`email: text('email').notNull(),`);
-    expect(src).toContain(`hits: integer('hits').default(sql\`0\`),`);
+    expect(src).toContain(`.default(sql\`now()\`),`);
     expect(src).not.toContain('primaryKey({');
   });
 
@@ -137,6 +144,72 @@ describe('exportDrizzle — pure unit tests', () => {
       ]);
       const src = exportDrizzle(m);
       expect(src).toContain(`label: text('label').notNull().default(sql\`true\`),`);
+    });
+  });
+
+  // Same drizzle-kit quirk as the boolean case above: `generateDrizzleJson`
+  // snapshots a bare `.default(1)` as the number 1 but any `` sql`…` `` default
+  // as the string "1", so diffing 1 !== "1" reports a phantom migration for
+  // byte-identical DDL. events.version/events.depth in @tickets/db are the real
+  // columns that hit this — the round-trip gate failed on them until the export
+  // emitted a bare literal here.
+  describe('numeric default shape (bare literal vs. sql`...`)', () => {
+    it('emits a bare .default(n) for a number-typed column, never sql`n`', () => {
+      const m = buildRawModel([
+        {
+          id: 'events',
+          columns: [
+            pkCol(),
+            { name: 'version', type: 'integer', nullable: false, default: '1' },
+            { name: 'depth', type: 'integer', nullable: false, default: '0' },
+            { name: 'score', type: 'double precision', default: '-1.5' },
+            { name: 'tier', type: 'smallint', default: '2' },
+          ],
+        },
+      ]);
+      const src = exportDrizzle(m);
+      expect(src).toContain(`version: integer('version').notNull().default(1),`);
+      expect(src).toContain(`depth: integer('depth').notNull().default(0),`);
+      expect(src).toContain(`score: doublePrecision('score').default(-1.5),`);
+      expect(src).toContain(`tier: smallint('tier').default(2),`);
+      expect(src).not.toContain('sql`1`');
+      expect(src).not.toContain('sql`0`');
+    });
+
+    // The guard the author's original "do NOT generalise" comment is about:
+    // on a string-typed column a stored "0" is ambiguous between the JS number
+    // and the SQL text, so it must keep going through sql`...`. `numeric` is
+    // typed `string` in drizzle and `bigint` depends on its `mode`, so both
+    // stay out of the bare-literal set too.
+    it('still emits a numeric-looking default through sql`...` for string-typed and mode-dependent columns', () => {
+      const m = buildRawModel([
+        {
+          id: 'notes',
+          columns: [
+            pkCol(),
+            { name: 'label', type: 'text', nullable: false, default: '0' },
+            { name: 'amount', type: 'numeric', default: '0' },
+            { name: 'big', type: 'bigint', default: '0' },
+          ],
+        },
+      ]);
+      const src = exportDrizzle(m);
+      // Pin the semantics (sql`0`, never a bare 0), not each builder's exact
+      // option spelling — bigint carries a `mode`, which is what makes it
+      // ineligible for the bare-literal path in the first place.
+      expect(src).toContain(`label: text('label').notNull().default(sql\`0\`),`);
+      expect(src).toMatch(/amount: numeric\([^)]*\)\.default\(sql`0`\)/);
+      expect(src).toMatch(/big: bigint\([^)]*\)\.default\(sql`0`\)/);
+      expect(src).not.toContain('.default(0)');
+    });
+
+    // A non-literal expression on a number-typed column is still an expression.
+    it('still emits an expression default on a number-typed column through sql`...`', () => {
+      const m = buildRawModel([
+        { id: 'counters', columns: [pkCol(), { name: 'n', type: 'integer', default: "nextval('s')" }] },
+      ]);
+      const src = exportDrizzle(m);
+      expect(src).toContain(`n: integer('n').default(sql\`nextval('s')\`),`);
     });
   });
 
