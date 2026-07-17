@@ -89,22 +89,20 @@ export interface ListMeta { total?: number }
 export interface UsersResponse { data: User[] }
 export interface ProjectsResponse { data: Project[] }
 
-// ── AI sessions (E1) ─────────────────────────────────────────────────────────
+// ── Terminal + Agent sessions (post terminal/agent split) ────────────────────
+//
+// `terminal.sessions` and `agent.sessions` are separate tables with separate id
+// sequences — a terminal and an agent can both be id 1. There is no `kind`
+// discriminator any more; a session's kind is which table/endpoint it came
+// from, so the two are modeled as entirely separate types below (never a
+// union keyed on a bare id).
 
-export type SessionKind = 'terminal' | 'agent';
-export type SessionStatus =
-  | 'starting'
-  | 'running'
-  | 'idle'
-  | 'awaiting_input'
-  | 'interrupted'
-  | 'exited'
-  | 'failed'
-  | 'live'
-  | 'disconnected';
 export type RunnerKind = 'local' | 'container';
 
-export interface AiWorkspace {
+// Shared: the one CRUD home for `core.workdirs` (owned by apps/api
+// terminal/routes.ts, used by both subsystems). The old ai-subsystem
+// workspaces route is gone.
+export interface Workdir {
   id: number;
   name: string;
   path: string;
@@ -117,19 +115,63 @@ export interface AiWorkspace {
   createdAt: string;
 }
 
-export interface AiSession {
+export interface CreateWorkdirInput {
+  name: string;
+  path: string;
+}
+
+// ── Terminal ──────────────────────────────────────────────────────────────
+
+// A PTY's lifecycle. `live` = attached and running; `disconnected` = the API
+// restarted and the process died with it. No turn states — those are agent
+// facts (see AgentSessionStatus).
+export type TerminalStatus = 'starting' | 'live' | 'disconnected' | 'exited' | 'failed';
+
+export interface TerminalSession {
   id: number;
-  kind: SessionKind;
   title: string;
-  workspaceId: number;
+  workdirId: number;
+  cwd: string | null;
+  status: TerminalStatus;
+  exitCode: number | null;
+  startedBy: number | null;
+  createdAt: string;
+  updatedAt: string;
+  endedAt: string | null;
+  archivedAt: string | null;
+}
+
+export interface CreateTerminalSessionInput {
+  workdirId: number;
+  title?: string;
+  command?: string;
+  cols?: number;
+  rows?: number;
+}
+
+// ── Agent ─────────────────────────────────────────────────────────────────
+
+// An agent turn's lifecycle. No live/disconnected — those are PTY facts.
+export type AgentSessionStatus =
+  | 'starting'
+  | 'running'
+  | 'idle'
+  | 'awaiting_input'
+  | 'interrupted'
+  | 'exited'
+  | 'failed';
+
+export interface AgentSession {
+  id: number;
+  title: string;
+  workdirId: number;
   agentId: number | null;
   itemId: number | null;
   parentSessionId: number | null;
-  status: SessionStatus;
+  status: AgentSessionStatus;
   providerSessionId: string | null;
   cwd: string | null;
   worktreePath: string | null;
-  exitCode: number | null;
   costUsd: string | null;
   startedBy: number | null;
   createdAt: string;
@@ -138,24 +180,17 @@ export interface AiSession {
   archivedAt: string | null;
 }
 
-export interface CreateAiWorkspaceInput {
-  name: string;
-  path: string;
-}
-
-export interface CreateAiSessionInput {
-  kind?: SessionKind;
-  workspaceId?: number;
-  agentId?: number;
+export interface CreateAgentSessionInput {
+  agentId: number;
+  workdirId?: number;
+  parentSessionId?: number;
+  itemId?: number;
   title?: string;
-  command?: string;
   maxBudgetUsd?: number;
-  cols?: number;
-  rows?: number;
 }
 
-// Mirror of the API's normalized agent event union (apps/api ai/types.ts). The
-// UI only ever sees these — never which provider produced them.
+// Mirror of the API's normalized agent event union (apps/api agent/types.ts).
+// The UI only ever sees these — never which provider produced them.
 export type AgentEvent =
   | { type: 'session_started'; providerSessionId: string }
   | { type: 'assistant_text'; text: string; parentToolUseId?: string }
@@ -177,15 +212,13 @@ export type AgentEvent =
     }
   | { type: 'error'; message: string };
 
-export type PermissionMode =
-  | 'default'
-  | 'acceptEdits'
-  | 'bypassPermissions'
-  | 'plan'
-  | 'dontAsk'
-  | 'auto';
+// Mirrors the Claude Agent SDK's PermissionMode. Exactly the 5 SDK values the
+// agent.permission_mode enum carries — no legacy `auto`.
+export type PermissionMode = 'default' | 'acceptEdits' | 'bypassPermissions' | 'plan' | 'dontAsk';
 
-export interface AiAgent {
+// The persona library (agent.agents) — a reusable provider/model/prompt/tool
+// config a session or dispatch runs with.
+export interface Agent {
   id: number;
   userId: number;
   key: string;
@@ -198,7 +231,7 @@ export interface AiAgent {
   permissionMode: PermissionMode;
   mcpServers: Record<string, unknown>;
   effort: string | null;
-  defaultWorkspaceId: number | null;
+  defaultWorkdirId: number | null;
   config: Record<string, unknown>;
   archivedAt: string | null;
   createdAt: string;
@@ -217,13 +250,13 @@ export interface ModelInfo {
   contextWindow: number;
 }
 
-export interface AiProvider {
+export interface AgentProviderInfo {
   key: string;
   capabilities: ProviderCapabilities;
   models: ModelInfo[];
 }
 
-export interface CreateAiAgentInput {
+export interface CreateAgentInput {
   key: string;
   name: string;
   providerKey: string;
@@ -232,10 +265,10 @@ export interface CreateAiAgentInput {
   allowedTools?: string[];
   permissionMode?: PermissionMode;
   effort?: string;
-  defaultWorkspaceId?: number;
+  defaultWorkdirId?: number;
 }
 
-export interface PatchAiAgentInput {
+export interface PatchAgentInput {
   id: number;
   name?: string;
   model?: string;
@@ -243,6 +276,6 @@ export interface PatchAiAgentInput {
   allowedTools?: string[];
   permissionMode?: PermissionMode;
   effort?: string | null;
-  defaultWorkspaceId?: number | null;
+  defaultWorkdirId?: number | null;
   archived?: boolean;
 }

@@ -1,4 +1,4 @@
-import type { SessionKind } from '../api/types';
+import type { SessionKind } from './session-kind-glyph';
 import { cn } from './cn';
 
 export type SessionStatus =
