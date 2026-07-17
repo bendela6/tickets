@@ -74,13 +74,25 @@ describe('describeSchema', () => {
     // list only reflected SCHEMA_GROUPS' raw `tables` array, workdirs and
     // every terminal.*/agent.* table (never hand-listed) would silently stop
     // being rendered.
-    const ai = graph.groups.find((g) => g.key === 'ai')!;
-    expect(ai.tables).toContain('workdirs');
-    expect(ai.tables).toContain('output');
-    expect(ai.tables).toContain('agents');
-    expect(ai.tables).toContain('messages');
-    expect(ai.tables).toContain('permission_requests');
-    expect(ai.tables.filter((t) => t === 'sessions')).toHaveLength(2);
+    const core = graph.groups.find((g) => g.key === 'core')!;
+    expect(core.tables).toContain('workdirs');
+    const terminal = graph.groups.find((g) => g.key === 'terminal')!;
+    expect(terminal.tables).toContain('output');
+    const agent = graph.groups.find((g) => g.key === 'agent')!;
+    expect(agent.tables).toContain('agents');
+    expect(agent.tables).toContain('messages');
+    expect(agent.tables).toContain('permission_requests');
+  });
+
+  it('the two subsystems are separate groups, not one AI bucket', () => {
+    // The split's whole point: terminal and agent are independent subsystems,
+    // and workdirs is core — not an AI concept. One group each, and the
+    // same-named `sessions` table lands in exactly one of them.
+    const terminal = graph.groups.find((g) => g.key === 'terminal')!;
+    const agent = graph.groups.find((g) => g.key === 'agent')!;
+    expect(terminal.tables).toContain('sessions');
+    expect(agent.tables).toContain('sessions');
+    expect(graph.groups.map((g) => g.label)).not.toContain('AI sessions');
   });
 });
 
@@ -96,12 +108,14 @@ describe('resolveGroupKey', () => {
 describe('resolveGroupKey — schema-derived membership', () => {
   it('resolves a schema-owned table with no `tables` entry at all', () => {
     // workdirs lives in schema `core` and is not listed under any group's
-    // `tables` array — it only resolves because the `ai` group claims
-    // `schemas: ['core', ...]`. This is what stops SCHEMA_GROUPS and the
-    // real schema from drifting apart for terminal/agent/core tables.
-    expect(resolveGroupKey('workdirs', SCHEMA_GROUPS, 'core')).toBe('ai');
-    expect(resolveGroupKey('sessions', SCHEMA_GROUPS, 'terminal')).toBe('ai');
-    expect(resolveGroupKey('sessions', SCHEMA_GROUPS, 'agent')).toBe('ai');
+    // `tables` array — it only resolves because the `core` group claims
+    // `schemas: ['core']`. This is what stops SCHEMA_GROUPS and the real
+    // schema from drifting apart for terminal/agent/core tables. The two
+    // `sessions` show it doing real work: same bare name, different schema,
+    // different group.
+    expect(resolveGroupKey('workdirs', SCHEMA_GROUPS, 'core')).toBe('core');
+    expect(resolveGroupKey('sessions', SCHEMA_GROUPS, 'terminal')).toBe('terminal');
+    expect(resolveGroupKey('sessions', SCHEMA_GROUPS, 'agent')).toBe('agent');
   });
   it('throws when a schema is owned by no group', () => {
     expect(() => resolveGroupKey('x', SCHEMA_GROUPS, 'nope')).toThrow(/no group/i);

@@ -12,7 +12,9 @@
 // Only `core`/`terminal`/`agent` are real schemas today — the 22
 // items-platform tables still live in `public` pending a later plan, which is
 // why `tables` still exists instead of every group deriving purely from
-// pgSchema.
+// pgSchema. A group owns at most one real schema today, but `schemas` stays a
+// list: nothing about the model forbids two, and resolveGroupKey already
+// rejects the reverse (one schema claimed by two groups).
 export type SchemaGroup = {
   key: string;
   label: string;
@@ -57,15 +59,37 @@ export const SCHEMA_GROUPS: SchemaGroup[] = [
     color: 'teal',
     tables: ['events', 'commands', 'outbox', 'item_activity'],
   },
+  // The three schemas below were ONE group labelled 'AI sessions' until the
+  // split landed, and that label contradicted the model twice over. First,
+  // `core.workdirs` is a place a process runs — not an AI concept, which is
+  // why it is in `core` and not in an AI schema at all. Second, `terminal` and
+  // `agent` are two fully independent subsystems (no FK, no import, no shared
+  // composition root); rendering them as one bucket drew the exact coupling
+  // the split removed. One group per schema, so the ERD shows what the
+  // database actually is.
+  //
+  // None of the three hand-lists a table: the legacy public `ai_*` tables are
+  // gone and every table here carries a real pgSchema, so membership derives
+  // from `schemas`.
   {
-    key: 'ai',
-    label: 'AI sessions',
-    color: 'purple',
-    // Nothing hand-listed: the legacy public `ai_*` tables are gone (Task 11)
-    // and every table here now carries a real pgSchema. workdirs (core),
-    // terminal.sessions/output and agent.sessions/messages/
-    // permission_requests/agents all derive membership from `schemas`.
+    key: 'core',
+    label: 'Workdirs',
+    color: 'green',
     tables: [],
-    schemas: ['core', 'terminal', 'agent'],
+    schemas: ['core'],
+  },
+  {
+    key: 'terminal',
+    label: 'Terminal sessions',
+    color: 'cyan',
+    tables: [],
+    schemas: ['terminal'],
+  },
+  {
+    key: 'agent',
+    label: 'Agent sessions',
+    color: 'purple',
+    tables: [],
+    schemas: ['agent'],
   },
 ];
