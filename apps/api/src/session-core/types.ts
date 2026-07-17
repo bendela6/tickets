@@ -2,8 +2,8 @@
 // single source of truth for ordering, and reconnect replay with dedupe.
 //
 // Both the terminal and agent subsystems depend on this module; it must never
-// depend on either of them (nor on anything under apps/api/src/ai,
-// apps/api/src/terminal, or apps/api/src/agent). session-core has no notion
+// depend on either of them (nor on anything under apps/api/src/terminal or
+// apps/api/src/agent). session-core has no notion
 // of a PTY, an agent run, a provider, or a table — a "frame" is whatever a
 // caller wants delivered to an attached subscriber, and the only thing
 // session-core ever reads off one is its `seq`.
@@ -86,9 +86,9 @@ export interface Channel<F extends SeqFrame = SeqFrame> {
 // Control frames a channel mints itself, injectable so session-core never
 // hardcodes a wire-protocol shape. Defaults below reproduce today's literals
 // byte-for-byte; a caller with its own frame union (see `ServerFrame` in
-// apps/api/src/ai/types.ts) can override either to match it exactly, with a
-// real type-level link instead of session-core silently duplicating strings
-// it has no import relationship to.
+// apps/api/src/agent/types.ts or apps/api/src/terminal/types.ts) can override
+// either to match it exactly, with a real type-level link instead of
+// session-core silently duplicating strings it has no import relationship to.
 export interface ControlFrames {
   // Sent once, after every replayed frame and before any live frame.
   replayDone(): unknown;

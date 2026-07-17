@@ -2,9 +2,14 @@ import type { AgentEvent } from './types';
 
 // How a persona decides whether a tool call needs a human — mirrors the Claude
 // Agent SDK's PermissionMode. Same set as the DB permission_mode enum, which
-// has FIVE values — no `auto`. The pre-split public API accepted a sixth
-// value, `auto`, that the DB enum never had; dropped here rather than carried
-// forward as dead surface (see task-8-report.md for the full reasoning).
+// has FIVE values — no `auto`. The pre-split legacy DB enum DID carry a
+// sixth value, `auto` (see legacyPermissionModeEnum in
+// packages/db/src/schema/enums.ts) — it shipped and was fully storable.
+// Dropping it here is a deliberate design decision of the terminal/agent
+// split (see the note on legacyPermissionModeEnum in enums.ts), not a
+// reflection of what the old enum allowed; safe because there is no data
+// migration from ai_agents to agent.agents, so no stored row can fail (see
+// task-8-report.md for the full reasoning).
 export type PermissionMode = 'default' | 'acceptEdits' | 'bypassPermissions' | 'plan' | 'dontAsk';
 
 export interface ModelInfo {

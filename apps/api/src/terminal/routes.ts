@@ -13,8 +13,9 @@ import { assertWorkspaceDir } from './workspace-fs';
 const runnerSchema = v.picklist(['local', 'container']);
 
 // Minimal workdir CRUD — just enough to create a workdir a terminal session
-// can run in. `/api/ai/workspaces` remains the full CRUD home over the same
-// `core.workdirs` table until Task 9 formalises one wire surface.
+// can run in. This is the one CRUD home for `core.workdirs`, shared by both
+// the terminal and agent subsystems (the old `/api/ai/workspaces` route is
+// gone with the rest of `apps/api/src/ai/`).
 const createWorkdirSchema = v.object({
   name: v.pipe(v.string(), v.minLength(1)),
   path: v.pipe(v.string(), v.minLength(1)),
