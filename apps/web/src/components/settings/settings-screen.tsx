@@ -4,6 +4,7 @@ import { useForkScheme, useUpdateProject } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { cn } from '../../ui/cn';
+import { useToast } from '../../ui/toast';
 import { indexBoard } from '../../utils/index-board';
 import { FieldsTab } from './fields-tab';
 import { LinksTab } from './links-tab';
@@ -36,6 +37,7 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
   const { userId } = useCurrentUser();
   const forkScheme = useForkScheme();
   const updateProject = useUpdateProject();
+  const { toast } = useToast();
 
   async function handleFork() {
     if (userId === null || !board) return;
@@ -49,13 +51,27 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
     const suffix = Date.now().toString(36);
     const key = `${board.project.key.toLowerCase()}-${suffix}`;
     const name = `${board.project.name} (forked)`;
-    const forked = (await forkScheme.mutateAsync({
-      actorId: userId,
-      sourceSchemeId: board.project.schemeId,
-      key,
-      name,
-    })) as { schemeId: number };
-    await updateProject.mutateAsync({ actorId: userId, id: board.project.id, schemeId: forked.schemeId });
+    try {
+      const forked = (await forkScheme.mutateAsync({
+        actorId: userId,
+        sourceSchemeId: board.project.schemeId,
+        key,
+        name,
+      })) as { schemeId: number };
+      await updateProject.mutateAsync({ actorId: userId, id: board.project.id, schemeId: forked.schemeId });
+    } catch (error) {
+      // A rejection here (either the fork POST or the repoint PATCH) must
+      // not be an unhandled promise rejection with zero feedback — and if
+      // the fork succeeded but the repoint failed, the new scheme is
+      // orphaned (forked but never attached to a project), which is worth
+      // surfacing distinctly since a retry would fork *again*.
+      toast({
+        title:
+          error instanceof Error
+            ? `Fork failed: ${error.message}`
+            : 'Fork failed. Please try again.',
+      });
+    }
   }
 
   if (boardQuery.isLoading) {
