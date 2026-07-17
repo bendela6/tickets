@@ -1,5 +1,4 @@
 // packages/db/src/schema/describe-schema.ts
-import { getTableName } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import { PgDialect, getTableConfig, uniqueKeyName, type PgTable } from 'drizzle-orm/pg-core';
 import { allEnums, allTables } from './registry';
@@ -13,7 +12,11 @@ export type ColumnMeta = {
   type: string;
   notNull: boolean;
   pk: boolean;
-  fk: { table: string; column: string } | null;
+  // `schema` is the REFERENCED table's schema (null = public). Without it a
+  // reference to `sessions` is ambiguous — terminal.sessions and agent.sessions
+  // share that bare name — so conformance could not tell an fk pointing at the
+  // wrong subsystem from a correct one. See qualifiedName().
+  fk: { schema: string | null; table: string; column: string } | null;
 };
 export type UniqueMeta = { name: string; columns: string[] };
 export type CheckMeta = { name: string; expression: string };
@@ -38,8 +41,17 @@ export type TableMeta = {
   indexes: IndexMeta[];
 };
 export type GroupMeta = { key: string; label: string; color: string; tables: string[] };
-export type EnumMeta = { name: string; values: string[] };
+export type EnumMeta = { name: string; values: string[]; schema: string | null };
 export type SchemaGraph = { tables: TableMeta[]; groups: GroupMeta[]; enums: EnumMeta[] };
+
+// The identity of a table or enum: its bare name in public, `schema.name`
+// otherwise. This is the SSOT model's own convention (tableId/enumId in
+// apps/eer/src/engine/model/import-drizzle) — conformance keys both sides by
+// this, so `terminal.sessions` and `agent.sessions` stay distinct instead of
+// silently collapsing into one map entry.
+export function qualifiedName(schema: string | null, name: string): string {
+  return schema && schema !== 'public' ? `${schema}.${name}` : name;
+}
 
 const normalizeType = (t: string): string =>
   t === 'timestamp with time zone' ? 'timestamptz' : t;
@@ -93,13 +105,18 @@ export function describeSchema(): SchemaGraph {
       ...compositePk,
     ]);
 
-    // local column name -> { table, column } from foreign keys (all single-column here)
-    const fkByColumn = new Map<string, { table: string; column: string }>();
+    // local column name -> { schema, table, column } from foreign keys (all
+    // single-column here). The referenced table's schema is read from its own
+    // config, not assumed from this table's — an fk routinely crosses schemas
+    // (terminal.sessions.workdir_id -> core.workdirs.id).
+    const fkByColumn = new Map<string, { schema: string | null; table: string; column: string }>();
     for (const fk of cfg.foreignKeys) {
       const ref = fk.reference();
       const local = ref.columns[0]!.name;
+      const foreignCfg = getTableConfig(ref.foreignTable);
       fkByColumn.set(local, {
-        table: getTableName(ref.foreignTable),
+        schema: foreignCfg.schema ?? null,
+        table: foreignCfg.name,
         column: ref.foreignColumns[0]!.name,
       });
     }
@@ -179,7 +196,11 @@ export function describeSchema(): SchemaGraph {
     tables: metas.filter((m) => m.group === g.key).map((m) => m.name),
   }));
 
-  const enums: EnumMeta[] = allEnums.map((e) => ({ name: e.enumName, values: [...e.enumValues] }));
+  const enums: EnumMeta[] = allEnums.map((e) => ({
+    name: e.enumName,
+    values: [...e.enumValues],
+    schema: e.schema ?? null,
+  }));
 
   return { tables: metas, groups, enums };
 }

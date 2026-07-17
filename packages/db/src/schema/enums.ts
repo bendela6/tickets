@@ -28,59 +28,10 @@ export const fieldTypeEnum = pgEnum('field_type', [
   'json',
 ]);
 
-// ── AI sessions (legacy, public schema) ─────────────────────────────────────
-// These back the old ai_* tables (ai-sessions.ts, ai-agents.ts,
-// ai-permission-requests.ts), which stay live until Tasks 6-9 port their
-// drivers off. terminal/agent split (Task 4/5) supersedes them with
-// terminal.session_status and agent.{session_status,permission_mode,
-// permission_status} below — same bare enum names, different schema, so the
-// TS identifiers here are prefixed `legacy*` to avoid colliding with the new
-// exports of the same conceptual enum.
+// ── core schema ──────────────────────────────────────────────────────────────
 
-// A session is one of two kinds; only `agent` is provider-adapted.
-export const sessionKindEnum = pgEnum('session_kind', ['terminal', 'agent']);
-
-// The lifecycle a running session moves through. `awaiting_input` (blocked on a
-// permission decision) is the only state that demands a human — E3.
-export const sessionStatusEnum = pgEnum('session_status', [
-  //
-  'starting',
-  'live',
-  'running',
-  'idle',
-  'awaiting_input',
-  'interrupted',
-  'disconnected',
-  'exited',
-  'failed',
-]);
-
-// Where a session's process runs. E1 implements `local` only.
+// Where a session's process runs. Only `local` is implemented.
 export const runnerKindEnum = coreSchema.enum('runner_kind', ['local', 'container']);
-
-// How a persona decides whether a tool call needs a human — mirrors the Claude
-// Agent SDK's PermissionMode. E2 ships agents in `bypassPermissions` (autonomy
-// now); the approval flow that uses `default` is E3. `auto` is a 6th value
-// apps/api's valibot schema still accepts for the legacy driver — the new
-// agent.permission_mode below drops it per the terminal/agent split brief.
-export const legacyPermissionModeEnum = pgEnum('permission_mode', [
-  //
-  'default',
-  'acceptEdits',
-  'bypassPermissions',
-  'plan',
-  'dontAsk',
-  'auto',
-]);
-
-// A pending permission request is a `canUseTool` promise in the supervisor
-// waiting on a human; the terminal transitions are the human's decision (E3).
-export const legacyPermissionStatusEnum = pgEnum('permission_status', [
-  //
-  'pending',
-  'allowed',
-  'denied',
-]);
 
 // ── terminal schema ──────────────────────────────────────────────────────────
 
