@@ -121,13 +121,15 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
   // back.
   const channelStore: CoreSessionStore<ChannelFrame> = {
     async append(sessionId, frames) {
-      const kind = sessions.get(sessionId)?.kind;
-      if (kind === 'agent') {
-        await store.appendMessages(
-          sessionId,
-          frames.map((f) => ({ seq: f.seq, event: (f as Extract<ChannelFrame, { type: 'message' }>).event })),
-        );
-      } else {
+      // A single lookup, then an explicit three-way branch on kind — rather
+      // than `if (kind === 'agent') … else { /* terminal */ }`, which let an
+      // unknown/missing kind (sessionId not in `sessions`) fall silently into
+      // the terminal branch and cast a message frame's absent `.data`.
+      // Unreachable today (append only ever follows a publish() from
+      // consumeTerminal/consumeAgent, both gated on the session already
+      // being in `sessions`), but made explicit rather than implicit.
+      const rs = sessions.get(sessionId);
+      if (rs?.kind === 'terminal') {
         await store.appendOutput(
           sessionId,
           frames.map((f) => ({ seq: f.seq, data: (f as Extract<ChannelFrame, { type: 'output' }>).data })),
@@ -135,20 +137,29 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
         // Only terminal scrollback is capped (a chatty process); agent turns
         // are bounded by the budget cap instead. Pruning is a driver concern
         // (outputCap), so it lives in this adapter rather than session-core.
-        const rs = sessions.get(sessionId);
-        if (rs && rs.seq > outputCap) await store.pruneOutput(sessionId, outputCap);
+        if (rs.seq > outputCap) await store.pruneOutput(sessionId, outputCap);
+      } else if (rs?.kind === 'agent') {
+        await store.appendMessages(
+          sessionId,
+          frames.map((f) => ({ seq: f.seq, event: (f as Extract<ChannelFrame, { type: 'message' }>).event })),
+        );
+      } else {
+        throw new Error(`session-core append() for unknown session ${sessionId}`);
       }
     },
     async replay(sessionId, afterSeq) {
-      const kind = sessions.get(sessionId)?.kind;
-      if (kind === 'agent') {
+      // Same explicit three-way branch as `append`, for the same reason.
+      const rs = sessions.get(sessionId);
+      if (rs?.kind === 'terminal') {
+        const { chunks, oldestSeq } = await store.loadOutputSince(sessionId, afterSeq);
+        const frames: ChannelFrame[] = chunks.map((c) => ({ type: 'output', seq: c.seq, data: c.data }));
+        return { frames, oldestSeq };
+      } else if (rs?.kind === 'agent') {
         const { messages, oldestSeq } = await store.loadMessagesSince(sessionId, afterSeq);
         const frames: ChannelFrame[] = messages.map((m) => ({ type: 'message', seq: m.seq, event: m.event }));
         return { frames, oldestSeq };
       }
-      const { chunks, oldestSeq } = await store.loadOutputSince(sessionId, afterSeq);
-      const frames: ChannelFrame[] = chunks.map((c) => ({ type: 'output', seq: c.seq, data: c.data }));
-      return { frames, oldestSeq };
+      throw new Error(`session-core replay() for unknown session ${sessionId}`);
     },
   };
 
@@ -168,7 +179,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     await channel.flush(rs.id);
     rs.status = status;
     await store.setStatus(rs.id, status);
-    channel.broadcast(rs.id, { type: 'status', status });
+    channel.notify(rs.id, { type: 'status', status });
   }
 
   async function finish(
@@ -180,7 +191,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     rs.status = status;
     rs.exitCode = exitCode;
     await store.finishSession(rs.id, status, exitCode);
-    channel.broadcast(rs.id, { type: 'status', status, exitCode });
+    channel.notify(rs.id, { type: 'status', status, exitCode });
     // Fire the teardown hook exactly once (worktree cleanup for a dispatch).
     if (!rs.ended) {
       rs.ended = true;
@@ -216,7 +227,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
             text = clean;
             if (event) {
               rs.busy = event.busy;
-              channel.broadcast(rs.id, { type: 'activity', ...event });
+              channel.notify(rs.id, { type: 'activity', ...event });
             }
           }
           if (text) publishOutput(rs, text);
@@ -248,7 +259,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
             await store.setCost(rs.id, rs.costUsd);
             await transition(rs, 'idle');
             if (rs.maxBudgetUsd != null && rs.costUsd >= rs.maxBudgetUsd) {
-              channel.broadcast(rs.id, {
+              channel.notify(rs.id, {
                 type: 'notice',
                 message: `budget cap reached — $${rs.costUsd.toFixed(2)} of $${rs.maxBudgetUsd.toFixed(2)}`,
               });
@@ -296,8 +307,8 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       rs.scanner = integ?.precise ? createActivityScanner() : null;
       sessions.set(spec.id, rs);
       void store.setStatus(spec.id, 'live');
-      channel.broadcast(spec.id, { type: 'status', status: 'live' });
-      if (integ?.precise) channel.broadcast(spec.id, { type: 'activity', busy: false, integrated: true });
+      channel.notify(spec.id, { type: 'status', status: 'live' });
+      if (integ?.precise) channel.notify(spec.id, { type: 'activity', busy: false, integrated: true });
       consumeTerminal(rs);
     },
 
@@ -307,7 +318,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       rs.onEnd = spec.onEnd;
       sessions.set(spec.id, rs);
       void store.markRunning(spec.id);
-      channel.broadcast(spec.id, { type: 'status', status: 'running' });
+      channel.notify(spec.id, { type: 'status', status: 'running' });
       consumeAgent(rs);
     },
 
@@ -321,9 +332,16 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       const send = (frame: unknown) => sub.send(frame as ServerFrame);
       const detach = await channel.attach(sessionId, lastSeq, send);
       // Current status (and integration state) is driver-owned, not part of
-      // the replayable seq stream — sent directly, right after the channel
-      // has finished replay and gone live, so it lands after replay_done and
-      // before any subsequent live frame.
+      // the replayable seq stream — sent directly, once channel.attach's
+      // replay has resolved. This is NOT guaranteed to land immediately after
+      // replay_done and before any subsequent live frame: attach() resolves
+      // as soon as the subscriber is registered, and this send runs a tick
+      // later, so an in-flight notify()/publish() can queue ahead of it on
+      // the wire. That's benign: this reads rs.status/exitCode at send time,
+      // and transition()/finish() always set them synchronously before their
+      // own notify() of the same status, so whichever status frame lands
+      // last is always the current one — last-write-wins converges
+      // regardless of the exact interleaving.
       sub.send({ type: 'status', status: rs.status, exitCode: rs.exitCode });
       // Re-send integration state so a client attaching after start() learns
       // this terminal has precise activity (the start() broadcast had no
