@@ -106,14 +106,14 @@ async function assertGeneratedFileTypechecks(schemaModule: Record<string, unknow
   }
 }
 
-// ---- gate 1: the real 28-table @tickets/db schema ----
+// ---- gate 1: the real 30-table @tickets/db schema ----
 
 it('round-trips @tickets/db with nothing lost', async () => {
   const { model, report } = await runRoundtripGate(realSchema as Record<string, unknown>);
 
   expect(report.blocksExport).toBe(false);
-  expect(model.entities).toHaveLength(28);
-  expect(model.enums).toHaveLength(8);
+  expect(model.entities).toHaveLength(30);
+  expect(model.enums).toHaveLength(9);
 }, 30_000);
 
 it('the generated file typechecks', async () => {

@@ -1,5 +1,5 @@
 import { pgEnum } from 'drizzle-orm/pg-core';
-import { coreSchema } from './schemas';
+import { coreSchema, terminalSchema } from './schemas';
 
 export const userKindEnum = pgEnum('user_kind', ['human', 'agent']);
 
@@ -71,4 +71,12 @@ export const permissionStatusEnum = pgEnum('permission_status', [
   'pending',
   'allowed',
   'denied',
+]);
+
+// ── terminal schema ──────────────────────────────────────────────────────────
+
+// A PTY's lifecycle. `live` = attached and running; `disconnected` = the API
+// restarted and the process died with it. No turn states — those are agent facts.
+export const terminalStatusEnum = terminalSchema.enum('session_status', [
+  'starting', 'live', 'disconnected', 'exited', 'failed',
 ]);

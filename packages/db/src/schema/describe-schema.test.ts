@@ -97,12 +97,18 @@ describe('schemaOf', () => {
 
 describe('describeSchema schemas', () => {
   it('carries a schema field on every table', () => {
-    // Task 3 moved `workdirs` into `core`; Tasks 4-5 move the rest of the AI
-    // tables out. Everything else is still in public at this point in the split.
+    // Task 3 moved `workdirs` into `core`; Task 4 moved terminal's `sessions`
+    // and `output` into `terminal`. Task 5 moves the rest of the AI tables
+    // out. Everything else is still in public at this point in the split.
+    const SCHEMA_BY_TABLE: Record<string, string> = {
+      workdirs: 'core',
+      sessions: 'terminal',
+      output: 'terminal',
+    };
     const graph = describeSchema();
     for (const table of graph.tables) {
       expect(table).toHaveProperty('schema');
-      expect(table.schema).toBe(table.name === 'workdirs' ? 'core' : null);
+      expect(table.schema).toBe(SCHEMA_BY_TABLE[table.name] ?? null);
     }
   });
 });
