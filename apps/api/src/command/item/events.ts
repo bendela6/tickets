@@ -28,6 +28,10 @@ export const commentAdded = defineEvent({
   kind: 'comment.added', aggregateType: 'item', version: 1,
   payload: v.object({ commentId: v.number(), body: v.string() }),
 });
+export const agentDispatched = defineEvent({
+  kind: 'item.agent_dispatched', aggregateType: 'item', version: 1,
+  payload: v.object({ sessionId: v.number(), agentId: v.number() }),
+});
 export const itemLinked = defineEvent({
   kind: 'item.linked', aggregateType: 'item', version: 1,
   payload: v.object({ linkTypeKey: v.string(), targetItemId: v.number() }),

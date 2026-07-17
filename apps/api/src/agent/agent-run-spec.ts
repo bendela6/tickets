@@ -1,8 +1,8 @@
 import type { PermissionMode, RunSpec } from './agent-types';
 
 // The persona fields the RunSpec builder reads — a structural subset of the
-// ai_agents row, so the builder is decoupled from drizzle and unit-testable with
-// plain objects.
+// agent.agents row, so the builder is decoupled from drizzle and unit-testable
+// with plain objects.
 export interface AgentSpecInput {
   model: string;
   systemPrompt: string | null;

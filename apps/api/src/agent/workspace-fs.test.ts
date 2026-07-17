@@ -10,7 +10,7 @@ describe('assertWorkspaceDir', () => {
   let filePath: string;
 
   beforeAll(async () => {
-    dir = await mkdtemp(join(tmpdir(), 'ws-fs-test-'));
+    dir = await mkdtemp(join(tmpdir(), 'agent-fs-test-'));
     filePath = join(dir, 'a-file.txt');
     await writeFile(filePath, 'hi');
   });

@@ -21,7 +21,7 @@ const CLAUDE_MODELS: ModelInfo[] = [
 
 // The first provider. Wraps the Claude Agent SDK: RunSpec → query() options,
 // SDKMessage → AgentEvent (via mapSdkMessage), and canUseTool → a parked
-// permission_request the supervisor resolves. Needs ANTHROPIC_API_KEY in the
+// permission_request the driver resolves. Needs ANTHROPIC_API_KEY in the
 // environment (third-party use cannot ride a claude.ai login).
 export function createClaudeProvider(deps: { query?: QueryFn } = {}): AgentProvider {
   const runQuery = deps.query ?? sdkQuery;
@@ -62,7 +62,7 @@ function startClaudeRun(runQuery: QueryFn, spec: RunSpec): AgentRun {
   const q = runQuery({ prompt: input.iterable, options });
 
   // Pump the SDK stream into our normalized event queue. Persist-before-broadcast
-  // and seq assignment happen upstream in the supervisor.
+  // and seq assignment happen upstream in the driver.
   void (async () => {
     try {
       for await (const msg of q) {
@@ -109,7 +109,7 @@ function userMessage(text: string): SDKUserMessage {
 }
 
 // A pushable async iterable: the input side feeds SDKUserMessages into query();
-// the events side feeds AgentEvents out. Same shape used by the PTY adapter.
+// the events side feeds AgentEvents out.
 function createAsyncQueue<T>() {
   const values: T[] = [];
   const waiters: ((r: IteratorResult<T>) => void)[] = [];

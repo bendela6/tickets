@@ -8,27 +8,28 @@ import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import type { Db } from '@tickets/db';
 import {
-  aiSessions,
+  agentSessions,
   comments,
   ensureSoftwareScheme,
   ensureUser,
   environment,
+  events,
   seedProject,
 } from '@tickets/db';
 import { itemCreate } from '../command/item/create';
 import { runCommand } from '../command/run-command';
-import type { AgentRun } from '../ai/agent-types';
-import { createProviderRegistry } from '../ai/provider-registry';
-import type { StartAgentSpec, Supervisor } from '../ai/supervisor';
-import type { WorktreeManager } from '../ai/worktree';
 import { buildApp } from '../app';
+import type { AgentRun } from './agent-types';
+import { createProviderRegistry } from './provider-registry';
+import type { AgentDriver, StartAgentSpec } from './driver';
+import type { WorktreeManager } from './worktree';
 
-// Full dispatch orchestration (TIX-208) against a scratch Postgres with a real
-// seeded project + ticket, but FAKE supervisor / provider / worktree — so the
-// whole flow (child session, worktree isolation, dispatched event, prompt, and
-// the comment-back on completion) is proven without an API key or a real repo.
+// Full dispatch orchestration against a scratch Postgres with a real seeded
+// project + item, but FAKE driver / provider / worktree — so the whole flow
+// (child session, worktree isolation, agentDispatched event, prompt, and the
+// comment-back on completion) is proven without an API key or a real repo.
 const { host, port, user, password } = environment.postgres;
-const dbName = `tozf_ai_dispatch_test_${process.pid}_${Date.now()}`;
+const dbName = `tozf_agent_dispatch_test_${process.pid}_${Date.now()}`;
 const adminUrl = `postgres://${user}:${password}@${host}:${port}/postgres`;
 const scratchUrl = `postgres://${user}:${password}@${host}:${port}/${dbName}`;
 
@@ -39,16 +40,13 @@ const projectKey = 'dsp';
 
 const agentStarted: StartAgentSpec[] = [];
 const prompts: { id: number; text: string }[] = [];
-const fakeSupervisor: Supervisor = {
-  start: () => {},
-  startAgent: (spec) => {
+const fakeDriver: AgentDriver = {
+  start: (spec) => {
     agentStarted.push(spec);
   },
   stop: () => {},
   attach: async () => {},
   detach: () => {},
-  write: () => {},
-  resize: () => {},
   prompt: (id, text) => {
     prompts.push({ id, text });
   },
@@ -105,7 +103,7 @@ beforeAll(async () => {
   await seedProject(db, { key: projectKey, name: 'Dispatch', itemPrefix: 'DSP', schemeId });
   const actorId = await ensureUser(db, { name: 'dispatcher', kind: 'human' });
 
-  app = buildApp({ db, supervisor: fakeSupervisor, providers, worktrees: fakeWorktrees });
+  app = buildApp({ db, agentDriver: fakeDriver, providers, worktrees: fakeWorktrees });
   await app.ready();
 
   // An item to dispatch onto. Created through the command pipeline — the
@@ -118,21 +116,21 @@ beforeAll(async () => {
   );
   itemId = created.id;
 
-  // Workspace + agent with that workspace as default.
-  const ws = await app.inject({
+  // Workdir + agent with that workdir as default.
+  const wd = await app.inject({
     method: 'POST',
-    url: '/api/ai/workspaces',
-    payload: { name: 'dsp-ws', path: tmpdir() },
+    url: '/api/workdirs',
+    payload: { name: 'dsp-wd', path: tmpdir() },
   });
   const agent = await app.inject({
     method: 'POST',
-    url: '/api/ai/agents',
+    url: '/api/agent/agents',
     payload: {
       key: 'dsp-agent',
       name: 'Coder',
       providerKey: 'claude',
       model: 'claude-opus-4-8',
-      defaultWorkspaceId: ws.json().id,
+      defaultWorkdirId: wd.json().id,
     },
   });
   agentId = agent.json().id;
@@ -147,36 +145,40 @@ afterAll(async () => {
 });
 
 describe('dispatch flow', () => {
-  test('creates a child session on the ticket, isolates it, prompts it, and comments back on completion', async () => {
+  test('creates a child session on the item, isolates it, prompts it, and comments back on completion', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: '/api/ai/dispatch',
+      url: '/api/agent/dispatch',
       payload: { agentId, itemId, prompt: 'implement the thing' },
     });
     expect(res.statusCode).toBe(201);
     const session = res.json();
-    expect(session).toMatchObject({ kind: 'agent', agentId, itemId });
+    expect(session).toMatchObject({ agentId, itemId });
 
     // Ran in its own worktree, started as an agent, and got the opening prompt.
     expect(worktreeCreated).toHaveLength(1);
     expect(agentStarted.at(-1)?.id).toBe(session.id);
     expect(prompts.at(-1)).toEqual({ id: session.id, text: 'implement the thing' });
 
-    // GAP: the "an agent is on this" signal (an agent_dispatched event on the
-    // item) is not written yet. It used the ticket-era writeEvent, which the
-    // platform forbids — routes may not write events directly, they go through
-    // a command. Restoring it needs an item.agentDispatched command; tracked in
-    // the plan's Task 8. The comment-back below still works.
+    // The "an agent is on this" signal: item.agentDispatched wrote an
+    // item.agent_dispatched event via the command pipeline (routes may not
+    // write events directly — command/no-raw-writes.test.ts).
+    const dispatchEvents = await db
+      .select()
+      .from(events)
+      .where(eq(events.kind, 'item.agent_dispatched'));
+    expect(dispatchEvents).toHaveLength(1);
+    expect(dispatchEvents[0]!.payload).toEqual({ sessionId: session.id, agentId });
 
-    // Simulate the run finishing, then fire the teardown hook the supervisor
+    // Simulate the run finishing, then fire the teardown hook the driver
     // would call.
     await db
-      .update(aiSessions)
+      .update(agentSessions)
       .set({ status: 'exited', costUsd: '0.4200' })
-      .where(eq(aiSessions.id, session.id));
+      .where(eq(agentSessions.id, session.id));
     await agentStarted.at(-1)!.onEnd!();
 
-    // Worktree cleaned up + a summary comment posted back to the ticket.
+    // Worktree cleaned up + a summary comment posted back to the item.
     expect(worktreeRemoved).toHaveLength(1);
     const itemComments = await db.select().from(comments).where(eq(comments.itemId, itemId));
     expect(itemComments).toHaveLength(1);
@@ -184,10 +186,10 @@ describe('dispatch flow', () => {
     expect(itemComments[0]!.body).toContain('$0.42');
   });
 
-  test('rejects a dispatch onto an unknown ticket', async () => {
+  test('rejects a dispatch onto an unknown item', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: '/api/ai/dispatch',
+      url: '/api/agent/dispatch',
       payload: { agentId, itemId: 999_999, prompt: 'x' },
     });
     expect(res.statusCode).toBe(404);

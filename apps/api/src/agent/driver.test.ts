@@ -1,15 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { createAgentDriver } from './driver';
+import type { AgentStore, MessageFrame } from './store';
+import type { AgentEvent, ServerFrame, SessionStatus, Subscriber } from './types';
 import type { AgentRun } from './agent-types';
-import { createSupervisor } from './supervisor';
-import type {
-  AgentEvent,
-  PersistedMessage,
-  Runner,
-  ServerFrame,
-  SessionStatus,
-  SessionStore,
-  Subscriber,
-} from './types';
 
 // A controllable AgentRun: push events, observe send/interrupt/permission.
 function makeAgentRun() {
@@ -72,28 +65,23 @@ function makeAgentRun() {
 }
 
 function makeStore(log?: string[]) {
-  const messages: PersistedMessage[] = [];
+  const frames: MessageFrame[] = [];
   const statuses: SessionStatus[] = [];
   const permissions: { id: number; toolName: string }[] = [];
   const decisions: { id: number; status: string; reason?: string }[] = [];
   let permId = 0;
   let cost = 0;
-  const store: SessionStore = {
-    async appendOutput() {},
-    async loadOutputSince() {
-      return { chunks: [], oldestSeq: null };
-    },
-    async pruneOutput() {},
-    async appendMessages(_id, msgs) {
-      for (const m of msgs) {
-        messages.push(m);
-        log?.push(`append:${m.seq}`);
+  const store: AgentStore = {
+    async append(_id, fs) {
+      for (const f of fs) {
+        frames.push(f);
+        log?.push(`append:${f.seq}`);
       }
     },
-    async loadMessagesSince(_id, afterSeq) {
+    async replay(_id, afterSeq) {
       return {
-        messages: messages.filter((m) => m.seq > afterSeq),
-        oldestSeq: messages.length ? messages[0]!.seq : null,
+        frames: frames.filter((f) => f.seq > afterSeq),
+        oldestSeq: frames.length ? frames[0]!.seq : null,
       };
     },
     async setCost(_id, c) {
@@ -118,14 +106,8 @@ function makeStore(log?: string[]) {
       return 0;
     },
   };
-  return { store, messages, statuses, permissions, decisions, getCost: () => cost };
+  return { store, frames, statuses, permissions, decisions, getCost: () => cost };
 }
-
-const deadRunner: Runner = {
-  spawnPty: () => {
-    throw new Error('agent tests do not spawn a PTY');
-  },
-};
 
 function makeSub(log?: string[]) {
   const frames: ServerFrame[] = [];
@@ -149,19 +131,19 @@ const msgs = (frames: ServerFrame[]) =>
 const statusFrames = (frames: ServerFrame[]) =>
   frames.filter((f): f is Extract<ServerFrame, { type: 'status' }> => f.type === 'status');
 
-describe('supervisor — agent sessions', () => {
+describe('agent driver', () => {
   it('persists each event before broadcasting it as a message frame', async () => {
     const log: string[] = [];
     const { store } = makeStore(log);
     const agent = makeAgentRun();
-    const sup = createSupervisor({ runner: deadRunner, store, schedule: syncSchedule });
-    sup.startAgent({ id: 1, run: agent.run });
+    const drv = createAgentDriver({ store, schedule: syncSchedule });
+    drv.start({ id: 1, run: agent.run });
     const { sub } = makeSub(log);
-    await sup.attach(1, sub, 0);
+    await drv.attach(1, sub, 0);
 
     agent.emit({ type: 'assistant_text', text: 'hello' });
     await tick();
-    await sup.flush(1);
+    await drv.flush(1);
     await tick();
 
     expect(log.indexOf('append:1')).toBeGreaterThanOrEqual(0);
@@ -171,16 +153,16 @@ describe('supervisor — agent sessions', () => {
   it('normalizes seq and delivers message frames in order to a live client', async () => {
     const { store } = makeStore();
     const agent = makeAgentRun();
-    const sup = createSupervisor({ runner: deadRunner, store, schedule: syncSchedule });
-    sup.startAgent({ id: 1, run: agent.run });
+    const drv = createAgentDriver({ store, schedule: syncSchedule });
+    drv.start({ id: 1, run: agent.run });
     const live = makeSub();
-    await sup.attach(1, live.sub, 0);
+    await drv.attach(1, live.sub, 0);
 
     agent.emit({ type: 'session_started', providerSessionId: 'sess_1' });
     agent.emit({ type: 'assistant_text', text: 'a' });
     agent.emit({ type: 'tool_use', id: 'tu1', name: 'Read', input: {} });
     await tick();
-    await sup.flush(1);
+    await drv.flush(1);
     await tick();
 
     expect(msgs(live.frames).map((f) => [f.seq, f.event.type])).toEqual([
@@ -193,22 +175,21 @@ describe('supervisor — agent sessions', () => {
   it('transitions running→idle on result and running→awaiting_input on a permission_request', async () => {
     const { store, statuses, getCost } = makeStore();
     const agent = makeAgentRun();
-    const sup = createSupervisor({ runner: deadRunner, store, schedule: syncSchedule });
-    sup.startAgent({ id: 1, run: agent.run });
+    const drv = createAgentDriver({ store, schedule: syncSchedule });
+    drv.start({ id: 1, run: agent.run });
     const { sub, frames } = makeSub();
-    await sup.attach(1, sub, 0);
+    await drv.attach(1, sub, 0);
 
     agent.emit({ type: 'permission_request', id: 'p1', toolName: 'Bash', input: {} });
     await tick();
     agent.emit({ type: 'result', costUsd: 0.5, durationMs: 10, isError: false });
     await tick();
-    await sup.flush(1);
+    await drv.flush(1);
     await tick();
 
     expect(statuses).toContain('awaiting_input');
     expect(statuses).toContain('idle');
     expect(getCost()).toBe(0.5);
-    // The client saw both status frames.
     const seen = statusFrames(frames).map((f) => f.status);
     expect(seen).toContain('awaiting_input');
     expect(seen).toContain('idle');
@@ -217,14 +198,14 @@ describe('supervisor — agent sessions', () => {
   it('enforces the budget cap: notice + interrupt once spend crosses it', async () => {
     const { store } = makeStore();
     const agent = makeAgentRun();
-    const sup = createSupervisor({ runner: deadRunner, store, schedule: syncSchedule });
-    sup.startAgent({ id: 1, run: agent.run, maxBudgetUsd: 1 });
+    const drv = createAgentDriver({ store, schedule: syncSchedule });
+    drv.start({ id: 1, run: agent.run, maxBudgetUsd: 1 });
     const { sub, frames } = makeSub();
-    await sup.attach(1, sub, 0);
+    await drv.attach(1, sub, 0);
 
     agent.emit({ type: 'result', costUsd: 1.5, durationMs: 10, isError: false });
     await tick();
-    await sup.flush(1);
+    await drv.flush(1);
     await tick();
 
     expect(frames.some((f) => f.type === 'notice')).toBe(true);
@@ -234,29 +215,29 @@ describe('supervisor — agent sessions', () => {
   it('prompt() sends a follow-up turn and flips the session back to running', async () => {
     const { store, statuses } = makeStore();
     const agent = makeAgentRun();
-    const sup = createSupervisor({ runner: deadRunner, store, schedule: syncSchedule });
-    sup.startAgent({ id: 1, run: agent.run });
+    const drv = createAgentDriver({ store, schedule: syncSchedule });
+    drv.start({ id: 1, run: agent.run });
     const { sub } = makeSub();
-    await sup.attach(1, sub, 0);
+    await drv.attach(1, sub, 0);
 
-    sup.prompt(1, 'do more');
+    drv.prompt(1, 'do more');
     await tick();
 
     expect(agent.sent).toEqual(['do more']);
     expect(statuses).toContain('running');
   });
 
-  it('persists a permission request and records the decision on respond (TIX-209)', async () => {
+  it('persists a permission request and records the decision on respond', async () => {
     const helper = makeStore();
     const agent = makeAgentRun();
-    const sup = createSupervisor({ runner: deadRunner, store: helper.store, schedule: syncSchedule });
-    sup.startAgent({ id: 1, run: agent.run });
+    const drv = createAgentDriver({ store: helper.store, schedule: syncSchedule });
+    drv.start({ id: 1, run: agent.run });
     const { sub } = makeSub();
-    await sup.attach(1, sub, 0);
+    await drv.attach(1, sub, 0);
 
     agent.emit({ type: 'permission_request', id: 'perm_1', toolName: 'Bash', input: { command: 'ls' } });
     await tick();
-    await sup.flush(1);
+    await drv.flush(1);
     await tick();
 
     // A pending request row was created; the session is awaiting a human.
@@ -264,11 +245,9 @@ describe('supervisor — agent sessions', () => {
     expect(helper.statuses).toContain('awaiting_input');
 
     // Approving resolves the AgentRun promise and records the decision.
-    sup.respondToPermission(1, 'perm_1', 'allow', 'looks safe');
+    drv.respondToPermission(1, 'perm_1', 'allow', 'looks safe');
     await tick();
-    expect(agent.permissionResponses).toEqual([
-      { id: 'perm_1', result: 'allow', reason: 'looks safe' },
-    ]);
+    expect(agent.permissionResponses).toEqual([{ id: 'perm_1', result: 'allow', reason: 'looks safe' }]);
     expect(helper.decisions).toEqual([{ id: 1, status: 'allowed', reason: 'looks safe' }]);
     expect(helper.statuses).toContain('running');
   });
@@ -276,17 +255,17 @@ describe('supervisor — agent sessions', () => {
   it('calls onEnd exactly once when the run finishes (worktree teardown)', async () => {
     const { store } = makeStore();
     const agent = makeAgentRun();
-    const sup = createSupervisor({ runner: deadRunner, store, schedule: syncSchedule });
+    const drv = createAgentDriver({ store, schedule: syncSchedule });
     let cleanups = 0;
-    sup.startAgent({ id: 1, run: agent.run, onEnd: () => void cleanups++ });
+    drv.start({ id: 1, run: agent.run, onEnd: () => void cleanups++ });
     const { sub } = makeSub();
-    await sup.attach(1, sub, 0);
+    await drv.attach(1, sub, 0);
 
     agent.emit({ type: 'assistant_text', text: 'done' });
     await tick();
     agent.end();
     await tick();
-    await sup.flush(1);
+    await drv.flush(1);
     await tick();
 
     expect(cleanups).toBe(1);
@@ -295,20 +274,59 @@ describe('supervisor — agent sessions', () => {
   it('replays exactly the missed messages, once, on reconnect', async () => {
     const { store } = makeStore();
     const agent = makeAgentRun();
-    const sup = createSupervisor({ runner: deadRunner, store, schedule: syncSchedule });
-    sup.startAgent({ id: 1, run: agent.run });
+    const drv = createAgentDriver({ store, schedule: syncSchedule });
+    drv.start({ id: 1, run: agent.run });
     const live = makeSub();
-    await sup.attach(1, live.sub, 0);
+    await drv.attach(1, live.sub, 0);
 
     agent.emit({ type: 'assistant_text', text: 'one' }); // seq 1
     agent.emit({ type: 'assistant_text', text: 'two' }); // seq 2
     await tick();
-    await sup.flush(1);
+    await drv.flush(1);
     await tick();
 
     const rejoin = makeSub();
-    await sup.attach(1, rejoin.sub, 1);
+    await drv.attach(1, rejoin.sub, 1);
     expect(msgs(rejoin.frames).map((f) => f.seq)).toEqual([2]);
     expect(rejoin.frames.some((f) => f.type === 'replay_done')).toBe(true);
+  });
+
+  it('detach removes the subscriber but does NOT close the run', async () => {
+    const { store } = makeStore();
+    const agent = makeAgentRun();
+    const drv = createAgentDriver({ store, schedule: syncSchedule });
+    drv.start({ id: 1, run: agent.run });
+    const { sub, frames } = makeSub();
+    await drv.attach(1, sub, 0);
+
+    drv.detach(1, sub);
+    agent.emit({ type: 'assistant_text', text: 'after-detach' });
+    await tick();
+    await drv.flush(1);
+    await tick();
+
+    expect(msgs(frames)).toEqual([]); // detached: received nothing new
+    expect(drv.has(1)).toBe(true); // session outlives the socket
+  });
+
+  it('on exit sets status without an exit code, and history stays replayable', async () => {
+    const helper = makeStore();
+    const agent = makeAgentRun();
+    const drv = createAgentDriver({ store: helper.store, schedule: syncSchedule });
+    drv.start({ id: 1, run: agent.run });
+    agent.emit({ type: 'assistant_text', text: 'done' }); // seq 1
+    await tick();
+    agent.end();
+    await tick();
+    await drv.flush(1);
+    await tick();
+
+    expect(helper.statuses).toContain('exited');
+
+    const reopen = makeSub();
+    await drv.attach(1, reopen.sub, 0);
+    expect(msgs(reopen.frames).map((f) => f.seq)).toEqual([1]);
+    const status = statusFrames(reopen.frames).at(-1);
+    expect(status).toEqual({ type: 'status', status: 'exited' });
   });
 });

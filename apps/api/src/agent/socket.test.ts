@@ -8,18 +8,20 @@ import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import type { Db } from '@tickets/db';
 import { environment } from '@tickets/db';
-import { createDbSessionStore } from './db-session-store';
-import { createSupervisor } from './supervisor';
-import type { PtyHandle, Runner, ServerFrame } from './types';
 import { buildApp } from '../app';
+import { createAgentDriver } from './driver';
+import { createAgentStore } from './store';
+import { createProviderRegistry } from './provider-registry';
+import type { AgentEvent, ServerFrame } from './types';
+import type { AgentRun } from './agent-types';
 
-// The crux integration test for E1: a REAL listening server, a REAL WebSocket
-// client, the REAL supervisor + REAL Postgres store — only the OS process is
-// faked (a controllable PTY), so output timing is deterministic while the seq
-// numbering, DB persistence, WS transport, and reconnect-and-replay path are all
-// exercised end to end. This is the behaviour E2 cannot ship without.
+// The crux integration test for the agent split: a REAL listening server, a
+// REAL WebSocket client, the REAL driver + REAL Postgres store — only the
+// provider is faked (a controllable AgentRun), so message seq numbering, DB
+// persistence, WS transport, and reconnect-and-replay are all exercised end
+// to end without an API key or a spawned subprocess.
 const { host, port, user, password } = environment.postgres;
-const dbName = `tozf_ai_socket_test_${process.pid}_${Date.now()}`;
+const dbName = `tozf_agent_socket_test_${process.pid}_${Date.now()}`;
 const adminUrl = `postgres://${user}:${password}@${host}:${port}/postgres`;
 const scratchUrl = `postgres://${user}:${password}@${host}:${port}/${dbName}`;
 
@@ -28,64 +30,63 @@ let db: Db;
 let app: FastifyInstance;
 let baseUrl: string;
 
-// A controllable PTY: push output, end with an exit code. Same shape the
-// supervisor's own unit tests use.
-function makePty() {
-  const chunks: string[] = [];
+// A controllable AgentRun: push events, observe close.
+function makeAgentRun() {
+  const events: AgentEvent[] = [];
   let notify: (() => void) | null = null;
   let ended = false;
-  let resolveExit!: (v: { exitCode: number | null }) => void;
-  const exit = new Promise<{ exitCode: number | null }>((r) => (resolveExit = r));
   const wake = () => {
     const n = notify;
     notify = null;
     n?.();
   };
-  const output = (async function* () {
+  const iterable = (async function* () {
     let i = 0;
     for (;;) {
-      if (i < chunks.length) {
-        yield chunks[i++]!;
+      if (i < events.length) {
+        yield events[i++]!;
         continue;
       }
       if (ended) return;
       await new Promise<void>((r) => (notify = r));
     }
   })();
-  const handle: PtyHandle = {
-    output,
-    exit,
-    write: () => {},
-    resize: () => {},
-    kill: () => {
+  const run: AgentRun = {
+    events: iterable,
+    send: async () => {},
+    respondToPermission: async () => {},
+    interrupt: async () => {
       ended = true;
       wake();
-      resolveExit({ exitCode: 130 });
+    },
+    close: () => {
+      ended = true;
+      wake();
     },
   };
   return {
-    handle,
-    push: (d: string) => {
-      chunks.push(d);
+    run,
+    push: (e: AgentEvent) => {
+      events.push(e);
       wake();
-    },
-    end: (code: number | null = 0) => {
-      ended = true;
-      wake();
-      resolveExit({ exitCode: code });
     },
   };
 }
 
-// Captures each spawned PTY so the test can drive the (single) session's output.
-const ptys: ReturnType<typeof makePty>[] = [];
-const runner: Runner = {
-  spawnPty: () => {
-    const p = makePty();
-    ptys.push(p);
-    return p.handle;
+// Captures each started run so the test can drive the (single) session's events.
+const runs: ReturnType<typeof makeAgentRun>[] = [];
+const providers = createProviderRegistry([
+  {
+    key: 'claude',
+    models: () => [{ id: 'claude-opus-4-8', label: 'Opus', contextWindow: 1_000_000 }],
+    capabilities: { permissions: true, resume: true, mcp: true, subagents: true },
+    start: () => {
+      const r = makeAgentRun();
+      runs.push(r);
+      return r.run;
+    },
   },
-};
+]);
 
 // ── ws client helpers (global WebSocket, Node 22+) ───────────────────────────
 
@@ -96,7 +97,7 @@ interface Client {
 }
 
 function connect(id: number): Promise<Client> {
-  const ws = new WebSocket(`${baseUrl}/api/ai/sessions/${id}/socket`);
+  const ws = new WebSocket(`${baseUrl}/api/agent/sessions/${id}/socket`);
   const frames: ServerFrame[] = [];
   let code: number | undefined;
   ws.addEventListener('message', (ev) => frames.push(JSON.parse(String(ev.data)) as ServerFrame));
@@ -119,19 +120,30 @@ function waitFor(check: () => boolean, timeoutMs = 3000): Promise<void> {
   });
 }
 
-const outputs = (frames: ServerFrame[]): { seq: number; data: string }[] =>
-  frames.filter((f): f is Extract<ServerFrame, { type: 'output' }> => f.type === 'output');
+const msgs = (frames: ServerFrame[]) =>
+  frames.filter((f): f is Extract<ServerFrame, { type: 'message' }> => f.type === 'message');
 
 async function createSession(): Promise<number> {
-  const ws = await app.inject({
+  const wd = await app.inject({
     method: 'POST',
-    url: '/api/ai/workspaces',
-    payload: { name: `ws-${Date.now()}`, path: tmpdir() },
+    url: '/api/workdirs',
+    payload: { name: `wd-${Date.now()}-${Math.random()}`, path: tmpdir() },
+  });
+  const agent = await app.inject({
+    method: 'POST',
+    url: '/api/agent/agents',
+    payload: {
+      key: `agent-${Date.now()}-${Math.random()}`,
+      name: 'Socket Test Agent',
+      providerKey: 'claude',
+      model: 'claude-opus-4-8',
+      defaultWorkdirId: wd.json().id,
+    },
   });
   const res = await app.inject({
     method: 'POST',
-    url: '/api/ai/sessions',
-    payload: { kind: 'terminal', workspaceId: ws.json().id },
+    url: '/api/agent/sessions',
+    payload: { agentId: agent.json().id },
   });
   return res.json().id;
 }
@@ -148,8 +160,8 @@ beforeAll(async () => {
     migrationsFolder: resolve(import.meta.dirname, '../../../../packages/db/drizzle'),
   });
 
-  const supervisor = createSupervisor({ runner, store: createDbSessionStore(db) });
-  app = buildApp({ db, supervisor });
+  const driver = createAgentDriver({ store: createAgentStore(db) });
+  app = buildApp({ db, agentDriver: driver, providers });
   await app.listen({ port: 0, host: '127.0.0.1' });
   const addr = app.server.address() as AddressInfo;
   baseUrl = `ws://127.0.0.1:${addr.port}`;
@@ -163,27 +175,23 @@ afterAll(async () => {
   await admin.end();
 });
 
-describe('AI session socket', () => {
-  test('reconnect replays exactly the missed output, in order, with no duplicates', async () => {
+describe('agent session socket', () => {
+  test('reconnect replays exactly the missed messages, in order, with no duplicates', async () => {
     const id = await createSession();
-    const pty = ptys.at(-1)!;
+    const run = runs.at(-1)!;
 
-    // First client attaches from scratch and sees live output.
     const c1 = await connect(id);
     c1.ws.send(JSON.stringify({ type: 'attach', lastSeq: 0 }));
     await waitFor(() => c1.frames.some((f) => f.type === 'replay_done'));
 
-    pty.push('AAA'); // seq 1
-    await waitFor(() => outputs(c1.frames).length >= 1);
-    pty.push('BBB'); // seq 2
-    await waitFor(() => outputs(c1.frames).length >= 2);
+    run.push({ type: 'assistant_text', text: 'AAA' }); // seq 1
+    await waitFor(() => msgs(c1.frames).length >= 1);
+    run.push({ type: 'assistant_text', text: 'BBB' }); // seq 2
+    await waitFor(() => msgs(c1.frames).length >= 2);
 
-    expect(outputs(c1.frames)).toEqual([
-      { type: 'output', seq: 1, data: 'AAA' },
-      { type: 'output', seq: 2, data: 'BBB' },
-    ]);
+    expect(msgs(c1.frames).map((f) => f.seq)).toEqual([1, 2]);
 
-    // Drop the connection (tab closed) — the process must keep running.
+    // Drop the connection (tab closed) — the run must keep going.
     c1.ws.close();
     await waitFor(() => c1.ws.readyState === c1.ws.CLOSED);
 
@@ -192,15 +200,12 @@ describe('AI session socket', () => {
     c2.ws.send(JSON.stringify({ type: 'attach', lastSeq: 1 }));
     await waitFor(() => c2.frames.some((f) => f.type === 'replay_done'));
 
-    expect(outputs(c2.frames)).toEqual([{ type: 'output', seq: 2, data: 'BBB' }]);
+    expect(msgs(c2.frames).map((f) => f.seq)).toEqual([2]);
 
-    // And live output continues to flow to the reconnected client.
-    pty.push('CCC'); // seq 3
-    await waitFor(() => outputs(c2.frames).length >= 2);
-    expect(outputs(c2.frames)).toEqual([
-      { type: 'output', seq: 2, data: 'BBB' },
-      { type: 'output', seq: 3, data: 'CCC' },
-    ]);
+    // And live messages continue to flow to the reconnected client.
+    run.push({ type: 'assistant_text', text: 'CCC' }); // seq 3
+    await waitFor(() => msgs(c2.frames).length >= 2);
+    expect(msgs(c2.frames).map((f) => f.seq)).toEqual([2, 3]);
 
     c2.ws.close();
   }, 20_000);

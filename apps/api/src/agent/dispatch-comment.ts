@@ -1,6 +1,6 @@
 import type { SessionStatus } from './types';
 
-// The comment a dispatched agent posts back to its ticket on completion. Pure, so
+// The comment a dispatched agent posts back to its item on completion. Pure, so
 // the wording is unit-tested; the orchestration just supplies the final session
 // state. `costUsd` is the numeric string drizzle returns (or null).
 export function dispatchComment(

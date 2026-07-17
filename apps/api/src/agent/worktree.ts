@@ -4,9 +4,9 @@ import { promisify } from 'node:util';
 const run = promisify(execFile);
 
 // A dispatched agent runs in its OWN git worktree so parallel dispatches on one
-// repo can't collide (TIX-206). The manager is an injectable seam: the local
-// impl shells out to git; tests use a fake so the orchestration is exercised
-// without touching a real repo.
+// repo can't collide. The manager is an injectable seam: the local impl shells
+// out to git; tests use a fake so the orchestration is exercised without
+// touching a real repo.
 export interface WorktreeSpec {
   repoPath: string; // the workspace's git repo
   branch: string; // new branch for the dispatched run
@@ -39,7 +39,7 @@ export function createLocalWorktreeManager(): WorktreeManager {
 
 // Derive a stable, filesystem-safe worktree branch + path for a dispatched
 // session. Pure, so the naming is unit-testable.
-export function worktreeName(sessionId: number, ticketRef?: string): string {
-  const suffix = ticketRef ? ticketRef.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'run';
-  return `ai/${suffix}-s${sessionId}`;
+export function worktreeName(sessionId: number, itemRef?: string): string {
+  const suffix = itemRef ? itemRef.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'run';
+  return `agent/${suffix}-s${sessionId}`;
 }
