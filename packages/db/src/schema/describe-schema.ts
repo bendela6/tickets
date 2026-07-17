@@ -1,6 +1,6 @@
 // packages/db/src/schema/describe-schema.ts
 import type { SQL } from 'drizzle-orm';
-import { PgDialect, getTableConfig, uniqueKeyName, type PgTable } from 'drizzle-orm/pg-core';
+import { PgDialect, getTableConfig, uniqueKeyName, type PgColumn, type PgTable } from 'drizzle-orm/pg-core';
 import { allEnums, allTables } from './registry';
 import { SCHEMA_GROUPS, type SchemaGroup } from './schema-groups';
 
@@ -55,6 +55,19 @@ export function qualifiedName(schema: string | null, name: string): string {
 
 const normalizeType = (t: string): string =>
   t === 'timestamp with time zone' ? 'timestamptz' : t;
+
+// An enum column's defining enum — name and schema — as set by
+// pgEnum()/pgSchema.enum() on the column's `.enum` property. That property
+// only exists on the PgEnumColumn/PgEnumObjectColumn subclasses (the base
+// PgColumn type getTableConfig().columns is typed as omits it), so this
+// narrows via `columnType` before reading it. Needed because getSQLType()
+// alone can't disambiguate: terminal.session_status and agent.session_status
+// are two different enums that both print the bare string "session_status".
+function enumIdentity(c: PgColumn): { schema: string | null; name: string } | null {
+  if (c.columnType !== 'PgEnumColumn' && c.columnType !== 'PgEnumObjectColumn') return null;
+  const e = (c as unknown as { enum: { enumName: string; schema: string | undefined } }).enum;
+  return { schema: e.schema ?? null, name: e.enumName };
+}
 
 // Every table must belong to exactly one group. Throws otherwise, so the config
 // can't silently fall behind the schema.
@@ -121,13 +134,22 @@ export function describeSchema(): SchemaGraph {
       });
     }
 
-    const columns: ColumnMeta[] = cfg.columns.map((c) => ({
-      name: c.name,
-      type: normalizeType(c.getSQLType()),
-      notNull: c.notNull,
-      pk: pkNames.has(c.name),
-      fk: fkByColumn.get(c.name) ?? null,
-    }));
+    const columns: ColumnMeta[] = cfg.columns.map((c) => {
+      const enumId = enumIdentity(c);
+      return {
+        name: c.name,
+        // Enum columns are qualified by the defining enum's own schema (see
+        // enumIdentity), using the same qualifiedName() convention as table
+        // identity and FK targets — otherwise a column rebound to the wrong
+        // same-named enum (e.g. terminal.sessions.status -> agent's
+        // session_status) would compare bare "session_status" ==
+        // "session_status" and conformance would never see the drift.
+        type: enumId ? qualifiedName(enumId.schema, enumId.name) : normalizeType(c.getSQLType()),
+        notNull: c.notNull,
+        pk: pkNames.has(c.name),
+        fk: fkByColumn.get(c.name) ?? null,
+      };
+    });
 
     const checks: CheckMeta[] = cfg.checks.map((c) => ({
       name: c.name,
