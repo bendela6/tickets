@@ -6,9 +6,17 @@ import { terminalSessions } from '@tickets/db';
 import { HttpError } from '../errors';
 import { parseBody } from '../utils/parse-body';
 import { parseId } from '../utils/parse-id';
+import { parseQuery } from '../utils/parse-query';
 import { loadRunnableWorkdir } from '../workdir/load-workdir';
 import type { TerminalDriver } from './driver';
 import { resolveSessionCommand } from './session-command';
+
+// `terminal.session_status`, in full. `?status=` is user input and reaches a
+// WHERE clause: unvalidated, a bogus value went to Postgres as an enum literal
+// and came back as invalid-enum-input — a 500 for what is a bad request.
+// These are the terminal's OWN statuses; the agent schema's enum shares the
+// name and neither may drift into the other.
+const statusSchema = v.picklist(['starting', 'live', 'disconnected', 'exited', 'failed']);
 
 const createSessionSchema = v.object({
   workdirId: v.pipe(v.number(), v.integer()),
@@ -29,7 +37,7 @@ export function registerTerminalRoutes(
   const listSessions = async (request: FastifyRequest, reply: FastifyReply) => {
     const query = request.query as { status?: string; archived?: string };
     const conditions = [];
-    if (query.status) conditions.push(eq(terminalSessions.status, query.status as never));
+    if (query.status) conditions.push(eq(terminalSessions.status, parseQuery(statusSchema, query.status)));
     if (query.archived !== 'true') conditions.push(isNull(terminalSessions.archivedAt));
     const rows = await db
       .select()

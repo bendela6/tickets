@@ -271,6 +271,27 @@ describe('agent routes', () => {
     expect(all.json().map((s: { id: number }) => s.id)).toContain(arch.id);
   });
 
+  test('filters by ?status= and 400s on a value outside the agent enum', async () => {
+    const workdirId = await createWorkdir('status-wd');
+    const agent = await createAgent('Statuser', workdirId);
+    const s = (
+      await app.inject({ method: 'POST', url: '/api/agent/sessions', payload: { agentId: agent.id } })
+    ).json();
+
+    const ok = await app.inject({ method: 'GET', url: '/api/agent/sessions?status=starting' });
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json().map((x: { id: number }) => x.id)).toContain(s.id);
+
+    // Unvalidated, this reached Postgres as an enum literal and came back as
+    // invalid-enum-input — a 500 for a bad request.
+    const bad = await app.inject({ method: 'GET', url: '/api/agent/sessions?status=bogus' });
+    expect(bad.statusCode).toBe(400);
+
+    // `live` is a real status — in the TERMINAL enum. Not this one.
+    const wrongEnum = await app.inject({ method: 'GET', url: '/api/agent/sessions?status=live' });
+    expect(wrongEnum.statusCode).toBe(400);
+  });
+
   test('stopping a live session closes the run but leaves it in the list', async () => {
     // The distinction stop exists for: ending a session must not hide it.
     const workdirId = await createWorkdir('stop-wd');
