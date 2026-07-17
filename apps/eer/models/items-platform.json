@@ -224,14 +224,36 @@
       }
     },
     {
-      "id": "ai",
-      "label": "AI SESSIONS",
+      "id": "core",
+      "label": "WORKDIRS",
       "order": 4,
       "bounds": {
         "x": 4131,
         "y": 80,
-        "w": 1248,
-        "h": 1450
+        "w": 408,
+        "h": 504
+      }
+    },
+    {
+      "id": "terminal",
+      "label": "TERMINAL SESSIONS",
+      "order": 5,
+      "bounds": {
+        "x": 4579,
+        "y": 80,
+        "w": 408,
+        "h": 806
+      }
+    },
+    {
+      "id": "agent",
+      "label": "AGENT SESSIONS",
+      "order": 6,
+      "bounds": {
+        "x": 5027,
+        "y": 80,
+        "w": 856,
+        "h": 1468
       }
     }
   ],
@@ -2641,7 +2663,7 @@
     {
       "id": "core.workdirs",
       "label": "workdirs",
-      "group": "ai",
+      "group": "core",
       "description": "A directory a session runs in. Optionally linked to a project; a standalone workdir (scratch clone, unrelated repo) has no project.",
       "schema": "core",
       "x": 4171,
@@ -2750,11 +2772,11 @@
     {
       "id": "terminal.sessions",
       "label": "sessions",
-      "group": "ai",
+      "group": "terminal",
       "description": "A PTY session. Independent of agent.sessions — no column here references the agent schema.",
       "schema": "terminal",
-      "x": 4171,
-      "y": 560,
+      "x": 4619,
+      "y": 150,
       "columns": [
         {
           "name": "id",
@@ -2886,11 +2908,11 @@
     {
       "id": "terminal.output",
       "label": "output",
-      "group": "ai",
+      "group": "terminal",
       "description": "Raw PTY scrollback, one row per chunk. `seq` is the SSOT a reconnecting browser replays from.",
       "schema": "terminal",
-      "x": 4171,
-      "y": 970,
+      "x": 4619,
+      "y": 560,
       "columns": [
         {
           "name": "id",
@@ -2953,10 +2975,10 @@
     {
       "id": "agent.agents",
       "label": "agents",
-      "group": "ai",
+      "group": "agent",
       "description": "The persona library. Each agent owns a users row with kind='agent', which is what makes it assignable and attributable.",
       "schema": "agent",
-      "x": 4571,
+      "x": 5067,
       "y": 150,
       "columns": [
         {
@@ -3116,10 +3138,10 @@
     {
       "id": "agent.sessions",
       "label": "sessions",
-      "group": "ai",
+      "group": "agent",
       "description": "An agent run. Independent of terminal.sessions — no column here references the terminal schema. No `kind` (this schema only holds agent runs) and no `exit_code` (a run has a result, not a process status).",
       "schema": "agent",
-      "x": 4571,
+      "x": 5067,
       "y": 650,
       "columns": [
         {
@@ -3332,10 +3354,10 @@
     {
       "id": "agent.messages",
       "label": "messages",
-      "group": "ai",
+      "group": "agent",
       "description": "One row per AgentEvent — the agent analogue of terminal.output, same seq / persist-before-broadcast discipline.",
       "schema": "agent",
-      "x": 4571,
+      "x": 5067,
       "y": 1150,
       "columns": [
         {
@@ -3436,10 +3458,10 @@
     {
       "id": "agent.permission_requests",
       "label": "permission_requests",
-      "group": "ai",
+      "group": "agent",
       "description": "A pending row IS a `canUseTool` promise parked in the supervisor: the session sits in `awaiting_input` until a human decides.",
       "schema": "agent",
-      "x": 4971,
+      "x": 5515,
       "y": 150,
       "columns": [
         {
