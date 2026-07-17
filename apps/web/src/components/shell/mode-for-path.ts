@@ -1,16 +1,11 @@
-import type { SessionKind } from '../../api/types';
-
 export type Mode = 'tasks' | 'terminals' | 'agents';
 
-// Which rail mode a route belongs to. The universal session viewer /ai/:id
-// follows the loaded session kind; until it loads, no mode is forced active.
-export function modeForPath(pathname: string, sessionKind?: SessionKind | null): Mode | null {
+// Which rail mode a route belongs to. The session viewer routes are split by
+// kind (/terminals/$sessionId, /agents/$sessionId) now that there is no
+// `kind` discriminator to look a session up by, so the path alone always
+// determines the mode — no session-data lookup needed.
+export function modeForPath(pathname: string): Mode | null {
   if (pathname.startsWith('/terminals')) return 'terminals';
   if (pathname.startsWith('/agents')) return 'agents';
-  if (pathname.startsWith('/ai/')) {
-    if (sessionKind === 'agent') return 'agents';
-    if (sessionKind === 'terminal') return 'terminals';
-    return null;
-  }
   return 'tasks';
 }

@@ -1,6 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { useNavigate, useParams, useRouterState } from '@tanstack/react-router';
-import { useAiSessions } from '../../api/use-ai-sessions';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { ActivityRail } from './activity-rail';
 import { ModePanel } from './mode-panel';
 import { modeForPath } from './mode-for-path';
@@ -16,20 +15,19 @@ export function AppShell({
 }) {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const params = useParams({ strict: false }) as { sessionId?: string };
-  const sessions = useAiSessions();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  // For /ai/:id the mode follows the loaded session kind.
-  const sessionKind =
-    params.sessionId != null
-      ? (sessions.data ?? []).find((s) => s.id === Number(params.sessionId))?.kind ?? null
-      : null;
-  const mode = modeForPath(pathname, sessionKind);
+  // The session viewer routes are split by kind (/terminals/$sessionId,
+  // /agents/$sessionId), so the path alone determines the mode — no session
+  // lookup needed any more.
+  const mode = modeForPath(pathname);
 
+  // Terminals are the only session kind created from this shell's "New"
+  // affordance (a dispatched agent session navigates itself); it always opens
+  // under /terminals/$sessionId.
   const onNavigateSession = (sessionId: number) => {
     setMobileNavOpen(false);
-    void navigate({ to: '/ai/$sessionId', params: { sessionId: String(sessionId) } });
+    void navigate({ to: '/terminals/$sessionId', params: { sessionId: String(sessionId) } });
   };
 
   const panel = (

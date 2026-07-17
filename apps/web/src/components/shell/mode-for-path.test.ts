@@ -14,10 +14,8 @@ describe('modeForPath', () => {
     expect(modeForPath('/agents/personas')).toBe('agents');
     expect(modeForPath('/agents/personas/5')).toBe('agents');
   });
-  it('follows the loaded session kind for the universal viewer', () => {
-    expect(modeForPath('/ai/12', 'agent')).toBe('agents');
-    expect(modeForPath('/ai/12', 'terminal')).toBe('terminals');
-    expect(modeForPath('/ai/12', null)).toBeNull();
-    expect(modeForPath('/ai/12')).toBeNull();
+  it('maps the split session viewer routes by path alone — no session lookup needed', () => {
+    expect(modeForPath('/terminals/12')).toBe('terminals');
+    expect(modeForPath('/agents/12')).toBe('agents');
   });
 });

@@ -20,7 +20,7 @@ import { DetailComments } from './detail-comments';
 import { DetailFields } from './detail-fields';
 import { DetailLinks } from './detail-links';
 import { MarkdownEditor } from './markdown-editor';
-import { TicketDispatch } from './ai/ticket-dispatch';
+import { TicketDispatch } from './agent/ticket-dispatch';
 
 const SECTION_LABEL = 'font-sans text-label font-medium uppercase text-ink-2';
 const ICON_BUTTON =
