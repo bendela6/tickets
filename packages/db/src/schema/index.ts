@@ -1,9 +1,7 @@
-// agentSchema is declared in ./schemas for Task 5 to import directly, but stays
-// unexported here until a real table uses it — drizzle-kit only emits CREATE
-// SCHEMA for schemas it sees exported from this entry point, and the eer
-// round-trip gate would (rightly) flag an empty schema the SSOT model doesn't
-// know about yet. terminalSchema graduated in Task 4: it now owns real tables.
-export { coreSchema, terminalSchema } from './schemas';
+// drizzle-kit only emits CREATE SCHEMA for schemas it sees exported from this
+// entry point. terminalSchema graduated in Task 4; agentSchema graduates here
+// in Task 5 — both now own real tables.
+export { coreSchema, terminalSchema, agentSchema } from './schemas';
 export {
   userKindEnum,
   statusKindEnum,
@@ -11,9 +9,12 @@ export {
   sessionKindEnum,
   sessionStatusEnum,
   runnerKindEnum,
+  legacyPermissionModeEnum,
+  legacyPermissionStatusEnum,
+  terminalStatusEnum,
+  agentStatusEnum,
   permissionModeEnum,
   permissionStatusEnum,
-  terminalStatusEnum,
 } from './enums';
 export { users } from './users';
 export { projects } from './projects';
@@ -44,6 +45,10 @@ export { aiAgents } from './ai-agents';
 export { aiMessages } from './ai-messages';
 export { aiPermissionRequests } from './ai-permission-requests';
 export { terminalSessions, terminalOutput } from './terminal-sessions';
+export { agentSessions } from './agent-sessions';
+export { agentMessages } from './agent-messages';
+export { agentPermissionRequests } from './agent-permission-requests';
+export { agentAgents } from './agent-agents';
 
 export { allTables, allEnums } from './registry';
 export { SCHEMA_GROUPS, type SchemaGroup } from './schema-groups';

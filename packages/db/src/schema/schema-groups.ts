@@ -58,6 +58,9 @@ export const SCHEMA_GROUPS: SchemaGroup[] = [
       'ai_permission_requests',
       'sessions',
       'output',
+      'agents',
+      'messages',
+      'permission_requests',
     ],
   },
 ];

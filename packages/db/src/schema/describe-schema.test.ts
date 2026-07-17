@@ -97,18 +97,29 @@ describe('schemaOf', () => {
 
 describe('describeSchema schemas', () => {
   it('carries a schema field on every table', () => {
-    // Task 3 moved `workdirs` into `core`; Task 4 moved terminal's `sessions`
-    // and `output` into `terminal`. Task 5 moves the rest of the AI tables
-    // out. Everything else is still in public at this point in the split.
+    // Task 3 moved `workdirs` into `core`. Task 4 moved terminal's `sessions`
+    // and `output` into `terminal`. Task 5 moves agent.{sessions,messages,
+    // permission_requests,agents} into `agent` — `sessions` is now a bare
+    // name shared by BOTH terminal.sessions and agent.sessions, so it can't
+    // key a name->schema map any more; it's asserted separately below. The
+    // legacy ai_* tables (and everything not yet split) stay in public.
     const SCHEMA_BY_TABLE: Record<string, string> = {
       workdirs: 'core',
-      sessions: 'terminal',
       output: 'terminal',
+      messages: 'agent',
+      permission_requests: 'agent',
+      agents: 'agent',
     };
     const graph = describeSchema();
     for (const table of graph.tables) {
       expect(table).toHaveProperty('schema');
+      if (table.name === 'sessions') continue;
       expect(table.schema).toBe(SCHEMA_BY_TABLE[table.name] ?? null);
     }
+    const sessionSchemas = graph.tables
+      .filter((t) => t.name === 'sessions')
+      .map((t) => t.schema)
+      .sort();
+    expect(sessionSchemas).toEqual(['agent', 'terminal']);
   });
 });

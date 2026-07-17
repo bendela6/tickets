@@ -2,14 +2,14 @@ import { sql } from 'drizzle-orm';
 import {
   integer,
   jsonb,
-  pgTable,
   serial,
   text,
   timestamp,
   unique,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
-import { legacyPermissionModeEnum } from './enums';
+import { permissionModeEnum } from './enums';
+import { agentSchema } from './schemas';
 import { users } from './users';
 import { workdirs } from './workdirs';
 
@@ -18,8 +18,8 @@ import { workdirs } from './workdirs';
 // with zero changes to the ticket system. provider_key selects a code-registered
 // AgentProvider (not a DB row); model/system_prompt/tools/permission_mode/effort
 // are the RunSpec the supervisor starts it with.
-export const aiAgents = pgTable(
-  'ai_agents',
+export const agentAgents = agentSchema.table(
+  'agents',
   {
     id: serial('id').primaryKey(),
     userId: integer('user_id')
@@ -37,12 +37,12 @@ export const aiAgents = pgTable(
     disallowedTools: jsonb('disallowed_tools')
       .notNull()
       .default(sql`'[]'::jsonb`),
-    permissionMode: legacyPermissionModeEnum('permission_mode').notNull().default('bypassPermissions'),
+    permissionMode: permissionModeEnum('permission_mode').notNull().default('bypassPermissions'),
     mcpServers: jsonb('mcp_servers')
       .notNull()
       .default(sql`'{}'::jsonb`),
     effort: text('effort'),
-    defaultWorkspaceId: integer('default_workspace_id').references(() => workdirs.id),
+    defaultWorkdirId: integer('default_workdir_id').references(() => workdirs.id),
     config: jsonb('config')
       .notNull()
       .default(sql`'{}'::jsonb`),
@@ -51,5 +51,5 @@ export const aiAgents = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [unique('ai_agents_key').on(table.key)],
+  (table) => [unique('agent_agents_key').on(table.key)],
 );
