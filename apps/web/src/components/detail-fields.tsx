@@ -1,12 +1,12 @@
 import { useQueryClient } from '@tanstack/react-query';
-import type { Board, BoardTicket } from '../api/types';
-import { usePatchTicket } from '../api/use-patch-ticket';
+import type { Board, Item } from '../api/types';
+import { usePatchItem } from '../api/use-patch-item';
 import { FieldWidget } from '../registry/field-widget';
 import { useCurrentUser } from '../state/current-user-context';
 import type { BoardIndexes } from '../utils/index-board';
 
 // Title and description are rendered as dedicated surfaces (big heading +
-// markdown section) by TicketDetail, so the form skips them here.
+// markdown section) by ItemDetail, so the form skips them here.
 const LIFTED_KEYS = new Set(['title', 'description']);
 
 // The per-type field form. Two layouts per the design: 'grid' is the drawer's
@@ -16,21 +16,19 @@ const LIFTED_KEYS = new Set(['title', 'description']);
 export function DetailFields({
   board,
   indexes,
-  ticket,
+  item,
   layout,
 }: {
   board: Board;
   indexes: BoardIndexes;
-  ticket: BoardTicket;
+  item: Item;
   layout: 'grid' | 'rail';
 }) {
   const { userId } = useCurrentUser();
-  const patch = usePatchTicket();
+  const patch = usePatchItem();
   const queryClient = useQueryClient();
 
-  const typeFields = board.typeFields
-    .filter((row) => row.ticketTypeId === ticket.typeId)
-    .sort((left, right) => left.position - right.position);
+  const placements = indexes.placementsByType.get(item.typeId) ?? [];
 
   const saveValue = (fieldKey: string, next: unknown) => {
     if (userId === null) {
@@ -38,9 +36,9 @@ export function DetailFields({
     }
     patch.mutate(
       {
-        ticketId: ticket.id,
+        itemId: item.id,
         actorId: userId,
-        expectedUpdatedAt: ticket.updatedAt,
+        expectedUpdatedAt: item.updatedAt,
         values: { [fieldKey]: next },
       },
       {
@@ -52,22 +50,22 @@ export function DetailFields({
     );
   };
 
-  const rows = typeFields.flatMap((typeField) => {
-    const field = indexes.fieldById.get(typeField.fieldId);
+  const rows = placements.flatMap((placement) => {
+    const field = indexes.fieldById.get(placement.fieldId);
     if (!field || field.archivedAt || LIFTED_KEYS.has(field.key)) {
       return [];
     }
-    if (layout === 'grid' && field.type === 'status') {
+    if (layout === 'grid' && field.config.workflow === true) {
       return []; // the drawer header owns the status select
     }
-    return [{ typeField, field }];
+    return [{ placement, field }];
   });
 
   return (
     <div className="flex flex-col gap-2.5">
       {userId === null ? (
         <p className="m-0 font-sans text-meta text-kind-blocked">
-          Pick a user in the header to edit tickets.
+          Pick a user in the header to edit items.
         </p>
       ) : null}
       {patch.isError ? (
@@ -78,7 +76,7 @@ export function DetailFields({
           layout === 'grid' ? 'grid grid-cols-2 gap-x-4.5 gap-y-2.5' : 'flex flex-col gap-3'
         }
       >
-        {rows.map(({ typeField, field }) => (
+        {rows.map(({ placement, field }) => (
           <label
             key={field.id}
             className={
@@ -93,16 +91,17 @@ export function DetailFields({
               }
             >
               {field.label}
-              {typeField.required ? <span className="text-danger"> *</span> : null}
+              {placement.required ? <span className="text-danger"> *</span> : null}
             </span>
             <span className="min-w-0 flex-1">
               <FieldWidget
                 field={field}
-                value={ticket.values[field.key]}
+                value={item.values[field.key]}
                 disabled={userId === null || patch.isPending}
                 board={board}
                 indexes={indexes}
-                ticket={ticket}
+                ticket={item}
+                typeId={item.typeId}
                 onChange={(next) => saveValue(field.key, next)}
               />
             </span>

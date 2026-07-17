@@ -12,7 +12,7 @@ function navItemClasses(active: boolean) {
   );
 }
 
-// The "tasks" mode panel: search, ＋ New ticket, Home/All-tickets nav, the
+// The "tasks" mode panel: search, ＋ New item, Home/All-items nav, the
 // PROJECTS list, and Settings. Lifted verbatim from AppShell's former
 // sidebarContent (the old `/ai` "AI sessions" link is dropped — the activity
 // rail replaces it). `onNavigate` closes the mobile slide-over on tap.
@@ -69,7 +69,7 @@ export function TasksPanel({
         onClick={handleNewTicket}
         className="mb-3.5 h-8.5 rounded-[8px] bg-accent font-sans text-ui font-medium text-on-accent hover:bg-accent-hover"
       >
-        ＋ New ticket
+        ＋ New item
       </button>
 
       <nav className="flex flex-col gap-0.5">
@@ -79,7 +79,7 @@ export function TasksPanel({
         </Link>
         <Link to="/all" onClick={onNavigate} className={navItemClasses(Boolean(matchRoute({ to: '/all' })))}>
           <span aria-hidden>▤</span>
-          <span className="flex-1">All tickets</span>
+          <span className="flex-1">All items</span>
           <span className="font-mono text-[11px] text-ink-3">{allCount || ''}</span>
         </Link>
       </nav>
@@ -99,7 +99,7 @@ export function TasksPanel({
               className={navItemClasses(project.key === activeProjectKey)}
             >
               <span className="rounded-[4px] bg-inset px-1.25 py-0.5 font-mono text-[10px] font-medium text-ink-2">
-                {project.ticketPrefix}
+                {project.itemPrefix}
               </span>
               <span className="flex-1 truncate">{project.name}</span>
               <span className="inline-flex h-0.75 w-6.5 overflow-hidden rounded-[2px] bg-hairline">

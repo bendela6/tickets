@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import type { JSX } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Board, BoardTicket, Field, Status } from '../api/types';
-import { usePatchTicket } from '../api/use-patch-ticket';
+import type { Board, Field, Item, Option, StatusKind } from '../api/types';
+import { usePatchItem } from '../api/use-patch-item';
 import { hexToOptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
 import { Avatar } from '../ui/avatar';
@@ -10,13 +10,13 @@ import { cn } from '../ui/cn';
 import { KindGlyph } from '../ui/kind-glyph';
 import { OptionChip } from '../ui/option-chip';
 import { RelativeDate } from '../ui/relative-date';
-import { TicketKey } from '../ui/ticket-key';
+import { ItemKey } from '../ui/item-key';
 import { TypeBadge } from '../ui/type-badge';
 import { childProgress } from '../utils/child-progress';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
 
-const kindTextClass: Record<Status['kind'], string> = {
+const kindTextClass: Record<StatusKind, string> = {
   todo: 'text-kind-todo',
   active: 'text-kind-active',
   blocked: 'text-kind-blocked',
@@ -53,10 +53,12 @@ function isPastDate(value: string, now: Date): boolean {
 
 type DragMode = 'idle' | 'origin' | 'legal' | 'illegal';
 
-// Board-mode kanban: one column per active status, cards draggable between
-// columns. While dragging, columns the workflow allows show a drop slot and
-// the rest dim with a "no transition" note (mirrors legalStatusTargets, which
-// mirrors the server rule). Dropping PATCHes the status field.
+// Board-mode kanban: one column per active workflow option (of the board's
+// primary type — the scheme shares one status set across types), cards
+// draggable between columns. While dragging, columns the workflow allows show
+// a drop slot and the rest dim with a "no transition" note (mirrors
+// legalStatusTargets, which mirrors the server rule). Dropping PATCHes the
+// workflow field.
 export function KanbanView({
   board,
   indexes,
@@ -65,32 +67,33 @@ export function KanbanView({
 }: {
   board: Board;
   indexes: BoardIndexes;
-  rows: BoardTicket[];
-  /** Kept for API symmetry with TableView; keys render from the ticketPrefix. */
+  rows: Item[];
+  /** Kept for API symmetry with TableView; keys render from the itemPrefix. */
   projectKey: string;
   onOpenTicket: (ticketNumber: number) => void;
 }): JSX.Element {
   const { userId } = useCurrentUser();
-  const patch = usePatchTicket();
+  const patch = usePatchItem();
   const queryClient = useQueryClient();
   const [draggingId, setDraggingId] = useState<number | null>(null);
 
-  const statusField = indexes.statusField;
+  const firstType = board.types[0];
+  const workflowField = firstType ? indexes.workflowField(firstType.id) : undefined;
 
   const columns = useMemo(
     () =>
-      [...board.statuses]
-        .filter((status) => !status.archivedAt)
-        .sort((left, right) => left.position - right.position),
-    [board.statuses],
+      !workflowField || workflowField.optionSetId === null
+        ? []
+        : (indexes.optionsBySetId.get(workflowField.optionSetId) ?? []),
+    [workflowField, indexes],
   );
 
   const priorityField = useMemo(
-    () => findFieldByPattern(board.fields, ['select'], /prio|priority|severity/i),
+    () => findFieldByPattern(board.fields, ['option'], /prio|priority|severity/i),
     [board.fields],
   );
   const assigneeField = useMemo(
-    () => findFieldByPattern(board.fields, ['select'], /assignee|owner/i),
+    () => findFieldByPattern(board.fields, ['user'], /assignee|owner/i),
     [board.fields],
   );
   const dueField = useMemo(
@@ -98,96 +101,99 @@ export function KanbanView({
     [board.fields],
   );
 
-  if (!statusField) {
+  if (!workflowField) {
     return (
       <div className="px-4 py-6 font-sans text-ui text-ink-3">
-        This project has no status field, so board mode is unavailable.
+        This project has no workflow field, so board mode is unavailable.
       </div>
     );
   }
 
-  const statusKeyOf = (ticket: BoardTicket): string | null => {
-    const raw = ticket.values[statusField.key];
+  const statusValueOf = (ticket: Item): string | null => {
+    const raw = ticket.values[workflowField.key];
     return typeof raw === 'string' ? raw : null;
   };
 
-  const cardsByStatusKey = new Map<string, BoardTicket[]>(
-    columns.map((status) => [status.key, []]),
-  );
+  const cardsByValue = new Map<string, Item[]>(columns.map((option) => [option.value, []]));
   for (const ticket of rows) {
-    const key = statusKeyOf(ticket);
-    if (key !== null) {
-      cardsByStatusKey.get(key)?.push(ticket);
+    const value = statusValueOf(ticket);
+    if (value !== null) {
+      cardsByValue.get(value)?.push(ticket);
     }
   }
 
   const dragged = draggingId === null ? null : (rows.find((t) => t.id === draggingId) ?? null);
-  const draggedFromKey = dragged ? statusKeyOf(dragged) : null;
+  const draggedFromValue = dragged ? statusValueOf(dragged) : null;
   const draggedFromLabel =
-    (draggedFromKey ? indexes.statusByKey.get(draggedFromKey)?.label : undefined) ??
-    draggedFromKey ??
+    (draggedFromValue
+      ? indexes.optionByValue(workflowField, draggedFromValue)?.label
+      : undefined) ??
+    draggedFromValue ??
     '?';
-  const legalTargetKeys = dragged
-    ? new Set(legalStatusTargets(board, indexes, dragged).map((status) => status.key))
+  const legalTargetValues = dragged
+    ? new Set(
+        legalStatusTargets(board, indexes, dragged, dragged.typeId).map((option) => option.value),
+      )
     : null;
 
-  const columnMode = (status: Status): DragMode => {
-    if (!dragged || !legalTargetKeys) {
+  const columnMode = (option: Option): DragMode => {
+    if (!dragged || !legalTargetValues) {
       return 'idle';
     }
-    if (status.key === draggedFromKey) {
+    if (option.value === draggedFromValue) {
       return 'origin';
     }
-    return legalTargetKeys.has(status.key) ? 'legal' : 'illegal';
+    return legalTargetValues.has(option.value) ? 'legal' : 'illegal';
   };
 
-  const dropOnColumn = (target: Status) => {
+  const dropOnColumn = (target: Option) => {
     const ticket = dragged;
     setDraggingId(null);
-    if (!ticket || userId === null || statusKeyOf(ticket) === target.key) {
+    if (!ticket || userId === null || statusValueOf(ticket) === target.value) {
       return;
     }
     patch.mutate(
       {
-        ticketId: ticket.id,
+        itemId: ticket.id,
         actorId: userId,
         expectedUpdatedAt: ticket.updatedAt,
-        values: { [statusField.key]: target.key },
+        values: { [workflowField.key]: target.value },
       },
       { onError: () => void queryClient.invalidateQueries({ queryKey: ['board'] }) },
     );
   };
 
-  const renderCard = (ticket: BoardTicket) => {
+  const renderCard = (ticket: Item) => {
     const type = indexes.typeById.get(ticket.typeId);
 
     const priorityRaw = priorityField ? ticket.values[priorityField.key] : undefined;
     const priorityOption =
       priorityField && priorityRaw !== undefined && priorityRaw !== null && priorityRaw !== ''
-        ? (indexes.optionsByFieldId
-            .get(priorityField.id)
-            ?.find((option) => option.value === priorityRaw) ?? null)
+        ? (indexes
+            .optionsForField(ticket.typeId, priorityField)
+            .find((option) => option.value === priorityRaw) ?? null)
         : null;
 
+    // 'user'-typed field value: a user id (or {id,name}); resolve through the board's users.
     const assigneeRaw = assigneeField ? ticket.values[assigneeField.key] : undefined;
-    const assigneeOption =
-      assigneeField && typeof assigneeRaw === 'string' && assigneeRaw !== ''
-        ? (indexes.optionsByFieldId
-            .get(assigneeField.id)
-            ?.find((option) => option.value === assigneeRaw) ?? null)
-        : null;
-    const assigneeUser = assigneeOption
-      ? board.users.find((user) => user.name === assigneeOption.label)
-      : undefined;
+    const assigneeUserId =
+      typeof assigneeRaw === 'number'
+        ? assigneeRaw
+        : assigneeRaw !== null &&
+            typeof assigneeRaw === 'object' &&
+            typeof (assigneeRaw as { id?: unknown }).id === 'number'
+          ? (assigneeRaw as { id: number }).id
+          : null;
+    const assigneeUser = assigneeUserId === null ? undefined : indexes.userById.get(assigneeUserId);
 
     const dueRaw = dueField ? ticket.values[dueField.key] : undefined;
     const due = typeof dueRaw === 'string' && dueRaw !== '' ? dueRaw : null;
-    const kind = indexes.statusByKey.get(statusKeyOf(ticket) ?? '')?.kind;
+    const kind = indexes.optionByValue(workflowField, statusValueOf(ticket) ?? '')?.kind;
     const overdue =
       due !== null && kind !== 'done' && kind !== 'dropped' && isPastDate(due, new Date());
 
     const progress = childProgress(ticket, indexes);
-    const hasFooter = assigneeOption !== null || due !== null || progress.total > 0;
+    const hasFooter = assigneeUser !== undefined || due !== null || progress.total > 0;
 
     return (
       <div
@@ -195,7 +201,7 @@ export function KanbanView({
         role="button"
         tabIndex={0}
         draggable={userId !== null}
-        title={userId === null ? 'Pick a user in the header to move tickets' : undefined}
+        title={userId === null ? 'Pick a user in the header to move items' : undefined}
         onClick={() => onOpenTicket(ticket.number)}
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') {
@@ -217,8 +223,8 @@ export function KanbanView({
         )}
       >
         <div className="flex items-center gap-2">
-          <TicketKey
-            prefix={board.project.ticketPrefix}
+          <ItemKey
+            prefix={board.project.itemPrefix}
             number={ticket.number}
             className="text-[11px]"
           />
@@ -239,8 +245,8 @@ export function KanbanView({
         </div>
         {hasFooter ? (
           <div className="flex items-center gap-2.25">
-            {assigneeOption ? (
-              <Avatar name={assigneeOption.label} kind={assigneeUser?.kind ?? 'human'} size="sm" />
+            {assigneeUser ? (
+              <Avatar name={assigneeUser.name} kind={assigneeUser.kind} size="sm" />
             ) : null}
             {due !== null ? (
               <RelativeDate value={due} overdue={overdue} className="text-[11px]" />
@@ -259,13 +265,14 @@ export function KanbanView({
 
   return (
     <div className="relative flex flex-1 gap-3.5 overflow-x-auto overflow-y-auto pb-5">
-      {columns.map((status) => {
-        const cards = cardsByStatusKey.get(status.key) ?? [];
-        const mode = columnMode(status);
+      {columns.map((option) => {
+        const cards = cardsByValue.get(option.value) ?? [];
+        const mode = columnMode(option);
+        const kind = option.kind ?? 'todo';
         return (
           <section
-            key={status.id}
-            aria-label={status.label}
+            key={option.id}
+            aria-label={option.label}
             className={cn(
               'flex w-[85vw] flex-none flex-col rounded-[12px] bg-inset md:w-63',
               mode === 'illegal' && 'opacity-50',
@@ -284,16 +291,16 @@ export function KanbanView({
               mode === 'legal'
                 ? (event) => {
                     event.preventDefault();
-                    dropOnColumn(status);
+                    dropOnColumn(option);
                   }
                 : undefined
             }
           >
             <div className="flex items-center gap-2 px-3.25 pt-3 pb-2">
-              <span className={cn('inline-flex shrink-0', kindTextClass[status.kind])}>
-                <KindGlyph kind={status.kind} />
+              <span className={cn('inline-flex shrink-0', kindTextClass[kind])}>
+                <KindGlyph kind={kind} />
               </span>
-              <span className="font-sans text-ui font-medium text-ink">{status.label}</span>
+              <span className="font-sans text-ui font-medium text-ink">{option.label}</span>
               <span className="font-mono text-[11px] text-ink-3">{cards.length}</span>
               <span className="flex-1" />
               {/* Inert for now: card creation from a column lands in a later task. */}
@@ -303,19 +310,19 @@ export function KanbanView({
             </div>
             {mode === 'illegal' ? (
               <div className="mx-2.5 mb-2 rounded-[8px] bg-danger-subtle px-2.5 py-1.75 font-sans text-[11px] leading-[1.4] text-danger">
-                ✕ workflow: no transition {draggedFromLabel} → {status.label}
+                ✕ workflow: no transition {draggedFromLabel} → {option.label}
               </div>
             ) : null}
             {mode === 'legal' ? (
               <div className="mx-2.5 mb-2 flex h-[74px] shrink-0 items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-accent bg-accent-subtle font-sans text-meta font-medium text-accent">
-                Drop — {draggedFromLabel} → {status.label}
+                Drop — {draggedFromLabel} → {option.label}
               </div>
             ) : null}
             <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-2.5 pb-2.5">
               {cards.map((ticket) => renderCard(ticket))}
               {mode === 'origin' && dragged ? (
                 <div className="flex h-[74px] shrink-0 items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-control font-mono text-[11px] text-ink-3">
-                  {board.project.ticketPrefix}-{dragged.number} — dragging…
+                  {board.project.itemPrefix}-{dragged.number} — dragging…
                 </div>
               ) : null}
             </div>

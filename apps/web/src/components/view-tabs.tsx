@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import type { Board } from '../api/types';
 import { useCreateView } from '../api/use-create-view';
+import { useCurrentUser } from '../state/current-user-context';
 import { cn } from '../ui/cn';
 import { Input } from '../ui/input';
-import { relativeLabel } from '../ui/relative-date';
 
 // Underline view tabs per docs/design/03-project-board.html lines 99–106:
 // active = medium ink with a 2px accent underline overlapping the hairline,
-// idle = regular ink-2; "＋" creates a view inline.
+// idle = regular ink-2; "＋" creates a view inline. board.views arrives
+// pre-filtered to unarchived views; sorted by id (creation order) since the
+// view record carries no explicit position.
 export function ViewTabs({
   projectKey,
   board,
@@ -20,12 +22,11 @@ export function ViewTabs({
 }) {
   const navigate = useNavigate();
   const createView = useCreateView();
+  const { userId } = useCurrentUser();
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
 
-  const views = board.views
-    .filter((view) => !view.archivedAt)
-    .sort((left, right) => left.position - right.position);
+  const views = [...board.views].sort((left, right) => left.id - right.id);
   const active = views.find((view) => view.id === activeViewId) ?? null;
 
   return (
@@ -55,13 +56,15 @@ export function ViewTabs({
           placeholder="view name"
           aria-label="New view name"
           value={draft}
+          disabled={userId === null}
           className="mx-1 w-36"
           onBlur={() => setAdding(false)}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={async (event) => {
-            if (event.key === 'Enter' && draft.trim().length > 0) {
+            if (event.key === 'Enter' && draft.trim().length > 0 && userId !== null) {
               const created = await createView.mutateAsync({
                 projectKey,
+                actorId: userId,
                 name: draft.trim(),
               });
               setAdding(false);
@@ -87,11 +90,7 @@ export function ViewTabs({
         </button>
       )}
       <span className="flex-1" />
-      {active ? (
-        <span className="py-2 font-mono text-[11px] text-ink-3">
-          view saved · created {relativeLabel(active.createdAt, new Date())}
-        </span>
-      ) : null}
+      {active ? <span className="py-2 font-mono text-[11px] text-ink-3">view saved</span> : null}
     </div>
   );
 }

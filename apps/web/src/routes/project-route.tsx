@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Outlet, createRoute, useParams } from '@tanstack/react-router';
 import { useBoard } from '../api/use-board';
-import { NewTicketDialog } from '../components/new-ticket-dialog';
+import { NewItemDialog } from '../components/new-item-dialog';
 import { AppShell } from '../components/shell/app-shell';
 import { ViewTabs } from '../components/view-tabs';
 import { STORAGE_KEYS } from '../utils/storage-keys';
@@ -47,7 +47,7 @@ function ProjectLayout() {
             activeViewId={childParams.viewId ? Number(childParams.viewId) : null}
           />
           <Outlet />
-          <NewTicketDialog
+          <NewItemDialog
             projectKey={projectKey}
             board={board}
             indexes={indexes}

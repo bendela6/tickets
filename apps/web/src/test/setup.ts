@@ -21,3 +21,18 @@ if (typeof Element !== 'undefined') {
   Element.prototype.setPointerCapture = Element.prototype.setPointerCapture ?? vi.fn();
   Element.prototype.releasePointerCapture = Element.prototype.releasePointerCapture ?? vi.fn();
 }
+
+// jsdom has no matchMedia — xterm's CoreBrowserService reads it on construction
+// (devicePixelRatio tracking) even in tests that never touch real media queries.
+if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
+  window.matchMedia = ((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia;
+}

@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Board, BoardTicket } from '../api/types';
-import { useCreateTicket } from '../api/use-create-ticket';
-import { usePatchTicket } from '../api/use-patch-ticket';
+import type { Board, Item } from '../api/types';
+import { useCreateItem } from '../api/use-create-item';
+import { usePatchItem } from '../api/use-patch-item';
 import { useCurrentUser } from '../state/current-user-context';
 import { cn } from '../ui/cn';
 import { KindGlyph, type StatusKind } from '../ui/kind-glyph';
 import { StatusSelect } from '../ui/status-select';
-import { TicketKey } from '../ui/ticket-key';
+import { ItemKey } from '../ui/item-key';
 import { childProgress } from '../utils/child-progress';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
@@ -26,43 +26,42 @@ export function DetailChildren({
   projectKey,
   board,
   indexes,
-  ticket,
-  onOpenTicket,
+  item,
+  onOpenItem,
 }: {
   projectKey: string;
   board: Board;
   indexes: BoardIndexes;
-  ticket: BoardTicket;
-  onOpenTicket: (ticketNumber: number) => void;
+  item: Item;
+  onOpenItem: (itemNumber: number) => void;
 }) {
   const { userId } = useCurrentUser();
-  const createTicket = useCreateTicket();
-  const patch = usePatchTicket();
+  const createItem = useCreateItem();
+  const patch = usePatchItem();
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
 
-  const prefix = board.project.ticketPrefix;
-  const children = [...(indexes.childrenByParent.get(ticket.id) ?? [])].sort(
+  const prefix = board.project.itemPrefix;
+  const children = [...(indexes.childrenByParent.get(item.id) ?? [])].sort(
     (left, right) => left.number - right.number,
   );
-  const progress = childProgress(ticket, indexes);
-  const statusField = indexes.statusField;
-  const activeStatuses = [...board.statuses]
-    .filter((status) => !status.archivedAt)
-    .sort((left, right) => left.position - right.position)
-    .map((status) => ({ key: status.key, label: status.label, kind: status.kind }));
-  const nextNumber = board.tickets.reduce((max, row) => Math.max(max, row.number), 0) + 1;
+  const progress = childProgress(item, indexes);
+  const nextNumber = board.items.reduce((max, row) => Math.max(max, row.number), 0) + 1;
 
-  const setChildStatus = (child: BoardTicket, next: string) => {
-    if (userId === null || !statusField) {
+  const setChildStatus = (child: Item, next: string) => {
+    if (userId === null) {
+      return;
+    }
+    const wf = indexes.workflowField(child.typeId);
+    if (!wf) {
       return;
     }
     patch.mutate(
       {
-        ticketId: child.id,
+        itemId: child.id,
         actorId: userId,
         expectedUpdatedAt: child.updatedAt,
-        values: { [statusField.key]: next },
+        values: { [wf.key]: next },
       },
       { onError: () => void queryClient.invalidateQueries({ queryKey: ['board'] }) },
     );
@@ -90,21 +89,35 @@ export function DetailChildren({
       </div>
       <div className="overflow-hidden rounded-[10px] border border-hairline">
         {children.map((child) => {
-          const rawStatus = statusField ? child.values[statusField.key] : undefined;
-          const status =
-            typeof rawStatus === 'string' ? indexes.statusByKey.get(rawStatus) : undefined;
-          const kind = status?.kind ?? 'todo';
+          const wf = indexes.workflowField(child.typeId);
+          const rawStatus = wf ? child.values[wf.key] : undefined;
+          const option =
+            wf && typeof rawStatus === 'string' ? indexes.optionByValue(wf, rawStatus) : undefined;
+          const kind = option?.kind ?? 'todo';
           const settled = kind === 'done' || kind === 'dropped';
+          const childStatusOptions = wf
+            ? indexes
+                .optionsForField(child.typeId, wf)
+                .filter((candidate) => !candidate.archivedAt)
+                .map((candidate) => ({
+                  key: candidate.value,
+                  label: candidate.label,
+                  kind: candidate.kind ?? 'todo',
+                }))
+            : [];
+          const legalKeys = wf
+            ? legalStatusTargets(board, indexes, child, child.typeId).map((option_) => option_.value)
+            : [];
           return (
             <div
               key={child.id}
               className="flex h-9.5 cursor-pointer items-center gap-2.5 border-b border-hairline px-3 hover:bg-app"
-              onClick={() => onOpenTicket(child.number)}
+              onClick={() => onOpenItem(child.number)}
             >
               <span aria-hidden className={cn('inline-flex shrink-0', KIND_TEXT[kind])}>
                 <KindGlyph kind={kind} />
               </span>
-              <TicketKey
+              <ItemKey
                 prefix={prefix}
                 number={child.number}
                 muted={settled}
@@ -122,10 +135,10 @@ export function DetailChildren({
                 <StatusSelect
                   size="compact"
                   className="w-auto"
-                  statuses={activeStatuses}
-                  legalTargets={legalStatusTargets(board, indexes, child).map((s) => s.key)}
+                  statuses={childStatusOptions}
+                  legalTargets={legalKeys}
                   value={typeof rawStatus === 'string' ? rawStatus : null}
-                  disabled={userId === null || !statusField}
+                  disabled={userId === null || !wf}
                   onChange={(next) => setChildStatus(child, next)}
                 />
               </span>
@@ -139,11 +152,11 @@ export function DetailChildren({
             if (userId === null || title.trim().length === 0) {
               return;
             }
-            await createTicket.mutateAsync({
+            await createItem.mutateAsync({
               projectKey,
               actorId: userId,
               typeKey: 'subtask',
-              parentId: ticket.id,
+              parentId: item.id,
               values: { title: title.trim() },
             });
             setTitle('');
@@ -168,9 +181,9 @@ export function DetailChildren({
           ) : null}
         </form>
       </div>
-      {createTicket.isError ? (
+      {createItem.isError ? (
         <p className="m-0 mt-1.5 font-sans text-meta text-danger">
-          {(createTicket.error as Error).message}
+          {(createItem.error as Error).message}
         </p>
       ) : null}
     </section>

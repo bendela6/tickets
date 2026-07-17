@@ -1,15 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { fetchJson } from './client';
-import type { Project } from './types';
+import { apiMutate } from './client';
+import type { CreateProjectInput, Project } from './types';
 
 export function useCreateProject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { key: string; name: string; ticketPrefix: string }) => {
-      return fetchJson<Project>('/api/projects', {
+    mutationFn: (input: CreateProjectInput) => {
+      const { actorId, ...body } = input;
+      return apiMutate<Project>('/api/projects', {
         method: 'POST',
-        body: JSON.stringify(input),
+        actorId,
+        body,
       });
     },
     onSuccess: async () => {

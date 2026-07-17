@@ -1,60 +1,65 @@
-import type {
-  Board,
-  BoardTicket,
-  Field,
-  FieldOption,
-  Status,
-  TicketType,
-  User,
-} from '../api/types';
+import type { Board, Field, Item, ItemType, ItemTypeField, Option, User } from '../api/types';
 
-// One memoizable pass over the board payload; every screen consumes these
-// maps instead of re-searching arrays.
 export function indexBoard(board: Board) {
-  const fieldById = new Map<number, Field>(board.fields.map((field) => [field.id, field]));
-  const fieldByKey = new Map<string, Field>(board.fields.map((field) => [field.key, field]));
-  const statusByKey = new Map<string, Status>(board.statuses.map((status) => [status.key, status]));
-  const statusById = new Map<number, Status>(board.statuses.map((status) => [status.id, status]));
-  const typeById = new Map<number, TicketType>(board.types.map((type) => [type.id, type]));
-  const userById = new Map<number, User>(board.users.map((user) => [user.id, user]));
-  const ticketById = new Map<number, BoardTicket>(
-    board.tickets.map((ticket) => [ticket.id, ticket]),
-  );
-  const ticketByNumber = new Map<number, BoardTicket>(
-    board.tickets.map((ticket) => [ticket.number, ticket]),
-  );
+  const typeById = new Map<number, ItemType>(board.types.map((t) => [t.id, t]));
+  const fieldById = new Map<number, Field>(board.fields.map((f) => [f.id, f]));
+  const fieldByKey = new Map<string, Field>(board.fields.map((f) => [f.key, f]));
+  const userById = new Map<number, User>(board.users.map((u) => [u.id, u]));
+  const itemById = new Map<number, Item>(board.items.map((i) => [i.id, i]));
+  const itemByNumber = new Map<number, Item>(board.items.map((i) => [i.number, i]));
+  const optionById = new Map<number, Option>(board.options.map((o) => [o.id, o]));
 
-  const optionsByFieldId = new Map<number, FieldOption[]>();
-  for (const field of board.fields) {
-    const active = [...field.options]
-      .filter((option) => !option.archivedAt)
-      .sort((left, right) => left.position - right.position);
-    optionsByFieldId.set(field.id, active);
+  const optionsBySetId = new Map<number, Option[]>();
+  for (const o of board.options) {
+    if (o.archivedAt) continue;
+    const bucket = optionsBySetId.get(o.optionSetId) ?? [];
+    bucket.push(o);
+    optionsBySetId.set(o.optionSetId, bucket);
   }
+  for (const bucket of optionsBySetId.values()) bucket.sort((a, b) => a.position - b.position);
 
-  const childrenByParent = new Map<number, BoardTicket[]>();
-  for (const ticket of board.tickets) {
-    if (ticket.parentId !== null && !ticket.archivedAt) {
-      const bucket = childrenByParent.get(ticket.parentId) ?? [];
-      bucket.push(ticket);
-      childrenByParent.set(ticket.parentId, bucket);
+  const placementsByType = new Map<number, ItemTypeField[]>();
+  for (const p of board.placements) {
+    const bucket = placementsByType.get(p.itemTypeId) ?? [];
+    bucket.push(p);
+    placementsByType.set(p.itemTypeId, bucket);
+  }
+  for (const bucket of placementsByType.values()) bucket.sort((a, b) => a.position - b.position);
+
+  const childrenByParent = new Map<number, Item[]>();
+  for (const item of board.items) {
+    if (item.parentId !== null && !item.archivedAt) {
+      const bucket = childrenByParent.get(item.parentId) ?? [];
+      bucket.push(item);
+      childrenByParent.set(item.parentId, bucket);
     }
   }
 
-  const statusField = board.fields.find((field) => field.type === 'status') ?? null;
+  function placement(typeId: number, fieldId: number): ItemTypeField | undefined {
+    return placementsByType.get(typeId)?.find((p) => p.fieldId === fieldId);
+  }
+  function workflowField(typeId: number): Field | undefined {
+    for (const p of placementsByType.get(typeId) ?? []) {
+      const f = fieldById.get(p.fieldId);
+      if (f && (f.config as { workflow?: boolean }).workflow === true) return f;
+    }
+    return undefined;
+  }
+  function optionsForField(typeId: number, field: Field): Option[] {
+    if (field.optionSetId === null) return [];
+    const all = optionsBySetId.get(field.optionSetId) ?? [];
+    const allow = placement(typeId, field.id)?.configOverride?.allowedOptionIds;
+    return allow ? all.filter((o) => allow.includes(o.id)) : all;
+  }
+  function optionByValue(field: Field, value: string): Option | undefined {
+    if (field.optionSetId === null) return undefined;
+    return (optionsBySetId.get(field.optionSetId) ?? []).find((o) => o.value === value);
+  }
 
   return {
-    fieldById,
-    fieldByKey,
-    statusByKey,
-    statusById,
-    typeById,
-    userById,
-    ticketById,
-    ticketByNumber,
-    optionsByFieldId,
-    childrenByParent,
-    statusField,
+    typeById, fieldById, fieldByKey, userById, itemById, itemByNumber, optionById,
+    optionsBySetId, placementsByType, childrenByParent,
+    placement, workflowField, optionsForField, optionByValue,
   };
 }
 

@@ -1,99 +1,160 @@
-import { useState } from 'react';
-import type { Board } from '../../api/types';
+import { useMemo, useState } from 'react';
+import { useBoard } from '../../api/use-board';
+import { useForkScheme, useUpdateProject } from '../../api/use-admin';
+import { useCurrentUser } from '../../state/current-user-context';
+import { Button } from '../../ui/button';
 import { cn } from '../../ui/cn';
-import type { BoardIndexes } from '../../utils/index-board';
-import { FieldsSettings } from './fields-settings';
-import { LinkTypesSettings } from './link-types-settings';
-import { TypesSettings } from './types-settings';
-import { UsersSettings } from './users-settings';
-import { WorkflowSettings } from './workflow-settings';
+import { useToast } from '../../ui/toast';
+import { indexBoard } from '../../utils/index-board';
+import { FieldsTab } from './fields-tab';
+import { LinksTab } from './links-tab';
+import { TypesTab } from './types-tab';
+import { WorkflowTab } from './workflow-tab';
 
-export type SettingsSectionProps = {
-  board: Board;
-  indexes: BoardIndexes;
-  projectKey: string;
-};
+type TabKey = 'types' | 'fields' | 'workflow' | 'links';
 
-type SectionKey = 'fields' | 'types' | 'workflow' | 'link-types' | 'users';
-
-const PROJECT_SECTIONS: { key: SectionKey; label: string }[] = [
-  { key: 'fields', label: 'Fields' },
+const TABS: { key: TabKey; label: string }[] = [
   { key: 'types', label: 'Types' },
+  { key: 'fields', label: 'Fields' },
   { key: 'workflow', label: 'Workflow' },
-  { key: 'link-types', label: 'Link types' },
+  { key: 'links', label: 'Links' },
 ];
 
-// Settings shell per docs/design/06-settings-admin.html §A: a 212px secondary
-// nav (PROJECT vocabulary sections, then WORKSPACE) beside the section content.
-// The outer app sidebar comes from AppShell; this only renders the inner split.
-export function SettingsScreen({ board, indexes, projectKey }: SettingsSectionProps) {
-  const [section, setSection] = useState<SectionKey>('fields');
+// The schema admin shell per the approved prototype: a scheme banner above a
+// left-rail tab switcher (Types · Fields · Workflow · Links). The four panels
+// are thin placeholders here — Tasks 10-13 fill each in behind its own file.
+//
+// The board payload carries no scheme *name* (only `project.schemeId` — see
+// `apps/web/src/api/types.ts`), so the banner labels the scheme by id rather
+// than inventing a name field that doesn't exist on the wire. Likewise there's
+// no project-count-per-scheme on the board, so the banner doesn't claim a
+// specific N; it says "all projects on this scheme" instead.
+export function SettingsScreen({ projectKey }: { projectKey: string }) {
+  const boardQuery = useBoard(projectKey);
+  const board = boardQuery.data;
+  const indexes = useMemo(() => (board ? indexBoard(board) : null), [board]);
+  const [tab, setTab] = useState<TabKey>('types');
+  const { userId } = useCurrentUser();
+  const forkScheme = useForkScheme();
+  const updateProject = useUpdateProject();
+  const { toast } = useToast();
 
-  const counts: Record<SectionKey, number> = {
-    fields: board.fields.filter((field) => !field.archivedAt).length,
-    types: board.types.filter((type) => !type.archivedAt).length,
-    workflow: board.statuses.filter((status) => !status.archivedAt).length,
-    'link-types': board.linkTypes.filter((linkType) => !linkType.archivedAt).length,
-    users: board.users.filter((user) => !user.archivedAt).length,
-  };
+  async function handleFork() {
+    if (userId === null || !board) return;
+    const confirmed = window.confirm(
+      `Fork the shared scheme so future changes only affect "${board.project.name}"? Other projects on this scheme are unaffected.`,
+    );
+    if (!confirmed) return;
+    // Derive a fresh, collision-free scheme key/name from the project's own
+    // key/name — a timestamp suffix lets the same project fork more than
+    // once without tripping the schemes.key unique constraint.
+    const suffix = Date.now().toString(36);
+    const key = `${board.project.key.toLowerCase()}-${suffix}`;
+    const name = `${board.project.name} (forked)`;
+    try {
+      const forked = (await forkScheme.mutateAsync({
+        actorId: userId,
+        sourceSchemeId: board.project.schemeId,
+        key,
+        name,
+      })) as { schemeId: number };
+      await updateProject.mutateAsync({ actorId: userId, id: board.project.id, schemeId: forked.schemeId });
+    } catch (error) {
+      // A rejection here (either the fork POST or the repoint PATCH) must
+      // not be an unhandled promise rejection with zero feedback — and if
+      // the fork succeeded but the repoint failed, the new scheme is
+      // orphaned (forked but never attached to a project), which is worth
+      // surfacing distinctly since a retry would fork *again*.
+      toast({
+        title:
+          error instanceof Error
+            ? `Fork failed: ${error.message}`
+            : 'Fork failed. Please try again.',
+      });
+    }
+  }
 
-  function navItem({ key, label }: { key: SectionKey; label: string }) {
-    const active = section === key;
+  if (boardQuery.isLoading) {
+    return <p className="px-8 py-7 font-sans text-ui text-ink-3">Loading {projectKey} settings…</p>;
+  }
+  if (boardQuery.isError || !board || !indexes) {
     return (
-      <button
-        key={key}
-        type="button"
-        onClick={() => setSection(key)}
-        aria-current={active ? 'true' : undefined}
-        className={cn(
-          'flex h-7.5 shrink-0 cursor-pointer items-center gap-2 rounded-[7px] px-2.25 text-left font-sans text-ui',
-          active ? 'bg-inset font-medium text-ink' : 'text-ink-2 hover:bg-inset hover:text-ink',
-        )}
-      >
-        <span className="flex-1">{label}</span>
-        <span className="font-mono text-[11px] text-ink-3">{counts[key]}</span>
-      </button>
+      <p className="px-8 py-7 font-sans text-ui text-danger">
+        Could not load project "{projectKey}" — {(boardQuery.error as Error | null)?.message}
+      </p>
     );
   }
 
-  return (
-    <div className="flex h-full min-h-0">
-      {/* settings secondary nav */}
-      <nav
-        aria-label="Settings sections"
-        className="flex w-53 flex-none flex-col gap-0.5 overflow-y-auto border-r border-hairline bg-app px-3 py-5.5"
-      >
-        <h1 className="m-0 px-2.25 pb-3 font-sans text-[16px] font-semibold text-ink">
-          Settings — {board.project.name}
-        </h1>
-        <div className="flex items-center gap-1.75 px-2.25 pb-2">
-          <span className="font-mono text-[10px] font-medium tracking-[0.09em] text-ink-3">
-            PROJECT
-          </span>
-          <span className="inline-flex h-5 items-center rounded-[5px] border border-hairline px-1.75 font-mono text-[11px] font-medium text-ink">
-            {board.project.ticketPrefix}
-          </span>
-        </div>
-        {PROJECT_SECTIONS.map(navItem)}
-        <div className="px-2.25 pb-1.5 pt-4 font-mono text-[10px] font-medium tracking-[0.09em] text-ink-3">
-          WORKSPACE
-        </div>
-        {navItem({ key: 'users', label: 'Users' })}
-      </nav>
+  const tabProps = { board, indexes, projectKey };
 
-      {/* section content */}
-      <div className="min-w-0 flex-1 overflow-y-auto">
-        {section === 'fields' ? (
-          <FieldsSettings board={board} indexes={indexes} projectKey={projectKey} />
-        ) : section === 'types' ? (
-          <TypesSettings board={board} indexes={indexes} projectKey={projectKey} />
-        ) : section === 'workflow' ? (
-          <WorkflowSettings board={board} indexes={indexes} projectKey={projectKey} />
-        ) : section === 'link-types' ? (
-          <LinkTypesSettings board={board} indexes={indexes} projectKey={projectKey} />
-        ) : (
-          <UsersSettings board={board} indexes={indexes} projectKey={projectKey} />
-        )}
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      {/* scheme banner */}
+      <div className="flex flex-none items-center gap-3 border-b border-hairline bg-inset px-6 py-3">
+        <p className="m-0 flex-1 font-sans text-ui text-ink-2">
+          Editing the shared scheme <span className="font-medium text-ink">#{board.project.schemeId}</span> —
+          changes affect all projects on this scheme.
+        </p>
+        <Button
+          variant="secondary"
+          size="compact"
+          disabled={userId === null || forkScheme.isPending || updateProject.isPending}
+          title={userId === null ? 'Sign in to fork the scheme' : undefined}
+          onClick={handleFork}
+        >
+          Fork for this project
+        </Button>
+      </div>
+
+      <div className="flex min-h-0 flex-1">
+        <nav
+          role="tablist"
+          aria-label="Settings sections"
+          className="flex w-53 flex-none flex-col gap-0.5 overflow-y-auto border-r border-hairline bg-app px-3 py-5.5"
+        >
+          {TABS.map(({ key, label }) => {
+            const active = tab === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setTab(key)}
+                className={cn(
+                  'flex h-7.5 shrink-0 cursor-pointer items-center rounded-[7px] px-2.25 text-left font-sans text-ui',
+                  active ? 'bg-inset font-medium text-ink' : 'text-ink-2 hover:bg-inset hover:text-ink',
+                )}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div role="tabpanel" className="min-w-0 flex-1 overflow-y-auto">
+          {/*
+            Keyed on the scheme id: each panel seeds local state (chip
+            selections, the selected-type picker, etc.) from the board on
+            mount, keyed by *type* ids. Forking re-inserts every type under
+            fresh ids (see schemeFork in
+            apps/api/src/command/config/scheme.ts) and repoints the project
+            without navigating away, so without this key the panels would
+            keep their stale, now-mismatched selections after the board
+            refetch — silently re-seeding from a scheme that no longer
+            applies. The key forces a clean remount so each panel re-derives
+            its state from the *new* board.
+          */}
+          {tab === 'types' ? (
+            <TypesTab key={board.project.schemeId} {...tabProps} />
+          ) : tab === 'fields' ? (
+            <FieldsTab key={board.project.schemeId} {...tabProps} />
+          ) : tab === 'workflow' ? (
+            <WorkflowTab key={board.project.schemeId} {...tabProps} />
+          ) : (
+            <LinksTab key={board.project.schemeId} {...tabProps} />
+          )}
+        </div>
       </div>
     </div>
   );

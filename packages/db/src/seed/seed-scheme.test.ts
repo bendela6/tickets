@@ -1,71 +1,138 @@
-import { resolve } from 'node:path';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import { eq } from 'drizzle-orm';
-import postgres from 'postgres';
-import { afterAll, beforeAll, expect, test } from 'vitest';
-import type { Db } from '../client';
-import { environment } from '../environment';
-import * as schema from '../schema';
-import { fieldOptions, fields, linkTypeTargetTypes, linkTypes, ticketTypes } from '../schema';
-import { seedScheme } from './seed-scheme';
-import { SOFTWARE_SCHEME } from './software-scheme';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { eq, inArray } from 'drizzle-orm';
+import { createDbClient, type Db } from '../client';
+import { fields, itemTypeFields, itemTypes, optionSets, options, optionTransitions } from '../schema';
+import { deleteSeededScheme, seedScheme } from './seed-scheme';
+import { softwareScheme } from './software-scheme';
 
-// Real-DB test: spins up a scratch database on the same dev postgres
-// (host/port/user/password from `environment`, database name generated per
-// run), runs the real drizzle migrations against it, seeds SOFTWARE_SCHEME,
-// then asserts on the resulting rows. Torn down in afterAll regardless of
-// pass/fail. No existing DB-backed vitest harness exists in this repo to
-// copy (`build-transitions.test.ts` is a pure unit test), so this harness
-// mirrors the scratch-db-per-run pattern used by the plan's manual
-// verification scripts (create db -> migrate -> seed -> assert -> drop).
-const { host, port, user, password } = environment.postgres;
-const dbName = `tozf_seed_scheme_test_${process.pid}_${Date.now()}`;
-const adminUrl = `postgres://${user}:${password}@${host}:${port}/postgres`;
-const scratchUrl = `postgres://${user}:${password}@${host}:${port}/${dbName}`;
+// The full (value -> kind) mapping the shared status option set must carry.
+// Pinned as a whole so a swap or omission fails, not just "some option is done".
+const EXPECTED_STATUS_KINDS: Record<string, string> = {
+  triage: 'todo',
+  backlog: 'todo',
+  todo: 'todo',
+  'in-progress': 'active',
+  'in-review': 'active',
+  merged: 'active',
+  deployed: 'active',
+  blocked: 'blocked',
+  done: 'done',
+  fixed: 'done',
+  cancelled: 'dropped',
+  'wont-fix': 'dropped',
+};
 
-let scratchSql: ReturnType<typeof postgres>;
-let db: Db;
+describe('seedScheme (requires POSTGRES_DATABASE=tickets_dev)', () => {
+  let db: Db;
+  let sql: ReturnType<typeof createDbClient>['sql'];
+  let seeded: Awaited<ReturnType<typeof seedScheme>>;
 
-beforeAll(async () => {
-  const admin = postgres(adminUrl, { max: 1 });
-  await admin.unsafe(`DROP DATABASE IF EXISTS "${dbName}"`);
-  await admin.unsafe(`CREATE DATABASE "${dbName}"`);
-  await admin.end();
+  beforeAll(async () => {
+    ({ db, sql } = createDbClient({ max: 1 }));
+    seeded = await seedScheme(db, softwareScheme);
+  });
+  afterAll(async () => {
+    // Fixed scheme key ('software') — clean up exactly what we created so the
+    // suite can re-seed the same key on the next run without a DB reset.
+    await deleteSeededScheme(db, seeded);
+    await sql.end();
+  });
 
-  scratchSql = postgres(scratchUrl, { max: 1 });
-  db = drizzle(scratchSql, { schema }) as Db;
-  await migrate(db, { migrationsFolder: resolve(import.meta.dirname, '../../drizzle') });
+  it('creates one shared status option set with lifecycle kinds', async () => {
+    const [set] = await db.select().from(optionSets).where(eq(optionSets.key, 'status'));
+    const rows = await db.select().from(options).where(eq(options.optionSetId, set!.id));
+    expect(rows.length).toBeGreaterThanOrEqual(5);
+    expect(rows.every((o) => o.kind !== null)).toBe(true);
+    expect(rows.some((o) => o.kind === 'done')).toBe(true);
+  });
 
-  await seedScheme(db, SOFTWARE_SCHEME);
-}, 30_000);
+  it('pins the exact status value -> kind mapping (a swap or omission must fail)', async () => {
+    const [set] = await db.select().from(optionSets).where(eq(optionSets.key, 'status'));
+    const rows = await db.select().from(options).where(eq(options.optionSetId, set!.id));
+    const actual = Object.fromEntries(rows.map((o) => [o.value, o.kind]));
+    expect(actual).toEqual(EXPECTED_STATUS_KINDS);
+  });
 
-afterAll(async () => {
-  await scratchSql?.end();
-  const admin = postgres(adminUrl, { max: 1 });
-  await admin.unsafe(`DROP DATABASE IF EXISTS "${dbName}"`);
-  await admin.end();
-});
+  it('gives non-workflow options a null kind, on every set and every row', async () => {
+    const nonWorkflowSetKeys = ['priority', 'kind', 'estimate', 'severity', 'environment'];
+    for (const key of nonWorkflowSetKeys) {
+      const [set] = await db.select().from(optionSets).where(eq(optionSets.key, key));
+      const rows = await db.select().from(options).where(eq(options.optionSetId, set!.id));
+      expect(rows.length).toBeGreaterThan(0);
+      expect(rows.every((o) => o.kind === null)).toBe(true);
+    }
+  });
 
-test('every type owns a distinct priority field row', async () => {
-  const prio = await db.select().from(fields).where(eq(fields.key, 'priority'));
-  expect(prio.length).toBe(5); // one per type
-  expect(new Set(prio.map((f) => f.ticketTypeId)).size).toBe(5);
-});
+  it('makes status a system option field, not a status type', async () => {
+    const [status] = await db.select().from(fields).where(eq(fields.key, 'status'));
+    expect(status!.type).toBe('option');
+    expect(status!.system).toBe(true);
+    expect(status!.optionSetId).not.toBeNull();
+  });
 
-test('options are duplicated per type-field', async () => {
-  const prio = await db.select().from(fields).where(eq(fields.key, 'priority'));
-  for (const f of prio) {
-    const opts = await db.select().from(fieldOptions).where(eq(fieldOptions.fieldId, f.id));
-    expect(opts.map((o) => o.value)).toEqual(['urgent', 'high', 'medium', 'low', 'trivial']);
-  }
-});
+  it('shares one field definition across types via placements', async () => {
+    const statusId = seeded.fieldIdByKey.get('status')!;
+    const placements = await db
+      .select()
+      .from(itemTypeFields)
+      .where(eq(itemTypeFields.fieldId, statusId));
+    expect(placements.length).toBe(seeded.typeIdByKey.size);
+  });
 
-test('link types are owned per type with targets present', async () => {
-  const taskType = (await db.select().from(ticketTypes).where(eq(ticketTypes.key, 'task')))[0]!;
-  const taskLinks = await db.select().from(linkTypes).where(eq(linkTypes.ticketTypeId, taskType.id));
-  expect(taskLinks.map((l) => l.key).sort()).toEqual(['blocks', 'caused-by', 'duplicates', 'relates-to']);
-  const blocks = taskLinks.find((l) => l.key === 'blocks')!;
-  const targets = await db.select().from(linkTypeTargetTypes).where(eq(linkTypeTargetTypes.linkTypeId, blocks.id));
-  expect(targets.length).toBe(5); // default: all types
+  it('records each type\'s status subset as an allowlist on the placement', async () => {
+    const statusId = seeded.fieldIdByKey.get('status')!;
+    const epicId = seeded.typeIdByKey.get('epic')!;
+    const [placement] = await db
+      .select()
+      .from(itemTypeFields)
+      .where(eq(itemTypeFields.itemTypeId, epicId));
+    const forStatus = await db
+      .select()
+      .from(itemTypeFields)
+      .where(eq(itemTypeFields.fieldId, statusId));
+    const epicPlacement = forStatus.find((p) => p.itemTypeId === epicId)!;
+    const override = epicPlacement.configOverride as { allowedOptionIds?: number[] };
+    expect(Array.isArray(override.allowedOptionIds)).toBe(true);
+    expect(override.allowedOptionIds!.length).toBe(5); // epic has 5 statuses
+  });
+
+  it('resolves every type\'s allowlist ids back to the exact option values softwareScheme declares', async () => {
+    const statusId = seeded.fieldIdByKey.get('status')!;
+    const placements = await db
+      .select()
+      .from(itemTypeFields)
+      .where(eq(itemTypeFields.fieldId, statusId));
+
+    const allOptionIds = placements.flatMap(
+      (p) => (p.configOverride as { allowedOptionIds?: number[] } | null)?.allowedOptionIds ?? [],
+    );
+    const optionRows = await db.select().from(options).where(inArray(options.id, allOptionIds));
+    const valueById = new Map(optionRows.map((o) => [o.id, o.value]));
+
+    const typeIdToKey = new Map([...seeded.typeIdByKey.entries()].map(([k, v]) => [v, k]));
+
+    for (const type of softwareScheme.types) {
+      const statusPlacement = type.placements.find((p) => p.fieldKey === 'status')!;
+      const expectedValues = [...statusPlacement.allowedOptionValues!].sort();
+
+      const typeId = seeded.typeIdByKey.get(type.key)!;
+      const placement = placements.find((p) => p.itemTypeId === typeId)!;
+      const override = placement.configOverride as { allowedOptionIds: number[] };
+      const actualValues = override.allowedOptionIds
+        .map((id) => {
+          const value = valueById.get(id);
+          expect(value, `option id ${id} on type ${typeIdToKey.get(typeId)} must resolve to a real option`).toBeDefined();
+          return value!;
+        })
+        .sort();
+
+      expect(actualValues).toEqual(expectedValues);
+    }
+  });
+
+  it('writes the workflow graph into option_transitions', async () => {
+    const rows = await db.select().from(optionTransitions);
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.some((t) => t.fromOptionId === null)).toBe(true); // a valid start
+  });
 });

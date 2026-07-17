@@ -1,270 +1,108 @@
-export interface Project {
-  id: number;
-  key: string;
-  name: string;
-  ticketPrefix: string;
-  createdAt: string;
-}
+export interface Project { id: number; key: string; name: string; schemeId: number; itemPrefix: string; createdAt: string; }
 
 export type UserKind = 'human' | 'agent';
+export interface User { id: number; name: string; email: string | null; kind: UserKind; archivedAt: string | null; }
 
-export interface User {
-  id: number;
-  name: string;
-  email: string | null;
-  kind: UserKind;
+export interface ItemType {
+  id: number; schemeId: number; key: string; label: string; position: number;
+  config: { color?: string } & Record<string, unknown>;
   archivedAt: string | null;
-  createdAt: string;
 }
 
-export interface TicketTypeConfig {
-  color?: string;
-}
-
-export interface TicketType {
-  id: number;
-  projectId: number;
-  key: string;
-  label: string;
-  config: TicketTypeConfig;
-  position: number;
+export type FieldType = 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'option' | 'user' | 'json';
+export interface Field {
+  id: number; schemeId: number; key: string; label: string; type: FieldType;
+  config: { multiple?: boolean; workflow?: boolean; format?: string } & Record<string, unknown>;
+  optionSetId: number | null;
   archivedAt: string | null;
-  createdAt: string;
 }
 
-export interface TypeField {
-  ticketTypeId: number;
-  fieldId: number;
-  position: number;
-  required: boolean;
+// A field placed on a type.
+export interface ItemTypeField {
+  itemTypeId: number; fieldId: number; position: number; required: boolean;
+  configOverride: { allowedOptionIds?: number[] } | null;
 }
 
 export type StatusKind = 'todo' | 'active' | 'blocked' | 'done' | 'dropped';
-
-export interface StatusConfig {
-  color?: string;
-  initial?: boolean;
-  description?: string;
-}
-
-export interface Status {
-  id: number;
-  projectId: number;
-  key: string;
-  label: string;
-  kind: StatusKind;
-  config: StatusConfig;
-  position: number;
+export interface Option {
+  id: number; optionSetId: number; value: string; label: string; position: number;
+  kind: StatusKind | null;                       // null for non-workflow options
+  config: { color?: string; icon?: string } & Record<string, unknown>;
   archivedAt: string | null;
-  createdAt: string;
 }
 
 export interface Transition {
-  id: number;
-  fromStatusId: number;
-  toStatusId: number;
-  ticketTypeId: number | null;
-  config: Record<string, unknown>;
+  id: number; fieldId: number; itemTypeId: number | null;
+  fromOptionId: number | null; toOptionId: number;
+  config: { guard?: { requiresComment?: boolean; requiresField?: string } } | null;
 }
 
-export type FieldType =
-  'text' | 'number' | 'date' | 'boolean' | 'json' | 'select' | 'multi_select' | 'status';
+export interface LinkType { id: number; itemTypeId: number; key: string; label: string; inverseLabel: string; directional: boolean; position: number; archivedAt: string | null; }
+export interface LinkTypeTargetType { linkTypeId: number; targetTypeId: number; }
+export interface View { id: number; projectId: number; name: string; config: Record<string, unknown>; }
+export interface ItemTypeChildType { parentTypeId: number; childTypeId: number; }
 
-export interface FieldConfig {
-  widget?: string;
-  description?: string;
-}
+export interface Comment { id: number; itemId: number; authorId: number; parentId: number | null; body: string; createdAt: string; }
+export interface ItemLink { id: number; linkTypeId: number; sourceItemId: number; targetItemId: number; createdAt: string; }
 
-export interface FieldOptionConfig {
-  color?: string;
-}
-
-export interface FieldOption {
-  id: number;
-  value: string;
-  label: string;
-  config: FieldOptionConfig;
-  position: number;
-  archivedAt: string | null;
-}
-
-export interface Field {
-  id: number;
-  projectId: number;
-  key: string;
-  label: string;
-  type: FieldType;
-  system: boolean;
-  config: FieldConfig;
-  archivedAt: string | null;
-  createdAt: string;
-  options: FieldOption[];
-}
-
-export interface LinkType {
-  id: number;
-  projectId: number;
-  key: string;
-  label: string;
-  inverseLabel: string;
-  directional: boolean;
-  position: number;
-  archivedAt: string | null;
-}
-
-export interface View {
-  id: number;
-  projectId: number;
-  name: string;
-  config: Record<string, unknown>;
-  position: number;
-  archivedAt: string | null;
-  createdAt: string;
-}
-
-export interface TicketComment {
-  id: number;
-  ticketId: number;
-  authorId: number;
-  body: string;
-  createdAt: string;
-}
-
-export interface TicketLink {
-  id: number;
-  linkTypeId: number;
-  sourceTicketId: number;
-  targetTicketId: number;
-}
-
-export interface BoardTicket {
-  id: number;
-  number: number;
-  typeId: number;
-  parentId: number | null;
-  createdBy: number;
-  archivedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  values: Record<string, unknown>;
-  comments: TicketComment[];
-  links: TicketLink[];
+export interface Item {
+  id: number; number: number; typeId: number; parentId: number | null;
+  createdBy: number; archivedAt: string | null; createdAt: string; updatedAt: string;
+  values: Record<string, unknown>;               // fieldKey -> rendered (option value string, {id,name}, scalar, or array)
+  comments: Comment[]; links: ItemLink[];
 }
 
 export interface Board {
   project: Project;
-  users: User[];
-  types: TicketType[];
-  typeFields: TypeField[];
-  statuses: Status[];
-  transitions: Transition[];
+  types: ItemType[];
   fields: Field[];
+  placements: ItemTypeField[];
+  options: Option[];
+  transitions: Transition[];
   linkTypes: LinkType[];
+  targetTypes: LinkTypeTargetType[];
   views: View[];
-  tickets: BoardTicket[];
+  users: User[];
+  childTypes: ItemTypeChildType[];
+  items: Item[];
 }
 
-export interface ListMeta {
-  skip: number;
-  take: number;
-  total: number;
-  sort: string | null;
+export interface ActivityEntry {
+  id: number; itemId: number; eventId: number; kind: string;
+  actorId: number; at: string; correlationId: string; summary: Record<string, unknown>;
 }
 
-export interface TicketEvent {
-  id: number;
-  ticketId: number;
-  actorId: number;
-  actorName: string | null;
-  kind: string;
-  payload: Record<string, unknown>;
-  createdAt: string;
-}
+// The envelope every mutation body carries.
+export interface CommandEnvelope { commandId: string; actorId: number; }
 
-export interface TicketEventsResponse {
-  data: TicketEvent[];
-  meta: ListMeta;
-}
+export interface CreateItemInput { projectKey: string; actorId: number; typeKey: string; parentId?: number | null; values: Record<string, unknown>; }
+export interface PatchItemInput { itemId: number; actorId: number; expectedUpdatedAt: string; parentId?: number | null; archived?: boolean; values?: Record<string, unknown>; }
+export interface CreatedItem { id: number; number: number; typeId: number; parentId: number | null; createdBy: number; archivedAt: string | null; createdAt: string; updatedAt: string; }
+export interface PatchItemResult { id: number; updatedAt: string; }
+export interface CreateCommentInput { itemId: number; actorId: number; body: string; parentId?: number | null; }
+export interface CreateLinkInput { actorId: number; linkTypeKey: string; sourceItemId: number; targetItemId: number; }
+export interface DeleteLinkInput { linkId: number; actorId: number; }
+export interface CreateUserInput { actorId: number; name: string; kind?: UserKind; }
+export interface CreateProjectInput { actorId: number; key: string; name: string; itemPrefix: string; }
 
-export interface UsersResponse {
-  data: User[];
-  meta: ListMeta;
-}
+export interface ListMeta { total?: number }
+export interface UsersResponse { data: User[] }
+export interface ProjectsResponse { data: Project[] }
 
-export interface CreatedTicket {
-  id: number;
-  projectId: number;
-  number: number;
-  typeId: number;
-  parentId: number | null;
-  createdBy: number;
-  archivedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+// ── Terminal + Agent sessions (post terminal/agent split) ────────────────────
+//
+// `terminal.sessions` and `agent.sessions` are separate tables with separate id
+// sequences — a terminal and an agent can both be id 1. There is no `kind`
+// discriminator any more; a session's kind is which table/endpoint it came
+// from, so the two are modeled as entirely separate types below (never a
+// union keyed on a bare id).
 
-export interface PatchTicketResult {
-  id: number;
-  updatedAt: string;
-}
-
-export interface CreateTicketInput {
-  projectKey: string;
-  actorId: number;
-  typeKey: string;
-  parentId?: number | null;
-  values: Record<string, unknown>;
-}
-
-export interface PatchTicketInput {
-  ticketId: number;
-  actorId: number;
-  expectedUpdatedAt: string;
-  typeKey?: string;
-  parentId?: number | null;
-  archived?: boolean;
-  values?: Record<string, unknown>;
-}
-
-export interface CreateCommentInput {
-  ticketId: number;
-  authorId: number;
-  body: string;
-}
-
-export interface CreateLinkInput {
-  actorId: number;
-  linkTypeKey: string;
-  sourceTicketId: number;
-  targetTicketId: number;
-}
-
-export interface DeleteLinkInput {
-  linkId: number;
-  actorId: number;
-}
-
-export interface CreateUserInput {
-  name: string;
-  kind?: UserKind;
-}
-
-// ── AI sessions (E1) ─────────────────────────────────────────────────────────
-
-export type SessionKind = 'terminal' | 'agent';
-export type SessionStatus =
-  | 'starting'
-  | 'running'
-  | 'idle'
-  | 'awaiting_input'
-  | 'interrupted'
-  | 'exited'
-  | 'failed'
-  | 'live'
-  | 'disconnected';
 export type RunnerKind = 'local' | 'container';
 
-export interface AiWorkspace {
+// Shared: the one CRUD home for `core.workdirs` (owned by apps/api
+// terminal/routes.ts, used by both subsystems). The old ai-subsystem
+// workspaces route is gone.
+export interface Workdir {
   id: number;
   name: string;
   path: string;
@@ -277,19 +115,63 @@ export interface AiWorkspace {
   createdAt: string;
 }
 
-export interface AiSession {
+export interface CreateWorkdirInput {
+  name: string;
+  path: string;
+}
+
+// ── Terminal ──────────────────────────────────────────────────────────────
+
+// A PTY's lifecycle. `live` = attached and running; `disconnected` = the API
+// restarted and the process died with it. No turn states — those are agent
+// facts (see AgentSessionStatus).
+export type TerminalStatus = 'starting' | 'live' | 'disconnected' | 'exited' | 'failed';
+
+export interface TerminalSession {
   id: number;
-  kind: SessionKind;
   title: string;
-  workspaceId: number;
+  workdirId: number;
+  cwd: string | null;
+  status: TerminalStatus;
+  exitCode: number | null;
+  startedBy: number | null;
+  createdAt: string;
+  updatedAt: string;
+  endedAt: string | null;
+  archivedAt: string | null;
+}
+
+export interface CreateTerminalSessionInput {
+  workdirId: number;
+  title?: string;
+  command?: string;
+  cols?: number;
+  rows?: number;
+}
+
+// ── Agent ─────────────────────────────────────────────────────────────────
+
+// An agent turn's lifecycle. No live/disconnected — those are PTY facts.
+export type AgentSessionStatus =
+  | 'starting'
+  | 'running'
+  | 'idle'
+  | 'awaiting_input'
+  | 'interrupted'
+  | 'exited'
+  | 'failed';
+
+export interface AgentSession {
+  id: number;
+  title: string;
+  workdirId: number;
   agentId: number | null;
-  ticketId: number | null;
+  itemId: number | null;
   parentSessionId: number | null;
-  status: SessionStatus;
+  status: AgentSessionStatus;
   providerSessionId: string | null;
   cwd: string | null;
   worktreePath: string | null;
-  exitCode: number | null;
   costUsd: string | null;
   startedBy: number | null;
   createdAt: string;
@@ -298,24 +180,17 @@ export interface AiSession {
   archivedAt: string | null;
 }
 
-export interface CreateAiWorkspaceInput {
-  name: string;
-  path: string;
-}
-
-export interface CreateAiSessionInput {
-  kind?: SessionKind;
-  workspaceId?: number;
-  agentId?: number;
+export interface CreateAgentSessionInput {
+  agentId: number;
+  workdirId?: number;
+  parentSessionId?: number;
+  itemId?: number;
   title?: string;
-  command?: string;
   maxBudgetUsd?: number;
-  cols?: number;
-  rows?: number;
 }
 
-// Mirror of the API's normalized agent event union (apps/api ai/types.ts). The
-// UI only ever sees these — never which provider produced them.
+// Mirror of the API's normalized agent event union (apps/api agent/types.ts).
+// The UI only ever sees these — never which provider produced them.
 export type AgentEvent =
   | { type: 'session_started'; providerSessionId: string }
   | { type: 'assistant_text'; text: string; parentToolUseId?: string }
@@ -337,15 +212,13 @@ export type AgentEvent =
     }
   | { type: 'error'; message: string };
 
-export type PermissionMode =
-  | 'default'
-  | 'acceptEdits'
-  | 'bypassPermissions'
-  | 'plan'
-  | 'dontAsk'
-  | 'auto';
+// Mirrors the Claude Agent SDK's PermissionMode. Exactly the 5 SDK values the
+// agent.permission_mode enum carries — no legacy `auto`.
+export type PermissionMode = 'default' | 'acceptEdits' | 'bypassPermissions' | 'plan' | 'dontAsk';
 
-export interface AiAgent {
+// The persona library (agent.agents) — a reusable provider/model/prompt/tool
+// config a session or dispatch runs with.
+export interface Agent {
   id: number;
   userId: number;
   key: string;
@@ -358,7 +231,7 @@ export interface AiAgent {
   permissionMode: PermissionMode;
   mcpServers: Record<string, unknown>;
   effort: string | null;
-  defaultWorkspaceId: number | null;
+  defaultWorkdirId: number | null;
   config: Record<string, unknown>;
   archivedAt: string | null;
   createdAt: string;
@@ -377,13 +250,13 @@ export interface ModelInfo {
   contextWindow: number;
 }
 
-export interface AiProvider {
+export interface AgentProviderInfo {
   key: string;
   capabilities: ProviderCapabilities;
   models: ModelInfo[];
 }
 
-export interface CreateAiAgentInput {
+export interface CreateAgentInput {
   key: string;
   name: string;
   providerKey: string;
@@ -392,10 +265,10 @@ export interface CreateAiAgentInput {
   allowedTools?: string[];
   permissionMode?: PermissionMode;
   effort?: string;
-  defaultWorkspaceId?: number;
+  defaultWorkdirId?: number;
 }
 
-export interface PatchAiAgentInput {
+export interface PatchAgentInput {
   id: number;
   name?: string;
   model?: string;
@@ -403,6 +276,6 @@ export interface PatchAiAgentInput {
   allowedTools?: string[];
   permissionMode?: PermissionMode;
   effort?: string | null;
-  defaultWorkspaceId?: number | null;
+  defaultWorkdirId?: number | null;
   archived?: boolean;
 }

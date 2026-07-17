@@ -16,10 +16,10 @@ describe('GET /api/schema', () => {
     const body = res.json() as { tables: unknown[]; groups: unknown[] };
     expect(Array.isArray(body.tables)).toBe(true);
     expect(body.tables.length).toBeGreaterThan(0);
-    const tickets = (body.tables as { name: string; group: string }[]).find(
-      (t) => t.name === 'tickets',
+    const items = (body.tables as { name: string; group: string }[]).find(
+      (t) => t.name === 'items',
     );
-    expect(tickets?.group).toBe('records');
+    expect(items?.group).toBe('rc');
     await app.close();
   });
 });

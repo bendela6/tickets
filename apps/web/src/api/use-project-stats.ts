@@ -1,6 +1,7 @@
 import { useQueries } from '@tanstack/react-query';
 import { fetchJson } from './client';
 import type { Board, Project, StatusKind } from './types';
+import { indexBoard } from '../utils/index-board';
 
 export interface ProjectStats {
   project: Project;
@@ -8,7 +9,7 @@ export interface ProjectStats {
   total: number;
   /** done / total, 0–100 */
   pct: number;
-  /** Ticket updates per day, oldest→today, for the activity sparkline. */
+  /** Item updates per day, oldest→today, for the activity sparkline. */
   activity: number[];
   lastUpdatedAt: string | null;
 }
@@ -16,9 +17,11 @@ export interface ProjectStats {
 const KINDS: StatusKind[] = ['todo', 'active', 'blocked', 'done', 'dropped'];
 const ACTIVITY_DAYS = 14;
 
+// Kind comes from the item's OWN type's workflow field's option — not a
+// project-wide status list. Each item resolves through indexBoard so types
+// with different workflow fields (or none) are handled per item.
 function computeStats(project: Project, board: Board): ProjectStats {
-  const statusField = board.fields.find((field) => field.type === 'status');
-  const kindByKey = new Map(board.statuses.map((status) => [status.key, status.kind]));
+  const indexes = indexBoard(board);
   const counts: Record<StatusKind, number> = {
     todo: 0,
     active: 0,
@@ -31,22 +34,26 @@ function computeStats(project: Project, board: Board): ProjectStats {
   const today = Date.now();
   let lastUpdatedAt: string | null = null;
 
-  for (const ticket of board.tickets) {
-    if (ticket.archivedAt) {
+  for (const item of board.items) {
+    if (item.archivedAt) {
       continue;
     }
-    const key = statusField ? ticket.values[statusField.key] : undefined;
-    const kind = typeof key === 'string' ? kindByKey.get(key) : undefined;
+    const workflowField = indexes.workflowField(item.typeId);
+    const raw = workflowField ? item.values[workflowField.key] : undefined;
+    const kind =
+      workflowField && typeof raw === 'string'
+        ? indexes.optionByValue(workflowField, raw)?.kind
+        : undefined;
     if (kind) {
       counts[kind] += 1;
     }
-    const age = Math.floor((today - new Date(ticket.updatedAt).getTime()) / dayMs);
+    const age = Math.floor((today - new Date(item.updatedAt).getTime()) / dayMs);
     if (age >= 0 && age < ACTIVITY_DAYS) {
       const bucket = ACTIVITY_DAYS - 1 - age;
       activity[bucket] = (activity[bucket] ?? 0) + 1;
     }
-    if (!lastUpdatedAt || ticket.updatedAt > lastUpdatedAt) {
-      lastUpdatedAt = ticket.updatedAt;
+    if (!lastUpdatedAt || item.updatedAt > lastUpdatedAt) {
+      lastUpdatedAt = item.updatedAt;
     }
   }
   const total = KINDS.reduce((sum, kind) => sum + counts[kind], 0);

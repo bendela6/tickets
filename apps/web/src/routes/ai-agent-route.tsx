@@ -1,5 +1,5 @@
 import { createRoute } from '@tanstack/react-router';
-import { AgentProfileScreen } from '../components/ai/agent-profile-screen';
+import { AgentProfileScreen } from '../components/agent/agent-profile-screen';
 import { AppShell } from '../components/shell/app-shell';
 import { rootRoute } from './root-route';
 

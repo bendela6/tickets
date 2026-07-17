@@ -1451,9 +1451,9 @@ describe('applyModelEdit', () => {
     // schemes.id -> uid (fixing schemes' own pk alongside it, so only the
     // inbound check is in play) — projects/item_types/fields/option_sets each
     // hold an fk (c2) pointing at schemes(id). The edit must be rejected
-    // outright, and the ORIGINAL seed model must still carry all 41 edges and
-    // 18 labels — no silent 41 -> 37 edge loss, no dangling fk written anywhere.
-    it('(d) real seed: renaming schemes.id -> uid is rejected; the model keeps all 41 edges and 18 labels', () => {
+    // outright, and the ORIGINAL seed model must still carry all 56 edges and
+    // 18 labels — no silent edge loss, no dangling fk written anywhere.
+    it('(d) real seed: renaming schemes.id -> uid is rejected; the model keeps all 56 edges and 18 labels', () => {
       const { model, errors } = loadModel(seedRaw);
       expect(errors).toEqual([]);
       const schemes = model!.entityById.get('schemes')!;
@@ -1484,7 +1484,7 @@ describe('applyModelEdit', () => {
       ).toThrow(/table "(projects|item_types|fields|option_sets)" has a foreign key \(c2\) referencing it/);
 
       // The rejected edit must not have mutated the model in any way.
-      expect(model!.relationships).toHaveLength(41);
+      expect(model!.relationships).toHaveLength(56);
       expect(model!.relationships.filter((r) => r.label).length).toBe(18);
     });
   });
