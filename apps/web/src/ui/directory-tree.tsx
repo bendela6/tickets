@@ -37,7 +37,7 @@ function Row({ row, onToggle, onSelect }: { row: VisibleRow; onToggle: (path: st
       </button>
       <button
         type="button"
-        id={`dtree-${row.path}`}
+        id={`dtree-${encodeURIComponent(row.path)}`}
         tabIndex={-1}
         role="treeitem"
         aria-expanded={row.expanded}
@@ -83,7 +83,7 @@ export function DirectoryTree({ roots, selected, onSelect }: DirectoryTreeProps)
     <div
       role="tree"
       tabIndex={0}
-      aria-activedescendant={tree.focus ? `dtree-${tree.focus}` : undefined}
+      aria-activedescendant={tree.focus ? `dtree-${encodeURIComponent(tree.focus)}` : undefined}
       onKeyDown={tree.onKeyDown}
       className="max-h-[250px] overflow-y-auto rounded-lg bg-inset p-1 outline-none"
     >
