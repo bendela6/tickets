@@ -50,6 +50,7 @@
   --ins-accent: #4e46c6;
   --ins-accent-hover: #4238b5;
   --ins-accent-subtle: #e9e7fa;
+  --ins-folder: #c29a2e;
   --ins-on-accent: #ffffff;
   --ins-danger: #c0382e;
   --ins-danger-hover: #a82f26;
@@ -137,6 +138,7 @@
   --ins-accent: #918aec;
   --ins-accent-hover: #a29cf1;
   --ins-accent-subtle: #2c2a4a;
+  --ins-folder: #dfc060;
   --ins-on-accent: #16143c;
   --ins-danger: #e26a5f;
   --ins-danger-hover: #e9847a;
@@ -227,6 +229,7 @@
   --color-accent: var(--ins-accent);
   --color-accent-hover: var(--ins-accent-hover);
   --color-accent-subtle: var(--ins-accent-subtle);
+  --color-folder: var(--ins-folder);
   --color-on-accent: var(--ins-on-accent);
   --color-danger: var(--ins-danger);
   --color-danger-hover: var(--ins-danger-hover);
