@@ -1,5 +1,12 @@
-import { stat } from 'node:fs/promises';
+import { readdir, stat } from 'node:fs/promises';
+import { homedir } from 'node:os';
+import { dirname, resolve, sep } from 'node:path';
+import { environment } from '../environment';
 import { HttpError } from '../errors';
+
+export type RootDir = { path: string; symbol: string; annotation: string };
+export type DirEntry = { name: string; path: string };
+export type DirListing = { path: string; parent: string | null; entries: DirEntry[]; error?: string };
 
 // A typo'd workdir path must fail the create/dispatch request, not spawn a
 // process that dies a moment later. This is the one filesystem check a route
@@ -15,4 +22,46 @@ export async function assertWorkdirDir(path: string): Promise<void> {
   if (!info.isDirectory()) {
     throw new HttpError(400, `workdir path is not a directory: ${path}`);
   }
+}
+
+// The configured browse roots, as pickable rows. `symbol` is the keycap chip
+// the tree renders (`~` for home, else the trailing segment); `annotation` is
+// the absolute path shown beside it.
+export function listRoots(): RootDir[] {
+  const home = homedir();
+  return environment.workdirRoots.map((path) => {
+    const abs = resolve(path);
+    const symbol = abs === home ? '~' : abs.split(sep).filter(Boolean).at(-1) ?? abs;
+    return { path: abs, symbol, annotation: abs };
+  });
+}
+
+// True when `abs` is one of the roots or nested beneath one.
+function isInsideRoots(abs: string): boolean {
+  return environment.workdirRoots.some((root) => {
+    const r = resolve(root);
+    return abs === r || abs.startsWith(r + sep);
+  });
+}
+
+// Immediate sub-directories of `requested`, confined to WORKDIR_ROOTS. Files
+// are omitted. Traversal outside the roots is a 403; a non-existent path is a
+// 400; an unreadable directory returns an inline `error` with empty entries.
+export async function listSubdirs(requested: string): Promise<DirListing> {
+  const abs = resolve(requested);
+  if (!isInsideRoots(abs)) {
+    throw new HttpError(403, `path is outside the allowed roots: ${abs}`);
+  }
+  await assertWorkdirDir(abs);
+  let entries: DirEntry[];
+  try {
+    const dirents = await readdir(abs, { withFileTypes: true });
+    entries = dirents
+      .filter((d) => d.isDirectory())
+      .map((d) => ({ name: d.name, path: resolve(abs, d.name) }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  } catch {
+    return { path: abs, parent: dirname(abs), entries: [], error: 'permission denied' };
+  }
+  return { path: abs, parent: dirname(abs), entries };
 }
