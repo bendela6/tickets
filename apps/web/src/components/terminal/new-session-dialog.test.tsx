@@ -116,4 +116,125 @@ describe('NewSessionDialog', () => {
     expect(screen.queryByRole('tree')).not.toBeInTheDocument();
     expect(screen.getByText('＋ New workdir')).toBeInTheDocument();
   });
+
+  it('submits a picked workdir straight to session-create, without creating a workdir', async () => {
+    vi.restoreAllMocks();
+    const fetchSpy = mockFetch([
+      {
+        id: 3,
+        name: 'saved',
+        path: '/home/me/saved',
+        runner: 'local',
+        containerName: null,
+        gitRemote: null,
+        defaultBranch: null,
+        config: {},
+        archivedAt: null,
+        createdAt: '2026-01-01',
+      },
+    ]);
+    const onCreated = vi.fn();
+    render(
+      <Wrap>
+        <NewSessionDialog open onOpenChange={() => {}} onCreated={onCreated} />
+      </Wrap>,
+    );
+
+    const start = await screen.findByRole('button', { name: /start session/i });
+    expect(start).toBeDisabled();
+
+    // The combobox trigger sits in a <label> alongside the "New workdir"
+    // toggle, which folds both into one ambiguous accessible name — so open
+    // it via its visible placeholder text rather than an accessible-name
+    // role query (see the sibling toggle button below for the same pattern).
+    await userEvent.click(await screen.findByText('Select a workdir…'));
+    await userEvent.click(await screen.findByRole('option', { name: /saved/i }));
+    expect(start).toBeEnabled();
+
+    await userEvent.click(start);
+
+    await vi.waitFor(() => expect(onCreated).toHaveBeenCalledWith(42));
+
+    const createWorkdirCalls = fetchSpy.mock.calls.filter(([url, init]) => {
+      const reqInit = init as RequestInit | undefined;
+      return String(url).endsWith('/api/workdirs') && reqInit?.method === 'POST';
+    });
+    expect(createWorkdirCalls).toHaveLength(0);
+
+    const sessionCall = fetchSpy.mock.calls.find(([url]) =>
+      String(url).includes('/api/terminal/sessions'),
+    );
+    expect(sessionCall).toBeDefined();
+    const sessionInit = sessionCall?.[1] as RequestInit | undefined;
+    expect(JSON.parse(String(sessionInit?.body))).toMatchObject({ workdirId: 3 });
+  });
+
+  it('passes the typed command through to session-create', async () => {
+    vi.restoreAllMocks();
+    const fetchSpy = mockFetch([
+      {
+        id: 3,
+        name: 'saved',
+        path: '/home/me/saved',
+        runner: 'local',
+        containerName: null,
+        gitRemote: null,
+        defaultBranch: null,
+        config: {},
+        archivedAt: null,
+        createdAt: '2026-01-01',
+      },
+    ]);
+    const onCreated = vi.fn();
+    render(
+      <Wrap>
+        <NewSessionDialog open onOpenChange={() => {}} onCreated={onCreated} />
+      </Wrap>,
+    );
+
+    await screen.findByRole('button', { name: /start session/i });
+    await userEvent.click(await screen.findByText('Select a workdir…'));
+    await userEvent.click(await screen.findByRole('option', { name: /saved/i }));
+
+    await userEvent.type(screen.getByPlaceholderText('claude'), 'pnpm test');
+    await userEvent.click(screen.getByRole('button', { name: /start session/i }));
+
+    await vi.waitFor(() => expect(onCreated).toHaveBeenCalledWith(42));
+
+    const sessionCall = fetchSpy.mock.calls.find(([url]) =>
+      String(url).includes('/api/terminal/sessions'),
+    );
+    expect(sessionCall).toBeDefined();
+    const sessionInit = sessionCall?.[1] as RequestInit | undefined;
+    expect(JSON.parse(String(sessionInit?.body))).toMatchObject({
+      workdirId: 3,
+      command: 'pnpm test',
+    });
+  });
+
+  it('treats a typed name equal to the last seeded basename as a manual edit', async () => {
+    render(
+      <Wrap>
+        <NewSessionDialog open onOpenChange={() => {}} onCreated={() => {}} />
+      </Wrap>,
+    );
+
+    // Pick folder A ("~" → /home/me) — name seeds to its basename "me".
+    await userEvent.click(await screen.findByRole('treeitem', { name: /~/ }));
+    const nameInput = screen.getByPlaceholderText('tickets');
+    expect(nameInput).toHaveValue('me');
+
+    // Clear the name (re-arms seeding), then type the SAME basename back in —
+    // this must still be treated as a manual edit, not silently ignored.
+    await userEvent.clear(nameInput);
+    await userEvent.type(nameInput, 'me');
+    expect(nameInput).toHaveValue('me');
+
+    // Picking a different folder (B) must NOT overwrite the name, even though
+    // what's currently in the box happens to equal A's old seeded basename.
+    const pathInput = screen.getByPlaceholderText(/absolute path/i);
+    await userEvent.clear(pathInput);
+    await userEvent.type(pathInput, '/srv/app');
+    expect(nameInput).toHaveValue('me');
+  });
 });
