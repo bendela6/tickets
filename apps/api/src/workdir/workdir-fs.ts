@@ -1,4 +1,5 @@
-import { readdir, stat } from 'node:fs/promises';
+import { realpathSync } from 'node:fs';
+import { readdir, realpath, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, resolve, sep } from 'node:path';
 import { environment } from '../environment';
@@ -36,10 +37,18 @@ export function listRoots(): RootDir[] {
   });
 }
 
-// True when `abs` is one of the roots or nested beneath one.
+// True when `abs` (already realpath'd) is one of the roots or nested beneath
+// one. Roots are realpath'd too — symlinks inside a configured root are
+// legitimate and must be collapsed the same way on both sides of the compare,
+// otherwise a symlinked root itself would fail to contain its own children.
 function isInsideRoots(abs: string): boolean {
   return environment.workdirRoots.some((root) => {
-    const r = resolve(root);
+    let r: string;
+    try {
+      r = realpathSync(resolve(root));
+    } catch {
+      r = resolve(root);
+    }
     return abs === r || abs.startsWith(r + sep);
   });
 }
@@ -47,21 +56,27 @@ function isInsideRoots(abs: string): boolean {
 // Immediate sub-directories of `requested`, confined to WORKDIR_ROOTS. Files
 // are omitted. Traversal outside the roots is a 403; a non-existent path is a
 // 400; an unreadable directory returns an inline `error` with empty entries.
+//
+// The containment check runs against the *real* path (symlinks resolved), not
+// the lexical one — a symlink under a root that points outside every root
+// still string-matches the root prefix lexically, so without this it would
+// bypass the boundary and let readdir list the target's contents.
 export async function listSubdirs(requested: string): Promise<DirListing> {
   const abs = resolve(requested);
-  if (!isInsideRoots(abs)) {
-    throw new HttpError(403, `path is outside the allowed roots: ${abs}`);
+  const real = await realpath(abs).catch(() => abs);
+  if (!isInsideRoots(real)) {
+    throw new HttpError(403, `path is outside the allowed roots: ${real}`);
   }
-  await assertWorkdirDir(abs);
+  await assertWorkdirDir(real);
   let entries: DirEntry[];
   try {
-    const dirents = await readdir(abs, { withFileTypes: true });
+    const dirents = await readdir(real, { withFileTypes: true });
     entries = dirents
       .filter((d) => d.isDirectory())
-      .map((d) => ({ name: d.name, path: resolve(abs, d.name) }))
+      .map((d) => ({ name: d.name, path: resolve(real, d.name) }))
       .sort((a, b) => a.name.localeCompare(b.name));
   } catch {
-    return { path: abs, parent: dirname(abs), entries: [], error: 'permission denied' };
+    return { path: real, parent: dirname(real), entries: [], error: 'permission denied' };
   }
-  return { path: abs, parent: dirname(abs), entries };
+  return { path: real, parent: dirname(real), entries };
 }
