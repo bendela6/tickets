@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 
 import { workdirDirQuery } from '../api/use-workdir-dirs';
 import type { WorkdirDirEntry, WorkdirRoot } from '../api/types';
@@ -37,6 +37,22 @@ export function useDirectoryTree(opts: {
   const [nodes, setNodes] = useState<Record<string, NodeState>>({});
   const [focus, setFocus] = useState<string | null>(roots[0]?.path ?? null);
 
+  // Mirrors of the latest state for reads inside `toggle`, so the decision of
+  // "expand vs collapse, load vs reuse" is made from fresh state BEFORE any
+  // setState call, never from inside a nested state-updater body (those must
+  // stay pure — StrictMode double-invokes them, which would double-fire `load`).
+  const expandedRef = useRef(expanded);
+  expandedRef.current = expanded;
+  const nodesRef = useRef(nodes);
+  nodesRef.current = nodes;
+
+  // Consumers supply `roots` from an async query that starts empty; sync the
+  // initial focus once roots arrive instead of only at mount. Never clobbers
+  // a focus the user (or keyboard nav) already set.
+  useEffect(() => {
+    if (focus == null && roots[0]) setFocus(roots[0].path);
+  }, [focus, roots]);
+
   const load = useCallback(
     async (path: string) => {
       setNodes((n) => ({ ...n, [path]: { ...n[path], loading: true } }));
@@ -52,21 +68,32 @@ export function useDirectoryTree(opts: {
 
   const toggle = useCallback(
     (path: string) => {
-      setExpanded((prev) => {
-        const next = new Set(prev);
-        if (next.has(path)) {
+      // Decide BEFORE touching state. Reading refs here (not the `expanded`/
+      // `nodes` closed over by this render) means the decision reflects the
+      // latest committed state even when this callback is invoked more than
+      // once (e.g. StrictMode), and `load` below runs exactly once, outside
+      // any updater body.
+      const isExpanded = expandedRef.current.has(path);
+      if (isExpanded) {
+        const hadError = Boolean(nodesRef.current[path]?.error);
+        setExpanded((prev) => {
+          const next = new Set(prev);
           next.delete(path);
-          // errored nodes drop their cache so a re-expand retries (design rule)
-          setNodes((n) => (n[path]?.error ? { ...n, [path]: { loading: false } } : n));
-        } else {
-          next.add(path);
-          setNodes((n) => {
-            if (!n[path]?.entries) void load(path);
-            return n;
-          });
+          return next;
+        });
+        // errored nodes drop their cache so a re-expand retries (design rule)
+        if (hadError) {
+          setNodes((n) => ({ ...n, [path]: { loading: false } }));
         }
-        return next;
-      });
+      } else {
+        const needsLoad = !nodesRef.current[path]?.entries;
+        setExpanded((prev) => {
+          const next = new Set(prev);
+          next.add(path);
+          return next;
+        });
+        if (needsLoad) void load(path);
+      }
     },
     [load],
   );
@@ -93,7 +120,7 @@ export function useDirectoryTree(opts: {
       });
       if (isExpanded && state?.entries) {
         if (state.entries.length === 0) {
-          out.push({ path: `${path} empty`, label: '', depth: depth + 1, isRoot: false, expanded: false, loading: false, selected: false, focused: false, note: '— empty —' });
+          out.push({ path: `${path}\u0000empty`, label: '', depth: depth + 1, isRoot: false, expanded: false, loading: false, selected: false, focused: false, note: '— empty —' });
         } else {
           for (const child of state.entries) walk(child.path, depth + 1);
         }
@@ -127,8 +154,21 @@ export function useDirectoryTree(opts: {
         case 'ArrowLeft': {
           e.preventDefault();
           const row = interactive[i];
-          if (row?.expanded) toggle(row.path);
-          else move(-1);
+          if (row?.expanded) {
+            toggle(row.path);
+          } else if (row) {
+            // Parent is the nearest PRECEDING row with a strictly smaller depth —
+            // NOT `move(-1)`, which would land on the previous visible row (a
+            // sibling, when one exists) instead of the actual parent. If none is
+            // found (already at a root), stay put.
+            for (let j = i - 1; j >= 0; j--) {
+              const candidate = interactive[j];
+              if (candidate && candidate.depth < row.depth) {
+                setFocus(candidate.path);
+                break;
+              }
+            }
+          }
           break;
         }
         case 'Enter':
