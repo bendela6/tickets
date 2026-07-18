@@ -20,8 +20,3 @@ export function workdirDirQuery(path: string) {
       fetchJson<WorkdirDirListing>(`/api/workdirs/dirs?path=${encodeURIComponent(path)}`),
   };
 }
-
-// Lazy: pass enabled=true only once the node is expanded.
-export function useWorkdirDir(path: string, enabled: boolean) {
-  return useQuery({ ...workdirDirQuery(path), enabled });
-}
