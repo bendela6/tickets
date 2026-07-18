@@ -78,9 +78,13 @@ export function NewSessionDialog({
   const [error, setError] = useState<string | null>(null);
 
   // Seed guard: once the user edits the name themselves we stop overwriting it;
-  // clearing the name re-arms seeding on the next folder pick.
+  // clearing the name re-arms seeding on the next folder pick. `seededByEffect`
+  // marks the *next* name-change notification as having come from our own
+  // `setFieldValue` call (below) rather than the user — comparing the string
+  // value alone (e.g. against a remembered "last seeded basename") breaks the
+  // instant a user types a name that happens to match that basename.
   const nameEdited = useRef(false);
-  const seededName = useRef('');
+  const seededByEffect = useRef(false);
   const prevPath = useRef('');
 
   // Subscribe to live form values (path/name) without pulling a second copy of
@@ -111,19 +115,23 @@ export function NewSessionDialog({
       prevPath.current = path;
       if (!nameEdited.current) {
         const base = basename(path);
-        seededName.current = base;
+        seededByEffect.current = true;
         form.setFieldValue('name', base);
       }
     }
   }, [path, form]);
 
   // Detect a manual name edit vs. our own seed; an empty name re-arms seeding.
+  // A seed-triggered change is consumed here (flag reset, no edit recorded) —
+  // any OTHER change is a user write, full stop, regardless of what string it
+  // happens to hold (so typing text equal to the last-seeded basename still
+  // counts as a manual edit).
   useEffect(() => {
-    if (name === '') {
-      nameEdited.current = false;
-    } else if (name !== seededName.current) {
-      nameEdited.current = true;
+    if (seededByEffect.current) {
+      seededByEffect.current = false;
+      return;
     }
+    nameEdited.current = name !== '';
   }, [name]);
 
   const selected = list.find((w) => String(w.id) === workdirId);
@@ -164,7 +172,7 @@ export function NewSessionDialog({
     setCommand('');
     setError(null);
     nameEdited.current = false;
-    seededName.current = '';
+    seededByEffect.current = false;
     prevPath.current = '';
     form.reset();
   }
