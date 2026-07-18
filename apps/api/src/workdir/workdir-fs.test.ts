@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -72,6 +72,18 @@ describe('listSubdirs', () => {
   it('throws 400 for a path that does not exist', async () => {
     environment.workdirRoots = [root];
     await expect(listSubdirs(join(root, 'nope'))).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  it('rejects a symlink under a root that escapes the roots with 403', async ({ skip }) => {
+    const outside = await mkdtemp(join(tmpdir(), 'outside-'));
+    const link = join(root, 'escape-link');
+    try {
+      await symlink(outside, link, 'dir');
+    } catch {
+      return skip(); // directory symlinks not permitted in this environment
+    }
+    environment.workdirRoots = [root];
+    await expect(listSubdirs(link)).rejects.toMatchObject({ statusCode: 403 });
   });
 });
 
