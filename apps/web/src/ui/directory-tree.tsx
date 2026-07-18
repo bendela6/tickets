@@ -28,17 +28,17 @@ function Row({ row, onToggle, onSelect }: { row: VisibleRow; onToggle: (path: st
     <div className="flex items-center gap-1.5" style={{ paddingLeft: 8 + row.depth * 16 }}>
       <button
         type="button"
+        tabIndex={-1}
         aria-label={`${row.expanded ? 'collapse' : 'expand'} ${row.path}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggle(row.path);
-        }}
+        onClick={() => onToggle(row.path)}
         className="grid size-4 shrink-0 place-items-center rounded hover:bg-inset"
       >
         <Caret open={row.expanded} loading={row.loading} />
       </button>
       <button
         type="button"
+        id={`dtree-${row.path}`}
+        tabIndex={-1}
         role="treeitem"
         aria-expanded={row.expanded}
         aria-selected={row.selected}
@@ -83,6 +83,7 @@ export function DirectoryTree({ roots, selected, onSelect }: DirectoryTreeProps)
     <div
       role="tree"
       tabIndex={0}
+      aria-activedescendant={tree.focus ? `dtree-${tree.focus}` : undefined}
       onKeyDown={tree.onKeyDown}
       className="max-h-[250px] overflow-y-auto rounded-lg bg-inset p-1 outline-none"
     >
