@@ -34,4 +34,12 @@ describe('DirectoryTree', () => {
     await userEvent.click(screen.getByRole('treeitem', { name: /~/ }));
     expect(onSelect).toHaveBeenCalledWith('/home/me');
   });
+
+  it('is a single tab stop (roving tabindex)', async () => {
+    render(<Wrap><DirectoryTree roots={ROOTS} selected={null} onSelect={() => {}} /></Wrap>);
+    await userEvent.tab();
+    expect(screen.getByRole('tree')).toHaveFocus();
+    await userEvent.tab();
+    expect(screen.getByRole('tree')).not.toHaveFocus(); // tab leaves the tree, not into row buttons
+  });
 });
