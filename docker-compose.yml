@@ -27,6 +27,8 @@ services:
       POSTGRES_DATABASE: tickets
       API_HOST: 127.0.0.1
       API_PORT: 4600
+      # Directory-browser allow-list (/api/workdirs/dirs): container's workspace root
+      WORKDIR_ROOTS: /workspaces
     ports:
       - '4610:80'   # everything by path: / (web) · /api · /studio
     depends_on:
