@@ -233,7 +233,11 @@ set -euo pipefail
 PG=tickets-postgres-1                 # postgres container (all DBs live here)
 PROD=tickets                          # live production database
 REHEARSAL_DB=tickets_rehearsal
-BACKUP_DIR="backups"
+# Anchor backups to the repo root, NOT the caller's CWD: LEGACY_DUMP is handed
+# to `pnpm --filter @tickets/db db:restore-legacy`, which runs in packages/db —
+# a relative path would resolve there and break.
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+BACKUP_DIR="$REPO_ROOT/backups"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 DUMP="${BACKUP_DIR}/tickets-cutover-${STAMP}.dump"
 
