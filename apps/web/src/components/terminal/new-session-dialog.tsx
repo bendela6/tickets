@@ -78,14 +78,17 @@ export function NewSessionDialog({
   const [error, setError] = useState<string | null>(null);
 
   // Seed guard: once the user edits the name themselves we stop overwriting it;
-  // clearing the name re-arms seeding on the next folder pick. `seededByEffect`
-  // marks the *next* name-change notification as having come from our own
-  // `setFieldValue` call (below) rather than the user — comparing the string
-  // value alone (e.g. against a remembered "last seeded basename") breaks the
-  // instant a user types a name that happens to match that basename.
+  // clearing the name re-arms seeding on the next folder pick. A seed write is
+  // recognised by BOTH a `seededByEffect` flag AND the exact string we seeded
+  // (`lastSeeded`) — the pair matters because a same-basename reseed calls
+  // `setFieldValue` with the string already in the box, which does NOT change
+  // the primitive `name` and so never fires the name-effect that would consume
+  // the flag. Left flag-only, that stuck `seededByEffect` would swallow the
+  // user's next genuine edit; requiring `name === lastSeeded` lets a real edit
+  // (a DIFFERENT string) fall through to `nameEdited = true` regardless.
   const nameEdited = useRef(false);
   const seededByEffect = useRef(false);
-  const prevPath = useRef('');
+  const lastSeeded = useRef<string | null>(null);
 
   // Subscribe to live form values (path/name) without pulling a second copy of
   // @tanstack/react-form into this app — read the form's store directly.
@@ -109,29 +112,34 @@ export function NewSessionDialog({
   const submitting = createSession.isPending || createWorkdir.isPending;
 
   // Name auto-seed: a fresh folder pick seeds the name from its basename until
-  // the user takes it over.
+  // the user takes it over. Runs on every path change (deps gate it), recording
+  // both the flag and the exact string we wrote so the name-effect can tell our
+  // own write from a user edit.
   useEffect(() => {
-    if (path && path !== prevPath.current) {
-      prevPath.current = path;
-      if (!nameEdited.current) {
-        const base = basename(path);
-        seededByEffect.current = true;
-        form.setFieldValue('name', base);
-      }
+    if (path && !nameEdited.current) {
+      const base = basename(path);
+      seededByEffect.current = true;
+      lastSeeded.current = base;
+      form.setFieldValue('name', base);
     }
   }, [path, form]);
 
   // Detect a manual name edit vs. our own seed; an empty name re-arms seeding.
-  // A seed-triggered change is consumed here (flag reset, no edit recorded) —
-  // any OTHER change is a user write, full stop, regardless of what string it
-  // happens to hold (so typing text equal to the last-seeded basename still
-  // counts as a manual edit).
+  // The seed-echo consume is guarded by BOTH the flag AND the string matching
+  // what we last seeded — so any change to a DIFFERENT string is a user write,
+  // even if the flag is stuck true from a same-basename reseed that produced no
+  // primitive change (that's the scenario a flag-only check gets wrong).
   useEffect(() => {
-    if (seededByEffect.current) {
+    if (name === '') {
+      nameEdited.current = false;
       seededByEffect.current = false;
       return;
     }
-    nameEdited.current = name !== '';
+    if (seededByEffect.current && name === lastSeeded.current) {
+      seededByEffect.current = false;
+      return;
+    }
+    nameEdited.current = true;
   }, [name]);
 
   const selected = list.find((w) => String(w.id) === workdirId);
@@ -173,7 +181,7 @@ export function NewSessionDialog({
     setError(null);
     nameEdited.current = false;
     seededByEffect.current = false;
-    prevPath.current = '';
+    lastSeeded.current = null;
     form.reset();
   }
 

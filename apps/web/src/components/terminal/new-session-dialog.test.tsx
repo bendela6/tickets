@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -236,5 +236,68 @@ describe('NewSessionDialog', () => {
     await userEvent.clear(pathInput);
     await userEvent.type(pathInput, '/srv/app');
     expect(nameInput).toHaveValue('me');
+  });
+
+  it('keeps a user edit after re-picking a same-basename folder (seed-echo does not stick)', async () => {
+    render(
+      <Wrap>
+        <NewSessionDialog open onOpenChange={() => {}} onCreated={() => {}} />
+      </Wrap>,
+    );
+
+    // Drive the seed via the fallback path input. We set full paths ATOMICALLY
+    // with fireEvent.change (as a tree pick does), not char-by-char typing —
+    // typing would pass through different intermediate basenames ("wor", …),
+    // each re-firing the name-effect and clearing the stuck seed flag, which is
+    // the exact state this bug depends on.
+    const pathInput = await screen.findByPlaceholderText(/absolute path/i);
+    const nameInput = screen.getByPlaceholderText('tickets');
+
+    // Pick /repo1/work → name seeds "work".
+    fireEvent.change(pathInput, { target: { value: '/repo1/work' } });
+    await waitFor(() => expect(nameInput).toHaveValue('work'));
+
+    // Pick /repo2/work — SAME basename "work". The reseed writes the string
+    // already in the box: no primitive name change, so the seed flag stays set
+    // (nothing consumes it). This is the trap the old flag-only check fell into.
+    fireEvent.change(pathInput, { target: { value: '/repo2/work' } });
+    await waitFor(() => expect(pathInput).toHaveValue('/repo2/work'));
+    expect(nameInput).toHaveValue('work');
+
+    // A genuine user edit to a DIFFERENT string must register as an edit even
+    // with the flag stuck, because "custom" !== the last-seeded "work".
+    fireEvent.change(nameInput, { target: { value: 'custom' } });
+    await waitFor(() => expect(nameInput).toHaveValue('custom'));
+
+    // Picking a different-basename folder must NOT clobber the user's edit.
+    fireEvent.change(pathInput, { target: { value: '/repo3/other' } });
+    await waitFor(() => expect(pathInput).toHaveValue('/repo3/other'));
+    expect(nameInput).toHaveValue('custom');
+  });
+
+  it('clear then retype the basename holds against a later folder pick', async () => {
+    render(
+      <Wrap>
+        <NewSessionDialog open onOpenChange={() => {}} onCreated={() => {}} />
+      </Wrap>,
+    );
+
+    const pathInput = await screen.findByPlaceholderText(/absolute path/i);
+    const nameInput = screen.getByPlaceholderText('tickets');
+
+    // Pick /repo1/work → name seeds "work".
+    fireEvent.change(pathInput, { target: { value: '/repo1/work' } });
+    await waitFor(() => expect(nameInput).toHaveValue('work'));
+
+    // Clear (re-arms seeding) then manually retype the SAME basename "work".
+    await userEvent.clear(nameInput);
+    await userEvent.type(nameInput, 'work');
+    expect(nameInput).toHaveValue('work');
+
+    // A later folder pick must NOT overwrite it — the retype was a manual edit,
+    // even though the value equals /repo1's old seeded basename.
+    fireEvent.change(pathInput, { target: { value: '/repo2/other' } });
+    await waitFor(() => expect(pathInput).toHaveValue('/repo2/other'));
+    expect(nameInput).toHaveValue('work');
   });
 });
