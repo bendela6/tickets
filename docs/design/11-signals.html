@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body { margin:0; background:#E9E8E3; font-family:'IBM Plex Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+a { color:#4E46C6; text-decoration:none; } a:hover { text-decoration:underline; }
+@keyframes sigspin { to { transform:rotate(360deg); } }
+@keyframes sigpulse { 0%,100% { opacity:1; } 50% { opacity:.45; } }
+</style>
+</helmet>
+
+<div style="padding:48px 40px 96px;display:flex;flex-direction:column;gap:44px;align-items:flex-start">
+
+  <header style="max-width:880px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="width:10px;height:10px;background:#4E46C6;border-radius:2px"></span>
+      <span style="font:600 18px 'IBM Plex Mono',monospace;color:#25231D">tickets</span>
+      <span style="font:400 12px 'IBM Plex Mono',monospace;color:#918D80">screen 11 — Signals · local-first error &amp; event monitoring</span>
+    </div>
+    <h1 style="font:600 26px/1.25 'IBM Plex Sans',sans-serif;color:#25231D;margin:0 0 12px;max-width:780px">Signals — a self-hosted Sentry that lives in the sidebar, not a dashboard</h1>
+    <p style="font:400 13px/1.6 'IBM Plex Sans',sans-serif;color:#5D5A50;margin:0;text-wrap:pretty">External apps send <strong style="font-weight:600;color:#25231D">signals</strong> (error · log · event) to a local daemon; error signals group by fingerprint into <strong style="font-weight:600;color:#25231D">issues</strong> (open / resolved / ignored), and every signal carries a <strong style="font-weight:600;color:#25231D">session_id</strong> so a session is the full chronological trail of one page load. Everything reuses Instrument: table, badge, tab, and toolbar patterns from Tickets and AI Sessions; issue status inherits the status-kind <em>shapes</em> (open = half circle, resolved = filled + check, ignored = dashed) so state reads without color, and a regression rides next to open as an orange ↺ chip rather than replacing it. Levels are shape-coded dots, counts are grouped-thousands mono and never abbreviated — a flood must read as a flood — and the local-first posture is worn openly: the DSN points at 127.0.0.1, the footer reports disk retention, and the error state blames the daemon, not “the cloud.” Screens A–D below in light + dark: Apps (with the new-app DSN panel and fresh-install empty state), Issues (the workhorse, plus loading / error / empty), Issue detail (symbolicated and raw), and the Session timeline.</p>
+  </header>
+
+  <section data-screen-label="Signals — new components" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">SIX NEW INSTRUMENT PIECES — LEVEL DOTS · ISSUE STATUS · REGRESSED CHIP · SIGNAL-KIND GLYPHS · SPARKLINE · COUNTS &amp; DSN</div>
+    <div style="display:flex;flex-wrap:wrap;gap:20px">
+      <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <div style="flex:1 1 620px;min-width:520px;background:var(--bg);border:1px solid var(--bd);border-radius:14px;padding:22px;color:var(--f1);{{tokLight}}">
+        <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--f3);margin-bottom:18px">LIGHT</div>
+        <dc-import name="SigGallery" hint-size="100%,460px"></dc-import>
+      </div>
+      </sc-if>
+      <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <div style="flex:1 1 620px;min-width:520px;background:var(--bg);border:1px solid var(--bd);border-radius:14px;padding:22px;color:var(--f1);{{tokDark}}">
+        <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--f3);margin-bottom:18px">DARK</div>
+        <dc-import name="SigGallery" hint-size="100%,460px"></dc-import>
+      </div>
+      </sc-if>
+    </div>
+  </section>
+
+  <section data-screen-label="A · Apps — light" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">A · APPS /signals/apps · LIGHT — platform chips · 24h counts (errors in danger) · footer wears the local daemon + retention</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="SigApps" tok="{{tokLight}}" hint-size="1440px,860px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="A · Apps — dark" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">A · APPS · DARK</div>
+    <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <dc-import name="SigApps" tok="{{tokDark}}" hint-size="1440px,860px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="A · New app — DSN + snippets" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">A · NEW APP, SUCCESS PANEL · LIGHT — copyable DSN · React / Node / &lt;script&gt; snippet tabs on the terminal surface · “waiting for the first signal” closes the loop</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="SigApps" tok="{{tokLight}}" variant="new" hint-size="1440px,860px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="A · Apps — fresh-install empty" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">A · FRESH INSTALL — no apps yet · the three-step promise · LIGHT</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="SigApps" tok="{{tokLight}}" variant="empty" hint-size="1440px,860px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="B · Issues — light" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">B · ISSUES /signals · LIGHT — the workhorse: level dot · type bold + message · 14d sparkline · flood row (4,213, ▲ 34/min) · ↺ regressed on row 2 · resolved/ignored dimmed · hover row actions ✓ resolve / ⊘ ignore</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="SigIssues" tok="{{tokLight}}" hint-size="1440px,860px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="B · Issues — dark" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">B · ISSUES · DARK</div>
+    <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <dc-import name="SigIssues" tok="{{tokDark}}" hint-size="1440px,860px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="B · Issues — loading" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">B · ISSUES · LOADING · LIGHT — skeleton keeps the exact column grid, toolbar half-dimmed</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="SigIssues" tok="{{tokLight}}" variant="loading" hint-size="1440px,860px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="B · Issues — error loading" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">B · ISSUES · ERROR LOADING · DARK — the daemon is down, and the copy says so: connection refused, Retry, daemon logs</div>
+    <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <dc-import name="SigIssues" tok="{{tokDark}}" variant="error" hint-size="1440px,860px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="B · Issues — empty" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">B · ISSUES · EMPTY — no open issues 🎉 · resolved/ignored still one click away · LIGHT</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="SigIssues" tok="{{tokLight}}" variant="empty" hint-size="1440px,860px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="C · Issue detail — symbolicated" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">C · ISSUE DETAIL /signals/SGL-142 · SYMBOLICATED · LIGHT — in-app frames emphasized, vendor frames collapsed · source context with the failing line · breadcrumbs end at the error · context rail · occurrences paginate to sessions</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="SigIssueDetail" tok="{{tokLight}}" hint-size="1440px,1010px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="C · Issue detail — raw fallback" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">C · ISSUE DETAIL · RAW / UNSYMBOLICATED · DARK — no source maps for 1.44.1: honest minified frames + the exact upload command</div>
+    <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <dc-import name="SigIssueDetail" tok="{{tokDark}}" variant="raw" hint-size="1440px,1010px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="D · Session timeline — light" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">D · SESSION TIMELINE /signals/sessions/sess_9f3k21 · LIGHT — elapsed-time gutter (t+0.0s…) · idle gaps compressed to dashed pills · the 500 → warn → TypeError chain reads at a glance · error is the terminal card</div>
+    <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
+      <dc-import name="SigSession" tok="{{tokLight}}" hint-size="1440px,960px"></dc-import>
+    </sc-if>
+  </section>
+
+  <section data-screen-label="D · Session timeline — dark" style="width:100%">
+    <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#918D80;margin-bottom:12px">D · SESSION TIMELINE · DARK</div>
+    <sc-if value="{{showDark}}" hint-placeholder-val="{{true}}">
+      <dc-import name="SigSession" tok="{{tokDark}}" hint-size="1440px,960px"></dc-import>
+    </sc-if>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:900},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;both&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;both&quot;,&quot;tsType&quot;:&quot;'both' | 'light' | 'dark'&quot;,&quot;section&quot;:&quot;Preview&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const t = this.props.theme ?? 'both';
+    const term_L = ";--tbg:#FBFAF7;--tfg:#33312A;--t2:#2E7D4F;--t4:#2E6FCC;--t5:#7B3FA0;--t8:#918D80";
+    const term_D = ";--tbg:#12110E;--tfg:#D9D6CA;--t2:#57B383;--t4:#6BA4EE;--t5:#C591E8;--t8:#79756A";
+    const tokLight = "--bg:#F7F6F2;--rs:#FFFFFF;--in:#ECEAE3;--bd:#E0DDD5;--bs:#C9C5BA;--f1:#25231D;--f2:#5D5A50;--f3:#918D80;--ac:#4E46C6;--ach:#4238B5;--acs:#E9E7FA;--oac:#FFFFFF;--kt:#6E6A5E;--kts:#EBEAE3;--ka:#2E6FCC;--kas:#E4EDF9;--kb:#C25425;--kbs:#F8E9DF;--kd:#2E7D4F;--kds:#E2F0E7;--kx:#9B968A;--kxs:#EFEEE8;--dg:#C0382E;--dgs:#F8E7E5;--onpos:#FFFFFF;--onkb:#FFFFFF;--shsm:0 1px 2px rgba(28,26,20,.06);--shlg:0 16px 40px rgba(28,26,20,.16),0 4px 10px rgba(28,26,20,.08)" + term_L;
+    const tokDark = "--bg:#1B1A17;--rs:#252320;--in:#2C2A25;--bd:#343128;--bs:#4C483D;--f1:#EDEBE3;--f2:#A6A296;--f3:#79756A;--ac:#918AEC;--ach:#A29CF1;--acs:#2C2A4A;--oac:#16143C;--kt:#8A8678;--kts:#2C2A25;--ka:#6BA4EE;--kas:#1E2A3F;--kb:#E08B56;--kbs:#392317;--kd:#57B383;--kds:#1E3626;--kx:#79756A;--kxs:#2C2A25;--dg:#E26A5F;--dgs:#41231F;--onpos:#10201A;--onkb:#331A0D;--shsm:0 1px 2px rgba(0,0,0,.4);--shlg:0 16px 40px rgba(0,0,0,.55),0 4px 10px rgba(0,0,0,.4)" + term_D;
+    return { showLight: t !== 'dark', showDark: t !== 'light', tokLight, tokDark };
+  }
+}
+</script>
+</body>
+</html>
