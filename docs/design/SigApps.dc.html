@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="width:1440px;height:860px;border:1px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;background:var(--bg);color:var(--f1);box-shadow:var(--shlg);font-family:'IBM Plex Sans',sans-serif;{{tok}}">
+
+  <aside style="width:236px;flex:none;border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px 12px 12px">
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 8px 14px"><span style="width:9px;height:9px;background:var(--ac);border-radius:2px"></span><span style="font:600 15px 'IBM Plex Mono',monospace">tickets</span><span style="flex:1"></span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">acme</span></div>
+    <div style="height:32px;border:1px solid var(--bd);border-radius:8px;background:var(--rs);display:flex;align-items:center;padding:0 10px;gap:7px;margin-bottom:8px"><span style="font:400 12px 'IBM Plex Sans',sans-serif;color:var(--f3)">⌕</span><span style="font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f3);flex:1">Search…</span><span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--f3);border:1px solid var(--bd);border-radius:4px;padding:1px 4px">⌘K</span></div>
+    <button style="height:34px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer;margin-bottom:14px">＋ New ticket</button>
+    <nav style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2);cursor:pointer" style-hover="background:var(--in);color:var(--f1)">⌂<span style="flex:1">Home</span></div>
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2);cursor:pointer" style-hover="background:var(--in);color:var(--f1)">▤<span style="flex:1">All tickets</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">218</span></div>
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2);cursor:pointer" style-hover="background:var(--in);color:var(--f1)">✳<span style="flex:1">Sessions</span><span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">6</span></div>
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;background:var(--in);font:500 13px 'IBM Plex Sans',sans-serif">∿<span style="flex:1">Signals</span><span style="font:500 11px 'IBM Plex Mono',monospace;color:var(--dg)">{{navCount}}</span></div>
+    </nav>
+    <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3);padding:16px 9px 6px">PROJECTS</div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="font:500 10px 'IBM Plex Mono',monospace;background:var(--in);border-radius:4px;padding:2px 5px">CORE</span><span style="flex:1">Items Core</span></div>
+      <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="font:500 10px 'IBM Plex Mono',monospace;background:var(--in);border-radius:4px;padding:2px 5px">WEB</span><span style="flex:1">Storefront Web</span></div>
+      <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2)"><span style="font:500 10px 'IBM Plex Mono',monospace;background:var(--in);border-radius:4px;padding:2px 5px">OPS</span><span style="flex:1">Infra</span></div>
+    </div>
+    <span style="flex:1"></span>
+    <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 9px;border-radius:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2);margin-bottom:8px">⚙<span style="flex:1">Settings</span></div>
+    <div style="border-top:1px solid var(--bd);padding-top:10px;display:flex;align-items:center;gap:9px;padding-left:8px"><span style="width:24px;height:24px;border-radius:50%;background:#DBEEF6;color:#14687E;display:inline-flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Sans',sans-serif">MK</span><span style="font:500 12px 'IBM Plex Sans',sans-serif">Mara K.</span></div>
+  </aside>
+
+  <main style="flex:1;min-width:0;padding:24px 28px 20px;display:flex;flex-direction:column;position:relative">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <h1 style="font:600 22px 'IBM Plex Sans',sans-serif;margin:0">Signals</h1>
+      <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3)">{{headMeta}}</span>
+      <span style="flex:1"></span>
+      <sc-if value="{{isList}}" hint-placeholder-val="{{true}}">
+        <button style="height:34px;padding:0 14px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">＋ New app</button>
+      </sc-if>
+    </div>
+    <div style="display:flex;gap:4px;border-bottom:1px solid var(--bd);margin-bottom:16px">
+      <span style="height:34px;padding:0 12px;display:inline-flex;align-items:center;gap:7px;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--f2);cursor:pointer" style-hover="color:var(--f1)">Issues<span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">{{issueCount}}</span></span>
+      <span style="height:34px;padding:0 12px;display:inline-flex;align-items:center;gap:7px;font:500 13px 'IBM Plex Sans',sans-serif;color:var(--f1);box-shadow:inset 0 -2px var(--ac)">Apps<span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">{{appCount}}</span></span>
+    </div>
+
+    <sc-if value="{{isList}}" hint-placeholder-val="{{true}}">
+      <div style="border:1px solid var(--bd);border-radius:12px;background:var(--rs);overflow:hidden">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 200px 130px 120px 150px 48px;align-items:center;height:36px;border-bottom:1px solid var(--bd);background:var(--bg);font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--f2);padding:0 14px">
+          <span>App</span><span>Platform</span><span style="text-align:right">Signals · 24h</span><span style="text-align:right">Errors · 24h</span><span>Created</span><span></span>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 200px 130px 120px 150px 48px;align-items:center;height:50px;border-bottom:1px solid var(--bd);padding:0 14px;cursor:pointer" style-hover="background:var(--bg)">
+          <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:22px;height:22px;border-radius:6px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:600 9px 'IBM Plex Mono',monospace;flex:none">SW</span><span style="font:500 13px 'IBM Plex Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">storefront-web</span></span>
+          <span style="display:flex;gap:6px"><span style="height:20px;padding:0 7px;border-radius:5px;background:var(--kas);color:var(--ka);font:500 10.5px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:4px">⚛ react</span><span style="height:20px;padding:0 7px;border-radius:5px;background:var(--in);color:var(--f2);font:500 10.5px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:4px">◍ browser</span></span>
+          <span style="font:500 12px 'IBM Plex Mono',monospace;text-align:right">3,412</span>
+          <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dg);text-align:right">118</span>
+          <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3);padding-left:24px">Mar 12, 2026</span>
+          <span style="display:flex;justify-content:flex-end"><span style="width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3)" style-hover="background:var(--in)">⋯</span></span>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 200px 130px 120px 150px 48px;align-items:center;height:50px;border-bottom:1px solid var(--bd);padding:0 14px;cursor:pointer" style-hover="background:var(--bg)">
+          <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:22px;height:22px;border-radius:6px;background:var(--kds);color:var(--kd);display:inline-flex;align-items:center;justify-content:center;font:600 9px 'IBM Plex Mono',monospace;flex:none">AG</span><span style="font:500 13px 'IBM Plex Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">api-gateway</span></span>
+          <span style="display:flex;gap:6px"><span style="height:20px;padding:0 7px;border-radius:5px;background:var(--kds);color:var(--kd);font:500 10.5px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:4px">⬢ node</span></span>
+          <span style="font:500 12px 'IBM Plex Mono',monospace;text-align:right">1,206</span>
+          <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dg);text-align:right">9</span>
+          <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3);padding-left:24px">Mar 12, 2026</span>
+          <span style="display:flex;justify-content:flex-end"><span style="width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3)" style-hover="background:var(--in)">⋯</span></span>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 200px 130px 120px 150px 48px;align-items:center;height:50px;border-bottom:1px solid var(--bd);padding:0 14px;cursor:pointer" style-hover="background:var(--bg)">
+          <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:22px;height:22px;border-radius:6px;background:var(--kbs);color:var(--kb);display:inline-flex;align-items:center;justify-content:center;font:600 9px 'IBM Plex Mono',monospace;flex:none">WB</span><span style="font:500 13px 'IBM Plex Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">worker-billing</span></span>
+          <span style="display:flex;gap:6px"><span style="height:20px;padding:0 7px;border-radius:5px;background:var(--kds);color:var(--kd);font:500 10.5px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:4px">⬢ node</span></span>
+          <span style="font:500 12px 'IBM Plex Mono',monospace;text-align:right">488</span>
+          <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dg);text-align:right">3</span>
+          <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3);padding-left:24px">Apr 02, 2026</span>
+          <span style="display:flex;justify-content:flex-end"><span style="width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3)" style-hover="background:var(--in)">⋯</span></span>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 200px 130px 120px 150px 48px;align-items:center;height:50px;padding:0 14px;cursor:pointer" style-hover="background:var(--bg)">
+          <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:22px;height:22px;border-radius:6px;background:var(--in);color:var(--f2);display:inline-flex;align-items:center;justify-content:center;font:600 9px 'IBM Plex Mono',monospace;flex:none">AP</span><span style="font:500 13px 'IBM Plex Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">admin-panel</span></span>
+          <span style="display:flex;gap:6px"><span style="height:20px;padding:0 7px;border-radius:5px;background:var(--kas);color:var(--ka);font:500 10.5px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:4px">⚛ react</span><span style="height:20px;padding:0 7px;border-radius:5px;background:var(--in);color:var(--f2);font:500 10.5px 'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:4px">◍ browser</span></span>
+          <span style="font:500 12px 'IBM Plex Mono',monospace;text-align:right">214</span>
+          <span style="font:400 12px 'IBM Plex Mono',monospace;color:var(--f3);text-align:right">—</span>
+          <span style="font:400 11px 'IBM Plex Mono',monospace;color:var(--f3);padding-left:24px">Jun 20, 2026</span>
+          <span style="display:flex;justify-content:flex-end"><span style="width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3)" style-hover="background:var(--in)">⋯</span></span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 4px;font:400 11px 'IBM Plex Mono',monospace;color:var(--f3)">
+        <span>4 apps · all sending to the local daemon at 127.0.0.1:4180</span><span style="flex:1"></span><span>retention 30d · 2.1 GB on disk</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+      <div style="flex:1;display:flex;align-items:center;justify-content:center">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:18px;max-width:600px">
+          <span style="width:44px;height:44px;border-radius:11px;background:var(--acs);color:var(--ac);display:inline-flex;align-items:center;justify-content:center;font:500 22px 'IBM Plex Mono',monospace">∿</span>
+          <div style="font:600 22px 'IBM Plex Sans',sans-serif">Connect your first app</div>
+          <div style="font:400 13px/1.55 'IBM Plex Sans',sans-serif;color:var(--f2);text-align:center;max-width:440px;text-wrap:pretty">Signals is your local error and event monitor. Register an app to get a DSN, drop the SDK into your code, and everything it reports lands here — nothing leaves this machine.</div>
+          <button style="height:36px;padding:0 16px;border-radius:8px;border:none;background:var(--ac);color:var(--oac);font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer">＋ New app</button>
+          <div style="display:flex;gap:12px;margin-top:6px">
+            <div style="width:186px;border:1px solid var(--bd);border-radius:10px;background:var(--rs);padding:12px 14px;display:flex;flex-direction:column;gap:6px"><span style="font:500 10px 'IBM Plex Mono',monospace;color:var(--f3)">1</span><span style="font:500 12.5px 'IBM Plex Sans',sans-serif">Create an app</span><span style="font:400 11.5px/1.45 'IBM Plex Sans',sans-serif;color:var(--f2)">Name it, pick a platform, get a DSN.</span></div>
+            <div style="width:186px;border:1px solid var(--bd);border-radius:10px;background:var(--rs);padding:12px 14px;display:flex;flex-direction:column;gap:6px"><span style="font:500 10px 'IBM Plex Mono',monospace;color:var(--f3)">2</span><span style="font:500 12.5px 'IBM Plex Sans',sans-serif">Install the SDK</span><span style="font:400 11.5px/1.45 'IBM Plex Sans',sans-serif;color:var(--f2)">React, Node, or a plain script tag.</span></div>
+            <div style="width:186px;border:1px solid var(--bd);border-radius:10px;background:var(--rs);padding:12px 14px;display:flex;flex-direction:column;gap:6px"><span style="font:500 10px 'IBM Plex Mono',monospace;color:var(--f3)">3</span><span style="font:500 12.5px 'IBM Plex Sans',sans-serif">Watch signals land</span><span style="font:400 11.5px/1.45 'IBM Plex Sans',sans-serif;color:var(--f2)">Errors group into issues automatically.</span></div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isNew}}" hint-placeholder-val="{{false}}">
+      <div style="position:absolute;inset:0;background:rgba(20,18,14,.42);display:flex;align-items:center;justify-content:center;border-radius:0 12px 12px 0">
+        <div style="width:620px;background:var(--rs);border:1px solid var(--bd);border-radius:12px;box-shadow:var(--shlg);padding:22px 24px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <span style="width:30px;height:30px;border-radius:50%;background:var(--kds);color:var(--kd);display:inline-flex;align-items:center;justify-content:center;font:600 13px 'IBM Plex Sans',sans-serif;flex:none">✓</span>
+            <div style="flex:1">
+              <div style="font:600 16px 'IBM Plex Sans',sans-serif"><span style="font:600 15px 'IBM Plex Mono',monospace">storefront-web</span> is ready</div>
+              <div style="font:400 12.5px/1.5 'IBM Plex Sans',sans-serif;color:var(--f2);margin-top:3px">Wire the SDK to this DSN. Signals send to your local daemon — nothing leaves the machine.</div>
+            </div>
+            <span style="width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--f3);cursor:pointer" style-hover="background:var(--in)">✕</span>
+          </div>
+          <div>
+            <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.09em;color:var(--f3);margin-bottom:6px">DSN</div>
+            <div style="display:flex;align-items:center;gap:10px;height:38px;padding:0 6px 0 12px;border:1px solid var(--bd);border-radius:8px;background:var(--in)">
+              <span style="font:500 12.5px 'IBM Plex Mono',monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">sgl://pub_4f9c21ab@127.0.0.1:4180/3</span>
+              <button style="height:28px;padding:0 11px;border-radius:6px;border:1px solid var(--bs);background:var(--rs);color:var(--f1);font:500 11.5px 'IBM Plex Sans',sans-serif;cursor:pointer" style-hover="border-color:var(--f3)">⧉ Copy</button>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;gap:4px;border-bottom:1px solid var(--bd)">
+              <span style="height:30px;padding:0 11px;display:inline-flex;align-items:center;font:500 12.5px 'IBM Plex Sans',sans-serif;color:var(--f1);box-shadow:inset 0 -2px var(--ac)">React</span>
+              <span style="height:30px;padding:0 11px;display:inline-flex;align-items:center;font:400 12.5px 'IBM Plex Sans',sans-serif;color:var(--f2);cursor:pointer" style-hover="color:var(--f1)">Node</span>
+              <span style="height:30px;padding:0 11px;display:inline-flex;align-items:center;font:400 12.5px 'IBM Plex Mono',monospace;color:var(--f2);cursor:pointer" style-hover="color:var(--f1)">&lt;script&gt;</span>
+            </div>
+            <div style="background:var(--tbg);border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px;padding:12px 14px;font:400 11.5px/1.7 'IBM Plex Mono',monospace;color:var(--tfg)">
+              <div style="color:var(--t8)"># npm install @acme/signals-react</div>
+              <div>&nbsp;</div>
+              <div><span style="color:var(--t5)">import</span> { initSignals } <span style="color:var(--t5)">from</span> <span style="color:var(--t2)">'@acme/signals-react'</span>;</div>
+              <div>&nbsp;</div>
+              <div>initSignals({</div>
+              <div>&nbsp;&nbsp;dsn: <span style="color:var(--t2)">'sgl://pub_4f9c21ab@127.0.0.1:4180/3'</span>,</div>
+              <div>&nbsp;&nbsp;release: <span style="color:var(--t4)">import.meta.env</span>.VITE_APP_VERSION,</div>
+              <div>&nbsp;&nbsp;environment: <span style="color:var(--t2)">'development'</span>,</div>
+              <div>});</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;border-top:1px solid var(--bd);padding-top:14px">
+            <span style="width:12px;height:12px;border-radius:50%;border:2px solid var(--bd);border-top-color:var(--f2);animation:sigspin .8s linear infinite;display:inline-block"></span>
+            <span style="font:400 11.5px 'IBM Plex Mono',monospace;color:var(--f3)">Waiting for the first signal from storefront-web…</span>
+            <span style="flex:1"></span>
+            <button style="height:32px;padding:0 12px;border-radius:8px;border:none;background:transparent;color:var(--f2);font:500 12.5px 'IBM Plex Sans',sans-serif;cursor:pointer" style-hover="background:var(--in);color:var(--f1)">Close</button>
+            <button style="height:32px;padding:0 13px;border-radius:8px;border:1px solid var(--bs);background:var(--rs);color:var(--f1);font:500 12.5px 'IBM Plex Sans',sans-serif;cursor:pointer" style-hover="background:var(--in)">Go to app</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1460,&quot;height&quot;:880},&quot;tok&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;list&quot;,&quot;new&quot;,&quot;empty&quot;],&quot;default&quot;:&quot;list&quot;,&quot;tsType&quot;:&quot;'list' | 'new' | 'empty'&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const v = this.props.variant ?? 'list';
+    const empty = v === 'empty';
+    return {
+      isList: !empty, isEmpty: empty, isNew: v === 'new',
+      navCount: empty ? '' : '6',
+      headMeta: empty ? 'no apps yet' : '4 apps · 5,320 signals last 24h',
+      issueCount: empty ? '0' : '8',
+      appCount: empty ? '0' : '4',
+    };
+  }
+}
+</script>
+</body>
+</html>
