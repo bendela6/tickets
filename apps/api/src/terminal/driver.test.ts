@@ -186,6 +186,34 @@ describe('terminal driver', () => {
     expect(finished).toContainEqual({ status: 'failed', exitCode: null });
   });
 
+  it('spawns the PTY with the api process environment inherited (never an empty env)', () => {
+    const { store } = makeStore();
+    const pty = makePty();
+    let seenEnv: Record<string, string> | undefined;
+    const drv = createTerminalDriver({
+      runner: {
+        spawnPty: (spec) => {
+          seenEnv = spec.env;
+          return pty.handle;
+        },
+      },
+      store,
+      schedule: syncSchedule,
+    });
+
+    // powershell.exe routes through the pwsh integration — the path that used
+    // to collapse env to {} and make Windows ConPTY CreateProcess fail (87).
+    drv.start({ id: 1, command: 'powershell.exe', cwd: '/w' });
+    expect(seenEnv).toBeDefined();
+    const keys = Object.keys(seenEnv!).map((k) => k.toUpperCase());
+    expect(keys).toContain('PATH');
+
+    // A shell with no integration must inherit too.
+    seenEnv = undefined;
+    drv.start({ id: 2, command: 'unintegrated-shell', cwd: '/w' });
+    expect(Object.keys(seenEnv ?? {}).map((k) => k.toUpperCase())).toContain('PATH');
+  });
+
   it('assigns monotonic seq and replays missed output in order on reconnect', async () => {
     const { store } = makeStore();
     const pty = makePty();
