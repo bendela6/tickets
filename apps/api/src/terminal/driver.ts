@@ -139,21 +139,29 @@ export function createTerminalDriver(options: TerminalDriverOptions): TerminalDr
     start(spec) {
       const integ = integrationFor(spec.command);
       const sp = integ ? integ.apply({ id: spec.id, command: spec.command, args: spec.args, env: spec.env }) : null;
+      // The child always inherits the api's own environment (spec/integration
+      // entries override). Spawning with an empty env block leaves the shell
+      // without PATH/SystemRoot and makes Windows ConPTY's CreateProcess fail
+      // outright (error 87), so a bare {} must never reach the runner.
+      const inherited = Object.fromEntries(
+        Object.entries(process.env).filter((e): e is [string, string] => e[1] !== undefined),
+      );
       let handle: PtyHandle;
       try {
         handle = runner.spawnPty({
           cwd: spec.cwd,
           command: sp?.command ?? spec.command,
           args: sp?.args ?? spec.args ?? [],
-          env: sp?.env ?? spec.env ?? {},
+          env: { ...inherited, ...(sp?.env ?? spec.env ?? {}) },
           cols: spec.cols ?? 80,
           rows: spec.rows ?? 24,
         });
-      } catch {
+      } catch (err) {
         // The PTY could not be created — an unresolvable command, or (on
         // Windows ConPTY) no attachable console. Record `failed` instead of
         // throwing, so createSession never 500s and the row doesn't hang in
-        // `starting`.
+        // `starting`. Log it — a swallowed spawn error is undebuggable.
+        console.error(`terminal ${spec.id}: PTY spawn failed:`, err);
         void store.finishSession(spec.id, 'failed', null);
         return;
       }
