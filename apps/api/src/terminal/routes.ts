@@ -54,7 +54,7 @@ export function registerTerminalRoutes(
     const [session] = await db
       .insert(terminalSessions)
       .values({
-        title: body.title ?? cmd.command,
+        title: body.title ?? cmd.title,
         workdirId: workdir.id,
         status: 'starting',
         cwd: workdir.path,

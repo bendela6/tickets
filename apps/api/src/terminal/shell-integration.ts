@@ -65,13 +65,17 @@ const wsl: ShellIntegration = {
 
 // pwsh: prompt emits D;<$LASTEXITCODE> + A; the Enter handler emits C with the
 // typed command (from the PSReadLine buffer). Injected via -NoExit -Command.
+// The Enter handler needs PSReadLine, which Windows PowerShell 5.1 cannot
+// load under ConPTY ("Cannot load PSReadline module" + a red
+// CommandNotFound). Guarded in try/catch: 5.1 then degrades to prompt-only
+// markers (D/A still work, no C/command text) instead of spewing errors.
 const PWSH_INIT =
   `function prompt { $e=[char]27; $ec=if($LASTEXITCODE -ne $null){$LASTEXITCODE}elseif($?){0}else{1}; ` +
   `"$e]133;D;$ec$e\\$e]133;A$e\\PS $($executionContext.SessionState.Path.CurrentLocation)> " }; ` +
-  `Set-PSReadLineKeyHandler -Chord Enter -ScriptBlock { ` +
+  `try { Set-PSReadLineKeyHandler -Chord Enter -ScriptBlock { ` +
   `$c=$null;[Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$c,[ref]$null); ` +
   `[Console]::Write([char]27+']133;C;'+$c+[char]27+'\\'); ` +
-  `[Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine() }`;
+  `[Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine() } } catch { }`;
 
 const pwsh: ShellIntegration = {
   id: 'pwsh',
