@@ -86,8 +86,14 @@ function makeStore(log?: string[]) {
     async pruneOutput(_id, keep) {
       if (out.length > keep) out.splice(0, out.length - keep);
     },
+    async lastSeq(_id) {
+      return out.length ? Math.max(...out.map((f) => f.seq)) : 0;
+    },
     async setStatus(_id, status) {
       statuses.push(status);
+    },
+    async markRestarted(_id) {
+      statuses.push('restarted');
     },
     async finishSession(_id, status, exitCode) {
       finished.push({ status, exitCode });
@@ -212,6 +218,41 @@ describe('terminal driver', () => {
     seenEnv = undefined;
     drv.start({ id: 2, command: 'unintegrated-shell', cwd: '/w' });
     expect(Object.keys(seenEnv ?? {}).map((k) => k.toUpperCase())).toContain('PATH');
+  });
+
+  it('restart respawns on the same id, resumes seq after the old scrollback, and marks the row live again', async () => {
+    const { store, out, statuses } = makeStore();
+    let spawnCount = 0;
+    const drv = createTerminalDriver({
+      runner: {
+        spawnPty: () => {
+          spawnCount++;
+          return makePty().handle;
+        },
+      },
+      store,
+      schedule: syncSchedule,
+    });
+
+    // First run produces some scrollback, then ends.
+    drv.start({ id: 1, command: 'sh', cwd: '/w' });
+    const sub = makeSub();
+    await drv.attach(1, sub.sub, 0);
+    // Manually seed two persisted frames as the prior run's scrollback.
+    out.push({ type: 'output', seq: 1, data: 'old-1' }, { type: 'output', seq: 2, data: 'old-2' });
+
+    await drv.restart({ id: 1, command: 'sh', cwd: '/w' });
+    await tick();
+    await drv.flush(1);
+    await tick();
+
+    // A second PTY was spawned for the same id.
+    expect(spawnCount).toBe(2);
+    // The divider was appended AFTER the old scrollback (seq 3, not a collision).
+    const dividerFrame = out.find((f) => f.data.includes('restarted'));
+    expect(dividerFrame?.seq).toBe(3);
+    // The row was flipped back to live via markRestarted (not a fresh setStatus only).
+    expect(statuses).toContain('restarted');
   });
 
   it('assigns monotonic seq and replays missed output in order on reconnect', async () => {

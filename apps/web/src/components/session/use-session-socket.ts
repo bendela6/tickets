@@ -55,6 +55,10 @@ export function useSessionSocket<TStatus extends string = TerminalStatus | Agent
     basePath: string;
     onData?: (data: string) => void;
     onMessage?: (seq: number, event: AgentEvent) => void;
+    // Bumping this tears down the socket and reconnects from seq 0 — used by
+    // Restart, which respawns an ended session and needs a fresh attach that
+    // replays the continued transcript (the socket closes itself on 'exited').
+    reconnectKey?: number | string;
   },
 ) {
   const [conn, setConn] = useState<ConnState>('connecting');
@@ -73,7 +77,12 @@ export function useSessionSocket<TStatus extends string = TerminalStatus | Agent
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const endedRef = useRef(false);
   const disposedRef = useRef(false);
+  // Identity = which session/path this socket is for. A reconnectKey bump keeps
+  // the identity (Restart) and MUST preserve lastSeq so replay appends only the
+  // new run below the existing scrollback; a real session/path change resets it.
+  const identityRef = useRef<string | null>(null);
   const basePath = handlers.basePath;
+  const reconnectKey = handlers.reconnectKey;
   // Keep the latest handlers without re-running the connect effect.
   const onDataRef = useRef(handlers.onData);
   onDataRef.current = handlers.onData;
@@ -83,8 +92,15 @@ export function useSessionSocket<TStatus extends string = TerminalStatus | Agent
   useEffect(() => {
     disposedRef.current = false;
     endedRef.current = false;
-    lastSeqRef.current = 0;
     backoffRef.current = BACKOFF_MIN;
+    // Only rewind to the start of the stream when the SESSION changes — a
+    // reconnectKey-only re-run (Restart) keeps lastSeq so the replay appends
+    // the new run's output below what the terminal already shows.
+    const identity = `${sessionId}|${basePath}`;
+    if (identityRef.current !== identity) {
+      identityRef.current = identity;
+      lastSeqRef.current = 0;
+    }
 
     function scheduleReconnect() {
       if (disposedRef.current || endedRef.current) return;
@@ -166,7 +182,7 @@ export function useSessionSocket<TStatus extends string = TerminalStatus | Agent
       wsRef.current?.close();
       wsRef.current = null;
     };
-  }, [sessionId, basePath]);
+  }, [sessionId, basePath, reconnectKey]);
 
   function send(frame: object) {
     const ws = wsRef.current;

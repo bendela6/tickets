@@ -30,6 +30,10 @@ export interface StartSpec {
 
 export interface TerminalDriver {
   start(spec: StartSpec): void;
+  // Respawn a PTY on an EXISTING (ended) session id — same record, scrollback
+  // continued below a divider. Async because it resumes the output seq from the
+  // persisted max before publishing.
+  restart(spec: StartSpec): Promise<void>;
   attach(sessionId: SessionId, sub: Subscriber, lastSeq: number): Promise<void>;
   detach(sessionId: SessionId, sub: Subscriber): void;
   write(sessionId: SessionId, data: string): void;
@@ -135,43 +139,79 @@ export function createTerminalDriver(options: TerminalDriverOptions): TerminalDr
     })();
   }
 
+  // Spawn a PTY for `spec`, returning the handle + its shell integration, or
+  // null after recording `failed` (an unresolvable command, or Windows ConPTY
+  // with no attachable console). The child always inherits the api's own
+  // environment (spec/integration entries override): an empty env block leaves
+  // the shell without PATH/SystemRoot and makes ConPTY's CreateProcess fail
+  // outright (error 87), so a bare {} must never reach the runner.
+  function spawnFor(
+    spec: StartSpec,
+  ): { handle: PtyHandle; integ: ReturnType<typeof integrationFor> } | null {
+    const integ = integrationFor(spec.command);
+    const sp = integ ? integ.apply({ id: spec.id, command: spec.command, args: spec.args, env: spec.env }) : null;
+    const inherited = Object.fromEntries(
+      Object.entries(process.env).filter((e): e is [string, string] => e[1] !== undefined),
+    );
+    try {
+      const handle = runner.spawnPty({
+        cwd: spec.cwd,
+        command: sp?.command ?? spec.command,
+        args: sp?.args ?? spec.args ?? [],
+        env: { ...inherited, ...(sp?.env ?? spec.env ?? {}) },
+        cols: spec.cols ?? 80,
+        rows: spec.rows ?? 24,
+      });
+      return { handle, integ };
+    } catch (err) {
+      // Log it — a swallowed spawn error is undebuggable — and record `failed`
+      // so createSession never 500s and the row doesn't hang in `starting`.
+      console.error(`terminal ${spec.id}: PTY spawn failed:`, err);
+      void store.finishSession(spec.id, 'failed', null);
+      return null;
+    }
+  }
+
+  // Divider written between a session's runs so restarted output reads as a
+  // continuation, not a jumbled overwrite. Dim, on its own lines.
+  function restartDivider(): string {
+    return `\r\n\x1b[2m─── restarted ───\x1b[0m\r\n`;
+  }
+
   return {
     start(spec) {
-      const integ = integrationFor(spec.command);
-      const sp = integ ? integ.apply({ id: spec.id, command: spec.command, args: spec.args, env: spec.env }) : null;
-      // The child always inherits the api's own environment (spec/integration
-      // entries override). Spawning with an empty env block leaves the shell
-      // without PATH/SystemRoot and makes Windows ConPTY's CreateProcess fail
-      // outright (error 87), so a bare {} must never reach the runner.
-      const inherited = Object.fromEntries(
-        Object.entries(process.env).filter((e): e is [string, string] => e[1] !== undefined),
-      );
-      let handle: PtyHandle;
-      try {
-        handle = runner.spawnPty({
-          cwd: spec.cwd,
-          command: sp?.command ?? spec.command,
-          args: sp?.args ?? spec.args ?? [],
-          env: { ...inherited, ...(sp?.env ?? spec.env ?? {}) },
-          cols: spec.cols ?? 80,
-          rows: spec.rows ?? 24,
-        });
-      } catch (err) {
-        // The PTY could not be created — an unresolvable command, or (on
-        // Windows ConPTY) no attachable console. Record `failed` instead of
-        // throwing, so createSession never 500s and the row doesn't hang in
-        // `starting`. Log it — a swallowed spawn error is undebuggable.
-        console.error(`terminal ${spec.id}: PTY spawn failed:`, err);
-        void store.finishSession(spec.id, 'failed', null);
-        return;
-      }
-      const rs = newSession(spec.id, handle);
+      const spawned = spawnFor(spec);
+      if (!spawned) return;
+      const rs = newSession(spec.id, spawned.handle);
       rs.status = 'live';
-      rs.scanner = integ?.precise ? createActivityScanner() : null;
+      rs.scanner = spawned.integ?.precise ? createActivityScanner() : null;
       sessions.set(spec.id, rs);
       void store.setStatus(spec.id, 'live');
       channel.notify(spec.id, { type: 'status', status: 'live' });
-      if (integ?.precise) channel.notify(spec.id, { type: 'activity', busy: false, integrated: true });
+      if (spawned.integ?.precise) channel.notify(spec.id, { type: 'activity', busy: false, integrated: true });
+      consume(rs);
+    },
+
+    async restart(spec) {
+      // Resume seq from the persisted max so the divider + new output land
+      // BELOW the existing scrollback (works whether or not the ended session
+      // is still in memory — e.g. after an API restart it is not).
+      const base = await store.lastSeq(spec.id);
+      const prev = sessions.get(spec.id);
+      const spawned = spawnFor(spec);
+      if (!spawned) return;
+      const rs = newSession(spec.id, spawned.handle);
+      rs.seq = base;
+      rs.status = 'live';
+      rs.scanner = spawned.integ?.precise ? createActivityScanner() : null;
+      // Carry over any still-attached subscribers so an open socket keeps
+      // flowing (the client also re-attaches, so this is belt-and-suspenders).
+      if (prev) rs.subscriberDetachers = prev.subscriberDetachers;
+      sessions.set(spec.id, rs);
+      publishOutput(rs, restartDivider());
+      await store.markRestarted(spec.id);
+      channel.notify(spec.id, { type: 'status', status: 'live' });
+      if (spawned.integ?.precise) channel.notify(spec.id, { type: 'activity', busy: false, integrated: true });
       consume(rs);
     },
 

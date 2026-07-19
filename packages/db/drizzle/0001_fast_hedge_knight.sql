@@ -1,0 +1,1 @@
+ALTER TABLE "terminal"."sessions" ADD COLUMN "command" text;
