@@ -2807,6 +2807,13 @@
           "nullable": true
         },
         {
+          "name": "command",
+          "type": "text",
+          "title": "Command",
+          "description": "Resolved shell/command this session was launched with, so Restart can respawn the same process on the same record (null for rows created before this column existed → Restart falls back to the default shell).",
+          "nullable": true
+        },
+        {
           "name": "status",
           "type": "session_status",
           "title": "Status",

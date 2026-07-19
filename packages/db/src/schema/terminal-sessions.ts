@@ -11,6 +11,11 @@ export const terminalSessions = terminalSchema.table(
     title: text('title').notNull(),
     workdirId: integer('workdir_id').notNull().references(() => workdirs.id),
     cwd: text('cwd'),
+    // The resolved shell/command this session was launched with, so Restart can
+    // respawn the same process on the same record (null for pre-restart rows and
+    // sessions started before this column existed → Restart falls back to the
+    // default shell in `cwd`).
+    command: text('command'),
     status: terminalStatusEnum('status').notNull().default('starting'),
     exitCode: integer('exit_code'),
     startedBy: integer('started_by').references(() => users.id),

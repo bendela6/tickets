@@ -99,6 +99,44 @@ describe('TerminalStore', () => {
     expect(done!.endedAt).not.toBeNull();
   });
 
+  test('lastSeq returns the max persisted seq, 0 when there is no output', async () => {
+    const [wd] = await db
+      .insert(workdirs)
+      .values({ name: 'lastseq-wd', path: '/tmp/lastseq' })
+      .returning({ id: workdirs.id });
+    const [fresh] = await db
+      .insert(terminalSessions)
+      .values({ title: 'no output', workdirId: wd!.id, status: 'starting' })
+      .returning({ id: terminalSessions.id });
+    expect(await store.lastSeq(fresh!.id)).toBe(0);
+
+    await store.append(fresh!.id, [
+      { type: 'output', seq: 1, data: 'x' },
+      { type: 'output', seq: 2, data: 'y' },
+    ]);
+    expect(await store.lastSeq(fresh!.id)).toBe(2);
+  });
+
+  test('markRestarted flips an ended row back to live and clears exit code + ended_at', async () => {
+    const [wd] = await db
+      .insert(workdirs)
+      .values({ name: 'restart-wd', path: '/tmp/restart' })
+      .returning({ id: workdirs.id });
+    const [row] = await db
+      .insert(terminalSessions)
+      .values({ title: 'ended', workdirId: wd!.id, status: 'exited', exitCode: 1, endedAt: new Date().toISOString() })
+      .returning({ id: terminalSessions.id });
+
+    await store.markRestarted(row!.id);
+    const [after] = await db
+      .select({ status: terminalSessions.status, exitCode: terminalSessions.exitCode, endedAt: terminalSessions.endedAt })
+      .from(terminalSessions)
+      .where(eq(terminalSessions.id, row!.id));
+    expect(after!.status).toBe('live');
+    expect(after!.exitCode).toBeNull();
+    expect(after!.endedAt).toBeNull();
+  });
+
   test('append with no frames is a no-op', async () => {
     const before = await db
       .select({ id: terminalSessions.id })
