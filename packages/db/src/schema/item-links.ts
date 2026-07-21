@@ -1,12 +1,13 @@
 import { sql } from 'drizzle-orm';
 import {
-  check, index, integer, pgTable, serial, timestamp, unique,
+  check, index, integer, serial, timestamp, unique,
 } from 'drizzle-orm/pg-core';
 import { items } from './items';
 import { linkTypes } from './link-types';
+import { recordsSchema } from './schemas';
 
 // Parent/child is NOT a link — that is items.parent_id.
-export const itemLinks = pgTable(
+export const itemLinks = recordsSchema.table(
   'item_links',
   {
     id: serial('id').primaryKey(),

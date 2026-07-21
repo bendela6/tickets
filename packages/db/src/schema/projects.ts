@@ -1,7 +1,8 @@
-import { integer, pgTable, serial, text, timestamp, unique } from 'drizzle-orm/pg-core';
+import { integer, serial, text, timestamp, unique } from 'drizzle-orm/pg-core';
 import { schemes } from './schemes';
+import { structureSchema } from './schemas';
 
-export const projects = pgTable(
+export const projects = structureSchema.table(
   'projects',
   {
     id: serial('id').primaryKey(),

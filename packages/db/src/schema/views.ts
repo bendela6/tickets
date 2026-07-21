@@ -1,8 +1,9 @@
 import { sql } from 'drizzle-orm';
-import { integer, jsonb, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
+import { integer, jsonb, serial, text, timestamp } from 'drizzle-orm/pg-core';
 import { projects } from './projects';
+import { structureSchema } from './schemas';
 
-export const views = pgTable('views', {
+export const views = structureSchema.table('views', {
   id: serial('id').primaryKey(),
   projectId: integer('project_id')
     .notNull()

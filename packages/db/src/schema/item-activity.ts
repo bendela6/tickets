@@ -1,11 +1,12 @@
-import { bigint, bigserial, index, integer, jsonb, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import { bigint, bigserial, index, integer, jsonb, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { events } from './events';
 import { items } from './items';
+import { historySchema } from './schemas';
 import { users } from './users';
 
 // Feed projection — source events are value-only, so the diff is computed on
 // fold and denormalised here. Built in sub-project 3; empty until then.
-export const itemActivity = pgTable(
+export const itemActivity = historySchema.table(
   'item_activity',
   {
     id: bigserial('id', { mode: 'number' }).primaryKey(),

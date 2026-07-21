@@ -1,8 +1,9 @@
-import { integer, pgTable, serial, text, timestamp, unique } from 'drizzle-orm/pg-core';
+import { integer, serial, text, timestamp, unique } from 'drizzle-orm/pg-core';
 import { comments } from './comments';
+import { recordsSchema } from './schemas';
 import { users } from './users';
 
-export const commentReactions = pgTable(
+export const commentReactions = recordsSchema.table(
   'comment_reactions',
   {
     id: serial('id').primaryKey(),
