@@ -1456,7 +1456,7 @@ describe('applyModelEdit', () => {
     it('(d) real seed: renaming schemes.id -> uid is rejected; the model keeps all 56 edges and 18 labels', () => {
       const { model, errors } = loadModel(seedRaw);
       expect(errors).toEqual([]);
-      const schemes = model!.entityById.get('schemes')!;
+      const schemes = model!.entityById.get('structure.schemes')!;
       const toField = (c: Column): EditField => ({
         name: c.name === 'id' ? 'uid' : c.name,
         type: c.type,
@@ -1471,7 +1471,7 @@ describe('applyModelEdit', () => {
         applyModelEdit(model!, {
           kind: 'upsertEntity',
           entity: {
-            id: 'schemes',
+            id: 'structure.schemes',
             label: schemes.label,
             group: schemes.group,
             description: schemes.description,
@@ -1481,7 +1481,9 @@ describe('applyModelEdit', () => {
             indexes: schemes.indexes,
           },
         }),
-      ).toThrow(/table "(projects|item_types|fields|option_sets)" has a foreign key \(c2\) referencing it/);
+      ).toThrow(
+        /table "(core\.projects|structure\.item_types|structure\.fields|structure\.option_sets)" has a foreign key \(c2\) referencing it/,
+      );
 
       // The rejected edit must not have mutated the model in any way.
       expect(model!.relationships).toHaveLength(56);

@@ -93,7 +93,10 @@ beforeAll(async () => {
   await admin.unsafe(`CREATE DATABASE "${dbName}"`);
   await admin.end();
 
-  scratchSql = postgres(scratchUrl, { max: 1 });
+  scratchSql = postgres(scratchUrl, {
+    max: 1,
+    connection: { search_path: 'core, structure, records, history, public' },
+  });
   db = drizzle(scratchSql) as unknown as Db;
   await migrate(db, {
     migrationsFolder: resolve(import.meta.dirname, '../../../../packages/db/drizzle'),

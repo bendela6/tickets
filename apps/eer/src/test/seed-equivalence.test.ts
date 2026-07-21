@@ -14,27 +14,36 @@ import { loadModel } from '../engine/model/load-model';
 // tables preserved their shape, so the new tables are out of its scope (their
 // shape is guarded by model-conformance + the round-trip gate). Passing the
 // legacy entity-id set keeps the comparison to the tables both sides share.
+// Namespacing (moving every table into core/structure/records/history)
+// requalified every entity id, e.g. "users" -> "core.users". The legacy
+// fixture predates namespacing and keeps bare ids. Strip the schema prefix
+// before comparing so both sides line up on the same (bare) identity — this
+// layers the namespace requalification the same way the Task 1/SP3 deltas
+// below are layered, it does not loosen any comparison: every field below
+// still checks exact string equality, just on the bare name.
+const bare = (id: string) => id.replace(/^[a-z_]+\./, '');
+
 const digest = (raw: unknown, only?: Set<string>) => {
   const { model, errors } = loadModel(raw);
   expect(errors).toEqual([]);
   const m = model!;
-  const keep = (id: string) => !only || only.has(id);
+  const keep = (id: string) => !only || only.has(bare(id));
   return {
-    entities: m.entities.map((e) => e.id).filter(keep).sort(),
+    entities: m.entities.map((e) => bare(e.id)).filter(keep).sort(),
     edges: m.relationships
       .filter((r) => keep(r.source) && keep(r.target))
-      .map((r) => `${r.source}.${r.sourceField}->${r.target}.${r.targetField}:${r.cardinality}`)
+      .map((r) => `${bare(r.source)}.${r.sourceField}->${bare(r.target)}.${r.targetField}:${r.cardinality}`)
       .sort(),
     labels: m.relationships.filter((r) => r.label && keep(r.source) && keep(r.target)).map((r) => r.label).sort(),
     titles: m.entities
       .filter((e) => keep(e.id))
-      .flatMap((e) => e.columns.filter((c) => c.title).map((c) => `${e.id}.${c.name}=${c.title!}`))
+      .flatMap((e) => e.columns.filter((c) => c.title).map((c) => `${bare(e.id)}.${c.name}=${c.title!}`))
       .sort(),
     badges: m.entities
       .filter((e) => keep(e.id))
       .flatMap((e) => {
         const roles = columnRoles(e);
-        return e.columns.map((c) => `${e.id}.${c.name}:${roles.get(c.name)!.pk ? 'pk' : ''}${roles.get(c.name)!.fk ? 'fk' : ''}`);
+        return e.columns.map((c) => `${bare(e.id)}.${c.name}:${roles.get(c.name)!.pk ? 'pk' : ''}${roles.get(c.name)!.fk ? 'fk' : ''}`);
       })
       .sort(),
   };
@@ -110,11 +119,12 @@ describe('seed rewrite', () => {
     // status is an option field, and options.kind carries its lifecycle. The
     // last five arrived with the terminal/agent split; they are compared
     // qualified because `session_status` is two different enums — one per
-    // subsystem, each carrying only its own reachable states.
+    // subsystem, each carrying only its own reachable states. Namespacing
+    // then qualified every remaining enum with its owning schema too.
     expect(model!.enums.map((e) => (e.schema ? `${e.schema}.${e.name}` : e.name))).toEqual([
-      'user_kind',
-      'status_kind',
-      'field_type',
+      'core.user_kind',
+      'structure.status_kind',
+      'structure.field_type',
       'core.runner_kind',
       'terminal.session_status',
       'agent.session_status',

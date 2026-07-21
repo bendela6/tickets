@@ -329,7 +329,8 @@ describe('TableModal', () => {
   // not a trimmed fixture, so it can't drift unnoticed as the seed grows.
   it('a no-op Save preserves title/description byte-identically, and preserves the entity\'s constraints/relationship (real seed, outbox)', async () => {
     const onClose = vi.fn();
-    const { actions } = await renderDiagram(<TableModal id="outbox" onClose={onClose} />, seedRaw);
+    // Namespacing moved outbox (and events) into `history`.
+    const { actions } = await renderDiagram(<TableModal id="history.outbox" onClose={onClose} />, seedRaw);
     const spy = vi.spyOn(actions, 'applyModelEdit');
 
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -339,7 +340,7 @@ describe('TableModal', () => {
     const [edit] = spy.mock.calls[0]!;
 
     const before = loadModel(seedRaw).model!;
-    const beforeEntity = before.entityById.get('outbox')!;
+    const beforeEntity = before.entityById.get('history.outbox')!;
     const originalField = beforeEntity.columns.find((f) => f.name === 'event_id')!;
     // Sanity: this is genuinely the titled shape the fix targets, and the
     // legacy role:'pk'+ref:'events' the raw file carries for this column has
@@ -350,14 +351,14 @@ describe('TableModal', () => {
     expect(beforeEntity.constraints).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: 'pk', columns: ['event_id'] }),
-        expect.objectContaining({ kind: 'fk', columns: ['event_id'], refTable: 'events' }),
+        expect.objectContaining({ kind: 'fk', columns: ['event_id'], refTable: 'history.events' }),
       ]),
     );
-    const beforeRel = before.relationships.find((r) => r.target === 'outbox' && r.targetField === 'event_id')!;
+    const beforeRel = before.relationships.find((r) => r.target === 'history.outbox' && r.targetField === 'event_id')!;
     expect(beforeRel).toBeDefined();
 
     const applied = applyModelEdit(before, edit as ModelEdit);
-    const appliedEntity = applied.entityById.get('outbox')!;
+    const appliedEntity = applied.entityById.get('history.outbox')!;
     // title/description survive; the entity's constraints (and therefore the
     // derived relationship for event_id -> events) are carried through
     // verbatim rather than re-derived from fields.
@@ -368,14 +369,14 @@ describe('TableModal', () => {
     const raw2 = serializeModel(applied, before.colors);
     const { model: reloaded, errors } = loadModel(raw2);
     expect(errors).toEqual([]);
-    expect(reloaded!.entityById.get('outbox')!.columns.find((f) => f.name === 'event_id')!.title).toBe('Event');
+    expect(reloaded!.entityById.get('history.outbox')!.columns.find((f) => f.name === 'event_id')!.title).toBe('Event');
     expect(reloaded!.relationships.some((r) => r.id === beforeRel.id)).toBe(true);
 
     // Every other field on the entity (plain, titled, no ref) survives too.
     const otherNames = ['created_at', 'picked_at', 'done_at'];
     for (const name of otherNames) {
       const orig = beforeEntity.columns.find((f) => f.name === name)!;
-      const reloadedField = reloaded!.entityById.get('outbox')!.columns.find((f) => f.name === name)!;
+      const reloadedField = reloaded!.entityById.get('history.outbox')!.columns.find((f) => f.name === name)!;
       expect(reloadedField.title).toBe(orig.title);
       expect(reloadedField.description).toBe(orig.description);
     }
