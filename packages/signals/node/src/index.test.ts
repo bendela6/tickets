@@ -1,0 +1,47 @@
+import { describe, expect, it } from 'vitest';
+import { expressErrorHandler, fastifyErrorHook, handleRejection, handleUncaught, initSignals } from './index';
+import type { Signal, Transport } from '@bendela6/signals-core';
+
+function fakeTransport() {
+  const sent: Signal[] = [];
+  const transport: Transport = {
+    enqueue: (s) => { sent.push(s); }, flush: async () => {}, takeAll: () => sent.splice(0),
+    queuedCount: () => sent.length, dispose: () => {},
+  };
+  return { transport, sent };
+}
+const DSN = 'sgl://k@127.0.0.1:4640/1';
+
+describe('node SDK', () => {
+  it('carries node platform info and does not register process handlers when disabled', () => {
+    const before = process.listenerCount('uncaughtException');
+    const { transport, sent } = fakeTransport();
+    const client = initSignals({ dsn: DSN, transport, registerProcessHandlers: false });
+    expect(process.listenerCount('uncaughtException')).toBe(before);
+    client.captureError(new Error('x'));
+    expect(sent[0]!.platform).toMatchObject({ runtime: 'node', nodeVersion: process.version, pid: process.pid });
+  });
+
+  it('handleUncaught captures with mechanism and calls exit hook; handleRejection never exits', () => {
+    const { transport, sent } = fakeTransport();
+    const client = initSignals({ dsn: DSN, transport, registerProcessHandlers: false });
+    let exited: number | null = null;
+    handleUncaught(client, new TypeError('crash'), (code) => { exited = code; });
+    expect(sent[0]).toMatchObject({ mechanism: 'uncaught-exception', name: 'TypeError' });
+    expect(exited).toBe(1);
+    handleRejection(client, 'string reason');
+    expect(sent[1]).toMatchObject({ mechanism: 'unhandled-rejection', message: 'string reason' });
+  });
+
+  it('express and fastify helpers capture with http context and middleware mechanism', () => {
+    const { transport, sent } = fakeTransport();
+    const client = initSignals({ dsn: DSN, transport, registerProcessHandlers: false });
+    let nexted: unknown = null;
+    expressErrorHandler(client)(new Error('exp'), { method: 'POST', url: '/pay', originalUrl: '/api/pay' }, {}, (e: unknown) => { nexted = e; });
+    expect(sent[0]).toMatchObject({ mechanism: 'middleware', message: 'exp' });
+    expect(sent[0]!.contexts?.http).toMatchObject({ method: 'POST', url: '/api/pay' });
+    expect(nexted).toBeInstanceOf(Error);
+    fastifyErrorHook(client)(new Error('fas'), { method: 'GET', url: '/x' });
+    expect(sent[1]!.contexts?.http).toMatchObject({ method: 'GET', url: '/x' });
+  });
+});
