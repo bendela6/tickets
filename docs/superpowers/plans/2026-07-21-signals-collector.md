@@ -1994,3 +1994,18 @@ git commit -m "feat(signals): dev wiring (mprocs pane), spec + running-the-stack
 - **Spec coverage:** ingest envelope/limits (T6), fingerprinting rules (T3), issue lifecycle incl. reopen/ignored (T6), symbolication + culprit refresh (T9), rate limit (T6/T4), apps + DSN (T5), issues list/detail/patch/occurrences + sparklines + distinct counts + release range (T7), session timeline + crashed/duration/counts (T8), db-size meta (T5), CORS-open ingest (T6), dev wiring (T10). Deferred by design: `GET /sdk.js` (plan 2), docker/nginx `/signals-api` proxy (plan 3), retention (post-v1).
 - **Known deviations from spec, accepted:** issue `key` derived from id (no column); sourcemap upload is JSON not multipart (spec updated in T10); `min/max` release is lexicographic.
 - **Type consistency:** `buildApp({ db, rateLimiter? })`; `registerXRoutes(app, { db })`; frames types live in `src/types.ts` and are reused by fingerprint/symbolicate/ingest.
+
+## Post-merge follow-ups (from final whole-branch review, 2026-07-21)
+
+Deferred, none merge-blocking — pick up in plans 2/3 or a cleanup pass:
+- Cap `stack` array length in the ingest schema (~128 frames) so the ~200 KB truncation claim is honest (plan 2, alongside SDK batching).
+- POST /apps slug race: catch pg 23505 → 409 (DB unique constraint already prevents duplicates).
+- Issues list: level filter post-pagination / `total` ignores level (documented v1 limitation; revisit when the UI exposes it).
+- Sparkline oldest slot undercounts (since-cutoff is an instant, not a day boundary).
+- Culprit can be clobbered by a later unsymbolicated occurrence when the fingerprint is message-only.
+- Fingerprint instability when maps lack `names` (falls back to minified function names).
+- Escape `%`/`_` in the issues `?q=` ilike pattern.
+- Add `OPTIONS /ingest/:key/sourcemaps` preflight if browser uploads ever happen (CLI-only in plan 2).
+- Close the postgres pool in server.ts shutdown.
+- **Plan 3 must include:** vite dev proxy `/signals-api/*` → 127.0.0.1:4640 (spec Architecture/Dev line; not implemented here by design) + nginx/docker wiring + `GET /sdk.js` (plan 2).
+- Symbolicate tests: add fixture variants covering the leading-`../` strip and `names`-fallback branches.
