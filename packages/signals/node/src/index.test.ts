@@ -1,5 +1,12 @@
-import { describe, expect, it } from 'vitest';
-import { expressErrorHandler, fastifyErrorHook, handleRejection, handleUncaught, initSignals } from './index';
+import { describe, expect, it, vi } from 'vitest';
+import {
+  buildUncaughtListener,
+  expressErrorHandler,
+  fastifyErrorHook,
+  handleRejection,
+  handleUncaught,
+  initSignals,
+} from './index';
 import type { Signal, Transport } from '@bendela6/signals-core';
 
 function fakeTransport() {
@@ -22,15 +29,30 @@ describe('node SDK', () => {
     expect(sent[0]!.platform).toMatchObject({ runtime: 'node', nodeVersion: process.version, pid: process.pid });
   });
 
-  it('handleUncaught captures with mechanism and calls exit hook; handleRejection never exits', () => {
+  it('handleUncaught captures with mechanism and calls exit hook; handleRejection never exits', async () => {
     const { transport, sent } = fakeTransport();
     const client = initSignals({ dsn: DSN, transport, registerProcessHandlers: false });
     let exited: number | null = null;
-    handleUncaught(client, new TypeError('crash'), (code) => { exited = code; });
+    await handleUncaught(client, new TypeError('crash'), (code) => { exited = code; });
     expect(sent[0]).toMatchObject({ mechanism: 'uncaught-exception', name: 'TypeError' });
     expect(exited).toBe(1);
     handleRejection(client, 'string reason');
     expect(sent[1]).toMatchObject({ mechanism: 'unhandled-rejection', message: 'string reason' });
+  });
+
+  it('buildUncaughtListener logs to stderr and never exits when exitOnUncaught is false', async () => {
+    const { transport, sent } = fakeTransport();
+    const client = initSignals({ dsn: DSN, transport, registerProcessHandlers: false });
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const listener = buildUncaughtListener(client, { exitOnUncaught: false });
+    const error = new TypeError('non-fatal crash');
+    listener(error);
+    // handleUncaught's capture + flush happen synchronously before the flush race,
+    // but the listener itself is fire-and-forget (`void handleUncaught(...)`).
+    await new Promise((r) => setTimeout(r, 0));
+    expect(sent[0]).toMatchObject({ mechanism: 'uncaught-exception', name: 'TypeError' });
+    expect(errorSpy).toHaveBeenCalledWith('[signals] uncaught exception (exitOnUncaught: false):', error);
+    errorSpy.mockRestore();
   });
 
   it('express and fastify helpers capture with http context and middleware mechanism', () => {
