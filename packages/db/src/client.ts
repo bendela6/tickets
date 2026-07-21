@@ -4,7 +4,10 @@ import { connectionUrl } from './environment';
 import * as schema from './schema';
 
 export function createDbClient({ max = 10 }: { max?: number } = {}) {
-  const sql = postgres(connectionUrl, { max });
+  const sql = postgres(connectionUrl, {
+    max,
+    connection: { search_path: 'core, structure, records, history, public' },
+  });
   const db = drizzle(sql, { schema });
   return { db, sql };
 }
