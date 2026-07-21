@@ -1,5 +1,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
+import { ApiError } from '../../api/api-error';
 import type { IssueDetail, OccurrencePage, SessionTimeline } from '../../api/signals/signals-api';
 import { IssueDetailScreen } from './issue-detail-screen';
 import { renderSignals, type FetchRoute } from './test-utils';
@@ -236,4 +237,24 @@ test('(f) clicking Resolve PATCHes /signals-api/issues/1', async () => {
   fireEvent.click(screen.getByRole('button', { name: /Resolve/ }));
 
   await waitFor(() => expect(resolved).toBe(true));
+});
+
+test('(g) a 500-style ApiError shows "Couldn\'t load issue" + Retry, not "Issue not found"', async () => {
+  renderSignals(<IssueDetailScreen issueId={1} />, {
+    fetchRoutes: [
+      {
+        test: /\/signals-api\/issues\/1$/,
+        handler: () => {
+          // Mirrors what apps/web/src/api/client.ts's fetchJson actually
+          // throws for a non-2xx response — a non-404 ApiError must NOT be
+          // misclassified as "issue not found".
+          throw new ApiError(500, 'internal error');
+        },
+      },
+    ],
+  });
+
+  expect(await screen.findByText("Couldn't load issue")).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Retry/ })).toBeInTheDocument();
+  expect(screen.queryByText('Issue not found')).not.toBeInTheDocument();
 });
