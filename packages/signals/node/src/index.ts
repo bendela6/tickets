@@ -2,6 +2,8 @@ import * as os from 'node:os';
 import { createClient, type ClientOptions, type SignalsClient } from '@bendela6/signals-core';
 
 export * from '@bendela6/signals-core';
+export { uploadSourcemaps } from './sourcemaps';
+export type { UploadSourcemapsOptions, UploadSourcemapsResult } from './sourcemaps';
 
 export type NodeInitOptions = Omit<ClientOptions, 'platform' | 'sdk'> & {
   registerProcessHandlers?: boolean;
