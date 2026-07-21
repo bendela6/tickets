@@ -12,6 +12,8 @@ import { projectRoute } from './routes/project-route';
 import { rootRoute } from './routes/root-route';
 import { schemaRoute } from './routes/schema-route';
 import { settingsRoute } from './routes/settings-route';
+import { signalsAppsRoute } from './routes/signals-apps-route';
+import { signalsRoute } from './routes/signals-route';
 import { terminalsRoute } from './routes/terminals-route';
 import { terminalSessionRoute } from './routes/terminal-session-route';
 import { ticketPageRoute } from './routes/ticket-page-route';
@@ -30,6 +32,8 @@ const routeTree = rootRoute.addChildren([
   galleryRoute,
   schemaRoute,
   settingsRoute,
+  signalsRoute,
+  signalsAppsRoute,
   projectRoute.addChildren([projectIndexRoute, viewRoute, ticketPageRoute]),
 ]);
 
