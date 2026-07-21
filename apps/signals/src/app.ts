@@ -6,6 +6,7 @@ import { registerAppsRoutes } from './routes/apps.routes';
 import { registerIngestRoutes } from './routes/ingest.routes';
 import { registerIssuesRoutes } from './routes/issues.routes';
 import { registerSessionsRoutes } from './routes/sessions.routes';
+import { registerSourcemapRoutes } from './routes/sourcemaps.routes';
 
 export function buildApp(context: { db: Db; rateLimiter?: RateLimiter }) {
   const app = fastify({ logger: false });
@@ -44,6 +45,7 @@ export function buildApp(context: { db: Db; rateLimiter?: RateLimiter }) {
   registerIngestRoutes(app, { db: context.db, rateLimiter });
   registerIssuesRoutes(app, context);
   registerSessionsRoutes(app, context);
+  registerSourcemapRoutes(app, context);
 
   return app;
 }
