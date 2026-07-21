@@ -19,7 +19,7 @@
   },
   "publishConfig": { "registry": "https://npm.pkg.github.com", "access": "restricted" },
   "scripts": {
-    "build": "tsup",
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },
@@ -27,6 +27,7 @@
     "@bendela6/signals-core": "workspace:^"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "jsdom": "^29.1.1",
     "tsup": "^8.5.0",
     "typescript": "^6.0.3",

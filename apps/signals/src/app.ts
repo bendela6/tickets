@@ -13,6 +13,20 @@ export function buildApp(context: { db: Db; rateLimiter?: RateLimiter }) {
   const app = fastify({ logger: false });
   const rateLimiter = context.rateLimiter ?? createRateLimiter();
 
+  // navigator.sendBeacon() has no way to set a request content-type, so it
+  // always sends its Blob/string body as `text/plain` — the browser SDK's
+  // flush-on-hide path (packages/signals/browser/src/instrument.ts) relies on
+  // this. Parse it the same way as JSON; a body that isn't valid JSON becomes
+  // `undefined`, which then fails valibot validation as a normal 400 rather
+  // than crashing the parser (and the request) with a 500.
+  app.addContentTypeParser('text/plain', { parseAs: 'string' }, (_req, body, done) => {
+    try {
+      done(null, JSON.parse(body as string));
+    } catch {
+      done(null, undefined);
+    }
+  });
+
   // Ingest is cross-origin by design: browser SDKs on other sites post here.
   app.addHook('onSend', async (request, reply, payload) => {
     if (request.url.startsWith('/ingest/')) {

@@ -13,3 +13,5 @@ if (dsn) {
 }
 
 window.Signals = { initSignals, getClient };
+
+export { initSignals, getClient };

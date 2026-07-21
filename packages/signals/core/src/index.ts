@@ -10,6 +10,7 @@ export type {
   Signal,
   SignalKind,
   SignalLevel,
+  SignalEnvelope,
   Mechanism,
   StackFrame,
   Breadcrumb,

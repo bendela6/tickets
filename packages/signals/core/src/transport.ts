@@ -41,8 +41,10 @@ export function createTransport(options: TransportOptions): Transport {
   let sending = false;
   let inFlight: Signal[] | null = null;
   let stolen = false;
+  let disposed = false;
 
   function armRetryIfNeeded(): void {
+    if (disposed) return;
     if (timer === null && queue.length > 0) {
       const retryDelayMs = Math.max(flushIntervalMs, backoffUntil - now());
       timer = scheduleFlush(() => { timer = null; void safeFlush(); }, retryDelayMs);
@@ -65,7 +67,7 @@ export function createTransport(options: TransportOptions): Transport {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body,
-            keepalive: body.length < 60_000,
+            keepalive: new TextEncoder().encode(body).length < 60_000,
           }));
         } catch {
           inFlight = null;
@@ -80,7 +82,15 @@ export function createTransport(options: TransportOptions): Transport {
           armRetryIfNeeded();
           return;
         }
+        if (status >= 400 && status < 500) {
+          // Poison pill: a 4xx other than 429 means the collector permanently
+          // rejected this exact batch (bad ingest key, schema violation, etc.) —
+          // retrying it would fail identically forever. Drop it (no requeue, no
+          // retry timer) and move on to the rest of the queue.
+          continue;
+        }
         if (status < 200 || status >= 300) {
+          // 5xx or anything else unexpected is treated as transient.
           if (!stolen) queue = [...batch, ...queue];
           armRetryIfNeeded();
           return;
@@ -100,7 +110,7 @@ export function createTransport(options: TransportOptions): Transport {
         if (queue.length > maxQueue) queue = queue.slice(queue.length - maxQueue);
         if (queue.length >= flushAt) {
           void safeFlush();
-        } else if (timer === null) {
+        } else if (timer === null && !disposed) {
           timer = scheduleFlush(() => { timer = null; void safeFlush(); }, flushIntervalMs);
         }
       } catch { /* never throw into host */ }
@@ -108,12 +118,16 @@ export function createTransport(options: TransportOptions): Transport {
     flush: () => safeFlush(),
     takeAll() {
       const drained = [...(inFlight ?? []), ...queue];
-      if (inFlight !== null) stolen = true;
+      if (inFlight !== null) {
+        stolen = true;
+        inFlight = null;   // a second takeAll during the same in-flight window must not re-return it
+      }
       queue = [];
       return drained;
     },
     queuedCount: () => queue.length,
     dispose() {
+      disposed = true;
       if (timer !== null) { try { cancelFlush(timer); } catch { /* noop */ } timer = null; }
     },
   };

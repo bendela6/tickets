@@ -113,4 +113,54 @@ describe('createTransport', () => {
     expect(inits).toHaveLength(1);
     expect(inits[0]!.keepalive).toBe(true);
   });
+
+  it('drops the batch on a non-429 4xx (poison pill) — no requeue, no retry timer', async () => {
+    const { transport, timers, setStatus } = harness({ flushAt: 1 });
+    setStatus(400);
+    transport.enqueue(sig(1));
+    await transport.flush();
+    expect(transport.queuedCount()).toBe(0);
+    expect(timers).toHaveLength(0);
+  });
+
+  it('still requeues and retries on a 5xx, unlike a 4xx', async () => {
+    const { transport, timers, setStatus } = harness({ flushAt: 1 });
+    setStatus(500);
+    transport.enqueue(sig(1));
+    await transport.flush();
+    expect(transport.queuedCount()).toBe(1);
+    expect(timers.length).toBeGreaterThan(0);
+  });
+
+  it('a second takeAll during the same in-flight window returns only the queue, not the batch again', async () => {
+    let resolveFetch!: (v: { status: number }) => void;
+    const deferred = new Promise<{ status: number }>((resolve) => { resolveFetch = resolve; });
+    const { transport } = harness({ flushAt: 1, fetchFn: async () => deferred });
+    transport.enqueue(sig(1));
+    const flushPromise = transport.flush();
+
+    const first = transport.takeAll();
+    expect(first.map((s) => s.name)).toEqual(['e1']);
+
+    transport.enqueue(sig(2));
+    const second = transport.takeAll();
+    expect(second.map((s) => s.name)).toEqual(['e2']);
+
+    resolveFetch({ status: 500 });
+    await flushPromise;
+  });
+
+  it('dispose during an in-flight failure leaves no retry timer armed after it settles', async () => {
+    let resolveFetch!: (v: { status: number }) => void;
+    const deferred = new Promise<{ status: number }>((resolve) => { resolveFetch = resolve; });
+    const { transport, timers } = harness({ flushAt: 1, fetchFn: async () => deferred });
+    transport.enqueue(sig(1));
+    const flushPromise = transport.flush();
+
+    transport.dispose();
+    resolveFetch({ status: 500 });
+    await flushPromise;
+
+    expect(timers).toHaveLength(0);
+  });
 });

@@ -154,4 +154,33 @@ describe('state isolation and guarding', () => {
     data.items = 999;
     expect(sent[0]!.contexts).toMatchObject({ event: { items: 3 } });
   });
+
+  it('clamps an oversized error name to 300 chars', () => {
+    const { transport, sent } = fakeTransport();
+    const client = createClient({ ...base, transport });
+    const err = new Error('boom');
+    err.name = 'X'.repeat(400);
+    client.captureError(err);
+    expect(sent[0]!.name).toBe('X'.repeat(300));
+  });
+
+  it('falls back captureEvent to <unnamed> when the name is empty', () => {
+    const { transport, sent } = fakeTransport();
+    const client = createClient({ ...base, transport });
+    client.captureEvent('');
+    expect(sent[0]!.name).toBe('<unnamed>');
+  });
+
+  it('clamps release, environment, and fingerprint', () => {
+    const { transport, sent } = fakeTransport();
+    const client = createClient({
+      ...base, transport,
+      release: 'r'.repeat(150),
+      environment: 'e'.repeat(80),
+    });
+    client.captureError(new Error('x'), { fingerprint: 'f'.repeat(250) });
+    expect(sent[0]!.release).toBe('r'.repeat(100));
+    expect(sent[0]!.environment).toBe('e'.repeat(50));
+    expect(sent[0]!.fingerprint).toBe('f'.repeat(200));
+  });
 });
