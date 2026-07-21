@@ -15,7 +15,7 @@ export function parseStack(
     const match = V8_FRAME.exec(line) ?? (line.includes('@') ? GECKO_FRAME.exec(line) : null);
     if (!match) continue;
     const [, fn, file, ln, col] = match;
-    if (!file || file.includes(' ')) continue; // "just a message" guard
+    if (!file) continue;
     frames.push({
       functionName: fn?.trim() || '<anonymous>',
       file,
