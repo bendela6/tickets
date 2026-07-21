@@ -15,10 +15,10 @@ Everything is a **signal** (`kind: error | log | event`) from day one, even thou
 | Decision | Choice |
 | --- | --- |
 | Consumers | Any of the user's projects, inside or outside this monorepo |
-| Physical shape | Separate app `apps/signals` (own server, port **4630**) + separate database `signals` in the existing postgres container (`127.0.0.1:5532`) |
+| Physical shape | Separate app `apps/signals` (own server, port **4640** — 4630 is taken by the eer dev server) + separate database `signals` in the existing postgres container (`127.0.0.1:5532`) |
 | Data model | Signal-generic core: one `signals` table + `issues` grouping for errors (Approach B) |
 | Grouping | Server-side fingerprinting; events + grouped issues (Sentry model) |
-| Registration | DSN-style ingest key per app, created in the UI. DSN format: `sgl://<ingestKey>@<host>:4630/<appId>` (Sentry-style, parsed by the SDK into the HTTP ingest endpoint) |
+| Registration | DSN-style ingest key per app, created in the UI. DSN format: `sgl://<ingestKey>@<host>:4640/<appId>` (Sentry-style, parsed by the SDK into the HTTP ingest endpoint) |
 | Capture scope v1 | Core error info + breadcrumbs + custom context API + source maps (all four) |
 | Distribution | Publish SDKs to the GitHub Packages **private** npm registry under `@bendela6/*`; collector serves an IIFE bundle for plain HTML |
 | Name | **Signals** (chosen for future extension to non-error events) |
@@ -33,7 +33,7 @@ your apps                          this repo
 ┌──────────────┐  POST /ingest/<key>  ┌─────────────────┐      ┌──────────────┐
 │ @bendela6/   │ ────────────────────▶│ apps/signals    │─────▶│ postgres      │
 │ signals-*,   │                      │ (own server,    │      │ database:     │
-│ <script sdk> │                      │  port 4630)     │      │ "signals"     │
+│ <script sdk> │                      │  port 4640)     │      │ "signals"     │
 └──────────────┘                      └─────────────────┘      └──────────────┘
                                               ▲
                               management API  │
@@ -43,7 +43,7 @@ your apps                          this repo
 ```
 
 - `apps/signals` is a standalone Fastify-style server modeled on `apps/api` conventions, with **zero imports from ticket modules**. It owns its drizzle schema, config, and migrations.
-- **Dev:** joins the `pnpm dev` mprocs lineup on port 4630. Web dev server proxies `/signals-api/*` → `localhost:4630`.
+- **Dev:** joins the `pnpm dev` mprocs lineup on port 4640. Web dev server proxies `/signals-api/*` → `localhost:4640`.
 - **Deploy:** a second service in the existing docker-compose. The tickets nginx proxies `/signals-api/*` to the signals container so the web UI needs no CORS and no hardcoded host. The ingest endpoints allow **any origin** (browser SDKs post cross-origin from other sites).
 
 ## Data model (4 tables, database `signals`)
@@ -123,7 +123,7 @@ Level meanings (three only): `error` = something failed · `warning` = didn't fa
 
 **`@bendela6/signals-node`** — `initSignals({ dsn })` hooks `uncaughtException` + `unhandledRejection`; captures node version, pid, hostname; Express and Fastify error-handler helpers; ships a `signals` bin (resolves from the project's own node_modules): `npx signals sourcemaps upload ./dist --release 1.2.0 --dsn …`. Session = one process lifetime.
 
-**Plain HTML** — `<script src="http://host:4630/sdk.js" data-dsn="…"></script>` auto-inits the browser SDK; zero build step.
+**Plain HTML** — `<script src="http://host:4640/sdk.js" data-dsn="…"></script>` auto-inits the browser SDK; zero build step.
 
 ## Web UI — "Signals" section in apps/web
 
