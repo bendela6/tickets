@@ -1,5 +1,6 @@
 import type { Mode } from './mode-for-path';
 import { AgentsPanel } from './agents-panel';
+import { SignalsPanel } from './signals-panel';
 import { TasksPanel } from './tasks-panel';
 import { TerminalsPanel } from './terminals-panel';
 
@@ -23,6 +24,8 @@ export function ModePanel({
         <TerminalsPanel onNavigateSession={onNavigateSession} onNavigate={onNavigate} />
       ) : mode === 'agents' ? (
         <AgentsPanel onNavigate={onNavigate} />
+      ) : mode === 'signals' ? (
+        <SignalsPanel onNavigate={onNavigate} />
       ) : mode === 'tasks' ? (
         <TasksPanel activeProjectKey={activeProjectKey} onNewTicket={onNewTicket} onNavigate={onNavigate} />
       ) : null}

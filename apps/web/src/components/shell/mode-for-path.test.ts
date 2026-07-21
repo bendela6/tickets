@@ -18,4 +18,10 @@ describe('modeForPath', () => {
     expect(modeForPath('/terminals/12')).toBe('terminals');
     expect(modeForPath('/agents/12')).toBe('agents');
   });
+  it('maps signals routes by prefix', () => {
+    expect(modeForPath('/signals')).toBe('signals');
+    expect(modeForPath('/signals/apps')).toBe('signals');
+    expect(modeForPath('/signals/sessions/x')).toBe('signals');
+    expect(modeForPath('/signals/issues/3')).toBe('signals');
+  });
 });
