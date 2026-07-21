@@ -63,6 +63,22 @@ export function formatDate(iso: string): string {
   });
 }
 
+/**
+ * 24h clock time in UTC from an ISO timestamp, e.g. "2026-07-22T14:03:35Z" ->
+ * "14:03:35". Fixed to UTC (matching formatDate) so the Issue detail screen's
+ * "occurrence HH:MM:SS" label and breadcrumb row timestamps don't shift with
+ * the host machine's timezone.
+ */
+export function formatClockTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-US', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZone: 'UTC',
+  });
+}
+
 /** Human-readable duration, e.g. 86_000 -> "1m 26s". */
 export function formatDurationMs(ms: number): string {
   const totalSec = Math.floor(ms / 1000);

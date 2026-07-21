@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { formatBytes, formatCount, formatDate, formatDurationMs, relativeTime } from './format';
+import { formatBytes, formatClockTime, formatCount, formatDate, formatDurationMs, relativeTime } from './format';
 
 describe('formatCount', () => {
   test('groups thousands, never abbreviates', () => {
@@ -63,6 +63,16 @@ describe('formatDate', () => {
 
   test('zero-pads single-digit days', () => {
     expect(formatDate('2026-04-02T00:00:00Z')).toBe('Apr 02, 2026');
+  });
+});
+
+describe('formatClockTime', () => {
+  test('renders 24h HH:MM:SS in UTC regardless of host timezone', () => {
+    expect(formatClockTime('2026-07-22T14:03:35Z')).toBe('14:03:35');
+  });
+
+  test('zero-pads single-digit hours', () => {
+    expect(formatClockTime('2026-07-22T04:03:05Z')).toBe('04:03:05');
   });
 });
 

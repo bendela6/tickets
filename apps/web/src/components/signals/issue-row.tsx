@@ -12,8 +12,9 @@ export const ISSUES_GRID_COLUMNS = '36px minmax(0,1fr) 116px 78px 64px 64px 106p
 
 // issue.title arrives as `${name} — ${message}` (the collector's format);
 // split on the FIRST ' — ' for a bold name + muted message. No match (no
-// separator in the title) falls back to the whole title bold.
-function splitTitle(title: string): { name: string; message: string | null } {
+// separator in the title) falls back to the whole title bold. Exported —
+// issue-detail-screen.tsx's header reuses the same split.
+export function splitTitle(title: string): { name: string; message: string | null } {
   const separator = ' — ';
   const index = title.indexOf(separator);
   if (index === -1) {
