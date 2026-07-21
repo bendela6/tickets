@@ -7,6 +7,7 @@
 | [Database tables](database.md) | Every Postgres table with its purpose and key constraints |
 | [Schema admin](schema-admin.md) | The config commands that edit scheme structure (types, placements, link-type vocabulary) — routes and archive-vs-replace semantics |
 | [Grok design SSOT](grok/README.md) | **Now:** [ticket→item rename](grok/rename/README.md); also platform/events/fields direction |
+| [Signals SDK](signals-sdk.md) | Consumer guide for `@bendela6/signals-*` — install, React/Node/plain-HTML quickstarts, source maps, publishing |
 
 The architecture rationale (why fields are data, EAV trade-offs, workflow graph
 semantics) lives in [DESIGN.md](../DESIGN.md).
