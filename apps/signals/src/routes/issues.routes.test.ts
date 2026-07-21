@@ -66,3 +66,24 @@ it('PATCH updates status and rejects bad values; occurrences paginate', async ()
   expect(occ.rows[0].sessionId).toBeDefined();
   await app.close();
 });
+
+it('issue detail includes appSlug, level, and mechanism from the newest signal', async () => {
+  const { app } = await seed();
+  const list = (await app.inject({ method: 'GET', url: '/issues?q=boom' })).json();
+  const detail = (await app.inject({ method: 'GET', url: `/issues/${list.rows[0].id}` })).json();
+  expect(detail.appSlug).toBeDefined();
+  expect(detail.level).toBe('error');
+  expect(detail.mechanism).toBe('uncaught-exception');
+  await app.close();
+});
+
+it('PATCH response includes appSlug, level, and mechanism from the newest signal', async () => {
+  const { app } = await seed();
+  const list = (await app.inject({ method: 'GET', url: '/issues?q=boom' })).json();
+  const id = list.rows[0].id;
+  const patched = (await app.inject({ method: 'PATCH', url: `/issues/${id}`, payload: { status: 'resolved' } })).json();
+  expect(patched.appSlug).toBeDefined();
+  expect(patched.level).toBe('error');
+  expect(patched.mechanism).toBe('uncaught-exception');
+  await app.close();
+});

@@ -15,6 +15,18 @@ function parseId(raw: string): number {
   return id;
 }
 
+// level/mechanism of an issue's newest signal (same tiebreak rule as the list query);
+// defaults if the issue somehow has no signals.
+async function newestSignalInfo(db: Db, issueId: number): Promise<{ level: string; mechanism: string }> {
+  const [row] = await db
+    .select({ level: signals.level, mechanism: signals.mechanism })
+    .from(signals)
+    .where(eq(signals.issueId, issueId))
+    .orderBy(desc(signals.receivedAt), desc(signals.id))
+    .limit(1);
+  return { level: row?.level ?? 'error', mechanism: row?.mechanism ?? 'manual' };
+}
+
 // UTC day-bucketed counts for the sparkline, oldest → newest, always `days` slots.
 async function sparklines(db: Db, issueIds: number[], days: number): Promise<Map<number, number[]>> {
   const result = new Map<number, number[]>(issueIds.map((id) => [id, Array(days).fill(0)]));
@@ -75,7 +87,7 @@ export function registerIssuesRoutes(app: FastifyInstance, context: { db: Db }) 
       ? await context.db
           .select({
             issueId: signals.issueId, level: signals.level, mechanism: signals.mechanism,
-            rn: sql<number>`row_number() OVER (PARTITION BY ${signals.issueId} ORDER BY ${signals.receivedAt} DESC)`,
+            rn: sql<number>`row_number() OVER (PARTITION BY ${signals.issueId} ORDER BY ${signals.receivedAt} DESC, ${signals.id} DESC)`,
           })
           .from(signals)
           .where(inArray(signals.issueId, ids))
@@ -111,9 +123,14 @@ export function registerIssuesRoutes(app: FastifyInstance, context: { db: Db }) 
       .from(signals)
       .where(eq(signals.issueId, id));
     const spark = (await sparklines(context.db, [id], 14)).get(id)!;
+    const [appRow] = await context.db.select({ slug: apps.slug }).from(apps).where(eq(apps.id, row.appId));
+    const { level, mechanism } = await newestSignalInfo(context.db, id);
     return {
       ...row,
       key: `SGL-${row.id}`,
+      appSlug: appRow?.slug,
+      level,
+      mechanism,
       spark,
       sessionCount: agg!.sessionCount,
       userCount: agg!.userCount,
@@ -128,7 +145,9 @@ export function registerIssuesRoutes(app: FastifyInstance, context: { db: Db }) 
     const [row] = await context.db
       .update(issues).set({ status: parsed.output.status }).where(eq(issues.id, id)).returning();
     if (!row) throw new HttpError(404, 'issue not found');
-    return { ...row, key: `SGL-${row.id}` };
+    const [appRow] = await context.db.select({ slug: apps.slug }).from(apps).where(eq(apps.id, row.appId));
+    const { level, mechanism } = await newestSignalInfo(context.db, id);
+    return { ...row, key: `SGL-${row.id}`, appSlug: appRow?.slug, level, mechanism };
   });
 
   app.get('/issues/:id/signals', async (request) => {
