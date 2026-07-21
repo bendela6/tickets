@@ -1,10 +1,14 @@
 import { createRoute } from '@tanstack/react-router';
 import { AppShell } from '../components/shell/app-shell';
+import { AppsScreen } from '../components/signals/apps-screen';
 import { rootRoute } from './root-route';
 
-// Placeholder — Task 5 replaces this component with the Apps screen.
 function SignalsAppsPage() {
-  return <AppShell>{null}</AppShell>;
+  return (
+    <AppShell>
+      <AppsScreen />
+    </AppShell>
+  );
 }
 
 export const signalsAppsRoute = createRoute({
