@@ -43,8 +43,16 @@ describe('formatBytes', () => {
     expect(formatBytes(0)).toBe('0 B');
   });
 
-  test('formats kilobytes', () => {
-    expect(formatBytes(2048)).toBe('2 KB');
+  test('formats kilobytes with one decimal', () => {
+    expect(formatBytes(2048)).toBe('2.0 KB');
+  });
+
+  test('rounds up through a unit boundary instead of showing "1024 KB"', () => {
+    expect(formatBytes(1_048_570)).toBe('1.0 MB');
+  });
+
+  test('rounds up through the MB->GB boundary the same way', () => {
+    expect(formatBytes(1_073_741_818)).toBe('1.0 GB');
   });
 });
 
@@ -59,5 +67,9 @@ describe('formatDurationMs', () => {
 
   test('hours and minutes', () => {
     expect(formatDurationMs(3_725_000)).toBe('1h 02m');
+  });
+
+  test('zero-pads single-digit seconds in the minutes branch', () => {
+    expect(formatDurationMs(64_000)).toBe('1m 04s');
   });
 });

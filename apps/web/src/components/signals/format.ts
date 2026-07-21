@@ -34,13 +34,19 @@ export function formatBytes(n: number): string {
   if (n === 0) {
     return '0 B';
   }
-  const exponent = Math.min(
+  let exponent = Math.min(
     BYTE_UNITS.length - 1,
     Math.floor(Math.log(Math.abs(n)) / Math.log(1024)),
   );
-  const value = n / 1024 ** exponent;
-  const formatted = exponent === 0 ? String(value) : value.toFixed(1).replace(/\.0$/, '');
-  return `${formatted} ${BYTE_UNITS[exponent]}`;
+  let mantissa = exponent === 0 ? String(n) : (n / 1024 ** exponent).toFixed(1);
+  // toFixed(1) rounds the mantissa, which can carry it up to "1024.0" right at
+  // a unit boundary (e.g. 1_048_570 B is < 1 MiB but rounds to "1024.0 KB").
+  // Bump to the next unit and recompute so the boundary reads "1.0 MB" instead.
+  if (exponent < BYTE_UNITS.length - 1 && Number(mantissa) >= 1024) {
+    exponent += 1;
+    mantissa = (n / 1024 ** exponent).toFixed(1);
+  }
+  return `${mantissa} ${BYTE_UNITS[exponent]}`;
 }
 
 /** Human-readable duration, e.g. 86_000 -> "1m 26s". */
@@ -54,7 +60,7 @@ export function formatDurationMs(ms: number): string {
     return `${hours}h ${String(minutes).padStart(2, '0')}m`;
   }
   if (minutes > 0) {
-    return `${minutes}m ${seconds}s`;
+    return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
   }
   return `${seconds}s`;
 }
