@@ -1,6 +1,7 @@
 import fastify from 'fastify';
 import type { Db } from './db/client';
 import { HttpError } from './errors';
+import { registerAppsRoutes } from './routes/apps.routes';
 
 export function buildApp(context: { db: Db }) {
   const app = fastify({ logger: false });
@@ -15,6 +16,8 @@ export function buildApp(context: { db: Db }) {
   });
 
   app.get('/health', async () => ({ ok: true }));
+
+  registerAppsRoutes(app, context);
 
   return app;
 }
