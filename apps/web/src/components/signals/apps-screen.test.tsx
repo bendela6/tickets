@@ -106,3 +106,40 @@ test('(c) New app → type name → submit posts /signals-api/apps and shows the
   fireEvent.click(screen.getByRole('tab', { name: '<script>' }));
   expect(await screen.findByText(/sdk\.js/)).toBeInTheDocument();
 });
+
+test('(d) a rejected create POST shows the inline error message with no unhandled rejection', async () => {
+  const onUnhandledRejection = vi.fn();
+  window.addEventListener('unhandledrejection', onUnhandledRejection);
+
+  try {
+    renderSignals(<AppsScreen />, {
+      fetchRoutes: [
+        {
+          test: /\/signals-api\/apps$/,
+          handler: (_url, init) => {
+            if (init?.method === 'POST') {
+              throw new Error('slug already taken');
+            }
+            return [];
+          },
+        },
+        metaRoute,
+      ],
+      initialPath: '/signals/apps',
+    });
+
+    await screen.findByText('Connect your first app');
+    fireEvent.click(screen.getByRole('button', { name: /New app/ }));
+
+    const nameInput = await screen.findByLabelText('Name');
+    fireEvent.change(nameInput, { target: { value: 'worker-billing' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create app' }));
+
+    expect(await screen.findByText('slug already taken')).toBeInTheDocument();
+    // Give any stray (unhandled) rejection a tick to surface before asserting.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(onUnhandledRejection).not.toHaveBeenCalled();
+  } finally {
+    window.removeEventListener('unhandledrejection', onUnhandledRejection);
+  }
+});
