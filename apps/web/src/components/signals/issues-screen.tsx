@@ -24,18 +24,31 @@ function displayUrl(filters: IssueFilters): string {
   return `/signals-api/issues${qs.length > 0 ? `?${qs}` : ''}`;
 }
 
-const HEADER_LABELS = ['', 'Issue', 'App', 'Events', 'First', 'Last', '14 days', 'Status', ''];
+// Per-column classes mirroring each column's data-cell padding (design lines
+// 59 vs. 72-79: First gets pl-3.5/14px, 14 days gets pl-1.5/6px, Status gets
+// pl-1/4px) so header labels line up with the cells beneath them.
+const HEADER_CELLS: { label: string; className?: string }[] = [
+  { label: '' },
+  { label: 'Issue' },
+  { label: 'App' },
+  { label: 'Events', className: 'text-right' },
+  { label: 'First', className: 'pl-3.5' },
+  { label: 'Last' },
+  { label: '14 days', className: 'pl-1.5' },
+  { label: 'Status', className: 'pl-1' },
+  { label: '' },
+];
 
 function TableHeader() {
   return (
     <div
       role="row"
-      className="grid h-9 shrink-0 items-center border-b border-hairline bg-app px-3.5 font-sans text-label font-medium tracking-[0.05em] text-ink-2 uppercase"
+      className="grid h-9 shrink-0 items-center border-b border-hairline bg-app px-3.5 font-sans text-label font-medium tracking-wider text-ink-2 uppercase"
       style={{ gridTemplateColumns: ISSUES_GRID_COLUMNS }}
     >
-      {HEADER_LABELS.map((label, index) => (
-        <span key={index} className={index === 3 ? 'text-right' : undefined}>
-          {label}
+      {HEADER_CELLS.map((cell, index) => (
+        <span key={index} className={cell.className}>
+          {cell.label}
         </span>
       ))}
     </div>
@@ -85,10 +98,13 @@ export function IssuesScreen() {
   const issuesQuery = useSignalsIssues(filters);
   const appsQuery = useSignalsApps();
   // Segmented-control counts: one extra perPage:1 query per status (cheap —
-  // the API doesn't expose a combined counts endpoint).
-  const openCount = useSignalsIssues({ status: 'open', perPage: 1 });
-  const resolvedCount = useSignalsIssues({ status: 'resolved', perPage: 1 });
-  const ignoredCount = useSignalsIssues({ status: 'ignored', perPage: 1 });
+  // the API doesn't expose a combined counts endpoint). These reuse every
+  // other active filter (app/level/days/q) so the counts — and the header's
+  // "N open issues" — reflect the current filter context, not the global
+  // total.
+  const openCount = useSignalsIssues({ ...filters, status: 'open', page: undefined, perPage: 1 });
+  const resolvedCount = useSignalsIssues({ ...filters, status: 'resolved', page: undefined, perPage: 1 });
+  const ignoredCount = useSignalsIssues({ ...filters, status: 'ignored', page: undefined, perPage: 1 });
   const patchStatus = usePatchIssueStatus();
 
   const rows = issuesQuery.data?.rows ?? [];
@@ -117,9 +133,10 @@ export function IssuesScreen() {
         </span>
         <Link
           to="/signals/apps"
-          className="-mb-px border-b-2 border-transparent px-3 py-2 font-sans text-ui text-ink-2 hover:text-ink"
+          className="-mb-px flex items-center gap-1.75 border-b-2 border-transparent px-3 py-2 font-sans text-ui text-ink-2 hover:text-ink"
         >
           Apps
+          <span className="font-mono text-[11px] text-ink-3">{appsQuery.data?.length ?? ''}</span>
         </Link>
       </div>
 
@@ -197,7 +214,7 @@ export function IssuesScreen() {
           <>
             <div className="flex-1 overflow-hidden">
               {Array.from({ length: SKELETON_ROWS }).map((_, index) => (
-                <IssueRowSkeleton key={index} />
+                <IssueRowSkeleton key={index} index={index} />
               ))}
             </div>
             <div className="flex h-9.5 shrink-0 items-center gap-2.5 border-t border-hairline bg-app px-3.5 font-mono text-[11px] text-ink-3">
