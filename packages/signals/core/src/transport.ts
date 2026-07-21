@@ -37,34 +37,52 @@ export function createTransport(options: TransportOptions): Transport {
 
   let queue: Signal[] = [];
   let timer: unknown = null;
-  let backoffUntil = 0;
+  let backoffUntil = -Infinity;
   let sending = false;
+  let inFlight: Signal[] | null = null;
+  let stolen = false;
+
+  function armRetryIfNeeded(): void {
+    if (timer === null && queue.length > 0) {
+      const retryDelayMs = Math.max(flushIntervalMs, backoffUntil - now());
+      timer = scheduleFlush(() => { timer = null; void safeFlush(); }, retryDelayMs);
+    }
+  }
 
   async function flush(): Promise<void> {
-    if (sending || queue.length === 0 || now() < backoffUntil) return;
+    if (sending || queue.length === 0 || now() <= backoffUntil) return;
     sending = true;
     try {
       while (queue.length > 0) {
         const batch = queue.slice(0, maxPerRequest);
         queue = queue.slice(batch.length);
+        stolen = false;
+        inFlight = batch;
         let status: number;
         try {
+          const body = JSON.stringify({ signals: batch });
           ({ status } = await fetchFn(url, {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ signals: batch }),
+            body,
+            keepalive: body.length < 60_000,
           }));
         } catch {
-          queue = [...batch, ...queue];   // network error: keep for retry
+          inFlight = null;
+          if (!stolen) queue = [...batch, ...queue];   // network error: keep for retry
+          armRetryIfNeeded();
           return;
         }
+        inFlight = null;
         if (status === 429) {
-          queue = [...batch, ...queue];
+          if (!stolen) queue = [...batch, ...queue];
           backoffUntil = now() + backoffMs;
+          armRetryIfNeeded();
           return;
         }
         if (status < 200 || status >= 300) {
-          queue = [...batch, ...queue];
+          if (!stolen) queue = [...batch, ...queue];
+          armRetryIfNeeded();
           return;
         }
       }
@@ -73,21 +91,24 @@ export function createTransport(options: TransportOptions): Transport {
     }
   }
 
+  const safeFlush = () => flush().catch(() => undefined);
+
   return {
     enqueue(signal) {
       try {
         queue.push(signal);
         if (queue.length > maxQueue) queue = queue.slice(queue.length - maxQueue);
         if (queue.length >= flushAt) {
-          void flush();
+          void safeFlush();
         } else if (timer === null) {
-          timer = scheduleFlush(() => { timer = null; void flush(); }, flushIntervalMs);
+          timer = scheduleFlush(() => { timer = null; void safeFlush(); }, flushIntervalMs);
         }
       } catch { /* never throw into host */ }
     },
-    flush: () => flush().catch(() => undefined),
+    flush: () => safeFlush(),
     takeAll() {
-      const drained = queue;
+      const drained = [...(inFlight ?? []), ...queue];
+      if (inFlight !== null) stolen = true;
       queue = [];
       return drained;
     },
