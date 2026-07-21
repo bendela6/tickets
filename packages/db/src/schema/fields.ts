@@ -1,14 +1,15 @@
 import { sql } from 'drizzle-orm';
 import {
-  boolean, check, integer, jsonb, pgTable, serial, text, timestamp, unique,
+  boolean, check, integer, jsonb, serial, text, timestamp, unique,
 } from 'drizzle-orm/pg-core';
 import { fieldTypeEnum } from './enums';
 import { optionSets } from './option-sets';
+import { structureSchema } from './schemas';
 import { schemes } from './schemes';
 
 // A scheme-scoped shared definition. Placement (position/required/overrides)
 // lives on item_type_fields — definition vs placement.
-export const fields = pgTable(
+export const fields = structureSchema.table(
   'fields',
   {
     id: serial('id').primaryKey(),

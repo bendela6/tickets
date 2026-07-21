@@ -1,10 +1,11 @@
 import {
-  index, integer, pgTable, serial, text, timestamp, type AnyPgColumn,
+  index, integer, serial, text, timestamp, type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { items } from './items';
+import { recordsSchema } from './schemas';
 import { users } from './users';
 
-export const comments = pgTable(
+export const comments = recordsSchema.table(
   'comments',
   {
     id: serial('id').primaryKey(),

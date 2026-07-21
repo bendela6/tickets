@@ -1,8 +1,9 @@
-import { integer, pgTable, primaryKey } from 'drizzle-orm/pg-core';
+import { integer, primaryKey } from 'drizzle-orm/pg-core';
 import { itemTypes } from './item-types';
 import { linkTypes } from './link-types';
+import { structureSchema } from './schemas';
 
-export const linkTypeTargetTypes = pgTable(
+export const linkTypeTargetTypes = structureSchema.table(
   'link_type_target_types',
   {
     linkTypeId: integer('link_type_id')

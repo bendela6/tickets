@@ -4,3 +4,6 @@ import { pgSchema } from 'drizzle-orm/pg-core';
 export const coreSchema = pgSchema('core');
 export const terminalSchema = pgSchema('terminal');
 export const agentSchema = pgSchema('agent');
+export const structureSchema = pgSchema('structure');
+export const recordsSchema = pgSchema('records');
+export const historySchema = pgSchema('history');

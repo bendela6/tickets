@@ -1,20 +1,21 @@
 // packages/db/src/schema/schema-groups.ts
 
 // A declared ownership group. `color` is an instrument option hue name.
-// `tables` lists bare sql table names in render order, for tables that have
-// no real Postgres schema yet (still `public`) — order of groups = layout
-// order. `schemas` lists real Postgres schema names wholly owned by this
-// group: membership for any table living in one of those schemas is DERIVED
-// from `getTableConfig(table).schema`, not hand-listed, so a table can't be
-// added to `terminal`/`agent`/etc. and silently fall out of its group the way
-// a forgotten `tables` entry could. See resolveGroupKey in describe-schema.ts.
+// `tables` lists bare sql table names in render order — order of groups =
+// layout order. A hand-listed `tables` entry always wins group membership,
+// regardless of the table's real Postgres schema: the ERD's visual grouping
+// (WORKSPACE/STRUCTURE/RECORDS/HISTORY) is a display concern independent of
+// schema namespacing, e.g. `core.users` renders in WORKSPACE, not WORKDIRS,
+// even though both carry schema `core`. `schemas` lists real Postgres schema
+// names wholly owned by a group with no hand-listed tables: membership for
+// any table living in one of those schemas is DERIVED from
+// `getTableConfig(table).schema`, so a table can't be added to
+// `terminal`/`agent`/etc. and silently fall out of its group the way a
+// forgotten `tables` entry could. See resolveGroupKey in describe-schema.ts.
 //
-// Only `core`/`terminal`/`agent` are real schemas today — the 22
-// items-platform tables still live in `public` pending a later plan, which is
-// why `tables` still exists instead of every group deriving purely from
-// pgSchema. A group owns at most one real schema today, but `schemas` stays a
-// list: nothing about the model forbids two, and resolveGroupKey already
-// rejects the reverse (one schema claimed by two groups).
+// A group owns at most one real schema today, but `schemas` stays a list:
+// nothing about the model forbids two, and resolveGroupKey already rejects
+// the reverse (one schema claimed by two groups).
 export type SchemaGroup = {
   key: string;
   label: string;

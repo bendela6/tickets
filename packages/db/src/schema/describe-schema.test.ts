@@ -17,14 +17,14 @@ describe('describeSchema', () => {
   it('derives a single-column FK', () => {
     const cr = byName.get('comment_reactions')!;
     const commentId = cr.columns.find((c) => c.name === 'comment_id')!;
-    expect(commentId.fk).toEqual({ schema: null, table: 'comments', column: 'id' });
+    expect(commentId.fk).toEqual({ schema: 'records', table: 'comments', column: 'id' });
     expect(commentId.notNull).toBe(true);
   });
 
   it('derives a nullable self-FK', () => {
     const comments = byName.get('comments')!;
     const parentId = comments.columns.find((c) => c.name === 'parent_id')!;
-    expect(parentId.fk).toEqual({ schema: null, table: 'comments', column: 'id' });
+    expect(parentId.fk).toEqual({ schema: 'records', table: 'comments', column: 'id' });
     expect(parentId.notNull).toBe(false);
   });
 
@@ -66,7 +66,7 @@ describe('describeSchema', () => {
   it('exposes groups with their table lists', () => {
     const records = graph.groups.find((g) => g.key === 'rc')!;
     expect(records.color).toBe('orange');
-    expect(records.tables).toContain('comment_reactions');
+    expect(records.tables).toContain('records.comment_reactions');
   });
 
   it('group table lists include schema-derived tables, not just hand-listed ones', () => {
@@ -104,8 +104,9 @@ describe('describeSchema', () => {
     const named = graph.groups.flatMap((g) => g.tables);
     expect(named).not.toContain('sessions');
     expect(new Set(named).size).toBe(named.length);
-    // public tables stay bare — qualification only kicks in off `public`
-    expect(named).toContain('items');
+    // items moved into `records` in Plan 2 — qualified like every other
+    // namespaced table now.
+    expect(named).toContain('records.items');
   });
 
   it('gives each same-named table its own ordering slot', () => {
@@ -183,17 +184,40 @@ describe('schemaOf', () => {
 describe('describeSchema schemas', () => {
   it('carries a schema field on every table', () => {
     // Task 3 moved `workdirs` into `core`. Task 4 moved terminal's `sessions`
-    // and `output` into `terminal`. Task 5 moves agent.{sessions,messages,
-    // permission_requests,agents} into `agent` — `sessions` is now a bare
-    // name shared by BOTH terminal.sessions and agent.sessions, so it can't
-    // key a name->schema map any more; it's asserted separately below. The
-    // legacy ai_* tables (and everything not yet split) stay in public.
+    // and `output` into `terminal`. Task 5 moved agent.{sessions,messages,
+    // permission_requests,agents} into `agent`. Plan 2 moved the 22
+    // items-platform tables into core/structure/records/history — nothing is
+    // left in public. `sessions` is a bare name shared by BOTH
+    // terminal.sessions and agent.sessions, so it can't key a name->schema
+    // map any more; it's asserted separately below.
     const SCHEMA_BY_TABLE: Record<string, string> = {
       workdirs: 'core',
       output: 'terminal',
       messages: 'agent',
       permission_requests: 'agent',
       agents: 'agent',
+      users: 'core',
+      schemes: 'structure',
+      projects: 'structure',
+      item_types: 'structure',
+      item_type_child_types: 'structure',
+      fields: 'structure',
+      item_type_fields: 'structure',
+      option_sets: 'structure',
+      options: 'structure',
+      option_transitions: 'structure',
+      link_types: 'structure',
+      link_type_target_types: 'structure',
+      views: 'structure',
+      items: 'records',
+      item_values: 'records',
+      item_links: 'records',
+      comments: 'records',
+      comment_reactions: 'records',
+      commands: 'history',
+      events: 'history',
+      outbox: 'history',
+      item_activity: 'history',
     };
     const graph = describeSchema();
     for (const table of graph.tables) {
