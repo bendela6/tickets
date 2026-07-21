@@ -324,11 +324,11 @@
       "indexes": []
     },
     {
-      "id": "structure.projects",
+      "id": "core.projects",
       "label": "projects",
       "group": "ws",
       "description": "Workspace container bound to a structure scheme.",
-      "schema": "structure",
+      "schema": "core",
       "x": 120,
       "y": 378,
       "columns": [
@@ -472,7 +472,7 @@
           "columns": [
             "project_id"
           ],
-          "refTable": "structure.projects",
+          "refTable": "core.projects",
           "refColumns": [
             "id"
           ]
@@ -1444,7 +1444,7 @@
           "columns": [
             "project_id"
           ],
-          "refTable": "structure.projects",
+          "refTable": "core.projects",
           "refColumns": [
             "id"
           ]
@@ -2783,7 +2783,7 @@
           "columns": [
             "project_id"
           ],
-          "refTable": "structure.projects",
+          "refTable": "core.projects",
           "refColumns": [
             "id"
           ]
@@ -3605,7 +3605,7 @@
       "id": "rel:projects:c2",
       "source": "structure.schemes",
       "sourceField": "id",
-      "target": "structure.projects",
+      "target": "core.projects",
       "targetField": "scheme_id",
       "kind": "fk",
       "label": "scheme"
@@ -3684,7 +3684,7 @@
     },
     {
       "id": "rel:items:c2",
-      "source": "structure.projects",
+      "source": "core.projects",
       "sourceField": "id",
       "target": "records.items",
       "targetField": "project_id",

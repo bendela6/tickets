@@ -44,8 +44,8 @@ migration (no `ALTER … SET SCHEMA` on live data, no second prod migration).
 
 | schema | tables |
 |---|---|
-| `core` | `users`, `workdirs` (already) |
-| `structure` | `schemes`, `projects`, `item_types`, `item_type_child_types`, `fields`, `item_type_fields`, `option_sets`, `options`, `option_transitions`, `link_types`, `link_type_target_types`, `views` |
+| `core` | `users`, `workdirs`, `projects` |
+| `structure` | `schemes`, `item_types`, `item_type_child_types`, `fields`, `item_type_fields`, `option_sets`, `options`, `option_transitions`, `link_types`, `link_type_target_types`, `views` |
 | `records` | `items`, `item_values`, `item_links`, `comments`, `comment_reactions` |
 | `history` | `commands`, `events`, `outbox`, `item_activity` |
 | `terminal` | `sessions`, `output` (unchanged) |
@@ -54,8 +54,9 @@ migration (no `ALTER … SET SCHEMA` on live data, no second prod migration).
 After this, `public` holds **none of our tables** (Postgres keeps `public`
 existing for extensions). Rationale for the judgment calls: `users` → `core`
 (shared identity referenced by records + agent + structure); `projects` →
-`structure` (the top of the config/vocabulary hierarchy, not a CRUD record);
-`views` → `structure` (saved configuration).
+`core` (a platform-level entity reusable outside the items/tickets domain —
+workdirs, terminal + agent sessions all attach to a project); `views` →
+`structure` (saved configuration).
 
 ## Mechanism (detail)
 
