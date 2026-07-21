@@ -35,12 +35,15 @@ const ISSUE_B = issue({
   eventCount: 89,
 });
 
+// Count-query URLs now carry every active filter (app/level/days/q), not
+// just status+perPage — match loosely (`.*`) between status and the
+// trailing perPage=1 so these routes still work whichever other filters are
+// set, instead of hardcoding one exact query-string shape.
 function countRoutes(counts: { open?: number; resolved?: number; ignored?: number } = {}): FetchRoute[] {
-  return [
-    { test: /status=open&perPage=1$/, handler: () => ({ rows: [], total: counts.open ?? 0 }) },
-    { test: /status=resolved&perPage=1$/, handler: () => ({ rows: [], total: counts.resolved ?? 0 }) },
-    { test: /status=ignored&perPage=1$/, handler: () => ({ rows: [], total: counts.ignored ?? 0 }) },
-  ];
+  return (['open', 'resolved', 'ignored'] as const).map((status) => ({
+    test: new RegExp(`status=${status}.*perPage=1$`),
+    handler: () => ({ rows: [], total: counts[status] ?? 0 }),
+  }));
 }
 
 const appsRoute: FetchRoute = { test: /\/signals-api\/apps$/, handler: () => [] };
@@ -147,5 +150,34 @@ test('(e) typing in search updates the request URL with q= after the 300ms debou
 
   await waitFor(() => {
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes('q=boom'))).toBe(true);
+  });
+});
+
+test('(f) status-count queries carry the active app filter', async () => {
+  const app = {
+    id: 5,
+    name: 'Storefront',
+    slug: 'storefront-web',
+    createdAt: '2026-07-01T00:00:00Z',
+    signals24h: 0,
+    errors24h: 0,
+  };
+  const { fetchMock } = renderSignals(<IssuesScreen />, {
+    fetchRoutes: [
+      { test: /\/signals-api\/apps$/, handler: () => [app] },
+      ...countRoutes({ open: 1 }),
+      { test: /perPage=25$/, handler: () => ({ rows: [ISSUE_A], total: 1 }) },
+    ],
+  });
+
+  await screen.findByText(/SGL-142/);
+  fetchMock.mockClear();
+
+  fireEvent.change(screen.getByLabelText('Filter by app'), { target: { value: '5' } });
+
+  await waitFor(() => {
+    const countCalls = fetchMock.mock.calls.filter(([url]) => /perPage=1$/.test(String(url)));
+    expect(countCalls.length).toBeGreaterThan(0);
+    expect(countCalls.every(([url]) => String(url).includes('app=5'))).toBe(true);
   });
 });

@@ -107,9 +107,25 @@ export function IssueRow({
   );
 }
 
+// Title-bar width pairs (% of column) lifted straight from
+// SigIssues.dc.html's `skels` array, so the loading skeleton reads like
+// varied real content instead of a uniform stripe repeated 8 times.
+const SKELETON_TITLE_WIDTHS: { w1: number; w2: number }[] = [
+  { w1: 62, w2: 40 },
+  { w1: 48, w2: 34 },
+  { w1: 70, w2: 44 },
+  { w1: 55, w2: 30 },
+  { w1: 64, w2: 38 },
+  { w1: 42, w2: 28 },
+  { w1: 58, w2: 36 },
+  { w1: 50, w2: 32 },
+];
+
 // Loading placeholder — 8 of these keep the same column grid as real rows so
-// the table doesn't reflow when data arrives.
-export function IssueRowSkeleton() {
+// the table doesn't reflow when data arrives. `index` staggers the title/
+// message bar widths per the design's `skels` fixture.
+export function IssueRowSkeleton({ index = 0 }: { index?: number }) {
+  const { w1, w2 } = SKELETON_TITLE_WIDTHS[index % SKELETON_TITLE_WIDTHS.length]!;
   return (
     <div
       role="row"
@@ -119,8 +135,8 @@ export function IssueRowSkeleton() {
     >
       <span className="size-2.25 rounded-full bg-inset" />
       <span>
-        <span className="block h-2.75 w-3/5 rounded-xs bg-inset" />
-        <span className="mt-1.5 block h-2 w-2/5 rounded-xs bg-inset" />
+        <span className="block h-2.75 rounded-xs bg-inset" style={{ width: `${w1}%` }} />
+        <span className="mt-1.5 block h-2 rounded-xs bg-inset" style={{ width: `${w2}%` }} />
       </span>
       <span className="inline-block h-3.5 w-18 rounded-xs bg-inset" />
       <span className="flex justify-end">
