@@ -4,6 +4,8 @@ export {
 } from './stack-parse';
 export { createTransport } from './transport';
 export type { Transport, TransportOptions } from './transport';
+export { createClient, generateSessionId } from './client';
+export type { ClientOptions, SignalsClient } from './client';
 export type {
   Signal,
   SignalKind,
