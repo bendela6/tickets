@@ -48,10 +48,14 @@ function installConsolePatch(client: SignalsClient, mode: CaptureConsoleMode): T
     originals[method] = console[method].bind(console);
     wrapped[method] = (...args: unknown[]) => {
       originals[method]!(...args);
-      const message = args.map((a) => (typeof a === 'string' ? a : safeStringify(a))).join(' ');
-      addBreadcrumb(client, { type: 'console', message, data: { method } });
-      if (mode === 'both') {
-        client.captureLog(message, CONSOLE_LEVEL_MAP[method]);
+      try {
+        const message = args.map((a) => (typeof a === 'string' ? a : safeStringify(a))).join(' ');
+        addBreadcrumb(client, { type: 'console', message, data: { method } });
+        if (mode === 'both') {
+          client.captureLog(message, CONSOLE_LEVEL_MAP[method]);
+        }
+      } catch {
+        addBreadcrumb(client, { type: 'console', message: '<unserializable>', data: { method } });
       }
     };
     console[method] = wrapped[method]!;
@@ -125,27 +129,52 @@ function installHistoryInstrumentation(client: SignalsClient): Teardown {
 function installFetchInstrumentation(client: SignalsClient): Teardown {
   const originalFetch = window.fetch.bind(window);
 
+  const describeRequest = (input: unknown, init: unknown): { method: string; url: string } => {
+    let method = 'GET';
+    let url = 'unknown';
+    try {
+      const initMethod = (init as { method?: unknown } | undefined)?.method;
+      if (typeof initMethod === 'string') method = initMethod.toUpperCase();
+      else if (input instanceof Request && typeof input.method === 'string') method = input.method.toUpperCase();
+    } catch {
+      // fall back to 'GET' above
+    }
+    try {
+      url = input instanceof Request ? input.url : String(input);
+    } catch {
+      // fall back to 'unknown' above
+    }
+    return { method, url };
+  };
+
   const wrappedFetch = async (...args: Parameters<typeof fetch>) => {
-    const [input, init] = args;
-    const method = (init?.method ?? (input instanceof Request ? input.method : undefined) ?? 'GET').toUpperCase();
-    const url = input instanceof Request ? input.url : String(input);
     const start = Date.now();
     try {
+      // raw args passed through untouched — the user's fetch call must never be altered
+      // or blocked by breadcrumb-computation failures.
       const response = await originalFetch(...args);
-      const durationMs = Date.now() - start;
-      addBreadcrumb(client, {
-        type: 'http',
-        message: `${method} ${url}`,
-        data: { status: response.status, durationMs },
-      });
+      try {
+        const { method, url } = describeRequest(args[0], args[1]);
+        addBreadcrumb(client, {
+          type: 'http',
+          message: `${method} ${url}`,
+          data: { status: response.status, durationMs: Date.now() - start },
+        });
+      } catch {
+        // never let breadcrumb bookkeeping affect the fetch result
+      }
       return response;
     } catch (error) {
-      const durationMs = Date.now() - start;
-      addBreadcrumb(client, {
-        type: 'http',
-        message: `${method} ${url}`,
-        data: { error: true, durationMs },
-      });
+      try {
+        const { method, url } = describeRequest(args[0], args[1]);
+        addBreadcrumb(client, {
+          type: 'http',
+          message: `${method} ${url}`,
+          data: { error: true, durationMs: Date.now() - start },
+        });
+      } catch {
+        // never let breadcrumb bookkeeping affect the rethrow below
+      }
       throw error;
     }
   };
@@ -160,10 +189,15 @@ function installFetchInstrumentation(client: SignalsClient): Teardown {
 
 function installFlushOnHide(client: SignalsClient, ingestUrl: string | null): Teardown {
   const flush = () => {
-    if (!ingestUrl) return;
-    const signals = client.takeAll();
-    if (signals.length === 0) return;
-    navigator.sendBeacon(ingestUrl, JSON.stringify({ signals }));
+    try {
+      if (!ingestUrl) return;
+      if (typeof navigator === 'undefined' || typeof navigator.sendBeacon !== 'function') return;
+      const signals = client.takeAll();
+      if (signals.length === 0) return;
+      navigator.sendBeacon(ingestUrl, JSON.stringify({ signals }));
+    } catch {
+      // best-effort flush on page hide — must never throw during unload
+    }
   };
 
   const visibilityHandler = () => {
@@ -179,15 +213,31 @@ function installFlushOnHide(client: SignalsClient, ingestUrl: string | null): Te
 }
 
 export function installInstrumentation(client: SignalsClient, options: InstrumentOptions): Teardown {
-  const teardowns: Teardown[] = [
-    installErrorListener(client),
-    installUnhandledRejectionListener(client),
-    installConsolePatch(client, options.captureConsole),
-    installClickListener(client),
-    installHistoryInstrumentation(client),
-    installFetchInstrumentation(client),
-    installFlushOnHide(client, options.ingestUrl),
-  ];
+  const teardowns: Teardown[] = [];
 
-  return () => teardowns.forEach((fn) => fn());
+  const install = (installer: () => Teardown): void => {
+    try {
+      const teardown = installer();
+      teardowns.push(teardown);
+    } catch {
+      // skip this hook, but keep the others — one bad installer must never
+      // take down the rest of the instrumentation.
+    }
+  };
+
+  install(() => installErrorListener(client));
+  install(() => installUnhandledRejectionListener(client));
+  install(() => installConsolePatch(client, options.captureConsole));
+  install(() => installClickListener(client));
+  install(() => installHistoryInstrumentation(client));
+  install(() => installFetchInstrumentation(client));
+  install(() => installFlushOnHide(client, options.ingestUrl));
+
+  return () => teardowns.forEach((fn) => {
+    try {
+      fn();
+    } catch {
+      // best-effort teardown — never throw during re-init/uninstall
+    }
+  });
 }

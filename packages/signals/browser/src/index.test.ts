@@ -81,4 +81,35 @@ describe('initSignals (browser)', () => {
     const http = sent[0]!.breadcrumbs!.find((b) => b.type === 'http');
     expect(http).toMatchObject({ type: 'http', message: 'GET /api/x', data: { status: 200 } });
   });
+
+  it('fetch wrapper survives a weird init object and still performs the fetch', async () => {
+    const { transport, sent } = fakeTransport();
+    const weirdInit = {
+      method: {
+        toUpperCase() {
+          throw new Error('nope');
+        },
+      },
+    } as unknown as RequestInit;
+    window.fetch = (async () => ({ status: 204 })) as unknown as typeof fetch;
+    initSignals({ dsn: DSN, transport });
+    await expect(fetch('/api/weird', weirdInit)).resolves.toMatchObject({ status: 204 });
+    expect(() => getClient()!.captureError(new Error('x'))).not.toThrow();
+    expect(sent).toHaveLength(1);
+  });
+
+  it('visibilitychange->hidden with no navigator.sendBeacon does not throw', () => {
+    const { transport } = fakeTransport();
+    const originalSendBeacon = (navigator as Navigator & { sendBeacon?: unknown }).sendBeacon;
+    // @ts-expect-error - simulate an environment without the Beacon API
+    delete navigator.sendBeacon;
+    initSignals({ dsn: DSN, transport });
+    expect(() => {
+      Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }).not.toThrow();
+    if (originalSendBeacon) {
+      (navigator as Navigator & { sendBeacon?: unknown }).sendBeacon = originalSendBeacon;
+    }
+  });
 });
