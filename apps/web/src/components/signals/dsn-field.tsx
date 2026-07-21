@@ -2,27 +2,35 @@ import { useEffect, useState } from 'react';
 import { Button } from '../../ui/button';
 import { cn } from '../../ui/cn';
 
-const COPIED_RESET_MS = 1500;
+const COPY_STATE_RESET_MS = 1500;
+
+type CopyState = 'idle' | 'copied' | 'failed';
 
 /**
  * DSN field (docs/design/SigGallery.dc.html "DSN FIELD — MACHINE TRUTH,
  * ALWAYS COPYABLE"): mono text truncated with ellipsis + a Copy button that
- * flips to "Copied" briefly after a successful clipboard write.
+ * flips to "Copied" briefly after a successful clipboard write, or "Copy
+ * failed" if the clipboard write rejects (permissions, insecure context,
+ * etc.) — never an unhandled rejection.
  */
 export function DsnField({ dsn, className }: { dsn: string; className?: string }) {
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<CopyState>('idle');
 
   useEffect(() => {
-    if (!copied) {
+    if (copyState === 'idle') {
       return;
     }
-    const timer = window.setTimeout(() => setCopied(false), COPIED_RESET_MS);
+    const timer = window.setTimeout(() => setCopyState('idle'), COPY_STATE_RESET_MS);
     return () => window.clearTimeout(timer);
-  }, [copied]);
+  }, [copyState]);
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(dsn);
-    setCopied(true);
+    try {
+      await navigator.clipboard.writeText(dsn);
+      setCopyState('copied');
+    } catch {
+      setCopyState('failed');
+    }
   }
 
   return (
@@ -41,7 +49,7 @@ export function DsnField({ dsn, className }: { dsn: string; className?: string }
         onClick={() => void handleCopy()}
         className="h-[26px] shrink-0 px-2.5 text-[11px]"
       >
-        {copied ? 'Copied' : '⧉ Copy'}
+        {copyState === 'copied' ? 'Copied' : copyState === 'failed' ? 'Copy failed' : '⧉ Copy'}
       </Button>
     </div>
   );

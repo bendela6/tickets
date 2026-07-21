@@ -64,7 +64,10 @@ export function StatusChip({
         {cfg.label}
       </span>
       {regressed ? (
-        <span className="inline-flex h-5.5 items-center gap-1 rounded-md bg-kind-blocked-subtle px-2.25 font-sans text-[11px] font-semibold text-kind-blocked">
+        // Design's regressed chip uses a 5px internal gap (narrower than the
+        // 6px status-chip gap) — gap-1.25 (1.25 * 4px) matches the repo's
+        // existing convention for odd pixel values (px-2.25, h-5.5, etc.).
+        <span className="inline-flex h-5.5 items-center gap-1.25 rounded-md bg-kind-blocked-subtle px-2.25 font-sans text-[11px] font-semibold text-kind-blocked">
           ↺ regressed
         </span>
       ) : null}
