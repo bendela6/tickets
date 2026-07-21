@@ -34,3 +34,10 @@ it('returns the chronological timeline with derived header data', async () => {
   expect((await app.inject({ method: 'GET', url: '/sessions/nope/signals' })).statusCode).toBe(404);
   await app.close();
 });
+
+it('GET /sessions/:sessionId/signals?app= rejects a malformed app id with 400', async () => {
+  const app = buildApp({ db: testDb });
+  const res = await app.inject({ method: 'GET', url: '/sessions/whatever/signals?app=abc' });
+  expect(res.statusCode).toBe(400);
+  await app.close();
+});

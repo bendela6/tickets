@@ -4,16 +4,11 @@ import * as v from 'valibot';
 import type { Db } from '../db/client';
 import { apps, issues, signals } from '../db/schema';
 import { HttpError } from '../errors';
+import { parseIntParam as parseId } from '../params';
 
 const PatchSchema = v.object({ status: v.picklist(['open', 'resolved', 'ignored']) });
 
 const dayMs = 24 * 60 * 60 * 1000;
-
-function parseId(raw: string): number {
-  const id = Number(raw);
-  if (!Number.isInteger(id)) throw new HttpError(400, 'invalid id');
-  return id;
-}
 
 // level/mechanism of an issue's newest signal (same tiebreak rule as the list query);
 // defaults if the issue somehow has no signals.
@@ -59,7 +54,7 @@ export function registerIssuesRoutes(app: FastifyInstance, context: { db: Db }) 
     const perPage = Math.min(Number(q.perPage ?? 25) || 25, 100);
 
     const where = and(
-      q.app ? eq(issues.appId, Number(q.app)) : undefined,
+      q.app ? eq(issues.appId, parseId(q.app, 'app')) : undefined,
       q.status ? eq(issues.status, q.status as 'open' | 'resolved' | 'ignored') : undefined,
       gte(issues.lastSeen, new Date(Date.now() - days * dayMs)),
       q.q ? or(ilike(issues.title, `%${q.q}%`), ilike(issues.culprit, `%${q.q}%`)) : undefined,

@@ -42,3 +42,9 @@ it('GET /meta reports database size', async () => {
   expect(meta.dbSizeBytes).toBeGreaterThan(0);
   await app.close();
 });
+
+it('GET /apps/:id rejects a malformed id with 400', async () => {
+  const app = buildApp({ db: testDb });
+  expect((await app.inject({ method: 'GET', url: '/apps/abc' })).statusCode).toBe(400);
+  await app.close();
+});

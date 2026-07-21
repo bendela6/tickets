@@ -87,3 +87,9 @@ it('PATCH response includes appSlug, level, and mechanism from the newest signal
   expect(patched.mechanism).toBe('uncaught-exception');
   await app.close();
 });
+
+it('GET /issues?app= rejects a malformed app id with 400', async () => {
+  const { app } = await seed();
+  expect((await app.inject({ method: 'GET', url: '/issues?app=abc' })).statusCode).toBe(400);
+  await app.close();
+});
