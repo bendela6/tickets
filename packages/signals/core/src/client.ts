@@ -113,7 +113,7 @@ export function createClient(options: ClientOptions): SignalsClient {
 
     captureEvent: guarded((name: string, data?: Record<string, unknown>, opts?: CaptureOptions) => {
       const signal = baseSignal('event', truncate(name, 300), 'manual', 'info', opts);
-      if (data) signal.contexts = { ...signal.contexts, event: data };
+      if (data) signal.contexts = { ...signal.contexts, event: { ...data } };
       send(signal);
     }),
 

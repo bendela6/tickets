@@ -145,4 +145,13 @@ describe('state isolation and guarding', () => {
     await expect(client.flush()).resolves.toBeUndefined();
     expect(client.takeAll()).toEqual([]);
   });
+
+  it('mutating a captureEvent data object after capture does not alter the sent signal', () => {
+    const { transport, sent } = fakeTransport();
+    const client = createClient({ ...base, transport });
+    const data = { items: 3 };
+    client.captureEvent('checkout.started', data);
+    data.items = 999;
+    expect(sent[0]!.contexts).toMatchObject({ event: { items: 3 } });
+  });
 });
