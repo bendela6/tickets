@@ -13,6 +13,7 @@
     "db:migrate": "tsx src/db/migrate.ts"
   },
   "dependencies": {
+    "@bendela6/signals-browser": "workspace:^",
     "@jridgewell/trace-mapping": "^0.3.31",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.8.5",

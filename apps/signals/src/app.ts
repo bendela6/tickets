@@ -5,6 +5,7 @@ import { createRateLimiter, type RateLimiter } from './rate-limit';
 import { registerAppsRoutes } from './routes/apps.routes';
 import { registerIngestRoutes } from './routes/ingest.routes';
 import { registerIssuesRoutes } from './routes/issues.routes';
+import { registerSdkRoutes } from './routes/sdk.routes';
 import { registerSessionsRoutes } from './routes/sessions.routes';
 import { registerSourcemapRoutes } from './routes/sourcemaps.routes';
 
@@ -44,6 +45,7 @@ export function buildApp(context: { db: Db; rateLimiter?: RateLimiter }) {
   registerAppsRoutes(app, context);
   registerIngestRoutes(app, { db: context.db, rateLimiter });
   registerIssuesRoutes(app, context);
+  registerSdkRoutes(app);
   registerSessionsRoutes(app, context);
   registerSourcemapRoutes(app, context);
 
