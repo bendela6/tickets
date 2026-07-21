@@ -1,5 +1,5 @@
 {
-  "id": "e1a6e202-fc64-4391-b899-967fc9d9fd01",
+  "id": "c108dbe8-0053-4f5f-9b81-c5f01e9cc110",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -118,6 +118,7 @@
           "name": "agents_user_id_users_id_fk",
           "tableFrom": "agents",
           "tableTo": "users",
+          "schemaTo": "core",
           "columnsFrom": [
             "user_id"
           ],
@@ -332,6 +333,7 @@
           "name": "permission_requests_decided_by_users_id_fk",
           "tableFrom": "permission_requests",
           "tableTo": "users",
+          "schemaTo": "core",
           "columnsFrom": [
             "decided_by"
           ],
@@ -524,6 +526,7 @@
           "name": "sessions_item_id_items_id_fk",
           "tableFrom": "sessions",
           "tableTo": "items",
+          "schemaTo": "records",
           "columnsFrom": [
             "item_id"
           ],
@@ -551,6 +554,7 @@
           "name": "sessions_started_by_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
+          "schemaTo": "core",
           "columnsFrom": [
             "started_by"
           ],
@@ -567,9 +571,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.commands": {
+    "history.commands": {
       "name": "commands",
-      "schema": "",
+      "schema": "history",
       "columns": {
         "id": {
           "name": "id",
@@ -615,6 +619,7 @@
           "name": "commands_actor_id_users_id_fk",
           "tableFrom": "commands",
           "tableTo": "users",
+          "schemaTo": "core",
           "columnsFrom": [
             "actor_id"
           ],
@@ -631,9 +636,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.comment_reactions": {
+    "records.comment_reactions": {
       "name": "comment_reactions",
-      "schema": "",
+      "schema": "records",
       "columns": {
         "id": {
           "name": "id",
@@ -673,6 +678,7 @@
           "name": "comment_reactions_comment_id_comments_id_fk",
           "tableFrom": "comment_reactions",
           "tableTo": "comments",
+          "schemaTo": "records",
           "columnsFrom": [
             "comment_id"
           ],
@@ -686,6 +692,7 @@
           "name": "comment_reactions_user_id_users_id_fk",
           "tableFrom": "comment_reactions",
           "tableTo": "users",
+          "schemaTo": "core",
           "columnsFrom": [
             "user_id"
           ],
@@ -712,9 +719,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.comments": {
+    "records.comments": {
       "name": "comments",
-      "schema": "",
+      "schema": "records",
       "columns": {
         "id": {
           "name": "id",
@@ -776,6 +783,7 @@
           "name": "comments_item_id_items_id_fk",
           "tableFrom": "comments",
           "tableTo": "items",
+          "schemaTo": "records",
           "columnsFrom": [
             "item_id"
           ],
@@ -789,6 +797,7 @@
           "name": "comments_author_id_users_id_fk",
           "tableFrom": "comments",
           "tableTo": "users",
+          "schemaTo": "core",
           "columnsFrom": [
             "author_id"
           ],
@@ -802,6 +811,7 @@
           "name": "comments_parent_id_comments_id_fk",
           "tableFrom": "comments",
           "tableTo": "comments",
+          "schemaTo": "records",
           "columnsFrom": [
             "parent_id"
           ],
@@ -818,9 +828,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.events": {
+    "history.events": {
       "name": "events",
-      "schema": "",
+      "schema": "history",
       "columns": {
         "id": {
           "name": "id",
@@ -1023,6 +1033,7 @@
           "name": "events_actor_id_users_id_fk",
           "tableFrom": "events",
           "tableTo": "users",
+          "schemaTo": "core",
           "columnsFrom": [
             "actor_id"
           ],
@@ -1036,6 +1047,7 @@
           "name": "events_caused_by_events_id_fk",
           "tableFrom": "events",
           "tableTo": "events",
+          "schemaTo": "history",
           "columnsFrom": [
             "caused_by"
           ],
@@ -1067,9 +1079,9 @@
       },
       "isRLSEnabled": false
     },
-    "public.fields": {
+    "structure.fields": {
       "name": "fields",
-      "schema": "",
+      "schema": "structure",
       "columns": {
         "id": {
           "name": "id",
@@ -1098,7 +1110,7 @@
         "type": {
           "name": "type",
           "type": "field_type",
-          "typeSchema": "public",
+          "typeSchema": "structure",
           "primaryKey": false,
           "notNull": true
         },
@@ -1135,6 +1147,7 @@
           "name": "fields_scheme_id_schemes_id_fk",
           "tableFrom": "fields",
           "tableTo": "schemes",
+          "schemaTo": "structure",
           "columnsFrom": [
             "scheme_id"
           ],
@@ -1148,6 +1161,7 @@
           "name": "fields_option_set_id_option_sets_id_fk",
           "tableFrom": "fields",
           "tableTo": "option_sets",
+          "schemaTo": "structure",
           "columnsFrom": [
             "option_set_id"
           ],
@@ -1178,9 +1192,9 @@
       },
       "isRLSEnabled": false
     },
-    "public.item_activity": {
+    "history.item_activity": {
       "name": "item_activity",
-      "schema": "",
+      "schema": "history",
       "columns": {
         "id": {
           "name": "id",
@@ -1280,6 +1294,7 @@
           "name": "item_activity_item_id_items_id_fk",
           "tableFrom": "item_activity",
           "tableTo": "items",
+          "schemaTo": "records",
           "columnsFrom": [
             "item_id"
           ],
@@ -1293,6 +1308,7 @@
           "name": "item_activity_event_id_events_id_fk",
           "tableFrom": "item_activity",
           "tableTo": "events",
+          "schemaTo": "history",
           "columnsFrom": [
             "event_id"
           ],
@@ -1306,6 +1322,7 @@
           "name": "item_activity_actor_id_users_id_fk",
           "tableFrom": "item_activity",
           "tableTo": "users",
+          "schemaTo": "core",
           "columnsFrom": [
             "actor_id"
           ],
@@ -1330,9 +1347,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.item_links": {
+    "records.item_links": {
       "name": "item_links",
-      "schema": "",
+      "schema": "records",
       "columns": {
         "id": {
           "name": "id",
@@ -1403,6 +1420,7 @@
           "name": "item_links_link_type_id_link_types_id_fk",
           "tableFrom": "item_links",
           "tableTo": "link_types",
+          "schemaTo": "structure",
           "columnsFrom": [
             "link_type_id"
           ],
@@ -1416,6 +1434,7 @@
           "name": "item_links_source_item_id_items_id_fk",
           "tableFrom": "item_links",
           "tableTo": "items",
+          "schemaTo": "records",
           "columnsFrom": [
             "source_item_id"
           ],
@@ -1429,6 +1448,7 @@
           "name": "item_links_target_item_id_items_id_fk",
           "tableFrom": "item_links",
           "tableTo": "items",
+          "schemaTo": "records",
           "columnsFrom": [
             "target_item_id"
           ],
@@ -1460,9 +1480,9 @@
       },
       "isRLSEnabled": false
     },
-    "public.item_type_child_types": {
+    "structure.item_type_child_types": {
       "name": "item_type_child_types",
-      "schema": "",
+      "schema": "structure",
       "columns": {
         "parent_type_id": {
           "name": "parent_type_id",
@@ -1483,6 +1503,7 @@
           "name": "item_type_child_types_parent_type_id_item_types_id_fk",
           "tableFrom": "item_type_child_types",
           "tableTo": "item_types",
+          "schemaTo": "structure",
           "columnsFrom": [
             "parent_type_id"
           ],
@@ -1496,6 +1517,7 @@
           "name": "item_type_child_types_child_type_id_item_types_id_fk",
           "tableFrom": "item_type_child_types",
           "tableTo": "item_types",
+          "schemaTo": "structure",
           "columnsFrom": [
             "child_type_id"
           ],
@@ -1520,9 +1542,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.item_type_fields": {
+    "structure.item_type_fields": {
       "name": "item_type_fields",
-      "schema": "",
+      "schema": "structure",
       "columns": {
         "item_type_id": {
           "name": "item_type_id",
@@ -1584,6 +1606,7 @@
           "name": "item_type_fields_item_type_id_item_types_id_fk",
           "tableFrom": "item_type_fields",
           "tableTo": "item_types",
+          "schemaTo": "structure",
           "columnsFrom": [
             "item_type_id"
           ],
@@ -1597,6 +1620,7 @@
           "name": "item_type_fields_field_id_fields_id_fk",
           "tableFrom": "item_type_fields",
           "tableTo": "fields",
+          "schemaTo": "structure",
           "columnsFrom": [
             "field_id"
           ],
@@ -1621,9 +1645,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.item_types": {
+    "structure.item_types": {
       "name": "item_types",
-      "schema": "",
+      "schema": "structure",
       "columns": {
         "id": {
           "name": "id",
@@ -1675,6 +1699,7 @@
           "name": "item_types_scheme_id_schemes_id_fk",
           "tableFrom": "item_types",
           "tableTo": "schemes",
+          "schemaTo": "structure",
           "columnsFrom": [
             "scheme_id"
           ],
@@ -1700,9 +1725,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.item_values": {
+    "records.item_values": {
       "name": "item_values",
-      "schema": "",
+      "schema": "records",
       "columns": {
         "id": {
           "name": "id",
@@ -1970,6 +1995,7 @@
           "name": "item_values_item_id_items_id_fk",
           "tableFrom": "item_values",
           "tableTo": "items",
+          "schemaTo": "records",
           "columnsFrom": [
             "item_id"
           ],
@@ -1983,6 +2009,7 @@
           "name": "item_values_field_id_fields_id_fk",
           "tableFrom": "item_values",
           "tableTo": "fields",
+          "schemaTo": "structure",
           "columnsFrom": [
             "field_id"
           ],
@@ -1996,6 +2023,7 @@
           "name": "item_values_option_id_options_id_fk",
           "tableFrom": "item_values",
           "tableTo": "options",
+          "schemaTo": "structure",
           "columnsFrom": [
             "option_id"
           ],
@@ -2009,6 +2037,7 @@
           "name": "item_values_value_user_id_users_id_fk",
           "tableFrom": "item_values",
           "tableTo": "users",
+          "schemaTo": "core",
           "columnsFrom": [
             "value_user_id"
           ],
@@ -2030,9 +2059,9 @@
       },
       "isRLSEnabled": false
     },
-    "public.items": {
+    "records.items": {
       "name": "items",
-      "schema": "",
+      "schema": "records",
       "columns": {
         "id": {
           "name": "id",
@@ -2134,6 +2163,7 @@
           "name": "items_project_id_projects_id_fk",
           "tableFrom": "items",
           "tableTo": "projects",
+          "schemaTo": "structure",
           "columnsFrom": [
             "project_id"
           ],
@@ -2147,6 +2177,7 @@
           "name": "items_type_id_item_types_id_fk",
           "tableFrom": "items",
           "tableTo": "item_types",
+          "schemaTo": "structure",
           "columnsFrom": [
             "type_id"
           ],
@@ -2160,6 +2191,7 @@
           "name": "items_parent_id_items_id_fk",
           "tableFrom": "items",
           "tableTo": "items",
+          "schemaTo": "records",
           "columnsFrom": [
             "parent_id"
           ],
@@ -2173,6 +2205,7 @@
           "name": "items_created_by_users_id_fk",
           "tableFrom": "items",
           "tableTo": "users",
+          "schemaTo": "core",
           "columnsFrom": [
             "created_by"
           ],
@@ -2198,9 +2231,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.link_type_target_types": {
+    "structure.link_type_target_types": {
       "name": "link_type_target_types",
-      "schema": "",
+      "schema": "structure",
       "columns": {
         "link_type_id": {
           "name": "link_type_id",
@@ -2221,6 +2254,7 @@
           "name": "link_type_target_types_link_type_id_link_types_id_fk",
           "tableFrom": "link_type_target_types",
           "tableTo": "link_types",
+          "schemaTo": "structure",
           "columnsFrom": [
             "link_type_id"
           ],
@@ -2234,6 +2268,7 @@
           "name": "link_type_target_types_target_type_id_item_types_id_fk",
           "tableFrom": "link_type_target_types",
           "tableTo": "item_types",
+          "schemaTo": "structure",
           "columnsFrom": [
             "target_type_id"
           ],
@@ -2258,9 +2293,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.link_types": {
+    "structure.link_types": {
       "name": "link_types",
-      "schema": "",
+      "schema": "structure",
       "columns": {
         "id": {
           "name": "id",
@@ -2317,6 +2352,7 @@
           "name": "link_types_item_type_id_item_types_id_fk",
           "tableFrom": "link_types",
           "tableTo": "item_types",
+          "schemaTo": "structure",
           "columnsFrom": [
             "item_type_id"
           ],
@@ -2342,9 +2378,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.option_sets": {
+    "structure.option_sets": {
       "name": "option_sets",
-      "schema": "",
+      "schema": "structure",
       "columns": {
         "id": {
           "name": "id",
@@ -2377,6 +2413,7 @@
           "name": "option_sets_scheme_id_schemes_id_fk",
           "tableFrom": "option_sets",
           "tableTo": "schemes",
+          "schemaTo": "structure",
           "columnsFrom": [
             "scheme_id"
           ],
@@ -2402,9 +2439,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.option_transitions": {
+    "structure.option_transitions": {
       "name": "option_transitions",
-      "schema": "",
+      "schema": "structure",
       "columns": {
         "id": {
           "name": "id",
@@ -2450,6 +2487,7 @@
           "name": "option_transitions_field_id_fields_id_fk",
           "tableFrom": "option_transitions",
           "tableTo": "fields",
+          "schemaTo": "structure",
           "columnsFrom": [
             "field_id"
           ],
@@ -2463,6 +2501,7 @@
           "name": "option_transitions_from_option_id_options_id_fk",
           "tableFrom": "option_transitions",
           "tableTo": "options",
+          "schemaTo": "structure",
           "columnsFrom": [
             "from_option_id"
           ],
@@ -2476,6 +2515,7 @@
           "name": "option_transitions_to_option_id_options_id_fk",
           "tableFrom": "option_transitions",
           "tableTo": "options",
+          "schemaTo": "structure",
           "columnsFrom": [
             "to_option_id"
           ],
@@ -2489,6 +2529,7 @@
           "name": "option_transitions_item_type_id_item_types_id_fk",
           "tableFrom": "option_transitions",
           "tableTo": "item_types",
+          "schemaTo": "structure",
           "columnsFrom": [
             "item_type_id"
           ],
@@ -2516,9 +2557,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.options": {
+    "structure.options": {
       "name": "options",
-      "schema": "",
+      "schema": "structure",
       "columns": {
         "id": {
           "name": "id",
@@ -2553,7 +2594,7 @@
         "kind": {
           "name": "kind",
           "type": "status_kind",
-          "typeSchema": "public",
+          "typeSchema": "structure",
           "primaryKey": false,
           "notNull": false
         },
@@ -2577,6 +2618,7 @@
           "name": "options_option_set_id_option_sets_id_fk",
           "tableFrom": "options",
           "tableTo": "option_sets",
+          "schemaTo": "structure",
           "columnsFrom": [
             "option_set_id"
           ],
@@ -2602,9 +2644,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.outbox": {
+    "history.outbox": {
       "name": "outbox",
-      "schema": "",
+      "schema": "history",
       "columns": {
         "event_id": {
           "name": "event_id",
@@ -2668,6 +2710,7 @@
           "name": "outbox_event_id_events_id_fk",
           "tableFrom": "outbox",
           "tableTo": "events",
+          "schemaTo": "history",
           "columnsFrom": [
             "event_id"
           ],
@@ -2684,9 +2727,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.projects": {
+    "structure.projects": {
       "name": "projects",
-      "schema": "",
+      "schema": "structure",
       "columns": {
         "id": {
           "name": "id",
@@ -2732,6 +2775,7 @@
           "name": "projects_scheme_id_schemes_id_fk",
           "tableFrom": "projects",
           "tableTo": "schemes",
+          "schemaTo": "structure",
           "columnsFrom": [
             "scheme_id"
           ],
@@ -2756,9 +2800,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.schemes": {
+    "structure.schemes": {
       "name": "schemes",
-      "schema": "",
+      "schema": "structure",
       "columns": {
         "id": {
           "name": "id",
@@ -2895,6 +2939,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "command": {
+          "name": "command",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "status": {
           "name": "status",
           "type": "session_status",
@@ -2984,6 +3034,7 @@
           "name": "sessions_started_by_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
+          "schemaTo": "core",
           "columnsFrom": [
             "started_by"
           ],
@@ -3000,9 +3051,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.users": {
+    "core.users": {
       "name": "users",
-      "schema": "",
+      "schema": "core",
       "columns": {
         "id": {
           "name": "id",
@@ -3025,7 +3076,7 @@
         "kind": {
           "name": "kind",
           "type": "user_kind",
-          "typeSchema": "public",
+          "typeSchema": "core",
           "primaryKey": false,
           "notNull": true
         },
@@ -3052,9 +3103,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.views": {
+    "structure.views": {
       "name": "views",
-      "schema": "",
+      "schema": "structure",
       "columns": {
         "id": {
           "name": "id",
@@ -3100,6 +3151,7 @@
           "name": "views_project_id_projects_id_fk",
           "tableFrom": "views",
           "tableTo": "projects",
+          "schemaTo": "structure",
           "columnsFrom": [
             "project_id"
           ],
@@ -3196,6 +3248,7 @@
           "name": "workdirs_project_id_projects_id_fk",
           "tableFrom": "workdirs",
           "tableTo": "projects",
+          "schemaTo": "structure",
           "columnsFrom": [
             "project_id"
           ],
@@ -3227,9 +3280,9 @@
         "failed"
       ]
     },
-    "public.field_type": {
+    "structure.field_type": {
       "name": "field_type",
-      "schema": "public",
+      "schema": "structure",
       "values": [
         "string",
         "number",
@@ -3269,9 +3322,9 @@
         "container"
       ]
     },
-    "public.status_kind": {
+    "structure.status_kind": {
       "name": "status_kind",
-      "schema": "public",
+      "schema": "structure",
       "values": [
         "todo",
         "active",
@@ -3291,9 +3344,9 @@
         "failed"
       ]
     },
-    "public.user_kind": {
+    "core.user_kind": {
       "name": "user_kind",
-      "schema": "public",
+      "schema": "core",
       "values": [
         "human",
         "agent"
@@ -3303,6 +3356,9 @@
   "schemas": {
     "agent": "agent",
     "core": "core",
+    "history": "history",
+    "records": "records",
+    "structure": "structure",
     "terminal": "terminal"
   },
   "sequences": {},
