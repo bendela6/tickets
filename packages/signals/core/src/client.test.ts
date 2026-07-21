@@ -102,3 +102,47 @@ describe('createClient', () => {
 it('generateSessionId shape', () => {
   expect(generateSessionId()).toMatch(/^sess_[a-z0-9]{10}$/);
 });
+
+describe('state isolation and guarding', () => {
+  it('mutating the user object after setUser does not alter captured signals', () => {
+    const { transport, sent } = fakeTransport();
+    const client = createClient({ ...base, transport });
+    const u = { id: 'u1', email: 'a@example.com' };
+    client.setUser(u);
+    u.id = 'mutated';
+    u.email = 'mutated@example.com';
+    client.captureError(new Error('x'));
+    expect(sent[0]!.user).toEqual({ id: 'u1', email: 'a@example.com' });
+  });
+
+  it('mutating a context object after capture does not alter the sent signal', () => {
+    const { transport, sent } = fakeTransport();
+    const client = createClient({ ...base, transport });
+    const cart = { items: 3 };
+    client.setContext('cart', cart);
+    client.captureError(new Error('x'));
+    cart.items = 999;
+    expect(sent[0]!.contexts).toMatchObject({ cart: { items: 3 } });
+  });
+
+  it('injected transport wins over an unparseable DSN', () => {
+    const { transport, sent } = fakeTransport();
+    const client = createClient({ ...base, dsn: 'garbage', transport });
+    expect(client.enabled).toBe(true);
+    client.captureError(new Error('x'));
+    expect(sent).toHaveLength(1);
+  });
+
+  it('flush and takeAll swallow a throwing transport', async () => {
+    const transport: Transport = {
+      enqueue: () => {},
+      flush: () => { throw new Error('flush boom'); },
+      takeAll: () => { throw new Error('takeAll boom'); },
+      queuedCount: () => 0,
+      dispose: () => {},
+    };
+    const client = createClient({ ...base, transport });
+    await expect(client.flush()).resolves.toBeUndefined();
+    expect(client.takeAll()).toEqual([]);
+  });
+});
