@@ -28,6 +28,7 @@ export interface SignalsClient {
   flush(): Promise<void>;
   takeAll(): Signal[];
   sessionId: string;
+  // false when the DSN failed to parse and no transport was injected
   enabled: boolean;
 }
 
@@ -77,6 +78,7 @@ export function createClient(options: ClientOptions): SignalsClient {
   };
 
   function baseSignal(kind: Signal['kind'], name: string, mechanism: Mechanism, level: SignalLevel, opts?: CaptureOptions): Signal {
+    const mergedContexts = { ...contexts, ...opts?.contexts };
     return {
       kind,
       sessionId,
@@ -87,9 +89,9 @@ export function createClient(options: ClientOptions): SignalsClient {
       release: options.release,
       environment: options.environment,
       fingerprint: opts?.fingerprint,
-      user,
+      user: user ? { ...user } : undefined,
       tags: Object.keys(tags).length ? { ...tags } : undefined,
-      contexts: { ...contexts, ...opts?.contexts },
+      contexts: Object.fromEntries(Object.entries(mergedContexts).map(([k, v]) => [k, { ...v }])),
       platform,
       sdk,
     };
@@ -97,6 +99,7 @@ export function createClient(options: ClientOptions): SignalsClient {
 
   return {
     sessionId,
+    // false when the DSN failed to parse and no transport was injected
     get enabled() { return enabled; },
 
     captureError: guarded((error: unknown, opts?: CaptureOptions) => {
@@ -104,7 +107,7 @@ export function createClient(options: ClientOptions): SignalsClient {
       const signal = baseSignal('error', isError ? error.name || 'Error' : 'Error', 'manual', 'error', opts);
       signal.message = truncate(isError ? error.message : String(error), 5000);
       signal.stack = parseStack(isError ? error.stack : undefined, isInApp);
-      signal.breadcrumbs = breadcrumbs.map((b) => ({ ...b }));
+      signal.breadcrumbs = breadcrumbs.map((b) => ({ ...b, data: b.data ? { ...b.data } : undefined }));
       send(signal);
     }),
 
@@ -121,18 +124,36 @@ export function createClient(options: ClientOptions): SignalsClient {
     }),
 
     addBreadcrumb: guarded((breadcrumb: Breadcrumb) => {
-      breadcrumbs.push({ ...breadcrumb, message: breadcrumb.message ? truncate(breadcrumb.message, 500) : undefined });
+      breadcrumbs.push({
+        ...breadcrumb,
+        message: breadcrumb.message ? truncate(breadcrumb.message, 500) : undefined,
+        data: breadcrumb.data ? { ...breadcrumb.data } : undefined,
+      });
       if (breadcrumbs.length > maxBreadcrumbs) breadcrumbs.splice(0, breadcrumbs.length - maxBreadcrumbs);
     }),
 
-    setUser: guarded((next) => { user = next ?? undefined; }),
+    setUser: guarded((next) => { user = next ? { ...next } : undefined; }),
     setTag: guarded((key: string, value: string) => { tags[key] = truncate(value, 200); }),
     setContext: guarded((key: string, context) => {
       if (context === null) delete contexts[key];
       else contexts[key] = context;
     }),
 
-    flush: () => (transport ? transport.flush() : Promise.resolve()),
-    takeAll: () => (transport ? transport.takeAll() : []),
+    flush: () => {
+      if (!transport) return Promise.resolve();
+      try {
+        return transport.flush();
+      } catch {
+        return Promise.resolve();
+      }
+    },
+    takeAll: () => {
+      if (!transport) return [];
+      try {
+        return transport.takeAll();
+      } catch {
+        return [];
+      }
+    },
   };
 }
