@@ -16,6 +16,7 @@ COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 COPY apps/mcp/package.json apps/mcp/
 COPY packages/db/package.json packages/db/
+COPY packages/web/form/package.json packages/web/form/
 RUN pnpm install --frozen-lockfile
 COPY . .
 
