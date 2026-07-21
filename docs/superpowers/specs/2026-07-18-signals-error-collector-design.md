@@ -18,10 +18,12 @@ Everything is a **signal** (`kind: error | log | event`) from day one, even thou
 | Physical shape | Separate app `apps/signals` (own server, port **4630**) + separate database `signals` in the existing postgres container (`127.0.0.1:5532`) |
 | Data model | Signal-generic core: one `signals` table + `issues` grouping for errors (Approach B) |
 | Grouping | Server-side fingerprinting; events + grouped issues (Sentry model) |
-| Registration | DSN-style ingest key per app, created in the UI |
+| Registration | DSN-style ingest key per app, created in the UI. DSN format: `sgl://<ingestKey>@<host>:4630/<appId>` (Sentry-style, parsed by the SDK into the HTTP ingest endpoint) |
 | Capture scope v1 | Core error info + breadcrumbs + custom context API + source maps (all four) |
 | Distribution | Publish SDKs to the GitHub Packages **private** npm registry under `@bendela6/*`; collector serves an IIFE bundle for plain HTML |
 | Name | **Signals** (chosen for future extension to non-error events) |
+| Levels | Three: `error` \| `warning` \| `info` (no fatal/debug — `mechanism` already distinguishes uncaught vs handled) |
+| Visual spec | `docs/design/11-signals.html` + `Sig*.dc.html` frames (imported from the Claude Design project) |
 | Tickets integration | Explicitly deferred — no coupling in v1 |
 
 ## Architecture
@@ -48,7 +50,7 @@ your apps                          this repo
 
 - **apps** — `id, name, slug, ingest_key (random secret, rendered as DSN), created_at`
 - **signals** — one row per report: `id (bigserial), app_id, kind ('error'|'log'|'event'), session_id (text), name` (error type or event name), `message, mechanism, level, client_timestamp, received_at, release, environment, issue_id (nullable FK), payload (jsonb)`. Payload holds stack frames (raw + symbolicated), embedded breadcrumbs, user, tags, contexts, platform info, SDK name/version.
-- **issues** — `id, app_id, fingerprint, title, status ('open'|'resolved'|'ignored'), first_seen, last_seen, event_count, created_at`; unique on `(app_id, fingerprint)`.
+- **issues** — `id, key (serial, rendered "SGL-<n>" in UI/URLs), app_id, fingerprint, title, culprit (top in-app frame, e.g. "src/checkout/CartList.tsx:48", set at fingerprint time and refreshed on symbolication), status ('open'|'resolved'|'ignored'), first_seen, last_seen, event_count, created_at`; unique on `(app_id, fingerprint)`.
 - **sourcemap_artifacts** — `id, app_id, release, filename, content, uploaded_at`. Maps live in the DB (local-first; no file volume to manage).
 
 Sessions are implicit: an ID the SDK generates per page load (browser) or process start (node). No sessions table; the timeline is `WHERE session_id = ?`.
@@ -72,8 +74,9 @@ Sessions are implicit: an ID the SDK generates per page load (browser) or proces
 
 - `GET/POST /apps`, `GET /apps/:id` (DSN + setup snippets data)
 - `GET /issues` — filters: app, status, level, time range, text search; includes daily counts for sparklines
-- `GET /issues/:id`, `PATCH /issues/:id` (status), `GET /issues/:id/signals` (occurrences, paginated)
-- `GET /sessions/:sessionId/signals` — chronological session timeline
+- `GET /issues/:id`, `PATCH /issues/:id` (status), `GET /issues/:id/signals` (occurrences, paginated). Issue detail also returns distinct session count, distinct user count, and the release range (first-seen → last-seen version) — all computed by query, no extra columns.
+- `GET /sessions/:sessionId/signals` — chronological session timeline, plus derived session header data: started/duration, per-kind signal counts, crashed flag (session contains an error-kind signal), release, platform
+- The Apps screen footer shows the current on-disk database size (cheap `pg_database_size` call); no retention promise is displayed until retention jobs exist (post-v1)
 - `POST /ingest/:key/sourcemaps` — multipart upload: release + map files
 - `GET /sdk.js` — prebuilt browser IIFE bundle (reads `data-dsn` from its script tag)
 
@@ -91,6 +94,7 @@ Consuming projects need two lines of setup — an `.npmrc`:
 with a `read:packages` PAT in the environment. Plain-HTML pages skip all of this: the collector-served `/sdk.js` needs no registry auth, making it the zero-setup path.
 
 **`@bendela6/signals-core`** — platform-neutral:
+- Entry point is `initSignals({ dsn, release?, environment?, beforeSend? })`; the SDK parses the `sgl://<key>@<host>:<port>/<appId>` DSN into the HTTP ingest endpoint
 - API: `captureError(err, extra?)`, `captureEvent(name, data?)`, `addBreadcrumb(b)`, `setUser`, `setTag`, `setContext`, `beforeSend` hook (scrub or drop)
 - Breadcrumb ring buffer (default 50), embedded into every error report
 - Batching transport: flush every ~5 s or 10 signals; retry with backoff; honors 429; client-side rate cap; payload truncation
@@ -103,21 +107,21 @@ Every signal carries a `mechanism` — **how** it was captured, set automaticall
 
 | Mechanism | Source | Kind | Default level |
 | --- | --- | --- | --- |
-| `uncaught-exception` | `window.onerror` / `process.on('uncaughtException')` | error | `fatal` |
-| `unhandled-rejection` | `unhandledrejection` / `process.on('unhandledRejection')` | error | `fatal` |
+| `uncaught-exception` | `window.onerror` / `process.on('uncaughtException')` | error | `error` |
+| `unhandled-rejection` | `unhandledrejection` / `process.on('unhandledRejection')` | error | `error` |
 | `error-boundary` | `<SignalsErrorBoundary>` catch | error | `error` |
 | `middleware` | Express/Fastify error handler | error | `error` |
 | `manual` | `captureError()` | error | `error` |
 | `console` | console instrumentation | log | maps from method: `error`→`error`, `warn`→`warning`, `log`→`info` |
 | `manual` | `captureEvent()` | event | `info` |
 
-Level meanings: `fatal` = nothing caught it, the page/process was breaking · `error` = failed but contained by a handler · `warning` = didn't fail but worth recording · `info` = normal noteworthy activity · `debug` = diagnostic detail for active investigation.
+Level meanings (three only): `error` = something failed · `warning` = didn't fail but worth recording · `info` = normal noteworthy activity. Whether an error was *uncaught* is carried by `mechanism` (`uncaught-exception` / `unhandled-rejection`), shown in the UI as the "unhandled" tag — a separate `fatal` level would duplicate that. In the UI, levels render as shape-coded dots: error = filled circle (danger), warning = diamond (orange), info = open circle (blue).
 
-**`@bendela6/signals-browser`** — `init({ dsn })` hooks `window.onerror` + `unhandledrejection`. Auto-breadcrumbs: console (log/warn/error), clicks (CSS selector), history/route changes, fetch/XHR (url, method, status, duration). Flush-on-unload via `sendBeacon`. Session = one page load.
+**`@bendela6/signals-browser`** — `initSignals({ dsn })` hooks `window.onerror` + `unhandledrejection`. Auto-breadcrumbs: console (log/warn/error), clicks (CSS selector), history/route changes, fetch/XHR (url, method, status, duration). Flush-on-unload via `sendBeacon`. Session = one page load.
 
 **`@bendela6/signals-react`** — re-exports browser init; adds `<SignalsErrorBoundary fallback={...}>` (captures component stack) and `useSignals()`. Window-level handlers still catch what boundaries miss.
 
-**`@bendela6/signals-node`** — `init({ dsn })` hooks `uncaughtException` + `unhandledRejection`; captures node version, pid, hostname; Express and Fastify error-handler helpers; ships the `signals-upload` CLI: `npx @bendela6/signals-node signals-upload --dsn … --release 1.2.0 ./dist`. Session = one process lifetime.
+**`@bendela6/signals-node`** — `initSignals({ dsn })` hooks `uncaughtException` + `unhandledRejection`; captures node version, pid, hostname; Express and Fastify error-handler helpers; ships a `signals` bin (resolves from the project's own node_modules): `npx signals sourcemaps upload ./dist --release 1.2.0 --dsn …`. Session = one process lifetime.
 
 **Plain HTML** — `<script src="http://host:4630/sdk.js" data-dsn="…"></script>` auto-inits the browser SDK; zero build step.
 
@@ -167,7 +171,7 @@ interface Signal {
   name: string                  // error type ("TypeError") or event name ("checkout.completed")
   message?: string
   mechanism: Mechanism          // how it was captured; set by the SDK, never by the caller
-  level: 'fatal' | 'error' | 'warning' | 'info' | 'debug'   // derived from mechanism+kind, caller may override
+  level: 'error' | 'warning' | 'info'   // derived from mechanism+kind, caller may override
   timestamp: string             // ISO, client clock
   release?: string
   environment?: string          // 'production' | 'development' | free-form
