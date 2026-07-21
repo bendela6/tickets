@@ -63,8 +63,13 @@ export async function handleUncaught(
   exit: (code: number) => void = (code) => process.exit(code),
 ): Promise<void> {
   client.captureError(error, { mechanism: 'uncaught-exception' });
-  await Promise.race([client.flush(), new Promise((resolve) => setTimeout(resolve, 2000))]);
-  exit(1);
+  try {
+    await Promise.race([client.flush(), new Promise((resolve) => setTimeout(resolve, 2000))]);
+  } catch {
+    // flush failure must not mask the exit
+  } finally {
+    exit(1);
+  }
 }
 
 export function handleRejection(client: SignalsClient, reason: unknown): void {

@@ -66,4 +66,21 @@ describe('node SDK', () => {
     fastifyErrorHook(client)(new Error('fas'), { method: 'GET', url: '/x' });
     expect(sent[1]!.contexts?.http).toMatchObject({ method: 'GET', url: '/x' });
   });
+
+  it('handleUncaught still exits when the transport flush() rejects', async () => {
+    const sent: Signal[] = [];
+    const transport: Transport = {
+      enqueue: (s) => { sent.push(s); },
+      flush: async () => { throw new Error('down'); },
+      takeAll: () => sent.splice(0),
+      queuedCount: () => sent.length,
+      dispose: () => {},
+    };
+    const client = initSignals({ dsn: DSN, transport, registerProcessHandlers: false });
+    let exited: number | null = null;
+    await expect(
+      handleUncaught(client, new TypeError('crash'), (code) => { exited = code; }),
+    ).resolves.toBeUndefined();
+    expect(exited).toBe(1);
+  });
 });
