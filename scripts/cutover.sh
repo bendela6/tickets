@@ -65,7 +65,7 @@ run "POSTGRES_DATABASE=$TARGET pnpm --filter @tickets/db db:import"
 run "POSTGRES_DATABASE=$TARGET pnpm --filter @tickets/db db:verify-import"
 if [ "$DRY" -eq 0 ]; then
   NULLS="$(docker exec $PG psql -U postgres -tAc \
-    "SELECT count(*) FROM events WHERE aggregate_type='item' AND project_id IS NULL" $TARGET)"
+    "SELECT count(*) FROM history.events WHERE aggregate_type='item' AND project_id IS NULL" $TARGET)"
 else
   NULLS="0"
 fi
