@@ -101,8 +101,14 @@ const signals = initSignals({
 // Express:
 app.use(expressErrorHandler(signals));
 
-// Fastify:
-app.setErrorHandler(fastifyErrorHook(signals));
+// Fastify: fastifyErrorHook only captures — it doesn't reply, so wire the
+// reply yourself (fastify requires setErrorHandler to always send a response,
+// otherwise the request hangs until it times out):
+const captureFastify = fastifyErrorHook(signals);
+app.setErrorHandler((error, request, reply) => {
+  captureFastify(error, request);
+  reply.status(500).send({ error: 'internal error' });
+});
 ```
 
 By default `initSignals` registers `process.on('uncaughtException'|'unhandledRejection', …)`
@@ -183,8 +189,11 @@ pnpm won't republish an unchanged version. `publishConfig.registry` and
 `repository` are already set in every `package.json` (GitHub Packages
 requires the latter to resolve the scope to this repo).
 
-To sanity-check what would ship without touching the registry:
+To sanity-check what would ship without touching the registry (filtered `pnpm pack`
+fails on this pnpm version — run it per-directory instead):
 
 ```sh
-pnpm --filter './packages/signals/*' pack
+for d in packages/signals/core packages/signals/browser packages/signals/react packages/signals/node; do
+  (cd "$d" && pnpm pack)
+done
 ```

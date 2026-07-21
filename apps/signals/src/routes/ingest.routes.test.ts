@@ -111,3 +111,16 @@ it('rejects malformed JSON bodies with 400', async () => {
   expect(res.statusCode).toBe(400);
   await app.close();
 });
+
+it('accepts a text/plain body, matching what navigator.sendBeacon() sends', async () => {
+  const { app, key } = await makeApp();
+  const res = await app.inject({
+    method: 'POST', url: `/ingest/${key}`,
+    payload: JSON.stringify({ signals: [errorSignal()] }),
+    headers: { 'content-type': 'text/plain' },
+  });
+  expect(res.statusCode).toBe(202);
+  expect(res.json()).toEqual({ accepted: 1 });
+  expect(await testDb.select().from(signals)).toHaveLength(1);
+  await app.close();
+});

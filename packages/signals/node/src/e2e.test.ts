@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { initSignals } from './index';
 
 // End-to-end: real HTTP from the node SDK into the real collector (in-process,
-// signals_test database). Requires postgres on 127.0.0.1:5532; skips otherwise.
+// signals_test database). Skips only when the collector sources can't be
+// resolved (e.g. running this package outside the monorepo). If postgres
+// itself is down, this test does NOT skip — createDbClient/sql.unsafe below
+// will throw and the test FAILS, intentionally: a down collector DB is a real
+// problem this suite should surface, not silently swallow.
 describe('node SDK ⇄ collector e2e', () => {
   it('captureError lands as a grouped issue', async () => {
     process.env.SIGNALS_DATABASE = 'signals_test';

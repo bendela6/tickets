@@ -51,6 +51,10 @@ export function createClient(options: ClientOptions): SignalsClient {
     isInApp,
   } = options;
 
+  // clamped once here since these come from ClientOptions and don't change per call
+  const release = options.release !== undefined ? truncate(options.release, 100) : undefined;
+  const environment = options.environment !== undefined ? truncate(options.environment, 50) : undefined;
+
   let transport: Transport | null = options.transport ?? null;
   let enabled = true;
   if (!transport) {
@@ -86,9 +90,9 @@ export function createClient(options: ClientOptions): SignalsClient {
       mechanism: opts?.mechanism ?? mechanism,
       level: opts?.level ?? level,
       timestamp: now().toISOString(),
-      release: options.release,
-      environment: options.environment,
-      fingerprint: opts?.fingerprint,
+      release,
+      environment,
+      fingerprint: opts?.fingerprint !== undefined ? truncate(opts.fingerprint, 200) : undefined,
       user: user ? { ...user } : undefined,
       tags: Object.keys(tags).length ? { ...tags } : undefined,
       contexts: Object.fromEntries(Object.entries(mergedContexts).map(([k, v]) => [k, { ...v }])),
@@ -104,7 +108,9 @@ export function createClient(options: ClientOptions): SignalsClient {
 
     captureError: guarded((error: unknown, opts?: CaptureOptions) => {
       const isError = error instanceof Error;
-      const signal = baseSignal('error', isError ? error.name || 'Error' : 'Error', 'manual', 'error', opts);
+      const rawName = isError ? error.name || 'Error' : 'Error';
+      const name = truncate(rawName, 300) || 'Error';
+      const signal = baseSignal('error', name, 'manual', 'error', opts);
       signal.message = truncate(isError ? error.message : String(error), 5000);
       signal.stack = parseStack(isError ? error.stack : undefined, isInApp);
       signal.breadcrumbs = breadcrumbs.map((b) => ({ ...b, data: b.data ? { ...b.data } : undefined }));
@@ -112,7 +118,8 @@ export function createClient(options: ClientOptions): SignalsClient {
     }),
 
     captureEvent: guarded((name: string, data?: Record<string, unknown>, opts?: CaptureOptions) => {
-      const signal = baseSignal('event', truncate(name, 300), 'manual', 'info', opts);
+      const clampedName = truncate(name, 300) || '<unnamed>';
+      const signal = baseSignal('event', clampedName, 'manual', 'info', opts);
       if (data) signal.contexts = { ...signal.contexts, event: { ...data } };
       send(signal);
     }),
