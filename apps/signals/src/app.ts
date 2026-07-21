@@ -1,4 +1,4 @@
-import fastify from 'fastify';
+import fastify, { type FastifyError } from 'fastify';
 import type { Db } from './db/client';
 import { HttpError } from './errors';
 import { createRateLimiter, type RateLimiter } from './rate-limit';
@@ -19,8 +19,16 @@ export function buildApp(context: { db: Db; rateLimiter?: RateLimiter }) {
     return payload;
   });
 
-  app.setErrorHandler((error, _request, reply) => {
+  app.setErrorHandler((error: FastifyError | HttpError, _request, reply) => {
     if (error instanceof HttpError) {
+      reply.status(error.statusCode).send({ error: error.message });
+      return;
+    }
+    // Fastify's body parser (and other framework-level validation) throws
+    // plain errors carrying a numeric statusCode — e.g. malformed JSON is
+    // a 400, not a server error. Respect those; only 5xx/unlabeled errors
+    // are truly "internal".
+    if (typeof error.statusCode === 'number' && error.statusCode < 500) {
       reply.status(error.statusCode).send({ error: error.message });
       return;
     }
