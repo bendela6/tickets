@@ -1,0 +1,84 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { initSignals, getClient } from './index';
+import type { Signal } from '@bendela6/signals-core';
+import type { Transport } from '@bendela6/signals-core';
+
+function fakeTransport() {
+  const sent: Signal[] = [];
+  const transport: Transport = {
+    enqueue: (s) => { sent.push(s); }, flush: async () => {}, takeAll: () => sent.splice(0),
+    queuedCount: () => sent.length, dispose: () => {},
+  };
+  return { transport, sent };
+}
+const DSN = 'sgl://k@127.0.0.1:4640/1';
+
+afterEach(() => { vi.restoreAllMocks(); });
+
+describe('initSignals (browser)', () => {
+  it('captures window error events with uncaught-exception mechanism and browser platform', () => {
+    const { transport, sent } = fakeTransport();
+    initSignals({ dsn: DSN, transport });
+    window.dispatchEvent(new ErrorEvent('error', { error: new TypeError('boom'), message: 'boom' }));
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({ kind: 'error', mechanism: 'uncaught-exception', name: 'TypeError' });
+    expect(sent[0]!.platform.runtime).toBe('browser');
+    expect(sent[0]!.platform.url).toContain('localhost');
+  });
+
+  it('captures unhandled rejections', () => {
+    const { transport, sent } = fakeTransport();
+    initSignals({ dsn: DSN, transport });
+    const event = new Event('unhandledrejection') as Event & { reason?: unknown };
+    event.reason = new Error('nope');
+    window.dispatchEvent(event);
+    expect(sent[0]).toMatchObject({ mechanism: 'unhandled-rejection', message: 'nope' });
+  });
+
+  it('console.warn leaves a breadcrumb that rides the next error', () => {
+    const { transport, sent } = fakeTransport();
+    initSignals({ dsn: DSN, transport });
+    console.warn('low stock');
+    getClient()!.captureError(new Error('x'));
+    expect(sent[0]!.breadcrumbs!.some((b) => b.type === 'console' && b.message === 'low stock')).toBe(true);
+  });
+
+  it("captureConsole: 'both' also emits log signals", () => {
+    const { transport, sent } = fakeTransport();
+    initSignals({ dsn: DSN, transport, captureConsole: 'both' });
+    console.error('gateway timeout');
+    expect(sent.some((s) => s.kind === 'log' && s.level === 'error' && s.message === 'gateway timeout')).toBe(true);
+  });
+
+  it('clicks and history changes leave typed breadcrumbs', () => {
+    const { transport, sent } = fakeTransport();
+    initSignals({ dsn: DSN, transport });
+    const button = document.createElement('button');
+    button.id = 'apply-coupon';
+    document.body.appendChild(button);
+    button.click();
+    history.pushState({}, '', '/checkout');
+    getClient()!.captureError(new Error('x'));
+    const types = sent[0]!.breadcrumbs!.map((b) => `${b.type}:${b.message}`);
+    expect(types).toContain('click:button#apply-coupon');
+    expect(types).toContain('navigation:/checkout');
+  });
+
+  it('re-init tears down old listeners (no double capture)', () => {
+    const { transport, sent } = fakeTransport();
+    initSignals({ dsn: DSN, transport });
+    initSignals({ dsn: DSN, transport });
+    window.dispatchEvent(new ErrorEvent('error', { error: new Error('once'), message: 'once' }));
+    expect(sent.filter((s) => s.kind === 'error')).toHaveLength(1);
+  });
+
+  it('fetch patch leaves an http breadcrumb with status and duration', async () => {
+    const { transport, sent } = fakeTransport();
+    window.fetch = (async () => ({ status: 200 })) as unknown as typeof fetch;
+    initSignals({ dsn: DSN, transport });
+    await fetch('/api/x');
+    getClient()!.captureError(new Error('x'));
+    const http = sent[0]!.breadcrumbs!.find((b) => b.type === 'http');
+    expect(http).toMatchObject({ type: 'http', message: 'GET /api/x', data: { status: 200 } });
+  });
+});
