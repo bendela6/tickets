@@ -49,6 +49,20 @@ export function formatBytes(n: number): string {
   return `${mantissa} ${BYTE_UNITS[exponent]}`;
 }
 
+/**
+ * Compact absolute date matching the Apps table's "Created" column, e.g.
+ * "2026-04-02T00:00:00Z" -> "Apr 02, 2026". Fixed to UTC so the rendered
+ * date doesn't shift with the host machine's timezone.
+ */
+export function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 /** Human-readable duration, e.g. 86_000 -> "1m 26s". */
 export function formatDurationMs(ms: number): string {
   const totalSec = Math.floor(ms / 1000);

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { formatBytes, formatCount, formatDurationMs, relativeTime } from './format';
+import { formatBytes, formatCount, formatDate, formatDurationMs, relativeTime } from './format';
 
 describe('formatCount', () => {
   test('groups thousands, never abbreviates', () => {
@@ -53,6 +53,16 @@ describe('formatBytes', () => {
 
   test('rounds up through the MB->GB boundary the same way', () => {
     expect(formatBytes(1_073_741_818)).toBe('1.0 GB');
+  });
+});
+
+describe('formatDate', () => {
+  test('formats a UTC iso timestamp regardless of host timezone', () => {
+    expect(formatDate('2026-03-12T00:00:00Z')).toBe('Mar 12, 2026');
+  });
+
+  test('zero-pads single-digit days', () => {
+    expect(formatDate('2026-04-02T00:00:00Z')).toBe('Apr 02, 2026');
   });
 });
 
