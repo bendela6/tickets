@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import * as v from 'valibot';
 import type { Db } from '../db/client';
@@ -48,15 +48,23 @@ export function registerIngestRoutes(
     }
 
     await context.db.transaction(async (tx) => {
+      // Keyed by release: batches commonly carry many error signals from the
+      // same release, so avoid re-querying the artifact table per signal.
+      const artifactCache = new Map<string, { filename: string; content: string }[]>();
       for (const s of batch) {
         let issueId: number | null = null;
         let symbolicated: SymbolicatedFrame[] | null = null;
         if (s.kind === 'error') {
           if (s.stack && s.release) {
-            const artifacts = await tx
-              .select({ filename: sourcemapArtifacts.filename, content: sourcemapArtifacts.content })
-              .from(sourcemapArtifacts)
-              .where(and(eq(sourcemapArtifacts.appId, appRow.id), eq(sourcemapArtifacts.release, s.release)));
+            let artifacts = artifactCache.get(s.release);
+            if (!artifacts) {
+              artifacts = await tx
+                .select({ filename: sourcemapArtifacts.filename, content: sourcemapArtifacts.content })
+                .from(sourcemapArtifacts)
+                .where(and(eq(sourcemapArtifacts.appId, appRow.id), eq(sourcemapArtifacts.release, s.release)))
+                .orderBy(asc(sourcemapArtifacts.uploadedAt), asc(sourcemapArtifacts.id));
+              artifactCache.set(s.release, artifacts);
+            }
             if (artifacts.length > 0) symbolicated = symbolicateFrames(s.stack, artifacts);
           }
           const effectiveStack = symbolicated ?? s.stack;

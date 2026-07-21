@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import type { Db } from '../db/client';
 import { signals } from '../db/schema';
 import { HttpError } from '../errors';
+import { parseIntParam } from '../params';
 
 export function registerSessionsRoutes(app: FastifyInstance, context: { db: Db }) {
   app.get('/sessions/:sessionId/signals', async (request) => {
@@ -13,7 +14,7 @@ export function registerSessionsRoutes(app: FastifyInstance, context: { db: Db }
       .from(signals)
       .where(and(
         eq(signals.sessionId, sessionId),
-        q.app ? eq(signals.appId, Number(q.app)) : undefined,
+        q.app ? eq(signals.appId, parseIntParam(q.app, 'app')) : undefined,
       ))
       .orderBy(asc(signals.clientTimestamp), asc(signals.id));
     if (rows.length === 0) throw new HttpError(404, 'session not found');

@@ -6,6 +6,7 @@ import type { Db } from '../db/client';
 import { apps, signals } from '../db/schema';
 import { composeDsn } from '../dsn';
 import { HttpError } from '../errors';
+import { parseIntParam } from '../params';
 
 const CreateAppSchema = v.object({ name: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100)) });
 
@@ -47,7 +48,7 @@ export function registerAppsRoutes(app: FastifyInstance, context: { db: Db }) {
   });
 
   app.get('/apps/:id', async (request) => {
-    const id = Number((request.params as { id: string }).id);
+    const id = parseIntParam((request.params as { id: string }).id);
     const [row] = await context.db.select().from(apps).where(eq(apps.id, id));
     if (!row) throw new HttpError(404, 'app not found');
     return { ...row, dsn: composeDsn(row.ingestKey, row.id) };
