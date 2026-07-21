@@ -1,21 +1,23 @@
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import * as v from 'valibot';
 import type { Db } from '../db/client';
-import { apps, issues, signals } from '../db/schema';
+import { apps, issues, signals, sourcemapArtifacts } from '../db/schema';
 import { HttpError } from '../errors';
 import { culpritFrom, fingerprintError, issueTitle } from '../fingerprint';
 import type { RateLimiter } from '../rate-limit';
-import type { SignalPayload } from '../types';
+import { symbolicateFrames } from '../symbolicate';
+import type { SignalPayload, SymbolicatedFrame } from '../types';
 import { IngestEnvelopeSchema, type IngestSignal } from './ingest.schema';
 
 const MAX_PAYLOAD_BYTES = 200_000;
 
-function toPayload(s: IngestSignal): SignalPayload {
+function toPayload(s: IngestSignal, stackSymbolicated: SymbolicatedFrame[] | null): SignalPayload {
   const payload: SignalPayload = {
     stack: s.stack, breadcrumbs: s.breadcrumbs, user: s.user, tags: s.tags,
     contexts: s.contexts, platform: s.platform, sdk: s.sdk,
   };
+  if (stackSymbolicated) payload.stackSymbolicated = stackSymbolicated;
   // Oversize guard: breadcrumbs are the usual offender — drop them first,
   // then contexts. Flag truncation so the UI can say so.
   if (JSON.stringify(payload).length > MAX_PAYLOAD_BYTES) {
@@ -48,16 +50,25 @@ export function registerIngestRoutes(
     await context.db.transaction(async (tx) => {
       for (const s of batch) {
         let issueId: number | null = null;
+        let symbolicated: SymbolicatedFrame[] | null = null;
         if (s.kind === 'error') {
+          if (s.stack && s.release) {
+            const artifacts = await tx
+              .select({ filename: sourcemapArtifacts.filename, content: sourcemapArtifacts.content })
+              .from(sourcemapArtifacts)
+              .where(and(eq(sourcemapArtifacts.appId, appRow.id), eq(sourcemapArtifacts.release, s.release)));
+            if (artifacts.length > 0) symbolicated = symbolicateFrames(s.stack, artifacts);
+          }
+          const effectiveStack = symbolicated ?? s.stack;
           const fingerprint = fingerprintError({
-            name: s.name, message: s.message, stack: s.stack, explicit: s.fingerprint,
+            name: s.name, message: s.message, stack: effectiveStack, explicit: s.fingerprint,
           });
           const [issue] = await tx
             .insert(issues)
             .values({
               appId: appRow.id, fingerprint,
               title: issueTitle(s.name, s.message),
-              culprit: culpritFrom(s.stack),
+              culprit: culpritFrom(effectiveStack),
             })
             .onConflictDoUpdate({
               target: [issues.appId, issues.fingerprint],
@@ -65,6 +76,7 @@ export function registerIngestRoutes(
                 eventCount: sql`${issues.eventCount} + 1`,
                 lastSeen: sql`now()`,
                 status: sql`CASE WHEN ${issues.status} = 'resolved' THEN 'open' ELSE ${issues.status} END`,
+                culprit: sql`COALESCE(EXCLUDED.culprit, ${issues.culprit})`,
               },
             })
             .returning({ id: issues.id });
@@ -75,7 +87,7 @@ export function registerIngestRoutes(
           message: s.message ?? null, mechanism: s.mechanism, level: s.level,
           clientTimestamp: new Date(s.timestamp),
           release: s.release ?? null, environment: s.environment ?? null,
-          issueId, payload: toPayload(s),
+          issueId, payload: toPayload(s, symbolicated),
         });
       }
     });
