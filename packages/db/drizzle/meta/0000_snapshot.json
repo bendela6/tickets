@@ -1,5 +1,5 @@
 {
-  "id": "c108dbe8-0053-4f5f-9b81-c5f01e9cc110",
+  "id": "bfdc0440-410c-4a56-bcb8-32a3e76738d4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2163,7 +2163,7 @@
           "name": "items_project_id_projects_id_fk",
           "tableFrom": "items",
           "tableTo": "projects",
-          "schemaTo": "structure",
+          "schemaTo": "core",
           "columnsFrom": [
             "project_id"
           ],
@@ -2727,9 +2727,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "structure.projects": {
+    "core.projects": {
       "name": "projects",
-      "schema": "structure",
+      "schema": "core",
       "columns": {
         "id": {
           "name": "id",
@@ -3151,7 +3151,7 @@
           "name": "views_project_id_projects_id_fk",
           "tableFrom": "views",
           "tableTo": "projects",
-          "schemaTo": "structure",
+          "schemaTo": "core",
           "columnsFrom": [
             "project_id"
           ],
@@ -3248,7 +3248,7 @@
           "name": "workdirs_project_id_projects_id_fk",
           "tableFrom": "workdirs",
           "tableTo": "projects",
-          "schemaTo": "structure",
+          "schemaTo": "core",
           "columnsFrom": [
             "project_id"
           ],

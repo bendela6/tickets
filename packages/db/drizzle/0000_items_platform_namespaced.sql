@@ -275,7 +275,7 @@ CREATE TABLE "history"."outbox" (
 	"last_error" text
 );
 --> statement-breakpoint
-CREATE TABLE "structure"."projects" (
+CREATE TABLE "core"."projects" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"key" text NOT NULL,
 	"name" text NOT NULL,
@@ -384,7 +384,7 @@ ALTER TABLE "records"."item_values" ADD CONSTRAINT "item_values_item_id_items_id
 ALTER TABLE "records"."item_values" ADD CONSTRAINT "item_values_field_id_fields_id_fk" FOREIGN KEY ("field_id") REFERENCES "structure"."fields"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "records"."item_values" ADD CONSTRAINT "item_values_option_id_options_id_fk" FOREIGN KEY ("option_id") REFERENCES "structure"."options"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "records"."item_values" ADD CONSTRAINT "item_values_value_user_id_users_id_fk" FOREIGN KEY ("value_user_id") REFERENCES "core"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "records"."items" ADD CONSTRAINT "items_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "structure"."projects"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "records"."items" ADD CONSTRAINT "items_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "core"."projects"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "records"."items" ADD CONSTRAINT "items_type_id_item_types_id_fk" FOREIGN KEY ("type_id") REFERENCES "structure"."item_types"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "records"."items" ADD CONSTRAINT "items_parent_id_items_id_fk" FOREIGN KEY ("parent_id") REFERENCES "records"."items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "records"."items" ADD CONSTRAINT "items_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "core"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -398,12 +398,12 @@ ALTER TABLE "structure"."option_transitions" ADD CONSTRAINT "option_transitions_
 ALTER TABLE "structure"."option_transitions" ADD CONSTRAINT "option_transitions_item_type_id_item_types_id_fk" FOREIGN KEY ("item_type_id") REFERENCES "structure"."item_types"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "structure"."options" ADD CONSTRAINT "options_option_set_id_option_sets_id_fk" FOREIGN KEY ("option_set_id") REFERENCES "structure"."option_sets"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "history"."outbox" ADD CONSTRAINT "outbox_event_id_events_id_fk" FOREIGN KEY ("event_id") REFERENCES "history"."events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "structure"."projects" ADD CONSTRAINT "projects_scheme_id_schemes_id_fk" FOREIGN KEY ("scheme_id") REFERENCES "structure"."schemes"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "core"."projects" ADD CONSTRAINT "projects_scheme_id_schemes_id_fk" FOREIGN KEY ("scheme_id") REFERENCES "structure"."schemes"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "terminal"."output" ADD CONSTRAINT "output_session_id_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "terminal"."sessions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "terminal"."sessions" ADD CONSTRAINT "sessions_workdir_id_workdirs_id_fk" FOREIGN KEY ("workdir_id") REFERENCES "core"."workdirs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "terminal"."sessions" ADD CONSTRAINT "sessions_started_by_users_id_fk" FOREIGN KEY ("started_by") REFERENCES "core"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "structure"."views" ADD CONSTRAINT "views_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "structure"."projects"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "core"."workdirs" ADD CONSTRAINT "workdirs_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "structure"."projects"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "structure"."views" ADD CONSTRAINT "views_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "core"."projects"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "core"."workdirs" ADD CONSTRAINT "workdirs_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "core"."projects"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "agent_sessions_status_created" ON "agent"."sessions" USING btree ("status","created_at");--> statement-breakpoint
 CREATE INDEX "agent_sessions_parent" ON "agent"."sessions" USING btree ("parent_session_id");--> statement-breakpoint
 CREATE INDEX "comments_item" ON "records"."comments" USING btree ("item_id");--> statement-breakpoint

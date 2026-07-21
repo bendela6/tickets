@@ -76,8 +76,8 @@ function enumIdentity(c: PgColumn): { schema: string | null; name: string } | nu
 // can't silently fall behind the schema.
 //
 // The ERD's visual group is independent of a table's real Postgres schema —
-// e.g. `core.users` renders in the WORKSPACE group alongside `structure.projects`,
-// not in the WORKDIRS group with `core.workdirs`, even though both carry
+// e.g. `core.users` renders in the WORKSPACE group alongside `core.projects`,
+// not in the WORKDIRS group with `core.workdirs`, even though all three carry
 // schema `core`. So a hand-listed `SchemaGroup.tables` entry (bare name)
 // always wins when present, regardless of schema. Only a table with NO
 // hand-listed entry falls back to schema-derived membership via
