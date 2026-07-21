@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Signals — plain HTML example</title>
+</head>
+<body>
+  <h1>Signals plain-HTML example</h1>
+  <p>
+    Zero build step: the collector serves the browser SDK itself. Point
+    <code>data-dsn</code> at the DSN shown for your app on the Apps screen, then
+    open this page and click the button — the thrown error should show up as an
+    issue within a few seconds (the SDK batches every ~5s / 10 signals, and also
+    flushes on click via <code>Signals.getClient().flush()</code> below).
+  </p>
+
+  <!--
+    Replace 127.0.0.1:4640 with your collector's host if it's not local, and
+    the data-dsn placeholder with the DSN from Apps → your app → <script> tab.
+  -->
+  <script src="http://127.0.0.1:4640/sdk.js" data-dsn="sgl://REPLACE_WITH_YOUR_INGEST_KEY@127.0.0.1:4640/REPLACE_WITH_APP_ID"></script>
+
+  <button id="boom">Throw an error</button>
+
+  <script>
+    document.getElementById('boom').addEventListener('click', () => {
+      // Not caught anywhere — window.onerror picks it up automatically.
+      throw new Error('plain.html example: boom');
+    });
+  </script>
+</body>
+</html>
