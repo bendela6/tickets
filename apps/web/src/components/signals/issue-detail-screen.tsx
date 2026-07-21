@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
+import { ApiError } from '../../api/api-error';
 import { usePatchIssueStatus, useSignalsIssue, useSignalsOccurrences, useSignalsSession } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
 import { BreadcrumbList } from './breadcrumb-list';
@@ -128,15 +129,48 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
     return null;
   }
 
-  if (issueQuery.isError || issueQuery.data === undefined) {
+  if (issueQuery.isError) {
+    // 404 reads as "this issue doesn't exist" — anything else (network
+    // down, 500, etc.) is transient and gets the same recoverable
+    // "Couldn't load" + Retry treatment as the Issues/Apps list screens,
+    // not a false "not found".
+    const notFound = issueQuery.error instanceof ApiError && issueQuery.error.status === 404;
+
+    if (notFound) {
+      return (
+        <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+          <div className="font-sans text-[15px] font-semibold text-ink">Issue not found</div>
+          <Link to="/signals" className="font-sans text-meta text-accent hover:underline">
+            ‹ Back to Issues
+          </Link>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-        <div className="font-sans text-[15px] font-semibold text-ink">Issue not found</div>
-        <Link to="/signals" className="font-sans text-meta text-accent hover:underline">
-          ‹ Back to Issues
-        </Link>
+      <div className="flex h-full items-center justify-center p-6">
+        <div className="flex max-w-115 flex-col items-center gap-3.5 text-center">
+          <span className="flex size-9.5 items-center justify-center rounded-[10px] bg-danger-subtle font-mono text-[16px] font-semibold text-danger">
+            ✕
+          </span>
+          <div className="font-sans text-[17px] font-semibold text-ink">Couldn't load issue</div>
+          <div className="font-sans text-[12.5px] leading-normal text-ink-2">
+            The signals daemon isn't responding. Check that it's running, then try again.
+          </div>
+          <button
+            type="button"
+            onClick={() => void issueQuery.refetch()}
+            className="mt-0.5 h-8 rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink hover:bg-inset"
+          >
+            ↻ Retry
+          </button>
+        </div>
       </div>
     );
+  }
+
+  if (issueQuery.data === undefined) {
+    return null;
   }
 
   const issue = issueQuery.data;
@@ -224,7 +258,11 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
             occurrenceTime={matchedRow?.clientTimestamp ?? newestOccurrence?.receivedAt}
           />
           <BreadcrumbList breadcrumbs={payload?.breadcrumbs} sessionId={newestOccurrence?.sessionId ?? undefined} />
-          <OccurrencesCard issueId={issueId} />
+          {/* key={issueId} resets the card's internal page state when the
+          user navigates from one issue's detail screen straight to
+          another's — otherwise a page-3 selection would silently leak into
+          the next issue's (usually much shorter) occurrences list. */}
+          <OccurrencesCard key={issueId} issueId={issueId} />
         </div>
         <ContextRail issue={issue} payload={payload} />
       </div>
