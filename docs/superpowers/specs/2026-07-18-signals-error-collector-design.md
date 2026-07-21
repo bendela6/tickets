@@ -77,7 +77,7 @@ Sessions are implicit: an ID the SDK generates per page load (browser) or proces
 - `GET /issues/:id`, `PATCH /issues/:id` (status), `GET /issues/:id/signals` (occurrences, paginated). Issue detail also returns distinct session count, distinct user count, and the release range (first-seen → last-seen version) — all computed by query, no extra columns.
 - `GET /sessions/:sessionId/signals` — chronological session timeline, plus derived session header data: started/duration, per-kind signal counts, crashed flag (session contains an error-kind signal), release, platform
 - The Apps screen footer shows the current on-disk database size (cheap `pg_database_size` call); no retention promise is displayed until retention jobs exist (post-v1)
-- `POST /ingest/:key/sourcemaps` — multipart upload: release + map files
+- `POST /ingest/:key/sourcemaps` — JSON upload: { release, files: [{ filename, content }] } (content = raw .map text; 50 MB body limit)
 - `GET /sdk.js` — prebuilt browser IIFE bundle (reads `data-dsn` from its script tag)
 
 ## SDK packages (`packages/signals/*` in this repo → GitHub Packages, private)

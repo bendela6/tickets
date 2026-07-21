@@ -12,6 +12,8 @@ procs:
     shell: pnpm --filter @tickets/eer dev
     env:
       EER_DEV_PORT: "4630"
+  signals:
+    shell: pnpm --filter @tickets/signals dev
   studio:
     shell: pnpm db:studio
   watchers:

@@ -12,6 +12,7 @@ description: Use when starting, restarting, deploying, or screenshotting the app
 | Deployed app (docker, single container `app`) | http://localhost:4610 | nginx serves the built web SPA and reverse-proxies `/api` to an internal node API (`127.0.0.1:4600` inside the container — not published to the host) |
 | Dev web (vite) | http://localhost:4620 | `strictPort` — fails hard if 4620 is taken; part of `pnpm dev` (mprocs) |
 | Dev API (tsx watch) | http://localhost:4600 | part of `pnpm dev` (mprocs); dev web proxies `/api` here |
+| Dev signals collector | http://localhost:4640 | part of `pnpm dev` (mprocs) pane "signals"; own db `signals`, independent of the `tickets_dev` switch |
 | DB browser (docker) | http://localhost:4610/studio | self-hosted **pgweb** (`--prefix studio`, internal `127.0.0.1:4983`), locked to prod `tickets`. Baked into the image → works offline. (Dev's mprocs `studio` pane still uses drizzle-kit studio, which needs internet.) |
 | Postgres (docker) | `127.0.0.1:5532` | ONE server, TWO databases: `tickets` (prod, used by the deployed app) and `tickets_dev` (dev, used by local tooling); loopback-only. Inspect: `docker exec -it tickets-postgres-1 psql -U postgres -d tickets` (or `-d tickets_dev`) |
 | Gallery | `/gallery` on either web | primitives showcase; what verifying-a-component measures |
