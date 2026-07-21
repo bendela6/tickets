@@ -93,8 +93,13 @@ export function NewAppDialog({
     if (trimmed === '') {
       return;
     }
-    const result = await createApp.mutateAsync(trimmed);
-    setCreated(result);
+    try {
+      const result = await createApp.mutateAsync(trimmed);
+      setCreated(result);
+    } catch {
+      // swallow — createApp.isError/.error already drives the inline
+      // error message below, matching new-item-dialog.tsx's convention.
+    }
   }
 
   return (
