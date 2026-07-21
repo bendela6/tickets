@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vitest';
 
-import { createApp, getSession, listIssues, patchIssueStatus } from './signals-api';
+import { createApp, getSession, listIssues, listOccurrences, patchIssueStatus } from './signals-api';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -60,4 +60,32 @@ test('getSession hits /signals-api/sessions/:sessionId/signals', async () => {
 
   const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
   expect(url).toBe('/signals-api/sessions/s1/signals');
+});
+
+test('getSession sends the appId as ?app= (not ?appId=)', async () => {
+  const fetchMock = vi.fn().mockResolvedValue(
+    jsonResponse({
+      session: {
+        sessionId: 's1', appId: 1, startedAt: '2026-07-22T00:00:00Z', endedAt: null, durationMs: null,
+        crashed: false, counts: { error: 0, log: 0, event: 0 }, release: null, platform: null,
+      },
+      rows: [],
+    }),
+  );
+  vi.stubGlobal('fetch', fetchMock);
+
+  await getSession('s1', 7);
+
+  const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+  expect(url).toBe('/signals-api/sessions/s1/signals?app=7');
+});
+
+test('listOccurrences hits /signals-api/issues/:id/signals (not /occurrences)', async () => {
+  const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ rows: [], total: 0 }));
+  vi.stubGlobal('fetch', fetchMock);
+
+  await listOccurrences(5, 2, 10);
+
+  const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+  expect(url).toBe('/signals-api/issues/5/signals?page=2&perPage=10');
 });

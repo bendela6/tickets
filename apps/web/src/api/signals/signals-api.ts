@@ -110,6 +110,16 @@ export interface SignalBreadcrumb {
   data?: Record<string, unknown>;
 }
 
+export interface PlatformInfo {
+  runtime: 'browser' | 'node';
+  os?: string;
+  browser?: string;
+  url?: string;
+  nodeVersion?: string;
+  hostname?: string;
+  pid?: number;
+}
+
 export interface SignalPayload {
   stack?: SignalStackFrame[];
   stackSymbolicated?: SignalStackFrame[];
@@ -117,7 +127,7 @@ export interface SignalPayload {
   user?: Record<string, unknown>;
   tags?: Record<string, unknown>;
   contexts?: Record<string, unknown>;
-  platform?: string;
+  platform?: PlatformInfo;
   sdk?: Record<string, unknown>;
   [key: string]: unknown;
 }
@@ -131,7 +141,7 @@ export interface SessionInfo {
   crashed: boolean;
   counts: { error: number; log: number; event: number };
   release: string | null;
-  platform: string | null;
+  platform: PlatformInfo | null;
 }
 
 export interface SessionEventRow {
@@ -168,7 +178,7 @@ export function getIssue(id: number): Promise<IssueDetail> {
   return fetchJson(`/signals-api/issues/${id}`);
 }
 
-export function patchIssueStatus(id: number, status: IssueStatus): Promise<IssueDetail> {
+export function patchIssueStatus(id: number, status: IssueStatus): Promise<IssueRow> {
   return fetchJson(`/signals-api/issues/${id}`, {
     method: 'PATCH',
     body: JSON.stringify({ status }),
@@ -177,11 +187,11 @@ export function patchIssueStatus(id: number, status: IssueStatus): Promise<Issue
 
 export function listOccurrences(id: number, page = 1, perPage = 25): Promise<OccurrencePage> {
   const params = new URLSearchParams({ page: String(page), perPage: String(perPage) });
-  return fetchJson(`/signals-api/issues/${id}/occurrences?${params.toString()}`);
+  return fetchJson(`/signals-api/issues/${id}/signals?${params.toString()}`);
 }
 
 export function getSession(sessionId: string, appId?: number): Promise<SessionTimeline> {
-  const qs = appId !== undefined ? `?appId=${appId}` : '';
+  const qs = appId !== undefined ? `?app=${appId}` : '';
   return fetchJson(`/signals-api/sessions/${sessionId}/signals${qs}`);
 }
 
