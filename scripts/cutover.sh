@@ -52,8 +52,13 @@ fi
 run "mkdir -p $BACKUP_DIR"
 run "docker exec $PG pg_dump -U postgres -Fc $PROD > $DUMP"
 
-# 3. Restore the dump as the import source (tickets_legacy)
-run "LEGACY_DUMP=$DUMP pnpm --filter @tickets/db db:restore-legacy"
+# 3. Restore the dump as the import source (tickets_legacy) — inline, NOT via
+#    `pnpm db:restore-legacy`: that script's nested `bash -c` can't resolve
+#    docker / the stdin redirect on Windows ("system cannot find the file
+#    specified"), whereas the same commands run fine in this script's shell.
+psql_prod "DROP DATABASE IF EXISTS tickets_legacy;"
+psql_prod "CREATE DATABASE tickets_legacy;"
+run "docker exec -i $PG pg_restore -U postgres -d tickets_legacy --no-owner < $DUMP"
 
 # 4. Build the target DB (drop+create, migrate, import) — never named 'tickets'
 psql_prod "DROP DATABASE IF EXISTS $TARGET;"
