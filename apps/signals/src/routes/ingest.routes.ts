@@ -45,38 +45,40 @@ export function registerIngestRoutes(
       throw new HttpError(429, 'rate limit exceeded — back off');
     }
 
-    for (const s of batch) {
-      let issueId: number | null = null;
-      if (s.kind === 'error') {
-        const fingerprint = fingerprintError({
-          name: s.name, message: s.message, stack: s.stack, explicit: s.fingerprint,
+    await context.db.transaction(async (tx) => {
+      for (const s of batch) {
+        let issueId: number | null = null;
+        if (s.kind === 'error') {
+          const fingerprint = fingerprintError({
+            name: s.name, message: s.message, stack: s.stack, explicit: s.fingerprint,
+          });
+          const [issue] = await tx
+            .insert(issues)
+            .values({
+              appId: appRow.id, fingerprint,
+              title: issueTitle(s.name, s.message),
+              culprit: culpritFrom(s.stack),
+            })
+            .onConflictDoUpdate({
+              target: [issues.appId, issues.fingerprint],
+              set: {
+                eventCount: sql`${issues.eventCount} + 1`,
+                lastSeen: sql`now()`,
+                status: sql`CASE WHEN ${issues.status} = 'resolved' THEN 'open' ELSE ${issues.status} END`,
+              },
+            })
+            .returning({ id: issues.id });
+          issueId = issue!.id;
+        }
+        await tx.insert(signals).values({
+          appId: appRow.id, kind: s.kind, sessionId: s.sessionId, name: s.name,
+          message: s.message ?? null, mechanism: s.mechanism, level: s.level,
+          clientTimestamp: new Date(s.timestamp),
+          release: s.release ?? null, environment: s.environment ?? null,
+          issueId, payload: toPayload(s),
         });
-        const [issue] = await context.db
-          .insert(issues)
-          .values({
-            appId: appRow.id, fingerprint,
-            title: issueTitle(s.name, s.message),
-            culprit: culpritFrom(s.stack),
-          })
-          .onConflictDoUpdate({
-            target: [issues.appId, issues.fingerprint],
-            set: {
-              eventCount: sql`${issues.eventCount} + 1`,
-              lastSeen: sql`now()`,
-              status: sql`CASE WHEN ${issues.status} = 'resolved' THEN 'open' ELSE ${issues.status} END`,
-            },
-          })
-          .returning({ id: issues.id });
-        issueId = issue!.id;
       }
-      await context.db.insert(signals).values({
-        appId: appRow.id, kind: s.kind, sessionId: s.sessionId, name: s.name,
-        message: s.message ?? null, mechanism: s.mechanism, level: s.level,
-        clientTimestamp: new Date(s.timestamp),
-        release: s.release ?? null, environment: s.environment ?? null,
-        issueId, payload: toPayload(s),
-      });
-    }
+    });
 
     reply.status(202).send({ accepted: batch.length });
   });

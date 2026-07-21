@@ -101,3 +101,13 @@ it('answers ingest CORS preflight with open headers', async () => {
   expect(res.headers['access-control-allow-origin']).toBe('*');
   await app.close();
 });
+
+it('rejects malformed JSON bodies with 400', async () => {
+  const { app, key } = await makeApp();
+  const res = await app.inject({
+    method: 'POST', url: `/ingest/${key}`,
+    payload: '{not json', headers: { 'content-type': 'application/json' },
+  });
+  expect(res.statusCode).toBe(400);
+  await app.close();
+});
