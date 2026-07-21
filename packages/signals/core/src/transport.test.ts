@@ -71,4 +71,46 @@ describe('createTransport', () => {
     await expect(transport.flush()).resolves.toBeUndefined();
     expect(transport.queuedCount()).toBe(1); // kept for retry
   });
+
+  it('re-arms a retry timer after a failed flush with no further enqueues', async () => {
+    const { transport, timers, setStatus } = harness({ flushAt: 1 });
+    setStatus(500);
+    transport.enqueue(sig(1));
+    await transport.flush();
+    const timersAfterFailure = timers.length;
+    expect(timersAfterFailure).toBeGreaterThan(0); // a new retry timer was scheduled
+
+    setStatus(202);
+    const newest = timers[timers.length - 1]!;
+    newest.cb();
+    await Promise.resolve(); await Promise.resolve();
+    expect(transport.queuedCount()).toBe(0);
+  });
+
+  it('takeAll during an in-flight flush returns the in-flight batch exactly once', async () => {
+    let resolveFetch!: (v: { status: number }) => void;
+    const deferred = new Promise<{ status: number }>((resolve) => { resolveFetch = resolve; });
+    const { transport } = harness({ flushAt: 1, fetchFn: async () => deferred });
+    transport.enqueue(sig(1));
+    const flushPromise = transport.flush(); // starts, hangs on the deferred fetch
+
+    const stolenSignals = transport.takeAll();
+    expect(stolenSignals.map((s) => s.name)).toEqual(['e1']);
+
+    resolveFetch({ status: 500 }); // would normally requeue the batch
+    await flushPromise;
+    expect(transport.queuedCount()).toBe(0); // not double-requeued
+  });
+
+  it('sets keepalive for small bodies', async () => {
+    const inits: { keepalive?: boolean }[] = [];
+    const { transport } = harness({
+      flushAt: 1,
+      fetchFn: async (_url, init) => { inits.push(init); return { status: 202 }; },
+    });
+    transport.enqueue(sig(1));
+    await transport.flush();
+    expect(inits).toHaveLength(1);
+    expect(inits[0]!.keepalive).toBe(true);
+  });
 });
