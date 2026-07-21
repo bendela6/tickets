@@ -252,15 +252,15 @@ describe('serializeModel', () => {
     expect(e2).toEqual([]);
 
     // schemes.id -> projects.scheme_id, labelled "scheme" — inferred 1-n
-    // before the schema change.
-    const before = m2!.relationships.find((r) => r.target === 'projects' && r.targetField === 'scheme_id')!;
+    // before the schema change. Namespacing moved projects into `core`.
+    const before = m2!.relationships.find((r) => r.target === 'core.projects' && r.targetField === 'scheme_id')!;
     expect(before).toMatchObject({ label: 'scheme', cardinality: '1-n', cardinalityInferred: true });
 
-    const projects = m2!.entityById.get('projects')!;
+    const projects = m2!.entityById.get('core.projects')!;
     const withUnique = applyModelEdit(m2!, {
       kind: 'upsertEntity',
       entity: {
-        id: 'projects',
+        id: 'core.projects',
         label: projects.label,
         group: projects.group,
         description: projects.description,
@@ -280,7 +280,7 @@ describe('serializeModel', () => {
       },
     });
 
-    const after = withUnique.relationships.find((r) => r.target === 'projects' && r.targetField === 'scheme_id')!;
+    const after = withUnique.relationships.find((r) => r.target === 'core.projects' && r.targetField === 'scheme_id')!;
     expect(after.cardinality).toBe('1-1');
     expect(after.label).toBe('scheme'); // label still donated correctly alongside the re-derived cardinality
   });
