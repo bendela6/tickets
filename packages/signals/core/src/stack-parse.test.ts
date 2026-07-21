@@ -31,4 +31,11 @@ describe('parseStack', () => {
     const frames = parseStack('    at f (/x/a.js:1:1)', () => false);
     expect(frames[0]!.inApp).toBe(false);
   });
+  it('parses frames with spaces in file paths', () => {
+    const stack = '    at CartList (/Users/John Doe/app/src/CartList.tsx:48:13)';
+    const frames = parseStack(stack);
+    expect(frames).toEqual([
+      { functionName: 'CartList', file: '/Users/John Doe/app/src/CartList.tsx', line: 48, column: 13, inApp: true },
+    ]);
+  });
 });
