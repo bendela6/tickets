@@ -20,7 +20,7 @@ export function registerRemoveLink(server: McpServer, context: ToolContext) {
       },
     },
     ({ projectKey, linkTypeKey, sourceNumber, targetNumber }) =>
-      runTool(async () => {
+      runTool('remove_link', async () => {
         const { actorId } = await context.getActor();
         const board = await loadBoard(projectKey);
         const source = resolveTicket(board, sourceNumber);

@@ -21,7 +21,7 @@ export function registerLinkTickets(server: McpServer, context: ToolContext) {
       },
     },
     ({ projectKey, linkTypeKey, sourceNumber, targetNumber }) =>
-      runTool(async () => {
+      runTool('link_tickets', async () => {
         const { actorId } = await context.getActor();
         const board = await loadBoard(projectKey);
         const source = resolveTicket(board, sourceNumber);

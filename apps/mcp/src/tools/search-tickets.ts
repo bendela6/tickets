@@ -22,7 +22,7 @@ export function registerSearchTickets(server: McpServer) {
       },
     },
     ({ projectKey, query, statusKinds, statuses, epic, typeKey, includeArchived }) =>
-      runTool(async () => {
+      runTool('search_tickets', async () => {
         const board = await loadBoard(projectKey);
         const statusField = board.fields.find((field) => field.type === 'status');
         const matches = board.tickets

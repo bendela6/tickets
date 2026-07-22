@@ -19,7 +19,7 @@ export function registerAddComment(server: McpServer, context: ToolContext) {
       },
     },
     ({ projectKey, ticketNumber, body }) =>
-      runTool(async () => {
+      runTool('add_comment', async () => {
         const { actorId } = await context.getActor();
         const board = await loadBoard(projectKey);
         const ticket = resolveTicket(board, ticketNumber);

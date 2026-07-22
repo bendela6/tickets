@@ -22,7 +22,7 @@ export function registerUpdateTicket(server: McpServer, context: ToolContext) {
       },
     },
     ({ projectKey, ticketNumber, values, parentNumber, archived }) =>
-      runTool(async () => {
+      runTool('update_ticket', async () => {
         const { actorId } = await context.getActor();
         const body: Record<string, unknown> = {};
         if (values !== undefined) {

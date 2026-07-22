@@ -28,7 +28,7 @@ export function registerDispatchAgent(server: McpServer, context: ToolContext) {
       },
     },
     ({ agentKey, projectKey, ticketNumber, prompt }) =>
-      runTool(async () => {
+      runTool('dispatch_agent', async () => {
         const { actorId } = await context.getActor();
         const board = await loadBoard(projectKey);
         const ticket = resolveTicket(board, ticketNumber);

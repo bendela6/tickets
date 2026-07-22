@@ -14,7 +14,7 @@ export function registerGetBoard(server: McpServer) {
       inputSchema: { projectKey: z.string() },
     },
     ({ projectKey }) =>
-      runTool(async () => {
+      runTool('get_board', async () => {
         const board = await loadBoard(projectKey);
         const epicField = board.fields.find((field) => field.key === 'epic');
         return toText({

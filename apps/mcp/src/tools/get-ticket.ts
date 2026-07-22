@@ -17,7 +17,7 @@ export function registerGetTicket(server: McpServer) {
       inputSchema: { projectKey: z.string(), ticketNumber: z.number().int() },
     },
     ({ projectKey, ticketNumber }) =>
-      runTool(async () => {
+      runTool('get_ticket', async () => {
         const board = await loadBoard(projectKey);
         const ticket = resolveTicket(board, ticketNumber);
         const events = await apiFetch<{ data: TicketEvent[] }>(
