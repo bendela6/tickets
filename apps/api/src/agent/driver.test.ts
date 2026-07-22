@@ -4,8 +4,8 @@ import type { AgentStore, MessageFrame } from './store';
 import type { AgentEvent, ServerFrame, SessionStatus, Subscriber } from './types';
 import type { AgentRun } from './agent-types';
 
-const captureError = vi.fn();
-vi.mock('@bendela6/signals-node', () => ({ getClient: () => ({ captureError }) }));
+const { captureError } = vi.hoisted(() => ({ captureError: vi.fn() }));
+vi.mock('@bendela6/signals-node', () => ({ captureError }));
 
 // A controllable AgentRun: push events, observe send/interrupt/permission.
 function makeAgentRun() {

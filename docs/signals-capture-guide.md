@@ -56,7 +56,7 @@ catch-all, because the code "handled" it by recording it.
 // event stream / async iterator
 for await (const event of run.events) {
   if (event.type === 'error') {
-    getClient()?.captureError(new Error(event.message), {
+    captureError(new Error(event.message), {
       contexts: { agent: { sessionId } },
     });
   }
@@ -65,13 +65,13 @@ for await (const event of run.events) {
 // nonzero process exit code
 const { exitCode } = await proc.exit;
 if (exitCode !== 0) {
-  getClient()?.captureError(new Error(`process exited ${exitCode}`), { contexts: { job } });
+  captureError(new Error(`process exited ${exitCode}`), { contexts: { job } });
 }
 
 // result object with an error field
 const result = await doThing();
 if (!result.ok) {
-  getClient()?.captureError(new Error(result.error), { contexts: { op: { name: 'doThing' } } });
+  captureError(new Error(result.error), { contexts: { op: { name: 'doThing' } } });
 }
 ```
 
@@ -85,11 +85,11 @@ try {
   await drainOutbox();
 } catch (err) {
   console.error('outbox drain failed', err);
-  getClient()?.captureError(err, { level: 'error', contexts: { outbox: { phase: 'drain' } } });
+  captureError(err, { level: 'error', contexts: { outbox: { phase: 'drain' } } });
 }
 
 // fire-and-forget that used to be silent
-cleanup().catch((err) => getClient()?.captureError(err, { contexts: { phase: 'teardown' } }));
+cleanup().catch((err) => captureError(err, { contexts: { phase: 'teardown' } }));
 ```
 
 ### 4. The client-side network seam
@@ -101,12 +101,12 @@ network failures. NOT 4xx (the server owns those; capturing both floods you with
 try {
   const res = await fetch(url);
   if (res.status >= 500) {
-    getClient()?.captureError(new Error(`server ${res.status}`), {
+    captureError(new Error(`server ${res.status}`), {
       contexts: { http: { url, status: res.status } },
     });
   }
 } catch (err) {
-  getClient()?.captureError(err, { contexts: { http: { url } } }); // network failure
+  captureError(err, { contexts: { http: { url } } }); // network failure
   throw err;
 }
 ```
@@ -119,7 +119,7 @@ A retry that succeeded, a fallback that kicked in. Real, not alarming → `warni
 try {
   return await callStripe();
 } catch (err) {
-  getClient()?.captureError(err, { level: 'warning', contexts: { retry: { attempt: 1 } } });
+  captureError(err, { level: 'warning', contexts: { retry: { attempt: 1 } } });
   return await callStripe(); // second try
 }
 ```
@@ -130,7 +130,7 @@ An invariant violation, a reconciliation mismatch, a suspicious value.
 
 ```ts
 if (cart.total !== recomputed) {
-  getClient()?.captureError(new Error('cart total mismatch'), {
+  captureError(new Error('cart total mismatch'), {
     level: 'warning',
     contexts: { cart: { shown: cart.total, actual: recomputed } },
   });

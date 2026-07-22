@@ -1,4 +1,4 @@
-import { getClient } from '@bendela6/signals-react';
+import { captureError } from '@bendela6/signals-react';
 import { ApiError } from './api-error';
 
 export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
@@ -16,7 +16,7 @@ export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> 
     // Network failure (offline, DNS, CORS, aborted) — fetch itself rejected
     // before any response existed. Still worth seeing in Signals; rethrow
     // unchanged so callers see the same error they always did.
-    getClient()?.captureError(err, { mechanism: 'manual', contexts: { http: { url } } });
+    captureError(err, { mechanism: 'manual', contexts: { http: { url } } });
     throw err;
   }
 
@@ -45,7 +45,7 @@ export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> 
     // side too (in case the API's own capture never lands, e.g. it crashed
     // before reaching the error hook).
     if (response.status >= 500) {
-      getClient()?.captureError(apiError, { mechanism: 'manual', contexts: { http: { url, status: response.status } } });
+      captureError(apiError, { mechanism: 'manual', contexts: { http: { url, status: response.status } } });
     }
     throw apiError;
   }

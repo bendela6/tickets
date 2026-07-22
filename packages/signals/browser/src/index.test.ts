@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { initSignals, getClient } from './index';
+import { captureError, initSignals, getClient } from './index';
 import type { Signal } from '@bendela6/signals-core';
 import type { Transport } from '@bendela6/signals-core';
 
@@ -14,6 +14,19 @@ function fakeTransport() {
 const DSN = 'sgl://k@127.0.0.1:4640/1';
 
 afterEach(() => { vi.restoreAllMocks(); });
+
+describe('top-level capture functions', () => {
+  it('no-op when no client has been inited', () => {
+    expect(() => captureError(new Error('x'))).not.toThrow();
+  });
+
+  it('routes to the active client after initSignals', () => {
+    const { transport, sent } = fakeTransport();
+    initSignals({ dsn: DSN, transport });
+    captureError(new Error('routed'));
+    expect(sent[0]).toMatchObject({ mechanism: 'manual', message: 'routed' });
+  });
+});
 
 describe('initSignals (browser)', () => {
   it('captures window error events with uncaught-exception mechanism and browser platform', () => {

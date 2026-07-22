@@ -1,5 +1,12 @@
 import * as os from 'node:os';
-import { createClient, type ClientOptions, type SignalsClient } from '@bendela6/signals-core';
+import {
+  createClient,
+  type Breadcrumb,
+  type CaptureOptions,
+  type ClientOptions,
+  type SignalLevel,
+  type SignalsClient,
+} from '@bendela6/signals-core';
 
 export * from '@bendela6/signals-core';
 export { uploadSourcemaps } from './sourcemaps';
@@ -59,6 +66,28 @@ export function initSignals(options: NodeInitOptions): SignalsClient {
 
 export function getClient(): SignalsClient | null {
   return current;
+}
+
+export function captureError(error: unknown, options?: CaptureOptions): void {
+  getClient()?.captureError(error, options);
+}
+export function captureEvent(name: string, data?: Record<string, unknown>, options?: CaptureOptions): void {
+  getClient()?.captureEvent(name, data, options);
+}
+export function captureLog(message: string, level?: SignalLevel): void {
+  getClient()?.captureLog(message, level);
+}
+export function addBreadcrumb(breadcrumb: Breadcrumb): void {
+  getClient()?.addBreadcrumb(breadcrumb);
+}
+export function setUser(user: { id?: string; email?: string; name?: string } | null): void {
+  getClient()?.setUser(user);
+}
+export function setTag(key: string, value: string): void {
+  getClient()?.setTag(key, value);
+}
+export function setContext(key: string, context: Record<string, unknown> | null): void {
+  getClient()?.setContext(key, context);
 }
 
 export async function handleUncaught(

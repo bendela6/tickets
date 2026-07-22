@@ -6,8 +6,8 @@ import { runCommand } from '../command/run-command';
 import { itemCreate } from '../command/item/create';
 import { createOutboxWorker } from './worker';
 
-const captureError = vi.fn();
-vi.mock('@bendela6/signals-node', () => ({ getClient: () => ({ captureError }) }));
+const { captureError } = vi.hoisted(() => ({ captureError: vi.fn() }));
+vi.mock('@bendela6/signals-node', () => ({ captureError }));
 
 beforeEach(() => {
   captureError.mockClear();
