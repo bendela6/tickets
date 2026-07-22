@@ -69,9 +69,9 @@ importers:
 
   apps/eer:
     dependencies:
-      '@bendela6/signals-browser':
+      '@bendela6/signals-react':
         specifier: workspace:^
-        version: link:../../packages/signals/browser
+        version: link:../../packages/signals/react
       '@fontsource/ibm-plex-mono':
         specifier: ^5.2.7
         version: 5.2.7

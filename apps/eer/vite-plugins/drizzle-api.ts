@@ -200,7 +200,10 @@ export function drizzleApiPlugin(root = DEFAULT_ROOT, exportsDir = DEFAULT_EXPOR
           res.setHeader('content-type', 'application/json');
           res.end(JSON.stringify(body));
         };
-        const fail = (err: unknown) => respond({ status: 500, body: { error: String(err) } });
+        const fail = (err: unknown) => {
+          console.error(`[eer-drizzle-api] ${req.method ?? 'GET'} ${req.url ?? '/'} failed:`, err);
+          return respond({ status: 500, body: { error: String(err) } });
+        };
 
         if (pathname === '/schema' && req.method === 'GET') {
           const moduleParam = new URLSearchParams(search ?? '').get('module');

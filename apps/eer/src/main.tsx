@@ -1,3 +1,4 @@
+import { SignalsErrorBoundary } from '@bendela6/signals-react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -24,6 +25,21 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App />
+    <SignalsErrorBoundary
+      fallback={
+        <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-gray-900 text-gray-50">
+          <p className="text-lg">Something broke.</p>
+          <button
+            type="button"
+            className="rounded-md border border-gray-600 px-4 py-2 text-sm text-gray-200 hover:text-gray-50"
+            onClick={() => window.location.reload()}
+          >
+            Reload
+          </button>
+        </div>
+      }
+    >
+      <App />
+    </SignalsErrorBoundary>
   </StrictMode>,
 );
