@@ -6,7 +6,7 @@ import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table
 import { TaskItem } from '@tiptap/extension-task-item';
 import { TaskList } from '@tiptap/extension-task-list';
 import { TextAlign } from '@tiptap/extension-text-align';
-import { TextStyle } from '@tiptap/extension-text-style';
+import { Color, TextStyle } from '@tiptap/extension-text-style';
 import type { Feature } from './features';
 
 export type ToolbarControl = { id: string; group: 'marks' | 'blocks' | 'insert' };
@@ -19,7 +19,7 @@ export type FeatureEntry = {
 
 export const REGISTRY: Record<Feature, FeatureEntry> = {
   marks: {
-    extensions: () => [TextStyle, Highlight.configure({ multicolor: true })],
+    extensions: () => [TextStyle, Color, Highlight.configure({ multicolor: true })],
     toolbar: [
       { id: 'bold', group: 'marks' }, { id: 'italic', group: 'marks' },
       { id: 'underline', group: 'marks' }, { id: 'strike', group: 'marks' },
