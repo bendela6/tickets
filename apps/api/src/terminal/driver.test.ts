@@ -3,8 +3,8 @@ import { createTerminalDriver } from './driver';
 import type { OutputFrame, TerminalStore } from './store';
 import type { PtyHandle, ServerFrame, Subscriber } from './types';
 
-const captureError = vi.fn();
-vi.mock('@bendela6/signals-node', () => ({ getClient: () => ({ captureError }) }));
+const { captureError } = vi.hoisted(() => ({ captureError: vi.fn() }));
+vi.mock('@bendela6/signals-node', () => ({ captureError }));
 
 // ── Fakes ────────────────────────────────────────────────────────────────────
 

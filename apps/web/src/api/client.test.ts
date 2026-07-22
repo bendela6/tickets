@@ -2,8 +2,8 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { apiMutate, fetchJson } from './client';
 import { ApiError } from './api-error';
 
-const captureError = vi.fn();
-vi.mock('@bendela6/signals-react', () => ({ getClient: () => ({ captureError }) }));
+const { captureError } = vi.hoisted(() => ({ captureError: vi.fn() }));
+vi.mock('@bendela6/signals-react', () => ({ captureError }));
 
 afterEach(() => {
   vi.unstubAllGlobals();

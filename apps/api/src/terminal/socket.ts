@@ -1,5 +1,5 @@
 import websocketPlugin from '@fastify/websocket';
-import { getClient } from '@bendela6/signals-node';
+import { captureError } from '@bendela6/signals-node';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { TerminalDriver } from './driver';
 import type { ClientFrame, ServerFrame, Subscriber } from './types';
@@ -47,7 +47,7 @@ export function registerTerminalSocket(app: FastifyInstance, context: { driver: 
           } catch (err) {
             // ignore malformed frames rather than tearing down the socket — but
             // a client sending garbage is still worth seeing in Signals.
-            getClient()?.captureError(err, { level: 'warning', contexts: { socket: { scope: 'terminal' } } });
+            captureError(err, { level: 'warning', contexts: { socket: { scope: 'terminal' } } });
             return;
           }
 

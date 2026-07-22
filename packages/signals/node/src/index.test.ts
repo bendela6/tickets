@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   buildUncaughtListener,
+  captureError,
   expressErrorHandler,
   fastifyErrorHook,
   handleRejection,
@@ -18,6 +19,19 @@ function fakeTransport() {
   return { transport, sent };
 }
 const DSN = 'sgl://k@127.0.0.1:4640/1';
+
+describe('top-level capture functions', () => {
+  it('no-op when no client has been inited', () => {
+    expect(() => captureError(new Error('x'))).not.toThrow();
+  });
+
+  it('routes to the active client after initSignals', () => {
+    const { transport, sent } = fakeTransport();
+    initSignals({ dsn: DSN, transport, registerProcessHandlers: false });
+    captureError(new Error('routed'));
+    expect(sent[0]).toMatchObject({ mechanism: 'manual', message: 'routed' });
+  });
+});
 
 describe('node SDK', () => {
   it('carries node platform info and does not register process handlers when disabled', () => {
