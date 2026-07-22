@@ -197,3 +197,65 @@ for d in packages/signals/core packages/signals/browser packages/signals/react p
   (cd "$d" && pnpm pack)
 done
 ```
+
+## Self-monitoring (this repo)
+
+Every app in this monorepo (except `apps/signals` itself — the collector
+doesn't watch itself) reports its own errors to Signals, using the same
+DSN-less self-registration flow consumers get from `ensureAppDsn`:
+
+| App | Slug | SDK | Init site |
+| --- | --- | --- | --- |
+| `apps/api` | `tickets-api` | `@bendela6/signals-node` | `apps/api/src/signals.ts` (`initApiSignals`, called at boot) |
+| `apps/mcp` | `tickets-mcp` | `@bendela6/signals-node` | `apps/mcp/src/signals.ts` (`initMcpSignals`, called at boot) |
+| `apps/web` | `tickets-web` | `@bendela6/signals-react` | `apps/web/src/signals-init.ts` (`initWebSignals`, fire-and-forget from `main.tsx`) |
+| `apps/eer` | `tickets-eer` | `@bendela6/signals-browser` | `apps/eer/src/signals-init.ts` (`initEerSignals`, fire-and-forget from `main.tsx`) |
+
+Names slugify deterministically (`Tickets API` → `tickets-api`, etc.), and
+`ensureAppDsn` is called with `upsert: true`, so re-registering on every
+boot/page-load is idempotent — it always resolves to the same app row.
+
+### Env knobs
+
+| Var | Apps | Effect |
+| --- | --- | --- |
+| `SIGNALS_DISABLED=1` | api, mcp | Skip Signals entirely — no registration attempt, no init. |
+| `VITE_SIGNALS_DISABLED=1` | web, eer | Same, for the browser build (read via `import.meta.env`). |
+| `SIGNALS_DSN` | api, mcp | Skip self-registration and use this DSN directly. |
+| `VITE_SIGNALS_DSN` | web, eer | Same, for the browser build. |
+| `SIGNALS_COLLECTOR_URL` | api, mcp | Collector base URL for the node `ensureAppDsn` call. Defaults to `http://127.0.0.1:4640`. |
+| *(none — same-origin)* | web, eer | The browser `ensureAppDsn` always registers against the same-origin `/signals-api` proxy (`basePath`, default), not a configurable URL — see `ensure.ts` above. |
+
+None of these are required in the deployed container: `SIGNALS_COLLECTOR_URL`
+resolves to the loopback collector supervisord runs alongside the api
+(`docker/supervisord.conf`), and the web/eer bundles hit `/signals-api`,
+which nginx reverse-proxies to the same collector (`docker/nginx.conf`).
+
+### Boundary and uncaught-error behavior
+
+- **api**: `registerProcessHandlers: true`, `exitOnUncaught: environment.nodeEnv === 'production'`
+  — in production, an uncaught exception is captured, flushed, and the
+  process exits (matching Node's own guidance); in dev it logs and keeps
+  running. Every HTTP 500 (any error that isn't an `HttpError`, i.e. isn't
+  an expected 4xx) is captured by the Fastify `setErrorHandler` in
+  `apps/api/src/app.ts` with `mechanism: 'middleware'` before the generic
+  `{ error: 'internal error' }` response — `HttpError`s (4xx) are never
+  reported, only genuine server faults.
+- **mcp**: `registerProcessHandlers: false` — `apps/mcp/src/server.ts` owns
+  its own `uncaughtException`/`unhandledRejection` listeners (the stdio
+  transport must never be torn down by an uncaught error) and forwards to
+  Signals through them instead of letting the SDK install its own
+  exit-capable handlers.
+- **web**: wrapped in `<SignalsErrorBoundary>` around the app root
+  (`apps/web/src/main.tsx`) with a minimal `AppCrashedFallback` (reload
+  button) — this is a backstop for render-time errors; `initSignals` also
+  installs `window.onerror`/`unhandledrejection` listeners, so navigation,
+  event-handler, and async errors outside React's render are still caught
+  even without the boundary.
+- **eer**: no React SDK dependency, so no error boundary — relies solely on
+  the browser SDK's `window.onerror`/`unhandledrejection` listeners.
+- **Every init path degrades silently on failure**: a down/unreachable
+  collector, a registration timeout (2s, no retry), or a disabled flag all
+  resolve to "no signals" with at most one `console.warn`/`console.error` —
+  none of the four apps ever fail to boot or fail to render because Signals
+  is unavailable.
