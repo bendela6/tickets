@@ -15,4 +15,9 @@ export const environment = {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean),
+  nodeEnv: process.env.NODE_ENV ?? 'development',
+  // Signals self-monitoring knobs — see src/signals.ts.
+  signalsDisabled: process.env.SIGNALS_DISABLED === '1',
+  signalsDsn: process.env.SIGNALS_DSN,
+  signalsCollectorUrl: process.env.SIGNALS_COLLECTOR_URL ?? 'http://127.0.0.1:4640',
 };

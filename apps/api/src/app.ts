@@ -1,4 +1,5 @@
 import fastify from 'fastify';
+import type { SignalsClient } from '@bendela6/signals-node';
 import type { Db } from '@tickets/db';
 import { createAgentStore } from './agent/store';
 import { createAgentDriver, type AgentDriver } from './agent/driver';
@@ -32,6 +33,9 @@ export function buildApp(context: {
   providers?: ProviderRegistry;
   worktrees?: WorktreeManager;
   terminalDriver?: TerminalDriver;
+  // Signals client for self-monitoring — undefined in most tests, real
+  // client in production (or a fake in tests exercising the error hook).
+  signals?: SignalsClient | null;
 }) {
   const app = fastify({ logger: false });
 
@@ -88,12 +92,17 @@ export function buildApp(context: {
       });
     })();
 
-  app.setErrorHandler((error, _request, reply) => {
+  app.setErrorHandler((error, request, reply) => {
     if (error instanceof HttpError) {
+      // Expected client errors (4xx) are not reported to Signals.
       reply.status(error.statusCode).send({ error: error.message });
       return;
     }
     console.error(error);
+    context.signals?.captureError(error, {
+      mechanism: 'middleware',
+      contexts: { http: { method: request.method, url: request.url } },
+    });
     reply.status(500).send({ error: 'internal error' });
   });
 

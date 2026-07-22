@@ -2,16 +2,19 @@ import { createDbClient } from '@tickets/db';
 import { buildApp } from './app';
 import { environment } from './environment';
 import { createOutboxWorker } from './outbox/worker';
+import { initApiSignals } from './signals';
 import './automation/rules'; // side-effect: register all automations
 
 const { db } = createDbClient();
-const app = buildApp({ db });
+const signals = await initApiSignals();
+const app = buildApp({ db, signals });
 const worker = createOutboxWorker(db, { pollMs: environment.outboxPollMs });
 worker.start();
 
 const shutdown = async () => {
   await worker.stop();
   await app.close();
+  await signals?.flush();
   process.exit(0);
 };
 process.on('SIGTERM', () => void shutdown());
