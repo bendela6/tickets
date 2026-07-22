@@ -134,6 +134,7 @@ export function createTerminalDriver(options: TerminalDriverOptions): TerminalDr
         await finish(rs, 'exited', exitCode);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
+        getClient()?.captureError(err, { level: 'error', contexts: { terminal: { sessionId: rs.id } } });
         publishOutput(rs, `\r\n[session error] ${message}\r\n`);
         await finish(rs, 'failed', null);
       }

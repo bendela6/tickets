@@ -1,8 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createAgentDriver } from './driver';
 import type { AgentStore, MessageFrame } from './store';
 import type { AgentEvent, ServerFrame, SessionStatus, Subscriber } from './types';
 import type { AgentRun } from './agent-types';
+
+const captureError = vi.fn();
+vi.mock('@bendela6/signals-node', () => ({ getClient: () => ({ captureError }) }));
 
 // A controllable AgentRun: push events, observe send/interrupt/permission.
 function makeAgentRun() {
@@ -307,6 +310,32 @@ describe('agent driver', () => {
 
     expect(msgs(frames)).toEqual([]); // detached: received nothing new
     expect(drv.has(1)).toBe(true); // session outlives the socket
+  });
+
+  it('captures an error event to Signals before transitioning to failed (event-driven failure, not a thrown exception)', async () => {
+    captureError.mockClear();
+    const { store, statuses } = makeStore();
+    const agent = makeAgentRun();
+    const drv = createAgentDriver({ store, schedule: syncSchedule });
+    drv.start({ id: 1, run: agent.run });
+    const { sub } = makeSub();
+    await drv.attach(1, sub, 0);
+
+    agent.emit({ type: 'error', message: 'boom exit 1' });
+    await tick();
+    await drv.flush(1);
+    await tick();
+
+    expect(statuses).toContain('failed');
+    expect(captureError).toHaveBeenCalledTimes(1);
+    const [err, opts] = captureError.mock.calls[0]!;
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toBe('boom exit 1');
+    expect(opts).toEqual({
+      level: 'error',
+      mechanism: 'manual',
+      contexts: { agent: { sessionId: 1 } },
+    });
   });
 
   it('on exit sets status without an exit code, and history stays replayable', async () => {

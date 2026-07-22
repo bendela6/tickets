@@ -140,6 +140,11 @@ export function createAgentDriver(options: AgentDriverOptions): AgentDriver {
               rs.run.interrupt().catch(() => {});
             }
           } else if (event.type === 'error') {
+            getClient()?.captureError(new Error(event.message ?? 'agent run failed'), {
+              level: 'error',
+              mechanism: 'manual',
+              contexts: { agent: { sessionId: rs.id } },
+            });
             await transition(rs, 'failed');
           }
         }
