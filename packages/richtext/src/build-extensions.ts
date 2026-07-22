@@ -1,9 +1,10 @@
 import type { AnyExtension } from '@tiptap/core';
 import { StarterKit } from '@tiptap/starter-kit';
 import type { Feature } from './features';
+import type { SuggestionHooks } from './nodes/refs';
 import { REGISTRY, type ToolbarControl } from './registry';
 
-export function buildExtensions(features: Feature[]): AnyExtension[] {
+export function buildExtensions(features: Feature[], hooks?: SuggestionHooks): AnyExtension[] {
   const on = new Set(features);
   const starterKit = StarterKit.configure({
     heading: on.has('headings') ? { levels: [1, 2, 3] } : false,
@@ -20,7 +21,7 @@ export function buildExtensions(features: Feature[]): AnyExtension[] {
     underline: on.has('marks') ? undefined : false,
     link: on.has('link') ? { openOnClick: false } : false,
   });
-  const extra = features.flatMap((feature) => REGISTRY[feature].extensions());
+  const extra = features.flatMap((feature) => REGISTRY[feature].extensions(hooks));
   return [starterKit, ...extra];
 }
 

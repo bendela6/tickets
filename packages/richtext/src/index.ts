@@ -6,3 +6,7 @@ export { PRESETS, ALL_FEATURES } from './features';
 export type { Feature } from './features';
 export { REGISTRY } from './registry';
 export type { FeatureEntry, ToolbarControl } from './registry';
+export { Callout } from './nodes/callout';
+export type { CalloutKind } from './nodes/callout';
+export { userMention, ticketRef } from './nodes/refs';
+export type { SuggestionHooks } from './nodes/refs';

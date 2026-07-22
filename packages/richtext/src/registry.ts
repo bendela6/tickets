@@ -8,12 +8,14 @@ import { TaskList } from '@tiptap/extension-task-list';
 import { TextAlign } from '@tiptap/extension-text-align';
 import { Color, TextStyle } from '@tiptap/extension-text-style';
 import type { Feature } from './features';
+import { Callout } from './nodes/callout';
+import { ticketRef, userMention, type SuggestionHooks } from './nodes/refs';
 
 export type ToolbarControl = { id: string; group: 'marks' | 'blocks' | 'insert' };
 
 export type FeatureEntry = {
   // StarterKit-covered features return []; standalone extensions return instances.
-  extensions: () => AnyExtension[];
+  extensions: (hooks?: SuggestionHooks) => AnyExtension[];
   toolbar: ToolbarControl[];
 };
 
@@ -47,12 +49,15 @@ export const REGISTRY: Record<Feature, FeatureEntry> = {
     extensions: () => [Details, DetailsSummary, DetailsContent],
     toolbar: [{ id: 'details', group: 'blocks' }],
   },
-  callout: { extensions: () => [], toolbar: [{ id: 'callout', group: 'blocks' }] }, // node added in Task 3
+  callout: { extensions: () => [Callout], toolbar: [{ id: 'callout', group: 'blocks' }] },
   align: {
     extensions: () => [TextAlign.configure({ types: ['heading', 'paragraph'] })],
     toolbar: [{ id: 'align', group: 'blocks' }],
   },
   image: { extensions: () => [Image], toolbar: [{ id: 'image', group: 'insert' }] },
-  mentions: { extensions: () => [], toolbar: [] }, // configured per-surface in Task 3
+  mentions: {
+    extensions: (hooks) => [userMention(hooks?.mention), ticketRef(hooks?.ticketRef)],
+    toolbar: [],
+  },
   divider: { extensions: () => [], toolbar: [{ id: 'horizontalRule', group: 'blocks' }] },
 };
