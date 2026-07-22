@@ -200,6 +200,41 @@ describe('terminal driver', () => {
     );
   });
 
+  it('captures a mid-session output-stream failure to Signals (not just a spawn failure)', async () => {
+    captureError.mockClear();
+    const { store, finished } = makeStore();
+    // A handle whose output iterator throws partway through — the in-band
+    // failure path (distinct from spawnFor's catch, which never runs here).
+    const failingOutput = (async function* () {
+      yield 'partial output';
+      throw new Error('pty stream crashed');
+    })();
+    const handle: PtyHandle = {
+      output: failingOutput,
+      exit: new Promise(() => {}), // never resolves — the catch path finishes the session instead
+      write: () => {},
+      resize: () => {},
+      kill: () => {},
+    };
+    const drv = createTerminalDriver({
+      runner: { spawnPty: () => handle },
+      store,
+      schedule: syncSchedule,
+    });
+    drv.start({ id: 1, command: 'sh', cwd: '/w' });
+    await tick();
+    await drv.flush(1);
+    await tick();
+
+    expect(finished).toContainEqual({ status: 'failed', exitCode: null });
+    expect(captureError).toHaveBeenCalledWith(
+      expect.any(Error),
+      { level: 'error', contexts: { terminal: { sessionId: 1 } } },
+    );
+    const call = captureError.mock.calls.find((c) => (c[0] as Error).message === 'pty stream crashed');
+    expect(call).toBeDefined();
+  });
+
   it('spawns the PTY with the api process environment inherited (never an empty env)', () => {
     const { store } = makeStore();
     const pty = makePty();
