@@ -81,7 +81,7 @@ describe('mapSdkMessage', () => {
           is_error: false,
         }),
       ),
-    ).toEqual([{ type: 'result', costUsd: 0.42, durationMs: 1234, isError: false }]);
+    ).toEqual([{ type: 'result', costUsd: 0.42, durationMs: 1234, isError: false, subtype: 'success' }]);
   });
 
   it('maps result usage into the result event', () => {
@@ -104,6 +104,7 @@ describe('mapSdkMessage', () => {
         costUsd: 0.12,
         durationMs: 3400,
         isError: false,
+        subtype: 'success',
         usage: {
           inputTokens: 72000,
           outputTokens: 1500,

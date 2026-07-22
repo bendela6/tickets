@@ -88,6 +88,7 @@ export function mapSdkMessage(msg: SDKMessage): AgentEvent[] {
           costUsd: msg.total_cost_usd,
           durationMs: msg.duration_ms,
           isError: msg.is_error,
+          subtype: msg.subtype,
           ...(usage ? { usage } : {}),
         },
       ];

@@ -2,6 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { createChannel, defaultControlFrames } from './channel';
 import type { SessionStore } from './types';
 
+const { captureError } = vi.hoisted(() => ({ captureError: vi.fn() }));
+vi.mock('@bendela6/signals-node', () => ({ captureError }));
+
 // A fake store with no DB — session-core must be unit-testable without
 // Postgres. Frames here are terminal-output-shaped, but the store/channel
 // never inspect anything beyond `seq`; a driver could just as easily store
@@ -217,6 +220,32 @@ describe('channel', () => {
       { seq: 1, data: 'a' },
       { seq: 2, data: 'b' },
     ]); // always in order, never 2-before-1
+  });
+
+  // ── A fire-and-forget scheduled flush captures its failure exactly once ─────
+
+  it('a scheduled-flush failure is captured exactly once, with the scheduled-flush phase', async () => {
+    captureError.mockClear();
+    const store: SessionStore<Frame> = {
+      append: async () => {
+        throw new Error('boom');
+      },
+      replay: async () => ({ frames: [], oldestSeq: null }),
+    };
+    // syncSchedule fires scheduleFlush's fire-and-forget flush right away; the
+    // append rejection then flows into scheduleFlush's own .catch → capture.
+    const ch = createChannel(store, { schedule: syncSchedule });
+    ch.publish(1, { seq: 1, data: 'x' }); // buffered + scheduled → append rejects
+    await tick();
+
+    expect(captureError).toHaveBeenCalledTimes(1);
+    const [err, opts] = captureError.mock.calls[0]!;
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toBe('boom');
+    expect(opts).toEqual({
+      level: 'error',
+      contexts: { session: { id: 1, phase: 'scheduled-flush' } },
+    });
   });
 
   // ── append rejects → the frame is not delivered to anyone ──────────────────

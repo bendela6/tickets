@@ -207,7 +207,7 @@ describe('agent driver', () => {
     const { sub, frames } = makeSub();
     await drv.attach(1, sub, 0);
 
-    agent.emit({ type: 'result', costUsd: 0, durationMs: 5, isError: true });
+    agent.emit({ type: 'result', costUsd: 0, durationMs: 5, isError: true, subtype: 'error_max_turns' });
     await tick();
     await drv.flush(1);
     await tick();
@@ -221,10 +221,13 @@ describe('agent driver', () => {
     expect(captureError).toHaveBeenCalledTimes(1);
     const [err, opts] = captureError.mock.calls[0]!;
     expect(err).toBeInstanceOf(Error);
+    // Distinct SDK failure modes surface distinctly (natural fingerprint
+    // includes the message) instead of collapsing into one low-info issue.
+    expect((err as Error).message).toContain('error_max_turns');
     expect(opts).toEqual({
       level: 'error',
       mechanism: 'manual',
-      contexts: { agent: { sessionId: 1 } },
+      contexts: { agent: { sessionId: 1, subtype: 'error_max_turns' } },
     });
   });
 
