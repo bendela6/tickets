@@ -10,6 +10,9 @@ describe('buildExtensions', () => {
       expect(schema.nodes[node], node).toBeDefined();
     }
     expect(schema.marks['highlight']).toBeDefined();
+    // Verify Color extension is wired via TextStyle mark
+    expect(schema.marks['textStyle']).toBeDefined();
+    expect(schema.marks['textStyle']!.spec.attrs).toHaveProperty('color');
   });
 
   it('compact preset omits headings, details, table, align', () => {
