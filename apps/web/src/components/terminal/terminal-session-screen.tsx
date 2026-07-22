@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { useArchiveTerminalSession, useStopTerminalSession } from '../../api/use-archive-terminal-session';
-import { useCreateTerminalSession } from '../../api/use-create-terminal-session';
+import { useRestartTerminalSession } from '../../api/use-restart-terminal-session';
 import { useTerminalSession } from '../../api/use-terminal-session';
 import type { TerminalStatus } from '../../api/types';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
@@ -21,11 +21,15 @@ import { useTerminalActivity } from './use-terminal-activity';
 export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
   const navigate = useNavigate();
   const session = useTerminalSession(sessionId);
-  const createSession = useCreateTerminalSession();
+  const restartSession = useRestartTerminalSession();
   const stopSession = useStopTerminalSession();
   const archiveSession = useArchiveTerminalSession();
   // Output-pulse fallback for sessions without shell integration (OSC 133).
   const fallback = useTerminalActivity();
+
+  // Bumped by Restart to force the socket to reconnect from seq 0 and replay
+  // the continued transcript onto a freshly-reset terminal.
+  const [restartEpoch, setRestartEpoch] = useState(0);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -98,6 +102,7 @@ export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
 
   const socket = useSessionSocket<TerminalStatus>(sessionId, {
     basePath: '/api/terminal/sessions',
+    reconnectKey: restartEpoch,
     onData: (data) => {
       const term = termRef.current;
       if (term) term.write(data);
@@ -122,15 +127,14 @@ export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
   const cmd = socket.integrated ? socket.activity?.command : undefined;
   const display = terminalDisplay(socket.conn, status, busy, cmd);
 
+  // Respawn on the SAME record: no navigation, no new session. Bump
+  // restartEpoch so the socket reconnects and replays from the last seq the
+  // terminal already showed — the divider + fresh shell append below the
+  // existing scrollback (the new shell clears its own viewport on launch).
   function handleRestart() {
-    if (!data) return;
-    createSession.mutate(
-      { workdirId: data.workdirId, title: data.title },
-      {
-        onSuccess: (created: { id: number }) =>
-          void navigate({ to: '/terminals/$sessionId', params: { sessionId: String(created.id) } }),
-      },
-    );
+    restartSession.mutate(sessionId, {
+      onSuccess: () => setRestartEpoch((e) => e + 1),
+    });
   }
 
   return (

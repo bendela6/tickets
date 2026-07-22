@@ -1,7 +1,15 @@
 // drizzle-kit only emits CREATE SCHEMA for schemas it sees exported from this
-// entry point. terminalSchema graduated in Task 4; agentSchema graduates here
-// in Task 5 — both now own real tables.
-export { coreSchema, terminalSchema, agentSchema } from './schemas';
+// entry point. terminalSchema and agentSchema graduated with the terminal/agent
+// split; structureSchema/recordsSchema/historySchema graduated with the
+// core/structure/records/history namespacing — all six now own real tables.
+export {
+  coreSchema,
+  terminalSchema,
+  agentSchema,
+  structureSchema,
+  recordsSchema,
+  historySchema,
+} from './schemas';
 export {
   userKindEnum,
   statusKindEnum,

@@ -19,9 +19,16 @@ export interface OutputFrame {
 export interface TerminalStore extends CoreSessionStore<OutputFrame> {
   // Drop all but the newest `keep` rows for a session.
   pruneOutput(sessionId: SessionId, keep: number): Promise<void>;
+  // Highest persisted output seq for a session (0 when it has none). Restart
+  // resumes numbering from here so appended output never collides with the
+  // pre-restart scrollback.
+  lastSeq(sessionId: SessionId): Promise<number>;
   // Non-terminal status transition (e.g. starting -> live) without touching
   // ended_at.
   setStatus(sessionId: SessionId, status: SessionStatus): Promise<void>;
+  // Bring an ended session back to life on restart: status -> live and clear
+  // the previous run's exit_code + ended_at.
+  markRestarted(sessionId: SessionId): Promise<void>;
   // Terminal transition: status + exit code + ended_at (process exit/failure).
   finishSession(sessionId: SessionId, status: SessionStatus, exitCode: number | null): Promise<void>;
   // Flip any session left starting/live with no ended_at to 'disconnected' and
@@ -76,10 +83,25 @@ export function createTerminalStore(db: Db): TerminalStore {
         .where(and(eq(terminalOutput.sessionId, sessionId), lt(terminalOutput.seq, oldestKept)));
     },
 
+    async lastSeq(sessionId: SessionId): Promise<number> {
+      const [row] = await db
+        .select({ seq: sql<number | null>`max(${terminalOutput.seq})` })
+        .from(terminalOutput)
+        .where(eq(terminalOutput.sessionId, sessionId));
+      return row?.seq == null ? 0 : Number(row.seq);
+    },
+
     async setStatus(sessionId: SessionId, status: SessionStatus): Promise<void> {
       await db
         .update(terminalSessions)
         .set({ status, updatedAt: sql`now()` })
+        .where(eq(terminalSessions.id, sessionId));
+    },
+
+    async markRestarted(sessionId: SessionId): Promise<void> {
+      await db
+        .update(terminalSessions)
+        .set({ status: 'live', exitCode: null, endedAt: null, updatedAt: sql`now()` })
         .where(eq(terminalSessions.id, sessionId));
     },
 

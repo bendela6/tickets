@@ -115,6 +115,24 @@ export interface Workdir {
   createdAt: string;
 }
 
+export interface WorkdirRoot {
+  path: string;
+  symbol: string;
+  annotation: string;
+}
+
+export interface WorkdirDirEntry {
+  name: string;
+  path: string;
+}
+
+export interface WorkdirDirListing {
+  path: string;
+  parent: string | null;
+  entries: WorkdirDirEntry[];
+  error?: string;
+}
+
 export interface CreateWorkdirInput {
   name: string;
   path: string;

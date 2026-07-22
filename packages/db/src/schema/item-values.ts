@@ -1,16 +1,17 @@
 import { sql } from 'drizzle-orm';
 import {
-  boolean, check, index, integer, jsonb, numeric, pgTable, serial, text, timestamp, uniqueIndex,
+  boolean, check, index, integer, jsonb, numeric, serial, text, timestamp, uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { fields } from './fields';
 import { items } from './items';
 import { options } from './options';
+import { recordsSchema } from './schemas';
 import { users } from './users';
 
 // Exactly one value column is populated per row — enforced by the DB, not the
 // app. Multi-value (option/user) = N rows. No status_id: a workflow status is
 // an option value like any other.
-export const itemValues = pgTable(
+export const itemValues = recordsSchema.table(
   'item_values',
   {
     id: serial('id').primaryKey(),

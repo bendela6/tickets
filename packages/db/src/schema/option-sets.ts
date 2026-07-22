@@ -1,7 +1,8 @@
-import { integer, pgTable, serial, text, unique } from 'drizzle-orm/pg-core';
+import { integer, serial, text, unique } from 'drizzle-orm/pg-core';
+import { structureSchema } from './schemas';
 import { schemes } from './schemes';
 
-export const optionSets = pgTable(
+export const optionSets = structureSchema.table(
   'option_sets',
   {
     id: serial('id').primaryKey(),

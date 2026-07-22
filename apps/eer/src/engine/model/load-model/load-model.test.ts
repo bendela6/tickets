@@ -605,10 +605,10 @@ describe('loadModel — relationships derive from constraints', () => {
 
     const ids = new Set(model!.relationships.map((r) => r.id));
     for (const expected of [
-      'rel:comments:c4', // comments.parent_id (self-loop)
-      'rel:items:c4', // items.parent_id (self-loop)
-      'rel:item_activity:c4', // item_activity.actor_id -> users.id
-      'rel:item_values:c5', // item_values.value_user_id -> users.id
+      'rel:records.comments:c4', // comments.parent_id (self-loop)
+      'rel:records.items:c4', // items.parent_id (self-loop)
+      'rel:history.item_activity:c4', // item_activity.actor_id -> users.id
+      'rel:records.item_values:c5', // item_values.value_user_id -> users.id
     ])
       expect(ids.has(expected)).toBe(true);
     // The reversed m2m rel ('fields.option_set_id -> option_sets.id') covered

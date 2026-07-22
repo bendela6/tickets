@@ -1,11 +1,41 @@
-import { useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react';
+
+import { defineForm, Form, useForm, type FormApi } from '@tickets/form';
+
 import { useCreateTerminalSession } from '../../api/use-create-terminal-session';
 import { useCreateWorkdir } from '../../api/use-create-workdir';
 import { useWorkdirs } from '../../api/use-workdirs';
+import { formRegistry } from '../../form/registry';
 import { Button } from '../../ui/button';
 import { Combobox } from '../../ui/combobox';
 import { DialogContent, DialogDescription, DialogRoot, DialogTitle } from '../../ui/dialog';
 import { Input } from '../../ui/input';
+
+// The add-workdir fields, driven by @tickets/form: a mono name and the
+// directory-tree widget. `command` is NOT here — it applies to both the add
+// and pick flows, so it stays a plain controlled input below the form.
+const workdirFormConfig = defineForm(formRegistry).build((b) => [
+  b.text({
+    name: 'name',
+    label: 'Workdir name',
+    required: true,
+    config: { placeholder: 'tickets', mono: true },
+  }),
+  b.directory({ name: 'path', label: 'Path', required: true, config: {} }),
+]);
+
+// Last path segment, tolerant of both separators and a trailing slash.
+function basename(p: string): string {
+  const parts = p.split(/[/\\]/).filter(Boolean);
+  return parts.at(-1) ?? p;
+}
 
 function Label({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
   return (
@@ -17,9 +47,9 @@ function Label({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
 }
 
 // The "New terminal session" flow (screen 10, terminal variant). Picks an
-// existing workdir or adds one inline — E1 has no separate workdir-admin
-// screen, so the first workdir is created here — then POSTs the session and
-// hands the new id back so the caller can navigate to the terminal.
+// existing workdir (Combobox) or adds one inline via @tickets/form — E1 has no
+// separate workdir-admin screen, so the first workdir is created here — then
+// POSTs the session and hands the new id back so the caller can navigate.
 export function NewSessionDialog({
   open,
   onOpenChange,
@@ -33,28 +63,126 @@ export function NewSessionDialog({
   const createSession = useCreateTerminalSession();
   const createWorkdir = useCreateWorkdir();
 
+  // Own the add-workdir form at the dialog level so we can seed `name` from a
+  // picked folder and read live values for the hint / Start gate. The form is
+  // rendered via `<Form formApi>` (api mode) so this single instance backs both
+  // the fields and our imperative reads/writes.
+  const { form, cache } = useForm({
+    config: workdirFormConfig,
+    defaultValues: { name: '', path: '' },
+  });
+
   const [workdirId, setWorkdirId] = useState<string | null>(null);
   const [addingWorkdir, setAddingWorkdir] = useState(false);
-  const [wdName, setWdName] = useState('');
-  const [wdPath, setWdPath] = useState('');
   const [command, setCommand] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  // Seed guard: once the user edits the name themselves we stop overwriting it;
+  // clearing the name re-arms seeding on the next folder pick. A seed write is
+  // recognised by BOTH a `seededByEffect` flag AND the exact string we seeded
+  // (`lastSeeded`) — the pair matters because a same-basename reseed calls
+  // `setFieldValue` with the string already in the box, which does NOT change
+  // the primitive `name` and so never fires the name-effect that would consume
+  // the flag. Left flag-only, that stuck `seededByEffect` would swallow the
+  // user's next genuine edit; requiring `name === lastSeeded` lets a real edit
+  // (a DIFFERENT string) fall through to `nameEdited = true` regardless.
+  const nameEdited = useRef(false);
+  const seededByEffect = useRef(false);
+  const lastSeeded = useRef<string | null>(null);
+
+  // Subscribe to live form values (path/name) without pulling a second copy of
+  // @tanstack/react-form into this app — read the form's store directly.
+  const values = useSyncExternalStore(
+    useCallback(
+      (onChange: () => void) => {
+        // @tanstack/store returns `{ unsubscribe }`, not a bare cleanup fn.
+        const sub = form.store.subscribe(onChange);
+        return () => sub.unsubscribe();
+      },
+      [form],
+    ),
+    () => form.store.state.values,
+  ) as Record<string, unknown>;
+  const path = String(values.path ?? '');
+  const name = String(values.name ?? '');
+
   const list = workdirs.data ?? [];
-  // Fall back to the inline form when there is nothing to pick.
+  // Fall back to the inline add form when there is nothing to pick.
   const showAddForm = addingWorkdir || (workdirs.isSuccess && list.length === 0);
   const submitting = createSession.isPending || createWorkdir.isPending;
+
+  // Name auto-seed: a fresh folder pick seeds the name from its basename until
+  // the user takes it over. Runs on every path change (deps gate it), recording
+  // both the flag and the exact string we wrote so the name-effect can tell our
+  // own write from a user edit.
+  useEffect(() => {
+    if (path && !nameEdited.current) {
+      const base = basename(path);
+      seededByEffect.current = true;
+      lastSeeded.current = base;
+      form.setFieldValue('name', base);
+    }
+  }, [path, form]);
+
+  // Detect a manual name edit vs. our own seed; an empty name re-arms seeding.
+  // The seed-echo consume is guarded by BOTH the flag AND the string matching
+  // what we last seeded — so any change to a DIFFERENT string is a user write,
+  // even if the flag is stuck true from a same-basename reseed that produced no
+  // primitive change (that's the scenario a flag-only check gets wrong).
+  useEffect(() => {
+    if (name === '') {
+      nameEdited.current = false;
+      seededByEffect.current = false;
+      return;
+    }
+    if (seededByEffect.current && name === lastSeeded.current) {
+      seededByEffect.current = false;
+      return;
+    }
+    nameEdited.current = true;
+  }, [name]);
+
+  const selected = list.find((w) => String(w.id) === workdirId);
   const canSubmit = showAddForm
-    ? wdName.trim().length > 0 && wdPath.trim().length > 0
+    ? path.trim().length > 0 && name.trim().length > 0
     : workdirId !== null;
+
+  const hint = showAddForm
+    ? !path
+      ? 'pick a folder to continue'
+      : !name
+        ? 'name the workdir to continue'
+        : `starts in ${path}`
+    : !workdirId
+      ? 'pick a workdir to continue'
+      : selected
+        ? `starts in ${selected.path}`
+        : '';
+
+  // FormApi for `<Form formApi>` — it only consumes `__internals`; the rest of
+  // the shape is satisfied from live state so the type stays honest.
+  const formApi: FormApi = {
+    isDirty: false,
+    isSubmitting: submitting,
+    isValid: canSubmit,
+    formError: undefined,
+    submit: async () => {
+      await form.handleSubmit();
+    },
+    reset: () => form.reset(),
+    getValues: () => form.store.state.values,
+    __internals: { form, cache },
+  };
 
   function reset() {
     setWorkdirId(null);
     setAddingWorkdir(false);
-    setWdName('');
-    setWdPath('');
     setCommand('');
     setError(null);
+    nameEdited.current = false;
+    seededByEffect.current = false;
+    lastSeeded.current = null;
+    form.reset();
   }
 
   function change(next: boolean) {
@@ -67,7 +195,7 @@ export function NewSessionDialog({
     try {
       let id: number;
       if (showAddForm) {
-        const wd = await createWorkdir.mutateAsync({ name: wdName.trim(), path: wdPath.trim() });
+        const wd = await createWorkdir.mutateAsync({ name: name.trim(), path: path.trim() });
         id = wd.id;
       } else {
         id = Number(workdirId);
@@ -93,24 +221,7 @@ export function NewSessionDialog({
         <div className="mt-4 flex flex-col gap-4">
           {showAddForm ? (
             <>
-              <label className="block">
-                <Label>Workdir name</Label>
-                <Input
-                  value={wdName}
-                  onChange={(e) => setWdName(e.target.value)}
-                  placeholder="tickets"
-                  autoFocus
-                />
-              </label>
-              <label className="block">
-                <Label hint="an existing directory on the server">Path</Label>
-                <Input
-                  value={wdPath}
-                  onChange={(e) => setWdPath(e.target.value)}
-                  placeholder="/home/me/work/tickets"
-                  className="font-mono text-[13px]"
-                />
-              </label>
+              <Form formApi={formApi} config={workdirFormConfig} registry={formRegistry} />
               {list.length > 0 ? (
                 <button
                   type="button"
@@ -153,13 +264,16 @@ export function NewSessionDialog({
           {error ? <p className="font-sans text-meta text-danger">{error}</p> : null}
         </div>
 
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="secondary" onClick={() => change(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={submit} disabled={!canSubmit} loading={submitting}>
-            Start session
-          </Button>
+        <div className="mt-5 flex items-center justify-between gap-2">
+          <span className="font-mono text-[11px] text-ink-3">{hint}</span>
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => change(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={submit} disabled={!canSubmit} loading={submitting}>
+              Start session
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </DialogRoot>

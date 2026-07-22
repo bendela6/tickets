@@ -1,7 +1,8 @@
-import { pgTable, serial, text, timestamp, unique } from 'drizzle-orm/pg-core';
+import { serial, text, timestamp, unique } from 'drizzle-orm/pg-core';
 import { userKindEnum } from './enums';
+import { coreSchema } from './schemas';
 
-export const users = pgTable(
+export const users = coreSchema.table(
   'users',
   {
     id: serial('id').primaryKey(),

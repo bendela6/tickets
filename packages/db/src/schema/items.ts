@@ -1,12 +1,13 @@
 import {
-  index, integer, pgTable, serial, timestamp, unique, type AnyPgColumn,
+  index, integer, serial, timestamp, unique, type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { itemTypes } from './item-types';
 import { projects } from './projects';
+import { recordsSchema } from './schemas';
 import { users } from './users';
 
 // Pure skeleton — everything user-visible lives in item_values.
-export const items = pgTable(
+export const items = recordsSchema.table(
   'items',
   {
     id: serial('id').primaryKey(),

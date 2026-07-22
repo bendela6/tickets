@@ -1,10 +1,11 @@
 import { sql } from 'drizzle-orm';
-import { bigint, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { bigint, index, integer, text, timestamp } from 'drizzle-orm/pg-core';
 import { events } from './events';
+import { historySchema } from './schemas';
 
 // One row per event, written in the same transaction. A single worker drains it
 // in id order (sub-project 3).
-export const outbox = pgTable(
+export const outbox = historySchema.table(
   'outbox',
   {
     eventId: bigint('event_id', { mode: 'number' })
