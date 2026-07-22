@@ -77,6 +77,7 @@ export async function handleUncaught(
 }
 
 export function handleRejection(client: SignalsClient, reason: unknown): void {
+  console.error('[signals] unhandled rejection:', reason);
   client.captureError(reason, { mechanism: 'unhandled-rejection' });
 }
 
@@ -95,6 +96,7 @@ export function buildUncaughtListener(
   const willExit = exitOnUncaught !== false;
   const exit = willExit ? (code: number) => process.exit(code) : () => {};
   return (error: unknown) => {
+    console.error('[signals] uncaught exception:', error);
     if (!willExit) {
       console.error('[signals] uncaught exception (exitOnUncaught: false):', error);
     }

@@ -23,17 +23,22 @@ export function registerAppsRoutes(app: FastifyInstance, context: { db: Db }) {
     if (!parsed.success) throw new HttpError(400, 'name is required');
     const slug = slugify(parsed.output.name);
     if (!slug) throw new HttpError(400, 'name must contain letters or digits');
-    const existing = await context.db.select().from(apps).where(eq(apps.slug, slug));
-    if (existing.length > 0) {
-      if (parsed.output.upsert) {
-        const [existingRow] = existing;
-        return reply.status(200).send({ ...existingRow, dsn: composeDsn(existingRow!.ingestKey, existingRow!.id) });
-      }
-      throw new HttpError(409, `an app with slug "${slug}" already exists`);
-    }
     const ingestKey = `pub_${randomBytes(6).toString('hex')}`;
-    const [row] = await context.db.insert(apps).values({ name: parsed.output.name, slug, ingestKey }).returning();
-    reply.status(201).send({ ...row, dsn: composeDsn(row!.ingestKey, row!.id) });
+    const inserted = await context.db
+      .insert(apps)
+      .values({ name: parsed.output.name, slug, ingestKey })
+      .onConflictDoNothing({ target: apps.slug })
+      .returning();
+    if (inserted.length > 0) {
+      const [row] = inserted;
+      return reply.status(201).send({ ...row, dsn: composeDsn(row!.ingestKey, row!.id) });
+    }
+    // Lost the race (or a plain duplicate): fetch whichever row won.
+    const [existingRow] = await context.db.select().from(apps).where(eq(apps.slug, slug));
+    if (parsed.output.upsert) {
+      return reply.status(200).send({ ...existingRow, dsn: composeDsn(existingRow!.ingestKey, existingRow!.id) });
+    }
+    throw new HttpError(409, `an app with slug "${slug}" already exists`);
   });
 
   app.get('/apps', async () => {
