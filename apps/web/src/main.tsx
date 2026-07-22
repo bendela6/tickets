@@ -23,7 +23,7 @@ function AppCrashedFallback() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-app font-sans text-ink">
       <div className="flex flex-col items-center gap-4 text-center">
-        <p className="text-ink">Something broke — the error was reported.</p>
+        <p className="text-ink">Something broke. If Signals is connected, the error was reported.</p>
         <Button variant="primary" onClick={() => location.reload()}>
           Reload
         </Button>

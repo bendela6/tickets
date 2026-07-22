@@ -225,6 +225,7 @@ boot/page-load is idempotent — it always resolves to the same app row.
 | `VITE_SIGNALS_DSN` | web, eer | Same, for the browser build. |
 | `SIGNALS_COLLECTOR_URL` | api, mcp | Collector base URL for the node `ensureAppDsn` call. Defaults to `http://127.0.0.1:4640`. |
 | *(none — same-origin)* | web, eer | The browser `ensureAppDsn` always registers against the same-origin `/signals-api` proxy (`basePath`, default), not a configurable URL — see `ensure.ts` above. |
+| `SIGNALS_PROXY_TARGET` | web, eer (dev only) | Overrides the vite dev-server proxy target for `/signals-api` (`apps/web/vite.config.ts`, `apps/eer/vite.config.ts`). Defaults to `http://127.0.0.1:4640`; not read at runtime by the built bundle. |
 
 None of these are required in the deployed container: `SIGNALS_COLLECTOR_URL`
 resolves to the loopback collector supervisord runs alongside the api
@@ -235,8 +236,9 @@ which nginx reverse-proxies to the same collector (`docker/nginx.conf`).
 
 - **api**: `registerProcessHandlers: true`, `exitOnUncaught: environment.nodeEnv === 'production'`
   — in production, an uncaught exception is captured, flushed, and the
-  process exits (matching Node's own guidance); in dev it logs and keeps
-  running. Every HTTP 500 (any error that isn't an `HttpError`, i.e. isn't
+  process exits (matching Node's own guidance); in dev it keeps running.
+  Either way the error always prints to stderr first (`buildUncaughtListener`
+  unconditionally logs it), so the crash stays visible in both modes. Every HTTP 500 (any error that isn't an `HttpError`, i.e. isn't
   an expected 4xx) is captured by the Fastify `setErrorHandler` in
   `apps/api/src/app.ts` with `mechanism: 'middleware'` before the generic
   `{ error: 'internal error' }` response — `HttpError`s (4xx) are never

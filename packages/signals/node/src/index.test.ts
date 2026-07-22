@@ -36,8 +36,11 @@ describe('node SDK', () => {
     await handleUncaught(client, new TypeError('crash'), (code) => { exited = code; });
     expect(sent[0]).toMatchObject({ mechanism: 'uncaught-exception', name: 'TypeError' });
     expect(exited).toBe(1);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     handleRejection(client, 'string reason');
     expect(sent[1]).toMatchObject({ mechanism: 'unhandled-rejection', message: 'string reason' });
+    expect(errorSpy).toHaveBeenCalledWith('[signals] unhandled rejection:', 'string reason');
+    errorSpy.mockRestore();
   });
 
   it('buildUncaughtListener logs to stderr and never exits when exitOnUncaught is false', async () => {
@@ -51,8 +54,26 @@ describe('node SDK', () => {
     // but the listener itself is fire-and-forget (`void handleUncaught(...)`).
     await new Promise((r) => setTimeout(r, 0));
     expect(sent[0]).toMatchObject({ mechanism: 'uncaught-exception', name: 'TypeError' });
+    expect(errorSpy).toHaveBeenCalledWith('[signals] uncaught exception:', error);
     expect(errorSpy).toHaveBeenCalledWith('[signals] uncaught exception (exitOnUncaught: false):', error);
     errorSpy.mockRestore();
+  });
+
+  it('buildUncaughtListener logs to stderr on the exit path too (exitOnUncaught: true)', async () => {
+    const { transport, sent } = fakeTransport();
+    const client = initSignals({ dsn: DSN, transport, registerProcessHandlers: false });
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+    const listener = buildUncaughtListener(client, { exitOnUncaught: true });
+    const error = new TypeError('fatal crash');
+    listener(error);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(sent[0]).toMatchObject({ mechanism: 'uncaught-exception', name: 'TypeError' });
+    expect(errorSpy).toHaveBeenCalledWith('[signals] uncaught exception:', error);
+    expect(errorSpy).not.toHaveBeenCalledWith('[signals] uncaught exception (exitOnUncaught: false):', error);
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    errorSpy.mockRestore();
+    exitSpy.mockRestore();
   });
 
   it('express and fastify helpers capture with http context and middleware mechanism', () => {

@@ -70,3 +70,18 @@ it('POST /apps without upsert on duplicate slug still returns 409', async () => 
   expect(second.statusCode).toBe(409);
   await app.close();
 });
+
+it('POST /apps with upsert:true handles two concurrent first registrations without a 500', async () => {
+  const app = buildApp({ db: testDb });
+  const [first, second] = await Promise.all([
+    app.inject({ method: 'POST', url: '/apps', payload: { name: 'Concurrent App', upsert: true } }),
+    app.inject({ method: 'POST', url: '/apps', payload: { name: 'Concurrent App', upsert: true } }),
+  ]);
+  const statuses = [first.statusCode, second.statusCode].sort();
+  expect(statuses).toEqual([200, 201]);
+  const winner = (first.statusCode === 201 ? first : second).json();
+  const loser = (first.statusCode === 200 ? first : second).json();
+  expect(loser.id).toBe(winner.id);
+  expect(loser.dsn).toBe(winner.dsn);
+  await app.close();
+});
