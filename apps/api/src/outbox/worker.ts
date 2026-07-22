@@ -1,3 +1,4 @@
+import { getClient } from '@bendela6/signals-node';
 import { eq, sql } from 'drizzle-orm';
 import type { Db } from '@tickets/db';
 import { ensureUser } from '@tickets/db';
@@ -77,6 +78,7 @@ export function createOutboxWorker(
       // Record the failure but leave done_at null. attempts was already bumped at
       // claim time, so a poison row climbs to MAX_ATTEMPTS and is then excluded
       // from future claims — visible (last_error) but non-blocking.
+      getClient()?.captureError(err, { level: 'error', contexts: { outbox: { phase: 'drain' } } });
       await db
         .update(outbox)
         .set({ lastError: err instanceof Error ? err.message : String(err) })
@@ -107,6 +109,7 @@ export function createOutboxWorker(
       } while (n > 0 && running);
     } catch (err) {
       console.error('outbox worker drain failed', err);
+      getClient()?.captureError(err, { level: 'error', contexts: { outbox: { phase: 'drain' } } });
     }
     if (running) timer = setTimeout(() => void loop(), opts.pollMs ?? 500);
   }
@@ -115,7 +118,12 @@ export function createOutboxWorker(
     start() {
       if (running) return;
       running = true;
-      onOutboxNotify(() => { drainOnce().catch((err) => console.error('outbox notify drain failed', err)); });
+      onOutboxNotify(() => {
+        drainOnce().catch((err) => {
+          console.error('outbox notify drain failed', err);
+          getClient()?.captureError(err, { level: 'error', contexts: { outbox: { phase: 'notify' } } });
+        });
+      });
       void loop();
     },
     async stop() {
