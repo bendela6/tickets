@@ -1,14 +1,36 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { SignalsErrorBoundary } from '@bendela6/signals-react';
 
 import { App } from './app';
+import { initWebSignals } from './signals-init';
+import { Button } from './ui/button';
 import '@fontsource/ibm-plex-sans/400.css';
 import '@fontsource/ibm-plex-sans/500.css';
 import '@fontsource/ibm-plex-sans/600.css';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
 import './styles/instrument.css';
+
+// Fire-and-forget: self-report errors to Signals without delaying render.
+void initWebSignals();
+
+// Minimal centered fallback for the top-level error boundary — the dashboard's
+// own /signals screens render inside this boundary too, so if Signals itself
+// throws we still get a reportable error and a way out (reload).
+function AppCrashedFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-app font-sans text-ink">
+      <div className="flex flex-col items-center gap-4 text-center">
+        <p className="text-ink">Something broke — the error was reported.</p>
+        <Button variant="primary" onClick={() => location.reload()}>
+          Reload
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 const storedTheme = window.localStorage.getItem('tickets-theme');
 
@@ -35,8 +57,10 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
+    <SignalsErrorBoundary fallback={<AppCrashedFallback />}>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </SignalsErrorBoundary>
   </StrictMode>,
 );

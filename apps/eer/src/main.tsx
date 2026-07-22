@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { App } from './app';
+import { initEerSignals } from './signals-init';
 import '@fontsource/ibm-plex-sans/400.css';
 import '@fontsource/ibm-plex-sans/500.css';
 import '@fontsource/ibm-plex-sans/600.css';
@@ -12,6 +13,9 @@ import './styles/debug.scss';
 
 // The viewer is a dark-only tool; mark the root so tokens resolve.
 document.documentElement.dataset.theme = 'dark';
+
+// Fire-and-forget: self-report errors to Signals without delaying render.
+void initEerSignals();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
