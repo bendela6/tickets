@@ -35,9 +35,13 @@ let app: FastifyInstance;
 // once started and not yet stopped.
 const started: StartSpec[] = [];
 const stopped: number[] = [];
+const restarted: StartSpec[] = [];
 const fakeDriver: TerminalDriver = {
   start: (spec) => {
     started.push(spec);
+  },
+  restart: async (spec) => {
+    restarted.push(spec);
   },
   stop: (id) => {
     stopped.push(id);
@@ -249,6 +253,49 @@ describe('terminal routes', () => {
 
   test('404s when stopping an unknown session', async () => {
     const res = await app.inject({ method: 'POST', url: '/api/terminal/sessions/999999/stop' });
+    expect(res.statusCode).toBe(404);
+  });
+
+  test('restart rejects a running session (409) and respawns an ended one on the same id from its saved command', async () => {
+    const [wd] = await db
+      .insert(workdirs)
+      .values({ name: `wd-restart-${Date.now()}-${Math.random()}`, path: tmpdir(), runner: 'local' })
+      .returning({ id: workdirs.id });
+
+    // Liveness is the DB status: a 'live' row is still running → 409.
+    const [liveRow] = await db
+      .insert(terminalSessions)
+      .values({ title: 'running', workdirId: wd!.id, status: 'live', command: 'pwsh', cwd: tmpdir() })
+      .returning({ id: terminalSessions.id });
+    const live = await app.inject({ method: 'POST', url: `/api/terminal/sessions/${liveRow!.id}/restart` });
+    expect(live.statusCode).toBe(409);
+
+    // An ended row restarts on the SAME id, reusing its persisted command.
+    const [endedRow] = await db
+      .insert(terminalSessions)
+      .values({
+        title: 'ended',
+        workdirId: wd!.id,
+        status: 'exited',
+        command: 'C:/Program Files/PowerShell/7/pwsh.exe',
+        cwd: tmpdir(),
+        endedAt: new Date().toISOString(),
+      })
+      .returning({ id: terminalSessions.id });
+
+    const before = (await app.inject({ method: 'GET', url: '/api/terminal/sessions?archived=true' })).json().length;
+    const res = await app.inject({ method: 'POST', url: `/api/terminal/sessions/${endedRow!.id}/restart` });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().id).toBe(endedRow!.id);
+    expect(restarted.map((r) => r.id)).toContain(endedRow!.id);
+    expect(restarted.find((r) => r.id === endedRow!.id)?.command).toBe('C:/Program Files/PowerShell/7/pwsh.exe');
+
+    const after = (await app.inject({ method: 'GET', url: '/api/terminal/sessions?archived=true' })).json().length;
+    expect(after).toBe(before); // NO new session record created
+  });
+
+  test('404s when restarting an unknown session', async () => {
+    const res = await app.inject({ method: 'POST', url: '/api/terminal/sessions/999999/restart' });
     expect(res.statusCode).toBe(404);
   });
 

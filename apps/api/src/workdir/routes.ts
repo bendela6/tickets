@@ -4,6 +4,7 @@ import * as v from 'valibot';
 import type { Db } from '@tickets/db';
 import { workdirs } from '@tickets/db';
 import { parseBody } from '../utils/parse-body';
+import { listRoots, listSubdirs } from './workdir-fs';
 
 // `core.workdirs` is a CORE concept, not an AI one: a directory a process can
 // run in. Both the terminal and the agent subsystem need one, so its CRUD
@@ -22,6 +23,8 @@ const createWorkdirSchema = v.object({
   defaultBranch: v.optional(v.string()),
   config: v.optional(v.record(v.string(), v.unknown())),
 });
+
+const dirsQuerySchema = v.object({ path: v.pipe(v.string(), v.minLength(1)) });
 
 export function registerWorkdirRoutes(app: FastifyInstance, context: { db: Db }): void {
   const { db } = context;
@@ -52,6 +55,17 @@ export function registerWorkdirRoutes(app: FastifyInstance, context: { db: Db })
     reply.send(rows);
   };
 
+  const getRoots = async (_request: FastifyRequest, reply: FastifyReply) => {
+    reply.send(listRoots());
+  };
+
+  const getDirs = async (request: FastifyRequest, reply: FastifyReply) => {
+    const query = parseBody(dirsQuerySchema, request.query); // throws HttpError(400) if path missing/blank
+    reply.send(await listSubdirs(query.path));
+  };
+
   app.post('/api/workdirs', createWorkdir);
   app.get('/api/workdirs', listWorkdirs);
+  app.get('/api/workdirs/roots', getRoots);
+  app.get('/api/workdirs/dirs', getDirs);
 }

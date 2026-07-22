@@ -1,7 +1,8 @@
-import { integer, pgTable, primaryKey, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { integer, primaryKey, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { itemTypes } from './item-types';
+import { structureSchema } from './schemas';
 
-export const itemTypeChildTypes = pgTable(
+export const itemTypeChildTypes = structureSchema.table(
   'item_type_child_types',
   {
     parentTypeId: integer('parent_type_id')

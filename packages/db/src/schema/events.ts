@@ -1,13 +1,14 @@
 import { sql } from 'drizzle-orm';
 import {
-  bigint, bigserial, check, index, integer, jsonb, pgTable, text, timestamp, unique, uuid,
+  bigint, bigserial, check, index, integer, jsonb, text, timestamp, unique, uuid,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
+import { historySchema } from './schemas';
 import { users } from './users';
 
 // Global append-only log, one stream per (aggregate_type, aggregate_id).
 // version 0 = imported legacy row: lossy, display-only, never folded.
-export const events = pgTable(
+export const events = historySchema.table(
   'events',
   {
     id: bigserial('id', { mode: 'number' }).primaryKey(),

@@ -8,9 +8,9 @@ describe('items-platform model', () => {
 
   it('has all 29 entities — 22 product tables plus the split', () => {
     expect(model.entities).toHaveLength(29);
-    expect(byId.has('item_values')).toBe(true);
-    expect(byId.has('option_transitions')).toBe(true);
-    expect(byId.has('outbox')).toBe(true);
+    expect(byId.has('records.item_values')).toBe(true);
+    expect(byId.has('structure.option_transitions')).toBe(true);
+    expect(byId.has('history.outbox')).toBe(true);
   });
 
   it('identifies a namespaced entity by its qualified name and carries its schema', () => {
@@ -19,8 +19,8 @@ describe('items-platform model', () => {
     expect(byId.get('terminal.sessions')!.schema).toBe('terminal');
     expect(byId.get('agent.sessions')!.schema).toBe('agent');
     expect(byId.get('core.workdirs')!.schema).toBe('core');
-    // The 22 product tables stay in public until Plan 2 moves them.
-    expect(byId.get('items')!.schema ?? null).toBeNull();
+    // The 22 product tables moved out of public in Plan 2 (core/structure/records/history).
+    expect(byId.get('records.items')!.schema).toBe('records');
   });
 
   it('keeps terminal and agent independent — no fk crosses between them', () => {
@@ -54,10 +54,10 @@ describe('items-platform model', () => {
       'agent.permission_status',
       'agent.session_status',
       'core.runner_kind',
-      'field_type',
-      'status_kind',
+      'core.user_kind',
+      'structure.field_type',
+      'structure.status_kind',
       'terminal.session_status',
-      'user_kind',
     ]);
     const fieldType = model.enums.find((e) => e.name === 'field_type')!;
     expect(fieldType.values).toEqual([
@@ -80,19 +80,19 @@ describe('items-platform model', () => {
   });
 
   it('gives options a nullable kind column (the model amendment)', () => {
-    const kind = byId.get('options')!.columns.find((c) => c.name === 'kind')!;
+    const kind = byId.get('structure.options')!.columns.find((c) => c.name === 'kind')!;
     expect(kind.type).toBe('status_kind');
     expect(kind.nullable).toBe(true);
   });
 
   it('carries the item_values integrity check', () => {
-    const check = byId.get('item_values')!.constraints.find((c) => c.kind === 'check');
+    const check = byId.get('records.item_values')!.constraints.find((c) => c.kind === 'check');
     expect(check).toBeDefined();
     expect(check!.expression).toMatch(/num_nonnulls/);
   });
 
   it('carries the item_values partial unique indexes', () => {
-    const indexes = byId.get('item_values')!.indexes;
+    const indexes = byId.get('records.item_values')!.indexes;
     const scalar = indexes.find((i) => i.name === 'iv_scalar')!;
     expect(scalar.unique).toBe(true);
     expect(scalar.where).toBe('option_id IS NULL AND value_user_id IS NULL');
@@ -100,19 +100,19 @@ describe('items-platform model', () => {
 
   it('carries the events stream-seq unique', () => {
     const unique = byId
-      .get('events')!
+      .get('history.events')!
       .constraints.filter((c) => c.kind === 'unique')
       .find((c) => c.name === 'events_stream_seq')!;
     expect(unique.columns).toEqual(['aggregate_type', 'aggregate_id', 'seq']);
   });
 
   it('carries composite primary keys on the join tables', () => {
-    const pk = byId.get('item_type_fields')!.constraints.find((c) => c.kind === 'pk')!;
+    const pk = byId.get('structure.item_type_fields')!.constraints.find((c) => c.kind === 'pk')!;
     expect(pk.columns).toEqual(['item_type_id', 'field_id']);
   });
 
   it('leaves no entity with an empty index list where the schema needs one', () => {
-    expect(byId.get('items')!.indexes.length).toBeGreaterThan(0);
-    expect(byId.get('events')!.indexes.length).toBeGreaterThan(0);
+    expect(byId.get('records.items')!.indexes.length).toBeGreaterThan(0);
+    expect(byId.get('history.events')!.indexes.length).toBeGreaterThan(0);
   });
 });

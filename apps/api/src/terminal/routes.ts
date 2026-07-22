@@ -54,10 +54,11 @@ export function registerTerminalRoutes(
     const [session] = await db
       .insert(terminalSessions)
       .values({
-        title: body.title ?? cmd.command,
+        title: body.title ?? cmd.title,
         workdirId: workdir.id,
         status: 'starting',
         cwd: workdir.path,
+        command: cmd.command,
       })
       .returning();
 
@@ -141,10 +142,35 @@ export function registerTerminalRoutes(
     reply.send(row);
   };
 
+  // Respawn a PTY on the SAME ended session record (no new row) — the workdir
+  // picker's "start a fresh shell" without losing the scrollback. Rejects a
+  // session that is still running. Uses the command persisted at create time
+  // so the same shell comes back; rows created before that column existed fall
+  // back to the workdir's default shell.
+  const restartSession = async (request: FastifyRequest, reply: FastifyReply) => {
+    const id = parseId((request.params as { id: string }).id);
+    const [session] = await db.select().from(terminalSessions).where(eq(terminalSessions.id, id));
+    if (!session) throw new HttpError(404, 'session not found');
+    // Liveness is the DB status, not driver.has(): the driver keeps an ended
+    // session's map entry (so a late attach still sees the final status), so
+    // has() stays true after exit and is not a running check. reconcileOrphaned
+    // keeps the row's status honest across API restarts.
+    if (session.status === 'starting' || session.status === 'live') {
+      throw new HttpError(409, 'session is still running');
+    }
+
+    const cwd = session.cwd ?? (await loadRunnableWorkdir(db, session.workdirId)).path;
+    const command = session.command ?? resolveSessionCommand(undefined).command;
+    await driver.restart({ id, command, cwd });
+    const [row] = await db.select().from(terminalSessions).where(eq(terminalSessions.id, id));
+    reply.send(row);
+  };
+
   app.get('/api/terminal/sessions', listSessions);
   app.post('/api/terminal/sessions', createSession);
   app.get('/api/terminal/sessions/:id', getSession);
   app.post('/api/terminal/sessions/:id/stop', stopSession);
+  app.post('/api/terminal/sessions/:id/restart', restartSession);
   app.post('/api/terminal/sessions/:id/archive', archiveSession);
   app.post('/api/terminal/sessions/:id/unarchive', unarchiveSession);
 }

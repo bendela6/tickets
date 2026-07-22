@@ -1,12 +1,13 @@
 import { sql } from 'drizzle-orm';
-import { integer, jsonb, pgTable, serial, unique } from 'drizzle-orm/pg-core';
+import { integer, jsonb, serial, unique } from 'drizzle-orm/pg-core';
 import { fields } from './fields';
 import { itemTypes } from './item-types';
 import { options } from './options';
+import { structureSchema } from './schemas';
 
 // The workflow graph. from_option_id NULL = a valid starting option;
 // item_type_id NULL = applies to every type using the field.
-export const optionTransitions = pgTable(
+export const optionTransitions = structureSchema.table(
   'option_transitions',
   {
     id: serial('id').primaryKey(),

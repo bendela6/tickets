@@ -1,9 +1,10 @@
 import { sql } from 'drizzle-orm';
-import { integer, jsonb, pgTable, serial, text, timestamp, unique } from 'drizzle-orm/pg-core';
+import { integer, jsonb, serial, text, timestamp, unique } from 'drizzle-orm/pg-core';
 import { statusKindEnum } from './enums';
 import { optionSets } from './option-sets';
+import { structureSchema } from './schemas';
 
-export const options = pgTable(
+export const options = structureSchema.table(
   'options',
   {
     id: serial('id').primaryKey(),

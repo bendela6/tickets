@@ -115,13 +115,18 @@ it('round-trips @tickets/db with nothing lost', async () => {
   // 29 tables / 8 enums after Task 11 deleted the 5 legacy public ai_* tables
   // and their 4 enums. The round trip carries each table's and enum's `schema`
   // through export -> import: terminal.sessions and agent.sessions survive as
-  // two distinct entities sharing one bare name.
+  // two distinct entities sharing one bare name. Namespacing then moved every
+  // remaining table out of `public` into core/structure/records/history, so
+  // nothing round-trips with an empty schema anymore.
   expect(model.entities).toHaveLength(29);
   expect(model.enums).toHaveLength(8);
   expect(model.entities.filter((e) => e.schema === 'terminal')).toHaveLength(2);
   expect(model.entities.filter((e) => e.schema === 'agent')).toHaveLength(4);
-  expect(model.entities.filter((e) => e.schema === 'core')).toHaveLength(1);
-  expect(model.entities.filter((e) => !e.schema)).toHaveLength(22);
+  expect(model.entities.filter((e) => e.schema === 'core')).toHaveLength(3);
+  expect(model.entities.filter((e) => e.schema === 'structure')).toHaveLength(11);
+  expect(model.entities.filter((e) => e.schema === 'records')).toHaveLength(5);
+  expect(model.entities.filter((e) => e.schema === 'history')).toHaveLength(4);
+  expect(model.entities.filter((e) => !e.schema)).toHaveLength(0);
 }, 30_000);
 
 it('the generated file typechecks', async () => {

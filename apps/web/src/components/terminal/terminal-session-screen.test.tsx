@@ -10,13 +10,13 @@ import { TerminalSessionScreen } from './terminal-session-screen';
 const { navigateMock } = vi.hoisted(() => ({ navigateMock: vi.fn() }));
 vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigateMock }));
 
-const { createMutateMock, stopMutateMock, archiveMutateMock } = vi.hoisted(() => ({
-  createMutateMock: vi.fn(),
+const { restartMutateMock, stopMutateMock, archiveMutateMock } = vi.hoisted(() => ({
+  restartMutateMock: vi.fn(),
   stopMutateMock: vi.fn(),
   archiveMutateMock: vi.fn(),
 }));
-vi.mock('../../api/use-create-terminal-session', () => ({
-  useCreateTerminalSession: () => ({ mutate: createMutateMock, isPending: false }),
+vi.mock('../../api/use-restart-terminal-session', () => ({
+  useRestartTerminalSession: () => ({ mutate: restartMutateMock, isPending: false }),
 }));
 
 vi.mock('../../api/use-archive-terminal-session', () => ({
@@ -76,7 +76,7 @@ function renderScreen(sessionId = 7) {
 beforeEach(() => {
   connState.current = 'ended';
   navigateMock.mockClear();
-  createMutateMock.mockReset();
+  restartMutateMock.mockReset();
   stopMutateMock.mockReset();
   archiveMutateMock.mockReset();
 });
@@ -85,16 +85,13 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test('a restarted terminal opens the new session under /terminals', async () => {
-  createMutateMock.mockImplementation((_input, opts?: { onSuccess?: (s: { id: number }) => void }) =>
-    opts?.onSuccess?.({ id: 42 }),
-  );
+test('Restart respawns the SAME session (no new record, no navigation)', async () => {
   renderScreen(7);
   await userEvent.click(screen.getByRole('button', { name: 'Restart' }));
-  expect(navigateMock).toHaveBeenCalledWith({
-    to: '/terminals/$sessionId',
-    params: { sessionId: '42' },
-  });
+  // Restarts this session id in place…
+  expect(restartMutateMock).toHaveBeenCalledWith(7, expect.anything());
+  // …and does NOT navigate to a different session.
+  expect(navigateMock).not.toHaveBeenCalled();
 });
 
 // "End session" and "Archive" are two different acts and must stay two

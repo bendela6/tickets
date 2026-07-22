@@ -75,18 +75,27 @@ function enumIdentity(c: PgColumn): { schema: string | null; name: string } | nu
 // Every table must belong to exactly one group. Throws otherwise, so the config
 // can't silently fall behind the schema.
 //
-// A table with a real Postgres schema (schema !== null) resolves via
-// `SchemaGroup.schemas` — derived, not hand-listed. A public table (schema
-// === null) falls back to the hand-listed `SchemaGroup.tables`, because most
-// of the platform has no real schema yet (see schema-groups.ts). This is also
-// what lets `terminal.sessions` and `agent.sessions` — the same bare name —
-// resolve unambiguously: each carries its own pgSchema, so there is no bare
-// name collision to trip the "in multiple groups" check.
+// The ERD's visual group is independent of a table's real Postgres schema —
+// e.g. `core.users` renders in the WORKSPACE group alongside `core.projects`,
+// not in the WORKDIRS group with `core.workdirs`, even though all three carry
+// schema `core`. So a hand-listed `SchemaGroup.tables` entry (bare name)
+// always wins when present, regardless of schema. Only a table with NO
+// hand-listed entry falls back to schema-derived membership via
+// `SchemaGroup.schemas` — that's how `core.workdirs`, `terminal.sessions` and
+// `agent.*` resolve, since group and schema happen to coincide 1:1 for them.
+// This also keeps `terminal.sessions` and `agent.sessions` — the same bare
+// name — resolving unambiguously: each carries its own pgSchema, so there is
+// no bare name collision to trip the "in multiple groups" check.
 export function resolveGroupKey(
   tableName: string,
   groups: SchemaGroup[],
   schema: string | null = null,
 ): string {
+  const byTable = groups.filter((g) => g.tables.includes(tableName));
+  if (byTable.length > 1) {
+    throw new Error(`table "${tableName}" is in multiple groups: ${byTable.map((g) => g.key).join(', ')}`);
+  }
+  if (byTable.length === 1) return byTable[0]!.key;
   if (schema !== null) {
     const owners = groups.filter((g) => g.schemas?.includes(schema));
     if (owners.length === 0) throw new Error(`schema "${schema}" (table "${tableName}") is in no group`);
@@ -95,12 +104,7 @@ export function resolveGroupKey(
     }
     return owners[0]!.key;
   }
-  const owners = groups.filter((g) => g.tables.includes(tableName));
-  if (owners.length === 0) throw new Error(`table "${tableName}" is in no group`);
-  if (owners.length > 1) {
-    throw new Error(`table "${tableName}" is in multiple groups: ${owners.map((g) => g.key).join(', ')}`);
-  }
-  return owners[0]!.key;
+  throw new Error(`table "${tableName}" is in no group`);
 }
 
 // A table's Postgres schema, or null for public. drizzle leaves `schema`
