@@ -155,11 +155,16 @@ function installFetchInstrumentation(client: SignalsClient): Teardown {
       const response = await originalFetch(...args);
       try {
         const { method, url } = describeRequest(args[0], args[1]);
-        addBreadcrumb(client, {
-          type: 'http',
-          message: `${method} ${url}`,
-          data: { status: response.status, durationMs: Date.now() - start },
-        });
+        // The SDK's own transport ingests through this same (patched) fetch —
+        // without this guard every ingest POST would breadcrumb itself, and
+        // that breadcrumb would ride the *next* batch, forever.
+        if (!url.includes('/ingest/')) {
+          addBreadcrumb(client, {
+            type: 'http',
+            message: `${method} ${url}`,
+            data: { status: response.status, durationMs: Date.now() - start },
+          });
+        }
       } catch {
         // never let breadcrumb bookkeeping affect the fetch result
       }
@@ -167,11 +172,13 @@ function installFetchInstrumentation(client: SignalsClient): Teardown {
     } catch (error) {
       try {
         const { method, url } = describeRequest(args[0], args[1]);
-        addBreadcrumb(client, {
-          type: 'http',
-          message: `${method} ${url}`,
-          data: { error: true, durationMs: Date.now() - start },
-        });
+        if (!url.includes('/ingest/')) {
+          addBreadcrumb(client, {
+            type: 'http',
+            message: `${method} ${url}`,
+            data: { error: true, durationMs: Date.now() - start },
+          });
+        }
       } catch {
         // never let breadcrumb bookkeeping affect the rethrow below
       }

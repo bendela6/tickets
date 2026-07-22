@@ -13,6 +13,7 @@
     "tokens:verify": "node scripts/build-tokens.mjs && git diff --exit-code src/styles/instrument.css && node scripts/scan-hardcoded-values.mjs && node scripts/check-design-tokens.mjs"
   },
   "dependencies": {
+    "@bendela6/signals-react": "workspace:^",
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@fontsource/ibm-plex-sans": "^5.2.8",
     "@tailwindcss/vite": "^4.3.2",

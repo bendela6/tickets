@@ -98,6 +98,18 @@ describe('initSignals (browser)', () => {
     expect(sent).toHaveLength(1);
   });
 
+  it('does not breadcrumb its own ingest POSTs (self-ingest loop guard)', async () => {
+    const { transport, sent } = fakeTransport();
+    window.fetch = (async () => ({ status: 200 })) as unknown as typeof fetch;
+    initSignals({ dsn: DSN, transport });
+    await fetch('http://127.0.0.1:4640/ingest/k');
+    await fetch('/api/x');
+    getClient()!.captureError(new Error('x'));
+    const http = sent[0]!.breadcrumbs!.filter((b) => b.type === 'http');
+    expect(http).toHaveLength(1);
+    expect(http[0]).toMatchObject({ message: 'GET /api/x' });
+  });
+
   it('visibilitychange->hidden with no navigator.sendBeacon does not throw', () => {
     const { transport } = fakeTransport();
     const originalSendBeacon = (navigator as Navigator & { sendBeacon?: unknown }).sendBeacon;
