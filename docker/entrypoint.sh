@@ -20,8 +20,16 @@ pnpm --filter @tickets/db db:migrate
 # Doing the migration here, before supervisord exists, means the `signals`
 # program only has to run `start` — as fast to bind as `api` is — so the two
 # race on comparable footing instead of api always losing.
-pnpm --filter @tickets/signals db:create
-pnpm --filter @tickets/signals db:migrate
+#
+# Non-fatal: apps must never fail to boot because Signals is down (locked
+# principle). Unlike the tickets-DB migrate above, a failure here only warns
+# and continues — api/web/pgweb still come up; the `signals` supervisord
+# program will itself fail to bind without a migrated DB, and api's own
+# ensureAppDsn degrades to "no signals" with a single console.warn, same as
+# any other unreachable-collector case.
+if ! (pnpm --filter @tickets/signals db:create && pnpm --filter @tickets/signals db:migrate); then
+  echo "[entrypoint] WARN: signals db bootstrap failed — continuing without self-monitoring" >&2
+fi
 
 # hand off to the process supervisor
 exec supervisord -c /etc/supervisor/conf.d/tickets.conf
