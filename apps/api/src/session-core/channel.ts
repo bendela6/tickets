@@ -68,9 +68,12 @@ export function createChannel<F extends SeqFrame = SeqFrame>(
   function flush(sessionId: SessionId): Promise<void> {
     const s = stateFor(sessionId);
     const run = (s.flushing ?? Promise.resolve()).then(() => flushSession(sessionId, s));
-    s.flushing = run.catch((err) => {
-      captureError(err, { level: 'error', contexts: { session: { id: sessionId } } });
-    });
+    // The stored/chained promise's catch is a SILENT guard against an
+    // unhandled rejection — it does NOT capture. Capture is the caller's job:
+    // an awaited driver flush reports through the driver's own try/catch (with
+    // agent/terminal context); the fire-and-forget scheduled flush reports in
+    // scheduleFlush below. Capturing here too would double-count every failure.
+    s.flushing = run.catch(() => {});
     return run;
   }
 
@@ -78,7 +81,9 @@ export function createChannel<F extends SeqFrame = SeqFrame>(
     if (s.flushScheduled) return;
     s.flushScheduled = true;
     schedule(() => {
-      void flush(sessionId);
+      flush(sessionId).catch((err) =>
+        captureError(err, { level: 'error', contexts: { session: { id: sessionId, phase: 'scheduled-flush' } } }),
+      );
     });
   }
 

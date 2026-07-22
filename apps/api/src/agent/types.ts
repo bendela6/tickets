@@ -30,6 +30,7 @@ export type AgentEvent =
       costUsd: number;
       durationMs: number;
       isError: boolean;
+      subtype?: string;
       usage?: {
         inputTokens: number;
         outputTokens: number;

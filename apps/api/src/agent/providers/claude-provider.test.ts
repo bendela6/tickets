@@ -109,7 +109,7 @@ describe('claude provider', () => {
     expect(events).toEqual([
       { type: 'session_started', providerSessionId: 'sess_1' },
       { type: 'assistant_text', text: 'hello', parentToolUseId: undefined },
-      { type: 'result', costUsd: 0.1, durationMs: 5, isError: false },
+      { type: 'result', costUsd: 0.1, durationMs: 5, isError: false, subtype: 'success' },
     ]);
   });
 

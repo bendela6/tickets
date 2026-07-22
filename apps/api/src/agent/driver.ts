@@ -132,10 +132,10 @@ export function createAgentDriver(options: AgentDriverOptions): AgentDriver {
             await channel.flush(rs.id);
             await store.setCost(rs.id, rs.costUsd);
             if (event.isError) {
-              captureError(new Error('agent turn ended in error'), {
+              captureError(new Error(`agent turn ended in error: ${event.subtype ?? 'unknown'}`), {
                 level: 'error',
                 mechanism: 'manual',
-                contexts: { agent: { sessionId: rs.id } },
+                contexts: { agent: { sessionId: rs.id, subtype: event.subtype } },
               });
               await transition(rs, 'failed');
             } else {
