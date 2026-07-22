@@ -24,6 +24,9 @@ export function useSignalsIssue(id: number) {
   return useQuery({
     queryKey: ['signals', 'issue', id],
     queryFn: () => getIssue(id),
+    // A non-numeric $issueId route param arrives here as NaN — never a real
+    // id, so skip the fetch entirely rather than requesting /issues/NaN.
+    enabled: Number.isFinite(id),
   });
 }
 
@@ -31,6 +34,7 @@ export function useSignalsOccurrences(id: number, page = 1) {
   return useQuery({
     queryKey: ['signals', 'occurrences', id, page],
     queryFn: () => listOccurrences(id, page),
+    enabled: Number.isFinite(id),
   });
 }
 

@@ -116,6 +116,10 @@ export function IssuesScreen() {
   const isError = issuesQuery.isError;
   const isEmpty = !isLoading && !isError && rows.length === 0;
   const isList = !isLoading && !isError && !isEmpty;
+  // "No open issues 🎉" only reads as an all-clear when the list is
+  // unfiltered — days/status aside, an active q/level/app filter means the
+  // empty result might just be a filter with nothing matching it.
+  const filtersActive = appId !== undefined || level !== undefined || debouncedQ.trim() !== '';
 
   return (
     <div className="flex h-full min-h-0 flex-col p-6 md:p-7">
@@ -259,7 +263,11 @@ export function IssuesScreen() {
                 ✓
               </span>
               <div className="font-sans text-[17px] font-semibold text-ink">
-                {status === 'open' ? 'No open issues 🎉' : `No ${status} issues`}
+                {filtersActive
+                  ? 'No issues match the current filters.'
+                  : status === 'open'
+                    ? 'No open issues 🎉'
+                    : `No ${status} issues`}
               </div>
               <div className="font-sans text-[12.5px] leading-normal text-ink-2">
                 Everything reported in the last {days} days is resolved or ignored. New errors will open

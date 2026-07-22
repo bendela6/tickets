@@ -42,6 +42,7 @@ const SESSION_SYM: SessionTimeline = {
   session: {
     sessionId: 'sess_9f3k21',
     appId: 1,
+    appSlug: 'storefront-web',
     startedAt: '2026-07-22T14:00:00Z',
     endedAt: '2026-07-22T14:03:36Z',
     durationMs: 216_000,
@@ -80,26 +81,27 @@ const SESSION_SYM: SessionTimeline = {
         stack: [
           { functionName: 't.map', file: '/assets/index-8f3a91.js', line: 14, column: 20993, inApp: false },
         ],
+        // 'fetch' is not a wire-legal breadcrumb `type` (the SDK only ever
+        // emits console|click|navigation|http|custom — see
+        // packages/signals/core/src/types.ts) and there is no 'error'
+        // breadcrumb either; the terminal row is synthesized by the screen
+        // from the matched error signal itself (name/message/
+        // clientTimestamp on the row below), not from this list.
         breadcrumbs: [
           { type: 'navigation', timestamp: '2026-07-22T14:03:28Z', message: '/checkout' },
           { type: 'console', timestamp: '2026-07-22T14:03:29Z', message: 'cart hydrate: 3 items' },
           {
-            type: 'fetch',
+            type: 'http',
             timestamp: '2026-07-22T14:03:30Z',
             message: 'GET /api/cart',
             data: { status: 200, durationMs: 214 },
           },
           { type: 'click', timestamp: '2026-07-22T14:03:33Z', message: 'button#apply-coupon' },
           {
-            type: 'fetch',
+            type: 'http',
             timestamp: '2026-07-22T14:03:34Z',
             message: 'POST /api/coupon',
             data: { status: 500, durationMs: 1210 },
-          },
-          {
-            type: 'error',
-            timestamp: '2026-07-22T14:03:35Z',
-            message: "TypeError: Cannot read properties of undefined (reading 'map')",
           },
         ],
         user: { id: 'usr_29c1', email: 'j.lang@example.com' },
@@ -109,6 +111,7 @@ const SESSION_SYM: SessionTimeline = {
           event: { should: 'be-skipped' },
         },
         platform: { runtime: 'browser', browser: 'Chrome 126', os: 'macOS 14.5' },
+        sdk: { name: '@bendela6/signals-browser', version: '0.1.0' },
       },
     },
   ],
@@ -136,14 +139,24 @@ test('(a) header shows name/status/culprit and stats (sessionCount, releaseRange
     fetchRoutes: [issueRoute(), occurrencesRoute({ rows: [OCC_NEWEST], total: 1 }), sessionSymRoute],
   });
 
-  expect(await screen.findByText('TypeError')).toBeInTheDocument();
-  expect(screen.getByText("— Cannot read properties of undefined (reading 'map')")).toBeInTheDocument();
+  // 'TypeError' now also appears in the breadcrumbs card's synthesized
+  // terminal row (see the (d) test below), so anchor on the unique message
+  // text first and use getAllByText (never throws on >1 match) for the name.
+  expect(await screen.findByText("— Cannot read properties of undefined (reading 'map')")).toBeInTheDocument();
+  expect(screen.getAllByText('TypeError').length).toBeGreaterThan(0);
   expect(screen.getByText('open')).toBeInTheDocument();
   expect(screen.getByText('SGL-142 · src/checkout/CartList.tsx:48')).toBeInTheDocument();
   expect(screen.getByText('storefront-web')).toBeInTheDocument();
   expect(screen.getByText('4,213')).toBeInTheDocument();
   expect(screen.getByText('1,847')).toBeInTheDocument();
   expect(screen.getByText(/1\.42\.0 → 1\.44\.1/)).toBeInTheDocument();
+});
+
+test('the issue is not fetched for a NaN issueId — "Issue not found" renders instead', async () => {
+  const { fetchMock } = renderSignals(<IssueDetailScreen issueId={Number('abc')} />, { fetchRoutes: [] });
+
+  expect(await screen.findByText('Issue not found')).toBeInTheDocument();
+  expect(fetchMock).not.toHaveBeenCalled();
 });
 
 test('(b) sym tab shows the original file path + context line text; raw toggle shows raw frames', async () => {
@@ -190,7 +203,7 @@ test('(c) a payload WITHOUT stackSymbolicated shows the no-sourcemaps banner and
   expect(screen.queryByRole('tab', { name: 'raw' })).not.toBeInTheDocument();
 });
 
-test('(d) breadcrumbs render glyph types and the 500 chip', async () => {
+test('(d) breadcrumbs render glyph types and the 500 chip; the terminal row is the error itself, danger-styled', async () => {
   renderSignals(<IssueDetailScreen issueId={1} />, {
     fetchRoutes: [issueRoute(), occurrencesRoute({ rows: [OCC_NEWEST], total: 1 }), sessionSymRoute],
   });
@@ -200,6 +213,22 @@ test('(d) breadcrumbs render glyph types and the 500 chip', async () => {
   expect(screen.getByText('500')).toBeInTheDocument();
   expect(screen.getByRole('img', { name: 'navigation' })).toBeInTheDocument();
   expect(screen.getByRole('img', { name: 'click' })).toBeInTheDocument();
+
+  // The terminal row is synthesized from the matched error signal (name +
+  // message + clientTimestamp), not from a breadcrumb — there is no
+  // wire-legal 'error' breadcrumb type — and renders danger-styled.
+  expect(screen.getByText('TypeError', { selector: 'span.text-danger' })).toBeInTheDocument();
+  expect(
+    screen.getByText("Cannot read properties of undefined (reading 'map')", { selector: 'span.text-danger' }),
+  ).toBeInTheDocument();
+});
+
+test('the PLATFORM card shows an sdk chip shortened from the @bendela6/signals-* package name', async () => {
+  renderSignals(<IssueDetailScreen issueId={1} />, {
+    fetchRoutes: [issueRoute(), occurrencesRoute({ rows: [OCC_NEWEST], total: 1 }), sessionSymRoute],
+  });
+
+  expect(await screen.findByText(/browser 0\.1\.0/)).toBeInTheDocument();
 });
 
 test('(e) occurrences render and the session link points at /signals/sessions/sess_x', async () => {

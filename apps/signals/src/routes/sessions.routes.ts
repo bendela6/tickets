@@ -1,7 +1,7 @@
 import { and, asc, eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import type { Db } from '../db/client';
-import { signals } from '../db/schema';
+import { apps, signals } from '../db/schema';
 import { HttpError } from '../errors';
 import { parseIntParam } from '../params';
 
@@ -24,10 +24,13 @@ export function registerSessionsRoutes(app: FastifyInstance, context: { db: Db }
     const counts = { error: 0, log: 0, event: 0 };
     for (const r of rows) counts[r.kind] += 1;
 
+    const [appRow] = await context.db.select({ slug: apps.slug }).from(apps).where(eq(apps.id, rows[0]!.appId));
+
     return {
       session: {
         sessionId,
         appId: rows[0]!.appId,
+        appSlug: appRow?.slug,
         startedAt,
         endedAt,
         durationMs: endedAt.getTime() - startedAt.getTime(),
