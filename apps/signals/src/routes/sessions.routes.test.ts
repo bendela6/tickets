@@ -41,3 +41,23 @@ it('GET /sessions/:sessionId/signals?app= rejects a malformed app id with 400', 
   expect(res.statusCode).toBe(400);
   await app.close();
 });
+
+it('session.appSlug is the owning app\'s slug', async () => {
+  const app = buildApp({ db: testDb });
+  const a = (await app.inject({ method: 'POST', url: '/apps', payload: { name: 'Storefront Web' } })).json();
+  await app.inject({
+    method: 'POST', url: `/ingest/${a.ingestKey}`,
+    payload: { signals: [
+      {
+        sessionId: 'sess_slug1', platform: { runtime: 'browser' }, sdk: { name: 't', version: '0' },
+        kind: 'event', name: 'page load', mechanism: 'manual', level: 'info',
+        timestamp: new Date().toISOString(),
+      },
+    ] },
+  });
+
+  const res = await app.inject({ method: 'GET', url: '/sessions/sess_slug1/signals' });
+  expect(res.statusCode).toBe(200);
+  expect(res.json().session.appSlug).toBe(a.slug);
+  await app.close();
+});

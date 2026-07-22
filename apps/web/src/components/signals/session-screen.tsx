@@ -66,7 +66,10 @@ function errorCulprit(payload: SignalPayload, mechanism: string | null): string 
 }
 
 function formatPlatform(platform: PlatformInfo | null): string {
-  if (platform === null) {
+  // The wire type says `PlatformInfo | null`, but a row whose payload never
+  // set `platform` deserializes as undefined, not null — treat that the
+  // same as "no platform data" rather than crashing on `platform.browser`.
+  if (platform == null) {
     return '—';
   }
   const browserParts = [platform.browser, platform.os].filter((p): p is string => p !== undefined);
@@ -309,7 +312,7 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
           <div className="flex flex-wrap items-center gap-2.5">
             <span className="font-mono text-[18px] font-semibold text-ink">{session.sessionId}</span>
             <span className="inline-flex h-5.5 items-center rounded-md bg-inset px-2 font-mono text-[11px] font-medium text-ink-2">
-              app {session.appId}
+              {session.appSlug ?? `app ${session.appId}`}
             </span>
             {user !== undefined ? (
               <span className="inline-flex items-center gap-1.5 font-sans text-[12px] text-ink-2">

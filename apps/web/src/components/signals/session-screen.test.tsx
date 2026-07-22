@@ -13,6 +13,7 @@ const SESSION: SessionTimeline = {
   session: {
     sessionId: 'sess_9f3k21',
     appId: 1,
+    appSlug: 'storefront-web',
     startedAt: '2026-07-22T14:00:00Z',
     endedAt: '2026-07-22T14:00:45Z',
     durationMs: 45_000,
@@ -120,6 +121,22 @@ test('(d) crashed chip + duration render in the header/stats', async () => {
   expect(await screen.findByText('crashed')).toBeInTheDocument();
   expect(screen.getByText('45s')).toBeInTheDocument();
   expect(screen.getByText('sess_9f3k21')).toBeInTheDocument();
+});
+
+test('the header app badge shows appSlug, not "app {appId}"', async () => {
+  renderSignals(<SessionScreen sessionId="sess_9f3k21" />, { fetchRoutes: [sessionRoute] });
+
+  expect(await screen.findByText('storefront-web')).toBeInTheDocument();
+  expect(screen.queryByText('app 1')).not.toBeInTheDocument();
+});
+
+test('the header app badge falls back to "app {appId}" when appSlug is absent', async () => {
+  const { appSlug: _appSlug, ...sessionWithoutSlug } = SESSION.session;
+  renderSignals(<SessionScreen sessionId="sess_9f3k21" />, {
+    fetchRoutes: [{ ...sessionRoute, handler: () => ({ session: sessionWithoutSlug, rows: SESSION.rows }) }],
+  });
+
+  expect(await screen.findByText('app 1')).toBeInTheDocument();
 });
 
 test('(e) a 404 ApiError shows "Session not found", not a generic error', async () => {

@@ -7,15 +7,21 @@ import { KindGlyph } from './kind-glyph';
 
 const BREADCRUMB_GRID_COLUMNS = '30px 84px minmax(0,1fr) auto';
 
-// Breadcrumb `type` strings are whatever the SDK's instrumentation emits
-// (console/console.warn, fetch/xhr, navigation, click, error, …) — map the
-// common ones onto KindGlyph's fixed glyph set; anything unrecognized falls
-// back to the neutral "custom" badge rather than crashing on an unknown key.
+// Breadcrumb `type` is a closed wire union — 'console' | 'click' |
+// 'navigation' | 'http' | 'custom' (packages/signals/core/src/types.ts).
+// There is no 'error' (or 'fetch'/'xhr') breadcrumb type on the wire; the SDK
+// never emits one, so those mappings are commented out rather than left live
+// dead code that implies a breadcrumb can be terminal on its own. ('error'
+// stays a valid KindGlyph *signal kind* for the session timeline — see
+// session-screen.tsx's toSignalKind — just not a breadcrumb `type`.) The
+// terminal danger row is synthesized separately by the caller from the
+// matched error signal itself; see BreadcrumbList's `terminal` prop.
 function kindForType(type: string): SignalKind {
   if (type === 'navigation') return 'navigation';
   if (type === 'click') return 'click';
-  if (type === 'fetch' || type === 'http' || type === 'xhr') return 'http';
-  if (type === 'error') return 'error';
+  if (type === 'http') return 'http';
+  // if (type === 'fetch' || type === 'xhr') return 'http'; // not wire-legal
+  // if (type === 'error') return 'error'; // not wire-legal for breadcrumbs
   if (type.startsWith('console')) return 'log';
   return 'custom';
 }
@@ -34,7 +40,7 @@ function HttpStatusChip({ status }: { status: number }) {
   );
 }
 
-function BreadcrumbRow({ crumb, terminal }: { crumb: SignalBreadcrumb; terminal: boolean }) {
+function BreadcrumbRow({ crumb }: { crumb: SignalBreadcrumb }) {
   const kind = kindForType(crumb.type);
   const status = typeof crumb.data?.status === 'number' ? crumb.data.status : undefined;
   const durationMs = typeof crumb.data?.durationMs === 'number' ? crumb.data.durationMs : undefined;
@@ -42,38 +48,48 @@ function BreadcrumbRow({ crumb, terminal }: { crumb: SignalBreadcrumb; terminal:
   return (
     <div
       role="row"
-      className={cn(
-        'grid items-center gap-x-2.5 px-4 py-1.5',
-        terminal ? 'bg-danger-subtle' : 'border-b border-hairline last:border-b-0',
-      )}
+      className="grid items-center gap-x-2.5 border-b border-hairline px-4 py-1.5 last:border-b-0"
       style={{ gridTemplateColumns: BREADCRUMB_GRID_COLUMNS }}
     >
-      {terminal ? (
-        <span className="flex size-5 items-center justify-center rounded-[6px] bg-danger font-mono text-[10px] font-semibold text-on-danger">
-          ✕
-        </span>
-      ) : (
-        <KindGlyph type={kind} />
-      )}
-      <span className={cn('font-mono text-[10.5px]', terminal ? 'font-medium text-danger' : 'text-ink-3')}>
-        {crumb.type}
-      </span>
+      <KindGlyph type={kind} />
+      <span className="font-mono text-[10.5px] text-ink-3">{crumb.type}</span>
       <span className="flex min-w-0 items-center gap-2">
-        <span
-          className={cn(
-            'truncate font-mono text-[12px]',
-            terminal ? 'font-medium text-danger' : 'text-ink-2',
-          )}
-        >
-          {crumb.message ?? ''}
-        </span>
+        <span className="truncate font-mono text-[12px] text-ink-2">{crumb.message ?? ''}</span>
         {status !== undefined ? <HttpStatusChip status={status} /> : null}
         {durationMs !== undefined ? (
           <span className="shrink-0 font-mono text-[10.5px] text-ink-3">{formatDurationMs(durationMs)}</span>
         ) : null}
       </span>
-      <span className={cn('font-mono text-[11px]', terminal ? 'font-medium text-danger' : 'text-ink-3')}>
-        {formatClockTime(crumb.timestamp)}
+      <span className="font-mono text-[11px] text-ink-3">{formatClockTime(crumb.timestamp)}</span>
+    </div>
+  );
+}
+
+// The terminal row's data — the matched error signal itself, not a
+// breadcrumb (there's no wire-legal 'error' breadcrumb type to pull it
+// from). `message` mirrors SessionEventRow.message: nullable.
+export interface TerminalBreadcrumb {
+  name: string;
+  message: string | null;
+  clientTimestamp: string;
+}
+
+function TerminalBreadcrumbRow({ terminal }: { terminal: TerminalBreadcrumb }) {
+  return (
+    <div
+      role="row"
+      className="grid items-center gap-x-2.5 bg-danger-subtle px-4 py-1.5"
+      style={{ gridTemplateColumns: BREADCRUMB_GRID_COLUMNS }}
+    >
+      <span className="flex size-5 items-center justify-center rounded-[6px] bg-danger font-mono text-[10px] font-semibold text-on-danger">
+        ✕
+      </span>
+      <span className="font-mono text-[10.5px] font-medium text-danger">{terminal.name}</span>
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="truncate font-mono text-[12px] font-medium text-danger">{terminal.message ?? ''}</span>
+      </span>
+      <span className="font-mono text-[11px] font-medium text-danger">
+        {formatClockTime(terminal.clientTimestamp)}
       </span>
     </div>
   );
@@ -82,19 +98,23 @@ function BreadcrumbRow({ crumb, terminal }: { crumb: SignalBreadcrumb; terminal:
 /**
  * Breadcrumbs card (docs/design/SigIssueDetail.dc.html): the signals leading
  * up to the occurrence shown in the stack trace, ending in a terminal
- * danger-colored row for the error itself. `sessionId` drives the "full
- * session →" link — omitted while the newest occurrence's session hasn't
- * resolved yet.
+ * danger-colored row for the error itself. The terminal row is NOT inferred
+ * from the breadcrumb list (breadcrumb `type` has no 'error' member on the
+ * wire — see kindForType above) — the caller synthesizes it from the matched
+ * error signal (name/message/clientTimestamp) and passes it explicitly.
+ * `sessionId` drives the "full session →" link — omitted while the newest
+ * occurrence's session hasn't resolved yet.
  */
 export function BreadcrumbList({
   breadcrumbs,
+  terminal,
   sessionId,
 }: {
   breadcrumbs: SignalBreadcrumb[] | undefined;
+  terminal: TerminalBreadcrumb | undefined;
   sessionId: string | undefined;
 }) {
   const rows = breadcrumbs ?? [];
-  const lastIndex = rows.length - 1;
 
   return (
     <div className="flex-none overflow-hidden rounded-xl border border-hairline bg-raised">
@@ -116,17 +136,14 @@ export function BreadcrumbList({
           </Link>
         ) : null}
       </div>
-      {rows.length === 0 ? (
+      {rows.length === 0 && terminal === undefined ? (
         <div className="px-4 py-4 font-mono text-[11.5px] text-ink-3">no breadcrumbs recorded</div>
       ) : (
         <div>
           {rows.map((crumb, index) => (
-            <BreadcrumbRow
-              key={index}
-              crumb={crumb}
-              terminal={index === lastIndex && kindForType(crumb.type) === 'error'}
-            />
+            <BreadcrumbRow key={index} crumb={crumb} />
           ))}
+          {terminal !== undefined ? <TerminalBreadcrumbRow terminal={terminal} /> : null}
         </div>
       )}
     </div>

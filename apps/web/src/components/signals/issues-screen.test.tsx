@@ -124,6 +124,20 @@ test('(d) an empty payload shows the "No open issues" empty state', async () => 
   expect(await screen.findByText(/No open issues/)).toBeInTheDocument();
 });
 
+test('an empty payload WITH an active level filter shows the filtered-empty copy, not the all-clear 🎉', async () => {
+  renderSignals(<IssuesScreen />, {
+    fetchRoutes: [appsRoute, ...countRoutes(), { test: /perPage=25$/, handler: () => ({ rows: [], total: 0 }) }],
+  });
+
+  // Unfiltered: the all-clear copy.
+  expect(await screen.findByText(/No open issues/)).toBeInTheDocument();
+
+  fireEvent.change(screen.getByLabelText('Filter by level'), { target: { value: 'warning' } });
+
+  expect(await screen.findByText('No issues match the current filters.')).toBeInTheDocument();
+  expect(screen.queryByText(/No open issues/)).not.toBeInTheDocument();
+});
+
 test('(e) typing in search updates the request URL with q= after the 300ms debounce', async () => {
   const { fetchMock } = renderSignals(<IssuesScreen />, {
     fetchRoutes: [

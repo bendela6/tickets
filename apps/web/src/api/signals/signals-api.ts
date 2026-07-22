@@ -135,6 +135,7 @@ export interface SignalPayload {
 export interface SessionInfo {
   sessionId: string;
   appId: number;
+  appSlug: string;
   startedAt: string;
   endedAt: string | null;
   durationMs: number | null;
@@ -178,7 +179,10 @@ export function getIssue(id: number): Promise<IssueDetail> {
   return fetchJson(`/signals-api/issues/${id}`);
 }
 
-export function patchIssueStatus(id: number, status: IssueStatus): Promise<IssueRow> {
+// The collector's PATCH /issues/:id response is the updated `issues` row
+// plus key/appSlug/level/mechanism — it never recomputes the 14-day
+// sparkline, so `spark` is never on this response's wire shape.
+export function patchIssueStatus(id: number, status: IssueStatus): Promise<Omit<IssueRow, 'spark'>> {
   return fetchJson(`/signals-api/issues/${id}`, {
     method: 'PATCH',
     body: JSON.stringify({ status }),

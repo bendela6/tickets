@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { ApiError } from '../../api/api-error';
 import { usePatchIssueStatus, useSignalsIssue, useSignalsOccurrences, useSignalsSession } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
+import type { TerminalBreadcrumb } from './breadcrumb-list';
 import { BreadcrumbList } from './breadcrumb-list';
 import { ContextRail } from './context-rail';
 import { formatCount, relativeTime } from './format';
@@ -100,6 +101,17 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
   );
 }
 
+function IssueNotFound() {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+      <div className="font-sans text-[15px] font-semibold text-ink">Issue not found</div>
+      <Link to="/signals" className="font-sans text-meta text-accent hover:underline">
+        ‹ Back to Issues
+      </Link>
+    </div>
+  );
+}
+
 /**
  * Issue detail screen (docs/design/SigIssueDetail.dc.html, variants
  * sym/raw) — the densest Signals screen: header + stats bar, stack trace,
@@ -109,6 +121,12 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
  * matching row, per the task brief's 2-request wiring).
  */
 export function IssueDetailScreen({ issueId }: { issueId: number }) {
+  // The route param comes through as `Number($issueId)` — a non-numeric
+  // segment (e.g. "/signals/issues/abc") produces NaN. That's never a real
+  // issue id, so it reads as "not found" without ever hitting the network
+  // (the queries below disable themselves on an invalid id).
+  const validId = Number.isFinite(issueId);
+
   const issueQuery = useSignalsIssue(issueId);
   const patchStatus = usePatchIssueStatus();
 
@@ -125,6 +143,18 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
     sessionQuery.data?.rows.find((row) => row.issueId === issueId);
   const payload = matchedRow?.payload;
 
+  // The breadcrumbs card's terminal row IS the matched error signal — there
+  // is no wire-legal 'error' breadcrumb type to infer it from (see
+  // breadcrumb-list.tsx's kindForType comment).
+  const terminal: TerminalBreadcrumb | undefined =
+    matchedRow !== undefined && matchedRow.name !== null
+      ? { name: matchedRow.name, message: matchedRow.message, clientTimestamp: matchedRow.clientTimestamp }
+      : undefined;
+
+  if (!validId) {
+    return <IssueNotFound />;
+  }
+
   if (issueQuery.isLoading) {
     return null;
   }
@@ -137,14 +167,7 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
     const notFound = issueQuery.error instanceof ApiError && issueQuery.error.status === 404;
 
     if (notFound) {
-      return (
-        <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-          <div className="font-sans text-[15px] font-semibold text-ink">Issue not found</div>
-          <Link to="/signals" className="font-sans text-meta text-accent hover:underline">
-            ‹ Back to Issues
-          </Link>
-        </div>
-      );
+      return <IssueNotFound />;
     }
 
     return (
@@ -257,7 +280,11 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
             release={sessionQuery.data?.session.release}
             occurrenceTime={matchedRow?.clientTimestamp ?? newestOccurrence?.receivedAt}
           />
-          <BreadcrumbList breadcrumbs={payload?.breadcrumbs} sessionId={newestOccurrence?.sessionId ?? undefined} />
+          <BreadcrumbList
+            breadcrumbs={payload?.breadcrumbs}
+            terminal={terminal}
+            sessionId={newestOccurrence?.sessionId ?? undefined}
+          />
           {/* key={issueId} resets the card's internal page state when the
           user navigates from one issue's detail screen straight to
           another's — otherwise a page-3 selection would silently leak into

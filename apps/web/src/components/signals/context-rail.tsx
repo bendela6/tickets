@@ -97,22 +97,50 @@ function TagsCard({
   );
 }
 
-function PlatformCard({ platform }: { platform: PlatformInfo | undefined }) {
-  if (platform === undefined) {
+// SDK identifiers are published as `@bendela6/signals-<target>` (browser,
+// node, react, core) — strip that prefix for the rail chip so it reads
+// "browser 0.1.0" instead of the full package name; any other/future name
+// (no prefix) passes through unshortened rather than being mangled.
+const SDK_NAME_PREFIX = '@bendela6/signals-';
+
+function sdkChipLabel(sdk: Record<string, unknown> | undefined): string | undefined {
+  const name = typeof sdk?.name === 'string' ? sdk.name : undefined;
+  const version = typeof sdk?.version === 'string' ? sdk.version : undefined;
+  if (name === undefined || version === undefined) {
+    return undefined;
+  }
+  const shortName = name.startsWith(SDK_NAME_PREFIX) ? name.slice(SDK_NAME_PREFIX.length) : name;
+  return `${shortName} ${version}`;
+}
+
+function PlatformCard({
+  platform,
+  sdk,
+}: {
+  platform: PlatformInfo | undefined;
+  sdk: Record<string, unknown> | undefined;
+}) {
+  const sdkLabel = sdkChipLabel(sdk);
+  if (platform === undefined && sdkLabel === undefined) {
     return null;
   }
   const chips: { label: string; glyph: string; accent: boolean }[] = [];
-  if (platform.browser !== undefined) {
-    chips.push({ label: platform.browser, glyph: '◍', accent: false });
+  if (platform !== undefined) {
+    if (platform.browser !== undefined) {
+      chips.push({ label: platform.browser, glyph: '◍', accent: false });
+    }
+    if (platform.os !== undefined) {
+      chips.push({ label: platform.os, glyph: '◍', accent: false });
+    }
+    chips.push({
+      label: platform.runtime,
+      glyph: platform.runtime === 'browser' ? '◍' : '⬡',
+      accent: true,
+    });
   }
-  if (platform.os !== undefined) {
-    chips.push({ label: platform.os, glyph: '◍', accent: false });
+  if (sdkLabel !== undefined) {
+    chips.push({ label: sdkLabel, glyph: '⬢', accent: false });
   }
-  chips.push({
-    label: platform.runtime,
-    glyph: platform.runtime === 'browser' ? '◍' : '⬡',
-    accent: true,
-  });
 
   return (
     <RailCard title="PLATFORM">
@@ -184,7 +212,7 @@ export function ContextRail({ issue, payload }: { issue: IssueDetail; payload: S
     <div className="flex flex-col gap-3.5 overflow-auto">
       <UserCard user={payload?.user} userCount={issue.userCount} />
       <TagsCard release={issue.releaseRange.last} tags={payload?.tags} />
-      <PlatformCard platform={payload?.platform} />
+      <PlatformCard platform={payload?.platform} sdk={payload?.sdk} />
       <ContextCard contexts={payload?.contexts} />
     </div>
   );
