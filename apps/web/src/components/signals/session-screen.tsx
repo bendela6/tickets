@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ApiError } from '../../api/api-error';
-import type { PlatformInfo, SessionEventRow, SignalPayload } from '../../api/signals/signals-api';
+import type { PlatformInfo, SessionEventRow, SignalPayload, SignalStackFrame } from '../../api/signals/signals-api';
 import { useSignalsSession } from '../../api/signals/use-signals';
 import { cn } from '../../ui/cn';
 import { formatClockTime, formatCount, formatDurationMs } from './format';
@@ -37,8 +37,24 @@ function rowMessage(row: SessionEventRow): string {
   return row.name ?? row.message ?? '';
 }
 
+// Prefer the top in-app frame — mirrors the collector's fingerprint.ts
+// convention (`stack?.find(f => f.inApp) ?? stack?.[0]`) — over a leading
+// vendor/framework frame; symbolicated frames win over raw ones when both
+// are present.
+function pickCulpritFrame(payload: SignalPayload): SignalStackFrame | undefined {
+  const sym = payload.stackSymbolicated;
+  if (sym !== undefined && sym.length > 0) {
+    return sym.find((f) => f.inApp) ?? sym[0];
+  }
+  const raw = payload.stack;
+  if (raw !== undefined && raw.length > 0) {
+    return raw.find((f) => f.inApp) ?? raw[0];
+  }
+  return undefined;
+}
+
 function errorCulprit(payload: SignalPayload, mechanism: string | null): string | undefined {
-  const frame = payload.stackSymbolicated?.[0] ?? payload.stack?.[0];
+  const frame = pickCulpritFrame(payload);
   const parts: string[] = [];
   if (frame !== undefined) {
     parts.push(`${frame.file}:${frame.line}`);
@@ -158,7 +174,12 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
   const lineClass = 'w-[1.5px] flex-none bg-hairline';
   return (
     <div className="flex items-stretch">
-      <span className="flex w-16 flex-none justify-end pt-0.5 font-mono text-[11px] text-ink-3">
+      <span
+        className={cn(
+          'flex w-16 flex-none justify-end pt-0.5 font-mono text-[11px]',
+          item.type === 'row' && item.row.kind === 'error' ? 'text-danger' : 'text-ink-3',
+        )}
+      >
         {item.type === 'row' ? elapsedLabel(item.row.clientTimestamp, startedAt) : null}
       </span>
       <span className="flex w-11 flex-none flex-col items-center">
@@ -256,7 +277,7 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
   }
 
   const { session, rows } = sessionQuery.data;
-  const errorRow = rows.find((row) => row.kind === 'error' && row.issueKey !== null);
+  const errorRow = rows.find((row) => row.kind === 'error' && row.issueId !== null && row.issueKey !== null);
   const user = headerUser(rows[0]?.payload.user);
   const total = session.counts.error + session.counts.log + session.counts.event;
   const timeline = buildTimeline(rows);
