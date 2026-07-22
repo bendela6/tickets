@@ -56,4 +56,7 @@ export function getClient(): SignalsClient | null {
   return current?.client ?? null;
 }
 
+export { ensureAppDsn } from './ensure';
+export type { EnsureAppDsnOptions } from './ensure';
+
 export * from '@bendela6/signals-core';
