@@ -57,7 +57,11 @@ const SESSION: SessionTimeline = {
       issueId: 7,
       issueKey: 'SGL-142',
       payload: {
+        // A leading vendor frame (inApp: false) above the real in-app frame
+        // — the culprit line must pick the top IN-APP frame, not just the
+        // literal first element.
         stackSymbolicated: [
+          { functionName: 't.map', file: '/assets/index-8f3a91.js', line: 14, column: 20993, inApp: false },
           { functionName: 'CartList', file: 'src/checkout/CartList.tsx', line: 48, column: 21, inApp: true },
         ],
       },
@@ -94,6 +98,20 @@ test('(c) the error card links to the issue route', async () => {
   expect(screen.getByText('‹ Issues')).toBeInTheDocument();
   const breadcrumbIssueLink = screen.getByRole('link', { name: 'SGL-142' });
   expect(breadcrumbIssueLink).toHaveAttribute('href', '/signals/issues/7');
+});
+
+test('the error card culprit line picks the top in-app frame, skipping a leading vendor frame', async () => {
+  renderSignals(<SessionScreen sessionId="sess_9f3k21" />, { fetchRoutes: [sessionRoute] });
+
+  expect(await screen.findByText('src/checkout/CartList.tsx:48 · uncaught-exception')).toBeInTheDocument();
+  expect(screen.queryByText(/index-8f3a91/)).not.toBeInTheDocument();
+});
+
+test('the error row elapsed-gutter label is danger-colored', async () => {
+  renderSignals(<SessionScreen sessionId="sess_9f3k21" />, { fetchRoutes: [sessionRoute] });
+
+  const errorElapsed = await screen.findByText('t+45.0s');
+  expect(errorElapsed).toHaveClass('text-danger');
 });
 
 test('(d) crashed chip + duration render in the header/stats', async () => {
