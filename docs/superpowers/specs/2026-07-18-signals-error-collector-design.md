@@ -1,7 +1,7 @@
 # Signals — local-first error & event collector
 
 **Date:** 2026-07-18
-**Status:** Approved design, awaiting implementation plan
+**Status:** Implemented (plans 1-3) — pending merge + npm publish
 **Owner:** Beka Bendeliani
 
 ## What this is
