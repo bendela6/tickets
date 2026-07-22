@@ -1,3 +1,4 @@
+import { captureError } from '@bendela6/signals-react';
 import { useEffect, useRef, useState } from 'react';
 import type { AgentEvent, AgentSessionStatus, TerminalStatus } from '../../api/types';
 
@@ -123,7 +124,10 @@ export function useSessionSocket<TStatus extends string = TerminalStatus | Agent
         let frame: ServerFrame<TStatus>;
         try {
           frame = JSON.parse(String(ev.data)) as ServerFrame<TStatus>;
-        } catch {
+        } catch (err) {
+          // Malformed frame — mirror the api-side socket capture (terminal/agent)
+          // so a server sending garbage is visible from the client too.
+          captureError(err, { level: 'warning', contexts: { socket: { scope: 'session' } } });
           return;
         }
         switch (frame.type) {

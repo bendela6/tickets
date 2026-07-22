@@ -71,7 +71,8 @@ export async function handleModelsRequest(
           try {
             const raw = JSON.parse(await readFile(join(dir, f), 'utf8')) as { meta?: { title?: string } };
             return { id: f.replace(/\.json$/, ''), title: raw.meta?.title ?? f };
-          } catch {
+          } catch (err) {
+            console.error(`[eer-models-api] skipping unreadable model file "${f}":`, err);
             return null;
           }
         }),
@@ -130,6 +131,7 @@ export function modelsApiPlugin(dir = join(process.cwd(), 'models')): Plugin {
               res.end(JSON.stringify(body));
             })
             .catch((err: unknown) => {
+              console.error(`[eer-models-api] ${req.method ?? 'GET'} ${req.url ?? '/'} failed:`, err);
               res.statusCode = 500;
               res.setHeader('content-type', 'application/json');
               res.end(JSON.stringify({ error: String(err) }));

@@ -1,4 +1,4 @@
-import { ensureAppDsn, initSignals } from '@bendela6/signals-browser';
+import { ensureAppDsn, initSignals } from '@bendela6/signals-react';
 
 // Self-registers Tickets EER with the local Signals collector (via the
 // same-origin /signals-api proxy) and initializes the browser SDK. Never
