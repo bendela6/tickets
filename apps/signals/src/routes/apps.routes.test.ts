@@ -48,3 +48,25 @@ it('GET /apps/:id rejects a malformed id with 400', async () => {
   expect((await app.inject({ method: 'GET', url: '/apps/abc' })).statusCode).toBe(400);
   await app.close();
 });
+
+it('POST /apps with upsert:true on duplicate slug returns 200 with existing app', async () => {
+  const app = buildApp({ db: testDb });
+  const firstRes = await app.inject({ method: 'POST', url: '/apps', payload: { name: 'Tickets API', upsert: true } });
+  expect(firstRes.statusCode).toBe(201);
+  const first = firstRes.json();
+  const secondRes = await app.inject({ method: 'POST', url: '/apps', payload: { name: 'Tickets API', upsert: true } });
+  expect(secondRes.statusCode).toBe(200);
+  const second = secondRes.json();
+  expect(second.id).toBe(first.id);
+  expect(second.ingestKey).toBe(first.ingestKey);
+  expect(second.dsn).toBe(first.dsn);
+  await app.close();
+});
+
+it('POST /apps without upsert on duplicate slug still returns 409', async () => {
+  const app = buildApp({ db: testDb });
+  await app.inject({ method: 'POST', url: '/apps', payload: { name: 'Tickets API' } });
+  const second = await app.inject({ method: 'POST', url: '/apps', payload: { name: 'Tickets API' } });
+  expect(second.statusCode).toBe(409);
+  await app.close();
+});

@@ -8,7 +8,10 @@ import { composeDsn } from '../dsn';
 import { HttpError } from '../errors';
 import { parseIntParam } from '../params';
 
-const CreateAppSchema = v.object({ name: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100)) });
+const CreateAppSchema = v.object({
+  name: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100)),
+  upsert: v.optional(v.boolean()),
+});
 
 function slugify(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -20,8 +23,14 @@ export function registerAppsRoutes(app: FastifyInstance, context: { db: Db }) {
     if (!parsed.success) throw new HttpError(400, 'name is required');
     const slug = slugify(parsed.output.name);
     if (!slug) throw new HttpError(400, 'name must contain letters or digits');
-    const existing = await context.db.select({ id: apps.id }).from(apps).where(eq(apps.slug, slug));
-    if (existing.length > 0) throw new HttpError(409, `an app with slug "${slug}" already exists`);
+    const existing = await context.db.select().from(apps).where(eq(apps.slug, slug));
+    if (existing.length > 0) {
+      if (parsed.output.upsert) {
+        const [existingRow] = existing;
+        return reply.status(200).send({ ...existingRow, dsn: composeDsn(existingRow!.ingestKey, existingRow!.id) });
+      }
+      throw new HttpError(409, `an app with slug "${slug}" already exists`);
+    }
     const ingestKey = `pub_${randomBytes(6).toString('hex')}`;
     const [row] = await context.db.insert(apps).values({ name: parsed.output.name, slug, ingestKey }).returning();
     reply.status(201).send({ ...row, dsn: composeDsn(row!.ingestKey, row!.id) });
