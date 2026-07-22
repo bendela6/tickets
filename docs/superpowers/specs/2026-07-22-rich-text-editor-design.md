@@ -49,6 +49,14 @@ conversion uses `@tiptap/html`-style generation).
   Highlight, TextStyle + Color, Underline, TextAlign, Link, Image, and two
   Mention configurations — `@` → user mention node, `#` → **TicketRef** custom
   node (stores item id + display key, e.g. TIX-123).
+- **Extension registry, built for custom additions.** The set is not a flat
+  hardcoded array: each feature is a registry entry bundling its Tiptap
+  extension(s), its `docToMarkdown` degradation rule, its `markdownToDoc`
+  parse rule (if any), and its toolbar control descriptor. Adding a future
+  custom node (embed, vote block, …) = one new entry; converters, editor,
+  and view pick it up without consumer changes.
+- **`buildExtensions(features)`** assembles a schema from a feature list —
+  the same list the editor toolbar renders from (see §3).
 - **`markdownToDoc(md): doc`** — markdown → Tiptap JSON. Covers the current
   renderer's subset (h1–h3, lists, tables, code fences, bold/italic/inline
   code, links) plus `- [ ]` task lists, `![](url)` images, and recognizes
@@ -67,8 +75,16 @@ conversion uses `@tiptap/html`-style generation).
 - **`RichTextEditor`** — replaces `MarkdownEditor` at all three call sites
   (`item-detail.tsx`, `detail-comments.tsx`, `registry/field-widget.tsx`).
   Same contract: `value`/`disabled`/`placeholder`/`onSave` (save on blur),
-  where `value` may be markdown or serialized doc (detected). Full and
-  compact (comment-composer) toolbar variants.
+  where `value` may be markdown or serialized doc (detected).
+- **Per-surface feature config:** the editor takes `features` — a preset
+  (`'full'` | `'compact'`) or an explicit feature list — which drives both
+  the loaded extensions and the rendered toolbar controls via the registry.
+  Descriptions use `full`; the comment composer uses `compact` (marks,
+  lists, code, link, mentions/refs, image — no headings/details/align);
+  rich-text fields read an optional feature list from the field's `config`.
+- **Superset rendering rule:** `RichTextView` always loads the *full*
+  extension set, so any stored doc renders correctly even on surfaces whose
+  editor has that feature disabled.
 - **`RichTextView`** — read-only renderer from the same extension set
   (replaces `renderMarkdown` + `dangerouslySetInnerHTML`). Ticket-ref and
   mention chips are clickable links; task-list checkboxes are read-only in
@@ -118,7 +134,9 @@ conversion uses `@tiptap/html`-style generation).
   malformed-input fuzz (never throws).
 - Web: editor mounts with markdown and with doc JSON; save emits doc JSON;
   suggestion popovers query and insert chips; `RichTextView` renders chips
-  as links; task checkbox interactivity (editable vs. read-only).
+  as links; task checkbox interactivity (editable vs. read-only); feature
+  config — a disabled feature's toolbar control is absent, and a doc using
+  it still renders in `RichTextView`.
 - API: attachment upload/download, mime/size validation, 404.
 - MCP: markdown default round-trip through tools; `format: 'rich'`
   passthrough.
