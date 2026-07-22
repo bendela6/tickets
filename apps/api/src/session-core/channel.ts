@@ -1,3 +1,4 @@
+import { captureError } from '@bendela6/signals-node';
 import type { Channel, ControlFrames, CreateChannelOptions, SeqFrame, SessionId, SessionStore } from './types';
 
 export type { Channel, ControlFrames, CreateChannelOptions, SeqFrame, SessionId, SessionStore, Send } from './types';
@@ -67,7 +68,9 @@ export function createChannel<F extends SeqFrame = SeqFrame>(
   function flush(sessionId: SessionId): Promise<void> {
     const s = stateFor(sessionId);
     const run = (s.flushing ?? Promise.resolve()).then(() => flushSession(sessionId, s));
-    s.flushing = run.catch(() => {});
+    s.flushing = run.catch((err) => {
+      captureError(err, { level: 'error', contexts: { session: { id: sessionId } } });
+    });
     return run;
   }
 

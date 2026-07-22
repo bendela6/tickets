@@ -78,7 +78,13 @@ export function buildApp(context: {
         .then((n) => {
           if (n > 0) app.log.info({ reconciled: n }, 'marked orphaned agent sessions interrupted');
         })
-        .catch((err) => app.log.error({ err }, 'agent orphan reconcile failed'));
+        .catch((err) => {
+          app.log.error({ err }, 'agent orphan reconcile failed');
+          context.signals?.captureError(err, {
+            level: 'error',
+            contexts: { boot: { phase: 'reconcile-orphaned', driver: 'agent' } },
+          });
+        });
       return createAgentDriver({ store });
     })();
 
@@ -98,7 +104,13 @@ export function buildApp(context: {
       // rows untouched.
       void store.reconcileOrphaned()
         .then((n) => { if (n > 0) app.log.info({ reconciled: n }, 'marked orphaned terminal sessions disconnected'); })
-        .catch((err) => app.log.error({ err }, 'terminal orphan reconcile failed'));
+        .catch((err) => {
+          app.log.error({ err }, 'terminal orphan reconcile failed');
+          context.signals?.captureError(err, {
+            level: 'error',
+            contexts: { boot: { phase: 'reconcile-orphaned', driver: 'terminal' } },
+          });
+        });
       return createTerminalDriver({
         runner: createLocalRunner(),
         store,

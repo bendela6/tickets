@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { captureError } from '@bendela6/signals-node';
 
 const run = promisify(execFile);
 
@@ -31,7 +32,9 @@ export function createLocalWorktreeManager(): WorktreeManager {
       // is left behind on purpose so the dispatched work is inspectable.
       await run('git', ['-C', path, 'worktree', 'remove', '--force', path]).catch(async () => {
         // Fall back to pruning from the parent repo if the dir is already gone.
-        await run('git', ['worktree', 'prune']).catch(() => {});
+        await run('git', ['worktree', 'prune']).catch((err) =>
+          captureError(err, { level: 'warning', contexts: { worktree: { phase: 'cleanup' } } }),
+        );
       });
     },
   };

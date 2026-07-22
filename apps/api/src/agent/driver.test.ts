@@ -198,6 +198,36 @@ describe('agent driver', () => {
     expect(seen).toContain('idle');
   });
 
+  it('transitions running→failed and captures to Signals when the result event carries isError', async () => {
+    captureError.mockClear();
+    const { store, statuses, getCost } = makeStore();
+    const agent = makeAgentRun();
+    const drv = createAgentDriver({ store, schedule: syncSchedule });
+    drv.start({ id: 1, run: agent.run });
+    const { sub, frames } = makeSub();
+    await drv.attach(1, sub, 0);
+
+    agent.emit({ type: 'result', costUsd: 0, durationMs: 5, isError: true });
+    await tick();
+    await drv.flush(1);
+    await tick();
+
+    // Cost accounting still happens even on a failed turn.
+    expect(getCost()).toBe(0);
+    expect(statuses).toContain('failed');
+    expect(statuses).not.toContain('idle');
+    const seen = statusFrames(frames).map((f) => f.status);
+    expect(seen).toContain('failed');
+    expect(captureError).toHaveBeenCalledTimes(1);
+    const [err, opts] = captureError.mock.calls[0]!;
+    expect(err).toBeInstanceOf(Error);
+    expect(opts).toEqual({
+      level: 'error',
+      mechanism: 'manual',
+      contexts: { agent: { sessionId: 1 } },
+    });
+  });
+
   it('enforces the budget cap: notice + interrupt once spend crosses it', async () => {
     const { store } = makeStore();
     const agent = makeAgentRun();
