@@ -20,7 +20,7 @@ export function registerListTicketEvents(server: McpServer) {
       },
     },
     ({ projectKey, ticketNumber, take }) =>
-      runTool(async () => {
+      runTool('list_ticket_events', async () => {
         const board = await loadBoard(projectKey);
         const ticket = resolveTicket(board, ticketNumber);
         const events = await apiFetch<{ data: TicketEvent[]; meta: { total: number } }>(

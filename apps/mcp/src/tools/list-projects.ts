@@ -13,7 +13,7 @@ export function registerListProjects(server: McpServer) {
       inputSchema: {},
     },
     () =>
-      runTool(async () => {
+      runTool('list_projects', async () => {
         const projects = await apiFetch<{ data: Project[] }>('/api/projects');
         return toText(
           projects.data.map((project) => ({

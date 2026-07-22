@@ -21,7 +21,7 @@ export function registerCreateTicket(server: McpServer, context: ToolContext) {
       },
     },
     ({ projectKey, typeKey, values, parentNumber }) =>
-      runTool(async () => {
+      runTool('create_ticket', async () => {
         const { actorId } = await context.getActor();
         let parentId: number | undefined;
         if (parentNumber !== undefined) {
