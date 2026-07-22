@@ -10,3 +10,5 @@ export { Callout } from './nodes/callout';
 export type { CalloutKind } from './nodes/callout';
 export { userMention, ticketRef } from './nodes/refs';
 export type { SuggestionHooks } from './nodes/refs';
+export { markdownToDoc, toDisplayDoc } from './markdown-to-doc';
+export { parseInline } from './inline-parse';
