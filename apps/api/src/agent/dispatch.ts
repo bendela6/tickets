@@ -3,6 +3,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import * as v from 'valibot';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
+import { captureError } from '@bendela6/signals-node';
 import type { Db } from '@tickets/db';
 import { agentAgents, agentSessions, items } from '@tickets/db';
 import { itemAgentDispatched } from '../command/item/agent-dispatched';
@@ -109,7 +110,10 @@ export function registerAgentDispatchRoute(
       maxBudgetUsd: body.maxBudgetUsd,
       onEnd: async () => {
         activeDispatches = Math.max(0, activeDispatches - 1);
-        if (worktreePath) await worktrees.remove(worktreePath).catch(() => {});
+        if (worktreePath)
+          await worktrees.remove(worktreePath).catch((err) =>
+            captureError(err, { level: 'warning', contexts: { dispatch: { phase: 'onEnd' } } }),
+          );
         const [final] = await db
           .select({ status: agentSessions.status, costUsd: agentSessions.costUsd })
           .from(agentSessions)

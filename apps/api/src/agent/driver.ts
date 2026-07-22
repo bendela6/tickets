@@ -131,13 +131,27 @@ export function createAgentDriver(options: AgentDriverOptions): AgentDriver {
             rs.costUsd += event.costUsd;
             await channel.flush(rs.id);
             await store.setCost(rs.id, rs.costUsd);
-            await transition(rs, 'idle');
-            if (rs.maxBudgetUsd != null && rs.costUsd >= rs.maxBudgetUsd) {
-              channel.notify(rs.id, {
-                type: 'notice',
-                message: `budget cap reached — $${rs.costUsd.toFixed(2)} of $${rs.maxBudgetUsd.toFixed(2)}`,
+            if (event.isError) {
+              captureError(new Error('agent turn ended in error'), {
+                level: 'error',
+                mechanism: 'manual',
+                contexts: { agent: { sessionId: rs.id } },
               });
-              rs.run.interrupt().catch(() => {});
+              await transition(rs, 'failed');
+            } else {
+              await transition(rs, 'idle');
+              if (rs.maxBudgetUsd != null && rs.costUsd >= rs.maxBudgetUsd) {
+                channel.notify(rs.id, {
+                  type: 'notice',
+                  message: `budget cap reached — $${rs.costUsd.toFixed(2)} of $${rs.maxBudgetUsd.toFixed(2)}`,
+                });
+                rs.run.interrupt().catch((err) =>
+                  captureError(err, {
+                    level: 'error',
+                    contexts: { agent: { sessionId: rs.id, phase: 'budget-interrupt' } },
+                  }),
+                );
+              }
             }
           } else if (event.type === 'error') {
             captureError(new Error(event.message ?? 'agent run failed'), {
@@ -164,7 +178,9 @@ export function createAgentDriver(options: AgentDriverOptions): AgentDriver {
       rs.maxBudgetUsd = spec.maxBudgetUsd;
       rs.onEnd = spec.onEnd;
       sessions.set(spec.id, rs);
-      void store.markRunning(spec.id);
+      void store.markRunning(spec.id).catch((err) =>
+        captureError(err, { level: 'error', contexts: { agent: { sessionId: spec.id, phase: 'markRunning' } } }),
+      );
       channel.notify(spec.id, { type: 'status', status: 'running' });
       consume(rs);
     },
@@ -201,13 +217,22 @@ export function createAgentDriver(options: AgentDriverOptions): AgentDriver {
     prompt(sessionId, text) {
       const rs = sessions.get(sessionId);
       if (!rs) return;
-      void rs.run.send(text).then(() => transition(rs, 'running'));
+      void rs.run
+        .send(text)
+        .then(() => transition(rs, 'running'))
+        .catch((err) =>
+          captureError(err, { level: 'error', contexts: { agent: { sessionId, phase: 'prompt' } } }),
+        );
     },
 
     interrupt(sessionId) {
       const rs = sessions.get(sessionId);
       if (!rs) return;
-      void rs.run.interrupt();
+      void rs.run
+        .interrupt()
+        .catch((err) =>
+          captureError(err, { level: 'error', contexts: { agent: { sessionId, phase: 'interrupt' } } }),
+        );
     },
 
     respondToPermission(sessionId, requestId, result, reason) {
@@ -217,9 +242,24 @@ export function createAgentDriver(options: AgentDriverOptions): AgentDriver {
       const rowId = rs.permissionRows.get(requestId);
       if (rowId != null) {
         rs.permissionRows.delete(requestId);
-        void store.decidePermissionRequest(rowId, result === 'allow' ? 'allowed' : 'denied', reason);
+        void store
+          .decidePermissionRequest(rowId, result === 'allow' ? 'allowed' : 'denied', reason)
+          .catch((err) =>
+            captureError(err, {
+              level: 'error',
+              contexts: { agent: { sessionId, phase: 'decidePermission' } },
+            }),
+          );
       }
-      void rs.run.respondToPermission(requestId, result, reason).then(() => transition(rs, 'running'));
+      void rs.run
+        .respondToPermission(requestId, result, reason)
+        .then(() => transition(rs, 'running'))
+        .catch((err) =>
+          captureError(err, {
+            level: 'error',
+            contexts: { agent: { sessionId, phase: 'respondToPermission' } },
+          }),
+        );
     },
 
     stop(sessionId) {

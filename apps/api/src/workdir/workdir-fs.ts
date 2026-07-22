@@ -2,8 +2,14 @@ import { realpathSync } from 'node:fs';
 import { readdir, realpath, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, resolve, sep } from 'node:path';
+import { captureError } from '@bendela6/signals-node';
 import { environment } from '../environment';
 import { HttpError } from '../errors';
+
+// fs errors expected during normal browsing (gone/permission-denied) — not
+// worth a Signals capture; anything else here is a genuinely unexpected
+// filesystem failure (e.g. EIO, ENOTDIR racing a delete) worth surfacing.
+const EXPECTED_READDIR_ERROR_CODES = new Set(['ENOENT', 'EACCES', 'EPERM']);
 
 export type RootDir = { path: string; symbol: string; annotation: string };
 export type DirEntry = { name: string; path: string };
@@ -75,7 +81,11 @@ export async function listSubdirs(requested: string): Promise<DirListing> {
       .filter((d) => d.isDirectory())
       .map((d) => ({ name: d.name, path: resolve(real, d.name) }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  } catch {
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (!code || !EXPECTED_READDIR_ERROR_CODES.has(code)) {
+      captureError(err, { level: 'warning', contexts: { workdir: { op: 'readdir' } } });
+    }
     return { path: real, parent: dirname(real), entries: [], error: 'permission denied' };
   }
   return { path: real, parent: dirname(real), entries };

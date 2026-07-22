@@ -189,7 +189,9 @@ export function createTerminalDriver(options: TerminalDriverOptions): TerminalDr
       rs.status = 'live';
       rs.scanner = spawned.integ?.precise ? createActivityScanner() : null;
       sessions.set(spec.id, rs);
-      void store.setStatus(spec.id, 'live');
+      void store.setStatus(spec.id, 'live').catch((err) =>
+        captureError(err, { level: 'error', contexts: { terminal: { sessionId: spec.id, phase: 'setStatus' } } }),
+      );
       channel.notify(spec.id, { type: 'status', status: 'live' });
       if (spawned.integ?.precise) channel.notify(spec.id, { type: 'activity', busy: false, integrated: true });
       consume(rs);
