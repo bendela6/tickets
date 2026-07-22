@@ -1,3 +1,4 @@
+import { getClient } from '@bendela6/signals-node';
 import { createChannel } from '../session-core/channel';
 import type { Channel, SessionStore as CoreSessionStore } from '../session-core/types';
 import type { AgentRun } from './agent-types';
@@ -145,6 +146,7 @@ export function createAgentDriver(options: AgentDriverOptions): AgentDriver {
         await finish(rs, rs.status === 'failed' ? 'failed' : 'exited');
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
+        getClient()?.captureError(err, { level: 'error', contexts: { agent: { sessionId: rs.id } } });
         publishMessage(rs, { type: 'error', message });
         await finish(rs, 'failed');
       }

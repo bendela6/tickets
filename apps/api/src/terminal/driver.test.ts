@@ -1,7 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createTerminalDriver } from './driver';
 import type { OutputFrame, TerminalStore } from './store';
 import type { PtyHandle, ServerFrame, Subscriber } from './types';
+
+const captureError = vi.fn();
+vi.mock('@bendela6/signals-node', () => ({ getClient: () => ({ captureError }) }));
 
 // ── Fakes ────────────────────────────────────────────────────────────────────
 
@@ -175,7 +178,8 @@ describe('terminal driver', () => {
     expect(frames).toContainEqual(expect.objectContaining({ type: 'activity', integrated: true }));
   });
 
-  it('marks a terminal failed instead of throwing when the PTY cannot spawn', async () => {
+  it('marks a terminal failed instead of throwing when the PTY cannot spawn, and captures it to Signals', async () => {
+    captureError.mockClear();
     const { store, finished } = makeStore();
     const drv = createTerminalDriver({
       runner: {
@@ -190,6 +194,10 @@ describe('terminal driver', () => {
     expect(() => drv.start({ id: 1, command: 'nope', cwd: '/w' })).not.toThrow();
     await tick();
     expect(finished).toContainEqual({ status: 'failed', exitCode: null });
+    expect(captureError).toHaveBeenCalledWith(
+      expect.any(Error),
+      { level: 'error', contexts: { terminal: { sessionId: 1 } } },
+    );
   });
 
   it('spawns the PTY with the api process environment inherited (never an empty env)', () => {

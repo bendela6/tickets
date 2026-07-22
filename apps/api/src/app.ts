@@ -94,14 +94,37 @@ export function buildApp(context: {
 
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof HttpError) {
-      // Expected client errors (4xx) are not reported to Signals.
+      // Expected client errors (4xx) — still worth visibility as a warning-level
+      // Signal (a spike of 404s/409s is a real product signal), just not at
+      // error severity like a genuine 500.
+      context.signals?.captureError(error, {
+        level: 'warning',
+        mechanism: 'middleware',
+        contexts: { http: { method: request.method, url: request.url, status: error.statusCode } },
+      });
       reply.status(error.statusCode).send({ error: error.message });
+      return;
+    }
+    // Fastify's own errors (body-parser, payload-too-large, content-type,
+    // etc.) carry a statusCode without being our HttpError — pass the real
+    // status through instead of flattening every non-HttpError into 500, and
+    // capture it as a warning like any other expected 4xx.
+    const fastifyErr = error as { statusCode?: number; message?: string };
+    const fastifyStatus = fastifyErr.statusCode;
+    if (typeof fastifyStatus === 'number' && fastifyStatus < 500) {
+      context.signals?.captureError(error, {
+        level: 'warning',
+        mechanism: 'middleware',
+        contexts: { http: { method: request.method, url: request.url, status: fastifyStatus } },
+      });
+      reply.status(fastifyStatus).send({ error: fastifyErr.message ?? 'request failed' });
       return;
     }
     console.error(error);
     context.signals?.captureError(error, {
+      level: 'error',
       mechanism: 'middleware',
-      contexts: { http: { method: request.method, url: request.url } },
+      contexts: { http: { method: request.method, url: request.url, status: 500 } },
     });
     reply.status(500).send({ error: 'internal error' });
   });

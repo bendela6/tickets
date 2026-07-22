@@ -1,3 +1,4 @@
+import { getClient } from '@bendela6/signals-node';
 import { createChannel } from '../session-core/channel';
 import type { Channel, SessionStore as CoreSessionStore } from '../session-core/types';
 import { createActivityScanner } from './activity-scanner';
@@ -167,6 +168,7 @@ export function createTerminalDriver(options: TerminalDriverOptions): TerminalDr
       // Log it — a swallowed spawn error is undebuggable — and record `failed`
       // so createSession never 500s and the row doesn't hang in `starting`.
       console.error(`terminal ${spec.id}: PTY spawn failed:`, err);
+      getClient()?.captureError(err, { level: 'error', contexts: { terminal: { sessionId: spec.id } } });
       void store.finishSession(spec.id, 'failed', null);
       return null;
     }

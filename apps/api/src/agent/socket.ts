@@ -1,4 +1,5 @@
 import websocketPlugin from '@fastify/websocket';
+import { getClient } from '@bendela6/signals-node';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { AgentDriver } from './driver';
 import type { ClientFrame, ServerFrame, Subscriber } from './types';
@@ -43,8 +44,11 @@ export function registerAgentSocket(app: FastifyInstance, context: { driver: Age
           let frame: ClientFrame;
           try {
             frame = JSON.parse(raw.toString()) as ClientFrame;
-          } catch {
-            return; // ignore malformed frames rather than tearing down the socket
+          } catch (err) {
+            // ignore malformed frames rather than tearing down the socket — but
+            // a client sending garbage is still worth seeing in Signals.
+            getClient()?.captureError(err, { level: 'warning', contexts: { socket: { scope: 'agent' } } });
+            return;
           }
 
           switch (frame.type) {
