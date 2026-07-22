@@ -24,16 +24,18 @@ COPY packages/signals/node/package.json packages/signals/node/
 COPY packages/signals/react/package.json packages/signals/react/
 RUN pnpm install --frozen-lockfile
 COPY . .
+# signals SDK packages — built once here so every downstream stage sees real
+# dist/ output: web-build needs @bendela6/signals-react resolvable at bundle
+# time (apps/web imports it), and the app stage's apps/signals runs from
+# source via tsx but its /sdk.js route resolves @bendela6/signals-browser's
+# built dist/sdk.js (createRequire) at runtime.
+RUN pnpm --filter './packages/signals/*' build
 
 FROM deps AS web-build
 RUN pnpm --filter @tickets/web build
 
 FROM deps AS app
 RUN apk add --no-cache nginx supervisor
-# signals SDK packages — apps/signals runs from source via tsx, but its
-# /sdk.js route resolves @bendela6/signals-browser's built dist/sdk.js
-# (createRequire) at runtime, so the workspace packages need building here.
-RUN pnpm --filter './packages/signals/*' build
 # self-hosted DB browser (static Go binary, baked in → works offline)
 COPY --from=sosedoff/pgweb:latest /usr/bin/pgweb /usr/bin/pgweb
 # built SPA bundle
