@@ -9,7 +9,8 @@ description: Use when starting, restarting, deploying, or screenshotting the app
 
 | What | Where | Notes |
 |---|---|---|
-| Deployed app (docker, single container `app`) | http://localhost:4610 | nginx serves the built web SPA and reverse-proxies `/api` to an internal node API (`127.0.0.1:4600` inside the container — not published to the host) |
+| Deployed app (docker, single container `app`) | http://localhost:4610 | nginx serves the built web SPA and reverse-proxies `/api` to an internal node API (`127.0.0.1:4600` inside the container — not published to the host) and `/signals-api` to the internal signals collector (`127.0.0.1:4640`) |
+| Deployed signals collector, direct | http://localhost:4640 | same process as `/signals-api` above, also published directly (`4640:4640`) so external apps' SDKs can send signals + fetch `/sdk.js` without going through `/signals-api`; `/health` and `/sdk.js` work on either path |
 | Dev web (vite) | http://localhost:4620 | `strictPort` — fails hard if 4620 is taken; part of `pnpm dev` (mprocs) |
 | Dev API (tsx watch) | http://localhost:4600 | part of `pnpm dev` (mprocs); dev web proxies `/api` here |
 | Dev signals collector | http://localhost:4640 | part of `pnpm dev` (mprocs) pane "signals"; own db `signals`, independent of the `tickets_dev` switch |
@@ -19,7 +20,7 @@ description: Use when starting, restarting, deploying, or screenshotting the app
 
 ## Commands
 
-- Full stack: `docker compose up -d` → postgres (`127.0.0.1:5532`, prod+dev dbs) + app on `:4610` serving everything by path: `/` (web), `/api`, `/studio`
+- Full stack: `docker compose up -d` → postgres (`127.0.0.1:5532`, prod+dev dbs) + app on `:4610` serving everything by path: `/` (web), `/api`, `/signals-api`, `/studio` — plus the signals collector published directly on `:4640`
 - Deploy current source to 4610: `sh scripts/deploy-web.sh` (`docker compose up -d --build app`) — at phase boundaries, not every commit
 - Dev loop: `pnpm dev` — mprocs dashboard with panes for api (`:4600`), web (`:4620`), studio, watchers, all against `tickets_dev` (`POSTGRES_DATABASE` in root `.env`)
 - DB: `pnpm db:migrate` / `db:seed` / `db:import` (hit `127.0.0.1:5532` per `.env` — default `.env.example` points at `tickets_dev`, not prod)
@@ -31,5 +32,5 @@ description: Use when starting, restarting, deploying, or screenshotting the app
 - **Dev web with `pnpm dev` down → `/api` proxy ECONNREFUSED.** Vite proxies to `127.0.0.1:4600`; the mprocs api pane must be running.
 - **Port 4620 busy → vite exits** (strictPort). Kill the stale dev server; don't switch ports — the verify pipeline and docs assume 4620.
 - **One postgres, two databases.** `tickets` is prod (deployed app), `tickets_dev` is dev (local tooling) — same server, same `127.0.0.1:5532`. Double-check `POSTGRES_DATABASE` before running migrations/seeds against a fresh `.env`; never point local tooling at `tickets` by accident.
-- **One published port in the deployed stack: `:4610`.** It serves web (`/`), `/api`, and `/studio` (pgweb) — the api and pgweb are internal to the container, proxied by nginx. pgweb is a self-hosted Postgres browser (static Go binary baked into the image), so `/studio` needs no internet. (Earlier this used proxied Drizzle Studio, whose hosted UI required internet + an origin-root method-routing hack — replaced by pgweb.)
+- **Two published ports in the deployed stack: `:4610` and `:4640`.** `:4610` serves web (`/`), `/api`, `/signals-api`, and `/studio` (pgweb) — api, signals, and pgweb are internal to the container, proxied by nginx. pgweb is a self-hosted Postgres browser (static Go binary baked into the image), so `/studio` needs no internet. (Earlier this used proxied Drizzle Studio, whose hosted UI required internet + an origin-root method-routing hack — replaced by pgweb.) `:4640` is the signals collector published directly, same process as `/signals-api` — external SDKs hit it without the `/signals-api` prefix rewrite.
 - Screenshot/measurement sessions should target **4620** (live source) unless explicitly reviewing the deployed build.
