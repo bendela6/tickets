@@ -1,4 +1,3 @@
-import { cn } from '../cn';
 import type { CollectedDemo } from './types';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;

@@ -21,6 +21,18 @@ function validate(mod: unknown): { ok: true; demo: DemoModule } | { ok: false; e
       return { ok: false, error: 'each state needs { name: string, render: () => ReactNode }' };
     }
   }
+  if (m.playground !== undefined) {
+    const p = m.playground as Partial<import('./controls').AnyPlayground> | null;
+    if (!p || typeof p !== 'object' || typeof p.render !== 'function' || !p.controls || typeof p.controls !== 'object') {
+      return { ok: false, error: 'playground must be { controls, render }' };
+    }
+    for (const def of Object.values(p.controls)) {
+      const kind = (def as { kind?: unknown })?.kind;
+      if (kind !== 'select' && kind !== 'boolean' && kind !== 'text' && kind !== 'number') {
+        return { ok: false, error: `playground control has unknown kind "${String(kind)}"` };
+      }
+    }
+  }
   return { ok: true, demo: m as DemoModule };
 }
 
@@ -42,6 +54,20 @@ export function sortDemos(demos: CollectedDemo[]): CollectedDemo[] {
   return [...demos].sort(compare);
 }
 
+// Guard a (possibly merged) list against slug collisions, then sort. A later
+// duplicate would double-render with colliding DOM ids and React keys — turn
+// it into an error card instead.
+export function prepareDemos(demos: CollectedDemo[]): CollectedDemo[] {
+  const seen = new Set<string>();
+  const guarded = demos.map((d) => {
+    if ('error' in d) return d;
+    if (seen.has(d.slug)) return { path: `#${d.slug}`, error: `duplicate demo slug "${d.slug}"` };
+    seen.add(d.slug);
+    return d;
+  });
+  return sortDemos(guarded);
+}
+
 export function collectDemos(glob: Record<string, unknown>): CollectedDemo[] {
   const collected: CollectedDemo[] = Object.entries(glob).map(([path, mod]) => {
     const v = validate(mod);
@@ -51,7 +77,8 @@ export function collectDemos(glob: Record<string, unknown>): CollectedDemo[] {
       slug,
       meta: v.demo.meta,
       states: v.demo.states.map((s) => ({ ...s, slug: `${slug}--${kebab(s.name)}` })),
+      playground: v.demo.playground,
     };
   });
-  return sortDemos(collected);
+  return prepareDemos(collected);
 }
