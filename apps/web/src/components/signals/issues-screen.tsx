@@ -179,6 +179,7 @@ export function IssuesScreen() {
                   }
                   onResolve={() => patchStatus.mutate({ id: issue.id, status: 'resolved' })}
                   onIgnore={() => patchStatus.mutate({ id: issue.id, status: 'ignored' })}
+                  onReopen={() => patchStatus.mutate({ id: issue.id, status: 'open' })}
                 />
               ))}
             </div>
