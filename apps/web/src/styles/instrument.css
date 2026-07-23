@@ -503,6 +503,10 @@
     border-radius: 999px;
     padding: 1px 6px;
   }
+  /* Ticket-reference chips are interactive; mention chips stay non-clickable. */
+  .rt [data-ticket-ref] {
+    cursor: pointer;
+  }
 
   /* Task lists: Tiptap renders `<ul data-type="taskList">` with per-item
      `<li data-checked>` and a real checkbox input — restore the marker-free
