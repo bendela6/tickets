@@ -59,6 +59,12 @@ export function installConsoleCapture(client: SignalsClient, floor: SignalLevel)
     return () => {};
   }
 
+  // `floor` often originates from an unvalidated env knob (SIGNALS_LOG_LEVEL /
+  // VITE_SIGNALS_LOG_LEVEL) cast to SignalLevel. A garbage value would make
+  // LEVEL_RANK[floor] undefined and, since `n < undefined` is always false,
+  // capture EVERYTHING (info+) — a noise flood. Fall back to the 'warning' floor.
+  const floorRank = LEVEL_RANK[floor] ?? LEVEL_RANK.warning;
+
   const originals: Partial<Record<ConsoleMethod, (...args: unknown[]) => void>> = {};
   const wrapped: Partial<Record<ConsoleMethod, (...args: unknown[]) => void>> = {};
 
@@ -77,7 +83,7 @@ export function installConsoleCapture(client: SignalsClient, floor: SignalLevel)
 
       if (capturing) return;
       const level = METHOD_LEVEL[method];
-      if (LEVEL_RANK[level] < LEVEL_RANK[floor]) return;
+      if (LEVEL_RANK[level] < floorRank) return;
 
       capturing = true;
       try {
