@@ -17,6 +17,17 @@ import { uploadImage } from './image-upload';
 import { LinkEditPopover } from './link-popover';
 import { buildSuggestionHooks, type RichTextSuggestions } from './suggestions';
 import { Toolbar, type ToolbarVariant } from './toolbar';
+import {
+  addUploadDecoration,
+  createUploadDecorationsExtension,
+  failUploadDecoration,
+  findUploadPos,
+  progressUploadDecoration,
+  removeUploadDecoration,
+  retryUploadDecoration,
+  type UploadHandlers,
+  type UploadHandlersRef,
+} from './upload-decorations';
 
 // Renders the toolbar as a bottom action row (border-top hairline, bg-app)
 // alongside a submit button and a ⌘↩ hint instead of the default top
@@ -62,7 +73,6 @@ export function RichTextEditor({
   composer,
 }: RichTextEditorProps) {
   const [focused, setFocused] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
   const featureList = resolveFeatures(features);
   const toolbarVariant: ToolbarVariant = features === 'compact' ? 'compact' : 'full';
   // handlePaste/handleDrop close over this ref rather than the `editor`
@@ -101,12 +111,22 @@ export function RichTextEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- re-check only when the stored value itself changes
   }, [value]);
 
+  // Ref-forwarded the same way placeholderRef is: the upload decorations
+  // plugin (built once, below, since it must be a stable extension identity)
+  // calls handlersRef.current.onRetry/onRemove, which are reassigned to
+  // fresh closures every render so they always see the latest editorRef/
+  // uploadImage state without the plugin itself needing to be rebuilt.
+  const uploadHandlersRef = useRef<UploadHandlers>({ onRetry: () => {}, onRemove: () => {} }) as UploadHandlersRef;
+  const uploadSeqRef = useRef(0);
+
   const extensions = useMemo(
-    () =>
-      buildExtensions(featureList, buildSuggestionHooks(suggestions), {
+    () => [
+      ...buildExtensions(featureList, buildSuggestionHooks(suggestions), {
         placeholder: () => placeholderRef.current ?? '',
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- feature list + suggestion identity are stable per surface; placeholder is read live from placeholderRef so it isn't a dependency
+      createUploadDecorationsExtension(uploadHandlersRef),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- feature list + suggestion identity are stable per surface; placeholder is read live from placeholderRef so it isn't a dependency; uploadHandlersRef is a stable ref
     [],
   );
 
@@ -130,39 +150,90 @@ export function RichTextEditor({
   // for an async lifecycle event just to read the doc it was created with.
   const initialRef = useRef<string | null>(null);
 
-  // Shared by paste, drop, and the toolbar's hidden file input. Inserts
-  // nothing while the upload is in flight (spec rule: no dangling
-  // placeholder node that could survive a failed/cancelled upload) — the
-  // image node only lands once the upload resolves. `pos` pins the drop
-  // coordinates; omitted for paste/toolbar so it falls back to the caret.
+  // Runs (or re-runs, on Retry) the actual upload for a file already backing
+  // an upload-decorations widget at `id`. Position is deliberately NOT
+  // captured here — it's re-read from the decoration (`findUploadPos`) at
+  // both progress time and success time, since DecorationSet.map() has kept
+  // it correct through any edits that happened while the request was in
+  // flight (design§06: "the block never jumps").
+  const runUpload = (id: string, file: File): void => {
+    uploadImage(file, (loaded, total) => {
+      const instance = editorRef.current;
+      if (instance === null || instance.isDestroyed) {
+        return;
+      }
+      progressUploadDecoration(instance.view, id, total > 0 ? (loaded / total) * 100 : 0);
+    })
+      .then((result) => {
+        const instance = editorRef.current;
+        if (instance === null || instance.isDestroyed) {
+          return;
+        }
+        const insertPos = findUploadPos(instance.state, id) ?? instance.state.selection.from;
+        removeUploadDecoration(instance.view, id);
+        instance
+          .chain()
+          .focus()
+          .insertContentAt(insertPos, { type: 'image', attrs: { src: result.url, alt: file.name } })
+          .run();
+      })
+      .catch(() => {
+        const instance = editorRef.current;
+        if (instance === null || instance.isDestroyed) {
+          return;
+        }
+        // Design§06 "failed": the in-place slot (danger tint, Retry/Remove)
+        // fully replaces the old inline error line under the editor — one
+        // failure surface instead of two disconnected ones, and it stays
+        // anchored right where the image would have landed.
+        failUploadDecoration(instance.view, id);
+      });
+  };
+
+  uploadHandlersRef.current = {
+    onRetry: (id, file) => {
+      const instance = editorRef.current;
+      if (instance === null || instance.isDestroyed) {
+        return;
+      }
+      retryUploadDecoration(instance.view, id);
+      runUpload(id, file);
+    },
+    onRemove: (id) => {
+      const instance = editorRef.current;
+      if (instance === null || instance.isDestroyed) {
+        return;
+      }
+      removeUploadDecoration(instance.view, id);
+    },
+  };
+
+  // Shared by paste, drop, and the toolbar's hidden file input. Never
+  // inserts a doc node for a pending/failed upload (spec rule: no dangling
+  // placeholder that could survive a failed/cancelled upload) — instead each
+  // file gets its own upload-decorations widget (ProseMirror widget
+  // decoration, pure UI) at the insert position; the real image node only
+  // lands once the upload resolves. `pos` pins the drop coordinates; omitted
+  // for paste/toolbar so it falls back to the caret.
   //
   // The editorRef survives unmount pointing at a destroyed editor (Tiptap's
   // Editor.destroy() nulls its commandManager but doesn't null the instance
-  // itself). Guard against late-resolving uploads with both null check and
-  // isDestroyed flag to prevent throws inside the promise chain.
+  // itself). Guard against a missing/destroyed editor with both a null check
+  // and isDestroyed flag before touching it.
   const insertImagesFromFiles = (files: FileList | null | undefined, pos?: number): boolean => {
     const images = files ? Array.from(files).filter((file) => file.type.startsWith('image/')) : [];
     if (images.length === 0) {
       return false;
     }
-    setUploadError(null);
+    const instance = editorRef.current;
+    if (instance === null || instance.isDestroyed) {
+      return true;
+    }
     for (const file of images) {
-      uploadImage(file)
-        .then((result) => {
-          const instance = editorRef.current;
-          if (instance === null || instance.isDestroyed) {
-            return;
-          }
-          const insertPos = pos ?? instance.state.selection.from;
-          instance
-            .chain()
-            .focus()
-            .insertContentAt(insertPos, { type: 'image', attrs: { src: result.url, alt: file.name } })
-            .run();
-        })
-        .catch((error: unknown) => {
-          setUploadError(error instanceof Error ? error.message : 'Image upload failed');
-        });
+      const insertPos = pos ?? instance.state.selection.from;
+      const id = `up-${++uploadSeqRef.current}`;
+      addUploadDecoration(instance.view, id, file, insertPos);
+      runUpload(id, file);
     }
     return true;
   };
@@ -328,9 +399,6 @@ export function RichTextEditor({
           </div>
         ) : null}
       </div>
-      {uploadError !== null ? (
-        <p className="m-0 mt-1 font-sans text-meta text-danger">{uploadError}</p>
-      ) : null}
       <LinkEditPopover editor={editor} />
     </div>
   );
