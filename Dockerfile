@@ -17,6 +17,7 @@ COPY apps/web/package.json apps/web/
 COPY apps/mcp/package.json apps/mcp/
 COPY apps/signals/package.json apps/signals/
 COPY packages/db/package.json packages/db/
+COPY packages/richtext/package.json packages/richtext/
 COPY packages/web/form/package.json packages/web/form/
 COPY packages/signals/core/package.json packages/signals/core/
 COPY packages/signals/browser/package.json packages/signals/browser/
