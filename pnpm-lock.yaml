@@ -240,6 +240,9 @@ importers:
       '@tickets/richtext':
         specifier: workspace:*
         version: link:../../packages/richtext
+      '@tickets/ui':
+        specifier: workspace:*
+        version: link:../../packages/web/ui
       '@tiptap/react':
         specifier: ^3.28.0
         version: 3.28.0(@floating-ui/dom@1.7.6)(@tiptap/core@3.28.0(@tiptap/pm@3.28.0))(@tiptap/pm@3.28.0)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)

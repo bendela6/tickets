@@ -44,6 +44,10 @@
       "$type": "color",
       "$value": "#e9e7fa"
     },
+    "folder": {
+      "$type": "color",
+      "$value": "#c29a2e"
+    },
     "danger": {
       "$type": "color",
       "$value": "#c0382e"
@@ -303,6 +307,10 @@
     "accent-subtle-dark": {
       "$type": "color",
       "$value": "#2c2a4a"
+    },
+    "folder-dark": {
+      "$type": "color",
+      "$value": "#dfc060"
     },
     "on-accent-dark": {
       "$type": "color",

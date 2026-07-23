@@ -44,6 +44,10 @@
       "$type": "color",
       "$value": "{p.accent-subtle-dark}"
     },
+    "folder": {
+      "$type": "color",
+      "$value": "{p.folder-dark}"
+    },
     "on-accent": {
       "$type": "color",
       "$value": "{p.on-accent-dark}"
