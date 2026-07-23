@@ -12,12 +12,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const srcDir = path.join(__dirname, '..', 'src');
+const srcDir = path.join(__dirname, '..', '..', '..', '..', 'apps', 'web', 'src');
 
 const EXCLUDE_RES = [
   /\.test\./,
-  /(^|\/)src\/styles\/tokens\//,
-  /(^|\/)src\/styles\/instrument\.css$/,
 ];
 
 function toPosix(p) {

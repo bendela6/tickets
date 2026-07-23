@@ -12,7 +12,7 @@ import path from 'node:path';
 import { resolveTokenMaps } from './build-tokens.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.join(__dirname, '..', '..', '..');
+const repoRoot = path.join(__dirname, '..', '..', '..', '..');
 const designHtmlPath = path.join(repoRoot, 'docs', 'design', 'design-system.html');
 
 // resolveTokenMaps() returns `name -> { value, type }`; this check only

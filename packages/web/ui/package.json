@@ -4,13 +4,18 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./tokens.css": "./src/tokens.css",
     "./cn": "./src/cn.ts",
     "./variants": "./src/variants.ts",
     "./runtime-style": "./src/runtime-style.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "tokens:build": "node scripts/build-tokens.mjs",
+    "tokens:lint": "node scripts/scan-hardcoded-values.mjs",
+    "tokens:check": "node scripts/check-design-tokens.mjs",
+    "tokens:verify": "node scripts/build-tokens.mjs && git diff --exit-code src/tokens.css && node scripts/scan-hardcoded-values.mjs && node scripts/check-design-tokens.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

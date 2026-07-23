@@ -14,7 +14,14 @@ export type SettingsTabProps = {
   projectKey: string;
 };
 
-const SWATCHES = ['#4E46C6', '#2E7D4F', '#C25425', '#A03028', '#2E6FCC', '#79756A'];
+const SWATCHES = [
+  '#4E46C6',
+  '#2E7D4F',
+  '#C25425',
+  '#A03028',
+  '#2E6FCC',
+  '#79756A',
+];
 
 function slugify(name: string): string {
   return name

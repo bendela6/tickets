@@ -20,7 +20,14 @@ import { StatusBadge } from '../../ui/status-badge';
 import type { SettingsTabProps } from './types-tab';
 
 const KIND_ORDER: StatusKind[] = ['todo', 'active', 'blocked', 'done', 'dropped'];
-const SWATCHES = ['#4E46C6', '#2E7D4F', '#C25425', '#A03028', '#2E6FCC', '#79756A'];
+const SWATCHES = [
+  '#4E46C6',
+  '#2E7D4F',
+  '#C25425',
+  '#A03028',
+  '#2E6FCC',
+  '#79756A',
+];
 
 // Combobox value for "starts here" — fromOptionId: null on the wire, meaning
 // this edge is a creation/entry move rather than a move between two options.
