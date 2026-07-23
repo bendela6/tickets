@@ -277,15 +277,17 @@ function collectViolations(root) {
       violations.push({ key: `${relPath}::${hit.text}`, line: `${relPath}:${hit.line}: ${hit.text}` });
     }
   }
-  return violations;
+  return { violations, fileCount: files.length };
 }
 
 function main() {
   const updateBaseline = process.argv.includes('--update-baseline');
   let failed = false;
+  let totalFiles = 0;
 
   for (const root of ROOTS) {
-    const violations = collectViolations(root);
+    const { violations, fileCount } = collectViolations(root);
+    totalFiles += fileCount;
 
     if (!root.baselined) {
       for (const v of violations) console.log(v.line);
@@ -315,7 +317,7 @@ function main() {
   }
 
   if (failed) process.exit(1);
-  console.log('ok: no new style-context hardcoded values');
+  console.log(`ok: no new style-context hardcoded values (${totalFiles} files scanned)`);
 }
 
 const isMain = process.argv[1] === fileURLToPath(import.meta.url);
