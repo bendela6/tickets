@@ -49,7 +49,26 @@ it('uses VITE_SIGNALS_DSN directly when set, skipping ensureAppDsn', async () =>
     environment: import.meta.env.MODE,
     captureConsole: true,
     logLevel: 'warning',
+    // unset in dev/test — frames aren't minified there, so there's nothing
+    // for the collector to symbolicate and no release to match maps against
+    release: undefined,
   });
+});
+
+it('passes VITE_SIGNALS_RELEASE through as release so uploaded source maps can be matched', async () => {
+  vi.stubEnv('VITE_SIGNALS_DSN', 'sgl://k@127.0.0.1:4640/1');
+  vi.stubEnv('VITE_SIGNALS_RELEASE', 'abc1234');
+  const initWebSignals = await importInitWebSignals();
+  await initWebSignals();
+  expect(initSignalsMock).toHaveBeenCalledWith(expect.objectContaining({ release: 'abc1234' }));
+});
+
+it('sends no release when VITE_SIGNALS_RELEASE is an empty string', async () => {
+  vi.stubEnv('VITE_SIGNALS_DSN', 'sgl://k@127.0.0.1:4640/1');
+  vi.stubEnv('VITE_SIGNALS_RELEASE', '');
+  const initWebSignals = await importInitWebSignals();
+  await initWebSignals();
+  expect(initSignalsMock).toHaveBeenCalledWith(expect.objectContaining({ release: undefined }));
 });
 
 it('passes VITE_SIGNALS_LOG_LEVEL through as logLevel when set', async () => {

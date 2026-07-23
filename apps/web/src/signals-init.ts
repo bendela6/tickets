@@ -22,7 +22,15 @@ export async function initWebSignals(): Promise<void> {
 
   const logLevel = (import.meta.env.VITE_SIGNALS_LOG_LEVEL as SignalLevel | undefined) ?? 'warning';
 
-  initSignals({ dsn, environment: import.meta.env.MODE, captureConsole: true, logLevel });
+  // The release ties a reported frame back to the source maps uploaded for
+  // this build: the collector only symbolicates when a signal carries a
+  // release AND artifacts exist for that (app, release) pair
+  // (apps/signals/src/routes/ingest.routes.ts). Baked in at build time by the
+  // Dockerfile/deploy script; absent in dev, where frames aren't minified
+  // anyway and there's nothing to symbolicate.
+  const release = import.meta.env.VITE_SIGNALS_RELEASE || undefined;
+
+  initSignals({ dsn, environment: import.meta.env.MODE, captureConsole: true, logLevel, release });
 
   if (!mountEventEmitted) {
     mountEventEmitted = true;

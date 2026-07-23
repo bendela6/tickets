@@ -4,6 +4,15 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    // 'hidden' emits .map files but omits the //# sourceMappingURL comment, so
+    // browsers never fetch them and the app's sources aren't exposed to anyone
+    // opening devtools. The maps exist purely to be uploaded to the Signals
+    // collector, which symbolicates minified frames server-side at ingest
+    // (apps/signals/src/symbolicate.ts matches a map to a frame by basename).
+    // The deploy script uploads them and strips them from the served bundle.
+    sourcemap: 'hidden',
+  },
   server: {
     // 4610 by default; during the redesign the dockerized web owns 4610, so the
     // dev server runs on WEB_DEV_PORT=4620 and proxies /api to the docker api.

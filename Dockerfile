@@ -33,6 +33,11 @@ COPY . .
 RUN pnpm --filter './packages/signals/*' build
 
 FROM deps AS web-build
+# Baked into the bundle so every signal the browser reports carries this
+# release; the deploy script uploads the matching source maps under the SAME
+# value, which is what lets the collector symbolicate minified frames.
+ARG SIGNALS_RELEASE=""
+ENV VITE_SIGNALS_RELEASE=$SIGNALS_RELEASE
 RUN pnpm --filter @tickets/web build
 
 FROM deps AS app
@@ -41,6 +46,13 @@ RUN apk add --no-cache nginx supervisor
 COPY --from=sosedoff/pgweb:latest /usr/bin/pgweb /usr/bin/pgweb
 # built SPA bundle
 COPY --from=web-build /app/apps/web/dist /usr/share/nginx/html
+# Source maps are for the collector, not the public: stage them where the
+# deploy script's upload step can read them, then strip them from the served
+# root so nginx can never hand them out. ('hidden' sourcemaps already omit the
+# sourceMappingURL comment, so nothing references them either way.)
+RUN mkdir -p /app/sourcemaps \
+  && find /usr/share/nginx/html -name '*.map' -exec mv {} /app/sourcemaps/ \; \
+  && echo "staged $(ls -1 /app/sourcemaps | wc -l) source maps"
 # infra
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/tickets.conf
