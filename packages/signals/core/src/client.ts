@@ -15,6 +15,10 @@ export interface ClientOptions {
   sessionId?: string;
   now?: () => Date;
   isInApp?: (file: string) => boolean;
+  // opt-in: patch console.warn/error (and log/info, depending on logLevel) to
+  // also emit `log` signals. See console-capture.ts / installConsoleCapture.
+  captureConsole?: boolean;
+  logLevel?: SignalLevel;
 }
 
 export interface SignalsClient {

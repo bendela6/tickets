@@ -6,6 +6,7 @@ export { createTransport } from './transport';
 export type { Transport, TransportOptions } from './transport';
 export { createClient, generateSessionId } from './client';
 export type { ClientOptions, SignalsClient } from './client';
+export { installConsoleCapture } from './console-capture';
 export type {
   Signal,
   SignalKind,
