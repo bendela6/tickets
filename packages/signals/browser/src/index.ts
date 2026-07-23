@@ -1,5 +1,6 @@
 import {
   createClient,
+  installConsoleCapture,
   parseDsn,
   type Breadcrumb,
   type CaptureOptions,
@@ -12,8 +13,12 @@ import { installInstrumentation, type CaptureConsoleMode } from './instrument';
 
 let current: { client: SignalsClient; uninstall: () => void } | null = null;
 
-export type BrowserInitOptions = Omit<ClientOptions, 'platform' | 'sdk' | 'transport'> & {
-  captureConsole?: CaptureConsoleMode;
+export type BrowserInitOptions = Omit<ClientOptions, 'platform' | 'sdk' | 'transport' | 'captureConsole' | 'logLevel'> & {
+  // `CaptureConsoleMode` ('breadcrumbs' | 'both' | 'off') is this package's
+  // pre-existing breadcrumb-oriented console capture; `true` opts into the
+  // core SDK's floor-gated `log`-signal capture (see logLevel) on top of it.
+  captureConsole?: CaptureConsoleMode | boolean;
+  logLevel?: SignalLevel;
   transport?: Transport;
 };
 
@@ -22,8 +27,10 @@ export function initSignals(options: BrowserInitOptions): SignalsClient {
     current?.uninstall();
     current = null;
 
+    const { captureConsole, logLevel, ...rest } = options;
+
     const client = createClient({
-      ...options,
+      ...rest,
       platform: { runtime: 'browser', browser: navigator.userAgent, url: location.href },
       sdk: { name: '@bendela6/signals-browser', version: '0.1.0' },
     });
@@ -35,10 +42,20 @@ export function initSignals(options: BrowserInitOptions): SignalsClient {
       // disabled client; no beacon target
     }
 
-    const uninstall = installInstrumentation(client, {
-      captureConsole: options.captureConsole ?? 'breadcrumbs',
+    const legacyMode: CaptureConsoleMode = typeof captureConsole === 'string' ? captureConsole : 'breadcrumbs';
+    const uninstallInstrumentation = installInstrumentation(client, {
+      captureConsole: legacyMode,
       ingestUrl,
     });
+
+    const uninstallConsoleCapture = captureConsole === true
+      ? installConsoleCapture(client, logLevel ?? 'warning')
+      : null;
+
+    const uninstall = () => {
+      uninstallInstrumentation();
+      uninstallConsoleCapture?.();
+    };
 
     current = { client, uninstall };
     return client;
