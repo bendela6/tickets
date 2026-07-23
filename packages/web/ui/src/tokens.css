@@ -8,6 +8,10 @@
 @import 'tailwindcss/preflight.css' layer(base);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
+/* Every consumer's Tailwind build must scan this package's own sources —
+   demo files today, the component library in P3. Relative to this file. */
+@source './';
+
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
 /* App-wide base on top of preflight. This block shares the base layer with
