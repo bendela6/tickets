@@ -337,6 +337,11 @@
   --radius-chip: 4px;
   --radius-tile: 6px;
   --radius-overlay: 10px;
+  /* Letter-spacing for uppercase labels — names avoid Tailwind defaults
+     (tracking-wide etc.). label matches text-label's baked .06em. */
+  --tracking-label: 0.06em;
+  --tracking-caps: 0.08em;
+  --tracking-mono-label: 0.09em;
 }
 
 @keyframes ai-spin {
