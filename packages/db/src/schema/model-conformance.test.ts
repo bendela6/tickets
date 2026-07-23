@@ -32,6 +32,10 @@ const TYPE_MAP: Record<string, string> = {
   jsonb: 'jsonb',
   uuid: 'uuid',
   'timestamp with time zone': 'timestamptz',
+  // records.attachments.data — drizzle's customType({ dataType: () => 'bytea' })
+  // prints its dataType() return value verbatim via getSQLType(), so this one
+  // spells identically on both sides.
+  bytea: 'bytea',
 };
 
 // model.enums grouped by bare name — a bare name can have more than one entry

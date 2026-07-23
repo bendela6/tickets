@@ -6,8 +6,8 @@ describe('items-platform model', () => {
   const model = loadModel();
   const byId = new Map(model.entities.map((e) => [e.id, e]));
 
-  it('has all 29 entities — 22 product tables plus the split', () => {
-    expect(model.entities).toHaveLength(29);
+  it('has all 30 entities — 22 product tables, attachments, plus the split', () => {
+    expect(model.entities).toHaveLength(30);
     expect(byId.has('records.item_values')).toBe(true);
     expect(byId.has('structure.option_transitions')).toBe(true);
     expect(byId.has('history.outbox')).toBe(true);

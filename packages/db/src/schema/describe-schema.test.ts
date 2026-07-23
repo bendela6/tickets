@@ -214,6 +214,7 @@ describe('describeSchema schemas', () => {
       item_links: 'records',
       comments: 'records',
       comment_reactions: 'records',
+      attachments: 'records',
       commands: 'history',
       events: 'history',
       outbox: 'history',

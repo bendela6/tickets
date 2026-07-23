@@ -2002,6 +2002,69 @@
       "indexes": []
     },
     {
+      "id": "records.attachments",
+      "label": "attachments",
+      "group": "rc",
+      "description": "Editor image uploads; no item FK, docs reference by URL.",
+      "schema": "records",
+      "x": 2702,
+      "y": 700,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "filename",
+          "type": "text",
+          "title": "Filename",
+          "description": "Original upload filename.",
+          "nullable": false
+        },
+        {
+          "name": "mime",
+          "type": "text",
+          "title": "Mime",
+          "description": "Content type.",
+          "nullable": false
+        },
+        {
+          "name": "size",
+          "type": "integer",
+          "title": "Size",
+          "description": "Byte size.",
+          "nullable": false
+        },
+        {
+          "name": "data",
+          "type": "bytea",
+          "title": "Data",
+          "description": "File bytes.",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "When uploaded.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
       "id": "records.item_links",
       "label": "item_links",
       "group": "im",

@@ -52,7 +52,7 @@ export const SCHEMA_GROUPS: SchemaGroup[] = [
     key: 'rc',
     label: 'Records',
     color: 'orange',
-    tables: ['items', 'item_values', 'comments', 'comment_reactions', 'item_links'],
+    tables: ['items', 'item_values', 'comments', 'comment_reactions', 'item_links', 'attachments'],
   },
   {
     key: 'hi',
