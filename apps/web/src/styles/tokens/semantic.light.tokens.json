@@ -327,6 +327,10 @@
     "on-opt-gray": {
       "$type": "color",
       "$value": "{p.raised}"
+    },
+    "highlight": {
+      "$type": "color",
+      "$value": "{p.highlight}"
     }
   }
 }

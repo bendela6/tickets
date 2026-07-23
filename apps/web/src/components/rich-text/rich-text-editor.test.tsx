@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RichTextEditor } from './rich-text-editor';
 import { RichTextView } from './rich-text-view';
@@ -25,11 +26,126 @@ describe('RichTextEditor', () => {
     expect(onSave).not.toHaveBeenCalled(); // unchanged → no save
   });
 
-  it('compact features hide heading control; full shows it', () => {
+  it('compact features hide the block-type select; full shows it', () => {
     const { rerender } = render(<RichTextEditor value="" onSave={vi.fn()} features="full" />);
-    expect(screen.getByRole('button', { name: /heading/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Paragraph' })).toBeInTheDocument();
     rerender(<RichTextEditor value="" onSave={vi.fn()} features="compact" />);
-    expect(screen.queryByRole('button', { name: /heading/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Paragraph' })).not.toBeInTheDocument();
+  });
+
+  it('block-type select applies a heading via editor commands and reflects the cursor', async () => {
+    const user = userEvent.setup();
+    render(<RichTextEditor value="" onSave={vi.fn()} features="full" />);
+    await user.click(screen.getByRole('button', { name: 'Paragraph' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Heading 2' }));
+    expect(screen.getByRole('heading', { level: 2 })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Heading 2' })).toBeInTheDocument();
+  });
+
+  it('full config renders the overflow "+" menu with highlight/color/callout/collapsible/divider', async () => {
+    const user = userEvent.setup();
+    render(<RichTextEditor value="" onSave={vi.fn()} features="full" />);
+    await user.click(screen.getByRole('button', { name: /more formatting/i }));
+    expect(await screen.findByRole('menuitem', { name: /highlight/i })).toBeInTheDocument();
+    expect(screen.getByText('Text color')).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /callout/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /collapsible section/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /divider/i })).toBeInTheDocument();
+  });
+
+  it('compact config has no overflow menu and drops underline/ordered-list/quote from the strip', () => {
+    render(<RichTextEditor value="" onSave={vi.fn()} features="compact" />);
+    expect(screen.queryByRole('button', { name: /more formatting/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'underline' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'orderedList' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'blockquote' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'bold' })).toBeInTheDocument();
+  });
+
+  it('compact config renders an "@" control that inserts the mention trigger', async () => {
+    const user = userEvent.setup();
+    render(<RichTextEditor value="" onSave={vi.fn()} features="compact" />);
+    await user.click(screen.getByRole('button', { name: 'at' }));
+    expect(document.querySelector('[contenteditable="true"]')!.textContent).toBe('@');
+  });
+
+  it('separators collapse with their group instead of doubling up or trailing', () => {
+    // link, lists (bulletList+orderedList), blocks (codeBlock) — no headings
+    // (no block-select) and no highlight/color/callout/details/divider (no
+    // overflow "+"), so the strip should render exactly 3 group clusters
+    // with 2 separators between them — none leading, none trailing.
+    render(<RichTextEditor value="" onSave={vi.fn()} features={['link', 'lists', 'codeBlock']} />);
+    const toolbarWrap = document.querySelector('.rt')!.previousElementSibling!;
+    const toolbarRoot = toolbarWrap.firstElementChild!;
+    const clusters = toolbarRoot.querySelectorAll(':scope > div');
+    expect(clusters).toHaveLength(3);
+    expect(toolbarRoot.firstElementChild).toBe(clusters[0]); // no leading separator
+    expect(toolbarRoot.lastElementChild).toBe(clusters[2]); // no trailing separator
+  });
+
+  it('focused container gets the accent border + halo; blur restores the hairline', async () => {
+    const user = userEvent.setup();
+    render(<RichTextEditor value="" onSave={vi.fn()} />);
+    const container = document.querySelector('.rt')!.parentElement!;
+    expect(container.className).toContain('border-hairline');
+    await user.click(document.querySelector('[contenteditable="true"]')!);
+    expect(container.className).toContain('border-accent');
+    expect(container.className).toContain('ring-accent-subtle');
+    await user.tab();
+    expect(container.className).toContain('border-hairline');
+  });
+
+  it('disabled container fills with the page background and dims the toolbar', () => {
+    render(<RichTextEditor value="" onSave={vi.fn()} disabled />);
+    const container = document.querySelector('.rt')!.parentElement!;
+    expect(container.className).toContain('bg-app');
+    const toolbarWrap = document.querySelector('.rt')!.previousElementSibling!;
+    expect(toolbarWrap.className).toContain('opacity-45');
+    expect(document.querySelector('.rt')!.className).toContain('cursor-not-allowed');
+  });
+
+  it('composer renders the toolbar in a bottom action row with the submit button and ⌘↩ hint', () => {
+    const onSubmit = vi.fn();
+    render(
+      <RichTextEditor
+        value=""
+        onSave={vi.fn()}
+        features="compact"
+        composer={{ onSubmit }}
+      />,
+    );
+    expect(screen.getByText('⌘↩')).toBeInTheDocument();
+    const button = screen.getByRole('button', { name: 'Comment' });
+    expect(button).toBeInTheDocument();
+    // Bottom row, not top: the editor content comes BEFORE the toolbar in
+    // DOM order when composer is set.
+    const content = document.querySelector('.rt')!;
+    const actionRow = content.nextElementSibling!;
+    expect(actionRow.contains(button)).toBe(true);
+    expect(actionRow.querySelector('button[aria-label="bold"]')).not.toBeNull();
+  });
+
+  it('composer submit button calls onSubmit with the live serialized doc', async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    render(<RichTextEditor value="" onSave={vi.fn()} features="compact" composer={{ onSubmit }} />);
+    await user.type(document.querySelector('[contenteditable="true"]')!, 'hi');
+    await user.click(screen.getByRole('button', { name: 'Comment' }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    const doc = JSON.parse(onSubmit.mock.calls[0]![0] as string);
+    expect(doc.content[0].content[0].text).toBe('hi');
+  });
+
+  it('⌘↩ (Mod-Enter) submits the composer instead of inserting a newline', async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    render(<RichTextEditor value="" onSave={vi.fn()} features="compact" composer={{ onSubmit }} />);
+    const surface = document.querySelector('[contenteditable="true"]')!;
+    await user.type(surface, 'hi{Meta>}{Enter}{/Meta}');
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    const doc = JSON.parse(onSubmit.mock.calls[0]![0] as string);
+    // Still a single paragraph — Mod-Enter did not insert a newline/split.
+    expect(doc.content).toHaveLength(1);
   });
 
   it('disabled editor is not editable', () => {

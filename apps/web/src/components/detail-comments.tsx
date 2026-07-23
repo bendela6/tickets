@@ -3,7 +3,6 @@ import type { Item } from '../api/types';
 import { useCreateComment } from '../api/use-create-comment';
 import { useCurrentUser } from '../state/current-user-context';
 import { Avatar } from '../ui/avatar';
-import { Button } from '../ui/button';
 import { RelativeDate } from '../ui/relative-date';
 import type { BoardIndexes } from '../utils/index-board';
 import { boardSuggestions } from './rich-text/board-suggestions';
@@ -25,9 +24,6 @@ export function DetailComments({
 }) {
   const { userId } = useCurrentUser();
   const createComment = useCreateComment();
-  // The editor commits its draft on blur; the Comment button's click lands
-  // after that blur, so `body` is current when submit runs.
-  const [body, setBody] = useState('');
   // Remount the composer after a successful post so its draft clears.
   const [composerKey, setComposerKey] = useState(0);
 
@@ -46,7 +42,10 @@ export function DetailComments({
     }
   };
 
-  const submit = async () => {
+  // Called both from the composer's Comment button and its ⌘↩ shortcut —
+  // RichTextEditor passes the doc it just serialized straight off the live
+  // editor instance, so this never depends on a blur having landed first.
+  const submit = async (body: string) => {
     if (userId === null || body.trim().length === 0) {
       return;
     }
@@ -55,7 +54,6 @@ export function DetailComments({
       actorId: userId,
       body: body.trim(),
     });
-    setBody('');
     setComposerKey((key) => key + 1);
   };
 
@@ -103,23 +101,17 @@ export function DetailComments({
             features="compact"
             suggestions={boardSuggestions(indexes, prefix)}
             placeholder={userId === null ? 'Pick a user in the header to comment' : 'Comment…'}
-            onSave={setBody}
+            composer={{
+              onSubmit: (body) => void submit(body),
+              submitDisabled: userId === null || createComment.isPending,
+              submitPending: createComment.isPending,
+            }}
           />
           {createComment.isError ? (
             <p className="m-0 mt-1 font-sans text-meta text-danger">
               {(createComment.error as Error).message}
             </p>
           ) : null}
-          <div className="mt-2 flex justify-end">
-            <Button
-              variant="primary"
-              size="compact"
-              disabled={userId === null || createComment.isPending}
-              onClick={() => void submit()}
-            >
-              Comment
-            </Button>
-          </div>
         </div>
       </div>
     </div>

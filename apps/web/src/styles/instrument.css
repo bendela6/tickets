@@ -122,6 +122,7 @@
   --ins-opt-gray-hover: #46443c;
   --ins-opt-gray-subtle: #eae9e4;
   --ins-on-opt-gray: #ffffff;
+  --ins-highlight: #f1dfa0;
   /* /tokens:light */
 }
 
@@ -210,6 +211,7 @@
   --ins-opt-gray-hover: #b8b5ab;
   --ins-opt-gray-subtle: #2a2924;
   --ins-on-opt-gray: #21201c;
+  --ins-highlight: #4a4020;
   /* /tokens:dark */
 }
 
@@ -299,6 +301,7 @@
   --color-opt-gray-hover: var(--ins-opt-gray-hover);
   --color-opt-gray-subtle: var(--ins-opt-gray-subtle);
   --color-on-opt-gray: var(--ins-on-opt-gray);
+  --color-highlight: var(--ins-highlight);
   --shadow-sm: var(--ins-shadow-sm);
   --shadow-lg: var(--ins-shadow-lg);
   /* /tokens:theme */
@@ -430,6 +433,12 @@
   .rt strong {
     font-weight: 600;
     color: var(--color-ink);
+  }
+  .rt mark {
+    background: var(--color-highlight);
+    color: var(--color-ink);
+    border-radius: 3px;
+    padding: 0 1px;
   }
   .rt blockquote {
     border-left: 2px solid var(--color-hairline);
