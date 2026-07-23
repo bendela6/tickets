@@ -25,7 +25,10 @@ function validate(mod: unknown): { ok: true; demo: DemoModule } | { ok: false; e
 }
 
 function compare(a: CollectedDemo, b: CollectedDemo): number {
-  if ('error' in a || 'error' in b) return 'error' in a ? 1 : -1;
+  if ('error' in a || 'error' in b) {
+    if ('error' in a && 'error' in b) return a.path.localeCompare(b.path);
+    return 'error' in a ? 1 : -1;
+  }
   const g = a.meta.group.localeCompare(b.meta.group);
   if (g !== 0) return g;
   const ao = a.meta.order ?? Number.MAX_SAFE_INTEGER;
