@@ -10,7 +10,7 @@ const SESSION_STATUSES: SessionStatus[] = [
   'failed',
 ];
 
-export const meta = { title: 'Session Status Pill', group: 'AI session', order: 2 };
+export const meta = { title: 'Session Status Pill', group: 'AI session', order: 1 };
 
 export const states = [
   ...SESSION_STATUSES.map((status) => ({
