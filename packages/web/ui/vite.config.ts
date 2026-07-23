@@ -5,5 +5,5 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   root: 'dev',
   plugins: [react(), tailwindcss()],
-  server: { port: 4630, strictPort: true },
+  server: { port: 4650, strictPort: true },
 });
