@@ -4,6 +4,7 @@ import { useCreateType, useSetChildTypes, useUpdateType } from '../../api/use-ad
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { SWATCHES } from '@tickets/ui/swatches';
 import { FieldLabel } from '../../ui/field-label';
 import { Input } from '../../ui/input';
 import type { BoardIndexes } from '../../utils/index-board';
@@ -13,15 +14,6 @@ export type SettingsTabProps = {
   indexes: BoardIndexes;
   projectKey: string;
 };
-
-const SWATCHES = [
-  '#4E46C6',
-  '#2E7D4F',
-  '#C25425',
-  '#A03028',
-  '#2E6FCC',
-  '#79756A',
-];
 
 function slugify(name: string): string {
   return name
