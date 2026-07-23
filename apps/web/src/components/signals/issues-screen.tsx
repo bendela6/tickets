@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import type { IssueFilters, IssueLevel, IssueStatus } from '../../api/signals/signals-api';
 import { usePatchIssueStatus, useSignalsApps, useSignalsIssues } from '../../api/signals/use-signals';
 import { cn } from '../../ui/cn';
@@ -130,19 +130,10 @@ export function IssuesScreen() {
         </span>
       </div>
 
-      <div className="mb-3.5 flex shrink-0 items-center gap-1.5 border-b border-hairline">
-        <span className="-mb-px flex items-center gap-1.75 border-b-2 border-accent px-3 py-2 font-sans text-ui font-medium text-ink">
-          Issues
-          <span className="font-mono text-[11px] text-ink-3">{total}</span>
-        </span>
-        <Link
-          to="/signals/apps"
-          className="-mb-px flex items-center gap-1.75 border-b-2 border-transparent px-3 py-2 font-sans text-ui text-ink-2 hover:text-ink"
-        >
-          Apps
-          <span className="font-mono text-[11px] text-ink-3">{appsQuery.data?.length ?? ''}</span>
-        </Link>
-      </div>
+      {/* No in-page tab bar: the Signals sidebar panel already navigates
+      between Issues / Apps / Activity, so a second nav here was duplicate
+      chrome that also drifted out of sync (Activity had three tabs while
+      this screen had two). */}
 
       <IssuesToolbar
         apps={appsQuery.data ?? []}

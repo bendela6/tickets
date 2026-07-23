@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from '@tanstack/react-router';
 import type { SignalsAppRow } from '../../api/signals/signals-api';
 import { useSignalsApps, useSignalsMeta } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
@@ -105,18 +104,7 @@ export function AppsScreen() {
         ) : null}
       </div>
 
-      <div className="mb-3.5 flex shrink-0 items-center gap-1.5 border-b border-hairline">
-        <Link
-          to="/signals"
-          className="-mb-px flex items-center gap-1.75 border-b-2 border-transparent px-3 py-2 font-sans text-ui text-ink-2 hover:text-ink"
-        >
-          Issues
-        </Link>
-        <span className="-mb-px flex items-center gap-1.75 border-b-2 border-accent px-3 py-2 font-sans text-ui font-medium text-ink">
-          Apps
-          <span className="font-mono text-[11px] text-ink-3">{rows.length}</span>
-        </span>
-      </div>
+      {/* Nav lives in the Signals sidebar panel — see issues-screen.tsx. */}
 
       {isList ? (
         <>
