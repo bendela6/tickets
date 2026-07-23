@@ -1,4 +1,4 @@
-import { cn } from './cn';
+import { cn } from '@tickets/ui/cn';
 
 type AvatarProps = {
   name: string;

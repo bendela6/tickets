@@ -1,6 +1,6 @@
 // Zero-dependency check: assert that docs/design/design-system.html's "01
 // Color" swatches match the resolved token hex values in
-// apps/web/src/styles/tokens/*.tokens.json.
+// packages/web/ui/src/tokens/*.tokens.json.
 //
 // Alias resolution (the one-level `{group.name}` lookup against primitives)
 // lives in build-tokens.mjs's `resolveTokenMaps()` — imported here rather
@@ -12,7 +12,7 @@ import path from 'node:path';
 import { resolveTokenMaps } from './build-tokens.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.join(__dirname, '..', '..', '..');
+const repoRoot = path.join(__dirname, '..', '..', '..', '..');
 const designHtmlPath = path.join(repoRoot, 'docs', 'design', 'design-system.html');
 
 // resolveTokenMaps() returns `name -> { value, type }`; this check only

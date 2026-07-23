@@ -1,4 +1,4 @@
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 
 const BAR_COUNT = 14;
 const MAX_HEIGHT_PX = 18;

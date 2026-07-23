@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-import { cn } from '../../ui/cn';
-import { runtimeStyle } from '../../ui/runtime-style';
+import { cn } from '@tickets/ui/cn';
+import { runtimeStyle } from '@tickets/ui/runtime-style';
 
 export function Chip({
   on,

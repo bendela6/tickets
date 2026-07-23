@@ -1,4 +1,4 @@
-import { cn } from './cn';
+import { cn } from '@tickets/ui/cn';
 
 type ItemKeyProps = { prefix: string; number: number; muted?: boolean; className?: string };
 

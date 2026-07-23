@@ -8,7 +8,7 @@ import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Avatar } from '../../ui/avatar';
 import { Button } from '../../ui/button';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 import { Input } from '../../ui/input';
 import { KindGlyph } from '../../ui/kind-glyph';

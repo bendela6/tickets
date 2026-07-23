@@ -6,11 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run",
-    "tokens:build": "node scripts/build-tokens.mjs",
-    "tokens:lint": "node scripts/scan-hardcoded-values.mjs",
-    "tokens:check": "node scripts/check-design-tokens.mjs",
-    "tokens:verify": "node scripts/build-tokens.mjs && git diff --exit-code src/styles/instrument.css && node scripts/scan-hardcoded-values.mjs && node scripts/check-design-tokens.mjs"
+    "test": "vitest run"
   },
   "dependencies": {
     "@bendela6/signals-react": "workspace:^",
@@ -22,6 +18,7 @@
     "@tanstack/react-router": "^1.170.17",
     "@tickets/form": "workspace:*",
     "@tickets/richtext": "workspace:*",
+    "@tickets/ui": "workspace:*",
     "@tiptap/core": "^3.28.0",
     "@tiptap/pm": "^3.28.0",
     "@tiptap/react": "^3.28.0",

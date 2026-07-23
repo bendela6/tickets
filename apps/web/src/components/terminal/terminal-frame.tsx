@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Button } from '../../ui/button';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import type { ConnState } from '../session/use-session-socket';
 
 // Re-exported so callers (e.g. terminal-display.ts) can depend on this module

@@ -9,7 +9,7 @@ import { getModel, listModels, saveModel, type ModelSummary } from '../../api/mo
 import { loadModel } from '../../engine/model/load-model';
 import { serializeModel } from '../../engine/model/serialize-model';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../state/diagram-context';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { useEditor } from '../editor';
 import { btn } from './button-class';
 

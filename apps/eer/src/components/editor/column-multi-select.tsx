@@ -18,7 +18,7 @@
 // on the SAME element across both states (a prior chip-vs-checkbox split
 // would have broken every existing "click this label to toggle" test).
 
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 
 interface ColumnMultiSelectProps {
   options: string[];

@@ -14,7 +14,7 @@ import { FieldWidget } from '../registry/field-widget';
 import { hexToOptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
 import { Button } from '../ui/button';
-import { cn } from '../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { Combobox } from '../ui/combobox';
 import { DialogClose, DialogContent, DialogRoot, DialogTitle } from '../ui/dialog';
 import { FieldError } from '../ui/field-error';

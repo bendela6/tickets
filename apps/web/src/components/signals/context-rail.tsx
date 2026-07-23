@@ -1,6 +1,6 @@
 import { Fragment, type ReactNode } from 'react';
 import type { IssueDetail, PlatformInfo, SignalPayload } from '../../api/signals/signals-api';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { formatCount } from './format';
 
 function RailCard({ title, children }: { title: string; children: ReactNode }) {

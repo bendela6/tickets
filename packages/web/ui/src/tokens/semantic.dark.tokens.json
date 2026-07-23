@@ -2,335 +2,339 @@
   "ins": {
     "app": {
       "$type": "color",
-      "$value": "{p.app}"
+      "$value": "{p.app-dark}"
     },
     "raised": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.raised-dark}"
     },
     "inset": {
       "$type": "color",
-      "$value": "{p.inset}"
+      "$value": "{p.inset-dark}"
     },
     "hairline": {
       "$type": "color",
-      "$value": "{p.hairline}"
+      "$value": "{p.hairline-dark}"
     },
     "control": {
       "$type": "color",
-      "$value": "{p.control}"
+      "$value": "{p.control-dark}"
     },
     "ink": {
       "$type": "color",
-      "$value": "{p.ink}"
+      "$value": "{p.ink-dark}"
     },
     "ink-2": {
       "$type": "color",
-      "$value": "{p.ink-2}"
+      "$value": "{p.ink-2-dark}"
     },
     "ink-3": {
       "$type": "color",
-      "$value": "{p.ink-3}"
+      "$value": "{p.ink-3-dark}"
     },
     "accent": {
       "$type": "color",
-      "$value": "{p.accent}"
+      "$value": "{p.accent-dark}"
     },
     "accent-hover": {
       "$type": "color",
-      "$value": "{p.accent-hover}"
+      "$value": "{p.accent-hover-dark}"
     },
     "accent-subtle": {
       "$type": "color",
-      "$value": "{p.accent-subtle}"
+      "$value": "{p.accent-subtle-dark}"
+    },
+    "folder": {
+      "$type": "color",
+      "$value": "{p.folder-dark}"
     },
     "on-accent": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-accent-dark}"
     },
     "danger": {
       "$type": "color",
-      "$value": "{p.danger}"
+      "$value": "{p.danger-dark}"
     },
     "danger-hover": {
       "$type": "color",
-      "$value": "{p.danger-hover}"
+      "$value": "{p.danger-hover-dark}"
     },
     "danger-subtle": {
       "$type": "color",
-      "$value": "{p.danger-subtle}"
+      "$value": "{p.danger-subtle-dark}"
     },
     "on-danger": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-danger-dark}"
     },
     "kind-todo": {
       "$type": "color",
-      "$value": "{p.kind-todo}"
+      "$value": "{p.kind-todo-dark}"
     },
     "kind-todo-hover": {
       "$type": "color",
-      "$value": "{p.kind-todo-hover}"
+      "$value": "{p.kind-todo-hover-dark}"
     },
     "kind-todo-subtle": {
       "$type": "color",
-      "$value": "{p.kind-todo-subtle}"
+      "$value": "{p.kind-todo-subtle-dark}"
     },
     "on-kind-todo": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-kind-todo-dark}"
     },
     "kind-active": {
       "$type": "color",
-      "$value": "{p.kind-active}"
+      "$value": "{p.kind-active-dark}"
     },
     "kind-active-hover": {
       "$type": "color",
-      "$value": "{p.kind-active-hover}"
+      "$value": "{p.kind-active-hover-dark}"
     },
     "kind-active-subtle": {
       "$type": "color",
-      "$value": "{p.kind-active-subtle}"
+      "$value": "{p.kind-active-subtle-dark}"
     },
     "on-kind-active": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-kind-active-dark}"
     },
     "kind-blocked": {
       "$type": "color",
-      "$value": "{p.kind-blocked}"
+      "$value": "{p.kind-blocked-dark}"
     },
     "kind-blocked-hover": {
       "$type": "color",
-      "$value": "{p.kind-blocked-hover}"
+      "$value": "{p.kind-blocked-hover-dark}"
     },
     "kind-blocked-subtle": {
       "$type": "color",
-      "$value": "{p.kind-blocked-subtle}"
+      "$value": "{p.kind-blocked-subtle-dark}"
     },
     "on-kind-blocked": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-kind-blocked-dark}"
     },
     "kind-done": {
       "$type": "color",
-      "$value": "{p.kind-done}"
+      "$value": "{p.kind-done-dark}"
     },
     "kind-done-hover": {
       "$type": "color",
-      "$value": "{p.kind-done-hover}"
+      "$value": "{p.kind-done-hover-dark}"
     },
     "kind-done-subtle": {
       "$type": "color",
-      "$value": "{p.kind-done-subtle}"
+      "$value": "{p.kind-done-subtle-dark}"
     },
     "on-kind-done": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-kind-done-dark}"
     },
     "kind-dropped": {
       "$type": "color",
-      "$value": "{p.kind-dropped}"
+      "$value": "{p.kind-dropped-dark}"
     },
     "kind-dropped-hover": {
       "$type": "color",
-      "$value": "{p.kind-dropped-hover}"
+      "$value": "{p.kind-dropped-hover-dark}"
     },
     "kind-dropped-subtle": {
       "$type": "color",
-      "$value": "{p.kind-dropped-subtle}"
+      "$value": "{p.kind-dropped-subtle-dark}"
     },
     "on-kind-dropped": {
       "$type": "color",
-      "$value": "{p.on-kind-dropped}"
+      "$value": "{p.raised}"
     },
     "shadow-sm": {
       "$type": "shadow",
-      "$value": "{p.shadow-sm}"
+      "$value": "{p.shadow-sm-dark}"
     },
     "shadow-lg": {
       "$type": "shadow",
-      "$value": "{p.shadow-lg}"
+      "$value": "{p.shadow-lg-dark}"
     },
     "opt-red": {
       "$type": "color",
-      "$value": "{p.opt-red}"
+      "$value": "{p.opt-red-dark}"
     },
     "opt-red-hover": {
       "$type": "color",
-      "$value": "{p.opt-red-hover}"
+      "$value": "{p.opt-red-hover-dark}"
     },
     "opt-red-subtle": {
       "$type": "color",
-      "$value": "{p.opt-red-subtle}"
+      "$value": "{p.opt-red-subtle-dark}"
     },
     "on-opt-red": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-opt-red-dark}"
     },
     "opt-orange": {
       "$type": "color",
-      "$value": "{p.opt-orange}"
+      "$value": "{p.opt-orange-dark}"
     },
     "opt-orange-hover": {
       "$type": "color",
-      "$value": "{p.opt-orange-hover}"
+      "$value": "{p.opt-orange-hover-dark}"
     },
     "opt-orange-subtle": {
       "$type": "color",
-      "$value": "{p.opt-orange-subtle}"
+      "$value": "{p.opt-orange-subtle-dark}"
     },
     "on-opt-orange": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-opt-orange-dark}"
     },
     "opt-yellow": {
       "$type": "color",
-      "$value": "{p.opt-yellow}"
+      "$value": "{p.opt-yellow-dark}"
     },
     "opt-yellow-hover": {
       "$type": "color",
-      "$value": "{p.opt-yellow-hover}"
+      "$value": "{p.opt-yellow-hover-dark}"
     },
     "opt-yellow-subtle": {
       "$type": "color",
-      "$value": "{p.opt-yellow-subtle}"
+      "$value": "{p.opt-yellow-subtle-dark}"
     },
     "on-opt-yellow": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-opt-yellow-dark}"
     },
     "opt-green": {
       "$type": "color",
-      "$value": "{p.opt-green}"
+      "$value": "{p.opt-green-dark}"
     },
     "opt-green-hover": {
       "$type": "color",
-      "$value": "{p.opt-green-hover}"
+      "$value": "{p.opt-green-hover-dark}"
     },
     "opt-green-subtle": {
       "$type": "color",
-      "$value": "{p.opt-green-subtle}"
+      "$value": "{p.opt-green-subtle-dark}"
     },
     "on-opt-green": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-opt-green-dark}"
     },
     "opt-teal": {
       "$type": "color",
-      "$value": "{p.opt-teal}"
+      "$value": "{p.opt-teal-dark}"
     },
     "opt-teal-hover": {
       "$type": "color",
-      "$value": "{p.opt-teal-hover}"
+      "$value": "{p.opt-teal-hover-dark}"
     },
     "opt-teal-subtle": {
       "$type": "color",
-      "$value": "{p.opt-teal-subtle}"
+      "$value": "{p.opt-teal-subtle-dark}"
     },
     "on-opt-teal": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-opt-teal-dark}"
     },
     "opt-cyan": {
       "$type": "color",
-      "$value": "{p.opt-cyan}"
+      "$value": "{p.opt-cyan-dark}"
     },
     "opt-cyan-hover": {
       "$type": "color",
-      "$value": "{p.opt-cyan-hover}"
+      "$value": "{p.opt-cyan-hover-dark}"
     },
     "opt-cyan-subtle": {
       "$type": "color",
-      "$value": "{p.opt-cyan-subtle}"
+      "$value": "{p.opt-cyan-subtle-dark}"
     },
     "on-opt-cyan": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-opt-cyan-dark}"
     },
     "opt-blue": {
       "$type": "color",
-      "$value": "{p.opt-blue}"
+      "$value": "{p.opt-blue-dark}"
     },
     "opt-blue-hover": {
       "$type": "color",
-      "$value": "{p.opt-blue-hover}"
+      "$value": "{p.opt-blue-hover-dark}"
     },
     "opt-blue-subtle": {
       "$type": "color",
-      "$value": "{p.opt-blue-subtle}"
+      "$value": "{p.opt-blue-subtle-dark}"
     },
     "on-opt-blue": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-opt-blue-dark}"
     },
     "opt-indigo": {
       "$type": "color",
-      "$value": "{p.opt-indigo}"
+      "$value": "{p.opt-indigo-dark}"
     },
     "opt-indigo-hover": {
       "$type": "color",
-      "$value": "{p.opt-indigo-hover}"
+      "$value": "{p.opt-indigo-hover-dark}"
     },
     "opt-indigo-subtle": {
       "$type": "color",
-      "$value": "{p.opt-indigo-subtle}"
+      "$value": "{p.opt-indigo-subtle-dark}"
     },
     "on-opt-indigo": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-opt-indigo-dark}"
     },
     "opt-purple": {
       "$type": "color",
-      "$value": "{p.opt-purple}"
+      "$value": "{p.opt-purple-dark}"
     },
     "opt-purple-hover": {
       "$type": "color",
-      "$value": "{p.opt-purple-hover}"
+      "$value": "{p.opt-purple-hover-dark}"
     },
     "opt-purple-subtle": {
       "$type": "color",
-      "$value": "{p.opt-purple-subtle}"
+      "$value": "{p.opt-purple-subtle-dark}"
     },
     "on-opt-purple": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-opt-purple-dark}"
     },
     "opt-pink": {
       "$type": "color",
-      "$value": "{p.opt-pink}"
+      "$value": "{p.opt-pink-dark}"
     },
     "opt-pink-hover": {
       "$type": "color",
-      "$value": "{p.opt-pink-hover}"
+      "$value": "{p.opt-pink-hover-dark}"
     },
     "opt-pink-subtle": {
       "$type": "color",
-      "$value": "{p.opt-pink-subtle}"
+      "$value": "{p.opt-pink-subtle-dark}"
     },
     "on-opt-pink": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-opt-pink-dark}"
     },
     "opt-gray": {
       "$type": "color",
-      "$value": "{p.opt-gray}"
+      "$value": "{p.opt-gray-dark}"
     },
     "opt-gray-hover": {
       "$type": "color",
-      "$value": "{p.opt-gray-hover}"
+      "$value": "{p.opt-gray-hover-dark}"
     },
     "opt-gray-subtle": {
       "$type": "color",
-      "$value": "{p.opt-gray-subtle}"
+      "$value": "{p.opt-gray-subtle-dark}"
     },
     "on-opt-gray": {
       "$type": "color",
-      "$value": "{p.raised}"
+      "$value": "{p.on-opt-gray-dark}"
     },
     "highlight": {
       "$type": "color",
-      "$value": "{p.highlight}"
+      "$value": "{p.highlight-dark}"
     }
   }
 }

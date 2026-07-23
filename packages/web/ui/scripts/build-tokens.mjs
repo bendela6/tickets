@@ -13,8 +13,8 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const tokensDir = path.join(__dirname, '..', 'src', 'styles', 'tokens');
-const cssFile = path.join(__dirname, '..', 'src', 'styles', 'instrument.css');
+const tokensDir = path.join(__dirname, '..', 'src', 'tokens');
+const cssFile = path.join(__dirname, '..', 'src', 'tokens.css');
 
 const ALIAS_RE = /^\{([^}]+)\}$/;
 
@@ -150,15 +150,15 @@ const MARKERS = [
 function spliceRegion(css, { start, end }, body, indent = '  ') {
   const startIdx = css.indexOf(start);
   if (startIdx === -1) {
-    throw new Error(`Marker not found in instrument.css: ${start}`);
+    throw new Error(`Marker not found in tokens.css: ${start}`);
   }
   const afterStart = startIdx + start.length;
   if (css.indexOf(start, afterStart) !== -1) {
-    throw new Error(`Duplicate start marker found in instrument.css (corruption?): ${start}`);
+    throw new Error(`Duplicate start marker found in tokens.css (corruption?): ${start}`);
   }
   const endIdx = css.indexOf(end, afterStart);
   if (endIdx === -1) {
-    throw new Error(`Marker not found in instrument.css: ${end}`);
+    throw new Error(`Marker not found in tokens.css: ${end}`);
   }
   return css.slice(0, afterStart) + '\n' + body + indent + css.slice(endIdx);
 }

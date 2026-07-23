@@ -18,7 +18,7 @@ import { importDrizzle, type ChangeRow, type ImportReport } from '../../engine/m
 import type { Model } from '../../engine/model/types';
 import type { SchemaDescription } from '../../node/describe-drizzle';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../state/diagram-context';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { Modal } from '../modal';
 
 // Mirrors DEFAULT_MODULE in vite-plugins/drizzle-api.ts — not imported from

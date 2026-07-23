@@ -2,7 +2,7 @@ import type { Editor } from '@tiptap/react';
 import type { ToolbarControl } from '@tickets/richtext';
 import { DropdownMenu } from 'radix-ui';
 import { useRef, type ReactNode } from 'react';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '../../ui/menu';
 import {
   IconCheck,

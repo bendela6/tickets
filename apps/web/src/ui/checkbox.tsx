@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useRef, type InputHTMLAttributes } from 'react';
-import { cn } from './cn';
+import { cn } from '@tickets/ui/cn';
 
 type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & {
   label: string;

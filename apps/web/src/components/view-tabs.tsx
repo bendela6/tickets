@@ -3,7 +3,7 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import type { Board } from '../api/types';
 import { useCreateView } from '../api/use-create-view';
 import { useCurrentUser } from '../state/current-user-context';
-import { cn } from '../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { Input } from '../ui/input';
 
 // Underline view tabs per docs/design/03-project-board.html lines 99–106:
