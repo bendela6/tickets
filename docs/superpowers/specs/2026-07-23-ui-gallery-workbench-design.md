@@ -27,7 +27,7 @@ Package exports added: `"./gallery": "./src/gallery/index.ts"`, `"./gallery/demo
 
 ### 2. Package dev app — `packages/web/ui/dev/`
 
-- `index.html` + `main.tsx` + `styles.css` + `vite.config.ts`; script `"dev": "vite dev"` → port **4630**, strictPort.
+- `index.html` + `main.tsx` + `styles.css` + `vite.config.ts`; script `"dev": "vite dev"` → port **4650**, strictPort.
 - `styles.css`: `@import '@tickets/ui/tokens.css';` then `@source '../src';` — package-resident class literals (demo files, and P3's components later) are Tailwind-scanned here from day one.
 - Fonts: `@fontsource/ibm-plex-sans` + `@fontsource/ibm-plex-mono` as package devDependencies, imported in `main.tsx` (mirrors web).
 - Renders `GalleryShell` over `packageDemos` (no provider wrapper).
@@ -56,7 +56,7 @@ Colocated with their components; every current gallery section is represented:
 
 - Engine: `collect-demos.test.ts` — valid module collected + sorted correctly (group/order/title), invalid module (missing states, non-function render) yields error entry not throw, slug stability. `state-grid.test.tsx` — renders state labels + ids from a fixture module.
 - Web: demo-coverage test — for every component module in `apps/web/src/ui` (every `.tsx` file excluding `*.test.tsx` and `*.demo.tsx`; exact list derived at plan time), a sibling `.demo.tsx` exists; fails listing missing names. Non-visual helper modules (e.g. `combobox-list` internals, `use-directory-tree`) may be exempted via an explicit allowlist in the test — the allowlist is the documented exception, not silence. This is the ratchet P3 inherits.
-- Gates: `pnpm --filter @tickets/ui test && typecheck`, `pnpm --filter @tickets/web test && typecheck`, `pnpm build`, `pnpm --filter @tickets/ui tokens:verify` (scanner now also sees demo files — any hex snuck into demos gets caught), dev app boots on 4630 and renders the seed demo, `/gallery` on web dev shows every ported section in both themes.
+- Gates: `pnpm --filter @tickets/ui test && typecheck`, `pnpm --filter @tickets/web test && typecheck`, `pnpm build`, `pnpm --filter @tickets/ui tokens:verify` (scanner now also sees demo files — any hex snuck into demos gets caught), dev app boots on 4650 and renders the seed demo, `/gallery` on web dev shows every ported section in both themes.
 
 ## Out of scope
 

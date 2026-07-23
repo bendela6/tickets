@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the gallery engine in `@tickets/ui`, a standalone dev app on :4630, port all ~20 sections of web's monolithic `/gallery` route into colocated `*.demo.tsx` files, and make `/gallery` a thin consumer.
+**Goal:** Build the gallery engine in `@tickets/ui`, a standalone dev app on :4650, port all ~20 sections of web's monolithic `/gallery` route into colocated `*.demo.tsx` files, and make `/gallery` a thin consumer.
 
 **Architecture:** Engine (`types` + `collectDemos` + `StateGrid` + `GalleryShell`) lives in `packages/web/ui/src/gallery/` and is consumed by two hosts: a minimal vite dev app inside the package (globs package demos — just the swatches seed in P2) and web's `gallery-route.tsx` (merges package demos + its own glob). Demo files colocate with components (`apps/web/src/ui/*.demo.tsx` until P3 moves them). A coverage test ratchets sibling-demo existence.
 
@@ -18,7 +18,7 @@
 - Demo groups (exact strings): `Foundation`, `Form controls`, `Pickers`, `Display`, `Overlays`, `AI session`.
 - Slugs: `kebab(meta.title)` for the demo, `` `${demoSlug}--${kebab(state.name)}` `` for a state (kebab: lowercase, non-alphanumeric runs → single `-`, trimmed).
 - Port fidelity: every state shown in the old `apps/web/src/routes/gallery-route.tsx` (as of merge `a3b87f4`) must exist as a demo state; fixtures move verbatim (SAMPLE_STREAM, KINDS, OPTION_COLORS, PRIORITY_OPTIONS, LABEL_OPTIONS, STATUSES, SESSION_STATUSES, `NOW`).
-- Dev app port 4630, `strictPort: true`.
+- Dev app port 4650, `strictPort: true`.
 - Demos import components RELATIVELY (`./button`) inside `src/ui`, and `@tickets/ui/cn` etc. for package modules — never `../routes/...`.
 
 ---
@@ -397,7 +397,7 @@ git add -A && git commit -m "feat(ui): StateGrid, GalleryShell, and package demo
 
 ---
 
-### Task 3: Package dev app on :4630 + swatches seed demo
+### Task 3: Package dev app on :4650 + swatches seed demo
 
 **Files:**
 - Create: `packages/web/ui/dev/index.html`, `packages/web/ui/dev/main.tsx`, `packages/web/ui/dev/styles.css`, `packages/web/ui/dev/vite.config.ts`, `packages/web/ui/src/swatches.demo.tsx`
@@ -405,7 +405,7 @@ git add -A && git commit -m "feat(ui): StateGrid, GalleryShell, and package demo
 
 **Interfaces:**
 - Consumes: `GalleryShell`, `packageDemos` (Task 2), `SWATCHES` (P1).
-- Produces: `pnpm --filter @tickets/ui dev` serving :4630.
+- Produces: `pnpm --filter @tickets/ui dev` serving :4650.
 
 - [ ] **Step 1: Seed demo `src/swatches.demo.tsx`**
 
@@ -484,7 +484,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  server: { port: 4630, strictPort: true },
+  server: { port: 4650, strictPort: true },
 });
 ```
 
@@ -492,13 +492,13 @@ Config placement (final form): the config lives at `packages/web/ui/vite.config.
 
 - [ ] **Step 3: Boot check**
 
-Run: `pnpm --filter @tickets/ui dev` in background; `curl -s -o /dev/null -w "%{http_code}" http://localhost:4630/` → `200`; then curl the page and confirm it contains `id="swatches"` after JS render is not verifiable via curl — instead verify the module graph: `curl -s http://localhost:4630/main.tsx | grep -c gallery` ≥ 1. Kill the dev server.
+Run: `pnpm --filter @tickets/ui dev` in background; `curl -s -o /dev/null -w "%{http_code}" http://localhost:4650/` → `200`; then curl the page and confirm it contains `id="swatches"` after JS render is not verifiable via curl — instead verify the module graph: `curl -s http://localhost:4650/main.tsx | grep -c gallery` ≥ 1. Kill the dev server.
 Also: `pnpm --filter @tickets/ui test && pnpm --filter @tickets/ui typecheck && pnpm --filter @tickets/ui tokens:verify` (scanner sees the new demo — must stay clean).
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add -A && git commit -m "feat(ui): standalone gallery dev app on 4630 with swatches seed demo"
+git add -A && git commit -m "feat(ui): standalone gallery dev app on 4650 with swatches seed demo"
 ```
 
 ---
