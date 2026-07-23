@@ -1,8 +1,5 @@
-// @ts-ignore
 import { readdirSync } from 'node:fs';
-// @ts-ignore
-import { dirname, join } from 'node:path';
-// @ts-ignore
+import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
@@ -20,12 +17,12 @@ describe('demo coverage', () => {
     const dir = dirname(fileURLToPath(import.meta.url));
     const files = readdirSync(dir);
     const components = files
-      .filter((f: string) => /\.(ts|tsx)$/.test(f))
-      .filter((f: string) => !/\.(test|demo)\.tsx?$/.test(f))
-      .map((f: string) => f.replace(/\.tsx?$/, ''))
-      .filter((name: string) => !['cn', 'variants'].includes(name)); // deleted in P1; guard against strays
+      .filter(f => /\.(ts|tsx)$/.test(f))
+      .filter(f => !/\.(test|demo)\.tsx?$/.test(f))
+      .map(f => f.replace(/\.tsx?$/, ''))
+      .filter(name => !['cn', 'variants'].includes(name)); // deleted in P1; guard against strays
     const missing = components.filter(
-      (name: string) => !ALLOWLIST.has(name) && !files.includes(`${name}.demo.tsx`),
+      name => !ALLOWLIST.has(name) && !files.includes(`${name}.demo.tsx`),
     );
     expect(missing).toEqual([]);
   });
