@@ -27,8 +27,8 @@ export function ActivityRow({ signal }: { signal: SignalListRow }) {
       </span>
       <span className="min-w-0 pr-3">
         <span className="block truncate font-sans text-ui text-ink-2">
-          {signal.name !== null ? <strong className="font-semibold text-ink">{signal.name}</strong> : null}
-          {signal.message !== null ? (signal.name !== null ? ` · ${signal.message}` : signal.message) : null}
+          <strong className="font-semibold text-ink">{signal.name}</strong>
+          {signal.message !== null ? ` · ${signal.message}` : null}
         </span>
       </span>
       <span>
@@ -38,17 +38,13 @@ export function ActivityRow({ signal }: { signal: SignalListRow }) {
       </span>
       <span className="font-mono text-[11px] text-ink-3">{relativeTime(signal.receivedAt)}</span>
       <span>
-        {signal.sessionId !== null ? (
-          <Link
-            to="/signals/sessions/$sessionId"
-            params={{ sessionId: signal.sessionId }}
-            className="font-mono text-[11px] font-medium text-accent hover:underline"
-          >
-            session →
-          </Link>
-        ) : (
-          <span className="font-mono text-[11px] text-ink-3">—</span>
-        )}
+        <Link
+          to="/signals/sessions/$sessionId"
+          params={{ sessionId: signal.sessionId }}
+          className="font-mono text-[11px] font-medium text-accent hover:underline"
+        >
+          session →
+        </Link>
       </span>
     </div>
   );
@@ -71,7 +67,7 @@ export function ActivityRowSkeleton({ index = 0 }: { index?: number }) {
       className="grid h-11 animate-pulse items-center border-b border-hairline px-3.5"
       style={{ gridTemplateColumns: ACTIVITY_GRID_COLUMNS }}
     >
-      <span className="size-3.5 rounded-[6px] bg-inset" />
+      <span className="size-3.5 rounded-md bg-inset" />
       <span className="size-2.25 rounded-full bg-inset" />
       <span className="block h-2.75 rounded-xs bg-inset" style={{ width: `${width}%` }} />
       <span className="inline-block h-3.5 w-18 rounded-xs bg-inset" />
