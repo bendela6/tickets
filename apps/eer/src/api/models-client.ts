@@ -9,7 +9,7 @@
 // and NOT reported. Only genuine faults reach Signals: a fetch that throws
 // (network) or a 5xx response — mirroring apps/web/src/api/client.ts.
 
-import { captureError } from '@bendela6/signals-react';
+import { captureError, captureEvent } from '@bendela6/signals-react';
 
 export interface ModelSummary {
   id: string;
@@ -61,7 +61,13 @@ export async function getModel(id: string): Promise<unknown> {
     }
     throw new Error(await errorMessage(res));
   }
-  return res.json();
+  const body = await res.json();
+  // getModel is the "import" half of the model round-trip: it reads a saved
+  // model into the app. Neither this fn nor its `id` param carries a title —
+  // use `id` (the same identifier ModelSummary.id/model-menu's dropdown uses)
+  // as modelName.
+  captureEvent('eer.model.import', { modelName: id });
+  return body;
 }
 
 export async function createModel(raw: unknown): Promise<{ id: string } | { error: string }> {
@@ -102,6 +108,9 @@ export async function saveModel(id: string, raw: unknown): Promise<boolean> {
         contexts: { http: { url, status: res.status } },
       });
     }
+    // saveModel is the "export" half of the model round-trip: it writes the
+    // current diagram back out to persistence (model-menu.tsx's Save button).
+    if (res.ok) captureEvent('eer.model.export', { modelName: id });
     return res.ok;
   } catch (err) {
     captureError(err, { mechanism: 'manual', contexts: { http: { url } } });
