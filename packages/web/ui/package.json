@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./cn": "./src/cn.ts"
+    "./cn": "./src/cn.ts",
+    "./variants": "./src/variants.ts",
+    "./runtime-style": "./src/runtime-style.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
