@@ -1,0 +1,25 @@
+import { useState } from 'react';
+import { RadioGroup } from './radio-group';
+
+function DensityFixture() {
+  const [density, setDensity] = useState('comfortable');
+  return (
+    <RadioGroup
+      name="density"
+      label="Density"
+      value={density}
+      onValueChange={setDensity}
+      options={[
+        { value: 'comfortable', label: 'Comfortable' },
+        { value: 'compact', label: 'Compact' },
+        { value: 'off', label: 'Disabled', disabled: true },
+      ]}
+    />
+  );
+}
+
+export const meta = { title: 'RadioGroup', group: 'Form controls' };
+
+export const states = [
+  { name: 'density', render: () => <DensityFixture /> },
+];
