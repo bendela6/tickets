@@ -9,7 +9,7 @@ here should need to leak back into those skills.
 - `docs/design/design-system.html` — the Instrument design spec, exported
   from the Claude Design project. This is the visual reference/baseline for
   every component.
-- `apps/web/src/styles/instrument.css` — holds the `--ins-*` CSS custom
+- `packages/web/ui/src/tokens.css` — holds the `--ins-*` CSS custom
   properties (the actual token values consumed by the app).
 - GAP: no visual-baseline images exist yet (no screenshot corpus to diff
   against — verification today is by measurement against the spec doc, not
@@ -17,19 +17,19 @@ here should need to leak back into those skills.
 
 ## tokenPipeline
 
-- Source of truth: `apps/web/src/styles/tokens/*.tokens.json` — DTCG-format
+- Source of truth: `packages/web/ui/src/tokens/*.tokens.json` — DTCG-format
   primitive + semantic (light/dark) token files.
-- Codegen: `pnpm --filter @tickets/web tokens:build` runs
-  `scripts/build-tokens.mjs`, which splices the generated `--ins-*` /
+- Codegen: `pnpm --filter @tickets/ui tokens:build` runs
+  `packages/web/ui/scripts/build-tokens.mjs`, which splices the generated `--ins-*` /
   `--color-*` custom-property regions into
-  `apps/web/src/styles/instrument.css` between `/* tokens:… */` markers.
+  `packages/web/ui/src/tokens.css` between `/* tokens:… */` markers.
   Everything outside those markers (Tailwind theme mappings, component CSS)
   is hand-authored and untouched by codegen.
-- Gates: `tokens:lint` (`scripts/scan-hardcoded-values.mjs`) scans
+- Gates: `tokens:lint` (`packages/web/ui/scripts/scan-hardcoded-values.mjs`) scans
   style-context source for hardcoded/literal values that should be tokens;
-  `tokens:check` (`scripts/check-design-tokens.mjs`) checks the built tokens
+  `tokens:check` (`packages/web/ui/scripts/check-design-tokens.mjs`) checks the built tokens
   conform to `docs/design/design-system.html`. Both are aggregated (with a
-  fresh-build drift check) behind `pnpm --filter @tickets/web tokens:verify`.
+  fresh-build drift check) behind `pnpm --filter @tickets/ui tokens:verify`.
 
 ## workbench
 
@@ -41,8 +41,8 @@ here should need to leak back into those skills.
 ## testCommands
 
 - Unit/component tests: `pnpm --filter @tickets/web test` (vitest).
-- Token pipeline gate: `pnpm --filter @tickets/web tokens:verify` (rebuilds
-  tokens, fails if `instrument.css` drifts from a fresh build, then runs
+- Token pipeline gate: `pnpm --filter @tickets/ui tokens:verify` (rebuilds
+  tokens, fails if `packages/web/ui/src/tokens.css` drifts from a fresh build, then runs
   `tokens:lint` + `tokens:check`).
 - GAP: no visual-regression runner wired up yet (no run command, no
   baseline-update command).
