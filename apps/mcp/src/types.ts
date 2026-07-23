@@ -21,6 +21,7 @@ export type Field = {
   key: string;
   label: string;
   type: string;
+  config: Record<string, unknown>;
   archivedAt: string | null;
   options: { id: number; value: string; label: string; archivedAt: string | null }[];
 };
