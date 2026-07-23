@@ -40,6 +40,13 @@ export function SignalsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
         >
           <span className="flex-1">Apps</span>
         </Link>
+        <Link
+          to="/signals/activity"
+          onClick={onNavigate}
+          className={navItemClasses(Boolean(matchRoute({ to: '/signals/activity' })))}
+        >
+          <span className="flex-1">Activity</span>
+        </Link>
       </nav>
     </div>
   );

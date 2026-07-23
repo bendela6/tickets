@@ -4,8 +4,8 @@ import type { AgentStore, MessageFrame } from './store';
 import type { AgentEvent, ServerFrame, SessionStatus, Subscriber } from './types';
 import type { AgentRun } from './agent-types';
 
-const { captureError } = vi.hoisted(() => ({ captureError: vi.fn() }));
-vi.mock('@bendela6/signals-node', () => ({ captureError }));
+const { captureError, captureEvent } = vi.hoisted(() => ({ captureError: vi.fn(), captureEvent: vi.fn() }));
+vi.mock('@bendela6/signals-node', () => ({ captureError, captureEvent }));
 
 // A controllable AgentRun: push events, observe send/interrupt/permission.
 function makeAgentRun() {
@@ -390,5 +390,52 @@ describe('agent driver', () => {
     expect(msgs(reopen.frames).map((f) => f.seq)).toEqual([1]);
     const status = statusFrames(reopen.frames).at(-1);
     expect(status).toEqual({ type: 'status', status: 'exited' });
+  });
+
+  it('emits agent.run.started on start and agent.run.completed once on a successful run', async () => {
+    captureEvent.mockClear();
+    const { store } = makeStore();
+    const agent = makeAgentRun();
+    const drv = createAgentDriver({ store, schedule: syncSchedule });
+    drv.start({ id: 1, run: agent.run });
+
+    expect(captureEvent).toHaveBeenCalledWith('agent.run.started', { sessionId: 1 });
+
+    agent.emit({ type: 'assistant_text', text: 'done' });
+    await tick();
+    agent.end();
+    await tick();
+    await drv.flush(1);
+    await tick();
+
+    const completedCalls = captureEvent.mock.calls.filter((c) => c[0] === 'agent.run.completed');
+    expect(completedCalls).toEqual([['agent.run.completed', { sessionId: 1 }]]);
+    expect(captureEvent).not.toHaveBeenCalledWith('agent.run.failed', expect.anything());
+  });
+
+  it('emits agent.run.failed on a failed run AND still captures the existing error', async () => {
+    captureError.mockClear();
+    captureEvent.mockClear();
+    const { store, statuses } = makeStore();
+    const agent = makeAgentRun();
+    const drv = createAgentDriver({ store, schedule: syncSchedule });
+    drv.start({ id: 1, run: agent.run });
+    const { sub } = makeSub();
+    await drv.attach(1, sub, 0);
+
+    agent.emit({ type: 'error', message: 'boom exit 1' });
+    await tick();
+    agent.end();
+    await tick();
+    await drv.flush(1);
+    await tick();
+
+    expect(statuses).toContain('failed');
+    // The existing error capture is untouched — this is additive, not a replacement.
+    expect(captureError).toHaveBeenCalledTimes(1);
+    // The new lifecycle/audit event fires alongside it.
+    const failedCalls = captureEvent.mock.calls.filter((c) => c[0] === 'agent.run.failed');
+    expect(failedCalls).toEqual([['agent.run.failed', { sessionId: 1 }]]);
+    expect(captureEvent).not.toHaveBeenCalledWith('agent.run.completed', expect.anything());
   });
 });

@@ -76,6 +76,56 @@ function buildIssuesQuery(filters: IssueFilters): string {
   return qs.length > 0 ? `?${qs}` : '';
 }
 
+// ---- activity (logs & events) -----------------------------------------------
+
+// Row shape from GET /signals-api/signals?kind=log,event&... (Task 2's
+// collector endpoint) — non-error signals only, so `kind` never carries
+// 'error' here (unlike IssueRow/SessionEventRow, which do see it). `name`,
+// `mechanism`, and `sessionId` are `.notNull()` columns on the collector's
+// `signals` table and the route selects them straight through, so — unlike
+// SessionEventRow (a different endpoint, where those genuinely are
+// nullable) — they are never null here. Only `message` is nullable.
+export interface SignalListRow {
+  id: number;
+  appId: number;
+  appSlug: string;
+  kind: 'log' | 'event';
+  name: string;
+  message: string | null;
+  level: IssueLevel;
+  mechanism: string;
+  sessionId: string;
+  clientTimestamp: string;
+  receivedAt: string;
+}
+
+export interface ActivityFilters {
+  kind?: 'log' | 'event';
+  app?: number;
+  level?: IssueLevel;
+  days?: number;
+  q?: string;
+  page?: number;
+  perPage?: number;
+}
+
+// Fixed key order, same rationale as ISSUE_FILTER_KEY_ORDER above — a stable
+// wire query string regardless of the order keys were set on the filters
+// object.
+const ACTIVITY_FILTER_KEY_ORDER: (keyof ActivityFilters)[] = ['kind', 'app', 'level', 'days', 'q', 'page', 'perPage'];
+
+function buildActivityQuery(filters: ActivityFilters): string {
+  const params = new URLSearchParams();
+  for (const key of ACTIVITY_FILTER_KEY_ORDER) {
+    const value = filters[key];
+    if (value !== undefined) {
+      params.set(key, String(value));
+    }
+  }
+  const qs = params.toString();
+  return qs.length > 0 ? `?${qs}` : '';
+}
+
 // ---- occurrences -----------------------------------------------------------
 
 export interface OccurrenceRow {
@@ -177,6 +227,13 @@ export function listIssues(filters: IssueFilters = {}): Promise<{ rows: IssueRow
 
 export function getIssue(id: number): Promise<IssueDetail> {
   return fetchJson(`/signals-api/issues/${id}`);
+}
+
+// Non-error signals stream (logs & events) — the Activity view's data
+// source, a sibling to listIssues but backed by /signals-api/signals rather
+// than /signals-api/issues.
+export function listSignals(filters: ActivityFilters = {}): Promise<{ rows: SignalListRow[]; total: number }> {
+  return fetchJson(`/signals-api/signals${buildActivityQuery(filters)}`);
 }
 
 // The collector's PATCH /issues/:id response is the updated `issues` row

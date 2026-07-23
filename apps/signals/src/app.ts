@@ -7,6 +7,7 @@ import { registerIngestRoutes } from './routes/ingest.routes';
 import { registerIssuesRoutes } from './routes/issues.routes';
 import { registerSdkRoutes } from './routes/sdk.routes';
 import { registerSessionsRoutes } from './routes/sessions.routes';
+import { registerSignalsRoutes } from './routes/signals.routes';
 import { registerSourcemapRoutes } from './routes/sourcemaps.routes';
 
 export function buildApp(context: { db: Db; rateLimiter?: RateLimiter }) {
@@ -61,6 +62,7 @@ export function buildApp(context: { db: Db; rateLimiter?: RateLimiter }) {
   registerIssuesRoutes(app, context);
   registerSdkRoutes(app);
   registerSessionsRoutes(app, context);
+  registerSignalsRoutes(app, context);
   registerSourcemapRoutes(app, context);
 
   return app;

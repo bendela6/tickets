@@ -11,4 +11,6 @@ export const environment = {
   signalsDisabled: process.env.SIGNALS_DISABLED === '1',
   signalsDsn: process.env.SIGNALS_DSN,
   signalsCollectorUrl: process.env.SIGNALS_COLLECTOR_URL ?? 'http://127.0.0.1:4640',
+  // Floor for console-log capture (installConsoleCapture) — 'error' | 'warning' | 'info'.
+  signalsLogLevel: (process.env.SIGNALS_LOG_LEVEL ?? 'warning') as 'error' | 'warning' | 'info',
 };

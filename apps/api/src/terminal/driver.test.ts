@@ -3,8 +3,8 @@ import { createTerminalDriver } from './driver';
 import type { OutputFrame, TerminalStore } from './store';
 import type { PtyHandle, ServerFrame, Subscriber } from './types';
 
-const { captureError } = vi.hoisted(() => ({ captureError: vi.fn() }));
-vi.mock('@bendela6/signals-node', () => ({ captureError }));
+const { captureError, captureEvent } = vi.hoisted(() => ({ captureError: vi.fn(), captureEvent: vi.fn() }));
+vi.mock('@bendela6/signals-node', () => ({ captureError, captureEvent }));
 
 // ── Fakes ────────────────────────────────────────────────────────────────────
 
@@ -478,5 +478,23 @@ describe('terminal driver', () => {
     const acts = frames.filter((f) => f.type === 'activity');
     expect(acts).toEqual(expect.arrayContaining([expect.objectContaining({ busy: true })]));
     expect(outputs(frames)).toEqual([]);
+  });
+
+  it('emits terminal.session.started on start and terminal.session.ended once the session exits', async () => {
+    captureEvent.mockClear();
+    const helper = makeStore();
+    const pty = makePty();
+    const drv = createTerminalDriver({ runner: { spawnPty: () => pty.handle }, store: helper.store, schedule: syncSchedule });
+    drv.start({ id: 1, command: 'sh', cwd: '/w' });
+
+    expect(captureEvent).toHaveBeenCalledWith('terminal.session.started', { sessionId: 1 });
+    expect(captureEvent).not.toHaveBeenCalledWith('terminal.session.ended', expect.anything());
+
+    pty.end(0);
+    await tick();
+    await drv.flush(1);
+    await tick();
+
+    expect(captureEvent).toHaveBeenCalledWith('terminal.session.ended', { sessionId: 1 });
   });
 });

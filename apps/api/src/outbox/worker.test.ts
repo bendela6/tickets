@@ -6,11 +6,12 @@ import { runCommand } from '../command/run-command';
 import { itemCreate } from '../command/item/create';
 import { createOutboxWorker } from './worker';
 
-const { captureError } = vi.hoisted(() => ({ captureError: vi.fn() }));
-vi.mock('@bendela6/signals-node', () => ({ captureError }));
+const { captureError, captureEvent } = vi.hoisted(() => ({ captureError: vi.fn(), captureEvent: vi.fn() }));
+vi.mock('@bendela6/signals-node', () => ({ captureError, captureEvent }));
 
 beforeEach(() => {
   captureError.mockClear();
+  captureEvent.mockClear();
   return resetDb();
 });
 afterAll(resetDb);
@@ -26,6 +27,7 @@ it('drains pending rows, projects them, and marks done', async () => {
   expect(await testDb.select().from(itemActivity).where(eq(itemActivity.itemId, created.id))).toHaveLength(1);
   const pending = await testDb.select().from(outbox).where(sql`${outbox.doneAt} IS NULL`);
   expect(pending).toHaveLength(0);
+  expect(captureEvent).toHaveBeenCalledWith('outbox.flush', { count: processed });
 });
 
 it('re-processing (done_at reset) does not duplicate the projection', async () => {

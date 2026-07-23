@@ -1,12 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { listModels, saveModel } from './models-client';
+import { getModel, listModels, saveModel } from './models-client';
 
-const { captureError } = vi.hoisted(() => ({ captureError: vi.fn() }));
-vi.mock('@bendela6/signals-react', () => ({ captureError }));
+const { captureError, captureEvent } = vi.hoisted(() => ({ captureError: vi.fn(), captureEvent: vi.fn() }));
+vi.mock('@bendela6/signals-react', () => ({ captureError, captureEvent }));
 
 afterEach(() => {
   vi.unstubAllGlobals();
   captureError.mockClear();
+  captureEvent.mockClear();
 });
 
 describe('models-client capture', () => {
@@ -56,5 +57,39 @@ describe('models-client capture', () => {
 
     await expect(saveModel('m', {})).resolves.toBe(false);
     expect(captureError).not.toHaveBeenCalled();
+  });
+
+  it('emits eer.model.export with modelName on a successful saveModel', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200 }));
+
+    await expect(saveModel('m', {})).resolves.toBe(true);
+    expect(captureEvent).toHaveBeenCalledWith('eer.model.export', { modelName: 'm' });
+  });
+
+  it('does NOT emit eer.model.export when saveModel fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }));
+
+    await expect(saveModel('m', {})).resolves.toBe(false);
+    expect(captureEvent).not.toHaveBeenCalled();
+  });
+
+  it('emits eer.model.import with modelName on a successful getModel', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve({ tables: [] }) }),
+    );
+
+    await expect(getModel('m')).resolves.toEqual({ tables: [] });
+    expect(captureEvent).toHaveBeenCalledWith('eer.model.import', { modelName: 'm' });
+  });
+
+  it('does NOT emit eer.model.import when getModel fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 404, json: () => Promise.resolve({ error: 'not found' }) }),
+    );
+
+    await expect(getModel('m')).rejects.toThrow();
+    expect(captureEvent).not.toHaveBeenCalled();
   });
 });
