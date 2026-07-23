@@ -273,7 +273,9 @@ export function Toolbar({ editor, controls, disabled, variant = 'full', onImageF
         </div>
       ))}
       {overflowIds.size > 0 ? (
-        <div className="ml-1 border-l border-hairline pl-1">
+        <div
+          className={cn((groups.length > 0 || blockTypeControl !== undefined) && 'ml-1 border-l border-hairline pl-1')}
+        >
           <OverflowMenu editor={editor} ids={overflowIds} disabled={disabled} />
         </div>
       ) : null}
@@ -381,7 +383,7 @@ function OverflowMenu({
           <IconPlus size={15} />
         </button>
       </MenuTrigger>
-      <MenuContent align="end" className="w-54 p-1.5">
+      <MenuContent align="end" className="w-54 rounded-[10px] p-1.5">
         {ids.has('highlight') ? (
           <MenuItem className="h-7.5" shortcut="⌘⇧H" onSelect={() => run(CONTROLS.highlight!.run)}>
             <span className="inline-flex items-center gap-2.25">
