@@ -1,3 +1,4 @@
+import { boolean, definePlayground, text } from '@tickets/ui/gallery';
 import { Checkbox } from './checkbox';
 
 export const meta = { title: 'Checkbox', group: 'Form controls' };
@@ -8,3 +9,12 @@ export const states = [
   { name: 'mixed', render: () => <Checkbox label="Mixed" indeterminate /> },
   { name: 'disabled', render: () => <Checkbox label="Disabled" disabled /> },
 ];
+
+export const playground = definePlayground({
+  controls: {
+    label: text('Notify me'),
+    indeterminate: boolean(),
+    disabled: boolean(),
+  },
+  render: (v) => <Checkbox {...v} />,
+});
