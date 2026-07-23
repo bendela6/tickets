@@ -20,6 +20,10 @@ export const LinkCursorDecoration = Extension.create({
         key: new PluginKey('linkCursorDecoration'),
         props: {
           decorations: (state) => {
+            // Only show the editing tint when the editor is editable
+            if (!this.editor.isEditable) {
+              return null;
+            }
             const { selection } = state;
             if (!selection.empty) {
               return null;
