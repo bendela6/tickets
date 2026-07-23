@@ -89,10 +89,6 @@ export async function initSelfSignals(db: Db): Promise<SignalsClient | null> {
   }
 }
 
-export function getSelfSignals(): SignalsClient | null {
-  return selfClient;
-}
-
 export function captureSelfError(error: unknown, options?: CaptureOptions): void {
   if (!selfClient || reporting) return;
   reporting = true;
