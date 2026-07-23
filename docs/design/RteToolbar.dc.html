@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;min-width:0">
+  <sc-for list="{{ tools }}" as="t" hint-placeholder-count="8">
+    <sc-if value="{{ t.sep }}" hint-placeholder-val="{{ false }}"><span style="width:1px;height:16px;background:var(--bd,#E0DDD5);margin:0 4px;flex:none"></span></sc-if>
+    <sc-if value="{{ t.select }}" hint-placeholder-val="{{ false }}"><span style="{{ t.style }}" style-hover="background:var(--in,#ECEAE3)"><span style="font:500 12px 'IBM Plex Sans',sans-serif">{{ t.label }}</span><dc-import name="Icon" glyph="chevron-down" size="12" hint-size="12px,12px"></dc-import></span></sc-if>
+    <sc-if value="{{ t.glyph }}" hint-placeholder-val="{{ false }}"><span style="{{ t.style }}" style-hover="background:var(--in,#ECEAE3)"><dc-import name="Icon" glyph="{{ t.glyph }}" size="15" hint-size="15px,15px"></dc-import></span></sc-if>
+    <sc-if value="{{ t.text }}" hint-placeholder-val="{{ false }}"><span style="{{ t.style }}" style-hover="background:var(--in,#ECEAE3)"><span style="{{ t.ts }}">{{ t.text }}</span></span></sc-if>
+    <sc-if value="{{ t.task }}" hint-placeholder-val="{{ false }}"><span style="{{ t.style }}" style-hover="background:var(--in,#ECEAE3)"><span style="width:12px;height:12px;border-radius:3.5px;border:1.5px solid currentColor;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box"><dc-import name="Icon" glyph="check" size="8" strokeWidth="3" hint-size="8px,8px"></dc-import></span></span></sc-if>
+    <sc-if value="{{ t.img }}" hint-placeholder-val="{{ false }}"><span style="{{ t.style }}" style-hover="background:var(--in,#ECEAE3)"><span style="width:15px;height:12px;border-radius:3px;border:1.5px solid currentColor;position:relative;display:inline-block;box-sizing:border-box"><span style="position:absolute;left:2px;top:2px;width:3px;height:3px;border-radius:50%;background:currentColor"></span></span></span></sc-if>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:48},&quot;tools&quot;:{&quot;editor&quot;:null,&quot;default&quot;:null,&quot;tsType&quot;:&quot;string[] — token names: 'b','i','u','s','code','link','ul','ol','task','quote','codeblock','img','at','hl','color','divider','more','sep','select:Label'; suffix '*' = active&quot;}}">
+const BTN = "height:26px;min-width:26px;padding:0 6px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;gap:3px;color:var(--f2,#5D5A50);cursor:pointer;flex:none;box-sizing:border-box";
+const ACT = ";background:var(--acs,#E9E7FA);color:var(--ac,#4E46C6)";
+const SANS = "'IBM Plex Sans',sans-serif";
+const DEF = {
+  b:    { text:'B',   ts:"font:600 13px "+SANS },
+  i:    { text:'I',   ts:"font:500 13px "+SANS+";font-style:italic" },
+  u:    { text:'U',   ts:"font:500 13px "+SANS+";text-decoration:underline;text-underline-offset:2.5px" },
+  s:    { text:'S',   ts:"font:500 13px "+SANS+";text-decoration:line-through" },
+  code: { text:'</>', ts:"font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:-.02em" },
+  at:   { text:'@',   ts:"font:500 13.5px "+SANS },
+  ol:   { text:'1.',  ts:"font:500 11.5px 'IBM Plex Mono',monospace" },
+  codeblock: { text:'{ }', ts:"font:500 11px 'IBM Plex Mono',monospace;letter-spacing:-.06em" },
+  divider:   { text:'—',   ts:"font:500 12px "+SANS },
+  hl:   { text:'A',   ts:"font:600 12px "+SANS+";background:var(--hl,#F1DFA0);padding:0 3px;border-radius:3px;color:var(--f1,#25231D)" },
+  color:{ text:'A',   ts:"font:600 12.5px "+SANS+";color:var(--ac,#4E46C6);border-bottom:3px solid var(--ac,#4E46C6)" },
+  link: { glyph:'link-2' },
+  ul:   { glyph:'list' },
+  quote:{ glyph:'quote' },
+  more: { glyph:'plus' },
+  task: { task:true },
+  img:  { img:true }
+};
+const FULL = ['select:Paragraph','sep','b','i','u','s','code','sep','link','sep','ul','ol','task','sep','quote','codeblock','sep','img','sep','more'];
+function parse(n) {
+  let active = n.endsWith('*'); if (active) n = n.slice(0, -1);
+  if (n === 'sep') return { sep:true };
+  if (n.indexOf('select:') === 0) return { select:true, label:n.slice(7), style:BTN + ';padding:0 8px' + (active ? ACT : '') };
+  const d = DEF[n] || { text:'?', ts:"font:500 12px "+SANS };
+  return Object.assign({}, d, { style: BTN + (active ? ACT : '') });
+}
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props || {};
+    const list = Array.isArray(p.tools) && p.tools.length ? p.tools : FULL;
+    return { tools: list.map(parse) };
+  }
+}
+</script>
+</body>
+</html>

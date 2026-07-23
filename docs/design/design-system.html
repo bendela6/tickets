@@ -649,9 +649,21 @@ body { margin:0; background:#E9E8E3; font-family:'IBM Plex Sans',sans-serif; -we
   </section>
 
   <!-- ============ 11 MARKDOWN EDITOR ============ -->
-  <section data-screen-label="11 Markdown editor" style="max-width:1280px;margin:0 auto 44px;padding:0 32px">
-    <h2 style="font:600 16px 'IBM Plex Sans',sans-serif;color:#25231D;margin:0 0 4px"><span style="font:500 12px 'IBM Plex Mono',monospace;color:#918D80;margin-right:10px">11</span>Markdown editor</h2>
-    <p style="font:400 13px/1.5 'IBM Plex Sans',sans-serif;color:#5D5A50;margin:0 0 16px;max-width:640px">The description and comment surface. Write in mono, preview in prose — the tab pair makes the mode unmistakable.</p>
+  <section data-screen-label="11 Rich text editor" style="max-width:1280px;margin:0 auto 44px;padding:0 32px">
+    <h2 style="font:600 16px 'IBM Plex Sans',sans-serif;color:#25231D;margin:0 0 4px"><span style="font:500 12px 'IBM Plex Mono',monospace;color:#918D80;margin-right:10px">11</span>Rich text editor</h2>
+    <p style="font:400 13px/1.5 'IBM Plex Sans',sans-serif;color:#5D5A50;margin:0 0 10px;max-width:680px">One WYSIWYG surface (RichTextEditor) backs descriptions, the comment composer, and rich-text fields — the write/preview markdown editor is retired. The toolbar is composed from groups (block select · marks · link · lists · blocks · insert · overflow); separators collapse with their group so any per-surface subset reads as intentional. Full mockups: <span style="font:500 12px 'IBM Plex Mono',monospace">RichTextEditor.dc.html</span> · toolbar atoms: <span style="font:500 12px 'IBM Plex Mono',monospace">RteToolbar.dc.html</span>.</p>
+    <ul style="font:400 13px/1.7 'IBM Plex Sans',sans-serif;color:#5D5A50;margin:0 0 16px;max-width:720px;padding-left:18px">
+      <li><strong style="color:#25231D;font-weight:600">Toolbar buttons</strong> — 26px height, min-width 26, radius 6, ink-2 glyphs, hover inset bg; active = accent-subtle bg + accent glyph. Separators 1px×16 hairline. Full config: Paragraph-select · B I U S &lt;/&gt; · link · ul 1. task · quote { } · img · +. Overflow (+) menu holds Highlight, Text color, Callout, Collapsible, Divider.</li>
+      <li><strong style="color:#25231D;font-weight:600">Compact config</strong> (comments) — B I S &lt;/&gt; · link @ · ul task · { } img, docked in the bottom action row beside ⌘↩ and the Comment button; one-line comments stay one line tall.</li>
+      <li><strong style="color:#25231D;font-weight:600">States</strong> — empty: ink-3 placeholder. Focused: control border + 3px accent halo (15%). Disabled: inset bg, toolbar at 45% opacity, cursor not-allowed. Read-only bodies render with no container chrome.</li>
+      <li><strong style="color:#25231D;font-weight:600">Chips</strong> — mention: 999px pill, accent-subtle bg, accent text, leading 14px initials avatar. Ticket ref: bordered 6px chip, mono ID, leading 7px status dot. Suggestion popovers: PEOPLE/TICKETS section label, 34px rows, selected row inset bg + ↩ hint, floating shadow 0 12px 32px @16%.</li>
+      <li><strong style="color:#25231D;font-weight:600">Callouts</strong> — tinted fill + toned leading icon (info/success/warning/danger), radius 8, no border, no left bar.</li>
+      <li><strong style="color:#25231D;font-weight:600">Task list</strong> — 15px checkbox radius 4; checked = accent fill + white check, label struck through in ink-3.</li>
+      <li><strong style="color:#25231D;font-weight:600">Images</strong> — upload runs in place (dimmed slot + filename + 3px accent progress bar); uploaded shows a caption row (filename · size · Alt affordance); failure keeps the slot with danger tint + Retry / Remove.</li>
+      <li><strong style="color:#25231D;font-weight:600">Link editing</strong> — cursor-in-link tints the span and opens a small popover: link icon, mono URL (truncated), divider, edit, remove. No modal.</li>
+      <li><strong style="color:#25231D;font-weight:600">Markdown shortcuts stay live</strong> — typing **bold**, # heading, - [ ] etc. converts as you type.</li>
+    </ul>
+    <p style="font:400 13px/1.5 'IBM Plex Sans',sans-serif;color:#5D5A50;margin:0 0 16px;max-width:640px">Legacy write/preview reference (retired):</p>
     <div style="display:flex;flex-wrap:wrap;gap:20px">
       <sc-if value="{{showLight}}" hint-placeholder-val="{{true}}">
       <div style="flex:1 1 520px;min-width:340px;background:var(--bg);border:1px solid var(--bd);border-radius:14px;padding:20px 22px;color:var(--f1);--bg:#F7F6F2;--rs:#FFFFFF;--in:#ECEAE3;--bd:#E0DDD5;--bs:#C9C5BA;--f1:#25231D;--f2:#5D5A50;--f3:#918D80;--ac:#4E46C6">
