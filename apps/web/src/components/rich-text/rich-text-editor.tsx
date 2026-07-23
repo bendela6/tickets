@@ -8,9 +8,10 @@ import {
   toolbarControls,
   type Feature,
 } from '@tickets/richtext';
-import { EditorContent, useEditor } from '@tiptap/react';
+import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '../../ui/cn';
+import { uploadImage } from './image-upload';
 import { buildSuggestionHooks, type RichTextSuggestions } from './suggestions';
 import { Toolbar } from './toolbar';
 
@@ -47,7 +48,15 @@ export function RichTextEditor({
   suggestions,
 }: RichTextEditorProps) {
   const [focused, setFocused] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const featureList = resolveFeatures(features);
+  // handlePaste/handleDrop close over this ref rather than the `editor`
+  // binding below: they're passed into the same useEditor() call that
+  // produces `editor`, so `editor` itself isn't in scope yet at the point
+  // the closures are created. The ref is kept current every render (see
+  // assignment right after useEditor), which is enough because paste/drop
+  // can only fire after the surface has mounted at least once.
+  const editorRef = useRef<Editor | null>(null);
 
   // A corrupt stored doc (starts with the doc sentinel but fails to parse as
   // JSON/doc) silently falls back to plain-paragraph rendering via
@@ -88,11 +97,50 @@ export function RichTextEditor({
   // for an async lifecycle event just to read the doc it was created with.
   const initialRef = useRef<string | null>(null);
 
+  // Shared by paste, drop, and the toolbar's hidden file input. Inserts
+  // nothing while the upload is in flight (spec rule: no dangling
+  // placeholder node that could survive a failed/cancelled upload) — the
+  // image node only lands once the upload resolves. `pos` pins the drop
+  // coordinates; omitted for paste/toolbar so it falls back to the caret.
+  const insertImagesFromFiles = (files: FileList | null | undefined, pos?: number): boolean => {
+    const images = files ? Array.from(files).filter((file) => file.type.startsWith('image/')) : [];
+    if (images.length === 0) {
+      return false;
+    }
+    setUploadError(null);
+    for (const file of images) {
+      uploadImage(file)
+        .then((result) => {
+          const instance = editorRef.current;
+          if (instance === null) {
+            return;
+          }
+          const insertPos = pos ?? instance.state.selection.from;
+          instance
+            .chain()
+            .focus()
+            .insertContentAt(insertPos, { type: 'image', attrs: { src: result.url, alt: file.name } })
+            .run();
+        })
+        .catch((error: unknown) => {
+          setUploadError(error instanceof Error ? error.message : 'Image upload failed');
+        });
+    }
+    return true;
+  };
+
   const editor = useEditor({
     extensions,
     content: toDisplayDoc(value),
     editable: disabled !== true,
     immediatelyRender: true,
+    editorProps: {
+      handlePaste: (_view, event) => insertImagesFromFiles(event.clipboardData?.files),
+      handleDrop: (view, event) => {
+        const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
+        return insertImagesFromFiles(event.dataTransfer?.files, coords?.pos);
+      },
+    },
     onFocus: () => setFocused(true),
     onBlur: ({ editor: instance }) => {
       setFocused(false);
@@ -106,6 +154,8 @@ export function RichTextEditor({
     },
   });
 
+  editorRef.current = editor;
+
   if (editor !== null && initialRef.current === null) {
     initialRef.current = JSON.stringify(editor.getJSON());
   }
@@ -117,18 +167,28 @@ export function RichTextEditor({
   }, [editor, disabled]);
 
   return (
-    <div
-      className={cn(
-        'overflow-hidden rounded-[10px] border bg-raised',
-        focused ? 'border-control' : 'border-hairline',
-      )}
-    >
-      <Toolbar editor={editor} controls={toolbarControls(featureList)} disabled={disabled} />
-      <EditorContent
-        editor={editor}
-        className="rt block min-h-27.5 w-full p-3 font-sans text-ui leading-[1.6] text-ink outline-none"
-        data-placeholder={placeholder}
-      />
+    <div>
+      <div
+        className={cn(
+          'overflow-hidden rounded-[10px] border bg-raised',
+          focused ? 'border-control' : 'border-hairline',
+        )}
+      >
+        <Toolbar
+          editor={editor}
+          controls={toolbarControls(featureList)}
+          disabled={disabled}
+          onImageFiles={(files) => insertImagesFromFiles(files)}
+        />
+        <EditorContent
+          editor={editor}
+          className="rt block min-h-27.5 w-full p-3 font-sans text-ui leading-[1.6] text-ink outline-none"
+          data-placeholder={placeholder}
+        />
+      </div>
+      {uploadError !== null ? (
+        <p className="m-0 mt-1 font-sans text-meta text-danger">{uploadError}</p>
+      ) : null}
     </div>
   );
 }
