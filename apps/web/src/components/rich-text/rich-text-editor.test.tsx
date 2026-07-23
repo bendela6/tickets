@@ -102,6 +102,40 @@ describe('RichTextEditor', () => {
     expect(document.querySelector('img')!.getAttribute('src')).toBe('/api/attachments/2');
   });
 
+  it('shows the placeholder text on the empty paragraph for an empty doc', () => {
+    render(<RichTextEditor value="" onSave={vi.fn()} placeholder="Comment…" />);
+    const empty = document.querySelector('.is-editor-empty')!;
+    expect(empty).toHaveAttribute('data-placeholder', 'Comment…');
+  });
+
+  it('hides the placeholder once the doc has content', () => {
+    render(<RichTextEditor value={storedDoc} onSave={vi.fn()} placeholder="Comment…" />);
+    expect(document.querySelector('.is-editor-empty')).toBeNull();
+  });
+
+  it('does not re-fire onSave on a second blur with no further edits', async () => {
+    const onSave = vi.fn();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ id: 3, url: '/api/attachments/3' }), { status: 201 }),
+    );
+    render(<RichTextEditor value="" onSave={onSave} />);
+    const surface = document.querySelector('[contenteditable="true"]')!;
+    const file = new File([new Uint8Array([1])], 'shot.png', { type: 'image/png' });
+
+    // Change the doc (paste an image — proven elsewhere in this file to
+    // land via editor commands, unlike raw contenteditable typing which
+    // jsdom doesn't wire through ProseMirror).
+    fireEvent.paste(surface, { clipboardData: { files: [file], getData: () => '' } });
+    await waitFor(() => expect(document.querySelector('img')).not.toBeNull());
+
+    fireEvent.blur(surface);
+    expect(onSave).toHaveBeenCalledTimes(1);
+
+    fireEvent.focus(surface);
+    fireEvent.blur(surface); // no edit since the previous save
+    expect(onSave).toHaveBeenCalledTimes(1);
+  });
+
   it('a non-image paste leaves default paste behavior untouched (no upload attempted)', () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch');
     render(<RichTextEditor value="" onSave={vi.fn()} />);

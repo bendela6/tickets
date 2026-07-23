@@ -1,6 +1,7 @@
 import { captureError } from '@bendela6/signals-react';
 import {
   buildExtensions,
+  DOC_SENTINEL,
   isDocEmpty,
   parseDoc,
   PRESETS,
@@ -23,10 +24,6 @@ type RichTextEditorProps = {
   features?: 'full' | 'compact' | Feature[];
   suggestions?: RichTextSuggestions;
 };
-
-// parseDoc's sentinel check, mirrored here so we can flag a corrupt stored
-// doc without re-parsing it (toDisplayDoc already falls back gracefully).
-const DOC_SENTINEL = '{"type":"doc"';
 
 function resolveFeatures(features: RichTextEditorProps['features']): Feature[] {
   if (Array.isArray(features)) {
@@ -58,6 +55,15 @@ export function RichTextEditor({
   // can only fire after the surface has mounted at least once.
   const editorRef = useRef<Editor | null>(null);
 
+  // Tiptap's Placeholder extension is configured once, when buildExtensions
+  // runs (see the frozen-deps useMemo below) — but the placeholder prop can
+  // change afterward without remounting the editor (detail-comments swaps
+  // its copy once a user is picked in the header). Threading a function
+  // that reads this ref keeps the placeholder live: the extension calls it
+  // on every decoration pass instead of capturing a stale string.
+  const placeholderRef = useRef(placeholder);
+  placeholderRef.current = placeholder;
+
   // A corrupt stored doc (starts with the doc sentinel but fails to parse as
   // JSON/doc) silently falls back to plain-paragraph rendering via
   // toDisplayDoc — report it once so the corruption doesn't go unnoticed.
@@ -72,8 +78,11 @@ export function RichTextEditor({
   }, [value]);
 
   const extensions = useMemo(
-    () => buildExtensions(featureList, buildSuggestionHooks(suggestions)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- feature list + suggestion identity are stable per surface
+    () =>
+      buildExtensions(featureList, buildSuggestionHooks(suggestions), {
+        placeholder: () => placeholderRef.current ?? '',
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- feature list + suggestion identity are stable per surface; placeholder is read live from placeholderRef so it isn't a dependency
     [],
   );
 
@@ -155,6 +164,10 @@ export function RichTextEditor({
         return;
       }
       const next = isDocEmpty(doc as never) ? '' : serialized;
+      // Advance the baseline before calling onSave so the next blur (with no
+      // further edits) compares against the just-saved state instead of the
+      // original stored value — otherwise every later blur re-fires onSave.
+      initialRef.current = serialized;
       onSave(next);
     },
   });
@@ -188,7 +201,6 @@ export function RichTextEditor({
         <EditorContent
           editor={editor}
           className="rt block min-h-27.5 w-full p-3 font-sans text-ui leading-[1.6] text-ink outline-none"
-          data-placeholder={placeholder}
         />
       </div>
       {uploadError !== null ? (
