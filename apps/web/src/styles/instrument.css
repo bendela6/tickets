@@ -558,9 +558,11 @@
     border-radius: 4px;
   }
 
-  /* Empty-state placeholder: standard Tiptap Placeholder-extension hook
-     (`.is-editor-empty::before` reading `data-placeholder`). Dormant until
-     a later task wires the Placeholder extension into buildExtensions. */
+  /* Empty-state placeholder: Tiptap's Placeholder extension (registered in
+     buildExtensions, packages/richtext/src/build-extensions.ts) decorates
+     the empty textblock itself with `is-empty is-editor-empty` classes and
+     a `data-placeholder` attribute — verified against its source
+     (@tiptap/extensions/src/placeholder/*). */
   .rt .is-editor-empty:first-child::before {
     content: attr(data-placeholder);
     float: left;

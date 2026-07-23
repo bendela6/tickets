@@ -7,7 +7,10 @@ export type DocNode = {
   text?: string;
 };
 
-const SENTINEL = '{"type":"doc"';
+// Marks a string as a serialized tiptap doc rather than legacy markdown.
+// Exported so callers that need to sniff the sentinel without a full parse
+// (e.g. RichTextEditor's corrupt-doc detection) share this one definition.
+export const DOC_SENTINEL = '{"type":"doc"';
 const ATOMS = new Set(['image', 'mention', 'ticketRef']);
 
 export function isRichDoc(text: string): boolean {
@@ -15,7 +18,7 @@ export function isRichDoc(text: string): boolean {
 }
 
 export function parseDoc(text: string): DocNode | null {
-  if (!text.startsWith(SENTINEL)) {
+  if (!text.startsWith(DOC_SENTINEL)) {
     return null;
   }
   try {
