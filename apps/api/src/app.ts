@@ -12,6 +12,7 @@ import { registerAgentSocket } from './agent/socket';
 import { createLocalWorktreeManager, type WorktreeManager } from './agent/worktree';
 import { HttpError } from './errors';
 import { registerActivityRoutes } from './routes/activity.routes';
+import { registerAttachmentsRoutes } from './routes/attachments.routes';
 import { registerBoardRoutes } from './routes/board.routes';
 import { registerItemsRoutes } from './routes/items.routes';
 import { registerLinksRoutes } from './routes/links.routes';
@@ -51,6 +52,17 @@ export function buildApp(context: {
   signals?: SignalsClient | null;
 }) {
   const app = fastify({ logger: false });
+
+  // Attachment uploads arrive as raw image bytes, not JSON — register a
+  // buffer parser for exactly the mimes registerAttachmentsRoutes accepts so
+  // request.body is a Buffer there. Any other content-type (e.g.
+  // application/pdf) has no parser and fastify replies 415 on its own,
+  // which is what that route relies on for rejecting non-image uploads.
+  app.addContentTypeParser(
+    ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+    { parseAs: 'buffer' },
+    (_request, body, done) => done(null, body),
+  );
 
   // The agent provider registry (code registry, not DB rows). Injectable so
   // tests supply a fake provider; production ships the Claude adapter.
@@ -170,6 +182,7 @@ export function buildApp(context: {
   registerUsersRoutes(app, context);
   registerItemsRoutes(app, context);
   registerActivityRoutes(app, context);
+  registerAttachmentsRoutes(app, context);
   registerLinksRoutes(app, context);
   registerBoardRoutes(app, context);
   registerVocabularyRoutes(app, context);
