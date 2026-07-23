@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { ApiError } from '../../api/api-error';
 import { usePatchIssueStatus, useSignalsIssue, useSignalsOccurrences, useSignalsSession } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
+import { cn } from '@tickets/ui/cn';
 import type { TerminalBreadcrumb } from './breadcrumb-list';
 import { BreadcrumbList } from './breadcrumb-list';
 import { ContextRail } from './context-rail';
@@ -42,31 +43,43 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
       {rows.length === 0 ? (
         <div className="px-4 py-4 font-mono text-[11.5px] text-ink-3">no occurrences recorded</div>
       ) : (
-        rows.map((row) => (
-          <div
-            key={row.id}
-            role="row"
-            className="grid h-8.5 items-center border-b border-hairline px-4 last:border-b-0"
-            style={{ gridTemplateColumns: OCCURRENCES_GRID_COLUMNS }}
-          >
-            <span className="font-mono text-[11.5px] font-medium text-ink">{relativeTime(row.receivedAt)}</span>
-            <span className="font-mono text-[11.5px] text-ink-2">{row.release ?? '—'}</span>
-            <span>
-              {row.sessionId !== null ? (
-                <Link
-                  to="/signals/sessions/$sessionId"
-                  params={{ sessionId: row.sessionId }}
-                  className="font-mono text-[11.5px] font-medium text-accent hover:underline"
-                >
-                  {row.sessionId} →
-                </Link>
-              ) : (
-                <span className="font-mono text-[11.5px] text-ink-3">—</span>
+        rows.map((row, index) => {
+          // The stack trace + breadcrumbs cards above are built from the newest
+          // occurrence (page 1, row 0), so mark that row here — accent tint +
+          // a "shown above" note — per the design, so it's clear which one the
+          // detail above corresponds to.
+          const isNewest = page === 1 && index === 0;
+          return (
+            <div
+              key={row.id}
+              role="row"
+              className={cn(
+                'grid h-8.5 items-center border-b border-hairline px-4 last:border-b-0',
+                isNewest && 'bg-accent-subtle',
               )}
-            </span>
-            <span />
-          </div>
-        ))
+              style={{ gridTemplateColumns: OCCURRENCES_GRID_COLUMNS }}
+            >
+              <span className="font-mono text-[11.5px] font-medium text-ink">{relativeTime(row.receivedAt)}</span>
+              <span className="font-mono text-[11.5px] text-ink-2">{row.release ?? '—'}</span>
+              <span>
+                {row.sessionId !== null ? (
+                  <Link
+                    to="/signals/sessions/$sessionId"
+                    params={{ sessionId: row.sessionId }}
+                    className="font-mono text-[11.5px] font-medium text-accent hover:underline"
+                  >
+                    {row.sessionId} →
+                  </Link>
+                ) : (
+                  <span className="font-mono text-[11.5px] text-ink-3">—</span>
+                )}
+              </span>
+              <span className="text-right font-mono text-[10.5px] text-ink-3">
+                {isNewest ? 'shown above' : ''}
+              </span>
+            </div>
+          );
+        })
       )}
       <div className="flex h-8.5 items-center gap-2 border-t border-hairline bg-app px-4 font-mono text-[11px] text-ink-3">
         <span>{OCCURRENCES_PER_PAGE} per page</span>
