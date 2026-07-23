@@ -22,5 +22,7 @@ export async function initApiSignals(): Promise<SignalsClient | null> {
     environment: environment.nodeEnv,
     exitOnUncaught: environment.nodeEnv === 'production',
     registerProcessHandlers: true,
+    captureConsole: true,
+    logLevel: environment.signalsLogLevel,
   });
 }
