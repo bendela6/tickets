@@ -9,6 +9,7 @@ export { REGISTRY } from './registry';
 export type { FeatureEntry, ToolbarControl } from './registry';
 export { Callout } from './nodes/callout';
 export type { CalloutKind } from './nodes/callout';
+export { LinkCursorDecoration } from './nodes/link-decoration';
 export { userMention, ticketRef } from './nodes/refs';
 export type { SuggestionHooks } from './nodes/refs';
 export { markdownToDoc, toDisplayDoc } from './markdown-to-doc';
