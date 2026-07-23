@@ -188,24 +188,20 @@ describe('RichTextEditor', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it('two rapid Mod-Enter keydowns do not double-submit once submitPending flips true', async () => {
+  it('two rapid Mod-Enter keydowns do not double-submit (synchronous lock)', async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();
-    const { rerender } = render(
+    render(
       <RichTextEditor value="" onSave={vi.fn()} features="compact" composer={{ onSubmit }} />,
     );
     const surface = document.querySelector('[contenteditable="true"]')!;
     await user.type(surface, 'hi');
 
-    fireEvent.keyDown(surface, { key: 'Enter', metaKey: true });
-    expect(onSubmit).toHaveBeenCalledTimes(1);
-
-    // Mimic the caller flipping submitPending true in response to the first
-    // submit's mutation kicking off, before it resolves.
-    rerender(
-      <RichTextEditor value="" onSave={vi.fn()} features="compact" composer={{ onSubmit, submitPending: true }} />,
-    );
-    fireEvent.keyDown(surface, { key: 'Enter', metaKey: true });
+    // Fire both Mod-Enter keydowns back-to-back with NO rerender between them.
+    // Both see the stale submitPending value in their closure, but the
+    // synchronous lock prevents the second from calling onSubmit.
+    fireEvent.keyDown(surface, { key: 'Enter', metaKey: true, repeat: false });
+    fireEvent.keyDown(surface, { key: 'Enter', metaKey: true, repeat: false });
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
