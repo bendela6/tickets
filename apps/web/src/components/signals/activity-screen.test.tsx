@@ -15,7 +15,7 @@ function signal(overrides: Partial<SignalListRow> = {}): SignalListRow {
     name: 'console.log',
     message: 'checkout started',
     level: 'info',
-    mechanism: null,
+    mechanism: 'console',
     sessionId: 'sess-abc123',
     clientTimestamp: '2026-07-22T00:00:00Z',
     receivedAt: '2026-07-22T00:00:05Z',
@@ -29,8 +29,9 @@ const EVENT_ROW = signal({
   kind: 'event',
   name: 'checkout.completed',
   message: null,
+  mechanism: 'custom',
   appSlug: 'admin-panel',
-  sessionId: null,
+  sessionId: 'sess-def456',
 });
 
 const appsRoute: FetchRoute = { test: /\/signals-api\/apps$/, handler: () => [] };
@@ -66,6 +67,24 @@ test('(b) switching the kind filter to "log" refetches with kind=log', async () 
 
   await waitFor(() => {
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes('kind=log'))).toBe(true);
+  });
+});
+
+test('(b2) switching the kind filter to "event" refetches with kind=event', async () => {
+  const { fetchMock } = renderSignals(<ActivityScreen />, {
+    fetchRoutes: [
+      appsRoute,
+      { test: /\/signals-api\/signals\?/, handler: () => ({ rows: [LOG_ROW, EVENT_ROW], total: 2 }) },
+    ],
+  });
+
+  await screen.findByText('console.log');
+  fetchMock.mockClear();
+
+  fireEvent.change(screen.getByLabelText('Filter by kind'), { target: { value: 'event' } });
+
+  await waitFor(() => {
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('kind=event'))).toBe(true);
   });
 });
 

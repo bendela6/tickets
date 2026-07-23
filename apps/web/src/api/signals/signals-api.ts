@@ -80,17 +80,21 @@ function buildIssuesQuery(filters: IssueFilters): string {
 
 // Row shape from GET /signals-api/signals?kind=log,event&... (Task 2's
 // collector endpoint) — non-error signals only, so `kind` never carries
-// 'error' here (unlike IssueRow/SessionEventRow, which do see it).
+// 'error' here (unlike IssueRow/SessionEventRow, which do see it). `name`,
+// `mechanism`, and `sessionId` are `.notNull()` columns on the collector's
+// `signals` table and the route selects them straight through, so — unlike
+// SessionEventRow (a different endpoint, where those genuinely are
+// nullable) — they are never null here. Only `message` is nullable.
 export interface SignalListRow {
   id: number;
   appId: number;
   appSlug: string;
   kind: 'log' | 'event';
-  name: string | null;
+  name: string;
   message: string | null;
   level: IssueLevel;
-  mechanism: string | null;
-  sessionId: string | null;
+  mechanism: string;
+  sessionId: string;
   clientTimestamp: string;
   receivedAt: string;
 }
