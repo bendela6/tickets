@@ -2,7 +2,8 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["ES2022", "DOM"],
-    "types": ["vitest/globals", "node"],
+    "jsx": "react-jsx",
+    "types": ["vitest/globals", "node", "vite/client"],
     "resolveJsonModule": true
   },
   "include": ["src"]
