@@ -58,13 +58,15 @@ Hand-authored in the static `@theme inline` section of `tokens.css`, one commit 
 | Group | Tokens | Values |
 |---|---|---|
 | Type scale | `text-nano / micro / body / title / heading / display` | 9 / 10 / 14 / 16 / 20 / 24px, each with a line-height chosen to match current usage at audit sites |
-| Radii | `radius-xs / sm / xl` | 4 / 6 / 10px (existing ctrl 5 / card 8 / panel 12 unchanged) |
+| Radii | `radius-chip / tile / overlay` | 4 / 6 / 10px (existing ctrl 5 / card 8 / panel 12 unchanged) |
 | Border | `border-hair` | 1.5px |
 | Focus ring | `ring-focus` | 3px |
-| Tracking | `tracking-wide / wider / widest` | .06 / .08 / .09em |
+| Tracking | `tracking-label / caps / mono-label` | .06 / .08 / .09em |
 | Z-scale | `z-sticky / scrim / overlay` | 10 / 40 / 50 |
 
 Off-scale sizes found in the audit (18, 22, half-px) are normalized onto this scale **at consumption time** in later phases, where any deliberate ±2px shift is reviewed per screen. P1 changes no rendering.
+
+**Deviation rationale:** Tailwind v4 ships default `--radius-xs/sm` and `--tracking-wide/wider/widest`; overriding them would restyle existing stock utility usage, so the new radii and tracking tokens use distinct names (chip/tile/overlay and label/caps/mono-label).
 
 ## Swatches
 
