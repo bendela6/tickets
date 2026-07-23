@@ -1,5 +1,6 @@
 import type { Db } from '@tickets/db';
 import { itemActivity } from '@tickets/db';
+import { docToText, parseDoc } from '@tickets/richtext';
 import type { StoredEvent } from '../automation/registry';
 
 // Compute a self-contained, display-ready summary from a value-only item event.
@@ -7,7 +8,12 @@ function summarize(event: StoredEvent): Record<string, unknown> {
   const payload = (event.payload ?? {}) as Record<string, unknown>;
   if (event.kind === 'comment.added') {
     const body = typeof payload.body === 'string' ? payload.body : '';
-    return { commentId: payload.commentId, excerpt: body.slice(0, 140) };
+    // Comment bodies may be legacy markdown or a serialized tiptap doc — an
+    // un-parsed doc's raw JSON is not a usable excerpt, so extract plain
+    // text first.
+    const doc = parseDoc(body);
+    const text = doc ? docToText(doc) : body;
+    return { commentId: payload.commentId, excerpt: text.slice(0, 140) };
   }
   if (event.kind === 'item.created') {
     const values = (payload.values ?? {}) as Record<string, unknown>;
