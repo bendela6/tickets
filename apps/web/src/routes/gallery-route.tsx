@@ -9,10 +9,12 @@ const webDemos = collectDemos(
   import.meta.glob('../**/*.demo.tsx', { eager: true }) as Record<string, unknown>,
 );
 
+const allDemos = prepareDemos([...packageDemos, ...webDemos]);
+
 function GalleryScreen() {
   return (
     <GalleryShell
-      demos={prepareDemos([...packageDemos, ...webDemos])}
+      demos={allDemos}
       title="Instrument — primitives gallery"
       providers={(children) => (
         <TooltipProvider>
