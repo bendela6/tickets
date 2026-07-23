@@ -5,11 +5,10 @@ import { isDemoError, type CollectedDemo } from './types';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
-function selectionFromHash(demos: LiveDemo[]): string | null {
-  const raw = window.location.hash.replace(/^#/, '');
-  if (!raw) return null;
-  const slug = raw.includes('--') ? raw.split('--')[0]! : raw;
-  return demos.some((d) => d.slug === slug) ? slug : null;
+function slugFromHash(rawHash: string, live: LiveDemo[]): string | null {
+  if (!rawHash) return null;
+  const slug = rawHash.includes('--') ? rawHash.split('--')[0]! : rawHash;
+  return live.some((d) => d.slug === slug) ? slug : null;
 }
 
 export function GalleryShell({
@@ -23,26 +22,25 @@ export function GalleryShell({
 }) {
   const live = demos.filter((d): d is LiveDemo => !isDemoError(d));
   const errors = demos.filter(isDemoError);
-  const [selected, setSelected] = useState<string | null>(() => selectionFromHash(live));
+  const [rawHash, setRawHash] = useState(() => window.location.hash.replace(/^#/, ''));
 
   useEffect(() => {
-    const onHash = () => setSelected(selectionFromHash(live));
+    const onHash = () => setRawHash(window.location.hash.replace(/^#/, ''));
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
-    // live is derived from props; demos identity is stable per host glob
-  }, [demos]);
+  }, []);
+
+  const selected = slugFromHash(rawHash, live);
 
   // Spec: "#slug--state selects the component AND scrolls to the state". The
   // state cell only exists after the selection render, so scroll post-render.
   useEffect(() => {
-    const raw = window.location.hash.replace(/^#/, '');
-    if (selected && raw.includes('--')) document.getElementById(raw)?.scrollIntoView();
-  }, [selected]);
+    if (rawHash.includes('--')) document.getElementById(rawHash)?.scrollIntoView();
+  }, [rawHash]);
 
   function toggleTheme() {
     const root = document.documentElement;
     root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
-    setSelected((s) => s); // no-op state poke keeps previous behavior of re-render
   }
 
   const groups = [...new Set(live.map((d) => d.meta.group))];
@@ -53,7 +51,7 @@ export function GalleryShell({
       <aside className="sticky top-0 flex h-screen w-56 shrink-0 flex-col gap-4 overflow-y-auto border-r border-hairline bg-raised px-4 py-6">
         <a
           href="#"
-          onClick={() => setSelected(null)}
+          onClick={() => setRawHash('')}
           className={`rounded-ctrl px-2 py-1 text-ui ${selected === null ? 'bg-accent-subtle text-accent' : 'text-ink-2 hover:text-ink'}`}
         >
           All
