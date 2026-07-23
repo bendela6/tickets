@@ -3,8 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RichTextEditor } from './rich-text-editor';
 import { RichTextView } from './rich-text-view';
+import { FakeXHR } from './test-fake-xhr';
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  FakeXHR.reset();
+});
 
 const storedDoc = JSON.stringify({
   type: 'doc',
@@ -232,55 +237,105 @@ describe('RichTextEditor', () => {
     expect(document.querySelector('[contenteditable="false"]')).toBeNull();
   });
 
-  it('pasting an image file uploads it and inserts an image node, no placeholder while pending', async () => {
-    let resolveUpload!: (value: Response) => void;
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockReturnValue(
-      new Promise<Response>((resolve) => {
-        resolveUpload = resolve;
-      }),
-    );
+  it('pasting an image file uploads it in place: no doc placeholder, a pending decoration card, then the image node on success', async () => {
+    vi.stubGlobal('XMLHttpRequest', FakeXHR);
     render(<RichTextEditor value="" onSave={vi.fn()} />);
     const surface = document.querySelector('[contenteditable="true"]')!;
     const file = new File([new Uint8Array([1, 2])], 'shot.png', { type: 'image/png' });
 
     fireEvent.paste(surface, { clipboardData: { files: [file], getData: () => '' } });
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/attachments', expect.objectContaining({ method: 'POST' }));
-    expect(document.querySelector('img')).toBeNull(); // no placeholder while the upload is pending
+    const xhr = FakeXHR.last();
+    expect(xhr.method).toBe('POST');
+    expect(xhr.url).toBe('/api/attachments');
+    expect(document.querySelector('img:not(.ProseMirror-separator)')).toBeNull(); // no doc placeholder while pending
 
-    resolveUpload(new Response(JSON.stringify({ id: 1, url: '/api/attachments/1' }), { status: 201 }));
-    await waitFor(() => expect(document.querySelector('img')).not.toBeNull());
-    expect(document.querySelector('img')!.getAttribute('src')).toBe('/api/attachments/1');
-    expect(document.querySelector('img')!.getAttribute('alt')).toBe('shot.png');
+    // design§06 "uploading": in-place card — filename + live percent + bar.
+    const card = document.querySelector('[data-upload-card]')!;
+    expect(card).not.toBeNull();
+    expect(card).toHaveTextContent('shot.png');
+    expect(card).toHaveTextContent('0%');
+
+    xhr.progress(62, 100);
+    expect(card).toHaveTextContent('62%');
+    const bar = card.querySelector('[style*="width"]')! as HTMLElement;
+    expect(bar.style.width).toBe('62%');
+
+    xhr.respond(201, { id: 1, url: '/api/attachments/1' });
+    await waitFor(() => expect(document.querySelector('img:not(.ProseMirror-separator)')).not.toBeNull());
+    expect(document.querySelector('img:not(.ProseMirror-separator)')!.getAttribute('src')).toBe('/api/attachments/1');
+    expect(document.querySelector('img:not(.ProseMirror-separator)')!.getAttribute('alt')).toBe('shot.png');
+    expect(document.querySelector('[data-upload-card]')).toBeNull(); // card cleared on success
   });
 
-  it('failed paste upload shows an inline error line and inserts nothing', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ error: 'unsupported attachment type' }), { status: 415 }),
-    );
+  it('a failed paste upload keeps the in-place slot (danger tint, Retry/Remove) instead of an inline error line', async () => {
+    vi.stubGlobal('XMLHttpRequest', FakeXHR);
     render(<RichTextEditor value="" onSave={vi.fn()} />);
     const surface = document.querySelector('[contenteditable="true"]')!;
     const file = new File([new Uint8Array([1])], 'x.png', { type: 'image/png' });
 
     fireEvent.paste(surface, { clipboardData: { files: [file], getData: () => '' } });
+    FakeXHR.last().respond(415, { error: 'unsupported attachment type' });
 
-    expect(await screen.findByText('unsupported attachment type')).toHaveClass('text-danger');
-    expect(document.querySelector('img')).toBeNull();
+    expect(await screen.findByText('Upload failed')).toBeInTheDocument();
+    const card = document.querySelector('[data-upload-card]')!;
+    expect(card).toHaveAttribute('data-upload-status', 'failed');
+    expect(card).toHaveTextContent('x.png');
+    expect(document.querySelector('img:not(.ProseMirror-separator)')).toBeNull();
+    expect(screen.queryByText('unsupported attachment type')).not.toBeInTheDocument(); // no separate inline error line
+    expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /remove/i })).toBeInTheDocument();
+  });
+
+  it('Retry on a failed upload re-runs the upload for the same file and inserts on success', async () => {
+    vi.stubGlobal('XMLHttpRequest', FakeXHR);
+    render(<RichTextEditor value="" onSave={vi.fn()} />);
+    const surface = document.querySelector('[contenteditable="true"]')!;
+    const file = new File([new Uint8Array([1])], 'shot.png', { type: 'image/png' });
+
+    fireEvent.paste(surface, { clipboardData: { files: [file], getData: () => '' } });
+    FakeXHR.last().respond(415, { error: 'nope' });
+    await screen.findByText('Upload failed');
+
+    fireEvent.click(screen.getByRole('button', { name: /retry/i }));
+    expect(document.querySelector('[data-upload-card]')).toHaveAttribute('data-upload-status', 'pending');
+    expect(FakeXHR.instances).toHaveLength(2); // a fresh request, same file
+
+    FakeXHR.last().respond(201, { id: 5, url: '/api/attachments/5' });
+    await waitFor(() => expect(document.querySelector('img:not(.ProseMirror-separator)')).not.toBeNull());
+    expect(document.querySelector('img:not(.ProseMirror-separator)')!.getAttribute('src')).toBe('/api/attachments/5');
+    expect(document.querySelector('img:not(.ProseMirror-separator)')!.getAttribute('alt')).toBe('shot.png');
+  });
+
+  it('Remove on a failed upload clears the slot without inserting anything or retrying', async () => {
+    vi.stubGlobal('XMLHttpRequest', FakeXHR);
+    render(<RichTextEditor value="" onSave={vi.fn()} />);
+    const surface = document.querySelector('[contenteditable="true"]')!;
+    const file = new File([new Uint8Array([1])], 'shot.png', { type: 'image/png' });
+
+    fireEvent.paste(surface, { clipboardData: { files: [file], getData: () => '' } });
+    FakeXHR.last().respond(415, { error: 'nope' });
+    await screen.findByText('Upload failed');
+
+    fireEvent.click(screen.getByRole('button', { name: /remove/i }));
+
+    expect(document.querySelector('[data-upload-card]')).toBeNull();
+    expect(document.querySelector('img:not(.ProseMirror-separator)')).toBeNull();
+    expect(FakeXHR.instances).toHaveLength(1); // no retry request fired
   });
 
   it('toolbar image control uploads the picked file and inserts an image node', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ id: 2, url: '/api/attachments/2' }), { status: 201 }),
-    );
+    vi.stubGlobal('XMLHttpRequest', FakeXHR);
     render(<RichTextEditor value="" onSave={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'image' }));
     const fileInput = document.querySelector('input[type="file"]')! as HTMLInputElement;
     const file = new File([new Uint8Array([1])], 'toolbar.png', { type: 'image/png' });
 
     fireEvent.change(fileInput, { target: { files: [file] } });
+    FakeXHR.last().respond(201, { id: 2, url: '/api/attachments/2' });
 
-    await waitFor(() => expect(document.querySelector('img')).not.toBeNull());
-    expect(document.querySelector('img')!.getAttribute('src')).toBe('/api/attachments/2');
+    await waitFor(() => expect(document.querySelector('img:not(.ProseMirror-separator)')).not.toBeNull());
+    expect(document.querySelector('img:not(.ProseMirror-separator)')!.getAttribute('src')).toBe('/api/attachments/2');
   });
 
   it('shows the placeholder text on the empty paragraph for an empty doc', () => {
@@ -302,9 +357,7 @@ describe('RichTextEditor', () => {
 
   it('does not re-fire onSave on a second blur with no further edits', async () => {
     const onSave = vi.fn();
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ id: 3, url: '/api/attachments/3' }), { status: 201 }),
-    );
+    vi.stubGlobal('XMLHttpRequest', FakeXHR);
     render(<RichTextEditor value="" onSave={onSave} />);
     const surface = document.querySelector('[contenteditable="true"]')!;
     const file = new File([new Uint8Array([1])], 'shot.png', { type: 'image/png' });
@@ -313,7 +366,8 @@ describe('RichTextEditor', () => {
     // land via editor commands, unlike raw contenteditable typing which
     // jsdom doesn't wire through ProseMirror).
     fireEvent.paste(surface, { clipboardData: { files: [file], getData: () => '' } });
-    await waitFor(() => expect(document.querySelector('img')).not.toBeNull());
+    FakeXHR.last().respond(201, { id: 3, url: '/api/attachments/3' });
+    await waitFor(() => expect(document.querySelector('img:not(.ProseMirror-separator)')).not.toBeNull());
 
     fireEvent.blur(surface);
     expect(onSave).toHaveBeenCalledTimes(1);
@@ -324,14 +378,14 @@ describe('RichTextEditor', () => {
   });
 
   it('a non-image paste leaves default paste behavior untouched (no upload attempted)', () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    vi.stubGlobal('XMLHttpRequest', FakeXHR);
     render(<RichTextEditor value="" onSave={vi.fn()} />);
     const surface = document.querySelector('[contenteditable="true"]')!;
     const file = new File([new Uint8Array([1])], 'notes.txt', { type: 'text/plain' });
 
     fireEvent.paste(surface, { clipboardData: { files: [file], getData: () => '' } });
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(FakeXHR.instances).toHaveLength(0);
   });
 });
 
