@@ -102,6 +102,11 @@ export function RichTextEditor({
   // placeholder node that could survive a failed/cancelled upload) — the
   // image node only lands once the upload resolves. `pos` pins the drop
   // coordinates; omitted for paste/toolbar so it falls back to the caret.
+  //
+  // The editorRef survives unmount pointing at a destroyed editor (Tiptap's
+  // Editor.destroy() nulls its commandManager but doesn't null the instance
+  // itself). Guard against late-resolving uploads with both null check and
+  // isDestroyed flag to prevent throws inside the promise chain.
   const insertImagesFromFiles = (files: FileList | null | undefined, pos?: number): boolean => {
     const images = files ? Array.from(files).filter((file) => file.type.startsWith('image/')) : [];
     if (images.length === 0) {
@@ -112,7 +117,7 @@ export function RichTextEditor({
       uploadImage(file)
         .then((result) => {
           const instance = editorRef.current;
-          if (instance === null) {
+          if (instance === null || instance.isDestroyed) {
             return;
           }
           const insertPos = pos ?? instance.state.selection.from;
