@@ -34,6 +34,20 @@ describe('RichTextEditor', () => {
     render(<RichTextEditor value="" onSave={vi.fn()} disabled />);
     expect(document.querySelector('[contenteditable="true"]')).toBeNull();
   });
+
+  it('disabled prop dynamically toggles editability', () => {
+    const { rerender } = render(<RichTextEditor value="" onSave={vi.fn()} disabled={false} />);
+    expect(document.querySelector('[contenteditable="true"]')).toBeInTheDocument();
+    expect(document.querySelector('[contenteditable="false"]')).toBeNull();
+
+    rerender(<RichTextEditor value="" onSave={vi.fn()} disabled={true} />);
+    expect(document.querySelector('[contenteditable="true"]')).toBeNull();
+    expect(document.querySelector('[contenteditable="false"]')).toBeInTheDocument();
+
+    rerender(<RichTextEditor value="" onSave={vi.fn()} disabled={false} />);
+    expect(document.querySelector('[contenteditable="true"]')).toBeInTheDocument();
+    expect(document.querySelector('[contenteditable="false"]')).toBeNull();
+  });
 });
 
 describe('RichTextView', () => {

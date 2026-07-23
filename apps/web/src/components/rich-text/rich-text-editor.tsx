@@ -110,6 +110,12 @@ export function RichTextEditor({
     initialRef.current = JSON.stringify(editor.getJSON());
   }
 
+  useEffect(() => {
+    if (editor !== null && editor.isEditable !== (disabled !== true)) {
+      editor.setEditable(disabled !== true);
+    }
+  }, [editor, disabled]);
+
   return (
     <div
       className={cn(
