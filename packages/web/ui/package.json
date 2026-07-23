@@ -7,7 +7,8 @@
     "./tokens.css": "./src/tokens.css",
     "./cn": "./src/cn.ts",
     "./variants": "./src/variants.ts",
-    "./runtime-style": "./src/runtime-style.ts"
+    "./runtime-style": "./src/runtime-style.ts",
+    "./swatches": "./src/swatches.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
