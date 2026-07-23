@@ -1,4 +1,4 @@
-import { captureError } from '@bendela6/signals-node';
+import { captureError, captureEvent } from '@bendela6/signals-node';
 import { createChannel } from '../session-core/channel';
 import type { Channel, SessionStore as CoreSessionStore } from '../session-core/types';
 import type { AgentRun } from './agent-types';
@@ -97,6 +97,10 @@ export function createAgentDriver(options: AgentDriverOptions): AgentDriver {
     rs.status = status;
     await store.finishSession(rs.id, status);
     channel.notify(rs.id, { type: 'status', status });
+    // Lifecycle/audit event — additive alongside whatever captureError already
+    // fired on the failure path that led here (this is the run's terminal
+    // outcome, not a substitute for the error capture).
+    captureEvent(status === 'failed' ? 'agent.run.failed' : 'agent.run.completed', { sessionId: rs.id });
     // Fire the teardown hook exactly once (worktree cleanup for a dispatch).
     if (!rs.ended) {
       rs.ended = true;
@@ -182,6 +186,7 @@ export function createAgentDriver(options: AgentDriverOptions): AgentDriver {
         captureError(err, { level: 'error', contexts: { agent: { sessionId: spec.id, phase: 'markRunning' } } }),
       );
       channel.notify(spec.id, { type: 'status', status: 'running' });
+      captureEvent('agent.run.started', { sessionId: spec.id });
       consume(rs);
     },
 

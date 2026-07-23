@@ -1,4 +1,4 @@
-import { captureError } from '@bendela6/signals-node';
+import { captureError, captureEvent } from '@bendela6/signals-node';
 import { createChannel } from '../session-core/channel';
 import type { Channel, SessionStore as CoreSessionStore } from '../session-core/types';
 import { createActivityScanner } from './activity-scanner';
@@ -100,6 +100,9 @@ export function createTerminalDriver(options: TerminalDriverOptions): TerminalDr
     rs.exitCode = exitCode;
     await store.finishSession(rs.id, status, exitCode);
     channel.notify(rs.id, { type: 'status', status, exitCode });
+    // Lifecycle/audit event — additive alongside any captureError already
+    // fired on the failure path that led here.
+    captureEvent('terminal.session.ended', { sessionId: rs.id });
   }
 
   function newSession(id: SessionId, handle: PtyHandle): RunningSession {
@@ -194,6 +197,7 @@ export function createTerminalDriver(options: TerminalDriverOptions): TerminalDr
       );
       channel.notify(spec.id, { type: 'status', status: 'live' });
       if (spawned.integ?.precise) channel.notify(spec.id, { type: 'activity', busy: false, integrated: true });
+      captureEvent('terminal.session.started', { sessionId: spec.id });
       consume(rs);
     },
 
@@ -217,6 +221,7 @@ export function createTerminalDriver(options: TerminalDriverOptions): TerminalDr
       await store.markRestarted(spec.id);
       channel.notify(spec.id, { type: 'status', status: 'live' });
       if (spawned.integ?.precise) channel.notify(spec.id, { type: 'activity', busy: false, integrated: true });
+      captureEvent('terminal.session.started', { sessionId: spec.id });
       consume(rs);
     },
 
