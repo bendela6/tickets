@@ -100,5 +100,14 @@ describe('prepareDemos duplicate-slug guard', () => {
     expect(out.filter((d) => !isDemoError(d))).toHaveLength(1);
     const err = out.find(isDemoError)!;
     expect(err.error).toMatch(/duplicate demo slug "button"/);
+    expect(err.path).toMatch(/^#button@\d+$/);
+  });
+
+  it('gives each extra duplicate a distinct error path', () => {
+    const mk = (k: string) => collectDemos({ [k]: { meta: { title: 'Button', group: 'G' }, states: [{ name: 's', render: () => null }] } });
+    const out = prepareDemos([...mk('a'), ...mk('b'), ...mk('c')]);
+    const errs = out.filter(isDemoError);
+    expect(errs).toHaveLength(2);
+    expect(new Set(errs.map((e) => e.path)).size).toBe(2);
   });
 });

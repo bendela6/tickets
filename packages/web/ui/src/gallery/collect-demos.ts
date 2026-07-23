@@ -59,9 +59,9 @@ export function sortDemos(demos: CollectedDemo[]): CollectedDemo[] {
 // it into an error card instead.
 export function prepareDemos(demos: CollectedDemo[]): CollectedDemo[] {
   const seen = new Set<string>();
-  const guarded = demos.map((d) => {
+  const guarded = demos.map((d, i) => {
     if ('error' in d) return d;
-    if (seen.has(d.slug)) return { path: `#${d.slug}`, error: `duplicate demo slug "${d.slug}"` };
+    if (seen.has(d.slug)) return { path: `#${d.slug}@${i}`, error: `duplicate demo slug "${d.slug}"` };
     seen.add(d.slug);
     return d;
   });
