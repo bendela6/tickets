@@ -63,12 +63,17 @@ export function installConsoleCapture(client: SignalsClient, floor: SignalLevel)
   const wrapped: Partial<Record<ConsoleMethod, (...args: unknown[]) => void>> = {};
 
   for (const method of CONSOLE_METHODS) {
-    const original = console[method].bind(console);
+    // capture the raw reference — NOT `.bind(console)`, which would mint a new
+    // function identity. Other instrumentation (e.g. the browser package's own
+    // breadcrumb patch) restores itself with `console[method] === wrapped`, and
+    // that check can only ever match a patch layered on top of the *exact* prior
+    // reference. `.call(console, ...)` below preserves `this` without rebinding.
+    const original = console[method];
     originals[method] = original;
 
     wrapped[method] = (...args: unknown[]) => {
       // always call through first — the SDK must never suppress normal logging
-      original(...args);
+      original.call(console, ...args);
 
       if (capturing) return;
       const level = METHOD_LEVEL[method];

@@ -34,6 +34,26 @@ describe('top-level capture functions', () => {
 });
 
 describe('node SDK', () => {
+  it('captureConsole: true captures console.warn/error as log signals, and re-init restores console (no leak)', () => {
+    const { transport, sent } = fakeTransport();
+    initSignals({ dsn: DSN, transport, registerProcessHandlers: false, captureConsole: true });
+
+    // deliberately not mocked: by this point console.warn IS the installed
+    // capture wrapper, so replacing it with a mock would bypass the very logic
+    // under test instead of exercising it (real console output is the accepted
+    // trade-off, matching the unmocked style used in the browser test suite).
+    console.warn('disk usage high');
+    expect(sent.some((s) => s.kind === 'log' && s.level === 'warning' && s.message === 'disk usage high')).toBe(true);
+
+    // re-init without captureConsole must tear down the prior console patch
+    const { transport: transport2, sent: sent2 } = fakeTransport();
+    initSignals({ dsn: DSN, transport: transport2, registerProcessHandlers: false });
+
+    console.warn('after reinit');
+    expect(sent.some((s) => s.kind === 'log' && s.message === 'after reinit')).toBe(false);
+    expect(sent2.some((s) => s.kind === 'log')).toBe(false);
+  });
+
   it('carries node platform info and does not register process handlers when disabled', () => {
     const before = process.listenerCount('uncaughtException');
     const { transport, sent } = fakeTransport();
