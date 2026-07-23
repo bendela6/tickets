@@ -238,6 +238,32 @@ export function diffAgainstBaseline(violationKeys, baselineKeys) {
   };
 }
 
+// Read + validate the ratchet baseline. Exported for tests.
+export function readBaseline(filePath) {
+  let raw;
+  try {
+    raw = readFileSync(filePath, 'utf8');
+  } catch {
+    console.error(
+      `error: baseline file missing: ${filePath}\n` +
+        'run `node scripts/scan-hardcoded-values.mjs --update-baseline` to (re)create it',
+    );
+    process.exit(1);
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    console.error(`error: baseline file is not valid JSON: ${filePath}`);
+    process.exit(1);
+  }
+  if (!Array.isArray(parsed?.violations) || !parsed.violations.every((v) => typeof v === 'string')) {
+    console.error(`error: baseline file malformed (expected { "violations": string[] }): ${filePath}`);
+    process.exit(1);
+  }
+  return parsed.violations;
+}
+
 function collectViolations(root) {
   const files = walk(root.dir, []).filter((f) => !isExcluded(path.relative(root.dir, f)));
   if (files.length === 0) {
@@ -274,7 +300,7 @@ function main() {
       continue;
     }
 
-    const baseline = JSON.parse(readFileSync(baselineFile, 'utf8')).violations;
+    const baseline = readBaseline(baselineFile);
     const keys = violations.map((v) => v.key);
     const { fresh, fixed } = diffAgainstBaseline([...new Set(keys)], baseline);
     for (const v of violations) {
