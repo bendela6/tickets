@@ -21,13 +21,17 @@ export function registerSignalsRoutes(app: FastifyInstance, context: { db: Db })
     const page = Math.max(Number(q.page ?? 1) || 1, 1);
     const perPage = Math.min(Number(q.perPage ?? 50) || 50, 100);
     const kinds = parseKinds(q.kind);
+    // non-numeric/zero/negative `days` (e.g. `?days=abc`) falls back to "no window",
+    // same guard style as page/perPage above and `days` in sibling issues.routes.ts —
+    // never let a bad value reach `new Date(NaN)`.
+    const days = Number(q.days) || 0;
 
     const where = and(
       // no valid kind requested (e.g. `?kind=error`) → no rows, never "all kinds"
       kinds.length ? inArray(signals.kind, kinds) : sql`false`,
       q.app ? eq(signals.appId, parseId(q.app, 'app')) : undefined,
       q.level ? eq(signals.level, q.level as 'error' | 'warning' | 'info') : undefined,
-      q.days ? gte(signals.receivedAt, new Date(Date.now() - Number(q.days) * dayMs)) : undefined,
+      days > 0 ? gte(signals.receivedAt, new Date(Date.now() - days * dayMs)) : undefined,
       q.q ? or(ilike(signals.name, `%${q.q}%`), ilike(signals.message, `%${q.q}%`)) : undefined,
     );
 

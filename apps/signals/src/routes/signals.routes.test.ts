@@ -83,6 +83,14 @@ it('filters by q against name or message', async () => {
   await app.close();
 });
 
+it('falls back to no window on a non-numeric days value instead of 500ing', async () => {
+  const { app } = await seed();
+  const res = await app.inject({ method: 'GET', url: '/signals?days=abc' });
+  expect(res.statusCode).toBe(200);
+  expect(res.json().total).toBe(5);
+  await app.close();
+});
+
 it('paginates with a correct total', async () => {
   const { app } = await seed();
   const body = (await app.inject({ method: 'GET', url: '/signals?perPage=2&page=1' })).json();
