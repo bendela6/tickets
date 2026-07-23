@@ -307,6 +307,102 @@ describe('RichTextEditor', () => {
     expect(document.querySelector('img:not(.ProseMirror-separator)')!.getAttribute('alt')).toBe('shot.png');
   });
 
+  it('rapid double-click on Retry fires only one XHR and inserts exactly one image', async () => {
+    vi.stubGlobal('XMLHttpRequest', FakeXHR);
+    render(<RichTextEditor value="" onSave={vi.fn()} />);
+    const surface = document.querySelector('[contenteditable="true"]')!;
+    const file = new File([new Uint8Array([1])], 'shot.png', { type: 'image/png' });
+
+    fireEvent.paste(surface, { clipboardData: { files: [file], getData: () => '' } });
+    FakeXHR.last().respond(415, { error: 'nope' });
+    await screen.findByText('Upload failed');
+
+    // Two Retry clicks back-to-back, no await between them — the second
+    // must be a no-op (single-flight guard on the entry), not a second XHR.
+    const retryBtn = screen.getByRole('button', { name: /retry/i });
+    fireEvent.click(retryBtn);
+    fireEvent.click(retryBtn);
+    expect(FakeXHR.instances).toHaveLength(2); // 1 initial + exactly 1 retry
+
+    FakeXHR.last().respond(201, { id: 9, url: '/api/attachments/9' });
+    await waitFor(() => expect(document.querySelector('img:not(.ProseMirror-separator)')).not.toBeNull());
+    expect(document.querySelectorAll('img:not(.ProseMirror-separator)')).toHaveLength(1);
+
+    // Guard released once the retry settled (success) — a further Retry
+    // click has nothing to click (card is gone), confirming no leaked lock.
+    expect(document.querySelector('[data-upload-card]')).toBeNull();
+  });
+
+  it('a failed retry re-enables the Retry guard: two failures then two retries insert exactly one image', async () => {
+    vi.stubGlobal('XMLHttpRequest', FakeXHR);
+    render(<RichTextEditor value="" onSave={vi.fn()} />);
+    const surface = document.querySelector('[contenteditable="true"]')!;
+    const file = new File([new Uint8Array([1])], 'shot.png', { type: 'image/png' });
+
+    fireEvent.paste(surface, { clipboardData: { files: [file], getData: () => '' } });
+    FakeXHR.last().respond(415, { error: 'nope' });
+    await screen.findByText('Upload failed');
+
+    fireEvent.click(screen.getByRole('button', { name: /retry/i }));
+    expect(FakeXHR.instances).toHaveLength(2);
+    FakeXHR.last().respond(415, { error: 'nope again' }); // the retry itself fails
+    await screen.findByText('Upload failed');
+
+    // The guard must have cleared on the re-failure — Retry is clickable again.
+    fireEvent.click(screen.getByRole('button', { name: /retry/i }));
+    expect(FakeXHR.instances).toHaveLength(3);
+    FakeXHR.last().respond(201, { id: 11, url: '/api/attachments/11' });
+    await waitFor(() => expect(document.querySelector('img:not(.ProseMirror-separator)')).not.toBeNull());
+    expect(document.querySelectorAll('img:not(.ProseMirror-separator)')).toHaveLength(1);
+  });
+
+  it('a transaction that deletes the pending upload\'s anchor range keeps the card alive (re-anchored), and a subsequent retry still succeeds', async () => {
+    vi.stubGlobal('XMLHttpRequest', FakeXHR);
+    const onSave = vi.fn();
+    render(<RichTextEditor value="" onSave={onSave} />);
+    const surface = document.querySelector('[contenteditable="true"]')!;
+    const user = userEvent.setup();
+    const file = new File([new Uint8Array([1])], 'shot.png', { type: 'image/png' });
+
+    await user.type(surface, 'hello world');
+    // Paste lands the widget at the current caret — the end of the typed
+    // text — so it sits inside the range a subsequent select-all deletes.
+    fireEvent.paste(surface, { clipboardData: { files: [file], getData: () => '' } });
+    expect(document.querySelector('[data-upload-card]')).not.toBeNull();
+
+    // Delete a range that spans the widget's anchor (design-review repro:
+    // `tr.delete` over a range containing the anchor position).
+    await user.keyboard('{Control>}a{/Control}{Backspace}');
+
+    // The card must still be present and attached — not silently dropped.
+    const card = document.querySelector('[data-upload-card]');
+    expect(card).not.toBeNull();
+    expect(document.body.contains(card)).toBe(true);
+    expect(card).toHaveAttribute('data-upload-status', 'pending');
+
+    // Now fail and retry from the re-anchored card — Retry must still work
+    // and the eventual success must still land an image (not get dropped
+    // for lack of a decoration).
+    FakeXHR.last().respond(415, { error: 'nope' });
+    const failedCard = await screen.findByText('Upload failed');
+    expect(document.body.contains(failedCard)).toBe(true);
+
+    fireEvent.click(screen.getByRole('button', { name: /retry/i }));
+    FakeXHR.last().respond(201, { id: 7, url: '/api/attachments/7' });
+    await waitFor(() => expect(document.querySelector('img:not(.ProseMirror-separator)')).not.toBeNull());
+    expect(document.querySelectorAll('img:not(.ProseMirror-separator)')).toHaveLength(1);
+    expect(document.querySelector('[data-upload-card]')).toBeNull();
+
+    // Doc stays clean: blur and inspect the saved JSON — exactly one image
+    // node, no leftover placeholder/dangling node from the upload.
+    fireEvent.blur(surface);
+    const saved = JSON.parse(onSave.mock.calls.at(-1)![0] as string) as unknown;
+    type DocNode = { type: string; content?: DocNode[] };
+    const countImages = (node: DocNode): number =>
+      (node.type === 'image' ? 1 : 0) + (node.content ?? []).reduce((sum, child) => sum + countImages(child), 0);
+    expect(countImages(saved as DocNode)).toBe(1);
+  });
+
   it('Remove on a failed upload clears the slot without inserting anything or retrying', async () => {
     vi.stubGlobal('XMLHttpRequest', FakeXHR);
     render(<RichTextEditor value="" onSave={vi.fn()} />);

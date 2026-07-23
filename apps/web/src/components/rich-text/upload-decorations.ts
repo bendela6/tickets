@@ -29,6 +29,16 @@ type UploadEntry = {
   nameEl: HTMLSpanElement | null;
   pctEl: HTMLSpanElement | null;
   barEl: HTMLDivElement | null;
+  // Last known anchor position, kept current every `apply()` pass (see
+  // `reanchorLostEntries`) so that if a transaction deletes the range
+  // containing the widget — DecorationSet.map() then maps it to nothing,
+  // per prosemirror-view — the plugin can recreate the widget at this
+  // (mapped + clamped) position instead of silently losing the upload UI.
+  pos: number;
+  // Set synchronously the instant Retry is clicked and cleared once the
+  // attempt settles (a fresh failure re-renders the card); guards against a
+  // rapid second click firing a second in-flight upload for the same id.
+  retrying: boolean;
 };
 
 type UploadMeta =
@@ -144,6 +154,9 @@ function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void 
   entry.nameEl = null;
   entry.pctEl = null;
   entry.barEl = null;
+  // A fresh failed card means any in-flight retry has settled (it's the one
+  // that just failed) — clear the guard so Retry is clickable again.
+  entry.retrying = false;
 
   const icon = svgIcon(CIRCLE_ALERT_PATHS, 18);
   icon.classList.add('text-danger');
@@ -164,7 +177,17 @@ function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void 
   retryBtn.className =
     'inline-flex h-6.5 items-center gap-1.5 rounded-ctrl border border-control bg-raised px-2.75 font-sans text-[12px] font-medium text-ink';
   retryBtn.append(svgIcon(ROTATE_CCW_PATHS, 12), document.createTextNode('Retry'));
-  retryBtn.addEventListener('click', () => handlersRef.current.onRetry(entry.id, entry.file));
+  retryBtn.addEventListener('click', () => {
+    // Single-flight guard: a rapid second Retry click (or a stray click on a
+    // detached copy of this button) must not start a second XHR for the
+    // same upload id. `entry` is the shared mutable record for this id — the
+    // flag survives even though the DOM node backing it gets replaced.
+    if (entry.retrying) {
+      return;
+    }
+    entry.retrying = true;
+    handlersRef.current.onRetry(entry.id, entry.file);
+  });
 
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
@@ -177,13 +200,51 @@ function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void 
   entry.root.append(icon, title, meta, actions);
 }
 
-function createEntry(id: string, file: File): UploadEntry {
+function createEntry(id: string, file: File, pos: number): UploadEntry {
   const root = document.createElement('div');
   root.contentEditable = 'false';
   root.setAttribute('data-upload-card', id);
-  const entry: UploadEntry = { id, file, status: 'pending', root, nameEl: null, pctEl: null, barEl: null };
+  const entry: UploadEntry = {
+    id,
+    file,
+    status: 'pending',
+    root,
+    nameEl: null,
+    pctEl: null,
+    barEl: null,
+    pos,
+    retrying: false,
+  };
   renderPending(entry);
   return entry;
+}
+
+// Runs at the top of every `apply()`, right after `DecorationSet.map()`.
+// prosemirror-view maps a widget decoration to nothing when the transaction
+// deletes the range containing its anchor — silently dropping the pending/
+// failed upload UI even though the upload itself is still alive (or already
+// failed and needs Retry/Remove). For every entry still tracked by the
+// plugin, check whether its decoration survived the mapping; if not,
+// recreate the SAME widget DOM node (identity preserved, so no
+// progress/status is lost) at its last known position, mapped through this
+// transaction and clamped into the new doc's bounds. Surviving entries get
+// their `pos` refreshed so the next loss (if any) re-anchors from an
+// up-to-date position rather than a stale one.
+function reanchorLostEntries(set: DecorationSet, tr: Transaction, entries: Map<string, UploadEntry>): DecorationSet {
+  const docSize = tr.doc.content.size;
+  const toAdd: Decoration[] = [];
+  for (const [id, entry] of entries) {
+    const found = set.find(undefined, undefined, (spec: { uploadId?: string }) => spec.uploadId === id);
+    if (found.length > 0) {
+      entry.pos = found[0]!.from;
+      continue;
+    }
+    const mapped = tr.mapping.map(entry.pos, -1);
+    const clamped = Math.max(0, Math.min(docSize, mapped));
+    entry.pos = clamped;
+    toAdd.push(Decoration.widget(clamped, entry.root, { key: id, uploadId: id, side: -1 }));
+  }
+  return toAdd.length > 0 ? set.add(tr.doc, toAdd) : set;
 }
 
 // The single source of truth for "where does this upload's insert position
@@ -233,13 +294,16 @@ export function createUploadDecorationsPlugin(handlersRef: UploadHandlersRef): P
       init: () => DecorationSet.empty,
       apply(tr: Transaction, old: DecorationSet): DecorationSet {
         let set = old.map(tr.mapping, tr.doc);
+        // Runs on EVERY transaction, meta or not — an anchor can be deleted
+        // by an ordinary edit that has nothing to do with the upload plugin.
+        set = reanchorLostEntries(set, tr, entries);
         const meta = tr.getMeta(uploadDecorationsKey) as UploadMeta | undefined;
         if (!meta) {
           return set;
         }
 
         if (meta.type === 'add') {
-          const entry = createEntry(meta.id, meta.file);
+          const entry = createEntry(meta.id, meta.file, meta.pos);
           entries.set(meta.id, entry);
           const deco = Decoration.widget(meta.pos, entry.root, {
             key: meta.id,
