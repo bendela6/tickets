@@ -1,6 +1,7 @@
 import * as os from 'node:os';
 import {
   createClient,
+  installConsoleCapture,
   type Breadcrumb,
   type CaptureOptions,
   type ClientOptions,
@@ -33,6 +34,7 @@ export type NodeInitOptions = Omit<ClientOptions, 'platform' | 'sdk'> & {
 let current: SignalsClient | null = null;
 let uncaughtHandlerRef: ((error: unknown) => void) | null = null;
 let rejectionHandlerRef: ((reason: unknown) => void) | null = null;
+let uninstallConsoleCapture: (() => void) | null = null;
 
 export function initSignals(options: NodeInitOptions): SignalsClient {
   const { registerProcessHandlers, exitOnUncaught, ...clientOptions } = options;
@@ -52,12 +54,20 @@ export function initSignals(options: NodeInitOptions): SignalsClient {
     process.off('unhandledRejection', rejectionHandlerRef);
     rejectionHandlerRef = null;
   }
+  if (uninstallConsoleCapture) {
+    uninstallConsoleCapture();
+    uninstallConsoleCapture = null;
+  }
 
   if (registerProcessHandlers !== false) {
     uncaughtHandlerRef = buildUncaughtListener(client, { exitOnUncaught });
     rejectionHandlerRef = (reason: unknown) => { handleRejection(client, reason); };
     process.on('uncaughtException', uncaughtHandlerRef);
     process.on('unhandledRejection', rejectionHandlerRef);
+  }
+
+  if (options.captureConsole) {
+    uninstallConsoleCapture = installConsoleCapture(client, options.logLevel ?? 'warning');
   }
 
   current = client;

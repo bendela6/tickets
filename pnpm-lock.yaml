@@ -176,6 +176,9 @@ importers:
       '@bendela6/signals-browser':
         specifier: workspace:^
         version: link:../../packages/signals/browser
+      '@bendela6/signals-node':
+        specifier: workspace:^
+        version: link:../../packages/signals/node
       '@jridgewell/trace-mapping':
         specifier: ^0.3.31
         version: 0.3.31

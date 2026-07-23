@@ -4,6 +4,7 @@ import * as v from 'valibot';
 import type { Db } from '../db/client';
 import { apps, sourcemapArtifacts } from '../db/schema';
 import { HttpError } from '../errors';
+import { captureSelfEvent, SELF_APP_SLUG } from '../signals-self';
 
 const UploadSchema = v.object({
   release: v.pipe(v.string(), v.minLength(1), v.maxLength(100)),
@@ -28,6 +29,14 @@ export function registerSourcemapRoutes(app: FastifyInstance, context: { db: Db 
     await context.db.insert(sourcemapArtifacts).values(
       files.map((f) => ({ appId: appRow.id, release, filename: f.filename, content: f.content })),
     );
+    // A signal about the collector's own operation (uploads received), not
+    // an error — skip when it's the self-app's own upload purely to avoid
+    // noise, not for recursion safety (this success path can't recurse: a
+    // failed self-report here just gets swallowed by the transport, never
+    // re-captured).
+    if (appRow.slug !== SELF_APP_SLUG) {
+      captureSelfEvent('collector.sourcemap-upload', { release });
+    }
     reply.status(201).send({ stored: files.length });
   });
 }

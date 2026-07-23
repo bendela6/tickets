@@ -1,4 +1,9 @@
-import { ensureAppDsn, initSignals } from '@bendela6/signals-react';
+import { captureEvent, ensureAppDsn, initSignals, type SignalLevel } from '@bendela6/signals-react';
+
+// Module-level: survives across calls within a page load so `eer.mount`
+// fires exactly once even if initEerSignals() is ever invoked more than
+// once (defensive — main.tsx only calls it once today).
+let mountEventEmitted = false;
 
 // Self-registers Tickets EER with the local Signals collector (via the
 // same-origin /signals-api proxy) and initializes the browser SDK. Never
@@ -15,5 +20,12 @@ export async function initEerSignals(): Promise<void> {
     return;
   }
 
-  initSignals({ dsn, environment: import.meta.env.MODE });
+  const logLevel = (import.meta.env.VITE_SIGNALS_LOG_LEVEL as SignalLevel | undefined) ?? 'warning';
+
+  initSignals({ dsn, environment: import.meta.env.MODE, captureConsole: true, logLevel });
+
+  if (!mountEventEmitted) {
+    mountEventEmitted = true;
+    captureEvent('eer.mount');
+  }
 }

@@ -6,6 +6,7 @@ import { apps, issues, signals, sourcemapArtifacts } from '../db/schema';
 import { HttpError } from '../errors';
 import { culpritFrom, fingerprintError, issueTitle } from '../fingerprint';
 import type { RateLimiter } from '../rate-limit';
+import { captureSelfError, SELF_APP_SLUG } from '../signals-self';
 import { symbolicateFrames } from '../symbolicate';
 import type { SignalPayload, SymbolicatedFrame } from '../types';
 import { IngestEnvelopeSchema, type IngestSignal } from './ingest.schema';
@@ -47,58 +48,72 @@ export function registerIngestRoutes(
       throw new HttpError(429, 'rate limit exceeded — back off');
     }
 
-    await context.db.transaction(async (tx) => {
-      // Keyed by release: batches commonly carry many error signals from the
-      // same release, so avoid re-querying the artifact table per signal.
-      const artifactCache = new Map<string, { filename: string; content: string }[]>();
-      for (const s of batch) {
-        let issueId: number | null = null;
-        let symbolicated: SymbolicatedFrame[] | null = null;
-        if (s.kind === 'error') {
-          if (s.stack && s.release) {
-            let artifacts = artifactCache.get(s.release);
-            if (!artifacts) {
-              artifacts = await tx
-                .select({ filename: sourcemapArtifacts.filename, content: sourcemapArtifacts.content })
-                .from(sourcemapArtifacts)
-                .where(and(eq(sourcemapArtifacts.appId, appRow.id), eq(sourcemapArtifacts.release, s.release)))
-                .orderBy(asc(sourcemapArtifacts.uploadedAt), asc(sourcemapArtifacts.id));
-              artifactCache.set(s.release, artifacts);
+    try {
+      await context.db.transaction(async (tx) => {
+        // Keyed by release: batches commonly carry many error signals from
+        // the same release, so avoid re-querying the artifact table per
+        // signal.
+        const artifactCache = new Map<string, { filename: string; content: string }[]>();
+        for (const s of batch) {
+          let issueId: number | null = null;
+          let symbolicated: SymbolicatedFrame[] | null = null;
+          if (s.kind === 'error') {
+            if (s.stack && s.release) {
+              let artifacts = artifactCache.get(s.release);
+              if (!artifacts) {
+                artifacts = await tx
+                  .select({ filename: sourcemapArtifacts.filename, content: sourcemapArtifacts.content })
+                  .from(sourcemapArtifacts)
+                  .where(and(eq(sourcemapArtifacts.appId, appRow.id), eq(sourcemapArtifacts.release, s.release)))
+                  .orderBy(asc(sourcemapArtifacts.uploadedAt), asc(sourcemapArtifacts.id));
+                artifactCache.set(s.release, artifacts);
+              }
+              if (artifacts.length > 0) symbolicated = symbolicateFrames(s.stack, artifacts);
             }
-            if (artifacts.length > 0) symbolicated = symbolicateFrames(s.stack, artifacts);
+            const effectiveStack = symbolicated ?? s.stack;
+            const fingerprint = fingerprintError({
+              name: s.name, message: s.message, stack: effectiveStack, explicit: s.fingerprint,
+            });
+            const [issue] = await tx
+              .insert(issues)
+              .values({
+                appId: appRow.id, fingerprint,
+                title: issueTitle(s.name, s.message),
+                culprit: culpritFrom(effectiveStack),
+              })
+              .onConflictDoUpdate({
+                target: [issues.appId, issues.fingerprint],
+                set: {
+                  eventCount: sql`${issues.eventCount} + 1`,
+                  lastSeen: sql`now()`,
+                  status: sql`CASE WHEN ${issues.status} = 'resolved' THEN 'open' ELSE ${issues.status} END`,
+                  culprit: sql`COALESCE(EXCLUDED.culprit, ${issues.culprit})`,
+                },
+              })
+              .returning({ id: issues.id });
+            issueId = issue!.id;
           }
-          const effectiveStack = symbolicated ?? s.stack;
-          const fingerprint = fingerprintError({
-            name: s.name, message: s.message, stack: effectiveStack, explicit: s.fingerprint,
+          await tx.insert(signals).values({
+            appId: appRow.id, kind: s.kind, sessionId: s.sessionId, name: s.name,
+            message: s.message ?? null, mechanism: s.mechanism, level: s.level,
+            clientTimestamp: new Date(s.timestamp),
+            release: s.release ?? null, environment: s.environment ?? null,
+            issueId, payload: toPayload(s, symbolicated),
           });
-          const [issue] = await tx
-            .insert(issues)
-            .values({
-              appId: appRow.id, fingerprint,
-              title: issueTitle(s.name, s.message),
-              culprit: culpritFrom(effectiveStack),
-            })
-            .onConflictDoUpdate({
-              target: [issues.appId, issues.fingerprint],
-              set: {
-                eventCount: sql`${issues.eventCount} + 1`,
-                lastSeen: sql`now()`,
-                status: sql`CASE WHEN ${issues.status} = 'resolved' THEN 'open' ELSE ${issues.status} END`,
-                culprit: sql`COALESCE(EXCLUDED.culprit, ${issues.culprit})`,
-              },
-            })
-            .returning({ id: issues.id });
-          issueId = issue!.id;
         }
-        await tx.insert(signals).values({
-          appId: appRow.id, kind: s.kind, sessionId: s.sessionId, name: s.name,
-          message: s.message ?? null, mechanism: s.mechanism, level: s.level,
-          clientTimestamp: new Date(s.timestamp),
-          release: s.release ?? null, environment: s.environment ?? null,
-          issueId, payload: toPayload(s, symbolicated),
+      });
+    } catch (err) {
+      // Anti-recursion: never self-report a failure to ingest the
+      // self-client's own signals — that failure trying to get self-reported
+      // is exactly the loop this collector must not create. See
+      // signals-self.ts for the full reasoning.
+      if (appRow.slug !== SELF_APP_SLUG) {
+        captureSelfError(err, {
+          contexts: { ingest: { appId: appRow.id, appSlug: appRow.slug, batchSize: batch.length } },
         });
       }
-    });
+      throw err;
+    }
 
     reply.status(202).send({ accepted: batch.length });
   });

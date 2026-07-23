@@ -41,8 +41,27 @@ it('uses SIGNALS_DSN directly when set, skipping ensureAppDsn', async () => {
     environment: environment.nodeEnv,
     exitOnUncaught: environment.nodeEnv === 'production',
     registerProcessHandlers: true,
+    captureConsole: true,
+    logLevel: environment.signalsLogLevel,
   });
   expect(result).toEqual({ fake: 'client' });
+});
+
+it('enables console capture with the configured log level floor (default "warning")', async () => {
+  environment.signalsDsn = 'sgl://k@127.0.0.1:4640/1';
+  initSignalsMock.mockReturnValue({ fake: 'client' });
+  await initApiSignals();
+  expect(initSignalsMock).toHaveBeenCalledWith(
+    expect.objectContaining({ captureConsole: true, logLevel: 'warning' }),
+  );
+});
+
+it('passes SIGNALS_LOG_LEVEL through as the console-capture floor', async () => {
+  environment.signalsDsn = 'sgl://k@127.0.0.1:4640/1';
+  environment.signalsLogLevel = 'info';
+  initSignalsMock.mockReturnValue({ fake: 'client' });
+  await initApiSignals();
+  expect(initSignalsMock).toHaveBeenCalledWith(expect.objectContaining({ logLevel: 'info' }));
 });
 
 it('falls back to ensureAppDsn using the configured collector url and name', async () => {

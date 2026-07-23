@@ -154,6 +154,37 @@ The transport batches (flush every ~5s or 10 signals, whichever first),
 retries with backoff, and never throws back into your app — a dead
 collector never affects the host app; worst case, signals drop silently.
 
+## Console capture
+
+Pass `captureConsole: true` to `initSignals` to auto-capture `console.warn` /
+`console.error` (and `console.info`, if you lower the floor) as `log`
+signals — on top of the existing console breadcrumb behavior, not instead
+of it. Off by default; each app opts in explicitly:
+
+```ts
+initSignals({
+  dsn,
+  captureConsole: true,
+  logLevel: 'warning', // floor; only console calls at or above this level are captured as logs
+});
+```
+
+The console call still runs normally either way — this only adds a capture
+on top, never suppresses or rewrites output. Never-throw and
+re-entrancy-guarded, same as every other capture path: a console call made
+while a console call is being reported can't recurse. See
+[signals-capture-guide.md](./signals-capture-guide.md) for when to reach
+for this vs. explicit `captureLog`, and for the `captureEvent` naming
+convention this repo uses.
+
+## Browsing logs and events
+
+The collector exposes `GET /signals` (`?kind=log,event&app&level&days&q&page&perPage`,
+returning `{ rows, total }`) listing non-error signals — this powers the
+web **Activity** view, a flat log/event stream sibling to Issues. Consumers
+inside this repo reach it at `/signals-api/signals` (same reverse-proxy
+path as ingest); errors stay separate, grouped into issues under `/issues`.
+
 ## Source maps
 
 If you ship minified/bundled JS with a `release`, upload its source maps
@@ -200,9 +231,8 @@ done
 
 ## Self-monitoring (this repo)
 
-Every app in this monorepo (except `apps/signals` itself — the collector
-doesn't watch itself) reports its own errors to Signals, using the same
-DSN-less self-registration flow consumers get from `ensureAppDsn`:
+Every app in this monorepo reports its own errors to Signals, using the
+same DSN-less self-registration flow consumers get from `ensureAppDsn`:
 
 | App | Slug | SDK | Init site |
 | --- | --- | --- | --- |
@@ -210,6 +240,18 @@ DSN-less self-registration flow consumers get from `ensureAppDsn`:
 | `apps/mcp` | `tickets-mcp` | `@bendela6/signals-node` | `apps/mcp/src/signals.ts` (`initMcpSignals`, called at boot) |
 | `apps/web` | `tickets-web` | `@bendela6/signals-react` | `apps/web/src/signals-init.ts` (`initWebSignals`, fire-and-forget from `main.tsx`) |
 | `apps/eer` | `tickets-eer` | `@bendela6/signals-browser` | `apps/eer/src/signals-init.ts` (`initEerSignals`, fire-and-forget from `main.tsx`) |
+| `apps/signals` (the collector) | `signals-collector` | `@bendela6/signals-node` | `apps/signals/src/signals-self.ts` (`initSelfSignals`, called at boot) |
+
+The collector's case is special: it's both the ingest endpoint and (now) a
+consumer of itself, registered in its own DB and pointed at its own
+loopback port (never the external/nginx-facing address). It reports its
+own errors (ingest/DB/migration failures) and lifecycle events
+(`collector.boot`, `collector.shutdown`) — no process handlers, since the
+one process whose job is to keep accepting everyone else's errors
+shouldn't install `uncaughtException`/`unhandledRejection` hooks of its
+own. A synchronous re-entrancy guard plus the SDK's own never-throw
+guarantee rule out a self-report-failure feedback loop. Set
+`SIGNALS_SELF_DISABLED=1` to turn this off entirely.
 
 Names slugify deterministically (`Tickets API` → `tickets-api`, etc.), and
 `ensureAppDsn` is called with `upsert: true`, so re-registering on every
@@ -226,6 +268,9 @@ boot/page-load is idempotent — it always resolves to the same app row.
 | `SIGNALS_COLLECTOR_URL` | api, mcp | Collector base URL for the node `ensureAppDsn` call. Defaults to `http://127.0.0.1:4640`. |
 | *(none — same-origin)* | web, eer | The browser `ensureAppDsn` always registers against the same-origin `/signals-api` proxy (`basePath`, default), not a configurable URL — see `ensure.ts` above. |
 | `SIGNALS_PROXY_TARGET` | web, eer (dev only) | Overrides the vite dev-server proxy target for `/signals-api` (`apps/web/vite.config.ts`, `apps/eer/vite.config.ts`). Defaults to `http://127.0.0.1:4640`; not read at runtime by the built bundle. |
+| `SIGNALS_LOG_LEVEL` | api, mcp | Console-capture floor for `captureConsole` (`'error'` \| `'warning'` \| `'info'`). Defaults to `'warning'`. |
+| `VITE_SIGNALS_LOG_LEVEL` | web, eer | Same, for the browser build. |
+| `SIGNALS_SELF_DISABLED=1` | apps/signals (the collector itself) | Turns off the collector's self-monitoring (see below) — no self-registration, no self-reported errors/events. |
 
 None of these are required in the deployed container: `SIGNALS_COLLECTOR_URL`
 resolves to the loopback collector supervisord runs alongside the api

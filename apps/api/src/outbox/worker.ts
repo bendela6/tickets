@@ -1,4 +1,4 @@
-import { captureError } from '@bendela6/signals-node';
+import { captureError, captureEvent } from '@bendela6/signals-node';
 import { eq, sql } from 'drizzle-orm';
 import type { Db } from '@tickets/db';
 import { ensureUser } from '@tickets/db';
@@ -97,6 +97,7 @@ export function createOutboxWorker(
     for (const id of ids) {
       if (await processOne(id, actorId, opts.rules)) ok++;
     }
+    captureEvent('outbox.flush', { count: ok });
     return ok;
   }
 

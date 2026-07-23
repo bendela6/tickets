@@ -8,14 +8,24 @@ import {
   listApps,
   listIssues,
   listOccurrences,
+  listSignals,
   patchIssueStatus,
 } from './signals-api';
-import type { IssueFilters, IssueStatus } from './signals-api';
+import type { ActivityFilters, IssueFilters, IssueStatus } from './signals-api';
 
 export function useSignalsIssues(filters: IssueFilters) {
   return useQuery({
     queryKey: ['signals', 'issues', filters],
     queryFn: () => listIssues(filters),
+    refetchInterval: 10000,
+  });
+}
+
+// The Activity view's data hook (logs & events) — mirrors useSignalsIssues.
+export function useSignalsActivity(filters: ActivityFilters) {
+  return useQuery({
+    queryKey: ['signals', 'activity', filters],
+    queryFn: () => listSignals(filters),
     refetchInterval: 10000,
   });
 }

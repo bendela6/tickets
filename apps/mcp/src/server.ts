@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import type { SignalsClient } from '@bendela6/signals-node';
+import { captureEvent, type SignalsClient } from '@bendela6/signals-node';
 import { getActor, type ToolContext } from './actor';
 import { environment } from './environment';
 import { initMcpSignals } from './signals';
@@ -48,6 +48,13 @@ registerLinkTickets(server, context);
 registerRemoveLink(server, context);
 registerDispatchAgent(server, context);
 
+// The stdio transport calls this when the client disconnects (e.g. the
+// parent process closes the pipe) — the closest thing this server has to a
+// shutdown hook, since it never calls process.exit() itself.
+server.server.onclose = () => {
+  captureEvent('mcp.shutdown');
+};
+
 await server.connect(new StdioServerTransport());
 // stdout belongs to the protocol — log to stderr only
 console.error(
@@ -57,6 +64,10 @@ console.error(
 // Signals self-registration is network I/O — deferred until after connect()
 // so it can never delay the client attaching to this server, and
 // fire-and-forget so a slow/down collector never blocks anything either.
+// The boot event is emitted here (rather than before initMcpSignals
+// resolves) so it isn't dropped by captureEvent no-op'ing against a null
+// client.
 void initMcpSignals().then((client) => {
   mcpSignals = client;
+  captureEvent('mcp.boot');
 });

@@ -1,4 +1,5 @@
 import { TraceMap, originalPositionFor, sourceContentFor } from '@jridgewell/trace-mapping';
+import { captureSelfError } from './signals-self';
 import type { StackFrame, SymbolicatedFrame } from './types';
 
 function basename(path: string): string {
@@ -15,8 +16,9 @@ export function symbolicateFrames(
   for (const a of artifacts) {
     try {
       maps.set(a.filename.replace(/\.map$/, ''), new TraceMap(a.content));
-    } catch {
+    } catch (err) {
       // an unparseable map never blocks ingest
+      captureSelfError(err, { level: 'warning' });
     }
   }
   let any = false;
