@@ -430,6 +430,17 @@
   .rt a:hover {
     text-decoration: underline;
   }
+  /* Cursor-in-link tint (RichTextEditor.dc.html §07): a ProseMirror
+     decoration (packages/richtext LinkCursorDecoration) stamps this class
+     onto the active link's mark range while the (collapsed) cursor sits
+     inside it — purely visual, no document mutation. `.rt a` already sets
+     the accent text color unconditionally, so only the tinted fill is
+     needed here. */
+  .rt .is-editing-link {
+    background: var(--color-accent-subtle);
+    border-radius: 3px;
+    padding: 1px 3px;
+  }
   .rt strong {
     font-weight: 600;
     color: var(--color-ink);

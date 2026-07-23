@@ -9,6 +9,7 @@ import { TextAlign } from '@tiptap/extension-text-align';
 import { Color, TextStyle } from '@tiptap/extension-text-style';
 import type { Feature } from './features';
 import { Callout } from './nodes/callout';
+import { LinkCursorDecoration } from './nodes/link-decoration';
 import { ticketRef, userMention, type SuggestionHooks } from './nodes/refs';
 
 // Groups mirror RichTextEditor.dc.html's toolbar comment: "groups: block ·
@@ -38,7 +39,7 @@ export const REGISTRY: Record<Feature, FeatureEntry> = {
       { id: 'highlight', group: 'overflow' }, { id: 'color', group: 'overflow' },
     ],
   },
-  link: { extensions: () => [], toolbar: [{ id: 'link', group: 'link' }] },
+  link: { extensions: () => [LinkCursorDecoration], toolbar: [{ id: 'link', group: 'link' }] },
   // The old cycling H1 button is gone — 'headings' now contributes the
   // leading block-type select (Paragraph/H1/H2/H3), rendered by the web
   // layer as its own control, not a plain toggle button.

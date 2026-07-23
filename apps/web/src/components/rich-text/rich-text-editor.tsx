@@ -14,6 +14,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../../ui/button';
 import { cn } from '../../ui/cn';
 import { uploadImage } from './image-upload';
+import { LinkEditPopover } from './link-popover';
 import { buildSuggestionHooks, type RichTextSuggestions } from './suggestions';
 import { Toolbar, type ToolbarVariant } from './toolbar';
 
@@ -330,6 +331,7 @@ export function RichTextEditor({
       {uploadError !== null ? (
         <p className="m-0 mt-1 font-sans text-meta text-danger">{uploadError}</p>
       ) : null}
+      <LinkEditPopover editor={editor} />
     </div>
   );
 }

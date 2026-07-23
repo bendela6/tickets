@@ -2,18 +2,81 @@ import type { SuggestionHooks } from '@tickets/richtext';
 import { ReactRenderer } from '@tiptap/react';
 import type { SuggestionKeyDownProps, SuggestionProps } from '@tiptap/suggestion';
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import type { StatusKind } from '../../api/types';
+import { Avatar } from '../../ui/avatar';
 import { cn } from '../../ui/cn';
 
 // RichTextEditor threads these two lookup sources through to the mention (@)
 // and ticket-ref (#) Mention nodes wired in @tickets/richtext. Either source
 // is optional — when absent, that trigger character simply never opens a
 // popover (Suggestion's `items`/`render` hooks are never attached for it).
+// `kind`/`statusKind` are optional too — board-suggestions.ts fills them in
+// from the board index; a caller that can't derive them just gets the
+// human/neutral row treatment.
 export type RichTextSuggestions = {
-  users?: () => { id: number; label: string }[];
-  tickets?: (query: string) => { id: number | null; label: string; title?: string }[];
+  users?: () => { id: number; label: string; kind?: 'human' | 'agent' }[];
+  tickets?: (
+    query: string,
+  ) => { id: number | null; label: string; title?: string; statusKind?: StatusKind | null }[];
 };
 
-type SuggestionItem = { id: number | null; label: string; title?: string };
+type SuggestionItem = {
+  id: number | null;
+  label: string;
+  title?: string;
+  kind?: 'human' | 'agent';
+  statusKind?: StatusKind | null;
+};
+
+// RichTextEditor.dc.html §04 "committed chips" derives initials from the
+// full label ("Mara K." -> "MK"); the popover's trailing handle instead
+// takes just the label's first word, lowercased ("Mara K." -> "@mara") — no
+// separate handle field exists on the suggestion source, so this is the
+// simplest honest derivation rather than inventing one.
+function deriveHandle(label: string): string {
+  const first = label.trim().split(/\s+/)[0] ?? '';
+  return `@${first.toLowerCase()}`;
+}
+
+const KIND_DOT: Record<StatusKind, string> = {
+  todo: 'bg-kind-todo',
+  active: 'bg-kind-active',
+  blocked: 'bg-kind-blocked',
+  done: 'bg-kind-done',
+  dropped: 'bg-kind-dropped',
+};
+
+// Neutral fallback (same token the committed ticket-ref chip's dot uses,
+// see `.rt [data-ticket-ref-dot]` in instrument.css) for rows whose source
+// couldn't derive a real status kind.
+function statusDotClass(kind: StatusKind | null | undefined): string {
+  return kind ? (KIND_DOT[kind] ?? 'bg-opt-gray') : 'bg-opt-gray';
+}
+
+function PeopleRow({ item, selected }: { item: SuggestionItem; selected: boolean }) {
+  const agent = item.kind === 'agent';
+  return (
+    <>
+      <Avatar name={item.label} kind={item.kind ?? 'human'} size="sm" />
+      <span className="truncate font-sans text-ui font-medium text-ink">{item.label}</span>
+      <span className="shrink-0 font-mono text-meta text-ink-3">{agent ? 'agent' : deriveHandle(item.label)}</span>
+      <span className="flex-1" />
+      {selected ? <span className="shrink-0 font-mono text-[11px] text-ink-3">↩</span> : null}
+    </>
+  );
+}
+
+function TicketRow({ item }: { item: SuggestionItem }) {
+  return (
+    <>
+      <span className="shrink-0 rounded-ctrl border border-hairline bg-app px-1.5 py-0.5 font-mono text-[11px] font-medium text-ink-2">
+        {item.label}
+      </span>
+      <span className="min-w-0 flex-1 truncate font-sans text-ui text-ink">{item.title}</span>
+      <span className={cn('size-2 shrink-0 rounded-full', statusDotClass(item.statusKind))} />
+    </>
+  );
+}
 
 type SuggestionListProps = {
   items: SuggestionItem[];
@@ -66,38 +129,50 @@ const SuggestionList = forwardRef<SuggestionListHandle, SuggestionListProps>(fun
     },
   }));
 
+  // RichTextEditor.dc.html §04: people popover is 272px, tickets 328px.
+  const width = trigger === '@' ? 'w-68' : 'w-82';
+  const sectionLabel = trigger === '@' ? 'PEOPLE' : 'TICKETS';
+
   return (
     <div
-      className="fixed z-50 min-w-45 rounded-[10px] border border-hairline bg-raised p-1 shadow-md"
+      className={cn(
+        'fixed z-50 rounded-[10px] border border-hairline bg-raised p-1.25 shadow-lg',
+        width,
+      )}
       style={{ left: rect?.left ?? 0, top: rect?.bottom ?? 0 }}
     >
       {items.length === 0 ? (
-        <div className="px-2 py-1.5 font-sans text-ui text-ink-2">No matches</div>
+        <div className="px-2.25 py-1.5 font-sans text-ui text-ink-2">No matches</div>
       ) : (
-        items.map((item, index) => (
-          <div
-            key={item.id ?? item.label}
-            className={cn(
-              'cursor-pointer rounded-md px-2 py-1.5 font-sans text-ui text-ink',
-              index === selected && 'bg-accent-subtle text-ink',
-            )}
-            // Suggestion's mousedown-driven selection would otherwise blur the
-            // editor before the click registers as a pick.
-            onMouseDown={(event) => {
-              event.preventDefault();
-              command(item);
-            }}
-          >
-            {/* The trigger char lives in its own node (not concatenated into
-                the label's text node) so the label alone stays queryable by
-                exact text — RTL's getByText only reads an element's direct
-                text-node children, so `@beka` as a single string would never
-                match a `'beka'` query. */}
-            <span aria-hidden="true">{trigger}</span>
-            <span>{item.label}</span>
-            {trigger === '#' && item.title ? <span className="text-ink-2"> — {item.title}</span> : null}
+        <>
+          <div className="px-2.25 pt-1.25 pb-1 font-mono text-[10px] font-medium tracking-widest text-ink-3">
+            {sectionLabel}
           </div>
-        ))
+          {items.map((item, index) => {
+            const isSelected = index === selected;
+            return (
+              <div
+                key={item.id ?? item.label}
+                className={cn(
+                  'flex h-8.5 cursor-pointer items-center gap-2.25 rounded-md px-2.25',
+                  isSelected ? 'bg-inset' : 'hover:bg-app',
+                )}
+                // Suggestion's mousedown-driven selection would otherwise blur
+                // the editor before the click registers as a pick.
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  command(item);
+                }}
+              >
+                {trigger === '@' ? (
+                  <PeopleRow item={item} selected={isSelected} />
+                ) : (
+                  <TicketRow item={item} />
+                )}
+              </div>
+            );
+          })}
+        </>
       )}
     </div>
   );
