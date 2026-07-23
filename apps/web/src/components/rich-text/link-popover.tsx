@@ -51,6 +51,7 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
   const [dismissed, setDismissed] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dismissedAtRangeRef = useRef<{ from: number; to: number } | null>(null);
 
   const linkType = editor?.schema.marks['link'];
   const active =
@@ -60,17 +61,33 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
     editor.state.selection.empty &&
     editor.isActive('link');
 
+  // Compute the current link range (if active)
+  const currentRange = active && linkType ? getMarkRange(editor!.state.selection.$from, linkType) : null;
+
   // Re-arm on every fresh entry into a link — a previous dismissal (outside
   // click) or a finished edit shouldn't stick once the cursor leaves and
-  // comes back to a(nother) link.
+  // comes back to a(nother) link. Also re-arm if the link range changes
+  // (cursor moved within/out of the link) or if we leave the link entirely.
   useEffect(() => {
-    if (active) {
-      setDismissed(false);
-    } else {
+    if (!active) {
       setEditing(false);
+      setDismissed(false);
+      dismissedAtRangeRef.current = null;
+    } else if (
+      dismissed &&
+      currentRange &&
+      dismissedAtRangeRef.current &&
+      (currentRange.from !== dismissedAtRangeRef.current.from || currentRange.to !== dismissedAtRangeRef.current.to)
+    ) {
+      // Link range changed (cursor moved to different position in same link or different link) — re-arm
+      setDismissed(false);
+      dismissedAtRangeRef.current = null;
+    } else if (!dismissed) {
+      // Just entered or re-armed — update the range reference
+      dismissedAtRangeRef.current = null;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-arm on the active transition itself
-  }, [active]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-arm on active, currentRange, or dismissed changes
+  }, [active, currentRange?.from, currentRange?.to, dismissed]);
 
   useEffect(() => {
     if (editing) {
@@ -93,11 +110,14 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
         !containsTarget(editor.view.dom as HTMLElement, event.target)
       ) {
         setDismissed(true);
+        if (currentRange) {
+          dismissedAtRangeRef.current = currentRange;
+        }
       }
     };
     document.addEventListener('mousedown', onDocMouseDown, true);
     return () => document.removeEventListener('mousedown', onDocMouseDown, true);
-  }, [editor, active]);
+  }, [editor, active, currentRange]);
 
   if (editor === null || linkType === undefined || !active || dismissed) {
     return null;
