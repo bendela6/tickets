@@ -350,7 +350,7 @@ export function ItemDetail({
             </div>
             <div className="pt-3">
               {tab === 'comments' ? (
-                <DetailComments indexes={indexes} item={item} prefix={prefix} />
+                <DetailComments indexes={indexes} item={item} prefix={prefix} onOpenItem={openItem} />
               ) : (
                 <DetailActivity item={item} indexes={indexes} />
               )}
@@ -417,7 +417,7 @@ export function ItemDetail({
           {linksSection}
           <section>
             <div className={cn('mb-3', SECTION_LABEL)}>Comments</div>
-            <DetailComments indexes={indexes} item={item} prefix={prefix} />
+            <DetailComments indexes={indexes} item={item} prefix={prefix} onOpenItem={openItem} />
           </section>
         </div>
         <div className="flex w-80 shrink-0 flex-col gap-5">

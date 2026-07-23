@@ -16,10 +16,12 @@ export function DetailComments({
   indexes,
   item,
   prefix,
+  onOpenItem,
 }: {
   indexes: BoardIndexes;
   item: Item;
   prefix: string;
+  onOpenItem?: (number: number) => void;
 }) {
   const { userId } = useCurrentUser();
   const createComment = useCreateComment();
@@ -33,6 +35,16 @@ export function DetailComments({
     left.createdAt.localeCompare(right.createdAt),
   );
   const me = userId !== null ? indexes.userById.get(userId) : undefined;
+
+  const handleOpenTicket = (label: string) => {
+    if (!onOpenItem) {
+      return;
+    }
+    const n = Number(label.split('-').at(-1));
+    if (Number.isFinite(n)) {
+      onOpenItem(n);
+    }
+  };
 
   const submit = async () => {
     if (userId === null || body.trim().length === 0) {
@@ -74,6 +86,7 @@ export function DetailComments({
                 <RichTextView
                   value={comment.body}
                   className="font-sans text-ui leading-[1.55] text-ink"
+                  onOpenTicket={handleOpenTicket}
                 />
               </div>
             </div>
