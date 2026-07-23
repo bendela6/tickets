@@ -172,7 +172,7 @@ test('(b) sym tab shows the original file path + context line text; raw toggle s
   expect(await screen.findByText(/index-8f3a91/)).toBeInTheDocument();
 });
 
-test('(c) a payload WITHOUT stackSymbolicated shows the no-sourcemaps banner and only the raw view', async () => {
+test('(c) a payload WITHOUT stackSymbolicated still renders the grouped view, with the no-sourcemaps banner and a raw toggle', async () => {
   const rawSession: SessionTimeline = {
     session: { ...SESSION_SYM.session, sessionId: 'sess_raw1', release: '1.44.1' },
     rows: [
@@ -199,8 +199,60 @@ test('(c) a payload WITHOUT stackSymbolicated shows the no-sourcemaps banner and
 
   expect(await screen.findByText(/No source maps uploaded for release/)).toBeInTheDocument();
   expect(screen.getByText(/minified-chunk/)).toBeInTheDocument();
-  expect(screen.queryByRole('tab', { name: 'symbolicated' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('tab', { name: 'raw' })).not.toBeInTheDocument();
+  // Unsymbolicated no longer means "flat raw list only": the grouped view is
+  // still rendered (from the raw frames) and the toggle stays available so the
+  // flat list is one click away.
+  expect(screen.getByRole('tab', { name: 'symbolicated' })).toBeInTheDocument();
+  expect(screen.getByRole('tab', { name: 'raw' })).toBeInTheDocument();
+});
+
+test('(c2) an unsymbolicated NODE stack shows WHERE it happened: in-app frame with file:line, no tab switching', async () => {
+  // The real-world case that motivated this: source maps are only ever uploaded
+  // for browser bundles, so every api/mcp stack arrives unsymbolicated — but its
+  // frames already carry true paths. Those must be visible on arrival.
+  const nodeSession: SessionTimeline = {
+    session: { ...SESSION_SYM.session, sessionId: 'sess_node1', release: null },
+    rows: [
+      {
+        ...SESSION_SYM.rows[0]!,
+        id: 602,
+        payload: {
+          stack: [
+            {
+              functionName: 'buildValueRows',
+              file: 'apps/api/src/values/build-value-rows.ts',
+              line: 23,
+              column: 11,
+              inApp: true,
+            },
+            {
+              functionName: 'processTicksAndRejections',
+              file: 'node:internal/process/task_queues',
+              line: 95,
+              column: 5,
+              inApp: false,
+            },
+          ],
+          breadcrumbs: [],
+        },
+      },
+    ],
+  };
+
+  renderSignals(<IssueDetailScreen issueId={1} />, {
+    fetchRoutes: [
+      issueRoute(),
+      occurrencesRoute({
+        rows: [{ id: 602, receivedAt: '2026-07-22T14:03:35Z', release: null, sessionId: 'sess_node1' }],
+        total: 1,
+      }),
+      { test: /\/signals-api\/sessions\/sess_node1\/signals$/, handler: () => nodeSession },
+    ],
+  });
+
+  expect(await screen.findByText('buildValueRows')).toBeInTheDocument();
+  expect(screen.getByText('apps/api/src/values/build-value-rows.ts:23')).toBeInTheDocument();
+  expect(screen.getByText('in-app')).toBeInTheDocument();
 });
 
 test('(d) breadcrumbs render glyph types and the 500 chip; the terminal row is the error itself, danger-styled', async () => {

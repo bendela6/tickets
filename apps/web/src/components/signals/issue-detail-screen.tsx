@@ -228,12 +228,24 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
             </span>
           </div>
         </div>
-        <Button variant="secondary" onClick={() => patchStatus.mutate({ id: issue.id, status: 'resolved' })}>
-          ✓ Resolve
-        </Button>
-        <Button variant="secondary" onClick={() => patchStatus.mutate({ id: issue.id, status: 'ignored' })}>
-          ⊘ Ignore
-        </Button>
+        {/* Only the transitions that make sense from the current status, so
+        every state shows exactly two actions and every state is escapable —
+        a resolved or ignored issue can always be reopened. */}
+        {issue.status !== 'open' ? (
+          <Button variant="secondary" onClick={() => patchStatus.mutate({ id: issue.id, status: 'open' })}>
+            ↺ Reopen
+          </Button>
+        ) : null}
+        {issue.status !== 'resolved' ? (
+          <Button variant="secondary" onClick={() => patchStatus.mutate({ id: issue.id, status: 'resolved' })}>
+            ✓ Resolve
+          </Button>
+        ) : null}
+        {issue.status !== 'ignored' ? (
+          <Button variant="secondary" onClick={() => patchStatus.mutate({ id: issue.id, status: 'ignored' })}>
+            ⊘ Ignore
+          </Button>
+        ) : null}
       </div>
 
       <div className="mb-4 flex flex-none items-center gap-6.5 rounded-[10px] border border-hairline bg-raised px-4.5 py-3">
