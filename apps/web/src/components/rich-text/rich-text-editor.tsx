@@ -169,7 +169,16 @@ export function RichTextEditor({
         if (instance === null || instance.isDestroyed) {
           return;
         }
-        const insertPos = findUploadPos(instance.state, id) ?? instance.state.selection.from;
+        // No caret fallback: the upload-decorations plugin re-anchors the
+        // widget through any edit (including one that deletes its anchor
+        // range), so a live decoration should always exist here. If it
+        // somehow doesn't, inserting at the caret would land the image
+        // wherever the user's cursor happens to be — unrelated to this
+        // upload — so dropping the insert is the safer failure mode.
+        const insertPos = findUploadPos(instance.state, id);
+        if (insertPos === null) {
+          return;
+        }
         removeUploadDecoration(instance.view, id);
         instance
           .chain()
