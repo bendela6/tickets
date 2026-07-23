@@ -26,5 +26,7 @@ export async function initMcpSignals(): Promise<SignalsClient | null> {
     dsn,
     environment: environment.nodeEnv,
     registerProcessHandlers: false,
+    captureConsole: true,
+    logLevel: environment.signalsLogLevel,
   });
 }
