@@ -318,6 +318,20 @@
      work and a calm attention pulse for "awaiting input". */
   --animate-ai-spin: ai-spin 1.4s linear infinite;
   --animate-ai-pulse: ai-pulse 1.8s ease-out infinite;
+  /* Extended type scale (audit 2026-07-23) — inert until consumed. Existing
+     label/meta/ui (11/12/13px) stay canonical for control chrome. */
+  --text-nano: 9px;
+  --text-nano--line-height: 1.3;
+  --text-micro: 10px;
+  --text-micro--line-height: 1.35;
+  --text-body: 14px;
+  --text-body--line-height: 1.5;
+  --text-title: 16px;
+  --text-title--line-height: 1.4;
+  --text-heading: 20px;
+  --text-heading--line-height: 1.3;
+  --text-display: 24px;
+  --text-display--line-height: 1.25;
 }
 
 @keyframes ai-spin {
