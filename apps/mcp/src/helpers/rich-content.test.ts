@@ -15,6 +15,9 @@ describe('encodeBody', () => {
     expect(encodeBody(storedDoc, 'rich')).toBe(storedDoc);
     expect(() => encodeBody('not a doc', 'rich')).toThrow(/serialized tiptap doc/);
   });
+  it('markdown passes already-serialized docs through unchanged', () => {
+    expect(encodeBody(storedDoc, 'markdown')).toBe(storedDoc);
+  });
 });
 
 describe('decodeBody', () => {
