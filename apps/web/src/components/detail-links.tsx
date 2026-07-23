@@ -4,7 +4,7 @@ import { useCreateLink } from '../api/use-create-link';
 import { useDeleteLink } from '../api/use-delete-link';
 import { useCurrentUser } from '../state/current-user-context';
 import { Button } from '../ui/button';
-import { cn } from '../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { Combobox } from '../ui/combobox';
 import type { ComboOption } from '../ui/combobox-list';
 import { Input } from '../ui/input';

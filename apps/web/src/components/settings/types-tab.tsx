@@ -3,7 +3,7 @@ import type { Board, ItemType } from '../../api/types';
 import { useCreateType, useSetChildTypes, useUpdateType } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { FieldLabel } from '../../ui/field-label';
 import { Input } from '../../ui/input';
 import type { BoardIndexes } from '../../utils/index-board';

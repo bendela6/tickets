@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { SignalPayload, SignalStackFrame } from '../../api/signals/signals-api';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { formatClockTime } from './format';
 
 type Tab = 'sym' | 'raw';

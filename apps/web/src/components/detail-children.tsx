@@ -4,7 +4,7 @@ import type { Board, Item } from '../api/types';
 import { useCreateItem } from '../api/use-create-item';
 import { usePatchItem } from '../api/use-patch-item';
 import { useCurrentUser } from '../state/current-user-context';
-import { cn } from '../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { KindGlyph, type StatusKind } from '../ui/kind-glyph';
 import { StatusSelect } from '../ui/status-select';
 import { ItemKey } from '../ui/item-key';

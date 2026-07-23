@@ -1,4 +1,4 @@
-import { cn } from './cn';
+import { cn } from '@tickets/ui/cn';
 import { KindGlyph, type StatusKind } from './kind-glyph';
 
 const kindClasses: Record<StatusKind, string> = {

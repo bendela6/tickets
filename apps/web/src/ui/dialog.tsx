@@ -1,7 +1,7 @@
 import { forwardRef, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 import { Dialog as RadixDialog } from 'radix-ui';
 import { Button } from './button';
-import { cn } from './cn';
+import { cn } from '@tickets/ui/cn';
 
 export const DialogRoot = RadixDialog.Root;
 export const DialogTrigger = RadixDialog.Trigger;

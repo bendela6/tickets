@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { cn } from './cn';
+import { cn } from '@tickets/ui/cn';
 import { ComboboxList, type ComboOption } from './combobox-list';
 import { OptionChip } from './option-chip';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';

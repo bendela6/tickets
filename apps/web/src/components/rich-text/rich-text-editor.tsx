@@ -11,7 +11,7 @@ import {
 } from '@tickets/richtext';
 import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { uploadImage } from './image-upload';
 import { buildSuggestionHooks, type RichTextSuggestions } from './suggestions';
 import { Toolbar } from './toolbar';

@@ -10,7 +10,7 @@ import { hexToOptionColor } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { Combobox } from '../../ui/combobox';
 import type { ComboOption } from '../../ui/combobox-list';
 import { FieldLabel } from '../../ui/field-label';

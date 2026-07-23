@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Button } from '../../ui/button';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import type { StreamBlock, ToolResult } from './build-message-stream';
 
 export type RespondFn = (requestId: string, result: 'allow' | 'deny', reason?: string) => void;

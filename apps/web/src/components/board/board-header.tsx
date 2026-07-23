@@ -1,7 +1,7 @@
 import type { Board } from '../../api/types';
 import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { Input } from '../../ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
 import type { BoardIndexes } from '../../utils/index-board';

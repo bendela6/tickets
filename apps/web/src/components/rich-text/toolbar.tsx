@@ -1,7 +1,7 @@
 import type { Editor } from '@tiptap/react';
 import type { ToolbarControl } from '@tickets/richtext';
 import { useRef } from 'react';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 
 type ToolbarProps = {
   editor: Editor | null;
