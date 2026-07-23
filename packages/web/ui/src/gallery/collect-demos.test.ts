@@ -46,4 +46,21 @@ describe('collectDemos', () => {
     expect(errors[0]!.error).toMatch(/states/);
     expect(out.filter((d) => !isDemoError(d))).toHaveLength(1);
   });
+
+  it('tiebreaks by title when group and order are equal', () => {
+    const out = collectDemos({
+      'a': { meta: { title: 'Zeta', group: 'G' }, states: [{ name: 's', render: () => null }] },
+      'b': { meta: { title: 'Alpha', group: 'G' }, states: [{ name: 's', render: () => null }] },
+    });
+    const titles = out.map((d) => (isDemoError(d) ? '!' : d.meta.title));
+    expect(titles).toEqual(['Alpha', 'Zeta']);
+  });
+
+  it('orders multiple error entries deterministically by path', () => {
+    const out = collectDemos({
+      './z.demo.tsx': { meta: { title: 'Z' } },
+      './a.demo.tsx': { meta: { title: 'A' } },
+    });
+    expect(out.map((d) => (isDemoError(d) ? d.path : '!'))).toEqual(['./a.demo.tsx', './z.demo.tsx']);
+  });
 });
