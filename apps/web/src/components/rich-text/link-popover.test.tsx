@@ -1,5 +1,5 @@
 import { buildExtensions } from '@tickets/richtext';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Editor } from '@tiptap/react';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -92,5 +92,33 @@ describe('LinkEditPopover', () => {
     await user.type(input, 'https://example.com/discarded{Escape}');
     expect(screen.getByText('https://example.com/docs')).toBeInTheDocument();
     expect(editor.view.dom.querySelector('a')?.getAttribute('href')).toBe('https://example.com/docs');
+  });
+
+  it('re-arms the popover when cursor moves within the same link after outside click dismissal', async () => {
+    editor = makeLinkEditor('https://example.com/docs');
+    editor.commands.setTextSelection(7); // 2 chars into "the docs" (link range 5..13)
+    render(<LinkEditPopover editor={editor} />);
+    expect(screen.getByText('https://example.com/docs')).toBeInTheDocument();
+
+    // Simulate outside mousedown to dismiss the popover by clicking on an external element
+    const externalElement = document.createElement('div');
+    document.body.appendChild(externalElement);
+    externalElement.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+
+    // Wait for the popover to be dismissed
+    await waitFor(() => {
+      expect(screen.queryByText('https://example.com/docs')).not.toBeInTheDocument();
+    });
+
+    // Move cursor to a different offset within the same link
+    editor.commands.setTextSelection(8);
+
+    // Wait for the popover to re-appear
+    await waitFor(() => {
+      expect(screen.getByText('https://example.com/docs')).toBeInTheDocument();
+    });
+
+    // Cleanup
+    externalElement.remove();
   });
 });
