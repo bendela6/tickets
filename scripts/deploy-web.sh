@@ -49,7 +49,11 @@ upload_sourcemaps() {
   # host the stored DSN carries is irrelevant (and may be unreachable here).
   dsn="sgl://${ingest_key}@127.0.0.1:4640/${app_id}"
 
-  docker compose exec -T app \
+  # MSYS_NO_PATHCONV / MSYS2_ARG_CONV_EXCL: on Windows Git Bash, MSYS rewrites
+  # leading-slash arguments into Windows paths before handing them to a native
+  # program, so the container paths below would arrive as
+  # "C:/Program Files/Git/app/...". Both vars are inert on Linux/macOS.
+  MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker compose exec -T app \
     node /app/packages/signals/node/dist/cli.js sourcemaps upload /app/sourcemaps \
     --release "$SIGNALS_RELEASE" --dsn "$dsn"
 }
