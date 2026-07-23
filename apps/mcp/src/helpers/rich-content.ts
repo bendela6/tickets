@@ -20,6 +20,10 @@ export function encodeBody(body: string, format: ContentFormat): string {
     }
     return body;
   }
+  // If body is already a serialized doc, pass it through to prevent double-encoding
+  if (isRichDoc(body)) {
+    return body;
+  }
   return JSON.stringify(markdownToDoc(body));
 }
 
