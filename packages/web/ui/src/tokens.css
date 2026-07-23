@@ -332,6 +332,11 @@
   --text-heading--line-height: 1.3;
   --text-display: 24px;
   --text-display--line-height: 1.25;
+  /* Radius gaps (audit): chip 4 / tile 6 / overlay 10 — names avoid Tailwind's
+     default --radius-xs/sm which existing rounded-sm usage relies on. */
+  --radius-chip: 4px;
+  --radius-tile: 6px;
+  --radius-overlay: 10px;
 }
 
 @keyframes ai-spin {
