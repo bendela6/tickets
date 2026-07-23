@@ -19,6 +19,11 @@ services:
     build:
       context: .
       target: app
+      args:
+        # Set by scripts/deploy-web.sh (git short SHA). Baked into the web
+        # bundle as VITE_SIGNALS_RELEASE and reused to tag the source maps it
+        # uploads, so reported frames and stored maps agree on one release.
+        SIGNALS_RELEASE: ${SIGNALS_RELEASE:-}
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
