@@ -8,7 +8,9 @@
     "./cn": "./src/cn.ts",
     "./variants": "./src/variants.ts",
     "./runtime-style": "./src/runtime-style.ts",
-    "./swatches": "./src/swatches.ts"
+    "./swatches": "./src/swatches.ts",
+    "./gallery": "./src/gallery/index.ts",
+    "./gallery/demos": "./src/gallery/demos.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -23,9 +25,15 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^26.1.1",
     "@types/react": "^19.2.14",
+    "@vitejs/plugin-react": "^6.0.1",
+    "jsdom": "^29.1.1",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
     "typescript": "^6.0.3",
+    "vite": "^8.1.3",
     "vitest": "^4.1.10"
   },
   "peerDependencies": {
