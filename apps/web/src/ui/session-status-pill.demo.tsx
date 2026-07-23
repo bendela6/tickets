@@ -1,3 +1,4 @@
+import { definePlayground, number, select } from '@tickets/ui/gallery';
 import { SessionStatusPill, type SessionStatus } from './session-status-pill';
 
 const SESSION_STATUSES: SessionStatus[] = [
@@ -27,3 +28,16 @@ export const states = [
     render: () => <SessionStatusPill status="exited" exitCode={1} />,
   },
 ];
+
+export const playground = definePlayground({
+  controls: {
+    status: select(SESSION_STATUSES, { initial: 'running' }),
+    exitCode: number(0, { min: 0, max: 255 }),
+  },
+  render: ({ status, exitCode }) => (
+    <SessionStatusPill
+      status={status}
+      exitCode={status === 'exited' ? exitCode : undefined}
+    />
+  ),
+});
