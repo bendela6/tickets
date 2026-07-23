@@ -38,6 +38,10 @@
 }
 
 :root {
+  /* Structural tokens (audit): consumed as border-(length:--border-hair) /
+     ring-(length:--ring-focus). */
+  --border-hair: 1.5px;
+  --ring-focus: 3px;
   /* tokens:light — generated, do not edit */
   --ins-app: #f7f6f2;
   --ins-raised: #ffffff;
