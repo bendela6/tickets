@@ -68,4 +68,29 @@ describe('RichTextView', () => {
       expect(onOpenTicket).toHaveBeenCalledWith('TIX-123');
     }
   });
+
+  it('does not show link editing tint (.is-editing-link) in read-only views', () => {
+    const doc = JSON.stringify({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: 'read more', marks: [{ type: 'link', attrs: { href: 'https://example.com' } }] },
+            { type: 'text', text: ' information' },
+          ],
+        },
+      ],
+    });
+    // RichTextView is always read-only (no editable prop)
+    render(<RichTextView value={doc} />);
+
+    // Assert that no element has the .is-editing-link class (used only in editable mode)
+    const editingLinkElements = document.querySelectorAll('.is-editing-link');
+    expect(editingLinkElements.length).toBe(0);
+
+    // Verify the link itself is rendered
+    const link = document.querySelector('a[href="https://example.com"]');
+    expect(link).not.toBeNull();
+  });
 });

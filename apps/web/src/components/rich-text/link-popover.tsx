@@ -51,7 +51,7 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
   const [dismissed, setDismissed] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const dismissedAtRangeRef = useRef<{ from: number; to: number } | null>(null);
+  const dismissedAtPosRef = useRef<number | null>(null);
 
   const linkType = editor?.schema.marks['link'];
   const active =
@@ -61,33 +61,34 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
     editor.state.selection.empty &&
     editor.isActive('link');
 
-  // Compute the current link range (if active)
+  // Compute the current cursor position and link range
+  const currentPos = active ? editor!.state.selection.$from.pos : null;
   const currentRange = active && linkType ? getMarkRange(editor!.state.selection.$from, linkType) : null;
 
   // Re-arm on every fresh entry into a link — a previous dismissal (outside
   // click) or a finished edit shouldn't stick once the cursor leaves and
-  // comes back to a(nother) link. Also re-arm if the link range changes
-  // (cursor moved within/out of the link) or if we leave the link entirely.
+  // comes back to a(nother) link. Also re-arm if the cursor position changes
+  // (any selection change re-arms when dismissed).
   useEffect(() => {
     if (!active) {
       setEditing(false);
       setDismissed(false);
-      dismissedAtRangeRef.current = null;
+      dismissedAtPosRef.current = null;
     } else if (
       dismissed &&
-      currentRange &&
-      dismissedAtRangeRef.current &&
-      (currentRange.from !== dismissedAtRangeRef.current.from || currentRange.to !== dismissedAtRangeRef.current.to)
+      dismissedAtPosRef.current !== null &&
+      currentPos !== null &&
+      currentPos !== dismissedAtPosRef.current
     ) {
-      // Link range changed (cursor moved to different position in same link or different link) — re-arm
+      // Cursor position changed (even within the same link) — re-arm
       setDismissed(false);
-      dismissedAtRangeRef.current = null;
+      dismissedAtPosRef.current = null;
     } else if (!dismissed) {
-      // Just entered or re-armed — update the range reference
-      dismissedAtRangeRef.current = null;
+      // Just entered or re-armed — clear the position reference
+      dismissedAtPosRef.current = null;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-arm on active, currentRange, or dismissed changes
-  }, [active, currentRange?.from, currentRange?.to, dismissed]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-arm on active, currentPos, or dismissed changes
+  }, [active, currentPos, dismissed]);
 
   useEffect(() => {
     if (editing) {
@@ -110,14 +111,12 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
         !containsTarget(editor.view.dom as HTMLElement, event.target)
       ) {
         setDismissed(true);
-        if (currentRange) {
-          dismissedAtRangeRef.current = currentRange;
-        }
+        dismissedAtPosRef.current = currentPos;
       }
     };
     document.addEventListener('mousedown', onDocMouseDown, true);
     return () => document.removeEventListener('mousedown', onDocMouseDown, true);
-  }, [editor, active, currentRange]);
+  }, [editor, active, currentPos]);
 
   if (editor === null || linkType === undefined || !active || dismissed) {
     return null;
