@@ -583,6 +583,14 @@
     "on-opt-gray-dark": {
       "$type": "color",
       "$value": "#21201c"
+    },
+    "highlight": {
+      "$type": "color",
+      "$value": "#f1dfa0"
+    },
+    "highlight-dark": {
+      "$type": "color",
+      "$value": "#4a4020"
     }
   }
 }

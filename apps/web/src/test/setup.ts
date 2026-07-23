@@ -20,6 +20,30 @@ if (typeof Element !== 'undefined') {
   Element.prototype.hasPointerCapture = Element.prototype.hasPointerCapture ?? (() => false);
   Element.prototype.setPointerCapture = Element.prototype.setPointerCapture ?? vi.fn();
   Element.prototype.releasePointerCapture = Element.prototype.releasePointerCapture ?? vi.fn();
+  // jsdom implements getBoundingClientRect but not getClientRects. ProseMirror's
+  // scrollToSelection (run after any transaction that moves the caret, e.g. real
+  // typing into a RichTextEditor via userEvent) calls it unconditionally on the
+  // target node/Range and throws if it's missing — an empty rect list is enough
+  // to keep that scroll-into-view step a no-op instead of an uncaught exception.
+  Element.prototype.getClientRects = Element.prototype.getClientRects ?? (() => [] as unknown as DOMRectList);
+}
+if (typeof Range !== 'undefined') {
+  const zeroRect = () =>
+    ({
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      toJSON() {
+        return this;
+      },
+    }) as DOMRect;
+  Range.prototype.getClientRects = Range.prototype.getClientRects ?? (() => [] as unknown as DOMRectList);
+  Range.prototype.getBoundingClientRect = Range.prototype.getBoundingClientRect ?? zeroRect;
 }
 
 // jsdom doesn't implement elementFromPoint. ProseMirror's mousedown handler

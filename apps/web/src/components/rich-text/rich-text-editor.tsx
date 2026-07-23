@@ -11,18 +11,33 @@ import {
 } from '@tickets/richtext';
 import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Button } from '../../ui/button';
 import { cn } from '../../ui/cn';
 import { uploadImage } from './image-upload';
 import { buildSuggestionHooks, type RichTextSuggestions } from './suggestions';
-import { Toolbar } from './toolbar';
+import { Toolbar, type ToolbarVariant } from './toolbar';
+
+// Renders the toolbar as a bottom action row (border-top hairline, bg-app)
+// alongside a submit button and a ⌘↩ hint instead of the default top
+// toolbar — RichTextEditor.dc.html §02 comment composer. Both the submit
+// button's click and Mod-Enter call `onSubmit` with the doc serialized
+// straight off the live editor instance, so the caller doesn't have to wait
+// for a blur (the normal `onSave` path) to see the current draft.
+type ComposerConfig = {
+  onSubmit: (value: string) => void;
+  submitLabel?: string;
+  submitDisabled?: boolean;
+  submitPending?: boolean;
+};
 
 type RichTextEditorProps = {
   value: string;
   disabled?: boolean;
   placeholder?: string;
-  onSave: (next: string) => void;
+  onSave?: (next: string) => void;
   features?: 'full' | 'compact' | Feature[];
   suggestions?: RichTextSuggestions;
+  composer?: ComposerConfig;
 };
 
 function resolveFeatures(features: RichTextEditorProps['features']): Feature[] {
@@ -43,10 +58,12 @@ export function RichTextEditor({
   onSave,
   features,
   suggestions,
+  composer,
 }: RichTextEditorProps) {
   const [focused, setFocused] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const featureList = resolveFeatures(features);
+  const toolbarVariant: ToolbarVariant = features === 'compact' ? 'compact' : 'full';
   // handlePaste/handleDrop close over this ref rather than the `editor`
   // binding below: they're passed into the same useEditor() call that
   // produces `editor`, so `editor` itself isn't in scope yet at the point
@@ -143,16 +160,49 @@ export function RichTextEditor({
     return true;
   };
 
+  // Shared by the composer's submit button and its Mod-Enter shortcut: read
+  // the live doc straight off the editor instance (not the blur-driven
+  // `initialRef`/onSave state) so a submit never depends on a blur having
+  // fired first. Same empty-doc encoding onBlur uses ('' rather than the
+  // literal empty-doc JSON) so callers can share the `next.length > 0`
+  // convention either path produces.
+  const submitCurrent = () => {
+    const instance = editorRef.current;
+    if (instance === null || instance.isDestroyed || composer === undefined) {
+      return;
+    }
+    const doc = instance.getJSON();
+    const serialized = isDocEmpty(doc as never) ? '' : JSON.stringify(doc);
+    composer.onSubmit(serialized);
+  };
+
   const editor = useEditor({
     extensions,
     content: toDisplayDoc(value),
     editable: disabled !== true,
     immediatelyRender: true,
+    // Tiptap v3 does NOT re-render the consuming component on every
+    // transaction by default (see @tiptap/react's useEditor selector) — the
+    // toolbar's active-mark highlighting and the block-type select's live
+    // label both read `editor.isActive(...)` at render time, so without this
+    // they'd only ever reflect the doc as of the last unrelated re-render
+    // (e.g. a focus/blur). This does mean a re-render per keystroke/selection
+    // change, which is the standard tradeoff for a toolbar that reflects
+    // live editor state.
+    shouldRerenderOnTransaction: true,
     editorProps: {
       handlePaste: (_view, event) => insertImagesFromFiles(event.clipboardData?.files),
       handleDrop: (view, event) => {
         const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
         return insertImagesFromFiles(event.dataTransfer?.files, coords?.pos);
+      },
+      handleKeyDown: (_view, event) => {
+        if (composer !== undefined && event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+          event.preventDefault();
+          submitCurrent();
+          return true;
+        }
+        return false;
       },
     },
     onFocus: () => setFocused(true),
@@ -168,7 +218,7 @@ export function RichTextEditor({
       // further edits) compares against the just-saved state instead of the
       // original stored value — otherwise every later blur re-fires onSave.
       initialRef.current = serialized;
-      onSave(next);
+      onSave?.(next);
     },
   });
 
@@ -184,24 +234,58 @@ export function RichTextEditor({
     }
   }, [editor, disabled]);
 
+  const toolbar = (
+    <Toolbar
+      editor={editor}
+      controls={toolbarControls(featureList)}
+      disabled={disabled}
+      variant={toolbarVariant}
+      onImageFiles={(files) => insertImagesFromFiles(files)}
+    />
+  );
+
+  // States (RichTextEditor.dc.html §03): rest = hairline border; focused =
+  // control-weight accent border + the app's standard 3px halo (same
+  // ring-accent-subtle pattern every other input uses); disabled = page-bg
+  // fill (not the inset token — the design's own mockup uses `--bg`) with a
+  // not-allowed cursor over the content and a dimmed toolbar.
+  const stateClasses = disabled
+    ? 'border-hairline bg-app'
+    : focused
+      ? 'border-accent bg-raised ring-[3px] ring-accent-subtle'
+      : 'border-hairline bg-raised';
+
   return (
     <div>
-      <div
-        className={cn(
-          'overflow-hidden rounded-[10px] border bg-raised',
-          focused ? 'border-control' : 'border-hairline',
-        )}
-      >
-        <Toolbar
-          editor={editor}
-          controls={toolbarControls(featureList)}
-          disabled={disabled}
-          onImageFiles={(files) => insertImagesFromFiles(files)}
-        />
+      <div className={cn('overflow-hidden rounded-[10px] border', stateClasses)}>
+        {composer === undefined ? (
+          <div className={cn('flex items-center border-b border-hairline px-2 py-1.25', disabled && 'opacity-45')}>
+            {toolbar}
+          </div>
+        ) : null}
         <EditorContent
           editor={editor}
-          className="rt block min-h-27.5 w-full p-3 font-sans text-ui leading-[1.6] text-ink outline-none"
+          className={cn(
+            'rt block w-full p-3 font-sans text-ui leading-[1.6] text-ink outline-none',
+            composer !== undefined ? 'min-h-11' : 'min-h-27.5',
+            disabled && 'cursor-not-allowed',
+          )}
         />
+        {composer !== undefined ? (
+          <div className="flex items-center gap-2 border-t border-hairline bg-app px-2 py-1.5 dark:bg-inset">
+            <div className={cn('min-w-0 flex-1', disabled && 'opacity-45')}>{toolbar}</div>
+            <span className="font-mono text-[11px] text-ink-3">⌘↩</span>
+            <Button
+              variant="primary"
+              size="compact"
+              disabled={composer.submitDisabled}
+              loading={composer.submitPending}
+              onClick={submitCurrent}
+            >
+              {composer.submitLabel ?? 'Comment'}
+            </Button>
+          </div>
+        ) : null}
       </div>
       {uploadError !== null ? (
         <p className="m-0 mt-1 font-sans text-meta text-danger">{uploadError}</p>

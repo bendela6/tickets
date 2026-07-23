@@ -26,8 +26,14 @@ describe('buildExtensions', () => {
   it('toolbar controls follow the feature list', () => {
     const full = toolbarControls(PRESETS.full).map((c) => c.id);
     const compact = toolbarControls(PRESETS.compact).map((c) => c.id);
-    expect(full).toContain('heading');
-    expect(compact).not.toContain('heading');
+    expect(full).toContain('blockType');
+    expect(compact).not.toContain('blockType');
     expect(compact).toContain('bold');
+  });
+
+  it('table and align have no toolbar surface even though the features stay enabled', () => {
+    const full = toolbarControls(PRESETS.full).map((c) => c.id);
+    expect(full).not.toContain('table');
+    expect(full).not.toContain('align');
   });
 });
