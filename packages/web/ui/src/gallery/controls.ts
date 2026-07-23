@@ -49,11 +49,23 @@ export interface PlaygroundDef<C extends Record<string, AnyControlDef> = Record<
 }
 export type AnyPlayground = PlaygroundDef;
 
-export function select<const T extends readonly string[], const N extends boolean = false>(
+// Overloads (not a const-generic default) so N is concrete at every call
+// site: during definePlayground's callback inference a generic N widens to
+// its `boolean` constraint and the ControlValue conditional distributes,
+// leaking `| undefined` into non-allowNone selects.
+export function select<const T extends readonly string[]>(
   options: T,
-  opts?: { initial?: T[number]; label?: string; allowNone?: N },
-): SelectDef<T[number], N> {
-  const allowNone = (opts?.allowNone ?? false) as N;
+  opts: { initial?: T[number]; label?: string; allowNone: true },
+): SelectDef<T[number], true>;
+export function select<const T extends readonly string[]>(
+  options: T,
+  opts?: { initial?: T[number]; label?: string; allowNone?: false },
+): SelectDef<T[number], false>;
+export function select<const T extends readonly string[]>(
+  options: T,
+  opts?: { initial?: T[number]; label?: string; allowNone?: boolean },
+): SelectDef<T[number], boolean> {
+  const allowNone = opts?.allowNone ?? false;
   return {
     kind: 'select',
     options,
