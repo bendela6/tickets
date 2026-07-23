@@ -33,12 +33,16 @@ export function Sparkline({
         const isLast = i === bars.length - 1;
         const height =
           max === 0 ? MIN_HEIGHT_PX : Math.max(MIN_HEIGHT_PX, Math.round((count / max) * MAX_HEIGHT_PX));
+        // Zero-count days render as muted stubs (design SigIssues script:
+        // `h === 0 ? var(--in)`), so a quiet day reads as quiet rather than
+        // as a short-but-active bar. The last bar still goes danger when hot.
+        const color = isLast && hot ? 'bg-danger' : count === 0 ? 'bg-inset' : 'bg-control';
         return (
           <span
             key={i}
             data-testid="sparkline-bar"
             style={{ height }}
-            className={cn('w-[5px] rounded-[1px]', isLast && hot ? 'bg-danger' : 'bg-control')}
+            className={cn('w-[5px] rounded-[1px]', color)}
           />
         );
       })}
