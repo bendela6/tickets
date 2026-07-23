@@ -455,3 +455,233 @@
     max-width: 100%;
   }
 }
+
+/* Rich-text prose (design §11, docs/design/design-system.html): the Tiptap
+   editing surface (RichTextEditor) and read-only render (RichTextView).
+   `.rt` wraps Tiptap's own `.ProseMirror` element, so most rules are plain
+   descendants; a few (first/last-child spacing) target `.ProseMirror`'s
+   direct children explicitly. Baseline ported from the `.md` rules above —
+   `[data-callout]`/chip/task-list/details additions are new. Colors below
+   are raw (not tokens): no warning/success/info semantic tokens exist yet
+   (only accent + danger) — Task 13's design pull is expected to replace
+   these with real tokens. This file is excluded from the hardcoded-color
+   lint gate for exactly this kind of prose-content styling. */
+@layer components {
+  .rt {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-ink);
+  }
+  .rt .ProseMirror {
+    outline: none;
+  }
+  .rt .ProseMirror > :first-child {
+    margin-top: 0;
+  }
+  .rt .ProseMirror > :last-child {
+    margin-bottom: 0;
+  }
+  .rt p {
+    margin: 6px 0;
+  }
+  .rt h1,
+  .rt h2,
+  .rt h3 {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    color: var(--color-ink);
+    margin: 14px 0 6px;
+  }
+  .rt h1 {
+    font-size: 16px;
+    margin: 16px 0 8px;
+  }
+  .rt h2 {
+    font-size: 14px;
+  }
+  .rt h3 {
+    font-size: 13px;
+  }
+  .rt ul,
+  .rt ol {
+    margin: 6px 0;
+    padding-left: 20px;
+  }
+  .rt ul {
+    list-style: disc;
+  }
+  .rt ol {
+    list-style: decimal;
+  }
+  .rt li {
+    margin: 3px 0;
+  }
+  .rt code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--color-inset);
+    border-radius: 5px;
+    padding: 2px 6px;
+  }
+  .rt pre {
+    background: var(--color-inset);
+    border-radius: var(--radius-card);
+    padding: 12px;
+    margin: 8px 0;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+    line-height: 1.5;
+  }
+  .rt pre code {
+    background: none;
+    border-radius: 0;
+    padding: 0;
+    font-size: inherit;
+  }
+  .rt a {
+    color: var(--color-accent);
+  }
+  .rt a:hover {
+    text-decoration: underline;
+  }
+  .rt strong {
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .rt blockquote {
+    border-left: 2px solid var(--color-hairline);
+    padding-left: 12px;
+    margin: 6px 0;
+    color: var(--color-ink-2);
+  }
+  .rt table {
+    border-collapse: collapse;
+    font-size: var(--text-meta);
+    margin: 8px 0;
+  }
+  .rt th,
+  .rt td {
+    border: 1px solid var(--color-hairline);
+    padding: 5px 9px;
+    text-align: left;
+    color: var(--color-ink-2);
+  }
+  .rt th {
+    color: var(--color-ink-3);
+    font-size: var(--text-label);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .rt img {
+    max-width: 100%;
+    border-radius: 5px;
+  }
+  .rt hr {
+    border: none;
+    border-top: 1px solid var(--color-hairline);
+    margin: 12px 0;
+  }
+
+  /* Callouts: tinted left-border panels, one hue per kind. Raw colors —
+     see file-level note above. */
+  .rt [data-callout] {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-left: 3px solid var(--color-accent);
+    background: var(--color-accent-subtle);
+    border-radius: 0 6px 6px 0;
+    padding: 8px 12px;
+    margin: 8px 0;
+  }
+  .rt [data-callout] p {
+    margin: 0;
+  }
+  .rt [data-callout='warning'] {
+    border-left-color: #b8860b;
+    background: rgba(184, 134, 11, 0.12);
+  }
+  .rt [data-callout='success'] {
+    border-left-color: #1f8a55;
+    background: rgba(31, 138, 85, 0.12);
+  }
+  .rt [data-callout='danger'] {
+    border-left-color: var(--color-danger);
+    background: var(--color-danger-subtle);
+  }
+
+  /* Mention / ticket-reference chips: mono, accent-tinted, pill-rounded. */
+  .rt [data-ticket-ref],
+  .rt [data-mention] {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-accent);
+    background: var(--color-accent-subtle);
+    border-radius: 999px;
+    padding: 1px 6px;
+  }
+
+  /* Task lists: Tiptap renders `<ul data-type="taskList">` with per-item
+     `<li data-checked>` and a real checkbox input — restore the marker-free
+     layout preflight would otherwise leave inconsistent. */
+  .rt ul[data-type='taskList'] {
+    list-style: none;
+    padding-left: 0;
+  }
+  .rt ul[data-type='taskList'] li {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 3px 0;
+  }
+  .rt ul[data-type='taskList'] li > label {
+    display: flex;
+    align-items: center;
+    padding-top: 2px;
+  }
+  .rt ul[data-type='taskList'] input[type='checkbox'] {
+    accent-color: var(--color-accent);
+  }
+  .rt ul[data-type='taskList'] li[data-checked='true'] > div {
+    color: var(--color-ink-3);
+    text-decoration: line-through;
+  }
+
+  /* Details/summary: an explicit affordance since preflight strips the
+     native marker triangle. */
+  .rt details {
+    margin: 6px 0;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-card);
+    padding: 8px 12px;
+  }
+  .rt details > summary {
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--color-ink-2);
+  }
+  .rt details > summary:hover {
+    color: var(--color-ink);
+  }
+
+  /* Selected node outline (tables/images/callouts selected via NodeSelection). */
+  .rt .ProseMirror-selectednode {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+    border-radius: 4px;
+  }
+
+  /* Empty-state placeholder: standard Tiptap Placeholder-extension hook
+     (`.is-editor-empty::before` reading `data-placeholder`). Dormant until
+     a later task wires the Placeholder extension into buildExtensions. */
+  .rt .is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    color: var(--color-ink-3);
+    pointer-events: none;
+  }
+}
