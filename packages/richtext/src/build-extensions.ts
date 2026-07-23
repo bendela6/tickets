@@ -36,7 +36,7 @@ export function buildExtensions(
     link: on.has('link') ? { openOnClick: false } : false,
   });
   const extra = features.flatMap((feature) => REGISTRY[feature].extensions(hooks));
-  const placeholder = Placeholder.configure({ placeholder: options?.placeholder ?? '' });
+  const placeholder = Placeholder.configure({ placeholder: options?.placeholder ?? '', showOnlyWhenEditable: false });
   return [starterKit, ...extra, placeholder];
 }
 
