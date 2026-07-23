@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { boolean, definePlayground, select } from '@tickets/ui/gallery';
 import { StatusSelect, type StatusOption } from './status-select';
 
 const STATUSES: StatusOption[] = [
@@ -29,3 +30,26 @@ export const meta = { title: 'StatusSelect', group: 'Pickers' };
 export const states = [
   { name: 'basic', render: () => <StatusSelectFixture /> },
 ];
+
+export const playground = definePlayground({
+  controls: {
+    disabled: boolean(),
+    size: select(['compact', 'regular'], { allowNone: true }),
+  },
+  render: ({ disabled, size }) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const [status, setStatus] = useState<string | null>('in-progress');
+    return (
+      <div className="w-56">
+        <StatusSelect
+          statuses={STATUSES}
+          value={status}
+          onChange={setStatus}
+          legalTargets={['in-review', 'blocked', 'shipped']}
+          disabled={disabled}
+          size={size}
+        />
+      </div>
+    );
+  },
+});
