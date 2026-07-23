@@ -1,5 +1,5 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
-import { cn } from './cn';
+import { cn } from '@tickets/ui/cn';
 
 type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> & {
   size?: 'compact' | 'regular';

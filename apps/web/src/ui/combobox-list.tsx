@@ -1,5 +1,5 @@
 import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import { cn } from './cn';
+import { cn } from '@tickets/ui/cn';
 import { OptionChip, type OptionColor } from './option-chip';
 
 export type ComboOption = {

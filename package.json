@@ -13,7 +13,7 @@
     "format:check": "prettier --check .",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
-    "verify:tokens": "pnpm --filter @tickets/web tokens:verify"
+    "verify:tokens": "pnpm --filter @tickets/ui tokens:verify"
   },
   "devDependencies": {
     "mprocs": "^0.9.6",

@@ -11,8 +11,8 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 
 import type { EnumDecl } from '../../engine/model/types';
 import { PG_TYPES, type PgTypeDescriptor, type PgTypeGroup } from '../../engine/model/pg-types';
-import { cn } from '../../ui/cn';
-import { runtimeStyle } from '../../ui/runtime-style';
+import { cn } from '@tickets/ui/cn';
+import { runtimeStyle } from '@tickets/ui/runtime-style';
 
 const GROUPS: PgTypeGroup[] = [
   'numeric', 'text', 'boolean', 'temporal', 'uuid', 'json', 'network', 'geometric', 'vector',

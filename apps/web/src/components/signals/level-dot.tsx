@@ -1,4 +1,4 @@
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 
 export type SignalLevel = 'error' | 'warning' | 'info';
 

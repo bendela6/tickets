@@ -1,4 +1,4 @@
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 
 export function Section({ title, count }: { title: string; count?: number }) {
   return (

@@ -6,7 +6,7 @@ import { usePatchItem } from '../api/use-patch-item';
 import { hexToOptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
 import { Avatar } from '../ui/avatar';
-import { cn } from '../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { KindGlyph } from '../ui/kind-glyph';
 import { OptionChip } from '../ui/option-chip';
 import { RelativeDate } from '../ui/relative-date';

@@ -1,6 +1,6 @@
 import { Link, useMatchRoute } from '@tanstack/react-router';
 import { useSignalsIssues } from '../../api/signals/use-signals';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 
 function navItemClasses(active: boolean) {
   return cn(

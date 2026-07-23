@@ -7,17 +7,14 @@
 // hand-written `.css`. It intentionally does NOT flag data constants
 // (e.g. a persisted-API-hex PALETTE table) or hex inside `*.test.*`
 // fixtures/assertions — those aren't styling.
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const srcDir = path.join(__dirname, '..', 'src');
 
 const EXCLUDE_RES = [
   /\.test\./,
-  /(^|\/)src\/styles\/tokens\//,
-  /(^|\/)src\/styles\/instrument\.css$/,
 ];
 
 function toPosix(p) {
@@ -225,27 +222,105 @@ function scanFile(file) {
     .map((idx) => lineAt(raw, idx));
 }
 
-function main() {
-  const files = walk(srcDir, []).filter((f) => !isExcluded(path.relative(process.cwd(), f)));
+const repoRoot = path.join(__dirname, '..', '..', '..', '..');
+const ROOTS = [
+  { app: 'web', dir: path.join(repoRoot, 'apps', 'web', 'src'), baselined: false },
+  { app: 'eer', dir: path.join(repoRoot, 'apps', 'eer', 'src'), baselined: true },
+];
+const baselineFile = path.join(__dirname, 'eer-baseline.json');
 
-  if (files.length === 0) {
-    console.error('error: scanned zero files — check srcDir/EXCLUDE_RES/walk() before trusting this gate');
-    process.exit(1);
-  }
-
-  let hitCount = 0;
-  for (const file of files) {
-    const relPath = toPosix(path.relative(process.cwd(), file));
-    for (const hit of scanFile(file)) {
-      console.log(`${relPath}:${hit.line}: ${hit.text}`);
-      hitCount++;
-    }
-  }
-
-  if (hitCount > 0) {
-    process.exit(1);
-  }
-  console.log(`ok: no style-context hardcoded values (${files.length} files scanned)`);
+export function diffAgainstBaseline(violationKeys, baselineKeys) {
+  const baselineSet = new Set(baselineKeys);
+  const currentSet = new Set(violationKeys);
+  return {
+    fresh: violationKeys.filter((k) => !baselineSet.has(k)),
+    fixed: baselineKeys.filter((k) => !currentSet.has(k)),
+  };
 }
 
-main();
+// Read + validate the ratchet baseline. Exported for tests.
+export function readBaseline(filePath) {
+  let raw;
+  try {
+    raw = readFileSync(filePath, 'utf8');
+  } catch {
+    console.error(
+      `error: baseline file missing: ${filePath}\n` +
+        'run `node scripts/scan-hardcoded-values.mjs --update-baseline` to (re)create it',
+    );
+    process.exit(1);
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    console.error(`error: baseline file is not valid JSON: ${filePath}`);
+    process.exit(1);
+  }
+  if (!Array.isArray(parsed?.violations) || !parsed.violations.every((v) => typeof v === 'string')) {
+    console.error(`error: baseline file malformed (expected { "violations": string[] }): ${filePath}`);
+    process.exit(1);
+  }
+  return parsed.violations;
+}
+
+function collectViolations(root) {
+  const files = walk(root.dir, []).filter((f) => !isExcluded(path.relative(root.dir, f)));
+  if (files.length === 0) {
+    console.error(`error: scanned zero files under ${root.dir} — check ROOTS/EXCLUDE_RES/walk()`);
+    process.exit(1);
+  }
+  const violations = [];
+  for (const file of files) {
+    const relPath = toPosix(path.relative(repoRoot, file));
+    for (const hit of scanFile(file)) {
+      violations.push({ key: `${relPath}::${hit.text}`, line: `${relPath}:${hit.line}: ${hit.text}` });
+    }
+  }
+  return { violations, fileCount: files.length };
+}
+
+function main() {
+  const updateBaseline = process.argv.includes('--update-baseline');
+  let failed = false;
+  let totalFiles = 0;
+
+  for (const root of ROOTS) {
+    const { violations, fileCount } = collectViolations(root);
+    totalFiles += fileCount;
+
+    if (!root.baselined) {
+      for (const v of violations) console.log(v.line);
+      if (violations.length > 0) failed = true;
+      continue;
+    }
+
+    if (updateBaseline) {
+      const keys = [...new Set(violations.map((v) => v.key))].sort();
+      writeFileSync(baselineFile, JSON.stringify({ violations: keys }, null, 2) + '\n', 'utf8');
+      console.log(`baseline updated: ${keys.length} known ${root.app} violations`);
+      continue;
+    }
+
+    const baseline = readBaseline(baselineFile);
+    const keys = violations.map((v) => v.key);
+    const { fresh, fixed } = diffAgainstBaseline([...new Set(keys)], baseline);
+    for (const v of violations) {
+      if (fresh.includes(v.key)) console.log(`NEW ${v.line}`);
+    }
+    if (fresh.length > 0) failed = true;
+    console.log(
+      `${root.app} ratchet: ${new Set(keys).size} known violations (baseline ${baseline.length}` +
+        (fixed.length ? `, ${fixed.length} fixed — run --update-baseline to ratchet down` : '') +
+        ')',
+    );
+  }
+
+  if (failed) process.exit(1);
+  console.log(`ok: no new style-context hardcoded values (${totalFiles} files scanned)`);
+}
+
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMain) {
+  main();
+}

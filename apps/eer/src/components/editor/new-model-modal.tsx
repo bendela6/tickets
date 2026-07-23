@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { createModel } from '../../api/models-client';
 import { loadModel } from '../../engine/model/load-model';
 import { useDiagramActions } from '../../state/diagram-context';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { Modal } from '../modal';
 
 export function seededRaw(title: string): Record<string, unknown> {

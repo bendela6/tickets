@@ -5,7 +5,7 @@ import { usePatchItem } from '../../api/use-patch-item';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
 import { StatusSelect } from '../../ui/status-select';
 import { ItemKey } from '../../ui/item-key';

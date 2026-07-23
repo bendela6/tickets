@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { ApiError } from '../../api/api-error';
 import type { PlatformInfo, SessionEventRow, SignalPayload, SignalStackFrame } from '../../api/signals/signals-api';
 import { useSignalsSession } from '../../api/signals/use-signals';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { formatClockTime, formatCount, formatDurationMs } from './format';
 import type { SignalKind } from './kind-glyph';
 import { KindGlyph } from './kind-glyph';

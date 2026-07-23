@@ -9,8 +9,8 @@ import {
   useDiagramView,
 } from '../../../state/diagram-context';
 import type { Relationship } from '../../../engine/model/types';
-import { cn } from '../../../ui/cn';
-import { runtimeStyle } from '../../../ui/runtime-style';
+import { cn } from '@tickets/ui/cn';
+import { runtimeStyle } from '@tickets/ui/runtime-style';
 
 interface EdgeProps {
   rel: Relationship;

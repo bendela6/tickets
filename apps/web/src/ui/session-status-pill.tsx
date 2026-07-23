@@ -1,5 +1,5 @@
 import type { SessionKind } from './session-kind-glyph';
-import { cn } from './cn';
+import { cn } from '@tickets/ui/cn';
 
 export type SessionStatus =
   | 'starting'

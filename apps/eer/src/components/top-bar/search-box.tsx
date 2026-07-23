@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import type { SearchResult } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 
 export function SearchBox() {
   const actions = useDiagramActions();

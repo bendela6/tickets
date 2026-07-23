@@ -1,6 +1,6 @@
 import type { Agent, PermissionMode } from '../../api/types';
 import { Avatar } from '../../ui/avatar';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 
 const PROVIDER_LABEL: Record<string, string> = {
   claude: 'Claude',

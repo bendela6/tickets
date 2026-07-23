@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { cn } from './cn';
+import { cn } from '@tickets/ui/cn';
 import { ComboboxList, type ComboOption } from './combobox-list';
 import { KindGlyph, type StatusKind } from './kind-glyph';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';

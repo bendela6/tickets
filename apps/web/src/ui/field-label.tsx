@@ -1,5 +1,5 @@
 import type { LabelHTMLAttributes } from 'react';
-import { cn } from './cn';
+import { cn } from '@tickets/ui/cn';
 
 type FieldLabelProps = LabelHTMLAttributes<HTMLLabelElement> & { required?: boolean };
 
