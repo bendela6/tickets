@@ -27,6 +27,24 @@ function appInitials(name: string): string {
   return (first.slice(0, 1) + second.slice(0, 1)).toUpperCase();
 }
 
+// Per-app badge color (design SigApps varies the initials badge per app so a
+// roster reads as distinct rows, not a column of identical accent squares).
+// Deterministic from the slug so an app keeps its color across renders/reloads.
+const AVATAR_TONES = [
+  'bg-accent-subtle text-accent',
+  'bg-kind-done-subtle text-kind-done',
+  'bg-kind-blocked-subtle text-kind-blocked',
+  'bg-inset text-ink-2',
+];
+
+function avatarTone(slug: string): string {
+  let hash = 0;
+  for (let i = 0; i < slug.length; i += 1) {
+    hash = (hash * 31 + slug.charCodeAt(i)) >>> 0;
+  }
+  return AVATAR_TONES[hash % AVATAR_TONES.length]!;
+}
+
 function TableHeader() {
   return (
     <div
@@ -50,7 +68,12 @@ function AppRow({ app }: { app: SignalsAppRow }) {
       style={{ gridTemplateColumns: APPS_GRID_COLUMNS }}
     >
       <span className="flex min-w-0 items-center gap-2.5">
-        <span className="flex size-5.5 shrink-0 items-center justify-center rounded-[6px] bg-accent-subtle font-mono text-[9px] font-semibold text-accent">
+        <span
+          className={cn(
+            'flex size-5.5 shrink-0 items-center justify-center rounded-[6px] font-mono text-[9px] font-semibold',
+            avatarTone(app.slug),
+          )}
+        >
           {appInitials(app.name)}
         </span>
         <span className="truncate font-mono text-[13px] font-medium text-ink">{app.slug}</span>
