@@ -22,13 +22,13 @@ const SAMPLE_STREAM: SeqEvent[] = [
   },
   { seq: 6, event: { type: 'tool_result', toolUseId: 't2', content: 'ok', isError: false } },
   { seq: 7, event: { type: 'tool_use', id: 't3', name: 'Bash', input: { command: 'pnpm typecheck' } } },
-  { seq: 8, event: { type: 'tool_result', toolUseId: 't3', content: "TS2345: Argument of type 'Date' is not assignable to parameter of type 'string'. - views/timeline.tsx:47", isError: true } },
+  { seq: 8, event: { type: 'tool_result', toolUseId: 't3', content: "TS2345: Argument of type 'Date' is not assignable to parameter of type 'string'. — views/timeline.tsx:47", isError: true } },
   { seq: 9, event: { type: 'tool_use', id: 'task1', name: 'Task', input: { description: 'explore renderers' } } },
   { seq: 10, event: { type: 'assistant_text', text: 'Both renderers share the lane grouping.', parentToolUseId: 'task1' } },
   { seq: 11, event: { type: 'tool_use', id: 't4', name: 'Grep', input: { pattern: 'useLogicalFields' }, parentToolUseId: 'task1' } },
   { seq: 12, event: { type: 'tool_result', toolUseId: 't4', content: '3 matches', isError: false } },
   { seq: 13, event: { type: 'tool_result', toolUseId: 'task1', content: 'done', isError: false } },
-  { seq: 14, event: { type: 'assistant_text', text: 'Typecheck failed - the range needs to be a string. Fixing, then I\'ll rerun.' } },
+  { seq: 14, event: { type: 'assistant_text', text: 'Typecheck failed — the range needs to be a string. Fixing, then I’ll rerun.' } },
   { seq: 15, event: { type: 'result', costUsd: 1.06, durationMs: 34200, isError: false } },
 ];
 
