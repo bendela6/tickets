@@ -23,8 +23,8 @@ const HEADING_LEVELS = [1, 2, 3] as const;
 const ALIGNMENTS = ['left', 'center', 'right', 'justify'] as const;
 
 // One glyph + one action per toolbar control id (see @tickets/richtext
-// REGISTRY for the full id list). Chrome matches the old MarkdownEditor
-// toolbar: px-1.75 glyphs in ink-2, active state tinted accent-subtle.
+// REGISTRY for the full id list). Chrome matches the legacy markdown
+// editor's toolbar: px-1.75 glyphs in ink-2, active state tinted accent-subtle.
 const CONTROLS: Record<string, ControlDef> = {
   bold: {
     label: 'B',

@@ -35,10 +35,10 @@ function resolveFeatures(features: RichTextEditorProps['features']): Feature[] {
   return PRESETS[features ?? 'full'];
 }
 
-// The description/comment rich-text surface. Same save contract as
-// MarkdownEditor: commit on blur only when the doc actually changed, and
-// emit '' (not '{}') for an empty doc so `next.length > 0 ? next : null`
-// keeps working at call sites.
+// The description/comment rich-text surface. Same save contract as the
+// legacy markdown editor it replaced: commit on blur only when the doc
+// actually changed, and emit '' (not '{}') for an empty doc so
+// `next.length > 0 ? next : null` keeps working at call sites.
 export function RichTextEditor({
   value,
   disabled,
