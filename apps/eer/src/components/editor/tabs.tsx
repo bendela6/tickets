@@ -12,7 +12,7 @@
 // MEANS (item count normally, error count when `hasError`), that's entirely
 // the caller's call (see table-modal.tsx).
 
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 
 export interface TabItem<Id extends string> {
   id: Id;

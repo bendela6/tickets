@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { fieldEdges } from '../../../engine/focus/field-edges';
 import { useDiagramModel, useDiagramUi } from '../../../state/diagram-context';
-import { cn } from '../../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { useFocusSets, useHiddenIds } from '../entity-cards';
 import { Edge } from './edge';
 

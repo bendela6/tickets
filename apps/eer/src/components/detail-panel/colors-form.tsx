@@ -5,7 +5,7 @@
 import { entityColor } from '../../engine/colors/entity-color';
 import { groupColor } from '../../engine/colors/group-color';
 import type { Model } from '../../engine/model/types';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 
 const swatchClass =
   'h-4 w-6 shrink-0 cursor-pointer rounded border border-gray-600 bg-transparent p-0 ' +

@@ -11,7 +11,7 @@ import { groupColor } from '../../engine/colors/group-color';
 import { applyModelEdit as tryApplyModelEdit } from '../../engine/model/apply-model-edit';
 import type { Model } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../state/diagram-context';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { Modal } from '../modal';
 
 const field = cn('w-full rounded-md border border-gray-600 bg-gray-900 px-2 py-1', 'text-sm text-gray-50');

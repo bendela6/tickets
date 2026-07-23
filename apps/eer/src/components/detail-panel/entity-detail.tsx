@@ -2,7 +2,7 @@ import { entityColor } from '../../engine/colors/entity-color';
 import { columnRoles } from '../../engine/model/column-roles';
 import type { Entity, Model } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { useEditor } from '../editor';
 import { Empty } from './empty';
 import { Header } from './header';
