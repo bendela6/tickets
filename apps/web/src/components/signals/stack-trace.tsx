@@ -141,6 +141,24 @@ function SymFrames({ frames }: { frames: SignalStackFrame[] }) {
   );
 }
 
+// Shown on both views when the collector had no source maps to symbolicate
+// with. Deliberately not worded as "minified frames": browser bundles are
+// minified, but node stacks (api/mcp) arrive with real paths — the accurate
+// shared statement is that there's no *source context*, not that frames are
+// unreadable.
+function NoSourceMapsBanner({ release }: { release: string | null | undefined }) {
+  return (
+    <div className="flex items-center gap-2.5 border-b border-hairline bg-kind-blocked-subtle px-4 py-2.5">
+      <span aria-hidden className="size-2 shrink-0 rotate-45 rounded-[1px] bg-kind-blocked" />
+      <span className="flex-1 font-sans text-[12px] leading-normal text-kind-blocked">
+        No source maps uploaded for release{' '}
+        <span className="font-mono text-[11.5px] font-medium">{release ?? 'unknown'}</span> — showing
+        raw frames without source context.
+      </span>
+    </div>
+  );
+}
+
 function RawFrames({
   frames,
   release,
@@ -152,16 +170,7 @@ function RawFrames({
 }) {
   return (
     <div>
-      {noSourceMaps ? (
-        <div className="flex items-center gap-2.5 border-b border-hairline bg-kind-blocked-subtle px-4 py-2.5">
-          <span aria-hidden className="size-2 shrink-0 rotate-45 rounded-[1px] bg-kind-blocked" />
-          <span className="flex-1 font-sans text-[12px] leading-normal text-kind-blocked">
-            No source maps uploaded for release{' '}
-            <span className="font-mono text-[11.5px] font-medium">{release ?? 'unknown'}</span> — showing
-            minified frames.
-          </span>
-        </div>
-      ) : null}
+      {noSourceMaps ? <NoSourceMapsBanner release={release} /> : null}
       <div className="px-4 py-3 font-mono text-[11.5px] leading-[1.9] text-ink-2">
         {frames.length === 0 ? <div className="text-ink-3">no raw frames recorded</div> : null}
         {frames.map((frame, index) => (
@@ -183,10 +192,16 @@ function RawFrames({
 
 /**
  * Stack trace card (docs/design/SigIssueDetail.dc.html, variants sym/raw):
- * symbolicated frames grouped with collapsed vendor runs and an
- * auto-expanded top in-app frame showing its context lines, or — when the
- * occurrence has no `stackSymbolicated` payload — a raw-only view with the
- * "no source maps" warn banner and upload command.
+ * frames grouped with collapsed vendor runs and an auto-expanded top in-app
+ * frame showing its context lines.
+ *
+ * The grouped view is driven by the symbolicated frames when the collector had
+ * source maps, and otherwise falls back to the RAW frames. That fallback is the
+ * point: source maps are only ever uploaded for browser bundles, so every node
+ * stack (api/mcp) arrives unsymbolicated even though its frames already carry
+ * real paths like `apps/api/src/values/build-value-rows.ts:23`. Previously those
+ * were dumped into the flat raw list, which hid the one thing you open this card
+ * for — where the error happened. Context lines are still symbolication-only.
  */
 export function StackTrace({
   payload,
@@ -201,7 +216,13 @@ export function StackTrace({
   const symFrames = payload?.stackSymbolicated ?? [];
   const rawFrames = payload?.stack ?? [];
   const hasSym = symFrames.length > 0;
-  const activeTab: Tab = hasSym ? tab : 'raw';
+  // Frames feeding the grouped view — symbolicated when available, raw otherwise.
+  const structuredFrames = hasSym ? symFrames : rawFrames;
+  const hasFrames = structuredFrames.length > 0;
+  // The toggle only earns its place when there's a flat raw list to fall back
+  // to; with no frames at all there's nothing to switch between.
+  const showToggle = hasFrames && rawFrames.length > 0;
+  const activeTab: Tab = showToggle ? tab : 'sym';
 
   return (
     <div className="flex-none overflow-hidden rounded-xl border border-hairline bg-raised">
@@ -213,7 +234,7 @@ export function StackTrace({
           </span>
         ) : null}
         <span className="flex-1" />
-        {hasSym ? (
+        {showToggle ? (
           <div
             role="tablist"
             className="inline-flex h-6 overflow-hidden rounded-[6px] border border-hairline bg-inset"
@@ -248,8 +269,13 @@ export function StackTrace({
 
       {payload === undefined ? (
         <div className="px-4 py-4 font-mono text-[11.5px] text-ink-3">no occurrence data</div>
+      ) : !hasFrames ? (
+        <div className="px-4 py-4 font-mono text-[11.5px] text-ink-3">no stack frames recorded</div>
       ) : activeTab === 'sym' ? (
-        <SymFrames frames={symFrames} />
+        <>
+          {!hasSym ? <NoSourceMapsBanner release={release} /> : null}
+          <SymFrames frames={structuredFrames} />
+        </>
       ) : (
         <RawFrames frames={rawFrames} release={release} noSourceMaps={!hasSym} />
       )}

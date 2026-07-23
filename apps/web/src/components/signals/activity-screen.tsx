@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from '@tanstack/react-router';
 import type { ActivityFilters, IssueLevel } from '../../api/signals/signals-api';
 import { useSignalsActivity, useSignalsApps } from '../../api/signals/use-signals';
 import { cn } from '../../ui/cn';
@@ -114,24 +113,7 @@ export function ActivityScreen() {
         </span>
       </div>
 
-      <div className="mb-3.5 flex shrink-0 items-center gap-1.5 border-b border-hairline">
-        <Link
-          to="/signals"
-          className="-mb-px flex items-center gap-1.75 border-b-2 border-transparent px-3 py-2 font-sans text-ui text-ink-2 hover:text-ink"
-        >
-          Issues
-        </Link>
-        <Link
-          to="/signals/apps"
-          className="-mb-px flex items-center gap-1.75 border-b-2 border-transparent px-3 py-2 font-sans text-ui text-ink-2 hover:text-ink"
-        >
-          Apps
-        </Link>
-        <span className="-mb-px flex items-center gap-1.75 border-b-2 border-accent px-3 py-2 font-sans text-ui font-medium text-ink">
-          Activity
-          <span className="font-mono text-[11px] text-ink-3">{total}</span>
-        </span>
-      </div>
+      {/* Nav lives in the Signals sidebar panel — see issues-screen.tsx. */}
 
       <ActivityToolbar
         apps={appsQuery.data ?? []}

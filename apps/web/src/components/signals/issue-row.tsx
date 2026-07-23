@@ -28,11 +28,13 @@ export function IssueRow({
   onOpen,
   onResolve,
   onIgnore,
+  onReopen,
 }: {
   issue: IssueRowData;
   onOpen: () => void;
   onResolve: () => void;
   onIgnore: () => void;
+  onReopen: () => void;
 }) {
   const { name, message } = splitTitle(issue.title);
   // Resolved/ignored issues read as settled — dim the whole row (~60% opacity
@@ -85,24 +87,41 @@ export function IssueRow({
         className="flex justify-end gap-1"
         onClick={(event) => event.stopPropagation()}
       >
-        <button
-          type="button"
-          title="Resolve"
-          aria-label="Resolve"
-          onClick={onResolve}
-          className="hidden size-6 items-center justify-center rounded-md text-ink-3 hover:bg-kind-done-subtle hover:text-kind-done group-hover:flex"
-        >
-          ✓
-        </button>
-        <button
-          type="button"
-          title="Ignore"
-          aria-label="Ignore"
-          onClick={onIgnore}
-          className="hidden size-6 items-center justify-center rounded-md text-ink-3 hover:bg-inset hover:text-ink group-hover:flex"
-        >
-          ⊘
-        </button>
+        {/* A settled row offers the way back out; an open row offers the two
+        ways in. Without this, resolve/ignore were one-way from the list. */}
+        {issue.status !== 'open' ? (
+          <button
+            type="button"
+            title="Reopen"
+            aria-label="Reopen"
+            onClick={onReopen}
+            className="hidden size-6 items-center justify-center rounded-md text-ink-3 hover:bg-inset hover:text-ink group-hover:flex"
+          >
+            ↺
+          </button>
+        ) : null}
+        {issue.status !== 'resolved' ? (
+          <button
+            type="button"
+            title="Resolve"
+            aria-label="Resolve"
+            onClick={onResolve}
+            className="hidden size-6 items-center justify-center rounded-md text-ink-3 hover:bg-kind-done-subtle hover:text-kind-done group-hover:flex"
+          >
+            ✓
+          </button>
+        ) : null}
+        {issue.status !== 'ignored' ? (
+          <button
+            type="button"
+            title="Ignore"
+            aria-label="Ignore"
+            onClick={onIgnore}
+            className="hidden size-6 items-center justify-center rounded-md text-ink-3 hover:bg-inset hover:text-ink group-hover:flex"
+          >
+            ⊘
+          </button>
+        ) : null}
       </span>
     </div>
   );
