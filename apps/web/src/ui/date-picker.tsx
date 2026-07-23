@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { cn } from './cn';
+import { cn } from '@tickets/ui/cn';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { formatExact } from './relative-date';
 

@@ -1,5 +1,5 @@
 import type { Item } from '../../api/types';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { KindGlyph, type StatusKind } from '../../ui/kind-glyph';
 import type { BoardIndexes } from '../../utils/index-board';
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { SignalsAppDetail } from '../../api/signals/signals-api';
 import { useCreateSignalsApp } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 import { FieldLabel } from '../../ui/field-label';
 import { Input } from '../../ui/input';

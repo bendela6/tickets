@@ -1,4 +1,4 @@
-import { cn } from './cn';
+import { cn } from '@tickets/ui/cn';
 
 type RadioOption = { value: string; label: string; disabled?: boolean };
 

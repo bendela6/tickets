@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '../../ui/button';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 
 const COPY_STATE_RESET_MS = 1500;
 

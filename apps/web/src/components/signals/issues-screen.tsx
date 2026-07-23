@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import type { IssueFilters, IssueLevel, IssueStatus } from '../../api/signals/signals-api';
 import { usePatchIssueStatus, useSignalsApps, useSignalsIssues } from '../../api/signals/use-signals';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { formatCount } from './format';
 import { ISSUES_GRID_COLUMNS, IssueRow, IssueRowSkeleton } from './issue-row';
 import { IssuesToolbar } from './issues-toolbar';

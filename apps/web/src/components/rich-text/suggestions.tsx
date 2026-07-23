@@ -2,7 +2,7 @@ import type { SuggestionHooks } from '@tickets/richtext';
 import { ReactRenderer } from '@tiptap/react';
 import type { SuggestionKeyDownProps, SuggestionProps } from '@tiptap/suggestion';
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 
 // RichTextEditor threads these two lookup sources through to the mention (@)
 // and ticket-ref (#) Mention nodes wired in @tickets/richtext. Either source

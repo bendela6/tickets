@@ -1,4 +1,4 @@
-import { cn } from './cn';
+import { cn } from '@tickets/ui/cn';
 
 export function TypeBadge({ label, className }: { label: string; className?: string }) {
   return (

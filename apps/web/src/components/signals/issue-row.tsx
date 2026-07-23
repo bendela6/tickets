@@ -1,5 +1,5 @@
 import type { IssueRow as IssueRowData } from '../../api/signals/signals-api';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { formatCount, relativeTime } from './format';
 import { LevelDot } from './level-dot';
 import { Sparkline } from './sparkline';

@@ -6,7 +6,7 @@ import type { Board, Item } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
 import { useCurrentUser } from '../state/current-user-context';
 import { Button } from '../ui/button';
-import { cn } from '../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../ui/menu';
 import { RelativeDate } from '../ui/relative-date';
 import { StatusSelect } from '../ui/status-select';
