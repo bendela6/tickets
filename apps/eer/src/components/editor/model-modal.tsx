@@ -16,7 +16,7 @@ import { applyModelEdit as tryApplyModelEdit } from '../../engine/model/apply-mo
 import { loadModel } from '../../engine/model/load-model';
 import type { Model } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../state/diagram-context';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { Modal } from '../modal';
 import { EnumsEditor } from './enums-editor';
 

@@ -17,7 +17,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { descriptorFor, formatType, parseType, type ArrayDimension } from '../../engine/model/pg-types';
 import type { EnumDecl } from '../../engine/model/types';
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { TypePicker } from './type-picker';
 
 const cell = cn('rounded border border-gray-600 bg-gray-900 px-1 py-1', 'font-mono text-xs text-gray-50');

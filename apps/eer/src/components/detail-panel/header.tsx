@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { cn } from '../../ui/cn';
+import { cn } from '@tickets/ui/cn';
 import { btn } from '../top-bar/button-class';
 import { Badge, type Tone } from './badge';
 import { Dot } from './dot';
