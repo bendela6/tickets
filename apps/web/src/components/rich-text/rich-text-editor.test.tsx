@@ -83,6 +83,21 @@ describe('RichTextEditor', () => {
     expect(toolbarRoot.lastElementChild).toBe(clusters[2]); // no trailing separator
   });
 
+  it('overflow-only config (no strip groups, no block-select) renders the "+" button with no leading separator', () => {
+    // features = ['callout','divider'] contribute only overflow-group
+    // controls — zero strip groups and no blockType select — so the "+"
+    // wrapper must not carry the leading hairline separator meant to divide
+    // it from strip content that isn't there.
+    render(<RichTextEditor value="" onSave={vi.fn()} features={['callout', 'divider']} />);
+    const overflowButton = screen.getByRole('button', { name: /more formatting/i });
+    expect(overflowButton).toBeInTheDocument();
+    const toolbarWrap = document.querySelector('.rt')!.previousElementSibling!;
+    const toolbarRoot = toolbarWrap.firstElementChild!;
+    const wrapper = toolbarRoot.lastElementChild!;
+    expect(wrapper.contains(overflowButton)).toBe(true);
+    expect(wrapper.className).not.toContain('border-l');
+  });
+
   it('focused container gets the accent border + halo; blur restores the hairline', async () => {
     const user = userEvent.setup();
     render(<RichTextEditor value="" onSave={vi.fn()} />);
@@ -146,6 +161,60 @@ describe('RichTextEditor', () => {
     const doc = JSON.parse(onSubmit.mock.calls[0]![0] as string);
     // Still a single paragraph — Mod-Enter did not insert a newline/split.
     expect(doc.content).toHaveLength(1);
+  });
+
+  it('Mod-Enter does not submit while the composer is pending or disabled', async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <RichTextEditor value="" onSave={vi.fn()} features="compact" composer={{ onSubmit, submitPending: true }} />,
+    );
+    const surface = document.querySelector('[contenteditable="true"]')!;
+    await user.type(surface, 'hi{Meta>}{Enter}{/Meta}');
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    rerender(
+      <RichTextEditor value="" onSave={vi.fn()} features="compact" composer={{ onSubmit, submitDisabled: true }} />,
+    );
+    await user.type(surface, '{Meta>}{Enter}{/Meta}');
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('a repeat-flagged Mod-Enter keydown does not submit (holding the key down)', () => {
+    const onSubmit = vi.fn();
+    render(<RichTextEditor value="" onSave={vi.fn()} features="compact" composer={{ onSubmit }} />);
+    const surface = document.querySelector('[contenteditable="true"]')!;
+    fireEvent.keyDown(surface, { key: 'Enter', metaKey: true, repeat: true });
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('two rapid Mod-Enter keydowns do not double-submit once submitPending flips true', async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <RichTextEditor value="" onSave={vi.fn()} features="compact" composer={{ onSubmit }} />,
+    );
+    const surface = document.querySelector('[contenteditable="true"]')!;
+    await user.type(surface, 'hi');
+
+    fireEvent.keyDown(surface, { key: 'Enter', metaKey: true });
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+
+    // Mimic the caller flipping submitPending true in response to the first
+    // submit's mutation kicking off, before it resolves.
+    rerender(
+      <RichTextEditor value="" onSave={vi.fn()} features="compact" composer={{ onSubmit, submitPending: true }} />,
+    );
+    fireEvent.keyDown(surface, { key: 'Enter', metaKey: true });
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it('submitCurrent no-ops on an empty doc — Mod-Enter with no content does not call onSubmit', () => {
+    const onSubmit = vi.fn();
+    render(<RichTextEditor value="" onSave={vi.fn()} features="compact" composer={{ onSubmit }} />);
+    const surface = document.querySelector('[contenteditable="true"]')!;
+    fireEvent.keyDown(surface, { key: 'Enter', metaKey: true });
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it('disabled editor is not editable', () => {

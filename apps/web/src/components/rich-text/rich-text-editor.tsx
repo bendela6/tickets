@@ -166,14 +166,28 @@ export function RichTextEditor({
   // fired first. Same empty-doc encoding onBlur uses ('' rather than the
   // literal empty-doc JSON) so callers can share the `next.length > 0`
   // convention either path produces.
+  //
+  // Guards composer.submitDisabled/submitPending itself rather than relying
+  // solely on the button's `disabled` prop: the Mod-Enter path in
+  // handleKeyDown below calls this directly, bypassing the DOM disabled
+  // state entirely, so without a check here a pending/disabled composer
+  // could still be double-submitted from the keyboard. Also no-ops on an
+  // empty doc — matching what a caller-driven `submitDisabled` would
+  // normally already prevent via the button — so Mod-Enter on empty content
+  // can't fire a submit either.
   const submitCurrent = () => {
     const instance = editorRef.current;
     if (instance === null || instance.isDestroyed || composer === undefined) {
       return;
     }
+    if (composer.submitDisabled === true || composer.submitPending === true) {
+      return;
+    }
     const doc = instance.getJSON();
-    const serialized = isDocEmpty(doc as never) ? '' : JSON.stringify(doc);
-    composer.onSubmit(serialized);
+    if (isDocEmpty(doc as never)) {
+      return;
+    }
+    composer.onSubmit(JSON.stringify(doc));
   };
 
   const editor = useEditor({
@@ -199,6 +213,15 @@ export function RichTextEditor({
       handleKeyDown: (_view, event) => {
         if (composer !== undefined && event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
           event.preventDefault();
+          // Still swallow the keystroke (return true, no newline) even when
+          // it can't submit — `event.repeat` fires on every autorepeat tick
+          // while the key is held, and submitDisabled/submitPending guard
+          // against a second Mod-Enter landing mid-mutation — but don't call
+          // submitCurrent in either case; it also re-checks
+          // submitDisabled/submitPending/empty itself as a second guard.
+          if (event.repeat || composer.submitDisabled === true || composer.submitPending === true) {
+            return true;
+          }
           submitCurrent();
           return true;
         }
