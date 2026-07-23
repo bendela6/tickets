@@ -19,7 +19,8 @@ import { DetailChildren } from './detail-children';
 import { DetailComments } from './detail-comments';
 import { DetailFields } from './detail-fields';
 import { DetailLinks } from './detail-links';
-import { MarkdownEditor } from './markdown-editor';
+import { boardSuggestions } from './rich-text/board-suggestions';
+import { RichTextEditor } from './rich-text/rich-text-editor';
 import { TicketDispatch } from './agent/ticket-dispatch';
 
 const SECTION_LABEL = 'font-sans text-label font-medium uppercase text-ink-2';
@@ -252,13 +253,15 @@ export function ItemDetail({
   const descriptionSection = descriptionField ? (
     <section>
       <div className={cn('mb-2', SECTION_LABEL)}>Description</div>
-      <MarkdownEditor
+      <RichTextEditor
         value={
           typeof item.values[descriptionField.key] === 'string'
             ? (item.values[descriptionField.key] as string)
             : ''
         }
         disabled={userId === null || patch.isPending}
+        features="full"
+        suggestions={boardSuggestions(indexes, prefix)}
         onSave={(next) => saveValues({ [descriptionField.key]: next.length > 0 ? next : null })}
       />
     </section>
@@ -347,7 +350,7 @@ export function ItemDetail({
             </div>
             <div className="pt-3">
               {tab === 'comments' ? (
-                <DetailComments indexes={indexes} item={item} />
+                <DetailComments indexes={indexes} item={item} prefix={prefix} />
               ) : (
                 <DetailActivity item={item} indexes={indexes} />
               )}
@@ -414,7 +417,7 @@ export function ItemDetail({
           {linksSection}
           <section>
             <div className={cn('mb-3', SECTION_LABEL)}>Comments</div>
-            <DetailComments indexes={indexes} item={item} />
+            <DetailComments indexes={indexes} item={item} prefix={prefix} />
           </section>
         </div>
         <div className="flex w-80 shrink-0 flex-col gap-5">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import type { Feature } from '@tickets/richtext';
 import type { Board, Field, Item } from '../api/types';
-import { MarkdownEditor } from '../components/markdown-editor';
+import { RichTextEditor } from '../components/rich-text/rich-text-editor';
 import { Checkbox } from '../ui/checkbox';
 import { Combobox } from '../ui/combobox';
 import type { ComboOption } from '../ui/combobox-list';
@@ -53,11 +54,12 @@ export function FieldWidget({
   const [numberDraft, setNumberDraft] = useState<number | null | undefined>(undefined);
   void ticket; // reserved: transition-aware editing (legal targets) lives with the status control, not here
 
-  if (field.type === 'string' && field.config.format === 'markdown') {
+  if (field.type === 'string' && (field.config.format === 'markdown' || field.config.format === 'rich')) {
     return (
-      <MarkdownEditor
+      <RichTextEditor
         value={typeof value === 'string' ? value : ''}
         disabled={disabled}
+        features={Array.isArray(field.config.features) ? (field.config.features as Feature[]) : 'full'}
         onSave={(next) => onChange(next.length > 0 ? next : null)}
       />
     );

@@ -63,7 +63,7 @@ export const softwareScheme: SchemeDef = {
   ],
   fields: [
     { key: 'title',       label: 'Title',       type: 'string', system: true },
-    { key: 'description', label: 'Description', type: 'string', config: { format: 'markdown' } },
+    { key: 'description', label: 'Description', type: 'string', config: { format: 'rich' } },
     { key: 'status',      label: 'Status',      type: 'option', system: true,
       optionSetKey: 'status', config: { multiple: false, workflow: true } },
     { key: 'priority',    label: 'Priority',    type: 'option', optionSetKey: 'priority', config: { multiple: false } },
