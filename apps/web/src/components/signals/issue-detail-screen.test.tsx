@@ -180,6 +180,9 @@ test('(c) a payload WITHOUT stackSymbolicated still renders the grouped view, wi
         ...SESSION_SYM.rows[0]!,
         id: 601,
         payload: {
+          // Browser occurrence: source maps were expected here, so the
+          // "no source maps" banner is relevant.
+          platform: { runtime: 'browser' },
           stack: [
             { functionName: 't.map', file: '/assets/minified-chunk.js', line: 14, column: 20993, inApp: false },
           ],
@@ -217,6 +220,9 @@ test('(c2) an unsymbolicated NODE stack shows WHERE it happened: in-app frame wi
         ...SESSION_SYM.rows[0]!,
         id: 602,
         payload: {
+          // Node occurrence: source maps never apply, so the banner must be
+          // suppressed even though these frames aren't symbolicated.
+          platform: { runtime: 'node' },
           stack: [
             {
               functionName: 'buildValueRows',
@@ -253,6 +259,8 @@ test('(c2) an unsymbolicated NODE stack shows WHERE it happened: in-app frame wi
   expect(await screen.findByText('buildValueRows')).toBeInTheDocument();
   expect(screen.getByText('apps/api/src/values/build-value-rows.ts:23')).toBeInTheDocument();
   expect(screen.getByText('in-app')).toBeInTheDocument();
+  // The misleading "no source maps" banner must NOT appear for a node stack.
+  expect(screen.queryByText(/No source maps uploaded/)).not.toBeInTheDocument();
 });
 
 test('(d) breadcrumbs render glyph types and the 500 chip; the terminal row is the error itself, danger-styled', async () => {

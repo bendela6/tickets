@@ -141,19 +141,25 @@ function SymFrames({ frames }: { frames: SignalStackFrame[] }) {
   );
 }
 
-// Shown on both views when the collector had no source maps to symbolicate
-// with. Deliberately not worded as "minified frames": browser bundles are
-// minified, but node stacks (api/mcp) arrive with real paths — the accurate
-// shared statement is that there's no *source context*, not that frames are
-// unreadable.
+// Shown ONLY for browser occurrences that weren't symbolicated — those are
+// the ones where source maps were expected but missing. Node stacks (api/mcp)
+// never have source maps and arrive with real paths already, so this banner is
+// suppressed for them (see StackTrace's `expectedSourceMaps`). When the
+// occurrence carries no release, the "for release X" clause is dropped rather
+// than rendering a bare "unknown".
 function NoSourceMapsBanner({ release }: { release: string | null | undefined }) {
   return (
     <div className="flex items-center gap-2.5 border-b border-hairline bg-kind-blocked-subtle px-4 py-2.5">
       <span aria-hidden className="size-2 shrink-0 rotate-45 rounded-[1px] bg-kind-blocked" />
       <span className="flex-1 font-sans text-[12px] leading-normal text-kind-blocked">
-        No source maps uploaded for release{' '}
-        <span className="font-mono text-[11.5px] font-medium">{release ?? 'unknown'}</span> — showing
-        raw frames without source context.
+        No source maps uploaded
+        {release ? (
+          <>
+            {' '}
+            for release <span className="font-mono text-[11.5px] font-medium">{release}</span>
+          </>
+        ) : null}{' '}
+        — showing raw frames without source context.
       </span>
     </div>
   );
@@ -216,6 +222,11 @@ export function StackTrace({
   const symFrames = payload?.stackSymbolicated ?? [];
   const rawFrames = payload?.stack ?? [];
   const hasSym = symFrames.length > 0;
+  // Source maps only exist for browser bundles, so the "no source maps" banner
+  // + upload hint are relevant ONLY for browser occurrences. A node stack is
+  // never symbolicated and never should be — showing "no source maps uploaded"
+  // there is misleading noise, so the banner is gated on this.
+  const expectedSourceMaps = payload?.platform?.runtime === 'browser' && !hasSym;
   // Frames feeding the grouped view — symbolicated when available, raw otherwise.
   const structuredFrames = hasSym ? symFrames : rawFrames;
   const hasFrames = structuredFrames.length > 0;
@@ -273,11 +284,11 @@ export function StackTrace({
         <div className="px-4 py-4 font-mono text-[11.5px] text-ink-3">no stack frames recorded</div>
       ) : activeTab === 'sym' ? (
         <>
-          {!hasSym ? <NoSourceMapsBanner release={release} /> : null}
+          {expectedSourceMaps ? <NoSourceMapsBanner release={release} /> : null}
           <SymFrames frames={structuredFrames} />
         </>
       ) : (
-        <RawFrames frames={rawFrames} release={release} noSourceMaps={!hasSym} />
+        <RawFrames frames={rawFrames} release={release} noSourceMaps={expectedSourceMaps} />
       )}
     </div>
   );
