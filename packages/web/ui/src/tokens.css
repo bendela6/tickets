@@ -42,6 +42,11 @@
      ring-(length:--ring-focus). */
   --border-hair: 1.5px;
   --ring-focus: 3px;
+  /* Layering scale: sticky table headers / overlay scrims / floating portals.
+     Consumed as z-(--z-sticky) etc. */
+  --z-sticky: 10;
+  --z-scrim: 40;
+  --z-overlay: 50;
   /* tokens:light — generated, do not edit */
   --ins-app: #f7f6f2;
   --ins-raised: #ffffff;
