@@ -1,11 +1,15 @@
 import type { Editor } from '@tiptap/react';
 import type { ToolbarControl } from '@tickets/richtext';
+import { useRef } from 'react';
 import { cn } from '../../ui/cn';
 
 type ToolbarProps = {
   editor: Editor | null;
   controls: ToolbarControl[];
   disabled?: boolean;
+  // Task 10: the 'image' control opens a hidden file input instead of
+  // running a chained editor command directly (see CONTROLS.image below).
+  onImageFiles?: (files: FileList | null) => void;
 };
 
 type ControlDef = {
@@ -160,15 +164,18 @@ const CONTROLS: Record<string, ControlDef> = {
   },
   image: {
     label: '\u{1F5BC}',
-    // Task 10 wires the real image uploader; this is a click-through
-    // placeholder so the control renders and is targetable by aria-label.
+    // The click handler special-cases 'image' to open the hidden file
+    // input (see below) instead of calling this — kept as a no-op so the
+    // CONTROLS lookup stays uniform for every id.
     run: () => {},
   },
 };
 
 const GROUP_ORDER: ToolbarControl['group'][] = ['marks', 'blocks', 'insert'];
 
-export function Toolbar({ editor, controls, disabled }: ToolbarProps) {
+export function Toolbar({ editor, controls, disabled, onImageFiles }: ToolbarProps) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   if (controls.length === 0) {
     return null;
   }
@@ -196,7 +203,13 @@ export function Toolbar({ editor, controls, disabled }: ToolbarProps) {
                 aria-label={control.id}
                 aria-pressed={def.isActive ? active : undefined}
                 disabled={disabled === true || editor === null}
-                onClick={() => editor && def.run(editor)}
+                onClick={() => {
+                  if (control.id === 'image') {
+                    fileInputRef.current?.click();
+                    return;
+                  }
+                  editor && def.run(editor);
+                }}
                 className={cn(
                   'rounded px-1.75 py-1 text-ink-2 hover:text-ink',
                   active && 'bg-accent-subtle text-ink',
@@ -209,6 +222,18 @@ export function Toolbar({ editor, controls, disabled }: ToolbarProps) {
           })}
         </div>
       ))}
+      {controls.some((control) => control.id === 'image') ? (
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(event) => {
+            onImageFiles?.(event.target.files);
+            event.target.value = '';
+          }}
+        />
+      ) : null}
     </div>
   );
 }
