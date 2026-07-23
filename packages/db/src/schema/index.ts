@@ -20,6 +20,7 @@ export {
   permissionModeEnum,
   permissionStatusEnum,
 } from './enums';
+export { attachments } from './attachments';
 export { users } from './users';
 export { projects } from './projects';
 export { views } from './views';

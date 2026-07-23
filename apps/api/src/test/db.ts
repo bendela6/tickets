@@ -17,7 +17,7 @@ const TABLES = [
   'item_links', 'comment_reactions', 'comments', 'item_values', 'items',
   'option_transitions', 'link_type_target_types', 'link_types', 'options', 'option_sets',
   'item_type_fields', 'item_type_child_types', 'fields', 'item_types',
-  'views', 'projects', 'schemes', 'users',
+  'views', 'projects', 'schemes', 'users', 'attachments',
 ];
 
 export async function resetDb(): Promise<void> {

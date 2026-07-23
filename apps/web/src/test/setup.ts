@@ -22,6 +22,15 @@ if (typeof Element !== 'undefined') {
   Element.prototype.releasePointerCapture = Element.prototype.releasePointerCapture ?? vi.fn();
 }
 
+// jsdom doesn't implement elementFromPoint. ProseMirror's mousedown handler
+// (posAtCoords, used to resolve a click to a document position so the editor
+// can focus + place the cursor) calls it unconditionally and throws if it's
+// missing entirely — a conservative "nothing there" stub keeps that click
+// path working without pretending to do real hit-testing.
+if (typeof document !== 'undefined' && typeof document.elementFromPoint === 'undefined') {
+  document.elementFromPoint = () => null;
+}
+
 // jsdom has no matchMedia — xterm's CoreBrowserService reads it on construction
 // (devicePixelRatio tracking) even in tests that never touch real media queries.
 if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {

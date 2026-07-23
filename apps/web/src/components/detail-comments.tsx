@@ -1,17 +1,28 @@
 import { useState } from 'react';
 import type { Item } from '../api/types';
 import { useCreateComment } from '../api/use-create-comment';
-import { renderMarkdown } from '../lib/render-markdown';
 import { useCurrentUser } from '../state/current-user-context';
 import { Avatar } from '../ui/avatar';
 import { Button } from '../ui/button';
 import { RelativeDate } from '../ui/relative-date';
 import type { BoardIndexes } from '../utils/index-board';
-import { MarkdownEditor } from './markdown-editor';
+import { boardSuggestions } from './rich-text/board-suggestions';
+import { RichTextEditor } from './rich-text/rich-text-editor';
+import { RichTextView } from './rich-text/rich-text-view';
 
-// Comment stream + markdown composer. The section heading (or drawer tab)
+// Comment stream + rich-text composer. The section heading (or drawer tab)
 // belongs to ItemDetail; this renders just the thread.
-export function DetailComments({ indexes, item }: { indexes: BoardIndexes; item: Item }) {
+export function DetailComments({
+  indexes,
+  item,
+  prefix,
+  onOpenItem,
+}: {
+  indexes: BoardIndexes;
+  item: Item;
+  prefix: string;
+  onOpenItem?: (number: number) => void;
+}) {
   const { userId } = useCurrentUser();
   const createComment = useCreateComment();
   // The editor commits its draft on blur; the Comment button's click lands
@@ -24,6 +35,16 @@ export function DetailComments({ indexes, item }: { indexes: BoardIndexes; item:
     left.createdAt.localeCompare(right.createdAt),
   );
   const me = userId !== null ? indexes.userById.get(userId) : undefined;
+
+  const handleOpenTicket = (label: string) => {
+    if (!onOpenItem) {
+      return;
+    }
+    const n = Number(label.split('-').at(-1));
+    if (Number.isFinite(n)) {
+      onOpenItem(n);
+    }
+  };
 
   const submit = async () => {
     if (userId === null || body.trim().length === 0) {
@@ -62,9 +83,10 @@ export function DetailComments({ indexes, item }: { indexes: BoardIndexes; item:
                     className="font-mono text-[11px] text-ink-3"
                   />
                 </div>
-                <div
-                  className="md font-sans text-ui leading-[1.55] text-ink"
-                  dangerouslySetInnerHTML={{ __html: renderMarkdown(comment.body) }}
+                <RichTextView
+                  value={comment.body}
+                  className="font-sans text-ui leading-[1.55] text-ink"
+                  onOpenTicket={handleOpenTicket}
                 />
               </div>
             </div>
@@ -74,15 +96,13 @@ export function DetailComments({ indexes, item }: { indexes: BoardIndexes; item:
       <div className="flex gap-2.5">
         {me ? <Avatar name={me.name} kind={me.kind} size="md" className="mt-0.5" /> : null}
         <div className="min-w-0 flex-1">
-          <MarkdownEditor
+          <RichTextEditor
             key={composerKey}
             value=""
             disabled={userId === null}
-            placeholder={
-              userId === null
-                ? 'Pick a user in the header to comment'
-                : 'Comment — markdown supported…'
-            }
+            features="compact"
+            suggestions={boardSuggestions(indexes, prefix)}
+            placeholder={userId === null ? 'Pick a user in the header to comment' : 'Comment…'}
             onSave={setBody}
           />
           {createComment.isError ? (

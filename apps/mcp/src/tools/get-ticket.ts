@@ -2,6 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { apiFetch } from '../api-client';
 import { loadBoard } from '../helpers/load-board';
+import { decodeBody, decodeValues } from '../helpers/rich-content';
 import { resolveTicket } from '../helpers/resolve-ticket';
 import { runTool } from '../helpers/run-tool';
 import { summarizeTicket } from '../helpers/summarize-ticket';
@@ -13,11 +14,16 @@ export function registerGetTicket(server: McpServer) {
     'get_ticket',
     {
       description:
-        'Full detail for one ticket: every field value including the markdown description, comments with authors, links with direction labels, children, and the 10 most recent events. Read this before working a ticket.',
-      inputSchema: { projectKey: z.string(), ticketNumber: z.number().int() },
+        'Full detail for one ticket: every field value including the description, comments with authors, links with direction labels, children, and the 10 most recent events. Read this before working a ticket. Rich-text values and comment bodies come back as markdown by default; pass format: "rich" to get serialized tiptap docs verbatim.',
+      inputSchema: {
+        projectKey: z.string(),
+        ticketNumber: z.number().int(),
+        format: z.enum(['markdown', 'rich']).optional(),
+      },
     },
-    ({ projectKey, ticketNumber }) =>
+    ({ projectKey, ticketNumber, format }) =>
       runTool('get_ticket', async () => {
+        const resolvedFormat = format ?? 'markdown';
         const board = await loadBoard(projectKey);
         const ticket = resolveTicket(board, ticketNumber);
         const events = await apiFetch<{ data: TicketEvent[] }>(
@@ -37,15 +43,16 @@ export function registerGetTicket(server: McpServer) {
             title: other?.values['title'],
           };
         });
+        const decodedValues = decodeValues(ticket.values, board.fields, resolvedFormat);
         return toText({
-          ...summarizeTicket(board, ticket),
-          description: ticket.values['description'] ?? null,
+          ...summarizeTicket(board, { ...ticket, values: decodedValues }),
+          description: decodedValues['description'] ?? null,
           createdAt: ticket.createdAt,
           updatedAt: ticket.updatedAt,
           comments: ticket.comments.map((comment) => ({
             by: userName(comment.authorId),
             at: comment.createdAt,
-            body: comment.body,
+            body: decodeBody(comment.body, resolvedFormat),
           })),
           links,
           recentEvents: events.data.map((event) => ({

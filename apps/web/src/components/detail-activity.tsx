@@ -1,3 +1,4 @@
+import { docToText, parseDoc } from '@tickets/richtext';
 import type { ReactNode } from 'react';
 import type { ActivityEntry, Item } from '../api/types';
 import { useItemActivity } from '../api/use-item-activity';
@@ -5,13 +6,29 @@ import { Avatar } from '../ui/avatar';
 import { RelativeDate } from '../ui/relative-date';
 import type { BoardIndexes } from '../utils/index-board';
 
+// Matches the excerpt length the api projection uses for comment bodies
+// (apps/api/src/projection/item-activity.ts) so field-changed diffs read
+// consistently with comment excerpts.
+const CHIP_EXCERPT_LENGTH = 140;
+
+function chipText(value: unknown): string {
+  if (value === null || value === undefined) {
+    return '—';
+  }
+  if (typeof value !== 'string') {
+    return JSON.stringify(value);
+  }
+  // field_changed from/to values may be a serialized tiptap doc (e.g. a
+  // description edit) — render plain text, not raw doc JSON.
+  const doc = parseDoc(value);
+  const text = doc ? docToText(doc) : value;
+  return text.length > CHIP_EXCERPT_LENGTH
+    ? `${text.slice(0, CHIP_EXCERPT_LENGTH)}…`
+    : text;
+}
+
 function ValueChip({ value }: { value: unknown }) {
-  const text =
-    value === null || value === undefined
-      ? '—'
-      : typeof value === 'string'
-        ? value
-        : JSON.stringify(value);
+  const text = chipText(value);
   return (
     <span className="rounded-sm bg-inset px-1.25 py-px font-mono text-[11px] text-ink">{text}</span>
   );
