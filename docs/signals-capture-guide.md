@@ -174,6 +174,66 @@ captureError(err, {
 });
 ```
 
+## Logs — a flat stream, not an issue
+
+Logs are for a captured line worth keeping, not for a fault. They never group into an issue;
+they show up in the **Activity** view as a flat, filterable stream (by app, level, time, search).
+
+Two ways a log gets captured:
+
+- **`captureConsole: true`** (SDK init option) — auto-captures `console.warn` / `console.error`
+  as `log` signals, gated by a floor (default `'warning'`; lower it to `'info'` with
+  `logLevel` / the env knob below to also capture `console.info`). It still calls through to the
+  real console — nothing about local output changes — and it's never-throw and
+  re-entrancy-guarded, so a console call made *while* reporting a console call can't loop. This
+  is the right default for most call sites: you're already writing `console.warn('slow query',
+  { ms })`, and turning the flag on makes that line show up in Signals for free.
+- **`captureLog(message, level?)`** — call this explicitly when you want a log captured but
+  *don't* want (or don't have) a matching `console.*` call, or when you want a level the console
+  floor wouldn't pass (e.g. an `'info'` log while the floor is `'warning'`). Prefer plain
+  `console.warn`/`console.error` + `captureConsole` for anything that's naturally a console line;
+  reach for `captureLog` when the log only needs to exist in Signals.
+
+Don't reach for `captureError` just to get something into the stream — if it didn't fail, it's a
+log, not an issue. See [signals-sdk.md](./signals-sdk.md) for `SIGNALS_LOG_LEVEL` /
+`VITE_SIGNALS_LOG_LEVEL` (the console-capture floor).
+
+## Events — lifecycle and audit facts, not traffic
+
+`captureEvent(name, data?)` records that something *happened* — a fact worth a line in an
+activity stream, not a fault. Use it for:
+
+- **Lifecycle**: boot, ready, graceful shutdown, session started/ended.
+- **Run/job outcomes**: a run or job started/completed/failed (as a fact — the failure itself,
+  if it's a real error, still gets its own `captureError` at the branch that saw it; the event is
+  the audit trail entry, the error is the fault report).
+- **Usage audit for infra you don't otherwise see**: e.g. every MCP tool call, so there's a
+  record of what ran and whether it succeeded.
+
+Don't use it for:
+
+- **High-frequency, per-request/per-navigation/per-keystroke traffic** — that stays a
+  **breadcrumb** (`addBreadcrumb`), which rides along on the next capture instead of becoming its
+  own stored row. An event per HTTP request or per route change would flood the Activity view and
+  tell you nothing a breadcrumb doesn't already.
+- **Domain audit** — ticket/item mutations already have a source of truth
+  (`item-activity`). Signals events are for *this repo's infra* (api/mcp/web/eer processes),
+  not for what a user did to a ticket.
+
+Naming convention actually used in this repo: `<app-or-subject>.<subject>.<verb>` — short,
+dotted, lowercase, stable (it's the thing you'll filter/search on in Activity, not a sentence).
+Real examples from what shipped:
+
+```ts
+captureEvent('api.boot', { port, environment });
+captureEvent('agent.run.completed', { sessionId });
+captureEvent('terminal.session.started', { sessionId });
+captureEvent('mcp.tool', { name, ok, durationMs }); // one per tool call — success or failure
+```
+
+Same "capture at the layer that has context, once" rule applies: the agent driver knows the
+session id and the run outcome, so it emits `agent.run.*`, not the route handler three layers up.
+
 ## Two rules that keep it clean
 
 1. **Capture at the layer that has context, once.** The driver knows the session id; the request
