@@ -40,4 +40,33 @@ describe('attachments routes', () => {
     expect(missing.statusCode).toBe(404);
     await app.close();
   });
+
+  it('exercises in-route mime guard via parseable content-type', async () => {
+    const app = buildApp({ db: testDb });
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/attachments',
+      headers: { 'content-type': 'application/json' },
+      payload: JSON.stringify({ test: 'data' }),
+    });
+    expect(res.statusCode).toBe(415);
+    const body = res.json() as { error?: string };
+    expect(body.error).toBe('unsupported attachment type: application/json');
+    await app.close();
+  });
+
+  it('rejects malformed percent-encoding in x-filename header', async () => {
+    const app = buildApp({ db: testDb });
+    const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47]); // PNG magic
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/attachments',
+      headers: { 'content-type': 'image/png', 'x-filename': '50% off.png' },
+      payload: bytes,
+    });
+    expect(res.statusCode).toBe(400);
+    const body = res.json() as { error?: string };
+    expect(body.error).toBe('invalid x-filename header');
+    await app.close();
+  });
 });

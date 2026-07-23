@@ -24,9 +24,19 @@ export function registerAttachmentsRoutes(app: FastifyInstance, ctx: { db: Db })
       throw new HttpError(400, 'empty attachment body');
     }
     const filenameHeader = request.headers['x-filename'];
-    const filename = typeof filenameHeader === 'string' && filenameHeader.length > 0
-      ? decodeURIComponent(filenameHeader)
-      : `image.${mime.split('/')[1]}`;
+    let filename: string;
+    if (typeof filenameHeader === 'string' && filenameHeader.length > 0) {
+      try {
+        filename = decodeURIComponent(filenameHeader);
+      } catch (err) {
+        if (err instanceof URIError) {
+          throw new HttpError(400, 'invalid x-filename header');
+        }
+        throw err;
+      }
+    } else {
+      filename = `image.${mime.split('/')[1]}`;
+    }
     const [row] = await db
       .insert(attachments)
       .values({ filename, mime, size: data.length, data })
