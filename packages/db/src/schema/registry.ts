@@ -3,6 +3,7 @@ import { agentAgents } from './agent-agents';
 import { agentMessages } from './agent-messages';
 import { agentPermissionRequests } from './agent-permission-requests';
 import { agentSessions } from './agent-sessions';
+import { attachments } from './attachments';
 import { commands } from './commands';
 import { commentReactions } from './comment-reactions';
 import { comments } from './comments';
@@ -44,7 +45,7 @@ export const allTables = [
   users, projects, views,
   schemes, itemTypes, itemTypeChildTypes, itemTypeFields, fields,
   optionSets, options, optionTransitions, linkTypes, linkTypeTargetTypes,
-  items, itemValues, comments, commentReactions, itemLinks,
+  items, itemValues, comments, commentReactions, itemLinks, attachments,
   events, commands, outbox, itemActivity,
   workdirs,
   terminalSessions, terminalOutput,

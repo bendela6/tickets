@@ -4,6 +4,7 @@ import { events, itemActivity } from '@tickets/db';
 import { resetDb, seedFixture, testDb } from '../test/db';
 import { runCommand } from '../command/run-command';
 import { itemCreate } from '../command/item/create';
+import { itemComment } from '../command/item/comment';
 import { projectEvent } from './item-activity';
 
 beforeEach(resetDb);
@@ -27,6 +28,29 @@ it('folds item.created into an activity row and is idempotent', async () => {
   const summary = rows[0]!.summary as Record<string, unknown>;
   expect(summary.title).toBe('Hello');
   expect(summary.typeKey).toBe('task');
+});
+
+it('extracts plain text from a rich-doc comment body instead of persisting raw doc JSON', async () => {
+  const fx = await seedFixture();
+  const created = await runCommand(testDb, itemCreate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
+    projectKey: fx.projectKey, typeKey: 'task', values: { title: 'Hello' },
+  });
+  const richBody = JSON.stringify({
+    type: 'doc',
+    content: [{ type: 'paragraph', content: [{ type: 'text', text: 'careful with prod' }] }],
+  });
+  await runCommand(testDb, itemComment, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
+    itemId: created.id, body: richBody,
+  });
+  const ev = (await testDb.select().from(events).where(eq(events.kind, 'comment.added')))[0]!;
+
+  await projectEvent(testDb, ev);
+
+  const rows = await testDb.select().from(itemActivity).where(eq(itemActivity.itemId, created.id));
+  const commentRow = rows.find((row) => row.kind === 'comment.added')!;
+  const summary = commentRow.summary as Record<string, unknown>;
+  expect(summary.excerpt).toBe('careful with prod');
+  expect(String(summary.excerpt)).not.toContain('"type":"doc"');
 });
 
 it('ignores non-item and legacy (version 0) events', async () => {

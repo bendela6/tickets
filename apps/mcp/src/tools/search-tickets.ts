@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { loadBoard } from '../helpers/load-board';
+import { searchableText } from '../helpers/rich-content';
 import { runTool } from '../helpers/run-tool';
 import { summarizeTicket } from '../helpers/summarize-ticket';
 import { toText } from '../helpers/to-text';
@@ -48,7 +49,12 @@ export function registerSearchTickets(server: McpServer) {
               return false;
             }
             if (query) {
-              const haystack = [String(ticket.number), ...Object.values(ticket.values)]
+              const haystack = [
+                String(ticket.number),
+                ...Object.values(ticket.values).map((value) =>
+                  typeof value === 'string' ? searchableText(value) : value,
+                ),
+              ]
                 .join(' ')
                 .toLowerCase();
               if (!haystack.includes(query.toLowerCase())) {

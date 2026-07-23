@@ -336,68 +336,76 @@
   }
 }
 
-/* Markdown prose (design §11, docs/design/design-system.html): the rendered
-   preview + comment bodies. Ported from legacy globals.css `.md` rules and
-   translated to Instrument tokens. Base type sits on `.md` itself so utility
-   classes on the wrapper (e.g. comments' text-ui) can still override it;
-   `@layer components` keeps every rule below the utilities layer. Preflight
-   zeroes list/heading/paragraph styles, so these restore them for prose. */
+/* Rich-text prose (design §11, docs/design/design-system.html): the Tiptap
+   editing surface (RichTextEditor) and read-only render (RichTextView).
+   `.rt` wraps Tiptap's own `.ProseMirror` element, so most rules are plain
+   descendants; a few (first/last-child spacing) target `.ProseMirror`'s
+   direct children explicitly. Baseline ported from the legacy `.md` rules
+   (removed once every markdown surface was swapped to rich text) —
+   `[data-callout]`/chip/task-list/details additions are new. Colors below
+   are raw (not tokens): no warning/success/info semantic tokens exist yet
+   (only accent + danger) — Task 13's design pull is expected to replace
+   these with real tokens. This file is excluded from the hardcoded-color
+   lint gate for exactly this kind of prose-content styling. */
 @layer components {
-  .md {
+  .rt {
     font-family: var(--font-sans);
     font-size: 14px;
     line-height: 1.6;
     color: var(--color-ink);
   }
-  .md > :first-child {
+  .rt .ProseMirror {
+    outline: none;
+  }
+  .rt .ProseMirror > :first-child {
     margin-top: 0;
   }
-  .md > :last-child {
+  .rt .ProseMirror > :last-child {
     margin-bottom: 0;
   }
-  .md p {
+  .rt p {
     margin: 6px 0;
   }
-  .md h1,
-  .md h2,
-  .md h3 {
+  .rt h1,
+  .rt h2,
+  .rt h3 {
     font-family: var(--font-sans);
     font-weight: 600;
     color: var(--color-ink);
     margin: 14px 0 6px;
   }
-  .md h1 {
+  .rt h1 {
     font-size: 16px;
     margin: 16px 0 8px;
   }
-  .md h2 {
+  .rt h2 {
     font-size: 14px;
   }
-  .md h3 {
+  .rt h3 {
     font-size: 13px;
   }
-  .md ul,
-  .md ol {
+  .rt ul,
+  .rt ol {
     margin: 6px 0;
     padding-left: 20px;
   }
-  .md ul {
+  .rt ul {
     list-style: disc;
   }
-  .md ol {
+  .rt ol {
     list-style: decimal;
   }
-  .md li {
+  .rt li {
     margin: 3px 0;
   }
-  .md code {
+  .rt code {
     font-family: var(--font-mono);
     font-size: 12px;
     background: var(--color-inset);
     border-radius: 5px;
     padding: 2px 6px;
   }
-  .md pre {
+  .rt pre {
     background: var(--color-inset);
     border-radius: var(--radius-card);
     padding: 12px;
@@ -407,51 +415,159 @@
     font-size: var(--text-meta);
     line-height: 1.5;
   }
-  .md pre code {
+  .rt pre code {
     background: none;
     border-radius: 0;
     padding: 0;
     font-size: inherit;
   }
-  .md a {
+  .rt a {
     color: var(--color-accent);
   }
-  .md a:hover {
+  .rt a:hover {
     text-decoration: underline;
   }
-  .md strong {
+  .rt strong {
     font-weight: 600;
     color: var(--color-ink);
   }
-  .md blockquote {
+  .rt blockquote {
     border-left: 2px solid var(--color-hairline);
     padding-left: 12px;
     margin: 6px 0;
     color: var(--color-ink-2);
   }
-  .md .tbl-scroll {
-    overflow-x: auto;
-  }
-  .md table {
+  .rt table {
     border-collapse: collapse;
     font-size: var(--text-meta);
     margin: 8px 0;
   }
-  .md th,
-  .md td {
+  .rt th,
+  .rt td {
     border: 1px solid var(--color-hairline);
     padding: 5px 9px;
     text-align: left;
     color: var(--color-ink-2);
   }
-  .md th {
+  .rt th {
     color: var(--color-ink-3);
     font-size: var(--text-label);
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
-  .md img {
+  .rt img {
     max-width: 100%;
+    border-radius: 5px;
+  }
+  .rt hr {
+    border: none;
+    border-top: 1px solid var(--color-hairline);
+    margin: 12px 0;
+  }
+
+  /* Callouts: tinted left-border panels, one hue per kind. Theme-aware colors via option-color tokens. Info intentionally falls through to accent-tinted default. */
+  .rt [data-callout] {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-left: 3px solid var(--color-accent);
+    background: var(--color-accent-subtle);
+    border-radius: 0 6px 6px 0;
+    padding: 8px 12px;
+    margin: 8px 0;
+  }
+  .rt [data-callout] p {
+    margin: 0;
+  }
+  .rt [data-callout='warning'] {
+    border-left-color: var(--color-opt-yellow);
+    background: var(--color-opt-yellow-subtle);
+  }
+  .rt [data-callout='success'] {
+    border-left-color: var(--color-opt-green);
+    background: var(--color-opt-green-subtle);
+  }
+  .rt [data-callout='danger'] {
+    border-left-color: var(--color-danger);
+    background: var(--color-danger-subtle);
+  }
+
+  /* Mention / ticket-reference chips: mono, accent-tinted, pill-rounded. */
+  .rt [data-ticket-ref],
+  .rt [data-mention] {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-accent);
+    background: var(--color-accent-subtle);
+    border-radius: 999px;
+    padding: 1px 6px;
+  }
+  /* Ticket-reference chips are interactive; mention chips stay non-clickable. */
+  .rt [data-ticket-ref] {
+    cursor: pointer;
+  }
+
+  /* Task lists: Tiptap renders `<ul data-type="taskList">` with per-item
+     `<li data-checked>` and a real checkbox input — restore the marker-free
+     layout preflight would otherwise leave inconsistent. */
+  .rt ul[data-type='taskList'] {
+    list-style: none;
+    padding-left: 0;
+  }
+  .rt ul[data-type='taskList'] li {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 3px 0;
+  }
+  .rt ul[data-type='taskList'] li > label {
+    display: flex;
+    align-items: center;
+    padding-top: 2px;
+  }
+  .rt ul[data-type='taskList'] input[type='checkbox'] {
+    accent-color: var(--color-accent);
+  }
+  .rt ul[data-type='taskList'] li[data-checked='true'] > div {
+    color: var(--color-ink-3);
+    text-decoration: line-through;
+  }
+
+  /* Details/summary: an explicit affordance since preflight strips the
+     native marker triangle. */
+  .rt details {
+    margin: 6px 0;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-card);
+    padding: 8px 12px;
+  }
+  .rt details > summary {
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--color-ink-2);
+  }
+  .rt details > summary:hover {
+    color: var(--color-ink);
+  }
+
+  /* Selected node outline (tables/images/callouts selected via NodeSelection). */
+  .rt .ProseMirror-selectednode {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+    border-radius: 4px;
+  }
+
+  /* Empty-state placeholder: Tiptap's Placeholder extension (registered in
+     buildExtensions, packages/richtext/src/build-extensions.ts) decorates
+     the empty textblock itself with `is-empty is-editor-empty` classes and
+     a `data-placeholder` attribute — verified against its source
+     (@tiptap/extensions/src/placeholder/*). */
+  .rt .is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    color: var(--color-ink-3);
+    pointer-events: none;
   }
 }
