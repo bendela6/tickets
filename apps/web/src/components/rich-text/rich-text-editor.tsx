@@ -81,6 +81,12 @@ export function RichTextEditor({
   const placeholderRef = useRef(placeholder);
   placeholderRef.current = placeholder;
 
+  // Synchronous lock to prevent double-submission on rapid Mod-Enter presses.
+  // Both keydowns can see the same stale submitPending value in their closure,
+  // so without a lock both would call submitCurrent(). Set when onSubmit is
+  // actually called, released when submitPending cycles back to false.
+  const submitLockRef = useRef(false);
+
   // A corrupt stored doc (starts with the doc sentinel but fails to parse as
   // JSON/doc) silently falls back to plain-paragraph rendering via
   // toDisplayDoc — report it once so the corruption doesn't go unnoticed.
@@ -180,6 +186,9 @@ export function RichTextEditor({
     if (instance === null || instance.isDestroyed || composer === undefined) {
       return;
     }
+    if (submitLockRef.current) {
+      return;
+    }
     if (composer.submitDisabled === true || composer.submitPending === true) {
       return;
     }
@@ -187,6 +196,7 @@ export function RichTextEditor({
     if (isDocEmpty(doc as never)) {
       return;
     }
+    submitLockRef.current = true;
     composer.onSubmit(JSON.stringify(doc));
   };
 
@@ -256,6 +266,13 @@ export function RichTextEditor({
       editor.setEditable(disabled !== true);
     }
   }, [editor, disabled]);
+
+  // Release the submit lock when the composer's pending state cycles back to false.
+  useEffect(() => {
+    if (composer?.submitPending !== true) {
+      submitLockRef.current = false;
+    }
+  }, [composer?.submitPending]);
 
   const toolbar = (
     <Toolbar
