@@ -63,6 +63,41 @@ describe('initSignals (browser)', () => {
     expect(sent.some((s) => s.kind === 'log' && s.level === 'error' && s.message === 'gateway timeout')).toBe(true);
   });
 
+  it('captureConsole: true captures warn/error as log signals at the default floor', () => {
+    const { transport, sent } = fakeTransport();
+    initSignals({ dsn: DSN, transport, captureConsole: true });
+    console.warn('low stock');
+    expect(sent.some((s) => s.kind === 'log' && s.level === 'warning' && s.message === 'low stock')).toBe(true);
+  });
+
+  it('captureConsole: true — uninstalling (via re-init) fully restores console: no stale breadcrumbs or log capture leak onto the disposed client', () => {
+    const { transport: transport1, sent: sent1 } = fakeTransport();
+    const client1 = initSignals({ dsn: DSN, transport: transport1, captureConsole: true });
+
+    // triggers `current?.uninstall()` for the first install (the only externally
+    // reachable uninstall path — there is no separate exported teardown function)
+    const { transport: transport2 } = fakeTransport();
+    initSignals({ dsn: DSN, transport: transport2 });
+
+    // deliberately NOT mocked with mockImplementation: a mock would replace
+    // console.warn outright and short-circuit the very patch chain this test
+    // exists to exercise. Matches the unmocked style used elsewhere in this file
+    // (e.g. the "leaves a breadcrumb" test above) — real console output is the
+    // accepted trade-off for actually exercising the chain.
+    console.warn('after uninstall');
+
+    // the disposed client must not have received a log signal for the post-uninstall call
+    expect(sent1.some((s) => s.kind === 'log')).toBe(false);
+
+    // nor should a leaked instrument.ts breadcrumb patch have added a breadcrumb
+    // to the disposed client's ring buffer
+    client1.captureError(new Error('after uninstall probe'));
+    const leaked = sent1
+      .find((s) => s.kind === 'error')
+      ?.breadcrumbs?.some((b) => b.message === 'after uninstall');
+    expect(leaked).toBeFalsy();
+  });
+
   it('clicks and history changes leave typed breadcrumbs', () => {
     const { transport, sent } = fakeTransport();
     initSignals({ dsn: DSN, transport });

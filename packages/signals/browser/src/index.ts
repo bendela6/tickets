@@ -52,9 +52,14 @@ export function initSignals(options: BrowserInitOptions): SignalsClient {
       ? installConsoleCapture(client, logLevel ?? 'warning')
       : null;
 
+    // LIFO teardown: installConsoleCapture was layered on top of
+    // installInstrumentation's console patch, so it must be uninstalled first —
+    // otherwise instrument.ts's own restore guard (`console[method] === wrapped`)
+    // never matches (console[method] is our wrapper, not theirs) and its patch
+    // leaks forever, calling addBreadcrumb on the disposed client.
     const uninstall = () => {
-      uninstallInstrumentation();
       uninstallConsoleCapture?.();
+      uninstallInstrumentation();
     };
 
     current = { client, uninstall };
