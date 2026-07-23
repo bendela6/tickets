@@ -113,6 +113,12 @@ describe('RichTextEditor', () => {
     expect(document.querySelector('.is-editor-empty')).toBeNull();
   });
 
+  it('shows the placeholder on the empty paragraph for a disabled editor', () => {
+    render(<RichTextEditor value="" onSave={vi.fn()} disabled placeholder="Pick a user in the header to comment" />);
+    const empty = document.querySelector('.is-editor-empty')!;
+    expect(empty).toHaveAttribute('data-placeholder', 'Pick a user in the header to comment');
+  });
+
   it('does not re-fire onSave on a second blur with no further edits', async () => {
     const onSave = vi.fn();
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
