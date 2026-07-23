@@ -12,3 +12,4 @@ export { userMention, ticketRef } from './nodes/refs';
 export type { SuggestionHooks } from './nodes/refs';
 export { markdownToDoc, toDisplayDoc } from './markdown-to-doc';
 export { parseInline } from './inline-parse';
+export { docToMarkdown } from './doc-to-markdown';
