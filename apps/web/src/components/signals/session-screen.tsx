@@ -23,6 +23,56 @@ function kindLabel(kind: string): string {
   return kind === 'log' ? 'console' : kind;
 }
 
+// "3 logs" / "1 error" — the count reads wrong unpluralized (the design's
+// "1 error" only looks right by luck).
+function plural(n: number, word: string): string {
+  return `${formatCount(n)} ${word}${n === 1 ? '' : 's'}`;
+}
+
+// STARTED shows a relative-day prefix like the design's "today 14:02:11" so a
+// bare clock time isn't ambiguous about which day it was.
+function formatStartedAt(iso: string): string {
+  const clock = formatClockTime(iso);
+  const started = new Date(iso);
+  const now = new Date();
+  const dayMs = 86_400_000;
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfStartedDay = new Date(started.getFullYear(), started.getMonth(), started.getDate()).getTime();
+  const daysAgo = Math.round((startOfToday - startOfStartedDay) / dayMs);
+  if (daysAgo === 0) return `today ${clock}`;
+  if (daysAgo === 1) return `yesterday ${clock}`;
+  return `${started.toLocaleDateString()} ${clock}`;
+}
+
+// Timeline placeholder while the session loads — the design carries a 14-row
+// skeleton; returning null left the screen blank until data arrived.
+function SessionSkeleton() {
+  return (
+    <div className="flex h-full min-h-0 flex-col p-6 md:p-7">
+      <div className="mb-3 h-3 w-40 animate-pulse rounded-xs bg-inset" />
+      <div className="mb-3 flex items-center gap-2.5">
+        <div className="h-5 w-48 animate-pulse rounded-xs bg-inset" />
+        <div className="h-5.5 w-16 animate-pulse rounded-md bg-inset" />
+      </div>
+      <div className="mb-4 h-16 flex-none animate-pulse rounded-[10px] border border-hairline bg-raised" />
+      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-hairline bg-raised p-4 md:p-5">
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <div className="h-3 w-10 flex-none animate-pulse rounded-xs bg-inset" />
+              <div className="size-5 flex-none animate-pulse rounded-[6px] bg-inset" />
+              <div
+                className="h-3 animate-pulse rounded-xs bg-inset"
+                style={{ width: `${38 + ((i * 7) % 45)}%` }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Events carry a short `name` plus an optional detail `message`
 // ("cart_updated" + "3 items, $83.40" -> "cart_updated — 3 items, $83.40");
 // logs just show whatever text landed in `message` (falling back to `name`
@@ -188,7 +238,10 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
       <span className="flex w-11 flex-none flex-col items-center">
         <span className={cn(lineClass, 'h-2', isFirst && 'bg-transparent')} />
         {item.type === 'row' ? (
-          <KindGlyph type={toSignalKind(item.row.kind)} />
+          <KindGlyph
+            type={toSignalKind(item.row.kind)}
+            className={cn(item.row.level === 'warning' && 'bg-kind-blocked-subtle text-kind-blocked')}
+          />
         ) : (
           <span className="py-0.5 font-mono text-[10px] text-ink-3">┆</span>
         )}
@@ -203,13 +256,25 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
           <ErrorCard row={item.row} />
         ) : (
           <span className="flex min-h-5.5 items-center gap-2.25">
-            <span className="w-18.5 flex-none font-mono text-[10.5px] text-ink-3">{kindLabel(item.row.kind)}</span>
+            <span
+              className={cn(
+                'w-18.5 flex-none font-mono text-[10.5px]',
+                // A warning-level log stands out in the run-up to a crash.
+                item.row.level === 'warning' ? 'text-kind-blocked' : 'text-ink-3',
+              )}
+            >
+              {item.row.level === 'warning' && item.row.kind === 'log'
+                ? 'console.warn'
+                : kindLabel(item.row.kind)}
+            </span>
             <span
               className={cn(
                 'truncate',
-                item.row.kind === 'event'
-                  ? 'font-sans text-[12.5px] text-ink'
-                  : 'font-mono text-[12px] text-ink',
+                item.row.level === 'warning'
+                  ? 'font-mono text-[12px] text-kind-blocked'
+                  : item.row.kind === 'event'
+                    ? 'font-sans text-[12.5px] text-ink'
+                    : 'font-mono text-[12px] text-ink',
               )}
             >
               {rowMessage(item.row)}
@@ -267,7 +332,7 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
   const sessionQuery = useSignalsSession(sessionId);
 
   if (sessionQuery.isLoading) {
-    return null;
+    return <SessionSkeleton />;
   }
 
   if (sessionQuery.isError) {
@@ -329,6 +394,9 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
               </span>
             ) : null}
           </div>
+          <div className="mt-1.5 font-sans text-[12px] text-ink-3">
+            One page load, everything it reported, in order — the error is the terminal point.
+          </div>
         </div>
         <CopySessionIdButton sessionId={session.sessionId} />
       </div>
@@ -336,7 +404,7 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
       <div className="mb-4 flex flex-none items-center gap-6.5 rounded-[10px] border border-hairline bg-raised px-4.5 py-3">
         <div>
           <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-ink-3">STARTED</div>
-          <div className="font-mono text-[13px] font-medium text-ink">{formatClockTime(session.startedAt)}</div>
+          <div className="font-mono text-[13px] font-medium text-ink">{formatStartedAt(session.startedAt)}</div>
         </div>
         <div>
           <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-ink-3">DURATION</div>
@@ -349,8 +417,8 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
           <div className="font-sans text-[13px] text-ink">
             <span className="font-mono text-[13px] font-medium">{formatCount(total)}</span>{' '}
             <span className="font-mono text-[11px] text-ink-3">
-              · {formatCount(session.counts.log)} logs · {formatCount(session.counts.event)} events ·{' '}
-              {formatCount(session.counts.error)} error
+              · {plural(session.counts.log, 'log')} · {plural(session.counts.event, 'event')} ·{' '}
+              {plural(session.counts.error, 'error')}
             </span>
           </div>
         </div>

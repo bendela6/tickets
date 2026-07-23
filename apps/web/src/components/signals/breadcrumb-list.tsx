@@ -45,16 +45,38 @@ function BreadcrumbRow({ crumb }: { crumb: SignalBreadcrumb }) {
   const status = typeof crumb.data?.status === 'number' ? crumb.data.status : undefined;
   const durationMs = typeof crumb.data?.durationMs === 'number' ? crumb.data.durationMs : undefined;
 
+  // A console breadcrumb records which method produced it (data.method, set by
+  // the browser SDK's console instrumentation). warn/error consoles are worth
+  // seeing at a glance in the run-up to a crash, so they get the amber/danger
+  // tint the design shows instead of the neutral log styling.
+  const consoleMethod = typeof crumb.data?.method === 'string' ? crumb.data.method : undefined;
+  const tone = consoleMethod === 'warn' ? 'warn' : consoleMethod === 'error' ? 'error' : 'neutral';
+
   return (
     <div
       role="row"
       className="grid items-center gap-x-2.5 border-b border-hairline px-4 py-1.5 last:border-b-0"
       style={{ gridTemplateColumns: BREADCRUMB_GRID_COLUMNS }}
     >
-      <KindGlyph type={kind} />
-      <span className="font-mono text-[10.5px] text-ink-3">{crumb.type}</span>
+      <KindGlyph
+        type={kind}
+        className={cn(
+          tone === 'warn' && 'bg-kind-blocked-subtle text-kind-blocked',
+          tone === 'error' && 'bg-danger-subtle text-danger',
+        )}
+      />
+      <span className="font-mono text-[10.5px] text-ink-3">
+        {consoleMethod === 'warn' || consoleMethod === 'error' ? `console.${consoleMethod}` : crumb.type}
+      </span>
       <span className="flex min-w-0 items-center gap-2">
-        <span className="truncate font-mono text-[12px] text-ink-2">{crumb.message ?? ''}</span>
+        <span
+          className={cn(
+            'truncate font-mono text-[12px]',
+            tone === 'warn' ? 'text-kind-blocked' : tone === 'error' ? 'text-danger' : 'text-ink-2',
+          )}
+        >
+          {crumb.message ?? ''}
+        </span>
         {status !== undefined ? <HttpStatusChip status={status} /> : null}
         {durationMs !== undefined ? (
           <span className="shrink-0 font-mono text-[10.5px] text-ink-3">{formatDurationMs(durationMs)}</span>
