@@ -5,10 +5,12 @@ import { initialValues, type CollectedDemo } from '@tickets/ui/gallery';
 import { CodeTab } from './code-tab';
 import { ControlsPanel } from './controls-panel';
 import { loadLayout, saveLayout } from './persisted-layout';
+import { MatrixMode } from './matrix-mode';
 import { PlaygroundCard } from './playground-card';
 import { PropsTable } from './props-table';
 import { SourceTab } from './source-tab';
 import { StateGrid } from './state-grid';
+import { ThemeSplit } from './theme-split';
 
 // v4's replacement for v2's `autoSaveId`: the app owns storage. Panel ids
 // below ("stage" / "controls") must stay stable — they're the keys `Layout`
@@ -43,25 +45,81 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
     playground ? initialValues(playground.controls) : {},
   );
   const [defaultLayout] = useState<Layout | undefined>(() => loadLayout(WORKBENCH_LAYOUT_KEY));
+  const [splitThemes, setSplitThemes] = useState(false);
+  const [matrixMode, setMatrixMode] = useState(false);
+
+  // Get select control keys for matrix mode
+  const selectKeys = playground
+    ? Object.entries(playground.controls)
+        .filter(([, def]) => def.kind === 'select')
+        .map(([key]) => key)
+    : [];
+  const [matrixX, setMatrixX] = useState(selectKeys[0] ?? '');
+  const [matrixY, setMatrixY] = useState(selectKeys[1] ?? '');
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex gap-6 border-b border-hairline">
-        {TABS.map(({ key, label }) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setTab(key)}
-            className={cn(
-              'border-b-2 pb-2 font-sans text-ui',
-              tab === key
-                ? '-mb-px border-accent font-medium text-ink'
-                : 'border-transparent text-ink-3 hover:text-ink',
+      <div className="flex items-center justify-between gap-6 border-b border-hairline pb-2">
+        <div className="flex gap-6">
+          {TABS.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setTab(key)}
+              className={cn(
+                'border-b-2 pb-2 font-sans text-ui',
+                tab === key
+                  ? '-mb-px border-accent font-medium text-ink'
+                  : 'border-transparent text-ink-3 hover:text-ink',
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {tab === 'preview' && playground && (
+          <div className="flex items-center gap-4">
+            {/* Split themes toggle */}
+            <label className="flex items-center gap-2 font-sans text-ui text-ink-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={splitThemes}
+                onChange={(e) => setSplitThemes(e.target.checked)}
+                className="sr-only"
+              />
+              <span className="inline-block w-8 h-4.5 rounded-full bg-strong relative">
+                <span
+                  className={cn(
+                    'absolute top-0.5 w-3.5 h-3.5 rounded-full bg-surface transition-all',
+                    splitThemes ? 'right-0.5' : 'left-0.5',
+                  )}
+                />
+              </span>
+              <span>Split themes</span>
+            </label>
+
+            {/* Matrix mode toggle - only visible if ≥2 select controls */}
+            {selectKeys.length >= 2 && (
+              <label className="flex items-center gap-2 font-sans text-ui text-ink-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={matrixMode}
+                  onChange={(e) => setMatrixMode(e.target.checked)}
+                  className="sr-only"
+                />
+                <span className="inline-block w-8 h-4.5 rounded-full bg-strong relative">
+                  <span
+                    className={cn(
+                      'absolute top-0.5 w-3.5 h-3.5 rounded-full bg-surface transition-all',
+                      matrixMode ? 'right-0.5' : 'left-0.5',
+                    )}
+                  />
+                </span>
+                <span>Matrix</span>
+              </label>
             )}
-          >
-            {label}
-          </button>
-        ))}
+          </div>
+        )}
       </div>
 
       <div className={tab === 'preview' ? '' : 'hidden'}>
@@ -76,7 +134,18 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
           >
             <Panel id="stage" defaultSize="70">
               <div className="flex flex-col gap-6 pr-6">
-                <StateGrid demo={demo} />
+                {matrixMode ? (
+                  <MatrixMode
+                    playground={playground}
+                    values={values}
+                    xKey={matrixX}
+                    yKey={matrixY}
+                  />
+                ) : splitThemes ? (
+                  <ThemeSplit render={() => <StateGrid demo={demo} />} />
+                ) : (
+                  <StateGrid demo={demo} />
+                )}
                 <PlaygroundCard playground={playground} values={values} />
                 <div className="flex flex-col gap-2.5">
                   <div className="font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3">

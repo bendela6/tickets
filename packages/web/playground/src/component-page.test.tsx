@@ -193,4 +193,60 @@ describe('ComponentPage', () => {
       JSON.stringify({ stage: 65, controls: 35 }),
     );
   });
+
+  it('renders Split themes toggle in header when on Preview tab', () => {
+    render(<ComponentPage demo={demo} />);
+    expect(screen.getByLabelText('Split themes')).toBeTruthy();
+  });
+
+  it('hides Split themes toggle when not on Preview tab', () => {
+    render(<ComponentPage demo={demo} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Code' }));
+    expect(screen.queryByLabelText('Split themes')).toBeNull();
+  });
+
+  it('renders Matrix toggle only when ≥2 select controls exist', () => {
+    const demoWith2Selects = collectDemos({
+      button: {
+        meta: { title: 'Button', group: 'Form controls' },
+        states: [{ name: 'primary', render: () => <b>state-btn</b> }],
+        playground: definePlayground({
+          controls: {
+            variant: select(['primary', 'secondary']),
+            size: select(['sm', 'lg']),
+            loading: booleanControl(false),
+          },
+          render: (v) => (
+            <button data-variant={v.variant}>play-btn</button>
+          ),
+        }),
+      },
+    })[0];
+    if (!demoWith2Selects || isDemoError(demoWith2Selects)) throw new Error('fixture demo failed');
+
+    render(<ComponentPage demo={demoWith2Selects} />);
+    expect(screen.getByLabelText('Matrix')).toBeTruthy();
+  });
+
+  it('hides Matrix toggle when <2 select controls', () => {
+    // demo has only 1 select (variant) and 1 boolean (loading)
+    render(<ComponentPage demo={demo} />);
+    expect(screen.queryByLabelText('Matrix')).toBeNull();
+  });
+
+  it('wraps StateGrid in ThemeSplit when Split themes is on', () => {
+    const { container } = render(<ComponentPage demo={demo} />);
+    fireEvent.click(screen.getByLabelText('Split themes'));
+
+    const panels = container.querySelectorAll('[data-theme]');
+    expect(panels).toHaveLength(2);
+    expect(panels[0]?.getAttribute('data-theme')).toBe('light');
+    expect(panels[1]?.getAttribute('data-theme')).toBe('dark');
+  });
+
+  it('shows StateGrid when Split themes is off', () => {
+    render(<ComponentPage demo={demo} />);
+    expect(screen.getByText('STATES')).toBeTruthy();
+  });
 });
+
