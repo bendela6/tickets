@@ -12,6 +12,7 @@
     "./tones": "./src/tones.ts",
     "./icon": "./src/icons/icon.tsx",
     "./pill": "./src/pill.tsx",
+    "./tabs": "./src/tabs.tsx",
     "./gallery": "./src/gallery/index.ts",
     "./gallery/demos": "./src/gallery/demos.ts",
     "./gallery/demo-sources": "./src/gallery/demo-sources.ts"
