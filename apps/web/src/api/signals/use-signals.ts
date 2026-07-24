@@ -1,17 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
+  clearAppSignals,
   createApp,
+  deleteApp,
+  deleteRelease,
+  getApp,
   getIssue,
   getMeta,
   getSession,
   listApps,
+  listAppReleases,
   listIssues,
   listOccurrences,
   listSignals,
+  patchApp,
   patchIssueStatus,
+  rotateAppKey,
 } from './signals-api';
-import type { ActivityFilters, IssueFilters, IssueStatus } from './signals-api';
+import type { ActivityFilters, ClearSignalsFilters, IssueFilters, IssueStatus } from './signals-api';
 
 export function useSignalsIssues(filters: IssueFilters) {
   return useQuery({
@@ -64,6 +71,22 @@ export function useSignalsApps() {
   });
 }
 
+export function useSignalsApp(id: number) {
+  return useQuery({
+    queryKey: ['signals', 'app', id],
+    queryFn: () => getApp(id),
+    enabled: Number.isFinite(id),
+  });
+}
+
+export function useAppReleases(id: number) {
+  return useQuery({
+    queryKey: ['signals', 'app', id, 'releases'],
+    queryFn: () => listAppReleases(id),
+    enabled: Number.isFinite(id),
+  });
+}
+
 export function useSignalsMeta() {
   return useQuery({
     queryKey: ['signals', 'meta'],
@@ -88,6 +111,66 @@ export function usePatchIssueStatus() {
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['signals', 'issues'] });
       await queryClient.invalidateQueries({ queryKey: ['signals', 'issue', variables.id] });
+    },
+  });
+}
+
+export function usePatchApp() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, name }: { id: number; name: string }) => patchApp(id, name),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'app', variables.id] });
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'apps'] });
+    },
+  });
+}
+
+export function useRotateAppKey() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => rotateAppKey(id),
+    onSuccess: async (_data, id) => {
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'app', id] });
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'apps'] });
+    },
+  });
+}
+
+export function useDeleteApp() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteApp(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'apps'] });
+    },
+  });
+}
+
+export function useClearAppSignals() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, filters }: { id: number; filters?: ClearSignalsFilters }) => clearAppSignals(id, filters),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'app', variables.id] });
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'apps'] });
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'app', variables.id, 'releases'] });
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'issues'] });
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'activity'] });
+    },
+  });
+}
+
+export function useDeleteRelease() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, release }: { id: number; release: string }) => deleteRelease(id, release),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'app', variables.id] });
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'apps'] });
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'app', variables.id, 'releases'] });
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'issues'] });
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'activity'] });
     },
   });
 }
