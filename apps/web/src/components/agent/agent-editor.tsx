@@ -119,7 +119,7 @@ export function AgentEditor({
 
         <div className="mt-4 flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1">
           {!caps.permissions || !caps.resume ? (
-            <div className="rounded-card border border-kind-blocked bg-kind-blocked-subtle px-3 py-2 font-sans text-meta text-ink">
+            <div className="rounded-card border border-opt-orange bg-opt-orange-subtle px-3 py-2 font-sans text-meta text-ink">
               <strong className="font-semibold">{providerLabel(providerKey)} can’t do everything.</strong>{' '}
               {!caps.permissions ? 'It can’t pause a run for tool approvals. ' : ''}
               {!caps.resume ? 'It can’t resume after a restart. ' : ''}

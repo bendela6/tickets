@@ -6,19 +6,19 @@ import {
   useDeleteTransition,
   useUpdateOption,
 } from '../../api/use-admin';
-import { statusPill } from '../../domain/status';
+import { KIND_ICON, KIND_TONE, statusPill } from '../../domain/status';
 import { hexToOptionColor } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
 import { cn } from '@tickets/ui/cn';
+import { Icon } from '@tickets/ui/icon';
 import { Pill } from '@tickets/ui/pill';
 import { SWATCHES } from '@tickets/ui/swatches';
 import { Combobox } from '../../ui/combobox';
 import type { ComboOption } from '../../ui/combobox-list';
 import { FieldLabel } from '../../ui/field-label';
 import { Input } from '../../ui/input';
-import { KindGlyph } from '../../ui/kind-glyph';
 import type { SettingsTabProps } from './types-tab';
 
 const KIND_ORDER: StatusKind[] = ['todo', 'active', 'blocked', 'done', 'dropped'];
@@ -26,14 +26,6 @@ const KIND_ORDER: StatusKind[] = ['todo', 'active', 'blocked', 'done', 'dropped'
 // Combobox value for "starts here" — fromOptionId: null on the wire, meaning
 // this edge is a creation/entry move rather than a move between two options.
 const ENTRY = '__entry__';
-
-const kindText: Record<StatusKind, string> = {
-  todo: 'text-kind-todo',
-  active: 'text-kind-active',
-  blocked: 'text-kind-blocked',
-  done: 'text-kind-done',
-  dropped: 'text-kind-dropped',
-};
 
 function slugify(label: string): string {
   return label
@@ -91,8 +83,8 @@ function KindPicker({
               : 'border-control bg-raised text-ink-2 hover:border-ink-3',
           )}
         >
-          <span className={cn('inline-flex', kindText[kind])}>
-            <KindGlyph kind={kind} />
+          <span className="inline-flex">
+            <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
           </span>
           {kind}
         </button>
@@ -430,8 +422,8 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     return (
                       <div key={option.id} className="border-b border-hairline last:border-b-0">
                         <div className={cn('flex h-10.5 items-center gap-2.5 px-4', archived && 'opacity-60')}>
-                          <span className={cn('inline-flex shrink-0', kindText[kind])}>
-                            <KindGlyph kind={kind} />
+                          <span className="inline-flex shrink-0">
+                            <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
                           </span>
                           <span
                             className={cn('font-sans text-ui font-medium text-ink', archived && 'line-through')}

@@ -46,7 +46,7 @@ function Block({ block, onRespond }: { block: StreamBlock; onRespond?: RespondFn
     case 'result':
       return (
         <div className="flex items-center gap-2 pt-0.5 font-mono text-meta text-ink-3">
-          <span className={block.isError ? 'text-danger' : 'text-kind-done'}>
+          <span className={block.isError ? 'text-danger' : 'text-opt-green'}>
             {block.isError ? '✕ turn failed' : '✓ turn complete'}
           </span>
           <span>·</span>
@@ -101,12 +101,12 @@ function ApprovalCard({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-panel border-[1.5px] border-kind-blocked bg-kind-blocked-subtle shadow-lg',
+        'overflow-hidden rounded-panel border-[1.5px] border-opt-orange bg-opt-orange-subtle shadow-lg',
         decided === null && 'animate-ai-pulse',
       )}
     >
       <div className="flex items-center gap-2 px-3.5 py-2.5">
-        <span aria-hidden className="size-2.5 shrink-0 rotate-45 rounded-[1px] bg-kind-blocked" />
+        <span aria-hidden className="size-2.5 shrink-0 rotate-45 rounded-[1px] bg-opt-orange" />
         <span className="font-sans text-ui font-semibold text-ink">Approval required</span>
         <Pill
           tone="secondary"
@@ -122,7 +122,7 @@ function ApprovalCard({
         ) : null}
       </div>
 
-      <div className="border-t border-kind-blocked/40 bg-app">
+      <div className="border-t border-opt-orange/40 bg-app">
         {diff ? (
           <DiffBody lines={diff.lines} />
         ) : (
@@ -209,8 +209,8 @@ function ToolStatusDot({ status }: { status: ToolStatus }) {
     return (
       <span
         aria-hidden
-        className="size-2.75 shrink-0 rounded-full border-[1.5px] border-kind-active animate-ai-spin"
-        style={{ background: 'linear-gradient(90deg, var(--color-kind-active) 50%, transparent 50%)' }}
+        className="size-2.75 shrink-0 rounded-full border-[1.5px] border-opt-blue animate-ai-spin"
+        style={{ background: 'linear-gradient(90deg, var(--color-opt-blue) 50%, transparent 50%)' }}
       />
     );
   }
@@ -220,7 +220,7 @@ function ToolStatusDot({ status }: { status: ToolStatus }) {
   return (
     <span
       aria-hidden
-      className="inline-flex size-3 shrink-0 items-center justify-center rounded-full bg-kind-done text-[7px] font-bold text-on-kind-done"
+      className="inline-flex size-3 shrink-0 items-center justify-center rounded-full bg-opt-green text-[7px] font-bold text-on-opt-green"
     >
       ✓
     </span>
@@ -252,7 +252,7 @@ function ToolCard({ name, input, result }: { name: string; input: unknown; resul
         <span className="flex-1 truncate font-mono text-meta text-ink-3">{summary}</span>
         {diff ? (
           <>
-            <span className="rounded-[4px] bg-kind-done-subtle px-1.5 font-mono text-[10px] text-kind-done">
+            <span className="rounded-[4px] bg-opt-green-subtle px-1.5 font-mono text-[10px] text-opt-green">
               +{diff.added}
             </span>
             <span className="rounded-[4px] bg-danger-subtle px-1.5 font-mono text-[10px] text-danger">
@@ -385,7 +385,7 @@ function DiffBody({ lines }: { lines: DiffLine[] }) {
           key={i}
           className={cn(
             'whitespace-pre px-3',
-            line.sign === '+' && 'bg-kind-done-subtle text-kind-done',
+            line.sign === '+' && 'bg-opt-green-subtle text-opt-green',
             line.sign === '-' && 'bg-danger-subtle text-danger',
             line.sign === ' ' && 'text-ink-2',
           )}

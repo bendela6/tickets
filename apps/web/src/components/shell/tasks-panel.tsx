@@ -103,7 +103,7 @@ export function TasksPanel({
               </span>
               <span className="flex-1 truncate">{project.name}</span>
               <span className="inline-flex h-0.75 w-6.5 overflow-hidden rounded-[2px] bg-hairline">
-                <span className="bg-kind-done" style={{ width: `${stat?.pct ?? 0}%` }} />
+                <span className="bg-opt-green" style={{ width: `${stat?.pct ?? 0}%` }} />
               </span>
             </Link>
           );

@@ -24,7 +24,10 @@ function resolve(name: string): string {
 }
 
 // Color-picker presets for type/status configuration — previously hardcoded
-// hex arrays in settings/types-tab.tsx and settings/workflow-tab.tsx.
-export const SWATCHES = ['accent', 'kind-done', 'kind-blocked', 'opt-red', 'kind-active', 'ink-3'].map(
+// hex arrays in settings/types-tab.tsx and settings/workflow-tab.tsx. The
+// three status-lifecycle picks now draw straight from the hue palette
+// (opt-green/opt-orange/opt-blue) instead of the retired per-status color
+// tokens they used before Task 6 ("retire the kind color family").
+export const SWATCHES = ['accent', 'opt-green', 'opt-orange', 'opt-red', 'opt-blue', 'ink-3'].map(
   resolve,
 );

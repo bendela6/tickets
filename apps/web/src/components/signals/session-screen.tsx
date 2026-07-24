@@ -6,17 +6,16 @@ import { useSignalsSession } from '../../api/signals/use-signals';
 import { cn } from '@tickets/ui/cn';
 import { Icon } from '@tickets/ui/icon';
 import { Pill } from '@tickets/ui/pill';
+import { signalKindIcon, signalKindTone, type SignalKind } from '../../domain/signal-status';
 import { formatClockTime, formatCount, formatDurationMs } from './format';
-import type { SignalKind } from './kind-glyph';
-import { KindGlyph } from './kind-glyph';
 
 const COPY_STATE_RESET_MS = 1500;
 const IDLE_GAP_THRESHOLD_MS = 30_000;
 
 // The session `kind` column only ever holds these three values (see
 // apps/signals/src/types.ts) — a bare cast would let anything through, so
-// unrecognized values fall back to KindGlyph's neutral "custom" badge rather
-// than crashing.
+// unrecognized values fall back to the neutral "custom" badge rather than
+// crashing.
 function toSignalKind(kind: string): SignalKind {
   return kind === 'event' || kind === 'log' || kind === 'error' ? kind : 'custom';
 }
@@ -240,9 +239,11 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
       <span className="flex w-11 flex-none flex-col items-center">
         <span className={cn(lineClass, 'h-2', isFirst && 'bg-transparent')} />
         {item.type === 'row' ? (
-          <KindGlyph
-            type={toSignalKind(item.row.kind)}
-            className={cn(item.row.level === 'warning' && 'bg-kind-blocked-subtle text-kind-blocked')}
+          <Icon
+            name={signalKindIcon(toSignalKind(item.row.kind))}
+            tone={item.row.level === 'warning' ? 'warning' : signalKindTone(toSignalKind(item.row.kind))}
+            size={11}
+            label={toSignalKind(item.row.kind)}
           />
         ) : (
           <span className="py-0.5 font-mono text-[10px] text-ink-3">┆</span>
@@ -266,7 +267,7 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
               className={cn(
                 'w-18.5 flex-none font-mono text-[10.5px]',
                 // A warning-level log stands out in the run-up to a crash.
-                item.row.level === 'warning' ? 'text-kind-blocked' : 'text-ink-3',
+                item.row.level === 'warning' ? 'text-opt-orange' : 'text-ink-3',
               )}
             >
               {item.row.level === 'warning' && item.row.kind === 'log'
@@ -277,7 +278,7 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
               className={cn(
                 'truncate',
                 item.row.level === 'warning'
-                  ? 'font-mono text-[12px] text-kind-blocked'
+                  ? 'font-mono text-[12px] text-opt-orange'
                   : item.row.kind === 'event'
                     ? 'font-sans text-[12.5px] text-ink'
                     : 'font-mono text-[12px] text-ink',

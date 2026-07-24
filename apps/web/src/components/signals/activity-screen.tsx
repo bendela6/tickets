@@ -217,7 +217,7 @@ export function ActivityScreen() {
         {isEmpty ? (
           <div className="flex flex-1 items-center justify-center">
             <div className="flex max-w-110 flex-col items-center gap-3.5 text-center">
-              <span className="flex size-9.5 items-center justify-center rounded-full bg-kind-done-subtle font-sans text-[16px] font-semibold text-kind-done">
+              <span className="flex size-9.5 items-center justify-center rounded-full bg-opt-green-subtle font-sans text-[16px] font-semibold text-opt-green">
                 ✓
               </span>
               <div className="font-sans text-[17px] font-semibold text-ink">

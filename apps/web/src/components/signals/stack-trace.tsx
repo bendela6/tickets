@@ -149,9 +149,9 @@ function SymFrames({ frames }: { frames: SignalStackFrame[] }) {
 // than rendering a bare "unknown".
 function NoSourceMapsBanner({ release }: { release: string | null | undefined }) {
   return (
-    <div className="flex items-center gap-2.5 border-b border-hairline bg-kind-blocked-subtle px-4 py-2.5">
-      <span aria-hidden className="size-2 shrink-0 rotate-45 rounded-[1px] bg-kind-blocked" />
-      <span className="flex-1 font-sans text-[12px] leading-normal text-kind-blocked">
+    <div className="flex items-center gap-2.5 border-b border-hairline bg-opt-orange-subtle px-4 py-2.5">
+      <span aria-hidden className="size-2 shrink-0 rotate-45 rounded-[1px] bg-opt-orange" />
+      <span className="flex-1 font-sans text-[12px] leading-normal text-opt-orange">
         No source maps uploaded
         {release ? (
           <>

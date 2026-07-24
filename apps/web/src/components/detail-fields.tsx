@@ -64,7 +64,7 @@ export function DetailFields({
   return (
     <div className="flex flex-col gap-2.5">
       {userId === null ? (
-        <p className="m-0 font-sans text-meta text-kind-blocked">
+        <p className="m-0 font-sans text-meta text-opt-orange">
           Pick a user in the header to edit items.
         </p>
       ) : null}

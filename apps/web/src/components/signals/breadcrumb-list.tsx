@@ -1,10 +1,10 @@
 import { Link } from '@tanstack/react-router';
 import type { SignalBreadcrumb } from '../../api/signals/signals-api';
 import { cn } from '@tickets/ui/cn';
+import { Icon } from '@tickets/ui/icon';
 import { Pill } from '@tickets/ui/pill';
+import { signalKindIcon, signalKindTone, type SignalKind } from '../../domain/signal-status';
 import { formatClockTime, formatDurationMs } from './format';
-import type { SignalKind } from './kind-glyph';
-import { KindGlyph } from './kind-glyph';
 
 const BREADCRUMB_GRID_COLUMNS = '30px 84px minmax(0,1fr) auto';
 
@@ -13,7 +13,7 @@ const BREADCRUMB_GRID_COLUMNS = '30px 84px minmax(0,1fr) auto';
 // There is no 'error' (or 'fetch'/'xhr') breadcrumb type on the wire; the SDK
 // never emits one, so those mappings are commented out rather than left live
 // dead code that implies a breadcrumb can be terminal on its own. ('error'
-// stays a valid KindGlyph *signal kind* for the session timeline — see
+// stays a valid `SignalKind` for the session timeline — see
 // session-screen.tsx's toSignalKind — just not a breadcrumb `type`.) The
 // terminal danger row is synthesized separately by the caller from the
 // matched error signal itself; see BreadcrumbList's `terminal` prop.
@@ -56,12 +56,11 @@ function BreadcrumbRow({ crumb }: { crumb: SignalBreadcrumb }) {
       className="grid items-center gap-x-2.5 border-b border-hairline px-4 py-1.5 last:border-b-0"
       style={{ gridTemplateColumns: BREADCRUMB_GRID_COLUMNS }}
     >
-      <KindGlyph
-        type={kind}
-        className={cn(
-          tone === 'warn' && 'bg-kind-blocked-subtle text-kind-blocked',
-          tone === 'error' && 'bg-danger-subtle text-danger',
-        )}
+      <Icon
+        name={signalKindIcon(kind)}
+        tone={tone === 'warn' ? 'warning' : tone === 'error' ? 'danger' : signalKindTone(kind)}
+        size={11}
+        label={kind}
       />
       <span className="font-mono text-[10.5px] text-ink-3">
         {consoleMethod === 'warn' || consoleMethod === 'error' ? `console.${consoleMethod}` : crumb.type}
@@ -70,7 +69,7 @@ function BreadcrumbRow({ crumb }: { crumb: SignalBreadcrumb }) {
         <span
           className={cn(
             'truncate font-mono text-[12px]',
-            tone === 'warn' ? 'text-kind-blocked' : tone === 'error' ? 'text-danger' : 'text-ink-2',
+            tone === 'warn' ? 'text-opt-orange' : tone === 'error' ? 'text-danger' : 'text-ink-2',
           )}
         >
           {crumb.message ?? ''}

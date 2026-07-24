@@ -1,14 +1,14 @@
-import type { Item } from '../../api/types';
-import { cn } from '@tickets/ui/cn';
-import { KindGlyph, type StatusKind } from '../../ui/kind-glyph';
+import type { Item, StatusKind } from '../../api/types';
+import { KIND_ICON, KIND_TONE } from '../../domain/status';
+import { Icon } from '@tickets/ui/icon';
 import type { BoardIndexes } from '../../utils/index-board';
 
-const KIND_ORDER: { kind: StatusKind; label: string; textClass: string }[] = [
-  { kind: 'todo', label: 'To do', textClass: 'text-kind-todo' },
-  { kind: 'active', label: 'Active', textClass: 'text-kind-active' },
-  { kind: 'blocked', label: 'Blocked', textClass: 'text-kind-blocked' },
-  { kind: 'done', label: 'Done', textClass: 'text-kind-done' },
-  { kind: 'dropped', label: 'Dropped', textClass: 'text-kind-dropped' },
+const KIND_ORDER: { kind: StatusKind; label: string }[] = [
+  { kind: 'todo', label: 'To do' },
+  { kind: 'active', label: 'Active' },
+  { kind: 'blocked', label: 'Blocked' },
+  { kind: 'done', label: 'Done' },
+  { kind: 'dropped', label: 'Dropped' },
 ];
 
 // Per-kind count tiles per docs/design/03-project-board.html lines 116–125;
@@ -24,13 +24,13 @@ export function KpiTiles({
 }) {
   return (
     <div className="mb-3.5 flex shrink-0 gap-2.5">
-      {KIND_ORDER.map(({ kind, label, textClass }) => (
+      {KIND_ORDER.map(({ kind, label }) => (
         <div
           key={kind}
           className="flex flex-1 items-center gap-2.5 rounded-[10px] border border-hairline bg-raised px-3.5 py-2.5 shadow-sm"
         >
-          <span className={cn('inline-flex shrink-0', textClass)}>
-            <KindGlyph kind={kind} />
+          <span className="inline-flex shrink-0">
+            <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
           </span>
           <span className="font-mono text-[18px] leading-none font-semibold text-ink">
             {counts[kind]}

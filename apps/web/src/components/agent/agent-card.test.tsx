@@ -13,7 +13,7 @@ test('autonomous modes read as accent, approval modes as blocked', () => {
   const { rerender } = render(<PermissionBadge mode="bypassPermissions" />);
   expect(screen.getByText('autonomous')).toHaveClass('text-accent');
   rerender(<PermissionBadge mode="default" />);
-  expect(screen.getByText('asks first')).toHaveClass('text-kind-blocked');
+  expect(screen.getByText('asks first')).toHaveClass('text-opt-orange');
 });
 
 const agent: Agent = {
