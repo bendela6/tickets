@@ -32,15 +32,18 @@ export interface SignalsAppDetail {
   errors24h?: number;
 }
 
-// Row shape from GET /signals-api/apps/:id/releases.
+// Row shape from GET /signals-api/apps/:id/releases. firstSeen/lastSeen are
+// nullable: the server FULL OUTER JOINs signals with sourcemap_artifacts, so
+// a maps-only release (sourcemaps uploaded, no signals reported yet) has no
+// signals to derive a first/last-seen timestamp from.
 export interface AppReleaseRow {
   release: string;
   signalCount: number;
   errorCount: number;
   sourcemapCount: number;
   sourcemapBytes: number;
-  firstSeen: string;
-  lastSeen: string;
+  firstSeen: string | null;
+  lastSeen: string | null;
 }
 
 export type ClearSignalsFilters = {

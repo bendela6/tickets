@@ -11,13 +11,19 @@ test('renders the node init snippet with the dsn verbatim', () => {
   expect(screen.getByText(new RegExp(DSN.replace(/[/@:.]/g, '\\$&')))).toBeInTheDocument();
 });
 
-test('toggling to browser shows the <script> tag form with the dsn', async () => {
+test('toggling to browser shows the <script> tag form calling Signals.initSignals with the dsn', async () => {
   const user = userEvent.setup();
   render(<SdkSnippet dsn={DSN} platform="node" />);
 
   await user.click(screen.getByRole('button', { name: /^browser$/i }));
 
-  expect(screen.getByText(/Signals\.init/)).toBeInTheDocument();
+  // The browser bundle exposes `window.Signals = { initSignals, getClient }`
+  // (see packages/signals/browser/src/auto.ts) — there is no `Signals.init`.
+  // Match `Signals.initSignals(` specifically so a regression back to the
+  // nonexistent `Signals.init(` (which `/Signals\.init/` would also match)
+  // fails this test.
+  expect(screen.getByText(/Signals\.initSignals\(/)).toBeInTheDocument();
+  expect(screen.queryByText(/Signals\.init\(/)).not.toBeInTheDocument();
   expect(screen.getByText(new RegExp(DSN.replace(/[/@:.]/g, '\\$&')))).toBeInTheDocument();
 });
 
