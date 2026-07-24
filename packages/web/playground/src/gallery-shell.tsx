@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { isDemoError, type CollectedDemo } from '@tickets/ui/gallery';
 import { ComponentPage } from './component-page';
 import { DemoErrorCard, StateGrid } from './state-grid';
+import { CommandPalette } from './command-palette';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
@@ -25,11 +26,25 @@ export function GalleryShell({
   const live = demos.filter((d): d is LiveDemo => !isDemoError(d));
   const errors = demos.filter(isDemoError);
   const [rawHash, setRawHash] = useState(() => window.location.hash.replace(/^#/, ''));
+  const [filterQuery, setFilterQuery] = useState('');
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   useEffect(() => {
     const onHash = () => setRawHash(window.location.hash.replace(/^#/, ''));
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  // Global keydown listener for ⌘K / Ctrl+K
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
   const selected = slugFromHash(rawHash, live);
@@ -48,9 +63,33 @@ export function GalleryShell({
   const groups = [...new Set(live.map((d) => d.meta.group))];
   const shown = selected ? live.filter((d) => d.slug === selected) : live;
 
+  // Filter logic
+  const filteredLive = live.filter((d) =>
+    d.meta.title.toLowerCase().includes(filterQuery.toLowerCase())
+  );
+  const filteredGroups = groups.filter((g) =>
+    filteredLive.some((d) => d.meta.group === g)
+  );
+
   return (
     <div className="flex min-h-screen bg-app font-sans text-ink">
       <aside className="sticky top-0 flex h-screen w-56 shrink-0 flex-col gap-4 overflow-y-auto border-r border-hairline bg-raised px-4 py-6">
+        <div className="flex items-center gap-1.5 h-7.5 px-1.5 pl-2.5 rounded-card border border-hairline bg-inset">
+          <input
+            type="text"
+            placeholder="Filter components…"
+            value={filterQuery}
+            onChange={(e) => setFilterQuery(e.target.value)}
+            className="flex-1 bg-transparent text-ui text-ink-2 placeholder:text-ink-3 outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            className="h-4.5 px-1.25 border border-control bg-raised text-label text-ink-3 rounded-xs hover:text-ink-2"
+          >
+            ⌘K
+          </button>
+        </div>
         <a
           href="#"
           onClick={() => setRawHash('')}
@@ -58,10 +97,10 @@ export function GalleryShell({
         >
           All
         </a>
-        {groups.map((g) => (
+        {filteredGroups.map((g) => (
           <div key={g} className="flex flex-col gap-0.5">
             <span className="px-2 font-mono text-label uppercase tracking-(--tracking-label) text-ink-3">{g}</span>
-            {live
+            {filteredLive
               .filter((d) => d.meta.group === g)
               .map((d) => (
                 <a
@@ -106,6 +145,7 @@ export function GalleryShell({
           )}
         </div>
       </main>
+      <CommandPalette demos={live} open={paletteOpen} onOpenChange={setPaletteOpen} />
     </div>
   );
 }

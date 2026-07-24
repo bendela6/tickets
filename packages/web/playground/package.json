@@ -15,6 +15,7 @@
   "dependencies": {
     "@shikijs/langs": "^4.3.1",
     "@tickets/ui": "workspace:*",
+    "cmdk": "^1.1.1",
     "react-resizable-panels": "^4.12.2",
     "shiki": "^4.3.1"
   },
