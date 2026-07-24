@@ -24,9 +24,16 @@ export const playground = definePlayground({
     value: text('sgl://pub_4f9c21ab@127.0.0.1:4180/3'),
     label: text('Copy'),
     copiedLabel: text('Copied'),
+    failedLabel: text('Failed'),
     resetMs: number(1500, { min: 200, max: 5000, step: 100 }),
   },
   render: (v) => (
-    <CopyButton value={v.value} label={v.label} copiedLabel={v.copiedLabel} resetMs={v.resetMs} />
+    <CopyButton
+      value={v.value}
+      label={v.label}
+      copiedLabel={v.copiedLabel}
+      failedLabel={v.failedLabel}
+      resetMs={v.resetMs}
+    />
   ),
 });
