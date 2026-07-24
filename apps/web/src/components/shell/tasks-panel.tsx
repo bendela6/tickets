@@ -4,6 +4,7 @@ import { useProjects } from '../../api/use-projects';
 import { useProjectStats } from '../../api/use-project-stats';
 import { cn } from '@tickets/ui/cn';
 import { Meter } from '@tickets/ui/meter';
+import { RailLabel } from '@tickets/ui/rail-label';
 import { NewProjectDialog } from './new-project-dialog';
 
 function navItemClasses(active: boolean) {
@@ -85,9 +86,7 @@ export function TasksPanel({
         </Link>
       </nav>
 
-      <div className="px-2.25 pb-1.5 pt-4 font-mono text-[10px] font-medium tracking-[0.09em] text-ink-3">
-        PROJECTS
-      </div>
+      <RailLabel className="block px-2.25 pb-1.5 pt-4">PROJECTS</RailLabel>
       <div className="flex flex-col gap-0.5">
         {projectList.map((project) => {
           const stat = statsByKey.get(project.key);

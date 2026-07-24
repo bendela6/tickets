@@ -6,6 +6,7 @@ import { useAgentSessions } from '../../api/use-agent-sessions';
 import { useCreateAgentSession } from '../../api/use-create-agent-session';
 import { sessionStatus } from '../../domain/session-status';
 import { Pill } from '@tickets/ui/pill';
+import { SectionHeader } from '@tickets/ui/section-header';
 import { Avatar } from '../../ui/avatar';
 import { Button } from '../../ui/button';
 import { SessionKindGlyph } from '../../ui/session-kind-glyph';
@@ -101,9 +102,7 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
       </div>
 
       <section>
-        <h2 className="mb-2 font-sans text-label font-medium uppercase tracking-wide text-ink-2">
-          Recent sessions
-        </h2>
+        <SectionHeader title="Recent sessions" className="mb-2 tracking-wide" />
         {mine.length === 0 ? (
           <p className="rounded-card border border-hairline bg-raised px-4 py-6 text-center font-sans text-meta text-ink-3">
             No sessions yet — run one to get started.

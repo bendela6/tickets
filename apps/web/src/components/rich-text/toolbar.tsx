@@ -3,18 +3,8 @@ import type { ToolbarControl } from '@tickets/richtext';
 import { DropdownMenu } from 'radix-ui';
 import { useRef, type ReactNode } from 'react';
 import { cn } from '@tickets/ui/cn';
+import { Icon } from '@tickets/ui/icon';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '../../ui/menu';
-import {
-  IconCheck,
-  IconChevronDown,
-  IconChevronRight,
-  IconInfo,
-  IconLink2,
-  IconList,
-  IconMinus,
-  IconPlus,
-  IconQuote,
-} from './toolbar-icons';
 
 export type ToolbarVariant = 'full' | 'compact';
 
@@ -49,7 +39,9 @@ const ACTIVE = 'bg-accent-subtle text-accent hover:bg-accent-subtle';
 
 // One glyph + one action per toolbar control id (see @tickets/richtext
 // REGISTRY for the full id list). Text glyph treatments match the DEF table
-// in RteToolbar.dc.html; icon glyphs stand in for lucide (see toolbar-icons).
+// in RteToolbar.dc.html; icon glyphs stand in for lucide via @tickets/ui's
+// Icon registry (list/quote/link/plus/chevron-down/chevron-right/
+// circle-info/minus/check).
 const CONTROLS: Record<string, ControlDef> = {
   bold: {
     content: <span className="font-sans text-[13px] font-semibold">B</span>,
@@ -79,7 +71,7 @@ const CONTROLS: Record<string, ControlDef> = {
     run: (editor) => editor.chain().focus().toggleCode().run(),
   },
   link: {
-    content: <IconLink2 size={15} />,
+    content: <Icon name="link" size={15} />,
     isActive: (editor) => editor.isActive('link'),
     run: (editor) => {
       if (editor.isActive('link')) {
@@ -100,7 +92,7 @@ const CONTROLS: Record<string, ControlDef> = {
     run: (editor) => editor.chain().focus().insertContent('@').run(),
   },
   bulletList: {
-    content: <IconList size={15} />,
+    content: <Icon name="list" size={15} />,
     isActive: (editor) => editor.isActive('bulletList'),
     run: (editor) => editor.chain().focus().toggleBulletList().run(),
   },
@@ -112,14 +104,14 @@ const CONTROLS: Record<string, ControlDef> = {
   taskList: {
     content: (
       <span className="box-border flex h-3 w-3 items-center justify-center rounded-[3.5px] border-[1.5px] border-current">
-        <IconCheck size={8} />
+        <Icon name="check" size={8} />
       </span>
     ),
     isActive: (editor) => editor.isActive('taskList'),
     run: (editor) => editor.chain().focus().toggleTaskList().run(),
   },
   blockquote: {
-    content: <IconQuote size={15} />,
+    content: <Icon name="quote" size={15} />,
     isActive: (editor) => editor.isActive('blockquote'),
     run: (editor) => editor.chain().focus().toggleBlockquote().run(),
   },
@@ -147,12 +139,12 @@ const CONTROLS: Record<string, ControlDef> = {
     run: (editor) => editor.chain().focus().toggleHighlight().run(),
   },
   callout: {
-    content: <IconInfo size={14} />,
+    content: <Icon name="circle-info" size={14} />,
     isActive: (editor) => editor.isActive('callout'),
     run: (editor) => editor.chain().focus().toggleCallout().run(),
   },
   details: {
-    content: <IconChevronRight size={14} />,
+    content: <Icon name="chevron-right" size={14} />,
     isActive: (editor) => editor.isActive('details'),
     run: (editor) =>
       editor.isActive('details')
@@ -160,7 +152,7 @@ const CONTROLS: Record<string, ControlDef> = {
         : editor.chain().focus().setDetails().run(),
   },
   horizontalRule: {
-    content: <IconMinus size={14} />,
+    content: <Icon name="minus" size={14} />,
     run: (editor) => editor.chain().focus().setHorizontalRule().run(),
   },
 };
@@ -326,7 +318,7 @@ function BlockTypeSelect({ editor, disabled }: { editor: Editor | null; disabled
           className="mr-1 inline-flex h-6.5 flex-none items-center gap-1 rounded-[6px] px-2 text-ink-2 hover:bg-inset disabled:pointer-events-none disabled:opacity-40"
         >
           <span className="font-sans text-[12px] font-medium">{currentBlockLabel(editor)}</span>
-          <IconChevronDown size={12} />
+          <Icon name="chevron-down" size={12} />
         </button>
       </MenuTrigger>
       <MenuContent align="start" className="min-w-37.5">
@@ -380,7 +372,7 @@ function OverflowMenu({
           disabled={disabled === true || editor === null}
           className={BTN}
         >
-          <IconPlus size={15} />
+          <Icon name="plus" size={15} />
         </button>
       </MenuTrigger>
       <MenuContent align="end" className="w-54 rounded-[10px] p-1.5">
@@ -400,7 +392,7 @@ function OverflowMenu({
           <MenuItem className="h-7.5" onSelect={() => run(CONTROLS.callout!.run)}>
             <span className="inline-flex items-center gap-2.25">
               <span className="inline-flex text-ink-2">
-                <IconInfo size={14} />
+                <Icon name="circle-info" size={14} />
               </span>
               Callout
             </span>
@@ -410,7 +402,7 @@ function OverflowMenu({
           <MenuItem className="h-7.5" onSelect={() => run(CONTROLS.details!.run)}>
             <span className="inline-flex items-center gap-2.25">
               <span className="inline-flex text-ink-2">
-                <IconChevronRight size={14} />
+                <Icon name="chevron-right" size={14} />
               </span>
               Collapsible section
             </span>
@@ -420,7 +412,7 @@ function OverflowMenu({
           <MenuItem className="h-7.5" onSelect={() => run(CONTROLS.horizontalRule!.run)}>
             <span className="inline-flex items-center gap-2.25">
               <span className="inline-flex text-ink-2">
-                <IconMinus size={14} />
+                <Icon name="minus" size={14} />
               </span>
               Divider
             </span>

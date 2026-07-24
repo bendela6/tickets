@@ -3,6 +3,7 @@ import { ApiError } from '../../api/api-error';
 import type { SignalsAppRow } from '../../api/signals/signals-api';
 import { usePatchApp } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
+import { DialogFooter } from '@tickets/ui/dialog-footer';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 import { FieldLabel } from '../../ui/field-label';
 import { Input } from '../../ui/input';
@@ -86,10 +87,7 @@ export function RenameAppDialog({
         {errorMessage !== null ? (
           <p className="mt-2 font-sans text-meta text-danger">{errorMessage}</p>
         ) : null}
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => change(false)}>
-            Cancel
-          </Button>
+        <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}>
           <Button
             variant="primary"
             disabled={name.trim() === '' || name.trim() === app.name}
@@ -98,7 +96,7 @@ export function RenameAppDialog({
           >
             Save
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </DialogRoot>
   );

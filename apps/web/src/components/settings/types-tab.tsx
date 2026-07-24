@@ -5,6 +5,7 @@ import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
 import { Pill } from '@tickets/ui/pill';
+import { SectionHeader } from '@tickets/ui/section-header';
 import { SWATCHES } from '@tickets/ui/swatches';
 import { FieldLabel } from '../../ui/field-label';
 import { Input } from '../../ui/input';
@@ -343,9 +344,7 @@ export function TypesTab({ board }: SettingsTabProps) {
 
                 {!type.archivedAt ? (
                   <div className="mt-2.5">
-                    <span className="mb-1.5 block font-sans text-label font-medium uppercase text-ink-3">
-                      Allowed children
-                    </span>
+                    <SectionHeader title="Allowed children" className="mb-1.5" />
                     <ChildTypeChips
                       candidates={candidates}
                       selected={selected}

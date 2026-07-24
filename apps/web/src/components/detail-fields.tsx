@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { Board, Item } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
 import { FieldWidget } from '../registry/field-widget';
+import { SectionHeader } from '@tickets/ui/section-header';
 import { useCurrentUser } from '../state/current-user-context';
 import type { BoardIndexes } from '../utils/index-board';
 
@@ -83,16 +84,15 @@ export function DetailFields({
               layout === 'grid' ? 'flex min-w-0 items-start gap-2.5' : 'flex flex-col gap-1.25'
             }
           >
-            <span
-              className={
-                layout === 'grid'
-                  ? 'w-19 shrink-0 pt-2.5 font-sans text-label font-medium uppercase text-ink-2'
-                  : 'font-sans text-label font-medium uppercase text-ink-2'
+            <SectionHeader
+              title={
+                <>
+                  {field.label}
+                  {placement.required ? <span className="text-danger"> *</span> : null}
+                </>
               }
-            >
-              {field.label}
-              {placement.required ? <span className="text-danger"> *</span> : null}
-            </span>
+              className={layout === 'grid' ? 'w-19 shrink-0 pt-2.5' : undefined}
+            />
             <span className="min-w-0 flex-1">
               <FieldWidget
                 field={field}

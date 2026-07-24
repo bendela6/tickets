@@ -6,6 +6,7 @@ import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
 import { cn } from '@tickets/ui/cn';
 import { Pill } from '@tickets/ui/pill';
+import { SectionHeader } from '@tickets/ui/section-header';
 import { Combobox } from '../../ui/combobox';
 import type { ComboOption } from '../../ui/combobox-list';
 import { FieldLabel } from '../../ui/field-label';
@@ -433,9 +434,7 @@ export function LinksTab({ board }: SettingsTabProps) {
 
                 {!linkType.archivedAt ? (
                   <div className="mt-2.5">
-                    <span className="mb-1.5 block font-sans text-label font-medium uppercase text-ink-3">
-                      Target types
-                    </span>
+                    <SectionHeader title="Target types" className="mb-1.5" />
                     <TargetTypeChips
                       candidates={activeTypes}
                       selected={selected}

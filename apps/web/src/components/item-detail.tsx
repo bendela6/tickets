@@ -10,6 +10,7 @@ import { Button } from '../ui/button';
 import { cn } from '@tickets/ui/cn';
 import { useCopy } from '@tickets/ui/copy-button';
 import { Pill } from '@tickets/ui/pill';
+import { SectionHeader } from '@tickets/ui/section-header';
 import { Tabs } from '@tickets/ui/tabs';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../ui/menu';
 import { ItemKey } from '../ui/item-key';
@@ -27,7 +28,6 @@ import { boardSuggestions } from './rich-text/board-suggestions';
 import { RichTextEditor } from './rich-text/rich-text-editor';
 import { TicketDispatch } from './agent/ticket-dispatch';
 
-const SECTION_LABEL = 'font-sans text-label font-medium uppercase text-ink-2';
 const ICON_BUTTON =
   'inline-flex size-7.5 shrink-0 items-center justify-center rounded-[7px] border border-hairline ' +
   'bg-transparent text-ink-2 hover:bg-inset hover:text-ink';
@@ -246,7 +246,7 @@ export function ItemDetail({
 
   const descriptionSection = descriptionField ? (
     <section>
-      <div className={cn('mb-2', SECTION_LABEL)}>Description</div>
+      <SectionHeader title="Description" className="mb-2" />
       <RichTextEditor
         value={
           typeof item.values[descriptionField.key] === 'string'
@@ -389,17 +389,17 @@ export function ItemDetail({
           {childrenSection}
           {linksSection}
           <section>
-            <div className={cn('mb-3', SECTION_LABEL)}>Comments</div>
+            <SectionHeader title="Comments" className="mb-3" />
             <DetailComments indexes={indexes} item={item} prefix={prefix} onOpenItem={openItem} />
           </section>
         </div>
         <div className="flex w-80 shrink-0 flex-col gap-5">
           <section className="flex flex-col gap-3 rounded-panel border border-hairline bg-raised p-4">
-            <div className={SECTION_LABEL}>Fields — {type?.label ?? '?'} form</div>
+            <SectionHeader title={`Fields — ${type?.label ?? '?'} form`} />
             <DetailFields board={board} indexes={indexes} item={item} layout="rail" />
           </section>
           <section>
-            <div className={cn('mb-2.5', SECTION_LABEL)}>Activity</div>
+            <SectionHeader title="Activity" className="mb-2.5" />
             <DetailActivity item={item} indexes={indexes} />
           </section>
         </div>

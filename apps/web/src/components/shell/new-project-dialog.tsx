@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useCreateProject } from '../../api/use-create-project';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
+import { DialogFooter } from '@tickets/ui/dialog-footer';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 import { FieldLabel } from '../../ui/field-label';
 import { Input } from '../../ui/input';
@@ -74,10 +75,7 @@ export function NewProjectDialog({
             </div>
           </div>
         </div>
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
+        <DialogFooter cancel={<Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>}>
           <Button
             variant="primary"
             disabled={!valid || userId === null}
@@ -86,7 +84,7 @@ export function NewProjectDialog({
           >
             Create project
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </DialogRoot>
   );

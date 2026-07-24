@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { SignalsAppDetail, SignalsAppRow } from '../../api/signals/signals-api';
 import { useRotateAppKey } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
+import { DialogFooter } from '@tickets/ui/dialog-footer';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 import { FieldLabel } from '../../ui/field-label';
 import { Input } from '../../ui/input';
@@ -89,10 +90,7 @@ export function RotateKeyDialog({
                 {rotateKey.error instanceof Error ? rotateKey.error.message : 'Could not rotate the key'}
               </p>
             ) : null}
-            <div className="mt-5 flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => change(false)}>
-                Cancel
-              </Button>
+            <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}>
               <Button
                 variant="destructive"
                 disabled={typed !== app.slug}
@@ -101,7 +99,7 @@ export function RotateKeyDialog({
               >
                 Rotate key
               </Button>
-            </div>
+            </DialogFooter>
           </>
         ) : (
           <>
@@ -113,11 +111,7 @@ export function RotateKeyDialog({
               <div className="mb-1.5 font-mono text-label font-medium tracking-wide text-ink-3">NEW DSN</div>
               <DsnField dsn={rotated.dsn} />
             </div>
-            <div className="mt-5 flex justify-end">
-              <Button variant="secondary" onClick={() => change(false)}>
-                Close
-              </Button>
-            </div>
+            <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Close</Button>} />
           </>
         )}
       </DialogContent>

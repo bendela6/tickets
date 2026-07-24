@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ClearSignalsFilters, SignalsAppRow } from '../../api/signals/signals-api';
 import { useAppReleases, useClearAppSignals } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
+import { DialogFooter } from '@tickets/ui/dialog-footer';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 
 type ManagedApp = Pick<SignalsAppRow, 'id' | 'name' | 'slug'>;
@@ -179,10 +180,7 @@ export function ClearSignalsDialog({
               </p>
             ) : null}
 
-            <div className="mt-5 flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => change(false)}>
-                Cancel
-              </Button>
+            <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}>
               <Button
                 variant="destructive"
                 disabled={confirmDisabled}
@@ -191,7 +189,7 @@ export function ClearSignalsDialog({
               >
                 Clear signals
               </Button>
-            </div>
+            </DialogFooter>
           </>
         ) : (
           <>
@@ -203,11 +201,7 @@ export function ClearSignalsDialog({
                 : ''}
               .
             </p>
-            <div className="mt-5 flex justify-end">
-              <Button variant="secondary" onClick={() => change(false)}>
-                Close
-              </Button>
-            </div>
+            <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Close</Button>} />
           </>
         )}
       </DialogContent>
