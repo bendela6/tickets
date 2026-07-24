@@ -10,6 +10,7 @@
     "./runtime-style": "./src/runtime-style.ts",
     "./swatches": "./src/swatches.ts",
     "./tones": "./src/tones.ts",
+    "./icon": "./src/icons/icon.tsx",
     "./gallery": "./src/gallery/index.ts",
     "./gallery/demos": "./src/gallery/demos.ts",
     "./gallery/demo-sources": "./src/gallery/demo-sources.ts"
