@@ -34,4 +34,20 @@ describe('Tabs', () => {
     render(<Tabs items={items} value="board" onChange={() => {}} />);
     expect(screen.getByText('128')).toBeTruthy();
   });
+  it('renders a numeric 0 badge instead of swallowing it, and renders no badge element when absent', () => {
+    const zeroItems = [
+      { value: 'board', label: 'Board', badge: 0 },
+      { value: 'table', label: 'Table' },
+    ];
+    render(<Tabs items={zeroItems} value="board" onChange={() => {}} />);
+    expect(screen.getByText('0')).toBeTruthy();
+    const tableTab = screen.getByRole('tab', { name: 'Table' });
+    expect(tableTab.querySelector('span')).toBeNull();
+  });
+  it('accepts an accessible label on the tablist, omitted when unset', () => {
+    const { rerender } = render(<Tabs items={items} value="board" onChange={() => {}} label="Type" />);
+    expect(screen.getByRole('tablist', { name: 'Type' })).toBeTruthy();
+    rerender(<Tabs items={items} value="board" onChange={() => {}} />);
+    expect(screen.getByRole('tablist').hasAttribute('aria-label')).toBe(false);
+  });
 });
