@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { boolean as booleanControl, definePlayground, select, text } from './controls';
+import { boolean as booleanControl, definePlayground, select, text } from '@tickets/ui/gallery';
 import { PlaygroundCard } from './playground-card';
 
 const pg = definePlayground({

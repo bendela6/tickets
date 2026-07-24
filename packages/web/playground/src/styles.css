@@ -1,0 +1,3 @@
+@import '@tickets/ui/tokens.css';
+/* Consumers' Tailwind must scan the playground's own class literals. */
+@source './';

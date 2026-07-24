@@ -11,7 +11,7 @@ import '@fontsource/ibm-plex-sans/500.css';
 import '@fontsource/ibm-plex-sans/600.css';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
-import '@tickets/ui/tokens.css';
+import '@tickets/playground/styles.css';
 
 // Fire-and-forget: self-report errors to Signals without delaying render.
 void initWebSignals();

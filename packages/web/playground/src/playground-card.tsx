@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { initialValues, type AnyControlDef, type PlaygroundDef } from './controls';
+import { initialValues, type AnyControlDef, type PlaygroundDef } from '@tickets/ui/gallery';
 import { ControlsPanel } from './controls-panel';
 
 export function PlaygroundCard<C extends Record<string, AnyControlDef>>({
