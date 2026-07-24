@@ -14,6 +14,7 @@
     "./pill": "./src/pill.tsx",
     "./tabs": "./src/tabs.tsx",
     "./segmented-control": "./src/segmented-control.tsx",
+    "./meter": "./src/meter.tsx",
     "./gallery": "./src/gallery/index.ts",
     "./gallery/demos": "./src/gallery/demos.ts",
     "./gallery/demo-sources": "./src/gallery/demo-sources.ts"
