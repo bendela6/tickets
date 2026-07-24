@@ -7,8 +7,13 @@ import './styles.css';
 import { createRoot } from 'react-dom/client';
 import { GalleryShell } from '../src';
 import { packageDemos } from '@tickets/ui/gallery/demos';
-import { packageDemoSources } from '@tickets/ui/gallery/demo-sources';
+import { packageComponentSources, packageDemoSources } from '@tickets/ui/gallery/demo-sources';
 
 createRoot(document.getElementById('root')!).render(
-  <GalleryShell demos={packageDemos} title="@tickets/ui — gallery" sources={packageDemoSources} />,
+  <GalleryShell
+    demos={packageDemos}
+    title="@tickets/ui — gallery"
+    sources={packageDemoSources}
+    implSources={packageComponentSources}
+  />,
 );

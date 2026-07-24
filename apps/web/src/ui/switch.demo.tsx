@@ -1,7 +1,7 @@
 import { boolean, definePlayground, text } from '@tickets/ui/gallery';
 import { Switch } from './switch';
 
-export const meta = { title: 'Switch', group: 'Form controls' };
+export const meta = { title: 'Switch', group: 'Form controls', size: 'sm' };
 
 export const states = [
   { name: 'on', render: () => <Switch label="KPI strip" defaultChecked /> },

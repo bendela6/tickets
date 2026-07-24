@@ -1,43 +1,98 @@
-import { useCallback, useRef, useState } from 'react';
-import { Group, Panel, Separator, type Layout } from 'react-resizable-panels';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Group,
+  Panel,
+  Separator,
+  type Layout,
+  type PanelImperativeHandle,
+} from 'react-resizable-panels';
 import { cn } from '@tickets/ui/cn';
+import { Icon } from '@tickets/ui/icon';
 import { initialValues, type CollectedDemo } from '@tickets/ui/gallery';
 import { Tabs } from '@tickets/ui/tabs';
 import { A11yTab } from './a11y-tab';
 import { getAxe } from './axe';
-import { CodeTab } from './code-tab';
 import { ControlsPanel } from './controls-panel';
-import { loadLayout, saveLayout } from './persisted-layout';
+import { DemoTab } from './demo-tab';
+import { GeneratedCode } from './generated-code';
+import { ImplTab, type ImplSources } from './impl-tab';
+import { loadFlag, loadLayout, saveFlag, saveLayout } from './persisted-layout';
 import { MatrixMode } from './matrix-mode';
 import { PlaygroundCard } from './playground-card';
 import { PropsTable } from './props-table';
-import { SourceTab } from './source-tab';
 import { StateGrid } from './state-grid';
 import { ThemeSplit } from './theme-split';
 
 // v4's replacement for v2's `autoSaveId`: the app owns storage. Panel ids
 // below ("stage" / "controls") must stay stable — they're the keys `Layout`
-// persists under.
-const WORKBENCH_LAYOUT_KEY = 'playground-workbench';
+// persists under. The `-v2` suffix retires layouts saved against the old
+// percentage-based rail, which read as far too wide once the shell went
+// full-bleed.
+const WORKBENCH_LAYOUT_KEY = 'playground-workbench-v2';
+const WORKBENCH_COLLAPSED_KEY = 'playground-workbench-collapsed';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
 const TABS = [
   { key: 'preview', label: 'Preview' },
-  { key: 'code', label: 'Code' },
-  { key: 'source', label: 'Source' },
+  { key: 'props', label: 'Props' },
+  { key: 'impl', label: 'Implementation' },
+  { key: 'demo', label: 'Demo' },
   { key: 'a11y', label: 'A11y' },
 ] as const;
 
 type TabKey = (typeof TABS)[number]['key'];
 
+function Toggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-2 font-sans text-ui text-ink-2">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="sr-only"
+      />
+      <span
+        className={cn(
+          'relative inline-block h-4.5 w-8 rounded-full',
+          checked ? 'bg-accent' : 'bg-control',
+        )}
+      >
+        <span
+          className={cn(
+            'absolute top-0.5 h-3.5 w-3.5 rounded-full bg-raised transition-all',
+            checked ? 'right-0.5' : 'left-0.5',
+          )}
+        />
+      </span>
+      <span>{label}</span>
+    </label>
+  );
+}
 
-// One component's doc page (design: docs/design/pulls/playground-workbench.dc.html
-// lines 103-188). Underline tab strip over Preview/Code/Source/A11y; Preview
-// splits into a resizable stage (states + playground + props) and a controls
-// rail. Non-active tabs stay mounted (`hidden`, not unmounted) so playground
-// values survive switching away and back — verified by component-page.test.tsx.
-export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: string }) {
+// One component's doc page. Underline tab strip over
+// Preview/Props/Implementation/Demo/A11y; Preview splits into a resizable
+// stage (states + playground + the generated code for the current controls)
+// and a collapsible controls rail. Non-active tabs stay mounted (`hidden`,
+// not unmounted) so playground values survive switching away and back —
+// verified by component-page.test.tsx.
+export function ComponentPage({
+  demo,
+  source,
+  implSources,
+}: {
+  demo: LiveDemo;
+  source?: string;
+  implSources?: ImplSources;
+}) {
   const [tab, setTab] = useState<TabKey>('preview');
   const { playground } = demo;
   const [values, setValues] = useState<Record<string, unknown>>(() =>
@@ -48,6 +103,27 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
   const [matrixMode, setMatrixMode] = useState(false);
   const [auditing, setAuditing] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
+
+  // The rail's collapsed-ness is ours to drive (button) and the library's to
+  // report (drag past minSize), so it lives in React state and is pushed into
+  // the panel imperatively — the panel has no controlled `collapsed` prop.
+  const controlsRef = useRef<PanelImperativeHandle | null>(null);
+  const [controlsCollapsed, setControlsCollapsed] = useState(
+    () => loadFlag(WORKBENCH_COLLAPSED_KEY) ?? false,
+  );
+  useEffect(() => {
+    const panel = controlsRef.current;
+    if (!panel) return;
+    if (controlsCollapsed !== panel.isCollapsed()) {
+      if (controlsCollapsed) panel.collapse();
+      else panel.expand();
+    }
+  }, [controlsCollapsed]);
+
+  function setCollapsed(next: boolean) {
+    setControlsCollapsed(next);
+    saveFlag(WORKBENCH_COLLAPSED_KEY, next);
+  }
 
   // axe-core's default excludeHidden skips display:none subtrees entirely,
   // so the preview must be genuinely visible while the audit walks it — the
@@ -96,9 +172,10 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between gap-6 border-b border-hairline pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-hairline pb-2">
         <Tabs
           variant="underline"
+          label={`${demo.meta.title} views`}
           className="border-b-0"
           items={TABS.map(({ key, label }) => ({ value: key, label }))}
           value={tab}
@@ -106,55 +183,20 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
         />
         {tab === 'preview' && playground && (
           <div className="flex items-center gap-4">
-            {/* Split themes toggle */}
-            <label className="flex items-center gap-2 font-sans text-ui text-ink-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={splitThemes}
-                onChange={(e) => setSplitThemes(e.target.checked)}
-                className="sr-only"
-              />
-              <span
-                className={cn(
-                  'inline-block w-8 h-4.5 rounded-full relative',
-                  splitThemes ? 'bg-accent' : 'bg-control',
-                )}
-              >
-                <span
-                  className={cn(
-                    'absolute top-0.5 w-3.5 h-3.5 rounded-full bg-raised transition-all',
-                    splitThemes ? 'right-0.5' : 'left-0.5',
-                  )}
-                />
-              </span>
-              <span>Split themes</span>
-            </label>
-
+            <Toggle label="Split themes" checked={splitThemes} onChange={setSplitThemes} />
             {/* Matrix mode toggle - only visible if ≥2 select controls */}
             {selectKeys.length >= 2 && (
-              <label className="flex items-center gap-2 font-sans text-ui text-ink-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={matrixMode}
-                  onChange={(e) => setMatrixMode(e.target.checked)}
-                  className="sr-only"
-                />
-                <span
-                  className={cn(
-                    'inline-block w-8 h-4.5 rounded-full relative',
-                    matrixMode ? 'bg-accent' : 'bg-control',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'absolute top-0.5 w-3.5 h-3.5 rounded-full bg-raised transition-all',
-                      matrixMode ? 'right-0.5' : 'left-0.5',
-                    )}
-                  />
-                </span>
-                <span>Matrix</span>
-              </label>
+              <Toggle label="Matrix" checked={matrixMode} onChange={setMatrixMode} />
             )}
+            <button
+              type="button"
+              aria-expanded={!controlsCollapsed}
+              onClick={() => setCollapsed(!controlsCollapsed)}
+              className="inline-flex h-6.5 items-center gap-1.5 rounded-ctrl border border-control bg-raised px-2 font-sans text-label font-medium text-ink-2 hover:text-ink"
+            >
+              <Icon name={controlsCollapsed ? 'chevron-left' : 'chevron-right'} size={12} />
+              {controlsCollapsed ? 'Show controls' : 'Hide controls'}
+            </button>
           </div>
         )}
       </div>
@@ -169,7 +211,7 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
               if (meta.isUserInteraction) saveLayout(WORKBENCH_LAYOUT_KEY, layout);
             }}
           >
-            <Panel id="stage" defaultSize="70">
+            <Panel id="stage">
               <div className="flex flex-col gap-6 pr-6">
                 {matrixMode ? (
                   <MatrixMode
@@ -186,17 +228,29 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
                   <StateGrid demo={demo} />
                 )}
                 <PlaygroundCard ref={previewRef} playground={playground} values={values} />
-                <div className="flex flex-col gap-2.5">
-                  <div className="font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3">
-                    PROPS
-                  </div>
-                  <PropsTable controls={playground.controls} />
-                </div>
+                <GeneratedCode demo={demo} values={values} />
               </div>
             </Panel>
             <Separator className="workbench-resize-handle" />
-            <Panel id="controls" defaultSize="30" minSize="20" maxSize="34">
-              <div className="flex h-full flex-col pl-6">
+            {/* Pixel sizes, not percentages: on a full-bleed shell a 30% rail
+                grows with the viewport for no reason. `preserve-pixel-size`
+                keeps that width through window resizes (the stage stays
+                relative, which the group requires of at least one panel). */}
+            <Panel
+              id="controls"
+              panelRef={controlsRef}
+              defaultSize={310}
+              minSize={240}
+              maxSize={520}
+              collapsible
+              collapsedSize={0}
+              groupResizeBehavior="preserve-pixel-size"
+              onResize={(size) => {
+                const collapsed = size.inPixels === 0;
+                if (collapsed !== controlsCollapsed) setCollapsed(collapsed);
+              }}
+            >
+              <div className={cn('flex h-full flex-col pl-6', controlsCollapsed && 'hidden')}>
                 <div className="flex items-center justify-between pb-2.5">
                   <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3">
                     CONTROLS
@@ -226,12 +280,18 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
         )}
       </div>
 
-
-      <div className={tab === 'code' ? '' : 'hidden'}>
-        <CodeTab demo={demo} values={values} />
+      <div className={tab === 'props' ? '' : 'hidden'}>
+        {playground ? (
+          <PropsTable controls={playground.controls} />
+        ) : (
+          <p className="font-sans text-meta text-ink-3">This component has no playground controls.</p>
+        )}
       </div>
-      <div className={tab === 'source' ? '' : 'hidden'}>
-        <SourceTab demo={demo} source={source} />
+      <div className={tab === 'impl' ? '' : 'hidden'}>
+        <ImplTab demo={demo} sources={implSources} />
+      </div>
+      <div className={tab === 'demo' ? '' : 'hidden'}>
+        <DemoTab demo={demo} source={source} />
       </div>
       <div className={tab === 'a11y' ? '' : 'hidden'}>
         {playground && <A11yTab runAudit={runAudit} />}

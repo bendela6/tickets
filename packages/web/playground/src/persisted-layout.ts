@@ -30,3 +30,26 @@ export function saveLayout(key: string, layout: Layout): void {
     // Storage unavailable/full — persistence is a nice-to-have, not fatal.
   }
 }
+
+// Collapsed-ness can't ride along in the Layout: a collapsed panel's size is
+// 0 either way, so the stored layout can't tell "user collapsed it" from "the
+// group hasn't measured yet". It gets its own flag.
+export function loadFlag(key: string): boolean | undefined {
+  let raw: string | null;
+  try {
+    raw = localStorage.getItem(key);
+  } catch {
+    return undefined;
+  }
+  if (raw === 'true') return true;
+  if (raw === 'false') return false;
+  return undefined;
+}
+
+export function saveFlag(key: string, value: boolean): void {
+  try {
+    localStorage.setItem(key, String(value));
+  } catch {
+    // See saveLayout.
+  }
+}

@@ -1,7 +1,7 @@
 import { definePlayground, boolean, text } from './gallery';
 import { DialogFooter } from './dialog-footer';
 
-export const meta = { title: 'DialogFooter', group: 'Display' };
+export const meta = { title: 'DialogFooter', group: 'Display', size: 'lg' };
 
 function GhostButton({ children }: { children: string }) {
   return (

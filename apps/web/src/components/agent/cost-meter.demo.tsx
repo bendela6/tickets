@@ -25,7 +25,7 @@ function CostMeterPlaygroundFixture({
   return <CostMeter costUsd={costUsd} capUsd={capped ? capUsd : undefined} />;
 }
 
-export const meta = { title: 'Cost Meter', group: 'AI session' };
+export const meta = { title: 'Cost Meter', group: 'AI session', size: 'md' };
 
 export const states = [
   { name: 'uncapped', render: () => <UncappedFixture /> },

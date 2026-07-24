@@ -35,7 +35,7 @@ describe('GalleryShell v2', () => {
     expect(screen.getByText('play')).toBeTruthy();
     // ComponentPage's tab strip, with Preview active by default.
     expect(screen.getByRole('tab', { name: 'Preview' })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: 'Code' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Props' })).toBeTruthy();
   });
 
   it('selecting a demo without a playground still routes through ComponentPage but shows no rail', () => {

@@ -1,4 +1,4 @@
-import { loadLayout, saveLayout } from './persisted-layout';
+import { loadFlag, loadLayout, saveFlag, saveLayout } from './persisted-layout';
 
 describe('persisted-layout', () => {
   afterEach(() => {
@@ -26,5 +26,20 @@ describe('persisted-layout', () => {
     expect(loadLayout('k')).toBeUndefined();
     localStorage.setItem('k', JSON.stringify(null));
     expect(loadLayout('k')).toBeUndefined();
+  });
+
+  it('saveFlag then loadFlag round-trips both booleans', () => {
+    saveFlag('f', true);
+    expect(loadFlag('f')).toBe(true);
+    saveFlag('f', false);
+    expect(loadFlag('f')).toBe(false);
+  });
+
+  it('loadFlag returns undefined (not false) when unset or unrecognised', () => {
+    // The caller distinguishes "never chosen" from "chosen false" to decide
+    // whether to apply a default, so an unset key must not read as false.
+    expect(loadFlag('f')).toBeUndefined();
+    localStorage.setItem('f', 'yes');
+    expect(loadFlag('f')).toBeUndefined();
   });
 });

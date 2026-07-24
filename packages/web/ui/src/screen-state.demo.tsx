@@ -3,7 +3,7 @@ import { TONE_NAMES } from './tones';
 import { ICON_NAMES } from './icons/registry';
 import { ScreenState } from './screen-state';
 
-export const meta = { title: 'ScreenState', group: 'Display' };
+export const meta = { title: 'ScreenState', group: 'Display', size: 'lg' };
 
 export const states = [
   {

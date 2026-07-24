@@ -36,7 +36,7 @@ function PlaygroundFixture({ label }: { label: string }) {
   );
 }
 
-export const meta = { title: 'RadioGroup', group: 'Form controls' };
+export const meta = { title: 'RadioGroup', group: 'Form controls', size: 'lg' };
 
 export const states = [
   { name: 'density', render: () => <DensityFixture /> },

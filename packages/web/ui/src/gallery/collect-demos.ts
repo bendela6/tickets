@@ -1,4 +1,4 @@
-import type { CollectedDemo, DemoModule } from './types';
+import { DEMO_SIZES, type CollectedDemo, type DemoModule, type DemoSize } from './types';
 
 export function kebab(s: string): string {
   return s
@@ -15,6 +15,16 @@ function validate(mod: unknown): { ok: true; demo: DemoModule } | { ok: false; e
   }
   if (!m.meta || typeof m.meta.title !== 'string' || typeof m.meta.group !== 'string') {
     return { ok: false, error: 'missing meta { title, group }' };
+  }
+  const { size, impl } = m.meta;
+  if (size !== undefined && !DEMO_SIZES.includes(size as DemoSize)) {
+    return { ok: false, error: `meta.size must be one of ${DEMO_SIZES.join(' | ')}` };
+  }
+  if (impl !== undefined) {
+    const paths = Array.isArray(impl) ? impl : [impl];
+    if (paths.length === 0 || paths.some((p) => typeof p !== 'string' || p === '')) {
+      return { ok: false, error: 'meta.impl must be a non-empty path or array of paths' };
+    }
   }
   for (const s of m.states) {
     if (typeof s?.name !== 'string' || typeof s?.render !== 'function') {
@@ -66,6 +76,18 @@ export function prepareDemos(demos: CollectedDemo[]): CollectedDemo[] {
     return d;
   });
   return sortDemos(guarded);
+}
+
+// `import.meta.glob` keys are relative to the module that globbed them
+// ("../pill.demo.tsx"), so two packages' maps share a key space they never
+// agreed on — @tickets/ui's `../cn.ts` and apps/web's `../app.tsx` are both
+// one level up from *different* directories, and merging the maps lets one
+// shadow the other. Rebasing each onto its workspace-relative root makes
+// every key unique, and readable while we're at it.
+export function rebaseGlobKeys<T>(root: string, glob: Record<string, T>): Record<string, T> {
+  return Object.fromEntries(
+    Object.entries(glob).map(([key, value]) => [`${root}/${key.replace(/^\.\.\//, '')}`, value]),
+  );
 }
 
 export function collectDemos(glob: Record<string, unknown>): CollectedDemo[] {

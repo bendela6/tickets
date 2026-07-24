@@ -59,12 +59,18 @@ vi.mock('react-resizable-panels', () => ({
     defaultSize,
     minSize,
     maxSize,
+    collapsible,
+    collapsedSize,
+    onResize,
   }: {
     children: ReactNode;
     id?: string;
     defaultSize?: string | number;
     minSize?: string | number;
     maxSize?: string | number;
+    collapsible?: boolean;
+    collapsedSize?: string | number;
+    onResize?: (size: { asPercentage: number; inPixels: number }) => void;
   }) => (
     <div
       data-testid="panel"
@@ -72,7 +78,18 @@ vi.mock('react-resizable-panels', () => ({
       data-default-size={defaultSize}
       data-min-size={minSize}
       data-max-size={maxSize}
+      data-collapsible={collapsible ? 'true' : undefined}
+      data-collapsed-size={collapsedSize}
     >
+      {/* Stands in for dragging the separator past minSize, which is how the
+          library itself collapses a panel — jsdom can't do a real drag. */}
+      {onResize && (
+        <button
+          type="button"
+          data-testid={`simulate-drag-collapse-${id}`}
+          onClick={() => onResize({ asPercentage: 0, inPixels: 0 })}
+        />
+      )}
       {children}
     </div>
   ),
@@ -111,41 +128,60 @@ describe('ComponentPage', () => {
     render(<ComponentPage demo={demo} />);
     expect(screen.getByRole('tablist')).toBeTruthy();
     const preview = screen.getByRole('tab', { name: 'Preview' });
-    const code = screen.getByRole('tab', { name: 'Code' });
-    expect(screen.getByRole('tab', { name: 'Source' })).toBeTruthy();
+    const props = screen.getByRole('tab', { name: 'Props' });
+    expect(screen.getByRole('tab', { name: 'Implementation' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Demo' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'A11y' })).toBeTruthy();
+    // The generated snippet moved onto the Preview stage, so there is no
+    // separate Code tab to duplicate it.
+    expect(screen.queryByRole('tab', { name: 'Code' })).toBeNull();
     expect(preview.className).toContain('border-accent');
-    expect(code.className).not.toContain('border-accent');
+    expect(props.className).not.toContain('border-accent');
     expect(preview.getAttribute('aria-selected')).toBe('true');
-    expect(code.getAttribute('aria-selected')).toBe('false');
+    expect(props.getAttribute('aria-selected')).toBe('false');
+  });
+
+  it('shows the generated code for the current controls on the Preview stage', () => {
+    const { container } = render(<ComponentPage demo={demo} />);
+    const previewWrapper = container.firstElementChild!.children[1] as HTMLElement;
+
+    expect(within(previewWrapper).getByText('CODE')).toBeTruthy();
+    expect(within(previewWrapper).getByText(/<Button \/>/)).toBeTruthy();
+
+    // A control change is reflected without leaving the tab — the whole point
+    // of hosting the snippet next to the playground.
+    fireEvent.change(screen.getByLabelText('variant'), { target: { value: 'secondary' } });
+    expect(within(previewWrapper).getByText(/variant="secondary"/)).toBeTruthy();
+
+    // The props table is no longer on this stage; it has its own tab.
+    expect(within(previewWrapper).queryByText('Options / range')).toBeNull();
   });
 
   it('switching tabs hides (not unmounts) the preview and preserves playground state', () => {
     const { container } = render(<ComponentPage demo={demo} />);
-    // ComponentPage's outer div: [0] tab strip, [1] preview pane, [2] code
-    // pane, [3] source pane, [4] a11y pane — each pane toggles `hidden`.
+    // ComponentPage's outer div: [0] tab strip, [1] preview pane, [2] props
+    // pane, [3] implementation pane, [4] demo pane, [5] a11y pane — each pane
+    // toggles `hidden`.
     const root = container.firstElementChild!;
     const previewWrapper = root.children[1] as HTMLElement;
-    const codeWrapper = root.children[2] as HTMLElement;
+    const propsWrapper = root.children[2] as HTMLElement;
 
     fireEvent.change(screen.getByLabelText('variant'), { target: { value: 'secondary' } });
     expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('secondary');
     expect(previewWrapper.className).toBe('');
-    expect(codeWrapper.className).toBe('hidden');
+    expect(propsWrapper.className).toBe('hidden');
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Code' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Props' }));
     expect(previewWrapper.className).toBe('hidden');
-    expect(codeWrapper.className).toBe('');
-    // Code tab reflects the live control values (variant changed above), not
-    // the old "Coming in this build." placeholder — see code-tab.test.tsx for
-    // the full snippet-generation/highlighting behavior.
-    expect(within(codeWrapper).getByText(/variant="secondary"/)).toBeTruthy();
+    expect(propsWrapper.className).toBe('');
+    expect(within(propsWrapper).getByText('Options / range')).toBeTruthy();
+    expect(within(propsWrapper).getByText('variant')).toBeTruthy();
     // Preview content is still in the DOM (hidden), not unmounted.
     expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('secondary');
 
     fireEvent.click(screen.getByRole('tab', { name: 'Preview' }));
     expect(previewWrapper.className).toBe('');
-    expect(codeWrapper.className).toBe('hidden');
+    expect(propsWrapper.className).toBe('hidden');
     expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('secondary');
     expect((screen.getByLabelText('variant') as HTMLSelectElement).value).toBe('secondary');
   });
@@ -164,7 +200,7 @@ describe('ComponentPage', () => {
     expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('primary');
   });
 
-  it('wires the Preview Group with id="playground-workbench" and the documented split', () => {
+  it('wires the Preview Group with id="playground-workbench" and a collapsible pixel-sized rail', () => {
     render(<ComponentPage demo={demo} />);
     const group = screen.getByTestId('panel-group');
     expect(group.dataset.id).toBe('playground-workbench');
@@ -173,30 +209,82 @@ describe('ComponentPage', () => {
     const panels = screen.getAllByTestId('panel');
     expect(panels).toHaveLength(2);
     expect(panels[0]?.dataset.id).toBe('stage');
-    expect(panels[0]?.dataset.defaultSize).toBe('70');
     expect(panels[1]?.dataset.id).toBe('controls');
-    expect(panels[1]?.dataset.defaultSize).toBe('30');
-    expect(panels[1]?.dataset.minSize).toBe('20');
-    expect(panels[1]?.dataset.maxSize).toBe('34');
+    // Pixel sizes (numbers), not percentages — a % rail grows with the
+    // viewport now that the shell is full-bleed.
+    expect(panels[1]?.dataset.defaultSize).toBe('310');
+    expect(panels[1]?.dataset.minSize).toBe('240');
+    expect(panels[1]?.dataset.maxSize).toBe('520');
+    expect(panels[1]?.dataset.collapsible).toBe('true');
+    expect(panels[1]?.dataset.collapsedSize).toBe('0');
   });
 
-  it('feeds defaultLayout from localStorage("playground-workbench") into the Group', () => {
-    localStorage.setItem('playground-workbench', JSON.stringify({ stage: 60, controls: 40 }));
+  it('feeds defaultLayout from localStorage("playground-workbench-v2") into the Group', () => {
+    localStorage.setItem('playground-workbench-v2', JSON.stringify({ stage: 60, controls: 40 }));
     render(<ComponentPage demo={demo} />);
     const group = screen.getByTestId('panel-group');
     expect(group.dataset.defaultLayout).toBe(JSON.stringify({ stage: 60, controls: 40 }));
+  });
+
+  it('ignores a layout saved under the retired percentage-era key', () => {
+    localStorage.setItem('playground-workbench', JSON.stringify({ stage: 60, controls: 40 }));
+    render(<ComponentPage demo={demo} />);
+    expect(screen.getByTestId('panel-group').dataset.defaultLayout).toBeUndefined();
   });
 
   it('persists the layout on onLayoutChanged only when isUserInteraction is true', () => {
     render(<ComponentPage demo={demo} />);
 
     fireEvent.click(screen.getByTestId('simulate-programmatic-layout'));
-    expect(localStorage.getItem('playground-workbench')).toBeNull();
+    expect(localStorage.getItem('playground-workbench-v2')).toBeNull();
 
     fireEvent.click(screen.getByTestId('simulate-user-resize'));
-    expect(localStorage.getItem('playground-workbench')).toBe(
+    expect(localStorage.getItem('playground-workbench-v2')).toBe(
       JSON.stringify({ stage: 65, controls: 35 }),
     );
+  });
+
+  describe('collapsible controls rail', () => {
+    function railBody() {
+      const panel = screen.getAllByTestId('panel')[1]!;
+      // The rail's own wrapper — hidden while collapsed so its content can't
+      // be tabbed into behind a zero-width panel. Matched on h-full rather
+      // than flex: `hidden` and `flex` are both display utilities, so twMerge
+      // drops `flex` from the class list when the rail collapses.
+      return panel.querySelector('div.h-full') as HTMLElement;
+    }
+
+    it('toggles the rail and persists the choice', () => {
+      render(<ComponentPage demo={demo} />);
+      const toggle = screen.getByRole('button', { name: /hide controls/i });
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+      expect(railBody().className).not.toContain('hidden');
+
+      fireEvent.click(toggle);
+      const reopened = screen.getByRole('button', { name: /show controls/i });
+      expect(reopened.getAttribute('aria-expanded')).toBe('false');
+      expect(railBody().className).toContain('hidden');
+      expect(localStorage.getItem('playground-workbench-collapsed')).toBe('true');
+
+      fireEvent.click(reopened);
+      expect(screen.getByRole('button', { name: /hide controls/i })).toBeTruthy();
+      expect(railBody().className).not.toContain('hidden');
+      expect(localStorage.getItem('playground-workbench-collapsed')).toBe('false');
+    });
+
+    it('restores a persisted collapsed rail on mount', () => {
+      localStorage.setItem('playground-workbench-collapsed', 'true');
+      render(<ComponentPage demo={demo} />);
+      expect(screen.getByRole('button', { name: /show controls/i })).toBeTruthy();
+      expect(railBody().className).toContain('hidden');
+    });
+
+    it('follows a collapse driven by dragging the separator, not just the button', () => {
+      render(<ComponentPage demo={demo} />);
+      fireEvent.click(screen.getByTestId('simulate-drag-collapse-controls'));
+      expect(screen.getByRole('button', { name: /show controls/i })).toBeTruthy();
+      expect(localStorage.getItem('playground-workbench-collapsed')).toBe('true');
+    });
   });
 
   it('renders Split themes toggle in header when on Preview tab', () => {
@@ -206,7 +294,7 @@ describe('ComponentPage', () => {
 
   it('hides Split themes toggle when not on Preview tab', () => {
     render(<ComponentPage demo={demo} />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Code' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Props' }));
     expect(screen.queryByLabelText('Split themes')).toBeNull();
   });
 

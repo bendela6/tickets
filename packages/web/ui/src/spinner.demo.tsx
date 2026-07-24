@@ -2,7 +2,7 @@ import { definePlayground, number, select } from './gallery';
 import { TONE_NAMES } from './tones';
 import { Spinner } from './spinner';
 
-export const meta = { title: 'Spinner', group: 'Display' };
+export const meta = { title: 'Spinner', group: 'Display', size: 'md' };
 
 export const states = [
   {
@@ -17,9 +17,11 @@ export const states = [
     ),
   },
   {
+    // Wraps like the Icon registry does: this enumerates every tone, so it's
+    // a grid of samples rather than a row that should widen its container.
     name: 'Tones',
     render: () => (
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         {TONE_NAMES.map((tone) => (
           <Spinner key={tone} tone={tone} />
         ))}

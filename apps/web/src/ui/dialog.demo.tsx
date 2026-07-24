@@ -53,7 +53,7 @@ function DialogPlaygroundFixture({
   );
 }
 
-export const meta = { title: 'Dialog', group: 'Overlays' };
+export const meta = { title: 'Dialog', group: 'Overlays', size: 'sm' };
 
 export const states = [{ name: 'confirm dialog', render: () => <DialogFixture /> }];
 

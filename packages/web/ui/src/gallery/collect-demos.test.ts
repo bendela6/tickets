@@ -1,5 +1,6 @@
-import { collectDemos, kebab, prepareDemos } from './collect-demos';
+import { collectDemos, kebab, prepareDemos, rebaseGlobKeys } from './collect-demos';
 import { isDemoError } from './types';
+import { UI_SRC_ROOT, WEB_SRC_ROOT } from './roots';
 import { boolean as booleanControl, definePlayground } from './controls';
 
 const good = (title: string, group: string, order?: number) => ({
@@ -112,12 +113,73 @@ describe('prepareDemos duplicate-slug guard', () => {
   });
 });
 
+describe('rebaseGlobKeys', () => {
+  it('strips the leading `../` and prefixes the workspace root', () => {
+    expect(rebaseGlobKeys(UI_SRC_ROOT, { '../pill.tsx': 1, '../icons/icon.tsx': 2 })).toEqual({
+      'packages/web/ui/src/pill.tsx': 1,
+      'packages/web/ui/src/icons/icon.tsx': 2,
+    });
+  });
+
+  it('keeps two packages from shadowing each other when the maps merge', () => {
+    // Both globs produce the key `../app.tsx` from *different* directories.
+    // Un-rebased, the merge silently drops one; rebased, both survive.
+    const ui = { '../app.tsx': 'ui-file' };
+    const web = { '../app.tsx': 'web-file' };
+    expect(Object.keys({ ...ui, ...web })).toHaveLength(1);
+    const merged = {
+      ...rebaseGlobKeys(UI_SRC_ROOT, ui),
+      ...rebaseGlobKeys(WEB_SRC_ROOT, web),
+    };
+    expect(merged['packages/web/ui/src/app.tsx']).toBe('ui-file');
+    expect(merged['apps/web/src/app.tsx']).toBe('web-file');
+  });
+});
+
+describe('meta.size and meta.impl validation', () => {
+  const base = { states: [{ name: 's', render: () => null }] };
+
+  it('carries a valid size and impl through', () => {
+    const out = collectDemos({
+      a: { ...base, meta: { title: 'B', group: 'G', size: 'full', impl: ['./a.tsx', './b.tsx'] } },
+    });
+    const d = out[0]!;
+    if (isDemoError(d)) throw new Error(d.error);
+    expect(d.meta.size).toBe('full');
+    expect(d.meta.impl).toEqual(['./a.tsx', './b.tsx']);
+  });
+
+  it('rejects an unknown size instead of silently falling back', () => {
+    const out = collectDemos({ a: { ...base, meta: { title: 'B', group: 'G', size: 'huge' } } });
+    expect(isDemoError(out[0]!)).toBe(true);
+    if (isDemoError(out[0]!)) expect(out[0]!.error).toMatch(/meta\.size/);
+  });
+
+  it('rejects an empty or non-string impl', () => {
+    for (const impl of [[], '', [123]]) {
+      const out = collectDemos({ a: { ...base, meta: { title: 'B', group: 'G', impl } } });
+      expect(isDemoError(out[0]!)).toBe(true);
+      if (isDemoError(out[0]!)) expect(out[0]!.error).toMatch(/meta\.impl/);
+    }
+  });
+});
+
 describe('CollectedDemo path field', () => {
   it('exposes the glob key as path on success entries', () => {
     const out = collectDemos({ './x/button.demo.tsx': { meta: { title: 'Button', group: 'G' }, states: [{ name: 's', render: () => null }] } });
     const d = out[0]!;
     if (isDemoError(d)) throw new Error(d.error);
     expect(d.path).toBe('./x/button.demo.tsx');
+  });
+
+  it('rebased demo paths still align with a sources map rebased the same way', () => {
+    const glob = { '../button.demo.tsx': { meta: { title: 'Button', group: 'G' }, states: [{ name: 's', render: () => null }] } };
+    const demos = collectDemos(rebaseGlobKeys(UI_SRC_ROOT, glob));
+    const sources = rebaseGlobKeys(UI_SRC_ROOT, { '../button.demo.tsx': 'src' });
+    const d = demos[0]!;
+    if (isDemoError(d)) throw new Error(d.error);
+    expect(d.path).toBe('packages/web/ui/src/button.demo.tsx');
+    expect(sources[d.path]).toBe('src');
   });
 
   it('demo paths align with a sources map sharing the same glob keys', () => {

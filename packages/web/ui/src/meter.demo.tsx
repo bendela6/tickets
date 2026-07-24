@@ -2,7 +2,7 @@ import { definePlayground, number, select } from './gallery';
 import { TONE_NAMES } from './tones';
 import { Meter } from './meter';
 
-export const meta = { title: 'Meter', group: 'Display' };
+export const meta = { title: 'Meter', group: 'Display', size: 'sm' };
 
 export const states = [
   {
