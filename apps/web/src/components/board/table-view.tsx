@@ -7,6 +7,7 @@ import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { Meter } from '@tickets/ui/meter';
 import { Pill } from '@tickets/ui/pill';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
 import { StatusSelect } from '../../ui/status-select';
@@ -112,12 +113,9 @@ function ProgressCell({ ticket, indexes }: { ticket: Item; indexes: BoardIndexes
   if (!any || total === 0) {
     return <span className="font-sans text-ui text-ink-3">—</span>;
   }
-  const percent = Math.round((done / total) * 100);
   return (
     <span className="inline-flex items-center gap-1.75" title={`${done} of ${total} subtasks done`}>
-      <span className="inline-flex h-1 w-9 shrink-0 overflow-hidden rounded-xs bg-inset">
-        <span className="h-full bg-opt-green" style={{ width: `${percent}%` }} />
-      </span>
+      <Meter tone="green" value={done} max={total} className="w-9" />
       <span className="font-mono text-[11px] text-ink-2">
         {done}/{total}
       </span>

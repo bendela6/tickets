@@ -3,6 +3,7 @@ import { Link, useMatchRoute, useNavigate } from '@tanstack/react-router';
 import { useProjects } from '../../api/use-projects';
 import { useProjectStats } from '../../api/use-project-stats';
 import { cn } from '@tickets/ui/cn';
+import { Meter } from '@tickets/ui/meter';
 import { NewProjectDialog } from './new-project-dialog';
 
 function navItemClasses(active: boolean) {
@@ -102,9 +103,7 @@ export function TasksPanel({
                 {project.itemPrefix}
               </span>
               <span className="flex-1 truncate">{project.name}</span>
-              <span className="inline-flex h-0.75 w-6.5 overflow-hidden rounded-[2px] bg-hairline">
-                <span className="bg-opt-green" style={{ width: `${stat?.pct ?? 0}%` }} />
-              </span>
+              <Meter tone="green" value={stat?.pct ?? 0} max={100} className="w-6.5" />
             </Link>
           );
         })}

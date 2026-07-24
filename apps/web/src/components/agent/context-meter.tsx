@@ -1,4 +1,5 @@
 import { cn } from '@tickets/ui/cn';
+import { Meter } from '@tickets/ui/meter';
 import { formatTokens } from './agent-models';
 
 // Context-window fill + cumulative output tokens, shown beside the CostMeter in
@@ -18,7 +19,6 @@ export function ContextMeter({
   className?: string;
 }) {
   if (contextTokens == null) return null;
-  const pct = Math.min(100, (contextTokens / contextWindow) * 100);
   const hot = contextTokens >= contextWindow * 0.9;
   return (
     <span
@@ -38,9 +38,7 @@ export function ContextMeter({
         <span aria-hidden="true">▣ </span>
         {formatTokens(contextTokens)} / {formatTokens(contextWindow)}
       </span>
-      <span className="inline-flex h-1 w-9 overflow-hidden rounded-full bg-inset">
-        <span className={cn('h-full', hot ? 'bg-danger' : 'bg-accent')} style={{ width: `${pct}%` }} />
-      </span>
+      <Meter value={contextTokens} max={contextWindow} dangerAt={contextWindow * 0.9} />
       <span className="font-mono text-meta text-ink-3" title="output tokens generated">
         <span aria-hidden="true">↓ </span>
         {formatTokens(tokensOut)}

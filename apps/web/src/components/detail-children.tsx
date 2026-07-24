@@ -7,6 +7,7 @@ import { KIND_ICON, KIND_TONE } from '../domain/status';
 import { useCurrentUser } from '../state/current-user-context';
 import { cn } from '@tickets/ui/cn';
 import { Icon } from '@tickets/ui/icon';
+import { Meter } from '@tickets/ui/meter';
 import { StatusSelect } from '../ui/status-select';
 import { ItemKey } from '../ui/item-key';
 import { childProgress } from '../utils/child-progress';
@@ -66,14 +67,7 @@ export function DetailChildren({
         <span className="font-sans text-label font-medium uppercase text-ink-2">Subtasks</span>
         {progress.any ? (
           <>
-            <span className="h-1 w-15 overflow-hidden rounded-full bg-inset">
-              <span
-                className="block h-full bg-opt-green"
-                style={{
-                  width: `${progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0}%`,
-                }}
-              />
-            </span>
+            <Meter tone="green" value={progress.done} max={progress.total || 1} className="w-15" />
             <span className="font-mono text-label text-ink-3">
               {progress.done}/{progress.total} done
             </span>
