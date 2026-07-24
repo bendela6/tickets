@@ -25,6 +25,33 @@ function ComboboxFixture() {
   );
 }
 
+function ComboboxPlaygroundFixture({
+  placeholder,
+  clearable,
+  disabled,
+  size,
+}: {
+  placeholder: string;
+  clearable: boolean;
+  disabled: boolean;
+  size: 'compact' | 'regular' | undefined;
+}) {
+  const [priority, setPriority] = useState<string | null>('p0');
+  return (
+    <div className="w-56">
+      <Combobox
+        options={PRIORITY_OPTIONS}
+        value={priority}
+        onChange={setPriority}
+        placeholder={placeholder}
+        clearable={clearable}
+        disabled={disabled}
+        size={size}
+      />
+    </div>
+  );
+}
+
 export const meta = { title: 'Combobox', group: 'Pickers' };
 
 export const states = [
@@ -38,21 +65,5 @@ export const playground = definePlayground({
     disabled: boolean(),
     size: select(['compact', 'regular'], { allowNone: true }),
   },
-  render: ({ placeholder, clearable, disabled, size }) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [priority, setPriority] = useState<string | null>('p0');
-    return (
-      <div className="w-56">
-        <Combobox
-          options={PRIORITY_OPTIONS}
-          value={priority}
-          onChange={setPriority}
-          placeholder={placeholder}
-          clearable={clearable}
-          disabled={disabled}
-          size={size}
-        />
-      </div>
-    );
-  },
+  render: (v) => <ComboboxPlaygroundFixture {...v} />,
 });
