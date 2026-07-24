@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { SegmentedControl } from '@tickets/ui/segmented-control';
 
 const COPY_STATE_RESET_MS = 1500;
 
@@ -35,14 +36,6 @@ function snippetFor(platform: SdkPlatform, dsn: string): string {
         `<script>Signals.initSignals({ dsn: '${dsn}' })</script>`
       );
   }
-}
-
-function segmentClasses(active: boolean, withBorder: boolean) {
-  return cn(
-    'inline-flex h-full items-center px-2.75 font-sans text-[12px]',
-    active ? 'bg-raised font-medium text-ink' : 'text-ink-2 hover:text-ink',
-    withBorder && 'border-l border-hairline',
-  );
 }
 
 /**
@@ -88,23 +81,14 @@ export function SdkSnippet({
   return (
     <div className={cn('flex flex-col gap-2', className)}>
       <div className="flex items-center justify-between gap-2">
-        <span
-          role="group"
-          aria-label="SDK platform"
-          className="inline-flex h-7 overflow-hidden rounded-[7px] border border-hairline bg-inset"
-        >
-          {PLATFORMS.map((candidate, index) => (
-            <button
-              key={candidate}
-              type="button"
-              aria-pressed={active === candidate}
-              className={segmentClasses(active === candidate, index > 0)}
-              onClick={() => setActive(candidate)}
-            >
-              {PLATFORM_LABELS[candidate]}
-            </button>
-          ))}
-        </span>
+        <div role="group" aria-label="SDK platform">
+          <SegmentedControl
+            className="h-7"
+            options={PLATFORMS.map((candidate) => ({ value: candidate, label: PLATFORM_LABELS[candidate] }))}
+            value={active}
+            onChange={(next) => setActive(next as SdkPlatform)}
+          />
+        </div>
         <Button
           variant="secondary"
           size="compact"

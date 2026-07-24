@@ -1,11 +1,11 @@
 import type { Board } from '../../api/types';
 import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
-import { cn } from '@tickets/ui/cn';
 import { Input } from '../../ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
+import { SegmentedControl } from '@tickets/ui/segmented-control';
 import type { BoardIndexes } from '../../utils/index-board';
-import type { ViewColumn, ViewConfig } from '../../utils/view-config';
+import type { ViewColumn, ViewConfig, ViewDensity, ViewMode } from '../../utils/view-config';
 
 type UpdateConfig = (mutate: (current: ViewConfig) => ViewConfig) => void;
 
@@ -20,14 +20,6 @@ export function columnLabel(column: ViewColumn, indexes: BoardIndexes): string {
     return 'Subtasks';
   }
   return indexes.fieldByKey.get(column.fieldKey)?.label ?? column.fieldKey;
-}
-
-function segmentClasses(active: boolean, withBorder: boolean) {
-  return cn(
-    'inline-flex h-7.5 cursor-pointer items-center justify-center gap-1.5 font-sans text-meta',
-    active ? 'bg-inset font-medium text-ink' : 'text-ink-3 hover:text-ink-2',
-    withBorder && 'border-l border-hairline',
-  );
 }
 
 /** Per-column visibility checkboxes; persists `hidden` into the view config. */
@@ -130,28 +122,15 @@ export function BoardHeader({
               <ColumnChecklist indexes={indexes} config={config} onUpdate={onUpdate} />
             </PopoverContent>
           </Popover>
-          <span
-            className="inline-flex shrink-0 overflow-hidden rounded-[8px] border border-hairline"
-            title="Density"
-          >
-            <button
-              type="button"
-              aria-label="Comfortable density"
-              aria-pressed={config.density === 'comfortable'}
-              className={cn(segmentClasses(config.density === 'comfortable', false), 'w-8')}
-              onClick={() => onUpdate((current) => ({ ...current, density: 'comfortable' }))}
-            >
-              ☰
-            </button>
-            <button
-              type="button"
-              aria-label="Compact density"
-              aria-pressed={config.density === 'compact'}
-              className={cn(segmentClasses(config.density === 'compact', true), 'w-8')}
-              onClick={() => onUpdate((current) => ({ ...current, density: 'compact' }))}
-            >
-              ≡
-            </button>
+          <span title="Density">
+            <SegmentedControl
+              options={[
+                { value: 'comfortable', icon: 'rows', label: <span className="sr-only">Comfortable density</span> },
+                { value: 'compact', icon: 'rows-compact', label: <span className="sr-only">Compact density</span> },
+              ]}
+              value={config.density}
+              onChange={(density) => onUpdate((current) => ({ ...current, density: density as ViewDensity }))}
+            />
           </span>
         </>
       ) : (
@@ -181,24 +160,14 @@ export function BoardHeader({
         </>
       )}
 
-      <span className="inline-flex shrink-0 overflow-hidden rounded-[8px] border border-hairline">
-        <button
-          type="button"
-          aria-pressed={config.mode === 'table'}
-          className={cn(segmentClasses(config.mode === 'table', false), 'px-2.75 font-medium')}
-          onClick={() => onUpdate((current) => ({ ...current, mode: 'table' }))}
-        >
-          ☰ Table
-        </button>
-        <button
-          type="button"
-          aria-pressed={config.mode === 'board'}
-          className={cn(segmentClasses(config.mode === 'board', true), 'px-2.75 font-medium')}
-          onClick={() => onUpdate((current) => ({ ...current, mode: 'board' }))}
-        >
-          ▦ Board
-        </button>
-      </span>
+      <SegmentedControl
+        options={[
+          { value: 'table', label: 'Table', icon: 'rows' },
+          { value: 'board', label: 'Board', icon: 'columns' },
+        ]}
+        value={config.mode}
+        onChange={(mode) => onUpdate((current) => ({ ...current, mode: mode as ViewMode }))}
+      />
     </div>
   );
 }

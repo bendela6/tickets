@@ -12,6 +12,7 @@ import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
 import { Icon } from '@tickets/ui/icon';
 import { Pill } from '@tickets/ui/pill';
+import { SegmentedControl } from '@tickets/ui/segmented-control';
 import { Tabs } from '@tickets/ui/tabs';
 import { toneClasses } from '@tickets/ui/tones';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
@@ -151,14 +152,6 @@ function AssigneeCell({ entry, value }: { entry: ProjectEntry; value: unknown })
     return <span className="font-sans text-ui text-ink-3">—</span>;
   }
   return <Avatar name={user.name} kind={user.kind} size="md" />;
-}
-
-function segmentClasses(active: boolean, withBorder: boolean) {
-  return cn(
-    'inline-flex h-7.5 w-8 cursor-pointer items-center justify-center font-sans text-meta',
-    active ? 'bg-inset font-medium text-ink' : 'text-ink-3 hover:text-ink-2',
-    withBorder && 'border-l border-hairline',
-  );
 }
 
 /** Small dialog for naming a new global view ("＋" tab / saving from the default tab). */
@@ -485,28 +478,17 @@ export function AllItemsScreen() {
           onToggle={setColumn}
           onKpiChange={(kpi) => setConfig((current) => ({ ...current, kpi }))}
         />
-        <span
-          className="inline-flex shrink-0 overflow-hidden rounded-[8px] border border-hairline"
-          title="Density"
-        >
-          <button
-            type="button"
-            aria-label="Comfortable density"
-            aria-pressed={config.density === 'comfortable'}
-            className={segmentClasses(config.density === 'comfortable', false)}
-            onClick={() => setConfig((current) => ({ ...current, density: 'comfortable' }))}
-          >
-            ☰
-          </button>
-          <button
-            type="button"
-            aria-label="Compact density"
-            aria-pressed={config.density === 'compact'}
-            className={segmentClasses(config.density === 'compact', true)}
-            onClick={() => setConfig((current) => ({ ...current, density: 'compact' }))}
-          >
-            ≡
-          </button>
+        <span title="Density">
+          <SegmentedControl
+            options={[
+              { value: 'comfortable', icon: 'rows', label: <span className="sr-only">Comfortable density</span> },
+              { value: 'compact', icon: 'rows-compact', label: <span className="sr-only">Compact density</span> },
+            ]}
+            value={config.density}
+            onChange={(density) =>
+              setConfig((current) => ({ ...current, density: density as GlobalViewConfig['density'] }))
+            }
+          />
         </span>
       </div>
 
