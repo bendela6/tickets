@@ -1,5 +1,6 @@
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { sessionStatus } from './session-status';
+import { exitCodeTrailing, sessionStatus } from './session-status';
 
 describe('sessionStatus', () => {
   it('running spins blue', () => {
@@ -23,5 +24,23 @@ describe('sessionStatus', () => {
     expect(sessionStatus('exited').tone).toBe('secondary');
     expect(sessionStatus('failed').tone).toBe('danger');
     expect(sessionStatus('idle').tone).toBe('green');
+  });
+});
+
+describe('exitCodeTrailing', () => {
+  it('clean exit (0) renders success-colored text', () => {
+    render(<div>{exitCodeTrailing('exited', 0)}</div>);
+    const el = screen.getByText('0');
+    expect(el.className).toContain('text-opt-green');
+  });
+  it('non-zero exit code renders danger-colored text', () => {
+    render(<div>{exitCodeTrailing('exited', 1)}</div>);
+    const el = screen.getByText('1');
+    expect(el.className).toContain('text-danger');
+  });
+  it('returns undefined for a non-exited status or a null code', () => {
+    expect(exitCodeTrailing('running', 0)).toBeUndefined();
+    expect(exitCodeTrailing('exited', null)).toBeUndefined();
+    expect(exitCodeTrailing('exited', undefined)).toBeUndefined();
   });
 });

@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { cn } from '@tickets/ui/cn';
 import { Icon } from '@tickets/ui/icon';
 import type { Tone } from '@tickets/ui/tones';
 import type { SessionKind } from '../ui/session-kind-glyph';
@@ -55,4 +56,18 @@ export function sessionStatus(status: SessionStatus, kind?: SessionKind): Entry 
   const entry = MAP[status];
   const label = (kind === 'terminal' && TERMINAL_LABELS[status]) || entry.label;
   return { ...entry, label };
+}
+
+// Exit-code chip for an exited session: green for a clean exit, danger
+// otherwise. Returns undefined when there is no code to show.
+export function exitCodeTrailing(
+  status: SessionStatus,
+  exitCode?: number | null,
+): ReactElement | undefined {
+  if (status !== 'exited' || exitCode == null) return undefined;
+  return (
+    <span className={cn('font-mono', exitCode === 0 ? 'text-opt-green' : 'text-danger')}>
+      {exitCode}
+    </span>
+  );
 }

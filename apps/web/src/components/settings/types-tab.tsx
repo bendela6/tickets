@@ -88,10 +88,9 @@ function ChildTypeChips({
         return (
           <Pill
             key={candidate.id}
-            onClick={() => {
-              if (!disabled) onToggle(candidate.id);
-            }}
+            onClick={() => onToggle(candidate.id)}
             pressed={active}
+            disabled={disabled}
             shape="full"
             label={candidate.label}
             tone={active ? 'primary' : 'secondary'}
@@ -99,7 +98,6 @@ function ChildTypeChips({
             className={cn(
               'h-6 border px-2.5 transition-colors',
               active ? 'border-accent' : 'border-control bg-raised hover:bg-inset',
-              disabled && 'pointer-events-none opacity-50',
             )}
           />
         );

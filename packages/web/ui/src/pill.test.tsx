@@ -52,4 +52,22 @@ describe('Pill', () => {
     render(<Pill label="static" />);
     expect(screen.queryByRole('button')).toBeNull();
   });
+
+  it('disabled toggle renders a real disabled button and blocks onClick', () => {
+    const onClick = vi.fn();
+    render(<Pill label="Bug" onClick={onClick} pressed disabled />);
+    const btn = screen.getByRole('button', { name: 'Bug' }) as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+    btn.click();
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it('enabled toggle still fires onClick', () => {
+    const onClick = vi.fn();
+    render(<Pill label="Bug" onClick={onClick} pressed />);
+    const btn = screen.getByRole('button', { name: 'Bug' }) as HTMLButtonElement;
+    expect(btn.disabled).toBe(false);
+    btn.click();
+    expect(onClick).toHaveBeenCalledOnce();
+  });
 });

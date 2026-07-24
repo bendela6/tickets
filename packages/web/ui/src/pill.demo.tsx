@@ -44,6 +44,7 @@ export const states = [
       <div className="flex flex-wrap gap-3">
         <Pill label="pressed" onClick={() => {}} pressed />
         <Pill label="unpressed" onClick={() => {}} />
+        <Pill label="disabled" onClick={() => {}} disabled />
       </div>
     ),
   },
@@ -66,6 +67,7 @@ export const playground = definePlayground({
     icon: select(ICON_NAMES, { allowNone: true }),
     shape: select(['md', 'full'] as const, { initial: 'md' }),
     strikethrough: boolean(false),
+    disabled: boolean(false),
   },
   render: (v) => (
     <Pill
@@ -75,6 +77,7 @@ export const playground = definePlayground({
       icon={v.icon}
       shape={v.shape}
       strikethrough={v.strikethrough}
+      disabled={v.disabled}
     />
   ),
 });
