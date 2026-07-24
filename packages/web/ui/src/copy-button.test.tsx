@@ -63,6 +63,7 @@ describe('useCopy', () => {
 
   it('clears the pending reset timer on unmount so no update fires after unmount', async () => {
     stubClipboard(vi.fn().mockResolvedValue(undefined));
+    const setSpy = vi.spyOn(globalThis, 'setTimeout');
     const clearSpy = vi.spyOn(globalThis, 'clearTimeout');
     const { result, unmount } = renderHook(() => useCopy());
 
@@ -71,12 +72,21 @@ describe('useCopy', () => {
     });
     expect(result.current.copied).toBe(true);
 
-    unmount();
-    expect(clearSpy).toHaveBeenCalled();
+    // copy() itself unconditionally calls clearTimeout before scheduling the
+    // reset timer, so a bare "was clearTimeout called at all" assertion would
+    // pass even without the useEffect cleanup. Capture the id of the timer
+    // that's actually pending post-copy, then clear the spy so anything
+    // recorded from here on is attributable to unmount alone.
+    const pendingTimerId = setSpy.mock.results.at(-1)?.value;
+    expect(pendingTimerId).toBeDefined();
+    clearSpy.mockClear();
 
-    // Advancing timers past the reset window after unmount must not throw —
-    // the pending setState was cancelled by the effect cleanup.
-    expect(() => act(() => vi.advanceTimersByTime(1500))).not.toThrow();
+    unmount();
+
+    const clearedPendingTimer = clearSpy.mock.calls.filter(([id]) => id === pendingTimerId);
+    expect(clearedPendingTimer).toHaveLength(1);
+
+    setSpy.mockRestore();
     clearSpy.mockRestore();
   });
 });
@@ -125,6 +135,19 @@ describe('CopyButton', () => {
     });
 
     expect(screen.getByRole('button', { name: 'Failed' })).toBeTruthy();
+  });
+
+  it('renders a custom failedLabel on the failure path, defaulting to "Failed" when omitted', async () => {
+    stubClipboard(vi.fn().mockRejectedValue(new Error('denied')));
+    render(<CopyButton value="hello" failedLabel="Copy failed" />);
+
+    const button = screen.getByRole('button', { name: 'Copy' });
+    await act(async () => {
+      button.click();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole('button', { name: 'Copy failed' })).toBeTruthy();
   });
 
   it('merges an extra className onto the button', () => {
