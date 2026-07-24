@@ -32,16 +32,18 @@ export function Tabs({
   items,
   value,
   onChange,
+  label,
   className,
 }: {
   variant?: Variant;
   items: { value: string; label: ReactNode; icon?: IconName; badge?: ReactNode }[];
   value: string;
   onChange: (value: string) => void;
+  label?: string;
   className?: string;
 }) {
   return (
-    <div role="tablist" className={cn(LIST[variant], className)}>
+    <div role="tablist" aria-label={label} className={cn(LIST[variant], className)}>
       {items.map((item) => {
         const active = item.value === value;
         return (
@@ -59,7 +61,7 @@ export function Tabs({
           >
             {item.icon ? <Icon name={item.icon} size={12} /> : null}
             {item.label}
-            {item.badge ? <span className="font-mono text-[10px] text-ink-3">{item.badge}</span> : null}
+            {item.badge != null ? <span className="font-mono text-[10px] text-ink-3">{item.badge}</span> : null}
           </button>
         );
       })}

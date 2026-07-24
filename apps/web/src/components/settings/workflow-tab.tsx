@@ -370,6 +370,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
             items={activeTypes.map((type) => ({ value: String(type.id), label: type.label }))}
             value={String(activeTypeId)}
             onChange={(next) => setSelectedTypeId(Number(next))}
+            label="Type"
           />
 
           {workflowField === undefined ? (
