@@ -3,7 +3,7 @@ import { and, count, eq, gte, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import * as v from 'valibot';
 import type { Db } from '../db/client';
-import { apps, signals } from '../db/schema';
+import { apps, issues, signals, sourcemapArtifacts } from '../db/schema';
 import { composeDsn } from '../dsn';
 import { HttpError } from '../errors';
 import { parseIntParam } from '../params';
@@ -125,6 +125,26 @@ export function registerAppsRoutes(app: FastifyInstance, context: { db: Db }) {
       .where(eq(apps.id, id))
       .returning();
     return reply.status(200).send({ ...updated, dsn: composeDsn(updated!.ingestKey, updated!.id) });
+  });
+
+  // Hard-deletes an app and all of its data. No ON DELETE CASCADE exists on the
+  // app_id FKs (schema.ts references are plain `.references()`, default NO ACTION),
+  // so children are deleted explicitly, FK-safe order: signals (references issues
+  // via issue_id) before issues, then sourcemap_artifacts, then the app row itself.
+  // All in one transaction so a mid-way failure leaves the app intact.
+  app.delete('/apps/:id', async (request) => {
+    const id = parseIntParam((request.params as { id: string }).id);
+    const [existing] = await context.db.select().from(apps).where(eq(apps.id, id));
+    if (!existing) throw new HttpError(404, 'app not found');
+
+    await context.db.transaction(async (tx) => {
+      await tx.delete(signals).where(eq(signals.appId, id));
+      await tx.delete(issues).where(eq(issues.appId, id));
+      await tx.delete(sourcemapArtifacts).where(eq(sourcemapArtifacts.appId, id));
+      await tx.delete(apps).where(eq(apps.id, id));
+    });
+
+    return { deleted: true };
   });
 
   app.get('/meta', async () => {
