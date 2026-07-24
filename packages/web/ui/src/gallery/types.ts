@@ -19,7 +19,7 @@ export interface DemoModule {
 }
 
 export type CollectedDemo =
-  | { slug: string; meta: DemoMeta; states: (DemoState & { slug: string })[]; playground?: AnyPlayground }
+  | { path: string; slug: string; meta: DemoMeta; states: (DemoState & { slug: string })[]; playground?: AnyPlayground }
   | { path: string; error: string };
 
 export function isDemoError(d: CollectedDemo): d is { path: string; error: string } {

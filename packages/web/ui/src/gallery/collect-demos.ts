@@ -74,6 +74,7 @@ export function collectDemos(glob: Record<string, unknown>): CollectedDemo[] {
     if (!v.ok) return { path, error: v.error };
     const slug = kebab(v.demo.meta.title);
     return {
+      path,
       slug,
       meta: v.demo.meta,
       states: v.demo.states.map((s) => ({ ...s, slug: `${slug}--${kebab(s.name)}` })),
