@@ -4,6 +4,8 @@ import { ApiError } from '../../api/api-error';
 import type { PlatformInfo, SessionEventRow, SignalPayload, SignalStackFrame } from '../../api/signals/signals-api';
 import { useSignalsSession } from '../../api/signals/use-signals';
 import { cn } from '@tickets/ui/cn';
+import { Icon } from '@tickets/ui/icon';
+import { Pill } from '@tickets/ui/pill';
 import { formatClockTime, formatCount, formatDurationMs } from './format';
 import type { SignalKind } from './kind-glyph';
 import { KindGlyph } from './kind-glyph';
@@ -249,9 +251,13 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
       </span>
       <span className="min-w-0 flex-1 py-0.5 pb-2.5 pl-3">
         {item.type === 'gap' ? (
-          <span className="inline-flex h-5.5 items-center rounded-full border border-dashed border-control px-2.25 font-mono text-[10.5px] text-ink-3">
-            {item.seconds}s idle
-          </span>
+          <Pill
+            tone="secondary"
+            emphasis="outline"
+            shape="full"
+            label={`${item.seconds}s idle`}
+            className="border-dashed border-control font-mono text-[10.5px]"
+          />
         ) : item.row.kind === 'error' ? (
           <ErrorCard row={item.row} />
         ) : (
@@ -388,10 +394,12 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
               </span>
             ) : null}
             {session.crashed ? (
-              <span className="inline-flex h-5.5 items-center gap-1.5 rounded-md bg-danger-subtle px-2 font-sans text-[11px] font-semibold text-danger">
-                <span className="size-1.75 shrink-0 rounded-full bg-danger" />
-                crashed
-              </span>
+              <Pill
+                tone="danger"
+                icon={<Icon name="dot" size={7} />}
+                label="crashed"
+                className="text-[11px] font-semibold"
+              />
             ) : null}
           </div>
           <div className="mt-1.5 font-sans text-[12px] text-ink-3">

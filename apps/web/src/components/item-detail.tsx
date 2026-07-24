@@ -10,6 +10,7 @@ import { Button } from '../ui/button';
 import { cn } from '@tickets/ui/cn';
 import { Pill } from '@tickets/ui/pill';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../ui/menu';
+import { ItemKey } from '../ui/item-key';
 import { RelativeDate } from '../ui/relative-date';
 import { StatusSelect } from '../ui/status-select';
 import { useToast } from '../ui/toast';
@@ -28,14 +29,6 @@ const SECTION_LABEL = 'font-sans text-label font-medium uppercase text-ink-2';
 const ICON_BUTTON =
   'inline-flex size-7.5 shrink-0 items-center justify-center rounded-[7px] border border-hairline ' +
   'bg-transparent text-ink-2 hover:bg-inset hover:text-ink';
-
-function KeyChip({ prefix, number }: { prefix: string; number: number }) {
-  return (
-    <span className="shrink-0 rounded-ctrl bg-inset px-1.75 py-0.75 font-mono text-meta font-medium text-ink">
-      {prefix}-{number}
-    </span>
-  );
-}
 
 // Click-to-edit title: static heading until clicked, then a borderless input
 // that commits on blur/Enter and cancels on Escape.
@@ -217,9 +210,7 @@ export function ItemDetail({
   };
 
   const archivedChip = item.archivedAt ? (
-    <span className="shrink-0 rounded-ctrl bg-inset px-1.75 py-0.75 font-sans text-label font-medium text-ink-3">
-      archived
-    </span>
+    <Pill tone="secondary" label="archived" className="rounded-ctrl text-label text-ink-3" />
   ) : null;
 
   const archiveMenu = (
@@ -287,7 +278,7 @@ export function ItemDetail({
     return (
       <>
         <div className="flex shrink-0 items-center gap-2.25 border-b border-hairline px-5 py-3.5">
-          <KeyChip prefix={prefix} number={item.number} />
+          <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-ctrl bg-inset px-1.75 py-0.75" />
           <Pill {...typePill} label={type?.label ?? '?'} />
           {workflowField ? (
             <StatusSelect
@@ -398,7 +389,7 @@ export function ItemDetail({
           <div>
             {breadcrumb ? <div className="mb-2.5">{breadcrumb}</div> : null}
             <div className="mb-2.5 flex items-center gap-2.25">
-              <KeyChip prefix={prefix} number={item.number} />
+              <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-ctrl bg-inset px-1.75 py-0.75" />
               <Pill {...typePill} label={type?.label ?? '?'} />
               <span className="font-mono text-label text-ink-3">
                 created{' '}

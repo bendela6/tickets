@@ -3,8 +3,9 @@ import { useNavigate } from '@tanstack/react-router';
 import type { AgentEvent, AgentSessionStatus } from '../../api/types';
 import { useAgentSession } from '../../api/use-agent-session';
 import { useArchiveAgentSession, useStopAgentSession } from '../../api/use-archive-agent-session';
+import { sessionStatus } from '../../domain/session-status';
+import { Pill } from '@tickets/ui/pill';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
-import { SessionStatusPill } from '../../ui/session-status-pill';
 import { useSessionSocket } from '../session/use-session-socket';
 import { contextWindowFor } from './agent-models';
 import { buildMessageStream, type SeqEvent } from './build-message-stream';
@@ -105,7 +106,7 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
           cacheReadTokens={usage.cacheReadTokens}
         />
         <CostMeter costUsd={cost} />
-        <SessionStatusPill status={status} />
+        <Pill {...sessionStatus(status)} />
         <Menu>
           <MenuTrigger asChild>
             <button

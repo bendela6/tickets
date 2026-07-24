@@ -1,9 +1,10 @@
 import type { IssueRow as IssueRowData } from '../../api/signals/signals-api';
+import { signalStatus } from '../../domain/signal-status';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import { formatCount, relativeTime } from './format';
 import { LevelDot } from './level-dot';
 import { Sparkline } from './sparkline';
-import { StatusChip } from './status-chip';
 
 // Grid per docs/design/SigIssues.dc.html line 58: dot · issue · app · events ·
 // first · last · sparkline · status · actions. Shared by the header row, data
@@ -80,7 +81,7 @@ export function IssueRow({
         <Sparkline counts={issue.spark} hot={hot} />
       </span>
       <span className="pl-1">
-        <StatusChip status={issue.status} />
+        <Pill {...signalStatus(issue.status)} />
       </span>
       {/* Hover-revealed row actions, mirroring board/table-view.tsx's RowActions. */}
       <span

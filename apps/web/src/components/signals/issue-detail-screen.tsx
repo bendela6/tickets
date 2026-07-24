@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ApiError } from '../../api/api-error';
 import { usePatchIssueStatus, useSignalsIssue, useSignalsOccurrences, useSignalsSession } from '../../api/signals/use-signals';
+import { signalStatus } from '../../domain/signal-status';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import type { TerminalBreadcrumb } from './breadcrumb-list';
 import { BreadcrumbList } from './breadcrumb-list';
 import { ContextRail } from './context-rail';
@@ -12,7 +14,6 @@ import { splitTitle } from './issue-row';
 import { LevelDot } from './level-dot';
 import { Sparkline } from './sparkline';
 import { StackTrace } from './stack-trace';
-import { StatusChip } from './status-chip';
 
 const OCCURRENCES_PER_PAGE = 25;
 const OCCURRENCES_GRID_COLUMNS = '200px 110px minmax(0,1fr) auto';
@@ -232,7 +233,7 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
             ) : null}
           </div>
           <div className="mt-1.75 flex items-center gap-2">
-            <StatusChip status={issue.status} />
+            <Pill {...signalStatus(issue.status)} />
             <span className="inline-flex h-5.5 items-center rounded-md bg-inset px-2 font-mono text-[11px] font-medium text-ink-2">
               {issue.appSlug}
             </span>

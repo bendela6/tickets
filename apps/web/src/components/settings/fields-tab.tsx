@@ -317,25 +317,25 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
         <p className="m-0 font-sans text-meta text-ink-3">No ticket types yet — create one on the Types tab first.</p>
       ) : (
         <>
-          <div role="tablist" aria-label="Type" className="mb-4 flex flex-wrap items-center gap-1.5">
+          {/* Pill toggles, not ARIA tabs — role="group" (not "tablist") since
+          the children are buttons with aria-pressed, not role="tab". */}
+          <div role="group" aria-label="Type" className="mb-4 flex flex-wrap items-center gap-1.5">
             {activeTypes.map((type) => {
               const active = type.id === activeTypeId;
               return (
-                <button
+                <Pill
                   key={type.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
                   onClick={() => setSelectedTypeId(type.id)}
+                  pressed={active}
+                  shape="full"
+                  label={type.label}
+                  tone={active ? 'primary' : 'secondary'}
+                  emphasis={active ? 'subtle' : 'outline'}
                   className={cn(
-                    'inline-flex h-7 cursor-pointer items-center rounded-full border px-3 font-sans text-meta font-medium transition-colors',
-                    active
-                      ? 'border-accent bg-accent-subtle text-accent'
-                      : 'border-control bg-raised text-ink-2 hover:bg-inset',
+                    'h-7 cursor-pointer border px-3 transition-colors',
+                    active ? 'border-accent' : 'border-control bg-raised hover:bg-inset',
                   )}
-                >
-                  {type.label}
-                </button>
+                />
               );
             })}
           </div>

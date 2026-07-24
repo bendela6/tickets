@@ -2,8 +2,9 @@ import { useMemo } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useArchiveAgentSession, useUnarchiveAgentSession } from '../../api/use-archive-agent-session';
 import type { AgentSession } from '../../api/types';
+import { sessionStatus } from '../../domain/session-status';
+import { Pill } from '@tickets/ui/pill';
 import { SessionKindGlyph } from '../../ui/session-kind-glyph';
-import { SessionStatusPill } from '../../ui/session-status-pill';
 import { formatAge } from '../../utils/format-age';
 import { buildSessionTree, type SessionTreeNode } from './build-session-tree';
 
@@ -79,7 +80,7 @@ function SessionRow({
             →#{session.itemId}
           </span>
         ) : null}
-        <SessionStatusPill status={session.status} kind="agent" />
+        <Pill {...sessionStatus(session.status, 'agent')} />
         <button
           type="button"
           className="shrink-0 rounded-[4px] border border-hairline bg-raised px-1.5 py-0.5 font-sans text-meta text-ink-2 opacity-0 hover:border-control group-hover:opacity-100"
