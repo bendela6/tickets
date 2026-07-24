@@ -50,6 +50,7 @@ export const registry = {
   // ── objects ──
   'columns':        { viewBox: '0 0 16 16', node: <><rect x="1.5" y="2" width="4" height="12" rx="1" {...s} /><rect x="6.5" y="2" width="4" height="8" rx="1" {...s} /><rect x="11.5" y="2" width="4" height="10" rx="1" {...s} /></> },
   'rows':           { viewBox: '0 0 16 16', node: <path d="M1.5 4h13M1.5 8h13M1.5 12h13" {...s} /> },
+  'rows-compact':   { viewBox: '0 0 16 16', node: <path d="M1.5 3h13M1.5 6h13M1.5 9h13M1.5 12h13" {...s} /> },
   'folder':         { viewBox: '0 0 16 16', node: <path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 2H13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1Z" {...s} /> },
   'file':           { viewBox: '0 0 16 16', node: <><path d="M4 2h5l3.5 3.5V14H4Z" {...s} /><path d="M9 2v3.5h3.5" {...s} /></> },
   'terminal':       { viewBox: '0 0 16 16', node: <><rect x="1.5" y="3" width="13" height="10" rx="1.5" {...s} /><path d="m4.5 6.5 2 2-2 2M9 10.5h2.5" {...s} /></> },

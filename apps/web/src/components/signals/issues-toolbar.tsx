@@ -1,18 +1,11 @@
 import type { IssueLevel, IssueStatus, SignalsAppRow } from '../../api/signals/signals-api';
 import { Input } from '../../ui/input';
 import { cn } from '@tickets/ui/cn';
+import { SegmentedControl } from '@tickets/ui/segmented-control';
 
 const selectClasses =
   'h-7 rounded-[7px] border border-hairline bg-raised px-2 font-sans text-[12px] text-ink-2 ' +
   'hover:border-control focus:border-accent focus:outline-none focus:ring-[3px] focus:ring-accent-subtle';
-
-function segmentClasses(active: boolean, withBorder: boolean) {
-  return cn(
-    'inline-flex h-full items-center gap-1.5 px-2.75 font-sans text-[12px]',
-    active ? 'bg-raised font-medium text-ink' : 'text-ink-2 hover:text-ink',
-    withBorder && 'border-l border-hairline',
-  );
-}
 
 const STATUSES: IssueStatus[] = ['open', 'resolved', 'ignored'];
 const DAY_OPTIONS = [7, 14, 30, 90];
@@ -67,24 +60,22 @@ export function IssuesToolbar({
         ))}
       </select>
 
-      <span
-        role="group"
-        aria-label="Filter by status"
-        className="inline-flex h-7 overflow-hidden rounded-[7px] border border-hairline bg-inset"
-      >
-        {STATUSES.map((candidate, index) => (
-          <button
-            key={candidate}
-            type="button"
-            aria-pressed={status === candidate}
-            className={segmentClasses(status === candidate, index > 0)}
-            onClick={() => onStatusChange(candidate)}
-          >
-            {candidate.charAt(0).toUpperCase() + candidate.slice(1)}
-            <span className="font-mono text-[11px] text-ink-3">{statusCounts[candidate] ?? ''}</span>
-          </button>
-        ))}
-      </span>
+      <div role="group" aria-label="Filter by status">
+        <SegmentedControl
+          className="h-7"
+          options={STATUSES.map((candidate) => ({
+            value: candidate,
+            label: (
+              <>
+                {candidate.charAt(0).toUpperCase() + candidate.slice(1)}
+                <span className="font-mono text-[11px] text-ink-3">{statusCounts[candidate] ?? ''}</span>
+              </>
+            ),
+          }))}
+          value={status}
+          onChange={(next) => onStatusChange(next as IssueStatus)}
+        />
+      </div>
 
       <select
         aria-label="Filter by level"
