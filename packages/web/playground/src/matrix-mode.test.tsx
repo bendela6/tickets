@@ -1,4 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { useState } from 'react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 import { boolean as booleanControl, definePlayground, select } from '@tickets/ui/gallery';
 import { MatrixMode, matrixValues } from './matrix-mode';
 
@@ -82,6 +84,8 @@ describe('MatrixMode', () => {
         values={values}
         xKey="size"
         yKey="variant"
+        onXKeyChange={vi.fn()}
+        onYKeyChange={vi.fn()}
       />,
     );
 
@@ -106,6 +110,8 @@ describe('MatrixMode', () => {
         values={values}
         xKey="size"
         yKey="variant"
+        onXKeyChange={vi.fn()}
+        onYKeyChange={vi.fn()}
       />,
     );
 
@@ -117,7 +123,7 @@ describe('MatrixMode', () => {
     expect(screen.getAllByText('lg')).toBeTruthy();
   });
 
-  it('renders correct matrix dimensions caption', () => {
+  it('renders the axis control names (rows × columns) as the caption, not counts', () => {
     const playground = definePlayground({
       controls: {
         variant: select(['a', 'b', 'c']),
@@ -133,10 +139,13 @@ describe('MatrixMode', () => {
         values={values}
         xKey="size"
         yKey="variant"
+        onXKeyChange={vi.fn()}
+        onYKeyChange={vi.fn()}
       />,
     );
 
-    expect(screen.getByText('matrix: 3 × 2')).toBeTruthy();
+    expect(screen.getByText('matrix: variant × size')).toBeTruthy();
+    expect(screen.queryByText('matrix: 3 × 2')).toBeNull();
   });
 
   it('renders with correct grid layout style', () => {
@@ -155,10 +164,103 @@ describe('MatrixMode', () => {
         values={values}
         xKey="size"
         yKey="variant"
+        onXKeyChange={vi.fn()}
+        onYKeyChange={vi.fn()}
       />,
     );
 
     const grid = container.querySelector('.grid[style*="grid-template-columns"]');
     expect(grid?.getAttribute('style')).toContain('grid-template-columns: 104px repeat(3, 1fr)');
+  });
+
+  it('changing the rows select calls onYKeyChange with the newly picked key', () => {
+    const playground = definePlayground({
+      controls: {
+        variant: select(['primary', 'secondary']),
+        size: select(['sm', 'lg']),
+      },
+      render: () => <div />,
+    });
+    const values = { variant: 'primary', size: 'sm' };
+    const onYKeyChange = vi.fn();
+
+    render(
+      <MatrixMode
+        playground={playground}
+        values={values}
+        xKey="size"
+        yKey="variant"
+        onXKeyChange={vi.fn()}
+        onYKeyChange={onYKeyChange}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('rows'), { target: { value: 'size' } });
+    expect(onYKeyChange).toHaveBeenCalledWith('size');
+  });
+
+  it('changing the columns select calls onXKeyChange with the newly picked key', () => {
+    const playground = definePlayground({
+      controls: {
+        variant: select(['primary', 'secondary']),
+        size: select(['sm', 'lg']),
+      },
+      render: () => <div />,
+    });
+    const values = { variant: 'primary', size: 'sm' };
+    const onXKeyChange = vi.fn();
+
+    render(
+      <MatrixMode
+        playground={playground}
+        values={values}
+        xKey="size"
+        yKey="variant"
+        onXKeyChange={onXKeyChange}
+        onYKeyChange={vi.fn()}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('columns'), { target: { value: 'variant' } });
+    expect(onXKeyChange).toHaveBeenCalledWith('variant');
+  });
+
+  it('changing rows updates the grid once the parent applies the new key', () => {
+    // Stand in for component-page.tsx's state wiring: feed the changed key
+    // straight back in as the new yKey prop.
+    const playground = definePlayground({
+      controls: {
+        variant: select(['primary', 'secondary', 'ghost']),
+        status: select(['open', 'closed']),
+      },
+      render: (v) => <button>{v.variant}</button>,
+    });
+
+    function Wrapper() {
+      const [yKey, setYKey] = useState('variant');
+      return (
+        <MatrixMode
+          playground={playground}
+          values={{ variant: 'primary', status: 'open' }}
+          xKey="status"
+          yKey={yKey}
+          onXKeyChange={vi.fn()}
+          onYKeyChange={setYKey}
+        />
+      );
+    }
+
+    render(<Wrapper />);
+    // Starting axis: rows=variant (3 options) × columns=status (2 options) = 6 cells.
+    expect(screen.getAllByRole('button')).toHaveLength(6);
+    expect(screen.getByText('matrix: variant × status')).toBeTruthy();
+
+    // Re-pick rows as status too, to isolate the "grid re-renders off the
+    // new yKey prop" behavior from the swap rule (covered separately in
+    // component-page.test.tsx): status has 2 options, so rows×columns
+    // becomes 2×2 = 4 cells.
+    fireEvent.change(screen.getByLabelText('rows'), { target: { value: 'status' } });
+    expect(screen.getAllByRole('button')).toHaveLength(4);
+    expect(screen.getByText('matrix: status × status')).toBeTruthy();
   });
 });

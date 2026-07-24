@@ -57,6 +57,18 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
   const [matrixX, setMatrixX] = useState(selectKeys[0] ?? '');
   const [matrixY, setMatrixY] = useState(selectKeys[1] ?? '');
 
+  // Axes must never land on the same key. If the newly picked key is
+  // already the other axis's key, swap: the other axis takes this axis's
+  // previous value instead of colliding with it.
+  const handleXKeyChange = (key: string) => {
+    if (key === matrixY) setMatrixY(matrixX);
+    setMatrixX(key);
+  };
+  const handleYKeyChange = (key: string) => {
+    if (key === matrixX) setMatrixX(matrixY);
+    setMatrixY(key);
+  };
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between gap-6 border-b border-hairline pb-2">
@@ -87,10 +99,15 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
                 onChange={(e) => setSplitThemes(e.target.checked)}
                 className="sr-only"
               />
-              <span className="inline-block w-8 h-4.5 rounded-full bg-strong relative">
+              <span
+                className={cn(
+                  'inline-block w-8 h-4.5 rounded-full relative',
+                  splitThemes ? 'bg-accent' : 'bg-control',
+                )}
+              >
                 <span
                   className={cn(
-                    'absolute top-0.5 w-3.5 h-3.5 rounded-full bg-surface transition-all',
+                    'absolute top-0.5 w-3.5 h-3.5 rounded-full bg-raised transition-all',
                     splitThemes ? 'right-0.5' : 'left-0.5',
                   )}
                 />
@@ -107,10 +124,15 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
                   onChange={(e) => setMatrixMode(e.target.checked)}
                   className="sr-only"
                 />
-                <span className="inline-block w-8 h-4.5 rounded-full bg-strong relative">
+                <span
+                  className={cn(
+                    'inline-block w-8 h-4.5 rounded-full relative',
+                    matrixMode ? 'bg-accent' : 'bg-control',
+                  )}
+                >
                   <span
                     className={cn(
-                      'absolute top-0.5 w-3.5 h-3.5 rounded-full bg-surface transition-all',
+                      'absolute top-0.5 w-3.5 h-3.5 rounded-full bg-raised transition-all',
                       matrixMode ? 'right-0.5' : 'left-0.5',
                     )}
                   />
@@ -140,6 +162,8 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
                     values={values}
                     xKey={matrixX}
                     yKey={matrixY}
+                    onXKeyChange={handleXKeyChange}
+                    onYKeyChange={handleYKeyChange}
                   />
                 ) : splitThemes ? (
                   <ThemeSplit render={() => <StateGrid demo={demo} />} />
