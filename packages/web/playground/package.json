@@ -13,8 +13,10 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@shikijs/langs": "^4.3.1",
     "@tickets/ui": "workspace:*",
-    "react-resizable-panels": "^4.12.2"
+    "react-resizable-panels": "^4.12.2",
+    "shiki": "^4.3.1"
   },
   "devDependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",

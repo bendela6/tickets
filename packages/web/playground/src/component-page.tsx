@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Group, Panel, Separator, type Layout } from 'react-resizable-panels';
 import { cn } from '@tickets/ui/cn';
 import { initialValues, type CollectedDemo } from '@tickets/ui/gallery';
+import { CodeTab } from './code-tab';
 import { ControlsPanel } from './controls-panel';
 import { loadLayout, saveLayout } from './persisted-layout';
 import { PlaygroundCard } from './playground-card';
 import { PropsTable } from './props-table';
+import { SourceTab } from './source-tab';
 import { StateGrid } from './state-grid';
 
 // v4's replacement for v2's `autoSaveId`: the app owns storage. Panel ids
@@ -24,8 +26,7 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]['key'];
 
-// Real component, not a stub: Code/Source render this until Task 5 wires
-// generated code + raw source, A11y until Task 8 wires the audit.
+// Real component, not a stub: A11y renders this until Task 8 wires the audit.
 function TabPending() {
   return <p className="font-sans text-meta text-ink-3">Coming in this build.</p>;
 }
@@ -36,8 +37,6 @@ function TabPending() {
 // rail. Non-active tabs stay mounted (`hidden`, not unmounted) so playground
 // values survive switching away and back — verified by component-page.test.tsx.
 export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: string }) {
-  // `source` is threaded through for the Code/Source tabs landing in Tasks 5/8.
-  void source;
   const [tab, setTab] = useState<TabKey>('preview');
   const { playground } = demo;
   const [values, setValues] = useState<Record<string, unknown>>(() =>
@@ -108,7 +107,8 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
                   onChange={(key, value) => setValues((v) => ({ ...v, [key]: value }))}
                 />
                 <p className="mt-3 font-sans text-label text-ink-3">
-                  Unset props fall back to the component default and are omitted from generated code.
+                  Unset props fall back to the component default and are omitted from generated
+                  code.
                 </p>
               </div>
             </Panel>
@@ -119,10 +119,10 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
       </div>
 
       <div className={tab === 'code' ? '' : 'hidden'}>
-        <TabPending />
+        <CodeTab demo={demo} values={values} />
       </div>
       <div className={tab === 'source' ? '' : 'hidden'}>
-        <TabPending />
+        <SourceTab demo={demo} source={source} />
       </div>
       <div className={tab === 'a11y' ? '' : 'hidden'}>
         <TabPending />
