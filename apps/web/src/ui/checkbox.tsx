@@ -45,7 +45,18 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           {...rest}
         />
         {/* Checkmark / dash rendered as overlays (not bg-image) so they never
-            conflict with checked:bg-accent under tailwind-merge. */}
+            conflict with checked:bg-accent under tailwind-merge.
+            Kept as hand-rolled inline SVGs rather than <Icon name="check"/> /
+            <Icon name="minus"/> (task-12 sweep, step 4): the registry's
+            "check"/"minus" glyphs are drawn on a 16-unit viewBox sized for a
+            standalone 14-16px icon, while these are purpose-fit to this
+            control's exact 12-unit viewBox + 1.5px stroke + size-4 p-px
+            overlay geometry (peer-checked/peer-indeterminate toggled, full
+            bleed over the input). Swapping in the registry glyphs would shift
+            the mark's proportions inside the box in a way that can't be
+            verified without a browser pass (out of scope for this task), so
+            the original geometry stays. checkbox.tsx is the one file this
+            sweep's `grep -rln "<svg" apps/web/src` allows to remain. */}
         <svg
           viewBox="0 0 12 12"
           aria-hidden
