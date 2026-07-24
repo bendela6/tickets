@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { regressedPill, signalStatus } from './signal-status';
+import {
+  regressedPill,
+  signalKindIcon,
+  signalKindTone,
+  signalStatus,
+  type SignalKind,
+} from './signal-status';
 
 describe('signalStatus', () => {
   it('open is blue, half-filled', () => {
@@ -23,5 +29,38 @@ describe('regressedPill', () => {
   it('is an orange chip with the regressed glyph', () => {
     expect(regressedPill.tone).toBe('orange');
     expect(regressedPill.label).toBe('↺ regressed');
+  });
+});
+
+describe('signalKindIcon', () => {
+  it('maps all seven kinds to their registry icon', () => {
+    expect(signalKindIcon('event')).toBe('diamond');
+    expect(signalKindIcon('log')).toBe('rows');
+    expect(signalKindIcon('click')).toBe('circle-dot');
+    expect(signalKindIcon('navigation')).toBe('arrow-up-right');
+    expect(signalKindIcon('http')).toBe('link');
+    expect(signalKindIcon('error')).toBe('triangle-alert');
+    expect(signalKindIcon('custom')).toBe('tag');
+  });
+
+  it('never collapses two kinds onto the same glyph', () => {
+    const kinds: SignalKind[] = ['event', 'log', 'click', 'navigation', 'http', 'error', 'custom'];
+    const icons = kinds.map(signalKindIcon);
+    expect(new Set(icons).size).toBe(icons.length);
+  });
+});
+
+describe('signalKindTone', () => {
+  it('gives error the danger tone and event the primary/accent tone', () => {
+    expect(signalKindTone('error')).toBe('danger');
+    expect(signalKindTone('event')).toBe('primary');
+  });
+
+  it('keeps error visually distinct from a neutral kind like log', () => {
+    const errorTone = signalKindTone('error');
+    const eventTone = signalKindTone('event');
+    const logTone = signalKindTone('log');
+    expect(logTone).not.toBe(errorTone);
+    expect(logTone).not.toBe(eventTone);
   });
 });
