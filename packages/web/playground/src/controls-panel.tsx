@@ -15,7 +15,7 @@ export function ControlsPanel({
   onChange: (key: string, value: string | number | boolean | undefined) => void;
 }) {
   return (
-    <div className="flex w-64 shrink-0 flex-col gap-2.5">
+    <div className="flex flex-col gap-2.5">
       {Object.entries(controls).map(([key, def]) => (
         <div
           key={key}

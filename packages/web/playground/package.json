@@ -13,7 +13,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@tickets/ui": "workspace:*"
+    "@tickets/ui": "workspace:*",
+    "react-resizable-panels": "^2.1.9"
   },
   "devDependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",

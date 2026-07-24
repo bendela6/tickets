@@ -1,3 +1,32 @@
 @import '@tickets/ui/tokens.css';
 /* Consumers' Tailwind must scan the playground's own class literals. */
 @source './';
+
+/* ComponentPage's Preview-tab drag handle (design: playground-workbench.dc.html
+   line 149) — a 9px hit area drawing a centered 1px hairline that turns
+   accent on hover. A plain CSS class because the gradient stops need two
+   token colors that Tailwind's arbitrary-value syntax can't reference
+   without hardcoding hex. */
+.workbench-resize-handle {
+  width: 9px;
+  margin: 0 8px;
+  cursor: col-resize;
+  background-image: linear-gradient(
+    to right,
+    transparent 4px,
+    var(--color-hairline) 4px,
+    var(--color-hairline) 5px,
+    transparent 5px
+  );
+}
+.workbench-resize-handle:hover,
+.workbench-resize-handle[data-resize-handle-state='hover'],
+.workbench-resize-handle[data-resize-handle-state='drag'] {
+  background-image: linear-gradient(
+    to right,
+    transparent 4px,
+    var(--color-accent) 4px,
+    var(--color-accent) 5px,
+    transparent 5px
+  );
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { isDemoError, type CollectedDemo } from '@tickets/ui/gallery';
-import { PlaygroundCard } from './playground-card';
+import { ComponentPage } from './component-page';
 import { DemoErrorCard, StateGrid } from './state-grid';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
@@ -15,10 +15,12 @@ export function GalleryShell({
   demos,
   title,
   providers = (children) => children,
+  sources,
 }: {
   demos: CollectedDemo[];
   title: string;
   providers?: (children: ReactNode) => ReactNode;
+  sources?: Record<string, string>;
 }) {
   const live = demos.filter((d): d is LiveDemo => !isDemoError(d));
   const errors = demos.filter(isDemoError);
@@ -92,12 +94,13 @@ export function GalleryShell({
           </header>
           {providers(
             <div className="flex flex-col gap-10">
-              {shown.map((d) => (
-                <div key={d.slug} className="flex flex-col gap-6">
-                  <StateGrid demo={d} />
-                  {selected === d.slug && d.playground && <PlaygroundCard playground={d.playground} />}
-                </div>
-              ))}
+              {shown.map((d) =>
+                selected === d.slug ? (
+                  <ComponentPage key={d.slug} demo={d} source={sources?.[d.path]} />
+                ) : (
+                  <StateGrid key={d.slug} demo={d} />
+                ),
+              )}
               {selected === null && errors.map((e) => <DemoErrorCard key={e.path} path={e.path} error={e.error} />)}
             </div>,
           )}
