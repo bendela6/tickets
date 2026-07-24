@@ -1,0 +1,105 @@
+import { useEffect, useState } from 'react';
+import type { SignalsAppRow } from '../../api/signals/signals-api';
+import { useDeleteApp } from '../../api/signals/use-signals';
+import { Button } from '../../ui/button';
+import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
+import { FieldLabel } from '../../ui/field-label';
+import { Input } from '../../ui/input';
+
+type ManagedApp = Pick<SignalsAppRow, 'id' | 'name' | 'slug'>;
+
+/**
+ * Delete-app dialog: typed-confirm (type the slug exactly) before the hard
+ * delete — apps.routes.ts's DELETE /apps/:id removes the app's signals,
+ * issues, and sourcemap artifacts in one transaction, so this is
+ * irreversible. `onDeleted` is optional so the roster's row menu (which
+ * just lets the row disappear from the invalidated list) and the detail
+ * page (which has nowhere left to render once its app is gone, so it must
+ * navigate back to the roster) can each wire their own follow-up.
+ */
+export function DeleteAppDialog({
+  app,
+  open,
+  onOpenChange,
+  onDeleted,
+}: {
+  app: ManagedApp;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onDeleted?: () => void;
+}) {
+  const deleteApp = useDeleteApp();
+  const [typed, setTyped] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      setTyped('');
+      deleteApp.reset();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, app.id]);
+
+  function change(next: boolean) {
+    onOpenChange(next);
+  }
+
+  async function confirm() {
+    if (typed !== app.slug) {
+      return;
+    }
+    try {
+      await deleteApp.mutateAsync(app.id);
+      change(false);
+      onDeleted?.();
+    } catch {
+      // swallow — deleteApp.isError/.error drives the inline error below.
+    }
+  }
+
+  return (
+    <DialogRoot open={open} onOpenChange={change}>
+      <DialogContent>
+        <DialogTitle>Delete app</DialogTitle>
+        <p className="mt-1.5 font-sans text-meta text-ink-2">
+          This permanently deletes <strong className="font-medium text-ink">{app.slug}</strong> — its
+          signals, issues, releases, and source maps. This cannot be undone.
+        </p>
+        <div className="mt-4">
+          <FieldLabel htmlFor="delete-app-confirm">
+            Type <span className="font-mono text-ink normal-case">{app.slug}</span> to confirm
+          </FieldLabel>
+          <Input
+            id="delete-app-confirm"
+            className="mt-1.5"
+            value={typed}
+            autoFocus
+            onChange={(event) => setTyped(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                void confirm();
+              }
+            }}
+          />
+        </div>
+        {deleteApp.isError ? (
+          <p className="mt-2 font-sans text-meta text-danger">
+            {deleteApp.error instanceof Error ? deleteApp.error.message : 'Could not delete the app'}
+          </p>
+        ) : null}
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => change(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={typed !== app.slug}
+            loading={deleteApp.isPending}
+            onClick={() => void confirm()}
+          >
+            Delete app
+          </Button>
+        </div>
+      </DialogContent>
+    </DialogRoot>
+  );
+}

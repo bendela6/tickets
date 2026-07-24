@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import type { AppReleaseRow } from '../../api/signals/signals-api';
 import { useAppReleases, useDeleteRelease } from '../../api/signals/use-signals';
 import { cn } from '@tickets/ui/cn';
+import { ConfirmDialog } from '../../ui/dialog';
 import { formatBytes, formatCount, relativeTime } from './format';
 
 // release · signals · errors · source maps (count + bytes) · last seen · delete.
@@ -8,18 +10,7 @@ const RELEASES_GRID_COLUMNS = 'minmax(0,1fr) 76px 76px 150px 84px 36px';
 
 function ReleaseRow({ appId, release }: { appId: number; release: AppReleaseRow }) {
   const deleteRelease = useDeleteRelease();
-
-  function handleDelete() {
-    // Lightweight window.confirm for this task — Task 7 replaces this with
-    // the richer confirm-dialog treatment shared by rotate/clear/delete-app.
-    const confirmed = window.confirm(
-      `Delete release "${release.release}"? This removes its signals, occurrences, and source maps.`,
-    );
-    if (!confirmed) {
-      return;
-    }
-    deleteRelease.mutate({ id: appId, release: release.release });
-  }
+  const [confirming, setConfirming] = useState(false);
 
   return (
     <div
@@ -50,13 +41,22 @@ function ReleaseRow({ appId, release }: { appId: number; release: AppReleaseRow 
           type="button"
           title="Delete release"
           aria-label={`Delete release ${release.release}`}
-          onClick={handleDelete}
+          onClick={() => setConfirming(true)}
           disabled={deleteRelease.isPending}
           className="flex size-6 items-center justify-center rounded-md text-ink-3 hover:bg-danger-subtle hover:text-danger disabled:pointer-events-none disabled:opacity-40"
         >
           ✕
         </button>
       </span>
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title="Delete release"
+        body={`Delete release "${release.release}"? This removes its signals, occurrences, and source maps.`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={() => deleteRelease.mutate({ id: appId, release: release.release })}
+      />
     </div>
   );
 }
@@ -64,9 +64,11 @@ function ReleaseRow({ appId, release }: { appId: number; release: AppReleaseRow 
 /**
  * Releases card on the app detail screen (Task 6): a table of the app's
  * releases — signal/error counts, source-map count + size, last seen — with
- * a per-row delete action. The delete itself is functional here (mutation +
- * a plain confirm()); Task 7 swaps the confirm() for a proper dialog as part
- * of the shared destructive-action treatment.
+ * a per-row delete action, confirmed via the shared `ConfirmDialog` primitive
+ * (Task 7) rather than a plain `window.confirm()`. Not a typed-confirm like
+ * Delete app/Rotate key — a single release is much lower blast radius than
+ * the whole app, so a plain confirm dialog matches the CONSTRAINTS' "typed
+ * confirm required for Delete app, Rotate key" scope.
  */
 export function ReleasesCard({ appId }: { appId: number }) {
   const releasesQuery = useAppReleases(appId);

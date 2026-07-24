@@ -4,13 +4,24 @@ import type { SignalsAppRow } from '../../api/signals/signals-api';
 import { useSignalsApps, useSignalsMeta } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '../../ui/menu';
+import { ClearSignalsDialog } from './clear-signals-dialog';
+import { DeleteAppDialog } from './delete-app-dialog';
 import { formatBytes, formatCount, formatDate } from './format';
 import { NewAppDialog } from './new-app-dialog';
+import { RenameAppDialog } from './rename-app-dialog';
+import { RevealDsnDialog } from './reveal-dsn-dialog';
+import { RotateKeyDialog } from './rotate-key-dialog';
 
-// dot · app · signals · errors · created — one fewer column than the
-// design's grid (no Platform or ⋯ actions: SignalsAppRow carries neither a
-// platform tag nor per-app actions in v1).
-const APPS_GRID_COLUMNS = 'minmax(0,1fr) 130px 120px 150px';
+// dot · app · signals · errors · created · ⋯ actions — one fewer column than
+// the design's grid (no Platform tag: SignalsAppRow carries no platform
+// field in v1). The ⋯ actions column (Task 7) is a real grid column, not an
+// absolute overlay, so it never covers the Created column's text.
+const APPS_GRID_COLUMNS = 'minmax(0,1fr) 130px 120px 150px 40px';
+
+// The row `⋯` menu's non-"Open" actions — "Open" is handled locally by
+// AppRow (it just navigates) rather than round-tripping through this union.
+type DialogKind = 'rename' | 'reveal' | 'rotate' | 'clear' | 'delete';
 
 const ONBOARDING_STEPS = [
   { n: 1, title: 'Create an app', body: 'Name it, pick a platform, get a DSN.' },
@@ -58,18 +69,29 @@ function TableHeader() {
       <span className="text-right">Signals · 24h</span>
       <span className="text-right">Errors · 24h</span>
       <span>Created</span>
+      <span />
     </div>
   );
 }
 
-function AppRow({ app }: { app: SignalsAppRow }) {
+function AppRow({
+  app,
+  onAction,
+}: {
+  app: SignalsAppRow;
+  onAction: (app: SignalsAppRow, kind: DialogKind) => void;
+}) {
   const navigate = useNavigate();
+
+  function goToApp() {
+    void navigate({ to: '/signals/apps/$appId', params: { appId: String(app.id) } });
+  }
 
   return (
     <div
       role="row"
-      onClick={() => void navigate({ to: '/signals/apps/$appId', params: { appId: String(app.id) } })}
-      className="grid h-12.5 cursor-pointer items-center border-b border-hairline px-3.5 last:border-b-0 hover:bg-app"
+      onClick={goToApp}
+      className="group grid h-12.5 cursor-pointer items-center border-b border-hairline px-3.5 last:border-b-0 hover:bg-app"
       style={{ gridTemplateColumns: APPS_GRID_COLUMNS }}
     >
       <span className="flex min-w-0 items-center gap-2.5">
@@ -95,6 +117,33 @@ function AppRow({ app }: { app: SignalsAppRow }) {
         {app.errors24h > 0 ? formatCount(app.errors24h) : '—'}
       </span>
       <span className="pl-6 font-mono text-[11px] text-ink-3">{formatDate(app.createdAt)}</span>
+      {/* stopPropagation on the whole cell — both the trigger and (via the
+      portal-rendered MenuContent living outside this row's DOM subtree)
+      every item click must never also fire the row's onClick/goToApp. */}
+      <span className="flex justify-end" onClick={(event) => event.stopPropagation()}>
+        <Menu>
+          <MenuTrigger asChild>
+            <button
+              type="button"
+              aria-label={`${app.slug} actions`}
+              className="hidden size-7 items-center justify-center rounded-md text-ink-3 hover:bg-inset hover:text-ink group-hover:flex data-[state=open]:flex"
+            >
+              ⋯
+            </button>
+          </MenuTrigger>
+          <MenuContent align="end">
+            <MenuItem onSelect={goToApp}>Open</MenuItem>
+            <MenuItem onSelect={() => onAction(app, 'rename')}>Rename</MenuItem>
+            <MenuItem onSelect={() => onAction(app, 'reveal')}>Reveal DSN</MenuItem>
+            <MenuItem onSelect={() => onAction(app, 'rotate')}>Rotate key</MenuItem>
+            <MenuItem onSelect={() => onAction(app, 'clear')}>Clear signals</MenuItem>
+            <MenuSeparator />
+            <MenuItem destructive onSelect={() => onAction(app, 'delete')}>
+              Delete
+            </MenuItem>
+          </MenuContent>
+        </Menu>
+      </span>
     </div>
   );
 }
@@ -107,6 +156,24 @@ export function AppsScreen() {
   const appsQuery = useSignalsApps();
   const metaQuery = useSignalsMeta();
   const [newAppOpen, setNewAppOpen] = useState(false);
+  // Which app + which management dialog the row `⋯` menu last opened. One
+  // shared pair of state (not per-row) so only the dialog actually in use
+  // mounts — and therefore only it fires its data hook (useAppReleases for
+  // Clear, useSignalsApp for Reveal DSN) — instead of every row's menu
+  // eagerly fetching on the off chance it gets opened.
+  const [activeApp, setActiveApp] = useState<SignalsAppRow | null>(null);
+  const [dialog, setDialog] = useState<DialogKind | null>(null);
+
+  function handleAction(app: SignalsAppRow, kind: DialogKind) {
+    setActiveApp(app);
+    setDialog(kind);
+  }
+
+  function closeDialog(open: boolean) {
+    if (!open) {
+      setDialog(null);
+    }
+  }
 
   const rows = appsQuery.data ?? [];
   const isLoading = appsQuery.isLoading;
@@ -140,7 +207,7 @@ export function AppsScreen() {
             <TableHeader />
             <div className="flex-1 overflow-auto">
               {rows.map((app) => (
-                <AppRow key={app.id} app={app} />
+                <AppRow key={app.id} app={app} onAction={handleAction} />
               ))}
             </div>
           </div>
@@ -223,6 +290,22 @@ export function AppsScreen() {
       ) : null}
 
       <NewAppDialog open={newAppOpen} onOpenChange={setNewAppOpen} />
+
+      {activeApp && dialog === 'rename' ? (
+        <RenameAppDialog app={activeApp} open onOpenChange={closeDialog} />
+      ) : null}
+      {activeApp && dialog === 'reveal' ? (
+        <RevealDsnDialog app={activeApp} open onOpenChange={closeDialog} />
+      ) : null}
+      {activeApp && dialog === 'rotate' ? (
+        <RotateKeyDialog app={activeApp} open onOpenChange={closeDialog} />
+      ) : null}
+      {activeApp && dialog === 'clear' ? (
+        <ClearSignalsDialog app={activeApp} open onOpenChange={closeDialog} />
+      ) : null}
+      {activeApp && dialog === 'delete' ? (
+        <DeleteAppDialog app={activeApp} open onOpenChange={closeDialog} />
+      ) : null}
     </div>
   );
 }

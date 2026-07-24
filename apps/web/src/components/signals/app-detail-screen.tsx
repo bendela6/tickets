@@ -1,13 +1,23 @@
+import { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { ApiError } from '../../api/api-error';
 import { usePatchIssueStatus, useSignalsApp, useSignalsIssues } from '../../api/signals/use-signals';
 import { cn } from '@tickets/ui/cn';
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '../../ui/menu';
 import { appInitials, avatarTone } from './apps-screen';
+import { ClearSignalsDialog } from './clear-signals-dialog';
+import { DeleteAppDialog } from './delete-app-dialog';
 import { DsnField } from './dsn-field';
 import { formatCount, formatDate } from './format';
 import { IssueRow, IssueRowSkeleton } from './issue-row';
 import { ReleasesCard } from './releases-card';
+import { RenameAppDialog } from './rename-app-dialog';
+import { RotateKeyDialog } from './rotate-key-dialog';
 import { SdkSnippet } from './sdk-snippet';
+
+// The header `⋯` menu's dialogs. No "Reveal DSN" here (unlike the roster's
+// row menu) — the Connect card below already shows the DSN permanently.
+type DialogKind = 'rename' | 'rotate' | 'clear' | 'delete';
 
 const RECENT_ISSUES_PER_PAGE = 5;
 const RECENT_ISSUES_SKELETON_ROWS = 3;
@@ -46,6 +56,7 @@ export function AppDetailScreen({ appId }: { appId: number }) {
     validId,
   );
   const patchStatus = usePatchIssueStatus();
+  const [dialog, setDialog] = useState<DialogKind | null>(null);
 
   if (!validId) {
     return <AppNotFound />;
@@ -123,7 +134,44 @@ export function AppDetailScreen({ appId }: { appId: number }) {
             </span>
           </div>
         </div>
-        {/* Task 7: rotate / clear / delete actions + dialogs mount here. */}
+        <Menu>
+          <MenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="App actions"
+              className="flex size-8 shrink-0 items-center justify-center rounded-[8px] border border-control bg-raised text-ink-2 hover:bg-inset hover:text-ink"
+            >
+              ⋯
+            </button>
+          </MenuTrigger>
+          <MenuContent align="end">
+            <MenuItem onSelect={() => setDialog('rename')}>Rename</MenuItem>
+            <MenuItem onSelect={() => setDialog('rotate')}>Rotate key</MenuItem>
+            <MenuItem onSelect={() => setDialog('clear')}>Clear signals</MenuItem>
+            <MenuSeparator />
+            <MenuItem destructive onSelect={() => setDialog('delete')}>
+              Delete app
+            </MenuItem>
+          </MenuContent>
+        </Menu>
+
+        {dialog === 'rename' ? (
+          <RenameAppDialog app={app} open onOpenChange={(next) => !next && setDialog(null)} />
+        ) : null}
+        {dialog === 'rotate' ? (
+          <RotateKeyDialog app={app} open onOpenChange={(next) => !next && setDialog(null)} />
+        ) : null}
+        {dialog === 'clear' ? (
+          <ClearSignalsDialog app={app} open onOpenChange={(next) => !next && setDialog(null)} />
+        ) : null}
+        {dialog === 'delete' ? (
+          <DeleteAppDialog
+            app={app}
+            open
+            onOpenChange={(next) => !next && setDialog(null)}
+            onDeleted={() => void navigate({ to: '/signals/apps' })}
+          />
+        ) : null}
       </div>
 
       <div className="mb-4 flex flex-none items-center gap-6.5 rounded-[10px] border border-hairline bg-raised px-4.5 py-3">
