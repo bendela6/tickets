@@ -111,3 +111,21 @@ describe('prepareDemos duplicate-slug guard', () => {
     expect(new Set(errs.map((e) => e.path)).size).toBe(2);
   });
 });
+
+describe('CollectedDemo path field', () => {
+  it('exposes the glob key as path on success entries', () => {
+    const out = collectDemos({ './x/button.demo.tsx': { meta: { title: 'Button', group: 'G' }, states: [{ name: 's', render: () => null }] } });
+    const d = out[0]!;
+    if (isDemoError(d)) throw new Error(d.error);
+    expect(d.path).toBe('./x/button.demo.tsx');
+  });
+
+  it('demo paths align with a sources map sharing the same glob keys', () => {
+    const key = './button.demo.tsx';
+    const demos = collectDemos({ [key]: { meta: { title: 'Button', group: 'G' }, states: [{ name: 's', render: () => null }] } });
+    const sources: Record<string, string> = { [key]: 'export const meta = …' };
+    const d = demos[0]!;
+    if (isDemoError(d)) throw new Error(d.error);
+    expect(sources[d.path]).toBe('export const meta = …');
+  });
+});
