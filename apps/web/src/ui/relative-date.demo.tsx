@@ -1,3 +1,4 @@
+import { boolean, definePlayground, text } from '@tickets/ui/gallery';
 import { RelativeDate } from './relative-date';
 
 // Fixed reference instant so RelativeDate output is deterministic in the gallery.
@@ -19,3 +20,11 @@ export const states = [
     render: () => <RelativeDate value="2026-07-03T00:00:00Z" now={NOW} overdue />,
   },
 ];
+
+export const playground = definePlayground({
+  controls: {
+    value: text('2026-07-09T00:00:00Z'),
+    overdue: boolean(),
+  },
+  render: ({ value, overdue }) => <RelativeDate value={value} now={NOW} overdue={overdue} />,
+});

@@ -1,5 +1,5 @@
 import { createRoute } from '@tanstack/react-router';
-import { collectDemos, GalleryShell, sortDemos } from '@tickets/ui/gallery';
+import { collectDemos, GalleryShell, prepareDemos } from '@tickets/ui/gallery';
 import { packageDemos } from '@tickets/ui/gallery/demos';
 import { ToastProvider } from '../ui/toast';
 import { TooltipProvider } from '../ui/tooltip';
@@ -9,10 +9,12 @@ const webDemos = collectDemos(
   import.meta.glob('../**/*.demo.tsx', { eager: true }) as Record<string, unknown>,
 );
 
+const allDemos = prepareDemos([...packageDemos, ...webDemos]);
+
 function GalleryScreen() {
   return (
     <GalleryShell
-      demos={sortDemos([...packageDemos, ...webDemos])}
+      demos={allDemos}
       title="Instrument — primitives gallery"
       providers={(children) => (
         <TooltipProvider>

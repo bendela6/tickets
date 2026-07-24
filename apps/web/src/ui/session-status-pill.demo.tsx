@@ -1,3 +1,4 @@
+import { definePlayground, number, select } from '@tickets/ui/gallery';
 import { SessionStatusPill, type SessionStatus } from './session-status-pill';
 
 const SESSION_STATUSES: SessionStatus[] = [
@@ -10,7 +11,7 @@ const SESSION_STATUSES: SessionStatus[] = [
   'failed',
 ];
 
-export const meta = { title: 'Session Status Pill', group: 'AI session', order: 2 };
+export const meta = { title: 'Session Status Pill', group: 'AI session', order: 1 };
 
 export const states = [
   ...SESSION_STATUSES.map((status) => ({
@@ -27,3 +28,16 @@ export const states = [
     render: () => <SessionStatusPill status="exited" exitCode={1} />,
   },
 ];
+
+export const playground = definePlayground({
+  controls: {
+    status: select(SESSION_STATUSES, { initial: 'running' }),
+    exitCode: number(0, { min: 0, max: 255 }),
+  },
+  render: ({ status, exitCode }) => (
+    <SessionStatusPill
+      status={status}
+      exitCode={status === 'exited' ? exitCode : undefined}
+    />
+  ),
+});

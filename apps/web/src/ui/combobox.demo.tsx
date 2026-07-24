@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { boolean, definePlayground, select, text } from '@tickets/ui/gallery';
 import { Combobox } from './combobox';
 import type { ComboOption } from './combobox-list';
 
@@ -24,8 +25,45 @@ function ComboboxFixture() {
   );
 }
 
+function ComboboxPlaygroundFixture({
+  placeholder,
+  clearable,
+  disabled,
+  size,
+}: {
+  placeholder: string;
+  clearable: boolean;
+  disabled: boolean;
+  size: 'compact' | 'regular' | undefined;
+}) {
+  const [priority, setPriority] = useState<string | null>('p0');
+  return (
+    <div className="w-56">
+      <Combobox
+        options={PRIORITY_OPTIONS}
+        value={priority}
+        onChange={setPriority}
+        placeholder={placeholder}
+        clearable={clearable}
+        disabled={disabled}
+        size={size}
+      />
+    </div>
+  );
+}
+
 export const meta = { title: 'Combobox', group: 'Pickers' };
 
 export const states = [
   { name: 'basic', render: () => <ComboboxFixture /> },
 ];
+
+export const playground = definePlayground({
+  controls: {
+    placeholder: text('Priority'),
+    clearable: boolean(true),
+    disabled: boolean(),
+    size: select(['compact', 'regular'], { allowNone: true }),
+  },
+  render: (v) => <ComboboxPlaygroundFixture {...v} />,
+});
