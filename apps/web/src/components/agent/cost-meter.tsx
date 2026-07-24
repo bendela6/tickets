@@ -1,4 +1,5 @@
 import { cn } from '@tickets/ui/cn';
+import { Meter } from '@tickets/ui/meter';
 
 // Agent runs cost real money and the UI must never hide that (screen 10): spend
 // so far, always visible in the session header. With a budget cap it shows
@@ -13,7 +14,6 @@ export function CostMeter({
   className?: string;
 }) {
   const capped = capUsd != null && capUsd > 0;
-  const pct = capped ? Math.min(100, (costUsd / capUsd) * 100) : 0;
   const over = capped && costUsd >= capUsd;
   return (
     <span
@@ -29,12 +29,7 @@ export function CostMeter({
       {capped ? (
         <>
           <span className="font-mono text-meta text-ink-3">/ ${capUsd.toFixed(2)}</span>
-          <span className="inline-flex h-1 w-9 overflow-hidden rounded-full bg-inset">
-            <span
-              className={cn('h-full', over ? 'bg-danger' : 'bg-accent')}
-              style={{ width: `${pct}%` }}
-            />
-          </span>
+          <Meter value={costUsd} max={capUsd} dangerAt={capUsd} />
         </>
       ) : null}
     </span>
