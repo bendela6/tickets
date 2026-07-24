@@ -6,7 +6,7 @@ import { useArchiveTerminalSession, useStopTerminalSession } from '../../api/use
 import { useRestartTerminalSession } from '../../api/use-restart-terminal-session';
 import { useTerminalSession } from '../../api/use-terminal-session';
 import type { TerminalStatus } from '../../api/types';
-import { sessionStatus } from '../../domain/session-status';
+import { exitCodeTrailing, sessionStatus } from '../../domain/session-status';
 import { Pill } from '@tickets/ui/pill';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
 import { useSessionSocket } from '../session/use-session-socket';
@@ -168,13 +168,7 @@ export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
                 icon={st.icon}
                 label={display.label}
                 className={st.className}
-                trailing={
-                  display.status === 'exited' && exitCode != null ? (
-                    <span className={exitCode === 0 ? 'font-mono text-opt-green' : 'font-mono text-danger'}>
-                      {exitCode}
-                    </span>
-                  ) : undefined
-                }
+                trailing={exitCodeTrailing(display.status, exitCode)}
               />
               <Menu>
                 <MenuTrigger asChild>
