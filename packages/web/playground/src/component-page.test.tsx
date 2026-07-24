@@ -1,7 +1,13 @@
 import type { ReactNode } from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { vi } from 'vitest';
-import { boolean as booleanControl, collectDemos, definePlayground, isDemoError, select } from '@tickets/ui/gallery';
+import {
+  boolean as booleanControl,
+  collectDemos,
+  definePlayground,
+  isDemoError,
+  select,
+} from '@tickets/ui/gallery';
 import { ComponentPage } from './component-page';
 
 // react-resizable-panels needs real layout (ResizeObserver-driven sizing) to
@@ -125,7 +131,10 @@ describe('ComponentPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Code' }));
     expect(previewWrapper.className).toBe('hidden');
     expect(codeWrapper.className).toBe('');
-    expect(within(codeWrapper).getByText('Coming in this build.')).toBeTruthy();
+    // Code tab reflects the live control values (variant changed above), not
+    // the old "Coming in this build." placeholder — see code-tab.test.tsx for
+    // the full snippet-generation/highlighting behavior.
+    expect(within(codeWrapper).getByText(/variant="secondary"/)).toBeTruthy();
     // Preview content is still in the DOM (hidden), not unmounted.
     expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('secondary');
 
@@ -180,6 +189,8 @@ describe('ComponentPage', () => {
     expect(localStorage.getItem('playground-workbench')).toBeNull();
 
     fireEvent.click(screen.getByTestId('simulate-user-resize'));
-    expect(localStorage.getItem('playground-workbench')).toBe(JSON.stringify({ stage: 65, controls: 35 }));
+    expect(localStorage.getItem('playground-workbench')).toBe(
+      JSON.stringify({ stage: 65, controls: 35 }),
+    );
   });
 });

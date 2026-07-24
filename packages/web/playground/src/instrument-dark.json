@@ -1,0 +1,33 @@
+{
+  "name": "instrument-dark",
+  "type": "dark",
+  "colors": { "editor.background": "#25231D", "editor.foreground": "#EDEBE3" },
+  "tokenColors": [
+    {
+      "scope": [
+        "entity.name.tag",
+        "support.class.component",
+        "keyword",
+        "storage.type",
+        "storage.modifier"
+      ],
+      "settings": { "foreground": "#A9A2F2" }
+    },
+    {
+      "scope": ["entity.other.attribute-name", "variable.other.readwrite", "variable.parameter"],
+      "settings": { "foreground": "#A6A296" }
+    },
+    {
+      "scope": ["string", "string.quoted"],
+      "settings": { "foreground": "#7FCB97" }
+    },
+    {
+      "scope": ["constant.numeric", "constant.language"],
+      "settings": { "foreground": "#EFA36C" }
+    },
+    {
+      "scope": ["punctuation", "meta.brace", "keyword.operator", "comment"],
+      "settings": { "foreground": "#79756A" }
+    }
+  ]
+}
