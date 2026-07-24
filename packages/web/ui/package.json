@@ -18,6 +18,9 @@
     "./screen-state": "./src/screen-state.tsx",
     "./spinner": "./src/spinner.tsx",
     "./copy-button": "./src/copy-button.tsx",
+    "./dialog-footer": "./src/dialog-footer.tsx",
+    "./rail-label": "./src/rail-label.tsx",
+    "./section-header": "./src/section-header.tsx",
     "./gallery": "./src/gallery/index.ts",
     "./gallery/demos": "./src/gallery/demos.ts",
     "./gallery/demo-sources": "./src/gallery/demo-sources.ts"
