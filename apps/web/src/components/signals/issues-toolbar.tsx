@@ -60,22 +60,21 @@ export function IssuesToolbar({
         ))}
       </select>
 
-      <div role="group" aria-label="Filter by status">
-        <SegmentedControl
-          className="h-7"
-          options={STATUSES.map((candidate) => ({
-            value: candidate,
-            label: (
-              <>
-                {candidate.charAt(0).toUpperCase() + candidate.slice(1)}
-                <span className="font-mono text-[11px] text-ink-3">{statusCounts[candidate] ?? ''}</span>
-              </>
-            ),
-          }))}
-          value={status}
-          onChange={(next) => onStatusChange(next as IssueStatus)}
-        />
-      </div>
+      <SegmentedControl
+        className="h-7"
+        label="Filter by status"
+        options={STATUSES.map((candidate) => ({
+          value: candidate,
+          label: (
+            <>
+              {candidate.charAt(0).toUpperCase() + candidate.slice(1)}
+              <span className="font-mono text-[11px] text-ink-3">{statusCounts[candidate] ?? ''}</span>
+            </>
+          ),
+        }))}
+        value={status}
+        onChange={(next) => onStatusChange(next as IssueStatus)}
+      />
 
       <select
         aria-label="Filter by level"

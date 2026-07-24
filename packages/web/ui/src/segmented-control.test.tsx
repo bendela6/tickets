@@ -51,7 +51,7 @@ describe('SegmentedControl', () => {
     expect(button.hasAttribute('aria-label')).toBe(false);
   });
 
-  it('renders a numeric 0 label instead of swallowing it', () => {
+  it('renders a numeric 0 label instead of swallowing it, and does not fall back to an aria-label', () => {
     render(
       <SegmentedControl
         options={[{ value: 'open', label: 0 }]}
@@ -60,5 +60,22 @@ describe('SegmentedControl', () => {
       />,
     );
     expect(screen.getByText('0')).toBeTruthy();
+    const button = screen.getByRole('button');
+    // A truthy-guard regression (`opt.label ? undefined : opt.value`) would treat the
+    // falsy `0` label as absent and wrongly stamp aria-label="open" on top of the "0" text.
+    expect(button.hasAttribute('aria-label')).toBe(false);
+    expect(button.getAttribute('aria-label')).not.toBe('open');
+  });
+
+  it('exposes an accessible group name when label is set', () => {
+    render(<SegmentedControl options={options} value="board" onChange={() => {}} label="View mode" />);
+    expect(screen.getByRole('group', { name: 'View mode' })).toBeTruthy();
+  });
+
+  it('renders no group role or aria-label when label is unset', () => {
+    const { container } = render(<SegmentedControl options={options} value="board" onChange={() => {}} />);
+    const root = container.firstElementChild!;
+    expect(root.hasAttribute('role')).toBe(false);
+    expect(root.hasAttribute('aria-label')).toBe(false);
   });
 });
