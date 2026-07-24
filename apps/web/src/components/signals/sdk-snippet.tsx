@@ -81,14 +81,13 @@ export function SdkSnippet({
   return (
     <div className={cn('flex flex-col gap-2', className)}>
       <div className="flex items-center justify-between gap-2">
-        <div role="group" aria-label="SDK platform">
-          <SegmentedControl
-            className="h-7"
-            options={PLATFORMS.map((candidate) => ({ value: candidate, label: PLATFORM_LABELS[candidate] }))}
-            value={active}
-            onChange={(next) => setActive(next as SdkPlatform)}
-          />
-        </div>
+        <SegmentedControl
+          className="h-7"
+          label="SDK platform"
+          options={PLATFORMS.map((candidate) => ({ value: candidate, label: PLATFORM_LABELS[candidate] }))}
+          value={active}
+          onChange={(next) => setActive(next as SdkPlatform)}
+        />
         <Button
           variant="secondary"
           size="compact"

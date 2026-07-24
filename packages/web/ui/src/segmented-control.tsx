@@ -6,15 +6,21 @@ export function SegmentedControl({
   options,
   value,
   onChange,
+  label,
   className,
 }: {
   options: { value: string; label?: ReactNode; icon?: IconName }[];
   value: string;
   onChange: (value: string) => void;
+  label?: string;
   className?: string;
 }) {
   return (
-    <div className={cn('inline-flex items-center gap-0.5 rounded-[7px] bg-inset p-0.75', className)}>
+    <div
+      role={label ? 'group' : undefined}
+      aria-label={label}
+      className={cn('inline-flex items-center gap-0.5 rounded-[7px] bg-inset p-0.75', className)}
+    >
       {options.map((opt) => {
         const active = opt.value === value;
         return (
