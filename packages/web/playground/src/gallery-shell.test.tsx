@@ -17,21 +17,33 @@ function setHash(h: string) {
 describe('GalleryShell v2', () => {
   afterEach(() => { window.location.hash = ''; });
 
-  it('renders all demos and a sidebar link per demo plus All', () => {
+  it('renders all demos and a sidebar link per demo plus All (plain StateGrids, no tabs)', () => {
     render(<GalleryShell demos={demos} title="t" />);
     expect(screen.getByRole('link', { name: 'All' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Button' })).toBeTruthy();
     expect(screen.getByText('btn')).toBeTruthy();
     expect(screen.getByText('inp')).toBeTruthy();
     expect(screen.queryByText('play')).toBeNull(); // playground hidden in All view
+    expect(screen.queryByRole('button', { name: 'Preview' })).toBeNull(); // no tab strip in All view
   });
 
-  it('hash selects a single component and shows its playground', () => {
+  it('hash selects a single component and routes it through ComponentPage (tabs + playground)', () => {
     render(<GalleryShell demos={demos} title="t" />);
     setHash('#button');
     expect(screen.getByText('btn')).toBeTruthy();
     expect(screen.queryByText('inp')).toBeNull();
     expect(screen.getByText('play')).toBeTruthy();
+    // ComponentPage's tab strip, with Preview active by default.
+    expect(screen.getByRole('button', { name: 'Preview' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Code' })).toBeTruthy();
+  });
+
+  it('selecting a demo without a playground still routes through ComponentPage but shows no rail', () => {
+    render(<GalleryShell demos={demos} title="t" />);
+    setHash('#input');
+    expect(screen.getByText('inp')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Preview' })).toBeTruthy();
+    expect(screen.queryByText('CONTROLS')).toBeNull();
   });
 
   it('state-anchor hash selects the owning component', () => {
@@ -56,5 +68,15 @@ describe('GalleryShell v2', () => {
     setHash('#button--primary2');
     expect(spy.mock.calls.length).toBeGreaterThan(first);
     spy.mockRestore();
+  });
+
+  it('passes sources[demo.path] through to ComponentPage', () => {
+    const button = demos.find((d) => 'slug' in d && d.slug === 'button');
+    if (!button || !('path' in button)) throw new Error('fixture missing button demo');
+    render(<GalleryShell demos={demos} title="t" sources={{ [button.path]: 'export const x = 1;' }} />);
+    setHash('#button');
+    // Source tab is still a placeholder in this task; just assert selection
+    // didn't crash with sources wired up (Code/Source tabs land in Task 5).
+    expect(screen.getByRole('button', { name: 'Preview' })).toBeTruthy();
   });
 });
