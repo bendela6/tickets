@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import type { SignalBreadcrumb } from '../../api/signals/signals-api';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import { formatClockTime, formatDurationMs } from './format';
 import type { SignalKind } from './kind-glyph';
 import { KindGlyph } from './kind-glyph';
@@ -26,17 +27,14 @@ function kindForType(type: string): SignalKind {
   return 'custom';
 }
 
-function HttpStatusChip({ status }: { status: number }) {
+function HttpStatusPill({ status }: { status: number }) {
   const ok = status < 400;
   return (
-    <span
-      className={cn(
-        'inline-flex h-4.25 shrink-0 items-center rounded-[4px] px-1.5 font-mono text-[10px]',
-        ok ? 'bg-kind-done-subtle font-medium text-kind-done' : 'bg-danger-subtle font-semibold text-danger',
-      )}
-    >
-      {status}
-    </span>
+    <Pill
+      tone={ok ? 'green' : 'danger'}
+      label={status}
+      className={cn('h-4.25 rounded-[4px] px-1.5 font-mono text-[10px]', !ok && 'font-semibold')}
+    />
   );
 }
 
@@ -77,7 +75,7 @@ function BreadcrumbRow({ crumb }: { crumb: SignalBreadcrumb }) {
         >
           {crumb.message ?? ''}
         </span>
-        {status !== undefined ? <HttpStatusChip status={status} /> : null}
+        {status !== undefined ? <HttpStatusPill status={status} /> : null}
         {durationMs !== undefined ? (
           <span className="shrink-0 font-mono text-[10.5px] text-ink-3">{formatDurationMs(durationMs)}</span>
         ) : null}

@@ -6,8 +6,9 @@ import { useArchiveTerminalSession, useStopTerminalSession } from '../../api/use
 import { useRestartTerminalSession } from '../../api/use-restart-terminal-session';
 import { useTerminalSession } from '../../api/use-terminal-session';
 import type { TerminalStatus } from '../../api/types';
+import { sessionStatus } from '../../domain/session-status';
+import { Pill } from '@tickets/ui/pill';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
-import { SessionStatusPill } from '../../ui/session-status-pill';
 import { useSessionSocket } from '../session/use-session-socket';
 import { terminalDisplay } from './terminal-display';
 import { TerminalFrame } from './terminal-frame';
@@ -126,6 +127,7 @@ export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
   const busy = socket.integrated ? (socket.activity?.busy ?? false) : fallback.busy;
   const cmd = socket.integrated ? socket.activity?.command : undefined;
   const display = terminalDisplay(socket.conn, status, busy, cmd);
+  const st = sessionStatus(display.status, 'terminal');
 
   // Respawn on the SAME record: no navigation, no new session. Bump
   // restartEpoch so the socket reconnects and replays from the last seq the
@@ -160,11 +162,19 @@ export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
           onRestart={handleRestart}
           actions={
             <div className="flex items-center gap-2">
-              <SessionStatusPill
-                status={display.status}
+              <Pill
+                tone={st.tone}
+                emphasis={st.emphasis}
+                icon={st.icon}
                 label={display.label}
-                kind="terminal"
-                exitCode={exitCode}
+                className={st.className}
+                trailing={
+                  display.status === 'exited' && exitCode != null ? (
+                    <span className={exitCode === 0 ? 'font-mono text-opt-green' : 'font-mono text-danger'}>
+                      {exitCode}
+                    </span>
+                  ) : undefined
+                }
               />
               <Menu>
                 <MenuTrigger asChild>

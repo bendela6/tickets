@@ -3,6 +3,7 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { ApiError } from '../../api/api-error';
 import { usePatchIssueStatus, useSignalsApp, useSignalsIssues } from '../../api/signals/use-signals';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '../../ui/menu';
 import { appInitials, avatarTone } from './apps-screen';
 import { ClearSignalsDialog } from './clear-signals-dialog';
@@ -129,9 +130,7 @@ export function AppDetailScreen({ appId }: { appId: number }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="m-0 font-sans text-[18px] leading-tight font-semibold text-ink">{app.name}</h1>
-            <span className="inline-flex h-5.5 items-center rounded-md bg-inset px-2 font-mono text-[11px] font-medium text-ink-2">
-              {app.slug}
-            </span>
+            <Pill tone="secondary" label={app.slug} className="font-mono text-[11px]" />
           </div>
         </div>
         <Menu>

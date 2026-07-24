@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from 'react';
 import type { IssueDetail, PlatformInfo, SignalPayload } from '../../api/signals/signals-api';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import { formatCount } from './format';
 
 function RailCard({ title, children }: { title: string; children: ReactNode }) {
@@ -51,14 +52,12 @@ function UserCard({
 function TagPill({ tagKey, value }: { tagKey: string; value: unknown }) {
   const danger = tagKey === 'handled' && String(value) === 'no';
   return (
-    <span
-      className={cn(
-        'inline-flex h-5 items-center rounded-full px-2 font-mono text-[11px] font-medium',
-        danger ? 'bg-danger-subtle text-danger' : 'bg-inset text-ink',
-      )}
-    >
-      {String(value)}
-    </span>
+    <Pill
+      tone={danger ? 'danger' : 'secondary'}
+      label={String(value)}
+      shape="full"
+      className={cn('h-5 text-[11px] font-mono', !danger && 'text-ink')}
+    />
   );
 }
 

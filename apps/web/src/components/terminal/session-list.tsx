@@ -1,8 +1,9 @@
 import { Link } from '@tanstack/react-router';
 import { useArchiveTerminalSession, useUnarchiveTerminalSession } from '../../api/use-archive-terminal-session';
 import type { TerminalSession } from '../../api/types';
+import { sessionStatus } from '../../domain/session-status';
+import { Pill } from '@tickets/ui/pill';
 import { SessionKindGlyph } from '../../ui/session-kind-glyph';
-import { SessionStatusPill } from '../../ui/session-status-pill';
 import { formatAge } from '../../utils/format-age';
 
 // The mode-panel session list (Terminals). A terminal session never parents
@@ -47,6 +48,7 @@ function SessionRow({
 }) {
   const archiveSession = useArchiveTerminalSession();
   const unarchiveSession = useUnarchiveTerminalSession();
+  const st = sessionStatus(session.status, 'terminal');
 
   return (
     <Link
@@ -58,7 +60,16 @@ function SessionRow({
     >
       <SessionKindGlyph kind="terminal" />
       <span className="min-w-0 flex-1 truncate font-sans text-ui text-ink">{session.title}</span>
-      <SessionStatusPill status={session.status} exitCode={session.exitCode} kind="terminal" />
+      <Pill
+        {...st}
+        trailing={
+          session.status === 'exited' && session.exitCode != null ? (
+            <span className={session.exitCode === 0 ? 'font-mono text-opt-green' : 'font-mono text-danger'}>
+              {session.exitCode}
+            </span>
+          ) : undefined
+        }
+      />
       <button
         type="button"
         className="shrink-0 rounded-[4px] border border-hairline bg-raised px-1.5 py-0.5 font-sans text-meta text-ink-2 opacity-0 hover:border-control group-hover:opacity-100"

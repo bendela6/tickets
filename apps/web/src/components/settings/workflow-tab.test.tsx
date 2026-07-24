@@ -125,7 +125,10 @@ test('lists the transition edges for the default type, rendering option labels n
 test('shows the "any move allowed" hint when the selected type has no transition edges', async () => {
   renderTab(makeBoard());
 
-  await userEvent.click(screen.getByRole('tab', { name: 'Task' }));
+  // The type selector is a Pill toggle (button + aria-pressed), not an ARIA
+  // tab, since it moved off the retired custom tablist markup onto the
+  // shared Pill primitive.
+  await userEvent.click(screen.getByRole('button', { name: 'Task' }));
 
   const transitionsRegion = screen.getByRole('region', { name: 'Transitions' });
   expect(within(transitionsRegion).getByText(/any move is allowed/i)).toBeInTheDocument();

@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import type { StreamBlock, ToolResult } from './build-message-stream';
 
 export type RespondFn = (requestId: string, result: 'allow' | 'deny', reason?: string) => void;
@@ -107,9 +108,12 @@ function ApprovalCard({
       <div className="flex items-center gap-2 px-3.5 py-2.5">
         <span aria-hidden className="size-2.5 shrink-0 rotate-45 rounded-[1px] bg-kind-blocked" />
         <span className="font-sans text-ui font-semibold text-ink">Approval required</span>
-        <span className="rounded-[5px] border border-hairline bg-raised px-1.5 font-mono text-[11px] text-ink-2">
-          {toolName}
-        </span>
+        <Pill
+          tone="secondary"
+          emphasis="outline"
+          label={toolName}
+          className="h-auto rounded-[5px] border-hairline bg-raised px-1.5 py-0 font-mono text-[11px]"
+        />
         <span className="flex-1" />
         {decided ? (
           <span className="font-mono text-meta text-ink-3">
@@ -303,9 +307,12 @@ function SubagentGroup({
           {name.slice(0, 2).toUpperCase()}
         </span>
         <span className="font-mono text-meta font-semibold text-ink">{name}</span>
-        <span className="rounded-[3px] border border-hairline px-1.5 font-mono text-[9px] uppercase tracking-wide text-ink-3">
-          subagent
-        </span>
+        <Pill
+          tone="secondary"
+          emphasis="outline"
+          label="subagent"
+          className="h-auto rounded-[3px] px-1.5 py-0 font-mono text-[9px] uppercase tracking-wide"
+        />
         <ToolStatusDot status={statusOf(result)} />
         <span className="truncate font-mono text-meta text-ink-3">{oneLineInput(input)}</span>
       </div>

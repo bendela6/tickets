@@ -4,10 +4,11 @@ import type { AgentSessionStatus } from '../../api/types';
 import { useAgents } from '../../api/use-agents';
 import { useAgentSessions } from '../../api/use-agent-sessions';
 import { useDispatchAgent } from '../../api/use-dispatch-agent';
+import { sessionStatus } from '../../domain/session-status';
+import { Pill } from '@tickets/ui/pill';
 import { Button } from '../../ui/button';
 import { Combobox } from '../../ui/combobox';
 import { DialogContent, DialogDescription, DialogRoot, DialogTitle } from '../../ui/dialog';
-import { SessionStatusPill } from '../../ui/session-status-pill';
 import { Textarea } from '../../ui/textarea';
 
 const LIVE: AgentSessionStatus[] = ['starting', 'running', 'idle', 'awaiting_input'];
@@ -60,7 +61,7 @@ export function TicketDispatch({ itemId, actorId }: { itemId: number; actorId?: 
           title="an agent is working this ticket"
         >
           <span className="font-mono text-meta text-ink-3">✳ {live.title}</span>
-          <SessionStatusPill status={live.status} />
+          <Pill {...sessionStatus(live.status)} />
         </Link>
       ) : null}
       <Button size="compact" onClick={() => setOpen(true)}>

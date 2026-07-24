@@ -3,8 +3,10 @@ import { ReactRenderer } from '@tiptap/react';
 import type { SuggestionKeyDownProps, SuggestionProps } from '@tiptap/suggestion';
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import type { StatusKind } from '../../api/types';
+import { KIND_TONE } from '../../domain/status';
 import { Avatar } from '../../ui/avatar';
 import { cn } from '@tickets/ui/cn';
+import { toneClasses } from '@tickets/ui/tones';
 
 // RichTextEditor threads these two lookup sources through to the mention (@)
 // and ticket-ref (#) Mention nodes wired in @tickets/richtext. Either source
@@ -38,19 +40,13 @@ function deriveHandle(label: string): string {
   return `@${first.toLowerCase()}`;
 }
 
-const KIND_DOT: Record<StatusKind, string> = {
-  todo: 'bg-kind-todo',
-  active: 'bg-kind-active',
-  blocked: 'bg-kind-blocked',
-  done: 'bg-kind-done',
-  dropped: 'bg-kind-dropped',
-};
-
 // Neutral fallback (same token the committed ticket-ref chip's dot uses,
 // see `.rt [data-ticket-ref-dot]` in instrument.css) for rows whose source
-// couldn't derive a real status kind.
+// couldn't derive a real status kind. Sources its color from the app's ONE
+// status→tone mapping (domain/status.ts) instead of a locally duplicated
+// kind→class table.
 function statusDotClass(kind: StatusKind | null | undefined): string {
-  return kind ? (KIND_DOT[kind] ?? 'bg-opt-gray') : 'bg-opt-gray';
+  return toneClasses(kind ? KIND_TONE[kind] : 'gray', 'solid');
 }
 
 function PeopleRow({ item, selected }: { item: SuggestionItem; selected: boolean }) {

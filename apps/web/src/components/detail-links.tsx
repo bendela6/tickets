@@ -4,7 +4,7 @@ import { useCreateLink } from '../api/use-create-link';
 import { useDeleteLink } from '../api/use-delete-link';
 import { useCurrentUser } from '../state/current-user-context';
 import { Button } from '../ui/button';
-import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import { Combobox } from '../ui/combobox';
 import type { ComboOption } from '../ui/combobox-list';
 import { Input } from '../ui/input';
@@ -120,16 +120,11 @@ export function DetailLinks({
                 key={link.id}
                 className="flex h-8.5 items-center gap-2.25 rounded-[9px] border border-hairline px-2.75 hover:bg-app"
               >
-                <span
-                  className={cn(
-                    'inline-flex h-5 shrink-0 items-center rounded-ctrl px-2 font-sans text-label font-medium',
-                    chip.blocked
-                      ? 'bg-kind-blocked-subtle text-kind-blocked'
-                      : 'bg-inset text-ink-2',
-                  )}
-                >
-                  {chip.text}
-                </span>
+                <Pill
+                  tone={chip.blocked ? 'orange' : 'secondary'}
+                  label={chip.text}
+                  className="h-5 rounded-ctrl text-label"
+                />
                 <button
                   type="button"
                   className="shrink-0"

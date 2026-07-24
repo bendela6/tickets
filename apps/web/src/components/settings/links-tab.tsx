@@ -5,6 +5,7 @@ import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import { Combobox } from '../../ui/combobox';
 import type { ComboOption } from '../../ui/combobox-list';
 import { FieldLabel } from '../../ui/field-label';
@@ -30,11 +31,7 @@ function ArchChip() {
 // Same folded-direction chip text as detail-links: outgoing "label →",
 // incoming "← inverseLabel", symmetric "label ↔".
 function DirectionChip({ text }: { text: string }) {
-  return (
-    <span className="inline-flex h-5 shrink-0 items-center rounded-ctrl bg-inset px-2 font-sans text-label font-medium text-ink-2">
-      {text}
-    </span>
-  );
+  return <Pill tone="secondary" label={text} className="h-5 rounded-ctrl text-label" />;
 }
 
 // Toggling a chip PUTs the *whole* new set to /api/link-types/:id/target-types
@@ -62,21 +59,22 @@ function TargetTypeChips({
       {candidates.map((candidate) => {
         const active = selected.includes(candidate.id);
         return (
-          <button
+          <Pill
             key={candidate.id}
-            type="button"
-            disabled={disabled}
-            aria-pressed={active}
-            onClick={() => onToggle(candidate.id)}
+            onClick={() => {
+              if (!disabled) onToggle(candidate.id);
+            }}
+            pressed={active}
+            shape="full"
+            label={candidate.label}
+            tone={active ? 'primary' : 'secondary'}
+            emphasis={active ? 'subtle' : 'outline'}
             className={cn(
-              'inline-flex h-6 shrink-0 items-center rounded-full border px-2.5 font-sans text-meta font-medium transition-colors',
-              active
-                ? 'border-accent bg-accent-subtle text-accent'
-                : 'border-control bg-raised text-ink-2 hover:bg-inset',
+              'h-6 border px-2.5 transition-colors',
+              active ? 'border-accent' : 'border-control bg-raised hover:bg-inset',
+              disabled && 'pointer-events-none opacity-50',
             )}
-          >
-            {candidate.label}
-          </button>
+          />
         );
       })}
     </div>

@@ -4,10 +4,11 @@ import { useAgents } from '../../api/use-agents';
 import { useAgentProviders } from '../../api/use-agent-providers';
 import { useAgentSessions } from '../../api/use-agent-sessions';
 import { useCreateAgentSession } from '../../api/use-create-agent-session';
+import { sessionStatus } from '../../domain/session-status';
+import { Pill } from '@tickets/ui/pill';
 import { Avatar } from '../../ui/avatar';
 import { Button } from '../../ui/button';
 import { SessionKindGlyph } from '../../ui/session-kind-glyph';
-import { SessionStatusPill } from '../../ui/session-status-pill';
 import { formatAge } from '../../utils/format-age';
 import { AgentBadge, PermissionBadge, providerLabel } from './agent-card';
 import { AgentEditor } from './agent-editor';
@@ -118,7 +119,7 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
               >
                 <SessionKindGlyph kind="agent" />
                 <span className="flex-1 truncate font-sans text-ui text-ink">{s.title}</span>
-                <SessionStatusPill status={s.status} />
+                <Pill {...sessionStatus(s.status)} />
                 <span className="font-mono text-meta text-ink-3">{formatAge(s.createdAt)}</span>
               </Link>
             ))}
