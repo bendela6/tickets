@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ActivityFilters, IssueLevel } from '../../api/signals/signals-api';
 import { useSignalsActivity, useSignalsApps } from '../../api/signals/use-signals';
 import { ScreenState } from '@tickets/ui/screen-state';
+import { Spinner } from '@tickets/ui/spinner';
 import { ACTIVITY_GRID_COLUMNS, ActivityRow, ActivityRowSkeleton } from './activity-row';
 import { ActivityToolbar } from './activity-toolbar';
 import { formatCount } from './format';
@@ -180,10 +181,7 @@ export function ActivityScreen() {
               ))}
             </div>
             <div className="flex h-9.5 shrink-0 items-center gap-2.5 border-t border-hairline bg-app px-3.5 font-mono text-[11px] text-ink-3">
-              <span
-                aria-hidden
-                className="size-2.75 animate-spin rounded-full border-2 border-hairline border-t-ink-2"
-              />
+              <Spinner size={11} tone="secondary" />
               <span>loading activity…</span>
             </div>
           </>

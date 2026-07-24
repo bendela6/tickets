@@ -5,6 +5,7 @@ import { useSignalsApps, useSignalsMeta } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
 import { ScreenState } from '@tickets/ui/screen-state';
+import { Spinner } from '@tickets/ui/spinner';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '../../ui/menu';
 import { ClearSignalsDialog } from './clear-signals-dialog';
 import { DeleteAppDialog } from './delete-app-dialog';
@@ -226,10 +227,7 @@ export function AppsScreen() {
       {isLoading ? (
         <div className="flex flex-1 items-center justify-center">
           <span className="flex items-center gap-2.5 font-mono text-[11.5px] text-ink-3">
-            <span
-              aria-hidden
-              className="size-2.75 animate-spin rounded-full border-2 border-hairline border-t-ink-2"
-            />
+            <Spinner size={11} tone="secondary" />
             loading apps…
           </span>
         </div>
