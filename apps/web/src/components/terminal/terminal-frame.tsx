@@ -8,10 +8,10 @@ import type { ConnState } from '../session/use-session-socket';
 export type { ConnState };
 
 const INDICATOR: Record<ConnState, { dot: string; label: string; pulse?: boolean }> = {
-  connecting: { dot: 'bg-kind-todo', label: 'connecting…' },
-  live: { dot: 'bg-kind-done', label: 'live' },
-  reconnecting: { dot: 'bg-kind-blocked', label: 'reconnecting…', pulse: true },
-  ended: { dot: 'bg-kind-dropped', label: 'ended' },
+  connecting: { dot: 'bg-opt-gray', label: 'connecting…' },
+  live: { dot: 'bg-opt-green', label: 'live' },
+  reconnecting: { dot: 'bg-opt-orange', label: 'reconnecting…', pulse: true },
+  ended: { dot: 'bg-opt-gray', label: 'ended' },
 };
 
 function ConnIndicator({ state }: { state: ConnState }) {
@@ -81,7 +81,7 @@ export function TerminalFrame({
                 <>
                   Exited with code{' '}
                   <span
-                    className={cn('font-mono', exitCode === 0 ? 'text-kind-done' : 'text-danger')}
+                    className={cn('font-mono', exitCode === 0 ? 'text-opt-green' : 'text-danger')}
                   >
                     {exitCode}
                   </span>

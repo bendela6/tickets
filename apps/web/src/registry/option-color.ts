@@ -74,7 +74,7 @@ export function hexToOptionColor(hex: string | undefined | null): OptionColor {
 // actually declared above (no slate/amber/rose in this palette): todo/dropped
 // are both neutral (gray) — dropped is further distinguished by the pill's
 // strikethrough — active is blue, blocked is orange (nearest hue to the
-// kind-blocked design token, #c25425), done is green.
+// retired blocked-status color token, #c25425 — now opt-orange), done is green.
 export function kindColor(kind: StatusKind | null): OptionColor {
   switch (kind) {
     case 'todo':

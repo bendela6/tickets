@@ -1,24 +1,17 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Board, Item } from '../api/types';
+import type { Board, Item, StatusKind } from '../api/types';
 import { useCreateItem } from '../api/use-create-item';
 import { usePatchItem } from '../api/use-patch-item';
+import { KIND_ICON, KIND_TONE } from '../domain/status';
 import { useCurrentUser } from '../state/current-user-context';
 import { cn } from '@tickets/ui/cn';
-import { KindGlyph, type StatusKind } from '../ui/kind-glyph';
+import { Icon } from '@tickets/ui/icon';
 import { StatusSelect } from '../ui/status-select';
 import { ItemKey } from '../ui/item-key';
 import { childProgress } from '../utils/child-progress';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
-
-const KIND_TEXT: Record<StatusKind, string> = {
-  todo: 'text-kind-todo',
-  active: 'text-kind-active',
-  blocked: 'text-kind-blocked',
-  done: 'text-kind-done',
-  dropped: 'text-kind-dropped',
-};
 
 // Subtasks panel: progress header, one row per child (kind glyph, key, title,
 // inline status select), and the always-there "type a title" creator row.
@@ -75,7 +68,7 @@ export function DetailChildren({
           <>
             <span className="h-1 w-15 overflow-hidden rounded-full bg-inset">
               <span
-                className="block h-full bg-kind-done"
+                className="block h-full bg-opt-green"
                 style={{
                   width: `${progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0}%`,
                 }}
@@ -114,8 +107,8 @@ export function DetailChildren({
               className="flex h-9.5 cursor-pointer items-center gap-2.5 border-b border-hairline px-3 hover:bg-app"
               onClick={() => onOpenItem(child.number)}
             >
-              <span aria-hidden className={cn('inline-flex shrink-0', KIND_TEXT[kind])}>
-                <KindGlyph kind={kind} />
+              <span aria-hidden className="inline-flex shrink-0">
+                <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
               </span>
               <ItemKey
                 prefix={prefix}

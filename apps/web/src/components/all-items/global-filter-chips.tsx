@@ -273,7 +273,7 @@ export function GlobalFilterChips({
       {dirty ? (
         <>
           <span className="inline-flex items-center gap-2 font-sans text-meta text-ink-2">
-            <span aria-hidden className="size-1.5 rounded-full bg-kind-blocked" />
+            <span aria-hidden className="size-1.5 rounded-full bg-opt-orange" />
             Unsaved changes
           </span>
           <Button size="compact" onClick={onSaveToView}>

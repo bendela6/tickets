@@ -107,7 +107,7 @@ export function IssueRow({
             title="Resolve"
             aria-label="Resolve"
             onClick={onResolve}
-            className="hidden size-6 items-center justify-center rounded-md text-ink-3 hover:bg-kind-done-subtle hover:text-kind-done group-hover:flex"
+            className="hidden size-6 items-center justify-center rounded-md text-ink-3 hover:bg-opt-green-subtle hover:text-opt-green group-hover:flex"
           >
             ✓
           </button>

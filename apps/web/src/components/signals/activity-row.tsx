@@ -1,12 +1,14 @@
 import { Link } from '@tanstack/react-router';
+import { Icon } from '@tickets/ui/icon';
 import type { SignalListRow } from '../../api/signals/signals-api';
+import { signalKindIcon, signalKindTone } from '../../domain/signal-status';
 import { relativeTime } from './format';
-import { KindGlyph } from './kind-glyph';
 import { LevelDot } from './level-dot';
 
 // Grid: kind glyph · level dot · name/message · app · when · session link.
 // One extra column vs. ISSUES_GRID_COLUMNS (issue-row.tsx) since a log/event
-// row carries both a kind glyph (log vs. event, per kind-glyph.tsx) AND a
+// row carries both a kind glyph (log vs. event, per domain/signal-status.tsx's
+// signalKindIcon) AND a
 // level dot (info/warning/error, per level-dot.tsx) — an issue row only
 // needs the level dot, kind is implicit ("issue"). Shared by the header row,
 // data rows, and the loading skeleton so all columns stay aligned.
@@ -20,7 +22,7 @@ export function ActivityRow({ signal }: { signal: SignalListRow }) {
       style={{ gridTemplateColumns: ACTIVITY_GRID_COLUMNS }}
     >
       <span className="flex">
-        <KindGlyph type={signal.kind} />
+        <Icon name={signalKindIcon(signal.kind)} tone={signalKindTone(signal.kind)} size={11} label={signal.kind} />
       </span>
       <span className="flex">
         <LevelDot level={signal.level} />

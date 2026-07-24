@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { cn } from '@tickets/ui/cn';
+import { Icon } from '@tickets/ui/icon';
 import { Pill } from '@tickets/ui/pill';
-import { statusPill } from '../domain/status';
+import type { StatusKind } from '../api/types';
+import { KIND_ICON, KIND_TONE, statusPill } from '../domain/status';
 import { ComboboxList, type ComboOption } from './combobox-list';
-import { KindGlyph, type StatusKind } from './kind-glyph';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
 export type StatusOption = { key: string; label: string; kind: StatusKind };
@@ -96,8 +97,8 @@ export function StatusSelect({
             const kind = kindByKey.get(option.value) ?? 'todo';
             return (
               <span className="inline-flex items-center gap-2.25">
-                <span className={cn('inline-flex', kindTextClass(kind))}>
-                  <KindGlyph kind={kind} />
+                <span className="inline-flex">
+                  <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
                 </span>
                 <span className="font-sans text-ui text-ink">{option.label}</span>
               </span>
@@ -112,14 +113,4 @@ export function StatusSelect({
       </PopoverContent>
     </Popover>
   );
-}
-
-function kindTextClass(kind: StatusKind) {
-  return {
-    todo: 'text-kind-todo',
-    active: 'text-kind-active',
-    blocked: 'text-kind-blocked',
-    done: 'text-kind-done',
-    dropped: 'text-kind-dropped',
-  }[kind];
 }

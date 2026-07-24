@@ -3,26 +3,18 @@ import type { JSX } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Board, Field, Item, Option, StatusKind } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
-import { typePill } from '../domain/status';
+import { KIND_ICON, KIND_TONE, typePill } from '../domain/status';
 import { hexToOptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
 import { Avatar } from '../ui/avatar';
 import { cn } from '@tickets/ui/cn';
+import { Icon } from '@tickets/ui/icon';
 import { Pill } from '@tickets/ui/pill';
-import { KindGlyph } from '../ui/kind-glyph';
 import { RelativeDate } from '../ui/relative-date';
 import { ItemKey } from '../ui/item-key';
 import { childProgress } from '../utils/child-progress';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
-
-const kindTextClass: Record<StatusKind, string> = {
-  todo: 'text-kind-todo',
-  active: 'text-kind-active',
-  blocked: 'text-kind-blocked',
-  done: 'text-kind-done',
-  dropped: 'text-kind-dropped',
-};
 
 // Card decorations come from conventionally named fields; the board schema is
 // user-defined, so we match by key/label rather than hard-coding field ids.
@@ -302,8 +294,8 @@ export function KanbanView({
             }
           >
             <div className="flex items-center gap-2 px-3.25 pt-3 pb-2">
-              <span className={cn('inline-flex shrink-0', kindTextClass[kind])}>
-                <KindGlyph kind={kind} />
+              <span className="inline-flex shrink-0">
+                <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
               </span>
               <span className="font-sans text-ui font-medium text-ink">{option.label}</span>
               <span className="font-mono text-[11px] text-ink-3">{cards.length}</span>

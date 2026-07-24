@@ -116,7 +116,7 @@ function ProgressCell({ ticket, indexes }: { ticket: Item; indexes: BoardIndexes
   return (
     <span className="inline-flex items-center gap-1.75" title={`${done} of ${total} subtasks done`}>
       <span className="inline-flex h-1 w-9 shrink-0 overflow-hidden rounded-xs bg-inset">
-        <span className="h-full bg-kind-done" style={{ width: `${percent}%` }} />
+        <span className="h-full bg-opt-green" style={{ width: `${percent}%` }} />
       </span>
       <span className="font-mono text-[11px] text-ink-2">
         {done}/{total}

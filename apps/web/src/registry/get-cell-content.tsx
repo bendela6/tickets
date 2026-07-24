@@ -71,7 +71,7 @@ export function getCellContent(
     return String(rawValue);
   }
   if (field.type === 'boolean') {
-    return rawValue === true ? <span className="text-kind-done">✓</span> : empty;
+    return rawValue === true ? <span className="text-opt-green">✓</span> : empty;
   }
   if (field.type === 'date') {
     const date = new Date(String(rawValue));

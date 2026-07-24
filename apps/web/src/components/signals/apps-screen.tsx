@@ -45,8 +45,8 @@ export function appInitials(name: string): string {
 // Deterministic from the slug so an app keeps its color across renders/reloads.
 const AVATAR_TONES = [
   'bg-accent-subtle text-accent',
-  'bg-kind-done-subtle text-kind-done',
-  'bg-kind-blocked-subtle text-kind-blocked',
+  'bg-opt-green-subtle text-opt-green',
+  'bg-opt-orange-subtle text-opt-orange',
   'bg-inset text-ink-2',
 ];
 

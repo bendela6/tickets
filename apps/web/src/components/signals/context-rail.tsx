@@ -149,7 +149,7 @@ function PlatformCard({
             key={index}
             className={cn(
               'inline-flex h-5 items-center gap-1 rounded-ctrl px-1.75 font-mono text-[10.5px] font-medium',
-              chip.accent ? 'bg-kind-active-subtle text-kind-active' : 'bg-inset text-ink-2',
+              chip.accent ? 'bg-opt-blue-subtle text-opt-blue' : 'bg-inset text-ink-2',
             )}
           >
             {chip.glyph} {chip.label}

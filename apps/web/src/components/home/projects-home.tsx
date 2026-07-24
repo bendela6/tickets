@@ -3,8 +3,9 @@ import { Link } from '@tanstack/react-router';
 import type { ProjectStats } from '../../api/use-project-stats';
 import { useProjects } from '../../api/use-projects';
 import { useProjectStats } from '../../api/use-project-stats';
+import { KIND_ICON, KIND_TONE } from '../../domain/status';
 import { Button } from '../../ui/button';
-import { KindGlyph } from '../../ui/kind-glyph';
+import { Icon } from '@tickets/ui/icon';
 import { relativeLabel } from '../../ui/relative-date';
 import { NewProjectDialog } from '../shell/new-project-dialog';
 
@@ -33,32 +34,32 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
 
       <div className="flex flex-col gap-1.75">
         <div className="flex h-1.5 gap-0.5 overflow-hidden rounded-full">
-          {counts.done > 0 ? <span className="bg-kind-done" style={{ flex: counts.done }} /> : null}
+          {counts.done > 0 ? <span className="bg-opt-green" style={{ flex: counts.done }} /> : null}
           {counts.active > 0 ? (
-            <span className="bg-kind-active" style={{ flex: counts.active }} />
+            <span className="bg-opt-blue" style={{ flex: counts.active }} />
           ) : null}
           {counts.blocked > 0 ? (
-            <span className="bg-kind-blocked" style={{ flex: counts.blocked }} />
+            <span className="bg-opt-orange" style={{ flex: counts.blocked }} />
           ) : null}
           {counts.todo > 0 ? <span className="bg-control" style={{ flex: counts.todo }} /> : null}
           {total === 0 ? <span className="flex-1 bg-hairline" /> : null}
         </div>
         <div className="flex items-center gap-3.5 font-sans text-meta text-ink-2">
           <span className="font-mono text-ui font-semibold text-ink">{pct}%</span>
-          <span className="inline-flex items-center gap-1.25 text-kind-todo">
-            <KindGlyph kind="todo" />
+          <span className="inline-flex items-center gap-1.25">
+            <Icon name={KIND_ICON.todo} tone={KIND_TONE.todo} size={10} />
             <span className="text-ink-2">{counts.todo}</span>
           </span>
-          <span className="inline-flex items-center gap-1.25 text-kind-active">
-            <KindGlyph kind="active" />
+          <span className="inline-flex items-center gap-1.25">
+            <Icon name={KIND_ICON.active} tone={KIND_TONE.active} size={10} />
             <span className="text-ink-2">{counts.active}</span>
           </span>
-          <span className="inline-flex items-center gap-1.25 text-kind-blocked">
-            <KindGlyph kind="blocked" />
+          <span className="inline-flex items-center gap-1.25">
+            <Icon name={KIND_ICON.blocked} tone={KIND_TONE.blocked} size={10} />
             <span className="text-ink-2">{counts.blocked}</span>
           </span>
-          <span className="inline-flex items-center gap-1.25 text-kind-done">
-            <KindGlyph kind="done" />
+          <span className="inline-flex items-center gap-1.25">
+            <Icon name={KIND_ICON.done} tone={KIND_TONE.done} size={10} />
             <span className="text-ink-2">{counts.done}</span>
           </span>
           <span className="flex-1" />

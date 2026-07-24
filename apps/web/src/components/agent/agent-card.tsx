@@ -41,7 +41,7 @@ export function PermissionBadge({ mode }: { mode: PermissionMode }) {
     <span
       className={cn(
         'inline-flex h-5 items-center rounded-[5px] px-1.75 font-mono text-[10px]',
-        autonomous ? 'bg-accent-subtle text-accent' : 'bg-kind-blocked-subtle text-kind-blocked',
+        autonomous ? 'bg-accent-subtle text-accent' : 'bg-opt-orange-subtle text-opt-orange',
       )}
     >
       {MODE_LABEL[mode]}

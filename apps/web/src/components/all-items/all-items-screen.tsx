@@ -4,16 +4,17 @@ import { fetchJson } from '../../api/client';
 import type { Board, Field, Item, StatusKind } from '../../api/types';
 import { usePatchItem } from '../../api/use-patch-item';
 import { useProjects } from '../../api/use-projects';
-import { typePill } from '../../domain/status';
+import { KIND_ICON, KIND_TONE, typePill } from '../../domain/status';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Avatar } from '../../ui/avatar';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { Icon } from '@tickets/ui/icon';
 import { Pill } from '@tickets/ui/pill';
+import { toneClasses } from '@tickets/ui/tones';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 import { Input } from '../../ui/input';
-import { KindGlyph } from '../../ui/kind-glyph';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
 import { RelativeDate } from '../../ui/relative-date';
 import { StatusSelect } from '../../ui/status-select';
@@ -50,12 +51,12 @@ import {
 
 type Row = { entry: ProjectEntry; ticket: Item };
 
-const KIND_ORDER: { kind: StatusKind; label: string; textClass: string }[] = [
-  { kind: 'todo', label: 'To do', textClass: 'text-kind-todo' },
-  { kind: 'active', label: 'Active', textClass: 'text-kind-active' },
-  { kind: 'blocked', label: 'Blocked', textClass: 'text-kind-blocked' },
-  { kind: 'done', label: 'Done', textClass: 'text-kind-done' },
-  { kind: 'dropped', label: 'Dropped', textClass: 'text-kind-dropped' },
+const KIND_ORDER: { kind: StatusKind; label: string }[] = [
+  { kind: 'todo', label: 'To do' },
+  { kind: 'active', label: 'Active' },
+  { kind: 'blocked', label: 'Blocked' },
+  { kind: 'done', label: 'Done' },
+  { kind: 'dropped', label: 'Dropped' },
 ];
 
 // One BoardIndexes per fetched board payload; keyed on the payload object so a
@@ -326,7 +327,8 @@ export function AllItemsScreen() {
     }
   } else {
     const entryOrder = new Map(entries.map((entry, index) => [entry, index]));
-    for (const { kind, label, textClass } of KIND_ORDER) {
+    for (const { kind, label } of KIND_ORDER) {
+      const textClass = toneClasses(KIND_TONE[kind], 'text');
       const rows = allRows
         .filter((row) => kindOf(row) === kind)
         .sort(
@@ -341,8 +343,8 @@ export function AllItemsScreen() {
         key: kind,
         header: (
           <>
-            <span className={cn('inline-flex shrink-0', textClass)}>
-              <KindGlyph kind={kind} />
+            <span className="inline-flex shrink-0">
+              <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
             </span>
             <span className={cn('font-sans text-ui font-medium', textClass)}>{label}</span>
             <span className="font-mono text-[11px] text-ink-3">{rows.length} shown</span>
@@ -528,7 +530,7 @@ export function AllItemsScreen() {
                 <span
                   aria-hidden
                   title="Unsaved changes"
-                  className="size-1.5 rounded-full bg-kind-blocked"
+                  className="size-1.5 rounded-full bg-opt-orange"
                 />
               ) : null}
             </button>

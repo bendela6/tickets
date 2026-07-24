@@ -146,7 +146,7 @@ export function NewAppDialog({
         ) : (
           <>
             <div className="flex items-start gap-3">
-              <span className="flex size-7.5 shrink-0 items-center justify-center rounded-full bg-kind-done-subtle font-sans text-[13px] font-semibold text-kind-done">
+              <span className="flex size-7.5 shrink-0 items-center justify-center rounded-full bg-opt-green-subtle font-sans text-[13px] font-semibold text-opt-green">
                 ✓
               </span>
               <div className="flex-1">
