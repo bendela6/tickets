@@ -1,3 +1,4 @@
+import { definePlayground, number, boolean } from '@tickets/ui/gallery';
 import { CostMeter } from './cost-meter';
 
 function UncappedFixture() {
@@ -12,6 +13,18 @@ function OverCapFixture() {
   return <CostMeter costUsd={5.2} capUsd={5} />;
 }
 
+function CostMeterPlaygroundFixture({
+  costUsd,
+  capped,
+  capUsd,
+}: {
+  costUsd: number;
+  capped: boolean;
+  capUsd: number;
+}) {
+  return <CostMeter costUsd={costUsd} capUsd={capped ? capUsd : undefined} />;
+}
+
 export const meta = { title: 'Cost Meter', group: 'AI session' };
 
 export const states = [
@@ -19,3 +32,12 @@ export const states = [
   { name: 'capped', render: () => <CappedFixture /> },
   { name: 'over cap', render: () => <OverCapFixture /> },
 ];
+
+export const playground = definePlayground({
+  controls: {
+    costUsd: number(1.06, { min: 0, max: 20, step: 0.01 }),
+    capped: boolean(true),
+    capUsd: number(5, { min: 0, max: 20 }),
+  },
+  render: (v) => <CostMeterPlaygroundFixture {...v} />,
+});
