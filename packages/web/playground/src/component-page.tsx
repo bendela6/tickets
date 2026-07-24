@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Group, Panel, Separator, type Layout } from 'react-resizable-panels';
 import { cn } from '@tickets/ui/cn';
 import { initialValues, type CollectedDemo } from '@tickets/ui/gallery';
 import { A11yTab } from './a11y-tab';
+import { getAxe } from './axe';
 import { CodeTab } from './code-tab';
 import { ControlsPanel } from './controls-panel';
 import { loadLayout, saveLayout } from './persisted-layout';
@@ -44,7 +45,32 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
   const [defaultLayout] = useState<Layout | undefined>(() => loadLayout(WORKBENCH_LAYOUT_KEY));
   const [splitThemes, setSplitThemes] = useState(false);
   const [matrixMode, setMatrixMode] = useState(false);
+  const [auditing, setAuditing] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
+
+  // axe-core's default excludeHidden skips display:none subtrees entirely,
+  // so the preview must be genuinely visible while the audit walks it — the
+  // a11y tab's `hidden` wrapper below is temporarily overridden by
+  // `auditing`. The double-rAF gives React a chance to commit the unhidden
+  // wrapper and the browser a chance to flush layout/styles before axe
+  // reads them; jsdom's rAF works for this, but fall back to a macrotask if
+  // it's ever unavailable.
+  const runAudit = useCallback(async () => {
+    setAuditing(true);
+    try {
+      await new Promise<void>((resolve) => {
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        } else {
+          setTimeout(resolve, 0);
+        }
+      });
+      const axe = await getAxe();
+      return await axe(previewRef.current!);
+    } finally {
+      setAuditing(false);
+    }
+  }, []);
 
   // Get select control keys for matrix mode
   const selectKeys = playground
@@ -142,7 +168,7 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
         )}
       </div>
 
-      <div className={tab === 'preview' ? '' : 'hidden'}>
+      <div className={tab === 'preview' || auditing ? '' : 'hidden'}>
         {playground ? (
           <Group
             id="playground-workbench"
@@ -217,7 +243,7 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
         <SourceTab demo={demo} source={source} />
       </div>
       <div className={tab === 'a11y' ? '' : 'hidden'}>
-        {playground && <A11yTab targetRef={previewRef as React.RefObject<HTMLDivElement | null>} />}
+        {playground && <A11yTab runAudit={runAudit} />}
       </div>
     </div>
   );

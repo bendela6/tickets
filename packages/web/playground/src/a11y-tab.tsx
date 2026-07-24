@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AxeResults } from 'axe-core';
 import { cn } from '@tickets/ui/cn';
-import { getAxe } from './axe';
 
 interface AuditState {
   results: AxeResults | null;
@@ -33,7 +32,7 @@ function getImpactClasses(impact: string | null | undefined): string {
   return 'bg-control text-ink-2';
 }
 
-export function A11yTab({ targetRef }: { targetRef: React.RefObject<HTMLDivElement | null> }) {
+export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<AxeResults> }) {
   const [auditState, setAuditState] = useState<AuditState>({
     results: null,
     timestamp: null,
@@ -55,13 +54,10 @@ export function A11yTab({ targetRef }: { targetRef: React.RefObject<HTMLDivEleme
   }, [auditState.timestamp]);
 
   const runAudit = async () => {
-    if (!targetRef.current) return;
-
     setAuditState((prev) => ({ ...prev, isLoading: true }));
 
     try {
-      const axeRunner = await getAxe();
-      const results = await axeRunner(targetRef.current);
+      const results = await runAuditImpl();
       setAuditState({
         results,
         timestamp: Date.now(),
