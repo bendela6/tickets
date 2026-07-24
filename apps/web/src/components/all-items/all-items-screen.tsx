@@ -4,6 +4,7 @@ import { fetchJson } from '../../api/client';
 import type { Board, Field, Item, StatusKind } from '../../api/types';
 import { usePatchItem } from '../../api/use-patch-item';
 import { useProjects } from '../../api/use-projects';
+import { typePill } from '../../domain/status';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Avatar } from '../../ui/avatar';
@@ -408,7 +409,7 @@ export function AllItemsScreen() {
   const cell = (id: string, row: Row): ReactNode => {
     if (id === 'type') {
       const type = row.entry.indexes.typeById.get(row.ticket.typeId);
-      return <Pill tone="neutral" emphasis="outline" label={type?.label ?? '?'} />;
+      return <Pill {...typePill} label={type?.label ?? '?'} />;
     }
     if (id === 'subs') {
       const { any, done, total } = childProgress(row.ticket, row.entry.indexes);

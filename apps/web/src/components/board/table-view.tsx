@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import type { Board, Item } from '../../api/types';
 import { usePatchItem } from '../../api/use-patch-item';
+import { typePill } from '../../domain/status';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
@@ -289,7 +290,7 @@ export function TableView({
       const type = indexes.typeById.get(ticket.typeId);
       return (
         <span key={key} className="px-2">
-          <Pill tone="neutral" emphasis="outline" label={type?.label ?? '?'} />
+          <Pill {...typePill} label={type?.label ?? '?'} />
         </span>
       );
     }

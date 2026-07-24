@@ -56,7 +56,13 @@ function ArchChip() {
 // workflow canvas treatment for the start of the graph.
 function EntryPill() {
   return (
-    <Pill tone="green" emphasis="outline" shape="full" label="entry" className="font-mono" />
+    <Pill
+      tone="green"
+      emphasis="outline"
+      shape="full"
+      label="entry"
+      className="border-dashed font-mono"
+    />
   );
 }
 
