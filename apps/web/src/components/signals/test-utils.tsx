@@ -58,5 +58,10 @@ export function renderSignals(
       <RouterProvider router={router} />
     </QueryClientProvider>,
   );
-  return { ...result, fetchMock, queryClient };
+  // `router` is exposed so callers can assert a click/action navigated
+  // somewhere (e.g. `router.state.location.pathname`) even when the target
+  // is reached via `useNavigate()` rather than a `Link` with an inspectable
+  // `href` — the memory router still tracks the location even though this
+  // test root has no child routes registered to render at that path.
+  return { ...result, fetchMock, queryClient, router };
 }

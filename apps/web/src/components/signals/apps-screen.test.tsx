@@ -49,6 +49,19 @@ test('(a) renders app rows with 24h counts and the db-size footer', async () => 
   expect(screen.getByText(/2 apps · sending to .*\/signals-api/)).toBeInTheDocument();
 });
 
+test('clicking a row navigates to /signals/apps/$appId ("Go to app")', async () => {
+  const { router } = renderSignals(<AppsScreen />, {
+    fetchRoutes: [{ test: /\/signals-api\/apps$/, handler: () => [APP_A, APP_B] }, metaRoute],
+    initialPath: '/signals/apps',
+  });
+
+  const row = (await screen.findByText('admin-panel')).closest('[role="row"]');
+  expect(row).not.toBeNull();
+  fireEvent.click(row!);
+
+  await waitFor(() => expect(router.state.location.pathname).toBe('/signals/apps/2'));
+});
+
 test('(b) empty list shows "Connect your first app"', async () => {
   renderSignals(<AppsScreen />, {
     fetchRoutes: [{ test: /\/signals-api\/apps$/, handler: () => [] }, metaRoute],

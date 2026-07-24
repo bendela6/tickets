@@ -20,11 +20,18 @@ import {
 } from './signals-api';
 import type { ActivityFilters, ClearSignalsFilters, IssueFilters, IssueStatus } from './signals-api';
 
-export function useSignalsIssues(filters: IssueFilters) {
+// `enabled` defaults to true so existing callers (IssuesScreen, the
+// segmented-control counts, AppsScreen) are unaffected — it exists so a
+// caller with an id-derived filter (e.g. AppDetailScreen's `app: appId`) can
+// gate the request off entirely for an invalid id, matching useSignalsApp/
+// useSignalsIssue's `enabled: Number.isFinite(id)` pattern rather than firing
+// a request and only then discovering the id was bogus.
+export function useSignalsIssues(filters: IssueFilters, enabled: boolean = true) {
   return useQuery({
     queryKey: ['signals', 'issues', filters],
     queryFn: () => listIssues(filters),
     refetchInterval: 10000,
+    enabled,
   });
 }
 

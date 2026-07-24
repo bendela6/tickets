@@ -95,3 +95,32 @@ test('a 404 on the app shows "App not found"', async () => {
   expect(await screen.findByText('App not found')).toBeInTheDocument();
   expect(fetchMock).toHaveBeenCalled();
 });
+
+test('a NaN appId renders "App not found" and never touches the network — both useSignalsApp and the recent-issues query must self-disable', async () => {
+  const { fetchMock } = renderSignals(<AppDetailScreen appId={Number('abc')} />, { fetchRoutes: [] });
+
+  expect(await screen.findByText('App not found')).toBeInTheDocument();
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+
+test('a release with null firstSeen/lastSeen renders "—" for Last seen', async () => {
+  const NO_DATES_RELEASE: AppReleaseRow = {
+    ...RELEASE,
+    release: '1.45.0-beta',
+    firstSeen: null,
+    lastSeen: null,
+  };
+
+  renderSignals(<AppDetailScreen appId={1} />, {
+    fetchRoutes: [
+      appRoute(),
+      { test: /\/signals-api\/apps\/1\/releases$/, handler: () => [NO_DATES_RELEASE] },
+      issuesRoute(),
+    ],
+  });
+
+  expect(await screen.findByText('1.45.0-beta')).toBeInTheDocument();
+  const row = screen.getByText('1.45.0-beta').closest('[role="row"]');
+  expect(row).not.toBeNull();
+  expect(row).toHaveTextContent('—');
+});

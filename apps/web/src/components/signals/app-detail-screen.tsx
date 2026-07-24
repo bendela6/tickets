@@ -39,7 +39,12 @@ export function AppDetailScreen({ appId }: { appId: number }) {
 
   const navigate = useNavigate();
   const appQuery = useSignalsApp(appId);
-  const issuesQuery = useSignalsIssues({ app: appId, status: 'open', perPage: RECENT_ISSUES_PER_PAGE });
+  // Gated on validId — same rationale as useSignalsApp's own `enabled`: a NaN
+  // appId must never reach the network, it should just read as "not found".
+  const issuesQuery = useSignalsIssues(
+    { app: appId, status: 'open', perPage: RECENT_ISSUES_PER_PAGE },
+    validId,
+  );
   const patchStatus = usePatchIssueStatus();
 
   if (!validId) {
