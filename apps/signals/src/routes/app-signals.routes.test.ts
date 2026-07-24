@@ -286,6 +286,56 @@ it('DELETE /apps/:id/releases/:release url-decodes the release, deletes its sign
   await app.close();
 });
 
+it('DELETE /apps/:id/releases/:release decodes the path segment exactly once — a literal %XX-shaped release name round-trips intact (not corrupted by a second decode), and a raw "%" does not 500', async () => {
+  const app = buildApp({ db: testDb });
+  const a = (await app.inject({ method: 'POST', url: '/apps', payload: { name: 'DecodeApp' } })).json();
+  const send = (payload: object) => app.inject({ method: 'POST', url: `/ingest/${a.ingestKey}`, payload });
+  const err = (session: string, message: string, release: string) => ({
+    kind: 'error', sessionId: session, name: 'TypeError', message,
+    mechanism: 'uncaught-exception', level: 'error', timestamp: new Date().toISOString(), release,
+    stack: [{ functionName: 'f', file: 'src/a.ts', line: 1, column: 1, inApp: true }],
+    platform: { runtime: 'browser' }, sdk: { name: 't', version: '0' },
+  });
+
+  // TRICKY's literal value contains a percent-escape-looking substring. A
+  // correct client encodes it exactly once via encodeURIComponent, so on the
+  // wire "%" itself becomes "%25": "v1%2E0" -> "v1%252E0". Fastify's router
+  // decodes the URL-encoded path segment ONCE (safely), handing the handler
+  // back the literal string "v1%2E0" in request.params.release. A route that
+  // decodes a SECOND time (e.g. an extra `decodeURIComponent` call) would
+  // turn "%2E" into "." and mismatch onto DECOY ("v1.0") instead — deleting
+  // the wrong release while leaving TRICKY's signal untouched. Asserting on
+  // both releases' final state makes single- vs double-decode distinguishable
+  // (unlike a space, which decodes to the same value either way).
+  const TRICKY = 'v1%2E0';
+  const DECOY = 'v1.0';
+  await send({ signals: [err('t1', 'tricky-boom', TRICKY), err('t2', 'decoy-boom', DECOY)] });
+
+  const res = await app.inject({
+    method: 'DELETE',
+    url: `/apps/${a.id}/releases/${encodeURIComponent(TRICKY)}`,
+  });
+  expect(res.statusCode).toBe(200);
+  expect(res.json()).toEqual({ deletedSignals: 1, deletedArtifacts: 0, prunedIssues: 1 });
+
+  expect(await testDb.select().from(signals)
+    .where(and(eq(signals.appId, a.id), eq(signals.release, TRICKY)))).toHaveLength(0);
+  // DECOY must survive untouched -- a double-decode bug would delete THIS one instead.
+  expect(await testDb.select().from(signals)
+    .where(and(eq(signals.appId, a.id), eq(signals.release, DECOY)))).toHaveLength(1);
+
+  // A release containing a raw "%" that doesn't form a valid %XX escape must
+  // not 500 on a second decode (decodeURIComponent throws URIError on it).
+  const res2 = await app.inject({
+    method: 'DELETE',
+    url: `/apps/${a.id}/releases/${encodeURIComponent('50% off')}`,
+  });
+  expect(res2.statusCode).toBe(200);
+  expect(res2.json()).toEqual({ deletedSignals: 0, deletedArtifacts: 0, prunedIssues: 0 });
+
+  await app.close();
+});
+
 it('DELETE a release with no matches returns 200 with zero counts (valid app, nothing to delete)', async () => {
   const { app, appId } = await seedReleases();
   const res = await app.inject({
