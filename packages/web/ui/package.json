@@ -10,7 +10,8 @@
     "./runtime-style": "./src/runtime-style.ts",
     "./swatches": "./src/swatches.ts",
     "./gallery": "./src/gallery/index.ts",
-    "./gallery/demos": "./src/gallery/demos.ts"
+    "./gallery/demos": "./src/gallery/demos.ts",
+    "./gallery/demo-sources": "./src/gallery/demo-sources.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
