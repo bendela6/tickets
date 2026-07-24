@@ -263,6 +263,43 @@ test('(c2) an unsymbolicated NODE stack shows WHERE it happened: in-app frame wi
   expect(screen.queryByText(/No source maps uploaded/)).not.toBeInTheDocument();
 });
 
+test('(c3) a browser stack with NO release (dev) shows no banner — vite serves real source', async () => {
+  // Dev browser errors carry no release and reference real source paths
+  // (localhost:4620/src/...), so there are no maps to upload and none needed —
+  // the banner would be misleading, exactly like the node case.
+  const devSession: SessionTimeline = {
+    session: { ...SESSION_SYM.session, sessionId: 'sess_dev1', release: null },
+    rows: [
+      {
+        ...SESSION_SYM.rows[0]!,
+        id: 603,
+        payload: {
+          platform: { runtime: 'browser' },
+          stack: [
+            { functionName: 'fetchJson', file: 'src/api/client.ts', line: 40, column: 8, inApp: true },
+          ],
+          breadcrumbs: [],
+        },
+      },
+    ],
+  };
+
+  renderSignals(<IssueDetailScreen issueId={1} />, {
+    fetchRoutes: [
+      issueRoute(),
+      occurrencesRoute({
+        rows: [{ id: 603, receivedAt: '2026-07-22T14:03:35Z', release: null, sessionId: 'sess_dev1' }],
+        total: 1,
+      }),
+      { test: /\/signals-api\/sessions\/sess_dev1\/signals$/, handler: () => devSession },
+    ],
+  });
+
+  expect(await screen.findByText('fetchJson')).toBeInTheDocument();
+  expect(screen.getByText('src/api/client.ts:40')).toBeInTheDocument();
+  expect(screen.queryByText(/No source maps uploaded/)).not.toBeInTheDocument();
+});
+
 test('(d) breadcrumbs render glyph types and the 500 chip; the terminal row is the error itself, danger-styled', async () => {
   renderSignals(<IssueDetailScreen issueId={1} />, {
     fetchRoutes: [issueRoute(), occurrencesRoute({ rows: [OCC_NEWEST], total: 1 }), sessionSymRoute],
