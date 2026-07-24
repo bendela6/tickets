@@ -17,9 +17,8 @@ const OLDER_THAN_OPTIONS: { days: OlderThanDays; label: string }[] = [
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 // Derives the wire filters from the mode picker — All -> {}, Older-than -> a
-// `before` cutoff computed from "now", Release -> {release}. Exported for
-// clarity in the test file's assertions (kept local otherwise; not imported
-// elsewhere).
+// `before` cutoff computed from "now", Release -> {release}. Pure function of
+// the current mode so switching back to "All" can't leak a stale before/release.
 function computeFilters(mode: Mode, olderThanDays: OlderThanDays, release: string): ClearSignalsFilters {
   if (mode === 'older-than') {
     return { before: new Date(Date.now() - olderThanDays * MS_PER_DAY).toISOString() };
