@@ -17,7 +17,7 @@ function DemoTabs({ variant }: { variant: (typeof VARIANTS)[number] }) {
   return <Tabs variant={variant} items={ALL_ITEMS.slice(0, 3)} value={value} onChange={setValue} />;
 }
 
-export const meta = { title: 'Tabs', group: 'Display' };
+export const meta = { title: 'Tabs', group: 'Display', size: 'md' };
 
 export const states = [
   { name: 'Underline', render: () => <DemoTabs variant="underline" /> },

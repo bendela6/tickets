@@ -4,7 +4,7 @@ import { ICON_NAMES } from './icons/registry';
 import { Pill } from './pill';
 import { Icon } from './icons/icon';
 
-export const meta = { title: 'Pill', group: 'Display' };
+export const meta = { title: 'Pill', group: 'Display', size: 'sm' };
 
 export const states = [
   {

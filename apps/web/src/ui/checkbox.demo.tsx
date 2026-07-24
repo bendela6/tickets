@@ -1,7 +1,7 @@
 import { boolean, definePlayground, text } from '@tickets/ui/gallery';
 import { Checkbox } from './checkbox';
 
-export const meta = { title: 'Checkbox', group: 'Form controls' };
+export const meta = { title: 'Checkbox', group: 'Form controls', size: 'sm' };
 
 export const states = [
   { name: 'off', render: () => <Checkbox label="Off" /> },

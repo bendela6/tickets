@@ -61,7 +61,7 @@ function ApprovalCardFixture() {
   );
 }
 
-export const meta = { title: 'Message Stream', group: 'AI session' };
+export const meta = { title: 'Message Stream', group: 'AI session', size: 'full' };
 
 export const states = [
   { name: 'stream', render: () => <StreamFixture /> },

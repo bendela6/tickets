@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { isDemoError, type CollectedDemo } from '@tickets/ui/gallery';
 import { ComponentPage } from './component-page';
+import type { ImplSources } from './impl-tab';
 import { DemoErrorCard, StateGrid } from './state-grid';
 import { CommandPalette } from './command-palette';
 
@@ -17,11 +18,15 @@ export function GalleryShell({
   title,
   providers = (children) => children,
   sources,
+  implSources,
 }: {
   demos: CollectedDemo[];
   title: string;
   providers?: (children: ReactNode) => ReactNode;
+  /** Eager `?raw` demo-file sources, keyed by `demo.path` — the Demo tab. */
   sources?: Record<string, string>;
+  /** Lazy `?raw` component-file loaders, keyed by path — the Implementation tab. */
+  implSources?: ImplSources;
 }) {
   const live = demos.filter((d): d is LiveDemo => !isDemoError(d));
   const errors = demos.filter(isDemoError);
@@ -114,8 +119,11 @@ export function GalleryShell({
           </div>
         ))}
       </aside>
-      <main className="flex-1 px-8 py-10">
-        <div className="mx-auto flex max-w-5xl flex-col gap-10">
+      {/* min-w-0 lets the workbench's overflowing children (code blocks, wide
+          state grids) scroll inside the main column instead of stretching the
+          flex row and pushing the sidebar off-screen. */}
+      <main className="min-w-0 flex-1 px-8 py-10">
+        <div className="flex w-full flex-col gap-10">
           <header className="flex items-center justify-between">
             <div>
               <h1 className="text-display font-semibold text-ink">{title}</h1>
@@ -135,7 +143,12 @@ export function GalleryShell({
             <div className="flex flex-col gap-10">
               {shown.map((d) =>
                 selected === d.slug ? (
-                  <ComponentPage key={d.slug} demo={d} source={sources?.[d.path]} />
+                  <ComponentPage
+                    key={d.slug}
+                    demo={d}
+                    source={sources?.[d.path]}
+                    implSources={implSources}
+                  />
                 ) : (
                   <StateGrid key={d.slug} demo={d} />
                 ),

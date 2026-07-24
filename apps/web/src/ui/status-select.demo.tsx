@@ -47,7 +47,7 @@ function StatusSelectPlaygroundFixture({
   );
 }
 
-export const meta = { title: 'StatusSelect', group: 'Pickers' };
+export const meta = { title: 'StatusSelect', group: 'Pickers', size: 'md' };
 
 export const states = [
   { name: 'basic', render: () => <StatusSelectFixture /> },

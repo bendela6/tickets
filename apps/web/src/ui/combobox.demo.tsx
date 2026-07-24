@@ -52,7 +52,7 @@ function ComboboxPlaygroundFixture({
   );
 }
 
-export const meta = { title: 'Combobox', group: 'Pickers' };
+export const meta = { title: 'Combobox', group: 'Pickers', size: 'md' };
 
 export const states = [
   { name: 'basic', render: () => <ComboboxFixture /> },

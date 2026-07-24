@@ -1,7 +1,7 @@
 import { boolean, definePlayground, select, text } from '@tickets/ui/gallery';
 import { Button } from './button';
 
-export const meta = { title: 'Button', group: 'Form controls', order: 1 };
+export const meta = { title: 'Button', group: 'Form controls', order: 1, size: 'sm' };
 
 export const states = [
   { name: 'primary', render: () => <Button variant="primary">New ticket</Button> },

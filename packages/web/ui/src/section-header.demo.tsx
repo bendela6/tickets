@@ -2,7 +2,7 @@ import { definePlayground, text } from './gallery';
 import { Meter } from './meter';
 import { SectionHeader } from './section-header';
 
-export const meta = { title: 'SectionHeader', group: 'Display' };
+export const meta = { title: 'SectionHeader', group: 'Display', size: 'lg' };
 
 export const states = [
   { name: 'Title only', render: () => <SectionHeader title="Fields" /> },

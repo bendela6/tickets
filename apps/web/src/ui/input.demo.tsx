@@ -1,7 +1,7 @@
 import { boolean, definePlayground, select, text } from '@tickets/ui/gallery';
 import { Input } from './input';
 
-export const meta = { title: 'Input', group: 'Form controls' };
+export const meta = { title: 'Input', group: 'Form controls', size: 'md' };
 
 export const states = [
   { name: 'with placeholder', render: () => <Input placeholder="Ticket title…" /> },

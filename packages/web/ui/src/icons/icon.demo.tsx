@@ -3,7 +3,15 @@ import { TONE_NAMES } from '../tones';
 import { Icon } from './icon';
 import { ICON_NAMES } from './registry';
 
-export const meta = { title: 'Icon', group: 'Foundation', order: 2 };
+export const meta = {
+  title: 'Icon',
+  group: 'Foundation',
+  order: 2,
+  size: 'full',
+  // The glyphs themselves are the interesting half, so the Implementation tab
+  // offers both files rather than only the wrapper component.
+  impl: ['./icon.tsx', './registry.tsx'],
+};
 
 export const states = [
   {

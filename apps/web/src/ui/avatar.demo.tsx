@@ -1,7 +1,7 @@
 import { definePlayground, select, text } from '@tickets/ui/gallery';
 import { Avatar } from './avatar';
 
-export const meta = { title: 'Avatar', group: 'Display', order: 5 };
+export const meta = { title: 'Avatar', group: 'Display', order: 5, size: 'sm' };
 
 export const states = [
   {

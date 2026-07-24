@@ -1,7 +1,9 @@
 import { runtimeStyle } from './runtime-style';
 import { SWATCHES } from './swatches';
 
-export const meta = { title: 'Swatches', group: 'Foundation' };
+// `impl` is spelled out because this is the one demo whose component is a
+// `.ts` file — the default convention looks for `swatches.tsx`.
+export const meta = { title: 'Swatches', group: 'Foundation', size: 'md', impl: './swatches.ts' };
 
 export const states = [
   {

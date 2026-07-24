@@ -1,6 +1,19 @@
-import type { CollectedDemo } from '@tickets/ui/gallery';
+import { runtimeStyle } from '@tickets/ui/runtime-style';
+import type { CollectedDemo, DemoSize } from '@tickets/ui/gallery';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
+
+// Minimum width of one state cell, per the demo's declared `meta.size`. The
+// grid auto-fills at that width, so a `sm` component gets many narrow columns
+// and a `full` one gets a single row-wide cell — components stop being
+// squeezed into a column that can't hold them. The value travels as a custom
+// property because Tailwind can't scan a class name built at runtime.
+export const CELL_MIN: Record<DemoSize, string> = {
+  sm: '150px',
+  md: '230px',
+  lg: '360px',
+  full: '100%',
+};
 
 // One component's demo: heading + a grid of per-state cards. Cell ids are the
 // screenshot/deep-link anchors (`#button--loading`).
@@ -12,14 +25,17 @@ export function StateGrid({ demo }: { demo: LiveDemo }) {
       </h2>
       <div className="flex flex-col gap-2.5">
         <div className="font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3">STATES</div>
-        <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-4">
+        <div
+          className="grid grid-cols-[repeat(auto-fill,minmax(var(--demo-cell),1fr))] gap-2.5"
+          style={runtimeStyle({ '--demo-cell': CELL_MIN[demo.meta.size ?? 'md'] })}
+        >
           {demo.states.map((state) => (
             <figure
               key={state.slug}
               id={state.slug}
               className="m-0 flex flex-col items-center gap-3 rounded-card border border-hairline bg-raised px-2.5 pb-3 pt-5"
             >
-              <div className="flex items-center">{state.render()}</div>
+              <div className="flex min-w-0 max-w-full items-center">{state.render()}</div>
               <figcaption className="font-mono text-label text-ink-3">{state.name}</figcaption>
             </figure>
           ))}
