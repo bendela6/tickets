@@ -67,7 +67,12 @@ export function DetailChildren({
         <span className="font-sans text-label font-medium uppercase text-ink-2">Subtasks</span>
         {progress.any ? (
           <>
-            <Meter tone="green" value={progress.done} max={progress.total || 1} className="w-15" />
+            <Meter
+              tone="green"
+              value={progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0}
+              max={100}
+              className="w-15"
+            />
             <span className="font-mono text-label text-ink-3">
               {progress.done}/{progress.total} done
             </span>

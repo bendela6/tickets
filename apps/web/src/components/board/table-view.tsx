@@ -113,9 +113,10 @@ function ProgressCell({ ticket, indexes }: { ticket: Item; indexes: BoardIndexes
   if (!any || total === 0) {
     return <span className="font-sans text-ui text-ink-3">—</span>;
   }
+  const percent = Math.round((done / total) * 100);
   return (
     <span className="inline-flex items-center gap-1.75" title={`${done} of ${total} subtasks done`}>
-      <Meter tone="green" value={done} max={total} className="w-9" />
+      <Meter tone="green" value={percent} max={100} className="w-9" />
       <span className="font-mono text-[11px] text-ink-2">
         {done}/{total}
       </span>
