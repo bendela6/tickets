@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import type { IssueFilters, IssueLevel, IssueStatus } from '../../api/signals/signals-api';
 import { usePatchIssueStatus, useSignalsApps, useSignalsIssues } from '../../api/signals/use-signals';
-import { cn } from '@tickets/ui/cn';
+import { ScreenState } from '@tickets/ui/screen-state';
 import { formatCount } from './format';
 import { ISSUES_GRID_COLUMNS, IssueRow, IssueRowSkeleton } from './issue-row';
 import { IssuesToolbar } from './issues-toolbar';
@@ -225,65 +225,67 @@ export function IssuesScreen() {
 
         {isError ? (
           <div className="flex flex-1 items-center justify-center">
-            <div className="flex max-w-115 flex-col items-center gap-3.5 text-center">
-              <span className="flex size-9.5 items-center justify-center rounded-[10px] bg-danger-subtle font-mono text-[16px] font-semibold text-danger">
-                ✕
-              </span>
-              <div className="font-sans text-[17px] font-semibold text-ink">Couldn't load issues</div>
-              <div className="font-mono text-[11.5px] leading-relaxed text-ink-3">{displayUrl(filters)}</div>
-              <div className="font-sans text-[12.5px] leading-normal text-ink-2">
-                The signals daemon isn't responding. Check that it's running, then try again.
-              </div>
-              <button
-                type="button"
-                onClick={() => void issuesQuery.refetch()}
-                className={cn(
-                  'mt-0.5 h-8 rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink',
-                  'hover:bg-inset',
-                )}
-              >
-                ↻ Retry
-              </button>
-            </div>
+            <ScreenState
+              className="max-w-115"
+              tone="danger"
+              icon="triangle-alert"
+              title="Couldn't load issues"
+              body={
+                <>
+                  <div className="font-mono text-[11.5px] leading-relaxed text-ink-3">{displayUrl(filters)}</div>
+                  <div className="mt-1">
+                    The signals daemon isn't responding. Check that it's running, then try again.
+                  </div>
+                </>
+              }
+              action={
+                <button
+                  type="button"
+                  onClick={() => void issuesQuery.refetch()}
+                  className="h-8 rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink hover:bg-inset"
+                >
+                  ↻ Retry
+                </button>
+              }
+            />
           </div>
         ) : null}
 
         {isEmpty ? (
           <div className="flex flex-1 items-center justify-center">
-            <div className="flex max-w-110 flex-col items-center gap-3.5 text-center">
-              <span className="flex size-9.5 items-center justify-center rounded-full bg-opt-green-subtle font-sans text-[16px] font-semibold text-opt-green">
-                ✓
-              </span>
-              <div className="font-sans text-[17px] font-semibold text-ink">
-                {filtersActive
+            <ScreenState
+              className="max-w-110"
+              tone="success"
+              icon="circle-check"
+              title={
+                filtersActive
                   ? 'No issues match the current filters.'
                   : status === 'open'
                     ? 'No open issues 🎉'
-                    : `No ${status} issues`}
-              </div>
-              <div className="font-sans text-[12.5px] leading-normal text-ink-2">
-                Everything reported in the last {days} days is resolved or ignored. New errors will open
-                issues here automatically.
-              </div>
-              <span className="font-mono text-meta text-ink-3">
-                view{' '}
-                <button
-                  type="button"
-                  className="text-accent hover:underline"
-                  onClick={() => setStatus('resolved')}
-                >
-                  resolved ({resolvedCount.data?.total ?? 0})
-                </button>{' '}
-                ·{' '}
-                <button
-                  type="button"
-                  className="text-accent hover:underline"
-                  onClick={() => setStatus('ignored')}
-                >
-                  ignored ({ignoredCount.data?.total ?? 0})
-                </button>
-              </span>
-            </div>
+                    : `No ${status} issues`
+              }
+              body={`Everything reported in the last ${days} days is resolved or ignored. New errors will open issues here automatically.`}
+              action={
+                <span className="font-mono text-meta text-ink-3">
+                  view{' '}
+                  <button
+                    type="button"
+                    className="text-accent hover:underline"
+                    onClick={() => setStatus('resolved')}
+                  >
+                    resolved ({resolvedCount.data?.total ?? 0})
+                  </button>{' '}
+                  ·{' '}
+                  <button
+                    type="button"
+                    className="text-accent hover:underline"
+                    onClick={() => setStatus('ignored')}
+                  >
+                    ignored ({ignoredCount.data?.total ?? 0})
+                  </button>
+                </span>
+              }
+            />
           </div>
         ) : null}
       </div>

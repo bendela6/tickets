@@ -9,6 +9,7 @@ import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
 import { Meter } from '@tickets/ui/meter';
 import { Pill } from '@tickets/ui/pill';
+import { ScreenState } from '@tickets/ui/screen-state';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
 import { StatusSelect } from '../../ui/status-select';
 import { ItemKey } from '../../ui/item-key';
@@ -173,47 +174,6 @@ function RowActions({ projectKey, ticket }: { projectKey: string; ticket: Item }
   );
 }
 
-function EmptyState({
-  filtered,
-  filterCount,
-  total,
-  onClearFilters,
-  onNewTicket,
-}: {
-  filtered: boolean;
-  filterCount: number;
-  total: number;
-  onClearFilters: () => void;
-  onNewTicket: () => void;
-}) {
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-2.5 py-16">
-      <span className="flex size-11 items-center justify-center rounded-[12px] bg-inset font-sans text-[18px] text-ink-3">
-        ⌕
-      </span>
-      <span className="font-sans text-[16px] font-semibold text-ink">
-        {filtered ? 'No items match these filters' : 'No items yet'}
-      </span>
-      <span className="max-w-85 text-center font-sans text-ui text-ink-2">
-        {filtered
-          ? `${filterCount === 1 ? '1 filter is' : `${filterCount} filters are`} hiding all ${total} items in this project.`
-          : 'This project is brand new. Create the first item, or point an agent at it.'}
-      </span>
-      <div className="mt-1.5 flex gap-2">
-        {filtered ? (
-          <Button size="regular" className="h-8" onClick={onClearFilters}>
-            Clear filters
-          </Button>
-        ) : (
-          <Button size="regular" className="h-8" onClick={onNewTicket}>
-            ＋ New item
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // Table renderer per docs/design/03-project-board.html lines 127–152: CSS grid
 // columns driven by the view config, sticky uppercase header with click-to-sort,
 // inline status edits, subtask rollup, hover actions. The view config IS the
@@ -352,12 +312,27 @@ export function TableView({
         })}
       </div>
       {rows.length === 0 ? (
-        <EmptyState
-          filtered={filtered}
-          filterCount={filterCount}
-          total={totalCount}
-          onClearFilters={onClearFilters}
-          onNewTicket={onNewTicket}
+        <ScreenState
+          className="flex-1 justify-center py-16"
+          tone="neutral"
+          icon="search"
+          title={filtered ? 'No items match these filters' : 'No items yet'}
+          body={
+            filtered
+              ? `${filterCount === 1 ? '1 filter is' : `${filterCount} filters are`} hiding all ${totalCount} items in this project.`
+              : 'This project is brand new. Create the first item, or point an agent at it.'
+          }
+          action={
+            filtered ? (
+              <Button size="regular" className="h-8" onClick={onClearFilters}>
+                Clear filters
+              </Button>
+            ) : (
+              <Button size="regular" className="h-8" onClick={onNewTicket}>
+                ＋ New item
+              </Button>
+            )
+          }
         />
       ) : (
         rows.map((ticket) => (

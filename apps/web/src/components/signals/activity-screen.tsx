@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ActivityFilters, IssueLevel } from '../../api/signals/signals-api';
 import { useSignalsActivity, useSignalsApps } from '../../api/signals/use-signals';
-import { cn } from '@tickets/ui/cn';
+import { ScreenState } from '@tickets/ui/screen-state';
 import { ACTIVITY_GRID_COLUMNS, ActivityRow, ActivityRowSkeleton } from './activity-row';
 import { ActivityToolbar } from './activity-toolbar';
 import { formatCount } from './format';
@@ -191,42 +191,41 @@ export function ActivityScreen() {
 
         {isError ? (
           <div className="flex flex-1 items-center justify-center">
-            <div className="flex max-w-115 flex-col items-center gap-3.5 text-center">
-              <span className="flex size-9.5 items-center justify-center rounded-[10px] bg-danger-subtle font-mono text-[16px] font-semibold text-danger">
-                ✕
-              </span>
-              <div className="font-sans text-[17px] font-semibold text-ink">Couldn't load activity</div>
-              <div className="font-mono text-[11.5px] leading-relaxed text-ink-3">{displayUrl(filters)}</div>
-              <div className="font-sans text-[12.5px] leading-normal text-ink-2">
-                The signals daemon isn't responding. Check that it's running, then try again.
-              </div>
-              <button
-                type="button"
-                onClick={() => void activityQuery.refetch()}
-                className={cn(
-                  'mt-0.5 h-8 rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink',
-                  'hover:bg-inset',
-                )}
-              >
-                ↻ Retry
-              </button>
-            </div>
+            <ScreenState
+              className="max-w-115"
+              tone="danger"
+              icon="triangle-alert"
+              title="Couldn't load activity"
+              body={
+                <>
+                  <div className="font-mono text-[11.5px] leading-relaxed text-ink-3">{displayUrl(filters)}</div>
+                  <div className="mt-1">
+                    The signals daemon isn't responding. Check that it's running, then try again.
+                  </div>
+                </>
+              }
+              action={
+                <button
+                  type="button"
+                  onClick={() => void activityQuery.refetch()}
+                  className="h-8 rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink hover:bg-inset"
+                >
+                  ↻ Retry
+                </button>
+              }
+            />
           </div>
         ) : null}
 
         {isEmpty ? (
           <div className="flex flex-1 items-center justify-center">
-            <div className="flex max-w-110 flex-col items-center gap-3.5 text-center">
-              <span className="flex size-9.5 items-center justify-center rounded-full bg-opt-green-subtle font-sans text-[16px] font-semibold text-opt-green">
-                ✓
-              </span>
-              <div className="font-sans text-[17px] font-semibold text-ink">
-                {filtersActive ? 'No signals match the current filters.' : 'No activity yet'}
-              </div>
-              <div className="font-sans text-[12.5px] leading-normal text-ink-2">
-                Logs and events reported in the last {days} days will show up here as they arrive.
-              </div>
-            </div>
+            <ScreenState
+              className="max-w-110"
+              tone="success"
+              icon="circle-check"
+              title={filtersActive ? 'No signals match the current filters.' : 'No activity yet'}
+              body={`Logs and events reported in the last ${days} days will show up here as they arrive.`}
+            />
           </div>
         ) : null}
       </div>
