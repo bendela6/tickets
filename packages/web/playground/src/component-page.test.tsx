@@ -8,6 +8,7 @@ import {
   isDemoError,
   select,
 } from '@tickets/ui/gallery';
+import { setAxeForTests } from './axe';
 import { ComponentPage } from './component-page';
 
 // react-resizable-panels needs real layout (ResizeObserver-driven sizing) to
@@ -103,6 +104,7 @@ if (!demo || isDemoError(demo)) throw new Error('fixture demo failed to collect'
 describe('ComponentPage', () => {
   afterEach(() => {
     localStorage.clear();
+    setAxeForTests(null);
   });
 
   it('renders the tab strip with Preview active', () => {
@@ -309,6 +311,32 @@ describe('ComponentPage', () => {
       fireEvent.change(screen.getByLabelText('columns'), { target: { value: 'tone' } });
       expect(screen.getByText('matrix: variant × tone')).toBeTruthy();
     });
+  });
+
+  it('renders A11yTab when a11y tab is active', () => {
+    render(<ComponentPage demo={demo} />);
+    fireEvent.click(screen.getByRole('button', { name: 'A11y' }));
+    expect(screen.getByText('no audit yet')).toBeTruthy();
+  });
+
+  it('keeps preview mounted while viewing other tabs so audits can access rendered DOM', () => {
+    const { container } = render(<ComponentPage demo={demo} />);
+    const root = container.firstElementChild!;
+    const previewWrapper = root.children[1] as HTMLElement;
+
+    // Preview is visible initially
+    expect(previewWrapper.className).toBe('');
+    expect(screen.getByText('play-btn')).toBeTruthy();
+
+    // Switch to A11y tab
+    fireEvent.click(screen.getByRole('button', { name: 'A11y' }));
+    // Preview wrapper is hidden but still mounted (not unmounted)
+    expect(previewWrapper.className).toBe('hidden');
+    // Preview content is still in the DOM
+    expect(screen.getByText('play-btn')).toBeTruthy();
+
+    // A11y tab content is visible
+    expect(screen.getByText('no audit yet')).toBeTruthy();
   });
 });
 
