@@ -40,4 +40,37 @@ describe('SectionHeader', () => {
     const { container } = render(<SectionHeader title="Links" className="mb-2" />);
     expect(container.firstElementChild!.className).toContain('mb-2');
   });
+
+  // Fix 1 (task-12 review): count/hint must resolve to the 11px caption size
+  // even though it sets no font-size of its own — regression pin for the
+  // "hint jumped from 11px to 16px" bug (new-session-dialog / agent-editor's
+  // Label helpers render their hint via `count`, which is a plain sibling
+  // span with no size class).
+  it('gives the row the text-label size so an unsized count/hint inherits 11px', () => {
+    const { container } = render(
+      <SectionHeader title="Command" count={<span>optional — defaults to your shell</span>} />,
+    );
+    const row = container.firstElementChild!;
+    expect(row.className).toContain('text-label');
+    const hint = screen.getByText('optional — defaults to your shell');
+    // The hint itself sets no size class — it must rely on inheriting the
+    // row's text-label rather than falling back to the document default.
+    expect(hint.className).not.toMatch(/text-(ui|meta|body|\[)/);
+  });
+
+  it('defaults to a non-heading title', () => {
+    render(<SectionHeader title="Fields" />);
+    expect(screen.queryByRole('heading')).toBeNull();
+  });
+
+  it('renders a real h2 when as="h2" is passed', () => {
+    render(<SectionHeader as="h2" title="Recent sessions" />);
+    expect(screen.getByRole('heading', { level: 2, name: 'Recent sessions' })).toBeTruthy();
+  });
+
+  it('merges titleClassName onto the title element and lets it beat the default', () => {
+    render(<SectionHeader title="Links" titleClassName="text-danger" />);
+    const el = screen.getByText('Links');
+    expect(el.className).toContain('text-danger');
+  });
 });

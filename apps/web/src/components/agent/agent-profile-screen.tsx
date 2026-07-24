@@ -102,7 +102,7 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
       </div>
 
       <section>
-        <SectionHeader title="Recent sessions" className="mb-2 tracking-wide" />
+        <SectionHeader as="h2" title="Recent sessions" className="mb-2 tracking-wide" />
         {mine.length === 0 ? (
           <p className="rounded-card border border-hairline bg-raised px-4 py-6 text-center font-sans text-meta text-ink-3">
             No sessions yet — run one to get started.
