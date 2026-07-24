@@ -74,7 +74,7 @@ export function CommandPalette({
             const groupDemos = demos.filter((d) => d.meta.group === group);
             return (
               <div key={group} className="flex flex-col">
-                <Command.Group heading={group}>
+                <Command.Group value={group}>
                   <div className="font-mono text-label uppercase tracking-label text-ink-3 px-3 py-2">
                     {group}
                   </div>

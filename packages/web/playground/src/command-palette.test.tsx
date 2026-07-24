@@ -34,8 +34,8 @@ describe('CommandPalette', () => {
     expect(screen.getByText('Button')).toBeTruthy();
     expect(screen.getByText('Input')).toBeTruthy();
     expect(screen.getByText('Avatar')).toBeTruthy();
-    expect(screen.getAllByText('Form controls').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Display').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Form controls')).toHaveLength(1);
+    expect(screen.getAllByText('Display')).toHaveLength(1);
   });
 
   it('selecting an item sets location.hash and calls onOpenChange(false)', () => {
