@@ -9,6 +9,7 @@ import { useCurrentUser } from '../state/current-user-context';
 import { Button } from '../ui/button';
 import { cn } from '@tickets/ui/cn';
 import { Pill } from '@tickets/ui/pill';
+import { Tabs } from '@tickets/ui/tabs';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../ui/menu';
 import { ItemKey } from '../ui/item-key';
 import { RelativeDate } from '../ui/relative-date';
@@ -318,28 +319,14 @@ export function ItemDetail({
           {childrenSection}
           {linksSection}
           <section>
-            <div role="tablist" className="flex items-center gap-0.5 border-b border-hairline">
-              {(['comments', 'activity'] as const).map((name) => (
-                <button
-                  key={name}
-                  type="button"
-                  role="tab"
-                  aria-selected={tab === name}
-                  onClick={() => setTab(name)}
-                  className={cn(
-                    'px-3 py-2 font-sans text-[13px] capitalize',
-                    tab === name
-                      ? '-mb-px border-b-2 border-accent font-medium text-ink'
-                      : 'text-ink-2 hover:text-ink',
-                  )}
-                >
-                  {name}{' '}
-                  {name === 'comments' ? (
-                    <span className="font-mono text-[11px] text-ink-3">{item.comments.length}</span>
-                  ) : null}
-                </button>
-              ))}
-            </div>
+            <Tabs
+              items={[
+                { value: 'comments', label: 'Comments', badge: item.comments.length },
+                { value: 'activity', label: 'Activity' },
+              ]}
+              value={tab}
+              onChange={(next) => setTab(next as typeof tab)}
+            />
             <div className="pt-3">
               {tab === 'comments' ? (
                 <DetailComments indexes={indexes} item={item} prefix={prefix} onOpenItem={openItem} />

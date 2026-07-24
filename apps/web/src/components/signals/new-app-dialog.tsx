@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { SignalsAppDetail } from '../../api/signals/signals-api';
 import { useCreateSignalsApp } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
-import { cn } from '@tickets/ui/cn';
+import { Tabs } from '@tickets/ui/tabs';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 import { FieldLabel } from '../../ui/field-label';
 import { Input } from '../../ui/input';
@@ -166,25 +166,11 @@ export function NewAppDialog({
             </div>
 
             <div className="mt-4">
-              <div role="tablist" className="flex gap-1 border-b border-hairline">
-                {TABS.map((candidate) => (
-                  <button
-                    key={candidate.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={tab === candidate.id}
-                    onClick={() => setTab(candidate.id)}
-                    className={cn(
-                      '-mb-px h-7.5 px-2.75 font-sans text-[12.5px]',
-                      tab === candidate.id
-                        ? 'border-b-2 border-accent font-medium text-ink'
-                        : 'text-ink-2 hover:text-ink',
-                    )}
-                  >
-                    {candidate.label}
-                  </button>
-                ))}
-              </div>
+              <Tabs
+                items={TABS.map((candidate) => ({ value: candidate.id, label: candidate.label }))}
+                value={tab}
+                onChange={(next) => setTab(next as SnippetTab)}
+              />
               <pre className="overflow-x-auto rounded-b-[8px] border border-t-0 border-hairline bg-inset px-3.5 py-3 font-mono text-[11.5px] leading-relaxed text-ink-2">
                 {snippetFor(tab, created.dsn)}
               </pre>

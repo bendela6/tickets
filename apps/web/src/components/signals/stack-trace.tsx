@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { SignalPayload, SignalStackFrame } from '../../api/signals/signals-api';
 import { cn } from '@tickets/ui/cn';
+import { Tabs } from '@tickets/ui/tabs';
 import { formatClockTime } from './format';
 
 type Tab = 'sym' | 'raw';
@@ -254,35 +255,15 @@ export function StackTrace({
         ) : null}
         <span className="flex-1" />
         {showToggle ? (
-          <div
-            role="tablist"
-            className="inline-flex h-6 overflow-hidden rounded-[6px] border border-hairline bg-inset"
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'sym'}
-              onClick={() => setTab('sym')}
-              className={cn(
-                'flex items-center border-r border-hairline px-2.25 font-sans text-[11px]',
-                activeTab === 'sym' ? 'bg-raised font-medium text-ink' : 'text-ink-2',
-              )}
-            >
-              symbolicated
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'raw'}
-              onClick={() => setTab('raw')}
-              className={cn(
-                'flex items-center px-2.25 font-sans text-[11px]',
-                activeTab === 'raw' ? 'bg-raised font-medium text-ink' : 'text-ink-2',
-              )}
-            >
-              raw
-            </button>
-          </div>
+          <Tabs
+            variant="pill"
+            items={[
+              { value: 'sym', label: 'symbolicated' },
+              { value: 'raw', label: 'raw' },
+            ]}
+            value={activeTab}
+            onChange={(next) => setTab(next as Tab)}
+          />
         ) : null}
       </div>
 
