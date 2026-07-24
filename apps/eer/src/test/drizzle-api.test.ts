@@ -205,8 +205,11 @@ const INSTRUMENT_CSS_PATH = resolve(HERE, '../../../../packages/web/ui/src/token
 
 function readLightModeOptPalette(): Record<string, string> {
   const css = readFileSync(INSTRUMENT_CSS_PATH, 'utf8');
-  const rootStart = css.indexOf(':root {');
-  if (rootStart === -1) throw new Error(':root block not found in instrument.css');
+  // The light block's selector is `:root, [data-theme='light'] {` since the
+  // ThemeSplit change — match any selector list that starts at :root.
+  const rootMatch = /:root[^{}]*\{/.exec(css);
+  if (!rootMatch) throw new Error(':root block not found in instrument.css');
+  const rootStart = rootMatch.index;
   const rootEnd = css.indexOf('\n}', rootStart);
   const lightBlock = css.slice(rootStart, rootEnd);
 
