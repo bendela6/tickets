@@ -1,6 +1,7 @@
 import { createRoute } from '@tanstack/react-router';
-import { collectDemos, GalleryShell, prepareDemos } from '@tickets/ui/gallery';
+import { collectDemos, prepareDemos } from '@tickets/ui/gallery';
 import { packageDemos } from '@tickets/ui/gallery/demos';
+import { GalleryShell } from '@tickets/playground';
 import { ToastProvider } from '../ui/toast';
 import { TooltipProvider } from '../ui/tooltip';
 import { rootRoute } from './root-route';

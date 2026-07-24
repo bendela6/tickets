@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { isDemoError, type CollectedDemo } from '@tickets/ui/gallery';
 import { PlaygroundCard } from './playground-card';
 import { DemoErrorCard, StateGrid } from './state-grid';
-import { isDemoError, type CollectedDemo } from './types';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 

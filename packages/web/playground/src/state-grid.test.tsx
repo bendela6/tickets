@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { StateGrid } from './state-grid';
-import { collectDemos } from './collect-demos';
-import { isDemoError } from './types';
+import { collectDemos, isDemoError } from '@tickets/ui/gallery';
 
 const demo = collectDemos({
   './x.demo.tsx': {

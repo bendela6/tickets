@@ -1,8 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { GalleryShell } from './gallery-shell';
-import { collectDemos } from './collect-demos';
-import { boolean as booleanControl, definePlayground } from './controls';
+import { collectDemos, boolean as booleanControl, definePlayground } from '@tickets/ui/gallery';
 
 const demos = collectDemos({
   'a': { meta: { title: 'Button', group: 'Form controls' }, states: [{ name: 'primary', render: () => <b>btn</b> }, { name: 'primary2', render: () => <b>btn2</b> }],
