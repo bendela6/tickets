@@ -6,6 +6,7 @@ import { signalStatus } from '../../domain/signal-status';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
 import { Pill } from '@tickets/ui/pill';
+import { ScreenState } from '@tickets/ui/screen-state';
 import type { TerminalBreadcrumb } from './breadcrumb-list';
 import { BreadcrumbList } from './breadcrumb-list';
 import { ContextRail } from './context-rail';
@@ -186,22 +187,22 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
 
     return (
       <div className="flex h-full items-center justify-center p-6">
-        <div className="flex max-w-115 flex-col items-center gap-3.5 text-center">
-          <span className="flex size-9.5 items-center justify-center rounded-[10px] bg-danger-subtle font-mono text-[16px] font-semibold text-danger">
-            ✕
-          </span>
-          <div className="font-sans text-[17px] font-semibold text-ink">Couldn't load issue</div>
-          <div className="font-sans text-[12.5px] leading-normal text-ink-2">
-            The signals daemon isn't responding. Check that it's running, then try again.
-          </div>
-          <button
-            type="button"
-            onClick={() => void issueQuery.refetch()}
-            className="mt-0.5 h-8 rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink hover:bg-inset"
-          >
-            ↻ Retry
-          </button>
-        </div>
+        <ScreenState
+          className="max-w-115"
+          tone="danger"
+          icon="triangle-alert"
+          title="Couldn't load issue"
+          body="The signals daemon isn't responding. Check that it's running, then try again."
+          action={
+            <button
+              type="button"
+              onClick={() => void issueQuery.refetch()}
+              className="h-8 rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink hover:bg-inset"
+            >
+              ↻ Retry
+            </button>
+          }
+        />
       </div>
     );
   }

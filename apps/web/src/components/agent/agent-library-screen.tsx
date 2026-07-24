@@ -5,6 +5,7 @@ import { useAgents } from '../../api/use-agents';
 import { useAgentProviders } from '../../api/use-agent-providers';
 import { useAgentSessions } from '../../api/use-agent-sessions';
 import { Button } from '../../ui/button';
+import { ScreenState } from '@tickets/ui/screen-state';
 import { AgentCard } from './agent-card';
 import { AgentEditor } from './agent-editor';
 
@@ -47,15 +48,16 @@ export function AgentLibraryScreen() {
       </div>
 
       {rows.length === 0 && agents.isSuccess ? (
-        <div className="rounded-panel border border-hairline bg-raised px-6 py-12 text-center">
-          <p className="font-sans text-ui font-medium text-ink">No agents yet</p>
-          <p className="mt-1 font-sans text-meta text-ink-3">
-            An agent is a reusable persona — a provider, model, prompt, and tool allowlist — that you
-            can run in a session or assign to a ticket.
-          </p>
-          <Button variant="primary" className="mt-4" onClick={() => setEditing('new')}>
-            ＋ New agent
-          </Button>
+        <div className="rounded-panel border border-hairline bg-raised">
+          <ScreenState
+            title="No agents yet"
+            body="An agent is a reusable persona — a provider, model, prompt, and tool allowlist — that you can run in a session or assign to a ticket."
+            action={
+              <Button variant="primary" onClick={() => setEditing('new')}>
+                ＋ New agent
+              </Button>
+            }
+          />
         </div>
       ) : (
         <div className="flex flex-wrap gap-3">

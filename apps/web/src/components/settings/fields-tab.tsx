@@ -13,6 +13,7 @@ import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
 import { Pill } from '@tickets/ui/pill';
+import { ScreenState } from '@tickets/ui/screen-state';
 import { Tabs } from '@tickets/ui/tabs';
 import { Combobox } from '../../ui/combobox';
 import type { ComboOption } from '../../ui/combobox-list';
@@ -364,9 +365,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
                   );
                 })}
                 {placements.length === 0 ? (
-                  <p className="m-0 px-3 py-5 text-center font-sans text-meta text-ink-3">
-                    No fields placed on this type yet.
-                  </p>
+                  <ScreenState className="px-3 py-5" title="No fields placed on this type yet." />
                 ) : null}
               </div>
 
@@ -447,7 +446,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
             );
           })}
           {sortedFields.length === 0 ? (
-            <p className="m-0 px-3 py-5 text-center font-sans text-meta text-ink-3">No fields yet.</p>
+            <ScreenState className="px-3 py-5" title="No fields yet." />
           ) : null}
         </div>
       </div>

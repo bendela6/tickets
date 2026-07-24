@@ -12,6 +12,7 @@ import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
 import { Icon } from '@tickets/ui/icon';
 import { Pill } from '@tickets/ui/pill';
+import { ScreenState } from '@tickets/ui/screen-state';
 import { SegmentedControl } from '@tickets/ui/segmented-control';
 import { Tabs } from '@tickets/ui/tabs';
 import { toneClasses } from '@tickets/ui/tones';
@@ -578,19 +579,17 @@ export function AllItemsScreen() {
           ))}
         </div>
         {allRows.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-2.5 py-16">
-            <span className="flex size-11 items-center justify-center rounded-[12px] bg-inset font-sans text-[18px] text-ink-3">
-              ⌕
-            </span>
-            <span className="font-sans text-[16px] font-semibold text-ink">
-              {totalCount > 0 ? 'No items match these filters' : 'No items yet'}
-            </span>
-            <span className="max-w-85 text-center font-sans text-ui text-ink-2">
-              {totalCount > 0
+          <ScreenState
+            className="flex-1 justify-center py-16"
+            tone="neutral"
+            icon="search"
+            title={totalCount > 0 ? 'No items match these filters' : 'No items yet'}
+            body={
+              totalCount > 0
                 ? `Filters are hiding all ${totalCount} items across ${entries.length} projects.`
-                : 'Nothing here yet — create an item in any project.'}
-            </span>
-          </div>
+                : 'Nothing here yet — create an item in any project.'
+            }
+          />
         ) : (
           groups.map((group) => (
             <div key={group.key} className="min-w-170">

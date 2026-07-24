@@ -4,6 +4,7 @@ import type { SignalsAppRow } from '../../api/signals/signals-api';
 import { useSignalsApps, useSignalsMeta } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { ScreenState } from '@tickets/ui/screen-state';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '../../ui/menu';
 import { ClearSignalsDialog } from './clear-signals-dialog';
 import { DeleteAppDialog } from './delete-app-dialog';
@@ -236,22 +237,22 @@ export function AppsScreen() {
 
       {isError ? (
         <div className="flex flex-1 items-center justify-center">
-          <div className="flex max-w-115 flex-col items-center gap-3.5 text-center">
-            <span className="flex size-9.5 items-center justify-center rounded-[10px] bg-danger-subtle font-mono text-[16px] font-semibold text-danger">
-              ✕
-            </span>
-            <div className="font-sans text-[17px] font-semibold text-ink">Couldn't load apps</div>
-            <div className="font-sans text-[12.5px] leading-normal text-ink-2">
-              The signals daemon isn't responding. Check that it's running, then try again.
-            </div>
-            <button
-              type="button"
-              onClick={() => void appsQuery.refetch()}
-              className="mt-0.5 h-8 rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink hover:bg-inset"
-            >
-              ↻ Retry
-            </button>
-          </div>
+          <ScreenState
+            className="max-w-115"
+            tone="danger"
+            icon="triangle-alert"
+            title="Couldn't load apps"
+            body="The signals daemon isn't responding. Check that it's running, then try again."
+            action={
+              <button
+                type="button"
+                onClick={() => void appsQuery.refetch()}
+                className="h-8 rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink hover:bg-inset"
+              >
+                ↻ Retry
+              </button>
+            }
+          />
         </div>
       ) : null}
 
