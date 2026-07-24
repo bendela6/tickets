@@ -19,7 +19,7 @@ const pg = definePlayground({
 describe('PlaygroundCard', () => {
   it('renders the preview with initial values', () => {
     render(<PlaygroundCard playground={pg} />);
-    const btn = screen.getByText('New ticket');
+    const btn = screen.getByRole('button', { name: 'New ticket' });
     expect(btn.getAttribute('data-variant')).toBe('primary');
     expect(btn.getAttribute('data-size')).toBe('default'); // allowNone starts unset
   });
@@ -27,22 +27,33 @@ describe('PlaygroundCard', () => {
   it('select change re-renders the preview', () => {
     render(<PlaygroundCard playground={pg} />);
     fireEvent.change(screen.getByLabelText('variant'), { target: { value: 'secondary' } });
-    expect(screen.getByText('New ticket').getAttribute('data-variant')).toBe('secondary');
+    expect(screen.getByRole('button', { name: 'New ticket' }).getAttribute('data-variant')).toBe('secondary');
   });
 
   it('allowNone select can return to (unset)', () => {
     render(<PlaygroundCard playground={pg} />);
     fireEvent.change(screen.getByLabelText('size'), { target: { value: 'compact' } });
-    expect(screen.getByText('New ticket').getAttribute('data-size')).toBe('compact');
+    expect(screen.getByRole('button', { name: 'New ticket' }).getAttribute('data-size')).toBe('compact');
     fireEvent.change(screen.getByLabelText('size'), { target: { value: '' } });
-    expect(screen.getByText('New ticket').getAttribute('data-size')).toBe('default');
+    expect(screen.getByRole('button', { name: 'New ticket' }).getAttribute('data-size')).toBe('default');
   });
 
   it('checkbox and text changes flow through', () => {
     render(<PlaygroundCard playground={pg} />);
     fireEvent.click(screen.getByLabelText('loading'));
-    expect(screen.getByText('New ticket').getAttribute('data-loading')).toBe('true');
+    expect(screen.getByRole('button', { name: 'New ticket' }).getAttribute('data-loading')).toBe('true');
     fireEvent.change(screen.getByLabelText('children'), { target: { value: 'Save' } });
-    expect(screen.getByText('Save')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy();
+  });
+
+  it('Reset button restores initial values', () => {
+    render(<PlaygroundCard playground={pg} />);
+    // Change variant to secondary
+    fireEvent.change(screen.getByLabelText('variant'), { target: { value: 'secondary' } });
+    expect(screen.getByRole('button', { name: 'New ticket' }).getAttribute('data-variant')).toBe('secondary');
+    // Click Reset
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    // Verify variant is back to primary (initial value)
+    expect(screen.getByRole('button', { name: 'New ticket' }).getAttribute('data-variant')).toBe('primary');
   });
 });

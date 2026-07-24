@@ -17,15 +17,20 @@ export function ControlsPanel({
   return (
     <div className="flex w-64 shrink-0 flex-col gap-2.5">
       {Object.entries(controls).map(([key, def]) => (
-        <label key={key} className="flex items-center justify-between gap-3 font-sans text-meta text-ink-2">
-          <span className="font-mono text-label uppercase tracking-(--tracking-label) text-ink-3">
+        <div
+          key={key}
+          className="grid grid-cols-[96px_1fr] items-center gap-2.5 border-b border-hairline py-2.5"
+        >
+          <label htmlFor={key} className="font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3">
             {def.label ?? key}
-          </span>
+          </label>
           {def.kind === 'select' && (
             <select
+              id={key}
               className={inputClasses}
               value={(values[key] as string | undefined) ?? ''}
               onChange={(e) => onChange(key, e.target.value === '' ? undefined : e.target.value)}
+              aria-label={def.label ?? key}
             >
               {def.allowNone && <option value="">(unset)</option>}
               {def.options.map((o) => (
@@ -37,23 +42,28 @@ export function ControlsPanel({
           )}
           {def.kind === 'boolean' && (
             <input
+              id={key}
               type="checkbox"
               className="size-4 accent-(--color-accent)"
               checked={values[key] as boolean}
               onChange={(e) => onChange(key, e.target.checked)}
+              aria-label={def.label ?? key}
             />
           )}
           {def.kind === 'text' && (
             <input
+              id={key}
               type="text"
               className={inputClasses}
               placeholder={def.placeholder}
               value={values[key] as string}
               onChange={(e) => onChange(key, e.target.value)}
+              aria-label={def.label ?? key}
             />
           )}
           {def.kind === 'number' && (
             <input
+              id={key}
               type="number"
               className={`${inputClasses} w-20`}
               min={def.min}
@@ -61,9 +71,10 @@ export function ControlsPanel({
               step={def.step}
               value={values[key] as number}
               onChange={(e) => onChange(key, e.target.value === '' ? def.initial : Number(e.target.value))}
+              aria-label={def.label ?? key}
             />
           )}
-        </label>
+        </div>
       ))}
     </div>
   );
