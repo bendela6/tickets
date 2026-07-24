@@ -1,3 +1,4 @@
+import { boolean, definePlayground, select, text } from '@tickets/ui/gallery';
 import { Button } from './button';
 
 export const meta = { title: 'Button', group: 'Form controls', order: 1 };
@@ -14,3 +15,14 @@ export const states = [
   { name: 'size touch', render: () => <Button size="touch">Touch 44</Button> },
   { name: 'size icon', render: () => <Button size="icon" aria-label="More">⋯</Button> },
 ];
+
+export const playground = definePlayground({
+  controls: {
+    variant: select(['primary', 'secondary', 'ghost', 'destructive'], { initial: 'primary' }),
+    size: select(['compact', 'regular', 'touch', 'icon'], { allowNone: true }),
+    loading: boolean(false, { label: 'show spinner' }),
+    disabled: boolean(),
+    children: text('New ticket', { placeholder: 'button label…' }),
+  },
+  render: ({ children, ...props }) => <Button {...props}>{children}</Button>,
+});

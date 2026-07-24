@@ -1,3 +1,4 @@
+import { boolean, definePlayground, text } from '@tickets/ui/gallery';
 import { FieldLabel } from './field-label';
 import { FieldError } from './field-error';
 import { Input } from './input';
@@ -30,3 +31,17 @@ export const states = [
     ),
   },
 ];
+
+export const playground = definePlayground({
+  controls: {
+    children: text('Key'),
+    required: boolean(true),
+    error: text('Key must be 2–24 chars'),
+  },
+  render: ({ children, required, error }) => (
+    <>
+      <FieldLabel required={required}>{children}</FieldLabel>
+      {error && <FieldError>{error}</FieldError>}
+    </>
+  ),
+});

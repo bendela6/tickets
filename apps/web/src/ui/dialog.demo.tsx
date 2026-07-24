@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { definePlayground, text, boolean } from '@tickets/ui/gallery';
 import { Button } from './button';
 import { ConfirmDialog } from './dialog';
 
@@ -22,6 +23,46 @@ function DialogFixture() {
   );
 }
 
+function DialogPlaygroundFixture({
+  title,
+  body,
+  confirmLabel,
+  destructive,
+}: {
+  title: string;
+  body: string;
+  confirmLabel: string;
+  destructive: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button variant="secondary" onClick={() => setOpen(true)}>
+        Open dialog
+      </Button>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title={title}
+        body={body}
+        confirmLabel={confirmLabel}
+        destructive={destructive}
+        onConfirm={() => undefined}
+      />
+    </>
+  );
+}
+
 export const meta = { title: 'Dialog', group: 'Overlays' };
 
 export const states = [{ name: 'confirm dialog', render: () => <DialogFixture /> }];
+
+export const playground = definePlayground({
+  controls: {
+    title: text('Archive this ticket?'),
+    body: text('It moves to the archive and leaves the board.'),
+    confirmLabel: text('Archive'),
+    destructive: boolean(true),
+  },
+  render: (v) => <DialogPlaygroundFixture {...v} />,
+});
