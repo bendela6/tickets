@@ -60,3 +60,39 @@ it('is a no-op when every issue still has referencing signals', async () => {
   const after = await testDb.select().from(issues).where(eq(issues.appId, appId));
   expect(after).toHaveLength(before.length);
 });
+
+it('does not touch another app\'s issues or signals', async () => {
+  const { appId: appAId } = await seed();
+
+  // App B: its own issue "widget-broke" with 2 signals, entirely separate from app A.
+  const app = buildApp({ db: testDb });
+  const b = (await app.inject({ method: 'POST', url: '/apps', payload: { name: 'B' } })).json();
+  const errB = (session: string) => ({
+    kind: 'error', sessionId: session, name: 'RangeError', message: 'widget-broke',
+    mechanism: 'uncaught-exception', level: 'error', timestamp: new Date().toISOString(),
+    stack: [{ functionName: 'g', file: 'src/b.ts', line: 1, column: 1, inApp: true }],
+    platform: { runtime: 'browser' }, sdk: { name: 't', version: '0' },
+  });
+  await app.inject({ method: 'POST', url: `/ingest/${b.ingestKey}`, payload: { signals: [errB('bs1'), errB('bs2')] } });
+  await app.close();
+
+  const bIssueBefore = (await testDb.select().from(issues).where(eq(issues.appId, b.id)))[0]!;
+  const bSignalsBefore = await testDb.select().from(signals).where(eq(signals.appId, b.id));
+  expect(bSignalsBefore).toHaveLength(2);
+
+  // Mirror the destructive scenario from the first test, but scoped to app A only.
+  const aIssues = await testDb.select().from(issues).where(eq(issues.appId, appAId));
+  const otherIssue = aIssues.find((i) => i.title.includes('other'))!;
+  await testDb.delete(signals).where(eq(signals.issueId, otherIssue.id));
+  await testDb.transaction((tx) => pruneIssues(tx, appAId));
+
+  // App B's issue row is byte-for-byte the same, and its signals are untouched.
+  const bIssueAfter = (await testDb.select().from(issues).where(eq(issues.id, bIssueBefore.id)))[0];
+  expect(bIssueAfter).toBeDefined();
+  expect(bIssueAfter!.eventCount).toBe(bIssueBefore.eventCount);
+  expect(bIssueAfter!.firstSeen.getTime()).toBe(bIssueBefore.firstSeen.getTime());
+  expect(bIssueAfter!.lastSeen.getTime()).toBe(bIssueBefore.lastSeen.getTime());
+  const bSignalsAfter = await testDb.select().from(signals).where(eq(signals.appId, b.id));
+  expect(bSignalsAfter).toHaveLength(2);
+  expect(bSignalsAfter.map((s) => s.id).sort()).toEqual(bSignalsBefore.map((s) => s.id).sort());
+});
