@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
+import { Pill } from '@tickets/ui/pill';
 import type { Field } from '../api/types';
-import { OptionChip } from '../ui/option-chip';
+import { statusPill } from '../domain/status';
 import { formatExact } from '../ui/relative-date';
-import { StatusBadge } from '../ui/status-badge';
 import type { BoardIndexes } from '../utils/index-board';
 import { hexToOptionColor } from './option-color';
 
@@ -22,7 +22,7 @@ function formatDateTime(raw: string): string {
 // the storage type; fields.config refines it; option configs carry the
 // colors (as hex, mapped onto the Instrument palette), except the workflow
 // field (config.workflow===true) whose color/glyph come from Option.kind via
-// StatusBadge. typeId narrows options to the item's type (per-type allowlist).
+// statusPill. typeId narrows options to the item's type (per-type allowlist).
 // The drawer's editable counterpart is FieldWidget.
 export function getCellContent(
   field: Field,
@@ -39,9 +39,9 @@ export function getCellContent(
       const value = values[0];
       const option = typeof value === 'string' ? indexes.optionByValue(field, value) : undefined;
       if (!option || option.kind === null) {
-        return <OptionChip label={String(value)} color="gray" />;
+        return <Pill label={String(value)} tone="gray" shape="full" />;
       }
-      return <StatusBadge kind={option.kind} label={option.label} />;
+      return <Pill {...statusPill(option.kind)} label={option.label} />;
     }
     const options = indexes.optionsForField(typeId, field);
     return (
@@ -49,10 +49,11 @@ export function getCellContent(
         {values.map((value, index) => {
           const option = options.find((candidate) => candidate.value === value);
           return (
-            <OptionChip
+            <Pill
               key={index}
               label={option?.label ?? String(value)}
-              color={hexToOptionColor(option?.config.color)}
+              tone={hexToOptionColor(option?.config.color)}
+              shape="full"
             />
           );
         })}

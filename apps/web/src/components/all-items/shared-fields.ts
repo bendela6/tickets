@@ -1,6 +1,5 @@
 import type { Board, FieldType, Project } from '../../api/types';
-import { hexToOptionColor, kindColor } from '../../registry/option-color';
-import type { OptionColor } from '../../ui/option-chip';
+import { hexToOptionColor, kindColor, type OptionColor } from '../../registry/option-color';
 import type { BoardIndexes } from '../../utils/index-board';
 
 export type ProjectEntry = { project: Project; board: Board; indexes: BoardIndexes };

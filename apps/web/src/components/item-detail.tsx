@@ -7,11 +7,11 @@ import { usePatchItem } from '../api/use-patch-item';
 import { useCurrentUser } from '../state/current-user-context';
 import { Button } from '../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../ui/menu';
 import { RelativeDate } from '../ui/relative-date';
 import { StatusSelect } from '../ui/status-select';
 import { useToast } from '../ui/toast';
-import { TypeBadge } from '../ui/type-badge';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
 import { DetailActivity } from './detail-activity';
@@ -287,7 +287,7 @@ export function ItemDetail({
       <>
         <div className="flex shrink-0 items-center gap-2.25 border-b border-hairline px-5 py-3.5">
           <KeyChip prefix={prefix} number={item.number} />
-          <TypeBadge label={type?.label ?? '?'} />
+          <Pill tone="neutral" emphasis="outline" label={type?.label ?? '?'} />
           {workflowField ? (
             <StatusSelect
               size="compact"
@@ -398,7 +398,7 @@ export function ItemDetail({
             {breadcrumb ? <div className="mb-2.5">{breadcrumb}</div> : null}
             <div className="mb-2.5 flex items-center gap-2.25">
               <KeyChip prefix={prefix} number={item.number} />
-              <TypeBadge label={type?.label ?? '?'} />
+              <Pill tone="neutral" emphasis="outline" label={type?.label ?? '?'} />
               <span className="font-mono text-label text-ink-3">
                 created{' '}
                 <RelativeDate value={item.createdAt} className="font-mono text-[11px] text-ink-3" />{' '}

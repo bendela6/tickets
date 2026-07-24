@@ -9,6 +9,7 @@ import { useCurrentUser } from '../../state/current-user-context';
 import { Avatar } from '../../ui/avatar';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 import { Input } from '../../ui/input';
 import { KindGlyph } from '../../ui/kind-glyph';
@@ -16,7 +17,6 @@ import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
 import { RelativeDate } from '../../ui/relative-date';
 import { StatusSelect } from '../../ui/status-select';
 import { ItemKey } from '../../ui/item-key';
-import { TypeBadge } from '../../ui/type-badge';
 import { childProgress } from '../../utils/child-progress';
 import { evaluateFilters } from '../../utils/evaluate-filters';
 import { indexBoard, type BoardIndexes } from '../../utils/index-board';
@@ -408,7 +408,7 @@ export function AllItemsScreen() {
   const cell = (id: string, row: Row): ReactNode => {
     if (id === 'type') {
       const type = row.entry.indexes.typeById.get(row.ticket.typeId);
-      return <TypeBadge label={type?.label ?? '?'} />;
+      return <Pill tone="neutral" emphasis="outline" label={type?.label ?? '?'} />;
     }
     if (id === 'subs') {
       const { any, done, total } = childProgress(row.ticket, row.entry.indexes);

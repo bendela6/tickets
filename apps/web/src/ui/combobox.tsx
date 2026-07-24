@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import { ComboboxList, type ComboOption } from './combobox-list';
-import { OptionChip } from './option-chip';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
 type ComboboxProps = {
@@ -45,7 +45,7 @@ export function Combobox({
           >
             {selected ? (
               selected.color ? (
-                <OptionChip color={selected.color} label={selected.label} />
+                <Pill tone={selected.color} shape="full" label={selected.label} />
               ) : (
                 <span className="truncate">{selected.label}</span>
               )

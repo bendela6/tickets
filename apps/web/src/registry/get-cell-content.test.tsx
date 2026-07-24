@@ -57,13 +57,13 @@ test('an option field renders the option label', () => {
   expect(screen.getByText('High')).toBeInTheDocument();
 });
 
-test('the workflow field renders a kind-colored StatusBadge', () => {
+test('the workflow field renders a kind-colored status pill', () => {
   const b = board();
   const ix = indexBoard(b);
   const field = ix.fieldById.get(10)!;
   render(<>{getCellContent(field, 'active', ix, 1)}</>);
   const badge = screen.getByText('In Progress').closest('span');
-  expect(badge).toHaveClass('bg-kind-active-subtle');
+  expect(badge).toHaveClass('bg-opt-blue-subtle');
 });
 
 test('a user field renders the user name', () => {

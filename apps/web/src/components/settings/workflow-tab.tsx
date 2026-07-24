@@ -6,18 +6,19 @@ import {
   useDeleteTransition,
   useUpdateOption,
 } from '../../api/use-admin';
+import { statusPill } from '../../domain/status';
 import { hexToOptionColor } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import { SWATCHES } from '@tickets/ui/swatches';
 import { Combobox } from '../../ui/combobox';
 import type { ComboOption } from '../../ui/combobox-list';
 import { FieldLabel } from '../../ui/field-label';
 import { Input } from '../../ui/input';
 import { KindGlyph } from '../../ui/kind-glyph';
-import { StatusBadge } from '../../ui/status-badge';
 import type { SettingsTabProps } from './types-tab';
 
 const KIND_ORDER: StatusKind[] = ['todo', 'active', 'blocked', 'done', 'dropped'];
@@ -55,9 +56,7 @@ function ArchChip() {
 // workflow canvas treatment for the start of the graph.
 function EntryPill() {
   return (
-    <span className="inline-flex h-5.5 shrink-0 items-center rounded-full border-[1.5px] border-dashed border-kind-done bg-transparent px-2.25 font-mono text-[10px] font-medium text-kind-done">
-      entry
-    </span>
+    <Pill tone="green" emphasis="outline" shape="full" label="entry" className="font-mono" />
   );
 }
 
@@ -434,7 +433,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                             {option.label}
                           </span>
                           <span className="font-mono text-meta text-ink-3">{option.value}</span>
-                          <StatusBadge kind={kind} label={kind} />
+                          <Pill {...statusPill(kind)} label={kind} />
                           {option.config.color ? (
                             <span
                               aria-hidden
@@ -522,7 +521,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                           className="flex h-10.5 items-center gap-2.5 border-b border-hairline px-4 last:border-b-0"
                         >
                           {from ? (
-                            <StatusBadge kind={(from.kind ?? 'todo') as StatusKind} label={from.label} />
+                            <Pill {...statusPill((from.kind ?? 'todo') as StatusKind)} label={from.label} />
                           ) : (
                             <EntryPill />
                           )}
@@ -530,7 +529,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                             →
                           </span>
                           {to ? (
-                            <StatusBadge kind={(to.kind ?? 'todo') as StatusKind} label={to.label} />
+                            <Pill {...statusPill((to.kind ?? 'todo') as StatusKind)} label={to.label} />
                           ) : (
                             <span className="font-mono text-meta text-ink-3">#{t.toOptionId}</span>
                           )}
