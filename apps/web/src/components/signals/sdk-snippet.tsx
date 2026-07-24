@@ -1,11 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { CopyButton } from '@tickets/ui/copy-button';
 import { SegmentedControl } from '@tickets/ui/segmented-control';
-
-const COPY_STATE_RESET_MS = 1500;
-
-type CopyState = 'idle' | 'copied' | 'failed';
 
 export type SdkPlatform = 'react' | 'node' | 'browser';
 
@@ -40,8 +36,7 @@ function snippetFor(platform: SdkPlatform, dsn: string): string {
 
 /**
  * Copy-paste SDK init snippet for a given DSN + platform, with a platform
- * toggle (React/Node/Browser) and a copy button — same copy-state pattern as
- * DsnField (idle → "Copied" / "Copy failed", resetting after a beat).
+ * toggle (React/Node/Browser) and a CopyButton.
  */
 export function SdkSnippet({
   dsn,
@@ -53,30 +48,12 @@ export function SdkSnippet({
   className?: string;
 }) {
   const [active, setActive] = useState<SdkPlatform>(platform);
-  const [copyState, setCopyState] = useState<CopyState>('idle');
 
   useEffect(() => {
     setActive(platform);
   }, [platform]);
 
-  useEffect(() => {
-    if (copyState === 'idle') {
-      return;
-    }
-    const timer = window.setTimeout(() => setCopyState('idle'), COPY_STATE_RESET_MS);
-    return () => window.clearTimeout(timer);
-  }, [copyState]);
-
   const code = snippetFor(active, dsn);
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopyState('copied');
-    } catch {
-      setCopyState('failed');
-    }
-  }
 
   return (
     <div className={cn('flex flex-col gap-2', className)}>
@@ -88,14 +65,7 @@ export function SdkSnippet({
           value={active}
           onChange={(next) => setActive(next as SdkPlatform)}
         />
-        <Button
-          variant="secondary"
-          size="compact"
-          onClick={() => void handleCopy()}
-          className="h-[26px] shrink-0 px-2.5 text-[11px]"
-        >
-          {copyState === 'copied' ? 'Copied' : copyState === 'failed' ? 'Copy failed' : '⧉ Copy'}
-        </Button>
+        <CopyButton value={code} className="shrink-0" />
       </div>
       <pre className="overflow-x-auto rounded-[8px] border border-hairline bg-inset p-3 font-mono text-[12px] leading-relaxed text-ink">
         <code>{code}</code>

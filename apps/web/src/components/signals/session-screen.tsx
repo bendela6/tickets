@@ -1,16 +1,14 @@
-import { useEffect, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ApiError } from '../../api/api-error';
 import type { PlatformInfo, SessionEventRow, SignalPayload, SignalStackFrame } from '../../api/signals/signals-api';
 import { useSignalsSession } from '../../api/signals/use-signals';
 import { cn } from '@tickets/ui/cn';
+import { useCopy } from '@tickets/ui/copy-button';
 import { Icon } from '@tickets/ui/icon';
 import { Pill } from '@tickets/ui/pill';
 import { ScreenState } from '@tickets/ui/screen-state';
 import { signalKindIcon, signalKindTone, type SignalKind } from '../../domain/signal-status';
 import { formatClockTime, formatCount, formatDurationMs } from './format';
-
-const COPY_STATE_RESET_MS = 1500;
 const IDLE_GAP_THRESHOLD_MS = 30_000;
 
 // The session `kind` column only ever holds these three values (see
@@ -173,32 +171,15 @@ function elapsedLabel(clientTimestamp: string, startedAt: string): string {
 }
 
 function CopySessionIdButton({ sessionId }: { sessionId: string }) {
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
-
-  useEffect(() => {
-    if (copyState === 'idle') {
-      return;
-    }
-    const timer = window.setTimeout(() => setCopyState('idle'), COPY_STATE_RESET_MS);
-    return () => window.clearTimeout(timer);
-  }, [copyState]);
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(sessionId);
-      setCopyState('copied');
-    } catch {
-      setCopyState('failed');
-    }
-  }
+  const { copied, failed, copy } = useCopy();
 
   return (
     <button
       type="button"
-      onClick={() => void handleCopy()}
+      onClick={() => void copy(sessionId)}
       className="h-8 flex-none rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink hover:border-ink-3 hover:bg-inset"
     >
-      {copyState === 'copied' ? 'Copied' : copyState === 'failed' ? 'Copy failed' : '⧉ Copy session id'}
+      {copied ? 'Copied' : failed ? 'Copy failed' : '⧉ Copy session id'}
     </button>
   );
 }

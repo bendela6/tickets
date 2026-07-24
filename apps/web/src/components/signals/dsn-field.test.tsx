@@ -11,21 +11,21 @@ test('shows the dsn text and labels the field for assistive tech', () => {
   expect(screen.getByLabelText('DSN')).toBeInTheDocument();
 });
 
-test('copies the dsn to the clipboard and flips to a "Copied" state', async () => {
+test('copies the dsn to the clipboard via CopyButton and flips to a "Copied" state', async () => {
   // userEvent.setup() installs its own navigator.clipboard stub (overriding
   // anything set beforehand), so the spy has to attach after setup() runs.
   const user = userEvent.setup();
   const writeText = vi.spyOn(navigator.clipboard, 'writeText');
 
   render(<DsnField dsn={DSN} />);
-  const button = screen.getByRole('button', { name: /copy/i });
+  const button = screen.getByRole('button', { name: 'Copy' });
   await user.click(button);
 
   expect(writeText).toHaveBeenCalledWith(DSN);
-  expect(await screen.findByRole('button', { name: /copied/i })).toBeInTheDocument();
+  expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument();
 });
 
-test('shows a transient "Copy failed" state when the clipboard write rejects, with no unhandled rejection', async () => {
+test('shows a transient "Failed" state when the clipboard write rejects, with no unhandled rejection', async () => {
   const onUnhandledRejection = vi.fn();
   window.addEventListener('unhandledrejection', onUnhandledRejection);
 
@@ -34,10 +34,10 @@ test('shows a transient "Copy failed" state when the clipboard write rejects, wi
     vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('denied'));
 
     render(<DsnField dsn={DSN} />);
-    const button = screen.getByRole('button', { name: /copy/i });
+    const button = screen.getByRole('button', { name: 'Copy' });
     await user.click(button);
 
-    expect(await screen.findByRole('button', { name: /copy failed/i })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Failed' })).toBeInTheDocument();
     // Give any stray (unhandled) rejection a tick to surface before asserting.
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(onUnhandledRejection).not.toHaveBeenCalled();

@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router';
 import type { IssueFilters, IssueLevel, IssueStatus } from '../../api/signals/signals-api';
 import { usePatchIssueStatus, useSignalsApps, useSignalsIssues } from '../../api/signals/use-signals';
 import { ScreenState } from '@tickets/ui/screen-state';
+import { Spinner } from '@tickets/ui/spinner';
 import { formatCount } from './format';
 import { ISSUES_GRID_COLUMNS, IssueRow, IssueRowSkeleton } from './issue-row';
 import { IssuesToolbar } from './issues-toolbar';
@@ -214,10 +215,7 @@ export function IssuesScreen() {
               ))}
             </div>
             <div className="flex h-9.5 shrink-0 items-center gap-2.5 border-t border-hairline bg-app px-3.5 font-mono text-[11px] text-ink-3">
-              <span
-                aria-hidden
-                className="size-2.75 animate-spin rounded-full border-2 border-hairline border-t-ink-2"
-              />
+              <Spinner size={11} tone="secondary" />
               <span>loading issues…</span>
             </div>
           </>

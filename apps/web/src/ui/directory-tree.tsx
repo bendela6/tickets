@@ -1,10 +1,11 @@
 import type { WorkdirRoot } from '../api/types';
 import { cn } from '@tickets/ui/cn';
+import { Spinner } from '@tickets/ui/spinner';
 import { useDirectoryTree, type VisibleRow } from './use-directory-tree';
 
 function Caret({ open, loading }: { open: boolean; loading: boolean }) {
   if (loading) {
-    return <span className="inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-control border-t-accent" aria-hidden />;
+    return <Spinner size={11} tone="secondary" />;
   }
   return (
     <span

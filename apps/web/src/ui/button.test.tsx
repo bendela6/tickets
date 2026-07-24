@@ -77,8 +77,14 @@ test('disabled swaps variant colors; loading keeps the fill', () => {
   expect(busy).not.toHaveClass('bg-inset');
 });
 
-test('loading spinner is a 12px ring', () => {
-  render(<Button loading>Creating…</Button>);
-  const spinner = screen.getByRole('button').querySelector('[aria-hidden]');
-  expect(spinner).toHaveClass('size-3', 'animate-spin', 'rounded-full');
+test('loading shows a 12px animating Spinner, hidden while not loading', () => {
+  const { rerender } = render(<Button loading>Creating…</Button>);
+  const spinner = screen.getByRole('img', { name: 'Loading' });
+  expect(spinner.tagName.toLowerCase()).toBe('svg');
+  expect(spinner).toHaveAttribute('width', '12');
+  expect(spinner).toHaveAttribute('height', '12');
+  expect(spinner).toHaveClass('animate-ai-spin');
+
+  rerender(<Button>Creating…</Button>);
+  expect(screen.queryByRole('img', { name: 'Loading' })).toBeNull();
 });

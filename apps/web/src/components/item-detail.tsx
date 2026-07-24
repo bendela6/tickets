@@ -8,6 +8,7 @@ import { typePill } from '../domain/status';
 import { useCurrentUser } from '../state/current-user-context';
 import { Button } from '../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { useCopy } from '@tickets/ui/copy-button';
 import { Pill } from '@tickets/ui/pill';
 import { Tabs } from '@tickets/ui/tabs';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../ui/menu';
@@ -116,7 +117,7 @@ export function ItemDetail({
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [tab, setTab] = useState<'comments' | 'activity'>('comments');
-  const [copied, setCopied] = useState(false);
+  const { copied, copy: copyLink } = useCopy();
 
   const prefix = board.project.itemPrefix;
   const type = indexes.typeById.get(item.typeId);
@@ -359,14 +360,7 @@ export function ItemDetail({
         {archivedChip}
         <span className="flex-1" />
         <TicketDispatch itemId={item.id} actorId={userId ?? undefined} />
-        <Button
-          size="compact"
-          onClick={() => {
-            void navigator.clipboard?.writeText(window.location.href);
-            setCopied(true);
-            window.setTimeout(() => setCopied(false), 1500);
-          }}
-        >
+        <Button size="compact" onClick={() => void copyLink(window.location.href)}>
           {copied ? 'Copied' : '⧉ Copy link'}
         </Button>
         {archiveMenu}

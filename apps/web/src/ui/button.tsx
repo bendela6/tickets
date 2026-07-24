@@ -1,5 +1,6 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
 import { cn } from '@tickets/ui/cn';
+import { Spinner } from '@tickets/ui/spinner';
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
@@ -83,12 +84,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       )}
       {...rest}
     >
-      {loading ? (
-        <span
-          aria-hidden
-          className="size-3 animate-spin rounded-full border-2 border-current/35 border-t-current"
-        />
-      ) : null}
+      {loading ? <Spinner size={12} tone="neutral" className="text-current" /> : null}
       {children}
     </button>
   );
