@@ -1,0 +1,11 @@
+{
+  "hues": ["red", "orange", "yellow", "green", "teal", "cyan", "blue", "indigo", "purple", "pink", "gray"],
+  "semantic": {
+    "primary":   { "base": "accent",     "subtle": "accent-subtle", "on": "on-accent" },
+    "secondary": { "base": "ink-2",      "subtle": "inset",         "on": "app" },
+    "success":   { "base": "opt-green",  "subtle": "opt-green-subtle",  "on": "on-opt-green" },
+    "warning":   { "base": "opt-orange", "subtle": "opt-orange-subtle", "on": "on-opt-orange" },
+    "danger":    { "base": "danger",     "subtle": "danger-subtle",  "on": "on-danger" },
+    "neutral":   { "base": "ink-3",      "subtle": "inset",          "on": "app" }
+  }
+}
