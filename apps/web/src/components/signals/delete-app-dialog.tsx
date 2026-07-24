@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { SignalsAppRow } from '../../api/signals/signals-api';
 import { useDeleteApp } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
+import { DialogFooter } from '@tickets/ui/dialog-footer';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 import { FieldLabel } from '../../ui/field-label';
 import { Input } from '../../ui/input';
@@ -86,10 +87,7 @@ export function DeleteAppDialog({
             {deleteApp.error instanceof Error ? deleteApp.error.message : 'Could not delete the app'}
           </p>
         ) : null}
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => change(false)}>
-            Cancel
-          </Button>
+        <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}>
           <Button
             variant="destructive"
             disabled={typed !== app.slug}
@@ -98,7 +96,7 @@ export function DeleteAppDialog({
           >
             Delete app
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </DialogRoot>
   );

@@ -13,6 +13,8 @@ import { useCreateTerminalSession } from '../../api/use-create-terminal-session'
 import { useCreateWorkdir } from '../../api/use-create-workdir';
 import { useWorkdirs } from '../../api/use-workdirs';
 import { formRegistry } from '../../form/registry';
+import { DialogFooter } from '@tickets/ui/dialog-footer';
+import { SectionHeader } from '@tickets/ui/section-header';
 import { Button } from '../../ui/button';
 import { Combobox } from '../../ui/combobox';
 import { DialogContent, DialogDescription, DialogRoot, DialogTitle } from '../../ui/dialog';
@@ -39,10 +41,11 @@ function basename(p: string): string {
 
 function Label({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
   return (
-    <span className="mb-1.5 flex items-center gap-1.5 font-sans text-label font-medium uppercase tracking-wide text-ink-2">
-      {children}
-      {hint ? <span className="font-normal normal-case text-ink-3">{hint}</span> : null}
-    </span>
+    <SectionHeader
+      title={children}
+      count={hint != null ? <span className="font-normal normal-case text-ink-3">{hint}</span> : null}
+      className="mb-1.5 gap-1.5 tracking-wide"
+    />
   );
 }
 
@@ -266,14 +269,14 @@ export function NewSessionDialog({
 
         <div className="mt-5 flex items-center justify-between gap-2">
           <span className="font-mono text-[11px] text-ink-3">{hint}</span>
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => change(false)}>
-              Cancel
-            </Button>
+          <DialogFooter
+            className="mt-0 border-0 p-0"
+            cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}
+          >
             <Button variant="primary" onClick={submit} disabled={!canSubmit} loading={submitting}>
               Start session
             </Button>
-          </div>
+          </DialogFooter>
         </div>
       </DialogContent>
     </DialogRoot>

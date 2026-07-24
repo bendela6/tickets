@@ -1,6 +1,6 @@
 import { getMarkRange, posToDOMRect, type Editor } from '@tiptap/react';
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { IconLink2, IconPencil, IconTrash2 } from './toolbar-icons';
+import { Icon } from '@tickets/ui/icon';
 
 // Forces a re-render whenever the given Tiptap editor fires a transaction or
 // selection-update event. RichTextEditor already re-renders on every
@@ -177,7 +177,7 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
       ) : (
         <>
           <span className="inline-flex shrink-0 text-accent">
-            <IconLink2 size={13} />
+            <Icon name="link" size={13} />
           </span>
           <span className="max-w-55 truncate font-mono text-[12px] text-accent">{href}</span>
         </>
@@ -192,7 +192,7 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
         }}
         className="flex size-5.5 shrink-0 items-center justify-center rounded-ctrl text-ink-2 hover:bg-inset"
       >
-        <IconPencil size={13} />
+        <Icon name="pencil" size={13} />
       </button>
       <button
         type="button"
@@ -200,7 +200,7 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
         onClick={remove}
         className="flex size-5.5 shrink-0 items-center justify-center rounded-ctrl text-ink-2 hover:bg-inset"
       >
-        <IconTrash2 size={13} />
+        <Icon name="trash" size={13} />
       </button>
     </div>
   );

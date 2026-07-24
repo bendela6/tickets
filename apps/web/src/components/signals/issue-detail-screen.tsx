@@ -118,11 +118,15 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
 
 function IssueNotFound() {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-      <div className="font-sans text-[15px] font-semibold text-ink">Issue not found</div>
-      <Link to="/signals" className="font-sans text-meta text-accent hover:underline">
-        ‹ Back to Issues
-      </Link>
+    <div className="flex h-full items-center justify-center p-6">
+      <ScreenState
+        title="Issue not found"
+        action={
+          <Link to="/signals" className="font-sans text-meta text-accent hover:underline">
+            ‹ Back to Issues
+          </Link>
+        }
+      />
     </div>
   );
 }

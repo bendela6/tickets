@@ -1,6 +1,7 @@
 import { Link, useMatchRoute } from '@tanstack/react-router';
 import { useSignalsIssues } from '../../api/signals/use-signals';
 import { cn } from '@tickets/ui/cn';
+import { RailLabel } from '@tickets/ui/rail-label';
 
 function navItemClasses(active: boolean) {
   return cn(
@@ -19,7 +20,7 @@ export function SignalsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between px-1 pb-2">
-        <span className="font-mono text-[10px] font-medium tracking-[0.09em] text-ink-3">SIGNALS</span>
+        <RailLabel>SIGNALS</RailLabel>
       </div>
       <nav className="flex flex-col gap-0.5">
         <Link

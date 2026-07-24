@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useAgentSessions } from '../../api/use-agent-sessions';
 import { useWorkdirs } from '../../api/use-workdirs';
+import { RailLabel } from '@tickets/ui/rail-label';
 import { SessionList } from '../agent/session-list';
 
 export function AgentsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
@@ -17,7 +18,7 @@ export function AgentsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between px-1 pb-2">
-        <span className="font-mono text-[10px] font-medium tracking-[0.09em] text-ink-3">AGENTS</span>
+        <RailLabel>AGENTS</RailLabel>
         <div className="flex items-center gap-2">
           <button
             type="button"

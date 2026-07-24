@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTerminalSessions } from '../../api/use-terminal-sessions';
 import { useWorkdirs } from '../../api/use-workdirs';
+import { RailLabel } from '@tickets/ui/rail-label';
 import { NewSessionDialog } from '../terminal/new-session-dialog';
 import { SessionList } from '../terminal/session-list';
 
@@ -24,7 +25,7 @@ export function TerminalsPanel({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between px-1 pb-2">
-        <span className="font-mono text-[10px] font-medium tracking-[0.09em] text-ink-3">TERMINALS</span>
+        <RailLabel>TERMINALS</RailLabel>
         <div className="flex items-center gap-2">
           <button
             type="button"

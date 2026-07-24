@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { SignalsAppDetail } from '../../api/signals/signals-api';
 import { useCreateSignalsApp } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
+import { DialogFooter } from '@tickets/ui/dialog-footer';
 import { Tabs } from '@tickets/ui/tabs';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 import { FieldLabel } from '../../ui/field-label';
@@ -129,10 +130,7 @@ export function NewAppDialog({
                 {createApp.error instanceof Error ? createApp.error.message : 'Could not create the app'}
               </p>
             ) : null}
-            <div className="mt-5 flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => change(false)}>
-                Cancel
-              </Button>
+            <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}>
               <Button
                 variant="primary"
                 disabled={name.trim() === ''}
@@ -141,7 +139,7 @@ export function NewAppDialog({
               >
                 Create app
               </Button>
-            </div>
+            </DialogFooter>
           </>
         ) : (
           <>
@@ -180,10 +178,10 @@ export function NewAppDialog({
               <span className="font-mono text-[11.5px] text-ink-3">
                 Send your first signal and it will appear under Issues.
               </span>
-              <span className="flex-1" />
-              <Button variant="secondary" onClick={() => change(false)}>
-                Close
-              </Button>
+              <DialogFooter
+                className="mt-0 border-0 p-0"
+                cancel={<Button variant="ghost" onClick={() => change(false)}>Close</Button>}
+              />
             </div>
           </>
         )}

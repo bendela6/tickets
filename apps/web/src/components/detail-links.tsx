@@ -5,6 +5,7 @@ import { useDeleteLink } from '../api/use-delete-link';
 import { useCurrentUser } from '../state/current-user-context';
 import { Button } from '../ui/button';
 import { Pill } from '@tickets/ui/pill';
+import { SectionHeader } from '@tickets/ui/section-header';
 import { Combobox } from '../ui/combobox';
 import type { ComboOption } from '../ui/combobox-list';
 import { Input } from '../ui/input';
@@ -91,17 +92,19 @@ export function DetailLinks({
 
   return (
     <section>
-      <div className="mb-2 flex items-center gap-2">
-        <span className="font-sans text-label font-medium uppercase text-ink-2">Links</span>
-        <span className="flex-1" />
-        <button
-          type="button"
-          className="font-sans text-meta font-medium text-ink-3 hover:text-ink"
-          onClick={() => setAdding((value) => !value)}
-        >
-          ＋ Add link
-        </button>
-      </div>
+      <SectionHeader
+        title="Links"
+        action={
+          <button
+            type="button"
+            className="font-sans text-meta font-medium text-ink-3 hover:text-ink"
+            onClick={() => setAdding((value) => !value)}
+          >
+            ＋ Add link
+          </button>
+        }
+        className="mb-2"
+      />
       <div className="flex flex-col gap-1.5">
         {item.links.length === 0 ? (
           <p className="m-0 font-sans text-meta text-ink-3">No links.</p>

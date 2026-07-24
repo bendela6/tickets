@@ -8,6 +8,7 @@ import { useCurrentUser } from '../state/current-user-context';
 import { cn } from '@tickets/ui/cn';
 import { Icon } from '@tickets/ui/icon';
 import { Meter } from '@tickets/ui/meter';
+import { SectionHeader } from '@tickets/ui/section-header';
 import { StatusSelect } from '../ui/status-select';
 import { ItemKey } from '../ui/item-key';
 import { childProgress } from '../utils/child-progress';
@@ -63,22 +64,25 @@ export function DetailChildren({
 
   return (
     <section>
-      <div className="mb-2 flex items-center gap-2.5">
-        <span className="font-sans text-label font-medium uppercase text-ink-2">Subtasks</span>
-        {progress.any ? (
-          <>
-            <Meter
-              tone="green"
-              value={progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0}
-              max={100}
-              className="w-15"
-            />
-            <span className="font-mono text-label text-ink-3">
-              {progress.done}/{progress.total} done
-            </span>
-          </>
-        ) : null}
-      </div>
+      <SectionHeader
+        title="Subtasks"
+        count={
+          progress.any ? (
+            <>
+              <Meter
+                tone="green"
+                value={progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0}
+                max={100}
+                className="w-15"
+              />
+              <span className="font-mono text-label text-ink-3">
+                {progress.done}/{progress.total} done
+              </span>
+            </>
+          ) : null
+        }
+        className="mb-2 gap-2.5"
+      />
       <div className="overflow-hidden rounded-[10px] border border-hairline">
         {children.map((child) => {
           const wf = indexes.workflowField(child.typeId);

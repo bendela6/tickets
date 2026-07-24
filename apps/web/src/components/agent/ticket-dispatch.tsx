@@ -6,6 +6,7 @@ import { useAgentSessions } from '../../api/use-agent-sessions';
 import { useDispatchAgent } from '../../api/use-dispatch-agent';
 import { sessionStatus } from '../../domain/session-status';
 import { Pill } from '@tickets/ui/pill';
+import { DialogFooter } from '@tickets/ui/dialog-footer';
 import { Button } from '../../ui/button';
 import { Combobox } from '../../ui/combobox';
 import { DialogContent, DialogDescription, DialogRoot, DialogTitle } from '../../ui/dialog';
@@ -89,10 +90,7 @@ export function TicketDispatch({ itemId, actorId }: { itemId: number; actorId?: 
             />
             {error ? <p className="font-sans text-meta text-danger">{error}</p> : null}
           </div>
-          <div className="mt-4 flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
+          <DialogFooter cancel={<Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>}>
             <Button
               variant="primary"
               onClick={submit}
@@ -101,7 +99,7 @@ export function TicketDispatch({ itemId, actorId }: { itemId: number; actorId?: 
             >
               Dispatch
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </DialogRoot>
     </span>

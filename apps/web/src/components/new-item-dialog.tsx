@@ -16,6 +16,7 @@ import { hexToOptionColor, type OptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
 import { Button } from '../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { DialogFooter } from '@tickets/ui/dialog-footer';
 import { Pill } from '@tickets/ui/pill';
 import { Combobox } from '../ui/combobox';
 import { DialogClose, DialogContent, DialogRoot, DialogTitle } from '../ui/dialog';
@@ -453,17 +454,16 @@ export function NewItemDialog({
                   ⌘↵ create
                 </span>
               )}
-              <Button variant="ghost" onClick={close}>
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                loading={createItem.isPending}
-                disabled={title.trim().length === 0 || userId === null}
-                onClick={() => void submit()}
-              >
-                Create item
-              </Button>
+              <DialogFooter className="mt-0 border-0 p-0" cancel={<Button variant="ghost" onClick={close}>Cancel</Button>}>
+                <Button
+                  variant="primary"
+                  loading={createItem.isPending}
+                  disabled={title.trim().length === 0 || userId === null}
+                  onClick={() => void submit()}
+                >
+                  Create item
+                </Button>
+              </DialogFooter>
             </footer>
           </>
         )}

@@ -60,9 +60,11 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// Hand-copied lucide path data, same convention as toolbar-icons.tsx (the
-// repo has no icon library) — circle-alert for the failed slot, rotate-ccw
-// for the Retry button, both at design§06's sizes (18px / 12px).
+// Hand-copied lucide path data — this plugin paints into real DOM nodes
+// (ProseMirror widget decorations), not React, so it can't render the
+// @tickets/ui icon registry's <Icon> component here the way the rest of the
+// toolbar does. circle-alert for the failed slot, rotate-ccw for the Retry
+// button, both at design§06's sizes (18px / 12px).
 const CIRCLE_ALERT_PATHS =
   '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>';
 const ROTATE_CCW_PATHS = '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>';

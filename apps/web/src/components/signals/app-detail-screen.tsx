@@ -26,11 +26,15 @@ const RECENT_ISSUES_SKELETON_ROWS = 3;
 
 function AppNotFound() {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-      <div className="font-sans text-[15px] font-semibold text-ink">App not found</div>
-      <Link to="/signals/apps" className="font-sans text-meta text-accent hover:underline">
-        ‹ Back to Apps
-      </Link>
+    <div className="flex h-full items-center justify-center p-6">
+      <ScreenState
+        title="App not found"
+        action={
+          <Link to="/signals/apps" className="font-sans text-meta text-accent hover:underline">
+            ‹ Back to Apps
+          </Link>
+        }
+      />
     </div>
   );
 }

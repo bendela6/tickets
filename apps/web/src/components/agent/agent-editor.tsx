@@ -3,6 +3,8 @@ import type { Agent, AgentProviderInfo, PermissionMode } from '../../api/types';
 import { useCreateAgent } from '../../api/use-create-agent';
 import { usePatchAgent } from '../../api/use-patch-agent';
 import { useWorkdirs } from '../../api/use-workdirs';
+import { DialogFooter } from '@tickets/ui/dialog-footer';
+import { SectionHeader } from '@tickets/ui/section-header';
 import { Button } from '../../ui/button';
 import { Combobox } from '../../ui/combobox';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
@@ -20,10 +22,11 @@ const NEEDS_PERMISSIONS: PermissionMode[] = ['default', 'acceptEdits', 'dontAsk'
 
 function Label({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
   return (
-    <span className="mb-1.5 flex items-center gap-1.5 font-sans text-label font-medium uppercase tracking-wide text-ink-2">
-      {children}
-      {hint ? <span className="font-normal normal-case text-ink-3">{hint}</span> : null}
-    </span>
+    <SectionHeader
+      title={children}
+      count={hint != null ? <span className="font-normal normal-case text-ink-3">{hint}</span> : null}
+      className="mb-1.5 gap-1.5 tracking-wide"
+    />
   );
 }
 
@@ -215,14 +218,11 @@ export function AgentEditor({
           {error ? <p className="font-sans text-meta text-danger">{error}</p> : null}
         </div>
 
-        <div className="mt-5 flex items-center justify-end gap-2">
-          <Button variant="secondary" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
+        <DialogFooter cancel={<Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>}>
           <Button variant="primary" onClick={save} disabled={!canSave} loading={saving}>
             {editing ? 'Save' : 'Create agent'}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </DialogRoot>
   );
