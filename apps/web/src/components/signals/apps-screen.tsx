@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import type { SignalsAppRow } from '../../api/signals/signals-api';
 import { useSignalsApps, useSignalsMeta } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
@@ -19,8 +20,9 @@ const ONBOARDING_STEPS = [
 
 // "storefront-web" -> "SW", "admin" -> "AD" — same split-on-dash/space
 // convention as ui/avatar.tsx's `initials`, just square-badged for apps
-// rather than the person/agent avatar's circle.
-function appInitials(name: string): string {
+// rather than the person/agent avatar's circle. Exported — app-detail-screen.tsx
+// reuses it for the detail header's avatar.
+export function appInitials(name: string): string {
   const parts = name.trim().split(/[\s-]+/).filter((part) => part.length > 0);
   const first = parts[0] ?? '';
   const second = parts[1] ?? parts[0]?.slice(1) ?? '';
@@ -37,7 +39,7 @@ const AVATAR_TONES = [
   'bg-inset text-ink-2',
 ];
 
-function avatarTone(slug: string): string {
+export function avatarTone(slug: string): string {
   let hash = 0;
   for (let i = 0; i < slug.length; i += 1) {
     hash = (hash * 31 + slug.charCodeAt(i)) >>> 0;
@@ -61,10 +63,13 @@ function TableHeader() {
 }
 
 function AppRow({ app }: { app: SignalsAppRow }) {
+  const navigate = useNavigate();
+
   return (
     <div
       role="row"
-      className="grid h-12.5 items-center border-b border-hairline px-3.5 last:border-b-0"
+      onClick={() => void navigate({ to: '/signals/apps/$appId', params: { appId: String(app.id) } })}
+      className="grid h-12.5 cursor-pointer items-center border-b border-hairline px-3.5 last:border-b-0 hover:bg-app"
       style={{ gridTemplateColumns: APPS_GRID_COLUMNS }}
     >
       <span className="flex min-w-0 items-center gap-2.5">
