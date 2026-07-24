@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { CommandPalette } from './command-palette';
+import { CommandPalette, highlightMatch } from './command-palette';
 import type { CollectedDemo } from '@tickets/ui/gallery';
 
 const demos: Extract<CollectedDemo, { slug: string }>[] = [
@@ -66,5 +66,63 @@ describe('CommandPalette', () => {
     fireEvent.keyDown(window, { key: 'Escape' });
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('filters items as the user types', () => {
+    render(<CommandPalette demos={demos} open={true} onOpenChange={() => {}} />);
+
+    const input = screen.getByRole('combobox');
+    fireEvent.change(input, { target: { value: 'butt' } });
+
+    // Button should still be visible (matches 'butt' in slug 'button')
+    const items = screen.getAllByRole('option');
+    expect(items.some((item) => item.textContent?.includes('Button'))).toBe(true);
+    // Input should be filtered out
+    expect(screen.queryByText(/^Input$/)).toBeNull();
+  });
+
+  it('resets query when dialog closes', () => {
+    const { rerender } = render(<CommandPalette demos={demos} open={true} onOpenChange={() => {}} />);
+
+    const input = screen.getByRole('combobox') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'button' } });
+    expect(input.value).toBe('button');
+
+    rerender(<CommandPalette demos={demos} open={false} onOpenChange={() => {}} />);
+    rerender(<CommandPalette demos={demos} open={true} onOpenChange={() => {}} />);
+
+    const newInput = screen.getByRole('combobox') as HTMLInputElement;
+    expect(newInput.value).toBe('');
+  });
+});
+
+describe('highlightMatch', () => {
+  it('highlights exact-case match with text-accent', () => {
+    const result = highlightMatch('Button', 'But');
+    expect(result).toBeTruthy();
+    // Verify it renders a strong tag with the matched part
+    const { container } = render(<div>{result}</div>);
+    const strong = container.querySelector('strong');
+    expect(strong).toBeTruthy();
+    expect(strong?.textContent).toBe('But');
+    expect(strong?.className).toContain('text-accent');
+  });
+
+  it('highlights case-insensitive match', () => {
+    const result = highlightMatch('Button', 'but');
+    const { container } = render(<div>{result}</div>);
+    const strong = container.querySelector('strong');
+    expect(strong).toBeTruthy();
+    expect(strong?.textContent).toBe('But');
+  });
+
+  it('returns plain title when query is empty', () => {
+    const result = highlightMatch('Button', '');
+    expect(result).toBe('Button');
+  });
+
+  it('returns plain title when no match found', () => {
+    const result = highlightMatch('Button', 'xyz');
+    expect(result).toBe('Button');
   });
 });
