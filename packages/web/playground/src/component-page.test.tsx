@@ -248,5 +248,67 @@ describe('ComponentPage', () => {
     render(<ComponentPage demo={demo} />);
     expect(screen.getByText('STATES')).toBeTruthy();
   });
+
+  describe('matrix mode axis wiring', () => {
+    // Three select controls (not two) so a "pick a fresh, non-colliding
+    // axis" case is distinguishable from the "pick the other axis's
+    // current key" swap case. `loading` stays boolean and is deliberately
+    // never targeted below — it isn't a legal matrix axis (matrixValues
+    // requires both axes to be select controls) and the real selects never
+    // offer it as an option.
+    function renderMatrixDemo() {
+      const demoWith3Selects = collectDemos({
+        button: {
+          meta: { title: 'Button', group: 'Form controls' },
+          states: [{ name: 'primary', render: () => <b>state-btn</b> }],
+          playground: definePlayground({
+            controls: {
+              variant: select(['primary', 'secondary']),
+              size: select(['sm', 'lg']),
+              tone: select(['soft', 'loud']),
+              loading: booleanControl(false),
+            },
+            render: (v) => <button data-variant={v.variant}>play-btn</button>,
+          }),
+        },
+      })[0];
+      if (!demoWith3Selects || isDemoError(demoWith3Selects)) throw new Error('fixture demo failed');
+
+      const utils = render(<ComponentPage demo={demoWith3Selects} />);
+      fireEvent.click(screen.getByLabelText('Matrix'));
+      return utils;
+    }
+
+    it('changing the rows select updates the matrix grid', () => {
+      renderMatrixDemo();
+      // Default axes: rows=size (2), columns=variant (2) -> 4 grid cells,
+      // plus the always-on PlaygroundCard preview button below the grid.
+      expect(screen.getAllByRole('button', { name: 'play-btn' })).toHaveLength(5);
+      expect(screen.getByText('matrix: size × variant')).toBeTruthy();
+
+      fireEvent.change(screen.getByLabelText('rows'), { target: { value: 'tone' } });
+      // rows=tone (2 options) x columns=variant (2) -> still 4 grid cells,
+      // but the caption must reflect the newly picked axis name.
+      expect(screen.getAllByRole('button', { name: 'play-btn' })).toHaveLength(5);
+      expect(screen.getByText('matrix: tone × variant')).toBeTruthy();
+    });
+
+    it('picking the other axis current key swaps the axes instead of colliding', () => {
+      renderMatrixDemo();
+      expect(screen.getByText('matrix: size × variant')).toBeTruthy();
+
+      // columns is currently "variant"; pick "variant" for rows too.
+      fireEvent.change(screen.getByLabelText('rows'), { target: { value: 'variant' } });
+
+      // Axes swapped: rows=variant, columns=size — never equal.
+      expect(screen.getByText('matrix: variant × size')).toBeTruthy();
+      expect((screen.getByLabelText('rows') as HTMLSelectElement).value).toBe('variant');
+      expect((screen.getByLabelText('columns') as HTMLSelectElement).value).toBe('size');
+
+      // Both axes remain independently usable after the swap.
+      fireEvent.change(screen.getByLabelText('columns'), { target: { value: 'tone' } });
+      expect(screen.getByText('matrix: variant × tone')).toBeTruthy();
+    });
+  });
 });
 

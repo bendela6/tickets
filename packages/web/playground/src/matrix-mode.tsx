@@ -22,56 +22,59 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
   values,
   xKey,
   yKey,
+  onXKeyChange,
+  onYKeyChange,
 }: {
   playground: PlaygroundDef<C>;
   values: Record<string, unknown>;
   xKey: string;
   yKey: string;
+  onXKeyChange: (key: string) => void;
+  onYKeyChange: (key: string) => void;
 }) {
   const { x, y, cell } = matrixValues(playground.controls, values, xKey, yKey);
+  const selectKeys = Object.keys(playground.controls).filter(
+    (key) => playground.controls[key]?.kind === 'select',
+  );
 
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-center gap-2.5">
-        <label className="flex items-center gap-2 h-7 px-2.5 border border-strong rounded-sm bg-surface font-sans text-ui text-ink cursor-pointer">
+        <label className="flex items-center gap-2 h-7 px-2.5 border border-control rounded-sm bg-raised font-sans text-ui text-ink cursor-pointer">
           <span>rows:</span>
           <select
             value={yKey}
-            onChange={(e) => {
-              // This will be handled by parent
-            }}
+            onChange={(e) => onYKeyChange(e.target.value)}
+            aria-label="rows"
             className="appearance-none bg-transparent border-none p-0 font-sans text-ui text-ink cursor-pointer"
           >
-            {Object.keys(playground.controls)
-              .filter((key) => playground.controls[key]?.kind === 'select')
-              .map((key) => (
-                <option key={key} value={key}>
-                  {key}
-                </option>
-              ))}
+            {selectKeys.map((key) => (
+              <option key={key} value={key}>
+                {key}
+              </option>
+            ))}
           </select>
+          <span className="text-nano text-ink-3">▾</span>
         </label>
-        <label className="flex items-center gap-2 h-7 px-2.5 border border-strong rounded-sm bg-surface font-sans text-ui text-ink cursor-pointer">
+        <label className="flex items-center gap-2 h-7 px-2.5 border border-control rounded-sm bg-raised font-sans text-ui text-ink cursor-pointer">
           <span>columns:</span>
           <select
             value={xKey}
-            onChange={(e) => {
-              // This will be handled by parent
-            }}
+            onChange={(e) => onXKeyChange(e.target.value)}
+            aria-label="columns"
             className="appearance-none bg-transparent border-none p-0 font-sans text-ui text-ink cursor-pointer"
           >
-            {Object.keys(playground.controls)
-              .filter((key) => playground.controls[key]?.kind === 'select')
-              .map((key) => (
-                <option key={key} value={key}>
-                  {key}
-                </option>
-              ))}
+            {selectKeys.map((key) => (
+              <option key={key} value={key}>
+                {key}
+              </option>
+            ))}
           </select>
+          <span className="text-nano text-ink-3">▾</span>
         </label>
         <div className="flex-1" />
         <div className="font-mono text-label text-ink-3">
-          matrix: {y.length} × {x.length}
+          matrix: {yKey} × {xKey}
         </div>
       </div>
 

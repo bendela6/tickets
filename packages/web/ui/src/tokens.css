@@ -41,7 +41,8 @@
   }
 }
 
-:root {
+/* [data-theme='light'] lets a wrapper re-assert light tokens inside a dark subtree (ThemeSplit) */
+:root, [data-theme='light'] {
   /* Structural tokens (audit): consumed as border-(length:--border-hair) /
      ring-(length:--ring-focus). */
   --border-hair: 1.5px;
