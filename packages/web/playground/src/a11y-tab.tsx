@@ -138,14 +138,14 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
             ))
           ) : (
             // All clear banner
-            <div className="flex items-center gap-2.5 rounded-card bg-kind-done-subtle p-3.5">
-              <span className="flex-none size-4 rounded-full bg-kind-done text-app flex items-center justify-center font-sans text-nano font-semibold">
+            <div className="flex items-center gap-2.5 rounded-card bg-opt-green-subtle p-3.5">
+              <span className="flex-none size-4 rounded-full bg-opt-green text-app flex items-center justify-center font-sans text-nano font-semibold">
                 ✓
               </span>
-              <span className="font-sans text-ui font-medium text-kind-done">
+              <span className="font-sans text-ui font-medium text-opt-green">
                 No violations found
               </span>
-              <span className="font-mono text-label text-kind-done opacity-75">
+              <span className="font-mono text-label text-opt-green opacity-75">
                 · {elementCount} elements checked
               </span>
             </div>
