@@ -49,14 +49,7 @@ export function CommandPalette({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onOpenChange]);
 
-  const filteredDemos = query.trim()
-    ? demos.filter((d) =>
-        d.slug.toLowerCase().includes(query.toLowerCase()) ||
-        d.meta.title.toLowerCase().includes(query.toLowerCase())
-      )
-    : demos;
-
-  const groups = [...new Set(filteredDemos.map((d) => d.meta.group))];
+  const groups = [...new Set(demos.map((d) => d.meta.group))];
 
   return (
     <Command.Dialog
@@ -78,7 +71,7 @@ export function CommandPalette({
 
         <div className="py-2 px-1.5 flex flex-col max-h-96 overflow-y-auto">
           {groups.map((group) => {
-            const groupDemos = filteredDemos.filter((d) => d.meta.group === group);
+            const groupDemos = demos.filter((d) => d.meta.group === group);
             return (
               <div key={group} className="flex flex-col">
                 <Command.Group heading={group}>
