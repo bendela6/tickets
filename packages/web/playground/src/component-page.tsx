@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Group, Panel, Separator, type Layout } from 'react-resizable-panels';
 import { cn } from '@tickets/ui/cn';
 import { initialValues, type CollectedDemo } from '@tickets/ui/gallery';
+import { A11yTab } from './a11y-tab';
 import { CodeTab } from './code-tab';
 import { ControlsPanel } from './controls-panel';
 import { loadLayout, saveLayout } from './persisted-layout';
@@ -28,10 +29,6 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]['key'];
 
-// Real component, not a stub: A11y renders this until Task 8 wires the audit.
-function TabPending() {
-  return <p className="font-sans text-meta text-ink-3">Coming in this build.</p>;
-}
 
 // One component's doc page (design: docs/design/pulls/playground-workbench.dc.html
 // lines 103-188). Underline tab strip over Preview/Code/Source/A11y; Preview
@@ -47,6 +44,7 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
   const [defaultLayout] = useState<Layout | undefined>(() => loadLayout(WORKBENCH_LAYOUT_KEY));
   const [splitThemes, setSplitThemes] = useState(false);
   const [matrixMode, setMatrixMode] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
 
   // Get select control keys for matrix mode
   const selectKeys = playground
@@ -170,7 +168,7 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
                 ) : (
                   <StateGrid demo={demo} />
                 )}
-                <PlaygroundCard playground={playground} values={values} />
+                <PlaygroundCard ref={previewRef} playground={playground} values={values} />
                 <div className="flex flex-col gap-2.5">
                   <div className="font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3">
                     PROPS
@@ -211,6 +209,7 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
         )}
       </div>
 
+
       <div className={tab === 'code' ? '' : 'hidden'}>
         <CodeTab demo={demo} values={values} />
       </div>
@@ -218,7 +217,7 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
         <SourceTab demo={demo} source={source} />
       </div>
       <div className={tab === 'a11y' ? '' : 'hidden'}>
-        <TabPending />
+        {playground && <A11yTab targetRef={previewRef as React.RefObject<HTMLDivElement | null>} />}
       </div>
     </div>
   );
