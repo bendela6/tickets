@@ -2,6 +2,7 @@ import fastify, { type FastifyError } from 'fastify';
 import type { Db } from './db/client';
 import { HttpError } from './errors';
 import { createRateLimiter, type RateLimiter } from './rate-limit';
+import { registerAppSignalsRoutes } from './routes/app-signals.routes';
 import { registerAppsRoutes } from './routes/apps.routes';
 import { registerIngestRoutes } from './routes/ingest.routes';
 import { registerIssuesRoutes } from './routes/issues.routes';
@@ -57,6 +58,7 @@ export function buildApp(context: { db: Db; rateLimiter?: RateLimiter }) {
 
   app.get('/health', async () => ({ ok: true }));
 
+  registerAppSignalsRoutes(app, context);
   registerAppsRoutes(app, context);
   registerIngestRoutes(app, { db: context.db, rateLimiter });
   registerIssuesRoutes(app, context);
