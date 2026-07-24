@@ -15,6 +15,7 @@
     "./tabs": "./src/tabs.tsx",
     "./segmented-control": "./src/segmented-control.tsx",
     "./meter": "./src/meter.tsx",
+    "./screen-state": "./src/screen-state.tsx",
     "./gallery": "./src/gallery/index.ts",
     "./gallery/demos": "./src/gallery/demos.ts",
     "./gallery/demo-sources": "./src/gallery/demo-sources.ts"
