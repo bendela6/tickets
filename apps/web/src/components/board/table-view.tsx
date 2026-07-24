@@ -6,10 +6,10 @@ import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
 import { StatusSelect } from '../../ui/status-select';
 import { ItemKey } from '../../ui/item-key';
-import { TypeBadge } from '../../ui/type-badge';
 import { childProgress } from '../../utils/child-progress';
 import type { BoardIndexes } from '../../utils/index-board';
 import { legalStatusTargets } from '../../utils/legal-status-targets';
@@ -289,7 +289,7 @@ export function TableView({
       const type = indexes.typeById.get(ticket.typeId);
       return (
         <span key={key} className="px-2">
-          <TypeBadge label={type?.label ?? '?'} />
+          <Pill tone="neutral" emphasis="outline" label={type?.label ?? '?'} />
         </span>
       );
     }

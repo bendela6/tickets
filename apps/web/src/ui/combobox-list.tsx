@@ -1,6 +1,7 @@
 import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { cn } from '@tickets/ui/cn';
-import { OptionChip, type OptionColor } from './option-chip';
+import { Pill } from '@tickets/ui/pill';
+import type { OptionColor } from '../registry/option-color';
 
 export type ComboOption = {
   value: string;
@@ -20,7 +21,7 @@ type ComboboxListProps = {
   groupOf?: (option: ComboOption) => string;
   /** Order + display labels for groups. */
   groups?: { key: string; label: string }[];
-  /** Custom rendering for an option's inner content (defaults to OptionChip/label). */
+  /** Custom rendering for an option's inner content (defaults to Pill/label). */
   renderOption?: (option: ComboOption, selected: boolean) => ReactNode;
   header?: ReactNode;
   footer?: ReactNode;
@@ -151,7 +152,7 @@ export function ComboboxList({
                 {renderOption ? (
                   renderOption(option, selected)
                 ) : option.color ? (
-                  <OptionChip color={option.color} label={option.label} />
+                  <Pill tone={option.color} shape="full" label={option.label} />
                 ) : (
                   <span>{option.label}</span>
                 )}

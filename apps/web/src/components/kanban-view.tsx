@@ -7,11 +7,10 @@ import { hexToOptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
 import { Avatar } from '../ui/avatar';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import { KindGlyph } from '../ui/kind-glyph';
-import { OptionChip } from '../ui/option-chip';
 import { RelativeDate } from '../ui/relative-date';
 import { ItemKey } from '../ui/item-key';
-import { TypeBadge } from '../ui/type-badge';
 import { childProgress } from '../utils/child-progress';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
@@ -229,15 +228,21 @@ export function KanbanView({
             className="text-[11px]"
           />
           {priorityOption ? (
-            <OptionChip
+            <Pill
               label={priorityOption.label}
-              color={hexToOptionColor(priorityOption.config.color)}
+              tone={hexToOptionColor(priorityOption.config.color)}
+              shape="full"
               className="h-4.5 px-1.75 text-[10px]"
             />
           ) : null}
           <span className="flex-1" />
           {type ? (
-            <TypeBadge label={type.label} className="h-4.5 rounded-[5px] px-1.75 text-[10px]" />
+            <Pill
+              tone="neutral"
+              emphasis="outline"
+              label={type.label}
+              className="h-4.5 rounded-[5px] px-1.75 text-[10px]"
+            />
           ) : null}
         </div>
         <div className="font-sans text-ui leading-[1.4] font-medium text-ink">

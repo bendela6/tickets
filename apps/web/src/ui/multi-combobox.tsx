@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import { ComboboxList, type ComboOption } from './combobox-list';
-import { OptionChip } from './option-chip';
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from './popover';
 
 type MultiComboboxProps = {
@@ -55,7 +55,7 @@ export function MultiCombobox({
             ) : null}
             {shown.map((option) => (
               <span key={option.value} className="inline-flex items-center gap-1">
-                <OptionChip color={option.color ?? 'gray'} label={option.label} />
+                <Pill tone={option.color ?? 'gray'} shape="full" label={option.label} />
                 <button
                   type="button"
                   aria-label={`Remove ${option.label}`}

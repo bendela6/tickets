@@ -1,12 +1,12 @@
 import { useState } from 'react';
+import { Pill } from '@tickets/ui/pill';
 import type { Board, Field, Option } from '../../api/types';
-import { hexToOptionColor, kindColor } from '../../registry/option-color';
+import { hexToOptionColor, kindColor, type OptionColor } from '../../registry/option-color';
 import { Button } from '../../ui/button';
 import type { ComboOption } from '../../ui/combobox-list';
 import { Combobox } from '../../ui/combobox';
 import { Input } from '../../ui/input';
 import { MultiCombobox } from '../../ui/multi-combobox';
-import { OptionChip, type OptionColor } from '../../ui/option-chip';
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { FilterRule } from '../../utils/view-config';
@@ -55,10 +55,11 @@ function RuleValues({ rule, indexes }: { rule: FilterRule; indexes: BoardIndexes
       {rule.values.map((value) => {
         if (rule.op === 'kinds') {
           return (
-            <OptionChip
+            <Pill
               key={value}
               label={value}
-              color={KIND_COLORS[value] ?? 'gray'}
+              tone={KIND_COLORS[value] ?? 'gray'}
+              shape="full"
               className="h-4.5"
             />
           );
@@ -66,10 +67,11 @@ function RuleValues({ rule, indexes }: { rule: FilterRule; indexes: BoardIndexes
         if (field?.config.workflow === true) {
           const option = indexes.optionByValue(field, value);
           return (
-            <OptionChip
+            <Pill
               key={value}
               label={option?.label ?? value}
-              color={kindColor(option?.kind ?? null)}
+              tone={kindColor(option?.kind ?? null)}
+              shape="full"
               className="h-4.5"
             />
           );
@@ -78,10 +80,11 @@ function RuleValues({ rule, indexes }: { rule: FilterRule; indexes: BoardIndexes
           ? optionsInSet(field, indexes).find((candidate) => candidate.value === value)
           : undefined;
         return (
-          <OptionChip
+          <Pill
             key={value}
             label={option?.label ?? value}
-            color={hexToOptionColor(option?.config.color)}
+            tone={hexToOptionColor(option?.config.color)}
+            shape="full"
             className="h-4.5"
           />
         );

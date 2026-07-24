@@ -11,18 +11,17 @@ import type {
 } from '../api/types';
 import { useCreateItem } from '../api/use-create-item';
 import { FieldWidget } from '../registry/field-widget';
-import { hexToOptionColor } from '../registry/option-color';
+import { hexToOptionColor, type OptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
 import { Button } from '../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import { Combobox } from '../ui/combobox';
 import { DialogClose, DialogContent, DialogRoot, DialogTitle } from '../ui/dialog';
 import { FieldError } from '../ui/field-error';
 import { FieldLabel } from '../ui/field-label';
 import { Input } from '../ui/input';
-import type { OptionColor } from '../ui/option-chip';
 import { StatusSelect } from '../ui/status-select';
-import { TypeBadge } from '../ui/type-badge';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
 
@@ -367,7 +366,12 @@ export function NewItemDialog({
                 </button>
               ) : null}
               <DialogTitle className="truncate">New {type.label}</DialogTitle>
-              <TypeBadge label={`${type.label} · 🔒 permanent`} className="shrink-0" />
+              <Pill
+                tone="neutral"
+                emphasis="outline"
+                label={`${type.label} · 🔒 permanent`}
+                className="shrink-0"
+              />
               <span className="font-sans text-ui text-ink-2">in</span>
               <ProjectChip project={board.project} />
               <span className="flex-1" />

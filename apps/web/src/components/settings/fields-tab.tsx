@@ -11,13 +11,13 @@ import { hexToOptionColor } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
 import { Combobox } from '../../ui/combobox';
 import type { ComboOption } from '../../ui/combobox-list';
 import { FieldLabel } from '../../ui/field-label';
 import { Input } from '../../ui/input';
 import { MultiCombobox } from '../../ui/multi-combobox';
 import { Switch } from '../../ui/switch';
-import { TypeBadge } from '../../ui/type-badge';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { SettingsTabProps } from './types-tab';
 
@@ -97,7 +97,7 @@ function PlacementRow({
   return (
     <div className={cn('grid items-center gap-2 border-b border-hairline px-2.5 py-2', GRID_COLUMNS)}>
       <span className="truncate font-sans text-ui font-medium text-ink">{field.label}</span>
-      <TypeBadge label={field.type} className="font-mono text-[11px]" />
+      <Pill tone="neutral" emphasis="outline" label={field.type} className="font-mono text-[11px]" />
       <Switch
         label="Required"
         checked={placement.required}
@@ -439,7 +439,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
               >
                 <span className="min-w-0 flex-1 truncate font-sans text-ui text-ink">{field.label}</span>
                 {field.archivedAt ? <ArchChip /> : null}
-                <TypeBadge label={field.type} className="font-mono text-[11px]" />
+                <Pill tone="neutral" emphasis="outline" label={field.type} className="font-mono text-[11px]" />
                 <span className="w-16 shrink-0 font-mono text-meta text-ink-3">
                   {placedCount} type{placedCount === 1 ? '' : 's'}
                 </span>

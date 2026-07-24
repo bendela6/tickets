@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { cn } from '@tickets/ui/cn';
+import { Pill } from '@tickets/ui/pill';
+import { statusPill } from '../domain/status';
 import { ComboboxList, type ComboOption } from './combobox-list';
 import { KindGlyph, type StatusKind } from './kind-glyph';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
-import { StatusBadge } from './status-badge';
 
 export type StatusOption = { key: string; label: string; kind: StatusKind };
 
@@ -72,7 +73,7 @@ export function StatusSelect({
           )}
         >
           {current ? (
-            <StatusBadge kind={current.kind} label={current.label} />
+            <Pill {...statusPill(current.kind)} label={current.label} />
           ) : (
             <span className="pl-1 font-sans text-ui text-ink-3">Set status…</span>
           )}

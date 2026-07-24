@@ -1,5 +1,7 @@
+import type { HueTone } from '@tickets/ui/tones';
 import type { StatusKind } from '../api/types';
-import type { OptionColor } from '../ui/option-chip';
+
+export type OptionColor = HueTone;
 
 // Option/status configs store free-form hex colors; the Instrument palette is
 // eleven named colors. Map by hue (circular distance), falling back to gray
@@ -67,10 +69,10 @@ export function hexToOptionColor(hex: string | undefined | null): OptionColor {
 
 // Lifecycle kind -> named palette color. This is the workflow field's swatch
 // source wherever a picker needs an OptionColor (e.g. FieldWidget's combobox
-// chips); StatusBadge itself keys off `kind` directly via its own CSS tokens,
-// so it doesn't go through this mapping. Chosen from the 11 names actually
-// declared above (no slate/amber/rose in this palette): todo/dropped are both
-// neutral (gray) — dropped is further distinguished by StatusBadge's
+// chips); domain/status.ts's statusPill keys off `kind` directly via its own
+// tone map, so it doesn't go through this mapping. Chosen from the 11 names
+// actually declared above (no slate/amber/rose in this palette): todo/dropped
+// are both neutral (gray) — dropped is further distinguished by the pill's
 // strikethrough — active is blue, blocked is orange (nearest hue to the
 // kind-blocked design token, #c25425), done is green.
 export function kindColor(kind: StatusKind | null): OptionColor {

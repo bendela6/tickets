@@ -13,7 +13,7 @@ export function boardSuggestions(indexes: BoardIndexes, prefix: string): RichTex
       const q = query.toLowerCase();
       return [...indexes.itemByNumber.values()]
         .map((item) => {
-          // Same lookup kanban-view/StatusBadge use to color a card's status
+          // Same lookup kanban-view/statusPill use to color a card's status
           // dot: the item's type owns a workflow field, whose current option
           // value carries the lifecycle `kind`. Types with no workflow field
           // (or an item whose value doesn't resolve to a live option) fall

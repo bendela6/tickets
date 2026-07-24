@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { Pill } from '@tickets/ui/pill';
 import { Button } from '../../ui/button';
 import { Combobox } from '../../ui/combobox';
 import type { ComboOption } from '../../ui/combobox-list';
 import { Input } from '../../ui/input';
 import { MultiCombobox } from '../../ui/multi-combobox';
-import { OptionChip, type OptionColor } from '../../ui/option-chip';
+import type { OptionColor } from '../../registry/option-color';
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
 import type { FilterRule } from '../../utils/view-config';
 import type { GlobalFilterRule } from './global-views';
@@ -53,20 +54,22 @@ function RuleValues({
       {rule.values.map((value) => {
         if (rule.op === 'kinds') {
           return (
-            <OptionChip
+            <Pill
               key={value}
               label={value}
-              color={KIND_COLORS[value] ?? 'gray'}
+              tone={KIND_COLORS[value] ?? 'gray'}
+              shape="full"
               className="h-4.5"
             />
           );
         }
         const option = field?.options.find((candidate) => candidate.value === value);
         return (
-          <OptionChip
+          <Pill
             key={value}
             label={option?.label ?? value}
-            color={option?.color ?? 'gray'}
+            tone={option?.color ?? 'gray'}
+            shape="full"
             className="h-4.5"
           />
         );
