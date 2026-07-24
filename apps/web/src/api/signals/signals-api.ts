@@ -16,7 +16,11 @@ export interface SignalsAppRow {
   errors24h: number;
 }
 
-// Response from creating an app (includes the one-time-visible ingest secrets).
+// Response from creating an app, rotating its key, or fetching its detail
+// (all three surface the ingest secrets — the LIST endpoint never does).
+// `signals24h`/`errors24h` are optional: only GET /apps/:id (the detail
+// fetch) computes and returns them — POST /apps and POST /apps/:id/rotate
+// return the row + dsn/ingestKey without the 24h counts.
 export interface SignalsAppDetail {
   id: number;
   name: string;
@@ -24,6 +28,41 @@ export interface SignalsAppDetail {
   ingestKey: string;
   dsn: string;
   createdAt: string;
+  signals24h?: number;
+  errors24h?: number;
+}
+
+// Row shape from GET /signals-api/apps/:id/releases.
+export interface AppReleaseRow {
+  release: string;
+  signalCount: number;
+  errorCount: number;
+  sourcemapCount: number;
+  sourcemapBytes: number;
+  firstSeen: string;
+  lastSeen: string;
+}
+
+export type ClearSignalsFilters = {
+  before?: string;
+  release?: string;
+  kind?: 'error' | 'log' | 'event';
+};
+
+// Fixed key order, same rationale as ISSUE_FILTER_KEY_ORDER — a stable wire
+// query string regardless of the order keys were set on the filters object.
+const CLEAR_SIGNALS_FILTER_KEY_ORDER: (keyof ClearSignalsFilters)[] = ['before', 'release', 'kind'];
+
+function buildClearSignalsQuery(filters: ClearSignalsFilters): string {
+  const params = new URLSearchParams();
+  for (const key of CLEAR_SIGNALS_FILTER_KEY_ORDER) {
+    const value = filters[key];
+    if (value !== undefined) {
+      params.set(key, String(value));
+    }
+  }
+  const qs = params.toString();
+  return qs.length > 0 ? `?${qs}` : '';
 }
 
 // ---- issues -----------------------------------------------------------------
@@ -265,6 +304,45 @@ export function createApp(name: string): Promise<SignalsAppDetail> {
     method: 'POST',
     body: JSON.stringify({ name }),
   });
+}
+
+export function getApp(id: number): Promise<SignalsAppDetail> {
+  return fetchJson(`/signals-api/apps/${id}`);
+}
+
+export function patchApp(id: number, name: string): Promise<Pick<SignalsAppDetail, 'id' | 'name' | 'slug' | 'createdAt'>> {
+  return fetchJson(`/signals-api/apps/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ name }),
+  });
+}
+
+export function rotateAppKey(id: number): Promise<SignalsAppDetail> {
+  return fetchJson(`/signals-api/apps/${id}/rotate`, { method: 'POST' });
+}
+
+export function deleteApp(id: number): Promise<{ deleted: true }> {
+  return fetchJson(`/signals-api/apps/${id}`, { method: 'DELETE' });
+}
+
+export function clearAppSignals(
+  id: number,
+  filters: ClearSignalsFilters = {},
+): Promise<{ deletedSignals: number; prunedIssues: number }> {
+  return fetchJson(`/signals-api/apps/${id}/signals${buildClearSignalsQuery(filters)}`, { method: 'DELETE' });
+}
+
+export function listAppReleases(id: number): Promise<AppReleaseRow[]> {
+  return fetchJson(`/signals-api/apps/${id}/releases`);
+}
+
+// The server decodes the :release path segment exactly once — encode it here
+// so releases containing '/' or other reserved characters round-trip.
+export function deleteRelease(
+  id: number,
+  release: string,
+): Promise<{ deletedSignals: number; deletedArtifacts: number; prunedIssues: number }> {
+  return fetchJson(`/signals-api/apps/${id}/releases/${encodeURIComponent(release)}`, { method: 'DELETE' });
 }
 
 export function getMeta(): Promise<SignalsMeta> {
