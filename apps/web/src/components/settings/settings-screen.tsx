@@ -3,7 +3,7 @@ import { useBoard } from '../../api/use-board';
 import { useForkScheme, useUpdateProject } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
-import { cn } from '@tickets/ui/cn';
+import { Tabs } from '@tickets/ui/tabs';
 import { useToast } from '../../ui/toast';
 import { indexBoard } from '../../utils/index-board';
 import { FieldsTab } from './fields-tab';
@@ -108,28 +108,15 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
 
       <div className="flex min-h-0 flex-1">
         <nav
-          role="tablist"
           aria-label="Settings sections"
-          className="flex w-53 flex-none flex-col gap-0.5 overflow-y-auto border-r border-hairline bg-app px-3 py-5.5"
+          className="w-53 flex-none overflow-y-auto border-r border-hairline bg-app px-3 py-5.5"
         >
-          {TABS.map(({ key, label }) => {
-            const active = tab === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setTab(key)}
-                className={cn(
-                  'flex h-7.5 shrink-0 cursor-pointer items-center rounded-[7px] px-2.25 text-left font-sans text-ui',
-                  active ? 'bg-inset font-medium text-ink' : 'text-ink-2 hover:bg-inset hover:text-ink',
-                )}
-              >
-                {label}
-              </button>
-            );
-          })}
+          <Tabs
+            variant="rail"
+            items={TABS.map(({ key, label }) => ({ value: key, label }))}
+            value={tab}
+            onChange={(next) => setTab(next as TabKey)}
+          />
         </nav>
 
         <div role="tabpanel" className="min-w-0 flex-1 overflow-y-auto">

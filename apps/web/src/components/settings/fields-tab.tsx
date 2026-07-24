@@ -13,6 +13,7 @@ import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
 import { Pill } from '@tickets/ui/pill';
+import { Tabs } from '@tickets/ui/tabs';
 import { Combobox } from '../../ui/combobox';
 import type { ComboOption } from '../../ui/combobox-list';
 import { FieldLabel } from '../../ui/field-label';
@@ -317,28 +318,13 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
         <p className="m-0 font-sans text-meta text-ink-3">No ticket types yet — create one on the Types tab first.</p>
       ) : (
         <>
-          <div role="tablist" aria-label="Type" className="mb-4 flex flex-wrap items-center gap-1.5">
-            {activeTypes.map((type) => {
-              const active = type.id === activeTypeId;
-              return (
-                <button
-                  key={type.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setSelectedTypeId(type.id)}
-                  className={cn(
-                    'inline-flex h-7 cursor-pointer items-center rounded-full border px-3 font-sans text-meta font-medium transition-colors',
-                    active
-                      ? 'border-accent bg-accent-subtle text-accent'
-                      : 'border-control bg-raised text-ink-2 hover:bg-inset',
-                  )}
-                >
-                  {type.label}
-                </button>
-              );
-            })}
-          </div>
+          <Tabs
+            variant="pill"
+            className="mb-4 flex-wrap"
+            items={activeTypes.map((type) => ({ value: String(type.id), label: type.label }))}
+            value={String(activeTypeId)}
+            onChange={(next) => setSelectedTypeId(Number(next))}
+          />
 
           {activeTypeId !== null ? (
             <>

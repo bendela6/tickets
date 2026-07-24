@@ -12,6 +12,7 @@ import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
 import { Icon } from '@tickets/ui/icon';
 import { Pill } from '@tickets/ui/pill';
+import { Tabs } from '@tickets/ui/tabs';
 import { toneClasses } from '@tickets/ui/tones';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 import { Input } from '../../ui/input';
@@ -511,31 +512,22 @@ export function AllItemsScreen() {
 
       {/* Global view tabs + group selector */}
       <div className="mb-3 flex shrink-0 items-center gap-1.5 border-b border-hairline">
-        {[DEFAULT_GLOBAL_VIEW, ...views].map((view) => {
-          const isActive = view.id === activeId;
-          return (
-            <button
-              key={view.id}
-              type="button"
-              onClick={() => selectView(view)}
-              className={cn(
-                '-mb-px inline-flex cursor-pointer items-center gap-1.75 border-b-2 px-3 py-2 font-sans text-ui',
-                isActive
-                  ? 'border-accent font-medium text-ink'
-                  : 'border-transparent text-ink-2 hover:text-ink',
-              )}
-            >
-              {view.name}
-              {isActive && dirty ? (
-                <span
-                  aria-hidden
-                  title="Unsaved changes"
-                  className="size-1.5 rounded-full bg-opt-orange"
-                />
-              ) : null}
-            </button>
-          );
-        })}
+        <Tabs
+          className="border-b-0"
+          items={[DEFAULT_GLOBAL_VIEW, ...views].map((view) => ({
+            value: view.id,
+            label: view.name,
+            badge:
+              view.id === activeId && dirty ? (
+                <span aria-hidden title="Unsaved changes" className="inline-block size-1.5 rounded-full bg-opt-orange" />
+              ) : undefined,
+          }))}
+          value={activeId}
+          onChange={(next) => {
+            const view = [DEFAULT_GLOBAL_VIEW, ...views].find((candidate) => candidate.id === next);
+            if (view) selectView(view);
+          }}
+        />
         <button
           type="button"
           aria-label="New global view"
