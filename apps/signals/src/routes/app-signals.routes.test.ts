@@ -1,7 +1,7 @@
-import { eq, lt } from 'drizzle-orm';
+import { and, eq, lt } from 'drizzle-orm';
 import { afterAll, beforeEach, expect, it } from 'vitest';
 import { buildApp } from '../app';
-import { issues, signals } from '../db/schema';
+import { issues, signals, sourcemapArtifacts } from '../db/schema';
 import { resetDb, testDb } from '../test/db';
 
 beforeEach(resetDb);
@@ -154,5 +154,155 @@ it('rejects a malformed app id with 400', async () => {
   const { app } = await seed();
   const res = await app.inject({ method: 'DELETE', url: '/apps/abc/signals' });
   expect(res.statusCode).toBe(400);
+  await app.close();
+});
+
+// --- releases list + delete-release -----------------------------------
+
+const RELEASE_A = '1.44.1 rc'; // has a space -> must round-trip through URL-encoding
+const RELEASE_B = '2.0.0';
+const RELEASE_C = 'maps-only'; // sourcemap artifacts only, no signals at all
+
+async function seedReleases() {
+  const app = buildApp({ db: testDb });
+  const a = (await app.inject({ method: 'POST', url: '/apps', payload: { name: 'ReleasesApp' } })).json();
+  const other = (await app.inject({ method: 'POST', url: '/apps', payload: { name: 'OtherApp' } })).json();
+  const err = (session: string, message: string, release: string) => ({
+    kind: 'error', sessionId: session, name: 'TypeError', message,
+    mechanism: 'uncaught-exception', level: 'error', timestamp: new Date().toISOString(), release,
+    stack: [{ functionName: 'f', file: 'src/a.ts', line: 1, column: 1, inApp: true }],
+    platform: { runtime: 'browser' }, sdk: { name: 't', version: '0' },
+  });
+  const log = (session: string, release: string) => ({
+    kind: 'log', sessionId: session, name: 'info', message: 'hello',
+    mechanism: 'manual', level: 'info', timestamp: new Date().toISOString(), release,
+    platform: { runtime: 'browser' }, sdk: { name: 't', version: '0' },
+  });
+
+  // App A / RELEASE_A: 2 errors (same fingerprint "boom") + 1 log + 2 sourcemap artifacts.
+  await app.inject({
+    method: 'POST', url: `/ingest/${a.ingestKey}`,
+    payload: { signals: [err('s1', 'boom', RELEASE_A), err('s2', 'boom', RELEASE_A), log('s1', RELEASE_A)] },
+  });
+  await app.inject({
+    method: 'POST', url: `/ingest/${a.ingestKey}/sourcemaps`,
+    payload: {
+      release: RELEASE_A,
+      files: [
+        { filename: 'a.js.map', content: 'x'.repeat(10) }, // 10 bytes
+        { filename: 'b.js.map', content: 'y'.repeat(20) }, // 20 bytes -> 30 total
+      ],
+    },
+  });
+
+  // App A / RELEASE_B: signals only, no maps.
+  await app.inject({ method: 'POST', url: `/ingest/${a.ingestKey}`, payload: { signals: [log('s2', RELEASE_B)] } });
+  // Push it 1h into the future so newest-first ordering is deterministic.
+  await testDb.update(signals)
+    .set({ receivedAt: new Date(Date.now() + 60 * 60 * 1000) })
+    .where(eq(signals.release, RELEASE_B));
+
+  // App A / RELEASE_C: sourcemap artifacts only, no signals at all -> still shows up (union), null seen dates.
+  await app.inject({
+    method: 'POST', url: `/ingest/${a.ingestKey}/sourcemaps`,
+    payload: { release: RELEASE_C, files: [{ filename: 'c.js.map', content: 'z'.repeat(5) }] },
+  });
+
+  // App B (other): its own signal under the SAME release-A name — must never leak into app A's rows/deletes.
+  await app.inject({
+    method: 'POST', url: `/ingest/${other.ingestKey}`,
+    payload: { signals: [err('os1', 'other-boom', RELEASE_A)] },
+  });
+
+  return { app, appId: a.id as number, otherAppId: other.id as number };
+}
+
+it('GET /apps/:id/releases unions signals and sourcemap releases, with correct counts/bytes, newest-first, scoped to the app', async () => {
+  const { app, appId, otherAppId } = await seedReleases();
+  const res = await app.inject({ method: 'GET', url: `/apps/${appId}/releases` });
+  expect(res.statusCode).toBe(200);
+  const rows = res.json();
+  expect(rows).toHaveLength(3);
+
+  // Newest-first: B (pushed 1h ahead) then A (just seeded) then C (no signals -> null lastSeen, sorts last).
+  expect(rows.map((r: { release: string }) => r.release)).toEqual([RELEASE_B, RELEASE_A, RELEASE_C]);
+
+  const [b, a, c] = rows;
+  expect(b).toMatchObject({ signalCount: 1, errorCount: 0, sourcemapCount: 0, sourcemapBytes: 0 });
+  expect(b.firstSeen).not.toBeNull();
+  expect(b.lastSeen).not.toBeNull();
+
+  // errorCount is 2, not 3 -> proves the other app's RELEASE_A error isn't counted in.
+  expect(a).toMatchObject({ signalCount: 3, errorCount: 2, sourcemapCount: 2, sourcemapBytes: 30 });
+  expect(a.firstSeen).not.toBeNull();
+  expect(a.lastSeen).not.toBeNull();
+
+  expect(c).toMatchObject({ signalCount: 0, errorCount: 0, sourcemapCount: 1, sourcemapBytes: 5 });
+  expect(c.firstSeen).toBeNull();
+  expect(c.lastSeen).toBeNull();
+
+  // Scoped correctly the other way too: the other app sees only its own RELEASE_A.
+  const otherRes = await app.inject({ method: 'GET', url: `/apps/${otherAppId}/releases` });
+  const otherRows = otherRes.json();
+  expect(otherRows).toHaveLength(1);
+  expect(otherRows[0]).toMatchObject({ release: RELEASE_A, signalCount: 1, errorCount: 1, sourcemapCount: 0, sourcemapBytes: 0 });
+
+  await app.close();
+});
+
+it('404s GET /apps/:id/releases for an unknown app', async () => {
+  const { app } = await seedReleases();
+  const res = await app.inject({ method: 'GET', url: '/apps/9999/releases' });
+  expect(res.statusCode).toBe(404);
+  await app.close();
+});
+
+it('DELETE /apps/:id/releases/:release url-decodes the release, deletes its signals+artifacts, prunes emptied issues, leaves other releases/apps untouched', async () => {
+  const { app, appId, otherAppId } = await seedReleases();
+
+  const res = await app.inject({
+    method: 'DELETE',
+    url: `/apps/${appId}/releases/${encodeURIComponent(RELEASE_A)}`,
+  });
+  expect(res.statusCode).toBe(200);
+  expect(res.json()).toEqual({ deletedSignals: 3, deletedArtifacts: 2, prunedIssues: 1 });
+
+  // RELEASE_A is fully gone for app A...
+  expect(await testDb.select().from(signals)
+    .where(and(eq(signals.appId, appId), eq(signals.release, RELEASE_A)))).toHaveLength(0);
+  expect(await testDb.select().from(sourcemapArtifacts)
+    .where(and(eq(sourcemapArtifacts.appId, appId), eq(sourcemapArtifacts.release, RELEASE_A)))).toHaveLength(0);
+  // ...and the "boom" issue (only ever referenced RELEASE_A signals) was pruned.
+  expect(await testDb.select().from(issues).where(eq(issues.appId, appId))).toHaveLength(0);
+
+  // RELEASE_B's signal and RELEASE_C's artifact survive untouched.
+  const remaining = (await app.inject({ method: 'GET', url: `/apps/${appId}/releases` })).json();
+  expect(remaining.map((r: { release: string }) => r.release).sort()).toEqual([RELEASE_B, RELEASE_C].sort());
+
+  // The other app's own RELEASE_A signal + issue are untouched.
+  expect(await testDb.select().from(signals).where(eq(signals.appId, otherAppId))).toHaveLength(1);
+  expect(await testDb.select().from(issues).where(eq(issues.appId, otherAppId))).toHaveLength(1);
+
+  await app.close();
+});
+
+it('DELETE a release with no matches returns 200 with zero counts (valid app, nothing to delete)', async () => {
+  const { app, appId } = await seedReleases();
+  const res = await app.inject({
+    method: 'DELETE',
+    url: `/apps/${appId}/releases/${encodeURIComponent('nope-9.9.9')}`,
+  });
+  expect(res.statusCode).toBe(200);
+  expect(res.json()).toEqual({ deletedSignals: 0, deletedArtifacts: 0, prunedIssues: 0 });
+  await app.close();
+});
+
+it('404s DELETE /apps/:id/releases/:release for an unknown app', async () => {
+  const { app } = await seedReleases();
+  const res = await app.inject({
+    method: 'DELETE',
+    url: `/apps/9999/releases/${encodeURIComponent(RELEASE_A)}`,
+  });
+  expect(res.statusCode).toBe(404);
   await app.close();
 });
