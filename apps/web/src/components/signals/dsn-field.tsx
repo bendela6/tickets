@@ -19,7 +19,7 @@ export function DsnField({ dsn, className }: { dsn: string; className?: string }
       )}
     >
       <span className="flex-1 truncate font-mono text-[12px] font-medium text-ink">{dsn}</span>
-      <CopyButton value={dsn} className="shrink-0" />
+      <CopyButton value={dsn} failedLabel="Copy failed" className="shrink-0" />
     </div>
   );
 }

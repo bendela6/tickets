@@ -65,7 +65,7 @@ export function SdkSnippet({
           value={active}
           onChange={(next) => setActive(next as SdkPlatform)}
         />
-        <CopyButton value={code} className="shrink-0" />
+        <CopyButton value={code} failedLabel="Copy failed" className="shrink-0" />
       </div>
       <pre className="overflow-x-auto rounded-[8px] border border-hairline bg-inset p-3 font-mono text-[12px] leading-relaxed text-ink">
         <code>{code}</code>

@@ -25,7 +25,7 @@ test('copies the dsn to the clipboard via CopyButton and flips to a "Copied" sta
   expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument();
 });
 
-test('shows a transient "Failed" state when the clipboard write rejects, with no unhandled rejection', async () => {
+test('shows a transient "Copy failed" state when the clipboard write rejects, with no unhandled rejection', async () => {
   const onUnhandledRejection = vi.fn();
   window.addEventListener('unhandledrejection', onUnhandledRejection);
 
@@ -37,7 +37,7 @@ test('shows a transient "Failed" state when the clipboard write rejects, with no
     const button = screen.getByRole('button', { name: 'Copy' });
     await user.click(button);
 
-    expect(await screen.findByRole('button', { name: 'Failed' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Copy failed' })).toBeInTheDocument();
     // Give any stray (unhandled) rejection a tick to surface before asserting.
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(onUnhandledRejection).not.toHaveBeenCalled();

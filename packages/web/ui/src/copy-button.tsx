@@ -29,12 +29,14 @@ export function CopyButton({
   value,
   label = 'Copy',
   copiedLabel = 'Copied',
+  failedLabel = 'Failed',
   resetMs = 1500,
   className,
 }: {
   value: string;
   label?: ReactNode;
   copiedLabel?: ReactNode;
+  failedLabel?: ReactNode;
   resetMs?: number;
   className?: string;
 }) {
@@ -50,7 +52,7 @@ export function CopyButton({
       )}
     >
       <Icon name={copied ? 'check' : 'copy'} size={11} />
-      {copied ? copiedLabel : failed ? 'Failed' : label}
+      {copied ? copiedLabel : failed ? failedLabel : label}
     </button>
   );
 }
