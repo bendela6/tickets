@@ -1,8 +1,23 @@
 import { Command } from 'cmdk';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { CollectedDemo } from '@tickets/ui/gallery';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
+
+export function highlightMatch(title: string, query: string): ReactNode {
+  const q = query.trim();
+  if (!q) return title;
+  const i = title.toLowerCase().indexOf(q.toLowerCase());
+  if (i === -1) return title;
+  return (
+    <>
+      {title.slice(0, i)}
+      <strong className="font-semibold text-accent">{title.slice(i, i + q.length)}</strong>
+      {title.slice(i + q.length)}
+    </>
+  );
+}
 
 export function CommandPalette({
   demos,
@@ -13,7 +28,16 @@ export function CommandPalette({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  // Close on Escape
+  const [query, setQuery] = useState('');
+
+  // Reset query when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setQuery('');
+    }
+  }, [open]);
+
+  // Close on Escape (Command.Dialog doesn't handle it in jsdom)
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
@@ -25,7 +49,14 @@ export function CommandPalette({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onOpenChange]);
 
-  const groups = [...new Set(demos.map((d) => d.meta.group))];
+  const filteredDemos = query.trim()
+    ? demos.filter((d) =>
+        d.slug.toLowerCase().includes(query.toLowerCase()) ||
+        d.meta.title.toLowerCase().includes(query.toLowerCase())
+      )
+    : demos;
+
+  const groups = [...new Set(filteredDemos.map((d) => d.meta.group))];
 
   return (
     <Command.Dialog
@@ -37,6 +68,8 @@ export function CommandPalette({
         <div className="flex items-center gap-2.5 px-4 py-3 border-b border-hairline">
           <span className="text-label text-ink-3">⌕</span>
           <Command.Input
+            value={query}
+            onValueChange={setQuery}
             placeholder=""
             className="flex-1 bg-transparent text-ui text-ink placeholder:text-ink-2 outline-none"
           />
@@ -45,7 +78,7 @@ export function CommandPalette({
 
         <div className="py-2 px-1.5 flex flex-col max-h-96 overflow-y-auto">
           {groups.map((group) => {
-            const groupDemos = demos.filter((d) => d.meta.group === group);
+            const groupDemos = filteredDemos.filter((d) => d.meta.group === group);
             return (
               <div key={group} className="flex flex-col">
                 <Command.Group heading={group}>
@@ -60,10 +93,10 @@ export function CommandPalette({
                         window.location.hash = `#${demo.slug}`;
                         onOpenChange(false);
                       }}
-                      className="[&_[cmdk-item][data-selected='true']]:bg-accent-subtle h-8.5 px-3 py-0 flex items-center rounded-lg text-ui cursor-pointer data-[selected=true]:bg-accent-subtle"
+                      className="h-8.5 px-3 py-0 flex items-center rounded-lg text-ui cursor-pointer data-[selected=true]:bg-accent-subtle"
                     >
                       <span className="text-ink-2 data-[selected=true]:text-accent">
-                        {demo.meta.title}
+                        {highlightMatch(demo.meta.title, query)}
                       </span>
                       <span className="flex-1" />
                       <span className="font-mono text-label text-ink-3 data-[selected=true]:inline hidden">
