@@ -103,7 +103,13 @@ export function TasksPanel({
                 {project.itemPrefix}
               </span>
               <span className="flex-1 truncate">{project.name}</span>
-              <Meter tone="green" value={stat?.pct ?? 0} max={100} className="w-6.5" />
+              <Meter
+                tone="green"
+                value={stat?.pct ?? 0}
+                max={100}
+                className="w-6.5"
+                trackClassName="min-w-0"
+              />
             </Link>
           );
         })}

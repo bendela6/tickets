@@ -11,6 +11,7 @@ export function Meter({
   label,
   trailing,
   className,
+  trackClassName,
 }: {
   value: number;
   max?: number;
@@ -19,7 +20,10 @@ export function Meter({
   dangerAt?: number;
   label?: ReactNode;
   trailing?: ReactNode;
+  /** Layout/spacing on the outer flex wrapper (label + track + trailing). */
   className?: string;
+  /** Overrides the track's own sizing (e.g. `min-w-*`, `h-*`) — twMerge resolves conflicts with the default. */
+  trackClassName?: string;
 }) {
   const pct = Math.min(100, Math.max(0, (value / max) * 100));
   const effective: Tone =
@@ -42,7 +46,7 @@ export function Meter({
         aria-valuenow={value}
         aria-valuemin={0}
         aria-valuemax={max}
-        className="h-1 min-w-9 flex-1 overflow-hidden rounded-full bg-inset"
+        className={cn('h-1 min-w-9 flex-1 overflow-hidden rounded-full bg-inset', trackClassName)}
       >
         <div className={cn('h-full rounded-full', fillBg)} style={{ width: `${pct}%` }} />
       </div>

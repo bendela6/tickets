@@ -98,5 +98,25 @@ describe('Meter', () => {
   it('merges an extra className onto the outer wrapper', () => {
     const { container } = render(<Meter value={10} max={100} className="w-15" />);
     expect(container.firstElementChild!.className).toContain('w-15');
+    expect(screen.getByRole('meter').className).not.toContain('w-15');
+  });
+
+  it('keeps the default min-w-9 track floor when trackClassName is unset', () => {
+    render(<Meter value={10} max={100} />);
+    expect(screen.getByRole('meter').className).toContain('min-w-9');
+  });
+
+  it('lets trackClassName override the track min-width floor via twMerge', () => {
+    render(<Meter value={10} max={100} trackClassName="min-w-0" />);
+    const trackClasses = screen.getByRole('meter').className.split(' ');
+    expect(trackClasses).toContain('min-w-0');
+    expect(trackClasses).not.toContain('min-w-9');
+  });
+
+  it('lets trackClassName override the track fixed height via twMerge', () => {
+    render(<Meter value={10} max={100} trackClassName="h-2" />);
+    const trackClasses = screen.getByRole('meter').className.split(' ');
+    expect(trackClasses).toContain('h-2');
+    expect(trackClasses).not.toContain('h-1');
   });
 });
