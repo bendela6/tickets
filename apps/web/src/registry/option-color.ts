@@ -1,5 +1,6 @@
 import type { HueTone } from '@tickets/ui/tones';
 import type { StatusKind } from '../api/types';
+import { KIND_TONE } from '../domain/status';
 
 export type OptionColor = HueTone;
 
@@ -69,25 +70,11 @@ export function hexToOptionColor(hex: string | undefined | null): OptionColor {
 
 // Lifecycle kind -> named palette color. This is the workflow field's swatch
 // source wherever a picker needs an OptionColor (e.g. FieldWidget's combobox
-// chips); domain/status.ts's statusPill keys off `kind` directly via its own
-// tone map, so it doesn't go through this mapping. Chosen from the 11 names
-// actually declared above (no slate/amber/rose in this palette): todo/dropped
-// are both neutral (gray) — dropped is further distinguished by the pill's
-// strikethrough — active is blue, blocked is orange (nearest hue to the
-// retired blocked-status color token, #c25425 — now opt-orange), done is green.
+// chips). domain/status.ts's KIND_TONE is the app's ONE status-kind color
+// mapping — nothing else may decide it — so this delegates to it (OptionColor
+// is just a type alias for HueTone, KIND_TONE's value type) and only adds the
+// `null` case (unassigned/unknown kind) that KIND_TONE, indexed by the
+// non-nullable StatusKind, doesn't cover.
 export function kindColor(kind: StatusKind | null): OptionColor {
-  switch (kind) {
-    case 'todo':
-      return 'gray';
-    case 'active':
-      return 'blue';
-    case 'blocked':
-      return 'orange';
-    case 'done':
-      return 'green';
-    case 'dropped':
-      return 'gray';
-    default:
-      return 'gray';
-  }
+  return kind === null ? 'gray' : KIND_TONE[kind];
 }

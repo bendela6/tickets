@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from './cn';
 import { Icon } from './icons/icon';
+import { toneClasses } from './tones';
 
 // Copies text to the clipboard, tracking a transient copied/failed state that
 // self-resets after `resetMs`. Retires N near-identical CopyState machines
@@ -47,7 +48,16 @@ export function CopyButton({
       onClick={() => void copy(value)}
       className={cn(
         'inline-flex items-center gap-1.5 rounded-ctrl border-(length:--border-hair) px-2.5 py-1 font-mono text-[11px]',
-        copied ? 'border-opt-green text-opt-green' : failed ? 'border-danger text-danger' : 'border-hairline text-ink-2 hover:bg-inset',
+        // `outline` emphasis resolves to the same border-color + text-color
+        // pair the hand-rolled classes used to hardcode (verified against
+        // tones.generated.ts): success -> border-opt-green/text-opt-green,
+        // danger -> border-danger/text-danger. Its own `border-(length:...)`
+        // duplicates the base one above; tailwind-merge dedupes it.
+        copied
+          ? toneClasses('success', 'outline')
+          : failed
+            ? toneClasses('danger', 'outline')
+            : 'border-hairline text-ink-2 hover:bg-inset',
         className,
       )}
     >

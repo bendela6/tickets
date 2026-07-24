@@ -22,9 +22,10 @@ describe('Spinner', () => {
     expect(bigSvg.getAttribute('height')).toBe('22');
   });
 
-  it('defaults to the primary tone', () => {
+  it('applies no tone class when tone is unset, inheriting currentColor like Icon', () => {
     const { container } = render(<Spinner />);
-    expect(container.querySelector('svg')!.getAttribute('class')).toContain('text-accent');
+    const classes = container.querySelector('svg')!.getAttribute('class')!.split(' ');
+    expect(classes.some((c) => c.startsWith('text-'))).toBe(false);
   });
 
   it('applies an explicit tone', () => {
@@ -35,6 +36,11 @@ describe('Spinner', () => {
   it('is labelled for assistive tech (not aria-hidden) since it conveys loading state', () => {
     const { getByRole } = render(<Spinner />);
     expect(getByRole('img', { name: 'Loading' })).toBeTruthy();
+  });
+
+  it('accepts a custom label for what is loading', () => {
+    const { getByRole } = render(<Spinner label="Fetching results" />);
+    expect(getByRole('img', { name: 'Fetching results' })).toBeTruthy();
   });
 
   it('merges an extra className onto the svg', () => {

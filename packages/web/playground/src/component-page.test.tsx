@@ -107,14 +107,17 @@ describe('ComponentPage', () => {
     setAxeForTests(null);
   });
 
-  it('renders the tab strip with Preview active', () => {
+  it('renders a real tablist with Preview active', () => {
     render(<ComponentPage demo={demo} />);
-    const preview = screen.getByRole('button', { name: 'Preview' });
-    const code = screen.getByRole('button', { name: 'Code' });
-    expect(screen.getByRole('button', { name: 'Source' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'A11y' })).toBeTruthy();
+    expect(screen.getByRole('tablist')).toBeTruthy();
+    const preview = screen.getByRole('tab', { name: 'Preview' });
+    const code = screen.getByRole('tab', { name: 'Code' });
+    expect(screen.getByRole('tab', { name: 'Source' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'A11y' })).toBeTruthy();
     expect(preview.className).toContain('border-accent');
     expect(code.className).not.toContain('border-accent');
+    expect(preview.getAttribute('aria-selected')).toBe('true');
+    expect(code.getAttribute('aria-selected')).toBe('false');
   });
 
   it('switching tabs hides (not unmounts) the preview and preserves playground state', () => {
@@ -130,7 +133,7 @@ describe('ComponentPage', () => {
     expect(previewWrapper.className).toBe('');
     expect(codeWrapper.className).toBe('hidden');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Code' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Code' }));
     expect(previewWrapper.className).toBe('hidden');
     expect(codeWrapper.className).toBe('');
     // Code tab reflects the live control values (variant changed above), not
@@ -140,7 +143,7 @@ describe('ComponentPage', () => {
     // Preview content is still in the DOM (hidden), not unmounted.
     expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('secondary');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Preview' }));
     expect(previewWrapper.className).toBe('');
     expect(codeWrapper.className).toBe('hidden');
     expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('secondary');
@@ -203,7 +206,7 @@ describe('ComponentPage', () => {
 
   it('hides Split themes toggle when not on Preview tab', () => {
     render(<ComponentPage demo={demo} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Code' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Code' }));
     expect(screen.queryByLabelText('Split themes')).toBeNull();
   });
 
@@ -315,7 +318,7 @@ describe('ComponentPage', () => {
 
   it('renders A11yTab when a11y tab is active', () => {
     render(<ComponentPage demo={demo} />);
-    fireEvent.click(screen.getByRole('button', { name: 'A11y' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'A11y' }));
     expect(screen.getByText('no audit yet')).toBeTruthy();
   });
 
@@ -329,7 +332,7 @@ describe('ComponentPage', () => {
     expect(screen.getByText('play-btn')).toBeTruthy();
 
     // Switch to A11y tab
-    fireEvent.click(screen.getByRole('button', { name: 'A11y' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'A11y' }));
     // Preview wrapper is hidden but still mounted (not unmounted)
     expect(previewWrapper.className).toBe('hidden');
     // Preview content is still in the DOM

@@ -77,7 +77,7 @@ describe('A11y tab — real axe-core regression', () => {
   it('finds real violations in the (temporarily unhidden) preview DOM', async () => {
     render(<ComponentPage demo={demo} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'A11y' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'A11y' }));
     fireEvent.click(screen.getByRole('button', { name: 'Run audit' }));
 
     await waitFor(

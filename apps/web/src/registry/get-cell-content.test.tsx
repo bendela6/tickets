@@ -57,7 +57,7 @@ test('an option field renders the option label', () => {
   expect(screen.getByText('High')).toBeInTheDocument();
 });
 
-test('the workflow field renders a kind-colored status pill', () => {
+test('the workflow field renders a status-colored pill', () => {
   const b = board();
   const ix = indexBoard(b);
   const field = ix.fieldById.get(10)!;

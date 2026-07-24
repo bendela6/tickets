@@ -24,7 +24,7 @@ describe('GalleryShell v2', () => {
     expect(screen.getByText('btn')).toBeTruthy();
     expect(screen.getByText('inp')).toBeTruthy();
     expect(screen.queryByText('play')).toBeNull(); // playground hidden in All view
-    expect(screen.queryByRole('button', { name: 'Preview' })).toBeNull(); // no tab strip in All view
+    expect(screen.queryByRole('tab', { name: 'Preview' })).toBeNull(); // no tab strip in All view
   });
 
   it('hash selects a single component and routes it through ComponentPage (tabs + playground)', () => {
@@ -34,15 +34,15 @@ describe('GalleryShell v2', () => {
     expect(screen.queryByText('inp')).toBeNull();
     expect(screen.getByText('play')).toBeTruthy();
     // ComponentPage's tab strip, with Preview active by default.
-    expect(screen.getByRole('button', { name: 'Preview' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Code' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Preview' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Code' })).toBeTruthy();
   });
 
   it('selecting a demo without a playground still routes through ComponentPage but shows no rail', () => {
     render(<GalleryShell demos={demos} title="t" />);
     setHash('#input');
     expect(screen.getByText('inp')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Preview' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Preview' })).toBeTruthy();
     expect(screen.queryByText('CONTROLS')).toBeNull();
   });
 
@@ -77,7 +77,7 @@ describe('GalleryShell v2', () => {
     setHash('#button');
     // Source tab is still a placeholder in this task; just assert selection
     // didn't crash with sources wired up (Code/Source tabs land in Task 5).
-    expect(screen.getByRole('button', { name: 'Preview' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Preview' })).toBeTruthy();
   });
 
   it('filter input narrows sidebar links (type "butt" → Button remains, Input gone, empty groups hide)', () => {

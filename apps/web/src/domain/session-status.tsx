@@ -58,6 +58,14 @@ export function sessionStatus(status: SessionStatus, kind?: SessionKind): Entry 
   return { ...entry, label };
 }
 
+// The color decision behind an exit code: green for a clean exit, danger
+// otherwise. Shared by exitCodeTrailing below and TerminalFrame's own
+// "Exited with code N" footer, which needs different surrounding markup than
+// the pill trailing content here so it can't reuse exitCodeTrailing wholesale.
+export function exitCodeTone(exitCode: number): string {
+  return exitCode === 0 ? 'text-opt-green' : 'text-danger';
+}
+
 // Exit-code chip for an exited session: green for a clean exit, danger
 // otherwise. Returns undefined when there is no code to show.
 export function exitCodeTrailing(
@@ -65,9 +73,5 @@ export function exitCodeTrailing(
   exitCode?: number | null,
 ): ReactElement | undefined {
   if (status !== 'exited' || exitCode == null) return undefined;
-  return (
-    <span className={cn('font-mono', exitCode === 0 ? 'text-opt-green' : 'text-danger')}>
-      {exitCode}
-    </span>
-  );
+  return <span className={cn('font-mono', exitCodeTone(exitCode))}>{exitCode}</span>;
 }

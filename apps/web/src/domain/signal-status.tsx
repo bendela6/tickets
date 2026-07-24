@@ -21,12 +21,6 @@ export function signalStatus(status: SignalStatus): Entry {
   return MAP[status];
 }
 
-// The adjacent "↺ regressed" chip shown next to the status pill — a
-// resolved/ignored issue that received a fresh occurrence after being
-// closed. Not carried by `signalStatus` itself since it's a second,
-// independent pill rendered beside the status one, not a status value.
-export const regressedPill = { tone: 'orange' as const, label: '↺ regressed' };
-
 // The app's ONE signal-kind glyph mapping — ported from the retired
 // components/signals/kind-glyph.tsx KindGlyph, whose hand-drawn unicode
 // glyphs (◆ ≡ ◉ → ⇅ ✕ ✳) now map onto the shared Icon registry's closest
