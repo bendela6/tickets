@@ -11,20 +11,48 @@ import { cn } from './cn';
 // `action` renders after a flex-1 spacer, pinned to the far right. Content
 // that must sit flush against the title text (e.g. a required-field
 // asterisk) belongs inside `title` itself instead of `count`.
+//
+// The row itself carries `text-label` (11px/1.2/.06em) so `count` — which
+// sets no font-size of its own (e.g. the `Label` helpers' hint span) —
+// inherits the same 11px caption size the title renders at, instead of
+// falling back to the document default. Callers that need their own size on
+// `count` (a Meter's mono readout) already set it explicitly and win the
+// cascade normally. The title keeps its own `text-label` too so
+// `title carries the uppercase mono-label styling` stays true in isolation.
 export function SectionHeader({
   title,
   count,
   action,
   className,
+  titleClassName,
+  as = 'div',
 }: {
   title: ReactNode;
   count?: ReactNode;
   action?: ReactNode;
   className?: string;
+  /**
+   * Merged onto the title element via `cn` (not the outer row) — `className`
+   * lands on the row and can't reach the title's own text-size/color/tracking
+   * classes, which silently defeats attempts to restyle the title. Use this
+   * instead.
+   */
+  titleClassName?: string;
+  /**
+   * Element the title renders as. Defaults to a plain `div` (block-level, so
+   * layout inside the flex row is unaffected either way); pass `h2`/`h3` when
+   * the section needs a real heading in the accessibility tree.
+   */
+  as?: 'div' | 'h2' | 'h3';
 }) {
+  const Title = as;
   return (
-    <div className={cn('flex items-center gap-2', className)}>
-      <span className="font-sans text-label font-medium uppercase text-ink-2">{title}</span>
+    <div className={cn('flex items-center gap-2 text-label', className)}>
+      <Title
+        className={cn('font-sans text-label font-medium uppercase text-ink-2', titleClassName)}
+      >
+        {title}
+      </Title>
       {count}
       {action != null ? (
         <>

@@ -179,7 +179,7 @@ export function NewAppDialog({
                 Send your first signal and it will appear under Issues.
               </span>
               <DialogFooter
-                className="mt-0 border-0 p-0"
+                className="mt-0 flex-1 border-0 p-0"
                 cancel={<Button variant="ghost" onClick={() => change(false)}>Close</Button>}
               />
             </div>
