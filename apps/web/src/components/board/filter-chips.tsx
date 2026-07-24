@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Pill } from '@tickets/ui/pill';
 import type { Board, Field, Option } from '../../api/types';
-import { hexToOptionColor, kindColor, type OptionColor } from '../../registry/option-color';
+import { KIND_TONE } from '../../domain/status';
+import { hexToOptionColor, kindColor } from '../../registry/option-color';
 import { Button } from '../../ui/button';
 import type { ComboOption } from '../../ui/combobox-list';
 import { Combobox } from '../../ui/combobox';
@@ -19,14 +20,6 @@ function optionsInSet(field: Field, indexes: BoardIndexes): Option[] {
 }
 
 const KINDS = ['todo', 'active', 'blocked', 'done', 'dropped'];
-
-const KIND_COLORS: Record<string, OptionColor> = {
-  todo: 'gray',
-  active: 'blue',
-  blocked: 'orange',
-  done: 'green',
-  dropped: 'gray',
-};
 
 const OP_LABELS: Record<FilterRule['op'], string> = {
   'any-of': 'is',
@@ -58,7 +51,7 @@ function RuleValues({ rule, indexes }: { rule: FilterRule; indexes: BoardIndexes
             <Pill
               key={value}
               label={value}
-              tone={KIND_COLORS[value] ?? 'gray'}
+              tone={KIND_TONE[value as keyof typeof KIND_TONE] ?? 'gray'}
               shape="full"
               className="h-4.5"
             />
@@ -134,7 +127,11 @@ function AddFilter({
     ? []
     : selectedField.config.workflow === true
       ? op === 'kinds'
-        ? KINDS.map((kind) => ({ value: kind, label: kind, color: KIND_COLORS[kind] ?? 'gray' }))
+        ? KINDS.map((kind) => ({
+            value: kind,
+            label: kind,
+            color: KIND_TONE[kind as keyof typeof KIND_TONE] ?? 'gray',
+          }))
         : optionsInSet(selectedField, indexes).map((option) => ({
             value: option.value,
             label: option.label,

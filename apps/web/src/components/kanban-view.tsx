@@ -3,6 +3,7 @@ import type { JSX } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Board, Field, Item, Option, StatusKind } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
+import { typePill } from '../domain/status';
 import { hexToOptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
 import { Avatar } from '../ui/avatar';
@@ -238,10 +239,9 @@ export function KanbanView({
           <span className="flex-1" />
           {type ? (
             <Pill
-              tone="neutral"
-              emphasis="outline"
+              {...typePill}
               label={type.label}
-              className="h-4.5 rounded-[5px] px-1.75 text-[10px]"
+              className={cn(typePill.className, 'h-4.5 rounded-[5px] px-1.75 text-[10px]')}
             />
           ) : null}
         </div>

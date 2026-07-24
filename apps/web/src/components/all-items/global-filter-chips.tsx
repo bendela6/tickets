@@ -3,23 +3,15 @@ import { Pill } from '@tickets/ui/pill';
 import { Button } from '../../ui/button';
 import { Combobox } from '../../ui/combobox';
 import type { ComboOption } from '../../ui/combobox-list';
+import { KIND_TONE } from '../../domain/status';
 import { Input } from '../../ui/input';
 import { MultiCombobox } from '../../ui/multi-combobox';
-import type { OptionColor } from '../../registry/option-color';
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
 import type { FilterRule } from '../../utils/view-config';
 import type { GlobalFilterRule } from './global-views';
 import type { SharedField } from './shared-fields';
 
 const KINDS = ['todo', 'active', 'blocked', 'done', 'dropped'];
-
-const KIND_COLORS: Record<string, OptionColor> = {
-  todo: 'gray',
-  active: 'blue',
-  blocked: 'orange',
-  done: 'green',
-  dropped: 'gray',
-};
 
 const OP_LABELS: Record<FilterRule['op'], string> = {
   'any-of': 'is',
@@ -57,7 +49,7 @@ function RuleValues({
             <Pill
               key={value}
               label={value}
-              tone={KIND_COLORS[value] ?? 'gray'}
+              tone={KIND_TONE[value as keyof typeof KIND_TONE] ?? 'gray'}
               shape="full"
               className="h-4.5"
             />
@@ -118,7 +110,11 @@ function AddFilter({
   const valueOptions: ComboOption[] = !selectedField
     ? []
     : op === 'kinds'
-      ? KINDS.map((kind) => ({ value: kind, label: kind, color: KIND_COLORS[kind] ?? 'gray' }))
+      ? KINDS.map((kind) => ({
+          value: kind,
+          label: kind,
+          color: KIND_TONE[kind as keyof typeof KIND_TONE] ?? 'gray',
+        }))
       : selectedField.options;
 
   const needsValues = op === 'any-of' || op === 'none-of' || op === 'kinds';

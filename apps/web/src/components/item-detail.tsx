@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '../api/api-error';
 import type { Board, Item } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
+import { typePill } from '../domain/status';
 import { useCurrentUser } from '../state/current-user-context';
 import { Button } from '../ui/button';
 import { cn } from '@tickets/ui/cn';
@@ -287,7 +288,7 @@ export function ItemDetail({
       <>
         <div className="flex shrink-0 items-center gap-2.25 border-b border-hairline px-5 py-3.5">
           <KeyChip prefix={prefix} number={item.number} />
-          <Pill tone="neutral" emphasis="outline" label={type?.label ?? '?'} />
+          <Pill {...typePill} label={type?.label ?? '?'} />
           {workflowField ? (
             <StatusSelect
               size="compact"
@@ -398,7 +399,7 @@ export function ItemDetail({
             {breadcrumb ? <div className="mb-2.5">{breadcrumb}</div> : null}
             <div className="mb-2.5 flex items-center gap-2.25">
               <KeyChip prefix={prefix} number={item.number} />
-              <Pill tone="neutral" emphasis="outline" label={type?.label ?? '?'} />
+              <Pill {...typePill} label={type?.label ?? '?'} />
               <span className="font-mono text-label text-ink-3">
                 created{' '}
                 <RelativeDate value={item.createdAt} className="font-mono text-[11px] text-ink-3" />{' '}

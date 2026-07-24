@@ -10,6 +10,7 @@ import type {
   Project,
 } from '../api/types';
 import { useCreateItem } from '../api/use-create-item';
+import { typePill } from '../domain/status';
 import { FieldWidget } from '../registry/field-widget';
 import { hexToOptionColor, type OptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
@@ -367,10 +368,9 @@ export function NewItemDialog({
               ) : null}
               <DialogTitle className="truncate">New {type.label}</DialogTitle>
               <Pill
-                tone="neutral"
-                emphasis="outline"
+                {...typePill}
                 label={`${type.label} · 🔒 permanent`}
-                className="shrink-0"
+                className={cn(typePill.className, 'shrink-0')}
               />
               <span className="font-sans text-ui text-ink-2">in</span>
               <ProjectChip project={board.project} />
