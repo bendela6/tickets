@@ -123,7 +123,13 @@ export function registerAppSignalsRoutes(app: FastifyInstance, context: { db: Db
     const id = parseIntParam((request.params as { id: string }).id);
     const [appRow] = await context.db.select().from(apps).where(eq(apps.id, id));
     if (!appRow) throw new HttpError(404, 'app not found');
-    const release = decodeURIComponent((request.params as { release: string }).release);
+    // Fastify's router (find-my-way) already URL-decodes path-segment params
+    // once, safely, before handing them to the handler — do NOT decode again
+    // here. A second decode would both throw on a release containing a raw
+    // "%" that isn't a valid %XX escape (e.g. "50% off") and silently mangle
+    // a release whose literal name contains a %XX-shaped substring (e.g.
+    // "v1%2E0" -> "v1.0"), matching/deleting the wrong release.
+    const release = (request.params as { release: string }).release;
 
     const result = await context.db.transaction(async (tx) => {
       const deletedSignals = await tx
