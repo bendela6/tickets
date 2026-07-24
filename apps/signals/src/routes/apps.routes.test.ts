@@ -1,5 +1,7 @@
+import { eq } from 'drizzle-orm';
 import { afterAll, beforeEach, expect, it } from 'vitest';
 import { buildApp } from '../app';
+import { apps, issues, signals, sourcemapArtifacts } from '../db/schema';
 import { resetDb, testDb } from '../test/db';
 
 beforeEach(resetDb);
@@ -159,6 +161,64 @@ it('POST /apps/:id/rotate issues a new ingestKey and dsn, reflected on subsequen
 it('POST /apps/:id/rotate 404s for an unknown id', async () => {
   const app = buildApp({ db: testDb });
   const res = await app.inject({ method: 'POST', url: '/apps/9999/rotate' });
+  expect(res.statusCode).toBe(404);
+  await app.close();
+});
+
+// Creates an app with one signal (which also creates one issue) and one sourcemap artifact.
+async function seedAppWithData(app: ReturnType<typeof buildApp>, name: string) {
+  const created = (await app.inject({ method: 'POST', url: '/apps', payload: { name } })).json();
+  const err = {
+    kind: 'error', sessionId: 's1', name: 'TypeError', message: 'boom',
+    mechanism: 'uncaught-exception', level: 'error', timestamp: new Date().toISOString(), release: '1.0.0',
+    stack: [{ functionName: 'f', file: 'src/a.ts', line: 1, column: 1, inApp: true }],
+    platform: { runtime: 'browser' }, sdk: { name: 't', version: '0' },
+  };
+  await app.inject({ method: 'POST', url: `/ingest/${created.ingestKey}`, payload: { signals: [err] } });
+  await app.inject({
+    method: 'POST',
+    url: `/ingest/${created.ingestKey}/sourcemaps`,
+    payload: { release: '1.0.0', files: [{ filename: 'a.js.map', content: '{"version":3}' }] },
+  });
+  return created as { id: number; ingestKey: string };
+}
+
+it('DELETE /apps/:id hard-deletes the app and cascades to its signals, issues, and sourcemap_artifacts, leaving other apps untouched', async () => {
+  const app = buildApp({ db: testDb });
+  const a = await seedAppWithData(app, 'App A');
+  const b = await seedAppWithData(app, 'App B');
+
+  const bSignalsBefore = await testDb.select().from(signals).where(eq(signals.appId, b.id));
+  const bIssuesBefore = await testDb.select().from(issues).where(eq(issues.appId, b.id));
+  const bArtifactsBefore = await testDb.select().from(sourcemapArtifacts).where(eq(sourcemapArtifacts.appId, b.id));
+  expect(bSignalsBefore).toHaveLength(1);
+  expect(bIssuesBefore).toHaveLength(1);
+  expect(bArtifactsBefore).toHaveLength(1);
+
+  const res = await app.inject({ method: 'DELETE', url: `/apps/${a.id}` });
+  expect(res.statusCode).toBe(200);
+  expect(res.json()).toEqual({ deleted: true });
+
+  expect(await testDb.select().from(apps).where(eq(apps.id, a.id))).toHaveLength(0);
+  expect(await testDb.select().from(signals).where(eq(signals.appId, a.id))).toHaveLength(0);
+  expect(await testDb.select().from(issues).where(eq(issues.appId, a.id))).toHaveLength(0);
+  expect(await testDb.select().from(sourcemapArtifacts).where(eq(sourcemapArtifacts.appId, a.id))).toHaveLength(0);
+
+  const bSignalsAfter = await testDb.select().from(signals).where(eq(signals.appId, b.id));
+  const bIssuesAfter = await testDb.select().from(issues).where(eq(issues.appId, b.id));
+  const bArtifactsAfter = await testDb.select().from(sourcemapArtifacts).where(eq(sourcemapArtifacts.appId, b.id));
+  expect(bSignalsAfter.map((s) => s.id).sort()).toEqual(bSignalsBefore.map((s) => s.id).sort());
+  expect(bIssuesAfter.map((i) => i.id).sort()).toEqual(bIssuesBefore.map((i) => i.id).sort());
+  expect(bArtifactsAfter.map((x) => x.id).sort()).toEqual(bArtifactsBefore.map((x) => x.id).sort());
+  expect(await testDb.select().from(apps).where(eq(apps.id, b.id))).toHaveLength(1);
+
+  expect((await app.inject({ method: 'GET', url: `/apps/${a.id}` })).statusCode).toBe(404);
+  await app.close();
+});
+
+it('DELETE /apps/:id 404s for an unknown id', async () => {
+  const app = buildApp({ db: testDb });
+  const res = await app.inject({ method: 'DELETE', url: '/apps/9999' });
   expect(res.statusCode).toBe(404);
   await app.close();
 });
