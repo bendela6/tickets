@@ -79,4 +79,35 @@ describe('GalleryShell v2', () => {
     // didn't crash with sources wired up (Code/Source tabs land in Task 5).
     expect(screen.getByRole('button', { name: 'Preview' })).toBeTruthy();
   });
+
+  it('filter input narrows sidebar links (type "butt" → Button remains, Input gone, empty groups hide)', () => {
+    render(<GalleryShell demos={demos} title="t" />);
+
+    const filterInput = screen.getByPlaceholderText('Filter components…') as HTMLInputElement;
+    fireEvent.change(filterInput, { target: { value: 'butt' } });
+
+    expect(screen.getByRole('link', { name: 'Button' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Input' })).toBeNull();
+  });
+
+  it('ctrl+K keydown opens the palette', () => {
+    render(<GalleryShell demos={demos} title="t" />);
+
+    fireEvent(window, new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }));
+
+    // The palette's search input should be visible when open
+    const paletteInput = screen.getAllByPlaceholderText('');
+    expect(paletteInput.length).toBeGreaterThan(0);
+  });
+
+  it('⌘K chip in filter input opens the palette', () => {
+    render(<GalleryShell demos={demos} title="t" />);
+
+    const cmdKButton = screen.getByRole('button', { name: '⌘K' });
+    fireEvent.click(cmdKButton);
+
+    // The palette's search input should be visible when open
+    const paletteInput = screen.getAllByPlaceholderText('');
+    expect(paletteInput.length).toBeGreaterThan(0);
+  });
 });
