@@ -106,6 +106,43 @@ it('kind filter deletes only that kind', async () => {
   await app.close();
 });
 
+it('does not touch another app\'s issues or signals', async () => {
+  const { app, appId: appAId } = await seed();
+
+  // App B: its own issue "widget-broke" with 2 signals, entirely separate from app A.
+  const b = (await app.inject({ method: 'POST', url: '/apps', payload: { name: 'B' } })).json();
+  const errB = (session: string) => ({
+    kind: 'error', sessionId: session, name: 'RangeError', message: 'widget-broke',
+    mechanism: 'uncaught-exception', level: 'error', timestamp: new Date().toISOString(),
+    stack: [{ functionName: 'g', file: 'src/b.ts', line: 1, column: 1, inApp: true }],
+    platform: { runtime: 'browser' }, sdk: { name: 't', version: '0' },
+  });
+  await app.inject({ method: 'POST', url: `/ingest/${b.ingestKey}`, payload: { signals: [errB('bs1'), errB('bs2')] } });
+
+  const bIssueBefore = (await testDb.select().from(issues).where(eq(issues.appId, b.id)))[0]!;
+  const bSignalsBefore = await testDb.select().from(signals).where(eq(signals.appId, b.id));
+  expect(bSignalsBefore).toHaveLength(2);
+
+  // No params -> deletes ALL of app A's signals and issues, the most destructive path.
+  const res = await app.inject({ method: 'DELETE', url: `/apps/${appAId}/signals` });
+  expect(res.statusCode).toBe(200);
+  const body = res.json();
+  expect(body.deletedSignals).toBe(6);
+  expect(body.prunedIssues).toBe(2);
+  expect(await testDb.select().from(issues).where(eq(issues.appId, appAId))).toHaveLength(0);
+
+  // App B's issue row is byte-for-byte the same, and its signals are untouched by id.
+  const bIssueAfter = (await testDb.select().from(issues).where(eq(issues.id, bIssueBefore.id)))[0];
+  expect(bIssueAfter).toBeDefined();
+  expect(bIssueAfter!.eventCount).toBe(bIssueBefore.eventCount);
+  expect(bIssueAfter!.firstSeen.getTime()).toBe(bIssueBefore.firstSeen.getTime());
+  expect(bIssueAfter!.lastSeen.getTime()).toBe(bIssueBefore.lastSeen.getTime());
+  const bSignalsAfter = await testDb.select().from(signals).where(eq(signals.appId, b.id));
+  expect(bSignalsAfter).toHaveLength(2);
+  expect(bSignalsAfter.map((s) => s.id).sort()).toEqual(bSignalsBefore.map((s) => s.id).sort());
+  await app.close();
+});
+
 it('404s for an unknown app id', async () => {
   const { app } = await seed();
   const res = await app.inject({ method: 'DELETE', url: '/apps/9999/signals' });
