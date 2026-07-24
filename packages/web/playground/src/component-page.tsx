@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { Group, Panel, Separator, type Layout } from 'react-resizable-panels';
 import { cn } from '@tickets/ui/cn';
 import { initialValues, type CollectedDemo } from '@tickets/ui/gallery';
+import { Tabs } from '@tickets/ui/tabs';
 import { A11yTab } from './a11y-tab';
 import { getAxe } from './axe';
 import { CodeTab } from './code-tab';
@@ -96,23 +97,13 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between gap-6 border-b border-hairline pb-2">
-        <div className="flex gap-6">
-          {TABS.map(({ key, label }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setTab(key)}
-              className={cn(
-                'border-b-2 pb-2 font-sans text-ui',
-                tab === key
-                  ? '-mb-px border-accent font-medium text-ink'
-                  : 'border-transparent text-ink-3 hover:text-ink',
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          variant="underline"
+          className="border-b-0"
+          items={TABS.map(({ key, label }) => ({ value: key, label }))}
+          value={tab}
+          onChange={(next) => setTab(next as TabKey)}
+        />
         {tab === 'preview' && playground && (
           <div className="flex items-center gap-4">
             {/* Split themes toggle */}

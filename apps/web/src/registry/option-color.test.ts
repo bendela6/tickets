@@ -1,5 +1,7 @@
 import { expect, test } from 'vitest';
-import { hexToOptionColor } from './option-color';
+import { KIND_TONE } from '../domain/status';
+import type { StatusKind } from '../api/types';
+import { hexToOptionColor, kindColor } from './option-color';
 
 // Real hex values stored in option/status configs in the dev database.
 test('maps stored config hexes onto the nearest palette color', () => {
@@ -25,4 +27,17 @@ test('covers the remaining palette hues', () => {
   expect(hexToOptionColor('#0891b2')).toBe('cyan');
   expect(hexToOptionColor('#9333ea')).toBe('purple');
   expect(hexToOptionColor('#db2777')).toBe('pink');
+});
+
+// kindColor must delegate to domain/status.ts's KIND_TONE — the app's ONE
+// status-kind color mapping — so the two can never drift apart again.
+test('kindColor agrees with KIND_TONE for every status kind', () => {
+  const kinds: StatusKind[] = ['todo', 'active', 'blocked', 'done', 'dropped'];
+  for (const kind of kinds) {
+    expect(kindColor(kind)).toBe(KIND_TONE[kind]);
+  }
+});
+
+test('kindColor falls back to gray for a null kind', () => {
+  expect(kindColor(null)).toBe('gray');
 });

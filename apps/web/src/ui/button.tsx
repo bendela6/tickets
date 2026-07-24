@@ -84,7 +84,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       )}
       {...rest}
     >
-      {loading ? <Spinner size={12} tone="neutral" className="text-current" /> : null}
+      {loading ? <Spinner size={12} /> : null}
       {children}
     </button>
   );

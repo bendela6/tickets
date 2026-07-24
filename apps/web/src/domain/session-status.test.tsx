@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { exitCodeTrailing, sessionStatus } from './session-status';
+import { exitCodeTone, exitCodeTrailing, sessionStatus } from './session-status';
 
 describe('sessionStatus', () => {
   it('running spins blue', () => {
@@ -24,6 +24,14 @@ describe('sessionStatus', () => {
     expect(sessionStatus('exited').tone).toBe('secondary');
     expect(sessionStatus('failed').tone).toBe('danger');
     expect(sessionStatus('idle').tone).toBe('green');
+  });
+});
+
+describe('exitCodeTone', () => {
+  it('is success-colored for a clean exit and danger-colored otherwise', () => {
+    expect(exitCodeTone(0)).toBe('text-opt-green');
+    expect(exitCodeTone(1)).toBe('text-danger');
+    expect(exitCodeTone(-1)).toBe('text-danger');
   });
 });
 

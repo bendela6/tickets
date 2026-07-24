@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
+import { exitCodeTone } from '../../domain/session-status';
 import type { ConnState } from '../session/use-session-socket';
 
 // Re-exported so callers (e.g. terminal-display.ts) can depend on this module
@@ -80,11 +81,7 @@ export function TerminalFrame({
               ) : (
                 <>
                   Exited with code{' '}
-                  <span
-                    className={cn('font-mono', exitCode === 0 ? 'text-opt-green' : 'text-danger')}
-                  >
-                    {exitCode}
-                  </span>
+                  <span className={cn('font-mono', exitCodeTone(exitCode))}>{exitCode}</span>
                 </>
               )}
             </span>

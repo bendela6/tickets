@@ -9,10 +9,10 @@ export const states = [
     name: 'Sizes',
     render: () => (
       <div className="flex items-center gap-4">
-        <Spinner size={11} />
-        <Spinner size={14} />
-        <Spinner size={20} />
-        <Spinner size={28} />
+        <Spinner size={11} tone="primary" />
+        <Spinner size={14} tone="primary" />
+        <Spinner size={20} tone="primary" />
+        <Spinner size={28} tone="primary" />
       </div>
     ),
   },

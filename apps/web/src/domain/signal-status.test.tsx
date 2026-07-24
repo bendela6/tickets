@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  regressedPill,
   signalKindIcon,
   signalKindTone,
   signalStatus,
@@ -22,13 +21,6 @@ describe('signalStatus', () => {
     const s = signalStatus('ignored');
     expect(s.tone).toBe('gray');
     expect(s.label).toBe('ignored');
-  });
-});
-
-describe('regressedPill', () => {
-  it('is an orange chip with the regressed glyph', () => {
-    expect(regressedPill.tone).toBe('orange');
-    expect(regressedPill.label).toBe('↺ regressed');
   });
 });
 
