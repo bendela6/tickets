@@ -1,21 +1,13 @@
 import type { AxeResults } from 'axe-core';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { useRef } from 'react';
-import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { A11yTab } from './a11y-tab';
-import { setAxeForTests } from './axe';
 
-// Mock component that renders a preview container
-function TestContainer() {
-  const ref = useRef<HTMLDivElement>(null);
-  return (
-    <div>
-      <div ref={ref} data-testid="preview-container">
-        <button>Test Button</button>
-      </div>
-      <A11yTab targetRef={ref} />
-    </div>
-  );
+// A11yTab now takes a `runAudit` callback directly (component-page.tsx is
+// the one that owns the axe.ts seam / DOM target), so tab tests inject a
+// stub runAudit rather than going through setAxeForTests + a target ref.
+function TestContainer({ runAudit }: { runAudit: () => Promise<AxeResults> }) {
+  return <A11yTab runAudit={runAudit} />;
 }
 
 const cannedViolations: AxeResults = {
@@ -143,25 +135,17 @@ const cannedNoViolations: AxeResults = {
 } as unknown as AxeResults;
 
 describe('A11yTab', () => {
-  beforeEach(() => {
-    // Clear the axe seam before each test
-    setAxeForTests(null);
-  });
-
   afterEach(() => {
-    setAxeForTests(null);
     vi.clearAllMocks();
   });
 
   it('renders "no audit yet" before running an audit', () => {
-    render(<TestContainer />);
+    render(<TestContainer runAudit={() => Promise.resolve(cannedNoViolations)} />);
     expect(screen.getByText('no audit yet')).toBeTruthy();
   });
 
   it('displays violations with proper impact colors', async () => {
-    setAxeForTests(() => Promise.resolve(cannedViolations));
-
-    render(<TestContainer />);
+    render(<TestContainer runAudit={() => Promise.resolve(cannedViolations)} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Run audit' }));
 
@@ -182,9 +166,7 @@ describe('A11yTab', () => {
   });
 
   it('displays rule descriptions and target selectors', async () => {
-    setAxeForTests(() => Promise.resolve(cannedViolations));
-
-    render(<TestContainer />);
+    render(<TestContainer runAudit={() => Promise.resolve(cannedViolations)} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Run audit' }));
 
@@ -197,9 +179,7 @@ describe('A11yTab', () => {
   });
 
   it('renders Learn more links with helpUrl', async () => {
-    setAxeForTests(() => Promise.resolve(cannedViolations));
-
-    render(<TestContainer />);
+    render(<TestContainer runAudit={() => Promise.resolve(cannedViolations)} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Run audit' }));
 
@@ -212,9 +192,7 @@ describe('A11yTab', () => {
   });
 
   it('displays all-clear banner when zero violations', async () => {
-    setAxeForTests(() => Promise.resolve(cannedNoViolations));
-
-    render(<TestContainer />);
+    render(<TestContainer runAudit={() => Promise.resolve(cannedNoViolations)} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Run audit' }));
 
@@ -225,9 +203,7 @@ describe('A11yTab', () => {
   });
 
   it('calculates element count from passes.nodes.length', async () => {
-    setAxeForTests(() => Promise.resolve(cannedNoViolations));
-
-    render(<TestContainer />);
+    render(<TestContainer runAudit={() => Promise.resolve(cannedNoViolations)} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Run audit' }));
 
@@ -243,9 +219,7 @@ describe('A11yTab', () => {
       resolveAudit = resolve;
     });
 
-    setAxeForTests(() => auditPromise);
-
-    render(<TestContainer />);
+    render(<TestContainer runAudit={() => auditPromise} />);
 
     const button = screen.getByRole('button', { name: 'Run audit' }) as HTMLButtonElement;
     fireEvent.click(button);
@@ -266,9 +240,7 @@ describe('A11yTab', () => {
   });
 
   it('updates meta line with axe-core version after audit', async () => {
-    setAxeForTests(() => Promise.resolve(cannedViolations));
-
-    render(<TestContainer />);
+    render(<TestContainer runAudit={() => Promise.resolve(cannedViolations)} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Run audit' }));
 
@@ -278,9 +250,7 @@ describe('A11yTab', () => {
   });
 
   it('shows relative time in meta line', async () => {
-    setAxeForTests(() => Promise.resolve(cannedViolations));
-
-    render(<TestContainer />);
+    render(<TestContainer runAudit={() => Promise.resolve(cannedViolations)} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Run audit' }));
 
@@ -291,9 +261,7 @@ describe('A11yTab', () => {
   });
 
   it('allows re-running audits', async () => {
-    setAxeForTests(() => Promise.resolve(cannedNoViolations));
-
-    render(<TestContainer />);
+    render(<TestContainer runAudit={() => Promise.resolve(cannedNoViolations)} />);
 
     const button = screen.getByRole('button', { name: 'Run audit' });
 
