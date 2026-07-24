@@ -1,11 +1,17 @@
 import { useState } from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { Group, Panel, Separator, type Layout } from 'react-resizable-panels';
 import { cn } from '@tickets/ui/cn';
 import { initialValues, type CollectedDemo } from '@tickets/ui/gallery';
 import { ControlsPanel } from './controls-panel';
+import { loadLayout, saveLayout } from './persisted-layout';
 import { PlaygroundCard } from './playground-card';
 import { PropsTable } from './props-table';
 import { StateGrid } from './state-grid';
+
+// v4's replacement for v2's `autoSaveId`: the app owns storage. Panel ids
+// below ("stage" / "controls") must stay stable — they're the keys `Layout`
+// persists under.
+const WORKBENCH_LAYOUT_KEY = 'playground-workbench';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
@@ -37,6 +43,7 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
   const [values, setValues] = useState<Record<string, unknown>>(() =>
     playground ? initialValues(playground.controls) : {},
   );
+  const [defaultLayout] = useState<Layout | undefined>(() => loadLayout(WORKBENCH_LAYOUT_KEY));
 
   return (
     <div className="flex flex-col gap-5">
@@ -60,8 +67,15 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
 
       <div className={tab === 'preview' ? '' : 'hidden'}>
         {playground ? (
-          <PanelGroup direction="horizontal" autoSaveId="playground-workbench">
-            <Panel defaultSize={70}>
+          <Group
+            id="playground-workbench"
+            orientation="horizontal"
+            defaultLayout={defaultLayout}
+            onLayoutChanged={(layout, meta) => {
+              if (meta.isUserInteraction) saveLayout(WORKBENCH_LAYOUT_KEY, layout);
+            }}
+          >
+            <Panel id="stage" defaultSize="70">
               <div className="flex flex-col gap-6 pr-6">
                 <StateGrid demo={demo} />
                 <PlaygroundCard playground={playground} values={values} />
@@ -73,8 +87,8 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
                 </div>
               </div>
             </Panel>
-            <PanelResizeHandle className="workbench-resize-handle" />
-            <Panel defaultSize={30} minSize={20} maxSize={34}>
+            <Separator className="workbench-resize-handle" />
+            <Panel id="controls" defaultSize="30" minSize="20" maxSize="34">
               <div className="flex h-full flex-col pl-6">
                 <div className="flex items-center justify-between pb-2.5">
                   <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3">
@@ -98,7 +112,7 @@ export function ComponentPage({ demo, source }: { demo: LiveDemo; source?: strin
                 </p>
               </div>
             </Panel>
-          </PanelGroup>
+          </Group>
         ) : (
           <StateGrid demo={demo} />
         )}

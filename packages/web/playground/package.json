@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@tickets/ui": "workspace:*",
-    "react-resizable-panels": "^2.1.9"
+    "react-resizable-panels": "^4.12.2"
   },
   "devDependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",

@@ -6,39 +6,70 @@ import { ComponentPage } from './component-page';
 
 // react-resizable-panels needs real layout (ResizeObserver-driven sizing) to
 // do anything useful, which jsdom can't provide meaningfully. Mock it with a
-// pass-through so ComponentPage's own wiring (autoSaveId, defaultSize, which
-// children go in which Panel) is directly assertable, while still rendering
-// real children for the tab-switching / controls-flow assertions below.
+// pass-through so ComponentPage's own wiring (defaultLayout, defaultSize,
+// which children go in which Panel, the persistence callback) is directly
+// assertable, while still rendering real children for the tab-switching /
+// controls-flow assertions below.
+type Layout = Record<string, number>;
+type LayoutChangedMeta = { isUserInteraction: boolean };
+
 vi.mock('react-resizable-panels', () => ({
-  PanelGroup: ({
+  Group: ({
     children,
-    autoSaveId,
-    direction,
+    id,
+    orientation,
+    defaultLayout,
+    onLayoutChanged,
   }: {
     children: ReactNode;
-    autoSaveId?: string;
-    direction?: string;
+    id?: string;
+    orientation?: string;
+    defaultLayout?: Layout;
+    onLayoutChanged?: (layout: Layout, meta: LayoutChangedMeta) => void;
   }) => (
-    <div data-testid="panel-group" data-auto-save-id={autoSaveId} data-direction={direction}>
+    <div
+      data-testid="panel-group"
+      data-id={id}
+      data-orientation={orientation}
+      data-default-layout={defaultLayout ? JSON.stringify(defaultLayout) : undefined}
+    >
+      <button
+        type="button"
+        data-testid="simulate-user-resize"
+        onClick={() => onLayoutChanged?.({ stage: 65, controls: 35 }, { isUserInteraction: true })}
+      />
+      <button
+        type="button"
+        data-testid="simulate-programmatic-layout"
+        onClick={() => onLayoutChanged?.({ stage: 50, controls: 50 }, { isUserInteraction: false })}
+      />
       {children}
     </div>
   ),
   Panel: ({
     children,
+    id,
     defaultSize,
     minSize,
     maxSize,
   }: {
     children: ReactNode;
-    defaultSize?: number;
-    minSize?: number;
-    maxSize?: number;
+    id?: string;
+    defaultSize?: string | number;
+    minSize?: string | number;
+    maxSize?: string | number;
   }) => (
-    <div data-testid="panel" data-default-size={defaultSize} data-min-size={minSize} data-max-size={maxSize}>
+    <div
+      data-testid="panel"
+      data-id={id}
+      data-default-size={defaultSize}
+      data-min-size={minSize}
+      data-max-size={maxSize}
+    >
       {children}
     </div>
   ),
-  PanelResizeHandle: ({ className }: { className?: string }) => (
+  Separator: ({ className }: { className?: string }) => (
     <div data-testid="resize-handle" className={className} />
   ),
 }));
@@ -64,6 +95,10 @@ const demo = demos[0];
 if (!demo || isDemoError(demo)) throw new Error('fixture demo failed to collect');
 
 describe('ComponentPage', () => {
+  afterEach(() => {
+    localStorage.clear();
+  });
+
   it('renders the tab strip with Preview active', () => {
     render(<ComponentPage demo={demo} />);
     const preview = screen.getByRole('button', { name: 'Preview' });
@@ -115,17 +150,36 @@ describe('ComponentPage', () => {
     expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('primary');
   });
 
-  it('wires the Preview PanelGroup with autoSaveId="playground-workbench" and the documented split', () => {
+  it('wires the Preview Group with id="playground-workbench" and the documented split', () => {
     render(<ComponentPage demo={demo} />);
     const group = screen.getByTestId('panel-group');
-    expect(group.dataset.autoSaveId).toBe('playground-workbench');
-    expect(group.dataset.direction).toBe('horizontal');
+    expect(group.dataset.id).toBe('playground-workbench');
+    expect(group.dataset.orientation).toBe('horizontal');
 
     const panels = screen.getAllByTestId('panel');
     expect(panels).toHaveLength(2);
+    expect(panels[0]?.dataset.id).toBe('stage');
     expect(panels[0]?.dataset.defaultSize).toBe('70');
+    expect(panels[1]?.dataset.id).toBe('controls');
     expect(panels[1]?.dataset.defaultSize).toBe('30');
     expect(panels[1]?.dataset.minSize).toBe('20');
     expect(panels[1]?.dataset.maxSize).toBe('34');
+  });
+
+  it('feeds defaultLayout from localStorage("playground-workbench") into the Group', () => {
+    localStorage.setItem('playground-workbench', JSON.stringify({ stage: 60, controls: 40 }));
+    render(<ComponentPage demo={demo} />);
+    const group = screen.getByTestId('panel-group');
+    expect(group.dataset.defaultLayout).toBe(JSON.stringify({ stage: 60, controls: 40 }));
+  });
+
+  it('persists the layout on onLayoutChanged only when isUserInteraction is true', () => {
+    render(<ComponentPage demo={demo} />);
+
+    fireEvent.click(screen.getByTestId('simulate-programmatic-layout'));
+    expect(localStorage.getItem('playground-workbench')).toBeNull();
+
+    fireEvent.click(screen.getByTestId('simulate-user-resize'));
+    expect(localStorage.getItem('playground-workbench')).toBe(JSON.stringify({ stage: 65, controls: 35 }));
   });
 });
