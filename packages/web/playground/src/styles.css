@@ -1,0 +1,93 @@
+@import '@tickets/ui/tokens.css';
+/* Consumers' Tailwind must scan the playground's own class literals. */
+@source './';
+
+/* ComponentPage's Preview-tab drag handle (design: playground-workbench.dc.html
+   line 149) — a 9px hit area drawing a centered 1px hairline that turns
+   accent on hover. A plain CSS class because the gradient stops need two
+   token colors that Tailwind's arbitrary-value syntax can't reference
+   without hardcoding hex. */
+.workbench-resize-handle {
+  width: 9px;
+  margin: 0 8px;
+  cursor: col-resize;
+  background-image: linear-gradient(
+    to right,
+    transparent 4px,
+    var(--color-hairline) 4px,
+    var(--color-hairline) 5px,
+    transparent 5px
+  );
+}
+.workbench-resize-handle:hover,
+.workbench-resize-handle[data-separator='hover'],
+.workbench-resize-handle[data-separator='active'] {
+  background-image: linear-gradient(
+    to right,
+    transparent 4px,
+    var(--color-accent) 4px,
+    var(--color-accent) 5px,
+    transparent 5px
+  );
+}
+
+/* Code/Source tabs' highlighted block (design: playground-workbench.dc.html
+   1c "CODE TAB" / 1d "SOURCE TAB"). The design fixes this surface dark
+   (#25231D) in BOTH themes — it's shiki's instrument-dark.json theme, baked
+   to these exact hex values (highlight.ts / instrument-dark.json) — so no
+   theme-flipping token fits. This is the ONE permitted fixed-hex surface:
+   package CSS here isn't covered by the hardcoded-value scanner (roots are
+   apps/web/src and apps/eer/src only — see scripts/scan-hardcoded-values.mjs
+   in @tickets/ui). */
+.pg-code-block {
+  position: relative;
+  overflow-x: auto;
+  background: #25231d;
+  color: #edebe3;
+}
+/* Neutralize preflight-off UA defaults (margin, font) on both shiki's
+   rendered <pre><code> and the plain-text loading-state <pre>, so the block
+   is flush with the container's own p-5/font-mono. */
+.pg-code-block pre,
+.pg-code-block code {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  white-space: pre;
+}
+
+/* The ⧉ Copy ghost button sits on the fixed-dark surface above, so — like
+   the surface itself — its colors are fixed rather than theme tokens (an
+   ink-3/hover:bg-inset pairing would have the wrong contrast against this
+   surface in light mode). */
+.pg-code-copy {
+  appearance: none;
+  margin: 0;
+  background: transparent;
+  color: #a6a296;
+  cursor: pointer;
+}
+.pg-code-copy:hover {
+  background: #3a362d;
+  color: #edebe3;
+}
+
+/* Source tab's line-number gutter: shiki wraps each source line in a `.line`
+   span inside a single <code>; a CSS counter draws the gutter without shiki
+   needing to know about it. Code tab blocks (no --numbered modifier) don't
+   get a gutter. */
+.pg-code-block--numbered code {
+  counter-reset: line;
+}
+.pg-code-block--numbered .line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 2.25em;
+  margin-right: 14px;
+  text-align: right;
+  color: #5d5a50;
+  user-select: none;
+}
