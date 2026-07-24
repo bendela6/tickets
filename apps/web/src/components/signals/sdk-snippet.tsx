@@ -32,7 +32,7 @@ function snippetFor(platform: SdkPlatform, dsn: string): string {
     case 'browser':
       return (
         `<script src="${window.location.origin}/signals-api/sdk.js"></script>\n` +
-        `<script>Signals.init({ dsn: '${dsn}' })</script>`
+        `<script>Signals.initSignals({ dsn: '${dsn}' })</script>`
       );
   }
 }

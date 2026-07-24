@@ -141,8 +141,15 @@ export function useDeleteApp() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => deleteApp(id),
-    onSuccess: async () => {
+    // DELETE /apps/:id also hard-deletes the app's signals and issues, so —
+    // like useClearAppSignals/useDeleteRelease — invalidate the app detail,
+    // apps list, and the issues/activity lists (otherwise they'd keep
+    // showing phantom rows for the now-deleted app).
+    onSuccess: async (_data, id) => {
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'app', id] });
       await queryClient.invalidateQueries({ queryKey: ['signals', 'apps'] });
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'issues'] });
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'activity'] });
     },
   });
 }
