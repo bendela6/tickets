@@ -13,6 +13,7 @@ import { rootRoute } from './routes/root-route';
 import { schemaRoute } from './routes/schema-route';
 import { settingsRoute } from './routes/settings-route';
 import { signalsActivityRoute } from './routes/signals-activity-route';
+import { signalsAppDetailRoute } from './routes/signals-app-detail-route';
 import { signalsAppsRoute } from './routes/signals-apps-route';
 import { signalsIssueRoute } from './routes/signals-issue-route';
 import { signalsRoute } from './routes/signals-route';
@@ -37,6 +38,7 @@ const routeTree = rootRoute.addChildren([
   settingsRoute,
   signalsRoute,
   signalsAppsRoute,
+  signalsAppDetailRoute,
   signalsActivityRoute,
   signalsIssueRoute,
   signalsSessionRoute,
