@@ -222,11 +222,19 @@ export function StackTrace({
   const symFrames = payload?.stackSymbolicated ?? [];
   const rawFrames = payload?.stack ?? [];
   const hasSym = symFrames.length > 0;
-  // Source maps only exist for browser bundles, so the "no source maps" banner
-  // + upload hint are relevant ONLY for browser occurrences. A node stack is
-  // never symbolicated and never should be — showing "no source maps uploaded"
-  // there is misleading noise, so the banner is gated on this.
-  const expectedSourceMaps = payload?.platform?.runtime === 'browser' && !hasSym;
+  // The "no source maps" banner is only truthful when symbolication was
+  // actually expected and failed. Three conditions:
+  //   - browser: source maps only exist for browser bundles; a node stack is
+  //     never symbolicated and arrives with real paths already.
+  //   - !hasSym: it wasn't symbolicated.
+  //   - release present: the collector only symbolicates against maps uploaded
+  //     for a specific release, so a release is what it would have matched on.
+  //     Production bundles always stamp one (VITE_SIGNALS_RELEASE); dev browser
+  //     errors carry none AND serve real source, so they must not show a banner
+  //     complaining about maps they neither have nor need. A release also means
+  //     the banner can always name it, so the vaguer no-release wording is dead.
+  const expectedSourceMaps =
+    payload?.platform?.runtime === 'browser' && !hasSym && release != null && release !== '';
   // Frames feeding the grouped view — symbolicated when available, raw otherwise.
   const structuredFrames = hasSym ? symFrames : rawFrames;
   const hasFrames = structuredFrames.length > 0;
