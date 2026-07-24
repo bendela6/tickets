@@ -129,6 +129,10 @@ export function usePatchApp() {
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['signals', 'app', variables.id] });
       await queryClient.invalidateQueries({ queryKey: ['signals', 'apps'] });
+      // Issue and activity rows embed the app's slug, which a rename changes —
+      // refresh them so they don't display the old slug until the next poll.
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'issues'] });
+      await queryClient.invalidateQueries({ queryKey: ['signals', 'activity'] });
     },
   });
 }
