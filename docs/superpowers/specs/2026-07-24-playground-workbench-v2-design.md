@@ -39,6 +39,23 @@ Hosts: web's `gallery-route.tsx` imports `@tickets/playground` (still lazy-loada
 
 **Tailwind scanning seam (the P2 swatches lesson, generalized):** tokens.css's `@source './'` covers only `ui/src` — consumers would never generate the playground's own class literals. The playground therefore ships `src/styles.css` = `@import '@tickets/ui/tokens.css'; @source './';` (relative to itself → playground src), exported as `@tickets/playground/styles.css`. Web's `main.tsx` swaps its `@tickets/ui/tokens.css` import for `@tickets/playground/styles.css`; the dev app uses the same entry. Any future consumer that renders the workbench imports the playground's CSS entry, and one that only uses components keeps importing ui's tokens.css.
 
+## Design of record
+
+Pulled from the claude.ai/design project: `Playground Workbench.dc.html` (screens 1a–1i) — raw copy at `docs/design/pulls/playground-workbench.dc.html`, embedded in `docs/design/design-system.html`. Where this spec and the design diverge, **the design wins**. Design-driven refinements binding on implementation:
+
+- **States grid**: each state is its OWN raised card (`bg-raised`, hairline border, `rounded-card`, centered render, mono 11px caption below) in a responsive ~4-column grid, under an uppercase mono `STATES` section label — replaces the current single-card flex-wrap StateGrid.
+- **Controls rail**: header row `CONTROLS` label + accent **Reset** link (re-seeds `initialValues` — new small feature); each control row is a 2-col grid (~96px uppercase mono label | control), rows divided by hairlines; footer helper text: "Unset props fall back to the component default and are omitted from generated code." Rail width default 300px, drag range 240–380 (map to react-resizable-panels px constraints); drag handle = 9px hit area drawing a 1px hairline that turns accent on hover.
+- **Playground stage**: centered preview, min-height 130px, raised card, under uppercase `PLAYGROUND` label.
+- **Props table**: on the stage under the playground, uppercase `PROPS` label; columns `PROP · TYPE · OPTIONS / RANGE · DEFAULT · UNSET?` (grid ≈110/100/1fr/100/64), mono values, options joined with `·`.
+- **Code blocks (Code + Source tabs)**: dark ink surface (`#25231D`-family) in BOTH themes with a **custom Instrument syntax palette** — tags `#A9A2F2`, attrs `#A6A296`, strings `#7FCB97`, numbers/booleans `#EFA36C`, punctuation/comments `#79756A`, plain text `#EDEBE3`, line numbers `#5D5A50`. Implement as a custom shiki TextMate theme (`instrument-dark`) — NOT the github themes named earlier. Ghost `⧉ Copy` button top-right (hover: lifted dark bg).
+- **Code tab**: uppercase label `GENERATED FROM CURRENT CONTROLS`; beneath the block a mono footnote listing omitted props (e.g. `size unset → omitted · max unset → omitted`).
+- **Source tab**: header row = uppercase filename (e.g. `BUTTON.DEMO.TSX`) left, `N lines` right; line-number gutter (right-aligned, muted, non-selectable).
+- **A11y tab**: meta line `last audit · <relative time> · axe-core <version>` + `Run audit` secondary button; finding cards = impact chip (serious → danger-subtle, moderate → orange opt-subtle), rule id (13px medium), description (12px ink-2, wraps), mono target-selector chip on inset bg, `Learn more ↗` accent link; all-clear = kind-done-subtle banner with ✓ disc, "No violations found · N elements checked".
+- **Split themes**: header toggle switch; stage becomes a 2-col grid of theme panels, each self-bordered with its theme's surface and a mono `light`/`dark` caption; full states grid duplicated in each panel (design shows a representative subset).
+- **Matrix mode**: toolbar `rows: <control> ▾` and `columns: <control> ▾` selects + right-aligned mono caption `matrix: variant × size`; grid = ~104px row-label column + one column per X value; uppercase mono axis labels; each cell a raised card with the rendered component.
+- **Command palette**: 520px modal, top-aligned ~72px below viewport top over a 40% black scrim; search row `⌕` + input + right hint "Jump to component…"; grouped results with the matched substring bold + accent; selected row accent-subtle with `↵` glyph; footer hint bar `↑↓ navigate · ↵ open · esc close` on app bg.
+- **Tokens unchanged**: the design's dark-panel colors approximate the existing dark tokens; code remains canonical for token values — no token edits from this pull.
+
 ## Features
 
 **Component page (tabs + rail).** Selecting a component shows tabs — `Preview` (states grid + playground, as today), `Code`, `Source`, `A11y` — with the controls rail in a `react-resizable-panels` horizontal group (`autoSaveId="playground-workbench"`, rail 20–40%). All view unchanged (grids only).
