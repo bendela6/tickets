@@ -130,7 +130,7 @@ export function GalleryShell({
                   <section
                     key={d.slug}
                     id={d.slug}
-                    className="flex flex-col border-t-2 border-control pt-10 pb-16 first:border-t-0 first:pt-0"
+                    className="pg-docs-entry flex flex-col border-t-2 border-control pt-10 pb-16 first:border-t-0 first:pt-0"
                   >
                     <div className="flex items-start gap-8">
                       <div className={`flex flex-col gap-4 ${DOCS_COLUMN}`}>

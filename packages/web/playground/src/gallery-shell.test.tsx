@@ -84,6 +84,10 @@ describe('GalleryShell v2', () => {
     expect(heading.className).toContain('text-heading');
 
     const section = heading.closest('section')!;
+    // Half a viewport minimum, so scrolling lands about one component per
+    // screenful. jsdom applies no stylesheet, so the class is the assertion.
+    expect(section.className).toContain('pg-docs-entry');
+    expect(section.className).toContain('pb-16');
     // A 2px rule in the control tone, not a hairline — and the first entry
     // draws none above it.
     expect(section.className).toContain('border-t-2');
