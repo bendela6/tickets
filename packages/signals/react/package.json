@@ -3,9 +3,14 @@
   "version": "0.1.0",
   "type": "module",
   "description": "React error boundary + hook for the Signals local-first error collector",
-  "repository": { "type": "git", "url": "git+https://github.com/bendela6/tickets.git" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bendela6/tickets.git"
+  },
   "license": "MIT",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -17,7 +22,10 @@
     },
     "./package.json": "./package.json"
   },
-  "publishConfig": { "registry": "https://npm.pkg.github.com", "access": "restricted" },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc -p tsconfig.json",
