@@ -5,6 +5,7 @@ import { DemoPreview, fitsBesideDocs } from './demo-preview';
 import { DocsPanel, DOCS_COLUMN } from './docs-panel';
 import type { ImplSources } from './impl-tab';
 import { useHashAnchor, useHashNavigation, type GalleryNavigation } from './navigation';
+import { Sidebar } from './sidebar';
 import { DemoErrorCard } from './state-grid';
 import { CommandPalette } from './command-palette';
 
@@ -40,7 +41,6 @@ export function GalleryShell({
 }) {
   const live = demos.filter((d): d is LiveDemo => !isDemoError(d));
   const errors = demos.filter(isDemoError);
-  const [filterQuery, setFilterQuery] = useState('');
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   // Always called (hooks can't be conditional); ignored when the host supplies
@@ -78,59 +78,16 @@ export function GalleryShell({
     root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
   }
 
-  const groups = [...new Set(live.map((d) => d.meta.group))];
   const shown = selected ? live.filter((d) => d.slug === selected) : live;
-
-  // Filter logic
-  const filteredLive = live.filter((d) =>
-    d.meta.title.toLowerCase().includes(filterQuery.toLowerCase())
-  );
-  const filteredGroups = groups.filter((g) =>
-    filteredLive.some((d) => d.meta.group === g)
-  );
 
   return (
     <div className="flex min-h-screen bg-app font-sans text-ink">
-      <aside className="sticky top-0 flex h-screen w-56 shrink-0 flex-col gap-4 overflow-y-auto border-r border-hairline bg-raised px-4 py-6">
-        <div className="flex items-center gap-1.5 h-7.5 px-1.5 pl-2.5 rounded-card border border-hairline bg-inset">
-          <input
-            type="text"
-            placeholder="Filter components…"
-            value={filterQuery}
-            onChange={(e) => setFilterQuery(e.target.value)}
-            className="flex-1 bg-transparent text-ui text-ink-2 placeholder:text-ink-3 outline-none"
-          />
-          <button
-            type="button"
-            onClick={() => setPaletteOpen(true)}
-            className="h-4.5 px-1.25 border border-control bg-raised text-label text-ink-3 rounded-xs hover:text-ink-2"
-          >
-            ⌘K
-          </button>
-        </div>
-        <a
-          {...nav.linkProps({ slug: null })}
-          className={`rounded-ctrl px-2 py-1 text-ui ${selected === null ? 'bg-accent-subtle text-accent' : 'text-ink-2 hover:text-ink'}`}
-        >
-          All
-        </a>
-        {filteredGroups.map((g) => (
-          <div key={g} className="flex flex-col gap-0.5">
-            <span className="px-2 font-mono text-label uppercase tracking-(--tracking-label) text-ink-3">{g}</span>
-            {filteredLive
-              .filter((d) => d.meta.group === g)
-              .map((d) => (
-                <a
-                  key={d.slug}
-                  {...nav.linkProps({ slug: d.slug })}
-                  className={`rounded-ctrl px-2 py-1 text-ui ${selected === d.slug ? 'bg-accent-subtle text-accent' : 'text-ink-2 hover:text-ink'}`}
-                >
-                  {d.meta.title}
-                </a>
-              ))}
-          </div>
-        ))}
-      </aside>
+      <Sidebar
+        demos={live}
+        selected={selected}
+        linkProps={nav.linkProps}
+        onOpenPalette={() => setPaletteOpen(true)}
+      />
       {/* min-w-0 lets the workbench's overflowing children (code blocks, wide
           state grids) scroll inside the main column instead of stretching the
           flex row and pushing the sidebar off-screen. */}
@@ -173,7 +130,7 @@ export function GalleryShell({
                   <section
                     key={d.slug}
                     id={d.slug}
-                    className="flex flex-col border-t-2 border-control pt-10 first:border-t-0 first:pt-0"
+                    className="flex flex-col border-t-2 border-control pt-10 pb-16 first:border-t-0 first:pt-0"
                   >
                     <div className="flex items-start gap-8">
                       <div className={`flex flex-col gap-4 ${DOCS_COLUMN}`}>
