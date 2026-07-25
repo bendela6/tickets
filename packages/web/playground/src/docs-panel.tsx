@@ -14,8 +14,14 @@ const CHIP_CAP = 12;
 // the round scale step next to that, giving rows of 200 + 28 gap + 572. The
 // shell is full-bleed, so the measure has to be stated or documentation prose
 // runs the width of the monitor — unreadable, and not what §1j draws.
-// Exported so the All view aligns its heading and jump links to the same column.
+//
+// Two forms of the same 800px because the context differs: a cap where the
+// panel is a block (the Docs tab), and a fixed basis in the All view's flex
+// row — there a `flex-1` preview sibling would otherwise squeeze a merely
+// capped column down to its content width. Keep the two in step; the
+// docs-panel test pins them together.
 export const DOCS_MEASURE = 'max-w-200';
+export const DOCS_COLUMN = 'w-200 shrink-0';
 
 const CHIP =
   'inline-flex h-5.5 items-center rounded-ctrl border border-hairline bg-raised px-2 font-mono text-label tracking-normal text-ink-2';
