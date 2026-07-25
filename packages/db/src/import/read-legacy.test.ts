@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createLegacyClient } from './legacy-client';
 import { readLegacy, type Legacy } from './read-legacy';
 
-describe('readLegacy (requires tickets_legacy restored — see Task 8 Step 1)', () => {
+describe('readLegacy (requires tickets_legacy — see legacy-client.ts to restore it)', () => {
   let close: () => Promise<void>;
   let legacy: Legacy;
 

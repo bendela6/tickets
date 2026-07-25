@@ -10,7 +10,7 @@ import { createLegacyClient } from './legacy-client';
 import { importLegacy, type ImportResult } from './import-legacy';
 import { readLegacy, type Legacy } from './read-legacy';
 
-describe('importLegacy (requires a freshly migrated tickets_dev)', () => {
+describe('importLegacy (requires a freshly migrated tickets_test)', () => {
   let db: Db;
   let close: () => Promise<void>;
   let legacy: Legacy;
@@ -28,7 +28,7 @@ describe('importLegacy (requires a freshly migrated tickets_dev)', () => {
   afterAll(async () => {
     // Delete exactly what importLegacy created, children before parents, so
     // the whole-suite run stays idempotent: a second `pnpm test` with no
-    // database reset must find the same clean, freshly-migrated tickets_dev
+    // database reset must find the same clean, freshly-migrated tickets_test
     // this test started with (and so must every other file that inserts a
     // fixed 'software'/scheme-scoped key, e.g. seed-scheme.test.ts).
     //
