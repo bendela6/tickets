@@ -84,16 +84,28 @@ function Toggle({
 // and a collapsible controls rail. Non-active tabs stay mounted (`hidden`,
 // not unmounted) so playground values survive switching away and back —
 // verified by component-page.test.tsx.
+function isTabKey(value: string | null | undefined): value is TabKey {
+  return TABS.some((t) => t.key === value);
+}
+
 export function ComponentPage({
   demo,
   source,
   implSources,
+  initialTab,
 }: {
   demo: LiveDemo;
   source?: string;
   implSources?: ImplSources;
+  /** Tab named by the hash (`#pill::impl`); ignored when it isn't a real tab. */
+  initialTab?: string | null;
 }) {
-  const [tab, setTab] = useState<TabKey>('preview');
+  const [tab, setTab] = useState<TabKey>(() => (isTabKey(initialTab) ? initialTab : 'preview'));
+  // A later hash change targeting the same component can't remount this (it's
+  // keyed by slug), so follow the prop rather than only seeding from it.
+  useEffect(() => {
+    if (isTabKey(initialTab)) setTab(initialTab);
+  }, [initialTab]);
   const { playground } = demo;
   const [values, setValues] = useState<Record<string, unknown>>(() =>
     playground ? initialValues(playground.controls) : {},

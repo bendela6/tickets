@@ -10,6 +10,13 @@ type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 // declaration order, which is how the option list is authored anyway.)
 const CHIP_CAP = 12;
 
+// The design frames this panel at 860px with 28px side padding, so its rows
+// measure 200px + 28px gap + 576px. The shell is full-bleed, so the measure
+// has to be stated or documentation prose runs the width of the monitor —
+// unreadable, and not what §1j draws. Exported so the All view can align its
+// per-component heading and jump links to the same column.
+export const DOCS_MEASURE = 'max-w-201';
+
 const CHIP =
   'inline-flex h-5.5 items-center rounded-ctrl border border-hairline bg-raised px-2 font-mono text-label tracking-normal text-ink-2';
 const META_LINE = 'flex flex-wrap gap-6 font-mono text-label tracking-normal text-ink-3';
@@ -152,7 +159,7 @@ export function DocsPanel({ demo, railNote = true }: { demo: LiveDemo; railNote?
   const docs = playground.docs;
 
   return (
-    <div className="flex flex-col">
+    <div className={cn('flex flex-col', DOCS_MEASURE)}>
       <div className="mt-5.5 mb-1.5 flex items-start justify-between gap-8">
         <div className="flex max-w-130 flex-col gap-2">
           <span className="font-mono text-micro font-medium tracking-(--tracking-mono-label) text-ink-3">
