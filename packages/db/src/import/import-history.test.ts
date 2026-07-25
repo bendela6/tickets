@@ -10,7 +10,7 @@ import { createLegacyClient } from './legacy-client';
 import { importLegacy, type ImportResult } from './import-legacy';
 import { readLegacy, type Legacy } from './read-legacy';
 
-describe('imported history (requires a freshly migrated tickets_dev)', () => {
+describe('imported history (requires a freshly migrated tickets_test)', () => {
   let db: Db;
   let close: () => Promise<void>;
   let legacy: Legacy;

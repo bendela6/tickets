@@ -19,7 +19,7 @@ import { users } from './users';
 // users_name_unique, even without the afterAll cleanup below.
 const RUN_ID = Date.now();
 
-describe('item_values integrity (requires POSTGRES_DATABASE=tickets_dev)', () => {
+describe('item_values integrity (runs against tickets_test — see test/setup-env.ts)', () => {
   let db: Db;
   let sql: ReturnType<typeof createDbClient>['sql'];
   let itemId = 0;

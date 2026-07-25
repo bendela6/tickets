@@ -22,7 +22,7 @@ const EXPECTED_STATUS_KINDS: Record<string, string> = {
   'wont-fix': 'dropped',
 };
 
-describe('seedScheme (requires POSTGRES_DATABASE=tickets_dev)', () => {
+describe('seedScheme (runs against tickets_test — see test/setup-env.ts)', () => {
   let db: Db;
   let sql: ReturnType<typeof createDbClient>['sql'];
   let seeded: Awaited<ReturnType<typeof seedScheme>>;

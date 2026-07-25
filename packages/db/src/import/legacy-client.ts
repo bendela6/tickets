@@ -1,6 +1,18 @@
 // packages/db/src/import/legacy-client.ts
 // Raw postgres client for the pre-rebuild schema. No drizzle — those tables no
-// longer exist in code. Restore the backup into tickets_legacy first.
+// longer exist in code.
+//
+// Restoring tickets_legacy needs no dump: the pre-rebuild data still lives in
+// the `tickets_old` database on the same server (the repo-root
+// backup-docker-*.dump files are `tickets` backups, NOT this).
+//
+//   docker exec tickets-postgres-1 psql -U postgres \
+//     -c 'CREATE DATABASE tickets_legacy TEMPLATE tickets_old;'
+//
+// Verified against read-legacy.test.ts's pinned counts — projects 5, tickets
+// 635, ticket_values 2948, comments 139, ticket_links 191, ticket_events 1523,
+// fields 46, statuses 34, ticket_types 5 — all exact. Set LEGACY_DATABASE to
+// read straight from tickets_old (or a fresh cutover dump) instead.
 import postgres, { type Sql } from 'postgres';
 import { environment } from '../environment';
 
