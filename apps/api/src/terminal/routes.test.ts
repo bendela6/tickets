@@ -71,13 +71,17 @@ beforeAll(async () => {
   await app.ready();
 }, 30_000);
 
+// 30_000 to match beforeAll: teardown closes the app (which tears down live
+// terminal sessions), then drops the scratch database. Under load — `turbo test`
+// runs 20 tasks at once — that exceeds vitest's 10s default hookTimeout and
+// fails the file with "Hook timed out" while every test in it passed.
 afterAll(async () => {
   await app?.close();
   await scratchSql?.end();
   const admin = postgres(adminUrl, { max: 1 });
   await admin.unsafe(`DROP DATABASE IF EXISTS "${dbName}"`);
   await admin.end();
-});
+}, 30_000);
 
 // Creates a workdir + terminal session via the real routes (own workdir per
 // call so tests don't collide). The fake driver marks it "live" (has(id) ===
