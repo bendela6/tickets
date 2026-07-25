@@ -1,17 +1,32 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { isDemoError, type CollectedDemo } from '@tickets/ui/gallery';
 import { ComponentPage } from './component-page';
-import { DocsPanel } from './docs-panel';
+import { DocsPanel, DOCS_MEASURE } from './docs-panel';
 import type { ImplSources } from './impl-tab';
-import { DemoErrorCard, StateGrid } from './state-grid';
+import { DemoErrorCard } from './state-grid';
 import { CommandPalette } from './command-palette';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
-function slugFromHash(rawHash: string, live: LiveDemo[]): string | null {
-  if (!rawHash) return null;
-  const slug = rawHash.includes('--') ? rawHash.split('--')[0]! : rawHash;
-  return live.some((d) => d.slug === slug) ? slug : null;
+// Tabs a docs entry can deep-link into. `::` can't occur in a kebab slug or a
+// state anchor, so it never collides with the `#slug--state` form.
+const TAB_SEPARATOR = '::';
+const JUMP_TABS = [
+  { tab: 'preview', label: 'Preview' },
+  { tab: 'impl', label: 'Implementation' },
+  { tab: 'demo', label: 'Demo' },
+] as const;
+
+// `#pill` · `#pill--solid` (state anchor) · `#pill::impl` (tab)
+export function parseHash(
+  rawHash: string,
+  live: LiveDemo[],
+): { slug: string | null; tab: string | null } {
+  if (!rawHash) return { slug: null, tab: null };
+  const [anchor = '', tab] = rawHash.split(TAB_SEPARATOR);
+  const slug = anchor.includes('--') ? anchor.split('--')[0]! : anchor;
+  if (!live.some((d) => d.slug === slug)) return { slug: null, tab: null };
+  return { slug, tab: tab ?? null };
 }
 
 export function GalleryShell({
@@ -53,7 +68,7 @@ export function GalleryShell({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const selected = slugFromHash(rawHash, live);
+  const { slug: selected, tab: selectedTab } = parseHash(rawHash, live);
 
   // Spec: "#slug--state selects the component AND scrolls to the state". The
   // state cell only exists after the selection render, so scroll post-render.
@@ -149,15 +164,36 @@ export function GalleryShell({
                     demo={d}
                     source={sources?.[d.path]}
                     implSources={implSources}
+                    initialTab={selectedTab}
                   />
                 ) : (
-                  // The All view is the whole library read end to end: states
-                  // first, then the same docs the component's own Docs tab
-                  // shows. The rail note is dropped — there's no rail here.
-                  <div key={d.slug} className="flex flex-col">
-                    <StateGrid demo={d} />
-                    {d.playground && <DocsPanel demo={d} railNote={false} />}
-                  </div>
+                  // The All view is the library's documentation, read end to
+                  // end — docs only, no state grids; the states live on each
+                  // component's own Preview tab. The rail note is dropped
+                  // because there is no controls rail on this screen.
+                  <section
+                    key={d.slug}
+                    id={d.slug}
+                    className={`flex flex-col gap-4 border-t border-hairline pt-10 first:border-t-0 first:pt-0 ${DOCS_MEASURE}`}
+                  >
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+                      <h2 className="font-sans text-heading font-semibold text-ink">
+                        {d.meta.title}
+                      </h2>
+                      <div className="flex items-center gap-4">
+                        {JUMP_TABS.map(({ tab, label }) => (
+                          <a
+                            key={tab}
+                            href={`#${d.slug}${TAB_SEPARATOR}${tab}`}
+                            className="font-sans text-meta font-medium text-accent hover:underline"
+                          >
+                            {label}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                    <DocsPanel demo={d} railNote={false} />
+                  </section>
                 ),
               )}
               {selected === null && errors.map((e) => <DemoErrorCard key={e.path} path={e.path} error={e.error} />)}

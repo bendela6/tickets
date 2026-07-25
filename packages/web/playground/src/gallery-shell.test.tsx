@@ -17,26 +17,76 @@ function setHash(h: string) {
 describe('GalleryShell v2', () => {
   afterEach(() => { window.location.hash = ''; });
 
-  it('renders all demos and a sidebar link per demo plus All (states + docs, no tabs)', () => {
+  it('renders a sidebar link per demo plus All, and no tab strip in the All view', () => {
     render(<GalleryShell demos={demos} title="t" />);
     expect(screen.getByRole('link', { name: 'All' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Button' })).toBeTruthy();
-    expect(screen.getByText('btn')).toBeTruthy();
-    expect(screen.getByText('inp')).toBeTruthy();
-    expect(screen.queryByText('play')).toBeNull(); // playground hidden in All view
-    expect(screen.queryByRole('tab', { name: 'Preview' })).toBeNull(); // no tab strip in All view
+    expect(screen.queryByRole('tab', { name: 'Preview' })).toBeNull();
   });
 
-  it('documents each component under its states in the All view', () => {
+  it('the All view is documentation only — every component headed, no states or playgrounds', () => {
     render(<GalleryShell demos={demos} title="t" />);
-    // Button has a playground, so its API docs render beneath the state grid.
+    // Both components are present, by heading...
+    expect(screen.getByRole('heading', { name: 'Button' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Input' })).toBeTruthy();
+    // ...with docs under them: Button's `on` control renders as a prop row.
     expect(screen.getByText('API')).toBeTruthy();
-    expect(screen.getByText('on')).toBeTruthy(); // the `on` control, as a prop row
+    expect(screen.getByText('on')).toBeTruthy();
+    // Input has no playground, so it says so rather than vanishing from the index.
+    expect(screen.getByText('This component has no playground controls.')).toBeTruthy();
 
-    // Input has no playground: it gets states only, and no "no controls" note
-    // is emitted for it — that message belongs to the Docs tab a user opened
-    // deliberately.
-    expect(screen.queryByText('This component has no playground controls.')).toBeNull();
+    // Neither the state cards nor the live playground belong on this screen —
+    // they live on each component's Preview tab.
+    expect(screen.queryByText('btn')).toBeNull();
+    expect(screen.queryByText('btn2')).toBeNull();
+    expect(screen.queryByText('inp')).toBeNull();
+    expect(screen.queryByText('play')).toBeNull();
+    expect(screen.queryByText('STATES')).toBeNull();
+  });
+
+  it('keeps the per-component anchor in the All view', () => {
+    render(<GalleryShell demos={demos} title="t" />);
+    expect(document.getElementById('button')).toBeTruthy();
+    expect(document.getElementById('input')).toBeTruthy();
+  });
+
+  it('separates and heads each docs entry, with jump links into the component', () => {
+    render(<GalleryShell demos={demos} title="t" />);
+    const heading = screen.getByRole('heading', { name: 'Button' });
+    // A real heading at heading size, not the small uppercase state-grid label.
+    expect(heading.className).toContain('text-heading');
+
+    const section = heading.closest('section')!;
+    // The first entry draws no rule above it; later ones do.
+    expect(section.className).toContain('border-t');
+    expect(section.className).toContain('first:border-t-0');
+
+    const links = [...section.querySelectorAll('a')].map((a) => [a.textContent, a.getAttribute('href')]);
+    expect(links).toEqual([
+      ['Preview', '#button::preview'],
+      ['Implementation', '#button::impl'],
+      ['Demo', '#button::demo'],
+    ]);
+  });
+
+  it('a tab-targeting hash opens the component on that tab', () => {
+    render(<GalleryShell demos={demos} title="t" />);
+    setHash('#button::impl');
+    expect(screen.getByRole('tab', { name: 'Implementation' }).getAttribute('aria-selected')).toBe(
+      'true',
+    );
+    expect(screen.getByRole('tab', { name: 'Preview' }).getAttribute('aria-selected')).toBe('false');
+
+    // Switching target on an already-selected component still moves the tab —
+    // ComponentPage is keyed by slug, so this can't rely on a remount.
+    setHash('#button::demo');
+    expect(screen.getByRole('tab', { name: 'Demo' }).getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('ignores an unknown tab name rather than blanking the page', () => {
+    render(<GalleryShell demos={demos} title="t" />);
+    setHash('#button::nope');
+    expect(screen.getByRole('tab', { name: 'Preview' }).getAttribute('aria-selected')).toBe('true');
   });
 
   it('drops the controls-rail note in the All view, where there is no rail', () => {
@@ -79,7 +129,8 @@ describe('GalleryShell v2', () => {
   it('unknown hash falls back to All', () => {
     render(<GalleryShell demos={demos} title="t" />);
     setHash('#nope');
-    expect(screen.getByText('inp')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Input' })).toBeTruthy();
+    expect(screen.queryByRole('tab', { name: 'Preview' })).toBeNull();
   });
 
   it('re-scrolls when moving between state anchors of the same component', () => {
