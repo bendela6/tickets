@@ -133,6 +133,19 @@ describe('Sidebar', () => {
     expect(aside()).toBeTruthy();
   });
 
+  it('keeps every truncating item unshrinkable in the scrolling column', () => {
+    mockViewport(false);
+    renderSidebar();
+    // `truncate` sets overflow:hidden, which drops a flex item's automatic
+    // minimum size to zero — so in an overflowing column the browser crushes
+    // it (measured: the All link rendered 8px tall instead of 28). Every
+    // truncating item has to opt out of shrinking.
+    for (const el of aside()!.querySelectorAll('.truncate')) {
+      const row = el.className.includes('rounded-ctrl') ? el : el.parentElement!;
+      expect(row.className).toContain('shrink-0');
+    }
+  });
+
   it('scrolls vertically only, with themed scrollbars and truncated names', () => {
     mockViewport(false);
     renderSidebar();
