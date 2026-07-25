@@ -25,12 +25,37 @@
     "db:generate": {
       "cache": false
     },
+    // `build`, not just `^build`: the signals packages' build scripts delete
+    // dist/ before regenerating it, and a package typechecks its OWN
+    // dist/index.d.ts whenever one of its test files imports a sibling
+    // workspace package by name. Without the self-dependency, `turbo typecheck
+    // --force` can run a package's typecheck while its own build is mid-delete,
+    // reported as a bogus TS2307/TS7016 on a file that does exist.
     "typecheck": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "build"],
       "outputs": []
     },
+    // `build` for the same reason as typecheck above.
     "test": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "build"],
+      "outputs": []
+    },
+    // Two pairs of suites share one live database, and each sets
+    // `fileParallelism: false` only WITHIN its own package — turbo would still
+    // run the two packages concurrently and let them truncate each other's rows
+    // mid-test. Serialize each pair, downstream package waiting on upstream.
+    // Whoever adds a third suite on either database must chain it here too.
+    //
+    //   tickets_test  <- @tickets/db (src/test/setup-env.ts)
+    //                    @tickets/api (src/test/setup-env.ts)
+    //   signals_test  <- @tickets/signals (src/test/setup-env.ts)
+    //                    @bendela6/signals-node (e2e.test.ts TRUNCATEs it)
+    "@tickets/api#test": {
+      "dependsOn": ["^build", "build", "@tickets/db#test"],
+      "outputs": []
+    },
+    "@bendela6/signals-node#test": {
+      "dependsOn": ["^build", "build", "@tickets/signals#test"],
       "outputs": []
     }
   }
