@@ -116,6 +116,45 @@ describe('GalleryShell v2', () => {
     expect(screen.getByRole('tab', { name: 'Demo' }).getAttribute('aria-selected')).toBe('true');
   });
 
+  it('takes its URLs from the host navigation when one is supplied', () => {
+    // What apps/web passes: real paths, no hash anywhere.
+    const navigate = vi.fn();
+    const navigation = {
+      slug: 'button',
+      tab: 'demo',
+      navigate,
+      linkProps: (target: { slug?: string | null; tab?: string | null }) => ({
+        href: !target.slug
+          ? '/gallery'
+          : target.tab
+            ? `/gallery/${target.slug}/${target.tab}`
+            : `/gallery/${target.slug}`,
+        onClick: () => {},
+      }),
+    };
+    render(<GalleryShell demos={demos} title="t" navigation={navigation} />);
+
+    // Selection and tab come from the host, with no hash involved.
+    expect(window.location.hash).toBe('');
+    expect(screen.getByRole('tab', { name: 'Demo' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('link', { name: 'All' }).getAttribute('href')).toBe('/gallery');
+    expect(screen.getByRole('link', { name: 'Button' }).getAttribute('href')).toBe(
+      '/gallery/button',
+    );
+  });
+
+  it('falls back to All when the host names a component that does not exist', () => {
+    const navigation = {
+      slug: 'ghost',
+      tab: null,
+      navigate: vi.fn(),
+      linkProps: () => ({ href: '/gallery', onClick: () => {} }),
+    };
+    render(<GalleryShell demos={demos} title="t" navigation={navigation} />);
+    expect(screen.queryByRole('tab', { name: 'Preview' })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Button' })).toBeTruthy();
+  });
+
   it('ignores an unknown tab name rather than blanking the page', () => {
     render(<GalleryShell demos={demos} title="t" />);
     setHash('#button::nope');

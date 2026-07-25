@@ -29,7 +29,7 @@ const demos: Extract<CollectedDemo, { slug: string }>[] = [
 
 describe('CommandPalette', () => {
   it('renders grouped items from demos', () => {
-    render(<CommandPalette demos={demos} open={true} onOpenChange={() => {}} />);
+    render(<CommandPalette demos={demos} open={true} onOpenChange={() => {}} onSelect={() => {}} />);
 
     expect(screen.getByText('Button')).toBeTruthy();
     expect(screen.getByText('Input')).toBeTruthy();
@@ -38,30 +38,37 @@ describe('CommandPalette', () => {
     expect(screen.getAllByText('Display')).toHaveLength(1);
   });
 
-  it('selecting an item sets location.hash and calls onOpenChange(false)', () => {
+  // The palette reports the slug and closes; how that reaches the URL is the
+  // shell's business (hash in the standalone app, a route in apps/web), so
+  // this no longer reaches for window.location.
+  it('selecting an item reports the slug and calls onOpenChange(false)', () => {
     const onOpenChange = vi.fn();
-    render(<CommandPalette demos={demos} open={true} onOpenChange={onOpenChange} />);
+    const onSelect = vi.fn();
+    render(
+      <CommandPalette demos={demos} open={true} onOpenChange={onOpenChange} onSelect={onSelect} />,
+    );
 
-    const buttonItem = screen.getByText('Button').closest('[cmdk-item]');
-    fireEvent.click(buttonItem!);
+    fireEvent.click(screen.getByText('Button').closest('[cmdk-item]')!);
 
-    expect(window.location.hash).toBe('#button');
+    expect(onSelect).toHaveBeenCalledWith('button');
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it('closing when open=false does not render', () => {
-    const { rerender } = render(<CommandPalette demos={demos} open={true} onOpenChange={() => {}} />);
+    const { rerender } = render(<CommandPalette demos={demos} open={true} onOpenChange={() => {}} onSelect={() => {}} />);
 
     expect(screen.getByText('Button')).toBeTruthy();
 
-    rerender(<CommandPalette demos={demos} open={false} onOpenChange={() => {}} />);
+    rerender(<CommandPalette demos={demos} open={false} onOpenChange={() => {}} onSelect={() => {}} />);
 
     expect(screen.queryByText('Button')).toBeNull();
   });
 
   it('escape key closes the palette', () => {
     const onOpenChange = vi.fn();
-    render(<CommandPalette demos={demos} open={true} onOpenChange={onOpenChange} />);
+    render(
+      <CommandPalette demos={demos} open={true} onOpenChange={onOpenChange} onSelect={() => {}} />,
+    );
 
     fireEvent.keyDown(window, { key: 'Escape' });
 
@@ -69,7 +76,7 @@ describe('CommandPalette', () => {
   });
 
   it('filters items as the user types', () => {
-    render(<CommandPalette demos={demos} open={true} onOpenChange={() => {}} />);
+    render(<CommandPalette demos={demos} open={true} onOpenChange={() => {}} onSelect={() => {}} />);
 
     const input = screen.getByRole('combobox');
     fireEvent.change(input, { target: { value: 'butt' } });
@@ -82,14 +89,14 @@ describe('CommandPalette', () => {
   });
 
   it('resets query when dialog closes', () => {
-    const { rerender } = render(<CommandPalette demos={demos} open={true} onOpenChange={() => {}} />);
+    const { rerender } = render(<CommandPalette demos={demos} open={true} onOpenChange={() => {}} onSelect={() => {}} />);
 
     const input = screen.getByRole('combobox') as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'button' } });
     expect(input.value).toBe('button');
 
-    rerender(<CommandPalette demos={demos} open={false} onOpenChange={() => {}} />);
-    rerender(<CommandPalette demos={demos} open={true} onOpenChange={() => {}} />);
+    rerender(<CommandPalette demos={demos} open={false} onOpenChange={() => {}} onSelect={() => {}} />);
+    rerender(<CommandPalette demos={demos} open={true} onOpenChange={() => {}} onSelect={() => {}} />);
 
     const newInput = screen.getByRole('combobox') as HTMLInputElement;
     expect(newInput.value).toBe('');

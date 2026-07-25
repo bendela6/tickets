@@ -23,10 +23,13 @@ export function CommandPalette({
   demos,
   open,
   onOpenChange,
+  onSelect,
 }: {
   demos: LiveDemo[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Jump to a component. The shell owns how that reaches the URL. */
+  onSelect: (slug: string) => void;
 }) {
   const [query, setQuery] = useState('');
 
@@ -83,7 +86,7 @@ export function CommandPalette({
                       key={demo.slug}
                       value={demo.slug}
                       onSelect={() => {
-                        window.location.hash = `#${demo.slug}`;
+                        onSelect(demo.slug);
                         onOpenChange(false);
                       }}
                       className="h-8.5 px-3 py-0 flex items-center rounded-lg text-ui cursor-pointer data-[selected=true]:bg-accent-subtle"

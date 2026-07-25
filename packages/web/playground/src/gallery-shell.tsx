@@ -4,31 +4,17 @@ import { ComponentPage } from './component-page';
 import { DemoPreview, fitsBesideDocs } from './demo-preview';
 import { DocsPanel, DOCS_COLUMN } from './docs-panel';
 import type { ImplSources } from './impl-tab';
+import { useHashAnchor, useHashNavigation, type GalleryNavigation } from './navigation';
 import { DemoErrorCard } from './state-grid';
 import { CommandPalette } from './command-palette';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
-// Tabs a docs entry can deep-link into. `::` can't occur in a kebab slug or a
-// state anchor, so it never collides with the `#slug--state` form.
-const TAB_SEPARATOR = '::';
 const JUMP_TABS = [
   { tab: 'preview', label: 'Preview' },
   { tab: 'impl', label: 'Implementation' },
   { tab: 'demo', label: 'Demo' },
 ] as const;
-
-// `#pill` · `#pill--solid` (state anchor) · `#pill::impl` (tab)
-export function parseHash(
-  rawHash: string,
-  live: LiveDemo[],
-): { slug: string | null; tab: string | null } {
-  if (!rawHash) return { slug: null, tab: null };
-  const [anchor = '', tab] = rawHash.split(TAB_SEPARATOR);
-  const slug = anchor.includes('--') ? anchor.split('--')[0]! : anchor;
-  if (!live.some((d) => d.slug === slug)) return { slug: null, tab: null };
-  return { slug, tab: tab ?? null };
-}
 
 export function GalleryShell({
   demos,
@@ -36,6 +22,7 @@ export function GalleryShell({
   providers = (children) => children,
   sources,
   implSources,
+  navigation,
 }: {
   demos: CollectedDemo[];
   title: string;
@@ -44,18 +31,23 @@ export function GalleryShell({
   sources?: Record<string, string>;
   /** Lazy `?raw` component-file loaders, keyed by path — the Implementation tab. */
   implSources?: ImplSources;
+  /**
+   * How this host moves between components and tabs. Defaults to the hash
+   * scheme, which needs no router — apps/web passes a router-backed one so
+   * the gallery gets real `/gallery/:slug/:tab` URLs.
+   */
+  navigation?: GalleryNavigation;
 }) {
   const live = demos.filter((d): d is LiveDemo => !isDemoError(d));
   const errors = demos.filter(isDemoError);
-  const [rawHash, setRawHash] = useState(() => window.location.hash.replace(/^#/, ''));
   const [filterQuery, setFilterQuery] = useState('');
   const [paletteOpen, setPaletteOpen] = useState(false);
 
-  useEffect(() => {
-    const onHash = () => setRawHash(window.location.hash.replace(/^#/, ''));
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
-  }, []);
+  // Always called (hooks can't be conditional); ignored when the host supplies
+  // its own navigation.
+  const hashNavigation = useHashNavigation();
+  const nav = navigation ?? hashNavigation;
+  const anchor = useHashAnchor();
 
   // Global keydown listener for ⌘K / Ctrl+K
   useEffect(() => {
@@ -69,13 +61,17 @@ export function GalleryShell({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const { slug: selected, tab: selectedTab } = parseHash(rawHash, live);
+  // The location names a slug; whether it's a real one is ours to say, so an
+  // unknown component falls back to All rather than rendering nothing.
+  const selected = live.some((d) => d.slug === nav.slug) ? nav.slug : null;
+  const selectedTab = selected ? nav.tab : null;
 
-  // Spec: "#slug--state selects the component AND scrolls to the state". The
-  // state cell only exists after the selection render, so scroll post-render.
+  // "#slug--state selects the component AND scrolls to the state" — the
+  // fragment keeps doing that under either navigation scheme. The state cell
+  // only exists after the selection render, so scroll post-render.
   useEffect(() => {
-    if (rawHash.includes('--')) document.getElementById(rawHash)?.scrollIntoView();
-  }, [rawHash]);
+    if (anchor?.includes('--')) document.getElementById(anchor)?.scrollIntoView();
+  }, [anchor]);
 
   function toggleTheme() {
     const root = document.documentElement;
@@ -113,8 +109,7 @@ export function GalleryShell({
           </button>
         </div>
         <a
-          href="#"
-          onClick={() => setRawHash('')}
+          {...nav.linkProps({ slug: null })}
           className={`rounded-ctrl px-2 py-1 text-ui ${selected === null ? 'bg-accent-subtle text-accent' : 'text-ink-2 hover:text-ink'}`}
         >
           All
@@ -127,7 +122,7 @@ export function GalleryShell({
               .map((d) => (
                 <a
                   key={d.slug}
-                  href={`#${d.slug}`}
+                  {...nav.linkProps({ slug: d.slug })}
                   className={`rounded-ctrl px-2 py-1 text-ui ${selected === d.slug ? 'bg-accent-subtle text-accent' : 'text-ink-2 hover:text-ink'}`}
                 >
                   {d.meta.title}
@@ -190,7 +185,7 @@ export function GalleryShell({
                             {JUMP_TABS.map(({ tab, label }) => (
                               <a
                                 key={tab}
-                                href={`#${d.slug}${TAB_SEPARATOR}${tab}`}
+                                {...nav.linkProps({ slug: d.slug, tab })}
                                 className="font-sans text-meta font-medium text-accent hover:underline"
                               >
                                 {label}
@@ -218,7 +213,12 @@ export function GalleryShell({
           )}
         </div>
       </main>
-      <CommandPalette demos={live} open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <CommandPalette
+        demos={live}
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        onSelect={(slug) => nav.navigate({ slug })}
+      />
     </div>
   );
 }
