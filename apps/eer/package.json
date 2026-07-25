@@ -29,11 +29,12 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@typescript/native": "npm:typescript@^7.0.2",
     "@vitejs/plugin-react": "^6.0.1",
     "drizzle-kit": "^0.31.10",
     "jsdom": "^29.1.1",
     "sass": "^1.101.0",
-    "typescript": "^6.0.3",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
     "vite": "^8.0.12",
     "vitest": "^4.1.10"
   }
