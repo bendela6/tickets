@@ -49,10 +49,23 @@ export const states = [
 ];
 
 export const playground = definePlayground({
+  docs: {
+    summary:
+      'The action row every dialog ends with: a hairline above, cancel pushed left, confirm on the right. It owns the geometry, not the buttons — pass whichever buttons the dialog needs as `children` and `cancel`.',
+  },
   controls: {
-    cancelLabel: text('Cancel'),
-    primaryLabel: text('Create item'),
-    showCancel: boolean(true),
+    cancelLabel: text('Cancel', {
+      description:
+        'Demo knob — the text of the ghost button passed as `cancel`. By convention that slot holds a ghost button, but the component does not enforce it.',
+    }),
+    primaryLabel: text('Create item', {
+      description:
+        'Demo knob — the text of the button passed as `children`. Name the action, not `OK`.',
+    }),
+    showCancel: boolean(true, {
+      description:
+        'Demo knob — drops the `cancel` slot entirely, which is how an acknowledge-only dialog renders.',
+    }),
   },
   render: (v) => (
     <DialogFooter cancel={v.showCancel ? <GhostButton>{v.cancelLabel}</GhostButton> : undefined}>

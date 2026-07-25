@@ -49,8 +49,17 @@ export const states = [
 ];
 
 export const playground = definePlayground({
+  docs: {
+    summary:
+      'A section title with an optional count and a trailing action, on one baseline. Renders a plain `div` by default; pass `as="h2"` when the section deserves a real heading in the accessibility tree.',
+  },
   controls: {
-    title: text('Subtasks'),
+    title: text('Subtasks', {
+      type: 'ReactNode',
+      required: true,
+      description:
+        'The section name. Restyle it through `titleClassName` rather than `className` — the latter lands on the row and cannot reach the title’s own text classes.',
+    }),
   },
   render: (v) => <SectionHeader title={v.title} />,
 });

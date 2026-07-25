@@ -227,7 +227,12 @@ export function ComponentPage({
                 ) : (
                   <StateGrid demo={demo} />
                 )}
-                <PlaygroundCard ref={previewRef} playground={playground} values={values} />
+                <PlaygroundCard
+                  ref={previewRef}
+                  component={demo.meta.title.replace(/\s+/g, '')}
+                  playground={playground}
+                  values={values}
+                />
                 <GeneratedCode demo={demo} values={values} />
               </div>
             </Panel>
@@ -281,11 +286,7 @@ export function ComponentPage({
       </div>
 
       <div className={tab === 'props' ? '' : 'hidden'}>
-        {playground ? (
-          <PropsTable controls={playground.controls} />
-        ) : (
-          <p className="font-sans text-meta text-ink-3">This component has no playground controls.</p>
-        )}
+        <PropsTable demo={demo} />
       </div>
       <div className={tab === 'impl' ? '' : 'hidden'}>
         <ImplTab demo={demo} sources={implSources} />

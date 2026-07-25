@@ -17,8 +17,17 @@ export const states = [
 ];
 
 export const playground = definePlayground({
+  docs: {
+    summary:
+      'The small mono caption that titles a rail section or a control group — CONTROLS, AGENTS, STATES. It exists so the uppercase-mono-tracking recipe lives in one place instead of being retyped at every rail.',
+  },
   controls: {
-    children: text('AGENTS'),
+    children: text('AGENTS', {
+      type: 'ReactNode',
+      required: true,
+      description:
+        'The caption. Write it in the case you want to see: the component sets the tracking and size but does not transform the text.',
+    }),
   },
   render: (v) => <RailLabel>{v.children}</RailLabel>,
 });

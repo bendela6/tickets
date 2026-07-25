@@ -39,9 +39,24 @@ function PlaygroundFixture({ variant, count }: { variant: (typeof VARIANTS)[numb
 }
 
 export const playground = definePlayground({
+  docs: {
+    summary:
+      'One tablist for three shapes. Every variant renders the same `role="tablist"` and `aria-selected` markup — the choice is visual placement only, so switching a surface from underline to rail never changes what a screen reader hears.',
+  },
   controls: {
-    variant: select(VARIANTS, { initial: 'underline' }),
-    count: number(3, { min: 2, max: ALL_ITEMS.length, step: 1, label: 'Tabs' }),
+    variant: select(VARIANTS, {
+      initial: 'underline',
+      description:
+        '`underline` for the tabs at the top of a pane, `pill` for a compact inline switch, `rail` for a vertical sidebar list.',
+    }),
+    count: number(3, {
+      min: 2,
+      max: ALL_ITEMS.length,
+      step: 1,
+      label: 'Tabs',
+      description:
+        'Demo knob, not a prop — it slices the fixture’s `items` array so you can see how the strip handles more entries.',
+    }),
   },
   render: (v) => <PlaygroundFixture variant={v.variant} count={v.count} />,
 });

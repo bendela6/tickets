@@ -41,11 +41,35 @@ export const states = [
 ];
 
 export const playground = definePlayground({
+  docs: {
+    summary:
+      'Every glyph in the product comes from one registry, and every glyph is colourless — an icon draws in `currentColor` until a tone says otherwise. Adding a glyph means adding one entry to `registry.tsx`; nothing else changes.',
+  },
   controls: {
-    name: select(ICON_NAMES, { initial: 'circle-half' }),
-    size: number(14, { min: 10, max: 32 }),
-    tone: select(TONE_NAMES, { allowNone: true }),
-    animate: select(['spin', 'pulse'] as const, { allowNone: true }),
+    name: select(ICON_NAMES, {
+      initial: 'circle-half',
+      type: 'IconName',
+      required: true,
+      description:
+        'Registry key. Names describe the shape (`circle-half`), never the use (`kind-active`), so one glyph can serve a status in one screen and a spinner in another.',
+    }),
+    size: number(14, {
+      min: 10,
+      max: 32,
+      description:
+        'Edge length in pixels, applied to both width and height. Plain numbers rather than a t-shirt scale: icons are sized to the text they sit beside.',
+    }),
+    tone: select(TONE_NAMES, {
+      allowNone: true,
+      type: 'Tone',
+      description:
+        'Draws the glyph in a tone instead of inheriting. Leave it unset inside buttons and pills so the icon follows its container’s colour.',
+    }),
+    animate: select(['spin', 'pulse'] as const, {
+      allowNone: true,
+      description:
+        'Motion is opt-in — no glyph animates by default. `spin` is for work in flight, `pulse` for something awaiting attention.',
+    }),
   },
   render: (v) => <Icon name={v.name} size={v.size} tone={v.tone} animate={v.animate} />,
 });
