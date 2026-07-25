@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { GalleryShell } from './gallery-shell';
 import { collectDemos, boolean as booleanControl, definePlayground } from '@tickets/ui/gallery';
@@ -24,7 +24,7 @@ describe('GalleryShell v2', () => {
     expect(screen.queryByRole('tab', { name: 'Preview' })).toBeNull();
   });
 
-  it('the All view is documentation only — every component headed, no states or playgrounds', () => {
+  it('the All view is docs plus one preview per component — no state grids', () => {
     render(<GalleryShell demos={demos} title="t" />);
     // Both components are present, by heading...
     expect(screen.getByRole('heading', { name: 'Button' })).toBeTruthy();
@@ -35,13 +35,40 @@ describe('GalleryShell v2', () => {
     // Input has no playground, so it says so rather than vanishing from the index.
     expect(screen.getByText('This component has no playground controls.')).toBeTruthy();
 
-    // Neither the state cards nor the live playground belong on this screen —
-    // they live on each component's Preview tab.
+    // The preview shows the playground at its defaults where there is one,
+    // and falls back to the first state where there isn't.
+    expect(screen.getAllByText('PREVIEW')).toHaveLength(2);
+    expect(screen.getByText('play')).toBeTruthy(); // Button: playground
+    expect(screen.getByText('inp')).toBeTruthy(); // Input: first state
+
+    // The state grid itself stays on the Preview tab: only ONE instance each,
+    // not a card per state.
     expect(screen.queryByText('btn')).toBeNull();
     expect(screen.queryByText('btn2')).toBeNull();
-    expect(screen.queryByText('inp')).toBeNull();
-    expect(screen.queryByText('play')).toBeNull();
     expect(screen.queryByText('STATES')).toBeNull();
+    expect(document.querySelectorAll('figure')).toHaveLength(0);
+  });
+
+  it('holds the preview back until there is room for it beside the docs', () => {
+    render(<GalleryShell demos={demos} title="t" />);
+    const preview = screen.getAllByText('PREVIEW')[0]!.closest('section')!.lastElementChild!
+      .lastElementChild!;
+    // jsdom applies no media queries, so the gate is asserted on the class.
+    expect(preview.className).toContain('hidden');
+    expect(preview.className).toContain('2xl:block');
+  });
+
+  it('gives no preview column to a full-width demo, which cannot fit beside 800px of docs', () => {
+    const wide = collectDemos({
+      c: {
+        meta: { title: 'Wide', group: 'Display', size: 'full' },
+        states: [{ name: 'only', render: () => <b>wide-state</b> }],
+      },
+    });
+    render(<GalleryShell demos={[...demos, ...wide]} title="t" />);
+    const section = screen.getByRole('heading', { name: 'Wide' }).closest('section')!;
+    expect(within(section).queryByText('PREVIEW')).toBeNull();
+    expect(screen.queryByText('wide-state')).toBeNull();
   });
 
   it('keeps the per-component anchor in the All view', () => {
