@@ -64,6 +64,13 @@ export function physicalTableName(e: Pick<Entity, 'id' | 'schema'>): string {
 // `numeric`/`decimal` are typed `string` in drizzle, `bigint` depends on its
 // `mode`, and the serials' defaults are type-borne rather than explicit.
 const BARE_NUMBER_BUILDERS = new Set(['smallint', 'integer', 'real', 'doublePrecision']);
+
+// SQL name -> the TS data type its `customType` helper carries. `Uint8Array`
+// rather than `Buffer` on purpose: the generated file must typecheck on its own
+// (the roundtrip gate runs tsc over it with no --types), and Buffer would drag
+// in @types/node. Round-trip fidelity is unaffected — describe-drizzle reads a
+// column's getSQLType(), which is "bytea" either way.
+const CUSTOM_TYPE_HELPERS = new Map<string, string>([['bytea', 'Uint8Array']]);
 const NUMERIC_LITERAL = /^-?(?:\d+|\d*\.\d+)$/;
 
 // ---- string / SQL escaping -------------------------------------------
@@ -167,6 +174,12 @@ export function exportDrizzle(model: Model): string {
   }
 
   // ---- figure out what to import ----
+  // A descriptor whose `builder` is drizzle's `customType` meta-factory (today:
+  // bytea only) can't be called directly — `customType('data')` is not a column.
+  // It needs a module-level helper declaration first, so collect one per SQL
+  // name here, in the same identifier namespace as tables and enums, and emit
+  // the declarations between the imports and the tables.
+  const customHelperNames = new Map<string, string>(); // sqlName -> JS identifier
   const builderImports = new Set<string>();
   let needSql = false;
   let needPgEnum = false;
@@ -189,6 +202,9 @@ export function exportDrizzle(model: Model): string {
         const d = descriptorFor(parsed.base);
         if (!d) throw new Error(`exportDrizzle: column "${e.id}.${c.name}" type "${parsed.base}" has no drizzle descriptor.`);
         builderImports.add(d.builder);
+        if (d.builder === 'customType' && !customHelperNames.has(d.sqlName)) {
+          customHelperNames.set(d.sqlName, uniqueIdentifier(toIdentifier(d.sqlName), usedIdentifiers));
+        }
       }
       // A boolean "true"/"false", or a plain numeric literal on a number-typed
       // column, is emitted as a bare JS literal (see isBareLiteralDefault) — no
@@ -381,7 +397,7 @@ export function exportDrizzle(model: Model): string {
       optionsSrc = null;
     } else {
       const d = descriptorFor(parsed.base)!;
-      builderExpr = d.builder;
+      builderExpr = d.builder === 'customType' ? customHelperNames.get(d.sqlName)! : d.builder;
       optionsSrc = columnOptions(d, parsed);
     }
 
@@ -535,6 +551,24 @@ export function exportDrizzle(model: Model): string {
     importLines.push(`import { ${[...pgCoreImports].sort().join(', ')} } from 'drizzle-orm/pg-core';`);
   }
   if (importLines.length > 0) parts.push(importLines.join('\n'));
+
+  if (customHelperNames.size > 0) {
+    parts.push(
+      [...customHelperNames]
+        .map(([sqlName, varName]) => {
+          const dataType = CUSTOM_TYPE_HELPERS.get(sqlName);
+          if (!dataType) throw new Error(`exportDrizzle: no customType data type registered for "${sqlName}".`);
+          return [
+            `const ${varName} = customType<{ data: ${dataType} }>({`,
+            `  dataType() {`,
+            `    return ${quote(sqlName)};`,
+            `  },`,
+            `});`,
+          ].join('\n');
+        })
+        .join('\n\n'),
+    );
+  }
 
   if (schemaNames.size > 0) {
     parts.push([...schemaNames].map((s) => `export const ${schemaVarNames.get(s)} = pgSchema(${quote(s)});`).join('\n'));

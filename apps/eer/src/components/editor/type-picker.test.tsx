@@ -24,9 +24,14 @@ function renderPicker(overrides: Partial<TypePickerProps> = {}) {
 describe('TypePicker', () => {
   it('never offers a type drizzle cannot build', () => {
     renderPicker();
-    for (const absent of ['bytea', 'box', 'varbit', 'path', 'polygon', 'circle']) {
+    for (const absent of ['box', 'varbit', 'path', 'polygon', 'circle']) {
       expect(screen.queryByRole('option', { name: absent })).toBeNull();
     }
+  });
+
+  it('offers bytea, which drizzle builds through customType', () => {
+    renderPicker();
+    expect(within(screen.getByRole('group', { name: 'binary' })).getByRole('option', { name: 'bytea' })).toBeInTheDocument();
   });
 
   it('lists the built-in groups as their own accessible groups', () => {

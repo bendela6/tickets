@@ -8,7 +8,7 @@
 
 export type PgTypeGroup =
   | 'numeric' | 'text' | 'temporal' | 'boolean' | 'uuid'
-  | 'json' | 'network' | 'geometric' | 'vector';
+  | 'json' | 'network' | 'geometric' | 'vector' | 'binary';
 
 export interface PgTypeParam {
   name: string;
@@ -69,6 +69,13 @@ export const DESCRIPTORS: PgTypeDescriptor[] = [
   { builder: 'vector', sqlName: 'vector', displayName: 'vector', group: 'vector', params: [P.dimensions] },
   { builder: 'halfvec', sqlName: 'halfvec', displayName: 'halfvec', group: 'vector', params: [P.dimensions] },
   { builder: 'sparsevec', sqlName: 'sparsevec', displayName: 'sparsevec', group: 'vector', params: [P.dimensions] },
+
+  // bytea is the one type Postgres has and drizzle ships no builder for — the
+  // only route is the `customType` meta-factory, which is why `builder` here
+  // names the factory rather than a ready-made builder. export-drizzle turns
+  // this into a module-level `customType` helper declaration and calls that;
+  // see CUSTOM_TYPE_HELPERS there. Real usage: records.attachments.data.
+  { builder: 'customType', sqlName: 'bytea', displayName: 'bytea', group: 'binary', params: [] },
 ];
 
 // Variants a builder reaches through options rather than a distinct export.

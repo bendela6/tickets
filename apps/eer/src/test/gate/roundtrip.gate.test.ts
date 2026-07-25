@@ -106,25 +106,26 @@ async function assertGeneratedFileTypechecks(schemaModule: Record<string, unknow
   }
 }
 
-// ---- gate 1: the real 29-table @tickets/db schema ----
+// ---- gate 1: the real 30-table @tickets/db schema ----
 
 it('round-trips @tickets/db with nothing lost', async () => {
   const { model, report } = await runRoundtripGate(realSchema as Record<string, unknown>);
 
   expect(report.blocksExport).toBe(false);
-  // 29 tables / 8 enums after Task 11 deleted the 5 legacy public ai_* tables
-  // and their 4 enums. The round trip carries each table's and enum's `schema`
-  // through export -> import: terminal.sessions and agent.sessions survive as
-  // two distinct entities sharing one bare name. Namespacing then moved every
-  // remaining table out of `public` into core/structure/records/history, so
-  // nothing round-trips with an empty schema anymore.
-  expect(model.entities).toHaveLength(29);
+  // 30 tables / 8 enums after Task 11 deleted the 5 legacy public ai_* tables
+  // and their 4 enums, and records.attachments arrived for editor uploads. The
+  // round trip carries each table's and enum's `schema` through export ->
+  // import: terminal.sessions and agent.sessions survive as two distinct
+  // entities sharing one bare name. Namespacing then moved every remaining
+  // table out of `public` into core/structure/records/history, so nothing
+  // round-trips with an empty schema anymore.
+  expect(model.entities).toHaveLength(30);
   expect(model.enums).toHaveLength(8);
   expect(model.entities.filter((e) => e.schema === 'terminal')).toHaveLength(2);
   expect(model.entities.filter((e) => e.schema === 'agent')).toHaveLength(4);
   expect(model.entities.filter((e) => e.schema === 'core')).toHaveLength(3);
   expect(model.entities.filter((e) => e.schema === 'structure')).toHaveLength(11);
-  expect(model.entities.filter((e) => e.schema === 'records')).toHaveLength(5);
+  expect(model.entities.filter((e) => e.schema === 'records')).toHaveLength(6); // + attachments
   expect(model.entities.filter((e) => e.schema === 'history')).toHaveLength(4);
   expect(model.entities.filter((e) => !e.schema)).toHaveLength(0);
 }, 30_000);

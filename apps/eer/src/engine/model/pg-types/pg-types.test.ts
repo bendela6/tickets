@@ -14,9 +14,21 @@ describe('catalogue', () => {
 
   it('offers nothing drizzle cannot build', () => {
     const names = PG_TYPES.map((t) => t.sqlName);
-    for (const absent of ['bytea', 'box', 'path', 'polygon', 'circle', 'varbit']) {
+    // bytea is absent from this list on purpose: drizzle ships no `bytea()`
+    // builder, but it CAN build the type through the customType meta-factory,
+    // which export-drizzle emits as a helper declaration. The types below have
+    // no route at all.
+    for (const absent of ['box', 'path', 'polygon', 'circle', 'varbit']) {
       expect(names).not.toContain(absent);
     }
+  });
+
+  it('offers bytea through the customType meta-factory', () => {
+    const bytea = PG_TYPES.find((t) => t.sqlName === 'bytea')!;
+    expect(bytea).toBeDefined();
+    expect(bytea.builder).toBe('customType');
+    expect(bytea.group).toBe('binary');
+    expect(parseType('bytea')).toEqual({ base: 'bytea', params: [], arrays: [], known: true });
   });
 
   it('offers the serial family — 16 columns of the real schema use it', () => {
