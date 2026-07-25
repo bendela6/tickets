@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { isDemoError, type CollectedDemo } from '@tickets/ui/gallery';
 import { ComponentPage } from './component-page';
+import { DemoPreview, fitsBesideDocs } from './demo-preview';
 import { DocsPanel, DOCS_MEASURE } from './docs-panel';
 import type { ImplSources } from './impl-tab';
 import { DemoErrorCard } from './state-grid';
@@ -179,24 +180,35 @@ export function GalleryShell({
                     id={d.slug}
                     className="flex flex-col border-t-2 border-control pt-10 first:border-t-0 first:pt-0"
                   >
-                    <div className={`flex flex-col gap-4 ${DOCS_MEASURE}`}>
-                      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-                        <h2 className="font-sans text-heading font-semibold text-ink">
-                          {d.meta.title}
-                        </h2>
-                        <div className="flex items-center gap-4">
-                          {JUMP_TABS.map(({ tab, label }) => (
-                            <a
-                              key={tab}
-                              href={`#${d.slug}${TAB_SEPARATOR}${tab}`}
-                              className="font-sans text-meta font-medium text-accent hover:underline"
-                            >
-                              {label}
-                            </a>
-                          ))}
+                    <div className="flex items-start gap-8">
+                      <div className={`flex flex-col gap-4 ${DOCS_MEASURE}`}>
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+                          <h2 className="font-sans text-heading font-semibold text-ink">
+                            {d.meta.title}
+                          </h2>
+                          <div className="flex items-center gap-4">
+                            {JUMP_TABS.map(({ tab, label }) => (
+                              <a
+                                key={tab}
+                                href={`#${d.slug}${TAB_SEPARATOR}${tab}`}
+                                className="font-sans text-meta font-medium text-accent hover:underline"
+                              >
+                                {label}
+                              </a>
+                            ))}
+                          </div>
                         </div>
+                        <DocsPanel demo={d} railNote={false} />
                       </div>
-                      <DocsPanel demo={d} railNote={false} />
+                      {/* Only where there's room for it: the docs hold 800px,
+                          so the preview waits for a viewport that leaves a
+                          usable column beside them, and sticks while a long
+                          entry scrolls past. */}
+                      {fitsBesideDocs(d) && (
+                        <div className="sticky top-8 hidden min-w-0 flex-1 2xl:block">
+                          <DemoPreview demo={d} />
+                        </div>
+                      )}
                     </div>
                   </section>
                 ),
