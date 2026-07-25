@@ -73,6 +73,15 @@
   );
 }
 
+/* Each All-view entry holds at least half the viewport, so scrolling the
+   documentation lands roughly one component per screenful instead of several
+   short ones crammed together. Tailwind has no half-viewport utility (only
+   the 100-unit h-screen/dvh family), so this is a real class rather than an
+   arbitrary value. */
+.pg-docs-entry {
+  min-height: 50vh;
+}
+
 /* States grid: auto-fills columns at the demo's declared width (--demo-cell,
    set per demo by StateGrid). Tailwind has no auto-fill grid utility, and the
    arbitrary-value form would bake a track list into a class name — a plain
