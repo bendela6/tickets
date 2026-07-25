@@ -47,11 +47,11 @@ const controls = {
   count: numberControl(5, { min: 1, max: 99 }),
 };
 
-// A prop's row: the grid cell holding the name, walked up to the row itself.
+// A prop's row, walked up from its name: span -> left column -> row.
 function row(name: string): HTMLElement {
-  const el = screen.getByText(name).closest('.grid');
+  const el = screen.getByText(name).parentElement?.parentElement;
   if (!el) throw new Error(`no props row for "${name}"`);
-  return el as HTMLElement;
+  return el;
 }
 
 describe('DocsPanel — API header', () => {

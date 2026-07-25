@@ -4,13 +4,14 @@ import type { CollectedDemo, DemoSize } from '@tickets/ui/gallery';
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
 // Minimum width of one state cell, per the demo's declared `meta.size`. The
-// grid auto-fills at that width, so a `sm` component gets many narrow columns
-// and a `full` one gets a single row-wide cell — components stop being
-// squeezed into a column that can't hold them. The value travels as a custom
-// property because Tailwind can't scan a class name built at runtime.
+// grid auto-fills at that width (see `.pg-state-grid` in styles.css), so a
+// `sm` component gets many narrow columns and a `full` one gets a single
+// row-wide cell — components stop being squeezed into a column that can't
+// hold them. The value travels as a custom property because Tailwind can't
+// scan a class name built at runtime.
 export const CELL_MIN: Record<DemoSize, string> = {
-  sm: '150px',
-  md: '230px',
+  sm: '160px',
+  md: '240px',
   lg: '360px',
   full: '100%',
 };
@@ -26,7 +27,7 @@ export function StateGrid({ demo }: { demo: LiveDemo }) {
       <div className="flex flex-col gap-2.5">
         <div className="font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3">STATES</div>
         <div
-          className="grid grid-cols-[repeat(auto-fill,minmax(var(--demo-cell),1fr))] gap-2.5"
+          className="pg-state-grid gap-2.5"
           style={runtimeStyle({ '--demo-cell': CELL_MIN[demo.meta.size ?? 'md'] })}
         >
           {demo.states.map((state) => (

@@ -31,6 +31,15 @@
   );
 }
 
+/* States grid: auto-fills columns at the demo's declared width (--demo-cell,
+   set per demo by StateGrid). Tailwind has no auto-fill grid utility, and the
+   arbitrary-value form would bake a track list into a class name — a plain
+   CSS class keeps the component's classes on the scale. */
+.pg-state-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--demo-cell), 1fr));
+}
+
 /* Code/Source tabs' highlighted block (design: playground-workbench.dc.html
    1c "CODE TAB" / 1d "SOURCE TAB"). The design fixes this surface dark
    (#25231D) in BOTH themes — it's shiki's instrument-dark.json theme, baked

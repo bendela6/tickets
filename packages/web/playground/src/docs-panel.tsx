@@ -10,12 +10,12 @@ type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 // declaration order, which is how the option list is authored anyway.)
 const CHIP_CAP = 12;
 
-// The design frames this panel at 860px with 28px side padding, so its rows
-// measure 200px + 28px gap + 576px. The shell is full-bleed, so the measure
-// has to be stated or documentation prose runs the width of the monitor —
-// unreadable, and not what §1j draws. Exported so the All view can align its
-// per-component heading and jump links to the same column.
-export const DOCS_MEASURE = 'max-w-201';
+// The design frames this panel at 860px less its 28px side padding; 800px is
+// the round scale step next to that, giving rows of 200 + 28 gap + 572. The
+// shell is full-bleed, so the measure has to be stated or documentation prose
+// runs the width of the monitor — unreadable, and not what §1j draws.
+// Exported so the All view aligns its heading and jump links to the same column.
+export const DOCS_MEASURE = 'max-w-200';
 
 const CHIP =
   'inline-flex h-5.5 items-center rounded-ctrl border border-hairline bg-raised px-2 font-mono text-label tracking-normal text-ink-2';
@@ -60,7 +60,7 @@ function prose(text: string): ReactNode[] {
     i % 2 === 1 ? (
       <span
         key={i}
-        className="rounded-chip bg-inset px-1.25 py-px font-mono text-ui text-ink"
+        className="rounded-chip bg-inset px-1.5 py-px font-mono text-ui text-ink"
       >
         {part}
       </span>
@@ -105,8 +105,10 @@ function PropRow({ name, def }: { name: string; def: AnyControlDef }) {
   const truncated = values.length > CHIP_CAP;
 
   return (
-    <div className="grid grid-cols-[200px_1fr] gap-7 border-t border-hairline py-4.5">
-      <div className="flex flex-col gap-1.5">
+    // Flex with a fixed first column rather than a grid template: `w-50` is
+    // the same 200px the design draws, without an arbitrary track list.
+    <div className="flex gap-7 border-t border-hairline py-4.5">
+      <div className="flex w-50 shrink-0 flex-col gap-1.5">
         <span className="font-mono text-ui font-semibold text-ink">{name}</span>
         <span className="font-mono text-label tracking-normal text-ink-3 text-pretty">
           {def.type ?? derivedType(def)}
@@ -120,9 +122,9 @@ function PropRow({ name, def }: { name: string; def: AnyControlDef }) {
           {def.required ? 'REQUIRED' : 'OPTIONAL'}
         </span>
       </div>
-      <div className="flex min-w-0 flex-col gap-2.5">
+      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
         {def.description && (
-          <div className="font-sans text-ui leading-[1.6] text-ink-2 text-pretty">
+          <div className="font-sans text-ui leading-relaxed text-ink-2 text-pretty">
             {prose(def.description)}
           </div>
         )}
@@ -160,17 +162,17 @@ export function DocsPanel({ demo, railNote = true }: { demo: LiveDemo; railNote?
 
   return (
     <div className={cn('flex flex-col', DOCS_MEASURE)}>
-      <div className="mt-5.5 mb-1.5 flex items-start justify-between gap-8">
-        <div className="flex max-w-130 flex-col gap-2">
+      <div className="mt-6 mb-1.5 flex items-start justify-between gap-8">
+        <div className="flex max-w-lg flex-col gap-2">
           <span className="font-mono text-micro font-medium tracking-(--tracking-mono-label) text-ink-3">
             API
           </span>
           {docs?.summary ? (
-            <div className="font-sans text-body leading-[1.65] text-ink-2 text-pretty">
+            <div className="font-sans text-body leading-relaxed text-ink-2 text-pretty">
               {prose(docs.summary)}
             </div>
           ) : (
-            <div className="font-sans text-body leading-[1.65] text-ink-3 text-pretty">
+            <div className="font-sans text-body leading-relaxed text-ink-3 text-pretty">
               Props marked unsettable fall back to the component default and are omitted from
               generated code.
             </div>
@@ -188,11 +190,11 @@ export function DocsPanel({ demo, railNote = true }: { demo: LiveDemo; railNote?
       ))}
 
       {railNote && (
-        <div className="mt-5.5 flex gap-2.5 rounded-card bg-opt-green-subtle px-3.5 py-3.25">
+        <div className="mt-6 flex gap-2.5 rounded-card bg-opt-green-subtle p-3.5">
           <span className="mt-px inline-flex size-4 flex-none items-center justify-center rounded-full bg-opt-green font-sans text-nano font-semibold text-on-opt-green">
             i
           </span>
-          <span className="font-sans text-meta leading-[1.55] text-opt-green text-pretty">
+          <span className="font-sans text-meta leading-normal text-opt-green text-pretty">
             Every prop on this page is wired to the controls rail — edit a value there and the code
             on the Preview tab regenerates.
           </span>
