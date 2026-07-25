@@ -15,7 +15,7 @@ import { cn } from '@tickets/ui/cn';
 import { runtimeStyle } from '@tickets/ui/runtime-style';
 
 const GROUPS: PgTypeGroup[] = [
-  'numeric', 'text', 'boolean', 'temporal', 'uuid', 'json', 'network', 'geometric', 'vector',
+  'numeric', 'text', 'boolean', 'temporal', 'uuid', 'json', 'network', 'geometric', 'vector', 'binary',
 ];
 
 // Every sqlName the built-in catalogue already owns — an enum sharing one of
