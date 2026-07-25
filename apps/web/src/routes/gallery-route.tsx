@@ -1,8 +1,9 @@
-import { createRoute } from '@tanstack/react-router';
+import { useMemo } from 'react';
+import { createRoute, useNavigate } from '@tanstack/react-router';
 import { collectDemos, prepareDemos, rebaseGlobKeys, WEB_SRC_ROOT } from '@tickets/ui/gallery';
 import { packageDemos } from '@tickets/ui/gallery/demos';
 import { packageComponentSources, packageDemoSources } from '@tickets/ui/gallery/demo-sources';
-import { GalleryShell } from '@tickets/playground';
+import { GalleryShell, isPlainClick, type GalleryNavigation, type GalleryTarget } from '@tickets/playground';
 import { ToastProvider } from '../ui/toast';
 import { TooltipProvider } from '../ui/tooltip';
 import { rootRoute } from './root-route';
@@ -39,13 +40,45 @@ const webComponentSources = rebaseGlobKeys(
 
 const allDemos = prepareDemos([...packageDemos, ...webDemos]);
 
-function GalleryScreen() {
+// Real URLs rather than the package's default hash scheme: `/gallery`,
+// `/gallery/pill`, `/gallery/pill/docs`. The fragment goes back to being just
+// an anchor — `/gallery/pill#pill--solid` scrolls to a state cell.
+export function galleryPath(target: GalleryTarget): string {
+  if (!target.slug) return '/gallery';
+  return target.tab ? `/gallery/${target.slug}/${target.tab}` : `/gallery/${target.slug}`;
+}
+
+function useGalleryNavigation(slug: string | null, tab: string | null): GalleryNavigation {
+  const routerNavigate = useNavigate();
+  return useMemo(
+    () => ({
+      slug,
+      tab,
+      navigate: (target) => void routerNavigate({ to: galleryPath(target) }),
+      linkProps: (target) => ({
+        href: galleryPath(target),
+        onClick: (event) => {
+          // Let the browser handle modified clicks so cmd/ctrl-click still
+          // opens the component in a new tab — the payoff for real hrefs.
+          if (!isPlainClick(event)) return;
+          event.preventDefault();
+          void routerNavigate({ to: galleryPath(target) });
+        },
+      }),
+    }),
+    [slug, tab, routerNavigate],
+  );
+}
+
+function GalleryScreen({ slug = null, tab = null }: { slug?: string | null; tab?: string | null }) {
+  const navigation = useGalleryNavigation(slug, tab);
   return (
     <GalleryShell
       demos={allDemos}
       title="Instrument — primitives gallery"
       sources={{ ...packageDemoSources, ...webDemoSources }}
       implSources={{ ...packageComponentSources, ...webComponentSources }}
+      navigation={navigation}
       providers={(children) => (
         <TooltipProvider>
           <ToastProvider>{children}</ToastProvider>
@@ -59,4 +92,26 @@ export const galleryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/gallery',
   component: GalleryScreen,
+});
+
+function GalleryComponentPage() {
+  const { slug } = galleryComponentRoute.useParams();
+  return <GalleryScreen slug={slug} />;
+}
+
+export const galleryComponentRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/gallery/$slug',
+  component: GalleryComponentPage,
+});
+
+function GalleryComponentTabPage() {
+  const { slug, tab } = galleryComponentTabRoute.useParams();
+  return <GalleryScreen slug={slug} tab={tab} />;
+}
+
+export const galleryComponentTabRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/gallery/$slug/$tab',
+  component: GalleryComponentTabPage,
 });
