@@ -171,28 +171,33 @@ export function GalleryShell({
                   // end — docs only, no state grids; the states live on each
                   // component's own Preview tab. The rail note is dropped
                   // because there is no controls rail on this screen.
+                  // The rule runs the full width of the column while the
+                  // documentation keeps its own measure, so it reads as a
+                  // divider between entries rather than an underline on one.
                   <section
                     key={d.slug}
                     id={d.slug}
-                    className={`flex flex-col gap-4 border-t border-hairline pt-10 first:border-t-0 first:pt-0 ${DOCS_MEASURE}`}
+                    className="flex flex-col border-t-2 border-control pt-10 first:border-t-0 first:pt-0"
                   >
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-                      <h2 className="font-sans text-heading font-semibold text-ink">
-                        {d.meta.title}
-                      </h2>
-                      <div className="flex items-center gap-4">
-                        {JUMP_TABS.map(({ tab, label }) => (
-                          <a
-                            key={tab}
-                            href={`#${d.slug}${TAB_SEPARATOR}${tab}`}
-                            className="font-sans text-meta font-medium text-accent hover:underline"
-                          >
-                            {label}
-                          </a>
-                        ))}
+                    <div className={`flex flex-col gap-4 ${DOCS_MEASURE}`}>
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+                        <h2 className="font-sans text-heading font-semibold text-ink">
+                          {d.meta.title}
+                        </h2>
+                        <div className="flex items-center gap-4">
+                          {JUMP_TABS.map(({ tab, label }) => (
+                            <a
+                              key={tab}
+                              href={`#${d.slug}${TAB_SEPARATOR}${tab}`}
+                              className="font-sans text-meta font-medium text-accent hover:underline"
+                            >
+                              {label}
+                            </a>
+                          ))}
+                        </div>
                       </div>
+                      <DocsPanel demo={d} railNote={false} />
                     </div>
-                    <DocsPanel demo={d} railNote={false} />
                   </section>
                 ),
               )}

@@ -57,9 +57,14 @@ describe('GalleryShell v2', () => {
     expect(heading.className).toContain('text-heading');
 
     const section = heading.closest('section')!;
-    // The first entry draws no rule above it; later ones do.
-    expect(section.className).toContain('border-t');
+    // A 2px rule in the control tone, not a hairline — and the first entry
+    // draws none above it.
+    expect(section.className).toContain('border-t-2');
+    expect(section.className).toContain('border-control');
     expect(section.className).toContain('first:border-t-0');
+    // The rule spans the column; only the content inside keeps the measure.
+    expect(section.className).not.toContain('max-w');
+    expect(heading.parentElement!.parentElement!.className).toContain('max-w');
 
     const links = [...section.querySelectorAll('a')].map((a) => [a.textContent, a.getAttribute('href')]);
     expect(links).toEqual([
