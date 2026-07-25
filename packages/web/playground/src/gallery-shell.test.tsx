@@ -89,9 +89,10 @@ describe('GalleryShell v2', () => {
     expect(section.className).toContain('border-t-2');
     expect(section.className).toContain('border-control');
     expect(section.className).toContain('first:border-t-0');
-    // The rule spans the column; only the content inside keeps the measure.
-    expect(section.className).not.toContain('max-w');
-    expect(heading.parentElement!.parentElement!.className).toContain('max-w');
+    // The rule spans the column; only the docs inside keep the measure — as a
+    // fixed basis, since a flex-1 preview sits beside them.
+    expect(section.className).not.toContain('w-200');
+    expect(heading.parentElement!.parentElement!.className).toContain('w-200 shrink-0');
 
     const links = [...section.querySelectorAll('a')].map((a) => [a.textContent, a.getAttribute('href')]);
     expect(links).toEqual([

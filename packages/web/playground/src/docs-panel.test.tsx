@@ -10,7 +10,7 @@ import {
   type AnyControlDef,
   type PlaygroundDocs,
 } from '@tickets/ui/gallery';
-import { DocsPanel } from './docs-panel';
+import { DocsPanel, DOCS_COLUMN, DOCS_MEASURE } from './docs-panel';
 
 // 13 values — one past the design's 12-chip cap, so the truncation branch is
 // exercised by the smallest possible margin.
@@ -53,6 +53,17 @@ function row(name: string): HTMLElement {
   if (!el) throw new Error(`no props row for "${name}"`);
   return el;
 }
+
+describe('DocsPanel — measure', () => {
+  it('states the same width in both its block and flex-column forms', () => {
+    // The two exist because a merely-capped column collapses next to a
+    // flex-1 sibling; if they ever disagree, the All view and the Docs tab
+    // silently render at different widths.
+    const step = (cls: string) => cls.match(/-(\d+)\b/)?.[1];
+    expect(step(DOCS_MEASURE)).toBe(step(DOCS_COLUMN));
+    expect(DOCS_COLUMN).toContain('shrink-0');
+  });
+});
 
 describe('DocsPanel — API header', () => {
   it('derives the package from the demo path', () => {
