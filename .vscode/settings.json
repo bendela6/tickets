@@ -1,0 +1,14 @@
+{
+  // The repo typechecks on TypeScript 7 (`tsc` comes from the @typescript/native
+  // alias in every package.json). The editor is a separate program: without this,
+  // VS Code keeps using its own bundled TypeScript, so CLI and editor disagree on
+  // which compiler you're seeing. Needs the TypeScriptTeam.native-preview
+  // extension from extensions.json; the setting id is spelled exactly as
+  // microsoft/typescript-go's README and the marketplace page give it.
+  "js/ts.experimental.useTsgo": true,
+
+  // typescript.tsdk is deliberately NOT set: TypeScript 7 ships no tsserver, so
+  // pointing at a workspace lib/ has nothing to launch. And node_modules/typescript
+  // here is the TS 6 API shim, which is not what should drive the editor.
+  "typescript.enablePromptUseWorkspaceTsdk": false
+}
