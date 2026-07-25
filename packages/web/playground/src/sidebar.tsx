@@ -125,7 +125,7 @@ export function Sidebar({
         )}
       >
         <nav className="pg-scroll flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden px-4 py-6">
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <div className="flex h-7.5 min-w-0 flex-1 items-center gap-1.5 rounded-card border border-hairline bg-inset px-1.5 pl-2.5">
               <input
                 type="text"
@@ -156,14 +156,14 @@ export function Sidebar({
           <a
             {...linkProps({ slug: null })}
             className={cn(
-              'truncate rounded-ctrl px-2 py-1 text-ui',
+              'shrink-0 truncate rounded-ctrl px-2 py-1 text-ui',
               selected === null ? 'bg-accent-subtle text-accent' : 'text-ink-2 hover:text-ink',
             )}
           >
             All
           </a>
           {shownGroups.map((group) => (
-            <div key={group} className="flex flex-col gap-0.5">
+            <div key={group} className="flex shrink-0 flex-col gap-0.5">
               <span className="truncate px-2 font-mono text-label uppercase tracking-(--tracking-label) text-ink-3">
                 {group}
               </span>
@@ -175,7 +175,7 @@ export function Sidebar({
                     {...linkProps({ slug: d.slug })}
                     title={d.meta.title}
                     className={cn(
-                      'truncate rounded-ctrl px-2 py-1 text-ui',
+                      'shrink-0 truncate rounded-ctrl px-2 py-1 text-ui',
                       selected === d.slug
                         ? 'bg-accent-subtle text-accent'
                         : 'text-ink-2 hover:text-ink',
