@@ -14,12 +14,12 @@ import { A11yTab } from './a11y-tab';
 import { getAxe } from './axe';
 import { ControlsPanel } from './controls-panel';
 import { DemoTab } from './demo-tab';
+import { DocsPanel } from './docs-panel';
 import { GeneratedCode } from './generated-code';
 import { ImplTab, type ImplSources } from './impl-tab';
 import { loadFlag, loadLayout, saveFlag, saveLayout } from './persisted-layout';
 import { MatrixMode } from './matrix-mode';
 import { PlaygroundCard } from './playground-card';
-import { PropsTable } from './props-table';
 import { StateGrid } from './state-grid';
 import { ThemeSplit } from './theme-split';
 
@@ -35,7 +35,7 @@ type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
 const TABS = [
   { key: 'preview', label: 'Preview' },
-  { key: 'props', label: 'Props' },
+  { key: 'docs', label: 'Docs' },
   { key: 'impl', label: 'Implementation' },
   { key: 'demo', label: 'Demo' },
   { key: 'a11y', label: 'A11y' },
@@ -285,8 +285,8 @@ export function ComponentPage({
         )}
       </div>
 
-      <div className={tab === 'props' ? '' : 'hidden'}>
-        <PropsTable demo={demo} />
+      <div className={tab === 'docs' ? '' : 'hidden'}>
+        <DocsPanel demo={demo} />
       </div>
       <div className={tab === 'impl' ? '' : 'hidden'}>
         <ImplTab demo={demo} sources={implSources} />

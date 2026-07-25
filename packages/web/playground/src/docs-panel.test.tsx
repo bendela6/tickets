@@ -10,7 +10,7 @@ import {
   type AnyControlDef,
   type PlaygroundDocs,
 } from '@tickets/ui/gallery';
-import { PropsTable } from './props-table';
+import { DocsPanel } from './docs-panel';
 
 // 13 values — one past the design's 12-chip cap, so the truncation branch is
 // exercised by the smallest possible margin.
@@ -54,23 +54,23 @@ function row(name: string): HTMLElement {
   return el as HTMLElement;
 }
 
-describe('PropsTable — API header', () => {
+describe('DocsPanel — API header', () => {
   it('derives the package from the demo path', () => {
-    render(<PropsTable demo={buildDemo(controls)} />);
+    render(<DocsPanel demo={buildDemo(controls)} />);
     expect(screen.getByText('API')).toBeTruthy();
     expect(screen.getByText('@tickets/ui')).toBeTruthy();
 
-    render(<PropsTable demo={buildDemo(controls, { path: 'apps/web/src/ui/button.demo.tsx' })} />);
+    render(<DocsPanel demo={buildDemo(controls, { path: 'apps/web/src/ui/button.demo.tsx' })} />);
     expect(screen.getByText('@tickets/web')).toBeTruthy();
   });
 
   it('shows version and status only when declared', () => {
-    const { unmount } = render(<PropsTable demo={buildDemo(controls)} />);
+    const { unmount } = render(<DocsPanel demo={buildDemo(controls)} />);
     expect(screen.queryByText('a11y verified')).toBeNull();
     unmount();
 
     render(
-      <PropsTable
+      <DocsPanel
         demo={buildDemo(controls, { docs: { version: 'v2.4.0 · stable', status: 'a11y verified' } })}
       />,
     );
@@ -80,7 +80,7 @@ describe('PropsTable — API header', () => {
 
   it('renders backticked spans of the summary as inline code', () => {
     render(
-      <PropsTable
+      <DocsPanel
         demo={buildDemo(controls, { docs: { summary: 'Icon-only pills need `aria-label`.' } })}
       />,
     );
@@ -92,14 +92,14 @@ describe('PropsTable — API header', () => {
   });
 
   it('falls back to the unsettable note when no summary is declared', () => {
-    render(<PropsTable demo={buildDemo(controls)} />);
+    render(<DocsPanel demo={buildDemo(controls)} />);
     expect(screen.getByText(/fall back to the component default/)).toBeTruthy();
   });
 });
 
-describe('PropsTable — prop rows', () => {
+describe('DocsPanel — prop rows', () => {
   beforeEach(() => {
-    render(<PropsTable demo={buildDemo(controls)} />);
+    render(<DocsPanel demo={buildDemo(controls)} />);
   });
 
   it('prints the declared type, falling back to the control primitive', () => {
@@ -150,10 +150,10 @@ describe('PropsTable — prop rows', () => {
   });
 });
 
-describe('PropsTable — large option sets', () => {
+describe('DocsPanel — large option sets', () => {
   function renderMany() {
     return render(
-      <PropsTable demo={buildDemo({ tone: select(MANY, { initial: 'red' }) })} />,
+      <DocsPanel demo={buildDemo({ tone: select(MANY, { initial: 'red' }) })} />,
     );
   }
 
@@ -176,16 +176,16 @@ describe('PropsTable — large option sets', () => {
   });
 
   it('leaves a 12-value enum untruncated — the cap is inclusive', () => {
-    render(<PropsTable demo={buildDemo({ tone: select(MANY.slice(0, 12)) })} />);
+    render(<DocsPanel demo={buildDemo({ tone: select(MANY.slice(0, 12)) })} />);
     expect(screen.queryByRole('button', { name: /show all/i })).toBeNull();
     expect(screen.queryByText(/enum · /)).toBeNull();
     expect(screen.getByText('black')).toBeTruthy();
   });
 });
 
-describe('PropsTable — footer', () => {
+describe('DocsPanel — footer', () => {
   it('carries the design note tying the page to the controls rail', () => {
-    render(<PropsTable demo={buildDemo(controls)} />);
+    render(<DocsPanel demo={buildDemo(controls)} />);
     expect(screen.getByText(/wired to the controls rail/)).toBeTruthy();
   });
 
@@ -197,7 +197,7 @@ describe('PropsTable — footer', () => {
       },
     })[0]!;
     if (isDemoError(demo)) throw new Error(demo.error);
-    render(<PropsTable demo={demo} />);
+    render(<DocsPanel demo={demo} />);
     expect(screen.getByText('This component has no playground controls.')).toBeTruthy();
   });
 });
