@@ -60,14 +60,48 @@ export const states = [
 ];
 
 export const playground = definePlayground({
+  docs: {
+    summary:
+      'A compact label for exactly one fact — a status, a type, a count. `tone` carries the meaning and `emphasis` carries the weight; pick the pair that lets the pill sit as quietly as its row allows.',
+  },
   controls: {
-    label: text('Pill'),
-    tone: select(TONE_NAMES, { initial: 'neutral' }),
-    emphasis: select(['subtle', 'solid', 'outline', 'text'] as const, { initial: 'subtle' }),
-    icon: select(ICON_NAMES, { allowNone: true }),
-    shape: select(['md', 'full'] as const, { initial: 'md' }),
-    strikethrough: boolean(false),
-    disabled: boolean(false),
+    label: text('Pill', {
+      type: 'ReactNode',
+      required: true,
+      description:
+        'The pill text. Keep it to a word or two — pills sit inside dense rows and never wrap.',
+    }),
+    tone: select(TONE_NAMES, {
+      initial: 'neutral',
+      type: 'Tone',
+      description:
+        'Semantic colour. The six semantic names carry meaning across themes; the eleven hue names are for user-chosen colours, where the hue itself is the label.',
+    }),
+    emphasis: select(['subtle', 'solid', 'outline', 'text'] as const, {
+      initial: 'subtle',
+      type: 'ToneEmphasis',
+      description:
+        'How loudly the tone reads. `subtle` is the default and the right pick inside lists; `solid` is for the one pill that has to win the row.',
+    }),
+    icon: select(ICON_NAMES, {
+      allowNone: true,
+      type: 'IconName | ReactElement',
+      description:
+        'Leading glyph from the icon registry, inheriting the pill’s own colour. Pass an element instead when the mark is not a registry icon.',
+    }),
+    shape: select(['md', 'full'] as const, {
+      initial: 'md',
+      description:
+        'Corner radius. `md` lines up with the surrounding controls; `full` reads as a tag or a count.',
+    }),
+    strikethrough: boolean(false, {
+      description:
+        'Strikes the label for a value that no longer applies — a dropped status, a removed tag.',
+    }),
+    disabled: boolean(false, {
+      description:
+        'Only meaningful on a toggle pill (one with `onClick`). Drops it out of the tab order and mutes the tone.',
+    }),
   },
   render: (v) => (
     <Pill

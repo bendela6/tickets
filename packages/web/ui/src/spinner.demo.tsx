@@ -31,9 +31,22 @@ export const states = [
 ];
 
 export const playground = definePlayground({
+  docs: {
+    summary:
+      'The one busy indicator. It is a composition over `Icon` — the same `circle-half` glyph with `animate="spin"` — so it inherits the icon system’s sizing and tones rather than inventing its own.',
+  },
   controls: {
-    size: number(14, { min: 10, max: 40 }),
-    tone: select(TONE_NAMES, { initial: 'primary' }),
+    size: number(14, {
+      min: 10,
+      max: 40,
+      description: 'Edge length in pixels. Match it to the text or control the spinner sits in.',
+    }),
+    tone: select(TONE_NAMES, {
+      initial: 'primary',
+      type: 'Tone',
+      description:
+        'Leave unset inside a button so the spinner takes the button’s own colour; set it when the spinner stands alone.',
+    }),
   },
   render: (v) => <Spinner size={v.size} tone={v.tone} />,
 });

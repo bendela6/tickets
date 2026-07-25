@@ -63,11 +63,34 @@ export const states = [
 ];
 
 export const playground = definePlayground({
+  docs: {
+    summary:
+      'The block a screen shows instead of its content — empty, loading, error, no-results. One component for all four so the four never drift apart; the tone and icon are what tell them apart.',
+  },
   controls: {
-    title: text("Couldn't load issues"),
-    icon: select(ICON_NAMES, { allowNone: true, initial: 'triangle-alert' }),
-    tone: select(TONE_NAMES, { initial: 'danger' }),
-    body: text("The signals daemon isn't responding. Check that it's running, then try again."),
+    title: text("Couldn't load issues", {
+      type: 'ReactNode',
+      required: true,
+      description:
+        'One line naming what happened, in the user’s terms. Not `Error` — say which thing failed.',
+    }),
+    icon: select(ICON_NAMES, {
+      allowNone: true,
+      initial: 'triangle-alert',
+      type: 'IconName',
+      description: 'Optional mark above the title, drawn in the state’s tone.',
+    }),
+    tone: select(TONE_NAMES, {
+      initial: 'danger',
+      type: 'Tone',
+      description:
+        'Colours the icon and frames the block. `danger` for failures, `neutral` for genuinely empty, `primary` while something is on its way.',
+    }),
+    body: text("The signals daemon isn't responding. Check that it's running, then try again.", {
+      type: 'ReactNode',
+      description:
+        'What to do next, in a sentence. Leave it out when the title already says everything.',
+    }),
   },
   render: (v) => (
     <ScreenState

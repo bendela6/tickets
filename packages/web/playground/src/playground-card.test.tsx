@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { boolean as booleanControl, definePlayground, select, text } from '@tickets/ui/gallery';
-import { PlaygroundCard } from './playground-card';
+import { PlaygroundCard, playgroundCaption } from './playground-card';
 
 const pg = definePlayground({
   controls: {
@@ -24,6 +24,7 @@ describe('PlaygroundCard', () => {
   it('renders the preview from the given values', () => {
     render(
       <PlaygroundCard
+        component="Button"
         playground={pg}
         values={{ variant: 'primary', size: undefined, loading: false, children: 'New ticket' }}
       />,
@@ -36,6 +37,7 @@ describe('PlaygroundCard', () => {
   it('re-renders when the values prop changes (external state, no internal state)', () => {
     const { rerender } = render(
       <PlaygroundCard
+        component="Button"
         playground={pg}
         values={{ variant: 'primary', size: undefined, loading: false, children: 'New ticket' }}
       />,
@@ -44,6 +46,7 @@ describe('PlaygroundCard', () => {
 
     rerender(
       <PlaygroundCard
+        component="Button"
         playground={pg}
         values={{ variant: 'secondary', size: 'compact', loading: true, children: 'Save' }}
       />,
@@ -52,5 +55,42 @@ describe('PlaygroundCard', () => {
     expect(btn.getAttribute('data-variant')).toBe('secondary');
     expect(btn.getAttribute('data-size')).toBe('compact');
     expect(btn.getAttribute('data-loading')).toBe('true');
+  });
+
+  it('captions the stage with the component and its non-default values', () => {
+    render(
+      <PlaygroundCard
+        component="Button"
+        playground={pg}
+        values={{ variant: 'secondary', size: 'compact', loading: true, children: 'New ticket' }}
+      />,
+    );
+    expect(screen.getByText('Button · secondary · compact · loading')).toBeTruthy();
+  });
+});
+
+describe('playgroundCaption', () => {
+  const { controls } = pg;
+
+  it('names the component alone when nothing is set away from its default', () => {
+    expect(
+      playgroundCaption('Button', controls, {
+        variant: 'primary',
+        size: undefined,
+        loading: false,
+        children: 'New ticket',
+      }),
+    ).toBe('Button');
+  });
+
+  it('lists booleans by prop name and everything else by value', () => {
+    expect(
+      playgroundCaption('Button', controls, {
+        variant: 'secondary',
+        size: undefined,
+        loading: true,
+        children: 'Save',
+      }),
+    ).toBe('Button · secondary · loading · Save');
   });
 });

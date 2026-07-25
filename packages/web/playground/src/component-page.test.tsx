@@ -153,8 +153,8 @@ describe('ComponentPage', () => {
     fireEvent.change(screen.getByLabelText('variant'), { target: { value: 'secondary' } });
     expect(within(previewWrapper).getByText(/variant="secondary"/)).toBeTruthy();
 
-    // The props table is no longer on this stage; it has its own tab.
-    expect(within(previewWrapper).queryByText('Options / range')).toBeNull();
+    // The props documentation is no longer on this stage; it has its own tab.
+    expect(within(previewWrapper).queryByText('API')).toBeNull();
   });
 
   it('switching tabs hides (not unmounts) the preview and preserves playground state', () => {
@@ -174,7 +174,7 @@ describe('ComponentPage', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Props' }));
     expect(previewWrapper.className).toBe('hidden');
     expect(propsWrapper.className).toBe('');
-    expect(within(propsWrapper).getByText('Options / range')).toBeTruthy();
+    expect(within(propsWrapper).getByText('API')).toBeTruthy();
     expect(within(propsWrapper).getByText('variant')).toBeTruthy();
     // Preview content is still in the DOM (hidden), not unmounted.
     expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('secondary');

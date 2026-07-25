@@ -47,12 +47,45 @@ export const states = [
 ];
 
 export const playground = definePlayground({
+  docs: {
+    summary:
+      'A single horizontal bar for a value against a ceiling — spend against a cap, tasks against a total. The track clamps out-of-range values rather than overflowing, so a runaway number stays inside its row.',
+  },
   controls: {
-    value: number(34, { min: -20, max: 150, step: 1 }),
-    max: number(100, { min: 1, max: 200, step: 1 }),
-    tone: select(TONE_NAMES, { initial: 'primary' }),
-    warnAt: number(80, { min: 0, max: 200, step: 1, label: 'warnAt (0 = off)' }),
-    dangerAt: number(95, { min: 0, max: 200, step: 1, label: 'dangerAt (0 = off)' }),
+    value: number(34, {
+      min: -20,
+      max: 150,
+      step: 1,
+      required: true,
+      description:
+        'Current amount. Values below zero or above `max` are clamped for drawing; the number you pass is still what a label reports.',
+    }),
+    max: number(100, {
+      min: 1,
+      max: 200,
+      step: 1,
+      description: 'The ceiling the value is measured against.',
+    }),
+    tone: select(TONE_NAMES, {
+      initial: 'primary',
+      type: 'Tone',
+      description: 'Fill colour while the value sits below both thresholds.',
+    }),
+    warnAt: number(80, {
+      min: 0,
+      max: 200,
+      step: 1,
+      label: 'warnAt (0 = off)',
+      description:
+        'Value at which the fill turns to the `warning` tone. Leave it unset for a bar that never changes colour.',
+    }),
+    dangerAt: number(95, {
+      min: 0,
+      max: 200,
+      step: 1,
+      label: 'dangerAt (0 = off)',
+      description: 'Value at which the fill turns to the `danger` tone. Takes precedence over `warnAt`.',
+    }),
   },
   render: (v) => (
     <div className="w-48">

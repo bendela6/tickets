@@ -46,8 +46,19 @@ function PlaygroundFixture({ count }: { count: number }) {
 }
 
 export const playground = definePlayground({
+  docs: {
+    summary:
+      'A two-or-three-way switch between views of the same thing — never a navigation control. Options are pressed buttons, not tabs: reach for `Tabs` when the choice swaps the panel underneath.',
+  },
   controls: {
-    count: number(2, { min: 2, max: 3, step: 1, label: 'Options' }),
+    count: number(2, {
+      min: 2,
+      max: 3,
+      step: 1,
+      label: 'Options',
+      description:
+        'Demo knob, not a prop — it slices the fixture’s `options` array. Past three segments the control stops reading as a switch; use a select instead.',
+    }),
   },
   render: (v) => <PlaygroundFixture count={v.count} />,
 });
