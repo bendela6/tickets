@@ -57,7 +57,7 @@ export function CodeBlock({
       <button
         type="button"
         onClick={() => void handleCopy()}
-        className="pg-code-copy absolute top-2.5 right-2.5 inline-flex h-[26px] items-center gap-1.5 rounded-ctrl border border-transparent px-2.5 font-sans text-label font-medium"
+        className="pg-code-copy absolute top-2.5 right-2.5 inline-flex h-6.5 items-center gap-1.5 rounded-ctrl border border-transparent px-2.5 font-sans text-label font-medium"
       >
         {copyState === 'copied' ? 'Copied' : copyState === 'failed' ? 'Copy failed' : '⧉ Copy'}
       </button>

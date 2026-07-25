@@ -3,7 +3,7 @@ import { SWATCHES } from './swatches';
 
 // `impl` is spelled out because this is the one demo whose component is a
 // `.ts` file — the default convention looks for `swatches.tsx`.
-export const meta = { title: 'Swatches', group: 'Foundation', size: 'md', impl: './swatches.ts' };
+export const meta = { title: 'Swatches', group: 'Foundation', size: 'lg', impl: './swatches.ts' };
 
 export const states = [
   {
