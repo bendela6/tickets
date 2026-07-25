@@ -17,7 +17,7 @@ function setHash(h: string) {
 describe('GalleryShell v2', () => {
   afterEach(() => { window.location.hash = ''; });
 
-  it('renders all demos and a sidebar link per demo plus All (plain StateGrids, no tabs)', () => {
+  it('renders all demos and a sidebar link per demo plus All (states + docs, no tabs)', () => {
     render(<GalleryShell demos={demos} title="t" />);
     expect(screen.getByRole('link', { name: 'All' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Button' })).toBeTruthy();
@@ -25,6 +25,29 @@ describe('GalleryShell v2', () => {
     expect(screen.getByText('inp')).toBeTruthy();
     expect(screen.queryByText('play')).toBeNull(); // playground hidden in All view
     expect(screen.queryByRole('tab', { name: 'Preview' })).toBeNull(); // no tab strip in All view
+  });
+
+  it('documents each component under its states in the All view', () => {
+    render(<GalleryShell demos={demos} title="t" />);
+    // Button has a playground, so its API docs render beneath the state grid.
+    expect(screen.getByText('API')).toBeTruthy();
+    expect(screen.getByText('on')).toBeTruthy(); // the `on` control, as a prop row
+
+    // Input has no playground: it gets states only, and no "no controls" note
+    // is emitted for it — that message belongs to the Docs tab a user opened
+    // deliberately.
+    expect(screen.queryByText('This component has no playground controls.')).toBeNull();
+  });
+
+  it('drops the controls-rail note in the All view, where there is no rail', () => {
+    render(<GalleryShell demos={demos} title="t" />);
+    expect(screen.queryByText(/wired to the controls rail/)).toBeNull();
+
+    // Selecting the component brings the note back with the Docs pane — which
+    // is mounted from the start (hidden, not unmounted), so its presence in
+    // the DOM is the assertion, not its visibility.
+    setHash('#button');
+    expect(screen.getByText(/wired to the controls rail/)).toBeTruthy();
   });
 
   it('hash selects a single component and routes it through ComponentPage (tabs + playground)', () => {
@@ -35,7 +58,7 @@ describe('GalleryShell v2', () => {
     expect(screen.getByText('play')).toBeTruthy();
     // ComponentPage's tab strip, with Preview active by default.
     expect(screen.getByRole('tab', { name: 'Preview' })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: 'Props' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Docs' })).toBeTruthy();
   });
 
   it('selecting a demo without a playground still routes through ComponentPage but shows no rail', () => {

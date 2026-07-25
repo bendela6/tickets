@@ -134,11 +134,15 @@ function PropRow({ name, def }: { name: string; def: AnyControlDef }) {
   );
 }
 
-// The Props tab (design docs/design/pulls/playground-workbench.dc.html §1j) —
+// The Docs tab (design docs/design/pulls/playground-workbench.dc.html §1j) —
 // API documentation rather than a spreadsheet: an API header, then one
 // definition-list row per prop (name/type/badge on the left, prose, options
 // and defaults on the right).
-export function PropsTable({ demo }: { demo: LiveDemo }) {
+//
+// The same panel runs under each component in the All view, where there is no
+// controls rail — hence `railNote`, which drops the closing note rather than
+// letting it point at a rail that isn't on screen.
+export function DocsPanel({ demo, railNote = true }: { demo: LiveDemo; railNote?: boolean }) {
   const { playground } = demo;
   if (!playground) {
     return (
@@ -176,15 +180,17 @@ export function PropsTable({ demo }: { demo: LiveDemo }) {
         <PropRow key={name} name={name} def={def} />
       ))}
 
-      <div className="mt-5.5 flex gap-2.5 rounded-card bg-opt-green-subtle px-3.5 py-3.25">
-        <span className="mt-px inline-flex size-4 flex-none items-center justify-center rounded-full bg-opt-green font-sans text-nano font-semibold text-on-opt-green">
-          i
-        </span>
-        <span className="font-sans text-meta leading-[1.55] text-opt-green text-pretty">
-          Every prop on this page is wired to the controls rail — edit a value there and the code on
-          the Preview tab regenerates.
-        </span>
-      </div>
+      {railNote && (
+        <div className="mt-5.5 flex gap-2.5 rounded-card bg-opt-green-subtle px-3.5 py-3.25">
+          <span className="mt-px inline-flex size-4 flex-none items-center justify-center rounded-full bg-opt-green font-sans text-nano font-semibold text-on-opt-green">
+            i
+          </span>
+          <span className="font-sans text-meta leading-[1.55] text-opt-green text-pretty">
+            Every prop on this page is wired to the controls rail — edit a value there and the code
+            on the Preview tab regenerates.
+          </span>
+        </div>
+      )}
     </div>
   );
 }

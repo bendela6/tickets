@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { isDemoError, type CollectedDemo } from '@tickets/ui/gallery';
 import { ComponentPage } from './component-page';
+import { DocsPanel } from './docs-panel';
 import type { ImplSources } from './impl-tab';
 import { DemoErrorCard, StateGrid } from './state-grid';
 import { CommandPalette } from './command-palette';
@@ -150,7 +151,13 @@ export function GalleryShell({
                     implSources={implSources}
                   />
                 ) : (
-                  <StateGrid key={d.slug} demo={d} />
+                  // The All view is the whole library read end to end: states
+                  // first, then the same docs the component's own Docs tab
+                  // shows. The rail note is dropped — there's no rail here.
+                  <div key={d.slug} className="flex flex-col">
+                    <StateGrid demo={d} />
+                    {d.playground && <DocsPanel demo={d} railNote={false} />}
+                  </div>
                 ),
               )}
               {selected === null && errors.map((e) => <DemoErrorCard key={e.path} path={e.path} error={e.error} />)}

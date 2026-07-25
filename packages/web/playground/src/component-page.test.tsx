@@ -128,7 +128,7 @@ describe('ComponentPage', () => {
     render(<ComponentPage demo={demo} />);
     expect(screen.getByRole('tablist')).toBeTruthy();
     const preview = screen.getByRole('tab', { name: 'Preview' });
-    const props = screen.getByRole('tab', { name: 'Props' });
+    const props = screen.getByRole('tab', { name: 'Docs' });
     expect(screen.getByRole('tab', { name: 'Implementation' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'Demo' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'A11y' })).toBeTruthy();
@@ -164,24 +164,24 @@ describe('ComponentPage', () => {
     // toggles `hidden`.
     const root = container.firstElementChild!;
     const previewWrapper = root.children[1] as HTMLElement;
-    const propsWrapper = root.children[2] as HTMLElement;
+    const docsWrapper = root.children[2] as HTMLElement;
 
     fireEvent.change(screen.getByLabelText('variant'), { target: { value: 'secondary' } });
     expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('secondary');
     expect(previewWrapper.className).toBe('');
-    expect(propsWrapper.className).toBe('hidden');
+    expect(docsWrapper.className).toBe('hidden');
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Props' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Docs' }));
     expect(previewWrapper.className).toBe('hidden');
-    expect(propsWrapper.className).toBe('');
-    expect(within(propsWrapper).getByText('API')).toBeTruthy();
-    expect(within(propsWrapper).getByText('variant')).toBeTruthy();
+    expect(docsWrapper.className).toBe('');
+    expect(within(docsWrapper).getByText('API')).toBeTruthy();
+    expect(within(docsWrapper).getByText('variant')).toBeTruthy();
     // Preview content is still in the DOM (hidden), not unmounted.
     expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('secondary');
 
     fireEvent.click(screen.getByRole('tab', { name: 'Preview' }));
     expect(previewWrapper.className).toBe('');
-    expect(propsWrapper.className).toBe('hidden');
+    expect(docsWrapper.className).toBe('hidden');
     expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('secondary');
     expect((screen.getByLabelText('variant') as HTMLSelectElement).value).toBe('secondary');
   });
@@ -294,7 +294,7 @@ describe('ComponentPage', () => {
 
   it('hides Split themes toggle when not on Preview tab', () => {
     render(<ComponentPage demo={demo} />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Props' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Docs' }));
     expect(screen.queryByLabelText('Split themes')).toBeNull();
   });
 
