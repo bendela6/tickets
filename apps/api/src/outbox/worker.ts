@@ -12,6 +12,34 @@ import { clearOutboxNotify, onOutboxNotify } from './notify';
 const BATCH = 50;
 const LEASE = '30 seconds';
 const MAX_ATTEMPTS = 5;
+// While the database is unreachable there is nothing to drain, so back off from
+// the normal sub-second poll to avoid spinning on a dead socket.
+const DB_DOWN_POLL_MS = 5_000;
+
+// Connection-level failures, as opposed to a bad row or a broken automation.
+// postgres-js surfaces the socket error either directly or wrapped by drizzle
+// (DrizzleQueryError -> cause), so walk the cause chain.
+const CONNECTION_ERROR_CODES = new Set([
+  'ECONNREFUSED',
+  'ECONNRESET',
+  'ENOTFOUND',
+  'EHOSTUNREACH',
+  'ETIMEDOUT',
+  'EPIPE',
+  'CONNECTION_ENDED',
+  'CONNECTION_CLOSED',
+  'CONNECTION_DESTROYED',
+  'CONNECT_TIMEOUT',
+]);
+
+export function isDatabaseUnreachable(err: unknown): boolean {
+  for (let current: unknown = err, depth = 0; current != null && depth < 5; depth += 1) {
+    const code = (current as { code?: unknown }).code;
+    if (typeof code === 'string' && CONNECTION_ERROR_CODES.has(code)) return true;
+    current = (current as { cause?: unknown }).cause;
+  }
+  return false;
+}
 
 export interface OutboxWorker {
   start(): void;
@@ -26,6 +54,35 @@ export function createOutboxWorker(
   let systemActorId: number | null = null;
   let running = false;
   let timer: NodeJS.Timeout | null = null;
+  // Latches while postgres is unreachable so an outage reports once instead of
+  // once per poll. Previously a single postgres restart produced a stack trace
+  // every 500ms — and, since these are captured, hundreds of duplicate signals.
+  let dbDown = false;
+
+  function noteFailure(err: unknown, phase: 'drain' | 'notify'): void {
+    if (isDatabaseUnreachable(err)) {
+      if (!dbDown) {
+        dbDown = true;
+        // One line on the way down, then silence until it recovers.
+        console.error(
+          `outbox worker: database unreachable — retrying every ${DB_DOWN_POLL_MS / 1000}s, further errors suppressed until it returns`,
+        );
+        captureError(err, { level: 'error', contexts: { outbox: { phase, dbDown: true } } });
+      }
+      return;
+    }
+    // A real processing failure — always surfaced.
+    console.error(`outbox worker ${phase} failed`, err);
+    captureError(err, { level: 'error', contexts: { outbox: { phase } } });
+  }
+
+  function noteReachable(): void {
+    if (dbDown) {
+      dbDown = false;
+      console.log('outbox worker: database reachable again — resuming');
+      captureEvent('outbox.db-recovered');
+    }
+  }
 
   async function getSystemActorId(): Promise<number> {
     if (systemActorId === null) {
@@ -108,11 +165,14 @@ export function createOutboxWorker(
       do {
         n = await drainOnce();
       } while (n > 0 && running);
+      // A completed pass means the connection is healthy again.
+      noteReachable();
     } catch (err) {
-      console.error('outbox worker drain failed', err);
-      captureError(err, { level: 'error', contexts: { outbox: { phase: 'drain' } } });
+      noteFailure(err, 'drain');
     }
-    if (running) timer = setTimeout(() => void loop(), opts.pollMs ?? 500);
+    if (running) {
+      timer = setTimeout(() => void loop(), dbDown ? DB_DOWN_POLL_MS : (opts.pollMs ?? 500));
+    }
   }
 
   return {
@@ -120,10 +180,7 @@ export function createOutboxWorker(
       if (running) return;
       running = true;
       onOutboxNotify(() => {
-        drainOnce().catch((err) => {
-          console.error('outbox notify drain failed', err);
-          captureError(err, { level: 'error', contexts: { outbox: { phase: 'notify' } } });
-        });
+        drainOnce().then(noteReachable).catch((err) => noteFailure(err, 'notify'));
       });
       void loop();
     },
