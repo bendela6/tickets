@@ -11,10 +11,10 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "tokens:build": "node scripts/build-tokens.mjs",
+    "tokens:build": "node scripts/build-tokens.mjs && node scripts/extract-safelist.mjs",
     "tokens:lint": "node scripts/scan-hardcoded-values.mjs",
     "tokens:check": "node scripts/check-design-tokens.mjs",
-    "tokens:verify": "node scripts/build-tokens.mjs && git diff --exit-code src/tokens/tokens.css src/style/tones/tones.generated.ts && node scripts/scan-hardcoded-values.mjs && node scripts/check-design-tokens.mjs"
+    "tokens:verify": "node scripts/build-tokens.mjs && node scripts/extract-safelist.mjs && git diff --exit-code src/tokens/tokens.css src/tokens/safelist.generated.css src/style/tones/tones.generated.ts && node scripts/scan-hardcoded-values.mjs && node scripts/check-design-tokens.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

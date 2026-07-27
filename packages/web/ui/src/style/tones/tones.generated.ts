@@ -5,6 +5,25 @@ export type Tone = (typeof TONE_NAMES)[number];
 export const HUE_TONES = ['red', 'orange', 'yellow', 'green', 'teal', 'cyan', 'blue', 'indigo', 'purple', 'pink', 'gray'] as const;
 export type HueTone = (typeof HUE_TONES)[number];
 export type ToneEmphasis = 'subtle' | 'solid' | 'outline' | 'text';
+export const TONE_SCALE: Record<Tone, HueTone> = {
+  'primary': 'indigo',
+  'secondary': 'gray',
+  'success': 'green',
+  'warning': 'orange',
+  'danger': 'red',
+  'neutral': 'gray',
+  'red': 'red',
+  'orange': 'orange',
+  'yellow': 'yellow',
+  'green': 'green',
+  'teal': 'teal',
+  'cyan': 'cyan',
+  'blue': 'blue',
+  'indigo': 'indigo',
+  'purple': 'purple',
+  'pink': 'pink',
+  'gray': 'gray',
+};
 export const TONES: Record<Tone, Record<ToneEmphasis, string>> = {
   'primary': {
     subtle: 'bg-indigo-3 text-indigo-11',
