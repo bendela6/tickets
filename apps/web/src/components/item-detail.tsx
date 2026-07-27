@@ -6,7 +6,7 @@ import type { Board, Item } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
 import { typePill } from '../domain/status';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, cn, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, useCopy, useToast } from '@tickets/ui';
+import { Button, cn, Icon, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, useCopy, useToast } from '@tickets/ui';
 import { StatusSelect } from '../ui/status-select';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
@@ -343,7 +343,7 @@ export function ItemDetail({
           {board.project.name}
         </Link>
         <span aria-hidden className="font-sans text-meta text-gray-9">
-          ▸
+          <Icon name="chevron-right" size="2xs" />
         </span>
         <span className="shrink-0 font-mono text-meta font-medium text-gray-12">
           {prefix}-{item.number}

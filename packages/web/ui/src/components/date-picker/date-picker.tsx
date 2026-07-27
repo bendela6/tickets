@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { cn, TONE_SCALE, type Tone } from '../../style';
 import { fieldClass, type FieldSize } from '../field';
+import { Icon, type IconSize } from '../icon';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
 import { formatExact } from '../relative-date';
 
@@ -51,6 +52,8 @@ const BOX: Record<FieldSize, string> = {
   md: 'px-3 text-[14px]',
   lg: 'px-3.5 text-[15px]',
 };
+
+const CHEVRON: Record<FieldSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
 
 export function DatePicker({
   value,
@@ -107,9 +110,7 @@ export function DatePicker({
           })}
         >
           {value ? formatExact(value) : placeholder}
-          <span aria-hidden className="text-[10px] text-gray-9">
-            ▾
-          </span>
+          <Icon name="chevron-down" size={CHEVRON[size]} className="text-gray-9" />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-59 rounded-[10px] p-3">
@@ -120,7 +121,7 @@ export function DatePicker({
             onClick={() => shiftMonth(-1)}
             className="inline-flex h-6 w-6 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
           >
-            ‹
+            <Icon name="chevron-left" size="sm" />
           </button>
           <span className="font-sans text-ui font-semibold text-gray-12">
             {MONTH_NAMES[view.month]} {view.year}
@@ -131,7 +132,7 @@ export function DatePicker({
             onClick={() => shiftMonth(1)}
             className="inline-flex h-6 w-6 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
           >
-            ›
+            <Icon name="chevron-right" size="sm" />
           </button>
         </div>
         <div className="grid grid-cols-[repeat(7,28px)] justify-center gap-0.5">

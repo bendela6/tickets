@@ -203,7 +203,6 @@ export function AgentEditor({
                 }))}
                 value={workdirId}
                 onChange={setWorkdirId}
-                clearable
                 placeholder="None"
               />
             </label>

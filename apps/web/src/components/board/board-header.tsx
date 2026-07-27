@@ -1,5 +1,5 @@
 import type { Board } from '../../api/types';
-import { Button, Checkbox, Input, Popover, PopoverContent, PopoverTrigger, Tabs } from '@tickets/ui';
+import { Button, Checkbox, Icon, Input, Popover, PopoverContent, PopoverTrigger, Tabs } from '@tickets/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { ViewColumn, ViewConfig, ViewDensity, ViewMode } from '../../utils/view-config';
 
@@ -134,7 +134,7 @@ export function BoardHeader({
           <span className="font-sans text-meta text-gray-11">
             Columns: <strong className="font-medium text-gray-12">Status</strong>{' '}
             <span aria-hidden className="text-[10px] text-gray-9">
-              ▾
+              <Icon name="chevron-down" size="2xs" />
             </span>
           </span>
           <Popover>
@@ -145,7 +145,7 @@ export function BoardHeader({
                   {visibleFieldCount} {visibleFieldCount === 1 ? 'field' : 'fields'}
                 </strong>{' '}
                 <span aria-hidden className="text-[10px] text-gray-9">
-                  ▾
+                  <Icon name="chevron-down" size="2xs" />
                 </span>
               </button>
             </PopoverTrigger>

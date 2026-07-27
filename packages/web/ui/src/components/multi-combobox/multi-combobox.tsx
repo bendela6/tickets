@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { cn, TONE_SCALE, type Tone } from '../../style';
 import { fieldClass, type FieldSize } from '../field';
+import { Icon, type IconSize } from '../icon';
 import { Pill } from '../pill';
 import { ComboboxList, type ComboOption } from '../combobox-list';
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '../popover';
@@ -27,6 +28,8 @@ const BOX: Record<FieldSize, string> = {
   md: 'h-auto min-h-9 py-1',
   lg: 'h-auto min-h-11 py-1.5',
 };
+
+const CHEVRON: Record<FieldSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
 
 export function MultiCombobox({
   options,
@@ -80,7 +83,7 @@ export function MultiCombobox({
                   onClick={() => toggle(option.value)}
                   className="rounded-md px-0.5 text-gray-9 hover:text-gray-12"
                 >
-                  ×
+                  <Icon name="x" size="2xs" />
                 </button>
               </span>
             ))}
@@ -88,16 +91,28 @@ export function MultiCombobox({
               <span className="font-mono text-meta font-medium text-gray-11">+{overflow}</span>
             ) : null}
           </div>
+          {/* Clearing every chip at once used to require opening the popover
+              and hitting "Clear (n)" — one click on a control that is already
+              on screen, versus three. Only shown when there is something to
+              clear, so the trigger does not gain a permanently dead slot. */}
+          {value.length > 0 && !disabled ? (
+            <button
+              type="button"
+              aria-label="Clear all"
+              onClick={() => onChange([])}
+              className="flex shrink-0 items-center self-center rounded-md px-0.5 text-gray-9 outline-none hover:text-gray-12"
+            >
+              <Icon name="x" size={CHEVRON[size]} />
+            </button>
+          ) : null}
           <PopoverTrigger asChild>
             <button
               type="button"
               aria-label={placeholder}
               disabled={disabled}
-              className="flex shrink-0 items-center self-center font-sans text-ui text-gray-9 outline-none"
+              className="flex shrink-0 items-center self-center font-sans text-gray-9 outline-none"
             >
-              <span aria-hidden className="text-[10px]">
-                ▾
-              </span>
+              <Icon name="chevron-down" size={CHEVRON[size]} />
             </button>
           </PopoverTrigger>
         </div>

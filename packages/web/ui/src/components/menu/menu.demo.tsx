@@ -6,7 +6,7 @@ function MenuFixture() {
   return (
     <Menu>
       <MenuTrigger asChild>
-        <Button variant="outline">Row actions ▾</Button>
+        <Button variant="outline" chevron>Row actions</Button>
       </MenuTrigger>
       <MenuContent>
         <MenuItem shortcut="E">Edit</MenuItem>
@@ -24,7 +24,7 @@ function MenuPlaygroundFixture({ shortcut, destructive }: { shortcut: string; de
   return (
     <Menu>
       <MenuTrigger asChild>
-        <Button variant="outline">Row actions ▾</Button>
+        <Button variant="outline" chevron>Row actions</Button>
       </MenuTrigger>
       <MenuContent>
         <MenuItem shortcut="E">Edit</MenuItem>

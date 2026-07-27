@@ -87,7 +87,7 @@ export function StatusSelect({
             <span className="pl-1 font-sans text-ui text-gray-9">Set status…</span>
           )}
           <span aria-hidden className="text-[10px] text-gray-9">
-            ▾
+            <Icon name="chevron-down" size="sm" />
           </span>
         </button>
       </PopoverTrigger>

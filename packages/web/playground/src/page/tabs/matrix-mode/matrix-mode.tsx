@@ -1,4 +1,4 @@
-import type { AnyControlDef, ControlValues, PlaygroundDef } from '@tickets/ui';
+import { Icon, type AnyControlDef, type ControlValues, type PlaygroundDef } from '@tickets/ui';
 
 export function matrixValues(
   controls: Record<string, AnyControlDef>,
@@ -54,7 +54,7 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
               </option>
             ))}
           </select>
-          <span className="text-nano text-gray-9">▾</span>
+          <Icon name="chevron-down" size="2xs" className="text-gray-9" />
         </label>
         <label className="flex items-center gap-2 h-7 px-2.5 border border-gray-7 rounded-sm bg-surface-raised font-sans text-ui text-gray-12 cursor-pointer">
           <span>columns:</span>
@@ -70,7 +70,7 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
               </option>
             ))}
           </select>
-          <span className="text-nano text-gray-9">▾</span>
+          <Icon name="chevron-down" size="2xs" className="text-gray-9" />
         </label>
         <div className="flex-1" />
         <div className="font-mono text-label text-gray-9">

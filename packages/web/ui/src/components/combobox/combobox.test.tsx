@@ -26,9 +26,10 @@ test('shows the selected label on the trigger', () => {
   expect(screen.getByRole('button')).toHaveTextContent('P0 · critical');
 });
 
-test('clear button emits null', async () => {
-  const onChange = vi.fn();
-  render(<Combobox options={OPTIONS} value="p0" onChange={onChange} clearable />);
-  await userEvent.click(screen.getByRole('button', { name: /clear/i }));
-  expect(onChange).toHaveBeenCalledWith(null);
+test('has no clear affordance — a single select is changed by picking, not emptied', () => {
+  // The X sat in the trigger competing with the chevron for the same corner,
+  // and a required single-select had no legal empty state to clear to.
+  // MultiCombobox keeps one, where clearing several chips is the real gesture.
+  render(<Combobox options={OPTIONS} value="p0" onChange={() => {}} />);
+  expect(screen.queryByRole('button', { name: /clear/i })).toBeNull();
 });

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { SignalPayload, SignalStackFrame } from '../../api/signals/signals-api';
-import { cn, Tabs } from '@tickets/ui';
+import { cn, Icon, Tabs } from '@tickets/ui';
 import { formatClockTime } from './format';
 
 type Tab = 'sym' | 'raw';
@@ -53,7 +53,7 @@ function FrameRow({ frame, defaultExpanded }: { frame: SignalStackFrame; default
         )}
       >
         <span aria-hidden className="w-3.5 shrink-0 font-sans text-[11px] text-gray-9">
-          {hasContext ? (expanded ? '▾' : '▸') : ''}
+          {hasContext ? <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size="2xs" /> : null}
         </span>
         <span className="font-mono text-[12.5px] font-semibold text-gray-12">{frame.functionName}</span>
         {frame.inApp ? (
@@ -105,7 +105,7 @@ function VendorGroup({ frames }: { frames: SignalStackFrame[] }) {
         className="flex w-full items-center gap-2.5 px-4 py-2 text-left opacity-55 hover:opacity-80"
       >
         <span aria-hidden className="w-3.5 shrink-0 font-sans text-[11px] text-gray-9">
-          {expanded ? '▾' : '▸'}
+          <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size="2xs" />
         </span>
         <span className="font-mono text-[11.5px] text-gray-9">
           {frames.length} framework frames — {vendorLabel(frames)}
