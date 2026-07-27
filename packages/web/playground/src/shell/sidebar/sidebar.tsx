@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react';
 import { cn, type CollectedDemo, Icon, runtimeStyle } from '@tickets/ui';
-import { loadFlag, loadLayout, saveFlag, saveLayout } from './persisted-layout';
-import type { GalleryNavigation } from './navigation';
+import { loadFlag, loadLayout, saveFlag, saveLayout } from '../persisted-layout';
+import type { GalleryNavigation } from '../navigation';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 

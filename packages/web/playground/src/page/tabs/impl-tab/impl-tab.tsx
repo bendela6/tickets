@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { type CollectedDemo, SegmentedControl } from '@tickets/ui';
-import { CodeBlock } from './code-block';
-import { fileName, implPaths } from './resolve-impl';
+import { CodeBlock } from '../../../code/code-block';
+import { fileName, implPaths } from '../../../code/resolve-impl';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 

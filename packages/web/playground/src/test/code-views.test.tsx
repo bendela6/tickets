@@ -7,10 +7,10 @@ import {
   isDemoError,
   select,
 } from '@tickets/ui';
-import { DemoTab } from './demo-tab';
-import { GeneratedCode } from './generated-code';
-import { setHighlighterForTests } from './highlight';
-import { ImplTab } from './impl-tab';
+import { DemoTab } from '../page/tabs/demo-tab';
+import { GeneratedCode } from '../code/generated-code';
+import { setHighlighterForTests } from '../code/highlight';
+import { ImplTab } from '../page/tabs/impl-tab';
 
 // collectDemos (rather than a hand-typed literal) widens `playground` to
 // `AnyPlayground`, matching what these views actually receive from

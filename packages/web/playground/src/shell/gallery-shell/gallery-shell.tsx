@@ -1,13 +1,13 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { isDemoError, type CollectedDemo } from '@tickets/ui';
-import { ComponentPage } from './component-page';
-import { DemoPreview, fitsBesideDocs } from './demo-preview';
-import { DocsPanel, DOCS_COLUMN } from './docs-panel';
-import type { ImplSources } from './impl-tab';
-import { useHashAnchor, useHashNavigation, type GalleryNavigation } from './navigation';
-import { Sidebar } from './sidebar';
-import { DemoErrorCard } from './state-grid';
-import { CommandPalette } from './command-palette';
+import { ComponentPage } from '../../page/component-page';
+import { DemoPreview, fitsBesideDocs } from '../../preview/demo-preview';
+import { DocsPanel, DOCS_COLUMN } from '../../page/tabs/docs-panel';
+import type { ImplSources } from '../../page/tabs/impl-tab';
+import { useHashAnchor, useHashNavigation, type GalleryNavigation } from '../navigation';
+import { Sidebar } from '../sidebar';
+import { DemoErrorCard } from '../../preview/state-grid';
+import { CommandPalette } from '../command-palette';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 

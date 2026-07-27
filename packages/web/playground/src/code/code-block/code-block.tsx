@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { cn } from '@tickets/ui';
-import { getHighlighter } from './highlight';
+import { getHighlighter } from '../highlight';
 
 const COPY_STATE_RESET_MS = 1500;
 
