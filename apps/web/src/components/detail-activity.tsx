@@ -2,8 +2,7 @@ import { docToText, parseDoc } from '@tickets/richtext';
 import type { ReactNode } from 'react';
 import type { ActivityEntry, Item } from '../api/types';
 import { useItemActivity } from '../api/use-item-activity';
-import { Avatar } from '../ui/avatar';
-import { RelativeDate } from '../ui/relative-date';
+import { Avatar, RelativeDate } from '@tickets/ui';
 import type { BoardIndexes } from '../utils/index-board';
 
 // Matches the excerpt length the api projection uses for comment bodies

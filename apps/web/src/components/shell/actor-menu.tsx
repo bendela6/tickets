@@ -2,12 +2,7 @@ import { useState } from 'react';
 import { useCreateUser } from '../../api/use-create-user';
 import { useUsers } from '../../api/use-users';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Avatar } from '../../ui/avatar';
-import { Button } from '../../ui/button';
-import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
-import { FieldLabel } from '../../ui/field-label';
-import { Input } from '../../ui/input';
-import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '../../ui/menu';
+import { Avatar, Button, DialogContent, DialogRoot, DialogTitle, FieldLabel, Input, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@tickets/ui';
 
 // Sidebar footer card: who edits are attributed to. Design 01 §sidebar footer.
 // `compact` renders just the avatar (for the 48px activity rail) instead of

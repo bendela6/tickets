@@ -18,7 +18,8 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.6.0",
+    "radix-ui": "^1.6.1"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.2",
@@ -30,7 +31,9 @@
     "react": "^19.2.5",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "vite": "^8.0.12",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/user-event": "^14.6.1"
   },
   "peerDependencies": {
     "@xterm/xterm": "^6.0.0",

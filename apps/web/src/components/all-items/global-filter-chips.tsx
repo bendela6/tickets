@@ -1,12 +1,6 @@
 import { useState } from 'react';
-import { Pill } from '@tickets/ui';
-import { Button } from '../../ui/button';
-import { Combobox } from '../../ui/combobox';
-import type { ComboOption } from '../../ui/combobox-list';
+import { Button, Combobox, type ComboOption, Input, MultiCombobox, Pill, Popover, PopoverContent, PopoverTrigger } from '@tickets/ui';
 import { KIND_TONE } from '../../domain/status';
-import { Input } from '../../ui/input';
-import { MultiCombobox } from '../../ui/multi-combobox';
-import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
 import type { FilterRule } from '../../utils/view-config';
 import type { GlobalFilterRule } from './global-views';
 import type { SharedField } from './shared-fields';

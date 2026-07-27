@@ -10,6 +10,8 @@ export default defineConfig({
     // empties `tokens.css?raw` — and foundation.ts reads the live token values
     // out of exactly that import. Processing CSS keeps the raw text intact.
     css: true,
+    // jest-dom matchers + the jsdom stubs radix overlays need, mirroring apps/web.
+    setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
   },
 });

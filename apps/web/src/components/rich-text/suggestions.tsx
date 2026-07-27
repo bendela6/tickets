@@ -4,8 +4,7 @@ import type { SuggestionKeyDownProps, SuggestionProps } from '@tiptap/suggestion
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import type { StatusKind } from '../../api/types';
 import { KIND_TONE } from '../../domain/status';
-import { Avatar } from '../../ui/avatar';
-import { cn, toneClasses } from '@tickets/ui';
+import { Avatar, cn, toneClasses } from '@tickets/ui';
 
 // RichTextEditor threads these two lookup sources through to the mention (@)
 // and ticket-ref (#) Mention nodes wired in @tickets/richtext. Either source

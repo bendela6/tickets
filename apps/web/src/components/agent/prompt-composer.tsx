@@ -1,6 +1,4 @@
-import { Button } from '../../ui/button';
-import { Combobox } from '../../ui/combobox';
-import type { ComboOption } from '../../ui/combobox-list';
+import { Button, Combobox, type ComboOption } from '@tickets/ui';
 
 // Models the Claude provider offers (mirror of apps/api CLAUDE_MODELS). The
 // switcher is compact and lives in the composer per screen 10.

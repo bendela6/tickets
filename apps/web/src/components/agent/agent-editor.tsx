@@ -3,12 +3,7 @@ import type { Agent, AgentProviderInfo, PermissionMode } from '../../api/types';
 import { useCreateAgent } from '../../api/use-create-agent';
 import { usePatchAgent } from '../../api/use-patch-agent';
 import { useWorkdirs } from '../../api/use-workdirs';
-import { DialogFooter, SectionHeader } from '@tickets/ui';
-import { Button } from '../../ui/button';
-import { Combobox } from '../../ui/combobox';
-import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
-import { Input } from '../../ui/input';
-import { Textarea } from '../../ui/textarea';
+import { Button, Combobox, DialogContent, DialogFooter, DialogRoot, DialogTitle, Input, SectionHeader, Textarea } from '@tickets/ui';
 import { providerLabel } from './agent-card';
 
 // The new agent.permission_mode enum carries exactly these 5 values — the old

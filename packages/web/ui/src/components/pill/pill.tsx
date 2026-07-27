@@ -1,7 +1,7 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
-import { cn } from '../../style/cn';
+import { cn } from '../../style';
 import { Icon, type IconName } from '../icon';
-import { toneClasses, type Tone, type ToneEmphasis } from '../../style/tones';
+import { toneClasses, type Tone, type ToneEmphasis } from '../../style';
 
 export function Pill({
   label,

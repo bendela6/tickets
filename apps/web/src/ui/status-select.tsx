@@ -1,9 +1,7 @@
 import { useMemo, useState } from 'react';
-import { cn, Icon, Pill } from '@tickets/ui';
+import { cn, ComboboxList, type ComboOption, Icon, Pill, Popover, PopoverContent, PopoverTrigger } from '@tickets/ui';
 import type { StatusKind } from '../api/types';
 import { KIND_ICON, KIND_TONE, statusPill } from '../domain/status';
-import { ComboboxList, type ComboOption } from './combobox-list';
-import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
 export type StatusOption = { key: string; label: string; kind: StatusKind };
 

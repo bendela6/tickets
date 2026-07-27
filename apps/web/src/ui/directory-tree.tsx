@@ -1,5 +1,6 @@
 import type { WorkdirRoot } from '../api/types';
-import { cn, Spinner } from '@tickets/ui';
+import { cn } from '@tickets/ui';
+import { Spinner } from '@tickets/ui';
 import { useDirectoryTree, type VisibleRow } from './use-directory-tree';
 
 function Caret({ open, loading }: { open: boolean; loading: boolean }) {

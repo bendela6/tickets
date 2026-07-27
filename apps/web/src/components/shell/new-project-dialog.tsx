@@ -2,11 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useCreateProject } from '../../api/use-create-project';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button } from '../../ui/button';
-import { DialogFooter } from '@tickets/ui';
-import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
-import { FieldLabel } from '../../ui/field-label';
-import { Input } from '../../ui/input';
+import { Button, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldLabel, Input } from '@tickets/ui';
 
 export function NewProjectDialog({
   open,

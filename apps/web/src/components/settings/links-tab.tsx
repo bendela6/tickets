@@ -2,13 +2,7 @@ import { useState } from 'react';
 import type { ItemType, LinkType } from '../../api/types';
 import { useCreateLinkType, useSetTargetTypes, useUpdateLinkType } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button } from '../../ui/button';
-import { Checkbox } from '../../ui/checkbox';
-import { cn, Pill, SectionHeader } from '@tickets/ui';
-import { Combobox } from '../../ui/combobox';
-import type { ComboOption } from '../../ui/combobox-list';
-import { FieldLabel } from '../../ui/field-label';
-import { Input } from '../../ui/input';
+import { Button, Checkbox, cn, Combobox, type ComboOption, FieldLabel, Input, Pill, SectionHeader } from '@tickets/ui';
 import type { SettingsTabProps } from './types-tab';
 
 function slugify(label: string): string {

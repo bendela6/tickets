@@ -1,9 +1,5 @@
 import type { Board } from '../../api/types';
-import { Button } from '../../ui/button';
-import { Checkbox } from '../../ui/checkbox';
-import { Input } from '../../ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
-import { SegmentedControl } from '@tickets/ui';
+import { Button, Checkbox, Input, Popover, PopoverContent, PopoverTrigger, SegmentedControl } from '@tickets/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { ViewColumn, ViewConfig, ViewDensity, ViewMode } from '../../utils/view-config';
 

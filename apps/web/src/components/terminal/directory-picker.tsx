@@ -1,6 +1,6 @@
 import { useWorkdirRoots } from '../../api/use-workdir-dirs';
+import { Input } from '@tickets/ui';
 import { DirectoryTree } from '../../ui/directory-tree';
-import { Input } from '../../ui/input';
 
 export function DirectoryPicker({ value, onChange }: { value: string; onChange: (path: string) => void }) {
   const roots = useWorkdirRoots();
