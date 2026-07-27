@@ -1,4 +1,4 @@
-export { GalleryShell } from './gallery-shell';
+export { GalleryShell } from './shell/gallery-shell';
 export {
   hashHref,
   isPlainClick,
@@ -7,8 +7,8 @@ export {
   useHashNavigation,
   type GalleryNavigation,
   type GalleryTarget,
-} from './navigation';
-export { DemoErrorCard, StateGrid } from './state-grid';
-export { ControlsPanel } from './controls-panel';
-export { PlaygroundCard } from './playground-card';
-export { ComponentPage } from './component-page';
+} from './shell/navigation';
+export { DemoErrorCard, StateGrid } from './preview/state-grid';
+export { ControlsPanel } from './preview/controls-panel';
+export { PlaygroundCard } from './preview/playground-card';
+export { ComponentPage } from './page/component-page';

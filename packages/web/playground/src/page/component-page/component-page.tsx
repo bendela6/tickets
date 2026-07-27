@@ -7,18 +7,18 @@ import {
   type PanelImperativeHandle,
 } from 'react-resizable-panels';
 import { cn, type CollectedDemo, Icon, initialValues, Tabs } from '@tickets/ui';
-import { A11yTab } from './a11y-tab';
-import { getAxe } from './axe';
-import { ControlsPanel } from './controls-panel';
-import { DemoTab } from './demo-tab';
-import { DocsPanel } from './docs-panel';
-import { GeneratedCode } from './generated-code';
-import { ImplTab, type ImplSources } from './impl-tab';
-import { loadFlag, loadLayout, saveFlag, saveLayout } from './persisted-layout';
-import { MatrixMode } from './matrix-mode';
-import { PlaygroundCard } from './playground-card';
-import { StateGrid } from './state-grid';
-import { ThemeSplit } from './theme-split';
+import { A11yTab } from '../tabs/a11y-tab';
+import { getAxe } from '../tabs/a11y-tab/axe';
+import { ControlsPanel } from '../../preview/controls-panel';
+import { DemoTab } from '../tabs/demo-tab';
+import { DocsPanel } from '../tabs/docs-panel';
+import { GeneratedCode } from '../../code/generated-code';
+import { ImplTab, type ImplSources } from '../tabs/impl-tab';
+import { loadFlag, loadLayout, saveFlag, saveLayout } from '../../shell/persisted-layout';
+import { MatrixMode } from '../tabs/matrix-mode';
+import { PlaygroundCard } from '../../preview/playground-card';
+import { StateGrid } from '../../preview/state-grid';
+import { ThemeSplit } from '../../shell/theme-split';
 
 // v4's replacement for v2's `autoSaveId`: the app owns storage. Panel ids
 // below ("stage" / "controls") must stay stable — they're the keys `Layout`

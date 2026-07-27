@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { collectDemos, definePlayground, isDemoError } from '@tickets/ui';
-import { setAxeForTests } from './axe';
-import { ComponentPage } from './component-page';
+import { setAxeForTests } from '../page/tabs/a11y-tab/axe';
+import { ComponentPage } from '../page/component-page';
 
 // Regression test for the "audit always runs against a display:none subtree"
 // bug: the a11y tab's target lived under `hidden` (the Preview pane), and

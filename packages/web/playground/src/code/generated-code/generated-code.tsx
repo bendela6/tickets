@@ -1,6 +1,6 @@
 import type { CollectedDemo } from '@tickets/ui';
-import { CodeBlock } from './code-block';
-import { generateSnippet } from './code-snippet';
+import { CodeBlock } from '../code-block';
+import { generateSnippet } from '../code-snippet';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 

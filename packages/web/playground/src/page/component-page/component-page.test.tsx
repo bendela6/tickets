@@ -8,7 +8,7 @@ import {
   isDemoError,
   select,
 } from '@tickets/ui';
-import { setAxeForTests } from './axe';
+import { setAxeForTests } from '../tabs/a11y-tab/axe';
 import { ComponentPage } from './component-page';
 
 // react-resizable-panels needs real layout (ResizeObserver-driven sizing) to
