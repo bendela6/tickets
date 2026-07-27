@@ -30,6 +30,6 @@ function ComposerFixture() {
   );
 }
 
-export const meta = { title: 'Prompt Composer', group: 'AI session', size: 'full' };
+export const meta = { title: 'Prompt Composer', group: 'Ungrouped', size: 'full' };
 
 export const states = [{ name: 'composer', render: () => <ComposerFixture /> }];

@@ -38,7 +38,7 @@ function MenuPlaygroundFixture({ shortcut, destructive }: { shortcut: string; de
   );
 }
 
-export const meta = { title: 'Menu', group: 'Overlays', size: 'sm' };
+export const meta = { title: 'Menu', group: 'Ungrouped', size: 'sm' };
 
 export const states = [{ name: 'row actions', render: () => <MenuFixture /> }];
 

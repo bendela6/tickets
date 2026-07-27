@@ -1,7 +1,7 @@
 import { boolean, definePlayground, text } from '../../gallery';
 import { Textarea } from './textarea';
 
-export const meta = { title: 'Textarea', group: 'Form controls', size: 'md' };
+export const meta = { title: 'Textarea', group: 'Components', size: 'md' };
 
 export const states = [
   { name: 'with placeholder', render: () => <Textarea placeholder="Steps to reproduce…" /> },

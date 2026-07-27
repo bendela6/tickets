@@ -12,7 +12,7 @@ function PlaygroundFixture({ min, max, disabled }: { min: number; max: number; d
   return <NumberInput value={value} onChange={setValue} min={min} max={max} disabled={disabled} />;
 }
 
-export const meta = { title: 'NumberInput', group: 'Form controls', size: 'sm' };
+export const meta = { title: 'NumberInput', group: 'Components', size: 'sm' };
 
 export const states = [
   { name: 'estimate 0–13', render: () => <EstimateFixture /> },

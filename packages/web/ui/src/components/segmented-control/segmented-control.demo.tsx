@@ -25,7 +25,7 @@ function DemoSegmentedControl({ options }: { options: Option[] }) {
   return <SegmentedControl options={options} value={value} onChange={setValue} />;
 }
 
-export const meta = { title: 'SegmentedControl', group: 'Display', size: 'md' };
+export const meta = { title: 'SegmentedControl', group: 'Components', size: 'md' };
 
 export const states = [
   { name: 'Labeled', render: () => <DemoSegmentedControl options={LABELED} /> },

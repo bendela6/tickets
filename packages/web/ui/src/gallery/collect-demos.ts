@@ -46,13 +46,32 @@ function validate(mod: unknown): { ok: true; demo: DemoModule } | { ok: false; e
   return { ok: true, demo: m as DemoModule };
 }
 
+/**
+ * The sidebar reads top-down as an argument: what the system is made of, then
+ * what is built from it, then everything not yet placed. Alphabetical order
+ * would put Components above Foundation and bury Ungrouped in the middle, so
+ * these three are ranked explicitly. Any other group sorts alphabetically
+ * between Components and Ungrouped — a new group appears in a sensible place
+ * without being listed here first.
+ */
+const GROUP_ORDER = ['Foundation', 'Components'];
+const UNGROUPED = 'Ungrouped';
+
+function groupRank(group: string): number {
+  const explicit = GROUP_ORDER.indexOf(group);
+  if (explicit !== -1) return explicit;
+  return group === UNGROUPED ? GROUP_ORDER.length + 1 : GROUP_ORDER.length;
+}
+
 function compare(a: CollectedDemo, b: CollectedDemo): number {
   if ('error' in a || 'error' in b) {
     if ('error' in a && 'error' in b) return a.path.localeCompare(b.path);
     return 'error' in a ? 1 : -1;
   }
-  const g = a.meta.group.localeCompare(b.meta.group);
+  const g = groupRank(a.meta.group) - groupRank(b.meta.group);
   if (g !== 0) return g;
+  const same = a.meta.group.localeCompare(b.meta.group);
+  if (same !== 0) return same;
   const ao = a.meta.order ?? Number.MAX_SAFE_INTEGER;
   const bo = b.meta.order ?? Number.MAX_SAFE_INTEGER;
   if (ao !== bo) return ao - bo;

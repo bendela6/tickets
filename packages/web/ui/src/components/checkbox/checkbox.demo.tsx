@@ -1,7 +1,7 @@
 import { boolean, definePlayground, text } from '../../gallery';
 import { Checkbox } from './checkbox';
 
-export const meta = { title: 'Checkbox', group: 'Form controls', size: 'sm' };
+export const meta = { title: 'Checkbox', group: 'Components', size: 'sm' };
 
 export const states = [
   { name: 'off', render: () => <Checkbox label="Off" /> },

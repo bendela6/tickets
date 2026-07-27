@@ -23,7 +23,7 @@ function PopoverPlaygroundFixture({
   );
 }
 
-export const meta = { title: 'Popover', group: 'Pickers', size: 'md' };
+export const meta = { title: 'Popover', group: 'Ungrouped', size: 'md' };
 
 export const states = [
   {
