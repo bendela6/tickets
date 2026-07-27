@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import type { AppReleaseRow } from '../../api/signals/signals-api';
 import { useAppReleases, useDeleteRelease } from '../../api/signals/use-signals';
-import { cn } from '@tickets/ui';
-import { ConfirmDialog } from '../../ui/dialog';
+import { cn, ConfirmDialog } from '@tickets/ui';
 import { formatBytes, formatCount, relativeTime } from './format';
 
 // release · signals · errors · source maps (count + bytes) · last seen · delete.

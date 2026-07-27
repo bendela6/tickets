@@ -1,6 +1,6 @@
 import { Outlet, createRootRoute } from '@tanstack/react-router';
 import { CurrentUserProvider } from '../state/current-user-context';
-import { ToastProvider } from '../ui/toast';
+import { ToastProvider } from '@tickets/ui';
 
 function RootLayout() {
   return (

@@ -5,11 +5,7 @@ import { useAgents } from '../../api/use-agents';
 import { useAgentSessions } from '../../api/use-agent-sessions';
 import { useDispatchAgent } from '../../api/use-dispatch-agent';
 import { sessionStatus } from '../../domain/session-status';
-import { DialogFooter, Pill } from '@tickets/ui';
-import { Button } from '../../ui/button';
-import { Combobox } from '../../ui/combobox';
-import { DialogContent, DialogDescription, DialogRoot, DialogTitle } from '../../ui/dialog';
-import { Textarea } from '../../ui/textarea';
+import { Button, Combobox, DialogContent, DialogDescription, DialogFooter, DialogRoot, DialogTitle, Pill, Textarea } from '@tickets/ui';
 
 const LIVE: AgentSessionStatus[] = ['starting', 'running', 'idle', 'awaiting_input'];
 

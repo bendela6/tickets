@@ -3,10 +3,7 @@ import type { Board, ItemType } from '../../api/types';
 import { useCreateType, useSetChildTypes, useUpdateType } from '../../api/use-admin';
 import { DEFAULT_OPTION_HEX, OPTION_COLOR_CHOICES } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button } from '../../ui/button';
-import { cn, Pill, SectionHeader } from '@tickets/ui';
-import { FieldLabel } from '../../ui/field-label';
-import { Input } from '../../ui/input';
+import { Button, cn, FieldLabel, Input, Pill, SectionHeader } from '@tickets/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 
 export type SettingsTabProps = {

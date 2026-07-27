@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
-import { Pill } from '@tickets/ui';
+import { formatExact, Pill } from '@tickets/ui';
 import type { Field } from '../api/types';
 import { statusPill } from '../domain/status';
-import { formatExact } from '../ui/relative-date';
 import type { BoardIndexes } from '../utils/index-board';
 import { hexToOptionColor } from './option-color';
 

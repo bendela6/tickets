@@ -2,11 +2,7 @@ import { useEffect, useState } from 'react';
 import { ApiError } from '../../api/api-error';
 import type { SignalsAppRow } from '../../api/signals/signals-api';
 import { usePatchApp } from '../../api/signals/use-signals';
-import { Button } from '../../ui/button';
-import { DialogFooter } from '@tickets/ui';
-import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
-import { FieldLabel } from '../../ui/field-label';
-import { Input } from '../../ui/input';
+import { Button, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldLabel, Input } from '@tickets/ui';
 
 type ManagedApp = Pick<SignalsAppRow, 'id' | 'name' | 'slug'>;
 

@@ -1,10 +1,7 @@
 import { defineRegistry, type InputProps } from '@tickets/form';
 
 import { DirectoryPicker } from '../components/terminal/directory-picker';
-import { cn } from '@tickets/ui';
-import { FieldError } from '../ui/field-error';
-import { FieldLabel } from '../ui/field-label';
-import { Input } from '../ui/input';
+import { cn, FieldError, FieldLabel, Input } from '@tickets/ui';
 
 function TextInput(p: InputProps<{ placeholder?: string; mono?: boolean }, string>) {
   return (

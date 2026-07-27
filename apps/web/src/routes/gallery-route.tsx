@@ -1,9 +1,7 @@
 import { useMemo } from 'react';
 import { createRoute, useNavigate } from '@tanstack/react-router';
-import { collectDemos, packageComponentSources, packageDemos, packageDemoSources, prepareDemos, rebaseGlobKeys, WEB_SRC_ROOT } from '@tickets/ui';
+import { collectDemos, packageComponentSources, packageDemos, packageDemoSources, prepareDemos, rebaseGlobKeys, ToastProvider, TooltipProvider, WEB_SRC_ROOT } from '@tickets/ui';
 import { GalleryShell, isPlainClick, type GalleryNavigation, type GalleryTarget } from '@tickets/playground';
-import { ToastProvider } from '../ui/toast';
-import { TooltipProvider } from '../ui/tooltip';
 import { rootRoute } from './root-route';
 
 // Every map below is rebased onto WEB_SRC_ROOT for the same reason the

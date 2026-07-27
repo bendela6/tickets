@@ -10,14 +10,7 @@ import {
 import { typePill } from '../../domain/status';
 import { hexToOptionColor } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button } from '../../ui/button';
-import { cn, Pill, ScreenState, Tabs } from '@tickets/ui';
-import { Combobox } from '../../ui/combobox';
-import type { ComboOption } from '../../ui/combobox-list';
-import { FieldLabel } from '../../ui/field-label';
-import { Input } from '../../ui/input';
-import { MultiCombobox } from '../../ui/multi-combobox';
-import { Switch } from '../../ui/switch';
+import { Button, cn, Combobox, type ComboOption, FieldLabel, Input, MultiCombobox, Pill, ScreenState, Switch, Tabs } from '@tickets/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { SettingsTabProps } from './types-tab';
 

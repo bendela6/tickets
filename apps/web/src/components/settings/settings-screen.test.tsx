@@ -5,7 +5,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import type { Board } from '../../api/types';
 import { CurrentUserProvider } from '../../state/current-user-context';
-import { ToastProvider } from '../../ui/toast';
+import { ToastProvider } from '@tickets/ui';
 import { SettingsScreen } from './settings-screen';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

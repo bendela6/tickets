@@ -10,7 +10,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { Board } from '../api/types';
 import { CurrentUserProvider } from '../state/current-user-context';
-import { ToastProvider } from '../ui/toast';
+import { ToastProvider } from '@tickets/ui';
 import { indexBoard } from '../utils/index-board';
 import { ItemDrawer } from './item-drawer';
 

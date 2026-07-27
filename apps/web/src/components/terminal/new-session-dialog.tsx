@@ -13,11 +13,7 @@ import { useCreateTerminalSession } from '../../api/use-create-terminal-session'
 import { useCreateWorkdir } from '../../api/use-create-workdir';
 import { useWorkdirs } from '../../api/use-workdirs';
 import { formRegistry } from '../../form/registry';
-import { DialogFooter, SectionHeader } from '@tickets/ui';
-import { Button } from '../../ui/button';
-import { Combobox } from '../../ui/combobox';
-import { DialogContent, DialogDescription, DialogRoot, DialogTitle } from '../../ui/dialog';
-import { Input } from '../../ui/input';
+import { Button, Combobox, DialogContent, DialogDescription, DialogFooter, DialogRoot, DialogTitle, Input, SectionHeader } from '@tickets/ui';
 
 // The add-workdir fields, driven by @tickets/form: a mono name and the
 // directory-tree widget. `command` is NOT here — it applies to both the add

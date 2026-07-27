@@ -3,12 +3,7 @@ import type { Board, Item } from '../api/types';
 import { useCreateLink } from '../api/use-create-link';
 import { useDeleteLink } from '../api/use-delete-link';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button } from '../ui/button';
-import { Pill, SectionHeader } from '@tickets/ui';
-import { Combobox } from '../ui/combobox';
-import type { ComboOption } from '../ui/combobox-list';
-import { Input } from '../ui/input';
-import { ItemKey } from '../ui/item-key';
+import { Button, Combobox, type ComboOption, Input, ItemKey, Pill, SectionHeader } from '@tickets/ui';
 import type { BoardIndexes } from '../utils/index-board';
 
 // Direction is folded into the chip text: outgoing "label →", incoming

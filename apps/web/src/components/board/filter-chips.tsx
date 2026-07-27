@@ -1,14 +1,8 @@
 import { useState } from 'react';
-import { Pill } from '@tickets/ui';
+import { Button, Combobox, type ComboOption, Input, MultiCombobox, Pill, Popover, PopoverContent, PopoverTrigger } from '@tickets/ui';
 import type { Board, Field, Option } from '../../api/types';
 import { KIND_TONE } from '../../domain/status';
 import { hexToOptionColor, kindColor } from '../../registry/option-color';
-import { Button } from '../../ui/button';
-import type { ComboOption } from '../../ui/combobox-list';
-import { Combobox } from '../../ui/combobox';
-import { Input } from '../../ui/input';
-import { MultiCombobox } from '../../ui/multi-combobox';
-import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { FilterRule } from '../../utils/view-config';
 
