@@ -38,6 +38,15 @@ export const states = [
     ),
   },
   {
+    name: 'Chevron',
+    render: () => (
+      <div className="flex flex-wrap gap-3">
+        <Pill label="Assignee" chevron onClick={() => {}} />
+        <Pill label="Status" tone="blue" chevron onClick={() => {}} />
+      </div>
+    ),
+  },
+  {
     name: 'Shapes',
     render: () => (
       <div className="flex flex-wrap gap-3">
@@ -120,6 +129,9 @@ export const playground = definePlayground({
       description:
         'Corner treatment. `square` lines up with the surrounding controls; `round` reads as a tag or a count.',
     }),
+    chevron: boolean(false, {
+      description: 'Trailing chevron, for a pill that opens a menu or popover.',
+    }),
     strikethrough: boolean(false, {
       description:
         'Strikes the label for a value that no longer applies — a dropped status, a removed tag.',
@@ -137,6 +149,7 @@ export const playground = definePlayground({
       size={v.size}
       icon={v.icon}
       shape={v.shape}
+      chevron={v.chevron}
       strikethrough={v.strikethrough}
       disabled={v.disabled}
     />
