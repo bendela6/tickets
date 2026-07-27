@@ -22,7 +22,7 @@ test('sm input overrides height, padding, radius, and font size', () => {
 });
 
 test('invalid input shows the danger border and always-on halo', () => {
-  render(<Input invalid aria-label="Key" />);
+  render(<Input tone="danger" aria-label="Key" />);
   const input = screen.getByLabelText('Key');
   expect(input).toHaveClass('border-red-9', 'ring-[3px]', 'ring-red-3');
 });
@@ -33,7 +33,7 @@ test('input associates label and error', () => {
       <FieldLabel htmlFor="key" required>
         Key
       </FieldLabel>
-      <Input id="key" invalid aria-describedby="key-error" />
+      <Input id="key" tone="danger" aria-describedby="key-error" />
       <FieldError id="key-error">Key must be kebab-case</FieldError>
     </>,
   );

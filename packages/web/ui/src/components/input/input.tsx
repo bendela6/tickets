@@ -1,12 +1,13 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
-import { cn, TONE_SCALE, type Tone } from '../../style';
-import { fieldClass, type FieldSize } from '../field';
+import { cn, type Tone } from '../../style';
+import { fieldClass, fieldState, type FieldSize } from '../field';
 
 type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> & {
   size?: FieldSize;
-  /** Which ramp the focus ring paints from. Defaults to `primary`. */
+  /** What the field is saying about itself. Unset is the resting field —
+   *  gray border, accent focus ring. Any tone colours the border, and
+   *  `danger` also sets aria-invalid. */
   tone?: Tone;
-  invalid?: boolean;
 };
 
 // Padding and font-size are per-component, not part of `fieldClass` — see the
@@ -18,16 +19,17 @@ const BOX: Record<FieldSize, string> = {
 };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { size = 'md', tone = 'primary', invalid, className, ...rest },
+  { size = 'md', tone, className, ...rest },
   ref,
 ) {
+  const field = fieldState(tone);
   return (
     <input
       ref={ref}
-      aria-invalid={invalid || undefined}
+      aria-invalid={field.invalid || undefined}
       className={fieldClass({
-        state: invalid ? 'invalid' : 'idle',
-        scale: TONE_SCALE[tone],
+        state: field.state,
+        scale: field.scale,
         size,
         className: cn('w-full', BOX[size], className),
       })}

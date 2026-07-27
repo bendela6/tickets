@@ -1,12 +1,12 @@
 import { forwardRef, type TextareaHTMLAttributes } from 'react';
-import { cn, TONE_SCALE, type Tone } from '../../style';
-import { fieldClass, type FieldSize } from '../field';
+import { cn, type Tone } from '../../style';
+import { fieldClass, fieldState, type FieldSize } from '../field';
 
 type TextareaProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'size'> & {
   size?: FieldSize;
-  /** Which ramp the focus ring paints from. Defaults to `primary`. */
+  /** What the field is saying about itself. Unset is the resting field;
+   *  any tone colours the border, and `danger` also sets aria-invalid. */
   tone?: Tone;
-  invalid?: boolean;
 };
 
 // A textarea grows, so its size axis sets a floor rather than a height —
@@ -20,16 +20,17 @@ const BOX: Record<FieldSize, string> = {
 };
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
-  { size = 'md', tone = 'primary', invalid, className, ...rest },
+  { size = 'md', tone, className, ...rest },
   ref,
 ) {
+  const field = fieldState(tone);
   return (
     <textarea
       ref={ref}
-      aria-invalid={invalid || undefined}
+      aria-invalid={field.invalid || undefined}
       className={fieldClass({
-        state: invalid ? 'invalid' : 'idle',
-        scale: TONE_SCALE[tone],
+        state: field.state,
+        scale: field.scale,
         size,
         className: cn('w-full resize-y leading-normal', BOX[size], className),
       })}

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { cn, ComboboxList, type ComboOption, fieldClass, type FieldSize, Icon, Pill, Popover, PopoverContent, PopoverTrigger, TONE_SCALE, type Tone } from '@tickets/ui';
+import { cn, ComboboxList, type ComboOption, fieldClass, fieldState, type FieldSize, Icon, Pill, Popover, PopoverContent, PopoverTrigger, TONE_SCALE, type Tone } from '@tickets/ui';
 import type { StatusKind } from '../api/types';
 import { KIND_ICON, KIND_TONE, statusPill } from '../domain/status';
 
@@ -38,11 +38,12 @@ export function StatusSelect({
   onChange,
   legalTargets,
   size = 'md',
-  tone = 'primary',
+  tone,
   disabled,
   className,
 }: StatusSelectProps) {
   const [open, setOpen] = useState(false);
+  const field = fieldState(tone);
   const kindByKey = useMemo(
     () => new Map(statuses.map((status) => [status.key, status.kind])),
     [statuses],
@@ -72,7 +73,8 @@ export function StatusSelect({
           disabled={disabled}
           className={fieldClass({
             size,
-            scale: TONE_SCALE[tone],
+            state: field.state,
+            scale: field.scale,
             className: cn(
               'flex w-full items-center justify-between gap-2',
               'disabled:pointer-events-none disabled:opacity-50',

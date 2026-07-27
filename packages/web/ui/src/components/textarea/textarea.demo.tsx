@@ -8,7 +8,7 @@ export const states = [
   { name: 'with placeholder', render: () => <Textarea placeholder="Steps to reproduce…" /> },
   { name: 'sm', render: () => <Textarea size="sm" placeholder="Two lines" /> },
   { name: 'lg', render: () => <Textarea size="lg" placeholder="Four lines" /> },
-  { name: 'invalid', render: () => <Textarea invalid placeholder="Required" /> },
+  { name: 'tone danger', render: () => <Textarea tone="danger" placeholder="Required" /> },
 ];
 
 export const playground = definePlayground({
@@ -16,7 +16,6 @@ export const playground = definePlayground({
     placeholder: text('Steps to reproduce…'),
     size: select(['sm', 'md', 'lg'], { allowNone: true }),
     tone: select([...TONE_NAMES], { allowNone: true }),
-    invalid: boolean(),
     disabled: boolean(),
   },
   render: (v) => <div className="w-72"><Textarea {...v} /></div>,
