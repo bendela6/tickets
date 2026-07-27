@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { definePlayground, number, boolean } from '../../gallery';
+import { boolean, definePlayground, number, select } from '../../gallery';
+import { TONE_NAMES } from '../../style';
 import { NumberInput } from './number-input';
 
 function EstimateFixture() {
@@ -20,6 +21,7 @@ export const states = [
 
 export const playground = definePlayground({
   controls: {
+    tone: select([...TONE_NAMES], { allowNone: true }),
     min: number(0, { min: 0, max: 100 }),
     max: number(13, { min: 0, max: 100 }),
     disabled: boolean(),

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { cn } from '../../style/cn';
+import { cn, TONE_SCALE, type Tone } from '../../style';
+import { fieldClass, type FieldSize } from '../field';
 import { Pill } from '../pill';
 import { ComboboxList, type ComboOption } from '../combobox-list';
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '../popover';
@@ -9,11 +10,22 @@ type MultiComboboxProps = {
   value: string[];
   onChange: (value: string[]) => void;
   placeholder?: string;
-  size?: 'sm' | 'md';
+  size?: FieldSize;
+  /** Which ramp the focus ring paints from. Defaults to `primary`. */
+  tone?: Tone;
   disabled?: boolean;
   /** Max chips shown on the trigger before collapsing to +N. */
   maxChips?: number;
   className?: string;
+};
+
+// The trigger wraps its chips onto more rows as they accumulate, so each rung
+// is a floor rather than a height — `h-auto` evicts the fixed height fieldClass
+// contributes for the single-line controls.
+const BOX: Record<FieldSize, string> = {
+  sm: 'h-auto min-h-7 py-0.5',
+  md: 'h-auto min-h-9 py-1',
+  lg: 'h-auto min-h-11 py-1.5',
 };
 
 export function MultiCombobox({
@@ -22,6 +34,7 @@ export function MultiCombobox({
   onChange,
   placeholder = 'Select…',
   size = 'md',
+  tone = 'primary',
   disabled,
   maxChips = 3,
   className,
@@ -41,13 +54,18 @@ export function MultiCombobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverAnchor asChild>
         <div
-          className={cn(
-            'flex w-full items-center gap-1.5 rounded-md border border-gray-7 bg-surface-raised px-2.5',
-            'focus-within:border-indigo-9 focus-within:ring-[3px] focus-within:ring-indigo-3',
-            disabled && 'pointer-events-none opacity-50',
-            size === 'sm' ? 'min-h-7 py-0.5' : 'min-h-9 py-1',
-            className,
-          )}
+          className={fieldClass({
+            size,
+            scale: TONE_SCALE[tone],
+            // Focus lands on the inner search input, not on this wrapper.
+            focus: 'focus-within',
+            className: cn(
+              'flex w-full items-center gap-1.5 px-2.5',
+              disabled && 'pointer-events-none opacity-50',
+              BOX[size],
+              className,
+            ),
+          })}
         >
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
             {selectedOptions.length === 0 ? (

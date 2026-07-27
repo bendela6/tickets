@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { cn } from '../../style/cn';
+import { cn, TONE_SCALE, type Tone } from '../../style';
+import { fieldClass, type FieldSize } from '../field';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
 import { formatExact } from '../relative-date';
 
@@ -38,9 +39,17 @@ type DatePickerProps = {
   value: string | null;
   onChange: (value: string | null) => void;
   placeholder?: string;
-  size?: 'sm' | 'md';
+  size?: FieldSize;
+  /** Which ramp the focus ring paints from. Defaults to `primary`. */
+  tone?: Tone;
   disabled?: boolean;
   className?: string;
+};
+
+const BOX: Record<FieldSize, string> = {
+  sm: 'px-2.25 text-[13px]',
+  md: 'px-3 text-[14px]',
+  lg: 'px-3.5 text-[15px]',
 };
 
 export function DatePicker({
@@ -48,6 +57,7 @@ export function DatePicker({
   onChange,
   placeholder = 'Set date…',
   size = 'md',
+  tone = 'primary',
   disabled,
   className,
 }: DatePickerProps) {
@@ -84,14 +94,17 @@ export function DatePicker({
         <button
           type="button"
           disabled={disabled}
-          className={cn(
-            'flex w-full items-center justify-between gap-2 rounded-[8px] border border-gray-7 bg-surface-raised px-3 font-sans text-[14px]',
-            'hover:border-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3',
-            'disabled:pointer-events-none disabled:opacity-50',
-            size === 'sm' ? 'h-7' : 'h-9',
-            selected ? 'text-gray-12' : 'text-gray-9',
-            className,
-          )}
+          className={fieldClass({
+            size,
+            scale: TONE_SCALE[tone],
+            className: cn(
+              'flex w-full items-center justify-between gap-2 font-sans',
+              'disabled:pointer-events-none disabled:opacity-50',
+              BOX[size],
+              selected ? 'text-gray-12' : 'text-gray-9',
+              className,
+            ),
+          })}
         >
           {value ? formatExact(value) : placeholder}
           <span aria-hidden className="text-[10px] text-gray-9">
@@ -173,7 +186,11 @@ export function DatePicker({
               setOpen(false);
             }
           }}
-          className="mt-2.5 h-7 w-full rounded-md border border-gray-7 bg-surface-raised px-2.25 font-mono text-meta text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3"
+          className={fieldClass({
+            size: 'sm',
+            scale: TONE_SCALE[tone],
+            className: 'mt-2.5 w-full px-2.25 font-mono text-meta text-gray-9',
+          })}
         />
       </PopoverContent>
     </Popover>

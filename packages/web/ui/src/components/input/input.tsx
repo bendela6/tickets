@@ -9,12 +9,12 @@ type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> & {
   invalid?: boolean;
 };
 
-// Horizontal padding is per-size and stays here rather than in `fieldClass`:
-// a stepper and a tag list want different insets at the same height.
-const PADDING: Record<FieldSize, string> = {
-  sm: 'px-2.25',
-  md: 'px-3',
-  lg: 'px-3.5',
+// Padding and font-size are per-component, not part of `fieldClass` — see the
+// note there. These values are Input's existing ones, with lg extrapolated.
+const BOX: Record<FieldSize, string> = {
+  sm: 'px-2.25 text-[13px]',
+  md: 'px-3 text-[14px]',
+  lg: 'px-3.5 text-[15px]',
 };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
@@ -29,7 +29,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         state: invalid ? 'invalid' : 'idle',
         scale: TONE_SCALE[tone],
         size,
-        className: cn('w-full', PADDING[size], className),
+        className: cn('w-full', BOX[size], className),
       })}
       {...rest}
     />
