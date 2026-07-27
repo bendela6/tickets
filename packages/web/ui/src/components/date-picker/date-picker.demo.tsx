@@ -26,7 +26,7 @@ function DatePickerPlaygroundFixture({
   );
 }
 
-export const meta = { title: 'DatePicker', group: 'Ungrouped', size: 'md' };
+export const meta = { title: 'DatePicker', group: 'Components', size: 'md' };
 
 export const states = [
   { name: 'basic', render: () => <DatePickerFixture /> },
