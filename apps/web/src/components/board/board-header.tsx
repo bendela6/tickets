@@ -1,5 +1,5 @@
 import type { Board } from '../../api/types';
-import { Button, Checkbox, Input, Popover, PopoverContent, PopoverTrigger, SegmentedControl } from '@tickets/ui';
+import { Button, Checkbox, Input, Popover, PopoverContent, PopoverTrigger, Tabs } from '@tickets/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { ViewColumn, ViewConfig, ViewDensity, ViewMode } from '../../utils/view-config';
 
@@ -119,8 +119,8 @@ export function BoardHeader({
             </PopoverContent>
           </Popover>
           <span title="Density">
-            <SegmentedControl
-              options={[
+            <Tabs variant="pill" role="group"
+              items={[
                 { value: 'comfortable', icon: 'rows', label: <span className="sr-only">Comfortable density</span> },
                 { value: 'compact', icon: 'rows-compact', label: <span className="sr-only">Compact density</span> },
               ]}
@@ -156,8 +156,8 @@ export function BoardHeader({
         </>
       )}
 
-      <SegmentedControl
-        options={[
+      <Tabs variant="pill" role="group"
+        items={[
           { value: 'table', label: 'Table', icon: 'rows' },
           { value: 'board', label: 'Board', icon: 'columns' },
         ]}

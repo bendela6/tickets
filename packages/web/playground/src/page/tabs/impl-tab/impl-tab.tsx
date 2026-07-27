@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { type CollectedDemo, SegmentedControl } from '@tickets/ui';
+import { type CollectedDemo, Tabs } from '@tickets/ui';
 import { CodeBlock } from '../../../code/code-block';
 import { fileName, implPaths } from '../../../code/resolve-impl';
 
@@ -63,9 +63,9 @@ export function ImplTab({ demo, sources }: { demo: LiveDemo; sources?: ImplSourc
     <div className="flex flex-col gap-2.5">
       <div className="flex items-center justify-between gap-4">
         {available.length > 1 ? (
-          <SegmentedControl
+          <Tabs variant="pill" role="group"
             label="Implementation file"
-            options={available.map((path) => ({ value: path, label: fileName(path) }))}
+            items={available.map((path) => ({ value: path, label: fileName(path) }))}
             value={active!}
             onChange={setSelected}
           />

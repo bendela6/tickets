@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { cn, CopyButton, SegmentedControl } from '@tickets/ui';
+import { cn, CopyButton, Tabs } from '@tickets/ui';
 
 export type SdkPlatform = 'react' | 'node' | 'browser';
 
@@ -56,10 +56,10 @@ export function SdkSnippet({
   return (
     <div className={cn('flex flex-col gap-2', className)}>
       <div className="flex items-center justify-between gap-2">
-        <SegmentedControl
+        <Tabs variant="pill" role="group"
           className="h-7"
           label="SDK platform"
-          options={PLATFORMS.map((candidate) => ({ value: candidate, label: PLATFORM_LABELS[candidate] }))}
+          items={PLATFORMS.map((candidate) => ({ value: candidate, label: PLATFORM_LABELS[candidate] }))}
           value={active}
           onChange={(next) => setActive(next as SdkPlatform)}
         />

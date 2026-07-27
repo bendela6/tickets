@@ -1,5 +1,5 @@
 import type { IssueLevel, IssueStatus, SignalsAppRow } from '../../api/signals/signals-api';
-import { cn, Input, SegmentedControl } from '@tickets/ui';
+import { cn, Input, Tabs } from '@tickets/ui';
 
 const selectClasses =
   'h-7 rounded-[7px] border border-gray-6 bg-surface-raised px-2 font-sans text-[12px] text-gray-11 ' +
@@ -58,10 +58,10 @@ export function IssuesToolbar({
         ))}
       </select>
 
-      <SegmentedControl
+      <Tabs variant="pill" role="group"
         className="h-7"
         label="Filter by status"
-        options={STATUSES.map((candidate) => ({
+        items={STATUSES.map((candidate) => ({
           value: candidate,
           label: (
             <>

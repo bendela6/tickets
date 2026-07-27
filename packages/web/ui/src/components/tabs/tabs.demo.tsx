@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { definePlayground, select, number } from '../../gallery';
+import { TONE_NAMES } from '../../style';
 import { Tabs } from './tabs';
 
 const VARIANTS = ['underline', 'pill', 'rail'] as const;
+const SIZES = ['sm', 'md', 'lg'] as const;
+const ROLES = ['tablist', 'group'] as const;
 
 const ALL_ITEMS = [
   { value: 'board', label: 'Board' },
@@ -12,9 +15,26 @@ const ALL_ITEMS = [
   { value: 'activity', label: 'Activity' },
 ];
 
-function DemoTabs({ variant }: { variant: (typeof VARIANTS)[number] }) {
+function DemoTabs({
+  variant,
+  size,
+  role,
+}: {
+  variant: (typeof VARIANTS)[number];
+  size?: (typeof SIZES)[number];
+  role?: (typeof ROLES)[number];
+}) {
   const [value, setValue] = useState(ALL_ITEMS[0]!.value);
-  return <Tabs variant={variant} items={ALL_ITEMS.slice(0, 3)} value={value} onChange={setValue} />;
+  return (
+    <Tabs
+      variant={variant}
+      size={size}
+      role={role}
+      items={ALL_ITEMS.slice(0, 3)}
+      value={value}
+      onChange={setValue}
+    />
+  );
 }
 
 export const meta = { title: 'Tabs', group: 'Components', size: 'md' };
@@ -23,14 +43,44 @@ export const states = [
   { name: 'Underline', render: () => <DemoTabs variant="underline" /> },
   { name: 'Pill', render: () => <DemoTabs variant="pill" /> },
   { name: 'Rail', render: () => <DemoTabs variant="rail" /> },
+  {
+    name: 'Sizes',
+    render: () => (
+      <div className="flex flex-col gap-3">
+        {SIZES.map((size) => (
+          <DemoTabs key={size} variant="pill" size={size} />
+        ))}
+      </div>
+    ),
+  },
+  {
+    // What SegmentedControl used to be: same pixels, different semantics.
+    name: 'Toggle group',
+    render: () => <DemoTabs variant="pill" role="group" />,
+  },
 ];
 
-function PlaygroundFixture({ variant, count }: { variant: (typeof VARIANTS)[number]; count: number }) {
+function PlaygroundFixture({
+  variant,
+  size,
+  role,
+  tone,
+  count,
+}: {
+  variant: (typeof VARIANTS)[number];
+  size: (typeof SIZES)[number];
+  role: (typeof ROLES)[number];
+  tone?: (typeof TONE_NAMES)[number];
+  count: number;
+}) {
   const items = ALL_ITEMS.slice(0, count);
   const [value, setValue] = useState(items[0]!.value);
   return (
     <Tabs
       variant={variant}
+      size={size}
+      role={role}
+      tone={tone}
       items={items}
       value={items.some((item) => item.value === value) ? value : items[0]!.value}
       onChange={setValue}
@@ -41,13 +91,30 @@ function PlaygroundFixture({ variant, count }: { variant: (typeof VARIANTS)[numb
 export const playground = definePlayground({
   docs: {
     summary:
-      'One tablist for three shapes. Every variant renders the same `role="tablist"` and `aria-selected` markup — the choice is visual placement only, so switching a surface from underline to rail never changes what a screen reader hears.',
+      'One strip for three shapes, and for both kinds of choice. The variants are visual placement only; `role` is what changes the semantics — `tablist` promises a panel behind each item, `group` is a set of toggles that change something in place.',
   },
   controls: {
     variant: select(VARIANTS, {
       initial: 'underline',
+      type: 'TabsVariant',
       description:
         '`underline` for the tabs at the top of a pane, `pill` for a compact inline switch, `rail` for a vertical sidebar list.',
+    }),
+    size: select(SIZES, {
+      initial: 'md',
+      type: 'TabsSize',
+      description: 'Padding and label size. Each variant pads to suit its own shape.',
+    }),
+    role: select(ROLES, {
+      initial: 'tablist',
+      type: 'TabsRole',
+      description:
+        'Pick `group` when the items change something in place — a density, a filter, a view mode — rather than revealing a panel. It swaps role="tab"/aria-selected for plain buttons with aria-pressed.',
+    }),
+    tone: select([...TONE_NAMES], {
+      allowNone: true,
+      type: 'Tone',
+      description: 'Which ramp the active item paints from. Defaults to `primary`.',
     }),
     count: number(3, {
       min: 2,
@@ -58,5 +125,13 @@ export const playground = definePlayground({
         'Demo knob, not a prop — it slices the fixture’s `items` array so you can see how the strip handles more entries.',
     }),
   },
-  render: (v) => <PlaygroundFixture variant={v.variant} count={v.count} />,
+  render: (v) => (
+    <PlaygroundFixture
+      variant={v.variant}
+      size={v.size}
+      role={v.role}
+      tone={v.tone}
+      count={v.count}
+    />
+  ),
 });

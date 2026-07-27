@@ -44,6 +44,50 @@ describe('Tabs', () => {
     const tableTab = screen.getByRole('tab', { name: 'Table' });
     expect(tableTab.querySelector('span')).toBeNull();
   });
+  // The half of the SegmentedControl merge that could silently regress. Every
+  // call site it absorbed is a toggle group — density, view mode, status
+  // filter, SDK platform, file picker — none of which reveals a panel.
+  // Announcing those as tabs tells a screen-reader user to expect panels that
+  // do not exist.
+  it('role="group" renders toggle buttons, not tabs', () => {
+    render(<Tabs role="group" variant="pill" items={items} value="board" onChange={() => {}} />);
+    expect(screen.getByRole('group')).toBeTruthy();
+    expect(screen.queryByRole('tablist')).toBeNull();
+    expect(screen.queryAllByRole('tab')).toHaveLength(0);
+
+    const buttons = screen.getAllByRole('button');
+    expect(buttons[0]!.getAttribute('aria-pressed')).toBe('true');
+    expect(buttons[1]!.getAttribute('aria-pressed')).toBe('false');
+    // A `tab` must never also claim aria-pressed, and a toggle must never
+    // claim aria-selected — the pair switches together or not at all.
+    expect(buttons[0]!.hasAttribute('aria-selected')).toBe(false);
+  });
+
+  it('tablist items never carry aria-pressed', () => {
+    render(<Tabs items={items} value="board" onChange={() => {}} />);
+    expect(screen.getByRole('tab', { name: 'Board' }).hasAttribute('aria-pressed')).toBe(false);
+  });
+
+  it('the active item follows tone rather than a fixed indigo', () => {
+    const { container } = render(
+      <Tabs variant="rail" tone="success" items={items} value="board" onChange={() => {}} />,
+    );
+    const active = container.querySelector('[aria-selected="true"]')!;
+    expect(active.className).toContain('bg-green-3');
+    expect(active.className).toContain('text-green-9');
+  });
+
+  it('size pads each variant to suit its own shape', () => {
+    const { container: sm } = render(
+      <Tabs variant="pill" size="sm" items={items} value="board" onChange={() => {}} />,
+    );
+    expect(sm.querySelector('[role="tab"]')!.className).toContain('px-2');
+    const { container: lg } = render(
+      <Tabs variant="pill" size="lg" items={items} value="board" onChange={() => {}} />,
+    );
+    expect(lg.querySelector('[role="tab"]')!.className).toContain('px-3.5');
+  });
+
   it('accepts an accessible label on the tablist, omitted when unset', () => {
     const { rerender } = render(<Tabs items={items} value="board" onChange={() => {}} label="Type" />);
     expect(screen.getByRole('tablist', { name: 'Type' })).toBeTruthy();
