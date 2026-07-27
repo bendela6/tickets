@@ -253,6 +253,7 @@
 @source inline("inline-flex");
 @source inline("items-center");
 @source inline("justify-center");
+@source inline("leading-none");
 @source inline("left-0.5");
 @source inline("m-0");
 @source inline("min-w-12");

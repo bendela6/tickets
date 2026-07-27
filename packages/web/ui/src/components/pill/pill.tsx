@@ -37,12 +37,19 @@ const pillClass = variants({
         round: 'rounded-full',
       },
     },
+    // `leading-none` is load-bearing, and it has to sit *after* the font size.
+    // The text tokens each carry a ~1.4 line-height, and flex centres the line
+    // box rather than the glyphs — inside a 22px pill that put the label 2.6px
+    // from the top and 4.4px from the bottom, reading as too high. Collapsing
+    // the line box centres it to within a rounding pixel. Written before
+    // `text-meta`, tailwind-merge evicts it: a font-size token that also sets a
+    // line-height wins the whole group.
     size: {
       default: 'md',
       options: {
-        sm: 'h-4.5 gap-1 px-1.75 text-label',
-        md: 'h-5.5 gap-1.5 px-2.25 text-meta',
-        lg: 'h-7 gap-2 px-3 text-ui',
+        sm: 'h-4.5 gap-1 px-1.75 text-label leading-none',
+        md: 'h-5.5 gap-1.5 px-2.25 text-meta leading-none',
+        lg: 'h-7 gap-2 px-3 text-ui leading-none',
       },
     },
   },
@@ -59,6 +66,7 @@ export function Pill({
   shape = 'square',
   size = 'md',
   trailing,
+  chevron = false,
   strikethrough,
   onClick,
   pressed,
@@ -72,6 +80,8 @@ export function Pill({
   shape?: PillShape;
   size?: PillSize;
   trailing?: ReactNode;
+  /** Adds a trailing chevron, for a pill that opens a menu or a popover. */
+  chevron?: boolean;
   strikethrough?: boolean;
   onClick?: () => void;
   pressed?: boolean;
@@ -83,6 +93,7 @@ export function Pill({
       {isValidElement(icon) ? icon : icon ? <Icon name={icon} size={ICON_SIZE[size]} /> : null}
       {strikethrough ? <s className="line-through">{label}</s> : label}
       {trailing}
+      {chevron ? <Icon name="chevron-down" size={ICON_SIZE[size]} className="-mr-0.5" /> : null}
     </>
   );
   const classes = (extra?: string) =>

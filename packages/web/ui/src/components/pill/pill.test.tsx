@@ -105,3 +105,21 @@ describe('Pill', () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 });
+
+describe('Pill layout', () => {
+  it('collapses the line box so the label centres on the glyphs', () => {
+    // The text tokens carry a ~1.4 line-height and flex centres the line box,
+    // not the ink — inside a 22px pill that put the label 2.6px from the top
+    // and 4.4px from the bottom. jsdom cannot measure that, so this pins the
+    // fix rather than the symptom.
+    render(<Pill label="Chore" />);
+    expect(screen.getByText('Chore').closest('span')!.className).toContain('leading-none');
+  });
+
+  it('chevron is opt-in and comes from the registry, not a typed glyph', () => {
+    const { container, rerender } = render(<Pill label="Assignee" chevron />);
+    expect(container.querySelector('svg')).not.toBeNull();
+    rerender(<Pill label="Assignee" />);
+    expect(container.querySelector('svg')).toBeNull();
+  });
+});
