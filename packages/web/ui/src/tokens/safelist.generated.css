@@ -116,6 +116,7 @@
 @source inline("disabled:pointer-events-none");
 @source inline("disabled:text-gray-9");
 @source inline("flex");
+@source inline("flex-1");
 @source inline("flex-col");
 @source inline("focus-visible:border-blue-9");
 @source inline("focus-visible:border-cyan-9");
@@ -203,12 +204,16 @@
 @source inline("gap-4.5");
 @source inline("gap-6");
 @source inline("group");
+@source inline("h-0.5");
+@source inline("h-1");
+@source inline("h-1.5");
 @source inline("h-11");
 @source inline("h-4");
 @source inline("h-4.5");
 @source inline("h-5.5");
 @source inline("h-7");
 @source inline("h-9");
+@source inline("h-full");
 @source inline("has-disabled:cursor-not-allowed");
 @source inline("hover:bg-blue-10");
 @source inline("hover:bg-cyan-10");
@@ -251,8 +256,12 @@
 @source inline("justify-center");
 @source inline("left-0.5");
 @source inline("m-0");
+@source inline("min-w-12");
+@source inline("min-w-7");
+@source inline("min-w-9");
 @source inline("opacity-60");
 @source inline("opacity-[0.55]");
+@source inline("overflow-hidden");
 @source inline("p-0.5");
 @source inline("p-0.75");
 @source inline("p-1");

@@ -52,6 +52,7 @@ export const playground = definePlayground({
       'A single horizontal bar for a value against a ceiling — spend against a cap, tasks against a total. The track clamps out-of-range values rather than overflowing, so a runaway number stays inside its row.',
   },
   controls: {
+    size: select(['sm', 'md', 'lg'] as const, { initial: 'md', type: 'MeterSize' }),
     value: number(34, {
       min: -20,
       max: 150,
