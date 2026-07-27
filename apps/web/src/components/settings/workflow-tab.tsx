@@ -41,8 +41,8 @@ function EntryPill() {
   return (
     <Pill
       tone="green"
-      emphasis="outline"
-      shape="full"
+      variant="outline"
+      shape="round"
       label="entry"
       className="border-dashed font-mono"
     />

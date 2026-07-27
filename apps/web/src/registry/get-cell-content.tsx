@@ -38,7 +38,7 @@ export function getCellContent(
       const value = values[0];
       const option = typeof value === 'string' ? indexes.optionByValue(field, value) : undefined;
       if (!option || option.kind === null) {
-        return <Pill label={String(value)} tone="gray" shape="full" />;
+        return <Pill label={String(value)} tone="gray" shape="round" />;
       }
       return <Pill {...statusPill(option.kind)} label={option.label} />;
     }
@@ -52,7 +52,7 @@ export function getCellContent(
               key={index}
               label={option?.label ?? String(value)}
               tone={hexToOptionColor(option?.config.color)}
-              shape="full"
+              shape="round"
             />
           );
         })}

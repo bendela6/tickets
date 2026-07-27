@@ -11,7 +11,7 @@ describe('sessionStatus', () => {
   it('awaiting_input is solid orange pulse', () => {
     const s = sessionStatus('awaiting_input');
     expect(s.tone).toBe('orange');
-    expect(s.emphasis).toBe('solid');
+    expect(s.variant).toBe('solid');
     expect(s.className).toContain('animate-ai-pulse');
     expect(s.label).toBe('awaiting input');
   });

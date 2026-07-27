@@ -44,7 +44,7 @@ function RuleValues({
               key={value}
               label={value}
               tone={KIND_TONE[value as keyof typeof KIND_TONE] ?? 'gray'}
-              shape="full"
+              shape="round"
               className="h-4.5"
             />
           );
@@ -55,7 +55,7 @@ function RuleValues({
             key={value}
             label={option?.label ?? value}
             tone={option?.color ?? 'gray'}
-            shape="full"
+            shape="round"
             className="h-4.5"
           />
         );

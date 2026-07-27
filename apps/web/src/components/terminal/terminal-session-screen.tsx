@@ -163,7 +163,7 @@ export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
             <div className="flex items-center gap-2">
               <Pill
                 tone={st.tone}
-                emphasis={st.emphasis}
+                variant={st.variant}
                 icon={st.icon}
                 label={display.label}
                 className={st.className}

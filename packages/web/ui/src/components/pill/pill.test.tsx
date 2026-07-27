@@ -1,9 +1,43 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { toneClasses, TONE_NAMES } from '../../style';
 import { Icon } from '../icon';
 import { Pill } from './pill';
 
+const VARIANTS = ['subtle', 'solid', 'outline', 'text'] as const;
+
 describe('Pill', () => {
+  // Pill builds its colours from STEP through variants() rather than calling
+  // toneClasses(), so that hover and opacity treatments can be added later.
+  // Both come from tones.tokens.json, and a Pill and a Button asking for the
+  // same treatment must never disagree — this is what stops them drifting.
+  it('produces exactly what toneClasses resolves, for every tone and variant', () => {
+    const mismatches: unknown[] = [];
+    for (const tone of TONE_NAMES) {
+      for (const variant of VARIANTS) {
+        render(<Pill label={`${tone}-${variant}`} tone={tone} variant={variant} />);
+        const actual = new Set(
+          screen.getByText(`${tone}-${variant}`).closest('span')!.className.split(/\s+/),
+        );
+        const missing = toneClasses(tone, variant)
+          .split(/\s+/)
+          .filter((cls) => !actual.has(cls));
+        if (missing.length) mismatches.push({ tone, variant, missing });
+      }
+    }
+    expect(mismatches).toEqual([]);
+  });
+
+  it('sizes the pill and its glyph together', () => {
+    const { rerender } = render(<Pill label="s" size="sm" icon="circle" />);
+    const at = () => screen.getByText('s').closest('span')!;
+    expect(at().className).toContain('h-4.5');
+    rerender(<Pill label="s" size="md" icon="circle" />);
+    expect(at().className).toContain('h-5.5');
+    rerender(<Pill label="s" size="lg" icon="circle" />);
+    expect(at().className).toContain('h-7');
+  });
+
   it('renders the shared shell with neutral subtle defaults', () => {
     render(<Pill label="Chore" />);
     const el = screen.getByText('Chore');
@@ -15,10 +49,10 @@ describe('Pill', () => {
     expect(pill.className).toContain('text-gray-11');
   });
 
-  it('tone + emphasis resolve through the tone map', () => {
+  it('tone + variant resolve through the tone map', () => {
     render(<Pill label="Done" tone="green" />);
     expect(screen.getByText('Done').closest('span')!.className).toContain('bg-green-3');
-    render(<Pill label="Hot" tone="orange" emphasis="solid" />);
+    render(<Pill label="Hot" tone="orange" variant="solid" />);
     expect(screen.getByText('Hot').closest('span')!.className).toContain('bg-orange-9');
   });
 
@@ -32,7 +66,7 @@ describe('Pill', () => {
   });
 
   it('shape full, strikethrough, trailing', () => {
-    render(<Pill label="tag" shape="full" trailing={<span>3</span>} strikethrough />);
+    render(<Pill label="tag" shape="round" trailing={<span>3</span>} strikethrough />);
     const pill = screen.getByText('tag').closest('span')!;
     expect(pill.className).toContain('rounded-full');
     expect(screen.getByText('3')).toBeTruthy();
