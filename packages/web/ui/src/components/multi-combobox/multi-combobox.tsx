@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { cn, TONE_SCALE, type Tone } from '../../style';
-import { fieldClass, type FieldSize } from '../field';
+import { fieldClass, fieldState, type FieldSize } from '../field';
 import { Icon, type IconSize } from '../icon';
 import { Pill } from '../pill';
 import { ComboboxList, type ComboOption } from '../combobox-list';
@@ -37,12 +37,13 @@ export function MultiCombobox({
   onChange,
   placeholder = 'Select…',
   size = 'md',
-  tone = 'primary',
+  tone,
   disabled,
   maxChips = 3,
   className,
 }: MultiComboboxProps) {
   const [open, setOpen] = useState(false);
+  const field = fieldState(tone);
   const selectedOptions = value
     .map((entry) => options.find((option) => option.value === entry))
     .filter((option): option is ComboOption => Boolean(option));
@@ -59,7 +60,8 @@ export function MultiCombobox({
         <div
           className={fieldClass({
             size,
-            scale: TONE_SCALE[tone],
+            state: field.state,
+            scale: field.scale,
             // Focus lands on the inner search input, not on this wrapper.
             focus: 'focus-within',
             className: cn(

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { cn, TONE_SCALE, type Tone } from '../../style';
-import { fieldClass, type FieldSize } from '../field';
+import { fieldClass, fieldState, type FieldSize } from '../field';
 import { Icon, type IconSize } from '../icon';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
 import { formatExact } from '../relative-date';
@@ -60,11 +60,12 @@ export function DatePicker({
   onChange,
   placeholder = 'Set date…',
   size = 'md',
-  tone = 'primary',
+  tone,
   disabled,
   className,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
+  const field = fieldState(tone);
   const selected = parseParts(value);
   const today = new Date();
   const [view, setView] = useState(() => ({
@@ -99,7 +100,8 @@ export function DatePicker({
           disabled={disabled}
           className={fieldClass({
             size,
-            scale: TONE_SCALE[tone],
+            state: field.state,
+            scale: field.scale,
             className: cn(
               'flex w-full items-center justify-between gap-2 font-sans',
               'disabled:pointer-events-none disabled:opacity-50',
@@ -189,7 +191,8 @@ export function DatePicker({
           }}
           className={fieldClass({
             size: 'sm',
-            scale: TONE_SCALE[tone],
+            state: field.state,
+            scale: field.scale,
             className: 'mt-2.5 w-full px-2.25 font-mono text-meta text-gray-9',
           })}
         />

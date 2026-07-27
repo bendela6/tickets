@@ -4,21 +4,44 @@ import { Input } from '../input';
 import { Textarea } from '../textarea';
 import { fieldClass } from './field';
 
-test('the accent follows tone instead of being fixed to indigo', () => {
+test('a tone colours the border outright, not only on focus', () => {
+  // The point of tone on a field is to say something at a glance — a validated
+  // value, a warning, an error. A colour that only appears once you focus the
+  // field is a colour nobody sees.
   render(<Input tone="success" aria-label="Budget" />);
   const input = screen.getByLabelText('Budget');
-  expect(input).toHaveClass('focus:border-green-9', 'focus:ring-green-3');
-  expect(input).not.toHaveClass('focus:border-indigo-9');
+  expect(input).toHaveClass('border-green-9', 'ring-green-3');
+  expect(input).not.toHaveClass('border-gray-7');
 });
 
-test('invalid keeps the danger ring on focus rather than turning accent', () => {
-  // The regression this guards: splitting focus into its own axis let an
-  // invalid field turn indigo the moment it was focused, hiding the error.
-  render(<Input invalid tone="success" aria-label="Key" />);
+test('a toned field keeps its own colour on focus rather than turning accent', () => {
+  // The regression this guards: while focus was its own axis, a danger field
+  // turned indigo the moment it was focused — hiding the error exactly when
+  // the user had gone to fix it.
+  render(<Input tone="danger" aria-label="Key" />);
   const input = screen.getByLabelText('Key');
   expect(input).toHaveClass('border-red-9', 'ring-[3px]', 'ring-red-3');
-  expect(input).not.toHaveClass('focus:border-green-9');
-  expect(input).not.toHaveClass('focus:ring-green-3');
+  expect(input).not.toHaveClass('focus:border-indigo-9');
+  expect(input).not.toHaveClass('focus:ring-indigo-3');
+});
+
+test('tone is what makes a field invalid — nothing else announces it', () => {
+  const { rerender } = render(<Input aria-label="Key" />);
+  expect(screen.getByLabelText('Key')).not.toHaveAttribute('aria-invalid');
+  rerender(<Input tone="success" aria-label="Key" />);
+  expect(screen.getByLabelText('Key')).not.toHaveAttribute('aria-invalid');
+  rerender(<Input tone="danger" aria-label="Key" />);
+  expect(screen.getByLabelText('Key')).toHaveAttribute('aria-invalid', 'true');
+});
+
+test('an unset tone is the resting field, not a coloured one', () => {
+  // Every input wearing its tone's border would paint the whole form indigo.
+  render(<Input aria-label="Title" />);
+  const input = screen.getByLabelText('Title');
+  expect(input).toHaveClass('border-gray-7', 'hover:border-gray-9');
+  expect(input).not.toHaveClass('border-indigo-9');
+  // …but the focus ring still follows the accent.
+  expect(input).toHaveClass('focus:ring-indigo-3');
 });
 
 test('composite fields hang the ring on focus-within, plain ones on focus', () => {

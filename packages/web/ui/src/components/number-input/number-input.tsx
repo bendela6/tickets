@@ -1,5 +1,5 @@
 import { cn, TONE_SCALE, type Tone } from '../../style';
-import { fieldClass, type FieldSize } from '../field';
+import { fieldClass, fieldState, type FieldSize } from '../field';
 import { Icon } from '../icon';
 
 type NumberInputProps = {
@@ -34,11 +34,13 @@ export function NumberInput({
   max,
   step = 1,
   size = 'md',
-  tone = 'primary',
+  tone,
   disabled,
   placeholder,
   className,
 }: NumberInputProps) {
+  const field = fieldState(tone);
+
   function nudge(delta: number) {
     const base = value ?? 0;
     onChange(clamp(base + delta, min, max));
@@ -48,7 +50,8 @@ export function NumberInput({
     <div
       className={fieldClass({
         size,
-        scale: TONE_SCALE[tone],
+        state: field.state,
+            scale: field.scale,
         // Focus lands on the inner <input>, never on this wrapper, so the ring
         // has to hang off focus-within.
         focus: 'focus-within',

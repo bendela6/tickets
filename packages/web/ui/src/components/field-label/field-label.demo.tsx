@@ -16,7 +16,7 @@ export const states = [
         <Input
           id="demo-key"
           defaultValue="core"
-          invalid
+          tone="danger"
           aria-describedby="demo-key-err"
           className="mt-1"
         />

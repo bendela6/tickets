@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { cn, TONE_SCALE, type Tone } from '../../style';
-import { fieldClass, type FieldSize } from '../field';
+import { fieldClass, fieldState, type FieldSize } from '../field';
 import { Icon, type IconSize } from '../icon';
 import { Pill } from '../pill';
 import { ComboboxList, type ComboOption } from '../combobox-list';
@@ -27,11 +27,12 @@ export function Combobox({
   onChange,
   placeholder = 'Select…',
   size = 'md',
-  tone = 'primary',
+  tone,
   disabled,
   className,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
+  const field = fieldState(tone);
   const selected = options.find((option) => option.value === value) ?? null;
 
   return (
@@ -43,7 +44,8 @@ export function Combobox({
             disabled={disabled}
             className={fieldClass({
               size,
-              scale: TONE_SCALE[tone],
+              state: field.state,
+            scale: field.scale,
               className: cn(
                 'flex w-full items-center justify-between gap-2 font-sans text-ui',
                 'disabled:opacity-50 disabled:pointer-events-none',
