@@ -5,7 +5,7 @@ import { SignalsErrorBoundary } from '@bendela6/signals-react';
 
 import { App } from './app';
 import { initWebSignals } from './signals-init';
-import { Button } from './ui/button';
+import { Button } from '@tickets/ui';
 import '@fontsource/ibm-plex-sans/400.css';
 import '@fontsource/ibm-plex-sans/500.css';
 import '@fontsource/ibm-plex-sans/600.css';
