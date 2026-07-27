@@ -94,7 +94,7 @@ export function resolveModulePath(
   return { path: abs };
 }
 
-// Instrument's option palette (light-mode hex — see packages/web/ui/src/tokens.css).
+// Instrument's option palette (light-mode hex — see packages/web/ui/src/tokens/tokens.css).
 // The schema-groups declare a colour by NAME (e.g. 'indigo'); the model wants
 // hex, so it's resolved here, once, at the read boundary. An unknown name
 // (typo, future palette addition not yet wired here) falls back to gray

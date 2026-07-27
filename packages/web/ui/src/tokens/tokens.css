@@ -1,0 +1,691 @@
+/* `xterm` is declared FIRST so it is the lowest-priority layer: xterm.css is
+   third-party UNLAYERED CSS and unlayered CSS outranks every layered rule —
+   left as-is it would beat Instrument. Wrapping it in the bottom layer keeps the
+   terminal's own canvas styles while letting any app utility win on conflict. */
+@layer xterm, theme, base, components, utilities;
+@import '@xterm/xterm/css/xterm.css' layer(xterm);
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* Every consumer's Tailwind build must scan this package's own sources —
+   demo files today, the component library in P3. Relative to this file. */
+/* `../`, not `./`: @source is relative to THIS file, and the classes to scan
+   live in the sibling component/foundation folders, not in tokens/. Narrowing
+   this to './' generates no utilities for any component and fails silently. */
+@source '../';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* App-wide base on top of preflight. This block shares the base layer with
+   preflight but loads after it, so these rules win on ties — notably
+   button{font:inherit} and cursor:pointer, which preflight does not set. */
+@layer base {
+  body {
+    background-color: var(--color-app);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+  button,
+  [type='button'],
+  [type='reset'],
+  [type='submit'] {
+    background-color: transparent;
+    background-image: none;
+    border: 0 solid;
+    cursor: pointer;
+    font: inherit;
+  }
+  button:disabled {
+    cursor: default;
+  }
+  a {
+    color: inherit;
+  }
+}
+
+/* [data-theme='light'] lets a wrapper re-assert light tokens inside a dark subtree (ThemeSplit) */
+:root, [data-theme='light'] {
+  /* Structural tokens (audit): consumed as border-(length:--border-hair) /
+     ring-(length:--ring-focus). */
+  --border-hair: 1.5px;
+  --ring-focus: 3px;
+  /* Layering scale: sticky table headers / overlay scrims / floating portals.
+     Consumed as z-(--z-sticky) etc. */
+  --z-sticky: 10;
+  --z-scrim: 40;
+  --z-overlay: 50;
+  /* tokens:light — generated, do not edit */
+  --ins-app: #f7f6f2;
+  --ins-raised: #ffffff;
+  --ins-inset: #eceae3;
+  --ins-hairline: #e0ddd5;
+  --ins-control: #c9c5ba;
+  --ins-ink: #25231d;
+  --ins-ink-2: #5d5a50;
+  --ins-ink-3: #918d80;
+  --ins-accent: #4e46c6;
+  --ins-accent-hover: #4238b5;
+  --ins-accent-subtle: #e9e7fa;
+  --ins-folder: #c29a2e;
+  --ins-on-accent: #ffffff;
+  --ins-danger: #c0382e;
+  --ins-danger-hover: #a82f26;
+  --ins-danger-subtle: #f8e7e5;
+  --ins-on-danger: #ffffff;
+  --ins-shadow-sm: 0 1px 2px rgba(28, 26, 20, 0.06);
+  --ins-shadow-lg: 0 16px 40px rgba(28, 26, 20, 0.16), 0 4px 10px rgba(28, 26, 20, 0.08);
+  --ins-opt-red: #a03028;
+  --ins-opt-red-hover: #7f2620;
+  --ins-opt-red-subtle: #fae3e1;
+  --ins-on-opt-red: #ffffff;
+  --ins-opt-orange: #a44e14;
+  --ins-opt-orange-hover: #803d10;
+  --ins-opt-orange-subtle: #fae7da;
+  --ins-on-opt-orange: #ffffff;
+  --ins-opt-yellow: #8a6a10;
+  --ins-opt-yellow-hover: #654e0c;
+  --ins-opt-yellow-subtle: #f5ebce;
+  --ins-on-opt-yellow: #ffffff;
+  --ins-opt-green: #2e7042;
+  --ins-opt-green-hover: #225331;
+  --ins-opt-green-subtle: #dff0e2;
+  --ins-on-opt-green: #ffffff;
+  --ins-opt-teal: #176d5c;
+  --ins-opt-teal-hover: #104b40;
+  --ins-opt-teal-subtle: #d9f0ea;
+  --ins-on-opt-teal: #ffffff;
+  --ins-opt-cyan: #14687e;
+  --ins-opt-cyan-hover: #0e4b5b;
+  --ins-opt-cyan-subtle: #dbeef6;
+  --ins-on-opt-cyan: #ffffff;
+  --ins-opt-blue: #2a5dae;
+  --ins-opt-blue-hover: #224b8d;
+  --ins-opt-blue-subtle: #e0eaf9;
+  --ins-on-opt-blue: #ffffff;
+  --ins-opt-indigo: #4a44b0;
+  --ins-opt-indigo-hover: #3e3993;
+  --ins-opt-indigo-subtle: #e6e6fa;
+  --ins-on-opt-indigo: #ffffff;
+  --ins-opt-purple: #7b3fa0;
+  --ins-opt-purple-hover: #643383;
+  --ins-opt-purple-subtle: #f0e3f7;
+  --ins-on-opt-purple: #ffffff;
+  --ins-opt-pink: #a63368;
+  --ins-opt-pink-hover: #872954;
+  --ins-opt-pink-subtle: #fae1ec;
+  --ins-on-opt-pink: #ffffff;
+  --ins-opt-gray: #5c594f;
+  --ins-opt-gray-hover: #46443c;
+  --ins-opt-gray-subtle: #eae9e4;
+  --ins-on-opt-gray: #ffffff;
+  --ins-highlight: #f1dfa0;
+  /* /tokens:light */
+}
+
+[data-theme='dark'] {
+  /* tokens:dark — generated, do not edit */
+  --ins-app: #1b1a17;
+  --ins-raised: #252320;
+  --ins-inset: #141310;
+  --ins-hairline: #343128;
+  --ins-control: #4c483d;
+  --ins-ink: #edebe3;
+  --ins-ink-2: #a6a296;
+  --ins-ink-3: #79756a;
+  --ins-accent: #918aec;
+  --ins-accent-hover: #a29cf1;
+  --ins-accent-subtle: #2c2a4a;
+  --ins-folder: #dfc060;
+  --ins-on-accent: #16143c;
+  --ins-danger: #e26a5f;
+  --ins-danger-hover: #e9847a;
+  --ins-danger-subtle: #41231f;
+  --ins-on-danger: #2b0f0b;
+  --ins-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --ins-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55), 0 4px 10px rgba(0, 0, 0, 0.4);
+  --ins-opt-red: #f0968d;
+  --ins-opt-red-hover: #f5b7b1;
+  --ins-opt-red-subtle: #46231f;
+  --ins-on-opt-red: #360b07;
+  --ins-opt-orange: #efa36c;
+  --ins-opt-orange-hover: #f3ba91;
+  --ins-opt-orange-subtle: #45291a;
+  --ins-on-opt-orange: #371b06;
+  --ins-opt-yellow: #dfc060;
+  --ins-opt-yellow-hover: #e6cd82;
+  --ins-opt-yellow-subtle: #3e3316;
+  --ins-on-opt-yellow: #33290a;
+  --ins-opt-green: #7fcb97;
+  --ins-opt-green-hover: #9cd7af;
+  --ins-opt-green-subtle: #1e3626;
+  --ins-on-opt-green: #122c1a;
+  --ins-opt-teal: #6cc9b4;
+  --ins-opt-teal-hover: #8ad4c3;
+  --ins-opt-teal-subtle: #16342e;
+  --ins-on-opt-teal: #102d26;
+  --ins-opt-cyan: #74c4dc;
+  --ins-opt-cyan-hover: #95d2e4;
+  --ins-opt-cyan-subtle: #173139;
+  --ins-on-opt-cyan: #0c2831;
+  --ins-opt-blue: #8bb4ef;
+  --ins-opt-blue-hover: #afcbf4;
+  --ins-opt-blue-subtle: #1d2c44;
+  --ins-on-opt-blue: #071a36;
+  --ins-opt-indigo: #a5a0f0;
+  --ins-opt-indigo-hover: #c6c3f6;
+  --ins-opt-indigo-subtle: #26254a;
+  --ins-on-opt-indigo: #0b0835;
+  --ins-opt-purple: #c591e8;
+  --ins-opt-purple-hover: #d7b3ef;
+  --ins-opt-purple-subtle: #332240;
+  --ins-on-opt-purple: #230b33;
+  --ins-opt-pink: #ee94bc;
+  --ins-opt-pink-hover: #f4b7d2;
+  --ins-opt-pink-subtle: #40222f;
+  --ins-on-opt-pink: #35081c;
+  --ins-opt-gray: #a5a195;
+  --ins-opt-gray-hover: #b8b5ab;
+  --ins-opt-gray-subtle: #2a2924;
+  --ins-on-opt-gray: #21201c;
+  --ins-highlight: #4a4020;
+  /* /tokens:dark */
+}
+
+@theme inline {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  /* tokens:theme — generated, do not edit */
+  --color-app: var(--ins-app);
+  --color-raised: var(--ins-raised);
+  --color-inset: var(--ins-inset);
+  --color-hairline: var(--ins-hairline);
+  --color-control: var(--ins-control);
+  --color-ink: var(--ins-ink);
+  --color-ink-2: var(--ins-ink-2);
+  --color-ink-3: var(--ins-ink-3);
+  --color-accent: var(--ins-accent);
+  --color-accent-hover: var(--ins-accent-hover);
+  --color-accent-subtle: var(--ins-accent-subtle);
+  --color-folder: var(--ins-folder);
+  --color-on-accent: var(--ins-on-accent);
+  --color-danger: var(--ins-danger);
+  --color-danger-hover: var(--ins-danger-hover);
+  --color-danger-subtle: var(--ins-danger-subtle);
+  --color-on-danger: var(--ins-on-danger);
+  --color-opt-red: var(--ins-opt-red);
+  --color-opt-red-hover: var(--ins-opt-red-hover);
+  --color-opt-red-subtle: var(--ins-opt-red-subtle);
+  --color-on-opt-red: var(--ins-on-opt-red);
+  --color-opt-orange: var(--ins-opt-orange);
+  --color-opt-orange-hover: var(--ins-opt-orange-hover);
+  --color-opt-orange-subtle: var(--ins-opt-orange-subtle);
+  --color-on-opt-orange: var(--ins-on-opt-orange);
+  --color-opt-yellow: var(--ins-opt-yellow);
+  --color-opt-yellow-hover: var(--ins-opt-yellow-hover);
+  --color-opt-yellow-subtle: var(--ins-opt-yellow-subtle);
+  --color-on-opt-yellow: var(--ins-on-opt-yellow);
+  --color-opt-green: var(--ins-opt-green);
+  --color-opt-green-hover: var(--ins-opt-green-hover);
+  --color-opt-green-subtle: var(--ins-opt-green-subtle);
+  --color-on-opt-green: var(--ins-on-opt-green);
+  --color-opt-teal: var(--ins-opt-teal);
+  --color-opt-teal-hover: var(--ins-opt-teal-hover);
+  --color-opt-teal-subtle: var(--ins-opt-teal-subtle);
+  --color-on-opt-teal: var(--ins-on-opt-teal);
+  --color-opt-cyan: var(--ins-opt-cyan);
+  --color-opt-cyan-hover: var(--ins-opt-cyan-hover);
+  --color-opt-cyan-subtle: var(--ins-opt-cyan-subtle);
+  --color-on-opt-cyan: var(--ins-on-opt-cyan);
+  --color-opt-blue: var(--ins-opt-blue);
+  --color-opt-blue-hover: var(--ins-opt-blue-hover);
+  --color-opt-blue-subtle: var(--ins-opt-blue-subtle);
+  --color-on-opt-blue: var(--ins-on-opt-blue);
+  --color-opt-indigo: var(--ins-opt-indigo);
+  --color-opt-indigo-hover: var(--ins-opt-indigo-hover);
+  --color-opt-indigo-subtle: var(--ins-opt-indigo-subtle);
+  --color-on-opt-indigo: var(--ins-on-opt-indigo);
+  --color-opt-purple: var(--ins-opt-purple);
+  --color-opt-purple-hover: var(--ins-opt-purple-hover);
+  --color-opt-purple-subtle: var(--ins-opt-purple-subtle);
+  --color-on-opt-purple: var(--ins-on-opt-purple);
+  --color-opt-pink: var(--ins-opt-pink);
+  --color-opt-pink-hover: var(--ins-opt-pink-hover);
+  --color-opt-pink-subtle: var(--ins-opt-pink-subtle);
+  --color-on-opt-pink: var(--ins-on-opt-pink);
+  --color-opt-gray: var(--ins-opt-gray);
+  --color-opt-gray-hover: var(--ins-opt-gray-hover);
+  --color-opt-gray-subtle: var(--ins-opt-gray-subtle);
+  --color-on-opt-gray: var(--ins-on-opt-gray);
+  --color-highlight: var(--ins-highlight);
+  --shadow-sm: var(--ins-shadow-sm);
+  --shadow-lg: var(--ins-shadow-lg);
+  /* /tokens:theme */
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --radius-ctrl: 5px;
+  --radius-card: 8px;
+  --radius-panel: 12px;
+  --text-label: 11px;
+  --text-label--line-height: 1.2;
+  --text-label--letter-spacing: 0.06em;
+  --text-meta: 12px;
+  --text-meta--line-height: 1.4;
+  --text-ui: 13px;
+  --text-ui--line-height: 1.45;
+  /* AI session status pill motion (screen 10): a slow spinner for in-flight
+     work and a calm attention pulse for "awaiting input". */
+  --animate-ai-spin: ai-spin 1.4s linear infinite;
+  --animate-ai-pulse: ai-pulse 1.8s ease-out infinite;
+  /* Extended type scale (audit 2026-07-23) — inert until consumed. Existing
+     label/meta/ui (11/12/13px) stay canonical for control chrome. */
+  --text-nano: 9px;
+  --text-nano--line-height: 1.3;
+  --text-micro: 10px;
+  --text-micro--line-height: 1.35;
+  --text-body: 14px;
+  --text-body--line-height: 1.5;
+  --text-title: 16px;
+  --text-title--line-height: 1.4;
+  --text-heading: 20px;
+  --text-heading--line-height: 1.3;
+  --text-display: 24px;
+  --text-display--line-height: 1.25;
+  /* Radius gaps (audit): chip 4 / tile 6 / overlay 10 — names avoid Tailwind's
+     default --radius-xs/sm which existing rounded-sm usage relies on. */
+  --radius-chip: 4px;
+  --radius-tile: 6px;
+  --radius-overlay: 10px;
+  /* Letter-spacing for uppercase labels — names avoid Tailwind defaults
+     (tracking-wide etc.). label matches text-label's baked .06em. */
+  --tracking-label: 0.06em;
+  --tracking-caps: 0.08em;
+  --tracking-mono-label: 0.09em;
+}
+
+@keyframes ai-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ai-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.62;
+  }
+}
+
+/* Rich-text prose (design §11, docs/design/design-system.html;
+   RichTextEditor.dc.html §04 mentions/refs + §05 rich blocks): the Tiptap
+   editing surface (RichTextEditor) and read-only render (RichTextView).
+   `.rt` wraps Tiptap's own `.ProseMirror` element, so most rules are plain
+   descendants; a few (first/last-child spacing) target `.ProseMirror`'s
+   direct children explicitly. Baseline ported from the legacy `.md` rules
+   (removed once every markdown surface was swapped to rich text) —
+   `[data-callout]`/chip/task-list/details additions are new. Callout kinds
+   draw from the hue tone palette (their hexes match the design's
+   info/success/warning palette exactly): info=opt-blue,
+   success=opt-green, warning=opt-orange, danger=danger. */
+@layer components {
+  .rt {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-ink);
+  }
+  .rt .ProseMirror {
+    outline: none;
+  }
+  .rt .ProseMirror > :first-child {
+    margin-top: 0;
+  }
+  .rt .ProseMirror > :last-child {
+    margin-bottom: 0;
+  }
+  .rt p {
+    margin: 6px 0;
+  }
+  .rt h1,
+  .rt h2,
+  .rt h3 {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    color: var(--color-ink);
+    margin: 14px 0 6px;
+  }
+  .rt h1 {
+    font-size: 16px;
+    margin: 16px 0 8px;
+  }
+  .rt h2 {
+    font-size: 14px;
+  }
+  .rt h3 {
+    font-size: 13px;
+  }
+  .rt ul,
+  .rt ol {
+    margin: 6px 0;
+    padding-left: 20px;
+  }
+  .rt ul {
+    list-style: disc;
+  }
+  .rt ol {
+    list-style: decimal;
+  }
+  .rt li {
+    margin: 3px 0;
+  }
+  .rt code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--color-inset);
+    border-radius: 5px;
+    padding: 2px 6px;
+  }
+  .rt pre {
+    background: var(--color-inset);
+    border-radius: var(--radius-card);
+    padding: 12px;
+    margin: 8px 0;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+    line-height: 1.5;
+  }
+  .rt pre code {
+    background: none;
+    border-radius: 0;
+    padding: 0;
+    font-size: inherit;
+  }
+  .rt a {
+    color: var(--color-accent);
+  }
+  .rt a:hover {
+    text-decoration: underline;
+  }
+  /* Cursor-in-link tint (RichTextEditor.dc.html §07): a ProseMirror
+     decoration (packages/richtext LinkCursorDecoration) stamps this class
+     onto the active link's mark range while the (collapsed) cursor sits
+     inside it — purely visual, no document mutation. `.rt a` already sets
+     the accent text color unconditionally, so only the tinted fill is
+     needed here. */
+  .rt .is-editing-link {
+    background: var(--color-accent-subtle);
+    border-radius: 3px;
+    padding: 1px 3px;
+  }
+  .rt strong {
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .rt mark {
+    background: var(--color-highlight);
+    color: var(--color-ink);
+    border-radius: 3px;
+    padding: 0 1px;
+  }
+  .rt blockquote {
+    border-left: 2px solid var(--color-hairline);
+    padding-left: 12px;
+    margin: 6px 0;
+    color: var(--color-ink-2);
+  }
+  .rt table {
+    border-collapse: collapse;
+    font-size: var(--text-meta);
+    margin: 8px 0;
+  }
+  .rt th,
+  .rt td {
+    border: 1px solid var(--color-hairline);
+    padding: 5px 9px;
+    text-align: left;
+    color: var(--color-ink-2);
+  }
+  .rt th {
+    color: var(--color-ink-3);
+    font-size: var(--text-label);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .rt img {
+    max-width: 100%;
+    border-radius: 5px;
+  }
+  .rt hr {
+    border: none;
+    border-top: 1px solid var(--color-hairline);
+    margin: 12px 0;
+  }
+
+  /* Callouts (RichTextEditor.dc.html §05 "CALLOUT VARIANTS"): tinted fill +
+     toned leading icon, radius 8, no border, no left-bar. The icon is a
+     pure-CSS ::before using mask-image on an inline SVG (Lucide-shaped
+     info/circle-check-big/triangle-alert/circle-alert) painted with
+     background-color so it follows the kind's toned token in both themes. */
+  .rt [data-callout] {
+    position: relative;
+    border-radius: var(--radius-card);
+    padding: 10px 12px 10px 34px;
+    margin: 8px 0;
+    background: var(--color-opt-blue-subtle);
+  }
+  .rt [data-callout]::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 11px;
+    width: 15px;
+    height: 15px;
+    background-color: var(--color-opt-blue);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+  }
+  .rt [data-callout] p {
+    margin: 0;
+  }
+  .rt [data-callout] p + p {
+    margin-top: 4px;
+  }
+  .rt [data-callout='warning'] {
+    background: var(--color-opt-orange-subtle);
+  }
+  .rt [data-callout='warning']::before {
+    background-color: var(--color-opt-orange);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z'/%3E%3Cpath d='M12 9v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z'/%3E%3Cpath d='M12 9v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
+  }
+  .rt [data-callout='success'] {
+    background: var(--color-opt-green-subtle);
+  }
+  .rt [data-callout='success']::before {
+    background-color: var(--color-opt-green);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.801 10A10 10 0 1 1 17 3.335'/%3E%3Cpath d='m9 11 3 3L22 4'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.801 10A10 10 0 1 1 17 3.335'/%3E%3Cpath d='m9 11 3 3L22 4'/%3E%3C/svg%3E");
+  }
+  .rt [data-callout='danger'] {
+    background: var(--color-danger-subtle);
+  }
+  .rt [data-callout='danger']::before {
+    background-color: var(--color-danger);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4'/%3E%3Cpath d='M12 16h.01'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4'/%3E%3Cpath d='M12 16h.01'/%3E%3C/svg%3E");
+  }
+
+  /* Mention chip (RichTextEditor.dc.html §04): 999px pill, accent-subtle
+     bg + accent text, leading 14px round initials avatar (rendered by
+     refs.ts as a `[data-mention-avatar]` child — see packages/richtext). */
+  .rt [data-mention] {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 1px 8px 1px 3px;
+    border-radius: 999px;
+    background: var(--color-accent-subtle);
+    color: var(--color-accent);
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+  .rt [data-mention-avatar] {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--color-opt-cyan-subtle);
+    color: var(--color-opt-cyan);
+    font-family: var(--font-sans);
+    font-size: 7px;
+    font-weight: 600;
+  }
+
+  /* Ticket-ref chip (RichTextEditor.dc.html §04): bordered 6px chip, page
+     fill, mono ID text, leading 7px neutral status dot (the actual ticket
+     status isn't known at render time, so the dot uses a neutral token
+     rather than a real kind color). */
+  .rt [data-ticket-ref] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 1px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--color-hairline);
+    background: var(--color-app);
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .rt [data-ticket-ref]:hover {
+    background: var(--color-inset);
+  }
+  .rt [data-ticket-ref-dot] {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-opt-gray);
+  }
+
+  /* Task lists: Tiptap renders `<ul data-type="taskList">` with per-item
+     `<li data-checked>` and a real checkbox input — restore the marker-free
+     layout preflight would otherwise leave inconsistent. */
+  .rt ul[data-type='taskList'] {
+    list-style: none;
+    padding-left: 0;
+  }
+  .rt ul[data-type='taskList'] li {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 3px 0;
+  }
+  /* Custom checkbox (design §11 "Task list"): 15px box, radius 4, checked =
+     accent fill + white check. Tiptap's TaskItem renders
+     `<label><input type="checkbox"><span></span></label>` — the native
+     input is kept for a11y/interaction but visually hidden; the sibling
+     `<span>` is painted as the box, and the check mark is a mask-image
+     ::after so its color (--color-on-accent) stays correct in both themes. */
+  .rt ul[data-type='taskList'] li > label {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    width: 15px;
+    height: 15px;
+    margin-top: 4px;
+  }
+  .rt ul[data-type='taskList'] li > label input[type='checkbox'] {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .rt ul[data-type='taskList'] li > label span {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    border: 1.5px solid var(--color-control);
+    border-radius: 4px;
+    background: var(--color-raised);
+    pointer-events: none;
+  }
+  .rt ul[data-type='taskList'] li > label input[type='checkbox']:checked + span {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+  }
+  .rt ul[data-type='taskList'] li > label input[type='checkbox']:checked + span::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background-color: var(--color-on-accent);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+  }
+  .rt ul[data-type='taskList'] li[data-checked='true'] > div {
+    color: var(--color-ink-3);
+    text-decoration: line-through;
+  }
+
+  /* Details/summary: an explicit affordance since preflight strips the
+     native marker triangle. */
+  .rt details {
+    margin: 6px 0;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-card);
+    padding: 8px 12px;
+  }
+  .rt details > summary {
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--color-ink-2);
+  }
+  .rt details > summary:hover {
+    color: var(--color-ink);
+  }
+
+  /* Selected node outline (tables/images/callouts selected via NodeSelection). */
+  .rt .ProseMirror-selectednode {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+    border-radius: 4px;
+  }
+
+  /* Empty-state placeholder: Tiptap's Placeholder extension (registered in
+     buildExtensions, packages/richtext/src/build-extensions.ts) decorates
+     the empty textblock itself with `is-empty is-editor-empty` classes and
+     a `data-placeholder` attribute — verified against its source
+     (@tiptap/extensions/src/placeholder/*). */
+  .rt .is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    color: var(--color-ink-3);
+    pointer-events: none;
+  }
+}

@@ -36,7 +36,15 @@ export function StateGrid({ demo }: { demo: LiveDemo }) {
               id={state.slug}
               className="m-0 flex flex-col items-center gap-3 rounded-card border border-hairline bg-raised px-2.5 pb-3 pt-5"
             >
-              <div className="flex min-w-0 max-w-full items-center">{state.render()}</div>
+              {/* `w-full` (not just max-w-full) so the wrapper has a definite
+                  width: the figure is `items-center`, so without it the cell
+                  shrinks to content and a `size: 'full'` demo whose specimen
+                  has no intrinsic width — a palette, a full-bleed table —
+                  collapses instead of filling the row. `justify-center` keeps
+                  narrow specimens centred exactly as before. */}
+              <div className="flex w-full min-w-0 max-w-full items-center justify-center">
+                {state.render()}
+              </div>
               <figcaption className="font-mono text-label text-ink-3">{state.name}</figcaption>
             </figure>
           ))}

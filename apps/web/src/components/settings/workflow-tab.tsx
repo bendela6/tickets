@@ -14,7 +14,7 @@ import { Checkbox } from '../../ui/checkbox';
 import { cn } from '@tickets/ui/cn';
 import { Icon } from '@tickets/ui/icon';
 import { Pill } from '@tickets/ui/pill';
-import { SWATCHES } from '@tickets/ui/swatches';
+import { SWATCHES } from '@tickets/ui/colors';
 import { Tabs } from '@tickets/ui/tabs';
 import { Combobox } from '../../ui/combobox';
 import type { ComboOption } from '../../ui/combobox-list';

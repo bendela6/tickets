@@ -1,0 +1,32 @@
+{
+  "hues": [
+    "gray",
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "teal",
+    "cyan",
+    "blue",
+    "indigo",
+    "purple",
+    "pink"
+  ],
+  "emphasis": {
+    "subtle": {
+      "bg": 3,
+      "text": 11
+    },
+    "solid": {
+      "bg": 9,
+      "text": "contrast"
+    },
+    "outline": {
+      "border": 7,
+      "text": 11
+    },
+    "text": {
+      "text": 11
+    }
+  }
+}
