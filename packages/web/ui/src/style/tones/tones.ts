@@ -1,5 +1,6 @@
 export {
   HUE_TONES,
+  STEP,
   TONE_NAMES,
   TONE_SCALE,
   TONES,

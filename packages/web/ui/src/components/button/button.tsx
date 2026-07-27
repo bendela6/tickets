@@ -1,5 +1,5 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
-import { HUE_TONES, TONE_SCALE, variants, type Tone } from '../../style';
+import { HUE_TONES, STEP, TONE_SCALE, variants, type Tone } from '../../style';
 import { Spinner } from '../spinner';
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -36,23 +36,23 @@ const buttonClass = variants({
       params: { scale: { default: 'indigo', values: HUE_TONES } },
       options: ({ scale }: { scale?: string }) => ({
         primary: [
-          `bg-${scale}-9 text-${scale}-contrast border border-transparent hover:bg-${scale}-10`,
-          `focus-visible:ring-[3px] focus-visible:ring-${scale}-3`,
+          `bg-${scale}-${STEP.solid} text-${scale}-${STEP.contrast} border border-transparent hover:bg-${scale}-${STEP.solidHover}`,
+          `focus-visible:ring-[3px] focus-visible:ring-${scale}-${STEP.focusRing}`,
           'focus-visible:shadow-[inset_0_0_0_1px_var(--color-gray-1)]',
         ],
         // Secondary is a surface button: it reads as chrome rather than as an
         // action in a color, so only its focus affordance follows the tone.
         secondary: [
           'bg-surface-raised text-gray-12 border border-gray-7 hover:bg-surface-inset hover:border-gray-9',
-          `focus-visible:ring-[3px] focus-visible:ring-${scale}-3 focus-visible:border-${scale}-9`,
+          `focus-visible:ring-[3px] focus-visible:ring-${scale}-${STEP.focusRing} focus-visible:border-${scale}-${STEP.solid}`,
         ],
         ghost: [
           'bg-transparent text-gray-11 border border-transparent hover:bg-surface-inset hover:text-gray-12',
-          `focus-visible:ring-[3px] focus-visible:ring-${scale}-3`,
+          `focus-visible:ring-[3px] focus-visible:ring-${scale}-${STEP.focusRing}`,
         ],
         destructive: [
-          `bg-${scale}-9 text-${scale}-contrast border border-transparent hover:bg-${scale}-10`,
-          `focus-visible:ring-[3px] focus-visible:ring-${scale}-3`,
+          `bg-${scale}-${STEP.solid} text-${scale}-${STEP.contrast} border border-transparent hover:bg-${scale}-${STEP.solidHover}`,
+          `focus-visible:ring-[3px] focus-visible:ring-${scale}-${STEP.focusRing}`,
         ],
       }),
     },
@@ -94,7 +94,7 @@ const disabledClass = variants({
         primary: 'bg-surface-inset text-gray-9',
         secondary: 'bg-gray-1 text-gray-9 border-gray-6',
         ghost: 'text-gray-9 opacity-60',
-        destructive: `bg-${scale}-3 text-${scale}-9 dark:text-${scale}-9 opacity-[0.55]`,
+        destructive: `bg-${scale}-${STEP.bgSubtle} text-${scale}-${STEP.solid} dark:text-${scale}-${STEP.solid} opacity-[0.55]`,
       }),
     },
   },
