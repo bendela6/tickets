@@ -10,6 +10,7 @@ export * from './dialog-footer';
 export * from './field-error';
 export * from './field-label';
 export * from './icon';
+export * from './field';
 export * from './input';
 export * from './item-key';
 export * from './menu';
