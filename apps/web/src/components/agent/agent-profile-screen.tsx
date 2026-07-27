@@ -6,6 +6,7 @@ import { useAgentSessions } from '../../api/use-agent-sessions';
 import { useCreateAgentSession } from '../../api/use-create-agent-session';
 import { sessionStatus } from '../../domain/session-status';
 import { Avatar, Button, Pill, SectionHeader, SessionKindGlyph } from '@tickets/ui';
+import { avatarFor } from '../../domain/actor';
 import { formatAge } from '../../utils/format-age';
 import { AgentBadge, PermissionBadge, providerLabel } from './agent-card';
 import { AgentEditor } from './agent-editor';
@@ -58,7 +59,7 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6 px-6 py-7">
       <div className="flex items-start gap-4">
-        <Avatar name={agent.name} kind="agent" size="md" className="size-11 text-[15px]" />
+        <Avatar name={agent.name} {...avatarFor('agent')} size="md" className="size-11 text-[15px]" />
         <div className="flex-1">
           <div className="flex items-center gap-2 font-mono text-meta text-gray-9">
             <Link to="/agents/personas" className="hover:text-gray-11">

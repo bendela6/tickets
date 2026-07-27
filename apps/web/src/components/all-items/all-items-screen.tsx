@@ -8,6 +8,7 @@ import { KIND_ICON, KIND_TONE, typePill } from '../../domain/status';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Avatar, Button, cn, DialogContent, DialogRoot, DialogTitle, Icon, Input, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, Tabs, toneClasses } from '@tickets/ui';
+import { avatarFor } from '../../domain/actor';
 import { StatusSelect } from '../../ui/status-select';
 import { childProgress } from '../../utils/child-progress';
 import { evaluateFilters } from '../../utils/evaluate-filters';
@@ -139,7 +140,7 @@ function AssigneeCell({ entry, value }: { entry: ProjectEntry; value: unknown })
   if (!user) {
     return <span className="font-sans text-ui text-gray-9">—</span>;
   }
-  return <Avatar name={user.name} kind={user.kind} size="md" />;
+  return <Avatar name={user.name} {...avatarFor(user.kind)} size="md" />;
 }
 
 /** Small dialog for naming a new global view ("＋" tab / saving from the default tab). */

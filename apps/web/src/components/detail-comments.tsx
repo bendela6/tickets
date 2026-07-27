@@ -3,6 +3,7 @@ import type { Item } from '../api/types';
 import { useCreateComment } from '../api/use-create-comment';
 import { useCurrentUser } from '../state/current-user-context';
 import { Avatar, RelativeDate } from '@tickets/ui';
+import { avatarFor } from '../domain/actor';
 import type { BoardIndexes } from '../utils/index-board';
 import { boardSuggestions } from './rich-text/board-suggestions';
 import { RichTextEditor } from './rich-text/rich-text-editor';
@@ -66,7 +67,7 @@ export function DetailComments({
           const name = author?.name ?? `user ${comment.authorId}`;
           return (
             <div key={comment.id} className="flex gap-2.5">
-              <Avatar name={name} kind={author?.kind ?? 'human'} size="md" className="mt-0.5" />
+              <Avatar name={name} {...avatarFor(author?.kind ?? 'human')} size="md" className="mt-0.5" />
               <div className="min-w-0 flex-1">
                 <div className="mb-0.75 flex items-baseline gap-2">
                   <span className="font-sans text-ui font-medium text-gray-12">{name}</span>
@@ -91,7 +92,7 @@ export function DetailComments({
         })
       )}
       <div className="flex gap-2.5">
-        {me ? <Avatar name={me.name} kind={me.kind} size="md" className="mt-0.5" /> : null}
+        {me ? <Avatar name={me.name} {...avatarFor(me.kind)} size="md" className="mt-0.5" /> : null}
         <div className="min-w-0 flex-1">
           <RichTextEditor
             key={composerKey}
