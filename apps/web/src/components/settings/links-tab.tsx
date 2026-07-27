@@ -134,10 +134,10 @@ function CreateForm({
         />
       </div>
       <div className="mt-3 flex justify-end gap-2">
-        <Button variant="ghost" size="compact" onClick={onCancel}>
+        <Button variant="ghost" size="sm" onClick={onCancel}>
           Cancel
         </Button>
-        <Button variant="primary" size="compact" disabled={!canSubmit} loading={pending} onClick={onSubmit}>
+        <Button variant="primary" size="sm" disabled={!canSubmit} loading={pending} onClick={onSubmit}>
           Create link type
         </Button>
       </div>
@@ -188,12 +188,12 @@ function EditForm({
         />
       </div>
       <div className="mt-3 flex justify-end gap-2">
-        <Button variant="ghost" size="compact" onClick={onCancel}>
+        <Button variant="ghost" size="sm" onClick={onCancel}>
           Cancel
         </Button>
         <Button
           variant="primary"
-          size="compact"
+          size="sm"
           disabled={draft.label.trim() === ''}
           loading={pending}
           onClick={onSubmit}
@@ -354,7 +354,7 @@ export function LinksTab({ board }: SettingsTabProps) {
         ) : (
           <Button
             variant="secondary"
-            size="compact"
+            size="sm"
             disabled={disabled || activeTypes.length === 0}
             onClick={startCreate}
           >
@@ -396,7 +396,7 @@ export function LinksTab({ board }: SettingsTabProps) {
                   <span className="flex-1" />
                   <Button
                     variant="ghost"
-                    size="compact"
+                    size="sm"
                     disabled={disabled || Boolean(linkType.archivedAt)}
                     aria-label={`Edit ${linkType.label}`}
                     onClick={() => startEdit(linkType)}
@@ -405,7 +405,7 @@ export function LinksTab({ board }: SettingsTabProps) {
                   </Button>
                   <Button
                     variant="ghost"
-                    size="compact"
+                    size="sm"
                     disabled={disabled}
                     aria-label={`${linkType.archivedAt ? 'Unarchive' : 'Archive'} ${linkType.label}`}
                     onClick={() => void toggleArchive(linkType)}

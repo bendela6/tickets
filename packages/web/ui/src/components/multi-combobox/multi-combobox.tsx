@@ -9,7 +9,7 @@ type MultiComboboxProps = {
   value: string[];
   onChange: (value: string[]) => void;
   placeholder?: string;
-  size?: 'compact' | 'regular';
+  size?: 'sm' | 'md';
   disabled?: boolean;
   /** Max chips shown on the trigger before collapsing to +N. */
   maxChips?: number;
@@ -21,7 +21,7 @@ export function MultiCombobox({
   value,
   onChange,
   placeholder = 'Select…',
-  size = 'regular',
+  size = 'md',
   disabled,
   maxChips = 3,
   className,
@@ -45,7 +45,7 @@ export function MultiCombobox({
             'flex w-full items-center gap-1.5 rounded-md border border-gray-7 bg-surface-raised px-2.5',
             'focus-within:border-indigo-9 focus-within:ring-[3px] focus-within:ring-indigo-3',
             disabled && 'pointer-events-none opacity-50',
-            size === 'compact' ? 'min-h-7 py-0.5' : 'min-h-9 py-1',
+            size === 'sm' ? 'min-h-7 py-0.5' : 'min-h-9 py-1',
             className,
           )}
         >

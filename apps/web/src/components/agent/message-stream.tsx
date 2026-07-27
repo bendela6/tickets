@@ -145,19 +145,19 @@ function ApprovalCard({
           <div className="flex items-center justify-end gap-2">
             {denying ? (
               <>
-                <Button size="compact" variant="ghost" onClick={() => setDenying(false)}>
+                <Button size="sm" variant="ghost" onClick={() => setDenying(false)}>
                   Cancel
                 </Button>
-                <Button size="compact" variant="destructive" onClick={() => respond('deny')}>
+                <Button size="sm" variant="destructive" onClick={() => respond('deny')}>
                   Confirm deny
                 </Button>
               </>
             ) : (
               <>
-                <Button size="compact" variant="secondary" onClick={() => setDenying(true)}>
+                <Button size="sm" variant="secondary" onClick={() => setDenying(true)}>
                   Deny
                 </Button>
-                <Button size="compact" variant="primary" onClick={() => respond('allow')}>
+                <Button size="sm" variant="primary" onClick={() => respond('allow')}>
                   Allow
                 </Button>
               </>

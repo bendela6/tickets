@@ -5,14 +5,14 @@ export const meta = { title: 'Input', group: 'Components', size: 'md' };
 
 export const states = [
   { name: 'with placeholder', render: () => <Input placeholder="Ticket title…" /> },
-  { name: 'compact', render: () => <Input size="compact" placeholder="Estimate" /> },
+  { name: 'sm', render: () => <Input size="sm" placeholder="Estimate" /> },
   { name: 'disabled', render: () => <Input placeholder="Disabled" disabled /> },
 ];
 
 export const playground = definePlayground({
   controls: {
     placeholder: text('Ticket title…'),
-    size: select(['compact', 'regular'], { allowNone: true }),
+    size: select(['sm', 'md'], { allowNone: true }),
     invalid: boolean(),
     disabled: boolean(),
   },

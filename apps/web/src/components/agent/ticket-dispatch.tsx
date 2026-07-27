@@ -60,7 +60,7 @@ export function TicketDispatch({ itemId, actorId }: { itemId: number; actorId?: 
           <Pill {...sessionStatus(live.status)} />
         </Link>
       ) : null}
-      <Button size="compact" onClick={() => setOpen(true)}>
+      <Button size="sm" onClick={() => setOpen(true)}>
         ＋ Put an agent on this
       </Button>
 

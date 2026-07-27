@@ -9,7 +9,7 @@ type ComboboxProps = {
   value: string | null;
   onChange: (value: string | null) => void;
   placeholder?: string;
-  size?: 'compact' | 'regular';
+  size?: 'sm' | 'md';
   disabled?: boolean;
   clearable?: boolean;
   className?: string;
@@ -20,7 +20,7 @@ export function Combobox({
   value,
   onChange,
   placeholder = 'Select…',
-  size = 'regular',
+  size = 'md',
   disabled,
   clearable,
   className,
@@ -39,7 +39,7 @@ export function Combobox({
               'flex w-full items-center justify-between gap-2 rounded-md border border-gray-7 bg-surface-raised font-sans text-ui text-gray-12',
               'hover:border-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3',
               'disabled:opacity-50 disabled:pointer-events-none',
-              size === 'compact' ? 'h-7 px-2' : 'h-9 px-3',
+              size === 'sm' ? 'h-7 px-2' : 'h-9 px-3',
               clearable && selected ? 'pr-14' : 'pr-8',
             )}
           >

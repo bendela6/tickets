@@ -275,7 +275,7 @@ export function ItemDetail({
           <Pill {...typePill} label={type?.label ?? '?'} />
           {workflowField ? (
             <StatusSelect
-              size="compact"
+              size="sm"
               className="w-auto"
               statuses={statusOptions}
               legalTargets={legalKeys}
@@ -351,7 +351,7 @@ export function ItemDetail({
         {archivedChip}
         <span className="flex-1" />
         <TicketDispatch itemId={item.id} actorId={userId ?? undefined} />
-        <Button size="compact" onClick={() => void copyLink(window.location.href)}>
+        <Button size="sm" onClick={() => void copyLink(window.location.href)}>
           {copied ? 'Copied' : '⧉ Copy link'}
         </Button>
         {archiveMenu}

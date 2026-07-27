@@ -29,19 +29,17 @@ test('loading disables and marks busy', () => {
 });
 
 test('sizes match design height/padding/radius/font-size', () => {
-  const { rerender } = render(<Button size="compact">c</Button>);
+  const { rerender } = render(<Button size="sm">c</Button>);
   expect(screen.getByRole('button')).toHaveClass('h-7', 'px-2.5', 'rounded-[6px]', 'text-[12px]');
-  rerender(<Button size="regular">r</Button>);
+  rerender(<Button size="md">r</Button>);
   expect(screen.getByRole('button')).toHaveClass('h-9', 'px-3.5', 'rounded-[8px]', 'text-[13px]');
-  rerender(<Button size="touch">t</Button>);
+  rerender(<Button size="lg">t</Button>);
   expect(screen.getByRole('button')).toHaveClass(
     'h-11',
     'px-[18px]',
     'rounded-[10px]',
     'text-[14px]',
   );
-  rerender(<Button size="icon" aria-label="more" />);
-  expect(screen.getByRole('button')).toHaveClass('h-8', 'w-8', 'p-0', 'rounded-[8px]');
 });
 
 test('focus halo is 3px accent-subtle, danger-subtle for destructive', () => {

@@ -38,7 +38,7 @@ type DatePickerProps = {
   value: string | null;
   onChange: (value: string | null) => void;
   placeholder?: string;
-  size?: 'compact' | 'regular';
+  size?: 'sm' | 'md';
   disabled?: boolean;
   className?: string;
 };
@@ -47,7 +47,7 @@ export function DatePicker({
   value,
   onChange,
   placeholder = 'Set date…',
-  size = 'regular',
+  size = 'md',
   disabled,
   className,
 }: DatePickerProps) {
@@ -88,7 +88,7 @@ export function DatePicker({
             'flex w-full items-center justify-between gap-2 rounded-[8px] border border-gray-7 bg-surface-raised px-3 font-sans text-[14px]',
             'hover:border-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3',
             'disabled:pointer-events-none disabled:opacity-50',
-            size === 'compact' ? 'h-7' : 'h-9',
+            size === 'sm' ? 'h-7' : 'h-9',
             selected ? 'text-gray-12' : 'text-gray-9',
             className,
           )}

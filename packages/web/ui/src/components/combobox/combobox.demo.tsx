@@ -34,7 +34,7 @@ function ComboboxPlaygroundFixture({
   placeholder: string;
   clearable: boolean;
   disabled: boolean;
-  size: 'compact' | 'regular' | undefined;
+  size: 'sm' | 'md' | undefined;
 }) {
   const [priority, setPriority] = useState<string | null>('p0');
   return (
@@ -63,7 +63,7 @@ export const playground = definePlayground({
     placeholder: text('Priority'),
     clearable: boolean(true),
     disabled: boolean(),
-    size: select(['compact', 'regular'], { allowNone: true }),
+    size: select(['sm', 'md'], { allowNone: true }),
   },
   render: (v) => <ComboboxPlaygroundFixture {...v} />,
 });

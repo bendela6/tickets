@@ -30,7 +30,7 @@ function StatusSelectPlaygroundFixture({
   size,
 }: {
   disabled: boolean;
-  size: 'compact' | 'regular' | undefined;
+  size: 'sm' | 'md' | undefined;
 }) {
   const [status, setStatus] = useState<string | null>('in-progress');
   return (
@@ -56,7 +56,7 @@ export const states = [
 export const playground = definePlayground({
   controls: {
     disabled: boolean(),
-    size: select(['compact', 'regular'], { allowNone: true }),
+    size: select(['sm', 'md'], { allowNone: true }),
   },
   render: (v) => <StatusSelectPlaygroundFixture {...v} />,
 });

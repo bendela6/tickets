@@ -6,7 +6,7 @@ type NumberInputProps = {
   min?: number;
   max?: number;
   step?: number;
-  size?: 'compact' | 'regular';
+  size?: 'sm' | 'md';
   disabled?: boolean;
   placeholder?: string;
   className?: string;
@@ -29,7 +29,7 @@ export function NumberInput({
   min,
   max,
   step = 1,
-  size = 'regular',
+  size = 'md',
   disabled,
   placeholder,
   className,
@@ -45,7 +45,7 @@ export function NumberInput({
         'inline-flex items-stretch rounded-md border border-gray-7 bg-surface-raised',
         'focus-within:border-indigo-9 focus-within:ring-[3px] focus-within:ring-indigo-3',
         disabled && 'pointer-events-none opacity-50',
-        size === 'compact' ? 'h-7' : 'h-9',
+        size === 'sm' ? 'h-7' : 'h-9',
         className,
       )}
     >

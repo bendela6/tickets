@@ -4,7 +4,7 @@ import { FieldError } from '../field-error';
 import { FieldLabel } from '../field-label';
 import { Input } from './input';
 
-test('regular input carries the spec size classes', () => {
+test('md input carries the spec size classes', () => {
   render(<Input aria-label="Title" />);
   const input = screen.getByLabelText('Title');
   expect(input).toHaveClass('h-9', 'px-3', 'rounded-[8px]', 'bg-surface-raised', 'border-gray-7');
@@ -14,8 +14,8 @@ test('regular input carries the spec size classes', () => {
   expect(input).toHaveClass('text-gray-12');
 });
 
-test('compact input overrides height, padding, radius, and font size', () => {
-  render(<Input size="compact" aria-label="Estimate" />);
+test('sm input overrides height, padding, radius, and font size', () => {
+  render(<Input size="sm" aria-label="Estimate" />);
   const input = screen.getByLabelText('Estimate');
   expect(input).toHaveClass('h-7', 'px-2.25', 'rounded-[6px]', 'text-[13px]');
   expect(input).not.toHaveClass('text-[14px]');

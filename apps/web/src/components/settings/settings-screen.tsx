@@ -95,7 +95,7 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
         </p>
         <Button
           variant="secondary"
-          size="compact"
+          size="sm"
           disabled={userId === null || forkScheme.isPending || updateProject.isPending}
           title={userId === null ? 'Sign in to fork the scheme' : undefined}
           onClick={handleFork}

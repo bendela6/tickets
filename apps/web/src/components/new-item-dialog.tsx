@@ -539,14 +539,14 @@ export function SubtaskQuickCreate({
         ↵ creates {board.project.itemPrefix}-{nextNumber}
       </span>
       <Combobox
-        size="compact"
+        size="sm"
         className="w-30 shrink-0"
         options={types.map((type) => ({ value: type.key, label: type.label }))}
         value={effectiveTypeKey}
         onChange={(next) => setTypeKey(next)}
       />
       <Button
-        size="compact"
+        size="sm"
         loading={createItem.isPending}
         disabled={userId === null || title.trim().length === 0}
         onClick={() => void create()}

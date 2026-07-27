@@ -2,7 +2,7 @@ import { forwardRef, type InputHTMLAttributes } from 'react';
 import { cn } from '../../style/cn';
 
 type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> & {
-  size?: 'compact' | 'regular';
+  size?: 'sm' | 'md';
   invalid?: boolean;
 };
 
@@ -18,7 +18,7 @@ export const inputClasses = (invalid: boolean | undefined, className?: string) =
   );
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { size = 'regular', invalid, className, ...rest },
+  { size = 'md', invalid, className, ...rest },
   ref,
 ) {
   return (
@@ -27,7 +27,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       aria-invalid={invalid || undefined}
       className={cn(
         inputClasses(invalid),
-        size === 'compact' ? 'h-7 rounded-[6px] px-2.25 text-[13px]' : 'h-9 px-3',
+        size === 'sm' ? 'h-7 rounded-[6px] px-2.25 text-[13px]' : 'h-9 px-3',
         className,
       )}
       {...rest}

@@ -134,12 +134,12 @@ function TypeForm({
       />
       <ColorSwatches value={draft.color} onChange={(color) => onChange({ ...draft, color })} />
       <div className="mt-3 flex justify-end gap-2">
-        <Button variant="ghost" size="compact" onClick={onCancel}>
+        <Button variant="ghost" size="sm" onClick={onCancel}>
           Cancel
         </Button>
         <Button
           variant="primary"
-          size="compact"
+          size="sm"
           disabled={draft.label.trim() === ''}
           loading={pending}
           onClick={onSubmit}
@@ -270,7 +270,7 @@ export function TypesTab({ board }: SettingsTabProps) {
             pending={createType.isPending}
           />
         ) : (
-          <Button variant="secondary" size="compact" disabled={disabled} onClick={startCreate}>
+          <Button variant="secondary" size="sm" disabled={disabled} onClick={startCreate}>
             + New type
           </Button>
         )}
@@ -305,7 +305,7 @@ export function TypesTab({ board }: SettingsTabProps) {
                   <span className="flex-1" />
                   <Button
                     variant="ghost"
-                    size="compact"
+                    size="sm"
                     disabled={disabled || Boolean(type.archivedAt)}
                     aria-label={`Edit ${type.label}`}
                     onClick={() => startEdit(type)}
@@ -314,7 +314,7 @@ export function TypesTab({ board }: SettingsTabProps) {
                   </Button>
                   <Button
                     variant="ghost"
-                    size="compact"
+                    size="sm"
                     disabled={disabled}
                     aria-label={`${type.archivedAt ? 'Unarchive' : 'Archive'} ${type.label}`}
                     onClick={() => void toggleArchive(type)}

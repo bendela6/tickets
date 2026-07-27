@@ -5,7 +5,7 @@ import { PlaygroundCard, playgroundCaption } from './playground-card';
 const pg = definePlayground({
   controls: {
     variant: select(['primary', 'secondary'], { label: 'variant' }),
-    size: select(['compact', 'regular'], { allowNone: true }),
+    size: select(['sm', 'md'], { allowNone: true }),
     loading: booleanControl(false),
     children: text('New ticket'),
   },
@@ -48,12 +48,12 @@ describe('PlaygroundCard', () => {
       <PlaygroundCard
         component="Button"
         playground={pg}
-        values={{ variant: 'secondary', size: 'compact', loading: true, children: 'Save' }}
+        values={{ variant: 'secondary', size: 'sm', loading: true, children: 'Save' }}
       />,
     );
     const btn = screen.getByRole('button', { name: 'Save' });
     expect(btn.getAttribute('data-variant')).toBe('secondary');
-    expect(btn.getAttribute('data-size')).toBe('compact');
+    expect(btn.getAttribute('data-size')).toBe('sm');
     expect(btn.getAttribute('data-loading')).toBe('true');
   });
 
@@ -62,10 +62,10 @@ describe('PlaygroundCard', () => {
       <PlaygroundCard
         component="Button"
         playground={pg}
-        values={{ variant: 'secondary', size: 'compact', loading: true, children: 'New ticket' }}
+        values={{ variant: 'secondary', size: 'sm', loading: true, children: 'New ticket' }}
       />,
     );
-    expect(screen.getByText('Button · secondary · compact · loading')).toBeTruthy();
+    expect(screen.getByText('Button · secondary · sm · loading')).toBeTruthy();
   });
 });
 

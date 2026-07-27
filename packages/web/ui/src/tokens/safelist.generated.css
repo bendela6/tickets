@@ -75,7 +75,6 @@
 @source inline("gap-2");
 @source inline("h-11");
 @source inline("h-7");
-@source inline("h-8");
 @source inline("h-9");
 @source inline("hover:bg-blue-10");
 @source inline("hover:bg-cyan-10");
@@ -96,7 +95,6 @@
 @source inline("justify-center");
 @source inline("opacity-60");
 @source inline("opacity-[0.55]");
-@source inline("p-0");
 @source inline("px-2.5");
 @source inline("px-3.5");
 @source inline("px-[18px]");
@@ -107,7 +105,6 @@
 @source inline("text-[12px]");
 @source inline("text-[13px]");
 @source inline("text-[14px]");
-@source inline("text-[15px]");
 @source inline("text-blue-9");
 @source inline("text-blue-contrast");
 @source inline("text-cyan-9");
@@ -133,4 +130,3 @@
 @source inline("text-yellow-9");
 @source inline("text-yellow-contrast");
 @source inline("transition-colors");
-@source inline("w-8");

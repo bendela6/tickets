@@ -8,7 +8,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
    *  is `danger`, everything else `primary` — so the four variants keep the
    *  colors they had before this prop existed. */
   tone?: Tone;
-  size?: 'compact' | 'regular' | 'touch' | 'icon';
+  size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
 };
 
@@ -61,14 +61,13 @@ const buttonClass = variants({
     // does not know those custom named sizes are font-sizes, so it groups them with
     // `text-{color}` utilities and silently drops the color (e.g. text-indigo-contrast).
     // Arbitrary lengths are classified as font-size, so the variant color survives.
-    // Radius is per-size (design: 6 / 8 / 10 / 8 px), not the 5px `rounded-md`.
+    // Radius is per-size (design: 6 / 8 / 10 px), not the 5px `rounded-md`.
     size: {
-      default: 'regular',
+      default: 'md',
       options: {
-        compact: 'h-7 px-2.5 rounded-[6px] text-[12px]',
-        regular: 'h-9 px-3.5 rounded-[8px] text-[13px]',
-        touch: 'h-11 px-[18px] rounded-[10px] text-[14px]',
-        icon: 'h-8 w-8 p-0 rounded-[8px] text-[15px]',
+        sm: 'h-7 px-2.5 rounded-[6px] text-[12px]',
+        md: 'h-9 px-3.5 rounded-[8px] text-[13px]',
+        lg: 'h-11 px-[18px] rounded-[10px] text-[14px]',
       },
     },
   },
@@ -111,7 +110,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   {
     variant = 'secondary',
     tone,
-    size = 'regular',
+    size = 'md',
     loading = false,
     className,
     children,
