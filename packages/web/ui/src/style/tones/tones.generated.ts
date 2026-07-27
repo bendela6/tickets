@@ -24,6 +24,20 @@ export const TONE_SCALE: Record<Tone, HueTone> = {
   'pink': 'pink',
   'gray': 'gray',
 };
+export const STEP = {
+  bgSubtle: 3,
+  bgSubtleHover: 4,
+  bgSubtleActive: 5,
+  border: 7,
+  borderHover: 8,
+  solid: 9,
+  solidHover: 10,
+  solidActive: 11,
+  text: 11,
+  textStrong: 12,
+  contrast: 'contrast',
+  focusRing: 3,
+} as const;
 export const TONES: Record<Tone, Record<ToneEmphasis, string>> = {
   'primary': {
     subtle: 'bg-indigo-3 text-indigo-11',

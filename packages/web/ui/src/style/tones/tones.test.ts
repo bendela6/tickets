@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HUE_TONES, TONE_NAMES, toneClasses, TONES } from './tones';
+import { HUE_TONES, STEP, TONE_NAMES, toneClasses, TONES } from './tones';
 
 const EMPHASES = ['subtle', 'solid', 'outline', 'text'] as const;
 
@@ -45,6 +45,31 @@ describe('tone system', () => {
     expect(toneClasses('secondary', 'solid')).toBe('bg-gray-9 text-gray-contrast');
     expect(toneClasses('danger', 'solid')).toBe('bg-red-9 text-red-contrast');
     expect(toneClasses('neutral', 'text')).toBe('text-gray-11');
+  });
+
+  // STEP is what components interpolate — `bg-${scale}-${STEP.solid}` — while
+  // TONES is what `toneClasses()` returns. Both come from tones.tokens.json, so
+  // re-anchoring a rung there has to move both together. If it ever moves only
+  // one, a Pill and a Button asking for the same treatment would disagree, and
+  // nothing else in the suite would notice.
+  it('agrees with the finished class strings toneClasses() hands out', () => {
+    expect(toneClasses('green', 'subtle')).toBe(
+      `bg-green-${STEP.bgSubtle} text-green-${STEP.text}`,
+    );
+    expect(toneClasses('green', 'solid')).toBe(`bg-green-${STEP.solid} text-green-${STEP.contrast}`);
+    expect(toneClasses('green', 'outline')).toBe(
+      `border-(length:--border-thick) border-green-${STEP.border} text-green-${STEP.text}`,
+    );
+    expect(toneClasses('green', 'text')).toBe(`text-green-${STEP.text}`);
+  });
+
+  it('orders the interaction rungs so hover and active always darken', () => {
+    expect(STEP.bgSubtle).toBeLessThan(STEP.bgSubtleHover);
+    expect(STEP.bgSubtleHover).toBeLessThan(STEP.bgSubtleActive);
+    expect(STEP.border).toBeLessThan(STEP.borderHover);
+    expect(STEP.solid).toBeLessThan(STEP.solidHover);
+    expect(STEP.solidHover).toBeLessThan(STEP.solidActive);
+    expect(STEP.text).toBeLessThan(STEP.textStrong);
   });
 
   it('every class in the map is one of the four known utility shapes', () => {
