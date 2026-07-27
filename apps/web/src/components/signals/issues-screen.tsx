@@ -214,7 +214,7 @@ export function IssuesScreen() {
               ))}
             </div>
             <div className="flex h-9.5 shrink-0 items-center gap-2.5 border-t border-gray-6 bg-gray-1 px-3.5 font-mono text-[11px] text-gray-9">
-              <Spinner size={11} tone="secondary" />
+              <Spinner size="xs" tone="secondary" />
               <span>loading issues…</span>
             </div>
           </>

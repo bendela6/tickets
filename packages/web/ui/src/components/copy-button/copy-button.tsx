@@ -61,7 +61,7 @@ export function CopyButton({
         className,
       )}
     >
-      <Icon name={copied ? 'check' : 'copy'} size={11} />
+      <Icon name={copied ? 'check' : 'copy'} size="xs" />
       {copied ? copiedLabel : failed ? failedLabel : label}
     </button>
   );

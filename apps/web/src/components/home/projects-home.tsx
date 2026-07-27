@@ -45,19 +45,19 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
         <div className="flex items-center gap-3.5 font-sans text-meta text-gray-11">
           <span className="font-mono text-ui font-semibold text-gray-12">{pct}%</span>
           <span className="inline-flex items-center gap-1.25">
-            <Icon name={KIND_ICON.todo} tone={KIND_TONE.todo} size={10} />
+            <Icon name={KIND_ICON.todo} tone={KIND_TONE.todo} size="xs" />
             <span className="text-gray-11">{counts.todo}</span>
           </span>
           <span className="inline-flex items-center gap-1.25">
-            <Icon name={KIND_ICON.active} tone={KIND_TONE.active} size={10} />
+            <Icon name={KIND_ICON.active} tone={KIND_TONE.active} size="xs" />
             <span className="text-gray-11">{counts.active}</span>
           </span>
           <span className="inline-flex items-center gap-1.25">
-            <Icon name={KIND_ICON.blocked} tone={KIND_TONE.blocked} size={10} />
+            <Icon name={KIND_ICON.blocked} tone={KIND_TONE.blocked} size="xs" />
             <span className="text-gray-11">{counts.blocked}</span>
           </span>
           <span className="inline-flex items-center gap-1.25">
-            <Icon name={KIND_ICON.done} tone={KIND_TONE.done} size={10} />
+            <Icon name={KIND_ICON.done} tone={KIND_TONE.done} size="xs" />
             <span className="text-gray-11">{counts.done}</span>
           </span>
           <span className="flex-1" />

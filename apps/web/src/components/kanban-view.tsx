@@ -290,7 +290,7 @@ export function KanbanView({
           >
             <div className="flex items-center gap-2 px-3.25 pt-3 pb-2">
               <span className="inline-flex shrink-0">
-                <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
+                <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
               </span>
               <span className="font-sans text-ui font-medium text-gray-12">{option.label}</span>
               <span className="font-mono text-[11px] text-gray-9">{cards.length}</span>

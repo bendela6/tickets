@@ -22,7 +22,7 @@ export function ActivityRow({ signal }: { signal: SignalListRow }) {
       style={{ gridTemplateColumns: ACTIVITY_GRID_COLUMNS }}
     >
       <span className="flex">
-        <Icon name={signalKindIcon(signal.kind)} tone={signalKindTone(signal.kind)} size={11} label={signal.kind} />
+        <Icon name={signalKindIcon(signal.kind)} tone={signalKindTone(signal.kind)} size="xs" label={signal.kind} />
       </span>
       <span className="flex">
         <LevelDot level={signal.level} />

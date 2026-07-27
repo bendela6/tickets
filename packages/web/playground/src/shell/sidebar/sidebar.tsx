@@ -100,7 +100,7 @@ export function Sidebar({
         onClick={toggle}
         className="fixed left-3 top-3 z-40 flex h-9 w-9 items-center justify-center rounded-md border border-gray-6 bg-surface-raised text-gray-11 shadow-sm hover:text-gray-12"
       >
-        <Icon name="rows" size={14} />
+        <Icon name="rows" size="md" />
       </button>
     );
   }
@@ -146,7 +146,7 @@ export function Sidebar({
               onClick={toggle}
               className="flex h-7.5 w-7 shrink-0 items-center justify-center rounded-md text-gray-9 hover:bg-surface-inset hover:text-gray-12"
             >
-              <Icon name="chevron-left" size={14} />
+              <Icon name="chevron-left" size="md" />
             </button>
           </div>
 

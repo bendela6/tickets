@@ -326,7 +326,7 @@ export function AllItemsScreen() {
         header: (
           <>
             <span className="inline-flex shrink-0">
-              <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
+              <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
             </span>
             <span className={cn('font-sans text-ui font-medium', textClass)}>{label}</span>
             <span className="font-mono text-[11px] text-gray-9">{rows.length} shown</span>

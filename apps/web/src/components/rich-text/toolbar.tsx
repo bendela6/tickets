@@ -69,7 +69,7 @@ const CONTROLS: Record<string, ControlDef> = {
     run: (editor) => editor.chain().focus().toggleCode().run(),
   },
   link: {
-    content: <Icon name="link" size={15} />,
+    content: <Icon name="link" size="md" />,
     isActive: (editor) => editor.isActive('link'),
     run: (editor) => {
       if (editor.isActive('link')) {
@@ -90,7 +90,7 @@ const CONTROLS: Record<string, ControlDef> = {
     run: (editor) => editor.chain().focus().insertContent('@').run(),
   },
   bulletList: {
-    content: <Icon name="list" size={15} />,
+    content: <Icon name="list" size="md" />,
     isActive: (editor) => editor.isActive('bulletList'),
     run: (editor) => editor.chain().focus().toggleBulletList().run(),
   },
@@ -102,14 +102,14 @@ const CONTROLS: Record<string, ControlDef> = {
   taskList: {
     content: (
       <span className="box-border flex h-3 w-3 items-center justify-center rounded-[3.5px] border-[1.5px] border-current">
-        <Icon name="check" size={8} />
+        <Icon name="check" size="2xs" />
       </span>
     ),
     isActive: (editor) => editor.isActive('taskList'),
     run: (editor) => editor.chain().focus().toggleTaskList().run(),
   },
   blockquote: {
-    content: <Icon name="quote" size={15} />,
+    content: <Icon name="quote" size="md" />,
     isActive: (editor) => editor.isActive('blockquote'),
     run: (editor) => editor.chain().focus().toggleBlockquote().run(),
   },
@@ -137,12 +137,12 @@ const CONTROLS: Record<string, ControlDef> = {
     run: (editor) => editor.chain().focus().toggleHighlight().run(),
   },
   callout: {
-    content: <Icon name="circle-info" size={14} />,
+    content: <Icon name="circle-info" size="md" />,
     isActive: (editor) => editor.isActive('callout'),
     run: (editor) => editor.chain().focus().toggleCallout().run(),
   },
   details: {
-    content: <Icon name="chevron-right" size={14} />,
+    content: <Icon name="chevron-right" size="md" />,
     isActive: (editor) => editor.isActive('details'),
     run: (editor) =>
       editor.isActive('details')
@@ -150,7 +150,7 @@ const CONTROLS: Record<string, ControlDef> = {
         : editor.chain().focus().setDetails().run(),
   },
   horizontalRule: {
-    content: <Icon name="minus" size={14} />,
+    content: <Icon name="minus" size="md" />,
     run: (editor) => editor.chain().focus().setHorizontalRule().run(),
   },
 };
@@ -316,7 +316,7 @@ function BlockTypeSelect({ editor, disabled }: { editor: Editor | null; disabled
           className="mr-1 inline-flex h-6.5 flex-none items-center gap-1 rounded-[6px] px-2 text-gray-11 hover:bg-surface-inset disabled:pointer-events-none disabled:opacity-40"
         >
           <span className="font-sans text-[12px] font-medium">{currentBlockLabel(editor)}</span>
-          <Icon name="chevron-down" size={12} />
+          <Icon name="chevron-down" size="sm" />
         </button>
       </MenuTrigger>
       <MenuContent align="start" className="min-w-37.5">
@@ -370,7 +370,7 @@ function OverflowMenu({
           disabled={disabled === true || editor === null}
           className={BTN}
         >
-          <Icon name="plus" size={15} />
+          <Icon name="plus" size="md" />
         </button>
       </MenuTrigger>
       <MenuContent align="end" className="w-54 rounded-[10px] p-1.5">
@@ -390,7 +390,7 @@ function OverflowMenu({
           <MenuItem className="h-7.5" onSelect={() => run(CONTROLS.callout!.run)}>
             <span className="inline-flex items-center gap-2.25">
               <span className="inline-flex text-gray-11">
-                <Icon name="circle-info" size={14} />
+                <Icon name="circle-info" size="md" />
               </span>
               Callout
             </span>
@@ -400,7 +400,7 @@ function OverflowMenu({
           <MenuItem className="h-7.5" onSelect={() => run(CONTROLS.details!.run)}>
             <span className="inline-flex items-center gap-2.25">
               <span className="inline-flex text-gray-11">
-                <Icon name="chevron-right" size={14} />
+                <Icon name="chevron-right" size="md" />
               </span>
               Collapsible section
             </span>
@@ -410,7 +410,7 @@ function OverflowMenu({
           <MenuItem className="h-7.5" onSelect={() => run(CONTROLS.horizontalRule!.run)}>
             <span className="inline-flex items-center gap-2.25">
               <span className="inline-flex text-gray-11">
-                <Icon name="minus" size={14} />
+                <Icon name="minus" size="md" />
               </span>
               Divider
             </span>

@@ -223,7 +223,7 @@ export function AppsScreen() {
       {isLoading ? (
         <div className="flex flex-1 items-center justify-center">
           <span className="flex items-center gap-2.5 font-mono text-[11.5px] text-gray-9">
-            <Spinner size={11} tone="secondary" />
+            <Spinner size="xs" tone="secondary" />
             loading apps…
           </span>
         </div>

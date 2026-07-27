@@ -106,7 +106,7 @@ export function StatusSelect({
             return (
               <span className="inline-flex items-center gap-2.25">
                 <span className="inline-flex">
-                  <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
+                  <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
                 </span>
                 <span className="font-sans text-ui text-gray-12">{option.label}</span>
               </span>

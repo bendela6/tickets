@@ -11,9 +11,9 @@ export type SignalStatus = 'open' | 'resolved' | 'ignored';
 type Entry = { tone: Tone; icon: ReactElement; label: string };
 
 const MAP: Record<SignalStatus, Entry> = {
-  open: { tone: 'blue', icon: <Icon name="circle-half" size={10} />, label: 'open' },
-  resolved: { tone: 'green', icon: <Icon name="circle-check" size={10} />, label: 'resolved' },
-  ignored: { tone: 'gray', icon: <Icon name="circle-dashed" size={10} />, label: 'ignored' },
+  open: { tone: 'blue', icon: <Icon name="circle-half" size="xs" />, label: 'open' },
+  resolved: { tone: 'green', icon: <Icon name="circle-check" size="xs" />, label: 'resolved' },
+  ignored: { tone: 'gray', icon: <Icon name="circle-dashed" size="xs" />, label: 'ignored' },
 };
 
 export function signalStatus(status: SignalStatus): Entry {
