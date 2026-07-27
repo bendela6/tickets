@@ -1,30 +1,34 @@
 import { HUE_TONES, STEP, TONE_SCALE, variants, type Tone } from '../../style';
 
 export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-export type AvatarKind = 'human' | 'agent';
+export type AvatarShape = 'round' | 'square';
+export type AvatarFont = 'sans' | 'mono';
 
 type AvatarProps = {
   name: string;
-  kind: AvatarKind;
+  shape?: AvatarShape;
+  /** Typeface for the initials. Independent of `shape` — a square avatar in
+   *  sans is a legitimate combination, so the two are separate axes. */
+  font?: AvatarFont;
   size?: AvatarSize;
-  /** Overrides the per-kind default ramp — `human` is cyan, `agent` primary. */
   tone?: Tone;
   className?: string;
 };
 
-// Kind is a real variant axis: it carries the shape and the typeface, not just
-// a colour. A human reads as a round slot in a sans face, an agent as a square
-// token in mono. Only the colour was ever a tone, and it was hardcoded.
 const avatarClass = variants({
   base: 'inline-flex shrink-0 items-center justify-center font-semibold',
   config: {
-    kind: {
-      default: 'human',
+    shape: {
+      default: 'round',
       params: { scale: { default: TONE_SCALE.primary, values: HUE_TONES } },
       options: ({ scale }: { scale?: string }) => ({
-        human: `rounded-full bg-${scale}-${STEP.bgSubtle} font-sans text-${scale}-${STEP.solid}`,
-        agent: `rounded-md bg-${scale}-${STEP.bgSubtle} font-mono text-${scale}-${STEP.solid}`,
+        round: `rounded-full bg-${scale}-${STEP.bgSubtle} text-${scale}-${STEP.solid}`,
+        square: `rounded-md bg-${scale}-${STEP.bgSubtle} text-${scale}-${STEP.solid}`,
       }),
+    },
+    font: {
+      default: 'sans',
+      options: { sans: 'font-sans', mono: 'font-mono' },
     },
     // Avatars sit on their own scale — 16 to 36px — not the 28/36/44 control
     // ladder. `sm` is 18px here because an avatar is a glyph inside a row, not
@@ -42,25 +46,23 @@ const avatarClass = variants({
   },
 });
 
-// What each kind painted before `tone` existed, kept as the default so no
-// avatar changes colour on its own.
-const DEFAULT_TONE: Record<AvatarKind, Tone> = { human: 'cyan', agent: 'primary' };
-
 function initials(name: string) {
   const parts = name.trim().split(/[\s-]+/);
   return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase();
 }
 
-export function Avatar({ name, kind, size = 'sm', tone, className }: AvatarProps) {
+export function Avatar({
+  name,
+  shape = 'round',
+  font = 'sans',
+  size = 'sm',
+  tone = 'primary',
+  className,
+}: AvatarProps) {
   return (
     <span
       title={name}
-      className={avatarClass({
-        kind,
-        size,
-        scale: TONE_SCALE[tone ?? DEFAULT_TONE[kind]],
-        className,
-      })}
+      className={avatarClass({ shape, font, size, scale: TONE_SCALE[tone], className })}
     >
       {initials(name)}
     </span>

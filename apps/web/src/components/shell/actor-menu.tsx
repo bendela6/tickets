@@ -3,6 +3,7 @@ import { useCreateUser } from '../../api/use-create-user';
 import { useUsers } from '../../api/use-users';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Avatar, Button, DialogContent, DialogRoot, DialogTitle, FieldLabel, Input, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@tickets/ui';
+import { avatarFor } from '../../domain/actor';
 
 // Sidebar footer card: who edits are attributed to. Design 01 §sidebar footer.
 // `compact` renders just the avatar (for the 48px activity rail) instead of
@@ -29,8 +30,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
             >
               {current ? (
                 <Avatar
-                  name={current.name}
-                  kind={current.kind === 'agent' ? 'agent' : 'human'}
+                  name={current.name} {...avatarFor(current.kind === 'agent' ? 'agent' : 'human')}
                   size="md"
                 />
               ) : (
@@ -46,8 +46,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
             >
               {current ? (
                 <Avatar
-                  name={current.name}
-                  kind={current.kind === 'agent' ? 'agent' : 'human'}
+                  name={current.name} {...avatarFor(current.kind === 'agent' ? 'agent' : 'human')}
                   size="md"
                 />
               ) : (
@@ -71,7 +70,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
           {active.map((user) => (
             <MenuItem key={user.id} onSelect={() => setUserId(user.id)}>
               <span className="inline-flex items-center gap-2">
-                <Avatar name={user.name} kind={user.kind === 'agent' ? 'agent' : 'human'} />
+                <Avatar name={user.name} {...avatarFor(user.kind === 'agent' ? 'agent' : 'human')} />
                 {user.name}
               </span>
             </MenuItem>

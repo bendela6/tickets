@@ -5,6 +5,7 @@ import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import type { StatusKind } from '../../api/types';
 import { KIND_TONE } from '../../domain/status';
 import { Avatar, cn, toneClasses } from '@tickets/ui';
+import { avatarFor } from '../../domain/actor';
 
 // RichTextEditor threads these two lookup sources through to the mention (@)
 // and ticket-ref (#) Mention nodes wired in @tickets/richtext. Either source
@@ -51,7 +52,7 @@ function PeopleRow({ item, selected }: { item: SuggestionItem; selected: boolean
   const agent = item.kind === 'agent';
   return (
     <>
-      <Avatar name={item.label} kind={item.kind ?? 'human'} size="sm" />
+      <Avatar name={item.label} {...avatarFor(item.kind ?? 'human')} size="sm" />
       <span className="truncate font-sans text-ui font-medium text-gray-12">{item.label}</span>
       <span className="shrink-0 font-mono text-meta text-gray-9">{agent ? 'agent' : deriveHandle(item.label)}</span>
       <span className="flex-1" />

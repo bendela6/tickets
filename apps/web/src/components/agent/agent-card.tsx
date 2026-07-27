@@ -1,5 +1,6 @@
 import type { Agent, PermissionMode } from '../../api/types';
 import { Avatar, cn } from '@tickets/ui';
+import { avatarFor } from '../../domain/actor';
 
 const PROVIDER_LABEL: Record<string, string> = {
   claude: 'Claude',
@@ -64,7 +65,7 @@ export function AgentCard({
       className="flex w-64 flex-col gap-2.5 rounded-lg border border-gray-6 bg-surface-raised p-3.5 text-left hover:border-gray-7"
     >
       <div className="flex items-center gap-2.5">
-        <Avatar name={agent.name} kind="agent" size="md" />
+        <Avatar name={agent.name} {...avatarFor('agent')} size="md" />
         <div className="min-w-0 flex-1">
           <div className="truncate font-sans text-ui font-semibold text-gray-12">{agent.name}</div>
           <div className="truncate font-mono text-meta text-gray-9">

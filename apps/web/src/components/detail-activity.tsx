@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { ActivityEntry, Item } from '../api/types';
 import { useItemActivity } from '../api/use-item-activity';
 import { Avatar, RelativeDate } from '@tickets/ui';
+import { avatarFor } from '../domain/actor';
 import type { BoardIndexes } from '../utils/index-board';
 
 // Matches the excerpt length the api projection uses for comment bodies
@@ -100,7 +101,7 @@ export function DetailActivity({ item, indexes }: { item: Item; indexes: BoardIn
         const name = actor?.name ?? `user ${entry.actorId}`;
         return (
           <div key={entry.id} className="flex items-start gap-2.25">
-            <Avatar name={name} kind={actor?.kind ?? 'human'} size="sm" className="mt-0.5" />
+            <Avatar name={name} {...avatarFor(actor?.kind ?? 'human')} size="sm" className="mt-0.5" />
             <span className="min-w-0 flex-1 font-sans text-meta leading-normal text-gray-11">
               <span className="font-medium text-gray-12">{name}</span> {describe(entry)}
             </span>

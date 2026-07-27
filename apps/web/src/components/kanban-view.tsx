@@ -7,6 +7,7 @@ import { KIND_ICON, KIND_TONE, typePill } from '../domain/status';
 import { hexToOptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
 import { Avatar, cn, Icon, ItemKey, Pill, RelativeDate } from '@tickets/ui';
+import { avatarFor } from '../domain/actor';
 import { childProgress } from '../utils/child-progress';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
@@ -238,7 +239,7 @@ export function KanbanView({
         {hasFooter ? (
           <div className="flex items-center gap-2.25">
             {assigneeUser ? (
-              <Avatar name={assigneeUser.name} kind={assigneeUser.kind} size="sm" />
+              <Avatar name={assigneeUser.name} {...avatarFor(assigneeUser.kind)} size="sm" />
             ) : null}
             {due !== null ? (
               <RelativeDate value={due} overdue={overdue} className="text-[11px]" />

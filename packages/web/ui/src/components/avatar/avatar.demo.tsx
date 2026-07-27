@@ -7,30 +7,25 @@ const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const;
 export const meta = { title: 'Avatar', group: 'Components', order: 5, size: 'sm' };
 
 export const states = [
-  {
-    name: 'human',
-    render: () => <Avatar name="Mara K." kind="human" />,
-  },
-  {
-    name: 'agent',
-    render: () => <Avatar name="claude-worker" kind="agent" />,
-  },
+  { name: 'round', render: () => <Avatar name="Mara K." /> },
+  { name: 'square', render: () => <Avatar name="Nils P." shape="square" /> },
+  { name: 'mono', render: () => <Avatar name="claude worker" shape="square" font="mono" /> },
   {
     name: 'sizes',
     render: () => (
       <div className="flex items-center gap-2">
         {SIZES.map((size) => (
-          <Avatar key={size} name="Mara K." kind="human" size={size} />
+          <Avatar key={size} name="Mara K." size={size} />
         ))}
       </div>
     ),
   },
   {
-    name: 'tone',
+    name: 'tones',
     render: () => (
       <div className="flex items-center gap-2">
-        {(['success', 'warning', 'danger', 'purple'] as const).map((tone) => (
-          <Avatar key={tone} name="Mara K." kind="human" size="md" tone={tone} />
+        {(['cyan', 'success', 'warning', 'danger', 'purple'] as const).map((tone) => (
+          <Avatar key={tone} name="Mara K." size="md" tone={tone} />
         ))}
       </div>
     ),
@@ -40,11 +35,16 @@ export const states = [
 export const playground = definePlayground({
   docs: {
     summary:
-      '`kind` is the shape and the typeface — a human is a round slot in sans, an agent a square token in mono. `tone` is only the colour, defaulting to cyan for humans and the accent for agents.',
+      'Initials in a coloured slot. Shape, typeface and tone are independent axes — the component has no idea whether it is standing for a person, a bot or a build. An app assigns that meaning at the call site.',
   },
   controls: {
     name: text('Mara K.'),
-    kind: select(['human', 'agent'] as const, { initial: 'human', type: 'AvatarKind' }),
+    shape: select(['round', 'square'] as const, { initial: 'round', type: 'AvatarShape' }),
+    font: select(['sans', 'mono'] as const, {
+      initial: 'sans',
+      type: 'AvatarFont',
+      description: 'Mono reads as an identifier, matching ticket keys and project prefixes.',
+    }),
     size: select(SIZES, {
       allowNone: true,
       type: 'AvatarSize',
@@ -52,5 +52,7 @@ export const playground = definePlayground({
     }),
     tone: select([...TONE_NAMES], { allowNone: true, type: 'Tone' }),
   },
-  render: ({ name, kind, size, tone }) => <Avatar name={name} kind={kind} size={size} tone={tone} />,
+  render: ({ name, shape, font, size, tone }) => (
+    <Avatar name={name} shape={shape} font={font} size={size} tone={tone} />
+  ),
 });
