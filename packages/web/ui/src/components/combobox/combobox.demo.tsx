@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { boolean, definePlayground, select, text } from '../../gallery';
+import { TONE_NAMES } from '../../style';
 import { Combobox } from './combobox';
 import type { ComboOption } from '../combobox-list';
 
@@ -34,7 +35,7 @@ function ComboboxPlaygroundFixture({
   placeholder: string;
   clearable: boolean;
   disabled: boolean;
-  size: 'sm' | 'md' | undefined;
+  size: 'sm' | 'md' | 'lg' | undefined;
 }) {
   const [priority, setPriority] = useState<string | null>('p0');
   return (
@@ -63,7 +64,8 @@ export const playground = definePlayground({
     placeholder: text('Priority'),
     clearable: boolean(true),
     disabled: boolean(),
-    size: select(['sm', 'md'], { allowNone: true }),
+    size: select(['sm', 'md', 'lg'], { allowNone: true }),
+    tone: select([...TONE_NAMES], { allowNone: true }),
   },
   render: (v) => <ComboboxPlaygroundFixture {...v} />,
 });

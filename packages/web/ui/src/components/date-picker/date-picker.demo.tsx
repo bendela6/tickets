@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { boolean, definePlayground, select } from '../../gallery';
+import { TONE_NAMES } from '../../style';
 import { DatePicker } from './date-picker';
 
 function DatePickerFixture() {
@@ -15,7 +16,7 @@ function DatePickerPlaygroundFixture({
   size,
   disabled,
 }: {
-  size: 'sm' | 'md' | undefined;
+  size: 'sm' | 'md' | 'lg' | undefined;
   disabled: boolean;
 }) {
   const [date, setDate] = useState<string | null>('2026-07-09T00:00:00Z');
@@ -34,7 +35,8 @@ export const states = [
 
 export const playground = definePlayground({
   controls: {
-    size: select(['sm', 'md'], { allowNone: true }),
+    size: select(['sm', 'md', 'lg'], { allowNone: true }),
+    tone: select([...TONE_NAMES], { allowNone: true }),
     disabled: boolean(),
   },
   render: (v) => <DatePickerPlaygroundFixture {...v} />,

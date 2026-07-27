@@ -1,4 +1,5 @@
-import { cn } from '../../style/cn';
+import { cn, TONE_SCALE, type Tone } from '../../style';
+import { fieldClass, type FieldSize } from '../field';
 
 type NumberInputProps = {
   value: number | null;
@@ -6,7 +7,9 @@ type NumberInputProps = {
   min?: number;
   max?: number;
   step?: number;
-  size?: 'sm' | 'md';
+  size?: FieldSize;
+  /** Which ramp the focus ring paints from. Defaults to `primary`. */
+  tone?: Tone;
   disabled?: boolean;
   placeholder?: string;
   className?: string;
@@ -30,6 +33,7 @@ export function NumberInput({
   max,
   step = 1,
   size = 'md',
+  tone = 'primary',
   disabled,
   placeholder,
   className,
@@ -41,13 +45,18 @@ export function NumberInput({
 
   return (
     <div
-      className={cn(
-        'inline-flex items-stretch rounded-md border border-gray-7 bg-surface-raised',
-        'focus-within:border-indigo-9 focus-within:ring-[3px] focus-within:ring-indigo-3',
-        disabled && 'pointer-events-none opacity-50',
-        size === 'sm' ? 'h-7' : 'h-9',
-        className,
-      )}
+      className={fieldClass({
+        size,
+        scale: TONE_SCALE[tone],
+        // Focus lands on the inner <input>, never on this wrapper, so the ring
+        // has to hang off focus-within.
+        focus: 'focus-within',
+        className: cn(
+          'inline-flex items-stretch',
+          disabled && 'pointer-events-none opacity-50',
+          className,
+        ),
+      })}
     >
       <input
         type="number"

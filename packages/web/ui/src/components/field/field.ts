@@ -37,16 +37,19 @@ export const fieldClass = variants({
         invalid: `border-${DANGER}-${STEP.solid} ring-[3px] ring-${DANGER}-${STEP.focusRing} ${focus}:outline-none`,
       }),
     },
-    // Height, radius and font-size only. Horizontal padding stays with each
-    // component: a stepper, a tag list and a plain input want different
-    // insets at the same height, and folding them in here would force every
-    // control to the widest one.
+    // Height and radius only — deliberately not padding or font-size.
+    // A stepper, a tag list and a plain input want different insets at the same
+    // height, and their font sizes genuinely differ today (Input is 14px, the
+    // comboboxes are text-ui at 13px) with nothing in the spec saying they
+    // should not. Folding either in here would change appearance under cover
+    // of a refactor. Radius IS shared: design-system.html §07 puts the 36px
+    // combobox trigger at 8px, same as the input.
     size: {
       default: 'md',
       options: {
-        sm: 'h-7 rounded-[6px] text-[13px]',
-        md: 'h-9 rounded-[8px] text-[14px]',
-        lg: 'h-11 rounded-[10px] text-[15px]',
+        sm: 'h-7 rounded-[6px]',
+        md: 'h-9 rounded-[8px]',
+        lg: 'h-11 rounded-[10px]',
       },
     },
   },

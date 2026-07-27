@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { cn, ComboboxList, type ComboOption, Icon, Pill, Popover, PopoverContent, PopoverTrigger } from '@tickets/ui';
+import { cn, ComboboxList, type ComboOption, fieldClass, type FieldSize, Icon, Pill, Popover, PopoverContent, PopoverTrigger, TONE_SCALE, type Tone } from '@tickets/ui';
 import type { StatusKind } from '../api/types';
 import { KIND_ICON, KIND_TONE, statusPill } from '../domain/status';
 
@@ -11,9 +11,17 @@ type StatusSelectProps = {
   onChange: (value: string) => void;
   /** Keys reachable from the current status per the workflow graph. Undefined = all allowed. */
   legalTargets?: string[];
-  size?: 'sm' | 'md';
+  size?: FieldSize;
+  /** Which ramp the focus ring paints from. Defaults to `primary`. */
+  tone?: Tone;
   disabled?: boolean;
   className?: string;
+};
+
+const PADDING: Record<FieldSize, string> = {
+  sm: 'pr-2 pl-1.5',
+  md: 'pr-2 pl-1.5',
+  lg: 'pr-2.5 pl-2',
 };
 
 const KIND_ORDER: { key: StatusKind; label: string }[] = [
@@ -30,6 +38,7 @@ export function StatusSelect({
   onChange,
   legalTargets,
   size = 'md',
+  tone = 'primary',
   disabled,
   className,
 }: StatusSelectProps) {
@@ -61,13 +70,16 @@ export function StatusSelect({
         <button
           type="button"
           disabled={disabled}
-          className={cn(
-            'flex w-full items-center justify-between gap-2 rounded-md border border-gray-7 bg-surface-raised pr-2 pl-1.5',
-            'hover:border-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3',
-            'disabled:pointer-events-none disabled:opacity-50',
-            size === 'sm' ? 'h-7' : 'h-9',
-            className,
-          )}
+          className={fieldClass({
+            size,
+            scale: TONE_SCALE[tone],
+            className: cn(
+              'flex w-full items-center justify-between gap-2',
+              'disabled:pointer-events-none disabled:opacity-50',
+              PADDING[size],
+              className,
+            ),
+          })}
         >
           {current ? (
             <Pill {...statusPill(current.kind)} label={current.label} />

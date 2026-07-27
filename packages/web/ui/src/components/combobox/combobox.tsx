@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { cn } from '../../style/cn';
+import { cn, TONE_SCALE, type Tone } from '../../style';
+import { fieldClass, type FieldSize } from '../field';
 import { Pill } from '../pill';
 import { ComboboxList, type ComboOption } from '../combobox-list';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
@@ -9,11 +10,15 @@ type ComboboxProps = {
   value: string | null;
   onChange: (value: string | null) => void;
   placeholder?: string;
-  size?: 'sm' | 'md';
+  size?: FieldSize;
+  /** Which ramp the focus ring paints from. Defaults to `primary`. */
+  tone?: Tone;
   disabled?: boolean;
   clearable?: boolean;
   className?: string;
 };
+
+const PADDING: Record<FieldSize, string> = { sm: 'px-2', md: 'px-3', lg: 'px-3.5' };
 
 export function Combobox({
   options,
@@ -21,6 +26,7 @@ export function Combobox({
   onChange,
   placeholder = 'Select…',
   size = 'md',
+  tone = 'primary',
   disabled,
   clearable,
   className,
@@ -35,13 +41,16 @@ export function Combobox({
           <button
             type="button"
             disabled={disabled}
-            className={cn(
-              'flex w-full items-center justify-between gap-2 rounded-md border border-gray-7 bg-surface-raised font-sans text-ui text-gray-12',
-              'hover:border-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3',
-              'disabled:opacity-50 disabled:pointer-events-none',
-              size === 'sm' ? 'h-7 px-2' : 'h-9 px-3',
-              clearable && selected ? 'pr-14' : 'pr-8',
-            )}
+            className={fieldClass({
+              size,
+              scale: TONE_SCALE[tone],
+              className: cn(
+                'flex w-full items-center justify-between gap-2 font-sans text-ui',
+                'disabled:opacity-50 disabled:pointer-events-none',
+                PADDING[size],
+                clearable && selected ? 'pr-14' : 'pr-8',
+              ),
+            })}
           >
             {selected ? (
               selected.color ? (

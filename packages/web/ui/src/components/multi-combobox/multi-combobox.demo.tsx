@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { boolean, definePlayground, number, text } from '../../gallery';
+import { boolean, definePlayground, number, select, text } from '../../gallery';
+import { TONE_NAMES } from '../../style';
 import { MultiCombobox } from './multi-combobox';
 import type { ComboOption } from '../combobox-list';
 
@@ -57,6 +58,7 @@ export const states = [
 
 export const playground = definePlayground({
   controls: {
+    tone: select([...TONE_NAMES], { allowNone: true }),
     placeholder: text('Labels'),
     disabled: boolean(),
     maxChips: number(3, { min: 1, max: 10 }),
