@@ -5,7 +5,7 @@ import { usePatchItem } from '../../api/use-patch-item';
 import { typePill } from '../../domain/status';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, cn, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Meter, Pill, ScreenState } from '@tickets/ui';
+import { Button, cn, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Progress, Pill, ScreenState } from '@tickets/ui';
 import { StatusSelect } from '../../ui/status-select';
 import { childProgress } from '../../utils/child-progress';
 import type { BoardIndexes } from '../../utils/index-board';
@@ -111,7 +111,7 @@ function ProgressCell({ ticket, indexes }: { ticket: Item; indexes: BoardIndexes
   const percent = Math.round((done / total) * 100);
   return (
     <span className="inline-flex items-center gap-1.75" title={`${done} of ${total} subtasks done`}>
-      <Meter tone="green" value={percent} max={100} className="w-9" />
+      <Progress tone="green" value={percent} className="w-9" />
       <span className="font-mono text-[11px] text-gray-11">
         {done}/{total}
       </span>

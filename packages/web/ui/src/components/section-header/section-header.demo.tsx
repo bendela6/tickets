@@ -1,5 +1,5 @@
 import { definePlayground, text } from '../../gallery';
-import { Meter } from '../meter';
+import { Progress } from '../progress';
 import { SectionHeader } from './section-header';
 
 export const meta = { title: 'SectionHeader', group: 'Deprecated', size: 'lg' };
@@ -13,7 +13,7 @@ export const states = [
         title="Subtasks"
         count={
           <>
-            <Meter tone="green" value={60} max={100} className="w-15" />
+            <Progress tone="green" value={60} className="w-15" />
             <span className="font-mono text-label text-gray-9">3/5 done</span>
           </>
         }

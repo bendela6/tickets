@@ -1,4 +1,4 @@
-import { cn, Meter } from '@tickets/ui';
+import { cn, Progress } from '@tickets/ui';
 import { formatTokens } from './agent-models';
 
 // Context-window fill + cumulative output tokens, shown beside the CostMeter in
@@ -37,7 +37,10 @@ export function ContextMeter({
         <span aria-hidden="true">▣ </span>
         {formatTokens(contextTokens)} / {formatTokens(contextWindow)}
       </span>
-      <Meter value={contextTokens} max={contextWindow} dangerAt={contextWindow * 0.9} />
+      <Progress
+        value={contextWindow > 0 ? (contextTokens / contextWindow) * 100 : 0}
+        tone={hot ? 'danger' : 'primary'}
+      />
       <span className="font-mono text-meta text-gray-9" title="output tokens generated">
         <span aria-hidden="true">↓ </span>
         {formatTokens(tokensOut)}
