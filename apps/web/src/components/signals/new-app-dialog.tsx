@@ -127,7 +127,7 @@ export function NewAppDialog({
             ) : null}
             <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}>
               <Button
-                variant="primary"
+                variant="solid"
                 disabled={name.trim() === ''}
                 loading={createApp.isPending}
                 onClick={() => void submit()}

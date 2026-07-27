@@ -162,7 +162,7 @@ function OptionForm({
       </div>
       <div className="flex items-center gap-2">
         <Button
-          variant="primary"
+          variant="solid"
           size="sm"
           disabled={draft.label.trim() === ''}
           loading={pending}

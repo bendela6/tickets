@@ -41,7 +41,7 @@ export function AgentLibraryScreen() {
           </div>
           <h1 className="mt-0.5 font-sans text-[19px] font-semibold text-gray-12">Agents</h1>
         </div>
-        <Button variant="primary" onClick={() => setEditing('new')}>
+        <Button variant="solid" onClick={() => setEditing('new')}>
           ＋ New agent
         </Button>
       </div>
@@ -52,7 +52,7 @@ export function AgentLibraryScreen() {
             title="No agents yet"
             body="An agent is a reusable persona — a provider, model, prompt, and tool allowlist — that you can run in a session or assign to a ticket."
             action={
-              <Button variant="primary" onClick={() => setEditing('new')}>
+              <Button variant="solid" onClick={() => setEditing('new')}>
                 ＋ New agent
               </Button>
             }

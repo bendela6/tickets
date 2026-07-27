@@ -81,11 +81,12 @@ export function ConfirmDialog({
         <DialogTitle>{title}</DialogTitle>
         {body ? <DialogDescription>{body}</DialogDescription> : null}
         <div className="mt-4 flex justify-end gap-2">
-          <Button variant="secondary" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             {cancelLabel}
           </Button>
           <Button
-            variant={destructive ? 'destructive' : 'primary'}
+            variant="solid"
+            tone={destructive ? 'danger' : 'primary'}
             onClick={() => {
               onConfirm();
               onOpenChange(false);

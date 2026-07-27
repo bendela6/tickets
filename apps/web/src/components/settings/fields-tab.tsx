@@ -242,7 +242,7 @@ function NewFieldComposer({
         <Button
           type="submit"
           size="sm"
-          variant="primary"
+          variant="solid"
           loading={createField.isPending}
           disabled={disabled || label.trim().length === 0 || key.trim().length === 0}
         >
@@ -371,7 +371,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
                 />
                 <Button
                   size="sm"
-                  variant="primary"
+                  variant="solid"
                   disabled={disabled || pickFieldId === null || placeField.isPending}
                   loading={placeField.isPending}
                   onClick={submitPlace}
@@ -381,7 +381,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
                 <span className="flex-1" />
                 <Button
                   size="sm"
-                  variant="secondary"
+                  variant="outline"
                   disabled={disabled}
                   onClick={() => setComposerOpen((open) => !open)}
                 >

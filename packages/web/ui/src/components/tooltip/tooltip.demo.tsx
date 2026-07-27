@@ -5,7 +5,7 @@ import { Tooltip } from './tooltip';
 function TooltipFixture() {
   return (
     <Tooltip content="Create a ticket · ⌘N">
-      <Button variant="secondary">Hover me</Button>
+      <Button variant="outline">Hover me</Button>
     </Tooltip>
   );
 }
@@ -19,7 +19,7 @@ function TooltipPlaygroundFixture({
 }) {
   return (
     <Tooltip content={content} side={side}>
-      <Button variant="secondary">Hover me</Button>
+      <Button variant="outline">Hover me</Button>
     </Tooltip>
   );
 }

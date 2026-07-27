@@ -137,7 +137,7 @@ function CreateForm({
         <Button variant="ghost" size="sm" onClick={onCancel}>
           Cancel
         </Button>
-        <Button variant="primary" size="sm" disabled={!canSubmit} loading={pending} onClick={onSubmit}>
+        <Button variant="solid" size="sm" disabled={!canSubmit} loading={pending} onClick={onSubmit}>
           Create link type
         </Button>
       </div>
@@ -192,7 +192,7 @@ function EditForm({
           Cancel
         </Button>
         <Button
-          variant="primary"
+          variant="solid"
           size="sm"
           disabled={draft.label.trim() === ''}
           loading={pending}
@@ -353,7 +353,7 @@ export function LinksTab({ board }: SettingsTabProps) {
           />
         ) : (
           <Button
-            variant="secondary"
+            variant="outline"
             size="sm"
             disabled={disabled || activeTypes.length === 0}
             onClick={startCreate}

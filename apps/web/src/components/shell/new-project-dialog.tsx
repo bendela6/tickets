@@ -73,7 +73,7 @@ export function NewProjectDialog({
         </div>
         <DialogFooter cancel={<Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>}>
           <Button
-            variant="primary"
+            variant="solid"
             disabled={!valid || userId === null}
             loading={createProject.isPending}
             onClick={() => void submit()}

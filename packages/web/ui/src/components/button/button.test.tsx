@@ -10,8 +10,8 @@ test('renders and clicks', async () => {
   expect(onClick).toHaveBeenCalledOnce();
 });
 
-test('primary variant gets accent classes', () => {
-  render(<Button variant="primary">New ticket</Button>);
+test('solid variant gets accent classes', () => {
+  render(<Button variant="solid">New ticket</Button>);
   const button = screen.getByRole('button');
   expect(button).toHaveClass('bg-indigo-9');
   // Regression guard: cn()/tailwind-merge must not drop the text color when a
@@ -42,23 +42,23 @@ test('sizes match design height/padding/radius/font-size', () => {
   );
 });
 
-test('focus halo is 3px accent-subtle, danger-subtle for destructive', () => {
-  const { rerender } = render(<Button variant="primary">New</Button>);
+test('focus halo is 3px accent-subtle, following tone', () => {
+  const { rerender } = render(<Button variant="solid">New</Button>);
   expect(screen.getByRole('button')).toHaveClass(
     'focus-visible:ring-[3px]',
     'focus-visible:ring-indigo-3',
   );
-  rerender(<Button variant="destructive">Archive</Button>);
+  rerender(<Button variant="solid" tone="danger">Archive</Button>);
   const danger = screen.getByRole('button');
   expect(danger).toHaveClass('focus-visible:ring-red-3');
   expect(danger).not.toHaveClass('focus-visible:ring-indigo-3');
 });
 
-test('tone repaints the variant onto another ramp, defaulting per variant', () => {
+test('tone repaints the variant onto another ramp', () => {
   // These classes exist nowhere in source text — they are built by
   // interpolation, which is why the generated safelist has to carry them.
   const { rerender } = render(
-    <Button variant="primary" tone="success">
+    <Button variant="solid" tone="success">
       Approve
     </Button>,
   );
@@ -68,17 +68,17 @@ test('tone repaints the variant onto another ramp, defaulting per variant', () =
 
   // A tone name is not a ramp name: `primary` has to resolve to `indigo`
   // before it reaches a class string, or this would be `bg-primary-9`.
-  rerender(<Button variant="primary">Save</Button>);
+  rerender(<Button variant="solid">Save</Button>);
   expect(screen.getByRole('button')).toHaveClass('bg-indigo-9');
 
-  // destructive defaults to the danger ramp without being asked.
-  rerender(<Button variant="destructive">Delete</Button>);
+  // What used to be variant="destructive" is now solid + the danger ramp.
+  rerender(<Button variant="solid" tone="danger">Delete</Button>);
   expect(screen.getByRole('button')).toHaveClass('bg-red-9');
 });
 
 test('disabled swaps variant colors; loading keeps the fill', () => {
   const { rerender } = render(
-    <Button variant="primary" disabled>
+    <Button variant="solid" disabled>
       New
     </Button>,
   );
@@ -87,7 +87,7 @@ test('disabled swaps variant colors; loading keeps the fill', () => {
   expect(screen.getByRole('button')).not.toHaveClass('bg-indigo-9');
   // Loading is also `disabled` but must keep the accent fill (design LOADING row).
   rerender(
-    <Button variant="primary" loading>
+    <Button variant="solid" loading>
       New
     </Button>,
   );
@@ -97,7 +97,7 @@ test('disabled swaps variant colors; loading keeps the fill', () => {
   expect(busy).not.toHaveClass('bg-surface-inset');
 });
 
-test('loading shows a 12px animating Spinner, hidden while not loading', () => {
+test('loading shows an animating Spinner, hidden while not loading', () => {
   const { rerender } = render(<Button loading>Creating…</Button>);
   const spinner = screen.getByRole('img', { name: 'Loading' });
   expect(spinner.tagName.toLowerCase()).toBe('svg');
@@ -107,4 +107,18 @@ test('loading shows a 12px animating Spinner, hidden while not loading', () => {
 
   rerender(<Button>Creating…</Button>);
   expect(screen.queryByRole('img', { name: 'Loading' })).toBeNull();
+});
+
+test('subtle spends less of the tone than solid', () => {
+  const { rerender } = render(<Button variant="subtle">Filter</Button>);
+  expect(screen.getByRole('button')).toHaveClass('bg-indigo-3', 'text-indigo-11');
+  rerender(<Button variant="solid">Filter</Button>);
+  expect(screen.getByRole('button')).toHaveClass('bg-indigo-9', 'text-indigo-contrast');
+});
+
+test('chevron is opt-in and comes from the icon registry, not a glyph', () => {
+  const { container, rerender } = render(<Button chevron>Row actions</Button>);
+  expect(container.querySelector('svg')).not.toBeNull();
+  rerender(<Button>Row actions</Button>);
+  expect(container.querySelector('svg')).toBeNull();
 });

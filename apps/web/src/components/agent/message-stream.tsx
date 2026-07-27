@@ -148,16 +148,16 @@ function ApprovalCard({
                 <Button size="sm" variant="ghost" onClick={() => setDenying(false)}>
                   Cancel
                 </Button>
-                <Button size="sm" variant="destructive" onClick={() => respond('deny')}>
+                <Button size="sm" variant="solid" tone="danger" onClick={() => respond('deny')}>
                   Confirm deny
                 </Button>
               </>
             ) : (
               <>
-                <Button size="sm" variant="secondary" onClick={() => setDenying(true)}>
+                <Button size="sm" variant="outline" onClick={() => setDenying(true)}>
                   Deny
                 </Button>
-                <Button size="sm" variant="primary" onClick={() => respond('allow')}>
+                <Button size="sm" variant="solid" onClick={() => respond('allow')}>
                   Allow
                 </Button>
               </>

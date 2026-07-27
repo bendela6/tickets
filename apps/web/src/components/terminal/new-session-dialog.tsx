@@ -268,7 +268,7 @@ export function NewSessionDialog({
             className="mt-0 border-0 p-0"
             cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}
           >
-            <Button variant="primary" onClick={submit} disabled={!canSubmit} loading={submitting}>
+            <Button variant="solid" onClick={submit} disabled={!canSubmit} loading={submitting}>
               Start session
             </Button>
           </DialogFooter>

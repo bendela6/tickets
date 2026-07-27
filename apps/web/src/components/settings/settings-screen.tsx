@@ -94,7 +94,7 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
           changes affect all projects on this scheme.
         </p>
         <Button
-          variant="secondary"
+          variant="outline"
           size="sm"
           disabled={userId === null || forkScheme.isPending || updateProject.isPending}
           title={userId === null ? 'Sign in to fork the scheme' : undefined}

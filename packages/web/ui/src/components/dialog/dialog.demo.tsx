@@ -7,7 +7,7 @@ function DialogFixture() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button variant="secondary" onClick={() => setOpen(true)}>
+      <Button variant="outline" onClick={() => setOpen(true)}>
         Open dialog
       </Button>
       <ConfirmDialog
@@ -37,7 +37,7 @@ function DialogPlaygroundFixture({
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button variant="secondary" onClick={() => setOpen(true)}>
+      <Button variant="outline" onClick={() => setOpen(true)}>
         Open dialog
       </Button>
       <ConfirmDialog

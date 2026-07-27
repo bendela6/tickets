@@ -88,7 +88,7 @@ export function RotateKeyDialog({
             ) : null}
             <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}>
               <Button
-                variant="destructive"
+                variant="solid" tone="danger"
                 disabled={typed !== app.slug}
                 loading={rotateKey.isPending}
                 onClick={() => void confirm()}

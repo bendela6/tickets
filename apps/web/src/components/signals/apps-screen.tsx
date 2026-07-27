@@ -191,7 +191,7 @@ export function AppsScreen() {
         {!isLoading && !isError ? <span className="font-mono text-meta text-gray-9">{headMeta}</span> : null}
         <span className="flex-1" />
         {!isEmpty ? (
-          <Button variant="primary" onClick={() => setNewAppOpen(true)}>
+          <Button variant="solid" onClick={() => setNewAppOpen(true)}>
             ＋ New app
           </Button>
         ) : null}
@@ -261,7 +261,7 @@ export function AppsScreen() {
               Signals is your local error and event monitor. Register an app to get a DSN, drop the SDK
               into your code, and everything it reports lands here — nothing leaves this machine.
             </div>
-            <Button variant="primary" onClick={() => setNewAppOpen(true)}>
+            <Button variant="solid" onClick={() => setNewAppOpen(true)}>
               ＋ New app
             </Button>
             <div className="mt-1.5 flex gap-3">

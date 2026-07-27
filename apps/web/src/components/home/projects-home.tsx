@@ -107,7 +107,7 @@ export function ProjectsHome() {
           {projectList.length} projects · {totalTickets} items · {openTickets} open
         </span>
         <span className="flex-1" />
-        <Button variant="secondary" size="sm" onClick={() => setCreating(true)}>
+        <Button variant="outline" size="sm" onClick={() => setCreating(true)}>
           ＋ New project
         </Button>
       </div>
