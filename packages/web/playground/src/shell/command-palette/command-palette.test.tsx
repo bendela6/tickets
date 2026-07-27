@@ -104,7 +104,7 @@ describe('CommandPalette', () => {
 });
 
 describe('highlightMatch', () => {
-  it('highlights exact-case match with text-accent', () => {
+  it('highlights exact-case match with text-indigo-9', () => {
     const result = highlightMatch('Button', 'But');
     expect(result).toBeTruthy();
     // Verify it renders a strong tag with the matched part
@@ -112,7 +112,7 @@ describe('highlightMatch', () => {
     const strong = container.querySelector('strong');
     expect(strong).toBeTruthy();
     expect(strong?.textContent).toBe('But');
-    expect(strong?.className).toContain('text-accent');
+    expect(strong?.className).toContain('text-indigo-9');
   });
 
   it('highlights case-insensitive match', () => {

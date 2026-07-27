@@ -60,7 +60,7 @@ export function TicketDispatch({ itemId, actorId }: { itemId: number; actorId?: 
           className="inline-flex items-center gap-1.5"
           title="an agent is working this ticket"
         >
-          <span className="font-mono text-meta text-ink-3">✳ {live.title}</span>
+          <span className="font-mono text-meta text-gray-9">✳ {live.title}</span>
           <Pill {...sessionStatus(live.status)} />
         </Link>
       ) : null}
@@ -87,7 +87,7 @@ export function TicketDispatch({ itemId, actorId }: { itemId: number; actorId?: 
               rows={3}
               placeholder="What should the agent do on this ticket?"
             />
-            {error ? <p className="font-sans text-meta text-danger">{error}</p> : null}
+            {error ? <p className="font-sans text-meta text-red-9">{error}</p> : null}
           </div>
           <DialogFooter cancel={<Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>}>
             <Button

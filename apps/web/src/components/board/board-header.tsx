@@ -50,7 +50,7 @@ function ColumnChecklist({
           }}
         />
       ))}
-      <div className="-mx-3 my-0.5 h-px bg-hairline" />
+      <div className="-mx-3 my-0.5 h-px bg-gray-6" />
       <Checkbox
         label="KPI strip"
         checked={config.kpi}
@@ -91,13 +91,13 @@ export function BoardHeader({
 
   return (
     <div className="mb-3.5 flex shrink-0 flex-wrap items-center gap-3 gap-y-2">
-      <span className="rounded-[5px] bg-inset px-1.75 py-0.75 font-mono text-meta font-medium text-ink">
+      <span className="rounded-[5px] bg-surface-inset px-1.75 py-0.75 font-mono text-meta font-medium text-gray-12">
         {board.project.itemPrefix}
       </span>
-      <h1 className="m-0 font-sans text-[22px] leading-tight font-semibold text-ink">
+      <h1 className="m-0 font-sans text-[22px] leading-tight font-semibold text-gray-12">
         {board.project.name}
       </h1>
-      <span className="font-mono text-meta text-ink-3">
+      <span className="font-mono text-meta text-gray-9">
         {ticketCount} items · {donePercent}% done
       </span>
       <span className="flex-1" />
@@ -135,20 +135,20 @@ export function BoardHeader({
         </>
       ) : (
         <>
-          <span className="font-sans text-meta text-ink-2">
-            Columns: <strong className="font-medium text-ink">Status</strong>{' '}
-            <span aria-hidden className="text-[10px] text-ink-3">
+          <span className="font-sans text-meta text-gray-11">
+            Columns: <strong className="font-medium text-gray-12">Status</strong>{' '}
+            <span aria-hidden className="text-[10px] text-gray-9">
               ▾
             </span>
           </span>
           <Popover>
             <PopoverTrigger asChild>
-              <button type="button" className="shrink-0 font-sans text-meta text-ink-2">
+              <button type="button" className="shrink-0 font-sans text-meta text-gray-11">
                 Cards:{' '}
-                <strong className="font-medium text-ink">
+                <strong className="font-medium text-gray-12">
                   {visibleFieldCount} {visibleFieldCount === 1 ? 'field' : 'fields'}
                 </strong>{' '}
-                <span aria-hidden className="text-[10px] text-ink-3">
+                <span aria-hidden className="text-[10px] text-gray-9">
                   ▾
                 </span>
               </button>

@@ -43,7 +43,7 @@ describe('Icon', () => {
 
   it('tone applies the text emphasis class; unset inherits currentColor', () => {
     const { container } = render(<Icon name="check" tone="green" />);
-    expect(container.querySelector('svg')!.getAttribute('class')).toContain('text-opt-green');
+    expect(container.querySelector('svg')!.getAttribute('class')).toContain('text-green-11');
     const { container: bare } = render(<Icon name="check" />);
     expect(bare.querySelector('svg')!.getAttribute('class') ?? '').not.toContain('text-');
   });

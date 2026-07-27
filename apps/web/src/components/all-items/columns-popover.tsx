@@ -59,15 +59,15 @@ export function ColumnsPopover({
           className={cn(
             'h-8 shrink-0',
             customized &&
-              'border-accent bg-accent-subtle text-accent hover:border-accent hover:bg-accent-subtle',
+              'border-indigo-9 bg-indigo-3 text-indigo-9 hover:border-indigo-9 hover:bg-indigo-3',
           )}
         >
           ▦ Columns
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-70 p-0">
-        <div className="flex items-center gap-2 border-b border-hairline px-3.25 py-2.5">
-          <span aria-hidden className="font-sans text-meta text-ink-3">
+        <div className="flex items-center gap-2 border-b border-gray-6 px-3.25 py-2.5">
+          <span aria-hidden className="font-sans text-meta text-gray-9">
             ⌕
           </span>
           <input
@@ -75,29 +75,29 @@ export function ColumnsPopover({
             placeholder="Find a field…"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-ui text-ink placeholder:text-ink-3 focus:outline-none focus:ring-0"
+            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-ui text-gray-12 placeholder:text-gray-9 focus:outline-none focus:ring-0"
           />
         </div>
         <div className="max-h-80 overflow-y-auto p-1.5">
-          <div className="px-2.25 pt-1.75 pb-0.75 font-mono text-[10px] font-medium tracking-[0.09em] text-ink-3 uppercase">
+          <div className="px-2.25 pt-1.75 pb-0.75 font-mono text-[10px] font-medium tracking-[0.09em] text-gray-9 uppercase">
             Shared across {projectCount} projects
           </div>
           {sharedRows.map((row) => (
             <div
               key={row.id}
-              className="flex items-center justify-between gap-2 rounded-[6px] px-2.25 py-1.5 hover:bg-inset"
+              className="flex items-center justify-between gap-2 rounded-[6px] px-2.25 py-1.5 hover:bg-surface-inset"
             >
               <Checkbox
                 label={row.label}
                 checked={enabled.has(row.id)}
                 onChange={(event) => onToggle(row.id, event.target.checked)}
               />
-              <span className="shrink-0 font-mono text-[10px] text-ink-3">{row.typeLabel}</span>
+              <span className="shrink-0 font-mono text-[10px] text-gray-9">{row.typeLabel}</span>
             </div>
           ))}
           {unsharedRows.length > 0 ? (
             <>
-              <div className="px-2.25 pt-2.25 pb-0.75 font-mono text-[10px] font-medium tracking-[0.09em] text-ink-3 uppercase">
+              <div className="px-2.25 pt-2.25 pb-0.75 font-mono text-[10px] font-medium tracking-[0.09em] text-gray-9 uppercase">
                 Not shared — unavailable here
               </div>
               {unsharedRows.map((field) => (
@@ -107,19 +107,19 @@ export function ColumnsPopover({
                 >
                   <span
                     aria-hidden
-                    className="size-3.75 shrink-0 rounded-[4px] border-[1.5px] border-hairline bg-inset"
+                    className="size-3.75 shrink-0 rounded-[4px] border-[1.5px] border-gray-6 bg-surface-inset"
                   />
-                  <span className="flex-1 truncate font-sans text-ui text-ink-2">
+                  <span className="flex-1 truncate font-sans text-ui text-gray-11">
                     {field.label}
                   </span>
-                  <span className="shrink-0 font-mono text-[10px] text-ink-3">
+                  <span className="shrink-0 font-mono text-[10px] text-gray-9">
                     {field.coverage} of {projectCount}
                   </span>
                 </div>
               ))}
             </>
           ) : null}
-          <div className="mx-2.25 my-1.5 h-px bg-hairline" />
+          <div className="mx-2.25 my-1.5 h-px bg-gray-6" />
           <div className="px-2.25 py-1">
             <Checkbox
               label="KPI strip"
@@ -128,7 +128,7 @@ export function ColumnsPopover({
             />
           </div>
         </div>
-        <div className="border-t border-hairline px-3.25 py-2 font-sans text-[11px] text-ink-3">
+        <div className="border-t border-gray-6 px-3.25 py-2 font-sans text-[11px] text-gray-9">
           A field is shared when the same key exists in every project.
         </div>
       </PopoverContent>

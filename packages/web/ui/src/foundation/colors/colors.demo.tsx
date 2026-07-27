@@ -60,7 +60,7 @@ function Ramp({ theme, scale, height = 40 }: { theme: Theme; scale: string; heig
 
 function StepHeader() {
   return (
-    <div className="flex w-full font-mono text-[10px] text-ink-3">
+    <div className="flex w-full font-mono text-[10px] text-gray-9">
       {STEPS.map((step) => (
         <span key={step} className="flex-1 text-center">
           {step}
@@ -78,7 +78,7 @@ function Palette() {
       <StepHeader />
       {HUES.map((scale) => (
         <div key={scale} className="flex flex-col gap-1">
-          <span className="font-mono text-meta font-medium text-ink">{scale}</span>
+          <span className="font-mono text-meta font-medium text-gray-12">{scale}</span>
           <Ramp theme={theme} scale={scale} />
         </div>
       ))}
@@ -102,7 +102,7 @@ function Verdict({
       : { background: '#f8e7e5', color: '#a82f26', mark: '✕' };
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-chip px-1.5 font-mono text-[10px] font-medium"
+      className="inline-flex items-center gap-1 rounded-sm px-1.5 font-mono text-[10px] font-medium"
       style={{ background: style.background, color: style.color }}
     >
       <span className="opacity-70">{what}</span>
@@ -115,10 +115,10 @@ function Verdict({
 function GroupLabel({ children }: { children: ReactNode }) {
   return (
     <div className="flex items-center gap-3 pt-2">
-      <span className="font-mono text-[10px] uppercase tracking-(--tracking-caps) text-ink-3">
+      <span className="font-mono text-[10px] uppercase tracking-(--tracking-caps) text-gray-9">
         {children}
       </span>
-      <span className="h-px flex-1 bg-hairline" />
+      <span className="h-px flex-1 bg-gray-6" />
     </div>
   );
 }
@@ -178,8 +178,8 @@ function StepsInUseRow({
   return (
     <div className="flex items-start gap-4">
       <span className="flex w-28 shrink-0 flex-col pt-1 font-mono text-meta">
-        <span className="font-medium text-ink">{label}</span>
-        {note ? <span className="text-[10px] text-ink-3">{note}</span> : null}
+        <span className="font-medium text-gray-12">{label}</span>
+        {note ? <span className="text-[10px] text-gray-9">{note}</span> : null}
       </span>
       <div className="grid min-w-0 flex-1 grid-cols-12 gap-1">
         {STEPS.map((step) => (
@@ -205,10 +205,10 @@ function StepsInUse() {
     <div ref={ref} className="flex w-full flex-col gap-3">
       <div className="flex items-start gap-4">
         <span className="w-28 shrink-0" />
-        <div className="grid min-w-0 flex-1 grid-cols-12 gap-1 font-mono text-[9px] leading-tight text-ink-3">
+        <div className="grid min-w-0 flex-1 grid-cols-12 gap-1 font-mono text-[9px] leading-tight text-gray-9">
           {STEPS.map((step) => (
             <span key={step} className="flex flex-col gap-0.5">
-              <span className="text-ink-2">{step}</span>
+              <span className="text-gray-11">{step}</span>
               <span>{STEP_JOBS[step]}</span>
             </span>
           ))}
@@ -243,9 +243,9 @@ function Roles() {
       {Object.entries(SEMANTIC_SCALES).map(([role, scale]) => (
         <div key={role} className="flex items-center gap-3">
           <span className={name}>
-            <span className="text-ink">{role}</span>
-            <span className="text-ink-3">→</span>
-            <span className="text-ink-2">{scale}</span>
+            <span className="text-gray-12">{role}</span>
+            <span className="text-gray-9">→</span>
+            <span className="text-gray-11">{scale}</span>
           </span>
           <div className="min-w-0 flex-1">
             <Ramp theme={theme} scale={scale} height={28} />
@@ -255,9 +255,9 @@ function Roles() {
       {surfaces.map(([surface, value]) => (
         <div key={surface} className="flex items-center gap-3">
           <span className={name}>
-            <span className="text-ink">surface-{surface}</span>
-            <span className="text-ink-3">→</span>
-            <span className="text-ink-3 italic">fixed</span>
+            <span className="text-gray-12">surface-{surface}</span>
+            <span className="text-gray-9">→</span>
+            <span className="text-gray-9 italic">fixed</span>
           </span>
           <div className="min-w-0 flex-1">
             <div
@@ -282,15 +282,15 @@ function Roles() {
 function Presets() {
   return (
     <div className="flex w-full flex-col gap-3">
-      <p className="font-sans text-meta text-ink-2">
+      <p className="font-sans text-meta text-gray-11">
         Offered by the type, status and highlight pickers. Picking one writes the literal hex to the
         database, so these resolve from the shipped tokens — not the numbered palette above.
       </p>
       <div className="flex flex-wrap gap-3">
         {SWATCHES.map((hex) => (
           <div key={hex} className="flex flex-col items-center gap-1.5">
-            <span className="size-12 rounded-ctrl" style={{ background: hex, ...RING }} />
-            <span className="font-mono text-meta text-ink-3">{hex}</span>
+            <span className="size-12 rounded-md" style={{ background: hex, ...RING }} />
+            <span className="font-mono text-meta text-gray-9">{hex}</span>
           </div>
         ))}
       </div>
@@ -303,14 +303,14 @@ function Report() {
   const required = all.filter((p) => p.severity === 'required');
   const failing = required.filter((p) => !p.passes);
   const advisory = all.filter((p) => p.severity === 'advisory' && !p.passes);
-  const cell = 'border-b border-hairline py-1.5 pr-4';
+  const cell = 'border-b border-gray-6 py-1.5 pr-4';
   return (
     <div className="flex w-full flex-col gap-3">
-      <p className="font-sans text-meta text-ink-2">
+      <p className="font-sans text-meta text-gray-11">
         {failing.length === 0
           ? `All ${required.length} required pairings meet their target.`
           : `${failing.length} of ${required.length} required pairings fall short.`}{' '}
-        <span className="text-ink-3">
+        <span className="text-gray-9">
           {advisory.length} decorative border{advisory.length === 1 ? '' : 's'} below 3:1 —
           reported, not enforced.
         </span>
@@ -319,24 +319,24 @@ function Report() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-140 border-collapse font-mono text-meta">
             <thead>
-              <tr className="text-left text-ink-3">
+              <tr className="text-left text-gray-9">
                 <th className={`${cell} font-medium`}>emphasis</th>
                 <th className={`${cell} font-medium`}>scale</th>
                 <th className={`${cell} font-medium`}>theme</th>
                 <th className={`${cell} font-medium`}>pair</th>
-                <th className="border-b border-hairline py-1.5 font-medium">ratio</th>
+                <th className="border-b border-gray-6 py-1.5 font-medium">ratio</th>
               </tr>
             </thead>
             <tbody>
               {failing.map((f) => (
-                <tr key={`${f.emphasis}-${f.scale}-${f.theme}`} className="text-ink">
+                <tr key={`${f.emphasis}-${f.scale}-${f.theme}`} className="text-gray-12">
                   <td className={cell}>{f.emphasis}</td>
                   <td className={cell}>{f.scale}</td>
-                  <td className={`${cell} text-ink-3`}>{f.theme}</td>
-                  <td className={`${cell} text-ink-3`}>
+                  <td className={`${cell} text-gray-9`}>{f.theme}</td>
+                  <td className={`${cell} text-gray-9`}>
                     {f.fgLabel} on {f.bgLabel}
                   </td>
-                  <td className="border-b border-hairline py-1.5">
+                  <td className="border-b border-gray-6 py-1.5">
                     <Verdict what={f.what} ratio={f.ratio} min={f.min} passes={false} />
                   </td>
                 </tr>

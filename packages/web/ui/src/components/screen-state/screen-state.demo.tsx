@@ -17,7 +17,7 @@ export const states = [
         action={
           <button
             type="button"
-            className="h-8 rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink hover:bg-inset"
+            className="h-8 rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-medium text-gray-12 hover:bg-surface-inset"
           >
             ↻ Retry
           </button>
@@ -53,7 +53,7 @@ export const states = [
       <ScreenState
         title="Session not found"
         action={
-          <a href="#" className="font-sans text-meta text-accent hover:underline">
+          <a href="#" className="font-sans text-meta text-indigo-9 hover:underline">
             ‹ Back to Issues
           </a>
         }

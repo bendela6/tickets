@@ -41,8 +41,8 @@ export function MultiCombobox({
       <PopoverAnchor asChild>
         <div
           className={cn(
-            'flex w-full items-center gap-1.5 rounded-ctrl border border-control bg-raised px-2.5',
-            'focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent-subtle',
+            'flex w-full items-center gap-1.5 rounded-md border border-gray-7 bg-surface-raised px-2.5',
+            'focus-within:border-indigo-9 focus-within:ring-[3px] focus-within:ring-indigo-3',
             disabled && 'pointer-events-none opacity-50',
             size === 'compact' ? 'min-h-7 py-0.5' : 'min-h-9 py-1',
             className,
@@ -50,7 +50,7 @@ export function MultiCombobox({
         >
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
             {selectedOptions.length === 0 ? (
-              <span className="truncate font-sans text-ui text-ink-3">{placeholder}</span>
+              <span className="truncate font-sans text-ui text-gray-9">{placeholder}</span>
             ) : null}
             {shown.map((option) => (
               <span key={option.value} className="inline-flex items-center gap-1">
@@ -59,14 +59,14 @@ export function MultiCombobox({
                   type="button"
                   aria-label={`Remove ${option.label}`}
                   onClick={() => toggle(option.value)}
-                  className="rounded-ctrl px-0.5 text-ink-3 hover:text-ink"
+                  className="rounded-md px-0.5 text-gray-9 hover:text-gray-12"
                 >
                   ×
                 </button>
               </span>
             ))}
             {overflow > 0 ? (
-              <span className="font-mono text-meta font-medium text-ink-2">+{overflow}</span>
+              <span className="font-mono text-meta font-medium text-gray-11">+{overflow}</span>
             ) : null}
           </div>
           <PopoverTrigger asChild>
@@ -74,7 +74,7 @@ export function MultiCombobox({
               type="button"
               aria-label={placeholder}
               disabled={disabled}
-              className="flex shrink-0 items-center self-center font-sans text-ui text-ink-3 outline-none"
+              className="flex shrink-0 items-center self-center font-sans text-ui text-gray-9 outline-none"
             >
               <span aria-hidden className="text-[10px]">
                 ▾
@@ -98,14 +98,14 @@ export function MultiCombobox({
                     options.filter((option) => !option.disabled).map((option) => option.value),
                   )
                 }
-                className="rounded-ctrl px-1 font-sans text-meta font-medium text-accent hover:underline"
+                className="rounded-md px-1 font-sans text-meta font-medium text-indigo-9 hover:underline"
               >
                 Select all
               </button>
               <button
                 type="button"
                 onClick={() => onChange([])}
-                className="rounded-ctrl px-1 font-sans text-meta font-medium text-ink-2 hover:underline"
+                className="rounded-md px-1 font-sans text-meta font-medium text-gray-11 hover:underline"
               >
                 Clear ({value.length})
               </button>

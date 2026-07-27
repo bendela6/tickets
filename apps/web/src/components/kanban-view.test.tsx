@@ -202,9 +202,9 @@ test('column glyph tint follows the option kind', () => {
   const backlog = screen.getByRole('region', { name: 'Backlog' });
   const review = screen.getByRole('region', { name: 'In review' });
   const shipped = screen.getByRole('region', { name: 'Shipped' });
-  expect(backlog.querySelector('.text-opt-gray')).not.toBeNull();
-  expect(review.querySelector('.text-opt-blue')).not.toBeNull();
-  expect(shipped.querySelector('.text-opt-green')).not.toBeNull();
+  expect(backlog.querySelector('.text-gray-11')).not.toBeNull();
+  expect(review.querySelector('.text-blue-11')).not.toBeNull();
+  expect(shipped.querySelector('.text-green-11')).not.toBeNull();
 });
 
 test('card shows the type badge', () => {

@@ -20,68 +20,68 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
     <Link
       to="/p/$projectKey"
       params={{ projectKey: project.key }}
-      className="flex cursor-pointer flex-col gap-3.25 rounded-panel border border-hairline bg-raised px-5 py-4.5 shadow-sm hover:border-control"
+      className="flex cursor-pointer flex-col gap-3.25 rounded-xl border border-gray-6 bg-surface-raised px-5 py-4.5 shadow-sm hover:border-gray-7"
     >
       <div className="flex items-center gap-2.5">
-        <span className="rounded-[5px] bg-inset px-1.75 py-0.75 font-mono text-meta font-medium text-ink">
+        <span className="rounded-[5px] bg-surface-inset px-1.75 py-0.75 font-mono text-meta font-medium text-gray-12">
           {project.itemPrefix}
         </span>
-        <span className="flex-1 truncate font-sans text-[15px] font-semibold text-ink">
+        <span className="flex-1 truncate font-sans text-[15px] font-semibold text-gray-12">
           {project.name}
         </span>
-        <span className="font-mono text-[11px] text-ink-3">{project.key}</span>
+        <span className="font-mono text-[11px] text-gray-9">{project.key}</span>
       </div>
 
       <div className="flex flex-col gap-1.75">
         <div className="flex h-1.5 gap-0.5 overflow-hidden rounded-full">
-          {counts.done > 0 ? <span className="bg-opt-green" style={{ flex: counts.done }} /> : null}
+          {counts.done > 0 ? <span className="bg-green-9" style={{ flex: counts.done }} /> : null}
           {counts.active > 0 ? (
-            <span className="bg-opt-blue" style={{ flex: counts.active }} />
+            <span className="bg-blue-9" style={{ flex: counts.active }} />
           ) : null}
           {counts.blocked > 0 ? (
-            <span className="bg-opt-orange" style={{ flex: counts.blocked }} />
+            <span className="bg-orange-9" style={{ flex: counts.blocked }} />
           ) : null}
-          {counts.todo > 0 ? <span className="bg-control" style={{ flex: counts.todo }} /> : null}
-          {total === 0 ? <span className="flex-1 bg-hairline" /> : null}
+          {counts.todo > 0 ? <span className="bg-gray-7" style={{ flex: counts.todo }} /> : null}
+          {total === 0 ? <span className="flex-1 bg-gray-6" /> : null}
         </div>
-        <div className="flex items-center gap-3.5 font-sans text-meta text-ink-2">
-          <span className="font-mono text-ui font-semibold text-ink">{pct}%</span>
+        <div className="flex items-center gap-3.5 font-sans text-meta text-gray-11">
+          <span className="font-mono text-ui font-semibold text-gray-12">{pct}%</span>
           <span className="inline-flex items-center gap-1.25">
             <Icon name={KIND_ICON.todo} tone={KIND_TONE.todo} size={10} />
-            <span className="text-ink-2">{counts.todo}</span>
+            <span className="text-gray-11">{counts.todo}</span>
           </span>
           <span className="inline-flex items-center gap-1.25">
             <Icon name={KIND_ICON.active} tone={KIND_TONE.active} size={10} />
-            <span className="text-ink-2">{counts.active}</span>
+            <span className="text-gray-11">{counts.active}</span>
           </span>
           <span className="inline-flex items-center gap-1.25">
             <Icon name={KIND_ICON.blocked} tone={KIND_TONE.blocked} size={10} />
-            <span className="text-ink-2">{counts.blocked}</span>
+            <span className="text-gray-11">{counts.blocked}</span>
           </span>
           <span className="inline-flex items-center gap-1.25">
             <Icon name={KIND_ICON.done} tone={KIND_TONE.done} size={10} />
-            <span className="text-ink-2">{counts.done}</span>
+            <span className="text-gray-11">{counts.done}</span>
           </span>
           <span className="flex-1" />
-          <span className="font-mono text-[11px] text-ink-3">{total} total</span>
+          <span className="font-mono text-[11px] text-gray-9">{total} total</span>
         </div>
       </div>
 
-      <div className="flex items-end gap-3 border-t border-hairline pt-3">
+      <div className="flex items-end gap-3 border-t border-gray-6 pt-3">
         <span className="inline-flex h-4.5 items-end gap-0.5">
           {activity.map((count, index) => (
             <span
               key={index}
-              className="w-1.25 rounded-t-[2px] bg-control"
+              className="w-1.25 rounded-t-[2px] bg-gray-7"
               style={{
                 height: `${BAR_MIN_PX + Math.round((count / peak) * (BAR_MAX_PX - BAR_MIN_PX))}px`,
               }}
             />
           ))}
         </span>
-        <span className="font-mono text-[11px] text-ink-3">{events} events · 14d</span>
+        <span className="font-mono text-[11px] text-gray-9">{events} events · 14d</span>
         <span className="flex-1" />
-        <span className="font-sans text-[11px] text-ink-3">
+        <span className="font-sans text-[11px] text-gray-9">
           {lastUpdatedAt ? `last: ${relativeLabel(lastUpdatedAt, new Date())}` : 'no activity yet'}
         </span>
       </div>
@@ -104,8 +104,8 @@ export function ProjectsHome() {
   return (
     <div className="px-4 py-5 md:px-8 md:py-7">
       <div className="mb-5.5 flex items-baseline gap-3.5">
-        <h1 className="font-sans text-[22px] font-semibold text-ink">Projects</h1>
-        <span className="font-mono text-meta text-ink-3">
+        <h1 className="font-sans text-[22px] font-semibold text-gray-12">Projects</h1>
+        <span className="font-mono text-meta text-gray-9">
           {projectList.length} projects · {totalTickets} items · {openTickets} open
         </span>
         <span className="flex-1" />
@@ -122,14 +122,14 @@ export function ProjectsHome() {
           ) : (
             <div
               key={project.id}
-              className="min-h-37.5 animate-pulse rounded-panel border border-hairline bg-raised"
+              className="min-h-37.5 animate-pulse rounded-xl border border-gray-6 bg-surface-raised"
             />
           );
         })}
         <button
           type="button"
           onClick={() => setCreating(true)}
-          className="flex min-h-37.5 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-panel border border-dashed border-control text-ink-3 hover:border-ink-3 hover:text-ink-2"
+          className="flex min-h-37.5 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-gray-7 text-gray-9 hover:border-gray-9 hover:text-gray-11"
         >
           <span className="font-sans text-[20px]">＋</span>
           <span className="font-sans text-ui font-medium">New project</span>

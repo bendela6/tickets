@@ -9,16 +9,16 @@ import type { ConnState } from '../session/use-session-socket';
 export type { ConnState };
 
 const INDICATOR: Record<ConnState, { dot: string; label: string; pulse?: boolean }> = {
-  connecting: { dot: 'bg-opt-gray', label: 'connecting…' },
-  live: { dot: 'bg-opt-green', label: 'live' },
-  reconnecting: { dot: 'bg-opt-orange', label: 'reconnecting…', pulse: true },
-  ended: { dot: 'bg-opt-gray', label: 'ended' },
+  connecting: { dot: 'bg-gray-9', label: 'connecting…' },
+  live: { dot: 'bg-green-9', label: 'live' },
+  reconnecting: { dot: 'bg-orange-9', label: 'reconnecting…', pulse: true },
+  ended: { dot: 'bg-gray-9', label: 'ended' },
 };
 
 function ConnIndicator({ state }: { state: ConnState }) {
   const it = INDICATOR[state];
   return (
-    <span className="inline-flex items-center gap-1.5 font-sans text-meta text-ink-2">
+    <span className="inline-flex items-center gap-1.5 font-sans text-meta text-gray-11">
       <span
         aria-hidden
         className={cn('size-2 rounded-full', it.dot, it.pulse && 'animate-ai-pulse')}
@@ -56,12 +56,12 @@ export function TerminalFrame({
 }) {
   const ended = conn === 'ended';
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-card border border-hairline bg-raised">
-      <div className="flex items-center gap-3 border-b border-hairline px-3.5 py-2">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-gray-6 bg-surface-raised">
+      <div className="flex items-center gap-3 border-b border-gray-6 px-3.5 py-2">
         <div className="flex min-w-0 flex-1 items-baseline gap-2.5">
-          <span className="truncate font-sans text-ui font-medium text-ink">{title}</span>
+          <span className="truncate font-sans text-ui font-medium text-gray-12">{title}</span>
           {workspacePath ? (
-            <span className="truncate font-mono text-meta text-ink-3">{workspacePath}</span>
+            <span className="truncate font-mono text-meta text-gray-9">{workspacePath}</span>
           ) : null}
         </div>
         <ConnIndicator state={conn} />
@@ -73,9 +73,9 @@ export function TerminalFrame({
       </div>
 
       {ended || truncated ? (
-        <div className="flex items-center gap-3 border-t border-hairline px-3.5 py-2 font-sans text-meta">
+        <div className="flex items-center gap-3 border-t border-gray-6 px-3.5 py-2 font-sans text-meta">
           {ended ? (
-            <span className="text-ink-2">
+            <span className="text-gray-11">
               {exitCode == null ? (
                 'Session ended'
               ) : (
@@ -87,7 +87,7 @@ export function TerminalFrame({
             </span>
           ) : null}
           {truncated ? (
-            <span className="text-ink-3">Earlier output was pruned from scrollback.</span>
+            <span className="text-gray-9">Earlier output was pruned from scrollback.</span>
           ) : null}
           <span className="flex-1" />
           {ended && onRestart ? (

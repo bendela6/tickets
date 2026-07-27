@@ -28,13 +28,13 @@ describe('cn', () => {
     // it, so this is the only place that catches it.
     expect(THEME_TEXT_SIZES.length).toBeGreaterThan(3);
     for (const name of THEME_TEXT_SIZES) {
-      expect(cn('text-on-accent', `text-${name}`)).toBe(`text-on-accent text-${name}`);
+      expect(cn('text-indigo-contrast', `text-${name}`)).toBe(`text-indigo-contrast text-${name}`);
     }
   });
 
   it('keeps a color class next to the eer-only sizes, which live outside this theme', () => {
     for (const size of ['text-3xs', 'text-2xs']) {
-      expect(cn('text-on-accent', size)).toBe(`text-on-accent ${size}`);
+      expect(cn('text-indigo-contrast', size)).toBe(`text-indigo-contrast ${size}`);
     }
   });
 

@@ -65,12 +65,12 @@ export function DetailFields({
   return (
     <div className="flex flex-col gap-2.5">
       {userId === null ? (
-        <p className="m-0 font-sans text-meta text-opt-orange">
+        <p className="m-0 font-sans text-meta text-orange-9">
           Pick a user in the header to edit items.
         </p>
       ) : null}
       {patch.isError ? (
-        <p className="m-0 font-sans text-meta text-danger">{(patch.error as Error).message}</p>
+        <p className="m-0 font-sans text-meta text-red-9">{(patch.error as Error).message}</p>
       ) : null}
       <div
         className={
@@ -88,7 +88,7 @@ export function DetailFields({
               title={
                 <>
                   {field.label}
-                  {placement.required ? <span className="text-danger"> *</span> : null}
+                  {placement.required ? <span className="text-red-9"> *</span> : null}
                 </>
               }
               className={layout === 'grid' ? 'w-19 shrink-0 pt-2.5' : undefined}

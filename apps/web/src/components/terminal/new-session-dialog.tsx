@@ -42,7 +42,7 @@ function Label({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
   return (
     <SectionHeader
       title={children}
-      count={hint != null ? <span className="font-normal normal-case text-ink-3">{hint}</span> : null}
+      count={hint != null ? <span className="font-normal normal-case text-gray-9">{hint}</span> : null}
       className="mb-1.5 gap-1.5 tracking-wide"
     />
   );
@@ -228,7 +228,7 @@ export function NewSessionDialog({
                 <button
                   type="button"
                   onClick={() => setAddingWorkdir(false)}
-                  className="self-start font-sans text-meta text-accent hover:underline"
+                  className="self-start font-sans text-meta text-indigo-9 hover:underline"
                 >
                   ← pick an existing workdir
                 </button>
@@ -246,7 +246,7 @@ export function NewSessionDialog({
               <button
                 type="button"
                 onClick={() => setAddingWorkdir(true)}
-                className="mt-1.5 font-sans text-meta text-accent hover:underline"
+                className="mt-1.5 font-sans text-meta text-indigo-9 hover:underline"
               >
                 ＋ New workdir
               </button>
@@ -263,11 +263,11 @@ export function NewSessionDialog({
             />
           </label>
 
-          {error ? <p className="font-sans text-meta text-danger">{error}</p> : null}
+          {error ? <p className="font-sans text-meta text-red-9">{error}</p> : null}
         </div>
 
         <div className="mt-5 flex items-center justify-between gap-2">
-          <span className="font-mono text-[11px] text-ink-3">{hint}</span>
+          <span className="font-mono text-[11px] text-gray-9">{hint}</span>
           <DialogFooter
             className="mt-0 border-0 p-0"
             cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}

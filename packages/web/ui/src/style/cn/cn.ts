@@ -5,7 +5,7 @@ import { extendTailwindMerge } from 'tailwind-merge';
 // extended nano..display scale; eer: text-3xs/2xs). tailwind-merge doesn't
 // know they're font sizes, so by default it buckets them into the text-COLOR
 // group and silently drops the adjacent color utility — e.g.
-// `text-on-accent text-ui` collapses to just `text-ui`. Register the UNION of
+// `text-indigo-contrast text-ui` collapses to just `text-ui`. Register the UNION of
 // both apps' sizes so one shared cn serves every consumer.
 //
 // This list MUST cover every `--text-*` token in tokens.css: a size missing

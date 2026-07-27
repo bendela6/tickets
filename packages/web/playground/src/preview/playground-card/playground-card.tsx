@@ -36,16 +36,16 @@ export const PlaygroundCard = forwardRef<
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-baseline justify-between gap-4">
-        <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3">
+        <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9">
           PLAYGROUND
         </span>
-        <span className="font-mono text-label tracking-normal text-ink-3">
+        <span className="font-mono text-label tracking-normal text-gray-9">
           {playgroundCaption(component, playground.controls, values)}
         </span>
       </div>
       <div
         ref={ref}
-        className="flex min-h-32 items-center justify-center rounded-card border border-hairline bg-raised p-7"
+        className="flex min-h-32 items-center justify-center rounded-lg border border-gray-6 bg-surface-raised p-7"
       >
         {playground.render(values as never)}
       </div>

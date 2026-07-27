@@ -29,7 +29,7 @@ import {
   type UploadHandlersRef,
 } from './upload-decorations';
 
-// Renders the toolbar as a bottom action row (border-top hairline, bg-app)
+// Renders the toolbar as a bottom action row (border-top hairline, bg-gray-1)
 // alongside a submit button and a ⌘↩ hint instead of the default top
 // toolbar — RichTextEditor.dc.html §02 comment composer. Both the submit
 // button's click and Mod-Enter call `onSubmit` with the doc serialized
@@ -367,35 +367,35 @@ export function RichTextEditor({
 
   // States (RichTextEditor.dc.html §03): rest = hairline border; focused =
   // control-weight accent border + the app's standard 3px halo (same
-  // ring-accent-subtle pattern every other input uses); disabled = page-bg
+  // ring-indigo-3 pattern every other input uses); disabled = page-bg
   // fill (not the inset token — the design's own mockup uses `--bg`) with a
   // not-allowed cursor over the content and a dimmed toolbar.
   const stateClasses = disabled
-    ? 'border-hairline bg-app'
+    ? 'border-gray-6 bg-gray-1'
     : focused
-      ? 'border-accent bg-raised ring-[3px] ring-accent-subtle'
-      : 'border-hairline bg-raised';
+      ? 'border-indigo-9 bg-surface-raised ring-[3px] ring-indigo-3'
+      : 'border-gray-6 bg-surface-raised';
 
   return (
     <div>
       <div className={cn('overflow-hidden rounded-[10px] border', stateClasses)}>
         {composer === undefined ? (
-          <div className={cn('flex items-center border-b border-hairline px-2 py-1.25', disabled && 'opacity-45')}>
+          <div className={cn('flex items-center border-b border-gray-6 px-2 py-1.25', disabled && 'opacity-45')}>
             {toolbar}
           </div>
         ) : null}
         <EditorContent
           editor={editor}
           className={cn(
-            'rt block w-full p-3 font-sans text-ui leading-[1.6] text-ink outline-none',
+            'rt block w-full p-3 font-sans text-ui leading-[1.6] text-gray-12 outline-none',
             composer !== undefined ? 'min-h-11' : 'min-h-27.5',
             disabled && 'cursor-not-allowed',
           )}
         />
         {composer !== undefined ? (
-          <div className="flex items-center gap-2 border-t border-hairline bg-app px-2 py-1.5 dark:bg-inset">
+          <div className="flex items-center gap-2 border-t border-gray-6 bg-gray-1 px-2 py-1.5 dark:bg-surface-inset">
             <div className={cn('min-w-0 flex-1', disabled && 'opacity-45')}>{toolbar}</div>
-            <span className="font-mono text-[11px] text-ink-3">⌘↩</span>
+            <span className="font-mono text-[11px] text-gray-9">⌘↩</span>
             <Button
               variant="primary"
               size="compact"

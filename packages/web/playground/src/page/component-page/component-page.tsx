@@ -50,7 +50,7 @@ function Toggle({
   onChange: (next: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 font-sans text-ui text-ink-2">
+    <label className="flex cursor-pointer items-center gap-2 font-sans text-ui text-gray-11">
       <input
         type="checkbox"
         checked={checked}
@@ -60,12 +60,12 @@ function Toggle({
       <span
         className={cn(
           'relative inline-block h-4.5 w-8 rounded-full',
-          checked ? 'bg-accent' : 'bg-control',
+          checked ? 'bg-indigo-9' : 'bg-gray-7',
         )}
       >
         <span
           className={cn(
-            'absolute top-0.5 h-3.5 w-3.5 rounded-full bg-raised transition-all',
+            'absolute top-0.5 h-3.5 w-3.5 rounded-full bg-surface-raised transition-all',
             checked ? 'right-0.5' : 'left-0.5',
           )}
         />
@@ -181,7 +181,7 @@ export function ComponentPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-hairline pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-gray-6 pb-2">
         <Tabs
           variant="underline"
           label={`${demo.meta.title} views`}
@@ -201,7 +201,7 @@ export function ComponentPage({
               type="button"
               aria-expanded={!controlsCollapsed}
               onClick={() => setCollapsed(!controlsCollapsed)}
-              className="inline-flex h-6.5 items-center gap-1.5 rounded-ctrl border border-control bg-raised px-2 font-sans text-label font-medium text-ink-2 hover:text-ink"
+              className="inline-flex h-6.5 items-center gap-1.5 rounded-md border border-gray-7 bg-surface-raised px-2 font-sans text-label font-medium text-gray-11 hover:text-gray-12"
             >
               <Icon name={controlsCollapsed ? 'chevron-left' : 'chevron-right'} size={12} />
               {controlsCollapsed ? 'Show controls' : 'Hide controls'}
@@ -266,13 +266,13 @@ export function ComponentPage({
             >
               <div className={cn('flex h-full flex-col pl-6', controlsCollapsed && 'hidden')}>
                 <div className="flex items-center justify-between pb-2.5">
-                  <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3">
+                  <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9">
                     CONTROLS
                   </span>
                   <button
                     type="button"
                     onClick={() => setValues(initialValues(playground.controls))}
-                    className="font-sans text-label font-medium text-accent hover:underline"
+                    className="font-sans text-label font-medium text-indigo-9 hover:underline"
                   >
                     Reset
                   </button>
@@ -282,7 +282,7 @@ export function ComponentPage({
                   values={values}
                   onChange={(key, value) => setValues((v) => ({ ...v, [key]: value }))}
                 />
-                <p className="mt-3 font-sans text-label text-ink-3">
+                <p className="mt-3 font-sans text-label text-gray-9">
                   Unset props fall back to the component default and are omitted from generated
                   code.
                 </p>

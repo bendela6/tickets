@@ -30,7 +30,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
               type="button"
               aria-label={current ? `Acting as ${current.name}` : 'Pick a user'}
               title={current ? `Acting as ${current.name}` : 'Pick a user'}
-              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full hover:bg-inset"
+              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full hover:bg-surface-inset"
             >
               {current ? (
                 <Avatar
@@ -39,7 +39,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
                   size="md"
                 />
               ) : (
-                <span className="inline-flex size-5.5 shrink-0 items-center justify-center rounded-full bg-inset font-sans text-[10px] text-ink-3">
+                <span className="inline-flex size-5.5 shrink-0 items-center justify-center rounded-full bg-surface-inset font-sans text-[10px] text-gray-9">
                   ?
                 </span>
               )}
@@ -47,7 +47,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
           ) : (
             <button
               type="button"
-              className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-[8px] border border-hairline bg-raised px-2 py-1.5 text-left hover:border-control"
+              className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-[8px] border border-gray-6 bg-surface-raised px-2 py-1.5 text-left hover:border-gray-7"
             >
               {current ? (
                 <Avatar
@@ -56,17 +56,17 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
                   size="md"
                 />
               ) : (
-                <span className="inline-flex size-5.5 shrink-0 items-center justify-center rounded-full bg-inset font-sans text-[10px] text-ink-3">
+                <span className="inline-flex size-5.5 shrink-0 items-center justify-center rounded-full bg-surface-inset font-sans text-[10px] text-gray-9">
                   ?
                 </span>
               )}
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate font-sans text-meta font-medium text-ink">
+                <span className="truncate font-sans text-meta font-medium text-gray-12">
                   {current ? current.name : 'Pick a user'}
                 </span>
-                <span className="font-mono text-[10px] text-ink-3">acting as</span>
+                <span className="font-mono text-[10px] text-gray-9">acting as</span>
               </span>
-              <span aria-hidden className="text-[10px] text-ink-3">
+              <span aria-hidden className="text-[10px] text-gray-9">
                 ⇅
               </span>
             </button>

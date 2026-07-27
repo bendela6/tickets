@@ -44,10 +44,10 @@ export function appInitials(name: string): string {
 // roster reads as distinct rows, not a column of identical accent squares).
 // Deterministic from the slug so an app keeps its color across renders/reloads.
 const AVATAR_TONES = [
-  'bg-accent-subtle text-accent',
-  'bg-opt-green-subtle text-opt-green',
-  'bg-opt-orange-subtle text-opt-orange',
-  'bg-inset text-ink-2',
+  'bg-indigo-3 text-indigo-9',
+  'bg-green-3 text-green-9',
+  'bg-orange-3 text-orange-9',
+  'bg-surface-inset text-gray-11',
 ];
 
 export function avatarTone(slug: string): string {
@@ -62,7 +62,7 @@ function TableHeader() {
   return (
     <div
       role="row"
-      className="grid h-9 shrink-0 items-center border-b border-hairline bg-app px-3.5 font-sans text-label font-medium tracking-wider text-ink-2 uppercase"
+      className="grid h-9 shrink-0 items-center border-b border-gray-6 bg-gray-1 px-3.5 font-sans text-label font-medium tracking-wider text-gray-11 uppercase"
       style={{ gridTemplateColumns: APPS_GRID_COLUMNS }}
     >
       <span>App</span>
@@ -91,7 +91,7 @@ function AppRow({
     <div
       role="row"
       onClick={goToApp}
-      className="group grid h-12.5 cursor-pointer items-center border-b border-hairline px-3.5 last:border-b-0 hover:bg-app"
+      className="group grid h-12.5 cursor-pointer items-center border-b border-gray-6 px-3.5 last:border-b-0 hover:bg-gray-1"
       style={{ gridTemplateColumns: APPS_GRID_COLUMNS }}
     >
       <span className="flex min-w-0 items-center gap-2.5">
@@ -103,20 +103,20 @@ function AppRow({
         >
           {appInitials(app.name)}
         </span>
-        <span className="truncate font-mono text-[13px] font-medium text-ink">{app.slug}</span>
+        <span className="truncate font-mono text-[13px] font-medium text-gray-12">{app.slug}</span>
       </span>
-      <span className="text-right font-mono text-[12px] font-medium text-ink">
+      <span className="text-right font-mono text-[12px] font-medium text-gray-12">
         {formatCount(app.signals24h)}
       </span>
       <span
         className={cn(
           'text-right font-mono text-[12px]',
-          app.errors24h > 0 ? 'font-medium text-danger' : 'text-ink-3',
+          app.errors24h > 0 ? 'font-medium text-red-9' : 'text-gray-9',
         )}
       >
         {app.errors24h > 0 ? formatCount(app.errors24h) : '—'}
       </span>
-      <span className="pl-6 font-mono text-[11px] text-ink-3">{formatDate(app.createdAt)}</span>
+      <span className="pl-6 font-mono text-[11px] text-gray-9">{formatDate(app.createdAt)}</span>
       {/* stopPropagation on the whole cell — both the trigger and (via the
       portal-rendered MenuContent living outside this row's DOM subtree)
       every item click must never also fire the row's onClick/goToApp. */}
@@ -126,7 +126,7 @@ function AppRow({
             <button
               type="button"
               aria-label={`${app.slug} actions`}
-              className="hidden size-7 items-center justify-center rounded-md text-ink-3 hover:bg-inset hover:text-ink group-hover:flex data-[state=open]:flex"
+              className="hidden size-7 items-center justify-center rounded-md text-gray-9 hover:bg-surface-inset hover:text-gray-12 group-hover:flex data-[state=open]:flex"
             >
               ⋯
             </button>
@@ -189,8 +189,8 @@ export function AppsScreen() {
   return (
     <div className="flex h-full min-h-0 flex-col p-6 md:p-7">
       <div className="mb-2.5 flex flex-wrap items-center gap-3">
-        <h1 className="m-0 font-sans text-[22px] leading-tight font-semibold text-ink">Signals</h1>
-        {!isLoading && !isError ? <span className="font-mono text-meta text-ink-3">{headMeta}</span> : null}
+        <h1 className="m-0 font-sans text-[22px] leading-tight font-semibold text-gray-12">Signals</h1>
+        {!isLoading && !isError ? <span className="font-mono text-meta text-gray-9">{headMeta}</span> : null}
         <span className="flex-1" />
         {!isEmpty ? (
           <Button variant="primary" onClick={() => setNewAppOpen(true)}>
@@ -203,7 +203,7 @@ export function AppsScreen() {
 
       {isList ? (
         <>
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[12px] border border-hairline bg-raised">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[12px] border border-gray-6 bg-surface-raised">
             <TableHeader />
             <div className="flex-1 overflow-auto">
               {rows.map((app) => (
@@ -211,7 +211,7 @@ export function AppsScreen() {
               ))}
             </div>
           </div>
-          <div className="flex h-9.5 shrink-0 items-center gap-2 px-1 pt-2 font-mono text-[11px] text-ink-3">
+          <div className="flex h-9.5 shrink-0 items-center gap-2 px-1 pt-2 font-mono text-[11px] text-gray-9">
             <span>
               {rows.length} {rows.length === 1 ? 'app' : 'apps'} · sending to {window.location.origin}
               /signals-api
@@ -224,7 +224,7 @@ export function AppsScreen() {
 
       {isLoading ? (
         <div className="flex flex-1 items-center justify-center">
-          <span className="flex items-center gap-2.5 font-mono text-[11.5px] text-ink-3">
+          <span className="flex items-center gap-2.5 font-mono text-[11.5px] text-gray-9">
             <Spinner size={11} tone="secondary" />
             loading apps…
           </span>
@@ -243,7 +243,7 @@ export function AppsScreen() {
               <button
                 type="button"
                 onClick={() => void appsQuery.refetch()}
-                className="h-8 rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink hover:bg-inset"
+                className="h-8 rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-medium text-gray-12 hover:bg-surface-inset"
               >
                 ↻ Retry
               </button>
@@ -255,11 +255,11 @@ export function AppsScreen() {
       {isEmpty ? (
         <div className="flex flex-1 items-center justify-center">
           <div className="flex max-w-137.5 flex-col items-center gap-4.5 text-center">
-            <span className="flex size-11 items-center justify-center rounded-[11px] bg-accent-subtle font-mono text-[22px] text-accent">
+            <span className="flex size-11 items-center justify-center rounded-[11px] bg-indigo-3 font-mono text-[22px] text-indigo-9">
               ∿
             </span>
-            <div className="font-sans text-[22px] font-semibold text-ink">Connect your first app</div>
-            <div className="max-w-110 text-pretty font-sans text-[13px] leading-relaxed text-ink-2">
+            <div className="font-sans text-[22px] font-semibold text-gray-12">Connect your first app</div>
+            <div className="max-w-110 text-pretty font-sans text-[13px] leading-relaxed text-gray-11">
               Signals is your local error and event monitor. Register an app to get a DSN, drop the SDK
               into your code, and everything it reports lands here — nothing leaves this machine.
             </div>
@@ -270,13 +270,13 @@ export function AppsScreen() {
               {ONBOARDING_STEPS.map((step) => (
                 <div
                   key={step.n}
-                  className="w-46.5 rounded-[10px] border border-hairline bg-raised p-3.5 text-left"
+                  className="w-46.5 rounded-[10px] border border-gray-6 bg-surface-raised p-3.5 text-left"
                 >
-                  <span className="block font-mono text-[10px] text-ink-3">{step.n}</span>
-                  <span className="mt-1.5 block font-sans text-[12.5px] font-medium text-ink">
+                  <span className="block font-mono text-[10px] text-gray-9">{step.n}</span>
+                  <span className="mt-1.5 block font-sans text-[12.5px] font-medium text-gray-12">
                     {step.title}
                   </span>
-                  <span className="mt-1 block font-sans text-[11.5px] leading-relaxed text-ink-2">
+                  <span className="mt-1 block font-sans text-[11.5px] leading-relaxed text-gray-11">
                     {step.body}
                   </span>
                 </div>

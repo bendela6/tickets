@@ -8,12 +8,12 @@ type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> & {
 
 export const inputClasses = (invalid: boolean | undefined, className?: string) =>
   cn(
-    'w-full appearance-none rounded-[8px] border bg-raised font-sans text-[14px] text-ink placeholder:text-ink-3',
+    'w-full appearance-none rounded-[8px] border bg-surface-raised font-sans text-[14px] text-gray-12 placeholder:text-gray-9',
     'transition-colors focus:outline-none focus:ring-[3px]',
     invalid
-      ? 'border-danger ring-[3px] ring-danger-subtle'
-      : 'border-control hover:border-ink-3 focus:border-accent focus:ring-accent-subtle',
-    'disabled:border-hairline disabled:bg-inset disabled:text-ink-3',
+      ? 'border-red-9 ring-[3px] ring-red-3'
+      : 'border-gray-7 hover:border-gray-9 focus:border-indigo-9 focus:ring-indigo-3',
+    'disabled:border-gray-6 disabled:bg-surface-inset disabled:text-gray-9',
     className,
   );
 

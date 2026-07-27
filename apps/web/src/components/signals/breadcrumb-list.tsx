@@ -51,7 +51,7 @@ function BreadcrumbRow({ crumb }: { crumb: SignalBreadcrumb }) {
   return (
     <div
       role="row"
-      className="grid items-center gap-x-2.5 border-b border-hairline px-4 py-1.5 last:border-b-0"
+      className="grid items-center gap-x-2.5 border-b border-gray-6 px-4 py-1.5 last:border-b-0"
       style={{ gridTemplateColumns: BREADCRUMB_GRID_COLUMNS }}
     >
       <Icon
@@ -60,24 +60,24 @@ function BreadcrumbRow({ crumb }: { crumb: SignalBreadcrumb }) {
         size={11}
         label={kind}
       />
-      <span className="font-mono text-[10.5px] text-ink-3">
+      <span className="font-mono text-[10.5px] text-gray-9">
         {consoleMethod === 'warn' || consoleMethod === 'error' ? `console.${consoleMethod}` : crumb.type}
       </span>
       <span className="flex min-w-0 items-center gap-2">
         <span
           className={cn(
             'truncate font-mono text-[12px]',
-            tone === 'warn' ? 'text-opt-orange' : tone === 'error' ? 'text-danger' : 'text-ink-2',
+            tone === 'warn' ? 'text-orange-9' : tone === 'error' ? 'text-red-9' : 'text-gray-11',
           )}
         >
           {crumb.message ?? ''}
         </span>
         {status !== undefined ? <HttpStatusPill status={status} /> : null}
         {durationMs !== undefined ? (
-          <span className="shrink-0 font-mono text-[10.5px] text-ink-3">{formatDurationMs(durationMs)}</span>
+          <span className="shrink-0 font-mono text-[10.5px] text-gray-9">{formatDurationMs(durationMs)}</span>
         ) : null}
       </span>
-      <span className="font-mono text-[11px] text-ink-3">{formatClockTime(crumb.timestamp)}</span>
+      <span className="font-mono text-[11px] text-gray-9">{formatClockTime(crumb.timestamp)}</span>
     </div>
   );
 }
@@ -95,17 +95,17 @@ function TerminalBreadcrumbRow({ terminal }: { terminal: TerminalBreadcrumb }) {
   return (
     <div
       role="row"
-      className="grid items-center gap-x-2.5 bg-danger-subtle px-4 py-1.5"
+      className="grid items-center gap-x-2.5 bg-red-3 px-4 py-1.5"
       style={{ gridTemplateColumns: BREADCRUMB_GRID_COLUMNS }}
     >
-      <span className="flex size-5 items-center justify-center rounded-[6px] bg-danger font-mono text-[10px] font-semibold text-on-danger">
+      <span className="flex size-5 items-center justify-center rounded-[6px] bg-red-9 font-mono text-[10px] font-semibold text-red-contrast">
         ✕
       </span>
-      <span className="font-mono text-[10.5px] font-medium text-danger">{terminal.name}</span>
+      <span className="font-mono text-[10.5px] font-medium text-red-9">{terminal.name}</span>
       <span className="flex min-w-0 items-center gap-2">
-        <span className="truncate font-mono text-[12px] font-medium text-danger">{terminal.message ?? ''}</span>
+        <span className="truncate font-mono text-[12px] font-medium text-red-9">{terminal.message ?? ''}</span>
       </span>
-      <span className="font-mono text-[11px] font-medium text-danger">
+      <span className="font-mono text-[11px] font-medium text-red-9">
         {formatClockTime(terminal.clientTimestamp)}
       </span>
     </div>
@@ -134,11 +134,11 @@ export function BreadcrumbList({
   const rows = breadcrumbs ?? [];
 
   return (
-    <div className="flex-none overflow-hidden rounded-xl border border-hairline bg-raised">
-      <div className="flex h-10.5 items-center gap-2.5 border-b border-hairline px-4">
-        <span className="font-sans text-[13.5px] font-semibold text-ink">Breadcrumbs</span>
+    <div className="flex-none overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
+      <div className="flex h-10.5 items-center gap-2.5 border-b border-gray-6 px-4">
+        <span className="font-sans text-[13.5px] font-semibold text-gray-12">Breadcrumbs</span>
         {rows.length > 0 ? (
-          <span className="font-mono text-[11px] text-ink-3">
+          <span className="font-mono text-[11px] text-gray-9">
             the {rows.length} signals before this occurrence
           </span>
         ) : null}
@@ -147,14 +147,14 @@ export function BreadcrumbList({
           <Link
             to="/signals/sessions/$sessionId"
             params={{ sessionId }}
-            className="font-mono text-[11.5px] text-accent hover:underline"
+            className="font-mono text-[11.5px] text-indigo-9 hover:underline"
           >
             full session →
           </Link>
         ) : null}
       </div>
       {rows.length === 0 && terminal === undefined ? (
-        <div className="px-4 py-4 font-mono text-[11.5px] text-ink-3">no breadcrumbs recorded</div>
+        <div className="px-4 py-4 font-mono text-[11.5px] text-gray-9">no breadcrumbs recorded</div>
       ) : (
         <div>
           {rows.map((crumb, index) => (

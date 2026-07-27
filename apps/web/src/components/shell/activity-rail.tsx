@@ -17,9 +17,9 @@ const ITEMS: { mode: Mode; to: '/' | '/terminals' | '/agents' | '/signals'; glyp
 export function ActivityRail({ mode, onNavigate }: { mode: Mode | null; onNavigate?: () => void }) {
   const [theme, setTheme] = useState(document.documentElement.dataset.theme ?? 'light');
   return (
-    <aside className="flex w-12 flex-none flex-col items-center gap-1.5 border-r border-hairline bg-app py-3">
+    <aside className="flex w-12 flex-none flex-col items-center gap-1.5 border-r border-gray-6 bg-gray-1 py-3">
       <Link to="/" onClick={onNavigate} className="mb-2" aria-label="tickets home">
-        <span aria-hidden className="block size-2.5 rounded-[2px] bg-accent" />
+        <span aria-hidden className="block size-2.5 rounded-[2px] bg-indigo-9" />
       </Link>
       {ITEMS.map((item) => (
         <Link
@@ -31,8 +31,8 @@ export function ActivityRail({ mode, onNavigate }: { mode: Mode | null; onNaviga
           className={cn(
             'flex size-9 items-center justify-center rounded-[9px] font-mono text-[13px]',
             mode === item.mode
-              ? 'bg-accent text-on-accent'
-              : 'text-ink-2 hover:bg-inset hover:text-ink',
+              ? 'bg-indigo-9 text-indigo-contrast'
+              : 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
           )}
         >
           {item.glyph}
@@ -47,7 +47,7 @@ export function ActivityRail({ mode, onNavigate }: { mode: Mode | null; onNaviga
           applyTheme(next);
           setTheme(next);
         }}
-        className="flex size-9 items-center justify-center rounded-[9px] text-ink-2 hover:bg-inset"
+        className="flex size-9 items-center justify-center rounded-[9px] text-gray-11 hover:bg-surface-inset"
       >
         ◐
       </button>

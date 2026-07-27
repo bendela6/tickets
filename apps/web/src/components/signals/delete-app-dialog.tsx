@@ -61,13 +61,13 @@ export function DeleteAppDialog({
     <DialogRoot open={open} onOpenChange={change}>
       <DialogContent>
         <DialogTitle>Delete app</DialogTitle>
-        <p className="mt-1.5 font-sans text-meta text-ink-2">
-          This permanently deletes <strong className="font-medium text-ink">{app.slug}</strong> — its
+        <p className="mt-1.5 font-sans text-meta text-gray-11">
+          This permanently deletes <strong className="font-medium text-gray-12">{app.slug}</strong> — its
           signals, issues, releases, and source maps. This cannot be undone.
         </p>
         <div className="mt-4">
           <FieldLabel htmlFor="delete-app-confirm">
-            Type <span className="font-mono text-ink normal-case">{app.slug}</span> to confirm
+            Type <span className="font-mono text-gray-12 normal-case">{app.slug}</span> to confirm
           </FieldLabel>
           <Input
             id="delete-app-confirm"
@@ -83,7 +83,7 @@ export function DeleteAppDialog({
           />
         </div>
         {deleteApp.isError ? (
-          <p className="mt-2 font-sans text-meta text-danger">
+          <p className="mt-2 font-sans text-meta text-red-9">
             {deleteApp.error instanceof Error ? deleteApp.error.message : 'Could not delete the app'}
           </p>
         ) : null}

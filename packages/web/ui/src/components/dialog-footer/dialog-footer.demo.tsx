@@ -7,7 +7,7 @@ function GhostButton({ children }: { children: string }) {
   return (
     <button
       type="button"
-      className="inline-flex h-9 items-center justify-center rounded-[8px] border border-transparent px-3.5 font-sans text-[13px] font-medium text-ink-2 hover:bg-inset hover:text-ink"
+      className="inline-flex h-9 items-center justify-center rounded-[8px] border border-transparent px-3.5 font-sans text-[13px] font-medium text-gray-11 hover:bg-surface-inset hover:text-gray-12"
     >
       {children}
     </button>
@@ -18,7 +18,7 @@ function PrimaryButton({ children }: { children: string }) {
   return (
     <button
       type="button"
-      className="inline-flex h-9 items-center justify-center rounded-[8px] bg-accent px-3.5 font-sans text-[13px] font-medium text-on-accent hover:bg-accent-hover"
+      className="inline-flex h-9 items-center justify-center rounded-[8px] bg-indigo-9 px-3.5 font-sans text-[13px] font-medium text-indigo-contrast hover:bg-indigo-10"
     >
       {children}
     </button>

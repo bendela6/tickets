@@ -23,12 +23,12 @@ export const KIND_TONE: Record<StatusKind, HueTone> = {
 };
 
 // Item-type badge preset: outline pill matching the retired TypeBadge look
-// (ink-2 text, control-gray border). border-control overrides the outline
-// emphasis's border-ink-2 via cn/twMerge (same border-color group).
+// (ink-2 text, control-gray border). border-gray-7 overrides the outline
+// emphasis's border-gray-11 via cn/twMerge (same border-color group).
 export const typePill = {
   tone: 'secondary',
   emphasis: 'outline',
-  className: 'border-control',
+  className: 'border-gray-7',
 } as const satisfies Partial<ComponentProps<typeof Pill>>;
 
 export function statusPill(kind: StatusKind): {

@@ -7,9 +7,9 @@ export type SignalLevel = 'error' | 'warning' | 'info';
 // diamond, info an open accent (opt-blue) circle. Shape carries the
 // meaning so level never rides on color alone.
 const SHAPE_CLASSES: Record<SignalLevel, string> = {
-  error: 'size-2.25 rounded-full bg-danger',
-  warning: 'size-2 rotate-45 rounded-[1px] bg-opt-orange',
-  info: 'size-2 rounded-full border-[1.5px] border-opt-blue bg-transparent box-border',
+  error: 'size-2.25 rounded-full bg-red-9',
+  warning: 'size-2 rotate-45 rounded-[1px] bg-orange-9',
+  info: 'size-2 rounded-full border-[1.5px] border-blue-9 bg-transparent box-border',
 };
 
 export function LevelDot({ level, className }: { level: SignalLevel; className?: string }) {

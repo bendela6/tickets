@@ -30,7 +30,7 @@ function chipText(value: unknown): string {
 function ValueChip({ value }: { value: unknown }) {
   const text = chipText(value);
   return (
-    <span className="rounded-sm bg-inset px-1.25 py-px font-mono text-[11px] text-ink">{text}</span>
+    <span className="rounded-sm bg-surface-inset px-1.25 py-px font-mono text-[11px] text-gray-12">{text}</span>
   );
 }
 
@@ -84,14 +84,14 @@ export function DetailActivity({ item, indexes }: { item: Item; indexes: BoardIn
 
   if (activity.isError) {
     return (
-      <p className="m-0 font-sans text-meta text-danger">{(activity.error as Error).message}</p>
+      <p className="m-0 font-sans text-meta text-red-9">{(activity.error as Error).message}</p>
     );
   }
   if (!activity.data) {
-    return <p className="m-0 font-sans text-meta text-ink-3">Loading…</p>;
+    return <p className="m-0 font-sans text-meta text-gray-9">Loading…</p>;
   }
   if (activity.data.length === 0) {
-    return <p className="m-0 font-sans text-meta text-ink-3">No activity yet.</p>;
+    return <p className="m-0 font-sans text-meta text-gray-9">No activity yet.</p>;
   }
 
   return (
@@ -102,10 +102,10 @@ export function DetailActivity({ item, indexes }: { item: Item; indexes: BoardIn
         return (
           <div key={entry.id} className="flex items-start gap-2.25">
             <Avatar name={name} kind={actor?.kind ?? 'human'} size="sm" className="mt-0.5" />
-            <span className="min-w-0 flex-1 font-sans text-meta leading-normal text-ink-2">
-              <span className="font-medium text-ink">{name}</span> {describe(entry)}
+            <span className="min-w-0 flex-1 font-sans text-meta leading-normal text-gray-11">
+              <span className="font-medium text-gray-12">{name}</span> {describe(entry)}
             </span>
-            <RelativeDate value={entry.at} className="shrink-0 font-mono text-[10px] text-ink-3" />
+            <RelativeDate value={entry.at} className="shrink-0 font-mono text-[10px] text-gray-9" />
           </div>
         );
       })}

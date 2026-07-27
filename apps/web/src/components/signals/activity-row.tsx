@@ -18,7 +18,7 @@ export function ActivityRow({ signal }: { signal: SignalListRow }) {
   return (
     <div
       role="row"
-      className="grid h-11 items-center border-b border-hairline px-3.5 hover:bg-app"
+      className="grid h-11 items-center border-b border-gray-6 px-3.5 hover:bg-gray-1"
       style={{ gridTemplateColumns: ACTIVITY_GRID_COLUMNS }}
     >
       <span className="flex">
@@ -28,22 +28,22 @@ export function ActivityRow({ signal }: { signal: SignalListRow }) {
         <LevelDot level={signal.level} />
       </span>
       <span className="min-w-0 pr-3">
-        <span className="block truncate font-sans text-ui text-ink-2">
-          <strong className="font-semibold text-ink">{signal.name}</strong>
+        <span className="block truncate font-sans text-ui text-gray-11">
+          <strong className="font-semibold text-gray-12">{signal.name}</strong>
           {signal.message !== null ? ` · ${signal.message}` : null}
         </span>
       </span>
       <span>
-        <span className="inline-flex h-5 max-w-25 items-center overflow-hidden rounded-ctrl bg-inset px-1.75 font-mono text-[10.5px] font-medium text-ink-2">
+        <span className="inline-flex h-5 max-w-25 items-center overflow-hidden rounded-md bg-surface-inset px-1.75 font-mono text-[10.5px] font-medium text-gray-11">
           {signal.appSlug}
         </span>
       </span>
-      <span className="font-mono text-[11px] text-ink-3">{relativeTime(signal.receivedAt)}</span>
+      <span className="font-mono text-[11px] text-gray-9">{relativeTime(signal.receivedAt)}</span>
       <span>
         <Link
           to="/signals/sessions/$sessionId"
           params={{ sessionId: signal.sessionId }}
-          className="font-mono text-[11px] font-medium text-accent hover:underline"
+          className="font-mono text-[11px] font-medium text-indigo-9 hover:underline"
         >
           session →
         </Link>
@@ -66,15 +66,15 @@ export function ActivityRowSkeleton({ index = 0 }: { index?: number }) {
     <div
       role="row"
       aria-hidden
-      className="grid h-11 animate-pulse items-center border-b border-hairline px-3.5"
+      className="grid h-11 animate-pulse items-center border-b border-gray-6 px-3.5"
       style={{ gridTemplateColumns: ACTIVITY_GRID_COLUMNS }}
     >
-      <span className="size-3.5 rounded-md bg-inset" />
-      <span className="size-2.25 rounded-full bg-inset" />
-      <span className="block h-2.75 rounded-xs bg-inset" style={{ width: `${width}%` }} />
-      <span className="inline-block h-3.5 w-18 rounded-xs bg-inset" />
-      <span className="inline-block h-2.25 w-6.5 rounded-xs bg-inset" />
-      <span className="inline-block h-2.25 w-13 rounded-xs bg-inset" />
+      <span className="size-3.5 rounded-md bg-surface-inset" />
+      <span className="size-2.25 rounded-full bg-surface-inset" />
+      <span className="block h-2.75 rounded-xs bg-surface-inset" style={{ width: `${width}%` }} />
+      <span className="inline-block h-3.5 w-18 rounded-xs bg-surface-inset" />
+      <span className="inline-block h-2.25 w-6.5 rounded-xs bg-surface-inset" />
+      <span className="inline-block h-2.25 w-13 rounded-xs bg-surface-inset" />
     </div>
   );
 }

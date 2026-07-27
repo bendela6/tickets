@@ -17,17 +17,17 @@ export function CostMeter({
   return (
     <span
       className={cn(
-        'inline-flex h-6 items-center gap-2 rounded-md border border-hairline bg-raised px-2',
+        'inline-flex h-6 items-center gap-2 rounded-md border border-gray-6 bg-surface-raised px-2',
         className,
       )}
       title={capped ? `spend $${costUsd.toFixed(4)} of $${capUsd.toFixed(2)} cap` : 'spend so far'}
     >
-      <span className={cn('font-mono text-meta', over ? 'text-danger' : 'text-ink')}>
+      <span className={cn('font-mono text-meta', over ? 'text-red-9' : 'text-gray-12')}>
         ${costUsd.toFixed(2)}
       </span>
       {capped ? (
         <>
-          <span className="font-mono text-meta text-ink-3">/ ${capUsd.toFixed(2)}</span>
+          <span className="font-mono text-meta text-gray-9">/ ${capUsd.toFixed(2)}</span>
           <Meter value={costUsd} max={capUsd} dangerAt={capUsd} />
         </>
       ) : null}

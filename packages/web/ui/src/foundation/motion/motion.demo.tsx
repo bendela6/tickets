@@ -35,7 +35,7 @@ function Replay({ children }: { children: (run: number) => ReactNode }) {
       <button
         type="button"
         onClick={() => setRun((n) => n + 1)}
-        className="self-start rounded-ctrl border border-hairline bg-raised px-3 py-1 font-sans text-ui text-ink hover:bg-inset"
+        className="self-start rounded-md border border-gray-6 bg-surface-raised px-3 py-1 font-sans text-ui text-gray-12 hover:bg-surface-inset"
       >
         Replay
       </button>
@@ -65,9 +65,9 @@ function Travel({ run, duration, ease }: { run: number; duration: string; ease: 
     };
   }, [run]);
   return (
-    <div className="relative h-6 overflow-hidden rounded-ctrl bg-inset">
+    <div className="relative h-6 overflow-hidden rounded-md bg-surface-inset">
       <span
-        className="absolute inset-y-1 w-10 rounded-chip bg-accent"
+        className="absolute inset-y-1 w-10 rounded-sm bg-indigo-9"
         style={{
           left: arrived ? 'calc(100% - 2.75rem)' : '0.25rem',
           transitionProperty: 'left',
@@ -128,10 +128,10 @@ function Easings() {
                 {/* Progress against time. A curve that leaves the box early and
                     flattens is one that arrives fast and settles. */}
                 <svg viewBox="-6 -6 112 112" className="size-24 shrink-0" aria-hidden="true">
-                  <rect x="0" y="0" width="100" height="100" className="fill-inset" />
+                  <rect x="0" y="0" width="100" height="100" className="fill-surface-inset" />
                   <path
                     d={curvePath(ease.value)}
-                    className="stroke-accent"
+                    className="stroke-indigo-9"
                     fill="none"
                     strokeWidth="3"
                   />
@@ -155,13 +155,13 @@ function Animations() {
       {ANIMATIONS.map((animation) => (
         <SpecRow key={animation.name} name={animation.name} value={animation.value}>
           <span
-            className={`inline-block size-5 rounded-full bg-accent motion-reduce:animate-none ${
+            className={`inline-block size-5 rounded-full bg-indigo-9 motion-reduce:animate-none ${
               animation.name === 'animate-ai-spin' ? 'animate-ai-spin' : 'animate-ai-pulse'
             }`}
           />
         </SpecRow>
       ))}
-      <p className="font-sans text-meta text-ink-3">
+      <p className="font-sans text-meta text-gray-9">
         These two are the only motion tokens the live sheet defines — both keyframes, both for the
         AI session status pill. Durations and easings below them are proposed, not shipped.
       </p>

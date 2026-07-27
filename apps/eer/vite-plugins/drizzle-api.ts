@@ -94,23 +94,23 @@ export function resolveModulePath(
   return { path: abs };
 }
 
-// Instrument's option palette (light-mode hex — see packages/web/ui/src/tokens/tokens.css).
+// Instrument's option palette (light-mode hex — the --ins-<hue>-9 step in packages/web/ui/src/tokens/tokens.css).
 // The schema-groups declare a colour by NAME (e.g. 'indigo'); the model wants
 // hex, so it's resolved here, once, at the read boundary. An unknown name
 // (typo, future palette addition not yet wired here) falls back to gray
 // rather than failing the whole schema read.
 export const INSTRUMENT_PALETTE: Record<string, string> = {
-  red: '#a03028',
+  gray: '#777368',
+  red: '#c0382e',
   orange: '#a44e14',
   yellow: '#8a6a10',
   green: '#2e7042',
   teal: '#176d5c',
   cyan: '#14687e',
   blue: '#2a5dae',
-  indigo: '#4a44b0',
+  indigo: '#4e46c6',
   purple: '#7b3fa0',
   pink: '#a63368',
-  gray: '#5c594f',
 };
 const DEFAULT_HEX = INSTRUMENT_PALETTE.gray!;
 

@@ -37,7 +37,7 @@ export function RelativeDate({ value, now = new Date(), overdue, className }: Re
   return (
     <span
       title={formatExact(value)}
-      className={cn('font-sans text-ui', overdue ? 'text-danger' : 'text-ink-2', className)}
+      className={cn('font-sans text-ui', overdue ? 'text-red-9' : 'text-gray-11', className)}
     >
       {relativeLabel(value, now)}
     </span>

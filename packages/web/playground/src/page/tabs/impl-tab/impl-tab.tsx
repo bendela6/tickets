@@ -51,7 +51,7 @@ export function ImplTab({ demo, sources }: { demo: LiveDemo; sources?: ImplSourc
 
   if (available.length === 0) {
     return (
-      <p className="font-sans text-meta text-ink-3">
+      <p className="font-sans text-meta text-gray-9">
         No implementation source found for this demo — looked for{' '}
         <span className="font-mono">{resolved.join(', ')}</span>. Point{' '}
         <span className="font-mono">meta.impl</span> at the component file to show it here.
@@ -70,18 +70,18 @@ export function ImplTab({ demo, sources }: { demo: LiveDemo; sources?: ImplSourc
             onChange={setSelected}
           />
         ) : (
-          <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3">
+          <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9">
             {fileName(active!).toUpperCase()}
           </span>
         )}
         {source !== null && (
-          <span className="font-mono text-meta text-ink-3">{source.split('\n').length} lines</span>
+          <span className="font-mono text-meta text-gray-9">{source.split('\n').length} lines</span>
         )}
       </div>
       {error !== null ? (
-        <p className="font-sans text-meta text-danger">Could not load source: {error}</p>
+        <p className="font-sans text-meta text-red-9">Could not load source: {error}</p>
       ) : source === null ? (
-        <p className="font-sans text-meta text-ink-3">Loading source…</p>
+        <p className="font-sans text-meta text-gray-9">Loading source…</p>
       ) : (
         <CodeBlock code={source} numbered />
       )}

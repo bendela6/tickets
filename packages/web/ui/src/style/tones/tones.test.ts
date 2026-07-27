@@ -30,26 +30,26 @@ describe('tone system', () => {
   });
 
   it('maps hues onto the opt-* families', () => {
-    expect(toneClasses('green', 'subtle')).toBe('bg-opt-green-subtle text-opt-green');
-    expect(toneClasses('green', 'solid')).toBe('bg-opt-green text-on-opt-green');
+    expect(toneClasses('green', 'subtle')).toBe('bg-green-3 text-green-11');
+    expect(toneClasses('green', 'solid')).toBe('bg-green-9 text-green-contrast');
     expect(toneClasses('green', 'outline')).toBe(
-      'border-(length:--border-hair) border-opt-green text-opt-green',
+      'border-(length:--border-thick) border-green-7 text-green-11',
     );
-    expect(toneClasses('green', 'text')).toBe('text-opt-green');
+    expect(toneClasses('green', 'text')).toBe('text-green-11');
   });
 
   it('maps semantic aliases onto their declared families', () => {
-    expect(toneClasses('primary', 'subtle')).toBe('bg-accent-subtle text-accent');
-    expect(toneClasses('primary', 'solid')).toBe('bg-accent text-on-accent');
-    expect(toneClasses('secondary', 'subtle')).toBe('bg-inset text-ink-2');
-    expect(toneClasses('secondary', 'solid')).toBe('bg-ink-2 text-app');
-    expect(toneClasses('danger', 'solid')).toBe('bg-danger text-on-danger');
-    expect(toneClasses('neutral', 'text')).toBe('text-ink-3');
+    expect(toneClasses('primary', 'subtle')).toBe('bg-indigo-3 text-indigo-11');
+    expect(toneClasses('primary', 'solid')).toBe('bg-indigo-9 text-indigo-contrast');
+    expect(toneClasses('secondary', 'subtle')).toBe('bg-gray-3 text-gray-11');
+    expect(toneClasses('secondary', 'solid')).toBe('bg-gray-9 text-gray-contrast');
+    expect(toneClasses('danger', 'solid')).toBe('bg-red-9 text-red-contrast');
+    expect(toneClasses('neutral', 'text')).toBe('text-gray-11');
   });
 
   it('every class in the map is one of the four known utility shapes', () => {
     const CLASS_RE =
-      /^(bg-[a-z0-9-]+|text-[a-z0-9-]+|border-[a-z0-9-]+|border-\(length:--border-hair\))$/;
+      /^(bg-[a-z0-9-]+|text-[a-z0-9-]+|border-[a-z0-9-]+|border-\(length:--border-thick\))$/;
     for (const emphases of Object.values(TONES)) {
       for (const classes of Object.values(emphases)) {
         for (const cls of classes.split(' ')) {

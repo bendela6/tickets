@@ -21,9 +21,9 @@ function SchemaPage() {
   }, [data]);
 
   return (
-    <div style={{ height: '100vh', overflow: 'auto', background: 'var(--color-app)', color: 'var(--color-ink)' }}>
+    <div style={{ height: '100vh', overflow: 'auto', background: 'var(--color-gray-1)', color: 'var(--color-gray-12)' }}>
       {isLoading && <p style={{ padding: 24 }}>Loading schema…</p>}
-      {error && <p style={{ padding: 24, color: 'var(--color-danger)' }}>Failed to load schema.</p>}
+      {error && <p style={{ padding: 24, color: 'var(--color-red-9)' }}>Failed to load schema.</p>}
       <div ref={containerRef} />
     </div>
   );

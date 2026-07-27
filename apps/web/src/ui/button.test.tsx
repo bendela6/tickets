@@ -13,11 +13,11 @@ test('renders and clicks', async () => {
 test('primary variant gets accent classes', () => {
   render(<Button variant="primary">New ticket</Button>);
   const button = screen.getByRole('button');
-  expect(button).toHaveClass('bg-accent');
+  expect(button).toHaveClass('bg-indigo-9');
   // Regression guard: cn()/tailwind-merge must not drop the text color when a
   // font-size utility is also present (custom named sizes like `text-ui` used to
-  // silently evict `text-on-accent`, rendering dark text on the accent fill).
-  expect(button).toHaveClass('text-on-accent');
+  // silently evict `text-indigo-contrast`, rendering dark text on the accent fill).
+  expect(button).toHaveClass('text-indigo-contrast');
   expect(button).toHaveClass('text-[13px]');
 });
 
@@ -48,12 +48,12 @@ test('focus halo is 3px accent-subtle, danger-subtle for destructive', () => {
   const { rerender } = render(<Button variant="primary">New</Button>);
   expect(screen.getByRole('button')).toHaveClass(
     'focus-visible:ring-[3px]',
-    'focus-visible:ring-accent-subtle',
+    'focus-visible:ring-indigo-3',
   );
   rerender(<Button variant="destructive">Archive</Button>);
   const danger = screen.getByRole('button');
-  expect(danger).toHaveClass('focus-visible:ring-danger-subtle');
-  expect(danger).not.toHaveClass('focus-visible:ring-accent-subtle');
+  expect(danger).toHaveClass('focus-visible:ring-red-3');
+  expect(danger).not.toHaveClass('focus-visible:ring-indigo-3');
 });
 
 test('disabled swaps variant colors; loading keeps the fill', () => {
@@ -63,8 +63,8 @@ test('disabled swaps variant colors; loading keeps the fill', () => {
     </Button>,
   );
   // Pure-disabled: design swaps the accent fill for an inset/ink-3 treatment.
-  expect(screen.getByRole('button')).toHaveClass('bg-inset', 'text-ink-3');
-  expect(screen.getByRole('button')).not.toHaveClass('bg-accent');
+  expect(screen.getByRole('button')).toHaveClass('bg-surface-inset', 'text-gray-9');
+  expect(screen.getByRole('button')).not.toHaveClass('bg-indigo-9');
   // Loading is also `disabled` but must keep the accent fill (design LOADING row).
   rerender(
     <Button variant="primary" loading>
@@ -73,8 +73,8 @@ test('disabled swaps variant colors; loading keeps the fill', () => {
   );
   const busy = screen.getByRole('button');
   expect(busy).toBeDisabled();
-  expect(busy).toHaveClass('bg-accent');
-  expect(busy).not.toHaveClass('bg-inset');
+  expect(busy).toHaveClass('bg-indigo-9');
+  expect(busy).not.toHaveClass('bg-surface-inset');
 });
 
 test('loading shows a 12px animating Spinner, hidden while not loading', () => {

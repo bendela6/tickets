@@ -19,5 +19,5 @@ export const projectIndexRoute = createRoute({
       });
     }
   },
-  component: () => <p className="py-6 font-sans text-ui text-ink-3">This project has no views.</p>,
+  component: () => <p className="py-6 font-sans text-ui text-gray-9">This project has no views.</p>,
 });

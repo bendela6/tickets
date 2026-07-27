@@ -21,7 +21,7 @@ function slugify(label: string): string {
 
 function ArchChip() {
   return (
-    <span className="inline-flex h-4.25 shrink-0 items-center rounded-sm bg-inset px-1.5 font-mono text-[10px] font-medium text-ink-3">
+    <span className="inline-flex h-4.25 shrink-0 items-center rounded-sm bg-surface-inset px-1.5 font-mono text-[10px] font-medium text-gray-9">
       ARCH
     </span>
   );
@@ -30,7 +30,7 @@ function ArchChip() {
 // Same folded-direction chip text as detail-links: outgoing "label →",
 // incoming "← inverseLabel", symmetric "label ↔".
 function DirectionChip({ text }: { text: string }) {
-  return <Pill tone="secondary" label={text} className="h-5 rounded-ctrl text-label" />;
+  return <Pill tone="secondary" label={text} className="h-5 rounded-md text-label" />;
 }
 
 // Toggling a chip PUTs the *whole* new set to /api/link-types/:id/target-types
@@ -51,7 +51,7 @@ function TargetTypeChips({
   disabled: boolean;
 }) {
   if (candidates.length === 0) {
-    return <p className="m-0 font-sans text-meta text-ink-3">No ticket types to target.</p>;
+    return <p className="m-0 font-sans text-meta text-gray-9">No ticket types to target.</p>;
   }
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -69,7 +69,7 @@ function TargetTypeChips({
             emphasis={active ? 'subtle' : 'outline'}
             className={cn(
               'h-6 border px-2.5 transition-colors',
-              active ? 'border-accent' : 'border-control bg-raised hover:bg-inset',
+              active ? 'border-indigo-9' : 'border-gray-7 bg-surface-raised hover:bg-surface-inset',
             )}
           />
         );
@@ -99,7 +99,7 @@ function CreateForm({
   const typeOptions: ComboOption[] = types.map((type) => ({ value: String(type.id), label: type.label }));
   const canSubmit = draft.itemTypeId !== null && draft.label.trim() !== '';
   return (
-    <div className="max-w-130 rounded-panel border border-hairline bg-raised p-3.5">
+    <div className="max-w-130 rounded-xl border border-gray-6 bg-surface-raised p-3.5">
       <div className="flex flex-col gap-2.5">
         <div>
           <FieldLabel>Type</FieldLabel>
@@ -165,7 +165,7 @@ function EditForm({
   pending: boolean;
 }) {
   return (
-    <div className="mt-2.5 max-w-130 rounded-panel border border-hairline bg-raised p-3.5">
+    <div className="mt-2.5 max-w-130 rounded-xl border border-gray-6 bg-surface-raised p-3.5">
       <div className="flex flex-col gap-2.5">
         <div className="flex items-center gap-2.5">
           <div className="flex-1">
@@ -340,10 +340,10 @@ export function LinksTab({ board }: SettingsTabProps) {
   return (
     <section className="flex min-h-0 flex-col px-6 py-5.5">
       <div className="mb-1.5 flex items-center gap-3">
-        <h1 className="m-0 font-sans text-[20px] font-semibold text-ink">Links</h1>
-        <span className="font-mono text-meta text-ink-3">{countLabel}</span>
+        <h1 className="m-0 font-sans text-[20px] font-semibold text-gray-12">Links</h1>
+        <span className="font-mono text-meta text-gray-9">{countLabel}</span>
       </div>
-      <p className="mb-4 mt-0 font-sans text-meta text-ink-3">
+      <p className="mb-4 mt-0 font-sans text-meta text-gray-9">
         Create link types owned by a ticket type, and choose which types they may target.
       </p>
 
@@ -371,7 +371,7 @@ export function LinksTab({ board }: SettingsTabProps) {
 
       <div className="flex flex-col gap-4">
         {linkTypes.length === 0 ? (
-          <p className="m-0 font-sans text-meta text-ink-3">No link types yet.</p>
+          <p className="m-0 font-sans text-meta text-gray-9">No link types yet.</p>
         ) : (
           linkTypes.map((linkType) => {
             const owningType = typeById.get(linkType.itemTypeId);
@@ -380,13 +380,13 @@ export function LinksTab({ board }: SettingsTabProps) {
               <section
                 key={linkType.id}
                 className={cn(
-                  'max-w-165 rounded-panel border border-hairline bg-raised p-3.5',
+                  'max-w-165 rounded-xl border border-gray-6 bg-surface-raised p-3.5',
                   linkType.archivedAt && 'opacity-60',
                 )}
               >
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="truncate font-sans text-ui font-semibold text-ink">{linkType.label}</span>
-                  <span className="font-mono text-meta text-ink-3">{linkType.key}</span>
+                  <span className="truncate font-sans text-ui font-semibold text-gray-12">{linkType.label}</span>
+                  <span className="font-mono text-meta text-gray-9">{linkType.key}</span>
                   <DirectionChip
                     text={linkType.directional ? `→ ${linkType.label}` : `${linkType.label} ↔`}
                   />
@@ -396,7 +396,7 @@ export function LinksTab({ board }: SettingsTabProps) {
                     }
                   />
                   {owningType ? (
-                    <span className="font-mono text-label text-ink-3">on {owningType.label}</span>
+                    <span className="font-mono text-label text-gray-9">on {owningType.label}</span>
                   ) : null}
                   {linkType.archivedAt ? <ArchChip /> : null}
                   <span className="flex-1" />

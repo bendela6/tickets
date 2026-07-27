@@ -63,14 +63,14 @@ export function RotateKeyDialog({
         {rotated === null ? (
           <>
             <DialogTitle>Rotate key</DialogTitle>
-            <p className="mt-1.5 font-sans text-meta text-ink-2">
+            <p className="mt-1.5 font-sans text-meta text-gray-11">
               This issues a new ingest key for{' '}
-              <strong className="font-medium text-ink">{app.slug}</strong>. The old DSN stops accepting
+              <strong className="font-medium text-gray-12">{app.slug}</strong>. The old DSN stops accepting
               signals immediately — every SDK using it must be updated.
             </p>
             <div className="mt-4">
               <FieldLabel htmlFor="rotate-key-confirm">
-                Type <span className="font-mono text-ink normal-case">{app.slug}</span> to confirm
+                Type <span className="font-mono text-gray-12 normal-case">{app.slug}</span> to confirm
               </FieldLabel>
               <Input
                 id="rotate-key-confirm"
@@ -86,7 +86,7 @@ export function RotateKeyDialog({
               />
             </div>
             {rotateKey.isError ? (
-              <p className="mt-2 font-sans text-meta text-danger">
+              <p className="mt-2 font-sans text-meta text-red-9">
                 {rotateKey.error instanceof Error ? rotateKey.error.message : 'Could not rotate the key'}
               </p>
             ) : null}
@@ -104,11 +104,11 @@ export function RotateKeyDialog({
         ) : (
           <>
             <DialogTitle>Key rotated</DialogTitle>
-            <p className="mt-1.5 font-sans text-meta text-danger">
+            <p className="mt-1.5 font-sans text-meta text-red-9">
               The old DSN no longer works. Update every SDK pointed at {app.slug} with the new DSN below.
             </p>
             <div className="mt-4">
-              <div className="mb-1.5 font-mono text-label font-medium tracking-wide text-ink-3">NEW DSN</div>
+              <div className="mb-1.5 font-mono text-label font-medium tracking-wide text-gray-9">NEW DSN</div>
               <DsnField dsn={rotated.dsn} />
             </div>
             <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Close</Button>} />

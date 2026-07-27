@@ -30,7 +30,7 @@ describe('Spinner', () => {
 
   it('applies an explicit tone', () => {
     const { container } = render(<Spinner tone="secondary" />);
-    expect(container.querySelector('svg')!.getAttribute('class')).toContain('text-ink-2');
+    expect(container.querySelector('svg')!.getAttribute('class')).toContain('text-gray-11');
   });
 
   it('is labelled for assistive tech (not aria-hidden) since it conveys loading state', () => {

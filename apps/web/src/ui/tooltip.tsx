@@ -22,13 +22,13 @@ export function Tooltip({ content, children, side = 'top', className }: TooltipP
           side={side}
           sideOffset={5}
           className={cn(
-            'z-50 max-w-64 rounded-ctrl bg-ink px-2 py-1 font-sans text-meta text-app',
+            'z-50 max-w-64 rounded-md bg-gray-12 px-2 py-1 font-sans text-meta text-gray-1',
             'select-none',
             className,
           )}
         >
           {content}
-          <RadixTooltip.Arrow className="fill-ink" />
+          <RadixTooltip.Arrow className="fill-gray-12" />
         </RadixTooltip.Content>
       </RadixTooltip.Portal>
     </RadixTooltip.Root>

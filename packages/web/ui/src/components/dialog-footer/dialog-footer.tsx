@@ -20,7 +20,7 @@ export function DialogFooter({
   className?: string;
 }) {
   return (
-    <div className={cn('mt-4 flex items-center justify-end gap-2 border-t border-hairline pt-4', className)}>
+    <div className={cn('mt-4 flex items-center justify-end gap-2 border-t border-gray-6 pt-4', className)}>
       {cancel}
       {children}
     </div>

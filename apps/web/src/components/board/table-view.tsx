@@ -109,13 +109,13 @@ function StatusCell({
 function ProgressCell({ ticket, indexes }: { ticket: Item; indexes: BoardIndexes }) {
   const { any, done, total } = childProgress(ticket, indexes);
   if (!any || total === 0) {
-    return <span className="font-sans text-ui text-ink-3">—</span>;
+    return <span className="font-sans text-ui text-gray-9">—</span>;
   }
   const percent = Math.round((done / total) * 100);
   return (
     <span className="inline-flex items-center gap-1.75" title={`${done} of ${total} subtasks done`}>
       <Meter tone="green" value={percent} max={100} className="w-9" />
-      <span className="font-mono text-[11px] text-ink-2">
+      <span className="font-mono text-[11px] text-gray-11">
         {done}/{total}
       </span>
     </span>
@@ -127,7 +127,7 @@ function RowActions({ projectKey, ticket }: { projectKey: string; ticket: Item }
   const { userId } = useCurrentUser();
   const patch = usePatchItem();
   const actionClasses =
-    'flex size-7.5 items-center justify-center rounded-[7px] border border-hairline bg-raised font-sans text-ui text-ink-2 shadow-sm hover:text-ink';
+    'flex size-7.5 items-center justify-center rounded-[7px] border border-gray-6 bg-surface-raised font-sans text-ui text-gray-11 shadow-sm hover:text-gray-12';
   return (
     <span
       className="absolute top-1/2 right-2.5 hidden -translate-y-1/2 items-center gap-1.25 group-hover:flex"
@@ -270,23 +270,23 @@ export function TableView({
     }
     if (field.key === 'title') {
       return (
-        <span key={key} className="truncate px-2 font-sans text-ui text-ink">
+        <span key={key} className="truncate px-2 font-sans text-ui text-gray-12">
           {String(ticket.values[field.key] ?? '')}
         </span>
       );
     }
     return (
-      <span key={key} className="min-w-0 truncate px-2 font-sans text-ui text-ink-2">
+      <span key={key} className="min-w-0 truncate px-2 font-sans text-ui text-gray-11">
         {getCellContent(field, ticket.values[field.key], indexes, ticket.typeId)}
       </span>
     );
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-auto rounded-t-[12px] border border-hairline bg-raised">
+    <div className="flex min-h-0 flex-1 flex-col overflow-auto rounded-t-[12px] border border-gray-6 bg-surface-raised">
       <div
         role="row"
-        className="sticky top-0 z-10 grid h-9 min-w-170 shrink-0 items-center border-b border-hairline bg-app px-1"
+        className="sticky top-0 z-10 grid h-9 min-w-170 shrink-0 items-center border-b border-gray-6 bg-gray-1 px-1"
         style={{ gridTemplateColumns }}
       >
         {visible.map(({ column, index }) => {
@@ -299,7 +299,7 @@ export function TableView({
               className={cn(
                 'cursor-pointer text-left font-sans text-label font-medium uppercase',
                 column.source === 'number' ? 'px-3' : 'px-2',
-                active ? 'text-ink' : 'text-ink-2 hover:text-ink',
+                active ? 'text-gray-12' : 'text-gray-11 hover:text-gray-12',
               )}
             >
               {columnLabel(column, indexes)}
@@ -338,7 +338,7 @@ export function TableView({
             role="row"
             onClick={() => onOpenTicket(ticket.number)}
             className={cn(
-              'group relative grid min-w-170 shrink-0 cursor-pointer items-center border-b border-hairline px-1 hover:bg-app',
+              'group relative grid min-w-170 shrink-0 cursor-pointer items-center border-b border-gray-6 px-1 hover:bg-gray-1',
               config.density === 'compact' ? 'h-8' : 'h-10.5',
             )}
             style={{ gridTemplateColumns }}

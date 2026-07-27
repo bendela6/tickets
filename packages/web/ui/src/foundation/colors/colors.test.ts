@@ -126,10 +126,11 @@ describe('checkPairings', () => {
     expect(advisoryPairings()).toHaveLength(HUES.length * 2);
   });
 
-  it('keeps grey solid readable by running its contrast the other way', () => {
-    // Every chromatic step 9 is dark, so white sits on it. gray-9 is a light
-    // mid-tone, so it takes dark ink in the light theme instead — white would
-    // score 3.32. The check is what forced this asymmetry into the open.
+  it('keeps grey solid readable, which is why gray-9 was re-anchored', () => {
+    // gray-9 used to be #918d80, a light mid-tone where NEITHER foreground
+    // passed: white scored 3.32 and dark ink 4.35 — the dead zone. Moving the
+    // anchor to #777368 puts white at 4.73, and WCAG and APCA finally agree
+    // with each other and with the eye. Every scale now takes white.
     for (const theme of ['light', 'dark'] as const) {
       const solid = checkPairings().find(
         (p) => p.emphasis === 'solid' && p.scale === 'gray' && p.theme === theme,
@@ -137,7 +138,17 @@ describe('checkPairings', () => {
       expect(solid?.passes).toBe(true);
       expect(solid?.ratio).toBeGreaterThanOrEqual(4.5);
     }
-    expect(colorOf('light', 'gray', 'contrast')).toBe('#25231d');
+    expect(colorOf('light', 'gray', 9)).toBe('#777368');
+    expect(colorOf('light', 'gray', 'contrast')).toBe('#ffffff');
     expect(colorOf('dark', 'gray', 'contrast')).toBe('#ffffff');
+  });
+
+  it('keeps the gray ramp monotonic through the re-anchored steps', () => {
+    // 11 and 12 are the ink steps and map exactly onto today's --color-ink-2
+    // and --color-ink, so the re-anchor had to move 9 and 10 without crossing
+    // them. If a future anchor change breaks the ordering, hover stops reading
+    // as a darker state.
+    const lum = [8, 9, 10, 11, 12].map((s) => luminance(colorOf('light', 'gray', s as never)));
+    for (let i = 1; i < lum.length; i += 1) expect(lum[i]!).toBeLessThan(lum[i - 1]!);
   });
 });

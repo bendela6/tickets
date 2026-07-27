@@ -71,8 +71,8 @@ export function SpecRow({
 }) {
   return (
     <div className={`flex gap-4 ${align === 'start' ? 'items-start' : 'items-center'}`}>
-      <span className="w-36 shrink-0 font-mono text-meta font-medium text-ink">{name}</span>
-      <span className="flex w-32 shrink-0 flex-col font-mono text-meta text-ink-3">
+      <span className="w-36 shrink-0 font-mono text-meta font-medium text-gray-12">{name}</span>
+      <span className="flex w-32 shrink-0 flex-col font-mono text-meta text-gray-9">
         <span>{value}</span>
         {note ? <span className="text-nano">{note}</span> : null}
       </span>
@@ -88,7 +88,7 @@ export function SpecRow({
  */
 export function SpecHeader({ specimen, value = 'value' }: { specimen: string; value?: string }) {
   return (
-    <div className="flex gap-4 font-mono text-nano uppercase tracking-(--tracking-caps) text-ink-3">
+    <div className="flex gap-4 font-mono text-nano uppercase tracking-(--tracking-caps) text-gray-9">
       <span className="w-36 shrink-0">token</span>
       <span className="w-32 shrink-0">{value}</span>
       <span className="min-w-0 flex-1">{specimen}</span>
@@ -111,10 +111,10 @@ const STATUS_TONE: Record<DriftStatus, 'success' | 'primary' | 'warning'> = {
 export function DriftView({ families }: { families: string[] }) {
   const all = drift().filter((f) => families.includes(f.family));
   const counts = driftSummary(all);
-  const cell = 'border-b border-hairline py-1.5 pr-4 text-left';
+  const cell = 'border-b border-gray-6 py-1.5 pr-4 text-left';
   return (
     <Sheet>
-      <p className="font-sans text-meta text-ink-2">
+      <p className="font-sans text-meta text-gray-11">
         {counts.matched} proposed token{counts.matched === 1 ? '' : 's'} already exist under another
         name · {counts.added} would be added · {counts.dropped} live token
         {counts.dropped === 1 ? '' : 's'} would lose their value.
@@ -123,26 +123,26 @@ export function DriftView({ families }: { families: string[] }) {
         <div key={family.family} className="flex flex-col gap-2">
           <SectionHeader title={family.family} count={`${family.rows.length}`} />
           {family.note ? (
-            <p className="font-sans text-meta text-ink-3">{family.note}</p>
+            <p className="font-sans text-meta text-gray-9">{family.note}</p>
           ) : null}
           <table className="w-full border-collapse font-mono text-meta">
             <thead>
-              <tr className="text-ink-3">
+              <tr className="text-gray-9">
                 <th className={`${cell} font-medium`}>proposed</th>
                 <th className={`${cell} font-medium`}>live</th>
                 <th className={`${cell} font-medium`}>value</th>
-                <th className="border-b border-hairline py-1.5 text-left font-medium">status</th>
+                <th className="border-b border-gray-6 py-1.5 text-left font-medium">status</th>
               </tr>
             </thead>
             <tbody>
               {family.rows.map((row) => (
-                <tr key={`${row.spec ?? ''}-${row.live ?? ''}`} className="text-ink">
-                  <td className={cell}>{row.spec ?? <span className="text-ink-3">—</span>}</td>
+                <tr key={`${row.spec ?? ''}-${row.live ?? ''}`} className="text-gray-12">
+                  <td className={cell}>{row.spec ?? <span className="text-gray-9">—</span>}</td>
                   <td className={cell}>
-                    {row.live ? `--${row.live}` : <span className="text-ink-3">—</span>}
+                    {row.live ? `--${row.live}` : <span className="text-gray-9">—</span>}
                   </td>
-                  <td className={`${cell} text-ink-2`}>{row.value}</td>
-                  <td className="border-b border-hairline py-1.5">
+                  <td className={`${cell} text-gray-11`}>{row.value}</td>
+                  <td className="border-b border-gray-6 py-1.5">
                     <Pill label={row.status} tone={STATUS_TONE[row.status]} />
                   </td>
                 </tr>

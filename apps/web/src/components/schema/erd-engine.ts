@@ -194,7 +194,7 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
         circ.setAttribute('cx', String(p.sx + sd * 16));
         circ.setAttribute('cy', String(p.sy));
         circ.setAttribute('r', '3.2');
-        circ.style.fill = 'var(--color-app)';
+        circ.style.fill = 'var(--color-gray-1)';
         g.appendChild(circ);
       }
       const td = Math.sign(pts[pts.length - 2]!.x - p.tx) || 1;

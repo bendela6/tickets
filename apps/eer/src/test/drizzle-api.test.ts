@@ -194,7 +194,7 @@ describe('resolveModulePath — symlink escape (finding 1)', () => {
 
 // ---- Finding 2: INSTRUMENT_PALETTE drift guard ----------------------------
 //
-// INSTRUMENT_PALETTE hand-copies the --ins-opt-* light-mode hex values out of
+// INSTRUMENT_PALETTE hand-copies the --ins-<hue>-9 light-mode hex values out of
 // packages/web/ui/src/tokens/tokens.css. There is no shared source, so this test
 // is the only thing standing between an Instrument palette change and a
 // silently desynced drizzle-import zone colour. Mirrors the drift-test
@@ -213,19 +213,18 @@ function readLightModeOptPalette(): Record<string, string> {
   const rootEnd = css.indexOf('\n}', rootStart);
   const lightBlock = css.slice(rootStart, rootEnd);
 
-  // Matches only the base "--ins-opt-<name>: #hex;" declarations — the [a-z]+
-  // capture can't cross the hyphen before "-hover"/"-subtle", and
-  // "--ins-on-opt-*" never contains "--ins-opt-" as a substring — so those
-  // variants are structurally excluded, not filtered after the fact.
+  // The solid fill of each ramp is step 9, so "--ins-<hue>-9: #hex;" is the
+  // one declaration per hue that a zone colour should track. Other steps end
+  // in a different number and never match.
   const found: Record<string, string> = {};
-  const re = /--ins-opt-([a-z]+):\s*(#[0-9a-fA-F]{6})\s*;/g;
+  const re = /--ins-([a-z]+)-9:\s*(#[0-9a-fA-F]{6})\s*;/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(lightBlock))) found[m[1]!] = m[2]!.toLowerCase();
   return found;
 }
 
 describe('INSTRUMENT_PALETTE (finding 2 — drift guard)', () => {
-  it('matches the --ins-opt-* light-mode hex values in instrument.css', () => {
+  it('matches the --ins-<hue>-9 light-mode hex values in instrument.css', () => {
     const found = readLightModeOptPalette();
     // Sanity check the parser actually found the whole named set, so a CSS
     // markup change can't silently make this assertion vacuous.

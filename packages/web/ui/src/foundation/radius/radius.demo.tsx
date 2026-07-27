@@ -31,11 +31,11 @@ function Scale() {
                 obvious. The other three corners stay square so the eye has a
                 right angle to measure the curve against. */}
             <span
-              className="size-16 border border-accent bg-accent-subtle"
+              className="size-16 border border-indigo-9 bg-indigo-3"
               style={{ borderTopLeftRadius: `calc(${radius.value} * 4)` }}
             />
             <span
-              className="flex h-16 flex-1 items-center justify-center border border-hairline bg-raised font-mono text-meta text-ink-3"
+              className="flex h-16 flex-1 items-center justify-center border border-gray-6 bg-surface-raised font-mono text-meta text-gray-9"
               style={{ borderRadius: radius.value }}
             >
               {radius.value}
@@ -53,49 +53,49 @@ function InUse() {
     <Sheet>
       <div className="flex flex-wrap items-start gap-6">
         <div className="flex flex-col gap-2">
-          <span className="font-mono text-nano uppercase tracking-(--tracking-caps) text-ink-3">
+          <span className="font-mono text-nano uppercase tracking-(--tracking-caps) text-gray-9">
             radius-1 · chip
           </span>
           <span
-            className="inline-flex h-5.5 items-center bg-accent-subtle px-2.25 font-sans text-meta font-medium text-accent"
+            className="inline-flex h-5.5 items-center bg-indigo-3 px-2.25 font-sans text-meta font-medium text-indigo-9"
             style={{ borderRadius: radius('radius-1') }}
           >
             blocked
           </span>
         </div>
         <div className="flex flex-col gap-2">
-          <span className="font-mono text-nano uppercase tracking-(--tracking-caps) text-ink-3">
+          <span className="font-mono text-nano uppercase tracking-(--tracking-caps) text-gray-9">
             radius-2 · control
           </span>
           <span
-            className="inline-flex h-7 items-center border border-hairline bg-raised px-3 font-sans text-ui text-ink"
+            className="inline-flex h-7 items-center border border-gray-6 bg-surface-raised px-3 font-sans text-ui text-gray-12"
             style={{ borderRadius: radius('radius-2') }}
           >
             Assign
           </span>
         </div>
         <div className="flex flex-col gap-2">
-          <span className="font-mono text-nano uppercase tracking-(--tracking-caps) text-ink-3">
+          <span className="font-mono text-nano uppercase tracking-(--tracking-caps) text-gray-9">
             radius-3 · card
           </span>
           <div
-            className="flex w-56 flex-col gap-1 border border-hairline bg-raised p-3"
+            className="flex w-56 flex-col gap-1 border border-gray-6 bg-surface-raised p-3"
             style={{ borderRadius: radius('radius-3') }}
           >
-            <span className="font-sans text-ui font-medium text-ink">Retry the gateway run</span>
-            <span className="font-mono text-meta text-ink-3">TIX-214 · in review</span>
+            <span className="font-sans text-ui font-medium text-gray-12">Retry the gateway run</span>
+            <span className="font-mono text-meta text-gray-9">TIX-214 · in review</span>
           </div>
         </div>
         <div className="flex flex-col gap-2">
-          <span className="font-mono text-nano uppercase tracking-(--tracking-caps) text-ink-3">
+          <span className="font-mono text-nano uppercase tracking-(--tracking-caps) text-gray-9">
             radius-4 · panel
           </span>
           <div
-            className="flex w-64 flex-col gap-2 border border-hairline bg-raised p-4"
+            className="flex w-64 flex-col gap-2 border border-gray-6 bg-surface-raised p-4"
             style={{ borderRadius: radius('radius-4') }}
           >
-            <span className="font-sans text-title font-medium text-ink">Discard changes?</span>
-            <span className="font-sans text-ui text-ink-2">
+            <span className="font-sans text-title font-medium text-gray-12">Discard changes?</span>
+            <span className="font-sans text-ui text-gray-11">
               Three edits will be lost. This cannot be undone.
             </span>
           </div>

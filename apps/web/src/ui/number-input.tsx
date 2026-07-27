@@ -42,8 +42,8 @@ export function NumberInput({
   return (
     <div
       className={cn(
-        'inline-flex items-stretch rounded-ctrl border border-control bg-raised',
-        'focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent-subtle',
+        'inline-flex items-stretch rounded-md border border-gray-7 bg-surface-raised',
+        'focus-within:border-indigo-9 focus-within:ring-[3px] focus-within:ring-indigo-3',
         disabled && 'pointer-events-none opacity-50',
         size === 'compact' ? 'h-7' : 'h-9',
         className,
@@ -63,15 +63,15 @@ export function NumberInput({
           const raw = event.target.value;
           onChange(raw === '' ? null : Number(raw));
         }}
-        className="w-16 bg-transparent px-2 text-right font-sans text-ui text-ink tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+        className="w-16 bg-transparent px-2 text-right font-sans text-ui text-gray-12 tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
       />
-      <div className="flex flex-col border-l border-hairline">
+      <div className="flex flex-col border-l border-gray-6">
         <button
           type="button"
           aria-label="Increment"
           tabIndex={-1}
           onClick={() => nudge(step)}
-          className="flex flex-1 items-center px-1.5 text-[8px] text-ink-3 hover:bg-inset hover:text-ink"
+          className="flex flex-1 items-center px-1.5 text-[8px] text-gray-9 hover:bg-surface-inset hover:text-gray-12"
         >
           ▲
         </button>
@@ -80,7 +80,7 @@ export function NumberInput({
           aria-label="Decrement"
           tabIndex={-1}
           onClick={() => nudge(-step)}
-          className="flex flex-1 items-center border-t border-hairline px-1.5 text-[8px] text-ink-3 hover:bg-inset hover:text-ink"
+          className="flex flex-1 items-center border-t border-gray-6 px-1.5 text-[8px] text-gray-9 hover:bg-surface-inset hover:text-gray-12"
         >
           ▼
         </button>

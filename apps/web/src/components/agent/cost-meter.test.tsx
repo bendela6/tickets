@@ -16,5 +16,5 @@ test('capped shows spend / cap', () => {
 
 test('crossing the cap turns the spend danger-coloured', () => {
   render(<CostMeter costUsd={6} capUsd={5} />);
-  expect(screen.getByText('$6.00')).toHaveClass('text-danger');
+  expect(screen.getByText('$6.00')).toHaveClass('text-red-9');
 });

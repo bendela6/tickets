@@ -17,7 +17,7 @@ describe('typePill', () => {
   it('resolves to the retired TypeBadge look: control-gray border wins over the outline emphasis border', () => {
     render(<Pill {...typePill} label="Feature" />);
     const pill = screen.getByText('Feature').closest('span')!;
-    expect(pill.className).toContain('border-control');
-    expect(pill.className).not.toContain('border-ink-2');
+    expect(pill.className).toContain('border-gray-7');
+    expect(pill.className).not.toContain('border-gray-11');
   });
 });

@@ -38,7 +38,7 @@ function RuleValues({
     return null;
   }
   if (rule.op === 'contains') {
-    return <span className="text-ink">“{rule.values[0] ?? ''}”</span>;
+    return <span className="text-gray-12">“{rule.values[0] ?? ''}”</span>;
   }
   const field = sharedByKey.get(rule.fieldKey);
   return (
@@ -142,7 +142,7 @@ function AddFilter({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="inline-flex h-7 cursor-pointer items-center gap-1.25 rounded-[7px] border border-dashed border-control px-2.5 font-sans text-meta font-medium text-ink-2 hover:text-ink"
+          className="inline-flex h-7 cursor-pointer items-center gap-1.25 rounded-[7px] border border-dashed border-gray-7 px-2.5 font-sans text-meta font-medium text-gray-11 hover:text-gray-12"
         >
           ＋ Filter
         </button>
@@ -252,15 +252,15 @@ export function GlobalFilterChips({
         return (
           <span
             key={index}
-            className="inline-flex h-7 items-center gap-1.5 rounded-[7px] border border-hairline bg-raised px-2.5 font-sans text-meta text-ink-2"
+            className="inline-flex h-7 items-center gap-1.5 rounded-[7px] border border-gray-6 bg-surface-raised px-2.5 font-sans text-meta text-gray-11"
           >
-            <strong className="font-medium text-ink">{field?.label ?? rule.fieldKey}</strong>
+            <strong className="font-medium text-gray-12">{field?.label ?? rule.fieldKey}</strong>
             {OP_LABELS[rule.op]}
             <RuleValues rule={rule} sharedByKey={sharedByKey} />
             <button
               type="button"
               aria-label="Remove filter"
-              className="cursor-pointer text-ink-3 hover:text-ink"
+              className="cursor-pointer text-gray-9 hover:text-gray-12"
               onClick={() => onRulesChange(rules.filter((candidate) => candidate !== rule))}
             >
               ×
@@ -272,8 +272,8 @@ export function GlobalFilterChips({
       <span className="flex-1" />
       {dirty ? (
         <>
-          <span className="inline-flex items-center gap-2 font-sans text-meta text-ink-2">
-            <span aria-hidden className="size-1.5 rounded-full bg-opt-orange" />
+          <span className="inline-flex items-center gap-2 font-sans text-meta text-gray-11">
+            <span aria-hidden className="size-1.5 rounded-full bg-orange-9" />
             Unsaved changes
           </span>
           <Button size="compact" onClick={onSaveToView}>
@@ -281,7 +281,7 @@ export function GlobalFilterChips({
           </Button>
           <button
             type="button"
-            className="cursor-pointer font-sans text-meta font-medium text-ink-3 hover:text-ink"
+            className="cursor-pointer font-sans text-meta font-medium text-gray-9 hover:text-gray-12"
             onClick={onReset}
           >
             Reset

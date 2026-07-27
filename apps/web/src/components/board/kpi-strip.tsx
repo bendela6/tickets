@@ -27,22 +27,22 @@ export function KpiTiles({
       {KIND_ORDER.map(({ kind, label }) => (
         <div
           key={kind}
-          className="flex flex-1 items-center gap-2.5 rounded-[10px] border border-hairline bg-raised px-3.5 py-2.5 shadow-sm"
+          className="flex flex-1 items-center gap-2.5 rounded-[10px] border border-gray-6 bg-surface-raised px-3.5 py-2.5 shadow-sm"
         >
           <span className="inline-flex shrink-0">
             <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
           </span>
-          <span className="font-mono text-[18px] leading-none font-semibold text-ink">
+          <span className="font-mono text-[18px] leading-none font-semibold text-gray-12">
             {counts[kind]}
           </span>
-          <span className="font-sans text-meta text-ink-2">{label}</span>
+          <span className="font-sans text-meta text-gray-11">{label}</span>
         </div>
       ))}
       <button
         type="button"
         title="Hide KPI strip"
         aria-label="Hide KPI strip"
-        className="flex w-7 cursor-pointer items-center justify-center font-sans text-meta text-ink-3 hover:text-ink"
+        className="flex w-7 cursor-pointer items-center justify-center font-sans text-meta text-gray-9 hover:text-gray-12"
         onClick={onHide}
       >
         ×

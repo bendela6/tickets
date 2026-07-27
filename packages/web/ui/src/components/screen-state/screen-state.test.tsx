@@ -23,15 +23,15 @@ describe('ScreenState', () => {
   it('tone="danger" puts the danger subtle classes on the icon disc', () => {
     render(<ScreenState title="Couldn't load issues" icon="triangle-alert" tone="danger" />);
     const disc = document.querySelector('svg')!.parentElement!;
-    expect(disc.className).toContain('bg-danger-subtle');
-    expect(disc.className).toContain('text-danger');
+    expect(disc.className).toContain('bg-red-3');
+    expect(disc.className).toContain('text-red-11');
   });
 
   it('defaults to the neutral tone when unset', () => {
     render(<ScreenState title="No agents yet" icon="circle" />);
     const disc = document.querySelector('svg')!.parentElement!;
-    expect(disc.className).toContain('bg-inset');
-    expect(disc.className).toContain('text-ink-3');
+    expect(disc.className).toContain('bg-gray-3');
+    expect(disc.className).toContain('text-gray-11');
   });
 
   it('renders body content when set', () => {

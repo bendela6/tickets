@@ -16,7 +16,7 @@ function TicketPageScreen() {
   const item = indexes.itemByNumber.get(Number(number));
   if (!item) {
     return (
-      <p className="py-4 font-sans text-ui text-danger">No item #{number} in this project.</p>
+      <p className="py-4 font-sans text-ui text-red-9">No item #{number} in this project.</p>
     );
   }
   return (

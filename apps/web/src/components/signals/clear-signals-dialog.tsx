@@ -102,13 +102,13 @@ export function ClearSignalsDialog({
         {result === null ? (
           <>
             <DialogTitle>Clear signals</DialogTitle>
-            <p className="mt-1.5 font-sans text-meta text-ink-2">
-              Removes signals for <strong className="font-medium text-ink">{app.slug}</strong> and prunes
+            <p className="mt-1.5 font-sans text-meta text-gray-11">
+              Removes signals for <strong className="font-medium text-gray-12">{app.slug}</strong> and prunes
               any issue left with none. This cannot be undone.
             </p>
 
             <div className="mt-4 flex flex-col gap-2.5">
-              <label className="flex items-center gap-2 font-sans text-ui text-ink">
+              <label className="flex items-center gap-2 font-sans text-ui text-gray-12">
                 <input
                   type="radio"
                   name="clear-signals-mode"
@@ -119,7 +119,7 @@ export function ClearSignalsDialog({
               </label>
 
               <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2 font-sans text-ui text-ink">
+                <label className="flex items-center gap-2 font-sans text-ui text-gray-12">
                   <input
                     type="radio"
                     name="clear-signals-mode"
@@ -133,7 +133,7 @@ export function ClearSignalsDialog({
                   value={olderThanDays}
                   disabled={mode !== 'older-than'}
                   onChange={(event) => setOlderThanDays(Number(event.target.value) as OlderThanDays)}
-                  className="h-7 rounded-[6px] border border-control bg-raised px-1.5 font-sans text-[12.5px] text-ink disabled:text-ink-3"
+                  className="h-7 rounded-[6px] border border-gray-7 bg-surface-raised px-1.5 font-sans text-[12.5px] text-gray-12 disabled:text-gray-9"
                 >
                   {OLDER_THAN_OPTIONS.map((option) => (
                     <option key={option.days} value={option.days}>
@@ -144,7 +144,7 @@ export function ClearSignalsDialog({
               </div>
 
               <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2 font-sans text-ui text-ink">
+                <label className="flex items-center gap-2 font-sans text-ui text-gray-12">
                   <input
                     type="radio"
                     name="clear-signals-mode"
@@ -158,7 +158,7 @@ export function ClearSignalsDialog({
                   value={release}
                   disabled={mode !== 'release'}
                   onChange={(event) => setRelease(event.target.value)}
-                  className="h-7 min-w-0 flex-1 rounded-[6px] border border-control bg-raised px-1.5 font-sans text-[12.5px] text-ink disabled:text-ink-3"
+                  className="h-7 min-w-0 flex-1 rounded-[6px] border border-gray-7 bg-surface-raised px-1.5 font-sans text-[12.5px] text-gray-12 disabled:text-gray-9"
                 >
                   <option value="">Choose a release…</option>
                   {releases.map((candidate) => (
@@ -170,12 +170,12 @@ export function ClearSignalsDialog({
               </div>
             </div>
 
-            <div className="mt-3 rounded-[8px] border border-hairline bg-inset px-3 py-2 font-mono text-[11.5px] text-ink-2">
+            <div className="mt-3 rounded-[8px] border border-gray-6 bg-surface-inset px-3 py-2 font-mono text-[11.5px] text-gray-11">
               Will clear: {scopeLabel(mode, olderThanDays, release)}
             </div>
 
             {clearSignals.isError ? (
-              <p className="mt-2 font-sans text-meta text-danger">
+              <p className="mt-2 font-sans text-meta text-red-9">
                 {clearSignals.error instanceof Error ? clearSignals.error.message : 'Could not clear signals'}
               </p>
             ) : null}
@@ -194,7 +194,7 @@ export function ClearSignalsDialog({
         ) : (
           <>
             <DialogTitle>Signals cleared</DialogTitle>
-            <p className="mt-1.5 font-sans text-meta text-ink-2">
+            <p className="mt-1.5 font-sans text-meta text-gray-11">
               Removed {result.deletedSignals} signal{result.deletedSignals === 1 ? '' : 's'}
               {result.prunedIssues > 0
                 ? ` and pruned ${result.prunedIssues} issue${result.prunedIssues === 1 ? '' : 's'} left with none`

@@ -9,7 +9,7 @@ function Caret({ open, loading }: { open: boolean; loading: boolean }) {
   return (
     <span
       aria-hidden
-      className={cn('inline-block size-2.5 shrink-0 bg-ink-3 transition-transform', open && 'rotate-90')}
+      className={cn('inline-block size-2.5 shrink-0 bg-gray-9 transition-transform', open && 'rotate-90')}
       style={{ clipPath: 'polygon(20% 10%, 20% 90%, 80% 50%)' }}
     />
   );
@@ -18,7 +18,7 @@ function Caret({ open, loading }: { open: boolean; loading: boolean }) {
 function Row({ row, onToggle, onSelect }: { row: VisibleRow; onToggle: (path: string) => void; onSelect: (path: string) => void }) {
   if (row.note) {
     return (
-      <div className="py-1 pr-2 font-mono text-meta italic text-ink-3" style={{ paddingLeft: 8 + row.depth * 16 }}>
+      <div className="py-1 pr-2 font-mono text-meta italic text-gray-9" style={{ paddingLeft: 8 + row.depth * 16 }}>
         {row.note}
       </div>
     );
@@ -31,7 +31,7 @@ function Row({ row, onToggle, onSelect }: { row: VisibleRow; onToggle: (path: st
         tabIndex={-1}
         aria-label={`${row.expanded ? 'collapse' : 'expand'} ${row.path}`}
         onClick={() => onToggle(row.path)}
-        className="grid size-4 shrink-0 place-items-center rounded hover:bg-inset"
+        className="grid size-4 shrink-0 place-items-center rounded hover:bg-surface-inset"
       >
         <Caret open={row.expanded} loading={row.loading} />
       </button>
@@ -46,26 +46,26 @@ function Row({ row, onToggle, onSelect }: { row: VisibleRow; onToggle: (path: st
         onClick={() => onSelect(row.path)}
         className={cn(
           'flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-1.5 py-1 text-left font-mono text-meta',
-          'hover:bg-inset',
-          row.selected && 'bg-accent-subtle font-medium text-accent',
-          row.focused && 'outline outline-2 -outline-offset-1 outline-accent',
+          'hover:bg-surface-inset',
+          row.selected && 'bg-indigo-3 font-medium text-indigo-9',
+          row.focused && 'outline outline-2 -outline-offset-1 outline-indigo-9',
         )}
       >
         {row.isRoot ? (
-          <span className="shrink-0 rounded border border-control px-1 font-mono text-[11px] leading-[15px] text-ink-2">{row.symbol}</span>
+          <span className="shrink-0 rounded border border-gray-7 px-1 font-mono text-[11px] leading-[15px] text-gray-11">{row.symbol}</span>
         ) : (
           <span
             aria-hidden
             className={cn(
               'size-3 shrink-0 rounded-[2px] border',
-              row.error ? 'border-danger' : 'border-folder',
+              row.error ? 'border-red-9' : 'border-folder',
               row.expanded && !row.error && 'bg-folder',
             )}
           />
         )}
         <span className="truncate">{row.isRoot ? row.annotation : row.label}</span>
-        {row.error ? <span className="ml-auto shrink-0 font-mono text-[10.5px] text-danger">{row.error}</span> : null}
-        {row.selected ? <span className="ml-auto shrink-0 text-accent">✓</span> : null}
+        {row.error ? <span className="ml-auto shrink-0 font-mono text-[10.5px] text-red-9">{row.error}</span> : null}
+        {row.selected ? <span className="ml-auto shrink-0 text-indigo-9">✓</span> : null}
       </button>
     </div>
   );
@@ -85,7 +85,7 @@ export function DirectoryTree({ roots, selected, onSelect }: DirectoryTreeProps)
       tabIndex={0}
       aria-activedescendant={tree.focus ? `dtree-${encodeURIComponent(tree.focus)}` : undefined}
       onKeyDown={tree.onKeyDown}
-      className="max-h-[250px] overflow-y-auto rounded-lg bg-inset p-1 outline-none"
+      className="max-h-[250px] overflow-y-auto rounded-lg bg-surface-inset p-1 outline-none"
     >
       {tree.rows.map((row) => (
         <Row key={row.path} row={row} onToggle={tree.toggle} onSelect={tree.select} />

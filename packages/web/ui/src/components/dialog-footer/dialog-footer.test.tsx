@@ -30,7 +30,7 @@ describe('DialogFooter', () => {
   it('right-aligns with a top hairline border by default', () => {
     const { container } = render(<DialogFooter cancel="Cancel" />);
     const el = container.firstElementChild!;
-    for (const cls of ['flex', 'items-center', 'justify-end', 'border-t', 'border-hairline']) {
+    for (const cls of ['flex', 'items-center', 'justify-end', 'border-t', 'border-gray-6']) {
       expect(el.className).toContain(cls);
     }
   });

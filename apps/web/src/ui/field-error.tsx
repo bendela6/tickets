@@ -5,7 +5,7 @@ export function FieldError({ className, ...rest }: HTMLAttributes<HTMLParagraphE
   return (
     <p
       role="alert"
-      className={cn('mt-1.25 font-sans text-meta text-danger', className)}
+      className={cn('mt-1.25 font-sans text-meta text-red-9', className)}
       {...rest}
     />
   );

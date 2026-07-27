@@ -24,21 +24,21 @@ export function GeneratedCode({
 
   if (!playground) {
     return (
-      <p className="font-sans text-meta text-ink-3">This component has no playground controls.</p>
+      <p className="font-sans text-meta text-gray-9">This component has no playground controls.</p>
     );
   }
 
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-baseline justify-between gap-4">
-        <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3">
+        <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9">
           CODE
         </span>
-        <span className="font-mono text-label text-ink-3">generated from current controls</span>
+        <span className="font-mono text-label text-gray-9">generated from current controls</span>
       </div>
       <CodeBlock code={code} />
       {omitted.length > 0 && (
-        <p className="font-mono text-meta text-ink-3">
+        <p className="font-mono text-meta text-gray-9">
           {omitted.map((key) => `${key} unset → omitted`).join(' · ')}
         </p>
       )}

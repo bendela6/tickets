@@ -2,9 +2,6 @@ import lightTokens from '../../tokens/next/colors.light.tokens.json';
 import darkTokens from '../../tokens/next/colors.dark.tokens.json';
 import semanticTokens from '../../tokens/next/semantic.tokens.json';
 import toneTokens from '../../tokens/next/tones.tokens.json';
-import primitives from '../../tokens/source/primitives.tokens.json';
-import semanticLight from '../../tokens/source/semantic.light.tokens.json';
-import semanticDark from '../../tokens/source/semantic.dark.tokens.json';
 
 export const HUES = toneTokens.hues as readonly string[];
 export const STEPS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
@@ -189,40 +186,15 @@ export function advisoryPairings(scales?: readonly string[]): Pairing[] {
 // ---------------------------------------------------------------------------
 
 /**
- * Resolve one semantic token name to its hex, following one level of
- * `{group.name}` alias into the primitives — mirroring
- * scripts/build-tokens.mjs resolveTokenMaps(). `ink-3` comes from the dark
- * theme; everything else from light.
+ * The colour-picker presets offered when someone gives an item type, a status
+ * or a highlight its own colour.
+ *
+ * FROZEN LITERALS, not derived tokens. Each of these is written into the
+ * database as a hex the moment someone picks it, so a row saved last year
+ * still holds the exact string below. They were originally resolved from the
+ * pre-numbered token set; five of the six happen to equal a ramp step today
+ * (indigo-9, green-9, orange-9, blue-9, gray-9-dark) but the fourth does not —
+ * the old option-red sat two steps darker than red-9. Deriving them would let
+ * a future re-anchor silently repaint saved rows, so they do not move.
  */
-function resolvePreset(name: string): string {
-  const semantic = name === 'ink-3' ? semanticDark : semanticLight;
-
-  for (const entries of Object.values(
-    semantic as Record<string, Record<string, { $value: string }>>,
-  )) {
-    const token = entries[name];
-    if (!token) continue;
-    const match = /^\{([^}]+)\}$/.exec(token.$value);
-    if (!match) return token.$value.toUpperCase();
-    const [group, primitiveName] = match[1]!.split('.', 2) as [string, string];
-    const primitive = (primitives as Record<string, Record<string, { $value: string }>>)[group]?.[
-      primitiveName
-    ];
-    if (!primitive) throw new Error(`Unresolved alias {${match[1]}} for preset token "${name}"`);
-    return primitive.$value.toUpperCase();
-  }
-
-  throw new Error(`Unknown preset token "${name}"`);
-}
-
-/**
- * The colour-picker presets offered when someone gives an item type, a status,
- * or a highlight its own colour. Not part of the scale above and deliberately
- * so: the picked value is written to the database as a literal hex, so these
- * six resolve from the SHIPPED token files rather than the proposed numbered
- * palette. Re-anchoring a ramp must not silently repaint rows that were saved
- * years ago — changing this list is a data migration, not a restyle.
- */
-export const SWATCHES = ['accent', 'opt-green', 'opt-orange', 'opt-red', 'opt-blue', 'ink-3'].map(
-  resolvePreset,
-);
+export const SWATCHES = ['#4E46C6', '#2E7042', '#A44E14', '#A03028', '#2A5DAE', '#79756A'];

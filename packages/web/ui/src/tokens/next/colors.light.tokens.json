@@ -34,11 +34,11 @@
     },
     "gray-9": {
       "$type": "color",
-      "$value": "#918d80"
+      "$value": "#777368"
     },
     "gray-10": {
       "$type": "color",
-      "$value": "#777368"
+      "$value": "#6a665b"
     },
     "gray-11": {
       "$type": "color",
@@ -530,7 +530,7 @@
     },
     "gray-contrast": {
       "$type": "color",
-      "$value": "#25231d"
+      "$value": "#ffffff"
     },
     "red-contrast": {
       "$type": "color",

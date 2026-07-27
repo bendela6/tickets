@@ -13,18 +13,18 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 // swaps its border to accent on focus; destructive halos in danger-subtle.
 const variantClasses = {
   primary:
-    'bg-accent text-on-accent border border-transparent hover:bg-accent-hover ' +
-    'focus-visible:ring-[3px] focus-visible:ring-accent-subtle ' +
-    'focus-visible:shadow-[inset_0_0_0_1px_var(--color-app)]',
+    'bg-indigo-9 text-indigo-contrast border border-transparent hover:bg-indigo-10 ' +
+    'focus-visible:ring-[3px] focus-visible:ring-indigo-3 ' +
+    'focus-visible:shadow-[inset_0_0_0_1px_var(--color-gray-1)]',
   secondary:
-    'bg-raised text-ink border border-control hover:bg-inset hover:border-ink-3 ' +
-    'focus-visible:ring-[3px] focus-visible:ring-accent-subtle focus-visible:border-accent',
+    'bg-surface-raised text-gray-12 border border-gray-7 hover:bg-surface-inset hover:border-gray-9 ' +
+    'focus-visible:ring-[3px] focus-visible:ring-indigo-3 focus-visible:border-indigo-9',
   ghost:
-    'bg-transparent text-ink-2 border border-transparent hover:bg-inset hover:text-ink ' +
-    'focus-visible:ring-[3px] focus-visible:ring-accent-subtle',
+    'bg-transparent text-gray-11 border border-transparent hover:bg-surface-inset hover:text-gray-12 ' +
+    'focus-visible:ring-[3px] focus-visible:ring-indigo-3',
   destructive:
-    'bg-danger text-on-danger border border-transparent hover:bg-danger-hover ' +
-    'focus-visible:ring-[3px] focus-visible:ring-danger-subtle',
+    'bg-red-9 text-red-contrast border border-transparent hover:bg-red-10 ' +
+    'focus-visible:ring-[3px] focus-visible:ring-red-3',
 };
 
 // Design's DISABLED row swaps colors per variant (opacity only where the design
@@ -33,18 +33,18 @@ const variantClasses = {
 // is genuinely disabled — a loading button is also `disabled` but must keep its
 // full variant fill (design LOADING row), so these are gated on !loading.
 const disabledClasses = {
-  primary: 'bg-inset text-ink-3',
-  secondary: 'bg-app text-ink-3 border-hairline',
-  ghost: 'text-ink-3 opacity-60',
-  destructive: 'bg-danger-subtle text-danger dark:text-danger opacity-[0.55]',
+  primary: 'bg-surface-inset text-gray-9',
+  secondary: 'bg-gray-1 text-gray-9 border-gray-6',
+  ghost: 'text-gray-9 opacity-60',
+  destructive: 'bg-red-3 text-red-9 dark:text-red-9 opacity-[0.55]',
 };
 
 // NOTE: font-size utilities here use arbitrary lengths (text-[12px]/text-[13px])
 // rather than the semantic `text-ui`/`text-meta` tokens on purpose. tailwind-merge
 // does not know those custom named sizes are font-sizes, so it groups them with
-// `text-{color}` utilities and silently drops the color (e.g. text-on-accent).
+// `text-{color}` utilities and silently drops the color (e.g. text-indigo-contrast).
 // Arbitrary lengths are classified as font-size, so the variant color survives.
-// Radius is per-size (design: 6 / 8 / 10 / 8 px), not the 5px `rounded-ctrl`.
+// Radius is per-size (design: 6 / 8 / 10 / 8 px), not the 5px `rounded-md`.
 const sizeClasses = {
   compact: 'h-7 px-2.5 rounded-[6px] text-[12px]',
   regular: 'h-9 px-3.5 rounded-[8px] text-[13px]',

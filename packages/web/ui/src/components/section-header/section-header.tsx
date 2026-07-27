@@ -49,7 +49,7 @@ export function SectionHeader({
   return (
     <div className={cn('flex items-center gap-2 text-label', className)}>
       <Title
-        className={cn('font-sans text-label font-medium uppercase text-ink-2', titleClassName)}
+        className={cn('font-sans text-label font-medium uppercase text-gray-11', titleClassName)}
       >
         {title}
       </Title>

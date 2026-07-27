@@ -43,7 +43,7 @@ function TableHeader() {
   return (
     <div
       role="row"
-      className="grid h-9 shrink-0 items-center border-b border-hairline bg-app px-3.5 font-sans text-label font-medium tracking-wider text-ink-2 uppercase"
+      className="grid h-9 shrink-0 items-center border-b border-gray-6 bg-gray-1 px-3.5 font-sans text-label font-medium tracking-wider text-gray-11 uppercase"
       style={{ gridTemplateColumns: ISSUES_GRID_COLUMNS }}
     >
       {HEADER_CELLS.map((cell, index) => (
@@ -124,8 +124,8 @@ export function IssuesScreen() {
   return (
     <div className="flex h-full min-h-0 flex-col p-6 md:p-7">
       <div className="mb-2.5 flex flex-wrap items-center gap-3">
-        <h1 className="m-0 font-sans text-[22px] leading-tight font-semibold text-ink">Signals</h1>
-        <span className="font-mono text-meta text-ink-3">
+        <h1 className="m-0 font-sans text-[22px] leading-tight font-semibold text-gray-12">Signals</h1>
+        <span className="font-mono text-meta text-gray-9">
           {openCount.data?.total ?? 0} open issues · {formatCount(loadedEvents)} events last {days}d
         </span>
       </div>
@@ -155,7 +155,7 @@ export function IssuesScreen() {
         dimmed={isLoading || isError}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[12px] border border-hairline bg-raised">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[12px] border border-gray-6 bg-surface-raised">
         <TableHeader />
 
         {isList ? (
@@ -174,7 +174,7 @@ export function IssuesScreen() {
                 />
               ))}
             </div>
-            <div className="flex h-9.5 shrink-0 items-center gap-2 border-t border-hairline bg-app px-3.5 font-mono text-[11px] text-ink-3">
+            <div className="flex h-9.5 shrink-0 items-center gap-2 border-t border-gray-6 bg-gray-1 px-3.5 font-mono text-[11px] text-gray-9">
               <span>{total} issues</span>
               <span className="flex-1" />
               {total > PER_PAGE ? (
@@ -184,7 +184,7 @@ export function IssuesScreen() {
                     aria-label="Previous page"
                     disabled={page <= 1}
                     onClick={() => setPage((current) => Math.max(1, current - 1))}
-                    className="disabled:pointer-events-none disabled:opacity-40 hover:text-ink"
+                    className="disabled:pointer-events-none disabled:opacity-40 hover:text-gray-12"
                   >
                     ‹
                   </button>
@@ -196,7 +196,7 @@ export function IssuesScreen() {
                     aria-label="Next page"
                     disabled={page >= pageCount}
                     onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
-                    className="disabled:pointer-events-none disabled:opacity-40 hover:text-ink"
+                    className="disabled:pointer-events-none disabled:opacity-40 hover:text-gray-12"
                   >
                     ›
                   </button>
@@ -213,7 +213,7 @@ export function IssuesScreen() {
                 <IssueRowSkeleton key={index} index={index} />
               ))}
             </div>
-            <div className="flex h-9.5 shrink-0 items-center gap-2.5 border-t border-hairline bg-app px-3.5 font-mono text-[11px] text-ink-3">
+            <div className="flex h-9.5 shrink-0 items-center gap-2.5 border-t border-gray-6 bg-gray-1 px-3.5 font-mono text-[11px] text-gray-9">
               <Spinner size={11} tone="secondary" />
               <span>loading issues…</span>
             </div>
@@ -229,7 +229,7 @@ export function IssuesScreen() {
               title="Couldn't load issues"
               body={
                 <>
-                  <div className="font-mono text-[11.5px] leading-relaxed text-ink-3">{displayUrl(filters)}</div>
+                  <div className="font-mono text-[11.5px] leading-relaxed text-gray-9">{displayUrl(filters)}</div>
                   <div className="mt-1">
                     The signals daemon isn't responding. Check that it's running, then try again.
                   </div>
@@ -239,7 +239,7 @@ export function IssuesScreen() {
                 <button
                   type="button"
                   onClick={() => void issuesQuery.refetch()}
-                  className="h-8 rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink hover:bg-inset"
+                  className="h-8 rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-medium text-gray-12 hover:bg-surface-inset"
                 >
                   ↻ Retry
                 </button>
@@ -263,11 +263,11 @@ export function IssuesScreen() {
               }
               body={`Everything reported in the last ${days} days is resolved or ignored. New errors will open issues here automatically.`}
               action={
-                <span className="font-mono text-meta text-ink-3">
+                <span className="font-mono text-meta text-gray-9">
                   view{' '}
                   <button
                     type="button"
-                    className="text-accent hover:underline"
+                    className="text-indigo-9 hover:underline"
                     onClick={() => setStatus('resolved')}
                   >
                     resolved ({resolvedCount.data?.total ?? 0})
@@ -275,7 +275,7 @@ export function IssuesScreen() {
                   ·{' '}
                   <button
                     type="button"
-                    className="text-accent hover:underline"
+                    className="text-indigo-9 hover:underline"
                     onClick={() => setStatus('ignored')}
                   >
                     ignored ({ignoredCount.data?.total ?? 0})

@@ -7,7 +7,7 @@ export function ItemKey({ prefix, number, muted, className }: ItemKeyProps) {
     <span
       className={cn(
         'font-mono text-meta font-medium',
-        muted ? 'text-ink-3' : 'text-ink',
+        muted ? 'text-gray-9' : 'text-gray-12',
         className,
       )}
     >

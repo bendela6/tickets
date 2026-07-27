@@ -26,7 +26,7 @@ describe('Tabs', () => {
     const { container: u } = render(<Tabs items={items} value="board" onChange={() => {}} />);
     expect(u.querySelector('[role="tablist"]')!.className).toContain('border-b');
     const { container: p } = render(<Tabs variant="pill" items={items} value="board" onChange={() => {}} />);
-    expect(p.querySelector('[role="tablist"]')!.className).toContain('bg-inset');
+    expect(p.querySelector('[role="tablist"]')!.className).toContain('bg-surface-inset');
     const { container: r } = render(<Tabs variant="rail" items={items} value="board" onChange={() => {}} />);
     expect(r.querySelector('[role="tablist"]')!.className).toContain('flex-col');
   });

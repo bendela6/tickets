@@ -53,10 +53,10 @@ function PeopleRow({ item, selected }: { item: SuggestionItem; selected: boolean
   return (
     <>
       <Avatar name={item.label} kind={item.kind ?? 'human'} size="sm" />
-      <span className="truncate font-sans text-ui font-medium text-ink">{item.label}</span>
-      <span className="shrink-0 font-mono text-meta text-ink-3">{agent ? 'agent' : deriveHandle(item.label)}</span>
+      <span className="truncate font-sans text-ui font-medium text-gray-12">{item.label}</span>
+      <span className="shrink-0 font-mono text-meta text-gray-9">{agent ? 'agent' : deriveHandle(item.label)}</span>
       <span className="flex-1" />
-      {selected ? <span className="shrink-0 font-mono text-[11px] text-ink-3">↩</span> : null}
+      {selected ? <span className="shrink-0 font-mono text-[11px] text-gray-9">↩</span> : null}
     </>
   );
 }
@@ -64,10 +64,10 @@ function PeopleRow({ item, selected }: { item: SuggestionItem; selected: boolean
 function TicketRow({ item }: { item: SuggestionItem }) {
   return (
     <>
-      <span className="shrink-0 rounded-ctrl border border-hairline bg-app px-1.5 py-0.5 font-mono text-[11px] font-medium text-ink-2">
+      <span className="shrink-0 rounded-md border border-gray-6 bg-gray-1 px-1.5 py-0.5 font-mono text-[11px] font-medium text-gray-11">
         {item.label}
       </span>
-      <span className="min-w-0 flex-1 truncate font-sans text-ui text-ink">{item.title}</span>
+      <span className="min-w-0 flex-1 truncate font-sans text-ui text-gray-12">{item.title}</span>
       <span className={cn('size-2 shrink-0 rounded-full', statusDotClass(item.statusKind))} />
     </>
   );
@@ -131,16 +131,16 @@ const SuggestionList = forwardRef<SuggestionListHandle, SuggestionListProps>(fun
   return (
     <div
       className={cn(
-        'fixed z-50 rounded-[10px] border border-hairline bg-raised p-1.25 shadow-lg',
+        'fixed z-50 rounded-[10px] border border-gray-6 bg-surface-raised p-1.25 shadow-lg',
         width,
       )}
       style={{ left: rect?.left ?? 0, top: rect?.bottom ?? 0 }}
     >
       {items.length === 0 ? (
-        <div className="px-2.25 py-1.5 font-sans text-ui text-ink-2">No matches</div>
+        <div className="px-2.25 py-1.5 font-sans text-ui text-gray-11">No matches</div>
       ) : (
         <>
-          <div className="px-2.25 pt-1.25 pb-1 font-mono text-[10px] font-medium tracking-widest text-ink-3">
+          <div className="px-2.25 pt-1.25 pb-1 font-mono text-[10px] font-medium tracking-widest text-gray-9">
             {sectionLabel}
           </div>
           {items.map((item, index) => {
@@ -150,7 +150,7 @@ const SuggestionList = forwardRef<SuggestionListHandle, SuggestionListProps>(fun
                 key={item.id ?? item.label}
                 className={cn(
                   'flex h-8.5 cursor-pointer items-center gap-2.25 rounded-md px-2.25',
-                  isSelected ? 'bg-inset' : 'hover:bg-app',
+                  isSelected ? 'bg-surface-inset' : 'hover:bg-gray-1',
                 )}
                 // Suggestion's mousedown-driven selection would otherwise blur
                 // the editor before the click registers as a pick.

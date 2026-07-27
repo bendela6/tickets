@@ -11,16 +11,16 @@ type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 // that didn't wire `sources` get a muted note instead of a block.
 export function DemoTab({ demo, source }: { demo: LiveDemo; source?: string }) {
   if (source === undefined) {
-    return <p className="font-sans text-meta text-ink-3">Source unavailable for this demo.</p>;
+    return <p className="font-sans text-meta text-gray-9">Source unavailable for this demo.</p>;
   }
 
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-center justify-between">
-        <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3">
+        <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9">
           {fileName(demo.path).toUpperCase()}
         </span>
-        <span className="font-mono text-meta text-ink-3">{source.split('\n').length} lines</span>
+        <span className="font-mono text-meta text-gray-9">{source.split('\n').length} lines</span>
       </div>
       <CodeBlock code={source} numbered />
     </div>

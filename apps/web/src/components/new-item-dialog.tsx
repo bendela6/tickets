@@ -44,17 +44,17 @@ function rowsForType(indexes: BoardIndexes, type: ItemType): PlacementRow[] {
 // 36px icon tile on each type card: type.config.color lands on the nearest
 // Instrument option color; colorless types get the neutral inset/ink-2 pair.
 const iconColorClasses: Record<OptionColor, string> = {
-  red: 'bg-opt-red-subtle text-opt-red',
-  orange: 'bg-opt-orange-subtle text-opt-orange',
-  yellow: 'bg-opt-yellow-subtle text-opt-yellow',
-  green: 'bg-opt-green-subtle text-opt-green',
-  teal: 'bg-opt-teal-subtle text-opt-teal',
-  cyan: 'bg-opt-cyan-subtle text-opt-cyan',
-  blue: 'bg-opt-blue-subtle text-opt-blue',
-  indigo: 'bg-opt-indigo-subtle text-opt-indigo',
-  purple: 'bg-opt-purple-subtle text-opt-purple',
-  pink: 'bg-opt-pink-subtle text-opt-pink',
-  gray: 'bg-opt-gray-subtle text-opt-gray',
+  red: 'bg-red-3 text-red-9',
+  orange: 'bg-orange-3 text-orange-9',
+  yellow: 'bg-yellow-3 text-yellow-9',
+  green: 'bg-green-3 text-green-9',
+  teal: 'bg-teal-3 text-teal-9',
+  cyan: 'bg-cyan-3 text-cyan-9',
+  blue: 'bg-blue-3 text-blue-9',
+  indigo: 'bg-indigo-3 text-indigo-9',
+  purple: 'bg-purple-3 text-purple-9',
+  pink: 'bg-pink-3 text-pink-9',
+  gray: 'bg-gray-3 text-gray-9',
 };
 
 function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
@@ -64,11 +64,11 @@ function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
       aria-hidden
       className={cn(
         'flex size-9 shrink-0 items-center justify-center rounded-[10px]',
-        colored ? iconColorClasses[hexToOptionColor(type.config.color)] : 'bg-inset text-ink-2',
+        colored ? iconColorClasses[hexToOptionColor(type.config.color)] : 'bg-surface-inset text-gray-11',
       )}
     >
       {dashed ? (
-        <span className="size-2.5 shrink-0 rounded-xs border-[1.5px] border-dashed border-ink-3" />
+        <span className="size-2.5 shrink-0 rounded-xs border-[1.5px] border-dashed border-gray-9" />
       ) : (
         <span className="size-2.5 shrink-0 rounded-xs bg-current" />
       )}
@@ -78,8 +78,8 @@ function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
 
 function ProjectChip({ project }: { project: Project }) {
   return (
-    <span className="inline-flex h-7 shrink-0 items-center gap-1.75 rounded-[7px] border border-hairline px-2.5 font-sans text-ui font-medium text-ink">
-      <span className="rounded-sm bg-inset px-1.25 py-0.5 font-mono text-label font-medium">
+    <span className="inline-flex h-7 shrink-0 items-center gap-1.75 rounded-[7px] border border-gray-6 px-2.5 font-sans text-ui font-medium text-gray-12">
+      <span className="rounded-sm bg-surface-inset px-1.25 py-0.5 font-mono text-label font-medium">
         {project.itemPrefix}
       </span>
       {project.name}
@@ -94,9 +94,9 @@ function CloseButton() {
         type="button"
         aria-label="Close"
         className={cn(
-          'flex size-7.5 shrink-0 items-center justify-center rounded-[7px] border border-hairline bg-transparent',
-          'text-ink-2 hover:bg-inset hover:text-ink',
-          'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-accent-subtle',
+          'flex size-7.5 shrink-0 items-center justify-center rounded-[7px] border border-gray-6 bg-transparent',
+          'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
+          'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-3',
         )}
       >
         ×
@@ -286,9 +286,9 @@ export function NewItemDialog({
       >
         {type === null ? (
           <>
-            <header className="flex items-center gap-2.5 border-b border-hairline px-5 py-4">
+            <header className="flex items-center gap-2.5 border-b border-gray-6 px-5 py-4">
               <DialogTitle>New item</DialogTitle>
-              <span className="font-sans text-ui text-ink-2">in</span>
+              <span className="font-sans text-ui text-gray-11">in</span>
               <ProjectChip project={board.project} />
               <span className="flex-1" />
               <CloseButton />
@@ -303,17 +303,17 @@ export function NewItemDialog({
                     type="button"
                     onClick={() => pick(candidate)}
                     className={cn(
-                      'flex w-full items-center gap-3 rounded-panel border border-hairline bg-transparent px-4 py-3.5 text-left',
-                      'hover:border-control hover:bg-app',
-                      'focus-visible:border-accent focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-accent-subtle',
+                      'flex w-full items-center gap-3 rounded-xl border border-gray-6 bg-transparent px-4 py-3.5 text-left',
+                      'hover:border-gray-7 hover:bg-gray-1',
+                      'focus-visible:border-indigo-9 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-3',
                     )}
                   >
                     <TypeIcon type={candidate} />
                     <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className="font-sans text-[14px] font-semibold text-ink">
+                      <span className="font-sans text-[14px] font-semibold text-gray-12">
                         {candidate.label}
                       </span>
-                      <span className="font-sans text-meta text-ink-2">
+                      <span className="font-sans text-meta text-gray-11">
                         {candidateRows.length} {candidateRows.length === 1 ? 'field' : 'fields'} ·{' '}
                         {requiredCount} required
                       </span>
@@ -321,7 +321,7 @@ export function NewItemDialog({
                     {index < 9 ? (
                       <span
                         aria-hidden
-                        className="shrink-0 rounded-sm border border-hairline px-1.5 py-px font-mono text-label text-ink-3"
+                        className="shrink-0 rounded-sm border border-gray-6 px-1.5 py-px font-mono text-label text-gray-9"
                       >
                         {index + 1}
                       </span>
@@ -330,21 +330,21 @@ export function NewItemDialog({
                 );
               })}
               {subtaskType ? (
-                <div className="flex items-center gap-3 rounded-panel border border-dashed border-hairline px-4 py-3 opacity-65">
+                <div className="flex items-center gap-3 rounded-xl border border-dashed border-gray-6 px-4 py-3 opacity-65">
                   <TypeIcon type={subtaskType} dashed />
                   <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="font-sans text-[14px] font-semibold text-ink-2">
+                    <span className="font-sans text-[14px] font-semibold text-gray-11">
                       {subtaskType.label}
                     </span>
-                    <span className="font-sans text-meta text-ink-3">
+                    <span className="font-sans text-meta text-gray-9">
                       Created from a parent item&rsquo;s Subtasks section — not from here
                     </span>
                   </span>
                 </div>
               ) : null}
             </div>
-            <footer className="border-t border-hairline bg-app px-5 py-3">
-              <p className="m-0 font-sans text-meta text-ink-2">
+            <footer className="border-t border-gray-6 bg-gray-1 px-5 py-3">
+              <p className="m-0 font-sans text-meta text-gray-11">
                 🔒 Type is permanent — it decides this item&rsquo;s form and can&rsquo;t be changed
                 after creation.
               </p>
@@ -352,14 +352,14 @@ export function NewItemDialog({
           </>
         ) : (
           <>
-            <header className="flex items-center gap-2.5 border-b border-hairline px-5 py-4">
+            <header className="flex items-center gap-2.5 border-b border-gray-6 px-5 py-4">
               {selectable.length > 1 ? (
                 <button
                   type="button"
                   onClick={() => setPickedTypeId(null)}
                   className={cn(
-                    'shrink-0 rounded-ctrl bg-transparent font-sans text-meta font-medium text-accent hover:text-accent-hover',
-                    'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-accent-subtle',
+                    'shrink-0 rounded-md bg-transparent font-sans text-meta font-medium text-indigo-9 hover:text-indigo-10',
+                    'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-3',
                   )}
                 >
                   ‹ Type
@@ -371,7 +371,7 @@ export function NewItemDialog({
                 label={`${type.label} · 🔒 permanent`}
                 className={cn(typePill.className, 'shrink-0')}
               />
-              <span className="font-sans text-ui text-ink-2">in</span>
+              <span className="font-sans text-ui text-gray-11">in</span>
               <ProjectChip project={board.project} />
               <span className="flex-1" />
               <CloseButton />
@@ -430,7 +430,7 @@ export function NewItemDialog({
                 </div>
               ))}
             </div>
-            <footer className="flex items-center gap-2.5 border-t border-hairline bg-inset px-5 py-3.5">
+            <footer className="flex items-center gap-2.5 border-t border-gray-6 bg-surface-inset px-5 py-3.5">
               {workflowField ? (
                 <div className="w-48 shrink-0">
                   <StatusSelect
@@ -444,11 +444,11 @@ export function NewItemDialog({
               <span className="flex-1" />
               {apiError ? <FieldError className="m-0">{apiError}</FieldError> : null}
               {userId === null ? (
-                <span className="font-sans text-meta text-danger">
+                <span className="font-sans text-meta text-red-9">
                   Pick a user in the header first
                 </span>
               ) : (
-                <span aria-hidden className="font-mono text-label text-ink-3">
+                <span aria-hidden className="font-mono text-label text-gray-9">
                   ⌘↵ create
                 </span>
               )}
@@ -519,13 +519,13 @@ export function SubtaskQuickCreate({
   return (
     <div
       className={cn(
-        'flex items-center gap-2.5 rounded-[10px] border border-control bg-raised py-1.5 pl-3.25 pr-1.5',
-        'focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent-subtle',
+        'flex items-center gap-2.5 rounded-[10px] border border-gray-7 bg-surface-raised py-1.5 pl-3.25 pr-1.5',
+        'focus-within:border-indigo-9 focus-within:ring-[3px] focus-within:ring-indigo-3',
       )}
     >
       <span
         aria-hidden
-        className="size-2.25 shrink-0 rounded-full border-[1.5px] border-dashed border-control"
+        className="size-2.25 shrink-0 rounded-full border-[1.5px] border-dashed border-gray-7"
       />
       <input
         value={title}
@@ -539,9 +539,9 @@ export function SubtaskQuickCreate({
             void create();
           }
         }}
-        className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-[14px] text-ink outline-none placeholder:text-ink-3"
+        className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-[14px] text-gray-12 outline-none placeholder:text-gray-9"
       />
-      <span aria-hidden className="hidden shrink-0 font-mono text-[10px] text-ink-3 sm:inline">
+      <span aria-hidden className="hidden shrink-0 font-mono text-[10px] text-gray-9 sm:inline">
         ↵ creates {board.project.itemPrefix}-{nextNumber}
       </span>
       <Combobox

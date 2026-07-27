@@ -6,11 +6,11 @@ type FieldLabelProps = LabelHTMLAttributes<HTMLLabelElement> & { required?: bool
 export function FieldLabel({ required, className, children, ...rest }: FieldLabelProps) {
   return (
     <label
-      className={cn('block font-sans text-label font-medium uppercase text-ink-2', className)}
+      className={cn('block font-sans text-label font-medium uppercase text-gray-11', className)}
       {...rest}
     >
       {children}
-      {required ? <span className="text-danger"> *</span> : null}
+      {required ? <span className="text-red-9"> *</span> : null}
     </label>
   );
 }

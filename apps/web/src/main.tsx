@@ -21,9 +21,9 @@ void initWebSignals();
 // throws we still get a reportable error and a way out (reload).
 function AppCrashedFallback() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-app font-sans text-ink">
+    <div className="flex min-h-screen items-center justify-center bg-gray-1 font-sans text-gray-12">
       <div className="flex flex-col items-center gap-4 text-center">
-        <p className="text-ink">Something broke. If Signals is connected, the error was reported.</p>
+        <p className="text-gray-12">Something broke. If Signals is connected, the error was reported.</p>
         <Button variant="primary" onClick={() => location.reload()}>
           Reload
         </Button>

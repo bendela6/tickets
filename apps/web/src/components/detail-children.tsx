@@ -72,7 +72,7 @@ export function DetailChildren({
                 max={100}
                 className="w-15"
               />
-              <span className="font-mono text-label text-ink-3">
+              <span className="font-mono text-label text-gray-9">
                 {progress.done}/{progress.total} done
               </span>
             </>
@@ -80,7 +80,7 @@ export function DetailChildren({
         }
         className="mb-2 gap-2.5"
       />
-      <div className="overflow-hidden rounded-[10px] border border-hairline">
+      <div className="overflow-hidden rounded-[10px] border border-gray-6">
         {children.map((child) => {
           const wf = indexes.workflowField(child.typeId);
           const rawStatus = wf ? child.values[wf.key] : undefined;
@@ -104,7 +104,7 @@ export function DetailChildren({
           return (
             <div
               key={child.id}
-              className="flex h-9.5 cursor-pointer items-center gap-2.5 border-b border-hairline px-3 hover:bg-app"
+              className="flex h-9.5 cursor-pointer items-center gap-2.5 border-b border-gray-6 px-3 hover:bg-gray-1"
               onClick={() => onOpenItem(child.number)}
             >
               <span aria-hidden className="inline-flex shrink-0">
@@ -119,7 +119,7 @@ export function DetailChildren({
               <span
                 className={cn(
                   'min-w-0 flex-1 truncate font-sans text-ui',
-                  settled ? 'text-ink-3' : 'text-ink',
+                  settled ? 'text-gray-9' : 'text-gray-12',
                 )}
               >
                 {String(child.values['title'] ?? '')}
@@ -139,7 +139,7 @@ export function DetailChildren({
           );
         })}
         <form
-          className="flex h-9.5 items-center gap-2.5 bg-app px-3"
+          className="flex h-9.5 items-center gap-2.5 bg-gray-1 px-3"
           onSubmit={async (event) => {
             event.preventDefault();
             if (userId === null || title.trim().length === 0) {
@@ -157,10 +157,10 @@ export function DetailChildren({
         >
           <span
             aria-hidden
-            className="size-2.25 shrink-0 rounded-full border-[1.5px] border-dashed border-control"
+            className="size-2.25 shrink-0 rounded-full border-[1.5px] border-dashed border-gray-7"
           />
           <input
-            className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-ui text-ink outline-none placeholder:text-ink-3"
+            className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-ui text-gray-12 outline-none placeholder:text-gray-9"
             placeholder="Add subtask — type a title…"
             aria-label="Add subtask"
             value={title}
@@ -168,14 +168,14 @@ export function DetailChildren({
             onChange={(event) => setTitle(event.target.value)}
           />
           {title.trim().length > 0 ? (
-            <span className="shrink-0 font-mono text-[10px] text-ink-3">
+            <span className="shrink-0 font-mono text-[10px] text-gray-9">
               ↵ creates {prefix}-{nextNumber}
             </span>
           ) : null}
         </form>
       </div>
       {createItem.isError ? (
-        <p className="m-0 mt-1.5 font-sans text-meta text-danger">
+        <p className="m-0 mt-1.5 font-sans text-meta text-red-9">
           {(createItem.error as Error).message}
         </p>
       ) : null}

@@ -40,13 +40,13 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-center gap-2.5">
-        <label className="flex items-center gap-2 h-7 px-2.5 border border-control rounded-sm bg-raised font-sans text-ui text-ink cursor-pointer">
+        <label className="flex items-center gap-2 h-7 px-2.5 border border-gray-7 rounded-sm bg-surface-raised font-sans text-ui text-gray-12 cursor-pointer">
           <span>rows:</span>
           <select
             value={yKey}
             onChange={(e) => onYKeyChange(e.target.value)}
             aria-label="rows"
-            className="appearance-none bg-transparent border-none p-0 font-sans text-ui text-ink cursor-pointer"
+            className="appearance-none bg-transparent border-none p-0 font-sans text-ui text-gray-12 cursor-pointer"
           >
             {selectKeys.map((key) => (
               <option key={key} value={key}>
@@ -54,15 +54,15 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
               </option>
             ))}
           </select>
-          <span className="text-nano text-ink-3">▾</span>
+          <span className="text-nano text-gray-9">▾</span>
         </label>
-        <label className="flex items-center gap-2 h-7 px-2.5 border border-control rounded-sm bg-raised font-sans text-ui text-ink cursor-pointer">
+        <label className="flex items-center gap-2 h-7 px-2.5 border border-gray-7 rounded-sm bg-surface-raised font-sans text-ui text-gray-12 cursor-pointer">
           <span>columns:</span>
           <select
             value={xKey}
             onChange={(e) => onXKeyChange(e.target.value)}
             aria-label="columns"
-            className="appearance-none bg-transparent border-none p-0 font-sans text-ui text-ink cursor-pointer"
+            className="appearance-none bg-transparent border-none p-0 font-sans text-ui text-gray-12 cursor-pointer"
           >
             {selectKeys.map((key) => (
               <option key={key} value={key}>
@@ -70,10 +70,10 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
               </option>
             ))}
           </select>
-          <span className="text-nano text-ink-3">▾</span>
+          <span className="text-nano text-gray-9">▾</span>
         </label>
         <div className="flex-1" />
-        <div className="font-mono text-label text-ink-3">
+        <div className="font-mono text-label text-gray-9">
           matrix: {yKey} × {xKey}
         </div>
       </div>
@@ -92,7 +92,7 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
         {x.map((xVal, xi) => (
           <div
             key={`header-${xi}`}
-            className="flex items-center justify-center font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3"
+            className="flex items-center justify-center font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9"
           >
             {xVal}
           </div>
@@ -104,7 +104,7 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
           items.push(
             <div
               key={`label-${yi}`}
-              className="flex items-center justify-center font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3"
+              className="flex items-center justify-center font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9"
             >
               {yVal}
             </div>,
@@ -113,7 +113,7 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
             items.push(
               <div
                 key={`cell-${yi}-${xi}`}
-                className="flex items-center justify-center rounded-card border border-hairline bg-raised px-2 py-3"
+                className="flex items-center justify-center rounded-lg border border-gray-6 bg-surface-raised px-2 py-3"
               >
                 {playground.render(cell(xi, yi) as ControlValues<C>)}
               </div>,

@@ -11,15 +11,15 @@ describe('Pill', () => {
     for (const cls of ['inline-flex', 'h-5.5', 'items-center', 'gap-1.5', 'rounded-md', 'px-2.25', 'text-meta', 'font-medium']) {
       expect(pill.className).toContain(cls);
     }
-    expect(pill.className).toContain('bg-inset');
-    expect(pill.className).toContain('text-ink-3');
+    expect(pill.className).toContain('bg-gray-3');
+    expect(pill.className).toContain('text-gray-11');
   });
 
   it('tone + emphasis resolve through the tone map', () => {
     render(<Pill label="Done" tone="green" />);
-    expect(screen.getByText('Done').closest('span')!.className).toContain('bg-opt-green-subtle');
+    expect(screen.getByText('Done').closest('span')!.className).toContain('bg-green-3');
     render(<Pill label="Hot" tone="orange" emphasis="solid" />);
-    expect(screen.getByText('Hot').closest('span')!.className).toContain('bg-opt-orange');
+    expect(screen.getByText('Hot').closest('span')!.className).toContain('bg-orange-9');
   });
 
   it('icon accepts a name or an element', () => {

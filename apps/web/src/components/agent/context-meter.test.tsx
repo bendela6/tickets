@@ -18,6 +18,6 @@ describe('ContextMeter', () => {
 
   it('marks the fill as over budget near the window', () => {
     render(<ContextMeter contextTokens={195_000} contextWindow={200_000} tokensOut={0} />);
-    expect(screen.getByTestId('context-fill').className).toContain('text-danger');
+    expect(screen.getByTestId('context-fill').className).toContain('text-red-9');
   });
 });

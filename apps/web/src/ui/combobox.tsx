@@ -35,8 +35,8 @@ export function Combobox({
             type="button"
             disabled={disabled}
             className={cn(
-              'flex w-full items-center justify-between gap-2 rounded-ctrl border border-control bg-raised font-sans text-ui text-ink',
-              'hover:border-ink-3 focus:border-accent focus:outline-none focus:ring-[3px] focus:ring-accent-subtle',
+              'flex w-full items-center justify-between gap-2 rounded-md border border-gray-7 bg-surface-raised font-sans text-ui text-gray-12',
+              'hover:border-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3',
               'disabled:opacity-50 disabled:pointer-events-none',
               size === 'compact' ? 'h-7 px-2' : 'h-9 px-3',
               clearable && selected ? 'pr-14' : 'pr-8',
@@ -49,11 +49,11 @@ export function Combobox({
                 <span className="truncate">{selected.label}</span>
               )
             ) : (
-              <span className="truncate text-ink-3">{placeholder}</span>
+              <span className="truncate text-gray-9">{placeholder}</span>
             )}
             <span
               aria-hidden
-              className="pointer-events-none absolute right-2 text-[10px] text-ink-3"
+              className="pointer-events-none absolute right-2 text-[10px] text-gray-9"
             >
               ▾
             </span>
@@ -67,7 +67,7 @@ export function Combobox({
               event.stopPropagation();
               onChange(null);
             }}
-            className="absolute right-7 top-1/2 -translate-y-1/2 rounded-ctrl px-1 text-ink-3 hover:text-ink"
+            className="absolute right-7 top-1/2 -translate-y-1/2 rounded-md px-1 text-gray-9 hover:text-gray-12"
           >
             ×
           </button>

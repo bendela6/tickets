@@ -96,7 +96,7 @@ export function DetailLinks({
         action={
           <button
             type="button"
-            className="font-sans text-meta font-medium text-ink-3 hover:text-ink"
+            className="font-sans text-meta font-medium text-gray-9 hover:text-gray-12"
             onClick={() => setAdding((value) => !value)}
           >
             ＋ Add link
@@ -106,7 +106,7 @@ export function DetailLinks({
       />
       <div className="flex flex-col gap-1.5">
         {item.links.length === 0 ? (
-          <p className="m-0 font-sans text-meta text-ink-3">No links.</p>
+          <p className="m-0 font-sans text-meta text-gray-9">No links.</p>
         ) : (
           item.links.map((link) => {
             const linkType = board.linkTypes.find((candidate) => candidate.id === link.linkTypeId);
@@ -120,12 +120,12 @@ export function DetailLinks({
             return (
               <div
                 key={link.id}
-                className="flex h-8.5 items-center gap-2.25 rounded-[9px] border border-hairline px-2.75 hover:bg-app"
+                className="flex h-8.5 items-center gap-2.25 rounded-[9px] border border-gray-6 px-2.75 hover:bg-gray-1"
               >
                 <Pill
                   tone={chip.blocked ? 'orange' : 'secondary'}
                   label={chip.text}
-                  className="h-5 rounded-ctrl text-label"
+                  className="h-5 rounded-md text-label"
                 />
                 <button
                   type="button"
@@ -135,10 +135,10 @@ export function DetailLinks({
                   <ItemKey
                     prefix={prefix}
                     number={other.number}
-                    className="text-[11px] hover:text-accent"
+                    className="text-[11px] hover:text-indigo-9"
                   />
                 </button>
-                <span className="min-w-0 flex-1 truncate font-sans text-ui text-ink-2">
+                <span className="min-w-0 flex-1 truncate font-sans text-ui text-gray-11">
                   {String(other.values['title'] ?? '')}
                 </span>
                 <button
@@ -146,7 +146,7 @@ export function DetailLinks({
                   aria-label="Remove link"
                   title="Remove link"
                   disabled={userId === null || deleteLink.isPending}
-                  className="shrink-0 font-sans text-meta text-ink-3 hover:text-danger disabled:opacity-50"
+                  className="shrink-0 font-sans text-meta text-gray-9 hover:text-red-9 disabled:opacity-50"
                   onClick={() => {
                     if (userId !== null) {
                       deleteLink.mutate({ linkId: link.id, actorId: userId });
@@ -192,7 +192,7 @@ export function DetailLinks({
           >
             Link
           </Button>
-          {error ? <span className="font-sans text-meta text-danger">{error}</span> : null}
+          {error ? <span className="font-sans text-meta text-red-9">{error}</span> : null}
         </form>
       ) : null}
     </section>

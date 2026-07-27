@@ -10,7 +10,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   return (
     <label
       className={cn(
-        'group inline-flex cursor-pointer items-center gap-2 font-sans text-ui text-ink has-disabled:cursor-not-allowed',
+        'group inline-flex cursor-pointer items-center gap-2 font-sans text-ui text-gray-12 has-disabled:cursor-not-allowed',
         className,
       )}
     >
@@ -20,12 +20,12 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
           type="checkbox"
           role="switch"
           className={cn(
-            // 32×18 track: solid bg-control when off, bg-accent when on, no border
-            // (a 1px hairline border appears only when disabled, over bg-inset).
-            'peer m-0 h-4.5 w-8 shrink-0 appearance-none rounded-full border-0 bg-control transition-colors',
-            'checked:bg-accent',
-            'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-accent-subtle',
-            'disabled:cursor-not-allowed disabled:border disabled:border-hairline disabled:bg-inset',
+            // 32×18 track: solid bg-gray-7 when off, bg-indigo-9 when on, no border
+            // (a 1px hairline border appears only when disabled, over bg-surface-inset).
+            'peer m-0 h-4.5 w-8 shrink-0 appearance-none rounded-full border-0 bg-gray-7 transition-colors',
+            'checked:bg-indigo-9',
+            'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-3',
+            'disabled:cursor-not-allowed disabled:border disabled:border-gray-6 disabled:bg-surface-inset',
           )}
           {...rest}
         />
@@ -35,12 +35,12 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
             // 14px thumb, inset 2px. Off thumb: white (light) / app (dark).
             // On thumb: white (light) / on-accent (dark). Disabled thumb: hairline.
             'pointer-events-none absolute left-0.5 top-0.5 size-3.5 rounded-full transition-transform',
-            'bg-white dark:bg-app dark:peer-checked:bg-on-accent peer-disabled:bg-hairline',
+            'bg-white dark:bg-gray-1 dark:peer-checked:bg-indigo-contrast peer-disabled:bg-gray-6',
             'peer-checked:translate-x-3.5',
           )}
         />
       </span>
-      <span className="group-has-disabled:text-ink-3">{label}</span>
+      <span className="group-has-disabled:text-gray-9">{label}</span>
     </label>
   );
 });

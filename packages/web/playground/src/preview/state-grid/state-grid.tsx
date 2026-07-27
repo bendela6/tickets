@@ -20,11 +20,11 @@ export const CELL_MIN: Record<DemoSize, string> = {
 export function StateGrid({ demo }: { demo: LiveDemo }) {
   return (
     <section id={demo.slug} className="flex flex-col gap-3">
-      <h2 className="font-sans text-label font-medium uppercase tracking-wider text-ink-2">
+      <h2 className="font-sans text-label font-medium uppercase tracking-wider text-gray-11">
         {demo.meta.title}
       </h2>
       <div className="flex flex-col gap-2.5">
-        <div className="font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3">STATES</div>
+        <div className="font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9">STATES</div>
         <div
           className="pg-state-grid gap-2.5"
           style={runtimeStyle({ '--demo-cell': CELL_MIN[demo.meta.size ?? 'md'] })}
@@ -33,7 +33,7 @@ export function StateGrid({ demo }: { demo: LiveDemo }) {
             <figure
               key={state.slug}
               id={state.slug}
-              className="m-0 flex flex-col items-center gap-3 rounded-card border border-hairline bg-raised px-2.5 pb-3 pt-5"
+              className="m-0 flex flex-col items-center gap-3 rounded-lg border border-gray-6 bg-surface-raised px-2.5 pb-3 pt-5"
             >
               {/* `w-full` (not just max-w-full) so the wrapper has a definite
                   width: the figure is `items-center`, so without it the cell
@@ -44,7 +44,7 @@ export function StateGrid({ demo }: { demo: LiveDemo }) {
               <div className="flex w-full min-w-0 max-w-full items-center justify-center">
                 {state.render()}
               </div>
-              <figcaption className="font-mono text-label text-ink-3">{state.name}</figcaption>
+              <figcaption className="font-mono text-label text-gray-9">{state.name}</figcaption>
             </figure>
           ))}
         </div>
@@ -55,7 +55,7 @@ export function StateGrid({ demo }: { demo: LiveDemo }) {
 
 export function DemoErrorCard({ path, error }: { path: string; error: string }) {
   return (
-    <section className="rounded-card border border-danger bg-danger-subtle p-4 font-mono text-meta text-danger">
+    <section className="rounded-lg border border-red-9 bg-red-3 p-4 font-mono text-meta text-red-9">
       {path}: {error}
     </section>
   );

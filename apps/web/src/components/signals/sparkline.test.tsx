@@ -23,14 +23,14 @@ test('truncates longer series to the most recent 14 bars', () => {
 test('the last bar is not danger-colored when not hot', () => {
   render(<Sparkline counts={FOURTEEN_DAYS} />);
   const bars = screen.getAllByTestId('sparkline-bar');
-  expect(bars.at(-1)?.className).not.toMatch(/bg-danger/);
+  expect(bars.at(-1)?.className).not.toMatch(/bg-red-9/);
 });
 
 test('marks the last bar danger when hot', () => {
   render(<Sparkline counts={FOURTEEN_DAYS} hot />);
   const bars = screen.getAllByTestId('sparkline-bar');
-  bars.slice(0, 13).forEach((bar) => expect(bar.className).not.toMatch(/bg-danger/));
-  expect(bars.at(-1)?.className).toMatch(/bg-danger/);
+  bars.slice(0, 13).forEach((bar) => expect(bar.className).not.toMatch(/bg-red-9/));
+  expect(bars.at(-1)?.className).toMatch(/bg-red-9/);
 });
 
 test('heights are normalized to the max, tallest bar reaching the max height', () => {

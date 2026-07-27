@@ -32,38 +32,38 @@ describe('Meter', () => {
   it('defaults to the primary tone fill below any threshold', () => {
     render(<Meter value={10} max={100} />);
     const fill = screen.getByRole('meter').firstElementChild as HTMLElement;
-    expect(fill.className).toContain('bg-accent');
+    expect(fill.className).toContain('bg-indigo-9');
   });
 
   it('respects an explicit tone below any threshold', () => {
     render(<Meter value={10} max={100} tone="green" />);
     const fill = screen.getByRole('meter').firstElementChild as HTMLElement;
-    expect(fill.className).toContain('bg-opt-green');
+    expect(fill.className).toContain('bg-green-9');
   });
 
   it('switches the fill to the warning tone at warnAt', () => {
     render(<Meter value={80} max={100} warnAt={80} />);
     const fill = screen.getByRole('meter').firstElementChild as HTMLElement;
-    expect(fill.className).toContain('bg-opt-orange');
+    expect(fill.className).toContain('bg-orange-9');
   });
 
   it('does not warn below warnAt', () => {
     render(<Meter value={79} max={100} warnAt={80} />);
     const fill = screen.getByRole('meter').firstElementChild as HTMLElement;
-    expect(fill.className).not.toContain('bg-opt-orange');
+    expect(fill.className).not.toContain('bg-orange-9');
   });
 
   it('switches the fill to the danger tone at dangerAt', () => {
     render(<Meter value={95} max={100} dangerAt={95} />);
     const fill = screen.getByRole('meter').firstElementChild as HTMLElement;
-    expect(fill.className).toContain('bg-danger');
+    expect(fill.className).toContain('bg-red-9');
   });
 
   it('prefers danger over warn when both thresholds are crossed', () => {
     render(<Meter value={99} max={100} warnAt={80} dangerAt={95} />);
     const fill = screen.getByRole('meter').firstElementChild as HTMLElement;
-    expect(fill.className).toContain('bg-danger');
-    expect(fill.className).not.toContain('bg-opt-orange');
+    expect(fill.className).toContain('bg-red-9');
+    expect(fill.className).not.toContain('bg-orange-9');
   });
 
   it('renders label and trailing content', () => {

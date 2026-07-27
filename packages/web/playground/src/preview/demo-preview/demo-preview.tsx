@@ -22,10 +22,10 @@ export function DemoPreview({ demo }: { demo: LiveDemo }) {
 
   return (
     <div className="flex flex-col gap-2.5">
-      <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-ink-3">
+      <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9">
         PREVIEW
       </span>
-      <div className="flex min-h-32 items-center justify-center rounded-card border border-hairline bg-raised p-7">
+      <div className="flex min-h-32 items-center justify-center rounded-lg border border-gray-6 bg-surface-raised p-7">
         {node}
       </div>
     </div>
