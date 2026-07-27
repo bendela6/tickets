@@ -3,12 +3,13 @@ import { definePlayground, select, text } from '../../gallery';
 import { TONE_NAMES } from '../../style';
 import { RadioGroup } from './radio-group';
 
-function DensityFixture() {
+function DensityFixture({ variant }: { variant?: 'plain' | 'card' } = {}) {
   const [density, setDensity] = useState('comfortable');
   return (
     <RadioGroup
-      name="density"
+      name={`density-${variant ?? 'plain'}`}
       label="Density"
+      variant={variant}
       value={density}
       onValueChange={setDensity}
       options={[
@@ -22,10 +23,12 @@ function DensityFixture() {
 
 function PlaygroundFixture({
   label,
+  variant,
   size,
   tone,
 }: {
   label: string;
+  variant: 'plain' | 'card';
   size: 'sm' | 'md' | 'lg';
   tone?: (typeof TONE_NAMES)[number];
 }) {
@@ -34,6 +37,7 @@ function PlaygroundFixture({
     <RadioGroup
       name="playground"
       label={label}
+      variant={variant}
       size={size}
       tone={tone}
       value={value}
@@ -50,11 +54,13 @@ function PlaygroundFixture({
 export const meta = { title: 'RadioGroup', group: 'Components', size: 'lg' };
 
 export const states = [
-  { name: 'density', render: () => <DensityFixture /> },
+  { name: 'plain', render: () => <DensityFixture /> },
+  { name: 'card', render: () => <DensityFixture variant="card" /> },
 ];
 
 export const playground = definePlayground({
   controls: {
+    variant: select(['plain', 'card'] as const, { initial: 'plain', type: 'RadioGroupVariant' }),
     size: select(['sm', 'md', 'lg'] as const, { initial: 'md', type: 'ToggleSize' }),
     tone: select([...TONE_NAMES], { allowNone: true, type: 'Tone' }),
     label: text('Density'),

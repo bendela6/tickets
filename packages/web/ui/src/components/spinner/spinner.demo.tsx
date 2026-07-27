@@ -36,6 +36,7 @@ export const playground = definePlayground({
       'The one busy indicator. It is a composition over `Icon` — the same `circle-half` glyph with `animate="spin"` — so it inherits the icon system’s sizing and tones rather than inventing its own.',
   },
   controls: {
+    variant: select(['arc', 'dashed', 'pulse'] as const, { initial: 'arc', type: 'SpinnerVariant' }),
     size: select(['2xs', 'xs', 'sm', 'md', 'lg', 'xl', '2xl'] as const, {
       initial: 'md',
       type: 'IconSize',
@@ -48,5 +49,5 @@ export const playground = definePlayground({
         'Leave unset inside a button so the spinner takes the button’s own colour; set it when the spinner stands alone.',
     }),
   },
-  render: (v) => <Spinner size={v.size} tone={v.tone} />,
+  render: (v) => <Spinner variant={v.variant} size={v.size} tone={v.tone} />,
 });
