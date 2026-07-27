@@ -1,4 +1,4 @@
-import { cn, Meter } from '@tickets/ui';
+import { cn, Progress } from '@tickets/ui';
 
 // Agent runs cost real money and the UI must never hide that (screen 10): spend
 // so far, always visible in the session header. With a budget cap it shows
@@ -28,7 +28,10 @@ export function CostMeter({
       {capped ? (
         <>
           <span className="font-mono text-meta text-gray-9">/ ${capUsd.toFixed(2)}</span>
-          <Meter value={costUsd} max={capUsd} dangerAt={capUsd} />
+          <Progress
+            value={(costUsd / capUsd!) * 100}
+            tone={over ? 'danger' : 'primary'}
+          />
         </>
       ) : null}
     </span>

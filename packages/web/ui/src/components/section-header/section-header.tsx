@@ -6,7 +6,7 @@ import { cn } from '../../style/cn';
 // settings tabs' sub-captions, and the two identical inline `Label` helpers
 // in new-session-dialog/agent-editor). `count` renders as a direct sibling
 // of the title in the flex row — so a caller combining pieces with their own
-// gap (a Meter + mono text, an inline hint) gets them spaced by the SAME row
+// gap (a Progress + mono text, an inline hint) gets them spaced by the SAME row
 // gap as the title, matching every existing call site's layout exactly.
 // `action` renders after a flex-1 spacer, pinned to the far right. Content
 // that must sit flush against the title text (e.g. a required-field
@@ -16,7 +16,7 @@ import { cn } from '../../style/cn';
 // sets no font-size of its own (e.g. the `Label` helpers' hint span) —
 // inherits the same 11px caption size the title renders at, instead of
 // falling back to the document default. Callers that need their own size on
-// `count` (a Meter's mono readout) already set it explicitly and win the
+// `count` (a Progress's mono readout) already set it explicitly and win the
 // cascade normally. The title keeps its own `text-label` too so
 // `title carries the uppercase mono-label styling` stays true in isolation.
 export function SectionHeader({

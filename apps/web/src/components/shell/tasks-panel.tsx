@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useMatchRoute, useNavigate } from '@tanstack/react-router';
 import { useProjects } from '../../api/use-projects';
 import { useProjectStats } from '../../api/use-project-stats';
-import { cn, Meter, RailLabel } from '@tickets/ui';
+import { cn, Progress, RailLabel } from '@tickets/ui';
 import { NewProjectDialog } from './new-project-dialog';
 
 function navItemClasses(active: boolean) {
@@ -100,10 +100,9 @@ export function TasksPanel({
                 {project.itemPrefix}
               </span>
               <span className="flex-1 truncate">{project.name}</span>
-              <Meter
+              <Progress
                 tone="green"
                 value={stat?.pct ?? 0}
-                max={100}
                 className="w-6.5"
                 trackClassName="min-w-0"
               />

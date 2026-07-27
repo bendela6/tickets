@@ -5,7 +5,7 @@ import { useCreateItem } from '../api/use-create-item';
 import { usePatchItem } from '../api/use-patch-item';
 import { KIND_ICON, KIND_TONE } from '../domain/status';
 import { useCurrentUser } from '../state/current-user-context';
-import { cn, Icon, ItemKey, Meter, SectionHeader } from '@tickets/ui';
+import { cn, Icon, ItemKey, Progress, SectionHeader } from '@tickets/ui';
 import { StatusSelect } from '../ui/status-select';
 import { childProgress } from '../utils/child-progress';
 import type { BoardIndexes } from '../utils/index-board';
@@ -65,10 +65,9 @@ export function DetailChildren({
         count={
           progress.any ? (
             <>
-              <Meter
+              <Progress
                 tone="green"
                 value={progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0}
-                max={100}
                 className="w-15"
               />
               <span className="font-mono text-label text-gray-9">
