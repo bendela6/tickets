@@ -1,7 +1,7 @@
 import { definePlayground, text } from '../../gallery';
 import { RailLabel } from './rail-label';
 
-export const meta = { title: 'RailLabel', group: 'Ungrouped', size: 'sm' };
+export const meta = { title: 'RailLabel', group: 'Deprecated', size: 'sm' };
 
 export const states = [
   { name: 'Default', render: () => <RailLabel>AGENTS</RailLabel> },

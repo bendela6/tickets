@@ -48,19 +48,23 @@ function validate(mod: unknown): { ok: true; demo: DemoModule } | { ok: false; e
 
 /**
  * The sidebar reads top-down as an argument: what the system is made of, then
- * what is built from it, then everything not yet placed. Alphabetical order
- * would put Components above Foundation and bury Ungrouped in the middle, so
- * these three are ranked explicitly. Any other group sorts alphabetically
- * between Components and Ungrouped — a new group appears in a sensible place
- * without being listed here first.
+ * what is built from it, then what has not been placed yet, and last what is
+ * on the way out. Alphabetical order would put Components above Foundation and
+ * scatter the other two through the middle, so the four are ranked explicitly.
+ *
+ * Any other group sorts alphabetically between Components and Ungrouped, so a
+ * new group lands somewhere sensible without having to be listed here first.
+ * Deprecated stays pinned to the bottom — it is the one group you should never
+ * reach for, and putting it anywhere else invites picking from it by accident.
  */
 const GROUP_ORDER = ['Foundation', 'Components'];
-const UNGROUPED = 'Ungrouped';
+const TRAILING = ['Ungrouped', 'Deprecated'];
 
 function groupRank(group: string): number {
   const explicit = GROUP_ORDER.indexOf(group);
   if (explicit !== -1) return explicit;
-  return group === UNGROUPED ? GROUP_ORDER.length + 1 : GROUP_ORDER.length;
+  const trailing = TRAILING.indexOf(group);
+  return trailing !== -1 ? GROUP_ORDER.length + 1 + trailing : GROUP_ORDER.length;
 }
 
 function compare(a: CollectedDemo, b: CollectedDemo): number {

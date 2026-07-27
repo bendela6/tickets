@@ -52,7 +52,7 @@ function ComboboxPlaygroundFixture({
   );
 }
 
-export const meta = { title: 'Combobox', group: 'Ungrouped', size: 'md' };
+export const meta = { title: 'Combobox', group: 'Components', size: 'md' };
 
 export const states = [
   { name: 'basic', render: () => <ComboboxFixture /> },

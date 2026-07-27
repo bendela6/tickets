@@ -30,7 +30,7 @@ function ToastPlaygroundFixture({ title, actionLabel }: { title: string; actionL
   );
 }
 
-export const meta = { title: 'Toast', group: 'Ungrouped', size: 'sm' };
+export const meta = { title: 'Toast', group: 'Components', size: 'sm' };
 
 export const states = [{ name: 'fire toast', render: () => <ToastFixture /> }];
 
