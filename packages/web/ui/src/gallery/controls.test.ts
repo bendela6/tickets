@@ -15,7 +15,16 @@ describe('control constructors', () => {
   it('boolean/text/number defaults', () => {
     expect(boolean()).toEqual({ kind: 'boolean', initial: false, label: undefined });
     expect(text()).toEqual({ kind: 'text', initial: '', placeholder: '', label: undefined });
-    expect(number()).toEqual({ kind: 'number', initial: 0, step: 1, min: undefined, max: undefined, label: undefined });
+    expect(number()).toEqual({ kind: 'number', initial: 0, step: 1, min: undefined, max: undefined, allowNone: false, label: undefined });
+  });
+
+  it('an allowNone number control can hold, and default to, no value', () => {
+    // A NumberInput's own min/max are optional, so a playground that cannot
+    // express "unset" cannot show the component in its default state.
+    expect(number(undefined, { allowNone: true }).initial).toBeUndefined();
+    expect(number(undefined, { allowNone: true }).allowNone).toBe(true);
+    // A plain control still falls back to 0 rather than carrying undefined.
+    expect(number(undefined).initial).toBe(0);
   });
 
   it('initialValues maps defs to their initial values', () => {

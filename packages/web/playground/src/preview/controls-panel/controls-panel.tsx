@@ -69,8 +69,21 @@ export function ControlsPanel({
               min={def.min}
               max={def.max}
               step={def.step}
-              value={values[key] as number}
-              onChange={(e) => onChange(key, e.target.value === '' ? def.initial : Number(e.target.value))}
+              value={(values[key] as number | undefined) ?? ''}
+              placeholder={def.allowNone ? 'unset' : undefined}
+              onChange={(e) =>
+                onChange(
+                  key,
+                  e.target.value === ''
+                    ? // An allowNone control empties to undefined so the demo can
+                      // show the component's own default; otherwise emptying the
+                      // box falls back to the initial rather than to NaN.
+                      def.allowNone
+                      ? undefined
+                      : def.initial
+                    : Number(e.target.value),
+                )
+              }
               aria-label={def.label ?? key}
             />
           )}

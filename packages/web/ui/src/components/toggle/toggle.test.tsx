@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Checkbox } from '../checkbox';
 import { RadioGroup } from '../radio-group';
+import { Spinner } from '../spinner';
 import { Switch } from '../switch';
 
 const options = [
@@ -58,5 +59,40 @@ describe('toggle controls', () => {
       expect(container.querySelector('[aria-hidden]')!.getAttribute('class')).toContain(travel);
       unmount();
     }
+  });
+});
+
+describe('variants', () => {
+  it('RadioGroup card puts the selected state on the hit area, not just the mark', () => {
+    // A 16px dot is a small target and a smaller signal. `card` makes the whole
+    // label clickable and lights the container, which is what a settings pane
+    // or a touch target needs.
+    const { container } = render(
+      <RadioGroup name="r" label="r" variant="card" value="a" options={options} onValueChange={() => {}} />,
+    );
+    const labels = [...container.querySelectorAll('label')];
+    expect(labels[0]!.className).toContain('border-indigo-9');
+    expect(labels[0]!.className).toContain('bg-indigo-3');
+    expect(labels[1]!.className).toContain('border-gray-7');
+  });
+
+  it('RadioGroup plain adds no container chrome', () => {
+    const { container } = render(
+      <RadioGroup name="r" label="r" value="a" options={options} onValueChange={() => {}} />,
+    );
+    expect(container.querySelector('label')!.className).not.toContain('border');
+  });
+
+  it('Spinner variants pick a different glyph and animation', () => {
+    const { container, rerender } = render(<Spinner variant="arc" />);
+    expect(container.querySelector('svg')!.getAttribute('class')).toContain('animate-ai-spin');
+    rerender(<Spinner variant="dashed" />);
+    expect(container.querySelector('svg')!.getAttribute('class')).toContain('animate-ai-spin');
+    // `pulse` deliberately does not rotate: it is a heartbeat, not work that
+    // finishes, so spinning would promise the wrong thing.
+    rerender(<Spinner variant="pulse" />);
+    const cls = container.querySelector('svg')!.getAttribute('class')!;
+    expect(cls).toContain('animate-ai-pulse');
+    expect(cls).not.toContain('animate-ai-spin');
   });
 });

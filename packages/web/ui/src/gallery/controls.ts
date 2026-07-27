@@ -33,12 +33,16 @@ export interface TextDef extends ControlDocs {
   placeholder: string;
   label: string | undefined;
 }
-export interface NumberDef extends ControlDocs {
+export interface NumberDef<N extends boolean = boolean> extends ControlDocs {
   kind: 'number';
-  initial: number;
+  initial: number | undefined;
   min: number | undefined;
   max: number | undefined;
   step: number;
+  /** Whether the control can be emptied. A NumberInput's own min/max are
+   *  optional, so a playground that cannot express "unset" cannot show the
+   *  component's default state. */
+  allowNone: N;
   label: string | undefined;
 }
 export type AnyControlDef = SelectDef | BooleanDef | TextDef | NumberDef;
@@ -52,8 +56,10 @@ export type ControlValue<D> = D extends SelectDef<infer T, infer N>
     ? boolean
     : D extends TextDef
       ? string
-      : D extends NumberDef
-        ? number
+      : D extends NumberDef<infer N>
+        ? N extends true
+          ? number | undefined
+          : number
         : never;
 
 export type ControlValues<C extends Record<string, AnyControlDef>> = { [K in keyof C]: ControlValue<C[K]> };
@@ -132,16 +138,30 @@ function textControl(
 }
 export { textControl as text };
 
+type NumberOpts = ControlDocs & { min?: number; max?: number; step?: number; label?: string };
+
+// Overloaded like `select`, so only an allowNone control widens its value to
+// `number | undefined` — a plain number control still types as `number`.
 function numberControl(
-  initial = 0,
-  opts?: ControlDocs & { min?: number; max?: number; step?: number; label?: string },
-): NumberDef {
+  initial: number | undefined,
+  opts: NumberOpts & { allowNone: true },
+): NumberDef<true>;
+function numberControl(initial?: number, opts?: NumberOpts & { allowNone?: false }): NumberDef<false>;
+function numberControl(
+  // No default on the parameter: `= 0` would coerce an explicit `undefined`
+  // before the allowNone branch could keep it, so an allowNone control could
+  // never start out empty.
+  initial: number | undefined,
+  opts?: NumberOpts & { allowNone?: boolean },
+): NumberDef<boolean> {
+  const allowNone = opts?.allowNone ?? false;
   return {
     kind: 'number',
-    initial,
+    initial: allowNone ? initial : (initial ?? 0),
     min: opts?.min,
     max: opts?.max,
     step: opts?.step ?? 1,
+    allowNone,
     label: opts?.label,
     ...docsOf(opts),
   };

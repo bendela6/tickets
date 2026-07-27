@@ -1,7 +1,17 @@
-import { cn, TONE_SCALE, type Tone } from '../../style';
+import { cn, HUE_TONES, STEP, TONE_SCALE, variants, type Tone } from '../../style';
 import { toggleGlyphClass, toggleMarkClass, toggleRowClass, type ToggleSize } from '../toggle';
 
 type RadioOption = { value: string; label: string; disabled?: boolean };
+
+/**
+ * How the choices are presented.
+ *
+ * `plain` is a row of marks and labels — right when the options are one word
+ * each and the group sits inline. `card` gives each option its own bordered
+ * hit area that lights up when selected, which is what you want when the
+ * options need room, sit in a settings pane, or are being tapped.
+ */
+export type RadioGroupVariant = 'plain' | 'card';
 
 type RadioGroupProps = {
   name: string;
@@ -9,17 +19,44 @@ type RadioGroupProps = {
   value: string;
   options: RadioOption[];
   onValueChange: (value: string) => void;
+  variant?: RadioGroupVariant;
   size?: ToggleSize;
   /** Which ramp the selected dot and focus ring paint from. Defaults to `primary`. */
   tone?: Tone;
   className?: string;
 };
 
+// `card` turns the whole label into the hit area, so its selected state has to
+// read on the container rather than only on the 16px mark.
+const optionClass = variants({
+  base: '',
+  config: {
+    variant: {
+      default: 'plain',
+      params: {
+        scale: { default: TONE_SCALE.primary, values: HUE_TONES },
+        state: { default: 'off', values: ['on', 'off'] },
+      },
+      options: ({ scale, state }: { scale?: string; state?: 'on' | 'off' }) => ({
+        plain: '',
+        card: cn(
+          'rounded-md border px-2.5 py-1.5',
+          state === 'on'
+            ? `border-${scale}-${STEP.solid} bg-${scale}-${STEP.bgSubtle}`
+            : 'border-gray-7 hover:border-gray-9',
+        ),
+      }),
+    },
+  },
+});
+
 // Circle and inner dot scale together: the dot stays half the circle so the
 // 1.5px accent ring around it reads the same at every rung.
 const CIRCLE: Record<ToggleSize, string> = { sm: 'size-3.5', md: 'size-4', lg: 'size-5' };
 const DOT: Record<ToggleSize, string> = { sm: 'size-1.5', md: 'size-2', lg: 'size-2.5' };
 const ROW_GAP: Record<ToggleSize, string> = { sm: 'gap-3', md: 'gap-4', lg: 'gap-5' };
+// Cards carry their own padding, so they sit closer together than bare rows.
+const CARD_GAP: Record<ToggleSize, string> = { sm: 'gap-1.5', md: 'gap-2', lg: 'gap-2.5' };
 
 export function RadioGroup({
   name,
@@ -27,16 +64,33 @@ export function RadioGroup({
   value,
   options,
   onValueChange,
+  variant = 'plain',
   size = 'md',
   tone = 'primary',
   className,
 }: RadioGroupProps) {
   const scale = TONE_SCALE[tone];
   return (
-    <fieldset className={cn('m-0 flex items-center border-0 p-0', ROW_GAP[size], className)}>
+    <fieldset
+      className={cn(
+        'm-0 flex items-center border-0 p-0',
+        variant === 'card' ? CARD_GAP[size] : ROW_GAP[size],
+        className,
+      )}
+    >
       <legend className="sr-only">{label}</legend>
       {options.map((option) => (
-        <label key={option.value} className={toggleRowClass({ size })}>
+        <label
+          key={option.value}
+          className={toggleRowClass({
+            size,
+            className: optionClass({
+              variant,
+              scale,
+              state: value === option.value ? 'on' : 'off',
+            }),
+          })}
+        >
           <span className={cn('relative inline-flex shrink-0', CIRCLE[size])}>
             <input
               type="radio"
