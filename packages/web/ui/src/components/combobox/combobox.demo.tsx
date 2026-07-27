@@ -20,7 +20,6 @@ function ComboboxFixture() {
         value={priority}
         onChange={setPriority}
         placeholder="Priority"
-        clearable
       />
     </div>
   );
@@ -28,12 +27,10 @@ function ComboboxFixture() {
 
 function ComboboxPlaygroundFixture({
   placeholder,
-  clearable,
   disabled,
   size,
 }: {
   placeholder: string;
-  clearable: boolean;
   disabled: boolean;
   size: 'sm' | 'md' | 'lg' | undefined;
 }) {
@@ -45,7 +42,6 @@ function ComboboxPlaygroundFixture({
         value={priority}
         onChange={setPriority}
         placeholder={placeholder}
-        clearable={clearable}
         disabled={disabled}
         size={size}
       />
@@ -62,7 +58,6 @@ export const states = [
 export const playground = definePlayground({
   controls: {
     placeholder: text('Priority'),
-    clearable: boolean(true),
     disabled: boolean(),
     size: select(['sm', 'md', 'lg'], { allowNone: true }),
     tone: select([...TONE_NAMES], { allowNone: true }),

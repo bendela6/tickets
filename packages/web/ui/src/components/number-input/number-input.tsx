@@ -1,5 +1,6 @@
 import { cn, TONE_SCALE, type Tone } from '../../style';
 import { fieldClass, type FieldSize } from '../field';
+import { Icon } from '../icon';
 
 type NumberInputProps = {
   value: number | null;
@@ -80,18 +81,18 @@ export function NumberInput({
           aria-label="Increment"
           tabIndex={-1}
           onClick={() => nudge(step)}
-          className="flex flex-1 items-center px-1.5 text-[8px] text-gray-9 hover:bg-surface-inset hover:text-gray-12"
+          className="flex flex-1 items-center px-1.5 text-gray-9 hover:bg-surface-inset hover:text-gray-12"
         >
-          ▲
+          <Icon name="chevron-up" size="2xs" />
         </button>
         <button
           type="button"
           aria-label="Decrement"
           tabIndex={-1}
           onClick={() => nudge(-step)}
-          className="flex flex-1 items-center border-t border-gray-6 px-1.5 text-[8px] text-gray-9 hover:bg-surface-inset hover:text-gray-12"
+          className="flex flex-1 items-center border-t border-gray-6 px-1.5 text-gray-9 hover:bg-surface-inset hover:text-gray-12"
         >
-          ▼
+          <Icon name="chevron-down" size="2xs" />
         </button>
       </div>
     </div>

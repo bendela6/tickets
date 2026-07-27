@@ -303,7 +303,7 @@ function currentBlockLabel(editor: Editor | null): string {
   return 'Paragraph';
 }
 
-// Leading "Paragraph ▾" control (full config only, RichTextEditor.dc.html
+// Leading "Paragraph" chevron control (full config only, RichTextEditor.dc.html
 // §01) — replaces the old cycling H1 toggle button. Label reflects the
 // block at the cursor; picking an item applies the matching editor command.
 function BlockTypeSelect({ editor, disabled }: { editor: Editor | null; disabled?: boolean }) {

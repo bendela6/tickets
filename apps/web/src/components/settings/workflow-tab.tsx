@@ -577,7 +577,6 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                       options={guardFieldOptions}
                       value={edgeRequiresField}
                       onChange={setEdgeRequiresField}
-                      clearable
                       disabled={disabled}
                     />
                     <Button

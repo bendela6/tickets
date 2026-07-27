@@ -177,7 +177,6 @@ export function FieldWidget({
         options={options}
         value={typeof value === 'string' ? value : null}
         disabled={disabled}
-        clearable
         placeholder="—"
         onChange={(next) => onChange(next)}
       />
@@ -197,7 +196,6 @@ export function FieldWidget({
         options={options}
         value={currentId === null ? null : String(currentId)}
         disabled={disabled}
-        clearable
         placeholder="Unassigned"
         onChange={(next) => onChange(next === null ? null : Number(next))}
       />

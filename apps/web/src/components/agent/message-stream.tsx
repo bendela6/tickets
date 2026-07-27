@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Button, cn, Pill } from '@tickets/ui';
+import { Button, cn, Icon, Pill } from '@tickets/ui';
 import type { StreamBlock, ToolResult } from './build-message-stream';
 
 export type RespondFn = (requestId: string, result: 'allow' | 'deny', reason?: string) => void;
@@ -183,7 +183,7 @@ function ThinkingBlock({ text }: { text: string }) {
         </span>
         Thinking
         <span aria-hidden className="text-[9px]">
-          {open ? '▾' : '▸'}
+          <Icon name={open ? 'chevron-down' : 'chevron-right'} size="2xs" />
         </span>
       </button>
       {open ? (
@@ -259,7 +259,7 @@ function ToolCard({ name, input, result }: { name: string; input: unknown; resul
           </>
         ) : null}
         <span aria-hidden className="text-[9px] text-gray-9">
-          {open ? '▾' : '▸'}
+          <Icon name={open ? 'chevron-down' : 'chevron-right'} size="2xs" />
         </span>
       </button>
       {open ? (

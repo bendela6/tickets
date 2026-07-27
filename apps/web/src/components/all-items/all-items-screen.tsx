@@ -516,7 +516,7 @@ export function AllItemsScreen() {
                 {config.group === 'project' ? 'Project' : 'Status kind'}
               </strong>{' '}
               <span aria-hidden className="text-[10px] text-gray-9">
-                ▾
+                <Icon name="chevron-down" size="2xs" />
               </span>
             </button>
           </MenuTrigger>
