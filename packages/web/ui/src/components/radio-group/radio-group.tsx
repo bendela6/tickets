@@ -1,4 +1,5 @@
-import { cn } from '../../style/cn';
+import { cn, TONE_SCALE, type Tone } from '../../style';
+import { toggleGlyphClass, toggleMarkClass, toggleRowClass, type ToggleSize } from '../toggle';
 
 type RadioOption = { value: string; label: string; disabled?: boolean };
 
@@ -8,8 +9,17 @@ type RadioGroupProps = {
   value: string;
   options: RadioOption[];
   onValueChange: (value: string) => void;
+  size?: ToggleSize;
+  /** Which ramp the selected dot and focus ring paint from. Defaults to `primary`. */
+  tone?: Tone;
   className?: string;
 };
+
+// Circle and inner dot scale together: the dot stays half the circle so the
+// 1.5px accent ring around it reads the same at every rung.
+const CIRCLE: Record<ToggleSize, string> = { sm: 'size-3.5', md: 'size-4', lg: 'size-5' };
+const DOT: Record<ToggleSize, string> = { sm: 'size-1.5', md: 'size-2', lg: 'size-2.5' };
+const ROW_GAP: Record<ToggleSize, string> = { sm: 'gap-3', md: 'gap-4', lg: 'gap-5' };
 
 export function RadioGroup({
   name,
@@ -17,17 +27,17 @@ export function RadioGroup({
   value,
   options,
   onValueChange,
+  size = 'md',
+  tone = 'primary',
   className,
 }: RadioGroupProps) {
+  const scale = TONE_SCALE[tone];
   return (
-    <fieldset className={cn('m-0 flex items-center gap-4 border-0 p-0', className)}>
+    <fieldset className={cn('m-0 flex items-center border-0 p-0', ROW_GAP[size], className)}>
       <legend className="sr-only">{label}</legend>
       {options.map((option) => (
-        <label
-          key={option.value}
-          className="inline-flex cursor-pointer items-center gap-2 font-sans text-ui text-gray-12 has-disabled:cursor-not-allowed"
-        >
-          <span className="relative inline-flex size-4 shrink-0">
+        <label key={option.value} className={toggleRowClass({ size })}>
+          <span className={cn('relative inline-flex shrink-0', CIRCLE[size])}>
             <input
               type="radio"
               name={name}
@@ -35,18 +45,24 @@ export function RadioGroup({
               checked={value === option.value}
               disabled={option.disabled}
               onChange={() => onValueChange(option.value)}
-              className={cn(
-                'peer m-0 size-4 shrink-0 appearance-none rounded-full border-[1.5px] border-gray-7 bg-surface-raised transition-colors',
-                'checked:border-indigo-9',
-                'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-3',
-                'disabled:cursor-not-allowed disabled:border-gray-6 disabled:bg-surface-inset',
-              )}
+              className={toggleMarkClass({
+                fill: 'ring',
+                scale,
+                className: cn('rounded-full border-[1.5px]', CIRCLE[size]),
+              })}
             />
             {/* Inner dot as an overlay (not a thick border) so selected reads as a
-                1.5px accent ring around an 8px accent dot, per the spec. */}
+                1.5px accent ring around an accent dot, per the spec. */}
             <span
               aria-hidden
-              className="pointer-events-none absolute left-1/2 top-1/2 hidden size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-9 peer-checked:block"
+              className={toggleGlyphClass({
+                on: 'solid',
+                scale,
+                className: cn(
+                  'left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 rounded-full peer-checked:block',
+                  DOT[size],
+                ),
+              })}
             />
           </span>
           <span className={cn(option.disabled && 'text-gray-9')}>{option.label}</span>

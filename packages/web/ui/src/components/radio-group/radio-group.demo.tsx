@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { definePlayground, text } from '../../gallery';
+import { definePlayground, select, text } from '../../gallery';
+import { TONE_NAMES } from '../../style';
 import { RadioGroup } from './radio-group';
 
 function DensityFixture() {
@@ -19,12 +20,22 @@ function DensityFixture() {
   );
 }
 
-function PlaygroundFixture({ label }: { label: string }) {
+function PlaygroundFixture({
+  label,
+  size,
+  tone,
+}: {
+  label: string;
+  size: 'sm' | 'md' | 'lg';
+  tone?: (typeof TONE_NAMES)[number];
+}) {
   const [value, setValue] = useState('comfortable');
   return (
     <RadioGroup
       name="playground"
       label={label}
+      size={size}
+      tone={tone}
       value={value}
       onValueChange={setValue}
       options={[
@@ -44,6 +55,8 @@ export const states = [
 
 export const playground = definePlayground({
   controls: {
+    size: select(['sm', 'md', 'lg'] as const, { initial: 'md', type: 'ToggleSize' }),
+    tone: select([...TONE_NAMES], { allowNone: true, type: 'Tone' }),
     label: text('Density'),
   },
   render: (v) => <PlaygroundFixture {...v} />,

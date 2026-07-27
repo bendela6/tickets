@@ -1,4 +1,5 @@
-import { boolean, definePlayground, text } from '../../gallery';
+import { boolean, definePlayground, select, text } from '../../gallery';
+import { TONE_NAMES } from '../../style';
 import { Checkbox } from './checkbox';
 
 export const meta = { title: 'Checkbox', group: 'Components', size: 'sm' };
@@ -12,6 +13,8 @@ export const states = [
 
 export const playground = definePlayground({
   controls: {
+    size: select(['sm', 'md', 'lg'] as const, { initial: 'md', type: 'ToggleSize' }),
+    tone: select([...TONE_NAMES], { allowNone: true, type: 'Tone' }),
     label: text('Notify me'),
     indeterminate: boolean(),
     disabled: boolean(),
