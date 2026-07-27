@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { Icon } from './icon';
+import { Icon, ICON_SIZES } from './icon';
 import { ICON_NAMES, registry } from './registry';
 
 describe('Icon', () => {
@@ -26,12 +26,24 @@ describe('Icon', () => {
     expect(container.innerHTML).not.toMatch(/(?:fill|stroke)="(?!none|currentColor)[a-z]/);
   });
 
-  it('sizes in px, default 14', () => {
+  it('sizes from the rung ladder, defaulting to md', () => {
     const { container } = render(<Icon name="check" />);
     const svg = container.querySelector('svg')!;
     expect(svg.getAttribute('width')).toBe('14');
-    const { container: big } = render(<Icon name="check" size={20} />);
+    const { container: big } = render(<Icon name="check" size="xl" />);
     expect(big.querySelector('svg')!.getAttribute('width')).toBe('20');
+  });
+
+  // The ladder replaced eleven ad-hoc pixel values between 7 and 20. Pinning it
+  // here means re-cutting a rung has to be a deliberate edit, not a drift.
+  it('is a strictly ascending ladder, applied to both dimensions', () => {
+    expect(Object.values(ICON_SIZES)).toEqual([8, 10, 12, 14, 16, 20, 28]);
+    for (const [rung, px] of Object.entries(ICON_SIZES)) {
+      const { container } = render(<Icon name="check" size={rung as keyof typeof ICON_SIZES} />);
+      const svg = container.querySelector('svg')!;
+      expect(svg.getAttribute('width')).toBe(String(px));
+      expect(svg.getAttribute('height')).toBe(String(px));
+    }
   });
 
   it('is aria-hidden without label, labelled img with one', () => {

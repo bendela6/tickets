@@ -107,7 +107,7 @@ export function DetailChildren({
               onClick={() => onOpenItem(child.number)}
             >
               <span aria-hidden className="inline-flex shrink-0">
-                <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
+                <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
               </span>
               <ItemKey
                 prefix={prefix}

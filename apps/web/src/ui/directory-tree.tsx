@@ -5,7 +5,7 @@ import { useDirectoryTree, type VisibleRow } from './use-directory-tree';
 
 function Caret({ open, loading }: { open: boolean; loading: boolean }) {
   if (loading) {
-    return <Spinner size={12} tone="primary" />;
+    return <Spinner size="sm" tone="primary" />;
   }
   return (
     <span

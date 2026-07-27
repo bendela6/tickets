@@ -57,7 +57,7 @@ function BreadcrumbRow({ crumb }: { crumb: SignalBreadcrumb }) {
       <Icon
         name={signalKindIcon(kind)}
         tone={tone === 'warn' ? 'warning' : tone === 'error' ? 'danger' : signalKindTone(kind)}
-        size={11}
+        size="xs"
         label={kind}
       />
       <span className="font-mono text-[10.5px] text-gray-9">

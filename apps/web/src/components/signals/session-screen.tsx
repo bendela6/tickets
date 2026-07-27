@@ -220,7 +220,7 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
           <Icon
             name={signalKindIcon(toSignalKind(item.row.kind))}
             tone={item.row.level === 'warning' ? 'warning' : signalKindTone(toSignalKind(item.row.kind))}
-            size={11}
+            size="xs"
             label={toSignalKind(item.row.kind)}
           />
         ) : (
@@ -379,7 +379,7 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
             {session.crashed ? (
               <Pill
                 tone="danger"
-                icon={<Icon name="dot" size={7} />}
+                icon={<Icon name="dot" size="2xs" />}
                 label="crashed"
                 className="text-[11px] font-semibold"
               />

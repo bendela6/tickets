@@ -177,7 +177,7 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
       ) : (
         <>
           <span className="inline-flex shrink-0 text-indigo-9">
-            <Icon name="link" size={13} />
+            <Icon name="link" size="sm" />
           </span>
           <span className="max-w-55 truncate font-mono text-[12px] text-indigo-9">{href}</span>
         </>
@@ -192,7 +192,7 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
         }}
         className="flex size-5.5 shrink-0 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
       >
-        <Icon name="pencil" size={13} />
+        <Icon name="pencil" size="sm" />
       </button>
       <button
         type="button"
@@ -200,7 +200,7 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
         onClick={remove}
         className="flex size-5.5 shrink-0 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
       >
-        <Icon name="trash" size={13} />
+        <Icon name="trash" size="sm" />
       </button>
     </div>
   );

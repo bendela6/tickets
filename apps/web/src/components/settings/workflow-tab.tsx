@@ -75,7 +75,7 @@ function KindPicker({
           )}
         >
           <span className="inline-flex">
-            <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
+            <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
           </span>
           {kind}
         </button>
@@ -400,7 +400,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                       <div key={option.id} className="border-b border-gray-6 last:border-b-0">
                         <div className={cn('flex h-10.5 items-center gap-2.5 px-4', archived && 'opacity-60')}>
                           <span className="inline-flex shrink-0">
-                            <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
+                            <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
                           </span>
                           <span
                             className={cn('font-sans text-ui font-medium text-gray-12', archived && 'line-through')}

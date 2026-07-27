@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { cn, HUE_TONES, STEP, TONE_SCALE, variants, type Tone } from '../../style';
-import { Icon, type IconName } from '../icon';
+import { Icon, type IconName, type IconSize } from '../icon';
 
 export type TabsVariant = 'underline' | 'pill' | 'rail';
 export type TabsSize = 'sm' | 'md' | 'lg';
@@ -108,7 +108,7 @@ const tabClass = variants({
   },
 });
 
-const GLYPH: Record<TabsSize, number> = { sm: 10, md: 12, lg: 14 };
+const GLYPH: Record<TabsSize, IconSize> = { sm: 'xs', md: 'sm', lg: 'md' };
 
 export function Tabs({
   variant = 'underline',

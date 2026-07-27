@@ -31,7 +31,7 @@ export function ScreenState({
             toneClasses(tone, 'subtle'),
           )}
         >
-          <Icon name={icon} size={14} />
+          <Icon name={icon} size="md" />
         </span>
       ) : null}
       <div className="text-ui font-semibold text-gray-12">{title}</div>

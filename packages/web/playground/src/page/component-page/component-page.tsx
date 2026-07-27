@@ -203,7 +203,7 @@ export function ComponentPage({
               onClick={() => setCollapsed(!controlsCollapsed)}
               className="inline-flex h-6.5 items-center gap-1.5 rounded-md border border-gray-7 bg-surface-raised px-2 font-sans text-label font-medium text-gray-11 hover:text-gray-12"
             >
-              <Icon name={controlsCollapsed ? 'chevron-left' : 'chevron-right'} size={12} />
+              <Icon name={controlsCollapsed ? 'chevron-left' : 'chevron-right'} size="sm" />
               {controlsCollapsed ? 'Show controls' : 'Hide controls'}
             </button>
           </div>

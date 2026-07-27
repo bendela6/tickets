@@ -1,6 +1,6 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { cn, HUE_TONES, STEP, TONE_SCALE, variants, type Tone, type ToneEmphasis } from '../../style';
-import { Icon, type IconName } from '../icon';
+import { Icon, type IconName, type IconSize } from '../icon';
 
 /** How loudly the tone reads. The same four treatments the tone contract
  *  defines — this is the emphasis axis, surfaced as the component's variant. */
@@ -49,7 +49,7 @@ const pillClass = variants({
 });
 
 // The leading glyph scales with the pill rather than being pinned at 10px.
-const ICON_SIZE: Record<PillSize, number> = { sm: 9, md: 10, lg: 12 };
+const ICON_SIZE: Record<PillSize, IconSize> = { sm: '2xs', md: 'xs', lg: 'sm' };
 
 export function Pill({
   label,

@@ -10,16 +10,16 @@ describe('Spinner', () => {
     expect(svg.getAttribute('class')).toContain('animate-ai-spin');
   });
 
-  it('defaults to 14px, sized via the size prop', () => {
+  it('defaults to the md rung, sized via the size prop', () => {
     const { container } = render(<Spinner />);
     const svg = container.querySelector('svg')!;
     expect(svg.getAttribute('width')).toBe('14');
     expect(svg.getAttribute('height')).toBe('14');
 
-    const { container: big } = render(<Spinner size={22} />);
+    const { container: big } = render(<Spinner size="xl" />);
     const bigSvg = big.querySelector('svg')!;
-    expect(bigSvg.getAttribute('width')).toBe('22');
-    expect(bigSvg.getAttribute('height')).toBe('22');
+    expect(bigSvg.getAttribute('width')).toBe('20');
+    expect(bigSvg.getAttribute('height')).toBe('20');
   });
 
   it('applies no tone class when tone is unset, inheriting currentColor like Icon', () => {

@@ -1,4 +1,4 @@
-import { definePlayground, number, select } from '../../gallery';
+import { definePlayground, select } from '../../gallery';
 import { TONE_NAMES } from '../../style/tones';
 import { Icon } from './icon';
 import { ICON_NAMES } from './registry';
@@ -20,7 +20,7 @@ export const states = [
       <div className="flex flex-wrap gap-4">
         {ICON_NAMES.map((name) => (
           <div key={name} className="flex w-20 flex-col items-center gap-1.5 text-gray-11">
-            <Icon name={name} size={16} />
+            <Icon name={name} size="lg" />
             <span className="font-mono text-[10px] text-gray-9">{name}</span>
           </div>
         ))}
@@ -34,7 +34,7 @@ export const states = [
         <Icon name="circle-half" tone="blue" animate="spin" />
         <Icon name="diamond" tone="orange" animate="pulse" />
         <Icon name="circle-check" tone="green" />
-        <Icon name="triangle-alert" tone="warning" size={20} />
+        <Icon name="triangle-alert" tone="warning" size="xl" />
       </div>
     ),
   },
@@ -53,11 +53,11 @@ export const playground = definePlayground({
       description:
         'Registry key. Names describe the shape (`circle-half`), never the use (`kind-active`), so one glyph can serve a status in one screen and a spinner in another.',
     }),
-    size: number(14, {
-      min: 10,
-      max: 32,
+    size: select(['2xs', 'xs', 'sm', 'md', 'lg', 'xl', '2xl'] as const, {
+      initial: 'md',
+      type: 'IconSize',
       description:
-        'Edge length in pixels, applied to both width and height. Plain numbers rather than a t-shirt scale: icons are sized to the text they sit beside.',
+        'Rung on the glyph ladder — 8/10/12/14/16/20/28px, applied to both width and height. Icons are sized to the text they sit beside, so pick the rung that matches the label, not the container.',
     }),
     tone: select(TONE_NAMES, {
       allowNone: true,
