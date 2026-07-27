@@ -1,0 +1,42 @@
+{
+  "border": {
+    "thin": {
+      "$type": "dimension",
+      "$value": "1px"
+    },
+    "thick": {
+      "$type": "dimension",
+      "$value": "1.5px"
+    }
+  },
+  "ring": {
+    "focus": {
+      "$type": "dimension",
+      "$value": "3px"
+    }
+  },
+  "z": {
+    "sticky": {
+      "$type": "number",
+      "$value": "10"
+    },
+    "scrim": {
+      "$type": "number",
+      "$value": "40"
+    },
+    "overlay": {
+      "$type": "number",
+      "$value": "50"
+    }
+  },
+  "breakpoint": {
+    "narrow": {
+      "$type": "dimension",
+      "$value": "1024px"
+    },
+    "wide": {
+      "$type": "dimension",
+      "$value": "1536px"
+    }
+  }
+}

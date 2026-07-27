@@ -6,7 +6,7 @@ import { Button } from '../../ui/button';
 import { cn } from '@tickets/ui/cn';
 import { Pill } from '@tickets/ui/pill';
 import { SectionHeader } from '@tickets/ui/section-header';
-import { SWATCHES } from '@tickets/ui/swatches';
+import { SWATCHES } from '@tickets/ui/colors';
 import { FieldLabel } from '../../ui/field-label';
 import { Input } from '../../ui/input';
 import type { BoardIndexes } from '../../utils/index-board';

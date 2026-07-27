@@ -195,13 +195,13 @@ describe('resolveModulePath — symlink escape (finding 1)', () => {
 // ---- Finding 2: INSTRUMENT_PALETTE drift guard ----------------------------
 //
 // INSTRUMENT_PALETTE hand-copies the --ins-opt-* light-mode hex values out of
-// packages/web/ui/src/tokens.css. There is no shared source, so this test
+// packages/web/ui/src/tokens/tokens.css. There is no shared source, so this test
 // is the only thing standing between an Instrument palette change and a
 // silently desynced drizzle-import zone colour. Mirrors the drift-test
 // pattern in pg-types.test.ts (guarding the type catalogue against a drizzle
 // upgrade) — a source-of-truth change should turn this red, not slip by.
 const HERE = dirname(fileURLToPath(import.meta.url)); // apps/eer/src/test
-const INSTRUMENT_CSS_PATH = resolve(HERE, '../../../../packages/web/ui/src/tokens.css');
+const INSTRUMENT_CSS_PATH = resolve(HERE, '../../../../packages/web/ui/src/tokens/tokens.css');
 
 function readLightModeOptPalette(): Record<string, string> {
   const css = readFileSync(INSTRUMENT_CSS_PATH, 'utf8');

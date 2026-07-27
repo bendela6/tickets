@@ -1,0 +1,20 @@
+{
+  "scale": {
+    "primary": "indigo",
+    "secondary": "gray",
+    "success": "green",
+    "warning": "orange",
+    "danger": "red",
+    "neutral": "gray"
+  },
+  "surface": {
+    "raised": {
+      "light": "#ffffff",
+      "dark": "#252320"
+    },
+    "inset": {
+      "light": "#eceae3",
+      "dark": "#141310"
+    }
+  }
+}

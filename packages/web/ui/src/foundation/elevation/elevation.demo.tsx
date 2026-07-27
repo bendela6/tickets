@@ -1,0 +1,108 @@
+import { SHADOWS } from '../spec';
+import { DriftView, Sheet, SpecHeader, SpecRow, useTheme } from '../view';
+
+export const meta = {
+  title: 'Elevation',
+  group: 'Foundation',
+  order: 4,
+  size: 'full',
+  impl: ['./foundation.ts', './foundation-view.tsx'],
+};
+
+// Elevation answers "how far above the page is this, and can I dismiss it?".
+// Three levels because there are three answers: attached, floating over one
+// surface, and floating over everything.
+const SHADOW_JOBS: Record<string, string> = {
+  'shadow-raised': 'cards, rows — attached to the page',
+  'shadow-overlay': 'popovers, menus — dismissible',
+  'shadow-modal': 'dialogs, sheets — blocking',
+};
+
+/** The one family whose token resolves differently per theme. */
+function useShadow() {
+  const [theme, ref] = useTheme();
+  return {
+    ref,
+    theme,
+    valueOf: (name: string) => {
+      const token = SHADOWS.find((s) => s.name === name)!;
+      return theme === 'dark' ? token.dark : token.light;
+    },
+  };
+}
+
+function Levels() {
+  const { ref, theme, valueOf } = useShadow();
+  return (
+    <div ref={ref} className="flex w-full flex-col gap-3">
+      <SpecHeader value="used for" specimen={`specimen · ${theme}`} />
+      {SHADOWS.map((shadow) => (
+        <SpecRow
+          key={shadow.name}
+          name={shadow.name}
+          value={SHADOW_JOBS[shadow.name] ?? ''}
+          note={theme === 'dark' ? 'dark values' : 'light values'}
+          align="start"
+        >
+          <div className="flex items-center gap-4 bg-app p-5">
+            <span
+              className="flex h-16 w-40 items-center justify-center rounded-card bg-raised font-mono text-meta text-ink-3"
+              style={{ boxShadow: valueOf(shadow.name) }}
+            >
+              {shadow.name.replace('shadow-', '')}
+            </span>
+            <code className="min-w-0 flex-1 font-mono text-nano leading-tight text-ink-3">
+              {valueOf(shadow.name)}
+            </code>
+          </div>
+        </SpecRow>
+      ))}
+    </div>
+  );
+}
+
+function InUse() {
+  const { ref, valueOf } = useShadow();
+  return (
+    <div ref={ref} className="flex w-full flex-col gap-3">
+      {/* All three stacked in one scene, because elevation is comparative —
+          a modal only reads as blocking next to something it blocks. */}
+      <div className="relative flex min-h-64 items-start gap-4 overflow-hidden rounded-panel bg-app p-5">
+        <div
+          className="flex w-56 flex-col gap-1 rounded-card bg-raised p-3"
+          style={{ boxShadow: valueOf('shadow-raised') }}
+        >
+          <span className="font-sans text-ui font-medium text-ink">Retry the gateway run</span>
+          <span className="font-mono text-meta text-ink-3">TIX-214</span>
+        </div>
+        <div
+          className="flex w-44 flex-col rounded-overlay bg-raised py-1"
+          style={{ boxShadow: valueOf('shadow-overlay') }}
+        >
+          {['Assign to me', 'Move to review', 'Archive'].map((label) => (
+            <span key={label} className="px-3 py-1.5 font-sans text-ui text-ink">
+              {label}
+            </span>
+          ))}
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+          <div
+            className="flex w-64 flex-col gap-2 rounded-panel bg-raised p-4"
+            style={{ boxShadow: valueOf('shadow-modal') }}
+          >
+            <span className="font-sans text-title font-medium text-ink">Discard changes?</span>
+            <span className="font-sans text-ui text-ink-2">
+              Three edits will be lost. This cannot be undone.
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export const states = [
+  { name: 'Levels', render: () => <Levels /> },
+  { name: 'In use', render: () => <InUse /> },
+  { name: 'Drift', render: () => <DriftView families={['shadow']} /> },
+];
