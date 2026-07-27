@@ -138,7 +138,7 @@ function TypeForm({
           Cancel
         </Button>
         <Button
-          variant="primary"
+          variant="solid"
           size="sm"
           disabled={draft.label.trim() === ''}
           loading={pending}
@@ -270,7 +270,7 @@ export function TypesTab({ board }: SettingsTabProps) {
             pending={createType.isPending}
           />
         ) : (
-          <Button variant="secondary" size="sm" disabled={disabled} onClick={startCreate}>
+          <Button variant="outline" size="sm" disabled={disabled} onClick={startCreate}>
             + New type
           </Button>
         )}

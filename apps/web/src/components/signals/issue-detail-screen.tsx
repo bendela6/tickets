@@ -248,17 +248,17 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
         every state shows exactly two actions and every state is escapable —
         a resolved or ignored issue can always be reopened. */}
         {issue.status !== 'open' ? (
-          <Button variant="secondary" onClick={() => patchStatus.mutate({ id: issue.id, status: 'open' })}>
+          <Button variant="outline" onClick={() => patchStatus.mutate({ id: issue.id, status: 'open' })}>
             ↺ Reopen
           </Button>
         ) : null}
         {issue.status !== 'resolved' ? (
-          <Button variant="secondary" onClick={() => patchStatus.mutate({ id: issue.id, status: 'resolved' })}>
+          <Button variant="outline" onClick={() => patchStatus.mutate({ id: issue.id, status: 'resolved' })}>
             ✓ Resolve
           </Button>
         ) : null}
         {issue.status !== 'ignored' ? (
-          <Button variant="secondary" onClick={() => patchStatus.mutate({ id: issue.id, status: 'ignored' })}>
+          <Button variant="outline" onClick={() => patchStatus.mutate({ id: issue.id, status: 'ignored' })}>
             ⊘ Ignore
           </Button>
         ) : null}

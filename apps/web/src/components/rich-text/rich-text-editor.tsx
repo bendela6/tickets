@@ -396,7 +396,7 @@ export function RichTextEditor({
             <div className={cn('min-w-0 flex-1', disabled && 'opacity-45')}>{toolbar}</div>
             <span className="font-mono text-[11px] text-gray-9">⌘↩</span>
             <Button
-              variant="primary"
+              variant="solid"
               size="sm"
               disabled={composer.submitDisabled}
               loading={composer.submitPending}

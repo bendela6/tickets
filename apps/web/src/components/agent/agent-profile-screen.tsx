@@ -83,10 +83,10 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => setEditing(true)}>
+          <Button variant="outline" onClick={() => setEditing(true)}>
             Edit
           </Button>
-          <Button variant="primary" loading={createSession.isPending} onClick={runSession}>
+          <Button variant="solid" loading={createSession.isPending} onClick={runSession}>
             ✳ Run session
           </Button>
         </div>

@@ -218,7 +218,7 @@ function AddFilter({
             </Button>
             <Button
               size="sm"
-              variant="primary"
+              variant="solid"
               disabled={!valid}
               onClick={() => {
                 if (!selectedField) {

@@ -180,7 +180,7 @@ export function ClearSignalsDialog({
 
             <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}>
               <Button
-                variant="destructive"
+                variant="solid" tone="danger"
                 disabled={confirmDisabled}
                 loading={clearSignals.isPending}
                 onClick={() => void confirm()}

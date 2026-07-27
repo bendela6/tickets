@@ -98,7 +98,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
               Cancel
             </Button>
             <Button
-              variant="primary"
+              variant="solid"
               disabled={nameDraft.trim() === '' || userId === null}
               loading={createUser.isPending}
               onClick={async () => {

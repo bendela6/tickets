@@ -182,10 +182,10 @@ function SaveViewDialog({
             onChange={(event) => setName(event.target.value)}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary" disabled={name.trim().length === 0}>
+            <Button type="submit" variant="solid" disabled={name.trim().length === 0}>
               Save view
             </Button>
           </div>

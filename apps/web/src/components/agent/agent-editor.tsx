@@ -213,7 +213,7 @@ export function AgentEditor({
         </div>
 
         <DialogFooter cancel={<Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>}>
-          <Button variant="primary" onClick={save} disabled={!canSave} loading={saving}>
+          <Button variant="solid" onClick={save} disabled={!canSave} loading={saving}>
             {editing ? 'Save' : 'Create agent'}
           </Button>
         </DialogFooter>

@@ -448,7 +448,7 @@ export function NewItemDialog({
               )}
               <DialogFooter className="mt-0 border-0 p-0" cancel={<Button variant="ghost" onClick={close}>Cancel</Button>}>
                 <Button
-                  variant="primary"
+                  variant="solid"
                   loading={createItem.isPending}
                   disabled={title.trim().length === 0 || userId === null}
                   onClick={() => void submit()}

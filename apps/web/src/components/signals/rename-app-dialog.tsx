@@ -85,7 +85,7 @@ export function RenameAppDialog({
         ) : null}
         <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}>
           <Button
-            variant="primary"
+            variant="solid"
             disabled={name.trim() === '' || name.trim() === app.name}
             loading={patchApp.isPending}
             onClick={() => void submit()}

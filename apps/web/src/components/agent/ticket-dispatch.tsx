@@ -87,7 +87,7 @@ export function TicketDispatch({ itemId, actorId }: { itemId: number; actorId?: 
           </div>
           <DialogFooter cancel={<Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>}>
             <Button
-              variant="primary"
+              variant="solid"
               onClick={submit}
               disabled={agentId == null || !prompt.trim()}
               loading={dispatch.isPending}

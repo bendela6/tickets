@@ -85,7 +85,7 @@ export function DeleteAppDialog({
         ) : null}
         <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}>
           <Button
-            variant="destructive"
+            variant="solid" tone="danger"
             disabled={typed !== app.slug}
             loading={deleteApp.isPending}
             onClick={() => void confirm()}

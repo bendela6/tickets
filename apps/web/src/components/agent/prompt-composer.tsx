@@ -71,13 +71,13 @@ export function PromptComposer({
         />
         <span className="flex-1" />
         {running ? (
-          <Button size="sm" variant="secondary" onClick={onInterrupt}>
+          <Button size="sm" variant="outline" onClick={onInterrupt}>
             ■ Stop
           </Button>
         ) : (
           <Button
             size="sm"
-            variant="primary"
+            variant="solid"
             onClick={onSend}
             disabled={disabled || !value.trim()}
           >

@@ -6,7 +6,7 @@ function ToastFixture() {
   const { toast } = useToast();
   return (
     <Button
-      variant="secondary"
+      variant="outline"
       onClick={() =>
         toast({ title: 'View saved', action: { label: 'Undo', onClick: () => undefined } })
       }
@@ -20,7 +20,7 @@ function ToastPlaygroundFixture({ title, actionLabel }: { title: string; actionL
   const { toast } = useToast();
   return (
     <Button
-      variant="secondary"
+      variant="outline"
       onClick={() =>
         toast({ title, action: { label: actionLabel, onClick: () => undefined } })
       }
