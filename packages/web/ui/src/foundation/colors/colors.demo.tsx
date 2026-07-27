@@ -6,7 +6,6 @@ import {
   STEP_JOBS,
   SEMANTIC_SCALES,
   SURFACES,
-  SWATCHES,
   checkPairings,
   colorOf,
   type Pairing,
@@ -272,32 +271,6 @@ function Roles() {
   );
 }
 
-/**
- * The picker presets, which are not part of the scale — they are the six
- * choices offered when someone colours an item type, a status or a highlight.
- * They live here rather than on a page of their own because they are made of
- * colour, but they are the one place in the system where a colour becomes
- * stored data instead of a token reference.
- */
-function Presets() {
-  return (
-    <div className="flex w-full flex-col gap-3">
-      <p className="font-sans text-meta text-gray-11">
-        Offered by the type, status and highlight pickers. Picking one writes the literal hex to the
-        database, so these resolve from the shipped tokens — not the numbered palette above.
-      </p>
-      <div className="flex flex-wrap gap-3">
-        {SWATCHES.map((hex) => (
-          <div key={hex} className="flex flex-col items-center gap-1.5">
-            <span className="size-12 rounded-md" style={{ background: hex, ...RING }} />
-            <span className="font-mono text-meta text-gray-9">{hex}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function Report() {
   const all = checkPairings();
   const required = all.filter((p) => p.severity === 'required');
@@ -353,6 +326,5 @@ export const states = [
   { name: 'Palette', render: () => <Palette /> },
   { name: 'In use', render: () => <StepsInUse /> },
   { name: 'Roles', render: () => <Roles /> },
-  { name: 'Picker presets', render: () => <Presets /> },
   { name: 'Contrast report', render: () => <Report /> },
 ];

@@ -1,4 +1,4 @@
-import type { HueTone } from '@tickets/ui';
+import { colorOf, HUE_TONES, type HueTone } from '@tickets/ui';
 import type { StatusKind } from '../api/types';
 import { KIND_TONE } from '../domain/status';
 
@@ -78,3 +78,17 @@ export function hexToOptionColor(hex: string | undefined | null): OptionColor {
 export function kindColor(kind: StatusKind | null): OptionColor {
   return kind === null ? 'gray' : KIND_TONE[kind];
 }
+
+// The colours a picker offers. Eleven, one per hue, each the ramp's solid fill
+// step — the same colour an option chip renders with. This replaces the old
+// six-entry SWATCHES list, which predated the numbered ramps and held two
+// values (an option-red and an option-indigo) that no longer exist anywhere.
+//
+// Stored rows are unaffected: config.color is a literal hex, so a row saved
+// against the old list keeps rendering its own colour, and hexToOptionColor
+// above still maps it onto the nearest hue for chip tinting.
+export const OPTION_COLOR_CHOICES: { color: OptionColor; hex: string }[] = HUE_TONES.map(
+  (color) => ({ color, hex: colorOf('light', color, 9).toUpperCase() }),
+);
+
+export const DEFAULT_OPTION_HEX = OPTION_COLOR_CHOICES[0]!.hex;

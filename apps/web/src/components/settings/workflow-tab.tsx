@@ -7,11 +7,11 @@ import {
   useUpdateOption,
 } from '../../api/use-admin';
 import { KIND_ICON, KIND_TONE, statusPill } from '../../domain/status';
-import { hexToOptionColor } from '../../registry/option-color';
+import { DEFAULT_OPTION_HEX, OPTION_COLOR_CHOICES, hexToOptionColor } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
-import { cn, Icon, Pill, SWATCHES, Tabs } from '@tickets/ui';
+import { cn, Icon, Pill, Tabs } from '@tickets/ui';
 import { Combobox } from '../../ui/combobox';
 import type { ComboOption } from '../../ui/combobox-list';
 import { FieldLabel } from '../../ui/field-label';
@@ -101,12 +101,12 @@ function ColorSwatches({
 }) {
   return (
     <div className="flex items-center gap-1.5">
-      {SWATCHES.map((hex) => (
+      {OPTION_COLOR_CHOICES.map(({ color, hex }) => (
         <button
-          key={hex}
+          key={color}
           type="button"
           disabled={disabled}
-          aria-label={`Color ${hex}`}
+          aria-label={color}
           aria-pressed={value === hex}
           onClick={() => onChange(hex)}
           className={cn(
@@ -229,15 +229,15 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
 
   // ----- options -----
   const [addingOption, setAddingOption] = useState(false);
-  const [newOption, setNewOption] = useState<OptionDraft>({ label: '', kind: 'todo', color: SWATCHES[0]! });
+  const [newOption, setNewOption] = useState<OptionDraft>({ label: '', kind: 'todo', color: DEFAULT_OPTION_HEX });
 
   const [editingOptionId, setEditingOptionId] = useState<number | null>(null);
-  const [editOption, setEditOption] = useState<OptionDraft>({ label: '', kind: 'todo', color: SWATCHES[0]! });
+  const [editOption, setEditOption] = useState<OptionDraft>({ label: '', kind: 'todo', color: DEFAULT_OPTION_HEX });
 
   function startCreateOption() {
     if (disabled) return;
     setEditingOptionId(null);
-    setNewOption({ label: '', kind: 'todo', color: SWATCHES[0]! });
+    setNewOption({ label: '', kind: 'todo', color: DEFAULT_OPTION_HEX });
     setAddingOption(true);
   }
 
@@ -263,7 +263,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
     setEditOption({
       label: option.label,
       kind: (option.kind ?? 'todo') as StatusKind,
-      color: option.config.color ?? SWATCHES[0]!,
+      color: option.config.color ?? DEFAULT_OPTION_HEX,
     });
     setEditingOptionId(option.id);
   }

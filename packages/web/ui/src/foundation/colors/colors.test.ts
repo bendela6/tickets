@@ -9,7 +9,6 @@ import {
   failingPairings,
   luminance,
   SURFACES,
-  SWATCHES,
 } from './colors';
 
 describe('contrastRatio', () => {
@@ -52,22 +51,6 @@ describe('colorOf', () => {
 
   it('throws on an unknown token rather than returning undefined', () => {
     expect(() => colorOf('light', 'chartreuse', 9)).toThrow(/unknown color token/);
-  });
-});
-
-describe('SWATCHES', () => {
-  it('derives the six colour-picker presets from the shipped tokens', () => {
-    // Asserted literally because every one of these is written into the
-    // database as a hex when someone picks it. A token rebrand has to update
-    // this list consciously — and then migrate the rows that already hold the
-    // old value.
-    expect(SWATCHES).toEqual(['#4E46C6', '#2E7042', '#A44E14', '#A03028', '#2A5DAE', '#79756A']);
-  });
-
-  it('does not follow the proposed numbered palette', () => {
-    // The presets resolve from tokens/*.tokens.json, not tokens/next — so
-    // re-anchoring a ramp cannot silently repaint saved rows.
-    expect(SWATCHES).not.toContain(colorOf('light', 'green', 9));
   });
 });
 

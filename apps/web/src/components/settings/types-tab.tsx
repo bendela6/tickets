@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import type { Board, ItemType } from '../../api/types';
 import { useCreateType, useSetChildTypes, useUpdateType } from '../../api/use-admin';
+import { DEFAULT_OPTION_HEX, OPTION_COLOR_CHOICES } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
-import { cn, Pill, SectionHeader, SWATCHES } from '@tickets/ui';
+import { cn, Pill, SectionHeader } from '@tickets/ui';
 import { FieldLabel } from '../../ui/field-label';
 import { Input } from '../../ui/input';
 import type { BoardIndexes } from '../../utils/index-board';
@@ -41,12 +42,12 @@ function ColorSwatches({
 }) {
   return (
     <div className="mt-2 flex items-center gap-1.5">
-      {SWATCHES.map((hex) => (
+      {OPTION_COLOR_CHOICES.map(({ color, hex }) => (
         <button
-          key={hex}
+          key={color}
           type="button"
           disabled={disabled}
-          aria-label={`Color ${hex}`}
+          aria-label={color}
           aria-pressed={value === hex}
           onClick={() => onChange(hex)}
           className={cn(
@@ -166,10 +167,10 @@ export function TypesTab({ board }: SettingsTabProps) {
   const setChildTypes = useSetChildTypes();
 
   const [creating, setCreating] = useState(false);
-  const [createDraft, setCreateDraft] = useState<Draft>({ label: '', color: SWATCHES[0]! });
+  const [createDraft, setCreateDraft] = useState<Draft>({ label: '', color: DEFAULT_OPTION_HEX });
 
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editDraft, setEditDraft] = useState<Draft>({ label: '', color: SWATCHES[0]! });
+  const [editDraft, setEditDraft] = useState<Draft>({ label: '', color: DEFAULT_OPTION_HEX });
 
   // typeId -> locally-selected child type ids, seeded from the board's
   // current item_type_child_types rows so a toggle diffs against what's
@@ -196,7 +197,7 @@ export function TypesTab({ board }: SettingsTabProps) {
   function startCreate() {
     if (disabled) return;
     setEditingId(null);
-    setCreateDraft({ label: '', color: SWATCHES[0]! });
+    setCreateDraft({ label: '', color: DEFAULT_OPTION_HEX });
     setCreating(true);
   }
 
@@ -212,13 +213,13 @@ export function TypesTab({ board }: SettingsTabProps) {
       config: { color: createDraft.color },
     });
     setCreating(false);
-    setCreateDraft({ label: '', color: SWATCHES[0]! });
+    setCreateDraft({ label: '', color: DEFAULT_OPTION_HEX });
   }
 
   function startEdit(type: ItemType) {
     if (disabled) return;
     setCreating(false);
-    setEditDraft({ label: type.label, color: type.config.color ?? SWATCHES[0]! });
+    setEditDraft({ label: type.label, color: type.config.color ?? DEFAULT_OPTION_HEX });
     setEditingId(type.id);
   }
 

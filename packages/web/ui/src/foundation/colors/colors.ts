@@ -180,21 +180,3 @@ export function failingPairings(scales?: readonly string[]): Pairing[] {
 export function advisoryPairings(scales?: readonly string[]): Pairing[] {
   return checkPairings(scales).filter((p) => !p.passes && p.severity === 'advisory');
 }
-
-// ---------------------------------------------------------------------------
-// Picker presets
-// ---------------------------------------------------------------------------
-
-/**
- * The colour-picker presets offered when someone gives an item type, a status
- * or a highlight its own colour.
- *
- * FROZEN LITERALS, not derived tokens. Each of these is written into the
- * database as a hex the moment someone picks it, so a row saved last year
- * still holds the exact string below. They were originally resolved from the
- * pre-numbered token set; five of the six happen to equal a ramp step today
- * (indigo-9, green-9, orange-9, blue-9, gray-9-dark) but the fourth does not —
- * the old option-red sat two steps darker than red-9. Deriving them would let
- * a future re-anchor silently repaint saved rows, so they do not move.
- */
-export const SWATCHES = ['#4E46C6', '#2E7042', '#A44E14', '#A03028', '#2A5DAE', '#79756A'];
