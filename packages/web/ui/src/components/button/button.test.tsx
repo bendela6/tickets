@@ -56,6 +56,28 @@ test('focus halo is 3px accent-subtle, danger-subtle for destructive', () => {
   expect(danger).not.toHaveClass('focus-visible:ring-indigo-3');
 });
 
+test('tone repaints the variant onto another ramp, defaulting per variant', () => {
+  // These classes exist nowhere in source text — they are built by
+  // interpolation, which is why the generated safelist has to carry them.
+  const { rerender } = render(
+    <Button variant="primary" tone="success">
+      Approve
+    </Button>,
+  );
+  const success = screen.getByRole('button');
+  expect(success).toHaveClass('bg-green-9', 'text-green-contrast', 'hover:bg-green-10');
+  expect(success).not.toHaveClass('bg-indigo-9');
+
+  // A tone name is not a ramp name: `primary` has to resolve to `indigo`
+  // before it reaches a class string, or this would be `bg-primary-9`.
+  rerender(<Button variant="primary">Save</Button>);
+  expect(screen.getByRole('button')).toHaveClass('bg-indigo-9');
+
+  // destructive defaults to the danger ramp without being asked.
+  rerender(<Button variant="destructive">Delete</Button>);
+  expect(screen.getByRole('button')).toHaveClass('bg-red-9');
+});
+
 test('disabled swaps variant colors; loading keeps the fill', () => {
   const { rerender } = render(
     <Button variant="primary" disabled>

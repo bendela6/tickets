@@ -171,12 +171,15 @@ function paramCombinations(domains: Record<string, readonly string[]>): Record<s
   return combinations;
 }
 
-/** The runtime `values` declared for one group's params, as a domain map. */
+/** The runtime `values` declared for one group's params, as a domain map.
+ *  Values are stringified: a numeric domain (an opacity of `40`) interpolates
+ *  identically either way, and keeping the domain textual lets `Axes` describe
+ *  itself honestly instead of casting numbers to strings. */
 function groupDomains(group: VariantGroup): Record<string, readonly string[]> {
   const domains: Record<string, readonly string[]> = {};
   for (const [key, spec] of Object.entries(group.params ?? {})) {
     if (spec.values) {
-      domains[key] = spec.values as readonly string[];
+      domains[key] = spec.values.map((value) => String(value));
     }
   }
   return domains;
@@ -198,10 +201,16 @@ function collectGroups(config: Config): Record<string, readonly string[]> {
 }
 
 /** Expands a config into every class it can produce. Each function group walks
- *  over its own params' combinations; static groups are walked once. */
-function enumerateClasses(base: ClassValue, config: Config): string[] {
+ *  over its own params' combinations; static groups are walked once. `extra` is
+ *  the call's declared escape hatch, folded in so it reaches the safelist too. */
+function enumerateClasses(
+  base: ClassValue,
+  config: Config,
+  extra: readonly string[] = [],
+): string[] {
   const found = new Set<string>();
   addTokens(found, base);
+  addTokens(found, extra as string[]);
   for (const group of Object.values(config)) {
     if (typeof group.options === 'function') {
       // Same contravariance gap as the render path: the param type is inferred
@@ -231,6 +240,11 @@ function enumerateClasses(base: ClassValue, config: Config): string[] {
 export function variants<const Groups extends Config & ValidGroups<Groups>>(options: {
   base: ClassValue;
   config: Groups;
+  /** Classes this component can produce that the config cannot enumerate —
+   *  anything assembled in the component body rather than in a group's options.
+   *  They reach the safelist but are never applied by the returned function, so
+   *  the component still has to emit them itself. */
+  safelist?: readonly string[];
 }): ClassFn<Groups> {
   const base = options.base;
   const config = options.config;
@@ -245,13 +259,13 @@ export function variants<const Groups extends Config & ValidGroups<Groups>>(opti
       if (spec.default !== undefined) {
         defaults[key] = spec.default;
       }
-      if (spec.values) {
-        domains[key] = spec.values as readonly string[];
-      }
     }
+    // Same helper the enumeration uses, so `axes` can never describe a domain
+    // the safelist was not expanded over.
+    Object.assign(domains, groupDomains(group));
   }
 
-  const classes = enumerateClasses(base, config);
+  const classes = enumerateClasses(base, config, options.safelist);
   for (const className of classes) {
     SAFELIST.add(className);
   }

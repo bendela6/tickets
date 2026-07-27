@@ -89,6 +89,67 @@ describe('variants', () => {
     });
   });
 
+  // The safelist is only as good as this cross-product: a class like
+  // `hover:bg-red-9/40` exists nowhere in source, so if enumeration misses a
+  // param combination Tailwind never emits the utility and the state renders
+  // unstyled. Numeric domains are the case to watch — they interpolate the same
+  // as strings but arrive as numbers.
+  const alphaClass = variants({
+    base: 'rounded-sm',
+    config: {
+      emphasis: {
+        default: 'solid',
+        params: {
+          tone: { default: 'red', values: ['red', 'blue'] },
+          alpha: { default: 40, values: [40, 60] },
+        },
+        options: ({ tone, alpha }: { tone?: string; alpha?: number }) => ({
+          solid: `bg-${tone}-9 hover:bg-${tone}-10/${alpha}`,
+          soft: `bg-${tone}-3/${alpha}`,
+        }),
+      },
+    },
+  });
+
+  it('enumerates the full cross-product of several params, including numeric ones', () => {
+    expect(new Set(alphaClass.classes)).toEqual(
+      new Set([
+        'rounded-sm',
+        'bg-red-9',
+        'bg-blue-9',
+        'hover:bg-red-10/40',
+        'hover:bg-red-10/60',
+        'hover:bg-blue-10/40',
+        'hover:bg-blue-10/60',
+        'bg-red-3/40',
+        'bg-red-3/60',
+        'bg-blue-3/40',
+        'bg-blue-3/60',
+      ]),
+    );
+  });
+
+  it('renders a numeric param without stringifying it differently', () => {
+    expect(alphaClass({ tone: 'blue', alpha: 60 })).toBe('rounded-sm bg-blue-9 hover:bg-blue-10/60');
+  });
+
+  it('reports a numeric domain as strings in axes', () => {
+    expect(alphaClass.axes.params).toEqual({ tone: ['red', 'blue'], alpha: ['40', '60'] });
+  });
+
+  const escapeHatchClass = variants({
+    base: 'block',
+    config: { size: { default: 'md', options: { md: 'h-9' } } },
+    safelist: ['bg-teal-9/[0.55]', 'dark:ring-teal-7'],
+  });
+
+  it('folds a declared safelist into the enumeration without applying it', () => {
+    expect(escapeHatchClass()).toBe('block h-9');
+    expect(new Set(escapeHatchClass.classes)).toEqual(
+      new Set(['block', 'h-9', 'bg-teal-9/[0.55]', 'dark:ring-teal-7']),
+    );
+  });
+
   it('exposes collectSafelist() including every class produced across all variants() calls', () => {
     const safelist = new Set(collectSafelist());
     for (const className of [

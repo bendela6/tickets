@@ -1,6 +1,7 @@
 export {
   HUE_TONES,
   TONE_NAMES,
+  TONE_SCALE,
   TONES,
   type HueTone,
   type Tone,
