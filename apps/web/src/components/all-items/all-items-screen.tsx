@@ -7,7 +7,7 @@ import { useProjects } from '../../api/use-projects';
 import { KIND_ICON, KIND_TONE, typePill } from '../../domain/status';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Avatar, Button, cn, DialogContent, DialogRoot, DialogTitle, Icon, Input, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, SegmentedControl, Tabs, toneClasses } from '@tickets/ui';
+import { Avatar, Button, cn, DialogContent, DialogRoot, DialogTitle, Icon, Input, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, Tabs, toneClasses } from '@tickets/ui';
 import { StatusSelect } from '../../ui/status-select';
 import { childProgress } from '../../utils/child-progress';
 import { evaluateFilters } from '../../utils/evaluate-filters';
@@ -467,8 +467,8 @@ export function AllItemsScreen() {
           onKpiChange={(kpi) => setConfig((current) => ({ ...current, kpi }))}
         />
         <span title="Density">
-          <SegmentedControl
-            options={[
+          <Tabs variant="pill" role="group"
+            items={[
               { value: 'comfortable', icon: 'rows', label: <span className="sr-only">Comfortable density</span> },
               { value: 'compact', icon: 'rows-compact', label: <span className="sr-only">Compact density</span> },
             ]}

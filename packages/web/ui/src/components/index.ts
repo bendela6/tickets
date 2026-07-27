@@ -24,7 +24,6 @@ export * from './rail-label';
 export * from './relative-date';
 export * from './screen-state';
 export * from './section-header';
-export * from './segmented-control';
 export * from './session-kind-glyph';
 export * from './spinner';
 export * from './switch';
