@@ -1,7 +1,7 @@
 import { definePlayground, select, text } from '../../gallery';
 import { Avatar } from './avatar';
 
-export const meta = { title: 'Avatar', group: 'Display', order: 5, size: 'sm' };
+export const meta = { title: 'Avatar', group: 'Components', order: 5, size: 'sm' };
 
 export const states = [
   {

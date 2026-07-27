@@ -49,7 +49,7 @@ function MultiComboboxPlaygroundFixture({
   );
 }
 
-export const meta = { title: 'MultiCombobox', group: 'Pickers', size: 'lg' };
+export const meta = { title: 'MultiCombobox', group: 'Ungrouped', size: 'lg' };
 
 export const states = [
   { name: 'basic', render: () => <MultiComboboxFixture /> },

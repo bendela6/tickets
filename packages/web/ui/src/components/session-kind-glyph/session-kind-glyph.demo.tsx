@@ -1,6 +1,6 @@
 import { SessionKindGlyph } from './session-kind-glyph';
 
-export const meta = { title: 'Session Kind Glyph', group: 'AI session', order: 2, size: 'sm' };
+export const meta = { title: 'Session Kind Glyph', group: 'Ungrouped', order: 2, size: 'sm' };
 
 export const states = [
   {

@@ -3,7 +3,7 @@ import { FieldLabel } from './field-label';
 import { FieldError } from '../field-error';
 import { Input } from '../input';
 
-export const meta = { title: 'FieldLabel', group: 'Form controls', size: 'md' };
+export const meta = { title: 'FieldLabel', group: 'Components', size: 'md' };
 
 export const states = [
   {

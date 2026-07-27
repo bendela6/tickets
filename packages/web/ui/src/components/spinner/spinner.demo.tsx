@@ -2,7 +2,7 @@ import { definePlayground, number, select } from '../../gallery';
 import { TONE_NAMES } from '../../style/tones';
 import { Spinner } from './spinner';
 
-export const meta = { title: 'Spinner', group: 'Display', size: 'md' };
+export const meta = { title: 'Spinner', group: 'Components', size: 'md' };
 
 export const states = [
   {
