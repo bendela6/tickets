@@ -1,7 +1,7 @@
 import { groupColor } from '../../engine/colors/group-color';
 import type { RoutingMode } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi, useDiagramView } from '../../state/diagram-context';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 import { useEditor } from '../editor';
 import { btn } from './button-class';
 import { Chip } from './chip';

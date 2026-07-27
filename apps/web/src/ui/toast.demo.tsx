@@ -1,4 +1,4 @@
-import { definePlayground, text } from '@tickets/ui/gallery';
+import { definePlayground, text } from '@tickets/ui';
 import { Button } from './button';
 import { useToast } from './toast';
 

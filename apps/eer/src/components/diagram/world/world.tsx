@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { useDiagramView } from '../../../state/diagram-context';
-import { cn } from '@tickets/ui/cn';
-import { runtimeStyle } from '@tickets/ui/runtime-style';
+import { cn, runtimeStyle } from '@tickets/ui';
 
 export function World({ children }: { children: ReactNode }) {
   const v = useDiagramView();

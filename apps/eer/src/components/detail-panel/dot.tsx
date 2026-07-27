@@ -1,5 +1,4 @@
-import { cn } from '@tickets/ui/cn';
-import { runtimeStyle } from '@tickets/ui/runtime-style';
+import { cn, runtimeStyle } from '@tickets/ui';
 
 export function Dot({ color, className }: { color: string; className?: string }) {
   return (

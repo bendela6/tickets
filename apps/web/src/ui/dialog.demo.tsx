@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { definePlayground, text, boolean } from '@tickets/ui/gallery';
+import { definePlayground, text, boolean } from '@tickets/ui';
 import { Button } from './button';
 import { ConfirmDialog } from './dialog';
 

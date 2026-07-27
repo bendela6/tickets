@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pill } from '@tickets/ui/pill';
+import { Pill } from '@tickets/ui';
 import { Button } from '../../ui/button';
 import { Combobox } from '../../ui/combobox';
 import type { ComboOption } from '../../ui/combobox-list';

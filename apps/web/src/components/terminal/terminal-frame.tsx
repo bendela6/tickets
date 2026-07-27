@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Button } from '../../ui/button';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 import { exitCodeTone } from '../../domain/session-status';
 import type { ConnState } from '../session/use-session-socket';
 

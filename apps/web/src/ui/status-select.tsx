@@ -1,7 +1,5 @@
 import { useMemo, useState } from 'react';
-import { cn } from '@tickets/ui/cn';
-import { Icon } from '@tickets/ui/icon';
-import { Pill } from '@tickets/ui/pill';
+import { cn, Icon, Pill } from '@tickets/ui';
 import type { StatusKind } from '../api/types';
 import { KIND_ICON, KIND_TONE, statusPill } from '../domain/status';
 import { ComboboxList, type ComboOption } from './combobox-list';

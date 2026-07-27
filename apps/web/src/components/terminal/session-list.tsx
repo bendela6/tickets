@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { useArchiveTerminalSession, useUnarchiveTerminalSession } from '../../api/use-archive-terminal-session';
 import type { TerminalSession } from '../../api/types';
 import { exitCodeTrailing, sessionStatus } from '../../domain/session-status';
-import { Pill } from '@tickets/ui/pill';
+import { Pill } from '@tickets/ui';
 import { SessionKindGlyph } from '../../ui/session-kind-glyph';
 import { formatAge } from '../../utils/format-age';
 

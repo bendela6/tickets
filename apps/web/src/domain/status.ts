@@ -1,7 +1,5 @@
 import type { ComponentProps } from 'react';
-import type { IconName } from '@tickets/ui/icon';
-import type { Pill } from '@tickets/ui/pill';
-import type { HueTone } from '@tickets/ui/tones';
+import { type HueTone, type IconName, type Pill } from '@tickets/ui';
 import type { StatusKind } from '../api/types';
 
 // The app's ONE ticket-status mapping. Nothing else in apps/web may decide

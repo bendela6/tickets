@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { boolean, definePlayground, select } from '@tickets/ui/gallery';
+import { boolean, definePlayground, select } from '@tickets/ui';
 import { StatusSelect, type StatusOption } from './status-select';
 
 const STATUSES: StatusOption[] = [

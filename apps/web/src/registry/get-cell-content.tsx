@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pill } from '@tickets/ui/pill';
+import { Pill } from '@tickets/ui';
 import type { Field } from '../api/types';
 import { statusPill } from '../domain/status';
 import { formatExact } from '../ui/relative-date';

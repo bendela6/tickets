@@ -1,5 +1,4 @@
-import { cn } from '@tickets/ui/cn';
-import { Meter } from '@tickets/ui/meter';
+import { cn, Meter } from '@tickets/ui';
 
 // Agent runs cost real money and the UI must never hide that (screen 10): spend
 // so far, always visible in the session header. With a budget cap it shows

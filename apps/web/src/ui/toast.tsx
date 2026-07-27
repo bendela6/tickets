@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Toast as RadixToast } from 'radix-ui';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 
 type ToastInput = { title: ReactNode; action?: { label: string; onClick: () => void } };
 type ToastEntry = ToastInput & { id: number };

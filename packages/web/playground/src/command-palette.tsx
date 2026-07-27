@@ -1,7 +1,7 @@
 import { Command } from 'cmdk';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { CollectedDemo } from '@tickets/ui/gallery';
+import type { CollectedDemo } from '@tickets/ui';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 

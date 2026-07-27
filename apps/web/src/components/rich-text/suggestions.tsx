@@ -5,8 +5,7 @@ import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import type { StatusKind } from '../../api/types';
 import { KIND_TONE } from '../../domain/status';
 import { Avatar } from '../../ui/avatar';
-import { cn } from '@tickets/ui/cn';
-import { toneClasses } from '@tickets/ui/tones';
+import { cn, toneClasses } from '@tickets/ui';
 
 // RichTextEditor threads these two lookup sources through to the mention (@)
 // and ticket-ref (#) Mention nodes wired in @tickets/richtext. Either source

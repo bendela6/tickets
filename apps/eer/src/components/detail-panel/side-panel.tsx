@@ -7,8 +7,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 
-import { cn } from '@tickets/ui/cn';
-import { runtimeStyle } from '@tickets/ui/runtime-style';
+import { cn, runtimeStyle } from '@tickets/ui';
 import { DetailPanel } from './detail-panel';
 
 const MIN_WIDTH = 240;

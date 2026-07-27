@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { boolean, definePlayground, number, text } from '@tickets/ui/gallery';
+import { boolean, definePlayground, number, text } from '@tickets/ui';
 import { MultiCombobox } from './multi-combobox';
 import type { ComboOption } from './combobox-list';
 

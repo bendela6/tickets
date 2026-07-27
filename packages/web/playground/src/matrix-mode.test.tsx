@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
-import { boolean as booleanControl, definePlayground, select } from '@tickets/ui/gallery';
+import { boolean as booleanControl, definePlayground, select } from '@tickets/ui';
 import { MatrixMode, matrixValues } from './matrix-mode';
 
 describe('matrixValues', () => {

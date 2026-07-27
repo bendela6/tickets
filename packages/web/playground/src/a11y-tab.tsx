@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AxeResults } from 'axe-core';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 
 interface AuditState {
   results: AxeResults | null;

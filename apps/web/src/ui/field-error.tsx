@@ -1,5 +1,5 @@
 import type { HTMLAttributes } from 'react';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 
 export function FieldError({ className, ...rest }: HTMLAttributes<HTMLParagraphElement>) {
   return (

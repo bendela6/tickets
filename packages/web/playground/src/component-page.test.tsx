@@ -7,7 +7,7 @@ import {
   definePlayground,
   isDemoError,
   select,
-} from '@tickets/ui/gallery';
+} from '@tickets/ui';
 import { setAxeForTests } from './axe';
 import { ComponentPage } from './component-page';
 

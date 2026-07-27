@@ -4,9 +4,7 @@ import { useCreateLinkType, useSetTargetTypes, useUpdateLinkType } from '../../a
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
-import { cn } from '@tickets/ui/cn';
-import { Pill } from '@tickets/ui/pill';
-import { SectionHeader } from '@tickets/ui/section-header';
+import { cn, Pill, SectionHeader } from '@tickets/ui';
 import { Combobox } from '../../ui/combobox';
 import type { ComboOption } from '../../ui/combobox-list';
 import { FieldLabel } from '../../ui/field-label';

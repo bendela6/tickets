@@ -1,7 +1,5 @@
 import type { ReactElement } from 'react';
-import { cn } from '@tickets/ui/cn';
-import { Icon } from '@tickets/ui/icon';
-import type { Tone } from '@tickets/ui/tones';
+import { cn, Icon, type Tone } from '@tickets/ui';
 import type { SessionKind } from '../ui/session-kind-glyph';
 
 // The app's ONE terminal/agent session status mapping — ported from the

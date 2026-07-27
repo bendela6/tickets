@@ -1,4 +1,4 @@
-import { initialValues, type CollectedDemo } from '@tickets/ui/gallery';
+import { initialValues, type CollectedDemo } from '@tickets/ui';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 

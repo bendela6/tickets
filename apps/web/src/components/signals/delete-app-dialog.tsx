@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { SignalsAppRow } from '../../api/signals/signals-api';
 import { useDeleteApp } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
-import { DialogFooter } from '@tickets/ui/dialog-footer';
+import { DialogFooter } from '@tickets/ui';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 import { FieldLabel } from '../../ui/field-label';
 import { Input } from '../../ui/input';

@@ -25,7 +25,7 @@
 
 import type { EditField } from '../../engine/model/apply-model-edit';
 import type { EnumDecl } from '../../engine/model/types';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 import { TypeCell } from './type-cell';
 
 const cellInput = cn('w-full rounded border border-gray-600 bg-gray-900 px-1 py-1', 'font-mono text-xs text-gray-50');

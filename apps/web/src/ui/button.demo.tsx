@@ -1,4 +1,4 @@
-import { boolean, definePlayground, select, text } from '@tickets/ui/gallery';
+import { boolean, definePlayground, select, text } from '@tickets/ui';
 import { Button } from './button';
 
 export const meta = { title: 'Button', group: 'Form controls', order: 1, size: 'sm' };

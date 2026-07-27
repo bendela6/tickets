@@ -5,7 +5,7 @@ import { useProjects } from '../../api/use-projects';
 import { useProjectStats } from '../../api/use-project-stats';
 import { KIND_ICON, KIND_TONE } from '../../domain/status';
 import { Button } from '../../ui/button';
-import { Icon } from '@tickets/ui/icon';
+import { Icon } from '@tickets/ui';
 import { relativeLabel } from '../../ui/relative-date';
 import { NewProjectDialog } from '../shell/new-project-dialog';
 

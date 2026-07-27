@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ClearSignalsFilters, SignalsAppRow } from '../../api/signals/signals-api';
 import { useAppReleases, useClearAppSignals } from '../../api/signals/use-signals';
 import { Button } from '../../ui/button';
-import { DialogFooter } from '@tickets/ui/dialog-footer';
+import { DialogFooter } from '@tickets/ui';
 import { DialogContent, DialogRoot, DialogTitle } from '../../ui/dialog';
 
 type ManagedApp = Pick<SignalsAppRow, 'id' | 'name' | 'slug'>;

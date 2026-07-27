@@ -1,4 +1,4 @@
-import { boolean, definePlayground, text } from '@tickets/ui/gallery';
+import { boolean, definePlayground, text } from '@tickets/ui';
 import { Textarea } from './textarea';
 
 export const meta = { title: 'Textarea', group: 'Form controls', size: 'md' };

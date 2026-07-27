@@ -1,4 +1,4 @@
-import { boolean, definePlayground, text } from '@tickets/ui/gallery';
+import { boolean, definePlayground, text } from '@tickets/ui';
 import { Checkbox } from './checkbox';
 
 export const meta = { title: 'Checkbox', group: 'Form controls', size: 'sm' };

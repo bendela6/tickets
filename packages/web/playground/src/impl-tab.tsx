@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { CollectedDemo } from '@tickets/ui/gallery';
-import { SegmentedControl } from '@tickets/ui/segmented-control';
+import { type CollectedDemo, SegmentedControl } from '@tickets/ui';
 import { CodeBlock } from './code-block';
 import { fileName, implPaths } from './resolve-impl';
 

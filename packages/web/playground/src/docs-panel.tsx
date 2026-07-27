@@ -1,6 +1,5 @@
 import { Fragment, useState, type ReactNode } from 'react';
-import { cn } from '@tickets/ui/cn';
-import { UI_SRC_ROOT, WEB_SRC_ROOT, type AnyControlDef, type CollectedDemo } from '@tickets/ui/gallery';
+import { type AnyControlDef, cn, type CollectedDemo, UI_SRC_ROOT, WEB_SRC_ROOT } from '@tickets/ui';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 

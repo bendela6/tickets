@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { definePlayground, text } from '@tickets/ui/gallery';
+import { definePlayground, text } from '@tickets/ui';
 import { RadioGroup } from './radio-group';
 
 function DensityFixture() {

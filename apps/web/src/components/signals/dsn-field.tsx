@@ -1,5 +1,4 @@
-import { cn } from '@tickets/ui/cn';
-import { CopyButton } from '@tickets/ui/copy-button';
+import { cn, CopyButton } from '@tickets/ui';
 
 /**
  * DSN field (docs/design/SigGallery.dc.html "DSN FIELD — MACHINE TRUTH,

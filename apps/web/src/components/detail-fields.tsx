@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { Board, Item } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
 import { FieldWidget } from '../registry/field-widget';
-import { SectionHeader } from '@tickets/ui/section-header';
+import { SectionHeader } from '@tickets/ui';
 import { useCurrentUser } from '../state/current-user-context';
 import type { BoardIndexes } from '../utils/index-board';
 

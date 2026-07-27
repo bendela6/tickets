@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { AppReleaseRow } from '../../api/signals/signals-api';
 import { useAppReleases, useDeleteRelease } from '../../api/signals/use-signals';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 import { ConfirmDialog } from '../../ui/dialog';
 import { formatBytes, formatCount, relativeTime } from './format';
 

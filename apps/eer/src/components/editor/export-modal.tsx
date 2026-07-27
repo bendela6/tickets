@@ -10,7 +10,7 @@ import { useMemo, useState } from 'react';
 
 import { exportDrizzle } from '../../engine/model/export-drizzle';
 import { useDiagramModelOrNull } from '../../state/diagram-context';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 import { Modal } from '../modal';
 
 const field = cn('w-full rounded-md border border-gray-600 bg-gray-900 px-2 py-1', 'text-sm text-gray-50');

@@ -1,4 +1,4 @@
-import { definePlayground, number, boolean } from '@tickets/ui/gallery';
+import { definePlayground, number, boolean } from '@tickets/ui';
 import { CostMeter } from './cost-meter';
 
 function UncappedFixture() {

@@ -1,4 +1,4 @@
-import type { HueTone } from '@tickets/ui/tones';
+import type { HueTone } from '@tickets/ui';
 import type { StatusKind } from '../api/types';
 import { KIND_TONE } from '../domain/status';
 

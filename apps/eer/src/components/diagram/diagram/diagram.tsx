@@ -2,8 +2,7 @@ import type { ReactNode } from 'react';
 
 import { useDiagramGestures } from '../../../hooks/use-diagram-gestures';
 import { useDiagramModelOrNull, useViewportRef } from '../../../state/diagram-context';
-import { cn } from '@tickets/ui/cn';
-import { runtimeStyle } from '@tickets/ui/runtime-style';
+import { cn, runtimeStyle } from '@tickets/ui';
 import { EdgesSvg } from '../edges-svg';
 import { EntityCards } from '../entity-cards';
 import { World } from '../world';

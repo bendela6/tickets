@@ -1,4 +1,4 @@
-import { definePlayground, select, text } from '@tickets/ui/gallery';
+import { definePlayground, select, text } from '@tickets/ui';
 import { Avatar } from './avatar';
 
 export const meta = { title: 'Avatar', group: 'Display', order: 5, size: 'sm' };

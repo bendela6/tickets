@@ -1,4 +1,4 @@
-import { definePlayground, text, boolean } from '@tickets/ui/gallery';
+import { definePlayground, text, boolean } from '@tickets/ui';
 import { Button } from './button';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from './menu';
 

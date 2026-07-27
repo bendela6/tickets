@@ -2,7 +2,7 @@ import { entityColor } from '../../engine/colors/entity-color';
 import { entityIdsInGroup } from '../../engine/groups/entity-ids-in-group';
 import type { Model } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 import { useEditor } from '../editor';
 import { Dot } from './dot';
 import { Empty } from './empty';

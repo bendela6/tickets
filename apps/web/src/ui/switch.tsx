@@ -1,5 +1,5 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 
 type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & { label: string };
 

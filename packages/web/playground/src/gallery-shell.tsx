@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { isDemoError, type CollectedDemo } from '@tickets/ui/gallery';
+import { isDemoError, type CollectedDemo } from '@tickets/ui';
 import { ComponentPage } from './component-page';
 import { DemoPreview, fitsBesideDocs } from './demo-preview';
 import { DocsPanel, DOCS_COLUMN } from './docs-panel';

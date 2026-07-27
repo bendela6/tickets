@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { definePlayground, select } from '@tickets/ui/gallery';
+import { definePlayground, select } from '@tickets/ui';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { Button } from './button';
 

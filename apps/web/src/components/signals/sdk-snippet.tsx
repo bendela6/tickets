@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import { cn } from '@tickets/ui/cn';
-import { CopyButton } from '@tickets/ui/copy-button';
-import { SegmentedControl } from '@tickets/ui/segmented-control';
+import { cn, CopyButton, SegmentedControl } from '@tickets/ui';
 
 export type SdkPlatform = 'react' | 'node' | 'browser';
 
