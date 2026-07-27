@@ -61,7 +61,7 @@ export function sessionStatus(status: SessionStatus, kind?: SessionKind): Entry 
 // "Exited with code N" footer, which needs different surrounding markup than
 // the pill trailing content here so it can't reuse exitCodeTrailing wholesale.
 export function exitCodeTone(exitCode: number): string {
-  return exitCode === 0 ? 'text-opt-green' : 'text-danger';
+  return exitCode === 0 ? 'text-green-9' : 'text-red-9';
 }
 
 // Exit-code chip for an exited session: green for a clean exit, danger

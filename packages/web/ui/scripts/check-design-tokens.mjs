@@ -30,21 +30,27 @@ function buildResolvedTokenMaps() {
   return { light: toHexMap(light), dark: toHexMap(dark) };
 }
 
-// design-system.html swatch label -> semantic token name.
+// design-system.html swatch label -> token name.
+//
+// The right-hand side is a ramp step now rather than a semantic alias: the
+// design file still speaks in roles ("text.secondary"), and this map is where
+// that vocabulary meets the numbered system. Roles resolve through
+// next/semantic.tokens.json — primary is indigo, danger is red — and the step
+// comes from the emphasis contract: 9 solid, 10 hover, 3 subtle, 11 text.
 const LABEL_TO_TOKEN = {
-  'bg.app': 'app',
-  'surface.raised': 'raised',
-  'surface.inset': 'inset',
-  'border.hairline': 'hairline',
-  'border.control': 'control',
-  'text.primary': 'ink',
-  'text.secondary': 'ink-2',
-  'text.tertiary': 'ink-3',
-  accent: 'accent',
-  'accent.hover': 'accent-hover',
-  'accent.subtle': 'accent-subtle',
-  danger: 'danger',
-  'danger.subtle': 'danger-subtle',
+  'bg.app': 'gray-1',
+  'surface.raised': 'surface-raised',
+  'surface.inset': 'surface-inset',
+  'border.hairline': 'gray-6',
+  'border.control': 'gray-7',
+  'text.primary': 'gray-12',
+  'text.secondary': 'gray-11',
+  'text.tertiary': 'gray-9',
+  accent: 'indigo-9',
+  'accent.hover': 'indigo-10',
+  'accent.subtle': 'indigo-3',
+  danger: 'red-9',
+  'danger.subtle': 'red-3',
 };
 
 // Matches `>label</div><div ...>#HEX</div>` swatch pairs, e.g.

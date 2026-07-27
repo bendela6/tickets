@@ -13,11 +13,11 @@ export function DsnField({ dsn, className }: { dsn: string; className?: string }
       role="group"
       aria-label="DSN"
       className={cn(
-        'flex h-9 max-w-[520px] items-center gap-2.5 rounded-[8px] border border-hairline bg-inset py-0 pr-1.5 pl-3',
+        'flex h-9 max-w-[520px] items-center gap-2.5 rounded-[8px] border border-gray-6 bg-surface-inset py-0 pr-1.5 pl-3',
         className,
       )}
     >
-      <span className="flex-1 truncate font-mono text-[12px] font-medium text-ink">{dsn}</span>
+      <span className="flex-1 truncate font-mono text-[12px] font-medium text-gray-12">{dsn}</span>
       <CopyButton value={dsn} failedLabel="Copy failed" className="shrink-0" />
     </div>
   );

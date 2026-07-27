@@ -45,20 +45,20 @@ function formatStartedAt(iso: string): string {
 function SessionSkeleton() {
   return (
     <div className="flex h-full min-h-0 flex-col p-6 md:p-7">
-      <div className="mb-3 h-3 w-40 animate-pulse rounded-xs bg-inset" />
+      <div className="mb-3 h-3 w-40 animate-pulse rounded-xs bg-surface-inset" />
       <div className="mb-3 flex items-center gap-2.5">
-        <div className="h-5 w-48 animate-pulse rounded-xs bg-inset" />
-        <div className="h-5.5 w-16 animate-pulse rounded-md bg-inset" />
+        <div className="h-5 w-48 animate-pulse rounded-xs bg-surface-inset" />
+        <div className="h-5.5 w-16 animate-pulse rounded-md bg-surface-inset" />
       </div>
-      <div className="mb-4 h-16 flex-none animate-pulse rounded-[10px] border border-hairline bg-raised" />
-      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-hairline bg-raised p-4 md:p-5">
+      <div className="mb-4 h-16 flex-none animate-pulse rounded-[10px] border border-gray-6 bg-surface-raised" />
+      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-gray-6 bg-surface-raised p-4 md:p-5">
         <div className="flex flex-col gap-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3">
-              <div className="h-3 w-10 flex-none animate-pulse rounded-xs bg-inset" />
-              <div className="size-5 flex-none animate-pulse rounded-[6px] bg-inset" />
+              <div className="h-3 w-10 flex-none animate-pulse rounded-xs bg-surface-inset" />
+              <div className="size-5 flex-none animate-pulse rounded-[6px] bg-surface-inset" />
               <div
-                className="h-3 animate-pulse rounded-xs bg-inset"
+                className="h-3 animate-pulse rounded-xs bg-surface-inset"
                 style={{ width: `${38 + ((i * 7) % 45)}%` }}
               />
             </div>
@@ -173,7 +173,7 @@ function CopySessionIdButton({ sessionId }: { sessionId: string }) {
     <button
       type="button"
       onClick={() => void copy(sessionId)}
-      className="h-8 flex-none rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink hover:border-ink-3 hover:bg-inset"
+      className="h-8 flex-none rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-medium text-gray-12 hover:border-gray-9 hover:bg-surface-inset"
     >
       {copied ? 'Copied' : failed ? 'Copy failed' : '⧉ Copy session id'}
     </button>
@@ -183,33 +183,33 @@ function CopySessionIdButton({ sessionId }: { sessionId: string }) {
 function ErrorCard({ row }: { row: SessionEventRow }) {
   const culprit = errorCulprit(row.payload, row.mechanism);
   return (
-    <div className="rounded-[10px] border border-danger bg-danger-subtle px-3.5 py-2.75">
+    <div className="rounded-[10px] border border-red-9 bg-red-3 px-3.5 py-2.75">
       <div className="flex items-center gap-2.5">
-        <span className="flex-none font-mono text-[13px] font-semibold text-danger">{row.name}</span>
-        <span className="min-w-0 flex-1 truncate font-sans text-[12.5px] text-ink">{row.message}</span>
+        <span className="flex-none font-mono text-[13px] font-semibold text-red-9">{row.name}</span>
+        <span className="min-w-0 flex-1 truncate font-sans text-[12.5px] text-gray-12">{row.message}</span>
         {row.issueId !== null && row.issueKey !== null ? (
           <Link
             to="/signals/issues/$issueId"
             params={{ issueId: String(row.issueId) }}
-            className="inline-flex h-6.5 flex-none items-center rounded-[6px] border border-danger px-2.5 font-sans text-[11px] font-medium text-danger hover:bg-danger/10"
+            className="inline-flex h-6.5 flex-none items-center rounded-[6px] border border-red-9 px-2.5 font-sans text-[11px] font-medium text-red-9 hover:bg-red-9/10"
           >
             View issue {row.issueKey} →
           </Link>
         ) : null}
       </div>
-      {culprit !== undefined ? <div className="mt-1.25 font-mono text-[11px] text-ink-2">{culprit}</div> : null}
+      {culprit !== undefined ? <div className="mt-1.25 font-mono text-[11px] text-gray-11">{culprit}</div> : null}
     </div>
   );
 }
 
 function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem; startedAt: string; isFirst: boolean; isLast: boolean }) {
-  const lineClass = 'w-[1.5px] flex-none bg-hairline';
+  const lineClass = 'w-[1.5px] flex-none bg-gray-6';
   return (
     <div className="flex items-stretch">
       <span
         className={cn(
           'flex w-16 flex-none justify-end pt-0.5 font-mono text-[11px]',
-          item.type === 'row' && item.row.kind === 'error' ? 'text-danger' : 'text-ink-3',
+          item.type === 'row' && item.row.kind === 'error' ? 'text-red-9' : 'text-gray-9',
         )}
       >
         {item.type === 'row' ? elapsedLabel(item.row.clientTimestamp, startedAt) : null}
@@ -224,7 +224,7 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
             label={toSignalKind(item.row.kind)}
           />
         ) : (
-          <span className="py-0.5 font-mono text-[10px] text-ink-3">┆</span>
+          <span className="py-0.5 font-mono text-[10px] text-gray-9">┆</span>
         )}
         <span className={cn(lineClass, 'flex-1', isLast && 'bg-transparent')} />
       </span>
@@ -235,7 +235,7 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
             emphasis="outline"
             shape="full"
             label={`${item.seconds}s idle`}
-            className="border-dashed border-control font-mono text-[10.5px]"
+            className="border-dashed border-gray-7 font-mono text-[10.5px]"
           />
         ) : item.row.kind === 'error' ? (
           <ErrorCard row={item.row} />
@@ -245,7 +245,7 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
               className={cn(
                 'w-18.5 flex-none font-mono text-[10.5px]',
                 // A warning-level log stands out in the run-up to a crash.
-                item.row.level === 'warning' ? 'text-opt-orange' : 'text-ink-3',
+                item.row.level === 'warning' ? 'text-orange-9' : 'text-gray-9',
               )}
             >
               {item.row.level === 'warning' && item.row.kind === 'log'
@@ -256,10 +256,10 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
               className={cn(
                 'truncate',
                 item.row.level === 'warning'
-                  ? 'font-mono text-[12px] text-opt-orange'
+                  ? 'font-mono text-[12px] text-orange-9'
                   : item.row.kind === 'event'
-                    ? 'font-sans text-[12.5px] text-ink'
-                    : 'font-mono text-[12px] text-ink',
+                    ? 'font-sans text-[12.5px] text-gray-12'
+                    : 'font-mono text-[12px] text-gray-12',
               )}
             >
               {rowMessage(item.row)}
@@ -277,7 +277,7 @@ function NotFound() {
       <ScreenState
         title="Session not found"
         action={
-          <Link to="/signals" className="font-sans text-meta text-accent hover:underline">
+          <Link to="/signals" className="font-sans text-meta text-indigo-9 hover:underline">
             ‹ Back to Issues
           </Link>
         }
@@ -299,7 +299,7 @@ function LoadError({ onRetry }: { onRetry: () => void }) {
           <button
             type="button"
             onClick={onRetry}
-            className="h-8 rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink hover:bg-inset"
+            className="h-8 rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-medium text-gray-12 hover:bg-surface-inset"
           >
             ↻ Retry
           </button>
@@ -341,8 +341,8 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col p-6 md:p-7">
-      <div className="mb-3 font-mono text-[12px] text-ink-3">
-        <Link to="/signals" className="text-accent hover:underline">
+      <div className="mb-3 font-mono text-[12px] text-gray-9">
+        <Link to="/signals" className="text-indigo-9 hover:underline">
           ‹ Issues
         </Link>
         {errorRow !== undefined ? (
@@ -352,7 +352,7 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
             <Link
               to="/signals/issues/$issueId"
               params={{ issueId: String(errorRow.issueId) }}
-              className="text-accent hover:underline"
+              className="text-indigo-9 hover:underline"
             >
               {errorRow.issueKey}
             </Link>{' '}
@@ -364,13 +364,13 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
       <div className="mb-3 flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="font-mono text-[18px] font-semibold text-ink">{session.sessionId}</span>
-            <span className="inline-flex h-5.5 items-center rounded-md bg-inset px-2 font-mono text-[11px] font-medium text-ink-2">
+            <span className="font-mono text-[18px] font-semibold text-gray-12">{session.sessionId}</span>
+            <span className="inline-flex h-5.5 items-center rounded-md bg-surface-inset px-2 font-mono text-[11px] font-medium text-gray-11">
               {session.appSlug ?? `app ${session.appId}`}
             </span>
             {user !== undefined ? (
-              <span className="inline-flex items-center gap-1.5 font-sans text-[12px] text-ink-2">
-                <span className="flex size-4.5 items-center justify-center rounded-full bg-accent-subtle font-sans text-[8px] font-semibold text-accent">
+              <span className="inline-flex items-center gap-1.5 font-sans text-[12px] text-gray-11">
+                <span className="flex size-4.5 items-center justify-center rounded-full bg-indigo-3 font-sans text-[8px] font-semibold text-indigo-9">
                   {user.initials}
                 </span>
                 {user.label}
@@ -385,45 +385,45 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
               />
             ) : null}
           </div>
-          <div className="mt-1.5 font-sans text-[12px] text-ink-3">
+          <div className="mt-1.5 font-sans text-[12px] text-gray-9">
             One page load, everything it reported, in order — the error is the terminal point.
           </div>
         </div>
         <CopySessionIdButton sessionId={session.sessionId} />
       </div>
 
-      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-[10px] border border-hairline bg-raised px-4.5 py-3">
+      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-[10px] border border-gray-6 bg-surface-raised px-4.5 py-3">
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-ink-3">STARTED</div>
-          <div className="font-mono text-[13px] font-medium text-ink">{formatStartedAt(session.startedAt)}</div>
+          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">STARTED</div>
+          <div className="font-mono text-[13px] font-medium text-gray-12">{formatStartedAt(session.startedAt)}</div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-ink-3">DURATION</div>
-          <div className="font-mono text-[13px] font-medium text-ink">
+          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">DURATION</div>
+          <div className="font-mono text-[13px] font-medium text-gray-12">
             {session.durationMs !== null ? formatDurationMs(session.durationMs) : '—'}
           </div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-ink-3">SIGNALS</div>
-          <div className="font-sans text-[13px] text-ink">
+          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">SIGNALS</div>
+          <div className="font-sans text-[13px] text-gray-12">
             <span className="font-mono text-[13px] font-medium">{formatCount(total)}</span>{' '}
-            <span className="font-mono text-[11px] text-ink-3">
+            <span className="font-mono text-[11px] text-gray-9">
               · {plural(session.counts.log, 'log')} · {plural(session.counts.event, 'event')} ·{' '}
               {plural(session.counts.error, 'error')}
             </span>
           </div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-ink-3">RELEASE</div>
-          <div className="font-mono text-[13px] text-ink">{session.release ?? '—'}</div>
+          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">RELEASE</div>
+          <div className="font-mono text-[13px] text-gray-12">{session.release ?? '—'}</div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-ink-3">BROWSER</div>
-          <div className="font-sans text-[13px] text-ink">{formatPlatform(session.platform)}</div>
+          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">BROWSER</div>
+          <div className="font-sans text-[13px] text-gray-12">{formatPlatform(session.platform)}</div>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-hairline bg-raised p-4 md:p-5">
+      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-gray-6 bg-surface-raised p-4 md:p-5">
         <div className="flex max-w-245 flex-col">
           {timeline.map((item, index) => (
             <TimelineRow

@@ -16,8 +16,8 @@ const ICON_ONLY: Option[] = [
 ];
 
 const WITH_COUNTS: Option[] = [
-  { value: 'open', label: <>Open <span className="font-mono text-[11px] text-ink-3">12</span></> },
-  { value: 'resolved', label: <>Resolved <span className="font-mono text-[11px] text-ink-3">0</span></> },
+  { value: 'open', label: <>Open <span className="font-mono text-[11px] text-gray-9">12</span></> },
+  { value: 'resolved', label: <>Resolved <span className="font-mono text-[11px] text-gray-9">0</span></> },
 ];
 
 function DemoSegmentedControl({ options }: { options: Option[] }) {

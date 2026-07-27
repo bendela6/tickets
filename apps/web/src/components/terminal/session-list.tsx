@@ -55,15 +55,15 @@ function SessionRow({
       to="/terminals/$sessionId"
       params={{ sessionId: String(session.id) }}
       title={`${workdirName(session.workdirId)} · ${formatAge(session.createdAt)}`}
-      className="group flex items-center gap-2 rounded-[7px] px-2 py-1.5 pl-2 hover:bg-inset"
+      className="group flex items-center gap-2 rounded-[7px] px-2 py-1.5 pl-2 hover:bg-surface-inset"
       onClick={onNavigate}
     >
       <SessionKindGlyph kind="terminal" />
-      <span className="min-w-0 flex-1 truncate font-sans text-ui text-ink">{session.title}</span>
+      <span className="min-w-0 flex-1 truncate font-sans text-ui text-gray-12">{session.title}</span>
       <Pill {...st} trailing={exitCodeTrailing(session.status, session.exitCode)} />
       <button
         type="button"
-        className="shrink-0 rounded-[4px] border border-hairline bg-raised px-1.5 py-0.5 font-sans text-meta text-ink-2 opacity-0 hover:border-control group-hover:opacity-100"
+        className="shrink-0 rounded-[4px] border border-gray-6 bg-surface-raised px-1.5 py-0.5 font-sans text-meta text-gray-11 opacity-0 hover:border-gray-7 group-hover:opacity-100"
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();

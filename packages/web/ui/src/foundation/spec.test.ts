@@ -40,10 +40,10 @@ describe('liveTokens', () => {
   });
 
   it('resolves one level of var() indirection, per theme', () => {
-    // `--shadow-sm: var(--ins-shadow-sm)` and --ins-shadow-sm is declared
+    // `--shadow-raised: var(--ins-shadow-raised)` and --ins-shadow-raised is declared
     // twice — once per theme. Unresolved, both themes would read "var(...)".
-    const light = liveTokens(/^shadow-sm$/)[0];
-    const dark = liveTokens(/^shadow-sm$/, 'dark')[0];
+    const light = liveTokens(/^shadow-raised$/)[0];
+    const dark = liveTokens(/^shadow-raised$/, 'dark')[0];
     expect(light?.value).toMatch(/^0 /);
     expect(dark?.value).toMatch(/^0 /);
     expect(light?.value).not.toBe(dark?.value);
@@ -119,23 +119,28 @@ describe('drift', () => {
     // Every proposed size already exists; the scale is a rename, not a change.
     expect(byFamily.text?.filter((r) => r.status !== 'matched')).toEqual([]);
 
-    // Radius is the one family that loses steps: the live sheet has six, the
-    // proposal has four, so `ctrl` (5px) and `overlay` (10px) have no home.
-    // Both are in wide use — this is the migration's real work.
-    expect(byFamily.radius?.filter((r) => r.status === 'dropped').map((r) => r.live)).toEqual([
-      'radius-ctrl',
-      'radius-overlay',
-    ]);
+    // Radius is migrated: the six custom names are gone and the four steps now
+    // resolve to Tailwind's own sm/md/lg/xl, which happen to be exactly
+    // 4/6/8/12px. Nothing of ours is left in the sheet to drop.
+    expect(byFamily.radius?.filter((r) => r.status === 'dropped')).toEqual([]);
 
-    // Elevation gains a middle step; the two live ones survive under new names.
-    expect(byFamily.shadow?.filter((r) => r.status === 'added').map((r) => r.spec)).toEqual([
-      'shadow-overlay',
-    ]);
+    // Elevation now ships all three levels — the middle one was the addition.
+    expect(byFamily.shadow?.filter((r) => r.status !== 'matched')).toEqual([]);
 
-    // Motion is proposed wholesale — the live sheet names no duration or curve.
-    expect(byFamily.duration?.every((r) => r.status === 'added')).toBe(true);
-    expect(byFamily.ease?.every((r) => r.status === 'added')).toBe(true);
+    // Motion has landed: durations and curves are named in the sheet now, so
+    // every proposed one matches something live.
+    expect(byFamily.duration?.every((r) => r.status === 'matched')).toBe(true);
+    expect(byFamily.ease?.every((r) => r.status === 'matched')).toBe(true);
     expect(byFamily.animate?.every((r) => r.status === 'matched')).toBe(true);
+  });
+
+  it('reports nothing dropped anywhere — the migration is complete', () => {
+    // `drift` was built to size the move from the old token set to the numbered
+    // one. Now that tokens.css is GENERATED from tokens/next, a dropped row
+    // means the sheet still defines something the spec does not, which is the
+    // definition of the migration being unfinished.
+    const dropped = drift().flatMap((f) => f.rows.filter((r) => r.status === 'dropped'));
+    expect(dropped.map((r) => r.live)).toEqual([]);
   });
 
   it('summarises to counts a page can lead with', () => {

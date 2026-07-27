@@ -112,7 +112,7 @@ test('the error row elapsed-gutter label is danger-colored', async () => {
   renderSignals(<SessionScreen sessionId="sess_9f3k21" />, { fetchRoutes: [sessionRoute] });
 
   const errorElapsed = await screen.findByText('t+45.0s');
-  expect(errorElapsed).toHaveClass('text-danger');
+  expect(errorElapsed).toHaveClass('text-red-9');
 });
 
 test('(d) crashed chip + duration render in the header/stats', async () => {

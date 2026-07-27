@@ -84,18 +84,18 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2.5 border-b border-hairline px-6 py-3">
+      <div className="flex items-center gap-2.5 border-b border-gray-6 px-6 py-3">
         <button
           type="button"
           onClick={() => void navigate({ to: '/agents' })}
-          className="font-sans text-meta text-ink-3 hover:text-ink-2"
+          className="font-sans text-meta text-gray-9 hover:text-gray-11"
         >
           ← sessions
         </button>
-        <span className="inline-flex size-6 items-center justify-center rounded-md bg-accent-subtle font-mono text-[13px] text-accent">
+        <span className="inline-flex size-6 items-center justify-center rounded-md bg-indigo-3 font-mono text-[13px] text-indigo-9">
           ✳
         </span>
-        <span className="truncate font-sans text-ui font-medium text-ink">
+        <span className="truncate font-sans text-ui font-medium text-gray-12">
           {data?.title ?? `agent session #${sessionId}`}
         </span>
         <span className="flex-1" />
@@ -112,7 +112,7 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
             <button
               type="button"
               aria-label="Session actions"
-              className="inline-flex size-6 items-center justify-center rounded-md border border-hairline bg-raised font-sans text-ink-2 hover:border-control"
+              className="inline-flex size-6 items-center justify-center rounded-md border border-gray-6 bg-surface-raised font-sans text-gray-11 hover:border-gray-7"
             >
               ⋯
             </button>
@@ -147,19 +147,19 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto flex max-w-3xl flex-col gap-4 px-6 py-6">
           {rendered.length === 0 ? (
-            <p className="py-10 text-center font-sans text-meta text-ink-3">
+            <p className="py-10 text-center font-sans text-meta text-gray-9">
               Send a prompt to start the agent turn.
             </p>
           ) : (
             rendered
           )}
           {socket.conn === 'reconnecting' ? (
-            <p className="font-sans text-meta text-ink-3">Reconnecting…</p>
+            <p className="font-sans text-meta text-gray-9">Reconnecting…</p>
           ) : null}
         </div>
       </div>
 
-      <div className="border-t border-hairline px-6 py-3">
+      <div className="border-t border-gray-6 px-6 py-3">
         <PromptComposer
           value={draft}
           onChange={setDraft}
@@ -201,7 +201,7 @@ function renderTimeline(entries: Entry[], onRespond: RespondFn) {
 function UserBubble({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-2.5 self-end">
-      <div className="max-w-[85%] rounded-[10px] border border-hairline bg-inset px-3 py-2 font-sans text-ui text-ink">
+      <div className="max-w-[85%] rounded-[10px] border border-gray-6 bg-surface-inset px-3 py-2 font-sans text-ui text-gray-12">
         {text}
       </div>
     </div>

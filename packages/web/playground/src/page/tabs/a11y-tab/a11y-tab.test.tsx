@@ -156,13 +156,13 @@ describe('A11yTab', () => {
 
     // Verify serious impact chip has danger colors
     const seriousChip = screen.getByText('serious');
-    expect(seriousChip.className).toContain('bg-danger-subtle');
-    expect(seriousChip.className).toContain('text-danger');
+    expect(seriousChip.className).toContain('bg-red-3');
+    expect(seriousChip.className).toContain('text-red-9');
 
     // Verify moderate impact chip has orange colors
     const moderateChip = screen.getByText('moderate');
-    expect(moderateChip.className).toContain('bg-opt-orange-subtle');
-    expect(moderateChip.className).toContain('text-opt-orange');
+    expect(moderateChip.className).toContain('bg-orange-3');
+    expect(moderateChip.className).toContain('text-orange-9');
   });
 
   it('displays rule descriptions and target selectors', async () => {

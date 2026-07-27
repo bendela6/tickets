@@ -145,7 +145,7 @@ export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
         <button
           type="button"
           onClick={() => void navigate({ to: '/terminals' })}
-          className="font-sans text-meta text-ink-3 hover:text-ink-2"
+          className="font-sans text-meta text-gray-9 hover:text-gray-11"
         >
           ← sessions
         </button>
@@ -175,7 +175,7 @@ export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
                   <button
                     type="button"
                     aria-label="Session actions"
-                    className="inline-flex size-6 items-center justify-center rounded-md border border-hairline bg-raised font-sans text-ink-2 hover:border-control"
+                    className="inline-flex size-6 items-center justify-center rounded-md border border-gray-6 bg-surface-raised font-sans text-gray-11 hover:border-gray-7"
                   >
                     ⋯
                   </button>

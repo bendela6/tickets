@@ -12,7 +12,7 @@ describe('SegmentedControl', () => {
     const { container } = render(
       <SegmentedControl options={options} value="board" onChange={() => {}} />,
     );
-    expect(container.firstElementChild!.className).toContain('bg-inset');
+    expect(container.firstElementChild!.className).toContain('bg-surface-inset');
   });
 
   it('sets aria-pressed on the active option only', () => {

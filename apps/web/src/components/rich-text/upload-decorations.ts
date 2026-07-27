@@ -91,31 +91,31 @@ function svgIcon(paths: string, size: number): SVGSVGElement {
 function renderPending(entry: UploadEntry): void {
   entry.root.innerHTML = '';
   entry.root.className =
-    'my-1 block w-full max-w-xs overflow-hidden rounded-card border border-hairline bg-raised';
+    'my-1 block w-full max-w-xs overflow-hidden rounded-lg border border-gray-6 bg-surface-raised';
   entry.root.dataset['uploadStatus'] = 'pending';
 
   const preview = document.createElement('div');
   preview.className = 'h-37.5 opacity-50';
   preview.style.backgroundImage =
-    'repeating-linear-gradient(45deg, var(--color-inset) 0 8px, transparent 8px 16px)';
+    'repeating-linear-gradient(45deg, var(--color-surface-inset) 0 8px, transparent 8px 16px)';
 
   const caption = document.createElement('div');
-  caption.className = 'border-t border-hairline px-3 py-2.25';
+  caption.className = 'border-t border-gray-6 px-3 py-2.25';
 
   const row = document.createElement('div');
   row.className = 'mb-1.75 flex items-center gap-2';
   const name = document.createElement('span');
-  name.className = 'min-w-0 flex-1 truncate font-mono text-[11px] text-ink-2';
+  name.className = 'min-w-0 flex-1 truncate font-mono text-[11px] text-gray-11';
   name.textContent = entry.file.name;
   const pct = document.createElement('span');
-  pct.className = 'shrink-0 font-mono text-[11px] text-ink-3';
+  pct.className = 'shrink-0 font-mono text-[11px] text-gray-9';
   pct.textContent = '0%';
   row.append(name, pct);
 
   const track = document.createElement('div');
-  track.className = 'h-0.75 overflow-hidden rounded-full bg-inset';
+  track.className = 'h-0.75 overflow-hidden rounded-full bg-surface-inset';
   const bar = document.createElement('div');
-  bar.className = 'h-full rounded-full bg-accent';
+  bar.className = 'h-full rounded-full bg-indigo-9';
   bar.style.width = '0%';
   track.appendChild(bar);
 
@@ -145,13 +145,13 @@ function updateProgress(entry: UploadEntry, progress: number): void {
 // Remove (ghost). Token choice: the mock's border is #EBC7C3 — a tone
 // between --ins-danger and --ins-danger-subtle that isn't in the token set.
 // Rather than invent an unmapped hex, this reuses the app's existing
-// danger-card convention (border-danger + bg-danger-subtle, see
+// danger-card convention (border-red-9 + bg-red-3, see
 // message-stream.tsx's error card) instead of a bespoke "danger-subtle
 // -strong" — full-strength border keeps the failure legible at a glance.
 function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void {
   entry.root.innerHTML = '';
   entry.root.className =
-    'my-1 box-border flex h-49 w-full max-w-xs flex-col items-center justify-center gap-1.5 rounded-card border border-danger bg-danger-subtle';
+    'my-1 box-border flex h-49 w-full max-w-xs flex-col items-center justify-center gap-1.5 rounded-lg border border-red-9 bg-red-3';
   entry.root.dataset['uploadStatus'] = 'failed';
   entry.nameEl = null;
   entry.pctEl = null;
@@ -161,14 +161,14 @@ function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void 
   entry.retrying = false;
 
   const icon = svgIcon(CIRCLE_ALERT_PATHS, 18);
-  icon.classList.add('text-danger');
+  icon.classList.add('text-red-9');
 
   const title = document.createElement('span');
-  title.className = 'font-sans text-ui font-medium text-ink';
+  title.className = 'font-sans text-ui font-medium text-gray-12';
   title.textContent = 'Upload failed';
 
   const meta = document.createElement('span');
-  meta.className = 'font-mono text-[11px] text-ink-3';
+  meta.className = 'font-mono text-[11px] text-gray-9';
   meta.textContent = `${entry.file.name} · ${formatFileSize(entry.file.size)}`;
 
   const actions = document.createElement('div');
@@ -177,7 +177,7 @@ function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void 
   const retryBtn = document.createElement('button');
   retryBtn.type = 'button';
   retryBtn.className =
-    'inline-flex h-6.5 items-center gap-1.5 rounded-ctrl border border-control bg-raised px-2.75 font-sans text-[12px] font-medium text-ink';
+    'inline-flex h-6.5 items-center gap-1.5 rounded-md border border-gray-7 bg-surface-raised px-2.75 font-sans text-[12px] font-medium text-gray-12';
   retryBtn.append(svgIcon(ROTATE_CCW_PATHS, 12), document.createTextNode('Retry'));
   retryBtn.addEventListener('click', () => {
     // Single-flight guard: a rapid second Retry click (or a stray click on a
@@ -194,7 +194,7 @@ function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void 
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
   removeBtn.className =
-    'inline-flex h-6.5 items-center rounded-ctrl px-2.25 font-sans text-[12px] font-medium text-ink-3 hover:bg-black/4';
+    'inline-flex h-6.5 items-center rounded-md px-2.25 font-sans text-[12px] font-medium text-gray-9 hover:bg-black/4';
   removeBtn.textContent = 'Remove';
   removeBtn.addEventListener('click', () => handlersRef.current.onRemove(entry.id));
 

@@ -19,7 +19,7 @@ test('reports a non-zero exit code and offers Restart when ended', () => {
       <div>canvas</div>
     </TerminalFrame>,
   );
-  expect(screen.getByText('1')).toHaveClass('text-danger');
+  expect(screen.getByText('1')).toHaveClass('text-red-9');
   expect(screen.getByRole('button', { name: 'Restart' })).toBeInTheDocument();
 });
 

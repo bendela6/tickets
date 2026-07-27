@@ -39,19 +39,19 @@ export function Meter({
   return (
     <div className={cn('flex items-center gap-2', className)}>
       {label != null ? (
-        <span className="font-mono text-[11px] text-ink-2 tabular-nums">{label}</span>
+        <span className="font-mono text-[11px] text-gray-11 tabular-nums">{label}</span>
       ) : null}
       <div
         role="meter"
         aria-valuenow={value}
         aria-valuemin={0}
         aria-valuemax={max}
-        className={cn('h-1 min-w-9 flex-1 overflow-hidden rounded-full bg-inset', trackClassName)}
+        className={cn('h-1 min-w-9 flex-1 overflow-hidden rounded-full bg-surface-inset', trackClassName)}
       >
         <div className={cn('h-full rounded-full', fillBg)} style={{ width: `${pct}%` }} />
       </div>
       {trailing != null ? (
-        <span className="font-mono text-[11px] text-ink-2 tabular-nums">{trailing}</span>
+        <span className="font-mono text-[11px] text-gray-11 tabular-nums">{trailing}</span>
       ) : null}
     </div>
   );

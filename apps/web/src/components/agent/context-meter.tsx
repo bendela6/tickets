@@ -22,7 +22,7 @@ export function ContextMeter({
   return (
     <span
       className={cn(
-        'inline-flex h-6 items-center gap-2 rounded-md border border-hairline bg-raised px-2',
+        'inline-flex h-6 items-center gap-2 rounded-md border border-gray-6 bg-surface-raised px-2',
         className,
       )}
       title={
@@ -32,13 +32,13 @@ export function ContextMeter({
     >
       <span
         data-testid="context-fill"
-        className={cn('font-mono text-meta', hot ? 'text-danger' : 'text-ink')}
+        className={cn('font-mono text-meta', hot ? 'text-red-9' : 'text-gray-12')}
       >
         <span aria-hidden="true">▣ </span>
         {formatTokens(contextTokens)} / {formatTokens(contextWindow)}
       </span>
       <Meter value={contextTokens} max={contextWindow} dangerAt={contextWindow * 0.9} />
-      <span className="font-mono text-meta text-ink-3" title="output tokens generated">
+      <span className="font-mono text-meta text-gray-9" title="output tokens generated">
         <span aria-hidden="true">↓ </span>
         {formatTokens(tokensOut)}
       </span>

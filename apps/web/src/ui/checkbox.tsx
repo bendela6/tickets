@@ -19,7 +19,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
   return (
     <label
       className={cn(
-        'group inline-flex cursor-pointer items-center gap-2 font-sans text-ui text-ink has-disabled:cursor-not-allowed',
+        'group inline-flex cursor-pointer items-center gap-2 font-sans text-ui text-gray-12 has-disabled:cursor-not-allowed',
         className,
       )}
     >
@@ -37,15 +37,15 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           className={cn(
             // shrink-0 is required: as a flex item the input otherwise collapses
             // from 16px to ~9px wide (the switch/radio inputs already have it).
-            'peer m-0 size-4 shrink-0 appearance-none rounded-[4px] border-[1.5px] border-control bg-raised transition-colors',
-            'checked:border-accent checked:bg-accent indeterminate:border-accent indeterminate:bg-accent',
-            'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-accent-subtle',
-            'disabled:cursor-not-allowed disabled:border-hairline disabled:bg-inset',
+            'peer m-0 size-4 shrink-0 appearance-none rounded-[4px] border-[1.5px] border-gray-7 bg-surface-raised transition-colors',
+            'checked:border-indigo-9 checked:bg-indigo-9 indeterminate:border-indigo-9 indeterminate:bg-indigo-9',
+            'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-3',
+            'disabled:cursor-not-allowed disabled:border-gray-6 disabled:bg-surface-inset',
           )}
           {...rest}
         />
         {/* Checkmark / dash rendered as overlays (not bg-image) so they never
-            conflict with checked:bg-accent under tailwind-merge.
+            conflict with checked:bg-indigo-9 under tailwind-merge.
             Kept as hand-rolled inline SVGs rather than <Icon name="check"/> /
             <Icon name="minus"/> (task-12 sweep, step 4): the registry's
             "check"/"minus" glyphs are drawn on a 16-unit viewBox sized for a
@@ -60,7 +60,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
         <svg
           viewBox="0 0 12 12"
           aria-hidden
-          className="pointer-events-none absolute inset-0 hidden size-4 p-px text-on-accent peer-checked:block"
+          className="pointer-events-none absolute inset-0 hidden size-4 p-px text-indigo-contrast peer-checked:block"
         >
           <path
             d="M2.5 6.5 5 9l4.5-5"
@@ -74,7 +74,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
         <svg
           viewBox="0 0 12 12"
           aria-hidden
-          className="pointer-events-none absolute inset-0 hidden size-4 p-px text-on-accent peer-indeterminate:block"
+          className="pointer-events-none absolute inset-0 hidden size-4 p-px text-indigo-contrast peer-indeterminate:block"
         >
           <path
             d="M3 6h6"
@@ -85,7 +85,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           />
         </svg>
       </span>
-      <span className="group-has-disabled:text-ink-3">{label}</span>
+      <span className="group-has-disabled:text-gray-9">{label}</span>
     </label>
   );
 });

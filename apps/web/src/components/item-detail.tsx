@@ -25,8 +25,8 @@ import { RichTextEditor } from './rich-text/rich-text-editor';
 import { TicketDispatch } from './agent/ticket-dispatch';
 
 const ICON_BUTTON =
-  'inline-flex size-7.5 shrink-0 items-center justify-center rounded-[7px] border border-hairline ' +
-  'bg-transparent text-ink-2 hover:bg-inset hover:text-ink';
+  'inline-flex size-7.5 shrink-0 items-center justify-center rounded-[7px] border border-gray-6 ' +
+  'bg-transparent text-gray-11 hover:bg-surface-inset hover:text-gray-12';
 
 // Click-to-edit title: static heading until clicked, then a borderless input
 // that commits on blur/Enter and cancels on Escape.
@@ -51,7 +51,7 @@ function InlineTitle({
         onClick={() => setDraft(value)}
         className={cn(
           'm-0 w-full cursor-text border-b border-dashed border-transparent bg-transparent p-0',
-          'text-left font-sans font-semibold text-ink enabled:hover:border-control',
+          'text-left font-sans font-semibold text-gray-12 enabled:hover:border-gray-7',
           className,
         )}
       >
@@ -81,8 +81,8 @@ function InlineTitle({
         }
       }}
       className={cn(
-        'm-0 w-full border-b border-dashed border-accent bg-transparent p-0',
-        'font-sans font-semibold text-ink outline-none',
+        'm-0 w-full border-b border-dashed border-indigo-9 bg-transparent p-0',
+        'font-sans font-semibold text-gray-12 outline-none',
         className,
       )}
     />
@@ -208,7 +208,7 @@ export function ItemDetail({
   };
 
   const archivedChip = item.archivedAt ? (
-    <Pill tone="secondary" label="archived" className="rounded-ctrl text-label text-ink-3" />
+    <Pill tone="secondary" label="archived" className="rounded-md text-label text-gray-9" />
   ) : null;
 
   const archiveMenu = (
@@ -230,7 +230,7 @@ export function ItemDetail({
     <button
       type="button"
       onClick={() => openItem(parent.number)}
-      className="flex w-fit min-w-0 items-center gap-1.5 bg-transparent p-0 text-left font-sans text-meta font-medium text-accent hover:underline"
+      className="flex w-fit min-w-0 items-center gap-1.5 bg-transparent p-0 text-left font-sans text-meta font-medium text-indigo-9 hover:underline"
     >
       <span aria-hidden>‹</span>
       <span className="shrink-0 font-mono">
@@ -275,8 +275,8 @@ export function ItemDetail({
   if (variant === 'drawer') {
     return (
       <>
-        <div className="flex shrink-0 items-center gap-2.25 border-b border-hairline px-5 py-3.5">
-          <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-ctrl bg-inset px-1.75 py-0.75" />
+        <div className="flex shrink-0 items-center gap-2.25 border-b border-gray-6 px-5 py-3.5">
+          <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-md bg-surface-inset px-1.75 py-0.75" />
           <Pill {...typePill} label={type?.label ?? '?'} />
           {workflowField ? (
             <StatusSelect
@@ -294,7 +294,7 @@ export function ItemDetail({
           <Link
             to="/p/$projectKey/t/$number"
             params={{ projectKey, number: String(item.number) }}
-            className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border border-control bg-raised px-2.5 font-sans text-[12px] font-medium text-ink hover:bg-inset"
+            className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border border-gray-7 bg-surface-raised px-2.5 font-sans text-[12px] font-medium text-gray-12 hover:bg-surface-inset"
           >
             Open page ↗
           </Link>
@@ -339,18 +339,18 @@ export function ItemDetail({
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center gap-2.25 border-b border-hairline py-3.5">
+      <div className="flex items-center gap-2.25 border-b border-gray-6 py-3.5">
         <Link
           to="/p/$projectKey"
           params={{ projectKey }}
-          className="shrink-0 font-sans text-meta text-ink-2 hover:text-ink"
+          className="shrink-0 font-sans text-meta text-gray-11 hover:text-gray-12"
         >
           {board.project.name}
         </Link>
-        <span aria-hidden className="font-sans text-meta text-ink-3">
+        <span aria-hidden className="font-sans text-meta text-gray-9">
           ▸
         </span>
-        <span className="shrink-0 font-mono text-meta font-medium text-ink">
+        <span className="shrink-0 font-mono text-meta font-medium text-gray-12">
           {prefix}-{item.number}
         </span>
         {archivedChip}
@@ -366,11 +366,11 @@ export function ItemDetail({
           <div>
             {breadcrumb ? <div className="mb-2.5">{breadcrumb}</div> : null}
             <div className="mb-2.5 flex items-center gap-2.25">
-              <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-ctrl bg-inset px-1.75 py-0.75" />
+              <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-md bg-surface-inset px-1.75 py-0.75" />
               <Pill {...typePill} label={type?.label ?? '?'} />
-              <span className="font-mono text-label text-ink-3">
+              <span className="font-mono text-label text-gray-9">
                 created{' '}
-                <RelativeDate value={item.createdAt} className="font-mono text-[11px] text-ink-3" />{' '}
+                <RelativeDate value={item.createdAt} className="font-mono text-[11px] text-gray-9" />{' '}
                 by {creator?.name ?? `user ${item.createdBy}`}
               </span>
             </div>
@@ -390,7 +390,7 @@ export function ItemDetail({
           </section>
         </div>
         <div className="flex w-80 shrink-0 flex-col gap-5">
-          <section className="flex flex-col gap-3 rounded-panel border border-hairline bg-raised p-4">
+          <section className="flex flex-col gap-3 rounded-xl border border-gray-6 bg-surface-raised p-4">
             <SectionHeader title={`Fields — ${type?.label ?? '?'} form`} />
             <DetailFields board={board} indexes={indexes} item={item} layout="rail" />
           </section>

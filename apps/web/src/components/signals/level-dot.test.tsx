@@ -24,7 +24,7 @@ test('error, warning and info render visually distinct shapes', () => {
 
   // error is a filled circle
   expect(errorClasses).toMatch(/rounded-full/);
-  expect(errorClasses).toMatch(/bg-danger/);
+  expect(errorClasses).toMatch(/bg-red-9/);
   // warning is a rotated diamond
   expect(warningClasses).toMatch(/rotate-45/);
   // info is an open (unfilled) circle

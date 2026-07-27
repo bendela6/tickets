@@ -22,7 +22,7 @@ function ComposerFixture() {
       <button
         type="button"
         onClick={() => setRunning((r) => !r)}
-        className="self-start font-sans text-meta text-accent hover:underline"
+        className="self-start font-sans text-meta text-indigo-9 hover:underline"
       >
         toggle running (Stop shows only while running)
       </button>

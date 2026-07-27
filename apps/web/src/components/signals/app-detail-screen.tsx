@@ -28,7 +28,7 @@ function AppNotFound() {
       <ScreenState
         title="App not found"
         action={
-          <Link to="/signals/apps" className="font-sans text-meta text-accent hover:underline">
+          <Link to="/signals/apps" className="font-sans text-meta text-indigo-9 hover:underline">
             ‹ Back to Apps
           </Link>
         }
@@ -93,7 +93,7 @@ export function AppDetailScreen({ appId }: { appId: number }) {
             <button
               type="button"
               onClick={() => void appQuery.refetch()}
-              className="h-8 rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink hover:bg-inset"
+              className="h-8 rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-medium text-gray-12 hover:bg-surface-inset"
             >
               ↻ Retry
             </button>
@@ -114,8 +114,8 @@ export function AppDetailScreen({ appId }: { appId: number }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-auto p-6 md:p-7">
-      <div className="mb-3 font-mono text-[12px] text-ink-3">
-        <Link to="/signals/apps" className="text-accent hover:underline">
+      <div className="mb-3 font-mono text-[12px] text-gray-9">
+        <Link to="/signals/apps" className="text-indigo-9 hover:underline">
           ‹ Apps
         </Link>{' '}
         / {app.slug}
@@ -132,7 +132,7 @@ export function AppDetailScreen({ appId }: { appId: number }) {
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="m-0 font-sans text-[18px] leading-tight font-semibold text-ink">{app.name}</h1>
+            <h1 className="m-0 font-sans text-[18px] leading-tight font-semibold text-gray-12">{app.name}</h1>
             <Pill tone="secondary" label={app.slug} className="font-mono text-[11px]" />
           </div>
         </div>
@@ -141,7 +141,7 @@ export function AppDetailScreen({ appId }: { appId: number }) {
             <button
               type="button"
               aria-label="App actions"
-              className="flex size-8 shrink-0 items-center justify-center rounded-[8px] border border-control bg-raised text-ink-2 hover:bg-inset hover:text-ink"
+              className="flex size-8 shrink-0 items-center justify-center rounded-[8px] border border-gray-7 bg-surface-raised text-gray-11 hover:bg-surface-inset hover:text-gray-12"
             >
               ⋯
             </button>
@@ -176,26 +176,26 @@ export function AppDetailScreen({ appId }: { appId: number }) {
         ) : null}
       </div>
 
-      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-[10px] border border-hairline bg-raised px-4.5 py-3">
+      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-[10px] border border-gray-6 bg-surface-raised px-4.5 py-3">
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-ink-3">SIGNALS · 24H</div>
-          <div className="font-mono text-[14px] font-semibold text-ink">{formatCount(signals24h)}</div>
+          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">SIGNALS · 24H</div>
+          <div className="font-mono text-[14px] font-semibold text-gray-12">{formatCount(signals24h)}</div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-ink-3">ERRORS · 24H</div>
-          <div className={cn('font-mono text-[14px] font-medium', errors24h > 0 ? 'text-danger' : 'text-ink')}>
+          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">ERRORS · 24H</div>
+          <div className={cn('font-mono text-[14px] font-medium', errors24h > 0 ? 'text-red-9' : 'text-gray-12')}>
             {formatCount(errors24h)}
           </div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-ink-3">CREATED</div>
-          <div className="font-sans text-[13px] text-ink">{formatDate(app.createdAt)}</div>
+          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">CREATED</div>
+          <div className="font-sans text-[13px] text-gray-12">{formatDate(app.createdAt)}</div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4.5 xl:grid-cols-2">
-        <div className="flex-none rounded-xl border border-hairline bg-raised p-4">
-          <div className="mb-3 font-sans text-[13.5px] font-semibold text-ink">Connect</div>
+        <div className="flex-none rounded-xl border border-gray-6 bg-surface-raised p-4">
+          <div className="mb-3 font-sans text-[13.5px] font-semibold text-gray-12">Connect</div>
           <DsnField dsn={app.dsn} className="mb-3" />
           <SdkSnippet dsn={app.dsn} platform="react" />
         </div>
@@ -203,16 +203,16 @@ export function AppDetailScreen({ appId }: { appId: number }) {
         <ReleasesCard appId={appId} />
       </div>
 
-      <div className="mt-4.5 flex-none overflow-hidden rounded-xl border border-hairline bg-raised">
-        <div className="flex h-10.5 items-center gap-2.5 border-b border-hairline px-4">
-          <span className="font-sans text-[13.5px] font-semibold text-ink">Recent issues</span>
+      <div className="mt-4.5 flex-none overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
+        <div className="flex h-10.5 items-center gap-2.5 border-b border-gray-6 px-4">
+          <span className="font-sans text-[13.5px] font-semibold text-gray-12">Recent issues</span>
         </div>
         {issuesQuery.isLoading ? (
           Array.from({ length: RECENT_ISSUES_SKELETON_ROWS }).map((_, index) => (
             <IssueRowSkeleton key={index} index={index} />
           ))
         ) : issueRows.length === 0 ? (
-          <div className="px-4 py-4 font-mono text-[11.5px] text-ink-3">no open issues</div>
+          <div className="px-4 py-4 font-mono text-[11.5px] text-gray-9">no open issues</div>
         ) : (
           issueRows.map((issue) => (
             <IssueRow

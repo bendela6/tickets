@@ -314,9 +314,9 @@ test('(d) breadcrumbs render glyph types and the 500 chip; the terminal row is t
   // The terminal row is synthesized from the matched error signal (name +
   // message + clientTimestamp), not from a breadcrumb — there is no
   // wire-legal 'error' breadcrumb type — and renders danger-styled.
-  expect(screen.getByText('TypeError', { selector: 'span.text-danger' })).toBeInTheDocument();
+  expect(screen.getByText('TypeError', { selector: 'span.text-red-9' })).toBeInTheDocument();
   expect(
-    screen.getByText("Cannot read properties of undefined (reading 'map')", { selector: 'span.text-danger' }),
+    screen.getByText("Cannot read properties of undefined (reading 'map')", { selector: 'span.text-red-9' }),
   ).toBeInTheDocument();
 });
 

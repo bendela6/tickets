@@ -36,7 +36,7 @@ export function Sparkline({
         // Zero-count days render as muted stubs (design SigIssues script:
         // `h === 0 ? var(--in)`), so a quiet day reads as quiet rather than
         // as a short-but-active bar. The last bar still goes danger when hot.
-        const color = isLast && hot ? 'bg-danger' : count === 0 ? 'bg-inset' : 'bg-control';
+        const color = isLast && hot ? 'bg-red-9' : count === 0 ? 'bg-surface-inset' : 'bg-gray-7';
         return (
           <span
             key={i}

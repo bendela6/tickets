@@ -33,14 +33,14 @@ export function AgentLibraryScreen() {
     <div className="mx-auto flex max-w-4xl flex-col gap-5 px-6 py-7">
       <div className="flex items-center gap-3">
         <div className="flex-1">
-          <div className="flex items-center gap-2 font-mono text-meta text-ink-3">
-            <Link to="/agents" className="hover:text-ink-2">
+          <div className="flex items-center gap-2 font-mono text-meta text-gray-9">
+            <Link to="/agents" className="hover:text-gray-11">
               Sessions
             </Link>
             <span>/</span>
-            <span className="text-ink-2">Agents</span>
+            <span className="text-gray-11">Agents</span>
           </div>
-          <h1 className="mt-0.5 font-sans text-[19px] font-semibold text-ink">Agents</h1>
+          <h1 className="mt-0.5 font-sans text-[19px] font-semibold text-gray-12">Agents</h1>
         </div>
         <Button variant="primary" onClick={() => setEditing('new')}>
           ＋ New agent
@@ -48,7 +48,7 @@ export function AgentLibraryScreen() {
       </div>
 
       {rows.length === 0 && agents.isSuccess ? (
-        <div className="rounded-panel border border-hairline bg-raised">
+        <div className="rounded-xl border border-gray-6 bg-surface-raised">
           <ScreenState
             title="No agents yet"
             body="An agent is a reusable persona — a provider, model, prompt, and tool allowlist — that you can run in a session or assign to a ticket."

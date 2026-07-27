@@ -135,8 +135,8 @@ describe('ComponentPage', () => {
     // The generated snippet moved onto the Preview stage, so there is no
     // separate Code tab to duplicate it.
     expect(screen.queryByRole('tab', { name: 'Code' })).toBeNull();
-    expect(preview.className).toContain('border-accent');
-    expect(props.className).not.toContain('border-accent');
+    expect(preview.className).toContain('border-indigo-9');
+    expect(props.className).not.toContain('border-indigo-9');
     expect(preview.getAttribute('aria-selected')).toBe('true');
     expect(props.getAttribute('aria-selected')).toBe('false');
   });

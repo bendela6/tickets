@@ -25,14 +25,14 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
   const pageCount = Math.max(1, Math.ceil(total / OCCURRENCES_PER_PAGE));
 
   return (
-    <div className="flex-none overflow-hidden rounded-xl border border-hairline bg-raised">
-      <div className="flex h-10.5 items-center gap-2.5 border-b border-hairline px-4">
-        <span className="font-sans text-[13.5px] font-semibold text-ink">Occurrences</span>
-        <span className="font-mono text-[11px] text-ink-3">{formatCount(total)} total</span>
+    <div className="flex-none overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
+      <div className="flex h-10.5 items-center gap-2.5 border-b border-gray-6 px-4">
+        <span className="font-sans text-[13.5px] font-semibold text-gray-12">Occurrences</span>
+        <span className="font-mono text-[11px] text-gray-9">{formatCount(total)} total</span>
       </div>
       <div
         role="row"
-        className="grid h-7.5 items-center border-b border-hairline bg-app px-4 font-sans text-[10.5px] font-medium tracking-wide text-ink-2 uppercase"
+        className="grid h-7.5 items-center border-b border-gray-6 bg-gray-1 px-4 font-sans text-[10.5px] font-medium tracking-wide text-gray-11 uppercase"
         style={{ gridTemplateColumns: OCCURRENCES_GRID_COLUMNS }}
       >
         <span>Time</span>
@@ -41,7 +41,7 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
         <span />
       </div>
       {rows.length === 0 ? (
-        <div className="px-4 py-4 font-mono text-[11.5px] text-ink-3">no occurrences recorded</div>
+        <div className="px-4 py-4 font-mono text-[11.5px] text-gray-9">no occurrences recorded</div>
       ) : (
         rows.map((row, index) => {
           // The stack trace + breadcrumbs cards above are built from the newest
@@ -54,34 +54,34 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
               key={row.id}
               role="row"
               className={cn(
-                'grid h-8.5 items-center border-b border-hairline px-4 last:border-b-0',
-                isNewest && 'bg-accent-subtle',
+                'grid h-8.5 items-center border-b border-gray-6 px-4 last:border-b-0',
+                isNewest && 'bg-indigo-3',
               )}
               style={{ gridTemplateColumns: OCCURRENCES_GRID_COLUMNS }}
             >
-              <span className="font-mono text-[11.5px] font-medium text-ink">{relativeTime(row.receivedAt)}</span>
-              <span className="font-mono text-[11.5px] text-ink-2">{row.release ?? '—'}</span>
+              <span className="font-mono text-[11.5px] font-medium text-gray-12">{relativeTime(row.receivedAt)}</span>
+              <span className="font-mono text-[11.5px] text-gray-11">{row.release ?? '—'}</span>
               <span>
                 {row.sessionId !== null ? (
                   <Link
                     to="/signals/sessions/$sessionId"
                     params={{ sessionId: row.sessionId }}
-                    className="font-mono text-[11.5px] font-medium text-accent hover:underline"
+                    className="font-mono text-[11.5px] font-medium text-indigo-9 hover:underline"
                   >
                     {row.sessionId} →
                   </Link>
                 ) : (
-                  <span className="font-mono text-[11.5px] text-ink-3">—</span>
+                  <span className="font-mono text-[11.5px] text-gray-9">—</span>
                 )}
               </span>
-              <span className="text-right font-mono text-[10.5px] text-ink-3">
+              <span className="text-right font-mono text-[10.5px] text-gray-9">
                 {isNewest ? 'shown above' : ''}
               </span>
             </div>
           );
         })
       )}
-      <div className="flex h-8.5 items-center gap-2 border-t border-hairline bg-app px-4 font-mono text-[11px] text-ink-3">
+      <div className="flex h-8.5 items-center gap-2 border-t border-gray-6 bg-gray-1 px-4 font-mono text-[11px] text-gray-9">
         <span>{OCCURRENCES_PER_PAGE} per page</span>
         <span className="flex-1" />
         {total > OCCURRENCES_PER_PAGE ? (
@@ -91,7 +91,7 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
               aria-label="Previous page"
               disabled={page <= 1}
               onClick={() => setPage((current) => Math.max(1, current - 1))}
-              className="disabled:pointer-events-none disabled:opacity-40 hover:text-ink"
+              className="disabled:pointer-events-none disabled:opacity-40 hover:text-gray-12"
             >
               ‹
             </button>
@@ -103,7 +103,7 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
               aria-label="Next page"
               disabled={page >= pageCount}
               onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
-              className="disabled:pointer-events-none disabled:opacity-40 hover:text-ink"
+              className="disabled:pointer-events-none disabled:opacity-40 hover:text-gray-12"
             >
               ›
             </button>
@@ -120,7 +120,7 @@ function IssueNotFound() {
       <ScreenState
         title="Issue not found"
         action={
-          <Link to="/signals" className="font-sans text-meta text-accent hover:underline">
+          <Link to="/signals" className="font-sans text-meta text-indigo-9 hover:underline">
             ‹ Back to Issues
           </Link>
         }
@@ -199,7 +199,7 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
             <button
               type="button"
               onClick={() => void issueQuery.refetch()}
-              className="h-8 rounded-[8px] border border-control bg-raised px-3.25 font-sans text-[12.5px] font-medium text-ink hover:bg-inset"
+              className="h-8 rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-medium text-gray-12 hover:bg-surface-inset"
             >
               ↻ Retry
             </button>
@@ -219,8 +219,8 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col p-6 md:p-7">
-      <div className="mb-3 font-mono text-[12px] text-ink-3">
-        <Link to="/signals" className="text-accent hover:underline">
+      <div className="mb-3 font-mono text-[12px] text-gray-9">
+        <Link to="/signals" className="text-indigo-9 hover:underline">
           ‹ Issues
         </Link>{' '}
         / {issue.key}
@@ -229,18 +229,18 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
       <div className="mb-3 flex items-start gap-3">
         <LevelDot level={issue.level} className="mt-2" />
         <div className="min-w-0 flex-1">
-          <div className="font-sans text-[18px] leading-tight font-semibold text-ink">
+          <div className="font-sans text-[18px] leading-tight font-semibold text-gray-12">
             <span className="font-mono text-[17px]">{name}</span>
             {message !== null ? (
-              <span className="ml-2 font-sans text-[16px] font-normal text-ink-2">— {message}</span>
+              <span className="ml-2 font-sans text-[16px] font-normal text-gray-11">— {message}</span>
             ) : null}
           </div>
           <div className="mt-1.75 flex items-center gap-2">
             <Pill {...signalStatus(issue.status)} />
-            <span className="inline-flex h-5.5 items-center rounded-md bg-inset px-2 font-mono text-[11px] font-medium text-ink-2">
+            <span className="inline-flex h-5.5 items-center rounded-md bg-surface-inset px-2 font-mono text-[11px] font-medium text-gray-11">
               {issue.appSlug}
             </span>
-            <span className="font-mono text-[11px] text-ink-3">
+            <span className="font-mono text-[11px] text-gray-9">
               {issue.culprit !== null ? `${issue.key} · ${issue.culprit}` : issue.key}
             </span>
           </div>
@@ -265,36 +265,36 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
         ) : null}
       </div>
 
-      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-[10px] border border-hairline bg-raised px-4.5 py-3">
+      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-[10px] border border-gray-6 bg-surface-raised px-4.5 py-3">
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-ink-3">EVENTS</div>
-          <div className="font-mono text-[14px] font-semibold text-ink">{formatCount(issue.eventCount)}</div>
+          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">EVENTS</div>
+          <div className="font-mono text-[14px] font-semibold text-gray-12">{formatCount(issue.eventCount)}</div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-ink-3">SESSIONS</div>
-          <div className="font-mono text-[14px] font-medium text-ink">{formatCount(issue.sessionCount)}</div>
+          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">SESSIONS</div>
+          <div className="font-mono text-[14px] font-medium text-gray-12">{formatCount(issue.sessionCount)}</div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-ink-3">FIRST SEEN</div>
-          <div className="font-sans text-[13px] text-ink">
+          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">FIRST SEEN</div>
+          <div className="font-sans text-[13px] text-gray-12">
             {relativeTime(issue.firstSeen)} ago
             {issue.releaseRange.first !== null ? (
-              <span className="ml-1.5 font-mono text-[11px] text-ink-3">· {issue.releaseRange.first}</span>
+              <span className="ml-1.5 font-mono text-[11px] text-gray-9">· {issue.releaseRange.first}</span>
             ) : null}
           </div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-ink-3">LAST SEEN</div>
-          <div className="font-sans text-[13px] font-medium text-ink">
+          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">LAST SEEN</div>
+          <div className="font-sans text-[13px] font-medium text-gray-12">
             {relativeTime(issue.lastSeen)} ago
             {issue.releaseRange.last !== null ? (
-              <span className="ml-1.5 font-mono text-[11px] font-normal text-ink-3">· {issue.releaseRange.last}</span>
+              <span className="ml-1.5 font-mono text-[11px] font-normal text-gray-9">· {issue.releaseRange.last}</span>
             ) : null}
           </div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-ink-3">RELEASES</div>
-          <div className="font-mono text-[12px] text-ink">
+          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">RELEASES</div>
+          <div className="font-mono text-[12px] text-gray-12">
             {issue.releaseRange.first ?? '—'} → {issue.releaseRange.last ?? '—'}
           </div>
         </div>

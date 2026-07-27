@@ -125,7 +125,7 @@ export function NewAppDialog({
               />
             </div>
             {createApp.isError ? (
-              <p className="mt-2 font-sans text-meta text-danger">
+              <p className="mt-2 font-sans text-meta text-red-9">
                 {createApp.error instanceof Error ? createApp.error.message : 'Could not create the app'}
               </p>
             ) : null}
@@ -143,14 +143,14 @@ export function NewAppDialog({
         ) : (
           <>
             <div className="flex items-start gap-3">
-              <span className="flex size-7.5 shrink-0 items-center justify-center rounded-full bg-opt-green-subtle font-sans text-[13px] font-semibold text-opt-green">
+              <span className="flex size-7.5 shrink-0 items-center justify-center rounded-full bg-green-3 font-sans text-[13px] font-semibold text-green-9">
                 ✓
               </span>
               <div className="flex-1">
                 <DialogTitle>
                   <span className="font-mono text-[15px]">{created.slug}</span> is ready
                 </DialogTitle>
-                <p className="mt-1 font-sans text-[12.5px] leading-relaxed text-ink-2">
+                <p className="mt-1 font-sans text-[12.5px] leading-relaxed text-gray-11">
                   Wire the SDK to this DSN. Signals send to your local daemon — nothing leaves the
                   machine.
                 </p>
@@ -158,7 +158,7 @@ export function NewAppDialog({
             </div>
 
             <div className="mt-4">
-              <div className="mb-1.5 font-mono text-label font-medium tracking-wide text-ink-3">DSN</div>
+              <div className="mb-1.5 font-mono text-label font-medium tracking-wide text-gray-9">DSN</div>
               <DsnField dsn={created.dsn} />
             </div>
 
@@ -168,13 +168,13 @@ export function NewAppDialog({
                 value={tab}
                 onChange={(next) => setTab(next as SnippetTab)}
               />
-              <pre className="overflow-x-auto rounded-b-[8px] border border-t-0 border-hairline bg-inset px-3.5 py-3 font-mono text-[11.5px] leading-relaxed text-ink-2">
+              <pre className="overflow-x-auto rounded-b-[8px] border border-t-0 border-gray-6 bg-surface-inset px-3.5 py-3 font-mono text-[11.5px] leading-relaxed text-gray-11">
                 {snippetFor(tab, created.dsn)}
               </pre>
             </div>
 
-            <div className="mt-4 flex items-center gap-2.5 border-t border-hairline pt-3.5">
-              <span className="font-mono text-[11.5px] text-ink-3">
+            <div className="mt-4 flex items-center gap-2.5 border-t border-gray-6 pt-3.5">
+              <span className="font-mono text-[11.5px] text-gray-9">
                 Send your first signal and it will appear under Issues.
               </span>
               <DialogFooter

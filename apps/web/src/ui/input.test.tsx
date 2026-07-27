@@ -7,11 +7,11 @@ import { Input } from './input';
 test('regular input carries the spec size classes', () => {
   render(<Input aria-label="Title" />);
   const input = screen.getByLabelText('Title');
-  expect(input).toHaveClass('h-9', 'px-3', 'rounded-[8px]', 'bg-raised', 'border-control');
+  expect(input).toHaveClass('h-9', 'px-3', 'rounded-[8px]', 'bg-surface-raised', 'border-gray-7');
   // Regression guard: tailwind-merge must not let the 14px font size evict the
   // ink text color (the same trap the primary button hit with text-ui).
   expect(input).toHaveClass('text-[14px]');
-  expect(input).toHaveClass('text-ink');
+  expect(input).toHaveClass('text-gray-12');
 });
 
 test('compact input overrides height, padding, radius, and font size', () => {
@@ -24,7 +24,7 @@ test('compact input overrides height, padding, radius, and font size', () => {
 test('invalid input shows the danger border and always-on halo', () => {
   render(<Input invalid aria-label="Key" />);
   const input = screen.getByLabelText('Key');
-  expect(input).toHaveClass('border-danger', 'ring-[3px]', 'ring-danger-subtle');
+  expect(input).toHaveClass('border-red-9', 'ring-[3px]', 'ring-red-3');
 });
 
 test('input associates label and error', () => {

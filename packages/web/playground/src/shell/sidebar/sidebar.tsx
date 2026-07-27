@@ -98,7 +98,7 @@ export function Sidebar({
         aria-label="Show component list"
         aria-expanded={false}
         onClick={toggle}
-        className="fixed left-3 top-3 z-40 flex h-9 w-9 items-center justify-center rounded-ctrl border border-hairline bg-raised text-ink-2 shadow-sm hover:text-ink"
+        className="fixed left-3 top-3 z-40 flex h-9 w-9 items-center justify-center rounded-md border border-gray-6 bg-surface-raised text-gray-11 shadow-sm hover:text-gray-12"
       >
         <Icon name="rows" size={14} />
       </button>
@@ -117,24 +117,24 @@ export function Sidebar({
         className={cn(
           // Width rides a custom property: a drag updates it every frame, and
           // Tailwind can't scan a class name built at runtime.
-          'sticky top-0 z-40 flex h-screen w-(--sidebar-width) shrink-0 border-r border-hairline bg-raised',
+          'sticky top-0 z-40 flex h-screen w-(--sidebar-width) shrink-0 border-r border-gray-6 bg-surface-raised',
           narrow && 'fixed left-0 shadow-lg',
         )}
       >
         <nav className="pg-scroll flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden px-4 py-6">
           <div className="flex shrink-0 items-center gap-2">
-            <div className="flex h-7.5 min-w-0 flex-1 items-center gap-1.5 rounded-card border border-hairline bg-inset px-1.5 pl-2.5">
+            <div className="flex h-7.5 min-w-0 flex-1 items-center gap-1.5 rounded-lg border border-gray-6 bg-surface-inset px-1.5 pl-2.5">
               <input
                 type="text"
                 placeholder="Filter components…"
                 value={filterQuery}
                 onChange={(e) => setFilterQuery(e.target.value)}
-                className="min-w-0 flex-1 bg-transparent text-ui text-ink-2 outline-none placeholder:text-ink-3"
+                className="min-w-0 flex-1 bg-transparent text-ui text-gray-11 outline-none placeholder:text-gray-9"
               />
               <button
                 type="button"
                 onClick={onOpenPalette}
-                className="h-4.5 shrink-0 rounded-xs border border-control bg-raised px-1.5 text-label text-ink-3 hover:text-ink-2"
+                className="h-4.5 shrink-0 rounded-xs border border-gray-7 bg-surface-raised px-1.5 text-label text-gray-9 hover:text-gray-11"
               >
                 ⌘K
               </button>
@@ -144,7 +144,7 @@ export function Sidebar({
               aria-label="Hide component list"
               aria-expanded
               onClick={toggle}
-              className="flex h-7.5 w-7 shrink-0 items-center justify-center rounded-ctrl text-ink-3 hover:bg-inset hover:text-ink"
+              className="flex h-7.5 w-7 shrink-0 items-center justify-center rounded-md text-gray-9 hover:bg-surface-inset hover:text-gray-12"
             >
               <Icon name="chevron-left" size={14} />
             </button>
@@ -153,15 +153,15 @@ export function Sidebar({
           <a
             {...linkProps({ slug: null })}
             className={cn(
-              'shrink-0 truncate rounded-ctrl px-2 py-1 text-ui',
-              selected === null ? 'bg-accent-subtle text-accent' : 'text-ink-2 hover:text-ink',
+              'shrink-0 truncate rounded-md px-2 py-1 text-ui',
+              selected === null ? 'bg-indigo-3 text-indigo-9' : 'text-gray-11 hover:text-gray-12',
             )}
           >
             All
           </a>
           {shownGroups.map((group) => (
             <div key={group} className="flex shrink-0 flex-col gap-0.5">
-              <span className="truncate px-2 font-mono text-label uppercase tracking-(--tracking-label) text-ink-3">
+              <span className="truncate px-2 font-mono text-label uppercase tracking-(--tracking-label) text-gray-9">
                 {group}
               </span>
               {filtered
@@ -172,10 +172,10 @@ export function Sidebar({
                     {...linkProps({ slug: d.slug })}
                     title={d.meta.title}
                     className={cn(
-                      'shrink-0 truncate rounded-ctrl px-2 py-1 text-ui',
+                      'shrink-0 truncate rounded-md px-2 py-1 text-ui',
                       selected === d.slug
-                        ? 'bg-accent-subtle text-accent'
-                        : 'text-ink-2 hover:text-ink',
+                        ? 'bg-indigo-3 text-indigo-9'
+                        : 'text-gray-11 hover:text-gray-12',
                     )}
                   >
                     {d.meta.title}

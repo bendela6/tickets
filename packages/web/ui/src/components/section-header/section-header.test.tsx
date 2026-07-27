@@ -31,7 +31,7 @@ describe('SectionHeader', () => {
   it('title carries the uppercase mono-label styling', () => {
     render(<SectionHeader title="Links" />);
     const el = screen.getByText('Links');
-    for (const cls of ['text-label', 'uppercase', 'text-ink-2']) {
+    for (const cls of ['text-label', 'uppercase', 'text-gray-11']) {
       expect(el.className).toContain(cls);
     }
   });
@@ -69,8 +69,8 @@ describe('SectionHeader', () => {
   });
 
   it('merges titleClassName onto the title element and lets it beat the default', () => {
-    render(<SectionHeader title="Links" titleClassName="text-danger" />);
+    render(<SectionHeader title="Links" titleClassName="text-red-9" />);
     const el = screen.getByText('Links');
-    expect(el.className).toContain('text-danger');
+    expect(el.className).toContain('text-red-9');
   });
 });

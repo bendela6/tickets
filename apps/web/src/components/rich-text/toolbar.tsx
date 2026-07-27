@@ -33,8 +33,8 @@ const HEADING_LEVELS = [1, 2, 3] as const;
 // inset bg, active = accent-subtle bg + accent content.
 const BTN =
   'inline-flex h-6.5 min-w-6.5 flex-none items-center justify-center gap-0.75 rounded-[6px] px-1.5 ' +
-  'text-ink-2 hover:bg-inset disabled:pointer-events-none disabled:opacity-40';
-const ACTIVE = 'bg-accent-subtle text-accent hover:bg-accent-subtle';
+  'text-gray-11 hover:bg-surface-inset disabled:pointer-events-none disabled:opacity-40';
+const ACTIVE = 'bg-indigo-3 text-indigo-9 hover:bg-indigo-3';
 
 // One glyph + one action per toolbar control id (see @tickets/richtext
 // REGISTRY for the full id list). Text glyph treatments match the DEF table
@@ -162,10 +162,10 @@ const CONTROLS: Record<string, ControlDef> = {
 // stores whatever string it's given on the textStyle mark's `color` attr
 // and it renders fine as `color: var(--x)` in the DOM.
 const COLOR_SWATCHES: { id: string; label: string; value: string | null }[] = [
-  { id: 'accent', label: 'Accent', value: 'var(--color-accent)' },
-  { id: 'danger', label: 'Danger', value: 'var(--color-danger)' },
-  { id: 'warning', label: 'Warning', value: 'var(--color-opt-yellow)' },
-  { id: 'success', label: 'Success', value: 'var(--color-opt-green)' },
+  { id: 'accent', label: 'Accent', value: 'var(--color-indigo-9)' },
+  { id: 'danger', label: 'Danger', value: 'var(--color-red-9)' },
+  { id: 'warning', label: 'Warning', value: 'var(--color-yellow-9)' },
+  { id: 'success', label: 'Success', value: 'var(--color-green-9)' },
   { id: 'default', label: 'Default', value: null },
 ];
 
@@ -257,7 +257,7 @@ export function Toolbar({ editor, controls, disabled, variant = 'full', onImageF
           key={group[0]!.group}
           className={cn(
             'flex items-center gap-0.5',
-            (index > 0 || blockTypeControl !== undefined) && 'ml-1 border-l border-hairline pl-1',
+            (index > 0 || blockTypeControl !== undefined) && 'ml-1 border-l border-gray-6 pl-1',
           )}
         >
           {group.map(renderStripButton)}
@@ -265,7 +265,7 @@ export function Toolbar({ editor, controls, disabled, variant = 'full', onImageF
       ))}
       {overflowIds.size > 0 ? (
         <div
-          className={cn((groups.length > 0 || blockTypeControl !== undefined) && 'ml-1 border-l border-hairline pl-1')}
+          className={cn((groups.length > 0 || blockTypeControl !== undefined) && 'ml-1 border-l border-gray-6 pl-1')}
         >
           <OverflowMenu editor={editor} ids={overflowIds} disabled={disabled} />
         </div>
@@ -314,7 +314,7 @@ function BlockTypeSelect({ editor, disabled }: { editor: Editor | null; disabled
         <button
           type="button"
           disabled={disabled === true || editor === null}
-          className="mr-1 inline-flex h-6.5 flex-none items-center gap-1 rounded-[6px] px-2 text-ink-2 hover:bg-inset disabled:pointer-events-none disabled:opacity-40"
+          className="mr-1 inline-flex h-6.5 flex-none items-center gap-1 rounded-[6px] px-2 text-gray-11 hover:bg-surface-inset disabled:pointer-events-none disabled:opacity-40"
         >
           <span className="font-sans text-[12px] font-medium">{currentBlockLabel(editor)}</span>
           <Icon name="chevron-down" size={12} />
@@ -378,7 +378,7 @@ function OverflowMenu({
         {ids.has('highlight') ? (
           <MenuItem className="h-7.5" shortcut="⌘⇧H" onSelect={() => run(CONTROLS.highlight!.run)}>
             <span className="inline-flex items-center gap-2.25">
-              <span className="flex h-4 w-4 items-center justify-center rounded-[3px] bg-highlight font-sans text-[12px] font-semibold text-ink">
+              <span className="flex h-4 w-4 items-center justify-center rounded-[3px] bg-highlight font-sans text-[12px] font-semibold text-gray-12">
                 A
               </span>
               Highlight
@@ -390,7 +390,7 @@ function OverflowMenu({
         {ids.has('callout') ? (
           <MenuItem className="h-7.5" onSelect={() => run(CONTROLS.callout!.run)}>
             <span className="inline-flex items-center gap-2.25">
-              <span className="inline-flex text-ink-2">
+              <span className="inline-flex text-gray-11">
                 <Icon name="circle-info" size={14} />
               </span>
               Callout
@@ -400,7 +400,7 @@ function OverflowMenu({
         {ids.has('details') ? (
           <MenuItem className="h-7.5" onSelect={() => run(CONTROLS.details!.run)}>
             <span className="inline-flex items-center gap-2.25">
-              <span className="inline-flex text-ink-2">
+              <span className="inline-flex text-gray-11">
                 <Icon name="chevron-right" size={14} />
               </span>
               Collapsible section
@@ -410,7 +410,7 @@ function OverflowMenu({
         {ids.has('horizontalRule') ? (
           <MenuItem className="h-7.5" onSelect={() => run(CONTROLS.horizontalRule!.run)}>
             <span className="inline-flex items-center gap-2.25">
-              <span className="inline-flex text-ink-2">
+              <span className="inline-flex text-gray-11">
                 <Icon name="minus" size={14} />
               </span>
               Divider
@@ -437,8 +437,8 @@ function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
   return (
     <DropdownMenu.Sub>
       <DropdownMenu.SubTrigger asChild>
-        <div className="flex h-7.5 cursor-pointer items-center gap-2.25 rounded-ctrl px-2 text-ink outline-none select-none data-[highlighted]:bg-inset data-[state=open]:bg-inset">
-          <span className="font-sans text-[12.5px] leading-[1.15] font-semibold text-accent [border-bottom:3px_solid_var(--color-accent)]">
+        <div className="flex h-7.5 cursor-pointer items-center gap-2.25 rounded-md px-2 text-gray-12 outline-none select-none data-[highlighted]:bg-surface-inset data-[state=open]:bg-surface-inset">
+          <span className="font-sans text-[12.5px] leading-[1.15] font-semibold text-indigo-9 [border-bottom:3px_solid_var(--color-indigo-9)]">
             A
           </span>
           <span className="font-sans text-ui">Text color</span>
@@ -447,7 +447,7 @@ function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
       <DropdownMenu.Portal>
         <DropdownMenu.SubContent
           sideOffset={4}
-          className="z-50 flex items-center gap-1.5 rounded-card border border-hairline bg-raised p-1.5 shadow-lg"
+          className="z-50 flex items-center gap-1.5 rounded-lg border border-gray-6 bg-surface-raised p-1.5 shadow-lg"
         >
           {COLOR_SWATCHES.map((swatch) => (
             <button
@@ -455,8 +455,8 @@ function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
               type="button"
               aria-label={swatch.label}
               onClick={() => onPick(swatch.value)}
-              className="h-5.5 w-5.5 flex-none rounded-full border border-hairline"
-              style={{ background: swatch.value ?? 'var(--color-raised)' }}
+              className="h-5.5 w-5.5 flex-none rounded-full border border-gray-6"
+              style={{ background: swatch.value ?? 'var(--color-surface-raised)' }}
             />
           ))}
         </DropdownMenu.SubContent>

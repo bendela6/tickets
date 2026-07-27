@@ -41,32 +41,32 @@ export function AppShell({
   );
 
   return (
-    <div className="flex h-screen flex-col bg-app font-sans text-ink md:flex-row">
+    <div className="flex h-screen flex-col bg-gray-1 font-sans text-gray-12 md:flex-row">
       {/* Mobile top bar */}
-      <div className="flex h-12 shrink-0 items-center gap-1.5 border-b border-hairline bg-app px-2 md:hidden">
+      <div className="flex h-12 shrink-0 items-center gap-1.5 border-b border-gray-6 bg-gray-1 px-2 md:hidden">
         <button
           type="button"
           aria-label="Open navigation"
           onClick={() => setMobileNavOpen(true)}
-          className="inline-flex size-9 items-center justify-center rounded-[8px] text-[17px] text-ink-2 hover:bg-inset"
+          className="inline-flex size-9 items-center justify-center rounded-[8px] text-[17px] text-gray-11 hover:bg-surface-inset"
         >
           ☰
         </button>
-        <span aria-hidden className="size-2.25 rounded-[2px] bg-accent" />
-        <span className="font-mono text-[15px] font-semibold text-ink">tickets</span>
+        <span aria-hidden className="size-2.25 rounded-[2px] bg-indigo-9" />
+        <span className="font-mono text-[15px] font-semibold text-gray-12">tickets</span>
       </div>
 
       {/* Desktop: rail + panel */}
       <div className="hidden md:flex">
         <ActivityRail mode={mode} />
-        <div className="flex w-56 flex-none flex-col overflow-y-auto border-r border-hairline">{panel}</div>
+        <div className="flex w-56 flex-none flex-col overflow-y-auto border-r border-gray-6">{panel}</div>
       </div>
 
       {/* Mobile slide-over: rail row on top + panel */}
       {mobileNavOpen ? (
         <div className="md:hidden">
           <div aria-hidden className="fixed inset-0 z-40 bg-black/20" onClick={() => setMobileNavOpen(false)} />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-72 bg-app shadow-lg">
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-72 bg-gray-1 shadow-lg">
             <ActivityRail mode={mode} onNavigate={() => setMobileNavOpen(false)} />
             <div className="flex flex-1 flex-col overflow-y-auto">{panel}</div>
           </aside>

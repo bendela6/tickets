@@ -81,7 +81,7 @@ export function GalleryShell({
   const shown = selected ? live.filter((d) => d.slug === selected) : live;
 
   return (
-    <div className="flex min-h-screen bg-app font-sans text-ink">
+    <div className="flex min-h-screen bg-gray-1 font-sans text-gray-12">
       <Sidebar
         demos={live}
         selected={selected}
@@ -95,15 +95,15 @@ export function GalleryShell({
         <div className="flex w-full flex-col gap-10">
           <header className="flex items-center justify-between">
             <div>
-              <h1 className="text-display font-semibold text-ink">{title}</h1>
-              <p className="mt-1 text-meta text-ink-2">
+              <h1 className="text-display font-semibold text-gray-12">{title}</h1>
+              <p className="mt-1 text-meta text-gray-11">
                 Instrument control library. Compare against docs/design/design-system.html.
               </p>
             </div>
             <button
               type="button"
               onClick={toggleTheme}
-              className="h-9 rounded-ctrl border border-control bg-raised px-3.5 text-ui text-ink hover:bg-inset"
+              className="h-9 rounded-md border border-gray-7 bg-surface-raised px-3.5 text-ui text-gray-12 hover:bg-surface-inset"
             >
               Toggle theme
             </button>
@@ -130,12 +130,12 @@ export function GalleryShell({
                   <section
                     key={d.slug}
                     id={d.slug}
-                    className="pg-docs-entry flex flex-col border-t-2 border-control pt-10 pb-16 first:border-t-0 first:pt-0"
+                    className="pg-docs-entry flex flex-col border-t-2 border-gray-7 pt-10 pb-16 first:border-t-0 first:pt-0"
                   >
                     <div className="flex items-start gap-8">
                       <div className={`flex flex-col gap-4 ${DOCS_COLUMN}`}>
                         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-                          <h2 className="font-sans text-heading font-semibold text-ink">
+                          <h2 className="font-sans text-heading font-semibold text-gray-12">
                             {d.meta.title}
                           </h2>
                           <div className="flex items-center gap-4">
@@ -143,7 +143,7 @@ export function GalleryShell({
                               <a
                                 key={tab}
                                 {...nav.linkProps({ slug: d.slug, tab })}
-                                className="font-sans text-meta font-medium text-accent hover:underline"
+                                className="font-sans text-meta font-medium text-indigo-9 hover:underline"
                               >
                                 {label}
                               </a>

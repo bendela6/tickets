@@ -5,25 +5,25 @@ import { Icon, type IconName } from '../icon';
 type Variant = 'underline' | 'pill' | 'rail';
 
 const LIST: Record<Variant, string> = {
-  underline: 'flex items-center gap-4.5 border-b-(length:--border-hair) border-hairline',
-  pill: 'inline-flex items-center gap-1 rounded-[7px] bg-inset p-0.75',
+  underline: 'flex items-center gap-4.5 border-b-(length:--border-thick) border-gray-6',
+  pill: 'inline-flex items-center gap-1 rounded-[7px] bg-surface-inset p-0.75',
   rail: 'flex flex-col gap-0.5',
 };
 const TAB: Record<Variant, { base: string; active: string; inactive: string }> = {
   underline: {
     base: '-mb-px border-b-2 px-0.5 pb-2 pt-1.75 text-ui',
-    active: 'border-accent font-medium text-ink',
-    inactive: 'border-transparent text-ink-2 hover:text-ink',
+    active: 'border-indigo-9 font-medium text-gray-12',
+    inactive: 'border-transparent text-gray-11 hover:text-gray-12',
   },
   pill: {
-    base: 'rounded-ctrl px-3 py-1 text-meta font-medium',
-    active: 'bg-raised text-ink shadow-sm',
-    inactive: 'text-ink-2 hover:text-ink',
+    base: 'rounded-md px-3 py-1 text-meta font-medium',
+    active: 'bg-surface-raised text-gray-12 shadow-sm',
+    inactive: 'text-gray-11 hover:text-gray-12',
   },
   rail: {
-    base: 'rounded-tile px-2.5 py-1.5 text-left text-ui',
-    active: 'bg-accent-subtle font-medium text-accent',
-    inactive: 'text-ink-2 hover:bg-inset hover:text-ink',
+    base: 'rounded-md px-2.5 py-1.5 text-left text-ui',
+    active: 'bg-indigo-3 font-medium text-indigo-9',
+    inactive: 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
   },
 };
 
@@ -61,7 +61,7 @@ export function Tabs({
           >
             {item.icon ? <Icon name={item.icon} size={12} /> : null}
             {item.label}
-            {item.badge != null ? <span className="font-mono text-[10px] text-ink-3">{item.badge}</span> : null}
+            {item.badge != null ? <span className="font-mono text-[10px] text-gray-9">{item.badge}</span> : null}
           </button>
         );
       })}

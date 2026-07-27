@@ -60,7 +60,7 @@ export function DetailComments({
   return (
     <div className="flex flex-col gap-3.5">
       {comments.length === 0 ? (
-        <p className="m-0 font-sans text-meta text-ink-3">No comments yet.</p>
+        <p className="m-0 font-sans text-meta text-gray-9">No comments yet.</p>
       ) : (
         comments.map((comment) => {
           const author = indexes.userById.get(comment.authorId);
@@ -70,20 +70,20 @@ export function DetailComments({
               <Avatar name={name} kind={author?.kind ?? 'human'} size="md" className="mt-0.5" />
               <div className="min-w-0 flex-1">
                 <div className="mb-0.75 flex items-baseline gap-2">
-                  <span className="font-sans text-ui font-medium text-ink">{name}</span>
+                  <span className="font-sans text-ui font-medium text-gray-12">{name}</span>
                   {author?.kind === 'agent' ? (
-                    <span className="self-center rounded-[3px] bg-accent-subtle px-1.25 font-mono text-[9px] font-medium text-accent">
+                    <span className="self-center rounded-[3px] bg-indigo-3 px-1.25 font-mono text-[9px] font-medium text-indigo-9">
                       AGENT
                     </span>
                   ) : null}
                   <RelativeDate
                     value={comment.createdAt}
-                    className="font-mono text-[11px] text-ink-3"
+                    className="font-mono text-[11px] text-gray-9"
                   />
                 </div>
                 <RichTextView
                   value={comment.body}
-                  className="font-sans text-ui leading-[1.55] text-ink"
+                  className="font-sans text-ui leading-[1.55] text-gray-12"
                   onOpenTicket={handleOpenTicket}
                 />
               </div>
@@ -108,7 +108,7 @@ export function DetailComments({
             }}
           />
           {createComment.isError ? (
-            <p className="m-0 mt-1 font-sans text-meta text-danger">
+            <p className="m-0 mt-1 font-sans text-meta text-red-9">
               {(createComment.error as Error).message}
             </p>
           ) : null}

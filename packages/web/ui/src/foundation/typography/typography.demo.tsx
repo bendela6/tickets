@@ -31,7 +31,7 @@ function Scale() {
           align="start"
         >
           <p
-            className="max-w-160 text-ink"
+            className="max-w-160 text-gray-12"
             style={{
               fontFamily: SANS,
               fontSize: size.value,
@@ -53,7 +53,7 @@ function WeightAndFamily() {
       <SpecHeader specimen="sans · mono" />
       {FONT_WEIGHTS.map((weight) => (
         <SpecRow key={weight.name} name={weight.name} value={weight.value}>
-          <div className="flex flex-wrap items-baseline gap-6 text-ink">
+          <div className="flex flex-wrap items-baseline gap-6 text-gray-12">
             <span style={{ fontFamily: SANS, fontWeight: weight.value, fontSize: '14px' }}>
               Deploy blocked by review
             </span>
@@ -65,7 +65,7 @@ function WeightAndFamily() {
       ))}
       {FONT_FAMILIES.map((family) => (
         <SpecRow key={family.name} name={family.name} value={family.value.split(',')[0]!}>
-          <span className="text-ink" style={{ fontFamily: family.value, fontSize: '14px' }}>
+          <span className="text-gray-12" style={{ fontFamily: family.value, fontSize: '14px' }}>
             0123456789 · Illustrate — rn m {'{}'} ()
           </span>
         </SpecRow>
@@ -84,7 +84,7 @@ function Tracking() {
               place these three are used — captions, section headers, and the
               mono key labels on an item row. */}
           <span
-            className="uppercase text-ink"
+            className="uppercase text-gray-12"
             style={{
               fontFamily: track.name === 'tracking-mono-label' ? MONO : SANS,
               fontSize: '11px',

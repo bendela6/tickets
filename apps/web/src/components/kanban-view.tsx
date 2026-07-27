@@ -93,7 +93,7 @@ export function KanbanView({
 
   if (!workflowField) {
     return (
-      <div className="px-4 py-6 font-sans text-ui text-ink-3">
+      <div className="px-4 py-6 font-sans text-ui text-gray-9">
         This project has no workflow field, so board mode is unavailable.
       </div>
     );
@@ -208,7 +208,7 @@ export function KanbanView({
         }}
         onDragEnd={() => setDraggingId(null)}
         className={cn(
-          'flex shrink-0 cursor-pointer flex-col gap-2 rounded-[10px] border border-hairline bg-raised px-3.25 py-2.75 text-left shadow-sm',
+          'flex shrink-0 cursor-pointer flex-col gap-2 rounded-[10px] border border-gray-6 bg-surface-raised px-3.25 py-2.75 text-left shadow-sm',
           draggingId === ticket.id && 'opacity-40',
         )}
       >
@@ -235,7 +235,7 @@ export function KanbanView({
             />
           ) : null}
         </div>
-        <div className="font-sans text-ui leading-[1.4] font-medium text-ink">
+        <div className="font-sans text-ui leading-[1.4] font-medium text-gray-12">
           {String(ticket.values['title'] ?? '')}
         </div>
         {hasFooter ? (
@@ -248,7 +248,7 @@ export function KanbanView({
             ) : null}
             <span className="flex-1" />
             {progress.total > 0 ? (
-              <span className="font-mono text-[10px] text-ink-3">
+              <span className="font-mono text-[10px] text-gray-9">
                 {progress.done}/{progress.total}
               </span>
             ) : null}
@@ -269,7 +269,7 @@ export function KanbanView({
             key={option.id}
             aria-label={option.label}
             className={cn(
-              'flex w-[85vw] flex-none flex-col rounded-[12px] bg-inset md:w-63',
+              'flex w-[85vw] flex-none flex-col rounded-[12px] bg-surface-inset md:w-63',
               mode === 'illegal' && 'opacity-50',
             )}
             onDragOver={
@@ -295,28 +295,28 @@ export function KanbanView({
               <span className="inline-flex shrink-0">
                 <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
               </span>
-              <span className="font-sans text-ui font-medium text-ink">{option.label}</span>
-              <span className="font-mono text-[11px] text-ink-3">{cards.length}</span>
+              <span className="font-sans text-ui font-medium text-gray-12">{option.label}</span>
+              <span className="font-mono text-[11px] text-gray-9">{cards.length}</span>
               <span className="flex-1" />
               {/* Inert for now: card creation from a column lands in a later task. */}
-              <span aria-hidden className="font-sans text-ui text-ink-3">
+              <span aria-hidden className="font-sans text-ui text-gray-9">
                 ＋
               </span>
             </div>
             {mode === 'illegal' ? (
-              <div className="mx-2.5 mb-2 rounded-[8px] bg-danger-subtle px-2.5 py-1.75 font-sans text-[11px] leading-[1.4] text-danger">
+              <div className="mx-2.5 mb-2 rounded-[8px] bg-red-3 px-2.5 py-1.75 font-sans text-[11px] leading-[1.4] text-red-9">
                 ✕ workflow: no transition {draggedFromLabel} → {option.label}
               </div>
             ) : null}
             {mode === 'legal' ? (
-              <div className="mx-2.5 mb-2 flex h-[74px] shrink-0 items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-accent bg-accent-subtle font-sans text-meta font-medium text-accent">
+              <div className="mx-2.5 mb-2 flex h-[74px] shrink-0 items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-indigo-9 bg-indigo-3 font-sans text-meta font-medium text-indigo-9">
                 Drop — {draggedFromLabel} → {option.label}
               </div>
             ) : null}
             <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-2.5 pb-2.5">
               {cards.map((ticket) => renderCard(ticket))}
               {mode === 'origin' && dragged ? (
-                <div className="flex h-[74px] shrink-0 items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-control font-mono text-[11px] text-ink-3">
+                <div className="flex h-[74px] shrink-0 items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-gray-7 font-mono text-[11px] text-gray-9">
                   {board.project.itemPrefix}-{dragged.number} — dragging…
                 </div>
               ) : null}

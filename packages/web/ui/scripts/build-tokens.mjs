@@ -92,15 +92,47 @@ function shadowVarLines(names, indent = '  ') {
 // token resolution — every script that needs resolved token hex (the CSS
 // build, the design-doc parity check) calls this rather than re-deriving
 // its own copy of the alias-resolution logic.
-export function resolveTokenMaps() {
-  const primitivesDoc = readJson('primitives.tokens.json');
-  const lightDoc = readJson('semantic.light.tokens.json');
-  const darkDoc = readJson('semantic.dark.tokens.json');
+const nextDir = path.join(__dirname, '..', 'src', 'tokens', 'next');
+const readNext = (name) => JSON.parse(readFileSync(path.join(nextDir, name), 'utf8'));
 
-  const primitivesMap = flattenPrimitives(primitivesDoc);
-  const light = resolveAliases(flattenSemantic(lightDoc), primitivesMap);
-  const dark = resolveAliases(flattenSemantic(darkDoc), primitivesMap);
-  return { light, dark };
+/**
+ * Resolve the numbered token set into `name -> { value, type }` per theme.
+ *
+ * There is no alias layer any more. A ramp step IS the token: `gray-1` is the
+ * app background, `red-9` the solid fill, `indigo-contrast` the text that sits
+ * on indigo-9. The old primitive -> semantic indirection existed so a rename
+ * could re-point `--color-accent`; with numbers the step number carries that
+ * meaning directly, and the indirection only hid which step a colour was.
+ *
+ * Three kinds of name survive that are NOT ramp steps, because nothing on a
+ * perceptual ramp can express them: the two surfaces (raised is pure white in
+ * the light theme, which no gray step is), and the literals — a folder glyph's
+ * gold and the search highlight are chosen for recognition, not for a contrast
+ * role.
+ */
+export function resolveTokenMaps() {
+  const colors = { light: readNext('colors.light.tokens.json'), dark: readNext('colors.dark.tokens.json') };
+  const shadows = { light: readNext('shadows.light.tokens.json'), dark: readNext('shadows.dark.tokens.json') };
+  const semantic = readNext('semantic.tokens.json');
+
+  const build = (theme) => {
+    const map = {};
+    for (const [name, token] of Object.entries(colors[theme].ins)) {
+      map[name] = { value: token.$value, type: 'color' };
+    }
+    for (const [name, byTheme] of Object.entries(semantic.surface)) {
+      map[`surface-${name}`] = { value: byTheme[theme], type: 'color' };
+    }
+    for (const [name, byTheme] of Object.entries(semantic.literal)) {
+      map[name] = { value: byTheme[theme], type: 'color' };
+    }
+    for (const [name, token] of Object.entries(shadows[theme].ins)) {
+      map[name] = { value: token.$value, type: 'shadow' };
+    }
+    return map;
+  };
+
+  return { light: build('light'), dark: build('dark') };
 }
 
 // Resolve the token JSON into the three generated regions of instrument.css:
@@ -141,32 +173,32 @@ const tonesFile = path.join(__dirname, '..', 'src', 'style', 'tones', 'tones.gen
 // scanned source file. This file lives under src/, which `@source './'` in
 // tokens.css already covers for every consumer.
 export function emitTones({ light }) {
-  const doc = readJson('tones.tokens.json');
+  const doc = readNext('tones.tokens.json');
+  const roles = readNext('semantic.tokens.json').scale;
+  const { subtle, solid, outline, text } = doc.emphasis;
   const entries = [];
 
-  const families = {};
-  for (const hue of doc.hues) {
-    families[hue] = { base: `opt-${hue}`, subtle: `opt-${hue}-subtle`, on: `on-opt-${hue}` };
-  }
-  for (const [name, refs] of Object.entries(doc.semantic)) {
-    families[name] = refs;
-  }
-  // Semantic tones first (declaration order), then hues — matches TONE_NAMES.
-  const ordered = [...Object.keys(doc.semantic), ...doc.hues];
+  // A tone is a NAME for a scale; the emphasis map says which steps that scale
+  // lends to each treatment. Roles come first so `primary` reads before `red`,
+  // then the hues — matching TONE_NAMES' declaration order.
+  const scaleOf = { ...roles };
+  for (const hue of doc.hues) scaleOf[hue] = hue;
+  const ordered = [...Object.keys(roles), ...doc.hues];
 
   for (const name of ordered) {
-    const { base, subtle, on } = families[name];
-    for (const ref of [base, subtle, on]) {
-      if (!(ref in light)) {
-        throw new Error(`tones.tokens.json: tone "${name}" references unknown token "${ref}"`);
+    const scale = scaleOf[name];
+    for (const step of [subtle.bg, subtle.text, solid.bg, solid.text, outline.border]) {
+      const token = `${scale}-${step}`;
+      if (!(token in light)) {
+        throw new Error(`tone "${name}" needs ${token}, which the ramps do not define`);
       }
     }
     entries.push(
       `  '${name}': {\n` +
-        `    subtle: 'bg-${subtle} text-${base}',\n` +
-        `    solid: 'bg-${base} text-${on}',\n` +
-        `    outline: 'border-(length:--border-hair) border-${base} text-${base}',\n` +
-        `    text: 'text-${base}',\n` +
+        `    subtle: 'bg-${scale}-${subtle.bg} text-${scale}-${subtle.text}',\n` +
+        `    solid: 'bg-${scale}-${solid.bg} text-${scale}-${solid.text}',\n` +
+        `    outline: 'border-(length:--border-thick) border-${scale}-${outline.border} text-${scale}-${outline.text}',\n` +
+        `    text: 'text-${scale}-${text.text}',\n` +
         `  },`,
     );
   }
@@ -174,7 +206,7 @@ export function emitTones({ light }) {
   const names = ordered.map((n) => `'${n}'`).join(', ');
   const hueNames = doc.hues.map((n) => `'${n}'`).join(', ');
   return (
-    `// GENERATED by scripts/build-tokens.mjs from src/tokens/source/tones.tokens.json — do not edit.\n` +
+    `// GENERATED by scripts/build-tokens.mjs from src/tokens/next/tones.tokens.json — do not edit.\n` +
     `// Literal class strings so Tailwind can scan them; see build-tokens.mjs emitTones().\n` +
     `export const TONE_NAMES = [${names}] as const;\n` +
     `export type Tone = (typeof TONE_NAMES)[number];\n` +

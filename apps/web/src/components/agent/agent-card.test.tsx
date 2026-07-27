@@ -11,9 +11,9 @@ test('providerLabel maps known keys and passes through unknowns', () => {
 
 test('autonomous modes read as accent, approval modes as blocked', () => {
   const { rerender } = render(<PermissionBadge mode="bypassPermissions" />);
-  expect(screen.getByText('autonomous')).toHaveClass('text-accent');
+  expect(screen.getByText('autonomous')).toHaveClass('text-indigo-9');
   rerender(<PermissionBadge mode="default" />);
-  expect(screen.getByText('asks first')).toHaveClass('text-opt-orange');
+  expect(screen.getByText('asks first')).toHaveClass('text-orange-9');
 });
 
 const agent: Agent = {

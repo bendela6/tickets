@@ -85,7 +85,7 @@ export function RenameAppDialog({
           />
         </div>
         {errorMessage !== null ? (
-          <p className="mt-2 font-sans text-meta text-danger">{errorMessage}</p>
+          <p className="mt-2 font-sans text-meta text-red-9">{errorMessage}</p>
         ) : null}
         <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}>
           <Button

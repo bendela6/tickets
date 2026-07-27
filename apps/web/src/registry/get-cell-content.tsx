@@ -6,7 +6,7 @@ import { formatExact } from '../ui/relative-date';
 import type { BoardIndexes } from '../utils/index-board';
 import { hexToOptionColor } from './option-color';
 
-const empty = <span className="text-ink-3">—</span>;
+const empty = <span className="text-gray-9">—</span>;
 
 function formatDateTime(raw: string): string {
   const date = new Date(raw);
@@ -71,7 +71,7 @@ export function getCellContent(
     return String(rawValue);
   }
   if (field.type === 'boolean') {
-    return rawValue === true ? <span className="text-opt-green">✓</span> : empty;
+    return rawValue === true ? <span className="text-green-9">✓</span> : empty;
   }
   if (field.type === 'date') {
     const date = new Date(String(rawValue));
@@ -86,7 +86,7 @@ export function getCellContent(
   if (field.type === 'json') {
     const text = JSON.stringify(rawValue);
     return (
-      <code className="font-mono text-meta text-ink-2">
+      <code className="font-mono text-meta text-gray-11">
         {text.length > 40 ? `${text.slice(0, 40)}…` : text}
       </code>
     );

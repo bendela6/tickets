@@ -64,8 +64,8 @@ export function StatusSelect({
           type="button"
           disabled={disabled}
           className={cn(
-            'flex w-full items-center justify-between gap-2 rounded-ctrl border border-control bg-raised pr-2 pl-1.5',
-            'hover:border-ink-3 focus:border-accent focus:outline-none focus:ring-[3px] focus:ring-accent-subtle',
+            'flex w-full items-center justify-between gap-2 rounded-md border border-gray-7 bg-surface-raised pr-2 pl-1.5',
+            'hover:border-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3',
             'disabled:pointer-events-none disabled:opacity-50',
             size === 'compact' ? 'h-7' : 'h-9',
             className,
@@ -74,9 +74,9 @@ export function StatusSelect({
           {current ? (
             <Pill {...statusPill(current.kind)} label={current.label} />
           ) : (
-            <span className="pl-1 font-sans text-ui text-ink-3">Set status…</span>
+            <span className="pl-1 font-sans text-ui text-gray-9">Set status…</span>
           )}
-          <span aria-hidden className="text-[10px] text-ink-3">
+          <span aria-hidden className="text-[10px] text-gray-9">
             ▾
           </span>
         </button>
@@ -98,7 +98,7 @@ export function StatusSelect({
                 <span className="inline-flex">
                   <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size={10} />
                 </span>
-                <span className="font-sans text-ui text-ink">{option.label}</span>
+                <span className="font-sans text-ui text-gray-12">{option.label}</span>
               </span>
             );
           }}

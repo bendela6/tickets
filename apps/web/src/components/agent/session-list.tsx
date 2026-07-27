@@ -64,26 +64,26 @@ function SessionRow({
         to="/agents/$sessionId"
         params={{ sessionId: String(session.id) }}
         title={`${workdirName(session.workdirId)} · ${formatAge(session.createdAt)}`}
-        className="group flex items-center gap-2 rounded-[7px] px-2 py-1.5 hover:bg-inset"
+        className="group flex items-center gap-2 rounded-[7px] px-2 py-1.5 hover:bg-surface-inset"
         style={{ paddingLeft: 8 + depth * 16 }}
         onClick={onNavigate}
       >
         {depth > 0 ? (
-          <span aria-hidden className="font-mono text-meta text-ink-3">
+          <span aria-hidden className="font-mono text-meta text-gray-9">
             └
           </span>
         ) : null}
         <SessionKindGlyph kind="agent" />
-        <span className="min-w-0 flex-1 truncate font-sans text-ui text-ink">{session.title}</span>
+        <span className="min-w-0 flex-1 truncate font-sans text-ui text-gray-12">{session.title}</span>
         {session.itemId != null ? (
-          <span className="shrink-0 rounded-[4px] border border-hairline px-1 font-mono text-[10px] text-accent">
+          <span className="shrink-0 rounded-[4px] border border-gray-6 px-1 font-mono text-[10px] text-indigo-9">
             →#{session.itemId}
           </span>
         ) : null}
         <Pill {...sessionStatus(session.status, 'agent')} />
         <button
           type="button"
-          className="shrink-0 rounded-[4px] border border-hairline bg-raised px-1.5 py-0.5 font-sans text-meta text-ink-2 opacity-0 hover:border-control group-hover:opacity-100"
+          className="shrink-0 rounded-[4px] border border-gray-6 bg-surface-raised px-1.5 py-0.5 font-sans text-meta text-gray-11 opacity-0 hover:border-gray-7 group-hover:opacity-100"
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();

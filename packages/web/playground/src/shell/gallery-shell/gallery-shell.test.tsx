@@ -91,7 +91,7 @@ describe('GalleryShell v2', () => {
     // A 2px rule in the control tone, not a hairline — and the first entry
     // draws none above it.
     expect(section.className).toContain('border-t-2');
-    expect(section.className).toContain('border-control');
+    expect(section.className).toContain('border-gray-7');
     expect(section.className).toContain('first:border-t-0');
     // The rule spans the column; only the docs inside keep the measure — as a
     // fixed basis, since a flex-1 preview sits beside them.

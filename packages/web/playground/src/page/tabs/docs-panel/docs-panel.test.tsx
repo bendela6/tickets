@@ -86,7 +86,7 @@ describe('DocsPanel — API header', () => {
       />,
     );
     expect(screen.getByText('v2.4.0 · stable')).toBeTruthy();
-    expect(screen.getByText('a11y verified').className).toContain('text-opt-green');
+    expect(screen.getByText('a11y verified').className).toContain('text-green-9');
   });
 
   it('renders backticked spans of the summary as inline code', () => {
@@ -97,7 +97,7 @@ describe('DocsPanel — API header', () => {
     );
     const code = screen.getByText('aria-label');
     expect(code.className).toContain('font-mono');
-    expect(code.className).toContain('bg-inset');
+    expect(code.className).toContain('bg-surface-inset');
     // The surrounding prose survives the split, rather than only the chip.
     expect(code.parentElement?.textContent).toBe('Icon-only pills need aria-label.');
   });
@@ -129,12 +129,12 @@ describe('DocsPanel — prop rows', () => {
     const code = [...description.querySelectorAll('span')].map((s) => s.className);
     expect(code).toHaveLength(1);
     expect(code[0]).toContain('font-mono');
-    expect(code[0]).toContain('bg-inset');
+    expect(code[0]).toContain('bg-surface-inset');
   });
 
   it('badges required props apart from optional ones', () => {
-    expect(within(row('children')).getByText('REQUIRED').className).toContain('text-accent');
-    expect(within(row('variant')).getByText('OPTIONAL').className).toContain('text-ink-3');
+    expect(within(row('children')).getByText('REQUIRED').className).toContain('text-indigo-9');
+    expect(within(row('variant')).getByText('OPTIONAL').className).toContain('text-gray-9');
   });
 
   it('renders a description only for props that declare one', () => {

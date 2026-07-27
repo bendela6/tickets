@@ -6,7 +6,7 @@ import { cn } from '../../style/cn';
 export function RailLabel({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <span
-      className={cn('font-mono text-[10px] font-medium uppercase tracking-(--tracking-mono-label) text-ink-3', className)}
+      className={cn('font-mono text-[10px] font-medium uppercase tracking-(--tracking-mono-label) text-gray-9', className)}
     >
       {children}
     </span>

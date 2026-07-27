@@ -23,7 +23,7 @@ function Label({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
   return (
     <SectionHeader
       title={children}
-      count={hint != null ? <span className="font-normal normal-case text-ink-3">{hint}</span> : null}
+      count={hint != null ? <span className="font-normal normal-case text-gray-9">{hint}</span> : null}
       className="mb-1.5 gap-1.5 tracking-wide"
     />
   );
@@ -121,7 +121,7 @@ export function AgentEditor({
 
         <div className="mt-4 flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1">
           {!caps.permissions || !caps.resume ? (
-            <div className="rounded-card border border-opt-orange bg-opt-orange-subtle px-3 py-2 font-sans text-meta text-ink">
+            <div className="rounded-lg border border-orange-9 bg-orange-3 px-3 py-2 font-sans text-meta text-gray-12">
               <strong className="font-semibold">{providerLabel(providerKey)} can’t do everything.</strong>{' '}
               {!caps.permissions ? 'It can’t pause a run for tool approvals. ' : ''}
               {!caps.resume ? 'It can’t resume after a restart. ' : ''}
@@ -214,7 +214,7 @@ export function AgentEditor({
             </label>
           </div>
 
-          {error ? <p className="font-sans text-meta text-danger">{error}</p> : null}
+          {error ? <p className="font-sans text-meta text-red-9">{error}</p> : null}
         </div>
 
         <DialogFooter cancel={<Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>}>

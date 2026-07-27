@@ -8,7 +8,7 @@ import { NewProjectDialog } from './new-project-dialog';
 function navItemClasses(active: boolean) {
   return cn(
     'flex h-8 items-center gap-2 rounded-[7px] px-2.25 font-sans text-ui',
-    active ? 'bg-inset font-medium text-ink' : 'text-ink-2 hover:bg-inset hover:text-ink',
+    active ? 'bg-surface-inset font-medium text-gray-12' : 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
   );
 }
 
@@ -53,13 +53,13 @@ export function TasksPanel({
       <button
         type="button"
         title="Command palette (coming soon)"
-        className="mb-2 flex h-8 cursor-pointer items-center gap-1.75 rounded-[8px] border border-hairline bg-raised px-2.5 hover:border-control"
+        className="mb-2 flex h-8 cursor-pointer items-center gap-1.75 rounded-[8px] border border-gray-6 bg-surface-raised px-2.5 hover:border-gray-7"
       >
-        <span aria-hidden className="text-meta text-ink-3">
+        <span aria-hidden className="text-meta text-gray-9">
           ⌕
         </span>
-        <span className="flex-1 text-left font-sans text-ui text-ink-3">Search…</span>
-        <span className="rounded-[4px] border border-hairline px-1 font-mono text-[10px] text-ink-3">
+        <span className="flex-1 text-left font-sans text-ui text-gray-9">Search…</span>
+        <span className="rounded-[4px] border border-gray-6 px-1 font-mono text-[10px] text-gray-9">
           ⌘K
         </span>
       </button>
@@ -67,7 +67,7 @@ export function TasksPanel({
       <button
         type="button"
         onClick={handleNewTicket}
-        className="mb-3.5 h-8.5 rounded-[8px] bg-accent font-sans text-ui font-medium text-on-accent hover:bg-accent-hover"
+        className="mb-3.5 h-8.5 rounded-[8px] bg-indigo-9 font-sans text-ui font-medium text-indigo-contrast hover:bg-indigo-10"
       >
         ＋ New item
       </button>
@@ -80,7 +80,7 @@ export function TasksPanel({
         <Link to="/all" onClick={onNavigate} className={navItemClasses(Boolean(matchRoute({ to: '/all' })))}>
           <span aria-hidden>▤</span>
           <span className="flex-1">All items</span>
-          <span className="font-mono text-[11px] text-ink-3">{allCount || ''}</span>
+          <span className="font-mono text-[11px] text-gray-9">{allCount || ''}</span>
         </Link>
       </nav>
 
@@ -96,7 +96,7 @@ export function TasksPanel({
               onClick={onNavigate}
               className={navItemClasses(project.key === activeProjectKey)}
             >
-              <span className="rounded-[4px] bg-inset px-1.25 py-0.5 font-mono text-[10px] font-medium text-ink-2">
+              <span className="rounded-[4px] bg-surface-inset px-1.25 py-0.5 font-mono text-[10px] font-medium text-gray-11">
                 {project.itemPrefix}
               </span>
               <span className="flex-1 truncate">{project.name}</span>
@@ -116,7 +116,7 @@ export function TasksPanel({
             onNavigate?.();
             setCreatingProject(true);
           }}
-          className="flex h-7.5 cursor-pointer items-center gap-2 rounded-[7px] px-2.25 font-sans text-meta text-ink-3 hover:bg-inset"
+          className="flex h-7.5 cursor-pointer items-center gap-2 rounded-[7px] px-2.25 font-sans text-meta text-gray-9 hover:bg-surface-inset"
         >
           ＋<span>New project</span>
         </button>

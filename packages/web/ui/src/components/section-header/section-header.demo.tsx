@@ -14,7 +14,7 @@ export const states = [
         count={
           <>
             <Meter tone="green" value={60} max={100} className="w-15" />
-            <span className="font-mono text-label text-ink-3">3/5 done</span>
+            <span className="font-mono text-label text-gray-9">3/5 done</span>
           </>
         }
         className="gap-2.5"
@@ -27,7 +27,7 @@ export const states = [
       <SectionHeader
         title="Links"
         action={
-          <button type="button" className="font-sans text-meta font-medium text-ink-3 hover:text-ink">
+          <button type="button" className="font-sans text-meta font-medium text-gray-9 hover:text-gray-12">
             ＋ Add link
           </button>
         }
@@ -40,7 +40,7 @@ export const states = [
       <SectionHeader
         title={
           <>
-            Name<span className="text-danger"> *</span>
+            Name<span className="text-red-9"> *</span>
           </>
         }
       />

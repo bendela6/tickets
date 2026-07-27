@@ -23,17 +23,17 @@ export function AgentsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
           <button
             type="button"
             onClick={() => setArchived((v) => !v)}
-            className="font-sans text-meta text-ink-3 hover:text-ink-2"
+            className="font-sans text-meta text-gray-9 hover:text-gray-11"
           >
             {archived ? 'Hide archived' : 'Show archived'}
           </button>
-          <Link to="/agents/personas" className="font-sans text-meta text-accent hover:underline">
+          <Link to="/agents/personas" className="font-sans text-meta text-indigo-9 hover:underline">
             Personas →
           </Link>
         </div>
       </div>
       {rows.length === 0 ? (
-        <p className="px-1 font-sans text-meta text-ink-3">
+        <p className="px-1 font-sans text-meta text-gray-9">
           {archived ? 'No archived agent sessions.' : 'No agent sessions yet.'}
         </p>
       ) : (

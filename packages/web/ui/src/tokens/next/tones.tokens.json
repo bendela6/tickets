@@ -1,6 +1,5 @@
 {
   "hues": [
-    "gray",
     "red",
     "orange",
     "yellow",
@@ -10,7 +9,8 @@
     "blue",
     "indigo",
     "purple",
-    "pink"
+    "pink",
+    "gray"
   ],
   "emphasis": {
     "subtle": {

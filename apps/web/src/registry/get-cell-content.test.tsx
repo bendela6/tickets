@@ -63,7 +63,7 @@ test('the workflow field renders a status-colored pill', () => {
   const field = ix.fieldById.get(10)!;
   render(<>{getCellContent(field, 'active', ix, 1)}</>);
   const badge = screen.getByText('In Progress').closest('span');
-  expect(badge).toHaveClass('bg-opt-blue-subtle');
+  expect(badge).toHaveClass('bg-blue-3');
 });
 
 test('a user field renders the user name', () => {

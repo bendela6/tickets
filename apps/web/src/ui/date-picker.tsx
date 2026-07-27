@@ -85,16 +85,16 @@ export function DatePicker({
           type="button"
           disabled={disabled}
           className={cn(
-            'flex w-full items-center justify-between gap-2 rounded-[8px] border border-control bg-raised px-3 font-sans text-[14px]',
-            'hover:border-ink-3 focus:border-accent focus:outline-none focus:ring-[3px] focus:ring-accent-subtle',
+            'flex w-full items-center justify-between gap-2 rounded-[8px] border border-gray-7 bg-surface-raised px-3 font-sans text-[14px]',
+            'hover:border-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3',
             'disabled:pointer-events-none disabled:opacity-50',
             size === 'compact' ? 'h-7' : 'h-9',
-            selected ? 'text-ink' : 'text-ink-3',
+            selected ? 'text-gray-12' : 'text-gray-9',
             className,
           )}
         >
           {value ? formatExact(value) : placeholder}
-          <span aria-hidden className="text-[10px] text-ink-3">
+          <span aria-hidden className="text-[10px] text-gray-9">
             ▾
           </span>
         </button>
@@ -105,25 +105,25 @@ export function DatePicker({
             type="button"
             aria-label="Previous month"
             onClick={() => shiftMonth(-1)}
-            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-ink-2 hover:bg-inset"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
           >
             ‹
           </button>
-          <span className="font-sans text-ui font-semibold text-ink">
+          <span className="font-sans text-ui font-semibold text-gray-12">
             {MONTH_NAMES[view.month]} {view.year}
           </span>
           <button
             type="button"
             aria-label="Next month"
             onClick={() => shiftMonth(1)}
-            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-ink-2 hover:bg-inset"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
           >
             ›
           </button>
         </div>
         <div className="grid grid-cols-[repeat(7,28px)] justify-center gap-0.5">
           {WEEKDAYS.map((weekday, index) => (
-            <div key={index} className="text-center font-mono text-[10px] font-medium text-ink-3">
+            <div key={index} className="text-center font-mono text-[10px] font-medium text-gray-9">
               {weekday}
             </div>
           ))}
@@ -147,10 +147,10 @@ export function DatePicker({
                 className={cn(
                   'flex h-7 w-7 items-center justify-center rounded-md font-sans text-[12px]',
                   isSelected
-                    ? 'bg-accent text-on-accent'
+                    ? 'bg-indigo-9 text-indigo-contrast'
                     : isToday
-                      ? 'text-ink ring-1 ring-inset ring-accent hover:bg-inset'
-                      : 'text-ink hover:bg-inset',
+                      ? 'text-gray-12 ring-1 ring-surface-inset ring-indigo-9 hover:bg-surface-inset'
+                      : 'text-gray-12 hover:bg-surface-inset',
                 )}
               >
                 {day}
@@ -173,7 +173,7 @@ export function DatePicker({
               setOpen(false);
             }
           }}
-          className="mt-2.5 h-7 w-full rounded-md border border-control bg-raised px-2.25 font-mono text-meta text-ink-3 focus:border-accent focus:outline-none focus:ring-[3px] focus:ring-accent-subtle"
+          className="mt-2.5 h-7 w-full rounded-md border border-gray-7 bg-surface-raised px-2.25 font-mono text-meta text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3"
         />
       </PopoverContent>
     </Popover>

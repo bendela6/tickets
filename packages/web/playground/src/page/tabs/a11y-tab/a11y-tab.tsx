@@ -24,12 +24,12 @@ function formatRelativeTime(timestamp: number): string {
 
 function getImpactClasses(impact: string | null | undefined): string {
   if (impact === 'critical' || impact === 'serious') {
-    return 'bg-danger-subtle text-danger';
+    return 'bg-red-3 text-red-9';
   }
   if (impact === 'moderate' || impact === 'minor') {
-    return 'bg-opt-orange-subtle text-opt-orange';
+    return 'bg-orange-3 text-orange-9';
   }
-  return 'bg-control text-ink-2';
+  return 'bg-gray-7 text-gray-11';
 }
 
 export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<AxeResults> }) {
@@ -83,12 +83,12 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
     <div className="flex flex-col gap-3.5">
       {/* Header with meta and button */}
       <div className="flex items-center justify-between">
-        <span className="font-mono text-meta text-ink-3">{metaText}</span>
+        <span className="font-mono text-meta text-gray-9">{metaText}</span>
         <button
           type="button"
           onClick={runAudit}
           disabled={auditState.isLoading}
-          className="h-7 rounded-card border border-control bg-raised px-3 font-sans text-meta text-ink hover:bg-inset disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-7 rounded-lg border border-gray-7 bg-surface-raised px-3 font-sans text-meta text-gray-12 hover:bg-surface-inset disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {auditState.isLoading ? 'auditing…' : 'Run audit'}
         </button>
@@ -102,34 +102,34 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
             auditState.results.violations.map((violation) => (
               <div
                 key={violation.id}
-                className="rounded-card border border-hairline bg-raised p-3.5 flex flex-col gap-2"
+                className="rounded-lg border border-gray-6 bg-surface-raised p-3.5 flex flex-col gap-2"
               >
                 {/* Impact chip + Rule ID */}
                 <div className="flex items-center gap-2">
                   <span
                     className={cn(
-                      'h-5 px-2 rounded-ctrl font-mono text-label inline-flex items-center',
+                      'h-5 px-2 rounded-md font-mono text-label inline-flex items-center',
                       getImpactClasses(violation.impact),
                     )}
                   >
                     {violation.impact}
                   </span>
-                  <span className="font-sans text-ui font-medium text-ink">{violation.id}</span>
+                  <span className="font-sans text-ui font-medium text-gray-12">{violation.id}</span>
                 </div>
 
                 {/* Description */}
-                <p className="font-sans text-meta text-ink-2">{violation.description}</p>
+                <p className="font-sans text-meta text-gray-11">{violation.description}</p>
 
                 {/* Target selector and Learn more link */}
                 <div className="flex items-center justify-between gap-2.5">
-                  <code className="font-mono text-label text-ink-2 bg-inset rounded-ctrl px-1.75 py-0.5 overflow-x-auto text-nowrap">
+                  <code className="font-mono text-label text-gray-11 bg-surface-inset rounded-md px-1.75 py-0.5 overflow-x-auto text-nowrap">
                     {String(violation.nodes[0]?.target?.[0]) || '(selector)'}
                   </code>
                   <a
                     href={violation.helpUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-sans text-label font-medium text-accent hover:underline"
+                    className="font-sans text-label font-medium text-indigo-9 hover:underline"
                   >
                     Learn more ↗
                   </a>
@@ -138,14 +138,14 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
             ))
           ) : (
             // All clear banner
-            <div className="flex items-center gap-2.5 rounded-card bg-opt-green-subtle p-3.5">
-              <span className="flex-none size-4 rounded-full bg-opt-green text-app flex items-center justify-center font-sans text-nano font-semibold">
+            <div className="flex items-center gap-2.5 rounded-lg bg-green-3 p-3.5">
+              <span className="flex-none size-4 rounded-full bg-green-9 text-gray-1 flex items-center justify-center font-sans text-nano font-semibold">
                 ✓
               </span>
-              <span className="font-sans text-ui font-medium text-opt-green">
+              <span className="font-sans text-ui font-medium text-green-9">
                 No violations found
               </span>
-              <span className="font-mono text-label text-opt-green opacity-75">
+              <span className="font-mono text-label text-green-9 opacity-75">
                 · {elementCount} elements checked
               </span>
             </div>

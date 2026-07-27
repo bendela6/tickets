@@ -24,7 +24,7 @@ function slugify(name: string): string {
 
 function ArchChip() {
   return (
-    <span className="inline-flex h-4.25 shrink-0 items-center rounded-sm bg-inset px-1.5 font-mono text-[10px] font-medium text-ink-3">
+    <span className="inline-flex h-4.25 shrink-0 items-center rounded-sm bg-surface-inset px-1.5 font-mono text-[10px] font-medium text-gray-9">
       ARCH
     </span>
   );
@@ -51,7 +51,7 @@ function ColorSwatches({
           onClick={() => onChange(hex)}
           className={cn(
             'size-5 shrink-0 rounded-full border-2 transition-shadow',
-            value === hex ? 'border-ink' : 'border-transparent hover:border-ink-3',
+            value === hex ? 'border-gray-12' : 'border-transparent hover:border-gray-9',
           )}
           style={{ backgroundColor: hex }}
         />
@@ -77,7 +77,7 @@ function ChildTypeChips({
   disabled: boolean;
 }) {
   if (candidates.length === 0) {
-    return <p className="m-0 font-sans text-meta text-ink-3">No other types to allow as children.</p>;
+    return <p className="m-0 font-sans text-meta text-gray-9">No other types to allow as children.</p>;
   }
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -95,7 +95,7 @@ function ChildTypeChips({
             emphasis={active ? 'subtle' : 'outline'}
             className={cn(
               'h-6 border px-2.5 transition-colors',
-              active ? 'border-accent' : 'border-control bg-raised hover:bg-inset',
+              active ? 'border-indigo-9' : 'border-gray-7 bg-surface-raised hover:bg-surface-inset',
             )}
           />
         );
@@ -125,7 +125,7 @@ function TypeForm({
 }) {
   const nameId = `${idPrefix}-name`;
   return (
-    <div className="max-w-105 rounded-panel border border-hairline bg-raised p-3.5">
+    <div className="max-w-105 rounded-xl border border-gray-6 bg-surface-raised p-3.5">
       <FieldLabel htmlFor={nameId}>Name</FieldLabel>
       <Input
         id={nameId}
@@ -253,10 +253,10 @@ export function TypesTab({ board }: SettingsTabProps) {
   return (
     <section className="flex min-h-0 flex-col px-6 py-5.5">
       <div className="mb-1.5 flex items-center gap-3">
-        <h1 className="m-0 font-sans text-[20px] font-semibold text-ink">Types</h1>
-        <span className="font-mono text-meta text-ink-3">{countLabel}</span>
+        <h1 className="m-0 font-sans text-[20px] font-semibold text-gray-12">Types</h1>
+        <span className="font-mono text-meta text-gray-9">{countLabel}</span>
       </div>
-      <p className="mb-4 mt-0 font-sans text-meta text-ink-3">
+      <p className="mb-4 mt-0 font-sans text-meta text-gray-9">
         Create, rename, and archive ticket types, and choose which types may nest under each one.
       </p>
 
@@ -280,7 +280,7 @@ export function TypesTab({ board }: SettingsTabProps) {
 
       <div className="flex flex-col gap-4">
         {types.length === 0 ? (
-          <p className="m-0 font-sans text-meta text-ink-3">No ticket types yet.</p>
+          <p className="m-0 font-sans text-meta text-gray-9">No ticket types yet.</p>
         ) : (
           types.map((type) => {
             const candidates = types.filter((other) => other.id !== type.id && !other.archivedAt);
@@ -289,7 +289,7 @@ export function TypesTab({ board }: SettingsTabProps) {
               <section
                 key={type.id}
                 className={cn(
-                  'max-w-165 rounded-panel border border-hairline bg-raised p-3.5',
+                  'max-w-165 rounded-xl border border-gray-6 bg-surface-raised p-3.5',
                   type.archivedAt && 'opacity-60',
                 )}
               >
@@ -301,8 +301,8 @@ export function TypesTab({ board }: SettingsTabProps) {
                       style={{ backgroundColor: type.config.color }}
                     />
                   ) : null}
-                  <span className="truncate font-sans text-ui font-semibold text-ink">{type.label}</span>
-                  <span className="shrink-0 font-mono text-meta text-ink-3">{type.key}</span>
+                  <span className="truncate font-sans text-ui font-semibold text-gray-12">{type.label}</span>
+                  <span className="shrink-0 font-mono text-meta text-gray-9">{type.key}</span>
                   {type.archivedAt ? <ArchChip /> : null}
                   <span className="flex-1" />
                   <Button

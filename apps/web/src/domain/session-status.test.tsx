@@ -29,9 +29,9 @@ describe('sessionStatus', () => {
 
 describe('exitCodeTone', () => {
   it('is success-colored for a clean exit and danger-colored otherwise', () => {
-    expect(exitCodeTone(0)).toBe('text-opt-green');
-    expect(exitCodeTone(1)).toBe('text-danger');
-    expect(exitCodeTone(-1)).toBe('text-danger');
+    expect(exitCodeTone(0)).toBe('text-green-9');
+    expect(exitCodeTone(1)).toBe('text-red-9');
+    expect(exitCodeTone(-1)).toBe('text-red-9');
   });
 });
 
@@ -39,12 +39,12 @@ describe('exitCodeTrailing', () => {
   it('clean exit (0) renders success-colored text', () => {
     render(<div>{exitCodeTrailing('exited', 0)}</div>);
     const el = screen.getByText('0');
-    expect(el.className).toContain('text-opt-green');
+    expect(el.className).toContain('text-green-9');
   });
   it('non-zero exit code renders danger-colored text', () => {
     render(<div>{exitCodeTrailing('exited', 1)}</div>);
     const el = screen.getByText('1');
-    expect(el.className).toContain('text-danger');
+    expect(el.className).toContain('text-red-9');
   });
   it('returns undefined for a non-exited status or a null code', () => {
     expect(exitCodeTrailing('running', 0)).toBeUndefined();

@@ -107,18 +107,18 @@ describe('RichTextEditor', () => {
     const user = userEvent.setup();
     render(<RichTextEditor value="" onSave={vi.fn()} />);
     const container = document.querySelector('.rt')!.parentElement!;
-    expect(container.className).toContain('border-hairline');
+    expect(container.className).toContain('border-gray-6');
     await user.click(document.querySelector('[contenteditable="true"]')!);
-    expect(container.className).toContain('border-accent');
-    expect(container.className).toContain('ring-accent-subtle');
+    expect(container.className).toContain('border-indigo-9');
+    expect(container.className).toContain('ring-indigo-3');
     await user.tab();
-    expect(container.className).toContain('border-hairline');
+    expect(container.className).toContain('border-gray-6');
   });
 
   it('disabled container fills with the page background and dims the toolbar', () => {
     render(<RichTextEditor value="" onSave={vi.fn()} disabled />);
     const container = document.querySelector('.rt')!.parentElement!;
-    expect(container.className).toContain('bg-app');
+    expect(container.className).toContain('bg-gray-1');
     const toolbarWrap = document.querySelector('.rt')!.previousElementSibling!;
     expect(toolbarWrap.className).toContain('opacity-45');
     expect(document.querySelector('.rt')!.className).toContain('cursor-not-allowed');
