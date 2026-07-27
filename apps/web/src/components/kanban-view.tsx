@@ -219,7 +219,7 @@ export function KanbanView({
             <Pill
               label={priorityOption.label}
               tone={hexToOptionColor(priorityOption.config.color)}
-              shape="full"
+              shape="round"
               className="h-4.5 px-1.75 text-[10px]"
             />
           ) : null}

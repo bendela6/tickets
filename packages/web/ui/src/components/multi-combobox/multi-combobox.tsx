@@ -73,7 +73,7 @@ export function MultiCombobox({
             ) : null}
             {shown.map((option) => (
               <span key={option.value} className="inline-flex items-center gap-1">
-                <Pill tone={option.color ?? 'gray'} shape="full" label={option.label} />
+                <Pill tone={option.color ?? 'gray'} shape="round" label={option.label} />
                 <button
                   type="button"
                   aria-label={`Remove ${option.label}`}

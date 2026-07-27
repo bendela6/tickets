@@ -153,7 +153,7 @@ export function ComboboxList({
                 {renderOption ? (
                   renderOption(option, selected)
                 ) : option.color ? (
-                  <Pill tone={option.color} shape="full" label={option.label} />
+                  <Pill tone={option.color} shape="round" label={option.label} />
                 ) : (
                   <span>{option.label}</span>
                 )}

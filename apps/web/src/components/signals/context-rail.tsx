@@ -54,7 +54,7 @@ function TagPill({ tagKey, value }: { tagKey: string; value: unknown }) {
     <Pill
       tone={danger ? 'danger' : 'secondary'}
       label={String(value)}
-      shape="full"
+      shape="round"
       className={cn('h-5 text-[11px] font-mono', !danger && 'text-gray-12')}
     />
   );

@@ -108,7 +108,7 @@ function ApprovalCard({
         <span className="font-sans text-ui font-semibold text-gray-12">Approval required</span>
         <Pill
           tone="secondary"
-          emphasis="outline"
+          variant="outline"
           label={toolName}
           className="h-auto rounded-[5px] border-gray-6 bg-surface-raised px-1.5 py-0 font-mono text-[11px]"
         />
@@ -307,7 +307,7 @@ function SubagentGroup({
         <span className="font-mono text-meta font-semibold text-gray-12">{name}</span>
         <Pill
           tone="secondary"
-          emphasis="outline"
+          variant="outline"
           label="subagent"
           className="h-auto rounded-[3px] px-1.5 py-0 font-mono text-[9px] uppercase tracking-wide"
         />

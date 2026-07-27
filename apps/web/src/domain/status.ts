@@ -27,7 +27,7 @@ export const KIND_TONE: Record<StatusKind, HueTone> = {
 // emphasis's border-gray-11 via cn/twMerge (same border-color group).
 export const typePill = {
   tone: 'secondary',
-  emphasis: 'outline',
+  variant: 'outline',
   className: 'border-gray-7',
 } as const satisfies Partial<ComponentProps<typeof Pill>>;
 

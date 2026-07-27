@@ -46,7 +46,7 @@ function RuleValues({ rule, indexes }: { rule: FilterRule; indexes: BoardIndexes
               key={value}
               label={value}
               tone={KIND_TONE[value as keyof typeof KIND_TONE] ?? 'gray'}
-              shape="full"
+              shape="round"
               className="h-4.5"
             />
           );
@@ -58,7 +58,7 @@ function RuleValues({ rule, indexes }: { rule: FilterRule; indexes: BoardIndexes
               key={value}
               label={option?.label ?? value}
               tone={kindColor(option?.kind ?? null)}
-              shape="full"
+              shape="round"
               className="h-4.5"
             />
           );
@@ -71,7 +71,7 @@ function RuleValues({ rule, indexes }: { rule: FilterRule; indexes: BoardIndexes
             key={value}
             label={option?.label ?? value}
             tone={hexToOptionColor(option?.config.color)}
-            shape="full"
+            shape="round"
             className="h-4.5"
           />
         );

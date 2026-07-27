@@ -232,8 +232,8 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
         {item.type === 'gap' ? (
           <Pill
             tone="secondary"
-            emphasis="outline"
-            shape="full"
+            variant="outline"
+            shape="round"
             label={`${item.seconds}s idle`}
             className="border-dashed border-gray-7 font-mono text-[10.5px]"
           />

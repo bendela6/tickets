@@ -54,7 +54,7 @@ export function Combobox({
           >
             {selected ? (
               selected.color ? (
-                <Pill tone={selected.color} shape="full" label={selected.label} />
+                <Pill tone={selected.color} shape="round" label={selected.label} />
               ) : (
                 <span className="truncate">{selected.label}</span>
               )

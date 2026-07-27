@@ -18,12 +18,31 @@ export const states = [
     ),
   },
   {
-    name: 'Emphases',
+    name: 'Variants',
     render: () => (
       <div className="flex flex-wrap gap-3">
-        {(['subtle', 'solid', 'outline', 'text'] as const).map((emphasis) => (
-          <Pill key={emphasis} label={emphasis} tone="green" emphasis={emphasis} />
+        {(['subtle', 'solid', 'outline', 'text'] as const).map((variant) => (
+          <Pill key={variant} label={variant} tone="green" variant={variant} />
         ))}
+      </div>
+    ),
+  },
+  {
+    name: 'Sizes',
+    render: () => (
+      <div className="flex flex-wrap items-center gap-3">
+        {(['sm', 'md', 'lg'] as const).map((size) => (
+          <Pill key={size} label={size} tone="blue" size={size} icon="circle" />
+        ))}
+      </div>
+    ),
+  },
+  {
+    name: 'Shapes',
+    render: () => (
+      <div className="flex flex-wrap gap-3">
+        <Pill label="square" shape="square" tone="purple" />
+        <Pill label="round" shape="round" tone="purple" />
       </div>
     ),
   },
@@ -53,7 +72,7 @@ export const states = [
     render: () => (
       <div className="flex flex-wrap gap-3">
         <Pill label="done" strikethrough trailing={<span>3</span>} />
-        <Pill label="tag" shape="full" trailing={<span>5</span>} />
+        <Pill label="tag" shape="round" trailing={<span>5</span>} />
       </div>
     ),
   },
@@ -62,7 +81,7 @@ export const states = [
 export const playground = definePlayground({
   docs: {
     summary:
-      'A compact label for exactly one fact — a status, a type, a count. `tone` carries the meaning and `emphasis` carries the weight; pick the pair that lets the pill sit as quietly as its row allows.',
+      'A compact label for exactly one fact — a status, a type, a count. `tone` carries the meaning and `variant` carries the weight; pick the pair that lets the pill sit as quietly as its row allows.',
   },
   controls: {
     label: text('Pill', {
@@ -77,11 +96,17 @@ export const playground = definePlayground({
       description:
         'Semantic colour. The six semantic names carry meaning across themes; the eleven hue names are for user-chosen colours, where the hue itself is the label.',
     }),
-    emphasis: select(['subtle', 'solid', 'outline', 'text'] as const, {
+    variant: select(['subtle', 'solid', 'outline', 'text'] as const, {
       initial: 'subtle',
-      type: 'ToneEmphasis',
+      type: 'PillVariant',
       description:
         'How loudly the tone reads. `subtle` is the default and the right pick inside lists; `solid` is for the one pill that has to win the row.',
+    }),
+    size: select(['sm', 'md', 'lg'] as const, {
+      initial: 'md',
+      type: 'PillSize',
+      description:
+        'Height of the pill — 18, 22 and 28px. `md` sits inside a table row; `lg` is for a pill that stands alone.',
     }),
     icon: select(ICON_NAMES, {
       allowNone: true,
@@ -89,10 +114,11 @@ export const playground = definePlayground({
       description:
         'Leading glyph from the icon registry, inheriting the pill’s own colour. Pass an element instead when the mark is not a registry icon.',
     }),
-    shape: select(['md', 'full'] as const, {
-      initial: 'md',
+    shape: select(['square', 'round'] as const, {
+      initial: 'square',
+      type: 'PillShape',
       description:
-        'Corner radius. `md` lines up with the surrounding controls; `full` reads as a tag or a count.',
+        'Corner treatment. `square` lines up with the surrounding controls; `round` reads as a tag or a count.',
     }),
     strikethrough: boolean(false, {
       description:
@@ -107,7 +133,8 @@ export const playground = definePlayground({
     <Pill
       label={v.label}
       tone={v.tone}
-      emphasis={v.emphasis}
+      variant={v.variant}
+      size={v.size}
       icon={v.icon}
       shape={v.shape}
       strikethrough={v.strikethrough}

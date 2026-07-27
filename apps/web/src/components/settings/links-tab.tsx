@@ -57,10 +57,10 @@ function TargetTypeChips({
             onClick={() => onToggle(candidate.id)}
             pressed={active}
             disabled={disabled}
-            shape="full"
+            shape="round"
             label={candidate.label}
             tone={active ? 'primary' : 'secondary'}
-            emphasis={active ? 'subtle' : 'outline'}
+            variant={active ? 'subtle' : 'outline'}
             className={cn(
               'h-6 border px-2.5 transition-colors',
               active ? 'border-indigo-9' : 'border-gray-7 bg-surface-raised hover:bg-surface-inset',

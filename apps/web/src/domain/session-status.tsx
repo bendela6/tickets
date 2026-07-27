@@ -16,7 +16,7 @@ export type SessionStatus =
   | 'live'
   | 'disconnected';
 
-type Entry = { tone: Tone; emphasis?: 'solid'; icon: ReactElement; label: string; className?: string };
+type Entry = { tone: Tone; variant?: 'solid'; icon: ReactElement; label: string; className?: string };
 
 // Reuses the run-status pill visual language: a coloured pill + a shape-coded
 // icon, so state reads at a glance and is not carried by colour alone. The
@@ -29,7 +29,7 @@ const MAP: Record<SessionStatus, Entry> = {
   idle: { tone: 'green', icon: <Icon name="circle-dot" size={10} />, label: 'idle' },
   awaiting_input: {
     tone: 'orange',
-    emphasis: 'solid',
+    variant: 'solid',
     className: 'font-semibold animate-ai-pulse',
     icon: <Icon name="diamond" size={8} />,
     label: 'awaiting input',
