@@ -77,7 +77,7 @@ function StatusCell({
     .map((option) => ({ key: option.value, label: option.label, kind: option.kind ?? 'todo' }));
   return (
     <StatusSelect
-      size="compact"
+      size="sm"
       statuses={statuses}
       value={typeof raw === 'string' ? raw : null}
       legalTargets={legalStatusTargets(board, indexes, ticket, ticket.typeId).map(
@@ -318,11 +318,11 @@ export function TableView({
           }
           action={
             filtered ? (
-              <Button size="regular" className="h-8" onClick={onClearFilters}>
+              <Button size="md" className="h-8" onClick={onClearFilters}>
                 Clear filters
               </Button>
             ) : (
-              <Button size="regular" className="h-8" onClick={onNewTicket}>
+              <Button size="md" className="h-8" onClick={onNewTicket}>
                 ＋ New item
               </Button>
             )

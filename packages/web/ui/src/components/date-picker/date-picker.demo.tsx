@@ -15,7 +15,7 @@ function DatePickerPlaygroundFixture({
   size,
   disabled,
 }: {
-  size: 'compact' | 'regular' | undefined;
+  size: 'sm' | 'md' | undefined;
   disabled: boolean;
 }) {
   const [date, setDate] = useState<string | null>('2026-07-09T00:00:00Z');
@@ -34,7 +34,7 @@ export const states = [
 
 export const playground = definePlayground({
   controls: {
-    size: select(['compact', 'regular'], { allowNone: true }),
+    size: select(['sm', 'md'], { allowNone: true }),
     disabled: boolean(),
   },
   render: (v) => <DatePickerPlaygroundFixture {...v} />,

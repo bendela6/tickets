@@ -50,7 +50,7 @@ export function ViewTabs({
       })}
       {adding ? (
         <Input
-          size="compact"
+          size="sm"
           autoFocus
           placeholder="view name"
           aria-label="New view name"

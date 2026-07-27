@@ -119,7 +119,7 @@ function PlacementRow({
             });
           }}
           placeholder="All options allowed"
-          size="compact"
+          size="sm"
           disabled={disabled}
         />
       ) : (
@@ -236,12 +236,12 @@ function NewFieldComposer({
         <p className="m-0 mt-2.5 font-sans text-meta text-red-9">{(createField.error as Error).message}</p>
       ) : null}
       <div className="mt-3.5 flex items-center justify-end gap-2">
-        <Button size="compact" variant="ghost" onClick={onClose}>
+        <Button size="sm" variant="ghost" onClick={onClose}>
           Cancel
         </Button>
         <Button
           type="submit"
-          size="compact"
+          size="sm"
           variant="primary"
           loading={createField.isPending}
           disabled={disabled || label.trim().length === 0 || key.trim().length === 0}
@@ -365,12 +365,12 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
                   value={pickFieldId}
                   onChange={setPickFieldId}
                   placeholder="Choose a field to place…"
-                  size="compact"
+                  size="sm"
                   disabled={disabled || pickOptions.length === 0}
                   className="w-72"
                 />
                 <Button
-                  size="compact"
+                  size="sm"
                   variant="primary"
                   disabled={disabled || pickFieldId === null || placeField.isPending}
                   loading={placeField.isPending}
@@ -380,7 +380,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
                 </Button>
                 <span className="flex-1" />
                 <Button
-                  size="compact"
+                  size="sm"
                   variant="secondary"
                   disabled={disabled}
                   onClick={() => setComposerOpen((open) => !open)}
@@ -421,7 +421,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
                   {placedCount} type{placedCount === 1 ? '' : 's'}
                 </span>
                 <Button
-                  size="compact"
+                  size="sm"
                   variant="ghost"
                   disabled={disabled}
                   aria-label={`${field.archivedAt ? 'Restore' : 'Archive'} ${field.label}`}

@@ -59,24 +59,24 @@ export function PromptComposer({
           options={AGENT_MODELS}
           value={model}
           onChange={(v) => onModelChange(v ?? model)}
-          size="compact"
+          size="sm"
           className="w-40"
         />
         <Combobox
           options={EFFORT_LEVELS}
           value={effort}
           onChange={(v) => onEffortChange(v ?? effort)}
-          size="compact"
+          size="sm"
           className="w-28"
         />
         <span className="flex-1" />
         {running ? (
-          <Button size="compact" variant="secondary" onClick={onInterrupt}>
+          <Button size="sm" variant="secondary" onClick={onInterrupt}>
             ■ Stop
           </Button>
         ) : (
           <Button
-            size="compact"
+            size="sm"
             variant="primary"
             onClick={onSend}
             disabled={disabled || !value.trim()}

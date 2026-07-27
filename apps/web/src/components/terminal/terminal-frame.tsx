@@ -90,7 +90,7 @@ export function TerminalFrame({
           ) : null}
           <span className="flex-1" />
           {ended && onRestart ? (
-            <Button size="compact" variant="secondary" onClick={onRestart}>
+            <Button size="sm" variant="secondary" onClick={onRestart}>
               Restart
             </Button>
           ) : null}

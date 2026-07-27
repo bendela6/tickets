@@ -11,10 +11,19 @@ export const states = [
   { name: 'destructive', render: () => <Button variant="destructive">Archive</Button> },
   { name: 'loading', render: () => <Button variant="primary" loading>Creating…</Button> },
   { name: 'disabled', render: () => <Button variant="secondary" disabled>Disabled</Button> },
-  { name: 'size compact', render: () => <Button size="compact">Compact 28</Button> },
-  { name: 'size regular', render: () => <Button size="regular">Regular 36</Button> },
-  { name: 'size touch', render: () => <Button size="touch">Touch 44</Button> },
-  { name: 'size icon', render: () => <Button size="icon" aria-label="More">⋯</Button> },
+  { name: 'size sm', render: () => <Button size="sm">Small 28</Button> },
+  { name: 'size md', render: () => <Button size="md">Medium 36</Button> },
+  { name: 'size lg', render: () => <Button size="lg">Large 44</Button> },
+  // Icon-only is geometry, not a rung: pick a size, then square it off. There
+  // is no `size="icon"` — that would have made one rung mean a shape.
+  {
+    name: 'icon only',
+    render: () => (
+      <Button size="md" aria-label="More" className="w-9 p-0">
+        ⋯
+      </Button>
+    ),
+  },
   // Every one of these fills is a class built by interpolation, so this row is
   // also the visual check that the generated safelist reached the stylesheet:
   // if it did not, these render with no fill at all.
@@ -36,7 +45,7 @@ export const playground = definePlayground({
   controls: {
     variant: select(['primary', 'secondary', 'ghost', 'destructive'], { initial: 'primary' }),
     tone: select([...TONE_NAMES], { allowNone: true }),
-    size: select(['compact', 'regular', 'touch', 'icon'], { allowNone: true }),
+    size: select(['sm', 'md', 'lg'], { allowNone: true }),
     loading: boolean(false, { label: 'show spinner' }),
     disabled: boolean(),
     children: text('New ticket', { placeholder: 'button label…' }),

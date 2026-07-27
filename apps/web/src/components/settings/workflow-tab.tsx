@@ -143,7 +143,7 @@ function OptionForm({
         <div className="flex items-center gap-2.5">
           <Input
             id={labelId}
-            size="compact"
+            size="sm"
             className="max-w-70"
             placeholder="e.g. In review"
             value={draft.label}
@@ -163,14 +163,14 @@ function OptionForm({
       <div className="flex items-center gap-2">
         <Button
           variant="primary"
-          size="compact"
+          size="sm"
           disabled={draft.label.trim() === ''}
           loading={pending}
           onClick={onSubmit}
         >
           {submitLabel}
         </Button>
-        <Button size="compact" onClick={onCancel}>
+        <Button size="sm" onClick={onCancel}>
           Cancel
         </Button>
       </div>
@@ -383,7 +383,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     {archivedCount > 0 ? ` · ${archivedCount} archived` : ''}
                   </span>
                   <span className="flex-1" />
-                  <Button size="compact" disabled={disabled} onClick={startCreateOption}>
+                  <Button size="sm" disabled={disabled} onClick={startCreateOption}>
                     + Add option
                   </Button>
                 </div>
@@ -419,7 +419,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                           {archived ? <ArchChip /> : null}
                           <span className="flex-1" />
                           <Button
-                            size="compact"
+                            size="sm"
                             variant="ghost"
                             disabled={disabled || archived}
                             aria-label={`Edit ${option.label}`}
@@ -428,7 +428,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                             Edit
                           </Button>
                           <Button
-                            size="compact"
+                            size="sm"
                             variant="ghost"
                             disabled={disabled}
                             aria-label={`${archived ? 'Restore' : 'Archive'} ${option.label}`}
@@ -544,7 +544,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     }}
                   >
                     <Combobox
-                      size="compact"
+                      size="sm"
                       className="w-44"
                       placeholder="From option"
                       options={fromOptions}
@@ -556,7 +556,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                       →
                     </span>
                     <Combobox
-                      size="compact"
+                      size="sm"
                       className="w-44"
                       placeholder="To option"
                       options={toOptions}
@@ -571,7 +571,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                       disabled={disabled}
                     />
                     <Combobox
-                      size="compact"
+                      size="sm"
                       className="w-44"
                       placeholder="Requires field"
                       options={guardFieldOptions}
@@ -582,7 +582,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     />
                     <Button
                       type="submit"
-                      size="compact"
+                      size="sm"
                       disabled={disabled || edgeFrom === null || edgeTo === null || createTransition.isPending}
                     >
                       Add edge

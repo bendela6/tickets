@@ -21,7 +21,7 @@ describe('control constructors', () => {
   it('initialValues maps defs to their initial values', () => {
     const values = initialValues({
       variant: select(['primary', 'secondary'], { initial: 'secondary' }),
-      size: select(['compact', 'regular'], { allowNone: true }),
+      size: select(['sm', 'md'], { allowNone: true }),
       loading: boolean(true),
       label: text('hi'),
       count: number(3),
@@ -33,14 +33,14 @@ describe('control constructors', () => {
     const p = definePlayground({
       controls: {
         variant: select(['primary', 'secondary']),
-        size: select(['compact', 'regular'], { allowNone: true }),
+        size: select(['sm', 'md'], { allowNone: true }),
         loading: boolean(),
         children: text('x'),
         max: number(1),
       },
       render: (v) => {
         expectTypeOf(v.variant).toEqualTypeOf<'primary' | 'secondary'>();
-        expectTypeOf(v.size).toEqualTypeOf<'compact' | 'regular' | undefined>();
+        expectTypeOf(v.size).toEqualTypeOf<'sm' | 'md' | undefined>();
         expectTypeOf(v.loading).toEqualTypeOf<boolean>();
         expectTypeOf(v.children).toEqualTypeOf<string>();
         expectTypeOf(v.max).toEqualTypeOf<number>();

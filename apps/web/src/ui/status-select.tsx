@@ -11,7 +11,7 @@ type StatusSelectProps = {
   onChange: (value: string) => void;
   /** Keys reachable from the current status per the workflow graph. Undefined = all allowed. */
   legalTargets?: string[];
-  size?: 'compact' | 'regular';
+  size?: 'sm' | 'md';
   disabled?: boolean;
   className?: string;
 };
@@ -29,7 +29,7 @@ export function StatusSelect({
   value,
   onChange,
   legalTargets,
-  size = 'regular',
+  size = 'md',
   disabled,
   className,
 }: StatusSelectProps) {
@@ -65,7 +65,7 @@ export function StatusSelect({
             'flex w-full items-center justify-between gap-2 rounded-md border border-gray-7 bg-surface-raised pr-2 pl-1.5',
             'hover:border-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3',
             'disabled:pointer-events-none disabled:opacity-50',
-            size === 'compact' ? 'h-7' : 'h-9',
+            size === 'sm' ? 'h-7' : 'h-9',
             className,
           )}
         >

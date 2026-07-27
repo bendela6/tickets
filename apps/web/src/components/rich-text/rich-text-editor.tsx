@@ -397,7 +397,7 @@ export function RichTextEditor({
             <span className="font-mono text-[11px] text-gray-9">⌘↩</span>
             <Button
               variant="primary"
-              size="compact"
+              size="sm"
               disabled={composer.submitDisabled}
               loading={composer.submitPending}
               onClick={submitCurrent}

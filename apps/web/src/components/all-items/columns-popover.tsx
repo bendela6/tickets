@@ -52,7 +52,7 @@ export function ColumnsPopover({
     <Popover onOpenChange={(open) => (open ? undefined : setQuery(''))}>
       <PopoverTrigger asChild>
         <Button
-          size="regular"
+          size="md"
           className={cn(
             'h-8 shrink-0',
             customized &&

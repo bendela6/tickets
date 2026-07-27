@@ -170,7 +170,7 @@ function AddFilter({
       <PopoverContent>
         <div className="flex w-64 flex-col gap-2 p-3">
           <Combobox
-            size="compact"
+            size="sm"
             options={fieldOptions}
             value={fieldKey}
             placeholder="Field…"
@@ -184,7 +184,7 @@ function AddFilter({
           />
           {selectedField ? (
             <Combobox
-              size="compact"
+              size="sm"
               options={opOptions}
               value={op}
               onChange={(next) => {
@@ -197,7 +197,7 @@ function AddFilter({
           ) : null}
           {selectedField && needsValues ? (
             <MultiCombobox
-              size="compact"
+              size="sm"
               options={valueOptions}
               value={values}
               onChange={setValues}
@@ -206,18 +206,18 @@ function AddFilter({
           ) : null}
           {selectedField && op === 'contains' ? (
             <Input
-              size="compact"
+              size="sm"
               placeholder="text…"
               value={text}
               onChange={(event) => setText(event.target.value)}
             />
           ) : null}
           <div className="flex items-center justify-end gap-2 pt-0.5">
-            <Button size="compact" variant="ghost" onClick={() => setOpen(false)}>
+            <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button
-              size="compact"
+              size="sm"
               variant="primary"
               disabled={!valid}
               onClick={() => {

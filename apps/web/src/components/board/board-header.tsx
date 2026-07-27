@@ -110,7 +110,7 @@ export function BoardHeader({
           />
           <Popover>
             <PopoverTrigger asChild>
-              <Button size="regular" className="h-8 shrink-0">
+              <Button size="md" className="h-8 shrink-0">
                 ▦ Columns
               </Button>
             </PopoverTrigger>

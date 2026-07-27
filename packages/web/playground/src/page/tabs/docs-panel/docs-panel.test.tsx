@@ -41,7 +41,7 @@ const controls = {
     type: 'PillVariant',
     description: 'Visual weight and intent. Pass `ghost` inside a toolbar.',
   }),
-  size: select(['compact', 'regular'], { allowNone: true }),
+  size: select(['sm', 'md'], { allowNone: true }),
   loading: booleanControl(false),
   children: text('New ticket', { type: 'ReactNode', required: true }),
   count: numberControl(5, { min: 1, max: 99 }),

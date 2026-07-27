@@ -164,7 +164,7 @@ export function DetailLinks({
           }}
         >
           <Combobox
-            size="compact"
+            size="sm"
             className="w-44"
             options={options}
             value={choice}
@@ -172,7 +172,7 @@ export function DetailLinks({
             onChange={setChoice}
           />
           <Input
-            size="compact"
+            size="sm"
             className="w-28"
             placeholder={`${prefix}-131`}
             aria-label="Item number"
@@ -182,7 +182,7 @@ export function DetailLinks({
           />
           <Button
             type="submit"
-            size="compact"
+            size="sm"
             disabled={userId === null || numberDraft.trim().length === 0 || createLink.isPending}
           >
             Link
