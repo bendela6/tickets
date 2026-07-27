@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
-import { collectDemos, definePlayground, isDemoError } from '@tickets/ui/gallery';
+import { collectDemos, definePlayground, isDemoError } from '@tickets/ui';
 import { setAxeForTests } from './axe';
 import { ComponentPage } from './component-page';
 

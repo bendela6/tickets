@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { CELL_MIN, StateGrid } from './state-grid';
-import { collectDemos, isDemoError, type DemoSize } from '@tickets/ui/gallery';
+import { collectDemos, isDemoError, type DemoSize } from '@tickets/ui';
 
 function buildDemo(size?: DemoSize) {
   const collected = collectDemos({

@@ -1,4 +1,4 @@
-import { boolean, definePlayground, text } from '@tickets/ui/gallery';
+import { boolean, definePlayground, text } from '@tickets/ui';
 import { Switch } from './switch';
 
 export const meta = { title: 'Switch', group: 'Form controls', size: 'sm' };

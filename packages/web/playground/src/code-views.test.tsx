@@ -6,7 +6,7 @@ import {
   definePlayground,
   isDemoError,
   select,
-} from '@tickets/ui/gallery';
+} from '@tickets/ui';
 import { DemoTab } from './demo-tab';
 import { GeneratedCode } from './generated-code';
 import { setHighlighterForTests } from './highlight';

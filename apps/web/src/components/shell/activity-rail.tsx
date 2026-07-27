@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { applyTheme } from '../../utils/apply-theme';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 import { ActorMenu } from './actor-menu';
 import type { Mode } from './mode-for-path';
 

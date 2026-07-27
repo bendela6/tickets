@@ -3,7 +3,7 @@ import { useBoard } from '../../api/use-board';
 import { useForkScheme, useUpdateProject } from '../../api/use-admin';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Button } from '../../ui/button';
-import { Tabs } from '@tickets/ui/tabs';
+import { Tabs } from '@tickets/ui';
 import { useToast } from '../../ui/toast';
 import { indexBoard } from '../../utils/index-board';
 import { FieldsTab } from './fields-tab';

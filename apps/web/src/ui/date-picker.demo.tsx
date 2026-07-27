@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { boolean, definePlayground, select } from '@tickets/ui/gallery';
+import { boolean, definePlayground, select } from '@tickets/ui';
 import { DatePicker } from './date-picker';
 
 function DatePickerFixture() {

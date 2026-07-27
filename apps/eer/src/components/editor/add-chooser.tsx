@@ -5,7 +5,7 @@
 // model-level type (no group needed), so its entry is always enabled.
 
 import { useDiagramModelOrNull } from '../../state/diagram-context';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 import { Modal } from '../modal';
 import { useEditor } from './editor-context';
 

@@ -7,7 +7,7 @@ import { useRestartTerminalSession } from '../../api/use-restart-terminal-sessio
 import { useTerminalSession } from '../../api/use-terminal-session';
 import type { TerminalStatus } from '../../api/types';
 import { exitCodeTrailing, sessionStatus } from '../../domain/session-status';
-import { Pill } from '@tickets/ui/pill';
+import { Pill } from '@tickets/ui';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../../ui/menu';
 import { useSessionSocket } from '../session/use-session-socket';
 import { terminalDisplay } from './terminal-display';

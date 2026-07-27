@@ -1,4 +1,4 @@
-import { boolean, definePlayground, select, text } from '@tickets/ui/gallery';
+import { boolean, definePlayground, select, text } from '@tickets/ui';
 import { Input } from './input';
 
 export const meta = { title: 'Input', group: 'Form controls', size: 'md' };

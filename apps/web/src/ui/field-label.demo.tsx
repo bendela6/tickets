@@ -1,4 +1,4 @@
-import { boolean, definePlayground, text } from '@tickets/ui/gallery';
+import { boolean, definePlayground, text } from '@tickets/ui';
 import { FieldLabel } from './field-label';
 import { FieldError } from './field-error';
 import { Input } from './input';

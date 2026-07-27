@@ -3,7 +3,7 @@
 // to keep that file's size down; no behaviour of its own beyond the dropdown.
 
 import type { FkAction } from '../../engine/model/types';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 
 const input = cn('rounded border border-gray-600 bg-gray-900 px-2 py-1', 'text-xs text-gray-50');
 const selectCls = cn(input, 'shrink-0');

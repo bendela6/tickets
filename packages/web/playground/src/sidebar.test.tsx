@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
-import { collectDemos, isDemoError, type CollectedDemo } from '@tickets/ui/gallery';
+import { collectDemos, isDemoError, type CollectedDemo } from '@tickets/ui';
 import { clampWidth, Sidebar, SIDEBAR_MAX, SIDEBAR_MIN } from './sidebar';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;

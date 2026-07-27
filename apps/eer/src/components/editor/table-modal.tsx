@@ -15,7 +15,7 @@ import { entityColor } from '../../engine/colors/entity-color';
 import { applyModelEdit as tryApplyModelEdit, fkRefsTo, ModelEditError, type EditField, type ModelEdit } from '../../engine/model/apply-model-edit';
 import type { Column, Constraint, Entity, Model, TableIndex } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi } from '../../state/diagram-context';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 import { Modal } from '../modal';
 import { ColumnsGrid } from './columns-grid';
 import { ConstraintsEditor } from './constraints-editor';

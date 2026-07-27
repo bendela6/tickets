@@ -1,6 +1,5 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
-import { cn } from '@tickets/ui/cn';
-import { Spinner } from '@tickets/ui/spinner';
+import { cn, Spinner } from '@tickets/ui';
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';

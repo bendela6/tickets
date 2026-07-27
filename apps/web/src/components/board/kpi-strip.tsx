@@ -1,6 +1,6 @@
 import type { Item, StatusKind } from '../../api/types';
 import { KIND_ICON, KIND_TONE } from '../../domain/status';
-import { Icon } from '@tickets/ui/icon';
+import { Icon } from '@tickets/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 
 const KIND_ORDER: { kind: StatusKind; label: string }[] = [

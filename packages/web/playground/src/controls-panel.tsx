@@ -1,4 +1,4 @@
-import type { AnyControlDef } from '@tickets/ui/gallery';
+import type { AnyControlDef } from '@tickets/ui';
 
 const inputClasses =
   'h-7 rounded-ctrl border border-control bg-raised px-2 font-sans text-ui text-ink focus:outline-none focus:ring-2 focus:ring-accent-subtle';

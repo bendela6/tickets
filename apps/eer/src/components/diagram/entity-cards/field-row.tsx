@@ -3,8 +3,7 @@ import { columnRoles, type ColumnRole } from '../../../engine/model/column-roles
 import { portKey } from '../../../engine/geometry/port-key';
 import { useDiagramDispatch } from '../../../state/diagram-context';
 import type { Column, Entity, Side } from '../../../engine/model/types';
-import { cn } from '@tickets/ui/cn';
-import { runtimeStyle } from '@tickets/ui/runtime-style';
+import { cn, runtimeStyle } from '@tickets/ui';
 
 function Port({
   e,

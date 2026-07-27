@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { definePlayground, number, boolean } from '@tickets/ui/gallery';
+import { definePlayground, number, boolean } from '@tickets/ui';
 import { NumberInput } from './number-input';
 
 function EstimateFixture() {

@@ -11,7 +11,7 @@
 
 import { useEffect, useId, useRef, type MouseEvent, type ReactNode } from 'react';
 
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 
 export interface ModalProps {
   title: string;

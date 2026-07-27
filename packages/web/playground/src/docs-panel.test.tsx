@@ -9,7 +9,7 @@ import {
   text,
   type AnyControlDef,
   type PlaygroundDocs,
-} from '@tickets/ui/gallery';
+} from '@tickets/ui';
 import { DocsPanel, DOCS_COLUMN, DOCS_MEASURE } from './docs-panel';
 
 // 13 values — one past the design's 12-chip cap, so the truncation branch is

@@ -17,7 +17,7 @@
 // backstop.
 
 import type { IndexColumn, TableIndex } from '../../engine/model/types';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 import { ColumnMultiSelect } from './column-multi-select';
 
 const card = cn('flex flex-col gap-2 rounded-xl border border-gray-600 bg-gray-900 p-3');

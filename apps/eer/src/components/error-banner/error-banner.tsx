@@ -1,6 +1,5 @@
-import { cn } from '@tickets/ui/cn';
+import { cn, runtimeStyle } from '@tickets/ui';
 import { mix } from '../../ui/color-mix';
-import { runtimeStyle } from '@tickets/ui/runtime-style';
 
 interface ErrorBannerProps {
   errors: string[];

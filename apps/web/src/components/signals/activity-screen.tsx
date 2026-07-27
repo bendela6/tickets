@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ActivityFilters, IssueLevel } from '../../api/signals/signals-api';
 import { useSignalsActivity, useSignalsApps } from '../../api/signals/use-signals';
-import { ScreenState } from '@tickets/ui/screen-state';
-import { Spinner } from '@tickets/ui/spinner';
+import { ScreenState, Spinner } from '@tickets/ui';
 import { ACTIVITY_GRID_COLUMNS, ActivityRow, ActivityRowSkeleton } from './activity-row';
 import { ActivityToolbar } from './activity-toolbar';
 import { formatCount } from './format';

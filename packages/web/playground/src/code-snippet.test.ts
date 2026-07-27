@@ -1,4 +1,4 @@
-import { boolean as booleanControl, select, text } from '@tickets/ui/gallery';
+import { boolean as booleanControl, select, text } from '@tickets/ui';
 import { generateSnippet } from './code-snippet';
 
 describe('generateSnippet', () => {

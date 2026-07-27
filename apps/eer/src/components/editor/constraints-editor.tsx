@@ -32,7 +32,7 @@
 // resets refColumns so a stale column from the PREVIOUS target can't survive.
 
 import type { Constraint, Model } from '../../engine/model/types';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 import { ColumnMultiSelect } from './column-multi-select';
 import { FkActionSelect } from './fk-action-select';
 import { generatedConstraintName } from './generated-constraint-name';

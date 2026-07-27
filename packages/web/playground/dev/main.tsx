@@ -6,8 +6,7 @@ import '@fontsource/ibm-plex-mono/500.css';
 import './styles.css';
 import { createRoot } from 'react-dom/client';
 import { GalleryShell } from '../src';
-import { packageDemos } from '@tickets/ui/gallery/demos';
-import { packageComponentSources, packageDemoSources } from '@tickets/ui/gallery/demo-sources';
+import { packageComponentSources, packageDemos, packageDemoSources } from '@tickets/ui';
 
 createRoot(document.getElementById('root')!).render(
   <GalleryShell

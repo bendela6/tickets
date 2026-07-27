@@ -1,4 +1,4 @@
-import type { AnyControlDef, ControlValues, PlaygroundDef } from '@tickets/ui/gallery';
+import type { AnyControlDef, ControlValues, PlaygroundDef } from '@tickets/ui';
 
 export function matrixValues(
   controls: Record<string, AnyControlDef>,

@@ -1,4 +1,4 @@
-import type { AnyControlDef } from '@tickets/ui/gallery';
+import type { AnyControlDef } from '@tickets/ui';
 
 function fmt(v: unknown): string {
   if (typeof v === 'string') return `"${v.replace(/"/g, '\\"')}"`;

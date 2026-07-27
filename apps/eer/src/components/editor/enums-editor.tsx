@@ -37,7 +37,7 @@ import { useRef, useState } from 'react';
 
 import { applyModelEdit as tryApplyModelEdit, enumRefsTo, type ModelEdit } from '../../engine/model/apply-model-edit';
 import type { Model } from '../../engine/model/types';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 
 const card = cn('flex flex-col gap-2 rounded-xl border border-gray-600 bg-gray-900 p-3');
 const input = cn('rounded border border-gray-600 bg-gray-900 px-2 py-1', 'text-xs text-gray-50');

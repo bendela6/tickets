@@ -1,5 +1,5 @@
 import { forwardRef, type ReactNode } from 'react';
-import type { AnyControlDef } from '@tickets/ui/gallery';
+import type { AnyControlDef } from '@tickets/ui';
 
 // The design's PLAYGROUND caption (1a, right of the label): the component
 // name followed by whatever is currently set, so the stage reads back its own

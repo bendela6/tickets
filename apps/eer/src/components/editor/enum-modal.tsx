@@ -15,7 +15,7 @@ import { useState } from 'react';
 import { applyModelEdit as tryApplyModelEdit, enumRefsTo, type ModelEdit } from '../../engine/model/apply-model-edit';
 import type { Model } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull } from '../../state/diagram-context';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 import { Modal } from '../modal';
 
 const field = cn('w-full rounded-md border border-gray-600 bg-gray-900 px-2 py-1', 'text-sm text-gray-50');

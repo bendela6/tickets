@@ -1,4 +1,4 @@
-import { definePlayground, text, select } from '@tickets/ui/gallery';
+import { definePlayground, text, select } from '@tickets/ui';
 import { Button } from './button';
 import { Tooltip } from './tooltip';
 

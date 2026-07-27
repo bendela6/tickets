@@ -1,7 +1,6 @@
 import type { IssueLevel, IssueStatus, SignalsAppRow } from '../../api/signals/signals-api';
 import { Input } from '../../ui/input';
-import { cn } from '@tickets/ui/cn';
-import { SegmentedControl } from '@tickets/ui/segmented-control';
+import { cn, SegmentedControl } from '@tickets/ui';
 
 const selectClasses =
   'h-7 rounded-[7px] border border-hairline bg-raised px-2 font-sans text-[12px] text-ink-2 ' +

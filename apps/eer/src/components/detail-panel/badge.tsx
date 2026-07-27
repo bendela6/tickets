@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 
 export type Tone = 'entity' | 'group' | 'subgroup' | 'edge';
 

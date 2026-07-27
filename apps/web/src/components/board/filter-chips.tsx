@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pill } from '@tickets/ui/pill';
+import { Pill } from '@tickets/ui';
 import type { Board, Field, Option } from '../../api/types';
 import { KIND_TONE } from '../../domain/status';
 import { hexToOptionColor, kindColor } from '../../registry/option-color';

@@ -1,8 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import type { SignalBreadcrumb } from '../../api/signals/signals-api';
-import { cn } from '@tickets/ui/cn';
-import { Icon } from '@tickets/ui/icon';
-import { Pill } from '@tickets/ui/pill';
+import { cn, Icon, Pill } from '@tickets/ui';
 import { signalKindIcon, signalKindTone, type SignalKind } from '../../domain/signal-status';
 import { formatClockTime, formatDurationMs } from './format';
 

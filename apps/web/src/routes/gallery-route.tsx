@@ -1,8 +1,6 @@
 import { useMemo } from 'react';
 import { createRoute, useNavigate } from '@tanstack/react-router';
-import { collectDemos, prepareDemos, rebaseGlobKeys, WEB_SRC_ROOT } from '@tickets/ui/gallery';
-import { packageDemos } from '@tickets/ui/gallery/demos';
-import { packageComponentSources, packageDemoSources } from '@tickets/ui/gallery/demo-sources';
+import { collectDemos, packageComponentSources, packageDemos, packageDemoSources, prepareDemos, rebaseGlobKeys, WEB_SRC_ROOT } from '@tickets/ui';
 import { GalleryShell, isPlainClick, type GalleryNavigation, type GalleryTarget } from '@tickets/playground';
 import { ToastProvider } from '../ui/toast';
 import { TooltipProvider } from '../ui/tooltip';

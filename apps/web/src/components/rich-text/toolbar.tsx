@@ -2,8 +2,7 @@ import type { Editor } from '@tiptap/react';
 import type { ToolbarControl } from '@tickets/richtext';
 import { DropdownMenu } from 'radix-ui';
 import { useRef, type ReactNode } from 'react';
-import { cn } from '@tickets/ui/cn';
-import { Icon } from '@tickets/ui/icon';
+import { cn, Icon } from '@tickets/ui';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '../../ui/menu';
 
 export type ToolbarVariant = 'full' | 'compact';

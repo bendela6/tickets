@@ -1,6 +1,6 @@
 import { forwardRef, type ComponentPropsWithoutRef } from 'react';
 import { Popover as RadixPopover } from 'radix-ui';
-import { cn } from '@tickets/ui/cn';
+import { cn } from '@tickets/ui';
 
 export const Popover = RadixPopover.Root;
 export const PopoverTrigger = RadixPopover.Trigger;

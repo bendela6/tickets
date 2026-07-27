@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { CommandPalette, highlightMatch } from './command-palette';
-import type { CollectedDemo } from '@tickets/ui/gallery';
+import type { CollectedDemo } from '@tickets/ui';
 
 const demos: Extract<CollectedDemo, { slug: string }>[] = [
   {

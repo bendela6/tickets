@@ -3,7 +3,7 @@ import { Button } from '../../ui/button';
 import { Checkbox } from '../../ui/checkbox';
 import { Input } from '../../ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
-import { SegmentedControl } from '@tickets/ui/segmented-control';
+import { SegmentedControl } from '@tickets/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { ViewColumn, ViewConfig, ViewDensity, ViewMode } from '../../utils/view-config';
 

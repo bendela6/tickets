@@ -1,5 +1,4 @@
-import { runtimeStyle } from '@tickets/ui/runtime-style';
-import type { CollectedDemo, DemoSize } from '@tickets/ui/gallery';
+import { type CollectedDemo, type DemoSize, runtimeStyle } from '@tickets/ui';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 

@@ -1,4 +1,4 @@
-import type { CollectedDemo } from '@tickets/ui/gallery';
+import type { CollectedDemo } from '@tickets/ui';
 import { CodeBlock } from './code-block';
 import { fileName } from './resolve-impl';
 

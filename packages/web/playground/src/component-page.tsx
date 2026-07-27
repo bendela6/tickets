@@ -6,10 +6,7 @@ import {
   type Layout,
   type PanelImperativeHandle,
 } from 'react-resizable-panels';
-import { cn } from '@tickets/ui/cn';
-import { Icon } from '@tickets/ui/icon';
-import { initialValues, type CollectedDemo } from '@tickets/ui/gallery';
-import { Tabs } from '@tickets/ui/tabs';
+import { cn, type CollectedDemo, Icon, initialValues, Tabs } from '@tickets/ui';
 import { A11yTab } from './a11y-tab';
 import { getAxe } from './axe';
 import { ControlsPanel } from './controls-panel';

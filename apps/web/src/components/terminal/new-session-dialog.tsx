@@ -13,8 +13,7 @@ import { useCreateTerminalSession } from '../../api/use-create-terminal-session'
 import { useCreateWorkdir } from '../../api/use-create-workdir';
 import { useWorkdirs } from '../../api/use-workdirs';
 import { formRegistry } from '../../form/registry';
-import { DialogFooter } from '@tickets/ui/dialog-footer';
-import { SectionHeader } from '@tickets/ui/section-header';
+import { DialogFooter, SectionHeader } from '@tickets/ui';
 import { Button } from '../../ui/button';
 import { Combobox } from '../../ui/combobox';
 import { DialogContent, DialogDescription, DialogRoot, DialogTitle } from '../../ui/dialog';

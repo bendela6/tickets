@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react';
-import { cn } from '@tickets/ui/cn';
-import { Icon } from '@tickets/ui/icon';
-import { runtimeStyle } from '@tickets/ui/runtime-style';
-import type { CollectedDemo } from '@tickets/ui/gallery';
+import { cn, type CollectedDemo, Icon, runtimeStyle } from '@tickets/ui';
 import { loadFlag, loadLayout, saveFlag, saveLayout } from './persisted-layout';
 import type { GalleryNavigation } from './navigation';
 
