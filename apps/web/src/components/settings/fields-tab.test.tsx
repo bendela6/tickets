@@ -172,8 +172,10 @@ test('setting an option allowlist fires useUpdatePlacement — PATCHes .../place
   renderTab(makeBoard());
 
   // Severity's placement has no configOverride yet, so both options (Low, High)
-  // start selected; removing High's chip narrows the allowlist to [Low].
-  await userEvent.click(screen.getByRole('button', { name: /remove high/i }));
+  // start selected; deselecting High narrows the allowlist to [Low]. The chips
+  // on the trigger are read-only, so this goes through the popover.
+  await userEvent.click(screen.getByRole('button', { name: /all options allowed/i }));
+  await userEvent.click(await screen.findByRole('option', { name: /high/i }));
 
   expect(fetchMock).toHaveBeenCalledTimes(1);
   const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];

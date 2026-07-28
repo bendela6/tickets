@@ -4,7 +4,7 @@ import { fieldClass, fieldState, type FieldSize } from '../field';
 import { Icon, type IconSize } from '../icon';
 import { Pill } from '../pill';
 import { ComboboxList, type ComboOption } from '../combobox-list';
-import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '../popover';
+import { Popover, PopoverContent, PopoverTrigger } from '../popover';
 
 type MultiComboboxProps = {
   options: ComboOption[];
@@ -56,69 +56,46 @@ export function MultiCombobox({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverAnchor asChild>
-        <div
+      {/* The whole shell is the trigger, not just the chevron. Now that the
+          chips are read-only there is nothing inside it competing for a click,
+          so a 12px glyph should not be the only way in — and the focus ring
+          hangs off `focus` rather than `focus-within` because focus lands here
+          rather than on some inner control. */}
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={placeholder}
+          disabled={disabled}
           className={fieldClass({
             size,
             state: field.state,
             scale: field.scale,
-            // Focus lands on the inner search input, not on this wrapper.
-            focus: 'focus-within',
             className: cn(
-              'flex w-full items-center gap-1.5 px-2.5',
-              disabled && 'pointer-events-none opacity-50',
+              'flex w-full items-center gap-1.5 px-2.5 text-left',
+              'disabled:pointer-events-none disabled:opacity-50',
               BOX[size],
               className,
             ),
           })}
         >
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
             {selectedOptions.length === 0 ? (
               <span className="truncate font-sans text-ui text-gray-9">{placeholder}</span>
             ) : null}
+            {/* Chips are read-only. Deselecting happens in the popover, where
+                the full set is visible and a mis-click is one click to undo —
+                an X on the trigger removes a value from a list you cannot see,
+                and puts a 12px target next to the control that opens it. */}
             {shown.map((option) => (
-              <span key={option.value} className="inline-flex items-center gap-1">
-                <Pill tone={option.color ?? 'gray'} shape="round" label={option.label} />
-                <button
-                  type="button"
-                  aria-label={`Remove ${option.label}`}
-                  onClick={() => toggle(option.value)}
-                  className="rounded-md px-0.5 text-gray-9 hover:text-gray-12"
-                >
-                  <Icon name="x" size="2xs" />
-                </button>
-              </span>
+              <Pill key={option.value} tone={option.color ?? 'gray'} shape="round" label={option.label} />
             ))}
             {overflow > 0 ? (
               <span className="font-mono text-meta font-medium text-gray-11">+{overflow}</span>
             ) : null}
-          </div>
-          {/* Clearing every chip at once used to require opening the popover
-              and hitting "Clear (n)" — one click on a control that is already
-              on screen, versus three. Only shown when there is something to
-              clear, so the trigger does not gain a permanently dead slot. */}
-          {value.length > 0 && !disabled ? (
-            <button
-              type="button"
-              aria-label="Clear all"
-              onClick={() => onChange([])}
-              className="flex shrink-0 items-center self-center rounded-md px-0.5 text-gray-9 outline-none hover:text-gray-12"
-            >
-              <Icon name="x" size={CHEVRON[size]} />
-            </button>
-          ) : null}
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              aria-label={placeholder}
-              disabled={disabled}
-              className="flex shrink-0 items-center self-center font-sans text-gray-9 outline-none"
-            >
-              <Icon name="chevron-down" size={CHEVRON[size]} />
-            </button>
-          </PopoverTrigger>
-        </div>
-      </PopoverAnchor>
+          </span>
+          <Icon name="chevron-down" size={CHEVRON[size]} className="shrink-0 self-center text-gray-9" />
+        </button>
+      </PopoverTrigger>
       <PopoverContent className="p-0">
         <ComboboxList
           options={options}
