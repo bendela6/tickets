@@ -52,12 +52,17 @@ describe('liveTokens', () => {
 
 describe('spec tokens', () => {
   it('folds line-height onto its size instead of listing it as one', () => {
-    // `text` holds both `13` and `13--line-height`; only the nine sizes are
-    // sizes, and every one of them carries its leading.
-    expect(TEXT_SIZES).toHaveLength(9);
+    // `text` holds both `13` and `13--line-height`; only the sizes are sizes.
+    expect(TEXT_SIZES).toHaveLength(10);
     expect(TEXT_SIZES.every((s) => s.value === `${s.step}px`)).toBe(true);
-    expect(TEXT_SIZES.every((s) => s.lineHeight)).toBe(true);
     expect(TEXT_SIZES.find((s) => s.step === '11')?.letterSpacing).toBe('.06em');
+  });
+
+  it('carries a leading for every rung except the one added for the sweep', () => {
+    // 15 is the `lg` control rung six primitives had been spelling as
+    // `text-[15px]`, which sets size alone. It ships without a leading so the
+    // swap renders identically; pairing is a separate, visible decision.
+    expect(TEXT_SIZES.filter((s) => !s.lineHeight).map((s) => s.step)).toEqual(['15']);
   });
 
   it('carries both theme values for the one family that has them', () => {
@@ -116,8 +121,9 @@ describe('drift', () => {
   it('pins what the proposal actually costs the live sheet', () => {
     const byFamily = Object.fromEntries(drift().map((f) => [f.family, f.rows]));
 
-    // Every proposed size already exists; the scale is a rename, not a change.
-    expect(byFamily.text?.filter((r) => r.status !== 'matched')).toEqual([]);
+    // Every proposed size exists in the sheet. The nine legacy NAMES also
+    // still exist and are reported dropped — see the ratchet below.
+    expect(byFamily.text?.filter((r) => r.status === 'added')).toEqual([]);
 
     // Radius is migrated: the six custom names are gone and the four steps now
     // resolve to Tailwind's own sm/md/lg/xl, which happen to be exactly
@@ -134,13 +140,23 @@ describe('drift', () => {
     expect(byFamily.animate?.every((r) => r.status === 'matched')).toBe(true);
   });
 
-  it('reports nothing dropped anywhere — the migration is complete', () => {
-    // `drift` was built to size the move from the old token set to the numbered
-    // one. Now that tokens.css is GENERATED from tokens/next, a dropped row
-    // means the sheet still defines something the spec does not, which is the
-    // definition of the migration being unfinished.
+  it('reports exactly the legacy type names as still-live — the sweep ratchet', () => {
+    // A dropped row means the sheet defines something the spec does not. That
+    // is now true of precisely the nine role-named sizes, which stay until
+    // their ~439 call sites move to the numeric scale and `--text-*: initial`
+    // removes the utilities.
+    //
+    // Counted, not named: `driftFor` matches on VALUE, and right now each
+    // legacy name shares its value with a numeric rung (`--text-label` and
+    // `--text-11` are both 11px). So drift cannot say which of the pair is the
+    // survivor — only that nine text values are defined twice. `text-15` is
+    // the one rung with no legacy twin, which is why it is not in the count.
+    //
+    // This number only shrinks. At 0, delete the legacy block from tokens.css
+    // and LEGACY_TEXT_SIZES from cn.ts — and this test with them.
     const dropped = drift().flatMap((f) => f.rows.filter((r) => r.status === 'dropped'));
-    expect(dropped.map((r) => r.live)).toEqual([]);
+    expect(dropped.every((r) => r.family === 'text')).toBe(true);
+    expect(dropped).toHaveLength(9);
   });
 
   it('summarises to counts a page can lead with', () => {
