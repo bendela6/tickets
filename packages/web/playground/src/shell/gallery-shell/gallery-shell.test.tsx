@@ -179,9 +179,12 @@ describe('GalleryShell v2', () => {
   it('hash selects a single component and routes it through ComponentPage (tabs + playground)', () => {
     render(<GalleryShell demos={demos} title="t" />);
     setHash('#button');
-    expect(screen.getByText('btn')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Button' })).toBeTruthy();
     expect(screen.queryByText('inp')).toBeNull();
-    expect(screen.getByText('play')).toBeTruthy();
+    // The state viewer derives its specimens from the playground, so the
+    // playground's own render appears once per `on` value plus once on the
+    // live stage — three in total, not one.
+    expect(screen.getAllByText('play')).toHaveLength(3);
     // ComponentPage's tab strip, with Preview active by default.
     expect(screen.getByRole('tab', { name: 'Preview' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'Docs' })).toBeTruthy();
@@ -197,9 +200,9 @@ describe('GalleryShell v2', () => {
 
   it('state-anchor hash selects the owning component', () => {
     render(<GalleryShell demos={demos} title="t" />);
-    setHash('#button--primary');
+    setHash('#button--on-true');
     expect(screen.queryByText('inp')).toBeNull();
-    expect(screen.getByText('btn')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Button' })).toBeTruthy();
   });
 
   it('unknown hash falls back to All', () => {
@@ -212,10 +215,12 @@ describe('GalleryShell v2', () => {
   it('re-scrolls when moving between state anchors of the same component', () => {
     const spy = vi.spyOn(Element.prototype, 'scrollIntoView');
     render(<GalleryShell demos={demos} title="t" />);
-    setHash('#button--primary');
+    // Anchors are the derived axis cells (`--on-false` / `--on-true`), not
+    // the authored state names, which the viewer no longer renders.
+    setHash('#button--on-false');
     const first = spy.mock.calls.length;
     expect(first).toBeGreaterThan(0);
-    setHash('#button--primary2');
+    setHash('#button--on-true');
     expect(spy.mock.calls.length).toBeGreaterThan(first);
     spy.mockRestore();
   });

@@ -118,6 +118,14 @@ const demos = collectDemos({
 const demo = demos[0];
 if (!demo || isDemoError(demo)) throw new Error('fixture demo failed to collect');
 
+// The state viewer derives its specimens from the same playground render, so
+// several `play-btn`s are on the page at once — each axis cell at its own
+// fixed value, plus the one live stage that follows the controls. Assertions
+// about the current control values mean that live one specifically.
+function stage(): HTMLElement {
+  return within(screen.getByRole('region', { name: 'Playground preview' })).getByText('play-btn');
+}
+
 describe('ComponentPage', () => {
   afterEach(() => {
     localStorage.clear();
@@ -167,7 +175,7 @@ describe('ComponentPage', () => {
     const docsWrapper = root.children[2] as HTMLElement;
 
     fireEvent.change(screen.getByLabelText('variant'), { target: { value: 'secondary' } });
-    expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('secondary');
+    expect(stage().getAttribute('data-variant')).toBe('secondary');
     expect(previewWrapper.className).toBe('');
     expect(docsWrapper.className).toBe('hidden');
 
@@ -177,12 +185,12 @@ describe('ComponentPage', () => {
     expect(within(docsWrapper).getByText('API')).toBeTruthy();
     expect(within(docsWrapper).getByText('variant')).toBeTruthy();
     // Preview content is still in the DOM (hidden), not unmounted.
-    expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('secondary');
+    expect(stage().getAttribute('data-variant')).toBe('secondary');
 
     fireEvent.click(screen.getByRole('tab', { name: 'Preview' }));
     expect(previewWrapper.className).toBe('');
     expect(docsWrapper.className).toBe('hidden');
-    expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('secondary');
+    expect(stage().getAttribute('data-variant')).toBe('secondary');
     expect((screen.getByLabelText('variant') as HTMLSelectElement).value).toBe('secondary');
   });
 
@@ -195,9 +203,9 @@ describe('ComponentPage', () => {
   it('Reset restores initial control values', () => {
     render(<ComponentPage demo={demo} />);
     fireEvent.change(screen.getByLabelText('variant'), { target: { value: 'secondary' } });
-    expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('secondary');
+    expect(stage().getAttribute('data-variant')).toBe('secondary');
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
-    expect(screen.getByText('play-btn').getAttribute('data-variant')).toBe('primary');
+    expect(stage().getAttribute('data-variant')).toBe('primary');
   });
 
   it('wires the Preview Group with id="playground-workbench" and a collapsible pixel-sized rail', () => {
@@ -417,14 +425,14 @@ describe('ComponentPage', () => {
 
     // Preview is visible initially
     expect(previewWrapper.className).toBe('');
-    expect(screen.getByText('play-btn')).toBeTruthy();
+    expect(stage()).toBeTruthy();
 
     // Switch to A11y tab
     fireEvent.click(screen.getByRole('tab', { name: 'A11y' }));
     // Preview wrapper is hidden but still mounted (not unmounted)
     expect(previewWrapper.className).toBe('hidden');
     // Preview content is still in the DOM
-    expect(screen.getByText('play-btn')).toBeTruthy();
+    expect(stage()).toBeTruthy();
 
     // A11y tab content is visible
     expect(screen.getByText('no audit yet')).toBeTruthy();

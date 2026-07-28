@@ -8,10 +8,16 @@ function fmt(v: unknown): string {
 // Generate the JSX for the current control values. Omits props at their
 // initial/undefined values; `true` renders as a bare flag; the `children`
 // control renders as element children; >3 set props wrap one-per-line.
+//
+// `always` pins props that must appear even when they sit at their initial
+// value. The state viewer needs this: a section showing every `variant`
+// would otherwise print `<Button />` for whichever variant happens to be the
+// default, hiding the one prop the section exists to demonstrate.
 export function generateSnippet(
   component: string,
   controls: Record<string, AnyControlDef>,
   values: Record<string, unknown>,
+  always: readonly string[] = [],
 ): { code: string; omitted: string[] } {
   const omitted: string[] = [];
   const props: string[] = [];
@@ -22,7 +28,9 @@ export function generateSnippet(
       children = typeof v === 'string' ? v : '';
       continue;
     }
-    if (v === undefined || v === def.initial) {
+    // An undefined value has nothing to print, so it is omitted even when
+    // pinned — `variant={undefined}` documents nothing.
+    if (v === undefined || (v === def.initial && !always.includes(key))) {
       omitted.push(key);
       continue;
     }
