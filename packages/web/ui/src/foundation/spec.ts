@@ -190,7 +190,10 @@ export interface DriftFamily {
  */
 export function drift(): DriftFamily[] {
   return [
-    { family: 'text', rows: driftFor('text', TEXT_SIZES, liveTokens(/^text-[a-z]+$/)) },
+    // `[a-z0-9]`, not `[a-z]`: the sizes are moving to numeric names, and a
+    // letters-only pattern made every new rung invisible to drift — reported
+    // as proposed-but-not-live while it sat in tokens.css all along.
+    { family: 'text', rows: driftFor('text', TEXT_SIZES, liveTokens(/^text-[a-z0-9]+$/)) },
     { family: 'radius', rows: driftFor('radius', RADII, liveTokens(/^radius-[a-z]+$/)) },
     {
       family: 'shadow',

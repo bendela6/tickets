@@ -38,6 +38,26 @@ describe('cn', () => {
     }
   });
 
+  it('keeps the font family next to every numeric weight the theme defines', () => {
+    // `font-*` serves both family and weight, so an unregistered `font-500`
+    // is read as a family and evicts `font-sans` — the same trap as the
+    // sizes, one namespace over. Driven off tokens.css for the same reason.
+    const weights = [
+      ...readFileSync(join(process.cwd(), 'src/tokens/tokens.css'), 'utf8').matchAll(
+        /^\s+--font-weight-(\d+):/gm,
+      ),
+    ].map((m) => m[1]!);
+    expect(weights.length).toBeGreaterThan(0);
+    for (const weight of weights) {
+      expect(cn('font-sans', `font-${weight}`)).toBe(`font-sans font-${weight}`);
+    }
+  });
+
+  it('still merges two weights, and two families, to the last one', () => {
+    expect(cn('font-400', 'font-600')).toBe('font-600');
+    expect(cn('font-sans', 'font-mono')).toBe('font-mono');
+  });
+
   it('still merges two font sizes to the last one', () => {
     expect(cn('text-ui', 'text-meta')).toBe('text-meta');
     expect(cn('text-3xs', 'text-label')).toBe('text-label');

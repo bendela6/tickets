@@ -24,6 +24,10 @@
       "$type": "dimension",
       "$value": "14px"
     },
+    "15": {
+      "$type": "dimension",
+      "$value": "15px"
+    },
     "16": {
       "$type": "dimension",
       "$value": "16px"

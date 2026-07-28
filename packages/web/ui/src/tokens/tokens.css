@@ -562,10 +562,53 @@
   --text-display: 24px;
   --text-display--line-height: 1.25;
   /* Letter-spacing for uppercase labels — names avoid Tailwind defaults
-     (tracking-wide etc.). label matches text-label's baked .06em. */
+     (tracking-wide etc.). label matches text-label's baked .06em.
+     Being retired: the vocabulary is moving to Tailwind's own
+     tracking-tight..widest, so these three have no successor names. */
   --tracking-label: 0.06em;
   --tracking-caps: 0.08em;
   --tracking-mono-label: 0.09em;
+
+  /* ── Numeric type scale ──────────────────────────────────────────────
+     The vocabulary the whole app is moving to: a size is its pixel value,
+     not a role. `text-11` replaces both `text-label` and the 88 hand-written
+     `text-[11px]`, which is the point — those were the same size wearing two
+     spellings, and neither could be found from the other.
+
+     Deliberately size-only, no paired line-height. Tailwind emits the pair
+     only when `--text-N--line-height` exists, so leaving it off makes
+     `text-11` render exactly as `text-[11px]` does today. The named tokens
+     it replaces DO carry line-heights, so a paired rung can be added later
+     per size, once someone decides that pairing is wanted rather than
+     inherited by accident.
+
+     15 is on the scale because six primitives use it as their large rung
+     (tabs, input, textarea, toggle, avatar, date-picker) — snapping it to
+     14 or 16 would restyle every large control. The named scale skipped it,
+     which is why those six reached for an arbitrary value. */
+  --text-9: 9px;
+  --text-10: 10px;
+  --text-11: 11px;
+  --text-12: 12px;
+  --text-13: 13px;
+  --text-14: 14px;
+  --text-15: 15px;
+  --text-16: 16px;
+  --text-20: 20px;
+  --text-24: 24px;
+
+  /* Numeric font weights, in 100 steps. `font-500` says what it does;
+     `font-medium` needs a lookup to find out.
+
+     Only 400/500/600 exist, because only those have font files: main.tsx
+     loads Plex Sans 400/500/600 and Plex Mono 400/500. Declaring 700..900
+     would let a caller ask for a weight the browser has to synthesise —
+     a faked bold, not the typeface. Adding a rung means adding a
+     @fontsource import first. (This matches typography.tokens.json, which
+     has said 400/500/600 since the token package landed.) */
+  --font-weight-400: 400;
+  --font-weight-500: 500;
+  --font-weight-600: 600;
   /* Motion (next/motion.tokens.json). Durations and curves were unnamed
      before — every transition picked its own number. */
   --duration-fast: 120ms;
