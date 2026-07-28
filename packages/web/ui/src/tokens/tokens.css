@@ -536,38 +536,16 @@
   /* /tokens:theme */
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
-  --text-label: 11px;
-  --text-label--line-height: 1.2;
-  --text-label--letter-spacing: 0.06em;
-  --text-meta: 12px;
-  --text-meta--line-height: 1.4;
-  --text-ui: 13px;
-  --text-ui--line-height: 1.45;
   /* AI session status pill motion (screen 10): a slow spinner for in-flight
      work and a calm attention pulse for "awaiting input". */
   --animate-ai-spin: ai-spin 1.4s linear infinite;
   --animate-ai-pulse: ai-pulse 1.8s ease-out infinite;
   /* Extended type scale (audit 2026-07-23) — inert until consumed. Existing
      label/meta/ui (11/12/13px) stay canonical for control chrome. */
-  --text-nano: 9px;
-  --text-nano--line-height: 1.3;
-  --text-micro: 10px;
-  --text-micro--line-height: 1.35;
-  --text-body: 14px;
-  --text-body--line-height: 1.5;
-  --text-title: 16px;
-  --text-title--line-height: 1.4;
-  --text-heading: 20px;
-  --text-heading--line-height: 1.3;
-  --text-display: 24px;
-  --text-display--line-height: 1.25;
   /* Letter-spacing for uppercase labels — names avoid Tailwind defaults
      (tracking-wide etc.). label matches text-label's baked .06em.
      Being retired: the vocabulary is moving to Tailwind's own
      tracking-tight..widest, so these three have no successor names. */
-  --tracking-label: 0.06em;
-  --tracking-caps: 0.08em;
-  --tracking-mono-label: 0.09em;
 
   /* ── Numeric type scale ──────────────────────────────────────────────
      The vocabulary the whole app is moving to: a size is its pixel value,
@@ -586,6 +564,9 @@
      (tabs, input, textarea, toggle, avatar, date-picker) — snapping it to
      14 or 16 would restyle every large control. The named scale skipped it,
      which is why those six reached for an arbitrary value. */
+  /* `initial` clears Tailwind's own scale AND the retired role names, so
+     text-sm / text-ui stop compiling — the old vocabulary cannot drift back. */
+  --text-*: initial;
   --text-9: 9px;
   --text-10: 10px;
   --text-11: 11px;
@@ -594,8 +575,111 @@
   --text-14: 14px;
   --text-15: 15px;
   --text-16: 16px;
+  --text-18: 18px;
   --text-20: 20px;
+  --text-22: 22px;
   --text-24: 24px;
+
+
+  /* Line heights, in px, for the `text-{size}/{leading}` pairing.
+     Open where the scale is closed: a size is a design decision and is
+     constrained to twelve rungs; a leading is DERIVED from its size, so
+     there is no drift to prevent by rationing it.
+
+     The range is exhaustive on purpose. Tailwind resolves the modifier
+     against --leading-* only if the token exists and otherwise falls back
+     to the SPACING scale — `text-22/24` with no --leading-24 compiles to
+     a 96px line-height (24 x 0.25rem), silently and four times wrong.
+     Covering 8..96 makes that fallback unreachable for any real value. */
+  --leading-8: 8px;
+  --leading-9: 9px;
+  --leading-10: 10px;
+  --leading-11: 11px;
+  --leading-12: 12px;
+  --leading-13: 13px;
+  --leading-14: 14px;
+  --leading-15: 15px;
+  --leading-16: 16px;
+  --leading-17: 17px;
+  --leading-18: 18px;
+  --leading-19: 19px;
+  --leading-20: 20px;
+  --leading-21: 21px;
+  --leading-22: 22px;
+  --leading-23: 23px;
+  --leading-24: 24px;
+  --leading-25: 25px;
+  --leading-26: 26px;
+  --leading-27: 27px;
+  --leading-28: 28px;
+  --leading-29: 29px;
+  --leading-30: 30px;
+  --leading-31: 31px;
+  --leading-32: 32px;
+  --leading-33: 33px;
+  --leading-34: 34px;
+  --leading-35: 35px;
+  --leading-36: 36px;
+  --leading-37: 37px;
+  --leading-38: 38px;
+  --leading-39: 39px;
+  --leading-40: 40px;
+  --leading-41: 41px;
+  --leading-42: 42px;
+  --leading-43: 43px;
+  --leading-44: 44px;
+  --leading-45: 45px;
+  --leading-46: 46px;
+  --leading-47: 47px;
+  --leading-48: 48px;
+  --leading-49: 49px;
+  --leading-50: 50px;
+  --leading-51: 51px;
+  --leading-52: 52px;
+  --leading-53: 53px;
+  --leading-54: 54px;
+  --leading-55: 55px;
+  --leading-56: 56px;
+  --leading-57: 57px;
+  --leading-58: 58px;
+  --leading-59: 59px;
+  --leading-60: 60px;
+  --leading-61: 61px;
+  --leading-62: 62px;
+  --leading-63: 63px;
+  --leading-64: 64px;
+  --leading-65: 65px;
+  --leading-66: 66px;
+  --leading-67: 67px;
+  --leading-68: 68px;
+  --leading-69: 69px;
+  --leading-70: 70px;
+  --leading-71: 71px;
+  --leading-72: 72px;
+  --leading-73: 73px;
+  --leading-74: 74px;
+  --leading-75: 75px;
+  --leading-76: 76px;
+  --leading-77: 77px;
+  --leading-78: 78px;
+  --leading-79: 79px;
+  --leading-80: 80px;
+  --leading-81: 81px;
+  --leading-82: 82px;
+  --leading-83: 83px;
+  --leading-84: 84px;
+  --leading-85: 85px;
+  --leading-86: 86px;
+  --leading-87: 87px;
+  --leading-88: 88px;
+  --leading-89: 89px;
+  --leading-90: 90px;
+  --leading-91: 91px;
+  --leading-92: 92px;
+  --leading-93: 93px;
+  --leading-94: 94px;
+  --leading-95: 95px;
+  --leading-96: 96px;
 
   /* Numeric font weights, in 100 steps. `font-500` says what it does;
      `font-medium` needs a lookup to find out.
@@ -606,6 +690,7 @@
      a faked bold, not the typeface. Adding a rung means adding a
      @fontsource import first. (This matches typography.tokens.json, which
      has said 400/500/600 since the token package landed.) */
+  --font-weight-*: initial;
   --font-weight-400: 400;
   --font-weight-500: 500;
   --font-weight-600: 600;

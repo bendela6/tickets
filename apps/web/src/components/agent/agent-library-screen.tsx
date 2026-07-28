@@ -32,14 +32,14 @@ export function AgentLibraryScreen() {
     <div className="mx-auto flex max-w-4xl flex-col gap-5 px-6 py-7">
       <div className="flex items-center gap-3">
         <div className="flex-1">
-          <div className="flex items-center gap-2 font-mono text-meta text-gray-9">
+          <div className="flex items-center gap-2 font-mono text-12/17 text-gray-9">
             <Link to="/agents" className="hover:text-gray-11">
               Sessions
             </Link>
             <span>/</span>
             <span className="text-gray-11">Agents</span>
           </div>
-          <h1 className="mt-0.5 font-sans text-[19px] font-600 text-gray-12">Agents</h1>
+          <h1 className="mt-0.5 font-sans text-20 font-600 text-gray-12">Agents</h1>
         </div>
         <Button variant="solid" onClick={() => setEditing('new')}>
           ＋ New agent

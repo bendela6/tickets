@@ -32,17 +32,17 @@ export function KpiTiles({
           <span className="inline-flex shrink-0">
             <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
           </span>
-          <span className="font-mono text-[18px] leading-none font-600 text-gray-12">
+          <span className="font-mono text-18 leading-none font-600 text-gray-12">
             {counts[kind]}
           </span>
-          <span className="font-sans text-meta text-gray-11">{label}</span>
+          <span className="font-sans text-12/17 text-gray-11">{label}</span>
         </div>
       ))}
       <button
         type="button"
         title="Hide KPI strip"
         aria-label="Hide KPI strip"
-        className="flex w-7 cursor-pointer items-center justify-center font-sans text-meta text-gray-9 hover:text-gray-12"
+        className="flex w-7 cursor-pointer items-center justify-center font-sans text-12/17 text-gray-9 hover:text-gray-12"
         onClick={onHide}
       >
         ×

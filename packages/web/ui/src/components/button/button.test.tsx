@@ -15,7 +15,7 @@ test('solid variant gets accent classes', () => {
   const button = screen.getByRole('button');
   expect(button).toHaveClass('bg-indigo-9');
   // Regression guard: cn()/tailwind-merge must not drop the text color when a
-  // font-size utility is also present (custom named sizes like `text-ui` used to
+  // font-size utility is also present (custom named sizes like `text-13/19` used to
   // silently evict `text-indigo-contrast`, rendering dark text on the accent fill).
   expect(button).toHaveClass('text-indigo-contrast');
   expect(button).toHaveClass('text-13');

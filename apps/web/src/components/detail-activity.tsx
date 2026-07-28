@@ -84,14 +84,14 @@ export function DetailActivity({ item, indexes }: { item: Item; indexes: BoardIn
 
   if (activity.isError) {
     return (
-      <p className="m-0 font-sans text-meta text-red-9">{(activity.error as Error).message}</p>
+      <p className="m-0 font-sans text-12/17 text-red-9">{(activity.error as Error).message}</p>
     );
   }
   if (!activity.data) {
-    return <p className="m-0 font-sans text-meta text-gray-9">Loading…</p>;
+    return <p className="m-0 font-sans text-12/17 text-gray-9">Loading…</p>;
   }
   if (activity.data.length === 0) {
-    return <p className="m-0 font-sans text-meta text-gray-9">No activity yet.</p>;
+    return <p className="m-0 font-sans text-12/17 text-gray-9">No activity yet.</p>;
   }
 
   return (
@@ -102,7 +102,7 @@ export function DetailActivity({ item, indexes }: { item: Item; indexes: BoardIn
         return (
           <div key={entry.id} className="flex items-start gap-2.25">
             <Avatar name={name} {...avatarFor(actor?.kind ?? 'human')} size="sm" className="mt-0.5" />
-            <span className="min-w-0 flex-1 font-sans text-meta leading-normal text-gray-11">
+            <span className="min-w-0 flex-1 font-sans text-12/17 leading-normal text-gray-11">
               <span className="font-500 text-gray-12">{name}</span> {describe(entry)}
             </span>
             <RelativeDate value={entry.at} className="shrink-0 font-mono text-10 text-gray-9" />

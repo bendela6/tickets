@@ -12,7 +12,7 @@ import { deriveAxes, type AxisSection } from '../state-axes';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
-const CAPTION = 'font-mono text-label uppercase tracking-widest text-gray-9';
+const CAPTION = 'font-mono text-11/13 tracking-wider uppercase tracking-widest text-gray-9';
 
 type AxisView = 'preview' | 'source';
 
@@ -69,7 +69,7 @@ function AxisRow({
                 <div className="flex min-h-9 items-center">
                   {playground.render(cell.values as ControlValues<Record<string, AnyControlDef>>)}
                 </div>
-                <figcaption className="font-mono text-label text-gray-9">{cell.label}</figcaption>
+                <figcaption className="font-mono text-11/13 tracking-wider text-gray-9">{cell.label}</figcaption>
               </figure>
             ))}
           </div>
@@ -122,7 +122,7 @@ export function StateGrid({ demo }: { demo: LiveDemo }) {
   const component = demo.meta.title.replace(/\s+/g, '');
   return (
     <section id={demo.slug} className="flex flex-col gap-3">
-      <h2 className="font-sans text-label font-500 uppercase tracking-wider text-gray-11">
+      <h2 className="font-sans text-11/13 tracking-wider font-500 uppercase tracking-wider text-gray-11">
         {demo.meta.title}
       </h2>
       <div className="flex flex-col gap-2.5">
@@ -148,7 +148,7 @@ export function StateGrid({ demo }: { demo: LiveDemo }) {
 
 export function DemoErrorCard({ path, error }: { path: string; error: string }) {
   return (
-    <section className="rounded-lg border border-red-9 bg-red-3 p-4 font-mono text-meta text-red-9">
+    <section className="rounded-lg border border-red-9 bg-red-3 p-4 font-mono text-12/17 text-red-9">
       {path}: {error}
     </section>
   );

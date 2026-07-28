@@ -103,7 +103,6 @@ export const TEXT_SIZES: TextSize[] = Object.keys(TEXT)
 
 export const FONT_WEIGHTS = tokens(typographyTokens['font-weight'], 'font-weight');
 export const FONT_FAMILIES = tokens(typographyTokens.font, 'font');
-export const TRACKING = tokens(typographyTokens.tracking, 'tracking');
 export const RADII = tokens(radiusTokens.radius, 'radius');
 export const DURATIONS = tokens(motionTokens.duration, 'duration');
 export const EASINGS = tokens(motionTokens.ease, 'ease');
@@ -203,7 +202,6 @@ export function drift(): DriftFamily[] {
         liveTokens(/^shadow-[a-z]+$/),
       ),
     },
-    { family: 'tracking', rows: driftFor('tracking', TRACKING, liveTokens(/^tracking-/)) },
     { family: 'font', rows: driftFor('font', FONT_FAMILIES, liveTokens(/^font-(sans|mono)$/)) },
     {
       family: 'font-weight',

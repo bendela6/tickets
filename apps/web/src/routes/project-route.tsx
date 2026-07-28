@@ -24,15 +24,15 @@ function ProjectLayout() {
   return (
     <AppShell activeProjectKey={projectKey} onNewTicket={() => setDialogOpen(true)}>
       {boardQuery.isLoading ? (
-        <p className="px-8 py-7 font-sans text-ui text-gray-9">Loading {projectKey}…</p>
+        <p className="px-8 py-7 font-sans text-13/19 text-gray-9">Loading {projectKey}…</p>
       ) : boardQuery.isError || !board || !indexes ? (
         <div className="px-8 py-7">
-          <p className="font-sans text-ui text-red-9">
+          <p className="font-sans text-13/19 text-red-9">
             Could not load project “{projectKey}” — {(boardQuery.error as Error | null)?.message}
           </p>
           <Link
             to="/"
-            className="mt-3 inline-flex h-8 items-center rounded-[8px] border border-gray-7 bg-surface-raised px-3 font-sans text-ui text-gray-12 hover:bg-surface-inset"
+            className="mt-3 inline-flex h-8 items-center rounded-[8px] border border-gray-7 bg-surface-raised px-3 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
           >
             ← projects
           </Link>

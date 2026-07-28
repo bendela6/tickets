@@ -75,7 +75,7 @@ function ChildTypeChips({
   disabled: boolean;
 }) {
   if (candidates.length === 0) {
-    return <p className="m-0 font-sans text-meta text-gray-9">No other types to allow as children.</p>;
+    return <p className="m-0 font-sans text-12/17 text-gray-9">No other types to allow as children.</p>;
   }
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -252,9 +252,9 @@ export function TypesTab({ board }: SettingsTabProps) {
     <section className="flex min-h-0 flex-col px-6 py-5.5">
       <div className="mb-1.5 flex items-center gap-3">
         <h1 className="m-0 font-sans text-20 font-600 text-gray-12">Types</h1>
-        <span className="font-mono text-meta text-gray-9">{countLabel}</span>
+        <span className="font-mono text-12/17 text-gray-9">{countLabel}</span>
       </div>
-      <p className="mb-4 mt-0 font-sans text-meta text-gray-9">
+      <p className="mb-4 mt-0 font-sans text-12/17 text-gray-9">
         Create, rename, and archive ticket types, and choose which types may nest under each one.
       </p>
 
@@ -278,7 +278,7 @@ export function TypesTab({ board }: SettingsTabProps) {
 
       <div className="flex flex-col gap-4">
         {types.length === 0 ? (
-          <p className="m-0 font-sans text-meta text-gray-9">No ticket types yet.</p>
+          <p className="m-0 font-sans text-12/17 text-gray-9">No ticket types yet.</p>
         ) : (
           types.map((type) => {
             const candidates = types.filter((other) => other.id !== type.id && !other.archivedAt);
@@ -299,8 +299,8 @@ export function TypesTab({ board }: SettingsTabProps) {
                       style={{ backgroundColor: type.config.color }}
                     />
                   ) : null}
-                  <span className="truncate font-sans text-ui font-600 text-gray-12">{type.label}</span>
-                  <span className="shrink-0 font-mono text-meta text-gray-9">{type.key}</span>
+                  <span className="truncate font-sans text-13/19 font-600 text-gray-12">{type.label}</span>
+                  <span className="shrink-0 font-mono text-12/17 text-gray-9">{type.key}</span>
                   {type.archivedAt ? <ArchChip /> : null}
                   <span className="flex-1" />
                   <Button

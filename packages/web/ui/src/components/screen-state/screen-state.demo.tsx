@@ -53,7 +53,7 @@ export const states = [
       <ScreenState
         title="Session not found"
         action={
-          <a href="#" className="font-sans text-meta text-indigo-9 hover:underline">
+          <a href="#" className="font-sans text-12/17 text-indigo-9 hover:underline">
             ‹ Back to Issues
           </a>
         }

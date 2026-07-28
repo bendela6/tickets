@@ -77,7 +77,7 @@ function Palette() {
       <StepHeader />
       {HUES.map((scale) => (
         <div key={scale} className="flex flex-col gap-1">
-          <span className="font-mono text-meta font-500 text-gray-12">{scale}</span>
+          <span className="font-mono text-12/17 font-500 text-gray-12">{scale}</span>
           <Ramp theme={theme} scale={scale} />
         </div>
       ))}
@@ -131,7 +131,7 @@ function GroupLabel({ children }: { children: ReactNode }) {
 function StepSpecimen({ theme, scale, step }: { theme: Theme; scale: string; step: Step }) {
   const c = colorOf(theme, scale, step);
   const page = colorOf(theme, 'gray', 1);
-  const box = 'flex h-8 w-full items-center justify-center rounded-sm font-sans text-meta';
+  const box = 'flex h-8 w-full items-center justify-center rounded-sm font-sans text-12/17';
 
   if (step <= 5) {
     return <div className={box} style={{ background: c, ...RING }} title={c} />;
@@ -176,7 +176,7 @@ function StepsInUseRow({
 }) {
   return (
     <div className="flex items-start gap-4">
-      <span className="flex w-28 shrink-0 flex-col pt-1 font-mono text-meta">
+      <span className="flex w-28 shrink-0 flex-col pt-1 font-mono text-12/17">
         <span className="font-500 text-gray-12">{label}</span>
         {note ? <span className="text-10 text-gray-9">{note}</span> : null}
       </span>
@@ -230,7 +230,7 @@ function Roles() {
   const surfaces = Object.entries(SURFACES).filter(
     (entry): entry is [string, Record<Theme, string>] => entry[1] != null,
   );
-  const name = 'flex w-40 shrink-0 items-baseline gap-1.5 font-mono text-meta';
+  const name = 'flex w-40 shrink-0 items-baseline gap-1.5 font-mono text-12/17';
   return (
     <div ref={ref} className="flex w-full flex-col gap-3">
       <div className="flex items-center gap-3">
@@ -279,7 +279,7 @@ function Report() {
   const cell = 'border-b border-gray-6 py-1.5 pr-4';
   return (
     <div className="flex w-full flex-col gap-3">
-      <p className="font-sans text-meta text-gray-11">
+      <p className="font-sans text-12/17 text-gray-11">
         {failing.length === 0
           ? `All ${required.length} required pairings meet their target.`
           : `${failing.length} of ${required.length} required pairings fall short.`}{' '}
@@ -290,7 +290,7 @@ function Report() {
       </p>
       {failing.length > 0 && (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-140 border-collapse font-mono text-meta">
+          <table className="w-full min-w-140 border-collapse font-mono text-12/17">
             <thead>
               <tr className="text-left text-gray-9">
                 <th className={`${cell} font-500`}>emphasis</th>

@@ -71,10 +71,10 @@ export function SpecRow({
 }) {
   return (
     <div className={`flex gap-4 ${align === 'start' ? 'items-start' : 'items-center'}`}>
-      <span className="w-36 shrink-0 font-mono text-meta font-500 text-gray-12">{name}</span>
-      <span className="flex w-32 shrink-0 flex-col font-mono text-meta text-gray-9">
+      <span className="w-36 shrink-0 font-mono text-12/17 font-500 text-gray-12">{name}</span>
+      <span className="flex w-32 shrink-0 flex-col font-mono text-12/17 text-gray-9">
         <span>{value}</span>
-        {note ? <span className="text-nano">{note}</span> : null}
+        {note ? <span className="text-9/12">{note}</span> : null}
       </span>
       <div className="min-w-0 flex-1">{children}</div>
     </div>
@@ -88,7 +88,7 @@ export function SpecRow({
  */
 export function SpecHeader({ specimen, value = 'value' }: { specimen: string; value?: string }) {
   return (
-    <div className="flex gap-4 font-mono text-nano uppercase tracking-widest text-gray-9">
+    <div className="flex gap-4 font-mono text-9/12 uppercase tracking-widest text-gray-9">
       <span className="w-36 shrink-0">token</span>
       <span className="w-32 shrink-0">{value}</span>
       <span className="min-w-0 flex-1">{specimen}</span>
@@ -114,7 +114,7 @@ export function DriftView({ families }: { families: string[] }) {
   const cell = 'border-b border-gray-6 py-1.5 pr-4 text-left';
   return (
     <Sheet>
-      <p className="font-sans text-meta text-gray-11">
+      <p className="font-sans text-12/17 text-gray-11">
         {counts.matched} proposed token{counts.matched === 1 ? '' : 's'} already exist under another
         name · {counts.added} would be added · {counts.dropped} live token
         {counts.dropped === 1 ? '' : 's'} would lose their value.
@@ -123,9 +123,9 @@ export function DriftView({ families }: { families: string[] }) {
         <div key={family.family} className="flex flex-col gap-2">
           <SectionHeader title={family.family} count={`${family.rows.length}`} />
           {family.note ? (
-            <p className="font-sans text-meta text-gray-9">{family.note}</p>
+            <p className="font-sans text-12/17 text-gray-9">{family.note}</p>
           ) : null}
-          <table className="w-full border-collapse font-mono text-meta">
+          <table className="w-full border-collapse font-mono text-12/17">
             <thead>
               <tr className="text-gray-9">
                 <th className={`${cell} font-500`}>proposed</th>

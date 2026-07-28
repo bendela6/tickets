@@ -35,7 +35,7 @@ export function RevealDsnDialog({
         ) : (
           <>
             <div className="mt-4">
-              <div className="mb-1.5 font-mono text-label font-500 tracking-wide text-gray-9">DSN</div>
+              <div className="mb-1.5 font-mono text-11/13 tracking-wider font-500 tracking-wide text-gray-9">DSN</div>
               <DsnField dsn={appQuery.data.dsn} />
             </div>
             <SdkSnippet dsn={appQuery.data.dsn} platform="react" className="mt-4" />

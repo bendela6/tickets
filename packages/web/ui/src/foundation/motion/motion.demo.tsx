@@ -35,7 +35,7 @@ function Replay({ children }: { children: (run: number) => ReactNode }) {
       <button
         type="button"
         onClick={() => setRun((n) => n + 1)}
-        className="self-start rounded-md border border-gray-6 bg-surface-raised px-3 py-1 font-sans text-ui text-gray-12 hover:bg-surface-inset"
+        className="self-start rounded-md border border-gray-6 bg-surface-raised px-3 py-1 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
       >
         Replay
       </button>
@@ -161,7 +161,7 @@ function Animations() {
           />
         </SpecRow>
       ))}
-      <p className="font-sans text-meta text-gray-9">
+      <p className="font-sans text-12/17 text-gray-9">
         These two are the only motion tokens the live sheet defines — both keyframes, both for the
         AI session status pill. Durations and easings below them are proposed, not shipped.
       </p>

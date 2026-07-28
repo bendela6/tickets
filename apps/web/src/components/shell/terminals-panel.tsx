@@ -30,21 +30,21 @@ export function TerminalsPanel({
           <button
             type="button"
             onClick={() => setArchived((v) => !v)}
-            className="font-sans text-meta text-gray-9 hover:text-gray-11"
+            className="font-sans text-12/17 text-gray-9 hover:text-gray-11"
           >
             {archived ? 'Hide archived' : 'Show archived'}
           </button>
           <button
             type="button"
             onClick={() => setCreating(true)}
-            className="font-sans text-meta text-indigo-9 hover:underline"
+            className="font-sans text-12/17 text-indigo-9 hover:underline"
           >
             ＋ New
           </button>
         </div>
       </div>
       {rows.length === 0 ? (
-        <p className="px-1 font-sans text-meta text-gray-9">
+        <p className="px-1 font-sans text-12/17 text-gray-9">
           {archived ? 'No archived terminal sessions.' : 'No terminal sessions yet.'}
         </p>
       ) : (

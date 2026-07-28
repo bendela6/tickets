@@ -125,7 +125,7 @@ export function DatePicker({
           >
             <Icon name="chevron-left" size="sm" />
           </button>
-          <span className="font-sans text-ui font-600 text-gray-12">
+          <span className="font-sans text-13/19 font-600 text-gray-12">
             {MONTH_NAMES[view.month]} {view.year}
           </span>
           <button
@@ -193,7 +193,7 @@ export function DatePicker({
             size: 'sm',
             state: field.state,
             scale: field.scale,
-            className: 'mt-2.5 w-full px-2.25 font-mono text-meta text-gray-9',
+            className: 'mt-2.5 w-full px-2.25 font-mono text-12/17 text-gray-9',
           })}
         />
       </PopoverContent>

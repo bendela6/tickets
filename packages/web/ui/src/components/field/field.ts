@@ -54,7 +54,7 @@ export const fieldClass = variants({
     // Height and radius only — deliberately not padding or font-size.
     // A stepper, a tag list and a plain input want different insets at the same
     // height, and their font sizes genuinely differ today (Input is 14px, the
-    // comboboxes are text-ui at 13px) with nothing in the spec saying they
+    // comboboxes are text-13/19 at 13px) with nothing in the spec saying they
     // should not. Folding either in here would change appearance under cover
     // of a refactor. Radius IS shared: design-system.html §07 puts the 36px
     // combobox trigger at 8px, same as the input.

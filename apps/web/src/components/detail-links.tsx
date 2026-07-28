@@ -91,7 +91,7 @@ export function DetailLinks({
         action={
           <button
             type="button"
-            className="font-sans text-meta font-500 text-gray-9 hover:text-gray-12"
+            className="font-sans text-12/17 font-500 text-gray-9 hover:text-gray-12"
             onClick={() => setAdding((value) => !value)}
           >
             ＋ Add link
@@ -101,7 +101,7 @@ export function DetailLinks({
       />
       <div className="flex flex-col gap-1.5">
         {item.links.length === 0 ? (
-          <p className="m-0 font-sans text-meta text-gray-9">No links.</p>
+          <p className="m-0 font-sans text-12/17 text-gray-9">No links.</p>
         ) : (
           item.links.map((link) => {
             const linkType = board.linkTypes.find((candidate) => candidate.id === link.linkTypeId);
@@ -120,7 +120,7 @@ export function DetailLinks({
                 <Pill
                   tone={chip.blocked ? 'orange' : 'secondary'}
                   label={chip.text}
-                  className="h-5 rounded-md text-label"
+                  className="h-5 rounded-md text-11/13 tracking-wider"
                 />
                 <button
                   type="button"
@@ -133,7 +133,7 @@ export function DetailLinks({
                     className="text-11 hover:text-indigo-9"
                   />
                 </button>
-                <span className="min-w-0 flex-1 truncate font-sans text-ui text-gray-11">
+                <span className="min-w-0 flex-1 truncate font-sans text-13/19 text-gray-11">
                   {String(other.values['title'] ?? '')}
                 </span>
                 <button
@@ -141,7 +141,7 @@ export function DetailLinks({
                   aria-label="Remove link"
                   title="Remove link"
                   disabled={userId === null || deleteLink.isPending}
-                  className="shrink-0 font-sans text-meta text-gray-9 hover:text-red-9 disabled:opacity-50"
+                  className="shrink-0 font-sans text-12/17 text-gray-9 hover:text-red-9 disabled:opacity-50"
                   onClick={() => {
                     if (userId !== null) {
                       deleteLink.mutate({ linkId: link.id, actorId: userId });
@@ -187,7 +187,7 @@ export function DetailLinks({
           >
             Link
           </Button>
-          {error ? <span className="font-sans text-meta text-red-9">{error}</span> : null}
+          {error ? <span className="font-sans text-12/17 text-red-9">{error}</span> : null}
         </form>
       ) : null}
     </section>

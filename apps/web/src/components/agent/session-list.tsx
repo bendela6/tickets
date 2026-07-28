@@ -68,12 +68,12 @@ function SessionRow({
         onClick={onNavigate}
       >
         {depth > 0 ? (
-          <span aria-hidden className="font-mono text-meta text-gray-9">
+          <span aria-hidden className="font-mono text-12/17 text-gray-9">
             └
           </span>
         ) : null}
         <SessionKindGlyph kind="agent" />
-        <span className="min-w-0 flex-1 truncate font-sans text-ui text-gray-12">{session.title}</span>
+        <span className="min-w-0 flex-1 truncate font-sans text-13/19 text-gray-12">{session.title}</span>
         {session.itemId != null ? (
           <span className="shrink-0 rounded-[4px] border border-gray-6 px-1 font-mono text-10 text-indigo-9">
             →#{session.itemId}
@@ -82,7 +82,7 @@ function SessionRow({
         <Pill {...sessionStatus(session.status, 'agent')} />
         <button
           type="button"
-          className="shrink-0 rounded-[4px] border border-gray-6 bg-surface-raised px-1.5 py-0.5 font-sans text-meta text-gray-11 opacity-0 hover:border-gray-7 group-hover:opacity-100"
+          className="shrink-0 rounded-[4px] border border-gray-6 bg-surface-raised px-1.5 py-0.5 font-sans text-12/17 text-gray-11 opacity-0 hover:border-gray-7 group-hover:opacity-100"
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();

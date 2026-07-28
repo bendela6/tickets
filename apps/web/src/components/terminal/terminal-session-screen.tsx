@@ -144,7 +144,7 @@ export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
         <button
           type="button"
           onClick={() => void navigate({ to: '/terminals' })}
-          className="font-sans text-meta text-gray-9 hover:text-gray-11"
+          className="font-sans text-12/17 text-gray-9 hover:text-gray-11"
         >
           ← sessions
         </button>

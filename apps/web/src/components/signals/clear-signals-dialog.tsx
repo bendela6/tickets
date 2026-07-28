@@ -100,13 +100,13 @@ export function ClearSignalsDialog({
         {result === null ? (
           <>
             <DialogTitle>Clear signals</DialogTitle>
-            <p className="mt-1.5 font-sans text-meta text-gray-11">
+            <p className="mt-1.5 font-sans text-12/17 text-gray-11">
               Removes signals for <strong className="font-500 text-gray-12">{app.slug}</strong> and prunes
               any issue left with none. This cannot be undone.
             </p>
 
             <div className="mt-4 flex flex-col gap-2.5">
-              <label className="flex items-center gap-2 font-sans text-ui text-gray-12">
+              <label className="flex items-center gap-2 font-sans text-13/19 text-gray-12">
                 <input
                   type="radio"
                   name="clear-signals-mode"
@@ -117,7 +117,7 @@ export function ClearSignalsDialog({
               </label>
 
               <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2 font-sans text-ui text-gray-12">
+                <label className="flex items-center gap-2 font-sans text-13/19 text-gray-12">
                   <input
                     type="radio"
                     name="clear-signals-mode"
@@ -142,7 +142,7 @@ export function ClearSignalsDialog({
               </div>
 
               <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2 font-sans text-ui text-gray-12">
+                <label className="flex items-center gap-2 font-sans text-13/19 text-gray-12">
                   <input
                     type="radio"
                     name="clear-signals-mode"
@@ -173,7 +173,7 @@ export function ClearSignalsDialog({
             </div>
 
             {clearSignals.isError ? (
-              <p className="mt-2 font-sans text-meta text-red-9">
+              <p className="mt-2 font-sans text-12/17 text-red-9">
                 {clearSignals.error instanceof Error ? clearSignals.error.message : 'Could not clear signals'}
               </p>
             ) : null}
@@ -192,7 +192,7 @@ export function ClearSignalsDialog({
         ) : (
           <>
             <DialogTitle>Signals cleared</DialogTitle>
-            <p className="mt-1.5 font-sans text-meta text-gray-11">
+            <p className="mt-1.5 font-sans text-12/17 text-gray-11">
               Removed {result.deletedSignals} signal{result.deletedSignals === 1 ? '' : 's'}
               {result.prunedIssues > 0
                 ? ` and pruned ${result.prunedIssues} issue${result.prunedIssues === 1 ? '' : 's'} left with none`

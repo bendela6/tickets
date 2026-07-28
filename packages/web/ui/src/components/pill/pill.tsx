@@ -56,14 +56,14 @@ const pillClass = variants({
     // box rather than the glyphs — inside a 22px pill that put the label 2.6px
     // from the top and 4.4px from the bottom, reading as too high. Collapsing
     // the line box centres it to within a rounding pixel. Written before
-    // `text-meta`, tailwind-merge evicts it: a font-size token that also sets a
+    // `text-12/17`, tailwind-merge evicts it: a font-size token that also sets a
     // line-height wins the whole group.
     size: {
       default: 'md',
       options: {
-        sm: 'h-4.5 gap-1 px-1.75 text-label leading-none',
-        md: 'h-5.5 gap-1.5 px-2.25 text-meta leading-none',
-        lg: 'h-7 gap-2 px-3 text-ui leading-none',
+        sm: 'h-4.5 gap-1 px-1.75 text-11/13 tracking-wider leading-none',
+        md: 'h-5.5 gap-1.5 px-2.25 text-12/17 leading-none',
+        lg: 'h-7 gap-2 px-3 text-13/19 leading-none',
       },
     },
   },

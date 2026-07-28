@@ -31,7 +31,7 @@ describe('SectionHeader', () => {
   it('title carries the uppercase mono-label styling', () => {
     render(<SectionHeader title="Links" />);
     const el = screen.getByText('Links');
-    for (const cls of ['text-label', 'uppercase', 'text-gray-11']) {
+    for (const cls of ['text-11/13 tracking-wider', 'uppercase', 'text-gray-11']) {
       expect(el.className).toContain(cls);
     }
   });
@@ -46,15 +46,15 @@ describe('SectionHeader', () => {
   // "hint jumped from 11px to 16px" bug (new-session-dialog / agent-editor's
   // Label helpers render their hint via `count`, which is a plain sibling
   // span with no size class).
-  it('gives the row the text-label size so an unsized count/hint inherits 11px', () => {
+  it('gives the row the text-11/13 tracking-wider size so an unsized count/hint inherits 11px', () => {
     const { container } = render(
       <SectionHeader title="Command" count={<span>optional — defaults to your shell</span>} />,
     );
     const row = container.firstElementChild!;
-    expect(row.className).toContain('text-label');
+    expect(row.className).toContain('text-11/13 tracking-wider');
     const hint = screen.getByText('optional — defaults to your shell');
     // The hint itself sets no size class — it must rely on inheriting the
-    // row's text-label rather than falling back to the document default.
+    // row's text-11/13 tracking-wider rather than falling back to the document default.
     expect(hint.className).not.toMatch(/text-(ui|meta|body|\[)/);
   });
 

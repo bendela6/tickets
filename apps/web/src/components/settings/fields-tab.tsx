@@ -89,7 +89,7 @@ function PlacementRow({
 
   return (
     <div className={cn('grid items-center gap-2 border-b border-gray-6 px-2.5 py-2', GRID_COLUMNS)}>
-      <span className="truncate font-sans text-ui font-500 text-gray-12">{field.label}</span>
+      <span className="truncate font-sans text-13/19 font-500 text-gray-12">{field.label}</span>
       <Pill {...typePill} label={field.type} className={cn(typePill.className, 'font-mono text-11')} />
       <Switch
         label="Required"
@@ -123,7 +123,7 @@ function PlacementRow({
           disabled={disabled}
         />
       ) : (
-        <span className="font-mono text-meta text-gray-9">—</span>
+        <span className="font-mono text-12/17 text-gray-9">—</span>
       )}
       <div className="flex items-center gap-0.5">
         <button
@@ -154,7 +154,7 @@ function PlacementRow({
           if (userId === null) return;
           unplaceField.mutate({ actorId: userId, itemTypeId: typeId, fieldId: field.id });
         }}
-        className="flex size-5.5 cursor-pointer items-center justify-center rounded-md font-sans text-ui text-gray-9 hover:bg-surface-inset hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex size-5.5 cursor-pointer items-center justify-center rounded-md font-sans text-13/19 text-gray-9 hover:bg-surface-inset hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
       >
         ⌫
       </button>
@@ -193,7 +193,7 @@ function NewFieldComposer({
 
   return (
     <form onSubmit={submit} className="mb-4 rounded-xl border border-gray-6 bg-surface-raised p-3.5">
-      <div className="mb-3 font-sans text-ui font-600 text-gray-12">New field</div>
+      <div className="mb-3 font-sans text-13/19 font-600 text-gray-12">New field</div>
       <div className="grid grid-cols-[1.4fr_1fr_1fr] gap-3">
         <div className="flex flex-col gap-1.25">
           <FieldLabel htmlFor="new-field-label">Label</FieldLabel>
@@ -233,7 +233,7 @@ function NewFieldComposer({
         </div>
       </div>
       {createField.isError ? (
-        <p className="m-0 mt-2.5 font-sans text-meta text-red-9">{(createField.error as Error).message}</p>
+        <p className="m-0 mt-2.5 font-sans text-12/17 text-red-9">{(createField.error as Error).message}</p>
       ) : null}
       <div className="mt-3.5 flex items-center justify-end gap-2">
         <Button size="sm" variant="ghost" onClick={onClose}>
@@ -297,16 +297,16 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
     <section className="flex min-h-0 flex-col px-6 py-5.5">
       <div className="mb-1.5 flex items-center gap-3">
         <h1 className="m-0 font-sans text-20 font-600 text-gray-12">Fields</h1>
-        <span className="font-mono text-meta text-gray-9">
+        <span className="font-mono text-12/17 text-gray-9">
           {board.fields.length} field{board.fields.length === 1 ? '' : 's'} in this scheme
         </span>
       </div>
-      <p className="mb-4 mt-0 font-sans text-meta text-gray-9">
+      <p className="mb-4 mt-0 font-sans text-12/17 text-gray-9">
         Choose a type, then place library fields onto it, reorder them, and set which are required.
       </p>
 
       {activeTypes.length === 0 ? (
-        <p className="m-0 font-sans text-meta text-gray-9">No ticket types yet — create one on the Types tab first.</p>
+        <p className="m-0 font-sans text-12/17 text-gray-9">No ticket types yet — create one on the Types tab first.</p>
       ) : (
         <>
           <Tabs
@@ -398,7 +398,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
       )}
 
       <div className="mt-2">
-        <h2 className="mb-2 font-sans text-ui font-600 text-gray-12">Field library</h2>
+        <h2 className="mb-2 font-sans text-13/19 font-600 text-gray-12">Field library</h2>
         <div
           role="region"
           aria-label="Field library"
@@ -414,10 +414,10 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
                   field.archivedAt && 'opacity-60',
                 )}
               >
-                <span className="min-w-0 flex-1 truncate font-sans text-ui text-gray-12">{field.label}</span>
+                <span className="min-w-0 flex-1 truncate font-sans text-13/19 text-gray-12">{field.label}</span>
                 {field.archivedAt ? <ArchChip /> : null}
                 <Pill {...typePill} label={field.type} className={cn(typePill.className, 'font-mono text-11')} />
-                <span className="w-16 shrink-0 font-mono text-meta text-gray-9">
+                <span className="w-16 shrink-0 font-mono text-12/17 text-gray-9">
                   {placedCount} type{placedCount === 1 ? '' : 's'}
                 </span>
                 <Button

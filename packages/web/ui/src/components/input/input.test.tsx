@@ -9,7 +9,7 @@ test('md input carries the spec size classes', () => {
   const input = screen.getByLabelText('Title');
   expect(input).toHaveClass('h-9', 'px-3', 'rounded-[8px]', 'bg-surface-raised', 'border-gray-7');
   // Regression guard: tailwind-merge must not let the 14px font size evict the
-  // ink text color (the same trap the primary button hit with text-ui).
+  // ink text color (the same trap the primary button hit with text-13/19).
   expect(input).toHaveClass('text-14');
   expect(input).toHaveClass('text-gray-12');
 });

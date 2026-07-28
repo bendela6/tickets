@@ -83,12 +83,12 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
     <div className="flex flex-col gap-3.5">
       {/* Header with meta and button */}
       <div className="flex items-center justify-between">
-        <span className="font-mono text-meta text-gray-9">{metaText}</span>
+        <span className="font-mono text-12/17 text-gray-9">{metaText}</span>
         <button
           type="button"
           onClick={runAudit}
           disabled={auditState.isLoading}
-          className="h-7 rounded-lg border border-gray-7 bg-surface-raised px-3 font-sans text-meta text-gray-12 hover:bg-surface-inset disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-7 rounded-lg border border-gray-7 bg-surface-raised px-3 font-sans text-12/17 text-gray-12 hover:bg-surface-inset disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {auditState.isLoading ? 'auditing…' : 'Run audit'}
         </button>
@@ -108,28 +108,28 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
                 <div className="flex items-center gap-2">
                   <span
                     className={cn(
-                      'h-5 px-2 rounded-md font-mono text-label inline-flex items-center',
+                      'h-5 px-2 rounded-md font-mono text-11/13 tracking-wider inline-flex items-center',
                       getImpactClasses(violation.impact),
                     )}
                   >
                     {violation.impact}
                   </span>
-                  <span className="font-sans text-ui font-500 text-gray-12">{violation.id}</span>
+                  <span className="font-sans text-13/19 font-500 text-gray-12">{violation.id}</span>
                 </div>
 
                 {/* Description */}
-                <p className="font-sans text-meta text-gray-11">{violation.description}</p>
+                <p className="font-sans text-12/17 text-gray-11">{violation.description}</p>
 
                 {/* Target selector and Learn more link */}
                 <div className="flex items-center justify-between gap-2.5">
-                  <code className="font-mono text-label text-gray-11 bg-surface-inset rounded-md px-1.75 py-0.5 overflow-x-auto text-nowrap">
+                  <code className="font-mono text-11/13 tracking-wider text-gray-11 bg-surface-inset rounded-md px-1.75 py-0.5 overflow-x-auto text-nowrap">
                     {String(violation.nodes[0]?.target?.[0]) || '(selector)'}
                   </code>
                   <a
                     href={violation.helpUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-sans text-label font-500 text-indigo-9 hover:underline"
+                    className="font-sans text-11/13 tracking-wider font-500 text-indigo-9 hover:underline"
                   >
                     Learn more ↗
                   </a>
@@ -139,13 +139,13 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
           ) : (
             // All clear banner
             <div className="flex items-center gap-2.5 rounded-lg bg-green-3 p-3.5">
-              <span className="flex-none size-4 rounded-full bg-green-9 text-gray-1 flex items-center justify-center font-sans text-nano font-600">
+              <span className="flex-none size-4 rounded-full bg-green-9 text-gray-1 flex items-center justify-center font-sans text-9/12 font-600">
                 ✓
               </span>
-              <span className="font-sans text-ui font-500 text-green-9">
+              <span className="font-sans text-13/19 font-500 text-green-9">
                 No violations found
               </span>
-              <span className="font-mono text-label text-green-9 opacity-75">
+              <span className="font-mono text-11/13 tracking-wider text-green-9 opacity-75">
                 · {elementCount} elements checked
               </span>
             </div>

@@ -76,7 +76,7 @@ export function NumberInput({
           const raw = event.target.value;
           onChange(raw === '' ? null : Number(raw));
         }}
-        className="w-16 bg-transparent px-2 text-right font-sans text-ui text-gray-12 tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+        className="w-16 bg-transparent px-2 text-right font-sans text-13/19 text-gray-12 tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
       />
       <div className="flex flex-col border-l border-gray-6">
         <button

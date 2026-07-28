@@ -49,7 +49,7 @@ export function CodeBlock({
   return (
     <div
       className={cn(
-        'pg-code-block rounded-lg p-5 font-mono text-ui',
+        'pg-code-block rounded-lg p-5 font-mono text-13/19',
         numbered && 'pg-code-block--numbered',
         className,
       )}
@@ -57,7 +57,7 @@ export function CodeBlock({
       <button
         type="button"
         onClick={() => void handleCopy()}
-        className="pg-code-copy absolute top-2.5 right-2.5 inline-flex h-6.5 items-center gap-1.5 rounded-md border border-transparent px-2.5 font-sans text-label font-500"
+        className="pg-code-copy absolute top-2.5 right-2.5 inline-flex h-6.5 items-center gap-1.5 rounded-md border border-transparent px-2.5 font-sans text-11/13 tracking-wider font-500"
       >
         {copyState === 'copied' ? 'Copied' : copyState === 'failed' ? 'Copy failed' : '⧉ Copy'}
       </button>

@@ -4,7 +4,7 @@ import { cn, RailLabel } from '@tickets/ui';
 
 function navItemClasses(active: boolean) {
   return cn(
-    'flex h-8 items-center gap-2 rounded-[7px] px-2.25 font-sans text-ui',
+    'flex h-8 items-center gap-2 rounded-[7px] px-2.25 font-sans text-13/19',
     active ? 'bg-surface-inset font-500 text-gray-12' : 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
   );
 }

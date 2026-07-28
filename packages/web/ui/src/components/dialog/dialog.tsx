@@ -48,7 +48,7 @@ export function DialogDescription({
   className?: string;
 }) {
   return (
-    <RadixDialog.Description className={cn('mt-1.5 font-sans text-ui text-gray-11', className)}>
+    <RadixDialog.Description className={cn('mt-1.5 font-sans text-13/19 text-gray-11', className)}>
       {children}
     </RadixDialog.Description>
   );

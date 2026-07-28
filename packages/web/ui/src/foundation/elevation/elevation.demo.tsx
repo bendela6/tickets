@@ -46,12 +46,12 @@ function Levels() {
         >
           <div className="flex items-center gap-4 bg-gray-1 p-5">
             <span
-              className="flex h-16 w-40 items-center justify-center rounded-lg bg-surface-raised font-mono text-meta text-gray-9"
+              className="flex h-16 w-40 items-center justify-center rounded-lg bg-surface-raised font-mono text-12/17 text-gray-9"
               style={{ boxShadow: valueOf(shadow.name) }}
             >
               {shadow.name.replace('shadow-', '')}
             </span>
-            <code className="min-w-0 flex-1 font-mono text-nano leading-tight text-gray-9">
+            <code className="min-w-0 flex-1 font-mono text-9/12 leading-tight text-gray-9">
               {valueOf(shadow.name)}
             </code>
           </div>
@@ -72,15 +72,15 @@ function InUse() {
           className="flex w-56 flex-col gap-1 rounded-lg bg-surface-raised p-3"
           style={{ boxShadow: valueOf('shadow-surface-raised') }}
         >
-          <span className="font-sans text-ui font-500 text-gray-12">Retry the gateway run</span>
-          <span className="font-mono text-meta text-gray-9">TIX-214</span>
+          <span className="font-sans text-13/19 font-500 text-gray-12">Retry the gateway run</span>
+          <span className="font-mono text-12/17 text-gray-9">TIX-214</span>
         </div>
         <div
           className="flex w-44 flex-col rounded-lg bg-surface-raised py-1"
           style={{ boxShadow: valueOf('shadow-overlay') }}
         >
           {['Assign to me', 'Move to review', 'Archive'].map((label) => (
-            <span key={label} className="px-3 py-1.5 font-sans text-ui text-gray-12">
+            <span key={label} className="px-3 py-1.5 font-sans text-13/19 text-gray-12">
               {label}
             </span>
           ))}
@@ -90,8 +90,8 @@ function InUse() {
             className="flex w-64 flex-col gap-2 rounded-xl bg-surface-raised p-4"
             style={{ boxShadow: valueOf('shadow-modal') }}
           >
-            <span className="font-sans text-title font-500 text-gray-12">Discard changes?</span>
-            <span className="font-sans text-ui text-gray-11">
+            <span className="font-sans text-16/22 font-500 text-gray-12">Discard changes?</span>
+            <span className="font-sans text-13/19 text-gray-11">
               Three edits will be lost. This cannot be undone.
             </span>
           </div>

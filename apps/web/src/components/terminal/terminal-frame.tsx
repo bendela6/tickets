@@ -17,7 +17,7 @@ const INDICATOR: Record<ConnState, { dot: string; label: string; pulse?: boolean
 function ConnIndicator({ state }: { state: ConnState }) {
   const it = INDICATOR[state];
   return (
-    <span className="inline-flex items-center gap-1.5 font-sans text-meta text-gray-11">
+    <span className="inline-flex items-center gap-1.5 font-sans text-12/17 text-gray-11">
       <span
         aria-hidden
         className={cn('size-2 rounded-full', it.dot, it.pulse && 'animate-ai-pulse')}
@@ -58,9 +58,9 @@ export function TerminalFrame({
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-gray-6 bg-surface-raised">
       <div className="flex items-center gap-3 border-b border-gray-6 px-3.5 py-2">
         <div className="flex min-w-0 flex-1 items-baseline gap-2.5">
-          <span className="truncate font-sans text-ui font-500 text-gray-12">{title}</span>
+          <span className="truncate font-sans text-13/19 font-500 text-gray-12">{title}</span>
           {workspacePath ? (
-            <span className="truncate font-mono text-meta text-gray-9">{workspacePath}</span>
+            <span className="truncate font-mono text-12/17 text-gray-9">{workspacePath}</span>
           ) : null}
         </div>
         <ConnIndicator state={conn} />
@@ -72,7 +72,7 @@ export function TerminalFrame({
       </div>
 
       {ended || truncated ? (
-        <div className="flex items-center gap-3 border-t border-gray-6 px-3.5 py-2 font-sans text-meta">
+        <div className="flex items-center gap-3 border-t border-gray-6 px-3.5 py-2 font-sans text-12/17">
           {ended ? (
             <span className="text-gray-11">
               {exitCode == null ? (

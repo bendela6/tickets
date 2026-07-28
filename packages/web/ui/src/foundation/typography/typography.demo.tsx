@@ -1,4 +1,4 @@
-import { FONT_FAMILIES, FONT_WEIGHTS, TEXT_SIZES, TRACKING } from '../spec';
+import { FONT_FAMILIES, FONT_WEIGHTS, TEXT_SIZES } from '../spec';
 import { DriftView, Sheet, SpecHeader, SpecRow } from '../view';
 
 export const meta = {
@@ -74,19 +74,30 @@ function WeightAndFamily() {
   );
 }
 
+// Tailwind's own scale, not ours. The three role names this used to read from
+// the spec (`tracking-label/caps/mono-label`) are retired: tracking is a
+// property of being an uppercase run, not of a role, so the call site names
+// the amount and nothing else.
+const TRACKING: { name: string; value: string }[] = [
+  { name: 'tracking-tight', value: '-0.025em' },
+  { name: 'tracking-normal', value: '0em' },
+  { name: 'tracking-wide', value: '0.025em' },
+  { name: 'tracking-wider', value: '0.05em' },
+  { name: 'tracking-widest', value: '0.1em' },
+];
+
 function Tracking() {
   return (
     <Sheet>
       <SpecHeader specimen="uppercase label · 11px" />
       {TRACKING.map((track) => (
         <SpecRow key={track.name} name={track.name} value={track.value}>
-          {/* Tracking only earns its keep on uppercase runs, which is the one
-              place these three are used — captions, section headers, and the
-              mono key labels on an item row. */}
+          {/* Tracking only earns its keep on uppercase runs — captions,
+              section headers, and the mono key labels on an item row. */}
           <span
             className="uppercase text-gray-12"
             style={{
-              fontFamily: track.name === 'tracking-mono-label' ? MONO : SANS,
+              fontFamily: SANS,
               fontSize: '11px',
               fontWeight: 500,
               letterSpacing: track.value,
@@ -106,6 +117,6 @@ export const states = [
   { name: 'Tracking', render: () => <Tracking /> },
   {
     name: 'Drift',
-    render: () => <DriftView families={['text', 'font', 'font-weight', 'tracking']} />,
+    render: () => <DriftView families={['text', 'font', 'font-weight']} />,
   },
 ];

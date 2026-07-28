@@ -95,15 +95,15 @@ export function GalleryShell({
         <div className="flex w-full flex-col gap-10">
           <header className="flex items-center justify-between">
             <div>
-              <h1 className="text-display font-600 text-gray-12">{title}</h1>
-              <p className="mt-1 text-meta text-gray-11">
+              <h1 className="text-24/30 font-600 text-gray-12">{title}</h1>
+              <p className="mt-1 text-12/17 text-gray-11">
                 Instrument control library. Compare against docs/design/design-system.html.
               </p>
             </div>
             <button
               type="button"
               onClick={toggleTheme}
-              className="h-9 rounded-md border border-gray-7 bg-surface-raised px-3.5 text-ui text-gray-12 hover:bg-surface-inset"
+              className="h-9 rounded-md border border-gray-7 bg-surface-raised px-3.5 text-13/19 text-gray-12 hover:bg-surface-inset"
             >
               Toggle theme
             </button>
@@ -135,7 +135,7 @@ export function GalleryShell({
                     <div className="flex items-start gap-8">
                       <div className={`flex flex-col gap-4 ${DOCS_COLUMN}`}>
                         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-                          <h2 className="font-sans text-heading font-600 text-gray-12">
+                          <h2 className="font-sans text-20/26 font-600 text-gray-12">
                             {d.meta.title}
                           </h2>
                           <div className="flex items-center gap-4">
@@ -143,7 +143,7 @@ export function GalleryShell({
                               <a
                                 key={tab}
                                 {...nav.linkProps({ slug: d.slug, tab })}
-                                className="font-sans text-meta font-500 text-indigo-9 hover:underline"
+                                className="font-sans text-12/17 font-500 text-indigo-9 hover:underline"
                               >
                                 {label}
                               </a>

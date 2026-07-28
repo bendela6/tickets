@@ -119,7 +119,7 @@ function IssueNotFound() {
       <ScreenState
         title="Issue not found"
         action={
-          <Link to="/signals" className="font-sans text-meta text-indigo-9 hover:underline">
+          <Link to="/signals" className="font-sans text-12/17 text-indigo-9 hover:underline">
             ‹ Back to Issues
           </Link>
         }
@@ -228,8 +228,8 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
       <div className="mb-3 flex items-start gap-3">
         <LevelDot level={issue.level} className="mt-2" />
         <div className="min-w-0 flex-1">
-          <div className="font-sans text-[18px] leading-tight font-600 text-gray-12">
-            <span className="font-mono text-[17px]">{name}</span>
+          <div className="font-sans text-18 leading-tight font-600 text-gray-12">
+            <span className="font-mono text-16">{name}</span>
             {message !== null ? (
               <span className="ml-2 font-sans text-16 font-400 text-gray-11">— {message}</span>
             ) : null}

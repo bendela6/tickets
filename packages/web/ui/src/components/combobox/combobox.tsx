@@ -47,7 +47,7 @@ export function Combobox({
               state: field.state,
             scale: field.scale,
               className: cn(
-                'flex w-full items-center justify-between gap-2 font-sans text-ui',
+                'flex w-full items-center justify-between gap-2 font-sans text-13/19',
                 'disabled:opacity-50 disabled:pointer-events-none',
                 PADDING[size],
                 'pr-7',

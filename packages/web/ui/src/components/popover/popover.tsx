@@ -23,7 +23,7 @@ export const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
           align={align}
           className={cn(
             'z-50 rounded-lg border border-gray-6 bg-surface-raised text-gray-12 shadow-lg',
-            'font-sans text-ui outline-none',
+            'font-sans text-13/19 outline-none',
             'data-[state=open]:animate-in data-[state=closed]:animate-out',
             className,
           )}

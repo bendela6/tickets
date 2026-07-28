@@ -89,7 +89,7 @@ describe('GalleryShell v2', () => {
     render(<GalleryShell demos={demos} title="t" />);
     const heading = screen.getByRole('heading', { name: 'Button' });
     // A real heading at heading size, not the small uppercase state-grid label.
-    expect(heading.className).toContain('text-heading');
+    expect(heading.className).toContain('text-20/26');
 
     const section = heading.closest('section')!;
     // Half a viewport minimum, so scrolling lands about one component per

@@ -51,11 +51,11 @@ function Edges() {
         <div className="flex items-center gap-4">
           <button
             type="button"
-            className="rounded-md border border-gray-6 bg-surface-raised px-3 py-1 font-sans text-ui text-gray-12 outline-none focus-visible:ring-(length:--ring-focus) focus-visible:ring-indigo-9"
+            className="rounded-md border border-gray-6 bg-surface-raised px-3 py-1 font-sans text-13/19 text-gray-12 outline-none focus-visible:ring-(length:--ring-focus) focus-visible:ring-indigo-9"
           >
             Tab to me
           </button>
-          <span className="font-sans text-meta text-gray-9">
+          <span className="font-sans text-12/17 text-gray-9">
             Focus this with the keyboard — the ring is the token, live.
           </span>
         </div>
@@ -75,7 +75,7 @@ function Layers() {
           demonstrated rather than asserted. */}
       <div className="relative mt-2 h-44 overflow-hidden rounded-xl bg-gray-1">
         <div
-          className="absolute inset-x-4 top-4 flex h-10 items-center rounded-lg border border-gray-6 bg-surface-raised px-3 font-mono text-meta text-gray-11"
+          className="absolute inset-x-4 top-4 flex h-10 items-center rounded-lg border border-gray-6 bg-surface-raised px-3 font-mono text-12/17 text-gray-11"
           style={{ zIndex: Number(LAYERS.find((l) => l.name === 'z-sticky')!.value) }}
         >
           z-sticky · pinned header
@@ -85,7 +85,7 @@ function Layers() {
           style={{ zIndex: Number(LAYERS.find((l) => l.name === 'z-scrim')!.value) }}
         />
         <div
-          className="absolute inset-x-16 top-16 flex h-20 items-center justify-center rounded-xl bg-surface-raised font-mono text-meta text-gray-12"
+          className="absolute inset-x-16 top-16 flex h-20 items-center justify-center rounded-xl bg-surface-raised font-mono text-12/17 text-gray-12"
           style={{ zIndex: Number(LAYERS.find((l) => l.name === 'z-overlay')!.value) }}
         >
           z-overlay · dialog
@@ -121,12 +121,12 @@ function Breakpoints() {
         value={`${narrow}px`}
         note="rail collapses to icons"
       >
-        <span className="font-sans text-meta text-gray-11">
+        <span className="font-sans text-12/17 text-gray-11">
           Below this, the board drops to a single column and the detail pane becomes a sheet.
         </span>
       </SpecRow>
       <SpecRow name="breakpoint-wide" value={`${wide}px`} note="detail pane pins open">
-        <span className="font-sans text-meta text-gray-11">
+        <span className="font-sans text-12/17 text-gray-11">
           Above this, the detail pane stays open beside the board instead of replacing it.
         </span>
       </SpecRow>
@@ -143,7 +143,7 @@ function Breakpoints() {
             style={{ left: `${(narrow / wide) * 100}%` }}
           />
         </div>
-        <span className="font-mono text-meta text-gray-9">
+        <span className="font-mono text-12/17 text-gray-9">
           viewport {width}px · {band}
         </span>
       </div>

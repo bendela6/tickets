@@ -149,7 +149,7 @@ function OptionForm({
             value={draft.label}
             onChange={(event) => onChange({ ...draft, label: event.target.value })}
           />
-          {valueHint ? <span className="font-mono text-label text-gray-9">{valueHint}</span> : null}
+          {valueHint ? <span className="font-mono text-11/13 tracking-wider text-gray-9">{valueHint}</span> : null}
         </div>
       </div>
       <div className="flex flex-col gap-1.25">
@@ -344,14 +344,14 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
     <section className="flex min-h-0 flex-col px-6 py-5.5">
       <div className="mb-1.5 flex items-center gap-3">
         <h1 className="m-0 font-sans text-20 font-600 text-gray-12">Workflow</h1>
-        <span className="font-mono text-meta text-gray-9">{projectKey}</span>
+        <span className="font-mono text-12/17 text-gray-9">{projectKey}</span>
       </div>
-      <p className="mb-4 mt-0 font-sans text-meta text-gray-9">
+      <p className="mb-4 mt-0 font-sans text-12/17 text-gray-9">
         Pick a type, then manage its workflow statuses and the moves allowed between them.
       </p>
 
       {activeTypes.length === 0 ? (
-        <p className="m-0 font-sans text-meta text-gray-9">No ticket types yet — create one on the Types tab first.</p>
+        <p className="m-0 font-sans text-12/17 text-gray-9">No ticket types yet — create one on the Types tab first.</p>
       ) : (
         <>
           <Tabs
@@ -364,7 +364,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
           />
 
           {workflowField === undefined ? (
-            <p className="m-0 font-sans text-meta text-gray-9">
+            <p className="m-0 font-sans text-12/17 text-gray-9">
               No workflow field is placed on this type — place a field with a workflow status set on the
               Fields tab first.
             </p>
@@ -378,7 +378,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
               >
                 <div className="flex items-center gap-2.25 border-b border-gray-6 bg-gray-1 px-4 py-2.75">
                   <span className="font-sans text-14 font-600 text-gray-12">Options</span>
-                  <span className="font-mono text-label text-gray-9">
+                  <span className="font-mono text-11/13 tracking-wider text-gray-9">
                     {options.length} option{options.length === 1 ? '' : 's'}
                     {archivedCount > 0 ? ` · ${archivedCount} archived` : ''}
                   </span>
@@ -388,7 +388,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                   </Button>
                 </div>
                 {options.length === 0 ? (
-                  <p className="m-0 px-4 py-5 text-center font-sans text-meta text-gray-9">
+                  <p className="m-0 px-4 py-5 text-center font-sans text-12/17 text-gray-9">
                     No options yet on this workflow field.
                   </p>
                 ) : (
@@ -403,11 +403,11 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                             <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
                           </span>
                           <span
-                            className={cn('font-sans text-ui font-500 text-gray-12', archived && 'line-through')}
+                            className={cn('font-sans text-13/19 font-500 text-gray-12', archived && 'line-through')}
                           >
                             {option.label}
                           </span>
-                          <span className="font-mono text-meta text-gray-9">{option.value}</span>
+                          <span className="font-mono text-12/17 text-gray-9">{option.value}</span>
                           <Pill {...statusPill(kind)} label={kind} />
                           {option.config.color ? (
                             <span
@@ -471,7 +471,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
               <div className="overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
                 <div className="flex items-center gap-2.25 border-b border-gray-6 bg-gray-1 px-4 py-2.75">
                   <span className="font-sans text-14 font-600 text-gray-12">Transitions</span>
-                  <span className="font-mono text-label text-gray-9">
+                  <span className="font-mono text-11/13 tracking-wider text-gray-9">
                     {transitions.length} edge{transitions.length === 1 ? '' : 's'}
                   </span>
                 </div>
@@ -481,7 +481,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                       <span className="font-sans text-15 font-600 text-gray-12">
                         No edges defined — any move is allowed
                       </span>
-                      <p className="m-0 max-w-90 font-sans text-meta text-gray-11">
+                      <p className="m-0 max-w-90 font-sans text-12/17 text-gray-11">
                         Items using this type can move between any two options. Add the first edge to start
                         constraining moves.
                       </p>
@@ -500,22 +500,22 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                           ) : (
                             <EntryPill />
                           )}
-                          <span aria-hidden className="shrink-0 font-sans text-ui text-gray-9">
+                          <span aria-hidden className="shrink-0 font-sans text-13/19 text-gray-9">
                             →
                           </span>
                           {to ? (
                             <Pill {...statusPill((to.kind ?? 'todo') as StatusKind)} label={to.label} />
                           ) : (
-                            <span className="font-mono text-meta text-gray-9">#{t.toOptionId}</span>
+                            <span className="font-mono text-12/17 text-gray-9">#{t.toOptionId}</span>
                           )}
                           {t.itemTypeId === null ? (
-                            <span className="font-mono text-label text-gray-9">all types</span>
+                            <span className="font-mono text-11/13 tracking-wider text-gray-9">all types</span>
                           ) : null}
                           {t.config?.guard?.requiresComment ? (
-                            <span className="font-mono text-label text-gray-9">requires comment</span>
+                            <span className="font-mono text-11/13 tracking-wider text-gray-9">requires comment</span>
                           ) : null}
                           {t.config?.guard?.requiresField ? (
-                            <span className="font-mono text-label text-gray-9">
+                            <span className="font-mono text-11/13 tracking-wider text-gray-9">
                               requires{' '}
                               {indexes.fieldByKey.get(t.config.guard.requiresField)?.label ??
                                 t.config.guard.requiresField}
@@ -527,7 +527,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                             aria-label={`Remove transition ${transitionLabel(t)}`}
                             title="Remove transition"
                             disabled={disabled || deleteTransition.isPending}
-                            className="shrink-0 px-1 font-sans text-ui text-gray-9 hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="shrink-0 px-1 font-sans text-13/19 text-gray-9 hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
                             onClick={() => void removeEdge(t)}
                           >
                             ×
@@ -552,7 +552,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                       onChange={setEdgeFrom}
                       disabled={disabled}
                     />
-                    <span aria-hidden className="font-sans text-ui text-gray-9">
+                    <span aria-hidden className="font-sans text-13/19 text-gray-9">
                       →
                     </span>
                     <Combobox
@@ -586,7 +586,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     >
                       Add edge
                     </Button>
-                    <span className="ml-auto font-mono text-label text-gray-9">
+                    <span className="ml-auto font-mono text-11/13 tracking-wider text-gray-9">
                       empty set = every move allowed
                     </span>
                   </form>

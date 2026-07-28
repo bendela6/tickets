@@ -38,7 +38,7 @@ export function ViewTabs({
             to="/p/$projectKey/v/$viewId"
             params={{ projectKey, viewId: String(view.id) }}
             className={cn(
-              '-mb-px border-b-2 px-3 py-2 font-sans text-ui',
+              '-mb-px border-b-2 px-3 py-2 font-sans text-13/19',
               isActive
                 ? 'border-indigo-9 font-500 text-gray-12'
                 : 'border-transparent text-gray-11 hover:text-gray-12',
@@ -82,7 +82,7 @@ export function ViewTabs({
         <button
           type="button"
           aria-label="New view"
-          className="px-2.5 py-2 font-sans text-ui text-gray-9 hover:text-gray-12"
+          className="px-2.5 py-2 font-sans text-13/19 text-gray-9 hover:text-gray-12"
           onClick={() => setAdding(true)}
         >
           ＋

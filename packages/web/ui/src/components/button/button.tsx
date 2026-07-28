@@ -80,7 +80,7 @@ const buttonClass = variants({
       },
     },
     // NOTE: font-size utilities here use arbitrary lengths (text-12/text-13)
-    // rather than the semantic `text-ui`/`text-meta` tokens on purpose. tailwind-merge
+    // rather than the semantic `text-13/19`/`text-12/17` tokens on purpose. tailwind-merge
     // does not know those custom named sizes are font-sizes, so it groups them with
     // `text-{color}` utilities and silently drops the color (e.g. text-indigo-contrast).
     // Arbitrary lengths are classified as font-size, so the variant color survives.

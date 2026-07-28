@@ -19,7 +19,7 @@ export const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(function
         align={align}
         className={cn(
           'z-50 min-w-47.5 rounded-lg border border-gray-6 bg-surface-raised p-1 text-gray-12 shadow-lg',
-          'font-sans text-ui outline-none',
+          'font-sans text-13/19 outline-none',
           className,
         )}
         {...rest}
@@ -51,7 +51,7 @@ export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(function MenuI
       {...rest}
     >
       <span>{children}</span>
-      {shortcut ? <span className="font-mono text-meta text-gray-9">{shortcut}</span> : null}
+      {shortcut ? <span className="font-mono text-12/17 text-gray-9">{shortcut}</span> : null}
     </DropdownMenu.Item>
   );
 });

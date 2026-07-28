@@ -65,12 +65,12 @@ export function DetailFields({
   return (
     <div className="flex flex-col gap-2.5">
       {userId === null ? (
-        <p className="m-0 font-sans text-meta text-orange-9">
+        <p className="m-0 font-sans text-12/17 text-orange-9">
           Pick a user in the header to edit items.
         </p>
       ) : null}
       {patch.isError ? (
-        <p className="m-0 font-sans text-meta text-red-9">{(patch.error as Error).message}</p>
+        <p className="m-0 font-sans text-12/17 text-red-9">{(patch.error as Error).message}</p>
       ) : null}
       <div
         className={

@@ -134,7 +134,7 @@ export function FieldWidget({
       <Textarea
         rows={4}
         tone={invalid ? 'danger' : undefined}
-        className="font-mono text-meta"
+        className="font-mono text-12/17"
         aria-label={field.label}
         value={shown}
         disabled={disabled}

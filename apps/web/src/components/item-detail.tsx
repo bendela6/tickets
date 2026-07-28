@@ -203,7 +203,7 @@ export function ItemDetail({
   };
 
   const archivedChip = item.archivedAt ? (
-    <Pill tone="secondary" label="archived" className="rounded-md text-label text-gray-9" />
+    <Pill tone="secondary" label="archived" className="rounded-md text-11/13 tracking-wider text-gray-9" />
   ) : null;
 
   const archiveMenu = (
@@ -225,7 +225,7 @@ export function ItemDetail({
     <button
       type="button"
       onClick={() => openItem(parent.number)}
-      className="flex w-fit min-w-0 items-center gap-1.5 bg-transparent p-0 text-left font-sans text-meta font-500 text-indigo-9 hover:underline"
+      className="flex w-fit min-w-0 items-center gap-1.5 bg-transparent p-0 text-left font-sans text-12/17 font-500 text-indigo-9 hover:underline"
     >
       <span aria-hidden>‹</span>
       <span className="shrink-0 font-mono">
@@ -303,7 +303,7 @@ export function ItemDetail({
           <InlineTitle
             value={title}
             disabled={userId === null}
-            className="text-[18px] leading-[1.35]"
+            className="text-18 leading-[1.35]"
             onSave={(next) => saveValues({ title: next })}
           />
           <DetailFields board={board} indexes={indexes} item={item} layout="grid" />
@@ -338,14 +338,14 @@ export function ItemDetail({
         <Link
           to="/p/$projectKey"
           params={{ projectKey }}
-          className="shrink-0 font-sans text-meta text-gray-11 hover:text-gray-12"
+          className="shrink-0 font-sans text-12/17 text-gray-11 hover:text-gray-12"
         >
           {board.project.name}
         </Link>
-        <span aria-hidden className="font-sans text-meta text-gray-9">
+        <span aria-hidden className="font-sans text-12/17 text-gray-9">
           <Icon name="chevron-right" size="2xs" />
         </span>
-        <span className="shrink-0 font-mono text-meta font-500 text-gray-12">
+        <span className="shrink-0 font-mono text-12/17 font-500 text-gray-12">
           {prefix}-{item.number}
         </span>
         {archivedChip}
@@ -363,7 +363,7 @@ export function ItemDetail({
             <div className="mb-2.5 flex items-center gap-2.25">
               <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-md bg-surface-inset px-1.75 py-0.75" />
               <Pill {...typePill} label={type?.label ?? '?'} />
-              <span className="font-mono text-label text-gray-9">
+              <span className="font-mono text-11/13 tracking-wider text-gray-9">
                 created{' '}
                 <RelativeDate value={item.createdAt} className="font-mono text-11 text-gray-9" />{' '}
                 by {creator?.name ?? `user ${item.createdBy}`}

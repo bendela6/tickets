@@ -33,7 +33,7 @@ const fillClass = variants({
 const TEXT: Record<ProgressSize, string> = {
   sm: 'text-10',
   md: 'text-11',
-  lg: 'text-meta',
+  lg: 'text-12/17',
 };
 
 /**
