@@ -1,5 +1,5 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
-import { cn, HUE_TONES, STEP, TONE_SCALE, variants, type Tone } from '../../style';
+import { cn, over, TONE, TONE_SCALE, variants, type Tone } from '../../style';
 import { toggleRowClass, type ToggleSize } from '../toggle';
 
 type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> & {
@@ -16,14 +16,13 @@ const trackClass = variants({
   config: {
     track: {
       default: 'on',
-      params: { scale: { default: TONE_SCALE.primary, values: HUE_TONES } },
-      options: ({ scale }: { scale?: string }) => ({
-        on: [
-          `checked:bg-${scale}-${STEP.solid}`,
-          `focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-${scale}-${STEP.focusRing}`,
+      options: {
+        on: over(TONE, (t) => [
+          `checked:bg-${t.solid}`,
+          t.ring,
           'disabled:cursor-not-allowed disabled:border disabled:border-gray-6 disabled:bg-surface-inset',
-        ],
-      }),
+        ]),
+      },
     },
     // Track, thumb and travel are one geometry: travel = width - thumb - 2*inset.
     // 28/16 with a 12px thumb, 32/18 with 14px, 40/22 with 18px.
@@ -49,16 +48,15 @@ const thumbClass = variants({
   config: {
     thumb: {
       default: 'default',
-      params: { scale: { default: TONE_SCALE.primary, values: HUE_TONES } },
-      options: ({ scale }: { scale?: string }) => ({
+      options: {
         // Off thumb: white (light) / app (dark). On thumb in dark picks up the
         // ramp's contrast token so it reads against the filled track.
-        default: [
+        default: over(TONE, (t) => [
           'bg-white dark:bg-gray-1',
-          `dark:peer-checked:bg-${scale}-${STEP.contrast}`,
+          `dark:peer-checked:bg-${t.contrast}`,
           'peer-disabled:bg-gray-6',
-        ],
-      }),
+        ]),
+      },
     },
   },
 });
