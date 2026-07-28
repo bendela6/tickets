@@ -4,7 +4,7 @@ import {
   type MouseEventHandler,
   type Ref,
 } from 'react';
-import { HUE_TONES, STEP, TONE_SCALE, variants, type Tone } from '../../style';
+import { over, TONE, TONE_SCALE, variants, type Tone } from '../../style';
 
 export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 export type AvatarShape = 'round' | 'square';
@@ -31,11 +31,10 @@ const avatarClass = variants({
   config: {
     shape: {
       default: 'round',
-      params: { scale: { default: TONE_SCALE.primary, values: HUE_TONES } },
-      options: ({ scale }: { scale?: string }) => ({
-        round: `rounded-full bg-${scale}-${STEP.bgSubtle} text-${scale}-${STEP.solid}`,
-        square: `rounded-md bg-${scale}-${STEP.bgSubtle} text-${scale}-${STEP.solid}`,
-      }),
+      options: {
+        round: over(TONE, (t) => `rounded-full bg-${t.bgSubtle} text-${t.solid}`),
+        square: over(TONE, (t) => `rounded-md bg-${t.bgSubtle} text-${t.solid}`),
+      },
     },
     font: {
       default: 'sans',

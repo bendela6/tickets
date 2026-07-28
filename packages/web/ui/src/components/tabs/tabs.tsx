@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { cn, HUE_TONES, STEP, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, cn, over, TONE, TONE_SCALE, variants, type Tone } from '../../style';
 import { Icon, type IconName, type IconSize } from '../icon';
 
 export type TabsVariant = 'underline' | 'pill' | 'rail';
@@ -22,20 +22,25 @@ const LIST_BOX: Record<TabsVariant, Record<TabsSize, string>> = {
   rail: { sm: 'gap-0.5', md: 'gap-0.5', lg: 'gap-1' },
 };
 
+/** The rung, shared by the list and its tabs so the two cannot disagree. */
+const SIZE = axis('size', ['sm', 'md', 'lg'], 'md');
+/** Whether a tab is the selected one. */
+const STATE = axis('state', ['active', 'inactive'], 'inactive');
+
 const listClass = variants({
   base: '',
   config: {
     variant: {
       default: 'underline',
-      params: { size: { default: 'md', values: ['sm', 'md', 'lg'] } },
-      options: ({ size }: { size?: TabsSize }) => ({
-        underline: cn(
-          'flex items-center border-b-(length:--border-thick) border-gray-6',
-          LIST_BOX.underline[size ?? 'md'],
+      options: {
+        underline: over(SIZE, (size) =>
+          cn('flex items-center border-b-(length:--border-thick) border-gray-6', LIST_BOX.underline[size]),
         ),
-        pill: cn('inline-flex items-center rounded-[7px] bg-surface-inset', LIST_BOX.pill[size ?? 'md']),
-        rail: cn('flex flex-col', LIST_BOX.rail[size ?? 'md']),
-      }),
+        pill: over(SIZE, (size) =>
+          cn('inline-flex items-center rounded-[7px] bg-surface-inset', LIST_BOX.pill[size]),
+        ),
+        rail: over(SIZE, (size) => cn('flex flex-col', LIST_BOX.rail[size])),
+      },
     },
   },
 });
@@ -67,42 +72,36 @@ const tabClass = variants({
   config: {
     variant: {
       default: 'underline',
-      params: {
-        scale: { default: TONE_SCALE.primary, values: HUE_TONES },
-        size: { default: 'md', values: ['sm', 'md', 'lg'] },
-        state: { default: 'inactive', values: ['active', 'inactive'] },
-      },
-      options: ({
-        scale,
-        size,
-        state,
-      }: {
-        scale?: string;
-        size?: TabsSize;
-        state?: 'active' | 'inactive';
-      }) => {
-        const box = (v: TabsVariant) => TAB_BOX[v][size ?? 'md'];
-        const on = state === 'active';
-        return {
-          underline: cn(
+      // Three axes. Written per option, the branch each variant actually takes
+      // is visible next to the classes it produces, instead of a shared
+      // closure computing `on` and `box()` above three ternaries.
+      options: {
+        underline: over(TONE, SIZE, STATE, (t, size, state) =>
+          cn(
             '-mb-px border-b-2',
-            box('underline'),
-            on
-              ? `border-${scale}-${STEP.solid} font-medium text-gray-12`
+            TAB_BOX.underline[size],
+            state === 'active'
+              ? `border-${t.solid} font-medium text-gray-12`
               : 'border-transparent text-gray-11 hover:text-gray-12',
           ),
-          pill: cn(
+        ),
+        pill: over(TONE, SIZE, STATE, (_t, size, state) =>
+          cn(
             'font-medium',
-            box('pill'),
-            on ? 'bg-surface-raised text-gray-12 shadow-sm' : 'text-gray-11 hover:text-gray-12',
+            TAB_BOX.pill[size],
+            state === 'active'
+              ? 'bg-surface-raised text-gray-12 shadow-sm'
+              : 'text-gray-11 hover:text-gray-12',
           ),
-          rail: cn(
-            box('rail'),
-            on
-              ? `bg-${scale}-${STEP.bgSubtle} font-medium text-${scale}-${STEP.solid}`
+        ),
+        rail: over(TONE, SIZE, STATE, (t, size, state) =>
+          cn(
+            TAB_BOX.rail[size],
+            state === 'active'
+              ? `bg-${t.bgSubtle} font-medium text-${t.solid}`
               : 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
           ),
-        };
+        ),
       },
     },
   },

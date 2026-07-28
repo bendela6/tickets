@@ -1,4 +1,4 @@
-import { cn, HUE_TONES, STEP, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, cn, over, TONE, TONE_SCALE, variants, type Tone } from '../../style';
 import { toggleGlyphClass, toggleMarkClass, toggleRowClass, type ToggleSize } from '../toggle';
 
 type RadioOption = { value: string; label: string; disabled?: boolean };
@@ -26,6 +26,9 @@ type RadioGroupProps = {
   className?: string;
 };
 
+/** Whether this option is the selected one. */
+const CHECKED = axis('state', ['on', 'off'], 'off');
+
 // `card` turns the whole label into the hit area, so its selected state has to
 // read on the container rather than only on the 16px mark.
 const optionClass = variants({
@@ -33,19 +36,19 @@ const optionClass = variants({
   config: {
     variant: {
       default: 'plain',
-      params: {
-        scale: { default: TONE_SCALE.primary, values: HUE_TONES },
-        state: { default: 'off', values: ['on', 'off'] },
-      },
-      options: ({ scale, state }: { scale?: string; state?: 'on' | 'off' }) => ({
+      options: {
+        // `plain` varies over nothing, and says so by being a plain string
+        // rather than an expansion that ignores its axes.
         plain: '',
-        card: cn(
-          'rounded-md border px-2.5 py-1.5',
-          state === 'on'
-            ? `border-${scale}-${STEP.solid} bg-${scale}-${STEP.bgSubtle}`
-            : 'border-gray-7 hover:border-gray-9',
+        card: over(TONE, CHECKED, (t, state) =>
+          cn(
+            'rounded-md border px-2.5 py-1.5',
+            state === 'on'
+              ? `border-${t.solid} bg-${t.bgSubtle}`
+              : 'border-gray-7 hover:border-gray-9',
+          ),
         ),
-      }),
+      },
     },
   },
 });

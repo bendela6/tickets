@@ -1,4 +1,4 @@
-import { HUE_TONES, STEP, TONE_SCALE, variants } from '../../style';
+import { over, TONE, variants } from '../../style';
 
 /** Checkbox, RadioGroup and Switch share a ladder: 14 / 16 / 20px marks. */
 export type ToggleSize = 'sm' | 'md' | 'lg';
@@ -32,11 +32,10 @@ export const toggleGlyphClass = variants({
   config: {
     on: {
       default: 'contrast',
-      params: { scale: { default: TONE_SCALE.primary, values: HUE_TONES } },
-      options: ({ scale }: { scale?: string }) => ({
-        contrast: `text-${scale}-${STEP.contrast}`,
-        solid: `bg-${scale}-${STEP.solid}`,
-      }),
+      options: {
+        contrast: over(TONE, (t) => `text-${t.contrast}`),
+        solid: over(TONE, (t) => `bg-${t.solid}`),
+      },
     },
   },
 });
@@ -54,22 +53,21 @@ export const toggleMarkClass = variants({
       // only takes an accent border and leaves an overlay to draw the mark
       // (a radio's inner dot).
       default: 'box',
-      params: { scale: { default: TONE_SCALE.primary, values: HUE_TONES } },
-      options: ({ scale }: { scale?: string }) => ({
-        box: [
+      options: {
+        box: over(TONE, (t) => [
           'border-gray-7',
-          `checked:border-${scale}-${STEP.solid} checked:bg-${scale}-${STEP.solid}`,
-          `indeterminate:border-${scale}-${STEP.solid} indeterminate:bg-${scale}-${STEP.solid}`,
-          `focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-${scale}-${STEP.focusRing}`,
+          `checked:border-${t.solid} checked:bg-${t.solid}`,
+          `indeterminate:border-${t.solid} indeterminate:bg-${t.solid}`,
+          t.ring,
           'disabled:cursor-not-allowed disabled:border-gray-6 disabled:bg-surface-inset',
-        ],
-        ring: [
+        ]),
+        ring: over(TONE, (t) => [
           'border-gray-7',
-          `checked:border-${scale}-${STEP.solid}`,
-          `focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-${scale}-${STEP.focusRing}`,
+          `checked:border-${t.solid}`,
+          t.ring,
           'disabled:cursor-not-allowed disabled:border-gray-6 disabled:bg-surface-inset',
-        ],
-      }),
+        ]),
+      },
     },
   },
 });

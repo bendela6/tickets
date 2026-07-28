@@ -7,7 +7,7 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { cn, HUE_TONES, STEP, TONE_SCALE, variants, type Tone, type ToneEmphasis } from '../../style';
+import { cn, over, toneAxis, TONE_SCALE, variants, type Tone, type ToneEmphasis } from '../../style';
 import { Icon, type IconName, type IconSize } from '../icon';
 
 /** How loudly the tone reads. The same four treatments the tone contract
@@ -21,8 +21,12 @@ export type PillSize = 'sm' | 'md' | 'lg';
  *  `md` and `full`, which collided with the size vocabulary. */
 export type PillShape = 'square' | 'round';
 
-// The four variants rebuild what `toneClasses()` returns, but from `STEP` and a
-// scale param so hover/opacity variants can be added later without a second
+// A Pill rests on neutral where a Button rests on primary — the resting ramp
+// is the only per-component decision the tone axis leaves open.
+const NEUTRAL_TONE = toneAxis(TONE_SCALE.neutral);
+
+// The four variants rebuild what `toneClasses()` returns, but from the ramp's
+// named rungs so hover/opacity variants can be added later without a second
 // vocabulary. A test asserts the two agree for every tone, since a Pill and a
 // Button asking for the same treatment must not diverge.
 const pillClass = variants({
@@ -30,13 +34,15 @@ const pillClass = variants({
   config: {
     variant: {
       default: 'subtle',
-      params: { scale: { default: TONE_SCALE.neutral, values: HUE_TONES } },
-      options: ({ scale }: { scale?: string }) => ({
-        subtle: `bg-${scale}-${STEP.bgSubtle} text-${scale}-${STEP.text}`,
-        solid: `bg-${scale}-${STEP.solid} text-${scale}-${STEP.contrast}`,
-        outline: `border-(length:--border-thick) border-${scale}-${STEP.border} text-${scale}-${STEP.text}`,
-        text: `text-${scale}-${STEP.text}`,
-      }),
+      options: {
+        subtle: over(NEUTRAL_TONE, (t) => `bg-${t.bgSubtle} text-${t.text}`),
+        solid: over(NEUTRAL_TONE, (t) => `bg-${t.solid} text-${t.contrast}`),
+        outline: over(
+          NEUTRAL_TONE,
+          (t) => `border-(length:--border-thick) border-${t.border} text-${t.text}`,
+        ),
+        text: over(NEUTRAL_TONE, (t) => `text-${t.text}`),
+      },
     },
     shape: {
       default: 'square',

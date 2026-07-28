@@ -1,6 +1,9 @@
-import { HUE_TONES, STEP, TONE_SCALE, variants } from '../../style';
+import { axis, over, TONE, TONE_SCALE, variants, type HueTone } from '../../style';
 
 export type FieldSize = 'sm' | 'md' | 'lg';
+
+/** Which pseudo-class the focus treatment hangs off — see `focus` below. */
+const FOCUS = axis('focus', ['focus', 'focus-within'], 'focus');
 
 /**
  * The shell every text-entry control wears: surface fill, a border that reacts
@@ -33,21 +36,20 @@ export const fieldClass = variants({
   config: {
     state: {
       default: 'neutral',
-      params: {
-        scale: { default: TONE_SCALE.primary, values: HUE_TONES },
-        focus: { default: 'focus', values: ['focus', 'focus-within'] },
-      },
-      options: ({ scale, focus }: { scale?: string; focus?: 'focus' | 'focus-within' }) => ({
-        neutral: [
+      // Two axes: the ramp, and which pseudo-class the focus treatment hangs
+      // off. `t.ring` is not reachable here — it is pinned to `focus-visible`,
+      // and a field's whole point is that the trigger varies.
+      options: {
+        neutral: over(TONE, FOCUS, (t, focus) => [
           'border-gray-7 hover:border-gray-9',
-          `${focus}:border-${scale}-${STEP.solid} ${focus}:outline-none`,
-          `${focus}:ring-[3px] ${focus}:ring-${scale}-${STEP.focusRing}`,
-        ],
-        toned: [
-          `border-${scale}-${STEP.solid} hover:border-${scale}-${STEP.solidHover}`,
-          `ring-[3px] ring-${scale}-${STEP.focusRing} ${focus}:outline-none`,
-        ],
-      }),
+          `${focus}:border-${t.solid} ${focus}:outline-none`,
+          `${focus}:ring-[3px] ${focus}:ring-${t.focusRing}`,
+        ]),
+        toned: over(TONE, FOCUS, (t, focus) => [
+          `border-${t.solid} hover:border-${t.solidHover}`,
+          `ring-[3px] ring-${t.focusRing} ${focus}:outline-none`,
+        ]),
+      },
     },
     // Height and radius only — deliberately not padding or font-size.
     // A stepper, a tag list and a plain input want different insets at the same
@@ -77,7 +79,10 @@ export const fieldClass = variants({
  */
 export function fieldState(tone: string | undefined): {
   state: 'neutral' | 'toned';
-  scale: string;
+  /** A ramp name, not a tone name — `primary` paints from `indigo`. Narrowed
+   *  to the ramp domain because that is what the `scale` axis accepts; it used
+   *  to be `string`, which let a tone name through to build `bg-primary-9`. */
+  scale: HueTone;
   invalid: boolean;
 } {
   const resolved = (tone ?? 'primary') as keyof typeof TONE_SCALE;
