@@ -86,7 +86,7 @@ export function StatusSelect({
           {current ? (
             <Pill {...statusPill(current.kind)} label={current.label} />
           ) : (
-            <span className="pl-1 font-sans text-ui text-gray-9">Set status…</span>
+            <span className="pl-1 font-sans text-13/19 text-gray-9">Set status…</span>
           )}
           <span aria-hidden className="text-10 text-gray-9">
             <Icon name="chevron-down" size="sm" />
@@ -110,7 +110,7 @@ export function StatusSelect({
                 <span className="inline-flex">
                   <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
                 </span>
-                <span className="font-sans text-ui text-gray-12">{option.label}</span>
+                <span className="font-sans text-13/19 text-gray-12">{option.label}</span>
               </span>
             );
           }}

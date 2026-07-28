@@ -55,7 +55,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
                 </span>
               )}
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate font-sans text-meta font-500 text-gray-12">
+                <span className="truncate font-sans text-12/17 font-500 text-gray-12">
                   {current ? current.name : 'Pick a user'}
                 </span>
                 <span className="font-mono text-10 text-gray-9">acting as</span>

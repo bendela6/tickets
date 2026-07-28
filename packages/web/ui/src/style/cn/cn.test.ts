@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { cn } from './cn';
 
 // Every `--text-*` size token the theme actually generates a utility for.
-// `--text-label--line-height` and friends are modifiers on those tokens, not
+// `--text-11--line-height` and friends are modifiers on those tokens, not
 // sizes of their own, so they're filtered out by the double dash. (Read from
 // the package root — vitest's cwd — since import.meta.url isn't a file URL
 // under the dev-server transform.)
@@ -59,8 +59,8 @@ describe('cn', () => {
   });
 
   it('still merges two font sizes to the last one', () => {
-    expect(cn('text-ui', 'text-meta')).toBe('text-meta');
-    expect(cn('text-3xs', 'text-label')).toBe('text-label');
+    expect(cn('text-13/19', 'text-12/17')).toBe('text-12/17');
+    expect(cn('text-3xs', 'text-11/13 tracking-wider')).toBe('text-11/13 tracking-wider');
   });
 
   it('passes through conditional values like clsx', () => {

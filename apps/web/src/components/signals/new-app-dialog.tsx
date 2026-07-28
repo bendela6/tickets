@@ -121,7 +121,7 @@ export function NewAppDialog({
               />
             </div>
             {createApp.isError ? (
-              <p className="mt-2 font-sans text-meta text-red-9">
+              <p className="mt-2 font-sans text-12/17 text-red-9">
                 {createApp.error instanceof Error ? createApp.error.message : 'Could not create the app'}
               </p>
             ) : null}
@@ -154,7 +154,7 @@ export function NewAppDialog({
             </div>
 
             <div className="mt-4">
-              <div className="mb-1.5 font-mono text-label font-500 tracking-wide text-gray-9">DSN</div>
+              <div className="mb-1.5 font-mono text-11/13 tracking-wider font-500 tracking-wide text-gray-9">DSN</div>
               <DsnField dsn={created.dsn} />
             </div>
 

@@ -17,14 +17,14 @@ const SIDES: DropdownSide[] = ['top', 'right', 'bottom', 'left'];
 const ALIGNS: DropdownAlign[] = ['start', 'center', 'end'];
 
 function Body({ label = 'Panel body' }: { label?: string }) {
-  return <p className="px-3 py-2 font-sans text-ui text-gray-12">{label}</p>;
+  return <p className="px-3 py-2 font-sans text-13/19 text-gray-12">{label}</p>;
 }
 
 function Rows({ count }: { count: number }) {
   return (
     <ul className="max-h-40 w-48 overflow-y-auto p-1">
       {Array.from({ length: count }, (_, index) => (
-        <li key={index} className="rounded-md px-2 py-1.5 font-sans text-ui text-gray-12">
+        <li key={index} className="rounded-md px-2 py-1.5 font-sans text-13/19 text-gray-12">
           Row {index + 1}
         </li>
       ))}

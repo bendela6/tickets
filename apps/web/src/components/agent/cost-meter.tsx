@@ -22,12 +22,12 @@ export function CostMeter({
       )}
       title={capped ? `spend $${costUsd.toFixed(4)} of $${capUsd.toFixed(2)} cap` : 'spend so far'}
     >
-      <span className={cn('font-mono text-meta', over ? 'text-red-9' : 'text-gray-12')}>
+      <span className={cn('font-mono text-12/17', over ? 'text-red-9' : 'text-gray-12')}>
         ${costUsd.toFixed(2)}
       </span>
       {capped ? (
         <>
-          <span className="font-mono text-meta text-gray-9">/ ${capUsd.toFixed(2)}</span>
+          <span className="font-mono text-12/17 text-gray-9">/ ${capUsd.toFixed(2)}</span>
           <Progress
             value={(costUsd / capUsd!) * 100}
             tone={over ? 'danger' : 'primary'}

@@ -23,8 +23,8 @@ export const DOCS_MEASURE = 'max-w-200';
 export const DOCS_COLUMN = 'w-200 shrink-0';
 
 const CHIP =
-  'inline-flex h-5.5 items-center rounded-md border border-gray-6 bg-surface-raised px-2 font-mono text-label tracking-normal text-gray-11';
-const META_LINE = 'flex flex-wrap gap-6 font-mono text-label tracking-normal text-gray-9';
+  'inline-flex h-5.5 items-center rounded-md border border-gray-6 bg-surface-raised px-2 font-mono text-11/13 tracking-wider tracking-normal text-gray-11';
+const META_LINE = 'flex flex-wrap gap-6 font-mono text-11/13 tracking-wider tracking-normal text-gray-9';
 
 // Which package a demo belongs to, for the API header's right column. Derived
 // from the demo path rather than declared, so it can never drift.
@@ -65,7 +65,7 @@ function prose(text: string): ReactNode[] {
     i % 2 === 1 ? (
       <span
         key={i}
-        className="rounded-sm bg-surface-inset px-1.5 py-px font-mono text-ui text-gray-12"
+        className="rounded-sm bg-surface-inset px-1.5 py-px font-mono text-13/19 text-gray-12"
       >
         {part}
       </span>
@@ -96,7 +96,7 @@ function OptionChips({ values }: { values: string[] }) {
         <button
           type="button"
           onClick={() => setExpanded(!expanded)}
-          className="ml-0.5 font-sans text-meta font-500 text-indigo-9 hover:underline"
+          className="ml-0.5 font-sans text-12/17 font-500 text-indigo-9 hover:underline"
         >
           {expanded ? 'Show fewer' : `Show all ${values.length}`}
         </button>
@@ -114,13 +114,13 @@ function PropRow({ name, def }: { name: string; def: AnyControlDef }) {
     // the same 200px the design draws, without an arbitrary track list.
     <div className="flex gap-7 border-t border-gray-6 py-4.5">
       <div className="flex w-50 shrink-0 flex-col gap-1.5">
-        <span className="font-mono text-ui font-600 text-gray-12">{name}</span>
-        <span className="font-mono text-label tracking-normal text-gray-9 text-pretty">
+        <span className="font-mono text-13/19 font-600 text-gray-12">{name}</span>
+        <span className="font-mono text-11/13 tracking-wider tracking-normal text-gray-9 text-pretty">
           {def.type ?? derivedType(def)}
         </span>
         <span
           className={cn(
-            'inline-flex h-4.5 items-center self-start rounded-sm px-1.5 font-mono text-micro font-500 tracking-wider',
+            'inline-flex h-4.5 items-center self-start rounded-sm px-1.5 font-mono text-10/14 font-500 tracking-wider',
             def.required ? 'bg-indigo-3 text-indigo-9' : 'bg-surface-inset text-gray-9',
           )}
         >
@@ -129,7 +129,7 @@ function PropRow({ name, def }: { name: string; def: AnyControlDef }) {
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-2.5">
         {def.description && (
-          <div className="font-sans text-ui leading-relaxed text-gray-11 text-pretty">
+          <div className="font-sans text-13/19 leading-relaxed text-gray-11 text-pretty">
             {prose(def.description)}
           </div>
         )}
@@ -160,7 +160,7 @@ export function DocsPanel({ demo, railNote = true }: { demo: LiveDemo; railNote?
   const { playground } = demo;
   if (!playground) {
     return (
-      <p className="font-sans text-meta text-gray-9">This component has no playground controls.</p>
+      <p className="font-sans text-12/17 text-gray-9">This component has no playground controls.</p>
     );
   }
   const docs = playground.docs;
@@ -169,21 +169,21 @@ export function DocsPanel({ demo, railNote = true }: { demo: LiveDemo; railNote?
     <div className={cn('flex flex-col', DOCS_MEASURE)}>
       <div className="mt-6 mb-1.5 flex items-start justify-between gap-8">
         <div className="flex max-w-lg flex-col gap-2">
-          <span className="font-mono text-micro font-500 tracking-widest text-gray-9">
+          <span className="font-mono text-10/14 font-500 tracking-widest text-gray-9">
             API
           </span>
           {docs?.summary ? (
-            <div className="font-sans text-body leading-relaxed text-gray-11 text-pretty">
+            <div className="font-sans text-14/21 leading-relaxed text-gray-11 text-pretty">
               {prose(docs.summary)}
             </div>
           ) : (
-            <div className="font-sans text-body leading-relaxed text-gray-9 text-pretty">
+            <div className="font-sans text-14/21 leading-relaxed text-gray-9 text-pretty">
               Props marked unsettable fall back to the component default and are omitted from
               generated code.
             </div>
           )}
         </div>
-        <div className="flex flex-none flex-col gap-1.5 font-mono text-label tracking-normal text-gray-9">
+        <div className="flex flex-none flex-col gap-1.5 font-mono text-11/13 tracking-wider tracking-normal text-gray-9">
           <span>{packageLabel(demo.path)}</span>
           {docs?.version && <span>{docs.version}</span>}
           {docs?.status && <span className="text-green-9">{docs.status}</span>}
@@ -196,10 +196,10 @@ export function DocsPanel({ demo, railNote = true }: { demo: LiveDemo; railNote?
 
       {railNote && (
         <div className="mt-6 flex gap-2.5 rounded-lg bg-green-3 p-3.5">
-          <span className="mt-px inline-flex size-4 flex-none items-center justify-center rounded-full bg-green-9 font-sans text-nano font-600 text-green-contrast">
+          <span className="mt-px inline-flex size-4 flex-none items-center justify-center rounded-full bg-green-9 font-sans text-9/12 font-600 text-green-contrast">
             i
           </span>
-          <span className="font-sans text-meta leading-normal text-green-9 text-pretty">
+          <span className="font-sans text-12/17 leading-normal text-green-9 text-pretty">
             Every prop on this page is wired to the controls rail — edit a value there and the code
             on the Preview tab regenerates.
           </span>

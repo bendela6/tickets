@@ -138,7 +138,7 @@ function AssigneeCell({ entry, value }: { entry: ProjectEntry; value: unknown })
         : null;
   const user = userId === null ? undefined : entry.indexes.userById.get(userId);
   if (!user) {
-    return <span className="font-sans text-ui text-gray-9">—</span>;
+    return <span className="font-sans text-13/19 text-gray-9">—</span>;
   }
   return <Avatar name={user.name} {...avatarFor(user.kind)} size="md" />;
 }
@@ -233,7 +233,7 @@ export function AllItemsScreen() {
   const loading =
     projectsQuery.isLoading || (projects.length > 0 && boardQueries.every((q) => !q.data));
   if (loading) {
-    return <p className="px-8 py-7 font-sans text-ui text-gray-9">Loading all items…</p>;
+    return <p className="px-8 py-7 font-sans text-13/19 text-gray-9">Loading all items…</p>;
   }
 
   const { shared, unshared } = computeSharedFields(entries);
@@ -301,7 +301,7 @@ export function AllItemsScreen() {
             <span className="rounded-[4px] bg-surface-inset px-1.5 py-0.5 font-mono text-11 font-500 text-gray-12">
               {entry.project.itemPrefix}
             </span>
-            <span className="font-sans text-ui font-500 text-gray-12">{entry.project.name}</span>
+            <span className="font-sans text-13/19 font-500 text-gray-12">{entry.project.name}</span>
             <span className="font-mono text-11 text-gray-9">{rows.length} shown</span>
           </>
         ),
@@ -329,7 +329,7 @@ export function AllItemsScreen() {
             <span className="inline-flex shrink-0">
               <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
             </span>
-            <span className={cn('font-sans text-ui font-500', textClass)}>{label}</span>
+            <span className={cn('font-sans text-13/19 font-500', textClass)}>{label}</span>
             <span className="font-mono text-11 text-gray-9">{rows.length} shown</span>
           </>
         ),
@@ -399,7 +399,7 @@ export function AllItemsScreen() {
     if (id === 'subs') {
       const { any, done, total } = childProgress(row.ticket, row.entry.indexes);
       if (!any || total === 0) {
-        return <span className="font-sans text-ui text-gray-9">—</span>;
+        return <span className="font-sans text-13/19 text-gray-9">—</span>;
       }
       return (
         <span className="font-mono text-11 text-gray-11">
@@ -432,7 +432,7 @@ export function AllItemsScreen() {
       );
     }
     return (
-      <span className="min-w-0 truncate font-sans text-ui text-gray-11">
+      <span className="min-w-0 truncate font-sans text-13/19 text-gray-11">
         {getCellContent(field, value, row.entry.indexes, row.ticket.typeId)}
       </span>
     );
@@ -442,10 +442,10 @@ export function AllItemsScreen() {
     <div className="flex h-full min-h-0 flex-col px-4 pt-4 md:px-7 md:pt-5.5">
       {/* Header: title · meta · search · columns · density */}
       <div className="mb-3.5 flex shrink-0 flex-wrap items-center gap-3.5 gap-y-2">
-        <h1 className="m-0 font-sans text-[22px] leading-tight font-600 text-gray-12">
+        <h1 className="m-0 font-sans text-22 leading-tight font-600 text-gray-12">
           All items
         </h1>
-        <span className="font-mono text-meta text-gray-9">
+        <span className="font-mono text-12/17 text-gray-9">
           {totalCount} items · {entries.length} projects
         </span>
         <span className="flex-1" />
@@ -502,7 +502,7 @@ export function AllItemsScreen() {
         <button
           type="button"
           aria-label="New global view"
-          className="cursor-pointer px-2.5 py-2 font-sans text-ui text-gray-9 hover:text-gray-12"
+          className="cursor-pointer px-2.5 py-2 font-sans text-13/19 text-gray-9 hover:text-gray-12"
           onClick={() => setNaming(true)}
         >
           ＋
@@ -510,7 +510,7 @@ export function AllItemsScreen() {
         <span className="flex-1" />
         <Menu>
           <MenuTrigger asChild>
-            <button type="button" className="cursor-pointer py-2 font-sans text-meta text-gray-11">
+            <button type="button" className="cursor-pointer py-2 font-sans text-12/17 text-gray-11">
               Group:{' '}
               <strong className="font-500 text-gray-12">
                 {config.group === 'project' ? 'Project' : 'Status kind'}
@@ -547,7 +547,7 @@ export function AllItemsScreen() {
         />
       ) : null}
 
-      <div className="mb-2 shrink-0 font-mono text-meta text-gray-9">
+      <div className="mb-2 shrink-0 font-mono text-12/17 text-gray-9">
         {allRows.length} of {totalCount} match filters
       </div>
 
@@ -558,10 +558,10 @@ export function AllItemsScreen() {
           className="sticky top-0 z-10 grid h-9 min-w-170 shrink-0 items-center border-b border-gray-6 bg-gray-1 px-1"
           style={{ gridTemplateColumns }}
         >
-          <span className="px-3 font-sans text-label font-500 text-gray-11 uppercase">Key</span>
-          <span className="px-2 font-sans text-label font-500 text-gray-11 uppercase">Title</span>
+          <span className="px-3 font-sans text-11/13 tracking-wider font-500 text-gray-11 uppercase">Key</span>
+          <span className="px-2 font-sans text-11/13 tracking-wider font-500 text-gray-11 uppercase">Title</span>
           {visibleColumns.map((id) => (
-            <span key={id} className="px-2 font-sans text-label font-500 text-gray-11 uppercase">
+            <span key={id} className="px-2 font-sans text-11/13 tracking-wider font-500 text-gray-11 uppercase">
               {columnLabelFor(id, sharedByKey)}
             </span>
           ))}
@@ -600,7 +600,7 @@ export function AllItemsScreen() {
                   <span className="px-3">
                     <ItemKey prefix={row.entry.project.itemPrefix} number={row.ticket.number} />
                   </span>
-                  <span className="truncate px-2 font-sans text-ui text-gray-12">
+                  <span className="truncate px-2 font-sans text-13/19 text-gray-12">
                     {String(row.ticket.values.title ?? '')}
                   </span>
                   {visibleColumns.map((id) => (

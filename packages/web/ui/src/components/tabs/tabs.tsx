@@ -51,18 +51,18 @@ const listClass = variants({
 // each row is exactly what that variant rendered before the axis existed.
 const TAB_BOX: Record<TabsVariant, Record<TabsSize, string>> = {
   underline: {
-    sm: 'px-0.5 pt-1.25 pb-1.5 text-meta',
-    md: 'px-0.5 pt-1.75 pb-2 text-ui',
+    sm: 'px-0.5 pt-1.25 pb-1.5 text-12/17',
+    md: 'px-0.5 pt-1.75 pb-2 text-13/19',
     lg: 'px-1 pt-2.25 pb-2.5 text-15',
   },
   pill: {
-    sm: 'rounded-md px-2 py-0.5 text-label',
-    md: 'rounded-md px-3 py-1 text-meta',
-    lg: 'rounded-md px-3.5 py-1.5 text-ui',
+    sm: 'rounded-md px-2 py-0.5 text-11/13 tracking-wider',
+    md: 'rounded-md px-3 py-1 text-12/17',
+    lg: 'rounded-md px-3.5 py-1.5 text-13/19',
   },
   rail: {
-    sm: 'rounded-md px-2 py-1 text-left text-meta',
-    md: 'rounded-md px-2.5 py-1.5 text-left text-ui',
+    sm: 'rounded-md px-2 py-1 text-left text-12/17',
+    md: 'rounded-md px-2.5 py-1.5 text-left text-13/19',
     lg: 'rounded-md px-3 py-2 text-left text-15',
   },
 };

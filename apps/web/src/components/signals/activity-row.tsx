@@ -28,7 +28,7 @@ export function ActivityRow({ signal }: { signal: SignalListRow }) {
         <LevelDot level={signal.level} />
       </span>
       <span className="min-w-0 pr-3">
-        <span className="block truncate font-sans text-ui text-gray-11">
+        <span className="block truncate font-sans text-13/19 text-gray-11">
           <strong className="font-600 text-gray-12">{signal.name}</strong>
           {signal.message !== null ? ` · ${signal.message}` : null}
         </span>

@@ -17,7 +17,7 @@ function PopoverPlaygroundFixture({
         <Button variant="outline">Open popover</Button>
       </PopoverTrigger>
       <PopoverContent side={side} align={align}>
-        <p className="font-sans text-ui text-gray-12">Anchored content.</p>
+        <p className="font-sans text-13/19 text-gray-12">Anchored content.</p>
       </PopoverContent>
     </Popover>
   );
@@ -34,7 +34,7 @@ export const states = [
           <Button variant="outline">Open popover</Button>
         </PopoverTrigger>
         <PopoverContent>
-          <p className="font-sans text-ui text-gray-12">Anchored content.</p>
+          <p className="font-sans text-13/19 text-gray-12">Anchored content.</p>
         </PopoverContent>
       </Popover>
     ),

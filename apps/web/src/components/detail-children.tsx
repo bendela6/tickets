@@ -70,7 +70,7 @@ export function DetailChildren({
                 value={progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0}
                 className="w-15"
               />
-              <span className="font-mono text-label text-gray-9">
+              <span className="font-mono text-11/13 tracking-wider text-gray-9">
                 {progress.done}/{progress.total} done
               </span>
             </>
@@ -116,7 +116,7 @@ export function DetailChildren({
               />
               <span
                 className={cn(
-                  'min-w-0 flex-1 truncate font-sans text-ui',
+                  'min-w-0 flex-1 truncate font-sans text-13/19',
                   settled ? 'text-gray-9' : 'text-gray-12',
                 )}
               >
@@ -158,7 +158,7 @@ export function DetailChildren({
             className="size-2.25 shrink-0 rounded-full border-[1.5px] border-dashed border-gray-7"
           />
           <input
-            className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-ui text-gray-12 outline-none placeholder:text-gray-9"
+            className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-13/19 text-gray-12 outline-none placeholder:text-gray-9"
             placeholder="Add subtask — type a title…"
             aria-label="Add subtask"
             value={title}
@@ -173,7 +173,7 @@ export function DetailChildren({
         </form>
       </div>
       {createItem.isError ? (
-        <p className="m-0 mt-1.5 font-sans text-meta text-red-9">
+        <p className="m-0 mt-1.5 font-sans text-12/17 text-red-9">
           {(createItem.error as Error).message}
         </p>
       ) : null}

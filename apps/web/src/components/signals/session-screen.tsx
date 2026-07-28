@@ -277,7 +277,7 @@ function NotFound() {
       <ScreenState
         title="Session not found"
         action={
-          <Link to="/signals" className="font-sans text-meta text-indigo-9 hover:underline">
+          <Link to="/signals" className="font-sans text-12/17 text-indigo-9 hover:underline">
             ‹ Back to Issues
           </Link>
         }
@@ -364,13 +364,13 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
       <div className="mb-3 flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="font-mono text-[18px] font-600 text-gray-12">{session.sessionId}</span>
+            <span className="font-mono text-18 font-600 text-gray-12">{session.sessionId}</span>
             <span className="inline-flex h-5.5 items-center rounded-md bg-surface-inset px-2 font-mono text-11 font-500 text-gray-11">
               {session.appSlug ?? `app ${session.appId}`}
             </span>
             {user !== undefined ? (
               <span className="inline-flex items-center gap-1.5 font-sans text-12 text-gray-11">
-                <span className="flex size-4.5 items-center justify-center rounded-full bg-indigo-3 font-sans text-[8px] font-600 text-indigo-9">
+                <span className="flex size-4.5 items-center justify-center rounded-full bg-indigo-3 font-sans text-9 font-600 text-indigo-9">
                   {user.initials}
                 </span>
                 {user.label}

@@ -46,7 +46,7 @@ const avatarClass = variants({
     size: {
       default: 'sm',
       options: {
-        xs: 'size-4 text-[8px]',
+        xs: 'size-4 text-9',
         sm: 'size-4.5 text-9',
         md: 'size-5.5 text-10',
         lg: 'size-7 text-12',

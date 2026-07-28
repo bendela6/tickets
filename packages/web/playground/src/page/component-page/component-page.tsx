@@ -50,7 +50,7 @@ function Toggle({
   onChange: (next: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 font-sans text-ui text-gray-11">
+    <label className="flex cursor-pointer items-center gap-2 font-sans text-13/19 text-gray-11">
       <input
         type="checkbox"
         checked={checked}
@@ -201,7 +201,7 @@ export function ComponentPage({
               type="button"
               aria-expanded={!controlsCollapsed}
               onClick={() => setCollapsed(!controlsCollapsed)}
-              className="inline-flex h-6.5 items-center gap-1.5 rounded-md border border-gray-7 bg-surface-raised px-2 font-sans text-label font-500 text-gray-11 hover:text-gray-12"
+              className="inline-flex h-6.5 items-center gap-1.5 rounded-md border border-gray-7 bg-surface-raised px-2 font-sans text-11/13 tracking-wider font-500 text-gray-11 hover:text-gray-12"
             >
               <Icon name={controlsCollapsed ? 'chevron-left' : 'chevron-right'} size="sm" />
               {controlsCollapsed ? 'Show controls' : 'Hide controls'}
@@ -266,13 +266,13 @@ export function ComponentPage({
             >
               <div className={cn('flex h-full flex-col pl-6', controlsCollapsed && 'hidden')}>
                 <div className="flex items-center justify-between pb-2.5">
-                  <span className="font-mono text-label uppercase tracking-widest text-gray-9">
+                  <span className="font-mono text-11/13 tracking-wider uppercase tracking-widest text-gray-9">
                     CONTROLS
                   </span>
                   <button
                     type="button"
                     onClick={() => setValues(initialValues(playground.controls))}
-                    className="font-sans text-label font-500 text-indigo-9 hover:underline"
+                    className="font-sans text-11/13 tracking-wider font-500 text-indigo-9 hover:underline"
                   >
                     Reset
                   </button>
@@ -282,7 +282,7 @@ export function ComponentPage({
                   values={values}
                   onChange={(key, value) => setValues((v) => ({ ...v, [key]: value }))}
                 />
-                <p className="mt-3 font-sans text-label text-gray-9">
+                <p className="mt-3 font-sans text-11/13 tracking-wider text-gray-9">
                   Unset props fall back to the component default and are omitted from generated
                   code.
                 </p>

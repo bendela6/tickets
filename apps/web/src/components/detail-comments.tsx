@@ -60,7 +60,7 @@ export function DetailComments({
   return (
     <div className="flex flex-col gap-3.5">
       {comments.length === 0 ? (
-        <p className="m-0 font-sans text-meta text-gray-9">No comments yet.</p>
+        <p className="m-0 font-sans text-12/17 text-gray-9">No comments yet.</p>
       ) : (
         comments.map((comment) => {
           const author = indexes.userById.get(comment.authorId);
@@ -70,7 +70,7 @@ export function DetailComments({
               <Avatar name={name} {...avatarFor(author?.kind ?? 'human')} size="md" className="mt-0.5" />
               <div className="min-w-0 flex-1">
                 <div className="mb-0.75 flex items-baseline gap-2">
-                  <span className="font-sans text-ui font-500 text-gray-12">{name}</span>
+                  <span className="font-sans text-13/19 font-500 text-gray-12">{name}</span>
                   {author?.kind === 'agent' ? (
                     <span className="self-center rounded-[3px] bg-indigo-3 px-1.25 font-mono text-9 font-500 text-indigo-9">
                       AGENT
@@ -83,7 +83,7 @@ export function DetailComments({
                 </div>
                 <RichTextView
                   value={comment.body}
-                  className="font-sans text-ui leading-[1.55] text-gray-12"
+                  className="font-sans text-13/19 leading-[1.55] text-gray-12"
                   onOpenTicket={handleOpenTicket}
                 />
               </div>
@@ -108,7 +108,7 @@ export function DetailComments({
             }}
           />
           {createComment.isError ? (
-            <p className="m-0 mt-1 font-sans text-meta text-red-9">
+            <p className="m-0 mt-1 font-sans text-12/17 text-red-9">
               {(createComment.error as Error).message}
             </p>
           ) : null}

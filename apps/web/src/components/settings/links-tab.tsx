@@ -24,7 +24,7 @@ function ArchChip() {
 // Same folded-direction chip text as detail-links: outgoing "label →",
 // incoming "← inverseLabel", symmetric "label ↔".
 function DirectionChip({ text }: { text: string }) {
-  return <Pill tone="secondary" label={text} className="h-5 rounded-md text-label" />;
+  return <Pill tone="secondary" label={text} className="h-5 rounded-md text-11/13 tracking-wider" />;
 }
 
 // Toggling a chip PUTs the *whole* new set to /api/link-types/:id/target-types
@@ -45,7 +45,7 @@ function TargetTypeChips({
   disabled: boolean;
 }) {
   if (candidates.length === 0) {
-    return <p className="m-0 font-sans text-meta text-gray-9">No ticket types to target.</p>;
+    return <p className="m-0 font-sans text-12/17 text-gray-9">No ticket types to target.</p>;
   }
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -335,9 +335,9 @@ export function LinksTab({ board }: SettingsTabProps) {
     <section className="flex min-h-0 flex-col px-6 py-5.5">
       <div className="mb-1.5 flex items-center gap-3">
         <h1 className="m-0 font-sans text-20 font-600 text-gray-12">Links</h1>
-        <span className="font-mono text-meta text-gray-9">{countLabel}</span>
+        <span className="font-mono text-12/17 text-gray-9">{countLabel}</span>
       </div>
-      <p className="mb-4 mt-0 font-sans text-meta text-gray-9">
+      <p className="mb-4 mt-0 font-sans text-12/17 text-gray-9">
         Create link types owned by a ticket type, and choose which types they may target.
       </p>
 
@@ -365,7 +365,7 @@ export function LinksTab({ board }: SettingsTabProps) {
 
       <div className="flex flex-col gap-4">
         {linkTypes.length === 0 ? (
-          <p className="m-0 font-sans text-meta text-gray-9">No link types yet.</p>
+          <p className="m-0 font-sans text-12/17 text-gray-9">No link types yet.</p>
         ) : (
           linkTypes.map((linkType) => {
             const owningType = typeById.get(linkType.itemTypeId);
@@ -379,8 +379,8 @@ export function LinksTab({ board }: SettingsTabProps) {
                 )}
               >
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="truncate font-sans text-ui font-600 text-gray-12">{linkType.label}</span>
-                  <span className="font-mono text-meta text-gray-9">{linkType.key}</span>
+                  <span className="truncate font-sans text-13/19 font-600 text-gray-12">{linkType.label}</span>
+                  <span className="font-mono text-12/17 text-gray-9">{linkType.key}</span>
                   <DirectionChip
                     text={linkType.directional ? `→ ${linkType.label}` : `${linkType.label} ↔`}
                   />
@@ -390,7 +390,7 @@ export function LinksTab({ board }: SettingsTabProps) {
                     }
                   />
                   {owningType ? (
-                    <span className="font-mono text-label text-gray-9">on {owningType.label}</span>
+                    <span className="font-mono text-11/13 tracking-wider text-gray-9">on {owningType.label}</span>
                   ) : null}
                   {linkType.archivedAt ? <ArchChip /> : null}
                   <span className="flex-1" />

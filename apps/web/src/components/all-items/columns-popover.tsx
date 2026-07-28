@@ -64,7 +64,7 @@ export function ColumnsPopover({
       </PopoverTrigger>
       <PopoverContent align="end" className="w-70 p-0">
         <div className="flex items-center gap-2 border-b border-gray-6 px-3.25 py-2.5">
-          <span aria-hidden className="font-sans text-meta text-gray-9">
+          <span aria-hidden className="font-sans text-12/17 text-gray-9">
             ⌕
           </span>
           <input
@@ -72,7 +72,7 @@ export function ColumnsPopover({
             placeholder="Find a field…"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-ui text-gray-12 placeholder:text-gray-9 focus:outline-none focus:ring-0"
+            className="min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-13/19 text-gray-12 placeholder:text-gray-9 focus:outline-none focus:ring-0"
           />
         </div>
         <div className="max-h-80 overflow-y-auto p-1.5">
@@ -106,7 +106,7 @@ export function ColumnsPopover({
                     aria-hidden
                     className="size-3.75 shrink-0 rounded-[4px] border-[1.5px] border-gray-6 bg-surface-inset"
                   />
-                  <span className="flex-1 truncate font-sans text-ui text-gray-11">
+                  <span className="flex-1 truncate font-sans text-13/19 text-gray-11">
                     {field.label}
                   </span>
                   <span className="shrink-0 font-mono text-10 text-gray-9">

@@ -34,7 +34,7 @@ describe('liveTokens', () => {
   it('reads the real sheet rather than a transcription of it', () => {
     // If tokens.css stops defining a type scale this fails, which is the
     // point — the views below claim to show what the app ships.
-    const sizes = liveTokens(/^text-[a-z]+$/);
+    const sizes = liveTokens(/^text-\d+$/);
     expect(sizes.length).toBeGreaterThan(0);
     expect(sizes.every((t) => /^\d+px$/.test(t.value))).toBe(true);
   });
@@ -51,18 +51,20 @@ describe('liveTokens', () => {
 });
 
 describe('spec tokens', () => {
-  it('folds line-height onto its size instead of listing it as one', () => {
-    // `text` holds both `13` and `13--line-height`; only the sizes are sizes.
-    expect(TEXT_SIZES).toHaveLength(10);
+  it('is a closed scale of twelve rungs, each named for its own pixel size', () => {
+    expect(TEXT_SIZES.map((s) => s.step)).toEqual([
+      '9', '10', '11', '12', '13', '14', '15', '16', '18', '20', '22', '24',
+    ]);
     expect(TEXT_SIZES.every((s) => s.value === `${s.step}px`)).toBe(true);
-    expect(TEXT_SIZES.find((s) => s.step === '11')?.letterSpacing).toBe('.06em');
   });
 
-  it('carries a leading for every rung except the one added for the sweep', () => {
-    // 15 is the `lg` control rung six primitives had been spelling as an
-    // arbitrary 15px value, which sets size alone. It ships without a leading
-    // so the swap renders identically; pairing is a separate, visible decision.
-    expect(TEXT_SIZES.filter((s) => !s.lineHeight).map((s) => s.step)).toEqual(['15']);
+  it('carries nothing but a size — no rung bundles a leading or a tracking', () => {
+    // A size token sets font-size and only font-size. Leading is stated at the
+    // call site as `text-13/19`, tracking as `tracking-wider`, because one is
+    // a function of the size and the other of the role, and neither is a
+    // property of the token. The old scale bundled both and called it semantic.
+    expect(TEXT_SIZES.some((s) => s.lineHeight)).toBe(false);
+    expect(TEXT_SIZES.some((s) => s.letterSpacing)).toBe(false);
   });
 
   it('carries both theme values for the one family that has them', () => {
@@ -83,9 +85,9 @@ describe('spec tokens', () => {
 
 describe('driftFor', () => {
   it('matches on value, not name — the proposal renames everything', () => {
-    const rows = driftFor('t', [{ name: 'text-13', value: '13px' }], [{ name: 'text-ui', value: '13px' }]);
+    const rows = driftFor('t', [{ name: 'text-13', value: '13px' }], [{ name: 'text-13/19', value: '13px' }]);
     expect(rows).toEqual([
-      { family: 't', status: 'matched', spec: 'text-13', live: 'text-ui', value: '13px' },
+      { family: 't', status: 'matched', spec: 'text-13', live: 'text-13/19', value: '13px' },
     ]);
   });
 
@@ -140,23 +142,13 @@ describe('drift', () => {
     expect(byFamily.animate?.every((r) => r.status === 'matched')).toBe(true);
   });
 
-  it('reports exactly the legacy type names as still-live — the sweep ratchet', () => {
-    // A dropped row means the sheet defines something the spec does not. That
-    // is now true of precisely the nine role-named sizes, which stay until
-    // their ~439 call sites move to the numeric scale and `--text-*: initial`
-    // removes the utilities.
-    //
-    // Counted, not named: `driftFor` matches on VALUE, and right now each
-    // legacy name shares its value with a numeric rung (`--text-label` and
-    // `--text-11` are both 11px). So drift cannot say which of the pair is the
-    // survivor — only that nine text values are defined twice. `text-15` is
-    // the one rung with no legacy twin, which is why it is not in the count.
-    //
-    // This number only shrinks. At 0, delete the legacy block from tokens.css
-    // and LEGACY_TEXT_SIZES from cn.ts — and this test with them.
+  it('reports nothing dropped anywhere — the sheet defines only what the spec does', () => {
+    // The sweep ratchet that used to live here counted the role-named sizes
+    // still in the sheet. It reached zero, so it is gone and this is the
+    // stronger claim in its place: a dropped row means the sheet defines
+    // something the spec does not, and there is nothing left.
     const dropped = drift().flatMap((f) => f.rows.filter((r) => r.status === 'dropped'));
-    expect(dropped.every((r) => r.family === 'text')).toBe(true);
-    expect(dropped).toHaveLength(9);
+    expect(dropped.map((r) => r.live)).toEqual([]);
   });
 
   it('summarises to counts a page can lead with', () => {

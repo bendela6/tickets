@@ -27,7 +27,7 @@ function AppNotFound() {
       <ScreenState
         title="App not found"
         action={
-          <Link to="/signals/apps" className="font-sans text-meta text-indigo-9 hover:underline">
+          <Link to="/signals/apps" className="font-sans text-12/17 text-indigo-9 hover:underline">
             ‹ Back to Apps
           </Link>
         }
@@ -131,7 +131,7 @@ export function AppDetailScreen({ appId }: { appId: number }) {
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="m-0 font-sans text-[18px] leading-tight font-600 text-gray-12">{app.name}</h1>
+            <h1 className="m-0 font-sans text-18 leading-tight font-600 text-gray-12">{app.name}</h1>
             <Pill tone="secondary" label={app.slug} className="font-mono text-11" />
           </div>
         </div>

@@ -48,7 +48,7 @@ export function AppShell({
           type="button"
           aria-label="Open navigation"
           onClick={() => setMobileNavOpen(true)}
-          className="inline-flex size-9 items-center justify-center rounded-[8px] text-[17px] text-gray-11 hover:bg-surface-inset"
+          className="inline-flex size-9 items-center justify-center rounded-[8px] text-16 text-gray-11 hover:bg-surface-inset"
         >
           ☰
         </button>

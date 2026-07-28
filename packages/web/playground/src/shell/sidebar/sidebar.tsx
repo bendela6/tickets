@@ -129,12 +129,12 @@ export function Sidebar({
                 placeholder="Filter components…"
                 value={filterQuery}
                 onChange={(e) => setFilterQuery(e.target.value)}
-                className="min-w-0 flex-1 bg-transparent text-ui text-gray-11 outline-none placeholder:text-gray-9"
+                className="min-w-0 flex-1 bg-transparent text-13/19 text-gray-11 outline-none placeholder:text-gray-9"
               />
               <button
                 type="button"
                 onClick={onOpenPalette}
-                className="h-4.5 shrink-0 rounded-xs border border-gray-7 bg-surface-raised px-1.5 text-label text-gray-9 hover:text-gray-11"
+                className="h-4.5 shrink-0 rounded-xs border border-gray-7 bg-surface-raised px-1.5 text-11/13 tracking-wider text-gray-9 hover:text-gray-11"
               >
                 ⌘K
               </button>
@@ -153,7 +153,7 @@ export function Sidebar({
           <a
             {...linkProps({ slug: null })}
             className={cn(
-              'shrink-0 truncate rounded-md px-2 py-1 text-ui',
+              'shrink-0 truncate rounded-md px-2 py-1 text-13/19',
               selected === null ? 'bg-indigo-3 text-indigo-9' : 'text-gray-11 hover:text-gray-12',
             )}
           >
@@ -161,7 +161,7 @@ export function Sidebar({
           </a>
           {shownGroups.map((group) => (
             <div key={group} className="flex shrink-0 flex-col gap-0.5">
-              <span className="truncate px-2 font-mono text-label uppercase tracking-wider text-gray-9">
+              <span className="truncate px-2 font-mono text-11/13 tracking-wider uppercase tracking-wider text-gray-9">
                 {group}
               </span>
               {filtered
@@ -172,7 +172,7 @@ export function Sidebar({
                     {...linkProps({ slug: d.slug })}
                     title={d.meta.title}
                     className={cn(
-                      'shrink-0 truncate rounded-md px-2 py-1 text-ui',
+                      'shrink-0 truncate rounded-md px-2 py-1 text-13/19',
                       selected === d.slug
                         ? 'bg-indigo-3 text-indigo-9'
                         : 'text-gray-11 hover:text-gray-12',

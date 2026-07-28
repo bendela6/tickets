@@ -80,7 +80,7 @@ export function MultiCombobox({
         >
           <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
             {selectedOptions.length === 0 ? (
-              <span className="truncate font-sans text-ui text-gray-9">{placeholder}</span>
+              <span className="truncate font-sans text-13/19 text-gray-9">{placeholder}</span>
             ) : null}
             {/* Chips are read-only. Deselecting happens in the popover, where
                 the full set is visible and a mis-click is one click to undo —
@@ -90,7 +90,7 @@ export function MultiCombobox({
               <Pill key={option.value} tone={option.color ?? 'gray'} shape="round" label={option.label} />
             ))}
             {overflow > 0 ? (
-              <span className="font-mono text-meta font-500 text-gray-11">+{overflow}</span>
+              <span className="font-mono text-12/17 font-500 text-gray-11">+{overflow}</span>
             ) : null}
           </span>
           <Icon name="chevron-down" size={CHEVRON[size]} className="shrink-0 self-center text-gray-9" />
@@ -111,14 +111,14 @@ export function MultiCombobox({
                     options.filter((option) => !option.disabled).map((option) => option.value),
                   )
                 }
-                className="rounded-md px-1 font-sans text-meta font-500 text-indigo-9 hover:underline"
+                className="rounded-md px-1 font-sans text-12/17 font-500 text-indigo-9 hover:underline"
               >
                 Select all
               </button>
               <button
                 type="button"
                 onClick={() => onChange([])}
-                className="rounded-md px-1 font-sans text-meta font-500 text-gray-11 hover:underline"
+                className="rounded-md px-1 font-sans text-12/17 font-500 text-gray-11 hover:underline"
               >
                 Clear ({value.length})
               </button>

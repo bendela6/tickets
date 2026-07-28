@@ -19,7 +19,7 @@ function Caret({ open, loading }: { open: boolean; loading: boolean }) {
 function Row({ row, onToggle, onSelect }: { row: VisibleRow; onToggle: (path: string) => void; onSelect: (path: string) => void }) {
   if (row.note) {
     return (
-      <div className="py-1 pr-2 font-mono text-meta italic text-gray-9" style={{ paddingLeft: 8 + row.depth * 16 }}>
+      <div className="py-1 pr-2 font-mono text-12/17 italic text-gray-9" style={{ paddingLeft: 8 + row.depth * 16 }}>
         {row.note}
       </div>
     );
@@ -46,7 +46,7 @@ function Row({ row, onToggle, onSelect }: { row: VisibleRow; onToggle: (path: st
         aria-label={row.isRoot ? `${row.symbol} ${row.annotation ?? ''}`.trim() : row.label}
         onClick={() => onSelect(row.path)}
         className={cn(
-          'flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-1.5 py-1 text-left font-mono text-meta',
+          'flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-1.5 py-1 text-left font-mono text-12/17',
           'hover:bg-surface-inset',
           row.selected && 'bg-indigo-3 font-500 text-indigo-9',
           row.focused && 'outline outline-2 -outline-offset-1 outline-indigo-9',

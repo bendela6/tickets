@@ -21,7 +21,7 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
       className="flex cursor-pointer flex-col gap-3.25 rounded-xl border border-gray-6 bg-surface-raised px-5 py-4.5 shadow-sm hover:border-gray-7"
     >
       <div className="flex items-center gap-2.5">
-        <span className="rounded-[5px] bg-surface-inset px-1.75 py-0.75 font-mono text-meta font-500 text-gray-12">
+        <span className="rounded-[5px] bg-surface-inset px-1.75 py-0.75 font-mono text-12/17 font-500 text-gray-12">
           {project.itemPrefix}
         </span>
         <span className="flex-1 truncate font-sans text-15 font-600 text-gray-12">
@@ -42,8 +42,8 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
           {counts.todo > 0 ? <span className="bg-gray-7" style={{ flex: counts.todo }} /> : null}
           {total === 0 ? <span className="flex-1 bg-gray-6" /> : null}
         </div>
-        <div className="flex items-center gap-3.5 font-sans text-meta text-gray-11">
-          <span className="font-mono text-ui font-600 text-gray-12">{pct}%</span>
+        <div className="flex items-center gap-3.5 font-sans text-12/17 text-gray-11">
+          <span className="font-mono text-13/19 font-600 text-gray-12">{pct}%</span>
           <span className="inline-flex items-center gap-1.25">
             <Icon name={KIND_ICON.todo} tone={KIND_TONE.todo} size="xs" />
             <span className="text-gray-11">{counts.todo}</span>
@@ -102,8 +102,8 @@ export function ProjectsHome() {
   return (
     <div className="px-4 py-5 md:px-8 md:py-7">
       <div className="mb-5.5 flex items-baseline gap-3.5">
-        <h1 className="font-sans text-[22px] font-600 text-gray-12">Projects</h1>
-        <span className="font-mono text-meta text-gray-9">
+        <h1 className="font-sans text-22 font-600 text-gray-12">Projects</h1>
+        <span className="font-mono text-12/17 text-gray-9">
           {projectList.length} projects · {totalTickets} items · {openTickets} open
         </span>
         <span className="flex-1" />
@@ -130,7 +130,7 @@ export function ProjectsHome() {
           className="flex min-h-37.5 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-gray-7 text-gray-9 hover:border-gray-9 hover:text-gray-11"
         >
           <span className="font-sans text-20">＋</span>
-          <span className="font-sans text-ui font-500">New project</span>
+          <span className="font-sans text-13/19 font-500">New project</span>
           <span className="font-mono text-11">key · name · prefix</span>
         </button>
       </div>

@@ -91,7 +91,7 @@ export function KanbanView({
 
   if (!workflowField) {
     return (
-      <div className="px-4 py-6 font-sans text-ui text-gray-9">
+      <div className="px-4 py-6 font-sans text-13/19 text-gray-9">
         This project has no workflow field, so board mode is unavailable.
       </div>
     );
@@ -233,7 +233,7 @@ export function KanbanView({
             />
           ) : null}
         </div>
-        <div className="font-sans text-ui leading-[1.4] font-500 text-gray-12">
+        <div className="font-sans text-13/19 leading-[1.4] font-500 text-gray-12">
           {String(ticket.values['title'] ?? '')}
         </div>
         {hasFooter ? (
@@ -293,11 +293,11 @@ export function KanbanView({
               <span className="inline-flex shrink-0">
                 <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
               </span>
-              <span className="font-sans text-ui font-500 text-gray-12">{option.label}</span>
+              <span className="font-sans text-13/19 font-500 text-gray-12">{option.label}</span>
               <span className="font-mono text-11 text-gray-9">{cards.length}</span>
               <span className="flex-1" />
               {/* Inert for now: card creation from a column lands in a later task. */}
-              <span aria-hidden className="font-sans text-ui text-gray-9">
+              <span aria-hidden className="font-sans text-13/19 text-gray-9">
                 ＋
               </span>
             </div>
@@ -307,7 +307,7 @@ export function KanbanView({
               </div>
             ) : null}
             {mode === 'legal' ? (
-              <div className="mx-2.5 mb-2 flex h-[74px] shrink-0 items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-indigo-9 bg-indigo-3 font-sans text-meta font-500 text-indigo-9">
+              <div className="mx-2.5 mb-2 flex h-[74px] shrink-0 items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-indigo-9 bg-indigo-3 font-sans text-12/17 font-500 text-indigo-9">
                 Drop — {draggedFromLabel} → {option.label}
               </div>
             ) : null}

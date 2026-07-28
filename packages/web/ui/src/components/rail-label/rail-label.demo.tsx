@@ -10,7 +10,7 @@ export const states = [
     render: () => (
       <div className="flex w-56 items-center justify-between">
         <RailLabel>TERMINALS</RailLabel>
-        <span className="font-sans text-meta text-indigo-9">＋ New</span>
+        <span className="font-sans text-12/17 text-indigo-9">＋ New</span>
       </div>
     ),
   },

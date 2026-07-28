@@ -386,7 +386,7 @@ export function RichTextEditor({
         <EditorContent
           editor={editor}
           className={cn(
-            'rt block w-full p-3 font-sans text-ui leading-[1.6] text-gray-12 outline-none',
+            'rt block w-full p-3 font-sans text-13/19 leading-[1.6] text-gray-12 outline-none',
             composer !== undefined ? 'min-h-11' : 'min-h-27.5',
             disabled && 'cursor-not-allowed',
           )}

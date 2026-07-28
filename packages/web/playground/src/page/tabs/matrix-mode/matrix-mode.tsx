@@ -40,13 +40,13 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-center gap-2.5">
-        <label className="flex items-center gap-2 h-7 px-2.5 border border-gray-7 rounded-sm bg-surface-raised font-sans text-ui text-gray-12 cursor-pointer">
+        <label className="flex items-center gap-2 h-7 px-2.5 border border-gray-7 rounded-sm bg-surface-raised font-sans text-13/19 text-gray-12 cursor-pointer">
           <span>rows:</span>
           <select
             value={yKey}
             onChange={(e) => onYKeyChange(e.target.value)}
             aria-label="rows"
-            className="appearance-none bg-transparent border-none p-0 font-sans text-ui text-gray-12 cursor-pointer"
+            className="appearance-none bg-transparent border-none p-0 font-sans text-13/19 text-gray-12 cursor-pointer"
           >
             {selectKeys.map((key) => (
               <option key={key} value={key}>
@@ -56,13 +56,13 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
           </select>
           <Icon name="chevron-down" size="2xs" className="text-gray-9" />
         </label>
-        <label className="flex items-center gap-2 h-7 px-2.5 border border-gray-7 rounded-sm bg-surface-raised font-sans text-ui text-gray-12 cursor-pointer">
+        <label className="flex items-center gap-2 h-7 px-2.5 border border-gray-7 rounded-sm bg-surface-raised font-sans text-13/19 text-gray-12 cursor-pointer">
           <span>columns:</span>
           <select
             value={xKey}
             onChange={(e) => onXKeyChange(e.target.value)}
             aria-label="columns"
-            className="appearance-none bg-transparent border-none p-0 font-sans text-ui text-gray-12 cursor-pointer"
+            className="appearance-none bg-transparent border-none p-0 font-sans text-13/19 text-gray-12 cursor-pointer"
           >
             {selectKeys.map((key) => (
               <option key={key} value={key}>
@@ -73,7 +73,7 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
           <Icon name="chevron-down" size="2xs" className="text-gray-9" />
         </label>
         <div className="flex-1" />
-        <div className="font-mono text-label text-gray-9">
+        <div className="font-mono text-11/13 tracking-wider text-gray-9">
           matrix: {yKey} × {xKey}
         </div>
       </div>
@@ -92,7 +92,7 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
         {x.map((xVal, xi) => (
           <div
             key={`header-${xi}`}
-            className="flex items-center justify-center font-mono text-label uppercase tracking-widest text-gray-9"
+            className="flex items-center justify-center font-mono text-11/13 tracking-wider uppercase tracking-widest text-gray-9"
           >
             {xVal}
           </div>
@@ -104,7 +104,7 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
           items.push(
             <div
               key={`label-${yi}`}
-              className="flex items-center justify-center font-mono text-label uppercase tracking-widest text-gray-9"
+              className="flex items-center justify-center font-mono text-11/13 tracking-wider uppercase tracking-widest text-gray-9"
             >
               {yVal}
             </div>,

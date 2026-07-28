@@ -8,7 +8,7 @@ function TerminalsPage() {
   return (
     <AppShell>
       <div className="flex h-full items-center justify-center px-6">
-        <p className="font-sans text-ui text-gray-9">
+        <p className="font-sans text-13/19 text-gray-9">
           Pick a terminal on the left, or start a new one.
         </p>
       </div>

@@ -85,7 +85,7 @@ export function getCellContent(
   if (field.type === 'json') {
     const text = JSON.stringify(rawValue);
     return (
-      <code className="font-mono text-meta text-gray-11">
+      <code className="font-mono text-12/17 text-gray-11">
         {text.length > 40 ? `${text.slice(0, 40)}…` : text}
       </code>
     );

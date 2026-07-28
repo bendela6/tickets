@@ -87,13 +87,13 @@ export function BoardHeader({
 
   return (
     <div className="mb-3.5 flex shrink-0 flex-wrap items-center gap-3 gap-y-2">
-      <span className="rounded-[5px] bg-surface-inset px-1.75 py-0.75 font-mono text-meta font-500 text-gray-12">
+      <span className="rounded-[5px] bg-surface-inset px-1.75 py-0.75 font-mono text-12/17 font-500 text-gray-12">
         {board.project.itemPrefix}
       </span>
-      <h1 className="m-0 font-sans text-[22px] leading-tight font-600 text-gray-12">
+      <h1 className="m-0 font-sans text-22 leading-tight font-600 text-gray-12">
         {board.project.name}
       </h1>
-      <span className="font-mono text-meta text-gray-9">
+      <span className="font-mono text-12/17 text-gray-9">
         {ticketCount} items · {donePercent}% done
       </span>
       <span className="flex-1" />
@@ -131,7 +131,7 @@ export function BoardHeader({
         </>
       ) : (
         <>
-          <span className="font-sans text-meta text-gray-11">
+          <span className="font-sans text-12/17 text-gray-11">
             Columns: <strong className="font-500 text-gray-12">Status</strong>{' '}
             <span aria-hidden className="text-10 text-gray-9">
               <Icon name="chevron-down" size="2xs" />
@@ -139,7 +139,7 @@ export function BoardHeader({
           </span>
           <Popover>
             <PopoverTrigger asChild>
-              <button type="button" className="shrink-0 font-sans text-meta text-gray-11">
+              <button type="button" className="shrink-0 font-sans text-12/17 text-gray-11">
                 Cards:{' '}
                 <strong className="font-500 text-gray-12">
                   {visibleFieldCount} {visibleFieldCount === 1 ? 'field' : 'fields'}

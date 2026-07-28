@@ -12,12 +12,12 @@ import { cn } from '../../style/cn';
 // that must sit flush against the title text (e.g. a required-field
 // asterisk) belongs inside `title` itself instead of `count`.
 //
-// The row itself carries `text-label` (11px/1.2/.06em) so `count` — which
+// The row itself carries `text-11/13 tracking-wider` (11px/1.2/.06em) so `count` — which
 // sets no font-size of its own (e.g. the `Label` helpers' hint span) —
 // inherits the same 11px caption size the title renders at, instead of
 // falling back to the document default. Callers that need their own size on
 // `count` (a Progress's mono readout) already set it explicitly and win the
-// cascade normally. The title keeps its own `text-label` too so
+// cascade normally. The title keeps its own `text-11/13 tracking-wider` too so
 // `title carries the uppercase mono-label styling` stays true in isolation.
 export function SectionHeader({
   title,
@@ -47,9 +47,9 @@ export function SectionHeader({
 }) {
   const Title = as;
   return (
-    <div className={cn('flex items-center gap-2 text-label', className)}>
+    <div className={cn('flex items-center gap-2 text-11/13 tracking-wider', className)}>
       <Title
-        className={cn('font-sans text-label font-500 uppercase text-gray-11', titleClassName)}
+        className={cn('font-sans text-11/13 tracking-wider font-500 uppercase text-gray-11', titleClassName)}
       >
         {title}
       </Title>

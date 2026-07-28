@@ -43,7 +43,7 @@ function TableHeader() {
   return (
     <div
       role="row"
-      className="grid h-9 shrink-0 items-center border-b border-gray-6 bg-gray-1 px-3.5 font-sans text-label font-500 tracking-wider text-gray-11 uppercase"
+      className="grid h-9 shrink-0 items-center border-b border-gray-6 bg-gray-1 px-3.5 font-sans text-11/13 tracking-wider font-500 tracking-wider text-gray-11 uppercase"
       style={{ gridTemplateColumns: ISSUES_GRID_COLUMNS }}
     >
       {HEADER_CELLS.map((cell, index) => (
@@ -124,8 +124,8 @@ export function IssuesScreen() {
   return (
     <div className="flex h-full min-h-0 flex-col p-6 md:p-7">
       <div className="mb-2.5 flex flex-wrap items-center gap-3">
-        <h1 className="m-0 font-sans text-[22px] leading-tight font-600 text-gray-12">Signals</h1>
-        <span className="font-mono text-meta text-gray-9">
+        <h1 className="m-0 font-sans text-22 leading-tight font-600 text-gray-12">Signals</h1>
+        <span className="font-mono text-12/17 text-gray-9">
           {openCount.data?.total ?? 0} open issues · {formatCount(loadedEvents)} events last {days}d
         </span>
       </div>
@@ -263,7 +263,7 @@ export function IssuesScreen() {
               }
               body={`Everything reported in the last ${days} days is resolved or ignored. New errors will open issues here automatically.`}
               action={
-                <span className="font-mono text-meta text-gray-9">
+                <span className="font-mono text-12/17 text-gray-9">
                   view{' '}
                   <button
                     type="button"

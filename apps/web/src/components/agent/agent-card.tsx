@@ -67,8 +67,8 @@ export function AgentCard({
       <div className="flex items-center gap-2.5">
         <Avatar name={agent.name} {...avatarFor('agent')} size="md" />
         <div className="min-w-0 flex-1">
-          <div className="truncate font-sans text-ui font-600 text-gray-12">{agent.name}</div>
-          <div className="truncate font-mono text-meta text-gray-9">
+          <div className="truncate font-sans text-13/19 font-600 text-gray-12">{agent.name}</div>
+          <div className="truncate font-mono text-12/17 text-gray-9">
             {providerLabel(agent.providerKey)} · {agent.model}
           </div>
         </div>

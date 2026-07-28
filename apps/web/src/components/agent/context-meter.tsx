@@ -32,7 +32,7 @@ export function ContextMeter({
     >
       <span
         data-testid="context-fill"
-        className={cn('font-mono text-meta', hot ? 'text-red-9' : 'text-gray-12')}
+        className={cn('font-mono text-12/17', hot ? 'text-red-9' : 'text-gray-12')}
       >
         <span aria-hidden="true">▣ </span>
         {formatTokens(contextTokens)} / {formatTokens(contextWindow)}
@@ -41,7 +41,7 @@ export function ContextMeter({
         value={contextWindow > 0 ? (contextTokens / contextWindow) * 100 : 0}
         tone={hot ? 'danger' : 'primary'}
       />
-      <span className="font-mono text-meta text-gray-9" title="output tokens generated">
+      <span className="font-mono text-12/17 text-gray-9" title="output tokens generated">
         <span aria-hidden="true">↓ </span>
         {formatTokens(tokensOut)}
       </span>

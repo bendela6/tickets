@@ -164,7 +164,7 @@ function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void 
   icon.classList.add('text-red-9');
 
   const title = document.createElement('span');
-  title.className = 'font-sans text-ui font-500 text-gray-12';
+  title.className = 'font-sans text-13/19 font-500 text-gray-12';
   title.textContent = 'Upload failed';
 
   const meta = document.createElement('span');

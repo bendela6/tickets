@@ -440,7 +440,7 @@ function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
           <span className="font-sans text-[12.5px] leading-[1.15] font-600 text-indigo-9 [border-bottom:3px_solid_var(--color-indigo-9)]">
             A
           </span>
-          <span className="font-sans text-ui">Text color</span>
+          <span className="font-sans text-13/19">Text color</span>
         </div>
       </DropdownMenu.SubTrigger>
       <DropdownMenu.Portal>

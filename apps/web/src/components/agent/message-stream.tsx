@@ -29,7 +29,7 @@ function Block({ block, onRespond }: { block: StreamBlock; onRespond?: RespondFn
   switch (block.kind) {
     case 'text':
       return (
-        <p className="whitespace-pre-wrap font-sans text-ui leading-relaxed text-gray-12">{block.text}</p>
+        <p className="whitespace-pre-wrap font-sans text-13/19 leading-relaxed text-gray-12">{block.text}</p>
       );
     case 'thinking':
       return <ThinkingBlock text={block.text} />;
@@ -43,7 +43,7 @@ function Block({ block, onRespond }: { block: StreamBlock; onRespond?: RespondFn
       );
     case 'result':
       return (
-        <div className="flex items-center gap-2 pt-0.5 font-mono text-meta text-gray-9">
+        <div className="flex items-center gap-2 pt-0.5 font-mono text-12/17 text-gray-9">
           <span className={block.isError ? 'text-red-9' : 'text-green-9'}>
             {block.isError ? '✕ turn failed' : '✓ turn complete'}
           </span>
@@ -55,7 +55,7 @@ function Block({ block, onRespond }: { block: StreamBlock; onRespond?: RespondFn
       );
     case 'error':
       return (
-        <div className="rounded-[9px] border border-red-9 bg-red-3 px-3 py-2 font-sans text-meta text-red-9">
+        <div className="rounded-[9px] border border-red-9 bg-red-3 px-3 py-2 font-sans text-12/17 text-red-9">
           {block.message}
         </div>
       );
@@ -105,7 +105,7 @@ function ApprovalCard({
     >
       <div className="flex items-center gap-2 px-3.5 py-2.5">
         <span aria-hidden className="size-2.5 shrink-0 rotate-45 rounded-[1px] bg-orange-9" />
-        <span className="font-sans text-ui font-600 text-gray-12">Approval required</span>
+        <span className="font-sans text-13/19 font-600 text-gray-12">Approval required</span>
         <Pill
           tone="secondary"
           variant="outline"
@@ -114,7 +114,7 @@ function ApprovalCard({
         />
         <span className="flex-1" />
         {decided ? (
-          <span className="font-mono text-meta text-gray-9">
+          <span className="font-mono text-12/17 text-gray-9">
             {decided === 'allow' ? 'allowed' : 'denied'}
           </span>
         ) : null}
@@ -139,7 +139,7 @@ function ApprovalCard({
               rows={2}
               autoFocus
               placeholder="Why deny? (optional — sent back to the agent)"
-              className="resize-y rounded-[8px] border border-gray-7 bg-surface-raised px-2.5 py-1.5 font-sans text-meta text-gray-12 placeholder:text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3"
+              className="resize-y rounded-[8px] border border-gray-7 bg-surface-raised px-2.5 py-1.5 font-sans text-12/17 text-gray-12 placeholder:text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3"
             />
           ) : null}
           <div className="flex items-center justify-end gap-2">
@@ -176,7 +176,7 @@ function ThinkingBlock({ text }: { text: string }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 rounded-[8px] border border-dashed border-gray-7 px-2.5 py-1 font-sans text-meta italic text-gray-9 hover:text-gray-11"
+        className="flex items-center gap-2 rounded-[8px] border border-dashed border-gray-7 px-2.5 py-1 font-sans text-12/17 italic text-gray-9 hover:text-gray-11"
       >
         <span aria-hidden className="font-mono not-italic">
           ✦
@@ -187,7 +187,7 @@ function ThinkingBlock({ text }: { text: string }) {
         </span>
       </button>
       {open ? (
-        <p className="mt-1.5 whitespace-pre-wrap border-l-2 border-gray-6 pl-3 font-sans text-meta italic text-gray-9">
+        <p className="mt-1.5 whitespace-pre-wrap border-l-2 border-gray-6 pl-3 font-sans text-12/17 italic text-gray-9">
           {text}
         </p>
       ) : null}
@@ -218,7 +218,7 @@ function ToolStatusDot({ status }: { status: ToolStatus }) {
   return (
     <span
       aria-hidden
-      className="inline-flex size-3 shrink-0 items-center justify-center rounded-full bg-green-9 text-[7px] font-600 text-green-contrast"
+      className="inline-flex size-3 shrink-0 items-center justify-center rounded-full bg-green-9 text-9 font-600 text-green-contrast"
     >
       ✓
     </span>
@@ -246,8 +246,8 @@ function ToolCard({ name, input, result }: { name: string; input: unknown; resul
         className="flex w-full items-center gap-2 px-2.75 py-1.5 text-left hover:bg-surface-inset"
       >
         <ToolStatusDot status={status} />
-        <span className="shrink-0 font-mono text-meta font-600 text-gray-12">{name}</span>
-        <span className="flex-1 truncate font-mono text-meta text-gray-9">{summary}</span>
+        <span className="shrink-0 font-mono text-12/17 font-600 text-gray-12">{name}</span>
+        <span className="flex-1 truncate font-mono text-12/17 text-gray-9">{summary}</span>
         {diff ? (
           <>
             <span className="rounded-[4px] bg-green-3 px-1.5 font-mono text-10 text-green-9">
@@ -301,10 +301,10 @@ function SubagentGroup({
   return (
     <div className="my-0.5 flex flex-col gap-2 border-l-2 border-gray-7 pl-3">
       <div className="flex items-center gap-2">
-        <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-indigo-3 font-mono text-[7px] font-600 text-indigo-9">
+        <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-indigo-3 font-mono text-9 font-600 text-indigo-9">
           {name.slice(0, 2).toUpperCase()}
         </span>
-        <span className="font-mono text-meta font-600 text-gray-12">{name}</span>
+        <span className="font-mono text-12/17 font-600 text-gray-12">{name}</span>
         <Pill
           tone="secondary"
           variant="outline"
@@ -312,7 +312,7 @@ function SubagentGroup({
           className="h-auto rounded-[3px] px-1.5 py-0 font-mono text-9 uppercase tracking-wide"
         />
         <ToolStatusDot status={statusOf(result)} />
-        <span className="truncate font-mono text-meta text-gray-9">{oneLineInput(input)}</span>
+        <span className="truncate font-mono text-12/17 text-gray-9">{oneLineInput(input)}</span>
       </div>
       {children}
     </div>

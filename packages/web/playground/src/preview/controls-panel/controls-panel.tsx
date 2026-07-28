@@ -1,7 +1,7 @@
 import type { AnyControlDef } from '@tickets/ui';
 
 const inputClasses =
-  'h-7 rounded-md border border-gray-7 bg-surface-raised px-2 font-sans text-ui text-gray-12 focus:outline-none focus:ring-2 focus:ring-indigo-3';
+  'h-7 rounded-md border border-gray-7 bg-surface-raised px-2 font-sans text-13/19 text-gray-12 focus:outline-none focus:ring-2 focus:ring-indigo-3';
 
 // One labeled row per control. Native elements only — this panel must not
 // depend on apps/web primitives (they move into this package in P3).
@@ -21,7 +21,7 @@ export function ControlsPanel({
           key={key}
           className="grid grid-cols-[96px_1fr] items-center gap-2.5 border-b border-gray-6 py-2.5"
         >
-          <label htmlFor={key} className="font-mono text-label uppercase tracking-widest text-gray-9">
+          <label htmlFor={key} className="font-mono text-11/13 tracking-wider uppercase tracking-widest text-gray-9">
             {def.label ?? key}
           </label>
           {def.kind === 'select' && (

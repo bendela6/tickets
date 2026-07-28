@@ -57,7 +57,7 @@ export function DeleteAppDialog({
     <DialogRoot open={open} onOpenChange={change}>
       <DialogContent>
         <DialogTitle>Delete app</DialogTitle>
-        <p className="mt-1.5 font-sans text-meta text-gray-11">
+        <p className="mt-1.5 font-sans text-12/17 text-gray-11">
           This permanently deletes <strong className="font-500 text-gray-12">{app.slug}</strong> — its
           signals, issues, releases, and source maps. This cannot be undone.
         </p>
@@ -79,7 +79,7 @@ export function DeleteAppDialog({
           />
         </div>
         {deleteApp.isError ? (
-          <p className="mt-2 font-sans text-meta text-red-9">
+          <p className="mt-2 font-sans text-12/17 text-red-9">
             {deleteApp.error instanceof Error ? deleteApp.error.message : 'Could not delete the app'}
           </p>
         ) : null}

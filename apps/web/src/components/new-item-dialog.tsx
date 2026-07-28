@@ -72,8 +72,8 @@ function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
 
 function ProjectChip({ project }: { project: Project }) {
   return (
-    <span className="inline-flex h-7 shrink-0 items-center gap-1.75 rounded-[7px] border border-gray-6 px-2.5 font-sans text-ui font-500 text-gray-12">
-      <span className="rounded-sm bg-surface-inset px-1.25 py-0.5 font-mono text-label font-500">
+    <span className="inline-flex h-7 shrink-0 items-center gap-1.75 rounded-[7px] border border-gray-6 px-2.5 font-sans text-13/19 font-500 text-gray-12">
+      <span className="rounded-sm bg-surface-inset px-1.25 py-0.5 font-mono text-11/13 tracking-wider font-500">
         {project.itemPrefix}
       </span>
       {project.name}
@@ -282,7 +282,7 @@ export function NewItemDialog({
           <>
             <header className="flex items-center gap-2.5 border-b border-gray-6 px-5 py-4">
               <DialogTitle>New item</DialogTitle>
-              <span className="font-sans text-ui text-gray-11">in</span>
+              <span className="font-sans text-13/19 text-gray-11">in</span>
               <ProjectChip project={board.project} />
               <span className="flex-1" />
               <CloseButton />
@@ -307,7 +307,7 @@ export function NewItemDialog({
                       <span className="font-sans text-14 font-600 text-gray-12">
                         {candidate.label}
                       </span>
-                      <span className="font-sans text-meta text-gray-11">
+                      <span className="font-sans text-12/17 text-gray-11">
                         {candidateRows.length} {candidateRows.length === 1 ? 'field' : 'fields'} ·{' '}
                         {requiredCount} required
                       </span>
@@ -315,7 +315,7 @@ export function NewItemDialog({
                     {index < 9 ? (
                       <span
                         aria-hidden
-                        className="shrink-0 rounded-sm border border-gray-6 px-1.5 py-px font-mono text-label text-gray-9"
+                        className="shrink-0 rounded-sm border border-gray-6 px-1.5 py-px font-mono text-11/13 tracking-wider text-gray-9"
                       >
                         {index + 1}
                       </span>
@@ -330,7 +330,7 @@ export function NewItemDialog({
                     <span className="font-sans text-14 font-600 text-gray-11">
                       {subtaskType.label}
                     </span>
-                    <span className="font-sans text-meta text-gray-9">
+                    <span className="font-sans text-12/17 text-gray-9">
                       Created from a parent item&rsquo;s Subtasks section — not from here
                     </span>
                   </span>
@@ -338,7 +338,7 @@ export function NewItemDialog({
               ) : null}
             </div>
             <footer className="border-t border-gray-6 bg-gray-1 px-5 py-3">
-              <p className="m-0 font-sans text-meta text-gray-11">
+              <p className="m-0 font-sans text-12/17 text-gray-11">
                 🔒 Type is permanent — it decides this item&rsquo;s form and can&rsquo;t be changed
                 after creation.
               </p>
@@ -352,7 +352,7 @@ export function NewItemDialog({
                   type="button"
                   onClick={() => setPickedTypeId(null)}
                   className={cn(
-                    'shrink-0 rounded-md bg-transparent font-sans text-meta font-500 text-indigo-9 hover:text-indigo-10',
+                    'shrink-0 rounded-md bg-transparent font-sans text-12/17 font-500 text-indigo-9 hover:text-indigo-10',
                     'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-3',
                   )}
                 >
@@ -365,7 +365,7 @@ export function NewItemDialog({
                 label={`${type.label} · 🔒 permanent`}
                 className={cn(typePill.className, 'shrink-0')}
               />
-              <span className="font-sans text-ui text-gray-11">in</span>
+              <span className="font-sans text-13/19 text-gray-11">in</span>
               <ProjectChip project={board.project} />
               <span className="flex-1" />
               <CloseButton />
@@ -438,11 +438,11 @@ export function NewItemDialog({
               <span className="flex-1" />
               {apiError ? <FieldError className="m-0">{apiError}</FieldError> : null}
               {userId === null ? (
-                <span className="font-sans text-meta text-red-9">
+                <span className="font-sans text-12/17 text-red-9">
                   Pick a user in the header first
                 </span>
               ) : (
-                <span aria-hidden className="font-mono text-label text-gray-9">
+                <span aria-hidden className="font-mono text-11/13 tracking-wider text-gray-9">
                   ⌘↵ create
                 </span>
               )}

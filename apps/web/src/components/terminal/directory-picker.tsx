@@ -9,9 +9,9 @@ export function DirectoryPicker({ value, onChange }: { value: string; onChange: 
       <div className="flex h-8 items-center gap-2 border-b border-gray-6 bg-surface-inset px-2.5">
         <span aria-hidden className="size-3 shrink-0 rounded-[2px] border border-folder" />
         {value ? (
-          <span className="truncate font-mono text-meta font-500 text-indigo-9">{value}</span>
+          <span className="truncate font-mono text-12/17 font-500 text-indigo-9">{value}</span>
         ) : (
-          <span className="font-mono text-meta italic text-gray-9">no folder selected</span>
+          <span className="font-mono text-12/17 italic text-gray-9">no folder selected</span>
         )}
       </div>
       <DirectoryTree roots={roots.data ?? []} selected={value || null} onSelect={onChange} />

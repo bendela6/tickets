@@ -106,7 +106,7 @@ function StatusCell({
 function ProgressCell({ ticket, indexes }: { ticket: Item; indexes: BoardIndexes }) {
   const { any, done, total } = childProgress(ticket, indexes);
   if (!any || total === 0) {
-    return <span className="font-sans text-ui text-gray-9">—</span>;
+    return <span className="font-sans text-13/19 text-gray-9">—</span>;
   }
   const percent = Math.round((done / total) * 100);
   return (
@@ -124,7 +124,7 @@ function RowActions({ projectKey, ticket }: { projectKey: string; ticket: Item }
   const { userId } = useCurrentUser();
   const patch = usePatchItem();
   const actionClasses =
-    'flex size-7.5 items-center justify-center rounded-[7px] border border-gray-6 bg-surface-raised font-sans text-ui text-gray-11 shadow-sm hover:text-gray-12';
+    'flex size-7.5 items-center justify-center rounded-[7px] border border-gray-6 bg-surface-raised font-sans text-13/19 text-gray-11 shadow-sm hover:text-gray-12';
   return (
     <span
       className="absolute top-1/2 right-2.5 hidden -translate-y-1/2 items-center gap-1.25 group-hover:flex"
@@ -267,13 +267,13 @@ export function TableView({
     }
     if (field.key === 'title') {
       return (
-        <span key={key} className="truncate px-2 font-sans text-ui text-gray-12">
+        <span key={key} className="truncate px-2 font-sans text-13/19 text-gray-12">
           {String(ticket.values[field.key] ?? '')}
         </span>
       );
     }
     return (
-      <span key={key} className="min-w-0 truncate px-2 font-sans text-ui text-gray-11">
+      <span key={key} className="min-w-0 truncate px-2 font-sans text-13/19 text-gray-11">
         {getCellContent(field, ticket.values[field.key], indexes, ticket.typeId)}
       </span>
     );
@@ -294,7 +294,7 @@ export function TableView({
               type="button"
               onClick={() => cycleSort(column)}
               className={cn(
-                'cursor-pointer text-left font-sans text-label font-500 uppercase',
+                'cursor-pointer text-left font-sans text-11/13 tracking-wider font-500 uppercase',
                 column.source === 'number' ? 'px-3' : 'px-2',
                 active ? 'text-gray-12' : 'text-gray-11 hover:text-gray-12',
               )}
