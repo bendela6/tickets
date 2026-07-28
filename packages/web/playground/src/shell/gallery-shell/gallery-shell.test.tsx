@@ -14,6 +14,14 @@ function setHash(h: string) {
   fireEvent(window, new HashChangeEvent('hashchange'));
 }
 
+// The page's own tab strip. Each state-viewer section carries its own
+// Preview/Source tablist too, so "the Preview tab" has to say which one it
+// means — the accessible name is what tells the two apart for a screen reader
+// as well.
+function pageTabs(title = 'Button') {
+  return within(screen.getByRole('tablist', { name: `${title} views` }));
+}
+
 describe('GalleryShell v2', () => {
   afterEach(() => { window.location.hash = ''; });
 
@@ -112,7 +120,7 @@ describe('GalleryShell v2', () => {
     expect(screen.getByRole('tab', { name: 'Implementation' }).getAttribute('aria-selected')).toBe(
       'true',
     );
-    expect(screen.getByRole('tab', { name: 'Preview' }).getAttribute('aria-selected')).toBe('false');
+    expect(pageTabs().getByRole('tab', { name: 'Preview' }).getAttribute('aria-selected')).toBe('false');
 
     // Switching target on an already-selected component still moves the tab —
     // ComponentPage is keyed by slug, so this can't rely on a remount.
@@ -162,7 +170,7 @@ describe('GalleryShell v2', () => {
   it('ignores an unknown tab name rather than blanking the page', () => {
     render(<GalleryShell demos={demos} title="t" />);
     setHash('#button::nope');
-    expect(screen.getByRole('tab', { name: 'Preview' }).getAttribute('aria-selected')).toBe('true');
+    expect(pageTabs().getByRole('tab', { name: 'Preview' }).getAttribute('aria-selected')).toBe('true');
   });
 
   it('drops the controls-rail note in the All view, where there is no rail', () => {
@@ -186,15 +194,15 @@ describe('GalleryShell v2', () => {
     // live stage — three in total, not one.
     expect(screen.getAllByText('play')).toHaveLength(3);
     // ComponentPage's tab strip, with Preview active by default.
-    expect(screen.getByRole('tab', { name: 'Preview' })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: 'Docs' })).toBeTruthy();
+    expect(pageTabs().getByRole('tab', { name: 'Preview' })).toBeTruthy();
+    expect(pageTabs().getByRole('tab', { name: 'Docs' })).toBeTruthy();
   });
 
   it('selecting a demo without a playground still routes through ComponentPage but shows no rail', () => {
     render(<GalleryShell demos={demos} title="t" />);
     setHash('#input');
     expect(screen.getByText('inp')).toBeTruthy();
-    expect(screen.getByRole('tab', { name: 'Preview' })).toBeTruthy();
+    expect(pageTabs('Input').getByRole('tab', { name: 'Preview' })).toBeTruthy();
     expect(screen.queryByText('CONTROLS')).toBeNull();
   });
 
@@ -232,7 +240,7 @@ describe('GalleryShell v2', () => {
     setHash('#button');
     // Source tab is still a placeholder in this task; just assert selection
     // didn't crash with sources wired up (Code/Source tabs land in Task 5).
-    expect(screen.getByRole('tab', { name: 'Preview' })).toBeTruthy();
+    expect(pageTabs().getByRole('tab', { name: 'Preview' })).toBeTruthy();
   });
 
   it('filter input narrows sidebar links (type "butt" → Button remains, Input gone, empty groups hide)', () => {

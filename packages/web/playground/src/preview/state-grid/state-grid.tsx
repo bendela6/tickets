@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Icon,
+  Tabs,
   type AnyControlDef,
   type AnyPlayground,
   type CollectedDemo,
@@ -13,6 +13,13 @@ import { deriveAxes, type AxisSection } from '../state-axes';
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
 const CAPTION = 'font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9';
+
+type AxisView = 'preview' | 'source';
+
+const VIEWS = [
+  { value: 'preview', label: 'Preview' },
+  { value: 'source', label: 'Source' },
+];
 
 // One prop, every value it can take, laid out full-bleed. Sections stack down
 // the page rather than tiling into a grid: an axis is read across, comparing
@@ -27,7 +34,7 @@ function AxisRow({
   playground: AnyPlayground;
   component: string;
 }) {
-  const [showSource, setShowSource] = useState(false);
+  const [view, setView] = useState<AxisView>('preview');
   return (
     <section
       id={section.slug}
@@ -35,41 +42,53 @@ function AxisRow({
     >
       <header className="flex items-center justify-between gap-4">
         <span className={CAPTION}>{section.prop}</span>
-        <button
-          type="button"
-          aria-expanded={showSource}
-          onClick={() => setShowSource((shown) => !shown)}
-          className="inline-flex h-6.5 items-center gap-1.5 rounded-md border border-gray-7 px-2 font-sans text-label font-medium text-gray-11 hover:text-gray-12"
-        >
-          <Icon name={showSource ? 'chevron-up' : 'chevron-down'} size="sm" />
-          Source
-        </button>
+        {/* A real tablist, not a toggle group: each item genuinely swaps the
+            panel below for another one, which is exactly the promise the role
+            makes. */}
+        <Tabs
+          variant="pill"
+          size="sm"
+          label={`${section.prop} view`}
+          items={VIEWS}
+          value={view}
+          onChange={(next) => setView(next as AxisView)}
+        />
       </header>
-      {/* `items-end`, so the captions of a row share one baseline and the
-          specimens hang above it. A size axis is exactly the case that breaks
-          under `items-start`: the tallest rung pushes its own caption down and
-          the labels stagger, reading as misalignment rather than as scale. */}
-      <div className="flex flex-wrap items-end gap-x-5 gap-y-4">
-        {section.cells.map((cell) => (
-          <figure key={cell.slug} id={cell.slug} className="m-0 flex min-w-0 flex-col gap-2">
-            {/* Same contravariance gap MatrixMode hits: the values are built
-                generically, so they are asserted back into the concrete shape
-                this playground's render declares. */}
-            <div className="flex min-h-9 items-center">
-              {playground.render(cell.values as ControlValues<Record<string, AnyControlDef>>)}
-            </div>
-            <figcaption className="font-mono text-label text-gray-9">{cell.label}</figcaption>
-            {showSource ? (
-              // The axis prop is pinned so the default-valued cell still prints
-              // the prop the section is about.
-              <CodeBlock
-                copyable={false}
-                className="p-3 text-meta"
-                code={generateSnippet(component, playground.controls, cell.values, [section.prop]).code}
-              />
-            ) : null}
-          </figure>
-        ))}
+      <div role="tabpanel" aria-label={`${section.prop} ${view}`}>
+        {view === 'preview' ? (
+          /* `items-end`, so the captions of a row share one baseline and the
+             specimens hang above it. A size axis is exactly the case that
+             breaks under `items-start`: the tallest rung pushes its own caption
+             down and the labels stagger, reading as misalignment not scale. */
+          <div className="flex flex-wrap items-end gap-x-5 gap-y-4">
+            {section.cells.map((cell) => (
+              <figure key={cell.slug} id={cell.slug} className="m-0 flex min-w-0 flex-col gap-2">
+                {/* Same contravariance gap MatrixMode hits: the values are built
+                    generically, so they are asserted back into the concrete
+                    shape this playground's render declares. */}
+                <div className="flex min-h-9 items-center">
+                  {playground.render(cell.values as ControlValues<Record<string, AnyControlDef>>)}
+                </div>
+                <figcaption className="font-mono text-label text-gray-9">{cell.label}</figcaption>
+              </figure>
+            ))}
+          </div>
+        ) : (
+          // One block, one line per cell, in the same order the specimens
+          // appear. Seventeen separate blocks down a tone axis would be a
+          // stack of chrome around one line of code each, and this is also
+          // what you would actually paste. The axis prop is pinned so the
+          // default-valued cell still prints the prop the section is about,
+          // rather than collapsing to a bare `<Button />`.
+          <CodeBlock
+            code={section.cells
+              .map(
+                (cell) =>
+                  generateSnippet(component, playground.controls, cell.values, [section.prop]).code,
+              )
+              .join('\n')}
+          />
+        )}
       </div>
     </section>
   );
