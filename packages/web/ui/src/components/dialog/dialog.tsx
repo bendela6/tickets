@@ -34,7 +34,7 @@ export const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(func
 
 export function DialogTitle({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <RadixDialog.Title className={cn('font-sans text-[16px] font-semibold text-gray-12', className)}>
+    <RadixDialog.Title className={cn('font-sans text-16 font-600 text-gray-12', className)}>
       {children}
     </RadixDialog.Title>
   );

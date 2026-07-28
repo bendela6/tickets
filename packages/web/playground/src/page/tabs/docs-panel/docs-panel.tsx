@@ -96,7 +96,7 @@ function OptionChips({ values }: { values: string[] }) {
         <button
           type="button"
           onClick={() => setExpanded(!expanded)}
-          className="ml-0.5 font-sans text-meta font-medium text-indigo-9 hover:underline"
+          className="ml-0.5 font-sans text-meta font-500 text-indigo-9 hover:underline"
         >
           {expanded ? 'Show fewer' : `Show all ${values.length}`}
         </button>
@@ -114,13 +114,13 @@ function PropRow({ name, def }: { name: string; def: AnyControlDef }) {
     // the same 200px the design draws, without an arbitrary track list.
     <div className="flex gap-7 border-t border-gray-6 py-4.5">
       <div className="flex w-50 shrink-0 flex-col gap-1.5">
-        <span className="font-mono text-ui font-semibold text-gray-12">{name}</span>
+        <span className="font-mono text-ui font-600 text-gray-12">{name}</span>
         <span className="font-mono text-label tracking-normal text-gray-9 text-pretty">
           {def.type ?? derivedType(def)}
         </span>
         <span
           className={cn(
-            'inline-flex h-4.5 items-center self-start rounded-sm px-1.5 font-mono text-micro font-medium tracking-(--tracking-label)',
+            'inline-flex h-4.5 items-center self-start rounded-sm px-1.5 font-mono text-micro font-500 tracking-wider',
             def.required ? 'bg-indigo-3 text-indigo-9' : 'bg-surface-inset text-gray-9',
           )}
         >
@@ -169,7 +169,7 @@ export function DocsPanel({ demo, railNote = true }: { demo: LiveDemo; railNote?
     <div className={cn('flex flex-col', DOCS_MEASURE)}>
       <div className="mt-6 mb-1.5 flex items-start justify-between gap-8">
         <div className="flex max-w-lg flex-col gap-2">
-          <span className="font-mono text-micro font-medium tracking-(--tracking-mono-label) text-gray-9">
+          <span className="font-mono text-micro font-500 tracking-widest text-gray-9">
             API
           </span>
           {docs?.summary ? (
@@ -196,7 +196,7 @@ export function DocsPanel({ demo, railNote = true }: { demo: LiveDemo; railNote?
 
       {railNote && (
         <div className="mt-6 flex gap-2.5 rounded-lg bg-green-3 p-3.5">
-          <span className="mt-px inline-flex size-4 flex-none items-center justify-center rounded-full bg-green-9 font-sans text-nano font-semibold text-green-contrast">
+          <span className="mt-px inline-flex size-4 flex-none items-center justify-center rounded-full bg-green-9 font-sans text-nano font-600 text-green-contrast">
             i
           </span>
           <span className="font-sans text-meta leading-normal text-green-9 text-pretty">

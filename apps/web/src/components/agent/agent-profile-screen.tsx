@@ -59,7 +59,7 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6 px-6 py-7">
       <div className="flex items-start gap-4">
-        <Avatar name={agent.name} {...avatarFor('agent')} size="md" className="size-11 text-[15px]" />
+        <Avatar name={agent.name} {...avatarFor('agent')} size="md" className="size-11 text-15" />
         <div className="flex-1">
           <div className="flex items-center gap-2 font-mono text-meta text-gray-9">
             <Link to="/agents/personas" className="hover:text-gray-11">
@@ -69,7 +69,7 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
             <span className="text-gray-11">{agent.name}</span>
           </div>
           <div className="mt-1 flex items-center gap-2">
-            <h1 className="font-sans text-[22px] font-semibold text-gray-12">{agent.name}</h1>
+            <h1 className="font-sans text-[22px] font-600 text-gray-12">{agent.name}</h1>
             <AgentBadge />
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-2 font-mono text-meta text-gray-9">
@@ -77,7 +77,7 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
               {providerLabel(agent.providerKey)} · {agent.model}
             </span>
             <PermissionBadge mode={agent.permissionMode} />
-            <span className="inline-flex h-5 items-center rounded-[5px] border border-gray-6 px-1.75 text-[10px] text-gray-11">
+            <span className="inline-flex h-5 items-center rounded-[5px] border border-gray-6 px-1.75 text-10 text-gray-11">
               {agent.allowedTools.length} tools
             </span>
           </div>
@@ -139,7 +139,7 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div className="flex-1 rounded-xl border border-gray-6 bg-surface-raised px-4 py-3">
-      <div className="font-mono text-[18px] font-semibold text-gray-12">{value}</div>
+      <div className="font-mono text-[18px] font-600 text-gray-12">{value}</div>
       <div className="mt-0.5 font-sans text-meta text-gray-9">{label}</div>
     </div>
   );

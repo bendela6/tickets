@@ -87,10 +87,10 @@ export function BoardHeader({
 
   return (
     <div className="mb-3.5 flex shrink-0 flex-wrap items-center gap-3 gap-y-2">
-      <span className="rounded-[5px] bg-surface-inset px-1.75 py-0.75 font-mono text-meta font-medium text-gray-12">
+      <span className="rounded-[5px] bg-surface-inset px-1.75 py-0.75 font-mono text-meta font-500 text-gray-12">
         {board.project.itemPrefix}
       </span>
-      <h1 className="m-0 font-sans text-[22px] leading-tight font-semibold text-gray-12">
+      <h1 className="m-0 font-sans text-[22px] leading-tight font-600 text-gray-12">
         {board.project.name}
       </h1>
       <span className="font-mono text-meta text-gray-9">
@@ -132,8 +132,8 @@ export function BoardHeader({
       ) : (
         <>
           <span className="font-sans text-meta text-gray-11">
-            Columns: <strong className="font-medium text-gray-12">Status</strong>{' '}
-            <span aria-hidden className="text-[10px] text-gray-9">
+            Columns: <strong className="font-500 text-gray-12">Status</strong>{' '}
+            <span aria-hidden className="text-10 text-gray-9">
               <Icon name="chevron-down" size="2xs" />
             </span>
           </span>
@@ -141,10 +141,10 @@ export function BoardHeader({
             <PopoverTrigger asChild>
               <button type="button" className="shrink-0 font-sans text-meta text-gray-11">
                 Cards:{' '}
-                <strong className="font-medium text-gray-12">
+                <strong className="font-500 text-gray-12">
                   {visibleFieldCount} {visibleFieldCount === 1 ? 'field' : 'fields'}
                 </strong>{' '}
-                <span aria-hidden className="text-[10px] text-gray-9">
+                <span aria-hidden className="text-10 text-gray-9">
                   <Icon name="chevron-down" size="2xs" />
                 </span>
               </button>

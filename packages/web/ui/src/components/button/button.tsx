@@ -38,7 +38,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 // Read each option down, not across: fill, text, border, focus, extra.
 const buttonClass = variants({
   base: [
-    'inline-flex items-center justify-center gap-2 font-sans font-medium',
+    'inline-flex items-center justify-center gap-2 font-sans font-500',
     'transition-colors select-none active:translate-y-px',
     'focus-visible:outline-none',
     'disabled:pointer-events-none',
@@ -79,7 +79,7 @@ const buttonClass = variants({
         ]),
       },
     },
-    // NOTE: font-size utilities here use arbitrary lengths (text-[12px]/text-[13px])
+    // NOTE: font-size utilities here use arbitrary lengths (text-12/text-13)
     // rather than the semantic `text-ui`/`text-meta` tokens on purpose. tailwind-merge
     // does not know those custom named sizes are font-sizes, so it groups them with
     // `text-{color}` utilities and silently drops the color (e.g. text-indigo-contrast).
@@ -88,9 +88,9 @@ const buttonClass = variants({
     size: {
       default: 'md',
       options: {
-        sm: 'h-7 px-2.5 rounded-[6px] text-[12px]',
-        md: 'h-9 px-3.5 rounded-[8px] text-[13px]',
-        lg: 'h-11 px-[18px] rounded-[10px] text-[14px]',
+        sm: 'h-7 px-2.5 rounded-[6px] text-12',
+        md: 'h-9 px-3.5 rounded-[8px] text-13',
+        lg: 'h-11 px-[18px] rounded-[10px] text-14',
       },
     },
   },

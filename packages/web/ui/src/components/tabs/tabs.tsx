@@ -53,7 +53,7 @@ const TAB_BOX: Record<TabsVariant, Record<TabsSize, string>> = {
   underline: {
     sm: 'px-0.5 pt-1.25 pb-1.5 text-meta',
     md: 'px-0.5 pt-1.75 pb-2 text-ui',
-    lg: 'px-1 pt-2.25 pb-2.5 text-[15px]',
+    lg: 'px-1 pt-2.25 pb-2.5 text-15',
   },
   pill: {
     sm: 'rounded-md px-2 py-0.5 text-label',
@@ -63,7 +63,7 @@ const TAB_BOX: Record<TabsVariant, Record<TabsSize, string>> = {
   rail: {
     sm: 'rounded-md px-2 py-1 text-left text-meta',
     md: 'rounded-md px-2.5 py-1.5 text-left text-ui',
-    lg: 'rounded-md px-3 py-2 text-left text-[15px]',
+    lg: 'rounded-md px-3 py-2 text-left text-15',
   },
 };
 
@@ -81,13 +81,13 @@ const tabClass = variants({
             '-mb-px border-b-2',
             TAB_BOX.underline[size],
             state === 'active'
-              ? `border-${t.solid} font-medium text-gray-12`
+              ? `border-${t.solid} font-500 text-gray-12`
               : 'border-transparent text-gray-11 hover:text-gray-12',
           ),
         ),
         pill: over(TONE, SIZE, STATE, (_t, size, state) =>
           cn(
-            'font-medium',
+            'font-500',
             TAB_BOX.pill[size],
             state === 'active'
               ? 'bg-surface-raised text-gray-12 shadow-sm'
@@ -98,7 +98,7 @@ const tabClass = variants({
           cn(
             TAB_BOX.rail[size],
             state === 'active'
-              ? `bg-${t.bgSubtle} font-medium text-${t.solid}`
+              ? `bg-${t.bgSubtle} font-500 text-${t.solid}`
               : 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
           ),
         ),
@@ -164,7 +164,7 @@ export function Tabs({
             {item.icon ? <Icon name={item.icon} size={GLYPH[size]} /> : null}
             {item.label}
             {item.badge != null ? (
-              <span className="font-mono text-[10px] text-gray-9">{item.badge}</span>
+              <span className="font-mono text-10 text-gray-9">{item.badge}</span>
             ) : null}
           </button>
         );

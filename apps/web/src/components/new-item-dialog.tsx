@@ -72,8 +72,8 @@ function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
 
 function ProjectChip({ project }: { project: Project }) {
   return (
-    <span className="inline-flex h-7 shrink-0 items-center gap-1.75 rounded-[7px] border border-gray-6 px-2.5 font-sans text-ui font-medium text-gray-12">
-      <span className="rounded-sm bg-surface-inset px-1.25 py-0.5 font-mono text-label font-medium">
+    <span className="inline-flex h-7 shrink-0 items-center gap-1.75 rounded-[7px] border border-gray-6 px-2.5 font-sans text-ui font-500 text-gray-12">
+      <span className="rounded-sm bg-surface-inset px-1.25 py-0.5 font-mono text-label font-500">
         {project.itemPrefix}
       </span>
       {project.name}
@@ -304,7 +304,7 @@ export function NewItemDialog({
                   >
                     <TypeIcon type={candidate} />
                     <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className="font-sans text-[14px] font-semibold text-gray-12">
+                      <span className="font-sans text-14 font-600 text-gray-12">
                         {candidate.label}
                       </span>
                       <span className="font-sans text-meta text-gray-11">
@@ -327,7 +327,7 @@ export function NewItemDialog({
                 <div className="flex items-center gap-3 rounded-xl border border-dashed border-gray-6 px-4 py-3 opacity-65">
                   <TypeIcon type={subtaskType} dashed />
                   <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="font-sans text-[14px] font-semibold text-gray-11">
+                    <span className="font-sans text-14 font-600 text-gray-11">
                       {subtaskType.label}
                     </span>
                     <span className="font-sans text-meta text-gray-9">
@@ -352,7 +352,7 @@ export function NewItemDialog({
                   type="button"
                   onClick={() => setPickedTypeId(null)}
                   className={cn(
-                    'shrink-0 rounded-md bg-transparent font-sans text-meta font-medium text-indigo-9 hover:text-indigo-10',
+                    'shrink-0 rounded-md bg-transparent font-sans text-meta font-500 text-indigo-9 hover:text-indigo-10',
                     'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-3',
                   )}
                 >
@@ -379,7 +379,7 @@ export function NewItemDialog({
                 placeholder="Title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                className="h-10 shrink-0 rounded-[9px] px-3.25 text-[15px]"
+                className="h-10 shrink-0 rounded-[9px] px-3.25 text-15"
               />
               {gridRows.length > 0 ? (
                 <div className="grid shrink-0 grid-cols-2 gap-x-4 gap-y-3">
@@ -533,9 +533,9 @@ export function SubtaskQuickCreate({
             void create();
           }
         }}
-        className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-[14px] text-gray-12 outline-none placeholder:text-gray-9"
+        className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-14 text-gray-12 outline-none placeholder:text-gray-9"
       />
-      <span aria-hidden className="hidden shrink-0 font-mono text-[10px] text-gray-9 sm:inline">
+      <span aria-hidden className="hidden shrink-0 font-mono text-10 text-gray-9 sm:inline">
         ↵ creates {board.project.itemPrefix}-{nextNumber}
       </span>
       <Combobox

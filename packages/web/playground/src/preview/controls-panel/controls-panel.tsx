@@ -21,7 +21,7 @@ export function ControlsPanel({
           key={key}
           className="grid grid-cols-[96px_1fr] items-center gap-2.5 border-b border-gray-6 py-2.5"
         >
-          <label htmlFor={key} className="font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9">
+          <label htmlFor={key} className="font-mono text-label uppercase tracking-widest text-gray-9">
             {def.label ?? key}
           </label>
           {def.kind === 'select' && (

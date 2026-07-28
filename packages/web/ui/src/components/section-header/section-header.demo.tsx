@@ -27,7 +27,7 @@ export const states = [
       <SectionHeader
         title="Links"
         action={
-          <button type="button" className="font-sans text-meta font-medium text-gray-9 hover:text-gray-12">
+          <button type="button" className="font-sans text-meta font-500 text-gray-9 hover:text-gray-12">
             ＋ Add link
           </button>
         }

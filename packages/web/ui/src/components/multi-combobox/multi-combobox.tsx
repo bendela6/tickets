@@ -90,7 +90,7 @@ export function MultiCombobox({
               <Pill key={option.value} tone={option.color ?? 'gray'} shape="round" label={option.label} />
             ))}
             {overflow > 0 ? (
-              <span className="font-mono text-meta font-medium text-gray-11">+{overflow}</span>
+              <span className="font-mono text-meta font-500 text-gray-11">+{overflow}</span>
             ) : null}
           </span>
           <Icon name="chevron-down" size={CHEVRON[size]} className="shrink-0 self-center text-gray-9" />
@@ -111,14 +111,14 @@ export function MultiCombobox({
                     options.filter((option) => !option.disabled).map((option) => option.value),
                   )
                 }
-                className="rounded-md px-1 font-sans text-meta font-medium text-indigo-9 hover:underline"
+                className="rounded-md px-1 font-sans text-meta font-500 text-indigo-9 hover:underline"
               >
                 Select all
               </button>
               <button
                 type="button"
                 onClick={() => onChange([])}
-                className="rounded-md px-1 font-sans text-meta font-medium text-gray-11 hover:underline"
+                className="rounded-md px-1 font-sans text-meta font-500 text-gray-11 hover:underline"
               >
                 Clear ({value.length})
               </button>

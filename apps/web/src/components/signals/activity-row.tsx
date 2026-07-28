@@ -29,21 +29,21 @@ export function ActivityRow({ signal }: { signal: SignalListRow }) {
       </span>
       <span className="min-w-0 pr-3">
         <span className="block truncate font-sans text-ui text-gray-11">
-          <strong className="font-semibold text-gray-12">{signal.name}</strong>
+          <strong className="font-600 text-gray-12">{signal.name}</strong>
           {signal.message !== null ? ` · ${signal.message}` : null}
         </span>
       </span>
       <span>
-        <span className="inline-flex h-5 max-w-25 items-center overflow-hidden rounded-md bg-surface-inset px-1.75 font-mono text-[10.5px] font-medium text-gray-11">
+        <span className="inline-flex h-5 max-w-25 items-center overflow-hidden rounded-md bg-surface-inset px-1.75 font-mono text-[10.5px] font-500 text-gray-11">
           {signal.appSlug}
         </span>
       </span>
-      <span className="font-mono text-[11px] text-gray-9">{relativeTime(signal.receivedAt)}</span>
+      <span className="font-mono text-11 text-gray-9">{relativeTime(signal.receivedAt)}</span>
       <span>
         <Link
           to="/signals/sessions/$sessionId"
           params={{ sessionId: signal.sessionId }}
-          className="font-mono text-[11px] font-medium text-indigo-9 hover:underline"
+          className="font-mono text-11 font-500 text-indigo-9 hover:underline"
         >
           session →
         </Link>

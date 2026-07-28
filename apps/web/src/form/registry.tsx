@@ -12,7 +12,7 @@ function TextInput(p: InputProps<{ placeholder?: string; mono?: boolean }, strin
       disabled={p.disabled}
       onChange={(e) => p.onChange(e.target.value)}
       onBlur={p.onBlur}
-      className={cn(p.config.mono && 'font-mono text-[13px]')}
+      className={cn(p.config.mono && 'font-mono text-13')}
     />
   );
 }

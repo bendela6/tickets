@@ -91,7 +91,7 @@ export function DetailLinks({
         action={
           <button
             type="button"
-            className="font-sans text-meta font-medium text-gray-9 hover:text-gray-12"
+            className="font-sans text-meta font-500 text-gray-9 hover:text-gray-12"
             onClick={() => setAdding((value) => !value)}
           >
             ＋ Add link
@@ -130,7 +130,7 @@ export function DetailLinks({
                   <ItemKey
                     prefix={prefix}
                     number={other.number}
-                    className="text-[11px] hover:text-indigo-9"
+                    className="text-11 hover:text-indigo-9"
                   />
                 </button>
                 <span className="min-w-0 flex-1 truncate font-sans text-ui text-gray-11">

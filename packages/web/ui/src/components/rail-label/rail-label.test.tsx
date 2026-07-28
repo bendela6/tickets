@@ -11,7 +11,7 @@ describe('RailLabel', () => {
   it('carries the mono/uppercase/tracking/muted classes', () => {
     render(<RailLabel>PROJECTS</RailLabel>);
     const el = screen.getByText('PROJECTS');
-    for (const cls of ['font-mono', 'text-[10px]', 'uppercase', 'text-gray-9']) {
+    for (const cls of ['font-mono', 'text-10', 'uppercase', 'text-gray-9']) {
       expect(el.className).toContain(cls);
     }
   });

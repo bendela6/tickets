@@ -10,15 +10,15 @@ test('md input carries the spec size classes', () => {
   expect(input).toHaveClass('h-9', 'px-3', 'rounded-[8px]', 'bg-surface-raised', 'border-gray-7');
   // Regression guard: tailwind-merge must not let the 14px font size evict the
   // ink text color (the same trap the primary button hit with text-ui).
-  expect(input).toHaveClass('text-[14px]');
+  expect(input).toHaveClass('text-14');
   expect(input).toHaveClass('text-gray-12');
 });
 
 test('sm input overrides height, padding, radius, and font size', () => {
   render(<Input size="sm" aria-label="Estimate" />);
   const input = screen.getByLabelText('Estimate');
-  expect(input).toHaveClass('h-7', 'px-2.25', 'rounded-[6px]', 'text-[13px]');
-  expect(input).not.toHaveClass('text-[14px]');
+  expect(input).toHaveClass('h-7', 'px-2.25', 'rounded-[6px]', 'text-13');
+  expect(input).not.toHaveClass('text-14');
 });
 
 test('invalid input shows the danger border and always-on halo', () => {

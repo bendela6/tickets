@@ -21,7 +21,7 @@ export const states = [
         {ICON_NAMES.map((name) => (
           <div key={name} className="flex w-20 flex-col items-center gap-1.5 text-gray-11">
             <Icon name={name} size="lg" />
-            <span className="font-mono text-[10px] text-gray-9">{name}</span>
+            <span className="font-mono text-10 text-gray-9">{name}</span>
           </div>
         ))}
       </div>

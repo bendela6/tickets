@@ -17,22 +17,22 @@ function ReleaseRow({ appId, release }: { appId: number; release: AppReleaseRow 
       className="grid h-8.5 items-center border-b border-gray-6 px-4 last:border-b-0"
       style={{ gridTemplateColumns: RELEASES_GRID_COLUMNS }}
     >
-      <span className="truncate font-mono text-[11.5px] font-medium text-gray-12">{release.release}</span>
+      <span className="truncate font-mono text-[11.5px] font-500 text-gray-12">{release.release}</span>
       <span className="text-right font-mono text-[11.5px] text-gray-12">{formatCount(release.signalCount)}</span>
       <span
         className={cn(
           'text-right font-mono text-[11.5px]',
-          release.errorCount > 0 ? 'font-medium text-red-9' : 'text-gray-9',
+          release.errorCount > 0 ? 'font-500 text-red-9' : 'text-gray-9',
         )}
       >
         {release.errorCount > 0 ? formatCount(release.errorCount) : '—'}
       </span>
-      <span className="text-right font-mono text-[11px] text-gray-9">
+      <span className="text-right font-mono text-11 text-gray-9">
         {release.sourcemapCount > 0
           ? `${formatCount(release.sourcemapCount)} (${formatBytes(release.sourcemapBytes)})`
           : '—'}
       </span>
-      <span className="text-right font-mono text-[11px] text-gray-9">
+      <span className="text-right font-mono text-11 text-gray-9">
         {release.lastSeen !== null ? relativeTime(release.lastSeen) : '—'}
       </span>
       <span className="flex justify-end">
@@ -78,14 +78,14 @@ export function ReleasesCard({ appId }: { appId: number }) {
   return (
     <div className="flex-none overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
       <div className="flex h-10.5 items-center gap-2.5 border-b border-gray-6 px-4">
-        <span className="font-sans text-[13.5px] font-semibold text-gray-12">Releases</span>
+        <span className="font-sans text-[13.5px] font-600 text-gray-12">Releases</span>
         {!isLoading && rows.length > 0 ? (
-          <span className="font-mono text-[11px] text-gray-9">{rows.length}</span>
+          <span className="font-mono text-11 text-gray-9">{rows.length}</span>
         ) : null}
       </div>
       <div
         role="row"
-        className="grid h-7.5 items-center border-b border-gray-6 bg-gray-1 px-4 font-sans text-[10.5px] font-medium tracking-wide text-gray-11 uppercase"
+        className="grid h-7.5 items-center border-b border-gray-6 bg-gray-1 px-4 font-sans text-[10.5px] font-500 tracking-wide text-gray-11 uppercase"
         style={{ gridTemplateColumns: RELEASES_GRID_COLUMNS }}
       >
         <span>Release</span>

@@ -172,14 +172,14 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
               setEditing(false);
             }
           }}
-          className="w-55 bg-transparent font-mono text-[12px] text-indigo-9 outline-none"
+          className="w-55 bg-transparent font-mono text-12 text-indigo-9 outline-none"
         />
       ) : (
         <>
           <span className="inline-flex shrink-0 text-indigo-9">
             <Icon name="link" size="sm" />
           </span>
-          <span className="max-w-55 truncate font-mono text-[12px] text-indigo-9">{href}</span>
+          <span className="max-w-55 truncate font-mono text-12 text-indigo-9">{href}</span>
         </>
       )}
       <span className="h-3.5 w-px shrink-0 bg-gray-6" />

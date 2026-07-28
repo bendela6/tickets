@@ -132,7 +132,7 @@ export function ComboboxList({
           return (
             <li key={option.value}>
               {showHeader ? (
-                <div className="px-2.25 pb-0.75 pt-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-gray-9">
+                <div className="px-2.25 pb-0.75 pt-1.5 font-mono text-10 font-500 uppercase tracking-[0.08em] text-gray-9">
                   {groupLabel}
                 </div>
               ) : null}
@@ -158,7 +158,7 @@ export function ComboboxList({
                   <span>{option.label}</span>
                 )}
                 {selected ? (
-                  <span className="font-sans text-meta font-medium text-indigo-9">✓</span>
+                  <span className="font-sans text-meta font-500 text-indigo-9">✓</span>
                 ) : null}
               </button>
             </li>
@@ -166,7 +166,7 @@ export function ComboboxList({
         })}
       </ul>
       {footer ? (
-        <div className="border-t border-gray-6 px-3 py-1.75 font-sans text-[11px] text-gray-9">
+        <div className="border-t border-gray-6 px-3 py-1.75 font-sans text-11 text-gray-9">
           {footer}
         </div>
       ) : null}

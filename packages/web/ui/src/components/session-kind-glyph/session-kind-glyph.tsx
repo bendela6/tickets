@@ -20,8 +20,8 @@ export function SessionKindGlyph({
       className={cn(
         'inline-flex size-5 shrink-0 select-none items-center justify-center rounded-md font-mono leading-none',
         terminal
-          ? 'bg-gray-12 text-gray-1 text-[8px] font-semibold'
-          : 'bg-indigo-3 text-indigo-9 text-[10px] font-medium',
+          ? 'bg-gray-12 text-gray-1 text-[8px] font-600'
+          : 'bg-indigo-3 text-indigo-9 text-10 font-500',
         className,
       )}
     >

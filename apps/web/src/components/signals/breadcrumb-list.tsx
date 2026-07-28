@@ -31,7 +31,7 @@ function HttpStatusPill({ status }: { status: number }) {
     <Pill
       tone={ok ? 'green' : 'danger'}
       label={status}
-      className={cn('h-4.25 rounded-[4px] px-1.5 font-mono text-[10px]', !ok && 'font-semibold')}
+      className={cn('h-4.25 rounded-[4px] px-1.5 font-mono text-10', !ok && 'font-600')}
     />
   );
 }
@@ -66,7 +66,7 @@ function BreadcrumbRow({ crumb }: { crumb: SignalBreadcrumb }) {
       <span className="flex min-w-0 items-center gap-2">
         <span
           className={cn(
-            'truncate font-mono text-[12px]',
+            'truncate font-mono text-12',
             tone === 'warn' ? 'text-orange-9' : tone === 'error' ? 'text-red-9' : 'text-gray-11',
           )}
         >
@@ -77,7 +77,7 @@ function BreadcrumbRow({ crumb }: { crumb: SignalBreadcrumb }) {
           <span className="shrink-0 font-mono text-[10.5px] text-gray-9">{formatDurationMs(durationMs)}</span>
         ) : null}
       </span>
-      <span className="font-mono text-[11px] text-gray-9">{formatClockTime(crumb.timestamp)}</span>
+      <span className="font-mono text-11 text-gray-9">{formatClockTime(crumb.timestamp)}</span>
     </div>
   );
 }
@@ -98,14 +98,14 @@ function TerminalBreadcrumbRow({ terminal }: { terminal: TerminalBreadcrumb }) {
       className="grid items-center gap-x-2.5 bg-red-3 px-4 py-1.5"
       style={{ gridTemplateColumns: BREADCRUMB_GRID_COLUMNS }}
     >
-      <span className="flex size-5 items-center justify-center rounded-[6px] bg-red-9 font-mono text-[10px] font-semibold text-red-contrast">
+      <span className="flex size-5 items-center justify-center rounded-[6px] bg-red-9 font-mono text-10 font-600 text-red-contrast">
         ✕
       </span>
-      <span className="font-mono text-[10.5px] font-medium text-red-9">{terminal.name}</span>
+      <span className="font-mono text-[10.5px] font-500 text-red-9">{terminal.name}</span>
       <span className="flex min-w-0 items-center gap-2">
-        <span className="truncate font-mono text-[12px] font-medium text-red-9">{terminal.message ?? ''}</span>
+        <span className="truncate font-mono text-12 font-500 text-red-9">{terminal.message ?? ''}</span>
       </span>
-      <span className="font-mono text-[11px] font-medium text-red-9">
+      <span className="font-mono text-11 font-500 text-red-9">
         {formatClockTime(terminal.clientTimestamp)}
       </span>
     </div>
@@ -136,9 +136,9 @@ export function BreadcrumbList({
   return (
     <div className="flex-none overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
       <div className="flex h-10.5 items-center gap-2.5 border-b border-gray-6 px-4">
-        <span className="font-sans text-[13.5px] font-semibold text-gray-12">Breadcrumbs</span>
+        <span className="font-sans text-[13.5px] font-600 text-gray-12">Breadcrumbs</span>
         {rows.length > 0 ? (
-          <span className="font-mono text-[11px] text-gray-9">
+          <span className="font-mono text-11 text-gray-9">
             the {rows.length} signals before this occurrence
           </span>
         ) : null}

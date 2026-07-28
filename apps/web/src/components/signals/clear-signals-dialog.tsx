@@ -101,7 +101,7 @@ export function ClearSignalsDialog({
           <>
             <DialogTitle>Clear signals</DialogTitle>
             <p className="mt-1.5 font-sans text-meta text-gray-11">
-              Removes signals for <strong className="font-medium text-gray-12">{app.slug}</strong> and prunes
+              Removes signals for <strong className="font-500 text-gray-12">{app.slug}</strong> and prunes
               any issue left with none. This cannot be undone.
             </p>
 

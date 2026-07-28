@@ -59,9 +59,9 @@ describe('spec tokens', () => {
   });
 
   it('carries a leading for every rung except the one added for the sweep', () => {
-    // 15 is the `lg` control rung six primitives had been spelling as
-    // `text-[15px]`, which sets size alone. It ships without a leading so the
-    // swap renders identically; pairing is a separate, visible decision.
+    // 15 is the `lg` control rung six primitives had been spelling as an
+    // arbitrary 15px value, which sets size alone. It ships without a leading
+    // so the swap renders identically; pairing is a separate, visible decision.
     expect(TEXT_SIZES.filter((s) => !s.lineHeight).map((s) => s.step)).toEqual(['15']);
   });
 

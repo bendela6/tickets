@@ -17,7 +17,7 @@ export function DemoTab({ demo, source }: { demo: LiveDemo; source?: string }) {
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-center justify-between">
-        <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9">
+        <span className="font-mono text-label uppercase tracking-widest text-gray-9">
           {fileName(demo.path).toUpperCase()}
         </span>
         <span className="font-mono text-meta text-gray-9">{source.split('\n').length} lines</span>

@@ -105,10 +105,10 @@ function renderPending(entry: UploadEntry): void {
   const row = document.createElement('div');
   row.className = 'mb-1.75 flex items-center gap-2';
   const name = document.createElement('span');
-  name.className = 'min-w-0 flex-1 truncate font-mono text-[11px] text-gray-11';
+  name.className = 'min-w-0 flex-1 truncate font-mono text-11 text-gray-11';
   name.textContent = entry.file.name;
   const pct = document.createElement('span');
-  pct.className = 'shrink-0 font-mono text-[11px] text-gray-9';
+  pct.className = 'shrink-0 font-mono text-11 text-gray-9';
   pct.textContent = '0%';
   row.append(name, pct);
 
@@ -164,11 +164,11 @@ function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void 
   icon.classList.add('text-red-9');
 
   const title = document.createElement('span');
-  title.className = 'font-sans text-ui font-medium text-gray-12';
+  title.className = 'font-sans text-ui font-500 text-gray-12';
   title.textContent = 'Upload failed';
 
   const meta = document.createElement('span');
-  meta.className = 'font-mono text-[11px] text-gray-9';
+  meta.className = 'font-mono text-11 text-gray-9';
   meta.textContent = `${entry.file.name} · ${formatFileSize(entry.file.size)}`;
 
   const actions = document.createElement('div');
@@ -177,7 +177,7 @@ function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void 
   const retryBtn = document.createElement('button');
   retryBtn.type = 'button';
   retryBtn.className =
-    'inline-flex h-6.5 items-center gap-1.5 rounded-md border border-gray-7 bg-surface-raised px-2.75 font-sans text-[12px] font-medium text-gray-12';
+    'inline-flex h-6.5 items-center gap-1.5 rounded-md border border-gray-7 bg-surface-raised px-2.75 font-sans text-12 font-500 text-gray-12';
   retryBtn.append(svgIcon(ROTATE_CCW_PATHS, 12), document.createTextNode('Retry'));
   retryBtn.addEventListener('click', () => {
     // Single-flight guard: a rapid second Retry click (or a stray click on a
@@ -194,7 +194,7 @@ function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void 
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
   removeBtn.className =
-    'inline-flex h-6.5 items-center rounded-md px-2.25 font-sans text-[12px] font-medium text-gray-9 hover:bg-black/4';
+    'inline-flex h-6.5 items-center rounded-md px-2.25 font-sans text-12 font-500 text-gray-9 hover:bg-black/4';
   removeBtn.textContent = 'Remove';
   removeBtn.addEventListener('click', () => handlersRef.current.onRemove(entry.id));
 

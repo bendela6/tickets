@@ -61,7 +61,7 @@ export function RotateKeyDialog({
             <DialogTitle>Rotate key</DialogTitle>
             <p className="mt-1.5 font-sans text-meta text-gray-11">
               This issues a new ingest key for{' '}
-              <strong className="font-medium text-gray-12">{app.slug}</strong>. The old DSN stops accepting
+              <strong className="font-500 text-gray-12">{app.slug}</strong>. The old DSN stops accepting
               signals immediately — every SDK using it must be updated.
             </p>
             <div className="mt-4">
@@ -104,7 +104,7 @@ export function RotateKeyDialog({
               The old DSN no longer works. Update every SDK pointed at {app.slug} with the new DSN below.
             </p>
             <div className="mt-4">
-              <div className="mb-1.5 font-mono text-label font-medium tracking-wide text-gray-9">NEW DSN</div>
+              <div className="mb-1.5 font-mono text-label font-500 tracking-wide text-gray-9">NEW DSN</div>
               <DsnField dsn={rotated.dsn} />
             </div>
             <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Close</Button>} />

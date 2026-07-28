@@ -40,7 +40,7 @@ export function ViewTabs({
             className={cn(
               '-mb-px border-b-2 px-3 py-2 font-sans text-ui',
               isActive
-                ? 'border-indigo-9 font-medium text-gray-12'
+                ? 'border-indigo-9 font-500 text-gray-12'
                 : 'border-transparent text-gray-11 hover:text-gray-12',
             )}
           >
@@ -89,7 +89,7 @@ export function ViewTabs({
         </button>
       )}
       <span className="flex-1" />
-      {active ? <span className="py-2 font-mono text-[11px] text-gray-9">view saved</span> : null}
+      {active ? <span className="py-2 font-mono text-11 text-gray-9">view saved</span> : null}
     </div>
   );
 }

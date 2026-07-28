@@ -105,12 +105,12 @@ function ApprovalCard({
     >
       <div className="flex items-center gap-2 px-3.5 py-2.5">
         <span aria-hidden className="size-2.5 shrink-0 rotate-45 rounded-[1px] bg-orange-9" />
-        <span className="font-sans text-ui font-semibold text-gray-12">Approval required</span>
+        <span className="font-sans text-ui font-600 text-gray-12">Approval required</span>
         <Pill
           tone="secondary"
           variant="outline"
           label={toolName}
-          className="h-auto rounded-[5px] border-gray-6 bg-surface-raised px-1.5 py-0 font-mono text-[11px]"
+          className="h-auto rounded-[5px] border-gray-6 bg-surface-raised px-1.5 py-0 font-mono text-11"
         />
         <span className="flex-1" />
         {decided ? (
@@ -124,7 +124,7 @@ function ApprovalCard({
         {diff ? (
           <DiffBody lines={diff.lines} />
         ) : (
-          <pre className="overflow-x-auto px-3.5 py-2 font-mono text-[11px] leading-relaxed text-gray-11">
+          <pre className="overflow-x-auto px-3.5 py-2 font-mono text-11 leading-relaxed text-gray-11">
             {pretty(input)}
           </pre>
         )}
@@ -182,7 +182,7 @@ function ThinkingBlock({ text }: { text: string }) {
           ✦
         </span>
         Thinking
-        <span aria-hidden className="text-[9px]">
+        <span aria-hidden className="text-9">
           <Icon name={open ? 'chevron-down' : 'chevron-right'} size="2xs" />
         </span>
       </button>
@@ -218,7 +218,7 @@ function ToolStatusDot({ status }: { status: ToolStatus }) {
   return (
     <span
       aria-hidden
-      className="inline-flex size-3 shrink-0 items-center justify-center rounded-full bg-green-9 text-[7px] font-bold text-green-contrast"
+      className="inline-flex size-3 shrink-0 items-center justify-center rounded-full bg-green-9 text-[7px] font-600 text-green-contrast"
     >
       ✓
     </span>
@@ -246,19 +246,19 @@ function ToolCard({ name, input, result }: { name: string; input: unknown; resul
         className="flex w-full items-center gap-2 px-2.75 py-1.5 text-left hover:bg-surface-inset"
       >
         <ToolStatusDot status={status} />
-        <span className="shrink-0 font-mono text-meta font-semibold text-gray-12">{name}</span>
+        <span className="shrink-0 font-mono text-meta font-600 text-gray-12">{name}</span>
         <span className="flex-1 truncate font-mono text-meta text-gray-9">{summary}</span>
         {diff ? (
           <>
-            <span className="rounded-[4px] bg-green-3 px-1.5 font-mono text-[10px] text-green-9">
+            <span className="rounded-[4px] bg-green-3 px-1.5 font-mono text-10 text-green-9">
               +{diff.added}
             </span>
-            <span className="rounded-[4px] bg-red-3 px-1.5 font-mono text-[10px] text-red-9">
+            <span className="rounded-[4px] bg-red-3 px-1.5 font-mono text-10 text-red-9">
               −{diff.removed}
             </span>
           </>
         ) : null}
-        <span aria-hidden className="text-[9px] text-gray-9">
+        <span aria-hidden className="text-9 text-gray-9">
           <Icon name={open ? 'chevron-down' : 'chevron-right'} size="2xs" />
         </span>
       </button>
@@ -267,14 +267,14 @@ function ToolCard({ name, input, result }: { name: string; input: unknown; resul
           {diff ? (
             <DiffBody lines={diff.lines} />
           ) : (
-            <pre className="overflow-x-auto px-3 py-2 font-mono text-[11px] leading-relaxed text-gray-11">
+            <pre className="overflow-x-auto px-3 py-2 font-mono text-11 leading-relaxed text-gray-11">
               {pretty(input)}
             </pre>
           )}
           {result ? (
             <pre
               className={cn(
-                'overflow-x-auto border-t border-gray-6 px-3 py-2 font-mono text-[11px] leading-relaxed',
+                'overflow-x-auto border-t border-gray-6 px-3 py-2 font-mono text-11 leading-relaxed',
                 result.isError ? 'text-red-9' : 'text-gray-9',
               )}
             >
@@ -301,15 +301,15 @@ function SubagentGroup({
   return (
     <div className="my-0.5 flex flex-col gap-2 border-l-2 border-gray-7 pl-3">
       <div className="flex items-center gap-2">
-        <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-indigo-3 font-mono text-[7px] font-semibold text-indigo-9">
+        <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-indigo-3 font-mono text-[7px] font-600 text-indigo-9">
           {name.slice(0, 2).toUpperCase()}
         </span>
-        <span className="font-mono text-meta font-semibold text-gray-12">{name}</span>
+        <span className="font-mono text-meta font-600 text-gray-12">{name}</span>
         <Pill
           tone="secondary"
           variant="outline"
           label="subagent"
-          className="h-auto rounded-[3px] px-1.5 py-0 font-mono text-[9px] uppercase tracking-wide"
+          className="h-auto rounded-[3px] px-1.5 py-0 font-mono text-9 uppercase tracking-wide"
         />
         <ToolStatusDot status={statusOf(result)} />
         <span className="truncate font-mono text-meta text-gray-9">{oneLineInput(input)}</span>
@@ -377,7 +377,7 @@ function diffLines(input: unknown): { lines: DiffLine[]; added: number; removed:
 
 function DiffBody({ lines }: { lines: DiffLine[] }) {
   return (
-    <div className="overflow-x-auto py-1 font-mono text-[11px] leading-relaxed">
+    <div className="overflow-x-auto py-1 font-mono text-11 leading-relaxed">
       {lines.map((line, i) => (
         <div
           key={i}

@@ -30,7 +30,7 @@ const NEUTRAL_TONE = toneAxis(TONE_SCALE.neutral);
 // vocabulary. A test asserts the two agree for every tone, since a Pill and a
 // Button asking for the same treatment must not diverge.
 const pillClass = variants({
-  base: 'inline-flex items-center font-sans font-medium',
+  base: 'inline-flex items-center font-sans font-500',
   config: {
     variant: {
       default: 'subtle',

@@ -201,7 +201,7 @@ export function ComponentPage({
               type="button"
               aria-expanded={!controlsCollapsed}
               onClick={() => setCollapsed(!controlsCollapsed)}
-              className="inline-flex h-6.5 items-center gap-1.5 rounded-md border border-gray-7 bg-surface-raised px-2 font-sans text-label font-medium text-gray-11 hover:text-gray-12"
+              className="inline-flex h-6.5 items-center gap-1.5 rounded-md border border-gray-7 bg-surface-raised px-2 font-sans text-label font-500 text-gray-11 hover:text-gray-12"
             >
               <Icon name={controlsCollapsed ? 'chevron-left' : 'chevron-right'} size="sm" />
               {controlsCollapsed ? 'Show controls' : 'Hide controls'}
@@ -266,13 +266,13 @@ export function ComponentPage({
             >
               <div className={cn('flex h-full flex-col pl-6', controlsCollapsed && 'hidden')}>
                 <div className="flex items-center justify-between pb-2.5">
-                  <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9">
+                  <span className="font-mono text-label uppercase tracking-widest text-gray-9">
                     CONTROLS
                   </span>
                   <button
                     type="button"
                     onClick={() => setValues(initialValues(playground.controls))}
-                    className="font-sans text-label font-medium text-indigo-9 hover:underline"
+                    className="font-sans text-label font-500 text-indigo-9 hover:underline"
                   >
                     Reset
                   </button>

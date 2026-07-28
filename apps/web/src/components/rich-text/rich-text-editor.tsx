@@ -394,7 +394,7 @@ export function RichTextEditor({
         {composer !== undefined ? (
           <div className="flex items-center gap-2 border-t border-gray-6 bg-gray-1 px-2 py-1.5 dark:bg-surface-inset">
             <div className={cn('min-w-0 flex-1', disabled && 'opacity-45')}>{toolbar}</div>
-            <span className="font-mono text-[11px] text-gray-9">⌘↩</span>
+            <span className="font-mono text-11 text-gray-9">⌘↩</span>
             <Button
               variant="solid"
               size="sm"

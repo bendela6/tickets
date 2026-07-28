@@ -32,7 +32,7 @@ export function KpiTiles({
           <span className="inline-flex shrink-0">
             <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
           </span>
-          <span className="font-mono text-[18px] leading-none font-semibold text-gray-12">
+          <span className="font-mono text-[18px] leading-none font-600 text-gray-12">
             {counts[kind]}
           </span>
           <span className="font-sans text-meta text-gray-11">{label}</span>

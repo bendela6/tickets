@@ -38,7 +38,7 @@ function Label({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
   return (
     <SectionHeader
       title={children}
-      count={hint != null ? <span className="font-normal normal-case text-gray-9">{hint}</span> : null}
+      count={hint != null ? <span className="font-400 normal-case text-gray-9">{hint}</span> : null}
       className="mb-1.5 gap-1.5 tracking-wide"
     />
   );
@@ -255,7 +255,7 @@ export function NewSessionDialog({
               value={command}
               onChange={(e) => setCommand(e.target.value)}
               placeholder="claude"
-              className="font-mono text-[13px]"
+              className="font-mono text-13"
             />
           </label>
 
@@ -263,7 +263,7 @@ export function NewSessionDialog({
         </div>
 
         <div className="mt-5 flex items-center justify-between gap-2">
-          <span className="font-mono text-[11px] text-gray-9">{hint}</span>
+          <span className="font-mono text-11 text-gray-9">{hint}</span>
           <DialogFooter
             className="mt-0 border-0 p-0"
             cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}

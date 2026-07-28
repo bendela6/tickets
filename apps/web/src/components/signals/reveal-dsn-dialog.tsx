@@ -28,14 +28,14 @@ export function RevealDsnDialog({
     <DialogRoot open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogTitle>
-          <span className="font-mono text-[15px]">{app.slug}</span> DSN
+          <span className="font-mono text-15">{app.slug}</span> DSN
         </DialogTitle>
         {appQuery.data === undefined ? (
           <p className="mt-3 font-mono text-[11.5px] text-gray-9">loading…</p>
         ) : (
           <>
             <div className="mt-4">
-              <div className="mb-1.5 font-mono text-label font-medium tracking-wide text-gray-9">DSN</div>
+              <div className="mb-1.5 font-mono text-label font-500 tracking-wide text-gray-9">DSN</div>
               <DsnField dsn={appQuery.data.dsn} />
             </div>
             <SdkSnippet dsn={appQuery.data.dsn} platform="react" className="mt-4" />

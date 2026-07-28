@@ -139,12 +139,12 @@ export function NewAppDialog({
         ) : (
           <>
             <div className="flex items-start gap-3">
-              <span className="flex size-7.5 shrink-0 items-center justify-center rounded-full bg-green-3 font-sans text-[13px] font-semibold text-green-9">
+              <span className="flex size-7.5 shrink-0 items-center justify-center rounded-full bg-green-3 font-sans text-13 font-600 text-green-9">
                 ✓
               </span>
               <div className="flex-1">
                 <DialogTitle>
-                  <span className="font-mono text-[15px]">{created.slug}</span> is ready
+                  <span className="font-mono text-15">{created.slug}</span> is ready
                 </DialogTitle>
                 <p className="mt-1 font-sans text-[12.5px] leading-relaxed text-gray-11">
                   Wire the SDK to this DSN. Signals send to your local daemon — nothing leaves the
@@ -154,7 +154,7 @@ export function NewAppDialog({
             </div>
 
             <div className="mt-4">
-              <div className="mb-1.5 font-mono text-label font-medium tracking-wide text-gray-9">DSN</div>
+              <div className="mb-1.5 font-mono text-label font-500 tracking-wide text-gray-9">DSN</div>
               <DsnField dsn={created.dsn} />
             </div>
 

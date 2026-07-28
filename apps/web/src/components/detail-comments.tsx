@@ -70,15 +70,15 @@ export function DetailComments({
               <Avatar name={name} {...avatarFor(author?.kind ?? 'human')} size="md" className="mt-0.5" />
               <div className="min-w-0 flex-1">
                 <div className="mb-0.75 flex items-baseline gap-2">
-                  <span className="font-sans text-ui font-medium text-gray-12">{name}</span>
+                  <span className="font-sans text-ui font-500 text-gray-12">{name}</span>
                   {author?.kind === 'agent' ? (
-                    <span className="self-center rounded-[3px] bg-indigo-3 px-1.25 font-mono text-[9px] font-medium text-indigo-9">
+                    <span className="self-center rounded-[3px] bg-indigo-3 px-1.25 font-mono text-9 font-500 text-indigo-9">
                       AGENT
                     </span>
                   ) : null}
                   <RelativeDate
                     value={comment.createdAt}
-                    className="font-mono text-[11px] text-gray-9"
+                    className="font-mono text-11 text-gray-9"
                   />
                 </div>
                 <RichTextView

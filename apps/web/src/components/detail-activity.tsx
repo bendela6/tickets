@@ -30,7 +30,7 @@ function chipText(value: unknown): string {
 function ValueChip({ value }: { value: unknown }) {
   const text = chipText(value);
   return (
-    <span className="rounded-sm bg-surface-inset px-1.25 py-px font-mono text-[11px] text-gray-12">{text}</span>
+    <span className="rounded-sm bg-surface-inset px-1.25 py-px font-mono text-11 text-gray-12">{text}</span>
   );
 }
 
@@ -103,9 +103,9 @@ export function DetailActivity({ item, indexes }: { item: Item; indexes: BoardIn
           <div key={entry.id} className="flex items-start gap-2.25">
             <Avatar name={name} {...avatarFor(actor?.kind ?? 'human')} size="sm" className="mt-0.5" />
             <span className="min-w-0 flex-1 font-sans text-meta leading-normal text-gray-11">
-              <span className="font-medium text-gray-12">{name}</span> {describe(entry)}
+              <span className="font-500 text-gray-12">{name}</span> {describe(entry)}
             </span>
-            <RelativeDate value={entry.at} className="shrink-0 font-mono text-[10px] text-gray-9" />
+            <RelativeDate value={entry.at} className="shrink-0 font-mono text-10 text-gray-9" />
           </div>
         );
       })}

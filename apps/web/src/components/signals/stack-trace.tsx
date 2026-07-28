@@ -52,12 +52,12 @@ function FrameRow({ frame, defaultExpanded }: { frame: SignalStackFrame; default
           hasContext ? 'cursor-pointer' : 'cursor-default',
         )}
       >
-        <span aria-hidden className="w-3.5 shrink-0 font-sans text-[11px] text-gray-9">
+        <span aria-hidden className="w-3.5 shrink-0 font-sans text-11 text-gray-9">
           {hasContext ? <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size="2xs" /> : null}
         </span>
-        <span className="font-mono text-[12.5px] font-semibold text-gray-12">{frame.functionName}</span>
+        <span className="font-mono text-[12.5px] font-600 text-gray-12">{frame.functionName}</span>
         {frame.inApp ? (
-          <span className="inline-flex h-4.25 shrink-0 items-center rounded-[4px] bg-indigo-3 px-1.5 font-mono text-[9.5px] font-medium text-indigo-9">
+          <span className="inline-flex h-4.25 shrink-0 items-center rounded-[4px] bg-indigo-3 px-1.5 font-mono text-[9.5px] font-500 text-indigo-9">
             in-app
           </span>
         ) : null}
@@ -79,7 +79,7 @@ function FrameRow({ frame, defaultExpanded }: { frame: SignalStackFrame; default
                   <span
                     className={cn(
                       'w-5.5 shrink-0 text-right text-gray-9',
-                      isErrorLine && 'font-semibold text-red-9',
+                      isErrorLine && 'font-600 text-red-9',
                     )}
                   >
                     {contextLine.line}
@@ -104,7 +104,7 @@ function VendorGroup({ frames }: { frames: SignalStackFrame[] }) {
         onClick={() => setExpanded((value) => !value)}
         className="flex w-full items-center gap-2.5 px-4 py-2 text-left opacity-55 hover:opacity-80"
       >
-        <span aria-hidden className="w-3.5 shrink-0 font-sans text-[11px] text-gray-9">
+        <span aria-hidden className="w-3.5 shrink-0 font-sans text-11 text-gray-9">
           <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size="2xs" />
         </span>
         <span className="font-mono text-[11.5px] text-gray-9">
@@ -112,7 +112,7 @@ function VendorGroup({ frames }: { frames: SignalStackFrame[] }) {
         </span>
       </button>
       {expanded ? (
-        <div className="border-t border-gray-6 px-4 py-2.5 font-mono text-[11px] leading-[1.9] text-gray-11">
+        <div className="border-t border-gray-6 px-4 py-2.5 font-mono text-11 leading-[1.9] text-gray-11">
           {frames.map((frame, index) => (
             <div key={index}>
               {frame.functionName} <span className="text-gray-9">@</span> {frame.file}:{frame.line}:
@@ -151,12 +151,12 @@ function NoSourceMapsBanner({ release }: { release: string | null | undefined })
   return (
     <div className="flex items-center gap-2.5 border-b border-gray-6 bg-orange-3 px-4 py-2.5">
       <span aria-hidden className="size-2 shrink-0 rotate-45 rounded-[1px] bg-orange-9" />
-      <span className="flex-1 font-sans text-[12px] leading-normal text-orange-9">
+      <span className="flex-1 font-sans text-12 leading-normal text-orange-9">
         No source maps uploaded
         {release ? (
           <>
             {' '}
-            for release <span className="font-mono text-[11.5px] font-medium">{release}</span>
+            for release <span className="font-mono text-[11.5px] font-500">{release}</span>
           </>
         ) : null}{' '}
         — showing raw frames without source context.
@@ -186,7 +186,7 @@ function RawFrames({
           </div>
         ))}
         {noSourceMaps ? (
-          <div className="mt-2.5 rounded-[8px] border border-gray-6 bg-surface-inset px-3 py-2 font-mono text-[11px] leading-relaxed text-gray-11">
+          <div className="mt-2.5 rounded-[8px] border border-gray-6 bg-surface-inset px-3 py-2 font-mono text-11 leading-relaxed text-gray-11">
             <span className="text-gray-9">$</span> npx signals sourcemaps upload ./dist --release{' '}
             {release ?? '?'}
           </div>
@@ -246,9 +246,9 @@ export function StackTrace({
   return (
     <div className="flex-none overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
       <div className="flex h-10.5 items-center gap-2.5 border-b border-gray-6 px-4">
-        <span className="font-sans text-[13.5px] font-semibold text-gray-12">Stack trace</span>
+        <span className="font-sans text-[13.5px] font-600 text-gray-12">Stack trace</span>
         {occurrenceTime ? (
-          <span className="font-mono text-[11px] text-gray-9">
+          <span className="font-mono text-11 text-gray-9">
             occurrence {formatClockTime(occurrenceTime)} · newest
           </span>
         ) : null}

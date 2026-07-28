@@ -162,7 +162,7 @@ function AddFilter({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="inline-flex h-7 cursor-pointer items-center gap-1.25 rounded-[7px] border border-dashed border-gray-7 px-2.5 font-sans text-meta font-medium text-gray-11 hover:text-gray-12"
+          className="inline-flex h-7 cursor-pointer items-center gap-1.25 rounded-[7px] border border-dashed border-gray-7 px-2.5 font-sans text-meta font-500 text-gray-11 hover:text-gray-12"
         >
           ＋ Filter
         </button>
@@ -273,7 +273,7 @@ export function FilterChips({
             key={index}
             className="inline-flex h-7 items-center gap-1.5 rounded-[7px] border border-gray-6 bg-surface-raised px-2.5 font-sans text-meta text-gray-11"
           >
-            <strong className="font-medium text-gray-12">
+            <strong className="font-500 text-gray-12">
               {field?.label ?? rule.fieldKey}
             </strong>
             {OP_LABELS[rule.op]}
@@ -297,7 +297,7 @@ export function FilterChips({
       {dirty ? (
         <button
           type="button"
-          className="cursor-pointer font-sans text-meta font-medium text-indigo-9 hover:underline"
+          className="cursor-pointer font-sans text-meta font-500 text-indigo-9 hover:underline"
           onClick={onSaveToView}
         >
           save to view

@@ -15,7 +15,7 @@ function slugify(label: string): string {
 
 function ArchChip() {
   return (
-    <span className="inline-flex h-4.25 shrink-0 items-center rounded-sm bg-surface-inset px-1.5 font-mono text-[10px] font-medium text-gray-9">
+    <span className="inline-flex h-4.25 shrink-0 items-center rounded-sm bg-surface-inset px-1.5 font-mono text-10 font-500 text-gray-9">
       ARCH
     </span>
   );
@@ -334,7 +334,7 @@ export function LinksTab({ board }: SettingsTabProps) {
   return (
     <section className="flex min-h-0 flex-col px-6 py-5.5">
       <div className="mb-1.5 flex items-center gap-3">
-        <h1 className="m-0 font-sans text-[20px] font-semibold text-gray-12">Links</h1>
+        <h1 className="m-0 font-sans text-20 font-600 text-gray-12">Links</h1>
         <span className="font-mono text-meta text-gray-9">{countLabel}</span>
       </div>
       <p className="mb-4 mt-0 font-sans text-meta text-gray-9">
@@ -379,7 +379,7 @@ export function LinksTab({ board }: SettingsTabProps) {
                 )}
               >
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="truncate font-sans text-ui font-semibold text-gray-12">{linkType.label}</span>
+                  <span className="truncate font-sans text-ui font-600 text-gray-12">{linkType.label}</span>
                   <span className="font-mono text-meta text-gray-9">{linkType.key}</span>
                   <DirectionChip
                     text={linkType.directional ? `→ ${linkType.label}` : `${linkType.label} ↔`}

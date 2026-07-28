@@ -161,7 +161,7 @@ export function Sidebar({
           </a>
           {shownGroups.map((group) => (
             <div key={group} className="flex shrink-0 flex-col gap-0.5">
-              <span className="truncate px-2 font-mono text-label uppercase tracking-(--tracking-label) text-gray-9">
+              <span className="truncate px-2 font-mono text-label uppercase tracking-wider text-gray-9">
                 {group}
               </span>
               {filtered

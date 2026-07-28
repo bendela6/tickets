@@ -31,8 +31,8 @@ const fillClass = variants({
 
 // The label and its trailing figure sit on the same rung as the bar.
 const TEXT: Record<ProgressSize, string> = {
-  sm: 'text-[10px]',
-  md: 'text-[11px]',
+  sm: 'text-10',
+  md: 'text-11',
   lg: 'text-meta',
 };
 

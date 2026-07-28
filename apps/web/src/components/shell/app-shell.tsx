@@ -53,7 +53,7 @@ export function AppShell({
           ☰
         </button>
         <span aria-hidden className="size-2.25 rounded-[2px] bg-indigo-9" />
-        <span className="font-mono text-[15px] font-semibold text-gray-12">tickets</span>
+        <span className="font-mono text-15 font-600 text-gray-12">tickets</span>
       </div>
 
       {/* Desktop: rail + panel */}

@@ -92,7 +92,7 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
         {x.map((xVal, xi) => (
           <div
             key={`header-${xi}`}
-            className="flex items-center justify-center font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9"
+            className="flex items-center justify-center font-mono text-label uppercase tracking-widest text-gray-9"
           >
             {xVal}
           </div>
@@ -104,7 +104,7 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
           items.push(
             <div
               key={`label-${yi}`}
-              className="flex items-center justify-center font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9"
+              className="flex items-center justify-center font-mono text-label uppercase tracking-widest text-gray-9"
             >
               {yVal}
             </div>,

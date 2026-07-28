@@ -13,7 +13,7 @@ export function highlightMatch(title: string, query: string): ReactNode {
   return (
     <>
       {title.slice(0, i)}
-      <strong className="font-semibold text-indigo-9">{title.slice(i, i + q.length)}</strong>
+      <strong className="font-600 text-indigo-9">{title.slice(i, i + q.length)}</strong>
       {title.slice(i + q.length)}
     </>
   );

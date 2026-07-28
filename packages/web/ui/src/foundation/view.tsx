@@ -71,7 +71,7 @@ export function SpecRow({
 }) {
   return (
     <div className={`flex gap-4 ${align === 'start' ? 'items-start' : 'items-center'}`}>
-      <span className="w-36 shrink-0 font-mono text-meta font-medium text-gray-12">{name}</span>
+      <span className="w-36 shrink-0 font-mono text-meta font-500 text-gray-12">{name}</span>
       <span className="flex w-32 shrink-0 flex-col font-mono text-meta text-gray-9">
         <span>{value}</span>
         {note ? <span className="text-nano">{note}</span> : null}
@@ -88,7 +88,7 @@ export function SpecRow({
  */
 export function SpecHeader({ specimen, value = 'value' }: { specimen: string; value?: string }) {
   return (
-    <div className="flex gap-4 font-mono text-nano uppercase tracking-(--tracking-caps) text-gray-9">
+    <div className="flex gap-4 font-mono text-nano uppercase tracking-widest text-gray-9">
       <span className="w-36 shrink-0">token</span>
       <span className="w-32 shrink-0">{value}</span>
       <span className="min-w-0 flex-1">{specimen}</span>
@@ -128,10 +128,10 @@ export function DriftView({ families }: { families: string[] }) {
           <table className="w-full border-collapse font-mono text-meta">
             <thead>
               <tr className="text-gray-9">
-                <th className={`${cell} font-medium`}>proposed</th>
-                <th className={`${cell} font-medium`}>live</th>
-                <th className={`${cell} font-medium`}>value</th>
-                <th className="border-b border-gray-6 py-1.5 text-left font-medium">status</th>
+                <th className={`${cell} font-500`}>proposed</th>
+                <th className={`${cell} font-500`}>live</th>
+                <th className={`${cell} font-500`}>value</th>
+                <th className="border-b border-gray-6 py-1.5 text-left font-500">status</th>
               </tr>
             </thead>
             <tbody>

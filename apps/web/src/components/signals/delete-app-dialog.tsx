@@ -58,7 +58,7 @@ export function DeleteAppDialog({
       <DialogContent>
         <DialogTitle>Delete app</DialogTitle>
         <p className="mt-1.5 font-sans text-meta text-gray-11">
-          This permanently deletes <strong className="font-medium text-gray-12">{app.slug}</strong> — its
+          This permanently deletes <strong className="font-500 text-gray-12">{app.slug}</strong> — its
           signals, issues, releases, and source maps. This cannot be undone.
         </p>
         <div className="mt-4">

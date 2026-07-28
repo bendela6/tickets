@@ -53,18 +53,18 @@ function InUse() {
     <Sheet>
       <div className="flex flex-wrap items-start gap-6">
         <div className="flex flex-col gap-2">
-          <span className="font-mono text-nano uppercase tracking-(--tracking-caps) text-gray-9">
+          <span className="font-mono text-nano uppercase tracking-widest text-gray-9">
             radius-1 · chip
           </span>
           <span
-            className="inline-flex h-5.5 items-center bg-indigo-3 px-2.25 font-sans text-meta font-medium text-indigo-9"
+            className="inline-flex h-5.5 items-center bg-indigo-3 px-2.25 font-sans text-meta font-500 text-indigo-9"
             style={{ borderRadius: radius('radius-1') }}
           >
             blocked
           </span>
         </div>
         <div className="flex flex-col gap-2">
-          <span className="font-mono text-nano uppercase tracking-(--tracking-caps) text-gray-9">
+          <span className="font-mono text-nano uppercase tracking-widest text-gray-9">
             radius-2 · control
           </span>
           <span
@@ -75,26 +75,26 @@ function InUse() {
           </span>
         </div>
         <div className="flex flex-col gap-2">
-          <span className="font-mono text-nano uppercase tracking-(--tracking-caps) text-gray-9">
+          <span className="font-mono text-nano uppercase tracking-widest text-gray-9">
             radius-3 · card
           </span>
           <div
             className="flex w-56 flex-col gap-1 border border-gray-6 bg-surface-raised p-3"
             style={{ borderRadius: radius('radius-3') }}
           >
-            <span className="font-sans text-ui font-medium text-gray-12">Retry the gateway run</span>
+            <span className="font-sans text-ui font-500 text-gray-12">Retry the gateway run</span>
             <span className="font-mono text-meta text-gray-9">TIX-214 · in review</span>
           </div>
         </div>
         <div className="flex flex-col gap-2">
-          <span className="font-mono text-nano uppercase tracking-(--tracking-caps) text-gray-9">
+          <span className="font-mono text-nano uppercase tracking-widest text-gray-9">
             radius-4 · panel
           </span>
           <div
             className="flex w-64 flex-col gap-2 border border-gray-6 bg-surface-raised p-4"
             style={{ borderRadius: radius('radius-4') }}
           >
-            <span className="font-sans text-title font-medium text-gray-12">Discard changes?</span>
+            <span className="font-sans text-title font-500 text-gray-12">Discard changes?</span>
             <span className="font-sans text-ui text-gray-11">
               Three edits will be lost. This cannot be undone.
             </span>

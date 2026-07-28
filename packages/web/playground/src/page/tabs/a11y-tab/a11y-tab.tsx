@@ -114,7 +114,7 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
                   >
                     {violation.impact}
                   </span>
-                  <span className="font-sans text-ui font-medium text-gray-12">{violation.id}</span>
+                  <span className="font-sans text-ui font-500 text-gray-12">{violation.id}</span>
                 </div>
 
                 {/* Description */}
@@ -129,7 +129,7 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
                     href={violation.helpUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-sans text-label font-medium text-indigo-9 hover:underline"
+                    className="font-sans text-label font-500 text-indigo-9 hover:underline"
                   >
                     Learn more ↗
                   </a>
@@ -139,10 +139,10 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
           ) : (
             // All clear banner
             <div className="flex items-center gap-2.5 rounded-lg bg-green-3 p-3.5">
-              <span className="flex-none size-4 rounded-full bg-green-9 text-gray-1 flex items-center justify-center font-sans text-nano font-semibold">
+              <span className="flex-none size-4 rounded-full bg-green-9 text-gray-1 flex items-center justify-center font-sans text-nano font-600">
                 ✓
               </span>
-              <span className="font-sans text-ui font-medium text-green-9">
+              <span className="font-sans text-ui font-500 text-green-9">
                 No violations found
               </span>
               <span className="font-mono text-label text-green-9 opacity-75">
