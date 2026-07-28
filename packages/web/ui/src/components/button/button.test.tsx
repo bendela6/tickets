@@ -18,7 +18,7 @@ test('solid variant gets accent classes', () => {
   // font-size utility is also present (custom named sizes like `text-ui` used to
   // silently evict `text-indigo-contrast`, rendering dark text on the accent fill).
   expect(button).toHaveClass('text-indigo-contrast');
-  expect(button).toHaveClass('text-[13px]');
+  expect(button).toHaveClass('text-13');
 });
 
 test('loading disables and marks busy', () => {
@@ -30,15 +30,15 @@ test('loading disables and marks busy', () => {
 
 test('sizes match design height/padding/radius/font-size', () => {
   const { rerender } = render(<Button size="sm">c</Button>);
-  expect(screen.getByRole('button')).toHaveClass('h-7', 'px-2.5', 'rounded-[6px]', 'text-[12px]');
+  expect(screen.getByRole('button')).toHaveClass('h-7', 'px-2.5', 'rounded-[6px]', 'text-12');
   rerender(<Button size="md">r</Button>);
-  expect(screen.getByRole('button')).toHaveClass('h-9', 'px-3.5', 'rounded-[8px]', 'text-[13px]');
+  expect(screen.getByRole('button')).toHaveClass('h-9', 'px-3.5', 'rounded-[8px]', 'text-13');
   rerender(<Button size="lg">t</Button>);
   expect(screen.getByRole('button')).toHaveClass(
     'h-11',
     'px-[18px]',
     'rounded-[10px]',
-    'text-[14px]',
+    'text-14',
   );
 });
 

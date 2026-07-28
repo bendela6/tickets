@@ -48,9 +48,9 @@ type DatePickerProps = {
 };
 
 const BOX: Record<FieldSize, string> = {
-  sm: 'px-2.25 text-[13px]',
-  md: 'px-3 text-[14px]',
-  lg: 'px-3.5 text-[15px]',
+  sm: 'px-2.25 text-13',
+  md: 'px-3 text-14',
+  lg: 'px-3.5 text-15',
 };
 
 const CHEVRON: Record<FieldSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
@@ -125,7 +125,7 @@ export function DatePicker({
           >
             <Icon name="chevron-left" size="sm" />
           </button>
-          <span className="font-sans text-ui font-semibold text-gray-12">
+          <span className="font-sans text-ui font-600 text-gray-12">
             {MONTH_NAMES[view.month]} {view.year}
           </span>
           <button
@@ -139,7 +139,7 @@ export function DatePicker({
         </div>
         <div className="grid grid-cols-[repeat(7,28px)] justify-center gap-0.5">
           {WEEKDAYS.map((weekday, index) => (
-            <div key={index} className="text-center font-mono text-[10px] font-medium text-gray-9">
+            <div key={index} className="text-center font-mono text-10 font-500 text-gray-9">
               {weekday}
             </div>
           ))}
@@ -161,7 +161,7 @@ export function DatePicker({
                 type="button"
                 onClick={() => pick(day)}
                 className={cn(
-                  'flex h-7 w-7 items-center justify-center rounded-md font-sans text-[12px]',
+                  'flex h-7 w-7 items-center justify-center rounded-md font-sans text-12',
                   isSelected
                     ? 'bg-indigo-9 text-indigo-contrast'
                     : isToday

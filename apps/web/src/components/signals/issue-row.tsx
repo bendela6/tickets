@@ -57,23 +57,23 @@ export function IssueRow({
       </span>
       <span className="min-w-0 pr-3">
         <span className="block truncate font-sans text-ui text-gray-11">
-          <strong className="font-semibold text-gray-12">{name}</strong>
+          <strong className="font-600 text-gray-12">{name}</strong>
           {message !== null ? ` · ${message}` : null}
         </span>
-        <span className="mt-0.5 block truncate font-mono text-[11px] text-gray-9">
+        <span className="mt-0.5 block truncate font-mono text-11 text-gray-9">
           {issue.culprit !== null ? `${issue.key} · ${issue.culprit}` : issue.key}
         </span>
       </span>
       <span>
-        <span className="inline-flex h-5 max-w-25 items-center overflow-hidden rounded-md bg-surface-inset px-1.75 font-mono text-[10.5px] font-medium text-gray-11">
+        <span className="inline-flex h-5 max-w-25 items-center overflow-hidden rounded-md bg-surface-inset px-1.75 font-mono text-[10.5px] font-500 text-gray-11">
           {issue.appSlug}
         </span>
       </span>
-      <span className="text-right font-mono text-[12px] font-medium text-gray-12">
+      <span className="text-right font-mono text-12 font-500 text-gray-12">
         {formatCount(issue.eventCount)}
       </span>
-      <span className="pl-3.5 font-mono text-[11px] text-gray-9">{relativeTime(issue.firstSeen)}</span>
-      <span className={cn('font-mono text-[11px] font-medium', hot ? 'text-gray-12' : 'text-gray-9')}>
+      <span className="pl-3.5 font-mono text-11 text-gray-9">{relativeTime(issue.firstSeen)}</span>
+      <span className={cn('font-mono text-11 font-500', hot ? 'text-gray-12' : 'text-gray-9')}>
         {relativeTime(issue.lastSeen)}
       </span>
       <span className="pl-1.5">

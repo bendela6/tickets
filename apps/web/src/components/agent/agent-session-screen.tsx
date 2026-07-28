@@ -91,10 +91,10 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
         >
           ← sessions
         </button>
-        <span className="inline-flex size-6 items-center justify-center rounded-md bg-indigo-3 font-mono text-[13px] text-indigo-9">
+        <span className="inline-flex size-6 items-center justify-center rounded-md bg-indigo-3 font-mono text-13 text-indigo-9">
           ✳
         </span>
-        <span className="truncate font-sans text-ui font-medium text-gray-12">
+        <span className="truncate font-sans text-ui font-500 text-gray-12">
           {data?.title ?? `agent session #${sessionId}`}
         </span>
         <span className="flex-1" />

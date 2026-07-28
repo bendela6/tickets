@@ -29,7 +29,7 @@ export function ActivityRail({ mode, onNavigate }: { mode: Mode | null; onNaviga
           aria-label={item.label}
           title={item.label}
           className={cn(
-            'flex size-9 items-center justify-center rounded-[9px] font-mono text-[13px]',
+            'flex size-9 items-center justify-center rounded-[9px] font-mono text-13',
             mode === item.mode
               ? 'bg-indigo-9 text-indigo-contrast'
               : 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',

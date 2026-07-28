@@ -13,9 +13,9 @@ type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> & {
 // Padding and font-size are per-component, not part of `fieldClass` — see the
 // note there. These values are Input's existing ones, with lg extrapolated.
 const BOX: Record<FieldSize, string> = {
-  sm: 'px-2.25 text-[13px]',
-  md: 'px-3 text-[14px]',
-  lg: 'px-3.5 text-[15px]',
+  sm: 'px-2.25 text-13',
+  md: 'px-3 text-14',
+  lg: 'px-3.5 text-15',
 };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(

@@ -53,10 +53,10 @@ function PeopleRow({ item, selected }: { item: SuggestionItem; selected: boolean
   return (
     <>
       <Avatar name={item.label} {...avatarFor(item.kind ?? 'human')} size="sm" />
-      <span className="truncate font-sans text-ui font-medium text-gray-12">{item.label}</span>
+      <span className="truncate font-sans text-ui font-500 text-gray-12">{item.label}</span>
       <span className="shrink-0 font-mono text-meta text-gray-9">{agent ? 'agent' : deriveHandle(item.label)}</span>
       <span className="flex-1" />
-      {selected ? <span className="shrink-0 font-mono text-[11px] text-gray-9">↩</span> : null}
+      {selected ? <span className="shrink-0 font-mono text-11 text-gray-9">↩</span> : null}
     </>
   );
 }
@@ -64,7 +64,7 @@ function PeopleRow({ item, selected }: { item: SuggestionItem; selected: boolean
 function TicketRow({ item }: { item: SuggestionItem }) {
   return (
     <>
-      <span className="shrink-0 rounded-md border border-gray-6 bg-gray-1 px-1.5 py-0.5 font-mono text-[11px] font-medium text-gray-11">
+      <span className="shrink-0 rounded-md border border-gray-6 bg-gray-1 px-1.5 py-0.5 font-mono text-11 font-500 text-gray-11">
         {item.label}
       </span>
       <span className="min-w-0 flex-1 truncate font-sans text-ui text-gray-12">{item.title}</span>
@@ -140,7 +140,7 @@ const SuggestionList = forwardRef<SuggestionListHandle, SuggestionListProps>(fun
         <div className="px-2.25 py-1.5 font-sans text-ui text-gray-11">No matches</div>
       ) : (
         <>
-          <div className="px-2.25 pt-1.25 pb-1 font-mono text-[10px] font-medium tracking-widest text-gray-9">
+          <div className="px-2.25 pt-1.25 pb-1 font-mono text-10 font-500 tracking-widest text-gray-9">
             {sectionLabel}
           </div>
           {items.map((item, index) => {

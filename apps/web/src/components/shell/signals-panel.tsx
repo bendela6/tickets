@@ -5,7 +5,7 @@ import { cn, RailLabel } from '@tickets/ui';
 function navItemClasses(active: boolean) {
   return cn(
     'flex h-8 items-center gap-2 rounded-[7px] px-2.25 font-sans text-ui',
-    active ? 'bg-surface-inset font-medium text-gray-12' : 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
+    active ? 'bg-surface-inset font-500 text-gray-12' : 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
   );
 }
 
@@ -30,7 +30,7 @@ export function SignalsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
           <span className="flex-1">Issues</span>
           {/* Render nothing while loading so the count never flickers 0 → real value. */}
           {!openIssues.isLoading ? (
-            <span className="font-mono text-[11px] text-gray-9">{openIssues.data?.total ?? ''}</span>
+            <span className="font-mono text-11 text-gray-9">{openIssues.data?.total ?? ''}</span>
           ) : null}
         </Link>
         <Link

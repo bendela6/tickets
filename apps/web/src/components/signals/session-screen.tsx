@@ -173,7 +173,7 @@ function CopySessionIdButton({ sessionId }: { sessionId: string }) {
     <button
       type="button"
       onClick={() => void copy(sessionId)}
-      className="h-8 flex-none rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-medium text-gray-12 hover:border-gray-9 hover:bg-surface-inset"
+      className="h-8 flex-none rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:border-gray-9 hover:bg-surface-inset"
     >
       {copied ? 'Copied' : failed ? 'Copy failed' : '⧉ Copy session id'}
     </button>
@@ -185,19 +185,19 @@ function ErrorCard({ row }: { row: SessionEventRow }) {
   return (
     <div className="rounded-[10px] border border-red-9 bg-red-3 px-3.5 py-2.75">
       <div className="flex items-center gap-2.5">
-        <span className="flex-none font-mono text-[13px] font-semibold text-red-9">{row.name}</span>
+        <span className="flex-none font-mono text-13 font-600 text-red-9">{row.name}</span>
         <span className="min-w-0 flex-1 truncate font-sans text-[12.5px] text-gray-12">{row.message}</span>
         {row.issueId !== null && row.issueKey !== null ? (
           <Link
             to="/signals/issues/$issueId"
             params={{ issueId: String(row.issueId) }}
-            className="inline-flex h-6.5 flex-none items-center rounded-[6px] border border-red-9 px-2.5 font-sans text-[11px] font-medium text-red-9 hover:bg-red-9/10"
+            className="inline-flex h-6.5 flex-none items-center rounded-[6px] border border-red-9 px-2.5 font-sans text-11 font-500 text-red-9 hover:bg-red-9/10"
           >
             View issue {row.issueKey} →
           </Link>
         ) : null}
       </div>
-      {culprit !== undefined ? <div className="mt-1.25 font-mono text-[11px] text-gray-11">{culprit}</div> : null}
+      {culprit !== undefined ? <div className="mt-1.25 font-mono text-11 text-gray-11">{culprit}</div> : null}
     </div>
   );
 }
@@ -208,7 +208,7 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
     <div className="flex items-stretch">
       <span
         className={cn(
-          'flex w-16 flex-none justify-end pt-0.5 font-mono text-[11px]',
+          'flex w-16 flex-none justify-end pt-0.5 font-mono text-11',
           item.type === 'row' && item.row.kind === 'error' ? 'text-red-9' : 'text-gray-9',
         )}
       >
@@ -224,7 +224,7 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
             label={toSignalKind(item.row.kind)}
           />
         ) : (
-          <span className="py-0.5 font-mono text-[10px] text-gray-9">┆</span>
+          <span className="py-0.5 font-mono text-10 text-gray-9">┆</span>
         )}
         <span className={cn(lineClass, 'flex-1', isLast && 'bg-transparent')} />
       </span>
@@ -256,10 +256,10 @@ function TimelineRow({ item, startedAt, isFirst, isLast }: { item: TimelineItem;
               className={cn(
                 'truncate',
                 item.row.level === 'warning'
-                  ? 'font-mono text-[12px] text-orange-9'
+                  ? 'font-mono text-12 text-orange-9'
                   : item.row.kind === 'event'
                     ? 'font-sans text-[12.5px] text-gray-12'
-                    : 'font-mono text-[12px] text-gray-12',
+                    : 'font-mono text-12 text-gray-12',
               )}
             >
               {rowMessage(item.row)}
@@ -299,7 +299,7 @@ function LoadError({ onRetry }: { onRetry: () => void }) {
           <button
             type="button"
             onClick={onRetry}
-            className="h-8 rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-medium text-gray-12 hover:bg-surface-inset"
+            className="h-8 rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
           >
             ↻ Retry
           </button>
@@ -341,7 +341,7 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col p-6 md:p-7">
-      <div className="mb-3 font-mono text-[12px] text-gray-9">
+      <div className="mb-3 font-mono text-12 text-gray-9">
         <Link to="/signals" className="text-indigo-9 hover:underline">
           ‹ Issues
         </Link>
@@ -364,13 +364,13 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
       <div className="mb-3 flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="font-mono text-[18px] font-semibold text-gray-12">{session.sessionId}</span>
-            <span className="inline-flex h-5.5 items-center rounded-md bg-surface-inset px-2 font-mono text-[11px] font-medium text-gray-11">
+            <span className="font-mono text-[18px] font-600 text-gray-12">{session.sessionId}</span>
+            <span className="inline-flex h-5.5 items-center rounded-md bg-surface-inset px-2 font-mono text-11 font-500 text-gray-11">
               {session.appSlug ?? `app ${session.appId}`}
             </span>
             {user !== undefined ? (
-              <span className="inline-flex items-center gap-1.5 font-sans text-[12px] text-gray-11">
-                <span className="flex size-4.5 items-center justify-center rounded-full bg-indigo-3 font-sans text-[8px] font-semibold text-indigo-9">
+              <span className="inline-flex items-center gap-1.5 font-sans text-12 text-gray-11">
+                <span className="flex size-4.5 items-center justify-center rounded-full bg-indigo-3 font-sans text-[8px] font-600 text-indigo-9">
                   {user.initials}
                 </span>
                 {user.label}
@@ -381,11 +381,11 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
                 tone="danger"
                 icon={<Icon name="dot" size="2xs" />}
                 label="crashed"
-                className="text-[11px] font-semibold"
+                className="text-11 font-600"
               />
             ) : null}
           </div>
-          <div className="mt-1.5 font-sans text-[12px] text-gray-9">
+          <div className="mt-1.5 font-sans text-12 text-gray-9">
             One page load, everything it reported, in order — the error is the terminal point.
           </div>
         </div>
@@ -394,32 +394,32 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
 
       <div className="mb-4 flex flex-none items-center gap-6.5 rounded-[10px] border border-gray-6 bg-surface-raised px-4.5 py-3">
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">STARTED</div>
-          <div className="font-mono text-[13px] font-medium text-gray-12">{formatStartedAt(session.startedAt)}</div>
+          <div className="mb-0.75 font-mono text-10 font-500 tracking-wide text-gray-9">STARTED</div>
+          <div className="font-mono text-13 font-500 text-gray-12">{formatStartedAt(session.startedAt)}</div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">DURATION</div>
-          <div className="font-mono text-[13px] font-medium text-gray-12">
+          <div className="mb-0.75 font-mono text-10 font-500 tracking-wide text-gray-9">DURATION</div>
+          <div className="font-mono text-13 font-500 text-gray-12">
             {session.durationMs !== null ? formatDurationMs(session.durationMs) : '—'}
           </div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">SIGNALS</div>
-          <div className="font-sans text-[13px] text-gray-12">
-            <span className="font-mono text-[13px] font-medium">{formatCount(total)}</span>{' '}
-            <span className="font-mono text-[11px] text-gray-9">
+          <div className="mb-0.75 font-mono text-10 font-500 tracking-wide text-gray-9">SIGNALS</div>
+          <div className="font-sans text-13 text-gray-12">
+            <span className="font-mono text-13 font-500">{formatCount(total)}</span>{' '}
+            <span className="font-mono text-11 text-gray-9">
               · {plural(session.counts.log, 'log')} · {plural(session.counts.event, 'event')} ·{' '}
               {plural(session.counts.error, 'error')}
             </span>
           </div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">RELEASE</div>
-          <div className="font-mono text-[13px] text-gray-12">{session.release ?? '—'}</div>
+          <div className="mb-0.75 font-mono text-10 font-500 tracking-wide text-gray-9">RELEASE</div>
+          <div className="font-mono text-13 text-gray-12">{session.release ?? '—'}</div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-[10px] font-medium tracking-wide text-gray-9">BROWSER</div>
-          <div className="font-sans text-[13px] text-gray-12">{formatPlatform(session.platform)}</div>
+          <div className="mb-0.75 font-mono text-10 font-500 tracking-wide text-gray-9">BROWSER</div>
+          <div className="font-sans text-13 text-gray-12">{formatPlatform(session.platform)}</div>
         </div>
       </div>
 

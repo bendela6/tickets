@@ -16,7 +16,7 @@ export const toggleRowClass = variants({
       options: {
         sm: 'gap-1.5 text-meta',
         md: 'gap-2 text-ui',
-        lg: 'gap-2.5 text-[15px]',
+        lg: 'gap-2.5 text-15',
       },
     },
   },

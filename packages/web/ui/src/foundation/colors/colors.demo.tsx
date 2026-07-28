@@ -59,7 +59,7 @@ function Ramp({ theme, scale, height = 40 }: { theme: Theme; scale: string; heig
 
 function StepHeader() {
   return (
-    <div className="flex w-full font-mono text-[10px] text-gray-9">
+    <div className="flex w-full font-mono text-10 text-gray-9">
       {STEPS.map((step) => (
         <span key={step} className="flex-1 text-center">
           {step}
@@ -77,7 +77,7 @@ function Palette() {
       <StepHeader />
       {HUES.map((scale) => (
         <div key={scale} className="flex flex-col gap-1">
-          <span className="font-mono text-meta font-medium text-gray-12">{scale}</span>
+          <span className="font-mono text-meta font-500 text-gray-12">{scale}</span>
           <Ramp theme={theme} scale={scale} />
         </div>
       ))}
@@ -101,7 +101,7 @@ function Verdict({
       : { background: '#f8e7e5', color: '#a82f26', mark: '✕' };
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-sm px-1.5 font-mono text-[10px] font-medium"
+      className="inline-flex items-center gap-1 rounded-sm px-1.5 font-mono text-10 font-500"
       style={{ background: style.background, color: style.color }}
     >
       <span className="opacity-70">{what}</span>
@@ -114,7 +114,7 @@ function Verdict({
 function GroupLabel({ children }: { children: ReactNode }) {
   return (
     <div className="flex items-center gap-3 pt-2">
-      <span className="font-mono text-[10px] uppercase tracking-(--tracking-caps) text-gray-9">
+      <span className="font-mono text-10 uppercase tracking-widest text-gray-9">
         {children}
       </span>
       <span className="h-px flex-1 bg-gray-6" />
@@ -148,7 +148,7 @@ function StepSpecimen({ theme, scale, step }: { theme: Theme; scale: string; ste
   if (step <= 10) {
     return (
       <div
-        className={`${box} font-medium`}
+        className={`${box} font-500`}
         style={{ background: c, color: colorOf(theme, scale, 'contrast') }}
         title={c}
       >
@@ -177,8 +177,8 @@ function StepsInUseRow({
   return (
     <div className="flex items-start gap-4">
       <span className="flex w-28 shrink-0 flex-col pt-1 font-mono text-meta">
-        <span className="font-medium text-gray-12">{label}</span>
-        {note ? <span className="text-[10px] text-gray-9">{note}</span> : null}
+        <span className="font-500 text-gray-12">{label}</span>
+        {note ? <span className="text-10 text-gray-9">{note}</span> : null}
       </span>
       <div className="grid min-w-0 flex-1 grid-cols-12 gap-1">
         {STEPS.map((step) => (
@@ -204,7 +204,7 @@ function StepsInUse() {
     <div ref={ref} className="flex w-full flex-col gap-3">
       <div className="flex items-start gap-4">
         <span className="w-28 shrink-0" />
-        <div className="grid min-w-0 flex-1 grid-cols-12 gap-1 font-mono text-[9px] leading-tight text-gray-9">
+        <div className="grid min-w-0 flex-1 grid-cols-12 gap-1 font-mono text-9 leading-tight text-gray-9">
           {STEPS.map((step) => (
             <span key={step} className="flex flex-col gap-0.5">
               <span className="text-gray-11">{step}</span>
@@ -293,11 +293,11 @@ function Report() {
           <table className="w-full min-w-140 border-collapse font-mono text-meta">
             <thead>
               <tr className="text-left text-gray-9">
-                <th className={`${cell} font-medium`}>emphasis</th>
-                <th className={`${cell} font-medium`}>scale</th>
-                <th className={`${cell} font-medium`}>theme</th>
-                <th className={`${cell} font-medium`}>pair</th>
-                <th className="border-b border-gray-6 py-1.5 font-medium">ratio</th>
+                <th className={`${cell} font-500`}>emphasis</th>
+                <th className={`${cell} font-500`}>scale</th>
+                <th className={`${cell} font-500`}>theme</th>
+                <th className={`${cell} font-500`}>pair</th>
+                <th className="border-b border-gray-6 py-1.5 font-500">ratio</th>
               </tr>
             </thead>
             <tbody>

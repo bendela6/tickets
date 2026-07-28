@@ -18,7 +18,7 @@ function Label({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
   return (
     <SectionHeader
       title={children}
-      count={hint != null ? <span className="font-normal normal-case text-gray-9">{hint}</span> : null}
+      count={hint != null ? <span className="font-400 normal-case text-gray-9">{hint}</span> : null}
       className="mb-1.5 gap-1.5 tracking-wide"
     />
   );
@@ -117,7 +117,7 @@ export function AgentEditor({
         <div className="mt-4 flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1">
           {!caps.permissions || !caps.resume ? (
             <div className="rounded-lg border border-orange-9 bg-orange-3 px-3 py-2 font-sans text-meta text-gray-12">
-              <strong className="font-semibold">{providerLabel(providerKey)} can’t do everything.</strong>{' '}
+              <strong className="font-600">{providerLabel(providerKey)} can’t do everything.</strong>{' '}
               {!caps.permissions ? 'It can’t pause a run for tool approvals. ' : ''}
               {!caps.resume ? 'It can’t resume after a restart. ' : ''}
               The affected controls are disabled, not hidden.
@@ -136,7 +136,7 @@ export function AgentEditor({
                 onChange={(e) => setKey(e.target.value)}
                 placeholder="coder"
                 disabled={editing}
-                className="font-mono text-[13px]"
+                className="font-mono text-13"
               />
             </label>
           </div>
@@ -181,7 +181,7 @@ export function AgentEditor({
               value={tools}
               onChange={(e) => setTools(e.target.value)}
               placeholder="Read, Grep, Edit, Bash"
-              className="font-mono text-[13px]"
+              className="font-mono text-13"
             />
           </label>
 

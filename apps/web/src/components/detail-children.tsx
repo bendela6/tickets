@@ -112,7 +112,7 @@ export function DetailChildren({
                 prefix={prefix}
                 number={child.number}
                 muted={settled}
-                className="shrink-0 text-[11px]"
+                className="shrink-0 text-11"
               />
               <span
                 className={cn(
@@ -166,7 +166,7 @@ export function DetailChildren({
             onChange={(event) => setTitle(event.target.value)}
           />
           {title.trim().length > 0 ? (
-            <span className="shrink-0 font-mono text-[10px] text-gray-9">
+            <span className="shrink-0 font-mono text-10 text-gray-9">
               ↵ creates {prefix}-{nextNumber}
             </span>
           ) : null}

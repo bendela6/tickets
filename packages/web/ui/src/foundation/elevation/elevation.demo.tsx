@@ -72,7 +72,7 @@ function InUse() {
           className="flex w-56 flex-col gap-1 rounded-lg bg-surface-raised p-3"
           style={{ boxShadow: valueOf('shadow-surface-raised') }}
         >
-          <span className="font-sans text-ui font-medium text-gray-12">Retry the gateway run</span>
+          <span className="font-sans text-ui font-500 text-gray-12">Retry the gateway run</span>
           <span className="font-mono text-meta text-gray-9">TIX-214</span>
         </div>
         <div
@@ -90,7 +90,7 @@ function InUse() {
             className="flex w-64 flex-col gap-2 rounded-xl bg-surface-raised p-4"
             style={{ boxShadow: valueOf('shadow-modal') }}
           >
-            <span className="font-sans text-title font-medium text-gray-12">Discard changes?</span>
+            <span className="font-sans text-title font-500 text-gray-12">Discard changes?</span>
             <span className="font-sans text-ui text-gray-11">
               Three edits will be lost. This cannot be undone.
             </span>

@@ -46,7 +46,7 @@ function InlineTitle({
         onClick={() => setDraft(value)}
         className={cn(
           'm-0 w-full cursor-text border-b border-dashed border-transparent bg-transparent p-0',
-          'text-left font-sans font-semibold text-gray-12 enabled:hover:border-gray-7',
+          'text-left font-sans font-600 text-gray-12 enabled:hover:border-gray-7',
           className,
         )}
       >
@@ -77,7 +77,7 @@ function InlineTitle({
       }}
       className={cn(
         'm-0 w-full border-b border-dashed border-indigo-9 bg-transparent p-0',
-        'font-sans font-semibold text-gray-12 outline-none',
+        'font-sans font-600 text-gray-12 outline-none',
         className,
       )}
     />
@@ -225,7 +225,7 @@ export function ItemDetail({
     <button
       type="button"
       onClick={() => openItem(parent.number)}
-      className="flex w-fit min-w-0 items-center gap-1.5 bg-transparent p-0 text-left font-sans text-meta font-medium text-indigo-9 hover:underline"
+      className="flex w-fit min-w-0 items-center gap-1.5 bg-transparent p-0 text-left font-sans text-meta font-500 text-indigo-9 hover:underline"
     >
       <span aria-hidden>‹</span>
       <span className="shrink-0 font-mono">
@@ -289,7 +289,7 @@ export function ItemDetail({
           <Link
             to="/p/$projectKey/t/$number"
             params={{ projectKey, number: String(item.number) }}
-            className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border border-gray-7 bg-surface-raised px-2.5 font-sans text-[12px] font-medium text-gray-12 hover:bg-surface-inset"
+            className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border border-gray-7 bg-surface-raised px-2.5 font-sans text-12 font-500 text-gray-12 hover:bg-surface-inset"
           >
             Open page ↗
           </Link>
@@ -345,7 +345,7 @@ export function ItemDetail({
         <span aria-hidden className="font-sans text-meta text-gray-9">
           <Icon name="chevron-right" size="2xs" />
         </span>
-        <span className="shrink-0 font-mono text-meta font-medium text-gray-12">
+        <span className="shrink-0 font-mono text-meta font-500 text-gray-12">
           {prefix}-{item.number}
         </span>
         {archivedChip}
@@ -365,14 +365,14 @@ export function ItemDetail({
               <Pill {...typePill} label={type?.label ?? '?'} />
               <span className="font-mono text-label text-gray-9">
                 created{' '}
-                <RelativeDate value={item.createdAt} className="font-mono text-[11px] text-gray-9" />{' '}
+                <RelativeDate value={item.createdAt} className="font-mono text-11 text-gray-9" />{' '}
                 by {creator?.name ?? `user ${item.createdBy}`}
               </span>
             </div>
             <InlineTitle
               value={title}
               disabled={userId === null}
-              className="text-[24px] leading-[1.3]"
+              className="text-24 leading-[1.3]"
               onSave={(next) => saveValues({ title: next })}
             />
           </div>

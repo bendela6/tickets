@@ -76,7 +76,7 @@ export function ColumnsPopover({
           />
         </div>
         <div className="max-h-80 overflow-y-auto p-1.5">
-          <div className="px-2.25 pt-1.75 pb-0.75 font-mono text-[10px] font-medium tracking-[0.09em] text-gray-9 uppercase">
+          <div className="px-2.25 pt-1.75 pb-0.75 font-mono text-10 font-500 tracking-[0.09em] text-gray-9 uppercase">
             Shared across {projectCount} projects
           </div>
           {sharedRows.map((row) => (
@@ -89,12 +89,12 @@ export function ColumnsPopover({
                 checked={enabled.has(row.id)}
                 onChange={(event) => onToggle(row.id, event.target.checked)}
               />
-              <span className="shrink-0 font-mono text-[10px] text-gray-9">{row.typeLabel}</span>
+              <span className="shrink-0 font-mono text-10 text-gray-9">{row.typeLabel}</span>
             </div>
           ))}
           {unsharedRows.length > 0 ? (
             <>
-              <div className="px-2.25 pt-2.25 pb-0.75 font-mono text-[10px] font-medium tracking-[0.09em] text-gray-9 uppercase">
+              <div className="px-2.25 pt-2.25 pb-0.75 font-mono text-10 font-500 tracking-[0.09em] text-gray-9 uppercase">
                 Not shared — unavailable here
               </div>
               {unsharedRows.map((field) => (
@@ -109,7 +109,7 @@ export function ColumnsPopover({
                   <span className="flex-1 truncate font-sans text-ui text-gray-11">
                     {field.label}
                   </span>
-                  <span className="shrink-0 font-mono text-[10px] text-gray-9">
+                  <span className="shrink-0 font-mono text-10 text-gray-9">
                     {field.coverage} of {projectCount}
                   </span>
                 </div>
@@ -125,7 +125,7 @@ export function ColumnsPopover({
             />
           </div>
         </div>
-        <div className="border-t border-gray-6 px-3.25 py-2 font-sans text-[11px] text-gray-9">
+        <div className="border-t border-gray-6 px-3.25 py-2 font-sans text-11 text-gray-9">
           A field is shared when the same key exists in every project.
         </div>
       </PopoverContent>

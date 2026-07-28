@@ -12,7 +12,7 @@ import { deriveAxes, type AxisSection } from '../state-axes';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
-const CAPTION = 'font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9';
+const CAPTION = 'font-mono text-label uppercase tracking-widest text-gray-9';
 
 type AxisView = 'preview' | 'source';
 
@@ -122,7 +122,7 @@ export function StateGrid({ demo }: { demo: LiveDemo }) {
   const component = demo.meta.title.replace(/\s+/g, '');
   return (
     <section id={demo.slug} className="flex flex-col gap-3">
-      <h2 className="font-sans text-label font-medium uppercase tracking-wider text-gray-11">
+      <h2 className="font-sans text-label font-500 uppercase tracking-wider text-gray-11">
         {demo.meta.title}
       </h2>
       <div className="flex flex-col gap-2.5">

@@ -6,7 +6,7 @@ import { formatCount } from './format';
 function RailCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="flex-none rounded-xl border border-gray-6 bg-surface-raised p-3.5">
-      <div className="mb-2.5 font-mono text-[10px] font-medium tracking-wide text-gray-9">{title}</div>
+      <div className="mb-2.5 font-mono text-10 font-500 tracking-wide text-gray-9">{title}</div>
       {children}
     </div>
   );
@@ -27,22 +27,22 @@ function UserCard({
       {id !== undefined || email !== undefined ? (
         <>
           <div className="mb-2.5 flex items-center gap-2.5">
-            <span className="flex size-6.5 shrink-0 items-center justify-center rounded-full bg-indigo-3 font-sans text-[10px] font-semibold text-indigo-9">
+            <span className="flex size-6.5 shrink-0 items-center justify-center rounded-full bg-indigo-3 font-sans text-10 font-600 text-indigo-9">
               {(id ?? email ?? '??').slice(0, 2).toUpperCase()}
             </span>
             <div>
               {id !== undefined ? (
-                <div className="font-mono text-[12.5px] font-medium text-gray-12">{id}</div>
+                <div className="font-mono text-[12.5px] font-500 text-gray-12">{id}</div>
               ) : null}
-              {email !== undefined ? <div className="font-sans text-[11px] text-gray-11">{email}</div> : null}
+              {email !== undefined ? <div className="font-sans text-11 text-gray-11">{email}</div> : null}
             </div>
           </div>
-          <div className="font-mono text-[11px] text-gray-9">
-            hit by <span className="font-medium text-gray-12">{formatCount(userCount)} users</span>
+          <div className="font-mono text-11 text-gray-9">
+            hit by <span className="font-500 text-gray-12">{formatCount(userCount)} users</span>
           </div>
         </>
       ) : (
-        <div className="font-mono text-[11px] text-gray-9">no user data</div>
+        <div className="font-mono text-11 text-gray-9">no user data</div>
       )}
     </RailCard>
   );
@@ -55,7 +55,7 @@ function TagPill({ tagKey, value }: { tagKey: string; value: unknown }) {
       tone={danger ? 'danger' : 'secondary'}
       label={String(value)}
       shape="round"
-      className={cn('h-5 text-[11px] font-mono', !danger && 'text-gray-12')}
+      className={cn('h-5 text-11 font-mono', !danger && 'text-gray-12')}
     />
   );
 }
@@ -84,7 +84,7 @@ function TagsCard({
       <div className="grid grid-cols-[88px_1fr] items-center gap-x-2.5 gap-y-1.75">
         {rows.map(([key, value]) => (
           <Fragment key={key}>
-            <span className="font-mono text-[11px] text-gray-9">{key}</span>
+            <span className="font-mono text-11 text-gray-9">{key}</span>
             <span>
               <TagPill tagKey={key} value={value} />
             </span>
@@ -147,7 +147,7 @@ function PlatformCard({
           <span
             key={index}
             className={cn(
-              'inline-flex h-5 items-center gap-1 rounded-md px-1.75 font-mono text-[10.5px] font-medium',
+              'inline-flex h-5 items-center gap-1 rounded-md px-1.75 font-mono text-[10.5px] font-500',
               chip.accent ? 'bg-blue-3 text-blue-9' : 'bg-surface-inset text-gray-11',
             )}
           >
@@ -181,7 +181,7 @@ function ContextCard({ contexts }: { contexts: Record<string, unknown> | undefin
           value !== null && typeof value === 'object' ? Object.entries(value as Record<string, unknown>) : [];
         return (
           <div key={key} className={index > 0 ? 'mt-3.5' : undefined}>
-            <div className="mb-2.5 font-mono text-[10px] font-medium tracking-wide text-gray-9">
+            <div className="mb-2.5 font-mono text-10 font-500 tracking-wide text-gray-9">
               CONTEXT · {key.toUpperCase()}
             </div>
             <div className="grid grid-cols-[96px_1fr] gap-x-2.5 gap-y-1.5 font-mono text-[11.5px]">

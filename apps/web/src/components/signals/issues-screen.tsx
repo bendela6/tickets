@@ -43,7 +43,7 @@ function TableHeader() {
   return (
     <div
       role="row"
-      className="grid h-9 shrink-0 items-center border-b border-gray-6 bg-gray-1 px-3.5 font-sans text-label font-medium tracking-wider text-gray-11 uppercase"
+      className="grid h-9 shrink-0 items-center border-b border-gray-6 bg-gray-1 px-3.5 font-sans text-label font-500 tracking-wider text-gray-11 uppercase"
       style={{ gridTemplateColumns: ISSUES_GRID_COLUMNS }}
     >
       {HEADER_CELLS.map((cell, index) => (
@@ -124,7 +124,7 @@ export function IssuesScreen() {
   return (
     <div className="flex h-full min-h-0 flex-col p-6 md:p-7">
       <div className="mb-2.5 flex flex-wrap items-center gap-3">
-        <h1 className="m-0 font-sans text-[22px] leading-tight font-semibold text-gray-12">Signals</h1>
+        <h1 className="m-0 font-sans text-[22px] leading-tight font-600 text-gray-12">Signals</h1>
         <span className="font-mono text-meta text-gray-9">
           {openCount.data?.total ?? 0} open issues · {formatCount(loadedEvents)} events last {days}d
         </span>
@@ -174,7 +174,7 @@ export function IssuesScreen() {
                 />
               ))}
             </div>
-            <div className="flex h-9.5 shrink-0 items-center gap-2 border-t border-gray-6 bg-gray-1 px-3.5 font-mono text-[11px] text-gray-9">
+            <div className="flex h-9.5 shrink-0 items-center gap-2 border-t border-gray-6 bg-gray-1 px-3.5 font-mono text-11 text-gray-9">
               <span>{total} issues</span>
               <span className="flex-1" />
               {total > PER_PAGE ? (
@@ -213,7 +213,7 @@ export function IssuesScreen() {
                 <IssueRowSkeleton key={index} index={index} />
               ))}
             </div>
-            <div className="flex h-9.5 shrink-0 items-center gap-2.5 border-t border-gray-6 bg-gray-1 px-3.5 font-mono text-[11px] text-gray-9">
+            <div className="flex h-9.5 shrink-0 items-center gap-2.5 border-t border-gray-6 bg-gray-1 px-3.5 font-mono text-11 text-gray-9">
               <Spinner size="xs" tone="secondary" />
               <span>loading issues…</span>
             </div>
@@ -239,7 +239,7 @@ export function IssuesScreen() {
                 <button
                   type="button"
                   onClick={() => void issuesQuery.refetch()}
-                  className="h-8 rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-medium text-gray-12 hover:bg-surface-inset"
+                  className="h-8 rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
                 >
                   ↻ Retry
                 </button>

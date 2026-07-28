@@ -54,11 +54,11 @@ test('composite fields hang the ring on focus-within, plain ones on focus', () =
 
 test('every rung sets height, radius and font size together', () => {
   const { rerender } = render(<Input size="sm" aria-label="f" />);
-  expect(screen.getByLabelText('f')).toHaveClass('h-7', 'rounded-[6px]', 'text-[13px]', 'px-2.25');
+  expect(screen.getByLabelText('f')).toHaveClass('h-7', 'rounded-[6px]', 'text-13', 'px-2.25');
   rerender(<Input size="md" aria-label="f" />);
-  expect(screen.getByLabelText('f')).toHaveClass('h-9', 'rounded-[8px]', 'text-[14px]', 'px-3');
+  expect(screen.getByLabelText('f')).toHaveClass('h-9', 'rounded-[8px]', 'text-14', 'px-3');
   rerender(<Input size="lg" aria-label="f" />);
-  expect(screen.getByLabelText('f')).toHaveClass('h-11', 'rounded-[10px]', 'text-[15px]', 'px-3.5');
+  expect(screen.getByLabelText('f')).toHaveClass('h-11', 'rounded-[10px]', 'text-15', 'px-3.5');
 });
 
 test('textarea rungs set a floor and evict the single-line height', () => {

@@ -36,7 +36,7 @@ export const PlaygroundCard = forwardRef<
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-baseline justify-between gap-4">
-        <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9">
+        <span className="font-mono text-label uppercase tracking-widest text-gray-9">
           PLAYGROUND
         </span>
         <span className="font-mono text-label tracking-normal text-gray-9">

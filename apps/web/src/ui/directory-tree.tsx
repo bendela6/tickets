@@ -48,12 +48,12 @@ function Row({ row, onToggle, onSelect }: { row: VisibleRow; onToggle: (path: st
         className={cn(
           'flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-1.5 py-1 text-left font-mono text-meta',
           'hover:bg-surface-inset',
-          row.selected && 'bg-indigo-3 font-medium text-indigo-9',
+          row.selected && 'bg-indigo-3 font-500 text-indigo-9',
           row.focused && 'outline outline-2 -outline-offset-1 outline-indigo-9',
         )}
       >
         {row.isRoot ? (
-          <span className="shrink-0 rounded border border-gray-7 px-1 font-mono text-[11px] leading-[15px] text-gray-11">{row.symbol}</span>
+          <span className="shrink-0 rounded border border-gray-7 px-1 font-mono text-11 leading-[15px] text-gray-11">{row.symbol}</span>
         ) : (
           <span
             aria-hidden

@@ -34,7 +34,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
                   size="md"
                 />
               ) : (
-                <span className="inline-flex size-5.5 shrink-0 items-center justify-center rounded-full bg-surface-inset font-sans text-[10px] text-gray-9">
+                <span className="inline-flex size-5.5 shrink-0 items-center justify-center rounded-full bg-surface-inset font-sans text-10 text-gray-9">
                   ?
                 </span>
               )}
@@ -50,17 +50,17 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
                   size="md"
                 />
               ) : (
-                <span className="inline-flex size-5.5 shrink-0 items-center justify-center rounded-full bg-surface-inset font-sans text-[10px] text-gray-9">
+                <span className="inline-flex size-5.5 shrink-0 items-center justify-center rounded-full bg-surface-inset font-sans text-10 text-gray-9">
                   ?
                 </span>
               )}
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate font-sans text-meta font-medium text-gray-12">
+                <span className="truncate font-sans text-meta font-500 text-gray-12">
                   {current ? current.name : 'Pick a user'}
                 </span>
-                <span className="font-mono text-[10px] text-gray-9">acting as</span>
+                <span className="font-mono text-10 text-gray-9">acting as</span>
               </span>
-              <span aria-hidden className="text-[10px] text-gray-9">
+              <span aria-hidden className="text-10 text-gray-9">
                 ⇅
               </span>
             </button>

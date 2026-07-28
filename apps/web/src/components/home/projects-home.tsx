@@ -21,13 +21,13 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
       className="flex cursor-pointer flex-col gap-3.25 rounded-xl border border-gray-6 bg-surface-raised px-5 py-4.5 shadow-sm hover:border-gray-7"
     >
       <div className="flex items-center gap-2.5">
-        <span className="rounded-[5px] bg-surface-inset px-1.75 py-0.75 font-mono text-meta font-medium text-gray-12">
+        <span className="rounded-[5px] bg-surface-inset px-1.75 py-0.75 font-mono text-meta font-500 text-gray-12">
           {project.itemPrefix}
         </span>
-        <span className="flex-1 truncate font-sans text-[15px] font-semibold text-gray-12">
+        <span className="flex-1 truncate font-sans text-15 font-600 text-gray-12">
           {project.name}
         </span>
-        <span className="font-mono text-[11px] text-gray-9">{project.key}</span>
+        <span className="font-mono text-11 text-gray-9">{project.key}</span>
       </div>
 
       <div className="flex flex-col gap-1.75">
@@ -43,7 +43,7 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
           {total === 0 ? <span className="flex-1 bg-gray-6" /> : null}
         </div>
         <div className="flex items-center gap-3.5 font-sans text-meta text-gray-11">
-          <span className="font-mono text-ui font-semibold text-gray-12">{pct}%</span>
+          <span className="font-mono text-ui font-600 text-gray-12">{pct}%</span>
           <span className="inline-flex items-center gap-1.25">
             <Icon name={KIND_ICON.todo} tone={KIND_TONE.todo} size="xs" />
             <span className="text-gray-11">{counts.todo}</span>
@@ -61,7 +61,7 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
             <span className="text-gray-11">{counts.done}</span>
           </span>
           <span className="flex-1" />
-          <span className="font-mono text-[11px] text-gray-9">{total} total</span>
+          <span className="font-mono text-11 text-gray-9">{total} total</span>
         </div>
       </div>
 
@@ -77,9 +77,9 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
             />
           ))}
         </span>
-        <span className="font-mono text-[11px] text-gray-9">{events} events · 14d</span>
+        <span className="font-mono text-11 text-gray-9">{events} events · 14d</span>
         <span className="flex-1" />
-        <span className="font-sans text-[11px] text-gray-9">
+        <span className="font-sans text-11 text-gray-9">
           {lastUpdatedAt ? `last: ${relativeLabel(lastUpdatedAt, new Date())}` : 'no activity yet'}
         </span>
       </div>
@@ -102,7 +102,7 @@ export function ProjectsHome() {
   return (
     <div className="px-4 py-5 md:px-8 md:py-7">
       <div className="mb-5.5 flex items-baseline gap-3.5">
-        <h1 className="font-sans text-[22px] font-semibold text-gray-12">Projects</h1>
+        <h1 className="font-sans text-[22px] font-600 text-gray-12">Projects</h1>
         <span className="font-mono text-meta text-gray-9">
           {projectList.length} projects · {totalTickets} items · {openTickets} open
         </span>
@@ -129,9 +129,9 @@ export function ProjectsHome() {
           onClick={() => setCreating(true)}
           className="flex min-h-37.5 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-gray-7 text-gray-9 hover:border-gray-9 hover:text-gray-11"
         >
-          <span className="font-sans text-[20px]">＋</span>
-          <span className="font-sans text-ui font-medium">New project</span>
-          <span className="font-mono text-[11px]">key · name · prefix</span>
+          <span className="font-sans text-20">＋</span>
+          <span className="font-sans text-ui font-500">New project</span>
+          <span className="font-mono text-11">key · name · prefix</span>
         </button>
       </div>
 

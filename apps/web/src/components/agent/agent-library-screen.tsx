@@ -39,7 +39,7 @@ export function AgentLibraryScreen() {
             <span>/</span>
             <span className="text-gray-11">Agents</span>
           </div>
-          <h1 className="mt-0.5 font-sans text-[19px] font-semibold text-gray-12">Agents</h1>
+          <h1 className="mt-0.5 font-sans text-[19px] font-600 text-gray-12">Agents</h1>
         </div>
         <Button variant="solid" onClick={() => setEditing('new')}>
           ＋ New agent

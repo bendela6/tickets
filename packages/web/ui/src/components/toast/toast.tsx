@@ -60,7 +60,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <RadixToast.Action
                 altText={entry.action.label}
                 onClick={entry.action.onClick}
-                className="font-sans text-ui font-medium text-indigo-9 hover:underline"
+                className="font-sans text-ui font-500 text-indigo-9 hover:underline"
               >
                 {entry.action.label}
               </RadixToast.Action>

@@ -214,14 +214,14 @@ export function KanbanView({
           <ItemKey
             prefix={board.project.itemPrefix}
             number={ticket.number}
-            className="text-[11px]"
+            className="text-11"
           />
           {priorityOption ? (
             <Pill
               label={priorityOption.label}
               tone={hexToOptionColor(priorityOption.config.color)}
               shape="round"
-              className="h-4.5 px-1.75 text-[10px]"
+              className="h-4.5 px-1.75 text-10"
             />
           ) : null}
           <span className="flex-1" />
@@ -229,11 +229,11 @@ export function KanbanView({
             <Pill
               {...typePill}
               label={type.label}
-              className={cn(typePill.className, 'h-4.5 rounded-[5px] px-1.75 text-[10px]')}
+              className={cn(typePill.className, 'h-4.5 rounded-[5px] px-1.75 text-10')}
             />
           ) : null}
         </div>
-        <div className="font-sans text-ui leading-[1.4] font-medium text-gray-12">
+        <div className="font-sans text-ui leading-[1.4] font-500 text-gray-12">
           {String(ticket.values['title'] ?? '')}
         </div>
         {hasFooter ? (
@@ -242,11 +242,11 @@ export function KanbanView({
               <Avatar name={assigneeUser.name} {...avatarFor(assigneeUser.kind)} size="sm" />
             ) : null}
             {due !== null ? (
-              <RelativeDate value={due} overdue={overdue} className="text-[11px]" />
+              <RelativeDate value={due} overdue={overdue} className="text-11" />
             ) : null}
             <span className="flex-1" />
             {progress.total > 0 ? (
-              <span className="font-mono text-[10px] text-gray-9">
+              <span className="font-mono text-10 text-gray-9">
                 {progress.done}/{progress.total}
               </span>
             ) : null}
@@ -293,8 +293,8 @@ export function KanbanView({
               <span className="inline-flex shrink-0">
                 <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
               </span>
-              <span className="font-sans text-ui font-medium text-gray-12">{option.label}</span>
-              <span className="font-mono text-[11px] text-gray-9">{cards.length}</span>
+              <span className="font-sans text-ui font-500 text-gray-12">{option.label}</span>
+              <span className="font-mono text-11 text-gray-9">{cards.length}</span>
               <span className="flex-1" />
               {/* Inert for now: card creation from a column lands in a later task. */}
               <span aria-hidden className="font-sans text-ui text-gray-9">
@@ -302,19 +302,19 @@ export function KanbanView({
               </span>
             </div>
             {mode === 'illegal' ? (
-              <div className="mx-2.5 mb-2 rounded-[8px] bg-red-3 px-2.5 py-1.75 font-sans text-[11px] leading-[1.4] text-red-9">
+              <div className="mx-2.5 mb-2 rounded-[8px] bg-red-3 px-2.5 py-1.75 font-sans text-11 leading-[1.4] text-red-9">
                 ✕ workflow: no transition {draggedFromLabel} → {option.label}
               </div>
             ) : null}
             {mode === 'legal' ? (
-              <div className="mx-2.5 mb-2 flex h-[74px] shrink-0 items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-indigo-9 bg-indigo-3 font-sans text-meta font-medium text-indigo-9">
+              <div className="mx-2.5 mb-2 flex h-[74px] shrink-0 items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-indigo-9 bg-indigo-3 font-sans text-meta font-500 text-indigo-9">
                 Drop — {draggedFromLabel} → {option.label}
               </div>
             ) : null}
             <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-2.5 pb-2.5">
               {cards.map((ticket) => renderCard(ticket))}
               {mode === 'origin' && dragged ? (
-                <div className="flex h-[74px] shrink-0 items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-gray-7 font-mono text-[11px] text-gray-9">
+                <div className="flex h-[74px] shrink-0 items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-gray-7 font-mono text-11 text-gray-9">
                   {board.project.itemPrefix}-{dragged.number} — dragging…
                 </div>
               ) : null}

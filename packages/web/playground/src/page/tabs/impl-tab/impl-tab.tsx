@@ -70,7 +70,7 @@ export function ImplTab({ demo, sources }: { demo: LiveDemo; sources?: ImplSourc
             onChange={setSelected}
           />
         ) : (
-          <span className="font-mono text-label uppercase tracking-(--tracking-caps) text-gray-9">
+          <span className="font-mono text-label uppercase tracking-widest text-gray-9">
             {fileName(active!).toUpperCase()}
           </span>
         )}

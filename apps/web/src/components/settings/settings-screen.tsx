@@ -90,7 +90,7 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
       {/* scheme banner */}
       <div className="flex flex-none items-center gap-3 border-b border-gray-6 bg-surface-inset px-6 py-3">
         <p className="m-0 flex-1 font-sans text-ui text-gray-11">
-          Editing the shared scheme <span className="font-medium text-gray-12">#{board.project.schemeId}</span> —
+          Editing the shared scheme <span className="font-500 text-gray-12">#{board.project.schemeId}</span> —
           changes affect all projects on this scheme.
         </p>
         <Button

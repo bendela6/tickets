@@ -28,7 +28,7 @@ function slugify(label: string): string {
 
 function ArchChip() {
   return (
-    <span className="inline-flex h-4.25 shrink-0 items-center rounded-sm bg-surface-inset px-1.5 font-mono text-[10px] font-medium text-gray-9">
+    <span className="inline-flex h-4.25 shrink-0 items-center rounded-sm bg-surface-inset px-1.5 font-mono text-10 font-500 text-gray-9">
       ARCH
     </span>
   );
@@ -68,7 +68,7 @@ function KindPicker({
           aria-pressed={value === kind}
           onClick={() => onChange(kind)}
           className={cn(
-            'inline-flex h-7 items-center gap-1.5 rounded-md border px-2 font-sans text-[12px] font-medium capitalize',
+            'inline-flex h-7 items-center gap-1.5 rounded-md border px-2 font-sans text-12 font-500 capitalize',
             value === kind
               ? 'border-indigo-9 bg-indigo-3 text-gray-12'
               : 'border-gray-7 bg-surface-raised text-gray-11 hover:border-gray-9',
@@ -343,7 +343,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
   return (
     <section className="flex min-h-0 flex-col px-6 py-5.5">
       <div className="mb-1.5 flex items-center gap-3">
-        <h1 className="m-0 font-sans text-[20px] font-semibold text-gray-12">Workflow</h1>
+        <h1 className="m-0 font-sans text-20 font-600 text-gray-12">Workflow</h1>
         <span className="font-mono text-meta text-gray-9">{projectKey}</span>
       </div>
       <p className="mb-4 mt-0 font-sans text-meta text-gray-9">
@@ -377,7 +377,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                 className="mb-4 overflow-hidden rounded-xl border border-gray-6 bg-surface-raised"
               >
                 <div className="flex items-center gap-2.25 border-b border-gray-6 bg-gray-1 px-4 py-2.75">
-                  <span className="font-sans text-[14px] font-semibold text-gray-12">Options</span>
+                  <span className="font-sans text-14 font-600 text-gray-12">Options</span>
                   <span className="font-mono text-label text-gray-9">
                     {options.length} option{options.length === 1 ? '' : 's'}
                     {archivedCount > 0 ? ` · ${archivedCount} archived` : ''}
@@ -403,7 +403,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                             <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
                           </span>
                           <span
-                            className={cn('font-sans text-ui font-medium text-gray-12', archived && 'line-through')}
+                            className={cn('font-sans text-ui font-500 text-gray-12', archived && 'line-through')}
                           >
                             {option.label}
                           </span>
@@ -470,7 +470,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
               {/* transitions — the graph of allowed moves for this type */}
               <div className="overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
                 <div className="flex items-center gap-2.25 border-b border-gray-6 bg-gray-1 px-4 py-2.75">
-                  <span className="font-sans text-[14px] font-semibold text-gray-12">Transitions</span>
+                  <span className="font-sans text-14 font-600 text-gray-12">Transitions</span>
                   <span className="font-mono text-label text-gray-9">
                     {transitions.length} edge{transitions.length === 1 ? '' : 's'}
                   </span>
@@ -478,7 +478,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                 <div role="region" aria-label="Transitions">
                   {transitions.length === 0 ? (
                     <div className="flex flex-col items-center justify-center gap-1.5 px-6 py-8 text-center">
-                      <span className="font-sans text-[15px] font-semibold text-gray-12">
+                      <span className="font-sans text-15 font-600 text-gray-12">
                         No edges defined — any move is allowed
                       </span>
                       <p className="m-0 max-w-90 font-sans text-meta text-gray-11">

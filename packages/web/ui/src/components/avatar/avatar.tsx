@@ -27,7 +27,7 @@ type AvatarProps = Omit<HTMLAttributes<HTMLElement>, 'children' | 'color' | 'onC
 };
 
 const avatarClass = variants({
-  base: 'inline-flex shrink-0 items-center justify-center font-semibold',
+  base: 'inline-flex shrink-0 items-center justify-center font-600',
   config: {
     shape: {
       default: 'round',
@@ -47,10 +47,10 @@ const avatarClass = variants({
       default: 'sm',
       options: {
         xs: 'size-4 text-[8px]',
-        sm: 'size-4.5 text-[9px]',
-        md: 'size-5.5 text-[10px]',
-        lg: 'size-7 text-[12px]',
-        xl: 'size-9 text-[15px]',
+        sm: 'size-4.5 text-9',
+        md: 'size-5.5 text-10',
+        lg: 'size-7 text-12',
+        xl: 'size-9 text-15',
       },
     },
   },

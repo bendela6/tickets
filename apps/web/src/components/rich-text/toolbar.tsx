@@ -42,29 +42,29 @@ const ACTIVE = 'bg-indigo-3 text-indigo-9 hover:bg-indigo-3';
 // circle-info/minus/check).
 const CONTROLS: Record<string, ControlDef> = {
   bold: {
-    content: <span className="font-sans text-[13px] font-semibold">B</span>,
+    content: <span className="font-sans text-13 font-600">B</span>,
     isActive: (editor) => editor.isActive('bold'),
     run: (editor) => editor.chain().focus().toggleBold().run(),
   },
   italic: {
-    content: <span className="font-sans text-[13px] font-medium italic">I</span>,
+    content: <span className="font-sans text-13 font-500 italic">I</span>,
     isActive: (editor) => editor.isActive('italic'),
     run: (editor) => editor.chain().focus().toggleItalic().run(),
   },
   underline: {
     content: (
-      <span className="font-sans text-[13px] font-medium underline [text-underline-offset:2.5px]">U</span>
+      <span className="font-sans text-13 font-500 underline [text-underline-offset:2.5px]">U</span>
     ),
     isActive: (editor) => editor.isActive('underline'),
     run: (editor) => editor.chain().focus().toggleUnderline().run(),
   },
   strike: {
-    content: <span className="font-sans text-[13px] font-medium line-through">S</span>,
+    content: <span className="font-sans text-13 font-500 line-through">S</span>,
     isActive: (editor) => editor.isActive('strike'),
     run: (editor) => editor.chain().focus().toggleStrike().run(),
   },
   code: {
-    content: <span className="font-mono text-[10.5px] font-medium tracking-[-0.02em]">{'</>'}</span>,
+    content: <span className="font-mono text-[10.5px] font-500 tracking-[-0.02em]">{'</>'}</span>,
     isActive: (editor) => editor.isActive('code'),
     run: (editor) => editor.chain().focus().toggleCode().run(),
   },
@@ -83,7 +83,7 @@ const CONTROLS: Record<string, ControlDef> = {
     },
   },
   at: {
-    content: <span className="font-sans text-[13.5px] font-medium">@</span>,
+    content: <span className="font-sans text-[13.5px] font-500">@</span>,
     // Inserts a literal '@' at the caret — the mentions Suggestion plugin
     // (packages/richtext/src/nodes/refs.ts) watches document transactions
     // for the trigger char and opens its own popover from there.
@@ -95,7 +95,7 @@ const CONTROLS: Record<string, ControlDef> = {
     run: (editor) => editor.chain().focus().toggleBulletList().run(),
   },
   orderedList: {
-    content: <span className="font-mono text-[11.5px] font-medium">1.</span>,
+    content: <span className="font-mono text-[11.5px] font-500">1.</span>,
     isActive: (editor) => editor.isActive('orderedList'),
     run: (editor) => editor.chain().focus().toggleOrderedList().run(),
   },
@@ -114,7 +114,7 @@ const CONTROLS: Record<string, ControlDef> = {
     run: (editor) => editor.chain().focus().toggleBlockquote().run(),
   },
   codeBlock: {
-    content: <span className="font-mono text-[11px] font-medium tracking-[-0.06em]">{'{ }'}</span>,
+    content: <span className="font-mono text-11 font-500 tracking-[-0.06em]">{'{ }'}</span>,
     isActive: (editor) => editor.isActive('codeBlock'),
     run: (editor) => editor.chain().focus().toggleCodeBlock().run(),
   },
@@ -132,7 +132,7 @@ const CONTROLS: Record<string, ControlDef> = {
   // Overflow-only ids (rendered as menu rows by OverflowMenu, never as
   // strip buttons) — `content` is unused there but kept for shape parity.
   highlight: {
-    content: <span className="font-sans text-[12px] font-semibold">A</span>,
+    content: <span className="font-sans text-12 font-600">A</span>,
     isActive: (editor) => editor.isActive('highlight'),
     run: (editor) => editor.chain().focus().toggleHighlight().run(),
   },
@@ -315,7 +315,7 @@ function BlockTypeSelect({ editor, disabled }: { editor: Editor | null; disabled
           disabled={disabled === true || editor === null}
           className="mr-1 inline-flex h-6.5 flex-none items-center gap-1 rounded-[6px] px-2 text-gray-11 hover:bg-surface-inset disabled:pointer-events-none disabled:opacity-40"
         >
-          <span className="font-sans text-[12px] font-medium">{currentBlockLabel(editor)}</span>
+          <span className="font-sans text-12 font-500">{currentBlockLabel(editor)}</span>
           <Icon name="chevron-down" size="sm" />
         </button>
       </MenuTrigger>
@@ -377,7 +377,7 @@ function OverflowMenu({
         {ids.has('highlight') ? (
           <MenuItem className="h-7.5" shortcut="⌘⇧H" onSelect={() => run(CONTROLS.highlight!.run)}>
             <span className="inline-flex items-center gap-2.25">
-              <span className="flex h-4 w-4 items-center justify-center rounded-[3px] bg-highlight font-sans text-[12px] font-semibold text-gray-12">
+              <span className="flex h-4 w-4 items-center justify-center rounded-[3px] bg-highlight font-sans text-12 font-600 text-gray-12">
                 A
               </span>
               Highlight
@@ -437,7 +437,7 @@ function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
     <DropdownMenu.Sub>
       <DropdownMenu.SubTrigger asChild>
         <div className="flex h-7.5 cursor-pointer items-center gap-2.25 rounded-md px-2 text-gray-12 outline-none select-none data-[highlighted]:bg-surface-inset data-[state=open]:bg-surface-inset">
-          <span className="font-sans text-[12.5px] leading-[1.15] font-semibold text-indigo-9 [border-bottom:3px_solid_var(--color-indigo-9)]">
+          <span className="font-sans text-[12.5px] leading-[1.15] font-600 text-indigo-9 [border-bottom:3px_solid_var(--color-indigo-9)]">
             A
           </span>
           <span className="font-sans text-ui">Text color</span>

@@ -34,7 +34,7 @@ export function ScreenState({
           <Icon name={icon} size="md" />
         </span>
       ) : null}
-      <div className="text-ui font-semibold text-gray-12">{title}</div>
+      <div className="text-ui font-600 text-gray-12">{title}</div>
       {/* != null (not truthiness) — a numeric 0 body/action is real content
       and must render, not get swallowed like an unset one. */}
       {body != null ? <div className="max-w-90 text-meta text-gray-11">{body}</div> : null}

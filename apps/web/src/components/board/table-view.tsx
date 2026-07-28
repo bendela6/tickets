@@ -112,7 +112,7 @@ function ProgressCell({ ticket, indexes }: { ticket: Item; indexes: BoardIndexes
   return (
     <span className="inline-flex items-center gap-1.75" title={`${done} of ${total} subtasks done`}>
       <Progress tone="green" value={percent} className="w-9" />
-      <span className="font-mono text-[11px] text-gray-11">
+      <span className="font-mono text-11 text-gray-11">
         {done}/{total}
       </span>
     </span>
@@ -294,7 +294,7 @@ export function TableView({
               type="button"
               onClick={() => cycleSort(column)}
               className={cn(
-                'cursor-pointer text-left font-sans text-label font-medium uppercase',
+                'cursor-pointer text-left font-sans text-label font-500 uppercase',
                 column.source === 'number' ? 'px-3' : 'px-2',
                 active ? 'text-gray-12' : 'text-gray-11 hover:text-gray-12',
               )}

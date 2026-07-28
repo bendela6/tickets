@@ -42,7 +42,7 @@ describe('Pill', () => {
     render(<Pill label="Chore" />);
     const el = screen.getByText('Chore');
     const pill = el.closest('span')!;
-    for (const cls of ['inline-flex', 'h-5.5', 'items-center', 'gap-1.5', 'rounded-md', 'px-2.25', 'text-meta', 'font-medium']) {
+    for (const cls of ['inline-flex', 'h-5.5', 'items-center', 'gap-1.5', 'rounded-md', 'px-2.25', 'text-meta', 'font-500']) {
       expect(pill.className).toContain(cls);
     }
     expect(pill.className).toContain('bg-gray-3');

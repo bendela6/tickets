@@ -298,11 +298,11 @@ export function AllItemsScreen() {
         key: entry.project.key,
         header: (
           <>
-            <span className="rounded-[4px] bg-surface-inset px-1.5 py-0.5 font-mono text-[11px] font-medium text-gray-12">
+            <span className="rounded-[4px] bg-surface-inset px-1.5 py-0.5 font-mono text-11 font-500 text-gray-12">
               {entry.project.itemPrefix}
             </span>
-            <span className="font-sans text-ui font-medium text-gray-12">{entry.project.name}</span>
-            <span className="font-mono text-[11px] text-gray-9">{rows.length} shown</span>
+            <span className="font-sans text-ui font-500 text-gray-12">{entry.project.name}</span>
+            <span className="font-mono text-11 text-gray-9">{rows.length} shown</span>
           </>
         ),
         rows,
@@ -329,8 +329,8 @@ export function AllItemsScreen() {
             <span className="inline-flex shrink-0">
               <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
             </span>
-            <span className={cn('font-sans text-ui font-medium', textClass)}>{label}</span>
-            <span className="font-mono text-[11px] text-gray-9">{rows.length} shown</span>
+            <span className={cn('font-sans text-ui font-500', textClass)}>{label}</span>
+            <span className="font-mono text-11 text-gray-9">{rows.length} shown</span>
           </>
         ),
         rows,
@@ -402,7 +402,7 @@ export function AllItemsScreen() {
         return <span className="font-sans text-ui text-gray-9">—</span>;
       }
       return (
-        <span className="font-mono text-[11px] text-gray-11">
+        <span className="font-mono text-11 text-gray-11">
           {done}/{total}
         </span>
       );
@@ -442,7 +442,7 @@ export function AllItemsScreen() {
     <div className="flex h-full min-h-0 flex-col px-4 pt-4 md:px-7 md:pt-5.5">
       {/* Header: title · meta · search · columns · density */}
       <div className="mb-3.5 flex shrink-0 flex-wrap items-center gap-3.5 gap-y-2">
-        <h1 className="m-0 font-sans text-[22px] leading-tight font-semibold text-gray-12">
+        <h1 className="m-0 font-sans text-[22px] leading-tight font-600 text-gray-12">
           All items
         </h1>
         <span className="font-mono text-meta text-gray-9">
@@ -512,10 +512,10 @@ export function AllItemsScreen() {
           <MenuTrigger asChild>
             <button type="button" className="cursor-pointer py-2 font-sans text-meta text-gray-11">
               Group:{' '}
-              <strong className="font-medium text-gray-12">
+              <strong className="font-500 text-gray-12">
                 {config.group === 'project' ? 'Project' : 'Status kind'}
               </strong>{' '}
-              <span aria-hidden className="text-[10px] text-gray-9">
+              <span aria-hidden className="text-10 text-gray-9">
                 <Icon name="chevron-down" size="2xs" />
               </span>
             </button>
@@ -558,10 +558,10 @@ export function AllItemsScreen() {
           className="sticky top-0 z-10 grid h-9 min-w-170 shrink-0 items-center border-b border-gray-6 bg-gray-1 px-1"
           style={{ gridTemplateColumns }}
         >
-          <span className="px-3 font-sans text-label font-medium text-gray-11 uppercase">Key</span>
-          <span className="px-2 font-sans text-label font-medium text-gray-11 uppercase">Title</span>
+          <span className="px-3 font-sans text-label font-500 text-gray-11 uppercase">Key</span>
+          <span className="px-2 font-sans text-label font-500 text-gray-11 uppercase">Title</span>
           {visibleColumns.map((id) => (
-            <span key={id} className="px-2 font-sans text-label font-medium text-gray-11 uppercase">
+            <span key={id} className="px-2 font-sans text-label font-500 text-gray-11 uppercase">
               {columnLabelFor(id, sharedByKey)}
             </span>
           ))}
