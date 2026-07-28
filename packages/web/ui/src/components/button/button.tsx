@@ -60,17 +60,20 @@ const buttonClass = variants({
           'border border-transparent',
           t.ring,
         ]),
-        // Outline is a surface button: it reads as chrome rather than as an
-        // action in a colour, so only its focus affordance follows the tone.
+        // Border and text follow the tone, matching what `TONES.outline`
+        // resolves to for a Pill asking for the same treatment — the two must
+        // not diverge on a shared variant name.
         outline: over(TONE, (t) => [
-          'bg-surface-raised hover:bg-surface-inset',
-          'text-gray-12',
-          'border border-gray-7 hover:border-gray-9',
+          `bg-surface-raised hover:bg-${t.bgSubtle}`,
+          `text-${t.text}`,
+          `border border-${t.border} hover:border-${t.borderHover}`,
           `${t.ring} focus-visible:border-${t.solid}`,
         ]),
+        // Ghost is Button's answer to Pill's `text` emphasis — the same tone
+        // text, plus the hover surface a button needs and a tag does not.
         ghost: over(TONE, (t) => [
-          'bg-transparent hover:bg-surface-inset',
-          'text-gray-11 hover:text-gray-12',
+          `bg-transparent hover:bg-${t.bgSubtle}`,
+          `text-${t.text} hover:text-${t.textStrong}`,
           'border border-transparent',
           t.ring,
         ]),
