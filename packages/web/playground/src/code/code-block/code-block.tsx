@@ -12,10 +12,19 @@ const COPY_STATE_RESET_MS = 1500;
 export function CodeBlock({
   code,
   numbered = false,
+  copyable = true,
   className,
 }: {
   code: string;
   numbered?: boolean;
+  /**
+   * The copy affordance floats over the block's top-right corner on a
+   * transparent background, which reads fine on a wide block whose first line
+   * is short. Turn it off for narrow one-liners — the state viewer's per-cell
+   * snippets — where a long line would otherwise run underneath it, and where
+   * repeating the button once per specimen is noise rather than utility.
+   */
+  copyable?: boolean;
   className?: string;
 }) {
   const [html, setHtml] = useState<string | null>(null);
@@ -54,13 +63,15 @@ export function CodeBlock({
         className,
       )}
     >
-      <button
-        type="button"
-        onClick={() => void handleCopy()}
-        className="pg-code-copy absolute top-2.5 right-2.5 inline-flex h-6.5 items-center gap-1.5 rounded-md border border-transparent px-2.5 font-sans text-label font-medium"
-      >
-        {copyState === 'copied' ? 'Copied' : copyState === 'failed' ? 'Copy failed' : '⧉ Copy'}
-      </button>
+      {copyable ? (
+        <button
+          type="button"
+          onClick={() => void handleCopy()}
+          className="pg-code-copy absolute top-2.5 right-2.5 inline-flex h-6.5 items-center gap-1.5 rounded-md border border-transparent px-2.5 font-sans text-label font-medium"
+        >
+          {copyState === 'copied' ? 'Copied' : copyState === 'failed' ? 'Copy failed' : '⧉ Copy'}
+        </button>
+      ) : null}
       {html !== null ? <div dangerouslySetInnerHTML={{ __html: html }} /> : <pre>{code}</pre>}
     </div>
   );

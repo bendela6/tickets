@@ -43,8 +43,14 @@ export const PlaygroundCard = forwardRef<
           {playgroundCaption(component, playground.controls, values)}
         </span>
       </div>
+      {/* Named region: the Preview tab stacks three stages (states, playground,
+          code) that all render the same component, so the live one needs to be
+          distinguishable — to a screen reader walking landmarks, and to a test
+          asserting which specimen reflects the current controls. */}
       <div
         ref={ref}
+        role="region"
+        aria-label="Playground preview"
         className="flex min-h-32 items-center justify-center rounded-lg border border-gray-6 bg-surface-raised p-7"
       >
         {playground.render(values as never)}
