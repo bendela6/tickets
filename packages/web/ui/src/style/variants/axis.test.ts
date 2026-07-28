@@ -47,13 +47,22 @@ describe('over', () => {
     expect(built).toBe(2);
   });
 
-  it('builds nothing until asked — the table is lazy, not eager', () => {
+  it('builds nothing on its own, but variants() walks it all at construction', () => {
+    // Worth stating plainly, because the two halves point opposite ways.
+    // `over()` alone is lazy — nothing is built until something asks.
     let built = 0;
-    over(RAMP, () => {
+    const expansion = over(RAMP, () => {
       built += 1;
       return '';
     });
     expect(built).toBe(0);
+
+    // But an expansion only ever exists inside a config, and `variants()`
+    // enumerates for the safelist as soon as it is called. So in practice the
+    // whole domain IS built at module load — the memoisation buys a cheap
+    // render, not a cheap import.
+    variants({ base: '', config: { v: { default: 'x', options: { x: expansion } } } });
+    expect(built).toBe(RAMP.keys.length);
   });
 
   it('composes axes and walks their whole product for the safelist', () => {

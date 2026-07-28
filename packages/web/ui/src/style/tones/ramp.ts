@@ -8,7 +8,7 @@ import { HUE_TONES, STEP, TONE_SCALE, type HueTone } from './tones.generated';
  * rung it means — the whole point of the step contract is that nobody writes
  * `-9` — while the `${scale}-${STEP.x}` ceremony happens once, here.
  */
-export type Ramp = { readonly name: HueTone } & {
+export type Ramp = {
   readonly [Rung in keyof typeof STEP]: string;
 } & {
   /**
@@ -24,14 +24,15 @@ function build(name: HueTone): Ramp {
     Object.entries(STEP).map(([rung, step]) => [rung, `${name}-${step}`]),
   ) as { [Rung in keyof typeof STEP]: string };
   return {
-    name,
     ...rungs,
     ring: `focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-${name}-${STEP.focusRing}`,
   };
 }
 
-/** Every ramp, keyed by hue — the domain the `TONE` axis varies over. */
-export const RAMPS: Record<HueTone, Ramp> = Object.fromEntries(
+// Every ramp, keyed by hue — the domain the `TONE` axis varies over. Not
+// exported: `TONE` and `toneAxis` are the API, and a component reaching for
+// the table directly would be back to assembling rungs by hand.
+const RAMPS: Record<HueTone, Ramp> = Object.fromEntries(
   HUE_TONES.map((hue) => [hue, build(hue)]),
 ) as Record<HueTone, Ramp>;
 

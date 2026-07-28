@@ -4,36 +4,34 @@ import { isExpansion, type Axis, type Expansion } from './axis';
 
 /**
  * CVA-like class builder. The whole call is one object: a `base` and a `config`
- * of variant groups. Each *variant group* carries its own `default` option and
- * an `options` map from option names to the classes they apply; a group's options
- * may instead be a function of a params object, so its classes can interpolate
- * them (e.g. a `tone` producing `bg-${tone}-100`). A function group declares those
- * params alongside its options, each with a `default` and the runtime `values` it
- * can take. `variants` never needs to know what the params mean — it reads their
- * shape from the function groups and folds them into the public props.
+ * of variant groups. Each group carries a `default` option and an `options` map
+ * from option names to the classes they apply. An option is either a class
+ * value, or an `over()` expansion that varies over one or more named axes.
  *
  *   const badgeClass = variants({
- *     base,
+ *     base: 'inline-flex',
  *     config: {
  *       variant: {
  *         default: 'soft',
- *         params: { tone: { default: 'base', values: Object.keys(COLOR_TONES) } },
- *         options: ({ tone }: { tone?: ColorTone }) => ({ soft: `bg-${tone}-100`, ... }),
+ *         options: {
+ *           soft: over(TONE, (t) => `bg-${t.bgSubtle} text-${t.text}`),
+ *           bare: 'bg-transparent',
+ *         },
  *       },
- *       size: {
- *         default: 'md',
- *         options: { sm: '...', md: '...' },
- *       },
+ *       size: { default: 'md', options: { sm: 'h-7', md: 'h-9' } },
  *     },
  *   });
  *
- *   type Props = VariantProps<typeof badgeClass>;
+ * An axis carries its own name, domain and resting value, so the group states
+ * no params: they are read off the options, and the axis name becomes a public
+ * prop (`badgeClass({ variant: 'soft', scale: 'red' })`).
  *
- * A param's `values` (types are erased, so the builder can't know them) let
- * `variants` expand that group over every option × every param combination and
- * record the resulting classes in a module registry — `collectSafelist()` returns
- * them so the Tailwind build can emit every class a component might produce at
- * runtime. A param's `default` fills in the prop when the caller omits it.
+ * At build time every expansion is walked over its whole domain and the result
+ * recorded in a module registry — `collectSafelist()` returns it so the
+ * Tailwind build emits classes that appear nowhere as literal text.
+ *
+ * A group may still declare `params` and compute `options` from them. Nothing
+ * uses that form any more; it is kept only until the last caller is gone.
  */
 
 /** Maps option names (e.g. `soft`, `md`) to the classes they apply. Values
@@ -258,16 +256,10 @@ function collectGroups(config: Config): Record<string, readonly string[]> {
 }
 
 /** Expands a config into every class it can produce. Each function group walks
- *  over its own params' combinations; static groups are walked once. `extra` is
- *  the call's declared escape hatch, folded in so it reaches the safelist too. */
-function enumerateClasses(
-  base: ClassValue,
-  config: Config,
-  extra: readonly string[] = [],
-): string[] {
+ *  over its own params' combinations; static groups are walked once. */
+function enumerateClasses(base: ClassValue, config: Config): string[] {
   const found = new Set<string>();
   addTokens(found, base);
-  addTokens(found, extra as string[]);
   for (const group of Object.values(config)) {
     if (typeof group.options === 'function') {
       // Same contravariance gap as the render path: the param type is inferred
@@ -305,11 +297,6 @@ function enumerateClasses(
 export function variants<const Groups extends Config & ValidGroups<Groups>>(options: {
   base: ClassValue;
   config: Groups;
-  /** Classes this component can produce that the config cannot enumerate —
-   *  anything assembled in the component body rather than in a group's options.
-   *  They reach the safelist but are never applied by the returned function, so
-   *  the component still has to emit them itself. */
-  safelist?: readonly string[];
 }): ClassFn<Groups> {
   const base = options.base;
   const config = options.config;
@@ -335,7 +322,7 @@ export function variants<const Groups extends Config & ValidGroups<Groups>>(opti
     Object.assign(domains, groupDomains(group));
   }
 
-  const classes = enumerateClasses(base, config, options.safelist);
+  const classes = enumerateClasses(base, config);
   for (const className of classes) {
     SAFELIST.add(className);
   }
@@ -377,7 +364,3 @@ export function variants<const Groups extends Config & ValidGroups<Groups>>(opti
   return Object.assign(classFn, { classes, axes });
 }
 
-/** Infers the props of a function built by {@link variants}. */
-export type VariantProps<Fn> = Fn extends (props?: infer Props) => string
-  ? NonNullable<Props>
-  : never;
