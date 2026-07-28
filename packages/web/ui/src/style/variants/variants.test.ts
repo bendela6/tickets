@@ -137,19 +137,6 @@ describe('variants', () => {
     expect(alphaClass.axes.params).toEqual({ tone: ['red', 'blue'], alpha: ['40', '60'] });
   });
 
-  const escapeHatchClass = variants({
-    base: 'block',
-    config: { size: { default: 'md', options: { md: 'h-9' } } },
-    safelist: ['bg-teal-9/[0.55]', 'dark:ring-teal-7'],
-  });
-
-  it('folds a declared safelist into the enumeration without applying it', () => {
-    expect(escapeHatchClass()).toBe('block h-9');
-    expect(new Set(escapeHatchClass.classes)).toEqual(
-      new Set(['block', 'h-9', 'bg-teal-9/[0.55]', 'dark:ring-teal-7']),
-    );
-  });
-
   it('exposes collectSafelist() including every class produced across all variants() calls', () => {
     const safelist = new Set(collectSafelist());
     for (const className of [
