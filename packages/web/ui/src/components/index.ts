@@ -7,6 +7,7 @@ export * from './copy-button';
 export * from './date-picker';
 export * from './dialog';
 export * from './dialog-footer';
+export * from './dropdown';
 export * from './field';
 export * from './field-error';
 export * from './field-label';

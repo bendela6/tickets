@@ -271,9 +271,12 @@
 @source inline("min-w-7");
 @source inline("min-w-9");
 @source inline("overflow-hidden");
+@source inline("p-0");
 @source inline("p-0.5");
 @source inline("p-0.75");
 @source inline("p-1");
+@source inline("p-2");
+@source inline("p-3");
 @source inline("pb-1.5");
 @source inline("pb-2");
 @source inline("pb-2.5");

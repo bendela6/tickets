@@ -1,4 +1,12 @@
-import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import {
+  forwardRef,
+  isValidElement,
+  type HTMLAttributes,
+  type MouseEventHandler,
+  type ReactElement,
+  type ReactNode,
+  type Ref,
+} from 'react';
 import { cn, HUE_TONES, STEP, TONE_SCALE, variants, type Tone, type ToneEmphasis } from '../../style';
 import { Icon, type IconName, type IconSize } from '../icon';
 
@@ -58,21 +66,10 @@ const pillClass = variants({
 // The leading glyph scales with the pill rather than being pinned at 10px.
 const ICON_SIZE: Record<PillSize, IconSize> = { sm: '2xs', md: 'xs', lg: 'sm' };
 
-export function Pill({
-  label,
-  tone = 'neutral',
-  variant = 'subtle',
-  icon,
-  shape = 'square',
-  size = 'md',
-  trailing,
-  chevron = false,
-  strikethrough,
-  onClick,
-  pressed,
-  disabled,
-  className,
-}: {
+// `children` is omitted because the content is `label`; `color` because a
+// Pill's colour comes from `tone` and the DOM attribute of that name would
+// read as an escape hatch that silently does nothing.
+type PillProps = Omit<HTMLAttributes<HTMLElement>, 'children' | 'color' | 'onClick'> & {
   label: ReactNode;
   tone?: Tone;
   variant?: PillVariant;
@@ -83,11 +80,41 @@ export function Pill({
   /** Adds a trailing chevron, for a pill that opens a menu or a popover. */
   chevron?: boolean;
   strikethrough?: boolean;
-  onClick?: () => void;
+  /** Widened from `() => void` to the DOM handler so the event is reachable —
+   *  a zero-arg callback still satisfies it, so existing call sites are
+   *  unaffected. */
+  onClick?: MouseEventHandler<HTMLElement>;
   pressed?: boolean;
   disabled?: boolean;
   className?: string;
-}) {
+};
+
+/**
+ * Forwards its ref and spreads unknown props so a Pill can serve as an
+ * overlay trigger (`<Dropdown trigger={<Pill chevron … />}>`). radix anchors
+ * a panel off the trigger's ref and writes `aria-expanded`/`data-state` onto
+ * it; without both of those the pill would open the panel on click and then
+ * misposition it, with nothing announced to assistive tech.
+ */
+export const Pill = forwardRef<HTMLElement, PillProps>(function Pill(
+  {
+    label,
+    tone = 'neutral',
+    variant = 'subtle',
+    icon,
+    shape = 'square',
+    size = 'md',
+    trailing,
+    chevron = false,
+    strikethrough,
+    onClick,
+    pressed,
+    disabled,
+    className,
+    ...rest
+  },
+  ref,
+) {
   const body = (
     <>
       {isValidElement(icon) ? icon : icon ? <Icon name={icon} size={ICON_SIZE[size]} /> : null}
@@ -111,11 +138,16 @@ export function Pill({
     // `pointer-events-none`) since native disabled already blocks activation.
     return (
       <button
+        // Both branches are HTMLElement subtypes, so the forwarded ref is
+        // narrowed at the point it is attached rather than the prop being
+        // split into two components per element type.
+        ref={ref as Ref<HTMLButtonElement>}
         type="button"
         disabled={disabled}
         aria-pressed={pressed}
         onClick={onClick}
         className={classes(disabled ? 'cursor-default opacity-50' : undefined)}
+        {...rest}
       >
         {body}
       </button>
@@ -123,5 +155,9 @@ export function Pill({
   }
   // No onClick means this is a static `<span>` — a span can't be disabled,
   // so `disabled` is meaningless here and intentionally ignored.
-  return <span className={classes()}>{body}</span>;
-}
+  return (
+    <span ref={ref as Ref<HTMLSpanElement>} className={classes()} {...rest}>
+      {body}
+    </span>
+  );
+});
