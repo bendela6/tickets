@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { cn } from '../cn';
+import { isExpansion, type Axis, type Expansion } from './axis';
 
 /**
  * CVA-like class builder. The whole call is one object: a `base` and a `config`
@@ -36,8 +37,10 @@ import { cn } from '../cn';
  */
 
 /** Maps option names (e.g. `soft`, `md`) to the classes they apply. Values
- *  accept anything `cn` does — a string, or an array of strings. */
-type ClassMap = Record<string, ClassValue>;
+ *  accept anything `cn` does — a string, or an array of strings — or an
+ *  `over()` expansion, which stands for one set of classes per combination of
+ *  the axes it declares. */
+type ClassMap = Record<string, ClassValue | Expansion>;
 
 /** A group's options: a static option map, or one computed from the params. */
 type OptionSource = ClassMap | ((params: never) => ClassMap);
@@ -102,9 +105,36 @@ type ValidGroups<Groups extends Config> = {
   };
 };
 
-/** The union of every function group's params (`never` if there are none). */
+/** The params a static option map contributes through its `over()` expansions.
+ *  Intersected, not unioned: a group whose options vary over different axes
+ *  (one over tone, another over size) contributes both props, not a choice
+ *  between them. */
+type ExpansionParams<Group extends VariantGroup> = Group['options'] extends (
+  params: never,
+) => ClassMap
+  ? never
+  : Intersect<
+      {
+        [Key in keyof Group['options']]: Group['options'][Key] extends Expansion<infer P>
+          ? P
+          : never;
+      }[keyof Group['options']]
+    >;
+
+/** Collapses a union of param objects into one object accepting all of them.
+ *  The empty union is special-cased: inferring from `never` yields `unknown`,
+ *  which would then union into `ParamsOf` and erase every other group's
+ *  params instead of contributing nothing. */
+type Intersect<Union> = [Union] extends [never]
+  ? never
+  : (Union extends unknown ? (arg: Union) => void : never) extends (arg: infer Merged) => void
+    ? Merged
+    : never;
+
+/** Every param any group contributes, from a function group's declaration or
+ *  from its options' axes (`never` if there are none). */
 type ParamsOf<Groups extends Config> = {
-  [Group in keyof Groups]: GroupParams<Groups[Group]>;
+  [Group in keyof Groups]: GroupParams<Groups[Group]> | ExpansionParams<Groups[Group]>;
 }[keyof Groups];
 
 /** Adds the params to the props, but only when a group actually uses them. */
@@ -174,7 +204,11 @@ function paramCombinations(domains: Record<string, readonly string[]>): Record<s
 /** The runtime `values` declared for one group's params, as a domain map.
  *  Values are stringified: a numeric domain (an opacity of `40`) interpolates
  *  identically either way, and keeping the domain textual lets `Axes` describe
- *  itself honestly instead of casting numbers to strings. */
+ *  itself honestly instead of casting numbers to strings.
+ *
+ *  Options built with `over()` carry their own axes, so a group whose options
+ *  declare them needs no `params` block — the domain is read off the options
+ *  instead of restated beside them. */
 function groupDomains(group: VariantGroup): Record<string, readonly string[]> {
   const domains: Record<string, readonly string[]> = {};
   for (const [key, spec] of Object.entries(group.params ?? {})) {
@@ -182,7 +216,30 @@ function groupDomains(group: VariantGroup): Record<string, readonly string[]> {
       domains[key] = spec.values.map((value) => String(value));
     }
   }
+  for (const ax of groupAxes(group)) {
+    domains[ax.name] = ax.keys;
+  }
   return domains;
+}
+
+/** Every axis any of a group's options varies over, deduped by name. Two
+ *  options sharing an axis (the usual case — each variant over the same tone)
+ *  contribute it once. */
+function groupAxes(group: VariantGroup): Axis[] {
+  if (typeof group.options === 'function') {
+    return [];
+  }
+  const byName = new Map<string, Axis>();
+  for (const value of Object.values(group.options)) {
+    if (isExpansion(value)) {
+      for (const ax of value.axes) {
+        if (!byName.has(ax.name)) {
+          byName.set(ax.name, ax);
+        }
+      }
+    }
+  }
+  return [...byName.values()];
 }
 
 /** The option names of each group. A function group's keys don't depend on the
@@ -223,7 +280,15 @@ function enumerateClasses(
       }
     } else {
       for (const value of Object.values(group.options)) {
-        addTokens(found, value);
+        // An expansion walks its whole combination space here — this is the
+        // one caller that does, so the render path can stay lazy.
+        if (isExpansion(value)) {
+          for (const classes of value.every()) {
+            addTokens(found, classes);
+          }
+        } else {
+          addTokens(found, value);
+        }
       }
     }
   }
@@ -260,6 +325,11 @@ export function variants<const Groups extends Config & ValidGroups<Groups>>(opti
         defaults[key] = spec.default;
       }
     }
+    // An axis declares its own resting value, so an options-declared param
+    // gets a default without the group restating one.
+    for (const ax of groupAxes(group)) {
+      defaults[ax.name] ??= ax.fallback;
+    }
     // Same helper the enumeration uses, so `axes` can never describe a domain
     // the safelist was not expanded over.
     Object.assign(domains, groupDomains(group));
@@ -293,7 +363,11 @@ export function variants<const Groups extends Config & ValidGroups<Groups>>(opti
         typeof group.options === 'function'
           ? (group.options as (params: Record<string, unknown>) => ClassMap)(selection)
           : group.options;
-      selected.push(classMap[option]);
+      const value = classMap[option];
+      // An expansion resolves against the selection and memoises, so this is a
+      // cache hit after the first render of a given combination — where a
+      // function group rebuilds every option's classes to read one of them.
+      selected.push(isExpansion(value) ? value.at(selection) : value);
     }
 
     const extra = selection.className;

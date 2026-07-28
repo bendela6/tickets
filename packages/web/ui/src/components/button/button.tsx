@@ -1,5 +1,5 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
-import { HUE_TONES, STEP, TONE_SCALE, variants, type Tone } from '../../style';
+import { over, TONE, TONE_SCALE, variants, type Tone } from '../../style';
 import { Icon, type IconSize } from '../icon';
 import { Spinner } from '../spinner';
 
@@ -28,12 +28,14 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 // halo (design: `0 0 0 3px var(--acs), 0 0 0 1px var(--bg) inset`); outline
 // swaps its border to accent on focus.
 //
-// The `scale` param is the *ramp* name, not the tone name — `primary` paints
-// from `indigo`, so passing a tone straight through would build `bg-primary-9`,
-// which no theme variable backs. Its domain is every ramp, which is what
-// expands the safelist: none of these classes exist as literal text anywhere,
-// so `bg-green-9`/`hover:bg-green-10` only get emitted because the enumeration
-// walked this options function over all 11 ramps.
+// Each option is written once and expanded over `TONE` — the axis names the
+// `scale` prop and owns its domain, so this file never restates which ramps
+// exist. `t` is the resolved ramp: `t.solid` is `indigo-9`, still named by its
+// STEP rung rather than spelled as a number. None of these classes exist as
+// literal text anywhere, so `bg-green-9`/`hover:bg-green-10` only reach the
+// safelist because the enumeration walks the axis over all 11 ramps.
+//
+// Read each option down, not across: fill, text, border, focus, extra.
 const buttonClass = variants({
   base: [
     'inline-flex items-center justify-center gap-2 font-sans font-medium',
@@ -44,28 +46,35 @@ const buttonClass = variants({
   config: {
     variant: {
       default: 'outline',
-      params: { scale: { default: TONE_SCALE.primary, values: HUE_TONES } },
-      options: ({ scale }: { scale?: string }) => ({
-        solid: [
-          `bg-${scale}-${STEP.solid} text-${scale}-${STEP.contrast} border border-transparent hover:bg-${scale}-${STEP.solidHover}`,
-          `focus-visible:ring-[3px] focus-visible:ring-${scale}-${STEP.focusRing}`,
+      options: {
+        solid: over(TONE, (t) => [
+          `bg-${t.solid} hover:bg-${t.solidHover}`,
+          `text-${t.contrast}`,
+          'border border-transparent',
+          t.ring,
           'focus-visible:shadow-[inset_0_0_0_1px_var(--color-gray-1)]',
-        ],
-        subtle: [
-          `bg-${scale}-${STEP.bgSubtle} text-${scale}-${STEP.text} border border-transparent hover:bg-${scale}-${STEP.bgSubtleHover}`,
-          `focus-visible:ring-[3px] focus-visible:ring-${scale}-${STEP.focusRing}`,
-        ],
+        ]),
+        subtle: over(TONE, (t) => [
+          `bg-${t.bgSubtle} hover:bg-${t.bgSubtleHover}`,
+          `text-${t.text}`,
+          'border border-transparent',
+          t.ring,
+        ]),
         // Outline is a surface button: it reads as chrome rather than as an
         // action in a colour, so only its focus affordance follows the tone.
-        outline: [
-          'bg-surface-raised text-gray-12 border border-gray-7 hover:bg-surface-inset hover:border-gray-9',
-          `focus-visible:ring-[3px] focus-visible:ring-${scale}-${STEP.focusRing} focus-visible:border-${scale}-${STEP.solid}`,
-        ],
-        ghost: [
-          'bg-transparent text-gray-11 border border-transparent hover:bg-surface-inset hover:text-gray-12',
-          `focus-visible:ring-[3px] focus-visible:ring-${scale}-${STEP.focusRing}`,
-        ],
-      }),
+        outline: over(TONE, (t) => [
+          'bg-surface-raised hover:bg-surface-inset',
+          'text-gray-12',
+          'border border-gray-7 hover:border-gray-9',
+          `${t.ring} focus-visible:border-${t.solid}`,
+        ]),
+        ghost: over(TONE, (t) => [
+          'bg-transparent hover:bg-surface-inset',
+          'text-gray-11 hover:text-gray-12',
+          'border border-transparent',
+          t.ring,
+        ]),
+      },
     },
     // NOTE: font-size utilities here use arbitrary lengths (text-[12px]/text-[13px])
     // rather than the semantic `text-ui`/`text-meta` tokens on purpose. tailwind-merge
