@@ -85,23 +85,50 @@ describe('StateGrid', () => {
     expect(screen.queryByText('hand written')).toBeNull();
   });
 
-  it('hides source until asked, then shows the JSX for each specimen', () => {
+  it('offers Preview and Source as a real tablist over one panel', () => {
+    render(<StateGrid demo={withPlayground} />);
+    const variant = section('variant');
+    const tabs = within(variant).getByRole('tablist', { name: 'variant view' });
+    expect(within(tabs).getByRole('tab', { name: 'Preview' }).getAttribute('aria-selected')).toBe(
+      'true',
+    );
+    expect(within(tabs).getByRole('tab', { name: 'Source' }).getAttribute('aria-selected')).toBe(
+      'false',
+    );
+    expect(within(variant).getByRole('tabpanel')).toBeTruthy();
+  });
+
+  it('shows specimens on Preview and swaps them for the JSX on Source', () => {
     render(<StateGrid demo={withPlayground} />);
     const variant = section('variant');
     expect(within(variant).queryByText(/<Button/)).toBeNull();
 
-    fireEvent.click(within(variant).getByRole('button', { name: /source/i }));
+    fireEvent.click(within(variant).getByRole('tab', { name: 'Source' }));
     // The pinned axis prop prints even on the default-valued cell, which
     // would otherwise render as a bare `<Button />`.
     expect(within(variant).getByText(/variant="subtle"/)).toBeTruthy();
     expect(within(variant).getByText(/variant="solid"/)).toBeTruthy();
+    // Tabs swap the panel — the specimens are gone, not merely pushed down.
+    expect(within(variant).queryByText('subtle/sm')).toBeNull();
   });
 
-  it('toggles source per section, not for the whole page', () => {
+  it('lists one line per cell, in specimen order, in a single block', () => {
     render(<StateGrid demo={withPlayground} />);
-    fireEvent.click(within(section('variant')).getByRole('button', { name: /source/i }));
-    expect(within(section('variant')).getAllByText(/variant=/)).toHaveLength(2);
+    const variant = section('variant');
+    fireEvent.click(within(variant).getByRole('tab', { name: 'Source' }));
+    expect(within(variant).getByRole('tabpanel').textContent).toContain(
+      '<Button variant="subtle" />\n<Button variant="solid" />',
+    );
+  });
+
+  it('switches view per section, not for the whole page', () => {
+    render(<StateGrid demo={withPlayground} />);
+    fireEvent.click(within(section('variant')).getByRole('tab', { name: 'Source' }));
+    expect(within(section('variant')).getByText(/variant=/)).toBeTruthy();
     expect(within(section('size')).queryByText(/size=/)).toBeNull();
+    expect(
+      within(section('size')).getByRole('tab', { name: 'Preview' }).getAttribute('aria-selected'),
+    ).toBe('true');
   });
 
   it('falls back to the authored states when there is no playground to derive from', () => {

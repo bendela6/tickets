@@ -126,6 +126,14 @@ function stage(): HTMLElement {
   return within(screen.getByRole('region', { name: 'Playground preview' })).getByText('play-btn');
 }
 
+// The page's own tab strip. Each state-viewer section carries its own
+// Preview/Source tablist too, so "the Preview tab" has to say which one it
+// means — the accessible name is what tells the two apart for a screen reader
+// as well.
+function pageTabs() {
+  return within(screen.getByRole('tablist', { name: 'Button views' }));
+}
+
 describe('ComponentPage', () => {
   afterEach(() => {
     localStorage.clear();
@@ -134,9 +142,9 @@ describe('ComponentPage', () => {
 
   it('renders a real tablist with Preview active', () => {
     render(<ComponentPage demo={demo} />);
-    expect(screen.getByRole('tablist')).toBeTruthy();
-    const preview = screen.getByRole('tab', { name: 'Preview' });
-    const props = screen.getByRole('tab', { name: 'Docs' });
+    expect(screen.getByRole('tablist', { name: 'Button views' })).toBeTruthy();
+    const preview = pageTabs().getByRole('tab', { name: 'Preview' });
+    const props = pageTabs().getByRole('tab', { name: 'Docs' });
     expect(screen.getByRole('tab', { name: 'Implementation' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'Demo' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'A11y' })).toBeTruthy();
@@ -179,7 +187,7 @@ describe('ComponentPage', () => {
     expect(previewWrapper.className).toBe('');
     expect(docsWrapper.className).toBe('hidden');
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Docs' }));
+    fireEvent.click(pageTabs().getByRole('tab', { name: 'Docs' }));
     expect(previewWrapper.className).toBe('hidden');
     expect(docsWrapper.className).toBe('');
     expect(within(docsWrapper).getByText('API')).toBeTruthy();
@@ -187,7 +195,7 @@ describe('ComponentPage', () => {
     // Preview content is still in the DOM (hidden), not unmounted.
     expect(stage().getAttribute('data-variant')).toBe('secondary');
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Preview' }));
+    fireEvent.click(pageTabs().getByRole('tab', { name: 'Preview' }));
     expect(previewWrapper.className).toBe('');
     expect(docsWrapper.className).toBe('hidden');
     expect(stage().getAttribute('data-variant')).toBe('secondary');
@@ -302,7 +310,7 @@ describe('ComponentPage', () => {
 
   it('hides Split themes toggle when not on Preview tab', () => {
     render(<ComponentPage demo={demo} />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Docs' }));
+    fireEvent.click(pageTabs().getByRole('tab', { name: 'Docs' }));
     expect(screen.queryByLabelText('Split themes')).toBeNull();
   });
 
