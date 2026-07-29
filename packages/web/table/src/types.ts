@@ -15,7 +15,11 @@ export interface Column<T> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   as?: Renderer<any>;
   sortable?: boolean;
-  width?: number;
+  /** Track size for this column. A number is pixels. A string is emitted into
+   *  grid-template-columns verbatim, so `minmax(240px, 1fr)` and other track
+   *  functions work — a flexible column cannot be expressed as a number.
+   *  A width the user has dragged always wins over both. */
+  width?: number | string;
   minWidth?: number;
   align?: 'left' | 'right' | 'center';
   resizable?: boolean;

@@ -153,3 +153,64 @@ describe('<Table> engine — states', () => {
     expect(container.querySelector('[data-slot="root"]')).toBeNull();
   });
 });
+
+describe('<Table> engine — sizing', () => {
+  it('uses a caller-supplied row height for virtual positioning', () => {
+    const { container } = render(<Harness rowHeight={64} />);
+    const first = container.querySelectorAll('[data-slot="tr"]')[0] as HTMLElement;
+    expect(first.style.height).toBe('64px');
+  });
+
+  it('falls back to the default row height', () => {
+    const { container } = render(<Harness />);
+    const first = container.querySelectorAll('[data-slot="tr"]')[0] as HTMLElement;
+    expect(first.style.height).toBe('40px');
+  });
+
+  it('stacks rows by the supplied height rather than the default', () => {
+    const { container } = render(<Harness rowHeight={64} />);
+    const second = container.querySelectorAll('[data-slot="tr"]')[1] as HTMLElement;
+    expect(second.style.transform).toBe('translateY(64px)');
+  });
+
+  it('emits a numeric column width as pixels', () => {
+    const { container } = render(
+      <Harness columns={[{ key: 'name', header: 'Name', value: (r) => r.name, width: 200 }]} />,
+    );
+    expect(container.querySelector('[data-slot="thead"]')).toHaveAttribute(
+      'data-grid-template',
+      '200px',
+    );
+  });
+
+  // minmax(240px, 1fr) is what all-items-screen's Title column needs, and no
+  // number can express it.
+  it('emits a string column width verbatim so track functions survive', () => {
+    const { container } = render(
+      <Harness
+        columns={[
+          { key: 'name', header: 'Name', value: (r) => r.name, width: 'minmax(240px, 1fr)' },
+        ]}
+      />,
+    );
+    expect(container.querySelector('[data-slot="thead"]')).toHaveAttribute(
+      'data-grid-template',
+      'minmax(240px, 1fr)',
+    );
+  });
+
+  it('lets a resized width override a string column width', () => {
+    const { container } = render(
+      <Harness
+        columns={[
+          { key: 'name', header: 'Name', value: (r) => r.name, width: 'minmax(240px, 1fr)' },
+        ]}
+        state={{ sort: [], widths: { name: 300 } }}
+      />,
+    );
+    expect(container.querySelector('[data-slot="thead"]')).toHaveAttribute(
+      'data-grid-template',
+      '300px',
+    );
+  });
+});
