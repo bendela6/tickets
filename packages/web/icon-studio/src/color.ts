@@ -10,6 +10,17 @@ function channels(hex: string): [number, number, number] {
   return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as [number, number, number];
 }
 
+function sector(i: number, c: number, x: number): [number, number, number] {
+  switch (i) {
+    case 0: return [c, x, 0];
+    case 1: return [x, c, 0];
+    case 2: return [0, c, x];
+    case 3: return [0, x, c];
+    case 4: return [x, 0, c];
+    default: return [c, 0, x];
+  }
+}
+
 export function toHsl(hex: string): [number, number, number] {
   const [r, g, b] = channels(hex);
   const mx = Math.max(r, g, b);
@@ -33,10 +44,7 @@ export function toHex(h: number, s: number, l: number): string {
   const c = (1 - Math.abs(2 * l - 1)) * s;
   const x = c * (1 - Math.abs(((hue / 60) % 2) - 1));
   const m = l - c / 2;
-  const table: [number, number, number][] = [
-    [c, x, 0], [x, c, 0], [0, c, x], [0, x, c], [x, 0, c], [c, 0, x],
-  ];
-  const seg = table[Math.floor(hue / 60) % 6];
+  const seg = sector(Math.floor(hue / 60) % 6, c, x);
   return '#' + seg.map((v) => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
 }
 
@@ -60,8 +68,8 @@ export function adjust(hex: string, a: Adjust): string {
 const toLinear = (c: number) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
 
 export function luminance(hex: string): number {
-  const [r, g, b] = channels(hex).map(toLinear);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const [r, g, b] = channels(hex);
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
 }
 
 export function contrast(a: string, b: string): number {
