@@ -131,7 +131,7 @@ Create `packages/web/table/package.json`, mirroring `packages/web/form/package.j
 }
 ```
 
-Create `packages/web/table/tsconfig.json`:
+Create `packages/web/table/tsconfig.json`. **No `"node"` in `types`** — this package uses no Node APIs and `include: ["src"]` excludes `vitest.config.ts`, so listing it would only force an `@types/node` devDependency the engine does not need. `packages/web/form` is the precedent here (headless leaf library), not `ui`/`playground`, which pair `"node"` with `"vite/client"` because they run a dev server.
 
 ```json
 {
@@ -139,10 +139,22 @@ Create `packages/web/table/tsconfig.json`:
   "compilerOptions": {
     "lib": ["ES2022", "DOM"],
     "jsx": "react-jsx",
-    "types": ["vitest/globals", "node", "@testing-library/jest-dom/vitest"]
+    "types": ["vitest/globals", "@testing-library/jest-dom/vitest"]
   },
   "include": ["src"]
 }
+```
+
+Create `packages/web/table/src/test/setup.ts`. **This is load-bearing for Task 3**: the ported `Table.test.tsx` calls `toHaveTextContent` four times, and listing jest-dom in tsconfig `types` only type-checks those matchers — it does not register them at runtime. Without this file Task 3 fails with "toHaveTextContent is not a function".
+
+```ts
+import '@testing-library/jest-dom/vitest';
+import { cleanup } from '@testing-library/react';
+import { afterEach } from 'vitest';
+
+afterEach(() => {
+  cleanup();
+});
 ```
 
 Create `packages/web/table/vitest.config.ts`:
@@ -156,6 +168,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
   },
 });
