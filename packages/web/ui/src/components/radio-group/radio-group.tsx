@@ -54,7 +54,7 @@ const optionClass = variants({
 });
 
 // Circle and inner dot scale together: the dot stays half the circle so the
-// 1.5px accent ring around it reads the same at every rung.
+// 2px accent ring around it reads the same at every rung.
 const CIRCLE: Record<ToggleSize, string> = { sm: 'size-3.5', md: 'size-4', lg: 'size-5' };
 const DOT: Record<ToggleSize, string> = { sm: 'size-1.5', md: 'size-2', lg: 'size-2.5' };
 const ROW_GAP: Record<ToggleSize, string> = { sm: 'gap-3', md: 'gap-4', lg: 'gap-5' };

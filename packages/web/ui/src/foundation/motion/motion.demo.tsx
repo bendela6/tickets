@@ -162,8 +162,10 @@ function Animations() {
         </SpecRow>
       ))}
       <p className="font-sans text-12/17 text-gray-9">
-        These two are the only motion tokens the live sheet defines — both keyframes, both for the
-        AI session status pill. Durations and easings below them are proposed, not shipped.
+        These two are the only motion tokens defined as keyframes in the live sheet — both for the
+        AI session status pill. Durations and easings are shipped too, just through different
+        mechanisms: durations as Tailwind-native duration-* classes with no token behind them,
+        easings as the named --ease-* custom properties above.
       </p>
     </Sheet>
   );
