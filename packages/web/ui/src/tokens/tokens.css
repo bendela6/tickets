@@ -58,15 +58,6 @@
 
 /* [data-theme='light'] lets a wrapper re-assert light tokens inside a dark subtree (ThemeSplit) */
 :root, [data-theme='light'] {
-  /* Structural token, consumed as ring-(length:--ring-focus). Border widths
-     are integers now — `border-1` / `border-2` state their own value, so the
-     thin/thick names bought nothing but a lookup. */
-  --ring-focus: 3px;
-  /* Layering scale: sticky table headers / overlay scrims / floating portals.
-     Consumed as z-(--z-sticky) etc. */
-  --z-sticky: 10;
-  --z-scrim: 40;
-  --z-overlay: 50;
   /* tokens:light — generated, do not edit */
   --ins-gray-1: #f7f6f2;
   --ins-gray-2: #f2f1ec;
@@ -698,16 +689,12 @@
   --font-weight-400: 400;
   --font-weight-500: 500;
   --font-weight-600: 600;
-  /* Motion (next/motion.tokens.json). Durations and curves were unnamed
-     before — every transition picked its own number. */
-  --duration-fast: 120ms;
-  --duration-base: 200ms;
-  --duration-slow: 320ms;
+  /* Motion (next/motion.tokens.json). Durations are written as numbers at the
+     call site — `duration-200` is 200ms, and a token could only restate it.
+     The curves stay named: `cubic-bezier(.2, 0, 0, 1)` has no number that
+     means anything to a reader. */
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  /* Breakpoints (next/layout.tokens.json), previously inline at each site. */
-  --breakpoint-narrow: 1024px;
-  --breakpoint-wide: 1536px;
   /* Radius (next/radius.tokens.json). Four rungs, not six: a radius is only
      legible against the box it rounds — 4px on a chip and 12px on a panel read
      as the same softness, while 4 and 5 on the same box read as a mistake.

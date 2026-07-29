@@ -117,7 +117,7 @@
 @source inline("focus-visible:border-teal-9");
 @source inline("focus-visible:border-yellow-9");
 @source inline("focus-visible:outline-none");
-@source inline("focus-visible:ring-[3px]");
+@source inline("focus-visible:ring-3");
 @source inline("focus-visible:ring-blue-3");
 @source inline("focus-visible:ring-cyan-3");
 @source inline("focus-visible:ring-gray-3");
@@ -142,7 +142,7 @@
 @source inline("focus-within:border-teal-9");
 @source inline("focus-within:border-yellow-9");
 @source inline("focus-within:outline-none");
-@source inline("focus-within:ring-[3px]");
+@source inline("focus-within:ring-3");
 @source inline("focus-within:ring-blue-3");
 @source inline("focus-within:ring-cyan-3");
 @source inline("focus-within:ring-gray-3");
@@ -166,7 +166,7 @@
 @source inline("focus:border-teal-9");
 @source inline("focus:border-yellow-9");
 @source inline("focus:outline-none");
-@source inline("focus:ring-[3px]");
+@source inline("focus:ring-3");
 @source inline("focus:ring-blue-3");
 @source inline("focus:ring-cyan-3");
 @source inline("focus:ring-gray-3");
@@ -331,7 +331,7 @@
 @source inline("py-1");
 @source inline("py-1.5");
 @source inline("py-2");
-@source inline("ring-[3px]");
+@source inline("ring-3");
 @source inline("ring-blue-3");
 @source inline("ring-cyan-3");
 @source inline("ring-gray-3");

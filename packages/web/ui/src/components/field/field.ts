@@ -43,11 +43,11 @@ export const fieldClass = variants({
         neutral: over(TONE, FOCUS, (t, focus) => [
           'border-gray-7 hover:border-gray-9',
           `${focus}:border-${t.solid} ${focus}:outline-none`,
-          `${focus}:ring-[3px] ${focus}:ring-${t.focusRing}`,
+          `${focus}:ring-3 ${focus}:ring-${t.focusRing}`,
         ]),
         toned: over(TONE, FOCUS, (t, focus) => [
           `border-${t.solid} hover:border-${t.solidHover}`,
-          `ring-[3px] ring-${t.focusRing} ${focus}:outline-none`,
+          `ring-3 ring-${t.focusRing} ${focus}:outline-none`,
         ]),
       },
     },

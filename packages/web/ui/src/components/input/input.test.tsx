@@ -24,7 +24,7 @@ test('sm input overrides height, padding, radius, and font size', () => {
 test('invalid input shows the danger border and always-on halo', () => {
   render(<Input tone="danger" aria-label="Key" />);
   const input = screen.getByLabelText('Key');
-  expect(input).toHaveClass('border-red-9', 'ring-[3px]', 'ring-red-3');
+  expect(input).toHaveClass('border-red-9', 'ring-3', 'ring-red-3');
 });
 
 test('input associates label and error', () => {

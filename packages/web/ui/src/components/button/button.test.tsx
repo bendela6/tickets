@@ -45,7 +45,7 @@ test('sizes match design height/padding/radius/font-size', () => {
 test('focus halo is 3px accent-subtle, following tone', () => {
   const { rerender } = render(<Button variant="solid">New</Button>);
   expect(screen.getByRole('button')).toHaveClass(
-    'focus-visible:ring-[3px]',
+    'focus-visible:ring-3',
     'focus-visible:ring-indigo-3',
   );
   rerender(<Button variant="solid" tone="danger">Archive</Button>);

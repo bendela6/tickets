@@ -109,7 +109,7 @@ export function Sidebar({
     <>
       {narrow && (
         // Clicking away closes the overlay, the way any drawer behaves.
-        <div className="fixed inset-0 z-30 bg-black/40" aria-hidden onClick={toggle} />
+        <div className="fixed inset-0 z-40 bg-black/40" aria-hidden onClick={toggle} />
       )}
       <aside
         ref={asideRef}
