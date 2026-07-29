@@ -17,9 +17,10 @@
     "tokens:verify": "node scripts/build-tokens.mjs && node scripts/extract-safelist.mjs && git diff --exit-code src/tokens/tokens.css src/tokens/safelist.generated.css src/style/tones/tones.generated.ts && node scripts/scan-hardcoded-values.mjs && node scripts/check-design-tokens.mjs"
   },
   "dependencies": {
+    "@tickets/form": "workspace:*",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.6.0",
-    "radix-ui": "^1.6.1"
+    "radix-ui": "^1.6.1",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.2",

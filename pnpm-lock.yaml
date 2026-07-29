@@ -641,6 +641,9 @@ importers:
 
   packages/web/ui:
     dependencies:
+      '@tickets/form':
+        specifier: workspace:*
+        version: link:../form
       '@xterm/xterm':
         specifier: ^6.0.0
         version: 6.0.0
