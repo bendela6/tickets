@@ -2,6 +2,8 @@
 // Literal class strings so Tailwind can scan them; see build-tokens.mjs emitTones().
 export const TONE_NAMES = ['primary', 'secondary', 'success', 'warning', 'danger', 'neutral', 'red', 'orange', 'yellow', 'green', 'teal', 'cyan', 'blue', 'indigo', 'purple', 'pink', 'gray'] as const;
 export type Tone = (typeof TONE_NAMES)[number];
+export const ROLE_TONES = ['primary', 'secondary', 'success', 'warning', 'danger', 'neutral'] as const;
+export type RoleTone = (typeof ROLE_TONES)[number];
 export const HUE_TONES = ['red', 'orange', 'yellow', 'green', 'teal', 'cyan', 'blue', 'indigo', 'purple', 'pink', 'gray'] as const;
 export type HueTone = (typeof HUE_TONES)[number];
 export type ToneEmphasis = 'subtle' | 'solid' | 'outline' | 'text';

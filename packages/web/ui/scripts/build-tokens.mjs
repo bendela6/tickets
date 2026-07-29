@@ -225,6 +225,13 @@ export function emitTones({ light }) {
 
   const names = ordered.map((n) => `'${n}'`).join(', ');
   const hueNames = doc.hues.map((n) => `'${n}'`).join(', ');
+  // The two halves of TONE_NAMES, named. A role is a JOB (`danger`) that
+  // resolves to whichever scale currently does it; a hue IS the scale
+  // (`red`). Reaching for a hue where a role exists is how a redefinition
+  // stops propagating, so the gallery lets you look at one half at a time.
+  const roleNames = Object.keys(roles)
+    .map((n) => `'${n}'`)
+    .join(', ');
   // A tone name is not always a scale name (`primary` paints from `indigo`),
   // so any component building class strings by hand needs the mapping. `TONES`
   // bakes it into finished strings; this exposes it for the cases that can't
@@ -241,6 +248,8 @@ export function emitTones({ light }) {
     `// Literal class strings so Tailwind can scan them; see build-tokens.mjs emitTones().\n` +
     `export const TONE_NAMES = [${names}] as const;\n` +
     `export type Tone = (typeof TONE_NAMES)[number];\n` +
+    `export const ROLE_TONES = [${roleNames}] as const;\n` +
+    `export type RoleTone = (typeof ROLE_TONES)[number];\n` +
     `export const HUE_TONES = [${hueNames}] as const;\n` +
     `export type HueTone = (typeof HUE_TONES)[number];\n` +
     `export type ToneEmphasis = 'subtle' | 'solid' | 'outline' | 'text';\n` +

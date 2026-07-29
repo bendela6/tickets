@@ -7,7 +7,10 @@ import {
   defineState,
   isDemoError,
   select,
+  Slot,
   text,
+  TONE_NAMES,
+  Wrap,
 } from '@tickets/ui';
 import { StateGrid } from './state-grid';
 
@@ -206,6 +209,42 @@ describe('StateGrid with authored sections', () => {
     // reason it is not a `layout` prop on defineState.
     expect(within(card).getByRole('tabpanel').textContent).toContain('<Center>');
     expect(within(card).getByRole('tabpanel').textContent).toContain('aria-label="More"');
+  });
+
+  it('hands the view to a section that asks for it', () => {
+    const toned = buildDemo({
+      meta: { title: 'Button', group: 'Components' },
+      states: [
+        defineState({
+          title: 'tones',
+          render: ({ tones }) => (
+            <Wrap>
+              {tones.map((tone) => (
+                <Slot key={tone} label={tone}>
+                  <button>{tone}</button>
+                </Slot>
+              ))}
+            </Wrap>
+          ),
+        }),
+      ],
+    });
+    render(<StateGrid demo={toned} view={{ tones: ['danger', 'success'] }} />);
+    expect(screen.getByRole('button', { name: 'danger' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'success' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'primary' })).toBeNull();
+  });
+
+  it('falls back to the whole vocabulary when no view is given', () => {
+    // The All view and the legacy path both render sections without one.
+    const toned = buildDemo({
+      meta: { title: 'Button', group: 'Components' },
+      states: [
+        defineState({ title: 'tones', render: ({ tones }) => <span>{tones.length}</span> }),
+      ],
+    });
+    render(<StateGrid demo={toned} />);
+    expect(screen.getByText(String(TONE_NAMES.length))).toBeTruthy();
   });
 
   it('hides the tablist when the source could not be read', () => {

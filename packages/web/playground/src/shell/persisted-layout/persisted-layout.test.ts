@@ -1,4 +1,11 @@
-import { loadFlag, loadLayout, saveFlag, saveLayout } from './persisted-layout';
+import {
+  loadFlag,
+  loadLayout,
+  loadOption,
+  saveFlag,
+  saveLayout,
+  saveOption,
+} from './persisted-layout';
 
 describe('persisted-layout', () => {
   afterEach(() => {
@@ -41,5 +48,18 @@ describe('persisted-layout', () => {
     expect(loadFlag('f')).toBeUndefined();
     localStorage.setItem('f', 'yes');
     expect(loadFlag('f')).toBeUndefined();
+  });
+
+  it('saveOption then loadOption round-trips a named choice', () => {
+    saveOption('o', 'roles');
+    expect(loadOption('o', ['all', 'roles', 'palette'])).toBe('roles');
+  });
+
+  it('loadOption refuses a value the caller no longer offers', () => {
+    // A build that renames or drops a setting leaves the old name in storage,
+    // and restoring it would put the UI in a state nothing can render.
+    localStorage.setItem('o', 'semantic');
+    expect(loadOption('o', ['all', 'roles', 'palette'])).toBeUndefined();
+    expect(loadOption('missing', ['all'])).toBeUndefined();
   });
 });

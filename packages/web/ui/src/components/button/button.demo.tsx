@@ -40,9 +40,9 @@ const variants = defineState({
 // it did not, these render with no fill at all.
 const tones = defineState({
   title: 'tones',
-  render: () => (
+  render: ({ tones }) => (
     <Grid columns={6}>
-      {TONE_NAMES.map((tone) => (
+      {tones.map((tone) => (
         <Slot key={tone} label={tone}>
           <Button variant="solid" tone={tone}>
             {tone}
@@ -58,9 +58,9 @@ const tones = defineState({
 // the two single-prop rows above cannot show a ghost danger button at all.
 const variantTone = defineState({
   title: 'variant × tone',
-  render: () => (
+  render: ({ tones }) => (
     <Matrix
-      rows={TONE_NAMES}
+      rows={tones}
       columns={VARIANTS}
       cell={(tone, variant) => (
         <Button variant={variant} tone={tone}>

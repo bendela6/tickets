@@ -53,3 +53,24 @@ export function saveFlag(key: string, value: boolean): void {
     // See saveLayout.
   }
 }
+
+// A setting with more than two positions. Storage is checked against the
+// caller's own list rather than trusted: a value left behind by an older
+// build would otherwise come back as a state nothing can render.
+export function loadOption<T extends string>(key: string, allowed: readonly T[]): T | undefined {
+  let raw: string | null;
+  try {
+    raw = localStorage.getItem(key);
+  } catch {
+    return undefined;
+  }
+  return allowed.find((option) => option === raw);
+}
+
+export function saveOption(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // See saveLayout.
+  }
+}

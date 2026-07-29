@@ -1,4 +1,4 @@
-import { initialValues, type CollectedDemo } from '@tickets/ui';
+import { DEFAULT_VIEW, initialValues, type CollectedDemo } from '@tickets/ui';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
@@ -18,7 +18,7 @@ export function DemoPreview({ demo }: { demo: LiveDemo }) {
   const { playground } = demo;
   const node = playground
     ? playground.render(initialValues(playground.controls) as never)
-    : demo.states[0]?.render();
+    : demo.states[0]?.render(DEFAULT_VIEW);
 
   return (
     <div className="flex flex-col gap-2.5">

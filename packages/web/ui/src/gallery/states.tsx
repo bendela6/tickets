@@ -1,5 +1,40 @@
 import { createContext, useContext, type ReactNode } from 'react';
-import { cn } from '../style';
+import { cn, HUE_TONES, ROLE_TONES, TONE_NAMES, type Tone } from '../style';
+
+/**
+ * The two halves of the tone vocabulary, plus both at once.
+ *
+ * A role is a JOB — `danger` resolves to whichever scale currently does it —
+ * and a hue IS the scale. They answer different questions, and seventeen
+ * swatches in one row answers neither, so the gallery lets you look at one
+ * half at a time.
+ */
+export const TONE_SETS = {
+  all: TONE_NAMES,
+  roles: ROLE_TONES,
+  palette: HUE_TONES,
+} as const satisfies Record<string, readonly Tone[]>;
+
+export type ToneSet = keyof typeof TONE_SETS;
+
+export const TONE_SET_NAMES = Object.keys(TONE_SETS) as ToneSet[];
+
+export function isToneSet(value: unknown): value is ToneSet {
+  return typeof value === 'string' && value in TONE_SETS;
+}
+
+/**
+ * Gallery-wide view settings a section can answer to, resolved before render
+ * is called. A section takes what it needs by destructuring and the rest is
+ * invisible — including to sections that predate a setting, which is why
+ * `render()` with no parameters stays valid.
+ */
+export interface StateView {
+  /** Whichever half of the tone vocabulary the rail's switch has selected. */
+  tones: readonly Tone[];
+}
+
+export const DEFAULT_VIEW: StateView = { tones: TONE_SETS.all };
 
 /**
  * A hand-authored state section.
@@ -15,7 +50,7 @@ export interface DefinedState {
    *  literal, and is how a demo opts in — see `collectDemos`. */
   kind: 'state';
   title: string;
-  render: () => ReactNode;
+  render: (view: StateView) => ReactNode;
 }
 
 /**

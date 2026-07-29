@@ -6,7 +6,18 @@ import {
   type Layout,
   type PanelImperativeHandle,
 } from 'react-resizable-panels';
-import { cn, type CollectedDemo, Icon, initialValues, Tabs } from '@tickets/ui';
+import {
+  cn,
+  isToneSet,
+  type CollectedDemo,
+  Icon,
+  initialValues,
+  Tabs,
+  TONE_SET_NAMES,
+  TONE_SETS,
+  type StateView,
+  type ToneSet,
+} from '@tickets/ui';
 import { A11yTab } from '../tabs/a11y-tab';
 import { getAxe } from '../tabs/a11y-tab/axe';
 import { ControlsPanel } from '../../preview/controls-panel';
@@ -14,7 +25,14 @@ import { DemoTab } from '../tabs/demo-tab';
 import { DocsPanel } from '../tabs/docs-panel';
 import { GeneratedCode } from '../../code/generated-code';
 import { ImplTab, type ImplSources } from '../tabs/impl-tab';
-import { loadFlag, loadLayout, saveFlag, saveLayout } from '../../shell/persisted-layout';
+import {
+  loadFlag,
+  loadLayout,
+  loadOption,
+  saveFlag,
+  saveLayout,
+  saveOption,
+} from '../../shell/persisted-layout';
 import { MatrixMode } from '../tabs/matrix-mode';
 import { PlaygroundCard } from '../../preview/playground-card';
 import { StateGrid } from '../../preview/state-grid';
@@ -27,6 +45,12 @@ import { ThemeSplit } from '../../shell/theme-split';
 // full-bleed.
 const WORKBENCH_LAYOUT_KEY = 'playground-workbench-v2';
 const WORKBENCH_COLLAPSED_KEY = 'playground-workbench-collapsed';
+// The tone switch is a view preference rather than a property of any one
+// component, and ComponentPage remounts per demo (it is keyed by slug), so
+// storage is what makes it hold as you move down the sidebar.
+const TONE_SET_KEY = 'playground-tone-set';
+
+const TONE_SET_ITEMS = TONE_SET_NAMES.map((value) => ({ value, label: value }));
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
@@ -108,6 +132,14 @@ export function ComponentPage({
     playground ? initialValues(playground.controls) : {},
   );
   const [defaultLayout] = useState<Layout | undefined>(() => loadLayout(WORKBENCH_LAYOUT_KEY));
+  const [toneSet, setToneSet] = useState<ToneSet>(
+    () => loadOption(TONE_SET_KEY, TONE_SET_NAMES) ?? 'all',
+  );
+  const view: StateView = { tones: TONE_SETS[toneSet] };
+  // Only demos that authored their sections can answer to this — a derived
+  // axis enumerates its own control's options — so the switch stays off the
+  // rail everywhere it would do nothing.
+  const authored = demo.states.some((state) => state.defined);
   const [splitThemes, setSplitThemes] = useState(false);
   const [matrixMode, setMatrixMode] = useState(false);
   const [auditing, setAuditing] = useState(false);
@@ -245,9 +277,9 @@ export function ComponentPage({
                     onYKeyChange={handleYKeyChange}
                   />
                 ) : splitThemes ? (
-                  <ThemeSplit render={() => <StateGrid demo={demo} source={source} />} />
+                  <ThemeSplit render={() => <StateGrid demo={demo} source={source} view={view} />} />
                 ) : (
-                  <StateGrid demo={demo} source={source} />
+                  <StateGrid demo={demo} source={source} view={view} />
                 )}
               </div>
             </Panel>
@@ -271,7 +303,29 @@ export function ComponentPage({
               }}
             >
               <div className={cn('flex h-full flex-col pl-6', controlsCollapsed && 'hidden')}>
-                <div className="flex items-center justify-between pb-2.5">
+                {/* Above the controls and separated from them, because this one
+                    is not a prop: it changes what the states show, and nothing
+                    about it reaches the generated code below the playground. */}
+                {authored && (
+                  <div className="flex flex-col gap-2 border-b border-gray-6 pb-3">
+                    <span className="font-mono text-11/13 uppercase tracking-widest text-gray-9">
+                      TONES
+                    </span>
+                    <Tabs
+                      variant="pill"
+                      size="sm"
+                      label="tone set"
+                      items={TONE_SET_ITEMS}
+                      value={toneSet}
+                      onChange={(next) => {
+                        if (!isToneSet(next)) return;
+                        setToneSet(next);
+                        saveOption(TONE_SET_KEY, next);
+                      }}
+                    />
+                  </div>
+                )}
+                <div className="flex items-center justify-between pb-2.5 pt-3">
                   <span className="font-mono text-11/13 tracking-wider uppercase tracking-widest text-gray-9">
                     CONTROLS
                   </span>
@@ -296,7 +350,7 @@ export function ComponentPage({
             </Panel>
           </Group>
         ) : (
-          <StateGrid demo={demo} source={source} />
+          <StateGrid demo={demo} source={source} view={view} />
         )}
       </div>
 
