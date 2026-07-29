@@ -1,16 +1,39 @@
+import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { TextInput } from './text-input';
+import { TextInput, type TextInputConfig } from './text-input';
 
 const base = { name: 'title', loading: false, onBlur: vi.fn(), config: {} };
 
+/** Feeds `onChange` back into `value`, the way the form engine does. */
+function Controlled({ config = {} as TextInputConfig }) {
+  const [value, setValue] = useState('');
+  return <TextInput {...base} config={config} value={value} onChange={setValue} />;
+}
+
 describe('TextInput', () => {
-  it('reports what the user types', async () => {
+  it('round-trips what the user types through its parent', async () => {
+    render(<Controlled />);
+    const input = screen.getByRole('textbox');
+    await userEvent.type(input, 'hi');
+    expect(input).toHaveValue('hi');
+  });
+
+  it('reports each keystroke to onChange', async () => {
     const onChange = vi.fn();
     render(<TextInput {...base} value="" onChange={onChange} />);
-    await userEvent.type(screen.getByRole('textbox'), 'hi');
-    expect(onChange).toHaveBeenLastCalledWith('hi');
+    await userEvent.type(screen.getByRole('textbox'), 'h');
+    expect(onChange).toHaveBeenCalledWith('h');
+  });
+
+  // The proof it holds no state: with `value` pinned by the parent, typing
+  // cannot change what is displayed.
+  it('shows only what its parent gives it', async () => {
+    render(<TextInput {...base} value="fixed" onChange={vi.fn()} />);
+    const input = screen.getByRole('textbox');
+    await userEvent.type(input, 'more');
+    expect(input).toHaveValue('fixed');
   });
 
   it('renders an undefined value as an empty controlled input', () => {
