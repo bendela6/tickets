@@ -3,7 +3,7 @@ import { Stack } from './stack';
 export const meta = { title: 'Stack', group: 'Components', size: 'sm' };
 
 const Box = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-md border border-gray-6 bg-gray-1 px-3 py-2 font-sans text-ui text-gray-11">
+  <div className="rounded-md border border-gray-6 bg-gray-1 px-3 py-2 font-sans text-13/19 text-gray-11">
     {children}
   </div>
 );
