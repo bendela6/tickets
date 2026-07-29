@@ -119,3 +119,27 @@ describe('tableRender', () => {
     expect(container.querySelectorAll('[data-skeleton-row]').length).toBeGreaterThan(0);
   });
 });
+
+describe('tableRender — groups', () => {
+  const grouped = [
+    { key: 'a', header: <span>Group A</span>, rows: [rows[0]!] },
+    { key: 'b', header: <span>Group B</span>, rows: [rows[1]!] },
+  ];
+
+  it('renders each group header', () => {
+    render(<Harness rows={[]} groups={grouped} />);
+    expect(screen.getByText('Group A')).toBeInTheDocument();
+    expect(screen.getByText('Group B')).toBeInTheDocument();
+  });
+
+  it('renders each group\'s rows under it', () => {
+    render(<Harness rows={[]} groups={grouped} />);
+    expect(screen.getByText('Alpha')).toBeInTheDocument();
+    expect(screen.getByText('Beta')).toBeInTheDocument();
+  });
+
+  it('marks group headers as rows so the grid semantics stay whole', () => {
+    render(<Harness rows={[]} groups={grouped} />);
+    expect(screen.getAllByRole('row').length).toBeGreaterThanOrEqual(4);
+  });
+});
