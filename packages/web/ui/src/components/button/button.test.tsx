@@ -30,14 +30,14 @@ test('loading disables and marks busy', () => {
 
 test('sizes match design height/padding/radius/font-size', () => {
   const { rerender } = render(<Button size="sm">c</Button>);
-  expect(screen.getByRole('button')).toHaveClass('h-7', 'px-2.5', 'rounded-[6px]', 'text-12');
+  expect(screen.getByRole('button')).toHaveClass('h-7', 'px-2.5', 'rounded-md', 'text-12');
   rerender(<Button size="md">r</Button>);
-  expect(screen.getByRole('button')).toHaveClass('h-9', 'px-3.5', 'rounded-[8px]', 'text-13');
+  expect(screen.getByRole('button')).toHaveClass('h-9', 'px-3.5', 'rounded-lg', 'text-13');
   rerender(<Button size="lg">t</Button>);
   expect(screen.getByRole('button')).toHaveClass(
     'h-11',
     'px-[18px]',
-    'rounded-[10px]',
+    'rounded-xl',
     'text-14',
   );
 });

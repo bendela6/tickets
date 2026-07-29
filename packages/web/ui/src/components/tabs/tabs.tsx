@@ -37,7 +37,7 @@ const listClass = variants({
           cn('flex items-center border-b-(length:--border-thick) border-gray-6', LIST_BOX.underline[size]),
         ),
         pill: over(SIZE, (size) =>
-          cn('inline-flex items-center rounded-[7px] bg-surface-inset', LIST_BOX.pill[size]),
+          cn('inline-flex items-center rounded-lg bg-surface-inset', LIST_BOX.pill[size]),
         ),
         rail: over(SIZE, (size) => cn('flex flex-col', LIST_BOX.rail[size])),
       },
