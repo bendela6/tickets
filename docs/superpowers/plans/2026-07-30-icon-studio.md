@@ -1723,7 +1723,9 @@ test('fetchConfig returns the served config', async () => {
   vi.stubGlobal('fetch', fetchMock);
 
   await expect(fetchConfig()).resolves.toEqual(DEFAULT_CONFIG);
-  expect(fetchMock).toHaveBeenCalledWith('/__icons/config');
+  // `json()` forwards its optional init, so the call carries a second
+  // `undefined` argument — assert the real call, not a tidier one.
+  expect(fetchMock).toHaveBeenCalledWith('/__icons/config', undefined);
 
   vi.unstubAllGlobals();
 });
@@ -2487,8 +2489,12 @@ export function Studio() {
 ```ts
 export { Studio } from './studio';
 export { DEFAULT_CONFIG, PRESETS, type MarkConfig } from './config';
-export { iconWriter } from './plugin/icon-writer';
 ```
+
+**Do not re-export `iconWriter` here.** `src/index.ts` is the browser entry —
+`dev/main.tsx` imports it — and `icon-writer.ts` pulls in `node:fs/promises`
+and `node:path`. `vite.config.ts` already imports the plugin directly from
+`./src/plugin/icon-writer`, which is the only consumer it needs.
 
 - [ ] **Step 6: Run the tests and typecheck**
 
