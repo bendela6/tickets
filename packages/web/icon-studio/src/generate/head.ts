@@ -29,6 +29,21 @@ export function injectHeadBlock(html: string, block: string): string {
   const start = html.indexOf(HEAD_START);
   const end = html.indexOf(HEAD_END);
 
+  // Guard against malformed marker pairings.
+  if ((start === -1) !== (end === -1)) {
+    // Exactly one marker is present.
+    const missing = start === -1 ? 'HEAD_START' : 'HEAD_END';
+    throw new Error(
+      `cannot inject icon tags: ${missing} marker missing in index.html. The file requires manual attention to resolve the stale marker.`,
+    );
+  }
+
+  if (start !== -1 && end !== -1 && end < start) {
+    throw new Error(
+      'cannot inject icon tags: markers are out of order in index.html. The file requires manual attention to resolve the reversed markers.',
+    );
+  }
+
   if (start !== -1 && end !== -1) {
     return html.slice(0, start) + block + html.slice(end + HEAD_END.length);
   }
