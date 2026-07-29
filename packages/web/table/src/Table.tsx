@@ -13,6 +13,10 @@ export interface TableProps<T> {
   isLoading: boolean;
   error?: Error | null;
   render: TableRender<T>;
+  /** Height of a data row in pixels. The virtualizer needs it up front, so a
+   *  caller with a density toggle must pass the height for the current mode
+   *  rather than styling rows and hoping. Defaults to ROW_HEIGHT. */
+  rowHeight?: number;
 }
 
 export function Table<T>(props: TableProps<T>): ReactNode {
@@ -26,13 +30,14 @@ export function Table<T>(props: TableProps<T>): ReactNode {
     onRowClick,
     isLoading,
     error,
+    rowHeight = ROW_HEIGHT,
   } = props;
 
   const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollEl,
-    estimateSize: () => ROW_HEIGHT,
+    estimateSize: () => rowHeight,
     overscan: 8,
   });
 
@@ -40,7 +45,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
     return render.error({ error });
   }
 
-  const gridTemplate = columns.map((c) => `${state.widths[c.key] ?? c.width ?? 160}px`).join(' ');
+  const gridTemplate = columns.map((c) => trackSize(c, state.widths)).join(' ');
 
   const onHeaderClick = (col: Column<T>, e: MouseEvent) => {
     if (!col.sortable) {
@@ -58,7 +63,8 @@ export function Table<T>(props: TableProps<T>): ReactNode {
     children: columns.map((col) => {
       const sortIdx = state.sort.findIndex((s) => s.field === col.key);
       const sort = sortIdx >= 0 ? state.sort[sortIdx] : undefined;
-      const colWidth = state.widths[col.key] ?? col.width ?? 160;
+      const colWidth =
+        state.widths[col.key] ?? (typeof col.width === 'number' ? col.width : 160);
       return (
         <RenderTh
           key={col.key}
@@ -106,7 +112,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
           top: 0,
           left: 0,
           right: 0,
-          height: ROW_HEIGHT,
+          height: rowHeight,
           transform: `translateY(${vi.start}px)`,
         };
         const cells = columns.map((col) => {
@@ -212,4 +218,13 @@ function renderCellContent<T>(col: Column<T>, row: T): ReactNode {
 
 function filterToCurrentField<F extends string>(sort: SortBy<F>[], key: F): SortBy<F>[] {
   return sort.filter((s) => s.field === key);
+}
+
+/** A dragged width always wins; then the authored width, numeric or track
+ *  function; then a 160px fallback. */
+function trackSize<T>(col: Column<T>, widths: Record<string, number>): string {
+  const dragged = widths[col.key];
+  if (dragged !== undefined) return `${dragged}px`;
+  if (typeof col.width === 'string') return col.width;
+  return `${col.width ?? 160}px`;
 }
