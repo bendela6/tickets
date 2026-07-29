@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { AnyPlayground } from './controls';
-import type { DefinedState } from './states';
+import type { DefinedState, StateView } from './states';
 
 // How much horizontal room this component needs to render honestly. Drives
 // the states-grid column width (and nothing else) — a Spinner in a 340px cell
@@ -36,7 +36,10 @@ export type AnyDemoState = DemoState | DefinedState;
  *  between the authored page and the derived one. */
 export interface CollectedState {
   name: string;
-  render: () => ReactNode;
+  /** Takes the view whether or not it wants it — a legacy `() => ReactNode`
+   *  is assignable here, which is how sections that predate a view setting
+   *  keep working without being touched. */
+  render: (view: StateView) => ReactNode;
   slug: string;
   defined: boolean;
 }

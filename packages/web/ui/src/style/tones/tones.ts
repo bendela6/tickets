@@ -1,10 +1,12 @@
 export {
   HUE_TONES,
+  ROLE_TONES,
   STEP,
   TONE_NAMES,
   TONE_SCALE,
   TONES,
   type HueTone,
+  type RoleTone,
   type Tone,
   type ToneEmphasis,
 } from './tones.generated';

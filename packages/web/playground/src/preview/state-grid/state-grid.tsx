@@ -1,7 +1,9 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import {
+  DEFAULT_VIEW,
   extractStateSources,
   Tabs,
+  type StateView,
   type AnyControlDef,
   type AnyPlayground,
   type CollectedDemo,
@@ -131,9 +133,17 @@ function AxisCard({
 // adds nothing around it. Its source is the render body lifted out of the demo
 // file's own text, so the layout components in it are visible rather than
 // implied.
-function AuthoredCard({ state, source }: { state: CollectedState; source: string | null }) {
+function AuthoredCard({
+  state,
+  source,
+  view,
+}: {
+  state: CollectedState;
+  source: string | null;
+  view: StateView;
+}) {
   return (
-    <SectionCard id={state.slug} title={state.name} preview={state.render()} source={source} />
+    <SectionCard id={state.slug} title={state.name} preview={state.render(view)} source={source} />
   );
 }
 
@@ -151,7 +161,7 @@ function LegacyStates({ demo }: { demo: LiveDemo }) {
         >
           <figcaption className={CAPTION}>{state.name}</figcaption>
           <div className="flex max-h-96 w-full min-w-0 max-w-full items-center overflow-auto">
-            {state.render()}
+            {state.render(DEFAULT_VIEW)}
           </div>
         </figure>
       ))}
@@ -170,7 +180,15 @@ function LegacyStates({ demo }: { demo: LiveDemo }) {
  * Section and cell ids are the screenshot/deep-link anchors
  * (`#button--variant`, `#button--variant-solid`).
  */
-export function StateGrid({ demo, source }: { demo: LiveDemo; source?: string }) {
+export function StateGrid({
+  demo,
+  source,
+  view = DEFAULT_VIEW,
+}: {
+  demo: LiveDemo;
+  source?: string;
+  view?: StateView;
+}) {
   const authored = demo.states.filter((state) => state.defined);
   const sources = useMemo(() => (source ? extractStateSources(source) : {}), [source]);
   const sections = demo.playground && authored.length === 0 ? deriveAxes(demo.playground.controls, demo.slug) : [];
@@ -185,7 +203,12 @@ export function StateGrid({ demo, source }: { demo: LiveDemo; source?: string })
         {authored.length > 0 ? (
           <div className="flex flex-col gap-2.5">
             {authored.map((state) => (
-              <AuthoredCard key={state.slug} state={state} source={sources[state.name] ?? null} />
+              <AuthoredCard
+                key={state.slug}
+                state={state}
+                source={sources[state.name] ?? null}
+                view={view}
+              />
             ))}
           </div>
         ) : sections.length > 0 && demo.playground ? (

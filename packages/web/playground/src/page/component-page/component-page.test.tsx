@@ -5,8 +5,12 @@ import {
   boolean as booleanControl,
   collectDemos,
   definePlayground,
+  defineState,
+  HUE_TONES,
   isDemoError,
+  ROLE_TONES,
   select,
+  TONE_NAMES,
 } from '@tickets/ui';
 import { setAxeForTests } from '../tabs/a11y-tab/axe';
 import { ComponentPage } from './component-page';
@@ -458,6 +462,70 @@ describe('ComponentPage', () => {
 
     // A11y tab content is visible
     expect(screen.getByText('no audit yet')).toBeTruthy();
+  });
+});
+
+const authoredDemos = collectDemos({
+  button: {
+    meta: { title: 'Button', group: 'Form controls' },
+    states: [
+      defineState({
+        title: 'tones',
+        render: ({ tones }) => <b>{`tones:${tones.length}`}</b>,
+      }),
+    ],
+    playground: definePlayground({
+      controls: { variant: select(['primary', 'secondary']) },
+      render: () => <button>play-btn</button>,
+    }),
+  },
+});
+const authoredDemo = authoredDemos[0];
+if (!authoredDemo || isDemoError(authoredDemo)) throw new Error('fixture failed to collect');
+
+describe('the tone switch', () => {
+  afterEach(() => localStorage.clear());
+
+  it('stays off the rail for a demo whose states are derived', () => {
+    // A derived axis enumerates its own control's options, so the switch
+    // would be a control that visibly does nothing.
+    render(<ComponentPage demo={demo} />);
+    expect(screen.queryByRole('tablist', { name: 'tone set' })).toBeNull();
+  });
+
+  it('offers both halves of the vocabulary and all of it', () => {
+    render(<ComponentPage demo={authoredDemo} />);
+    const tabs = within(screen.getByRole('tablist', { name: 'tone set' }));
+    expect(tabs.getAllByRole('tab').map((t) => t.textContent)).toEqual([
+      'all',
+      'roles',
+      'palette',
+    ]);
+  });
+
+  it('re-renders the sections through the chosen set', () => {
+    render(<ComponentPage demo={authoredDemo} />);
+    expect(screen.getByText(`tones:${TONE_NAMES.length}`)).toBeTruthy();
+
+    const tabs = within(screen.getByRole('tablist', { name: 'tone set' }));
+    fireEvent.click(tabs.getByRole('tab', { name: 'roles' }));
+    expect(screen.getByText(`tones:${ROLE_TONES.length}`)).toBeTruthy();
+
+    fireEvent.click(tabs.getByRole('tab', { name: 'palette' }));
+    expect(screen.getByText(`tones:${HUE_TONES.length}`)).toBeTruthy();
+  });
+
+  it('remembers the choice, because it is a view setting and not a prop', () => {
+    // ComponentPage is keyed by slug and remounts as you move down the
+    // sidebar, so storage is the only thing that makes this global.
+    const first = render(<ComponentPage demo={authoredDemo} />);
+    fireEvent.click(
+      within(screen.getByRole('tablist', { name: 'tone set' })).getByRole('tab', { name: 'roles' }),
+    );
+    first.unmount();
+
+    render(<ComponentPage demo={authoredDemo} />);
+    expect(screen.getByText(`tones:${ROLE_TONES.length}`)).toBeTruthy();
   });
 });
 

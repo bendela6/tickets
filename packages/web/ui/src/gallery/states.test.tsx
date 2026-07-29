@@ -1,5 +1,34 @@
 import { render, screen, within } from '@testing-library/react';
-import { Center, defineState, Grid, isDefinedState, List, Matrix, Slot, Wrap } from './states';
+import { TONE_NAMES } from '../style';
+import {
+  Center,
+  defineState,
+  Grid,
+  isDefinedState,
+  isToneSet,
+  List,
+  Matrix,
+  Slot,
+  TONE_SETS,
+  Wrap,
+} from './states';
+
+describe('TONE_SETS', () => {
+  it('splits the vocabulary in two with nothing lost or counted twice', () => {
+    // Roles and palette are generated from the token source, so a tone added
+    // to either half must show up in exactly one of them — otherwise the
+    // switch quietly hides a tone that nobody can find any other way.
+    expect([...TONE_SETS.roles, ...TONE_SETS.palette]).toEqual([...TONE_NAMES]);
+    expect(TONE_SETS.all).toEqual(TONE_NAMES);
+  });
+
+  it('rejects a set name it does not know', () => {
+    // Storage can hand back a value left by an older build.
+    expect(isToneSet('roles')).toBe(true);
+    expect(isToneSet('semantic')).toBe(false);
+    expect(isToneSet(undefined)).toBe(false);
+  });
+});
 
 describe('defineState', () => {
   it('brands a section so the collector can tell it from a plain literal', () => {
