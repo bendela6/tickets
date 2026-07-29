@@ -2,6 +2,7 @@ import { collectDemos, kebab, prepareDemos, rebaseGlobKeys } from './collect-dem
 import { isDemoError } from './types';
 import { UI_SRC_ROOT, WEB_SRC_ROOT } from './roots';
 import { boolean as booleanControl, definePlayground } from './controls';
+import { defineState } from './states';
 
 const good = (title: string, group: string, order?: number) => ({
   meta: { title, group, order },
@@ -64,6 +65,56 @@ describe('collectDemos', () => {
       './a.demo.tsx': { meta: { title: 'A' } },
     });
     expect(out.map((d) => (isDemoError(d) ? d.path : '!'))).toEqual(['./a.demo.tsx', './z.demo.tsx']);
+  });
+});
+
+describe('authored states', () => {
+  const pg = () => definePlayground({ controls: { on: booleanControl() }, render: () => null });
+
+  it('normalises a defineState title into the same name and slug a literal gets', () => {
+    const out = collectDemos({
+      'a': {
+        meta: { title: 'Button', group: 'G' },
+        states: [defineState({ title: 'icon only', render: () => null })],
+      },
+    });
+    const d = out[0]!;
+    if (isDemoError(d)) throw new Error(d.error);
+    expect(d.states[0]).toMatchObject({ name: 'icon only', slug: 'button--icon-only', defined: true });
+  });
+
+  it('marks a plain literal as not authored', () => {
+    const out = collectDemos({ 'a': good('Button', 'G') });
+    const d = out[0]!;
+    if (isDemoError(d)) throw new Error(d.error);
+    expect(d.states[0]!.defined).toBe(false);
+  });
+
+  it('rejects a half-migrated array', () => {
+    // Both halves would render, the authored ones winning the page and the
+    // literals sitting beside them with no layout and no source. An error is
+    // more useful than that page.
+    const out = collectDemos({
+      'a': {
+        meta: { title: 'Button', group: 'G' },
+        states: [defineState({ title: 'new', render: () => null }), { name: 'old', render: () => null }],
+      },
+    });
+    expect(out.filter(isDemoError)[0]!.error).toMatch(/mixes/);
+  });
+
+  it('lets a demo with a playground omit states entirely', () => {
+    // The derived axes are the page in that case, so an empty states[] would
+    // be dead weight kept alive only to satisfy the validator.
+    const out = collectDemos({ 'a': { meta: { title: 'B', group: 'G' }, playground: pg() } });
+    const d = out[0]!;
+    if (isDemoError(d)) throw new Error(d.error);
+    expect(d.states).toEqual([]);
+  });
+
+  it('still requires a demo with no playground to author something', () => {
+    const out = collectDemos({ 'a': { meta: { title: 'B', group: 'G' } } });
+    expect(out.filter(isDemoError)[0]!.error).toMatch(/states\[\] or a playground/);
   });
 });
 

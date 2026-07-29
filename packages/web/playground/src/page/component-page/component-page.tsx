@@ -245,9 +245,9 @@ export function ComponentPage({
                     onYKeyChange={handleYKeyChange}
                   />
                 ) : splitThemes ? (
-                  <ThemeSplit render={() => <StateGrid demo={demo} />} />
+                  <ThemeSplit render={() => <StateGrid demo={demo} source={source} />} />
                 ) : (
-                  <StateGrid demo={demo} />
+                  <StateGrid demo={demo} source={source} />
                 )}
               </div>
             </Panel>
@@ -296,7 +296,7 @@ export function ComponentPage({
             </Panel>
           </Group>
         ) : (
-          <StateGrid demo={demo} />
+          <StateGrid demo={demo} source={source} />
         )}
       </div>
 

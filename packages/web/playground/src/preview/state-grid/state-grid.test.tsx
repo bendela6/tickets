@@ -1,5 +1,14 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { boolean, collectDemos, definePlayground, isDemoError, select, text } from '@tickets/ui';
+import {
+  boolean,
+  Center,
+  collectDemos,
+  definePlayground,
+  defineState,
+  isDemoError,
+  select,
+  text,
+} from '@tickets/ui';
 import { StateGrid } from './state-grid';
 
 function buildDemo(mod: Record<string, unknown>) {
@@ -131,6 +140,13 @@ describe('StateGrid', () => {
     ).toBe('true');
   });
 
+  it('scrolls a tall section rather than pushing the page', () => {
+    // A tone grid runs to seventeen rungs and the states list now sits under
+    // the playground, so an unbounded section buries everything after it.
+    render(<StateGrid demo={withPlayground} />);
+    expect(within(section('variant')).getByRole('tabpanel').className).toContain('overflow-auto');
+  });
+
   it('falls back to the authored states when there is no playground to derive from', () => {
     // The Foundation pages are token showcases with no props to enumerate, so
     // deriving would leave them blank.
@@ -139,5 +155,64 @@ describe('StateGrid', () => {
     expect(screen.getByText('three surfaces')).toBeTruthy();
     expect(screen.getByText('ramps')).toBeTruthy();
     expect(document.getElementById('colors--surfaces')).toBeTruthy();
+  });
+});
+
+const authored = buildDemo({
+  meta: { title: 'Button', group: 'Components' },
+  states: [
+    defineState({
+      title: 'icon only',
+      render: () => (
+        <Center>
+          <button aria-label="More">⋯</button>
+        </Center>
+      ),
+    }),
+  ],
+  playground: definePlayground({
+    controls: { variant: select(['subtle', 'solid']) },
+    render: (v) => <button>{v.variant}</button>,
+  }),
+});
+
+// The demo file's own text, as the eager `?raw` glob hands it over.
+const AUTHORED_SOURCE = `
+const iconOnly = defineState({
+  title: 'icon only',
+  render: () => (
+    <Center>
+      <button aria-label="More">⋯</button>
+    </Center>
+  ),
+});
+`;
+
+describe('StateGrid with authored sections', () => {
+  it('renders the authored sections instead of the derived axes', () => {
+    // This is what defineState opts into: the demo owns its page, so the
+    // per-prop axes stop being generated for it.
+    render(<StateGrid demo={authored} source={AUTHORED_SOURCE} />);
+    expect(screen.getByRole('button', { name: 'More' })).toBeTruthy();
+    expect(document.getElementById('button--icon-only')).toBeTruthy();
+    expect(document.getElementById('button--variant')).toBeNull();
+  });
+
+  it('shows the render body from the demo file, not a generated snippet', () => {
+    render(<StateGrid demo={authored} source={AUTHORED_SOURCE} />);
+    const card = document.getElementById('button--icon-only')!;
+    fireEvent.click(within(card).getByRole('tab', { name: 'Source' }));
+    // The layout is a component in the body, so it is visible here — the whole
+    // reason it is not a `layout` prop on defineState.
+    expect(within(card).getByRole('tabpanel').textContent).toContain('<Center>');
+    expect(within(card).getByRole('tabpanel').textContent).toContain('aria-label="More"');
+  });
+
+  it('hides the tablist when the source could not be read', () => {
+    // Better a card with no tabs than a Source tab that opens on nothing.
+    render(<StateGrid demo={authored} />);
+    const card = document.getElementById('button--icon-only')!;
+    expect(within(card).queryByRole('tablist')).toBeNull();
+    expect(screen.getByRole('button', { name: 'More' })).toBeTruthy();
   });
 });

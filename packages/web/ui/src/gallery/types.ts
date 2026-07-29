@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { AnyPlayground } from './controls';
+import type { DefinedState } from './states';
 
 // How much horizontal room this component needs to render honestly. Drives
 // the states-grid column width (and nothing else) — a Spinner in a 340px cell
@@ -21,19 +22,35 @@ export interface DemoMeta {
   impl?: string | string[];
 }
 
+/** The pre-`defineState` literal. Still valid, still ignored when the demo has
+ *  a playground to derive axes from — see `defineState` for why. */
 export interface DemoState {
   name: string;
   render: () => ReactNode;
 }
 
+export type AnyDemoState = DemoState | DefinedState;
+
+/** Both forms, normalised: `title` and `name` become one field, and `defined`
+ *  records which form it arrived in — the flag the state grid reads to decide
+ *  between the authored page and the derived one. */
+export interface CollectedState {
+  name: string;
+  render: () => ReactNode;
+  slug: string;
+  defined: boolean;
+}
+
 export interface DemoModule {
   meta: DemoMeta;
-  states: DemoState[];
+  /** Optional: a demo with a playground and nothing authored gets the derived
+   *  page, which is most of them. */
+  states?: AnyDemoState[];
   playground?: AnyPlayground;
 }
 
 export type CollectedDemo =
-  | { path: string; slug: string; meta: DemoMeta; states: (DemoState & { slug: string })[]; playground?: AnyPlayground }
+  | { path: string; slug: string; meta: DemoMeta; states: CollectedState[]; playground?: AnyPlayground }
   | { path: string; error: string };
 
 export function isDemoError(d: CollectedDemo): d is { path: string; error: string } {
