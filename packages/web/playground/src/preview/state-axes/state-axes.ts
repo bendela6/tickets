@@ -23,8 +23,19 @@ export interface AxisSection {
  * The vocabulary reads variant, then tone, then size — loudest axis first,
  * geometry last. Anything else follows in the order the demo declared it,
  * which is the author's own reading order.
+ *
+ * `size` is only promoted alongside one of the other two. The ordering exists
+ * to give a COMPONENT's axes a hierarchy; a demo with no variant and no tone
+ * has no such hierarchy to impose, and promoting its `size` there just
+ * overrides the author — the Typography page declares font before size and
+ * means it.
  */
 const LEADING = ['variant', 'tone', 'size'];
+
+function leadingFor(declared: string[]): string[] {
+  const loud = LEADING.filter((key) => key !== 'size' && declared.includes(key));
+  return loud.length > 0 ? LEADING.filter((key) => declared.includes(key)) : loud;
+}
 
 /**
  * The values a control can be enumerated over, or `null` when it cannot be.
@@ -57,10 +68,8 @@ export function deriveAxes(
 ): AxisSection[] {
   const base = initialValues(controls) as Record<string, unknown>;
   const declared = Object.keys(controls);
-  const ordered = [
-    ...LEADING.filter((key) => declared.includes(key)),
-    ...declared.filter((key) => !LEADING.includes(key)),
-  ];
+  const leading = leadingFor(declared);
+  const ordered = [...leading, ...declared.filter((key) => !leading.includes(key))];
 
   const sections: AxisSection[] = [];
   for (const prop of ordered) {

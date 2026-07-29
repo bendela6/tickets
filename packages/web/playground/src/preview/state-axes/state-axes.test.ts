@@ -44,6 +44,23 @@ describe('deriveAxes', () => {
     ]);
   });
 
+  it('leaves size where the author put it when there is no variant or tone', () => {
+    // The promotion exists to rank a component's axes. A demo with neither of
+    // the loud two has no hierarchy to impose, so hoisting its `size` would
+    // just override the author — Typography declares font before size and
+    // means it.
+    const controls = {
+      font: select(['sans', 'mono']),
+      size: select(['11', '13']),
+      weight: select(['400', '500']),
+    };
+    expect(deriveAxes(controls, 'typography').map((s) => s.prop)).toEqual([
+      'font',
+      'size',
+      'weight',
+    ]);
+  });
+
   it('drops props with no enumerable domain', () => {
     expect(deriveAxes(CONTROLS, 'button').map((s) => s.prop)).not.toContain('label');
   });
