@@ -13,6 +13,7 @@ export function MultiSelectInput(p: InputProps<MultiSelectInputConfig, string[]>
   return (
     <div onBlur={p.onBlur}>
       <MultiCombobox
+        id={p.name}
         options={p.config.options ?? []}
         value={p.value ?? []}
         placeholder={p.config.placeholder}

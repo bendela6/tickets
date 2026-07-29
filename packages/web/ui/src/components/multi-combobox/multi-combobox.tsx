@@ -7,6 +7,7 @@ import { ComboboxList, type ComboOption } from '../combobox-list';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
 
 type MultiComboboxProps = {
+  id?: string;
   options: ComboOption[];
   value: string[];
   onChange: (value: string[]) => void;
@@ -32,6 +33,7 @@ const BOX: Record<FieldSize, string> = {
 const CHEVRON: Record<FieldSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
 
 export function MultiCombobox({
+  id,
   options,
   value,
   onChange,
@@ -63,6 +65,7 @@ export function MultiCombobox({
           rather than on some inner control. */}
       <PopoverTrigger asChild>
         <button
+          id={id}
           type="button"
           aria-label={placeholder}
           disabled={disabled}

@@ -60,6 +60,15 @@ describe('NumberFormInput', () => {
     expect(onBlur).toHaveBeenCalled();
   });
 
+  // The proof it holds no state: with `value` pinned by the parent, typing
+  // cannot change what is displayed.
+  it('shows only what its parent gives it', async () => {
+    render(<NumberFormInput {...base} value={7} onChange={vi.fn()} />);
+    const input = screen.getByRole('spinbutton');
+    await userEvent.type(input, '9');
+    expect(input).toHaveValue(7);
+  });
+
   it('renders the suffix when configured', () => {
     render(<NumberFormInput {...base} config={{ suffix: 'hours' }} value={null} onChange={vi.fn()} />);
     expect(screen.getByText('hours')).toBeInTheDocument();

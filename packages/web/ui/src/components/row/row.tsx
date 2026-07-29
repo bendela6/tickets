@@ -1,19 +1,13 @@
 import type { HTMLAttributes } from 'react';
 import { cn } from '../../style';
-import { GAP, type Align, type Gap } from '../stack';
+import { ALIGN, GAP, type Align, type Gap } from '../stack';
 
 /** Row adds `baseline` to Stack's alignment domain: a label sitting next to a
  *  number wants their text baselines to line up, which a column never needs. */
 export type RowAlign = Align | 'baseline';
 export type Justify = 'start' | 'center' | 'end' | 'between';
 
-const ROW_ALIGN: Record<RowAlign, string> = {
-  start: 'items-start',
-  center: 'items-center',
-  end: 'items-end',
-  stretch: 'items-stretch',
-  baseline: 'items-baseline',
-};
+const ROW_ALIGN: Record<RowAlign, string> = { ...ALIGN, baseline: 'items-baseline' };
 
 const JUSTIFY: Record<Justify, string> = {
   start: 'justify-start',

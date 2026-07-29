@@ -14,6 +14,7 @@ export function SelectInput(p: InputProps<SelectInputConfig, string | null>) {
   return (
     <div onBlur={p.onBlur}>
       <Combobox
+        id={p.name}
         options={p.config.options ?? []}
         value={p.value ?? null}
         placeholder={p.config.placeholder}

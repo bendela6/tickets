@@ -3,6 +3,7 @@ import { fieldClass, fieldState, type FieldSize } from '../field';
 import { Icon } from '../icon';
 
 type NumberInputProps = {
+  id?: string;
   value: number | null;
   onChange: (value: number | null) => void;
   min?: number;
@@ -28,6 +29,7 @@ function clamp(value: number, min?: number, max?: number) {
 }
 
 export function NumberInput({
+  id,
   value,
   onChange,
   min,
@@ -63,6 +65,7 @@ export function NumberInput({
       })}
     >
       <input
+        id={id}
         type="number"
         role="spinbutton"
         inputMode="numeric"

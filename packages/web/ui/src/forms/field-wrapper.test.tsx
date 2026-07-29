@@ -42,14 +42,11 @@ describe('FieldWrapper', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Required');
   });
 
-  // The layout-stability contract: once `error` is set the element is mounted
-  // and STAYS mounted as `touched` flips, so the message appearing never
-  // reflows the form under the user's cursor. Only its opacity changes.
-  //
-  // The opacity itself is deliberately NOT asserted — it is a class
-  // FieldWrapper picks for itself, and jsdom loads no stylesheet, so neither
-  // `toContain('opacity-0')` nor `toBeVisible()` would prove anything about
-  // what a user sees. Mount-persistence is the part that is real and testable.
+  // `touched` is part of the engine's FieldWrapperProps but no longer gates
+  // anything here: the error is mounted and visible as soon as `error` is
+  // set, regardless of `touched`. This pins that `touched` flipping causes no
+  // change — the error was visible before the rerender and stays visible
+  // after it.
   it('keeps the error element mounted whether or not the field is touched', () => {
     const { rerender } = render(
       <FieldWrapper {...base} label="Title" error="Required">

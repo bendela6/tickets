@@ -23,6 +23,7 @@ const shared = { loading: false, onBlur: noop, disabled: false };
 
 function Demo() {
   const [text, setText] = useState('');
+  const [body, setBody] = useState('');
   const [num, setNum] = useState<number | null>(null);
   const [sel, setSel] = useState<string | null>(null);
   const [multi, setMulti] = useState<string[]>([]);
@@ -34,7 +35,7 @@ function Demo() {
         <TextInput {...shared} name="title" config={{ placeholder: 'Short summary' }} value={text} onChange={setText} />
       </FieldWrapper>
       <FieldWrapper name="body" label="Description" required={false} touched={false} loading={false}>
-        <TextareaInput {...shared} name="body" config={{ rows: 3 }} value="" onChange={noop} />
+        <TextareaInput {...shared} name="body" config={{ rows: 3 }} value={body} onChange={setBody} />
       </FieldWrapper>
       <FieldWrapper name="estimate" label="Estimate" required={false} touched={false} loading={false}
         description="Rounded to whole hours">

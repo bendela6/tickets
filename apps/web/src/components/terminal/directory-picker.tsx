@@ -2,7 +2,15 @@ import { useWorkdirRoots } from '../../api/use-workdir-dirs';
 import { Input } from '@tickets/ui';
 import { DirectoryTree } from '../../ui/directory-tree';
 
-export function DirectoryPicker({ value, onChange }: { value: string; onChange: (path: string) => void }) {
+export function DirectoryPicker({
+  id,
+  value,
+  onChange,
+}: {
+  id?: string;
+  value: string;
+  onChange: (path: string) => void;
+}) {
   const roots = useWorkdirRoots();
   return (
     <div className="overflow-hidden rounded-[10px] border border-gray-7 bg-gray-1">
@@ -16,6 +24,7 @@ export function DirectoryPicker({ value, onChange }: { value: string; onChange: 
       </div>
       <DirectoryTree roots={roots.data ?? []} selected={value || null} onSelect={onChange} />
       <Input
+        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="/absolute path — or pick above"

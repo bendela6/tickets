@@ -9,6 +9,7 @@ import { DirectoryPicker } from '../components/terminal/directory-picker';
 function DirectoryInput(p: InputProps<Record<string, never>, string>) {
   return (
     <DirectoryPicker
+      id={p.name}
       value={p.value ?? ''}
       onChange={(next) => {
         p.onChange(next);

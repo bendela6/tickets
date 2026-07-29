@@ -29,7 +29,7 @@ export function TextInput(p: InputProps<TextInputConfig, string>) {
         tone={p.error ? 'danger' : undefined}
         onChange={(e) => p.onChange(e.target.value)}
         onBlur={p.onBlur}
-        className={cn(p.config.mono && 'font-mono')}
+        className={cn(p.config.mono && 'font-mono text-13')}
       />
     </div>
   );
