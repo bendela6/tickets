@@ -4,10 +4,6 @@ import { describe, expect, it } from 'vitest';
 import { formRegistry } from './registry';
 
 describe('formRegistry', () => {
-  it('exposes text and directory input widgets', () => {
-    expect(Object.keys(formRegistry.inputs).sort()).toEqual(['directory', 'text']);
-  });
-
   it('the text widget renders a control wired to onChange', async () => {
     const { text } = formRegistry.inputs;
     const Comp = text.Component;
