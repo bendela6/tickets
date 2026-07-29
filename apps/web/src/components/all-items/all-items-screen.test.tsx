@@ -311,3 +311,39 @@ test('clicking a row opens the ticket drawer with that project’s board', async
   expect(within(drawer).getByText('APP-1')).toBeInTheDocument();
   expect(within(drawer).getByRole('button', { name: /ship mobile nav/i })).toBeInTheDocument();
 });
+
+/** Item keys in DOM order, read off the rendered data rows. Group banners
+ *  carry no key, so this is exactly the row sequence the user sees. */
+function keyOrder(): string[] {
+  return [...document.querySelectorAll('[role="row"][data-index]')]
+    .map((row) => /(?:CORE|APP)-\d+/.exec(row.textContent ?? '')?.[0])
+    .filter((key): key is string => key !== undefined);
+}
+
+test('clicking a column header sorts rows inside each group', async () => {
+  await renderScreen();
+  // default ordering is by item number, ascending, within each project group
+  expect(keyOrder()).toEqual(['CORE-1', 'CORE-2', 'APP-1']);
+
+  const keyHeader = screen.getByRole('button', { name: 'Key' });
+  await userEvent.click(keyHeader); // first click: ascending — unchanged
+  expect(keyOrder()).toEqual(['CORE-1', 'CORE-2', 'APP-1']);
+
+  await userEvent.click(keyHeader); // second click: descending
+  // The sort reorders WITHIN each group; grouping still puts Core before App,
+  // so APP-1 stays last rather than leading a globally descending list.
+  expect(keyOrder()).toEqual(['CORE-2', 'CORE-1', 'APP-1']);
+
+  await userEvent.click(keyHeader); // third click: back to no sort
+  expect(keyOrder()).toEqual(['CORE-1', 'CORE-2', 'APP-1']);
+});
+
+test('a sorted column header announces its direction', async () => {
+  await renderScreen();
+  const header = () => screen.getByRole('columnheader', { name: /Key/ });
+  expect(header()).toHaveAttribute('aria-sort', 'none');
+  await userEvent.click(screen.getByRole('button', { name: 'Key' }));
+  expect(header()).toHaveAttribute('aria-sort', 'ascending');
+  await userEvent.click(screen.getByRole('button', { name: 'Key' }));
+  expect(header()).toHaveAttribute('aria-sort', 'descending');
+});
