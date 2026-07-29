@@ -140,6 +140,14 @@ describe('<Table> engine — states', () => {
     expect(container.querySelector('[data-slot="tbody"]')).toBeNull();
   });
 
+  // Fix 7: a compact table's skeleton placeholders must match the real row
+  // height passed in, not the engine's hardcoded ROW_HEIGHT default.
+  it('sizes skeleton rows to the caller-supplied row height', () => {
+    const { container } = render(<Harness rows={[]} isLoading rowHeight={64} />);
+    const skeletonRow = container.querySelector('[data-slot="skeleton-row"]') as HTMLElement;
+    expect(skeletonRow).toHaveAttribute('data-row-height', '64');
+  });
+
   it('renders nothing inside root when not loading and rows are empty', () => {
     const { container } = render(<Harness rows={[]} isLoading={false} />);
     expect(container.querySelector('[data-slot="tbody"]')).toBeNull();
@@ -226,6 +234,17 @@ describe('<Table> engine — sizing', () => {
     );
     const th = container.querySelector('[data-slot="th"]') as HTMLElement;
     expect(th.getAttribute('data-start-width')).toBe('160');
+  });
+
+  // Fix 2: a string PIXEL width (all-items' 'key' column is '96px') does have
+  // a single pixel start, so the resize handle must recover it rather than
+  // falling back to 160 — grabbing a 96px column should not jump it to 160px.
+  it('recovers a pixel start from a leading `<n>px` string width', () => {
+    const { container } = render(
+      <Harness columns={[{ key: 'name', header: 'Name', value: (r) => r.name, width: '96px' }]} />,
+    );
+    const th = container.querySelector('[data-slot="th"]') as HTMLElement;
+    expect(th.getAttribute('data-start-width')).toBe('96');
   });
 });
 
