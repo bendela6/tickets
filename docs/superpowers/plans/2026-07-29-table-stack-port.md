@@ -1397,7 +1397,8 @@ Create `packages/web/ui/src/table/columns/columns.test.tsx`:
 
 ```tsx
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 import { DateColumn } from './date-column';
 import { LinkColumn } from './link-column';
 import { NumberColumn } from './number-column';
@@ -1443,6 +1444,14 @@ describe('NumberColumn', () => {
   it('shows an em dash for a value that is not a number', () => {
     const R = NumberColumn();
     render(<>{R({ value: 'abc', row: {} })}</>);
+    expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
+  // `Number('  ')` is 0, not NaN — without the trim guard this renders a fake
+  // zero, which is wrong DATA in a table, not just wrong styling.
+  it('shows an em dash for a whitespace-only value, not zero', () => {
+    const R = NumberColumn();
+    render(<>{R({ value: '   ', row: {} })}</>);
     expect(screen.getByText('—')).toBeInTheDocument();
   });
 
