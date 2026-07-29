@@ -32,9 +32,10 @@ const VIEWS = [
  * uses, which is the point of those being components rather than a `layout`
  * prop the frame would resolve invisibly.
  *
- * The body scrolls rather than growing: a tone grid or a long list would
- * otherwise push every section below it off the page, and the states list sits
- * under the playground now.
+ * A section is as tall as its states: scrolling one vertically hides specimens
+ * behind an interaction, and a states list you have to scroll inside to read
+ * is not a states list. Width is the one axis that gets a scrollbar — a wide
+ * matrix should not force the page itself sideways.
  */
 function SectionCard({
   id,
@@ -70,7 +71,7 @@ function SectionCard({
           />
         )}
       </header>
-      <div role="tabpanel" aria-label={`${title} ${showing}`} className="max-h-96 overflow-auto">
+      <div role="tabpanel" aria-label={`${title} ${showing}`} className="overflow-x-auto">
         {showing === 'preview' ? preview : <CodeBlock code={source!} />}
       </div>
     </section>
@@ -160,7 +161,7 @@ function LegacyStates({ demo }: { demo: LiveDemo }) {
           className="m-0 flex w-full flex-col gap-3 rounded-lg border border-gray-6 bg-surface-raised px-3.5 py-3"
         >
           <figcaption className={CAPTION}>{state.name}</figcaption>
-          <div className="flex max-h-96 w-full min-w-0 max-w-full items-center overflow-auto">
+          <div className="flex w-full min-w-0 max-w-full items-center overflow-x-auto">
             {state.render(DEFAULT_VIEW)}
           </div>
         </figure>
