@@ -1,0 +1,3 @@
+@import '@tickets/ui/tokens.css';
+/* Tailwind must scan the studio's own class literals. */
+@source '../src/';
