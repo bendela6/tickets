@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import {
   DEFAULT_VIEW,
   extractStateSources,
+  Matrix,
   Tabs,
   type StateView,
   type AnyControlDef,
@@ -12,7 +13,7 @@ import {
 } from '@tickets/ui';
 import { CodeBlock } from '../../code/code-block';
 import { generateSnippet } from '../../code/code-snippet';
-import { deriveAxes, type AxisSection } from '../state-axes';
+import { deriveAxes, type AxisSection, type CrossSection } from '../state-axes';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
@@ -94,7 +95,7 @@ function AxisCard({
   return (
     <SectionCard
       id={section.slug}
-      title={section.prop}
+      title={section.title}
       preview={
         /* `items-end`, so the captions of a row share one baseline and the
            specimens hang above it. A size axis is exactly the case that breaks
@@ -124,6 +125,51 @@ function AxisCard({
       source={section.cells
         .map(
           (cell) => generateSnippet(component, playground.controls, cell.values, [section.prop]).code,
+        )
+        .join('\n')}
+    />
+  );
+}
+
+// The same Matrix an authored demo reaches for, filled from the playground
+// instead of by hand — so a derived crossing and a written one are the same
+// object on the page, not two things that merely look alike.
+function CrossCard({
+  section,
+  playground,
+  component,
+}: {
+  section: CrossSection;
+  playground: AnyPlayground;
+  component: string;
+}) {
+  return (
+    <SectionCard
+      id={section.slug}
+      title={section.title}
+      preview={
+        <Matrix
+          rows={section.rows}
+          columns={section.columns}
+          cell={(row, column) =>
+            playground.render(
+              section.values(row, column) as ControlValues<Record<string, AnyControlDef>>,
+            )
+          }
+        />
+      }
+      // Row-major, matching how the grid reads. Both props are pinned so every
+      // line names the pair it stands for rather than collapsing to the
+      // default-valued corner.
+      source={section.rows
+        .flatMap((row) =>
+          section.columns.map(
+            (column) =>
+              generateSnippet(component, playground.controls, section.values(row, column), [
+                section.columnProp,
+                section.rowProp,
+              ]).code,
+          ),
         )
         .join('\n')}
     />
@@ -214,14 +260,23 @@ export function StateGrid({
           </div>
         ) : sections.length > 0 && demo.playground ? (
           <div className="flex flex-col gap-2.5">
-            {sections.map((section) => (
-              <AxisCard
-                key={section.prop}
-                section={section}
-                playground={demo.playground!}
-                component={component}
-              />
-            ))}
+            {sections.map((section) =>
+              section.kind === 'cross' ? (
+                <CrossCard
+                  key={section.slug}
+                  section={section}
+                  playground={demo.playground!}
+                  component={component}
+                />
+              ) : (
+                <AxisCard
+                  key={section.slug}
+                  section={section}
+                  playground={demo.playground!}
+                  component={component}
+                />
+              ),
+            )}
           </div>
         ) : (
           <LegacyStates demo={demo} />
