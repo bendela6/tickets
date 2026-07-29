@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { ANIMATIONS, DURATIONS, EASINGS } from '../spec';
-import { DriftView, Sheet, SpecHeader, SpecRow } from '../view';
+import { DriftView, NativeNote, Sheet, SpecHeader, SpecRow } from '../view';
 
 export const meta = {
   title: 'Motion',
@@ -11,9 +11,9 @@ export const meta = {
 };
 
 const DURATION_JOBS: Record<string, string> = {
-  'duration-fast': 'hover, press — feedback',
-  'duration-base': 'open, close — transitions',
-  'duration-slow': 'enter, layout — arrivals',
+  'duration-120': 'hover, press — feedback',
+  'duration-200': 'open, close — transitions',
+  'duration-320': 'enter, layout — arrivals',
 };
 
 const EASE_JOBS: Record<string, string> = {
@@ -170,8 +170,16 @@ function Animations() {
 }
 
 export const states = [
-  { name: 'Durations', render: () => <Durations /> },
+  {
+    name: 'Durations',
+    render: () => (
+      <>
+        <Durations />
+        <NativeNote family="duration" />
+      </>
+    ),
+  },
   { name: 'Easings', render: () => <Easings /> },
   { name: 'Animations', render: () => <Animations /> },
-  { name: 'Drift', render: () => <DriftView families={['duration', 'ease', 'animate']} /> },
+  { name: 'Drift', render: () => <DriftView families={['ease', 'animate']} /> },
 ];

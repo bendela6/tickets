@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BORDERS, BREAKPOINTS, LAYERS, RINGS } from '../spec';
-import { DriftView, Sheet, SpecHeader, SpecRow } from '../view';
+import { NativeNote, Sheet, SpecHeader, SpecRow } from '../view';
 
 export const meta = {
   title: 'Layout',
@@ -11,18 +11,20 @@ export const meta = {
 };
 
 const BORDER_JOBS: Record<string, string> = {
-  'border-thin': 'dividers, table rules',
-  'border-thick': 'inputs, cards — edges you act on',
+  'border-1': 'dividers, table rules',
+  'border-2': 'inputs, cards — edges you act on',
 };
 
 const LAYER_JOBS: Record<string, string> = {
-  'z-sticky': 'pinned headers, toolbars',
-  'z-scrim': 'the dim behind a dialog',
-  'z-overlay': 'dialogs, menus, toasts',
+  'z-10': 'pinned headers, toolbars',
+  'z-40': 'the dim behind a dialog',
+  'z-50': 'dialogs, menus, toasts',
 };
 
+const BORDER_CLASS: Record<string, string> = { 'border-1': 'border-1', 'border-2': 'border-2' };
+
 function Edges() {
-  const ring = RINGS.find((r) => r.name === 'ring-focus')!;
+  const ring = RINGS.find((r) => r.name === 'ring-3')!;
   return (
     <Sheet>
       <SpecHeader specimen="drawn against the page" />
@@ -35,8 +37,7 @@ function Edges() {
         >
           <div className="flex items-center gap-4">
             <span
-              className="h-10 w-40 rounded-md border-gray-6 bg-surface-raised"
-              style={{ borderStyle: 'solid', borderWidth: border.value }}
+              className={`h-10 w-40 rounded-md border-solid border-gray-6 bg-surface-raised ${BORDER_CLASS[border.name]}`}
             />
             {/* A rule on its own, where the weight difference is easiest to
                 judge — a box's four edges hide a half-pixel, one line does not. */}
@@ -76,19 +77,19 @@ function Layers() {
       <div className="relative mt-2 h-44 overflow-hidden rounded-xl bg-gray-1">
         <div
           className="absolute inset-x-4 top-4 flex h-10 items-center rounded-lg border-1 border-gray-6 bg-surface-raised px-3 font-mono text-12/17 text-gray-11"
-          style={{ zIndex: Number(LAYERS.find((l) => l.name === 'z-sticky')!.value) }}
+          style={{ zIndex: Number(LAYERS.find((l) => l.name === 'z-10')!.value) }}
         >
-          z-sticky · pinned header
+          z-10 · pinned header
         </div>
         <div
           className="absolute inset-0 bg-black/40"
-          style={{ zIndex: Number(LAYERS.find((l) => l.name === 'z-scrim')!.value) }}
+          style={{ zIndex: Number(LAYERS.find((l) => l.name === 'z-40')!.value) }}
         />
         <div
           className="absolute inset-x-16 top-16 flex h-20 items-center justify-center rounded-xl bg-surface-raised font-mono text-12/17 text-gray-12"
-          style={{ zIndex: Number(LAYERS.find((l) => l.name === 'z-overlay')!.value) }}
+          style={{ zIndex: Number(LAYERS.find((l) => l.name === 'z-50')!.value) }}
         >
-          z-overlay · dialog
+          z-50 · dialog
         </div>
       </div>
     </Sheet>
@@ -110,14 +111,14 @@ function useViewportWidth(): number {
 
 function Breakpoints() {
   const width = useViewportWidth();
-  const narrow = Number.parseInt(BREAKPOINTS.find((b) => b.name === 'breakpoint-narrow')!.value, 10);
-  const wide = Number.parseInt(BREAKPOINTS.find((b) => b.name === 'breakpoint-wide')!.value, 10);
+  const narrow = Number.parseInt(BREAKPOINTS.find((b) => b.name === 'breakpoint-lg')!.value, 10);
+  const wide = Number.parseInt(BREAKPOINTS.find((b) => b.name === 'breakpoint-2xl')!.value, 10);
   const band = width < narrow ? 'below narrow' : width < wide ? 'narrow' : 'wide';
   return (
     <Sheet>
       <SpecHeader specimen="what changes at this width" />
       <SpecRow
-        name="breakpoint-narrow"
+        name="breakpoint-lg"
         value={`${narrow}px`}
         note="rail collapses to icons"
       >
@@ -125,7 +126,7 @@ function Breakpoints() {
           Below this, the board drops to a single column and the detail pane becomes a sheet.
         </span>
       </SpecRow>
-      <SpecRow name="breakpoint-wide" value={`${wide}px`} note="detail pane pins open">
+      <SpecRow name="breakpoint-2xl" value={`${wide}px`} note="detail pane pins open">
         <span className="font-sans text-12/17 text-gray-11">
           Above this, the detail pane stays open beside the board instead of replacing it.
         </span>
@@ -155,5 +156,15 @@ export const states = [
   { name: 'Borders & focus', render: () => <Edges /> },
   { name: 'Layers', render: () => <Layers /> },
   { name: 'Breakpoints', render: () => <Breakpoints /> },
-  { name: 'Drift', render: () => <DriftView families={['border', 'ring', 'z', 'breakpoint']} /> },
+  {
+    name: 'Native',
+    render: () => (
+      <>
+        <NativeNote family="border" />
+        <NativeNote family="ring" />
+        <NativeNote family="z" />
+        <NativeNote family="breakpoint" />
+      </>
+    ),
+  },
 ];

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pill } from '../components/pill';
 import { SectionHeader } from '../components/section-header';
-import { drift, driftSummary, type DriftStatus } from './spec';
+import { NATIVE_FAMILIES, drift, driftSummary, type DriftStatus } from './spec';
 // colors.ts owns the theme axis for the whole Foundation group — the colour
 // tokens are the only ones that vary per step. Imported, not re-exported: the
 // folder barrel already surfaces it from there, and a second path to the same
@@ -151,6 +151,21 @@ export function DriftView({ families }: { families: string[] }) {
           </table>
         </div>
       ))}
+    </Sheet>
+  );
+}
+
+/** Stands where a drift table would, for a family that ships no token. */
+export function NativeNote({ family }: { family: string }) {
+  return (
+    <Sheet>
+      <p className="font-sans text-13/19 text-gray-11">
+        <span className="font-mono text-12/17 text-gray-12">{family}</span> is Tailwind-native — no
+        token. {NATIVE_FAMILIES[family]}
+      </p>
+      <p className="mt-2 font-sans text-12/17 text-gray-9">
+        There is no drift to measure: the value exists once, at the call site.
+      </p>
     </Sheet>
   );
 }

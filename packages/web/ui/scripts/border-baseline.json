@@ -40,7 +40,7 @@
     "packages/web/ui/src/foundation/colors/colors.ts::pair('outline-border', 'border', theme, scale, step(7), [page], 3, 'advisory'),",
     "packages/web/ui/src/foundation/colors/colors.ts::what: 'text' | 'border',",
     "packages/web/ui/src/foundation/colors/colors.ts::what: 'text' | 'border';",
-    "packages/web/ui/src/foundation/layout/layout.demo.tsx::{ name: 'Drift', render: () => <DriftView families={['border', 'ring', 'z', 'breakpoint']} /> },",
+    "packages/web/ui/src/foundation/layout/layout.demo.tsx::<NativeNote family=\"border\" />",
     "packages/web/ui/src/foundation/spec.ts::export const BORDERS = tokens(layoutTokens.border, 'border');"
   ]
 }
