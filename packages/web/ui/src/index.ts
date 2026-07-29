@@ -12,6 +12,7 @@
 // the app's entry chunk.
 export * from './components';
 export * from './forms';
+export * from './table';
 export * from './style';
 export * from './foundation';
 export * from './gallery';
