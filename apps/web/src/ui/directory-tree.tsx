@@ -32,7 +32,7 @@ function Row({ row, onToggle, onSelect }: { row: VisibleRow; onToggle: (path: st
         tabIndex={-1}
         aria-label={`${row.expanded ? 'collapse' : 'expand'} ${row.path}`}
         onClick={() => onToggle(row.path)}
-        className="grid size-4 shrink-0 place-items-center rounded hover:bg-surface-inset"
+        className="grid size-4 shrink-0 place-items-center rounded-sm hover:bg-surface-inset"
       >
         <Caret open={row.expanded} loading={row.loading} />
       </button>
@@ -53,7 +53,7 @@ function Row({ row, onToggle, onSelect }: { row: VisibleRow; onToggle: (path: st
         )}
       >
         {row.isRoot ? (
-          <span className="shrink-0 rounded border-1 border-gray-7 px-1 font-mono text-11 leading-[15px] text-gray-11">{row.symbol}</span>
+          <span className="shrink-0 rounded-sm border-1 border-gray-7 px-1 font-mono text-11 leading-[15px] text-gray-11">{row.symbol}</span>
         ) : (
           <span
             aria-hidden

@@ -703,8 +703,10 @@
      packages/web/ui/src, packages/web/playground/src and apps/web/src) kept
      the pixel they already had — no edit needed for them. The subsequent
      sweep (converting arbitrary rounded-[Npx] sites onto these same four
-     rungs) brought the total to 338; that number belongs to the sweep, not
-     to this naming decision.
+     rungs) brought the total to approximately 340 — an approximate figure,
+     since the scanner, a plain grep and this comment's own prose (which
+     itself contains "rounded-t-lg") each count it slightly differently;
+     that number belongs to the sweep, not to this naming decision.
 
      `initial` on the rest is the enforcement: rounded-xs / 2xl / 3xl / 4xl stop
      compiling, so an off-scale corner is a build-visible mistake rather than a
@@ -1042,7 +1044,7 @@
     position: absolute;
     inset: 0;
     box-sizing: border-box;
-    border: 1.5px solid var(--color-gray-7);
+    border: 2px solid var(--color-gray-7);
     border-radius: 4px;
     background: var(--color-surface-raised);
     pointer-events: none;

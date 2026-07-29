@@ -44,10 +44,20 @@ export type RetiredFamily = 'radius' | 'border' | 'ring' | 'z';
  * in the tree reports as a violation.
  */
 export const RETIRED: Record<RetiredFamily, RegExp> = {
-  // Arbitrary radii, plus the four rungs cleared to `initial`.
-  radius: /(?<![\w-])rounded(-[a-z]{1,2})?-(\[[^\]\n]+\]|xs|2xl|3xl|4xl)(?![\w-])/g,
+  // Arbitrary radii, the four rungs cleared to `initial`, and bare `rounded`
+  // / `rounded-<side>` with no rung at all (Tailwind's static 0.25rem
+  // default). The corner-suffix alternative is an explicit whitelist rather
+  // than a generic `[a-z]{1,2}`, because `sm`/`md`/`lg`/`xl` are themselves
+  // two lowercase letters — a generic group would swallow a real rung
+  // (`rounded-sm`) as if it were a side suffix and let the bare branch below
+  // match right past it.
+  radius:
+    /(?<![\w-])rounded(-t|-r|-b|-l|-tl|-tr|-bl|-br|-ss|-se|-ee|-es)?(?:-(\[[^\]\n]+\]|xs|2xl|3xl|4xl)|(?![\w-]))/g,
   // Bare `border` / `border-b` (width utilities with no number), and 1.5px.
-  border: /(?<=[\s"'`{])border(-[trblxy])?(?=[\s"'`}])|(?<![\w-])border(-[trblxy])?-\[1\.5px\]/g,
+  // The left boundary includes `:` so a variant-prefixed bare form
+  // (`disabled:border`) is caught too — a bare word preceded by a Tailwind
+  // state variant is still a real, functional utility, not prose.
+  border: /(?<=[\s"'`{:])border(-[trblxy])?(?=[\s"'`}])|(?<![\w-])border(-[trblxy])?-\[1\.5px\]/g,
   ring: /(?<![\w-])ring-(\[3px\]|\(length:--ring-focus\))/g,
   z: /(?<![\w-])z-(3|30)(?![\w-])/g,
 };

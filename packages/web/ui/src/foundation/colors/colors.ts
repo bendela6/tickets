@@ -121,7 +121,7 @@ function pair(
     }
   }
   // Round before comparing so a 4.499 does not fail on float noise alone.
-  const rounded = Math.round(ratio * 100) / 100;
+  const roundedRatio = Math.round(ratio * 100) / 100;
   return {
     emphasis,
     what,
@@ -131,10 +131,10 @@ function pair(
     bgLabel: worst[0],
     fg: fg[1],
     bg: worst[1],
-    ratio: rounded,
+    ratio: roundedRatio,
     min,
     severity,
-    passes: rounded >= min,
+    passes: roundedRatio >= min,
   };
 }
 
