@@ -193,7 +193,10 @@ export function drift(): DriftFamily[] {
     // letters-only pattern made every new rung invisible to drift — reported
     // as proposed-but-not-live while it sat in tokens.css all along.
     { family: 'text', rows: driftFor('text', TEXT_SIZES, liveTokens(/^text-[a-z0-9]+$/)) },
-    { family: 'radius', rows: driftFor('radius', RADII, liveTokens(/^radius-[a-z]+$/)) },
+    // Narrowed to the four live rungs: xs/2xl/3xl/4xl are `initial` —
+    // declarations of absence, not tokens — and matching them would report
+    // the scale as drifting from itself over an unmatchable value.
+    { family: 'radius', rows: driftFor('radius', RADII, liveTokens(/^radius-(sm|md|lg|xl)$/)) },
     {
       family: 'shadow',
       rows: driftFor(
