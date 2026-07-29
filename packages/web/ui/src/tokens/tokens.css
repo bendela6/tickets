@@ -698,8 +698,10 @@
   /* Radius (next/radius.tokens.json). Four rungs, not six: a radius is only
      legible against the box it rounds — 4px on a chip and 12px on a panel read
      as the same softness, while 4 and 5 on the same box read as a mistake.
-     The values are Tailwind's own sm/md/lg/xl, so the 166 existing usages of
-     those names keep the pixel they already had.
+     The values are Tailwind's own sm/md/lg/xl, so the 337 existing usages of
+     those names (incl. side-specific forms like rounded-t-lg, across
+     packages/web/ui/src, packages/web/playground/src and apps/web/src) keep
+     the pixel they already had.
 
      `initial` on the rest is the enforcement: rounded-xs / 2xl / 3xl / 4xl stop
      compiling, so an off-scale corner is a build-visible mistake rather than a

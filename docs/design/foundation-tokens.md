@@ -33,15 +33,18 @@ Placement decides the syntax, and getting it wrong silently produces no styling.
 
 | Block | Contains | Consumed as |
 |---|---|---|
-| `@theme inline` | colour, text, weight, radius, tracking, shadow, font, ease, animate, breakpoint | Plain utility — `bg-gray-1`, `text-4`, `rounded-3` |
-| `:root` | duration, border width, focus ring, z-index | Explicit var — `ring-(length:--ring-focus)`, `z-(--z-overlay)` |
+| `@theme inline` | colour, text, weight, radius, tracking, shadow, font, ease, animate | Plain utility — `bg-gray-1`, `text-4`, `rounded-md` |
+| *(none — no custom property)* | border width, ring, z-index, duration, breakpoints | Tailwind-native bare value or default — `border-2`, `ring-3`, `z-40`, `duration-200`, `lg:` |
 
 Every `@theme` family opens with `--<family>-*: initial`, so Tailwind's default
 palette, type scale, weights and radii do not exist. What is listed here is the
 whole set.
 
-The rule is mechanical: **if Tailwind v4 has a namespace for it, it belongs in
-`@theme` and generates a utility; if not, it belongs in `:root`.**
+The rule is mechanical: **if the value needs to be named or shared across
+themes, it belongs in `@theme` and generates a utility; if Tailwind can already
+express the exact value as a bare number or a default, no token is needed at
+all — the class states the value, so a token would just be a second copy of
+it.**
 
 > **Tailwind preflight is OFF in this repo.** Unlayered CSS and native control
 > defaults can beat these tokens — see the trap tables in the project skills
@@ -239,14 +242,23 @@ a `text-*` colour sits alongside. `cn.test.ts` reads `--text-*` out of
 
 | Token | Value | Use |
 |---|---|---|
-| `--radius-1` | 4px | Chips, small marks |
-| `--radius-2` | 6px | Controls, inputs, buttons |
-| `--radius-3` | 8px | Cards, tiles |
-| `--radius-4` | 12px | Panels, sheets, dialogs |
+| `--radius-sm` | 4px | Chips, tags, inline marks |
+| `--radius-md` | 6px | Buttons, inputs, controls |
+| `--radius-lg` | 8px | Cards, list rows, popovers |
+| `--radius-xl` | 12px | Panels, dialogs, sheets |
 
-`--radius-*: initial` removes Tailwind's `rounded-sm`/`md`/`lg`/`xl` and bare
-`rounded`. **`rounded-full` is retained** — a pill is not a step on the scale,
-so it stays as the one exception, the same way `contrast` does for colour.
+The values are Tailwind's own `sm`/`md`/`lg`/`xl`, so `rounded-md` means what it
+has always meant. `--radius-xs/2xl/3xl/4xl: initial` removes the rest, so an
+off-scale corner fails to compile. **`rounded-full` is retained** — Tailwind
+hardcodes it to `calc(infinity * 1px)` rather than reading a token, and a pill is
+not a step on the scale. Bare `rounded` is likewise static (0.25rem) and cannot be
+cleared; `vocabulary.test.ts` is what keeps it out of the tree.
+
+Because the names didn't change, existing call sites didn't need touching: 337
+usages of `rounded-sm`/`md`/`lg`/`xl` (side-specific forms like `rounded-t-lg`
+included) already spanned `packages/web/ui/src`, `packages/web/playground/src`
+and `apps/web/src` before the redefinition, and every one keeps the pixel it
+already had.
 
 ## Control height
 
@@ -259,21 +271,46 @@ Textarea, Select, Combobox, DatePicker, NumberInput, Switch, Checkbox and
 Avatar. That is a **prop contract**, not a design token. Icon-only is not a
 size: `size="md" iconOnly` renders a square at that size's height.
 
-## Border and focus
+## Border, ring, z-index, duration — Tailwind-native
 
-| Token | Value | Consumed as |
+These ship no tokens. The class states the value, so a token would be a second
+copy of it — the only way the two could ever disagree.
+
+| Class | Value | Use |
 |---|---|---|
-| `--border-thin` | 1px | `border-(length:--border-thin)` |
-| `--border-thick` | 1.5px | `border-(length:--border-thick)` |
-| `--ring-focus` | 3px | `ring-(length:--ring-focus)` |
+| `border-1` | 1px | Dividers, table rules |
+| `border-2` | 2px | Inputs, cards, outline controls |
+| `ring-3` | 3px | The focus-visible ring, every control |
+| `z-10` | 10 | Pinned headers, toolbars |
+| `z-40` | 40 | The scrim behind a dialog |
+| `z-50` | 50 | Dialogs, menus, toasts |
+| `duration-120` | 120ms | Hover, press — feedback |
+| `duration-200` | 200ms | Open, close — transitions |
+| `duration-320` | 320ms | Enter, layout — arrivals |
+
+Bare `border` and `border-b/t/l/r` are retired: a width utility states its width.
+Tailwind cannot un-define them, so `packages/web/ui/src/tokens/vocabulary.test.ts`
+is the gate.
+
+Easings stay named — `--ease-out` and `--ease-in-out`. `cubic-bezier(.2, 0, 0, 1)`
+has no number that means anything to a reader.
+
+Breakpoints are Tailwind's standard `sm` 640 · `md` 768 · `lg` 1024 · `xl` 1280 ·
+`2xl` 1536. The former `narrow`/`wide` were exact duplicates of `lg` and `2xl`.
+
+`design-system.html` specifies `border:1.5px` in 30 rules; the app uses `border-2`
+instead — a deliberate deviation recorded in
+`docs/superpowers/specs/2026-07-29-foundation-scale-vocabulary-design.md`.
 
 Border *colour* comes from steps 6–8. Every interactive component spreads the
 shared `focusRing` const from `variants.ts`; no component hand-writes a focus
-ring.
+ring. The scrim behind a dialog draws its colour from `gray-12` at reduced
+alpha rather than a dedicated token.
 
 ## Shadow
 
-Named by role, matching the layering scale.
+Named by role — `raised`, `overlay`, `modal` — the same three tiers the
+z-index scale above stacks in, just no longer sharing token names with it.
 
 | Token | Light | Dark |
 |---|---|---|
@@ -283,31 +320,18 @@ Named by role, matching the layering scale.
 
 `raised` = cards · `overlay` = popovers and menus · `modal` = dialogs.
 
-## Layering
-
-| Token | Value | Use |
-|---|---|---|
-| `--z-sticky` | 10 | Sticky table headers |
-| `--z-scrim` | 40 | Backdrops |
-| `--z-overlay` | 50 | Floating portals |
-
-Backdrops draw their colour from `gray-12` at reduced alpha rather than a
-dedicated token.
-
 ## Motion
 
 | Token | Value |
 |---|---|
-| `--duration-fast` | `120ms` |
-| `--duration-base` | `200ms` |
-| `--duration-slow` | `320ms` |
 | `--ease-out` | `cubic-bezier(.2, 0, 0, 1)` |
 | `--ease-in-out` | `cubic-bezier(.4, 0, .2, 1)` |
 | `--animate-ai-spin` | `ai-spin 1.4s linear infinite` |
 | `--animate-ai-pulse` | `ai-pulse 1.8s ease-out infinite` |
 
-Tailwind v4 has no `--duration-*` namespace, so durations live in `:root` and
-are consumed as `duration-(--duration-base)`.
+Durations (`duration-120`/`200`/`320`) are Tailwind-native bare values, not
+tokens — see [Border, ring, z-index, duration](#border-ring-z-index-duration--tailwind-native)
+above.
 
 All motion is suppressed under a global guard:
 
@@ -319,15 +343,6 @@ All motion is suppressed under a global guard:
   }
 }
 ```
-
-## Breakpoints
-
-| Token | Value | Use |
-|---|---|---|
-| `--breakpoint-narrow` | 1024px | Sidebar collapses to an overlay |
-| `--breakpoint-wide` | 1536px | Docs view gains a second column |
-
-Real Tailwind v4 namespace, so these generate `narrow:` and `wide:` variants.
 
 ---
 

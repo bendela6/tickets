@@ -76,3 +76,12 @@ here should need to leak back into those skills.
    option-color light hexes as persisted API data** — duplicates
    `--ins-opt-*`; a known drift point not yet covered by `tokens:check`
    (future work).
+5. **Bare `border` and bare `rounded` still compile.** Tailwind defines both as
+   static utilities, so `--border-*`/`--radius-*: initial` cannot remove them.
+   They are retired by convention; `packages/web/ui/src/tokens/vocabulary.test.ts`
+   is the only thing stopping them coming back. A new component that writes
+   `border` instead of `border-1` will render correctly and fail the suite.
+   The bare-`border` scanner matches the bare WORD, so it cannot distinguish a
+   class from prose or a data literal — `packages/web/ui/scripts/border-baseline.json`
+   holds 41 reviewed non-class hits, and the test asserts both `fresh === []`
+   and `fixed === []`, so the list can only shrink, never grow with new excuses.
