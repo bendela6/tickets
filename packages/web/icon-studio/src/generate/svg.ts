@@ -1,4 +1,5 @@
 import type { MarkConfig } from '../config';
+import { BARE_REACH } from '../config';
 
 const CENTRE = 24;
 
@@ -48,7 +49,7 @@ export function svgFavicon(c: MarkConfig): string {
   </style>
   <g fill="none">${sticks({
     angles: c.angles,
-    reach: 18,
+    reach: BARE_REACH,
     weight: c.bareWeight,
     classes: ['s1', 's2', 's3'],
   })}
@@ -62,7 +63,7 @@ export function svgBare(c: MarkConfig, mode: 'light' | 'dark'): string {
   return `${open}
   <g fill="none">${sticks({
     angles: c.angles,
-    reach: 18,
+    reach: BARE_REACH,
     weight: c.bareWeight,
     colours: c[mode],
   })}
@@ -76,7 +77,7 @@ export function svgMono(c: MarkConfig): string {
   return `${open}
   <g fill="none">${sticks({
     angles: c.angles,
-    reach: 18,
+    reach: BARE_REACH,
     weight: c.bareWeight,
     colours: ['#000', '#000', '#000'],
   })}
