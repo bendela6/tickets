@@ -254,11 +254,13 @@ hardcodes it to `calc(infinity * 1px)` rather than reading a token, and a pill i
 not a step on the scale. Bare `rounded` is likewise static (0.25rem) and cannot be
 cleared; `vocabulary.test.ts` is what keeps it out of the tree.
 
-Because the names didn't change, existing call sites didn't need touching: 337
+Because the names didn't change, existing call sites didn't need touching: 174
 usages of `rounded-sm`/`md`/`lg`/`xl` (side-specific forms like `rounded-t-lg`
 included) already spanned `packages/web/ui/src`, `packages/web/playground/src`
 and `apps/web/src` before the redefinition, and every one keeps the pixel it
-already had.
+already had. The sweep (Tasks 3–4) then converted ~164 arbitrary
+`rounded-[Npx]` sites onto those same four rungs, bringing the total to 338 —
+two different populations, not one number wearing two claims.
 
 ## Control height
 
