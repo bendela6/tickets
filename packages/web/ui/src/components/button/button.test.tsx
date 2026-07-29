@@ -28,6 +28,18 @@ test('loading disables and marks busy', () => {
   expect(button).toHaveAttribute('aria-busy', 'true');
 });
 
+test('outline shares its border-2 weight with Pill/CopyButton outline', () => {
+  // button.tsx's own comment: Button `outline` and Pill `outline` must not
+  // diverge on a shared variant name. design-system.html calls this weight
+  // "edges you act on" (inputs, cards, outline controls); Button used to be
+  // border-1 while Pill/CopyButton were already border-2 — this pins the
+  // reconciled value so the two can't silently drift apart again.
+  render(<Button variant="outline">Outline</Button>);
+  const button = screen.getByRole('button');
+  expect(button).toHaveClass('border-2');
+  expect(button).not.toHaveClass('border-1');
+});
+
 test('sizes match design height/padding/radius/font-size', () => {
   const { rerender } = render(<Button size="sm">c</Button>);
   expect(screen.getByRole('button')).toHaveClass('h-7', 'px-2.5', 'rounded-md', 'text-12');
