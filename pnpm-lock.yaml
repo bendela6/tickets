@@ -681,6 +681,9 @@ importers:
       '@tickets/form':
         specifier: workspace:*
         version: link:../form
+      '@tickets/table':
+        specifier: workspace:*
+        version: link:../table
       '@xterm/xterm':
         specifier: ^6.0.0
         version: 6.0.0
