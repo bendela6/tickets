@@ -663,7 +663,31 @@ Expected: PASS, 5 tests
 
 - [ ] **Step 6: Write the failing engine test**
 
-First add the slot to the stub. In `packages/web/table/src/render-stub.tsx`, add after the `td` slot:
+First extend the stub. In `packages/web/table/src/render-stub.tsx`, add `data-start-width` to the **existing** `th` slot's attributes, right after `data-resizable`:
+
+```tsx
+          data-start-width={resize?.startWidth ?? ''}
+```
+
+The stub currently reports only whether a column is resizable, never the numeric width the handle starts from — so nothing can catch a regression in Task 4's `colWidth` guard, which is what stops a `minmax(…)` column seeding the resize handle with a string and doing `NaN` drag arithmetic. all-items' Title column is exactly such a column, so that path is real. With the attribute exposed, add this test to the sizing describe block in `Table.test.tsx`:
+
+```tsx
+  // Task 4's guard: a string width has no pixel start, so the resize handle
+  // must fall back to 160 rather than seeding `NaN` into the drag maths.
+  it('seeds the resize handle with a number even for a track-function column', () => {
+    const { container } = render(
+      <Harness
+        columns={[
+          { key: 'name', header: 'Name', value: (r) => r.name, width: 'minmax(240px, 1fr)' },
+        ]}
+      />,
+    );
+    const th = container.querySelector('[data-slot="th"]') as HTMLElement;
+    expect(th.getAttribute('data-start-width')).toBe('160');
+  });
+```
+
+Then add the group-header slot. In the same file, after the `td` slot:
 
 ```tsx
     groupHeader: ({ key, header, gridTemplate, style }) => {
