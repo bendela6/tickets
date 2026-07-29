@@ -71,6 +71,7 @@ function Harness(props: Partial<React.ComponentProps<typeof Table<Row>>>) {
 describe('tableRender', () => {
   it('exposes the table to assistive tech as a grid of rows and cells', () => {
     render(<Harness />);
+    expect(screen.getByRole('grid')).toBeInTheDocument();
     expect(screen.getAllByRole('row').length).toBeGreaterThan(0);
     expect(screen.getAllByRole('columnheader')).toHaveLength(2);
     expect(screen.getAllByRole('cell').length).toBe(4);

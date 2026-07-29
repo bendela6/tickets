@@ -21,6 +21,12 @@
    this to './' generates no utilities for any component and fails silently. */
 @source '../';
 
+/* The table ENGINE lives in a sibling package but styles the one node it owns
+   outright — its scroll container. Nothing else scans that package, so without
+   this the container's utilities are generated only by coincidence, wherever an
+   app happens to use them already. */
+@source '../../../table/src';
+
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
 /* App-wide base on top of preflight. This block shares the base layer with

@@ -6,6 +6,14 @@ function alignClass(align: 'left' | 'right' | 'center' | undefined) {
   return align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
 }
 
+// The sortable branch renders a flex row (icon + label + ordinal), and flex
+// layout ignores `text-align` on its own content — only `justify-content`
+// moves flex children. `alignClass` above still governs the non-sortable
+// branch, where the header is plain block text.
+function justifyClass(align: 'left' | 'right' | 'center' | undefined) {
+  return align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : '';
+}
+
 /** Column headers carry aria-sort so a screen reader announces the sort state
  *  the caret shows visually. */
 function ariaSort(direction: 'asc' | 'desc' | undefined) {
@@ -45,7 +53,7 @@ export function renderTh<T>({ column, sort, totalSorts, onSortClick, resize }: R
         <button
           type="button"
           onClick={onSortClick}
-          className="flex w-full items-center gap-1 hover:text-gray-12"
+          className={cn('flex w-full items-center gap-1 hover:text-gray-12', justifyClass(column.align))}
         >
           {column.header}
           {sort ? (

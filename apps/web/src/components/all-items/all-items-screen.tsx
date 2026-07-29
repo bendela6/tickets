@@ -341,11 +341,17 @@ export function AllItemsScreen() {
     }
   }
 
+  // Column resizing is a NEW, persisted capability the old hand-rolled table
+  // never had — the migration onto @tickets/table introduced it silently and
+  // nobody has ever seen it run in a browser. It ships off (resizable: false)
+  // until someone verifies it, matching the existing deliberate decision that
+  // no column below opts into `sortable` either.
   const columns: Column<Row>[] = [
     {
       key: 'key',
       header: 'Key',
       width: '96px',
+      resizable: false,
       render: (row) => (
         <ItemKey prefix={row.entry.project.itemPrefix} number={row.ticket.number} />
       ),
@@ -354,6 +360,7 @@ export function AllItemsScreen() {
       key: 'title',
       header: 'Title',
       width: 'minmax(240px, 1fr)',
+      resizable: false,
       render: (row) => (
         <span className="truncate font-sans text-13/19 text-gray-12">
           {String(row.ticket.values.title ?? '')}
@@ -364,6 +371,7 @@ export function AllItemsScreen() {
       key: id,
       header: columnLabelFor(id, sharedByKey),
       width: columnWidthFor(id, sharedByKey),
+      resizable: false,
       render: (row: Row) => cell(id, row),
     })),
   ];

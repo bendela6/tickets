@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Table, useTableWidths, type Column, type SortBy } from '@tickets/table';
+import { boolean, definePlayground, select } from '../gallery';
 import { tableRender } from './table-render';
 import { BadgeColumn } from './columns/badge-column';
 import { DateColumn } from './columns/date-column';
@@ -31,9 +32,19 @@ const COLUMNS: Column<Row>[] = [
   { key: 'updated', header: 'Updated', value: (r) => r.updated, as: DateColumn(), width: 140 },
 ];
 
-function Demo({ grouped, loading, error }: { grouped?: boolean; loading?: boolean; error?: boolean }) {
+function Demo({
+  grouped,
+  loading,
+  error,
+  rowHeight,
+}: {
+  grouped?: boolean;
+  loading?: boolean;
+  error?: boolean;
+  rowHeight?: number;
+}) {
   const [sort, setSort] = useState<SortBy[]>([]);
-  const [widths, setWidth] = useTableWidths('demo');
+  const [widths, setWidth] = useTableWidths('gallery-table-demo');
   const groups = grouped
     ? Object.entries(
         ROWS.reduce<Record<string, Row[]>>((acc, row) => {
@@ -67,6 +78,7 @@ function Demo({ grouped, loading, error }: { grouped?: boolean; loading?: boolea
         onRowClick={() => {}}
         isLoading={Boolean(loading)}
         error={error ? new Error('The server said no.') : null}
+        rowHeight={rowHeight}
         render={tableRender<Row>()}
       />
     </div>
@@ -79,3 +91,18 @@ export const states = [
   { name: 'Loading', render: () => <Demo loading /> },
   { name: 'Error', render: () => <Demo error /> },
 ];
+
+// Minimal playground: enough to mount the A11y tab (component-page.tsx gates
+// it on `demo.playground`) so axe actually sees table markup, not a full
+// workbench. `grouped` exercises the group-header/rowgroup branch; `density`
+// exercises the row-height plumbing (Fix 7) rather than duplicating a control
+// per prop the engine takes.
+export const playground = definePlayground({
+  controls: {
+    grouped: boolean(),
+    density: select(['comfortable', 'compact'] as const, { initial: 'comfortable' }),
+  },
+  render: (v) => (
+    <Demo grouped={v.grouped} rowHeight={v.density === 'compact' ? 32 : undefined} />
+  ),
+});

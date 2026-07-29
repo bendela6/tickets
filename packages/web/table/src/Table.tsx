@@ -82,8 +82,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
     children: columns.map((col) => {
       const sortIdx = state.sort.findIndex((s) => s.field === col.key);
       const sort = sortIdx >= 0 ? state.sort[sortIdx] : undefined;
-      const colWidth =
-        state.widths[col.key] ?? (typeof col.width === 'number' ? col.width : 160);
+      const colWidth = startWidthOf(col, state.widths);
       return (
         <RenderTh
           key={col.key}
@@ -114,6 +113,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
           key={i}
           columns={columns}
           gridTemplate={gridTemplate}
+          rowHeight={rowHeight}
           slot={render.skeletonRow}
         />
       );
@@ -241,9 +241,14 @@ function RenderGroupHeader(props: {
 function RenderSkeletonRow<T>(props: {
   columns: Column<T>[];
   gridTemplate: string;
+  rowHeight: number;
   slot: TableRender<T>['skeletonRow'];
 }): ReactNode {
-  return props.slot({ columns: props.columns, gridTemplate: props.gridTemplate });
+  return props.slot({
+    columns: props.columns,
+    gridTemplate: props.gridTemplate,
+    rowHeight: props.rowHeight,
+  });
 }
 
 function renderCellContent<T>(col: Column<T>, row: T): ReactNode {
@@ -268,4 +273,21 @@ function trackSize<T>(col: Column<T>, widths: Record<string, number>): string {
   if (dragged !== undefined) return `${dragged}px`;
   if (typeof col.width === 'string') return col.width;
   return `${col.width ?? 160}px`;
+}
+
+/** Pixel start for the resize handle. A dragged width wins; then a numeric
+ *  authored width; then a leading `<n>px` parsed out of a string width (so a
+ *  `'96px'` column starts at 96, not the fallback); then 160. A track function
+ *  like `minmax(240px, 1fr)` has no single pixel start, so it takes the
+ *  fallback — which is why `startWidth` is a starting point, not a source of
+ *  truth. */
+function startWidthOf<T>(col: Column<T>, widths: Record<string, number>): number {
+  const dragged = widths[col.key];
+  if (dragged !== undefined) return dragged;
+  if (typeof col.width === 'number') return col.width;
+  if (typeof col.width === 'string') {
+    const px = /^(\d+(?:\.\d+)?)px$/.exec(col.width.trim());
+    if (px) return Number(px[1]);
+  }
+  return 160;
 }

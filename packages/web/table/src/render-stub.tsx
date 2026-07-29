@@ -72,9 +72,9 @@ export function makeStubRender<T>(): TableRender<T> {
         </div>
       );
     },
-    skeletonRow: ({ columns, gridTemplate }) => {
+    skeletonRow: ({ columns, gridTemplate, rowHeight }) => {
       return (
-        <div data-slot="skeleton-row" data-grid-template={gridTemplate}>
+        <div data-slot="skeleton-row" data-grid-template={gridTemplate} data-row-height={rowHeight}>
           {columns.map((c) => {
             return <div key={c.key} data-slot="skeleton-cell" />;
           })}

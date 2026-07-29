@@ -75,6 +75,10 @@ export interface RenderTdCtx<T> {
 export interface RenderSkeletonRowCtx<T> {
   columns: Column<T>[];
   gridTemplate: string;
+  /** The caller's data row height, so a placeholder is the same height as the
+   *  real rows it stands in for (e.g. a compact density's 32px rather than
+   *  the engine's ROW_HEIGHT default). */
+  rowHeight: number;
 }
 
 export interface RenderErrorCtx {
