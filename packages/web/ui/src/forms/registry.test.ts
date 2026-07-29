@@ -12,8 +12,11 @@ describe('form registry maps', () => {
     expect(Object.keys(baseLayouts).sort()).toEqual(['card', 'column', 'group', 'row']);
   });
 
-  // A default whose type disagrees with its adapter's value channel seeds the
-  // field wrong and only surfaces at runtime, so pin them here.
+  // The engine seeds a field from the FieldNode's own `defaultValue`, not from
+  // this registry entry — what actually keeps `undefined` values safe is the
+  // uniform fallback in every adapter (`?? ''` / `?? null` / `?? []` /
+  // `Boolean(...)` for the toggle). Pin these anyway; they document the
+  // channel each adapter expects.
   it('seeds each input with a default matching its value channel', () => {
     expect(baseInputs.text.defaultValue).toBe('');
     expect(baseInputs.textarea.defaultValue).toBe('');

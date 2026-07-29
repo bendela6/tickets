@@ -7,6 +7,7 @@ import { ComboboxList, type ComboOption } from '../combobox-list';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
 
 type ComboboxProps = {
+  id?: string;
   options: ComboOption[];
   value: string | null;
   onChange: (value: string | null) => void;
@@ -22,6 +23,7 @@ const PADDING: Record<FieldSize, string> = { sm: 'px-2', md: 'px-3', lg: 'px-3.5
 const CHEVRON: Record<FieldSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
 
 export function Combobox({
+  id,
   options,
   value,
   onChange,
@@ -40,6 +42,7 @@ export function Combobox({
       <div className={cn('relative', className)}>
         <PopoverTrigger asChild>
           <button
+            id={id}
             type="button"
             disabled={disabled}
             className={fieldClass({

@@ -34,6 +34,15 @@ describe('TextareaInput', () => {
     expect(screen.getByRole('textbox')).toHaveAttribute('rows', '10');
   });
 
+  // The proof it holds no state: with `value` pinned by the parent, typing
+  // cannot change what is displayed.
+  it('shows only what its parent gives it', async () => {
+    render(<TextareaInput {...base} value="fixed" onChange={vi.fn()} />);
+    const input = screen.getByRole('textbox');
+    await userEvent.type(input, 'more');
+    expect(input).toHaveValue('fixed');
+  });
+
   it('marks itself invalid when the engine passes an error', () => {
     render(<TextareaInput {...base} value="" onChange={vi.fn()} error="Required" />);
     expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true');

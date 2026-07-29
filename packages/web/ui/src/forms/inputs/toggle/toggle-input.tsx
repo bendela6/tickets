@@ -17,8 +17,8 @@ export function ToggleInput(p: InputProps<ToggleInputConfig, boolean>) {
       disabled={p.disabled}
       onChange={(e) => {
         p.onChange(e.target.checked);
-        // A switch is toggled, never blurred, so touch it here or the engine
-        // will never surface this field's validation.
+        // A switch is toggled, never blurred, so call onBlur here to trigger
+        // blur-cause validation the way a real blur would.
         p.onBlur();
       }}
     />
