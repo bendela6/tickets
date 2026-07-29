@@ -1,5 +1,6 @@
 import type { RenderTrCtx } from '@tickets/table';
 import { cn } from '../style';
+import { ROW_INSET } from './metrics';
 
 export function renderTr<T>({ index, cells, gridTemplate, style, onClick }: RenderTrCtx<T>) {
   return (
@@ -10,7 +11,8 @@ export function renderTr<T>({ index, cells, gridTemplate, style, onClick }: Rend
       className={cn(
         // `group` is load-bearing: ActionsColumn reveals its buttons on
         // group-hover, so removing it silently hides every row action.
-        'group grid border-b border-gray-6 transition-colors hover:bg-gray-1',
+        'group grid items-center border-b border-gray-6 transition-colors hover:bg-gray-1',
+        ROW_INSET,
         onClick && 'cursor-pointer',
       )}
       // `right: auto` undoes the engine's stretched absolute positioning;

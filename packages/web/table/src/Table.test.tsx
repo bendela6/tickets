@@ -43,6 +43,12 @@ interface Row {
   name: string;
 }
 const cols: Column<Row>[] = [{ key: 'name', header: 'Name', value: (r) => r.name, sortable: true }];
+/** Column-position assertions need more than one column to be meaningful. */
+const threeCols: Column<Row>[] = [
+  { key: 'id', header: 'Id', value: (r) => r.id },
+  { key: 'name', header: 'Name', value: (r) => r.name },
+  { key: 'extra', header: 'Extra', value: () => '' },
+];
 const rows: Row[] = [
   { id: '1', name: 'Alpha' },
   { id: '2', name: 'Beta' },
@@ -96,6 +102,26 @@ describe('<Table> engine — header', () => {
       { field: 'other', direction: 'asc' },
       { field: 'name', direction: 'asc' },
     ]);
+  });
+
+  // A render set styles the table's leading column differently from the rest,
+  // and `column.key` cannot tell it which one that is. Header and body must
+  // agree on the answer or the two fall out of horizontal alignment, so both
+  // slots are checked against the same three columns.
+  it('tells the th slot which column position it is rendering', () => {
+    const { container } = render(<Harness columns={threeCols} />);
+    const indices = [...container.querySelectorAll('[data-slot="th"]')].map((el) =>
+      el.getAttribute('data-column-index'),
+    );
+    expect(indices).toEqual(['0', '1', '2']);
+  });
+
+  it('gives the td slot the same column positions as the th slot', () => {
+    const { container } = render(<Harness columns={threeCols} rows={[rows[0] as Row]} />);
+    const indices = [...container.querySelectorAll('[data-slot="td"]')].map((el) =>
+      el.getAttribute('data-column-index'),
+    );
+    expect(indices).toEqual(['0', '1', '2']);
   });
 });
 

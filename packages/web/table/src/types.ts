@@ -42,6 +42,10 @@ export interface RenderThResize {
 
 export interface RenderThCtx<T> {
   column: Column<T>;
+  /** Zero-based position of this column in `columns`. A render set needs it to
+   *  treat the leading column differently from the rest (the design's wider
+   *  edge gutter); `column.key` cannot answer "am I first?". */
+  index: number;
   sort?: { direction: 'asc' | 'desc'; index: number };
   totalSorts: number;
   onSortClick: (e: MouseEvent) => void;
@@ -67,6 +71,10 @@ export const ROW_HEIGHT = 40;
 
 export interface RenderTdCtx<T> {
   column: Column<T>;
+  /** Zero-based column position, matching `RenderThCtx.index` — a cell has to
+   *  reach the same gutter decision its header did or the two fall out of
+   *  alignment. */
+  index: number;
   row: T;
   /** Cell content from `column.render(row)` / `column.as({...})` / stringified `column.value(row)`. */
   children: ReactNode;

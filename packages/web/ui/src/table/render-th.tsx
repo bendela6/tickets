@@ -1,17 +1,14 @@
 import { useColumnResize, type RenderThCtx, type RenderThResize } from '@tickets/table';
 import { cn } from '../style';
 import { Icon } from '../components/icon';
+import { cellGutter } from './metrics';
 
-function alignClass(align: 'left' | 'right' | 'center' | undefined) {
-  return align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
-}
-
-// The sortable branch renders a flex row (icon + label + ordinal), and flex
-// layout ignores `text-align` on its own content — only `justify-content`
-// moves flex children. `alignClass` above still governs the non-sortable
-// branch, where the header is plain block text.
+// The cell is a flex row in both branches — a sortable header holds a caret
+// and an ordinal beside its label, and a plain one still has to centre its
+// label against the fixed header height. Flex layout ignores `text-align` on
+// its own children, so column alignment is expressed as `justify-content`.
 function justifyClass(align: 'left' | 'right' | 'center' | undefined) {
-  return align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : '';
+  return align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start';
 }
 
 /** Column headers carry aria-sort so a screen reader announces the sort state
@@ -38,22 +35,28 @@ function ResizeHandle({ resize }: { resize: RenderThResize }) {
   );
 }
 
-export function renderTh<T>({ column, sort, totalSorts, onSortClick, resize }: RenderThCtx<T>) {
+export function renderTh<T>({ column, index, sort, totalSorts, onSortClick, resize }: RenderThCtx<T>) {
   return (
     <div
       role="columnheader"
       aria-sort={column.sortable ? ariaSort(sort?.direction) : undefined}
       className={cn(
-        'relative px-3 py-2',
-        'font-sans text-11/13 font-500 tracking-wider text-gray-11 uppercase',
-        alignClass(column.align),
+        // No vertical padding: the header's height is fixed by the row, and
+        // the cell stretches into it so the resize handle spans all 36px.
+        'relative flex items-center',
+        cellGutter(index),
+        'font-sans text-11/13 font-500 tracking-wider uppercase',
+        justifyClass(column.align),
+        // The sorted column reads at full strength; the rest sit back a step
+        // and only come forward on hover.
+        sort ? 'text-gray-12' : 'text-gray-11',
       )}
     >
       {column.sortable ? (
         <button
           type="button"
           onClick={onSortClick}
-          className={cn('flex w-full items-center gap-1 hover:text-gray-12', justifyClass(column.align))}
+          className="flex cursor-pointer items-center gap-1 hover:text-gray-12"
         >
           {column.header}
           {sort ? (

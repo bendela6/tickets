@@ -15,11 +15,12 @@ export function makeStubRender<T>(): TableRender<T> {
         </div>
       );
     },
-    th: ({ column, sort, totalSorts, onSortClick, resize }) => {
+    th: ({ column, index, sort, totalSorts, onSortClick, resize }) => {
       return (
         <button
           data-slot="th"
           data-key={column.key}
+          data-column-index={index}
           data-sort-direction={sort?.direction ?? ''}
           data-sort-index={sort?.index ?? ''}
           data-total-sorts={totalSorts}
@@ -53,9 +54,9 @@ export function makeStubRender<T>(): TableRender<T> {
         </div>
       );
     },
-    td: ({ column, children }) => {
+    td: ({ column, index, children }) => {
       return (
-        <div data-slot="td" data-key={column.key}>
+        <div data-slot="td" data-key={column.key} data-column-index={index}>
           {children}
         </div>
       );
