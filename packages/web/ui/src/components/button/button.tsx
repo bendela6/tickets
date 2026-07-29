@@ -66,7 +66,7 @@ const buttonClass = variants({
         outline: over(TONE, (t) => [
           `bg-surface-raised hover:bg-${t.bgSubtle}`,
           `text-${t.text}`,
-          `border-1 border-${t.border} hover:border-${t.borderHover}`,
+          `border-2 border-${t.border} hover:border-${t.borderHover}`,
           `${t.ring} focus-visible:border-${t.solid}`,
         ]),
         // Ghost is Button's answer to Pill's `text` emphasis — the same tone
