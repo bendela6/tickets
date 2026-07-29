@@ -1975,7 +1975,7 @@ export function ColumnLayout({ children }: LayoutComponentProps<BareProps>) {
 - [ ] **Step 4: Run the test to verify it passes**
 
 Run: `pnpm --filter @tickets/ui test -- src/forms/layouts.test.tsx`
-Expected: PASS, 8 tests
+Expected: PASS, 7 tests
 
 - [ ] **Step 5: Commit**
 
