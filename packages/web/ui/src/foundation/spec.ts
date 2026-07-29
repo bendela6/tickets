@@ -184,18 +184,18 @@ export interface DriftFamily {
 }
 
 /**
- * `text` compares sizes only. Line-heights ride along with their size, and a
- * live line-height of `1.45` would otherwise "match" an unrelated one.
+ * Drift compares two copies of a value — the sheet's and the spec's — so it
+ * only means something for families that HAVE two copies. Border, ring, z,
+ * duration and breakpoint are Tailwind-native: `border-1` is 1px because the
+ * class says so, and `next/layout.tokens.json` records which rungs are
+ * sanctioned, not what they resolve to. Listing them here would report every
+ * rung as `dropped` in perpetuity.
  */
 export function drift(): DriftFamily[] {
   return [
-    // `[a-z0-9]`, not `[a-z]`: the sizes are moving to numeric names, and a
-    // letters-only pattern made every new rung invisible to drift — reported
-    // as proposed-but-not-live while it sat in tokens.css all along.
+    // `[a-z0-9]`, not `[a-z]`: the sizes are numeric now, and a
+    // letters-only pattern made every new rung invisible to drift.
     { family: 'text', rows: driftFor('text', TEXT_SIZES, liveTokens(/^text-[a-z0-9]+$/)) },
-    // Narrowed to the four live rungs: xs/2xl/3xl/4xl are `initial` —
-    // declarations of absence, not tokens — and matching them would report
-    // the scale as drifting from itself over an unmatchable value.
     { family: 'radius', rows: driftFor('radius', RADII, liveTokens(/^radius-(sm|md|lg|xl)$/)) },
     {
       family: 'shadow',
@@ -211,23 +211,19 @@ export function drift(): DriftFamily[] {
       rows: driftFor('font-weight', FONT_WEIGHTS, liveTokens(/^font-weight-/)),
       note: 'Tailwind ships font-weight utilities without our declaring them; these name the three the design actually uses.',
     },
-    { family: 'duration', rows: driftFor('duration', DURATIONS, liveTokens(/^duration-/)) },
     { family: 'ease', rows: driftFor('ease', EASINGS, liveTokens(/^ease-/)) },
     { family: 'animate', rows: driftFor('animate', ANIMATIONS, liveTokens(/^animate-/)) },
-    {
-      family: 'border',
-      rows: driftFor('border', BORDERS, liveTokens(/^border-[a-z]+$/)),
-      note: 'The live sheet has one width, named `hair`; the proposal splits it into thin and thick.',
-    },
-    { family: 'ring', rows: driftFor('ring', RINGS, liveTokens(/^ring-/)) },
-    { family: 'z', rows: driftFor('z', LAYERS, liveTokens(/^z-/)) },
-    {
-      family: 'breakpoint',
-      rows: driftFor('breakpoint', BREAKPOINTS, liveTokens(/^breakpoint-/)),
-      note: 'Breakpoints are currently written inline at each call site; naming them is new.',
-    },
   ];
 }
+
+/** Families that ship no token, and why — rendered where a drift table would be. */
+export const NATIVE_FAMILIES: Record<string, string> = {
+  border: 'border-1 / border-2 — the class states the width; a token would be a second copy of it.',
+  ring: 'ring-3 — same rule as border.',
+  z: 'z-10 / z-40 / z-50 — the class IS the layer number.',
+  duration: 'duration-120 / duration-200 / duration-320 — the class IS the millisecond count.',
+  breakpoint: "Tailwind's standard sm/md/lg/xl/2xl, unmodified.",
+};
 
 /** Counts for a headline, so a page can say "12 matched, 5 added" up front. */
 export function driftSummary(families: DriftFamily[] = drift()): Record<DriftStatus, number> {
