@@ -62,7 +62,7 @@ function SessionRow({
       <Pill {...st} trailing={exitCodeTrailing(session.status, session.exitCode)} />
       <button
         type="button"
-        className="shrink-0 rounded-sm border border-gray-6 bg-surface-raised px-1.5 py-0.5 font-sans text-12/17 text-gray-11 opacity-0 hover:border-gray-7 group-hover:opacity-100"
+        className="shrink-0 rounded-sm border-1 border-gray-6 bg-surface-raised px-1.5 py-0.5 font-sans text-12/17 text-gray-11 opacity-0 hover:border-gray-7 group-hover:opacity-100"
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();

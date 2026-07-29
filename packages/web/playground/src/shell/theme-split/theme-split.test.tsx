@@ -37,7 +37,7 @@ describe('ThemeSplit', () => {
     const panels = container.querySelectorAll('[data-theme]');
     panels.forEach((panel) => {
       expect(panel.className).toContain('rounded-lg');
-      expect(panel.className).toContain('border');
+      expect(panel.className).toContain('border-1');
       expect(panel.className).toContain('border-gray-6');
       expect(panel.className).toContain('bg-gray-1');
       expect(panel.className).toContain('p-4');

@@ -256,7 +256,7 @@ export function Toolbar({ editor, controls, disabled, variant = 'full', onImageF
           key={group[0]!.group}
           className={cn(
             'flex items-center gap-0.5',
-            (index > 0 || blockTypeControl !== undefined) && 'ml-1 border-l border-gray-6 pl-1',
+            (index > 0 || blockTypeControl !== undefined) && 'ml-1 border-l-1 border-gray-6 pl-1',
           )}
         >
           {group.map(renderStripButton)}
@@ -264,7 +264,7 @@ export function Toolbar({ editor, controls, disabled, variant = 'full', onImageF
       ))}
       {overflowIds.size > 0 ? (
         <div
-          className={cn((groups.length > 0 || blockTypeControl !== undefined) && 'ml-1 border-l border-gray-6 pl-1')}
+          className={cn((groups.length > 0 || blockTypeControl !== undefined) && 'ml-1 border-l-1 border-gray-6 pl-1')}
         >
           <OverflowMenu editor={editor} ids={overflowIds} disabled={disabled} />
         </div>
@@ -446,7 +446,7 @@ function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
       <DropdownMenu.Portal>
         <DropdownMenu.SubContent
           sideOffset={4}
-          className="z-50 flex items-center gap-1.5 rounded-lg border border-gray-6 bg-surface-raised p-1.5 shadow-lg"
+          className="z-50 flex items-center gap-1.5 rounded-lg border-1 border-gray-6 bg-surface-raised p-1.5 shadow-lg"
         >
           {COLOR_SWATCHES.map((swatch) => (
             <button
@@ -454,7 +454,7 @@ function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
               type="button"
               aria-label={swatch.label}
               onClick={() => onPick(swatch.value)}
-              className="h-5.5 w-5.5 flex-none rounded-full border border-gray-6"
+              className="h-5.5 w-5.5 flex-none rounded-full border-1 border-gray-6"
               style={{ background: swatch.value ?? 'var(--color-surface-raised)' }}
             />
           ))}

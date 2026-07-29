@@ -50,8 +50,8 @@ function SessionSkeleton() {
         <div className="h-5 w-48 animate-pulse rounded-sm bg-surface-inset" />
         <div className="h-5.5 w-16 animate-pulse rounded-md bg-surface-inset" />
       </div>
-      <div className="mb-4 h-16 flex-none animate-pulse rounded-xl border border-gray-6 bg-surface-raised" />
-      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-gray-6 bg-surface-raised p-4 md:p-5">
+      <div className="mb-4 h-16 flex-none animate-pulse rounded-xl border-1 border-gray-6 bg-surface-raised" />
+      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised p-4 md:p-5">
         <div className="flex flex-col gap-3">
           {Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3">
@@ -173,7 +173,7 @@ function CopySessionIdButton({ sessionId }: { sessionId: string }) {
     <button
       type="button"
       onClick={() => void copy(sessionId)}
-      className="h-8 flex-none rounded-lg border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:border-gray-9 hover:bg-surface-inset"
+      className="h-8 flex-none rounded-lg border-1 border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:border-gray-9 hover:bg-surface-inset"
     >
       {copied ? 'Copied' : failed ? 'Copy failed' : '⧉ Copy session id'}
     </button>
@@ -183,7 +183,7 @@ function CopySessionIdButton({ sessionId }: { sessionId: string }) {
 function ErrorCard({ row }: { row: SessionEventRow }) {
   const culprit = errorCulprit(row.payload, row.mechanism);
   return (
-    <div className="rounded-xl border border-red-9 bg-red-3 px-3.5 py-2.75">
+    <div className="rounded-xl border-1 border-red-9 bg-red-3 px-3.5 py-2.75">
       <div className="flex items-center gap-2.5">
         <span className="flex-none font-mono text-13 font-600 text-red-9">{row.name}</span>
         <span className="min-w-0 flex-1 truncate font-sans text-[12.5px] text-gray-12">{row.message}</span>
@@ -191,7 +191,7 @@ function ErrorCard({ row }: { row: SessionEventRow }) {
           <Link
             to="/signals/issues/$issueId"
             params={{ issueId: String(row.issueId) }}
-            className="inline-flex h-6.5 flex-none items-center rounded-md border border-red-9 px-2.5 font-sans text-11 font-500 text-red-9 hover:bg-red-9/10"
+            className="inline-flex h-6.5 flex-none items-center rounded-md border-1 border-red-9 px-2.5 font-sans text-11 font-500 text-red-9 hover:bg-red-9/10"
           >
             View issue {row.issueKey} →
           </Link>
@@ -299,7 +299,7 @@ function LoadError({ onRetry }: { onRetry: () => void }) {
           <button
             type="button"
             onClick={onRetry}
-            className="h-8 rounded-lg border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+            className="h-8 rounded-lg border-1 border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
           >
             ↻ Retry
           </button>
@@ -392,7 +392,7 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
         <CopySessionIdButton sessionId={session.sessionId} />
       </div>
 
-      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-xl border border-gray-6 bg-surface-raised px-4.5 py-3">
+      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-xl border-1 border-gray-6 bg-surface-raised px-4.5 py-3">
         <div>
           <div className="mb-0.75 font-mono text-10 font-500 tracking-wide text-gray-9">STARTED</div>
           <div className="font-mono text-13 font-500 text-gray-12">{formatStartedAt(session.startedAt)}</div>
@@ -423,7 +423,7 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-gray-6 bg-surface-raised p-4 md:p-5">
+      <div className="min-h-0 flex-1 overflow-auto rounded-xl border-1 border-gray-6 bg-surface-raised p-4 md:p-5">
         <div className="flex max-w-245 flex-col">
           {timeline.map((item, index) => (
             <TimelineRow

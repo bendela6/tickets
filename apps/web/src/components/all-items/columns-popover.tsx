@@ -63,7 +63,7 @@ export function ColumnsPopover({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-70 p-0">
-        <div className="flex items-center gap-2 border-b border-gray-6 px-3.25 py-2.5">
+        <div className="flex items-center gap-2 border-b-1 border-gray-6 px-3.25 py-2.5">
           <span aria-hidden className="font-sans text-12/17 text-gray-9">
             ⌕
           </span>
@@ -125,7 +125,7 @@ export function ColumnsPopover({
             />
           </div>
         </div>
-        <div className="border-t border-gray-6 px-3.25 py-2 font-sans text-11 text-gray-9">
+        <div className="border-t-1 border-gray-6 px-3.25 py-2 font-sans text-11 text-gray-9">
           A field is shared when the same key exists in every project.
         </div>
       </PopoverContent>

@@ -93,7 +93,7 @@ export function ComboboxList({
 
   return (
     <div className="flex max-h-72 w-64 flex-col">
-      <div className="flex items-center gap-2 border-b border-gray-6 px-3 py-2.25">
+      <div className="flex items-center gap-2 border-b-1 border-gray-6 px-3 py-2.25">
         <span aria-hidden className="font-sans text-12/17 text-gray-9">
           ⌕
         </span>
@@ -117,7 +117,7 @@ export function ComboboxList({
           )}
         />
       </div>
-      {header ? <div className="border-b border-gray-6 px-1.5 py-1">{header}</div> : null}
+      {header ? <div className="border-b-1 border-gray-6 px-1.5 py-1">{header}</div> : null}
       <ul id={listId} role="listbox" className="flex-1 overflow-y-auto p-1.25">
         {filtered.length === 0 ? (
           <li className="px-2 py-3 text-center font-sans text-12/17 text-gray-9">{emptyLabel}</li>
@@ -166,7 +166,7 @@ export function ComboboxList({
         })}
       </ul>
       {footer ? (
-        <div className="border-t border-gray-6 px-3 py-1.75 font-sans text-11 text-gray-9">
+        <div className="border-t-1 border-gray-6 px-3 py-1.75 font-sans text-11 text-gray-9">
           {footer}
         </div>
       ) : null}

@@ -20,7 +20,7 @@ import { RichTextEditor } from './rich-text/rich-text-editor';
 import { TicketDispatch } from './agent/ticket-dispatch';
 
 const ICON_BUTTON =
-  'inline-flex size-7.5 shrink-0 items-center justify-center rounded-lg border border-gray-6 ' +
+  'inline-flex size-7.5 shrink-0 items-center justify-center rounded-lg border-1 border-gray-6 ' +
   'bg-transparent text-gray-11 hover:bg-surface-inset hover:text-gray-12';
 
 // Click-to-edit title: static heading until clicked, then a borderless input
@@ -45,7 +45,7 @@ function InlineTitle({
         disabled={disabled}
         onClick={() => setDraft(value)}
         className={cn(
-          'm-0 w-full cursor-text border-b border-dashed border-transparent bg-transparent p-0',
+          'm-0 w-full cursor-text border-b-1 border-dashed border-transparent bg-transparent p-0',
           'text-left font-sans font-600 text-gray-12 enabled:hover:border-gray-7',
           className,
         )}
@@ -76,7 +76,7 @@ function InlineTitle({
         }
       }}
       className={cn(
-        'm-0 w-full border-b border-dashed border-indigo-9 bg-transparent p-0',
+        'm-0 w-full border-b-1 border-dashed border-indigo-9 bg-transparent p-0',
         'font-sans font-600 text-gray-12 outline-none',
         className,
       )}
@@ -270,7 +270,7 @@ export function ItemDetail({
   if (variant === 'drawer') {
     return (
       <>
-        <div className="flex shrink-0 items-center gap-2.25 border-b border-gray-6 px-5 py-3.5">
+        <div className="flex shrink-0 items-center gap-2.25 border-b-1 border-gray-6 px-5 py-3.5">
           <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-md bg-surface-inset px-1.75 py-0.75" />
           <Pill {...typePill} label={type?.label ?? '?'} />
           {workflowField ? (
@@ -289,7 +289,7 @@ export function ItemDetail({
           <Link
             to="/p/$projectKey/t/$number"
             params={{ projectKey, number: String(item.number) }}
-            className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border border-gray-7 bg-surface-raised px-2.5 font-sans text-12 font-500 text-gray-12 hover:bg-surface-inset"
+            className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border-1 border-gray-7 bg-surface-raised px-2.5 font-sans text-12 font-500 text-gray-12 hover:bg-surface-inset"
           >
             Open page ↗
           </Link>
@@ -334,7 +334,7 @@ export function ItemDetail({
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center gap-2.25 border-b border-gray-6 py-3.5">
+      <div className="flex items-center gap-2.25 border-b-1 border-gray-6 py-3.5">
         <Link
           to="/p/$projectKey"
           params={{ projectKey }}
@@ -385,7 +385,7 @@ export function ItemDetail({
           </section>
         </div>
         <div className="flex w-80 shrink-0 flex-col gap-5">
-          <section className="flex flex-col gap-3 rounded-xl border border-gray-6 bg-surface-raised p-4">
+          <section className="flex flex-col gap-3 rounded-xl border-1 border-gray-6 bg-surface-raised p-4">
             <SectionHeader title={`Fields — ${type?.label ?? '?'} form`} />
             <DetailFields board={board} indexes={indexes} item={item} layout="rail" />
           </section>

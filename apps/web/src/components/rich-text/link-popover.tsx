@@ -144,7 +144,7 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
   return (
     <div
       ref={popoverRef}
-      className="fixed z-50 flex items-center gap-2 rounded-lg border border-gray-6 bg-surface-raised px-2.5 py-1.5 shadow-lg"
+      className="fixed z-50 flex items-center gap-2 rounded-lg border-1 border-gray-6 bg-surface-raised px-2.5 py-1.5 shadow-lg"
       style={{ left: rect?.left ?? 0, top: rect?.bottom ?? 0 }}
       // Keeps the editor's own selection/focus intact when clicking a
       // button in here — a real mousedown-driven focus change would blur

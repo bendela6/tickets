@@ -24,14 +24,14 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
   const pageCount = Math.max(1, Math.ceil(total / OCCURRENCES_PER_PAGE));
 
   return (
-    <div className="flex-none overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
-      <div className="flex h-10.5 items-center gap-2.5 border-b border-gray-6 px-4">
+    <div className="flex-none overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
+      <div className="flex h-10.5 items-center gap-2.5 border-b-1 border-gray-6 px-4">
         <span className="font-sans text-[13.5px] font-600 text-gray-12">Occurrences</span>
         <span className="font-mono text-11 text-gray-9">{formatCount(total)} total</span>
       </div>
       <div
         role="row"
-        className="grid h-7.5 items-center border-b border-gray-6 bg-gray-1 px-4 font-sans text-[10.5px] font-500 tracking-wide text-gray-11 uppercase"
+        className="grid h-7.5 items-center border-b-1 border-gray-6 bg-gray-1 px-4 font-sans text-[10.5px] font-500 tracking-wide text-gray-11 uppercase"
         style={{ gridTemplateColumns: OCCURRENCES_GRID_COLUMNS }}
       >
         <span>Time</span>
@@ -53,7 +53,7 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
               key={row.id}
               role="row"
               className={cn(
-                'grid h-8.5 items-center border-b border-gray-6 px-4 last:border-b-0',
+                'grid h-8.5 items-center border-b-1 border-gray-6 px-4 last:border-b-0',
                 isNewest && 'bg-indigo-3',
               )}
               style={{ gridTemplateColumns: OCCURRENCES_GRID_COLUMNS }}
@@ -80,7 +80,7 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
           );
         })
       )}
-      <div className="flex h-8.5 items-center gap-2 border-t border-gray-6 bg-gray-1 px-4 font-mono text-11 text-gray-9">
+      <div className="flex h-8.5 items-center gap-2 border-t-1 border-gray-6 bg-gray-1 px-4 font-mono text-11 text-gray-9">
         <span>{OCCURRENCES_PER_PAGE} per page</span>
         <span className="flex-1" />
         {total > OCCURRENCES_PER_PAGE ? (
@@ -198,7 +198,7 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
             <button
               type="button"
               onClick={() => void issueQuery.refetch()}
-              className="h-8 rounded-lg border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+              className="h-8 rounded-lg border-1 border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
             >
               ↻ Retry
             </button>
@@ -264,7 +264,7 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
         ) : null}
       </div>
 
-      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-xl border border-gray-6 bg-surface-raised px-4.5 py-3">
+      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-xl border-1 border-gray-6 bg-surface-raised px-4.5 py-3">
         <div>
           <div className="mb-0.75 font-mono text-10 font-500 tracking-wide text-gray-9">EVENTS</div>
           <div className="font-mono text-14 font-600 text-gray-12">{formatCount(issue.eventCount)}</div>

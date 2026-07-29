@@ -60,7 +60,7 @@ function TableHeader() {
   return (
     <div
       role="row"
-      className="grid h-9 shrink-0 items-center border-b border-gray-6 bg-gray-1 px-3.5 font-sans text-11/13 tracking-wider font-500 tracking-wider text-gray-11 uppercase"
+      className="grid h-9 shrink-0 items-center border-b-1 border-gray-6 bg-gray-1 px-3.5 font-sans text-11/13 tracking-wider font-500 tracking-wider text-gray-11 uppercase"
       style={{ gridTemplateColumns: APPS_GRID_COLUMNS }}
     >
       <span>App</span>
@@ -89,7 +89,7 @@ function AppRow({
     <div
       role="row"
       onClick={goToApp}
-      className="group grid h-12.5 cursor-pointer items-center border-b border-gray-6 px-3.5 last:border-b-0 hover:bg-gray-1"
+      className="group grid h-12.5 cursor-pointer items-center border-b-1 border-gray-6 px-3.5 last:border-b-0 hover:bg-gray-1"
       style={{ gridTemplateColumns: APPS_GRID_COLUMNS }}
     >
       <span className="flex min-w-0 items-center gap-2.5">
@@ -201,7 +201,7 @@ export function AppsScreen() {
 
       {isList ? (
         <>
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
             <TableHeader />
             <div className="flex-1 overflow-auto">
               {rows.map((app) => (
@@ -241,7 +241,7 @@ export function AppsScreen() {
               <button
                 type="button"
                 onClick={() => void appsQuery.refetch()}
-                className="h-8 rounded-lg border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+                className="h-8 rounded-lg border-1 border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
               >
                 ↻ Retry
               </button>
@@ -268,7 +268,7 @@ export function AppsScreen() {
               {ONBOARDING_STEPS.map((step) => (
                 <div
                   key={step.n}
-                  className="w-46.5 rounded-xl border border-gray-6 bg-surface-raised p-3.5 text-left"
+                  className="w-46.5 rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5 text-left"
                 >
                   <span className="block font-mono text-10 text-gray-9">{step.n}</span>
                   <span className="mt-1.5 block font-sans text-[12.5px] font-500 text-gray-12">

@@ -103,7 +103,7 @@ describe('RichTextEditor', () => {
     expect(wrapper.className).not.toContain('border-l');
   });
 
-  it('focused container gets the accent border + halo; blur restores the hairline', async () => {
+  it('focused container gets the accent border-1 + halo; blur restores the hairline', async () => {
     const user = userEvent.setup();
     render(<RichTextEditor value="" onSave={vi.fn()} />);
     const container = document.querySelector('.rt')!.parentElement!;

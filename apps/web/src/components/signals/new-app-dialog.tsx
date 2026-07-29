@@ -164,12 +164,12 @@ export function NewAppDialog({
                 value={tab}
                 onChange={(next) => setTab(next as SnippetTab)}
               />
-              <pre className="overflow-x-auto rounded-b-lg border border-t-0 border-gray-6 bg-surface-inset px-3.5 py-3 font-mono text-[11.5px] leading-relaxed text-gray-11">
+              <pre className="overflow-x-auto rounded-b-lg border-1 border-t-0 border-gray-6 bg-surface-inset px-3.5 py-3 font-mono text-[11.5px] leading-relaxed text-gray-11">
                 {snippetFor(tab, created.dsn)}
               </pre>
             </div>
 
-            <div className="mt-4 flex items-center gap-2.5 border-t border-gray-6 pt-3.5">
+            <div className="mt-4 flex items-center gap-2.5 border-t-1 border-gray-6 pt-3.5">
               <span className="font-mono text-[11.5px] text-gray-9">
                 Send your first signal and it will appear under Issues.
               </span>

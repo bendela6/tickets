@@ -29,7 +29,7 @@ const FOCUS = axis('focus', ['focus', 'focus-within'], 'focus');
  */
 export const fieldClass = variants({
   base: [
-    'appearance-none border bg-surface-raised font-sans text-gray-12 placeholder:text-gray-9',
+    'appearance-none border-1 bg-surface-raised font-sans text-gray-12 placeholder:text-gray-9',
     'transition-colors',
     'disabled:border-gray-6 disabled:bg-surface-inset disabled:text-gray-9',
   ],

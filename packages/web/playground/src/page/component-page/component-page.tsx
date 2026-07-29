@@ -213,7 +213,7 @@ export function ComponentPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-gray-6 pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b-1 border-gray-6 pb-2">
         <Tabs
           variant="underline"
           label={`${demo.meta.title} views`}
@@ -233,7 +233,7 @@ export function ComponentPage({
               type="button"
               aria-expanded={!controlsCollapsed}
               onClick={() => setCollapsed(!controlsCollapsed)}
-              className="inline-flex h-6.5 items-center gap-1.5 rounded-md border border-gray-7 bg-surface-raised px-2 font-sans text-11/13 tracking-wider font-500 text-gray-11 hover:text-gray-12"
+              className="inline-flex h-6.5 items-center gap-1.5 rounded-md border-1 border-gray-7 bg-surface-raised px-2 font-sans text-11/13 tracking-wider font-500 text-gray-11 hover:text-gray-12"
             >
               <Icon name={controlsCollapsed ? 'chevron-left' : 'chevron-right'} size="sm" />
               {controlsCollapsed ? 'Show controls' : 'Hide controls'}
@@ -307,7 +307,7 @@ export function ComponentPage({
                     is not a prop: it changes what the states show, and nothing
                     about it reaches the generated code below the playground. */}
                 {authored && (
-                  <div className="flex flex-col gap-2 border-b border-gray-6 pb-3">
+                  <div className="flex flex-col gap-2 border-b-1 border-gray-6 pb-3">
                     <span className="font-mono text-11/13 uppercase tracking-widest text-gray-9">
                       TONES
                     </span>

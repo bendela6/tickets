@@ -92,7 +92,7 @@ function ChildTypeChips({
             tone={active ? 'primary' : 'secondary'}
             variant={active ? 'subtle' : 'outline'}
             className={cn(
-              'h-6 border px-2.5 transition-colors',
+              'h-6 border-1 px-2.5 transition-colors',
               active ? 'border-indigo-9' : 'border-gray-7 bg-surface-raised hover:bg-surface-inset',
             )}
           />
@@ -123,7 +123,7 @@ function TypeForm({
 }) {
   const nameId = `${idPrefix}-name`;
   return (
-    <div className="max-w-105 rounded-xl border border-gray-6 bg-surface-raised p-3.5">
+    <div className="max-w-105 rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5">
       <FieldLabel htmlFor={nameId}>Name</FieldLabel>
       <Input
         id={nameId}
@@ -287,7 +287,7 @@ export function TypesTab({ board }: SettingsTabProps) {
               <section
                 key={type.id}
                 className={cn(
-                  'max-w-165 rounded-xl border border-gray-6 bg-surface-raised p-3.5',
+                  'max-w-165 rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5',
                   type.archivedAt && 'opacity-60',
                 )}
               >

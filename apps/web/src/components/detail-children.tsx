@@ -78,7 +78,7 @@ export function DetailChildren({
         }
         className="mb-2 gap-2.5"
       />
-      <div className="overflow-hidden rounded-xl border border-gray-6">
+      <div className="overflow-hidden rounded-xl border-1 border-gray-6">
         {children.map((child) => {
           const wf = indexes.workflowField(child.typeId);
           const rawStatus = wf ? child.values[wf.key] : undefined;
@@ -102,7 +102,7 @@ export function DetailChildren({
           return (
             <div
               key={child.id}
-              className="flex h-9.5 cursor-pointer items-center gap-2.5 border-b border-gray-6 px-3 hover:bg-gray-1"
+              className="flex h-9.5 cursor-pointer items-center gap-2.5 border-b-1 border-gray-6 px-3 hover:bg-gray-1"
               onClick={() => onOpenItem(child.number)}
             >
               <span aria-hidden className="inline-flex shrink-0">

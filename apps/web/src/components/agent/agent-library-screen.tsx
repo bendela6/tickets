@@ -47,7 +47,7 @@ export function AgentLibraryScreen() {
       </div>
 
       {rows.length === 0 && agents.isSuccess ? (
-        <div className="rounded-xl border border-gray-6 bg-surface-raised">
+        <div className="rounded-xl border-1 border-gray-6 bg-surface-raised">
           <ScreenState
             title="No agents yet"
             body="An agent is a reusable persona — a provider, model, prompt, and tool allowlist — that you can run in a session or assign to a ticket."

@@ -77,7 +77,7 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
               {providerLabel(agent.providerKey)} · {agent.model}
             </span>
             <PermissionBadge mode={agent.permissionMode} />
-            <span className="inline-flex h-5 items-center rounded-md border border-gray-6 px-1.75 text-10 text-gray-11">
+            <span className="inline-flex h-5 items-center rounded-md border-1 border-gray-6 px-1.75 text-10 text-gray-11">
               {agent.allowedTools.length} tools
             </span>
           </div>
@@ -101,17 +101,17 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
       <section>
         <SectionHeader as="h2" title="Recent sessions" className="mb-2 tracking-wide" />
         {mine.length === 0 ? (
-          <p className="rounded-lg border border-gray-6 bg-surface-raised px-4 py-6 text-center font-sans text-12/17 text-gray-9">
+          <p className="rounded-lg border-1 border-gray-6 bg-surface-raised px-4 py-6 text-center font-sans text-12/17 text-gray-9">
             No sessions yet — run one to get started.
           </p>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-gray-6 bg-surface-raised">
+          <div className="overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-raised">
             {mine.slice(0, 8).map((s) => (
               <Link
                 key={s.id}
                 to="/agents/$sessionId"
                 params={{ sessionId: String(s.id) }}
-                className="flex items-center gap-3 border-b border-gray-6 px-4 py-2.5 last:border-b-0 hover:bg-surface-inset"
+                className="flex items-center gap-3 border-b-1 border-gray-6 px-4 py-2.5 last:border-b-0 hover:bg-surface-inset"
               >
                 <SessionKindGlyph kind="agent" />
                 <span className="flex-1 truncate font-sans text-13/19 text-gray-12">{s.title}</span>
@@ -138,7 +138,7 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="flex-1 rounded-xl border border-gray-6 bg-surface-raised px-4 py-3">
+    <div className="flex-1 rounded-xl border-1 border-gray-6 bg-surface-raised px-4 py-3">
       <div className="font-mono text-18 font-600 text-gray-12">{value}</div>
       <div className="mt-0.5 font-sans text-12/17 text-gray-9">{label}</div>
     </div>

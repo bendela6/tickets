@@ -11,7 +11,7 @@ export function renderThead({ children, gridTemplate }: RenderTheadCtx) {
       // absolutely positioned against its cell, so a cell that shrank to its
       // label's height would leave a 13px-tall drag target.
       className={cn(
-        'sticky top-0 z-10 grid w-full min-w-max border-b border-gray-6 bg-gray-1',
+        'sticky top-0 z-10 grid w-full min-w-max border-b-1 border-gray-6 bg-gray-1',
         HEAD_HEIGHT,
         ROW_INSET,
       )}

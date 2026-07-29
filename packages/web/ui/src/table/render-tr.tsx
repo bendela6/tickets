@@ -11,7 +11,7 @@ export function renderTr<T>({ index, cells, gridTemplate, style, onClick }: Rend
       className={cn(
         // `group` is load-bearing: ActionsColumn reveals its buttons on
         // group-hover, so removing it silently hides every row action.
-        'group grid items-center border-b border-gray-6 transition-colors hover:bg-gray-1',
+        'group grid items-center border-b-1 border-gray-6 transition-colors hover:bg-gray-1',
         ROW_INSET,
         onClick && 'cursor-pointer',
       )}

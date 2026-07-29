@@ -136,7 +136,7 @@ function AddFilter({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="inline-flex h-7 cursor-pointer items-center gap-1.25 rounded-lg border border-dashed border-gray-7 px-2.5 font-sans text-12/17 font-500 text-gray-11 hover:text-gray-12"
+          className="inline-flex h-7 cursor-pointer items-center gap-1.25 rounded-lg border-1 border-dashed border-gray-7 px-2.5 font-sans text-12/17 font-500 text-gray-11 hover:text-gray-12"
         >
           ＋ Filter
         </button>
@@ -246,7 +246,7 @@ export function GlobalFilterChips({
         return (
           <span
             key={index}
-            className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-gray-6 bg-surface-raised px-2.5 font-sans text-12/17 text-gray-11"
+            className="inline-flex h-7 items-center gap-1.5 rounded-lg border-1 border-gray-6 bg-surface-raised px-2.5 font-sans text-12/17 text-gray-11"
           >
             <strong className="font-500 text-gray-12">{field?.label ?? rule.fieldKey}</strong>
             {OP_LABELS[rule.op]}

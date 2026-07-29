@@ -37,7 +37,7 @@ function TableHeader() {
   return (
     <div
       role="row"
-      className="grid h-9 shrink-0 items-center border-b border-gray-6 bg-gray-1 px-3.5 font-sans text-11/13 tracking-wider font-500 tracking-wider text-gray-11 uppercase"
+      className="grid h-9 shrink-0 items-center border-b-1 border-gray-6 bg-gray-1 px-3.5 font-sans text-11/13 tracking-wider font-500 tracking-wider text-gray-11 uppercase"
       style={{ gridTemplateColumns: ACTIVITY_GRID_COLUMNS }}
     >
       {HEADER_CELLS.map((cell, index) => (
@@ -130,7 +130,7 @@ export function ActivityScreen() {
         dimmed={isLoading || isError}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
         <TableHeader />
 
         {isList ? (
@@ -140,7 +140,7 @@ export function ActivityScreen() {
                 <ActivityRow key={row.id} signal={row} />
               ))}
             </div>
-            <div className="flex h-9.5 shrink-0 items-center gap-2 border-t border-gray-6 bg-gray-1 px-3.5 font-mono text-11 text-gray-9">
+            <div className="flex h-9.5 shrink-0 items-center gap-2 border-t-1 border-gray-6 bg-gray-1 px-3.5 font-mono text-11 text-gray-9">
               <span>{total} signals</span>
               <span className="flex-1" />
               {total > PER_PAGE ? (
@@ -179,7 +179,7 @@ export function ActivityScreen() {
                 <ActivityRowSkeleton key={index} index={index} />
               ))}
             </div>
-            <div className="flex h-9.5 shrink-0 items-center gap-2.5 border-t border-gray-6 bg-gray-1 px-3.5 font-mono text-11 text-gray-9">
+            <div className="flex h-9.5 shrink-0 items-center gap-2.5 border-t-1 border-gray-6 bg-gray-1 px-3.5 font-mono text-11 text-gray-9">
               <Spinner size="xs" tone="secondary" />
               <span>loading activity…</span>
             </div>
@@ -205,7 +205,7 @@ export function ActivityScreen() {
                 <button
                   type="button"
                   onClick={() => void activityQuery.refetch()}
-                  className="h-8 rounded-lg border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+                  className="h-8 rounded-lg border-1 border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
                 >
                   ↻ Retry
                 </button>

@@ -7,7 +7,7 @@ function GhostButton({ children }: { children: string }) {
   return (
     <button
       type="button"
-      className="inline-flex h-9 items-center justify-center rounded-lg border border-transparent px-3.5 font-sans text-13 font-500 text-gray-11 hover:bg-surface-inset hover:text-gray-12"
+      className="inline-flex h-9 items-center justify-center rounded-lg border-1 border-transparent px-3.5 font-sans text-13 font-500 text-gray-11 hover:bg-surface-inset hover:text-gray-12"
     >
       {children}
     </button>

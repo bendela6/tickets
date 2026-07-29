@@ -16,7 +16,7 @@ export function renderGroupHeader({ header, style }: RenderGroupHeaderCtx) {
   return (
     <div
       role="row"
-      className="flex items-center gap-2.5 border-b border-gray-6 bg-gray-1 px-4"
+      className="flex items-center gap-2.5 border-b-1 border-gray-6 bg-gray-1 px-4"
       style={{ ...style, right: 'auto', width: 'max-content', minWidth: '100%' }}
     >
       {header}

@@ -43,7 +43,7 @@ function FrameRow({ frame, defaultExpanded }: { frame: SignalStackFrame; default
   const hasContext = (frame.contextLines?.length ?? 0) > 0;
 
   return (
-    <div className="border-b border-gray-6 last:border-b-0">
+    <div className="border-b-1 border-gray-6 last:border-b-0">
       <button
         type="button"
         onClick={() => hasContext && setExpanded((value) => !value)}
@@ -67,8 +67,8 @@ function FrameRow({ frame, defaultExpanded }: { frame: SignalStackFrame; default
         </span>
       </button>
       {expanded && hasContext ? (
-        <div className="border-t border-gray-6 bg-gray-1 px-4 pt-2.5 pb-3">
-          <div className="overflow-hidden rounded-lg border border-gray-6 bg-surface-inset py-2 font-mono text-[11.5px] leading-[1.75]">
+        <div className="border-t-1 border-gray-6 bg-gray-1 px-4 pt-2.5 pb-3">
+          <div className="overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-inset py-2 font-mono text-[11.5px] leading-[1.75]">
             {frame.contextLines!.map((contextLine) => {
               const isErrorLine = contextLine.line === frame.line;
               return (
@@ -98,7 +98,7 @@ function FrameRow({ frame, defaultExpanded }: { frame: SignalStackFrame; default
 function VendorGroup({ frames }: { frames: SignalStackFrame[] }) {
   const [expanded, setExpanded] = useState(false);
   return (
-    <div className="border-b border-gray-6 last:border-b-0">
+    <div className="border-b-1 border-gray-6 last:border-b-0">
       <button
         type="button"
         onClick={() => setExpanded((value) => !value)}
@@ -112,7 +112,7 @@ function VendorGroup({ frames }: { frames: SignalStackFrame[] }) {
         </span>
       </button>
       {expanded ? (
-        <div className="border-t border-gray-6 px-4 py-2.5 font-mono text-11 leading-[1.9] text-gray-11">
+        <div className="border-t-1 border-gray-6 px-4 py-2.5 font-mono text-11 leading-[1.9] text-gray-11">
           {frames.map((frame, index) => (
             <div key={index}>
               {frame.functionName} <span className="text-gray-9">@</span> {frame.file}:{frame.line}:
@@ -149,7 +149,7 @@ function SymFrames({ frames }: { frames: SignalStackFrame[] }) {
 // than rendering a bare "unknown".
 function NoSourceMapsBanner({ release }: { release: string | null | undefined }) {
   return (
-    <div className="flex items-center gap-2.5 border-b border-gray-6 bg-orange-3 px-4 py-2.5">
+    <div className="flex items-center gap-2.5 border-b-1 border-gray-6 bg-orange-3 px-4 py-2.5">
       <span aria-hidden className="size-2 shrink-0 rotate-45 rounded-sm bg-orange-9" />
       <span className="flex-1 font-sans text-12 leading-normal text-orange-9">
         No source maps uploaded
@@ -186,7 +186,7 @@ function RawFrames({
           </div>
         ))}
         {noSourceMaps ? (
-          <div className="mt-2.5 rounded-lg border border-gray-6 bg-surface-inset px-3 py-2 font-mono text-11 leading-relaxed text-gray-11">
+          <div className="mt-2.5 rounded-lg border-1 border-gray-6 bg-surface-inset px-3 py-2 font-mono text-11 leading-relaxed text-gray-11">
             <span className="text-gray-9">$</span> npx signals sourcemaps upload ./dist --release{' '}
             {release ?? '?'}
           </div>
@@ -244,8 +244,8 @@ export function StackTrace({
   const activeTab: Tab = showToggle ? tab : 'sym';
 
   return (
-    <div className="flex-none overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
-      <div className="flex h-10.5 items-center gap-2.5 border-b border-gray-6 px-4">
+    <div className="flex-none overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
+      <div className="flex h-10.5 items-center gap-2.5 border-b-1 border-gray-6 px-4">
         <span className="font-sans text-[13.5px] font-600 text-gray-12">Stack trace</span>
         {occurrenceTime ? (
           <span className="font-mono text-11 text-gray-9">

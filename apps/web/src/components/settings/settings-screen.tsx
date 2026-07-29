@@ -88,7 +88,7 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* scheme banner */}
-      <div className="flex flex-none items-center gap-3 border-b border-gray-6 bg-surface-inset px-6 py-3">
+      <div className="flex flex-none items-center gap-3 border-b-1 border-gray-6 bg-surface-inset px-6 py-3">
         <p className="m-0 flex-1 font-sans text-13/19 text-gray-11">
           Editing the shared scheme <span className="font-500 text-gray-12">#{board.project.schemeId}</span> —
           changes affect all projects on this scheme.
@@ -107,7 +107,7 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
       <div className="flex min-h-0 flex-1">
         <nav
           aria-label="Settings sections"
-          className="w-53 flex-none overflow-y-auto border-r border-gray-6 bg-gray-1 px-3 py-5.5"
+          className="w-53 flex-none overflow-y-auto border-r-1 border-gray-6 bg-gray-1 px-3 py-5.5"
         >
           <Tabs
             variant="rail"

@@ -98,7 +98,7 @@ export function Sidebar({
         aria-label="Show component list"
         aria-expanded={false}
         onClick={toggle}
-        className="fixed left-3 top-3 z-40 flex h-9 w-9 items-center justify-center rounded-md border border-gray-6 bg-surface-raised text-gray-11 shadow-sm hover:text-gray-12"
+        className="fixed left-3 top-3 z-40 flex h-9 w-9 items-center justify-center rounded-md border-1 border-gray-6 bg-surface-raised text-gray-11 shadow-sm hover:text-gray-12"
       >
         <Icon name="rows" size="md" />
       </button>
@@ -117,13 +117,13 @@ export function Sidebar({
         className={cn(
           // Width rides a custom property: a drag updates it every frame, and
           // Tailwind can't scan a class name built at runtime.
-          'sticky top-0 z-40 flex h-screen w-(--sidebar-width) shrink-0 border-r border-gray-6 bg-surface-raised',
+          'sticky top-0 z-40 flex h-screen w-(--sidebar-width) shrink-0 border-r-1 border-gray-6 bg-surface-raised',
           narrow && 'fixed left-0 shadow-lg',
         )}
       >
         <nav className="pg-scroll flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden px-4 py-6">
           <div className="flex shrink-0 items-center gap-2">
-            <div className="flex h-7.5 min-w-0 flex-1 items-center gap-1.5 rounded-lg border border-gray-6 bg-surface-inset px-1.5 pl-2.5">
+            <div className="flex h-7.5 min-w-0 flex-1 items-center gap-1.5 rounded-lg border-1 border-gray-6 bg-surface-inset px-1.5 pl-2.5">
               <input
                 type="text"
                 placeholder="Filter components…"
@@ -134,7 +134,7 @@ export function Sidebar({
               <button
                 type="button"
                 onClick={onOpenPalette}
-                className="h-4.5 shrink-0 rounded-sm border border-gray-7 bg-surface-raised px-1.5 text-11/13 tracking-wider text-gray-9 hover:text-gray-11"
+                className="h-4.5 shrink-0 rounded-sm border-1 border-gray-7 bg-surface-raised px-1.5 text-11/13 tracking-wider text-gray-9 hover:text-gray-11"
               >
                 ⌘K
               </button>

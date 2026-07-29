@@ -13,9 +13,9 @@ export function DirectoryPicker({
 }) {
   const roots = useWorkdirRoots();
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-7 bg-gray-1">
-      <div className="flex h-8 items-center gap-2 border-b border-gray-6 bg-surface-inset px-2.5">
-        <span aria-hidden className="size-3 shrink-0 rounded-sm border border-folder" />
+    <div className="overflow-hidden rounded-xl border-1 border-gray-7 bg-gray-1">
+      <div className="flex h-8 items-center gap-2 border-b-1 border-gray-6 bg-surface-inset px-2.5">
+        <span aria-hidden className="size-3 shrink-0 rounded-sm border-1 border-folder" />
         {value ? (
           <span className="truncate font-mono text-12/17 font-500 text-indigo-9">{value}</span>
         ) : (
@@ -28,7 +28,7 @@ export function DirectoryPicker({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="/absolute path — or pick above"
-        className="rounded-none border-0 border-t border-gray-6 font-mono text-13"
+        className="rounded-none border-0 border-t-1 border-gray-6 font-mono text-13"
       />
     </div>
   );

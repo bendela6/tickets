@@ -60,8 +60,8 @@ export function CommandPalette({
       onOpenChange={onOpenChange}
       className="[&_[cmdk-dialog]]:fixed [&_[cmdk-dialog]]:inset-0 [&_[cmdk-dialog]]:flex [&_[cmdk-dialog]]:items-start [&_[cmdk-dialog]]:justify-center [&_[cmdk-dialog]]:bg-black/40 [&_[cmdk-dialog]]:pt-18"
     >
-      <div className="w-130 rounded-xl border border-gray-6 bg-surface-raised shadow-lg overflow-hidden">
-        <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-6">
+      <div className="w-130 rounded-xl border-1 border-gray-6 bg-surface-raised shadow-lg overflow-hidden">
+        <div className="flex items-center gap-2.5 px-4 py-3 border-b-1 border-gray-6">
           <span className="text-11/13 tracking-wider text-gray-9">⌕</span>
           <Command.Input
             value={query}
@@ -106,7 +106,7 @@ export function CommandPalette({
           })}
         </div>
 
-        <div className="flex items-center px-4 py-2.25 border-t border-gray-6 bg-gray-1">
+        <div className="flex items-center px-4 py-2.25 border-t-1 border-gray-6 bg-gray-1">
           <span className="font-mono text-11/13 tracking-wider text-gray-9">
             ↑↓ navigate · ↵ open · esc close
           </span>

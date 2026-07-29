@@ -53,13 +53,13 @@ export function TasksPanel({
       <button
         type="button"
         title="Command palette (coming soon)"
-        className="mb-2 flex h-8 cursor-pointer items-center gap-1.75 rounded-lg border border-gray-6 bg-surface-raised px-2.5 hover:border-gray-7"
+        className="mb-2 flex h-8 cursor-pointer items-center gap-1.75 rounded-lg border-1 border-gray-6 bg-surface-raised px-2.5 hover:border-gray-7"
       >
         <span aria-hidden className="text-12/17 text-gray-9">
           ⌕
         </span>
         <span className="flex-1 text-left font-sans text-13/19 text-gray-9">Search…</span>
-        <span className="rounded-sm border border-gray-6 px-1 font-mono text-10 text-gray-9">
+        <span className="rounded-sm border-1 border-gray-6 px-1 font-mono text-10 text-gray-9">
           ⌘K
         </span>
       </button>

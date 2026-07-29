@@ -62,7 +62,7 @@ function TargetTypeChips({
             tone={active ? 'primary' : 'secondary'}
             variant={active ? 'subtle' : 'outline'}
             className={cn(
-              'h-6 border px-2.5 transition-colors',
+              'h-6 border-1 px-2.5 transition-colors',
               active ? 'border-indigo-9' : 'border-gray-7 bg-surface-raised hover:bg-surface-inset',
             )}
           />
@@ -93,7 +93,7 @@ function CreateForm({
   const typeOptions: ComboOption[] = types.map((type) => ({ value: String(type.id), label: type.label }));
   const canSubmit = draft.itemTypeId !== null && draft.label.trim() !== '';
   return (
-    <div className="max-w-130 rounded-xl border border-gray-6 bg-surface-raised p-3.5">
+    <div className="max-w-130 rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5">
       <div className="flex flex-col gap-2.5">
         <div>
           <FieldLabel>Type</FieldLabel>
@@ -159,7 +159,7 @@ function EditForm({
   pending: boolean;
 }) {
   return (
-    <div className="mt-2.5 max-w-130 rounded-xl border border-gray-6 bg-surface-raised p-3.5">
+    <div className="mt-2.5 max-w-130 rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5">
       <div className="flex flex-col gap-2.5">
         <div className="flex items-center gap-2.5">
           <div className="flex-1">
@@ -374,7 +374,7 @@ export function LinksTab({ board }: SettingsTabProps) {
               <section
                 key={linkType.id}
                 className={cn(
-                  'max-w-165 rounded-xl border border-gray-6 bg-surface-raised p-3.5',
+                  'max-w-165 rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5',
                   linkType.archivedAt && 'opacity-60',
                 )}
               >

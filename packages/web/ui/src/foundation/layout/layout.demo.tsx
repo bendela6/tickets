@@ -51,7 +51,7 @@ function Edges() {
         <div className="flex items-center gap-4">
           <button
             type="button"
-            className="rounded-md border border-gray-6 bg-surface-raised px-3 py-1 font-sans text-13/19 text-gray-12 outline-none focus-visible:ring-(length:--ring-focus) focus-visible:ring-indigo-9"
+            className="rounded-md border-1 border-gray-6 bg-surface-raised px-3 py-1 font-sans text-13/19 text-gray-12 outline-none focus-visible:ring-(length:--ring-focus) focus-visible:ring-indigo-9"
           >
             Tab to me
           </button>
@@ -75,7 +75,7 @@ function Layers() {
           demonstrated rather than asserted. */}
       <div className="relative mt-2 h-44 overflow-hidden rounded-xl bg-gray-1">
         <div
-          className="absolute inset-x-4 top-4 flex h-10 items-center rounded-lg border border-gray-6 bg-surface-raised px-3 font-mono text-12/17 text-gray-11"
+          className="absolute inset-x-4 top-4 flex h-10 items-center rounded-lg border-1 border-gray-6 bg-surface-raised px-3 font-mono text-12/17 text-gray-11"
           style={{ zIndex: Number(LAYERS.find((l) => l.name === 'z-sticky')!.value) }}
         >
           z-sticky · pinned header

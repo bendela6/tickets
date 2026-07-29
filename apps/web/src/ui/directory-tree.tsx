@@ -53,12 +53,12 @@ function Row({ row, onToggle, onSelect }: { row: VisibleRow; onToggle: (path: st
         )}
       >
         {row.isRoot ? (
-          <span className="shrink-0 rounded border border-gray-7 px-1 font-mono text-11 leading-[15px] text-gray-11">{row.symbol}</span>
+          <span className="shrink-0 rounded border-1 border-gray-7 px-1 font-mono text-11 leading-[15px] text-gray-11">{row.symbol}</span>
         ) : (
           <span
             aria-hidden
             className={cn(
-              'size-3 shrink-0 rounded-sm border',
+              'size-3 shrink-0 rounded-sm border-1',
               row.error ? 'border-red-9' : 'border-folder',
               row.expanded && !row.error && 'bg-folder',
             )}

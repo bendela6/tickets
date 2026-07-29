@@ -18,7 +18,7 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
     <Link
       to="/p/$projectKey"
       params={{ projectKey: project.key }}
-      className="flex cursor-pointer flex-col gap-3.25 rounded-xl border border-gray-6 bg-surface-raised px-5 py-4.5 shadow-sm hover:border-gray-7"
+      className="flex cursor-pointer flex-col gap-3.25 rounded-xl border-1 border-gray-6 bg-surface-raised px-5 py-4.5 shadow-sm hover:border-gray-7"
     >
       <div className="flex items-center gap-2.5">
         <span className="rounded-md bg-surface-inset px-1.75 py-0.75 font-mono text-12/17 font-500 text-gray-12">
@@ -65,7 +65,7 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
         </div>
       </div>
 
-      <div className="flex items-end gap-3 border-t border-gray-6 pt-3">
+      <div className="flex items-end gap-3 border-t-1 border-gray-6 pt-3">
         <span className="inline-flex h-4.5 items-end gap-0.5">
           {activity.map((count, index) => (
             <span
@@ -124,14 +124,14 @@ export function ProjectsHome() {
           ) : (
             <div
               key={project.id}
-              className="min-h-37.5 animate-pulse rounded-xl border border-gray-6 bg-surface-raised"
+              className="min-h-37.5 animate-pulse rounded-xl border-1 border-gray-6 bg-surface-raised"
             />
           );
         })}
         <button
           type="button"
           onClick={() => setCreating(true)}
-          className="flex min-h-37.5 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-gray-7 text-gray-9 hover:border-gray-9 hover:text-gray-11"
+          className="flex min-h-37.5 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-1 border-dashed border-gray-7 text-gray-9 hover:border-gray-9 hover:text-gray-11"
         >
           <span className="font-sans text-20">＋</span>
           <span className="font-sans text-13/19 font-500">New project</span>

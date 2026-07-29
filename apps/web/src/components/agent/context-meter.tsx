@@ -22,7 +22,7 @@ export function ContextMeter({
   return (
     <span
       className={cn(
-        'inline-flex h-6 items-center gap-2 rounded-md border border-gray-6 bg-surface-raised px-2',
+        'inline-flex h-6 items-center gap-2 rounded-md border-1 border-gray-6 bg-surface-raised px-2',
         className,
       )}
       title={

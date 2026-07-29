@@ -25,7 +25,7 @@ export function DemoPreview({ demo }: { demo: LiveDemo }) {
       <span className="font-mono text-11/13 tracking-wider uppercase tracking-widest text-gray-9">
         PREVIEW
       </span>
-      <div className="flex min-h-32 items-center justify-center rounded-lg border border-gray-6 bg-surface-raised p-7">
+      <div className="flex min-h-32 items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised p-7">
         {node}
       </div>
     </div>

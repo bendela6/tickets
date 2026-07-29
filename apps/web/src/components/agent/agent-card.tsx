@@ -62,7 +62,7 @@ export function AgentCard({
     <button
       type="button"
       onClick={onEdit}
-      className="flex w-64 flex-col gap-2.5 rounded-lg border border-gray-6 bg-surface-raised p-3.5 text-left hover:border-gray-7"
+      className="flex w-64 flex-col gap-2.5 rounded-lg border-1 border-gray-6 bg-surface-raised p-3.5 text-left hover:border-gray-7"
     >
       <div className="flex items-center gap-2.5">
         <Avatar name={agent.name} {...avatarFor('agent')} size="md" />
@@ -75,11 +75,11 @@ export function AgentCard({
       </div>
       <div className="flex flex-wrap items-center gap-1.5">
         <PermissionBadge mode={agent.permissionMode} />
-        <span className="inline-flex h-5 items-center rounded-md border border-gray-6 px-1.75 font-mono text-10 text-gray-11">
+        <span className="inline-flex h-5 items-center rounded-md border-1 border-gray-6 px-1.75 font-mono text-10 text-gray-11">
           {agent.allowedTools.length} tools
         </span>
       </div>
-      <div className="border-t border-gray-6 pt-2 font-mono text-11 text-gray-9">
+      <div className="border-t-1 border-gray-6 pt-2 font-mono text-11 text-gray-9">
         {sessionCount} session{sessionCount === 1 ? '' : 's'}
       </div>
     </button>

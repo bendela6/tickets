@@ -88,7 +88,7 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
           type="button"
           onClick={runAudit}
           disabled={auditState.isLoading}
-          className="h-7 rounded-lg border border-gray-7 bg-surface-raised px-3 font-sans text-12/17 text-gray-12 hover:bg-surface-inset disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-7 rounded-lg border-1 border-gray-7 bg-surface-raised px-3 font-sans text-12/17 text-gray-12 hover:bg-surface-inset disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {auditState.isLoading ? 'auditing…' : 'Run audit'}
         </button>
@@ -102,7 +102,7 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
             auditState.results.violations.map((violation) => (
               <div
                 key={violation.id}
-                className="rounded-lg border border-gray-6 bg-surface-raised p-3.5 flex flex-col gap-2"
+                className="rounded-lg border-1 border-gray-6 bg-surface-raised p-3.5 flex flex-col gap-2"
               >
                 {/* Impact chip + Rule ID */}
                 <div className="flex items-center gap-2">

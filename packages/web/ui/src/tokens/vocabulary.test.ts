@@ -29,9 +29,13 @@ describe('RETIRED patterns', () => {
 });
 
 describe('scanRetired', () => {
+  it('has no bare border width utility left in scope', () => {
+    expect(scanRetired('border')).toEqual([]);
+  });
+
   it('walks real files rather than an empty tree', () => {
-    // `border` is not swept until Task 6, so this is a live tree with hits in it.
-    expect(scanRetired('border').length).toBeGreaterThan(0);
+    // `ring` is not swept until Task 7, so this is a live tree with hits in it.
+    expect(scanRetired('ring').length).toBeGreaterThan(0);
   });
 
   it('never reports a file under apps/eer — that app owns its own scale', () => {

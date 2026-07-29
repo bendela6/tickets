@@ -55,8 +55,8 @@ export function TerminalFrame({
 }) {
   const ended = conn === 'ended';
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-gray-6 bg-surface-raised">
-      <div className="flex items-center gap-3 border-b border-gray-6 px-3.5 py-2">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-raised">
+      <div className="flex items-center gap-3 border-b-1 border-gray-6 px-3.5 py-2">
         <div className="flex min-w-0 flex-1 items-baseline gap-2.5">
           <span className="truncate font-sans text-13/19 font-500 text-gray-12">{title}</span>
           {workspacePath ? (
@@ -72,7 +72,7 @@ export function TerminalFrame({
       </div>
 
       {ended || truncated ? (
-        <div className="flex items-center gap-3 border-t border-gray-6 px-3.5 py-2 font-sans text-12/17">
+        <div className="flex items-center gap-3 border-t-1 border-gray-6 px-3.5 py-2 font-sans text-12/17">
           {ended ? (
             <span className="text-gray-11">
               {exitCode == null ? (

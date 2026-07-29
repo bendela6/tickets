@@ -54,7 +54,7 @@ function SectionCard({
   return (
     <section
       id={id}
-      className="flex w-full flex-col gap-3 rounded-lg border border-gray-6 bg-surface-raised px-3.5 py-3"
+      className="flex w-full flex-col gap-3 rounded-lg border-1 border-gray-6 bg-surface-raised px-3.5 py-3"
     >
       <header className="flex items-center justify-between gap-4">
         <span className={CAPTION}>{title}</span>
@@ -204,7 +204,7 @@ function LegacyStates({ demo }: { demo: LiveDemo }) {
         <figure
           key={state.slug}
           id={state.slug}
-          className="m-0 flex w-full flex-col gap-3 rounded-lg border border-gray-6 bg-surface-raised px-3.5 py-3"
+          className="m-0 flex w-full flex-col gap-3 rounded-lg border-1 border-gray-6 bg-surface-raised px-3.5 py-3"
         >
           <figcaption className={CAPTION}>{state.name}</figcaption>
           <div className="flex w-full min-w-0 max-w-full items-center overflow-x-auto">
@@ -288,7 +288,7 @@ export function StateGrid({
 
 export function DemoErrorCard({ path, error }: { path: string; error: string }) {
   return (
-    <section className="rounded-lg border border-red-9 bg-red-3 p-4 font-mono text-12/17 text-red-9">
+    <section className="rounded-lg border-1 border-red-9 bg-red-3 p-4 font-mono text-12/17 text-red-9">
       {path}: {error}
     </section>
   );

@@ -111,7 +111,7 @@ const STATUS_TONE: Record<DriftStatus, 'success' | 'primary' | 'warning'> = {
 export function DriftView({ families }: { families: string[] }) {
   const all = drift().filter((f) => families.includes(f.family));
   const counts = driftSummary(all);
-  const cell = 'border-b border-gray-6 py-1.5 pr-4 text-left';
+  const cell = 'border-b-1 border-gray-6 py-1.5 pr-4 text-left';
   return (
     <Sheet>
       <p className="font-sans text-12/17 text-gray-11">
@@ -131,7 +131,7 @@ export function DriftView({ families }: { families: string[] }) {
                 <th className={`${cell} font-500`}>proposed</th>
                 <th className={`${cell} font-500`}>live</th>
                 <th className={`${cell} font-500`}>value</th>
-                <th className="border-b border-gray-6 py-1.5 text-left font-500">status</th>
+                <th className="border-b-1 border-gray-6 py-1.5 text-left font-500">status</th>
               </tr>
             </thead>
             <tbody>
@@ -142,7 +142,7 @@ export function DriftView({ families }: { families: string[] }) {
                     {row.live ? `--${row.live}` : <span className="text-gray-9">—</span>}
                   </td>
                   <td className={`${cell} text-gray-11`}>{row.value}</td>
-                  <td className="border-b border-gray-6 py-1.5">
+                  <td className="border-b-1 border-gray-6 py-1.5">
                     <Pill label={row.status} tone={STATUS_TONE[row.status]} />
                   </td>
                 </tr>

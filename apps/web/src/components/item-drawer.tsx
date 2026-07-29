@@ -34,7 +34,7 @@ export function ItemDrawer({
       <div aria-hidden className="fixed inset-0 z-40 bg-black/20" onClick={onClose} />
       <aside
         aria-label="Item detail"
-        className="fixed inset-y-0 right-0 z-40 flex w-full flex-col border-l border-gray-6 bg-surface-raised font-sans text-gray-12 shadow-lg md:w-155 md:max-w-[calc(100vw-3rem)]"
+        className="fixed inset-y-0 right-0 z-40 flex w-full flex-col border-l-1 border-gray-6 bg-surface-raised font-sans text-gray-12 shadow-lg md:w-155 md:max-w-[calc(100vw-3rem)]"
       >
         {/* Keyed so switching items in-place resets edit drafts and tab state. */}
         <ItemDetail

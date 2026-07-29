@@ -8,7 +8,7 @@ export function renderSkeletonRow<T>({ columns, gridTemplate, rowHeight }: Rende
       data-skeleton-row
       // Same inset and gutters as a real row: a skeleton that sat on different
       // metrics would visibly shift its columns the moment the data arrived.
-      className={cn('grid w-max min-w-full items-center border-b border-gray-6', ROW_INSET)}
+      className={cn('grid w-max min-w-full items-center border-b-1 border-gray-6', ROW_INSET)}
       style={{ gridTemplateColumns: gridTemplate, height: rowHeight }}
     >
       {columns.map((col, index) => (
