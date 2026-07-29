@@ -16,7 +16,8 @@ Reference source (behaviour only, never markup): `../items-core/packages/web/ui/
 - **Never copy items-core's markup.** It hardcodes `bg-slate-100 dark:bg-slate-900`, `text-12`, `rounded-4`, `p-20`. Every class in this plan comes from Instrument tokens: `bg-surface-raised`, `bg-gray-1`, `border-gray-6`, `text-gray-11`, `text-gray-12`, `text-ui`, `text-12/17`, `font-sans`, `font-mono`.
 - **Spacing uses Tailwind's numbered units**, exposed as an enumerable union (`gap={4}`). Never a named `xs|sm|md|lg|xl` scale — `docs/design/foundation-tokens.md` records spacing as deliberately non-tokenized because Tailwind's 4px scale already is one.
 - **No arbitrary `[...]` Tailwind values and no odd fractional steps.** Round scale numbers or named utilities only.
-- **Tests assert observable behaviour**, per `verifying-a-component`. The one sanctioned exception is a prop→utility-class mapping that has no other observable effect in jsdom (jsdom computes no layout). `pill.test.tsx` already does this for its size axis; follow that precedent and only for that purpose.
+- **Tests assert observable behaviour**, per `verifying-a-component`. **Never assert on a class the component chooses for itself** — no `expect(el.className).toContain('gap-4')`, `'flex-col'`, `'rounded-xl'`, `'font-mono'` or similar. jsdom computes no layout, so spacing and sizing simply go untested here; that is a deliberate ruling, not an oversight, and the gallery demo is where those are checked by eye.
+  What tests may assert: rendered children, composition, DOM attributes (`role`, `rows`, `aria-invalid`, `disabled`, `href`), accessible names and roles, callback arguments, and that a **caller-supplied** `className` survives to the DOM (that one is an API contract, not an internal choice).
 - Every new component gets a `.demo.tsx` so it appears at `/gallery/:slug/:tab`. `meta` shape: `{ title, group, size }` where `size` is one of `'sm' | 'md' | 'lg' | 'full'`.
 - Conventional commits scoped by package: `feat(ui): …`, `refactor(web): …`. One commit per task.
 - Run from repo root. Test a single file with:
@@ -77,51 +78,50 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Stack } from './stack';
 
+// Spacing and direction are NOT tested — jsdom computes no layout, and
+// asserting the class Stack picked for itself would just restate the
+// implementation. The gap/align lookups are verified by eye in the gallery.
 describe('Stack', () => {
-  it('stacks its children in a column', () => {
+  it('renders its children in order', () => {
     render(
-      <Stack data-testid="s">
+      <Stack>
         <span>a</span>
         <span>b</span>
       </Stack>,
     );
-    expect(screen.getByTestId('s').className).toContain('flex-col');
     expect(screen.getByText('a')).toBeInTheDocument();
     expect(screen.getByText('b')).toBeInTheDocument();
   });
 
-  // jsdom computes no layout, so the utility class IS the observable contract
-  // for a spacing prop. Same precedent as pill.test.tsx's size axis.
-  it('maps every gap value to its Tailwind class', () => {
-    const cases = [
-      [0, 'gap-0'], [1, 'gap-1'], [2, 'gap-2'], [3, 'gap-3'],
-      [4, 'gap-4'], [6, 'gap-6'], [8, 'gap-8'],
-    ] as const;
-    for (const [gap, expected] of cases) {
-      const { unmount } = render(<Stack data-testid="s" gap={gap} />);
-      expect(screen.getByTestId('s').className.split(/\s+/)).toContain(expected);
+  it('renders with no children and no props', () => {
+    render(<Stack data-testid="s" />);
+    expect(screen.getByTestId('s')).toBeEmptyDOMElement();
+  });
+
+  // A caller's className surviving is an API contract, not an internal choice.
+  it('keeps a caller-supplied className', () => {
+    render(<Stack data-testid="s" className="mt-2" />);
+    expect(screen.getByTestId('s').className).toContain('mt-2');
+  });
+
+  it('forwards unknown props to the underlying div', () => {
+    render(<Stack data-testid="s" role="group" aria-label="Filters" />);
+    const el = screen.getByTestId('s');
+    expect(el).toHaveAttribute('role', 'group');
+    expect(el).toHaveAccessibleName('Filters');
+  });
+
+  it('accepts every gap and align value the types allow', () => {
+    // Type-level coverage: this fails to compile if the unions and the lookup
+    // Records disagree. It asserts nothing about the resulting classes.
+    for (const gap of [0, 1, 2, 3, 4, 6, 8] as const) {
+      const { unmount } = render(<Stack gap={gap} />);
       unmount();
     }
-  });
-
-  it('defaults to gap 4', () => {
-    render(<Stack data-testid="s" />);
-    expect(screen.getByTestId('s').className.split(/\s+/)).toContain('gap-4');
-  });
-
-  it('applies align only when asked', () => {
-    const { rerender } = render(<Stack data-testid="s" />);
-    expect(screen.getByTestId('s').className).not.toContain('items-');
-    rerender(<Stack data-testid="s" align="center" />);
-    expect(screen.getByTestId('s').className).toContain('items-center');
-  });
-
-  it('merges className and forwards unknown props to the div', () => {
-    render(<Stack data-testid="s" className="mt-2" role="group" aria-label="l" />);
-    const el = screen.getByTestId('s');
-    expect(el.className).toContain('mt-2');
-    expect(el).toHaveAttribute('role', 'group');
-    expect(el).toHaveAccessibleName('l');
+    for (const align of ['start', 'center', 'end', 'stretch'] as const) {
+      const { unmount } = render(<Stack align={align} />);
+      unmount();
+    }
   });
 });
 ```
@@ -197,48 +197,44 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Row } from './row';
 
+// Same ruling as Stack: no assertions on classes Row picks for itself.
 describe('Row', () => {
-  it('lays its children out in a row, vertically centred by default', () => {
-    render(<Row data-testid="r"><span>a</span></Row>);
-    const cls = screen.getByTestId('r').className;
-    expect(cls).toContain('flex-row');
-    expect(cls).toContain('items-center');
+  it('renders its children in order', () => {
+    render(
+      <Row>
+        <span>a</span>
+        <span>b</span>
+      </Row>,
+    );
+    expect(screen.getByText('a')).toBeInTheDocument();
+    expect(screen.getByText('b')).toBeInTheDocument();
   });
 
-  it('maps every gap value to its Tailwind class', () => {
-    const cases = [
-      [0, 'gap-0'], [1, 'gap-1'], [2, 'gap-2'], [3, 'gap-3'],
-      [4, 'gap-4'], [6, 'gap-6'], [8, 'gap-8'],
-    ] as const;
-    for (const [gap, expected] of cases) {
-      const { unmount } = render(<Row data-testid="r" gap={gap} />);
-      expect(screen.getByTestId('r').className.split(/\s+/)).toContain(expected);
+  it('keeps a caller-supplied className', () => {
+    render(<Row data-testid="r" className="mt-2" />);
+    expect(screen.getByTestId('r').className).toContain('mt-2');
+  });
+
+  it('forwards unknown props to the underlying div', () => {
+    render(<Row data-testid="r" role="group" aria-label="Actions" />);
+    expect(screen.getByTestId('r')).toHaveAccessibleName('Actions');
+  });
+
+  it('accepts every gap, align and justify value the types allow', () => {
+    // Type-level coverage — Row's align domain includes `baseline`, which
+    // Stack's does not. Fails to compile if the unions drift from the Records.
+    for (const gap of [0, 1, 2, 3, 4, 6, 8] as const) {
+      const { unmount } = render(<Row gap={gap} />);
       unmount();
     }
-  });
-
-  it('supports baseline alignment, which Stack does not', () => {
-    render(<Row data-testid="r" align="baseline" />);
-    expect(screen.getByTestId('r').className).toContain('items-baseline');
-  });
-
-  it('maps every justify value to its Tailwind class', () => {
-    const cases = [
-      ['start', 'justify-start'], ['center', 'justify-center'],
-      ['end', 'justify-end'], ['between', 'justify-between'],
-    ] as const;
-    for (const [justify, expected] of cases) {
-      const { unmount } = render(<Row data-testid="r" justify={justify} />);
-      expect(screen.getByTestId('r').className.split(/\s+/)).toContain(expected);
+    for (const align of ['start', 'center', 'end', 'stretch', 'baseline'] as const) {
+      const { unmount } = render(<Row align={align} />);
       unmount();
     }
-  });
-
-  it('merges className and forwards unknown props to the div', () => {
-    render(<Row data-testid="r" className="mt-2" role="group" aria-label="l" />);
-    const el = screen.getByTestId('r');
-    expect(el.className).toContain('mt-2');
-    expect(el).toHaveAccessibleName('l');
+    for (const justify of ['start', 'center', 'end', 'between'] as const) {
+      const { unmount } = render(<Row justify={justify} />);
+      unmount();
+    }
   });
 });
 ```
@@ -311,7 +307,7 @@ export * from './row';
 - [ ] **Step 8: Run the test to verify it passes**
 
 Run: `pnpm --filter @tickets/ui test -- src/components/row/row.test.tsx`
-Expected: PASS, 5 tests
+Expected: PASS, 4 tests
 
 - [ ] **Step 9: Add the demos**
 
@@ -461,36 +457,16 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Card, CardBody, CardHeader, CardTitle } from './card';
 
+// Surface, radius, padding and the hover affordance are NOT asserted — those
+// are classes Card picks for itself, and jsdom cannot observe their effect.
+// The gallery demo is where they are checked.
 describe('Card', () => {
-  it('paints the raised surface with a border', () => {
-    render(<Card data-testid="c">body</Card>);
-    const cls = screen.getByTestId('c').className.split(/\s+/);
-    expect(cls).toContain('bg-surface-raised');
-    expect(cls).toContain('border-gray-6');
+  it('renders its children', () => {
+    render(<Card>body</Card>);
+    expect(screen.getByText('body')).toBeInTheDocument();
   });
 
-  it('defaults to no padding so a header rule can bleed to the edges', () => {
-    render(<Card data-testid="c" />);
-    expect(screen.getByTestId('c').className.split(/\s+/)).toContain('p-0');
-  });
-
-  it('maps every radius to its Tailwind class', () => {
-    const cases = [['md', 'rounded-md'], ['lg', 'rounded-lg'], ['xl', 'rounded-xl']] as const;
-    for (const [radius, expected] of cases) {
-      const { unmount } = render(<Card data-testid="c" radius={radius} />);
-      expect(screen.getByTestId('c').className.split(/\s+/)).toContain(expected);
-      unmount();
-    }
-  });
-
-  it('adds the hover affordance only when interactive', () => {
-    const { rerender } = render(<Card data-testid="c" />);
-    expect(screen.getByTestId('c').className).not.toContain('hover:border-gray-7');
-    rerender(<Card data-testid="c" interactive />);
-    expect(screen.getByTestId('c').className).toContain('hover:border-gray-7');
-  });
-
-  it('renders a header, a title and a body together', () => {
+  it('composes a header, a title and a body', () => {
     render(
       <Card>
         <CardHeader><CardTitle>Filters</CardTitle></CardHeader>
@@ -501,21 +477,43 @@ describe('Card', () => {
     expect(screen.getByText('content')).toBeInTheDocument();
   });
 
-  it('separates the header from the body with a rule', () => {
-    render(<CardHeader data-testid="h">h</CardHeader>);
-    expect(screen.getByTestId('h').className).toContain('border-b');
+  // The heading level is a real accessibility contract, not a style choice.
+  it('renders the title as a level-3 heading', () => {
+    render(<CardTitle>Filters</CardTitle>);
+    expect(screen.getByRole('heading', { level: 3, name: 'Filters' })).toBeInTheDocument();
   });
 
-  it('lets the body override its padding', () => {
-    render(<CardBody data-testid="b" padding={8}>x</CardBody>);
-    expect(screen.getByTestId('b').className.split(/\s+/)).toContain('p-8');
+  it('keeps a caller-supplied className on each part', () => {
+    render(
+      <Card data-testid="c" className="mt-2">
+        <CardHeader data-testid="h" className="mt-3">h</CardHeader>
+        <CardBody data-testid="b" className="mt-4">b</CardBody>
+      </Card>,
+    );
+    expect(screen.getByTestId('c').className).toContain('mt-2');
+    expect(screen.getByTestId('h').className).toContain('mt-3');
+    expect(screen.getByTestId('b').className).toContain('mt-4');
   });
 
-  it('forwards unknown props and merges className', () => {
-    render(<Card data-testid="c" className="mt-2" role="region" aria-label="l" />);
-    const el = screen.getByTestId('c');
-    expect(el.className).toContain('mt-2');
-    expect(el).toHaveAccessibleName('l');
+  it('forwards unknown props to the underlying div', () => {
+    render(<Card data-testid="c" role="region" aria-label="Summary" />);
+    expect(screen.getByTestId('c')).toHaveAccessibleName('Summary');
+  });
+
+  it('accepts every radius, padding and interactive value the types allow', () => {
+    // Type-level coverage only; asserts nothing about the resulting classes.
+    for (const radius of ['md', 'lg', 'xl'] as const) {
+      const { unmount } = render(<Card radius={radius} />);
+      unmount();
+    }
+    for (const padding of [0, 1, 2, 3, 4, 6, 8] as const) {
+      const { unmount } = render(<Card padding={padding} />);
+      unmount();
+      const body = render(<CardBody padding={padding} />);
+      body.unmount();
+    }
+    const { unmount } = render(<Card interactive />);
+    unmount();
   });
 });
 ```
@@ -626,7 +624,7 @@ export * from './card';
 - [ ] **Step 4: Run the test to verify it passes**
 
 Run: `pnpm --filter @tickets/ui test -- src/components/card/card.test.tsx`
-Expected: PASS, 8 tests
+Expected: PASS, 6 tests
 
 - [ ] **Step 5: Add the demo**
 
@@ -746,6 +744,8 @@ In `packages/web/ui/package.json`, add to `dependencies` (keeping the block alph
 ```json
     "@tickets/form": "workspace:*",
 ```
+
+**Every import of `@tickets/form` in this package is `import type`** — the registry-assembling `defineRegistry` call lives in apps/web, not here (see Task 9). It stays a real dependency rather than a devDependency because `@tickets/ui` publishes TypeScript source (`"exports": { ".": "./src/index.ts" }`), so consumers compile these files and must be able to resolve the types. Being type-only, it adds nothing to any runtime bundle.
 
 Run: `pnpm install`
 Expected: resolves the workspace link, no lockfile surprises
@@ -1600,11 +1600,16 @@ describe('JsonInput', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('renders in a monospace face at twelve rows by default', () => {
+  it('defaults to twelve rows and honours an override', () => {
+    const { rerender } = render(<JsonInput {...base} value="" onChange={vi.fn()} />);
+    expect(screen.getByRole('textbox')).toHaveAttribute('rows', '12');
+    rerender(<JsonInput {...base} config={{ rows: 4 }} value="" onChange={vi.fn()} />);
+    expect(screen.getByRole('textbox')).toHaveAttribute('rows', '4');
+  });
+
+  it('turns off spellcheck, which would underline every JSON key', () => {
     render(<JsonInput {...base} value="" onChange={vi.fn()} />);
-    const el = screen.getByRole('textbox');
-    expect(el).toHaveAttribute('rows', '12');
-    expect(el.className).toContain('font-mono');
+    expect(screen.getByRole('textbox')).toHaveAttribute('spellcheck', 'false');
   });
 });
 ```
@@ -1706,7 +1711,7 @@ export function JsonInput(p: InputProps<JsonInputConfig, string>) {
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm --filter @tickets/ui test -- src/forms/inputs/toggle src/forms/inputs/json`
-Expected: PASS, 11 tests
+Expected: PASS, 12 tests
 
 - [ ] **Step 5: Commit**
 
@@ -1777,14 +1782,21 @@ describe('form layouts', () => {
     expect(screen.getByText('field')).toBeInTheDocument();
   });
 
-  it('RowLayout arranges its children horizontally', () => {
-    render(<RowLayout props={{}} ><span>a</span><span>b</span></RowLayout>);
-    expect(screen.getByText('a').parentElement!.className).toContain('flex-row');
+  it('GroupLayout omits its header when given neither title nor description', () => {
+    render(<GroupLayout props={{}}><span>field</span></GroupLayout>);
+    expect(screen.getByText('field')).toBeInTheDocument();
   });
 
-  it('ColumnLayout arranges its children vertically', () => {
+  it('RowLayout renders its children', () => {
+    render(<RowLayout props={{}}><span>a</span><span>b</span></RowLayout>);
+    expect(screen.getByText('a')).toBeInTheDocument();
+    expect(screen.getByText('b')).toBeInTheDocument();
+  });
+
+  it('ColumnLayout renders its children', () => {
     render(<ColumnLayout props={{}}><span>a</span><span>b</span></ColumnLayout>);
-    expect(screen.getByText('a').parentElement!.className).toContain('flex-col');
+    expect(screen.getByText('a')).toBeInTheDocument();
+    expect(screen.getByText('b')).toBeInTheDocument();
   });
 });
 ```
@@ -1871,7 +1883,7 @@ export function ColumnLayout({ children }: LayoutComponentProps<BareProps>) {
 - [ ] **Step 4: Run the test to verify it passes**
 
 Run: `pnpm --filter @tickets/ui test -- src/forms/layouts.test.tsx`
-Expected: PASS, 6 tests
+Expected: PASS, 7 tests
 
 - [ ] **Step 5: Commit**
 
@@ -1889,12 +1901,12 @@ git commit -m "feat(ui): card, group, row and column form layouts"
 - Modify: `packages/web/ui/src/index.ts`
 
 **Interfaces:**
-- Consumes: everything from Tasks 3–8; `defineRegistry` from `@tickets/form` (the one **value** import from the engine in this package)
-- Produces: `baseInputs`, `baseLayouts`, `formRegistry`, and re-exports of `FieldWrapper`, `RootWrapper` and every input/layout — consumed by Task 10
+- Consumes: everything from Tasks 3–8
+- Produces: `baseInputs`, `baseLayouts`, and re-exports of `FieldWrapper`, `RootWrapper` and every input/layout — consumed by Task 10
 
 **Default values, one per key.** These must match each adapter's value channel exactly or the engine seeds a field with the wrong type: `text` `''` · `textarea` `''` · `number` `null` · `select` `null` · `multi-select` `[]` · `toggle` `false` · `json` `''`.
 
-**On `formRegistry`.** It is exported but has no consumer — apps/web needs a `directory` input and so assembles its own from `baseInputs`/`baseLayouts` in Task 10. It ships for a future consumer that needs no app-specific inputs. If that consumer never appears, delete it rather than let it drift out of sync with the maps. Say so in the source comment.
+**Ship the maps, NOT an assembled registry.** An earlier draft exported a ready-made `formRegistry` built with `defineRegistry`. It is cut: apps/web needs a `directory` input and so assembles its own from these maps in Task 10, which left the packaged one with no consumer and a second copy of the wiring to keep in sync. **`@tickets/ui` therefore makes no `defineRegistry` call and imports nothing from `@tickets/form` at runtime** — every remaining engine import in this package is `import type`. Do not reintroduce it.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1945,9 +1957,6 @@ Expected: FAIL — `Failed to resolve import "./registry"`
 Create `packages/web/ui/src/forms/registry.ts`:
 
 ```ts
-import { defineRegistry } from '@tickets/form';
-import { FieldWrapper } from './field-wrapper';
-import { RootWrapper } from './root-wrapper';
 import { JsonInput } from './inputs/json/json-input';
 import { MultiSelectInput } from './inputs/multi-select/multi-select-input';
 import { NumberFormInput } from './inputs/number/number-input';
@@ -1976,22 +1985,10 @@ export const baseLayouts = {
   row: { Component: RowLayout },
   column: { Component: ColumnLayout },
 };
-
-/**
- * The whole set, assembled. NOTE: nothing consumes this today — apps/web needs
- * a `directory` input and so builds its own registry from the maps above. It
- * ships for a consumer that needs no app-specific inputs. If that consumer
- * never appears, delete this rather than let it drift out of sync.
- */
-export const formRegistry = defineRegistry({
-  inputs: baseInputs,
-  layouts: baseLayouts,
-  field: { Component: FieldWrapper },
-  root: { Component: RootWrapper },
-});
-
-export type BaseFormRegistry = typeof formRegistry;
 ```
+
+There is deliberately no `defineRegistry` call here — see the note above. The
+app assembles the registry, because only the app knows about `directory`.
 
 - [ ] **Step 4: Run the test to verify it passes**
 
