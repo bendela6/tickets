@@ -206,7 +206,7 @@ export function KanbanView({
         }}
         onDragEnd={() => setDraggingId(null)}
         className={cn(
-          'flex shrink-0 cursor-pointer flex-col gap-2 rounded-xl border border-gray-6 bg-surface-raised px-3.25 py-2.75 text-left shadow-sm',
+          'flex shrink-0 cursor-pointer flex-col gap-2 rounded-xl border-1 border-gray-6 bg-surface-raised px-3.25 py-2.75 text-left shadow-sm',
           draggingId === ticket.id && 'opacity-40',
         )}
       >

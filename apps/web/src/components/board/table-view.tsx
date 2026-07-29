@@ -124,7 +124,7 @@ function RowActions({ projectKey, ticket }: { projectKey: string; ticket: Item }
   const { userId } = useCurrentUser();
   const patch = usePatchItem();
   const actionClasses =
-    'flex size-7.5 items-center justify-center rounded-lg border border-gray-6 bg-surface-raised font-sans text-13/19 text-gray-11 shadow-sm hover:text-gray-12';
+    'flex size-7.5 items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised font-sans text-13/19 text-gray-11 shadow-sm hover:text-gray-12';
   return (
     <span
       className="absolute top-1/2 right-2.5 hidden -translate-y-1/2 items-center gap-1.25 group-hover:flex"
@@ -280,10 +280,10 @@ export function TableView({
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-auto rounded-t-xl border border-gray-6 bg-surface-raised">
+    <div className="flex min-h-0 flex-1 flex-col overflow-auto rounded-t-xl border-1 border-gray-6 bg-surface-raised">
       <div
         role="row"
-        className="sticky top-0 z-10 grid h-9 min-w-170 shrink-0 items-center border-b border-gray-6 bg-gray-1 px-1"
+        className="sticky top-0 z-10 grid h-9 min-w-170 shrink-0 items-center border-b-1 border-gray-6 bg-gray-1 px-1"
         style={{ gridTemplateColumns }}
       >
         {visible.map(({ column, index }) => {
@@ -335,7 +335,7 @@ export function TableView({
             role="row"
             onClick={() => onOpenTicket(ticket.number)}
             className={cn(
-              'group relative grid min-w-170 shrink-0 cursor-pointer items-center border-b border-gray-6 px-1 hover:bg-gray-1',
+              'group relative grid min-w-170 shrink-0 cursor-pointer items-center border-b-1 border-gray-6 px-1 hover:bg-gray-1',
               config.density === 'compact' ? 'h-8' : 'h-10.5',
             )}
             style={{ gridTemplateColumns }}

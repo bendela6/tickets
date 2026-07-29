@@ -29,7 +29,7 @@ export function ViewTabs({
   const active = views.find((view) => view.id === activeViewId) ?? null;
 
   return (
-    <div className="mb-3 flex shrink-0 items-center gap-1.5 border-b border-gray-6">
+    <div className="mb-3 flex shrink-0 items-center gap-1.5 border-b-1 border-gray-6">
       {views.map((view) => {
         const isActive = view.id === activeViewId;
         return (

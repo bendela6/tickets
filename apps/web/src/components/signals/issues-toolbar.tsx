@@ -2,7 +2,7 @@ import type { IssueLevel, IssueStatus, SignalsAppRow } from '../../api/signals/s
 import { cn, Input, Tabs } from '@tickets/ui';
 
 const selectClasses =
-  'h-7 rounded-lg border border-gray-6 bg-surface-raised px-2 font-sans text-12 text-gray-11 ' +
+  'h-7 rounded-lg border-1 border-gray-6 bg-surface-raised px-2 font-sans text-12 text-gray-11 ' +
   'hover:border-gray-7 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3';
 
 const STATUSES: IssueStatus[] = ['open', 'resolved', 'ignored'];

@@ -31,11 +31,11 @@ function Scale() {
                 obvious. The other three corners stay square so the eye has a
                 right angle to measure the curve against. */}
             <span
-              className="size-16 border border-indigo-9 bg-indigo-3"
+              className="size-16 border-1 border-indigo-9 bg-indigo-3"
               style={{ borderTopLeftRadius: `calc(${radius.value} * 4)` }}
             />
             <span
-              className="flex h-16 flex-1 items-center justify-center border border-gray-6 bg-surface-raised font-mono text-12/17 text-gray-9"
+              className="flex h-16 flex-1 items-center justify-center border-1 border-gray-6 bg-surface-raised font-mono text-12/17 text-gray-9"
               style={{ borderRadius: radius.value }}
             >
               {radius.value}
@@ -68,7 +68,7 @@ function InUse() {
             radius-2 · control
           </span>
           <span
-            className="inline-flex h-7 items-center border border-gray-6 bg-surface-raised px-3 font-sans text-13/19 text-gray-12"
+            className="inline-flex h-7 items-center border-1 border-gray-6 bg-surface-raised px-3 font-sans text-13/19 text-gray-12"
             style={{ borderRadius: radius('radius-2') }}
           >
             Assign
@@ -79,7 +79,7 @@ function InUse() {
             radius-3 · card
           </span>
           <div
-            className="flex w-56 flex-col gap-1 border border-gray-6 bg-surface-raised p-3"
+            className="flex w-56 flex-col gap-1 border-1 border-gray-6 bg-surface-raised p-3"
             style={{ borderRadius: radius('radius-3') }}
           >
             <span className="font-sans text-13/19 font-500 text-gray-12">Retry the gateway run</span>
@@ -91,7 +91,7 @@ function InUse() {
             radius-4 · panel
           </span>
           <div
-            className="flex w-64 flex-col gap-2 border border-gray-6 bg-surface-raised p-4"
+            className="flex w-64 flex-col gap-2 border-1 border-gray-6 bg-surface-raised p-4"
             style={{ borderRadius: radius('radius-4') }}
           >
             <span className="font-sans text-16/22 font-500 text-gray-12">Discard changes?</span>

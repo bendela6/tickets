@@ -103,7 +103,7 @@ export function GalleryShell({
             <button
               type="button"
               onClick={toggleTheme}
-              className="h-9 rounded-md border border-gray-7 bg-surface-raised px-3.5 text-13/19 text-gray-12 hover:bg-surface-inset"
+              className="h-9 rounded-md border-1 border-gray-7 bg-surface-raised px-3.5 text-13/19 text-gray-12 hover:bg-surface-inset"
             >
               Toggle theme
             </button>

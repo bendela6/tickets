@@ -64,7 +64,7 @@ function PeopleRow({ item, selected }: { item: SuggestionItem; selected: boolean
 function TicketRow({ item }: { item: SuggestionItem }) {
   return (
     <>
-      <span className="shrink-0 rounded-md border border-gray-6 bg-gray-1 px-1.5 py-0.5 font-mono text-11 font-500 text-gray-11">
+      <span className="shrink-0 rounded-md border-1 border-gray-6 bg-gray-1 px-1.5 py-0.5 font-mono text-11 font-500 text-gray-11">
         {item.label}
       </span>
       <span className="min-w-0 flex-1 truncate font-sans text-13/19 text-gray-12">{item.title}</span>
@@ -131,7 +131,7 @@ const SuggestionList = forwardRef<SuggestionListHandle, SuggestionListProps>(fun
   return (
     <div
       className={cn(
-        'fixed z-50 rounded-xl border border-gray-6 bg-surface-raised p-1.25 shadow-lg',
+        'fixed z-50 rounded-xl border-1 border-gray-6 bg-surface-raised p-1.25 shadow-lg',
         width,
       )}
       style={{ left: rect?.left ?? 0, top: rect?.bottom ?? 0 }}

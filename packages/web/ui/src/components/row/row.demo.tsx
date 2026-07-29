@@ -3,7 +3,7 @@ import { Row } from './row';
 export const meta = { title: 'Row', group: 'Components', size: 'sm' };
 
 const Box = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-md border border-gray-6 bg-gray-1 px-3 py-2 font-sans text-13/19 text-gray-11">
+  <div className="rounded-md border-1 border-gray-6 bg-gray-1 px-3 py-2 font-sans text-13/19 text-gray-11">
     {children}
   </div>
 );
@@ -28,7 +28,7 @@ export const states = [
     render: () => (
       <div className="flex flex-col gap-4">
         {(['start', 'center', 'end', 'between'] as const).map((justify) => (
-          <Row key={justify} justify={justify} className="w-96 border border-dashed border-gray-6 p-2">
+          <Row key={justify} justify={justify} className="w-96 border-1 border-dashed border-gray-6 p-2">
             <Box>{justify}</Box>
             <Box>x</Box>
           </Row>
@@ -39,7 +39,7 @@ export const states = [
   {
     name: 'Baseline align',
     render: () => (
-      <Row align="baseline" className="border border-dashed border-gray-6 p-2">
+      <Row align="baseline" className="border-1 border-dashed border-gray-6 p-2">
         <span className="font-sans text-24 text-gray-12">42</span>
         <span className="font-sans text-13/19 text-gray-11">open tickets</span>
       </Row>

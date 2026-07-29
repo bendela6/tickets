@@ -72,7 +72,7 @@ function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
 
 function ProjectChip({ project }: { project: Project }) {
   return (
-    <span className="inline-flex h-7 shrink-0 items-center gap-1.75 rounded-lg border border-gray-6 px-2.5 font-sans text-13/19 font-500 text-gray-12">
+    <span className="inline-flex h-7 shrink-0 items-center gap-1.75 rounded-lg border-1 border-gray-6 px-2.5 font-sans text-13/19 font-500 text-gray-12">
       <span className="rounded-sm bg-surface-inset px-1.25 py-0.5 font-mono text-11/13 tracking-wider font-500">
         {project.itemPrefix}
       </span>
@@ -88,7 +88,7 @@ function CloseButton() {
         type="button"
         aria-label="Close"
         className={cn(
-          'flex size-7.5 shrink-0 items-center justify-center rounded-lg border border-gray-6 bg-transparent',
+          'flex size-7.5 shrink-0 items-center justify-center rounded-lg border-1 border-gray-6 bg-transparent',
           'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
           'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-3',
         )}
@@ -280,7 +280,7 @@ export function NewItemDialog({
       >
         {type === null ? (
           <>
-            <header className="flex items-center gap-2.5 border-b border-gray-6 px-5 py-4">
+            <header className="flex items-center gap-2.5 border-b-1 border-gray-6 px-5 py-4">
               <DialogTitle>New item</DialogTitle>
               <span className="font-sans text-13/19 text-gray-11">in</span>
               <ProjectChip project={board.project} />
@@ -297,7 +297,7 @@ export function NewItemDialog({
                     type="button"
                     onClick={() => pick(candidate)}
                     className={cn(
-                      'flex w-full items-center gap-3 rounded-xl border border-gray-6 bg-transparent px-4 py-3.5 text-left',
+                      'flex w-full items-center gap-3 rounded-xl border-1 border-gray-6 bg-transparent px-4 py-3.5 text-left',
                       'hover:border-gray-7 hover:bg-gray-1',
                       'focus-visible:border-indigo-9 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-3',
                     )}
@@ -315,7 +315,7 @@ export function NewItemDialog({
                     {index < 9 ? (
                       <span
                         aria-hidden
-                        className="shrink-0 rounded-sm border border-gray-6 px-1.5 py-px font-mono text-11/13 tracking-wider text-gray-9"
+                        className="shrink-0 rounded-sm border-1 border-gray-6 px-1.5 py-px font-mono text-11/13 tracking-wider text-gray-9"
                       >
                         {index + 1}
                       </span>
@@ -324,7 +324,7 @@ export function NewItemDialog({
                 );
               })}
               {subtaskType ? (
-                <div className="flex items-center gap-3 rounded-xl border border-dashed border-gray-6 px-4 py-3 opacity-65">
+                <div className="flex items-center gap-3 rounded-xl border-1 border-dashed border-gray-6 px-4 py-3 opacity-65">
                   <TypeIcon type={subtaskType} dashed />
                   <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="font-sans text-14 font-600 text-gray-11">
@@ -337,7 +337,7 @@ export function NewItemDialog({
                 </div>
               ) : null}
             </div>
-            <footer className="border-t border-gray-6 bg-gray-1 px-5 py-3">
+            <footer className="border-t-1 border-gray-6 bg-gray-1 px-5 py-3">
               <p className="m-0 font-sans text-12/17 text-gray-11">
                 🔒 Type is permanent — it decides this item&rsquo;s form and can&rsquo;t be changed
                 after creation.
@@ -346,7 +346,7 @@ export function NewItemDialog({
           </>
         ) : (
           <>
-            <header className="flex items-center gap-2.5 border-b border-gray-6 px-5 py-4">
+            <header className="flex items-center gap-2.5 border-b-1 border-gray-6 px-5 py-4">
               {selectable.length > 1 ? (
                 <button
                   type="button"
@@ -424,7 +424,7 @@ export function NewItemDialog({
                 </div>
               ))}
             </div>
-            <footer className="flex items-center gap-2.5 border-t border-gray-6 bg-surface-inset px-5 py-3.5">
+            <footer className="flex items-center gap-2.5 border-t-1 border-gray-6 bg-surface-inset px-5 py-3.5">
               {workflowField ? (
                 <div className="w-48 shrink-0">
                   <StatusSelect
@@ -513,7 +513,7 @@ export function SubtaskQuickCreate({
   return (
     <div
       className={cn(
-        'flex items-center gap-2.5 rounded-xl border border-gray-7 bg-surface-raised py-1.5 pl-3.25 pr-1.5',
+        'flex items-center gap-2.5 rounded-xl border-1 border-gray-7 bg-surface-raised py-1.5 pl-3.25 pr-1.5',
         'focus-within:border-indigo-9 focus-within:ring-[3px] focus-within:ring-indigo-3',
       )}
     >

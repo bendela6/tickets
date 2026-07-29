@@ -83,7 +83,7 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2.5 border-b border-gray-6 px-6 py-3">
+      <div className="flex items-center gap-2.5 border-b-1 border-gray-6 px-6 py-3">
         <button
           type="button"
           onClick={() => void navigate({ to: '/agents' })}
@@ -111,7 +111,7 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
             <button
               type="button"
               aria-label="Session actions"
-              className="inline-flex size-6 items-center justify-center rounded-md border border-gray-6 bg-surface-raised font-sans text-gray-11 hover:border-gray-7"
+              className="inline-flex size-6 items-center justify-center rounded-md border-1 border-gray-6 bg-surface-raised font-sans text-gray-11 hover:border-gray-7"
             >
               ⋯
             </button>
@@ -158,7 +158,7 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
         </div>
       </div>
 
-      <div className="border-t border-gray-6 px-6 py-3">
+      <div className="border-t-1 border-gray-6 px-6 py-3">
         <PromptComposer
           value={draft}
           onChange={setDraft}
@@ -200,7 +200,7 @@ function renderTimeline(entries: Entry[], onRespond: RespondFn) {
 function UserBubble({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-2.5 self-end">
-      <div className="max-w-[85%] rounded-xl border border-gray-6 bg-surface-inset px-3 py-2 font-sans text-13/19 text-gray-12">
+      <div className="max-w-[85%] rounded-xl border-1 border-gray-6 bg-surface-inset px-3 py-2 font-sans text-13/19 text-gray-12">
         {text}
       </div>
     </div>

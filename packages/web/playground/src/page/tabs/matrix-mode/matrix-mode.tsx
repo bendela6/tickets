@@ -40,7 +40,7 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-center gap-2.5">
-        <label className="flex items-center gap-2 h-7 px-2.5 border border-gray-7 rounded-sm bg-surface-raised font-sans text-13/19 text-gray-12 cursor-pointer">
+        <label className="flex items-center gap-2 h-7 px-2.5 border-1 border-gray-7 rounded-sm bg-surface-raised font-sans text-13/19 text-gray-12 cursor-pointer">
           <span>rows:</span>
           <select
             value={yKey}
@@ -56,7 +56,7 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
           </select>
           <Icon name="chevron-down" size="2xs" className="text-gray-9" />
         </label>
-        <label className="flex items-center gap-2 h-7 px-2.5 border border-gray-7 rounded-sm bg-surface-raised font-sans text-13/19 text-gray-12 cursor-pointer">
+        <label className="flex items-center gap-2 h-7 px-2.5 border-1 border-gray-7 rounded-sm bg-surface-raised font-sans text-13/19 text-gray-12 cursor-pointer">
           <span>columns:</span>
           <select
             value={xKey}
@@ -113,7 +113,7 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
             items.push(
               <div
                 key={`cell-${yi}-${xi}`}
-                className="flex items-center justify-center rounded-lg border border-gray-6 bg-surface-raised px-2 py-3"
+                className="flex items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised px-2 py-3"
               >
                 {playground.render(cell(xi, yi) as ControlValues<C>)}
               </div>,

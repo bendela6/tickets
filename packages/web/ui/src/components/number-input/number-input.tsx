@@ -81,7 +81,7 @@ export function NumberInput({
         }}
         className="w-16 bg-transparent px-2 text-right font-sans text-13/19 text-gray-12 tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
       />
-      <div className="flex flex-col border-l border-gray-6">
+      <div className="flex flex-col border-l-1 border-gray-6">
         <button
           type="button"
           aria-label="Increment"
@@ -96,7 +96,7 @@ export function NumberInput({
           aria-label="Decrement"
           tabIndex={-1}
           onClick={() => nudge(-step)}
-          className="flex flex-1 items-center border-t border-gray-6 px-1.5 text-gray-9 hover:bg-surface-inset hover:text-gray-12"
+          className="flex flex-1 items-center border-t-1 border-gray-6 px-1.5 text-gray-9 hover:bg-surface-inset hover:text-gray-12"
         >
           <Icon name="chevron-down" size="2xs" />
         </button>

@@ -51,7 +51,7 @@ function BreadcrumbRow({ crumb }: { crumb: SignalBreadcrumb }) {
   return (
     <div
       role="row"
-      className="grid items-center gap-x-2.5 border-b border-gray-6 px-4 py-1.5 last:border-b-0"
+      className="grid items-center gap-x-2.5 border-b-1 border-gray-6 px-4 py-1.5 last:border-b-0"
       style={{ gridTemplateColumns: BREADCRUMB_GRID_COLUMNS }}
     >
       <Icon
@@ -134,8 +134,8 @@ export function BreadcrumbList({
   const rows = breadcrumbs ?? [];
 
   return (
-    <div className="flex-none overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
-      <div className="flex h-10.5 items-center gap-2.5 border-b border-gray-6 px-4">
+    <div className="flex-none overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
+      <div className="flex h-10.5 items-center gap-2.5 border-b-1 border-gray-6 px-4">
         <span className="font-sans text-[13.5px] font-600 text-gray-12">Breadcrumbs</span>
         {rows.length > 0 ? (
           <span className="font-mono text-11 text-gray-9">

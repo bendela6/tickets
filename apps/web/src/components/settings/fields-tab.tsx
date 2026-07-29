@@ -88,7 +88,7 @@ function PlacementRow({
   }
 
   return (
-    <div className={cn('grid items-center gap-2 border-b border-gray-6 px-2.5 py-2', GRID_COLUMNS)}>
+    <div className={cn('grid items-center gap-2 border-b-1 border-gray-6 px-2.5 py-2', GRID_COLUMNS)}>
       <span className="truncate font-sans text-13/19 font-500 text-gray-12">{field.label}</span>
       <Pill {...typePill} label={field.type} className={cn(typePill.className, 'font-mono text-11')} />
       <Switch
@@ -192,7 +192,7 @@ function NewFieldComposer({
   }
 
   return (
-    <form onSubmit={submit} className="mb-4 rounded-xl border border-gray-6 bg-surface-raised p-3.5">
+    <form onSubmit={submit} className="mb-4 rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5">
       <div className="mb-3 font-sans text-13/19 font-600 text-gray-12">New field</div>
       <div className="grid grid-cols-[1.4fr_1fr_1fr] gap-3">
         <div className="flex flex-col gap-1.25">
@@ -323,11 +323,11 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
               <div
                 role="region"
                 aria-label="Placements"
-                className="mb-4 overflow-hidden rounded-xl border border-gray-6 bg-surface-raised"
+                className="mb-4 overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised"
               >
                 <div
                   className={cn(
-                    'grid h-8.5 items-center border-b border-gray-6 bg-gray-1 px-2.5 font-sans text-11 font-500 uppercase tracking-wider text-gray-11',
+                    'grid h-8.5 items-center border-b-1 border-gray-6 bg-gray-1 px-2.5 font-sans text-11 font-500 uppercase tracking-wider text-gray-11',
                     GRID_COLUMNS,
                   )}
                 >
@@ -402,7 +402,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
         <div
           role="region"
           aria-label="Field library"
-          className="overflow-hidden rounded-xl border border-gray-6 bg-surface-raised"
+          className="overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised"
         >
           {sortedFields.map((field) => {
             const placedCount = board.placements.filter((placement) => placement.fieldId === field.id).length;
@@ -410,7 +410,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
               <div
                 key={field.id}
                 className={cn(
-                  'flex items-center gap-2.5 border-b border-gray-6 px-2.5 py-2',
+                  'flex items-center gap-2.5 border-b-1 border-gray-6 px-2.5 py-2',
                   field.archivedAt && 'opacity-60',
                 )}
               >

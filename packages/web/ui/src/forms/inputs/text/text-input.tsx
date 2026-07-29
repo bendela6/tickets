@@ -13,7 +13,7 @@ export function TextInput(p: InputProps<TextInputConfig, string>) {
   return (
     <div className="flex items-stretch gap-2">
       {p.config.prefix ? (
-        <span className="inline-flex items-center rounded-md border border-gray-6 bg-gray-1 px-3 font-sans text-13/19 text-gray-11">
+        <span className="inline-flex items-center rounded-md border-1 border-gray-6 bg-gray-1 px-3 font-sans text-13/19 text-gray-11">
           {p.config.prefix}
         </span>
       ) : null}

@@ -23,7 +23,7 @@ export const DOCS_MEASURE = 'max-w-200';
 export const DOCS_COLUMN = 'w-200 shrink-0';
 
 const CHIP =
-  'inline-flex h-5.5 items-center rounded-md border border-gray-6 bg-surface-raised px-2 font-mono text-11/13 tracking-wider tracking-normal text-gray-11';
+  'inline-flex h-5.5 items-center rounded-md border-1 border-gray-6 bg-surface-raised px-2 font-mono text-11/13 tracking-wider tracking-normal text-gray-11';
 const META_LINE = 'flex flex-wrap gap-6 font-mono text-11/13 tracking-wider tracking-normal text-gray-9';
 
 // Which package a demo belongs to, for the API header's right column. Derived
@@ -112,7 +112,7 @@ function PropRow({ name, def }: { name: string; def: AnyControlDef }) {
   return (
     // Flex with a fixed first column rather than a grid template: `w-50` is
     // the same 200px the design draws, without an arbitrary track list.
-    <div className="flex gap-7 border-t border-gray-6 py-4.5">
+    <div className="flex gap-7 border-t-1 border-gray-6 py-4.5">
       <div className="flex w-50 shrink-0 flex-col gap-1.5">
         <span className="font-mono text-13/19 font-600 text-gray-12">{name}</span>
         <span className="font-mono text-11/13 tracking-wider tracking-normal text-gray-9 text-pretty">

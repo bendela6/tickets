@@ -91,7 +91,7 @@ function svgIcon(paths: string, size: number): SVGSVGElement {
 function renderPending(entry: UploadEntry): void {
   entry.root.innerHTML = '';
   entry.root.className =
-    'my-1 block w-full max-w-xs overflow-hidden rounded-lg border border-gray-6 bg-surface-raised';
+    'my-1 block w-full max-w-xs overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-raised';
   entry.root.dataset['uploadStatus'] = 'pending';
 
   const preview = document.createElement('div');
@@ -100,7 +100,7 @@ function renderPending(entry: UploadEntry): void {
     'repeating-linear-gradient(45deg, var(--color-surface-inset) 0 8px, transparent 8px 16px)';
 
   const caption = document.createElement('div');
-  caption.className = 'border-t border-gray-6 px-3 py-2.25';
+  caption.className = 'border-t-1 border-gray-6 px-3 py-2.25';
 
   const row = document.createElement('div');
   row.className = 'mb-1.75 flex items-center gap-2';
@@ -151,7 +151,7 @@ function updateProgress(entry: UploadEntry, progress: number): void {
 function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void {
   entry.root.innerHTML = '';
   entry.root.className =
-    'my-1 box-border flex h-49 w-full max-w-xs flex-col items-center justify-center gap-1.5 rounded-lg border border-red-9 bg-red-3';
+    'my-1 box-border flex h-49 w-full max-w-xs flex-col items-center justify-center gap-1.5 rounded-lg border-1 border-red-9 bg-red-3';
   entry.root.dataset['uploadStatus'] = 'failed';
   entry.nameEl = null;
   entry.pctEl = null;
@@ -177,7 +177,7 @@ function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void 
   const retryBtn = document.createElement('button');
   retryBtn.type = 'button';
   retryBtn.className =
-    'inline-flex h-6.5 items-center gap-1.5 rounded-md border border-gray-7 bg-surface-raised px-2.75 font-sans text-12 font-500 text-gray-12';
+    'inline-flex h-6.5 items-center gap-1.5 rounded-md border-1 border-gray-7 bg-surface-raised px-2.75 font-sans text-12 font-500 text-gray-12';
   retryBtn.append(svgIcon(ROTATE_CCW_PATHS, 12), document.createTextNode('Retry'));
   retryBtn.addEventListener('click', () => {
     // Single-flight guard: a rapid second Retry click (or a stray click on a

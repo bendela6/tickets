@@ -42,7 +42,7 @@ const optionClass = variants({
         plain: '',
         card: over(TONE, CHECKED, (t, state) =>
           cn(
-            'rounded-md border px-2.5 py-1.5',
+            'rounded-md border-1 px-2.5 py-1.5',
             state === 'on'
               ? `border-${t.solid} bg-${t.bgSubtle}`
               : 'border-gray-7 hover:border-gray-9',

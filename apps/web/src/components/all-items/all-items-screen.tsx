@@ -562,7 +562,7 @@ export function AllItemsScreen() {
       </div>
 
       {/* Global view tabs + group selector */}
-      <div className="mb-3 flex shrink-0 items-center gap-1.5 border-b border-gray-6">
+      <div className="mb-3 flex shrink-0 items-center gap-1.5 border-b-1 border-gray-6">
         <Tabs
           className="border-b-0"
           items={[DEFAULT_GLOBAL_VIEW, ...views].map((view) => ({
@@ -632,7 +632,7 @@ export function AllItemsScreen() {
       </div>
 
       {/* Grouped table */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-xl border border-gray-6 bg-surface-raised">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-xl border-1 border-gray-6 bg-surface-raised">
         {allRows.length === 0 ? (
           <ScreenState
             className="flex-1 justify-center py-16"

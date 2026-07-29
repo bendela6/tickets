@@ -276,7 +276,7 @@ function Report() {
   const required = all.filter((p) => p.severity === 'required');
   const failing = required.filter((p) => !p.passes);
   const advisory = all.filter((p) => p.severity === 'advisory' && !p.passes);
-  const cell = 'border-b border-gray-6 py-1.5 pr-4';
+  const cell = 'border-b-1 border-gray-6 py-1.5 pr-4';
   return (
     <div className="flex w-full flex-col gap-3">
       <p className="font-sans text-12/17 text-gray-11">
@@ -297,7 +297,7 @@ function Report() {
                 <th className={`${cell} font-500`}>scale</th>
                 <th className={`${cell} font-500`}>theme</th>
                 <th className={`${cell} font-500`}>pair</th>
-                <th className="border-b border-gray-6 py-1.5 font-500">ratio</th>
+                <th className="border-b-1 border-gray-6 py-1.5 font-500">ratio</th>
               </tr>
             </thead>
             <tbody>
@@ -309,7 +309,7 @@ function Report() {
                   <td className={`${cell} text-gray-9`}>
                     {f.fgLabel} on {f.bgLabel}
                   </td>
-                  <td className="border-b border-gray-6 py-1.5">
+                  <td className="border-b-1 border-gray-6 py-1.5">
                     <Verdict what={f.what} ratio={f.ratio} min={f.min} passes={false} />
                   </td>
                 </tr>

@@ -18,7 +18,7 @@ export function ActivityRow({ signal }: { signal: SignalListRow }) {
   return (
     <div
       role="row"
-      className="grid h-11 items-center border-b border-gray-6 px-3.5 hover:bg-gray-1"
+      className="grid h-11 items-center border-b-1 border-gray-6 px-3.5 hover:bg-gray-1"
       style={{ gridTemplateColumns: ACTIVITY_GRID_COLUMNS }}
     >
       <span className="flex">
@@ -66,7 +66,7 @@ export function ActivityRowSkeleton({ index = 0 }: { index?: number }) {
     <div
       role="row"
       aria-hidden
-      className="grid h-11 animate-pulse items-center border-b border-gray-6 px-3.5"
+      className="grid h-11 animate-pulse items-center border-b-1 border-gray-6 px-3.5"
       style={{ gridTemplateColumns: ACTIVITY_GRID_COLUMNS }}
     >
       <span className="size-3.5 rounded-md bg-surface-inset" />

@@ -47,7 +47,7 @@ export function IssueRow({
       role="row"
       onClick={onOpen}
       className={cn(
-        'group relative grid h-13.5 cursor-pointer items-center border-b border-gray-6 px-3.5 hover:bg-gray-1',
+        'group relative grid h-13.5 cursor-pointer items-center border-b-1 border-gray-6 px-3.5 hover:bg-gray-1',
         dimmed && 'opacity-60',
       )}
       style={{ gridTemplateColumns: ISSUES_GRID_COLUMNS }}
@@ -150,7 +150,7 @@ export function IssueRowSkeleton({ index = 0 }: { index?: number }) {
     <div
       role="row"
       aria-hidden
-      className="grid h-13.5 animate-pulse items-center border-b border-gray-6 px-3.5"
+      className="grid h-13.5 animate-pulse items-center border-b-1 border-gray-6 px-3.5"
       style={{ gridTemplateColumns: ISSUES_GRID_COLUMNS }}
     >
       <span className="size-2.25 rounded-full bg-surface-inset" />

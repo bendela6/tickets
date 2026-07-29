@@ -51,7 +51,7 @@ export const PlaygroundCard = forwardRef<
         ref={ref}
         role="region"
         aria-label="Playground preview"
-        className="flex min-h-32 items-center justify-center rounded-lg border border-gray-6 bg-surface-raised p-7"
+        className="flex min-h-32 items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised p-7"
       >
         {playground.render(values as never)}
       </div>

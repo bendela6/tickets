@@ -55,7 +55,7 @@ function Block({ block, onRespond }: { block: StreamBlock; onRespond?: RespondFn
       );
     case 'error':
       return (
-        <div className="rounded-lg border border-red-9 bg-red-3 px-3 py-2 font-sans text-12/17 text-red-9">
+        <div className="rounded-lg border-1 border-red-9 bg-red-3 px-3 py-2 font-sans text-12/17 text-red-9">
           {block.message}
         </div>
       );
@@ -120,7 +120,7 @@ function ApprovalCard({
         ) : null}
       </div>
 
-      <div className="border-t border-orange-9/40 bg-gray-1">
+      <div className="border-t-1 border-orange-9/40 bg-gray-1">
         {diff ? (
           <DiffBody lines={diff.lines} />
         ) : (
@@ -139,7 +139,7 @@ function ApprovalCard({
               rows={2}
               autoFocus
               placeholder="Why deny? (optional — sent back to the agent)"
-              className="resize-y rounded-lg border border-gray-7 bg-surface-raised px-2.5 py-1.5 font-sans text-12/17 text-gray-12 placeholder:text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3"
+              className="resize-y rounded-lg border-1 border-gray-7 bg-surface-raised px-2.5 py-1.5 font-sans text-12/17 text-gray-12 placeholder:text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3"
             />
           ) : null}
           <div className="flex items-center justify-end gap-2">
@@ -176,7 +176,7 @@ function ThinkingBlock({ text }: { text: string }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 rounded-lg border border-dashed border-gray-7 px-2.5 py-1 font-sans text-12/17 italic text-gray-9 hover:text-gray-11"
+        className="flex items-center gap-2 rounded-lg border-1 border-dashed border-gray-7 px-2.5 py-1 font-sans text-12/17 italic text-gray-9 hover:text-gray-11"
       >
         <span aria-hidden className="font-mono not-italic">
           ✦
@@ -236,7 +236,7 @@ function ToolCard({ name, input, result }: { name: string; input: unknown; resul
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-lg border bg-surface-raised',
+        'overflow-hidden rounded-lg border-1 bg-surface-raised',
         status === 'error' ? 'border-red-9' : 'border-gray-6',
       )}
     >
@@ -263,7 +263,7 @@ function ToolCard({ name, input, result }: { name: string; input: unknown; resul
         </span>
       </button>
       {open ? (
-        <div className="border-t border-gray-6 bg-gray-1">
+        <div className="border-t-1 border-gray-6 bg-gray-1">
           {diff ? (
             <DiffBody lines={diff.lines} />
           ) : (
@@ -274,7 +274,7 @@ function ToolCard({ name, input, result }: { name: string; input: unknown; resul
           {result ? (
             <pre
               className={cn(
-                'overflow-x-auto border-t border-gray-6 px-3 py-2 font-mono text-11 leading-relaxed',
+                'overflow-x-auto border-t-1 border-gray-6 px-3 py-2 font-mono text-11 leading-relaxed',
                 result.isError ? 'text-red-9' : 'text-gray-9',
               )}
             >

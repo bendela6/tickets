@@ -35,7 +35,7 @@ function Replay({ children }: { children: (run: number) => ReactNode }) {
       <button
         type="button"
         onClick={() => setRun((n) => n + 1)}
-        className="self-start rounded-md border border-gray-6 bg-surface-raised px-3 py-1 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
+        className="self-start rounded-md border-1 border-gray-6 bg-surface-raised px-3 py-1 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
       >
         Replay
       </button>

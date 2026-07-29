@@ -92,7 +92,7 @@ export function AppDetailScreen({ appId }: { appId: number }) {
             <button
               type="button"
               onClick={() => void appQuery.refetch()}
-              className="h-8 rounded-lg border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+              className="h-8 rounded-lg border-1 border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
             >
               ↻ Retry
             </button>
@@ -140,7 +140,7 @@ export function AppDetailScreen({ appId }: { appId: number }) {
             <button
               type="button"
               aria-label="App actions"
-              className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-gray-7 bg-surface-raised text-gray-11 hover:bg-surface-inset hover:text-gray-12"
+              className="flex size-8 shrink-0 items-center justify-center rounded-lg border-1 border-gray-7 bg-surface-raised text-gray-11 hover:bg-surface-inset hover:text-gray-12"
             >
               ⋯
             </button>
@@ -175,7 +175,7 @@ export function AppDetailScreen({ appId }: { appId: number }) {
         ) : null}
       </div>
 
-      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-xl border border-gray-6 bg-surface-raised px-4.5 py-3">
+      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-xl border-1 border-gray-6 bg-surface-raised px-4.5 py-3">
         <div>
           <div className="mb-0.75 font-mono text-10 font-500 tracking-wide text-gray-9">SIGNALS · 24H</div>
           <div className="font-mono text-14 font-600 text-gray-12">{formatCount(signals24h)}</div>
@@ -193,7 +193,7 @@ export function AppDetailScreen({ appId }: { appId: number }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4.5 xl:grid-cols-2">
-        <div className="flex-none rounded-xl border border-gray-6 bg-surface-raised p-4">
+        <div className="flex-none rounded-xl border-1 border-gray-6 bg-surface-raised p-4">
           <div className="mb-3 font-sans text-[13.5px] font-600 text-gray-12">Connect</div>
           <DsnField dsn={app.dsn} className="mb-3" />
           <SdkSnippet dsn={app.dsn} platform="react" />
@@ -202,8 +202,8 @@ export function AppDetailScreen({ appId }: { appId: number }) {
         <ReleasesCard appId={appId} />
       </div>
 
-      <div className="mt-4.5 flex-none overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
-        <div className="flex h-10.5 items-center gap-2.5 border-b border-gray-6 px-4">
+      <div className="mt-4.5 flex-none overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
+        <div className="flex h-10.5 items-center gap-2.5 border-b-1 border-gray-6 px-4">
           <span className="font-sans text-[13.5px] font-600 text-gray-12">Recent issues</span>
         </div>
         {issuesQuery.isLoading ? (

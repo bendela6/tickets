@@ -18,7 +18,7 @@ export const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(function
         sideOffset={sideOffset}
         align={align}
         className={cn(
-          'z-50 min-w-47.5 rounded-lg border border-gray-6 bg-surface-raised p-1 text-gray-12 shadow-lg',
+          'z-50 min-w-47.5 rounded-lg border-1 border-gray-6 bg-surface-raised p-1 text-gray-12 shadow-lg',
           'font-sans text-13/19 outline-none',
           className,
         )}

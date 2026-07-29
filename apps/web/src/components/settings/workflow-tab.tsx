@@ -68,7 +68,7 @@ function KindPicker({
           aria-pressed={value === kind}
           onClick={() => onChange(kind)}
           className={cn(
-            'inline-flex h-7 items-center gap-1.5 rounded-md border px-2 font-sans text-12 font-500 capitalize',
+            'inline-flex h-7 items-center gap-1.5 rounded-md border-1 px-2 font-sans text-12 font-500 capitalize',
             value === kind
               ? 'border-indigo-9 bg-indigo-3 text-gray-12'
               : 'border-gray-7 bg-surface-raised text-gray-11 hover:border-gray-9',
@@ -137,7 +137,7 @@ function OptionForm({
 }) {
   const labelId = `${idPrefix}-label`;
   return (
-    <div className="flex flex-col gap-2.5 border-t border-gray-6 bg-gray-1 px-4 py-3">
+    <div className="flex flex-col gap-2.5 border-t-1 border-gray-6 bg-gray-1 px-4 py-3">
       <div className="flex flex-col gap-1.25">
         <FieldLabel htmlFor={labelId}>Label</FieldLabel>
         <div className="flex items-center gap-2.5">
@@ -374,9 +374,9 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
               <div
                 role="region"
                 aria-label="Options"
-                className="mb-4 overflow-hidden rounded-xl border border-gray-6 bg-surface-raised"
+                className="mb-4 overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised"
               >
-                <div className="flex items-center gap-2.25 border-b border-gray-6 bg-gray-1 px-4 py-2.75">
+                <div className="flex items-center gap-2.25 border-b-1 border-gray-6 bg-gray-1 px-4 py-2.75">
                   <span className="font-sans text-14 font-600 text-gray-12">Options</span>
                   <span className="font-mono text-11/13 tracking-wider text-gray-9">
                     {options.length} option{options.length === 1 ? '' : 's'}
@@ -397,7 +397,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     const editing = editingOptionId === option.id;
                     const kind = (option.kind ?? 'todo') as StatusKind;
                     return (
-                      <div key={option.id} className="border-b border-gray-6 last:border-b-0">
+                      <div key={option.id} className="border-b-1 border-gray-6 last:border-b-0">
                         <div className={cn('flex h-10.5 items-center gap-2.5 px-4', archived && 'opacity-60')}>
                           <span className="inline-flex shrink-0">
                             <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
@@ -468,8 +468,8 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
               </div>
 
               {/* transitions — the graph of allowed moves for this type */}
-              <div className="overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
-                <div className="flex items-center gap-2.25 border-b border-gray-6 bg-gray-1 px-4 py-2.75">
+              <div className="overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
+                <div className="flex items-center gap-2.25 border-b-1 border-gray-6 bg-gray-1 px-4 py-2.75">
                   <span className="font-sans text-14 font-600 text-gray-12">Transitions</span>
                   <span className="font-mono text-11/13 tracking-wider text-gray-9">
                     {transitions.length} edge{transitions.length === 1 ? '' : 's'}
@@ -493,7 +493,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                       return (
                         <div
                           key={t.id}
-                          className="flex h-10.5 items-center gap-2.5 border-b border-gray-6 px-4 last:border-b-0"
+                          className="flex h-10.5 items-center gap-2.5 border-b-1 border-gray-6 px-4 last:border-b-0"
                         >
                           {from ? (
                             <Pill {...statusPill((from.kind ?? 'todo') as StatusKind)} label={from.label} />
@@ -537,7 +537,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     })
                   )}
                   <form
-                    className="flex flex-wrap items-center gap-1.5 border-t border-gray-6 bg-gray-1 px-4 py-2.75"
+                    className="flex flex-wrap items-center gap-1.5 border-t-1 border-gray-6 bg-gray-1 px-4 py-2.75"
                     onSubmit={(event) => {
                       event.preventDefault();
                       void submitEdge();

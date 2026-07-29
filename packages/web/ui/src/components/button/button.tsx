@@ -50,14 +50,14 @@ const buttonClass = variants({
         solid: over(TONE, (t) => [
           `bg-${t.solid} hover:bg-${t.solidHover}`,
           `text-${t.contrast}`,
-          'border border-transparent',
+          'border-1 border-transparent',
           t.ring,
           'focus-visible:shadow-[inset_0_0_0_1px_var(--color-gray-1)]',
         ]),
         subtle: over(TONE, (t) => [
           `bg-${t.bgSubtle} hover:bg-${t.bgSubtleHover}`,
           `text-${t.text}`,
-          'border border-transparent',
+          'border-1 border-transparent',
           t.ring,
         ]),
         // Border and text follow the tone, matching what `TONES.outline`
@@ -66,7 +66,7 @@ const buttonClass = variants({
         outline: over(TONE, (t) => [
           `bg-surface-raised hover:bg-${t.bgSubtle}`,
           `text-${t.text}`,
-          `border border-${t.border} hover:border-${t.borderHover}`,
+          `border-1 border-${t.border} hover:border-${t.borderHover}`,
           `${t.ring} focus-visible:border-${t.solid}`,
         ]),
         // Ghost is Button's answer to Pill's `text` emphasis — the same tone
@@ -74,7 +74,7 @@ const buttonClass = variants({
         ghost: over(TONE, (t) => [
           `bg-transparent hover:bg-${t.bgSubtle}`,
           `text-${t.text} hover:text-${t.textStrong}`,
-          'border border-transparent',
+          'border-1 border-transparent',
           t.ring,
         ]),
       },

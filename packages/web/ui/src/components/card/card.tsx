@@ -54,7 +54,7 @@ export function Card({
   return (
     <div
       className={cn(
-        'overflow-hidden border border-gray-6 bg-surface-raised',
+        'overflow-hidden border-1 border-gray-6 bg-surface-raised',
         RADIUS[radius],
         PAD[padding],
         interactive && 'cursor-pointer hover:border-gray-7',
@@ -67,7 +67,7 @@ export function Card({
 
 /** Header band with the dividing rule. Carries its own padding — see Card. */
 export function CardHeader({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('border-b border-gray-6 px-4 py-3', className)} {...rest} />;
+  return <div className={cn('border-b-1 border-gray-6 px-4 py-3', className)} {...rest} />;
 }
 
 /** The header's heading. Always an h3, so a card inside a page section lands
