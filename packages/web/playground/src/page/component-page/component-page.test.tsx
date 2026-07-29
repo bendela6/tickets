@@ -173,6 +173,20 @@ describe('ComponentPage', () => {
     expect(within(previewWrapper).queryByText('API')).toBeNull();
   });
 
+  it('stages the playground and its code above the states', () => {
+    // Order is the assertion. The live specimen is the only thing on the page
+    // that answers to the controls rail beside it, so it sits next to it —
+    // below a states list that can run to seventeen tone swatches, changing a
+    // control scrolled the thing you were changing off the screen.
+    const { container } = render(<ComponentPage demo={demo} />);
+    const previewWrapper = container.firstElementChild!.children[1] as HTMLElement;
+    const captions = [...previewWrapper.querySelectorAll('span, div')]
+      .map((n) => n.textContent?.trim())
+      .filter((t) => t === 'PLAYGROUND' || t === 'CODE' || t === 'STATES');
+
+    expect(captions.slice(0, 3)).toEqual(['PLAYGROUND', 'CODE', 'STATES']);
+  });
+
   it('switching tabs hides (not unmounts) the preview and preserves playground state', () => {
     const { container } = render(<ComponentPage demo={demo} />);
     // ComponentPage's outer div: [0] tab strip, [1] preview pane, [2] props

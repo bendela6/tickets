@@ -221,7 +221,20 @@ export function ComponentPage({
             }}
           >
             <Panel id="stage">
+              {/* Playground first, then its code, then the states. The live
+                  specimen is the one thing on this page that answers to the
+                  controls rail beside it, so it belongs next to it rather than
+                  below a states list that can run to seventeen tone swatches —
+                  changing a control used to scroll the thing you were changing
+                  off the screen. */}
               <div className="flex flex-col gap-6 pr-6">
+                <PlaygroundCard
+                  ref={previewRef}
+                  component={demo.meta.title.replace(/\s+/g, '')}
+                  playground={playground}
+                  values={values}
+                />
+                <GeneratedCode demo={demo} values={values} />
                 {matrixMode ? (
                   <MatrixMode
                     playground={playground}
@@ -236,13 +249,6 @@ export function ComponentPage({
                 ) : (
                   <StateGrid demo={demo} />
                 )}
-                <PlaygroundCard
-                  ref={previewRef}
-                  component={demo.meta.title.replace(/\s+/g, '')}
-                  playground={playground}
-                  values={values}
-                />
-                <GeneratedCode demo={demo} values={values} />
               </div>
             </Panel>
             <Separator className="workbench-resize-handle" />
