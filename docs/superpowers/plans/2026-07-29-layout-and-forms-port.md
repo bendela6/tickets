@@ -1657,10 +1657,13 @@ import { JsonInput } from './json-input';
 const base = { name: 'payload', loading: false, onBlur: vi.fn(), config: {} };
 
 describe('JsonInput', () => {
+  // `{` opens a key descriptor in user-event v14 (`{Enter}`), so a literal
+  // brace has to be doubled. `'{{'` types one `{`; passing a bare `'{'` throws
+  // `Expected key descriptor but found "" in "{"`.
   it('reports the raw text, valid or not', async () => {
     const onChange = vi.fn();
     render(<JsonInput {...base} value="" onChange={onChange} />);
-    await userEvent.type(screen.getByRole('textbox'), '{');
+    await userEvent.type(screen.getByRole('textbox'), '{{');
     expect(onChange).toHaveBeenLastCalledWith('{');
   });
 
