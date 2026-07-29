@@ -4,7 +4,7 @@
 
 **Goal:** Add `Stack`, `Row` and a compound `Card` to `@tickets/ui`, then build the form input/registry layer at `@tickets/ui/src/forms/` on top of them, shrinking `apps/web/src/form/registry.tsx` to a thin extension.
 
-**Architecture:** Three layout primitives styled from Instrument tokens, then seven form inputs that are thin adapters over primitives `@tickets/ui` already owns, plus four layouts, a `FieldWrapper` and a `RootWrapper`. `@tickets/ui` gains a runtime dependency on `@tickets/form` (for `defineRegistry`); the inputs themselves import the engine `import type` only.
+**Architecture:** Three layout primitives styled from Instrument tokens, then seven form inputs that are thin adapters over primitives `@tickets/ui` already owns, plus four layouts, a `FieldWrapper` and a `RootWrapper`. `@tickets/ui` takes `@tickets/form` as a dependency but imports it **`import type` only** — it makes no `defineRegistry` call and pulls nothing from the engine into any runtime bundle. The registry is assembled in apps/web, which is the only place that knows about the app-specific `directory` input.
 
 **Tech Stack:** React 19 · TypeScript · Tailwind v4 (preflight ON) · vitest + @testing-library/react · pnpm workspaces
 
