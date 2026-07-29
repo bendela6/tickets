@@ -72,9 +72,11 @@ describe('tone system', () => {
     expect(STEP.text).toBeLessThan(STEP.textStrong);
   });
 
-  it('every class in the map is one of the four known utility shapes', () => {
-    const CLASS_RE =
-      /^(bg-[a-z0-9-]+|text-[a-z0-9-]+|border-[a-z0-9-]+|border-2)$/;
+  it('every class in the map is one of the three known utility shapes', () => {
+    // `border-2` used to be listed as a fourth alternative, but
+    // `border-[a-z0-9-]+` already matches it (`2` is `[a-z0-9-]`) — a dead
+    // branch that could never be reached.
+    const CLASS_RE = /^(bg-[a-z0-9-]+|text-[a-z0-9-]+|border-[a-z0-9-]+)$/;
     for (const emphases of Object.values(TONES)) {
       for (const classes of Object.values(emphases)) {
         for (const cls of classes.split(' ')) {
