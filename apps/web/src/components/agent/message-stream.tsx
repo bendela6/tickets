@@ -139,7 +139,7 @@ function ApprovalCard({
               rows={2}
               autoFocus
               placeholder="Why deny? (optional — sent back to the agent)"
-              className="resize-y rounded-lg border-1 border-gray-7 bg-surface-raised px-2.5 py-1.5 font-sans text-12/17 text-gray-12 placeholder:text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-[3px] focus:ring-indigo-3"
+              className="resize-y rounded-lg border-1 border-gray-7 bg-surface-raised px-2.5 py-1.5 font-sans text-12/17 text-gray-12 placeholder:text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-3 focus:ring-indigo-3"
             />
           ) : null}
           <div className="flex items-center justify-end gap-2">

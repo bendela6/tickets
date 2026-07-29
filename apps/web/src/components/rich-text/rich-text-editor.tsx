@@ -372,7 +372,7 @@ export function RichTextEditor({
   const stateClasses = disabled
     ? 'border-gray-6 bg-gray-1'
     : focused
-      ? 'border-indigo-9 bg-surface-raised ring-[3px] ring-indigo-3'
+      ? 'border-indigo-9 bg-surface-raised ring-3 ring-indigo-3'
       : 'border-gray-6 bg-surface-raised';
 
   return (

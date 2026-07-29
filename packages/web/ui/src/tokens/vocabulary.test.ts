@@ -47,9 +47,12 @@ describe('scanRetired', () => {
     expect(scanBorderAgainstBaseline().fixed).toEqual([]);
   });
 
-  it('walks real files rather than an empty tree', () => {
-    // `ring` is not swept until Task 7, so this is a live tree with hits in it.
-    expect(scanRetired('ring').length).toBeGreaterThan(0);
+  it('has no retired ring form left in scope', () => {
+    expect(scanRetired('ring')).toEqual([]);
+  });
+
+  it('has no off-ladder z-index left in scope', () => {
+    expect(scanRetired('z')).toEqual([]);
   });
 
   it('never reports a file under apps/eer — that app owns its own scale', () => {

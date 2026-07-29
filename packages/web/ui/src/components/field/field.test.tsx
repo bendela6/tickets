@@ -20,7 +20,7 @@ test('a toned field keeps its own colour on focus rather than turning accent', (
   // the user had gone to fix it.
   render(<Input tone="danger" aria-label="Key" />);
   const input = screen.getByLabelText('Key');
-  expect(input).toHaveClass('border-red-9', 'ring-[3px]', 'ring-red-3');
+  expect(input).toHaveClass('border-red-9', 'ring-3', 'ring-red-3');
   expect(input).not.toHaveClass('focus:border-indigo-9');
   expect(input).not.toHaveClass('focus:ring-indigo-3');
 });

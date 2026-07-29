@@ -14,7 +14,7 @@ export type Ramp = {
   /**
    * The focus affordance itself, not a rung. Nine hand-written copies of this
    * across button/field/switch/toggle differed only in the trigger; this is
-   * also the one place `ring-[3px]` needs replacing when it becomes a token.
+   * the one place `ring-3` is spelled, rather than copied nine times.
    */
   readonly ring: string;
 };
@@ -25,7 +25,7 @@ function build(name: HueTone): Ramp {
   ) as { [Rung in keyof typeof STEP]: string };
   return {
     ...rungs,
-    ring: `focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-${name}-${STEP.focusRing}`,
+    ring: `focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-${name}-${STEP.focusRing}`,
   };
 }
 

@@ -160,7 +160,7 @@ describe('drift', () => {
 
     // Motion has landed: durations and curves are named in the sheet now, so
     // every proposed one matches something live.
-    expect(byFamily.duration?.every((r) => r.status === 'matched')).toBe(true);
+    // (deleted here, restored in narrowed form by Task 8)
     expect(byFamily.ease?.every((r) => r.status === 'matched')).toBe(true);
     expect(byFamily.animate?.every((r) => r.status === 'matched')).toBe(true);
   });
@@ -179,5 +179,18 @@ describe('drift', () => {
     const rows = drift().flatMap((f) => f.rows).length;
     expect(summary.matched + summary.added + summary.dropped).toBe(rows);
     expect(summary.matched).toBeGreaterThan(0);
+  });
+});
+
+describe('the un-tokenized families', () => {
+  it('declares no border, ring, z, duration or breakpoint token', () => {
+    // Tailwind's bare-value utilities already state these — `border-1` is 1px,
+    // `z-10` is 10, `duration-200` is 200ms. A token would be a second place
+    // for the value to live, which is the only way it could disagree.
+    expect(liveTokens(/^(border|ring|z|duration|breakpoint)-/)).toEqual([]);
+  });
+
+  it('keeps the easings, which have no numeric form', () => {
+    expect(liveTokens(/^ease-/).map((t) => t.name).sort()).toEqual(['ease-in-out', 'ease-out']);
   });
 });

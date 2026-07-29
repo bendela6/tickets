@@ -51,7 +51,7 @@ function Edges() {
         <div className="flex items-center gap-4">
           <button
             type="button"
-            className="rounded-md border-1 border-gray-6 bg-surface-raised px-3 py-1 font-sans text-13/19 text-gray-12 outline-none focus-visible:ring-(length:--ring-focus) focus-visible:ring-indigo-9"
+            className="rounded-md border-1 border-gray-6 bg-surface-raised px-3 py-1 font-sans text-13/19 text-gray-12 outline-none focus-visible:ring-3 focus-visible:ring-indigo-9"
           >
             Tab to me
           </button>

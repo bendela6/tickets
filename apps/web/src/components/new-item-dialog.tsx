@@ -90,7 +90,7 @@ function CloseButton() {
         className={cn(
           'flex size-7.5 shrink-0 items-center justify-center rounded-lg border-1 border-gray-6 bg-transparent',
           'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
-          'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-3',
+          'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-indigo-3',
         )}
       >
         ×
@@ -299,7 +299,7 @@ export function NewItemDialog({
                     className={cn(
                       'flex w-full items-center gap-3 rounded-xl border-1 border-gray-6 bg-transparent px-4 py-3.5 text-left',
                       'hover:border-gray-7 hover:bg-gray-1',
-                      'focus-visible:border-indigo-9 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-3',
+                      'focus-visible:border-indigo-9 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-indigo-3',
                     )}
                   >
                     <TypeIcon type={candidate} />
@@ -353,7 +353,7 @@ export function NewItemDialog({
                   onClick={() => setPickedTypeId(null)}
                   className={cn(
                     'shrink-0 rounded-md bg-transparent font-sans text-12/17 font-500 text-indigo-9 hover:text-indigo-10',
-                    'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-3',
+                    'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-indigo-3',
                   )}
                 >
                   ‹ Type
@@ -514,7 +514,7 @@ export function SubtaskQuickCreate({
     <div
       className={cn(
         'flex items-center gap-2.5 rounded-xl border-1 border-gray-7 bg-surface-raised py-1.5 pl-3.25 pr-1.5',
-        'focus-within:border-indigo-9 focus-within:ring-[3px] focus-within:ring-indigo-3',
+        'focus-within:border-indigo-9 focus-within:ring-3 focus-within:ring-indigo-3',
       )}
     >
       <span
