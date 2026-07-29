@@ -11,16 +11,17 @@ type ImageColumnOpts = {
 export function ImageColumn(opts: ImageColumnOpts = {}): Renderer<string | null | undefined> {
   return ({ value, row }) => {
     if (value) {
-      // `alt` is left undefined rather than `""` when there is no fallback
-      // mapper: an empty `alt` maps to the `presentation` role (a deliberate
-      // "this image is decorative"), which is wrong for row content and also
-      // makes the element unreachable via `getByRole('img')`. Omitting the
-      // attribute keeps the implicit `img` role; a fallback mapper supplies a
-      // real accessible name when the caller has one to give.
+      // `alt` must ALWAYS be present. A missing `alt` leaves role `img` with no
+      // accessible name — a WCAG 1.1.1 / axe `image-alt` failure, and exactly
+      // the shape this repo's own a11y-integration test uses as its canonical
+      // violation fixture. `alt=""` is the valid degrade path (a declared
+      // decorative image), so fall back to it when no name mapper is supplied.
+      // Note this drops the element's role to `presentation`, so a test wanting
+      // getByRole('img') must pass a `fallback`.
       return (
         <img
           src={value}
-          alt={opts.fallback?.(row)}
+          alt={opts.fallback?.(row) ?? ''}
           loading="lazy"
           className="size-6 rounded-sm object-cover"
         />
