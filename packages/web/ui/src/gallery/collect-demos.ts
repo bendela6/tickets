@@ -1,4 +1,12 @@
-import { DEMO_SIZES, type CollectedDemo, type DemoModule, type DemoSize } from './types';
+import { isDefinedState } from './states';
+import {
+  DEMO_SIZES,
+  type AnyDemoState,
+  type CollectedDemo,
+  type CollectedState,
+  type DemoModule,
+  type DemoSize,
+} from './types';
 
 export function kebab(s: string): string {
   return s
@@ -10,7 +18,11 @@ export function kebab(s: string): string {
 function validate(mod: unknown): { ok: true; demo: DemoModule } | { ok: false; error: string } {
   const m = mod as Partial<DemoModule> | null;
   if (!m || typeof m !== 'object') return { ok: false, error: 'module is not an object' };
-  if (!Array.isArray(m.states) || m.states.length === 0) {
+  // A demo needs SOMETHING to show: either sections it authored or a playground
+  // whose controls the axes can be derived from.
+  if (m.states === undefined) {
+    if (!m.playground) return { ok: false, error: 'needs states[] or a playground' };
+  } else if (!Array.isArray(m.states) || m.states.length === 0) {
     return { ok: false, error: 'missing non-empty states[]' };
   }
   if (!m.meta || typeof m.meta.title !== 'string' || typeof m.meta.group !== 'string') {
@@ -26,10 +38,23 @@ function validate(mod: unknown): { ok: true; demo: DemoModule } | { ok: false; e
       return { ok: false, error: 'meta.impl must be a non-empty path or array of paths' };
     }
   }
-  for (const s of m.states) {
-    if (typeof s?.name !== 'string' || typeof s?.render !== 'function') {
+  for (const s of m.states ?? []) {
+    if (isDefinedState(s)) {
+      if (typeof s.title !== 'string' || typeof s.render !== 'function') {
+        return { ok: false, error: 'defineState needs { title: string, render: () => ReactNode }' };
+      }
+      continue;
+    }
+    if (typeof (s as { name?: unknown })?.name !== 'string' || typeof s?.render !== 'function') {
       return { ok: false, error: 'each state needs { name: string, render: () => ReactNode }' };
     }
+  }
+  // Half-migrated is worse than either end: the authored sections would win the
+  // page and the leftover literals would render beside them with no layout and
+  // no source. Make it a visible error rather than a confusing page.
+  const defined = (m.states ?? []).filter(isDefinedState).length;
+  if (defined > 0 && defined < (m.states ?? []).length) {
+    return { ok: false, error: 'states[] mixes defineState() sections with plain literals' };
   }
   if (m.playground !== undefined) {
     const p = m.playground as Partial<import('./controls').AnyPlayground> | null;
@@ -44,6 +69,15 @@ function validate(mod: unknown): { ok: true; demo: DemoModule } | { ok: false; e
     }
   }
   return { ok: true, demo: m as DemoModule };
+}
+
+// `title` and `name` are the same field under two names — the authored form
+// says title because that is what the card's header shows, the literal said
+// name because it predates the card having one.
+function collectState(state: AnyDemoState, demoSlug: string): CollectedState {
+  const defined = isDefinedState(state);
+  const name = defined ? state.title : state.name;
+  return { name, render: state.render, slug: `${demoSlug}--${kebab(name)}`, defined };
 }
 
 /**
@@ -122,7 +156,7 @@ export function collectDemos(glob: Record<string, unknown>): CollectedDemo[] {
       path,
       slug,
       meta: v.demo.meta,
-      states: v.demo.states.map((s) => ({ ...s, slug: `${slug}--${kebab(s.name)}` })),
+      states: (v.demo.states ?? []).map((s) => collectState(s, slug)),
       playground: v.demo.playground,
     };
   });
