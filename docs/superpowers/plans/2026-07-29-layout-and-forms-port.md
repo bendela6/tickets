@@ -2241,6 +2241,28 @@ Run: `cat apps/web/src/form/registry.tsx apps/web/src/form/registry.test.tsx`
 
 Note what the existing test asserts. It must keep passing unchanged — if it asserts the inline field wrapper's markup, that assertion is now covered by `field-wrapper.test.tsx` in the package and the app-side one should be deleted rather than rewritten. Anything else stays.
 
+**The key-enumeration test is NOT one to delete.** `registry.test.tsx` asserts
+`Object.keys(formRegistry.inputs).sort()` equals `['directory', 'text']`. That
+expectation is genuinely obsolete — the key set is what this task changes — so
+**update the expected array**, do not remove the test. Updating an assertion
+whose subject the task deliberately changed is the test doing its job; deleting
+it drops the only coverage that `directory` is registered at all. The package's
+`forms/registry.test.ts` cannot substitute: it knows only `baseInputs`, so it
+cannot tell whether apps/web actually spread them in, and it has no concept of
+`directory`. Replace it with:
+
+```tsx
+  it('registers every base input plus the app-specific directory', () => {
+    expect(Object.keys(formRegistry.inputs).sort()).toEqual([
+      'directory', 'json', 'multi-select', 'number', 'select', 'text', 'textarea', 'toggle',
+    ]);
+  });
+
+  it('registers the four base layouts', () => {
+    expect(Object.keys(formRegistry.layouts).sort()).toEqual(['card', 'column', 'group', 'row']);
+  });
+```
+
 - [ ] **Step 2: Rewrite the registry**
 
 Replace the whole of `apps/web/src/form/registry.tsx` with:
