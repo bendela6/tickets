@@ -47,11 +47,11 @@ export function CopyButton({
       type="button"
       onClick={() => void copy(value)}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md border-(length:--border-thick) px-2.5 py-1 font-mono text-11',
+        'inline-flex items-center gap-1.5 rounded-md border-2 px-2.5 py-1 font-mono text-11',
         // `outline` emphasis resolves to the same border-color + text-color
         // pair the hand-rolled classes used to hardcode (verified against
         // tones.generated.ts): success -> border-green-9/text-green-9,
-        // danger -> border-red-9/text-red-9. Its own `border-(length:...)`
+        // danger -> border-red-9/text-red-9. Its own `border-2`
         // duplicates the base one above; tailwind-merge dedupes it.
         copied
           ? toneClasses('success', 'outline')

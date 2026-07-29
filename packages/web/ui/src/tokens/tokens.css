@@ -58,11 +58,9 @@
 
 /* [data-theme='light'] lets a wrapper re-assert light tokens inside a dark subtree (ThemeSplit) */
 :root, [data-theme='light'] {
-  /* Structural tokens, consumed as border-(length:--border-thick) /
-     ring-(length:--ring-focus). next/layout splits the single 'hair' width
-     into thin (dividers, table rules) and thick (edges you act on). */
-  --border-thin: 1px;
-  --border-thick: 1.5px;
+  /* Structural token, consumed as ring-(length:--ring-focus). Border widths
+     are integers now — `border-1` / `border-2` state their own value, so the
+     thin/thick names bought nothing but a lookup. */
   --ring-focus: 3px;
   /* Layering scale: sticky table headers / overlay scrims / floating portals.
      Consumed as z-(--z-sticky) etc. */

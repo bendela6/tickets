@@ -99,7 +99,7 @@ function ApprovalCard({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-xl border-[1.5px] border-orange-9 bg-orange-3 shadow-lg',
+        'overflow-hidden rounded-xl border-2 border-orange-9 bg-orange-3 shadow-lg',
         decided === null && 'animate-ai-pulse',
       )}
     >
@@ -207,7 +207,7 @@ function ToolStatusDot({ status }: { status: ToolStatus }) {
     return (
       <span
         aria-hidden
-        className="size-2.75 shrink-0 rounded-full border-[1.5px] border-blue-9 animate-ai-spin"
+        className="size-2.75 shrink-0 rounded-full border-2 border-blue-9 animate-ai-spin"
         style={{ background: 'linear-gradient(90deg, var(--color-blue-9) 50%, transparent 50%)' }}
       />
     );

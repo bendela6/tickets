@@ -217,7 +217,7 @@ export function emitTones({ light }) {
       `  '${name}': {\n` +
         `    subtle: 'bg-${scale}-${subtle.bg} text-${scale}-${subtle.text}',\n` +
         `    solid: 'bg-${scale}-${solid.bg} text-${scale}-${solid.text}',\n` +
-        `    outline: 'border-(length:--border-thick) border-${scale}-${outline.border} text-${scale}-${outline.text}',\n` +
+        `    outline: 'border-2 border-${scale}-${outline.border} text-${scale}-${outline.text}',\n` +
         `    text: 'text-${scale}-${text.text}',\n` +
         `  },`,
     );

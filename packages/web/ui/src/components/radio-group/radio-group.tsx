@@ -105,11 +105,11 @@ export function RadioGroup({
               className={toggleMarkClass({
                 fill: 'ring',
                 scale,
-                className: cn('rounded-full border-[1.5px]', CIRCLE[size]),
+                className: cn('rounded-full border-2', CIRCLE[size]),
               })}
             />
             {/* Inner dot as an overlay (not a thick border) so selected reads as a
-                1.5px accent ring around an accent dot, per the spec. */}
+                2px accent ring around an accent dot. */}
             <span
               aria-hidden
               className={toggleGlyphClass({

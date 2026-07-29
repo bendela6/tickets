@@ -33,7 +33,7 @@ describe('tone system', () => {
     expect(toneClasses('green', 'subtle')).toBe('bg-green-3 text-green-11');
     expect(toneClasses('green', 'solid')).toBe('bg-green-9 text-green-contrast');
     expect(toneClasses('green', 'outline')).toBe(
-      'border-(length:--border-thick) border-green-7 text-green-11',
+      'border-2 border-green-7 text-green-11',
     );
     expect(toneClasses('green', 'text')).toBe('text-green-11');
   });
@@ -58,7 +58,7 @@ describe('tone system', () => {
     );
     expect(toneClasses('green', 'solid')).toBe(`bg-green-${STEP.solid} text-green-${STEP.contrast}`);
     expect(toneClasses('green', 'outline')).toBe(
-      `border-(length:--border-thick) border-green-${STEP.border} text-green-${STEP.text}`,
+      `border-2 border-green-${STEP.border} text-green-${STEP.text}`,
     );
     expect(toneClasses('green', 'text')).toBe(`text-green-${STEP.text}`);
   });
@@ -74,7 +74,7 @@ describe('tone system', () => {
 
   it('every class in the map is one of the four known utility shapes', () => {
     const CLASS_RE =
-      /^(bg-[a-z0-9-]+|text-[a-z0-9-]+|border-[a-z0-9-]+|border-\(length:--border-thick\))$/;
+      /^(bg-[a-z0-9-]+|text-[a-z0-9-]+|border-[a-z0-9-]+|border-2)$/;
     for (const emphases of Object.values(TONES)) {
       for (const classes of Object.values(emphases)) {
         for (const cls of classes.split(' ')) {

@@ -39,7 +39,7 @@ const pillClass = variants({
         solid: over(NEUTRAL_TONE, (t) => `bg-${t.solid} text-${t.contrast}`),
         outline: over(
           NEUTRAL_TONE,
-          (t) => `border-(length:--border-thick) border-${t.border} text-${t.text}`,
+          (t) => `border-2 border-${t.border} text-${t.text}`,
         ),
         text: over(NEUTRAL_TONE, (t) => `text-${t.text}`),
       },

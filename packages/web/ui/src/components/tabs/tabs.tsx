@@ -34,7 +34,7 @@ const listClass = variants({
       default: 'underline',
       options: {
         underline: over(SIZE, (size) =>
-          cn('flex items-center border-b-(length:--border-thick) border-gray-6', LIST_BOX.underline[size]),
+          cn('flex items-center border-b-2 border-gray-6', LIST_BOX.underline[size]),
         ),
         pill: over(SIZE, (size) =>
           cn('inline-flex items-center rounded-lg bg-surface-inset', LIST_BOX.pill[size]),
