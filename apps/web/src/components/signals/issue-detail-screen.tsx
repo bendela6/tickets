@@ -198,7 +198,7 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
             <button
               type="button"
               onClick={() => void issueQuery.refetch()}
-              className="h-8 rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+              className="h-8 rounded-lg border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
             >
               ↻ Retry
             </button>
@@ -264,7 +264,7 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
         ) : null}
       </div>
 
-      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-[10px] border border-gray-6 bg-surface-raised px-4.5 py-3">
+      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-xl border border-gray-6 bg-surface-raised px-4.5 py-3">
         <div>
           <div className="mb-0.75 font-mono text-10 font-500 tracking-wide text-gray-9">EVENTS</div>
           <div className="font-mono text-14 font-600 text-gray-12">{formatCount(issue.eventCount)}</div>

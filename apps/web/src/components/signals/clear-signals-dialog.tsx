@@ -131,7 +131,7 @@ export function ClearSignalsDialog({
                   value={olderThanDays}
                   disabled={mode !== 'older-than'}
                   onChange={(event) => setOlderThanDays(Number(event.target.value) as OlderThanDays)}
-                  className="h-7 rounded-[6px] border border-gray-7 bg-surface-raised px-1.5 font-sans text-[12.5px] text-gray-12 disabled:text-gray-9"
+                  className="h-7 rounded-md border border-gray-7 bg-surface-raised px-1.5 font-sans text-[12.5px] text-gray-12 disabled:text-gray-9"
                 >
                   {OLDER_THAN_OPTIONS.map((option) => (
                     <option key={option.days} value={option.days}>
@@ -156,7 +156,7 @@ export function ClearSignalsDialog({
                   value={release}
                   disabled={mode !== 'release'}
                   onChange={(event) => setRelease(event.target.value)}
-                  className="h-7 min-w-0 flex-1 rounded-[6px] border border-gray-7 bg-surface-raised px-1.5 font-sans text-[12.5px] text-gray-12 disabled:text-gray-9"
+                  className="h-7 min-w-0 flex-1 rounded-md border border-gray-7 bg-surface-raised px-1.5 font-sans text-[12.5px] text-gray-12 disabled:text-gray-9"
                 >
                   <option value="">Choose a release…</option>
                   {releases.map((candidate) => (
@@ -168,7 +168,7 @@ export function ClearSignalsDialog({
               </div>
             </div>
 
-            <div className="mt-3 rounded-[8px] border border-gray-6 bg-surface-inset px-3 py-2 font-mono text-[11.5px] text-gray-11">
+            <div className="mt-3 rounded-lg border border-gray-6 bg-surface-inset px-3 py-2 font-mono text-[11.5px] text-gray-11">
               Will clear: {scopeLabel(mode, olderThanDays, release)}
             </div>
 

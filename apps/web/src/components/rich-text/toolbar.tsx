@@ -31,7 +31,7 @@ const HEADING_LEVELS = [1, 2, 3] as const;
 // 26px / min-width 26 / radius 6 (RteToolbar.dc.html BTN const); hover =
 // inset bg, active = accent-subtle bg + accent content.
 const BTN =
-  'inline-flex h-6.5 min-w-6.5 flex-none items-center justify-center gap-0.75 rounded-[6px] px-1.5 ' +
+  'inline-flex h-6.5 min-w-6.5 flex-none items-center justify-center gap-0.75 rounded-md px-1.5 ' +
   'text-gray-11 hover:bg-surface-inset disabled:pointer-events-none disabled:opacity-40';
 const ACTIVE = 'bg-indigo-3 text-indigo-9 hover:bg-indigo-3';
 
@@ -101,7 +101,7 @@ const CONTROLS: Record<string, ControlDef> = {
   },
   taskList: {
     content: (
-      <span className="box-border flex h-3 w-3 items-center justify-center rounded-[3.5px] border-[1.5px] border-current">
+      <span className="box-border flex h-3 w-3 items-center justify-center rounded-sm border-[1.5px] border-current">
         <Icon name="check" size="2xs" />
       </span>
     ),
@@ -120,7 +120,7 @@ const CONTROLS: Record<string, ControlDef> = {
   },
   image: {
     content: (
-      <span className="relative box-border inline-block h-3 w-3.75 rounded-[3px] border-[1.5px] border-current">
+      <span className="relative box-border inline-block h-3 w-3.75 rounded-sm border-[1.5px] border-current">
         <span className="absolute top-0.5 left-0.5 h-0.75 w-0.75 rounded-full bg-current" />
       </span>
     ),
@@ -313,7 +313,7 @@ function BlockTypeSelect({ editor, disabled }: { editor: Editor | null; disabled
         <button
           type="button"
           disabled={disabled === true || editor === null}
-          className="mr-1 inline-flex h-6.5 flex-none items-center gap-1 rounded-[6px] px-2 text-gray-11 hover:bg-surface-inset disabled:pointer-events-none disabled:opacity-40"
+          className="mr-1 inline-flex h-6.5 flex-none items-center gap-1 rounded-md px-2 text-gray-11 hover:bg-surface-inset disabled:pointer-events-none disabled:opacity-40"
         >
           <span className="font-sans text-12 font-500">{currentBlockLabel(editor)}</span>
           <Icon name="chevron-down" size="sm" />
@@ -373,11 +373,11 @@ function OverflowMenu({
           <Icon name="plus" size="md" />
         </button>
       </MenuTrigger>
-      <MenuContent align="end" className="w-54 rounded-[10px] p-1.5">
+      <MenuContent align="end" className="w-54 rounded-xl p-1.5">
         {ids.has('highlight') ? (
           <MenuItem className="h-7.5" shortcut="⌘⇧H" onSelect={() => run(CONTROLS.highlight!.run)}>
             <span className="inline-flex items-center gap-2.25">
-              <span className="flex h-4 w-4 items-center justify-center rounded-[3px] bg-highlight font-sans text-12 font-600 text-gray-12">
+              <span className="flex h-4 w-4 items-center justify-center rounded-sm bg-highlight font-sans text-12 font-600 text-gray-12">
                 A
               </span>
               Highlight

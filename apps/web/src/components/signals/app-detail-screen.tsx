@@ -92,7 +92,7 @@ export function AppDetailScreen({ appId }: { appId: number }) {
             <button
               type="button"
               onClick={() => void appQuery.refetch()}
-              className="h-8 rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+              className="h-8 rounded-lg border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
             >
               ↻ Retry
             </button>
@@ -123,7 +123,7 @@ export function AppDetailScreen({ appId }: { appId: number }) {
       <div className="mb-4 flex items-start gap-3">
         <span
           className={cn(
-            'flex size-9 shrink-0 items-center justify-center rounded-[8px] font-mono text-13 font-600',
+            'flex size-9 shrink-0 items-center justify-center rounded-lg font-mono text-13 font-600',
             avatarTone(app.slug),
           )}
         >
@@ -140,7 +140,7 @@ export function AppDetailScreen({ appId }: { appId: number }) {
             <button
               type="button"
               aria-label="App actions"
-              className="flex size-8 shrink-0 items-center justify-center rounded-[8px] border border-gray-7 bg-surface-raised text-gray-11 hover:bg-surface-inset hover:text-gray-12"
+              className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-gray-7 bg-surface-raised text-gray-11 hover:bg-surface-inset hover:text-gray-12"
             >
               ⋯
             </button>
@@ -175,7 +175,7 @@ export function AppDetailScreen({ appId }: { appId: number }) {
         ) : null}
       </div>
 
-      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-[10px] border border-gray-6 bg-surface-raised px-4.5 py-3">
+      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-xl border border-gray-6 bg-surface-raised px-4.5 py-3">
         <div>
           <div className="mb-0.75 font-mono text-10 font-500 tracking-wide text-gray-9">SIGNALS · 24H</div>
           <div className="font-mono text-14 font-600 text-gray-12">{formatCount(signals24h)}</div>

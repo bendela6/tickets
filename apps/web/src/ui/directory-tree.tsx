@@ -58,7 +58,7 @@ function Row({ row, onToggle, onSelect }: { row: VisibleRow; onToggle: (path: st
           <span
             aria-hidden
             className={cn(
-              'size-3 shrink-0 rounded-[2px] border',
+              'size-3 shrink-0 rounded-sm border',
               row.error ? 'border-red-9' : 'border-folder',
               row.expanded && !row.error && 'bg-folder',
             )}

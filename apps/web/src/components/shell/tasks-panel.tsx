@@ -7,7 +7,7 @@ import { NewProjectDialog } from './new-project-dialog';
 
 function navItemClasses(active: boolean) {
   return cn(
-    'flex h-8 items-center gap-2 rounded-[7px] px-2.25 font-sans text-13/19',
+    'flex h-8 items-center gap-2 rounded-lg px-2.25 font-sans text-13/19',
     active ? 'bg-surface-inset font-500 text-gray-12' : 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
   );
 }
@@ -53,13 +53,13 @@ export function TasksPanel({
       <button
         type="button"
         title="Command palette (coming soon)"
-        className="mb-2 flex h-8 cursor-pointer items-center gap-1.75 rounded-[8px] border border-gray-6 bg-surface-raised px-2.5 hover:border-gray-7"
+        className="mb-2 flex h-8 cursor-pointer items-center gap-1.75 rounded-lg border border-gray-6 bg-surface-raised px-2.5 hover:border-gray-7"
       >
         <span aria-hidden className="text-12/17 text-gray-9">
           ⌕
         </span>
         <span className="flex-1 text-left font-sans text-13/19 text-gray-9">Search…</span>
-        <span className="rounded-[4px] border border-gray-6 px-1 font-mono text-10 text-gray-9">
+        <span className="rounded-sm border border-gray-6 px-1 font-mono text-10 text-gray-9">
           ⌘K
         </span>
       </button>
@@ -67,7 +67,7 @@ export function TasksPanel({
       <button
         type="button"
         onClick={handleNewTicket}
-        className="mb-3.5 h-8.5 rounded-[8px] bg-indigo-9 font-sans text-13/19 font-500 text-indigo-contrast hover:bg-indigo-10"
+        className="mb-3.5 h-8.5 rounded-lg bg-indigo-9 font-sans text-13/19 font-500 text-indigo-contrast hover:bg-indigo-10"
       >
         ＋ New item
       </button>
@@ -96,7 +96,7 @@ export function TasksPanel({
               onClick={onNavigate}
               className={navItemClasses(project.key === activeProjectKey)}
             >
-              <span className="rounded-[4px] bg-surface-inset px-1.25 py-0.5 font-mono text-10 font-500 text-gray-11">
+              <span className="rounded-sm bg-surface-inset px-1.25 py-0.5 font-mono text-10 font-500 text-gray-11">
                 {project.itemPrefix}
               </span>
               <span className="flex-1 truncate">{project.name}</span>
@@ -115,7 +115,7 @@ export function TasksPanel({
             onNavigate?.();
             setCreatingProject(true);
           }}
-          className="flex h-7.5 cursor-pointer items-center gap-2 rounded-[7px] px-2.25 font-sans text-12/17 text-gray-9 hover:bg-surface-inset"
+          className="flex h-7.5 cursor-pointer items-center gap-2 rounded-lg px-2.25 font-sans text-12/17 text-gray-9 hover:bg-surface-inset"
         >
           ＋<span>New project</span>
         </button>

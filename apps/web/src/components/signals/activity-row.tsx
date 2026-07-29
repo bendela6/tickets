@@ -71,10 +71,10 @@ export function ActivityRowSkeleton({ index = 0 }: { index?: number }) {
     >
       <span className="size-3.5 rounded-md bg-surface-inset" />
       <span className="size-2.25 rounded-full bg-surface-inset" />
-      <span className="block h-2.75 rounded-xs bg-surface-inset" style={{ width: `${width}%` }} />
-      <span className="inline-block h-3.5 w-18 rounded-xs bg-surface-inset" />
-      <span className="inline-block h-2.25 w-6.5 rounded-xs bg-surface-inset" />
-      <span className="inline-block h-2.25 w-13 rounded-xs bg-surface-inset" />
+      <span className="block h-2.75 rounded-sm bg-surface-inset" style={{ width: `${width}%` }} />
+      <span className="inline-block h-3.5 w-18 rounded-sm bg-surface-inset" />
+      <span className="inline-block h-2.25 w-6.5 rounded-sm bg-surface-inset" />
+      <span className="inline-block h-2.25 w-13 rounded-sm bg-surface-inset" />
     </div>
   );
 }

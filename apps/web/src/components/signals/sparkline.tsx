@@ -42,7 +42,10 @@ export function Sparkline({
             key={i}
             data-testid="sparkline-bar"
             style={{ height }}
-            className={cn('w-[5px] rounded-[1px]', color)}
+            // rounded-full, not a scale rung: bars are 5px wide and as short as
+            // MIN_HEIGHT_PX (2px) — any rounded-sm corner (4px) would overflow
+            // the bar, so this stays off the radius scale deliberately.
+            className={cn('w-[5px] rounded-full', color)}
           />
         );
       })}

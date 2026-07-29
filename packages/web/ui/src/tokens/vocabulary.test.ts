@@ -29,12 +29,9 @@ describe('RETIRED patterns', () => {
 });
 
 describe('scanRetired', () => {
-  it('reads the in-scope trees and returns locatable hits', () => {
-    // Radius is swept in Tasks 2-3; this pins that the scanner is wired to
-    // real files rather than silently walking an empty tree.
-    const hits = scanRetired('radius');
-    expect(hits.length).toBeGreaterThan(0);
-    expect(hits[0]).toMatch(/^(packages|apps)\/.+:\d+: /);
+  it('walks real files rather than an empty tree', () => {
+    // `border` is not swept until Task 6, so this is a live tree with hits in it.
+    expect(scanRetired('border').length).toBeGreaterThan(0);
   });
 
   it('never reports a file under apps/eer — that app owns its own scale', () => {
@@ -42,8 +39,7 @@ describe('scanRetired', () => {
     expect(all.filter((h) => h.startsWith('apps/eer'))).toEqual([]);
   });
 
-  it('has no retired radius form left in @tickets/ui or the playground', () => {
-    const packagesOnly = scanRetired('radius').filter((h) => h.startsWith('packages/'));
-    expect(packagesOnly).toEqual([]);
+  it('has no retired radius form anywhere in scope', () => {
+    expect(scanRetired('radius')).toEqual([]);
   });
 });

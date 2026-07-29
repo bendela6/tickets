@@ -164,7 +164,7 @@ export function NewAppDialog({
                 value={tab}
                 onChange={(next) => setTab(next as SnippetTab)}
               />
-              <pre className="overflow-x-auto rounded-b-[8px] border border-t-0 border-gray-6 bg-surface-inset px-3.5 py-3 font-mono text-[11.5px] leading-relaxed text-gray-11">
+              <pre className="overflow-x-auto rounded-b-lg border border-t-0 border-gray-6 bg-surface-inset px-3.5 py-3 font-mono text-[11.5px] leading-relaxed text-gray-11">
                 {snippetFor(tab, created.dsn)}
               </pre>
             </div>

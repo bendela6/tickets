@@ -13,9 +13,9 @@ export function DirectoryPicker({
 }) {
   const roots = useWorkdirRoots();
   return (
-    <div className="overflow-hidden rounded-[10px] border border-gray-7 bg-gray-1">
+    <div className="overflow-hidden rounded-xl border border-gray-7 bg-gray-1">
       <div className="flex h-8 items-center gap-2 border-b border-gray-6 bg-surface-inset px-2.5">
-        <span aria-hidden className="size-3 shrink-0 rounded-[2px] border border-folder" />
+        <span aria-hidden className="size-3 shrink-0 rounded-sm border border-folder" />
         {value ? (
           <span className="truncate font-mono text-12/17 font-500 text-indigo-9">{value}</span>
         ) : (

@@ -57,14 +57,14 @@ function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
     <span
       aria-hidden
       className={cn(
-        'flex size-9 shrink-0 items-center justify-center rounded-[10px]',
+        'flex size-9 shrink-0 items-center justify-center rounded-xl',
         colored ? iconColorClasses[hexToOptionColor(type.config.color)] : 'bg-surface-inset text-gray-11',
       )}
     >
       {dashed ? (
-        <span className="size-2.5 shrink-0 rounded-xs border-[1.5px] border-dashed border-gray-9" />
+        <span className="size-2.5 shrink-0 rounded-sm border-[1.5px] border-dashed border-gray-9" />
       ) : (
-        <span className="size-2.5 shrink-0 rounded-xs bg-current" />
+        <span className="size-2.5 shrink-0 rounded-sm bg-current" />
       )}
     </span>
   );
@@ -72,7 +72,7 @@ function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
 
 function ProjectChip({ project }: { project: Project }) {
   return (
-    <span className="inline-flex h-7 shrink-0 items-center gap-1.75 rounded-[7px] border border-gray-6 px-2.5 font-sans text-13/19 font-500 text-gray-12">
+    <span className="inline-flex h-7 shrink-0 items-center gap-1.75 rounded-lg border border-gray-6 px-2.5 font-sans text-13/19 font-500 text-gray-12">
       <span className="rounded-sm bg-surface-inset px-1.25 py-0.5 font-mono text-11/13 tracking-wider font-500">
         {project.itemPrefix}
       </span>
@@ -88,7 +88,7 @@ function CloseButton() {
         type="button"
         aria-label="Close"
         className={cn(
-          'flex size-7.5 shrink-0 items-center justify-center rounded-[7px] border border-gray-6 bg-transparent',
+          'flex size-7.5 shrink-0 items-center justify-center rounded-lg border border-gray-6 bg-transparent',
           'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
           'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-3',
         )}
@@ -379,7 +379,7 @@ export function NewItemDialog({
                 placeholder="Title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                className="h-10 shrink-0 rounded-[9px] px-3.25 text-15"
+                className="h-10 shrink-0 rounded-lg px-3.25 text-15"
               />
               {gridRows.length > 0 ? (
                 <div className="grid shrink-0 grid-cols-2 gap-x-4 gap-y-3">
@@ -513,7 +513,7 @@ export function SubtaskQuickCreate({
   return (
     <div
       className={cn(
-        'flex items-center gap-2.5 rounded-[10px] border border-gray-7 bg-surface-raised py-1.5 pl-3.25 pr-1.5',
+        'flex items-center gap-2.5 rounded-xl border border-gray-7 bg-surface-raised py-1.5 pl-3.25 pr-1.5',
         'focus-within:border-indigo-9 focus-within:ring-[3px] focus-within:ring-indigo-3',
       )}
     >

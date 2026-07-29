@@ -155,7 +155,7 @@ export function IssuesScreen() {
         dimmed={isLoading || isError}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[12px] border border-gray-6 bg-surface-raised">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
         <TableHeader />
 
         {isList ? (
@@ -239,7 +239,7 @@ export function IssuesScreen() {
                 <button
                   type="button"
                   onClick={() => void issuesQuery.refetch()}
-                  className="h-8 rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+                  className="h-8 rounded-lg border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
                 >
                   ↻ Retry
                 </button>
