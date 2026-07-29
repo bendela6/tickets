@@ -70,7 +70,11 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
           {activity.map((count, index) => (
             <span
               key={index}
-              className="w-1.25 rounded-t-sm bg-gray-7"
+              // rounded-t-full, not a scale rung: bars are 5px wide (w-1.25) and
+              // as short as BAR_MIN_PX (3px) — a rounded-t-sm corner (4px) would
+              // overflow both the width and the minimum height, so this stays
+              // off the radius scale deliberately, matching sparkline.tsx.
+              className="w-1.25 rounded-t-full bg-gray-7"
               style={{
                 height: `${BAR_MIN_PX + Math.round((count / peak) * (BAR_MAX_PX - BAR_MIN_PX))}px`,
               }}
