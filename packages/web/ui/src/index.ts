@@ -11,6 +11,7 @@
 // flag is ever removed, all 18 demo modules and their raw source text land in
 // the app's entry chunk.
 export * from './components';
+export * from './forms';
 export * from './style';
 export * from './foundation';
 export * from './gallery';
