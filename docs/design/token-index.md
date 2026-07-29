@@ -196,9 +196,10 @@ Declared as `--text-<n>--line-height` and `--text-3--letter-spacing`.
 | `--radius-lg` | 8px | Cards, list rows, popovers |
 | `--radius-xl` | 12px | Panels, dialogs, sheets |
 
-`rounded-full` retained as the one exception. 337 existing `rounded-sm`/`md`/`lg`/`xl`
+`rounded-full` retained as the one exception. 174 pre-existing `rounded-sm`/`md`/`lg`/`xl`
 usages (incl. side-specific forms) across `packages/web/ui/src`,
-`packages/web/playground/src` and `apps/web/src` keep the pixel they already had.
+`packages/web/playground/src` and `apps/web/src` kept the pixel they already
+had; the sweep brought the total to 338.
 
 # Shadow — 3
 
