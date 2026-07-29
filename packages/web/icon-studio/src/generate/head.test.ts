@@ -64,3 +64,39 @@ test('throws when there is no </head> to insert before', () => {
     /<\/head>/,
   );
 });
+
+test('throws when HEAD_START is present but HEAD_END is missing', () => {
+  const block = buildHeadBlock(DEFAULT_CONFIG);
+  const html = page(`
+    ${HEAD_START}
+    <stale>tag</stale>`);
+  expect(() => injectHeadBlock(html, block)).toThrow(/HEAD_END/);
+  expect(() => injectHeadBlock(html, block)).toThrow(/index.html/);
+});
+
+test('throws when HEAD_END is present but HEAD_START is missing', () => {
+  const block = buildHeadBlock(DEFAULT_CONFIG);
+  const html = page(`
+    <stale>tag</stale>
+    ${HEAD_END}`);
+  expect(() => injectHeadBlock(html, block)).toThrow(/HEAD_START/);
+  expect(() => injectHeadBlock(html, block)).toThrow(/index.html/);
+});
+
+test('throws when markers are present but in reverse order', () => {
+  const block = buildHeadBlock(DEFAULT_CONFIG);
+  const html = page(`
+    ${HEAD_END}
+    <stale>tag</stale>
+    ${HEAD_START}`);
+  expect(() => injectHeadBlock(html, block)).toThrow(/out of order/);
+  expect(() => injectHeadBlock(html, block)).toThrow(/index.html/);
+});
+
+test('regression: clean insert and identical injection still work', () => {
+  const block = buildHeadBlock(DEFAULT_CONFIG);
+  const html = page('');
+  const once = injectHeadBlock(html, block);
+  expect(once).toContain(HEAD_START);
+  expect(injectHeadBlock(once, block)).toBe(once);
+});
