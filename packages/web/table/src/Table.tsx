@@ -79,7 +79,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
 
   const headerNode = render.thead({
     gridTemplate,
-    children: columns.map((col) => {
+    children: columns.map((col, colIndex) => {
       const sortIdx = state.sort.findIndex((s) => s.field === col.key);
       const sort = sortIdx >= 0 ? state.sort[sortIdx] : undefined;
       const colWidth = startWidthOf(col, state.widths);
@@ -87,6 +87,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
         <RenderTh
           key={col.key}
           column={col}
+          index={colIndex}
           sort={sort ? { direction: sort.direction, index: sortIdx } : undefined}
           totalSorts={state.sort.length}
           onSortClick={(e) => onHeaderClick(col, e)}
@@ -147,9 +148,14 @@ export function Table<T>(props: TableProps<T>): ReactNode {
           );
         }
 
-        const cells = columns.map((col) => (
+        const cells = columns.map((col, colIndex) => (
           <Fragment key={col.key}>
-            {render.td({ column: col, row: item.row, children: renderCellContent(col, item.row) })}
+            {render.td({
+              column: col,
+              index: colIndex,
+              row: item.row,
+              children: renderCellContent(col, item.row),
+            })}
           </Fragment>
         ));
         return (
@@ -189,6 +195,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
 
 function RenderTh<T>(props: {
   column: Column<T>;
+  index: number;
   sort?: { direction: 'asc' | 'desc'; index: number };
   totalSorts: number;
   onSortClick: (e: MouseEvent) => void;
@@ -197,6 +204,7 @@ function RenderTh<T>(props: {
 }): ReactNode {
   return props.slot({
     column: props.column,
+    index: props.index,
     sort: props.sort,
     totalSorts: props.totalSorts,
     onSortClick: props.onSortClick,
