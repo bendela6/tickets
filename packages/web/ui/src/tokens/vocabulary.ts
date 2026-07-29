@@ -47,8 +47,8 @@ export const RETIRED: Record<RetiredFamily, RegExp> = {
   // Arbitrary radii, plus the four rungs cleared to `initial`.
   radius: /(?<![\w-])rounded(-[a-z]{1,2})?-(\[[^\]\n]+\]|xs|2xl|3xl|4xl)(?![\w-])/g,
   // Bare `border` / `border-b` (width utilities with no number), and 1.5px.
-  border: /(?<=[\s"'`{])border(-[trblxy])?(?=[\s"'`}])|border(-[trblxy])?-\[1\.5px\]/g,
-  ring: /ring-\[3px\]|ring-\(length:--ring-focus\)/g,
+  border: /(?<=[\s"'`{])border(-[trblxy])?(?=[\s"'`}])|(?<![\w-])border(-[trblxy])?-\[1\.5px\]/g,
+  ring: /(?<![\w-])ring-(\[3px\]|\(length:--ring-focus\))/g,
   z: /(?<![\w-])z-(3|30)(?![\w-])/g,
 };
 
