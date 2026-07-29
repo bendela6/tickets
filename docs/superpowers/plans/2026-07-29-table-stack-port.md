@@ -1723,10 +1723,23 @@ describe('BadgeColumn', () => {
 });
 
 describe('ImageColumn', () => {
+  // Passes a `fallback` so the image has a real accessible name and therefore
+  // role `img`. Without one the component correctly emits `alt=""` (decorative),
+  // which drops the role to `presentation` — that is the right accessibility
+  // outcome, not a test-ergonomics problem to route around.
   it('renders the image when there is a src', () => {
-    const R = ImageColumn();
+    const R = ImageColumn({ fallback: () => 'Alpha' });
     render(<>{R({ value: 'https://example.com/a.png', row: {} })}</>);
-    expect(screen.getByRole('img')).toHaveAttribute('src', 'https://example.com/a.png');
+    expect(screen.getByRole('img', { name: 'Alpha' })).toHaveAttribute(
+      'src',
+      'https://example.com/a.png',
+    );
+  });
+
+  it('marks the image decorative when no name can be derived', () => {
+    const R = ImageColumn();
+    const { container } = render(<>{R({ value: 'https://example.com/a.png', row: {} })}</>);
+    expect(container.querySelector('img')).toHaveAttribute('alt', '');
   });
 
   it('falls back to an avatar built from the row', () => {
@@ -1805,10 +1818,17 @@ type ImageColumnOpts = {
 export function ImageColumn(opts: ImageColumnOpts = {}): Renderer<string | null | undefined> {
   return ({ value, row }) => {
     if (value) {
+      // `alt` must ALWAYS be present. A missing `alt` leaves role `img` with no
+      // accessible name — a WCAG 1.1.1 / axe `image-alt` failure, and exactly
+      // the shape this repo's own a11y-integration test uses as its canonical
+      // violation fixture. `alt=""` is the valid degrade path (a declared
+      // decorative image), so fall back to it when no name mapper is supplied.
+      // Note this drops the element's role to `presentation`, so a test wanting
+      // getByRole('img') must pass a `fallback`.
       return (
         <img
           src={value}
-          alt=""
+          alt={opts.fallback?.(row) ?? ''}
           loading="lazy"
           className="size-6 rounded-sm object-cover"
         />
