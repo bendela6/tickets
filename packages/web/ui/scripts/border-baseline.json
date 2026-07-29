@@ -41,8 +41,6 @@
     "packages/web/ui/src/foundation/colors/colors.ts::what: 'text' | 'border',",
     "packages/web/ui/src/foundation/colors/colors.ts::what: 'text' | 'border';",
     "packages/web/ui/src/foundation/layout/layout.demo.tsx::{ name: 'Drift', render: () => <DriftView families={['border', 'ring', 'z', 'breakpoint']} /> },",
-    "packages/web/ui/src/foundation/spec.ts::export const BORDERS = tokens(layoutTokens.border, 'border');",
-    "packages/web/ui/src/foundation/spec.ts::family: 'border',",
-    "packages/web/ui/src/foundation/spec.ts::rows: driftFor('border', BORDERS, liveTokens(/^border-[a-z]+$/)),"
+    "packages/web/ui/src/foundation/spec.ts::export const BORDERS = tokens(layoutTokens.border, 'border');"
   ]
 }

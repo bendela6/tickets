@@ -7,6 +7,7 @@ import {
   FONT_WEIGHTS,
   LAYERS,
   RADII,
+  RINGS,
   SHADOWS,
   TEXT_SIZES,
   drift,
@@ -73,13 +74,14 @@ describe('spec tokens', () => {
   });
 
   it('exposes each remaining family at its documented size', () => {
-    expect(RADII).toHaveLength(4);
+    expect(RADII.map((r) => r.name)).toEqual(['radius-sm', 'radius-md', 'radius-lg', 'radius-xl']);
     expect(FONT_WEIGHTS.map((w) => w.value)).toEqual(['400', '500', '600']);
-    expect(DURATIONS).toHaveLength(3);
+    expect(DURATIONS.map((d) => d.name)).toEqual(['duration-120', 'duration-200', 'duration-320']);
     expect(EASINGS).toHaveLength(2);
-    expect(BORDERS).toHaveLength(2);
-    expect(LAYERS).toHaveLength(3);
-    expect(BREAKPOINTS).toHaveLength(2);
+    expect(BORDERS.map((b) => b.name)).toEqual(['border-1', 'border-2']);
+    expect(RINGS.map((r) => r.name)).toEqual(['ring-3']);
+    expect(LAYERS.map((l) => l.name)).toEqual(['z-10', 'z-40', 'z-50']);
+    expect(BREAKPOINTS.map((b) => b.value)).toEqual(['640px', '768px', '1024px', '1280px', '1536px']);
   });
 });
 
@@ -143,24 +145,29 @@ describe('driftFor', () => {
 });
 
 describe('drift', () => {
+  it('covers only the families that are actually tokenized', () => {
+    // Border, ring, z, duration and breakpoint are Tailwind-native now: the
+    // value lives at the call site and nowhere else. Drift measures the gap
+    // between two copies of a value, so a family with one copy has none to
+    // measure, and listing it would report every rung as `dropped` forever.
+    expect(drift().map((f) => f.family)).toEqual([
+      'text',
+      'radius',
+      'shadow',
+      'font',
+      'font-weight',
+      'ease',
+      'animate',
+    ]);
+  });
+
   it('pins what the proposal actually costs the live sheet', () => {
     const byFamily = Object.fromEntries(drift().map((f) => [f.family, f.rows]));
-
-    // Every proposed size exists in the sheet. The nine legacy NAMES also
-    // still exist and are reported dropped — see the ratchet below.
     expect(byFamily.text?.filter((r) => r.status === 'added')).toEqual([]);
-
-    // Radius is migrated: the six custom names are gone and the four steps now
-    // resolve to Tailwind's own sm/md/lg/xl, which happen to be exactly
-    // 4/6/8/12px. Nothing of ours is left in the sheet to drop.
-    expect(byFamily.radius?.filter((r) => r.status === 'dropped')).toEqual([]);
-
-    // Elevation now ships all three levels — the middle one was the addition.
+    // Radius is migrated: the four rungs resolve to Tailwind's own sm/md/lg/xl,
+    // which are exactly 4/6/8/12px. Nothing of ours is left to drop.
+    expect(byFamily.radius?.filter((r) => r.status !== 'matched')).toEqual([]);
     expect(byFamily.shadow?.filter((r) => r.status !== 'matched')).toEqual([]);
-
-    // Motion has landed: durations and curves are named in the sheet now, so
-    // every proposed one matches something live.
-    // (deleted here, restored in narrowed form by Task 8)
     expect(byFamily.ease?.every((r) => r.status === 'matched')).toBe(true);
     expect(byFamily.animate?.every((r) => r.status === 'matched')).toBe(true);
   });

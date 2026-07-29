@@ -1,17 +1,8 @@
 {
   "duration": {
-    "fast": {
-      "$type": "duration",
-      "$value": "120ms"
-    },
-    "base": {
-      "$type": "duration",
-      "$value": "200ms"
-    },
-    "slow": {
-      "$type": "duration",
-      "$value": "320ms"
-    }
+    "120": { "$type": "duration", "$value": "120ms" },
+    "200": { "$type": "duration", "$value": "200ms" },
+    "320": { "$type": "duration", "$value": "320ms" }
   },
   "ease": {
     "out": {

@@ -1,42 +1,21 @@
 {
   "border": {
-    "thin": {
-      "$type": "dimension",
-      "$value": "1px"
-    },
-    "thick": {
-      "$type": "dimension",
-      "$value": "1.5px"
-    }
+    "1": { "$type": "dimension", "$value": "1px" },
+    "2": { "$type": "dimension", "$value": "2px" }
   },
   "ring": {
-    "focus": {
-      "$type": "dimension",
-      "$value": "3px"
-    }
+    "3": { "$type": "dimension", "$value": "3px" }
   },
   "z": {
-    "sticky": {
-      "$type": "number",
-      "$value": "10"
-    },
-    "scrim": {
-      "$type": "number",
-      "$value": "40"
-    },
-    "overlay": {
-      "$type": "number",
-      "$value": "50"
-    }
+    "10": { "$type": "number", "$value": "10" },
+    "40": { "$type": "number", "$value": "40" },
+    "50": { "$type": "number", "$value": "50" }
   },
   "breakpoint": {
-    "narrow": {
-      "$type": "dimension",
-      "$value": "1024px"
-    },
-    "wide": {
-      "$type": "dimension",
-      "$value": "1536px"
-    }
+    "sm": { "$type": "dimension", "$value": "640px" },
+    "md": { "$type": "dimension", "$value": "768px" },
+    "lg": { "$type": "dimension", "$value": "1024px" },
+    "xl": { "$type": "dimension", "$value": "1280px" },
+    "2xl": { "$type": "dimension", "$value": "1536px" }
   }
 }
