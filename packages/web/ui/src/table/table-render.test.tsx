@@ -61,7 +61,7 @@ function Harness(props: Partial<React.ComponentProps<typeof Table<Row>>>) {
         onSortChange={() => {}}
         onWidthChange={() => {}}
         isLoading={false}
-        render={tableRender}
+        render={tableRender<Row>()}
         {...props}
       />
     </div>
