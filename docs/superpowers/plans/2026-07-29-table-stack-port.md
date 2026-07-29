@@ -15,8 +15,9 @@ Prerequisite: **Plan 1 Task 1 must be merged** — the adapter's demos use `Stac
 ## Global Constraints
 
 - **The engine imports nothing from `@tickets/ui`.** That separation is the whole reason it is its own package. If a task seems to need a UI import, the thing you want belongs in a render slot instead.
-- **Never copy items-core's markup.** Their table slots are `bg-slate-100 dark:bg-slate-900`, `text-14`, `border-1`, `px-12`, `text-[12px]`. Ports go through Instrument tokens: `bg-surface-raised`, `bg-gray-1`, `border-gray-6`, `text-gray-9/11/12`, `text-ui`, `text-meta`, `text-11/13`, and the tone scale via `toneClasses`.
+- **Never copy items-core's markup.** Their table slots are `bg-slate-100 dark:bg-slate-900`, `text-14`, `border-1`, `px-12`, `text-[12px]`. Ports go through Instrument tokens: `bg-surface-raised`, `bg-gray-1`, `border-gray-6`, `text-gray-9/11/12`, `text-13/19`, `text-12/17`, `text-11/13`, and the tone scale via `toneClasses`.
 - **No arbitrary `[...]` Tailwind values.** items-core's helpers use `text-[12px]`, `text-[12.5px]`, `text-[10px]`, `rounded-[4px]` — every one must become a named token or a round scale step.
+- **The type scale is numeric, and the role names are RETIRED.** `tokens.css` does `--text-*: initial;` before defining `--text-9` … `--text-24`, so `text-ui`, `text-meta` and `text-label` compile to nothing and render as unstyled text. Commit `4205792` retired them with this mapping — use the right-hand column: `text-ui` → **`text-13/19`**, `text-meta` → **`text-12/17`**, `text-label` → **`text-11/13 tracking-wider`**. There is no `text-32`; the scale stops at `text-24`. `tokens:verify` does **not** catch a dead type class, so nothing but review will flag this.
 - **Verbatim-port tasks change three things only:** the import specifier `@bw/table` → `@tickets/table`, the localStorage key prefix, and formatting. Do not "improve" logic in a port task — Task 4 and Task 5 are where changes belong.
 - Tests assert observable behaviour. The engine's tests do this through `makeStubRender`, whose slots emit `data-slot` markers — assert on those, never on styled chrome.
 - Conventional commits: `feat(table): …`, `feat(ui): …`, `refactor(web): …`. One commit per task.
@@ -968,7 +969,7 @@ Create `packages/web/ui/src/table/render-root.tsx`:
 import type { RenderRootCtx } from '@tickets/table';
 
 export function renderRoot({ children }: RenderRootCtx) {
-  return <div className="w-max font-sans text-ui text-gray-12">{children}</div>;
+  return <div className="w-max font-sans text-13/19 text-gray-12">{children}</div>;
 }
 ```
 
@@ -1440,7 +1441,7 @@ export function TextColumn(opts: TextColumnOpts = {}): Renderer<string | null | 
   return ({ value }) => {
     if (value == null) return null;
     return (
-      <span className={cn('block', truncate && 'truncate', mono && 'font-mono text-meta')}>
+      <span className={cn('block', truncate && 'truncate', mono && 'font-mono text-12/17')}>
         {value}
       </span>
     );
@@ -1491,7 +1492,7 @@ export function NumberColumn(opts: NumberColumnOpts = {}): Renderer<number | str
     const n = typeof value === 'string' ? Number(value) : value;
     if (Number.isNaN(n)) return <span className="text-gray-9">—</span>;
     return (
-      <span className="block text-right font-mono text-meta tabular-nums">
+      <span className="block text-right font-mono text-12/17 tabular-nums">
         {format(n, style, currency, fractionDigits)}
       </span>
     );
@@ -1519,7 +1520,7 @@ export function DateColumn(
     if (Number.isNaN(date.getTime())) return <span className="text-gray-9">—</span>;
     if (style === 'absolute') {
       return (
-        <span className="font-mono text-meta text-gray-11" title={date.toISOString()}>
+        <span className="font-mono text-12/17 text-gray-11" title={date.toISOString()}>
           {date.toLocaleString()}
         </span>
       );
@@ -1862,7 +1863,7 @@ function Demo({ grouped, loading, error }: { grouped?: boolean; loading?: boolea
         key,
         header: (
           <>
-            <span className="font-sans text-ui font-semibold text-gray-12">{key}</span>
+            <span className="font-sans text-13/19 font-semibold text-gray-12">{key}</span>
             <span className="font-mono text-11 text-gray-9">{rows.length}</span>
           </>
         ),

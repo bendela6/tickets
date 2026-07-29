@@ -13,9 +13,10 @@ Reference source (behaviour only, never markup): `../items-core/packages/web/ui/
 
 ## Global Constraints
 
-- **Never copy items-core's markup.** It hardcodes `bg-slate-100 dark:bg-slate-900`, `text-12`, `rounded-4`, `p-20`. Every class in this plan comes from Instrument tokens: `bg-surface-raised`, `bg-gray-1`, `border-gray-6`, `text-gray-11`, `text-gray-12`, `text-ui`, `text-12/17`, `font-sans`, `font-mono`.
+- **Never copy items-core's markup.** It hardcodes `bg-slate-100 dark:bg-slate-900`, `text-12`, `rounded-4`, `p-20`. Every class in this plan comes from Instrument tokens: `bg-surface-raised`, `bg-gray-1`, `border-gray-6`, `text-gray-11`, `text-gray-12`, `text-13/19`, `text-12/17`, `font-sans`, `font-mono`.
 - **Spacing uses Tailwind's numbered units**, exposed as an enumerable union (`gap={4}`). Never a named `xs|sm|md|lg|xl` scale — `docs/design/foundation-tokens.md` records spacing as deliberately non-tokenized because Tailwind's 4px scale already is one.
 - **No arbitrary `[...]` Tailwind values and no odd fractional steps.** Round scale numbers or named utilities only.
+- **The type scale is numeric, and the role names are RETIRED.** `tokens.css` does `--text-*: initial;` before defining `--text-9` … `--text-24`, so `text-ui`, `text-meta` and `text-label` compile to nothing and render as unstyled text. Commit `4205792` retired them with this mapping — use the right-hand column: `text-ui` → **`text-13/19`**, `text-meta` → **`text-12/17`**, `text-label` → **`text-11/13 tracking-wider`**. There is no `text-32`; the scale stops at `text-24`. `tokens:verify` does **not** catch a dead type class — it only checks hex/rgb literals and colour drift — so nothing but review will flag this.
 - **Tests assert observable behaviour**, per `verifying-a-component`. **Never assert on a class the component chooses for itself** — no `expect(el.className).toContain('gap-4')`, `'flex-col'`, `'rounded-xl'`, `'font-mono'` or similar. jsdom computes no layout, so spacing and sizing simply go untested here; that is a deliberate ruling, not an oversight, and the gallery demo is where those are checked by eye.
   What tests may assert: rendered children, composition, DOM attributes (`role`, `rows`, `aria-invalid`, `disabled`, `href`), accessible names and roles, callback arguments, and that a **caller-supplied** `className` survives to the DOM (that one is an API contract, not an internal choice).
 - Every new component gets a `.demo.tsx` so it appears at `/gallery/:slug/:tab`. `meta` shape: `{ title, group, size }` where `size` is one of `'sm' | 'md' | 'lg' | 'full'`.
@@ -319,7 +320,7 @@ import { Stack } from './stack';
 export const meta = { title: 'Stack', group: 'Components', size: 'sm' };
 
 const Box = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-md border border-gray-6 bg-gray-1 px-3 py-2 font-sans text-ui text-gray-11">
+  <div className="rounded-md border border-gray-6 bg-gray-1 px-3 py-2 font-sans text-13/19 text-gray-11">
     {children}
   </div>
 );
@@ -363,7 +364,7 @@ import { Row } from './row';
 export const meta = { title: 'Row', group: 'Components', size: 'sm' };
 
 const Box = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-md border border-gray-6 bg-gray-1 px-3 py-2 font-sans text-ui text-gray-11">
+  <div className="rounded-md border border-gray-6 bg-gray-1 px-3 py-2 font-sans text-13/19 text-gray-11">
     {children}
   </div>
 );
@@ -400,8 +401,8 @@ export const states = [
     name: 'Baseline align',
     render: () => (
       <Row align="baseline" className="border border-dashed border-gray-6 p-2">
-        <span className="font-sans text-32 text-gray-12">42</span>
-        <span className="font-sans text-ui text-gray-11">open tickets</span>
+        <span className="font-sans text-24 text-gray-12">42</span>
+        <span className="font-sans text-13/19 text-gray-11">open tickets</span>
       </Row>
     ),
   },
@@ -603,7 +604,7 @@ export function CardHeader({ className, ...rest }: HTMLAttributes<HTMLDivElement
 /** The header's heading. Rendered as an h3 so a card inside a page section
  *  lands at a sensible depth; override with `as` at the call site if not. */
 export function CardTitle({ className, ...rest }: HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn('font-sans text-ui font-semibold text-gray-12', className)} {...rest} />;
+  return <h3 className={cn('font-sans text-13/19 font-semibold text-gray-12', className)} {...rest} />;
 }
 
 type CardBodyProps = HTMLAttributes<HTMLDivElement> & { padding?: Padding };
@@ -641,7 +642,7 @@ export const states = [
     name: 'Headerless',
     render: () => (
       <Card padding={4} className="w-80">
-        <span className="font-sans text-ui text-gray-11">
+        <span className="font-sans text-13/19 text-gray-11">
           A card with no header sets its own padding.
         </span>
       </Card>
@@ -653,7 +654,7 @@ export const states = [
       <Card className="w-80">
         <CardHeader><CardTitle>Filters</CardTitle></CardHeader>
         <CardBody>
-          <span className="font-sans text-ui text-gray-11">
+          <span className="font-sans text-13/19 text-gray-11">
             Padding stays 0 on the Card so the rule bleeds edge to edge.
           </span>
         </CardBody>
@@ -666,7 +667,7 @@ export const states = [
       <Stack gap={3}>
         {(['md', 'lg', 'xl'] as const).map((radius) => (
           <Card key={radius} radius={radius} padding={3} className="w-80">
-            <span className="font-sans text-ui text-gray-11">radius {radius}</span>
+            <span className="font-sans text-13/19 text-gray-11">radius {radius}</span>
           </Card>
         ))}
       </Stack>
@@ -676,7 +677,7 @@ export const states = [
     name: 'Interactive',
     render: () => (
       <Card interactive padding={4} className="w-80">
-        <span className="font-sans text-ui text-gray-11">Hover me — the border lifts.</span>
+        <span className="font-sans text-13/19 text-gray-11">Hover me — the border lifts.</span>
       </Card>
     ),
   },
@@ -1052,7 +1053,7 @@ export function TextInput(p: InputProps<TextInputConfig, string>) {
   return (
     <div className="flex items-stretch gap-2">
       {p.config.prefix ? (
-        <span className="inline-flex items-center rounded-md border border-gray-6 bg-gray-1 px-3 font-sans text-ui text-gray-11">
+        <span className="inline-flex items-center rounded-md border border-gray-6 bg-gray-1 px-3 font-sans text-13/19 text-gray-11">
           {p.config.prefix}
         </span>
       ) : null}
@@ -1255,7 +1256,7 @@ export function NumberFormInput(p: InputProps<NumberInputConfig, number | null>)
         onChange={(next) => p.onChange(next === null ? null : clamp(next, p.config.min, p.config.max))}
       />
       {p.config.suffix ? (
-        <span className="font-sans text-ui text-gray-11">{p.config.suffix}</span>
+        <span className="font-sans text-13/19 text-gray-11">{p.config.suffix}</span>
       ) : null}
     </div>
   );
@@ -1851,7 +1852,7 @@ export function GroupLayout({ props, children }: LayoutComponentProps<TitledProp
       {hasHeader ? (
         <Stack gap={1} className="border-t border-gray-6 pt-3">
           {props.title ? (
-            <span className="font-sans text-ui font-semibold text-gray-12">{props.title}</span>
+            <span className="font-sans text-13/19 font-semibold text-gray-12">{props.title}</span>
           ) : null}
           {props.description ? (
             <span className="font-sans text-12/17 text-gray-11">{props.description}</span>
