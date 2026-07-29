@@ -258,6 +258,9 @@ importers:
       '@tickets/richtext':
         specifier: workspace:*
         version: link:../../packages/richtext
+      '@tickets/table':
+        specifier: workspace:*
+        version: link:../../packages/web/table
       '@tickets/ui':
         specifier: workspace:*
         version: link:../../packages/web/ui
