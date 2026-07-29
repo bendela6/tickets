@@ -20,6 +20,15 @@
 - **Conventional commits scoped by app**, one per task: `feat(ui)!:`, `refactor(ui)!:`, `chore(ui):`, `docs(ui):`.
 - **Checks that must pass before any commit:** `pnpm --filter @tickets/ui test` and, for tasks touching `apps/web`, `pnpm --filter @tickets/web test`.
 
+### Working alongside another session — read before your first commit
+
+This plan executes on `main` while a **second session is concurrently implementing a different plan** (the items-core UI port) in the same working tree. Two consequences bind every task:
+
+- **Stage files explicitly. Never `git add` a directory.** The commit steps below show directory adds for brevity; replace each with `git add` of the exact files your task changed, checked against `git status --short` first. Staging a directory sweeps the other session's unfinished work into your commit.
+- **These paths belong to the other session.** Never stage them unless your own sweep genuinely had to modify one, and say so in your report if it did:
+  `packages/web/ui/src/gallery/` (all of it, including untracked `states.tsx`, `state-source.ts`, `state-source.test.ts`) · `packages/web/ui/src/components/button/button.demo.tsx` · `packages/web/ui/src/components/card/card.tsx` · `packages/web/ui/src/foundation/typography/typography.demo.tsx` · `packages/web/ui/src/foundation/elevation/elevation.demo.tsx` · `packages/web/playground/src/page/component-page/component-page.tsx` · `packages/web/playground/src/preview/state-grid/` · `ui.md`
+- **The baseline suite is already red, and it is not yours.** `packages/web/ui/src/gallery/collect-demos.test.ts` fails 2 tests with `ReferenceError: defineState is not defined` — the other session's in-flight work. Treat exactly those 2 failures as the expected baseline. Any *other* failure is yours. Prefer targeted runs (`pnpm --filter @tickets/ui test <file>`) over the full suite so the noise stays out of your way.
+
 ---
 
 ## File Structure
