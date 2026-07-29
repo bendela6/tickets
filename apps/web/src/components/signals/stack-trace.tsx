@@ -150,7 +150,7 @@ function SymFrames({ frames }: { frames: SignalStackFrame[] }) {
 function NoSourceMapsBanner({ release }: { release: string | null | undefined }) {
   return (
     <div className="flex items-center gap-2.5 border-b-1 border-gray-6 bg-orange-3 px-4 py-2.5">
-      <span aria-hidden className="size-2 shrink-0 rotate-45 rounded-sm bg-orange-9" />
+      <span aria-hidden className="size-2 shrink-0 rotate-45 rounded-none bg-orange-9" />
       <span className="flex-1 font-sans text-12 leading-normal text-orange-9">
         No source maps uploaded
         {release ? (

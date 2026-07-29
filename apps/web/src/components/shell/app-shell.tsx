@@ -52,7 +52,7 @@ export function AppShell({
         >
           ☰
         </button>
-        <span aria-hidden className="size-2.25 rounded-sm bg-indigo-9" />
+        <span aria-hidden className="size-2.25 rounded-none bg-indigo-9" />
         <span className="font-mono text-15 font-600 text-gray-12">tickets</span>
       </div>
 

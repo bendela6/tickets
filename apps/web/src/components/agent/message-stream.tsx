@@ -104,7 +104,7 @@ function ApprovalCard({
       )}
     >
       <div className="flex items-center gap-2 px-3.5 py-2.5">
-        <span aria-hidden className="size-2.5 shrink-0 rotate-45 rounded-sm bg-orange-9" />
+        <span aria-hidden className="size-2.5 shrink-0 rotate-45 rounded-none bg-orange-9" />
         <span className="font-sans text-13/19 font-600 text-gray-12">Approval required</span>
         <Pill
           tone="secondary"
@@ -213,7 +213,7 @@ function ToolStatusDot({ status }: { status: ToolStatus }) {
     );
   }
   if (status === 'error') {
-    return <span aria-hidden className="size-2.5 shrink-0 rotate-45 rounded-sm bg-red-9" />;
+    return <span aria-hidden className="size-2.5 shrink-0 rotate-45 rounded-none bg-red-9" />;
   }
   return (
     <span

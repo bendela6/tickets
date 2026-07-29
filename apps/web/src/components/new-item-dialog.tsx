@@ -62,9 +62,9 @@ function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
       )}
     >
       {dashed ? (
-        <span className="size-2.5 shrink-0 rounded-sm border-2 border-dashed border-gray-9" />
+        <span className="size-2.5 shrink-0 rounded-none border-2 border-dashed border-gray-9" />
       ) : (
-        <span className="size-2.5 shrink-0 rounded-sm bg-current" />
+        <span className="size-2.5 shrink-0 rounded-none bg-current" />
       )}
     </span>
   );
