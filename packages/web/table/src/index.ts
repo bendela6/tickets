@@ -18,3 +18,6 @@ export { toggleSort, multiSortToggle } from './sort-utils';
 export { useTableWidths } from './use-table-widths';
 export { useColumnResize } from './use-column-resize';
 export type { UseColumnResizeOptions, UseColumnResizeHandlers } from './use-column-resize';
+export { Table } from './Table';
+export type { TableProps } from './Table';
+export { makeStubRender } from './render-stub';

@@ -1,0 +1,215 @@
+import { Fragment, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { toggleSort, multiSortToggle } from './sort-utils';
+import { ROW_HEIGHT, type Column, type SortBy, type TableRender } from './types';
+
+export interface TableProps<T> {
+  columns: Column<T>[];
+  rows: T[];
+  state: { sort: SortBy[]; widths: Record<string, number> };
+  onSortChange: (next: SortBy[]) => void;
+  onWidthChange: (key: string, px: number) => void;
+  onRowClick?: (row: T) => void;
+  isLoading: boolean;
+  error?: Error | null;
+  render: TableRender<T>;
+}
+
+export function Table<T>(props: TableProps<T>): ReactNode {
+  const {
+    columns,
+    rows,
+    state,
+    render,
+    onSortChange,
+    onWidthChange,
+    onRowClick,
+    isLoading,
+    error,
+  } = props;
+
+  const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollEl,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 8,
+  });
+
+  if (error) {
+    return render.error({ error });
+  }
+
+  const gridTemplate = columns.map((c) => `${state.widths[c.key] ?? c.width ?? 160}px`).join(' ');
+
+  const onHeaderClick = (col: Column<T>, e: MouseEvent) => {
+    if (!col.sortable) {
+      return;
+    }
+    onSortChange(
+      e.shiftKey
+        ? multiSortToggle(state.sort, col.key)
+        : toggleSort(filterToCurrentField(state.sort, col.key), col.key),
+    );
+  };
+
+  const headerNode = render.thead({
+    gridTemplate,
+    children: columns.map((col) => {
+      const sortIdx = state.sort.findIndex((s) => s.field === col.key);
+      const sort = sortIdx >= 0 ? state.sort[sortIdx] : undefined;
+      const colWidth = state.widths[col.key] ?? col.width ?? 160;
+      return (
+        <RenderTh
+          key={col.key}
+          column={col}
+          sort={sort ? { direction: sort.direction, index: sortIdx } : undefined}
+          totalSorts={state.sort.length}
+          onSortClick={(e) => onHeaderClick(col, e)}
+          resize={
+            (col.resizable ?? true)
+              ? {
+                  startWidth: colWidth,
+                  minWidth: col.minWidth,
+                  onWidthChange: (px) => onWidthChange(col.key, px),
+                }
+              : undefined
+          }
+          slot={render.th}
+        />
+      );
+    }),
+  });
+
+  let bodyNode: ReactNode = null;
+  if (isLoading && rows.length === 0) {
+    bodyNode = Array.from({ length: 10 }).map((_, i) => {
+      return (
+        <RenderSkeletonRow
+          key={i}
+          columns={columns}
+          gridTemplate={gridTemplate}
+          slot={render.skeletonRow}
+        />
+      );
+    });
+  } else if (rows.length > 0) {
+    bodyNode = render.tbody({
+      totalSize: virtualizer.getTotalSize(),
+      children: virtualizer.getVirtualItems().map((vi) => {
+        const row = rows[vi.index];
+        if (!row) {
+          return null;
+        }
+        const style: CSSProperties = {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: ROW_HEIGHT,
+          transform: `translateY(${vi.start}px)`,
+        };
+        const cells = columns.map((col) => {
+          return (
+            <Fragment key={col.key}>
+              {render.td({
+                column: col,
+                row,
+                children: renderCellContent(col, row),
+              })}
+            </Fragment>
+          );
+        });
+        return (
+          <RenderTr
+            key={vi.key}
+            row={row}
+            index={vi.index}
+            cells={cells}
+            gridTemplate={gridTemplate}
+            style={style}
+            onClick={onRowClick ? () => onRowClick(row) : undefined}
+            slot={render.tr}
+          />
+        );
+      }),
+    });
+  }
+
+  return (
+    <div
+      ref={setScrollEl}
+      data-slot="table-scroll"
+      className="h-full w-full overflow-auto"
+      style={{ overflowAnchor: 'none' }}
+    >
+      {render.root({
+        children: (
+          <>
+            {headerNode}
+            {bodyNode}
+          </>
+        ),
+      })}
+    </div>
+  );
+}
+
+function RenderTh<T>(props: {
+  column: Column<T>;
+  sort?: { direction: 'asc' | 'desc'; index: number };
+  totalSorts: number;
+  onSortClick: (e: MouseEvent) => void;
+  resize?: { startWidth: number; minWidth?: number; onWidthChange: (px: number) => void };
+  slot: TableRender<T>['th'];
+}): ReactNode {
+  return props.slot({
+    column: props.column,
+    sort: props.sort,
+    totalSorts: props.totalSorts,
+    onSortClick: props.onSortClick,
+    resize: props.resize,
+  });
+}
+
+function RenderTr<T>(props: {
+  row: T;
+  index: number;
+  cells: ReactNode;
+  gridTemplate: string;
+  style: CSSProperties;
+  onClick?: () => void;
+  slot: TableRender<T>['tr'];
+}): ReactNode {
+  return props.slot({
+    row: props.row,
+    index: props.index,
+    cells: props.cells,
+    gridTemplate: props.gridTemplate,
+    style: props.style,
+    onClick: props.onClick,
+  });
+}
+
+function RenderSkeletonRow<T>(props: {
+  columns: Column<T>[];
+  gridTemplate: string;
+  slot: TableRender<T>['skeletonRow'];
+}): ReactNode {
+  return props.slot({ columns: props.columns, gridTemplate: props.gridTemplate });
+}
+
+function renderCellContent<T>(col: Column<T>, row: T): ReactNode {
+  if (col.render) {
+    return col.render(row);
+  }
+  if (col.as) {
+    const value = col.value ? col.value(row) : undefined;
+    return col.as({ value, row });
+  }
+  return col.value ? String(col.value(row) ?? '') : '';
+}
+
+function filterToCurrentField<F extends string>(sort: SortBy<F>[], key: F): SortBy<F>[] {
+  return sort.filter((s) => s.field === key);
+}
