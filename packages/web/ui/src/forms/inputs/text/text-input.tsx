@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import type { InputProps } from '@tickets/form';
 import { cn } from '../../../style';
 import { Input } from '../../../components/input';
@@ -11,18 +10,6 @@ export type TextInputConfig = {
 };
 
 export function TextInput(p: InputProps<TextInputConfig, string>) {
-  const [internalValue, setInternalValue] = useState(p.value ?? '');
-
-  useEffect(() => {
-    setInternalValue(p.value ?? '');
-  }, [p.value]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setInternalValue(newValue);
-    p.onChange(newValue);
-  };
-
   return (
     <div className="flex items-stretch gap-2">
       {p.config.prefix ? (
@@ -36,11 +23,11 @@ export function TextInput(p: InputProps<TextInputConfig, string>) {
         type="text"
         // The engine can hand back undefined before a default lands; an
         // undefined `value` would flip the input to uncontrolled mid-life.
-        value={internalValue}
+        value={p.value ?? ''}
         placeholder={p.config.placeholder}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
-        onChange={handleChange}
+        onChange={(e) => p.onChange(e.target.value)}
         onBlur={p.onBlur}
         className={cn(p.config.mono && 'font-mono')}
       />
