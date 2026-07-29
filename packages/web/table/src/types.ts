@@ -88,6 +88,32 @@ export interface TableRender<T = unknown> {
   tbody: (ctx: RenderTbodyCtx) => ReactNode;
   tr: (ctx: RenderTrCtx<T>) => ReactNode;
   td: (ctx: RenderTdCtx<T>) => ReactNode;
+  groupHeader: (ctx: RenderGroupHeaderCtx) => ReactNode;
   skeletonRow: (ctx: RenderSkeletonRowCtx<T>) => ReactNode;
   error: (ctx: RenderErrorCtx) => ReactNode;
+}
+
+/** Height of a group header row in pixels. Exported so the adapter styling and
+ *  the virtualizer's size estimate cannot disagree — if they do, every row
+ *  below the first group sits at the wrong offset. */
+export const GROUP_ROW_HEIGHT = 34;
+
+export interface TableGroup<T> {
+  key: string;
+  header: ReactNode;
+  rows: T[];
+}
+
+/** One entry in the flattened, virtualized list. Group headers and data rows
+ *  share a single virtualizer so the table keeps one scroll region. */
+export type VirtualRow<T> =
+  | { kind: 'group'; key: string; header: ReactNode }
+  | { kind: 'row'; row: T; index: number };
+
+export interface RenderGroupHeaderCtx {
+  key: string;
+  header: ReactNode;
+  gridTemplate: string;
+  /** Virtualization positioning. MUST be applied or the header will not appear. */
+  style: CSSProperties;
 }
