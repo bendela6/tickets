@@ -10,6 +10,21 @@ describe('RETIRED patterns', () => {
     expect('rounded-xs rounded-2xl'.match(RETIRED.radius)).toEqual(['rounded-xs', 'rounded-2xl']);
   });
 
+  it('matches bare rounded and a bare side, but never a rung on the scale', () => {
+    // Bare `rounded` (and `rounded-t`/`-r`/`-b`/`-l`/corner forms) resolves to
+    // Tailwind's static 0.25rem default and was invisible to the pattern
+    // before this case existed — the pattern required a `-<rung>` or
+    // `-[…]` suffix, so a truly bare class never matched anything.
+    expect('rounded'.match(RETIRED.radius)).toEqual(['rounded']);
+    expect('rounded-t'.match(RETIRED.radius)).toEqual(['rounded-t']);
+    // A scale rung must still never match, bare or side-qualified — `sm` is
+    // two lowercase letters just like the `tl`/`tr`/`bl`/`br` corner
+    // suffixes, which is exactly the ambiguity a generic `[a-z]{1,2}` side
+    // group would fall into.
+    expect('rounded-sm'.match(RETIRED.radius)).toBeNull();
+    expect('rounded-t-lg'.match(RETIRED.radius)).toBeNull();
+  });
+
   it('matches a bare width utility but never a border COLOUR', () => {
     expect(' border '.match(RETIRED.border)).toEqual(['border']);
     expect(' border-b '.match(RETIRED.border)).toEqual(['border-b']);
@@ -20,6 +35,19 @@ describe('RETIRED patterns', () => {
   it('matches 1.5px but not an integer width', () => {
     expect('border-[1.5px]'.match(RETIRED.border)).toEqual(['border-[1.5px]']);
     expect(' border-2 '.match(RETIRED.border)).toBeNull();
+  });
+
+  it('matches a bare width utility behind a state variant like disabled:', () => {
+    // `disabled:border` is a real, functional Tailwind class (the switch
+    // track's disabled-only hairline) — the boundary excluded `:` so this
+    // slipped past the scanner while `safelist.generated.css` still emitted
+    // the rule for it. Trailing space, like the plain bare-word case above,
+    // gives the lookahead a boundary character to match against.
+    expect('disabled:border '.match(RETIRED.border)).toEqual(['border']);
+    // A coloured/width-qualified class behind the same variant must still
+    // never match.
+    expect('disabled:border-gray-6 '.match(RETIRED.border)).toBeNull();
+    expect('disabled:border-1 '.match(RETIRED.border)).toBeNull();
   });
 
   it('never matches the 1.5px form as a substring of a longer identifier', () => {
@@ -47,6 +75,14 @@ describe('RETIRED patterns', () => {
 });
 
 describe('scanRetired', () => {
+  // Both of these walk every .ts/.tsx file under all three ROOTS from disk
+  // (`collectHits` re-reads the whole tree per call, uncached) — on Windows,
+  // under parallel test-file contention, that has intermittently exceeded
+  // vitest's 5000ms default. A flaky gate is a disabled gate, and this is
+  // the only thing enforcing the border baseline, so it gets an explicit,
+  // generous timeout rather than a shorter implicit one.
+  const BASELINE_SCAN_TIMEOUT_MS = 20_000;
+
   it('has no bare border width utility outside the reviewed baseline', () => {
     // `RETIRED.border` can't tell a class string from prose, a comment, or a
     // data/enum literal — `border-baseline.json` is the reviewed list of
@@ -54,7 +90,7 @@ describe('scanRetired', () => {
     // `scanBorderAgainstBaseline`). Anything outside it is a real, unswept
     // bare-border site.
     expect(scanBorderAgainstBaseline().fresh).toEqual([]);
-  });
+  }, BASELINE_SCAN_TIMEOUT_MS);
 
   it('never lets the border baseline rot into stale excuses', () => {
     // The ratchet: every baseline entry must still correspond to a real,
@@ -63,7 +99,7 @@ describe('scanRetired', () => {
     // This is what stops the baseline from silently growing wrong: it can
     // only ever shrink.
     expect(scanBorderAgainstBaseline().fixed).toEqual([]);
-  });
+  }, BASELINE_SCAN_TIMEOUT_MS);
 
   it('has no retired ring form left in scope', () => {
     expect(scanRetired('ring')).toEqual([]);

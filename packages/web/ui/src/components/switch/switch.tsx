@@ -20,7 +20,7 @@ const trackClass = variants({
         on: over(TONE, (t) => [
           `checked:bg-${t.solid}`,
           t.ring,
-          'disabled:cursor-not-allowed disabled:border disabled:border-gray-6 disabled:bg-surface-inset',
+          'disabled:cursor-not-allowed disabled:border-1 disabled:border-gray-6 disabled:bg-surface-inset',
         ]),
       },
     },

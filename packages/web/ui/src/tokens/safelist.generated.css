@@ -97,7 +97,7 @@
 @source inline("dark:peer-checked:bg-teal-contrast");
 @source inline("dark:peer-checked:bg-yellow-contrast");
 @source inline("disabled:bg-surface-inset");
-@source inline("disabled:border");
+@source inline("disabled:border-1");
 @source inline("disabled:border-gray-6");
 @source inline("disabled:cursor-not-allowed");
 @source inline("disabled:pointer-events-none");
