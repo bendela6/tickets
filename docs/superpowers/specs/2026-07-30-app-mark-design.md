@@ -1,225 +1,203 @@
 # App mark, favicon and installable icons — design
 
-**Date:** 2026-07-30 · **Status:** awaiting review
+**Date:** 2026-07-30 · **Status:** colours and geometry locked; one open question (see end)
 
 The apps have no icon at all. `apps/web/index.html` carries no `<link rel="icon">` and
-there is no `apps/web/public/`, so every tab — tickets, the UI gallery, the EER viewer —
-shows the browser's default blank-page glyph. This spec defines one mark, its three
-working states, the sibling-app family, and the files that ship it, including the icons
-needed to save the web app to a phone's home screen.
+there is no `apps/web/public/`, so every tab shows the browser's default blank-page glyph.
+This spec defines the mark, its colours, the loader it animates into, and the files that
+ship it — including the icons needed to save the web app to a phone's home screen.
+
+Superseded revision: an earlier draft of this file described a three-drawing state system
+(`resting` / `working` / `settled`) built from lines, nodes, a ring and a core. That is
+gone. The mark is **three sticks and nothing else**, and the states are poses of those
+three sticks.
 
 ## The rule
 
-**One drawing at every size.** The mark is three strokes of uniform width around a
-centre. It is not simplified for small sizes and not enriched for large ones — the
+**One drawing at every size, and it must be paintable by hand.** Three strokes of uniform
+width around a centre. No gradients, no shading, no simplified-for-small variant — the
 16px favicon and the 512px install icon are the same geometry at different scales.
 
-This follows from a constraint set late in the design: **the mark must be paintable by
-hand.** That single requirement decided almost everything else. It ruled out gradients,
-fog, specular lighting, perspective and dimensional shading; it ruled out the
-rich-master-plus-reduction split those treatments force; and because hand paint is flat
-colour, it put the mark back inside the Instrument palette instead of the off-palette
-schemes explored earlier.
+That constraint decided nearly everything: it ruled out the rich-master-plus-reduction
+split that gradients force, and it kept the count of moving parts at three.
 
-## The mark
+## Geometry
 
-All geometry on a 48-unit grid, centre `24,24`. Stroke width 6, `stroke-linecap: round`,
-`fill: none`. Every coordinate is an integer or a half — nothing lands on a third of a
-pixel when scaled to 16.
+A 48-unit grid, centre `24,24`. Each stick is a full diameter: `M24 6 L24 42`,
+`stroke-linecap: round`, `fill: none`, rotated about the centre.
 
-| Element | Count | Geometry |
+| | Value | Note |
 |---|---|---|
-| Line | 3 | `M24 6 L24 42`, rotated `0°` / `120°` / `240°` about `24,24`. Path length 36. |
-| Node | 3 | `circle r="4.5"` at `24,8`, rotated `0°` / `120°` / `240°`. |
-| Ring | 1 | `circle r="16"`, `stroke-dasharray: 10.4 6.35`, rotated `-102°`. Yields six equal arcs. |
-| Core | 1 | `circle` at `24,24`, `r="5.5"`. |
+| Stick count | 3 | Each is 180°-symmetric — it looks identical at θ and θ+180 |
+| Bare stroke | 6 | Reach 18, so the weight-to-reach ratio is **1/3** |
+| Logo angles | `62°` / `27°` / `160°` | Deliberately uneven; gaps 35 / 47 / 82 |
+| Paint order | low, mid, top | Back-to-front, so `top` is the stick you see on top |
 
-The three lines cross at the centre and produce a six-pointed asterisk. The three nodes
-sit at radius 16 on the three arms pointing up, lower-right and lower-left — on existing
-arms, not at new positions. The ring runs at that same radius 16, just inside the six line
-tips at radius 18, so it passes through all six arms. This shared skeleton is what makes
-the states transformable rather than merely sequential.
+**The uneven pose is the point.** A perfect 0/60/120 asterisk reads constructed; 62/27/160
+reads drawn. It is also the pose the loader resolves *out of*, which gives the animation
+somewhere to go.
 
-### Construction by hand
-
-1. Find the centre by eye.
-2. One vertical stroke through it, edge to edge.
-3. Two more at sixty degrees either side.
-
-Three strokes, no measuring. The nodes and ring in the other states are located by the
-same centre and the same tips.
-
-## The three states
-
-`P1` is the logo. `P2` and `P3` are states it enters while the kit is working — they
-appear only in the favicon and the activity rail, never in a lockup, a splash screen or
-an app-store listing.
-
-| State | Shape | Means | Rotation |
-|---|---|---|---|
-| `resting` | 3 full lines. No nodes, no ring, no core — the lines cross instead. | Nothing running. | Still |
-| `working` | 3 lines retracted to spokes, node on each tip, core filled. | Agents dispatched. | 2s per turn |
-| `settled` | Lines withdrawn into the centre, ring showing six arcs, core slightly smaller. | Work finished, nothing needs you. | 24s per turn |
-| `failed` | `resting`, held still, in pink-9. | A session errored. | Still |
-
-`failed` deliberately reuses the resting shape. Stillness reads as wrong beside a mark
-that is normally turning, so the shape does not need to change — only the hue and the
-absence of motion carry it. This keeps the state count at three drawings, not four.
-
-## Transformation
-
-Nothing is created, destroyed or cross-faded. The same eight elements persist through
-every state; each changes only its length or its scale.
-
-| Element | resting | working | settled | Driven by |
-|---|---|---|---|---|
-| Line ×3 | `dasharray: 36 0`, `dashoffset: 0` | `dasharray: 13 36`, `dashoffset: -5` | `dasharray: 0 36`, `dashoffset: -18` | `stroke-dasharray`, `stroke-dashoffset` |
-| Node ×3 | `scale(0)` | `scale(1)` | `scale(0)` | `transform` |
-| Ring | `dasharray: 0 16.75`, `opacity: 0` | same | `dasharray: 10.4 6.35`, `opacity: 1` | `stroke-dasharray`, `opacity` |
-| Core | `scale(0)` | `scale(1)` | `scale(0.82)` | `transform` |
-
-Three consequences worth stating, because they are the reason to build it this way:
-
-- **Reversible.** `working → resting` runs the `resting → working` keyframes backwards.
-  A cancelled run does not have to pass through `settled`.
-- **Interruptible.** State lives in two numbers per element, not in a path shape, so a
-  transition can be caught mid-flight and redirected. No morph library and no path
-  interpolation.
-- **Cheap.** No filters, no blur, no lighting. It is affordable to redraw in a canvas
-  every frame, which is what the favicon needs.
-
-Transitions run ~450ms with a soft ease — long enough to read as one thing changing,
-short enough not to feel like a loading screen.
-
-### Known imperfection
-
-In `working → settled` the ring's six arcs grow from six fixed points rather than
-sweeping out of the three nodes. Sweeping would read better as "the agents traced this
-ring", but needs six individually-animated arc paths instead of one dashed circle.
-Deferred until the current version is on screen and judged.
+**Stroke must scale with reach.** Any inset variant has to hold the 1/3 ratio or it reads
+as a bolder mark. The chip inset to reach 14 therefore uses stroke 4.6, not 6.
 
 ## Colour
 
-Instrument tokens only, theme-aware, exactly as the existing rail mark behaves.
+Three sticks, three colours, one set per theme. `top` is the leading stick.
 
-| Role | Light | Dark |
+| Stick | Light | Dark |
 |---|---|---|
-| tickets | `indigo-9` `#4e46c6` | `#918aec` |
-| gallery | `teal-9` `#176d5c` | `#6cc9b4` |
-| eer | `orange-9` `#a44e14` | `#efa36c` |
-| `failed` state | `pink-9` `#a63368` | `#ee94bc` |
+| top | `#7167ff` | `#6652ff` |
+| mid | `#00bb9a` | `#12b898` |
+| low | `#ff298a` | `#ff378c` |
+| chip field | `#1b1830` | `#1b1830` |
 
-The mark is drawn with `currentColor` throughout, so a single file serves every hue and
-both themes. The standalone `favicon.svg` files carry an internal
-`@media (prefers-color-scheme: dark)` block to swap their own colour, since a favicon has
-no inherited `color` to read.
+Measured contrast, against a white tab and a selected dark tab (`#35363a`):
 
-**Sibling rule:** same three strokes, one hue each. A fourth app is one hue and one file.
+| Stick | On white | On dark tab | On chip field |
+|---|---|---|---|
+| top | 4.13 | **2.42** | 3.46 |
+| mid | **2.45** | 4.79 | 6.83 |
+| low | 3.54 | 3.55 | 5.06 |
 
-## Lockups
+Two things follow from that table:
 
-Mark plus wordmark in IBM Plex Mono 600, matching the shell's existing treatment
-(`app-shell.tsx:56`).
+- **Each theme loses a different stick.** The emerald is weakest on white, the violet on a
+  dark tab. The mark is never missing the same colour twice, so it stays recognisable
+  across themes — this is luck, but it is useful luck.
+- **Every install icon is fine.** On the chip field the worst value is 3.46. The weakness
+  is confined to the bare favicon.
 
-| Variant | Use | Spec |
-|---|---|---|
-| Horizontal | Primary. Docs, README, headers. | Mark height = wordmark cap height. Gap = ½ mark width. |
-| Stacked | Splash, about screen. | Mark above, gap = ⅓ mark height. |
-| Compact | Mobile top bar. | Mark at 18px beside 15px wordmark. |
+A brand mark has no WCAG minimum — WCAG 1.4.11 exempts logotypes — so these are a
+judgement about findability, not a compliance failure. **Optional one-value fix:** dark
+`top` `#6652ff` → `#8071ff` raises 2.42 → 3.29 with no visible hue change. Not applied;
+recorded as an option.
 
-## Files to build
+This set leaves the Instrument palette. That is a deliberate exception for the icon only —
+no token changes, no UI consequences.
 
-| File | Apps | Notes |
-|---|---|---|
-| `favicon.svg` | web, eer, playground | Bare mark, self-contained colour with a dark-scheme block. Hue is the only difference between the three. |
-| `icon-192.png`, `icon-512.png` | web | Squircle field (48-grid, `rx="11"`), strokes knocked out at `r=12` (`M24 12 V36`), stroke 5. Maskable: the mark sits inside the centre 80%, safe for Android's circular crop. |
-| `apple-touch-icon.png` | web | 180×180, opaque field, square corners — iOS applies its own mask. Required for Add to Home Screen. |
-| `site.webmanifest` | web | `name`, `short_name`, `start_url`, `scope`, `display: standalone`, `theme_color`, `background_color`, the two maskable icons. |
-| iOS meta tags | web | `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, `viewport-fit=cover`. Safari ignores the manifest for home-screen launch, so these are not redundant. |
-| `mark.tsx` | `@tickets/ui` | The mark as a component. See Types. |
-| `favicon-painter.ts` | `apps/web` | Renders the current state to a canvas and swaps `link.href`. |
+## The loader
 
-The maskable icon is the one place the mark gets a filled square. Bare strokes paint
-better and read sharper, but Android crops to a circle and a bare asterisk would lose its
-tips.
+The same three sticks, animated. Each stick integrates **its own speed**, ramping 0 → one
+shared top speed on **smootherstep** (zero velocity *and* zero acceleration at both ends).
+Starts are staggered, and the stack unpeels **top down**: the stick on top leaves first.
 
-## Motion in the favicon
+| Phase | Behaviour |
+|---|---|
+| `idle` | Sticks a few degrees apart, still. Reads as one stroke with a slight fan. |
+| `spin-up` | Top stick starts, then mid, then low. Gaps open to exactly 60°. |
+| `running` | All three at full speed, holding 60° apart — a rigid rotating asterisk. |
+| `spin-down` | Same ramp reversed; top slows first, the others close on it. Folds shut. |
 
-**A favicon file cannot animate.** Chrome and Safari render only the first frame of an
-animated SVG icon; Firefox alone plays it. The working technique is a `<canvas>` redrawn
-from JS with `link.href` swapped per frame.
+### Why the stagger is derived, not tuned
 
-`favicon-painter.ts` therefore:
+A stick sweeps `V · F(t − i·Δd)` where `F` is the integral of the easing. Past the ramp,
+`F(x) = x − k` with the **same** `k` for every stick, so the separation settles at exactly
+`V · Δd` regardless of the easing shape. Setting `V · Δd = 60° − rest` lands the asterisk
+exactly:
 
-- Renders `resting`, `settled` and `failed` as single static data URLs, set once.
-- For `working`, cycles a pre-rendered 12-frame loop of the spin on a timer.
-- Runs **only** while a session is active. Idle costs nothing — no timer, no canvas.
-- Reads session state from the same store the rail already uses; it introduces no new
-  source of truth.
+```
+Δd = (60 − rest) / V     // seconds
+```
+
+At `V = 120°/s` with `rest = 8°`, `Δd = 0.433s`. Change the speed and it recomputes, so
+the formation is exact by construction rather than by timing. Verified numerically across
+speeds 40/120/260, rest spreads 0/8/24, at 30fps and 60fps: every combination lands on
+60.00° / 60.00° and returns precisely to the rest fan.
+
+Transitions run `2Δd + 0.9s`. The implementation snaps to the exact pose at the end of each
+transition to absorb per-frame integration drift.
+
+### Motion in the favicon
+
+**A favicon file cannot animate** — Chrome and Safari render frame one of an animated SVG
+icon; Firefox alone plays it. The working technique is a `<canvas>` redrawn from JS with
+`link.href` swapped per frame. It should run only while a session is active; idle costs
+nothing.
+
+## Files
+
+| File | Notes |
+|---|---|
+| `favicon.svg` | Bare mark. Both triads inlined, swapped by a `prefers-color-scheme` block — a favicon has no inherited colour, so `currentColor` is no use. |
+| `icon-192.png`, `icon-512.png` | Chip: `rx 11` field in `#1b1830`, mark at reach 14 / stroke 4.6. Maskable — outer extent 16.3 of 24, **68%** of the tile, inside the 80% safe circle. |
+| `apple-touch-icon.png` | 180×180, same chip, square corners — iOS applies its own mask. |
+| `icon-mono.svg` | Solid black, single colour. Safari pinned tab tints it itself. |
+| `site.webmanifest` | `display: standalone`, `start_url`, `scope`, `theme_color` and `background_color` both `#1b1830`, the two maskable icons. |
+| head tags | `icon`, `mask-icon`, `apple-touch-icon`, `manifest`, `theme-color`, plus the iOS meta tags Safari needs because it ignores the manifest for home-screen launch. |
+
+The chip field is dark in **both** themes. A coloured field cannot knock out three colours,
+and a dark chip lets the mark sit at full strength on any home-screen wallpaper.
 
 ## Accessibility
 
-`prefers-reduced-motion: reduce` holds every animation and falls back to the three stills
-with no tween. The states differ in **shape**, not only in movement, so the information
-survives with motion switched off entirely — which is the test a status indicator has to
-pass. The rail mark carries an `aria-label` naming the state in words.
+`prefers-reduced-motion: reduce` holds the loader on its idle pose. The phases differ in
+**shape**, not only in movement, so state survives with motion off — the test a status
+indicator has to pass. The rail mark carries an `aria-label` naming the phase in words.
 
 ## Decisions locked
 
-1. **P1 is the logo.** P2 and P3 are states of it, not alternates.
-2. **Instrument palette**, indigo-9, theme-aware. The off-palette schemes (ultraviolet,
-   bioluminescent, ember, iridescent, dusk) are dropped.
-3. **One drawing at every size.** No rich master, no separate reduction.
-4. **Siblings differ by hue only.**
-5. **Transport is deferred.** The icons are identical whether the app is later served over
-   plain HTTP, Tailscale, or a local certificate.
+1. Three sticks, uneven pose `62/27/160`, one drawing at every size.
+2. The colour sets above, off-palette, icon-only.
+3. Weight-to-reach ratio 1/3 everywhere.
+4. Loader = staggered speed ramps with a derived stagger; asterisk is a pose it forms.
+5. Chip field dark in both themes.
 
 ## Rejected, and why
 
 | Direction | Why not |
 |---|---|
-| Ticket stub | Wrong object. The product is a development kit, not a ticket tracker. |
-| Polychrome burst / iris / prism | Forces a rich-master-plus-reduction split; not hand-paintable. |
-| Glass, aurora, chrome | Depends on gradients and translucency; both die at 16px and cannot be painted. |
-| Orb, billet, crystal, rack | Dimensional shading is a large-size treatment only. Explicitly disliked. |
-| Orbit family (L, AA, AF) | Perspective ellipses under fog. Explicitly disliked, and impossible to draw by hand. |
-| Four-point AI sparkle | The most exhausted mark in the category; would date the product within a year. |
+| Ticket stub | Wrong object — the product is a development kit. |
+| Polychrome burst / iris / prism | Force a rich-master-plus-reduction split; not paintable. |
+| Glass, aurora, chrome, fog | Gradients and translucency die at 16px and cannot be painted. |
+| Orb, billet, crystal, rack | Dimensional shading is large-size only. Explicitly disliked. |
+| Orbit family | Perspective ellipses under fog. Explicitly disliked, impossible by hand. |
+| Four-point AI sparkle | The most exhausted mark in the category. |
+| Nodes / ring / core states | Superseded — three sticks do the same job with a third of the parts. |
+| Same-rung triads | Rung 11 is a flat-lightness ramp; three hues at one rung read as one colour at 16px on white. |
 
-## Open questions
+## Open question
 
-1. **The `✳` collision.** The logo is an asterisk and `✳` is already the Agents glyph in
-   the rail (`activity-rail.tsx:11`), three rows below it. Either the product is named
-   after what it does, or it is a clash. Recommendation: if it reads as a clash, the
-   **rail glyph** changes, not the logo.
-2. **Transport for the mobile install.** Plain HTTP gives a working standalone app on iOS
-   only; Android needs a secure context for a true install, and neither gets offline
-   support without HTTPS. Options: stay on HTTP (iOS only), Tailscale `*.ts.net` with real
-   certificates, or a self-signed cert trusted per device.
-3. **The name.** "tickets" describes one drawer of a development kit. Not blocking the
-   mark, but the wordmark is where it starts to matter.
+**The rail's idle pose.** The logo is the uneven `62/27/160`. The loader's idle pose is the
+near-aligned fan (`~8°` apart). Those are different shapes, so an idle rail mark would not
+look like the favicon. Three ways out, in preference order:
+
+1. The loader rests on the **logo pose** and spreads to the asterisk while running. The
+   near-aligned stack becomes a spin-up flourish rather than a resting state.
+2. Keep both: the favicon is the logo pose, the rail idles near-aligned. Accepts the
+   mismatch on the grounds that they are never seen side by side.
+3. Make the logo the near-aligned fan. Rejected — it reads as one thick stroke and throws
+   away two of the three colours.
+
+Recommendation is (1), but it changes what "idle" means in the loader, so it needs a call.
 
 ## Out of scope
 
-Restyling the rail's four mode glyphs; any change to the Instrument palette itself; TLS
-or reverse-proxy work; renaming the app or its packages; offline/service-worker support.
+Sibling-app icons for eer and the gallery — a three-colour mark leaves them no hue of their
+own, and the rule for distinguishing them is deferred. Restyling the rail's four mode
+glyphs. Any change to the Instrument palette. TLS or transport work for the mobile install.
 
 ## Types
 
 ```ts
-/** Which form the mark is drawn in. Shape carries the meaning, not just colour. */
-type MarkState = 'resting' | 'working' | 'settled' | 'failed';
+/** Which pose the mark is drawn in. Shape carries the meaning, not just colour. */
+type MarkPhase = 'idle' | 'spin-up' | 'running' | 'spin-down' | 'failed';
 
-/** Which app the mark represents; selects the hue. */
-type MarkApp = 'tickets' | 'gallery' | 'eer';
+/** A stick's identity, ordered as painted: `top` is frontmost and leads. */
+type Stick = 'top' | 'mid' | 'low';
 
-interface MarkProps {
-  /** Defaults to 'resting'. */
-  state?: MarkState;
-  /** Defaults to 'tickets'. */
-  app?: MarkApp;
-  /** Rendered px. The geometry is unchanged at every size. */
-  size?: number;
-  /** Accessible name. Defaults to a phrase describing `state`. */
-  label?: string;
+/** Everything the mark needs to draw itself. Serialised as icons.config.json. */
+interface MarkConfig {
+  /** Hex per stick, in `top, mid, low` order. */
+  light: [string, string, string];
+  dark: [string, string, string];
+  /** Field behind the mark on the chip variants. */
+  chip: string;
+  /** Degrees per stick, in `top, mid, low` order. */
+  angles: [number, number, number];
+  /** Stroke width of the bare mark on the 48-unit grid. */
+  bareWeight: number;
+  /** Arm reach and stroke for the inset chip variants. */
+  chipReach: number;
+  chipWeight: number;
 }
 ```
