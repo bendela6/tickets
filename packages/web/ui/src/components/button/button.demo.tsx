@@ -4,6 +4,7 @@ import {
   defineState,
   definePlayground,
   Grid,
+  Matrix,
   select,
   Slot,
   text,
@@ -49,6 +50,24 @@ const tones = defineState({
         </Slot>
       ))}
     </Grid>
+  ),
+});
+
+// The pair that actually needs crossing: `variant` decides how much of the
+// tone a button spends, so neither axis means anything without the other and
+// the two single-prop rows above cannot show a ghost danger button at all.
+const variantTone = defineState({
+  title: 'variant × tone',
+  render: () => (
+    <Matrix
+      rows={TONE_NAMES}
+      columns={VARIANTS}
+      cell={(tone, variant) => (
+        <Button variant={variant} tone={tone}>
+          {tone}
+        </Button>
+      )}
+    />
   ),
 });
 
@@ -122,7 +141,7 @@ const iconOnly = defineState({
   ),
 });
 
-export const states = [variants, tones, sizes, busy, chevron, iconOnly];
+export const states = [variants, tones, variantTone, sizes, busy, chevron, iconOnly];
 
 export const playground = definePlayground({
   docs: {

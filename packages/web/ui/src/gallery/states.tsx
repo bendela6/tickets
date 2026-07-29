@@ -119,6 +119,74 @@ export function Center({ children, className }: LayoutProps) {
   );
 }
 
+const HEAD = 'font-mono text-11/13 tracking-wider font-400 uppercase tracking-widest text-gray-9';
+
+/**
+ * Two axes crossed — `variant × tone`, `size × state`. The one arrangement the
+ * derived sections cannot produce: an axis row varies exactly one prop, and
+ * the interesting failures live where two of them meet.
+ *
+ * A real table rather than a grid of divs. The content IS labelled on two
+ * axes, so `scope="col"` / `scope="row"` says so to a screen reader, the
+ * columns size themselves to their specimens, and the headers can stick
+ * without any grid-template arithmetic — which matters because the card
+ * scrolls at 24rem and a tone axis is seventeen rows deep.
+ *
+ * Cells carry no caption: the headers already name every one of them, and a
+ * label under each of sixty-eight specimens is noise.
+ */
+export function Matrix<R extends string, C extends string>({
+  rows,
+  columns,
+  cell,
+  className,
+}: {
+  rows: readonly R[];
+  columns: readonly C[];
+  /** Rendered once per intersection. Both arguments keep their literal union
+   *  type, so a typo in either axis is a compile error. */
+  cell: (row: R, column: C) => ReactNode;
+  className?: string;
+}) {
+  return (
+    <table className={cn('w-full border-collapse', className)}>
+      <thead>
+        <tr>
+          {/* The corner outranks both header bands, so it stays put while
+              either one scrolls under it. */}
+          <th className="sticky left-0 top-0 z-20 bg-surface-raised" />
+          {columns.map((column) => (
+            <th
+              key={column}
+              scope="col"
+              className={cn('sticky top-0 z-10 bg-surface-raised px-3 py-2 text-center', HEAD)}
+            >
+              {column}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row}>
+            <th
+              scope="row"
+              className={cn('sticky left-0 z-10 bg-surface-raised pr-3 text-right', HEAD)}
+            >
+              {row}
+            </th>
+            {columns.map((column) => (
+              <td key={column} className="px-3 py-2 text-center">
+                {cell(row, column)}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 /**
  * One specimen and its caption. Sizes itself from the surrounding layout, so
  * the same `<Slot>` is a cell in a `Wrap` and a full-width band in a `List`.
