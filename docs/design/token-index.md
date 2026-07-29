@@ -1,6 +1,6 @@
 # Token index
 
-218 tokens. Grids only — rules in [foundation-tokens.md](foundation-tokens.md).
+209 tokens. Grids only — rules in [foundation-tokens.md](foundation-tokens.md).
 
 ---
 
@@ -191,12 +191,14 @@ Declared as `--text-<n>--line-height` and `--text-3--letter-spacing`.
 
 | Token | Value | Use |
 |---|---|---|
-| `--radius-1` | 4px | Chips, small marks |
-| `--radius-2` | 6px | Controls, inputs, buttons |
-| `--radius-3` | 8px | Cards, tiles |
-| `--radius-4` | 12px | Panels, sheets, dialogs |
+| `--radius-sm` | 4px | Chips, tags, inline marks |
+| `--radius-md` | 6px | Buttons, inputs, controls |
+| `--radius-lg` | 8px | Cards, list rows, popovers |
+| `--radius-xl` | 12px | Panels, dialogs, sheets |
 
-`rounded-full` retained as the one exception.
+`rounded-full` retained as the one exception. 337 existing `rounded-sm`/`md`/`lg`/`xl`
+usages (incl. side-specific forms) across `packages/web/ui/src`,
+`packages/web/playground/src` and `apps/web/src` keep the pixel they already had.
 
 # Shadow — 3
 
@@ -219,46 +221,27 @@ Declared as `--text-<n>--line-height` and `--text-3--letter-spacing`.
 | `--animate-ai-spin` | `ai-spin 1.4s linear infinite` |
 | `--animate-ai-pulse` | `ai-pulse 1.8s ease-out infinite` |
 
-# Breakpoints — 2
+# Border, ring, z-index, duration — Tailwind-native, not tokens
 
-**File:** `tokens.css` → `@theme inline`
+No file, no custom property — the class states the value. Rules in
+[foundation-tokens.md](foundation-tokens.md#border-ring-z-index-duration--tailwind-native).
+Not counted in the totals below.
 
-| Token | Value | Use |
+| Class | Value | Use |
 |---|---|---|
-| `--breakpoint-narrow` | 1024px | Sidebar collapses to an overlay |
-| `--breakpoint-wide` | 1536px | Docs view gains a second column |
+| `border-1` | 1px | Dividers, table rules |
+| `border-2` | 2px | Inputs, cards, outline controls |
+| `ring-3` | 3px | The focus-visible ring, every control |
+| `z-10` | 10 | Pinned headers, toolbars |
+| `z-40` | 40 | The scrim behind a dialog |
+| `z-50` | 50 | Dialogs, menus, toasts |
+| `duration-120` | 120ms | Hover, press — feedback |
+| `duration-200` | 200ms | Open, close — transitions |
+| `duration-320` | 320ms | Enter, layout — arrivals |
 
----
-
-# Border and focus — 3
-
-**File:** `tokens.css` → `:root`
-
-| Token | Value | Consumed as |
-|---|---|---|
-| `--border-thin` | 1px | `border-(length:--border-thin)` |
-| `--border-thick` | 1.5px | `border-(length:--border-thick)` |
-| `--ring-focus` | 3px | `ring-(length:--ring-focus)` |
-
-# Layering — 3
-
-**File:** `tokens.css` → `:root`
-
-| Token | Value | Use |
-|---|---|---|
-| `--z-sticky` | 10 | Sticky table headers |
-| `--z-scrim` | 40 | Backdrops |
-| `--z-overlay` | 50 | Floating portals |
-
-# Duration — 3
-
-**File:** `tokens.css` → `:root`
-
-| Token | Value |
-|---|---|
-| `--duration-fast` | `120ms` |
-| `--duration-base` | `200ms` |
-| `--duration-slow` | `320ms` |
+Breakpoints are Tailwind's standard `sm`/`md`/`lg`/`xl`/`2xl` — the former
+`narrow`/`wide` breakpoint tokens were exact duplicates of `lg`/`2xl` and are
+gone too.
 
 ---
 
@@ -276,8 +259,7 @@ Declared as `--text-<n>--line-height` and `--text-3--letter-spacing`.
 | Radius | 4 | `tokens.css` `@theme` |
 | Shadow | 3 | `tokens.css` `@theme` |
 | Easing + animation | 4 | `tokens.css` `@theme` |
-| Breakpoints | 2 | `tokens.css` `@theme` |
-| Border + focus | 3 | `tokens.css` `:root` |
-| Layering | 3 | `tokens.css` `:root` |
-| Duration | 3 | `tokens.css` `:root` |
-| **Total** | **220** | |
+| **Total** | **209** | |
+
+Border, ring, z-index, duration and breakpoints are Tailwind-native — no
+token, so no row above.
