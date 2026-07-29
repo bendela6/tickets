@@ -199,7 +199,9 @@ Declared as `--text-<n>--line-height` and `--text-3--letter-spacing`.
 `rounded-full` retained as the one exception. 174 pre-existing `rounded-sm`/`md`/`lg`/`xl`
 usages (incl. side-specific forms) across `packages/web/ui/src`,
 `packages/web/playground/src` and `apps/web/src` kept the pixel they already
-had; the sweep brought the total to 338.
+had; the sweep brought the total to approximately 340 (an approximate figure —
+the scanner, a plain grep, and prose that itself quotes class-shaped text each
+count it a little differently).
 
 # Shadow — 3
 
@@ -230,8 +232,8 @@ Not counted in the totals below.
 
 | Class | Value | Use |
 |---|---|---|
-| `border-1` | 1px | Dividers, table rules |
-| `border-2` | 2px | Inputs, cards, outline controls |
+| `border-1` | 1px | Dividers, table rules, inputs, cards |
+| `border-2` | 2px | Outline controls |
 | `ring-3` | 3px | The focus-visible ring, every control |
 | `z-10` | 10 | Pinned headers, toolbars |
 | `z-40` | 40 | The scrim behind a dialog |

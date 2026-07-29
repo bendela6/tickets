@@ -11,8 +11,8 @@ export const meta = {
 };
 
 const BORDER_JOBS: Record<string, string> = {
-  'border-1': 'dividers, table rules',
-  'border-2': 'inputs, cards — edges you act on',
+  'border-1': 'dividers, table rules, inputs, cards',
+  'border-2': 'outline controls — edges you act on',
 };
 
 const LAYER_JOBS: Record<string, string> = {
@@ -40,7 +40,8 @@ function Edges() {
               className={`h-10 w-40 rounded-md border-solid border-gray-6 bg-surface-raised ${BORDER_CLASS[border.name]}`}
             />
             {/* A rule on its own, where the weight difference is easiest to
-                judge — a box's four edges hide a half-pixel, one line does not. */}
+                judge — a box's four corners and anti-aliasing make 1px vs 2px
+                harder to compare at a glance than a single straight line. */}
             <span
               className="w-40 bg-gray-6"
               style={{ height: border.value }}
@@ -111,22 +112,27 @@ function useViewportWidth(): number {
 
 function Breakpoints() {
   const width = useViewportWidth();
-  const narrow = Number.parseInt(BREAKPOINTS.find((b) => b.name === 'breakpoint-lg')!.value, 10);
-  const wide = Number.parseInt(BREAKPOINTS.find((b) => b.name === 'breakpoint-2xl')!.value, 10);
-  const band = width < narrow ? 'below narrow' : width < wide ? 'narrow' : 'wide';
+  const breakpointLg = Number.parseInt(BREAKPOINTS.find((b) => b.name === 'breakpoint-lg')!.value, 10);
+  const breakpoint2xl = Number.parseInt(BREAKPOINTS.find((b) => b.name === 'breakpoint-2xl')!.value, 10);
+  const band =
+    width < breakpointLg
+      ? 'below breakpoint-lg'
+      : width < breakpoint2xl
+        ? 'breakpoint-lg'
+        : 'breakpoint-2xl';
   return (
     <Sheet>
       <SpecHeader specimen="what changes at this width" />
       <SpecRow
         name="breakpoint-lg"
-        value={`${narrow}px`}
+        value={`${breakpointLg}px`}
         note="rail collapses to icons"
       >
         <span className="font-sans text-12/17 text-gray-11">
           Below this, the board drops to a single column and the detail pane becomes a sheet.
         </span>
       </SpecRow>
-      <SpecRow name="breakpoint-2xl" value={`${wide}px`} note="detail pane pins open">
+      <SpecRow name="breakpoint-2xl" value={`${breakpoint2xl}px`} note="detail pane pins open">
         <span className="font-sans text-12/17 text-gray-11">
           Above this, the detail pane stays open beside the board instead of replacing it.
         </span>
@@ -137,11 +143,11 @@ function Breakpoints() {
         <div className="relative h-8 overflow-hidden rounded-md bg-surface-inset">
           <span
             className="absolute inset-y-0 left-0 bg-indigo-3"
-            style={{ width: `${Math.min(100, (width / wide) * 100)}%` }}
+            style={{ width: `${Math.min(100, (width / breakpoint2xl) * 100)}%` }}
           />
           <span
             className="absolute inset-y-0 w-px bg-indigo-9"
-            style={{ left: `${(narrow / wide) * 100}%` }}
+            style={{ left: `${(breakpointLg / breakpoint2xl) * 100}%` }}
           />
         </div>
         <span className="font-mono text-12/17 text-gray-9">

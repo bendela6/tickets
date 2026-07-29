@@ -36,9 +36,12 @@ Placement decides the syntax, and getting it wrong silently produces no styling.
 | `@theme inline` | colour, text, weight, radius, tracking, shadow, font, ease, animate | Plain utility — `bg-gray-1`, `text-4`, `rounded-md` |
 | *(none — no custom property)* | border width, ring, z-index, duration, breakpoints | Tailwind-native bare value or default — `border-2`, `ring-3`, `z-40`, `duration-200`, `lg:` |
 
-Every `@theme` family opens with `--<family>-*: initial`, so Tailwind's default
-palette, type scale, weights and radii do not exist. What is listed here is the
-whole set.
+Most `@theme` families open with `--<family>-*: initial` — `--color-*`,
+`--text-*` and `--font-weight-*` clear Tailwind's whole default palette, type
+scale and weight set in one line. Radius is the exception: it clears four
+specific off-scale rungs individually (`--radius-xs/2xl/3xl/4xl: initial`)
+rather than the whole family, since `rounded-full` and the four kept rungs
+have to survive. What is listed here is the whole set either way.
 
 The rule is mechanical: **if the value needs to be named or shared across
 themes, it belongs in `@theme` and generates a utility; if Tailwind can already
@@ -259,8 +262,11 @@ usages of `rounded-sm`/`md`/`lg`/`xl` (side-specific forms like `rounded-t-lg`
 included) already spanned `packages/web/ui/src`, `packages/web/playground/src`
 and `apps/web/src` before the redefinition, and every one keeps the pixel it
 already had. The sweep (Tasks 3–4) then converted ~164 arbitrary
-`rounded-[Npx]` sites onto those same four rungs, bringing the total to 338 —
-two different populations, not one number wearing two claims.
+`rounded-[Npx]` sites onto those same four rungs, bringing the total to
+approximately 340 — two different populations, not one number wearing two
+claims. (The exact combined figure is approximate: the scanner, a plain
+grep and prose that itself quotes class-shaped text each count it a little
+differently.)
 
 ## Control height
 
@@ -280,8 +286,8 @@ copy of it — the only way the two could ever disagree.
 
 | Class | Value | Use |
 |---|---|---|
-| `border-1` | 1px | Dividers, table rules |
-| `border-2` | 2px | Inputs, cards, outline controls |
+| `border-1` | 1px | Dividers, table rules, inputs, cards |
+| `border-2` | 2px | Outline controls |
 | `ring-3` | 3px | The focus-visible ring, every control |
 | `z-10` | 10 | Pinned headers, toolbars |
 | `z-40` | 40 | The scrim behind a dialog |
