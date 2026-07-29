@@ -145,10 +145,23 @@ describe('BadgeColumn', () => {
 });
 
 describe('ImageColumn', () => {
+  // Passes a `fallback` so the image has a real accessible name and therefore
+  // role `img`. Without one the component correctly emits `alt=""` (decorative),
+  // which drops the role to `presentation` — that is the right accessibility
+  // outcome, not a test-ergonomics problem to route around.
   it('renders the image when there is a src', () => {
-    const R = ImageColumn();
+    const R = ImageColumn({ fallback: () => 'Alpha' });
     render(<>{R({ value: 'https://example.com/a.png', row: {} })}</>);
-    expect(screen.getByRole('img')).toHaveAttribute('src', 'https://example.com/a.png');
+    expect(screen.getByRole('img', { name: 'Alpha' })).toHaveAttribute(
+      'src',
+      'https://example.com/a.png',
+    );
+  });
+
+  it('marks the image decorative when no name can be derived', () => {
+    const R = ImageColumn();
+    const { container } = render(<>{R({ value: 'https://example.com/a.png', row: {} })}</>);
+    expect(container.querySelector('img')).toHaveAttribute('alt', '');
   });
 
   it('falls back to an avatar built from the row', () => {
