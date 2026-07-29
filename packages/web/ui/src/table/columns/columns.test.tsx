@@ -1,7 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { ActionsColumn } from './actions-column';
+import { BadgeColumn } from './badge-column';
 import { DateColumn } from './date-column';
+import { ImageColumn } from './image-column';
 import { LinkColumn } from './link-column';
 import { NumberColumn } from './number-column';
 import { TextColumn } from './text-column';
@@ -117,6 +120,65 @@ describe('LinkColumn', () => {
     const R = LinkColumn({ href: () => '#' });
     render(<div onClick={onRowClick}>{R({ value: 'Alpha', row: {} })}</div>);
     await userEvent.click(screen.getByRole('link', { name: 'Alpha' }));
+    expect(onRowClick).not.toHaveBeenCalled();
+  });
+});
+
+describe('BadgeColumn', () => {
+  it('renders the value as a pill in the tone the mapper returns', () => {
+    const R = BadgeColumn<string>({ tone: () => 'green' });
+    render(<>{R({ value: 'done', row: {} })}</>);
+    expect(screen.getByText('done')).toBeInTheDocument();
+  });
+
+  it('uses the label mapper when given one', () => {
+    const R = BadgeColumn<string>({ tone: () => 'blue', label: (v) => v.toUpperCase() });
+    render(<>{R({ value: 'open', row: {} })}</>);
+    expect(screen.getByText('OPEN')).toBeInTheDocument();
+  });
+
+  it('renders nothing for a null value rather than an empty pill', () => {
+    const R = BadgeColumn<string | null>({ tone: () => 'gray' });
+    const { container } = render(<>{R({ value: null, row: {} })}</>);
+    expect(container.textContent).toBe('');
+  });
+});
+
+describe('ImageColumn', () => {
+  it('renders the image when there is a src', () => {
+    const R = ImageColumn();
+    render(<>{R({ value: 'https://example.com/a.png', row: {} })}</>);
+    expect(screen.getByRole('img')).toHaveAttribute('src', 'https://example.com/a.png');
+  });
+
+  it('falls back to an avatar built from the row', () => {
+    const R = ImageColumn({ fallback: (row) => (row as { name: string }).name });
+    render(<>{R({ value: null, row: { name: 'Alpha' } })}</>);
+    expect(screen.getByText('A')).toBeInTheDocument();
+  });
+});
+
+describe('ActionsColumn', () => {
+  it('renders a labelled button per action', () => {
+    const R = ActionsColumn({ items: [{ icon: 'trash', label: 'Delete', onClick: () => {} }] });
+    render(<>{R({ value: undefined, row: {} })}</>);
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+  });
+
+  it('calls the action with its row', async () => {
+    const onClick = vi.fn();
+    const R = ActionsColumn({ items: [{ icon: 'trash', label: 'Delete', onClick }] });
+    render(<>{R({ value: undefined, row: { id: '9' } })}</>);
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(onClick).toHaveBeenCalledWith({ id: '9' });
+  });
+
+  // Rows open a drawer on click; an action must not do both.
+  it('does not let the click reach the row', async () => {
+    const onRowClick = vi.fn();
+    const R = ActionsColumn({ items: [{ icon: 'trash', label: 'Delete', onClick: () => {} }] });
+    render(<div onClick={onRowClick}>{R({ value: undefined, row: {} })}</div>);
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
     expect(onRowClick).not.toHaveBeenCalled();
   });
 });
