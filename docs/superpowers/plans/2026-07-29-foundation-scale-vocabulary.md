@@ -875,6 +875,8 @@ Replace the `duration` group only; leave `ease` and `animate` untouched:
 
 - [ ] **Step 6: Narrow `drift()`**
 
+**Already partly done.** Task 2 narrowed the radius matcher from `/^radius-[a-z]+$/` to `/^radius-(sm|md|lg|xl)$/`, because the four `--radius-*: initial` declarations otherwise read as live tokens with an unmatchable value and reported the scale as drifting from itself. Keep that line as you find it; your job here is the *family list*, not the radius regex.
+
 In `packages/web/ui/src/foundation/spec.ts`, replace the whole `drift()` body (lines ~190-227) with the tokenized families only, and add the exported note the demos render for the rest:
 
 ```ts
