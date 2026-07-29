@@ -897,7 +897,7 @@ git commit -m "feat(table): grouped rows sharing one virtualized scroll region"
 
 **Interfaces:**
 - Consumes: every `Render*Ctx` type and `useColumnResize`, `ROW_HEIGHT` from `@tickets/table`; `cn`, `Icon` from `@tickets/ui`
-- Produces: `tableRender` — a `TableRender` with all slots except `groupHeader`, which Task 7 adds
+- Produces: `tableRender<T>()` — a generic factory returning a `TableRender<T>` with all slots except `groupHeader`, which Task 7 adds
 
 This is a **restyle**, not a copy. items-core's slots are the behavioural reference; every class is rewritten. Their `▲`/`▼` text glyphs become `Icon` entries, and their arbitrary values (`text-[10px]`, `w-8` resize handle) become tokens and round steps.
 
@@ -943,7 +943,7 @@ function Harness(props: Partial<React.ComponentProps<typeof Table<Row>>>) {
         onSortChange={() => {}}
         onWidthChange={() => {}}
         isLoading={false}
-        render={tableRender}
+        render={tableRender<Row>()}
         {...props}
       />
     </div>
@@ -1235,17 +1235,37 @@ import { renderTd } from './render-td';
 import { renderSkeletonRow } from './render-skeleton-row';
 import { renderError } from './render-error';
 
+/**
+ * The default styled render set, as a GENERIC FACTORY rather than a constant.
+ *
+ * The individual slots are already generic (`renderTh<T>` etc.), but assembling
+ * them into a plain `const tableRender: TableRender` pins the whole set to
+ * `TableRender<unknown>` — and because each slot takes a `T`-typed context,
+ * `TableRender<unknown>` is not assignable to `TableRender<Row>`. The adapter
+ * would then be unusable with any concrete row type:
+ *
+ *   Type 'TableRender<unknown>' is not assignable to type 'TableRender<Row>'.
+ *
+ * A factory instantiates the slots at the call site instead. Mirrors
+ * `makeStubRender<T>()` in @tickets/table. The returned object is cheap — nine
+ * references to module-level functions — and the engine never keys off its
+ * identity, so calling it inline in JSX is fine.
+ *
+ * Call it as `render={tableRender<Row>()}`.
+ */
 // groupHeader is added in Task 7 — the type will complain until then.
-export const tableRender: TableRender = {
-  root: renderRoot,
-  thead: renderThead,
-  th: renderTh,
-  tbody: renderTbody,
-  tr: renderTr,
-  td: renderTd,
-  skeletonRow: renderSkeletonRow,
-  error: renderError,
-};
+export function tableRender<T>(): TableRender<T> {
+  return {
+    root: renderRoot,
+    thead: renderThead,
+    th: renderTh,
+    tbody: renderTbody,
+    tr: renderTr,
+    td: renderTd,
+    skeletonRow: renderSkeletonRow,
+    error: renderError,
+  };
+}
 ```
 
 - [ ] **Step 5: Run the test to verify it passes**
@@ -1945,7 +1965,7 @@ function Demo({ grouped, loading, error }: { grouped?: boolean; loading?: boolea
         onRowClick={() => {}}
         isLoading={Boolean(loading)}
         error={error ? new Error('The server said no.') : null}
-        render={tableRender}
+        render={tableRender<Row>()}
       />
     </div>
   );
@@ -2076,7 +2096,7 @@ Delete the sticky header block and the `groups.map(...)` row loop (roughly lines
       }
       rowHeight={config.density === 'compact' ? 32 : 42}
       isLoading={false}
-      render={tableRender}
+      render={tableRender<Row>()}
     />
   )}
 </div>
