@@ -16,6 +16,7 @@ Reference source (behaviour only, never markup): `../items-core/packages/web/ui/
 - **Never copy items-core's markup.** It hardcodes `bg-slate-100 dark:bg-slate-900`, `text-12`, `rounded-4`, `p-20`. Every class in this plan comes from Instrument tokens: `bg-surface-raised`, `bg-gray-1`, `border-gray-6`, `text-gray-11`, `text-gray-12`, `text-13/19`, `text-12/17`, `font-sans`, `font-mono`.
 - **Spacing uses Tailwind's numbered units**, exposed as an enumerable union (`gap={4}`). Never a named `xs|sm|md|lg|xl` scale — `docs/design/foundation-tokens.md` records spacing as deliberately non-tokenized because Tailwind's 4px scale already is one.
 - **No arbitrary `[...]` Tailwind values and no odd fractional steps.** Round scale numbers or named utilities only.
+- **Every form input is CONTROLLED and holds no state of its own.** The engine owns the value; the input renders `p.value` and reports through `p.onChange`. **Never add `useState`/`useEffect` to an input to mirror its value.** A second source of truth means a form reset, a `when`-clause change, or a validation-coerced value leaves the field showing stale text. If a test seems to require internal state, the test is wrong — a spy-based test may only type ONE character (a frozen `value` makes every keystroke report the same one); multi-character entry needs a stateful harness that feeds `onChange` back into `value`, exactly as the engine does.
 - **THREE Tailwind namespaces are cleared in `tokens.css` and only the listed values exist.** Anything outside them compiles to *nothing* and renders unstyled. `tokens:verify` does **not** catch any of it — it only checks hex/rgb literals and colour drift — so review is the only gate. Grep `-\*: initial` in `tokens.css` to see the three.
 
   | Cleared | What exists | Dead → use instead |
@@ -956,20 +957,53 @@ interface InputProps<TConfigResolved, TValue> {
 
 Create `packages/web/ui/src/forms/inputs/text/text-input.test.tsx`:
 
+**These inputs are CONTROLLED and hold no state of their own.** The engine owns
+the value. That makes a test which types more than one character while passing a
+`vi.fn()` as `onChange` a trap: `value` stays frozen at `''`, so every keystroke
+reports the same single character and `toHaveBeenLastCalledWith('hi')` can never
+pass. Feeding the value back through a stateful harness — exactly what the engine
+does — is the only honest way to test multi-character typing. **Do not add
+`useState`/`useEffect` to the component to make a spy-based test pass**; that
+creates a second source of truth and the input will show stale text whenever the
+form resets a field or validation coerces its value.
+
 ```tsx
+import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { TextInput } from './text-input';
+import { TextInput, type TextInputConfig } from './text-input';
 
 const base = { name: 'title', loading: false, onBlur: vi.fn(), config: {} };
 
+/** Feeds `onChange` back into `value`, the way the form engine does. */
+function Controlled({ config = {} as TextInputConfig }) {
+  const [value, setValue] = useState('');
+  return <TextInput {...base} config={config} value={value} onChange={setValue} />;
+}
+
 describe('TextInput', () => {
-  it('reports what the user types', async () => {
+  it('round-trips what the user types through its parent', async () => {
+    render(<Controlled />);
+    const input = screen.getByRole('textbox');
+    await userEvent.type(input, 'hi');
+    expect(input).toHaveValue('hi');
+  });
+
+  it('reports each keystroke to onChange', async () => {
     const onChange = vi.fn();
     render(<TextInput {...base} value="" onChange={onChange} />);
-    await userEvent.type(screen.getByRole('textbox'), 'hi');
-    expect(onChange).toHaveBeenLastCalledWith('hi');
+    await userEvent.type(screen.getByRole('textbox'), 'h');
+    expect(onChange).toHaveBeenCalledWith('h');
+  });
+
+  // The proof it holds no state: with `value` pinned by the parent, typing
+  // cannot change what is displayed.
+  it('shows only what its parent gives it', async () => {
+    render(<TextInput {...base} value="fixed" onChange={vi.fn()} />);
+    const input = screen.getByRole('textbox');
+    await userEvent.type(input, 'more');
+    expect(input).toHaveValue('fixed');
   });
 
   it('renders an undefined value as an empty controlled input', () => {
@@ -1010,19 +1044,33 @@ describe('TextInput', () => {
 Create `packages/web/ui/src/forms/inputs/textarea/textarea-input.test.tsx`:
 
 ```tsx
+import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { TextareaInput } from './textarea-input';
+import { TextareaInput, type TextareaInputConfig } from './textarea-input';
 
 const base = { name: 'body', loading: false, onBlur: vi.fn(), config: {} };
 
+/** Feeds `onChange` back into `value`, the way the form engine does. */
+function Controlled({ config = {} as TextareaInputConfig }) {
+  const [value, setValue] = useState('');
+  return <TextareaInput {...base} config={config} value={value} onChange={setValue} />;
+}
+
 describe('TextareaInput', () => {
-  it('reports what the user types', async () => {
+  it('round-trips what the user types through its parent', async () => {
+    render(<Controlled />);
+    const input = screen.getByRole('textbox');
+    await userEvent.type(input, 'ab');
+    expect(input).toHaveValue('ab');
+  });
+
+  it('reports each keystroke to onChange', async () => {
     const onChange = vi.fn();
     render(<TextareaInput {...base} value="" onChange={onChange} />);
-    await userEvent.type(screen.getByRole('textbox'), 'ab');
-    expect(onChange).toHaveBeenLastCalledWith('ab');
+    await userEvent.type(screen.getByRole('textbox'), 'a');
+    expect(onChange).toHaveBeenCalledWith('a');
   });
 
   it('defaults to four rows and honours an override', () => {
@@ -1123,7 +1171,7 @@ export function TextareaInput(p: InputProps<TextareaInputConfig, string>) {
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm --filter @tickets/ui test -- src/forms/inputs`
-Expected: PASS, 11 tests
+Expected: PASS, 13 tests
 
 - [ ] **Step 5: Commit**
 
@@ -1164,34 +1212,58 @@ The exported component is named `NumberFormInput`, not `NumberInput`, so it does
 
 Create `packages/web/ui/src/forms/inputs/number/number-input.test.tsx`:
 
+**Same controlled-component rule as Task 4.** `NumberFormInput` holds no state.
+A spy-based test may only type ONE character, because `value` stays frozen and
+every keystroke would otherwise report the same digit. Multi-digit entry needs
+the stateful harness below. **Do not add `useState`/`useEffect` to the component
+to make a spy assertion pass.**
+
 ```tsx
+import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { NumberFormInput } from './number-input';
+import { NumberFormInput, type NumberInputConfig } from './number-input';
 
 const base = { name: 'estimate', loading: false, onBlur: vi.fn(), config: {} };
+
+/** Feeds `onChange` back into `value`, the way the form engine does. */
+function Controlled({ config = {} as NumberInputConfig }) {
+  const [value, setValue] = useState<number | null>(null);
+  return <NumberFormInput {...base} config={config} value={value} onChange={setValue} />;
+}
 
 describe('NumberFormInput', () => {
   it('reports the number the user types', async () => {
     const onChange = vi.fn();
     render(<NumberFormInput {...base} value={null} onChange={onChange} />);
     await userEvent.type(screen.getByRole('spinbutton'), '7');
-    expect(onChange).toHaveBeenLastCalledWith(7);
+    expect(onChange).toHaveBeenCalledWith(7);
   });
 
-  it('clamps a value above max down to max', async () => {
+  // Single keystroke, so the frozen `value` cannot distort the result: 9 alone
+  // already exceeds a max of 5.
+  it('clamps a single entry above max down to max', async () => {
     const onChange = vi.fn();
-    render(<NumberFormInput {...base} config={{ max: 10 }} value={null} onChange={onChange} />);
-    await userEvent.type(screen.getByRole('spinbutton'), '99');
-    expect(onChange).toHaveBeenLastCalledWith(10);
+    render(<NumberFormInput {...base} config={{ max: 5 }} value={null} onChange={onChange} />);
+    await userEvent.type(screen.getByRole('spinbutton'), '9');
+    expect(onChange).toHaveBeenCalledWith(5);
+  });
+
+  // Multi-digit entry needs the value fed back, or the second 9 would be typed
+  // into a still-empty field and read as 9 again rather than 99.
+  it('clamps to max as the user keeps typing digits', async () => {
+    render(<Controlled config={{ max: 10 }} />);
+    const input = screen.getByRole('spinbutton');
+    await userEvent.type(input, '99');
+    expect(input).toHaveValue(10);
   });
 
   it('clamps a value below min up to min', async () => {
     const onChange = vi.fn();
     render(<NumberFormInput {...base} config={{ min: 5 }} value={null} onChange={onChange} />);
     await userEvent.type(screen.getByRole('spinbutton'), '1');
-    expect(onChange).toHaveBeenLastCalledWith(5);
+    expect(onChange).toHaveBeenCalledWith(5);
   });
 
   it('reports null when the field is cleared rather than coercing to zero', async () => {
@@ -1282,7 +1354,7 @@ export function NumberFormInput(p: InputProps<NumberInputConfig, number | null>)
 - [ ] **Step 4: Run the test to verify it passes**
 
 Run: `pnpm --filter @tickets/ui test -- src/forms/inputs/number`
-Expected: PASS, 7 tests
+Expected: PASS, 8 tests
 
 If the clamp tests fail because the primitive already clamps on its own before calling `onChange`, keep the clamp here anyway — it is what makes this adapter correct independent of the primitive's internals — and adjust the test's expected call count, not the expected value.
 
@@ -1900,7 +1972,7 @@ export function ColumnLayout({ children }: LayoutComponentProps<BareProps>) {
 - [ ] **Step 4: Run the test to verify it passes**
 
 Run: `pnpm --filter @tickets/ui test -- src/forms/layouts.test.tsx`
-Expected: PASS, 7 tests
+Expected: PASS, 8 tests
 
 - [ ] **Step 5: Commit**
 
