@@ -1,41 +1,28 @@
 import { defineRegistry, type InputProps } from '@tickets/form';
+import { baseInputs, baseLayouts, FieldWrapper, RootWrapper } from '@tickets/ui';
 
 import { DirectoryPicker } from '../components/terminal/directory-picker';
-import { cn, FieldError, FieldLabel, Input } from '@tickets/ui';
 
-function TextInput(p: InputProps<{ placeholder?: string; mono?: boolean }, string>) {
+/** The one input the shared package cannot own: DirectoryPicker reaches into
+ *  the terminal components and calls /api/workdir-roots, and @tickets/ui is
+ *  domain-free by test. */
+function DirectoryInput(p: InputProps<Record<string, never>, string>) {
   return (
-    <Input
-      name={p.name}
+    <DirectoryPicker
       value={p.value ?? ''}
-      placeholder={p.config.placeholder}
-      disabled={p.disabled}
-      onChange={(e) => p.onChange(e.target.value)}
-      onBlur={p.onBlur}
-      className={cn(p.config.mono && 'font-mono text-13')}
+      onChange={(next) => {
+        p.onChange(next);
+        p.onBlur();
+      }}
     />
   );
 }
 
-function DirectoryInput(p: InputProps<Record<string, never>, string>) {
-  return <DirectoryPicker value={p.value ?? ''} onChange={(next) => { p.onChange(next); p.onBlur(); }} />;
-}
-
 export const formRegistry = defineRegistry({
-  inputs: {
-    text: { Component: TextInput, defaultValue: '' },
-    directory: { Component: DirectoryInput, defaultValue: '' },
-  },
-  layouts: {},
-  field: {
-    Component: ({ label, required, error, children }) => (
-      <div className="block">
-        {label ? <FieldLabel required={required}>{label}</FieldLabel> : null}
-        {children}
-        {error ? <FieldError>{error}</FieldError> : null}
-      </div>
-    ),
-  },
+  inputs: { ...baseInputs, directory: { Component: DirectoryInput, defaultValue: '' } },
+  layouts: baseLayouts,
+  field: { Component: FieldWrapper },
+  root: { Component: RootWrapper },
 });
 
 export type AppFormRegistry = typeof formRegistry;
