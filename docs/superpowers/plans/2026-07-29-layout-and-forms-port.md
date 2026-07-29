@@ -16,7 +16,17 @@ Reference source (behaviour only, never markup): `../items-core/packages/web/ui/
 - **Never copy items-core's markup.** It hardcodes `bg-slate-100 dark:bg-slate-900`, `text-12`, `rounded-4`, `p-20`. Every class in this plan comes from Instrument tokens: `bg-surface-raised`, `bg-gray-1`, `border-gray-6`, `text-gray-11`, `text-gray-12`, `text-13/19`, `text-12/17`, `font-sans`, `font-mono`.
 - **Spacing uses Tailwind's numbered units**, exposed as an enumerable union (`gap={4}`). Never a named `xs|sm|md|lg|xl` scale — `docs/design/foundation-tokens.md` records spacing as deliberately non-tokenized because Tailwind's 4px scale already is one.
 - **No arbitrary `[...]` Tailwind values and no odd fractional steps.** Round scale numbers or named utilities only.
-- **The type scale is numeric, and the role names are RETIRED.** `tokens.css` does `--text-*: initial;` before defining `--text-9` … `--text-24`, so `text-ui`, `text-meta` and `text-label` compile to nothing and render as unstyled text. Commit `4205792` retired them with this mapping — use the right-hand column: `text-ui` → **`text-13/19`**, `text-meta` → **`text-12/17`**, `text-label` → **`text-11/13 tracking-wider`**. There is no `text-32`; the scale stops at `text-24`. `tokens:verify` does **not** catch a dead type class — it only checks hex/rgb literals and colour drift — so nothing but review will flag this.
+- **THREE Tailwind namespaces are cleared in `tokens.css` and only the listed values exist.** Anything outside them compiles to *nothing* and renders unstyled. `tokens:verify` does **not** catch any of it — it only checks hex/rgb literals and colour drift — so review is the only gate. Grep `-\*: initial` in `tokens.css` to see the three.
+
+  | Cleared | What exists | Dead → use instead |
+  |---|---|---|
+  | `--text-*` (line 569) | `--text-9` … `--text-24`, numeric only | `text-ui`→**`text-13/19`** · `text-meta`→**`text-12/17`** · `text-label`→**`text-11/13 tracking-wider`** · no `text-32`, scale stops at 24 |
+  | `--font-weight-*` (line 693) | `400`, `500`, `600` only | `font-semibold`→**`font-600`** · `font-medium`→**`font-500`** · `font-normal`→**`font-400`** · no `font-bold` |
+  | `--color-*` (line 380) | the named ramps only | see the tone rule below |
+
+  Radius, spacing and the rest are **not** cleared — `rounded-md/lg/xl`, `p-4`, `gap-2` all work normally.
+
+- **`primary` / `secondary` / `success` / `warning` / `danger` / `neutral` are TONES, not colour families.** There is no `primary-11` or `primary-8` utility. A tone resolves through `TONE_SCALE` (`primary` → `indigo`), so paint with **`toneClasses(tone, emphasis)`** — `toneClasses('primary','text')` yields `text-indigo-11`. Never write a rung number against a tone name. Real colour families you *can* index directly: `gray-*`, `red-*`, `indigo-*` and the other hues.
 - **Tests assert observable behaviour**, per `verifying-a-component`. **Never assert on a class the component chooses for itself** — no `expect(el.className).toContain('gap-4')`, `'flex-col'`, `'rounded-xl'`, `'font-mono'` or similar. jsdom computes no layout, so spacing and sizing simply go untested here; that is a deliberate ruling, not an oversight, and the gallery demo is where those are checked by eye.
   What tests may assert: rendered children, composition, DOM attributes (`role`, `rows`, `aria-invalid`, `disabled`, `href`), accessible names and roles, callback arguments, and that a **caller-supplied** `className` survives to the DOM (that one is an API contract, not an internal choice).
 - Every new component gets a `.demo.tsx` so it appears at `/gallery/:slug/:tab`. `meta` shape: `{ title, group, size }` where `size` is one of `'sm' | 'md' | 'lg' | 'full'`.
@@ -604,7 +614,7 @@ export function CardHeader({ className, ...rest }: HTMLAttributes<HTMLDivElement
 /** The header's heading. Rendered as an h3 so a card inside a page section
  *  lands at a sensible depth; override with `as` at the call site if not. */
 export function CardTitle({ className, ...rest }: HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn('font-sans text-13/19 font-semibold text-gray-12', className)} {...rest} />;
+  return <h3 className={cn('font-sans text-13/19 font-600 text-gray-12', className)} {...rest} />;
 }
 
 type CardBodyProps = HTMLAttributes<HTMLDivElement> & { padding?: Padding };
@@ -1852,7 +1862,7 @@ export function GroupLayout({ props, children }: LayoutComponentProps<TitledProp
       {hasHeader ? (
         <Stack gap={1} className="border-t border-gray-6 pt-3">
           {props.title ? (
-            <span className="font-sans text-13/19 font-semibold text-gray-12">{props.title}</span>
+            <span className="font-sans text-13/19 font-600 text-gray-12">{props.title}</span>
           ) : null}
           {props.description ? (
             <span className="font-sans text-12/17 text-gray-11">{props.description}</span>

@@ -17,7 +17,17 @@ Prerequisite: **Plan 1 Task 1 must be merged** — the adapter's demos use `Stac
 - **The engine imports nothing from `@tickets/ui`.** That separation is the whole reason it is its own package. If a task seems to need a UI import, the thing you want belongs in a render slot instead.
 - **Never copy items-core's markup.** Their table slots are `bg-slate-100 dark:bg-slate-900`, `text-14`, `border-1`, `px-12`, `text-[12px]`. Ports go through Instrument tokens: `bg-surface-raised`, `bg-gray-1`, `border-gray-6`, `text-gray-9/11/12`, `text-13/19`, `text-12/17`, `text-11/13`, and the tone scale via `toneClasses`.
 - **No arbitrary `[...]` Tailwind values.** items-core's helpers use `text-[12px]`, `text-[12.5px]`, `text-[10px]`, `rounded-[4px]` — every one must become a named token or a round scale step.
-- **The type scale is numeric, and the role names are RETIRED.** `tokens.css` does `--text-*: initial;` before defining `--text-9` … `--text-24`, so `text-ui`, `text-meta` and `text-label` compile to nothing and render as unstyled text. Commit `4205792` retired them with this mapping — use the right-hand column: `text-ui` → **`text-13/19`**, `text-meta` → **`text-12/17`**, `text-label` → **`text-11/13 tracking-wider`**. There is no `text-32`; the scale stops at `text-24`. `tokens:verify` does **not** catch a dead type class, so nothing but review will flag this.
+- **THREE Tailwind namespaces are cleared in `tokens.css` and only the listed values exist.** Anything outside them compiles to *nothing* and renders unstyled. `tokens:verify` does **not** catch any of it, so review is the only gate.
+
+  | Cleared | What exists | Dead → use instead |
+  |---|---|---|
+  | `--text-*` (line 569) | `--text-9` … `--text-24`, numeric only | `text-ui`→**`text-13/19`** · `text-meta`→**`text-12/17`** · `text-label`→**`text-11/13 tracking-wider`** · no `text-32` |
+  | `--font-weight-*` (line 693) | `400`, `500`, `600` only | `font-semibold`→**`font-600`** · `font-medium`→**`font-500`** · no `font-bold` |
+  | `--color-*` (line 380) | the named ramps only | see the tone rule below |
+
+  Radius and spacing are **not** cleared — `rounded-md/lg/xl`, `p-3`, `gap-2` work normally.
+
+- **`primary` / `danger` / `neutral` etc. are TONES, not colour families.** There is no `primary-11` or `primary-8` utility. Paint with **`toneClasses(tone, emphasis)`** — `toneClasses('primary','text')` resolves through `TONE_SCALE` (`primary` → `indigo`) to `text-indigo-11`. Never write a rung number against a tone name. `gray-*`, `red-*`, `indigo-*` and the other hues *can* be indexed directly.
 - **Verbatim-port tasks change three things only:** the import specifier `@bw/table` → `@tickets/table`, the localStorage key prefix, and formatting. Do not "improve" logic in a port task — Task 4 and Task 5 are where changes belong.
 - Tests assert observable behaviour. The engine's tests do this through `makeStubRender`, whose slots emit `data-slot` markers — assert on those, never on styled chrome.
 - Conventional commits: `feat(table): …`, `feat(ui): …`, `refactor(web): …`. One commit per task.
@@ -1021,7 +1031,7 @@ function ResizeHandle({ resize }: { resize: RenderThResize }) {
       role="separator"
       aria-orientation="vertical"
       {...handlers}
-      className="absolute top-0 right-0 h-full w-1 cursor-col-resize hover:bg-primary-8"
+      className="absolute top-0 right-0 h-full w-1 cursor-col-resize hover:bg-gray-8"
     />
   );
 }
@@ -1536,6 +1546,7 @@ Create `packages/web/ui/src/table/columns/link-column.tsx`:
 
 ```tsx
 import type { Renderer } from '@tickets/table';
+import { cn, toneClasses } from '../../style';
 
 type LinkColumnOpts = { href: (row: unknown) => string; external?: boolean };
 
@@ -1547,7 +1558,10 @@ export function LinkColumn(opts: LinkColumnOpts): Renderer<string> {
       // also open the row's drawer behind it.
       onClick={(e) => e.stopPropagation()}
       {...(opts.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-      className="truncate text-primary-11 hover:underline"
+      // `primary` is a TONE, not a colour family — there is no `primary-11`
+      // utility. toneClasses('primary','text') resolves through TONE_SCALE
+      // (primary -> indigo) and yields `text-indigo-11`.
+      className={cn('truncate hover:underline', toneClasses('primary', 'text'))}
     >
       {value}
     </a>
@@ -1863,7 +1877,7 @@ function Demo({ grouped, loading, error }: { grouped?: boolean; loading?: boolea
         key,
         header: (
           <>
-            <span className="font-sans text-13/19 font-semibold text-gray-12">{key}</span>
+            <span className="font-sans text-13/19 font-600 text-gray-12">{key}</span>
             <span className="font-mono text-11 text-gray-9">{rows.length}</span>
           </>
         ),
