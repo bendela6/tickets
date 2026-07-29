@@ -2002,7 +2002,11 @@ function Demo({ grouped, loading, error }: { grouped?: boolean; loading?: boolea
     <div className="h-100 w-full">
       <Table<Row>
         columns={COLUMNS}
-        rows={grouped ? [] : ROWS}
+        // `loading` must also empty `rows`. The engine only renders skeletons
+        // when `isLoading && items.length === 0`, so passing 40 rows alongside
+        // isLoading makes the Loading state pixel-identical to Flat and leaves
+        // render-skeleton-row.tsx exercised by nothing.
+        rows={grouped || loading ? [] : ROWS}
         groups={groups}
         state={{ sort, widths }}
         onSortChange={setSort}
