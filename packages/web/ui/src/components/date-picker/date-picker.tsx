@@ -115,7 +115,7 @@ export function DatePicker({
           <Icon name="chevron-down" size={CHEVRON[size]} className="text-gray-9" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-59 rounded-[10px] p-3">
+      <PopoverContent className="w-59 rounded-xl p-3">
         <div className="mb-2 flex items-center justify-between">
           <button
             type="button"

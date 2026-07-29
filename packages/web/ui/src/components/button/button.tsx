@@ -84,13 +84,14 @@ const buttonClass = variants({
     // does not know those custom named sizes are font-sizes, so it groups them with
     // `text-{color}` utilities and silently drops the color (e.g. text-indigo-contrast).
     // Arbitrary lengths are classified as font-size, so the variant color survives.
-    // Radius is per-size (design: 6 / 8 / 10 px), not the 5px `rounded-md`.
+    // Radius is per-size: the design's 6 / 8 / 10 px, snapped to the scale's
+    // md / lg / xl. Only `lg` moves — 10px was never a rung.
     size: {
       default: 'md',
       options: {
-        sm: 'h-7 px-2.5 rounded-[6px] text-12',
-        md: 'h-9 px-3.5 rounded-[8px] text-13',
-        lg: 'h-11 px-[18px] rounded-[10px] text-14',
+        sm: 'h-7 px-2.5 rounded-md text-12',
+        md: 'h-9 px-3.5 rounded-lg text-13',
+        lg: 'h-11 px-[18px] rounded-xl text-14',
       },
     },
   },

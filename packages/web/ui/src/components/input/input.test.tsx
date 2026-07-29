@@ -7,7 +7,7 @@ import { Input } from './input';
 test('md input carries the spec size classes', () => {
   render(<Input aria-label="Title" />);
   const input = screen.getByLabelText('Title');
-  expect(input).toHaveClass('h-9', 'px-3', 'rounded-[8px]', 'bg-surface-raised', 'border-gray-7');
+  expect(input).toHaveClass('h-9', 'px-3', 'rounded-lg', 'bg-surface-raised', 'border-gray-7');
   // Regression guard: tailwind-merge must not let the 14px font size evict the
   // ink text color (the same trap the primary button hit with text-13/19).
   expect(input).toHaveClass('text-14');
@@ -17,7 +17,7 @@ test('md input carries the spec size classes', () => {
 test('sm input overrides height, padding, radius, and font size', () => {
   render(<Input size="sm" aria-label="Estimate" />);
   const input = screen.getByLabelText('Estimate');
-  expect(input).toHaveClass('h-7', 'px-2.25', 'rounded-[6px]', 'text-13');
+  expect(input).toHaveClass('h-7', 'px-2.25', 'rounded-md', 'text-13');
   expect(input).not.toHaveClass('text-14');
 });
 

@@ -344,12 +344,10 @@
 @source inline("ring-red-3");
 @source inline("ring-teal-3");
 @source inline("ring-yellow-3");
-@source inline("rounded-[10px]");
-@source inline("rounded-[6px]");
-@source inline("rounded-[7px]");
-@source inline("rounded-[8px]");
 @source inline("rounded-full");
+@source inline("rounded-lg");
 @source inline("rounded-md");
+@source inline("rounded-xl");
 @source inline("select-none");
 @source inline("shadow-sm");
 @source inline("shrink-0");

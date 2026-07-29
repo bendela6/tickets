@@ -41,4 +41,9 @@ describe('scanRetired', () => {
     const all = (['radius', 'border', 'ring', 'z'] as const).flatMap(scanRetired);
     expect(all.filter((h) => h.startsWith('apps/eer'))).toEqual([]);
   });
+
+  it('has no retired radius form left in @tickets/ui or the playground', () => {
+    const packagesOnly = scanRetired('radius').filter((h) => h.startsWith('packages/'));
+    expect(packagesOnly).toEqual([]);
+  });
 });

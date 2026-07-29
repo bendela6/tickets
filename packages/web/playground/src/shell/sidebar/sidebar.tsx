@@ -134,7 +134,7 @@ export function Sidebar({
               <button
                 type="button"
                 onClick={onOpenPalette}
-                className="h-4.5 shrink-0 rounded-xs border border-gray-7 bg-surface-raised px-1.5 text-11/13 tracking-wider text-gray-9 hover:text-gray-11"
+                className="h-4.5 shrink-0 rounded-sm border border-gray-7 bg-surface-raised px-1.5 text-11/13 tracking-wider text-gray-9 hover:text-gray-11"
               >
                 ⌘K
               </button>

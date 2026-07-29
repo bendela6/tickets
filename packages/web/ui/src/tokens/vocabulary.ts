@@ -18,8 +18,19 @@ const ROOTS = [
   join(REPO_ROOT, 'apps', 'web', 'src'),
 ];
 
-/** Generated files restate what their generator emits; scanning them double-counts. */
-const SKIP = new Set(['tones.generated.ts', 'safelist.generated.css', 'vocabulary.ts']);
+/**
+ * Generated files restate what their generator emits; scanning them double-counts.
+ * `vocabulary.test.ts` is skipped for a related reason: it unit-tests `RETIRED`
+ * against literal retired-form strings (`rounded-[7px]`, `rounded-xs`, …) as
+ * fixtures, so it always "contains" retired forms by design — that's not a
+ * real call site left to sweep.
+ */
+const SKIP = new Set([
+  'tones.generated.ts',
+  'safelist.generated.css',
+  'vocabulary.ts',
+  'vocabulary.test.ts',
+]);
 
 export type RetiredFamily = 'radius' | 'border' | 'ring' | 'z';
 
