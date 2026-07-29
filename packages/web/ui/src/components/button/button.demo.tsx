@@ -22,40 +22,12 @@ const SIZES = [
 
 export const meta = { title: 'Button', group: 'Components', order: 1, size: 'sm' };
 
-const variants = defineState({
-  title: 'variants',
-  render: () => (
-    <Wrap>
-      {VARIANTS.map((variant) => (
-        <Slot key={variant} label={variant}>
-          <Button variant={variant}>{variant}</Button>
-        </Slot>
-      ))}
-    </Wrap>
-  ),
-});
-
-// Every one of these fills is a class built by interpolation, so this grid is
-// also the visual check that the generated safelist reached the stylesheet: if
-// it did not, these render with no fill at all.
-const tones = defineState({
-  title: 'tones',
-  render: ({ tones }) => (
-    <Grid columns={6}>
-      {tones.map((tone) => (
-        <Slot key={tone} label={tone}>
-          <Button variant="solid" tone={tone}>
-            {tone}
-          </Button>
-        </Slot>
-      ))}
-    </Grid>
-  ),
-});
-
-// The pair that actually needs crossing: `variant` decides how much of the
-// tone a button spends, so neither axis means anything without the other and
-// the two single-prop rows above cannot show a ghost danger button at all.
+// `variant` decides how much of the tone a button spends and `tone` decides
+// which ramp, so neither axis means anything alone — a row of variants and a
+// row of tones are this grid's first column and first row, and show nothing it
+// does not. Every fill here is a class built by interpolation, so it is also
+// the visual check that the generated safelist reached the stylesheet: if it
+// did not, these render with no fill at all.
 const variantTone = defineState({
   title: 'variant × tone',
   render: ({ tones }) => (
@@ -141,7 +113,7 @@ const iconOnly = defineState({
   ),
 });
 
-export const states = [variants, tones, variantTone, sizes, busy, chevron, iconOnly];
+export const states = [variantTone, sizes, busy, chevron, iconOnly];
 
 export const playground = definePlayground({
   docs: {
