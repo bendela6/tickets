@@ -131,7 +131,7 @@ const SuggestionList = forwardRef<SuggestionListHandle, SuggestionListProps>(fun
   return (
     <div
       className={cn(
-        'fixed z-50 rounded-[10px] border border-gray-6 bg-surface-raised p-1.25 shadow-lg',
+        'fixed z-50 rounded-xl border border-gray-6 bg-surface-raised p-1.25 shadow-lg',
         width,
       )}
       style={{ left: rect?.left ?? 0, top: rect?.bottom ?? 0 }}

@@ -20,7 +20,7 @@ import { RichTextEditor } from './rich-text/rich-text-editor';
 import { TicketDispatch } from './agent/ticket-dispatch';
 
 const ICON_BUTTON =
-  'inline-flex size-7.5 shrink-0 items-center justify-center rounded-[7px] border border-gray-6 ' +
+  'inline-flex size-7.5 shrink-0 items-center justify-center rounded-lg border border-gray-6 ' +
   'bg-transparent text-gray-11 hover:bg-surface-inset hover:text-gray-12';
 
 // Click-to-edit title: static heading until clicked, then a borderless input

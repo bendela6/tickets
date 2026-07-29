@@ -18,7 +18,7 @@ export function providerLabel(key: string): string {
 // dropdown uses so a persona reads as an agent everywhere it appears as a user.
 export function AgentBadge() {
   return (
-    <span className="inline-flex h-4 items-center rounded-[4px] bg-indigo-3 px-1.5 font-mono text-9 font-500 text-indigo-9">
+    <span className="inline-flex h-4 items-center rounded-sm bg-indigo-3 px-1.5 font-mono text-9 font-500 text-indigo-9">
       AGENT
     </span>
   );
@@ -40,7 +40,7 @@ export function PermissionBadge({ mode }: { mode: PermissionMode }) {
   return (
     <span
       className={cn(
-        'inline-flex h-5 items-center rounded-[5px] px-1.75 font-mono text-10',
+        'inline-flex h-5 items-center rounded-md px-1.75 font-mono text-10',
         autonomous ? 'bg-indigo-3 text-indigo-9' : 'bg-orange-3 text-orange-9',
       )}
     >
@@ -75,7 +75,7 @@ export function AgentCard({
       </div>
       <div className="flex flex-wrap items-center gap-1.5">
         <PermissionBadge mode={agent.permissionMode} />
-        <span className="inline-flex h-5 items-center rounded-[5px] border border-gray-6 px-1.75 font-mono text-10 text-gray-11">
+        <span className="inline-flex h-5 items-center rounded-md border border-gray-6 px-1.75 font-mono text-10 text-gray-11">
           {agent.allowedTools.length} tools
         </span>
       </div>

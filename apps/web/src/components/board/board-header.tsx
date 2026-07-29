@@ -87,7 +87,7 @@ export function BoardHeader({
 
   return (
     <div className="mb-3.5 flex shrink-0 flex-wrap items-center gap-3 gap-y-2">
-      <span className="rounded-[5px] bg-surface-inset px-1.75 py-0.75 font-mono text-12/17 font-500 text-gray-12">
+      <span className="rounded-md bg-surface-inset px-1.75 py-0.75 font-mono text-12/17 font-500 text-gray-12">
         {board.project.itemPrefix}
       </span>
       <h1 className="m-0 font-sans text-22 leading-tight font-600 text-gray-12">

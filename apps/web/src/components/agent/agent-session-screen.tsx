@@ -200,7 +200,7 @@ function renderTimeline(entries: Entry[], onRespond: RespondFn) {
 function UserBubble({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-2.5 self-end">
-      <div className="max-w-[85%] rounded-[10px] border border-gray-6 bg-surface-inset px-3 py-2 font-sans text-13/19 text-gray-12">
+      <div className="max-w-[85%] rounded-xl border border-gray-6 bg-surface-inset px-3 py-2 font-sans text-13/19 text-gray-12">
         {text}
       </div>
     </div>

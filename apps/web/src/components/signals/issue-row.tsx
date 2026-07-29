@@ -155,21 +155,21 @@ export function IssueRowSkeleton({ index = 0 }: { index?: number }) {
     >
       <span className="size-2.25 rounded-full bg-surface-inset" />
       <span>
-        <span className="block h-2.75 rounded-xs bg-surface-inset" style={{ width: `${w1}%` }} />
-        <span className="mt-1.5 block h-2 rounded-xs bg-surface-inset" style={{ width: `${w2}%` }} />
+        <span className="block h-2.75 rounded-sm bg-surface-inset" style={{ width: `${w1}%` }} />
+        <span className="mt-1.5 block h-2 rounded-sm bg-surface-inset" style={{ width: `${w2}%` }} />
       </span>
-      <span className="inline-block h-3.5 w-18 rounded-xs bg-surface-inset" />
+      <span className="inline-block h-3.5 w-18 rounded-sm bg-surface-inset" />
       <span className="flex justify-end">
-        <span className="inline-block h-2.75 w-8 rounded-xs bg-surface-inset" />
+        <span className="inline-block h-2.75 w-8 rounded-sm bg-surface-inset" />
       </span>
       <span className="pl-3.5">
-        <span className="inline-block h-2.25 w-6.5 rounded-xs bg-surface-inset" />
+        <span className="inline-block h-2.25 w-6.5 rounded-sm bg-surface-inset" />
       </span>
       <span>
-        <span className="inline-block h-2.25 w-6.5 rounded-xs bg-surface-inset" />
+        <span className="inline-block h-2.25 w-6.5 rounded-sm bg-surface-inset" />
       </span>
       <span className="pl-1.5">
-        <span className="inline-block h-3 w-23 rounded-xs bg-surface-inset" />
+        <span className="inline-block h-3 w-23 rounded-sm bg-surface-inset" />
       </span>
       <span className="pl-1">
         <span className="inline-block h-4 w-16 rounded-md bg-surface-inset" />

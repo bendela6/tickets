@@ -48,11 +48,11 @@ export function AppShell({
           type="button"
           aria-label="Open navigation"
           onClick={() => setMobileNavOpen(true)}
-          className="inline-flex size-9 items-center justify-center rounded-[8px] text-16 text-gray-11 hover:bg-surface-inset"
+          className="inline-flex size-9 items-center justify-center rounded-lg text-16 text-gray-11 hover:bg-surface-inset"
         >
           ☰
         </button>
-        <span aria-hidden className="size-2.25 rounded-[2px] bg-indigo-9" />
+        <span aria-hidden className="size-2.25 rounded-sm bg-indigo-9" />
         <span className="font-mono text-15 font-600 text-gray-12">tickets</span>
       </div>
 

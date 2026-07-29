@@ -65,7 +65,7 @@ export function SdkSnippet({
         />
         <CopyButton value={code} failedLabel="Copy failed" className="shrink-0" />
       </div>
-      <pre className="overflow-x-auto rounded-[8px] border border-gray-6 bg-surface-inset p-3 font-mono text-12 leading-relaxed text-gray-12">
+      <pre className="overflow-x-auto rounded-lg border border-gray-6 bg-surface-inset p-3 font-mono text-12 leading-relaxed text-gray-12">
         <code>{code}</code>
       </pre>
     </div>

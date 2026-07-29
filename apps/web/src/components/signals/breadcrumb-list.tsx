@@ -31,7 +31,7 @@ function HttpStatusPill({ status }: { status: number }) {
     <Pill
       tone={ok ? 'green' : 'danger'}
       label={status}
-      className={cn('h-4.25 rounded-[4px] px-1.5 font-mono text-10', !ok && 'font-600')}
+      className={cn('h-4.25 rounded-sm px-1.5 font-mono text-10', !ok && 'font-600')}
     />
   );
 }
@@ -98,7 +98,7 @@ function TerminalBreadcrumbRow({ terminal }: { terminal: TerminalBreadcrumb }) {
       className="grid items-center gap-x-2.5 bg-red-3 px-4 py-1.5"
       style={{ gridTemplateColumns: BREADCRUMB_GRID_COLUMNS }}
     >
-      <span className="flex size-5 items-center justify-center rounded-[6px] bg-red-9 font-mono text-10 font-600 text-red-contrast">
+      <span className="flex size-5 items-center justify-center rounded-md bg-red-9 font-mono text-10 font-600 text-red-contrast">
         ✕
       </span>
       <span className="font-mono text-[10.5px] font-500 text-red-9">{terminal.name}</span>

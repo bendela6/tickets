@@ -21,7 +21,7 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
       className="flex cursor-pointer flex-col gap-3.25 rounded-xl border border-gray-6 bg-surface-raised px-5 py-4.5 shadow-sm hover:border-gray-7"
     >
       <div className="flex items-center gap-2.5">
-        <span className="rounded-[5px] bg-surface-inset px-1.75 py-0.75 font-mono text-12/17 font-500 text-gray-12">
+        <span className="rounded-md bg-surface-inset px-1.75 py-0.75 font-mono text-12/17 font-500 text-gray-12">
           {project.itemPrefix}
         </span>
         <span className="flex-1 truncate font-sans text-15 font-600 text-gray-12">
@@ -70,7 +70,7 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
           {activity.map((count, index) => (
             <span
               key={index}
-              className="w-1.25 rounded-t-[2px] bg-gray-7"
+              className="w-1.25 rounded-t-sm bg-gray-7"
               style={{
                 height: `${BAR_MIN_PX + Math.round((count / peak) * (BAR_MAX_PX - BAR_MIN_PX))}px`,
               }}

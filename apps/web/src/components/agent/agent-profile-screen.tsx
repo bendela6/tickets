@@ -77,7 +77,7 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
               {providerLabel(agent.providerKey)} · {agent.model}
             </span>
             <PermissionBadge mode={agent.permissionMode} />
-            <span className="inline-flex h-5 items-center rounded-[5px] border border-gray-6 px-1.75 text-10 text-gray-11">
+            <span className="inline-flex h-5 items-center rounded-md border border-gray-6 px-1.75 text-10 text-gray-11">
               {agent.allowedTools.length} tools
             </span>
           </div>

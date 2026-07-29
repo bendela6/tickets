@@ -95,7 +95,7 @@ function AppRow({
       <span className="flex min-w-0 items-center gap-2.5">
         <span
           className={cn(
-            'flex size-5.5 shrink-0 items-center justify-center rounded-[6px] font-mono text-9 font-600',
+            'flex size-5.5 shrink-0 items-center justify-center rounded-md font-mono text-9 font-600',
             avatarTone(app.slug),
           )}
         >
@@ -201,7 +201,7 @@ export function AppsScreen() {
 
       {isList ? (
         <>
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[12px] border border-gray-6 bg-surface-raised">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-6 bg-surface-raised">
             <TableHeader />
             <div className="flex-1 overflow-auto">
               {rows.map((app) => (
@@ -241,7 +241,7 @@ export function AppsScreen() {
               <button
                 type="button"
                 onClick={() => void appsQuery.refetch()}
-                className="h-8 rounded-[8px] border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+                className="h-8 rounded-lg border border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
               >
                 ↻ Retry
               </button>
@@ -253,7 +253,7 @@ export function AppsScreen() {
       {isEmpty ? (
         <div className="flex flex-1 items-center justify-center">
           <div className="flex max-w-137.5 flex-col items-center gap-4.5 text-center">
-            <span className="flex size-11 items-center justify-center rounded-[11px] bg-indigo-3 font-mono text-22 text-indigo-9">
+            <span className="flex size-11 items-center justify-center rounded-xl bg-indigo-3 font-mono text-22 text-indigo-9">
               ∿
             </span>
             <div className="font-sans text-22 font-600 text-gray-12">Connect your first app</div>
@@ -268,7 +268,7 @@ export function AppsScreen() {
               {ONBOARDING_STEPS.map((step) => (
                 <div
                   key={step.n}
-                  className="w-46.5 rounded-[10px] border border-gray-6 bg-surface-raised p-3.5 text-left"
+                  className="w-46.5 rounded-xl border border-gray-6 bg-surface-raised p-3.5 text-left"
                 >
                   <span className="block font-mono text-10 text-gray-9">{step.n}</span>
                   <span className="mt-1.5 block font-sans text-[12.5px] font-500 text-gray-12">

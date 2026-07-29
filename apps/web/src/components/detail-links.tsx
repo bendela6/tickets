@@ -115,7 +115,7 @@ export function DetailLinks({
             return (
               <div
                 key={link.id}
-                className="flex h-8.5 items-center gap-2.25 rounded-[9px] border border-gray-6 px-2.75 hover:bg-gray-1"
+                className="flex h-8.5 items-center gap-2.25 rounded-lg border border-gray-6 px-2.75 hover:bg-gray-1"
               >
                 <Pill
                   tone={chip.blocked ? 'orange' : 'secondary'}

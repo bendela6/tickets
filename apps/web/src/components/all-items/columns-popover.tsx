@@ -82,7 +82,7 @@ export function ColumnsPopover({
           {sharedRows.map((row) => (
             <div
               key={row.id}
-              className="flex items-center justify-between gap-2 rounded-[6px] px-2.25 py-1.5 hover:bg-surface-inset"
+              className="flex items-center justify-between gap-2 rounded-md px-2.25 py-1.5 hover:bg-surface-inset"
             >
               <Checkbox
                 label={row.label}
@@ -100,11 +100,11 @@ export function ColumnsPopover({
               {unsharedRows.map((field) => (
                 <div
                   key={field.key}
-                  className="flex items-center gap-2 rounded-[6px] px-2.25 py-1.5 opacity-55"
+                  className="flex items-center gap-2 rounded-md px-2.25 py-1.5 opacity-55"
                 >
                   <span
                     aria-hidden
-                    className="size-3.75 shrink-0 rounded-[4px] border-[1.5px] border-gray-6 bg-surface-inset"
+                    className="size-3.75 shrink-0 rounded-sm border-[1.5px] border-gray-6 bg-surface-inset"
                   />
                   <span className="flex-1 truncate font-sans text-13/19 text-gray-11">
                     {field.label}

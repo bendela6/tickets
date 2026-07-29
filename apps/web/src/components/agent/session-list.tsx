@@ -63,7 +63,7 @@ function SessionRow({
         to="/agents/$sessionId"
         params={{ sessionId: String(session.id) }}
         title={`${workdirName(session.workdirId)} · ${formatAge(session.createdAt)}`}
-        className="group flex items-center gap-2 rounded-[7px] px-2 py-1.5 hover:bg-surface-inset"
+        className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-surface-inset"
         style={{ paddingLeft: 8 + depth * 16 }}
         onClick={onNavigate}
       >
@@ -75,14 +75,14 @@ function SessionRow({
         <SessionKindGlyph kind="agent" />
         <span className="min-w-0 flex-1 truncate font-sans text-13/19 text-gray-12">{session.title}</span>
         {session.itemId != null ? (
-          <span className="shrink-0 rounded-[4px] border border-gray-6 px-1 font-mono text-10 text-indigo-9">
+          <span className="shrink-0 rounded-sm border border-gray-6 px-1 font-mono text-10 text-indigo-9">
             →#{session.itemId}
           </span>
         ) : null}
         <Pill {...sessionStatus(session.status, 'agent')} />
         <button
           type="button"
-          className="shrink-0 rounded-[4px] border border-gray-6 bg-surface-raised px-1.5 py-0.5 font-sans text-12/17 text-gray-11 opacity-0 hover:border-gray-7 group-hover:opacity-100"
+          className="shrink-0 rounded-sm border border-gray-6 bg-surface-raised px-1.5 py-0.5 font-sans text-12/17 text-gray-11 opacity-0 hover:border-gray-7 group-hover:opacity-100"
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();

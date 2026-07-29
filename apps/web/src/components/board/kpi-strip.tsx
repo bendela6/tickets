@@ -27,7 +27,7 @@ export function KpiTiles({
       {KIND_ORDER.map(({ kind, label }) => (
         <div
           key={kind}
-          className="flex flex-1 items-center gap-2.5 rounded-[10px] border border-gray-6 bg-surface-raised px-3.5 py-2.5 shadow-sm"
+          className="flex flex-1 items-center gap-2.5 rounded-xl border border-gray-6 bg-surface-raised px-3.5 py-2.5 shadow-sm"
         >
           <span className="inline-flex shrink-0">
             <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
