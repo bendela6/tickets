@@ -1497,6 +1497,17 @@ describe('LinkColumn', () => {
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
+
+  // Rows in this table are clickable. Without stopPropagation, following a
+  // link would ALSO open the row's drawer behind it. Easy to implement and
+  // easy to drop in a refactor, so it gets its own test.
+  it('does not let a link click reach the row', async () => {
+    const onRowClick = vi.fn();
+    const R = LinkColumn({ href: () => '#' });
+    render(<div onClick={onRowClick}>{R({ value: 'Alpha', row: {} })}</div>);
+    await userEvent.click(screen.getByRole('link', { name: 'Alpha' }));
+    expect(onRowClick).not.toHaveBeenCalled();
+  });
 });
 ```
 
@@ -1567,7 +1578,12 @@ function format(
 export function NumberColumn(opts: NumberColumnOpts = {}): Renderer<number | string | null> {
   const { format: style = 'decimal', currency, fractionDigits } = opts;
   return ({ value }) => {
-    if (value == null || value === '') return <span className="text-gray-9">—</span>;
+    // `.trim()` matters: `Number('  ')` is 0, not NaN, so a whitespace-only
+    // cell would otherwise render a fake zero instead of an em dash — wrong
+    // data, not just wrong styling.
+    if (value == null || (typeof value === 'string' && value.trim() === '')) {
+      return <span className="text-gray-9">—</span>;
+    }
     const n = typeof value === 'string' ? Number(value) : value;
     if (Number.isNaN(n)) return <span className="text-gray-9">—</span>;
     return (
@@ -1641,7 +1657,7 @@ export function LinkColumn(opts: LinkColumnOpts): Renderer<string> {
 - [ ] **Step 4: Run the test to verify it passes**
 
 Run: `pnpm --filter @tickets/ui test -- src/table/columns/columns.test.tsx`
-Expected: PASS, 13 tests
+Expected: PASS, 15 tests
 
 - [ ] **Step 5: Commit**
 
