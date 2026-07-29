@@ -1,4 +1,4 @@
-import { RETIRED, scanRetired } from './vocabulary';
+import { RETIRED, scanBorderAgainstBaseline, scanRetired } from './vocabulary';
 
 describe('RETIRED patterns', () => {
   it('matches an arbitrary radius but not a rung on the scale', () => {
@@ -29,8 +29,22 @@ describe('RETIRED patterns', () => {
 });
 
 describe('scanRetired', () => {
-  it('has no bare border width utility left in scope', () => {
-    expect(scanRetired('border')).toEqual([]);
+  it('has no bare border width utility outside the reviewed baseline', () => {
+    // `RETIRED.border` can't tell a class string from prose, a comment, or a
+    // data/enum literal — `border-baseline.json` is the reviewed list of
+    // matches confirmed not to be a Tailwind class (see vocabulary.ts's
+    // `scanBorderAgainstBaseline`). Anything outside it is a real, unswept
+    // bare-border site.
+    expect(scanBorderAgainstBaseline().fresh).toEqual([]);
+  });
+
+  it('never lets the border baseline rot into stale excuses', () => {
+    // The ratchet: every baseline entry must still correspond to a real,
+    // current line — if a baselined line changes shape (or disappears), it
+    // shows up as `fixed` and the baseline needs pruning, not preserving.
+    // This is what stops the baseline from silently growing wrong: it can
+    // only ever shrink.
+    expect(scanBorderAgainstBaseline().fixed).toEqual([]);
   });
 
   it('walks real files rather than an empty tree', () => {
