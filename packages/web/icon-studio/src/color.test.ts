@@ -22,6 +22,19 @@ test('raising saturation and lightness moves the colour', () => {
   expect(s).toBeGreaterThanOrEqual(s0);
 });
 
+test('saturation multiplier is applied and clamped correctly', () => {
+  const [, base] = toHsl('#12b898');
+  // Increase saturation: 1.4x should raise it but clamp at 1
+  const increased = adjust('#12b898', { hue: 0, sat: 1.4, lit: 0 });
+  const [, sInc] = toHsl(increased);
+  expect(sInc).toBeGreaterThan(base);
+  expect(sInc).toBeLessThanOrEqual(1);
+  // Decrease saturation: 0.5x should lower it
+  const decreased = adjust('#12b898', { hue: 0, sat: 0.5, lit: 0 });
+  const [, sDec] = toHsl(decreased);
+  expect(sDec).toBeLessThan(base);
+});
+
 test('lightness is clamped so a colour never becomes pure black or white', () => {
   expect(adjust('#ffffff', { hue: 0, sat: 1, lit: 0.9 })).not.toBe('#ffffff');
   const [, , l] = toHsl(adjust('#000000', { hue: 0, sat: 1, lit: -0.9 }));
