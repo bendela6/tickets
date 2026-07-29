@@ -12,9 +12,11 @@ import { Avatar, Button, cn, DialogContent, DialogRoot, DialogTitle, Icon, Input
 import { avatarFor } from '../../domain/actor';
 import { StatusSelect } from '../../ui/status-select';
 import { childProgress } from '../../utils/child-progress';
+import { compareTicketsBy } from '../../utils/compare-tickets';
 import { evaluateFilters } from '../../utils/evaluate-filters';
 import { indexBoard, type BoardIndexes } from '../../utils/index-board';
 import { legalStatusTargets } from '../../utils/legal-status-targets';
+import type { ViewSort } from '../../utils/view-config';
 import { KpiTiles } from '../board/kpi-strip';
 import { ItemDrawer } from '../item-drawer';
 import { ColumnsPopover } from './columns-popover';
@@ -71,6 +73,36 @@ function kindOf(row: Row): StatusKind {
       ? row.entry.indexes.optionByValue(workflowField, raw)
       : undefined;
   return option?.kind ?? 'todo';
+}
+
+/**
+ * Translate the table engine's sort intent into the shared comparator's
+ * vocabulary. The engine reports a column key; `compareTicketsBy` wants a
+ * ViewSort. Key ranks by item number and the two synthetic columns map onto
+ * their own sources — everything else, Title included, is an ordinary field
+ * key, which is why the fallback is `source: 'field'` rather than a lookup.
+ *
+ * Only the first sort is honoured: `Column.sortable` drives the engine's
+ * single-sort toggle, and the shared comparator takes one ViewSort. A
+ * shift-click still appends, so the leading entry is the one the user most
+ * recently made primary.
+ */
+function viewSortFor(sort: SortBy[]): ViewSort {
+  const first = sort[0];
+  if (!first) {
+    return null;
+  }
+  const dir = first.direction;
+  if (first.field === 'key') {
+    return { source: 'number', dir };
+  }
+  if (first.field === 'type') {
+    return { source: 'type', dir };
+  }
+  if (first.field === 'subs') {
+    return { source: 'progress', dir };
+  }
+  return { source: 'field', fieldKey: first.field, dir };
 }
 
 function isPastDate(value: string, now: Date): boolean {
@@ -288,12 +320,25 @@ export function AllItemsScreen() {
     kpiCounts[kindOf(row)] += 1;
   }
 
+  // Sorting is applied WITHIN each group, never across them: the group is the
+  // outer ordering the user chose from the Group menu, and a column sort
+  // reorders rows inside it. Without an active sort each grouping keeps the
+  // default it was written with.
+  const sorted = viewSortFor(sort);
+  const bySort = sorted
+    ? compareTicketsBy<Row>(
+        sorted,
+        (row) => row.entry.indexes,
+        (row) => row.ticket,
+      )
+    : null;
+
   const groups: TableGroup<Row>[] = [];
   if (config.group === 'project') {
     for (const entry of entries) {
       const rows = allRows
         .filter((row) => row.entry === entry)
-        .sort((left, right) => left.ticket.number - right.ticket.number);
+        .sort(bySort ?? ((left, right) => left.ticket.number - right.ticket.number));
       if (rows.length === 0) {
         continue;
       }
@@ -301,7 +346,7 @@ export function AllItemsScreen() {
         key: entry.project.key,
         header: (
           <>
-            <span className="rounded-[4px] bg-surface-inset px-1.5 py-0.5 font-mono text-11 font-500 text-gray-12">
+            <span className="rounded-sm bg-surface-inset px-1.5 py-0.5 font-mono text-11 font-500 text-gray-12">
               {entry.project.itemPrefix}
             </span>
             <span className="font-sans text-13/19 font-500 text-gray-12">{entry.project.name}</span>
@@ -318,9 +363,10 @@ export function AllItemsScreen() {
       const rows = allRows
         .filter((row) => kindOf(row) === kind)
         .sort(
-          (left, right) =>
-            (entryOrder.get(left.entry) ?? 0) - (entryOrder.get(right.entry) ?? 0) ||
-            left.ticket.number - right.ticket.number,
+          bySort ??
+            ((left, right) =>
+              (entryOrder.get(left.entry) ?? 0) - (entryOrder.get(right.entry) ?? 0) ||
+              left.ticket.number - right.ticket.number),
         );
       if (rows.length === 0) {
         continue;
@@ -341,16 +387,16 @@ export function AllItemsScreen() {
     }
   }
 
-  // Column resizing is a NEW, persisted capability the old hand-rolled table
-  // never had — the migration onto @tickets/table introduced it silently and
-  // nobody has ever seen it run in a browser. It ships off (resizable: false)
-  // until someone verifies it, matching the existing deliberate decision that
-  // no column below opts into `sortable` either.
+  // Every column sorts, matching the project board's table where every header
+  // is clickable. Column RESIZING stays off: it is a new, persisted capability
+  // the old hand-rolled table never had — the migration onto @tickets/table
+  // introduced it silently — and nobody has yet seen it run in a browser.
   const columns: Column<Row>[] = [
     {
       key: 'key',
       header: 'Key',
       width: '96px',
+      sortable: true,
       resizable: false,
       render: (row) => (
         <ItemKey prefix={row.entry.project.itemPrefix} number={row.ticket.number} />
@@ -360,6 +406,7 @@ export function AllItemsScreen() {
       key: 'title',
       header: 'Title',
       width: 'minmax(240px, 1fr)',
+      sortable: true,
       resizable: false,
       render: (row) => (
         <span className="truncate font-sans text-13/19 text-gray-12">
@@ -371,6 +418,7 @@ export function AllItemsScreen() {
       key: id,
       header: columnLabelFor(id, sharedByKey),
       width: columnWidthFor(id, sharedByKey),
+      sortable: true,
       resizable: false,
       render: (row: Row) => cell(id, row),
     })),
@@ -584,7 +632,7 @@ export function AllItemsScreen() {
       </div>
 
       {/* Grouped table */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-[12px] border border-gray-6 bg-surface-raised">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-xl border border-gray-6 bg-surface-raised">
         {allRows.length === 0 ? (
           <ScreenState
             className="flex-1 justify-center py-16"

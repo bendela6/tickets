@@ -10,8 +10,30 @@ export function compareTickets(
   indexes: BoardIndexes,
   sort: ViewSort,
 ): (left: Item, right: Item) => number {
+  return compareTicketsBy(
+    sort,
+    () => indexes,
+    (item) => item,
+  );
+}
+
+/**
+ * The same comparator, over rows that are not bare Items and need not share a
+ * board. All items lists tickets from every project at once, so each row has
+ * to be ranked through ITS OWN project's indexes: field keys and option
+ * positions are per-board, so a comparator closed over a single BoardIndexes
+ * would rank other projects' rows against the wrong option set — quietly, and
+ * only for the projects that happen to order their options differently.
+ */
+export function compareTicketsBy<T>(
+  sort: ViewSort,
+  indexesOf: (row: T) => BoardIndexes,
+  itemOf: (row: T) => Item,
+): (left: T, right: T) => number {
   const direction = sort?.dir === 'desc' ? -1 : 1;
-  const rank = (item: Item): number | string => {
+  const rank = (row: T): number | string => {
+    const indexes = indexesOf(row);
+    const item = itemOf(row);
     if (!sort || sort.source === 'number') {
       return item.number;
     }
@@ -54,6 +76,6 @@ export function compareTickets(
     if (leftRank > rightRank) {
       return 1 * direction;
     }
-    return left.number - right.number;
+    return itemOf(left).number - itemOf(right).number;
   };
 }
