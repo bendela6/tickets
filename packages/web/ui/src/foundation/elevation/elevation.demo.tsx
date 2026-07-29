@@ -13,7 +13,7 @@ export const meta = {
 // Three levels because there are three answers: attached, floating over one
 // surface, and floating over everything.
 const SHADOW_JOBS: Record<string, string> = {
-  'shadow-surface-raised': 'cards, rows — attached to the page',
+  'shadow-raised': 'cards, rows — attached to the page',
   'shadow-overlay': 'popovers, menus — dismissible',
   'shadow-modal': 'dialogs, sheets — blocking',
 };
@@ -25,7 +25,15 @@ function useShadow() {
     ref,
     theme,
     valueOf: (name: string) => {
-      const token = SHADOWS.find((s) => s.name === name)!;
+      const token = SHADOWS.find((s) => s.name === name);
+      // Naming the miss, rather than asserting it away: a renamed token used
+      // to reach the DOM as `undefined` and take the page down with a message
+      // about reading `light`, which says nothing about which token is gone.
+      if (!token) {
+        throw new Error(
+          `elevation demo asks for "${name}", which is not a shadow token (have: ${SHADOWS.map((s) => s.name).join(', ')})`,
+        );
+      }
       return theme === 'dark' ? token.dark : token.light;
     },
   };
@@ -70,7 +78,7 @@ function InUse() {
       <div className="relative flex min-h-64 items-start gap-4 overflow-hidden rounded-xl bg-gray-1 p-5">
         <div
           className="flex w-56 flex-col gap-1 rounded-lg bg-surface-raised p-3"
-          style={{ boxShadow: valueOf('shadow-surface-raised') }}
+          style={{ boxShadow: valueOf('shadow-raised') }}
         >
           <span className="font-sans text-13/19 font-500 text-gray-12">Retry the gateway run</span>
           <span className="font-mono text-12/17 text-gray-9">TIX-214</span>
