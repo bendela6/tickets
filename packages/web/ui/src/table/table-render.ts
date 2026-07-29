@@ -7,6 +7,7 @@ import { renderTr } from './render-tr';
 import { renderTd } from './render-td';
 import { renderSkeletonRow } from './render-skeleton-row';
 import { renderError } from './render-error';
+import { renderGroupHeader } from './render-group-header';
 
 /**
  * The default styled render set, as a GENERIC FACTORY rather than a constant.
@@ -24,7 +25,6 @@ import { renderError } from './render-error';
  *
  * Call it as `render={tableRender<Row>()}`.
  */
-// groupHeader is added in Task 7 — the type will complain until then.
 export function tableRender<T>(): TableRender<T> {
   return {
     root: renderRoot,
@@ -33,6 +33,7 @@ export function tableRender<T>(): TableRender<T> {
     tbody: renderTbody,
     tr: renderTr,
     td: renderTd,
+    groupHeader: renderGroupHeader,
     skeletonRow: renderSkeletonRow,
     error: renderError,
   };
