@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 import { DateColumn } from './date-column';
 import { LinkColumn } from './link-column';
 import { NumberColumn } from './number-column';
@@ -45,6 +46,14 @@ describe('NumberColumn', () => {
   it('shows an em dash for a value that is not a number', () => {
     const R = NumberColumn();
     render(<>{R({ value: 'abc', row: {} })}</>);
+    expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
+  // `Number('  ')` is 0, not NaN — without the trim guard this renders a fake
+  // zero, which is wrong DATA in a table, not just wrong styling.
+  it('shows an em dash for a whitespace-only value, not zero', () => {
+    const R = NumberColumn();
+    render(<>{R({ value: '   ', row: {} })}</>);
     expect(screen.getByText('—')).toBeInTheDocument();
   });
 
@@ -98,5 +107,16 @@ describe('LinkColumn', () => {
     const link = screen.getByRole('link', { name: 'Out' });
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  // Rows in this table are clickable. Without stopPropagation, following a
+  // link would ALSO open the row's drawer behind it. Easy to implement and
+  // easy to drop in a refactor, so it gets its own test.
+  it('does not let a link click reach the row', async () => {
+    const onRowClick = vi.fn();
+    const R = LinkColumn({ href: () => '#' });
+    render(<div onClick={onRowClick}>{R({ value: 'Alpha', row: {} })}</div>);
+    await userEvent.click(screen.getByRole('link', { name: 'Alpha' }));
+    expect(onRowClick).not.toHaveBeenCalled();
   });
 });
