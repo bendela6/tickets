@@ -1359,10 +1359,14 @@ describe('TextColumn', () => {
     expect(container.textContent).toBe('');
   });
 
-  it('renders in a monospace face when asked', () => {
-    const R = TextColumn({ mono: true });
+  // The `mono` and `truncate` options change nothing but the classes the
+  // helper picks for itself, which the project's testing ruling forbids
+  // asserting — and jsdom would render them identically anyway. Accepting the
+  // options is all that is checkable here; the faces are verified in the demo.
+  it('accepts its options', () => {
+    const R = TextColumn({ mono: true, truncate: false });
     render(<>{R({ value: 'abc', row: {} })}</>);
-    expect(screen.getByText('abc').className).toContain('font-mono');
+    expect(screen.getByText('abc')).toBeInTheDocument();
   });
 });
 
@@ -1385,14 +1389,22 @@ describe('NumberColumn', () => {
     expect(screen.getByText('—')).toBeInTheDocument();
   });
 
-  it('aligns right in a tabular face so digits line up down the column', () => {
-    const R = NumberColumn();
-    render(<>{R({ value: 42, row: {} })}</>);
-    const cls = screen.getByText('42').className;
-    expect(cls).toContain('text-right');
-    expect(cls).toContain('tabular-nums');
+  it('formats a currency value with its symbol', () => {
+    const R = NumberColumn({ format: 'currency', currency: 'USD' });
+    render(<>{R({ value: 1234.5, row: {} })}</>);
+    expect(screen.getByText(/1,234\.50/)).toBeInTheDocument();
+  });
+
+  it('parses a numeric string as a number', () => {
+    const R = NumberColumn({ format: 'integer' });
+    render(<>{R({ value: '1234', row: {} })}</>);
+    expect(screen.getByText('1,234')).toBeInTheDocument();
   });
 });
+// Right-alignment and `tabular-nums` are deliberately not asserted: they are
+// classes the helper picks for itself, and jsdom computes no layout, so the
+// assertion would restate the implementation without proving digits line up.
+// The demo is where that is checked.
 
 describe('DateColumn', () => {
   it('renders a relative time for a valid date', () => {
@@ -1572,7 +1584,7 @@ export function LinkColumn(opts: LinkColumnOpts): Renderer<string> {
 - [ ] **Step 4: Run the test to verify it passes**
 
 Run: `pnpm --filter @tickets/ui test -- src/table/columns/columns.test.tsx`
-Expected: PASS, 12 tests
+Expected: PASS, 13 tests
 
 - [ ] **Step 5: Commit**
 
