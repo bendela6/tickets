@@ -70,10 +70,11 @@ export function CardHeader({ className, ...rest }: HTMLAttributes<HTMLDivElement
   return <div className={cn('border-b border-gray-6 px-4 py-3', className)} {...rest} />;
 }
 
-/** The header's heading. Rendered as an h3 so a card inside a page section
- *  lands at a sensible depth; override with `as` at the call site if not. */
+/** The header's heading. Always an h3, so a card inside a page section lands
+ *  at a sensible depth. A caller needing a different level should render its
+ *  own heading element inside CardHeader rather than reaching for CardTitle. */
 export function CardTitle({ className, ...rest }: HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn('font-sans text-13/19 font-semibold text-gray-12', className)} {...rest} />;
+  return <h3 className={cn('font-sans text-13/19 font-600 text-gray-12', className)} {...rest} />;
 }
 
 type CardBodyProps = HTMLAttributes<HTMLDivElement> & { padding?: Padding };
