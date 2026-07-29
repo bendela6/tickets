@@ -19,6 +19,7 @@
     "@tickets/form": "workspace:*",
     "@tickets/playground": "workspace:*",
     "@tickets/richtext": "workspace:*",
+    "@tickets/table": "workspace:*",
     "@tickets/ui": "workspace:*",
     "@tiptap/core": "^3.28.0",
     "@tiptap/pm": "^3.28.0",

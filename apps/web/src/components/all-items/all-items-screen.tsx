@@ -7,7 +7,8 @@ import { useProjects } from '../../api/use-projects';
 import { KIND_ICON, KIND_TONE, typePill } from '../../domain/status';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Avatar, Button, cn, DialogContent, DialogRoot, DialogTitle, Icon, Input, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, Tabs, toneClasses } from '@tickets/ui';
+import { Table, useTableWidths, type Column, type SortBy, type TableGroup } from '@tickets/table';
+import { Avatar, Button, cn, DialogContent, DialogRoot, DialogTitle, Icon, Input, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, tableRender, Tabs, toneClasses } from '@tickets/ui';
 import { avatarFor } from '../../domain/actor';
 import { StatusSelect } from '../../ui/status-select';
 import { childProgress } from '../../utils/child-progress';
@@ -221,6 +222,8 @@ export function AllItemsScreen() {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<{ projectKey: string; ticketId: number } | null>(null);
   const [naming, setNaming] = useState(false);
+  const [sort, setSort] = useState<SortBy[]>([]);
+  const [widths, setWidth] = useTableWidths('all-items');
 
   const entries: ProjectEntry[] = [];
   projects.forEach((project, index) => {
@@ -285,7 +288,7 @@ export function AllItemsScreen() {
     kpiCounts[kindOf(row)] += 1;
   }
 
-  const groups: { key: string; header: ReactNode; rows: Row[] }[] = [];
+  const groups: TableGroup<Row>[] = [];
   if (config.group === 'project') {
     for (const entry of entries) {
       const rows = allRows
@@ -338,11 +341,32 @@ export function AllItemsScreen() {
     }
   }
 
-  const gridTemplateColumns = [
-    '96px',
-    'minmax(240px, 1fr)',
-    ...visibleColumns.map((id) => columnWidthFor(id, sharedByKey)),
-  ].join(' ');
+  const columns: Column<Row>[] = [
+    {
+      key: 'key',
+      header: 'Key',
+      width: '96px',
+      render: (row) => (
+        <ItemKey prefix={row.entry.project.itemPrefix} number={row.ticket.number} />
+      ),
+    },
+    {
+      key: 'title',
+      header: 'Title',
+      width: 'minmax(240px, 1fr)',
+      render: (row) => (
+        <span className="truncate font-sans text-13/19 text-gray-12">
+          {String(row.ticket.values.title ?? '')}
+        </span>
+      ),
+    },
+    ...visibleColumns.map((id) => ({
+      key: id,
+      header: columnLabelFor(id, sharedByKey),
+      width: columnWidthFor(id, sharedByKey),
+      render: (row: Row) => cell(id, row),
+    })),
+  ];
 
   const setColumn = (id: string, visible: boolean) => {
     setConfig((current) => {
@@ -552,20 +576,7 @@ export function AllItemsScreen() {
       </div>
 
       {/* Grouped table */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-auto rounded-t-[12px] border border-gray-6 bg-surface-raised">
-        <div
-          role="row"
-          className="sticky top-0 z-10 grid h-9 min-w-170 shrink-0 items-center border-b border-gray-6 bg-gray-1 px-1"
-          style={{ gridTemplateColumns }}
-        >
-          <span className="px-3 font-sans text-11/13 tracking-wider font-500 text-gray-11 uppercase">Key</span>
-          <span className="px-2 font-sans text-11/13 tracking-wider font-500 text-gray-11 uppercase">Title</span>
-          {visibleColumns.map((id) => (
-            <span key={id} className="px-2 font-sans text-11/13 tracking-wider font-500 text-gray-11 uppercase">
-              {columnLabelFor(id, sharedByKey)}
-            </span>
-          ))}
-        </div>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-[12px] border border-gray-6 bg-surface-raised">
         {allRows.length === 0 ? (
           <ScreenState
             className="flex-1 justify-center py-16"
@@ -579,39 +590,20 @@ export function AllItemsScreen() {
             }
           />
         ) : (
-          groups.map((group) => (
-            <div key={group.key} className="min-w-170">
-              <div className="flex h-8.5 items-center gap-2.5 border-b border-gray-6 bg-gray-1 px-4">
-                {group.header}
-              </div>
-              {group.rows.map((row) => (
-                <div
-                  key={`${row.entry.project.key}-${row.ticket.id}`}
-                  role="row"
-                  onClick={() =>
-                    setSelected({ projectKey: row.entry.project.key, ticketId: row.ticket.id })
-                  }
-                  className={cn(
-                    'grid shrink-0 cursor-pointer items-center border-b border-gray-6 px-1 hover:bg-gray-1',
-                    config.density === 'compact' ? 'h-8' : 'h-10.5',
-                  )}
-                  style={{ gridTemplateColumns }}
-                >
-                  <span className="px-3">
-                    <ItemKey prefix={row.entry.project.itemPrefix} number={row.ticket.number} />
-                  </span>
-                  <span className="truncate px-2 font-sans text-13/19 text-gray-12">
-                    {String(row.ticket.values.title ?? '')}
-                  </span>
-                  {visibleColumns.map((id) => (
-                    <span key={id} className="min-w-0 px-2">
-                      {cell(id, row)}
-                    </span>
-                  ))}
-                </div>
-              ))}
-            </div>
-          ))
+          <Table<Row>
+            columns={columns}
+            rows={[]}
+            groups={groups}
+            state={{ sort, widths }}
+            onSortChange={setSort}
+            onWidthChange={setWidth}
+            onRowClick={(row) =>
+              setSelected({ projectKey: row.entry.project.key, ticketId: row.ticket.id })
+            }
+            rowHeight={config.density === 'compact' ? 32 : 42}
+            isLoading={false}
+            render={tableRender<Row>()}
+          />
         )}
       </div>
 

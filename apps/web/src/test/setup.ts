@@ -7,9 +7,40 @@ afterEach(() => {
 });
 
 // jsdom gaps that radix-ui overlays (Popover, Tooltip, Dialog, …) rely on.
+//
+// @tickets/table's virtualizer (useVirtualizer) also measures its scroll
+// container via ResizeObserver. jsdom does no layout, so a real
+// ResizeObserver would never fire and the container would stay 0x0 forever —
+// the virtualizer would then compute an empty visible range and every
+// virtualized row/group would be missing from the DOM, even though the
+// engine is correct (see @tickets/ui's table-render.test.tsx, which hits the
+// same gap locally). Firing synchronously — but ONLY for the table's own
+// scroll node, tagged `data-slot="table-scroll"` in Table.tsx — gives the
+// virtualizer a real size while every other ResizeObserver consumer (radix
+// popovers/tooltips/etc.) keeps the previous no-op behaviour.
 if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = class {
-    observe() {}
+    private cb: ResizeObserverCallback;
+    constructor(cb: ResizeObserverCallback) {
+      this.cb = cb;
+    }
+    observe(target: Element) {
+      if (target.getAttribute('data-slot') !== 'table-scroll') {
+        return;
+      }
+      this.cb(
+        [
+          {
+            target,
+            contentRect: { width: 1000, height: 400 } as DOMRectReadOnly,
+            borderBoxSize: [{ inlineSize: 1000, blockSize: 400 }] as ResizeObserverSize[],
+            contentBoxSize: [{ inlineSize: 1000, blockSize: 400 }] as ResizeObserverSize[],
+            devicePixelContentBoxSize: [] as ResizeObserverSize[],
+          },
+        ],
+        this as unknown as ResizeObserver,
+      );
+    }
     unobserve() {}
     disconnect() {}
   };
