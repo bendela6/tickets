@@ -143,11 +143,15 @@ describe('StateGrid', () => {
     ).toBe('true');
   });
 
-  it('scrolls a tall section rather than pushing the page', () => {
-    // A tone grid runs to seventeen rungs and the states list now sits under
-    // the playground, so an unbounded section buries everything after it.
+  it('renders a section at full height and scrolls only sideways', () => {
+    // Capping the height would hide specimens behind an interaction, and a
+    // states list you have to scroll inside to read is not a states list.
+    // Width is the one axis that gets a scrollbar, so a wide matrix does not
+    // force the page itself sideways.
     render(<StateGrid demo={withPlayground} />);
-    expect(within(section('variant')).getByRole('tabpanel').className).toContain('overflow-auto');
+    const panel = within(section('variant')).getByRole('tabpanel');
+    expect(panel.className).toContain('overflow-x-auto');
+    expect(panel.className).not.toMatch(/max-h-/);
   });
 
   it('falls back to the authored states when there is no playground to derive from', () => {

@@ -163,9 +163,10 @@ const HEAD = 'font-mono text-11/13 tracking-wider font-400 uppercase tracking-wi
  *
  * A real table rather than a grid of divs. The content IS labelled on two
  * axes, so `scope="col"` / `scope="row"` says so to a screen reader, the
- * columns size themselves to their specimens, and the headers can stick
- * without any grid-template arithmetic — which matters because the card
- * scrolls at 24rem and a tone axis is seventeen rows deep.
+ * columns size themselves to their specimens, and the row headers can stick
+ * without any grid-template arithmetic — which matters because a wide matrix
+ * is the one thing in a section that scrolls sideways, and the labels are
+ * what you lose first.
  *
  * Cells carry no caption: the headers already name every one of them, and a
  * label under each of sixty-eight specimens is noise.
@@ -187,15 +188,11 @@ export function Matrix<R extends string, C extends string>({
     <table className={cn('w-full border-collapse', className)}>
       <thead>
         <tr>
-          {/* The corner outranks both header bands, so it stays put while
-              either one scrolls under it. */}
-          <th className="sticky left-0 top-0 z-20 bg-surface-raised" />
+          {/* Sits in the row-header column, so it travels with it. A section
+              never scrolls vertically, so nothing sticks to the top. */}
+          <th className="sticky left-0 z-10 bg-surface-raised" />
           {columns.map((column) => (
-            <th
-              key={column}
-              scope="col"
-              className={cn('sticky top-0 z-10 bg-surface-raised px-3 py-2 text-center', HEAD)}
-            >
+            <th key={column} scope="col" className={cn('px-3 py-2 text-center', HEAD)}>
               {column}
             </th>
           ))}

@@ -119,11 +119,13 @@ describe('Matrix', () => {
     expect(screen.getAllByRole('rowheader').map((h) => h.textContent)).toEqual([...TONES]);
   });
 
-  it('sticks both header bands so they survive the card scrolling', () => {
-    // A tone axis is seventeen rows deep inside a panel that stops at 24rem.
+  it('sticks the row labels, which are what a sideways scroll loses first', () => {
+    // Only the row band: a section is as tall as its states and never scrolls
+    // vertically, so a column header pinned to `top` would have no scroll
+    // container to stick within and would float over the page instead.
     renderMatrix();
-    expect(screen.getAllByRole('columnheader')[1]!.className).toContain('sticky');
-    expect(screen.getAllByRole('rowheader')[0]!.className).toContain('sticky');
+    expect(screen.getAllByRole('rowheader')[0]!.className).toContain('sticky left-0');
+    expect(screen.getAllByRole('columnheader')[1]!.className).not.toContain('sticky');
   });
 
   it('gives each cell one specimen and no caption of its own', () => {
