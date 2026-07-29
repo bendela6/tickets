@@ -213,4 +213,66 @@ describe('<Table> engine — sizing', () => {
       '300px',
     );
   });
+
+  // Task 4's guard: a string width has no pixel start, so the resize handle
+  // must fall back to 160 rather than seeding `NaN` into the drag maths.
+  it('seeds the resize handle with a number even for a track-function column', () => {
+    const { container } = render(
+      <Harness
+        columns={[
+          { key: 'name', header: 'Name', value: (r) => r.name, width: 'minmax(240px, 1fr)' },
+        ]}
+      />,
+    );
+    const th = container.querySelector('[data-slot="th"]') as HTMLElement;
+    expect(th.getAttribute('data-start-width')).toBe('160');
+  });
+});
+
+describe('<Table> engine — grouping', () => {
+  const grouped = [
+    { key: 'a', header: 'Group A', rows: [{ id: '1', name: 'Alpha' }] },
+    { key: 'b', header: 'Group B', rows: [{ id: '2', name: 'Beta' }] },
+  ];
+
+  it('renders a header per group through the groupHeader slot', () => {
+    const { container } = render(<Harness rows={[]} groups={grouped} />);
+    const headers = container.querySelectorAll('[data-slot="group-header"]');
+    expect(headers.length).toBe(2);
+    expect(headers[0]).toHaveTextContent('Group A');
+  });
+
+  it('renders each group\'s rows through the tr slot', () => {
+    const { container } = render(<Harness rows={[]} groups={grouped} />);
+    expect(container.querySelectorAll('[data-slot="tr"]').length).toBe(2);
+  });
+
+  it('positions group headers at their own height, not the row height', () => {
+    const { container } = render(<Harness rows={[]} groups={grouped} rowHeight={40} />);
+    const header = container.querySelector('[data-slot="group-header"]') as HTMLElement;
+    expect(header.style.height).toBe('34px');
+  });
+
+  it('offsets the second group by its predecessor\'s header plus rows', () => {
+    const { container } = render(<Harness rows={[]} groups={grouped} rowHeight={40} />);
+    const headers = container.querySelectorAll('[data-slot="group-header"]');
+    // group A header (34) + one row (40) = 74
+    expect((headers[1] as HTMLElement).style.transform).toBe('translateY(74px)');
+  });
+
+  it('gives onRowClick the right row from the second group', () => {
+    const onRowClick = vi.fn();
+    const { container } = render(
+      <Harness rows={[]} groups={grouped} onRowClick={onRowClick} />,
+    );
+    const trs = container.querySelectorAll('[data-slot="tr"]');
+    fireEvent.click(trs[1] as HTMLElement);
+    expect(onRowClick).toHaveBeenCalledWith(grouped[1]!.rows[0]);
+  });
+
+  it('still renders a flat list when given rows instead of groups', () => {
+    const { container } = render(<Harness />);
+    expect(container.querySelectorAll('[data-slot="group-header"]').length).toBe(0);
+    expect(container.querySelectorAll('[data-slot="tr"]').length).toBe(2);
+  });
 });

@@ -1,11 +1,23 @@
 import { Fragment, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { toggleSort, multiSortToggle } from './sort-utils';
-import { ROW_HEIGHT, type Column, type SortBy, type TableRender } from './types';
+import { flattenGroups } from './flatten-groups';
+import {
+  GROUP_ROW_HEIGHT,
+  ROW_HEIGHT,
+  type Column,
+  type SortBy,
+  type TableGroup,
+  type TableRender,
+  type VirtualRow,
+} from './types';
 
 export interface TableProps<T> {
   columns: Column<T>[];
   rows: T[];
+  /** Grouped rows. Mutually exclusive with `rows` in practice — when present it
+   *  wins, and `rows` is ignored. */
+  groups?: TableGroup<T>[];
   state: { sort: SortBy[]; widths: Record<string, number> };
   onSortChange: (next: SortBy[]) => void;
   onWidthChange: (key: string, px: number) => void;
@@ -23,6 +35,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
   const {
     columns,
     rows,
+    groups,
     state,
     render,
     onSortChange,
@@ -33,11 +46,17 @@ export function Table<T>(props: TableProps<T>): ReactNode {
     rowHeight = ROW_HEIGHT,
   } = props;
 
+  // An ungrouped table is one implicit group's worth of rows, so both shapes
+  // go through the same virtualized list and the body loop below has one form.
+  const items: VirtualRow<T>[] = groups
+    ? flattenGroups(groups)
+    : rows.map((row, index) => ({ kind: 'row' as const, row, index }));
+
   const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
   const virtualizer = useVirtualizer({
-    count: rows.length,
+    count: items.length,
     getScrollElement: () => scrollEl,
-    estimateSize: () => rowHeight,
+    estimateSize: (i) => (items[i]?.kind === 'group' ? GROUP_ROW_HEIGHT : rowHeight),
     overscan: 8,
   });
 
@@ -88,7 +107,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
   });
 
   let bodyNode: ReactNode = null;
-  if (isLoading && rows.length === 0) {
+  if (isLoading && items.length === 0) {
     bodyNode = Array.from({ length: 10 }).map((_, i) => {
       return (
         <RenderSkeletonRow
@@ -99,42 +118,49 @@ export function Table<T>(props: TableProps<T>): ReactNode {
         />
       );
     });
-  } else if (rows.length > 0) {
+  } else if (items.length > 0) {
     bodyNode = render.tbody({
       totalSize: virtualizer.getTotalSize(),
       children: virtualizer.getVirtualItems().map((vi) => {
-        const row = rows[vi.index];
-        if (!row) {
-          return null;
-        }
+        const item = items[vi.index];
+        if (!item) return null;
+
         const style: CSSProperties = {
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
-          height: rowHeight,
+          height: item.kind === 'group' ? GROUP_ROW_HEIGHT : rowHeight,
           transform: `translateY(${vi.start}px)`,
         };
-        const cells = columns.map((col) => {
+
+        if (item.kind === 'group') {
           return (
-            <Fragment key={col.key}>
-              {render.td({
-                column: col,
-                row,
-                children: renderCellContent(col, row),
-              })}
-            </Fragment>
+            <RenderGroupHeader
+              key={vi.key}
+              groupKey={item.key}
+              header={item.header}
+              gridTemplate={gridTemplate}
+              style={style}
+              slot={render.groupHeader}
+            />
           );
-        });
+        }
+
+        const cells = columns.map((col) => (
+          <Fragment key={col.key}>
+            {render.td({ column: col, row: item.row, children: renderCellContent(col, item.row) })}
+          </Fragment>
+        ));
         return (
           <RenderTr
             key={vi.key}
-            row={row}
-            index={vi.index}
+            row={item.row}
+            index={item.index}
             cells={cells}
             gridTemplate={gridTemplate}
             style={style}
-            onClick={onRowClick ? () => onRowClick(row) : undefined}
+            onClick={onRowClick ? () => onRowClick(item.row) : undefined}
             slot={render.tr}
           />
         );
@@ -194,6 +220,21 @@ function RenderTr<T>(props: {
     gridTemplate: props.gridTemplate,
     style: props.style,
     onClick: props.onClick,
+  });
+}
+
+function RenderGroupHeader(props: {
+  groupKey: string;
+  header: ReactNode;
+  gridTemplate: string;
+  style: CSSProperties;
+  slot: TableRender<never>['groupHeader'];
+}): ReactNode {
+  return props.slot({
+    key: props.groupKey,
+    header: props.header,
+    gridTemplate: props.gridTemplate,
+    style: props.style,
   });
 }
 

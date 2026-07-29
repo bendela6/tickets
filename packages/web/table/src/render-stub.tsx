@@ -24,6 +24,7 @@ export function makeStubRender<T>(): TableRender<T> {
           data-sort-index={sort?.index ?? ''}
           data-total-sorts={totalSorts}
           data-resizable={resize ? 'true' : 'false'}
+          data-start-width={resize?.startWidth ?? ''}
           onClick={onSortClick}
         >
           {column.header}
@@ -56,6 +57,18 @@ export function makeStubRender<T>(): TableRender<T> {
       return (
         <div data-slot="td" data-key={column.key}>
           {children}
+        </div>
+      );
+    },
+    groupHeader: ({ key, header, gridTemplate, style }) => {
+      return (
+        <div
+          data-slot="group-header"
+          data-key={key}
+          data-grid-template={gridTemplate}
+          style={style}
+        >
+          {header}
         </div>
       );
     },

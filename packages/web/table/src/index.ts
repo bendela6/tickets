@@ -21,3 +21,6 @@ export type { UseColumnResizeOptions, UseColumnResizeHandlers } from './use-colu
 export { Table } from './Table';
 export type { TableProps } from './Table';
 export { makeStubRender } from './render-stub';
+export { GROUP_ROW_HEIGHT } from './types';
+export type { TableGroup, VirtualRow, RenderGroupHeaderCtx } from './types';
+export { flattenGroups } from './flatten-groups';
