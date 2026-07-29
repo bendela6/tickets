@@ -307,14 +307,14 @@ export function KanbanView({
               </div>
             ) : null}
             {mode === 'legal' ? (
-              <div className="mx-2.5 mb-2 flex h-[74px] shrink-0 items-center justify-center rounded-xl border-[1.5px] border-dashed border-indigo-9 bg-indigo-3 font-sans text-12/17 font-500 text-indigo-9">
+              <div className="mx-2.5 mb-2 flex h-[74px] shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-indigo-9 bg-indigo-3 font-sans text-12/17 font-500 text-indigo-9">
                 Drop — {draggedFromLabel} → {option.label}
               </div>
             ) : null}
             <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-2.5 pb-2.5">
               {cards.map((ticket) => renderCard(ticket))}
               {mode === 'origin' && dragged ? (
-                <div className="flex h-[74px] shrink-0 items-center justify-center rounded-xl border-[1.5px] border-dashed border-gray-7 font-mono text-11 text-gray-9">
+                <div className="flex h-[74px] shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-gray-7 font-mono text-11 text-gray-9">
                   {board.project.itemPrefix}-{dragged.number} — dragging…
                 </div>
               ) : null}

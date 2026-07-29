@@ -34,9 +34,8 @@
 @source inline("bg-yellow-3");
 @source inline("bg-yellow-9");
 @source inline("border");
-@source inline("border-(length:--border-thick)");
 @source inline("border-0");
-@source inline("border-b-(length:--border-thick)");
+@source inline("border-2");
 @source inline("border-b-2");
 @source inline("border-blue-7");
 @source inline("border-blue-9");

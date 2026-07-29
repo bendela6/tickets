@@ -155,7 +155,7 @@ export function DetailChildren({
         >
           <span
             aria-hidden
-            className="size-2.25 shrink-0 rounded-full border-[1.5px] border-dashed border-gray-7"
+            className="size-2.25 shrink-0 rounded-full border-2 border-dashed border-gray-7"
           />
           <input
             className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-13/19 text-gray-12 outline-none placeholder:text-gray-9"
