@@ -83,6 +83,29 @@ describe('spec tokens', () => {
   });
 });
 
+describe('the radius scale in the live sheet', () => {
+  it('declares exactly the four rungs, at the spec values', () => {
+    const rungs = liveTokens(/^radius-(sm|md|lg|xl)$/);
+    expect(Object.fromEntries(rungs.map((r) => [r.name, r.value]))).toEqual({
+      'radius-sm': '4px',
+      'radius-md': '6px',
+      'radius-lg': '8px',
+      'radius-xl': '12px',
+    });
+  });
+
+  it('clears the off-scale rungs so they cannot drift back', () => {
+    const cleared = liveTokens(/^radius-(xs|2xl|3xl|4xl)$/);
+    expect(cleared.map((r) => r.name).sort()).toEqual([
+      'radius-2xl',
+      'radius-3xl',
+      'radius-4xl',
+      'radius-xs',
+    ]);
+    expect(cleared.every((r) => r.value === 'initial')).toBe(true);
+  });
+});
+
 describe('driftFor', () => {
   it('matches on value, not name — the proposal renames everything', () => {
     const rows = driftFor('t', [{ name: 'text-13', value: '13px' }], [{ name: 'text-13/19', value: '13px' }]);
