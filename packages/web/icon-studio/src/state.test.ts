@@ -23,6 +23,42 @@ test('adding two elements of the same type still gives distinct ids', () => {
   expect(new Set(ids).size).toBe(ids.length);
 });
 
+// Regression: `updateElement` only ever applies a patch key already present
+// on the target element (`key in e`) — a guard that exists to stop a
+// *different* element type's field from attaching, see `ElementPatch`'s
+// comment above. `blankElement` must therefore seed every element type with
+// a `spin` key, not just `stick` (whose bare mark happens to start spun) —
+// omitting it on `ring`/`dot` previously meant a spin toggle on a freshly
+// added ring or dot dispatched correctly but was silently dropped by the
+// guard, because the key didn't yet exist to overwrite.
+test('a newly added ring can have its spin toggled on', () => {
+  const added = studioReducer(INITIAL_STATE, { type: 'addElement', elementType: 'ring' });
+  const ring = added.doc.elements.at(-1);
+  expect(ring?.type).toBe('ring');
+
+  const toggled = studioReducer(added, {
+    type: 'updateElement',
+    id: ring?.id ?? '',
+    patch: { spin: true },
+  });
+  const result = toggled.doc.elements.find((e) => e.id === ring?.id);
+  expect(result?.spin).toBe(true);
+});
+
+test('a newly added dot can have its spin toggled on', () => {
+  const added = studioReducer(INITIAL_STATE, { type: 'addElement', elementType: 'dot' });
+  const dot = added.doc.elements.at(-1);
+  expect(dot?.type).toBe('dot');
+
+  const toggled = studioReducer(added, {
+    type: 'updateElement',
+    id: dot?.id ?? '',
+    patch: { spin: true },
+  });
+  const result = toggled.doc.elements.find((e) => e.id === dot?.id);
+  expect(result?.spin).toBe(true);
+});
+
 test('removing an element leaves the others in order', () => {
   const next = studioReducer(INITIAL_STATE, { type: 'removeElement', id: 'mid' });
   expect(next.doc.elements.map((e) => e.id)).toEqual(['top', 'low']);
