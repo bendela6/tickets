@@ -21,7 +21,11 @@ export type OutputName = keyof typeof OUTPUTS;
  * The names the browser must supply, because a canvas is the only rasteriser.
  * Everything else the plugin derives from the config itself.
  */
-export const PNG_NAMES = ['icon-192.png', 'icon-512.png', 'apple-touch-icon.png'] as const;
+export const PNG_NAMES = Object.freeze([
+  'icon-192.png',
+  'icon-512.png',
+  'apple-touch-icon.png',
+] as const);
 
 /**
  * Absolute destination for a name, or null if the name is not in the table.
