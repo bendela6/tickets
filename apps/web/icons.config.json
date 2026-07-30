@@ -1,0 +1,21 @@
+{
+  "light": [
+    "#7167ff",
+    "#00bb9a",
+    "#ff298a"
+  ],
+  "dark": [
+    "#6652ff",
+    "#12b898",
+    "#ff378c"
+  ],
+  "chip": "#1b1830",
+  "angles": [
+    62,
+    27,
+    160
+  ],
+  "bareWeight": 6,
+  "chipReach": 14,
+  "chipWeight": 4.6
+}
