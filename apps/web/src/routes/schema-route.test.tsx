@@ -18,9 +18,10 @@ const graph: SchemaGraph = {
       columns: [{ name: 'id', type: 'serial', notNull: true, pk: true, fk: null }],
     },
   ],
+  enums: [],
 };
 
-const emptyGraph: SchemaGraph = { groups: [], tables: [] };
+const emptyGraph: SchemaGraph = { groups: [], tables: [], enums: [] };
 
 /**
  * Mounts the REAL route object against the REAL root route, on a memory
