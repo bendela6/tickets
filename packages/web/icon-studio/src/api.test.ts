@@ -1,14 +1,14 @@
-import { DEFAULT_CONFIG } from './config';
+import { DEFAULT_DOC } from './doc';
 import { fetchConfig } from './api';
 
 test('fetchConfig returns the served config', async () => {
   const fetchMock = vi.fn().mockResolvedValue({
     ok: true,
-    json: async () => DEFAULT_CONFIG,
+    json: async () => DEFAULT_DOC,
   });
   vi.stubGlobal('fetch', fetchMock);
 
-  await expect(fetchConfig()).resolves.toEqual(DEFAULT_CONFIG);
+  await expect(fetchConfig()).resolves.toEqual(DEFAULT_DOC);
   // `json()` forwards its optional init, so the call carries a second
   // `undefined` argument — assert the real call, not a tidier one.
   expect(fetchMock).toHaveBeenCalledWith('/__icons/config', undefined);

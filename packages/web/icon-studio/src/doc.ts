@@ -12,9 +12,6 @@ export const CENTRE = GRID / 2;
 /** Reach of a bare stick: it spans the full diameter, 6..42 on a 48 grid. */
 export const BARE_REACH = 18;
 
-/** Weight-to-reach ratio the bare mark holds, and every scaled variant inherits. */
-export const RATIO = 1 / 3;
-
 /** A colour with a value per theme. */
 export interface Ink {
   light: string;

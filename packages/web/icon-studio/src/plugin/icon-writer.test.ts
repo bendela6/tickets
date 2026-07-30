@@ -3,7 +3,6 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type { Plugin } from 'vite';
-import { DEFAULT_CONFIG } from '../config';
 import { DEFAULT_DOC } from '../doc';
 import { iconWriter, isLoopback } from './icon-writer';
 
@@ -121,7 +120,7 @@ test('a missing config file still yields the locked defaults', async () => {
     await middleware(fakeRequest('/__icons/config', 'GET'), res, () => {});
 
     expect(captured.statusCode).toBe(200);
-    expect(JSON.parse(captured.body)).toEqual(DEFAULT_CONFIG);
+    expect(JSON.parse(captured.body)).toEqual(DEFAULT_DOC);
   });
 });
 
@@ -138,7 +137,7 @@ test('a config file with invalid JSON yields an error, never the defaults', asyn
 
     expect(captured.statusCode).toBe(500);
     const payload = JSON.parse(captured.body);
-    expect(payload).not.toEqual(DEFAULT_CONFIG);
+    expect(payload).not.toEqual(DEFAULT_DOC);
     expect(payload.error).toContain('icons.config.json');
   });
 });
@@ -198,7 +197,7 @@ test('a non-loopback remote address is refused with 403 on both routes, and noth
 
     const generateMiddleware = captureMiddleware(iconWriter({ repoRoot }));
     const { res: generateRes, captured: generateCaptured } = fakeResponse();
-    const body = JSON.stringify({ config: DEFAULT_CONFIG, pngs: {} });
+    const body = JSON.stringify({ config: DEFAULT_DOC, pngs: {} });
     await generateMiddleware(
       fakeRequest('/__icons/generate', 'POST', {
         remoteAddress: '192.168.1.20',
