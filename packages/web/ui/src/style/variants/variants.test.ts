@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { axis, over } from './axis';
 import { collectSafelist, variants } from './variants';
 
 describe('variants', () => {
@@ -31,17 +32,21 @@ describe('variants', () => {
     expect(buttonClass({ size: undefined })).toBe('inline-flex bg-indigo-500 text-white text-sm');
   });
 
+  // These used to be written as a group declaring `params` and computing its
+  // options from them. That form is gone — an axis carries its own name, domain
+  // and resting value, so the group restates none of it — but the behaviour
+  // under test is the same, which is why the expected class sets below did not
+  // change when the form did.
+  const TONE = axis('tone', ['red', 'blue'], 'red');
+
   const badgeClass = variants({
     base: 'font-600',
     config: {
       variant: {
         default: 'soft',
-        params: { tone: { default: 'base', values: ['red', 'blue'] } },
-        options: ({ tone }: { tone?: string }) => {
-          return {
-            soft: [`bg-${tone}-100 text-${tone}-800`, `dark:bg-${tone}-900`],
-            ghost: `text-${tone}-700`,
-          };
+        options: {
+          soft: over(TONE, (tone) => [`bg-${tone}-100 text-${tone}-800`, `dark:bg-${tone}-900`]),
+          ghost: over(TONE, (tone) => `text-${tone}-700`),
         },
       },
       size: {
@@ -51,13 +56,13 @@ describe('variants', () => {
     },
   });
 
-  it('passes params into function groups at render time', () => {
+  it('resolves an axis prop at render time', () => {
     expect(badgeClass({ tone: 'red', variant: 'soft' })).toBe(
       'font-600 bg-red-100 text-red-800 dark:bg-red-900 text-base',
     );
   });
 
-  it('enumerates every class across options and param values', () => {
+  it('enumerates every class across options and the axis domain', () => {
     expect(new Set(badgeClass.classes)).toEqual(
       new Set([
         'font-600',
@@ -75,14 +80,14 @@ describe('variants', () => {
     );
   });
 
-  it('exposes axes: group option names (static + function) and param domains', () => {
+  it('exposes axes: each group’s option names and each axis’s domain', () => {
     expect(badgeClass.axes).toEqual({
       groups: { variant: ['soft', 'ghost'], size: ['sm', 'md'] },
       params: { tone: ['red', 'blue'] },
     });
   });
 
-  it('exposes empty params when none are configured', () => {
+  it('exposes empty params when no option varies over anything', () => {
     expect(buttonClass.axes).toEqual({
       groups: { intent: ['primary', 'ghost'], size: ['sm', 'md'] },
       params: {},
@@ -90,28 +95,26 @@ describe('variants', () => {
   });
 
   // The safelist is only as good as this cross-product: a class like
-  // `hover:bg-red-9/40` exists nowhere in source, so if enumeration misses a
-  // param combination Tailwind never emits the utility and the state renders
-  // unstyled. Numeric domains are the case to watch — they interpolate the same
-  // as strings but arrive as numbers.
+  // `hover:bg-red-10/40` exists nowhere in source, so if enumeration misses a
+  // combination Tailwind never emits the utility and the state renders
+  // unstyled. Two axes on one option is the case to watch — the walk has to be
+  // the product, not the concatenation.
+  const ALPHA = axis('alpha', ['40', '60'], '40');
+
   const alphaClass = variants({
     base: 'rounded-sm',
     config: {
       emphasis: {
         default: 'solid',
-        params: {
-          tone: { default: 'red', values: ['red', 'blue'] },
-          alpha: { default: 40, values: [40, 60] },
+        options: {
+          solid: over(TONE, ALPHA, (tone, alpha) => `bg-${tone}-9 hover:bg-${tone}-10/${alpha}`),
+          soft: over(TONE, ALPHA, (tone, alpha) => `bg-${tone}-3/${alpha}`),
         },
-        options: ({ tone, alpha }: { tone?: string; alpha?: number }) => ({
-          solid: `bg-${tone}-9 hover:bg-${tone}-10/${alpha}`,
-          soft: `bg-${tone}-3/${alpha}`,
-        }),
       },
     },
   });
 
-  it('enumerates the full cross-product of several params, including numeric ones', () => {
+  it('enumerates the full cross-product of two axes on one option', () => {
     expect(new Set(alphaClass.classes)).toEqual(
       new Set([
         'rounded-sm',
@@ -129,11 +132,13 @@ describe('variants', () => {
     );
   });
 
-  it('renders a numeric param without stringifying it differently', () => {
-    expect(alphaClass({ tone: 'blue', alpha: 60 })).toBe('rounded-sm bg-blue-9 hover:bg-blue-10/60');
+  it('renders one cell of that product', () => {
+    expect(alphaClass({ tone: 'blue', alpha: '60' })).toBe(
+      'rounded-sm bg-blue-9 hover:bg-blue-10/60',
+    );
   });
 
-  it('reports a numeric domain as strings in axes', () => {
+  it('reports both axis domains in axes', () => {
     expect(alphaClass.axes.params).toEqual({ tone: ['red', 'blue'], alpha: ['40', '60'] });
   });
 
