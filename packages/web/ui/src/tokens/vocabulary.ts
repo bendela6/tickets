@@ -11,9 +11,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(HERE, '..', '..', '..', '..', '..');
 
 /**
- * The trees that consume `tokens.css`. `apps/eer` is deliberately absent — it
- * declares its own `@theme` with different radius values, so its classes are
- * not this vocabulary's to police.
+ * The trees that consume `tokens.css`.
  */
 const ROOTS = [
   join(REPO_ROOT, 'packages', 'web', 'ui', 'src'),
@@ -113,9 +111,9 @@ export function scanRetired(family: RetiredFamily): string[] {
  * `scanRetired('ring' | 'z')` must always be `[]`, no baseline needed.
  *
  * A baseline is its own small JSON file per family, not one file keyed by
- * family, because `readBaseline()` (shared with `apps/eer`'s ratchet in
- * `scan-hardcoded-values.mjs`) hard-validates `{ violations: string[] }` — a
- * flat array of strings. Nesting a second family under one `violations` key
+ * family, because `readBaseline()` (in `scan-hardcoded-values.mjs`)
+ * hard-validates `{ violations: string[] }` — a flat array of strings.
+ * Nesting a second family under one `violations` key
  * would fail that shared validator (or require changing a contract another
  * script also depends on) for no benefit: one small file per family is a
  * strictly smaller, safer change than reshaping a validator two scripts share.
@@ -132,11 +130,11 @@ const BASELINE_FILES: Partial<Record<RetiredFamily, string>> = {
  * string literal like `'text' | 'border'`, or (for `radius`) a local
  * identifier like `const rounded = …` — tightening either regex to exclude
  * those shapes starts rejecting real class strings too (see each baseline
- * file's own `_comment`). So both families get the same reviewed-baseline
- * ratchet `scan-hardcoded-values.mjs` already uses for `apps/eer`: every hit
- * is keyed on `path::fullLineText` (not a line number, which churns on
- * unrelated edits), and anything not already in that family's baseline file
- * is a real, unswept site.
+ * file's own `_comment`). So both families get a reviewed-baseline ratchet,
+ * built on the same `readBaseline()`/`diffAgainstBaseline()` exported by
+ * `scan-hardcoded-values.mjs`: every hit is keyed on `path::fullLineText`
+ * (not a line number, which churns on unrelated edits), and anything not
+ * already in that family's baseline file is a real, unswept site.
  *
  * `fresh` — current hits absent from the baseline; must be empty, or one of
  * these is a real unswept site.

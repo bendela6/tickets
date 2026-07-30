@@ -8,10 +8,6 @@ procs:
     shell: pnpm --filter @tickets/web dev
     env:
       WEB_DEV_PORT: "4620"
-  eer:
-    shell: pnpm --filter @tickets/eer dev
-    env:
-      EER_DEV_PORT: "4630"
   signals:
     shell: pnpm --filter @tickets/signals dev
   studio:
