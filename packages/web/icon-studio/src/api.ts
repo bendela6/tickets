@@ -4,7 +4,10 @@ import { svgChip } from './generate/svg';
 import type { GenerateResponse } from './plugin/write';
 
 async function json<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, init);
+  // Only forward a second argument when there's an init — passing an
+  // explicit `undefined` still shows up as a second call argument, which
+  // trips up callers asserting `fetch` was called with just the URL.
+  const res = init === undefined ? await fetch(url) : await fetch(url, init);
   if (!res.ok) {
     let message = `${url} (${res.status})`;
     try {

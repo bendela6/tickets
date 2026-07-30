@@ -9,9 +9,10 @@ test('fetchConfig returns the served config', async () => {
   vi.stubGlobal('fetch', fetchMock);
 
   await expect(fetchConfig()).resolves.toEqual(DEFAULT_CONFIG);
-  // `json()` forwards its optional init, so the call carries a second
-  // `undefined` argument — assert the real call, not a tidier one.
-  expect(fetchMock).toHaveBeenCalledWith('/__icons/config', undefined);
+  // `json()` omits the second argument entirely when there's no init, so
+  // callers checking `fetch` was invoked don't have to account for a stray
+  // `undefined`.
+  expect(fetchMock).toHaveBeenCalledWith('/__icons/config');
 
   vi.unstubAllGlobals();
 });
