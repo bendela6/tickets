@@ -48,6 +48,7 @@ export function renderTh<T>({
   resize,
   focused,
   focusProps,
+  children,
 }: RenderThCtx<T>) {
   return (
     <div
@@ -70,7 +71,12 @@ export function renderTh<T>({
         focused && CELL_FOCUS_RING,
       )}
     >
-      {column.sortable ? (
+      {/* The engine takes this cell over when it owns what goes in it — today
+          that means the select-all checkbox above a `select` column, which
+          neither sorts nor shows a label. */}
+      {children ? (
+        children
+      ) : column.sortable ? (
         <button
           type="button"
           onClick={onSortClick}

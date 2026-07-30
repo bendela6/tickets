@@ -9,11 +9,16 @@ export function renderTr<T>({
   style,
   onClick,
   overlay,
+  selected,
 }: RenderTrCtx<T>) {
   return (
     <div
       role="row"
       data-index={index}
+      // Announced, not just tinted. A selected row that only differs by
+      // background is invisible to a screen reader, and bulk actions are
+      // exactly the thing you must be able to check before running.
+      aria-selected={selected === undefined ? undefined : selected}
       onClick={onClick}
       className={cn(
         // `group` is load-bearing: ActionsColumn reveals its buttons on
@@ -21,6 +26,9 @@ export function renderTr<T>({
         'group grid items-center border-b-1 border-gray-6 transition-colors hover:bg-gray-1',
         ROW_INSET,
         onClick && 'cursor-pointer',
+        // A tint one step past the hover state, so a selected row still
+        // responds to hover instead of looking stuck.
+        selected && 'bg-indigo-2 hover:bg-indigo-3',
       )}
       // `right: auto` undoes the engine's stretched absolute positioning;
       // `width: 100%` then gives a flexible `1fr` track (e.g. all-items'

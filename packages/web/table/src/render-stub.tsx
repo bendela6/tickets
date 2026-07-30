@@ -15,7 +15,17 @@ export function makeStubRender<T>(): TableRender<T> {
         </div>
       );
     },
-    th: ({ column, index, sort, totalSorts, onSortClick, resize, focused, focusProps }) => {
+    th: ({
+      column,
+      index,
+      sort,
+      totalSorts,
+      onSortClick,
+      resize,
+      focused,
+      focusProps,
+      children,
+    }) => {
       return (
         <button
           {...focusProps}
@@ -30,7 +40,7 @@ export function makeStubRender<T>(): TableRender<T> {
           data-start-width={resize?.startWidth ?? ''}
           onClick={onSortClick}
         >
-          {column.header}
+          {children ?? column.header}
           {resize && <span data-slot="resize" />}
         </button>
       );
@@ -42,11 +52,12 @@ export function makeStubRender<T>(): TableRender<T> {
         </div>
       );
     },
-    tr: ({ row, index, cells, gridTemplate, style, onClick, overlay }) => {
+    tr: ({ row, index, cells, gridTemplate, style, onClick, overlay, selected }) => {
       return (
         <div
           data-slot="tr"
           data-index={index}
+          data-selected={String(Boolean(selected))}
           data-row-id={(row as { id?: string }).id ?? ''}
           data-grid-template={gridTemplate}
           style={style}
@@ -93,5 +104,19 @@ export function makeStubRender<T>(): TableRender<T> {
     },
     error: ({ error }) => <div data-slot="error">{error.message}</div>,
     empty: ({ filtered }) => <div data-slot="empty" data-filtered={String(filtered)} />,
+    selectCell: ({ checked, indeterminate, isHeader, onChange, label }) => {
+      return (
+        <input
+          type="checkbox"
+          data-slot={isHeader ? 'select-all' : 'select-row'}
+          data-indeterminate={String(Boolean(indeterminate))}
+          aria-label={label}
+          checked={checked}
+          onChange={(e) =>
+            onChange(('shiftKey' in e.nativeEvent && e.nativeEvent.shiftKey) === true)
+          }
+        />
+      );
+    },
   };
 }

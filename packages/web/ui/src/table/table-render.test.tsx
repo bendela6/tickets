@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -173,6 +174,87 @@ describe('tableRender — cell focus', () => {
     const stops = container.querySelectorAll('[data-cell-row][tabindex="0"]');
     expect(stops).toHaveLength(1);
     expect(stops[0]).toHaveAttribute('data-cell-col', 'count');
+  });
+});
+
+describe('tableRender — row selection', () => {
+  const selectColumns: Column<Row>[] = [
+    { key: 'select', header: '', select: true, width: 36, resizable: false },
+    ...columns,
+  ];
+
+  function Selectable() {
+    const [selected, setSelected] = useState<Set<string>>(new Set());
+    return (
+      <div style={{ height: 400 }}>
+        <Table<Row>
+          columns={selectColumns}
+          rows={rows}
+          state={{ sort: [], widths: {}, selected }}
+          onSortChange={() => {}}
+          onWidthChange={() => {}}
+          getRowId={(r) => r.id}
+          onSelectionChange={setSelected}
+          isLoading={false}
+          render={tableRender<Row>()}
+        />
+      </div>
+    );
+  }
+
+  // The column shows no visible text, so the name is the only thing standing
+  // between a screen-reader user and a table of anonymous checkboxes.
+  it('names the select-all checkbox and every row checkbox', () => {
+    render(<Selectable />);
+    expect(screen.getByRole('checkbox', { name: 'Select all rows' })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Select row 1' })).toBeInTheDocument();
+  });
+
+  it('ticks the row the user selected', async () => {
+    render(<Selectable />);
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select row 2' }));
+    expect(screen.getByRole('checkbox', { name: 'Select row 2' })).toBeChecked();
+  });
+
+  // A selected row that differs only by background is invisible to a screen
+  // reader, and bulk actions are exactly the thing you must be able to check
+  // before running.
+  it('announces the selected row', async () => {
+    render(<Selectable />);
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select row 1' }));
+    const selected = screen.getAllByRole('row').filter((r) => r.ariaSelected === 'true');
+    expect(selected).toHaveLength(1);
+  });
+
+  it('selects every row from the header checkbox', async () => {
+    render(<Selectable />);
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select all rows' }));
+    expect(screen.getByRole('checkbox', { name: 'Select row 1' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Select row 2' })).toBeChecked();
+  });
+
+  // The row opens a drawer on click. Ticking a checkbox must not do both —
+  // the same trap LinkColumn and ActionsColumn already guard against.
+  it('does not let a checkbox click reach the row', async () => {
+    const onRowClick = vi.fn();
+    render(
+      <div style={{ height: 400 }}>
+        <Table<Row>
+          columns={selectColumns}
+          rows={rows}
+          state={{ sort: [], widths: {}, selected: new Set() }}
+          onSortChange={() => {}}
+          onWidthChange={() => {}}
+          getRowId={(r) => r.id}
+          onSelectionChange={() => {}}
+          onRowClick={onRowClick}
+          isLoading={false}
+          render={tableRender<Row>()}
+        />
+      </div>,
+    );
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Select row 1' }));
+    expect(onRowClick).not.toHaveBeenCalled();
   });
 });
 

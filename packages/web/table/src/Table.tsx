@@ -1,8 +1,22 @@
-import { Fragment, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
+import {
+  Fragment,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+  type ReactNode,
+} from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { toggleSort, multiSortToggle } from './sort-utils';
 import { flattenGroups } from './flatten-groups';
 import { useCellFocus } from './use-cell-focus';
+import {
+  extendSelection,
+  rangeBetween,
+  selectionOf,
+  toggleAll,
+  toggleSelection,
+} from './selection';
 import {
   GROUP_ROW_HEIGHT,
   ROW_HEIGHT,
@@ -34,6 +48,15 @@ export interface TableProps<T> {
    *  Without it the engine does not touch the tab order, so a table whose
    *  cells hold links and buttons keeps them tabbable. */
   onFocusChange?: (next: CellRef | null) => void;
+  /** Stable identity for a row. Required for selection, which is keyed on id
+   *  rather than position — under sort, filter and windowed loading the row
+   *  at index 4 is not the row it was a moment ago. Optional so that every
+   *  table that does not select does not have to supply one. */
+  getRowId?: (row: T) => string;
+  /** Supplying this, together with `getRowId`, is what turns row selection on.
+   *  `Space` toggles the focused row; the checkbox column and shift-click
+   *  ranges do the rest. */
+  onSelectionChange?: (next: Set<string>) => void;
   onRowClick?: (row: T) => void;
   /** `Enter` on a focused cell that holds no widget of its own. */
   onRowActivate?: (row: T) => void;
@@ -62,6 +85,8 @@ export function Table<T>(props: TableProps<T>): ReactNode {
     onSortChange,
     onWidthChange,
     onFocusChange,
+    getRowId,
+    onSelectionChange,
     onRowClick,
     onRowActivate,
     isLoading,
@@ -94,6 +119,44 @@ export function Table<T>(props: TableProps<T>): ReactNode {
       itemIndexOfRow[item.index] = i;
     }
   }
+
+  // Selection needs both halves: an id to key on and somewhere to send the
+  // result. One without the other is a caller mistake, not a half-feature.
+  const selectable = Boolean(getRowId && onSelectionChange);
+  const selectedIds = state.selected ?? EMPTY_SELECTION;
+  const rowIdAt = (rowIndex: number): string | null => {
+    const item = items[itemIndexOfRow[rowIndex] ?? -1];
+    return item?.kind === 'row' && getRowId ? getRowId(item.row) : null;
+  };
+  /**
+   * Where a shift-click range starts. The last row selected WITHOUT shift,
+   * seeded from wherever focus was.
+   *
+   * It cannot simply read `state.focused` at click time: focus moves to the
+   * clicked cell before the click handler runs, so the anchor and the target
+   * would always be the same row and every shift-click would select one row.
+   */
+  const anchorRow = useRef<number | null>(null);
+
+  const selectRow = (rowIndex: number, shiftKey: boolean) => {
+    if (!onSelectionChange) {
+      return;
+    }
+    const anchor = anchorRow.current ?? state.focused?.rowIndex ?? rowIndex;
+    if (shiftKey && anchor >= 0) {
+      const ids = rangeBetween(anchor, rowIndex)
+        .map(rowIdAt)
+        .filter((id): id is string => id !== null);
+      onSelectionChange(extendSelection(selectedIds, ids));
+      return;
+    }
+    const id = rowIdAt(rowIndex);
+    if (id === null) {
+      return;
+    }
+    anchorRow.current = rowIndex;
+    onSelectionChange(toggleSelection(selectedIds, id));
+  };
 
   const focus = useCellFocus({
     scrollEl,
@@ -133,6 +196,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
         onRowActivate?.(item.row);
       }
     },
+    onSelect: selectable ? selectRow : undefined,
   });
 
   if (error) {
@@ -150,6 +214,27 @@ export function Table<T>(props: TableProps<T>): ReactNode {
         ? multiSortToggle(state.sort, col.key)
         : toggleSort(filterToCurrentField(state.sort, col.key), col.key),
     );
+  };
+
+  // Every row the table currently holds, in order. What "select all" means:
+  // the rows on screen and off, but NOT rows a filter has removed — those are
+  // not in `rows` at all, which is exactly the right answer.
+  const allRowIds = getRowId
+    ? items.flatMap((item) => (item.kind === 'row' ? [getRowId(item.row)] : []))
+    : [];
+
+  const selectAllCell = () => {
+    if (!selectable || !render.selectCell || !onSelectionChange) {
+      return undefined;
+    }
+    const { checked, indeterminate } = selectionOf(selectedIds, allRowIds);
+    return render.selectCell({
+      checked,
+      indeterminate,
+      isHeader: true,
+      label: 'Select all rows',
+      onChange: () => onSelectionChange(toggleAll(selectedIds, allRowIds)),
+    });
   };
 
   const headerNode = render.thead({
@@ -177,6 +262,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
           }
           focused={focus.isFocused(HEADER_ROW, col.key)}
           focusProps={focus.focusPropsFor(HEADER_ROW, col.key)}
+          content={col.select ? selectAllCell() : undefined}
           slot={render.th}
         />
       );
@@ -225,15 +311,25 @@ export function Table<T>(props: TableProps<T>): ReactNode {
           );
         }
 
+        const rowId = getRowId ? getRowId(item.row) : null;
+        const rowIndex = item.index;
         const cells = columns.map((col, colIndex) => (
           <Fragment key={col.key}>
             {render.td({
               column: col,
               index: colIndex,
               row: item.row,
-              children: renderCellContent(col, item.row),
-              focused: focus.isFocused(item.index, col.key),
-              focusProps: focus.focusPropsFor(item.index, col.key),
+              children:
+                col.select && selectable && render.selectCell
+                  ? render.selectCell({
+                      checked: rowId !== null && selectedIds.has(rowId),
+                      isHeader: false,
+                      label: `Select row ${rowIndex + 1}`,
+                      onChange: (shiftKey) => selectRow(rowIndex, shiftKey),
+                    })
+                  : renderCellContent(col, item.row),
+              focused: focus.isFocused(rowIndex, col.key),
+              focusProps: focus.focusPropsFor(rowIndex, col.key),
             })}
           </Fragment>
         ));
@@ -241,12 +337,13 @@ export function Table<T>(props: TableProps<T>): ReactNode {
           <RenderTr
             key={vi.key}
             row={item.row}
-            index={item.index}
+            index={rowIndex}
             cells={cells}
             gridTemplate={gridTemplate}
             style={style}
             onClick={onRowClick ? () => onRowClick(item.row) : undefined}
             overlay={rowOverlay ? rowOverlay(item.row) : undefined}
+            selected={rowId !== null && selectedIds.has(rowId)}
             slot={render.tr}
           />
         );
@@ -289,6 +386,10 @@ export function Table<T>(props: TableProps<T>): ReactNode {
 /** `CellRef.rowIndex` for the header row. */
 const HEADER_ROW = -1;
 
+/** Shared empty set, so a table with no selection does not hand a fresh
+ *  object to every row on every render. */
+const EMPTY_SELECTION: ReadonlySet<string> = new Set<string>();
+
 function RenderTh<T>(props: {
   column: Column<T>;
   index: number;
@@ -298,6 +399,7 @@ function RenderTh<T>(props: {
   resize?: { startWidth: number; minWidth?: number; onWidthChange: (px: number) => void };
   focused: boolean;
   focusProps: CellFocusProps;
+  content?: ReactNode;
   slot: TableRender<T>['th'];
 }): ReactNode {
   return props.slot({
@@ -309,6 +411,7 @@ function RenderTh<T>(props: {
     resize: props.resize,
     focused: props.focused,
     focusProps: props.focusProps,
+    children: props.content,
   });
 }
 
@@ -320,6 +423,7 @@ function RenderTr<T>(props: {
   style: CSSProperties;
   onClick?: () => void;
   overlay?: ReactNode;
+  selected?: boolean;
   slot: TableRender<T>['tr'];
 }): ReactNode {
   return props.slot({
@@ -330,6 +434,7 @@ function RenderTr<T>(props: {
     style: props.style,
     onClick: props.onClick,
     overlay: props.overlay,
+    selected: props.selected,
   });
 }
 
