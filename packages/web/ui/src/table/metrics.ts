@@ -38,3 +38,26 @@ export const HEAD_HEIGHT = 'h-9';
 export function cellGutter(index: number): string {
   return index === 0 ? 'px-3' : 'px-2';
 }
+
+/** The two row densities the design defines. */
+export type Density = 'comfortable' | 'compact';
+
+/**
+ * Row heights in pixels, per docs/design/02-all-tickets.html line 137 and
+ * 03-project-board.html line 132 (42px), with the board's compact rung at 32px.
+ *
+ * These are pixel numbers rather than Tailwind classes because the virtualizer
+ * needs the height up front to position rows — it cannot read a class. That is
+ * exactly why they belong here: a caller passing a raw `42` to `rowHeight` is
+ * writing a design value at a call site, which is the one thing the rest of
+ * this module exists to prevent.
+ */
+export const ROW_HEIGHT: Record<Density, number> = {
+  comfortable: 42,
+  compact: 32,
+};
+
+/** `rowHeight={rowHeightFor(density)}` — the intended way to feed the engine. */
+export function rowHeightFor(density: Density): number {
+  return ROW_HEIGHT[density];
+}

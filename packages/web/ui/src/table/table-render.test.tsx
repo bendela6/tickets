@@ -119,6 +119,25 @@ describe('tableRender', () => {
     const { container } = render(<Harness rows={[]} isLoading />);
     expect(container.querySelectorAll('[data-skeleton-row]').length).toBeGreaterThan(0);
   });
+
+  // The empty state renders INSIDE the table, so the column header stays above
+  // it — that is the whole reason the slot exists rather than the caller
+  // placing its own empty state beside the table.
+  it('keeps the header above an empty table', () => {
+    render(<Harness rows={[]} isLoading={false} />);
+    expect(screen.getByText('Nothing here yet')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /Name/ })).toBeInTheDocument();
+  });
+
+  it('says something different when filters are what emptied it', () => {
+    render(<Harness rows={[]} isLoading={false} isFiltered />);
+    expect(screen.getByText('No matches')).toBeInTheDocument();
+  });
+
+  it('renders row overlay content inside the row', () => {
+    render(<Harness rowOverlay={() => <span>peek</span>} />);
+    expect(screen.getAllByText('peek')).toHaveLength(rows.length);
+  });
 });
 
 describe('tableRender — groups', () => {

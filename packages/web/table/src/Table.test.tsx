@@ -174,10 +174,46 @@ describe('<Table> engine — states', () => {
     expect(skeletonRow).toHaveAttribute('data-row-height', '64');
   });
 
-  it('renders nothing inside root when not loading and rows are empty', () => {
+  it('renders the empty slot instead of a body when not loading and rows are empty', () => {
     const { container } = render(<Harness rows={[]} isLoading={false} />);
     expect(container.querySelector('[data-slot="tbody"]')).toBeNull();
     expect(container.querySelector('[data-slot="skeleton-row"]')).toBeNull();
+    expect(container.querySelector('[data-slot="empty"]')).not.toBeNull();
+  });
+
+  // The engine is handed rows, never the query behind them, so it cannot tell
+  // "nothing exists" from "the filters hide everything" on its own.
+  it('forwards isFiltered to the empty slot', () => {
+    const { container } = render(<Harness rows={[]} isLoading={false} />);
+    expect(container.querySelector('[data-slot="empty"]')).toHaveAttribute('data-filtered', 'false');
+  });
+
+  it('reports a filtered-empty table as filtered', () => {
+    const { container } = render(<Harness rows={[]} isLoading={false} isFiltered />);
+    expect(container.querySelector('[data-slot="empty"]')).toHaveAttribute('data-filtered', 'true');
+  });
+
+  it('prefers the skeleton over the empty slot while loading', () => {
+    const { container } = render(<Harness rows={[]} isLoading />);
+    expect(container.querySelector('[data-slot="skeleton-row"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="empty"]')).toBeNull();
+  });
+
+  it('prefers the error slot over the empty slot', () => {
+    const { container } = render(<Harness rows={[]} isLoading={false} error={new Error('nope')} />);
+    expect(container.querySelector('[data-slot="error"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="empty"]')).toBeNull();
+  });
+
+  it('renders a row overlay inside every row', () => {
+    const { container } = render(<Harness rowOverlay={(row) => <b>{`⋯${row.name}`}</b>} />);
+    const overlays = [...container.querySelectorAll('[data-slot="row-overlay"]')];
+    expect(overlays.map((el) => el.textContent)).toEqual(['⋯Alpha', '⋯Beta']);
+  });
+
+  it('renders no overlay when the caller supplies none', () => {
+    const { container } = render(<Harness />);
+    expect(container.querySelector('[data-slot="row-overlay"]')).toBeNull();
   });
 
   it('renders the error slot in place of everything when error is set', () => {

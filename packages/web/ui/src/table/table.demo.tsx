@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Table, useTableWidths, type Column, type SortBy } from '@tickets/table';
 import { boolean, definePlayground, select } from '../gallery';
+import { Button } from '../components/button';
+import { Icon } from '../components/icon';
+import { rowHeightFor } from './metrics';
 import { tableRender } from './table-render';
 import { BadgeColumn } from './columns/badge-column';
 import { DateColumn } from './columns/date-column';
@@ -37,11 +40,17 @@ function Demo({
   loading,
   error,
   rowHeight,
+  empty,
+  filtered,
+  overlay,
 }: {
   grouped?: boolean;
   loading?: boolean;
   error?: boolean;
   rowHeight?: number;
+  empty?: boolean;
+  filtered?: boolean;
+  overlay?: boolean;
 }) {
   const [sort, setSort] = useState<SortBy[]>([]);
   const [widths, setWidth] = useTableWidths('gallery-table-demo');
@@ -70,7 +79,7 @@ function Demo({
         // when `isLoading && items.length === 0`, so passing 40 rows alongside
         // isLoading makes the Loading state pixel-identical to Flat and leaves
         // render-skeleton-row.tsx exercised by nothing.
-        rows={grouped || loading ? [] : ROWS}
+        rows={grouped || loading || empty ? [] : ROWS}
         groups={groups}
         state={{ sort, widths }}
         onSortChange={setSort}
@@ -78,7 +87,22 @@ function Demo({
         onRowClick={() => {}}
         isLoading={Boolean(loading)}
         error={error ? new Error('The server said no.') : null}
+        isFiltered={Boolean(filtered)}
         rowHeight={rowHeight}
+        // Absolutely positioned against the row, which the virtualizer has
+        // already positioned — this is the arrangement a column cannot express,
+        // since it would reserve width even while hidden.
+        rowOverlay={
+          overlay
+            ? () => (
+                <span className="absolute top-1/2 right-2.5 hidden -translate-y-1/2 items-center gap-1.25 group-hover:flex">
+                  <Button variant="outline" size="sm" className="w-7 p-0" aria-label="Open">
+                    <Icon name="arrow-up-right" size="sm" />
+                  </Button>
+                </span>
+              )
+            : undefined
+        }
         render={tableRender<Row>()}
       />
     </div>
@@ -88,7 +112,10 @@ function Demo({
 export const states = [
   { name: 'Flat', render: () => <Demo /> },
   { name: 'Grouped', render: () => <Demo grouped /> },
+  { name: 'Row overlay', render: () => <Demo overlay /> },
   { name: 'Loading', render: () => <Demo loading /> },
+  { name: 'Empty', render: () => <Demo empty /> },
+  { name: 'Empty — filtered', render: () => <Demo empty filtered /> },
   { name: 'Error', render: () => <Demo error /> },
 ];
 
@@ -102,7 +129,7 @@ export const playground = definePlayground({
     grouped: boolean(),
     density: select(['comfortable', 'compact'] as const, { initial: 'comfortable' }),
   },
-  render: (v) => (
-    <Demo grouped={v.grouped} rowHeight={v.density === 'compact' ? 32 : undefined} />
-  ),
+  // `rowHeightFor` rather than a literal: the virtualizer needs a pixel number
+  // up front, and this is the one place that number is allowed to come from.
+  render: (v) => <Demo grouped={v.grouped} rowHeight={rowHeightFor(v.density)} />,
 });
