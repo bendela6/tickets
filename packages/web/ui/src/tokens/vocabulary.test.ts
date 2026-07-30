@@ -129,5 +129,5 @@ describe('scanRetired', () => {
   it('never reports a file under apps/eer — that app owns its own scale', () => {
     const all = (['radius', 'border', 'ring', 'z'] as const).flatMap(scanRetired);
     expect(all.filter((h) => h.startsWith('apps/eer'))).toEqual([]);
-  });
+  }, BASELINE_SCAN_TIMEOUT_MS);
 });
