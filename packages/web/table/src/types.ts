@@ -26,6 +26,42 @@ export interface Column<T> {
 }
 
 /**
+ * One focused cell. Two deliberate asymmetries:
+ *
+ * - **Column KEY, not index**, so focus survives hiding, reordering and
+ *   pinning a column.
+ * - **Row INDEX, not id**, because focus is positional: under windowed
+ *   loading the row at an index may not be fetched yet, and changing the sort
+ *   resets the window anyway, so id stability buys nothing.
+ *
+ * `rowIndex: -1` addresses the HEADER row. That is what lets `↑` from row 0
+ * reach the column headers instead of dead-ending, and it is the only reason
+ * sorting is reachable from the keyboard at all.
+ */
+export interface CellRef {
+  rowIndex: number;
+  columnKey: string;
+}
+
+/**
+ * MUST be spread onto the element a `th` or `td` slot renders.
+ *
+ * `tabIndex` is the roving tab stop — 0 on the focused cell, -1 everywhere
+ * else — and is omitted entirely when the caller has not opted into the focus
+ * model, so a table without it keeps whatever tab behaviour it had.
+ *
+ * The two data attributes are the engine's only handle on a cell it did not
+ * create. Virtualization unmounts rows, so a React ref would go stale; the
+ * coordinates let the engine find the cell again by address after it
+ * remounts.
+ */
+export interface CellFocusProps {
+  tabIndex?: number;
+  'data-cell-row': number;
+  'data-cell-col': string;
+}
+
+/**
  * Everything the table's chrome is driven by, in one object.
  *
  * One bag rather than a prop per concern: a caller spreads `useTable()`'s
@@ -39,6 +75,9 @@ export interface TableState {
   /** Keys of the collapsed groups. Carried here so a caller does not have to
    *  invent its own place to keep it; the engine does not yet act on it. */
   collapsed?: Set<string>;
+  /** The focused cell. Supplying `onFocusChange` is what turns the focus
+   *  model on; without it the engine leaves the tab order alone. */
+  focused?: CellRef | null;
 }
 
 export interface RenderRootCtx {
@@ -66,6 +105,11 @@ export interface RenderThCtx<T> {
   totalSorts: number;
   onSortClick: (e: MouseEvent) => void;
   resize?: RenderThResize;
+  /** This header cell holds the grid's focus. The ring is the ADAPTER's to
+   *  draw — the engine has no business owning a colour. */
+  focused?: boolean;
+  /** MUST be spread onto the header cell element. */
+  focusProps: CellFocusProps;
 }
 
 export interface RenderTbodyCtx {
@@ -102,6 +146,10 @@ export interface RenderTdCtx<T> {
   row: T;
   /** Cell content from `column.render(row)` / `column.as({...})` / stringified `column.value(row)`. */
   children: ReactNode;
+  /** This cell holds the grid's focus. The ring is the ADAPTER's to draw. */
+  focused?: boolean;
+  /** MUST be spread onto the cell element. */
+  focusProps: CellFocusProps;
 }
 
 export interface RenderSkeletonRowCtx<T> {

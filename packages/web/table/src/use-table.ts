@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTableWidths } from './use-table-widths';
-import type { SortBy, TableState } from './types';
+import type { CellRef, SortBy, TableState } from './types';
 
 export interface UseTableOptions {
   initialSort?: SortBy[];
@@ -15,6 +15,7 @@ export interface UseTableResult {
   onSortChange: (next: SortBy[]) => void;
   onWidthChange: (key: string, px: number) => void;
   onCollapseChange: (next: Set<string>) => void;
+  onFocusChange: (next: CellRef | null) => void;
 }
 
 /**
@@ -37,11 +38,17 @@ export function useTable(opts: UseTableOptions = {}): UseTableResult {
   const [sort, setSort] = useState<SortBy[]>(() => opts.initialSort ?? []);
   const [widths, onWidthChange] = useTableWidths(opts.widthsId);
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(opts.initialCollapsed));
+  // Null, not the first cell: the ring must not appear until the user has put
+  // focus somewhere. The engine still makes the first cell the TAB STOP, so
+  // the grid is reachable — that is a separate question from where the ring is.
+  const [focused, setFocused] = useState<CellRef | null>(null);
 
   return {
-    state: { sort, widths, collapsed },
+    state: { sort, widths, collapsed, focused },
     onSortChange: setSort,
     onWidthChange,
     onCollapseChange: setCollapsed,
+    // Passing this to <Table> is what turns the cell focus model on.
+    onFocusChange: setFocused,
   };
 }

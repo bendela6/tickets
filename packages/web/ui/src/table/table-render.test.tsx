@@ -40,7 +40,11 @@ afterAll(() => {
   globalThis.ResizeObserver = _originalResizeObserver;
 });
 
-interface Row { id: string; name: string; count: number }
+interface Row {
+  id: string;
+  name: string;
+  count: number;
+}
 
 const rows: Row[] = [
   { id: '1', name: 'Alpha', count: 3 },
@@ -77,7 +81,7 @@ describe('tableRender', () => {
     expect(screen.getAllByRole('cell').length).toBe(4);
   });
 
-  it('renders each cell\'s value', () => {
+  it("renders each cell's value", () => {
     render(<Harness />);
     expect(screen.getByText('Alpha')).toBeInTheDocument();
     expect(screen.getByText('Beta')).toBeInTheDocument();
@@ -140,6 +144,38 @@ describe('tableRender', () => {
   });
 });
 
+// The engine decides WHICH cell is focused; these check the adapter honours
+// the two things it is handed. The ring itself is a class, and asserting
+// classes is not this project's idea of a test — but `focusProps` is a
+// contract: drop it and keyboard navigation silently stops working, because
+// the engine can no longer find a cell it did not render.
+describe('tableRender — cell focus', () => {
+  it("puts the engine's coordinates on every cell", () => {
+    const { container } = render(<Harness onFocusChange={() => {}} />);
+    const cell = container.querySelector('[data-cell-row="0"][data-cell-col="name"]');
+    expect(cell).not.toBeNull();
+    expect(cell).toHaveAttribute('role', 'cell');
+  });
+
+  it('addresses header cells as row -1', () => {
+    const { container } = render(<Harness onFocusChange={() => {}} />);
+    const header = container.querySelector('[data-cell-row="-1"][data-cell-col="name"]');
+    expect(header).toHaveAttribute('role', 'columnheader');
+  });
+
+  it('carries the roving tab stop onto the focused cell', () => {
+    const { container } = render(
+      <Harness
+        onFocusChange={() => {}}
+        state={{ sort: [], widths: {}, focused: { rowIndex: 1, columnKey: 'count' } }}
+      />,
+    );
+    const stops = container.querySelectorAll('[data-cell-row][tabindex="0"]');
+    expect(stops).toHaveLength(1);
+    expect(stops[0]).toHaveAttribute('data-cell-col', 'count');
+  });
+});
+
 describe('tableRender — groups', () => {
   const grouped = [
     { key: 'a', header: <span>Group A</span>, rows: [rows[0]!] },
@@ -152,7 +188,7 @@ describe('tableRender — groups', () => {
     expect(screen.getByText('Group B')).toBeInTheDocument();
   });
 
-  it('renders each group\'s rows under it', () => {
+  it("renders each group's rows under it", () => {
     render(<Harness rows={[]} groups={grouped} />);
     expect(screen.getByText('Alpha')).toBeInTheDocument();
     expect(screen.getByText('Beta')).toBeInTheDocument();

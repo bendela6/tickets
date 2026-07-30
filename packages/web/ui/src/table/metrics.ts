@@ -61,3 +61,23 @@ export const ROW_HEIGHT: Record<Density, number> = {
 export function rowHeightFor(density: Density): number {
   return ROW_HEIGHT[density];
 }
+
+/**
+ * The focused cell's ring.
+ *
+ * The house idiom is `focus-visible:ring-3`, and it is WRONG here: a 3px soft
+ * ring drawn outside the box bleeds over the neighbouring cell in a dense
+ * grid, so the focused cell and the one beside it both look half-selected.
+ *
+ * `tokens.css:1094` already establishes the right shape for a rectangular
+ * selection — the rich-text node outline, 2px indigo at `outline-offset: 1px`.
+ * Cells take the same colour and weight at offset **-2**, so the ring sits
+ * INSET and cannot overlap an adjacent cell or the row's bottom border.
+ *
+ * This is a plain outline rather than a `focus-visible` variant on purpose:
+ * the grid's focus is a MODEL, not a browser heuristic. The engine says which
+ * cell is focused via `RenderTdCtx.focused`, and arrow-key navigation must
+ * draw the ring whether or not the browser considers the interaction
+ * keyboard-driven.
+ */
+export const CELL_FOCUS_RING = 'outline-2 -outline-offset-2 outline-indigo-9';

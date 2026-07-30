@@ -2,9 +2,12 @@ import { Fragment, useState, type CSSProperties, type MouseEvent, type ReactNode
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { toggleSort, multiSortToggle } from './sort-utils';
 import { flattenGroups } from './flatten-groups';
+import { useCellFocus } from './use-cell-focus';
 import {
   GROUP_ROW_HEIGHT,
   ROW_HEIGHT,
+  type CellFocusProps,
+  type CellRef,
   type Column,
   type SortBy,
   type TableGroup,
@@ -26,7 +29,14 @@ export interface TableProps<T> {
    *  collapsible groups are a later phase — but a caller keeping the state
    *  should not have to strip the handler back out. */
   onCollapseChange?: (next: Set<string>) => void;
+  /** Supplying this is what turns the cell focus model ON: a roving tabindex
+   *  over the cells, arrow-key navigation, and the grid as a single tab stop.
+   *  Without it the engine does not touch the tab order, so a table whose
+   *  cells hold links and buttons keeps them tabbable. */
+  onFocusChange?: (next: CellRef | null) => void;
   onRowClick?: (row: T) => void;
+  /** `Enter` on a focused cell that holds no widget of its own. */
+  onRowActivate?: (row: T) => void;
   isLoading: boolean;
   error?: Error | null;
   render: TableRender<T>;
@@ -51,7 +61,9 @@ export function Table<T>(props: TableProps<T>): ReactNode {
     render,
     onSortChange,
     onWidthChange,
+    onFocusChange,
     onRowClick,
+    onRowActivate,
     isLoading,
     error,
     rowHeight = ROW_HEIGHT,
@@ -71,6 +83,56 @@ export function Table<T>(props: TableProps<T>): ReactNode {
     getScrollElement: () => scrollEl,
     estimateSize: (i) => (items[i]?.kind === 'group' ? GROUP_ROW_HEIGHT : rowHeight),
     overscan: 8,
+  });
+
+  // A data row's index is continuous across groups, but its position in the
+  // virtualized list is not — group bands take slots too. Focus addresses the
+  // former and the virtualizer wants the latter, so keep the map.
+  const itemIndexOfRow: number[] = [];
+  for (const [i, item] of items.entries()) {
+    if (item.kind === 'row') {
+      itemIndexOfRow[item.index] = i;
+    }
+  }
+
+  const focus = useCellFocus({
+    scrollEl,
+    enabled: Boolean(onFocusChange),
+    focused: state.focused,
+    onFocusChange,
+    geometry: {
+      columnKeys: columns.map((c) => c.key),
+      rowCount: itemIndexOfRow.length,
+      // `scrollRect` comes from the virtualizer's own ResizeObserver, which
+      // reports a real height where `clientHeight` reads 0 (jsdom, and the
+      // frame before the first layout). One row is the floor: a PageDown that
+      // moves nowhere is worse than one that moves a little.
+      pageSize: Math.max(
+        1,
+        Math.floor((virtualizer.scrollRect?.height ?? scrollEl?.clientHeight ?? 0) / rowHeight),
+      ),
+    },
+    scrollRowIntoView: (rowIndex) => {
+      if (rowIndex < 0) {
+        // The header row is sticky, but the table still scrolls to the top so
+        // the user sees where focus went. A property assignment rather than
+        // `scrollTo`, which jsdom does not implement.
+        if (scrollEl) {
+          scrollEl.scrollTop = 0;
+        }
+        return;
+      }
+      const itemIndex = itemIndexOfRow[rowIndex];
+      if (itemIndex !== undefined) {
+        virtualizer.scrollToIndex(itemIndex, { align: 'auto' });
+      }
+    },
+    onActivate: (rowIndex) => {
+      const item = items[itemIndexOfRow[rowIndex] ?? -1];
+      if (item?.kind === 'row') {
+        onRowActivate?.(item.row);
+      }
+    },
   });
 
   if (error) {
@@ -113,6 +175,8 @@ export function Table<T>(props: TableProps<T>): ReactNode {
                 }
               : undefined
           }
+          focused={focus.isFocused(HEADER_ROW, col.key)}
+          focusProps={focus.focusPropsFor(HEADER_ROW, col.key)}
           slot={render.th}
         />
       );
@@ -168,6 +232,8 @@ export function Table<T>(props: TableProps<T>): ReactNode {
               index: colIndex,
               row: item.row,
               children: renderCellContent(col, item.row),
+              focused: focus.isFocused(item.index, col.key),
+              focusProps: focus.focusPropsFor(item.index, col.key),
             })}
           </Fragment>
         ));
@@ -200,6 +266,13 @@ export function Table<T>(props: TableProps<T>): ReactNode {
       data-slot="table-scroll"
       className="h-full w-full overflow-auto"
       style={{ overflowAnchor: 'none' }}
+      // -1, never 0: this is not a tab stop, it is where DOM focus is PARKED
+      // when the focused row is scrolled out and unmounted. Without it focus
+      // would fall to <body> and the user would lose their place entirely.
+      tabIndex={onFocusChange ? -1 : undefined}
+      onKeyDown={focus.onKeyDown}
+      onFocusCapture={focus.onFocusCapture}
+      onBlurCapture={focus.onBlurCapture}
     >
       {render.root({
         children: (
@@ -213,6 +286,9 @@ export function Table<T>(props: TableProps<T>): ReactNode {
   );
 }
 
+/** `CellRef.rowIndex` for the header row. */
+const HEADER_ROW = -1;
+
 function RenderTh<T>(props: {
   column: Column<T>;
   index: number;
@@ -220,6 +296,8 @@ function RenderTh<T>(props: {
   totalSorts: number;
   onSortClick: (e: MouseEvent) => void;
   resize?: { startWidth: number; minWidth?: number; onWidthChange: (px: number) => void };
+  focused: boolean;
+  focusProps: CellFocusProps;
   slot: TableRender<T>['th'];
 }): ReactNode {
   return props.slot({
@@ -229,6 +307,8 @@ function RenderTh<T>(props: {
     totalSorts: props.totalSorts,
     onSortClick: props.onSortClick,
     resize: props.resize,
+    focused: props.focused,
+    focusProps: props.focusProps,
   });
 }
 
