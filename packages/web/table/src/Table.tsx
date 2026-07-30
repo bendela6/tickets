@@ -420,6 +420,18 @@ export function Table<T>(props: TableProps<T>): ReactNode {
 
   let bodyNode: ReactNode = null;
   let stickyGroupNode: ReactNode = null;
+
+  /**
+   * The totals row, present as soon as any column defines one.
+   *
+   * Only alongside actual rows: a totals row over a skeleton, an error or an
+   * empty state is summing nothing, and pinning "0" to the bottom of a table
+   * that failed to load is worse than showing no total at all.
+   */
+  const footerNode: ReactNode =
+    !error && !isLoading && items.length > 0 && columns.some((c) => c.footer !== undefined)
+      ? render.tfoot({ columns, gridTemplate })
+      : null;
   if (isLoading && items.length === 0) {
     bodyNode = Array.from({ length: 10 }).map((_, i) => {
       return (
@@ -552,6 +564,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
             {headerNode}
             {stickyGroupNode}
             {bodyNode}
+            {footerNode}
           </>
         ),
       })}

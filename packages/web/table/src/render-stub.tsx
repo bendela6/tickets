@@ -118,6 +118,17 @@ export function makeStubRender<T>(): TableRender<T> {
     },
     error: ({ error }) => <div data-slot="error">{error.message}</div>,
     empty: ({ filtered }) => <div data-slot="empty" data-filtered={String(filtered)} />,
+    tfoot: ({ columns, gridTemplate }) => {
+      return (
+        <div data-slot="tfoot" data-grid-template={gridTemplate}>
+          {columns.map((c) => (
+            <div key={c.key} data-slot="tfoot-cell" data-key={c.key}>
+              {c.footer}
+            </div>
+          ))}
+        </div>
+      );
+    },
     selectCell: ({ checked, indeterminate, isHeader, onChange, label }) => {
       return (
         <input

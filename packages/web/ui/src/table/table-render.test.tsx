@@ -393,3 +393,26 @@ describe('tableRender — collapsible groups', () => {
     expect(onCollapseChange).toHaveBeenCalledWith(new Set(['a']));
   });
 });
+
+describe('tableRender — totals row', () => {
+  const withFooter: Column<Row>[] = [
+    { key: 'name', header: 'Name', value: (r) => r.name, footer: 'Total' },
+    { key: 'count', header: 'Count', value: (r) => r.count, align: 'right', footer: '10' },
+  ];
+
+  it('renders the totals row as cells of the grid', () => {
+    render(<Harness columns={withFooter} />);
+    expect(screen.getByText('Total')).toBeInTheDocument();
+    expect(screen.getByText('10')).toBeInTheDocument();
+  });
+
+  // It is a row of cells like any other, so a grid whose last row was bare
+  // divs would be an aria-required-children violation — the same one the group
+  // band and the row overlay each turned out to have.
+  it('keeps the totals row a legal grid row', () => {
+    render(<Harness columns={withFooter} />);
+    const total = screen.getByText('Total');
+    expect(total.closest('[role="gridcell"]')).not.toBeNull();
+    expect(total.closest('[role="row"]')).not.toBeNull();
+  });
+});

@@ -153,6 +153,17 @@ const HELPER_COLUMNS: Column<Row>[] = [
  * holds the select-all checkbox, which carries its own accessible name, so
  * there is nothing anonymous about it.
  */
+/** The four-column set with a totals row. The engine holds no opinion about
+ *  what the numbers mean, so the arithmetic is the caller's — here a count and
+ *  a sum over ROWS. */
+const FOOTER_COLUMNS: Column<Row>[] = COLUMNS.map((c) =>
+  c.key === 'name'
+    ? { ...c, footer: `${ROWS.length} items` }
+    : c.key === 'count'
+      ? { ...c, footer: String(ROWS.reduce((sum, r) => sum + r.count, 0)) }
+      : c,
+);
+
 const SELECT_COLUMNS: Column<Row>[] = [
   { key: 'select', header: '', select: true, width: 36, resizable: false },
   ...COLUMNS,
@@ -321,6 +332,7 @@ export const states = [
   // Wider than its container: scroll sideways and Name stays put on the left,
   // Actions on the right, with a hairline where the frozen part ends.
   { name: 'Pinned columns', render: () => <Demo columns={WIDE_COLUMNS} /> },
+  { name: 'Totals row', render: () => <Demo columns={FOOTER_COLUMNS} /> },
   { name: 'Per-row height', render: () => <Demo rowHeight={varyingRowHeight} /> },
   { name: 'Grouped', render: () => <Demo grouped /> },
   { name: 'Grouped — collapsed', render: () => <Demo grouped collapsedKeys={['open']} /> },
