@@ -21,3 +21,35 @@ test('fetchConfig throws when the endpoint is unavailable', async () => {
   await expect(fetchConfig()).rejects.toThrow(/403/);
   vi.unstubAllGlobals();
 });
+
+test('json() surfaces server error messages when present', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+    ok: false,
+    status: 400,
+    json: async () => ({ error: 'body.config.chip must be a 6-digit hex color' }),
+  }));
+  await expect(fetchConfig()).rejects.toThrow('body.config.chip must be a 6-digit hex color');
+  vi.unstubAllGlobals();
+});
+
+test('json() handles invalid JSON body gracefully', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+    ok: false,
+    status: 500,
+    json: async () => {
+      throw new Error('invalid json');
+    },
+  }));
+  await expect(fetchConfig()).rejects.toThrow(/500/);
+  vi.unstubAllGlobals();
+});
+
+test('json() falls back to status message when error field is missing', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+    ok: false,
+    status: 400,
+    json: async () => ({ message: 'some other field' }),
+  }));
+  await expect(fetchConfig()).rejects.toThrow('/__icons/config (400)');
+  vi.unstubAllGlobals();
+});
