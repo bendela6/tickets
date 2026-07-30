@@ -51,14 +51,14 @@ export function SearchBox() {
         <div
           className={cn(
             'absolute left-0 top-full z-40 mt-1 max-h-85 min-w-56 overflow-auto',
-            'rounded-lg border-1 border-gray-7 bg-gray-3 p-1 shadow-modal',
+            'rounded-lg border-1 border-gray-7 bg-surface-raised p-1 shadow-modal',
           )}
         >
           {results.map((m, i) => (
             <button
               key={i}
               type="button"
-              className="block w-full rounded-md px-2 py-2 text-left text-13 hover:bg-gray-4"
+              className="block w-full rounded-md px-2 py-2 text-left text-13 hover:bg-surface-inset"
               onMouseDown={(e) => {
                 e.preventDefault();
                 pick(m);

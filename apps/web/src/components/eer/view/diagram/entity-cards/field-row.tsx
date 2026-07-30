@@ -68,7 +68,7 @@ export function FieldRow({
   const badge = role?.pk ? 'pk' : role?.fk ? 'fk' : null;
   return (
     <div
-      className="relative flex h-6 cursor-default items-center gap-2 px-3 text-12 hover:bg-gray-3"
+      className="relative flex h-6 cursor-default items-center gap-2 px-3 text-12 hover:bg-surface-inset"
       data-entity={e.id}
       data-field={f.name}
       data-index={String(index)}

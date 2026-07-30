@@ -92,7 +92,7 @@ export function EntityDetail({
                   {fk && (
                     <button
                       type="button"
-                      className="ml-1 rounded-sm bg-gray-3 px-1 py-px font-mono text-10 text-green-9 hover:bg-gray-4"
+                      className="ml-1 rounded-sm bg-gray-3 px-1 py-px font-mono text-10 text-green-9 hover:bg-surface-inset"
                       onClick={() => {
                         actions.selectEntity(fk.table);
                         actions.centerOn(fk.table);
