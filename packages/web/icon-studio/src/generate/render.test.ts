@@ -39,15 +39,17 @@ describe('primitives', () => {
     expect(svg).not.toContain('stroke-width');
   });
 
-  test('elements are painted in document order, back to front', () => {
+  test('elements are painted in reverse document order, so the first element is frontmost', () => {
     const svg = renderSvg(
       docWith([
-        { id: 'back', type: 'ring', ink: 'low', radius: 15, weight: 3 },
-        { id: 'front', type: 'dot', ink: 'top', at: [24, 24], radius: 4 },
+        { id: 'front', type: 'ring', ink: 'low', radius: 15, weight: 3 },
+        { id: 'back', type: 'dot', ink: 'top', at: [24, 24], radius: 4 },
       ]),
       'mono',
     );
-    expect(svg.indexOf('r="15"')).toBeLessThan(svg.indexOf('r="4"'));
+    // The ring is elements[0] — frontmost — so it is emitted last; the dot's
+    // r="4" (elements[1], backmost) appears earlier in the document.
+    expect(svg.indexOf('r="4"')).toBeLessThan(svg.indexOf('r="15"'));
   });
 });
 

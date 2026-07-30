@@ -5,6 +5,12 @@ import { CENTRE, GRID, type Element, type IconDoc, type InkResolution } from '..
  * `svgChip` were four functions drawing the same three sticks differently;
  * with the drawing in the document, they collapse to this.
  *
+ * `doc.elements` reads front to back — `elements[0]` is the leader a running
+ * formation follows and the layer a panel would list on top — so the
+ * renderer paints in *reverse* document order: the frontmost element is
+ * emitted last, since SVG has no z-index and later markup paints over
+ * earlier markup.
+ *
  * Output format is matched character for character to the generators it
  * replaces, because the committed assets must come out byte-identical.
  */
@@ -91,23 +97,32 @@ export function renderSvg(doc: IconDoc, variantName: string): string {
       }"/>`
     : '';
 
+  // Elements are listed front to back — `elements[0]` is the leader a
+  // running formation follows (Task 4) and the one a layer panel would show
+  // on top. SVG has no z-index, so the frontmost element must be *emitted*
+  // last: painting proceeds in reverse document order.
+  const indexed = doc.elements.map((element, i) => ({ element, i }));
+  const painted = [...indexed].reverse();
+
   if (resolution === 'theme') {
     // A favicon has no inherited colour, so both sets are inlined and swapped
-    // by a media query inside the file itself.
+    // by a media query inside the file itself. Rules are keyed `s{docIndex+1}`
+    // and listed in document order; only the painted `<path>`/`<circle>`
+    // elements below are reversed.
     const rules = doc.elements
       .map((element, i) => {
         const { light } = resolveInk(doc, element.ink, 'light');
-        return `.e${i}{${element.type === 'dot' ? 'fill' : 'stroke'}:${light}}`;
+        return `.s${i + 1}{${element.type === 'dot' ? 'fill' : 'stroke'}:${light}}`;
       })
       .join('');
     const darkRules = doc.elements
       .map((element, i) => {
         const { dark } = resolveInk(doc, element.ink, 'theme');
-        return `.e${i}{${element.type === 'dot' ? 'fill' : 'stroke'}:${dark}}`;
+        return `.s${i + 1}{${element.type === 'dot' ? 'fill' : 'stroke'}:${dark}}`;
       })
       .join('');
-    const body = doc.elements
-      .map((element, i) => drawElement(element, scale, paintOf(element, `e${i}`, '')))
+    const body = painted
+      .map(({ element, i }) => drawElement(element, scale, paintOf(element, `s${i + 1}`, '')))
       .join('');
     return `${open}${comment}${plate}
   <style>
@@ -120,8 +135,8 @@ export function renderSvg(doc: IconDoc, variantName: string): string {
 `;
   }
 
-  const body = doc.elements
-    .map((element) =>
+  const body = painted
+    .map(({ element }) =>
       drawElement(element, scale, paintOf(element, null, resolveInk(doc, element.ink, resolution).light)),
     )
     .join('');
