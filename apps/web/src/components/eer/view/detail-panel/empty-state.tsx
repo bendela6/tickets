@@ -23,7 +23,9 @@ export function EmptyState({ model }: { model: Model | null }) {
     <div>
       <div className="border-b-1 border-gray-6 px-4 pb-3 pt-4">
         <Badge tone="entity">Overview</Badge>
-        <h2 className="mt-2 font-mono text-16 font-500 text-gray-12">{model?.meta.title ?? 'EER viewer'}</h2>
+        {/* Matches what the adapter sets meta.title to, so nothing flashes the
+            standalone app's old name before the model lands. */}
+        <h2 className="mt-2 font-mono text-16 font-500 text-gray-12">{model?.meta.title ?? 'Database schema'}</h2>
         <div className="mt-1 text-11 text-gray-11">Click an entity, group, or edge to inspect it.</div>
       </div>
 
