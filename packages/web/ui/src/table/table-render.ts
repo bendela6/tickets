@@ -9,6 +9,7 @@ import { renderTd } from './render-td';
 import { renderSkeletonRow } from './render-skeleton-row';
 import { renderError } from './render-error';
 import { renderEmpty } from './render-empty';
+import { renderTfoot } from './render-tfoot';
 import { renderGroupHeader } from './render-group-header';
 import { renderSelectCell } from './render-select-cell';
 
@@ -40,6 +41,7 @@ export function tableRender<T>(): TableRender<T> {
     skeletonRow: renderSkeletonRow,
     error: renderError,
     empty: renderEmpty,
+    tfoot: renderTfoot,
     selectCell: renderSelectCell,
     // The engine owns the scroll container — it holds the ref, the keyboard
     // handler and the focus parking spot — so this hands it a class rather

@@ -24,6 +24,19 @@ export interface Column<T> {
   align?: 'left' | 'right' | 'center';
   resizable?: boolean;
   /**
+   * This column's cell in the totals row pinned to the bottom of the table.
+   * A footer row appears as soon as any column defines one; columns that do
+   * not simply leave their cell blank.
+   *
+   * A finished ReactNode, not an aggregate function, for the same reason the
+   * engine reports sort intent instead of sorting: it holds no opinion about
+   * what the data means. A sum, a count, a mean and "3 of 40 selected" are all
+   * the caller's arithmetic — and under windowed loading the engine would be
+   * aggregating whatever chunk it happened to have, which is worse than not
+   * offering it at all.
+   */
+  footer?: ReactNode;
+  /**
    * The row-selection checkbox column. The engine owns this column's content —
    * `value`, `render` and `as` are ignored — because only the engine knows
    * which rows are selected, and the checkbox itself is drawn by the render
@@ -253,6 +266,15 @@ export interface RenderErrorCtx {
   error: Error;
 }
 
+/** The totals row. One slot rather than a row slot plus a cell slot: its
+ *  content comes entirely from `column.footer`, so there is nothing per-cell
+ *  for the engine to hand over that the render set cannot read off the column
+ *  itself. */
+export interface RenderTfootCtx<T> {
+  columns: Column<T>[];
+  gridTemplate: string;
+}
+
 export interface RenderEmptyCtx {
   /** Why the table is empty. "Nothing here yet" and "your filters hide
    *  everything" need different copy and different actions, and only the
@@ -271,6 +293,7 @@ export interface TableRender<T = unknown> {
   skeletonRow: (ctx: RenderSkeletonRowCtx<T>) => ReactNode;
   error: (ctx: RenderErrorCtx) => ReactNode;
   empty: (ctx: RenderEmptyCtx) => ReactNode;
+  tfoot: (ctx: RenderTfootCtx<T>) => ReactNode;
   /** Optional: a render set that does not draw checkboxes simply cannot host
    *  a `select` column, rather than every existing render set breaking. */
   selectCell?: (ctx: RenderSelectCellCtx) => ReactNode;

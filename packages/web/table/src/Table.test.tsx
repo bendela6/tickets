@@ -525,3 +525,53 @@ describe('<Table> engine — sticky group band', () => {
     expect(onCollapseChange).toHaveBeenCalledWith(new Set(['a']));
   });
 });
+
+describe('<Table> engine — totals row', () => {
+  const withFooter: Column<Row>[] = [
+    { key: 'name', header: 'Name', value: (r) => r.name, footer: 'Total' },
+    { key: 'other', header: 'Other', value: () => '', footer: '2 rows' },
+  ];
+
+  it('renders no totals row when no column defines one', () => {
+    const { container } = render(<Harness />);
+    expect(container.querySelector('[data-slot="tfoot"]')).toBeNull();
+  });
+
+  it('renders a totals row as soon as one column defines a footer', () => {
+    const { container } = render(<Harness columns={withFooter} />);
+    expect(container.querySelector('[data-slot="tfoot"]')).not.toBeNull();
+  });
+
+  it('gives every column a footer cell, blank where none is defined', () => {
+    const partial: Column<Row>[] = [
+      { key: 'name', header: 'Name', value: (r) => r.name },
+      { key: 'other', header: 'Other', value: () => '', footer: '2 rows' },
+    ];
+    const { container } = render(<Harness columns={partial} />);
+    const cells = [...container.querySelectorAll('[data-slot="tfoot-cell"]')];
+    expect(cells.map((c) => c.textContent)).toEqual(['', '2 rows']);
+  });
+
+  // A total over a skeleton, an error or an empty table is summing nothing.
+  it('renders no totals row while loading', () => {
+    const { container } = render(<Harness columns={withFooter} rows={[]} isLoading />);
+    expect(container.querySelector('[data-slot="tfoot"]')).toBeNull();
+  });
+
+  it('renders no totals row when the table is empty', () => {
+    const { container } = render(<Harness columns={withFooter} rows={[]} isLoading={false} />);
+    expect(container.querySelector('[data-slot="tfoot"]')).toBeNull();
+  });
+
+  it('renders no totals row when the table failed', () => {
+    const { container } = render(<Harness columns={withFooter} error={new Error('no')} />);
+    expect(container.querySelector('[data-slot="tfoot"]')).toBeNull();
+  });
+
+  it('lays the totals row out on the same grid template as the rows', () => {
+    const { container } = render(<Harness columns={withFooter} />);
+    const foot = container.querySelector('[data-slot="tfoot"]');
+    const head = container.querySelector('[data-slot="thead"]');
+    expect(foot?.getAttribute('data-grid-template')).toBe(head?.getAttribute('data-grid-template'));
+  });
+});
