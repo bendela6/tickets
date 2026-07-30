@@ -48,4 +48,39 @@ describe('readIndexes', () => {
     const names = indexes.get(items.oid)!.map((ix) => ix.name).sort();
     expect(names).toEqual(['items_parent', 'items_project_number', 'items_project_type']);
   });
+
+  it('resolves a mixed named+expression index via pg_get_indexdef, not string-slicing', async () => {
+    // records.items is a column-free "skeleton" table (id/fks/timestamps
+    // only, see items.ts) with no text column suitable for lower() — so this
+    // uses core.projects instead, which has real text columns (key, name,
+    // item_prefix).
+    //
+    // This is the one place in this plan a test runs DDL: it creates one
+    // temporary index mixing a named column with an expression, reads it
+    // back, then drops it unconditionally (both a pre-emptive drop in case a
+    // prior run crashed before cleanup, and an unconditional drop in
+    // `finally`) so a failing assertion can't leave it behind for other
+    // suites sharing tickets_test.
+    const { tables, indexes } = await withDatabase('tickets_test', async (sql) => {
+      await sql`DROP INDEX IF EXISTS core.tmp_expr_idx`;
+      await sql`CREATE INDEX tmp_expr_idx ON core.projects (scheme_id, lower(name))`;
+      try {
+        const tables = await readTables(sql);
+        return { tables, indexes: await readIndexes(sql, tables) };
+      } finally {
+        await sql`DROP INDEX IF EXISTS core.tmp_expr_idx`;
+      }
+    });
+    const projects = tables.find((t) => t.name === 'projects' && t.schema === 'core')!;
+    expect(projects).toBeDefined();
+    const ix = indexes.get(projects.oid)!.find((i) => i.name === 'tmp_expr_idx');
+    expect(ix).toBeDefined();
+    // Canonical Postgres rendering, confirmed by running this once against
+    // the live catalog: the named column keeps its bare name; the expression
+    // renders verbatim as `lower(name)` (pg_get_indexdef omits the table
+    // qualifier for an index's own table). A string-slicing implementation
+    // instead returns the WHOLE column list in the expression slot:
+    // ['scheme_id', 'scheme_id, lower(name)'].
+    expect(ix!.columns).toEqual(['scheme_id', 'lower(name)']);
+  });
 });

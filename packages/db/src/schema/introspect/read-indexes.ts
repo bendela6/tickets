@@ -9,9 +9,16 @@ import type { RawTable } from './read-tables';
  * primary key constraint readConstraints already reports, and drawing it as an
  * index too would double-count.
  *
- * `indkey` is an int2vector of attnums where 0 means "an expression". Expression
- * columns are rendered from `pg_get_indexdef` rather than named, matching the
- * drizzle-derived path's use of rendered SQL text for expression columns.
+ * Each column position is resolved through `pg_get_indexdef(indexrelid, colno,
+ * true)` — the correct API for a single index column, whether it's a named
+ * column (returns the name) or an expression (returns just that expression).
+ * `indkey` still supplies the position count (`cardinality(string_to_array(...))`);
+ * it is not re-parsed into attnums, since pg_get_indexdef resolves each
+ * position on its own. An earlier version tried to render expression columns
+ * by string-slicing the whole-index `pg_get_indexdef(indexrelid)` text, which
+ * silently produced the WRONG result on a mixed index (named column +
+ * expression): the expression slot got the entire column list, duplicating
+ * the named column into it. That path is what this replaces.
  */
 export async function readIndexes(
   sql: postgres.Sql,
@@ -21,10 +28,6 @@ export async function readIndexes(
   for (const t of tables) out.set(t.oid, []);
   if (tables.length === 0) return out;
 
-  const nameByAttnum = new Map<number, Map<number, string>>(
-    tables.map((t) => [t.oid, new Map(t.columns.map((c) => [c.attnum, c.name]))]),
-  );
-
   const rows = await sql<
     {
       indrelid: number;
@@ -32,8 +35,7 @@ export async function readIndexes(
       is_unique: boolean;
       method: string;
       where_expr: string | null;
-      indkey: string;
-      definition: string;
+      columns: string[];
     }[]
   >`
     SELECT i.indrelid::int    AS indrelid,
@@ -41,8 +43,10 @@ export async function readIndexes(
            i.indisunique      AS is_unique,
            am.amname          AS method,
            pg_get_expr(i.indpred, i.indrelid) AS where_expr,
-           i.indkey::text     AS indkey,
-           pg_get_indexdef(i.indexrelid)      AS definition
+           (
+             SELECT array_agg(pg_get_indexdef(i.indexrelid, gs.colno, true) ORDER BY gs.colno)
+             FROM generate_series(1, cardinality(string_to_array(i.indkey::text, ' '))) AS gs(colno)
+           ) AS columns
     FROM pg_index i
     JOIN pg_class ic ON ic.oid = i.indexrelid
     JOIN pg_am am    ON am.oid = ic.relam
@@ -52,14 +56,11 @@ export async function readIndexes(
   `;
 
   for (const row of rows) {
-    const names = nameByAttnum.get(row.indrelid);
-    if (!names) continue;
-    // int2vector prints space-separated; 0 marks an expression column.
-    const attnums = row.indkey.split(' ').filter((s) => s.length > 0).map(Number);
-    const columns = attnums.map((n) => names.get(n) ?? expressionColumn(row.definition));
-    out.get(row.indrelid)!.push({
+    const bucket = out.get(row.indrelid);
+    if (!bucket) continue;
+    bucket.push({
       name: row.name,
-      columns,
+      columns: row.columns,
       unique: row.is_unique,
       method: row.method,
       where: row.where_expr,
@@ -67,16 +68,4 @@ export async function readIndexes(
   }
 
   return out;
-}
-
-/**
- * The parenthesised column list from `CREATE INDEX … ON t USING m (…)`, used
- * verbatim for an expression column. Deliberately coarse: the exact rendering
- * of an expression index is display text, and the alternative — reimplementing
- * Postgres' expression deparser — buys nothing the ERD can use.
- */
-function expressionColumn(definition: string): string {
-  const open = definition.indexOf('(');
-  const close = definition.lastIndexOf(')');
-  return open >= 0 && close > open ? definition.slice(open + 1, close) : definition;
 }
