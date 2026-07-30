@@ -1,12 +1,11 @@
 import { type ClassValue, clsx } from 'clsx';
 import { extendTailwindMerge } from 'tailwind-merge';
 
-// Both apps define custom font-size tokens (web: the numeric scale below;
-// eer: text-3xs/2xs). tailwind-merge doesn't know they're font sizes, so by
-// default it buckets them into the text-COLOR group and silently drops the
-// adjacent color utility — e.g. `text-indigo-contrast text-13` collapses to
-// just `text-13`. Register the UNION of both apps' sizes so one shared cn
-// serves every consumer.
+// The app defines custom font-size tokens (the numeric scale below).
+// tailwind-merge doesn't know they're font sizes, so by default it buckets them
+// into the text-COLOR group and silently drops the adjacent color utility —
+// e.g. `text-indigo-contrast text-13` collapses to just `text-13`. Registering
+// them here is what keeps one shared cn correct for every consumer.
 //
 // This list MUST cover every `--text-*` token in tokens.css: a size missing
 // here fails silently, and only at the call sites that pair it with a color.
@@ -18,10 +17,6 @@ import { extendTailwindMerge } from 'tailwind-merge';
  *  admitting every integer would be arbitrary values with nicer syntax. */
 const TEXT_SIZES = ['9', '10', '11', '12', '13', '14', '15', '16', '18', '20', '22', '24'];
 
-/** eer keeps its own scale — it has its own `@theme` and never loads this
- *  package's tokens.css, but it does share this `cn`. */
-const EER_TEXT_SIZES = ['3xs', '2xs'];
-
 /** Same trap as the sizes, one namespace over: `font-*` serves BOTH family
  *  and weight, so an unregistered `font-500` is read as a family and evicts
  *  `font-sans` — verified: `twMerge('font-sans font-400')` yields `font-400`.
@@ -32,7 +27,7 @@ const FONT_WEIGHTS = ['100', '200', '300', '400', '500', '600', '700', '800', '9
 const twMerge = extendTailwindMerge({
   extend: {
     classGroups: {
-      'font-size': [{ text: [...TEXT_SIZES, ...EER_TEXT_SIZES] }],
+      'font-size': [{ text: TEXT_SIZES }],
       'font-weight': [{ font: FONT_WEIGHTS }],
     },
   },
