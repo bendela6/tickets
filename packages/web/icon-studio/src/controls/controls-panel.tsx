@@ -1,8 +1,13 @@
+import { Button } from '@tickets/ui';
+import type { Adjust } from '../color';
 import { GROUND } from '../color';
-import type { IconDoc, Stick } from '../doc';
+import { PRESETS, type PresetName } from '../config';
+import type { IconDoc, Ink, Stick } from '../doc';
 import type { StudioAction } from '../state';
 import { SliderRow } from './slider-row';
 import { SwatchRow } from './swatch-row';
+
+const signed = (v: number) => (v === 0 ? '0' : `${v > 0 ? '+' : ''}${v.toFixed(2)}`);
 
 /**
  * Degrees apart on the circle every stick actually lives on. Sticks are full
@@ -33,12 +38,21 @@ function isStick(element: IconDoc['elements'][number]): element is Stick {
 }
 
 export function ControlsPanel({
-  doc, dispatch,
+  doc, base, adjLight, adjDark, dispatch, onBaseChange, onAdjustChange, onResetAdjust, onApplyPreset,
 }: {
   doc: IconDoc;
+  /** The un-adjusted seed colour per adjustable ink (every ink but the chip
+   * field) — what the colour pickers below edit directly. */
+  base: Record<string, Ink>;
+  adjLight: Adjust;
+  adjDark: Adjust;
   dispatch: (action: StudioAction) => void;
+  onBaseChange: (name: string, mode: 'light' | 'dark', hex: string) => void;
+  onAdjustChange: (mode: 'light' | 'dark', patch: Partial<Adjust>) => void;
+  onResetAdjust: () => void;
+  onApplyPreset: (name: PresetName) => void;
 }) {
-  const inkNames = Object.keys(doc.inks).filter((name) => name !== 'field');
+  const inkNames = Object.keys(base);
   const sticks = doc.elements.filter(isStick);
   const gap = tightestGap(sticks.map((s) => s.angle));
   const tight = gap < GAP_WARNING_DEGREES;
@@ -50,15 +64,19 @@ export function ControlsPanel({
         <section key={mode} className="flex flex-col gap-2">
           <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">{mode} theme</h2>
           {inkNames.map((name) => {
-            const hex = doc.inks[name]?.[mode] ?? '#000000';
+            const rawHex = base[name]?.[mode] ?? '#000000';
+            // The document's ink is re-derived (base + adjustment) upstream
+            // in studio.tsx, so it already reflects the current vividness and
+            // brightness sliders — this is the swatch's live preview.
+            const derivedHex = doc.inks[name]?.[mode] ?? rawHex;
             return (
               <SwatchRow
                 key={name}
                 label={`${mode} ${name}`}
-                base={hex}
-                derived={hex}
+                base={rawHex}
+                derived={derivedHex}
                 ground={GROUND[mode]}
-                onChange={(value) => dispatch({ type: 'setInk', name, patch: { [mode]: value } })}
+                onChange={(hex) => onBaseChange(name, mode, hex)}
               />
             );
           })}
@@ -74,6 +92,47 @@ export function ControlsPanel({
           ground={doc.inks.top?.dark ?? GROUND.dark}
           onChange={(hex) => dispatch({ type: 'setInk', name: 'field', patch: { light: hex, dark: hex } })}
         />
+        <div className="flex flex-wrap gap-1.5">
+          {(Object.keys(PRESETS) as PresetName[]).map((name) => (
+            <Button key={name} variant="outline" size="sm" onClick={() => onApplyPreset(name)}>
+              {name}
+            </Button>
+          ))}
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">Vividness &amp; brightness</h2>
+        {(['light', 'dark'] as const).map((mode) => (
+          <div key={mode} className="flex flex-col gap-2">
+            <SliderRow
+              label={`${mode} vivid`} min={0.3} max={1.8} step={0.02}
+              value={mode === 'light' ? adjLight.sat : adjDark.sat}
+              format={(v) => v.toFixed(2)}
+              onChange={(sat) => onAdjustChange(mode, { sat })}
+            />
+            <SliderRow
+              label={`${mode} bright`} min={-0.2} max={0.2} step={0.01}
+              value={mode === 'light' ? adjLight.lit : adjDark.lit}
+              format={signed}
+              onChange={(lit) => onAdjustChange(mode, { lit })}
+            />
+          </div>
+        ))}
+        <SliderRow
+          label="hue shift" min={-90} max={90}
+          value={adjLight.hue}
+          format={(v) => `${v}°`}
+          onChange={(hue) => {
+            onAdjustChange('light', { hue });
+            onAdjustChange('dark', { hue });
+          }}
+        />
+        <div>
+          <Button variant="outline" size="sm" onClick={onResetAdjust}>
+            Reset adjustments
+          </Button>
+        </div>
       </section>
 
       <section className="flex flex-col gap-2">

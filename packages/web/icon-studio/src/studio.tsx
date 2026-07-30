@@ -1,16 +1,40 @@
 import { useEffect, useReducer, useState } from 'react';
 import { Button } from '@tickets/ui';
 import { fetchConfig, generate } from './api';
+import { adjust, NEUTRAL, type Adjust } from './color';
 import type { MarkConfig } from './config';
-import { DEFAULT_CONFIG } from './config';
+import { DEFAULT_CONFIG, PRESETS, STICKS, type PresetName } from './config';
 import { ControlsPanel } from './controls/controls-panel';
 import { MotionPanel } from './controls/motion-panel';
+import { DEFAULT_DOC, type IconDoc, type Ink } from './doc';
 import { toDoc } from './migrate';
 import { FileGrid } from './output/file-grid';
 import type { MarkState } from './motion';
 import { MotionPreview } from './output/motion-preview';
 import type { GenerateResult } from './plugin/write';
 import { INITIAL_STATE, studioReducer } from './state';
+
+/** Every ink the vividness/brightness layer adjusts — every named ink except
+ * the chip field, which is edited directly and never adjusted. */
+function baseFrom(doc: IconDoc): Record<string, Ink> {
+  const out: Record<string, Ink> = {};
+  for (const [name, ink] of Object.entries(doc.inks)) {
+    if (name !== 'field') out[name] = ink;
+  }
+  return out;
+}
+
+/**
+ * `adjust` round-trips a colour through HSL, which does not promise to land
+ * back on a byte-identical hex at every input — so passing `NEUTRAL` through
+ * it is not itself a guarantee of returning to the exact original. Skipping
+ * the round-trip at `NEUTRAL` is what actually makes that guarantee: the
+ * non-compounding hazard `base` exists to prevent (see below) is worthless if
+ * "back to neutral" can still land one bit off from where it started.
+ */
+function deriveHex(hex: string, a: Adjust): string {
+  return a.hue === NEUTRAL.hue && a.sat === NEUTRAL.sat && a.lit === NEUTRAL.lit ? hex : adjust(hex, a);
+}
 
 export function Studio() {
   const [state, dispatch] = useReducer(studioReducer, INITIAL_STATE);
@@ -31,12 +55,28 @@ export function Studio() {
   // job, not this one's.
   const [rawConfig, setRawConfig] = useState<MarkConfig>(DEFAULT_CONFIG);
 
+  // The picker-editable seed colours and the two vividness/brightness deltas
+  // applied on top of them, one per theme. Kept outside the document for the
+  // same reason `loaderState` is: this is a way of *looking at* the inks, not
+  // a property of them. `base` is never itself overwritten by an adjustment —
+  // only by a direct edit or a preset — and `doc.inks` is re-derived from
+  // `base` + the deltas below from scratch on every change, so dragging
+  // vividness back and forth (or resetting) always lands on exactly the
+  // original colour instead of drifting further from it each time.
+  const [base, setBase] = useState<Record<string, Ink>>(() => baseFrom(DEFAULT_DOC));
+  const [adjLight, setAdjLight] = useState<Adjust>(NEUTRAL);
+  const [adjDark, setAdjDark] = useState<Adjust>(NEUTRAL);
+
   // Reopen on whatever is committed, so the studio reflects the shipped icons.
   useEffect(() => {
     fetchConfig()
       .then((loaded) => {
         setRawConfig(loaded);
-        dispatch({ type: 'loadDoc', doc: toDoc(loaded) });
+        const doc = toDoc(loaded);
+        setBase(baseFrom(doc));
+        setAdjLight(NEUTRAL);
+        setAdjDark(NEUTRAL);
+        dispatch({ type: 'loadDoc', doc });
       })
       .catch((e: unknown) => {
         // Render the server's own message (which carries the `(EACCES)` or
@@ -45,6 +85,21 @@ export function Studio() {
         setError(e instanceof Error ? e.message : 'Could not read icons.config.json.');
       });
   }, []);
+
+  // Re-derive doc.inks from base + the two adjustments every time either
+  // changes. Always starting from `base` (never from the document's current,
+  // possibly already-adjusted ink) is what keeps this non-destructive.
+  // `setInk` is a no-op for a name the document doesn't carry, so this only
+  // ever touches inks `base` actually tracks.
+  useEffect(() => {
+    for (const [name, ink] of Object.entries(base)) {
+      dispatch({
+        type: 'setInk',
+        name,
+        patch: { light: deriveHex(ink.light, adjLight), dark: deriveHex(ink.dark, adjDark) },
+      });
+    }
+  }, [base, adjLight, adjDark]);
 
   async function onGenerate() {
     setBusy(true);
@@ -57,6 +112,35 @@ export function Studio() {
     } finally {
       setBusy(false);
     }
+  }
+
+  function onBaseChange(name: string, mode: 'light' | 'dark', hex: string) {
+    setBase((prev) => {
+      const existing = prev[name];
+      if (!existing) return prev;
+      return { ...prev, [name]: { ...existing, [mode]: hex } };
+    });
+  }
+
+  function onAdjustChange(mode: 'light' | 'dark', patch: Partial<Adjust>) {
+    (mode === 'light' ? setAdjLight : setAdjDark)((prev) => ({ ...prev, ...patch }));
+  }
+
+  function onResetAdjust() {
+    setAdjLight(NEUTRAL);
+    setAdjDark(NEUTRAL);
+  }
+
+  function onApplyPreset(name: PresetName) {
+    const preset = PRESETS[name];
+    const next: Record<string, Ink> = {};
+    STICKS.forEach((stick, i) => {
+      next[stick] = { light: preset.light[i] ?? '#000000', dark: preset.dark[i] ?? '#000000' };
+    });
+    setBase(next);
+    setAdjLight(NEUTRAL);
+    setAdjDark(NEUTRAL);
+    dispatch({ type: 'setInk', name: 'field', patch: { light: preset.chip, dark: preset.chip } });
   }
 
   return (
@@ -78,7 +162,17 @@ export function Studio() {
 
         <div className="flex flex-col gap-6 lg:flex-row">
           <div className="flex flex-col gap-5 lg:w-88 lg:shrink-0">
-            <ControlsPanel doc={state.doc} dispatch={dispatch} />
+            <ControlsPanel
+              doc={state.doc}
+              base={base}
+              adjLight={adjLight}
+              adjDark={adjDark}
+              dispatch={dispatch}
+              onBaseChange={onBaseChange}
+              onAdjustChange={onAdjustChange}
+              onResetAdjust={onResetAdjust}
+              onApplyPreset={onApplyPreset}
+            />
             <MotionPanel
               doc={state.doc}
               state={loaderState}
