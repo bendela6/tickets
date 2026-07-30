@@ -86,7 +86,7 @@ export function FieldRow({
       {badge && (
         <span
           className={cn(
-            'shrink-0 text-center font-mono text-9 font-600 tracking-wide text-gray-9',
+            'shrink-0 text-center font-mono text-9 font-600 tracking-wide text-gray-11',
             {
               'text-yellow-9': badge === 'pk',
               'text-green-9': badge === 'fk',
@@ -103,7 +103,7 @@ export function FieldRow({
       >
         {f.name}
       </span>
-      <span className="ml-auto max-w-1/2 truncate font-mono text-11 text-gray-9">
+      <span className="ml-auto max-w-1/2 truncate font-mono text-11 text-gray-11">
         {f.type || ''}
       </span>
       <Port e={e} f={f} role={role} side="L" connected={connected} pinSpan={pinSpan} hot={hot} />

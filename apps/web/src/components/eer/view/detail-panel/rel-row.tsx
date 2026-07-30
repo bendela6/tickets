@@ -30,10 +30,10 @@ export function RelRow({
     <button type="button" className={rowClass} onClick={onClick}>
       <Card>{cardinality}</Card>
       <span className="truncate font-mono text-gray-11">{here}</span>
-      <span className="shrink-0 text-gray-9">{dir === 'out' ? '→' : '←'}</span>
+      <span className="shrink-0 text-gray-11">{dir === 'out' ? '→' : '←'}</span>
       <Dot color={entityColor(model, otherEntity, colors)} />
       <span className="truncate font-mono text-gray-12">{otherEntity}</span>
-      <span className="truncate font-mono text-gray-9">.{otherField}</span>
+      <span className="truncate font-mono text-gray-11">.{otherField}</span>
     </button>
   );
 }

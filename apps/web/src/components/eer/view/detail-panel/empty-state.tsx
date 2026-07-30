@@ -24,7 +24,7 @@ export function EmptyState({ model }: { model: Model | null }) {
       <div className="border-b-1 border-gray-6 px-4 pb-3 pt-4">
         <Badge tone="entity">Overview</Badge>
         <h2 className="mt-2 font-mono text-16 font-500 text-gray-12">{model?.meta.title ?? 'EER viewer'}</h2>
-        <div className="mt-1 text-11 text-gray-9">Click an entity, group, or edge to inspect it.</div>
+        <div className="mt-1 text-11 text-gray-11">Click an entity, group, or edge to inspect it.</div>
       </div>
 
       <div className="px-4 pb-5 pt-3">

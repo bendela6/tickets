@@ -65,7 +65,7 @@ export function SearchBox() {
               }}
             >
               <span className="font-mono">{m.label}</span>
-              <span className="ml-2 text-11 text-gray-9">
+              <span className="ml-2 text-11 text-gray-11">
                 {m.kind === 'field' ? `${m.entityLabel} · field` : 'entity'}
               </span>
             </button>

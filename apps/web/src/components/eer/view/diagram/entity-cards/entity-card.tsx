@@ -28,7 +28,13 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
         'bg-gray-2 shadow-raised',
         'transition-(--transition-paint) duration-120',
         {
-          'opacity-22': p.dim,
+          // Dimmed, not erased. At `opacity-22` a card's frame fell to 1.01:1
+          // against the canvas and its text to roughly the same — it stopped
+          // reading as a card at all, so the focused subset looked like the
+          // whole diagram. 45% keeps the label near 2.7:1: legible as context,
+          // still obviously secondary. (Zone boxes dim to 40%; they carry no
+          // body text, so they can go further.)
+          'opacity-45': p.dim,
           'border-gray-7': p.focus,
           'border-blue-9 ring-1 ring-blue-9 shadow-overlay': p.selected,
           hidden: p.hidden,
