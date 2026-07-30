@@ -2,7 +2,14 @@ import type { RenderTrCtx } from '@tickets/table';
 import { cn } from '../style';
 import { ROW_INSET } from './metrics';
 
-export function renderTr<T>({ index, cells, gridTemplate, style, onClick, overlay }: RenderTrCtx<T>) {
+export function renderTr<T>({
+  index,
+  cells,
+  gridTemplate,
+  style,
+  onClick,
+  overlay,
+}: RenderTrCtx<T>) {
   return (
     <div
       role="row"
@@ -34,8 +41,24 @@ export function renderTr<T>({ index, cells, gridTemplate, style, onClick, overla
       {cells}
       {/* After the cells, so it paints over them. The row is already
           `position: absolute` from the virtualizer, so an absolutely
-          positioned overlay resolves against this row. */}
-      {overlay}
+          positioned overlay resolves against this row.
+
+          The `role="gridcell"` wrapper is not decoration: a `row` may own
+          nothing but cells, and an unwrapped overlay made axe report a
+          CRITICAL `aria-required-children` violation on every row. Row actions
+          reading as a trailing cell is also the right answer for a keyboard
+          user — they become reachable rather than invisible.
+
+          `contents` is what makes that free. The wrapper generates no box, so
+          an absolutely-positioned overlay still resolves against the row and
+          an in-flow one still becomes a grid item — layout is identical to
+          having no wrapper at all, which a plain `div` would not have been
+          (it would have opened an implicit grid track). */}
+      {overlay ? (
+        <div role="gridcell" className="contents">
+          {overlay}
+        </div>
+      ) : null}
     </div>
   );
 }
