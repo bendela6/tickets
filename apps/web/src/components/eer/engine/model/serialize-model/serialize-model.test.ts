@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyModelEdit } from '../apply-model-edit';
 import { buildModel, pkField } from '../../../test/models';
 import { loadModel } from '../load-model';
 import { packLayout } from '../../layout/pack-layout';
@@ -142,10 +141,10 @@ describe('serializeModel', () => {
     ]);
   });
 
-  // Rule: load seed -> no-op edit -> serialize -> load must reproduce the exact
-  // same derived edge set (same source/target/fields/id) and the same authored
-  // labels — the whole point of deriving fk edges from constraints instead of
-  // hand-copying a rel list around.
+  // Rule: load seed -> serialize -> load must reproduce the exact same derived
+  // edge set (same source/target/fields/id) and the same authored labels — the
+  // whole point of deriving fk edges from constraints instead of hand-copying
+  // a rel list around.
   //
   // CRITICAL, reviewer-found: a prior version dropped every authored kind:'fk'
   // relationship's label in favour of its bare derived twin, and serialize-
@@ -165,12 +164,11 @@ describe('serializeModel', () => {
   // load, and serialize-model then had nothing left to write, so the very
   // next Save permanently erased the edge from the file. 18 (not 17) is the
   // correct label count; 'istream' must both load and round-trip.
-  it('roundtrips the real seed model: same derived edge set, same labels/kinds, same titles after an edit + save + reload', () => {
+  it('roundtrips the real seed model: same derived edge set, same labels/kinds, same titles after a save + reload', () => {
     const { model: m1, errors: e1 } = loadModel(seedRaw);
     expect(e1).toEqual([]);
 
-    const edited = applyModelEdit(m1!, { kind: 'setMeta', title: m1!.meta.title ?? '', description: m1!.meta.description ?? '' });
-    const raw2 = serializeModel(edited, m1!.colors);
+    const raw2 = serializeModel(m1!, m1!.colors);
     const { model: m2, errors: e2 } = loadModel(raw2);
     expect(e2).toEqual([]);
 
@@ -256,31 +254,19 @@ describe('serializeModel', () => {
     const before = m2!.relationships.find((r) => r.target === 'core.projects' && r.targetField === 'scheme_id')!;
     expect(before).toMatchObject({ label: 'scheme', cardinality: '1-n', cardinalityInferred: true });
 
-    const projects = m2!.entityById.get('core.projects')!;
-    const withUnique = applyModelEdit(m2!, {
-      kind: 'upsertEntity',
-      entity: {
-        id: 'core.projects',
-        label: projects.label,
-        group: projects.group,
-        description: projects.description,
-        schema: projects.schema,
-        fields: projects.columns.map((f) => ({
-          name: f.name,
-          type: f.type,
-          title: f.title,
-          description: f.description,
-          nullable: f.nullable,
-          default: f.default,
-          identity: f.identity,
-          generated: f.generated,
-        })),
-        constraints: [...projects.constraints, { id: 'u1', kind: 'unique', name: null, columns: ['scheme_id'], nullsNotDistinct: false }],
-        indexes: projects.indexes,
-      },
-    });
+    // Add the UNIQUE to the ALREADY-SERIALIZED form and load that, rather than
+    // going through an in-memory edit: the roundtripped FILE is where the bug
+    // lived (serializeModel wrote a `cardinality` it should not have, so the
+    // next load pinned it), and this reads the same file the app would.
+    const projectsRaw = (raw2 as { entities: { id: string; constraints: unknown[] }[] }).entities.find(
+      (e) => e.id === 'core.projects',
+    )!;
+    expect(projectsRaw.constraints.length).toBeGreaterThan(0); // serializeModel really wrote them
+    projectsRaw.constraints.push({ id: 'u1', kind: 'unique', name: null, columns: ['scheme_id'], nullsNotDistinct: false });
 
-    const after = withUnique.relationships.find((r) => r.target === 'core.projects' && r.targetField === 'scheme_id')!;
+    const { model: m3, errors: e3 } = loadModel(raw2);
+    expect(e3).toEqual([]);
+    const after = m3!.relationships.find((r) => r.target === 'core.projects' && r.targetField === 'scheme_id')!;
     expect(after.cardinality).toBe('1-1');
     expect(after.label).toBe('scheme'); // label still donated correctly alongside the re-derived cardinality
   });
