@@ -26,8 +26,27 @@ description: Use when starting, restarting, deploying, or screenshotting the app
 - DB: `pnpm db:migrate` / `db:seed` / `db:import` (hit `127.0.0.1:5532` per `.env` — default `.env.example` points at `tickets_dev`, not prod)
 - Checks: `pnpm typecheck` · `pnpm --filter @tickets/web test` · `pnpm build`
 
+## Icon studio
+
+`@tickets/icon-studio` (`packages/web/icon-studio`, port **4660**) is the dev-only tool
+that tunes the app mark and, on one button, writes every favicon and install icon into
+`apps/web`. `apps/web/icons.config.json` is the source of truth: the studio reads and
+writes it, and **Generate** re-derives every other asset (`favicon.svg`, `icon-mono.svg`,
+the PNGs, `site.webmanifest`, the `index.html` head block) from it. Nobody hand-edits
+`favicon.svg`.
+
+- Run it: `pnpm --filter @tickets/icon-studio dev` (own Vite dev server, not part of
+  `pnpm dev`'s mprocs — it's used rarely, so it's started on demand).
+- Open it at **`http://localhost:4660`**, not `127.0.0.1:4660` — see the gotcha below.
+- Generate writes into `apps/web/public/*`, `apps/web/icons.config.json`, and the marked
+  `<!-- icons:start -->…<!-- icons:end -->` block in `apps/web/index.html`.
+
 ## Gotchas — all previously hit
 
+- **On Windows, use `localhost:4660` for the icon studio, never `127.0.0.1:4660`.**
+  Windows resolves `localhost` to `::1` (IPv6) first, and Vite's dev server binds only
+  that address by default — so `http://127.0.0.1:4660` gets connection-refused while
+  `http://localhost:4660` works. This cost an hour to track down once; don't repeat it.
 - **4610 shows stale code until `deploy-web.sh` is rerun.** The `app` container is a baked image, not a bind mount. "My fix isn't visible" on 4610 → check 4620 first; if it's right there, 4610 just needs a redeploy (`docker compose up -d --build app`).
 - **Dev web with `pnpm dev` down → `/api` proxy ECONNREFUSED.** Vite proxies to `127.0.0.1:4600`; the mprocs api pane must be running.
 - **Port 4620 busy → vite exits** (strictPort). Kill the stale dev server; don't switch ports — the verify pipeline and docs assume 4620.
