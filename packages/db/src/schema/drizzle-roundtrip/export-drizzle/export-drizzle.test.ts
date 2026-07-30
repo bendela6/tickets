@@ -1,18 +1,19 @@
-// Node-only (see vitest.config.ts's environmentMatchGlobs): the gate test
-// (Step 5 of task-6-brief.md) writes generated source to a temp file via
+// packages/db's vitest.config.ts runs everything under environment 'node'
+// already (no jsdom to match away from, unlike the eer app's config) — the
+// gate test below (writes generated source to a temp file via
 // loadGeneratedModule and hands it to drizzle-kit/api, which touches the
-// filesystem. The pure exportDrizzle unit tests above it don't need that, but
-// live in the same file (and so the same environment) per the brief.
+// filesystem) needs no special-casing here. The pure exportDrizzle unit tests
+// above it share the same environment, hence the same file, per the original
+// brief this was written against (the eer app's task-6-brief.md).
 import { generateDrizzleJson, generateMigration } from 'drizzle-kit/api';
 import { describe, expect, it } from 'vitest';
 
-import { generatedConstraintName } from '../../../components/editor/generated-constraint-name';
-import { loadGeneratedModule } from '../../../test/helpers/load-generated-module';
+import { loadGeneratedModule } from '../load-generated-module';
 import { importDrizzle } from '../import-drizzle';
 import { loadModel } from '../load-model';
 import type { Model } from '../types';
 
-import { describeDrizzle } from '../../../node/describe-drizzle';
+import { describeDrizzle } from '../describe-drizzle';
 
 import { exportDrizzle } from './export-drizzle';
 
@@ -532,97 +533,26 @@ describe('exportDrizzle — semantic verification via a real drizzle module', ()
     });
   });
 
-  // Task 12 review, Finding 1 (IMPORTANT): generatedConstraintName's greyed
-  // placeholder (constraints-editor.tsx) is used with the raw Entity.id,
-  // which is SCHEMA-QUALIFIED for a non-public table (e.g. "billing.orders")
-  // — but drizzle names an unnamed constraint off the PHYSICAL table name
-  // only (pgTable's first argument, stripped of the schema prefix — see
-  // export-drizzle.ts's own physicalTableName()). So the card used to show
-  // "billing.orders_number_unique" while the real drizzle object (and the
-  // exporter's own generated source, once loaded and run) is actually named
-  // "orders_number_unique". Proved here against the REAL computed name (via
-  // loadGeneratedModule + describeDrizzle), not just the generated source
-  // text — table-level unique names are never printed in the emitted DDL at
-  // all (drizzle computes them at schema-definition time), so only running
-  // the real module can reveal what name a blank one actually gets.
-  it('the placeholder for an unnamed constraint on a schema-qualified table equals what exportDrizzle (+ real drizzle) actually assigns', async () => {
-    const m = buildRawModel([
-      {
-        id: 'billing.orders',
-        schema: 'billing',
-        columns: [pkCol(), { name: 'number', type: 'text' }],
-        constraints: [
-          { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
-          { id: 'c2', kind: 'unique', name: null, columns: ['number'], nullsNotDistinct: false },
-        ],
-      },
-    ]);
-    const entity = m.entityById.get('billing.orders')!;
-    const uniqueConstraint = entity.constraints.find((c) => c.kind === 'unique')!;
-
-    const preview = generatedConstraintName(entity, uniqueConstraint, entity.constraints);
-
-    const src = exportDrizzle(m);
-    const generated = await loadGeneratedModule(src);
-    const desc = describeDrizzle(generated, []);
-    const table = desc.tables.find((t) => t.name === 'orders')!;
-
-    expect(preview).toBe(table.uniques[0]!.name);
-  });
-
-  // Task 12 review, Finding 3 (the same "preview lies" bug, one component
-  // over): an fk's generated name is `<table>_<cols>_<targetTable>_<targetCols>_fk`,
-  // and drizzle's ForeignKey.getName() keys off the TARGET's PHYSICAL table
-  // name (pgTable's first argument), never the schema-qualified id. Finding 1
-  // stripped the schema from the OWNING table only; a cross-schema fk left the
-  // refTable component schema-qualified, so the card used to show
-  // "orders_customer_id_billing.customers_id_fk" while the real drizzle object
-  // is named "orders_customer_id_customers_id_fk". Proved against the REAL
-  // computed name, same as Finding 1's parity test above.
-  it('the placeholder for an unnamed fk whose TARGET is in a non-public schema equals what real drizzle assigns', async () => {
-    const m = buildRawModel([
-      {
-        id: 'billing.customers',
-        schema: 'billing',
-        columns: [pkCol()],
-        constraints: [{ id: 'c1', kind: 'pk', name: null, columns: ['id'] }],
-      },
-      {
-        id: 'orders',
-        columns: [pkCol(), { name: 'customer_id', type: 'integer' }],
-        constraints: [
-          { id: 'c1', kind: 'pk', name: null, columns: ['id'] },
-          {
-            id: 'c2',
-            kind: 'fk',
-            name: null,
-            columns: ['customer_id'],
-            refSchema: 'billing',
-            refTable: 'billing.customers',
-            refColumns: ['id'],
-            onDelete: null,
-            onUpdate: null,
-          },
-        ],
-      },
-    ]);
-    const orders = m.entityById.get('orders')!;
-    const fk = orders.constraints.find((c) => c.kind === 'fk')!;
-
-    const preview = generatedConstraintName(orders, fk, orders.constraints);
-
-    const src = exportDrizzle(m);
-    const generated = await loadGeneratedModule(src);
-    const desc = describeDrizzle(generated, []);
-    const table = desc.tables.find((t) => t.name === 'orders')!;
-
-    expect(preview).toBe(table.foreignKeys[0]!.name);
-  });
+  // Two tests deliberately NOT moved here from the eer app's
+  // engine/model/export-drizzle/export-drizzle.test.ts (Task 12 review,
+  // Findings 1 and 3): both proved that the eer app's
+  // components/editor/generated-constraint-name.ts's greyed name-input
+  // placeholder matches what exportDrizzle (+ real drizzle) actually assigns
+  // for a schema-qualified table/fk-target. That helper is editor-only UI
+  // code — it stays in the eer app and is deleted with the rest of
+  // components/editor/ in Task 4 of the eer-web-module plan (2026-07-30), never
+  // moving to packages/db or apps/web. Porting the two tests here would have
+  // meant porting the UI helper too, which packages/db has no business
+  // depending on. The behaviour they guarded (physicalTableName's schema
+  // stripping) is still fully exercised by exportDrizzle's own tests above
+  // (e.g. "schema-qualifies a table and enum via pgSchema(...)") — only the
+  // *placeholder preview's* parity with it is unguarded now, and that feature
+  // has a lifetime of a few more commits.
 });
 
 describe('exportDrizzle — the two-table gate (Step 5)', () => {
   it('round-trips a two-table schema through drizzle-kit with an empty migration', async () => {
-    const original = await import('../../../test/fixtures/tiny-schema');
+    const original = await import('../fixtures/tiny-schema');
     const { model } = importDrizzle(describeDrizzle(original as unknown as Record<string, unknown>, []), null);
 
     const src = exportDrizzle(model);

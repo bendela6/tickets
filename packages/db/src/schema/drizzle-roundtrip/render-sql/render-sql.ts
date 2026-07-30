@@ -1,4 +1,4 @@
-// apps/eer/src/node/render-sql/render-sql.ts
+// packages/db/src/schema/drizzle-roundtrip/render-sql/render-sql.ts
 //
 // A default is either a JS literal (`.default(0)`) or a sql template
 // (`.defaultNow()` → sql`now()`). Both become SQL text: once flattened you can

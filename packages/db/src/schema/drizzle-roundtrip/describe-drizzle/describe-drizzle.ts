@@ -1,4 +1,4 @@
-// apps/eer/src/node/describe-drizzle/describe-drizzle.ts
+// packages/db/src/schema/drizzle-roundtrip/describe-drizzle/describe-drizzle.ts
 //
 // Node-only: introspects a loaded drizzle schema module (via getTableConfig /
 // isPgEnum) and emits a plain-JSON SchemaDescription. Pure function of its
@@ -13,7 +13,7 @@
 import { is, Relations, SQL } from 'drizzle-orm';
 import { getTableConfig, isPgEnum, PgTable, uniqueKeyName } from 'drizzle-orm/pg-core';
 
-import type { EnumDecl, FkAction, Generated, Identity, IndexColumn } from '../../engine/model/types';
+import type { EnumDecl, FkAction, Generated, Identity, IndexColumn } from '../types';
 import { renderSql } from '../render-sql';
 
 // ---- wire types --------------------------------------------------------
