@@ -30,6 +30,7 @@ const graph: SchemaGraph = {
       ],
     },
   ],
+  enums: [],
 };
 
 // The real schema's shape, minimised: ONE bare table name (`sessions`) owned by
@@ -78,6 +79,7 @@ const splitGraph: SchemaGraph = {
       ],
     },
   ],
+  enums: [],
 };
 
 describe('renderErd', () => {
@@ -119,7 +121,7 @@ describe('renderErd — a database with no tables', () => {
   // out of the route's useEffect and SignalsErrorBoundary replaced the entire
   // app with "Something broke" — a whole-app crash from picking a valid entry
   // in the dropdown.
-  const empty: SchemaGraph = { groups: [], tables: [] };
+  const empty: SchemaGraph = { groups: [], tables: [], enums: [] };
 
   it('does not throw', () => {
     const container = document.createElement('div');
