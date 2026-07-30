@@ -231,11 +231,26 @@ function assertIconDoc(value: unknown, field: string): IconDoc {
   if (!Array.isArray(value.elements)) throw new Error(`${field}.elements must be an array`);
   if (!isRecord(value.variants)) throw new Error(`${field}.variants must be an object`);
 
-  const inks: Record<string, Ink> = {};
+  // A plain `{}` accumulator is unsafe here: `Object.entries(value.inks)`
+  // can legitimately yield a pair named `__proto__` (a JSON body decodes it
+  // as an ordinary own key — JSON.parse uses CreateDataProperty, not
+  // assignment), but writing it back with `inks[name] = ...` on a *plain*
+  // object *is* assignment, and a bracket-assignment named `__proto__` hits
+  // the inherited `Object.prototype.__proto__` accessor instead of creating
+  // an own key: it silently replaces `inks`'s own prototype with the ink
+  // object rather than adding an entry. The two written outputs then
+  // disagree about that one ink's existence: `JSON.stringify(inks)` (which
+  // walks own keys) omits it entirely, while a later `inks[id]` *read* (as
+  // `docToMarkConfig` below does) resolves it through the hijacked
+  // prototype chain and finds it anyway. `Object.create(null)` has no
+  // inherited `__proto__` accessor to hit, so a name of `__proto__` becomes
+  // an ordinary own key like any other — both paths agree. Same reasoning
+  // for `variants` just below.
+  const inks: Record<string, Ink> = Object.create(null);
   for (const [name, ink] of Object.entries(value.inks)) {
     inks[name] = assertInk(ink, `${field}.inks.${name}`);
   }
-  const variants: Record<string, Variant> = {};
+  const variants: Record<string, Variant> = Object.create(null);
   for (const [name, variant] of Object.entries(value.variants)) {
     variants[name] = assertVariant(variant, `${field}.variants.${name}`);
   }
