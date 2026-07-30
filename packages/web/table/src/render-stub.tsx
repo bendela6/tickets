@@ -85,15 +85,22 @@ export function makeStubRender<T>(): TableRender<T> {
         </div>
       );
     },
-    groupHeader: ({ key, header, gridTemplate, style }) => {
+    groupHeader: ({ key, header, gridTemplate, style, collapsed, onToggle }) => {
       return (
         <div
           data-slot="group-header"
           data-key={key}
           data-grid-template={gridTemplate}
+          data-collapsed={String(collapsed)}
+          data-collapsible={onToggle ? 'true' : 'false'}
           style={style}
         >
           {header}
+          {onToggle ? (
+            <button data-slot="group-toggle" onClick={onToggle}>
+              toggle
+            </button>
+          ) : null}
         </div>
       );
     },

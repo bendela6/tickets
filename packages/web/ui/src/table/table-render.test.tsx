@@ -336,3 +336,42 @@ describe('tableRender — groups', () => {
     expect(screen.getAllByRole('row').length).toBeGreaterThanOrEqual(4);
   });
 });
+
+describe('tableRender — collapsible groups', () => {
+  const grouped = [
+    { key: 'a', header: <span>Group A</span>, rows: [rows[0]!] },
+    { key: 'b', header: <span>Group B</span>, rows: [rows[1]!] },
+  ];
+
+  it('leaves the band inert when the caller has not opted in', () => {
+    render(<Harness rows={[]} groups={grouped} />);
+    expect(screen.queryByRole('button', { name: /Group A/ })).not.toBeInTheDocument();
+  });
+
+  it('makes the whole band a disclosure control', () => {
+    render(<Harness rows={[]} groups={grouped} onCollapseChange={() => {}} />);
+    expect(screen.getByRole('button', { name: /Group A/ })).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('reports a collapsed group as not expanded', () => {
+    render(
+      <Harness
+        rows={[]}
+        groups={grouped}
+        state={{ sort: [], widths: {}, collapsed: new Set(['a']) }}
+        onCollapseChange={() => {}}
+      />,
+    );
+    expect(screen.getByRole('button', { name: /Group A/ })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+  });
+
+  it('collapses a group when its band is clicked', async () => {
+    const onCollapseChange = vi.fn();
+    render(<Harness rows={[]} groups={grouped} onCollapseChange={onCollapseChange} />);
+    await userEvent.click(screen.getByRole('button', { name: /Group A/ }));
+    expect(onCollapseChange).toHaveBeenCalledWith(new Set(['a']));
+  });
+});

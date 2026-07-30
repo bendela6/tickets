@@ -35,3 +35,32 @@ describe('flattenGroups', () => {
     expect(flattenGroups([])).toEqual([]);
   });
 });
+
+describe('flattenGroups — collapsed', () => {
+  it('keeps a collapsed group header but drops its rows', () => {
+    const items = flattenGroups(groups, new Set(['a']));
+    expect(items.filter((i) => i.kind === 'group').map((i) => (i.kind === 'group' ? i.key : ''))).toEqual(
+      ['a', 'b'],
+    );
+    expect(items.filter((i) => i.kind === 'row')).toHaveLength(1);
+  });
+
+  // Everything downstream is positional — the virtualizer counts visible items
+  // and cell focus moves by `rowIndex + 1`. A gap where a hidden row used to be
+  // would make arrow-down step onto a row that is not on screen.
+  it('leaves no index gap where a collapsed group used to be', () => {
+    const indices = flattenGroups(groups, new Set(['a']))
+      .filter((i) => i.kind === 'row')
+      .map((i) => (i.kind === 'row' ? i.index : -1));
+    expect(indices).toEqual([0]);
+  });
+
+  it('is unchanged by a collapsed key that matches no group', () => {
+    expect(flattenGroups(groups, new Set(['nope']))).toEqual(flattenGroups(groups));
+  });
+
+  it('drops every row when all groups collapse', () => {
+    const items = flattenGroups(groups, new Set(['a', 'b']));
+    expect(items.every((i) => i.kind === 'group')).toBe(true);
+  });
+});

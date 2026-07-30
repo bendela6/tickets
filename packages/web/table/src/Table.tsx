@@ -42,9 +42,9 @@ export interface TableProps<T> {
   state: TableState;
   onSortChange: (next: SortBy[]) => void;
   onWidthChange: (key: string, px: number) => void;
-  /** Accepted so `{...useTable()}` spreads cleanly. Nothing acts on it yet —
-   *  collapsible groups are a later phase — but a caller keeping the state
-   *  should not have to strip the handler back out. */
+  /** Supplying this is what turns group collapsing on: each band gets a
+   *  disclosure control, and a collapsed group's rows leave the virtualized
+   *  list entirely. Without it the bands render as plain headers. */
   onCollapseChange?: (next: Set<string>) => void;
   /** Supplying this is what turns the cell focus model ON: a roving tabindex
    *  over the cells, arrow-key navigation, and the grid as a single tab stop.
@@ -92,6 +92,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
     render,
     onSortChange,
     onWidthChange,
+    onCollapseChange,
     onFocusChange,
     getRowId,
     onSelectionChange,
@@ -106,9 +107,22 @@ export function Table<T>(props: TableProps<T>): ReactNode {
 
   // An ungrouped table is one implicit group's worth of rows, so both shapes
   // go through the same virtualized list and the body loop below has one form.
+  const collapsedKeys = state.collapsed;
   const items: VirtualRow<T>[] = groups
-    ? flattenGroups(groups)
+    ? flattenGroups(groups, collapsedKeys)
     : rows.map((row, index) => ({ kind: 'row' as const, row, index }));
+
+  /** Collapsing needs somewhere to send the result, so like focus and
+   *  selection it is on only when the caller supplies the handler. */
+  const toggleGroup = onCollapseChange
+    ? (key: string) => {
+        const next = new Set(collapsedKeys ?? []);
+        if (!next.delete(key)) {
+          next.add(key);
+        }
+        onCollapseChange(next);
+      }
+    : undefined;
 
   // A data row's index is continuous across groups, but its position in the
   // virtualized list is not — group bands take slots too. Focus addresses the
@@ -402,6 +416,8 @@ export function Table<T>(props: TableProps<T>): ReactNode {
               header={item.header}
               gridTemplate={gridTemplate}
               style={style}
+              collapsed={Boolean(collapsedKeys?.has(item.key))}
+              onToggle={toggleGroup ? () => toggleGroup(item.key) : undefined}
               slot={render.groupHeader}
             />
           );
@@ -591,6 +607,8 @@ function RenderGroupHeader(props: {
   header: ReactNode;
   gridTemplate: string;
   style: CSSProperties;
+  collapsed: boolean;
+  onToggle?: () => void;
   slot: TableRender<never>['groupHeader'];
 }): ReactNode {
   return props.slot({
@@ -598,6 +616,8 @@ function RenderGroupHeader(props: {
     header: props.header,
     gridTemplate: props.gridTemplate,
     style: props.style,
+    collapsed: props.collapsed,
+    onToggle: props.onToggle,
   });
 }
 
