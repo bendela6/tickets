@@ -1,25 +1,15 @@
 import { render, screen } from '@testing-library/react';
 import { NEUTRAL } from '../color';
-import { DEFAULT_DOC, type IconDoc, type Ink } from '../doc';
+import { DEFAULT_DOC, type IconDoc } from '../doc';
 import { ControlsPanel, GAP_WARNING_DEGREES, tightestGap } from './controls-panel';
-
-function baseFrom(doc: IconDoc): Record<string, Ink> {
-  const out: Record<string, Ink> = {};
-  for (const [name, ink] of Object.entries(doc.inks)) {
-    if (name !== 'field') out[name] = ink;
-  }
-  return out;
-}
 
 function renderPanel(doc: IconDoc) {
   render(
     <ControlsPanel
       doc={doc}
-      base={baseFrom(doc)}
       adjLight={NEUTRAL}
       adjDark={NEUTRAL}
       dispatch={() => {}}
-      onBaseChange={() => {}}
       onAdjustChange={() => {}}
       onResetAdjust={() => {}}
       onApplyPreset={() => {}}

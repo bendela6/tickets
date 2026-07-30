@@ -4,6 +4,8 @@ import { fetchConfig, generate } from './api';
 import { adjust, NEUTRAL, type Adjust } from './color';
 import { PRESETS, STICKS, type PresetName } from './config';
 import { ControlsPanel } from './controls/controls-panel';
+import { ElementPanel } from './controls/element-panel';
+import { InkPanel } from './controls/ink-panel';
 import { MotionPanel } from './controls/motion-panel';
 import { DEFAULT_DOC, type IconDoc, type Ink } from './doc';
 import { toDoc } from './migrate';
@@ -150,13 +152,13 @@ export function Studio() {
 
         <div className="flex flex-col gap-6 lg:flex-row">
           <div className="flex flex-col gap-5 lg:w-88 lg:shrink-0">
+            <ElementPanel doc={state.doc} dispatch={dispatch} />
+            <InkPanel doc={state.doc} base={base} onBaseChange={onBaseChange} />
             <ControlsPanel
               doc={state.doc}
-              base={base}
               adjLight={adjLight}
               adjDark={adjDark}
               dispatch={dispatch}
-              onBaseChange={onBaseChange}
               onAdjustChange={onAdjustChange}
               onResetAdjust={onResetAdjust}
               onApplyPreset={onApplyPreset}
