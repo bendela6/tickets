@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { DEFAULT_CONFIG } from './config';
 import { Studio } from './studio';
 
@@ -21,7 +21,9 @@ test('renders the studio heading', async () => {
 
 test('loads the committed config on mount', async () => {
   render(<Studio />);
-  await waitFor(() => expect(fetch).toHaveBeenCalledWith('/__icons/config'));
+  // `json()` forwards its optional init, so the call carries a second
+  // `undefined` argument — assert the real call, not a tidier one.
+  await waitFor(() => expect(fetch).toHaveBeenCalledWith('/__icons/config', undefined));
 });
 
 test('shows a colour picker per stick for both themes', async () => {
@@ -51,4 +53,22 @@ test('lists every file that Generate will write', async () => {
 test('offers a Generate button', async () => {
   render(<Studio />);
   expect(screen.getByRole('button', { name: /generate/i })).toBeDefined();
+});
+
+test('wires each stick colour picker to its own index, not a neighbour', async () => {
+  render(<Studio />);
+  // Let the committed config finish loading before mutating state, so the
+  // async `loadConfig` dispatch can't race the change below and clobber it.
+  await waitFor(() => expect(fetch).toHaveBeenCalledWith('/__icons/config', undefined));
+
+  const top = screen.getByLabelText('light top') as HTMLInputElement;
+  const mid = screen.getByLabelText('light mid') as HTMLInputElement;
+  const low = screen.getByLabelText('light low') as HTMLInputElement;
+  const [originalTop, , originalLow] = DEFAULT_CONFIG.light;
+
+  fireEvent.change(mid, { target: { value: '#123456' } });
+
+  expect(mid.value).toBe('#123456');
+  expect(top.value).toBe(originalTop);
+  expect(low.value).toBe(originalLow);
 });

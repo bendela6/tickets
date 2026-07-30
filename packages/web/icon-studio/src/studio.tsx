@@ -51,10 +51,12 @@ export function Studio() {
           </p>
         ) : null}
 
-        <div className="grid gap-6 lg:grid-cols-[22rem_1fr]">
-          <ControlsPanel state={state} config={config} dispatch={dispatch} />
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <div className="lg:w-88 lg:shrink-0">
+            <ControlsPanel state={state} config={config} dispatch={dispatch} />
+          </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 lg:flex-1">
             <div className="flex items-center gap-3">
               <Button variant="solid" onClick={onGenerate} loading={busy}>
                 Generate all icons
