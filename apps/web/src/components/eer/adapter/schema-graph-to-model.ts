@@ -59,8 +59,16 @@ export function schemaGraphToModel(graph: SchemaGraph): LoadResult {
 
   const groups = graph.groups.map((g, order) => ({ id: g.key, label: g.label, order }));
 
+  // Identity here must match how describe-schema.ts stamps an enum COLUMN's
+  // type: qualifiedName(enumSchema, enumName), not the enum's bare name. Two
+  // same-named enums in different schemas (terminal.session_status vs
+  // agent.session_status) print the same bare string, so a bare `name` here
+  // would make loadModel's unknown-type check (which matches a column's type
+  // against this very set) either collide the two enums or — as it did before
+  // this fix — never match a qualified column type at all, false-positiving
+  // every enum column as "unknown type".
   const enums = graph.enums.map((e) => ({
-    name: e.name,
+    name: qualifiedName(e.schema, e.name),
     schema: e.schema,
     values: [...e.values],
   }));
