@@ -1,47 +1,41 @@
 import { Button } from '@tickets/ui';
 import { REST_POSES, type MarkConfig, type RestPose } from '../config';
-import { PHASES, rampSpread, ramps, runningHoldSeconds, transitionSeconds } from '../motion';
-import type { PhaseChoice } from '../output/motion-preview';
+import {
+  isSpinning, MARK_STATES, planMove, rampSpread, statePose, type MarkState,
+} from '../motion';
 import type { StudioAction } from '../state';
 import { SliderRow } from './slider-row';
 
-const CHOICES: readonly PhaseChoice[] = ['auto', ...PHASES];
-
 export function MotionPanel({
-  config, choice, playing, dispatch, onChoice, onPlaying,
+  config, state, dispatch, onState,
 }: {
   config: MarkConfig;
-  choice: PhaseChoice;
-  playing: boolean;
+  state: MarkState;
   dispatch: (action: StudioAction) => void;
-  onChoice: (choice: PhaseChoice) => void;
-  onPlaying: (playing: boolean) => void;
+  onState: (state: MarkState) => void;
 }) {
   const { motion } = config;
-  const perStick = ramps(config);
   const even = motion.restPose === 'fan';
 
   return (
     <section className="flex flex-col gap-2">
       <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">Motion</h2>
 
+      {/* Clicking a state animates to it from wherever the mark is now. */}
       <div className="flex flex-wrap gap-1.5">
-        {CHOICES.map((c) => (
+        {MARK_STATES.map((s) => (
           <Button
-            key={c}
-            variant={c === choice ? 'solid' : 'outline'}
+            key={s}
+            variant={s === state ? 'solid' : 'outline'}
             size="sm"
-            onClick={() => onChoice(c)}
+            onClick={() => onState(s)}
           >
-            {c}
+            {s}
           </Button>
         ))}
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        <Button variant="outline" size="sm" onClick={() => onPlaying(!playing)}>
-          {playing ? 'Pause' : 'Play'}
-        </Button>
         {REST_POSES.map((pose: RestPose) => (
           <Button
             key={pose}
@@ -71,20 +65,20 @@ export function MotionPanel({
       />
 
       {/*
-        All three start together; these are what differ. The ramps are derived,
-        never dialled — each is exactly long enough for that stick to fall its
-        share of 60° behind the leader. `ramp` above sets the leading stick's,
-        and on the even `fan` pose the step between them is twice the spec's
-        derived Δd, which is worth being able to check.
+        Every move is planned, not dialled: all three sticks start together and
+        each gets exactly the ramp it needs to reach its place in the target
+        formation. Listing the move times makes that visible instead of magic —
+        and on the even `fan` pose the ramp step is twice the mark spec's derived
+        Δd, which is worth being able to check.
       */}
-      <p className="font-mono text-11 text-gray-11">
-        ramps {perStick.map((r: number) => r.toFixed(3)).join(' · ')}s
-        {even ? ` · step ${rampSpread(motion).toFixed(3)}s` : ' · uneven pose'}
-      </p>
-      <p className="font-mono text-11 text-gray-11">
-        transition {transitionSeconds(config).toFixed(2)}s · running{' '}
-        {runningHoldSeconds(config).toFixed(2)}s
-      </p>
+      <div className="flex flex-col gap-0.5 font-mono text-11 text-gray-11">
+        {MARK_STATES.filter((s) => s !== state).map((s) => (
+          <p key={s}>
+            → {s} {planMove(config, { pose: statePose(config, state), spinning: isSpinning(state) }, s).duration.toFixed(2)}s
+          </p>
+        ))}
+        <p>{even ? `ramp step ${rampSpread(motion).toFixed(3)}s` : 'uneven rest pose'}</p>
+      </div>
 
       <div>
         <Button variant="outline" size="sm" onClick={() => dispatch({ type: 'resetMotion' })}>

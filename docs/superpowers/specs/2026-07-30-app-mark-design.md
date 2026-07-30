@@ -86,12 +86,22 @@ Revised from an earlier draft, which staggered the *starts* and gave every stick
 ramp. Simultaneous starts with differing ramps land the identical formation (below) and read
 as one object coming up to speed rather than three sticks taking turns.
 
-| Phase | Behaviour |
+It is a **state machine**, not a fixed cycle: the mark sits in a state and *moves*
+between any pair of them, so a caller only ever names a destination.
+
+| State | Formation |
 |---|---|
-| `idle` | The rest pose, still. |
-| `spin-up` | All three go at once, the trailing ones accelerating more slowly. Gaps open to exactly 60°. |
-| `running` | All three at full speed, holding 60° apart — a rigid rotating asterisk. |
-| `spin-down` | All three decelerate at once over their own ramps; the top stick parks first and the others close on it. Folds shut. |
+| `default` | The mark's own angles — an idle loader *is* the favicon. Still. |
+| `resting` | Near-aligned, `restSpread` apart. Reads as one stroke with a slight fan. Still. |
+| `running` | A rigid asterisk exactly 60° apart, turning at full speed. |
+
+Three kinds of move follow from that, each planned in closed form:
+
+| Move | Behaviour |
+|---|---|
+| still → `running` | All three accelerate at once, the trailing ones more slowly, opening to exactly 60°. |
+| `running` → still | All three decelerate at once over their own ramps; the leader parks first and the others close on it. |
+| still → still | Each stick turns the short way round onto its target over one shared duration, so the ones with further to go simply move faster. |
 
 ### Why the ramps are derived, not tuned
 
@@ -115,19 +125,26 @@ configured value stays something you can feel. On an evenly-spaced rest pose thi
 to `Rᵢ = R₀ + 2i·Δd` for the earlier draft's `Δd = (60 − rest) / V`: what was a start delay
 is now a ramp difference of twice the size.
 
-A transition runs until the slowest stick finishes accelerating, `max(Rᵢ)`. Verified across
-speeds 40/120/260 and rest spreads 0/8/24, on both rest poses: every combination lands on
-60.00° / 60.00° and folds back onto the rest pose exactly.
+**The direction reverses between the two cases.** Accelerating, a longer ramp covers *less*
+ground, so a stick that must fall further behind wants the longer ramp. Decelerating, a
+longer ramp covers *more*, so a stick that must close up wants it. Using one sign for both
+lands the formation 50° out.
+
+A move runs until the slowest stick finishes its ramp, `max(Rᵢ)`. Verified across speeds
+40/120/260 and rest spreads 0/8/24, on both rest poses: every move lands on exactly
+60.00° / 60.00° going in, and back on its target pose coming out.
 
 **No snap is needed.** Poses are closed-form functions of time rather than per-frame
-integrations, so nothing accumulates and there is no drift to hide at the end of a
-transition.
+integrations, so nothing accumulates and there is no drift to hide at the end of a move.
+This also makes correctness independent of frame rate: measured in a browser granting only
+**1 fps**, every move still landed exactly, which is the property an animated favicon needs
+in a throttled background tab.
 
-One correction falls out of looping it: spin-down returns the mark's *shape* but leaves its
-orientation wherever the spinning got to, which would park the logo at an arbitrary angle.
-Because a stick is 180°-symmetric, holding `running` for a whole number of half-turns lands
-the mark back on its own orientation — so the running hold, the one duration carrying no
-meaning, absorbs that correction and the ramp does not.
+One correction falls out of stopping: decelerating restores the mark's *shape* but leaves
+its orientation wherever the spinning got to, which would park the logo at an arbitrary
+angle. So a `running` → still move first **coasts at full speed** for the shortest wait that
+makes the landing exact — at most a half-turn, since a stick is 180°-symmetric — and only
+then decelerates.
 
 ### Motion in the favicon
 
