@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { applyTheme } from '../../utils/apply-theme';
 import { cn } from '@tickets/ui';
 import { ActorMenu } from './actor-menu';
+import { BrandMark } from './brand-mark';
 import type { Mode } from './mode-for-path';
 
 const ITEMS: { mode: Mode; to: '/' | '/terminals' | '/agents' | '/signals'; glyph: string; label: string }[] = [
@@ -19,7 +20,7 @@ export function ActivityRail({ mode, onNavigate }: { mode: Mode | null; onNaviga
   return (
     <aside className="flex w-12 flex-none flex-col items-center gap-1.5 border-r-1 border-gray-6 bg-gray-1 py-3">
       <Link to="/" onClick={onNavigate} className="mb-2" aria-label="tickets home">
-        <span aria-hidden className="block size-2.5 rounded-none bg-indigo-9" />
+        <BrandMark />
       </Link>
       {ITEMS.map((item) => (
         <Link
