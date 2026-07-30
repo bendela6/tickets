@@ -89,6 +89,72 @@ describe('schemaGraphToModel', () => {
     expect(model!.entityById.get('records.items')!.group).toBe('rc');
   });
 
+  // The `colors` key had zero assertions: the whole hue -> token boundary could
+  // have been deleted and every other test here would still pass. It is keyed
+  // by GROUP id (not table, not hue name) because that is what groupColor looks
+  // up, and the value is a token rather than a hex so it flips with the theme.
+  it('resolves each group hue to a theme token, keyed by group id', () => {
+    const { model } = schemaGraphToModel(graph);
+    expect(model!.colors.get('ws')).toBe('var(--color-blue-9)');
+    expect(model!.colors.get('rc')).toBe('var(--color-orange-9)');
+  });
+
+  it('drops the override for a hue it cannot paint, rather than emitting an undefined property', () => {
+    // `var(--color-chartreuse-9)` is not a declared token, and an undefined
+    // custom property invalidates the whole declaration — the group would paint
+    // nothing at all. No override instead, so groupColor falls back to its own
+    // palette and the zone still has a colour.
+    const odd: SchemaGraph = {
+      ...graph,
+      groups: [{ ...graph.groups[0]!, color: 'chartreuse' }, graph.groups[1]!],
+    };
+    const { model } = schemaGraphToModel(odd);
+    expect(model!.colors.has('ws')).toBe(false);
+    expect(model!.colors.get('rc')).toBe('var(--color-orange-9)');
+  });
+
+  // `uniques` was `[]` in every fixture, so the loop that forwards it was
+  // indistinguishable from deleted code. A unique on an fk COLUMN is what turns
+  // a crow's foot into a 1-1 tick (deriveRelationships' cardinalityOf), so this
+  // asserts both the constraint arriving and the cardinality it changes.
+  it('forwards unique constraints, which is what makes an fk edge read 1-1', () => {
+    const oneToOne: SchemaGraph = {
+      ...graph,
+      tables: graph.tables.map((t) =>
+        t.name === 'items'
+          ? { ...t, uniques: [{ name: 'items_project_id_key', columns: ['project_id'] }] }
+          : t,
+      ),
+    };
+    const { model } = schemaGraphToModel(oneToOne);
+    const items = model!.entityById.get('records.items')!;
+    const unique = items.constraints.find((c) => c.kind === 'unique')!;
+    expect(unique).toBeDefined();
+    expect(unique.name).toBe('items_project_id_key');
+    expect(unique.columns).toEqual(['project_id']);
+    // Same fixture without the unique derives '1-n' (see the fk test above).
+    expect(model!.relationships[0]!.cardinality).toBe('1-1');
+    expect(schemaGraphToModel(graph).model!.relationships[0]!.cardinality).toBe('1-n');
+  });
+
+  // An fk pointing at a table the graph does not carry (it lives in a schema
+  // the introspection did not cover) drops its edge silently: deriveConstraint-
+  // Edges skips it and loadModel only WARNS. The warning is the only trace, so
+  // the adapter must forward it — and schema-route must show it, or the user
+  // just sees a missing line.
+  it('warns rather than silently dropping an fk whose target table is absent', () => {
+    const dangling: SchemaGraph = {
+      ...graph,
+      tables: graph.tables.filter((t) => t.name !== 'projects'),
+      groups: [graph.groups[1]!],
+    };
+    const { model, errors, warnings } = schemaGraphToModel(dangling);
+    expect(errors).toEqual([]);
+    expect(model!.relationships).toHaveLength(0); // the edge really is gone
+    expect(warnings.join(' ')).toContain('core.projects');
+    expect(warnings.join(' ')).toMatch(/unknown table/i);
+  });
+
   it('carries enums through with their values in order', () => {
     const { model } = schemaGraphToModel(graph);
     const e = model!.enums.find((x) => x.name === 'status_kind')!;

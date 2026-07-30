@@ -52,6 +52,15 @@ const graph: SchemaGraph = {
 
 const emptyGraph: SchemaGraph = { groups: [], tables: [], enums: [] };
 
+// The same graph minus `tickets`, so comments.ticket_id points at a table that
+// is not there. deriveRelationships skips the fk and loadModel only WARNS, so
+// this is the shape where an edge goes missing with nothing on screen to say
+// why — the case the warnings banner exists for.
+const danglingFkGraph: SchemaGraph = {
+  ...graph,
+  tables: graph.tables.filter((t) => t.name !== 'tickets'),
+};
+
 /**
  * Mounts the REAL route object against the REAL root route, on a memory
  * history at /schema. Rendering `SchemaPage` on its own would prove nothing
@@ -150,6 +159,21 @@ describe('/schema inside the app shell', () => {
     expect(screen.queryByText('This schema could not be drawn.')).not.toBeInTheDocument();
     // The shell survives: the crash used to take the rail with it.
     expect(screen.getByLabelText('Schema')).toBeInTheDocument();
+  });
+
+  it('says why an edge is missing instead of just not drawing it', async () => {
+    const { container } = renderSchemaRoute({ schema: danglingFkGraph });
+    // The card still renders — this is a partial failure, not a broken schema.
+    await waitFor(() => expect(container.querySelectorAll('[data-card]')).toHaveLength(1));
+    expect(container.querySelectorAll('g[data-rel]')).toHaveLength(0);
+    expect(screen.getByText('1 part of this schema could not be drawn')).toBeInTheDocument();
+    expect(screen.getByText(/unknown table "tickets"/)).toBeInTheDocument();
+  });
+
+  it('shows no warnings banner for a schema that draws completely', async () => {
+    const { container } = renderSchemaRoute();
+    await waitFor(() => expect(container.querySelectorAll('[data-card]')).toHaveLength(2));
+    expect(screen.queryByText(/could not be drawn/)).not.toBeInTheDocument();
   });
 });
 
