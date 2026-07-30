@@ -241,14 +241,14 @@ Legend: **✅** built · **🔩** built but unwired or unverified · **🆕** to
 
 ## Sequencing
 
-| Phase | Work | Effort |
-| --- | --- | --- |
-| 0 | Close API holes: `empty` + `rowOverlay` slots, density token, multi-sort decision | 1d |
-| 1 | Lock down: virtualization guard, axe, 3 missing demos, visual baseline | 2d |
-| 2 | `sortRows` default + `useTable()` uncontrolled state | 1d |
-| 3 | **Cell focus model** → keyboard navigation | 2–3d |
-| 4 | Row selection (builds on focus for the range anchor) | 1–2d |
-| 5 | Pinning, scroll shadow, auto-fit, per-row height | 2d |
+| Phase | Work | Effort | |
+| --- | --- | --- | --- |
+| 0 | Close API holes: `empty` + `rowOverlay` slots, density token, multi-sort decision | 1d | ✅ `8e84d88` |
+| 1 | Lock down: virtualization guard, axe, 3 missing demos, visual baseline | 2d | ⚠️ `25a82c7` — visual baseline NOT done |
+| 2 | `sortRows` default + `useTable()` uncontrolled state | 1d | ✅ `885d858` |
+| 3 | **Cell focus model** → keyboard navigation | 2–3d | ✅ `233ccbf` |
+| 4 | Row selection (builds on focus for the range anchor) | 1–2d | ✅ `8501cda` |
+| 5 | Pinning, scroll shadow, auto-fit, per-row height | 2d | ✅ `1a8f940` |
 | 6 | **Backend**: keyset-paged, sorted, filtered items endpoint | 2–3d |
 | 7 | Base windowing: `rowCount` + `getRow` + `onRangeChange` + per-row skeleton | 1–2d |
 | 8 | **DataTable v1** — flat, server sort/filter, cache, invalidation, abort, retry | 3–4d |
@@ -256,6 +256,35 @@ Legend: **✅** built · **🔩** built but unwired or unverified · **🆕** to
 
 Phases 0–5 complete layer 1 (~9 days). Phases 6–8 are the mission (~7 days). Phase 6 is backend and
 cannot be skipped.
+
+## Where the build departed from this sketch
+
+Phases 0–5 shipped. Five things resolved differently from what is written above,
+and the code is right in each case:
+
+1. **Multi-sort was kept, not dropped.** Phase 2's `sortRows` honours the full
+   `SortBy[]`, so the shift-click affordance the engine already rendered became
+   real rather than being deleted one phase before it worked.
+2. **`TableState.editing` does not exist.** Interaction mode is engine-local
+   state. This page listed the field but defined no `onEditingChange`, so a
+   controlled `editing` would have been a prop nothing could ever move.
+3. **`role="cell"` stays.** Real axe over every gallery demo state did not flag
+   it under `role="grid"`. Open decision 3 below is therefore closed. Axe *did*
+   find two CRITICAL `aria-required-children` violations — the group band and
+   the row overlay each put bare content inside a `role="row"` — both since
+   fixed.
+4. **The scroll and pinned "shadows" are hairlines.** A one-sided inset shadow
+   needs an arbitrary Tailwind value, which this project forbids, and every
+   `shadow-*` token casts on all four sides — on a 32px row that reads as a
+   smudge. `SCROLL_EDGE` and `PINNED_EDGE` in `metrics.ts`; a one-line swap if a
+   token is ever added.
+5. **Sorting puts missing values last in BOTH directions** — the one deliberate
+   asc/desc asymmetry. `NaN` counts as missing; empty string does not.
+
+Two capabilities are opt-in by construction, so existing tables are unaffected:
+the focus model activates only when `onFocusChange` is supplied (otherwise the
+engine never touches the tab order, and links inside cells stay tabbable), and
+selection only when `getRowId` *and* `onSelectionChange` are both present.
 
 ## Open decisions
 
@@ -325,10 +354,40 @@ export interface CellRef {
 export interface TableState {
   sort: SortBy[];
   widths: Record<string, number>;
-  collapsed?: Set<string>; // ✳
-  selected?: Set<string>; // ✳
-  focused?: CellRef | null; // ✳
-  editing?: boolean; // ✳ interaction mode
+  /** Carried by useTable(); the engine does not act on it yet — collapsible
+   *  groups are not in phases 0–5. */
+  collapsed?: Set<string>;
+  focused?: CellRef | null;
+  selected?: Set<string>;
+}
+
+/** Sticky geometry for a pinned cell. The ENGINE computes it: only it sees
+ *  column order together with dragged widths. `edge` marks the innermost
+ *  pinned column per side, so three frozen columns draw one divider. */
+export interface CellPin {
+  side: 'left' | 'right';
+  offset: number;
+  edge: boolean;
+}
+
+/** How far the scroll container is scrolled horizontally, so the adapter can
+ *  mark which edges have content hidden past them. */
+export type ScrollX = 'none' | 'start' | 'middle' | 'end';
+
+/** Spread onto a cell so the engine can find it again. Focus moves by ADDRESS,
+ *  not by ref — a ref goes stale the moment a virtualized row unmounts. */
+export interface CellFocusProps {
+  tabIndex?: number;
+  'data-cell-row': number;
+  'data-cell-col': string;
+}
+
+export interface RenderSelectCellCtx {
+  checked: boolean;
+  indeterminate?: boolean;
+  isHeader: boolean;
+  onChange: (shiftKey: boolean) => void;
+  label: string;
 }
 
 export interface TableProps<T> {
