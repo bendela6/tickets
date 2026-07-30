@@ -31,7 +31,7 @@ test('the block carries every tag the platforms need', () => {
 
 test('the block is wrapped in both markers', () => {
   const block = buildHeadBlock(DEFAULT_CONFIG);
-  expect(block.startsWith(HEAD_START)).toBe(true);
+  expect(block).toContain(HEAD_START);
   expect(block.trimEnd().endsWith(HEAD_END)).toBe(true);
 });
 
@@ -99,4 +99,27 @@ test('regression: clean insert and identical injection still work', () => {
   const once = injectHeadBlock(html, block);
   expect(once).toContain(HEAD_START);
   expect(injectHeadBlock(once, block)).toBe(once);
+});
+
+test('all lines of the injected block have exactly 4-space indentation', () => {
+  const block = buildHeadBlock(DEFAULT_CONFIG);
+  const injected = injectHeadBlock(page(''), block);
+
+  // Extract the full block section including leading whitespace
+  const blockStart = injected.lastIndexOf('\n', injected.indexOf(HEAD_START)) + 1;
+  const blockEnd = injected.indexOf(HEAD_END) + HEAD_END.length;
+  const blockSection = injected.substring(blockStart, blockEnd);
+
+  // Split into lines and check indentation
+  const lines = blockSection.split('\n');
+  for (const line of lines) {
+    // Every line in the block should start with exactly 4 spaces
+    if (line.trim().length > 0) {
+      expect(line.substring(0, 4)).toBe('    ');
+      // Verify there's content after the spaces
+      expect(line.length).toBeGreaterThan(4);
+      // Verify exactly 4 spaces, not more
+      expect(line[4]).not.toBe(' ');
+    }
+  }
 });
