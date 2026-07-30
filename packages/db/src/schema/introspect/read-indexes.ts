@@ -3,11 +3,15 @@ import type { IndexMeta } from '../describe-schema';
 import type { RawTable } from './read-tables';
 
 /**
- * Non-primary indexes per table oid.
+ * Indexes per table oid, minus every index that only backs a constraint.
  *
- * The pk's backing index is excluded (`NOT indisprimary`): it restates the
- * primary key constraint readConstraints already reports, and drawing it as an
- * index too would double-count.
+ * One exclusion rule, applied twice: an index that exists solely because a
+ * CONSTRAINT exists is readConstraints' to report, not this reader's —
+ * reporting it here too would double-count the same object. That covers the
+ * primary key (`NOT indisprimary`) and, identically, the unique constraints
+ * readConstraints already returns in `uniques` (the `pg_constraint` NOT EXISTS
+ * on `contype = 'u'`). A plain `CREATE UNIQUE INDEX` has no pg_constraint row
+ * and so still comes through — it is a real index, not a constraint's shadow.
  *
  * Each column position is resolved through `pg_get_indexdef(indexrelid, colno,
  * true)` — the correct API for a single index column, whether it's a named
@@ -52,6 +56,10 @@ export async function readIndexes(
     JOIN pg_am am    ON am.oid = ic.relam
     WHERE i.indrelid = ANY(${tables.map((t) => t.oid)})
       AND NOT i.indisprimary
+      AND NOT EXISTS (
+        SELECT 1 FROM pg_constraint con
+        WHERE con.conindid = i.indexrelid AND con.contype = 'u'
+      )
     ORDER BY i.indrelid, ic.relname
   `;
 
