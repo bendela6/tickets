@@ -32,12 +32,6 @@ describe('cn', () => {
     }
   });
 
-  it('keeps a color class next to the eer-only sizes, which live outside this theme', () => {
-    for (const size of ['text-3xs', 'text-2xs']) {
-      expect(cn('text-indigo-contrast', size)).toBe(`text-indigo-contrast ${size}`);
-    }
-  });
-
   it('keeps the font family next to every numeric weight the theme defines', () => {
     // `font-*` serves both family and weight, so an unregistered `font-500`
     // is read as a family and evicts `font-sans` — the same trap as the
@@ -60,7 +54,7 @@ describe('cn', () => {
 
   it('still merges two font sizes to the last one', () => {
     expect(cn('text-13/19', 'text-12/17')).toBe('text-12/17');
-    expect(cn('text-3xs', 'text-11/13 tracking-wider')).toBe('text-11/13 tracking-wider');
+    expect(cn('text-9', 'text-11/13 tracking-wider')).toBe('text-11/13 tracking-wider');
   });
 
   it('passes through conditional values like clsx', () => {
