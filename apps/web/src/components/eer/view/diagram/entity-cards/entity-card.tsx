@@ -24,7 +24,7 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
         'select-none overflow-visible',
         'absolute left-0 top-0',
         'w-(--card-width) translate-x-(--card-x) translate-y-(--card-y)',
-        'border border-(--card-border) rounded-lg',
+        'border-1 border-(--card-border) rounded-lg',
         'bg-gray-2 shadow-raised',
         'transition-(--transition-paint) duration-120',
         {
@@ -55,7 +55,7 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
           'rounded-t-lg cursor-grab active:cursor-grabbing',
           'flex items-center gap-2',
           'h-9 px-3',
-          'border-b border-(--card-hd-border)',
+          'border-b-1 border-(--card-hd-border)',
           'bg-(--card-hd-bg)',
         )}
       >

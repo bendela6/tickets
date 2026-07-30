@@ -50,7 +50,7 @@ export function Modal({ title, onClose, size = 'default', children }: ModalProps
           tabIndex={-1}
           className={cn(
             'flex w-full flex-col gap-3',
-            'rounded-lg border border-gray-7 bg-gray-3 px-4 py-4 shadow-modal',
+            'rounded-lg border-1 border-gray-7 bg-gray-3 px-4 py-4 shadow-modal',
             { 'max-w-md': size === 'default', 'max-w-5xl': size === 'wide' },
           )}
           onClick={stopInside}

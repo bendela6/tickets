@@ -20,7 +20,7 @@ export function ZoneBoxes() {
         const cls = cn(
           'pointer-events-auto absolute cursor-grab active:cursor-grabbing',
           'left-(--zone-left) top-(--zone-top) h-(--zone-height) w-(--zone-width)',
-          'rounded-xl border border-dashed border-(--zone-border) bg-(--zone-bg)',
+          'rounded-xl border-1 border-dashed border-(--zone-border) bg-(--zone-bg)',
           'transition-(--transition-paint) duration-120',
           'data-[resize-cursor=ew-resize]:cursor-ew-resize data-[resize-cursor=ns-resize]:cursor-ns-resize',
           'data-[resize-cursor=nesw-resize]:cursor-nesw-resize',

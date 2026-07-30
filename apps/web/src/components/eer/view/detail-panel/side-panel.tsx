@@ -50,7 +50,7 @@ export function SidePanel() {
         aria-expanded={false}
         title="Expand panel"
         className={cn(
-          'flex h-full w-6 shrink-0 items-center justify-center border-l border-gray-6',
+          'flex h-full w-6 shrink-0 items-center justify-center border-l-1 border-gray-6',
           'bg-gray-2 text-gray-9 hover:bg-gray-3 hover:text-gray-12',
         )}
         onClick={() => setCollapsed(false)}
@@ -62,7 +62,7 @@ export function SidePanel() {
 
   return (
     <aside
-      className="relative flex w-(--sidebar-w) shrink-0 flex-col border-l border-gray-6 bg-gray-2"
+      className="relative flex w-(--sidebar-w) shrink-0 flex-col border-l-1 border-gray-6 bg-gray-2"
       style={runtimeStyle({ '--sidebar-w': `${width}px` })}
     >
       <div
@@ -77,7 +77,7 @@ export function SidePanel() {
           else if (e.key === 'ArrowRight') setWidth((w) => clampWidth(w - KEY_STEP));
         }}
       />
-      <div className="flex shrink-0 justify-end border-b border-gray-6 px-2 py-1">
+      <div className="flex shrink-0 justify-end border-b-1 border-gray-6 px-2 py-1">
         <button
           type="button"
           aria-label="Collapse panel"
