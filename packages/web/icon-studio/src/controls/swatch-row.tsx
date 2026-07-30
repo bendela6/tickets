@@ -17,18 +17,18 @@ export function SwatchRow({
 }) {
   const ratio = contrast(derived, ground);
   return (
-    <div className="grid grid-cols-[4.5rem_2.5rem_1.25rem_1fr_auto] items-center gap-2">
-      <span className="font-mono text-12 text-gray-11">{label}</span>
+    <div className="flex items-center gap-2">
+      <span className="w-18 shrink-0 font-mono text-12 text-gray-11">{label}</span>
       <input
         aria-label={label}
         type="color"
         value={base}
         onChange={(e) => onChange(e.target.value)}
-        className="h-7 w-10 rounded-md border-1 border-gray-6"
+        className="h-7 w-10 shrink-0 rounded-md border-1 border-gray-6"
       />
-      <span aria-hidden className="size-4 rounded-sm border-1 border-gray-6" style={{ background: derived }} />
-      <span className="font-mono text-12 text-gray-12">{derived}</span>
-      <span className={`font-mono text-11 ${TONE[verdict(ratio)]}`}>{ratio.toFixed(2)}:1</span>
+      <span aria-hidden className="mr-1 size-4 shrink-0 rounded-sm border-1 border-gray-6" style={{ background: derived }} />
+      <span className="flex-1 font-mono text-12 text-gray-12">{derived}</span>
+      <span className={`shrink-0 font-mono text-11 ${TONE[verdict(ratio)]}`}>{ratio.toFixed(2)}:1</span>
     </div>
   );
 }
