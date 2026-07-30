@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { BARE_REACH, type MarkConfig } from '../config';
+import { toDoc } from '../migrate';
 import {
   isSpinning, planMove, separations, statePose, type Formation, type MarkState,
 } from '../motion';
@@ -39,6 +40,12 @@ export function MotionPreview({
   const reduced = useReducedMotion();
   const sticks = useRef<(SVGPathElement | null)[]>([null, null, null]);
 
+  // motion.ts now operates on an IconDoc rather than the old MarkConfig — the
+  // preview still only ever renders the mark's three sticks, so migrating the
+  // config on the fly here reuses the real motion maths without pulling this
+  // control into the document/state rewrite that owns the rest of the studio.
+  const doc = toDoc(config);
+
   /**
    * The live formation is a ref, not React state: the frame loop writes each
    * stick's transform straight to the DOM. Re-rendering three paths sixty times
@@ -47,7 +54,7 @@ export function MotionPreview({
    * earlier version came to stop after two frames.
    */
   const live = useRef<Formation>({
-    pose: statePose(config, state),
+    pose: statePose(doc, state),
     spinning: isSpinning(state),
   });
 
@@ -63,14 +70,14 @@ export function MotionPreview({
     };
 
     if (reduced) {
-      paint({ pose: statePose(config, state), spinning: isSpinning(state) });
+      paint({ pose: statePose(doc, state), spinning: isSpinning(state) });
       setReadout(live.current);
       return;
     }
 
     // Planned once, from wherever the mark actually is — so clicking a second
     // state mid-flight continues from the current pose rather than snapping.
-    const move = planMove(config, live.current, state);
+    const move = planMove(doc, live.current, state);
     let frame = 0;
     let startedAt: number | null = null;
     let lastReadout = 0;

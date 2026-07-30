@@ -1,5 +1,6 @@
 import { Button } from '@tickets/ui';
 import { REST_POSES, type MarkConfig, type RestPose } from '../config';
+import { toDoc } from '../migrate';
 import {
   isSpinning, MARK_STATES, planMove, rampSpread, statePose, type MarkState,
 } from '../motion';
@@ -16,6 +17,10 @@ export function MotionPanel({
 }) {
   const { motion } = config;
   const even = motion.restPose === 'fan';
+  // motion.ts now plans over an IconDoc; this panel still only ever edits the
+  // mark's three sticks, so the live config is migrated on the fly rather than
+  // pulling this control into the document/state rewrite.
+  const doc = toDoc(config);
 
   return (
     <section className="flex flex-col gap-2">
@@ -74,7 +79,7 @@ export function MotionPanel({
       <div className="flex flex-col gap-0.5 font-mono text-11 text-gray-11">
         {MARK_STATES.filter((s) => s !== state).map((s) => (
           <p key={s}>
-            → {s} {planMove(config, { pose: statePose(config, state), spinning: isSpinning(state) }, s).duration.toFixed(2)}s
+            → {s} {planMove(doc, { pose: statePose(doc, state), spinning: isSpinning(state) }, s).duration.toFixed(2)}s
           </p>
         ))}
         <p>{even ? `ramp step ${rampSpread(motion).toFixed(3)}s` : 'uneven rest pose'}</p>
