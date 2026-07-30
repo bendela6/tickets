@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { axis, cn, over, TONE, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, cn, over, SCALE, TONE_SCALE, variants, type Tone } from '../../style';
 import { Icon, type IconName, type IconSize } from '../icon';
 
 export type TabsVariant = 'underline' | 'pill' | 'rail';
@@ -76,16 +76,16 @@ const tabClass = variants({
       // is visible next to the classes it produces, instead of a shared
       // closure computing `on` and `box()` above three ternaries.
       options: {
-        underline: over(TONE, SIZE, STATE, (t, size, state) =>
+        underline: over(SCALE, SIZE, STATE, (tone, size, state) =>
           cn(
             '-mb-px border-b-2',
             TAB_BOX.underline[size],
             state === 'active'
-              ? `border-${t.solid} font-500 text-gray-12`
+              ? `border-${tone}-9 font-500 text-gray-12`
               : 'border-transparent text-gray-11 hover:text-gray-12',
           ),
         ),
-        pill: over(TONE, SIZE, STATE, (_t, size, state) =>
+        pill: over(SCALE, SIZE, STATE, (_tone, size, state) =>
           cn(
             'font-500',
             TAB_BOX.pill[size],
@@ -94,11 +94,11 @@ const tabClass = variants({
               : 'text-gray-11 hover:text-gray-12',
           ),
         ),
-        rail: over(TONE, SIZE, STATE, (t, size, state) =>
+        rail: over(SCALE, SIZE, STATE, (tone, size, state) =>
           cn(
             TAB_BOX.rail[size],
             state === 'active'
-              ? `bg-${t.bgSubtle} font-500 text-${t.solid}`
+              ? `bg-${tone}-3 font-500 text-${tone}-9`
               : 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
           ),
         ),

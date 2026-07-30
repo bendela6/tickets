@@ -1,4 +1,4 @@
-import { axis, over, TONE, TONE_SCALE, variants, type HueTone } from '../../style';
+import { axis, over, SCALE, TONE_SCALE, variants, type HueTone } from '../../style';
 
 export type FieldSize = 'sm' | 'md' | 'lg';
 
@@ -37,17 +37,17 @@ export const fieldClass = variants({
     state: {
       default: 'neutral',
       // Two axes: the ramp, and which pseudo-class the focus treatment hangs
-      // off. `t.ring` is not reachable here — it is pinned to `focus-visible`,
+      // off. `ring()` is not reachable here — it is pinned to `focus-visible`,
       // and a field's whole point is that the trigger varies.
       options: {
-        neutral: over(TONE, FOCUS, (t, focus) => [
+        neutral: over(SCALE, FOCUS, (tone, focus) => [
           'border-gray-7 hover:border-gray-9',
-          `${focus}:border-${t.solid} ${focus}:outline-none`,
-          `${focus}:ring-3 ${focus}:ring-${t.focusRing}`,
+          `${focus}:border-${tone}-9 ${focus}:outline-none`,
+          `${focus}:ring-3 ${focus}:ring-${tone}-3`,
         ]),
-        toned: over(TONE, FOCUS, (t, focus) => [
-          `border-${t.solid} hover:border-${t.solidHover}`,
-          `ring-3 ring-${t.focusRing} ${focus}:outline-none`,
+        toned: over(SCALE, FOCUS, (tone, focus) => [
+          `border-${tone}-9 hover:border-${tone}-10`,
+          `ring-3 ring-${tone}-3 ${focus}:outline-none`,
         ]),
       },
     },

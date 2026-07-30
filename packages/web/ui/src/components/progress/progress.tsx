@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { cn, over, TONE, TONE_SCALE, variants, type Tone } from '../../style';
+import { cn, over, SCALE, TONE_SCALE, variants, type Tone } from '../../style';
 
 export type ProgressSize = 'sm' | 'md' | 'lg';
 
@@ -23,7 +23,7 @@ const fillClass = variants({
     fill: {
       default: 'solid',
       options: {
-        solid: over(TONE, (t) => `bg-${t.solid}`),
+        solid: over(SCALE, (tone) => `bg-${tone}-9`),
       },
     },
   },

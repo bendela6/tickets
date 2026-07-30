@@ -14,7 +14,7 @@ import { isExpansion, type Axis, type Expansion } from './axis';
  *       variant: {
  *         default: 'soft',
  *         options: {
- *           soft: over(TONE, (t) => `bg-${t.bgSubtle} text-${t.text}`),
+ *           soft: over(SCALE, (tone) => `bg-${tone}-3 text-${tone}-11`),
  *           bare: 'bg-transparent',
  *         },
  *       },
