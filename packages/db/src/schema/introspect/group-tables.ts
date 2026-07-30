@@ -3,9 +3,15 @@ import { SCHEMA_GROUPS } from '../schema-groups';
 
 /**
  * Hues for namespace fallback groups, ordered so the first few are maximally
- * distinct. Instrument option hue NAMES — the renderer resolves each into
- * `var(--color-<name>-9)` (and `-3` for subtle fills), so a hex or an invented
- * name yields an undefined custom property and paints nothing at all.
+ * distinct. Instrument option hue NAMES — the renderer resolves each to
+ * `var(--color-<name>-9)` through an explicit map (apps/web's
+ * components/eer/adapter/hue-token.ts), which is also what makes Tailwind emit
+ * the token at all. Only the `-9` step is consumed; subtler fills are derived
+ * from it with color-mix() at the element, not from a `-3` token.
+ *
+ * A name that map does not carry gets no override, so the group falls back to
+ * the diagram's own palette. Adding a hue here without adding it there is a
+ * silent downgrade — hue-token.test.ts fails on exactly that.
  * `gray` is absent: it reads as "no group" rather than a hue.
  */
 const FALLBACK_HUES = ['blue', 'green', 'orange', 'purple', 'teal', 'cyan', 'pink', 'red', 'yellow'];

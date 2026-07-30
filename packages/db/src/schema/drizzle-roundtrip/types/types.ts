@@ -1,10 +1,16 @@
-// A COPY of the eer app's engine/model/types/types.ts, not a move: import-drizzle
-// and export-drizzle need this model vocabulary, but the eer app still owns the
-// original (the editor and diagram engine depend on it too) until Task 2 of
-// the eer-web-module plan moves the engine into apps/web wholesale. packages/db
-// must never import across the workspace into the eer app, so this package gets
-// its own copy rather than a relative reach-across. The duplication is
-// intentionally short-lived — it ends when the eer app is deleted (Task 9).
+// A PERMANENT copy of the diagram engine's model vocabulary, which now lives at
+// apps/web/src/components/eer/engine/model/types/types.ts. import-drizzle and
+// export-drizzle need these types, and packages/db must not import from apps/ —
+// the dependency only runs the other way (apps consume @tickets/db), and
+// reversing it would make the db package unbuildable on its own and drag React-
+// era app code into every consumer. A copy is the price of that boundary.
+//
+// DRIFT IS THE RISK, and nothing enforces the two stay in step: a field added to
+// the app-side Model is simply absent here, and import/export-drizzle will
+// silently drop it on a round trip rather than fail to compile. Anyone editing
+// either file should edit both. (The gate that would catch it — a conformance
+// test comparing the two shapes — does not exist yet; it would have to read the
+// app source as text, since the import is exactly what is forbidden.)
 //
 // Group nesting is unbounded as a product feature; this is only a
 // runaway/corruption backstop (a cyclic or absurdly deep parent chain in a
