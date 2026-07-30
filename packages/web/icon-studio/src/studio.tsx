@@ -2,7 +2,9 @@ import { useEffect, useMemo, useReducer, useState } from 'react';
 import { Button } from '@tickets/ui';
 import { fetchConfig, generate } from './api';
 import { ControlsPanel } from './controls/controls-panel';
+import { MotionPanel } from './controls/motion-panel';
 import { FileGrid } from './output/file-grid';
+import { MotionPreview, type PhaseChoice } from './output/motion-preview';
 import type { GenerateResult } from './plugin/write';
 import { INITIAL_STATE, studioReducer, toConfig } from './state';
 
@@ -11,6 +13,10 @@ export function Studio() {
   const [results, setResults] = useState<GenerateResult[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Which phase to watch and whether it is moving are ways of looking at the
+  // mark, not properties of it, so they stay out of the config.
+  const [choice, setChoice] = useState<PhaseChoice>('auto');
+  const [playing, setPlaying] = useState(true);
 
   const config = useMemo(() => toConfig(state), [state]);
 
@@ -57,8 +63,16 @@ export function Studio() {
         ) : null}
 
         <div className="flex flex-col gap-6 lg:flex-row">
-          <div className="lg:w-88 lg:shrink-0">
+          <div className="flex flex-col gap-5 lg:w-88 lg:shrink-0">
             <ControlsPanel state={state} config={config} dispatch={dispatch} />
+            <MotionPanel
+              config={config}
+              choice={choice}
+              playing={playing}
+              dispatch={dispatch}
+              onChoice={setChoice}
+              onPlaying={setPlaying}
+            />
           </div>
 
           <div className="flex flex-col gap-4 lg:flex-1">
@@ -85,6 +99,13 @@ export function Studio() {
                 ))}
               </ul>
             ) : null}
+
+            <section className="flex flex-col gap-2 rounded-lg border-1 border-gray-6 bg-gray-2 p-3">
+              <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">
+                Loader
+              </h2>
+              <MotionPreview config={config} choice={choice} playing={playing} />
+            </section>
 
             <FileGrid config={config} />
           </div>

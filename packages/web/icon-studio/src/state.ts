@@ -1,6 +1,7 @@
 import { adjust, NEUTRAL, type Adjust } from './color';
 import {
-  DEFAULT_CONFIG, PRESETS, RATIO, type MarkConfig, type PresetName,
+  DEFAULT_CONFIG, DEFAULT_MOTION, PRESETS, RATIO,
+  type MarkConfig, type MotionConfig, type PresetName,
 } from './config';
 
 type Triple = [string, string, string];
@@ -21,6 +22,7 @@ export interface StudioState {
   bareWeight: number;
   chipReach: number;
   chipWeight: number;
+  motion: MotionConfig;
 }
 
 export function fromConfig(config: MarkConfig): StudioState {
@@ -33,6 +35,12 @@ export function fromConfig(config: MarkConfig): StudioState {
     bareWeight: config.bareWeight,
     chipReach: config.chipReach,
     chipWeight: config.chipWeight,
+    // A committed config written before the motion block existed still opens:
+    // the defaults fill in, they are visible in the panel rather than silently
+    // applied, and the next Generate writes them into the file. Spreading over
+    // the defaults also means a config carrying only some of the four keys
+    // keeps whatever it does carry.
+    motion: { ...DEFAULT_MOTION, ...(config.motion ?? {}) },
   };
 }
 
@@ -48,6 +56,7 @@ export function toConfig(state: StudioState): MarkConfig {
     bareWeight: state.bareWeight,
     chipReach: state.chipReach,
     chipWeight: state.chipWeight,
+    motion: { ...state.motion },
   };
 }
 
@@ -60,6 +69,8 @@ export type StudioAction =
   | { type: 'setAngle'; index: number; degrees: number }
   | { type: 'setNumber'; key: NumberKey; value: number }
   | { type: 'matchRatio' }
+  | { type: 'setMotion'; patch: Partial<MotionConfig> }
+  | { type: 'resetMotion' }
   | { type: 'loadConfig'; config: MarkConfig };
 
 export function studioReducer(state: StudioState, action: StudioAction): StudioState {
@@ -97,6 +108,10 @@ export function studioReducer(state: StudioState, action: StudioAction): StudioS
     case 'matchRatio':
       // Round to one decimal so the written config stays readable.
       return { ...state, chipWeight: Math.round(state.chipReach * RATIO * 10) / 10 };
+    case 'setMotion':
+      return { ...state, motion: { ...state.motion, ...action.patch } };
+    case 'resetMotion':
+      return { ...state, motion: { ...DEFAULT_MOTION } };
     case 'loadConfig':
       return fromConfig(action.config);
   }

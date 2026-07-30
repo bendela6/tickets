@@ -77,35 +77,57 @@ no token changes, no UI consequences.
 
 ## The loader
 
-The same three sticks, animated. Each stick integrates **its own speed**, ramping 0 → one
-shared top speed on **smootherstep** (zero velocity *and* zero acceleration at both ends).
-Starts are staggered, and the stack unpeels **top down**: the stick on top leaves first.
+The same three sticks, animated. Each ramps 0 → one shared top speed on **smootherstep**
+(zero velocity *and* zero acceleration at both ends). **All three start at the same instant;
+what differs is how hard each accelerates.** The stack still unpeels top down — the top
+stick accelerates hardest and so leads.
+
+Revised from an earlier draft, which staggered the *starts* and gave every stick the same
+ramp. Simultaneous starts with differing ramps land the identical formation (below) and read
+as one object coming up to speed rather than three sticks taking turns.
 
 | Phase | Behaviour |
 |---|---|
-| `idle` | Sticks a few degrees apart, still. Reads as one stroke with a slight fan. |
-| `spin-up` | Top stick starts, then mid, then low. Gaps open to exactly 60°. |
+| `idle` | The rest pose, still. |
+| `spin-up` | All three go at once, the trailing ones accelerating more slowly. Gaps open to exactly 60°. |
 | `running` | All three at full speed, holding 60° apart — a rigid rotating asterisk. |
-| `spin-down` | Same ramp reversed; top slows first, the others close on it. Folds shut. |
+| `spin-down` | All three decelerate at once over their own ramps; the top stick parks first and the others close on it. Folds shut. |
 
-### Why the stagger is derived, not tuned
+### Why the ramps are derived, not tuned
 
-A stick sweeps `V · F(t − i·Δd)` where `F` is the integral of the easing. Past the ramp,
-`F(x) = x − k` with the **same** `k` for every stick, so the separation settles at exactly
-`V · Δd` regardless of the easing shape. Setting `V · Δd = 60° − rest` lands the asterisk
-exactly:
+Past its ramp a stick has given up exactly **half a ramp's worth of distance** to
+accelerating — `V·R/2`, and the shape of the easing never enters into it. Two sticks sharing
+a top speed therefore end up permanently
 
 ```
-Δd = (60 − rest) / V     // seconds
+V · (Rᵢ − R₀) / 2      degrees apart
 ```
 
-At `V = 120°/s` with `rest = 8°`, `Δd = 0.433s`. Change the speed and it recomputes, so
-the formation is exact by construction rather than by timing. Verified numerically across
-speeds 40/120/260, rest spreads 0/8/24, at 30fps and 60fps: every combination lands on
-60.00° / 60.00° and returns precisely to the rest fan.
+so a *difference in ramps* buys a fixed separation with no staggered starts involved. Stick
+`i` needs to fall `60i` behind the leader, less however far behind it already rests, giving
 
-Transitions run `2Δd + 0.9s`. The implementation snaps to the exact pose at the end of each
-transition to absorb per-frame integration drift.
+```
+Rᵢ = R₀ + 2 · (60i − gapᵢ) / V      seconds
+```
+
+`R₀` is the configured ramp — the leading stick's — and the rest grow from it, so the
+configured value stays something you can feel. On an evenly-spaced rest pose this collapses
+to `Rᵢ = R₀ + 2i·Δd` for the earlier draft's `Δd = (60 − rest) / V`: what was a start delay
+is now a ramp difference of twice the size.
+
+A transition runs until the slowest stick finishes accelerating, `max(Rᵢ)`. Verified across
+speeds 40/120/260 and rest spreads 0/8/24, on both rest poses: every combination lands on
+60.00° / 60.00° and folds back onto the rest pose exactly.
+
+**No snap is needed.** Poses are closed-form functions of time rather than per-frame
+integrations, so nothing accumulates and there is no drift to hide at the end of a
+transition.
+
+One correction falls out of looping it: spin-down returns the mark's *shape* but leaves its
+orientation wherever the spinning got to, which would park the logo at an arbitrary angle.
+Because a stick is 180°-symmetric, holding `running` for a whole number of half-turns lands
+the mark back on its own orientation — so the running hold, the one duration carrying no
+meaning, absorbs that correction and the ramp does not.
 
 ### Motion in the favicon
 
@@ -157,20 +179,18 @@ indicator has to pass. The rail mark carries an `aria-label` naming the phase in
 | Nodes / ring / core states | Superseded — three sticks do the same job with a third of the parts. |
 | Same-rung triads | Rung 11 is a flat-lightness ramp; three hues at one rung read as one colour at 16px on white. |
 
-## Open question
+## Resolved: the rail's idle pose
 
-**The rail's idle pose.** The logo is the uneven `62/27/160`. The loader's idle pose is the
-near-aligned fan (`~8°` apart). Those are different shapes, so an idle rail mark would not
-look like the favicon. Three ways out, in preference order:
+The logo is the uneven pose; the loader's idle used to be a near-aligned fan (`~8°` apart).
+Those are different shapes, so an idle rail mark would not have looked like the favicon.
 
-1. The loader rests on the **logo pose** and spreads to the asterisk while running. The
-   near-aligned stack becomes a spin-up flourish rather than a resting state.
-2. Keep both: the favicon is the logo pose, the rail idles near-aligned. Accepts the
-   mismatch on the grounds that they are never seen side by side.
-3. Make the logo the near-aligned fan. Rejected — it reads as one thick stroke and throws
-   away two of the three colours.
-
-Recommendation is (1), but it changes what "idle" means in the loader, so it needs a call.
+**Settled as option (1): the loader rests on the logo pose** and spreads to the asterisk
+while running, so an idle loader *is* the favicon and the near-aligned stack becomes a
+spin-up flourish rather than a resting state. `motion.restPose` carries the choice —
+`logo` is the default, `fan` stays available — because it is a question best answered by
+looking at both, which the icon studio's Motion panel now allows. Option (3), making the
+logo itself the near-aligned fan, stays rejected: it reads as one thick stroke and throws
+away two of the three colours.
 
 ## Out of scope
 
@@ -201,5 +221,23 @@ interface MarkConfig {
   /** Arm reach and stroke for the inset chip variants. */
   chipReach: number;
   chipWeight: number;
+  motion: MotionConfig;
+}
+
+/** Which pose the loader rests on when nothing is running. */
+type RestPose = 'logo' | 'fan';
+
+/**
+ * The loader. Nothing here is a timing tweak: the per-stick ramps that land the
+ * asterisk are derived from these four values.
+ */
+interface MotionConfig {
+  /** Top speed of the running asterisk, degrees per second. */
+  speed: number;
+  /** Degrees between neighbouring sticks at rest. Only the `fan` pose uses it. */
+  restSpread: number;
+  /** The leading stick's ramp, in seconds. The others are derived from it. */
+  ramp: number;
+  restPose: RestPose;
 }
 ```
