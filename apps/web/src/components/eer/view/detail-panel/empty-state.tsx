@@ -23,8 +23,8 @@ export function EmptyState({ model }: { model: Model | null }) {
     <div>
       <div className="border-b border-gray-6 px-4 pb-3 pt-4">
         <Badge tone="entity">Overview</Badge>
-        <h2 className="mt-2 font-mono text-lg font-medium text-gray-12">{model?.meta.title ?? 'EER viewer'}</h2>
-        <div className="mt-1 text-xs text-gray-9">Click an entity, group, or edge to inspect it.</div>
+        <h2 className="mt-2 font-mono text-16 font-medium text-gray-12">{model?.meta.title ?? 'EER viewer'}</h2>
+        <div className="mt-1 text-11 text-gray-9">Click an entity, group, or edge to inspect it.</div>
       </div>
 
       <div className="px-4 pb-5 pt-3">
@@ -38,7 +38,7 @@ export function EmptyState({ model }: { model: Model | null }) {
         )}
 
         <Section title="Controls" />
-        <div className="flex flex-col gap-2 text-sm leading-relaxed text-gray-11">
+        <div className="flex flex-col gap-2 text-12 leading-relaxed text-gray-11">
           {rows.map(([k, label], i) => (
             <div key={i} className="flex items-baseline gap-2">
               <Kbd>{k}</Kbd>

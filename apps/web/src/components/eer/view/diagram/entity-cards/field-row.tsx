@@ -32,8 +32,8 @@ function Port({
         'transition-(--transition-paint) duration-120',
         connected.has(key) ? 'opacity-100' : 'opacity-0',
         {
-          'right-full rounded-l-xs': side === 'L',
-          'left-full rounded-r-xs': side === 'R',
+          'right-full rounded-l-sm': side === 'L',
+          'left-full rounded-r-sm': side === 'R',
           'bg-yellow-9': !!role?.pk,
           'bg-green-9': !role?.pk && !!role?.fk,
           'bg-blue-9 ring-3 ring-blue-9/30': hot,
@@ -68,7 +68,7 @@ export function FieldRow({
   const badge = role?.pk ? 'pk' : role?.fk ? 'fk' : null;
   return (
     <div
-      className="relative flex h-6 cursor-default items-center gap-2 px-3 text-sm hover:bg-gray-3"
+      className="relative flex h-6 cursor-default items-center gap-2 px-3 text-12 hover:bg-gray-3"
       data-entity={e.id}
       data-field={f.name}
       data-index={String(index)}
@@ -86,7 +86,7 @@ export function FieldRow({
       {badge && (
         <span
           className={cn(
-            'shrink-0 text-center font-mono text-3xs font-semibold tracking-wide text-gray-9',
+            'shrink-0 text-center font-mono text-9 font-semibold tracking-wide text-gray-9',
             {
               'text-yellow-9': badge === 'pk',
               'text-green-9': badge === 'fk',
@@ -103,7 +103,7 @@ export function FieldRow({
       >
         {f.name}
       </span>
-      <span className="ml-auto max-w-1/2 truncate font-mono text-xs text-gray-9">
+      <span className="ml-auto max-w-1/2 truncate font-mono text-11 text-gray-9">
         {f.type || ''}
       </span>
       <Port e={e} f={f} role={role} side="L" connected={connected} pinSpan={pinSpan} hot={hot} />

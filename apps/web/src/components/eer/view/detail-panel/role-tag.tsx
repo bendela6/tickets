@@ -5,7 +5,7 @@ export function RoleTag({ role }: { role: 'pk' | 'fk' | null }) {
     return <span className="inline-block w-7 shrink-0" aria-hidden />;
   return (
     <span
-      className={cn('inline-block w-7 shrink-0 rounded text-center font-mono text-3xs font-semibold leading-4', {
+      className={cn('inline-block w-7 shrink-0 rounded-sm text-center font-mono text-9 font-semibold leading-4', {
         'bg-yellow-9/15 text-yellow-9': role === 'pk',
         'bg-green-9/15 text-green-9': role !== 'pk',
       })}

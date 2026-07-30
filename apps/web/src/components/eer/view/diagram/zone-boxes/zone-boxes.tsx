@@ -20,7 +20,7 @@ export function ZoneBoxes() {
         const cls = cn(
           'pointer-events-auto absolute cursor-grab active:cursor-grabbing',
           'left-(--zone-left) top-(--zone-top) h-(--zone-height) w-(--zone-width)',
-          'rounded-2xl border border-dashed border-(--zone-border) bg-(--zone-bg)',
+          'rounded-xl border border-dashed border-(--zone-border) bg-(--zone-bg)',
           'transition-(--transition-paint) duration-120',
           'data-[resize-cursor=ew-resize]:cursor-ew-resize data-[resize-cursor=ns-resize]:cursor-ns-resize',
           'data-[resize-cursor=nesw-resize]:cursor-nesw-resize',
@@ -66,9 +66,9 @@ export function ZoneBoxes() {
               data-zone-label=""
               className={cn(
                 'pointer-events-none absolute left-3 top-2',
-                'text-sm font-semibold uppercase tracking-wide text-(--zone-ink)',
+                'text-12 font-semibold uppercase tracking-wide text-(--zone-ink)',
                 {
-                  'text-2xs font-medium normal-case': subgroup,
+                  'text-10 font-medium normal-case': subgroup,
                   'text-gray-12': selected,
                 },
               )}

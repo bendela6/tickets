@@ -88,11 +88,11 @@ export function EntityDetail({
               <div key={f.name} className="border-b border-gray-6/50 py-2 last:border-0">
                 <div className="flex items-center gap-2">
                   <RoleTag role={badge} />
-                  <span className={cn('font-mono text-sm', { 'text-yellow-9': badge === 'pk', 'text-gray-12': badge !== 'pk' })}>{f.name}</span>
+                  <span className={cn('font-mono text-12', { 'text-yellow-9': badge === 'pk', 'text-gray-12': badge !== 'pk' })}>{f.name}</span>
                   {fk && (
                     <button
                       type="button"
-                      className="ml-1 rounded bg-gray-3 px-1 py-px font-mono text-2xs text-green-9 hover:bg-gray-4"
+                      className="ml-1 rounded-sm bg-gray-3 px-1 py-px font-mono text-10 text-green-9 hover:bg-gray-4"
                       onClick={() => {
                         actions.selectEntity(fk.table);
                         actions.centerOn(fk.table);
@@ -101,9 +101,9 @@ export function EntityDetail({
                       → {fk.table}.{fk.field}
                     </button>
                   )}
-                  <span className="ml-auto shrink-0 font-mono text-xs text-gray-9">{f.type}</span>
+                  <span className="ml-auto shrink-0 font-mono text-11 text-gray-9">{f.type}</span>
                 </div>
-                {note && <div className="mt-1 pl-7 text-xs leading-snug text-gray-11">{note}</div>}
+                {note && <div className="mt-1 pl-7 text-11 leading-snug text-gray-11">{note}</div>}
               </div>
             );
           })}

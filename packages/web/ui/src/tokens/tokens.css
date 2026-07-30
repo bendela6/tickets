@@ -695,6 +695,17 @@
      means anything to a reader. */
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Paint-only transition set for the eer diagram (entity-card.tsx,
+     field-row.tsx, zone-boxes.tsx via `transition-(--transition-paint)`).
+     transform/translate are deliberately excluded so drag and pan stay
+     immediate — the diagram moves cards and zones via translate on every
+     pointermove, and animating that would make dragging feel laggy. Not a
+     `--duration-*`/`--ease-*` rung, so it does not generate its own utility;
+     it exists only to be read back through the arbitrary-value reference
+     already at each call site. Ported from the standalone apps/eer package's
+     `--transition-paint` (src/styles/tailwind.css), which this package does
+     not import. */
+  --transition-paint: opacity, border-color, background-color, box-shadow;
   /* Radius (next/radius.tokens.json). Four rungs, not six: a radius is only
      legible against the box it rounds — 4px on a chip and 12px on a panel read
      as the same softness, while 4 and 5 on the same box read as a mistake.

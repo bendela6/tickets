@@ -25,12 +25,12 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
         'absolute left-0 top-0',
         'w-(--card-width) translate-x-(--card-x) translate-y-(--card-y)',
         'border border-(--card-border) rounded-lg',
-        'bg-gray-2 shadow-md',
+        'bg-gray-2 shadow-raised',
         'transition-(--transition-paint) duration-120',
         {
           'opacity-22': p.dim,
           'border-gray-7': p.focus,
-          'border-blue-9 ring-1 ring-blue-9 shadow-lg': p.selected,
+          'border-blue-9 ring-1 ring-blue-9 shadow-overlay': p.selected,
           hidden: p.hidden,
         },
       )}
@@ -59,7 +59,7 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
           'bg-(--card-hd-bg)',
         )}
       >
-        <span className="font-mono text-base font-medium text-gray-12">{e.label}</span>
+        <span className="font-mono text-13 font-medium text-gray-12">{e.label}</span>
       </div>
       <div className="py-1">
         {e.columns.map((f, i) => (

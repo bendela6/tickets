@@ -83,7 +83,7 @@ export function SidePanel() {
           aria-label="Collapse panel"
           aria-expanded
           title="Collapse panel"
-          className="rounded px-2 text-gray-9 hover:bg-gray-3 hover:text-gray-12"
+          className="rounded-sm px-2 text-gray-9 hover:bg-gray-3 hover:text-gray-12"
           onClick={() => setCollapsed(true)}
         >
           ›

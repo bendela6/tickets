@@ -14,7 +14,7 @@ export function DetailPanel() {
   // SidePanel, which wraps this. Kept as its own component so the selection
   // routing stays testable without the panel chrome.
   return (
-    <div className="text-base">
+    <div className="text-13">
       {model && selection.type === 'entity' && <EntityDetail model={model} id={selection.id} colors={colors} />}
       {model && selection.type === 'group' && <GroupDetail model={model} id={selection.id} colors={colors} />}
       {model && selection.type === 'edge' && <EdgeDetail model={model} id={selection.id} colors={colors} />}
