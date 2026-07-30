@@ -1,3 +1,9 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import type { Plugin } from 'vite';
+import { DEFAULT_CONFIG } from '../config';
 import { iconWriter, isLoopback } from './icon-writer';
 
 test('the plugin only exists while serving', () => {
@@ -16,4 +22,106 @@ test('anything else is refused, including an absent address', () => {
   for (const addr of ['192.168.1.20', '10.0.0.4', '203.0.113.9', undefined]) {
     expect(isLoopback(addr), String(addr)).toBe(false);
   }
+});
+
+// --- middleware harness -----------------------------------------------
+//
+// Below is a minimal req/res pair rather than a real dev server: enough
+// surface for the handler (`req.url`, `req.method`, `req.socket.remoteAddress`,
+// `res.statusCode`/`setHeader`/`end`) without paying for an actual listening
+// socket.
+
+type Middleware = (req: IncomingMessage, res: ServerResponse, next: () => void) => void | Promise<void>;
+
+/** Runs the plugin's `configureServer` hook against a fake server just to capture the one middleware it registers. */
+function captureMiddleware(plugin: Plugin): Middleware {
+  const hook = plugin.configureServer;
+  if (typeof hook !== 'function') {
+    throw new Error('expected configureServer to be a plain function, not an object hook');
+  }
+  let captured: Middleware | undefined;
+  const fakeServer = {
+    middlewares: {
+      use(fn: Middleware) {
+        captured = fn;
+      },
+    },
+  };
+  // Cast away the hook's declared `this` (a full Rollup/Vite plugin
+  // context) — icon-writer's own configureServer body never references
+  // `this`, so a plain call with just the server argument is all this needs.
+  const call = hook as unknown as (server: unknown) => void;
+  call(fakeServer);
+  if (!captured) throw new Error('the plugin never registered a middleware');
+  return captured;
+}
+
+function fakeRequest(url: string, method: string): IncomingMessage {
+  return { url, method, socket: { remoteAddress: '127.0.0.1' } } as unknown as IncomingMessage;
+}
+
+interface CapturedResponse {
+  statusCode: number;
+  headers: Record<string, string>;
+  body: string;
+}
+
+function fakeResponse(): { res: ServerResponse; captured: CapturedResponse } {
+  const captured: CapturedResponse = { statusCode: 0, headers: {}, body: '' };
+  const res = {
+    setHeader(name: string, value: string) {
+      captured.headers[name] = value;
+    },
+    end(chunk: string) {
+      captured.body = chunk;
+    },
+  };
+  // `statusCode` is a plain settable property on the real ServerResponse, so
+  // mirror that rather than a getter/setter pair.
+  Object.defineProperty(res, 'statusCode', {
+    get: () => captured.statusCode,
+    set: (value: number) => {
+      captured.statusCode = value;
+    },
+  });
+  return { res: res as unknown as ServerResponse, captured };
+}
+
+async function withTempRepo(run: (repoRoot: string) => Promise<void>): Promise<void> {
+  const repoRoot = await mkdtemp(path.join(tmpdir(), 'icon-studio-'));
+  try {
+    await run(repoRoot);
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+}
+
+test('a missing config file still yields the locked defaults', async () => {
+  await withTempRepo(async (repoRoot) => {
+    const middleware = captureMiddleware(iconWriter({ repoRoot }));
+    const { res, captured } = fakeResponse();
+
+    await middleware(fakeRequest('/__icons/config', 'GET'), res, () => {});
+
+    expect(captured.statusCode).toBe(200);
+    expect(JSON.parse(captured.body)).toEqual(DEFAULT_CONFIG);
+  });
+});
+
+test('a config file with invalid JSON yields an error, never the defaults', async () => {
+  await withTempRepo(async (repoRoot) => {
+    const configPath = path.join(repoRoot, 'apps', 'web', 'icons.config.json');
+    await mkdir(path.dirname(configPath), { recursive: true });
+    await writeFile(configPath, '{ this is not json', 'utf8');
+
+    const middleware = captureMiddleware(iconWriter({ repoRoot }));
+    const { res, captured } = fakeResponse();
+
+    await middleware(fakeRequest('/__icons/config', 'GET'), res, () => {});
+
+    expect(captured.statusCode).toBe(500);
+    const payload = JSON.parse(captured.body);
+    expect(payload).not.toEqual(DEFAULT_CONFIG);
+    expect(payload.error).toContain('icons.config.json');
+  });
 });

@@ -7,7 +7,11 @@ test('every known name resolves inside the repo root', () => {
   for (const name of Object.keys(OUTPUTS)) {
     const abs = resolveOutput(name, ROOT);
     expect(abs, name).not.toBeNull();
-    expect(abs!.startsWith(ROOT + path.sep), name).toBe(true);
+    // The expectation above already fails the test if `abs` is null; this
+    // guard exists to make that provable to the type checker too, instead of
+    // asserting it away with `!`.
+    if (abs === null) throw new Error(`resolveOutput(${name}) returned null unexpectedly`);
+    expect(abs.startsWith(ROOT + path.sep), name).toBe(true);
   }
 });
 
