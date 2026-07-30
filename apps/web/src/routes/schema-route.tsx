@@ -15,6 +15,14 @@ function SchemaPage() {
   // render. ModelLoader (inside EerDiagram) reloads whenever `model` changes
   // identity; an unmemoised call here would retrigger that load in a loop.
   const result = useMemo(() => (data ? schemaGraphToModel(data) : null), [data]);
+  // An empty database is not a broken one. `loadModel` treats empty
+  // groups/entities as a load ERROR, so `?database=postgres` (zero user
+  // tables) satisfies BOTH `result.errors.length > 0` and
+  // `data.tables.length === 0` — the two branches below are independent, so a
+  // red "This schema could not be drawn." used to stack on top of "No tables
+  // in this database." The table count is the more specific diagnosis, so it
+  // wins: errors only mean something once there was something to draw.
+  const drawable = !!data && data.tables.length > 0;
 
   // AppShell — like every other shell route — is what mounts the activity rail
   // and the mode panel, and the mode panel is where the database dropdown
@@ -27,13 +35,13 @@ function SchemaPage() {
     <AppShell>
       {isLoading && <p className="p-6 font-sans text-13 text-gray-11">Loading schema…</p>}
       {error && <p className="p-6 font-sans text-13 text-red-11">Failed to load schema.</p>}
-      {result?.errors.length ? (
+      {drawable && result?.errors.length ? (
         <p className="p-6 font-sans text-13 text-red-11">This schema could not be drawn.</p>
       ) : null}
       {data && data.tables.length === 0 && (
         <p className="p-6 font-sans text-13 text-gray-11">No tables in this database.</p>
       )}
-      {result?.model && data && data.tables.length > 0 ? <EerDiagram model={result.model} /> : null}
+      {result?.model && drawable ? <EerDiagram model={result.model} /> : null}
     </AppShell>
   );
 }

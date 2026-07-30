@@ -144,6 +144,10 @@ describe('/schema inside the app shell', () => {
     // better, so the empty case is stated.
     renderSchemaRoute({ schema: emptyGraph, path: '/schema?database=postgres' });
     expect(await screen.findByText('No tables in this database.')).toBeInTheDocument();
+    // ...and ONLY that. loadModel reports empty groups/entities as a load
+    // error, so the error branch and the empty branch both fired and a red
+    // "could not be drawn" stacked above the real explanation.
+    expect(screen.queryByText('This schema could not be drawn.')).not.toBeInTheDocument();
     // The shell survives: the crash used to take the rail with it.
     expect(screen.getByLabelText('Schema')).toBeInTheDocument();
   });
