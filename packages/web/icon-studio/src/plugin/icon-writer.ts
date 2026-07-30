@@ -15,7 +15,7 @@ export function isLoopback(address: string | undefined): boolean {
   return ['127.0.0.1', '::1', '::ffff:127.0.0.1', 'localhost'].includes(address);
 }
 
-/** Four PNGs plus JSON overhead; generous but bounded. */
+/** Three PNGs plus JSON overhead; generous but bounded. */
 const BODY_LIMIT = MAX_BYTES * 6;
 
 export async function readBody(req: IncomingMessage, limit = BODY_LIMIT): Promise<string> {
@@ -96,6 +96,16 @@ export function iconWriter({ repoRoot }: { repoRoot: string }): Plugin {
         }
 
         if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
+
+        // A `fetch` with a JSON content-type is preflighted, and the method
+        // check above already refuses the preflight's OPTIONS. But a
+        // `<form enctype="text/plain">` POST is a *simple* request — no
+        // preflight — and a `name=value` body split happens to be valid
+        // JSON. Requiring the header a form cannot set closes that gap.
+        if (!(req.headers['content-type'] ?? '').includes('application/json')) {
+          return send(res, 415, { error: 'content-type must be application/json' });
+        }
+
         try {
           const body = JSON.parse(await readBody(req));
           send(res, 200, await runGenerate(body, repoRoot));

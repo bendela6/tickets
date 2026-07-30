@@ -18,7 +18,12 @@ export function Studio() {
   useEffect(() => {
     fetchConfig()
       .then((loaded) => dispatch({ type: 'loadConfig', config: loaded }))
-      .catch(() => setError('Could not read icons.config.json — showing defaults.'));
+      .catch((e: unknown) => {
+        // Render the server's own message (which carries the `(EACCES)` or
+        // parse detail — see icon-writer.ts's isFsError handling) rather
+        // than a generic string that would discard it.
+        setError(e instanceof Error ? e.message : 'Could not read icons.config.json.');
+      });
   }, []);
 
   async function onGenerate() {

@@ -1,6 +1,6 @@
-import { contrast, verdict } from '../color';
+import { contrast, verdict, type Verdict } from '../color';
 
-const TONE: Record<string, string> = {
+const TONE: Record<Verdict, string> = {
   ok: 'text-green-11',
   min: 'text-orange-11',
   bad: 'text-pink-11',

@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { DEFAULT_CONFIG } from '../config';
@@ -122,6 +122,21 @@ test('rejects a png payload that is not a png', async () => {
 test('rejects a malformed body without throwing', async () => {
   const root = await fakeRepo();
   await expect(runGenerate({ nope: true }, root)).rejects.toThrow(/config/);
+});
+
+test('rejects a non-string png payload before writing anything, rather than crashing inside decodePng', async () => {
+  const root = await fakeRepo();
+  // A non-string value (e.g. `{"icon-192.png": 123}`) would otherwise reach
+  // `decodePng`, which calls `.replace` on it and throws a raw
+  // "payload.replace is not a function" — after the derived outputs had
+  // already been written. Rejecting it in assertRequest keeps the whole
+  // request from writing anything at all.
+  await expect(
+    runGenerate({ config: DEFAULT_CONFIG, pngs: { 'icon-192.png': 123 } }, root),
+  ).rejects.toThrow(/body\.pngs/);
+
+  const entries = await readdir(path.join(root, 'apps', 'web'));
+  expect(entries).toEqual(['index.html']);
 });
 
 test('rejects a non-hex colour in light', async () => {

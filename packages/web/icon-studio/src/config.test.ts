@@ -17,7 +17,20 @@ test('the bare mark holds the 1/3 weight-to-reach ratio', () => {
 });
 
 test('the chip holds the same ratio', () => {
-  expect(DEFAULT_CONFIG.chipWeight / DEFAULT_CONFIG.chipReach).toBeCloseTo(RATIO, 2);
+  // chipWeight is committed to one decimal place — a paintable stroke width —
+  // so it cannot equal chipReach * RATIO (14 * 1/3 = 4.6667) exactly. 4.6,
+  // not 4.7, is what got locked when the design rounded that value down to
+  // one decimal. Assert the real relationship (chipWeight against
+  // chipReach * RATIO, in stroke-width units) with a tolerance that names
+  // its own budget, rather than `toBeCloseTo(RATIO, 2)` on the ratio itself:
+  // that compared numbers 0.00476 apart against a 0.005 threshold, so a
+  // single extra digit of drift in either value would have passed silently.
+  // 0.1 is comfortably above the current 0.0667 gap (real headroom) while
+  // still well below what a genuine mismatch between chipWeight and
+  // chipReach would produce.
+  const CHIP_WEIGHT_TOLERANCE = 0.1;
+  const expectedChipWeight = DEFAULT_CONFIG.chipReach * RATIO;
+  expect(Math.abs(DEFAULT_CONFIG.chipWeight - expectedChipWeight)).toBeLessThan(CHIP_WEIGHT_TOLERANCE);
 });
 
 test('every preset supplies three light, three dark and a chip', () => {

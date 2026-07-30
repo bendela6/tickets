@@ -100,6 +100,30 @@ function assertPositiveWeight(value: unknown, field: string): number {
 }
 
 /**
+ * `config` is validated exhaustively above, but `pngs`' values were only ever
+ * trusted as `Record<string, string>` by a cast — so `{"icon-192.png": 123}`
+ * would reach `decodePng`, which calls `.replace` on it and throws a raw
+ * `payload.replace is not a function` instead of a clean rejection. Checking
+ * the shape here, before anything is derived or written, keeps a malformed
+ * `pngs` entry from ever reaching that point — consistent with why `config`
+ * is validated up front instead of failing wherever it's first used.
+ */
+function assertPngs(value: unknown, field: string): Record<string, string> {
+  if (value === undefined) return {};
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error(`${field} must be an object`);
+  }
+  const out: Record<string, string> = {};
+  for (const [name, payload] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof payload !== 'string') {
+      throw new Error(`${field}["${name}"] must be a base64-encoded string`);
+    }
+    out[name] = payload;
+  }
+  return out;
+}
+
+/**
  * Every colour and number is validated before anything is derived or
  * written. These raw values are template-interpolated *unescaped* into SVG
  * and HTML attributes downstream (`generate/svg.ts` writes `stroke="…"` and
@@ -112,7 +136,7 @@ function assertPositiveWeight(value: unknown, field: string): number {
  */
 function assertRequest(body: unknown): GenerateRequest {
   if (typeof body !== 'object' || body === null) throw new Error('body must be an object');
-  const { config, pngs } = body as { config?: unknown; pngs?: Record<string, string> };
+  const { config, pngs } = body as { config?: unknown; pngs?: unknown };
   if (typeof config !== 'object' || config === null) throw new Error('body.config is required');
   const c = config as Record<string, unknown>;
 
@@ -126,7 +150,7 @@ function assertRequest(body: unknown): GenerateRequest {
     chipWeight: assertPositiveWeight(c.chipWeight, 'body.config.chipWeight'),
   };
 
-  return { config: validConfig, pngs: pngs ?? {} };
+  return { config: validConfig, pngs: assertPngs(pngs, 'body.pngs') };
 }
 
 export async function runGenerate(body: unknown, repoRoot: string): Promise<GenerateResponse> {
