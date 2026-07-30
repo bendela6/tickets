@@ -1,12 +1,12 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { DEFAULT_CONFIG } from './config';
+import { DEFAULT_DOC } from './doc';
 import { Studio } from './studio';
 
 beforeEach(() => {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string) => {
-      if (url === '/__icons/config') return { ok: true, json: async () => DEFAULT_CONFIG };
+      if (url === '/__icons/config') return { ok: true, json: async () => DEFAULT_DOC };
       return { ok: true, json: async () => ({ results: [] }) };
     }),
   );
@@ -94,7 +94,8 @@ test('wires each stick colour picker to its own index, not a neighbour', async (
   const top = screen.getByLabelText('light top') as HTMLInputElement;
   const mid = screen.getByLabelText('light mid') as HTMLInputElement;
   const low = screen.getByLabelText('light low') as HTMLInputElement;
-  const [originalTop, , originalLow] = DEFAULT_CONFIG.light;
+  const originalTop = DEFAULT_DOC.inks.top?.light;
+  const originalLow = DEFAULT_DOC.inks.low?.light;
 
   fireEvent.change(mid, { target: { value: '#123456' } });
 
