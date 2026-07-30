@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { SchemaDescription } from '../../../node/describe-drizzle';
+import type { SchemaDescription } from '../describe-drizzle';
 import { importDrizzle } from './import-drizzle';
 
 const DESC: SchemaDescription = {

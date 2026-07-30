@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 
-import * as schema from '../../../../../packages/db/src/schema/index';
+import * as schema from '../../index';
 
 import { describeDrizzle } from './describe-drizzle';
 

@@ -1,5 +1,7 @@
-// The gate (Task 7 of the drizzle-roundtrip plan): proves apps/eer round-trips
-// a drizzle schema with nothing lost.
+// The gate (moved from the eer app to packages/db, Task 1 of the eer-web-module
+// plan, 2026-07-30 — originally Task 7 of the drizzle-roundtrip plan): proves
+// @tickets/db's schema round-trips through a drizzle schema module with
+// nothing lost.
 //
 //   describe (schema) -> import -> export -> load generated module
 //     Gate A: describeDrizzle(regenerated) deep-equals describeDrizzle(original)
@@ -8,17 +10,19 @@
 //
 // TWO schemas are run through the same four assertions:
 //   1. the repo's REAL 22-table drizzle schema (packages/db/src/schema) — a
-//      regression gate: this is the schema apps/eer actually has to serve.
-//   2. a hand-written "kitchen sink" fixture (test/fixtures/kitchen-sink-schema.ts)
+//      regression gate: this is the schema this package actually has to serve.
+//   2. a hand-written "kitchen sink" fixture (fixtures/kitchen-sink-schema.ts)
 //      exercising constructs the real schema never happens to use — varchar/char
 //      lengths, numeric precision+scale, fk onDelete+onUpdate, non-default index
 //      methods/opClasses, identity sequence options, etc. A reviewer proved gate 1
 //      alone is blind to regressions in every one of those (disabling each
 //      emitter in export-drizzle.ts one at a time left gate 1 green) — see
-//      task-7-report.md.
+//      the eer app's (now-historical) task-7-report.md.
 //
-// Node-only (see vitest.config.ts's environmentMatchGlobs): loadGeneratedModule
-// writes to disk and dynamically imports, and the typecheck helper shells out to tsc.
+// packages/db's vitest.config.ts already runs everything under environment
+// 'node' (unlike the eer app's, this package has no jsdom suites to match away
+// from) — loadGeneratedModule writes to disk and dynamically imports, and the
+// typecheck helper shells out to tsc, both of which just work under plain node.
 //
 // Import the @tickets/db schema BARREL by relative path, never the package
 // root (`src/index.ts`) — that pulls in client.ts/environment.ts, which touch
@@ -31,20 +35,20 @@ import { fileURLToPath } from 'node:url';
 import { generateDrizzleJson, generateMigration } from 'drizzle-kit/api';
 import { expect, it } from 'vitest';
 
-import * as realSchema from '../../../../../packages/db/src/schema/index';
-import { describeDrizzle } from '../../node/describe-drizzle';
-import { importDrizzle } from '../../engine/model/import-drizzle';
-import type { ImportReport } from '../../engine/model/import-drizzle';
-import { exportDrizzle } from '../../engine/model/export-drizzle';
-import type { Model } from '../../engine/model/types';
-import * as kitchenSinkSchema from '../fixtures/kitchen-sink-schema';
-import { loadGeneratedModule } from '../helpers/load-generated-module';
+import * as realSchema from '../index';
+import { describeDrizzle } from './describe-drizzle';
+import { importDrizzle } from './import-drizzle';
+import type { ImportReport } from './import-drizzle';
+import { exportDrizzle } from './export-drizzle';
+import type { Model } from './types';
+import * as kitchenSinkSchema from './fixtures/kitchen-sink-schema';
+import { loadGeneratedModule } from './load-generated-module';
 
 // Same rationale as load-generated-module.ts: the generated file's bare
 // imports (`drizzle-orm`, `drizzle-orm/pg-core`) only resolve — for tsc's
 // module resolution as much as Node's/Vite's — from a directory that has
-// apps/eer/node_modules as an ancestor. The OS tmp dir does not.
-const EER_ROOT = dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url))))); // src/test/gate -> apps/eer
+// packages/db/node_modules as an ancestor. The OS tmp dir does not.
+const DB_ROOT = dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url))))); // src/schema/drizzle-roundtrip -> packages/db
 
 // ---- shared round-trip machinery (used by both the real-schema gate and the
 // kitchen-sink gate below) ----
@@ -70,13 +74,13 @@ async function runRoundtripGate(schemaModule: Record<string, unknown>): Promise<
   return { model, report };
 }
 
-// export -> write to a temp file under apps/eer/node_modules -> tsc --strict.
+// export -> write to a temp file under packages/db/node_modules -> tsc --strict.
 async function assertGeneratedFileTypechecks(schemaModule: Record<string, unknown>): Promise<void> {
   const before = describeDrizzle(schemaModule, []);
   const { model } = importDrizzle(before, null);
   const source = exportDrizzle(model);
 
-  const dir = await mkdtemp(join(EER_ROOT, 'node_modules', '.eer-tsc-'));
+  const dir = await mkdtemp(join(DB_ROOT, 'node_modules', '.db-tsc-'));
   const file = join(dir, 'schema.generated.ts');
   try {
     await writeFile(file, source, 'utf8');
@@ -92,10 +96,10 @@ async function assertGeneratedFileTypechecks(schemaModule: Record<string, unknow
         '--moduleResolution',
         'bundler',
         '--skipLibCheck',
-        '--ignoreConfig', // apps/eer/tsconfig.json sits above this temp file; a bare file arg would otherwise warn (TS5112) and be treated as an error below
+        '--ignoreConfig', // packages/db/tsconfig.json sits above this temp file; a bare file arg would otherwise warn (TS5112) and be treated as an error below
         file,
       ],
-      { encoding: 'utf8', shell: true, cwd: EER_ROOT },
+      { encoding: 'utf8', shell: true, cwd: DB_ROOT },
     );
 
     expect(stdout).toBe(''); // tsc prints errors to stdout

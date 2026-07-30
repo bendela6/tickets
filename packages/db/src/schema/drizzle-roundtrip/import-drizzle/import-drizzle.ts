@@ -33,7 +33,7 @@ import type {
   SchemaDescription,
   TableDescription,
   UnsupportedConstruct,
-} from '../../../node/describe-drizzle';
+} from '../describe-drizzle';
 
 export interface ChangeRow {
   table: string;
