@@ -2,10 +2,8 @@ import { groupColor } from '../../engine/colors/group-color';
 import type { RoutingMode } from '../../engine/model/types';
 import { useDiagramActions, useDiagramModelOrNull, useDiagramUi, useDiagramView } from '../../state/diagram-context';
 import { cn } from '@tickets/ui';
-import { useEditor } from '../editor';
 import { btn } from './button-class';
 import { Chip } from './chip';
-import { ModelMenu } from './model-menu';
 import { SearchBox } from './search-box';
 import { ToggleGroup } from './toggle-group';
 
@@ -25,7 +23,6 @@ export function TopBar() {
   const view = useDiagramView();
   const ui = useDiagramUi();
   const actions = useDiagramActions();
-  const { openModal } = useEditor();
 
   const cycleRouting = () => {
     const order: RoutingMode[] = ['curved', 'avoid', 'ortho'];
@@ -48,18 +45,7 @@ export function TopBar() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <ModelMenu />
         <SearchBox />
-
-        <button
-          type="button"
-          className={btn}
-          disabled={!model}
-          title="Add a group or table"
-          onClick={() => openModal({ kind: 'add' })}
-        >
-          + Add
-        </button>
 
         {model && model.groups.some((g) => !g.parent) && (
           <ToggleGroup label="Groups">
@@ -97,28 +83,6 @@ export function TopBar() {
         <button type="button" className={btn} title="Re-pack entities by group" onClick={() => actions.rearrange()}>
           Rearrange
         </button>
-
-        {import.meta.env.DEV && (
-          <>
-            <button
-              type="button"
-              className={btn}
-              title="Dry-run a scan of a drizzle schema module against this model"
-              onClick={() => openModal({ kind: 'import' })}
-            >
-              Import
-            </button>
-            <button
-              type="button"
-              className={btn}
-              disabled={!model}
-              title="Preview and write this model out as a drizzle schema module"
-              onClick={() => openModal({ kind: 'export' })}
-            >
-              Export
-            </button>
-          </>
-        )}
       </div>
     </header>
   );

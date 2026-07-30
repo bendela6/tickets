@@ -1,10 +1,10 @@
 import { act, fireEvent } from '@testing-library/react';
 import { expect, it } from 'vitest';
 
-import { EdgesSvg } from '../../components/diagram/edges-svg';
-import { EntityCards } from '../../components/diagram/entity-cards';
-import { World } from '../../components/diagram/world';
-import { ZoneBoxes } from '../../components/diagram/zone-boxes';
+import { EdgesSvg } from '../../view/diagram/edges-svg';
+import { EntityCards } from '../../view/diagram/entity-cards';
+import { World } from '../../view/diagram/world';
+import { ZoneBoxes } from '../../view/diagram/zone-boxes';
 import { useDiagramModelOrNull, useViewportRef } from '../../state/diagram-context';
 import { renderDiagram } from '../../test/render';
 import { useDiagramGestures } from './use-diagram-gestures';

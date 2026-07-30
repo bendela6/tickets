@@ -1,6 +1,5 @@
-// Shared default top-bar button look — used by both <TopBar/>'s own buttons
-// (Fit, Rearrange, …) and <ModelMenu/>'s (New, Save), so it's defined once here
-// instead of duplicated in each file.
+// Shared default top-bar button look — <TopBar/>'s own buttons (Lines, Fit,
+// Rearrange, …), defined once here instead of duplicated per-button.
 
 import { cn } from '@tickets/ui';
 

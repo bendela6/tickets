@@ -3,18 +3,12 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { twoZoneRaw } from '../../test/models';
 import { renderDiagram } from '../../test/render';
-import { EditorModals } from '../editor';
 import { SidePanel } from './side-panel';
 
 afterEach(cleanup);
 
 async function render() {
-  return renderDiagram(
-    <EditorModals>
-      <SidePanel />
-    </EditorModals>,
-    twoZoneRaw(),
-  );
+  return renderDiagram(<SidePanel />, twoZoneRaw());
 }
 
 describe('SidePanel', () => {
