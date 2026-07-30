@@ -9,15 +9,26 @@ export interface StudioState {
 
 export const INITIAL_STATE: StudioState = { doc: structuredClone(DEFAULT_DOC) };
 
-/** A new element of each type, placed so it is visible the moment it is added. */
+/**
+ * A new element of each type, placed so it is visible the moment it is
+ * added. Every branch must set `spin` — not just `stick`, whose bare mark
+ * happens to start spun — because `updateElement` below only ever applies a
+ * patch key already present on the target element (`key in e`), a guard
+ * that exists to stop a *different* element type's field from attaching.
+ * Neither the guard nor an omitted `spin` here is wrong on its own; the two
+ * together produce a silent no-op: a ring or dot added through the UI would
+ * carry no `spin` key, so toggling its spin checkbox would dispatch a patch
+ * the guard then quietly drops, and `spinningIndexes` in motion.ts would
+ * never see that element as eligible to run.
+ */
 function blankElement(type: ElementType, id: string): Element {
   switch (type) {
     case 'stick':
       return { id, type, ink: 'top', spin: true, angle: 0, reach: BARE_REACH, weight: 6 };
     case 'ring':
-      return { id, type, ink: 'top', radius: 15, weight: 3 };
+      return { id, type, ink: 'top', spin: false, radius: 15, weight: 3 };
     case 'dot':
-      return { id, type, ink: 'top', at: [24, 24], radius: 4 };
+      return { id, type, ink: 'top', spin: false, at: [24, 24], radius: 4 };
   }
 }
 
