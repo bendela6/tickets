@@ -61,13 +61,20 @@ function motionOf(value: unknown): MotionConfig {
   };
 }
 
-/** Already a document? Recognised by the two fields the old shape never had. */
+/** Already a document? All four required fields must be structurally present. */
 function isDoc(value: unknown): value is IconDoc {
-  return isRecord(value) && Array.isArray(value.elements) && isRecord(value.inks);
+  return (
+    isRecord(value)
+    && Array.isArray(value.elements)
+    && isRecord(value.inks)
+    && isRecord(value.variants)
+    && isRecord(value.motion)
+    && typeof (value.motion as Record<string, unknown>).speed === 'number'
+  );
 }
 
 export function toDoc(value: unknown): IconDoc {
-  if (isDoc(value)) return value;
+  if (isDoc(value)) return structuredClone(value);
   if (!isRecord(value)) return structuredClone(DEFAULT_DOC);
 
   const light = hexTriple(value.light);
