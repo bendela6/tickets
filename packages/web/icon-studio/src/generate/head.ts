@@ -9,7 +9,7 @@ export const HEAD_END = '<!-- icons:end -->';
  * status bar style have to be declared here too.
  */
 export function buildHeadBlock(c: MarkConfig): string {
-  return `${HEAD_START}
+  return `    ${HEAD_START}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="mask-icon" href="/icon-mono.svg" color="${c.light[0]}" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -45,7 +45,10 @@ export function injectHeadBlock(html: string, block: string): string {
   }
 
   if (start !== -1 && end !== -1) {
-    return html.slice(0, start) + block + html.slice(end + HEAD_END.length);
+    // Replace path: strip whitespace before marker to avoid double indentation,
+    // since buildHeadBlock now owns the indentation for all lines.
+    const lineStart = html.lastIndexOf('\n', start) + 1;
+    return html.slice(0, lineStart) + block + html.slice(end + HEAD_END.length);
   }
 
   const close = html.indexOf('</head>');
@@ -53,8 +56,8 @@ export function injectHeadBlock(html: string, block: string): string {
     throw new Error('cannot inject icon tags: no </head> found in index.html');
   }
 
-  // Keep the closing tag's own indentation by inserting on the line above it.
+  // Insert path: place block on its own line before </head>.
+  // buildHeadBlock owns the indentation for all lines.
   const lineStart = html.lastIndexOf('\n', close) + 1;
-  const indent = html.slice(lineStart, close);
-  return html.slice(0, lineStart) + indent + block + '\n' + html.slice(lineStart);
+  return html.slice(0, lineStart) + block + '\n' + html.slice(lineStart);
 }
