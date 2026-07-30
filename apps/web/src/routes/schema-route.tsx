@@ -1,18 +1,16 @@
 import { createRoute } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
-import { fetchJson } from '../api/client';
+import { useSchemaGraph } from '../api/use-schema';
 import { renderErd } from '../components/schema/erd-engine';
-import type { SchemaGraph } from '../components/schema/erd-types';
 import '../components/schema/erd.css';
 import { rootRoute } from './root-route';
 
+export type SchemaSearch = { database?: string };
+
 function SchemaPage() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['schema'],
-    queryFn: () => fetchJson<SchemaGraph>('/api/schema'),
-  });
+  const { database } = schemaRoute.useSearch();
+  const { data, isLoading, error } = useSchemaGraph(database);
 
   useEffect(() => {
     if (!data || !containerRef.current) return;
@@ -21,9 +19,9 @@ function SchemaPage() {
   }, [data]);
 
   return (
-    <div style={{ height: '100vh', overflow: 'auto', background: 'var(--color-gray-1)', color: 'var(--color-gray-12)' }}>
-      {isLoading && <p style={{ padding: 24 }}>Loading schema…</p>}
-      {error && <p style={{ padding: 24, color: 'var(--color-red-9)' }}>Failed to load schema.</p>}
+    <div className="h-screen overflow-auto bg-gray-1 text-gray-12">
+      {isLoading && <p className="p-6 font-sans text-13 text-gray-11">Loading schema…</p>}
+      {error && <p className="p-6 font-sans text-13 text-red-11">Failed to load schema.</p>}
       <div ref={containerRef} />
     </div>
   );
@@ -32,5 +30,12 @@ function SchemaPage() {
 export const schemaRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/schema',
+  // Only `database` survives, and only as a non-empty string: an empty value
+  // must fall back to the API's configured database rather than being sent
+  // through as `?database=`.
+  validateSearch: (search: Record<string, unknown>): SchemaSearch =>
+    typeof search.database === 'string' && search.database.length > 0
+      ? { database: search.database }
+      : {},
   component: SchemaPage,
 });
