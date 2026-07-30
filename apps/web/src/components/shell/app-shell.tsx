@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { ActivityRail } from './activity-rail';
+import { BrandMark } from './brand-mark';
 import { ModePanel } from './mode-panel';
 import { modeForPath } from './mode-for-path';
 
@@ -52,7 +53,7 @@ export function AppShell({
         >
           ☰
         </button>
-        <span aria-hidden className="size-2.25 rounded-none bg-indigo-9" />
+        <BrandMark size={18} />
         <span className="font-mono text-15 font-600 text-gray-12">tickets</span>
       </div>
 
