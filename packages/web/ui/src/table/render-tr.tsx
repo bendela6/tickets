@@ -2,7 +2,7 @@ import type { RenderTrCtx } from '@tickets/table';
 import { cn } from '../style';
 import { ROW_INSET } from './metrics';
 
-export function renderTr<T>({ index, cells, gridTemplate, style, onClick }: RenderTrCtx<T>) {
+export function renderTr<T>({ index, cells, gridTemplate, style, onClick, overlay }: RenderTrCtx<T>) {
   return (
     <div
       role="row"
@@ -32,6 +32,10 @@ export function renderTr<T>({ index, cells, gridTemplate, style, onClick }: Rend
       }}
     >
       {cells}
+      {/* After the cells, so it paints over them. The row is already
+          `position: absolute` from the virtualizer, so an absolutely
+          positioned overlay resolves against this row. */}
+      {overlay}
     </div>
   );
 }

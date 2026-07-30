@@ -7,6 +7,7 @@ import { renderTr } from './render-tr';
 import { renderTd } from './render-td';
 import { renderSkeletonRow } from './render-skeleton-row';
 import { renderError } from './render-error';
+import { renderEmpty } from './render-empty';
 import { renderGroupHeader } from './render-group-header';
 
 /**
@@ -36,5 +37,6 @@ export function tableRender<T>(): TableRender<T> {
     groupHeader: renderGroupHeader,
     skeletonRow: renderSkeletonRow,
     error: renderError,
+    empty: renderEmpty,
   };
 }

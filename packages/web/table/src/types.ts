@@ -65,6 +65,14 @@ export interface RenderTrCtx<T> {
   /** Virtualization positioning. MUST be applied or the row will not appear. */
   style: CSSProperties;
   onClick?: () => void;
+  /** Row-level chrome that is NOT a column — hover actions floating over the
+   *  row's right edge, a peek hint. Rendered after the cells, inside the row,
+   *  which the virtualizer has already positioned; an absolutely-positioned
+   *  overlay therefore resolves against the row rather than the page.
+   *
+   *  This exists so such chrome does not have to become a column and reserve
+   *  permanent width for something only visible on hover. */
+  overlay?: ReactNode;
 }
 
 export const ROW_HEIGHT = 40;
@@ -93,6 +101,13 @@ export interface RenderErrorCtx {
   error: Error;
 }
 
+export interface RenderEmptyCtx {
+  /** Why the table is empty. "Nothing here yet" and "your filters hide
+   *  everything" need different copy and different actions, and only the
+   *  caller knows which applies — the engine is handed rows, not a query. */
+  filtered: boolean;
+}
+
 export interface TableRender<T = unknown> {
   root: (ctx: RenderRootCtx) => ReactNode;
   thead: (ctx: RenderTheadCtx) => ReactNode;
@@ -103,6 +118,7 @@ export interface TableRender<T = unknown> {
   groupHeader: (ctx: RenderGroupHeaderCtx) => ReactNode;
   skeletonRow: (ctx: RenderSkeletonRowCtx<T>) => ReactNode;
   error: (ctx: RenderErrorCtx) => ReactNode;
+  empty: (ctx: RenderEmptyCtx) => ReactNode;
 }
 
 /** Height of a group header row in pixels. Exported so the adapter styling and

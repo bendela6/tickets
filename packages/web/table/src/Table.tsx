@@ -29,6 +29,12 @@ export interface TableProps<T> {
    *  caller with a density toggle must pass the height for the current mode
    *  rather than styling rows and hoping. Defaults to ROW_HEIGHT. */
   rowHeight?: number;
+  /** Row-level chrome that is not a column — see `RenderTrCtx.overlay`. */
+  rowOverlay?: (row: T) => ReactNode;
+  /** Whether a filter is responsible for there being no rows. Forwarded to the
+   *  `empty` slot, which needs it to choose its copy. The engine cannot infer
+   *  it: it receives rows, never the query that produced them. */
+  isFiltered?: boolean;
 }
 
 export function Table<T>(props: TableProps<T>): ReactNode {
@@ -44,6 +50,8 @@ export function Table<T>(props: TableProps<T>): ReactNode {
     isLoading,
     error,
     rowHeight = ROW_HEIGHT,
+    rowOverlay,
+    isFiltered = false,
   } = props;
 
   // An ungrouped table is one implicit group's worth of rows, so both shapes
@@ -167,11 +175,18 @@ export function Table<T>(props: TableProps<T>): ReactNode {
             gridTemplate={gridTemplate}
             style={style}
             onClick={onRowClick ? () => onRowClick(item.row) : undefined}
+            overlay={rowOverlay ? rowOverlay(item.row) : undefined}
             slot={render.tr}
           />
         );
       }),
     });
+  } else {
+    // Not loading, no error, nothing to show. Rendered INSIDE root so the empty
+    // state sits under the column header and within the scroll container,
+    // rather than beside the table where a caller would otherwise have to put
+    // it — losing the header above it.
+    bodyNode = render.empty({ filtered: isFiltered });
   }
 
   return (
@@ -219,6 +234,7 @@ function RenderTr<T>(props: {
   gridTemplate: string;
   style: CSSProperties;
   onClick?: () => void;
+  overlay?: ReactNode;
   slot: TableRender<T>['tr'];
 }): ReactNode {
   return props.slot({
@@ -228,6 +244,7 @@ function RenderTr<T>(props: {
     gridTemplate: props.gridTemplate,
     style: props.style,
     onClick: props.onClick,
+    overlay: props.overlay,
   });
 }
 

@@ -40,7 +40,7 @@ export function makeStubRender<T>(): TableRender<T> {
         </div>
       );
     },
-    tr: ({ row, index, cells, gridTemplate, style, onClick }) => {
+    tr: ({ row, index, cells, gridTemplate, style, onClick, overlay }) => {
       return (
         <div
           data-slot="tr"
@@ -51,6 +51,7 @@ export function makeStubRender<T>(): TableRender<T> {
           onClick={onClick}
         >
           {cells}
+          {overlay ? <span data-slot="row-overlay">{overlay}</span> : null}
         </div>
       );
     },
@@ -83,5 +84,6 @@ export function makeStubRender<T>(): TableRender<T> {
       );
     },
     error: ({ error }) => <div data-slot="error">{error.message}</div>,
+    empty: ({ filtered }) => <div data-slot="empty" data-filtered={String(filtered)} />,
   };
 }

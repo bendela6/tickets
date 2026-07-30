@@ -12,6 +12,7 @@ export type {
   RenderTdCtx,
   RenderSkeletonRowCtx,
   RenderErrorCtx,
+  RenderEmptyCtx,
 } from './types';
 export { ROW_HEIGHT } from './types';
 export { toggleSort, multiSortToggle } from './sort-utils';
