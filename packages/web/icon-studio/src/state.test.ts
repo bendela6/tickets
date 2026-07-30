@@ -55,3 +55,38 @@ test('matchRatio derives the chip stroke from its reach', () => {
   const matched = studioReducer(wide, { type: 'matchRatio' });
   expect(toConfig(matched).chipWeight).toBeCloseTo(6, 1);
 });
+
+test('setChip sets the chip colour and leaves everything else untouched', () => {
+  const next = studioReducer(INITIAL_STATE, { type: 'setChip', hex: '#abcdef' });
+  const config = toConfig(next);
+  expect(config.chip).toBe('#abcdef');
+  expect(config.light).toEqual(DEFAULT_CONFIG.light);
+  expect(config.dark).toEqual(DEFAULT_CONFIG.dark);
+  expect(config.angles).toEqual(DEFAULT_CONFIG.angles);
+  expect(config.bareWeight).toBe(DEFAULT_CONFIG.bareWeight);
+  expect(config.chipReach).toBe(DEFAULT_CONFIG.chipReach);
+  expect(config.chipWeight).toBe(DEFAULT_CONFIG.chipWeight);
+});
+
+test('loadConfig replaces the whole state and clears adjustments', () => {
+  const dirty = studioReducer(INITIAL_STATE, { type: 'setAdjust', mode: 'light', patch: { lit: 0.3 } });
+  expect(toConfig(dirty).light).not.toEqual(DEFAULT_CONFIG.light);
+
+  const customConfig: typeof DEFAULT_CONFIG = {
+    light: ['#111111', '#222222', '#333333'],
+    dark: ['#444444', '#555555', '#666666'],
+    chip: '#999999',
+    angles: [30, 60, 90],
+    bareWeight: 1.5,
+    chipReach: 12,
+    chipWeight: 4,
+  };
+
+  const next = studioReducer(dirty, { type: 'loadConfig', config: customConfig });
+  const result = toConfig(next);
+
+  expect(result).toEqual(customConfig);
+  expect(result.light).not.toBe(customConfig.light);
+  expect(result.dark).not.toBe(customConfig.dark);
+  expect(result.angles).not.toBe(customConfig.angles);
+});
