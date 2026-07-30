@@ -86,7 +86,7 @@ export function FieldRow({
       {badge && (
         <span
           className={cn(
-            'shrink-0 text-center font-mono text-9 font-semibold tracking-wide text-gray-9',
+            'shrink-0 text-center font-mono text-9 font-600 tracking-wide text-gray-9',
             {
               'text-yellow-9': badge === 'pk',
               'text-green-9': badge === 'fk',

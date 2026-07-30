@@ -66,9 +66,9 @@ export function ZoneBoxes() {
               data-zone-label=""
               className={cn(
                 'pointer-events-none absolute left-3 top-2',
-                'text-12 font-semibold uppercase tracking-wide text-(--zone-ink)',
+                'text-12 font-600 uppercase tracking-wide text-(--zone-ink)',
                 {
-                  'text-10 font-medium normal-case': subgroup,
+                  'text-10 font-500 normal-case': subgroup,
                   'text-gray-12': selected,
                 },
               )}

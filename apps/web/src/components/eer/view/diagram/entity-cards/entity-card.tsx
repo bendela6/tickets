@@ -59,7 +59,7 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
           'bg-(--card-hd-bg)',
         )}
       >
-        <span className="font-mono text-13 font-medium text-gray-12">{e.label}</span>
+        <span className="font-mono text-13 font-500 text-gray-12">{e.label}</span>
       </div>
       <div className="py-1">
         {e.columns.map((f, i) => (
