@@ -15,6 +15,20 @@ const splitRowKey = (key: string): [table: string, column: string] => {
 };
 const NS = 'http://www.w3.org/2000/svg';
 
+// GroupMeta.color is an Instrument option hue NAME ('blue', 'indigo', …); these
+// resolve it to real token values.
+//
+// They exist because this file used to emit `var(--ins-opt-<hue>)`, and
+// `--ins-opt-*` is defined NOWHERE in the repo — it went away with the numbered
+// token migration (a97f987) and nothing repointed the one file still asking for
+// it. An undefined custom property makes the declaration invalid, so every edge
+// fell back to SVG's default `stroke: none`: the paths were built with correct
+// geometry and painted with nothing. Group boxes and card headers lost their
+// borders and fills the same way. Steps 9 (solid) and 3 (subtle) match how the
+// rest of the app uses these ramps.
+const hue = (name: string) => `var(--color-${name}-9)`;
+const hueSubtle = (name: string) => `var(--color-${name}-3)`;
+
 const el = (tag: string, cls?: string) => {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -64,8 +78,8 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
       }
     }
     const box = el('div', 'erd-group-box');
-    box.style.setProperty('--gc', `var(--ins-opt-${group.color})`);
-    box.style.setProperty('--gc-s', `var(--ins-opt-${group.color}-subtle)`);
+    box.style.setProperty('--gc', hue(group.color));
+    box.style.setProperty('--gc-s', hueSubtle(group.color));
     const head = el('div', 'erd-group-head');
     head.append(txt('erd-g-label', group.label));
     box.append(head);
@@ -188,7 +202,7 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
       // colors via inline style, not presentation attributes: some engines don't
       // resolve var() inside SVG presentation attributes, but inline style is real CSS.
       g.style.fill = 'none';
-      g.style.stroke = `var(--ins-opt-${groupByKey.get(tableById.get(p.e.tgt)!.group)!.color})`;
+      g.style.stroke = hue(groupByKey.get(tableById.get(p.e.tgt)!.group)!.color);
       g.setAttribute('stroke-width', '1.5');
       const path = document.createElementNS(NS, 'path');
       path.setAttribute('d', roundedPath(pts));
@@ -271,8 +285,8 @@ function buildCard(t: TableMeta, group: GroupMeta): HTMLElement {
   const id = qualifiedName(t.schema, t.name);
   const card = el('article', 'erd-card');
   card.dataset.table = id;
-  card.style.setProperty('--cc', `var(--ins-opt-${group.color})`);
-  card.style.setProperty('--cc-s', `var(--ins-opt-${group.color}-subtle)`);
+  card.style.setProperty('--cc', hue(group.color));
+  card.style.setProperty('--cc-s', hueSubtle(group.color));
   const head = el('header', 'erd-card-head');
   head.append(txt('erd-card-title', id));
   card.append(head);

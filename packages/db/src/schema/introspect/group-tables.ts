@@ -3,9 +3,10 @@ import { SCHEMA_GROUPS } from '../schema-groups';
 
 /**
  * Hues for namespace fallback groups, ordered so the first few are maximally
- * distinct. Instrument option hue NAMES — the renderer interpolates these into
- * `var(--ins-opt-<name>)`, so a hex or an invented name yields an invalid
- * custom property. `gray` is absent: it reads as "no group" rather than a hue.
+ * distinct. Instrument option hue NAMES — the renderer resolves each into
+ * `var(--color-<name>-9)` (and `-3` for subtle fills), so a hex or an invented
+ * name yields an undefined custom property and paints nothing at all.
+ * `gray` is absent: it reads as "no group" rather than a hue.
  */
 const FALLBACK_HUES = ['blue', 'green', 'orange', 'purple', 'teal', 'cyan', 'pink', 'red', 'yellow'];
 
