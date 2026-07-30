@@ -52,8 +52,8 @@ export function GroupDetail({
               const n = model.entities.filter((e) => e.group === sg.id).length;
               return (
                 <button key={sg.id} type="button" className={rowClass} onClick={() => actions.selectGroup(sg.id)}>
-                  <span className="truncate font-mono text-gray-50">{sg.label}</span>
-                  <span className="ml-auto shrink-0 text-xs text-gray-400">{n} tables</span>
+                  <span className="truncate font-mono text-gray-12">{sg.label}</span>
+                  <span className="ml-auto shrink-0 text-xs text-gray-9">{n} tables</span>
                 </button>
               );
             })}
@@ -72,13 +72,13 @@ export function GroupDetail({
             }}
           >
             <Dot color={entityColor(model, e.id, colors)} />
-            <span className="truncate font-mono text-gray-50">{e.label}</span>
+            <span className="truncate font-mono text-gray-12">{e.label}</span>
             {e.group !== id && (
-              <span className="ml-auto mr-1 shrink-0 text-2xs text-gray-400">
+              <span className="ml-auto mr-1 shrink-0 text-2xs text-gray-9">
                 {model.groups.find((g) => g.id === e.group)?.label ?? e.group}
               </span>
             )}
-            <span className={cn('shrink-0 text-xs text-gray-400', { 'ml-auto': e.group === id })}>
+            <span className={cn('shrink-0 text-xs text-gray-9', { 'ml-auto': e.group === id })}>
               {e.columns.length} fields
             </span>
           </button>

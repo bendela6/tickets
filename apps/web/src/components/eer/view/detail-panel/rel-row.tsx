@@ -5,7 +5,7 @@ import { Dot } from './dot';
 
 // The row style shared by every clickable list row in the panel.
 export const rowClass =
-  'flex w-full cursor-pointer items-center gap-2 rounded-md border border-transparent px-2 py-2 text-left text-sm hover:border-gray-500 hover:bg-gray-800';
+  'flex w-full cursor-pointer items-center gap-2 rounded-md border border-transparent px-2 py-2 text-left text-sm hover:border-gray-7 hover:bg-gray-3';
 
 export function RelRow({
   model,
@@ -29,11 +29,11 @@ export function RelRow({
   return (
     <button type="button" className={rowClass} onClick={onClick}>
       <Card>{cardinality}</Card>
-      <span className="truncate font-mono text-gray-200">{here}</span>
-      <span className="shrink-0 text-gray-400">{dir === 'out' ? '→' : '←'}</span>
+      <span className="truncate font-mono text-gray-11">{here}</span>
+      <span className="shrink-0 text-gray-9">{dir === 'out' ? '→' : '←'}</span>
       <Dot color={entityColor(model, otherEntity, colors)} />
-      <span className="truncate font-mono text-gray-50">{otherEntity}</span>
-      <span className="truncate font-mono text-gray-400">.{otherField}</span>
+      <span className="truncate font-mono text-gray-12">{otherEntity}</span>
+      <span className="truncate font-mono text-gray-9">.{otherField}</span>
     </button>
   );
 }

@@ -3,13 +3,25 @@
 // colour, so everything inside one domain reads as one family. A user override
 // (keyed by group id) beats inheritance: own override, then the zone's, then the
 // palette.
-// Dataviz dark-theme categorical palette, validated against #0b0d12. Ordered so
-// the first few entries are maximally distinct — models rarely have >5 zones.
 
 import { zoneIdOf } from '../../groups/zone-id-of';
 import type { Model } from '../../model/types';
 
-export const GROUP_PALETTE = ['#3987e5', '#199e70', '#c98500', '#9085e9', '#e66767', '#d55181', '#d95926', '#008300'];
+// Instrument option hues at their solid step. Values, not names: these flow
+// straight into color-mix() recipes at the element (see ui/color-mix.ts), so
+// they must be usable wherever a colour is. `gray` is absent — it reads as
+// "no group" rather than a hue. Ordered so the first few entries stay
+// maximally distinct — models rarely have >5 zones.
+export const GROUP_PALETTE = [
+  'var(--color-blue-9)',
+  'var(--color-green-9)',
+  'var(--color-orange-9)',
+  'var(--color-purple-9)',
+  'var(--color-red-9)',
+  'var(--color-pink-9)',
+  'var(--color-teal-9)',
+  'var(--color-cyan-9)',
+];
 
 export function groupColor(model: Model, groupId: string, overrides?: ReadonlyMap<string, string>): string {
   const own = overrides?.get(groupId);

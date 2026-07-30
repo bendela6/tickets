@@ -52,14 +52,14 @@ export function ZoneBoxes() {
               '--group-c': c,
               '--zone-border': selected
                 ? subgroup
-                  ? mix(c, 55, 'var(--color-gray-500)')
+                  ? mix(c, 55, 'var(--color-gray-7)')
                   : mix(c, 65)
                 : subgroup
-                  ? mix(c, 24, 'var(--color-gray-600)')
+                  ? mix(c, 24, 'var(--color-gray-6)')
                   : mix(c, 30),
               '--zone-bg': mix(c, selected ? (subgroup ? 8 : 11) : subgroup ? 4 : 6),
               '--zone-handle': mix(c, 45),
-              '--zone-ink': subgroup ? mix(c, 40, 'var(--color-gray-200)') : mix(c, 60, 'var(--color-gray-200)'),
+              '--zone-ink': subgroup ? mix(c, 40, 'var(--color-gray-11)') : mix(c, 60, 'var(--color-gray-11)'),
             })}
           >
             <div
@@ -69,7 +69,7 @@ export function ZoneBoxes() {
                 'text-sm font-semibold uppercase tracking-wide text-(--zone-ink)',
                 {
                   'text-2xs font-medium normal-case': subgroup,
-                  'text-gray-50': selected,
+                  'text-gray-12': selected,
                 },
               )}
             >
