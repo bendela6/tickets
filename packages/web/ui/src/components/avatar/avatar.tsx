@@ -4,7 +4,10 @@ import {
   type MouseEventHandler,
   type Ref,
 } from 'react';
-import { over, SCALE, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, HUE_TONES, over, TONE_SCALE, variants, type Tone } from '../../style';
+
+// Which ramp this component paints from. `scale` is the prop it surfaces as.
+const SCALE = axis('scale', HUE_TONES, 'indigo');
 
 export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 export type AvatarShape = 'round' | 'square';

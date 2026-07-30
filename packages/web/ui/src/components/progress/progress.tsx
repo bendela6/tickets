@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
-import { cn, over, SCALE, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, cn, HUE_TONES, over, TONE_SCALE, variants, type Tone } from '../../style';
+
+// Which ramp this component paints from. `scale` is the prop it surfaces as.
+const SCALE = axis('scale', HUE_TONES, 'indigo');
 
 export type ProgressSize = 'sm' | 'md' | 'lg';
 

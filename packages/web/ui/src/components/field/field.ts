@@ -1,4 +1,7 @@
-import { axis, over, SCALE, TONE_SCALE, variants, type HueTone } from '../../style';
+import { axis, HUE_TONES, over, TONE_SCALE, variants, type HueTone } from '../../style';
+
+// Which ramp this component paints from. `scale` is the prop it surfaces as.
+const SCALE = axis('scale', HUE_TONES, 'indigo');
 
 export type FieldSize = 'sm' | 'md' | 'lg';
 

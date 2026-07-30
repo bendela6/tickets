@@ -1,6 +1,9 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
-import { cn, over, ring, SCALE, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, cn, HUE_TONES, over, TONE_SCALE, variants, type Tone } from '../../style';
 import { toggleRowClass, type ToggleSize } from '../toggle';
+
+// Which ramp this component paints from. `scale` is the prop it surfaces as.
+const SCALE = axis('scale', HUE_TONES, 'indigo');
 
 type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> & {
   label: string;
@@ -19,7 +22,7 @@ const trackClass = variants({
       options: {
         on: over(SCALE, (tone) => [
           `checked:bg-${tone}-9`,
-          ring(tone),
+          `focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-${tone}-3`,
           'disabled:cursor-not-allowed disabled:border-1 disabled:border-gray-6 disabled:bg-surface-inset',
         ]),
       },

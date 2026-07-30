@@ -1,4 +1,7 @@
-import { over, ring, SCALE, variants } from '../../style';
+import { axis, HUE_TONES, over, variants } from '../../style';
+
+// Which ramp this component paints from. `scale` is the prop it surfaces as.
+const SCALE = axis('scale', HUE_TONES, 'indigo');
 
 /** Checkbox, RadioGroup and Switch share a ladder: 14 / 16 / 20px marks. */
 export type ToggleSize = 'sm' | 'md' | 'lg';
@@ -58,13 +61,13 @@ export const toggleMarkClass = variants({
           'border-gray-7',
           `checked:border-${tone}-9 checked:bg-${tone}-9`,
           `indeterminate:border-${tone}-9 indeterminate:bg-${tone}-9`,
-          ring(tone),
+          `focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-${tone}-3`,
           'disabled:cursor-not-allowed disabled:border-gray-6 disabled:bg-surface-inset',
         ]),
         ring: over(SCALE, (tone) => [
           'border-gray-7',
           `checked:border-${tone}-9`,
-          ring(tone),
+          `focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-${tone}-3`,
           'disabled:cursor-not-allowed disabled:border-gray-6 disabled:bg-surface-inset',
         ]),
       },

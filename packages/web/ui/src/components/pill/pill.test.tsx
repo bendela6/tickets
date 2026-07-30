@@ -1,27 +1,49 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { toneClasses, TONE_NAMES } from '../../style';
+import { TONE_NAMES } from '../../style';
+import { Button } from '../button';
 import { Icon } from '../icon';
 import { Pill } from './pill';
 
-const VARIANTS = ['subtle', 'solid', 'outline', 'text'] as const;
+
+/** The resting-state colour classes, dropping the variants a Button adds and a
+ *  Pill has no use for (hover, focus-visible) and the geometry either one sets
+ *  independently (radius, padding, height, font). */
+function colours(el: Element): Set<string> {
+  return new Set(
+    el.className
+      .split(/\s+/)
+      .filter((cls) => /^(bg|text|border)-[a-z]+-([0-9]+|contrast)$/.test(cls)),
+  );
+}
 
 describe('Pill', () => {
-  // Pill builds its colours from STEP through variants() rather than calling
-  // toneClasses(), so that hover and opacity treatments can be added later.
-  // Both come from tones.tokens.json, and a Pill and a Button asking for the
-  // same treatment must never disagree — this is what stops them drifting.
-  it('produces exactly what toneClasses resolves, for every tone and variant', () => {
+  // This used to compare both Pill and Button against `toneClasses()`, a third
+  // table of finished class strings. That table is gone — components spell their
+  // own rungs — so the comparison is now direct, which is what it was always
+  // really about: a Pill and a Button asking for the same treatment must not
+  // disagree about which rungs that treatment uses.
+  it('paints a shared variant from the same rungs a Button does', () => {
     const mismatches: unknown[] = [];
+    // `text` is Pill's fourth and `ghost` is Button's; they are deliberately
+    // different treatments, so only the three shared names are compared.
     for (const tone of TONE_NAMES) {
-      for (const variant of VARIANTS) {
-        render(<Pill label={`${tone}-${variant}`} tone={tone} variant={variant} />);
-        const actual = new Set(
-          screen.getByText(`${tone}-${variant}`).closest('span')!.className.split(/\s+/),
+      for (const variant of ['subtle', 'solid', 'outline'] as const) {
+        const pill = render(<Pill label="p" tone={tone} variant={variant} />);
+        const pillColours = colours(screen.getByText('p').closest('span')!);
+        pill.unmount();
+
+        const button = render(
+          <Button tone={tone} variant={variant}>
+            b
+          </Button>,
         );
-        const missing = toneClasses(tone, variant)
-          .split(/\s+/)
-          .filter((cls) => !actual.has(cls));
+        const buttonColours = colours(screen.getByRole('button'));
+        button.unmount();
+
+        // Button's outline sits on `bg-surface-raised`, which is not a ramp
+        // step and so is filtered out above; everything remaining must match.
+        const missing = [...buttonColours].filter((cls) => !pillColours.has(cls));
         if (missing.length) mismatches.push({ tone, variant, missing });
       }
     }
