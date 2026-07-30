@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Table, type Column } from '@tickets/table';
@@ -255,6 +255,61 @@ describe('tableRender — row selection', () => {
     );
     await userEvent.click(screen.getByRole('checkbox', { name: 'Select row 1' }));
     expect(onRowClick).not.toHaveBeenCalled();
+  });
+});
+
+// jsdom applies no stylesheet, so a class assertion here would prove nothing
+// about what a pinned column looks like — and asserting the classes a
+// component picks for itself is not what this project tests. What IS testable
+// is the one thing the adapter cannot get from a class: the pixel offset,
+// which depends on the current column widths and has to reach the inline
+// style or a second frozen column lands on top of the first.
+describe('tableRender — pinned columns', () => {
+  const pinnedColumns: Column<Row>[] = [
+    { key: 'name', header: 'Name', value: (r) => r.name, width: 150, pinned: 'left' },
+    { key: 'count', header: 'Count', value: (r) => r.count, width: 100 },
+  ];
+
+  it('offsets a pinned header cell from its edge', () => {
+    render(<Harness columns={pinnedColumns} />);
+    expect(screen.getByRole('columnheader', { name: /Name/ })).toHaveStyle({ left: '0px' });
+  });
+
+  it('offsets the pinned body cells the same way', () => {
+    const { container } = render(<Harness columns={pinnedColumns} />);
+    const cell = container.querySelector('[data-cell-row="0"][data-cell-col="name"]');
+    expect(cell).toHaveStyle({ left: '0px' });
+  });
+
+  it('leaves unpinned cells unpositioned', () => {
+    const { container } = render(<Harness columns={pinnedColumns} />);
+    const cell = container.querySelector(
+      '[data-cell-row="0"][data-cell-col="count"]',
+    ) as HTMLElement;
+    expect(cell.style.left).toBe('');
+  });
+
+  it('follows a dragged width for the second pinned column', () => {
+    const two: Column<Row>[] = [
+      { key: 'name', header: 'Name', value: (r) => r.name, width: 150, pinned: 'left' },
+      { key: 'count', header: 'Count', value: (r) => r.count, width: 100, pinned: 'left' },
+    ];
+    render(<Harness columns={two} state={{ sort: [], widths: { name: 220 } }} />);
+    expect(screen.getByRole('columnheader', { name: /Count/ })).toHaveStyle({ left: '220px' });
+  });
+});
+
+describe('tableRender — auto-fit', () => {
+  // The gesture every spreadsheet has trained people to expect, and the
+  // fastest way out of a column that truncates everything.
+  it('fits the column to its widest cell when the handle is double-clicked', () => {
+    const onWidthChange = vi.fn();
+    const { container } = render(<Harness onWidthChange={onWidthChange} />);
+    for (const cell of container.querySelectorAll('[data-cell-col="name"]')) {
+      Object.defineProperty(cell, 'scrollWidth', { value: 260, configurable: true });
+    }
+    fireEvent.doubleClick(screen.getAllByRole('separator')[0] as HTMLElement);
+    expect(onWidthChange).toHaveBeenCalledWith('name', 260);
   });
 });
 

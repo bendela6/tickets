@@ -30,7 +30,41 @@ export interface Column<T> {
    * set's `selectCell` slot so no glyph leaks into the engine.
    */
   select?: boolean;
+  /**
+   * Freeze this column against the horizontal scroll.
+   *
+   * Implemented with `position: sticky` on the cell, NOT by splitting the
+   * table into separate panes. We lay out on one CSS Grid, so a pinned column
+   * keeps its track in the template and every row stays a single grid row —
+   * panes would mean three virtualizers, three scroll positions to keep in
+   * step, and rows that can drift apart vertically.
+   *
+   * A pinned column needs a resolvable pixel width, because the engine has to
+   * add those widths up to know where the next pinned column starts. A track
+   * function like `minmax(240px, 1fr)` has no such width and falls back to the
+   * same 160px default the resize handle uses.
+   */
+  pinned?: 'left' | 'right';
 }
+
+/** Where a pinned cell sticks, and how far in. Computed by the engine, which
+ *  is the only thing that knows the column order and the current widths. */
+export interface CellPin {
+  side: 'left' | 'right';
+  /** Pixels from that edge — the widths of the pinned columns outside it. */
+  offset: number;
+  /** The innermost pinned column on this side, i.e. the one that borders the
+   *  scrolling middle. The edge treatment goes here and nowhere else. */
+  edge: boolean;
+}
+
+/**
+ * How far the table is scrolled horizontally.
+ *
+ * `none` means it all fits. The other three say which edges have content
+ * hidden beyond them, which is what an edge treatment has to know.
+ */
+export type ScrollX = 'none' | 'start' | 'middle' | 'end';
 
 /**
  * One focused cell. Two deliberate asymmetries:
@@ -103,6 +137,12 @@ export interface RenderThResize {
   startWidth: number;
   minWidth?: number;
   onWidthChange: (px: number) => void;
+  /** Size the column to its widest RENDERED cell — the double-click gesture on
+   *  the handle. Measured, not estimated: only the DOM knows how wide "Add a
+   *  retry budget to the outbox worker" actually is in this font at this
+   *  weight. Only the mounted rows are measured, which is the honest answer
+   *  for a virtualized table. */
+  onAutoFit: () => void;
 }
 
 export interface RenderThCtx<T> {
@@ -120,6 +160,9 @@ export interface RenderThCtx<T> {
   focused?: boolean;
   /** MUST be spread onto the header cell element. */
   focusProps: CellFocusProps;
+  /** Set when `column.pinned` is. The adapter turns it into `position: sticky`
+   *  plus an offset; the engine supplies the arithmetic, never the CSS. */
+  pin?: CellPin;
   /** Content to render INSTEAD of `column.header`, when the engine owns what
    *  goes in the header cell. Today that means one thing: the select-all
    *  checkbox above a `select` column. Mirrors `RenderTdCtx.children`. */
@@ -149,6 +192,15 @@ export interface RenderTrCtx<T> {
   overlay?: ReactNode;
   /** This row is in the selection. The treatment is the ADAPTER's to choose. */
   selected?: boolean;
+  /** Some column in this table is pinned.
+   *
+   *  A pinned cell has to be opaque or the rows sliding beneath it show
+   *  through, and the only way for it to stay in step with the row's hover and
+   *  selected tints is `background: inherit` — which needs the ROW to have a
+   *  real background rather than the transparent one it can otherwise get away
+   *  with. This says when that applies, so a table with no pinned column keeps
+   *  exactly the background it had. */
+  hasPinned?: boolean;
 }
 
 /**
@@ -184,6 +236,8 @@ export interface RenderTdCtx<T> {
   focused?: boolean;
   /** MUST be spread onto the cell element. */
   focusProps: CellFocusProps;
+  /** Set when `column.pinned` is — see `RenderThCtx.pin`. */
+  pin?: CellPin;
 }
 
 export interface RenderSkeletonRowCtx<T> {
@@ -220,6 +274,16 @@ export interface TableRender<T = unknown> {
   /** Optional: a render set that does not draw checkboxes simply cannot host
    *  a `select` column, rather than every existing render set breaking. */
   selectCell?: (ctx: RenderSelectCellCtx) => ReactNode;
+  /**
+   * Classes for the SCROLL CONTAINER, given how far it is scrolled.
+   *
+   * A className rather than a node, because this is the one element the engine
+   * cannot hand over: it carries the scroll ref, the keyboard handler and the
+   * focus parking spot. But the engine has no business choosing what a scroll
+   * edge looks like either, so the render set names the classes and the engine
+   * only says when.
+   */
+  scrollClass?: (ctx: { scrollX: ScrollX }) => string;
 }
 
 /** Height of a group header row in pixels. Exported so the adapter styling and

@@ -1,8 +1,10 @@
 export type {
   CellFocusProps,
+  CellPin,
   CellRef,
   Column,
   Renderer,
+  ScrollX,
   SortBy,
   TableRender,
   TableState,

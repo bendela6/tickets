@@ -24,12 +24,14 @@ export function makeStubRender<T>(): TableRender<T> {
       resize,
       focused,
       focusProps,
+      pin,
       children,
     }) => {
       return (
         <button
           {...focusProps}
           data-slot="th"
+          data-pin={pin ? `${pin.side}:${pin.offset}${pin.edge ? ':edge' : ''}` : ''}
           data-focused={String(Boolean(focused))}
           data-key={column.key}
           data-column-index={index}
@@ -41,7 +43,7 @@ export function makeStubRender<T>(): TableRender<T> {
           onClick={onSortClick}
         >
           {children ?? column.header}
-          {resize && <span data-slot="resize" />}
+          {resize && <span data-slot="resize" onDoubleClick={resize.onAutoFit} />}
         </button>
       );
     },
@@ -52,12 +54,13 @@ export function makeStubRender<T>(): TableRender<T> {
         </div>
       );
     },
-    tr: ({ row, index, cells, gridTemplate, style, onClick, overlay, selected }) => {
+    tr: ({ row, index, cells, gridTemplate, style, onClick, overlay, selected, hasPinned }) => {
       return (
         <div
           data-slot="tr"
           data-index={index}
           data-selected={String(Boolean(selected))}
+          data-has-pinned={String(Boolean(hasPinned))}
           data-row-id={(row as { id?: string }).id ?? ''}
           data-grid-template={gridTemplate}
           style={style}
@@ -68,11 +71,12 @@ export function makeStubRender<T>(): TableRender<T> {
         </div>
       );
     },
-    td: ({ column, index, children, focused, focusProps }) => {
+    td: ({ column, index, children, focused, focusProps, pin }) => {
       return (
         <div
           {...focusProps}
           data-slot="td"
+          data-pin={pin ? `${pin.side}:${pin.offset}${pin.edge ? ':edge' : ''}` : ''}
           data-focused={String(Boolean(focused))}
           data-key={column.key}
           data-column-index={index}

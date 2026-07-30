@@ -1,7 +1,8 @@
 import { useColumnResize, type RenderThCtx, type RenderThResize } from '@tickets/table';
 import { cn } from '../style';
 import { Icon } from '../components/icon';
-import { CELL_FOCUS_RING, cellGutter } from './metrics';
+import { CELL_FOCUS_RING, cellGutter, PINNED_CELL, PINNED_EDGE } from './metrics';
+import { pinStyle } from './render-td';
 
 // The cell is a flex row in both branches — a sortable header holds a caret
 // and an ordinal beside its label, and a plain one still has to centre its
@@ -34,6 +35,10 @@ function ResizeHandle({ resize }: { resize: RenderThResize }) {
       role="separator"
       aria-orientation="vertical"
       {...handlers}
+      // Double-clicking a resize handle to fit the column to its contents is
+      // the gesture every spreadsheet has trained people to expect, and it is
+      // the fastest way out of a column that truncates everything.
+      onDoubleClick={resize.onAutoFit}
       className="absolute top-0 right-0 h-full w-1 cursor-col-resize hover:bg-gray-8"
     />
   );
@@ -48,6 +53,7 @@ export function renderTh<T>({
   resize,
   focused,
   focusProps,
+  pin,
   children,
 }: RenderThCtx<T>) {
   return (
@@ -69,7 +75,12 @@ export function renderTh<T>({
         // and only come forward on hover.
         sort ? 'text-gray-12' : 'text-gray-11',
         focused && CELL_FOCUS_RING,
+        // The header row is already sticky vertically; this adds the
+        // horizontal half, so a frozen column's header travels with it.
+        pin && PINNED_CELL,
+        pin?.edge && PINNED_EDGE[pin.side],
       )}
+      style={pinStyle(pin)}
     >
       {/* The engine takes this cell over when it owns what goes in it — today
           that means the select-all checkbox above a `select` column, which

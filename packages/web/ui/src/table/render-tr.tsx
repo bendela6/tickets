@@ -10,6 +10,7 @@ export function renderTr<T>({
   onClick,
   overlay,
   selected,
+  hasPinned,
 }: RenderTrCtx<T>) {
   return (
     <div
@@ -26,6 +27,12 @@ export function renderTr<T>({
         'group grid items-center border-b-1 border-gray-6 transition-colors hover:bg-gray-1',
         ROW_INSET,
         onClick && 'cursor-pointer',
+        // Only when a column is pinned. A pinned cell is `bg-inherit` so it
+        // follows this row's hover and selected tints, and inheriting a
+        // TRANSPARENT background lets the rows scrolling underneath show
+        // through it. Applied conditionally so a table with no frozen column
+        // keeps exactly the background it had.
+        hasPinned && 'bg-surface-raised',
         // A tint one step past the hover state, so a selected row still
         // responds to hover instead of looking stuck.
         selected && 'bg-indigo-2 hover:bg-indigo-3',

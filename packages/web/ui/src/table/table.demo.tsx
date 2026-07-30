@@ -158,6 +158,72 @@ const SELECT_COLUMNS: Column<Row>[] = [
   ...COLUMNS,
 ];
 
+/**
+ * A table wider than its container, with the leading column frozen and the
+ * actions column frozen to the other edge. This is the arrangement pinning
+ * exists for: scroll sideways through ten columns and still know which row
+ * you are on and still reach its actions.
+ *
+ * Every column takes a fixed pixel width, deliberately. A pinned column's
+ * offset is the sum of the pinned widths outside it, and a track function
+ * like `minmax(240px, 1fr)` has no width to sum.
+ */
+const WIDE_COLUMNS: Column<Row>[] = [
+  {
+    key: 'name',
+    header: 'Name',
+    value: (r) => r.name,
+    as: TextColumn(),
+    sortable: true,
+    width: 180,
+    pinned: 'left',
+  },
+  { key: 'owner', header: 'Assignee', value: (r) => r.owner, as: TextColumn(), width: 170 },
+  {
+    key: 'status',
+    header: 'Status',
+    value: (r) => r.status,
+    as: BadgeColumn<string>({ tone: (v) => STATUS_TONE[v] ?? 'gray' }),
+    width: 130,
+  },
+  {
+    key: 'count',
+    header: 'Count',
+    value: (r) => r.count,
+    as: NumberColumn({ format: 'integer' }),
+    align: 'right',
+    width: 120,
+    sortable: true,
+  },
+  { key: 'updated', header: 'Updated', value: (r) => r.updated, as: DateColumn(), width: 170 },
+  { key: 'created', header: 'Created', value: (r) => r.updated, as: DateColumn(), width: 170 },
+  {
+    key: 'link',
+    header: 'Link',
+    value: (r) => r.name,
+    as: LinkColumn({ href: (row) => `#/items/${(row as Row).id}` }),
+    width: 170,
+  },
+  {
+    key: 'actions',
+    header: 'Actions',
+    as: ActionsColumn({
+      items: [
+        { icon: 'pencil', label: 'Edit', onClick: () => {} },
+        { icon: 'trash', label: 'Delete', onClick: () => {}, tone: 'danger' },
+      ],
+    }),
+    align: 'right',
+    width: 110,
+    resizable: false,
+    pinned: 'right',
+  },
+];
+
+/** Two-line rows for every third item, to show the height function actually
+ *  varying rather than a density toggle in disguise. */
+const varyingRowHeight = (_row: Row | undefined, index: number) => (index % 3 === 0 ? 64 : 42);
+
 function Demo({
   grouped,
   loading,
@@ -172,7 +238,7 @@ function Demo({
   grouped?: boolean;
   loading?: boolean;
   error?: boolean;
-  rowHeight?: number;
+  rowHeight?: number | ((row: Row | undefined, index: number) => number);
   empty?: boolean;
   filtered?: boolean;
   overlay?: boolean;
@@ -249,6 +315,10 @@ export const states = [
   // All 7 column helpers: Image, Link, Text, Badge, Number, Date, Actions.
   { name: 'Column helpers', render: () => <Demo columns={HELPER_COLUMNS} /> },
   { name: 'Selectable', render: () => <Demo columns={SELECT_COLUMNS} selectable /> },
+  // Wider than its container: scroll sideways and Name stays put on the left,
+  // Actions on the right, with a hairline where the frozen part ends.
+  { name: 'Pinned columns', render: () => <Demo columns={WIDE_COLUMNS} /> },
+  { name: 'Per-row height', render: () => <Demo rowHeight={varyingRowHeight} /> },
   { name: 'Grouped', render: () => <Demo grouped /> },
   { name: 'Row overlay', render: () => <Demo overlay /> },
   { name: 'Loading', render: () => <Demo loading /> },

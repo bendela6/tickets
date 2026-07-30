@@ -81,3 +81,49 @@ export function rowHeightFor(density: Density): number {
  * keyboard-driven.
  */
 export const CELL_FOCUS_RING = 'outline-2 -outline-offset-2 outline-indigo-9';
+
+/**
+ * A pinned cell. `position: sticky` on the CELL, with the offset supplied by
+ * the engine — we lay out on one CSS Grid, so a frozen column keeps its track
+ * in the template rather than the table splitting into panes.
+ *
+ * `bg-inherit` is the load-bearing part: a pinned cell must be opaque or the
+ * rows sliding under it show through, and inheriting is the only way for it to
+ * follow the row's hover and selected tints instead of freezing one colour.
+ * It is why `renderTr` takes an opaque background whenever a column is pinned.
+ *
+ * `z-10` puts it over the scrolling cells but under the sticky header, which
+ * is `z-10` on a row that comes first in the DOM.
+ */
+export const PINNED_CELL = 'sticky z-10 bg-inherit';
+
+/**
+ * The line between the frozen columns and the part that scrolls.
+ *
+ * Only the INNERMOST pinned column carries it — the engine marks that one —
+ * so a table with three frozen columns gets one divider, not three.
+ *
+ * A hairline rather than a shadow: every `shadow-*` token here casts on all
+ * four sides, which on a 32px row reads as a smudge above and below, and a
+ * one-sided shadow can only be written as an arbitrary value, which this
+ * project does not allow.
+ */
+export const PINNED_EDGE: Record<'left' | 'right', string> = {
+  left: 'border-r-1 border-gray-6',
+  right: 'border-l-1 border-gray-6',
+};
+
+/**
+ * The scroll container's edge treatment, by how far it is scrolled.
+ *
+ * Same reasoning as `PINNED_EDGE`, and the same limitation: a directional
+ * inset shadow — the classic scroll-shadow — needs an arbitrary value. This is
+ * a hairline on whichever edge has content hidden past it, which carries the
+ * same information: there is more table that way.
+ */
+export const SCROLL_EDGE: Record<'none' | 'start' | 'middle' | 'end', string> = {
+  none: '',
+  start: 'border-r-1 border-gray-6',
+  middle: 'border-x-1 border-gray-6',
+  end: 'border-l-1 border-gray-6',
+};
