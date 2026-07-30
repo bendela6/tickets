@@ -81,6 +81,14 @@ export interface TableProps<T> {
    *  `empty` slot, which needs it to choose its copy. The engine cannot infer
    *  it: it receives rows, never the query that produced them. */
   isFiltered?: boolean;
+  /** Pin the current group's band under the column header while its rows
+   *  scroll past.
+   *
+   *  Opt-in, like focus, selection and collapsing — and for a sharper reason
+   *  than those. It renders the band a SECOND time, which changes the DOM of
+   *  every grouped table that already exists: a group's label suddenly appears
+   *  twice. That is a change a caller should ask for. */
+  stickyGroupHeader?: boolean;
 }
 
 export function Table<T>(props: TableProps<T>): ReactNode {
@@ -103,6 +111,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
     rowHeight = ROW_HEIGHT,
     rowOverlay,
     isFiltered = false,
+    stickyGroupHeader = false,
   } = props;
 
   // An ungrouped table is one implicit group's worth of rows, so both shapes
@@ -376,7 +385,41 @@ export function Table<T>(props: TableProps<T>): ReactNode {
     }),
   });
 
+  /**
+   * The band for whichever group the topmost visible row belongs to, pinned
+   * under the column header so a long group still says what you are looking at.
+   *
+   * It has to be a SECOND rendering of the band rather than the real one made
+   * sticky: the virtualizer positions every item absolutely, and
+   * `position: sticky` does nothing on an absolutely positioned element. The
+   * engine decides which group is active; where it sticks and what it looks
+   * like belong to the render set, which is handed `sticky: true` and nothing
+   * else.
+   *
+   * Walking backwards from the first visible item is a scan over `items`, not
+   * over the virtual window — `items` is already fully materialized here, so
+   * this costs one loop bounded by the number of rows above the viewport, and
+   * stops at the first band it meets.
+   */
+  const stickyGroup = (() => {
+    if (!stickyGroupHeader || !groups || items.length === 0) {
+      return null;
+    }
+    const first = virtualizer.getVirtualItems()[0]?.index;
+    if (first === undefined) {
+      return null;
+    }
+    for (let i = first; i >= 0; i -= 1) {
+      const item = items[i];
+      if (item?.kind === 'group') {
+        return item;
+      }
+    }
+    return null;
+  })();
+
   let bodyNode: ReactNode = null;
+  let stickyGroupNode: ReactNode = null;
   if (isLoading && items.length === 0) {
     bodyNode = Array.from({ length: 10 }).map((_, i) => {
       return (
@@ -463,6 +506,19 @@ export function Table<T>(props: TableProps<T>): ReactNode {
         );
       }),
     });
+    stickyGroupNode = stickyGroup
+      ? render.groupHeader({
+          key: stickyGroup.key,
+          header: stickyGroup.header,
+          gridTemplate,
+          // No virtualizer style: this copy is not in the virtual list. The
+          // render set positions it.
+          style: {},
+          sticky: true,
+          collapsed: Boolean(collapsedKeys?.has(stickyGroup.key)),
+          onToggle: toggleGroup ? () => toggleGroup(stickyGroup.key) : undefined,
+        })
+      : null;
   } else {
     // Not loading, no error, nothing to show. Rendered INSIDE root so the empty
     // state sits under the column header and within the scroll container,
@@ -494,6 +550,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
         children: (
           <>
             {headerNode}
+            {stickyGroupNode}
             {bodyNode}
           </>
         ),

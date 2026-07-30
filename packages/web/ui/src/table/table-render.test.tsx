@@ -325,6 +325,24 @@ describe('tableRender — groups', () => {
     expect(screen.getByText('Group B')).toBeInTheDocument();
   });
 
+  it('pins the current group under the header when asked', () => {
+    render(<Harness rows={[]} groups={grouped} stickyGroupHeader />);
+    // Twice on purpose — once in the row flow, once pinned. The real band is
+    // absolutely positioned by the virtualizer and so cannot be made sticky,
+    // which is why the pinned one is a second rendering. Only the group the
+    // topmost visible row belongs to is pinned.
+    expect(screen.getAllByText('Group A')).toHaveLength(2);
+    expect(screen.getAllByText('Group B')).toHaveLength(1);
+  });
+
+  it('hides the pinned copy from assistive tech so a group is announced once', () => {
+    render(<Harness rows={[]} groups={grouped} stickyGroupHeader />);
+    const announced = screen
+      .getAllByText('Group A')
+      .filter((el) => el.closest('[aria-hidden="true"]') === null);
+    expect(announced).toHaveLength(1);
+  });
+
   it("renders each group's rows under it", () => {
     render(<Harness rows={[]} groups={grouped} />);
     expect(screen.getByText('Alpha')).toBeInTheDocument();

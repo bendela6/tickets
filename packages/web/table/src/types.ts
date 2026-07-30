@@ -310,6 +310,12 @@ export interface RenderGroupHeaderCtx {
   style: CSSProperties;
   /** Whether this group's rows are hidden. */
   collapsed: boolean;
+  /** True for the extra copy pinned under the column header. The virtualizer
+   *  positions every real band absolutely, and `position: sticky` does nothing
+   *  on an absolutely positioned element — so the pinned band is a second
+   *  rendering, and `style` is empty for it. The render set decides where it
+   *  sticks and what it looks like. */
+  sticky?: boolean;
   /** Absent when the caller supplies no `onCollapseChange` — collapsing is
    *  opt-in, like focus and selection, so a band that cannot collapse must not
    *  render a disclosure control that does nothing. */
