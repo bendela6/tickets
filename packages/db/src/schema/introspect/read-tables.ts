@@ -27,7 +27,23 @@ const TABLE_KINDS = ['r', 'p'];
  * oversight: it is the only table in tickets_test that describeSchema() does
  * not declare.
  */
-const EXCLUDED_NAMESPACES = ['pg_catalog', 'information_schema', 'drizzle'];
+export const EXCLUDED_NAMESPACES = ['pg_catalog', 'information_schema', 'drizzle'];
+
+/**
+ * The namespace filter every catalog reader applies, as one reusable SQL
+ * fragment. It is a fragment rather than a copied WHERE clause because the
+ * list must not drift between readers: an enum hidden in a namespace whose
+ * tables are excluded (or vice versa) would produce a graph that describes
+ * two different databases at once. Assumes the caller aliased `pg_namespace`
+ * as `n`, which every reader here does.
+ */
+export function inModelledNamespace(sql: postgres.Sql) {
+  return sql`
+    n.nspname <> ALL(${EXCLUDED_NAMESPACES})
+    AND n.nspname NOT LIKE 'pg\\_toast%'
+    AND n.nspname NOT LIKE 'pg\\_temp%'
+  `;
+}
 
 /**
  * Tables and their columns, straight from the catalog.
@@ -42,9 +58,7 @@ export async function readTables(sql: postgres.Sql): Promise<RawTable[]> {
     FROM pg_class c
     JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE c.relkind = ANY(${TABLE_KINDS})
-      AND n.nspname <> ALL(${EXCLUDED_NAMESPACES})
-      AND n.nspname NOT LIKE 'pg\\_toast%'
-      AND n.nspname NOT LIKE 'pg\\_temp%'
+      AND ${inModelledNamespace(sql)}
     ORDER BY n.nspname, c.relname
   `;
   if (tableRows.length === 0) return [];

@@ -1,5 +1,6 @@
 import type postgres from 'postgres';
 import type { EnumMeta } from '../describe-schema';
+import { inModelledNamespace } from './read-tables';
 
 /**
  * Enum declarations, values in declaration order.
@@ -7,6 +8,11 @@ import type { EnumMeta } from '../describe-schema';
  * `enumsortorder`, not `enumlabel`: the label order is the enum's meaning
  * (a status ladder, a priority scale), and sorting alphabetically would
  * silently reorder it.
+ *
+ * The namespace filter is the SHARED `inModelledNamespace` fragment, not a
+ * hand-copied list: readTables and readEnums must hide exactly the same
+ * namespaces, or an enum would surface from a namespace whose tables are
+ * invisible (`drizzle` being the concrete case).
  */
 export async function readEnums(sql: postgres.Sql): Promise<EnumMeta[]> {
   const rows = await sql<{ name: string; schema: string; value: string }[]>`
@@ -17,7 +23,7 @@ export async function readEnums(sql: postgres.Sql): Promise<EnumMeta[]> {
     JOIN pg_namespace n ON n.oid = t.typnamespace
     JOIN pg_enum e      ON e.enumtypid = t.oid
     WHERE t.typtype = 'e'
-      AND n.nspname NOT IN ('pg_catalog', 'information_schema')
+      AND ${inModelledNamespace(sql)}
     ORDER BY n.nspname, t.typname, e.enumsortorder
   `;
 
