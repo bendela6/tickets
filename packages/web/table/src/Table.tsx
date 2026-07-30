@@ -9,6 +9,7 @@ import {
   type SortBy,
   type TableGroup,
   type TableRender,
+  type TableState,
   type VirtualRow,
 } from './types';
 
@@ -18,9 +19,13 @@ export interface TableProps<T> {
   /** Grouped rows. Mutually exclusive with `rows` in practice — when present it
    *  wins, and `rows` is ignored. */
   groups?: TableGroup<T>[];
-  state: { sort: SortBy[]; widths: Record<string, number> };
+  state: TableState;
   onSortChange: (next: SortBy[]) => void;
   onWidthChange: (key: string, px: number) => void;
+  /** Accepted so `{...useTable()}` spreads cleanly. Nothing acts on it yet —
+   *  collapsible groups are a later phase — but a caller keeping the state
+   *  should not have to strip the handler back out. */
+  onCollapseChange?: (next: Set<string>) => void;
   onRowClick?: (row: T) => void;
   isLoading: boolean;
   error?: Error | null;
