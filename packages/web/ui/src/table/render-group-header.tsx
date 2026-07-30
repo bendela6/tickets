@@ -1,4 +1,6 @@
 import type { RenderGroupHeaderCtx } from '@tickets/table';
+import { cn } from '../style';
+import { Icon } from '../components/icon';
 
 /**
  * A group's banner row. It does NOT take the column grid template: the header
@@ -19,7 +21,12 @@ import type { RenderGroupHeaderCtx } from '@tickets/table';
  * content sits at (a row's 4px inset plus that column's 12px gutter — see
  * metrics.ts), so a group's label lines up with the keys beneath it.
  */
-export function renderGroupHeader({ header, style }: RenderGroupHeaderCtx) {
+export function renderGroupHeader({ header, style, collapsed, onToggle }: RenderGroupHeaderCtx) {
+  // The whole band is the hit target rather than just the chevron — a 34px
+  // strip is a far easier thing to hit than a 12px glyph, and there is nothing
+  // else in the band to click. When the caller has not opted into collapsing,
+  // it stays a plain div so nothing suggests it is interactive.
+  const Band = onToggle ? 'button' : 'div';
   return (
     <div
       role="row"
@@ -29,8 +36,31 @@ export function renderGroupHeader({ header, style }: RenderGroupHeaderCtx) {
       {/* `h-full` so the cell still fills the band the virtualizer sized, which
           is what keeps the label vertically centred now that the flex box is
           one level down. */}
-      <div role="gridcell" className="flex h-full items-center gap-2.5 px-4">
-        {header}
+      <div role="gridcell" className="h-full">
+        <Band
+          {...(onToggle
+            ? { type: 'button' as const, onClick: onToggle, 'aria-expanded': !collapsed }
+            : {})}
+          className={cn(
+            'flex h-full w-full items-center gap-2.5 px-4 text-left',
+            onToggle && 'cursor-pointer hover:bg-surface-inset',
+          )}
+        >
+          {onToggle ? (
+            // Rotation rather than two glyphs: the chevron turning is what
+            // reads as the same control changing state.
+            <span
+              aria-hidden
+              className={cn(
+                'inline-flex shrink-0 text-gray-9 transition-transform',
+                collapsed ? '-rotate-90' : 'rotate-0',
+              )}
+            >
+              <Icon name="chevron-down" size="2xs" />
+            </span>
+          ) : null}
+          {header}
+        </Band>
       </div>
     </div>
   );

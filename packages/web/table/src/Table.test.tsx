@@ -391,3 +391,69 @@ describe('<Table> engine — grouping', () => {
     expect(container.querySelectorAll('[data-slot="tr"]').length).toBe(2);
   });
 });
+
+describe('<Table> engine — collapsible groups', () => {
+  const grouped = [
+    { key: 'a', header: 'Group A', rows: [{ id: '1', name: 'Alpha' }] },
+    { key: 'b', header: 'Group B', rows: [{ id: '2', name: 'Beta' }] },
+  ];
+  const state = (collapsed?: Set<string>) => ({ sort: [], widths: {}, collapsed });
+
+  // Collapsing is opt-in in the same way focus and selection are: without
+  // somewhere to send the result, a disclosure control would do nothing.
+  it('offers no toggle when the caller supplies no onCollapseChange', () => {
+    const { container } = render(<Harness rows={[]} groups={grouped} />);
+    const bands = [...container.querySelectorAll('[data-slot="group-header"]')];
+    expect(bands).toHaveLength(2);
+    expect(bands.every((b) => b.getAttribute('data-collapsible') === 'false')).toBe(true);
+  });
+
+  it('offers a toggle per band once onCollapseChange is supplied', () => {
+    const { container } = render(
+      <Harness rows={[]} groups={grouped} onCollapseChange={() => {}} />,
+    );
+    expect(container.querySelectorAll('[data-slot="group-toggle"]')).toHaveLength(2);
+  });
+
+  it('hides a collapsed group’s rows but keeps its band', () => {
+    const { container } = render(
+      <Harness rows={[]} groups={grouped} state={state(new Set(['a']))} onCollapseChange={() => {}} />,
+    );
+    expect(container.querySelectorAll('[data-slot="group-header"]')).toHaveLength(2);
+    const names = [...container.querySelectorAll('[data-slot="td"]')].map((c) => c.textContent);
+    expect(names).toEqual(['Beta']);
+  });
+
+  it('adds a group to the collapsed set when its band is toggled', () => {
+    const onCollapseChange = vi.fn();
+    const { container } = render(
+      <Harness rows={[]} groups={grouped} onCollapseChange={onCollapseChange} />,
+    );
+    fireEvent.click(container.querySelectorAll('[data-slot="group-toggle"]')[1] as HTMLElement);
+    expect(onCollapseChange).toHaveBeenCalledWith(new Set(['b']));
+  });
+
+  it('removes a group from the collapsed set when toggled again', () => {
+    const onCollapseChange = vi.fn();
+    const { container } = render(
+      <Harness
+        rows={[]}
+        groups={grouped}
+        state={state(new Set(['a', 'b']))}
+        onCollapseChange={onCollapseChange}
+      />,
+    );
+    fireEvent.click(container.querySelector('[data-slot="group-toggle"]') as HTMLElement);
+    expect(onCollapseChange).toHaveBeenCalledWith(new Set(['b']));
+  });
+
+  it('reports collapsed state to the band', () => {
+    const { container } = render(
+      <Harness rows={[]} groups={grouped} state={state(new Set(['a']))} onCollapseChange={() => {}} />,
+    );
+    const flags = [...container.querySelectorAll('[data-slot="group-header"]')].map((b) =>
+      b.getAttribute('data-collapsed'),
+    );
+    expect(flags).toEqual(['true', 'false']);
+  });
+});

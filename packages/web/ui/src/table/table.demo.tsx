@@ -226,6 +226,7 @@ const varyingRowHeight = (_row: Row | undefined, index: number) => (index % 3 ==
 
 function Demo({
   grouped,
+  collapsedKeys,
   loading,
   error,
   rowHeight,
@@ -236,6 +237,7 @@ function Demo({
   selectable,
 }: {
   grouped?: boolean;
+  collapsedKeys?: string[];
   loading?: boolean;
   error?: boolean;
   rowHeight?: number | ((row: Row | undefined, index: number) => number);
@@ -247,7 +249,7 @@ function Demo({
 }) {
   // All of the table's uncontrolled state in one line, spread onto <Table>
   // below. `widthsId` is what makes a dragged column width outlive a reload.
-  const table = useTable({ widthsId: 'gallery-table-demo' });
+  const table = useTable({ widthsId: 'gallery-table-demo', initialCollapsed: collapsedKeys });
   // The engine emits sort intent and never reorders anything, so a
   // client-sorted caller runs the rows through `sortRows` itself. Shift-click
   // a second header and the ordinals in the header row describe an ordering
@@ -320,6 +322,7 @@ export const states = [
   { name: 'Pinned columns', render: () => <Demo columns={WIDE_COLUMNS} /> },
   { name: 'Per-row height', render: () => <Demo rowHeight={varyingRowHeight} /> },
   { name: 'Grouped', render: () => <Demo grouped /> },
+  { name: 'Grouped — collapsed', render: () => <Demo grouped collapsedKeys={['open']} /> },
   { name: 'Row overlay', render: () => <Demo overlay /> },
   { name: 'Loading', render: () => <Demo loading /> },
   { name: 'Empty', render: () => <Demo empty /> },

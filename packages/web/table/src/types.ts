@@ -308,4 +308,10 @@ export interface RenderGroupHeaderCtx {
   gridTemplate: string;
   /** Virtualization positioning. MUST be applied or the header will not appear. */
   style: CSSProperties;
+  /** Whether this group's rows are hidden. */
+  collapsed: boolean;
+  /** Absent when the caller supplies no `onCollapseChange` — collapsing is
+   *  opt-in, like focus and selection, so a band that cannot collapse must not
+   *  render a disclosure control that does nothing. */
+  onToggle?: () => void;
 }
