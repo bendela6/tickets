@@ -85,10 +85,13 @@ export function makeStubRender<T>(): TableRender<T> {
         </div>
       );
     },
-    groupHeader: ({ key, header, gridTemplate, style, collapsed, onToggle }) => {
+    groupHeader: ({ key, header, gridTemplate, style, collapsed, onToggle, sticky }) => {
       return (
         <div
-          data-slot="group-header"
+          // A distinct slot name, not a flag on the same one: the pinned copy
+          // is a SECOND rendering of a band that is also in the row flow, so a
+          // test counting bands would otherwise silently count one too many.
+          data-slot={sticky ? 'sticky-group-header' : 'group-header'}
           data-key={key}
           data-grid-template={gridTemplate}
           data-collapsed={String(collapsed)}
@@ -97,7 +100,7 @@ export function makeStubRender<T>(): TableRender<T> {
         >
           {header}
           {onToggle ? (
-            <button data-slot="group-toggle" onClick={onToggle}>
+            <button data-slot={sticky ? 'sticky-group-toggle' : 'group-toggle'} onClick={onToggle}>
               toggle
             </button>
           ) : null}

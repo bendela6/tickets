@@ -457,3 +457,71 @@ describe('<Table> engine — collapsible groups', () => {
     expect(flags).toEqual(['true', 'false']);
   });
 });
+
+describe('<Table> engine — sticky group band', () => {
+  const grouped = [
+    { key: 'a', header: 'Group A', rows: [{ id: '1', name: 'Alpha' }] },
+    { key: 'b', header: 'Group B', rows: [{ id: '2', name: 'Beta' }] },
+  ];
+
+  it('pins a band for the group the topmost visible row belongs to', () => {
+    const { container } = render(<Harness rows={[]} groups={grouped} stickyGroupHeader />);
+    const pinned = container.querySelectorAll('[data-slot="sticky-group-header"]');
+    expect(pinned).toHaveLength(1);
+    expect(pinned[0]).toHaveTextContent('Group A');
+  });
+
+  // The real bands are positioned absolutely by the virtualizer, where
+  // `position: sticky` does nothing — so the pinned band is a SECOND rendering
+  // and both must exist at once.
+  it('pins in addition to the band in the row flow, not instead of it', () => {
+    const { container } = render(<Harness rows={[]} groups={grouped} stickyGroupHeader />);
+    expect(container.querySelectorAll('[data-slot="group-header"]')).toHaveLength(2);
+    expect(container.querySelectorAll('[data-slot="sticky-group-header"]')).toHaveLength(1);
+  });
+
+  // With the flag on but no groups, so this fails if the engine ever pins
+  // something for a flat table rather than passing for want of the opt-in.
+  it('pins nothing for an ungrouped table', () => {
+    const { container } = render(<Harness stickyGroupHeader />);
+    expect(container.querySelector('[data-slot="sticky-group-header"]')).toBeNull();
+  });
+
+  // It renders the band a second time, so switching it on silently would make
+  // every group label in every existing grouped table appear twice.
+  it('is off unless the caller asks for it', () => {
+    const { container } = render(<Harness rows={[]} groups={grouped} />);
+    expect(container.querySelector('[data-slot="sticky-group-header"]')).toBeNull();
+    expect(container.querySelectorAll('[data-slot="group-header"]')).toHaveLength(2);
+  });
+
+  it('pins nothing when there are no rows at all', () => {
+    const { container } = render(<Harness rows={[]} groups={[]} stickyGroupHeader isLoading={false} />);
+    expect(container.querySelector('[data-slot="sticky-group-header"]')).toBeNull();
+  });
+
+  it('carries the collapsed state onto the pinned band', () => {
+    const { container } = render(
+      <Harness
+        rows={[]}
+        stickyGroupHeader
+        groups={grouped}
+        state={{ sort: [], widths: {}, collapsed: new Set(['a']) }}
+        onCollapseChange={() => {}}
+      />,
+    );
+    expect(container.querySelector('[data-slot="sticky-group-header"]')).toHaveAttribute(
+      'data-collapsed',
+      'true',
+    );
+  });
+
+  it('collapses the right group from the pinned band', () => {
+    const onCollapseChange = vi.fn();
+    const { container } = render(
+      <Harness rows={[]} groups={grouped} stickyGroupHeader onCollapseChange={onCollapseChange} />,
+    );
+    fireEvent.click(container.querySelector('[data-slot="sticky-group-toggle"]') as HTMLElement);
+    expect(onCollapseChange).toHaveBeenCalledWith(new Set(['a']));
+  });
+});

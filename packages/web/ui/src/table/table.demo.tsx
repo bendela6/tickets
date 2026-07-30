@@ -283,6 +283,7 @@ function Demo({
         // render-skeleton-row.tsx exercised by nothing.
         rows={grouped || loading || empty ? [] : sorted}
         groups={groups}
+        stickyGroupHeader={Boolean(grouped)}
         // `getRowId` alongside onSelectionChange (which arrives with the
         // spread) is what turns selection on.
         getRowId={selectable ? (r) => r.id : undefined}
