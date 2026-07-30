@@ -138,7 +138,9 @@ indicator has to pass. The rail mark carries an `aria-label` naming the phase in
 
 1. Three sticks, uneven pose `62/27/160`, one drawing at every size.
 2. The colour sets above, off-palette, icon-only.
-3. Weight-to-reach ratio 1/3 everywhere.
+3. Weight-to-reach ratio 1/3 everywhere. In practice the locked `chipWeight` 4.6 is a
+   one-decimal rounding of `chipReach * 1/3` (14/3 = 4.6667), a 0.0048 deviation from the
+   exact ratio — chosen for a paintable stroke width, not a break from the rule.
 4. Loader = staggered speed ramps with a derived stagger; asterisk is a pose it forms.
 5. Chip field dark in both themes.
 

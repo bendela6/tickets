@@ -1,6 +1,6 @@
 import type { MarkConfig } from '../config';
 import { dataUri } from '../generate/raster';
-import { safeZonePct, svgBare, svgChip, svgFavicon, svgMono } from '../generate/svg';
+import { SAFE_ZONE_PCT, safeZonePct, svgBare, svgChip, svgFavicon, svgMono } from '../generate/svg';
 
 interface Row {
   file: string;
@@ -48,7 +48,7 @@ export function FileGrid({ config }: { config: MarkConfig }) {
       ))}
       <p className="font-mono text-12 text-gray-11 md:col-span-2">
         chip mark reaches {safeZonePct(config).toFixed(0)}% of the tile
-        {safeZonePct(config) > 80 ? ' — outside the maskable safe circle' : ' — inside the maskable safe circle'}
+        {safeZonePct(config) > SAFE_ZONE_PCT ? ' — outside the maskable safe circle' : ' — inside the maskable safe circle'}
       </p>
     </div>
   );

@@ -1,11 +1,29 @@
 import { Button } from '@tickets/ui';
 import { GROUND } from '../color';
-import { PRESETS, STICKS, type MarkConfig, type PresetName } from '../config';
+import { PRESETS, RATIO, STICKS, type MarkConfig, type PresetName } from '../config';
 import type { StudioAction, StudioState } from '../state';
 import { SliderRow } from './slider-row';
 import { SwatchRow } from './swatch-row';
 
 const signed = (v: number) => (v === 0 ? '0' : `${v > 0 ? '+' : ''}${v.toFixed(2)}`);
+
+/**
+ * Degrees apart on the circle every stick actually lives on. Sticks are full
+ * diameters — 180°-symmetric, identical at θ and θ+180 — so the distance
+ * between two angles wraps at 180, not 360.
+ */
+function pairGap(a: number, b: number): number {
+  const d = Math.abs(a - b) % 180;
+  return Math.min(d, 180 - d);
+}
+
+/** The smallest of the three pairwise gaps — the pair closest to occluding each other. */
+export function tightestGap([a, b, c]: [number, number, number]): number {
+  return Math.min(pairGap(a, b), pairGap(b, c), pairGap(a, c));
+}
+
+/** Below this, two sticks start reading as a single thicker stroke rather than two. */
+export const GAP_WARNING_DEGREES = 12;
 
 export function ControlsPanel({
   state, config, dispatch,
@@ -95,6 +113,15 @@ export function ControlsPanel({
             onChange={(degrees) => dispatch({ type: 'setAngle', index: i, degrees })}
           />
         ))}
+        {(() => {
+          const gap = tightestGap(config.angles);
+          const tight = gap < GAP_WARNING_DEGREES;
+          return (
+            <p className={`font-mono text-11 ${tight ? 'text-orange-11' : 'text-gray-11'}`}>
+              tightest gap {gap.toFixed(0)}°{tight ? ' — sticks may hide each other' : ''}
+            </p>
+          );
+        })()}
         <SliderRow
           label="bare stroke" min={3} max={8} step={0.25} value={state.bareWeight}
           onChange={(value) => dispatch({ type: 'setNumber', key: 'bareWeight', value })}
@@ -107,6 +134,9 @@ export function ControlsPanel({
           label="chip stroke" min={2} max={8} step={0.1} value={state.chipWeight}
           onChange={(value) => dispatch({ type: 'setNumber', key: 'chipWeight', value })}
         />
+        <p className="font-mono text-11 text-gray-11">
+          chip ratio {(config.chipWeight / config.chipReach).toFixed(2)} · bare mark 1/3 = {RATIO.toFixed(2)}
+        </p>
         <div>
           <Button variant="outline" size="sm" onClick={() => dispatch({ type: 'matchRatio' })}>
             Match the favicon ratio
