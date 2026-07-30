@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from 'vitest';
+import { BARE_REACH, DEFAULT_DOC, type IconDoc } from '../doc';
 import { toDoc } from '../migrate';
 import { renderSvg } from './render';
 
@@ -47,12 +48,41 @@ const OLD_SCHEMA_CONFIG = {
   chipWeight: 4.6,
 };
 
-test('an old-schema config migrates and re-renders the same favicon byte for byte', () => {
-  const doc = toDoc(OLD_SCHEMA_CONFIG);
-  expect(renderSvg(doc, 'favicon')).toBe(read('apps/web/public/favicon.svg'));
-});
+/**
+ * The same mark, written as a document. Migration is proved against *this*, not
+ * against the committed SVGs.
+ *
+ * An earlier version of these two tests compared the migrated fixture to
+ * `apps/web/public/favicon.svg`. That passed only while the committed icons
+ * happened to be this exact mark, so retuning the icon — the entire purpose of
+ * the studio — broke a test about migration. Asserting the two shapes agree
+ * with *each other* is the property actually under test, and it holds whatever
+ * the shipped icon later becomes.
+ */
+const EQUIVALENT_DOC: IconDoc = {
+  inks: {
+    field: { light: '#1b1830', dark: '#1b1830' },
+    top: { light: '#7167ff', dark: '#6652ff' },
+    mid: { light: '#00bb9a', dark: '#12b898' },
+    low: { light: '#ff298a', dark: '#ff378c' },
+  },
+  elements: [
+    { id: 'top', type: 'stick', ink: 'top', spin: true, angle: 62, reach: BARE_REACH, weight: 6 },
+    { id: 'mid', type: 'stick', ink: 'mid', spin: true, angle: 27, reach: BARE_REACH, weight: 6 },
+    { id: 'low', type: 'stick', ink: 'low', spin: true, angle: 160, reach: BARE_REACH, weight: 6 },
+  ],
+  variants: {
+    favicon: { inks: 'theme', scale: 1 },
+    mono: { inks: 'black', scale: 1 },
+    chip: { inks: 'dark', scale: 14 / BARE_REACH, field: { ink: 'field', radius: 11 } },
+    apple: { inks: 'dark', scale: 14 / BARE_REACH, field: { ink: 'field', radius: 0 } },
+  },
+  motion: DEFAULT_DOC.motion,
+};
 
-test('an old-schema config migrates and re-renders the same mono icon byte for byte', () => {
-  const doc = toDoc(OLD_SCHEMA_CONFIG);
-  expect(renderSvg(doc, 'mono')).toBe(read('apps/web/public/icon-mono.svg'));
-});
+test.each(['favicon', 'mono', 'chip', 'apple'])(
+  'an old-schema config migrates to a document that renders the same %s',
+  (variant) => {
+    expect(renderSvg(toDoc(OLD_SCHEMA_CONFIG), variant)).toBe(renderSvg(EQUIVALENT_DOC, variant));
+  },
+);
