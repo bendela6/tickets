@@ -949,6 +949,16 @@ git commit -m "refactor(ui): token files record the sanctioned rungs, drift narr
 - Consumes: `RADII`, `BORDERS`, `RINGS`, `LAYERS`, `BREAKPOINTS`, `DURATIONS`, `NATIVE_FAMILIES` from Task 8; `Sheet`, `SpecRow`, `SpecHeader`, `DriftView` from `view.tsx`.
 - Produces: `NativeNote({ family }: { family: string })` exported from `view.tsx`.
 
+**Definition of done — this task starts with a RED suite, and closing it is the point.**
+The concurrent items-core-port session added `packages/web/ui/src/gallery/demos.smoke.test.tsx` (in `badaa6f`) after this plan was written. It renders every state of every demo, which turns the Task 8→9 seam from a cosmetic wrongness into two hard test failures:
+
+| Failing test | Throwing lookup | Why |
+|---|---|---|
+| `radius renders every state` | `radius.demo.tsx` — `RADII.find((r) => r.name === 'radius-1')!.value` | keys are `radius-sm/md/lg/xl` now |
+| `layout renders every state` | `layout.demo.tsx` — `RINGS.find((r) => r.name === 'ring-focus')!` | the token is `ring-3` now |
+
+Both are non-null-asserted `.find()` calls, so a missed rename throws rather than rendering wrong. `RADIUS_JOBS`/`LAYER_JOBS`/`BORDER_JOBS` keys and the `radius('radius-1')`-style helper calls must all move to the new names. `pnpm --filter @tickets/ui test demos.smoke` going green is this task's gate, alongside the full suite.
+
 - [ ] **Step 1: Add `NativeNote` to `view.tsx`**
 
 Extend the existing import on line 4 — do not add a second import line from the same module:
