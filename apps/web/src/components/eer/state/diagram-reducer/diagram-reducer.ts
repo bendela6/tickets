@@ -2,7 +2,6 @@
 // with structural sharing so memoized scene components skip untouched nodes.
 
 import { packLayout } from '../../engine/layout/pack-layout';
-import { applyModelEdit, type ModelEdit } from '../../engine/model/apply-model-edit';
 import type { Focus, Model, RoutingMode, Selection } from '../../engine/model/types';
 
 export type DiagramGesture =
@@ -26,9 +25,6 @@ export interface DiagramUi {
   fieldHighlight: { entityId: string; field: string } | null;
   raisedEdge: string | null; // renders last → paints on top
   gesture: DiagramGesture;
-  dirty: boolean; // unsaved changes since LOAD/MARK_SAVED
-  modelId: string | null; // id of the loaded model, for save-back
-  editError: string | null; // message from the last failed APPLY_MODEL_EDIT
 }
 
 export interface DiagramState {
@@ -48,14 +44,11 @@ export const initialDiagramState: DiagramState = {
     fieldHighlight: null,
     raisedEdge: null,
     gesture: { kind: 'idle' },
-    dirty: false,
-    modelId: null,
-    editError: null,
   },
 };
 
 export type DiagramAction =
-  | { type: 'LOAD'; model: Model; modelId?: string }
+  | { type: 'LOAD'; model: Model }
   | { type: 'REPACK' } // fonts.ready — keeps focus
   | { type: 'REARRANGE' } // toolbar — clears focus
   | { type: 'SET_VIEW'; view: Partial<Pick<DiagramView, 'zoom' | 'panX' | 'panY'>> }
@@ -73,11 +66,7 @@ export type DiagramAction =
   | { type: 'HIGHLIGHT_FIELD'; entityId: string; field: string }
   | { type: 'CLEAR_FIELD_HIGHLIGHT' }
   | { type: 'RAISE_EDGE'; id: string }
-  | { type: 'CLEAR_SELECTION' }
-  | { type: 'APPLY_MODEL_EDIT'; edit: ModelEdit }
-  | { type: 'MARK_SAVED' }
-  | { type: 'CLEAR_EDIT_ERROR' }
-  | { type: 'CLEAR_MODEL_ID' };
+  | { type: 'CLEAR_SELECTION' };
 
 function toggled(set: ReadonlySet<string>, id: string): Set<string> {
   const next = new Set(set);
@@ -118,9 +107,6 @@ export function diagramReducer(state: DiagramState, action: DiagramAction): Diag
           ...initialDiagramState.ui,
           hidden: { groups: new Set(), kinds: new Set() },
           colors: action.model.colors ?? new Map(),
-          modelId: action.modelId ?? null,
-          dirty: false,
-          editError: null,
         },
       };
     case 'REPACK':
@@ -128,14 +114,11 @@ export function diagramReducer(state: DiagramState, action: DiagramAction): Diag
     case 'REARRANGE':
       // Toolbar "Rearrange" must actually move cards — a saved layout would
       // otherwise snap everything straight back, making the button a no-op.
-      // It's a real layout change like SET_POSITIONS/RESIZE_GROUP, so it must
-      // set dirty too — otherwise switching models right after silently
-      // discards the new layout with no unsaved-changes confirm.
       return state.model
         ? {
             ...state,
             model: packLayout({ ...state.model, _savedLayout: undefined }),
-            ui: { ...state.ui, focus: null, panelSelection: { type: 'none' }, fieldHighlight: null, raisedEdge: null, dirty: true },
+            ui: { ...state.ui, focus: null, panelSelection: { type: 'none' }, fieldHighlight: null, raisedEdge: null },
           }
         : state;
     case 'SET_VIEW':
@@ -143,14 +126,14 @@ export function diagramReducer(state: DiagramState, action: DiagramAction): Diag
     case 'SET_ROUTING':
       return { ...state, view: { ...state.view, routing: action.routing } };
     case 'SET_COLORS':
-      return { ...state, ui: { ...state.ui, colors: action.colors, dirty: true } };
+      return { ...state, ui: { ...state.ui, colors: action.colors } };
     case 'TOGGLE_GROUP':
       return { ...state, ui: { ...state.ui, hidden: { ...state.ui.hidden, groups: toggled(state.ui.hidden.groups, action.id) } } };
     case 'TOGGLE_KIND':
       return { ...state, ui: { ...state.ui, hidden: { ...state.ui.hidden, kinds: toggled(state.ui.hidden.kinds, action.id) } } };
     case 'SET_POSITIONS':
       return state.model
-        ? { ...state, model: withPositions(state.model, action.entities, action.boxes), ui: { ...state.ui, dirty: true } }
+        ? { ...state, model: withPositions(state.model, action.entities, action.boxes) }
         : state;
     case 'RESIZE_GROUP':
       return state.model
@@ -162,7 +145,6 @@ export function diagramReducer(state: DiagramState, action: DiagramAction): Diag
                 b.id === action.id ? { ...b, x: action.x, y: action.y, w: action.w, h: action.h } : b,
               ),
             },
-            ui: { ...state.ui, dirty: true },
           }
         : state;
     case 'SET_GESTURE':
@@ -205,28 +187,5 @@ export function diagramReducer(state: DiagramState, action: DiagramAction): Diag
         ...state,
         ui: { ...state.ui, focus: null, panelSelection: { type: 'none' }, fieldHighlight: null, raisedEdge: null },
       };
-    case 'APPLY_MODEL_EDIT': {
-      if (!state.model) return state;
-      // applyModelEdit throws a user-readable Error on an invalid edit (duplicate
-      // field names, unknown group, bad fk ref/refField, bad group parent) — a
-      // reducer must never throw, so failure surfaces as ui.editError instead and
-      // leaves state otherwise untouched (no model change, dirty not set).
-      try {
-        const model = applyModelEdit(state.model, action.edit);
-        return { ...state, model, ui: { ...state.ui, dirty: true, editError: null } };
-      } catch (err) {
-        return { ...state, ui: { ...state.ui, editError: err instanceof Error ? err.message : String(err) } };
-      }
-    }
-    case 'MARK_SAVED':
-      return { ...state, ui: { ...state.ui, dirty: false } };
-    case 'CLEAR_EDIT_ERROR':
-      return state.ui.editError ? { ...state, ui: { ...state.ui, editError: null } } : state;
-    case 'CLEAR_MODEL_ID':
-      // Deleting the loaded model's file must stop Save from being able to
-      // resurrect it — clear the save-back id only; the diagram itself (model,
-      // dirty, selection, …) stays exactly as it was so the screen doesn't
-      // flash empty out from under the user.
-      return state.ui.modelId === null ? state : { ...state, ui: { ...state.ui, modelId: null } };
   }
 }

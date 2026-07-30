@@ -6,7 +6,6 @@ import { useEffect, useMemo, useReducer, useRef, type ReactNode } from 'react';
 
 import { centerOnPoint, fitView } from '../../engine/layout/fit-view';
 import { visibleBounds } from '../../engine/layout/visible-bounds';
-import type { ModelEdit } from '../../engine/model/apply-model-edit';
 import type { Model, RoutingMode, SearchResult } from '../../engine/model/types';
 import { computeEdgeGeometry, type EdgeGeometry } from '../../engine/routing/edge-geometry';
 import { searchModel } from '../../engine/search/search-model';
@@ -36,12 +35,8 @@ export interface DiagramActions {
   focusFromSearch(entityId: string, field?: string): void;
   clearSelection(): void;
   search(q: string): SearchResult[];
-  load(model: Model, modelId?: string): void; // dispatch LOAD + double-rAF fit
+  load(model: Model): void; // dispatch LOAD + double-rAF fit
   repackAndFit(): void; // REPACK + fit (fonts.ready)
-  applyModelEdit(edit: ModelEdit): void;
-  markSaved(): void;
-  clearEditError(): void;
-  clearModelId(): void; // drop the save-back id without unloading the diagram
 }
 
 const EMPTY_GEOMETRY: EdgeGeometry = { slots: new Map(), pinSpan: new Map(), routes: new Map() };
@@ -106,8 +101,8 @@ export function DiagramProvider({ children }: { children: ReactNode }) {
       },
       clearSelection: () => dispatch({ type: 'CLEAR_SELECTION' }),
       search: (q: string): SearchResult[] => (stateRef.current.model ? searchModel(stateRef.current.model, q) : []),
-      load: (model: Model, modelId?: string) => {
-        dispatch({ type: 'LOAD', model, modelId });
+      load: (model: Model) => {
+        dispatch({ type: 'LOAD', model });
         // Fit after layout settles (grid/scrollbars finalize a frame late) — legacy double-rAF.
         requestAnimationFrame(() => requestAnimationFrame(fit));
       },
@@ -117,10 +112,6 @@ export function DiagramProvider({ children }: { children: ReactNode }) {
         // packed model instead of fitting the pre-repack one.
         requestAnimationFrame(() => requestAnimationFrame(fit));
       },
-      applyModelEdit: (edit: ModelEdit) => dispatch({ type: 'APPLY_MODEL_EDIT', edit }),
-      markSaved: () => dispatch({ type: 'MARK_SAVED' }),
-      clearEditError: () => dispatch({ type: 'CLEAR_EDIT_ERROR' }),
-      clearModelId: () => dispatch({ type: 'CLEAR_MODEL_ID' }),
     };
   }, []);
 

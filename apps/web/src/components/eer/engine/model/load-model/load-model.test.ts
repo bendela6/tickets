@@ -293,11 +293,11 @@ describe('loadModel — real seed regression (pinned cardinality multiset)', () 
 // validate WEAKER than the legacy `fields` role/ref shape it replaced —
 // normalizeConstraint never checked that an fk's refTable resolved, or that
 // its columns/refColumns actually existed on the respective tables. That
-// asymmetry is exactly why a file corrupted by apply-model-edit missing an
-// inbound-fk guard (see apply-model-edit.test.ts) could load clean: 0 errors,
-// 0 warnings. These pin the fix — a WARNING (the file still loads, matching
-// the legacy behaviour), not an error, for each of the three ways a
-// constraints-shaped fk can dangle.
+// asymmetry is exactly why a file carrying an fk whose target was deleted out
+// from under it could load clean: 0 errors, 0 warnings, and the edge silently
+// missing from the diagram. These pin the fix — a WARNING (the file still
+// loads, matching the legacy behaviour), not an error, for each of the three
+// ways a constraints-shaped fk can dangle.
 describe('loadModel — dangling fk CONSTRAINTS warn (canonical shape, not just legacy ref)', () => {
   it('(i) an fk to an unknown table warns and produces no phantom edge', () => {
     const raw = {
