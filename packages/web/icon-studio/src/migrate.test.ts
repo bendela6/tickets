@@ -27,9 +27,9 @@ test('angles and weight become one stick element each, in painted order', () => 
 });
 
 test('chip reach becomes a scale, and chipWeight is dropped', () => {
-  const doc = toDoc({ ...OLD, chipReach: 18, bareWeight: 8, chipWeight: 8 });
+  const doc = toDoc({ ...OLD, chipReach: 12, bareWeight: 8, chipWeight: 8 });
 
-  expect(doc.variants.chip?.scale).toBeCloseTo(18 / BARE_REACH, 10);
+  expect(doc.variants.chip?.scale).toBeCloseTo(12 / BARE_REACH, 10);
   expect(JSON.stringify(doc)).not.toContain('chipWeight');
 });
 
@@ -39,8 +39,14 @@ test('the chip colour becomes an ink, dark in both themes', () => {
   expect(doc.variants.chip?.field).toEqual({ ink: 'field', radius: 11 });
 });
 
-test('a document that is already migrated passes through untouched', () => {
+test('a document that is already migrated passes through unchanged', () => {
   expect(toDoc(DEFAULT_DOC)).toEqual(DEFAULT_DOC);
+});
+
+test('a half-built object is not mistaken for a document', () => {
+  expect(toDoc({ elements: [], inks: {} })).toEqual(DEFAULT_DOC);
+  expect(toDoc({ elements: [], inks: {}, variants: {} })).toEqual(DEFAULT_DOC);
+  expect(toDoc({ elements: [], inks: {}, variants: {}, motion: {} })).toEqual(DEFAULT_DOC);
 });
 
 test('anything unrecognisable falls back to the default document', () => {
