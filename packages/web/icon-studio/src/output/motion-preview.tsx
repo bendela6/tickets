@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { BARE_REACH, type MarkConfig } from '../config';
-import { configToDoc } from '../migrate';
+import { BARE_REACH, type IconDoc } from '../doc';
 import {
   isSpinning, planMove, separations, statePose, type Formation, type MarkState,
 } from '../motion';
@@ -30,25 +29,27 @@ function useReducedMotion(): boolean {
   return reduced;
 }
 
+/**
+ * The stroke this loader draws at slot `index` (0 = top, 1 = mid, 2 = low).
+ * This preview always draws three positions regardless of what the document
+ * actually holds — a slot with no stick there (removed, or replaced with a
+ * ring/dot) falls back to a plain black stroke rather than throwing.
+ */
+function stickPaint(doc: IconDoc, index: number): { color: string; weight: number } {
+  const element = doc.elements[index];
+  if (!element || element.type !== 'stick') return { color: '#000000', weight: 6 };
+  return { color: doc.inks[element.ink]?.light ?? '#000000', weight: element.weight };
+}
+
 export function MotionPreview({
-  config, state, size = 132,
+  doc, state, size = 132,
 }: {
-  config: MarkConfig;
+  doc: IconDoc;
   state: MarkState;
   size?: number;
 }) {
   const reduced = useReducedMotion();
   const sticks = useRef<(SVGPathElement | null)[]>([null, null, null]);
-
-  // motion.ts now operates on an IconDoc rather than the old MarkConfig — the
-  // preview still only ever renders the mark's three sticks, so bridging the
-  // config on the fly here reuses the real motion maths without pulling this
-  // control into the document/state rewrite that owns the rest of the studio.
-  // configToDoc, not toDoc: this config is always a real, type-checked
-  // MarkConfig, and toDoc's fallback-to-default-on-invalid-input behaviour
-  // would silently show the locked mark's angles instead of the user's own
-  // whenever a value happened to fail its validation (see migrate.ts).
-  const doc = configToDoc(config);
 
   /**
    * The live formation is a ref, not React state: the frame loop writes each
@@ -111,7 +112,7 @@ export function MotionPreview({
 
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [config, state, reduced]);
+  }, [doc, state, reduced]);
 
   const [first, second] = separations(readout.pose);
 
@@ -127,19 +128,22 @@ export function MotionPreview({
       >
         <g fill="none">
           {/* Painted low, mid, top so the leading stick stays frontmost. */}
-          {[2, 1, 0].map((i) => (
-            <path
-              key={i}
-              ref={(node) => {
-                sticks.current[i] = node;
-              }}
-              d={`M${CENTRE} ${CENTRE - BARE_REACH}L${CENTRE} ${CENTRE + BARE_REACH}`}
-              stroke={config.light[i]}
-              strokeWidth={config.bareWeight}
-              strokeLinecap="round"
-              transform={`rotate(${live.current.pose[i] ?? 0} ${CENTRE} ${CENTRE})`}
-            />
-          ))}
+          {[2, 1, 0].map((i) => {
+            const { color, weight } = stickPaint(doc, i);
+            return (
+              <path
+                key={i}
+                ref={(node) => {
+                  sticks.current[i] = node;
+                }}
+                d={`M${CENTRE} ${CENTRE - BARE_REACH}L${CENTRE} ${CENTRE + BARE_REACH}`}
+                stroke={color}
+                strokeWidth={weight}
+                strokeLinecap="round"
+                transform={`rotate(${live.current.pose[i] ?? 0} ${CENTRE} ${CENTRE})`}
+              />
+            );
+          })}
         </g>
       </svg>
 

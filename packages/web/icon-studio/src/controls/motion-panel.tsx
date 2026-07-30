@@ -1,6 +1,6 @@
 import { Button } from '@tickets/ui';
-import { REST_POSES, type MarkConfig, type RestPose } from '../config';
-import { configToDoc } from '../migrate';
+import { REST_POSES, type RestPose } from '../config';
+import type { IconDoc } from '../doc';
 import {
   isSpinning, MARK_STATES, planMove, rampSpread, statePose, type MarkState,
 } from '../motion';
@@ -8,23 +8,15 @@ import type { StudioAction } from '../state';
 import { SliderRow } from './slider-row';
 
 export function MotionPanel({
-  config, state, dispatch, onState,
+  doc, state, dispatch, onState,
 }: {
-  config: MarkConfig;
+  doc: IconDoc;
   state: MarkState;
   dispatch: (action: StudioAction) => void;
   onState: (state: MarkState) => void;
 }) {
-  const { motion } = config;
+  const { motion } = doc;
   const even = motion.restPose === 'fan';
-  // motion.ts now plans over an IconDoc; this panel still only ever edits the
-  // mark's three sticks, so the live config is bridged rather than pulling
-  // this control into the document/state rewrite. configToDoc, not toDoc:
-  // this config is always a real MarkConfig, and toDoc's fallback-to-default
-  // behaviour on invalid input would silently show the locked mark's ramp
-  // durations instead of the ones the sliders above actually set (see
-  // migrate.ts).
-  const doc = configToDoc(config);
 
   return (
     <section className="flex flex-col gap-2">
