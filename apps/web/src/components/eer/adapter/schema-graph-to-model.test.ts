@@ -155,11 +155,65 @@ describe('schemaGraphToModel', () => {
     expect(warnings.join(' ')).toMatch(/unknown table/i);
   });
 
-  it('carries enums through with their values in order', () => {
+  // `name` is the enum's QUALIFIED identity (schema.name), not the bare name
+  // pgEnum prints — see the "qualifies enum identity" test below for why.
+  it('carries enums through with their values in order, keyed by qualified name', () => {
     const { model } = schemaGraphToModel(graph);
-    const e = model!.enums.find((x) => x.name === 'status_kind')!;
+    const e = model!.enums.find((x) => x.name === 'structure.status_kind')!;
+    expect(e).toBeDefined();
     expect(e.values).toEqual(['todo', 'active', 'done']);
     expect(e.schema).toBe('structure');
+  });
+
+  // The introspection side (describe-schema.ts) reports an enum COLUMN's type
+  // as the enum's schema-qualified identity (qualifiedName(enumSchema,
+  // enumName)) — deliberately, because two same-named enums in different
+  // schemas (terminal.session_status vs agent.session_status) would otherwise
+  // collapse into one. loadModel's unknown-type check only clears a column
+  // whose type string is a KNOWN pg type OR matches a declared enum's `name`
+  // exactly, so that name must carry the same qualification the column type
+  // does, or every enum column false-positives as "unknown type".
+  it('qualifies enum identity so a same-named enum in another schema does not false-positive an unknown-type warning', () => {
+    const twoSchemas: SchemaGraph = {
+      tables: [
+        {
+          name: 'sessions', schema: 'terminal', group: 'term',
+          columns: [
+            { name: 'id', type: 'integer', notNull: true, pk: true, fk: null },
+            { name: 'status', type: 'terminal.session_status', notNull: true, pk: false, fk: null },
+          ],
+          primaryKey: ['id'], uniques: [],
+        },
+        {
+          name: 'sessions', schema: 'agent', group: 'agt',
+          columns: [
+            { name: 'id', type: 'integer', notNull: true, pk: true, fk: null },
+            { name: 'status', type: 'agent.session_status', notNull: true, pk: false, fk: null },
+          ],
+          primaryKey: ['id'], uniques: [],
+        },
+      ],
+      groups: [
+        { key: 'term', label: 'Terminal', color: 'blue', tables: ['terminal.sessions'] },
+        { key: 'agt', label: 'Agent', color: 'orange', tables: ['agent.sessions'] },
+      ],
+      enums: [
+        { name: 'session_status', schema: 'terminal', values: ['idle', 'running'] },
+        { name: 'session_status', schema: 'agent', values: ['pending', 'active'] },
+      ],
+    };
+
+    const { model, errors, warnings } = schemaGraphToModel(twoSchemas);
+    expect(errors).toEqual([]);
+    expect(warnings).toEqual([]);
+
+    // The enum columns still display their fully qualified type, and the two
+    // same-named enums stay distinct rather than collapsing into one.
+    const term = model!.entityById.get('terminal.sessions')!;
+    const agt = model!.entityById.get('agent.sessions')!;
+    expect(term.columns.find((c) => c.name === 'status')!.type).toBe('terminal.session_status');
+    expect(agt.columns.find((c) => c.name === 'status')!.type).toBe('agent.session_status');
+    expect(model!.enums.map((e) => e.name).sort()).toEqual(['agent.session_status', 'terminal.session_status']);
   });
 
   // loadModel treats empty groups/entities as a load ERROR ("Missing or empty
