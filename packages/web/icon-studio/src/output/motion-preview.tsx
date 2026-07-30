@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { BARE_REACH, type IconDoc } from '../doc';
+import type { IconDoc } from '../doc';
+import { resolveInk } from '../generate/render';
 import {
   isSpinning, planMove, separations, statePose, type Formation, type MarkState,
 } from '../motion';
@@ -29,18 +30,6 @@ function useReducedMotion(): boolean {
   return reduced;
 }
 
-/**
- * The stroke this loader draws at slot `index` (0 = top, 1 = mid, 2 = low).
- * This preview always draws three positions regardless of what the document
- * actually holds — a slot with no stick there (removed, or replaced with a
- * ring/dot) falls back to a plain black stroke rather than throwing.
- */
-function stickPaint(doc: IconDoc, index: number): { color: string; weight: number } {
-  const element = doc.elements[index];
-  if (!element || element.type !== 'stick') return { color: '#000000', weight: 6 };
-  return { color: doc.inks[element.ink]?.light ?? '#000000', weight: element.weight };
-}
-
 export function MotionPreview({
   doc, state, size = 132,
 }: {
@@ -49,7 +38,12 @@ export function MotionPreview({
   size?: number;
 }) {
   const reduced = useReducedMotion();
-  const sticks = useRef<(SVGPathElement | null)[]>([null, null, null]);
+  // One ref slot per document index, populated only for `stick` elements —
+  // a ring or dot never carries a rotate transform (see the render loop
+  // below), so the animation loop below simply has nothing to write there.
+  // Sized and indexed by `doc.elements`, not a fixed three, so it tracks
+  // however many elements the document actually holds.
+  const sticks = useRef<(SVGPathElement | null)[]>([]);
 
   /**
    * The live formation is a ref, not React state: the frame loop writes each
@@ -116,6 +110,14 @@ export function MotionPreview({
 
   const [first, second] = separations(readout.pose);
 
+  // Painted in reverse document order, exactly like `render.ts`:
+  // `elements[0]` is frontmost and the leader a running formation follows,
+  // and SVG has no z-index, so the frontmost element must be the *last*
+  // markup emitted. Each entry keeps its own document index `i` — that is
+  // what both the ref array and `live.current.pose` are keyed to, never the
+  // position an element happens to paint in.
+  const painted = [...doc.elements.entries()].reverse();
+
   return (
     <div className="flex items-center gap-4">
       <svg
@@ -127,22 +129,50 @@ export function MotionPreview({
         className="rounded-lg bg-gray-2"
       >
         <g fill="none">
-          {/* Painted low, mid, top so the leading stick stays frontmost. */}
-          {[2, 1, 0].map((i) => {
-            const { color, weight } = stickPaint(doc, i);
-            return (
-              <path
-                key={i}
-                ref={(node) => {
-                  sticks.current[i] = node;
-                }}
-                d={`M${CENTRE} ${CENTRE - BARE_REACH}L${CENTRE} ${CENTRE + BARE_REACH}`}
-                stroke={color}
-                strokeWidth={weight}
-                strokeLinecap="round"
-                transform={`rotate(${live.current.pose[i] ?? 0} ${CENTRE} ${CENTRE})`}
-              />
-            );
+          {painted.map(([i, element]) => {
+            // Light-theme only: this preview never re-renders for a theme
+            // change, so there is no "current theme" to resolve `theme`
+            // against — same posture as the single hardcoded stroke it
+            // replaces. `resolveInk` (not a raw `doc.inks[...]` read) is
+            // what keeps this own-key-safe against a document built by
+            // `structuredClone`ing parsed JSON (see render.ts).
+            const color = resolveInk(doc, element.ink, 'light').light;
+            switch (element.type) {
+              case 'stick':
+                return (
+                  <path
+                    key={element.id}
+                    ref={(node) => {
+                      sticks.current[i] = node;
+                    }}
+                    d={`M${CENTRE} ${CENTRE - element.reach}L${CENTRE} ${CENTRE + element.reach}`}
+                    stroke={color}
+                    strokeWidth={element.weight}
+                    strokeLinecap="round"
+                    transform={`rotate(${live.current.pose[i] ?? 0} ${CENTRE} ${CENTRE})`}
+                  />
+                );
+              case 'ring':
+                // Rotationally symmetric about the centre, so — like
+                // render.ts — it never needs a rotate transform, spinning or
+                // not: there would be nothing visibly different to animate.
+                return (
+                  <circle
+                    key={element.id}
+                    cx={CENTRE}
+                    cy={CENTRE}
+                    r={element.radius}
+                    stroke={color}
+                    strokeWidth={element.weight}
+                  />
+                );
+              case 'dot':
+                // Same posture as render.ts: a dot is drawn at its own fixed
+                // point and never rotated, spinning or not.
+                return (
+                  <circle key={element.id} cx={element.at[0]} cy={element.at[1]} r={element.radius} fill={color} />
+                );
+            }
           })}
         </g>
       </svg>

@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { DEFAULT_DOC } from '../doc';
 import { HEAD_START } from '../generate/head';
+import { toDoc } from '../migrate';
+import { studioReducer, type StudioState } from '../state';
 import { runGenerate } from './write';
 
 const PNG_SIG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -166,6 +168,18 @@ test.each([
   // would be caught.
   ['a 3-digit hex shorthand ink colour', { ...DEFAULT_DOC, inks: { top: { light: '#fff', dark: '#000000' } } },
     'body.config.inks.top.light must be a 6-digit hex color'],
+  ['an element id containing a space', {
+    ...DEFAULT_DOC,
+    elements: [{ id: 'top mid', type: 'stick', ink: 'top', angle: 0, reach: 10, weight: 2 }],
+  }, 'body.config.elements[0].id must contain only letters, digits, hyphens and underscores'],
+  // The concrete sink this guards: `apps/web/src/components/shell/brand-mark.tsx`
+  // interpolates `id` straight into a CSS custom-property name
+  // (`--brand-${id}`) — a `}` there closes the declaration and lets the rest
+  // of the id inject further CSS into apps/web's bundle.
+  ['an element id containing a CSS-breaking character', {
+    ...DEFAULT_DOC,
+    elements: [{ id: 'x}injected{y', type: 'stick', ink: 'top', angle: 0, reach: 10, weight: 2 }],
+  }, 'body.config.elements[0].id must contain only letters, digits, hyphens and underscores'],
   ['an unknown ink resolution', { ...DEFAULT_DOC, variants: { v: { inks: 'sepia', scale: 1 } } },
     'body.config.variants.v.inks must be one of theme, light, dark, black'],
   ['a zero scale', { ...DEFAULT_DOC, variants: { v: { inks: 'dark', scale: 0 } } },
@@ -379,4 +393,42 @@ test('accepts a zero ramp and a fully stacked rest pose', async () => {
 
   const { results } = await runGenerate({ ...docBody(), config }, root);
   expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
+});
+
+// A non-spinning element's `spin` used to be serialised as `undefined`
+// (`value.spin === true ? true : undefined`), which `JSON.stringify` then
+// drops from the written `icons.config.json` entirely. On reopen, `toDoc`'s
+// pass-through branch leaves that element with no `spin` key at all, and
+// `studioReducer`'s `updateElement` guard (state.ts) only ever applies a
+// patch key already present on the target element — so a later attempt to
+// turn spin back on would dispatch a patch the guard silently drops. The
+// bug needs an element with `spin: false` to reproduce: `DEFAULT_DOC`'s
+// elements are all `spin: true`, which is exactly why the existing
+// "round-trips the document" test above (built on `docBody()`) never caught
+// it.
+test('spin survives a round trip even when false, so the toggle is not a permanent no-op', async () => {
+  const root = await fakeRepo();
+  const config = {
+    ...DEFAULT_DOC,
+    elements: [{ id: 'r', type: 'ring' as const, ink: 'top', spin: false, radius: 10, weight: 3 }],
+  };
+
+  await runGenerate({ ...docBody(), config }, root);
+  const saved = JSON.parse(await readFile(path.join(root, 'apps/web/icons.config.json'), 'utf8'));
+
+  // Must be an own, *present* key — not merely absent-and-therefore-reading-
+  // as-falsy. `saved.elements[0].spin === false` alone would also pass for a
+  // dropped key (reading a missing property yields `undefined`, which is
+  // also falsy); `hasOwnProperty` is what actually distinguishes "false" from
+  // "not there".
+  expect(Object.prototype.hasOwnProperty.call(saved.elements[0], 'spin')).toBe(true);
+  expect(saved.elements[0].spin).toBe(false);
+
+  // And prove the round-tripped document actually accepts a later spin
+  // toggle — reopen exactly as the studio would (toDoc's pass-through
+  // branch), then dispatch the same action the checkbox does.
+  const reopened = toDoc(saved);
+  const state: StudioState = { doc: reopened };
+  const next = studioReducer(state, { type: 'updateElement', id: 'r', patch: { spin: true } });
+  expect(next.doc.elements[0]?.spin).toBe(true);
 });

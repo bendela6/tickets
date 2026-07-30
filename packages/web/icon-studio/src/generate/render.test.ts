@@ -176,6 +176,29 @@ describe('ink resolution', () => {
     expect(() => renderSvg(doc, 'v')).not.toThrow();
     expect(renderSvg(doc, 'v')).toContain('#000');
   });
+
+  test('an ink literally named "constructor" still falls back to black, not inherited prototype garbage', () => {
+    // `doc.inks` here is a plain object — exactly what a client-built
+    // `structuredClone` of parsed JSON produces — so it inherits
+    // `Object.prototype`. `doc.inks['constructor']` therefore resolves
+    // through inheritance to the `Object` function itself (truthy, but with
+    // no `.light`/`.dark`) unless the lookup is own-key-only, in which case
+    // this render would emit a literal `stroke="undefined"` instead of
+    // falling back to black like any other missing ink.
+    const doc: IconDoc = {
+      ...DEFAULT_DOC,
+      elements: [{ id: 'a', type: 'stick', ink: 'constructor', angle: 0, reach: 18, weight: 6 }],
+      variants: { v: { inks: 'dark', scale: 1 } },
+    };
+    const svg = renderSvg(doc, 'v');
+    expect(svg).toContain('#000');
+    expect(svg).not.toContain('undefined');
+  });
+
+  test('light resolves every ink to its light value, not dark', () => {
+    const svg = renderSvg({ ...DEFAULT_DOC, variants: { v: { inks: 'light', scale: 1 } } }, 'v');
+    expect(svg).toContain('#7167ff');
+  });
 });
 
 describe('scale', () => {

@@ -147,6 +147,29 @@ function assertString(value: unknown, field: string): string {
   return value;
 }
 
+/** Letters, digits, hyphen, underscore — matches the `${type}-${n}` ids the
+ * studio itself generates (`freshId` in state.ts) and the bare `top`/`mid`/`low`
+ * ids the locked mark uses, so this never rejects a legitimate document. */
+const SAFE_ID = /^[A-Za-z0-9_-]+$/;
+
+/**
+ * `id` gets its own validator rather than `assertString` because it reaches a
+ * third, distinct unescaped sink beyond SVG/HTML attributes (see the comment
+ * on `assertIconDoc`): `apps/web/src/components/shell/brand-mark.tsx`
+ * interpolates it straight into a CSS custom-property *name*
+ * (`--brand-${element.id}`). A space there breaks the declaration; a `;` or
+ * `}` closes it and lets the rest of the id inject further CSS into
+ * apps/web's bundled stylesheet. Anchoring to a safe charset — not just
+ * "is a string" — is what closes that off.
+ */
+function assertElementId(value: unknown, field: string): string {
+  const id = assertString(value, field);
+  if (!SAFE_ID.test(id)) {
+    throw new Error(`${field} must contain only letters, digits, hyphens and underscores`);
+  }
+  return id;
+}
+
 function assertInk(value: unknown, field: string): Ink {
   if (!isRecord(value)) throw new Error(`${field} must be an object`);
   return {
@@ -157,9 +180,19 @@ function assertInk(value: unknown, field: string): Ink {
 
 function assertElement(value: unknown, field: string): Element {
   if (!isRecord(value)) throw new Error(`${field} must be an object`);
-  const id = assertString(value.id, `${field}.id`);
+  const id = assertElementId(value.id, `${field}.id`);
   const ink = assertString(value.ink, `${field}.ink`);
-  const spin = value.spin === true ? true : undefined;
+  // Always a real boolean, never `undefined`: `JSON.stringify` (in
+  // `runGenerate`, writing `icons.config.json`) drops `undefined`-valued
+  // keys entirely, so a `spin: undefined` here would round-trip as *no*
+  // `spin` key at all. On reopen, `toDoc`'s pass-through branch leaves that
+  // element without one, and `studioReducer`'s `updateElement` guard
+  // (state.ts) only ever applies a patch key already present on the target
+  // element — so a later attempt to turn spin back on would dispatch a patch
+  // the guard silently drops. Same interaction bug Task 8 fixed for
+  // freshly-added elements (`blankElement` in state.ts), on the other side
+  // of the persistence seam.
+  const spin = value.spin === true;
   const type = value.type;
   if (type !== 'stick' && type !== 'ring' && type !== 'dot') {
     throw new Error(`${field}.type must be one of ${ELEMENT_TYPES.join(', ')}`);
@@ -217,12 +250,17 @@ function assertVariant(value: unknown, field: string): Variant {
  * Every colour and number is validated before anything is derived or
  * written. These raw values are template-interpolated *unescaped* into SVG
  * and HTML attributes downstream (`generate/render.ts` writes `stroke="…"` and
- * `fill="…"`; `generate/head.ts` writes `color="…"` and `content="…"`), so an
- * unvalidated field is not just a crash risk — an unchecked ink colour could
- * break out of an attribute and persist chosen markup into the repo's real,
- * hand-maintained `apps/web/index.html`. Anchoring the hex pattern at both
- * ends also rejects 3-digit shorthand, `rgb()`, and named colours: the
- * generators and the written `icons.config.json` all assume 6-digit hex.
+ * `fill="…"`; `generate/head.ts` writes `color="…"` and `content="…"`) — and,
+ * for element `id`, into a third sink with different escaping rules again: a
+ * CSS custom-property *name* in `apps/web/src/components/shell/brand-mark.tsx`
+ * (`--brand-${element.id}`). So an unvalidated field is not just a crash risk
+ * — an unchecked ink colour could break out of an attribute and persist
+ * chosen markup into the repo's real, hand-maintained `apps/web/index.html`,
+ * and an unchecked id could inject chosen CSS into apps/web's bundled
+ * stylesheet. Anchoring the hex pattern at both ends also rejects 3-digit
+ * shorthand, `rgb()`, and named colours: the generators and the written
+ * `icons.config.json` all assume 6-digit hex. `id` is anchored to a safe
+ * charset for the same reason (see `assertElementId`).
  */
 function assertIconDoc(value: unknown, field: string): IconDoc {
   if (!isRecord(value)) throw new Error(`${field} must be an object`);

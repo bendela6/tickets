@@ -33,15 +33,27 @@ export interface Resolved {
 export function resolveInk(doc: IconDoc, name: string, resolution: InkResolution): Resolved {
   if (resolution === 'black') return { light: BLACK, dark: BLACK };
   // A missing ink renders black rather than throwing: a half-edited document
-  // should still draw something you can see and fix.
-  const ink = doc.inks[name] ?? { light: BLACK, dark: BLACK };
+  // should still draw something you can see and fix. The lookup is own-key
+  // only (`hasOwnProperty`, not a plain `doc.inks[name] ?? …`) because
+  // `doc.inks` is not always the prototype-less object `assertIconDoc`
+  // builds server-side: client-side, `toDoc` returns a `structuredClone` of
+  // parsed JSON, which is a plain object and so inherits `Object.prototype`.
+  // An ink literally named `constructor`, `toString` or `valueOf` would
+  // otherwise resolve through that inheritance to a truthy, non-`Ink` value
+  // instead of `undefined` — and this render path would emit a literal
+  // `stroke="undefined"` rather than falling back to black. Same bug class
+  // `assertIconDoc` closes for `__proto__` on the write side.
+  const ink = Object.prototype.hasOwnProperty.call(doc.inks, name)
+    ? doc.inks[name]
+    : undefined;
+  const resolved = ink ?? { light: BLACK, dark: BLACK };
   switch (resolution) {
     case 'light':
-      return { light: ink.light, dark: ink.light };
+      return { light: resolved.light, dark: resolved.light };
     case 'dark':
-      return { light: ink.dark, dark: ink.dark };
+      return { light: resolved.dark, dark: resolved.dark };
     case 'theme':
-      return { light: ink.light, dark: ink.dark };
+      return { light: resolved.light, dark: resolved.dark };
   }
 }
 
