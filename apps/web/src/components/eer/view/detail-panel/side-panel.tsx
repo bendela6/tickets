@@ -51,7 +51,7 @@ export function SidePanel() {
         title="Expand panel"
         className={cn(
           'flex h-full w-6 shrink-0 items-center justify-center border-l-1 border-gray-6',
-          'bg-gray-2 text-gray-9 hover:bg-gray-3 hover:text-gray-12',
+          'bg-gray-2 text-gray-9 hover:bg-surface-inset hover:text-gray-12',
         )}
         onClick={() => setCollapsed(false)}
       >
@@ -83,7 +83,7 @@ export function SidePanel() {
           aria-label="Collapse panel"
           aria-expanded
           title="Collapse panel"
-          className="rounded-sm px-2 text-gray-9 hover:bg-gray-3 hover:text-gray-12"
+          className="rounded-sm px-2 text-gray-9 hover:bg-surface-inset hover:text-gray-12"
           onClick={() => setCollapsed(true)}
         >
           ›
