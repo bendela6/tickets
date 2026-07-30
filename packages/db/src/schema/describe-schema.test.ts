@@ -264,6 +264,14 @@ describe('findGroupKey', () => {
     expect(() => findGroupKey('items', dupe, null)).toThrow(/multiple groups/);
   });
 
+  it('still throws when a schema is claimed by two groups', () => {
+    const dupe: SchemaGroup[] = [
+      { key: 'a', label: 'A', color: 'blue', tables: [], schemas: ['shared'] },
+      { key: 'b', label: 'B', color: 'red', tables: [], schemas: ['shared'] },
+    ];
+    expect(() => findGroupKey('anything', dupe, 'shared')).toThrow(/multiple groups/);
+  });
+
   it('resolveGroupKey still throws for an unknown table', () => {
     expect(() => resolveGroupKey('audit_log', groups, null)).toThrow(/in no group/);
   });

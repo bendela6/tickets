@@ -80,6 +80,18 @@ function enumIdentity(c: PgColumn): { schema: string | null; name: string } | nu
  * Live introspection needs the null: a database the config never described
  * (or a table added to the database but not the code) has no curated group,
  * and that is expected rather than fatal. See introspect/group-tables.ts.
+ *
+ * The ERD's visual group is independent of a table's real Postgres schema —
+ * e.g. `core.users` renders in the WORKSPACE group alongside `core.projects`,
+ * not in the WORKDIRS group with `core.workdirs`, even though all three carry
+ * schema `core`. So a hand-listed `SchemaGroup.tables` entry (bare name)
+ * always wins when present, regardless of schema. Only a table with NO
+ * hand-listed entry falls back to schema-derived membership via
+ * `SchemaGroup.schemas` — that's how `core.workdirs`, `terminal.sessions` and
+ * `agent.*` resolve, since group and schema happen to coincide 1:1 for them.
+ * This also keeps `terminal.sessions` and `agent.sessions` — the same bare
+ * name — resolving unambiguously: each carries its own pgSchema, so there is
+ * no bare name collision to trip the "in multiple groups" check.
  */
 export function findGroupKey(
   tableName: string,
@@ -101,20 +113,8 @@ export function findGroupKey(
   return null;
 }
 
-// Every table must belong to exactly one group. Throws otherwise, so the config
-// can't silently fall behind the schema.
-//
-// The ERD's visual group is independent of a table's real Postgres schema —
-// e.g. `core.users` renders in the WORKSPACE group alongside `core.projects`,
-// not in the WORKDIRS group with `core.workdirs`, even though all three carry
-// schema `core`. So a hand-listed `SchemaGroup.tables` entry (bare name)
-// always wins when present, regardless of schema. Only a table with NO
-// hand-listed entry falls back to schema-derived membership via
-// `SchemaGroup.schemas` — that's how `core.workdirs`, `terminal.sessions` and
-// `agent.*` resolve, since group and schema happen to coincide 1:1 for them.
-// This also keeps `terminal.sessions` and `agent.sessions` — the same bare
-// name — resolving unambiguously: each carries its own pgSchema, so there is
-// no bare name collision to trip the "in multiple groups" check.
+// Every table in the drizzle registry must belong to exactly one group.
+// Throws otherwise, so the config can't silently fall behind the schema.
 export function resolveGroupKey(
   tableName: string,
   groups: SchemaGroup[],
