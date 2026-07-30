@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type { Plugin } from 'vite';
 import { DEFAULT_CONFIG } from '../config';
+import { DEFAULT_DOC } from '../doc';
 import { iconWriter, isLoopback } from './icon-writer';
 
 test('the plugin only exists while serving', () => {
@@ -153,7 +154,7 @@ test('a non-JSON content-type on generate is refused with 415, and nothing is wr
     // A `<form enctype="text/plain">` submit produces exactly this shape: a
     // simple request, non-JSON content-type, and (not shown here) a body
     // that a `name=value` split would coincidentally parse as JSON.
-    const body = JSON.stringify({ config: DEFAULT_CONFIG, pngs: {} });
+    const body = JSON.stringify({ config: DEFAULT_DOC, pngs: {} });
     await middleware(
       fakeRequest('/__icons/generate', 'POST', { headers: { 'content-type': 'text/plain' }, body }),
       res,
@@ -170,7 +171,7 @@ test('an application/json content-type on generate proceeds past the content-typ
     const middleware = captureMiddleware(iconWriter({ repoRoot }));
     const { res, captured } = fakeResponse();
 
-    const body = JSON.stringify({ config: DEFAULT_CONFIG, pngs: {} });
+    const body = JSON.stringify({ config: DEFAULT_DOC, pngs: {} });
     await middleware(
       fakeRequest('/__icons/generate', 'POST', { headers: { 'content-type': 'application/json' }, body }),
       res,

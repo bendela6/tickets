@@ -1,7 +1,7 @@
 import { mkdtemp, mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { DEFAULT_CONFIG } from '../config';
+import { DEFAULT_DOC } from '../doc';
 import { HEAD_START } from '../generate/head';
 import { runGenerate } from './write';
 
@@ -24,14 +24,21 @@ async function fakeRepo() {
   return root;
 }
 
-const body = () => ({
-  config: DEFAULT_CONFIG,
+const docBody = () => ({
+  config: DEFAULT_DOC,
   pngs: { 'icon-192.png': png, 'icon-512.png': png, 'apple-touch-icon.png': png },
 });
 
+/** `DEFAULT_DOC.inks` is a `Record`, so a known key still reads as possibly `undefined`. */
+function ink(name: string, theme: 'light' | 'dark'): string {
+  const value = DEFAULT_DOC.inks[name]?.[theme];
+  if (value === undefined) throw new Error(`DEFAULT_DOC.inks.${name}.${theme} is missing`);
+  return value;
+}
+
 test('writes all seven outputs and creates public/', async () => {
   const root = await fakeRepo();
-  const { results } = await runGenerate(body(), root);
+  const { results } = await runGenerate(docBody(), root);
 
   expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
   expect(results.map((r) => r.path).sort()).toEqual([
@@ -46,28 +53,34 @@ test('writes all seven outputs and creates public/', async () => {
   ]);
 });
 
-test('derives the svgs and manifest from the config rather than the client', async () => {
+test('writes every output from a document', async () => {
   const root = await fakeRepo();
-  await runGenerate(body(), root);
+  const { results } = await runGenerate(docBody(), root);
+  expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
+});
+
+test('derives the svgs and manifest from the document rather than the client', async () => {
+  const root = await fakeRepo();
+  await runGenerate(docBody(), root);
 
   const favicon = await readFile(path.join(root, 'apps/web/public/favicon.svg'), 'utf8');
-  expect(favicon).toContain(DEFAULT_CONFIG.light[0]);
+  expect(favicon).toContain(ink('top', 'light'));
   expect(favicon).toContain('prefers-color-scheme:dark');
 
   const manifest = JSON.parse(await readFile(path.join(root, 'apps/web/public/site.webmanifest'), 'utf8'));
-  expect(manifest.theme_color).toBe(DEFAULT_CONFIG.chip);
+  expect(manifest.theme_color).toBe(ink('field', 'dark'));
 });
 
-test('round-trips the config so the studio reopens on it', async () => {
+test('round-trips the document so the studio reopens on it', async () => {
   const root = await fakeRepo();
-  await runGenerate(body(), root);
+  await runGenerate(docBody(), root);
   const saved = JSON.parse(await readFile(path.join(root, 'apps/web/icons.config.json'), 'utf8'));
-  expect(saved).toEqual(DEFAULT_CONFIG);
+  expect(saved).toEqual(DEFAULT_DOC);
 });
 
 test('injects the head block into index.html without touching the rest', async () => {
   const root = await fakeRepo();
-  await runGenerate(body(), root);
+  await runGenerate(docBody(), root);
   const html = await readFile(path.join(root, 'apps/web/index.html'), 'utf8');
   expect(html).toContain(HEAD_START);
   expect(html).toContain('<title>tickets</title>');
@@ -75,7 +88,7 @@ test('injects the head block into index.html without touching the rest', async (
 
 test('a second identical run reports everything unchanged and touches no file', async () => {
   const root = await fakeRepo();
-  const { results: first } = await runGenerate(body(), root);
+  const { results: first } = await runGenerate(docBody(), root);
 
   // Prove no write happened, not just that the status string says so: an
   // implementation that fabricated 'unchanged' would still pass a check of
@@ -87,7 +100,7 @@ test('a second identical run reports everything unchanged and touches no file', 
   const inoOf = async (rel: string) => (await stat(path.join(root, rel))).ino;
   const before = await Promise.all(first.map((r) => inoOf(r.path)));
 
-  const { results: second } = await runGenerate(body(), root);
+  const { results: second } = await runGenerate(docBody(), root);
   expect(second.every((r) => r.status === 'unchanged')).toBe(true);
 
   const after = await Promise.all(first.map((r) => inoOf(r.path)));
@@ -97,7 +110,7 @@ test('a second identical run reports everything unchanged and touches no file', 
 test('rejects an unknown png name and writes nothing for it', async () => {
   const root = await fakeRepo();
   const { results } = await runGenerate(
-    { config: DEFAULT_CONFIG, pngs: { 'evil.png': png } },
+    { config: DEFAULT_DOC, pngs: { 'evil.png': png } },
     root,
   );
   const evil = results.find((r) => r.path === 'evil.png');
@@ -109,7 +122,7 @@ test('rejects a png payload that is not a png', async () => {
   const root = await fakeRepo();
   const { results } = await runGenerate(
     {
-      config: DEFAULT_CONFIG,
+      config: DEFAULT_DOC,
       pngs: { 'icon-192.png': Buffer.from('<svg/>').toString('base64') },
     },
     root,
@@ -132,64 +145,36 @@ test('rejects a non-string png payload before writing anything, rather than cras
   // already been written. Rejecting it in assertRequest keeps the whole
   // request from writing anything at all.
   await expect(
-    runGenerate({ config: DEFAULT_CONFIG, pngs: { 'icon-192.png': 123 } }, root),
+    runGenerate({ config: DEFAULT_DOC, pngs: { 'icon-192.png': 123 } }, root),
   ).rejects.toThrow(/body\.pngs/);
 
   const entries = await readdir(path.join(root, 'apps', 'web'));
   expect(entries).toEqual(['index.html']);
 });
 
-test('rejects a non-hex colour in light', async () => {
+test.each([
+  ['no elements array', { ...DEFAULT_DOC, elements: undefined }, 'body.config.elements must be an array'],
+  ['an unknown element type', { ...DEFAULT_DOC, elements: [{ id: 'a', type: 'blob', ink: 'top' }] },
+    'body.config.elements[0].type must be one of stick, ring, dot'],
+  ['an element naming no ink', { ...DEFAULT_DOC, elements: [{ id: 'a', type: 'ring', radius: 5, weight: 1 }] },
+    'body.config.elements[0].ink must be a string'],
+  ['a bad ink colour', { ...DEFAULT_DOC, inks: { top: { light: 'red', dark: '#000000' } } },
+    'body.config.inks.top.light must be a 6-digit hex color'],
+  ['an unknown ink resolution', { ...DEFAULT_DOC, variants: { v: { inks: 'sepia', scale: 1 } } },
+    'body.config.variants.v.inks must be one of theme, light, dark, black'],
+  ['a zero scale', { ...DEFAULT_DOC, variants: { v: { inks: 'dark', scale: 0 } } },
+    'body.config.variants.v.scale must be a finite number greater than zero'],
+])('rejects a document with %s, and writes nothing', async (_label, config, message) => {
   const root = await fakeRepo();
-  const bad = {
-    ...DEFAULT_CONFIG,
-    light: ['not-a-colour', DEFAULT_CONFIG.light[1], DEFAULT_CONFIG.light[2]],
-  };
-  await expect(runGenerate({ config: bad, pngs: {} }, root)).rejects.toThrow(/light\[0\]/);
+  await expect(runGenerate({ ...docBody(), config }, root)).rejects.toThrow(message);
+  await expect(stat(path.join(root, 'apps', 'web', 'public'))).rejects.toThrow();
 });
 
-test('rejects a non-hex chip colour (3-digit shorthand) before writing anything', async () => {
+test('accepts a document with zero elements', async () => {
+  // An empty icon is a legitimate starting point, not an error.
   const root = await fakeRepo();
-  const bad = { ...DEFAULT_CONFIG, chip: '#fff' };
-  await expect(runGenerate({ config: bad, pngs: {} }, root)).rejects.toThrow(/chip/);
-
-  // The whole point of validating up front: a rejected config must not have
-  // touched the repo's hand-maintained index.html on the way to failing.
-  const html = await readFile(path.join(root, 'apps/web/index.html'), 'utf8');
-  expect(html).toBe(INDEX);
-});
-
-test('rejects a non-finite angle', async () => {
-  const root = await fakeRepo();
-  const bad = {
-    ...DEFAULT_CONFIG,
-    angles: [DEFAULT_CONFIG.angles[0], Number.NaN, DEFAULT_CONFIG.angles[2]],
-  };
-  await expect(runGenerate({ config: bad, pngs: {} }, root)).rejects.toThrow(/angles\[1\]/);
-});
-
-test('rejects a zero or negative weight', async () => {
-  const root = await fakeRepo();
-  const zero = { ...DEFAULT_CONFIG, bareWeight: 0 };
-  await expect(runGenerate({ config: zero, pngs: {} }, root)).rejects.toThrow(/bareWeight/);
-
-  const negative = { ...DEFAULT_CONFIG, chipReach: -1 };
-  await expect(runGenerate({ config: negative, pngs: {} }, root)).rejects.toThrow(/chipReach/);
-});
-
-test('accepts a fully valid config unchanged, so the guard is not over-tight', async () => {
-  const root = await fakeRepo();
-  const valid = {
-    light: ['#123456', '#abcdef', '#000000'],
-    dark: ['#654321', '#fedcba', '#ffffff'],
-    chip: '#010203',
-    angles: [0, 180.5, -45],
-    bareWeight: 0.5,
-    chipReach: 1,
-    chipWeight: 0.1,
-    motion: { speed: 0.5, restSpread: 0, ramp: 0, restPose: 'logo' },
-  };
-  const { results } = await runGenerate({ config: valid, pngs: {} }, root);
+  const config = { ...DEFAULT_DOC, elements: [] };
+  const { results } = await runGenerate({ ...docBody(), config }, root);
   expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
 });
 
@@ -208,7 +193,7 @@ test('a malformed head marker rejects only the index.html step; every other outp
 `;
   await writeFile(path.join(root, 'apps', 'web', 'index.html'), malformed, 'utf8');
 
-  const { results } = await runGenerate(body(), root);
+  const { results } = await runGenerate(docBody(), root);
 
   const indexResult = results.find((r) => r.path === 'apps/web/index.html');
   expect(indexResult?.status).toBe('rejected');
@@ -222,11 +207,11 @@ test('a malformed head marker rejects only the index.html step; every other outp
 test('persists the motion block into icons.config.json', async () => {
   const root = await fakeRepo();
   const tuned = {
-    ...DEFAULT_CONFIG,
+    ...DEFAULT_DOC,
     motion: { speed: 260, restSpread: 24, ramp: 0.4, restPose: 'fan' as const },
   };
 
-  await runGenerate({ ...body(), config: tuned }, root);
+  await runGenerate({ ...docBody(), config: tuned }, root);
   const saved = JSON.parse(
     await readFile(path.join(root, 'apps', 'web', 'icons.config.json'), 'utf8'),
   );
@@ -234,7 +219,7 @@ test('persists the motion block into icons.config.json', async () => {
   expect(saved.motion).toEqual(tuned.motion);
 });
 
-// Generate writes the validated config straight back over icons.config.json, so
+// Generate writes the validated document straight back over icons.config.json, so
 // a missing or malformed motion block must be a loud rejection — substituting
 // defaults would silently overwrite tuned values and report a normal write.
 test.each([
@@ -250,9 +235,9 @@ test.each([
     'body.config.motion.restSpread must be a finite number'],
 ])('rejects motion that is %s, and writes nothing', async (_label, motion, message) => {
   const root = await fakeRepo();
-  const config = { ...DEFAULT_CONFIG, motion } as typeof DEFAULT_CONFIG;
+  const config = { ...DEFAULT_DOC, motion } as typeof DEFAULT_DOC;
 
-  await expect(runGenerate({ ...body(), config }, root)).rejects.toThrow(message);
+  await expect(runGenerate({ ...docBody(), config }, root)).rejects.toThrow(message);
   // The rejection has to land before any file is derived or written.
   await expect(stat(path.join(root, 'apps', 'web', 'public'))).rejects.toThrow();
   await expect(stat(path.join(root, 'apps', 'web', 'icons.config.json'))).rejects.toThrow();
@@ -262,10 +247,10 @@ test('accepts a zero ramp and a fully stacked rest pose', async () => {
   // Both are legitimate: an instant ramp, and every stick starting aligned.
   const root = await fakeRepo();
   const config = {
-    ...DEFAULT_CONFIG,
+    ...DEFAULT_DOC,
     motion: { speed: 90, restSpread: 0, ramp: 0, restPose: 'fan' as const },
   };
 
-  const { results } = await runGenerate({ ...body(), config }, root);
+  const { results } = await runGenerate({ ...docBody(), config }, root);
   expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
 });
