@@ -48,10 +48,11 @@ export type EnumMeta = { name: string; values: string[]; schema: string | null }
 export type SchemaGraph = { tables: TableMeta[]; groups: GroupMeta[]; enums: EnumMeta[] };
 
 // The identity of a table or enum: its bare name in public, `schema.name`
-// otherwise. This is the SSOT model's own convention (tableId/enumId in
-// apps/eer/src/engine/model/import-drizzle) — conformance keys both sides by
-// this, so `terminal.sessions` and `agent.sessions` stay distinct instead of
-// silently collapsing into one map entry.
+// otherwise. This is the SSOT model's own convention (tableId/enumId, as
+// produced by the import-drizzle step that generated items-platform.json) —
+// conformance keys both sides by this, so `terminal.sessions` and
+// `agent.sessions` stay distinct instead of silently collapsing into one map
+// entry.
 export function qualifiedName(schema: string | null, name: string): string {
   return schema && schema !== 'public' ? `${schema}.${name}` : name;
 }

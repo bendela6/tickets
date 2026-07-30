@@ -1,6 +1,6 @@
 // packages/db/src/schema/model-conformance.test.ts
-// The drizzle schema and apps/eer/models/items-platform.json must agree, in BOTH
-// directions. A stray table in drizzle fails as loudly as a missing one.
+// The drizzle schema and packages/db/src/schema/items-platform.json must agree,
+// in BOTH directions. A stray table in drizzle fails as loudly as a missing one.
 import { describe, expect, it } from 'vitest';
 import { describeSchema, qualifiedName } from './describe-schema';
 import { loadModel, topLevelGroup, type EerEntity } from './model';
@@ -8,8 +8,8 @@ import { loadModel, topLevelGroup, type EerEntity } from './model';
 // model type name -> the type string drizzle's getSQLType() produces.
 //
 // The two sides spell the same types differently, so this is not an identity
-// map: the model stores canonical Postgres SQL names (what apps/eer's type
-// catalogue emits, e.g. "timestamp with time zone"), while drizzle's
+// map: the model stores canonical Postgres SQL names (what the SSOT model's
+// type catalogue emits, e.g. "timestamp with time zone"), while drizzle's
 // getSQLType() prints its own shorthand ("timestamptz"). A key that stops
 // matching the model fails loudly via the `unmapped model type` assertion
 // below rather than silently skipping the column.

@@ -40,7 +40,7 @@ import { views } from './views';
 import { workdirs } from './workdirs';
 
 // Every pgTable in the schema. The conformance test forces this to equal the
-// entity set in apps/eer/models/items-platform.json.
+// entity set in packages/db/src/schema/items-platform.json.
 export const allTables = [
   users, projects, views,
   schemes, itemTypes, itemTypeChildTypes, itemTypeFields, fields,
