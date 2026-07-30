@@ -13,7 +13,7 @@ import { TopBar } from '../top-bar';
 // thing that turns it into diagram state.
 function Viewer() {
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       <TopBar />
       <div className="flex min-h-0 flex-1">
         <Diagram />
