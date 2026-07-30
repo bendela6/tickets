@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useReducer, useState } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 import { Button } from '@tickets/ui';
 import { fetchConfig, generate } from './api';
+import type { MarkConfig } from './config';
+import { DEFAULT_CONFIG } from './config';
 import { ControlsPanel } from './controls/controls-panel';
 import { MotionPanel } from './controls/motion-panel';
+import { toDoc } from './migrate';
 import { FileGrid } from './output/file-grid';
 import type { MarkState } from './motion';
 import { MotionPreview } from './output/motion-preview';
 import type { GenerateResult } from './plugin/write';
-import { INITIAL_STATE, studioReducer, toConfig } from './state';
+import { INITIAL_STATE, studioReducer } from './state';
 
 export function Studio() {
   const [state, dispatch] = useReducer(studioReducer, INITIAL_STATE);
@@ -15,15 +18,26 @@ export function Studio() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Which state the loader is being driven to is a way of looking at the mark,
-  // not a property of it, so it stays out of the config.
+  // not a property of it, so it stays out of the document.
   const [loaderState, setLoaderState] = useState<MarkState>('default');
 
-  const config = useMemo(() => toConfig(state), [state]);
+  // Generate, FileGrid and the raster pipeline still walk the old
+  // MarkConfig -> generate/svg.ts path — that cutover is a later task, and
+  // svg.ts is off limits here. So the raw config fetched on mount is kept
+  // alongside the live document: it drives the output previews and Generate,
+  // while `state.doc` (migrated from the same fetch via `toDoc`) drives the
+  // panels below. The two intentionally fall out of sync once the document is
+  // edited; reconnecting Generate to the live document is that later task's
+  // job, not this one's.
+  const [rawConfig, setRawConfig] = useState<MarkConfig>(DEFAULT_CONFIG);
 
   // Reopen on whatever is committed, so the studio reflects the shipped icons.
   useEffect(() => {
     fetchConfig()
-      .then((loaded) => dispatch({ type: 'loadConfig', config: loaded }))
+      .then((loaded) => {
+        setRawConfig(loaded);
+        dispatch({ type: 'loadDoc', doc: toDoc(loaded) });
+      })
       .catch((e: unknown) => {
         // Render the server's own message (which carries the `(EACCES)` or
         // parse detail — see icon-writer.ts's isFsError handling) rather
@@ -36,7 +50,7 @@ export function Studio() {
     setBusy(true);
     setError(null);
     try {
-      const response = await generate(config);
+      const response = await generate(rawConfig);
       setResults(response.results);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Generate failed');
@@ -64,9 +78,9 @@ export function Studio() {
 
         <div className="flex flex-col gap-6 lg:flex-row">
           <div className="flex flex-col gap-5 lg:w-88 lg:shrink-0">
-            <ControlsPanel state={state} config={config} dispatch={dispatch} />
+            <ControlsPanel doc={state.doc} dispatch={dispatch} />
             <MotionPanel
-              config={config}
+              doc={state.doc}
               state={loaderState}
               dispatch={dispatch}
               onState={setLoaderState}
@@ -102,10 +116,10 @@ export function Studio() {
               <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">
                 Loader
               </h2>
-              <MotionPreview config={config} state={loaderState} />
+              <MotionPreview doc={state.doc} state={loaderState} />
             </section>
 
-            <FileGrid config={config} />
+            <FileGrid config={rawConfig} />
           </div>
         </div>
       </div>
