@@ -3,6 +3,23 @@ import { environment } from '../../environment';
 import { assertKnownDatabase } from '../list-databases';
 
 /**
+ * For testing: factory for postgres instances. Wraps each instance to track
+ * end() calls for leak detection in tests.
+ */
+export function createPostgresInstance(options: Parameters<typeof postgres>[0]) {
+  const sql = postgres(options);
+  // Wrap end() to enable test tracking if a hook is installed
+  if (typeof (global as any).__withDatabaseEndTracker === 'function') {
+    const originalEnd = sql.end.bind(sql);
+    sql.end = (async (...args: any[]) => {
+      (global as any).__withDatabaseEndTracker();
+      return originalEnd(...args);
+    }) as any;
+  }
+  return sql;
+}
+
+/**
  * Open a short-lived, read-only connection to a NAMED database and hand the
  * caller the raw postgres.js handle.
  *
@@ -22,7 +39,7 @@ export async function withDatabase<T>(
 ): Promise<T> {
   const database = await assertKnownDatabase(name);
   const { host, port, user, password } = environment.postgres;
-  const sql = postgres({ host, port, user, password, database, max: 1 });
+  const sql = createPostgresInstance({ host, port, user, password, database, max: 1 });
   try {
     return await fn(sql);
   } finally {
