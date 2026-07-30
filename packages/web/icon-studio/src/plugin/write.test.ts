@@ -187,6 +187,7 @@ test('accepts a fully valid config unchanged, so the guard is not over-tight', a
     bareWeight: 0.5,
     chipReach: 1,
     chipWeight: 0.1,
+    motion: { speed: 0.5, restSpread: 0, ramp: 0, restPose: 'logo' },
   };
   const { results } = await runGenerate({ config: valid, pngs: {} }, root);
   expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
@@ -216,4 +217,55 @@ test('a malformed head marker rejects only the index.html step; every other outp
   const others = results.filter((r) => r.path !== 'apps/web/index.html');
   expect(others.length).toBeGreaterThan(0);
   expect(others.every((r) => r.status === 'written')).toBe(true);
+});
+
+test('persists the motion block into icons.config.json', async () => {
+  const root = await fakeRepo();
+  const tuned = {
+    ...DEFAULT_CONFIG,
+    motion: { speed: 260, restSpread: 24, ramp: 0.4, restPose: 'fan' as const },
+  };
+
+  await runGenerate({ ...body(), config: tuned }, root);
+  const saved = JSON.parse(
+    await readFile(path.join(root, 'apps', 'web', 'icons.config.json'), 'utf8'),
+  );
+
+  expect(saved.motion).toEqual(tuned.motion);
+});
+
+// Generate writes the validated config straight back over icons.config.json, so
+// a missing or malformed motion block must be a loud rejection — substituting
+// defaults would silently overwrite tuned values and report a normal write.
+test.each([
+  ['missing entirely', undefined, 'body.config.motion must be an object'],
+  ['an array', [120, 8], 'body.config.motion must be an object'],
+  ['an unknown rest pose', { speed: 120, restSpread: 8, ramp: 0.9, restPose: 'spiral' },
+    'body.config.motion.restPose must be "logo" or "fan"'],
+  ['a zero speed', { speed: 0, restSpread: 8, ramp: 0.9, restPose: 'logo' },
+    'body.config.motion.speed must be a finite number greater than zero'],
+  ['a negative ramp', { speed: 120, restSpread: 8, ramp: -1, restPose: 'logo' },
+    'body.config.motion.ramp must not be negative'],
+  ['a non-numeric spread', { speed: 120, restSpread: '8', ramp: 0.9, restPose: 'logo' },
+    'body.config.motion.restSpread must be a finite number'],
+])('rejects motion that is %s, and writes nothing', async (_label, motion, message) => {
+  const root = await fakeRepo();
+  const config = { ...DEFAULT_CONFIG, motion } as typeof DEFAULT_CONFIG;
+
+  await expect(runGenerate({ ...body(), config }, root)).rejects.toThrow(message);
+  // The rejection has to land before any file is derived or written.
+  await expect(stat(path.join(root, 'apps', 'web', 'public'))).rejects.toThrow();
+  await expect(stat(path.join(root, 'apps', 'web', 'icons.config.json'))).rejects.toThrow();
+});
+
+test('accepts a zero ramp and a fully stacked rest pose', async () => {
+  // Both are legitimate: an instant ramp, and every stick starting aligned.
+  const root = await fakeRepo();
+  const config = {
+    ...DEFAULT_CONFIG,
+    motion: { speed: 90, restSpread: 0, ramp: 0, restPose: 'fan' as const },
+  };
+
+  const { results } = await runGenerate({ ...body(), config }, root);
+  expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
 });

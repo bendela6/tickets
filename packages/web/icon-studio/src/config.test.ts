@@ -9,6 +9,9 @@ test('default config matches the locked design values', () => {
     bareWeight: 6,
     chipReach: 14,
     chipWeight: 4.6,
+    // The spec's loader values: 120°/s top speed on a 0.9s smootherstep ramp,
+    // resting on the logo pose so an idle loader is the favicon.
+    motion: { speed: 120, restSpread: 8, ramp: 0.9, restPose: 'logo' },
   });
 });
 

@@ -150,6 +150,7 @@ rather than the raw HTML of the exploration.
 | Adjust | Hue shift; vividness and brightness, separately for light and dark. Non-destructive over the base. |
 | Angles | One slider per stick, 0–180°, plus a tightest-gap readout that warns when sticks hide each other. |
 | Weight | Bare stroke, chip reach, chip stroke, with a ratio readout against the bare mark's 1/3 and a maskable safe-circle proof. |
+| Motion | The loader, animating. Speed, rest spread and the leading stick's ramp; a rest-pose toggle (`logo` / `fan`); phase buttons (`auto` cycles, or hold one of the four); play/pause. Readouts show the *derived* per-stick ramps, the transition length and the running hold, so none of the timing is magic. Honours `prefers-reduced-motion` by holding the idle pose. |
 | Output | Every file previewed at true size on a transparency check. **Generate** writes them all; per-file result reported. |
 
 Presets seed the palette, including the chosen set and the violet-lifted variant from the
@@ -205,6 +206,20 @@ interface MarkConfig {
   bareWeight: number;
   chipReach: number;
   chipWeight: number;
+  /**
+   * The loader, defined in the mark spec. Required, never defaulted server-side:
+   * Generate writes the validated config straight back over icons.config.json,
+   * so silently substituting defaults for a missing block would overwrite tuned
+   * values and report it as an ordinary write. A config file written before this
+   * block existed still opens — the studio fills the defaults in on read, where
+   * they are visible in the panel rather than silently applied.
+   */
+  motion: {
+    speed: number;
+    restSpread: number;
+    ramp: number;
+    restPose: 'logo' | 'fan';
+  };
 }
 
 interface GenerateRequest {

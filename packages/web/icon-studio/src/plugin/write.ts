@@ -1,6 +1,6 @@
 import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { MarkConfig } from '../config';
+import type { MarkConfig, MotionConfig } from '../config';
 import { buildHeadBlock, injectHeadBlock } from '../generate/head';
 import { buildManifest } from '../generate/manifest';
 import { svgFavicon, svgMono } from '../generate/svg';
@@ -99,6 +99,40 @@ function assertPositiveWeight(value: unknown, field: string): number {
   return n;
 }
 
+function assertNonNegative(value: unknown, field: string): number {
+  const n = assertFiniteNumber(value, field);
+  if (n < 0) throw new Error(`${field} must not be negative`);
+  return n;
+}
+
+/**
+ * The motion block is required, not defaulted.
+ *
+ * `runGenerate` writes the validated config straight back to
+ * `icons.config.json`, so quietly substituting defaults for a missing block
+ * would overwrite a developer's tuned values with stock ones and report it as a
+ * normal write — the same silent-data-loss shape as the config read that used
+ * to fall back to defaults on any error. A client that omits it gets a 400
+ * instead. `speed` must be positive because the stagger divides by it; `ramp`
+ * and `restSpread` may be zero (an instant ramp and a fully-stacked rest pose
+ * are both legitimate), but not negative.
+ */
+function assertMotion(value: unknown, field: string): MotionConfig {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error(`${field} must be an object`);
+  }
+  const m = value as Record<string, unknown>;
+  if (m.restPose !== 'logo' && m.restPose !== 'fan') {
+    throw new Error(`${field}.restPose must be "logo" or "fan"`);
+  }
+  return {
+    speed: assertPositiveWeight(m.speed, `${field}.speed`),
+    restSpread: assertNonNegative(m.restSpread, `${field}.restSpread`),
+    ramp: assertNonNegative(m.ramp, `${field}.ramp`),
+    restPose: m.restPose,
+  };
+}
+
 /**
  * `config` is validated exhaustively above, but `pngs`' values were only ever
  * trusted as `Record<string, string>` by a cast — so `{"icon-192.png": 123}`
@@ -148,6 +182,7 @@ function assertRequest(body: unknown): GenerateRequest {
     bareWeight: assertPositiveWeight(c.bareWeight, 'body.config.bareWeight'),
     chipReach: assertPositiveWeight(c.chipReach, 'body.config.chipReach'),
     chipWeight: assertPositiveWeight(c.chipWeight, 'body.config.chipWeight'),
+    motion: assertMotion(c.motion, 'body.config.motion'),
   };
 
   return { config: validConfig, pngs: assertPngs(pngs, 'body.pngs') };

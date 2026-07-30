@@ -80,6 +80,7 @@ test('loadConfig replaces the whole state and clears adjustments', () => {
     bareWeight: 1.5,
     chipReach: 12,
     chipWeight: 4,
+    motion: { speed: 200, restSpread: 12, ramp: 0.5, restPose: 'fan' },
   };
 
   const next = studioReducer(dirty, { type: 'loadConfig', config: customConfig });
@@ -89,4 +90,47 @@ test('loadConfig replaces the whole state and clears adjustments', () => {
   expect(result.light).not.toBe(customConfig.light);
   expect(result.dark).not.toBe(customConfig.dark);
   expect(result.angles).not.toBe(customConfig.angles);
+});
+
+test('setMotion patches one field and leaves the rest of the block alone', () => {
+  const next = studioReducer(INITIAL_STATE, { type: 'setMotion', patch: { speed: 260 } });
+  const { motion } = toConfig(next);
+
+  expect(motion.speed).toBe(260);
+  expect(motion.restSpread).toBe(DEFAULT_CONFIG.motion.restSpread);
+  expect(motion.ramp).toBe(DEFAULT_CONFIG.motion.ramp);
+  expect(motion.restPose).toBe(DEFAULT_CONFIG.motion.restPose);
+});
+
+test('resetMotion restores the locked motion block without touching the palette', () => {
+  const tuned = studioReducer(
+    studioReducer(INITIAL_STATE, { type: 'setMotion', patch: { speed: 40, restPose: 'fan' } }),
+    { type: 'setChip', hex: '#abcdef' },
+  );
+  const next = studioReducer(tuned, { type: 'resetMotion' });
+  const config = toConfig(next);
+
+  expect(config.motion).toEqual(DEFAULT_CONFIG.motion);
+  expect(config.chip).toBe('#abcdef');
+});
+
+test('a config written before the motion block existed still opens, on the defaults', () => {
+  // The committed icons.config.json predates motion; dropping it must not throw
+  // or produce an undefined block that the preview would then read.
+  const { motion: _omitted, ...legacy } = DEFAULT_CONFIG;
+  const state = fromConfig(legacy as typeof DEFAULT_CONFIG);
+
+  expect(toConfig(state).motion).toEqual(DEFAULT_CONFIG.motion);
+});
+
+test('a config carrying only some motion keys keeps them and fills the rest', () => {
+  const partial = {
+    ...DEFAULT_CONFIG,
+    motion: { speed: 42 } as typeof DEFAULT_CONFIG.motion,
+  };
+
+  expect(toConfig(fromConfig(partial)).motion).toEqual({
+    ...DEFAULT_CONFIG.motion,
+    speed: 42,
+  });
 });
