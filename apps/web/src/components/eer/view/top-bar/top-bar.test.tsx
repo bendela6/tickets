@@ -25,7 +25,7 @@ describe('TopBar', () => {
         <TopBar />
       </DiagramProvider>,
     );
-    expect(screen.getByRole('heading', { name: 'EER model viewer' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Database schema' })).toBeInTheDocument();
     expect(screen.getByText('loading…')).toBeInTheDocument();
     expect(screen.queryByText('Groups')).not.toBeInTheDocument();
   });

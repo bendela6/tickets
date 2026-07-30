@@ -37,10 +37,13 @@ export function TopBar() {
       )}
     >
       <div className="mr-auto">
-        <h1 className="text-16 font-600 tracking-tight">{model?.meta.title ?? 'EER model viewer'}</h1>
+        {/* 'Database schema' is what the adapter sets meta.title to, so the
+            fallback matches instead of flashing the old standalone app's name
+            ('EER model viewer') for the frame before the model arrives. */}
+        <h1 className="text-16 font-600 tracking-tight">{model?.meta.title ?? 'Database schema'}</h1>
         <p className="mt-1 max-w-sm truncate text-12 text-gray-11">
           {model?.meta.description ??
-            (model ? `${model.entities.length} entities · ${model.relationships.length} relationships` : 'loading…')}
+            (model ? `${model.entities.length} tables · ${model.relationships.length} relationships` : 'loading…')}
         </p>
       </div>
 
