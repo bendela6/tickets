@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Table, useTableWidths, type Column, type SortBy } from '@tickets/table';
+import { Table, sortRows, useTable, type Column } from '@tickets/table';
 import { boolean, definePlayground, select } from '../gallery';
 import { Button } from '../components/button';
 import { Icon } from '../components/icon';
@@ -163,11 +162,17 @@ function Demo({
   overlay?: boolean;
   columns?: Column<Row>[];
 }) {
-  const [sort, setSort] = useState<SortBy[]>([]);
-  const [widths, setWidth] = useTableWidths('gallery-table-demo');
+  // All of the table's uncontrolled state in one line, spread onto <Table>
+  // below. `widthsId` is what makes a dragged column width outlive a reload.
+  const table = useTable({ widthsId: 'gallery-table-demo' });
+  // The engine emits sort intent and never reorders anything, so a
+  // client-sorted caller runs the rows through `sortRows` itself. Shift-click
+  // a second header and the ordinals in the header row describe an ordering
+  // this actually performs.
+  const sorted = sortRows(ROWS, table.state.sort, columns);
   const groups = grouped
     ? Object.entries(
-        ROWS.reduce<Record<string, Row[]>>((acc, row) => {
+        sorted.reduce<Record<string, Row[]>>((acc, row) => {
           (acc[row.status] ??= []).push(row);
           return acc;
         }, {}),
@@ -185,16 +190,14 @@ function Demo({
   return (
     <div className="h-100 w-full">
       <Table<Row>
+        {...table}
         columns={columns}
         // `loading` must also empty `rows`. The engine only renders skeletons
         // when `isLoading && items.length === 0`, so passing 40 rows alongside
         // isLoading makes the Loading state pixel-identical to Flat and leaves
         // render-skeleton-row.tsx exercised by nothing.
-        rows={grouped || loading || empty ? [] : ROWS}
+        rows={grouped || loading || empty ? [] : sorted}
         groups={groups}
-        state={{ sort, widths }}
-        onSortChange={setSort}
-        onWidthChange={setWidth}
         onRowClick={() => {}}
         isLoading={Boolean(loading)}
         error={error ? new Error('The server said no.') : null}

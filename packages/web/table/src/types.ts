@@ -25,6 +25,22 @@ export interface Column<T> {
   resizable?: boolean;
 }
 
+/**
+ * Everything the table's chrome is driven by, in one object.
+ *
+ * One bag rather than a prop per concern: a caller spreads `useTable()`'s
+ * result onto `<Table>` and gets all of it, and a controlled caller replaces
+ * exactly the fields it wants to own. Every field past `sort` and `widths` is
+ * optional so a caller can adopt them one at a time.
+ */
+export interface TableState {
+  sort: SortBy[];
+  widths: Record<string, number>;
+  /** Keys of the collapsed groups. Carried here so a caller does not have to
+   *  invent its own place to keep it; the engine does not yet act on it. */
+  collapsed?: Set<string>;
+}
+
 export interface RenderRootCtx {
   children: ReactNode;
 }
