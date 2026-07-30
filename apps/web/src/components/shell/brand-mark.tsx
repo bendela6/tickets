@@ -11,10 +11,12 @@ import config from '../../../icons.config.json';
  * The config is the `IconDoc` shape (`inks` + `elements`, see
  * `packages/web/icon-studio/src/doc.ts`), not the three-stick shape it used
  * to be. Geometry mirrors the studio's `renderSvg()` for the `favicon`
- * variant: a 48-unit grid, each stick a full diameter through the centre.
- * The studio is a dev-only package that must stay out of the app's bundle,
- * so the drawing is re-derived here rather than imported — the two files
- * agree by matching convention, not by sharing code.
+ * variant: a 48-unit grid, each stick a full diameter through the centre,
+ * scaled by that variant's own `scale` (see `stickGeometry` below) exactly
+ * as `renderSvg` multiplies every element's reach and weight together for
+ * it. The studio is a dev-only package that must stay out of the app's
+ * bundle, so the drawing is re-derived here rather than imported — the two
+ * files agree by matching convention, not by sharing code.
  */
 
 /** Centre of the 48-unit grid. Locked by the mark spec, same as the studio's `CENTRE`. */
@@ -59,6 +61,47 @@ function isStick(element: unknown): element is StickElement {
 }
 
 const inks = config.inks as Record<string, Ink>;
+
+/**
+ * The favicon variant's own `scale` — read as defensively as `config.elements`
+ * above, rather than trusted at the type level, because it is JSON and not
+ * something TypeScript's structural inference from the current file's shape
+ * can be relied on to hold across a future edit. Falls back to 1 (the
+ * locked mark's own value) so a document that predates variants, or one
+ * missing the favicon entry, still draws at its natural size instead of
+ * throwing.
+ */
+function faviconScale(value: unknown): number {
+  if (typeof value !== 'object' || value === null) return 1;
+  const variants = (value as Record<string, unknown>).variants;
+  if (typeof variants !== 'object' || variants === null) return 1;
+  const favicon = (variants as Record<string, unknown>).favicon;
+  if (typeof favicon !== 'object' || favicon === null) return 1;
+  const scale = (favicon as Record<string, unknown>).scale;
+  return typeof scale === 'number' && Number.isFinite(scale) ? scale : 1;
+}
+
+const FAVICON_SCALE = faviconScale(config);
+
+/**
+ * The path geometry and stroke width for one stick element, scaled by the
+ * favicon variant — the same multiplier `render.ts`'s `renderSvg` applies to
+ * every element's reach and weight for that variant. Exported as a pure
+ * function, decoupled from the module-level `config` import, so the scaling
+ * itself is directly testable without mocking a JSON module: the committed
+ * fixture's favicon variant is scale 1, so a rendering test against it alone
+ * cannot tell "scale applied, and it's 1" apart from "scale ignored".
+ */
+export function stickGeometry(
+  element: Pick<StickElement, 'reach' | 'weight'>,
+  scale: number,
+): { d: string; strokeWidth: number } {
+  const reach = element.reach * scale;
+  return {
+    d: `M${CENTRE} ${CENTRE - reach}L${CENTRE} ${CENTRE + reach}`,
+    strokeWidth: element.weight * scale,
+  };
+}
 
 /** A missing ink draws black rather than throwing — same posture as the studio's `resolveInk`. */
 function inkOf(name: string, mode: 'light' | 'dark'): string {
@@ -122,17 +165,20 @@ export function BrandMark({ size = DEFAULT_SIZE, className }: { size?: number; c
         aria-hidden
         className={cn('shrink-0', className)}
       >
-        {PAINT_ORDER.map((element) => (
-          <path
-            key={element.id}
-            d={`M${CENTRE} ${CENTRE - element.reach}L${CENTRE} ${CENTRE + element.reach}`}
-            fill="none"
-            stroke={`var(--brand-${element.id})`}
-            strokeWidth={element.weight}
-            strokeLinecap="round"
-            transform={`rotate(${element.angle} ${CENTRE} ${CENTRE})`}
-          />
-        ))}
+        {PAINT_ORDER.map((element) => {
+          const { d, strokeWidth } = stickGeometry(element, FAVICON_SCALE);
+          return (
+            <path
+              key={element.id}
+              d={d}
+              fill="none"
+              stroke={`var(--brand-${element.id})`}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              transform={`rotate(${element.angle} ${CENTRE} ${CENTRE})`}
+            />
+          );
+        })}
       </svg>
     </>
   );

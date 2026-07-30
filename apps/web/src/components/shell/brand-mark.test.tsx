@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { expect, test } from 'vitest';
 import config from '../../../icons.config.json';
-import { BRAND_MARK_CSS, BrandMark } from './brand-mark';
+import { BRAND_MARK_CSS, BrandMark, stickGeometry } from './brand-mark';
 
 // Every expectation below is derived from icons.config.json rather than
 // restating its values, so retuning the mark in the studio can never leave
@@ -94,4 +94,17 @@ test('publishes the theme block into the document, so the strokes resolve', () =
     s.textContent?.includes('--brand-'),
   );
   expect(published.length).toBeGreaterThan(0);
+});
+
+// The committed fixture's favicon variant is scale 1 (see icons.config.json),
+// so a rendering test against it alone can't distinguish "the scale is
+// applied, and happens to be 1" from "the scale is ignored outright" — that
+// is exactly the gap between this file's header comment (claims parity with
+// renderSvg's favicon variant) and the code (used to read reach/weight raw).
+// `stickGeometry` is exported specifically so the multiplication itself can
+// be pinned independent of the fixture.
+test('stickGeometry holds reach and weight to renderSvg\'s own scale multiplier', () => {
+  expect(stickGeometry({ reach: 18, weight: 6 }, 1)).toEqual({ d: 'M24 6L24 42', strokeWidth: 6 });
+  expect(stickGeometry({ reach: 10, weight: 4 }, 2)).toEqual({ d: 'M24 4L24 44', strokeWidth: 8 });
+  expect(stickGeometry({ reach: 18, weight: 6 }, 0.5)).toEqual({ d: 'M24 15L24 33', strokeWidth: 3 });
 });
