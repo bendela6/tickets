@@ -3,24 +3,18 @@ import { DEFAULT_CONFIG, type MarkConfig, type RestPose } from './config';
 import {
   ASTERISK_GAP,
   coastDegrees,
-  cycleLength,
-  cyclePhaseAt,
-  cyclePose,
-  IDLE_HOLD,
-  poseAt,
+  isSpinning,
+  lags,
+  MARK_STATES,
+  planMove,
   rampSpread,
-  ramps,
-  restAngles,
-  RUNNING_HOLD,
-  runningHoldSeconds,
-  runningPose,
   separations,
   smootherstep,
   specStagger,
-  spinDownPose,
-  spinUpPose,
+  statePose,
   sweptDegrees,
-  transitionSeconds,
+  type Formation,
+  type MarkState,
 } from './motion';
 
 function withMotion(patch: Partial<MarkConfig['motion']>): MarkConfig {
@@ -28,16 +22,25 @@ function withMotion(patch: Partial<MarkConfig['motion']>): MarkConfig {
 }
 
 /**
- * A stick is 180°-symmetric, so a gap of 0 and a gap of 180 are the same gap.
- * Comparing raw numbers would call a gap that lands a hair below zero — and so
- * wraps to 179.999 — a 180° error, which is a wrap artefact rather than drift.
+ * A stick is 180°-symmetric, so a gap of 0 and a gap of 180 are the same gap,
+ * and 179.999 is a hair from 0 rather than 180 away. Comparing raw numbers would
+ * report a wrap as a 180° error.
  */
-function gapDiff(a: number, b: number): number {
+function angleDiff(a: number, b: number): number {
   const d = Math.abs(a - b) % 180;
   return Math.min(d, 180 - d);
 }
 
-// The matrix the mark spec says it verified the loader against.
+function at(config: MarkConfig, from: Formation, to: MarkState) {
+  const move = planMove(config, from, to);
+  return { move, landed: move.pose(move.duration) };
+}
+
+function standing(config: MarkConfig, state: MarkState): Formation {
+  return { pose: statePose(config, state), spinning: isSpinning(state) };
+}
+
+// The matrix the mark spec records the loader as verified against.
 const SPEEDS = [40, 120, 260];
 const SPREADS = [0, 8, 24];
 const POSES: RestPose[] = ['logo', 'fan'];
@@ -58,34 +61,30 @@ describe('the easing', () => {
       (smootherstep(u + h) - 2 * smootherstep(u) + smootherstep(u - h)) / (h * h);
 
     for (const end of [0, 1]) {
-      const at = end === 0 ? h * 2 : 1 - h * 2;
-      expect(Math.abs(d1(at))).toBeLessThan(0.01);
-      expect(Math.abs(d2(at))).toBeLessThan(0.1);
+      const u = end === 0 ? h * 2 : 1 - h * 2;
+      expect(Math.abs(d1(u))).toBeLessThan(0.01);
+      expect(Math.abs(d2(u))).toBeLessThan(0.1);
     }
-    // Fastest in the middle, so the ramp actually goes somewhere.
     expect(d1(0.5)).toBeGreaterThan(1.5);
   });
 });
 
 describe('the ramp integral', () => {
   test('is continuous where the ramp ends', () => {
-    const ramp = 0.9;
     const speed = 120;
     const step = 1e-6;
-    const before = sweptDegrees(speed, ramp, ramp - step);
-    const at = sweptDegrees(speed, ramp, ramp);
-    // A stick never exceeds `speed`, so across `step` seconds the swept angle
-    // cannot move further than `speed * step`. Asserting a tighter bound than
-    // that would be asserting the sampling error, not continuity.
-    expect(Math.abs(at - before)).toBeLessThanOrEqual(speed * step * 1.001);
+    const before = sweptDegrees(speed, 0.9, 0.9 - step);
+    const at909 = sweptDegrees(speed, 0.9, 0.9);
+    // A stick never exceeds `speed`, so it cannot move further than
+    // `speed × step` across that gap. A tighter bound would be asserting the
+    // sampling error rather than continuity.
+    expect(Math.abs(at909 - before)).toBeLessThanOrEqual(speed * step * 1.001);
   });
 
   test('gives up exactly half a ramp of distance to accelerating', () => {
-    // The constant that makes a staggered start produce a fixed separation.
-    const speed = 120;
-    const ramp = 0.9;
+    // The constant that turns a difference in ramps into a fixed separation.
     for (const elapsed of [0.9, 1.5, 4]) {
-      expect(sweptDegrees(speed, ramp, elapsed)).toBeCloseTo(speed * (elapsed - ramp / 2), 8);
+      expect(sweptDegrees(120, 0.9, elapsed)).toBeCloseTo(120 * (elapsed - 0.45), 8);
     }
   });
 
@@ -99,102 +98,94 @@ describe('the ramp integral', () => {
   });
 
   test('accelerating and decelerating over one ramp cover the same ground', () => {
-    // Symmetry of the easing: what spin-up loses to its ramp, spin-down loses too.
     expect(coastDegrees(120, 0.9, 0.9)).toBeCloseTo(sweptDegrees(120, 0.9, 0.9), 8);
   });
 });
 
-describe('the ramps', () => {
-  test('all three sticks are already moving the instant the transition starts', () => {
-    // The defining property: simultaneous starts. Under a staggered-start model
-    // the mid and low sticks sit still until their delay elapses, so this is
-    // what separates the two designs.
-    for (const restPose of POSES) {
-      const config = withMotion({ restPose });
-      const rest = restAngles(config);
-      const moved = spinUpPose(config, 0.05);
+describe('the states', () => {
+  test('running is the exact asterisk; the others are still', () => {
+    const config = withMotion({});
+    const [first, second] = separations(statePose(config, 'running'));
+    expect(first).toBeCloseTo(ASTERISK_GAP, 10);
+    expect(second).toBeCloseTo(ASTERISK_GAP, 10);
 
-      for (let i = 0; i < 3; i++) {
-        expect(Math.abs((moved[i] ?? 0) - (rest[i] ?? 0))).toBeGreaterThan(0);
-      }
-    }
+    expect(isSpinning('running')).toBe(true);
+    expect(isSpinning('default')).toBe(false);
+    expect(isSpinning('resting')).toBe(false);
   });
 
-  test('gives the leading stick the configured ramp and the trailing ones longer', () => {
-    for (const speed of SPEEDS) {
-      for (const restSpread of SPREADS) {
-        const config = withMotion({ speed, restSpread, restPose: 'fan' });
-        const [top, mid, low] = ramps(config);
-        const spread = rampSpread(config.motion);
-
-        expect(top).toBeCloseTo(config.motion.ramp, 10);
-        expect(mid).toBeCloseTo(config.motion.ramp + spread, 10);
-        expect(low).toBeCloseTo(config.motion.ramp + 2 * spread, 10);
-      }
-    }
+  test('default is the mark\'s own angles, so an idle loader is the favicon', () => {
+    const config = withMotion({});
+    expect(statePose(config, 'default')).toEqual(config.angles);
   });
 
-  test("each ramp difference is twice the spec's derived stagger", () => {
-    // The spec expressed the offset as a start delay Δd; with simultaneous
-    // starts the same separation comes from a ramp that is 2Δd longer, because
-    // a ramp costs a stick half its length in distance.
-    for (const speed of SPEEDS) {
-      for (const restSpread of SPREADS) {
-        const motion = { ...DEFAULT_CONFIG.motion, speed, restSpread };
-        expect(rampSpread(motion)).toBeCloseTo(2 * specStagger(motion), 10);
-      }
-    }
-  });
-
-  test('runs a transition until the slowest stick finishes accelerating', () => {
-    for (const speed of SPEEDS) {
-      for (const restSpread of SPREADS) {
-        const config = withMotion({ speed, restSpread, restPose: 'fan' });
-        expect(transitionSeconds(config)).toBeCloseTo(
-          config.motion.ramp + 2 * rampSpread(config.motion),
-          10,
-        );
-      }
-    }
-  });
-
-  test('accelerates the top stick hardest, and never asks for a negative ramp', () => {
-    for (const restPose of POSES) {
-      const perStick = ramps(withMotion({ restPose }));
-      expect(Math.min(...perStick)).toBeGreaterThanOrEqual(0);
-      expect(perStick[0]).toBeLessThanOrEqual(perStick[1]);
-      expect(perStick[1]).toBeLessThanOrEqual(perStick[2]);
-    }
-  });
-
-  test('keeps every ramp real even for a pose that runs the other way', () => {
-    // Angles ordered so the top stick trails rather than leads — the case that
-    // would otherwise want a ramp shorter than zero.
-    const reversed: MarkConfig = { ...withMotion({ restPose: 'logo' }), angles: [10, 80, 150] };
-    expect(Math.min(...ramps(reversed))).toBeGreaterThanOrEqual(0);
+  test('resting sits restSpread apart, reading as one stroke', () => {
+    const config = withMotion({ restSpread: 8 });
+    expect(separations(statePose(config, 'resting'))).toEqual([8, 8]);
   });
 });
 
-describe('the rest pose', () => {
-  test('logo rests on the mark\'s own angles, so an idle loader is the favicon', () => {
-    const config = withMotion({ restPose: 'logo' });
-    expect(restAngles(config)).toEqual(config.angles);
+describe('every move', () => {
+  test('starts exactly where the mark already is, so nothing jumps on click', () => {
+    const config = withMotion({});
+    for (const from of MARK_STATES) {
+      for (const to of MARK_STATES) {
+        const move = planMove(config, standing(config, from), to);
+        expect(move.pose(0), `${from} → ${to}`).toEqual(statePose(config, from));
+      }
+    }
   });
 
-  test('fan rests restSpread apart, reading as one stroke', () => {
-    const config = withMotion({ restPose: 'fan', restSpread: 8 });
-    expect(separations(restAngles(config))).toEqual([8, 8]);
+  test('has a finite, non-negative duration across the whole matrix', () => {
+    for (const restSpread of SPREADS) {
+      for (const speed of SPEEDS) {
+        const config = withMotion({ speed, restSpread });
+        for (const from of MARK_STATES) {
+          for (const to of MARK_STATES) {
+            const { duration } = planMove(config, standing(config, from), to);
+            expect(Number.isFinite(duration), `${from} → ${to}`).toBe(true);
+            expect(duration).toBeGreaterThanOrEqual(0);
+          }
+        }
+      }
+    }
+  });
+
+  test('sets every stick that has somewhere to go moving from the first instant', () => {
+    // Simultaneous starts: under a staggered-start model the trailing sticks
+    // would sit still until their delay elapsed. Sticks already on their target
+    // are excluded — `default` and `resting` share the same `top` anchor, so the
+    // leading stick genuinely stays put between those two.
+    const config = withMotion({});
+    for (const from of MARK_STATES) {
+      for (const to of MARK_STATES) {
+        if (from === to) continue;
+        const move = planMove(config, standing(config, from), to);
+        const start = statePose(config, from);
+        const landed = move.pose(move.duration);
+        const early = move.pose(move.duration * 0.05);
+
+        for (let i = 0; i < 3; i++) {
+          const hasFurtherToGo = angleDiff(landed[i] ?? 0, start[i] ?? 0) > 1e-9;
+          if (!hasFurtherToGo) continue;
+          expect(
+            Math.abs((early[i] ?? 0) - (start[i] ?? 0)),
+            `${from} → ${to} stick ${i}`,
+          ).toBeGreaterThan(0);
+        }
+      }
+    }
   });
 });
 
-describe('spin-up', () => {
-  test('lands the asterisk exactly, from either pose, across the whole matrix', () => {
+describe('moving into running', () => {
+  test('lands the asterisk exactly, from either resting pose, across the matrix', () => {
     for (const restPose of POSES) {
       for (const speed of SPEEDS) {
         for (const restSpread of SPREADS) {
           const config = withMotion({ speed, restSpread, restPose });
-          const settled = spinUpPose(config, transitionSeconds(config));
-          const [first, second] = separations(settled);
+          const from = standing(config, restPose === 'fan' ? 'resting' : 'default');
+          const [first, second] = separations(at(config, from, 'running').landed);
 
           expect(first).toBeCloseTo(ASTERISK_GAP, 6);
           expect(second).toBeCloseTo(ASTERISK_GAP, 6);
@@ -203,126 +194,168 @@ describe('spin-up', () => {
     }
   });
 
-  test('starts on the rest pose', () => {
-    for (const restPose of POSES) {
-      const config = withMotion({ restPose });
-      expect(spinUpPose(config, 0)).toEqual(restAngles(config));
-    }
-  });
-
-  test('holds the asterisk once settled rather than drifting past it', () => {
+  test('holds the asterisk once up to speed rather than drifting past it', () => {
     const config = withMotion({});
+    const { move } = at(config, standing(config, 'default'), 'running');
     for (const extra of [0, 0.5, 3, 10]) {
-      const [first, second] = separations(runningPose(config, extra));
+      const [first, second] = separations(move.pose(move.duration + extra));
       expect(first).toBeCloseTo(ASTERISK_GAP, 6);
       expect(second).toBeCloseTo(ASTERISK_GAP, 6);
     }
   });
+
+  test('gives the leading stick the configured ramp and the trailing ones longer', () => {
+    for (const speed of SPEEDS) {
+      for (const restSpread of SPREADS) {
+        const config = withMotion({ speed, restSpread, restPose: 'fan' });
+        const { move } = at(config, standing(config, 'resting'), 'running');
+        // The slowest stick sets the duration: two ramp-steps past the leader's.
+        expect(move.duration).toBeCloseTo(
+          config.motion.ramp + 2 * rampSpread(config.motion),
+          8,
+        );
+      }
+    }
+  });
+
+  test("each ramp step is twice the spec's derived stagger", () => {
+    for (const speed of SPEEDS) {
+      for (const restSpread of SPREADS) {
+        const motion = { ...DEFAULT_CONFIG.motion, speed, restSpread };
+        expect(rampSpread(motion)).toBeCloseTo(2 * specStagger(motion), 10);
+      }
+    }
+  });
+
+  test('is a no-op when already running, and keeps turning', () => {
+    const config = withMotion({});
+    const move = planMove(config, standing(config, 'running'), 'running');
+    expect(move.duration).toBe(0);
+    expect(move.spinning).toBe(true);
+    // Still turning at full speed after the (zero-length) move.
+    const turned = move.pose(1);
+    expect((turned[0] ?? 0) - (statePose(config, 'running')[0] ?? 0)).toBeCloseTo(
+      config.motion.speed,
+      6,
+    );
+  });
 });
 
-describe('spin-down', () => {
-  test('folds back onto the rest pose exactly, across the whole matrix', () => {
-    for (const restPose of POSES) {
+describe('moving out of running', () => {
+  test('lands on the target pose exactly — orientation included — across the matrix', () => {
+    // The coast exists for this: decelerating alone closes the formation but
+    // parks it at whatever angle the spinning reached.
+    for (const to of ['default', 'resting'] as const) {
       for (const speed of SPEEDS) {
         for (const restSpread of SPREADS) {
-          const config = withMotion({ speed, restSpread, restPose });
-          const folded = spinDownPose(config, transitionSeconds(config));
-          const [wantFirst, wantSecond] = separations(restAngles(config));
-          const [gotFirst, gotSecond] = separations(folded);
+          const config = withMotion({ speed, restSpread });
+          const { landed } = at(config, standing(config, 'running'), to);
+          const target = statePose(config, to);
 
-          expect(gapDiff(gotFirst, wantFirst)).toBeLessThan(1e-6);
-          expect(gapDiff(gotSecond, wantSecond)).toBeLessThan(1e-6);
+          for (let i = 0; i < 3; i++) {
+            expect(angleDiff(landed[i] ?? 0, target[i] ?? 0), `${to} stick ${i}`)
+              .toBeLessThan(1e-6);
+          }
         }
       }
     }
   });
 
-  test('starts from where running left the mark', () => {
+  test('stops turning', () => {
     const config = withMotion({});
-    expect(spinDownPose(config, 0)).toEqual(runningPose(config, 0));
+    expect(planMove(config, standing(config, 'running'), 'default').spinning).toBe(false);
   });
 
-  test('stops the top stick first, and the others close on it after it has parked', () => {
-    const config = withMotion({ restPose: 'fan' });
-    const [topRamp, midRamp] = ramps(config);
-    // Between the two ramps: the top stick has finished, the mid stick has not.
-    const between = ((topRamp ?? 0) + (midRamp ?? 0)) / 2;
+  test('waits no more than a half-turn before slowing', () => {
+    // The coast is the shortest wait that makes the landing exact, so it can
+    // never add a visible stall.
+    for (const speed of SPEEDS) {
+      const config = withMotion({ speed });
+      const { move } = at(config, standing(config, 'running'), 'default');
+      const decelerating = config.motion.ramp + 2 * (180 / speed);
+      expect(move.duration).toBeLessThanOrEqual(180 / speed + decelerating + 1e-9);
+    }
+  });
 
-    const top = (t: number) => spinDownPose(config, t)[0];
-    expect(top(between)).toBeCloseTo(top(between + 0.05), 6);
+  test('parks the leading stick first, and the others close on it', () => {
+    const config = withMotion({ restSpread: 8 });
+    const { move } = at(config, standing(config, 'running'), 'resting');
+    const top = (t: number) => move.pose(t)[0];
 
-    // And while the mid stick is still moving, its gap to the parked top stick
-    // is closing.
-    const early = separations(spinDownPose(config, between))[0];
-    const later = separations(spinDownPose(config, between + 0.05))[0];
-    expect(later).toBeLessThan(early);
+    // The leader is on the shortest ramp, so it is stationary before the move ends.
+    expect(top(move.duration - 1e-3)).toBeCloseTo(top(move.duration), 6);
+
+    // And while the others still run, the formation is closing — the gap is
+    // approaching the resting spread, not lingering near the asterisk's 60°.
+    const [targetGap] = separations(statePose(config, 'resting'));
+    const early = separations(move.pose(move.duration * 0.6))[0];
+    const later = separations(move.pose(move.duration * 0.85))[0];
+    expect(angleDiff(later, targetGap)).toBeLessThan(angleDiff(early, targetGap));
   });
 });
 
-describe('the self-cycling preview', () => {
-  test('runs idle → spin-up → running → spin-down and loops', () => {
-    const config = withMotion({});
-    const transition = transitionSeconds(config);
-    const running = runningHoldSeconds(config);
-
-    expect(cyclePhaseAt(config, 0).phase).toBe('idle');
-    expect(cyclePhaseAt(config, IDLE_HOLD + 0.01).phase).toBe('spin-up');
-    expect(cyclePhaseAt(config, IDLE_HOLD + transition + 0.01).phase).toBe('running');
-    expect(cyclePhaseAt(config, IDLE_HOLD + transition + running + 0.01).phase).toBe('spin-down');
-    // One full loop on, back to the start.
-    expect(cyclePhaseAt(config, cycleLength(config) + 0.01).phase).toBe('idle');
-  });
-
-  test('turns the mark a whole number of half-turns per cycle, so the logo lands upright', () => {
-    // Without this the mark folds shut at an arbitrary orientation and the loop
-    // visibly jumps — caught by the handover test below before it shipped.
-    for (const restPose of POSES) {
-      for (const speed of SPEEDS) {
-        const config = withMotion({ speed, restPose });
-        const hold = runningHoldSeconds(config);
-        const turned = speed * (transitionSeconds(config) + hold);
-
-        expect(turned % 180).toBeCloseTo(0, 6);
-        // Running is what absorbs the correction, but it stays watchable.
-        expect(hold).toBeGreaterThanOrEqual(RUNNING_HOLD);
+describe('moving between two still poses', () => {
+  test('lands on the target pose exactly, both ways', () => {
+    for (const restSpread of SPREADS) {
+      const config = withMotion({ restSpread });
+      for (const [from, to] of [
+        ['default', 'resting'],
+        ['resting', 'default'],
+      ] as const) {
+        const { landed } = at(config, standing(config, from), to);
+        const target = statePose(config, to);
+        for (let i = 0; i < 3; i++) {
+          expect(angleDiff(landed[i] ?? 0, target[i] ?? 0), `${from} → ${to}`)
+            .toBeLessThan(1e-9);
+        }
       }
     }
   });
 
-  test('never jumps the mark at a phase handover', () => {
-    // A stick is 180°-symmetric, so equality mod 180 is what the eye sees.
-    const config = withMotion({});
-    const modulo = (a: number) => ((a % 180) + 180) % 180;
-    const step = 1e-4;
+  test('turns each stick the short way round rather than the long way', () => {
+    // The mid stick sits *ahead* of where resting wants it, so the short way is
+    // backwards. With the locked angles every target happens to lie forwards,
+    // which would let a forward-only implementation pass — so this case is
+    // chosen to force the direction flip.
+    const config: MarkConfig = {
+      ...withMotion({ restSpread: 8 }),
+      angles: [62, 70, 160],
+    };
+    const start = statePose(config, 'default');
+    const { move } = at(config, standing(config, 'default'), 'resting');
+    const landed = move.pose(move.duration);
 
-    for (const boundary of [
-      IDLE_HOLD,
-      IDLE_HOLD + transitionSeconds(config),
-      IDLE_HOLD + transitionSeconds(config) + runningHoldSeconds(config),
-      cycleLength(config),
-    ]) {
-      const before = cyclePose(config, boundary - step);
-      const after = cyclePose(config, boundary + step);
-      for (let i = 0; i < 3; i++) {
-        const drift = Math.abs(modulo(before[i] ?? 0) - modulo(after[i] ?? 0));
-        expect(Math.min(drift, 180 - drift)).toBeLessThan(0.5);
-      }
+    const turns = [0, 1, 2].map((i) => (landed[i] ?? 0) - (start[i] ?? 0));
+    // Nothing takes the long way: a quarter turn is the most any stick needs.
+    for (const turn of turns) expect(Math.abs(turn)).toBeLessThanOrEqual(90 + 1e-9);
+    // And at least one stick really does turn backwards here.
+    expect(Math.min(...turns)).toBeLessThan(0);
+  });
+
+  test('a round trip comes back to where it started', () => {
+    const config = withMotion({});
+    const out = at(config, standing(config, 'default'), 'resting');
+    const back = at(config, { pose: out.landed, spinning: false }, 'default');
+    const target = statePose(config, 'default');
+
+    for (let i = 0; i < 3; i++) {
+      expect(angleDiff(back.landed[i] ?? 0, target[i] ?? 0)).toBeLessThan(1e-9);
     }
   });
 });
 
-describe('poseAt', () => {
-  test('holds each named phase at its end, so a paused control still shows it', () => {
+describe('interrupting a move', () => {
+  test('re-planning from a half-finished pose still lands exactly', () => {
+    // Clicking a second state mid-flight: the new move starts from wherever the
+    // mark actually is, which must not degrade the landing.
     const config = withMotion({});
-    const transition = transitionSeconds(config);
-    expect(poseAt(config, 'spin-up', transition * 3)).toEqual(poseAt(config, 'spin-up', transition));
-    expect(poseAt(config, 'spin-down', transition * 3)).toEqual(
-      poseAt(config, 'spin-down', transition),
-    );
-  });
+    const spinUp = planMove(config, standing(config, 'default'), 'running');
+    const halfway = { pose: spinUp.pose(spinUp.duration / 2), spinning: false };
 
-  test('idle is static', () => {
-    const config = withMotion({});
-    expect(poseAt(config, 'idle', 0)).toEqual(poseAt(config, 'idle', 99));
+    const { landed } = at(config, halfway, 'resting');
+    const target = statePose(config, 'resting');
+    for (let i = 0; i < 3; i++) {
+      expect(angleDiff(landed[i] ?? 0, target[i] ?? 0)).toBeLessThan(1e-9);
+    }
   });
 });

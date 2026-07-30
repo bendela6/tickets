@@ -4,7 +4,8 @@ import { fetchConfig, generate } from './api';
 import { ControlsPanel } from './controls/controls-panel';
 import { MotionPanel } from './controls/motion-panel';
 import { FileGrid } from './output/file-grid';
-import { MotionPreview, type PhaseChoice } from './output/motion-preview';
+import type { MarkState } from './motion';
+import { MotionPreview } from './output/motion-preview';
 import type { GenerateResult } from './plugin/write';
 import { INITIAL_STATE, studioReducer, toConfig } from './state';
 
@@ -13,10 +14,9 @@ export function Studio() {
   const [results, setResults] = useState<GenerateResult[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Which phase to watch and whether it is moving are ways of looking at the
-  // mark, not properties of it, so they stay out of the config.
-  const [choice, setChoice] = useState<PhaseChoice>('auto');
-  const [playing, setPlaying] = useState(true);
+  // Which state the loader is being driven to is a way of looking at the mark,
+  // not a property of it, so it stays out of the config.
+  const [loaderState, setLoaderState] = useState<MarkState>('default');
 
   const config = useMemo(() => toConfig(state), [state]);
 
@@ -67,11 +67,9 @@ export function Studio() {
             <ControlsPanel state={state} config={config} dispatch={dispatch} />
             <MotionPanel
               config={config}
-              choice={choice}
-              playing={playing}
+              state={loaderState}
               dispatch={dispatch}
-              onChoice={setChoice}
-              onPlaying={setPlaying}
+              onState={setLoaderState}
             />
           </div>
 
@@ -104,7 +102,7 @@ export function Studio() {
               <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">
                 Loader
               </h2>
-              <MotionPreview config={config} choice={choice} playing={playing} />
+              <MotionPreview config={config} state={loaderState} />
             </section>
 
             <FileGrid config={config} />
