@@ -1,6 +1,7 @@
 import { qualifiedName, type SchemaGraph } from '../../schema/erd-types';
 import { loadModel } from '../engine/model/load-model';
 import type { LoadResult } from '../engine/model/types';
+import { hueToken } from './hue-token';
 
 /**
  * SchemaGraph (what GET /api/schema returns) -> the eer diagram Model.
@@ -68,8 +69,17 @@ export function schemaGraphToModel(graph: SchemaGraph): LoadResult {
   // values here, at the one boundary that knows both vocabularies. groupColor
   // passes these straight into color-mix() recipes, so a token value works
   // wherever a colour does — and it flips with the theme, which a hex could not.
+  //
+  // Via hueToken's literal map, never by interpolating the name into
+  // `var(--color-${g.color}-9)`: Tailwind emits a `@theme inline` variable into
+  // :root only for token names it can SEE in scanned source, so a runtime-built
+  // string is a custom property nothing guarantees exists — and an undefined one
+  // invalidates the declaration outright (invisible edges). See hue-token.ts.
   const colors: Record<string, string> = {};
-  for (const g of graph.groups) colors[g.key] = `var(--color-${g.color}-9)`;
+  for (const g of graph.groups) {
+    const token = hueToken(g.color);
+    if (token) colors[g.key] = token;
+  }
 
   const result = loadModel({
     meta: { title: 'Database schema' },
