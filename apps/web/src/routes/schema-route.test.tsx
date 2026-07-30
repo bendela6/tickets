@@ -1,21 +1,50 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createMemoryHistory, createRouter } from '@tanstack/react-router';
 import { render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { SchemaGraph } from '../components/schema/erd-types';
 import { rootRoute } from './root-route';
 import { schemaRoute } from './schema-route';
 
+// EerDiagram's load() schedules a double-rAF fit (see diagram-provider.tsx).
+// jsdom's rAF support is version-dependent; the eer module's own tests
+// (eer-viewer.test.tsx) stub it the same defensive way.
+beforeAll(() => {
+  globalThis.requestAnimationFrame ??= ((cb: FrameRequestCallback) =>
+    setTimeout(() => cb(0), 0) as unknown as number) as typeof requestAnimationFrame;
+});
+
+// Two tables with an fk between them: 'comments.ticket_id' -> 'tickets.id'.
+// A single-table graph would render a card but never exercise edge rendering
+// at all — this fixture stays the minimal shape that proves both a card AND
+// a derived fk edge reach the DOM.
 const graph: SchemaGraph = {
-  groups: [{ key: 'records', label: 'Ticket data', color: 'orange', tables: ['comments'] }],
+  groups: [{ key: 'records', label: 'Ticket data', color: 'orange', tables: ['comments', 'tickets'] }],
   tables: [
+    {
+      name: 'tickets',
+      schema: null,
+      group: 'records',
+      primaryKey: ['id'],
+      uniques: [],
+      columns: [{ name: 'id', type: 'serial', notNull: true, pk: true, fk: null }],
+    },
     {
       name: 'comments',
       schema: null,
       group: 'records',
       primaryKey: ['id'],
       uniques: [],
-      columns: [{ name: 'id', type: 'serial', notNull: true, pk: true, fk: null }],
+      columns: [
+        { name: 'id', type: 'serial', notNull: true, pk: true, fk: null },
+        {
+          name: 'ticket_id',
+          type: 'integer',
+          notNull: true,
+          pk: false,
+          fk: { schema: null, table: 'tickets', column: 'id' },
+        },
+      ],
     },
   ],
   enums: [],
@@ -88,8 +117,15 @@ describe('/schema inside the app shell', () => {
 
   it('renders the diagram beside the shell', async () => {
     const { container } = renderSchemaRoute();
-    await waitFor(() => expect(container.querySelectorAll('.erd-card')).toHaveLength(1));
-    expect(container.querySelector('.erd-card-title')?.textContent).toBe('comments');
+    // Both tables from the stubbed graph land as eer entity cards.
+    await waitFor(() => expect(container.querySelectorAll('[data-card]')).toHaveLength(2));
+    const commentsCard = container.querySelector('[data-entity="comments"]');
+    expect(commentsCard?.textContent).toContain('comments');
+    // The fk (comments.ticket_id -> tickets.id) is a derived relationship,
+    // drawn as an SVG path inside eer's edges layer — not just "a table".
+    const edgesLayer = container.querySelector('svg[data-edges]');
+    expect(edgesLayer?.querySelectorAll('g[data-rel]')).toHaveLength(1);
+    expect(edgesLayer?.querySelector('path[data-path]')).not.toBeNull();
   });
 
   it('reads the selected database from the search param', async () => {

@@ -1,40 +1,39 @@
 import { createRoute } from '@tanstack/react-router';
-import { useEffect, useRef } from 'react';
+import { useMemo } from 'react';
 import { useSchemaGraph } from '../api/use-schema';
-import { renderErd } from '../components/schema/erd-engine';
-import '../components/schema/erd.css';
+import { EerDiagram, schemaGraphToModel } from '../components/eer';
 import { AppShell } from '../components/shell/app-shell';
 import { rootRoute } from './root-route';
 
 export type SchemaSearch = { database?: string };
 
 function SchemaPage() {
-  const containerRef = useRef<HTMLDivElement>(null);
   const { database } = schemaRoute.useSearch();
   const { data, isLoading, error } = useSchemaGraph(database);
-  // A loaded graph with nothing in it, not "not loaded yet" — `postgres` is a
-  // selectable database with zero user tables, and a blank pane there is
-  // indistinguishable from a broken one.
-  const isEmpty = data !== undefined && data.tables.length === 0;
-
-  useEffect(() => {
-    if (!data || !containerRef.current) return;
-    const cleanup = renderErd(containerRef.current, data);
-    return cleanup;
-  }, [data]);
+  // `schemaGraphToModel` runs loadModel plus layout packing — memoised on
+  // `data` so a fresh Model identity isn't handed to EerDiagram on every
+  // render. ModelLoader (inside EerDiagram) reloads whenever `model` changes
+  // identity; an unmemoised call here would retrigger that load in a loop.
+  const result = useMemo(() => (data ? schemaGraphToModel(data) : null), [data]);
 
   // AppShell — like every other shell route — is what mounts the activity rail
   // and the mode panel, and the mode panel is where the database dropdown
   // lives. Without it `/schema` renders a diagram with no way to change what
-  // it is a diagram OF. No `h-screen` here: AppShell's <main> is already the
-  // height-constrained, `overflow-auto` scroll container, so a second one
-  // inside it gives the page two scrollbars and clips the diagram.
+  // it is a diagram OF. No `h-screen` inside EerDiagram's viewer: AppShell's
+  // <main> is already the height-constrained, `overflow-auto` scroll
+  // container, so a second one inside it gives the page two scrollbars and
+  // clips the diagram.
   return (
     <AppShell>
       {isLoading && <p className="p-6 font-sans text-13 text-gray-11">Loading schema…</p>}
       {error && <p className="p-6 font-sans text-13 text-red-11">Failed to load schema.</p>}
-      {isEmpty && <p className="p-6 font-sans text-13 text-gray-11">No tables in this database.</p>}
-      <div ref={containerRef} />
+      {result?.errors.length ? (
+        <p className="p-6 font-sans text-13 text-red-11">This schema could not be drawn.</p>
+      ) : null}
+      {data && data.tables.length === 0 && (
+        <p className="p-6 font-sans text-13 text-gray-11">No tables in this database.</p>
+      )}
+      {result?.model && data && data.tables.length > 0 ? <EerDiagram model={result.model} /> : null}
     </AppShell>
   );
 }
