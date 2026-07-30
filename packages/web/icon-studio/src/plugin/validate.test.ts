@@ -20,6 +20,19 @@ test('rejects bytes that are not a PNG', () => {
   expect(out).toEqual({ ok: false, reason: 'not a png' });
 });
 
+test('rejects a payload long enough to clear the length gate but bearing a different magic number', () => {
+  const jpegSig = Buffer.from([0xff, 0xd8, 0xff, 0xe0]);
+  const payload = Buffer.concat([jpegSig, Buffer.alloc(32)]).toString('base64');
+  const out = decodePng(payload);
+  expect(out).toEqual({ ok: false, reason: 'not a png' });
+});
+
+test('rejects an 8-byte payload matching the PNG signature everywhere except the last byte', () => {
+  const almostSig = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x00]);
+  const out = decodePng(almostSig.toString('base64'));
+  expect(out).toEqual({ ok: false, reason: 'not a png' });
+});
+
 test('rejects a payload that is not valid base64', () => {
   expect(decodePng('!!!not base64!!!').ok).toBe(false);
 });
