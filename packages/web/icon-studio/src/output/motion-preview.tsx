@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { BARE_REACH, type MarkConfig } from '../config';
-import { toDoc } from '../migrate';
+import { configToDoc } from '../migrate';
 import {
   isSpinning, planMove, separations, statePose, type Formation, type MarkState,
 } from '../motion';
@@ -41,10 +41,14 @@ export function MotionPreview({
   const sticks = useRef<(SVGPathElement | null)[]>([null, null, null]);
 
   // motion.ts now operates on an IconDoc rather than the old MarkConfig — the
-  // preview still only ever renders the mark's three sticks, so migrating the
+  // preview still only ever renders the mark's three sticks, so bridging the
   // config on the fly here reuses the real motion maths without pulling this
   // control into the document/state rewrite that owns the rest of the studio.
-  const doc = toDoc(config);
+  // configToDoc, not toDoc: this config is always a real, type-checked
+  // MarkConfig, and toDoc's fallback-to-default-on-invalid-input behaviour
+  // would silently show the locked mark's angles instead of the user's own
+  // whenever a value happened to fail its validation (see migrate.ts).
+  const doc = configToDoc(config);
 
   /**
    * The live formation is a ref, not React state: the frame loop writes each

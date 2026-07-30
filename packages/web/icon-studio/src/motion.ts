@@ -124,10 +124,11 @@ export function statePose(doc: IconDoc, state: MarkState): number[] {
   const leadIndex = spinners[0];
   // Nothing spins: every state is the same still drawing.
   if (leadIndex === undefined) return pose;
+  // `default` is each element's own angle, with no fanning — nothing to compute.
+  if (state === 'default') return pose;
+
   const lead = pose[leadIndex] ?? 0;
   const gap = state === 'resting' ? doc.motion.restSpread : formationGap(spinners.length);
-
-  if (state === 'default') return pose;
   spinners.forEach((index, order) => {
     pose[index] = lead - gap * order;
   });
