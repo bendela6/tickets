@@ -43,10 +43,12 @@ export const Edge = memo(function Edge({ rel, active, dim, forcedHot, hidden }: 
   const emphasized = hot || active;
   const cls = cn({ 'opacity-12': dim, 'hidden': hidden });
   const color = entityColor(model, rel.source, ui.colors);
-  // Emphasis colour. This was `brightness-125`, which is only ever "stronger"
-  // on a dark canvas: Instrument's step 9 flips luminance across themes
-  // (blue-9 = #2a5dae light / #8bb4ef dark), so brightening the light theme's
-  // dark stroke moved it TOWARD the near-white page — blue 5.93:1 -> 4.17:1,
+  // Emphasis colour. This was a 125% brightness filter, which is only ever
+  // "stronger" on a dark canvas — and, written as a utility class, the name
+  // alone was enough to keep Tailwind emitting the rule. Instrument's step 9
+  // flips luminance across themes (blue-9 = #2a5dae light / #8bb4ef dark), so
+  // brightening the light theme's dark stroke moved it TOWARD the near-white
+  // page — blue 5.93:1 -> 4.17:1,
   // green 5.53 -> 3.84, yellow 4.68 -> 3.16. Hovering a relationship made it
   // ~30% FAINTER while also thickening it, which reads as a smear.
   //
