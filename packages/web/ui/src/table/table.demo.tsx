@@ -199,6 +199,7 @@ function Demo({
         rows={grouped || loading || empty ? [] : sorted}
         groups={groups}
         onRowClick={() => {}}
+        onRowActivate={() => {}}
         isLoading={Boolean(loading)}
         error={error ? new Error('The server said no.') : null}
         isFiltered={Boolean(filtered)}

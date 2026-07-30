@@ -1,4 +1,6 @@
 export type {
+  CellFocusProps,
+  CellRef,
   Column,
   Renderer,
   SortBy,

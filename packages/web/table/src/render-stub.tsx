@@ -15,10 +15,12 @@ export function makeStubRender<T>(): TableRender<T> {
         </div>
       );
     },
-    th: ({ column, index, sort, totalSorts, onSortClick, resize }) => {
+    th: ({ column, index, sort, totalSorts, onSortClick, resize, focused, focusProps }) => {
       return (
         <button
+          {...focusProps}
           data-slot="th"
+          data-focused={String(Boolean(focused))}
           data-key={column.key}
           data-column-index={index}
           data-sort-direction={sort?.direction ?? ''}
@@ -55,9 +57,15 @@ export function makeStubRender<T>(): TableRender<T> {
         </div>
       );
     },
-    td: ({ column, index, children }) => {
+    td: ({ column, index, children, focused, focusProps }) => {
       return (
-        <div data-slot="td" data-key={column.key} data-column-index={index}>
+        <div
+          {...focusProps}
+          data-slot="td"
+          data-focused={String(Boolean(focused))}
+          data-key={column.key}
+          data-column-index={index}
+        >
           {children}
         </div>
       );

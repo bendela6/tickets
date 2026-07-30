@@ -1,14 +1,18 @@
 import { useColumnResize, type RenderThCtx, type RenderThResize } from '@tickets/table';
 import { cn } from '../style';
 import { Icon } from '../components/icon';
-import { cellGutter } from './metrics';
+import { CELL_FOCUS_RING, cellGutter } from './metrics';
 
 // The cell is a flex row in both branches — a sortable header holds a caret
 // and an ordinal beside its label, and a plain one still has to centre its
 // label against the fixed header height. Flex layout ignores `text-align` on
 // its own children, so column alignment is expressed as `justify-content`.
 function justifyClass(align: 'left' | 'right' | 'center' | undefined) {
-  return align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start';
+  return align === 'right'
+    ? 'justify-end'
+    : align === 'center'
+      ? 'justify-center'
+      : 'justify-start';
 }
 
 /** Column headers carry aria-sort so a screen reader announces the sort state
@@ -35,11 +39,24 @@ function ResizeHandle({ resize }: { resize: RenderThResize }) {
   );
 }
 
-export function renderTh<T>({ column, index, sort, totalSorts, onSortClick, resize }: RenderThCtx<T>) {
+export function renderTh<T>({
+  column,
+  index,
+  sort,
+  totalSorts,
+  onSortClick,
+  resize,
+  focused,
+  focusProps,
+}: RenderThCtx<T>) {
   return (
     <div
       role="columnheader"
       aria-sort={column.sortable ? ariaSort(sort?.direction) : undefined}
+      // Carries the roving tabindex and this cell's coordinates. `rowIndex`
+      // is -1 for every header cell, which is what makes ArrowUp from row 0
+      // land here and sorting reachable without a mouse.
+      {...focusProps}
       className={cn(
         // No vertical padding: the header's height is fixed by the row, and
         // the cell stretches into it so the resize handle spans all 36px.
@@ -50,6 +67,7 @@ export function renderTh<T>({ column, index, sort, totalSorts, onSortClick, resi
         // The sorted column reads at full strength; the rest sit back a step
         // and only come forward on hover.
         sort ? 'text-gray-12' : 'text-gray-11',
+        focused && CELL_FOCUS_RING,
       )}
     >
       {column.sortable ? (
