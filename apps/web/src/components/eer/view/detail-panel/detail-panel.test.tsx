@@ -1,26 +1,17 @@
-import { act, cleanup, fireEvent, screen } from '@testing-library/react';
+import { act, cleanup, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import type { DiagramActions } from '../../state/diagram-provider';
 import { twoZoneRaw } from '../../test/models';
 import { renderDiagram } from '../../test/render';
-import { EditorModals } from '../editor';
 import { DetailPanel } from './detail-panel';
 
 afterEach(cleanup);
 
 // DetailPanel now reads model + panelSelection from the provider, so drive the
 // selection through the same actions the app uses instead of a `selection` prop.
-// Wrapped in <EditorModals/> — the Edit button calls useEditor(), which throws
-// without it (same rationale as top-bar.test.tsx's renderWithEditor), and this
-// is also what actually renders the routed modal when Edit is clicked.
 async function renderPanel(select?: (a: DiagramActions) => void) {
-  const result = await renderDiagram(
-    <EditorModals>
-      <DetailPanel />
-    </EditorModals>,
-    twoZoneRaw(),
-  );
+  const result = await renderDiagram(<DetailPanel />, twoZoneRaw());
   if (select) await act(async () => select(result.actions));
   return result;
 }
@@ -51,13 +42,6 @@ describe('DetailPanel', () => {
     expect(screen.getByText('.manager_id')).toBeInTheDocument();
   });
 
-  it('selecting an entity renders an Edit button that opens the table modal', async () => {
-    await renderPanel((a) => a.selectEntity('users'));
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-    const dialog = screen.getByRole('dialog');
-    expect(dialog).toHaveTextContent('Edit users');
-  });
-
   it('lists member tables for a selected group', async () => {
     const { container } = await renderPanel((a) => a.selectGroup('z2'));
     expect(screen.getByText('Group')).toBeInTheDocument();
@@ -69,13 +53,6 @@ describe('DetailPanel', () => {
     // one external connection (rel:orders:c2 to users), rel:orders:c3 is internal
     expect(container.textContent).toContain('2 relationships (1 internal)');
     expect(screen.getByText('users')).toBeInTheDocument();
-  });
-
-  it('selecting a group renders an Edit button that opens the group modal', async () => {
-    await renderPanel((a) => a.selectGroup('z2'));
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-    const dialog = screen.getByRole('dialog');
-    expect(dialog).toHaveTextContent('Edit Zone Two');
   });
 
   it('shows both endpoints for a selected edge', async () => {

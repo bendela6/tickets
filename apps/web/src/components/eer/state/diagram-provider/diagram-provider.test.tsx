@@ -1,7 +1,7 @@
 import { act, render, screen } from '@testing-library/react';
 import { expect, it } from 'vitest';
 
-import { Diagram } from '../../components/diagram/diagram';
+import { Diagram } from '../../view/diagram/diagram';
 import { fitView } from '../../engine/layout/fit-view';
 import { visibleBounds } from '../../engine/layout/visible-bounds';
 import { renderDiagram } from '../../test/render';
