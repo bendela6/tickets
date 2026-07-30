@@ -26,9 +26,9 @@ export function Header({
         <Badge tone={tone}>{badge}</Badge>
         {titleColor && <Dot color={titleColor} />}
       </div>
-      <h2 className="font-mono text-lg font-medium leading-tight text-gray-12">{title}</h2>
-      <div className="mt-1 text-xs text-gray-9">{sub}</div>
-      {description && <p className="mt-2 text-sm leading-relaxed text-gray-11">{description}</p>}
+      <h2 className="font-mono text-16 font-medium leading-tight text-gray-12">{title}</h2>
+      <div className="mt-1 text-11 text-gray-9">{sub}</div>
+      {description && <p className="mt-2 text-12 leading-relaxed text-gray-11">{description}</p>}
     </div>
   );
 }

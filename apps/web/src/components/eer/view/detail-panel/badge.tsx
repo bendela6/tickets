@@ -15,7 +15,7 @@ export function Badge({ tone, children }: { tone: Tone; children: ReactNode }) {
   return (
     <span
       className={cn(
-        'rounded px-2 py-1 font-mono text-3xs font-semibold uppercase tracking-widest',
+        'rounded-sm px-2 py-1 font-mono text-9 font-semibold uppercase tracking-widest',
         toneClass[tone],
       )}
     >

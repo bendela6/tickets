@@ -37,8 +37,8 @@ export function TopBar() {
       )}
     >
       <div className="mr-auto">
-        <h1 className="text-lg font-semibold tracking-tight">{model?.meta.title ?? 'EER model viewer'}</h1>
-        <p className="mt-1 max-w-sm truncate text-sm text-gray-11">
+        <h1 className="text-16 font-semibold tracking-tight">{model?.meta.title ?? 'EER model viewer'}</h1>
+        <p className="mt-1 max-w-sm truncate text-12 text-gray-11">
           {model?.meta.description ??
             (model ? `${model.entities.length} entities · ${model.relationships.length} relationships` : 'loading…')}
         </p>

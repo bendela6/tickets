@@ -17,7 +17,7 @@ export function Chip({
     <button
       type="button"
       onClick={onClick}
-      className={cn('inline-flex items-center gap-2 rounded-full border px-2 py-1 text-sm', {
+      className={cn('inline-flex items-center gap-2 rounded-full border px-2 py-1 text-12', {
         'border-gray-7 text-gray-12': on,
         'border-gray-6 text-gray-11 line-through opacity-45': !on,
       })}
