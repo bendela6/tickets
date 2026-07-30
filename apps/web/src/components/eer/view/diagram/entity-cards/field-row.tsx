@@ -27,7 +27,7 @@ function Port({
   return (
     <span
       className={cn(
-        'absolute top-1/2 z-3 h-4 w-1 -translate-y-1/2',
+        'absolute top-1/2 z-4 h-4 w-1 -translate-y-1/2',
         'bg-gray-10',
         'transition-(--transition-paint) duration-120',
         connected.has(key) ? 'opacity-100' : 'opacity-0',

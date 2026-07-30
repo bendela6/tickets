@@ -13,7 +13,7 @@ export function ErrorBanner({ errors, warnings, onDismiss }: ErrorBannerProps) {
     <div
       className={cn(
         'absolute left-1/2 top-3 z-50 max-w-(--banner-max-w) -translate-x-1/2 px-4 py-3',
-        'rounded-lg border border-(--banner-border) bg-(--banner-bg) shadow-modal',
+        'rounded-lg border-1 border-(--banner-border) bg-(--banner-bg) shadow-modal',
       )}
       style={runtimeStyle({
         '--banner-border': mix('var(--color-red-9)', 55, 'var(--color-gray-6)'),

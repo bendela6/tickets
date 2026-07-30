@@ -85,7 +85,7 @@ export function EntityDetail({
             const badge = role?.pk ? 'pk' : role?.fk ? 'fk' : null;
             const fk = fkTarget(e, f.name);
             return (
-              <div key={f.name} className="border-b border-gray-6/50 py-2 last:border-0">
+              <div key={f.name} className="border-b-1 border-gray-6/50 py-2 last:border-0">
                 <div className="flex items-center gap-2">
                   <RoleTag role={badge} />
                   <span className={cn('font-mono text-12', { 'text-yellow-9': badge === 'pk', 'text-gray-12': badge !== 'pk' })}>{f.name}</span>

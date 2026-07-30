@@ -33,7 +33,7 @@ export function TopBar() {
     <header
       className={cn(
         'z-10 flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3',
-        'border-b border-gray-6 bg-gray-1/95',
+        'border-b-1 border-gray-6 bg-gray-1/95',
       )}
     >
       <div className="mr-auto">

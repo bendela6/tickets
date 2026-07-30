@@ -33,7 +33,7 @@ export function SearchBox() {
         autoComplete="off"
         spellCheck={false}
         className={cn(
-          'w-48 rounded-md border border-gray-6 bg-gray-2 px-3 py-2 text-13 text-gray-12',
+          'w-48 rounded-md border-1 border-gray-6 bg-gray-2 px-3 py-2 text-13 text-gray-12',
           'outline-none placeholder:text-gray-9 focus:border-gray-7',
         )}
         onChange={(e) => run(e.target.value)}
@@ -50,8 +50,8 @@ export function SearchBox() {
       {open && (
         <div
           className={cn(
-            'absolute left-0 top-full z-30 mt-1 max-h-85 min-w-56 overflow-auto',
-            'rounded-lg border border-gray-7 bg-gray-3 p-1 shadow-modal',
+            'absolute left-0 top-full z-40 mt-1 max-h-85 min-w-56 overflow-auto',
+            'rounded-lg border-1 border-gray-7 bg-gray-3 p-1 shadow-modal',
           )}
         >
           {results.map((m, i) => (
