@@ -1,5 +1,6 @@
 import type { Mode } from './mode-for-path';
 import { AgentsPanel } from './agents-panel';
+import { SchemaPanel } from './schema-panel';
 import { SignalsPanel } from './signals-panel';
 import { TasksPanel } from './tasks-panel';
 import { TerminalsPanel } from './terminals-panel';
@@ -11,12 +12,14 @@ export function ModePanel({
   onNewTicket,
   onNavigate,
   onNavigateSession,
+  schemaDatabase,
 }: {
   mode: Mode | null;
   activeProjectKey?: string;
   onNewTicket?: () => void;
   onNavigate?: () => void;
   onNavigateSession: (sessionId: number) => void;
+  schemaDatabase?: string;
 }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col px-3 pb-3 pt-3.5">
@@ -26,6 +29,8 @@ export function ModePanel({
         <AgentsPanel onNavigate={onNavigate} />
       ) : mode === 'signals' ? (
         <SignalsPanel onNavigate={onNavigate} />
+      ) : mode === 'schema' ? (
+        <SchemaPanel selected={schemaDatabase} onNavigate={onNavigate} />
       ) : mode === 'tasks' ? (
         <TasksPanel activeProjectKey={activeProjectKey} onNewTicket={onNewTicket} onNavigate={onNavigate} />
       ) : null}
