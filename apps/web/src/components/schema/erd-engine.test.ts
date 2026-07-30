@@ -112,6 +112,38 @@ describe('renderErd', () => {
   });
 });
 
+describe('renderErd — a database with no tables', () => {
+  // `listDatabases()` offers every connectable database, `postgres` included,
+  // and that one has zero user tables. The layout pass indexes colRects
+  // positionally (`colRects[0]!`), so before the guard this threw a TypeError
+  // out of the route's useEffect and SignalsErrorBoundary replaced the entire
+  // app with "Something broke" — a whole-app crash from picking a valid entry
+  // in the dropdown.
+  const empty: SchemaGraph = { groups: [], tables: [] };
+
+  it('does not throw', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    expect(() => renderErd(container, empty)).not.toThrow();
+  });
+
+  it('draws no cards and no edges', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    renderErd(container, empty);
+    expect(container.querySelectorAll('.erd-card')).toHaveLength(0);
+    expect(container.querySelectorAll('.erd-edge')).toHaveLength(0);
+  });
+
+  it('still returns a working cleanup', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const cleanup = renderErd(container, empty);
+    expect(() => cleanup()).not.toThrow();
+    expect(container.classList.contains('erd')).toBe(false);
+  });
+});
+
 describe('renderErd — same table name in two schemas', () => {
   let container: HTMLElement;
   beforeEach(() => {

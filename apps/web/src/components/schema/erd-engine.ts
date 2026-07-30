@@ -106,6 +106,14 @@ export function renderErd(container: HTMLElement, graph: SchemaGraph): () => voi
     const PAD = 14, HEAD = 34;
     const colNodes = [...cols.children] as HTMLElement[];
     const colRects = colNodes.map((c) => rel(c.getBoundingClientRect(), base));
+    // A database with no user tables (`postgres` itself is one, and it is
+    // selectable in the dropdown) yields no groups and so no columns. Every
+    // line below indexes colRects positionally — `colRects[0]!`, the last
+    // element, `Math.max(...)` — so an empty graph is not a degenerate layout
+    // to compute, it is nothing to lay out. Returning here matters more than
+    // it looks: draw() runs inside the route's useEffect, so a TypeError
+    // escapes to SignalsErrorBoundary and replaces the whole app.
+    if (colRects.length === 0) return;
     graph.groups.forEach((g, ci) => {
       const box = boxEl.get(g.key)!;
       const r = colRects[ci]!;
