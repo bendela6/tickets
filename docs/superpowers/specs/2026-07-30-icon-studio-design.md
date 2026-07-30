@@ -58,10 +58,13 @@ The client therefore sends bytes, not instructions. That shapes the endpoint's s
 | Route | Method | Behaviour |
 |---|---|---|
 | `/__icons/config` | GET | Returns `apps/web/icons.config.json`, or the built-in default if absent. |
-| `/__icons/generate` | POST | Body `{ config, assets }`. Writes the assets, the config, and the head block. Returns a per-file report. |
+| `/__icons/generate` | POST | Body `{ config, pngs }`. Writes the derived assets, the three client-rasterised PNGs, the config, and the head block. Returns a per-file report. |
 
-`assets` is `Record<string, string>` — a filename mapped to either SVG source or a
-base64 PNG payload.
+`pngs` is `Record<string, string>` — a PNG filename mapped to a base64 payload. Every
+other asset (`favicon.svg`, `icon-mono.svg`, `site.webmanifest`) is derived server-side
+from `config`; the client never sends SVG source. Only a browser `<canvas>` can rasterise
+a PNG, so that's the one thing the server cannot produce itself — everything derivable is
+derived, never trusted from the client.
 
 ### Security posture
 
@@ -84,14 +87,25 @@ Then, in order, every request must pass:
 1. **Dev only.** The plugin's `apply` is `'serve'`, so the route does not exist in a build.
 2. **Loopback only.** Non-loopback remote addresses are refused — the dev server may be
    bound wider on a LAN.
-3. **Name allowlist.** Keys not in `OUTPUTS` are rejected. No path traversal is possible
+3. **POST + content-type.** `/__icons/generate` only accepts `POST`, and only with a
+   `content-type` that includes `application/json`. This closes a gap the loopback check
+   alone leaves open: while the dev server runs, any page the developer has open in the
+   same browser is also "loopback" from the server's point of view. A `fetch` with a JSON
+   body is preflighted, and the `POST`-only check already refuses the preflight's
+   `OPTIONS` — but a `<form enctype="text/plain">` submit is a *simple* request with no
+   preflight, and a `name=value` body split happens to parse as valid JSON. Requiring a
+   content-type a form cannot set closes that gap without needing CSRF tokens.
+4. **Name allowlist.** Keys not in `OUTPUTS` are rejected. No path traversal is possible
    because no path crosses the wire.
-4. **Containment check.** Each resolved absolute path is `realpath`-checked to be inside
-   the repo root before writing — the same discipline as `WORKDIR_ROOTS` on the directory
-   picker.
-5. **Type and size.** SVG payloads must parse as XML and start with `<svg`; PNG payloads
+5. **Containment check.** Each resolved absolute path is checked to be inside the repo
+   root before writing (`path.resolve` plus a prefix comparison, not `realpath`) — the
+   same discipline as `WORKDIR_ROOTS` on the directory picker. `realpath` was considered
+   and rejected: it requires the target to already exist, and `apps/web/public/` does not
+   exist until the first successful Generate creates it — a `realpath` check would fail
+   every first run, before there's anything to contain.
+6. **Type and size.** SVG payloads must parse as XML and start with `<svg`; PNG payloads
    must carry the PNG magic bytes. Anything over 1 MB is refused.
-6. **Atomic write.** Write to `<name>.tmp` in the destination directory, then rename, so a
+7. **Atomic write.** Write to `<name>.tmp` in the destination directory, then rename, so a
    failure never leaves a truncated icon in place.
 
 ## What Generate writes
@@ -146,8 +160,6 @@ mark spec.
 - **Unit** — the pure generators. Given a config, each `svg*()` returns one `<svg>` with
   exactly three `<path>` elements, honours custom angles, and holds the 1/3 weight ratio
   where it claims to.
-- **Unit** — the derived stagger. The asterisk lands at 60.00° across speeds, rest spreads
-  and frame rates. Already verified numerically during design; port those cases as tests.
 - **Unit** — the allowlist. Unknown names, traversal attempts, oversized bodies and
   non-loopback callers are all refused, and nothing is written.
 - **Manual** — run Generate, confirm the six files appear, `pnpm --filter @tickets/web build`
@@ -165,6 +177,18 @@ that regenerates or verifies icons. Rasterising server-side.
 1. **Commit the PNGs?** They are generated, which argues for ignoring them — but nginx
    serves `dist/`, and a clean clone that never runs the studio would ship no icons.
    Recommendation: **commit them**, and treat the config as the reviewable artefact.
+
+   **Resolved.** Commit them — and not only for the clean-clone reason above. The five
+   text artefacts (`favicon.svg`, `icon-mono.svg`, `site.webmanifest`,
+   `icons.config.json`, the `index.html` head block) are byte-exact reproducible from the
+   committed config: `runGenerate` derives them with plain string templating, so the same
+   config always produces the same bytes on any machine. The three PNGs are not — they're
+   rasterised by the browser's own `<canvas>` (`drawImage` + `toDataURL('image/png')`),
+   and canvas PNG encoding is browser- and version-dependent (different encoders, filter
+   heuristics, and compression levels). That's a second, independent reason to commit
+   them: a contributor who reopens the studio and re-runs Generate on a different browser
+   will see the three PNGs reported as `written` with different bytes, even though nothing
+   about the mark actually changed. Expect that churn; it is not a bug.
 2. **`pnpm dev` integration.** The root dev script runs mprocs. The studio is used rarely,
    so the recommendation is to leave it out and run it on demand with
    `pnpm --filter @tickets/icon-studio dev`.
@@ -183,12 +207,11 @@ interface MarkConfig {
   chipWeight: number;
 }
 
-/** Filename to payload. SVG as source text, PNG as base64 without a data: prefix. */
-type Assets = Record<string, string>;
-
 interface GenerateRequest {
   config: MarkConfig;
-  assets: Assets;
+  /** PNG filename to base64 payload, without a `data:` prefix. Only a browser
+   * canvas can rasterise these; every other asset is derived server-side. */
+  pngs: Record<string, string>;
 }
 
 interface GenerateResult {
