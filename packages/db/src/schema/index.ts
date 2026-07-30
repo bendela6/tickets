@@ -63,3 +63,5 @@ export {
   type UniqueMeta,
   type GroupMeta,
 } from './describe-schema';
+export { introspectDatabase } from './introspect/introspect-database';
+export { listDatabases, assertKnownDatabase, UnknownDatabaseError } from './list-databases';
