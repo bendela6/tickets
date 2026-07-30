@@ -160,6 +160,12 @@ test.each([
     'body.config.elements[0].ink must be a string'],
   ['a bad ink colour', { ...DEFAULT_DOC, inks: { top: { light: 'red', dark: '#000000' } } },
     'body.config.inks.top.light must be a 6-digit hex color'],
+  // The hex regex is anchored on digit count, not just "starts with # and is
+  // stringy" — 'red' above proves the latter; this proves 3-digit shorthand
+  // (valid CSS, invalid here) is rejected too, so loosening `{6}` to `{3,6}`
+  // would be caught.
+  ['a 3-digit hex shorthand ink colour', { ...DEFAULT_DOC, inks: { top: { light: '#fff', dark: '#000000' } } },
+    'body.config.inks.top.light must be a 6-digit hex color'],
   ['an unknown ink resolution', { ...DEFAULT_DOC, variants: { v: { inks: 'sepia', scale: 1 } } },
     'body.config.variants.v.inks must be one of theme, light, dark, black'],
   ['a zero scale', { ...DEFAULT_DOC, variants: { v: { inks: 'dark', scale: 0 } } },
@@ -170,12 +176,108 @@ test.each([
   await expect(stat(path.join(root, 'apps', 'web', 'public'))).rejects.toThrow();
 });
 
+// Each case below pins one specific `assertFiniteNumber`/`assertPositiveWeight`
+// call site inside `assertElement` — the shared helpers are already exercised
+// (via `Variant.scale` above and via `assertMotion`'s own tests), which proves
+// the *helpers* work but not that every element branch still calls them. A
+// `DEFAULT_DOC`-only suite can't catch a dropped call here, since every one of
+// its values is already valid.
+test.each([
+  ['a non-finite stick angle',
+    [{ id: 'a', type: 'stick', ink: 'top', angle: Number.NaN, reach: 10, weight: 2 }],
+    'body.config.elements[0].angle must be a finite number'],
+  ['a zero stick reach',
+    [{ id: 'a', type: 'stick', ink: 'top', angle: 0, reach: 0, weight: 2 }],
+    'body.config.elements[0].reach must be a finite number greater than zero'],
+  ['a negative stick weight',
+    [{ id: 'a', type: 'stick', ink: 'top', angle: 0, reach: 10, weight: -1 }],
+    'body.config.elements[0].weight must be a finite number greater than zero'],
+  ['a zero ring radius',
+    [{ id: 'a', type: 'ring', ink: 'top', radius: 0, weight: 2 }],
+    'body.config.elements[0].radius must be a finite number greater than zero'],
+  ['a negative ring weight',
+    [{ id: 'a', type: 'ring', ink: 'top', radius: 5, weight: -2 }],
+    'body.config.elements[0].weight must be a finite number greater than zero'],
+  ['a zero dot radius',
+    [{ id: 'a', type: 'dot', ink: 'top', at: [4, 4], radius: 0 }],
+    'body.config.elements[0].radius must be a finite number greater than zero'],
+])('rejects an element with %s, and writes nothing', async (_label, elements, message) => {
+  const root = await fakeRepo();
+  const config = { ...DEFAULT_DOC, elements };
+  await expect(runGenerate({ ...docBody(), config }, root)).rejects.toThrow(message);
+  await expect(stat(path.join(root, 'apps', 'web', 'public'))).rejects.toThrow();
+});
+
 test('accepts a document with zero elements', async () => {
   // An empty icon is a legitimate starting point, not an error.
   const root = await fakeRepo();
   const config = { ...DEFAULT_DOC, elements: [] };
   const { results } = await runGenerate({ ...docBody(), config }, root);
   expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
+});
+
+test('an ink or variant literally named "__proto__" round-trips as an own key, not a hijacked prototype', async () => {
+  const root = await fakeRepo();
+  // Built from a literal JSON string, not an object literal: `{ __proto__:
+  // x }` as *object-literal syntax* is special-cased by the language itself
+  // to set the new object's prototype rather than create an own property, so
+  // a JS literal here wouldn't even reach assertIconDoc with the hazard
+  // intact. `JSON.parse`, by contrast, always creates a genuine own
+  // property no matter the key's name (it uses CreateDataProperty, never
+  // assignment) — this is exactly what `icon-writer.ts` hands to
+  // `runGenerate` after parsing a real request body, so this is the actual
+  // attack surface, not a synthetic one.
+  const malicious = JSON.parse(`{
+    "inks": { "__proto__": { "light": "#123456", "dark": "#abcdef" } },
+    "elements": [
+      { "id": "a", "type": "stick", "ink": "__proto__", "angle": 0, "reach": 10, "weight": 5 }
+    ],
+    "variants": { "__proto__": { "inks": "dark", "scale": 1 } },
+    "motion": ${JSON.stringify(DEFAULT_DOC.motion)}
+  }`);
+
+  const { results } = await runGenerate({ ...docBody(), config: malicious }, root);
+  expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
+
+  const saved = JSON.parse(await readFile(path.join(root, 'apps/web/icons.config.json'), 'utf8'));
+  // The failure mode this guards against: a hijacked-prototype `inks` would
+  // make `saved.inks.__proto__` resolve through inheritance to *something*
+  // even if nothing was ever actually stored — only `hasOwnProperty` proves
+  // an own key genuinely round-tripped.
+  expect(Object.prototype.hasOwnProperty.call(saved.inks, '__proto__')).toBe(true);
+  expect(saved.inks.__proto__).toEqual({ light: '#123456', dark: '#abcdef' });
+  expect(Object.prototype.hasOwnProperty.call(saved.variants, '__proto__')).toBe(true);
+
+  // The two written files must agree, not merely both "not crash": the
+  // favicon's colour for the "__proto__"-inked stick has to be the exact
+  // colour icons.config.json claims to hold for that same ink.
+  const favicon = await readFile(path.join(root, 'apps/web/public/favicon.svg'), 'utf8');
+  expect(favicon).toContain('#123456');
+});
+
+test("docToMarkConfig's interim bridge degrades to black/zero when fewer than three sticks are present, rather than crashing (Task 7 removes this bridge)", async () => {
+  const root = await fakeRepo();
+  const config = {
+    ...DEFAULT_DOC,
+    // A ring first, then a single stick: only stick-type elements are
+    // bridged into the legacy MarkConfig shape, and only the first three of
+    // those — this document has just one, so slots 2 and 3 must fall back
+    // to black rather than reading the ring or throwing.
+    elements: [
+      { id: 'r', type: 'ring', ink: 'field', radius: 10, weight: 3 },
+      { id: 's', type: 'stick', ink: 'top', angle: 45, reach: 12, weight: 5 },
+    ],
+  };
+
+  const { results } = await runGenerate({ ...docBody(), config }, root);
+  expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
+
+  const favicon = await readFile(path.join(root, 'apps/web/public/favicon.svg'), 'utf8');
+  expect(favicon).toContain(
+    `.s1{stroke:${ink('top', 'light')}}.s2{stroke:#000000}.s3{stroke:#000000}`,
+  );
+  // bareWeight comes from the one stick found (weight 5), not the ring.
+  expect(favicon).toContain('stroke-width="5"');
 });
 
 test('a malformed head marker rejects only the index.html step; every other output still writes', async () => {
