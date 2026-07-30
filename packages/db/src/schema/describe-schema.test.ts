@@ -1,8 +1,8 @@
 // packages/db/src/schema/describe-schema.test.ts
 import { describe, expect, it } from 'vitest';
 import { pgSchema, pgTable, serial } from 'drizzle-orm/pg-core';
-import { describeSchema, resolveGroupKey, schemaOf } from './describe-schema';
-import { SCHEMA_GROUPS } from './schema-groups';
+import { describeSchema, findGroupKey, resolveGroupKey, schemaOf } from './describe-schema';
+import { SCHEMA_GROUPS, type SchemaGroup } from './schema-groups';
 
 describe('describeSchema', () => {
   const graph = describeSchema();
@@ -231,5 +231,40 @@ describe('describeSchema schemas', () => {
       .map((t) => t.schema)
       .sort();
     expect(sessionSchemas).toEqual(['agent', 'terminal']);
+  });
+});
+
+describe('findGroupKey', () => {
+  const groups: SchemaGroup[] = [
+    { key: 'ws', label: 'Workspace', color: 'blue', tables: ['users'] },
+    { key: 'core', label: 'Workdirs', color: 'green', tables: [], schemas: ['core'] },
+  ];
+
+  it('resolves a hand-listed table regardless of its schema', () => {
+    expect(findGroupKey('users', groups, 'core')).toBe('ws');
+  });
+
+  it('falls back to schema ownership when no table is listed', () => {
+    expect(findGroupKey('workdirs', groups, 'core')).toBe('core');
+  });
+
+  it('returns null instead of throwing for an unknown table', () => {
+    expect(findGroupKey('audit_log', groups, null)).toBeNull();
+  });
+
+  it('returns null instead of throwing for an unowned schema', () => {
+    expect(findGroupKey('jobs', groups, 'scheduler')).toBeNull();
+  });
+
+  it('still throws when a table is claimed by two groups', () => {
+    const dupe: SchemaGroup[] = [
+      { key: 'a', label: 'A', color: 'blue', tables: ['items'] },
+      { key: 'b', label: 'B', color: 'red', tables: ['items'] },
+    ];
+    expect(() => findGroupKey('items', dupe, null)).toThrow(/multiple groups/);
+  });
+
+  it('resolveGroupKey still throws for an unknown table', () => {
+    expect(() => resolveGroupKey('audit_log', groups, null)).toThrow(/in no group/);
   });
 });
