@@ -244,8 +244,8 @@ export function describeSchema(): SchemaGraph {
 
   // Derived from resolved membership (not the raw config) so schema-owned
   // tables — never listed in `SchemaGroup.tables` — still show up here; the
-  // ERD renderer (apps/web/src/components/schema/erd-engine.ts) iterates
-  // this array to lay out each group's cards, looking each name up in
+  // diagram adapter (apps/web/src/components/eer/adapter/schema-graph-to-model.ts)
+  // reads this array to build the model's groups, resolving each name against
   // `tables`. Qualified, therefore: emitting a bare "sessions" in both the
   // terminal and the agent group would have the renderer resolve BOTH to
   // whichever table its own map happened to keep, drawing one subsystem's
