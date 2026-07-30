@@ -1,4 +1,4 @@
-import { axis, cn, over, TONE, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, cn, over, SCALE, TONE_SCALE, variants, type Tone } from '../../style';
 import { toggleGlyphClass, toggleMarkClass, toggleRowClass, type ToggleSize } from '../toggle';
 
 type RadioOption = { value: string; label: string; disabled?: boolean };
@@ -40,11 +40,11 @@ const optionClass = variants({
         // `plain` varies over nothing, and says so by being a plain string
         // rather than an expansion that ignores its axes.
         plain: '',
-        card: over(TONE, CHECKED, (t, state) =>
+        card: over(SCALE, CHECKED, (tone, state) =>
           cn(
             'rounded-md border-1 px-2.5 py-1.5',
             state === 'on'
-              ? `border-${t.solid} bg-${t.bgSubtle}`
+              ? `border-${tone}-9 bg-${tone}-3`
               : 'border-gray-7 hover:border-gray-9',
           ),
         ),

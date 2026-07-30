@@ -7,7 +7,7 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { cn, over, toneAxis, TONE_SCALE, variants, type Tone, type ToneEmphasis } from '../../style';
+import { cn, over, scaleAxis, TONE_SCALE, variants, type Tone, type ToneEmphasis } from '../../style';
 import { Icon, type IconName, type IconSize } from '../icon';
 
 /** How loudly the tone reads. The same four treatments the tone contract
@@ -23,25 +23,22 @@ export type PillShape = 'square' | 'round';
 
 // A Pill rests on neutral where a Button rests on primary — the resting ramp
 // is the only per-component decision the tone axis leaves open.
-const NEUTRAL_TONE = toneAxis(TONE_SCALE.neutral);
+const NEUTRAL_SCALE = scaleAxis(TONE_SCALE.neutral);
 
-// The four variants rebuild what `toneClasses()` returns, but from the ramp's
-// named rungs so hover/opacity variants can be added later without a second
-// vocabulary. A test asserts the two agree for every tone, since a Pill and a
-// Button asking for the same treatment must not diverge.
+// The four variants rebuild what `toneClasses()` returns, spelling the rungs so
+// hover/opacity variants can be added later without a second vocabulary. A test
+// asserts the two agree for every tone, since a Pill and a Button asking for the
+// same treatment must not diverge.
 const pillClass = variants({
   base: 'inline-flex items-center font-sans font-500',
   config: {
     variant: {
       default: 'subtle',
       options: {
-        subtle: over(NEUTRAL_TONE, (t) => `bg-${t.bgSubtle} text-${t.text}`),
-        solid: over(NEUTRAL_TONE, (t) => `bg-${t.solid} text-${t.contrast}`),
-        outline: over(
-          NEUTRAL_TONE,
-          (t) => `border-2 border-${t.border} text-${t.text}`,
-        ),
-        text: over(NEUTRAL_TONE, (t) => `text-${t.text}`),
+        subtle: over(NEUTRAL_SCALE, (tone) => `bg-${tone}-3 text-${tone}-11`),
+        solid: over(NEUTRAL_SCALE, (tone) => `bg-${tone}-9 text-${tone}-contrast`),
+        outline: over(NEUTRAL_SCALE, (tone) => `border-2 border-${tone}-7 text-${tone}-11`),
+        text: over(NEUTRAL_SCALE, (tone) => `text-${tone}-11`),
       },
     },
     shape: {

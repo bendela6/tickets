@@ -1,5 +1,5 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
-import { cn, over, TONE, TONE_SCALE, variants, type Tone } from '../../style';
+import { cn, over, ring, SCALE, TONE_SCALE, variants, type Tone } from '../../style';
 import { toggleRowClass, type ToggleSize } from '../toggle';
 
 type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> & {
@@ -17,9 +17,9 @@ const trackClass = variants({
     track: {
       default: 'on',
       options: {
-        on: over(TONE, (t) => [
-          `checked:bg-${t.solid}`,
-          t.ring,
+        on: over(SCALE, (tone) => [
+          `checked:bg-${tone}-9`,
+          ring(tone),
           'disabled:cursor-not-allowed disabled:border-1 disabled:border-gray-6 disabled:bg-surface-inset',
         ]),
       },
@@ -51,9 +51,9 @@ const thumbClass = variants({
       options: {
         // Off thumb: white (light) / app (dark). On thumb in dark picks up the
         // ramp's contrast token so it reads against the filled track.
-        default: over(TONE, (t) => [
+        default: over(SCALE, (tone) => [
           'bg-white dark:bg-gray-1',
-          `dark:peer-checked:bg-${t.contrast}`,
+          `dark:peer-checked:bg-${tone}-contrast`,
           'peer-disabled:bg-gray-6',
         ]),
       },

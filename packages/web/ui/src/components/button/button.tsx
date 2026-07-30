@@ -1,5 +1,5 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
-import { over, TONE, TONE_SCALE, variants, type Tone } from '../../style';
+import { over, ring, SCALE, TONE_SCALE, variants, type Tone } from '../../style';
 import { Icon, type IconSize } from '../icon';
 import { Spinner } from '../spinner';
 
@@ -28,12 +28,13 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 // halo (design: `0 0 0 3px var(--acs), 0 0 0 1px var(--bg) inset`); outline
 // swaps its border to accent on focus.
 //
-// Each option is written once and expanded over `TONE` — the axis names the
+// Each option is written once and expanded over `SCALE` — the axis names the
 // `scale` prop and owns its domain, so this file never restates which ramps
-// exist. `t` is the resolved ramp: `t.solid` is `indigo-9`, still named by its
-// STEP rung rather than spelled as a number. None of these classes exist as
-// literal text anywhere, so `bg-green-9`/`hover:bg-green-10` only reach the
-// safelist because the enumeration walks the axis over all 11 ramps.
+// exist. `tone` is the bare scale name and the rung is spelled here: 3-5 are
+// component fills, 7-8 borders, 9-10 solid fills, 11-12 text, the same ladder
+// on every scale (see the Colors page). None of these classes exist as literal
+// text anywhere, so `bg-green-9`/`hover:bg-green-10` only reach the safelist
+// because the enumeration walks the axis over all 11 ramps.
 //
 // Read each option down, not across: fill, text, border, focus, extra.
 const buttonClass = variants({
@@ -47,35 +48,35 @@ const buttonClass = variants({
     variant: {
       default: 'outline',
       options: {
-        solid: over(TONE, (t) => [
-          `bg-${t.solid} hover:bg-${t.solidHover}`,
-          `text-${t.contrast}`,
+        solid: over(SCALE, (tone) => [
+          `bg-${tone}-9 hover:bg-${tone}-10`,
+          `text-${tone}-contrast`,
           'border-1 border-transparent',
-          t.ring,
+          ring(tone),
           'focus-visible:shadow-[inset_0_0_0_1px_var(--color-gray-1)]',
         ]),
-        subtle: over(TONE, (t) => [
-          `bg-${t.bgSubtle} hover:bg-${t.bgSubtleHover}`,
-          `text-${t.text}`,
+        subtle: over(SCALE, (tone) => [
+          `bg-${tone}-3 hover:bg-${tone}-4`,
+          `text-${tone}-11`,
           'border-1 border-transparent',
-          t.ring,
+          ring(tone),
         ]),
         // Border and text follow the tone, matching what `TONES.outline`
         // resolves to for a Pill asking for the same treatment — the two must
         // not diverge on a shared variant name.
-        outline: over(TONE, (t) => [
-          `bg-surface-raised hover:bg-${t.bgSubtle}`,
-          `text-${t.text}`,
-          `border-2 border-${t.border} hover:border-${t.borderHover}`,
-          `${t.ring} focus-visible:border-${t.solid}`,
+        outline: over(SCALE, (tone) => [
+          `bg-surface-raised hover:bg-${tone}-3`,
+          `text-${tone}-11`,
+          `border-2 border-${tone}-7 hover:border-${tone}-8`,
+          `${ring(tone)} focus-visible:border-${tone}-9`,
         ]),
         // Ghost is Button's answer to Pill's `text` emphasis — the same tone
         // text, plus the hover surface a button needs and a tag does not.
-        ghost: over(TONE, (t) => [
-          `bg-transparent hover:bg-${t.bgSubtle}`,
-          `text-${t.text} hover:text-${t.textStrong}`,
+        ghost: over(SCALE, (tone) => [
+          `bg-transparent hover:bg-${tone}-4`,
+          `text-${tone}-11 hover:text-${tone}-12`,
           'border-1 border-transparent',
-          t.ring,
+          ring(tone),
         ]),
       },
     },

@@ -3,43 +3,38 @@ import { axis, isExpansion, over } from './axis';
 import { variants } from './variants';
 
 const SIZE = axis('size', ['sm', 'md', 'lg'], 'md');
-const RAMP = axis('scale', { red: { solid: 'red-9' }, blue: { solid: 'blue-9' } }, 'blue');
+const SCALE = axis('scale', ['red', 'blue'], 'blue');
 const STATE = axis('state', ['on', 'off'], 'off');
 
 describe('axis', () => {
-  it('takes a list domain and hands the value straight to the callback', () => {
-    expect(SIZE.keys).toEqual(['sm', 'md', 'lg']);
-    expect(SIZE.resolve('sm')).toBe('sm');
-  });
-
-  it('takes a record domain and hands over the entry, not the key', () => {
-    // This is what lets a tone axis pass a resolved ramp, so a call site says
-    // `t.solid` instead of rebuilding it from the key and a STEP.
-    expect(RAMP.keys).toEqual(['red', 'blue']);
-    expect(RAMP.resolve('red')).toEqual({ solid: 'red-9' });
+  it('is its name, its domain and a fallback — nothing else', () => {
+    // There used to be a second, record-shaped domain that handed the callback
+    // a resolved ramp (`t.solid`). Call sites spell the rung now, so the record
+    // form and the handle it carried had no users left.
+    expect(SIZE).toEqual({ name: 'size', keys: ['sm', 'md', 'lg'], fallback: 'md' });
   });
 });
 
 describe('over', () => {
   it('resolves against the selection', () => {
-    const expansion = over(RAMP, (t) => `bg-${t.solid}`);
+    const expansion = over(SCALE, (tone) => `bg-${tone}-9`);
     expect(isExpansion(expansion)).toBe(true);
     expect(expansion.at({ scale: 'red' })).toBe('bg-red-9');
   });
 
   it('falls back when the axis is unset or outside its own domain', () => {
-    // A `scale` of `primary` is a tone name, not a ramp name. Indexing the
-    // ramp table with it would produce `bg-undefined` rather than failing.
-    const expansion = over(RAMP, (t) => `bg-${t.solid}`);
+    // A `scale` of `primary` is a tone name, not a scale name. Letting it
+    // through would build `bg-primary-9`, a class that does not exist.
+    const expansion = over(SCALE, (tone) => `bg-${tone}-9`);
     expect(expansion.at({})).toBe('bg-blue-9');
     expect(expansion.at({ scale: 'primary' })).toBe('bg-blue-9');
   });
 
   it('builds each combination once and reuses it', () => {
     let built = 0;
-    const expansion = over(RAMP, (t) => {
+    const expansion = over(SCALE, (tone) => {
       built += 1;
-      return `bg-${t.solid}`;
+      return `bg-${tone}-9`;
     });
     expansion.at({ scale: 'red' });
     expansion.at({ scale: 'red' });
@@ -51,7 +46,7 @@ describe('over', () => {
     // Worth stating plainly, because the two halves point opposite ways.
     // `over()` alone is lazy — nothing is built until something asks.
     let built = 0;
-    const expansion = over(RAMP, () => {
+    const expansion = over(SCALE, () => {
       built += 1;
       return '';
     });
@@ -62,11 +57,11 @@ describe('over', () => {
     // whole domain IS built at module load — the memoisation buys a cheap
     // render, not a cheap import.
     variants({ base: '', config: { v: { default: 'x', options: { x: expansion } } } });
-    expect(built).toBe(RAMP.keys.length);
+    expect(built).toBe(SCALE.keys.length);
   });
 
   it('composes axes and walks their whole product for the safelist', () => {
-    const expansion = over(RAMP, STATE, (t, state) => `bg-${t.solid} ${state}`);
+    const expansion = over(SCALE, STATE, (tone, state) => `bg-${tone}-9 ${state}`);
     expect(expansion.at({ scale: 'red', state: 'on' })).toBe('bg-red-9 on');
     expect(expansion.every()).toEqual([
       'bg-red-9 on',
@@ -84,7 +79,7 @@ describe('variants with over()', () => {
       variant: {
         default: 'solid',
         options: {
-          solid: over(RAMP, (t) => `bg-${t.solid}`),
+          solid: over(SCALE, (tone) => `bg-${tone}-9`),
           // A plain string is still a legal option — an option that varies over
           // nothing should not have to pretend it varies over something.
           ghost: 'bg-transparent',

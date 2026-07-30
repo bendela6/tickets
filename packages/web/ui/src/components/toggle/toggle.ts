@@ -1,4 +1,4 @@
-import { over, TONE, variants } from '../../style';
+import { over, ring, SCALE, variants } from '../../style';
 
 /** Checkbox, RadioGroup and Switch share a ladder: 14 / 16 / 20px marks. */
 export type ToggleSize = 'sm' | 'md' | 'lg';
@@ -33,8 +33,8 @@ export const toggleGlyphClass = variants({
     on: {
       default: 'contrast',
       options: {
-        contrast: over(TONE, (t) => `text-${t.contrast}`),
-        solid: over(TONE, (t) => `bg-${t.solid}`),
+        contrast: over(SCALE, (tone) => `text-${tone}-contrast`),
+        solid: over(SCALE, (tone) => `bg-${tone}-9`),
       },
     },
   },
@@ -54,17 +54,17 @@ export const toggleMarkClass = variants({
       // (a radio's inner dot).
       default: 'box',
       options: {
-        box: over(TONE, (t) => [
+        box: over(SCALE, (tone) => [
           'border-gray-7',
-          `checked:border-${t.solid} checked:bg-${t.solid}`,
-          `indeterminate:border-${t.solid} indeterminate:bg-${t.solid}`,
-          t.ring,
+          `checked:border-${tone}-9 checked:bg-${tone}-9`,
+          `indeterminate:border-${tone}-9 indeterminate:bg-${tone}-9`,
+          ring(tone),
           'disabled:cursor-not-allowed disabled:border-gray-6 disabled:bg-surface-inset',
         ]),
-        ring: over(TONE, (t) => [
+        ring: over(SCALE, (tone) => [
           'border-gray-7',
-          `checked:border-${t.solid}`,
-          t.ring,
+          `checked:border-${tone}-9`,
+          ring(tone),
           'disabled:cursor-not-allowed disabled:border-gray-6 disabled:bg-surface-inset',
         ]),
       },
