@@ -1,4 +1,5 @@
 import type { TableRender } from '@tickets/table';
+import { SCROLL_EDGE } from './metrics';
 import { renderRoot } from './render-root';
 import { renderThead } from './render-thead';
 import { renderTh } from './render-th';
@@ -40,5 +41,10 @@ export function tableRender<T>(): TableRender<T> {
     error: renderError,
     empty: renderEmpty,
     selectCell: renderSelectCell,
+    // The engine owns the scroll container — it holds the ref, the keyboard
+    // handler and the focus parking spot — so this hands it a class rather
+    // than a node. The engine says WHICH edges hide content; what that looks
+    // like stays here, in metrics.
+    scrollClass: ({ scrollX }) => SCROLL_EDGE[scrollX],
   };
 }

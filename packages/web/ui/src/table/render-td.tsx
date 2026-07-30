@@ -1,6 +1,17 @@
-import type { RenderTdCtx } from '@tickets/table';
+import type { CellPin, RenderTdCtx } from '@tickets/table';
+import type { CSSProperties } from 'react';
 import { cn } from '../style';
-import { CELL_FOCUS_RING, cellGutter } from './metrics';
+import { CELL_FOCUS_RING, cellGutter, PINNED_CELL, PINNED_EDGE } from './metrics';
+
+/** The engine works out how far in a frozen column sits; this only turns that
+ *  number into the one CSS property it belongs in. A pixel offset cannot be a
+ *  Tailwind class — it depends on the current column widths. */
+export function pinStyle(pin: CellPin | undefined): CSSProperties | undefined {
+  if (!pin) {
+    return undefined;
+  }
+  return pin.side === 'left' ? { left: pin.offset } : { right: pin.offset };
+}
 
 function alignClass(align: 'left' | 'right' | 'center' | undefined) {
   return align === 'right'
@@ -10,7 +21,7 @@ function alignClass(align: 'left' | 'right' | 'center' | undefined) {
       : 'justify-start';
 }
 
-export function renderTd<T>({ column, index, children, focused, focusProps }: RenderTdCtx<T>) {
+export function renderTd<T>({ column, index, children, focused, focusProps, pin }: RenderTdCtx<T>) {
   return (
     <div
       // `focusProps` carries the roving tabindex and the coordinates the
@@ -28,7 +39,10 @@ export function renderTd<T>({ column, index, children, focused, focusProps }: Re
         // The engine decides WHICH cell is focused; the ring is drawn here
         // and only here.
         focused && CELL_FOCUS_RING,
+        pin && PINNED_CELL,
+        pin?.edge && PINNED_EDGE[pin.side],
       )}
+      style={pinStyle(pin)}
       role="cell"
     >
       {children}

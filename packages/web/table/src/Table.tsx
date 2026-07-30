@@ -1,5 +1,6 @@
 import {
   Fragment,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -21,8 +22,10 @@ import {
   GROUP_ROW_HEIGHT,
   ROW_HEIGHT,
   type CellFocusProps,
+  type CellPin,
   type CellRef,
   type Column,
+  type ScrollX,
   type SortBy,
   type TableGroup,
   type TableRender,
@@ -65,8 +68,13 @@ export interface TableProps<T> {
   render: TableRender<T>;
   /** Height of a data row in pixels. The virtualizer needs it up front, so a
    *  caller with a density toggle must pass the height for the current mode
-   *  rather than styling rows and hoping. Defaults to ROW_HEIGHT. */
-  rowHeight?: number;
+   *  rather than styling rows and hoping. Defaults to ROW_HEIGHT.
+   *
+   *  A function gives per-row heights — a wrapped two-line title next to
+   *  one-liners. It is asked BEFORE the row is rendered, so it must answer
+   *  from the DATA; the engine cannot measure a row that does not exist yet.
+   *  `row` is undefined where the row is not loaded. */
+  rowHeight?: number | ((row: T | undefined, index: number) => number);
   /** Row-level chrome that is not a column — see `RenderTrCtx.overlay`. */
   rowOverlay?: (row: T) => ReactNode;
   /** Whether a filter is responsible for there being no rows. Forwarded to the
@@ -102,14 +110,6 @@ export function Table<T>(props: TableProps<T>): ReactNode {
     ? flattenGroups(groups)
     : rows.map((row, index) => ({ kind: 'row' as const, row, index }));
 
-  const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
-  const virtualizer = useVirtualizer({
-    count: items.length,
-    getScrollElement: () => scrollEl,
-    estimateSize: (i) => (items[i]?.kind === 'group' ? GROUP_ROW_HEIGHT : rowHeight),
-    overscan: 8,
-  });
-
   // A data row's index is continuous across groups, but its position in the
   // virtualized list is not — group bands take slots too. Focus addresses the
   // former and the virtualizer wants the latter, so keep the map.
@@ -119,6 +119,65 @@ export function Table<T>(props: TableProps<T>): ReactNode {
       itemIndexOfRow[item.index] = i;
     }
   }
+
+  /**
+   * A row's height, which may differ per row — a wrapped title needs two
+   * lines, a one-liner does not. The virtualizer asks for it BEFORE the row
+   * exists, so this is a function of the data and never a measurement.
+   */
+  const heightOf = (index: number): number => {
+    if (typeof rowHeight === 'number') {
+      return rowHeight;
+    }
+    const item = items[itemIndexOfRow[index] ?? -1];
+    return rowHeight(item?.kind === 'row' ? item.row : undefined, index);
+  };
+  /** One number, for the places that need a representative height rather than
+   *  a specific row's: the skeleton and the PageUp/PageDown step. */
+  const baseRowHeight = typeof rowHeight === 'number' ? rowHeight : ROW_HEIGHT;
+
+  const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
+
+  /**
+   * Which horizontal edges have content hidden past them.
+   *
+   * Kept as state rather than read during render because it is a MEASUREMENT:
+   * `scrollWidth` and `clientWidth` are only true after layout, and a table
+   * whose columns have just been resized has to re-measure without a scroll
+   * event ever firing. Hence both an `onScroll` handler and a layout effect.
+   */
+  const [scrollX, setScrollX] = useState<ScrollX>('none');
+  const syncScrollX = () => {
+    const el = scrollEl;
+    if (!el) {
+      return;
+    }
+    const hidden = el.scrollWidth - el.clientWidth;
+    // A one-pixel tolerance: sub-pixel column widths otherwise leave a table
+    // that visibly fits reporting a fraction of a pixel of overflow forever.
+    if (hidden <= 1) {
+      setScrollX('none');
+      return;
+    }
+    if (el.scrollLeft <= 1) {
+      setScrollX('start');
+    } else if (el.scrollLeft >= hidden - 1) {
+      setScrollX('end');
+    } else {
+      setScrollX('middle');
+    }
+  };
+  useLayoutEffect(syncScrollX);
+
+  const virtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => scrollEl,
+    estimateSize: (i) => {
+      const item = items[i];
+      return item?.kind === 'group' ? GROUP_ROW_HEIGHT : heightOf(item?.index ?? i);
+    },
+    overscan: 8,
+  });
 
   // Selection needs both halves: an id to key on and somewhere to send the
   // result. One without the other is a caller mistake, not a half-feature.
@@ -170,9 +229,13 @@ export function Table<T>(props: TableProps<T>): ReactNode {
       // reports a real height where `clientHeight` reads 0 (jsdom, and the
       // frame before the first layout). One row is the floor: a PageDown that
       // moves nowhere is worse than one that moves a little.
+      //
+      // The BASE height, not a per-row one: a page is a rough distance, and
+      // asking "how many rows fit" of a table whose rows differ in height has
+      // no single answer worth computing on every keystroke.
       pageSize: Math.max(
         1,
-        Math.floor((virtualizer.scrollRect?.height ?? scrollEl?.clientHeight ?? 0) / rowHeight),
+        Math.floor((virtualizer.scrollRect?.height ?? scrollEl?.clientHeight ?? 0) / baseRowHeight),
       ),
     },
     scrollRowIntoView: (rowIndex) => {
@@ -204,6 +267,34 @@ export function Table<T>(props: TableProps<T>): ReactNode {
   }
 
   const gridTemplate = columns.map((c) => trackSize(c, state.widths)).join(' ');
+  const pins = pinOffsets(columns, state.widths);
+  const hasPinned = pins.size > 0;
+
+  /**
+   * Size a column to its widest MOUNTED cell.
+   *
+   * Measured rather than estimated: only the DOM knows how wide a given title
+   * is in this font at this weight, and a character count guesses badly at
+   * both ends. `scrollWidth` is the full content width even where the cell
+   * clips it with `truncate`, which is exactly the number wanted.
+   *
+   * Only mounted rows are measured, and under virtualization that is the only
+   * honest answer — measuring 800,000 rows would mean rendering them.
+   */
+  const autoFitColumn = (col: Column<T>) => {
+    if (!scrollEl) {
+      return;
+    }
+    let widest = 0;
+    for (const cell of scrollEl.querySelectorAll<HTMLElement>('[data-cell-col]')) {
+      if (cell.getAttribute('data-cell-col') === col.key) {
+        widest = Math.max(widest, cell.scrollWidth);
+      }
+    }
+    if (widest > 0) {
+      onWidthChange(col.key, Math.max(widest, col.minWidth ?? 0));
+    }
+  };
 
   const onHeaderClick = (col: Column<T>, e: MouseEvent) => {
     if (!col.sortable) {
@@ -257,11 +348,13 @@ export function Table<T>(props: TableProps<T>): ReactNode {
                   startWidth: colWidth,
                   minWidth: col.minWidth,
                   onWidthChange: (px) => onWidthChange(col.key, px),
+                  onAutoFit: () => autoFitColumn(col),
                 }
               : undefined
           }
           focused={focus.isFocused(HEADER_ROW, col.key)}
           focusProps={focus.focusPropsFor(HEADER_ROW, col.key)}
+          pin={pins.get(col.key)}
           content={col.select ? selectAllCell() : undefined}
           slot={render.th}
         />
@@ -277,7 +370,10 @@ export function Table<T>(props: TableProps<T>): ReactNode {
           key={i}
           columns={columns}
           gridTemplate={gridTemplate}
-          rowHeight={rowHeight}
+          // A placeholder stands in for a row that has not arrived, so there
+          // is no row to ask for a per-row height. The base height is the only
+          // answer available and the right one.
+          rowHeight={baseRowHeight}
           slot={render.skeletonRow}
         />
       );
@@ -294,7 +390,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
           top: 0,
           left: 0,
           right: 0,
-          height: item.kind === 'group' ? GROUP_ROW_HEIGHT : rowHeight,
+          height: item.kind === 'group' ? GROUP_ROW_HEIGHT : heightOf(item.index),
           transform: `translateY(${vi.start}px)`,
         };
 
@@ -330,6 +426,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
                   : renderCellContent(col, item.row),
               focused: focus.isFocused(rowIndex, col.key),
               focusProps: focus.focusPropsFor(rowIndex, col.key),
+              pin: pins.get(col.key),
             })}
           </Fragment>
         ));
@@ -344,6 +441,7 @@ export function Table<T>(props: TableProps<T>): ReactNode {
             onClick={onRowClick ? () => onRowClick(item.row) : undefined}
             overlay={rowOverlay ? rowOverlay(item.row) : undefined}
             selected={rowId !== null && selectedIds.has(rowId)}
+            hasPinned={hasPinned}
             slot={render.tr}
           />
         );
@@ -361,12 +459,17 @@ export function Table<T>(props: TableProps<T>): ReactNode {
     <div
       ref={setScrollEl}
       data-slot="table-scroll"
-      className="h-full w-full overflow-auto"
+      // The scroll state is on the element as an attribute AND in the class
+      // the render set chose: the attribute is what a test and a screenshot
+      // can read, the class is what a person sees.
+      data-scroll-x={scrollX}
+      className={joinClasses('h-full w-full overflow-auto', render.scrollClass?.({ scrollX }))}
       style={{ overflowAnchor: 'none' }}
       // -1, never 0: this is not a tab stop, it is where DOM focus is PARKED
       // when the focused row is scrolled out and unmounted. Without it focus
       // would fall to <body> and the user would lose their place entirely.
       tabIndex={onFocusChange ? -1 : undefined}
+      onScroll={syncScrollX}
       onKeyDown={focus.onKeyDown}
       onFocusCapture={focus.onFocusCapture}
       onBlurCapture={focus.onBlurCapture}
@@ -386,6 +489,42 @@ export function Table<T>(props: TableProps<T>): ReactNode {
 /** `CellRef.rowIndex` for the header row. */
 const HEADER_ROW = -1;
 
+/** The engine has no `cn`, and does not want one — this only ever joins its
+ *  own two strings, one of which the render set supplied. */
+function joinClasses(...parts: (string | undefined)[]): string {
+  return parts.filter(Boolean).join(' ');
+}
+
+/**
+ * Where each pinned column sticks.
+ *
+ * A left-pinned column sits past the widths of the left-pinned columns before
+ * it; a right-pinned one past those after it. The widths come from the same
+ * `startWidthOf` the resize handle uses, so a dragged width moves the pinned
+ * offsets with it and the columns cannot overlap.
+ *
+ * The INNERMOST pinned column on each side is marked `edge` — it is the one
+ * bordering the part that scrolls, and the only one that should carry a
+ * divider. Marking them all would draw a line between every frozen column.
+ */
+function pinOffsets<T>(columns: Column<T>[], widths: Record<string, number>): Map<string, CellPin> {
+  const pins = new Map<string, CellPin>();
+  const left = columns.filter((c) => c.pinned === 'left');
+  const right = columns.filter((c) => c.pinned === 'right');
+
+  let offset = 0;
+  for (const [i, col] of left.entries()) {
+    pins.set(col.key, { side: 'left', offset, edge: i === left.length - 1 });
+    offset += startWidthOf(col, widths);
+  }
+  offset = 0;
+  for (const [i, col] of [...right].reverse().entries()) {
+    pins.set(col.key, { side: 'right', offset, edge: i === right.length - 1 });
+    offset += startWidthOf(col, widths);
+  }
+  return pins;
+}
+
 /** Shared empty set, so a table with no selection does not hand a fresh
  *  object to every row on every render. */
 const EMPTY_SELECTION: ReadonlySet<string> = new Set<string>();
@@ -396,9 +535,15 @@ function RenderTh<T>(props: {
   sort?: { direction: 'asc' | 'desc'; index: number };
   totalSorts: number;
   onSortClick: (e: MouseEvent) => void;
-  resize?: { startWidth: number; minWidth?: number; onWidthChange: (px: number) => void };
+  resize?: {
+    startWidth: number;
+    minWidth?: number;
+    onWidthChange: (px: number) => void;
+    onAutoFit: () => void;
+  };
   focused: boolean;
   focusProps: CellFocusProps;
+  pin?: CellPin;
   content?: ReactNode;
   slot: TableRender<T>['th'];
 }): ReactNode {
@@ -411,6 +556,7 @@ function RenderTh<T>(props: {
     resize: props.resize,
     focused: props.focused,
     focusProps: props.focusProps,
+    pin: props.pin,
     children: props.content,
   });
 }
@@ -424,6 +570,7 @@ function RenderTr<T>(props: {
   onClick?: () => void;
   overlay?: ReactNode;
   selected?: boolean;
+  hasPinned?: boolean;
   slot: TableRender<T>['tr'];
 }): ReactNode {
   return props.slot({
@@ -435,6 +582,7 @@ function RenderTr<T>(props: {
     onClick: props.onClick,
     overlay: props.overlay,
     selected: props.selected,
+    hasPinned: props.hasPinned,
   });
 }
 
