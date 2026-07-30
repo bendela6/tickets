@@ -2,21 +2,8 @@ import postgres from 'postgres';
 import { environment } from '../../environment';
 import { assertKnownDatabase } from '../list-databases';
 
-/**
- * For testing: factory for postgres instances. Wraps each instance to track
- * end() calls for leak detection in tests.
- */
 export function createPostgresInstance(options: Parameters<typeof postgres>[0]) {
-  const sql = postgres(options);
-  // Wrap end() to enable test tracking if a hook is installed
-  if (typeof (global as any).__withDatabaseEndTracker === 'function') {
-    const originalEnd = sql.end.bind(sql);
-    sql.end = (async (...args: any[]) => {
-      (global as any).__withDatabaseEndTracker();
-      return originalEnd(...args);
-    }) as any;
-  }
-  return sql;
+  return postgres(options);
 }
 
 /**
@@ -32,14 +19,21 @@ export function createPostgresInstance(options: Parameters<typeof postgres>[0]) 
  * `max: 1` plus an unconditional close in `finally`: introspection runs once
  * per dropdown change, so a pool cached per database would hold idle handles
  * open against every database anyone ever looked at.
+ *
+ * @param name - database name, validated via assertKnownDatabase
+ * @param fn - callback receiving the postgres.Sql handle
+ * @param createClient - optional factory for postgres instances (for testing);
+ *                       defaults to createPostgresInstance
  */
 export async function withDatabase<T>(
   name: string,
   fn: (sql: postgres.Sql) => Promise<T>,
+  createClient?: typeof createPostgresInstance,
 ): Promise<T> {
   const database = await assertKnownDatabase(name);
   const { host, port, user, password } = environment.postgres;
-  const sql = createPostgresInstance({ host, port, user, password, database, max: 1 });
+  const factory = createClient || createPostgresInstance;
+  const sql = factory({ host, port, user, password, database, max: 1 });
   try {
     return await fn(sql);
   } finally {
