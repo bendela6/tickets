@@ -21,6 +21,17 @@ Spec: [`docs/superpowers/specs/2026-07-30-schema-browser-design.md`](../specs/20
 - **`packages/db` tests run against `tickets_test`** (forced by `src/test/setup-env.ts`) with `fileParallelism: false`. Node environment.
 - Conventional commits scoped by app: `feat(db):`, `feat(api):`, `feat(web):`.
 
+## Verified environment facts
+
+Confirmed against the running stack before this plan was written. Tests assert against these, so a surprise here is a real change, not a bad test.
+
+- **Postgres:** `tickets-postgres-1`, healthy, `127.0.0.1:5532`.
+- **11 databases:** `postgres`, `signals`, `signals_test`, `tickets`, `tickets_dev`, `tickets_e2dev`, `tickets_legacy`, `tickets_old`, `tickets_platform`, `tickets_split`, `tickets_test`. The dropdown will have real content, and `signals` / `tickets_legacy` / `tickets_platform` genuinely exercise the namespace-fallback grouping.
+- **`tickets_test` has NO public tables.** Every table sits in `agent`, `core`, `history`, `records`, `structure`, `terminal` — plus `drizzle.__drizzle_migrations`. Any test written as "public tables have a null schema" would pass vacuously; assert real namespaces instead.
+- **`items` is `records.items`**, pk column `id`, constraint `items_pkey`, unique `items_project_number`, four FKs, and three non-primary indexes (`items_project_number`, `items_project_type`, `items_parent`).
+- **`items` is hand-listed in `SCHEMA_GROUPS` group `rc`**, so it resolves curated (not by namespace) — which is what keeps the existing `items.group === 'rc'` API assertion true after the switch to live introspection.
+- **8 enums**, all in named schemas. `session_status` exists **twice** (`agent` and `terminal`) — the case that makes schema-qualification load-bearing rather than decorative.
+
 ## Known pre-existing breakage (do not chase)
 
 `--ins-opt-*` is referenced by `apps/web/src/components/schema/erd-engine.ts` (lines 67, 68, 183, 266, 267) and **defined nowhere in the repo**. The legacy ERD's group boxes, cards and edge strokes therefore have no colour today. This is pre-existing, unrelated to this plan, and is resolved in Phase 2 when that renderer is deleted. **Verify Phase 1 on structure — table names, columns, PK/FK badges, grouping, edges, the dropdown — not on colour.**
@@ -439,17 +450,22 @@ describe('readTables', () => {
     expect(items!.columns.some((c) => c.name === 'id')).toBe(true);
   });
 
-  it('reports public tables with a null schema', async () => {
+  it('carries the real namespace, and never the string "public"', async () => {
+    // Every table in tickets_test lives in a named schema — there are no
+    // public tables at all — so this asserts a real value, not a vacuous one.
     const tables = await withDatabase('tickets_test', (sql) => readTables(sql));
-    for (const t of tables) {
-      expect(t.schema).not.toBe('public');
-    }
+    expect(tables.find((t) => t.name === 'items')!.schema).toBe('records');
+    expect(tables.find((t) => t.name === 'sessions' )!.schema).not.toBeNull();
+    for (const t of tables) expect(t.schema).not.toBe('public');
   });
 
-  it('excludes system catalogs', async () => {
+  it('excludes system catalogs and migration bookkeeping', async () => {
     const tables = await withDatabase('tickets_test', (sql) => readTables(sql));
     expect(tables.some((t) => t.schema === 'pg_catalog')).toBe(false);
     expect(tables.some((t) => t.schema === 'information_schema')).toBe(false);
+    // drizzle.__drizzle_migrations is drizzle-kit's bookkeeping, not schema.
+    expect(tables.some((t) => t.name === '__drizzle_migrations')).toBe(false);
+    expect(tables.some((t) => t.schema === 'drizzle')).toBe(false);
   });
 
   it('orders columns by attnum', async () => {
@@ -500,6 +516,16 @@ export type RawTable = {
 const TABLE_KINDS = ['r', 'p'];
 
 /**
+ * Namespaces that hold no modelled schema. `drizzle` is migration bookkeeping
+ * (`__drizzle_migrations`), owned by drizzle-kit rather than by the domain —
+ * without this it lands in a fallback group and the diagram grows a stray
+ * DRIZZLE zone containing one bookkeeping table. This is a decision, not an
+ * oversight: it is the only table in tickets_test that describeSchema() does
+ * not declare.
+ */
+const EXCLUDED_NAMESPACES = ['pg_catalog', 'information_schema', 'drizzle'];
+
+/**
  * Tables and their columns, straight from the catalog.
  *
  * `format_type` rather than a `pg_type` join: it is what renders
@@ -512,7 +538,7 @@ export async function readTables(sql: postgres.Sql): Promise<RawTable[]> {
     FROM pg_class c
     JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE c.relkind = ANY(${TABLE_KINDS})
-      AND n.nspname NOT IN ('pg_catalog', 'information_schema')
+      AND n.nspname <> ALL(${EXCLUDED_NAMESPACES})
       AND n.nspname NOT LIKE 'pg\\_toast%'
       AND n.nspname NOT LIKE 'pg\\_temp%'
     ORDER BY n.nspname, c.relname
@@ -843,14 +869,25 @@ import { readEnums } from './read-enums';
 describe('readEnums', () => {
   it('reads enum declarations with ordered values', async () => {
     const enums = await withDatabase('tickets_test', (sql) => readEnums(sql));
+    expect(enums.length).toBeGreaterThan(0);
     for (const e of enums) {
       expect(e.name.length).toBeGreaterThan(0);
       expect(e.values.length).toBeGreaterThan(0);
     }
   });
 
-  it('reports public enums with a null schema', async () => {
+  it('keeps same-named enums in different schemas distinct', async () => {
+    // agent.session_status and terminal.session_status both exist and print
+    // the same bare name — collapsing them would lose one entirely.
     const enums = await withDatabase('tickets_test', (sql) => readEnums(sql));
+    const sessionStatus = enums.filter((e) => e.name === 'session_status');
+    expect(sessionStatus.length).toBe(2);
+    expect(new Set(sessionStatus.map((e) => e.schema))).toEqual(new Set(['agent', 'terminal']));
+  });
+
+  it('carries the real namespace, never the string "public"', async () => {
+    const enums = await withDatabase('tickets_test', (sql) => readEnums(sql));
+    expect(enums.find((e) => e.name === 'field_type')!.schema).toBe('structure');
     for (const e of enums) expect(e.schema).not.toBe('public');
   });
 });
