@@ -29,6 +29,12 @@ function Viewer() {
 // behaviour has to survive the move. Renders nothing; it exists purely to run
 // the effect inside <DiagramProvider>, where useDiagramActions is available.
 //
+// `cancelled` guards the fonts.ready continuation the same way the deleted
+// `use-model-loader` did: fonts.ready is a promise that can resolve well after
+// this effect's cleanup has run, and without the flag a stale repackAndFit()
+// from a since-replaced `model` would still fire — clobbering pan/zoom the
+// user has already set on whatever model is current by then.
+//
 // No effect loop: `actions` is a useMemo'd value with an empty dep array (see
 // diagram-provider.tsx), so its identity never changes across renders — only
 // a genuine change of the `model` prop re-fires this effect. Callers must keep
@@ -38,9 +44,16 @@ function Viewer() {
 function ModelLoader({ model }: { model: Model }) {
   const actions = useDiagramActions();
   useEffect(() => {
+    let cancelled = false;
     actions.load(model);
     const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
-    if (fonts?.ready) void fonts.ready.then(() => actions.repackAndFit());
+    if (fonts?.ready)
+      void fonts.ready.then(() => {
+        if (!cancelled) actions.repackAndFit();
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [actions, model]);
   return null;
 }
