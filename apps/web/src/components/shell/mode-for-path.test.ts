@@ -24,4 +24,11 @@ describe('modeForPath', () => {
     expect(modeForPath('/signals/sessions/x')).toBe('signals');
     expect(modeForPath('/signals/issues/3')).toBe('signals');
   });
+  it('maps /schema to the schema mode', () => {
+    expect(modeForPath('/schema')).toBe('schema');
+  });
+
+  it('maps a nested schema path to the schema mode', () => {
+    expect(modeForPath('/schema/anything')).toBe('schema');
+  });
 });
