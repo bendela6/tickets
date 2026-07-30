@@ -1,6 +1,10 @@
 import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { MarkConfig, MotionConfig } from '../config';
+import type { MarkConfig } from '../config';
+import {
+  ELEMENT_TYPES, INK_RESOLUTIONS,
+  type Element, type IconDoc, type Ink, type MotionConfig, type Stick, type Variant,
+} from '../doc';
 import { buildHeadBlock, injectHeadBlock } from '../generate/head';
 import { buildManifest } from '../generate/manifest';
 import { svgFavicon, svgMono } from '../generate/svg';
@@ -8,7 +12,7 @@ import { PNG_NAMES, resolveOutput } from './outputs';
 import { decodePng } from './validate';
 
 export interface GenerateRequest {
-  config: MarkConfig;
+  config: IconDoc;
   /** base64 PNG per name. Only a browser can produce these. */
   pngs: Record<string, string>;
 }
@@ -55,6 +59,10 @@ export async function writeIfChanged(abs: string, bytes: Buffer): Promise<'writt
   return 'written';
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 
 function assertHexColor(value: unknown, field: string): string {
@@ -64,33 +72,11 @@ function assertHexColor(value: unknown, field: string): string {
   return value;
 }
 
-function assertColorTriple(value: unknown, field: string): [string, string, string] {
-  if (!Array.isArray(value) || value.length !== 3) {
-    throw new Error(`${field} must be a triple`);
-  }
-  return [
-    assertHexColor(value[0], `${field}[0]`),
-    assertHexColor(value[1], `${field}[1]`),
-    assertHexColor(value[2], `${field}[2]`),
-  ];
-}
-
 function assertFiniteNumber(value: unknown, field: string): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     throw new Error(`${field} must be a finite number`);
   }
   return value;
-}
-
-function assertAngleTriple(value: unknown, field: string): [number, number, number] {
-  if (!Array.isArray(value) || value.length !== 3) {
-    throw new Error(`${field} must be a triple`);
-  }
-  return [
-    assertFiniteNumber(value[0], `${field}[0]`),
-    assertFiniteNumber(value[1], `${field}[1]`),
-    assertFiniteNumber(value[2], `${field}[2]`),
-  ];
 }
 
 function assertPositiveWeight(value: unknown, field: string): number {
@@ -157,48 +143,182 @@ function assertPngs(value: unknown, field: string): Record<string, string> {
   return out;
 }
 
+function assertString(value: unknown, field: string): string {
+  if (typeof value !== 'string') throw new Error(`${field} must be a string`);
+  return value;
+}
+
+function assertInk(value: unknown, field: string): Ink {
+  if (!isRecord(value)) throw new Error(`${field} must be an object`);
+  return {
+    light: assertHexColor(value.light, `${field}.light`),
+    dark: assertHexColor(value.dark, `${field}.dark`),
+  };
+}
+
+function assertElement(value: unknown, field: string): Element {
+  if (!isRecord(value)) throw new Error(`${field} must be an object`);
+  const id = assertString(value.id, `${field}.id`);
+  const ink = assertString(value.ink, `${field}.ink`);
+  const spin = value.spin === true ? true : undefined;
+  const type = value.type;
+  if (type !== 'stick' && type !== 'ring' && type !== 'dot') {
+    throw new Error(`${field}.type must be one of ${ELEMENT_TYPES.join(', ')}`);
+  }
+  switch (type) {
+    case 'stick':
+      return {
+        id, ink, spin, type,
+        angle: assertFiniteNumber(value.angle, `${field}.angle`),
+        reach: assertPositiveWeight(value.reach, `${field}.reach`),
+        weight: assertPositiveWeight(value.weight, `${field}.weight`),
+      };
+    case 'ring':
+      return {
+        id, ink, spin, type,
+        radius: assertPositiveWeight(value.radius, `${field}.radius`),
+        weight: assertPositiveWeight(value.weight, `${field}.weight`),
+      };
+    case 'dot': {
+      const at = value.at;
+      if (!Array.isArray(at) || at.length !== 2) throw new Error(`${field}.at must be a pair`);
+      return {
+        id, ink, spin, type,
+        at: [assertFiniteNumber(at[0], `${field}.at[0]`), assertFiniteNumber(at[1], `${field}.at[1]`)],
+        radius: assertPositiveWeight(value.radius, `${field}.radius`),
+      };
+    }
+  }
+}
+
+function assertVariant(value: unknown, field: string): Variant {
+  if (!isRecord(value)) throw new Error(`${field} must be an object`);
+  const resolution = value.inks;
+  if (
+    resolution !== 'theme' && resolution !== 'light' &&
+    resolution !== 'dark' && resolution !== 'black'
+  ) {
+    throw new Error(`${field}.inks must be one of ${INK_RESOLUTIONS.join(', ')}`);
+  }
+  const variant: Variant = {
+    inks: resolution,
+    scale: assertPositiveWeight(value.scale, `${field}.scale`),
+  };
+  if (value.field !== undefined) {
+    if (!isRecord(value.field)) throw new Error(`${field}.field must be an object`);
+    variant.field = {
+      ink: assertString(value.field.ink, `${field}.field.ink`),
+      radius: assertNonNegative(value.field.radius, `${field}.field.radius`),
+    };
+  }
+  return variant;
+}
+
 /**
  * Every colour and number is validated before anything is derived or
  * written. These raw values are template-interpolated *unescaped* into SVG
  * and HTML attributes downstream (`generate/svg.ts` writes `stroke="…"` and
  * `fill="…"`; `generate/head.ts` writes `color="…"` and `content="…"`), so an
- * unvalidated field is not just a crash risk — an unchecked `chip` could
+ * unvalidated field is not just a crash risk — an unchecked ink colour could
  * break out of an attribute and persist chosen markup into the repo's real,
  * hand-maintained `apps/web/index.html`. Anchoring the hex pattern at both
  * ends also rejects 3-digit shorthand, `rgb()`, and named colours: the
  * generators and the written `icons.config.json` all assume 6-digit hex.
  */
+function assertIconDoc(value: unknown, field: string): IconDoc {
+  if (!isRecord(value)) throw new Error(`${field} must be an object`);
+  if (!isRecord(value.inks)) throw new Error(`${field}.inks must be an object`);
+  if (!Array.isArray(value.elements)) throw new Error(`${field}.elements must be an array`);
+  if (!isRecord(value.variants)) throw new Error(`${field}.variants must be an object`);
+
+  const inks: Record<string, Ink> = {};
+  for (const [name, ink] of Object.entries(value.inks)) {
+    inks[name] = assertInk(ink, `${field}.inks.${name}`);
+  }
+  const variants: Record<string, Variant> = {};
+  for (const [name, variant] of Object.entries(value.variants)) {
+    variants[name] = assertVariant(variant, `${field}.variants.${name}`);
+  }
+  return {
+    inks,
+    elements: value.elements.map((e, i) => assertElement(e, `${field}.elements[${i}]`)),
+    variants,
+    motion: assertMotion(value.motion, `${field}.motion`),
+  };
+}
+
 function assertRequest(body: unknown): GenerateRequest {
   if (typeof body !== 'object' || body === null) throw new Error('body must be an object');
   const { config, pngs } = body as { config?: unknown; pngs?: unknown };
-  if (typeof config !== 'object' || config === null) throw new Error('body.config is required');
-  const c = config as Record<string, unknown>;
+  return { config: assertIconDoc(config, 'body.config'), pngs: assertPngs(pngs, 'body.pngs') };
+}
 
-  const validConfig: MarkConfig = {
-    light: assertColorTriple(c.light, 'body.config.light'),
-    dark: assertColorTriple(c.dark, 'body.config.dark'),
-    chip: assertHexColor(c.chip, 'body.config.chip'),
-    angles: assertAngleTriple(c.angles, 'body.config.angles'),
-    bareWeight: assertPositiveWeight(c.bareWeight, 'body.config.bareWeight'),
-    chipReach: assertPositiveWeight(c.chipReach, 'body.config.chipReach'),
-    chipWeight: assertPositiveWeight(c.chipWeight, 'body.config.chipWeight'),
-    motion: assertMotion(c.motion, 'body.config.motion'),
+function isStickElement(element: Element): element is Stick {
+  return element.type === 'stick';
+}
+
+/**
+ * `runGenerate` still derives favicon.svg, icon-mono.svg, site.webmanifest and
+ * the injected `<head>` block by calling into `generate/svg.ts`,
+ * `generate/manifest.ts` and `generate/head.ts` — all three still speak the
+ * retired `MarkConfig` shape. A later task cuts that call chain over to
+ * `generate/render.ts`'s `renderSvg`, which reads a document directly; until
+ * then this derives just the scalars those three modules actually read on
+ * this path (`light`, `dark`, `angles`, `bareWeight` for the two SVGs;
+ * `chip` for the manifest and the head block) from the now-validated
+ * document. `chipReach` and `chipWeight` are part of `MarkConfig`'s shape but
+ * nothing `runGenerate` calls ever reads them — `svgChip` is a client-side
+ * (`api.ts`) concern — so they're filled with an inert placeholder rather
+ * than derived.
+ *
+ * The mapping mirrors `toDoc()`'s legacy-read path: the first three
+ * stick-type elements stand in for `top`/`mid`/`low`, and the `chip`
+ * variant's field ink stands in for `chip`. A document that doesn't have
+ * that shape (fewer than three sticks, no `chip` variant, an ink name that
+ * isn't defined) degrades to black/zero for the missing pieces rather than
+ * throwing a second time — `assertIconDoc` already decided this document is
+ * acceptable, so this bridge is scaffolding, not a second validator.
+ */
+function docToMarkConfig(doc: IconDoc): MarkConfig {
+  const sticks = doc.elements.filter(isStickElement);
+  const s0 = sticks[0];
+  const s1 = sticks[1];
+  const s2 = sticks[2];
+
+  const channel = (id: string | undefined, theme: 'light' | 'dark'): string => {
+    if (id === undefined) return '#000000';
+    return doc.inks[id]?.[theme] ?? '#000000';
   };
 
-  return { config: validConfig, pngs: assertPngs(pngs, 'body.pngs') };
+  const chipField = doc.variants.chip?.field;
+  const chip = chipField
+    ? (doc.inks[chipField.ink]?.dark ?? doc.inks[chipField.ink]?.light ?? '#000000')
+    : '#000000';
+
+  return {
+    light: [channel(s0?.ink, 'light'), channel(s1?.ink, 'light'), channel(s2?.ink, 'light')],
+    dark: [channel(s0?.ink, 'dark'), channel(s1?.ink, 'dark'), channel(s2?.ink, 'dark')],
+    chip,
+    angles: [s0?.angle ?? 0, s1?.angle ?? 0, s2?.angle ?? 0],
+    bareWeight: s0?.weight ?? 6,
+    chipReach: 14,
+    chipWeight: 4.6,
+    motion: doc.motion,
+  };
 }
 
 export async function runGenerate(body: unknown, repoRoot: string): Promise<GenerateResponse> {
-  const { config, pngs } = assertRequest(body);
+  const { config: doc, pngs } = assertRequest(body);
   const results: GenerateResult[] = [];
   const rel = (abs: string) => path.relative(repoRoot, abs).split(path.sep).join('/');
+  const legacy = docToMarkConfig(doc);
 
   // Everything derivable is derived here, not trusted from the client.
   const derived: Record<string, Buffer> = {
-    'favicon.svg': Buffer.from(svgFavicon(config), 'utf8'),
-    'icon-mono.svg': Buffer.from(svgMono(config), 'utf8'),
-    'site.webmanifest': Buffer.from(buildManifest(config), 'utf8'),
-    'icons.config.json': Buffer.from(JSON.stringify(config, null, 2) + '\n', 'utf8'),
+    'favicon.svg': Buffer.from(svgFavicon(legacy), 'utf8'),
+    'icon-mono.svg': Buffer.from(svgMono(legacy), 'utf8'),
+    'site.webmanifest': Buffer.from(buildManifest(legacy), 'utf8'),
+    'icons.config.json': Buffer.from(JSON.stringify(doc, null, 2) + '\n', 'utf8'),
   };
 
   for (const [name, bytes] of Object.entries(derived)) {
@@ -241,7 +361,7 @@ export async function runGenerate(body: unknown, repoRoot: string): Promise<Gene
   const indexPath = path.resolve(repoRoot, 'apps/web/index.html');
   try {
     const html = await readFile(indexPath, 'utf8');
-    const merged = injectHeadBlock(html, buildHeadBlock(config));
+    const merged = injectHeadBlock(html, buildHeadBlock(legacy));
     const bytes = Buffer.from(merged, 'utf8');
     const status = await writeIfChanged(indexPath, bytes);
     results.push({ path: rel(indexPath), bytes: bytes.byteLength, status });
