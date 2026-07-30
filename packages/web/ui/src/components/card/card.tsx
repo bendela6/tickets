@@ -42,7 +42,7 @@ type CardProps = HTMLAttributes<HTMLDivElement> & {
  * enforcing it would cost a context provider to save a sentence of docs.
  *
  * `overflow-hidden` is load-bearing: without it a CardHeader's rule and any
- * full-bleed child square off the corner radius.
+ * full-bleed child square off the rounded corners.
  */
 export function Card({
   radius = 'xl',
