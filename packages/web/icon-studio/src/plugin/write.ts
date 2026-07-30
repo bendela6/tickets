@@ -1,13 +1,12 @@
 import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { MarkConfig } from '../config';
 import {
   ELEMENT_TYPES, INK_RESOLUTIONS,
-  type Element, type IconDoc, type Ink, type MotionConfig, type Stick, type Variant,
+  type Element, type IconDoc, type Ink, type MotionConfig, type Variant,
 } from '../doc';
 import { buildHeadBlock, injectHeadBlock } from '../generate/head';
 import { buildManifest } from '../generate/manifest';
-import { svgFavicon, svgMono } from '../generate/svg';
+import { renderSvg, resolveInk } from '../generate/render';
 import { PNG_NAMES, resolveOutput } from './outputs';
 import { decodePng } from './validate';
 
@@ -217,7 +216,7 @@ function assertVariant(value: unknown, field: string): Variant {
 /**
  * Every colour and number is validated before anything is derived or
  * written. These raw values are template-interpolated *unescaped* into SVG
- * and HTML attributes downstream (`generate/svg.ts` writes `stroke="…"` and
+ * and HTML attributes downstream (`generate/render.ts` writes `stroke="…"` and
  * `fill="…"`; `generate/head.ts` writes `color="…"` and `content="…"`), so an
  * unvalidated field is not just a crash risk — an unchecked ink colour could
  * break out of an attribute and persist chosen markup into the repo's real,
@@ -241,8 +240,9 @@ function assertIconDoc(value: unknown, field: string): IconDoc {
   // object rather than adding an entry. The two written outputs then
   // disagree about that one ink's existence: `JSON.stringify(inks)` (which
   // walks own keys) omits it entirely, while a later `inks[id]` *read* (as
-  // `docToMarkConfig` below does) resolves it through the hijacked
-  // prototype chain and finds it anyway. `Object.create(null)` has no
+  // `resolveInk`, called from `chipFieldColor`/`leadColor` below, does)
+  // resolves it through the hijacked prototype chain and finds it anyway.
+  // `Object.create(null)` has no
   // inherited `__proto__` accessor to hit, so a name of `__proto__` becomes
   // an ordinary own key like any other — both paths agree. Same reasoning
   // for `variants` just below.
@@ -268,71 +268,42 @@ function assertRequest(body: unknown): GenerateRequest {
   return { config: assertIconDoc(config, 'body.config'), pngs: assertPngs(pngs, 'body.pngs') };
 }
 
-function isStickElement(element: Element): element is Stick {
-  return element.type === 'stick';
+/**
+ * The chip field's resolved colour — what the manifest and the head block's
+ * theme-color both share. Falls back to black rather than throwing when the
+ * document has no `chip` variant or its field names an undefined ink:
+ * `assertIconDoc` already decided this document is acceptable, so this must
+ * degrade gracefully rather than reject a second time.
+ */
+function chipFieldColor(doc: IconDoc): string {
+  const field = doc.variants.chip?.field;
+  return field ? resolveInk(doc, field.ink, 'dark').dark : '#000000';
 }
 
 /**
- * `runGenerate` still derives favicon.svg, icon-mono.svg, site.webmanifest and
- * the injected `<head>` block by calling into `generate/svg.ts`,
- * `generate/manifest.ts` and `generate/head.ts` — all three still speak the
- * retired `MarkConfig` shape. A later task cuts that call chain over to
- * `generate/render.ts`'s `renderSvg`, which reads a document directly; until
- * then this derives just the scalars those three modules actually read on
- * this path (`light`, `dark`, `angles`, `bareWeight` for the two SVGs;
- * `chip` for the manifest and the head block) from the now-validated
- * document. `chipReach` and `chipWeight` are part of `MarkConfig`'s shape but
- * nothing `runGenerate` calls ever reads them — `svgChip` is a client-side
- * (`api.ts`) concern — so they're filled with an inert placeholder rather
- * than derived.
- *
- * The mapping mirrors `toDoc()`'s legacy-read path: the first three
- * stick-type elements stand in for `top`/`mid`/`low`, and the `chip`
- * variant's field ink stands in for `chip`. A document that doesn't have
- * that shape (fewer than three sticks, no `chip` variant, an ink name that
- * isn't defined) degrades to black/zero for the missing pieces rather than
- * throwing a second time — `assertIconDoc` already decided this document is
- * acceptable, so this bridge is scaffolding, not a second validator.
+ * The mask-icon colour: the light-theme ink of the *leading* element —
+ * `doc.elements[0]`, whichever type it is. This replaces the retired
+ * interim bridge's stick-only lookup, which degraded to black for any
+ * document whose first element wasn't a stick (or had fewer than three
+ * sticks at all) even though the document was perfectly valid — the mark
+ * simply isn't drawn from sticks alone any more.
  */
-function docToMarkConfig(doc: IconDoc): MarkConfig {
-  const sticks = doc.elements.filter(isStickElement);
-  const s0 = sticks[0];
-  const s1 = sticks[1];
-  const s2 = sticks[2];
-
-  const channel = (id: string | undefined, theme: 'light' | 'dark'): string => {
-    if (id === undefined) return '#000000';
-    return doc.inks[id]?.[theme] ?? '#000000';
-  };
-
-  const chipField = doc.variants.chip?.field;
-  const chip = chipField
-    ? (doc.inks[chipField.ink]?.dark ?? doc.inks[chipField.ink]?.light ?? '#000000')
-    : '#000000';
-
-  return {
-    light: [channel(s0?.ink, 'light'), channel(s1?.ink, 'light'), channel(s2?.ink, 'light')],
-    dark: [channel(s0?.ink, 'dark'), channel(s1?.ink, 'dark'), channel(s2?.ink, 'dark')],
-    chip,
-    angles: [s0?.angle ?? 0, s1?.angle ?? 0, s2?.angle ?? 0],
-    bareWeight: s0?.weight ?? 6,
-    chipReach: 14,
-    chipWeight: 4.6,
-    motion: doc.motion,
-  };
+function leadColor(doc: IconDoc): string {
+  const lead = doc.elements[0];
+  return lead ? resolveInk(doc, lead.ink, 'light').light : '#000000';
 }
 
 export async function runGenerate(body: unknown, repoRoot: string): Promise<GenerateResponse> {
   const { config: doc, pngs } = assertRequest(body);
   const results: GenerateResult[] = [];
   const rel = (abs: string) => path.relative(repoRoot, abs).split(path.sep).join('/');
-  const legacy = docToMarkConfig(doc);
+  const themeColor = chipFieldColor(doc);
 
   // Everything derivable is derived here, not trusted from the client.
   const derived: Record<string, Buffer> = {
-    'favicon.svg': Buffer.from(svgFavicon(legacy), 'utf8'),
-    'icon-mono.svg': Buffer.from(svgMono(legacy), 'utf8'),
-    'site.webmanifest': Buffer.from(buildManifest(legacy), 'utf8'),
+    'favicon.svg': Buffer.from(renderSvg(doc, 'favicon'), 'utf8'),
+    'icon-mono.svg': Buffer.from(renderSvg(doc, 'mono'), 'utf8'),
+    'site.webmanifest': Buffer.from(buildManifest(themeColor), 'utf8'),
     'icons.config.json': Buffer.from(JSON.stringify(doc, null, 2) + '\n', 'utf8'),
   };
 
@@ -376,7 +347,10 @@ export async function runGenerate(body: unknown, repoRoot: string): Promise<Gene
   const indexPath = path.resolve(repoRoot, 'apps/web/index.html');
   try {
     const html = await readFile(indexPath, 'utf8');
-    const merged = injectHeadBlock(html, buildHeadBlock(legacy));
+    const merged = injectHeadBlock(
+      html,
+      buildHeadBlock({ maskIconColor: leadColor(doc), themeColor }),
+    );
     const bytes = Buffer.from(merged, 'utf8');
     const status = await writeIfChanged(indexPath, bytes);
     results.push({ path: rel(indexPath), bytes: bytes.byteLength, status });

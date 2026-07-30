@@ -232,7 +232,11 @@ test('an ink or variant literally named "__proto__" round-trips as an own key, n
     "elements": [
       { "id": "a", "type": "stick", "ink": "__proto__", "angle": 0, "reach": 10, "weight": 5 }
     ],
-    "variants": { "__proto__": { "inks": "dark", "scale": 1 } },
+    "variants": {
+      "__proto__": { "inks": "dark", "scale": 1 },
+      "favicon": { "inks": "theme", "scale": 1 },
+      "mono": { "inks": "black", "scale": 1 }
+    },
     "motion": ${JSON.stringify(DEFAULT_DOC.motion)}
   }`);
 
@@ -255,29 +259,49 @@ test('an ink or variant literally named "__proto__" round-trips as an own key, n
   expect(favicon).toContain('#123456');
 });
 
-test("docToMarkConfig's interim bridge degrades to black/zero when fewer than three sticks are present, rather than crashing (Task 7 removes this bridge)", async () => {
+// Task 7 retired the interim MarkConfig-bridging helper this file used to
+// call here, which only ever read stick-type elements — a document led by a
+// ring or a dot (or with fewer than three sticks) silently degraded to black
+// there, even though the document itself was perfectly valid. The two tests
+// below prove the replacement (`leadColor`/`chipFieldColor` in write.ts, both
+// built on `resolveInk`) no longer has that blind spot.
+
+test('the head mask-icon colour comes from the leading element regardless of its type', async () => {
   const root = await fakeRepo();
   const config = {
     ...DEFAULT_DOC,
-    // A ring first, then a single stick: only stick-type elements are
-    // bridged into the legacy MarkConfig shape, and only the first three of
-    // those — this document has just one, so slots 2 and 3 must fall back
-    // to black rather than reading the ring or throwing.
+    // A ring leads the document — under the old bridge this would have
+    // fallen straight to black, since only stick-type elements were read.
     elements: [
-      { id: 'r', type: 'ring', ink: 'field', radius: 10, weight: 3 },
-      { id: 's', type: 'stick', ink: 'top', angle: 45, reach: 12, weight: 5 },
+      { id: 'r', type: 'ring', ink: 'top', radius: 10, weight: 3 },
+      { id: 's', type: 'stick', ink: 'mid', angle: 45, reach: 12, weight: 5 },
     ],
   };
 
   const { results } = await runGenerate({ ...docBody(), config }, root);
   expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
 
-  const favicon = await readFile(path.join(root, 'apps/web/public/favicon.svg'), 'utf8');
-  expect(favicon).toContain(
-    `.s1{stroke:${ink('top', 'light')}}.s2{stroke:#000000}.s3{stroke:#000000}`,
+  const html = await readFile(path.join(root, 'apps/web/index.html'), 'utf8');
+  expect(html).toContain(`color="${ink('top', 'light')}"`);
+});
+
+test('the manifest and head theme colour come from the chip variant field ink, not a placeholder', async () => {
+  const root = await fakeRepo();
+  const config = {
+    ...DEFAULT_DOC,
+    elements: [{ id: 'r', type: 'ring', ink: 'low', radius: 10, weight: 3 }],
+  };
+
+  const { results } = await runGenerate({ ...docBody(), config }, root);
+  expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
+
+  const manifest = JSON.parse(
+    await readFile(path.join(root, 'apps/web/public/site.webmanifest'), 'utf8'),
   );
-  // bareWeight comes from the one stick found (weight 5), not the ring.
-  expect(favicon).toContain('stroke-width="5"');
+  expect(manifest.theme_color).toBe(ink('field', 'dark'));
+
+  const html = await readFile(path.join(root, 'apps/web/index.html'), 'utf8');
+  expect(html).toContain(`content="${ink('field', 'dark')}"`);
 });
 
 test('a malformed head marker rejects only the index.html step; every other output still writes', async () => {

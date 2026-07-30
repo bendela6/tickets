@@ -31,6 +31,11 @@ test('the built-in variants reproduce the four renderings', () => {
     scale: 14 / 18,
     field: { ink: 'field', radius: 11 },
   });
+  expect(DEFAULT_DOC.variants.apple).toEqual({
+    inks: 'dark',
+    scale: 14 / 18,
+    field: { ink: 'field', radius: 0 },
+  });
 });
 
 test('the motion block carries the spec values', () => {

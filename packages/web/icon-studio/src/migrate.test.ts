@@ -39,6 +39,16 @@ test('the chip colour becomes an ink, dark in both themes', () => {
   expect(doc.variants.chip?.field).toEqual({ ink: 'field', radius: 11 });
 });
 
+test('the apple variant mirrors chip — same triad and scale — but square', () => {
+  const doc = toDoc({ ...OLD, chipReach: 12, chip: '#123456' });
+  expect(doc.variants.apple).toEqual({
+    inks: 'dark',
+    scale: 12 / BARE_REACH,
+    field: { ink: 'field', radius: 0 },
+  });
+  expect(doc.variants.apple?.scale).toBe(doc.variants.chip?.scale);
+});
+
 test('a document that is already migrated passes through unchanged', () => {
   expect(toDoc(DEFAULT_DOC)).toEqual(DEFAULT_DOC);
 });

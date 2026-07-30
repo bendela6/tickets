@@ -117,6 +117,9 @@ export const DEFAULT_DOC: IconDoc = {
     favicon: { inks: 'theme', scale: 1 },
     mono: { inks: 'black', scale: 1 },
     chip: { inks: 'dark', scale: 14 / BARE_REACH, field: { ink: 'field', radius: 11 } },
+    // Square iOS icon: same dark triad and scale as chip, zero corner radius —
+    // iOS applies its own mask, so a rounded field here would double up.
+    apple: { inks: 'dark', scale: 14 / BARE_REACH, field: { ink: 'field', radius: 0 } },
   },
   motion: { speed: 120, restSpread: 8, ramp: 0.9, restPose: 'logo' },
 };
