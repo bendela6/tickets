@@ -1,4 +1,4 @@
-import { RETIRED, scanBorderAgainstBaseline, scanRetired } from './vocabulary';
+import { RETIRED, scanAgainstBaseline, scanRetired } from './vocabulary';
 
 describe('RETIRED patterns', () => {
   it('matches an arbitrary radius but not a rung on the scale', () => {
@@ -75,21 +75,22 @@ describe('RETIRED patterns', () => {
 });
 
 describe('scanRetired', () => {
-  // Both of these walk every .ts/.tsx file under all three ROOTS from disk
-  // (`collectHits` re-reads the whole tree per call, uncached) — on Windows,
-  // under parallel test-file contention, that has intermittently exceeded
-  // vitest's 5000ms default. A flaky gate is a disabled gate, and this is
-  // the only thing enforcing the border baseline, so it gets an explicit,
-  // generous timeout rather than a shorter implicit one.
+  // All four of these walk every .ts/.tsx file under all three ROOTS from
+  // disk (`collectHits` re-reads the whole tree per call, uncached) — on
+  // Windows, under parallel test-file contention, that has intermittently
+  // exceeded vitest's 5000ms default. A flaky gate is a disabled gate, and
+  // these are the only things enforcing the border and radius baselines, so
+  // each gets an explicit, generous timeout rather than a shorter implicit
+  // one.
   const BASELINE_SCAN_TIMEOUT_MS = 20_000;
 
   it('has no bare border width utility outside the reviewed baseline', () => {
     // `RETIRED.border` can't tell a class string from prose, a comment, or a
     // data/enum literal — `border-baseline.json` is the reviewed list of
     // matches confirmed not to be a Tailwind class (see vocabulary.ts's
-    // `scanBorderAgainstBaseline`). Anything outside it is a real, unswept
+    // `scanAgainstBaseline`). Anything outside it is a real, unswept
     // bare-border site.
-    expect(scanBorderAgainstBaseline().fresh).toEqual([]);
+    expect(scanAgainstBaseline('border').fresh).toEqual([]);
   }, BASELINE_SCAN_TIMEOUT_MS);
 
   it('never lets the border baseline rot into stale excuses', () => {
@@ -98,7 +99,23 @@ describe('scanRetired', () => {
     // shows up as `fixed` and the baseline needs pruning, not preserving.
     // This is what stops the baseline from silently growing wrong: it can
     // only ever shrink.
-    expect(scanBorderAgainstBaseline().fixed).toEqual([]);
+    expect(scanAgainstBaseline('border').fixed).toEqual([]);
+  }, BASELINE_SCAN_TIMEOUT_MS);
+
+  it('has no bare rounded/identifier collision outside the reviewed baseline', () => {
+    // `RETIRED.radius`'s bare-`rounded` alternative can't tell a class string
+    // from the English word "rounded" or a local identifier like
+    // `const rounded = …` — `radius-baseline.json` is the reviewed list of
+    // matches confirmed not to be a Tailwind class. Anything outside it is a
+    // real, unswept bare-radius site. Reviewed non-matches get baselined,
+    // never rewritten: reworking correct prose or renaming a working
+    // variable just to appease the scanner inverts the relationship between
+    // the tool and the code it's meant to serve.
+    expect(scanAgainstBaseline('radius').fresh).toEqual([]);
+  }, BASELINE_SCAN_TIMEOUT_MS);
+
+  it('never lets the radius baseline rot into stale excuses', () => {
+    expect(scanAgainstBaseline('radius').fixed).toEqual([]);
   }, BASELINE_SCAN_TIMEOUT_MS);
 
   it('has no retired ring form left in scope', () => {
@@ -112,9 +129,5 @@ describe('scanRetired', () => {
   it('never reports a file under apps/eer — that app owns its own scale', () => {
     const all = (['radius', 'border', 'ring', 'z'] as const).flatMap(scanRetired);
     expect(all.filter((h) => h.startsWith('apps/eer'))).toEqual([]);
-  });
-
-  it('has no retired radius form anywhere in scope', () => {
-    expect(scanRetired('radius')).toEqual([]);
   });
 });

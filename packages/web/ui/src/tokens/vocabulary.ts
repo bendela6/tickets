@@ -103,33 +103,58 @@ export function scanRetired(family: RetiredFamily): string[] {
   return collectHits(family).map((h) => `${h.file}:${h.line}: ${h.text}`);
 }
 
-const BORDER_BASELINE_FILE = join(HERE, '..', '..', 'scripts', 'border-baseline.json');
+/**
+ * Which families get the reviewed-baseline ratchet rather than a flat
+ * zero-tolerance scan, and where each one's reviewed non-matches live. Only
+ * families whose retired pattern matches on bare, undecorated English words
+ * (currently `border`'s bare-width words and `radius`'s bare `rounded`) can
+ * ever collide with prose/identifiers — `ring` and `z`'s patterns require a
+ * `-[…]`/numeric suffix no comment would ever spell out, so they stay exact:
+ * `scanRetired('ring' | 'z')` must always be `[]`, no baseline needed.
+ *
+ * A baseline is its own small JSON file per family, not one file keyed by
+ * family, because `readBaseline()` (shared with `apps/eer`'s ratchet in
+ * `scan-hardcoded-values.mjs`) hard-validates `{ violations: string[] }` — a
+ * flat array of strings. Nesting a second family under one `violations` key
+ * would fail that shared validator (or require changing a contract another
+ * script also depends on) for no benefit: one small file per family is a
+ * strictly smaller, safer change than reshaping a validator two scripts share.
+ */
+const BASELINE_FILES: Partial<Record<RetiredFamily, string>> = {
+  border: join(HERE, '..', '..', 'scripts', 'border-baseline.json'),
+  radius: join(HERE, '..', '..', 'scripts', 'radius-baseline.json'),
+};
 
 /**
- * `RETIRED.border` matches a bare word between class-string-shaped
- * delimiters, so it cannot tell a real Tailwind class apart from prose, a
- * comment, a test description, or a data/enum string literal like
- * `'text' | 'border'` — tightening the regex to exclude those shapes starts
- * rejecting real class strings too (see `border-baseline.json`'s `_comment`).
- * So `border` gets the same reviewed-baseline ratchet
- * `scan-hardcoded-values.mjs` already uses for `apps/eer`: every hit is keyed
- * on `path::fullLineText` (not a line number, which churns on unrelated
- * edits), and anything not already in `border-baseline.json` is a real,
- * unswept site.
+ * `RETIRED.border` and `RETIRED.radius`'s bare-word alternatives match
+ * between class-string-shaped delimiters, so neither can tell a real
+ * Tailwind class apart from prose, a comment, a test description, a data/enum
+ * string literal like `'text' | 'border'`, or (for `radius`) a local
+ * identifier like `const rounded = …` — tightening either regex to exclude
+ * those shapes starts rejecting real class strings too (see each baseline
+ * file's own `_comment`). So both families get the same reviewed-baseline
+ * ratchet `scan-hardcoded-values.mjs` already uses for `apps/eer`: every hit
+ * is keyed on `path::fullLineText` (not a line number, which churns on
+ * unrelated edits), and anything not already in that family's baseline file
+ * is a real, unswept site.
  *
  * `fresh` — current hits absent from the baseline; must be empty, or one of
- * these is a real bare-border site that still needs sweeping.
+ * these is a real unswept site.
  * `fixed` — baseline entries with no current match; must also be empty, or
  * the baseline has rotted into stale excuses for lines that no longer exist
  * in that shape (the baseline "must only shrink" — a fixed entry means the
  * line changed and the baseline needs pruning, not that it can stay).
  */
-export function scanBorderAgainstBaseline(): { fresh: string[]; fixed: string[] } {
-  const hits = collectHits('border').map((h) => ({
+export function scanAgainstBaseline(family: RetiredFamily): { fresh: string[]; fixed: string[] } {
+  const baselineFile = BASELINE_FILES[family];
+  if (!baselineFile) {
+    throw new Error(`no baseline file configured for family "${family}" — use scanRetired instead`);
+  }
+  const hits = collectHits(family).map((h) => ({
     key: `${h.file}::${h.lineText}`,
     line: `${h.file}:${h.line}: ${h.text}`,
   }));
-  const baseline = readBaseline(BORDER_BASELINE_FILE) as string[];
+  const baseline = readBaseline(baselineFile) as string[];
   const currentKeys = [...new Set(hits.map((h) => h.key))];
   const { fresh, fixed } = diffAgainstBaseline(currentKeys, baseline) as {
     fresh: string[];

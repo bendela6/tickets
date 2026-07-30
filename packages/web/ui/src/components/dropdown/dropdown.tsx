@@ -5,10 +5,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '../popover';
 /**
  * How far the panel insets its content. `none` is the default because the
  * dominant body is a list that draws its own row padding (OptionList, Menu
- * rows) and must bleed all the way to the panel's own corner radius;
- * `sm`/`md` are for arbitrary content that needs breathing room. Before
- * this, every call site spelled the inset itself — three wrote `p-0`, one
- * wrote `p-3`, and three wrote nothing and got 0 by accident.
+ * rows) and must bleed to the panel's rounded edge; `sm`/`md` are for
+ * arbitrary content that needs breathing room. Before this, every call site
+ * spelled the inset itself — three wrote `p-0`, one wrote `p-3`, and three
+ * wrote nothing and got 0 by accident.
  */
 export type DropdownPadding = 'none' | 'sm' | 'md';
 
