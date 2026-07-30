@@ -2,7 +2,7 @@ import postgres from 'postgres';
 import { environment } from '../../environment';
 import { assertKnownDatabase } from '../list-databases';
 
-export function createPostgresInstance(options: Parameters<typeof postgres>[0]) {
+export function createPostgresInstance(options: postgres.Options<Record<string, never>>) {
   return postgres(options);
 }
 
