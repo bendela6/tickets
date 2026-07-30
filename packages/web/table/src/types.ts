@@ -23,6 +23,13 @@ export interface Column<T> {
   minWidth?: number;
   align?: 'left' | 'right' | 'center';
   resizable?: boolean;
+  /**
+   * The row-selection checkbox column. The engine owns this column's content —
+   * `value`, `render` and `as` are ignored — because only the engine knows
+   * which rows are selected, and the checkbox itself is drawn by the render
+   * set's `selectCell` slot so no glyph leaks into the engine.
+   */
+  select?: boolean;
 }
 
 /**
@@ -78,6 +85,9 @@ export interface TableState {
   /** The focused cell. Supplying `onFocusChange` is what turns the focus
    *  model on; without it the engine leaves the tab order alone. */
   focused?: CellRef | null;
+  /** Selected row IDs. Ids and not indices: under sort, filter and windowed
+   *  loading the row at index 4 is not the row it was a moment ago. */
+  selected?: Set<string>;
 }
 
 export interface RenderRootCtx {
@@ -110,6 +120,10 @@ export interface RenderThCtx<T> {
   focused?: boolean;
   /** MUST be spread onto the header cell element. */
   focusProps: CellFocusProps;
+  /** Content to render INSTEAD of `column.header`, when the engine owns what
+   *  goes in the header cell. Today that means one thing: the select-all
+   *  checkbox above a `select` column. Mirrors `RenderTdCtx.children`. */
+  children?: ReactNode;
 }
 
 export interface RenderTbodyCtx {
@@ -133,6 +147,26 @@ export interface RenderTrCtx<T> {
    *  This exists so such chrome does not have to become a column and reserve
    *  permanent width for something only visible on hover. */
   overlay?: ReactNode;
+  /** This row is in the selection. The treatment is the ADAPTER's to choose. */
+  selected?: boolean;
+}
+
+/**
+ * The selection checkbox, in a row or above the column. The engine knows what
+ * is selected; the render set knows what a checkbox looks like, and that is
+ * the whole division here.
+ */
+export interface RenderSelectCellCtx {
+  checked: boolean;
+  /** Header only: some rows are selected but not all. */
+  indeterminate?: boolean;
+  /** True for the select-all cell in the column header. */
+  isHeader: boolean;
+  /** `shiftKey` is what turns a click into a range — see `TableProps`. */
+  onChange: (shiftKey: boolean) => void;
+  /** Accessible name. A checkbox column shows no visible label, so a render
+   *  set MUST attach this or every checkbox in the table is anonymous. */
+  label: string;
 }
 
 export const ROW_HEIGHT = 40;
@@ -183,6 +217,9 @@ export interface TableRender<T = unknown> {
   skeletonRow: (ctx: RenderSkeletonRowCtx<T>) => ReactNode;
   error: (ctx: RenderErrorCtx) => ReactNode;
   empty: (ctx: RenderEmptyCtx) => ReactNode;
+  /** Optional: a render set that does not draw checkboxes simply cannot host
+   *  a `select` column, rather than every existing render set breaking. */
+  selectCell?: (ctx: RenderSelectCellCtx) => ReactNode;
 }
 
 /** Height of a group header row in pixels. Exported so the adapter styling and
@@ -199,8 +236,7 @@ export interface TableGroup<T> {
 /** One entry in the flattened, virtualized list. Group headers and data rows
  *  share a single virtualizer so the table keeps one scroll region. */
 export type VirtualRow<T> =
-  | { kind: 'group'; key: string; header: ReactNode }
-  | { kind: 'row'; row: T; index: number };
+  { kind: 'group'; key: string; header: ReactNode } | { kind: 'row'; row: T; index: number };
 
 export interface RenderGroupHeaderCtx {
   key: string;

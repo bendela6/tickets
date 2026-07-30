@@ -9,6 +9,7 @@ import { renderSkeletonRow } from './render-skeleton-row';
 import { renderError } from './render-error';
 import { renderEmpty } from './render-empty';
 import { renderGroupHeader } from './render-group-header';
+import { renderSelectCell } from './render-select-cell';
 
 /**
  * The default styled render set, as a GENERIC FACTORY rather than a constant.
@@ -38,5 +39,6 @@ export function tableRender<T>(): TableRender<T> {
     skeletonRow: renderSkeletonRow,
     error: renderError,
     empty: renderEmpty,
+    selectCell: renderSelectCell,
   };
 }

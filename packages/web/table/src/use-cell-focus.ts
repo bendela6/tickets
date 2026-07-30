@@ -40,6 +40,9 @@ export interface UseCellFocusOptions {
   scrollRowIntoView: (rowIndex: number) => void;
   /** Enter on a cell that holds no widget. */
   onActivate?: (rowIndex: number) => void;
+  /** Space on a data row. Absent when the table does not select, in which
+   *  case Space falls through to the browser. */
+  onSelect?: (rowIndex: number, shiftKey: boolean) => void;
 }
 
 export interface CellFocusApi {
@@ -71,8 +74,16 @@ export interface CellFocusApi {
  *   focusable child and hands the arrows to it. `Escape` comes back.
  */
 export function useCellFocus(opts: UseCellFocusOptions): CellFocusApi {
-  const { scrollEl, enabled, focused, onFocusChange, geometry, scrollRowIntoView, onActivate } =
-    opts;
+  const {
+    scrollEl,
+    enabled,
+    focused,
+    onFocusChange,
+    geometry,
+    scrollRowIntoView,
+    onActivate,
+    onSelect,
+  } = opts;
   const [interacting, setInteracting] = useState(false);
   /** Does the grid currently own DOM focus? Kept in a ref rather than state
    *  because it must be readable inside the layout effect without causing the
@@ -223,6 +234,14 @@ export function useCellFocus(opts: UseCellFocusOptions): CellFocusApi {
     if (e.key === 'Enter' || e.key === 'F2') {
       e.preventDefault();
       enterCell(current, e.key === 'Enter', e.shiftKey);
+      return;
+    }
+
+    // Space selects the focused row. Swallowed only when the table actually
+    // selects — otherwise it stays the browser's page-down.
+    if (e.key === ' ' && onSelect && current.rowIndex >= 0) {
+      e.preventDefault();
+      onSelect(current.rowIndex, e.shiftKey);
       return;
     }
 

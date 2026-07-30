@@ -8,6 +8,7 @@ export interface UseTableOptions {
    *  the component — see `useTableWidths`. */
   widthsId?: string;
   initialCollapsed?: string[];
+  initialSelected?: string[];
 }
 
 export interface UseTableResult {
@@ -16,6 +17,7 @@ export interface UseTableResult {
   onWidthChange: (key: string, px: number) => void;
   onCollapseChange: (next: Set<string>) => void;
   onFocusChange: (next: CellRef | null) => void;
+  onSelectionChange: (next: Set<string>) => void;
 }
 
 /**
@@ -42,13 +44,16 @@ export function useTable(opts: UseTableOptions = {}): UseTableResult {
   // focus somewhere. The engine still makes the first cell the TAB STOP, so
   // the grid is reachable — that is a separate question from where the ring is.
   const [focused, setFocused] = useState<CellRef | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(() => new Set(opts.initialSelected));
 
   return {
-    state: { sort, widths, collapsed, focused },
+    state: { sort, widths, collapsed, focused, selected },
     onSortChange: setSort,
     onWidthChange,
     onCollapseChange: setCollapsed,
     // Passing this to <Table> is what turns the cell focus model on.
     onFocusChange: setFocused,
+    // This plus `getRowId` is what turns row selection on.
+    onSelectionChange: setSelected,
   };
 }

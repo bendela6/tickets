@@ -143,6 +143,21 @@ const HELPER_COLUMNS: Column<Row>[] = [
   },
 ];
 
+/**
+ * The four-column set with a selection checkbox in front. `select: true` is
+ * all a caller writes — the engine owns the column's content, because only it
+ * knows what is selected, and the checkbox itself comes from the render set's
+ * `selectCell` slot so no glyph leaks into the engine.
+ *
+ * `header: ''` is right here and wrong in HELPER_COLUMNS: the header cell
+ * holds the select-all checkbox, which carries its own accessible name, so
+ * there is nothing anonymous about it.
+ */
+const SELECT_COLUMNS: Column<Row>[] = [
+  { key: 'select', header: '', select: true, width: 36, resizable: false },
+  ...COLUMNS,
+];
+
 function Demo({
   grouped,
   loading,
@@ -152,6 +167,7 @@ function Demo({
   filtered,
   overlay,
   columns = COLUMNS,
+  selectable,
 }: {
   grouped?: boolean;
   loading?: boolean;
@@ -161,6 +177,7 @@ function Demo({
   filtered?: boolean;
   overlay?: boolean;
   columns?: Column<Row>[];
+  selectable?: boolean;
 }) {
   // All of the table's uncontrolled state in one line, spread onto <Table>
   // below. `widthsId` is what makes a dragged column width outlive a reload.
@@ -198,6 +215,9 @@ function Demo({
         // render-skeleton-row.tsx exercised by nothing.
         rows={grouped || loading || empty ? [] : sorted}
         groups={groups}
+        // `getRowId` alongside onSelectionChange (which arrives with the
+        // spread) is what turns selection on.
+        getRowId={selectable ? (r) => r.id : undefined}
         onRowClick={() => {}}
         onRowActivate={() => {}}
         isLoading={Boolean(loading)}
@@ -228,6 +248,7 @@ export const states = [
   { name: 'Flat', render: () => <Demo /> },
   // All 7 column helpers: Image, Link, Text, Badge, Number, Date, Actions.
   { name: 'Column helpers', render: () => <Demo columns={HELPER_COLUMNS} /> },
+  { name: 'Selectable', render: () => <Demo columns={SELECT_COLUMNS} selectable /> },
   { name: 'Grouped', render: () => <Demo grouped /> },
   { name: 'Row overlay', render: () => <Demo overlay /> },
   { name: 'Loading', render: () => <Demo loading /> },
