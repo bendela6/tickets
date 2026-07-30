@@ -2,7 +2,7 @@ import { Button } from '@tickets/ui';
 import type { Adjust } from '../color';
 import { GROUND } from '../color';
 import { PRESETS, type PresetName } from '../config';
-import type { IconDoc, Ink, Stick } from '../doc';
+import type { IconDoc, Stick } from '../doc';
 import type { StudioAction } from '../state';
 import { SliderRow } from './slider-row';
 import { SwatchRow } from './swatch-row';
@@ -38,21 +38,16 @@ function isStick(element: IconDoc['elements'][number]): element is Stick {
 }
 
 export function ControlsPanel({
-  doc, base, adjLight, adjDark, dispatch, onBaseChange, onAdjustChange, onResetAdjust, onApplyPreset,
+  doc, adjLight, adjDark, dispatch, onAdjustChange, onResetAdjust, onApplyPreset,
 }: {
   doc: IconDoc;
-  /** The un-adjusted seed colour per adjustable ink (every ink but the chip
-   * field) — what the colour pickers below edit directly. */
-  base: Record<string, Ink>;
   adjLight: Adjust;
   adjDark: Adjust;
   dispatch: (action: StudioAction) => void;
-  onBaseChange: (name: string, mode: 'light' | 'dark', hex: string) => void;
   onAdjustChange: (mode: 'light' | 'dark', patch: Partial<Adjust>) => void;
   onResetAdjust: () => void;
   onApplyPreset: (name: PresetName) => void;
 }) {
-  const inkNames = Object.keys(base);
   const sticks = doc.elements.filter(isStick);
   const gap = tightestGap(sticks.map((s) => s.angle));
   const tight = gap < GAP_WARNING_DEGREES;
@@ -60,29 +55,6 @@ export function ControlsPanel({
 
   return (
     <div className="flex flex-col gap-5">
-      {(['light', 'dark'] as const).map((mode) => (
-        <section key={mode} className="flex flex-col gap-2">
-          <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">{mode} theme</h2>
-          {inkNames.map((name) => {
-            const rawHex = base[name]?.[mode] ?? '#000000';
-            // The document's ink is re-derived (base + adjustment) upstream
-            // in studio.tsx, so it already reflects the current vividness and
-            // brightness sliders — this is the swatch's live preview.
-            const derivedHex = doc.inks[name]?.[mode] ?? rawHex;
-            return (
-              <SwatchRow
-                key={name}
-                label={`${mode} ${name}`}
-                base={rawHex}
-                derived={derivedHex}
-                ground={GROUND[mode]}
-                onChange={(hex) => onBaseChange(name, mode, hex)}
-              />
-            );
-          })}
-        </section>
-      ))}
-
       <section className="flex flex-col gap-2">
         <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">Chip field</h2>
         <SwatchRow
@@ -136,22 +108,10 @@ export function ControlsPanel({
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">Angles &amp; weight</h2>
-        {sticks.map((stick) => (
-          <div key={stick.id} className="flex flex-col gap-2">
-            <SliderRow
-              label={`${stick.id} angle`} min={0} max={180}
-              value={stick.angle}
-              format={(v) => `${v}°`}
-              onChange={(angle) => dispatch({ type: 'updateElement', id: stick.id, patch: { angle } })}
-            />
-            <SliderRow
-              label={`${stick.id} weight`} min={0.5} max={12} step={0.25}
-              value={stick.weight}
-              onChange={(weight) => dispatch({ type: 'updateElement', id: stick.id, patch: { weight } })}
-            />
-          </div>
-        ))}
+        <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">Stick spacing</h2>
+        {/* Angle and weight are edited per-element in ElementPanel now; this
+         * stays here as a document-wide occlusion check across every stick,
+         * however many there are. */}
         <p className={`font-mono text-11 ${tight ? 'text-orange-11' : 'text-gray-11'}`}>
           tightest gap {gap.toFixed(0)}°{tight ? ' — sticks may hide each other' : ''}
         </p>
