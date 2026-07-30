@@ -100,28 +100,29 @@ export function renderSvg(doc: IconDoc, variantName: string): string {
   // Elements are listed front to back — `elements[0]` is the leader a
   // running formation follows (Task 4) and the one a layer panel would show
   // on top. SVG has no z-index, so the frontmost element must be *emitted*
-  // last: painting proceeds in reverse document order.
+  // last: painting proceeds in reverse document order. Each entry keeps its
+  // own document index `i` — that is what a theme variant's class name is
+  // keyed to, never the position an element happens to paint in.
   const indexed = doc.elements.map((element, i) => ({ element, i }));
   const painted = [...indexed].reverse();
 
   if (resolution === 'theme') {
     // A favicon has no inherited colour, so both sets are inlined and swapped
-    // by a media query inside the file itself. Rules are keyed `s{docIndex+1}`
-    // and listed in document order; only the painted `<path>`/`<circle>`
-    // elements below are reversed.
-    const rules = doc.elements
-      .map((element, i) => {
-        const { light } = resolveInk(doc, element.ink, 'light');
-        return `.s${i + 1}{${element.type === 'dot' ? 'fill' : 'stroke'}:${light}}`;
-      })
+    // by a media query inside the file itself. One `resolveInk` call per
+    // element supplies both the light and dark rule.
+    const withInk = indexed.map(({ element, i }) => ({
+      element,
+      i,
+      ink: resolveInk(doc, element.ink, 'theme'),
+    }));
+    const rules = withInk
+      .map(({ element, i, ink }) => `.s${i + 1}{${element.type === 'dot' ? 'fill' : 'stroke'}:${ink.light}}`)
       .join('');
-    const darkRules = doc.elements
-      .map((element, i) => {
-        const { dark } = resolveInk(doc, element.ink, 'theme');
-        return `.s${i + 1}{${element.type === 'dot' ? 'fill' : 'stroke'}:${dark}}`;
-      })
+    const darkRules = withInk
+      .map(({ element, i, ink }) => `.s${i + 1}{${element.type === 'dot' ? 'fill' : 'stroke'}:${ink.dark}}`)
       .join('');
-    const body = painted
+    const body = [...withInk]
+      .reverse()
       .map(({ element, i }) => drawElement(element, scale, paintOf(element, `s${i + 1}`, '')))
       .join('');
     return `${open}${comment}${plate}

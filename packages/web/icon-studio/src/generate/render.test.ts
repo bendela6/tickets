@@ -75,12 +75,49 @@ describe('ink resolution', () => {
     expect(svg).toContain('@media (prefers-color-scheme:dark)');
   });
 
+  test('a theme class label is pinned to document index, not paint position', () => {
+    // Three distinct inks so a swapped label would be visible, not coincidental.
+    const doc: IconDoc = {
+      ...DEFAULT_DOC,
+      elements: [
+        { id: 'a', type: 'stick', ink: 'top', angle: 0, reach: 18, weight: 6 },
+        { id: 'b', type: 'stick', ink: 'mid', angle: 30, reach: 18, weight: 6 },
+        { id: 'c', type: 'stick', ink: 'low', angle: 60, reach: 18, weight: 6 },
+      ],
+      variants: { v: { inks: 'theme', scale: 1 } },
+    };
+    const svg = renderSvg(doc, 'v');
+
+    // Document element 0 (angle 0, ink 'top') must carry class="s1" in the
+    // markup, regardless of where the reverse paint places it in the file.
+    const element0Path = svg.split('\n').find((line) => line.includes('rotate(0 24 24)'));
+    expect(element0Path).toContain('class="s1"');
+
+    // And the .s1 rule must resolve element 0's own ink ('top'), not
+    // whichever element happens to land in that paint position.
+    const topLight = DEFAULT_DOC.inks.top?.light ?? '';
+    expect(topLight).not.toBe('');
+    expect(svg).toContain(`.s1{stroke:${topLight}}`);
+  });
+
   test('an element naming a missing ink renders black rather than crashing', () => {
     const svg = renderSvg(
       docWith([{ id: 'a', type: 'stick', ink: 'nope', angle: 0, reach: 18, weight: 6 }]),
       'mono',
     );
     expect(svg).toContain('#000');
+  });
+
+  test('a missing ink falls back to black under a resolution that actually reads doc.inks', () => {
+    // 'mono' resolves to 'black', which short-circuits before ever touching
+    // doc.inks — it can't exercise the fallback. 'dark' (like chip) does.
+    const doc: IconDoc = {
+      ...DEFAULT_DOC,
+      elements: [{ id: 'a', type: 'stick', ink: 'nope', angle: 0, reach: 18, weight: 6 }],
+      variants: { v: { inks: 'dark', scale: 1 } },
+    };
+    expect(() => renderSvg(doc, 'v')).not.toThrow();
+    expect(renderSvg(doc, 'v')).toContain('#000');
   });
 });
 

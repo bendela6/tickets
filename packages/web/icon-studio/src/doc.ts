@@ -91,7 +91,7 @@ export interface MotionConfig {
 
 export interface IconDoc {
   inks: Record<string, Ink>;
-  /** Painted in order, back to front. */
+  /** Listed front to back: `elements[0]` leads and paints frontmost, last. */
   elements: Element[];
   variants: Record<string, Variant>;
   motion: MotionConfig;
