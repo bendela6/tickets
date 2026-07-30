@@ -28,6 +28,44 @@ describe('readConstraints', () => {
     expect(fk.column).not.toMatch(/^\d+$/);
   });
 
+  it("resolves a cross-schema foreign key to the REFERENCED table's schema", async () => {
+    // terminal.sessions.workdir_id -> core.workdirs.id. refSchema must be
+    // 'core' (the referenced table's schema) — if it were flipped to take
+    // the referencing table's schema instead, this would read 'terminal'.
+    const { tables, constraints } = await withDatabase('tickets_test', async (sql) => {
+      const tables = await readTables(sql);
+      return { tables, constraints: await readConstraints(sql, tables) };
+    });
+    const sessions = tables.find((t) => t.name === 'sessions' && t.schema === 'terminal')!;
+    expect(sessions).toBeDefined();
+    const fk = constraints.get(sessions.oid)!.fks.find((f) => f.column === 'workdir_id');
+    expect(fk).toEqual({
+      column: 'workdir_id',
+      refSchema: 'core',
+      refTable: 'workdirs',
+      refColumn: 'id',
+    });
+  });
+
+  it('resolves a self-referencing foreign key without mixing up local/foreign columns', async () => {
+    // records.items.parent_id -> records.items.id (conrelid === confrelid).
+    // A bug that swapped conkey/confkey resolution would surface here as
+    // column and refColumn both resolving to the same name.
+    const { tables, constraints } = await withDatabase('tickets_test', async (sql) => {
+      const tables = await readTables(sql);
+      return { tables, constraints: await readConstraints(sql, tables) };
+    });
+    const items = tables.find((t) => t.name === 'items' && t.schema === 'records')!;
+    expect(items).toBeDefined();
+    const fk = constraints.get(items.oid)!.fks.find((f) => f.column === 'parent_id');
+    expect(fk).toEqual({
+      column: 'parent_id',
+      refSchema: 'records',
+      refTable: 'items',
+      refColumn: 'id',
+    });
+  });
+
   it('returns an entry for every table, even one with no constraints', async () => {
     const { tables, constraints } = await withDatabase('tickets_test', async (sql) => {
       const tables = await readTables(sql);
