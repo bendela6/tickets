@@ -1,9 +1,30 @@
 import { render, screen } from '@testing-library/react';
-import { DEFAULT_DOC, type IconDoc } from '../doc';
+import { NEUTRAL } from '../color';
+import { DEFAULT_DOC, type IconDoc, type Ink } from '../doc';
 import { ControlsPanel, GAP_WARNING_DEGREES, tightestGap } from './controls-panel';
 
+function baseFrom(doc: IconDoc): Record<string, Ink> {
+  const out: Record<string, Ink> = {};
+  for (const [name, ink] of Object.entries(doc.inks)) {
+    if (name !== 'field') out[name] = ink;
+  }
+  return out;
+}
+
 function renderPanel(doc: IconDoc) {
-  render(<ControlsPanel doc={doc} dispatch={() => {}} />);
+  render(
+    <ControlsPanel
+      doc={doc}
+      base={baseFrom(doc)}
+      adjLight={NEUTRAL}
+      adjDark={NEUTRAL}
+      dispatch={() => {}}
+      onBaseChange={() => {}}
+      onAdjustChange={() => {}}
+      onResetAdjust={() => {}}
+      onApplyPreset={() => {}}
+    />,
+  );
 }
 
 function docWithAngles(angles: [number, number, number]): IconDoc {
@@ -38,4 +59,19 @@ test('the chip scale slider reflects the chip variant', () => {
   renderPanel(DEFAULT_DOC);
   const slider = screen.getByLabelText(/chip scale/i) as HTMLInputElement;
   expect(Number(slider.value)).toBeCloseTo(DEFAULT_DOC.variants.chip?.scale ?? NaN, 5);
+});
+
+test('shows the vividness and brightness sliders for both themes', () => {
+  renderPanel(DEFAULT_DOC);
+  for (const label of ['light vivid', 'light bright', 'dark vivid', 'dark bright', 'hue shift']) {
+    expect(screen.getByLabelText(label), label).toBeDefined();
+  }
+  expect(screen.getByRole('button', { name: /reset adjustments/i })).toBeDefined();
+});
+
+test('shows one button per palette preset', () => {
+  renderPanel(DEFAULT_DOC);
+  for (const name of ['chosen', 'lifted', 'neon', 'soft']) {
+    expect(screen.getByRole('button', { name }), name).toBeDefined();
+  }
 });

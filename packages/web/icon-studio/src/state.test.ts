@@ -46,6 +46,21 @@ test('moveElement clamps an out-of-range index to the nearest valid position', (
   expect(low.doc.elements.map((e) => e.id)).toEqual(['mid', 'top', 'low']);
 });
 
+test('updating an element drops a patch key the element does not have', () => {
+  // `radius` belongs to a ring or a dot, never a stick — but `ElementPatch`
+  // cannot reject it appearing alongside `angle` (see its comment), so this
+  // typechecks. The reducer must still refuse to attach it.
+  const next = studioReducer(INITIAL_STATE, {
+    type: 'updateElement',
+    id: 'mid',
+    patch: { angle: 45, radius: 999 },
+  });
+  const mid = next.doc.elements.find((e) => e.id === 'mid');
+
+  expect(mid?.type === 'stick' && mid.angle).toBe(45);
+  expect(mid && 'radius' in mid).toBe(false);
+});
+
 test('updating an element patches only that element', () => {
   const next = studioReducer(INITIAL_STATE, {
     type: 'updateElement',
