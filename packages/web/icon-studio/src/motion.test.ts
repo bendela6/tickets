@@ -204,6 +204,57 @@ describe('moving into running', () => {
     }
   });
 
+  test('orders the sticks blue → green → red, fastest to slowest, for any angles', () => {
+    // Painted order is top (blue), mid (green), low (red), and that has to be
+    // the speed order too. Testing only the locked 62/27/160 hid the bug: from
+    // 10/55/100 the raw lag differences are 0/105/30, which made green slowest
+    // and red the middle one.
+    const ANGLE_SETS: [number, number, number][] = [
+      [62, 27, 160],
+      [10, 55, 100],
+      [0, 60, 120],
+      [170, 5, 95],
+      [90, 90, 90],
+      [45, 44, 43],
+      [10, 170, 80],
+    ];
+
+    for (const angles of ANGLE_SETS) {
+      for (const speed of SPEEDS) {
+        const config: MarkConfig = { ...withMotion({ speed }), angles };
+        const label = `${angles.join('/')} @ ${speed}`;
+
+        // Angular speed is the observable form of "fastest": measure it rather
+        // than the ramp that produces it.
+        const speedsAt = (move: ReturnType<typeof planMove>, t: number) => {
+          const h = 1e-4;
+          return [0, 1, 2].map(
+            (i) => ((move.pose(t + h)[i] ?? 0) - (move.pose(t - h)[i] ?? 0)) / (2 * h),
+          );
+        };
+
+        // Speeding up: blue is turning fastest, red slowest.
+        const up = planMove(config, standing(config, 'default'), 'running');
+        for (const fraction of [0.2, 0.5]) {
+          const [blue, green, red] = speedsAt(up, up.duration * fraction);
+          expect(blue, `up ${label} @${fraction}`).toBeGreaterThanOrEqual((green ?? 0) - 1e-6);
+          expect(green, `up ${label} @${fraction}`).toBeGreaterThanOrEqual((red ?? 0) - 1e-6);
+        }
+
+        // The formation still lands exactly despite the reordering.
+        const [first, second] = separations(up.pose(up.duration));
+        expect(first, `up ${label}`).toBeCloseTo(ASTERISK_GAP, 6);
+        expect(second, `up ${label}`).toBeCloseTo(ASTERISK_GAP, 6);
+
+        // Slowing down: blue gives up its speed first, so it is the slowest.
+        const down = planMove(config, standing(config, 'running'), 'default');
+        const [blue, green, red] = speedsAt(down, down.duration * 0.8);
+        expect(blue, `down ${label}`).toBeLessThanOrEqual((green ?? 0) + 1e-6);
+        expect(green, `down ${label}`).toBeLessThanOrEqual((red ?? 0) + 1e-6);
+      }
+    }
+  });
+
   test('gives the leading stick the configured ramp and the trailing ones longer', () => {
     for (const speed of SPEEDS) {
       for (const restSpread of SPREADS) {

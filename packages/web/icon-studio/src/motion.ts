@@ -134,23 +134,40 @@ function rampsFor(motion: MotionConfig, relative: Triple): Triple {
 
 /**
  * The relative travel each stick needs to get from the lags it has to the ones
- * it wants. The direction depends on which way the ramp cuts:
+ * it wants. Two things are going on here.
+ *
+ * **Direction.** It depends on which way the ramp cuts:
  *
  * - **Accelerating**, a longer ramp covers *less* ground, so a stick that needs
  *   to fall further behind wants `wanted − have`.
  * - **Decelerating**, a longer ramp covers *more* ground, so a stick that needs
  *   to close up wants `have − wanted`.
  *
- * Getting these the same way round lands the formation 50° out — which is what
- * the round-trip tests caught.
+ * Getting these the same way round lands the formation 50° out.
+ *
+ * **Order.** The sticks must come out fastest-to-slowest in painted order — top
+ * (blue), then mid (green), then low (red) — whatever angles the mark is
+ * configured with. Taking each lag difference at face value does not give that:
+ * from angles `10/55/100` the raw travels are `0 / 105 / 30`, which makes green
+ * the slowest and red the middle, the wrong way round.
+ *
+ * Adding a half-turn to a stick's travel lands the *same* formation, because a
+ * stick is a full diameter and so identical every 180°. So each successive stick
+ * is lifted by half-turns until it needs at least as much travel as the one
+ * before it — which fixes the ordering while leaving every landing exact.
  */
 function relativeTravel(have: Triple, wanted: Triple, mode: 'accelerating' | 'decelerating'): Triple {
-  return triple(
-    have.map((lag, i) => {
-      const want = wanted[i] ?? 0;
-      return mode === 'accelerating' ? mod180(want - lag) : mod180(lag - want);
-    }),
-  );
+  const out: number[] = [];
+  let previous = 0;
+  for (let i = 0; i < have.length; i++) {
+    const lag = have[i] ?? 0;
+    const want = wanted[i] ?? 0;
+    let travel = mode === 'accelerating' ? mod180(want - lag) : mod180(lag - want);
+    while (travel < previous) travel += 180;
+    out.push(travel);
+    previous = travel;
+  }
+  return triple(out);
 }
 
 /** Plan the move from where the mark is now onto `to`. */
