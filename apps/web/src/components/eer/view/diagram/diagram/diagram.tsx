@@ -18,10 +18,13 @@ export function Diagram({ children }: { children?: ReactNode }) {
       data-viewport=""
       className={cn(
         'relative min-w-0 flex-1 cursor-default overflow-hidden',
-        'bg-gray-950 bg-(image:--dot-grid) bg-size-(--dot-grid-size)',
+        'bg-gray-1 bg-(image:--dot-grid) bg-size-(--dot-grid-size)',
       )}
       style={runtimeStyle({
-        '--dot-grid': 'radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.05) 1px, transparent 0)',
+        // The grid dot is a hairline-weight structural mark, so it rides the
+        // border rung: subtle against gray-1 in both themes, and it flips with
+        // [data-theme] where the old hardcoded white never could.
+        '--dot-grid': 'radial-gradient(circle at 1px 1px, var(--color-gray-6) 1px, transparent 0)',
         '--dot-grid-size': '26px 26px',
       })}
     >

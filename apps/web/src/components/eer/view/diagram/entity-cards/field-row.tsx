@@ -28,15 +28,15 @@ function Port({
     <span
       className={cn(
         'absolute top-1/2 z-3 h-4 w-1 -translate-y-1/2',
-        'bg-gray-300',
+        'bg-gray-10',
         'transition-(--transition-paint) duration-120',
         connected.has(key) ? 'opacity-100' : 'opacity-0',
         {
           'right-full rounded-l-xs': side === 'L',
           'left-full rounded-r-xs': side === 'R',
-          'bg-yellow-400': !!role?.pk,
-          'bg-green-400': !role?.pk && !!role?.fk,
-          'bg-blue-400 ring-3 ring-blue-400/30': hot,
+          'bg-yellow-9': !!role?.pk,
+          'bg-green-9': !role?.pk && !!role?.fk,
+          'bg-blue-9 ring-3 ring-blue-9/30': hot,
           'h-(--port-height)': off > 0,
         },
       )}
@@ -68,7 +68,7 @@ export function FieldRow({
   const badge = role?.pk ? 'pk' : role?.fk ? 'fk' : null;
   return (
     <div
-      className="relative flex h-6 cursor-default items-center gap-2 px-3 text-sm hover:bg-gray-800"
+      className="relative flex h-6 cursor-default items-center gap-2 px-3 text-sm hover:bg-gray-3"
       data-entity={e.id}
       data-field={f.name}
       data-index={String(index)}
@@ -86,10 +86,10 @@ export function FieldRow({
       {badge && (
         <span
           className={cn(
-            'shrink-0 text-center font-mono text-3xs font-semibold tracking-wide text-gray-400',
+            'shrink-0 text-center font-mono text-3xs font-semibold tracking-wide text-gray-9',
             {
-              'text-yellow-400': badge === 'pk',
-              'text-green-400': badge === 'fk',
+              'text-yellow-9': badge === 'pk',
+              'text-green-9': badge === 'fk',
             },
           )}
         >
@@ -97,13 +97,13 @@ export function FieldRow({
         </span>
       )}
       <span
-        className={cn('truncate font-mono text-gray-50', {
-          'text-yellow-400': badge === 'pk',
+        className={cn('truncate font-mono text-gray-12', {
+          'text-yellow-9': badge === 'pk',
         })}
       >
         {f.name}
       </span>
-      <span className="ml-auto max-w-1/2 truncate font-mono text-xs text-gray-400">
+      <span className="ml-auto max-w-1/2 truncate font-mono text-xs text-gray-9">
         {f.type || ''}
       </span>
       <Port e={e} f={f} role={role} side="L" connected={connected} pinSpan={pinSpan} hot={hot} />

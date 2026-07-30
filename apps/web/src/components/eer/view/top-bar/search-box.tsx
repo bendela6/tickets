@@ -33,8 +33,8 @@ export function SearchBox() {
         autoComplete="off"
         spellCheck={false}
         className={cn(
-          'w-48 rounded-md border border-gray-600 bg-gray-900 px-3 py-2 text-base text-gray-50',
-          'outline-none placeholder:text-gray-400 focus:border-gray-500',
+          'w-48 rounded-md border border-gray-6 bg-gray-2 px-3 py-2 text-base text-gray-12',
+          'outline-none placeholder:text-gray-9 focus:border-gray-7',
         )}
         onChange={(e) => run(e.target.value)}
         onFocus={() => setOpen(results.length > 0)}
@@ -51,21 +51,21 @@ export function SearchBox() {
         <div
           className={cn(
             'absolute left-0 top-full z-30 mt-1 max-h-85 min-w-56 overflow-auto',
-            'rounded-lg border border-gray-500 bg-gray-800 p-1 shadow-xl',
+            'rounded-lg border border-gray-7 bg-gray-3 p-1 shadow-xl',
           )}
         >
           {results.map((m, i) => (
             <button
               key={i}
               type="button"
-              className="block w-full rounded-md px-2 py-2 text-left text-base hover:bg-gray-700"
+              className="block w-full rounded-md px-2 py-2 text-left text-base hover:bg-gray-4"
               onMouseDown={(e) => {
                 e.preventDefault();
                 pick(m);
               }}
             >
               <span className="font-mono">{m.label}</span>
-              <span className="ml-2 text-xs text-gray-400">
+              <span className="ml-2 text-xs text-gray-9">
                 {m.kind === 'field' ? `${m.entityLabel} · field` : 'entity'}
               </span>
             </button>

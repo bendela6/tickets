@@ -85,14 +85,14 @@ export function EntityDetail({
             const badge = role?.pk ? 'pk' : role?.fk ? 'fk' : null;
             const fk = fkTarget(e, f.name);
             return (
-              <div key={f.name} className="border-b border-gray-600/50 py-2 last:border-0">
+              <div key={f.name} className="border-b border-gray-6/50 py-2 last:border-0">
                 <div className="flex items-center gap-2">
                   <RoleTag role={badge} />
-                  <span className={cn('font-mono text-sm', { 'text-yellow-400': badge === 'pk', 'text-gray-50': badge !== 'pk' })}>{f.name}</span>
+                  <span className={cn('font-mono text-sm', { 'text-yellow-9': badge === 'pk', 'text-gray-12': badge !== 'pk' })}>{f.name}</span>
                   {fk && (
                     <button
                       type="button"
-                      className="ml-1 rounded bg-gray-800 px-1 py-px font-mono text-2xs text-green-400 hover:bg-gray-700"
+                      className="ml-1 rounded bg-gray-3 px-1 py-px font-mono text-2xs text-green-9 hover:bg-gray-4"
                       onClick={() => {
                         actions.selectEntity(fk.table);
                         actions.centerOn(fk.table);
@@ -101,9 +101,9 @@ export function EntityDetail({
                       → {fk.table}.{fk.field}
                     </button>
                   )}
-                  <span className="ml-auto shrink-0 font-mono text-xs text-gray-400">{f.type}</span>
+                  <span className="ml-auto shrink-0 font-mono text-xs text-gray-9">{f.type}</span>
                 </div>
-                {note && <div className="mt-1 pl-7 text-xs leading-snug text-gray-200">{note}</div>}
+                {note && <div className="mt-1 pl-7 text-xs leading-snug text-gray-11">{note}</div>}
               </div>
             );
           })}

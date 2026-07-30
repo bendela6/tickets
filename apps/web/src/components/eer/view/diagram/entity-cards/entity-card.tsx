@@ -17,7 +17,7 @@ interface EntityCardProps {
 
 export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
   const e = p.entity;
-  const frame = p.color || 'var(--color-gray-600)';
+  const frame = p.color || 'var(--color-gray-6)';
   return (
     <div
       className={cn(
@@ -25,12 +25,12 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
         'absolute left-0 top-0',
         'w-(--card-width) translate-x-(--card-x) translate-y-(--card-y)',
         'border border-(--card-border) rounded-lg',
-        'bg-gray-900 shadow-md',
+        'bg-gray-2 shadow-md',
         'transition-(--transition-paint) duration-120',
         {
           'opacity-22': p.dim,
-          'border-gray-500': p.focus,
-          'border-blue-400 ring-1 ring-blue-400 shadow-lg': p.selected,
+          'border-gray-7': p.focus,
+          'border-blue-9 ring-1 ring-blue-9 shadow-lg': p.selected,
           hidden: p.hidden,
         },
       )}
@@ -45,9 +45,9 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
         '--card-x': `${e.x}px`,
         '--card-y': `${e.y}px`,
         '--entity-c': p.color,
-        '--card-border': mix(frame, 28, 'var(--color-gray-600)'),
-        '--card-hd-border': mix(frame, 22, 'var(--color-gray-600)'),
-        '--card-hd-bg': mix(p.color || 'var(--color-gray-800)', 13, 'var(--color-gray-800)'),
+        '--card-border': mix(frame, 28, 'var(--color-gray-6)'),
+        '--card-hd-border': mix(frame, 22, 'var(--color-gray-6)'),
+        '--card-hd-bg': mix(p.color || 'var(--color-gray-3)', 13, 'var(--color-gray-3)'),
       })}
     >
       <div
@@ -59,7 +59,7 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
           'bg-(--card-hd-bg)',
         )}
       >
-        <span className="font-mono text-base font-medium text-gray-50">{e.label}</span>
+        <span className="font-mono text-base font-medium text-gray-12">{e.label}</span>
       </div>
       <div className="py-1">
         {e.columns.map((f, i) => (

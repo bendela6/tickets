@@ -26,9 +26,9 @@ export function EdgeDetail({
   const endpoint = (entityId: string, field: string, role: string) => (
     <button type="button" className={rowClass} onClick={() => goto(entityId)}>
       <Dot color={entityColor(model, entityId, colors)} />
-      <span className="font-mono text-gray-50">{entityId}</span>
-      <span className="font-mono text-gray-400">.{field}</span>
-      <span className="ml-auto shrink-0 text-2xs uppercase tracking-wider text-gray-400">{role}</span>
+      <span className="font-mono text-gray-12">{entityId}</span>
+      <span className="font-mono text-gray-9">.{field}</span>
+      <span className="ml-auto shrink-0 text-2xs uppercase tracking-wider text-gray-9">{role}</span>
     </button>
   );
 
@@ -42,7 +42,7 @@ export function EdgeDetail({
           <>
             <Card>{rel.cardinality}</Card>
             <span className="ml-2">{rel.kind ?? 'edge'}</span>
-            {rel.cardinalityInferred && <span className="ml-2 text-gray-400">· inferred from roles</span>}
+            {rel.cardinalityInferred && <span className="ml-2 text-gray-9">· inferred from roles</span>}
           </>
         }
         description={rel.label}

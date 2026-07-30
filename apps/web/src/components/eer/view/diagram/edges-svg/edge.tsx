@@ -63,7 +63,7 @@ export const Edge = memo(function Edge({ rel, active, dim, forcedHot, hidden }: 
       onClick={() => dispatch({ type: 'ISOLATE_EDGE', id: rel.id })}
     >
       <path className="cursor-pointer fill-none stroke-transparent" pointerEvents="stroke" strokeWidth={14} d={d} />
-      <path className="fill-none stroke-gray-950" strokeLinecap="round" strokeWidth={4.5} d={d} />
+      <path className="fill-none stroke-gray-1" strokeLinecap="round" strokeWidth={4.5} d={d} />
       <path
         data-path=""
         data-dashed={dashed ? '' : undefined}

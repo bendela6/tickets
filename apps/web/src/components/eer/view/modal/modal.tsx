@@ -40,7 +40,7 @@ export function Modal({ title, onClose, size = 'default', children }: ModalProps
   const stopInside = (e: MouseEvent) => e.stopPropagation();
 
   return (
-    <div className={cn('fixed inset-0 z-50 overflow-y-auto bg-gray-950/60')} onClick={onClose}>
+    <div className={cn('fixed inset-0 z-50 overflow-y-auto bg-black/40')} onClick={onClose}>
       <div className="flex min-h-full items-center justify-center p-4">
         <div
           ref={panelRef}
@@ -50,18 +50,18 @@ export function Modal({ title, onClose, size = 'default', children }: ModalProps
           tabIndex={-1}
           className={cn(
             'flex w-full flex-col gap-3',
-            'rounded-lg border border-gray-500 bg-gray-800 px-4 py-4 shadow-xl',
+            'rounded-lg border border-gray-7 bg-gray-3 px-4 py-4 shadow-xl',
             { 'max-w-md': size === 'default', 'max-w-5xl': size === 'wide' },
           )}
           onClick={stopInside}
         >
           <div className="flex items-center justify-between gap-3">
-            <h2 id={titleId} className="text-base font-medium text-gray-50">
+            <h2 id={titleId} className="text-base font-medium text-gray-12">
               {title}
             </h2>
             <button
               type="button"
-              className="text-lg text-gray-200 hover:text-gray-50"
+              className="text-lg text-gray-11 hover:text-gray-12"
               onClick={onClose}
               aria-label="Close"
             >

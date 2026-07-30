@@ -33,12 +33,12 @@ export function TopBar() {
     <header
       className={cn(
         'z-10 flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3',
-        'border-b border-gray-600 bg-gray-950/95',
+        'border-b border-gray-6 bg-gray-1/95',
       )}
     >
       <div className="mr-auto">
         <h1 className="text-lg font-semibold tracking-tight">{model?.meta.title ?? 'EER model viewer'}</h1>
-        <p className="mt-1 max-w-sm truncate text-sm text-gray-200">
+        <p className="mt-1 max-w-sm truncate text-sm text-gray-11">
           {model?.meta.description ??
             (model ? `${model.entities.length} entities · ${model.relationships.length} relationships` : 'loading…')}
         </p>

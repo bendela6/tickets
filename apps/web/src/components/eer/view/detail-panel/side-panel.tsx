@@ -50,8 +50,8 @@ export function SidePanel() {
         aria-expanded={false}
         title="Expand panel"
         className={cn(
-          'flex h-full w-6 shrink-0 items-center justify-center border-l border-gray-600',
-          'bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-gray-50',
+          'flex h-full w-6 shrink-0 items-center justify-center border-l border-gray-6',
+          'bg-gray-2 text-gray-9 hover:bg-gray-3 hover:text-gray-12',
         )}
         onClick={() => setCollapsed(false)}
       >
@@ -62,7 +62,7 @@ export function SidePanel() {
 
   return (
     <aside
-      className="relative flex w-(--sidebar-w) shrink-0 flex-col border-l border-gray-600 bg-gray-900"
+      className="relative flex w-(--sidebar-w) shrink-0 flex-col border-l border-gray-6 bg-gray-2"
       style={runtimeStyle({ '--sidebar-w': `${width}px` })}
     >
       <div
@@ -70,20 +70,20 @@ export function SidePanel() {
         aria-orientation="vertical"
         aria-label="Resize panel"
         tabIndex={0}
-        className="absolute left-0 top-0 z-10 h-full w-2 cursor-col-resize bg-transparent hover:bg-blue-400"
+        className="absolute left-0 top-0 z-10 h-full w-2 cursor-col-resize bg-transparent hover:bg-blue-9"
         onPointerDown={startDrag}
         onKeyDown={(e) => {
           if (e.key === 'ArrowLeft') setWidth((w) => clampWidth(w + KEY_STEP));
           else if (e.key === 'ArrowRight') setWidth((w) => clampWidth(w - KEY_STEP));
         }}
       />
-      <div className="flex shrink-0 justify-end border-b border-gray-600 px-2 py-1">
+      <div className="flex shrink-0 justify-end border-b border-gray-6 px-2 py-1">
         <button
           type="button"
           aria-label="Collapse panel"
           aria-expanded
           title="Collapse panel"
-          className="rounded px-2 text-gray-400 hover:bg-gray-800 hover:text-gray-50"
+          className="rounded px-2 text-gray-9 hover:bg-gray-3 hover:text-gray-12"
           onClick={() => setCollapsed(true)}
         >
           ›
