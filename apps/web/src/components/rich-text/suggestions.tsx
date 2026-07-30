@@ -4,7 +4,7 @@ import type { SuggestionKeyDownProps, SuggestionProps } from '@tiptap/suggestion
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import type { StatusKind } from '../../api/types';
 import { KIND_TONE } from '../../domain/status';
-import { Avatar, cn, toneClasses } from '@tickets/ui';
+import { Avatar, cn, TONE_SCALE } from '@tickets/ui';
 import { avatarFor } from '../../domain/actor';
 
 // RichTextEditor threads these two lookup sources through to the mention (@)
@@ -45,7 +45,9 @@ function deriveHandle(label: string): string {
 // status→tone mapping (domain/status.ts) instead of a locally duplicated
 // kind→class table.
 function statusDotClass(kind: StatusKind | null | undefined): string {
-  return toneClasses(kind ? KIND_TONE[kind] : 'gray', 'solid');
+  // The solid pair: 9 fills, contrast texts.
+  const scale = TONE_SCALE[kind ? KIND_TONE[kind] : 'gray'];
+  return `bg-${scale}-9 text-${scale}-contrast`;
 }
 
 function PeopleRow({ item, selected }: { item: SuggestionItem; selected: boolean }) {

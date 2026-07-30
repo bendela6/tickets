@@ -8,7 +8,7 @@ import { KIND_ICON, KIND_TONE, typePill } from '../../domain/status';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Table, useTableWidths, type Column, type SortBy, type TableGroup } from '@tickets/table';
-import { Avatar, Button, cn, DialogContent, DialogRoot, DialogTitle, Icon, Input, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, tableRender, Tabs, toneClasses } from '@tickets/ui';
+import { Avatar, Button, cn, DialogContent, DialogRoot, DialogTitle, Icon, Input, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, tableRender, Tabs, TONE_SCALE } from '@tickets/ui';
 import { avatarFor } from '../../domain/actor';
 import { StatusSelect } from '../../ui/status-select';
 import { childProgress } from '../../utils/child-progress';
@@ -359,7 +359,9 @@ export function AllItemsScreen() {
   } else {
     const entryOrder = new Map(entries.map((entry, index) => [entry, index]));
     for (const { kind, label } of KIND_ORDER) {
-      const textClass = toneClasses(KIND_TONE[kind], 'text');
+      // 11 is the text rung; the role goes through TONE_SCALE because `danger`
+      // is a job, not a colour family.
+      const textClass = `text-${TONE_SCALE[KIND_TONE[kind]]}-11`;
       const rows = allRows
         .filter((row) => kindOf(row) === kind)
         .sort(

@@ -7,12 +7,14 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { cn, over, scaleAxis, TONE_SCALE, variants, type Tone, type ToneEmphasis } from '../../style';
+import { axis, cn, HUE_TONES, over, TONE_SCALE, variants, type Tone } from '../../style';
 import { Icon, type IconName, type IconSize } from '../icon';
 
-/** How loudly the tone reads. The same four treatments the tone contract
- *  defines — this is the emphasis axis, surfaced as the component's variant. */
-export type PillVariant = ToneEmphasis;
+/** How loudly the tone reads. These used to be `ToneEmphasis`, defined next to
+ *  the table of finished class strings; with that table gone the four names
+ *  belong to the component that offers them. Three are shared with Button; the
+ *  fourth is `text` where a button's is `ghost`. */
+export type PillVariant = 'subtle' | 'solid' | 'outline' | 'text';
 
 export type PillSize = 'sm' | 'md' | 'lg';
 
@@ -23,12 +25,12 @@ export type PillShape = 'square' | 'round';
 
 // A Pill rests on neutral where a Button rests on primary — the resting ramp
 // is the only per-component decision the tone axis leaves open.
-const NEUTRAL_SCALE = scaleAxis(TONE_SCALE.neutral);
+const NEUTRAL_SCALE = axis('scale', HUE_TONES, 'gray');
 
-// The four variants rebuild what `toneClasses()` returns, spelling the rungs so
-// hover/opacity variants can be added later without a second vocabulary. A test
-// asserts the two agree for every tone, since a Pill and a Button asking for the
-// same treatment must not diverge.
+// The four variants spell their own rungs, so hover/opacity treatments can be
+// added later without a second vocabulary. A test renders Pill and Button side
+// by side for every tone, since two components asking for the same treatment
+// must not disagree about which rungs it uses.
 const pillClass = variants({
   base: 'inline-flex items-center font-sans font-500',
   config: {
