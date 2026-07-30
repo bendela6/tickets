@@ -5,7 +5,21 @@ import type { GenerateResponse } from './plugin/write';
 
 async function json<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
-  if (!res.ok) throw new Error(`${url} failed: ${res.status}`);
+  if (!res.ok) {
+    let message = `${url} (${res.status})`;
+    try {
+      const body = await res.json() as unknown;
+      if (typeof body === 'object' && body !== null && 'error' in body) {
+        const error = (body as Record<string, unknown>).error;
+        if (typeof error === 'string') {
+          message = `${url} (${res.status}): ${error}`;
+        }
+      }
+    } catch {
+      // Ignore parse errors, use status-based message
+    }
+    throw new Error(message);
+  }
   return (await res.json()) as T;
 }
 
