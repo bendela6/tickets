@@ -1,10 +1,55 @@
 import { describe, expect, test } from 'vitest';
 import { BARE_REACH, DEFAULT_DOC, type IconDoc } from '../doc';
-import { outerExtent, renderSvg, safeZonePct } from './render';
+import { outerExtent, renderSvg, SAFE_ZONE_PCT, safeZonePct } from './render';
 
 function docWith(elements: IconDoc['elements']): IconDoc {
   return { ...DEFAULT_DOC, elements };
 }
+
+/**
+ * Ported from the retired `generate/svg.ts`'s test suite (Task 7): properties
+ * that suite proved once per hardcoded favicon/bare/mono/chip function, and
+ * this one proves once, generically, across every variant a document
+ * actually declares.
+ */
+describe('every built-in variant (ported from svg.test.ts)', () => {
+  test('is one well-formed svg with every element drawn once', () => {
+    for (const name of Object.keys(DEFAULT_DOC.variants)) {
+      const svg = renderSvg(DEFAULT_DOC, name);
+      expect(svg.match(/<svg/g), name).toHaveLength(1);
+      expect(svg.match(/<\/svg>/g), name).toHaveLength(1);
+      expect(svg.match(/<path/g), name).toHaveLength(DEFAULT_DOC.elements.length);
+      expect(svg, name).toContain('xmlns="http://www.w3.org/2000/svg"');
+      expect(svg, name).toContain('viewBox="0 0 48 48"');
+    }
+  });
+
+  test('honours each element\'s own angle', () => {
+    const doc: IconDoc = {
+      ...DEFAULT_DOC,
+      elements: [
+        { id: 'a', type: 'stick', ink: 'top', angle: 5, reach: 18, weight: 6 },
+        { id: 'b', type: 'stick', ink: 'mid', angle: 37, reach: 18, weight: 6 },
+        { id: 'c', type: 'stick', ink: 'low', angle: 155, reach: 18, weight: 6 },
+      ],
+    };
+    for (const name of Object.keys(doc.variants)) {
+      const svg = renderSvg(doc, name);
+      expect(svg, name).toContain('rotate(5 24 24)');
+      expect(svg, name).toContain('rotate(37 24 24)');
+      expect(svg, name).toContain('rotate(155 24 24)');
+    }
+  });
+
+  test('the apple variant is square where chip is rounded', () => {
+    expect(renderSvg(DEFAULT_DOC, 'chip')).toContain('rx="11"');
+    expect(renderSvg(DEFAULT_DOC, 'apple')).toContain('rx="0"');
+  });
+
+  test('the chip mark sits inside the android maskable safe circle', () => {
+    expect(safeZonePct(DEFAULT_DOC, 'chip')).toBeLessThan(SAFE_ZONE_PCT);
+  });
+});
 
 describe('primitives', () => {
   test('a stick is a full diameter, rotated about the centre', () => {
@@ -73,6 +118,18 @@ describe('ink resolution', () => {
     expect(svg).toContain('#7167ff');
     expect(svg).toContain('#6652ff');
     expect(svg).toContain('@media (prefers-color-scheme:dark)');
+  });
+
+  test('theme resolution inlines every element\'s own ink, light and dark, not only the first', () => {
+    const svg = renderSvg(DEFAULT_DOC, 'favicon');
+    const usedInks = new Set(DEFAULT_DOC.elements.map((e) => e.ink));
+    for (const name of usedInks) {
+      const pair = DEFAULT_DOC.inks[name];
+      expect(pair, name).toBeDefined();
+      if (!pair) continue;
+      expect(svg, name).toContain(pair.light);
+      expect(svg, name).toContain(pair.dark);
+    }
   });
 
   test('a theme class label is pinned to document index, not paint position', () => {

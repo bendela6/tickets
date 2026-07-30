@@ -2,8 +2,7 @@ import { useEffect, useReducer, useState } from 'react';
 import { Button } from '@tickets/ui';
 import { fetchConfig, generate } from './api';
 import { adjust, NEUTRAL, type Adjust } from './color';
-import type { MarkConfig } from './config';
-import { DEFAULT_CONFIG, PRESETS, STICKS, type PresetName } from './config';
+import { PRESETS, STICKS, type PresetName } from './config';
 import { ControlsPanel } from './controls/controls-panel';
 import { MotionPanel } from './controls/motion-panel';
 import { DEFAULT_DOC, type IconDoc, type Ink } from './doc';
@@ -45,16 +44,6 @@ export function Studio() {
   // not a property of it, so it stays out of the document.
   const [loaderState, setLoaderState] = useState<MarkState>('default');
 
-  // Generate, FileGrid and the raster pipeline still walk the old
-  // MarkConfig -> generate/svg.ts path — that cutover is a later task, and
-  // svg.ts is off limits here. So the raw config fetched on mount is kept
-  // alongside the live document: it drives the output previews and Generate,
-  // while `state.doc` (migrated from the same fetch via `toDoc`) drives the
-  // panels below. The two intentionally fall out of sync once the document is
-  // edited; reconnecting Generate to the live document is that later task's
-  // job, not this one's.
-  const [rawConfig, setRawConfig] = useState<MarkConfig>(DEFAULT_CONFIG);
-
   // The picker-editable seed colours and the two vividness/brightness deltas
   // applied on top of them, one per theme. Kept outside the document for the
   // same reason `loaderState` is: this is a way of *looking at* the inks, not
@@ -71,7 +60,6 @@ export function Studio() {
   useEffect(() => {
     fetchConfig()
       .then((loaded) => {
-        setRawConfig(loaded);
         const doc = toDoc(loaded);
         setBase(baseFrom(doc));
         setAdjLight(NEUTRAL);
@@ -105,7 +93,7 @@ export function Studio() {
     setBusy(true);
     setError(null);
     try {
-      const response = await generate(rawConfig);
+      const response = await generate(state.doc);
       setResults(response.results);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Generate failed');
@@ -213,7 +201,7 @@ export function Studio() {
               <MotionPreview doc={state.doc} state={loaderState} />
             </section>
 
-            <FileGrid config={rawConfig} />
+            <FileGrid doc={state.doc} />
           </div>
         </div>
       </div>

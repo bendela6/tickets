@@ -1,6 +1,6 @@
-import type { MarkConfig } from '../config';
+import type { IconDoc } from '../doc';
 import { dataUri } from '../generate/raster';
-import { SAFE_ZONE_PCT, safeZonePct, svgBare, svgChip, svgFavicon, svgMono } from '../generate/svg';
+import { renderSvg, SAFE_ZONE_PCT, safeZonePct } from '../generate/render';
 
 interface Row {
   file: string;
@@ -10,14 +10,14 @@ interface Row {
   ground: 'light' | 'dark' | 'checker';
 }
 
-function rows(c: MarkConfig): Row[] {
+function rows(doc: IconDoc): Row[] {
   return [
-    { file: 'favicon.svg', use: 'Browser tab. Swaps triad by theme.', svg: svgFavicon(c), sizes: [16, 32, 48], ground: 'checker' },
-    { file: 'icon-512.png', use: 'PWA install. Maskable chip.', svg: svgChip(c), sizes: [64, 128], ground: 'checker' },
-    { file: 'icon-192.png', use: 'Android home screen. Maskable chip.', svg: svgChip(c), sizes: [48, 96], ground: 'checker' },
-    { file: 'apple-touch-icon.png', use: 'iOS home screen. Square — iOS masks it.', svg: svgChip(c, { rounded: false }), sizes: [60, 120], ground: 'checker' },
-    { file: 'icon-mono.svg', use: 'Safari pinned tab.', svg: svgMono(c), sizes: [16, 32], ground: 'light' },
-    { file: 'site.webmanifest', use: 'Install metadata. Derived from the config.', svg: svgBare(c, 'dark'), sizes: [32], ground: 'dark' },
+    { file: 'favicon.svg', use: 'Browser tab. Swaps triad by theme.', svg: renderSvg(doc, 'favicon'), sizes: [16, 32, 48], ground: 'checker' },
+    { file: 'icon-512.png', use: 'PWA install. Maskable chip.', svg: renderSvg(doc, 'chip'), sizes: [64, 128], ground: 'checker' },
+    { file: 'icon-192.png', use: 'Android home screen. Maskable chip.', svg: renderSvg(doc, 'chip'), sizes: [48, 96], ground: 'checker' },
+    { file: 'apple-touch-icon.png', use: 'iOS home screen. Square — iOS masks it.', svg: renderSvg(doc, 'apple'), sizes: [60, 120], ground: 'checker' },
+    { file: 'icon-mono.svg', use: 'Safari pinned tab.', svg: renderSvg(doc, 'mono'), sizes: [16, 32], ground: 'light' },
+    { file: 'site.webmanifest', use: 'Install metadata. Points at the chip icons above.', svg: renderSvg(doc, 'chip'), sizes: [32], ground: 'dark' },
   ];
 }
 
@@ -27,10 +27,10 @@ const BG: Record<Row['ground'], string> = {
   checker: 'bg-surface-inset',
 };
 
-export function FileGrid({ config }: { config: MarkConfig }) {
+export function FileGrid({ doc }: { doc: IconDoc }) {
   return (
     <div className="grid gap-3 md:grid-cols-2">
-      {rows(config).map((row) => (
+      {rows(doc).map((row) => (
         <div key={row.file} className="overflow-hidden rounded-xl border-1 border-gray-6 bg-gray-2">
           <div className="flex flex-col gap-0.5 px-3 pt-3">
             <span className="font-mono text-13 font-600 text-gray-12">{row.file}</span>
@@ -47,8 +47,8 @@ export function FileGrid({ config }: { config: MarkConfig }) {
         </div>
       ))}
       <p className="font-mono text-12 text-gray-11 md:col-span-2">
-        chip mark reaches {safeZonePct(config).toFixed(0)}% of the tile
-        {safeZonePct(config) > SAFE_ZONE_PCT ? ' — outside the maskable safe circle' : ' — inside the maskable safe circle'}
+        chip mark reaches {safeZonePct(doc, 'chip').toFixed(0)}% of the tile
+        {safeZonePct(doc, 'chip') > SAFE_ZONE_PCT ? ' — outside the maskable safe circle' : ' — inside the maskable safe circle'}
       </p>
     </div>
   );

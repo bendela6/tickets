@@ -114,6 +114,8 @@ export function toDoc(value: unknown): IconDoc {
       // chipWeight is deliberately not read: one scale derives it, which is what
       // stops the ratio drifting.
       chip: { inks: 'dark', scale: chipReach / BARE_REACH, field: { ink: 'field', radius: 11 } },
+      // Square iOS icon: same triad and scale as chip, zero corner radius.
+      apple: { inks: 'dark', scale: chipReach / BARE_REACH, field: { ink: 'field', radius: 0 } },
     },
     motion: motionOf(value.motion),
   };
