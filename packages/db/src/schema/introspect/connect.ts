@@ -7,8 +7,14 @@ export function createPostgresInstance(options: postgres.Options<Record<string, 
 }
 
 /**
- * Open a short-lived, read-only connection to a NAMED database and hand the
- * caller the raw postgres.js handle.
+ * Open a short-lived connection to a NAMED database and hand the caller the
+ * raw postgres.js handle.
+ *
+ * INTENDED for reads (introspection), but read-only is NOT enforced: the
+ * connection uses the ordinary application role and nothing sets a read-only
+ * transaction. `read-indexes.test.ts` deliberately runs CREATE INDEX / DROP
+ * INDEX through this helper. Treat "read-only" here as a convention a caller
+ * can break, not a guarantee this helper provides.
  *
  * Only the database name varies — host, port, user and password always come
  * from `environment.postgres`, so no caller can redirect this at another
