@@ -23,8 +23,6 @@ export interface StudioState {
   chipWeight: number;
 }
 
-export const INITIAL_STATE: StudioState = fromConfig(DEFAULT_CONFIG);
-
 export function fromConfig(config: MarkConfig): StudioState {
   return {
     base: { light: [...config.light] as Triple, dark: [...config.dark] as Triple },
@@ -37,6 +35,8 @@ export function fromConfig(config: MarkConfig): StudioState {
     chipWeight: config.chipWeight,
   };
 }
+
+export const INITIAL_STATE: StudioState = fromConfig(DEFAULT_CONFIG);
 
 export function toConfig(state: StudioState): MarkConfig {
   const apply = (triple: Triple, a: Adjust) => triple.map((hex) => adjust(hex, a)) as Triple;
