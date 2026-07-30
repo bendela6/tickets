@@ -310,6 +310,40 @@ describe('<Table> engine — sizing', () => {
   });
 });
 
+// Virtualization is the engine's single most expensive promise and the one
+// nothing else in this file would miss. Every other body assertion — cell
+// content, row click, overlays — passes just as happily against a plain
+// `items.map(...)`, so deleting `useVirtualizer` would leave the suite green
+// while quietly mounting one DOM node per record. This is the test that goes
+// red instead.
+describe('<Table> engine — virtualization', () => {
+  const many: Row[] = Array.from({ length: 10_000 }, (_, i) => ({
+    id: String(i),
+    name: `Row ${i + 1}`,
+  }));
+
+  // The mocked ResizeObserver reports a 400px viewport, so a 40px row height
+  // fits ~10 rows plus the virtualizer's overscan of 8. The bound is 100 —
+  // two orders of magnitude below the row count — so it tolerates any
+  // reasonable change to the row height or overscan while still failing hard
+  // the moment the list is materialized.
+  it('mounts a bounded number of rows for a 10,000-row table', () => {
+    const { container } = render(<Harness rows={many} />);
+    const mounted = container.querySelectorAll('[data-slot="tr"]').length;
+    expect(mounted).toBeGreaterThan(0);
+    expect(mounted).toBeLessThan(100);
+  });
+
+  // A 10,000-row table must still size its scroll region for all 10,000, or
+  // the scrollbar lies about how much there is to scroll through. This is the
+  // other half of the guard: bounded MOUNTS, unbounded TOTAL.
+  it('still sizes the scroll region for every row', () => {
+    const { container } = render(<Harness rows={many} />);
+    const tbody = container.querySelector('[data-slot="tbody"]');
+    expect(Number(tbody?.getAttribute('data-total-size'))).toBe(10_000 * 40);
+  });
+});
+
 describe('<Table> engine — grouping', () => {
   const grouped = [
     { key: 'a', header: 'Group A', rows: [{ id: '1', name: 'Alpha' }] },

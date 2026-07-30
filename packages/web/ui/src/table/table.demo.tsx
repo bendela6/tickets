@@ -5,14 +5,35 @@ import { Button } from '../components/button';
 import { Icon } from '../components/icon';
 import { rowHeightFor } from './metrics';
 import { tableRender } from './table-render';
+import { ActionsColumn } from './columns/actions-column';
 import { BadgeColumn } from './columns/badge-column';
 import { DateColumn } from './columns/date-column';
+import { ImageColumn } from './columns/image-column';
+import { LinkColumn } from './columns/link-column';
 import { NumberColumn } from './columns/number-column';
 import { TextColumn } from './columns/text-column';
 
 export const meta = { title: 'Table', group: 'Components', size: 'full' };
 
-type Row = { id: string; name: string; status: string; count: number; updated: string };
+type Row = {
+  id: string;
+  name: string;
+  status: string;
+  count: number;
+  updated: string;
+  owner: string;
+  /** `null` on purpose for some rows: ImageColumn's whole second branch is the
+   *  Avatar it falls back to when a row has no image, and a demo where every
+   *  row has one never shows it. */
+  avatar: string | null;
+};
+
+const OWNERS = ['Ada Lovelace', 'Grace Hopper', 'Alan Turing', 'Katherine Johnson'];
+
+/** An inline SVG rather than a URL. The gallery, the demos smoke test and the
+ *  axe test all render this demo, and none of them may depend on the network. */
+const SWATCH =
+  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="%236e56cf"/></svg>';
 
 const ROWS: Row[] = Array.from({ length: 40 }, (_, i) => ({
   id: String(i),
@@ -20,6 +41,8 @@ const ROWS: Row[] = Array.from({ length: 40 }, (_, i) => ({
   status: ['open', 'done', 'blocked'][i % 3]!,
   count: (i + 1) * 3,
   updated: new Date(2026, 6, 1 + (i % 28)).toISOString(),
+  owner: OWNERS[i % OWNERS.length]!,
+  avatar: i % 3 === 0 ? null : SWATCH,
 }));
 
 const STATUS_TONE: Record<string, 'blue' | 'green' | 'red'> = {
@@ -29,10 +52,96 @@ const STATUS_TONE: Record<string, 'blue' | 'green' | 'red'> = {
 };
 
 const COLUMNS: Column<Row>[] = [
-  { key: 'name', header: 'Name', value: (r) => r.name, as: TextColumn(), sortable: true, width: 'minmax(200px, 1fr)' },
-  { key: 'status', header: 'Status', value: (r) => r.status, as: BadgeColumn<string>({ tone: (v) => STATUS_TONE[v] ?? 'gray' }), width: 120 },
-  { key: 'count', header: 'Count', value: (r) => r.count, as: NumberColumn({ format: 'integer' }), align: 'right', width: 100, sortable: true },
+  {
+    key: 'name',
+    header: 'Name',
+    value: (r) => r.name,
+    as: TextColumn(),
+    sortable: true,
+    width: 'minmax(200px, 1fr)',
+  },
+  {
+    key: 'status',
+    header: 'Status',
+    value: (r) => r.status,
+    as: BadgeColumn<string>({ tone: (v) => STATUS_TONE[v] ?? 'gray' }),
+    width: 120,
+  },
+  {
+    key: 'count',
+    header: 'Count',
+    value: (r) => r.count,
+    as: NumberColumn({ format: 'integer' }),
+    align: 'right',
+    width: 100,
+    sortable: true,
+  },
   { key: 'updated', header: 'Updated', value: (r) => r.updated, as: DateColumn(), width: 140 },
+];
+
+/**
+ * Every column helper the adapter ships, in one table.
+ *
+ * The four-column set above covers the common case; this one exists because
+ * LinkColumn, ImageColumn and ActionsColumn were shipped with no demo at all,
+ * so nothing rendered them and nothing would have noticed them breaking.
+ *
+ * Both header-less columns carry real header text instead. A `columnheader`
+ * with no accessible name is an axe `empty-table-header` finding, and this
+ * demo is audited — a blank actions header is a design question worth its own
+ * pass (visually-hidden label), not something to smuggle in here.
+ */
+const HELPER_COLUMNS: Column<Row>[] = [
+  {
+    key: 'avatar',
+    header: 'Owner',
+    value: (r) => r.avatar,
+    as: ImageColumn({ fallback: (row) => (row as Row).owner }),
+    width: 60,
+    resizable: false,
+  },
+  {
+    key: 'name',
+    header: 'Name',
+    value: (r) => r.name,
+    // A hash href so the gallery does not navigate away when a link is clicked.
+    as: LinkColumn({ href: (row) => `#/items/${(row as Row).id}` }),
+    sortable: true,
+    width: 'minmax(160px, 1fr)',
+  },
+  { key: 'owner', header: 'Assignee', value: (r) => r.owner, as: TextColumn(), width: 150 },
+  {
+    key: 'status',
+    header: 'Status',
+    value: (r) => r.status,
+    as: BadgeColumn<string>({ tone: (v) => STATUS_TONE[v] ?? 'gray' }),
+    width: 110,
+  },
+  {
+    key: 'count',
+    header: 'Count',
+    value: (r) => r.count,
+    as: NumberColumn({ format: 'integer' }),
+    align: 'right',
+    width: 90,
+    sortable: true,
+  },
+  { key: 'updated', header: 'Updated', value: (r) => r.updated, as: DateColumn(), width: 130 },
+  {
+    key: 'actions',
+    header: 'Actions',
+    // No `value`: ActionsColumn reads the row, never a cell value.
+    as: ActionsColumn({
+      items: [
+        { icon: 'copy', label: 'Copy link', onClick: () => {} },
+        { icon: 'pencil', label: 'Edit', onClick: () => {} },
+        { icon: 'trash', label: 'Delete', onClick: () => {}, tone: 'danger' },
+      ],
+    }),
+    align: 'right',
+    width: 130,
+    resizable: false,
+  },
 ];
 
 function Demo({
@@ -43,6 +152,7 @@ function Demo({
   empty,
   filtered,
   overlay,
+  columns = COLUMNS,
 }: {
   grouped?: boolean;
   loading?: boolean;
@@ -51,6 +161,7 @@ function Demo({
   empty?: boolean;
   filtered?: boolean;
   overlay?: boolean;
+  columns?: Column<Row>[];
 }) {
   const [sort, setSort] = useState<SortBy[]>([]);
   const [widths, setWidth] = useTableWidths('gallery-table-demo');
@@ -74,7 +185,7 @@ function Demo({
   return (
     <div className="h-100 w-full">
       <Table<Row>
-        columns={COLUMNS}
+        columns={columns}
         // `loading` must also empty `rows`. The engine only renders skeletons
         // when `isLoading && items.length === 0`, so passing 40 rows alongside
         // isLoading makes the Loading state pixel-identical to Flat and leaves
@@ -111,6 +222,8 @@ function Demo({
 
 export const states = [
   { name: 'Flat', render: () => <Demo /> },
+  // All 7 column helpers: Image, Link, Text, Badge, Number, Date, Actions.
+  { name: 'Column helpers', render: () => <Demo columns={HELPER_COLUMNS} /> },
   { name: 'Grouped', render: () => <Demo grouped /> },
   { name: 'Row overlay', render: () => <Demo overlay /> },
   { name: 'Loading', render: () => <Demo loading /> },
