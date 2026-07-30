@@ -101,7 +101,7 @@ export function EntityDetail({
                       → {fk.table}.{fk.field}
                     </button>
                   )}
-                  <span className="ml-auto shrink-0 font-mono text-11 text-gray-9">{f.type}</span>
+                  <span className="ml-auto shrink-0 font-mono text-11 text-gray-11">{f.type}</span>
                 </div>
                 {note && <div className="mt-1 pl-7 text-11 leading-snug text-gray-11">{note}</div>}
               </div>
