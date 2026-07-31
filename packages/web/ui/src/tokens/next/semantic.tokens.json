@@ -15,9 +15,21 @@
     "inset": {
       "light": "#eceae3",
       "dark": "#141310"
+    },
+    "field": {
+      "light": "#e7e5de",
+      "dark": "#131210"
     }
   },
   "literal": {
+    "handle": {
+      "light": "#4e46c6",
+      "dark": "#4e46c6"
+    },
+    "safe-zone": {
+      "light": "#c0382e",
+      "dark": "#c0382e"
+    },
     "folder": {
       "light": "#c29a2e",
       "dark": "#dfc060"

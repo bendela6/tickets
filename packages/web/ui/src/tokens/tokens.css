@@ -204,6 +204,9 @@
   --ins-pink-contrast: #ffffff;
   --ins-surface-raised: #ffffff;
   --ins-surface-inset: #eceae3;
+  --ins-surface-field: #e7e5de;
+  --ins-handle: #4e46c6;
+  --ins-safe-zone: #c0382e;
   --ins-folder: #c29a2e;
   --ins-highlight: #f1dfa0;
   --ins-black: #000000;
@@ -211,6 +214,7 @@
   --ins-shadow-raised: 0 1px 2px rgba(28, 26, 20, 0.06);
   --ins-shadow-overlay: 0 6px 16px rgba(28, 26, 20, 0.10), 0 2px 4px rgba(28, 26, 20, 0.06);
   --ins-shadow-modal: 0 16px 40px rgba(28, 26, 20, 0.16), 0 4px 10px rgba(28, 26, 20, 0.08);
+  --ins-shadow-artboard: 0 1px 2px rgba(28, 26, 20, 0.07), 0 10px 28px rgba(28, 26, 20, 0.09);
   /* /tokens:light */
 }
 
@@ -361,6 +365,9 @@
   --ins-pink-contrast: #35081c;
   --ins-surface-raised: #252320;
   --ins-surface-inset: #141310;
+  --ins-surface-field: #131210;
+  --ins-handle: #4e46c6;
+  --ins-safe-zone: #c0382e;
   --ins-folder: #dfc060;
   --ins-highlight: #4a4020;
   --ins-black: #000000;
@@ -368,6 +375,7 @@
   --ins-shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.4);
   --ins-shadow-overlay: 0 6px 16px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.3);
   --ins-shadow-modal: 0 16px 40px rgba(0, 0, 0, 0.55), 0 4px 10px rgba(0, 0, 0, 0.4);
+  --ins-shadow-artboard: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 12px 34px rgba(0, 0, 0, 0.55);
   /* /tokens:dark */
 }
 
@@ -521,6 +529,9 @@
   --color-pink-contrast: var(--ins-pink-contrast);
   --color-surface-raised: var(--ins-surface-raised);
   --color-surface-inset: var(--ins-surface-inset);
+  --color-surface-field: var(--ins-surface-field);
+  --color-handle: var(--ins-handle);
+  --color-safe-zone: var(--ins-safe-zone);
   --color-folder: var(--ins-folder);
   --color-highlight: var(--ins-highlight);
   --color-black: var(--ins-black);
@@ -528,6 +539,7 @@
   --shadow-raised: var(--ins-shadow-raised);
   --shadow-overlay: var(--ins-shadow-overlay);
   --shadow-modal: var(--ins-shadow-modal);
+  --shadow-artboard: var(--ins-shadow-artboard);
   /* /tokens:theme */
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
