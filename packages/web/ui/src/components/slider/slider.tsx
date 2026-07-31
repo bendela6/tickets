@@ -9,12 +9,13 @@ export type SliderSize = 'sm' | 'md';
 /**
  * A single-value slider.
  *
- * Built on a div with `role="slider"` rather than `<input type="range">`
- * because preflight is off in this project: an unstyled range input keeps its
- * user-agent track and thumb, and the vendor pseudo-elements needed to
- * override them cannot be expressed as Tailwind utilities. The ARIA
- * contract — `aria-valuemin`/`max`/`now`, arrow/Home/End keys, a focusable
- * tabindex — is what makes it a slider either way.
+ * Built on a div with `role="slider"` rather than `<input type="range">`: a
+ * native range's track and thumb are only reachable through vendor
+ * pseudo-elements (`::-webkit-slider-thumb`, `::-moz-range-thumb`), which no
+ * utility class can target, so a tokenised range would need a hand-written
+ * stylesheet per engine. The ARIA contract — `aria-valuemin`/`max`/`now`, the
+ * arrow/Page/Home/End keys, a focusable tabindex — is what makes it a slider,
+ * and it is spelled out below rather than inherited.
  */
 const trackClass = variants({
   base: 'relative w-full cursor-pointer touch-none rounded-full bg-surface-inset',

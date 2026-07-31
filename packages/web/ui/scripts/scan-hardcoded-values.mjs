@@ -223,7 +223,10 @@ function scanFile(file) {
 }
 
 const repoRoot = path.join(__dirname, '..', '..', '..', '..');
-const ROOTS = [path.join(repoRoot, 'apps', 'web', 'src')];
+const ROOTS = [
+  path.join(repoRoot, 'apps', 'web', 'src'),
+  path.join(repoRoot, 'apps', 'icon', 'src'),
+];
 
 export function diffAgainstBaseline(violationKeys, baselineKeys) {
   const baselineSet = new Set(baselineKeys);

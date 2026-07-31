@@ -17,6 +17,7 @@ const ROOTS = [
   join(REPO_ROOT, 'packages', 'web', 'ui', 'src'),
   join(REPO_ROOT, 'packages', 'web', 'playground', 'src'),
   join(REPO_ROOT, 'apps', 'web', 'src'),
+  join(REPO_ROOT, 'apps', 'icon', 'src'),
 ];
 
 /**
