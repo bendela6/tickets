@@ -16,6 +16,10 @@ export function AppShell({
 }) {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // `useRouterState` (already used above for `pathname`) rather than
+  // `schemaRoute.useSearch()`, which throws when the active route isn't
+  // `/schema` — this shell renders across every route.
+  const search = useRouterState({ select: (s) => s.location.search as { database?: string } });
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // The session viewer routes are split by kind (/terminals/$sessionId,
@@ -38,6 +42,7 @@ export function AppShell({
       onNewTicket={onNewTicket}
       onNavigate={() => setMobileNavOpen(false)}
       onNavigateSession={onNavigateSession}
+      schemaDatabase={search.database}
     />
   );
 

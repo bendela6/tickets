@@ -7,7 +7,7 @@
 // hand-written `.css`. It intentionally does NOT flag data constants
 // (e.g. a persisted-API-hex PALETTE table) or hex inside `*.test.*`
 // fixtures/assertions — those aren't styling.
-import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -223,11 +223,7 @@ function scanFile(file) {
 }
 
 const repoRoot = path.join(__dirname, '..', '..', '..', '..');
-const ROOTS = [
-  { app: 'web', dir: path.join(repoRoot, 'apps', 'web', 'src'), baselined: false },
-  { app: 'eer', dir: path.join(repoRoot, 'apps', 'eer', 'src'), baselined: true },
-];
-const baselineFile = path.join(__dirname, 'eer-baseline.json');
+const ROOTS = [path.join(repoRoot, 'apps', 'web', 'src')];
 
 export function diffAgainstBaseline(violationKeys, baselineKeys) {
   const baselineSet = new Set(baselineKeys);
@@ -244,10 +240,7 @@ export function readBaseline(filePath) {
   try {
     raw = readFileSync(filePath, 'utf8');
   } catch {
-    console.error(
-      `error: baseline file missing: ${filePath}\n` +
-        'run `node scripts/scan-hardcoded-values.mjs --update-baseline` to (re)create it',
-    );
+    console.error(`error: baseline file missing: ${filePath}`);
     process.exit(1);
   }
   let parsed;
@@ -264,10 +257,10 @@ export function readBaseline(filePath) {
   return parsed.violations;
 }
 
-function collectViolations(root) {
-  const files = walk(root.dir, []).filter((f) => !isExcluded(path.relative(root.dir, f)));
+function collectViolations(dir) {
+  const files = walk(dir, []).filter((f) => !isExcluded(path.relative(dir, f)));
   if (files.length === 0) {
-    console.error(`error: scanned zero files under ${root.dir} — check ROOTS/EXCLUDE_RES/walk()`);
+    console.error(`error: scanned zero files under ${dir} — check ROOTS/EXCLUDE_RES/walk()`);
     process.exit(1);
   }
   const violations = [];
@@ -281,39 +274,14 @@ function collectViolations(root) {
 }
 
 function main() {
-  const updateBaseline = process.argv.includes('--update-baseline');
   let failed = false;
   let totalFiles = 0;
 
-  for (const root of ROOTS) {
-    const { violations, fileCount } = collectViolations(root);
+  for (const dir of ROOTS) {
+    const { violations, fileCount } = collectViolations(dir);
     totalFiles += fileCount;
-
-    if (!root.baselined) {
-      for (const v of violations) console.log(v.line);
-      if (violations.length > 0) failed = true;
-      continue;
-    }
-
-    if (updateBaseline) {
-      const keys = [...new Set(violations.map((v) => v.key))].sort();
-      writeFileSync(baselineFile, JSON.stringify({ violations: keys }, null, 2) + '\n', 'utf8');
-      console.log(`baseline updated: ${keys.length} known ${root.app} violations`);
-      continue;
-    }
-
-    const baseline = readBaseline(baselineFile);
-    const keys = violations.map((v) => v.key);
-    const { fresh, fixed } = diffAgainstBaseline([...new Set(keys)], baseline);
-    for (const v of violations) {
-      if (fresh.includes(v.key)) console.log(`NEW ${v.line}`);
-    }
-    if (fresh.length > 0) failed = true;
-    console.log(
-      `${root.app} ratchet: ${new Set(keys).size} known violations (baseline ${baseline.length}` +
-        (fixed.length ? `, ${fixed.length} fixed — run --update-baseline to ratchet down` : '') +
-        ')',
-    );
+    for (const v of violations) console.log(v.line);
+    if (violations.length > 0) failed = true;
   }
 
   if (failed) process.exit(1);

@@ -48,10 +48,11 @@ export type EnumMeta = { name: string; values: string[]; schema: string | null }
 export type SchemaGraph = { tables: TableMeta[]; groups: GroupMeta[]; enums: EnumMeta[] };
 
 // The identity of a table or enum: its bare name in public, `schema.name`
-// otherwise. This is the SSOT model's own convention (tableId/enumId in
-// apps/eer/src/engine/model/import-drizzle) — conformance keys both sides by
-// this, so `terminal.sessions` and `agent.sessions` stay distinct instead of
-// silently collapsing into one map entry.
+// otherwise. This is the SSOT model's own convention (tableId/enumId, as
+// produced by the import-drizzle step that generated items-platform.json) —
+// conformance keys both sides by this, so `terminal.sessions` and
+// `agent.sessions` stay distinct instead of silently collapsing into one map
+// entry.
 export function qualifiedName(schema: string | null, name: string): string {
   return schema && schema !== 'public' ? `${schema}.${name}` : name;
 }
@@ -72,25 +73,32 @@ function enumIdentity(c: PgColumn): { schema: string | null; name: string } | nu
   return { schema: e.schema ?? null, name: e.enumName };
 }
 
-// Every table must belong to exactly one group. Throws otherwise, so the config
-// can't silently fall behind the schema.
-//
-// The ERD's visual group is independent of a table's real Postgres schema —
-// e.g. `core.users` renders in the WORKSPACE group alongside `core.projects`,
-// not in the WORKDIRS group with `core.workdirs`, even though all three carry
-// schema `core`. So a hand-listed `SchemaGroup.tables` entry (bare name)
-// always wins when present, regardless of schema. Only a table with NO
-// hand-listed entry falls back to schema-derived membership via
-// `SchemaGroup.schemas` — that's how `core.workdirs`, `terminal.sessions` and
-// `agent.*` resolve, since group and schema happen to coincide 1:1 for them.
-// This also keeps `terminal.sessions` and `agent.sessions` — the same bare
-// name — resolving unambiguously: each carries its own pgSchema, so there is
-// no bare name collision to trip the "in multiple groups" check.
-export function resolveGroupKey(
+/**
+ * Group membership lookup, or null when the table belongs to no configured
+ * group. Genuine ambiguity (one table or schema claimed by two groups) still
+ * throws — that is a config bug regardless of caller.
+ *
+ * Live introspection needs the null: a database the config never described
+ * (or a table added to the database but not the code) has no curated group,
+ * and that is expected rather than fatal. See introspect/group-tables.ts.
+ *
+ * The ERD's visual group is independent of a table's real Postgres schema —
+ * e.g. `core.users` renders in the WORKSPACE group alongside `core.projects`,
+ * not in the WORKDIRS group with `core.workdirs`, even though all three carry
+ * schema `core`. So a hand-listed `SchemaGroup.tables` entry (bare name)
+ * always wins when present, regardless of schema. Only a table with NO
+ * hand-listed entry falls back to schema-derived membership via
+ * `SchemaGroup.schemas` — that's how `core.workdirs`, `terminal.sessions` and
+ * `agent.*` resolve, since group and schema happen to coincide 1:1 for them.
+ * This also keeps `terminal.sessions` and `agent.sessions` — the same bare
+ * name — resolving unambiguously: each carries its own pgSchema, so there is
+ * no bare name collision to trip the "in multiple groups" check.
+ */
+export function findGroupKey(
   tableName: string,
   groups: SchemaGroup[],
   schema: string | null = null,
-): string {
+): string | null {
   const byTable = groups.filter((g) => g.tables.includes(tableName));
   if (byTable.length > 1) {
     throw new Error(`table "${tableName}" is in multiple groups: ${byTable.map((g) => g.key).join(', ')}`);
@@ -98,12 +106,24 @@ export function resolveGroupKey(
   if (byTable.length === 1) return byTable[0]!.key;
   if (schema !== null) {
     const owners = groups.filter((g) => g.schemas?.includes(schema));
-    if (owners.length === 0) throw new Error(`schema "${schema}" (table "${tableName}") is in no group`);
     if (owners.length > 1) {
       throw new Error(`schema "${schema}" is in multiple groups: ${owners.map((g) => g.key).join(', ')}`);
     }
-    return owners[0]!.key;
+    return owners[0]?.key ?? null;
   }
+  return null;
+}
+
+// Every table in the drizzle registry must belong to exactly one group.
+// Throws otherwise, so the config can't silently fall behind the schema.
+export function resolveGroupKey(
+  tableName: string,
+  groups: SchemaGroup[],
+  schema: string | null = null,
+): string {
+  const key = findGroupKey(tableName, groups, schema);
+  if (key !== null) return key;
+  if (schema !== null) throw new Error(`schema "${schema}" (table "${tableName}") is in no group`);
   throw new Error(`table "${tableName}" is in no group`);
 }
 
@@ -224,8 +244,8 @@ export function describeSchema(): SchemaGraph {
 
   // Derived from resolved membership (not the raw config) so schema-owned
   // tables — never listed in `SchemaGroup.tables` — still show up here; the
-  // ERD renderer (apps/web/src/components/schema/erd-engine.ts) iterates
-  // this array to lay out each group's cards, looking each name up in
+  // diagram adapter (apps/web/src/components/eer/adapter/schema-graph-to-model.ts)
+  // reads this array to build the model's groups, resolving each name against
   // `tables`. Qualified, therefore: emitting a bare "sessions" in both the
   // terminal and the agent group would have the renderer resolve BOTH to
   // whichever table its own map happened to keep, drawing one subsystem's

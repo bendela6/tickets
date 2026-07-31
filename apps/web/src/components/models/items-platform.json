@@ -1,0 +1,3821 @@
+{
+  "meta": {
+    "title": "Items platform — ER model",
+    "description": "Extracted from docs/grok/er-model.html."
+  },
+  "view": {
+    "routing": "avoid"
+  },
+  "kinds": [
+    {
+      "id": "fk",
+      "label": "FK constraint",
+      "style": "solid"
+    },
+    {
+      "id": "m2m",
+      "label": "Many-to-many",
+      "style": "dashed"
+    }
+  ],
+  "colors": {},
+  "enums": [
+    {
+      "name": "user_kind",
+      "values": [
+        "human",
+        "agent"
+      ],
+      "schema": "core"
+    },
+    {
+      "name": "status_kind",
+      "values": [
+        "todo",
+        "active",
+        "blocked",
+        "done",
+        "dropped"
+      ],
+      "schema": "structure"
+    },
+    {
+      "name": "field_type",
+      "values": [
+        "string",
+        "number",
+        "boolean",
+        "date",
+        "datetime",
+        "option",
+        "user",
+        "json"
+      ],
+      "schema": "structure"
+    },
+    {
+      "name": "runner_kind",
+      "values": [
+        "local",
+        "container"
+      ],
+      "schema": "core"
+    },
+    {
+      "name": "session_status",
+      "values": [
+        "starting",
+        "live",
+        "disconnected",
+        "exited",
+        "failed"
+      ],
+      "schema": "terminal"
+    },
+    {
+      "name": "session_status",
+      "values": [
+        "starting",
+        "running",
+        "idle",
+        "awaiting_input",
+        "interrupted",
+        "exited",
+        "failed"
+      ],
+      "schema": "agent"
+    },
+    {
+      "name": "permission_mode",
+      "values": [
+        "default",
+        "acceptEdits",
+        "bypassPermissions",
+        "plan",
+        "dontAsk"
+      ],
+      "schema": "agent"
+    },
+    {
+      "name": "permission_status",
+      "values": [
+        "pending",
+        "allowed",
+        "denied"
+      ],
+      "schema": "agent"
+    }
+  ],
+  "groups": [
+    {
+      "id": "ws",
+      "label": "WORKSPACE",
+      "order": 0,
+      "bounds": {
+        "x": 80,
+        "y": 80,
+        "w": 372,
+        "h": 770
+      }
+    },
+    {
+      "id": "st",
+      "label": "STRUCTURE",
+      "order": 1,
+      "bounds": {
+        "x": 672,
+        "y": 80,
+        "w": 1304,
+        "h": 1080
+      }
+    },
+    {
+      "id": "rc",
+      "label": "RECORDS",
+      "order": 2,
+      "bounds": {
+        "x": 2196,
+        "y": 80,
+        "w": 848,
+        "h": 924
+      }
+    },
+    {
+      "id": "hi",
+      "label": "HISTORY",
+      "order": 3,
+      "bounds": {
+        "x": 3264,
+        "y": 80,
+        "w": 747,
+        "h": 996
+      }
+    },
+    {
+      "id": "it",
+      "label": "Item types",
+      "order": 10,
+      "parent": "st",
+      "bounds": {
+        "x": 712,
+        "y": 378,
+        "w": 328,
+        "h": 574
+      }
+    },
+    {
+      "id": "op",
+      "label": "Options",
+      "order": 11,
+      "parent": "st",
+      "bounds": {
+        "x": 1160,
+        "y": 474,
+        "w": 328,
+        "h": 646
+      }
+    },
+    {
+      "id": "lt",
+      "label": "Link types",
+      "order": 12,
+      "parent": "st",
+      "bounds": {
+        "x": 1608,
+        "y": 150,
+        "w": 328,
+        "h": 408
+      }
+    },
+    {
+      "id": "im",
+      "label": "Items",
+      "order": 20,
+      "parent": "rc",
+      "bounds": {
+        "x": 2236,
+        "y": 150,
+        "w": 328,
+        "h": 814
+      }
+    },
+    {
+      "id": "cm",
+      "label": "Comments",
+      "order": 21,
+      "parent": "rc",
+      "bounds": {
+        "x": 2684,
+        "y": 150,
+        "w": 320,
+        "h": 432
+      }
+    },
+    {
+      "id": "es",
+      "label": "Event stream",
+      "order": 30,
+      "parent": "hi",
+      "bounds": {
+        "x": 3304,
+        "y": 150,
+        "w": 320,
+        "h": 886
+      }
+    },
+    {
+      "id": "core",
+      "label": "WORKDIRS",
+      "order": 4,
+      "bounds": {
+        "x": 4131,
+        "y": 80,
+        "w": 408,
+        "h": 504
+      }
+    },
+    {
+      "id": "terminal",
+      "label": "TERMINAL SESSIONS",
+      "order": 5,
+      "bounds": {
+        "x": 4579,
+        "y": 80,
+        "w": 408,
+        "h": 806
+      }
+    },
+    {
+      "id": "agent",
+      "label": "AGENT SESSIONS",
+      "order": 6,
+      "bounds": {
+        "x": 5027,
+        "y": 80,
+        "w": 856,
+        "h": 1468
+      }
+    }
+  ],
+  "entities": [
+    {
+      "id": "core.users",
+      "label": "users",
+      "group": "ws",
+      "description": "Actors for mutations and comments (humans and agents).",
+      "schema": "core",
+      "x": 120,
+      "y": 150,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "title": "Name",
+          "description": "Display name; unique. (unique)",
+          "nullable": false
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "title": "Email",
+          "description": "Optional contact; future auth hook.",
+          "nullable": true
+        },
+        {
+          "name": "kind",
+          "type": "user_kind",
+          "title": "Kind",
+          "description": "human or agent. (human | agent)",
+          "nullable": false
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete; null = active.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "users_name_unique",
+          "columns": [
+            "name"
+          ],
+          "nullsNotDistinct": false
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "core.projects",
+      "label": "projects",
+      "group": "ws",
+      "description": "Workspace container bound to a structure scheme.",
+      "schema": "core",
+      "x": 120,
+      "y": 378,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "key",
+          "type": "text",
+          "title": "Key",
+          "description": "URL-safe project slug. (unique)",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "title": "Name",
+          "description": "Display name.",
+          "nullable": false
+        },
+        {
+          "name": "item_prefix",
+          "type": "text",
+          "title": "Item prefix",
+          "description": "Display prefix, e.g. TASK → TASK-42.",
+          "nullable": false
+        },
+        {
+          "name": "scheme_id",
+          "type": "integer",
+          "title": "Scheme",
+          "description": "Structure pack this project uses.",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "When the project was created.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "scheme_id"
+          ],
+          "refTable": "structure.schemes",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "projects_key_unique",
+          "columns": [
+            "key"
+          ],
+          "nullsNotDistinct": false
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "structure.views",
+      "label": "views",
+      "group": "ws",
+      "description": "Saved board/table lenses (columns, filters, sort).",
+      "schema": "structure",
+      "x": 120,
+      "y": 630,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "project_id",
+          "type": "integer",
+          "title": "Project",
+          "description": "Owning project.",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "title": "Name",
+          "description": "View title in the UI.",
+          "nullable": false
+        },
+        {
+          "name": "position",
+          "type": "integer",
+          "title": "Position",
+          "description": "Order in the view list.",
+          "nullable": false
+        },
+        {
+          "name": "config",
+          "type": "jsonb",
+          "title": "Config",
+          "description": "Columns, filters, sort; field refs by id.",
+          "nullable": false
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "project_id"
+          ],
+          "refTable": "core.projects",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "structure.schemes",
+      "label": "schemes",
+      "group": "st",
+      "description": "Structure pack root: types, field library, option sets.",
+      "schema": "structure",
+      "x": 712,
+      "y": 150,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "key",
+          "type": "text",
+          "title": "Key",
+          "description": "Stable scheme identifier. (unique)",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "title": "Name",
+          "description": "Display name.",
+          "nullable": false
+        },
+        {
+          "name": "config",
+          "type": "jsonb",
+          "title": "Config",
+          "description": "Defaults (e.g. default view blueprint).",
+          "nullable": false
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "schemes_key_unique",
+          "columns": [
+            "key"
+          ],
+          "nullsNotDistinct": false
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "structure.item_types",
+      "label": "item_types",
+      "group": "it",
+      "description": "Kinds of items within a scheme (task, bug, document, …).",
+      "schema": "structure",
+      "x": 730,
+      "y": 422,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "scheme_id",
+          "type": "integer",
+          "title": "Scheme",
+          "description": "Owning structure pack.",
+          "nullable": false
+        },
+        {
+          "name": "key",
+          "type": "text",
+          "title": "Key",
+          "description": "Stable type key, e.g. task.",
+          "nullable": false
+        },
+        {
+          "name": "label",
+          "type": "text",
+          "title": "Label",
+          "description": "UI label, e.g. Task.",
+          "nullable": false
+        },
+        {
+          "name": "position",
+          "type": "integer",
+          "title": "Position",
+          "description": "Order in pickers.",
+          "nullable": false
+        },
+        {
+          "name": "config",
+          "type": "jsonb",
+          "title": "Config",
+          "description": "Icon, product copy, UI hints.",
+          "nullable": false
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "scheme_id"
+          ],
+          "refTable": "structure.schemes",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "item_types_scheme_key",
+          "columns": [
+            "scheme_id",
+            "key"
+          ],
+          "nullsNotDistinct": false
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "structure.item_type_child_types",
+      "label": "item_type_child_types",
+      "group": "it",
+      "description": "Which child types may hang under a parent type (hierarchy rules).",
+      "schema": "structure",
+      "x": 730,
+      "y": 660,
+      "columns": [
+        {
+          "name": "parent_type_id",
+          "type": "integer",
+          "title": "Parent type",
+          "description": "Type of the parent item.",
+          "nullable": false
+        },
+        {
+          "name": "child_type_id",
+          "type": "integer",
+          "title": "Child type",
+          "description": "Type allowed as child.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "fk",
+          "columns": [
+            "parent_type_id"
+          ],
+          "refTable": "structure.item_types",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "child_type_id"
+          ],
+          "refTable": "structure.item_types",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "p1",
+          "kind": "pk",
+          "name": null,
+          "columns": [
+            "parent_type_id",
+            "child_type_id"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "structure.item_type_fields",
+      "label": "item_type_fields",
+      "group": "it",
+      "description": "Places a library field on a type (M2M). Definition stays on fields.",
+      "schema": "structure",
+      "x": 730,
+      "y": 778,
+      "columns": [
+        {
+          "name": "item_type_id",
+          "type": "integer",
+          "title": "Item type",
+          "description": "Type that shows this field.",
+          "nullable": false
+        },
+        {
+          "name": "field_id",
+          "type": "integer",
+          "title": "Field",
+          "description": "Shared field definition.",
+          "nullable": false
+        },
+        {
+          "name": "position",
+          "type": "integer",
+          "title": "Position",
+          "description": "Order on forms for this type.",
+          "nullable": false
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "title": "Required",
+          "description": "Must have a value on create/update.",
+          "nullable": false
+        },
+        {
+          "name": "config_override",
+          "type": "jsonb",
+          "title": "Config override",
+          "description": "Per-type overrides (allowlist, transitions, …).",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "fk",
+          "columns": [
+            "item_type_id"
+          ],
+          "refTable": "structure.item_types",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "field_id"
+          ],
+          "refTable": "structure.fields",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "p1",
+          "kind": "pk",
+          "name": null,
+          "columns": [
+            "item_type_id",
+            "field_id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "itf_type_position",
+          "columns": [
+            {
+              "expression": "item_type_id"
+            },
+            {
+              "expression": "position"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
+    },
+    {
+      "id": "structure.fields",
+      "label": "fields",
+      "group": "st",
+      "description": "Scheme-scoped field library (reusable across types).",
+      "schema": "structure",
+      "x": 1160,
+      "y": 150,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "scheme_id",
+          "type": "integer",
+          "title": "Scheme",
+          "description": "Owning structure pack.",
+          "nullable": false
+        },
+        {
+          "name": "key",
+          "type": "text",
+          "title": "Key",
+          "description": "Stable key, unique per scheme. (unique/scheme)",
+          "nullable": false
+        },
+        {
+          "name": "label",
+          "type": "text",
+          "title": "Label",
+          "description": "UI label.",
+          "nullable": false
+        },
+        {
+          "name": "type",
+          "type": "field_type",
+          "title": "Type",
+          "description": "string | number | boolean | date | datetime | option | user | json.",
+          "nullable": false
+        },
+        {
+          "name": "system",
+          "type": "boolean",
+          "title": "System",
+          "description": "Seeded/locked field (e.g. title, status).",
+          "nullable": false
+        },
+        {
+          "name": "config",
+          "type": "jsonb",
+          "title": "Config",
+          "description": "Format, multiple, workflow flags, UI hints.",
+          "nullable": false
+        },
+        {
+          "name": "option_set_id",
+          "type": "integer",
+          "title": "Option set",
+          "description": "Shared choices when type is option.",
+          "nullable": true
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "scheme_id"
+          ],
+          "refTable": "structure.schemes",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "option_set_id"
+          ],
+          "refTable": "structure.option_sets",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "fields_scheme_key",
+          "columns": [
+            "scheme_id",
+            "key"
+          ],
+          "nullsNotDistinct": false
+        },
+        {
+          "id": "k1",
+          "kind": "check",
+          "name": "fields_option_set_required",
+          "expression": "type <> 'option' OR option_set_id IS NOT NULL"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "structure.option_sets",
+      "label": "option_sets",
+      "group": "op",
+      "description": "Shared option lists; many option fields can reuse one set.",
+      "schema": "structure",
+      "x": 1178,
+      "y": 518,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "scheme_id",
+          "type": "integer",
+          "title": "Scheme",
+          "description": "Owning structure pack.",
+          "nullable": false
+        },
+        {
+          "name": "key",
+          "type": "text",
+          "title": "Key",
+          "description": "Stable set key, e.g. status.",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "title": "Name",
+          "description": "Display name for the list.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "scheme_id"
+          ],
+          "refTable": "structure.schemes",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "option_sets_scheme_key",
+          "columns": [
+            "scheme_id",
+            "key"
+          ],
+          "nullsNotDistinct": false
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "structure.options",
+      "label": "options",
+      "group": "op",
+      "description": "One choice in an option set (e.g. a status value).",
+      "schema": "structure",
+      "x": 1178,
+      "y": 684,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key; stored on item_values.option_id.",
+          "nullable": false
+        },
+        {
+          "name": "option_set_id",
+          "type": "integer",
+          "title": "Option set",
+          "description": "Parent list.",
+          "nullable": false
+        },
+        {
+          "name": "value",
+          "type": "text",
+          "title": "Value",
+          "description": "Stable machine value.",
+          "nullable": false
+        },
+        {
+          "name": "label",
+          "type": "text",
+          "title": "Label",
+          "description": "UI label.",
+          "nullable": false
+        },
+        {
+          "name": "position",
+          "type": "integer",
+          "title": "Position",
+          "description": "Order in pickers.",
+          "nullable": false
+        },
+        {
+          "name": "kind",
+          "type": "status_kind",
+          "nullable": true,
+          "title": "Kind",
+          "description": "Lifecycle semantic for workflow options; null for non-workflow options. (todo | active | blocked | done | dropped)"
+        },
+        {
+          "name": "config",
+          "type": "jsonb",
+          "title": "Config",
+          "description": "kind (todo/active/done), color, icon.",
+          "nullable": false
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "option_set_id"
+          ],
+          "refTable": "structure.option_sets",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "options_set_value",
+          "columns": [
+            "option_set_id",
+            "value"
+          ],
+          "nullsNotDistinct": false
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "structure.option_transitions",
+      "label": "option_transitions",
+      "group": "op",
+      "description": "Workflow graph: which option may move to which (on a workflow field).",
+      "schema": "structure",
+      "x": 1178,
+      "y": 922,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "field_id",
+          "type": "integer",
+          "title": "Field",
+          "description": "Workflow option field these edges apply to.",
+          "nullable": false
+        },
+        {
+          "name": "from_option_id",
+          "type": "integer",
+          "title": "From option",
+          "description": "Source option; null = valid start.",
+          "nullable": true
+        },
+        {
+          "name": "to_option_id",
+          "type": "integer",
+          "title": "To option",
+          "description": "Destination option.",
+          "nullable": false
+        },
+        {
+          "name": "item_type_id",
+          "type": "integer",
+          "title": "Item type",
+          "description": "Optional; null = all types using the field.",
+          "nullable": true
+        },
+        {
+          "name": "config",
+          "type": "jsonb",
+          "title": "Config",
+          "description": "Future guards / metadata.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "field_id"
+          ],
+          "refTable": "structure.fields",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "from_option_id"
+          ],
+          "refTable": "structure.options",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c4",
+          "kind": "fk",
+          "columns": [
+            "to_option_id"
+          ],
+          "refTable": "structure.options",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c5",
+          "kind": "fk",
+          "columns": [
+            "item_type_id"
+          ],
+          "refTable": "structure.item_types",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "option_transitions_edge",
+          "columns": [
+            "field_id",
+            "from_option_id",
+            "to_option_id",
+            "item_type_id"
+          ],
+          "nullsNotDistinct": true
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "structure.link_types",
+      "label": "link_types",
+      "group": "lt",
+      "description": "Named relation vocabulary owned by a source type.",
+      "schema": "structure",
+      "x": 1626,
+      "y": 194,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "item_type_id",
+          "type": "integer",
+          "title": "Source type",
+          "description": "Type that owns this link type.",
+          "nullable": false
+        },
+        {
+          "name": "key",
+          "type": "text",
+          "title": "Key",
+          "description": "e.g. blocks.",
+          "nullable": false
+        },
+        {
+          "name": "label",
+          "type": "text",
+          "title": "Label",
+          "description": "Forward label.",
+          "nullable": false
+        },
+        {
+          "name": "inverse_label",
+          "type": "text",
+          "title": "Inverse label",
+          "description": "Label from the target side.",
+          "nullable": false
+        },
+        {
+          "name": "directional",
+          "type": "boolean",
+          "title": "Directional",
+          "description": "Whether direction matters (cycle checks).",
+          "nullable": false
+        },
+        {
+          "name": "position",
+          "type": "integer",
+          "title": "Position",
+          "description": "Order in UI.",
+          "nullable": false
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "item_type_id"
+          ],
+          "refTable": "structure.item_types",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "link_types_type_key",
+          "columns": [
+            "item_type_id",
+            "key"
+          ],
+          "nullsNotDistinct": false
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "structure.link_type_target_types",
+      "label": "link_type_target_types",
+      "group": "lt",
+      "description": "Which item types may be targets of a given link type.",
+      "schema": "structure",
+      "x": 1626,
+      "y": 456,
+      "columns": [
+        {
+          "name": "link_type_id",
+          "type": "integer",
+          "title": "Link type",
+          "description": "The relation definition.",
+          "nullable": false
+        },
+        {
+          "name": "target_type_id",
+          "type": "integer",
+          "title": "Target type",
+          "description": "Allowed target item type.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "fk",
+          "columns": [
+            "link_type_id"
+          ],
+          "refTable": "structure.link_types",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "target_type_id"
+          ],
+          "refTable": "structure.item_types",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "p1",
+          "kind": "pk",
+          "name": null,
+          "columns": [
+            "link_type_id",
+            "target_type_id"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "records.items",
+      "label": "items",
+      "group": "im",
+      "description": "Record spine (generic work/knowledge object in a project).",
+      "schema": "records",
+      "x": 2254,
+      "y": 194,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "project_id",
+          "type": "integer",
+          "title": "Project",
+          "description": "Home project.",
+          "nullable": false
+        },
+        {
+          "name": "type_id",
+          "type": "integer",
+          "title": "Type",
+          "description": "Item type (task, doc, …).",
+          "nullable": false
+        },
+        {
+          "name": "parent_id",
+          "type": "integer",
+          "title": "Parent",
+          "description": "Optional parent item (tree).",
+          "nullable": true
+        },
+        {
+          "name": "number",
+          "type": "integer",
+          "title": "Number",
+          "description": "Per-project display number. (unique/project)",
+          "nullable": false
+        },
+        {
+          "name": "created_by",
+          "type": "integer",
+          "title": "Created by",
+          "description": "Author user.",
+          "nullable": false
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete.",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "Creation time.",
+          "nullable": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "title": "Updated at",
+          "description": "Optimistic-lock token.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "project_id"
+          ],
+          "refTable": "core.projects",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "type_id"
+          ],
+          "refTable": "structure.item_types",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c4",
+          "kind": "fk",
+          "columns": [
+            "parent_id"
+          ],
+          "refTable": "records.items",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c5",
+          "kind": "fk",
+          "columns": [
+            "created_by"
+          ],
+          "refTable": "core.users",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "items_project_number",
+          "columns": [
+            "project_id",
+            "number"
+          ],
+          "nullsNotDistinct": false
+        }
+      ],
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "items_project_type",
+          "columns": [
+            {
+              "expression": "project_id"
+            },
+            {
+              "expression": "type_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i2",
+          "name": "items_parent",
+          "columns": [
+            {
+              "expression": "parent_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
+    },
+    {
+      "id": "records.item_values",
+      "label": "item_values",
+      "group": "im",
+      "description": "EAV storage: one row (or N for multi) per field value on an item.",
+      "schema": "records",
+      "x": 2254,
+      "y": 480,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "item_id",
+          "type": "integer",
+          "title": "Item",
+          "description": "Owning item.",
+          "nullable": false
+        },
+        {
+          "name": "field_id",
+          "type": "integer",
+          "title": "Field",
+          "description": "Field definition (shared library id).",
+          "nullable": false
+        },
+        {
+          "name": "value_text",
+          "type": "text",
+          "title": "Text value",
+          "description": "For string-like fields.",
+          "nullable": true
+        },
+        {
+          "name": "value_number",
+          "type": "numeric",
+          "title": "Number value",
+          "description": "For number fields.",
+          "nullable": true
+        },
+        {
+          "name": "value_date",
+          "type": "timestamp with time zone",
+          "title": "Date value",
+          "description": "For date/datetime fields.",
+          "nullable": true
+        },
+        {
+          "name": "value_bool",
+          "type": "boolean",
+          "title": "Boolean value",
+          "description": "For boolean fields.",
+          "nullable": true
+        },
+        {
+          "name": "value_json",
+          "type": "jsonb",
+          "title": "JSON value",
+          "description": "For json / compound fields.",
+          "nullable": true
+        },
+        {
+          "name": "option_id",
+          "type": "integer",
+          "title": "Option",
+          "description": "For option fields (incl. status).",
+          "nullable": true
+        },
+        {
+          "name": "value_user_id",
+          "type": "integer",
+          "title": "User",
+          "description": "For user fields.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "item_id"
+          ],
+          "refTable": "records.items",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "field_id"
+          ],
+          "refTable": "structure.fields",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c4",
+          "kind": "fk",
+          "columns": [
+            "option_id"
+          ],
+          "refTable": "structure.options",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c5",
+          "kind": "fk",
+          "columns": [
+            "value_user_id"
+          ],
+          "refTable": "core.users",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "k1",
+          "kind": "check",
+          "name": "iv_one_value",
+          "expression": "num_nonnulls(value_text, value_number, value_date, value_bool, value_json, option_id, value_user_id) = 1"
+        }
+      ],
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "iv_scalar",
+          "columns": [
+            {
+              "expression": "item_id"
+            },
+            {
+              "expression": "field_id"
+            }
+          ],
+          "unique": true,
+          "method": "btree",
+          "where": "option_id IS NULL AND value_user_id IS NULL"
+        },
+        {
+          "id": "i2",
+          "name": "iv_option",
+          "columns": [
+            {
+              "expression": "item_id"
+            },
+            {
+              "expression": "field_id"
+            },
+            {
+              "expression": "option_id"
+            }
+          ],
+          "unique": true,
+          "method": "btree",
+          "where": "option_id IS NOT NULL"
+        },
+        {
+          "id": "i3",
+          "name": "iv_user",
+          "columns": [
+            {
+              "expression": "item_id"
+            },
+            {
+              "expression": "field_id"
+            },
+            {
+              "expression": "value_user_id"
+            }
+          ],
+          "unique": true,
+          "method": "btree",
+          "where": "value_user_id IS NOT NULL"
+        },
+        {
+          "id": "i4",
+          "name": "iv_item",
+          "columns": [
+            {
+              "expression": "item_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i5",
+          "name": "iv_field_text",
+          "columns": [
+            {
+              "expression": "field_id"
+            },
+            {
+              "expression": "value_text"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i6",
+          "name": "iv_field_number",
+          "columns": [
+            {
+              "expression": "field_id"
+            },
+            {
+              "expression": "value_number"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i7",
+          "name": "iv_field_date",
+          "columns": [
+            {
+              "expression": "field_id"
+            },
+            {
+              "expression": "value_date"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i8",
+          "name": "iv_field_option",
+          "columns": [
+            {
+              "expression": "field_id"
+            },
+            {
+              "expression": "option_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i9",
+          "name": "iv_field_user",
+          "columns": [
+            {
+              "expression": "field_id"
+            },
+            {
+              "expression": "value_user_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
+    },
+    {
+      "id": "records.comments",
+      "label": "comments",
+      "group": "cm",
+      "description": "Discussion threads on an item.",
+      "schema": "records",
+      "x": 2702,
+      "y": 194,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "item_id",
+          "type": "integer",
+          "title": "Item",
+          "description": "Item being discussed.",
+          "nullable": false
+        },
+        {
+          "name": "author_id",
+          "type": "integer",
+          "title": "Author",
+          "description": "Comment author.",
+          "nullable": false
+        },
+        {
+          "name": "parent_id",
+          "type": "integer",
+          "title": "Parent comment",
+          "description": "Reply parent; null = top-level.",
+          "nullable": true
+        },
+        {
+          "name": "body",
+          "type": "text",
+          "title": "Body",
+          "description": "Markdown body.",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "When posted.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "item_id"
+          ],
+          "refTable": "records.items",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "author_id"
+          ],
+          "refTable": "core.users",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c4",
+          "kind": "fk",
+          "columns": [
+            "parent_id"
+          ],
+          "refTable": "records.comments",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "comments_item",
+          "columns": [
+            {
+              "expression": "item_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
+    },
+    {
+      "id": "records.comment_reactions",
+      "label": "comment_reactions",
+      "group": "cm",
+      "description": "Emoji reactions on comments.",
+      "schema": "records",
+      "x": 2702,
+      "y": 408,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "comment_id",
+          "type": "integer",
+          "title": "Comment",
+          "description": "Target comment.",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "integer",
+          "title": "User",
+          "description": "Who reacted.",
+          "nullable": false
+        },
+        {
+          "name": "emoji",
+          "type": "text",
+          "title": "Emoji",
+          "description": "Reaction glyph.",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "When reacted.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "comment_id"
+          ],
+          "refTable": "records.comments",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "user_id"
+          ],
+          "refTable": "core.users",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "comment_reactions_unique",
+          "columns": [
+            "comment_id",
+            "user_id",
+            "emoji"
+          ],
+          "nullsNotDistinct": false
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "records.attachments",
+      "label": "attachments",
+      "group": "rc",
+      "description": "Editor image uploads; no item FK, docs reference by URL.",
+      "schema": "records",
+      "x": 2702,
+      "y": 700,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "filename",
+          "type": "text",
+          "title": "Filename",
+          "description": "Original upload filename.",
+          "nullable": false
+        },
+        {
+          "name": "mime",
+          "type": "text",
+          "title": "Mime",
+          "description": "Content type.",
+          "nullable": false
+        },
+        {
+          "name": "size",
+          "type": "integer",
+          "title": "Size",
+          "description": "Byte size.",
+          "nullable": false
+        },
+        {
+          "name": "data",
+          "type": "bytea",
+          "title": "Data",
+          "description": "File bytes.",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "When uploaded.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "records.item_links",
+      "label": "item_links",
+      "group": "im",
+      "description": "Typed edges between two items.",
+      "schema": "records",
+      "x": 2254,
+      "y": 790,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "link_type_id",
+          "type": "integer",
+          "title": "Link type",
+          "description": "Relation kind.",
+          "nullable": false
+        },
+        {
+          "name": "source_item_id",
+          "type": "integer",
+          "title": "Source item",
+          "description": "From item.",
+          "nullable": false
+        },
+        {
+          "name": "target_item_id",
+          "type": "integer",
+          "title": "Target item",
+          "description": "To item.",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "When linked.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "link_type_id"
+          ],
+          "refTable": "structure.link_types",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "source_item_id"
+          ],
+          "refTable": "records.items",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c4",
+          "kind": "fk",
+          "columns": [
+            "target_item_id"
+          ],
+          "refTable": "records.items",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "item_links_unique",
+          "columns": [
+            "link_type_id",
+            "source_item_id",
+            "target_item_id"
+          ],
+          "nullsNotDistinct": false
+        },
+        {
+          "id": "k1",
+          "kind": "check",
+          "name": "item_links_no_self",
+          "expression": "source_item_id <> target_item_id"
+        }
+      ],
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "item_links_source",
+          "columns": [
+            {
+              "expression": "source_item_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i2",
+          "name": "item_links_target",
+          "columns": [
+            {
+              "expression": "target_item_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
+    },
+    {
+      "id": "history.events",
+      "label": "events",
+      "group": "es",
+      "description": "Global append-only log for every aggregate stream.",
+      "schema": "history",
+      "x": 3322,
+      "y": 194,
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigserial",
+          "title": "Id",
+          "description": "Global cursor / outbox order.",
+          "nullable": false
+        },
+        {
+          "name": "aggregate_type",
+          "type": "text",
+          "title": "Aggregate type",
+          "description": "item | field | type | project | …",
+          "nullable": false
+        },
+        {
+          "name": "aggregate_id",
+          "type": "integer",
+          "title": "Aggregate id",
+          "description": "Entity id within that type.",
+          "nullable": false
+        },
+        {
+          "name": "seq",
+          "type": "integer",
+          "title": "Sequence",
+          "description": "Order within the stream; concurrency.",
+          "nullable": false
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "title": "Kind",
+          "description": "e.g. item.field_changed.",
+          "nullable": false
+        },
+        {
+          "name": "version",
+          "type": "integer",
+          "title": "Version",
+          "description": "Payload schema version for upcasts.",
+          "nullable": false
+        },
+        {
+          "name": "payload",
+          "type": "jsonb",
+          "title": "Payload",
+          "description": "Event data (value-only for fields).",
+          "nullable": false
+        },
+        {
+          "name": "actor_id",
+          "type": "integer",
+          "title": "Actor",
+          "description": "Who caused it.",
+          "nullable": false
+        },
+        {
+          "name": "at",
+          "type": "timestamp with time zone",
+          "title": "At",
+          "description": "When it happened.",
+          "nullable": false
+        },
+        {
+          "name": "command_id",
+          "type": "uuid",
+          "title": "Command id",
+          "description": "Links to commands ledger / retries.",
+          "nullable": false
+        },
+        {
+          "name": "correlation_id",
+          "type": "uuid",
+          "title": "Correlation id",
+          "description": "Groups multi-event commands.",
+          "nullable": false
+        },
+        {
+          "name": "caused_by",
+          "type": "bigint",
+          "title": "Caused by",
+          "description": "Parent event id (automations).",
+          "nullable": true
+        },
+        {
+          "name": "depth",
+          "type": "integer",
+          "title": "Depth",
+          "description": "Automation chain depth.",
+          "nullable": false
+        },
+        {
+          "name": "project_id",
+          "type": "integer",
+          "title": "Project id",
+          "description": "Denorm for partition / ACL.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "actor_id"
+          ],
+          "refTable": "core.users",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "events_stream_seq",
+          "columns": [
+            "aggregate_type",
+            "aggregate_id",
+            "seq"
+          ],
+          "nullsNotDistinct": false
+        },
+        {
+          "id": "f9",
+          "kind": "fk",
+          "name": null,
+          "columns": [
+            "caused_by"
+          ],
+          "refTable": "history.events",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "k1",
+          "kind": "check",
+          "name": "events_item_project",
+          "expression": "aggregate_type <> 'item' OR project_id IS NOT NULL"
+        }
+      ],
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "events_correlation",
+          "columns": [
+            {
+              "expression": "correlation_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i2",
+          "name": "events_command",
+          "columns": [
+            {
+              "expression": "aggregate_type"
+            },
+            {
+              "expression": "aggregate_id"
+            },
+            {
+              "expression": "command_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i3",
+          "name": "events_caused_by",
+          "columns": [
+            {
+              "expression": "caused_by"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i4",
+          "name": "events_project_at",
+          "columns": [
+            {
+              "expression": "project_id"
+            },
+            {
+              "expression": "at"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i5",
+          "name": "events_stream_at",
+          "columns": [
+            {
+              "expression": "aggregate_type"
+            },
+            {
+              "expression": "aggregate_id"
+            },
+            {
+              "expression": "at"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
+    },
+    {
+      "id": "history.commands",
+      "label": "commands",
+      "group": "hi",
+      "description": "One row per accepted command; dedupes multi-event retries.",
+      "schema": "history",
+      "x": 3744,
+      "y": 150,
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "title": "Id",
+          "description": "Client commandId; primary key.",
+          "nullable": false
+        },
+        {
+          "name": "aggregate_type",
+          "type": "text",
+          "title": "Aggregate type",
+          "description": "Usually item.",
+          "nullable": false
+        },
+        {
+          "name": "aggregate_id",
+          "type": "integer",
+          "title": "Aggregate id",
+          "description": "Target entity.",
+          "nullable": false
+        },
+        {
+          "name": "actor_id",
+          "type": "integer",
+          "title": "Actor",
+          "description": "Who issued the command.",
+          "nullable": false
+        },
+        {
+          "name": "at",
+          "type": "timestamp with time zone",
+          "title": "At",
+          "description": "When accepted.",
+          "nullable": false
+        },
+        {
+          "name": "result",
+          "type": "jsonb",
+          "title": "Result",
+          "description": "Optional cached response for retries.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "actor_id"
+          ],
+          "refTable": "core.users",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "history.outbox",
+      "label": "outbox",
+      "group": "es",
+      "description": "Reliable after-commit handoff to consumers.",
+      "schema": "history",
+      "x": 3322,
+      "y": 600,
+      "columns": [
+        {
+          "name": "event_id",
+          "type": "bigint",
+          "title": "Event",
+          "description": "Event to deliver.",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "When enqueued.",
+          "nullable": false
+        },
+        {
+          "name": "picked_at",
+          "type": "timestamp with time zone",
+          "title": "Picked at",
+          "description": "When a worker claimed it.",
+          "nullable": true
+        },
+        {
+          "name": "done_at",
+          "type": "timestamp with time zone",
+          "title": "Done at",
+          "description": "When delivery finished.",
+          "nullable": true
+        },
+        {
+          "name": "attempts",
+          "type": "integer",
+          "title": "Attempts",
+          "description": "Delivery attempts so far; a poison row is retired at 5.",
+          "nullable": false
+        },
+        {
+          "name": "last_error",
+          "type": "text",
+          "title": "Last error",
+          "description": "Message from the most recent failed delivery.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "event_id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "event_id"
+          ],
+          "refTable": "history.events",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "outbox_pending",
+          "columns": [
+            {
+              "expression": "event_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": "done_at IS NULL"
+        }
+      ]
+    },
+    {
+      "id": "history.item_activity",
+      "label": "item_activity",
+      "group": "es",
+      "description": "Per-item activity feed projection (UI diffs).",
+      "schema": "history",
+      "x": 3322,
+      "y": 766,
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigserial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "item_id",
+          "type": "integer",
+          "title": "Item",
+          "description": "Item the activity belongs to.",
+          "nullable": false
+        },
+        {
+          "name": "event_id",
+          "type": "bigint",
+          "title": "Event",
+          "description": "Source event.",
+          "nullable": false
+        },
+        {
+          "name": "project_id",
+          "type": "integer",
+          "title": "Project",
+          "description": "Denorm project.",
+          "nullable": false
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "title": "Kind",
+          "description": "Copied event kind.",
+          "nullable": false
+        },
+        {
+          "name": "actor_id",
+          "type": "integer",
+          "title": "Actor",
+          "description": "Who did it.",
+          "nullable": false
+        },
+        {
+          "name": "at",
+          "type": "timestamp with time zone",
+          "title": "At",
+          "description": "When.",
+          "nullable": false
+        },
+        {
+          "name": "correlation_id",
+          "type": "uuid",
+          "title": "Correlation",
+          "description": "Group multi-field saves.",
+          "nullable": false
+        },
+        {
+          "name": "summary",
+          "type": "jsonb",
+          "title": "Summary",
+          "description": "UI payload, e.g. before/after for fields.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "item_id"
+          ],
+          "refTable": "records.items",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "event_id"
+          ],
+          "refTable": "history.events",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c4",
+          "kind": "fk",
+          "columns": [
+            "actor_id"
+          ],
+          "refTable": "core.users",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "item_activity_event",
+          "columns": [
+            "event_id"
+          ],
+          "nullsNotDistinct": false
+        }
+      ],
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "item_activity_item_at",
+          "columns": [
+            {
+              "expression": "item_id"
+            },
+            {
+              "expression": "at"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i2",
+          "name": "item_activity_correlation",
+          "columns": [
+            {
+              "expression": "correlation_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
+    },
+    {
+      "id": "core.workdirs",
+      "label": "workdirs",
+      "group": "core",
+      "description": "A directory a session runs in. Optionally linked to a project; a standalone workdir (scratch clone, unrelated repo) has no project.",
+      "schema": "core",
+      "x": 4171,
+      "y": 150,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "project_id",
+          "type": "integer",
+          "title": "Project",
+          "description": "Owning project; null for a standalone workdir. A session in a project-linked workdir can comment back on an item.",
+          "nullable": true
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "title": "Name",
+          "description": "Display name.",
+          "nullable": false
+        },
+        {
+          "name": "path",
+          "type": "text",
+          "title": "Path",
+          "description": "Absolute directory path on the runner.",
+          "nullable": false
+        },
+        {
+          "name": "runner",
+          "type": "runner_kind",
+          "title": "Runner",
+          "description": "Where the process runs. (local | container)",
+          "nullable": false
+        },
+        {
+          "name": "container_name",
+          "type": "text",
+          "title": "Container",
+          "description": "Container to exec in; null for the local runner.",
+          "nullable": true
+        },
+        {
+          "name": "git_remote",
+          "type": "text",
+          "title": "Git remote",
+          "description": "Origin URL, when the directory is a clone.",
+          "nullable": true
+        },
+        {
+          "name": "default_branch",
+          "type": "text",
+          "title": "Default branch",
+          "description": "Branch new worktrees fork from.",
+          "nullable": true
+        },
+        {
+          "name": "config",
+          "type": "jsonb",
+          "title": "Config",
+          "description": "Runner-shaped extras (env, mounts).",
+          "nullable": true
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete.",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "Insert time.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "project_id"
+          ],
+          "refTable": "core.projects",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "terminal.sessions",
+      "label": "sessions",
+      "group": "terminal",
+      "description": "A PTY session. Independent of agent.sessions — no column here references the agent schema.",
+      "schema": "terminal",
+      "x": 4619,
+      "y": 150,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key. A separate id space from agent.sessions.",
+          "nullable": false
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "title": "Title",
+          "description": "Shown in the terminal list.",
+          "nullable": false
+        },
+        {
+          "name": "workdir_id",
+          "type": "integer",
+          "title": "Workdir",
+          "description": "Directory the PTY starts in.",
+          "nullable": false
+        },
+        {
+          "name": "cwd",
+          "type": "text",
+          "title": "Cwd",
+          "description": "Working directory override within the workdir.",
+          "nullable": true
+        },
+        {
+          "name": "command",
+          "type": "text",
+          "title": "Command",
+          "description": "Resolved shell/command this session was launched with, so Restart can respawn the same process on the same record (null for rows created before this column existed → Restart falls back to the default shell).",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "session_status",
+          "title": "Status",
+          "description": "PTY lifecycle. (starting | live | disconnected | exited | failed)",
+          "nullable": false
+        },
+        {
+          "name": "exit_code",
+          "type": "integer",
+          "title": "Exit code",
+          "description": "Process exit status; a PTY fact with no agent analogue.",
+          "nullable": true
+        },
+        {
+          "name": "started_by",
+          "type": "integer",
+          "title": "Started by",
+          "description": "Who opened it.",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "Insert time.",
+          "nullable": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "title": "Updated at",
+          "description": "Last status change.",
+          "nullable": false
+        },
+        {
+          "name": "ended_at",
+          "type": "timestamp with time zone",
+          "title": "Ended at",
+          "description": "When the process exited.",
+          "nullable": true
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "workdir_id"
+          ],
+          "refTable": "core.workdirs",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "started_by"
+          ],
+          "refTable": "core.users",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "terminal_sessions_status_created",
+          "columns": [
+            {
+              "expression": "status"
+            },
+            {
+              "expression": "created_at"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
+    },
+    {
+      "id": "terminal.output",
+      "label": "output",
+      "group": "terminal",
+      "description": "Raw PTY scrollback, one row per chunk. `seq` is the SSOT a reconnecting browser replays from.",
+      "schema": "terminal",
+      "x": 4619,
+      "y": 560,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "session_id",
+          "type": "integer",
+          "title": "Session",
+          "description": "Owning terminal session.",
+          "nullable": false
+        },
+        {
+          "name": "seq",
+          "type": "integer",
+          "title": "Seq",
+          "description": "Monotonic per session; persist-before-broadcast ordering.",
+          "nullable": false
+        },
+        {
+          "name": "data",
+          "type": "text",
+          "title": "Data",
+          "description": "Raw bytes as written by the PTY.",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "Insert time.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "session_id"
+          ],
+          "refTable": "terminal.sessions",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "agent.agents",
+      "label": "agents",
+      "group": "agent",
+      "description": "The persona library. Each agent owns a users row with kind='agent', which is what makes it assignable and attributable.",
+      "schema": "agent",
+      "x": 5067,
+      "y": 150,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "integer",
+          "title": "User",
+          "description": "The users row this persona acts as.",
+          "nullable": false
+        },
+        {
+          "name": "key",
+          "type": "text",
+          "title": "Key",
+          "description": "Stable slug.",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "title": "Name",
+          "description": "Display name.",
+          "nullable": false
+        },
+        {
+          "name": "provider_key",
+          "type": "text",
+          "title": "Provider",
+          "description": "Selects a code-registered AgentProvider, not a DB row.",
+          "nullable": false
+        },
+        {
+          "name": "model",
+          "type": "text",
+          "title": "Model",
+          "description": "Provider model id.",
+          "nullable": false
+        },
+        {
+          "name": "system_prompt",
+          "type": "text",
+          "title": "System prompt",
+          "description": "Prepended to every run.",
+          "nullable": true
+        },
+        {
+          "name": "allowed_tools",
+          "type": "jsonb",
+          "title": "Allowed tools",
+          "description": "Provider-shaped allow list.",
+          "nullable": false
+        },
+        {
+          "name": "disallowed_tools",
+          "type": "jsonb",
+          "title": "Disallowed tools",
+          "description": "Provider-shaped deny list.",
+          "nullable": false
+        },
+        {
+          "name": "permission_mode",
+          "type": "permission_mode",
+          "title": "Permission mode",
+          "description": "How a tool call decides it needs a human. (default | acceptEdits | bypassPermissions | plan | dontAsk)",
+          "nullable": false
+        },
+        {
+          "name": "mcp_servers",
+          "type": "jsonb",
+          "title": "MCP servers",
+          "description": "MCP server config passed to the run.",
+          "nullable": false
+        },
+        {
+          "name": "effort",
+          "type": "text",
+          "title": "Effort",
+          "description": "Provider reasoning-effort hint.",
+          "nullable": true
+        },
+        {
+          "name": "default_workdir_id",
+          "type": "integer",
+          "title": "Default workdir",
+          "description": "Pre-selected directory for new sessions.",
+          "nullable": true
+        },
+        {
+          "name": "config",
+          "type": "jsonb",
+          "title": "Config",
+          "description": "Provider-shaped extras.",
+          "nullable": false
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete.",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "Insert time.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "user_id"
+          ],
+          "refTable": "core.users",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "default_workdir_id"
+          ],
+          "refTable": "core.workdirs",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "agent_agents_key",
+          "columns": [
+            "key"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "agent.sessions",
+      "label": "sessions",
+      "group": "agent",
+      "description": "An agent run. Independent of terminal.sessions — no column here references the terminal schema. No `kind` (this schema only holds agent runs) and no `exit_code` (a run has a result, not a process status).",
+      "schema": "agent",
+      "x": 5067,
+      "y": 650,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key. A separate id space from terminal.sessions.",
+          "nullable": false
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "title": "Title",
+          "description": "Shown in the agent list.",
+          "nullable": false
+        },
+        {
+          "name": "workdir_id",
+          "type": "integer",
+          "title": "Workdir",
+          "description": "Directory the run executes in.",
+          "nullable": false
+        },
+        {
+          "name": "agent_id",
+          "type": "integer",
+          "title": "Agent",
+          "description": "Persona driving the run.",
+          "nullable": true
+        },
+        {
+          "name": "item_id",
+          "type": "integer",
+          "title": "Item",
+          "description": "Ticket the run is working on.",
+          "nullable": true
+        },
+        {
+          "name": "parent_session_id",
+          "type": "integer",
+          "title": "Parent session",
+          "description": "Self-reference: the dispatch tree. A terminal never parents anything, so this lives only here.",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "session_status",
+          "title": "Status",
+          "description": "Agent-turn lifecycle. (starting | running | idle | awaiting_input | interrupted | exited | failed)",
+          "nullable": false
+        },
+        {
+          "name": "provider_session_id",
+          "type": "text",
+          "title": "Provider session",
+          "description": "Id for resuming the run with the provider.",
+          "nullable": true
+        },
+        {
+          "name": "cwd",
+          "type": "text",
+          "title": "Cwd",
+          "description": "Working directory override within the workdir.",
+          "nullable": true
+        },
+        {
+          "name": "worktree_path",
+          "type": "text",
+          "title": "Worktree path",
+          "description": "Git worktree the run was given.",
+          "nullable": true
+        },
+        {
+          "name": "cost_usd",
+          "type": "numeric(10, 4)",
+          "title": "Cost (USD)",
+          "description": "Accumulated provider spend.",
+          "nullable": true
+        },
+        {
+          "name": "started_by",
+          "type": "integer",
+          "title": "Started by",
+          "description": "Who dispatched it.",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "Insert time.",
+          "nullable": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "title": "Updated at",
+          "description": "Last status change.",
+          "nullable": false
+        },
+        {
+          "name": "ended_at",
+          "type": "timestamp with time zone",
+          "title": "Ended at",
+          "description": "When the run finished.",
+          "nullable": true
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "title": "Archived at",
+          "description": "Soft-delete.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "workdir_id"
+          ],
+          "refTable": "core.workdirs",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "agent_id"
+          ],
+          "refTable": "agent.agents",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c4",
+          "kind": "fk",
+          "columns": [
+            "item_id"
+          ],
+          "refTable": "records.items",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c5",
+          "kind": "fk",
+          "columns": [
+            "parent_session_id"
+          ],
+          "refTable": "agent.sessions",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c6",
+          "kind": "fk",
+          "columns": [
+            "started_by"
+          ],
+          "refTable": "core.users",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "id": "i1",
+          "name": "agent_sessions_status_created",
+          "columns": [
+            {
+              "expression": "status"
+            },
+            {
+              "expression": "created_at"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        },
+        {
+          "id": "i2",
+          "name": "agent_sessions_parent",
+          "columns": [
+            {
+              "expression": "parent_session_id"
+            }
+          ],
+          "unique": false,
+          "method": "btree",
+          "where": null
+        }
+      ]
+    },
+    {
+      "id": "agent.messages",
+      "label": "messages",
+      "group": "agent",
+      "description": "One row per AgentEvent — the agent analogue of terminal.output, same seq / persist-before-broadcast discipline.",
+      "schema": "agent",
+      "x": 5067,
+      "y": 1150,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "session_id",
+          "type": "integer",
+          "title": "Session",
+          "description": "Owning agent session.",
+          "nullable": false
+        },
+        {
+          "name": "seq",
+          "type": "integer",
+          "title": "Seq",
+          "description": "Monotonic per session; the replay cursor.",
+          "nullable": false
+        },
+        {
+          "name": "role",
+          "type": "text",
+          "title": "Role",
+          "description": "Who produced it (user | assistant | system).",
+          "nullable": false
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "title": "Kind",
+          "description": "AgentEvent.type (assistant_text | thinking | tool_use | …). Free text by design — the vocabulary grows in app code, not in a migration.",
+          "nullable": false
+        },
+        {
+          "name": "content",
+          "type": "jsonb",
+          "title": "Content",
+          "description": "Provider-shaped payload.",
+          "nullable": false
+        },
+        {
+          "name": "tool_use_id",
+          "type": "text",
+          "title": "Tool use id",
+          "description": "Correlates a tool call with its result.",
+          "nullable": true
+        },
+        {
+          "name": "parent_tool_use_id",
+          "type": "text",
+          "title": "Parent tool use id",
+          "description": "Attributes subagent output to the right nested pane.",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "Insert time.",
+          "nullable": false
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "session_id"
+          ],
+          "refTable": "agent.sessions",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "u1",
+          "kind": "unique",
+          "name": "agent_messages_session_seq",
+          "columns": [
+            "session_id",
+            "seq"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "id": "agent.permission_requests",
+      "label": "permission_requests",
+      "group": "agent",
+      "description": "A pending row IS a `canUseTool` promise parked in the supervisor: the session sits in `awaiting_input` until a human decides.",
+      "schema": "agent",
+      "x": 5515,
+      "y": 150,
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "title": "Id",
+          "description": "Primary key.",
+          "nullable": false
+        },
+        {
+          "name": "session_id",
+          "type": "integer",
+          "title": "Session",
+          "description": "Session blocked on this decision.",
+          "nullable": false
+        },
+        {
+          "name": "tool_name",
+          "type": "text",
+          "title": "Tool",
+          "description": "Tool the agent asked to use.",
+          "nullable": false
+        },
+        {
+          "name": "input",
+          "type": "jsonb",
+          "title": "Input",
+          "description": "Arguments the tool was called with.",
+          "nullable": false
+        },
+        {
+          "name": "status",
+          "type": "permission_status",
+          "title": "Status",
+          "description": "Decision state. (pending | allowed | denied)",
+          "nullable": false
+        },
+        {
+          "name": "decision_reason",
+          "type": "text",
+          "title": "Decision reason",
+          "description": "Why the human allowed or denied it.",
+          "nullable": true
+        },
+        {
+          "name": "decided_by",
+          "type": "integer",
+          "title": "Decided by",
+          "description": "Who decided.",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "title": "Created at",
+          "description": "When the agent asked.",
+          "nullable": false
+        },
+        {
+          "name": "decided_at",
+          "type": "timestamp with time zone",
+          "title": "Decided at",
+          "description": "When the human answered.",
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        {
+          "id": "c1",
+          "kind": "pk",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fk",
+          "columns": [
+            "session_id"
+          ],
+          "refTable": "agent.sessions",
+          "refColumns": [
+            "id"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "fk",
+          "columns": [
+            "decided_by"
+          ],
+          "refTable": "core.users",
+          "refColumns": [
+            "id"
+          ]
+        }
+      ],
+      "indexes": []
+    }
+  ],
+  "relationships": [
+    {
+      "id": "istream",
+      "source": "records.items",
+      "sourceField": "id",
+      "target": "history.events",
+      "targetField": "aggregate_id",
+      "kind": "fk",
+      "label": "stream"
+    },
+    {
+      "id": "rel:projects:c2",
+      "source": "structure.schemes",
+      "sourceField": "id",
+      "target": "core.projects",
+      "targetField": "scheme_id",
+      "kind": "fk",
+      "label": "scheme"
+    },
+    {
+      "id": "rel:item_type_child_types:c1",
+      "source": "structure.item_types",
+      "sourceField": "id",
+      "target": "structure.item_type_child_types",
+      "targetField": "parent_type_id",
+      "kind": "fk",
+      "label": "parent"
+    },
+    {
+      "id": "rel:item_type_child_types:c2",
+      "source": "structure.item_types",
+      "sourceField": "id",
+      "target": "structure.item_type_child_types",
+      "targetField": "child_type_id",
+      "kind": "fk",
+      "label": "child"
+    },
+    {
+      "id": "rel:item_type_fields:c1",
+      "source": "structure.item_types",
+      "sourceField": "id",
+      "target": "structure.item_type_fields",
+      "targetField": "item_type_id",
+      "kind": "m2m",
+      "label": "M2M"
+    },
+    {
+      "id": "rel:item_type_fields:c2",
+      "source": "structure.fields",
+      "sourceField": "id",
+      "target": "structure.item_type_fields",
+      "targetField": "field_id",
+      "kind": "m2m",
+      "label": "M2M"
+    },
+    {
+      "id": "rel:fields:c3",
+      "source": "structure.option_sets",
+      "sourceField": "id",
+      "target": "structure.fields",
+      "targetField": "option_set_id",
+      "kind": "m2m",
+      "label": "option_set"
+    },
+    {
+      "id": "rel:option_transitions:c3",
+      "source": "structure.options",
+      "sourceField": "id",
+      "target": "structure.option_transitions",
+      "targetField": "from_option_id",
+      "kind": "fk",
+      "label": "from"
+    },
+    {
+      "id": "rel:option_transitions:c4",
+      "source": "structure.options",
+      "sourceField": "id",
+      "target": "structure.option_transitions",
+      "targetField": "to_option_id",
+      "kind": "fk",
+      "label": "to"
+    },
+    {
+      "id": "rel:link_type_target_types:c2",
+      "source": "structure.item_types",
+      "sourceField": "id",
+      "target": "structure.link_type_target_types",
+      "targetField": "target_type_id",
+      "kind": "fk",
+      "label": "target"
+    },
+    {
+      "id": "rel:items:c2",
+      "source": "core.projects",
+      "sourceField": "id",
+      "target": "records.items",
+      "targetField": "project_id",
+      "kind": "fk",
+      "label": "owns"
+    },
+    {
+      "id": "rel:items:c3",
+      "source": "structure.item_types",
+      "sourceField": "id",
+      "target": "records.items",
+      "targetField": "type_id",
+      "kind": "fk",
+      "label": "type"
+    },
+    {
+      "id": "rel:items:c5",
+      "source": "core.users",
+      "sourceField": "id",
+      "target": "records.items",
+      "targetField": "created_by",
+      "kind": "fk",
+      "label": "created_by"
+    },
+    {
+      "id": "rel:item_values:c4",
+      "source": "structure.options",
+      "sourceField": "id",
+      "target": "records.item_values",
+      "targetField": "option_id",
+      "kind": "fk",
+      "label": "option_id"
+    },
+    {
+      "id": "rel:comments:c3",
+      "source": "core.users",
+      "sourceField": "id",
+      "target": "records.comments",
+      "targetField": "author_id",
+      "kind": "fk",
+      "label": "author"
+    },
+    {
+      "id": "rel:item_links:c3",
+      "source": "records.items",
+      "sourceField": "id",
+      "target": "records.item_links",
+      "targetField": "source_item_id",
+      "kind": "fk",
+      "label": "source"
+    },
+    {
+      "id": "rel:item_links:c4",
+      "source": "records.items",
+      "sourceField": "id",
+      "target": "records.item_links",
+      "targetField": "target_item_id",
+      "kind": "fk",
+      "label": "target"
+    },
+    {
+      "id": "rel:events:c2",
+      "source": "core.users",
+      "sourceField": "id",
+      "target": "history.events",
+      "targetField": "actor_id",
+      "kind": "fk",
+      "label": "actor"
+    }
+  ]
+}

@@ -96,9 +96,9 @@
    (#25231D) in BOTH themes — it's shiki's instrument-dark.json theme, baked
    to these exact hex values (highlight.ts / instrument-dark.json) — so no
    theme-flipping token fits. This is the ONE permitted fixed-hex surface:
-   package CSS here isn't covered by the hardcoded-value scanner (roots are
-   apps/web/src and apps/eer/src only — see scripts/scan-hardcoded-values.mjs
-   in @tickets/ui). */
+   package CSS here isn't covered by the hardcoded-value scanner (its only
+   root is apps/web/src — see scripts/scan-hardcoded-values.mjs in
+   @tickets/ui). */
 .pg-code-block {
   position: relative;
   overflow-x: auto;
