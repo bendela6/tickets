@@ -38,8 +38,14 @@ services:
       SIGNALS_PORT: 4640
       SIGNALS_DATABASE: signals
     ports:
-      - '4610:80'   # everything by path: / (web) · /api · /studio
-      - '4640:4640' # signals collector, published directly for external SDKs
+      # Loopback-bound, like postgres above. `/api` is unauthenticated and now
+      # includes /api/schema/databases + /api/schema?database=, which enumerate
+      # every connectable database on this server and dump any of their
+      # catalogs — so publishing it on every interface would hand the LAN a
+      # cluster-wide schema disclosure. Reach it from another host over an SSH
+      # tunnel, not by widening this.
+      - '127.0.0.1:4610:80' # everything by path: / (web) · /api · /studio
+      - '4640:4640'         # signals collector, published directly for external SDKs
     depends_on:
       postgres:
         condition: service_healthy

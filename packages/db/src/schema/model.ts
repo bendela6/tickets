@@ -1,6 +1,7 @@
 // packages/db/src/schema/model.ts
-// Reads apps/eer/models/items-platform.json — the schema SSOT. The conformance
-// test (model-conformance.test.ts) diffs the drizzle schema against this.
+// Reads packages/db/src/schema/items-platform.json — the schema SSOT. The
+// conformance test (model-conformance.test.ts) diffs the drizzle schema
+// against this.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -40,9 +41,9 @@ export type EerEntity = {
   id: string;
   label: string;
   group: string;
-  // The Postgres schema, mirroring apps/eer's Entity.schema. Absent or null
-  // means public — the field is only serialised once it has been set, so
-  // conformance reads it as `entity.schema ?? null`.
+  // The Postgres schema, mirroring the SSOT model's Entity.schema. Absent or
+  // null means public — the field is only serialised once it has been set,
+  // so conformance reads it as `entity.schema ?? null`.
   schema?: string | null;
   columns: EerColumn[];
   constraints: EerConstraint[];
@@ -58,10 +59,7 @@ export type EerModel = {
   enums: EerEnum[];
 };
 
-const MODEL_PATH = resolve(
-  import.meta.dirname,
-  '../../../../apps/eer/models/items-platform.json',
-);
+const MODEL_PATH = resolve(import.meta.dirname, './items-platform.json');
 
 export function loadModel(): EerModel {
   const raw = JSON.parse(readFileSync(MODEL_PATH, 'utf8')) as {

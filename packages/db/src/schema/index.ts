@@ -54,6 +54,7 @@ export { allTables, allEnums } from './registry';
 export { SCHEMA_GROUPS, type SchemaGroup } from './schema-groups';
 export {
   describeSchema,
+  findGroupKey,
   resolveGroupKey,
   qualifiedName,
   type SchemaGraph,
@@ -62,3 +63,5 @@ export {
   type UniqueMeta,
   type GroupMeta,
 } from './describe-schema';
+export { introspectDatabase } from './introspect/introspect-database';
+export { listDatabases, assertKnownDatabase, UnknownDatabaseError } from './list-databases';
