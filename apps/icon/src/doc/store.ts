@@ -1,4 +1,4 @@
-import { newObject } from './defaults';
+import { newObject, objectId } from './defaults';
 import { bounds, fitToBox, translate, type Box } from './geometry';
 import type {
   ArtboardSize,
@@ -51,6 +51,7 @@ export type Action =
   | { type: 'addObject'; kind: ShapeKind }
   | { type: 'selectObject'; id: string | null }
   | { type: 'deleteObject'; id: string }
+  | { type: 'duplicateObject'; id: string }
   | { type: 'renameObject'; id: string; name: string }
   | { type: 'toggleHidden'; id: string }
   | { type: 'toggleLocked'; id: string }
@@ -198,6 +199,33 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         ...remember(state, label),
         doc: { ...state.doc, objects: state.doc.objects.filter((o) => o.id !== action.id) },
         selectedId: state.selectedId === action.id ? null : state.selectedId,
+      };
+    }
+    case 'duplicateObject': {
+      const source = state.doc.objects.find((o) => o.id === action.id);
+      if (!source) return state;
+      const sequence = state.sequence + 1;
+      const kind = source.geometry.kind;
+      // A copy is a new object, not a second reference: `structuredClone`
+      // rather than a spread, or the two would share one geometry and one
+      // colour pair and editing either would move both.
+      const copy: IconObject = {
+        ...structuredClone(source),
+        id: objectId(kind, sequence),
+        name: `${source.name} copy`,
+        // A duplicate arrives unlocked whatever the original was, because it
+        // was made to be moved.
+        locked: false,
+      };
+      const at = state.doc.objects.findIndex((o) => o.id === action.id);
+      const objects = state.doc.objects.slice();
+      objects.splice(at, 0, copy);
+      return {
+        ...state,
+        ...remember(state, `duplicate ${source.name}`),
+        doc: { ...state.doc, objects },
+        selectedId: copy.id,
+        sequence,
       };
     }
     case 'renameObject':
