@@ -59,7 +59,7 @@ export const states = [
 export const playground = definePlayground({
   docs: {
     summary:
-      'A single-value slider with the full keyboard contract — arrows by step, PageUp/PageDown by a tenth of the range, Home/End to the ends. It is a `role="slider"` div rather than `<input type="range">` because preflight is off here: a native range keeps its user-agent track and thumb, and the vendor pseudo-elements that would override them are not expressible as utilities.',
+      'A single-value slider with the full keyboard contract — arrows by step, PageUp/PageDown by a tenth of the range, Home/End to the ends. It is a `role="slider"` div rather than `<input type="range">`: a native range exposes its track and thumb only through vendor pseudo-elements, which no utility class can target, so tokenising one would mean a hand-written stylesheet per engine.',
   },
   controls: {
     min: number(0, { min: -100, max: 0, step: 10, description: 'Lower bound.' }),

@@ -1,0 +1,4 @@
+@import '@tickets/ui/tokens.css';
+/* Tailwind must scan this app's own class literals; `@source` is relative to
+   this file, so `./` is apps/icon/src. */
+@source './';
