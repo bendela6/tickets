@@ -99,13 +99,13 @@ export function renderPosed(
   options: RenderOptions,
 ): string {
   const { ground, background = true } = options;
-  const size = doc.size;
+  const { width, height } = doc.artboard;
   const parts: string[] = [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${n(width)}" height="${n(height)}" viewBox="0 0 ${n(width)} ${n(height)}">`,
   ];
   if (background) {
     parts.push(
-      `<rect x="0" y="0" width="${size}" height="${size}" fill="${escapeAttribute(doc.background[ground])}"/>`,
+      `<rect x="0" y="0" width="${n(width)}" height="${n(height)}" fill="${escapeAttribute(doc.background[ground])}"/>`,
     );
   }
   // Document order is front-to-back; SVG paints in source order, so the list

@@ -290,6 +290,145 @@ describe('clamping', () => {
   });
 });
 
+describe('precision', () => {
+  const snapped = (snap: number) =>
+    run(initialState({ ...emptyDocument('test'), snap }), { type: 'addObject', kind: 'rect' });
+
+  it('holds every route to the same grid — a typed value cannot beat a drag', () => {
+    const state = snapped(1);
+    const id = state.doc.objects[0]!.id;
+    const geometry = state.doc.objects[0]!.geometry;
+    if (geometry.kind !== 'rect') throw new Error('expected a rect');
+
+    const typed = editorReducer(state, {
+      type: 'setGeometry',
+      id,
+      geometry: { ...geometry, x: 1.5, y: 2.4 },
+      label: 'move',
+    });
+    expect(typed.doc.objects[0]?.geometry).toMatchObject({ x: 2, y: 2 });
+  });
+
+  it('a step of 1 on a small board means 1, 2, 3 and nothing between', () => {
+    const state = run(
+      initialState({ ...emptyDocument('test', { width: 16, height: 16 }), snap: 1 }),
+      { type: 'addObject', kind: 'rect' },
+    );
+    const id = state.doc.objects[0]!.id;
+    const geometry = state.doc.objects[0]!.geometry;
+    if (geometry.kind !== 'rect') throw new Error('expected a rect');
+
+    for (const [asked, expected] of [
+      [1, 1],
+      [1.5, 2],
+      [2.4, 2],
+      [3, 3],
+    ] as const) {
+      const next = editorReducer(state, {
+        type: 'setGeometry',
+        id,
+        geometry: { ...geometry, x: asked },
+        label: 'move',
+      });
+      expect({ asked, x: (next.doc.objects[0]?.geometry as { x: number }).x }).toEqual({
+        asked,
+        x: expected,
+      });
+    }
+  });
+
+  it('a finer step allows what a coarser one refuses', () => {
+    const half = snapped(0.5);
+    const id = half.doc.objects[0]!.id;
+    const geometry = half.doc.objects[0]!.geometry;
+    if (geometry.kind !== 'rect') throw new Error('expected a rect');
+    const next = editorReducer(half, {
+      type: 'setGeometry',
+      id,
+      geometry: { ...geometry, x: 1.5 },
+      label: 'move',
+    });
+    expect(next.doc.objects[0]?.geometry).toMatchObject({ x: 1.5 });
+  });
+
+  it('snaps a drag as well as a typed value', () => {
+    const state = snapped(8);
+    const id = state.doc.objects[0]!.id;
+    const before = bounds(state.doc.objects[0]!);
+    const moved = editorReducer(state, { type: 'moveObject', id, dx: 3, dy: 3 });
+    const after = bounds(moved.doc.objects[0]!);
+    expect((after.x - before.x) % 8).toBe(0);
+  });
+
+  it('changing the step re-snaps what is already there', () => {
+    // Otherwise the grid describes what will happen next rather than what the
+    // document is.
+    const state = snapped(1);
+    const coarse = editorReducer(state, { type: 'setSnap', snap: 64 });
+    const box = bounds(coarse.doc.objects[0]!);
+    expect(box.x % 64).toBe(0);
+    expect(box.w % 64).toBe(0);
+  });
+
+  it('refuses a step of zero rather than dividing by it', () => {
+    expect(editorReducer(start(), { type: 'setSnap', snap: 0 }).doc.snap).toBeGreaterThan(0);
+  });
+
+  it('a new shape arrives already on the grid', () => {
+    const box = bounds(snapped(8).doc.objects[0]!);
+    expect(box.x % 8).toBe(0);
+    expect(box.w % 8).toBe(0);
+  });
+});
+
+describe('artboard', () => {
+  it('takes width and height independently', () => {
+    const wide = editorReducer(start(), {
+      type: 'setArtboard',
+      artboard: { width: 1024, height: 256 },
+    });
+    expect(wide.doc.artboard).toEqual({ width: 1024, height: 256 });
+  });
+
+  it('changes one axis without disturbing the other', () => {
+    const taller = editorReducer(start(), { type: 'setArtboard', artboard: { height: 200 } });
+    expect(taller.doc.artboard).toEqual({ width: 512, height: 200 });
+  });
+
+  it('clamps to a board that can actually hold a shape', () => {
+    expect(
+      editorReducer(start(), { type: 'setArtboard', artboard: { width: 0 } }).doc.artboard.width,
+    ).toBeGreaterThan(0);
+    expect(
+      editorReducer(start(), { type: 'setArtboard', artboard: { width: 99999 } }).doc.artboard
+        .width,
+    ).toBeLessThanOrEqual(4096);
+  });
+
+  it('places a new shape relative to the board it is on', () => {
+    const small = run(initialState(emptyDocument('t', { width: 16, height: 16 })), {
+      type: 'addObject',
+      kind: 'rect',
+    });
+    const box = bounds(small.doc.objects[0]!);
+    expect(box.w).toBeLessThanOrEqual(16);
+    expect(box.x + box.w).toBeLessThanOrEqual(16);
+  });
+
+  it('centres a new shape on a wide board rather than leaving it off one end', () => {
+    const wide = run(initialState(emptyDocument('t', { width: 1024, height: 256 })), {
+      type: 'addObject',
+      kind: 'polygon',
+    });
+    const box = bounds(wide.doc.objects[0]!);
+    expect(box.x + box.w / 2).toBeCloseTo(512, 0);
+    expect(box.y + box.h / 2).toBeCloseTo(128, 0);
+    // A polygon takes the shorter edge, so it stays on the board vertically.
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.h).toBeLessThanOrEqual(256);
+  });
+});
+
 describe('selection', () => {
   it('resolves to the object, and to null once it is deleted', () => {
     const state = withRect();

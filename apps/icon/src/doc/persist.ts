@@ -1,5 +1,5 @@
 import { emptyDocument } from './defaults';
-import type { ArtboardSize, DocumentSummary, IconDoc } from './types';
+import type { Artboard, DocumentSummary, IconDoc } from './types';
 
 /**
  * Where documents live.
@@ -13,14 +13,14 @@ export interface DocumentStore {
   list(): Promise<DocumentSummary[]>;
   load(id: string): Promise<IconDoc | null>;
   save(id: string, doc: IconDoc): Promise<DocumentSummary>;
-  create(name: string, size?: ArtboardSize): Promise<{ id: string; doc: IconDoc }>;
+  create(name: string, artboard?: Artboard): Promise<{ id: string; doc: IconDoc }>;
   remove(id: string): Promise<void>;
 }
 
 interface Record_ {
   id: string;
   name: string;
-  size: ArtboardSize;
+  artboard: Artboard;
   updatedAt: number;
   doc: IconDoc;
 }
@@ -28,7 +28,7 @@ interface Record_ {
 const summaryOf = (record: Record_): DocumentSummary => ({
   id: record.id,
   name: record.name,
-  size: record.size,
+  artboard: record.artboard,
   updatedAt: record.updatedAt,
 });
 
@@ -61,18 +61,18 @@ export function memoryStore(
       const record: Record_ = {
         id,
         name: doc.name,
-        size: doc.size,
+        artboard: doc.artboard,
         updatedAt: clock(),
         doc: structuredClone(doc),
       };
       records.set(id, record);
       return summaryOf(record);
     },
-    async create(name, size = 512) {
+    async create(name, artboard = { width: 512, height: 512 }) {
       counter += 1;
       const id = `doc-${counter}`;
-      const doc = emptyDocument(name, size);
-      records.set(id, { id, name, size, updatedAt: clock(), doc });
+      const doc = emptyDocument(name, artboard);
+      records.set(id, { id, name, artboard, updatedAt: clock(), doc });
       return { id, doc };
     },
     async remove(id) {
@@ -131,7 +131,7 @@ export function indexedDbStore(clock: () => number = () => Date.now()): Document
       const record: Record_ = {
         id,
         name: doc.name,
-        size: doc.size,
+        artboard: doc.artboard,
         updatedAt: clock(),
         // structuredClone up front rather than trusting IndexedDB's own: it
         // throws on anything unclonable, and failing here names the document
@@ -141,11 +141,11 @@ export function indexedDbStore(clock: () => number = () => Date.now()): Document
       await withStore('readwrite', (store) => store.put(record));
       return summaryOf(record);
     },
-    async create(name, size = 512) {
+    async create(name, artboard = { width: 512, height: 512 }) {
       const id = `doc-${clock()}-${Math.random().toString(36).slice(2, 8)}`;
-      const doc = emptyDocument(name, size);
+      const doc = emptyDocument(name, artboard);
       await withStore('readwrite', (store) =>
-        store.put({ id, name, size, updatedAt: clock(), doc } satisfies Record_),
+        store.put({ id, name, artboard, updatedAt: clock(), doc } satisfies Record_),
       );
       return { id, doc };
     },

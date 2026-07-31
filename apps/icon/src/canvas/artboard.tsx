@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { cn } from '@tickets/ui';
-import { ARTBOARD_PX, GRID_UNITS, SAFE_ZONE } from '../doc/constants';
+import { MIN_GRID_PX, SAFE_ZONE } from '../doc/constants';
+import { gridPitch } from '../doc/snap';
 import { bounds, lineEndpoints } from '../doc/geometry';
 import { selectedObject } from '../doc/store';
 import { safeZoneWarnings } from '../doc/validate';
@@ -8,7 +9,7 @@ import type { IconObject } from '../doc/types';
 import { useEditor } from '../editor-context';
 import { gridInk } from '../render/ink';
 import { renderPosed } from '../render/svg';
-import { chromeIsDim, posedFor } from '../view';
+import { chromeIsDim, posedFor, scaleFor } from '../view';
 import { EmptyArtboard } from './empty-artboard';
 import { DimensionPill, LineSelectionOverlay, SelectionOverlay } from './selection-overlay';
 import { useArtboardPointer } from './use-artboard-pointer';
@@ -27,8 +28,11 @@ export function Artboard() {
   const { state, dispatch, view, setView } = useEditor();
   const surfaceRef = useRef<HTMLDivElement>(null);
 
-  const side = (ARTBOARD_PX * view.zoom) / 100;
-  const scale = side / state.doc.size;
+  const { artboard } = state.doc;
+  const scale = scaleFor(artboard, view.zoom);
+  const screenWidth = artboard.width * scale;
+  const screenHeight = artboard.height * scale;
+  const pitch = gridPitch(state.doc.snap, scale, MIN_GRID_PX);
   const posed = posedFor(state.doc, view);
   const dim = chromeIsDim(view);
 
@@ -56,7 +60,11 @@ export function Artboard() {
       role="img"
       aria-label={`${state.doc.name} artboard, ${state.doc.objects.length} objects`}
       className="relative flex-none touch-none outline-1 outline-gray-7 shadow-artboard"
-      style={{ width: side, height: side, background: state.doc.background[view.ground] }}
+      style={{
+        width: screenWidth,
+        height: screenHeight,
+        background: state.doc.background[view.ground],
+      }}
       {...surfaceProps}
     >
       <div
@@ -67,14 +75,17 @@ export function Artboard() {
         className="absolute inset-0 [&>svg]:size-full"
       />
 
-      {view.grid ? (
+      {/* The grid draws the snap step itself, so what you see is what a drag
+          will land on — thinned by doubling when the step is too fine to read
+          at this zoom, and dropped entirely when even that is too dense. */}
+      {view.grid && pitch !== null ? (
         <div
           aria-hidden
           className={cn('pointer-events-none absolute inset-0', dim && 'opacity-50')}
           style={{
             backgroundImage:
               'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
-            backgroundSize: `${GRID_UNITS * scale}px ${GRID_UNITS * scale}px`,
+            backgroundSize: `${pitch * scale}px ${pitch * scale}px`,
             color: gridInk(state.doc.background[view.ground]),
           }}
         />

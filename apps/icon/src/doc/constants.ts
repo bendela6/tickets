@@ -1,11 +1,14 @@
-import type { ArtboardSize, Pace, Pair, Ramp, Rest, Role, Speed, Sustain } from './types';
+import type { Artboard, Pace, Pair, Ramp, Rest, Role, Speed, Sustain } from './types';
 
 /**
  * Values of record, transcribed from the design's prototype. Nothing here is a
  * guess and nothing here should be re-derived at a call site.
  */
 
-/** The artboard's on-screen edge at 100% zoom, in CSS pixels. */
+/**
+ * The artboard's LONGER on-screen edge at 100% zoom, in CSS pixels. The other
+ * edge follows from the document's aspect, so a wide board stays wide.
+ */
 export const ARTBOARD_PX = 448;
 
 /**
@@ -26,14 +29,40 @@ export const TRANSITION_MS = 400;
 /** One turn of a sustained loop, in milliseconds at 1× speed. */
 export const CYCLE_MS = 900;
 
-/** Artboard grid pitch, in document units. */
-export const GRID_UNITS = 32;
 
-export const ARTBOARD_SIZES: readonly ArtboardSize[] = [256, 512, 1024];
+/** Square presets, offered beside the two free-form fields. */
+export const ARTBOARD_PRESETS: readonly Artboard[] = [
+  { width: 16, height: 16 },
+  { width: 64, height: 64 },
+  { width: 256, height: 256 },
+  { width: 512, height: 512 },
+  { width: 1024, height: 1024 },
+];
 
-export const ZOOM_MIN = 50;
-export const ZOOM_MAX = 200;
-export const ZOOM_STEP = 25;
+export const ARTBOARD_MIN = 1;
+export const ARTBOARD_MAX = 4096;
+
+/**
+ * The zoom ladder the stepper walks and the wheel snaps to.
+ *
+ * It reaches much further than a percentage stepper normally would in both
+ * directions, because the artboard is now any size: a 16 × 16 board needs to
+ * be magnified to be drawn on at all, and a 4096 one needs to be shrunk to be
+ * seen whole.
+ */
+export const ZOOM_LADDER: readonly number[] = [
+  10, 25, 50, 75, 100, 150, 200, 300, 400, 600, 800, 1600,
+];
+
+export const ZOOM_MIN = ZOOM_LADDER[0] ?? 10;
+export const ZOOM_MAX = ZOOM_LADDER[ZOOM_LADDER.length - 1] ?? 1600;
+
+/** Snap steps offered as presets. Any positive number is legal. */
+export const SNAP_PRESETS: readonly number[] = [0.5, 1, 2, 4, 8];
+export const SNAP_MIN = 0.01;
+
+/** Below this the grid is noise rather than guidance, so it thins out. */
+export const MIN_GRID_PX = 8;
 
 /** The eight one-click colours in the properties panel. */
 export const SWATCHES: readonly string[] = [

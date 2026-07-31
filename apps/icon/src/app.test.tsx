@@ -313,6 +313,130 @@ describe('every shape has equivalent controls', () => {
   });
 });
 
+describe('the artboard is configurable in both axes', () => {
+  const docRail = () => {
+    // Nothing selected: the right rail carries the document's properties.
+    return propsRail();
+  };
+
+  it('offers width and height as separate fields', async () => {
+    setup();
+    expect(within(docRail()).getByLabelText('Artboard width')).toHaveValue('512');
+    expect(within(docRail()).getByLabelText('Artboard height')).toHaveValue('512');
+  });
+
+  it('takes a non-square board, and the top bar reports both edges', async () => {
+    const { user } = setup();
+    const height = within(docRail()).getByLabelText('Artboard height');
+    await user.clear(height);
+    await user.type(height, '256');
+    await user.tab();
+    expect(within(screen.getByRole('banner')).getByText('512 × 256')).toBeInTheDocument();
+  });
+
+  it('takes a tiny board, which is the case the precision setting exists for', async () => {
+    const { user } = setup();
+    for (const label of ['Artboard width', 'Artboard height']) {
+      const field = within(docRail()).getByLabelText(label);
+      await user.clear(field);
+      await user.type(field, '16');
+      await user.tab();
+    }
+    expect(within(screen.getByRole('banner')).getByText('16 × 16')).toBeInTheDocument();
+  });
+
+  it('offers square presets beside the fields', async () => {
+    const { user } = setup();
+    await user.click(within(docRail()).getByRole('button', { name: '16 by 16' }));
+    expect(within(screen.getByRole('banner')).getByText('16 × 16')).toBeInTheDocument();
+  });
+});
+
+describe('precision', () => {
+  const setStep = async (user: ReturnType<typeof userEvent.setup>, step: string) => {
+    const field = within(propsRail()).getByLabelText('Snap step');
+    await user.clear(field);
+    await user.type(field, step);
+    await user.tab();
+  };
+
+  it('is a document setting, offered with presets', async () => {
+    setup();
+    expect(within(propsRail()).getByLabelText('Snap step')).toHaveValue('1');
+    expect(within(propsRail()).getByRole('button', { name: 'Step 8' })).toBeInTheDocument();
+  });
+
+  it('a step of 1 refuses a half — typing 1.5 lands on 2', async () => {
+    const { user } = setup();
+    await user.keyboard('r');
+    const x = within(propsRail()).getByLabelText('X');
+    await user.clear(x);
+    await user.type(x, '1.5');
+    await user.tab();
+    expect(within(propsRail()).getByLabelText('X')).toHaveValue('2');
+  });
+
+  it('a finer step allows the half the coarser one refused', async () => {
+    const { user } = setup();
+    await user.keyboard('r');
+    await user.keyboard('{Escape}');
+    await setStep(user, '0.5');
+    await user.click(within(objectRail()).getByRole('button', { name: 'rect 1' }));
+
+    const x = within(propsRail()).getByLabelText('X');
+    await user.clear(x);
+    await user.type(x, '1.5');
+    await user.tab();
+    expect(within(propsRail()).getByLabelText('X')).toHaveValue('1.5');
+  });
+
+  it('a coarser step pulls existing work onto the new grid', async () => {
+    const { user } = setup();
+    await user.keyboard('r');
+    await user.keyboard('{Escape}');
+    await user.click(within(propsRail()).getByRole('button', { name: 'Step 8' }));
+    await user.click(within(objectRail()).getByRole('button', { name: 'rect 1' }));
+    expect(Number(within(propsRail()).getByLabelText('X').getAttribute('value')) % 8).toBe(0);
+  });
+});
+
+describe('zoom', () => {
+  const zoomLabel = () => screen.getByRole('button', { name: 'Reset zoom' });
+
+  it('walks a ladder in both directions', async () => {
+    const { user } = setup();
+    await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    expect(zoomLabel()).toHaveTextContent('150%');
+    await user.click(screen.getByRole('button', { name: 'Zoom out' }));
+    expect(zoomLabel()).toHaveTextContent('100%');
+  });
+
+  it('reaches far enough to draw on a tiny board and to see a huge one', async () => {
+    const { user } = setup();
+    for (let i = 0; i < 12; i++) {
+      await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    }
+    expect(zoomLabel()).toHaveTextContent('1600%');
+    for (let i = 0; i < 20; i++) {
+      await user.click(screen.getByRole('button', { name: 'Zoom out' }));
+    }
+    expect(zoomLabel()).toHaveTextContent('10%');
+  });
+
+  it('resets to 100% from its own readout', async () => {
+    const { user } = setup();
+    await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    await user.click(zoomLabel());
+    expect(zoomLabel()).toHaveTextContent('100%');
+  });
+
+  it('is a way of looking, not an edit — it never dirties the document', async () => {
+    const { user } = setup();
+    await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    expect(within(screen.getByRole('banner')).queryByText('unsaved')).not.toBeInTheDocument();
+  });
+});
+
 describe('colour is a pair', () => {
   it('edits the previewed half and leaves the other alone', async () => {
     const { user } = setup();
@@ -390,7 +514,9 @@ describe('looking at the document', () => {
   it('zooms in steps, without touching the document', async () => {
     const { user } = setup();
     await user.click(screen.getByRole('button', { name: 'Zoom in' }));
-    expect(screen.getByText('125%')).toBeInTheDocument();
+    // The ladder runs 100 → 150, not 100 → 125: a fixed percentage step is
+    // the wrong shape for a range that now spans 10% to 1600%.
+    expect(screen.getByRole('button', { name: 'Reset zoom' })).toHaveTextContent('150%');
   });
 
   it('previews the other ground without changing the UI theme', async () => {

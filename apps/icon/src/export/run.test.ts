@@ -6,6 +6,9 @@ import { buildFiles, runExport, type Rasteriser } from './run';
 import { TARGETS, type TargetId } from './targets';
 import { readZip } from './zip';
 
+/** The 512-square board most of these fixtures assume. */
+const BOARD = { width: 512, height: 512 };
+
 /** A stand-in rasteriser: a PNG signature plus the size, so payloads differ. */
 const stubRasterise: Rasteriser = async (_svg, sizes) =>
   sizes.map((size) => {
@@ -21,7 +24,7 @@ function docWith(sustained = false): IconDoc {
   const base = emptyDocument('wallet.icon');
   return {
     ...base,
-    objects: [newObject('rect', 1, 512), newObject('polygon', 2, 512)],
+    objects: [newObject('rect', 1, BOARD), newObject('polygon', 2, BOARD)],
     states: [
       { id: 's0', name: 'idle', sustain: null },
       { id: 's1', name: 'loading', sustain: sustained ? 'turning' : null },
@@ -138,10 +141,10 @@ describe('animated targets', () => {
     const doc: IconDoc = {
       ...docWith(true),
       objects: [
-        newObject('rect', 1, 512),
-        newObject('ellipse', 2, 512),
-        newObject('line', 3, 512),
-        newObject('polygon', 4, 512),
+        newObject('rect', 1, BOARD),
+        newObject('ellipse', 2, BOARD),
+        newObject('line', 3, BOARD),
+        newObject('polygon', 4, BOARD),
       ],
     };
     const files = await build(['lottie'], doc);
@@ -211,7 +214,7 @@ describe('runExport', () => {
   it('captures the state it is asked for', async () => {
     const doc: IconDoc = {
       ...docWith(),
-      objects: [{ ...newObject('rect', 1, 512), motion: { takesPart: true, role: 'spins', pace: 1 } }],
+      objects: [{ ...newObject('rect', 1, BOARD), motion: { takesPart: true, role: 'spins', pace: 1 } }],
     };
     let seen = '';
     const capture: Rasteriser = async (svg, sizes) => {

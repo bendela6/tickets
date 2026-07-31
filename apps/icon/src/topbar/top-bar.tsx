@@ -1,7 +1,6 @@
 import { cn } from '@tickets/ui';
-import { ZOOM_STEP } from '../doc/constants';
 import { useEditor } from '../editor-context';
-import { clampZoom } from '../view';
+import { steppedZoom } from '../view';
 import { DocumentsPopover } from './documents-popover';
 import type { Documents } from './use-documents';
 
@@ -38,7 +37,7 @@ export function TopBar({
       <DocumentsPopover name={state.doc.name} documents={documents} now={now} />
 
       <span className="font-mono text-11 text-gray-9">
-        {state.doc.size} × {state.doc.size}
+        {state.doc.artboard.width} × {state.doc.artboard.height}
       </span>
 
       {documents.dirty ? (
@@ -63,16 +62,24 @@ export function TopBar({
         <button
           type="button"
           aria-label="Zoom out"
-          onClick={() => setView((v) => ({ ...v, zoom: clampZoom(v.zoom - ZOOM_STEP) }))}
+          onClick={() => setView((v) => ({ ...v, zoom: steppedZoom(v.zoom, -1) }))}
           className="h-6.5 w-6.75 text-14 text-gray-11"
         >
           −
         </button>
-        <span className="w-12 text-center font-mono text-11 text-gray-11">{view.zoom}%</span>
+        <button
+          type="button"
+          aria-label="Reset zoom"
+          title="Reset to 100% · ⌘0"
+          onClick={() => setView((v) => ({ ...v, zoom: 100 }))}
+          className="w-12 text-center font-mono text-11 text-gray-11"
+        >
+          {view.zoom}%
+        </button>
         <button
           type="button"
           aria-label="Zoom in"
-          onClick={() => setView((v) => ({ ...v, zoom: clampZoom(v.zoom + ZOOM_STEP) }))}
+          onClick={() => setView((v) => ({ ...v, zoom: steppedZoom(v.zoom, 1) }))}
           className="h-6.5 w-6.75 text-14 text-gray-11"
         >
           +
