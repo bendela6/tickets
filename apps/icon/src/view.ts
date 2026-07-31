@@ -75,18 +75,31 @@ export function scaleFor(artboard: { width: number; height: number }, zoom: numb
   return ((ARTBOARD_PX * zoom) / 100) / longest;
 }
 
-/** The zoom that fits the artboard inside `viewport`, with a little room. */
+/**
+ * The zoom that makes the artboard fill `room` without overflowing either axis.
+ *
+ * `room` is the space actually available, in CSS pixels: the caller has already
+ * taken off its own padding and anything stacked below the artboard, so there
+ * is no margin to guess at here. Both axes are solved rather than the smaller
+ * viewport edge taken — that only fits a square board, and would have left a
+ * 1024×256 document at a quarter of the zoom it had room for.
+ */
 export function zoomToFit(
   artboard: { width: number; height: number },
-  viewport: { width: number; height: number },
-  margin = 64,
+  room: { width: number; height: number },
 ): number {
   const longest = Math.max(artboard.width, artboard.height);
-  if (longest <= 0) return 100;
-  const room = Math.min(viewport.width - margin, viewport.height - margin);
-  if (room <= 0) return ZOOM_MIN;
-  // Invert `scaleFor`: what zoom makes the longest edge exactly `room` wide?
-  return clampZoom((room / ARTBOARD_PX) * 100);
+  if (longest <= 0 || artboard.width <= 0 || artboard.height <= 0) return 100;
+  if (room.width <= 0 || room.height <= 0) return ZOOM_MIN;
+  // `scaleFor` puts the longest edge at ARTBOARD_PX, so the zoom follows
+  // directly from how many pixels that edge is allowed to take.
+  const longestPx = Math.min(
+    room.width * (longest / artboard.width),
+    room.height * (longest / artboard.height),
+  );
+  // Floored, not rounded: zoom is a whole percent, and rounding up puts the
+  // board back outside the room it was just fitted to.
+  return clampZoom(Math.floor((longestPx / ARTBOARD_PX) * 100));
 }
 
 /**

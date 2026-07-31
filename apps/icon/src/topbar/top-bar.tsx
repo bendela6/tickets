@@ -70,7 +70,7 @@ export function TopBar({
         <button
           type="button"
           aria-label="Reset zoom"
-          title="Reset to 100% · ⌘0"
+          title="Reset to 100% · ⌘0 — fit the board ⇧⌘0"
           onClick={() => setView((v) => ({ ...v, zoom: 100 }))}
           className="w-12 text-center font-mono text-11 text-gray-11"
         >

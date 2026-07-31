@@ -197,4 +197,13 @@ describe('play', () => {
     await user.keyboard('r');
     expect(screen.getByRole('button', { name: 'Play' })).toBeEnabled();
   });
+
+  it('says what it is playing, by state name, in the status line', async () => {
+    const { user } = await setup();
+    // Not the selection line: while the transport is running, what is playing
+    // is the only thing worth reading down there.
+    expect(screen.getByRole('status')).toHaveTextContent('rect 1 selected');
+    await user.click(screen.getByRole('button', { name: 'Play' }));
+    expect(screen.getByRole('status')).toHaveTextContent('playing · default');
+  });
 });

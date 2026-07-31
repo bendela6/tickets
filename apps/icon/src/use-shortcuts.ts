@@ -17,11 +17,15 @@ export function useShortcuts({
   dispatch,
   onSave,
   onExport,
+  onResetZoom,
+  onFitZoom,
 }: {
   state: EditorState;
   dispatch: (action: Action) => void;
   onSave: () => void;
   onExport: () => void;
+  onResetZoom: () => void;
+  onFitZoom: () => void;
 }): void {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -48,6 +52,14 @@ export function useShortcuts({
         dispatch({ type: 'duplicateObject', id: state.selectedId });
         return;
       }
+      // Matched on `code` rather than `key`, because shift turns the `0` key
+      // into `)` and the two chords would otherwise need different tests.
+      if (accel && (event.code === 'Digit0' || event.code === 'Numpad0')) {
+        event.preventDefault();
+        if (event.shiftKey) onFitZoom();
+        else onResetZoom();
+        return;
+      }
       // Any other accelerator belongs to the browser — ⌘R must still reload
       // rather than adding a rectangle.
       if (accel) return;
@@ -71,5 +83,5 @@ export function useShortcuts({
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [dispatch, onExport, onSave, state.selectedId]);
+  }, [dispatch, onExport, onFitZoom, onResetZoom, onSave, state.selectedId]);
 }
