@@ -59,6 +59,18 @@ function initialGeometry(kind: ShapeKind, size: number): Geometry {
 }
 
 /**
+ * The id a shape gets from its kind and sequence number.
+ *
+ * Shared rather than spelled out twice: alt-dragging duplicates an object and
+ * then has to keep dragging the copy, which means the caller must know the new
+ * id before the reducer's state comes back. Both sides derive it from here so
+ * they cannot disagree.
+ */
+export function objectId(kind: ShapeKind, sequence: number): string {
+  return `${kind}-${sequence}`;
+}
+
+/**
  * A fresh object of `kind`. `sequence` is the running count of shapes ever
  * added to this document, so names stay stable when earlier ones are deleted —
  * numbering by `objects.length` would hand a new shape a name a deleted one
@@ -66,7 +78,7 @@ function initialGeometry(kind: ShapeKind, size: number): Geometry {
  */
 export function newObject(kind: ShapeKind, sequence: number, size: ArtboardSize): IconObject {
   return {
-    id: `${kind}-${sequence}`,
+    id: objectId(kind, sequence),
     name: `${kind} ${sequence}`,
     geometry: initialGeometry(kind, size),
     fill: { ...DEFAULT_INK },
