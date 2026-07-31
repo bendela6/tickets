@@ -1,7 +1,7 @@
 import { Slider } from '@tickets/ui';
 import { ShapeGlyph } from '../canvas/shape-tools';
 import { ARTBOARD_SIZES } from '../doc/constants';
-import { bounds, fitToBox } from '../doc/geometry';
+import { bounds } from '../doc/geometry';
 import { selectedObject } from '../doc/store';
 import { useEditor } from '../editor-context';
 import type { ArtboardSize, IconObject } from '../doc/types';
@@ -53,105 +53,57 @@ function Header({ object }: { object: IconObject | null }) {
 
 function ObjectProperties({ object }: { object: IconObject }) {
   const { state, dispatch, view } = useEditor();
-  const box = bounds(object);
   const isLine = object.geometry.kind === 'line';
-
-  const resize = (next: Partial<typeof box>) =>
-    dispatch({ type: 'resizeObject', id: object.id, box: { ...box, ...next } });
 
   return (
     <>
-      <RailGroup label="POSITION &amp; SIZE">
-        <div className="grid grid-cols-2 gap-1.5">
-          <NumberField
-            label="X"
-            value={Math.round(box.x)}
-            onCommit={(x) =>
-              dispatch({
-                type: 'setGeometry',
-                id: object.id,
-                geometry: fitToBox(object, { ...box, x }),
-                label: `move ${object.name}`,
-              })
-            }
-          />
-          <NumberField
-            label="Y"
-            value={Math.round(box.y)}
-            onCommit={(y) =>
-              dispatch({
-                type: 'setGeometry',
-                id: object.id,
-                geometry: fitToBox(object, { ...box, y }),
-                label: `move ${object.name}`,
-              })
-            }
-          />
-          <NumberField
-            label="W"
-            name="Width"
-            value={Math.round(box.w)}
-            min={1}
-            onCommit={(w) => resize({ w })}
-          />
-          <NumberField
-            label="H"
-            name="Height"
-            value={Math.round(box.h)}
-            min={1}
-            onCommit={(h) => resize({ h })}
-          />
-        </div>
-        <NumberField
-          label="ROTATION"
-          value={object.rotation}
-          suffix="°"
-          onCommit={(degrees) => dispatch({ type: 'rotateObject', id: object.id, degrees })}
-        />
-      </RailGroup>
+      <PositionGroup object={object} />
 
       <RailGroup label="APPEARANCE">
+        {/* A line has no area, so a fill would paint nothing. Everything else
+            gets both, and both are editable — a shape that can be given a
+            stroke width it cannot colour is not a finished control. */}
+        {isLine ? null : (
+          <ColourPairField
+            label="FILL"
+            value={object.fill}
+            ground={view.ground}
+            against={state.doc.background}
+            onChange={(hex) =>
+              dispatch({
+                type: 'setColor',
+                id: object.id,
+                channel: 'fill',
+                ground: view.ground,
+                hex,
+              })
+            }
+          />
+        )}
+
         <ColourPairField
-          label={isLine ? 'STROKE' : 'FILL'}
-          value={isLine ? object.stroke : object.fill}
+          label="STROKE"
+          value={object.stroke}
           ground={view.ground}
           against={state.doc.background}
           onChange={(hex) =>
             dispatch({
               type: 'setColor',
               id: object.id,
-              channel: isLine ? 'stroke' : 'fill',
+              channel: 'stroke',
               ground: view.ground,
               hex,
             })
           }
         />
 
-        <div className="flex items-center gap-1.5">
-          <div className="flex min-w-0 flex-1 items-center gap-1.75 rounded-md border-1 border-gray-6 bg-surface-raised px-2 py-1.5">
-            <span
-              aria-hidden
-              className="size-4 flex-none rounded-sm border-1 border-gray-7"
-              style={
-                isLine || object.strokeWidth === 0
-                  ? { background: 'transparent', borderStyle: 'dashed' }
-                  : { background: object.stroke[view.ground] }
-              }
-            />
-            <span className="flex-1 truncate font-mono text-11 text-gray-9">
-              {isLine ? 'n/a on a line' : object.strokeWidth > 0 ? object.stroke[view.ground].toUpperCase() : 'no stroke'}
-            </span>
-          </div>
-          <div className="w-17.5 flex-none">
-            <NumberField
-              label="W"
-              name="Stroke width"
-              value={object.strokeWidth}
-              min={0}
-              onCommit={(width) => dispatch({ type: 'setStrokeWidth', id: object.id, width })}
-            />
-          </div>
-        </div>
+        <NumberField
+          label={isLine ? 'THICKNESS' : 'STROKE WIDTH'}
+          name={isLine ? 'Thickness' : 'Stroke width'}
+          value={object.strokeWidth}
+          min={isLine ? 1 : 0}
+          onCommit={(width) => dispatch({ type: 'setStrokeWidth', id: object.id, width })}
+        />
 
         <div className="flex flex-col gap-1.5">
           <NumberField
@@ -176,6 +128,123 @@ function ObjectProperties({ object }: { object: IconObject }) {
 
       <MotionGroup object={object} />
     </>
+  );
+}
+
+/**
+ * Where the object is, stated in the terms the shape is actually defined by.
+ *
+ * A line is two points, so quoting it an X/Y/W/H box describes a by-product of
+ * where its ends happen to be — and offers a height field that really means
+ * thickness. A polygon is a centre and a radius. Only the two box shapes are
+ * boxes. Every shape still gets rotation, because rotation is a transform on
+ * top of geometry rather than part of it, and `spins` needs it.
+ */
+function PositionGroup({ object }: { object: IconObject }) {
+  const { dispatch } = useEditor();
+  const geometry = object.geometry;
+
+  const rotation = (
+    <NumberField
+      label="ROTATION"
+      value={object.rotation}
+      suffix="°"
+      onCommit={(degrees) => dispatch({ type: 'rotateObject', id: object.id, degrees })}
+    />
+  );
+
+  const setGeometry = (next: typeof geometry, label: string) =>
+    dispatch({ type: 'setGeometry', id: object.id, geometry: next, label });
+
+  if (geometry.kind === 'line') {
+    return (
+      <RailGroup label="POSITION">
+        <div className="grid grid-cols-2 gap-1.5">
+          <NumberField
+            label="X1"
+            value={Math.round(geometry.x1)}
+            onCommit={(x1) => setGeometry({ ...geometry, x1 }, `reshape ${object.name}`)}
+          />
+          <NumberField
+            label="Y1"
+            value={Math.round(geometry.y1)}
+            onCommit={(y1) => setGeometry({ ...geometry, y1 }, `reshape ${object.name}`)}
+          />
+          <NumberField
+            label="X2"
+            value={Math.round(geometry.x2)}
+            onCommit={(x2) => setGeometry({ ...geometry, x2 }, `reshape ${object.name}`)}
+          />
+          <NumberField
+            label="Y2"
+            value={Math.round(geometry.y2)}
+            onCommit={(y2) => setGeometry({ ...geometry, y2 }, `reshape ${object.name}`)}
+          />
+        </div>
+        {rotation}
+      </RailGroup>
+    );
+  }
+
+  if (geometry.kind === 'polygon') {
+    return (
+      <RailGroup label="POSITION &amp; SIZE">
+        <div className="grid grid-cols-2 gap-1.5">
+          <NumberField
+            label="CX"
+            name="Centre X"
+            value={Math.round(geometry.cx)}
+            onCommit={(cx) => setGeometry({ ...geometry, cx }, `move ${object.name}`)}
+          />
+          <NumberField
+            label="CY"
+            name="Centre Y"
+            value={Math.round(geometry.cy)}
+            onCommit={(cy) => setGeometry({ ...geometry, cy }, `move ${object.name}`)}
+          />
+        </div>
+        <NumberField
+          label="RADIUS"
+          value={Math.round(geometry.r)}
+          min={1}
+          onCommit={(r) => setGeometry({ ...geometry, r }, `resize ${object.name}`)}
+        />
+        {rotation}
+      </RailGroup>
+    );
+  }
+
+  const box = bounds(object);
+  return (
+    <RailGroup label="POSITION &amp; SIZE">
+      <div className="grid grid-cols-2 gap-1.5">
+        <NumberField
+          label="X"
+          value={Math.round(box.x)}
+          onCommit={(x) => setGeometry({ ...geometry, x }, `move ${object.name}`)}
+        />
+        <NumberField
+          label="Y"
+          value={Math.round(box.y)}
+          onCommit={(y) => setGeometry({ ...geometry, y }, `move ${object.name}`)}
+        />
+        <NumberField
+          label="W"
+          name="Width"
+          value={Math.round(box.w)}
+          min={1}
+          onCommit={(w) => dispatch({ type: 'resizeObject', id: object.id, box: { ...box, w } })}
+        />
+        <NumberField
+          label="H"
+          name="Height"
+          value={Math.round(box.h)}
+          min={1}
+          onCommit={(h) => dispatch({ type: 'resizeObject', id: object.id, box: { ...box, h } })}
+        />
+      </div>
+      {rotation}
+    </RailGroup>
   );
 }
 

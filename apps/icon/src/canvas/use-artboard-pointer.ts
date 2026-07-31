@@ -1,20 +1,33 @@
 import { useCallback, useRef, useState, type PointerEvent, type RefObject } from 'react';
 import { objectId } from '../doc/defaults';
-import { bounds, hitTest, translate, type Box, type Point } from '../doc/geometry';
+import {
+  bounds,
+  boxCentre,
+  hitTest,
+  rotatePoint,
+  translate,
+  type Box,
+  type Point,
+} from '../doc/geometry';
 import type { Action, EditorState } from '../doc/store';
 import type { Geometry, IconObject } from '../doc/types';
 import {
   angleFrom,
   constrainDelta,
-  resizeBox,
+  isEndpoint,
+  lineEndpointAt,
+  polygonRadius,
+  resizeRotated,
   snapAngle,
+  type EndpointHandle,
   type Handle,
   type ResizeHandle,
 } from './interaction';
 
 type Gesture =
   | { mode: 'move'; id: string; startGeometry: Geometry; startPoint: Point; startBox: Box }
-  | { mode: 'resize'; id: string; handle: ResizeHandle; startBox: Box }
+  | { mode: 'resize'; id: string; handle: ResizeHandle; startBox: Box; rotation: number }
+  | { mode: 'endpoint'; id: string; handle: EndpointHandle; rotation: number }
   | { mode: 'rotate'; id: string; centre: Point };
 
 export interface DragChrome {
@@ -24,6 +37,8 @@ export interface DragChrome {
   current: Box;
   /** Movement so far, in document units. */
   delta: Point;
+  /** The object's rotation, so the ghost turns with it. */
+  rotation: number;
 }
 
 /**
@@ -102,7 +117,12 @@ export function useArtboardPointer({
       startPoint: point,
       startBox,
     });
-    setChrome({ origin: startBox, current: startBox, delta: { x: 0, y: 0 } });
+    setChrome({
+      origin: startBox,
+      current: startBox,
+      delta: { x: 0, y: 0 },
+      rotation: target.rotation,
+    });
   };
 
   const onHandleDown = (handle: Handle, event: PointerEvent) => {
@@ -113,15 +133,20 @@ export function useArtboardPointer({
     if (!object || object.locked) return;
 
     if (handle === 'rotate') {
-      const box = bounds(object);
-      begin(event, {
-        mode: 'rotate',
-        id: object.id,
-        centre: { x: box.x + box.w / 2, y: box.y + box.h / 2 },
-      });
+      begin(event, { mode: 'rotate', id: object.id, centre: boxCentre(bounds(object)) });
       return;
     }
-    begin(event, { mode: 'resize', id: object.id, handle, startBox: bounds(object) });
+    if (isEndpoint(handle)) {
+      begin(event, { mode: 'endpoint', id: object.id, handle, rotation: object.rotation });
+      return;
+    }
+    begin(event, {
+      mode: 'resize',
+      id: object.id,
+      handle,
+      startBox: bounds(object),
+      rotation: object.rotation,
+    });
   };
 
   const onPointerMove = (event: PointerEvent) => {
@@ -129,6 +154,8 @@ export function useArtboardPointer({
     if (!active) return;
     const point = pointOf(event);
     if (!point) return;
+    const object = objectById(active.id);
+    if (!object) return;
 
     if (active.mode === 'move') {
       const delta = constrainDelta(
@@ -138,25 +165,69 @@ export function useArtboardPointer({
       );
       const dx = Math.round(delta.x);
       const dy = Math.round(delta.y);
-      const geometry = translate(active.startGeometry, dx, dy);
       dispatch({
         type: 'setGeometry',
         id: active.id,
-        geometry,
-        label: `move ${objectById(active.id)?.name ?? 'object'}`,
+        geometry: translate(active.startGeometry, dx, dy),
+        label: `move ${object.name}`,
         at: event.timeStamp,
       });
       setChrome({
         origin: active.startBox,
         current: { ...active.startBox, x: active.startBox.x + dx, y: active.startBox.y + dy },
         delta: { x: dx, y: dy },
+        rotation: object.rotation,
+      });
+      return;
+    }
+
+    if (active.mode === 'endpoint') {
+      const g = object.geometry;
+      if (g.kind !== 'line') return;
+      const centre = boxCentre(bounds(object));
+      // The pointer is in artboard space but the endpoints are stored before
+      // rotation, so it comes back into the object's own frame first.
+      const local = rotatePoint(point, centre, -active.rotation);
+      const anchor =
+        active.handle === 'p1' ? { x: g.x2, y: g.y2 } : { x: g.x1, y: g.y1 };
+      const moved = lineEndpointAt(anchor, local, event.shiftKey);
+      const next =
+        active.handle === 'p1'
+          ? { ...g, x1: Math.round(moved.x), y1: Math.round(moved.y) }
+          : { ...g, x2: Math.round(moved.x), y2: Math.round(moved.y) };
+      dispatch({
+        type: 'setGeometry',
+        id: active.id,
+        geometry: next,
+        label: `reshape ${object.name}`,
+        at: event.timeStamp,
       });
       return;
     }
 
     if (active.mode === 'resize') {
-      const box = resizeBox(active.startBox, active.handle, point, event.shiftKey);
-      dispatch({ type: 'resizeObject', id: active.id, box, at: event.timeStamp });
+      // A regular polygon resizes about its centre — it has no corner to pin,
+      // and fitting one into a dragged rectangle leaves half the handles inert.
+      if (object.geometry.kind === 'polygon') {
+        const centre = { x: object.geometry.cx, y: object.geometry.cy };
+        dispatch({
+          type: 'setGeometry',
+          id: active.id,
+          geometry: {
+            ...object.geometry,
+            r: Math.round(polygonRadius(centre, active.handle, point, active.rotation)),
+          },
+          label: `resize ${object.name}`,
+          at: event.timeStamp,
+        });
+        return;
+      }
+      dispatch({
+        type: 'resizeObject',
+        id: active.id,
+        box: resizeRotated(active.startBox, active.handle, point, active.rotation, event.shiftKey),
+        at: event.timeStamp,
+      });
       return;
     }
 

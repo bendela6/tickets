@@ -27,6 +27,16 @@ function colourFor(object: IconObject, ground: Ground): string {
   return pair[ground];
 }
 
+/**
+ * The outline on a shape that has an area. Emitted only when there is one to
+ * draw — a `stroke-width` of 0 with a colour is dead weight in every exported
+ * file, and there is one per size per target.
+ */
+function strokeAttributes(object: PosedObject, ground: Ground): string {
+  if (object.geometry.kind === 'line' || object.strokeWidth <= 0) return '';
+  return ` stroke="${escapeAttribute(object.stroke[ground])}" stroke-width="${n(object.strokeWidth)}"`;
+}
+
 function transformOf(object: PosedObject): string {
   if (object.rotation % 360 === 0) return '';
   const c = centreOf(object);
@@ -40,7 +50,7 @@ function opacityOf(object: PosedObject): string {
 function shapeMarkup(object: PosedObject, ground: Ground): string {
   const g = object.geometry;
   const colour = escapeAttribute(colourFor(object, ground));
-  const tail = `${opacityOf(object)}${transformOf(object)}`;
+  const tail = `${strokeAttributes(object, ground)}${opacityOf(object)}${transformOf(object)}`;
 
   switch (g.kind) {
     case 'rect': {
