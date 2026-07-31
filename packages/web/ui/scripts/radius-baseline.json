@@ -6,6 +6,10 @@
     "packages/web/ui/src/components/dropdown/dropdown.tsx::* rows) and must bleed to the panel's rounded edge; `sm`/`md` are for",
     "packages/web/ui/src/foundation/colors/colors.ts::const rounded = Math.round(ratio * 100) / 100;",
     "packages/web/ui/src/foundation/colors/colors.ts::ratio: rounded,",
-    "packages/web/ui/src/foundation/colors/colors.ts::passes: rounded >= min,"
+    "packages/web/ui/src/foundation/colors/colors.ts::passes: rounded >= min,",
+    "apps/icon/src/render/svg.test.ts::const rounded = still(newObject('rect', 1, 512));",
+    "apps/icon/src/render/svg.test.ts::expect(renderSvg(docOf([rounded]), { ground: 'light' })).toContain('rx=\"32\"');",
+    "apps/icon/src/render/svg.test.ts::...rounded,",
+    "apps/icon/src/transport/track.tsx::* **Finite** — a transition — is a solid rail with rounded caps and a fill"
   ]
 }
