@@ -3,6 +3,9 @@ import { emptyDocument, newObject } from '../doc/defaults';
 import type { IconDoc } from '../doc/types';
 import { renderSvg } from './svg';
 
+/** The 512-square board most of these fixtures assume. */
+const BOARD = { width: 512, height: 512 };
+
 /**
  * The rasteriser hands `renderSvg`'s output to an `<img>`, which refuses
  * anything that is not a well-formed XML document — and refuses it silently,
@@ -25,10 +28,10 @@ const docWith = (objects: IconDoc['objects']): IconDoc => ({
 describe('the rendered SVG is a document a browser will actually decode', () => {
   it('parses with every shape kind on the artboard', () => {
     const doc = docWith([
-      newObject('rect', 1, 512),
-      newObject('ellipse', 2, 512),
-      newObject('line', 3, 512),
-      newObject('polygon', 4, 512),
+      newObject('rect', 1, BOARD),
+      newObject('ellipse', 2, BOARD),
+      newObject('line', 3, BOARD),
+      newObject('polygon', 4, BOARD),
     ]);
     const parsed = parse(renderSvg(doc, { ground: 'light' }));
     expect(parsed.documentElement.tagName).toBe('svg');
@@ -37,14 +40,14 @@ describe('the rendered SVG is a document a browser will actually decode', () => 
 
   it('parses when a colour contains characters that would otherwise break an attribute', () => {
     const doc = docWith([
-      { ...newObject('rect', 1, 512), fill: { light: '"><script/>', dark: '#000000' } },
+      { ...newObject('rect', 1, BOARD), fill: { light: '"><script/>', dark: '#000000' } },
     ]);
     const parsed = parse(renderSvg(doc, { ground: 'light' }));
     expect(parsed.querySelectorAll('script')).toHaveLength(0);
   });
 
   it('parses when a rotation and an opacity are both present', () => {
-    const doc = docWith([{ ...newObject('rect', 1, 512), rotation: 33, opacity: 42 }]);
+    const doc = docWith([{ ...newObject('rect', 1, BOARD), rotation: 33, opacity: 42 }]);
     const rect = parse(renderSvg(doc, { ground: 'light' })).querySelectorAll('rect')[1];
     expect(rect?.getAttribute('transform')).toContain('rotate(');
     expect(rect?.getAttribute('opacity')).toBe('0.42');
@@ -56,12 +59,12 @@ describe('the rendered SVG is a document a browser will actually decode', () => 
   });
 
   it('survives a name containing markup, since the document name reaches the manifest', () => {
-    const doc: IconDoc = { ...docWith([newObject('rect', 1, 512)]), name: '<bad>&name' };
+    const doc: IconDoc = { ...docWith([newObject('rect', 1, BOARD)]), name: '<bad>&name' };
     expect(() => parse(renderSvg(doc, { ground: 'light' }))).not.toThrow();
   });
 
   it('declares dimensions a rasteriser can scale from', () => {
-    const parsed = parse(renderSvg(emptyDocument('x', 1024), { ground: 'light' }));
+    const parsed = parse(renderSvg(emptyDocument('x', { width: 1024, height: 1024 }), { ground: 'light' }));
     expect(parsed.documentElement.getAttribute('viewBox')).toBe('0 0 1024 1024');
     expect(parsed.documentElement.getAttribute('width')).toBe('1024');
   });

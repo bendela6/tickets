@@ -92,14 +92,18 @@ export function rotatePoint(point: Point, about: Point, degrees: number): Point 
 
 /**
  * How far the object reaches from the artboard's centre, as a fraction of the
- * half-width — the number Android's maskable rule is stated against.
+ * distance to its edge — the number Android's maskable rule is stated against.
  *
- * Rotation is applied first: a square turned 45° reaches further than its
- * unrotated box does, and the platform crops what is actually drawn.
+ * Measured per axis rather than against one half-width, so a wide board is
+ * judged by how much of *itself* an object covers. Rotation is applied first:
+ * a square turned 45° reaches further than its unrotated box does, and the
+ * platform crops what is actually drawn.
  */
-export function extentOf(object: IconObject, size: number): number {
+export function extentOf(object: IconObject, artboard: { width: number; height: number }): number {
   const b = bounds(object);
-  const half = size / 2;
+  const halfW = artboard.width / 2;
+  const halfH = artboard.height / 2;
+  if (halfW <= 0 || halfH <= 0) return 0;
   const middle = { x: b.x + b.w / 2, y: b.y + b.h / 2 };
   const corners: Point[] = [
     { x: b.x, y: b.y },
@@ -110,9 +114,13 @@ export function extentOf(object: IconObject, size: number): number {
   let furthest = 0;
   for (const corner of corners) {
     const turned = rotatePoint(corner, middle, object.rotation);
-    furthest = Math.max(furthest, Math.abs(turned.x - half), Math.abs(turned.y - half));
+    furthest = Math.max(
+      furthest,
+      Math.abs(turned.x - halfW) / halfW,
+      Math.abs(turned.y - halfH) / halfH,
+    );
   }
-  return furthest / half;
+  return furthest;
 }
 
 function pointInBox(point: Point, box: Box): boolean {

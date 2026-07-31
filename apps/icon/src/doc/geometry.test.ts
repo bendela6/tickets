@@ -12,8 +12,11 @@ import {
 } from './geometry';
 import type { IconObject } from './types';
 
+/** The 512-square board most of these fixtures assume. */
+const BOARD = { width: 512, height: 512 };
+
 const rect = (over: Partial<IconObject> = {}): IconObject => ({
-  ...newObject('rect', 1, 512),
+  ...newObject('rect', 1, BOARD),
   ...over,
 });
 
@@ -37,7 +40,7 @@ describe('bounds', () => {
 
   it('inflates a line by its stroke, because that is what you can see and click', () => {
     // A horizontal segment has zero height; the drawn line is 20 units tall.
-    const line = newObject('line', 1, 512);
+    const line = newObject('line', 1, BOARD);
     const box = bounds(line);
     expect(box.h).toBe(line.strokeWidth);
     expect(box.y).toBe(256 - line.strokeWidth / 2);
@@ -45,7 +48,7 @@ describe('bounds', () => {
   });
 
   it('boxes a polygon by its circumradius', () => {
-    const poly = newObject('polygon', 1, 512);
+    const poly = newObject('polygon', 1, BOARD);
     expect(bounds(poly)).toEqual({ x: 256 - 120, y: 256 - 120, w: 240, h: 240 });
   });
 });
@@ -56,13 +59,13 @@ describe('extentOf', () => {
     const backdrop = rect({
       geometry: { kind: 'rect', x: 32, y: 32, w: 448, h: 448, radius: 96 },
     });
-    expect(Math.round(extentOf(backdrop, 512) * 100)).toBe(88);
+    expect(Math.round(extentOf(backdrop, BOARD) * 100)).toBe(88);
   });
 
   it('counts rotation, because the platform crops what is actually drawn', () => {
     const square = rect({ geometry: { kind: 'rect', x: 156, y: 156, w: 200, h: 200, radius: 0 } });
-    const upright = extentOf(square, 512);
-    const turned = extentOf({ ...square, rotation: 45 }, 512);
+    const upright = extentOf(square, BOARD);
+    const turned = extentOf({ ...square, rotation: 45 }, BOARD);
     expect(turned).toBeGreaterThan(upright);
     // A 200-square turned 45° has a half-diagonal of 100·√2.
     expect(turned).toBeCloseTo((100 * Math.SQRT2) / 256, 5);
@@ -70,13 +73,13 @@ describe('extentOf', () => {
 
   it('is 1 for an object that exactly fills the board', () => {
     const full = rect({ geometry: { kind: 'rect', x: 0, y: 0, w: 512, h: 512, radius: 0 } });
-    expect(extentOf(full, 512)).toBe(1);
+    expect(extentOf(full, BOARD)).toBe(1);
   });
 });
 
 describe('contains', () => {
   it('excludes the corners of an ellipse that its box would include', () => {
-    const ellipse = newObject('ellipse', 1, 512);
+    const ellipse = newObject('ellipse', 1, BOARD);
     expect(contains(ellipse, { x: 256, y: 256 })).toBe(true);
     expect(contains(ellipse, { x: 137, y: 137 })).toBe(false);
   });
@@ -92,14 +95,14 @@ describe('contains', () => {
   });
 
   it('gives a line the width of its stroke to be hit in', () => {
-    const line = newObject('line', 1, 512);
+    const line = newObject('line', 1, BOARD);
     expect(contains(line, { x: 256, y: 256 })).toBe(true);
     expect(contains(line, { x: 256, y: 256 + line.strokeWidth })).toBe(false);
   });
 
   it('excludes the notches between a polygon’s vertices', () => {
     const triangle: IconObject = {
-      ...newObject('polygon', 1, 512),
+      ...newObject('polygon', 1, BOARD),
       geometry: { kind: 'polygon', cx: 256, cy: 256, r: 120, sides: 3 },
     };
     expect(contains(triangle, { x: 256, y: 256 })).toBe(true);
@@ -131,7 +134,7 @@ describe('hitTest', () => {
 
 describe('lineEndpoints', () => {
   it('returns the two ends as stored when the line is upright', () => {
-    const line = newObject('line', 1, 512);
+    const line = newObject('line', 1, BOARD);
     expect(lineEndpoints(line)).toEqual([
       { x: 136, y: 256 },
       { x: 376, y: 256 },
@@ -139,7 +142,7 @@ describe('lineEndpoints', () => {
   });
 
   it('applies the object’s rotation, because that is where the handles have to be', () => {
-    const line = { ...newObject('line', 1, 512), rotation: 90 };
+    const line = { ...newObject('line', 1, BOARD), rotation: 90 };
     const [start, end] = lineEndpoints(line);
     // A horizontal line turned a quarter turn about its own centre (256,256).
     expect(start.x).toBeCloseTo(256, 6);
@@ -149,7 +152,7 @@ describe('lineEndpoints', () => {
   });
 
   it('refuses a shape that has no endpoints rather than inventing some', () => {
-    expect(() => lineEndpoints(newObject('rect', 1, 512))).toThrow(/non-line/);
+    expect(() => lineEndpoints(newObject('rect', 1, BOARD))).toThrow(/non-line/);
   });
 });
 
@@ -171,14 +174,14 @@ describe('translate', () => {
 
 describe('fitToBox', () => {
   it('keeps a polygon regular by taking the smaller half-extent as its radius', () => {
-    const poly = newObject('polygon', 1, 512);
+    const poly = newObject('polygon', 1, BOARD);
     const fitted = fitToBox(poly, { x: 0, y: 0, w: 200, h: 80 });
     expect(fitted).toEqual({ kind: 'polygon', cx: 100, cy: 40, r: 40, sides: 6 });
   });
 
   it('keeps a line running the same way it did', () => {
     const line: IconObject = {
-      ...newObject('line', 1, 512),
+      ...newObject('line', 1, BOARD),
       geometry: { kind: 'line', x1: 100, y1: 200, x2: 0, y2: 0 },
       strokeWidth: 0,
     };
@@ -189,7 +192,7 @@ describe('fitToBox', () => {
 
   it('round-trips: fitting a shape to its own bounds changes nothing', () => {
     for (const kind of ['rect', 'ellipse', 'line', 'polygon'] as const) {
-      const object = newObject(kind, 1, 512);
+      const object = newObject(kind, 1, BOARD);
       expect(fitToBox(object, bounds(object))).toEqual(object.geometry);
     }
   });

@@ -47,7 +47,22 @@ export async function rasterise(svg: string, size: number): Promise<Uint8Array> 
   if (!context) throw new Error('this browser gave no 2D canvas context');
 
   const image = await loadImage(svgUrl(svg));
-  context.drawImage(image, 0, 0, size, size);
+
+  // Icon targets are square but the artboard need not be, so a non-square
+  // document is fitted and centred rather than stretched. Squashing a wide
+  // mark into a square tile is the one thing an icon exporter must not do
+  // quietly.
+  const natural = Math.max(image.naturalWidth, image.naturalHeight) || size;
+  const scale = size / natural;
+  const drawWidth = (image.naturalWidth || size) * scale;
+  const drawHeight = (image.naturalHeight || size) * scale;
+  context.drawImage(
+    image,
+    (size - drawWidth) / 2,
+    (size - drawHeight) / 2,
+    drawWidth,
+    drawHeight,
+  );
   return toBytes(canvas);
 }
 

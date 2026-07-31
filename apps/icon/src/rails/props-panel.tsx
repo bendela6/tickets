@@ -1,10 +1,16 @@
 import { Slider } from '@tickets/ui';
 import { ShapeGlyph } from '../canvas/shape-tools';
-import { ARTBOARD_SIZES } from '../doc/constants';
+import {
+  ARTBOARD_MAX,
+  ARTBOARD_MIN,
+  ARTBOARD_PRESETS,
+  SNAP_MIN,
+  SNAP_PRESETS,
+} from '../doc/constants';
 import { bounds } from '../doc/geometry';
 import { selectedObject } from '../doc/store';
 import { useEditor } from '../editor-context';
-import type { ArtboardSize, IconObject } from '../doc/types';
+import type { IconObject } from '../doc/types';
 import { ColourPairField } from './colour-pair-field';
 import { MotionGroup } from './motion-group';
 import { NumberField } from './number-field';
@@ -141,8 +147,11 @@ function ObjectProperties({ object }: { object: IconObject }) {
  * top of geometry rather than part of it, and `spins` needs it.
  */
 function PositionGroup({ object }: { object: IconObject }) {
-  const { dispatch } = useEditor();
+  const { state, dispatch } = useEditor();
   const geometry = object.geometry;
+  // The arrows move by one grid unit, so holding one walks the same positions
+  // a drag would land on rather than a parallel set of its own.
+  const step = state.doc.snap;
 
   const rotation = (
     <NumberField
@@ -162,22 +171,26 @@ function PositionGroup({ object }: { object: IconObject }) {
         <div className="grid grid-cols-2 gap-1.5">
           <NumberField
             label="X1"
-            value={Math.round(geometry.x1)}
+            value={geometry.x1}
+          step={step}
             onCommit={(x1) => setGeometry({ ...geometry, x1 }, `reshape ${object.name}`)}
           />
           <NumberField
             label="Y1"
-            value={Math.round(geometry.y1)}
+            value={geometry.y1}
+          step={step}
             onCommit={(y1) => setGeometry({ ...geometry, y1 }, `reshape ${object.name}`)}
           />
           <NumberField
             label="X2"
-            value={Math.round(geometry.x2)}
+            value={geometry.x2}
+          step={step}
             onCommit={(x2) => setGeometry({ ...geometry, x2 }, `reshape ${object.name}`)}
           />
           <NumberField
             label="Y2"
-            value={Math.round(geometry.y2)}
+            value={geometry.y2}
+          step={step}
             onCommit={(y2) => setGeometry({ ...geometry, y2 }, `reshape ${object.name}`)}
           />
         </div>
@@ -193,19 +206,22 @@ function PositionGroup({ object }: { object: IconObject }) {
           <NumberField
             label="CX"
             name="Centre X"
-            value={Math.round(geometry.cx)}
+            value={geometry.cx}
+          step={step}
             onCommit={(cx) => setGeometry({ ...geometry, cx }, `move ${object.name}`)}
           />
           <NumberField
             label="CY"
             name="Centre Y"
-            value={Math.round(geometry.cy)}
+            value={geometry.cy}
+          step={step}
             onCommit={(cy) => setGeometry({ ...geometry, cy }, `move ${object.name}`)}
           />
         </div>
         <NumberField
           label="RADIUS"
-          value={Math.round(geometry.r)}
+          value={geometry.r}
+          step={step}
           min={1}
           onCommit={(r) => setGeometry({ ...geometry, r }, `resize ${object.name}`)}
         />
@@ -220,25 +236,29 @@ function PositionGroup({ object }: { object: IconObject }) {
       <div className="grid grid-cols-2 gap-1.5">
         <NumberField
           label="X"
-          value={Math.round(box.x)}
+          value={box.x}
+          step={step}
           onCommit={(x) => setGeometry({ ...geometry, x }, `move ${object.name}`)}
         />
         <NumberField
           label="Y"
-          value={Math.round(box.y)}
+          value={box.y}
+          step={step}
           onCommit={(y) => setGeometry({ ...geometry, y }, `move ${object.name}`)}
         />
         <NumberField
           label="W"
           name="Width"
-          value={Math.round(box.w)}
+          value={box.w}
+          step={step}
           min={1}
           onCommit={(w) => dispatch({ type: 'resizeObject', id: object.id, box: { ...box, w } })}
         />
         <NumberField
           label="H"
           name="Height"
-          value={Math.round(box.h)}
+          value={box.h}
+          step={step}
           min={1}
           onCommit={(h) => dispatch({ type: 'resizeObject', id: object.id, box: { ...box, h } })}
         />
@@ -313,26 +333,77 @@ function DocumentProperties() {
     <>
       <RailGroup label="ARTBOARD">
         <div className="grid grid-cols-2 gap-1.5">
-          <NumberField label="W" name="Artboard width" value={doc.size} onCommit={() => {}} disabled />
-          <NumberField label="H" name="Artboard height" value={doc.size} onCommit={() => {}} disabled />
+          <NumberField
+            label="W"
+            name="Artboard width"
+            value={doc.artboard.width}
+            min={ARTBOARD_MIN}
+            max={ARTBOARD_MAX}
+            onCommit={(width) => dispatch({ type: 'setArtboard', artboard: { width } })}
+          />
+          <NumberField
+            label="H"
+            name="Artboard height"
+            value={doc.artboard.height}
+            min={ARTBOARD_MIN}
+            max={ARTBOARD_MAX}
+            onCommit={(height) => dispatch({ type: 'setArtboard', artboard: { height } })}
+          />
         </div>
         <div className="flex gap-1.25">
-          {ARTBOARD_SIZES.map((size) => (
+          {ARTBOARD_PRESETS.map((preset) => {
+            const current =
+              preset.width === doc.artboard.width && preset.height === doc.artboard.height;
+            return (
+              <button
+                key={`${preset.width}x${preset.height}`}
+                type="button"
+                aria-pressed={current}
+                aria-label={`${preset.width} by ${preset.height}`}
+                onClick={() => dispatch({ type: 'setArtboard', artboard: preset })}
+                className={
+                  current
+                    ? 'h-6.5 flex-1 rounded-md border-1 border-indigo-9 bg-indigo-3 font-mono text-10 text-indigo-9'
+                    : 'h-6.5 flex-1 rounded-md border-1 border-gray-6 bg-surface-raised font-mono text-10 text-gray-11'
+                }
+              >
+                {preset.width}
+              </button>
+            );
+          })}
+        </div>
+      </RailGroup>
+
+      <RailGroup label="PRECISION">
+        <NumberField
+          label="STEP"
+          name="Snap step"
+          value={doc.snap}
+          min={SNAP_MIN}
+          step={0.5}
+          onCommit={(snap) => dispatch({ type: 'setSnap', snap })}
+        />
+        <div className="flex gap-1.25">
+          {SNAP_PRESETS.map((preset) => (
             <button
-              key={size}
+              key={preset}
               type="button"
-              aria-pressed={size === doc.size}
-              onClick={() => dispatch({ type: 'setArtboardSize', size: size as ArtboardSize })}
+              aria-pressed={preset === doc.snap}
+              aria-label={`Step ${preset}`}
+              onClick={() => dispatch({ type: 'setSnap', snap: preset })}
               className={
-                size === doc.size
-                  ? 'h-6.5 flex-1 rounded-md border-1 border-indigo-9 bg-indigo-3 font-mono text-11 text-indigo-9'
-                  : 'h-6.5 flex-1 rounded-md border-1 border-gray-6 bg-surface-raised font-mono text-11 text-gray-11'
+                preset === doc.snap
+                  ? 'h-6.5 flex-1 rounded-md border-1 border-indigo-9 bg-indigo-3 font-mono text-10 text-indigo-9'
+                  : 'h-6.5 flex-1 rounded-md border-1 border-gray-6 bg-surface-raised font-mono text-10 text-gray-11'
               }
             >
-              {size}
+              {preset}
             </button>
           ))}
         </div>
+        <span className="font-mono text-9/relaxed text-gray-9 text-pretty">
+          every position and size lands on multiples of {doc.snap} — the grid draws the same step
+        </span>
       </RailGroup>
 
       <RailGroup label="BACKGROUND">

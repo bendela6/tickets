@@ -78,7 +78,7 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
               Export icon
             </DialogTitle>
             <span className="font-sans text-12 text-gray-11">
-              Rasterised from the {doc.size} × {doc.size} vector source. Nothing is written until
+              Rasterised from the {doc.artboard.width} × {doc.artboard.height} vector source. Nothing is written until
               you press Export.
             </span>
           </div>

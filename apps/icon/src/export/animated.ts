@@ -53,7 +53,7 @@ export function animatedSvg(source: AnimatedSource): string {
 
   const animations = movers(source).map(({ object, amplitude }) => {
     const centre = centreOf(object);
-    const scale = doc.size / REFERENCE_SIZE;
+    const scale = Math.min(doc.artboard.width, doc.artboard.height) / REFERENCE_SIZE;
 
     if (object.motion.role === 'spins') {
       const sweep = LOOP_SPIN_DEGREES * amplitude * object.motion.pace;
@@ -104,7 +104,7 @@ export function lottie(source: AnimatedSource): unknown {
   const frameRate = 60;
   const frames = Math.round(cycleSeconds(doc) * frameRate);
   const posed = poseAtState(doc, source.stateId);
-  const scale = doc.size / REFERENCE_SIZE;
+  const scale = Math.min(doc.artboard.width, doc.artboard.height) / REFERENCE_SIZE;
 
   const layers = [...posed]
     .reverse()
@@ -206,8 +206,8 @@ export function lottie(source: AnimatedSource): unknown {
     fr: frameRate,
     ip: 0,
     op: frames,
-    w: doc.size,
-    h: doc.size,
+    w: doc.artboard.width,
+    h: doc.artboard.height,
     nm: doc.name,
     ddd: 0,
     assets: [],
@@ -357,7 +357,7 @@ function frameSvg(source: AnimatedSource, loop: number): string {
     const amplitude = amplitudeFor(source, object);
     if (amplitude === 0) return object;
     const wave = 2 * Math.PI * ((loop - index * doc.timing.rest) * object.motion.pace);
-    const scale = doc.size / REFERENCE_SIZE;
+    const scale = Math.min(doc.artboard.width, doc.artboard.height) / REFERENCE_SIZE;
     if (object.motion.role === 'spins') {
       return {
         ...object,

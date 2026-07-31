@@ -1,10 +1,11 @@
 import { DEFAULT_GROUND, DEFAULT_INK, REFERENCE_SIZE } from './constants';
-import type { ArtboardSize, Geometry, IconDoc, IconObject, ShapeKind } from './types';
+import { snapGeometry, snapTo } from './snap';
+import type { Artboard, Geometry, IconDoc, IconObject, ShapeKind } from './types';
 
 /**
  * Where a new shape lands, stated as fractions of the artboard so the same
- * call produces the same picture on a 256, 512 or 1024 board. The numerators
- * are the design's own 512-unit values.
+ * call produces the same picture on a 16, 512 or 1024 board — and on a wide
+ * one. The numerators are the design's own 512-unit values.
  */
 const PLACEMENT = {
   boxOrigin: 136 / REFERENCE_SIZE,
@@ -18,41 +19,38 @@ const PLACEMENT = {
 
 const DEFAULT_SIDES = 6;
 
-function initialGeometry(kind: ShapeKind, size: number): Geometry {
-  const at = (fraction: number) => Math.round(fraction * size);
-  const centre = size / 2;
+function initialGeometry(kind: ShapeKind, artboard: Artboard): Geometry {
+  const { width, height } = artboard;
+  // The shorter edge governs anything that has to stay round — a polygon on a
+  // wide board should not spill off the top and bottom.
+  const shorter = Math.min(width, height);
+  const centre = { x: width / 2, y: height / 2 };
+
   switch (kind) {
     case 'rect':
-      return {
-        kind: 'rect',
-        x: at(PLACEMENT.boxOrigin),
-        y: at(PLACEMENT.boxOrigin),
-        w: at(PLACEMENT.boxSide),
-        h: at(PLACEMENT.boxSide),
-        radius: at(PLACEMENT.rectRadius),
-      };
-    case 'ellipse':
-      return {
-        kind: 'ellipse',
-        x: at(PLACEMENT.boxOrigin),
-        y: at(PLACEMENT.boxOrigin),
-        w: at(PLACEMENT.boxSide),
-        h: at(PLACEMENT.boxSide),
-      };
-    case 'line':
+    case 'ellipse': {
+      const w = PLACEMENT.boxSide * width;
+      const h = PLACEMENT.boxSide * height;
+      const box = { x: centre.x - w / 2, y: centre.y - h / 2, w, h };
+      if (kind === 'ellipse') return { kind: 'ellipse', ...box };
+      return { kind: 'rect', ...box, radius: PLACEMENT.rectRadius * shorter };
+    }
+    case 'line': {
+      const half = ((PLACEMENT.lineEnd - PLACEMENT.lineStart) * width) / 2;
       return {
         kind: 'line',
-        x1: at(PLACEMENT.lineStart),
-        y1: centre,
-        x2: at(PLACEMENT.lineEnd),
-        y2: centre,
+        x1: centre.x - half,
+        y1: centre.y,
+        x2: centre.x + half,
+        y2: centre.y,
       };
+    }
     case 'polygon':
       return {
         kind: 'polygon',
-        cx: centre,
-        cy: centre,
-        r: at(PLACEMENT.polygonRadius),
+        cx: centre.x,
+        cy: centre.y,
+        r: PLACEMENT.polygonRadius * shorter,
         sides: DEFAULT_SIDES,
       };
   }
@@ -71,19 +69,27 @@ export function objectId(kind: ShapeKind, sequence: number): string {
 }
 
 /**
- * A fresh object of `kind`. `sequence` is the running count of shapes ever
- * added to this document, so names stay stable when earlier ones are deleted —
- * numbering by `objects.length` would hand a new shape a name a deleted one
- * already used, and undo would then have two `rect 2`s to tell apart.
+ * A fresh object of `kind`, already on the document's grid. `sequence` is the
+ * running count of shapes ever added, so names stay stable when earlier ones
+ * are deleted — numbering by `objects.length` would hand a new shape a name a
+ * deleted one already used, and undo would then have two `rect 2`s to tell
+ * apart.
  */
-export function newObject(kind: ShapeKind, sequence: number, size: ArtboardSize): IconObject {
+export function newObject(
+  kind: ShapeKind,
+  sequence: number,
+  artboard: Artboard,
+  snap = 1,
+): IconObject {
+  const shorter = Math.min(artboard.width, artboard.height);
   return {
     id: objectId(kind, sequence),
     name: `${kind} ${sequence}`,
-    geometry: initialGeometry(kind, size),
+    geometry: snapGeometry(initialGeometry(kind, artboard), snap),
     fill: { ...DEFAULT_INK },
     stroke: { ...DEFAULT_INK },
-    strokeWidth: kind === 'line' ? Math.round(PLACEMENT.lineWidth * size) : 0,
+    strokeWidth:
+      kind === 'line' ? Math.max(snap, snapTo(PLACEMENT.lineWidth * shorter, snap)) : 0,
     opacity: 100,
     rotation: 0,
     hidden: false,
@@ -97,10 +103,11 @@ export function newObject(kind: ShapeKind, sequence: number, size: ArtboardSize)
  * and a tool that insists on a second state is inventing motion the icon does
  * not need.
  */
-export function emptyDocument(name: string, size: ArtboardSize = 512): IconDoc {
+export function emptyDocument(name: string, artboard: Artboard = { width: 512, height: 512 }): IconDoc {
   return {
     name,
-    size,
+    artboard: { ...artboard },
+    snap: 1,
     background: { ...DEFAULT_GROUND },
     objects: [],
     states: [{ id: 'state-1', name: 'default', sustain: null }],

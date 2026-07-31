@@ -1,4 +1,4 @@
-import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP } from './doc/constants';
+import { ARTBOARD_PX, ZOOM_LADDER, ZOOM_MAX, ZOOM_MIN } from './doc/constants';
 import { poseAll, poseAtState, type Moment } from './doc/pose';
 import type { Ground, IconDoc, PosedObject } from './doc/types';
 
@@ -53,7 +53,41 @@ export function initialView(doc: IconDoc): ViewState {
 }
 
 export const clampZoom = (zoom: number): number =>
-  Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.round(zoom / ZOOM_STEP) * ZOOM_STEP));
+  Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.round(zoom)));
+
+/**
+ * The next rung of the zoom ladder in `direction`.
+ *
+ * A ladder rather than a fixed 25% step, because the range now spans 10% to
+ * 1600%: a fixed step would take sixty presses to cross it, and 25 percentage
+ * points means something quite different at 25% than at 1600%.
+ */
+export function steppedZoom(zoom: number, direction: 1 | -1): number {
+  const rungs = direction === 1 ? ZOOM_LADDER : [...ZOOM_LADDER].reverse();
+  const next = rungs.find((rung) => (direction === 1 ? rung > zoom : rung < zoom));
+  return next ?? clampZoom(zoom);
+}
+
+/** How many CSS pixels one document unit occupies at this zoom. */
+export function scaleFor(artboard: { width: number; height: number }, zoom: number): number {
+  const longest = Math.max(artboard.width, artboard.height);
+  if (longest <= 0) return 1;
+  return ((ARTBOARD_PX * zoom) / 100) / longest;
+}
+
+/** The zoom that fits the artboard inside `viewport`, with a little room. */
+export function zoomToFit(
+  artboard: { width: number; height: number },
+  viewport: { width: number; height: number },
+  margin = 64,
+): number {
+  const longest = Math.max(artboard.width, artboard.height);
+  if (longest <= 0) return 100;
+  const room = Math.min(viewport.width - margin, viewport.height - margin);
+  if (room <= 0) return ZOOM_MIN;
+  // Invert `scaleFor`: what zoom makes the longest edge exactly `room` wide?
+  return clampZoom((room / ARTBOARD_PX) * 100);
+}
 
 /**
  * Both rails, the top bar and the grid recede while the artboard is being

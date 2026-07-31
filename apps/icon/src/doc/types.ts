@@ -86,11 +86,25 @@ export interface Timing {
   rest: Rest;
 }
 
-export type ArtboardSize = 256 | 512 | 1024;
+export interface Artboard {
+  width: number;
+  height: number;
+}
 
 export interface IconDoc {
   name: string;
-  size: ArtboardSize;
+  /** The artboard, in document units. Not required to be square. */
+  artboard: Artboard;
+  /**
+   * The grid every position and size lands on, in document units.
+   *
+   * A property of the document rather than of the view: on a 16 × 16 board a
+   * step of 1 is the difference between a drawable icon and one whose edges
+   * fall between pixels, and that has to survive being saved and reopened.
+   * `1` means whole units only; `0.5` allows halves; `8` snaps to eighths of a
+   * 64-unit board.
+   */
+  snap: number;
   background: Pair;
   /** Front-to-back. `objects[0]` is frontmost. */
   objects: IconObject[];
@@ -105,6 +119,6 @@ export type PosedObject = IconObject;
 export interface DocumentSummary {
   id: string;
   name: string;
-  size: ArtboardSize;
+  artboard: Artboard;
   updatedAt: number;
 }

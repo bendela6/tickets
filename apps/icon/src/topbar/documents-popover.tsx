@@ -74,7 +74,7 @@ export function DocumentsPopover({
                       {summary.name}
                     </span>
                     <span className="font-mono text-9 text-gray-9">
-                      {summary.size} × {summary.size} · {agoOf(summary.updatedAt, now)}
+                      {summary.artboard.width} × {summary.artboard.height} · {agoOf(summary.updatedAt, now)}
                     </span>
                   </span>
                 </button>

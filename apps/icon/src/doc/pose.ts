@@ -91,7 +91,7 @@ export function poseObject(
 ): PosedObject {
   if (!object.motion.takesPart) return object;
 
-  const scale = doc.size / REFERENCE_SIZE;
+  const scale = Math.min(doc.artboard.width, doc.artboard.height) / REFERENCE_SIZE;
   const { role, pace } = object.motion;
 
   let rotation = object.rotation;

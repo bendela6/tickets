@@ -1,7 +1,9 @@
+import { ARTBOARD_MAX, ARTBOARD_MIN, SNAP_MIN } from './constants';
 import { newObject, objectId } from './defaults';
 import { bounds, fitToBox, translate, type Box } from './geometry';
+import { snapGeometry, snapTo } from './snap';
 import type {
-  ArtboardSize,
+  Artboard,
   Geometry,
   Ground,
   IconDoc,
@@ -64,7 +66,8 @@ export type Action =
   | { type: 'setStrokeWidth'; id: string; width: number }
   | { type: 'setColor'; id: string; channel: 'fill' | 'stroke'; ground: Ground; hex: string }
   | { type: 'setBackground'; ground: Ground; hex: string }
-  | { type: 'setArtboardSize'; size: ArtboardSize }
+  | { type: 'setArtboard'; artboard: Partial<Artboard> }
+  | { type: 'setSnap'; snap: number }
   | { type: 'setMotion'; id: string; motion: Partial<IconObject['motion']> }
   | { type: 'addState' }
   | { type: 'renameState'; id: string; name: string }
@@ -101,6 +104,27 @@ function moveWithin<T>(list: T[], from: number, to: number): T[] {
 function mapObject(doc: IconDoc, id: string, fn: (object: IconObject) => IconObject): IconDoc {
   return { ...doc, objects: doc.objects.map((object) => (object.id === id ? fn(object) : object)) };
 }
+
+/**
+ * Set an object's geometry, on the document's grid.
+ *
+ * Every route that moves or resizes anything goes through here rather than
+ * snapping at the pointer, so a value typed into the properties panel lands on
+ * the same grid a drag does. Snapping only the pointer would let the panel
+ * write positions no drag could ever produce.
+ */
+function mapGeometry(
+  doc: IconDoc,
+  id: string,
+  fn: (object: IconObject) => Geometry,
+): IconDoc {
+  return mapObject(doc, id, (o) =>
+    o.locked ? o : { ...o, geometry: snapGeometry(fn(o), doc.snap) },
+  );
+}
+
+const clampArtboard = (value: number): number =>
+  Math.max(ARTBOARD_MIN, Math.min(ARTBOARD_MAX, Math.round(value)));
 
 function nameOf(state: EditorState, id: string): string {
   return state.doc.objects.find((object) => object.id === id)?.name ?? 'object';
@@ -182,7 +206,7 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
     // ----- objects --------------------------------------------------------
     case 'addObject': {
       const sequence = state.sequence + 1;
-      const object = newObject(action.kind, sequence, state.doc.size);
+      const object = newObject(action.kind, sequence, state.doc.artboard, state.doc.snap);
       return {
         ...state,
         ...remember(state, `add ${action.kind}`),
@@ -264,8 +288,8 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
       return {
         ...state,
         ...remember(state, label, { key: `move:${action.id}`, at: action.at ?? 0 }),
-        doc: mapObject(state.doc, action.id, (o) =>
-          o.locked ? o : { ...o, geometry: translate(o.geometry, action.dx, action.dy) },
+        doc: mapGeometry(state.doc, action.id, (o) =>
+          translate(o.geometry, action.dx, action.dy),
         ),
       };
     }
@@ -273,18 +297,14 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
       return {
         ...state,
         ...remember(state, action.label, { key: `geometry:${action.id}`, at: action.at ?? 0 }),
-        doc: mapObject(state.doc, action.id, (o) =>
-          o.locked ? o : { ...o, geometry: action.geometry },
-        ),
+        doc: mapGeometry(state.doc, action.id, () => action.geometry),
       };
     case 'resizeObject': {
       const label = `resize ${nameOf(state, action.id)}`;
       return {
         ...state,
         ...remember(state, label, { key: `resize:${action.id}`, at: action.at ?? 0 }),
-        doc: mapObject(state.doc, action.id, (o) =>
-          o.locked ? o : { ...o, geometry: fitToBox(o, action.box) },
-        ),
+        doc: mapGeometry(state.doc, action.id, (o) => fitToBox(o, action.box)),
       };
     }
     case 'rotateObject': {
@@ -317,7 +337,7 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         ...remember(state, `stroke ${nameOf(state, action.id)}`),
         doc: mapObject(state.doc, action.id, (o) => ({
           ...o,
-          strokeWidth: Math.max(0, Math.round(action.width)),
+          strokeWidth: Math.max(0, snapTo(action.width, state.doc.snap)),
         })),
       };
     case 'setColor': {
@@ -342,12 +362,36 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
           background: { ...state.doc.background, [action.ground]: action.hex },
         },
       };
-    case 'setArtboardSize':
+    case 'setArtboard': {
+      const artboard = {
+        width: clampArtboard(action.artboard.width ?? state.doc.artboard.width),
+        height: clampArtboard(action.artboard.height ?? state.doc.artboard.height),
+      };
       return {
         ...state,
-        ...remember(state, `artboard ${action.size}`),
-        doc: { ...state.doc, size: action.size },
+        ...remember(state, `artboard ${artboard.width} × ${artboard.height}`),
+        doc: { ...state.doc, artboard },
       };
+    }
+    case 'setSnap': {
+      const snap = Math.max(SNAP_MIN, action.snap);
+      // Re-snapping what is already there is the point: changing the step to 8
+      // and leaving everything on halves would mean the grid describes what
+      // will happen next rather than what the document is.
+      return {
+        ...state,
+        ...remember(state, `step ${snap}`),
+        doc: {
+          ...state.doc,
+          snap,
+          objects: state.doc.objects.map((object) => ({
+            ...object,
+            geometry: snapGeometry(object.geometry, snap),
+            strokeWidth: snapTo(object.strokeWidth, snap),
+          })),
+        },
+      };
+    }
     case 'setMotion':
       return {
         ...state,

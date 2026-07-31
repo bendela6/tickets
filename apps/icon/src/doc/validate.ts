@@ -21,10 +21,10 @@ export interface SafeZoneWarning {
  */
 export function safeZoneWarnings(doc: IconDoc): SafeZoneWarning[] {
   return doc.objects
-    .filter((object) => !object.hidden && extentOf(object, doc.size) > SAFE_ZONE)
+    .filter((object) => !object.hidden && extentOf(object, doc.artboard) > SAFE_ZONE)
     .map((object) => ({
       id: object.id,
       name: object.name,
-      percent: Math.round(extentOf(object, doc.size) * 100),
+      percent: Math.round(extentOf(object, doc.artboard) * 100),
     }));
 }

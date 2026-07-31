@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '@tickets/ui';
 import { Artboard } from './canvas/artboard';
 import { CanvasFooter } from './canvas/canvas-footer';
@@ -11,7 +11,7 @@ import { TopBar } from './topbar/top-bar';
 import { HeldPoses } from './transport/held-poses';
 import { Transport } from './transport/transport';
 import { useShortcuts } from './use-shortcuts';
-import { chromeIsDim } from './view';
+import { chromeIsDim, steppedZoom } from './view';
 
 /** How long the status slot echoes an action before falling back to the selection line. */
 const ECHO_MS = 2000;
@@ -66,14 +66,7 @@ function Editor() {
           <ObjectList />
         </aside>
 
-        <main className="relative flex min-w-0 flex-1 items-center justify-center bg-surface-field">
-          <div className="relative mb-7 flex flex-none flex-col items-center gap-3">
-            <Artboard />
-            <Transport />
-            <HeldPoses />
-          </div>
-          <CanvasFooter status={status} />
-        </main>
+        <CanvasField status={status} />
 
         <aside
           aria-label="Properties"
@@ -86,6 +79,46 @@ function Editor() {
         </aside>
       </div>
     </div>
+  );
+}
+
+/**
+ * The canvas region.
+ *
+ * It scrolls, because the artboard is now any size at any zoom and a 4096
+ * board at 800% has to be reachable. That is also why the wheel is left alone
+ * for scrolling and zoom is on ⌘/Ctrl + wheel: hijacking a plain wheel would
+ * take away the only way to pan.
+ */
+function CanvasField({ status }: { status: string }) {
+  const { setView } = useEditor();
+  const region = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const element = region.current;
+    if (!element) return;
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      // Without this the browser's own page zoom takes the gesture.
+      event.preventDefault();
+      setView((v) => ({ ...v, zoom: steppedZoom(v.zoom, event.deltaY < 0 ? 1 : -1) }));
+    };
+    element.addEventListener('wheel', onWheel, { passive: false });
+    return () => element.removeEventListener('wheel', onWheel);
+  }, [setView]);
+
+  return (
+    <main
+      ref={region}
+      className="relative flex min-w-0 flex-1 items-center justify-center overflow-auto bg-surface-field"
+    >
+      <div className="relative m-auto flex flex-none flex-col items-center gap-3 p-8 pb-14">
+        <Artboard />
+        <Transport />
+        <HeldPoses />
+      </div>
+      <CanvasFooter status={status} />
+    </main>
   );
 }
 

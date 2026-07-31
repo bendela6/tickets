@@ -24,8 +24,11 @@ describe('DocumentStore contract', () => {
   it('reports the saved name and size, not the ones it was created with', async () => {
     const store = memoryStore();
     const { id } = await store.create('untitled.icon');
-    const summary = await store.save(id, { ...emptyDocument('wallet.icon', 1024) });
-    expect(summary).toMatchObject({ name: 'wallet.icon', size: 1024 });
+    const summary = await store.save(id, { ...emptyDocument('wallet.icon', { width: 1024, height: 1024 }) });
+    expect(summary).toMatchObject({
+      name: 'wallet.icon',
+      artboard: { width: 1024, height: 1024 },
+    });
   });
 
   it('stores a copy, so mutating the document afterwards cannot change what was saved', async () => {

@@ -10,6 +10,9 @@ import { bounds } from './geometry';
 import { ease, paceHint, phaseOf, poseAll, poseAtState, runningOrder } from './pose';
 import type { IconDoc, IconObject, Role, Sustain } from './types';
 
+/** The 512-square board most of these fixtures assume. */
+const BOARD = { width: 512, height: 512 };
+
 function docWith(objects: IconObject[], states = ['idle', 'loading', 'done']): IconDoc {
   return {
     ...emptyDocument('test'),
@@ -20,7 +23,7 @@ function docWith(objects: IconObject[], states = ['idle', 'loading', 'done']): I
 }
 
 function objectWith(role: Role, over: Partial<IconObject> = {}): IconObject {
-  const base = newObject('rect', 1, 512);
+  const base = newObject('rect', 1, BOARD);
   return { ...base, ...over, motion: { takesPart: true, role, pace: 1, ...over.motion } };
 }
 
@@ -135,14 +138,21 @@ describe('taking part', () => {
 });
 
 describe('artboard size', () => {
+  const travelOn = (width: number, height: number) => {
+    const doc: IconDoc = { ...docWith([objectWith('moves')]), artboard: { width, height } };
+    return bounds(poseAtState(doc, 's2')[0]!).y - bounds(poseAtState(doc, 's0')[0]!).y;
+  };
+
   it('scales travel with the board, so the motion has the same shape at any size', () => {
-    const at = (size: 256 | 512 | 1024) => {
-      const doc: IconDoc = { ...docWith([objectWith('moves')]), size };
-      return bounds(poseAtState(doc, 's2')[0]!).y - bounds(poseAtState(doc, 's0')[0]!).y;
-    };
-    expect(at(512)).toBe(TRANSITION_MOVE_UNITS);
-    expect(at(1024)).toBe(TRANSITION_MOVE_UNITS * 2);
-    expect(at(256)).toBe(TRANSITION_MOVE_UNITS / 2);
+    expect(travelOn(512, 512)).toBe(TRANSITION_MOVE_UNITS);
+    expect(travelOn(1024, 1024)).toBe(TRANSITION_MOVE_UNITS * 2);
+    expect(travelOn(256, 256)).toBe(TRANSITION_MOVE_UNITS / 2);
+  });
+
+  it('takes its scale from the shorter edge, so a wide board does not overshoot', () => {
+    // Travel is vertical; a 2048 × 256 board must not move things eight times
+    // as far as a square 256 one does, just because it is wide.
+    expect(travelOn(2048, 256)).toBe(travelOn(256, 256));
   });
 });
 

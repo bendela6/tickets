@@ -4,8 +4,11 @@ import { emptyDocument, newObject } from './defaults';
 import { safeZoneWarnings } from './validate';
 import type { IconDoc, IconObject } from './types';
 
+/** The 512-square board most of these fixtures assume. */
+const BOARD = { width: 512, height: 512 };
+
 const backdrop = (over: Partial<IconObject> = {}): IconObject => ({
-  ...newObject('rect', 1, 512),
+  ...newObject('rect', 1, BOARD),
   name: 'backdrop',
   geometry: { kind: 'rect', x: 32, y: 32, w: 448, h: 448, radius: 96 },
   ...over,
@@ -44,7 +47,7 @@ describe('safeZoneWarnings', () => {
   it('measures against the document’s own size, not a fixed board', () => {
     // The same 448-box, centred, occupies far less of a 1024 board.
     const big: IconDoc = {
-      ...emptyDocument('test', 1024),
+      ...emptyDocument('test', { width: 1024, height: 1024 }),
       objects: [backdrop({ geometry: { kind: 'rect', x: 288, y: 288, w: 448, h: 448, radius: 0 } })],
     };
     expect(safeZoneWarnings(big)).toEqual([]);
@@ -54,7 +57,7 @@ describe('safeZoneWarnings', () => {
     // Same box as above, parked in the top-left quadrant instead of centred:
     // its far corner is now 480 of the 512 half-width away.
     const offCentre: IconDoc = {
-      ...emptyDocument('test', 1024),
+      ...emptyDocument('test', { width: 1024, height: 1024 }),
       objects: [backdrop({ geometry: { kind: 'rect', x: 32, y: 32, w: 448, h: 448, radius: 0 } })],
     };
     expect(safeZoneWarnings(offCentre)).toEqual([
