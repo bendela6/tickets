@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { Tabs, cn } from '@tickets/ui';
-import { ARTBOARD_PX } from '../doc/constants';
 import { useEditor } from '../editor-context';
+import { scaleFor } from '../view';
 import { isLooping, readout, sustainOf, tick } from './clock';
 import { StateManager } from './state-manager';
 import { TimingPopover } from './timing-popover';
 import { Track } from './track';
 
-/** The strip matches the artboard's width, never narrower than this. */
+/** The strip matches the artboard's drawn width, never narrower than this. */
 const MIN_STRIP_PX = 420;
 
 /**
@@ -65,7 +65,14 @@ export function Transport() {
   return (
     <div
       className="flex h-8.5 flex-none items-center gap-2"
-      style={{ width: Math.max((ARTBOARD_PX * view.zoom) / 100, MIN_STRIP_PX) }}
+      style={{
+        // The artboard's drawn width, which is its *longer* edge only when the
+        // board is square or wide. Sizing by the longer edge — as this did
+        // before boards could be any shape — made the strip four times wider
+        // than a tall artboard, and wide enough to push a scrollbar into the
+        // canvas region.
+        width: Math.max(doc.artboard.width * scaleFor(doc.artboard, view.zoom), MIN_STRIP_PX),
+      }}
     >
       <button
         type="button"
