@@ -72,4 +72,26 @@ describe('zoomToFit', () => {
     expect(tiny).toBeGreaterThanOrEqual(ZOOM_MIN);
     expect(tiny).toBeLessThanOrEqual(ZOOM_MAX);
   });
+
+  it('fills the room a wide board actually has, rather than the shorter edge', () => {
+    // A 1024×256 board in a 1000×400 room is limited by width, not height:
+    // taking the smaller viewport edge would have fitted it to 400px and left
+    // it at a quarter of the zoom it had room for.
+    const wide = zoomToFit({ width: 1024, height: 256 }, { width: 1000, height: 400 });
+    expect(wide).toBe(Math.floor((1000 / ARTBOARD_PX) * 100));
+
+    const scale = scaleFor({ width: 1024, height: 256 }, wide);
+    expect(1024 * scale).toBeLessThanOrEqual(1000);
+    expect(256 * scale).toBeLessThanOrEqual(400);
+  });
+
+  it('lets the short axis win when that is the binding one', () => {
+    // The same board in a room that is wide but shallow.
+    const scale = scaleFor({ width: 1024, height: 256 }, zoomToFit(
+      { width: 1024, height: 256 },
+      { width: 4000, height: 200 },
+    ));
+    expect(256 * scale).toBeLessThanOrEqual(200);
+    expect(256 * scale).toBeGreaterThan(190);
+  });
 });

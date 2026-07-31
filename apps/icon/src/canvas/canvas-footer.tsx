@@ -2,12 +2,28 @@ import { Tabs, cn } from '@tickets/ui';
 import { selectedObject } from '../doc/store';
 import { safeZoneWarnings } from '../doc/validate';
 import { useEditor } from '../editor-context';
-import type { Ground } from '../doc/types';
+import type { Ground, IconDoc } from '../doc/types';
+import type { ViewState } from '../view';
 
 const GROUNDS: { value: Ground; label: string }[] = [
   { value: 'light', label: 'light' },
   { value: 'dark', label: 'dark' },
 ];
+
+/**
+ * The modifiers are only worth naming while a drag is actually under way —
+ * printed permanently they would be chrome nobody reads, and there is no menu
+ * or tooltip anywhere else that could teach them.
+ */
+const DRAG_HINT = 'hold ⇧ to constrain · ⌥ to duplicate';
+
+/** What the transport is doing, named by state rather than by frame number. */
+function playingLine(doc: IconDoc, view: ViewState): string {
+  const named = (id: string) => doc.states.find((state) => state.id === id)?.name ?? id;
+  return view.from === view.to
+    ? `playing · ${named(view.to)}`
+    : `playing · ${named(view.from)} → ${named(view.to)}`;
+}
 
 /** A checkbox drawn as a small filled square, matching the design's chips. */
 function ToggleChip({
@@ -56,6 +72,14 @@ export function CanvasFooter({ status }: { status: string }) {
   const busy = view.dragging || view.playing;
   const showWarning = warnings.length > 0 && !busy;
   const first = warnings[0];
+  // Precedence: what is happening right now, then what an action just did,
+  // then what is selected. A drag hint outlives its usefulness the moment the
+  // pointer comes up, which is why it is not the fallback.
+  const line = view.dragging
+    ? DRAG_HINT
+    : view.playing
+      ? playingLine(state.doc, view)
+      : status || (selected ? `${selected.name} selected` : 'nothing selected');
 
   return (
     <>
@@ -92,12 +116,11 @@ export function CanvasFooter({ status }: { status: string }) {
         </div>
       </div>
 
-      <div
-        className={cn(
-          'absolute bottom-3.5 right-4 flex items-center gap-2.5',
-          busy && 'opacity-40',
-        )}
-      >
+      {/* This slot stays fully lit while the rest of the chrome recedes: it is
+          the one thing that has something new to say during a drag or a
+          playthrough, and dimming it would hide exactly the modifiers it
+          exists to teach. */}
+      <div className="absolute bottom-3.5 right-4 flex items-center gap-2.5">
         {showWarning && first ? (
           <button
             type="button"
@@ -118,7 +141,7 @@ export function CanvasFooter({ status }: { status: string }) {
           </button>
         ) : (
           <span role="status" className="font-mono text-10 text-gray-9">
-            {status || (selected ? `${selected.name} selected` : 'nothing selected')}
+            {line}
           </span>
         )}
       </div>

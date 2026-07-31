@@ -430,6 +430,23 @@ describe('zoom', () => {
     expect(zoomLabel()).toHaveTextContent('100%');
   });
 
+  it('resets to 100% from the keyboard, which is what the readout promises', async () => {
+    const { user } = setup();
+    await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    expect(zoomLabel()).toHaveTextContent('150%');
+    await user.keyboard('{Control>}0{/Control}');
+    expect(zoomLabel()).toHaveTextContent('100%');
+  });
+
+  it('leaves the zoom alone when there is no layout to fit it to', async () => {
+    // ⇧⌘0 fits the board to the canvas, which needs a measured canvas: with
+    // none it does nothing rather than jumping to some invented number.
+    const { user } = setup();
+    await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    await user.keyboard('{Control>}{Shift>}0{/Shift}{/Control}');
+    expect(zoomLabel()).toHaveTextContent('150%');
+  });
+
   it('is a way of looking, not an edit — it never dirties the document', async () => {
     const { user } = setup();
     await user.click(screen.getByRole('button', { name: 'Zoom in' }));

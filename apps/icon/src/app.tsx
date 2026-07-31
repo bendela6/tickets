@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { cn } from '@tickets/ui';
 import { Artboard } from './canvas/artboard';
 import { CanvasFooter } from './canvas/canvas-footer';
+import { canvasRoom } from './canvas/fit';
 import { EditorProvider, useEditor } from './editor-context';
 import { ExportDialog } from './export/export-dialog';
 import { useDocuments } from './topbar/use-documents';
@@ -11,7 +12,7 @@ import { TopBar } from './topbar/top-bar';
 import { HeldPoses } from './transport/held-poses';
 import { Transport } from './transport/transport';
 import { useShortcuts } from './use-shortcuts';
-import { chromeIsDim, steppedZoom } from './view';
+import { chromeIsDim, steppedZoom, zoomToFit } from './view';
 
 /** How long the status slot echoes an action before falling back to the selection line. */
 const ECHO_MS = 2000;
@@ -35,17 +36,27 @@ export function App() {
 }
 
 function Editor() {
-  const { state, dispatch, view } = useEditor();
+  const { state, dispatch, view, setView } = useEditor();
   const [exportOpen, setExportOpen] = useState(false);
   const status = useActionEcho();
   const documents = useDocuments({ state, dispatch });
   const now = useNow(documents.savedAgo);
+  // Held here rather than inside the canvas because fitting the zoom is a
+  // keyboard shortcut, and the shortcuts are bound at this level.
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const stackRef = useRef<HTMLDivElement>(null);
 
   useShortcuts({
     state,
     dispatch,
     onSave: documents.save,
     onExport: () => setExportOpen(true),
+    onResetZoom: () => setView((v) => ({ ...v, zoom: 100 })),
+    onFitZoom: () => {
+      const room = canvasRoom(scrollerRef.current, stackRef.current, state.doc.artboard, view.zoom);
+      if (!room) return;
+      setView((v) => ({ ...v, zoom: zoomToFit(state.doc.artboard, room) }));
+    },
   });
 
   const dim = chromeIsDim(view);
@@ -66,7 +77,7 @@ function Editor() {
           <ObjectList />
         </aside>
 
-        <CanvasField status={status} />
+        <CanvasField status={status} scrollerRef={scrollerRef} stackRef={stackRef} />
 
         <aside
           aria-label="Properties"
@@ -90,12 +101,19 @@ function Editor() {
  * for scrolling and zoom is on ⌘/Ctrl + wheel: hijacking a plain wheel would
  * take away the only way to pan.
  */
-function CanvasField({ status }: { status: string }) {
+function CanvasField({
+  status,
+  scrollerRef,
+  stackRef,
+}: {
+  status: string;
+  scrollerRef: RefObject<HTMLDivElement | null>;
+  stackRef: RefObject<HTMLDivElement | null>;
+}) {
   const { setView } = useEditor();
-  const region = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const element = region.current;
+    const element = scrollerRef.current;
     if (!element) return;
     const onWheel = (event: WheelEvent) => {
       if (!event.ctrlKey && !event.metaKey) return;
@@ -105,7 +123,7 @@ function CanvasField({ status }: { status: string }) {
     };
     element.addEventListener('wheel', onWheel, { passive: false });
     return () => element.removeEventListener('wheel', onWheel);
-  }, [setView]);
+  }, [scrollerRef, setView]);
 
   return (
     <main className="relative min-w-0 flex-1 bg-surface-field">
@@ -114,10 +132,13 @@ function CanvasField({ status }: { status: string }) {
           relative to the padding box, so a footer inside the scroller would
           scroll away with the artboard — which it did. */}
       <div
-        ref={region}
+        ref={scrollerRef}
         className="absolute inset-0 flex items-center justify-center overflow-auto"
       >
-        <div className="relative m-auto flex flex-none flex-col items-center gap-3 p-8 pb-16">
+        <div
+          ref={stackRef}
+          className="relative m-auto flex flex-none flex-col items-center gap-3 p-8 pb-16"
+        >
           <Artboard />
           <Transport />
           <HeldPoses />
