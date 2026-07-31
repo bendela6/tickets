@@ -40,7 +40,13 @@ const byNewest = (a: DocumentSummary, b: DocumentSummary) => b.updatedAt - a.upd
  * browsers) — a session that cannot persist is better than one that will not
  * start.
  */
-export function memoryStore(seed: Record_[] = [], clock: () => number = () => 0): DocumentStore {
+export function memoryStore(
+  seed: Record_[] = [],
+  // Real time by default, the same as the IndexedDB store: this is a fallback
+  // people actually run in, not only a test double, and a fixed clock would
+  // have every save read `saved 20666d ago`. Tests pass their own.
+  clock: () => number = () => Date.now(),
+): DocumentStore {
   const records = new Map(seed.map((record) => [record.id, record]));
   let counter = seed.length;
 
