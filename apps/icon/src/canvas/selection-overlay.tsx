@@ -1,6 +1,13 @@
 import type { PointerEvent } from 'react';
-import type { Box } from '../doc/geometry';
-import { HANDLE_CURSOR, handlePosition, RESIZE_HANDLES, type Handle, type ResizeHandle } from './interaction';
+import type { Box, Point } from '../doc/geometry';
+import {
+  ENDPOINT_HANDLES,
+  HANDLE_CURSOR,
+  handlePosition,
+  RESIZE_HANDLES,
+  type Handle,
+  type ResizeHandle,
+} from './interaction';
 
 /**
  * Everything on the artboard layer is fixed `handle` in both themes, because
@@ -17,6 +24,7 @@ const EDGE_LONG = 8;
 const EDGE_SHORT = 7;
 const ROTATE_STEM = 14;
 const ROTATE_KNOB = 10;
+const ENDPOINT_PX = 10;
 
 const isCorner = (handle: ResizeHandle) => handle.length === 2;
 
@@ -27,17 +35,27 @@ function handleSize(handle: ResizeHandle): { w: number; h: number } {
     : { w: EDGE_SHORT, h: EDGE_LONG };
 }
 
-export function SelectionOverlay({
-  box,
-  scale,
-  onHandleDown,
-}: {
-  /** The selected object's box, in document units. */
+const HANDLE_SKIN = 'pointer-events-auto absolute border-1 border-handle bg-white p-0';
+
+export interface OverlayProps {
+  /** The object's box, in document units, BEFORE rotation. */
   box: Box;
+  /** Degrees. The overlay turns with the object so handles stay on its own axes. */
+  rotation: number;
   /** Document units to CSS pixels. */
   scale: number;
   onHandleDown: (handle: Handle, event: PointerEvent) => void;
-}) {
+}
+
+/**
+ * The box, its eight resize handles and the rotation knob.
+ *
+ * The whole overlay is rotated with the object rather than drawn around its
+ * axis-aligned extent. A rotated shape sitting inside an upright rectangle
+ * tells you nothing about which handle grows which side, and the box stops
+ * touching the artwork at all.
+ */
+export function SelectionOverlay({ box, rotation, scale, onHandleDown }: OverlayProps) {
   return (
     <div
       // Not interactive itself — only the handles inside it are — so the
@@ -48,6 +66,7 @@ export function SelectionOverlay({
         top: box.y * scale,
         width: box.w * scale,
         height: box.h * scale,
+        transform: `rotate(${rotation}deg)`,
       }}
     >
       {RESIZE_HANDLES.map((handle) => {
@@ -59,7 +78,7 @@ export function SelectionOverlay({
             type="button"
             aria-label={`Resize ${handle}`}
             onPointerDown={(event) => onHandleDown(handle, event)}
-            className="pointer-events-auto absolute rounded-sm border-1 border-handle bg-white p-0"
+            className={`${HANDLE_SKIN} rounded-sm`}
             style={{
               left: (position.x - box.x) * scale - size.w / 2,
               top: (position.y - box.y) * scale - size.h / 2,
@@ -71,6 +90,66 @@ export function SelectionOverlay({
         );
       })}
 
+      <RotateKnob onHandleDown={onHandleDown} />
+    </div>
+  );
+}
+
+/**
+ * A line's selection: its two ends, and nothing else.
+ *
+ * Drawn in artboard space rather than inside a rotated box, because the
+ * endpoints already carry the line's direction — there is no box for them to
+ * sit in the corners of.
+ */
+export function LineSelectionOverlay({
+  endpoints,
+  box,
+  rotation,
+  scale,
+  onHandleDown,
+}: Omit<OverlayProps, 'box'> & { endpoints: [Point, Point]; box: Box }) {
+  return (
+    <>
+      {ENDPOINT_HANDLES.map((handle, index) => {
+        const point = endpoints[index] ?? endpoints[0];
+        return (
+          <button
+            key={handle}
+            type="button"
+            aria-label={handle === 'p1' ? 'Move start point' : 'Move end point'}
+            onPointerDown={(event) => onHandleDown(handle, event)}
+            className={`${HANDLE_SKIN} rounded-full`}
+            style={{
+              left: point.x * scale - ENDPOINT_PX / 2,
+              top: point.y * scale - ENDPOINT_PX / 2,
+              width: ENDPOINT_PX,
+              height: ENDPOINT_PX,
+              cursor: HANDLE_CURSOR[handle],
+            }}
+          />
+        );
+      })}
+
+      <div
+        className="pointer-events-none absolute"
+        style={{
+          left: box.x * scale,
+          top: box.y * scale,
+          width: box.w * scale,
+          height: box.h * scale,
+          transform: `rotate(${rotation}deg)`,
+        }}
+      >
+        <RotateKnob onHandleDown={onHandleDown} />
+      </div>
+    </>
+  );
+}
+
+function RotateKnob({ onHandleDown }: Pick<OverlayProps, 'onHandleDown'>) {
+  return (
+    <>
       <span
         aria-hidden
         className="absolute bg-handle"
@@ -85,7 +164,7 @@ export function SelectionOverlay({
         type="button"
         aria-label="Rotate"
         onPointerDown={(event) => onHandleDown('rotate', event)}
-        className="pointer-events-auto absolute rounded-full border-1 border-handle bg-white p-0"
+        className={`${HANDLE_SKIN} rounded-full`}
         style={{
           left: `calc(50% - ${ROTATE_KNOB / 2}px)`,
           top: -(ROTATE_STEM + ROTATE_KNOB),
@@ -94,18 +173,45 @@ export function SelectionOverlay({
           cursor: HANDLE_CURSOR.rotate,
         }}
       />
-    </div>
+    </>
   );
 }
 
-/** The one filled accent on the artboard layer: what the box currently measures. */
-export function DimensionPill({ box, scale }: { box: Box; scale: number }) {
+/**
+ * The one filled accent on the artboard layer: what the box currently measures.
+ *
+ * It hangs below the *rotated* box rather than below the upright extent, so it
+ * stays attached to the edge it is describing.
+ */
+export function DimensionPill({
+  box,
+  rotation,
+  scale,
+  label,
+}: {
+  box: Box;
+  rotation: number;
+  scale: number;
+  label: string;
+}) {
   return (
-    <span
-      className="pointer-events-none absolute flex h-5 -translate-x-1/2 items-center whitespace-nowrap rounded-sm bg-handle px-1.75 font-mono text-10 text-white"
-      style={{ left: (box.x + box.w / 2) * scale, top: (box.y + box.h) * scale + 8 }}
+    <div
+      aria-hidden
+      className="pointer-events-none absolute"
+      style={{
+        left: box.x * scale,
+        top: box.y * scale,
+        width: box.w * scale,
+        height: box.h * scale,
+        transform: `rotate(${rotation}deg)`,
+      }}
     >
-      {Math.round(box.w)} × {Math.round(box.h)}
-    </span>
+      <span
+        className="absolute left-1/2 top-full flex h-5 -translate-x-1/2 items-center whitespace-nowrap rounded-sm bg-handle px-1.75 font-mono text-10 text-white"
+        style={{ marginTop: 8, transform: `rotate(${-rotation}deg)` }}
+      >
+        {label}
+      </span>
+    </div>
   );
 }

@@ -109,6 +109,46 @@ describe('renderSvg', () => {
     expect(renderSvg(doc, { ground: 'light', stateId: 'b' })).toContain('rotate(110');
   });
 
+  it('strokes a shape that has an area, so the stroke controls actually paint', () => {
+    for (const kind of ['rect', 'ellipse', 'polygon'] as const) {
+      const object = still({
+        ...newObject(kind, 1, 512),
+        strokeWidth: 8,
+        stroke: { light: '#C0382E', dark: '#C0382E' },
+      });
+      const svg = renderSvg(docOf([object]), { ground: 'light' });
+      expect(svg).toContain('stroke="#C0382E"');
+      expect(svg).toContain('stroke-width="8"');
+    }
+  });
+
+  it('omits the stroke entirely at zero width, rather than shipping dead attributes', () => {
+    // One per shape per size per target adds up across an export.
+    const object = still({ ...newObject('rect', 1, 512), strokeWidth: 0 });
+    const svg = renderSvg(docOf([object]), { ground: 'light' });
+    expect(svg).not.toContain('stroke=');
+    expect(svg).not.toContain('stroke-width=');
+  });
+
+  it('a line is drawn by its stroke and gains no second one', () => {
+    const line = still({
+      ...newObject('line', 1, 512),
+      stroke: { light: '#2E6FCC', dark: '#2E6FCC' },
+    });
+    const svg = renderSvg(docOf([line]), { ground: 'light' });
+    expect(svg.match(/stroke="/g)).toHaveLength(1);
+    expect(svg.match(/stroke-width="/g)).toHaveLength(1);
+  });
+
+  it('takes the stroke from the previewed half of the pair', () => {
+    const object = still({
+      ...newObject('rect', 1, 512),
+      strokeWidth: 4,
+      stroke: { light: '#111111', dark: '#EEEEEE' },
+    });
+    expect(renderSvg(docOf([object]), { ground: 'dark' })).toContain('stroke="#EEEEEE"');
+  });
+
   it('is deterministic — the same document renders identically every time', () => {
     const doc = docOf([still(newObject('rect', 1, 512)), still(newObject('polygon', 2, 512))]);
     expect(renderSvg(doc, { ground: 'light' })).toBe(renderSvg(doc, { ground: 'light' }));

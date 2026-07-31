@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { App } from './app';
@@ -160,6 +160,156 @@ describe('properties', () => {
     slider.focus();
     await user.keyboard('{ArrowLeft}');
     expect(within(propsRail()).getByLabelText('OPACITY')).toHaveValue('99');
+  });
+});
+
+describe('selection follows the object it is selecting', () => {
+  const overlay = () =>
+    screen.getByRole('main').querySelector<HTMLElement>('.outline-handle');
+
+  it('turns with the object rather than boxing it upright', async () => {
+    const { user } = setup();
+    await user.keyboard('r');
+    expect(overlay()?.style.transform).toBe('rotate(0deg)');
+
+    const rotation = within(propsRail()).getByLabelText('ROTATION');
+    await user.clear(rotation);
+    await user.type(rotation, '45');
+    await user.tab();
+
+    expect(overlay()?.style.transform).toBe('rotate(45deg)');
+  });
+
+  it('reports each shape in the terms it is defined by, not always a box', async () => {
+    const { user } = setup();
+    const main = screen.getByRole('main');
+
+    await user.keyboard('r');
+    expect(main).toHaveTextContent('240 × 240');
+
+    await user.keyboard('l');
+    // A line's box is a by-product of where its ends are; its length is not.
+    expect(main).toHaveTextContent('240 long');
+    expect(main).not.toHaveTextContent('× 20');
+
+    await user.keyboard('p');
+    expect(main).toHaveTextContent('r 120 · 6 sides');
+  });
+});
+
+describe('handles match the shape', () => {
+  const handleNames = () =>
+    within(screen.getByRole('main'))
+      .getAllByRole('button')
+      .map((button) => button.getAttribute('aria-label'))
+      .filter((label): label is string => label !== null);
+
+  it('a box shape gets eight resize handles and a rotate knob', async () => {
+    const { user } = setup();
+    await user.keyboard('r');
+    const names = handleNames();
+    for (const handle of ['nw', 'ne', 'sw', 'se', 'n', 's', 'w', 'e']) {
+      expect(names).toContain(`Resize ${handle}`);
+    }
+    expect(names).toContain('Rotate');
+  });
+
+  it('a line gets its two ends instead — it cannot be resized as a box', async () => {
+    const { user } = setup();
+    await user.keyboard('l');
+    const names = handleNames();
+    expect(names).toContain('Move start point');
+    expect(names).toContain('Move end point');
+    expect(names.filter((name) => name.startsWith('Resize'))).toEqual([]);
+  });
+
+  it('a line still rotates, because rotation is a transform and spins needs it', async () => {
+    const { user } = setup();
+    await user.keyboard('l');
+    expect(handleNames()).toContain('Rotate');
+  });
+});
+
+describe('every shape has equivalent controls', () => {
+  const kinds = [
+    { key: 'r', name: 'rect 1' },
+    { key: 'e', name: 'ellipse 1' },
+    { key: 'l', name: 'line 1' },
+    { key: 'p', name: 'polygon 1' },
+  ];
+
+  it('all four can be given a stroke colour, not only a stroke width', async () => {
+    for (const kind of kinds) {
+      const { user } = setup();
+      await user.keyboard(kind.key);
+      expect(within(propsRail()).getByLabelText('STROKE light value')).toBeInTheDocument();
+      cleanup();
+    }
+  });
+
+  it('all four carry rotation, opacity and a thickness field', async () => {
+    for (const kind of kinds) {
+      const { user } = setup();
+      await user.keyboard(kind.key);
+      const rail = propsRail();
+      expect(within(rail).getByLabelText('ROTATION')).toBeInTheDocument();
+      expect(within(rail).getByLabelText('OPACITY')).toBeInTheDocument();
+      expect(
+        within(rail).queryByLabelText('Stroke width') ?? within(rail).getByLabelText('Thickness'),
+      ).toBeInTheDocument();
+      cleanup();
+    }
+  });
+
+  it('only the shapes with an area offer a fill', async () => {
+    const { user } = setup();
+    await user.keyboard('r');
+    expect(within(propsRail()).getByLabelText('FILL light value')).toBeInTheDocument();
+    await user.keyboard('l');
+    expect(within(propsRail()).queryByLabelText('FILL light value')).not.toBeInTheDocument();
+  });
+
+  it('a line is stated as two points, never as a width and a height', async () => {
+    const { user } = setup();
+    await user.keyboard('l');
+    const rail = propsRail();
+    for (const label of ['X1', 'Y1', 'X2', 'Y2']) {
+      expect(within(rail).getByLabelText(label)).toBeInTheDocument();
+    }
+    expect(within(rail).queryByLabelText('Width')).not.toBeInTheDocument();
+    expect(within(rail).queryByLabelText('Height')).not.toBeInTheDocument();
+  });
+
+  it('a polygon is stated as a centre and a radius', async () => {
+    const { user } = setup();
+    await user.keyboard('p');
+    const rail = propsRail();
+    expect(within(rail).getByLabelText('Centre X')).toBeInTheDocument();
+    expect(within(rail).getByLabelText('RADIUS')).toBeInTheDocument();
+    expect(within(rail).getByLabelText('SIDES')).toBeInTheDocument();
+    expect(within(rail).queryByLabelText('Width')).not.toBeInTheDocument();
+  });
+
+  it('editing a line endpoint moves that end and leaves the other alone', async () => {
+    const { user } = setup();
+    await user.keyboard('l');
+    const x1 = within(propsRail()).getByLabelText('X1');
+    await user.clear(x1);
+    await user.type(x1, '50');
+    await user.tab();
+    expect(within(propsRail()).getByLabelText('X1')).toHaveValue('50');
+    expect(within(propsRail()).getByLabelText('X2')).toHaveValue('376');
+  });
+
+  it('editing a polygon radius resizes it about its centre', async () => {
+    const { user } = setup();
+    await user.keyboard('p');
+    const radius = within(propsRail()).getByLabelText('RADIUS');
+    await user.clear(radius);
+    await user.type(radius, '60');
+    await user.tab();
+    expect(within(propsRail()).getByLabelText('Centre X')).toHaveValue('256');
+    expect(screen.getByRole('main')).toHaveTextContent('r 60 · 6 sides');
   });
 });
 

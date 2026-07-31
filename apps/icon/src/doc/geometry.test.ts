@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { newObject } from './defaults';
-import { bounds, contains, extentOf, fitToBox, hitTest, polygonPoints, translate } from './geometry';
+import {
+  bounds,
+  contains,
+  extentOf,
+  fitToBox,
+  hitTest,
+  lineEndpoints,
+  polygonPoints,
+  translate,
+} from './geometry';
 import type { IconObject } from './types';
 
 const rect = (over: Partial<IconObject> = {}): IconObject => ({
@@ -117,6 +126,30 @@ describe('hitTest', () => {
 
   it('returns null on empty ground', () => {
     expect(hitTest([front], { x: 10, y: 10 })).toBeNull();
+  });
+});
+
+describe('lineEndpoints', () => {
+  it('returns the two ends as stored when the line is upright', () => {
+    const line = newObject('line', 1, 512);
+    expect(lineEndpoints(line)).toEqual([
+      { x: 136, y: 256 },
+      { x: 376, y: 256 },
+    ]);
+  });
+
+  it('applies the object’s rotation, because that is where the handles have to be', () => {
+    const line = { ...newObject('line', 1, 512), rotation: 90 };
+    const [start, end] = lineEndpoints(line);
+    // A horizontal line turned a quarter turn about its own centre (256,256).
+    expect(start.x).toBeCloseTo(256, 6);
+    expect(start.y).toBeCloseTo(136, 6);
+    expect(end.x).toBeCloseTo(256, 6);
+    expect(end.y).toBeCloseTo(376, 6);
+  });
+
+  it('refuses a shape that has no endpoints rather than inventing some', () => {
+    expect(() => lineEndpoints(newObject('rect', 1, 512))).toThrow(/non-line/);
   });
 });
 

@@ -43,6 +43,22 @@ export function centreOf(object: IconObject): Point {
   return { x: b.x + b.w / 2, y: b.y + b.h / 2 };
 }
 
+export const boxCentre = (box: Box): Point => ({ x: box.x + box.w / 2, y: box.y + box.h / 2 });
+
+/**
+ * A line's two endpoints in artboard space, with the object's rotation already
+ * applied — which is where its handles actually have to be drawn.
+ */
+export function lineEndpoints(object: IconObject): [Point, Point] {
+  const g = object.geometry;
+  if (g.kind !== 'line') throw new Error('lineEndpoints called on a non-line object');
+  const centre = centreOf(object);
+  return [
+    rotatePoint({ x: g.x1, y: g.y1 }, centre, object.rotation),
+    rotatePoint({ x: g.x2, y: g.y2 }, centre, object.rotation),
+  ];
+}
+
 /**
  * A regular polygon's vertices, first one directly above the centre.
  *
@@ -58,7 +74,13 @@ export function polygonPoints(cx: number, cy: number, r: number, sides: number):
   return points;
 }
 
-function rotatePoint(point: Point, about: Point, degrees: number): Point {
+/**
+ * Rotate a point about another. Exported because the selection layer has to
+ * move between the artboard's frame and an object's own: a rotated object is
+ * resized by rotating the pointer *into* its frame, resizing there, and
+ * rotating the result back.
+ */
+export function rotatePoint(point: Point, about: Point, degrees: number): Point {
   if (degrees === 0) return point;
   const radians = (degrees * Math.PI) / 180;
   const cos = Math.cos(radians);

@@ -1,4 +1,4 @@
-import type { Box, Point } from '../doc/geometry';
+import { boxCentre, rotatePoint, type Box, type Point } from '../doc/geometry';
 
 /**
  * The eight resize handles and the rotation knob, named by where they sit.
@@ -12,7 +12,21 @@ export const EDGE_HANDLES = ['n', 's', 'w', 'e'] as const;
 export type CornerHandle = (typeof CORNER_HANDLES)[number];
 export type EdgeHandle = (typeof EDGE_HANDLES)[number];
 export type ResizeHandle = CornerHandle | EdgeHandle;
-export type Handle = ResizeHandle | 'rotate';
+
+/**
+ * A line's two ends. It gets these *instead* of the eight box handles: a line
+ * is two points, and a bounding box cannot express one — dragging the box's
+ * north edge on a horizontal line would be asking to change its thickness,
+ * which is a different property with its own control.
+ */
+export type EndpointHandle = 'p1' | 'p2';
+
+export type Handle = ResizeHandle | EndpointHandle | 'rotate';
+
+export const ENDPOINT_HANDLES: readonly EndpointHandle[] = ['p1', 'p2'];
+
+export const isEndpoint = (handle: Handle): handle is EndpointHandle =>
+  handle === 'p1' || handle === 'p2';
 
 export const RESIZE_HANDLES: readonly ResizeHandle[] = [...CORNER_HANDLES, ...EDGE_HANDLES];
 
@@ -26,6 +40,8 @@ export const HANDLE_CURSOR: Record<Handle, string> = {
   s: 'ns-resize',
   w: 'ew-resize',
   e: 'ew-resize',
+  p1: 'move',
+  p2: 'move',
   rotate: 'grab',
 };
 
@@ -108,4 +124,83 @@ export function handlePosition(box: Box, handle: ResizeHandle): Point {
   const x = movesLeft(handle) ? box.x : movesRight(handle) ? box.x + box.w : box.x + box.w / 2;
   const y = movesTop(handle) ? box.y : movesBottom(handle) ? box.y + box.h : box.y + box.h / 2;
   return { x, y };
+}
+
+/**
+ * The point that must not move while `handle` is dragged — the opposite corner
+ * or edge. Dragging the SE corner pins NW; dragging the E edge pins the W edge.
+ */
+export function anchorPoint(box: Box, handle: ResizeHandle): Point {
+  const x = movesLeft(handle) ? box.x + box.w : movesRight(handle) ? box.x : box.x + box.w / 2;
+  const y = movesTop(handle) ? box.y + box.h : movesBottom(handle) ? box.y : box.y + box.h / 2;
+  return { x, y };
+}
+
+/**
+ * Resize an object that is rotated.
+ *
+ * Three steps, and the third is the one that is easy to leave out: rotate the
+ * pointer into the object's own frame, resize there, then translate the result
+ * so the anchor lands back where it was on screen. Without that last step the
+ * box is right but the shape slides away under the pointer, because rotation
+ * happens about the box's centre and resizing moves the centre.
+ */
+export function resizeRotated(
+  start: Box,
+  handle: ResizeHandle,
+  pointer: Point,
+  rotation: number,
+  constrain: boolean,
+): Box {
+  const centre = boxCentre(start);
+  const local = rotatePoint(pointer, centre, -rotation);
+  const next = resizeBox(start, handle, local, constrain);
+  if (rotation % 360 === 0) return next;
+
+  const anchorBefore = rotatePoint(anchorPoint(start, handle), centre, rotation);
+  const anchorAfter = rotatePoint(anchorPoint(next, handle), boxCentre(next), rotation);
+  return {
+    ...next,
+    x: next.x + (anchorBefore.x - anchorAfter.x),
+    y: next.y + (anchorBefore.y - anchorAfter.y),
+  };
+}
+
+/**
+ * A regular polygon's new radius from a handle drag.
+ *
+ * It resizes about its centre rather than about an anchor corner, because a
+ * radial shape has no corner to pin — and every handle has to do something.
+ * Taking the smaller half-extent of a dragged box, which is what fitting a
+ * polygon into a rectangle does, leaves the east handle inert whenever the box
+ * is already wider than it is tall.
+ */
+export function polygonRadius(
+  centre: Point,
+  handle: ResizeHandle,
+  pointer: Point,
+  rotation: number,
+): number {
+  const local = rotatePoint(pointer, centre, -rotation);
+  const dx = Math.abs(local.x - centre.x);
+  const dy = Math.abs(local.y - centre.y);
+  const isCorner = (CORNER_HANDLES as readonly string[]).includes(handle);
+  if (isCorner) return Math.max(MIN_SIDE / 2, Math.max(dx, dy));
+  const along = handle === 'e' || handle === 'w' ? dx : dy;
+  return Math.max(MIN_SIDE / 2, along);
+}
+
+/**
+ * Where a dragged line endpoint lands.
+ *
+ * Shift snaps the segment's *angle* rather than locking an axis: a line is two
+ * points, so the useful constraint is the direction it runs in, and 15° steps
+ * give both axes and both diagonals for free.
+ */
+export function lineEndpointAt(anchor: Point, pointer: Point, constrain: boolean): Point {
+  if (!constrain) return pointer;
+  const length = Math.hypot(pointer.x - anchor.x, pointer.y - anchor.y);
+  const degrees = (Math.atan2(pointer.y - anchor.y, pointer.x - anchor.x) * 180) / Math.PI;
+  const snapped = (Math.round(degrees / ROTATE_SNAP) * ROTATE_SNAP * Math.PI) / 180;
+  return { x: anchor.x + length * Math.cos(snapped), y: anchor.y + length * Math.sin(snapped) };
 }
