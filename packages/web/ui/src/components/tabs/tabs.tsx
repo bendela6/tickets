@@ -52,9 +52,10 @@ const listClass = variants({
           cn('inline-flex items-center rounded-lg bg-surface-inset', LIST_BOX.pill[size]),
         ),
         rail: over(SIZE, (size) => cn('flex flex-col', LIST_BOX.rail[size])),
-        // A hairline container over the page ground, not a filled well. The
-        // border is what separates the group from whatever it sits on, so
-        // `segment` works on the app background where `pill` needs a surface.
+        // A hairline container over the page ground, not a filled well. Its
+        // one-pixel edge is what separates the group from whatever it sits
+        // on, so `segment` works directly on the app background where `pill`
+        // needs a surface beneath it.
         segment: over(SIZE, (size) =>
           cn(
             'inline-flex items-center rounded-lg border-1 border-gray-6',
