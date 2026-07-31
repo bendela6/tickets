@@ -3,6 +3,8 @@ import { cn } from '@tickets/ui';
 import { Artboard } from './canvas/artboard';
 import { CanvasFooter } from './canvas/canvas-footer';
 import { EditorProvider, useEditor } from './editor-context';
+import { ExportDialog } from './export/export-dialog';
+import { useDocuments } from './topbar/use-documents';
 import { ObjectList } from './rails/object-list';
 import { PropsPanel } from './rails/props-panel';
 import { TopBar } from './topbar/top-bar';
@@ -36,11 +38,13 @@ function Editor() {
   const { state, dispatch, view } = useEditor();
   const [exportOpen, setExportOpen] = useState(false);
   const status = useActionEcho();
+  const documents = useDocuments({ state, dispatch });
+  const now = useNow(documents.savedAgo);
 
   useShortcuts({
     state,
     dispatch,
-    onSave: () => {},
+    onSave: documents.save,
     onExport: () => setExportOpen(true),
   });
 
@@ -48,7 +52,8 @@ function Editor() {
 
   return (
     <div className="flex h-screen flex-col bg-gray-1 font-sans text-gray-12">
-      <TopBar dim={dim} onExport={() => setExportOpen(true)} exportOpen={exportOpen} onCloseExport={() => setExportOpen(false)} />
+      <TopBar dim={dim} documents={documents} now={now} onExport={() => setExportOpen(true)} />
+      {exportOpen ? <ExportDialog onClose={() => setExportOpen(false)} /> : null}
 
       <div className="flex min-h-0 flex-1">
         <aside
@@ -82,6 +87,21 @@ function Editor() {
       </div>
     </div>
   );
+}
+
+/**
+ * A clock that ticks only while something is actually shown relative to it.
+ * `saved 2m ago` has to become `3m ago` on its own, but a document that has
+ * never been saved reads `never` and needs no re-render at all.
+ */
+function useNow(savedAgo: string): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (savedAgo === 'never') return;
+    const timer = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(timer);
+  }, [savedAgo]);
+  return now;
 }
 
 /**
