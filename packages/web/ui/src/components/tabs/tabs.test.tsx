@@ -88,6 +88,54 @@ describe('Tabs', () => {
     expect(lg.querySelector('[role="tab"]')!.className).toContain('px-3.5');
   });
 
+  it('segment is a hairline group over the page ground, not a filled well', () => {
+    const { container } = render(
+      <Tabs role="group" variant="segment" items={items} value="board" onChange={() => {}} />,
+    );
+    const box = container.querySelector('[role="group"]')!;
+    expect(box.className).toContain('border-gray-6');
+    expect(box.className).not.toContain('bg-surface-inset');
+  });
+
+  it('marks where the selection came from without claiming it is selected', () => {
+    render(
+      <Tabs
+        role="group"
+        variant="segment"
+        items={items}
+        value="table"
+        previousValue="board"
+        onChange={() => {}}
+      />,
+    );
+    // The outlined chip is a hint about history, not a second selection —
+    // announcing both as pressed would tell a screen-reader user that two
+    // things are on at once.
+    expect(screen.getByRole('button', { name: 'Board' }).getAttribute('aria-pressed')).toBe('false');
+    expect(screen.getByRole('button', { name: /Table/ }).getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('previousValue equal to value leaves nothing outlined', () => {
+    const { container } = render(
+      <Tabs
+        role="group"
+        variant="segment"
+        items={items}
+        value="board"
+        previousValue="board"
+        onChange={() => {}}
+      />,
+    );
+    expect(container.querySelector('.inset-ring-1')).toBeNull();
+  });
+
+  it('previousValue is inert on the variants that do not draw it', () => {
+    const { container } = render(
+      <Tabs items={items} value="table" previousValue="board" onChange={() => {}} />,
+    );
+    expect(container.querySelector('.inset-ring-1')).toBeNull();
+  });
+
   it('accepts an accessible label on the tablist, omitted when unset', () => {
     const { rerender } = render(<Tabs items={items} value="board" onChange={() => {}} label="Type" />);
     expect(screen.getByRole('tablist', { name: 'Type' })).toBeTruthy();
