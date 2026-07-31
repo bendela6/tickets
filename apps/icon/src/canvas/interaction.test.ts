@@ -5,8 +5,10 @@ import {
   angleFrom,
   constrainDelta,
   handlePosition,
+  handleDirection as handleDirectionForTest,
   lineEndpointAt,
-  polygonRadius,
+  lineFromWorld,
+  polygonResize,
   resizeBox,
   resizeRotated,
   snapAngle,
@@ -89,6 +91,12 @@ describe('anchorPoint', () => {
   });
 });
 
+const ALL_HANDLES = ['nw', 'ne', 'sw', 'se', 'n', 's', 'e', 'w'] as const;
+
+/** Where a box handle actually sits on screen, once the object is rotated. */
+const onScreen = (box: typeof start, handle: ResizeHandle, rotation: number) =>
+  rotatePoint(handlePosition(box, handle), boxCentre(box), rotation);
+
 describe('resizeRotated', () => {
   it('behaves exactly like an unrotated resize at 0°', () => {
     const pointer = { x: 400, y: 400 };
@@ -97,47 +105,85 @@ describe('resizeRotated', () => {
     );
   });
 
-  it('keeps the anchor corner still on screen, which is the whole point', () => {
-    const rotation = 30;
-    const centre = boxCentre(start);
-    const anchorBefore = rotatePoint(anchorPoint(start, 'se'), centre, rotation);
-
-    // Drag the SE handle somewhere arbitrary in artboard space.
-    const next = resizeRotated(start, 'se', { x: 380, y: 340 }, rotation, false);
-    const anchorAfter = rotatePoint(anchorPoint(next, 'se'), boxCentre(next), rotation);
-
-    expect(anchorAfter.x).toBeCloseTo(anchorBefore.x, 6);
-    expect(anchorAfter.y).toBeCloseTo(anchorBefore.y, 6);
+  it('leaves the opposite handle exactly where it was, at every angle', () => {
+    // The reported bug: dragging one handle dragged the whole shape, because
+    // resizing moves the centre and everything else pivots about it.
+    for (const rotation of [0, 17, 45, 90, 180, 271]) {
+      for (const handle of ALL_HANDLES) {
+        const before = onScreen(start, handle === 'se' ? 'nw' : anchorTwin(handle), rotation);
+        const next = resizeRotated(start, handle, { x: 260, y: 90 }, rotation, false);
+        const after = onScreen(next, handle === 'se' ? 'nw' : anchorTwin(handle), rotation);
+        expect({ rotation, handle, x: after.x.toFixed(6), y: after.y.toFixed(6) }).toEqual({
+          rotation,
+          handle,
+          x: before.x.toFixed(6),
+          y: before.y.toFixed(6),
+        });
+      }
+    }
   });
 
-  it('holds the anchor for every handle, not only the corners', () => {
-    const rotation = 47;
-    for (const handle of ['nw', 'ne', 'sw', 'se', 'n', 's', 'e', 'w'] as const) {
-      const centre = boxCentre(start);
-      const before = rotatePoint(anchorPoint(start, handle), centre, rotation);
-      const next = resizeRotated(start, handle, { x: 260, y: 90 }, rotation, false);
-      const after = rotatePoint(anchorPoint(next, handle), boxCentre(next), rotation);
-      expect({ handle, x: after.x.toFixed(4), y: after.y.toFixed(4) }).toEqual({
-        handle,
-        x: before.x.toFixed(4),
-        y: before.y.toFixed(4),
-      });
+  it('puts a dragged corner exactly under the pointer, rotated or not', () => {
+    for (const rotation of [0, 33, 120, 250]) {
+      for (const handle of ['nw', 'ne', 'sw', 'se'] as const) {
+        // A pointer genuinely on the handle's side of the anchor: push the
+        // handle further out along the direction it already points.
+        const at = handlePosition(start, handle);
+        const sign = handleDirectionForTest(handle);
+        const away = rotatePoint(
+          { x: at.x + sign.x * 60, y: at.y + sign.y * 60 },
+          boxCentre(start),
+          rotation,
+        );
+        const landed = onScreen(resizeRotated(start, handle, away, rotation, false), handle, rotation);
+        expect({ rotation, handle, x: landed.x.toFixed(6), y: landed.y.toFixed(6) }).toEqual({
+          rotation,
+          handle,
+          x: away.x.toFixed(6),
+          y: away.y.toFixed(6),
+        });
+      }
     }
+  });
+
+  it('an edge handle follows the pointer on its own axis and ignores the other', () => {
+    // Dragging `e` sideways moves the east edge; wandering up and down while
+    // you do it must not also change the height.
+    const next = resizeRotated(start, 'e', { x: 420, y: 900 }, 0, false);
+    expect(next.h).toBeCloseTo(start.h, 6);
+    expect(next.x + next.w).toBeCloseTo(420, 6);
+  });
+
+  it('clamps rather than mirroring when dragged past the anchor', () => {
+    // The handle cannot follow the pointer through the anchor and out the far
+    // side — a box with negative width is not a smaller box, and springing
+    // back to full size pointing the other way is worse than either.
+    const past = resizeRotated(start, 'e', { x: -400, y: 150 }, 0, false);
+    expect(past.w).toBeGreaterThan(0);
+    expect(past.w).toBeLessThan(start.w);
+    // The anchor — the west edge — is exactly where it was.
+    expect(past.x).toBeCloseTo(start.x, 6);
+  });
+
+  it('a diagonal drag grows both sides fully, not by a normalised fraction', () => {
+    // A corner's direction vector is 1/√2 per axis; multiplying a span by it
+    // would take 30% off every diagonal resize.
+    const next = resizeRotated(start, 'se', { x: 400, y: 300 }, 0, false);
+    expect(next.w).toBeCloseTo(300, 6);
+    expect(next.h).toBeCloseTo(200, 6);
+  });
+
+  it('an edge handle still changes one axis only', () => {
+    const next = resizeRotated(start, 'e', { x: 500, y: 999 }, 40, false);
+    expect(next.h).toBeCloseTo(start.h, 6);
   });
 
   it('grows along the object’s own axes rather than the artboard’s', () => {
     // At 90° the object's local +x runs down the screen, so a pointer dragged
     // straight DOWN from the SE handle should lengthen its width.
     const rotation = 90;
-    const centre = boxCentre(start);
-    const seOnScreen = rotatePoint(handlePosition(start, 'se'), centre, rotation);
-    const next = resizeRotated(
-      start,
-      'se',
-      { x: seOnScreen.x, y: seOnScreen.y + 60 },
-      rotation,
-      false,
-    );
+    const se = onScreen(start, 'se', rotation);
+    const next = resizeRotated(start, 'se', { x: se.x, y: se.y + 60 }, rotation, false);
     expect(next.w).toBeCloseTo(start.w + 60, 4);
     expect(next.h).toBeCloseTo(start.h, 4);
   });
@@ -146,31 +192,143 @@ describe('resizeRotated', () => {
     const next = resizeRotated(start, 'se', { x: 500, y: 150 }, 25, true);
     expect(next.w / next.h).toBeCloseTo(start.w / start.h, 6);
   });
+
+  it('never collapses to nothing', () => {
+    const next = resizeRotated(start, 'se', anchorPoint(start, 'se'), 0, false);
+    expect(next.w).toBeGreaterThan(0);
+    expect(next.h).toBeGreaterThan(0);
+  });
 });
 
-describe('polygonRadius', () => {
-  const centre = { x: 100, y: 100 };
+/** The handle diametrically opposite this one — the one that must not move. */
+function anchorTwin(handle: ResizeHandle): ResizeHandle {
+  const opposite: Record<ResizeHandle, ResizeHandle> = {
+    nw: 'se',
+    se: 'nw',
+    ne: 'sw',
+    sw: 'ne',
+    n: 's',
+    s: 'n',
+    e: 'w',
+    w: 'e',
+  };
+  return opposite[handle];
+}
+
+describe('polygonResize', () => {
+  const poly = { cx: 100, cy: 100, r: 40 };
+
+  /** Where a polygon's handle sits on screen. */
+  const polyHandle = (shape: typeof poly, handle: ResizeHandle, rotation: number) => {
+    const direction = handleDirectionForTest(handle);
+    const isCorner = handle.length === 2;
+    const reach = isCorner ? shape.r * Math.SQRT2 : shape.r;
+    return rotatePoint(
+      { x: shape.cx + direction.x * reach, y: shape.cy + direction.y * reach },
+      { x: shape.cx, y: shape.cy },
+      rotation,
+    );
+  };
 
   it('gives every handle something to do, including the horizontal ones', () => {
-    // The old box-fitting took min(w,h)/2, which left `e` inert on any polygon
-    // whose box was already wider than tall.
-    expect(polygonRadius(centre, 'e', { x: 180, y: 100 }, 0)).toBe(80);
-    expect(polygonRadius(centre, 'w', { x: 30, y: 100 }, 0)).toBe(70);
-    expect(polygonRadius(centre, 'n', { x: 100, y: 40 }, 0)).toBe(60);
-    expect(polygonRadius(centre, 's', { x: 100, y: 190 }, 0)).toBe(90);
+    // Fitting a polygon into a dragged rectangle took min(w,h)/2, which left
+    // `e` inert on any polygon already wider than tall.
+    for (const handle of ALL_HANDLES) {
+      const next = polygonResize(poly, handle, { x: 200, y: 200 }, 0);
+      expect({ handle, changed: next.r !== poly.r }).toEqual({ handle, changed: true });
+    }
   });
 
-  it('a corner takes the larger of the two axes, so a diagonal drag grows it', () => {
-    expect(polygonRadius(centre, 'se', { x: 150, y: 190 }, 0)).toBe(90);
+  it('leaves the opposite handle exactly where it was, at every angle', () => {
+    for (const rotation of [0, 23, 90, 200]) {
+      for (const handle of ALL_HANDLES) {
+        const before = polyHandle(poly, anchorTwin(handle), rotation);
+        const next = polygonResize(poly, handle, { x: 190, y: 60 }, rotation);
+        const after = polyHandle(next, anchorTwin(handle), rotation);
+        expect({ rotation, handle, x: after.x.toFixed(6), y: after.y.toFixed(6) }).toEqual({
+          rotation,
+          handle,
+          x: before.x.toFixed(6),
+          y: before.y.toFixed(6),
+        });
+      }
+    }
   });
 
-  it('measures in the object’s own frame when it is rotated', () => {
-    // At 90° a pointer straight below the centre is on the local +x axis.
-    expect(polygonRadius(centre, 'e', { x: 100, y: 180 }, 90)).toBeCloseTo(80, 6);
+  it('projects an off-axis wobble onto the handle’s own axis', () => {
+    // Dragging `e` straight out, then wandering vertically, must not shrink it.
+    const straight = polygonResize(poly, 'e', { x: 180, y: 100 }, 0);
+    const wobbled = polygonResize(poly, 'e', { x: 180, y: 145 }, 0);
+    expect(wobbled.r).toBeCloseTo(straight.r, 6);
+  });
+
+  it('grows from the anchor: dragging east doubles the reach across the shape', () => {
+    // Anchor sits at x=60; pointer at x=200 means a 140 span, so r = 70.
+    expect(polygonResize(poly, 'e', { x: 200, y: 100 }, 0)).toMatchObject({ r: 70, cx: 130 });
   });
 
   it('never collapses to nothing', () => {
-    expect(polygonRadius(centre, 'e', centre, 0)).toBeGreaterThan(0);
+    expect(polygonResize(poly, 'e', { x: -500, y: 100 }, 0).r).toBeGreaterThan(0);
+  });
+});
+
+describe('lineFromWorld', () => {
+  it('is the identity at 0°', () => {
+    expect(lineFromWorld({ x: 10, y: 20 }, { x: 30, y: 40 }, 0)).toEqual({
+      x1: 10,
+      y1: 20,
+      x2: 30,
+      y2: 40,
+    });
+  });
+
+  it('round-trips: rendering the result back out lands on the world points asked for', () => {
+    const a = { x: 40, y: 90 };
+    const b = { x: 300, y: 210 };
+    for (const rotation of [0, 31, 90, 180, 305]) {
+      const stored = lineFromWorld(a, b, rotation);
+      // How the renderer draws it: rotate the stored ends about their midpoint.
+      const pivot = { x: (stored.x1 + stored.x2) / 2, y: (stored.y1 + stored.y2) / 2 };
+      const drawn1 = rotatePoint({ x: stored.x1, y: stored.y1 }, pivot, rotation);
+      const drawn2 = rotatePoint({ x: stored.x2, y: stored.y2 }, pivot, rotation);
+      expect({ rotation, x: drawn1.x.toFixed(6), y: drawn1.y.toFixed(6) }).toEqual({
+        rotation,
+        x: a.x.toFixed(6),
+        y: a.y.toFixed(6),
+      });
+      expect({ rotation, x: drawn2.x.toFixed(6), y: drawn2.y.toFixed(6) }).toEqual({
+        rotation,
+        x: b.x.toFixed(6),
+        y: b.y.toFixed(6),
+      });
+    }
+  });
+
+  it('preserves length whatever the rotation', () => {
+    const a = { x: 0, y: 0 };
+    const b = { x: 120, y: 50 };
+    const expected = Math.hypot(120, 50);
+    for (const rotation of [0, 45, 137]) {
+      const s = lineFromWorld(a, b, rotation);
+      expect(Math.hypot(s.x2 - s.x1, s.y2 - s.y1)).toBeCloseTo(expected, 6);
+    }
+  });
+
+  it('moving one end leaves the other exactly where it was on screen', () => {
+    // The reported bug, stated directly.
+    const rotation = 40;
+    const fixedEnd = { x: 300, y: 210 };
+    const first = lineFromWorld({ x: 40, y: 90 }, fixedEnd, rotation);
+    const second = lineFromWorld({ x: 155, y: 12 }, fixedEnd, rotation);
+
+    const drawnFar = (s: typeof first) => {
+      const pivot = { x: (s.x1 + s.x2) / 2, y: (s.y1 + s.y2) / 2 };
+      return rotatePoint({ x: s.x2, y: s.y2 }, pivot, rotation);
+    };
+    const before = drawnFar(first);
+    const after = drawnFar(second);
+    expect(after.x).toBeCloseTo(before.x, 6);
+    expect(after.y).toBeCloseTo(before.y, 6);
   });
 });
 

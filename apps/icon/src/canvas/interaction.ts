@@ -137,13 +137,47 @@ export function anchorPoint(box: Box, handle: ResizeHandle): Point {
 }
 
 /**
- * Resize an object that is rotated.
+ * Which way each axis grows for this handle: -1, 0 or +1, deliberately NOT
+ * normalised. `resizeRotated` multiplies a span by this to get a signed
+ * length, and a corner's 1/√2 components would quietly shrink both sides of
+ * every diagonal drag by 30%.
+ */
+function handleSign(handle: ResizeHandle): Point {
+  return {
+    x: movesLeft(handle) ? -1 : movesRight(handle) ? 1 : 0,
+    y: movesTop(handle) ? -1 : movesBottom(handle) ? 1 : 0,
+  };
+}
+
+/** Rotate a direction vector. Directions turn about the origin, not about a point. */
+function rotateVector(vector: Point, degrees: number): Point {
+  const radians = (degrees * Math.PI) / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  return { x: vector.x * cos - vector.y * sin, y: vector.x * sin + vector.y * cos };
+}
+
+/** Where the anchor sits relative to the box's centre, for a box of this size. */
+function anchorOffset(handle: ResizeHandle, w: number, h: number): Point {
+  const x = movesLeft(handle) ? w / 2 : movesRight(handle) ? -w / 2 : 0;
+  const y = movesTop(handle) ? h / 2 : movesBottom(handle) ? -h / 2 : 0;
+  return { x, y };
+}
+
+/**
+ * Resize a rotated object with the anchor nailed down.
  *
- * Three steps, and the third is the one that is easy to leave out: rotate the
- * pointer into the object's own frame, resize there, then translate the result
- * so the anchor lands back where it was on screen. Without that last step the
- * box is right but the shape slides away under the pointer, because rotation
- * happens about the box's centre and resizing moves the centre.
+ * Solved in world space rather than by resizing in the object's frame and
+ * patching afterwards. The naive order — rotate the pointer in, resize, rotate
+ * back — cannot work on its own, because rotation pivots about the box's
+ * centre and resizing *moves* that centre: every other handle then swings
+ * around the new pivot, so dragging one corner appears to drag the whole
+ * shape.
+ *
+ * Instead: the anchor's world position is fixed by definition, the new size
+ * comes from the pointer-to-anchor vector measured in the object's frame, and
+ * the centre is then whatever puts the anchor back where it already was. The
+ * dragged handle lands exactly under the pointer and nothing else moves.
  */
 export function resizeRotated(
   start: Box,
@@ -152,42 +186,116 @@ export function resizeRotated(
   rotation: number,
   constrain: boolean,
 ): Box {
-  const centre = boxCentre(start);
-  const local = rotatePoint(pointer, centre, -rotation);
-  const next = resizeBox(start, handle, local, constrain);
-  if (rotation % 360 === 0) return next;
+  const startCentre = boxCentre(start);
+  const anchorWorld = rotatePoint(anchorPoint(start, handle), startCentre, rotation);
 
-  const anchorBefore = rotatePoint(anchorPoint(start, handle), centre, rotation);
-  const anchorAfter = rotatePoint(anchorPoint(next, handle), boxCentre(next), rotation);
+  // How far the pointer is from the anchor, along the object's own axes.
+  const span = rotateVector(
+    { x: pointer.x - anchorWorld.x, y: pointer.y - anchorWorld.y },
+    -rotation,
+  );
+
+  const isCorner = (CORNER_HANDLES as readonly string[]).includes(handle);
+  const sign = handleSign(handle);
+
+  // Signed along the handle's own outward direction, so dragging *past* the
+  // anchor clamps to a minimum rather than mirroring the box out the far side.
+  // `Math.abs` here would make a shape dragged inside-out spring back to full
+  // size pointing the other way.
+  let w = sign.x === 0 ? start.w : Math.max(MIN_SIDE, span.x * sign.x);
+  let h = sign.y === 0 ? start.h : Math.max(MIN_SIDE, span.y * sign.y);
+
+  if (constrain && isCorner && start.w > 0 && start.h > 0) {
+    const ratio = start.w / start.h;
+    if (w / h > ratio) h = w / ratio;
+    else w = h * ratio;
+  }
+
+  // The centre is wherever it has to be for the anchor to stay put.
+  const offset = rotateVector(anchorOffset(handle, w, h), rotation);
+  const centre = { x: anchorWorld.x - offset.x, y: anchorWorld.y - offset.y };
+  return { x: centre.x - w / 2, y: centre.y - h / 2, w, h };
+}
+
+/** Unit vector from the centre towards the handle, in the object's own frame. */
+export function handleDirection(handle: ResizeHandle): Point {
+  const x = movesLeft(handle) ? -1 : movesRight(handle) ? 1 : 0;
+  const y = movesTop(handle) ? -1 : movesBottom(handle) ? 1 : 0;
+  const length = Math.hypot(x, y) || 1;
+  return { x: x / length, y: y / length };
+}
+
+export interface PolygonShape {
+  cx: number;
+  cy: number;
+  r: number;
+}
+
+/**
+ * Resize a regular polygon, keeping the opposite handle still.
+ *
+ * A polygon is a centre and a radius, so a handle drag has to move both: the
+ * anchor stays put and the centre slides to keep it there. Growing about the
+ * centre instead would move every handle at once, which is exactly what a drag
+ * on one of them should not do.
+ *
+ * The pointer is projected onto the handle's own axis, so an off-axis wobble
+ * does not shrink the shape. A corner sits `r√2` from the centre rather than
+ * `r`, so a corner drag divides by that as well as by two.
+ */
+export function polygonResize(
+  start: PolygonShape,
+  handle: ResizeHandle,
+  pointer: Point,
+  rotation: number,
+): PolygonShape {
+  const centre = { x: start.cx, y: start.cy };
+  const direction = handleDirection(handle);
+  const isCorner = (CORNER_HANDLES as readonly string[]).includes(handle);
+  // A corner is r√2 out; an edge midpoint is r out.
+  const reach = isCorner ? start.r * Math.SQRT2 : start.r;
+
+  const anchorLocal = {
+    x: centre.x - direction.x * reach,
+    y: centre.y - direction.y * reach,
+  };
+  const anchorWorld = rotatePoint(anchorLocal, centre, rotation);
+  const axis = rotateVector(direction, rotation);
+
+  const span = Math.max(
+    MIN_SIDE,
+    (pointer.x - anchorWorld.x) * axis.x + (pointer.y - anchorWorld.y) * axis.y,
+  );
+
   return {
-    ...next,
-    x: next.x + (anchorBefore.x - anchorAfter.x),
-    y: next.y + (anchorBefore.y - anchorAfter.y),
+    // Rotation pivots about the polygon's own centre, so the stored centre and
+    // the on-screen centre are the same point — no conversion needed.
+    cx: anchorWorld.x + (axis.x * span) / 2,
+    cy: anchorWorld.y + (axis.y * span) / 2,
+    r: isCorner ? span / (2 * Math.SQRT2) : span / 2,
   };
 }
 
 /**
- * A regular polygon's new radius from a handle drag.
+ * A line's stored endpoints, given where its two ends should be on screen.
  *
- * It resizes about its centre rather than about an anchor corner, because a
- * radial shape has no corner to pin — and every handle has to do something.
- * Taking the smaller half-extent of a dragged box, which is what fitting a
- * polygon into a rectangle does, leaves the east handle inert whenever the box
- * is already wider than it is tall.
+ * A line rotates about the midpoint of its endpoints — that is what its
+ * bounding box's centre works out to — and rotation leaves a midpoint where it
+ * found it. So the world midpoint of the pair IS the pivot, and each stored
+ * endpoint is just its world position turned back by the rotation about it.
+ *
+ * This is what stops the far end drifting: moving one end changes the pivot,
+ * and anything expressed relative to the old pivot swings when it does.
  */
-export function polygonRadius(
-  centre: Point,
-  handle: ResizeHandle,
-  pointer: Point,
+export function lineFromWorld(
+  a: Point,
+  b: Point,
   rotation: number,
-): number {
-  const local = rotatePoint(pointer, centre, -rotation);
-  const dx = Math.abs(local.x - centre.x);
-  const dy = Math.abs(local.y - centre.y);
-  const isCorner = (CORNER_HANDLES as readonly string[]).includes(handle);
-  if (isCorner) return Math.max(MIN_SIDE / 2, Math.max(dx, dy));
-  const along = handle === 'e' || handle === 'w' ? dx : dy;
-  return Math.max(MIN_SIDE / 2, along);
+): { x1: number; y1: number; x2: number; y2: number } {
+  const pivot = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  const local1 = rotatePoint(a, pivot, -rotation);
+  const local2 = rotatePoint(b, pivot, -rotation);
+  return { x1: local1.x, y1: local1.y, x2: local2.x, y2: local2.y };
 }
 
 /**

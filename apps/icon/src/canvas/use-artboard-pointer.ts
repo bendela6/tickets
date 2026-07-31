@@ -4,7 +4,7 @@ import {
   bounds,
   boxCentre,
   hitTest,
-  rotatePoint,
+  lineEndpoints,
   translate,
   type Box,
   type Point,
@@ -16,18 +16,39 @@ import {
   constrainDelta,
   isEndpoint,
   lineEndpointAt,
-  polygonRadius,
+  lineFromWorld,
+  polygonResize,
   resizeRotated,
   snapAngle,
   type EndpointHandle,
   type Handle,
+  type PolygonShape,
   type ResizeHandle,
 } from './interaction';
 
+const roundPolygon = (shape: PolygonShape): PolygonShape => ({
+  cx: Math.round(shape.cx),
+  cy: Math.round(shape.cy),
+  r: Math.round(shape.r),
+});
+
 type Gesture =
   | { mode: 'move'; id: string; startGeometry: Geometry; startPoint: Point; startBox: Box }
-  | { mode: 'resize'; id: string; handle: ResizeHandle; startBox: Box; rotation: number }
-  | { mode: 'endpoint'; id: string; handle: EndpointHandle; rotation: number }
+  | {
+      mode: 'resize';
+      id: string;
+      handle: ResizeHandle;
+      startBox: Box;
+      rotation: number;
+      /** Set only for a polygon, which resizes as a centre and a radius. */
+      startPolygon?: PolygonShape;
+    }
+  /**
+   * `anchorWorld` is captured once, when the drag starts, and never
+   * recomputed. Reading the far end's position from the document each frame
+   * would read it through a pivot that the drag itself is moving.
+   */
+  | { mode: 'endpoint'; id: string; handle: EndpointHandle; rotation: number; anchorWorld: Point }
   | { mode: 'rotate'; id: string; centre: Point };
 
 export interface DragChrome {
@@ -137,7 +158,15 @@ export function useArtboardPointer({
       return;
     }
     if (isEndpoint(handle)) {
-      begin(event, { mode: 'endpoint', id: object.id, handle, rotation: object.rotation });
+      if (object.geometry.kind !== 'line') return;
+      const [start, end] = lineEndpoints(object);
+      begin(event, {
+        mode: 'endpoint',
+        id: object.id,
+        handle,
+        rotation: object.rotation,
+        anchorWorld: handle === 'p1' ? end : start,
+      });
       return;
     }
     begin(event, {
@@ -146,6 +175,15 @@ export function useArtboardPointer({
       handle,
       startBox: bounds(object),
       rotation: object.rotation,
+      ...(object.geometry.kind === 'polygon'
+        ? {
+            startPolygon: {
+              cx: object.geometry.cx,
+              cy: object.geometry.cy,
+              r: object.geometry.r,
+            },
+          }
+        : {}),
     });
   };
 
@@ -184,21 +222,22 @@ export function useArtboardPointer({
     if (active.mode === 'endpoint') {
       const g = object.geometry;
       if (g.kind !== 'line') return;
-      const centre = boxCentre(bounds(object));
-      // The pointer is in artboard space but the endpoints are stored before
-      // rotation, so it comes back into the object's own frame first.
-      const local = rotatePoint(point, centre, -active.rotation);
-      const anchor =
-        active.handle === 'p1' ? { x: g.x2, y: g.y2 } : { x: g.x1, y: g.y1 };
-      const moved = lineEndpointAt(anchor, local, event.shiftKey);
-      const next =
-        active.handle === 'p1'
-          ? { ...g, x1: Math.round(moved.x), y1: Math.round(moved.y) }
-          : { ...g, x2: Math.round(moved.x), y2: Math.round(moved.y) };
+      // Both ends are decided in artboard space — the dragged one follows the
+      // pointer, the other stays exactly where it was when the drag began —
+      // and only then converted back to stored coordinates.
+      const moved = lineEndpointAt(active.anchorWorld, point, event.shiftKey);
+      const [a, b] = active.handle === 'p1' ? [moved, active.anchorWorld] : [active.anchorWorld, moved];
+      const next = lineFromWorld(a, b, active.rotation);
       dispatch({
         type: 'setGeometry',
         id: active.id,
-        geometry: next,
+        geometry: {
+          ...g,
+          x1: Math.round(next.x1),
+          y1: Math.round(next.y1),
+          x2: Math.round(next.x2),
+          y2: Math.round(next.y2),
+        },
         label: `reshape ${object.name}`,
         at: event.timeStamp,
       });
@@ -206,16 +245,19 @@ export function useArtboardPointer({
     }
 
     if (active.mode === 'resize') {
-      // A regular polygon resizes about its centre — it has no corner to pin,
-      // and fitting one into a dragged rectangle leaves half the handles inert.
-      if (object.geometry.kind === 'polygon') {
-        const centre = { x: object.geometry.cx, y: object.geometry.cy };
+      // A polygon is a centre and a radius, so its handle drag moves both:
+      // the anchor holds still and the centre slides to keep it there.
+      if (active.startPolygon) {
         dispatch({
           type: 'setGeometry',
           id: active.id,
           geometry: {
-            ...object.geometry,
-            r: Math.round(polygonRadius(centre, active.handle, point, active.rotation)),
+            ...(object.geometry.kind === 'polygon'
+              ? object.geometry
+              : { kind: 'polygon' as const, sides: 6, cx: 0, cy: 0, r: 0 }),
+            ...roundPolygon(
+              polygonResize(active.startPolygon, active.handle, point, active.rotation),
+            ),
           },
           label: `resize ${object.name}`,
           at: event.timeStamp,
