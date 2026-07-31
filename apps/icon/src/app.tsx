@@ -6,6 +6,8 @@ import { EditorProvider, useEditor } from './editor-context';
 import { ObjectList } from './rails/object-list';
 import { PropsPanel } from './rails/props-panel';
 import { TopBar } from './topbar/top-bar';
+import { HeldPoses } from './transport/held-poses';
+import { Transport } from './transport/transport';
 import { useShortcuts } from './use-shortcuts';
 import { chromeIsDim } from './view';
 
@@ -62,6 +64,8 @@ function Editor() {
         <main className="relative flex min-w-0 flex-1 items-center justify-center bg-surface-field">
           <div className="relative mb-7 flex flex-none flex-col items-center gap-3">
             <Artboard />
+            <Transport />
+            <HeldPoses />
           </div>
           <CanvasFooter status={status} />
         </main>
