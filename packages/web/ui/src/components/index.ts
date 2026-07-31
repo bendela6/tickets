@@ -28,6 +28,7 @@ export * from './row';
 export * from './screen-state';
 export * from './section-header';
 export * from './session-kind-glyph';
+export * from './slider';
 export * from './spinner';
 export * from './stack';
 export * from './switch';

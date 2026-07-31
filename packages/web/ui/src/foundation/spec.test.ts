@@ -69,7 +69,14 @@ describe('spec tokens', () => {
   });
 
   it('carries both theme values for the one family that has them', () => {
-    expect(SHADOWS).toHaveLength(3);
+    // Named rather than counted: a count passes for any four shadows, and
+    // this assertion exists to pin which four the system actually has.
+    expect(SHADOWS.map((s) => s.name)).toEqual([
+      'shadow-raised',
+      'shadow-overlay',
+      'shadow-modal',
+      'shadow-artboard',
+    ]);
     expect(SHADOWS.every((s) => s.light !== s.dark)).toBe(true);
   });
 
