@@ -17,6 +17,7 @@ description: Use when starting, restarting, deploying, or screenshotting the app
 | DB browser (docker) | http://localhost:4610/studio | self-hosted **pgweb** (`--prefix studio`, internal `127.0.0.1:4983`), locked to prod `tickets`. Baked into the image → works offline. (Dev's mprocs `studio` pane still uses drizzle-kit studio, which needs internet.) |
 | Postgres (docker) | `127.0.0.1:5532` | ONE server, TWO databases: `tickets` (prod, used by the deployed app) and `tickets_dev` (dev, used by local tooling); loopback-only. Inspect: `docker exec -it tickets-postgres-1 psql -U postgres -d tickets` (or `-d tickets_dev`) |
 | Gallery | `/gallery` on either web | primitives showcase; what verifying-a-component measures |
+| Icon editor (vite) | http://localhost:4670 | `@tickets/icon` — the canvas icon builder. Started on demand, not part of `pnpm dev`. Same IPv6 gotcha as the studio: use `localhost`, never `127.0.0.1` |
 
 ## Commands
 
@@ -40,6 +41,21 @@ the PNGs, `site.webmanifest`, the `index.html` head block) from it. Nobody hand-
 - Open it at **`http://localhost:4660`**, not `127.0.0.1:4660` — see the gotcha below.
 - Generate writes into `apps/web/public/*`, `apps/web/icons.config.json`, and the marked
   `<!-- icons:start -->…<!-- icons:end -->` block in `apps/web/index.html`.
+
+## Icon editor — the canvas builder (`apps/icon`, port 4670)
+
+A **separate app from the icon studio**, and neither knows about the other. The
+studio owns `apps/web`'s six shipped icon files and the tickets mark; the editor
+is a general drawing tool whose documents are its own.
+
+- Run it: `pnpm --filter @tickets/icon dev`, then **`http://localhost:4670`**.
+- Entirely client-side. Documents live in the browser (IndexedDB), and export
+  produces a `.zip` download — there is no write path and no server, so nothing
+  here can touch the repo.
+- Nine export targets are real: favicon `.ico`, PWA + manifest, iOS
+  `.appiconset`, Android mipmaps, macOS `.icns`, Windows `.ico`, animated SVG,
+  Lottie, and a canvas animated favicon. No runtime dependency backs any of them.
+- Checks: `pnpm --filter @tickets/icon test` · `typecheck` · `build`.
 
 ## Gotchas — all previously hit
 

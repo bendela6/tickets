@@ -1,12 +1,12 @@
 # tickets
 
-pnpm + turbo monorepo. `apps/api` (Fastify-style API, port 4600) · `apps/web` (React 19, TanStack Router/Query, Tailwind v4 via vite plugin, radix-ui, IBM Plex fonts) · `apps/mcp` (MCP server) · `packages/` incl. `@tickets/db`.
+pnpm + turbo monorepo. `apps/api` (Fastify-style API, port 4600) · `apps/web` (React 19, TanStack Router/Query, Tailwind v4 via vite plugin, radix-ui, IBM Plex fonts) · `apps/icon` (the canvas icon editor, :4670, client-only) · `apps/mcp` (MCP server) · `packages/` incl. `@tickets/db`.
 
 ## UI redesign (in progress, branch `redesign`)
 
 - Total redesign to the **Instrument** design system. Spec of record: `docs/design/design-system.html` (exported from the Claude Design project). Brief: `docs/superpowers/specs/2026-07-05-ui-redesign-design.md`; plans in `docs/superpowers/plans/`.
 - Locked decisions: full-stack scope; **replace per phase** (legacy `styles/globals.css` screens coexist with redesigned ones until ported); extend vocabulary + seed data; verify by measurement, not screenshot judgment; autonomous execution with a commit per task.
-- **Tailwind preflight is OFF.** Native controls and unlayered legacy CSS bite — see the trap tables in the project skills before debugging styles.
+- **Tailwind preflight is ON** — `tokens.css` imports `tailwindcss/preflight.css` into the `base` layer. (This line said OFF long after the redesign turned it on; it cost real debugging time, so check `tokens.css` rather than trusting prose.)
 
 ## Project skills (in `.claude/skills/` — use them)
 
