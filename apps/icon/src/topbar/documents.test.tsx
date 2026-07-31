@@ -1,8 +1,10 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../app';
 import { agoOf } from './use-documents';
+
+afterEach(() => vi.restoreAllMocks());
 
 const setup = async () => {
   const user = userEvent.setup();
@@ -123,6 +125,34 @@ describe('the documents popover', () => {
         within(screen.getByRole('complementary', { name: 'Objects' })).getAllByRole('listitem'),
       ).toHaveLength(1),
     );
+  });
+
+  it('asks before discarding unsaved work, and does nothing when refused', async () => {
+    const { user } = await setup();
+    const asked: string[] = [];
+    // jsdom's confirm throws "not implemented"; this is what the hook calls.
+    vi.spyOn(window, 'confirm').mockImplementation((message?: string) => {
+      asked.push(String(message));
+      return false;
+    });
+
+    await user.keyboard('r');
+    await user.click(screen.getByRole('button', { name: 'Documents' }));
+    await user.click(screen.getByRole('button', { name: '+ new icon' }));
+
+    expect(asked[0]).toContain('unsaved changes');
+    // The rectangle is still here: refusing means nothing happened.
+    expect(
+      within(screen.getByRole('complementary', { name: 'Objects' })).getAllByRole('listitem'),
+    ).toHaveLength(1);
+  });
+
+  it('does not ask when there is nothing to lose', async () => {
+    const { user } = await setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    await user.click(screen.getByRole('button', { name: 'Documents' }));
+    await user.click(screen.getByRole('button', { name: '+ new icon' }));
+    expect(confirmSpy).not.toHaveBeenCalled();
   });
 
   it('a reopened document has no history to undo into', async () => {

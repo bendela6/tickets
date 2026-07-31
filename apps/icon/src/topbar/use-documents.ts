@@ -18,6 +18,18 @@ export interface Documents {
   create: () => void;
 }
 
+/**
+ * Asked before anything would discard unsaved work.
+ *
+ * Injectable so the tests do not have to stub a global — and so a later
+ * in-app dialog can replace the browser's `confirm` without touching the
+ * lifecycle logic that decides *when* to ask.
+ */
+export type ConfirmDiscard = (name: string) => boolean;
+
+const browserConfirm: ConfirmDiscard = (name) =>
+  globalThis.confirm?.(`${name} has unsaved changes. Discard them?`) ?? true;
+
 function agoOf(at: number | null, now: number): string {
   if (at === null) return 'never';
   const seconds = Math.max(0, Math.round((now - at) / 1000));
@@ -42,11 +54,13 @@ export function useDocuments({
   dispatch,
   store: given,
   now = () => Date.now(),
+  confirmDiscard = browserConfirm,
 }: {
   state: EditorState;
   dispatch: (action: Action) => void;
   store?: DocumentStore;
   now?: () => number;
+  confirmDiscard?: ConfirmDiscard;
 }): Documents {
   // Pinned on first render rather than defaulted in the parameter list: a
   // default argument is evaluated on EVERY render, which would build a fresh
@@ -110,6 +124,10 @@ export function useDocuments({
 
   const open = useCallback(
     (id: string) => {
+      if (id === currentId) return;
+      // Opening another document replaces this one outright, history and all,
+      // so unsaved work would be gone with no way back.
+      if (dirty && !confirmDiscard(state.doc.name)) return;
       void (async () => {
         const doc = await store.load(id);
         if (!doc) return;
@@ -119,10 +137,11 @@ export function useDocuments({
         setSavedAt(list.find((summary) => summary.id === id)?.updatedAt ?? null);
       })();
     },
-    [dispatch, list, store],
+    [confirmDiscard, currentId, dirty, dispatch, list, state.doc.name, store],
   );
 
   const create = useCallback(() => {
+    if (dirty && !confirmDiscard(state.doc.name)) return;
     void (async () => {
       const created = await store.create(UNTITLED);
       dispatch({ type: 'replaceDocument', doc: created.doc });
@@ -131,7 +150,7 @@ export function useDocuments({
       setSavedAt(null);
       await refresh();
     })();
-  }, [dispatch, refresh, store]);
+  }, [confirmDiscard, dirty, dispatch, refresh, state.doc.name, store]);
 
   return { list, currentId, dirty, savedAgo: agoOf(savedAt, now()), save, open, create };
 }
