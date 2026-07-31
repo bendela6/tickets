@@ -7,7 +7,7 @@ import {
   SNAP_MIN,
   SNAP_PRESETS,
 } from '../doc/constants';
-import { bounds } from '../doc/geometry';
+import { aimLine, bounds, lineAngle } from '../doc/geometry';
 import { selectedObject } from '../doc/store';
 import { useEditor } from '../editor-context';
 import type { IconObject } from '../doc/types';
@@ -194,7 +194,12 @@ function PositionGroup({ object }: { object: IconObject }) {
             onCommit={(y2) => setGeometry({ ...geometry, y2 }, `reshape ${object.name}`)}
           />
         </div>
-        {rotation}
+        <NumberField
+          label="ROTATION"
+          value={Math.round(lineAngle(geometry))}
+          suffix="°"
+          onCommit={(degrees) => setGeometry(aimLine(geometry, degrees), `rotate ${object.name}`)}
+        />
       </RailGroup>
     );
   }
