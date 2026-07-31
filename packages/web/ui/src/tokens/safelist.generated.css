@@ -293,6 +293,18 @@
 @source inline("indeterminate:border-teal-9");
 @source inline("indeterminate:border-yellow-9");
 @source inline("inline-flex");
+@source inline("inset-ring-1");
+@source inline("inset-ring-blue-9");
+@source inline("inset-ring-cyan-9");
+@source inline("inset-ring-gray-9");
+@source inline("inset-ring-green-9");
+@source inline("inset-ring-indigo-9");
+@source inline("inset-ring-orange-9");
+@source inline("inset-ring-pink-9");
+@source inline("inset-ring-purple-9");
+@source inline("inset-ring-red-9");
+@source inline("inset-ring-teal-9");
+@source inline("inset-ring-yellow-9");
 @source inline("items-center");
 @source inline("justify-center");
 @source inline("leading-none");
@@ -356,6 +368,7 @@
 @source inline("size-7");
 @source inline("size-9");
 @source inline("text-10");
+@source inline("text-11");
 @source inline("text-11/13");
 @source inline("text-12");
 @source inline("text-12/17");
