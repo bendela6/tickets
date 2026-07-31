@@ -92,7 +92,7 @@ function Editor() {
  */
 function CanvasField({ status }: { status: string }) {
   const { setView } = useEditor();
-  const region = useRef<HTMLElement>(null);
+  const region = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const element = region.current;
@@ -108,14 +108,20 @@ function CanvasField({ status }: { status: string }) {
   }, [setView]);
 
   return (
-    <main
-      ref={region}
-      className="relative flex min-w-0 flex-1 items-center justify-center overflow-auto bg-surface-field"
-    >
-      <div className="relative m-auto flex flex-none flex-col items-center gap-3 p-8 pb-14">
-        <Artboard />
-        <Transport />
-        <HeldPoses />
+    <main className="relative min-w-0 flex-1 bg-surface-field">
+      {/* The scroller is a layer inside the region rather than the region
+          itself, so the footer below stays pinned. Absolute positioning is
+          relative to the padding box, so a footer inside the scroller would
+          scroll away with the artboard — which it did. */}
+      <div
+        ref={region}
+        className="absolute inset-0 flex items-center justify-center overflow-auto"
+      >
+        <div className="relative m-auto flex flex-none flex-col items-center gap-3 p-8 pb-16">
+          <Artboard />
+          <Transport />
+          <HeldPoses />
+        </div>
       </div>
       <CanvasFooter status={status} />
     </main>

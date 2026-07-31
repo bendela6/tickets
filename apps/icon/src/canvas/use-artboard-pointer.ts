@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState, type PointerEvent, type RefObject } from 'react';
 import { objectId } from '../doc/defaults';
 import {
+  aimLine,
   bounds,
   boxCentre,
   hitTest,
@@ -49,7 +50,16 @@ type Gesture =
    * would read it through a pivot that the drag itself is moving.
    */
   | { mode: 'endpoint'; id: string; handle: EndpointHandle; rotation: number; anchorWorld: Point }
-  | { mode: 'rotate'; id: string; centre: Point };
+  /**
+   * `line` is set when the object being turned is a line, which stores no
+   * rotation of its own — turning it rewrites its endpoints instead.
+   */
+  | {
+      mode: 'rotate';
+      id: string;
+      centre: Point;
+      line?: Extract<Geometry, { kind: 'line' }>;
+    };
 
 export interface DragChrome {
   /** Where the object started, so the ghost can be drawn there. */
@@ -154,7 +164,12 @@ export function useArtboardPointer({
     if (!object || object.locked) return;
 
     if (handle === 'rotate') {
-      begin(event, { mode: 'rotate', id: object.id, centre: boxCentre(bounds(object)) });
+      begin(event, {
+        mode: 'rotate',
+        id: object.id,
+        centre: boxCentre(bounds(object)),
+        line: object.geometry.kind === 'line' ? object.geometry : undefined,
+      });
       return;
     }
     if (isEndpoint(handle)) {
@@ -273,10 +288,25 @@ export function useArtboardPointer({
       return;
     }
 
+    const aimed = snapAngle(angleFrom(active.centre, point), event.shiftKey);
+    if (active.line) {
+      // A line carries no rotation: turning it moves its ends. That is what
+      // keeps the far end still when the near one is later dragged — a stored
+      // rotation would pivot about the midpoint, and the midpoint moves.
+      dispatch({
+        type: 'setGeometry',
+        id: active.id,
+        // The knob reads clockwise from straight up; a bearing reads from east.
+        geometry: aimLine(active.line, aimed - 90),
+        label: `rotate ${object.name}`,
+        at: event.timeStamp,
+      });
+      return;
+    }
     dispatch({
       type: 'rotateObject',
       id: active.id,
-      degrees: snapAngle(angleFrom(active.centre, point), event.shiftKey),
+      degrees: aimed,
       at: event.timeStamp,
     });
   };

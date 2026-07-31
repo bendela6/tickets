@@ -46,6 +46,35 @@ export function centreOf(object: IconObject): Point {
 export const boxCentre = (box: Box): Point => ({ x: box.x + box.w / 2, y: box.y + box.h / 2 });
 
 /**
+ * The bearing of a line, in degrees clockwise from east, 0–359.
+ *
+ * A line has no separate rotation: its two points already say which way it
+ * runs, so this IS its angle. Storing a rotation beside them would make the
+ * pivot — the midpoint — move whenever either end did, and the far end would
+ * then drift every time you dragged the near one.
+ */
+export function lineAngle(geometry: Extract<Geometry, { kind: 'line' }>): number {
+  const degrees =
+    (Math.atan2(geometry.y2 - geometry.y1, geometry.x2 - geometry.x1) * 180) / Math.PI;
+  return ((degrees % 360) + 360) % 360;
+}
+
+/** Turn a line to a new bearing about its own midpoint, leaving its length alone. */
+export function aimLine(
+  geometry: Extract<Geometry, { kind: 'line' }>,
+  degrees: number,
+): Extract<Geometry, { kind: 'line' }> {
+  const pivot = {
+    x: (geometry.x1 + geometry.x2) / 2,
+    y: (geometry.y1 + geometry.y2) / 2,
+  };
+  const turn = degrees - lineAngle(geometry);
+  const a = rotatePoint({ x: geometry.x1, y: geometry.y1 }, pivot, turn);
+  const b = rotatePoint({ x: geometry.x2, y: geometry.y2 }, pivot, turn);
+  return { ...geometry, x1: a.x, y1: a.y, x2: b.x, y2: b.y };
+}
+
+/**
  * A line's two endpoints in artboard space, with the object's rotation already
  * applied — which is where its handles actually have to be drawn.
  */
