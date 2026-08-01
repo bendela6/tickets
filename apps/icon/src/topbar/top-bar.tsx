@@ -74,7 +74,9 @@ export function TopBar({
           onClick={() => setView((v) => ({ ...v, zoom: 100 }))}
           className="w-12 text-center font-mono text-11 text-gray-11"
         >
-          {view.zoom}%
+          {/* The stored zoom is fractional because the wheel is continuous;
+              only the readout is whole. */}
+          {Math.round(view.zoom)}%
         </button>
         <button
           type="button"

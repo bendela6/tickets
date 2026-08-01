@@ -117,6 +117,9 @@ export function useArtboardPointer({
   };
 
   const onPointerDown = (event: PointerEvent) => {
+    // The middle button pans the canvas and the right one is the context menu.
+    // Only the primary button draws.
+    if (event.button !== 0) return;
     const point = pointOf(event);
     if (!point) return;
     const hit = hitTest(state.doc.objects, point);

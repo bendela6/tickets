@@ -52,8 +52,15 @@ export function initialView(doc: IconDoc): ViewState {
   };
 }
 
+/**
+ * Hold the zoom inside its range, without rounding.
+ *
+ * A wheel zoom is continuous, so the stored value is fractional and only the
+ * readout rounds. Rounding here would quantise the wheel to whole percent —
+ * fine at 400%, a tenth of the range at 10%.
+ */
 export const clampZoom = (zoom: number): number =>
-  Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.round(zoom)));
+  Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom));
 
 /**
  * The next rung of the zoom ladder in `direction`.

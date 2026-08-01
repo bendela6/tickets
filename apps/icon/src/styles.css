@@ -2,3 +2,25 @@
 /* Tailwind must scan this app's own class literals; `@source` is relative to
    this file, so `./` is apps/icon/src. */
 @source './';
+
+/* The canvas is navigated by wheel, middle-drag and two fingers, so its
+   scrollbars are chrome nobody reaches for — and the width they take changes
+   how much room `fit` believes it has. Scrolling still works; only the bars
+   are gone. Written here rather than as an arbitrary Tailwind value because
+   `scrollbar-width` has no utility and this codebase does not use `[...]`. */
+.canvas-scroll {
+  scrollbar-width: none;
+
+  /* `safe` centring, not plain centring. A centred flex child that grows past
+     its container overflows in BOTH directions, and `scrollLeft` cannot go
+     negative — so the leading edge becomes permanently unreachable and a
+     cursor-anchored zoom silently stops tracking. `safe` falls back to
+     start-alignment the moment the content stops fitting, which is what makes
+     the whole artboard reachable at 1600%. */
+  align-items: safe center;
+  justify-content: safe center;
+}
+
+.canvas-scroll::-webkit-scrollbar {
+  display: none;
+}
