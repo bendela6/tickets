@@ -1,4 +1,5 @@
 import type { PathSegment, Point } from '../doc/types';
+import { parseDeclarations } from './css';
 
 /**
  * SVG text in, data out.
@@ -27,9 +28,14 @@ export interface SvgNode {
   children: SvgNode[];
 }
 
-export type ParseOutcome = { ok: true; root: SvgNode } | { ok: false; message: string };
-
-const STYLE_DECLARATION = /([\w-]+)\s*:\s*([^;]+)/g;
+export type ParseOutcome =
+  | {
+      ok: true;
+      root: SvgNode;
+      /** The text of every `<style>` block, in source order. */
+      css: string[];
+    }
+  | { ok: false; message: string };
 
 function attributesOf(element: Element): Record<string, string> {
   const attrs: Record<string, string> = {};
@@ -40,14 +46,10 @@ function attributesOf(element: Element): Record<string, string> {
   // Inline style beats the presentation attribute of the same name, which is
   // the cascade's own rule. Drawing tools lean on it — a `fill` left over from
   // a template with a `style` that overrides it is one file, not a broken one.
+  // What a `<style>` block says ranks between the two, and is folded in later:
+  // only there is the whole file available to work out which rule won.
   const style = attrs['style'];
-  if (style !== undefined) {
-    for (const declaration of style.matchAll(STYLE_DECLARATION)) {
-      const property = declaration[1];
-      const value = declaration[2];
-      if (property !== undefined && value !== undefined) attrs[property] = value.trim();
-    }
-  }
+  if (style !== undefined) Object.assign(attrs, parseDeclarations(style));
   return attrs;
 }
 
@@ -94,7 +96,16 @@ export function parseSvg(text: string): ParseOutcome {
       message: `the root element is <${root?.localName ?? 'nothing'}> rather than <svg>`,
     };
   }
-  return { ok: true, root: nodeOf(root) };
+  // Taken off the document rather than out of the tree above, which holds
+  // elements and not the text inside them — and taken from wherever it sits,
+  // because a stylesheet tucked into `<defs>` styles the file just the same.
+  const css: string[] = [];
+  const blocks = parsed.getElementsByTagName('style');
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks.item(i)?.textContent;
+    if (block !== null && block !== undefined) css.push(block);
+  }
+  return { ok: true, root: nodeOf(root), css };
 }
 
 /**
