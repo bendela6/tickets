@@ -5,14 +5,13 @@
 // padding class, which keeps the guide line and the offset in one place and
 // means no depth→class table to run off the end of.
 
-import { cn, runtimeStyle } from '@tickets/ui';
+import { cn, Dot } from '@tickets/ui';
 import { groupColor } from '../../engine/colors/group-color';
 import { zoneIdOf } from '../../engine/groups/zone-id-of';
 import { useDiagramActions, useDiagramModel, useDiagramUi } from '../../state/diagram-context';
 import { outlineCount, type OutlineEntity, type OutlineNode } from './build-outline';
 
 const indent = 'ml-3 border-l-1 border-gray-6 pl-1';
-const dot = 'h-2 w-2 rounded-full';
 
 export function GroupNode({
   node,
@@ -40,12 +39,7 @@ export function GroupNode({
   const color = groupColor(model, g.id, ui.colors);
   const count = outlineCount(node);
 
-  const swatch = (
-    <span
-      className={cn(dot, hidden ? 'border-1 border-gray-8' : 'bg-(--group-color)')}
-      style={hidden ? undefined : runtimeStyle({ '--group-color': color })}
-    />
-  );
+  const swatch = <Dot color={color} hollow={hidden} />;
 
   return (
     <div>

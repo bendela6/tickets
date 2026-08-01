@@ -4,6 +4,7 @@
     "apps/web/src/components/eer/engine/geometry/port-world-pos/port-world-pos.test.ts::it('puts the L port just outside the left border', () => {",
     "apps/web/src/components/eer/engine/geometry/port-world-pos/port-world-pos.test.ts::it('puts the R port just outside the right border', () => {",
     "apps/web/src/components/eer/view/diagram/diagram/diagram.tsx::// border rung: subtle against gray-1 in both themes, and it flips with",
+    "apps/web/src/components/eer/view/outline/outline.test.tsx::// unmistakable. It used to fake a ring by passing border classes through",
     "apps/web/src/components/rich-text/rich-text-editor.test.tsx::expect(wrapper.className).not.toContain('border-l');",
     "apps/web/src/components/rich-text/rich-text-editor.test.tsx::it('focused container gets the accent border + halo; blur restores the hairline', async () => {",
     "apps/web/src/components/rich-text/rich-text-editor.tsx::// control-weight accent border + the app's standard 3px halo (same",
