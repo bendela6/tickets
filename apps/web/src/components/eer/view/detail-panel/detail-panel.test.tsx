@@ -44,6 +44,15 @@ describe('DetailPanel', () => {
     expect(screen.getByText('.manager_id')).toBeInTheDocument();
   });
 
+  it('keeps the entity badge at font-600 — Pill\'s own base is font-500, so the weight has to be restored explicitly', async () => {
+    // tailwind-merge treats `font-500`/`font-600` as one group: passing
+    // `font-mono uppercase` in className does NOT restore 600 on top of
+    // Pill's font-500 base. Without an explicit font-600 the badge silently
+    // regresses to 500.
+    await renderPanel((a) => a.selectEntity('users'));
+    expect(screen.getByText('Entity').className).toContain('font-600');
+  });
+
   it('lists member tables for a selected group', async () => {
     const { container } = await renderPanel((a) => a.selectGroup('z2'));
     expect(screen.getByText('Group')).toBeInTheDocument();
