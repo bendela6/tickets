@@ -8,7 +8,7 @@
 // mounts on routes where no <DiagramProvider> exists, and this must render
 // nothing there instead of throwing.
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useId, useMemo, useState } from 'react';
 
 import { Tree, cn, useTreeView } from '@tickets/ui';
 import type { Selection } from '../../engine/model/types';
@@ -34,6 +34,17 @@ export function Outline() {
   const model = useDiagramModelOrNull();
   const ui = useDiagramUiOrNull();
   const actions = useDiagramActionsOrNull();
+
+  // app-shell.tsx builds the mode panel ONCE and renders that same element in
+  // two places — the desktop column (CSS-hidden below `md`, but still
+  // MOUNTED) and the mobile drawer `<aside>` (mounted only while open). Each
+  // location instantiates its own <Outline/>, so on /schema at a width where
+  // both are mounted, two trees exist in the DOM at once. A literal idPrefix
+  // would give them identical row ids, and `aria-activedescendant` resolves
+  // by id to the FIRST match in document order — the hidden desktop copy —
+  // leaving the visible (mobile) tree's roving focus pointing at an element
+  // nobody can see. `useId()` gives every mounted instance its own prefix.
+  const uid = useId();
 
   const [query, setQuery] = useState('');
 
@@ -75,7 +86,7 @@ export function Outline() {
     // seeded empty means "closed" to useTreeView by default, so this flips
     // the baseline polarity instead of that.
     defaultExpanded: true,
-    idPrefix: 'outline',
+    idPrefix: `outline-${uid}`,
   });
 
   if (!model || !ui || !actions) return null;
