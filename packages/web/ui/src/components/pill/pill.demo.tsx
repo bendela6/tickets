@@ -105,13 +105,13 @@ export const playground = definePlayground({
       description:
         'Semantic colour. The six semantic names carry meaning across themes; the eleven hue names are for user-chosen colours, where the hue itself is the label.',
     }),
-    variant: select(['subtle', 'solid', 'outline', 'text'] as const, {
+    variant: select(['subtle', 'solid', 'outline', 'text', 'tint'] as const, {
       initial: 'subtle',
       type: 'PillVariant',
       description:
         'How loudly the tone reads. `subtle` is the default and the right pick inside lists; `solid` is for the one pill that has to win the row.',
     }),
-    size: select(['sm', 'md', 'lg'] as const, {
+    size: select(['xs', 'sm', 'md', 'lg'] as const, {
       initial: 'md',
       type: 'PillSize',
       description:
