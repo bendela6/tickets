@@ -152,6 +152,30 @@ export function extentOf(object: IconObject, artboard: { width: number; height: 
   return furthest;
 }
 
+/**
+ * The axis-aligned box the object actually occupies once its rotation is
+ * applied — where a rotated shape actually sits on the artboard, which is not
+ * what its own `x`/`y`/`w`/`h` say, since those describe the geometry before
+ * the transform and are what gets exported.
+ */
+export function rotatedBounds(object: IconObject): Box {
+  const box = bounds(object);
+  if (object.rotation === 0) return box;
+  const centre = centreOf(object);
+  const corners: Point[] = [
+    { x: box.x, y: box.y },
+    { x: box.x + box.w, y: box.y },
+    { x: box.x, y: box.y + box.h },
+    { x: box.x + box.w, y: box.y + box.h },
+  ];
+  const turned = corners.map((corner) => rotatePoint(corner, centre, object.rotation));
+  const xs = turned.map((point) => point.x);
+  const ys = turned.map((point) => point.y);
+  const minX = Math.min(...xs);
+  const minY = Math.min(...ys);
+  return { x: minX, y: minY, w: Math.max(...xs) - minX, h: Math.max(...ys) - minY };
+}
+
 function pointInBox(point: Point, box: Box): boolean {
   return (
     point.x >= box.x && point.x <= box.x + box.w && point.y >= box.y && point.y <= box.y + box.h
