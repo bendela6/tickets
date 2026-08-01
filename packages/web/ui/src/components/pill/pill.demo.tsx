@@ -21,7 +21,7 @@ export const states = [
     name: 'Variants',
     render: () => (
       <div className="flex flex-wrap gap-3">
-        {(['subtle', 'solid', 'outline', 'text'] as const).map((variant) => (
+        {(['subtle', 'solid', 'outline', 'text', 'tint'] as const).map((variant) => (
           <Pill key={variant} label={variant} tone="green" variant={variant} />
         ))}
       </div>
@@ -31,7 +31,7 @@ export const states = [
     name: 'Sizes',
     render: () => (
       <div className="flex flex-wrap items-center gap-3">
-        {(['sm', 'md', 'lg'] as const).map((size) => (
+        {(['xs', 'sm', 'md', 'lg'] as const).map((size) => (
           <Pill key={size} label={size} tone="blue" size={size} icon="circle" />
         ))}
       </div>
