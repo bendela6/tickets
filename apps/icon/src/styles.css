@@ -24,3 +24,12 @@
 .canvas-scroll::-webkit-scrollbar {
   display: none;
 }
+
+/* The documents popover's footer holds two controls that are one control split
+   in two — start an icon, or bring one in — so they have to keep the same
+   corner. One is a <button> and the other a <label> wrapping a file input,
+   which cannot share a component; stating the shape once here is what stops
+   the two of them drifting apart. */
+.popover-action {
+  border-radius: var(--radius-md);
+}

@@ -1,0 +1,513 @@
+import { describe, expect, it } from 'vitest';
+import { arcPath } from '../doc/geometry';
+import { emptyDocument } from '../doc/defaults';
+import { renderSvg } from '../render/svg';
+import type { Geometry, IconDoc, IconObject, Pair } from '../doc/types';
+import { importSvg, type ImportReport } from './map';
+
+/** The document an import produced, or a failure the test can name. */
+function imported(svg: string): { doc: IconDoc; report: ImportReport } {
+  const outcome = importSvg(svg, 'test.icon');
+  if (!outcome.ok) throw new Error(`import failed: ${outcome.message}`);
+  return { doc: outcome.doc, report: outcome.report };
+}
+
+const only = (svg: string): IconObject => {
+  const { doc } = imported(svg);
+  const first = doc.objects[0];
+  if (!first) throw new Error('nothing was imported');
+  return first;
+};
+
+const wrap = (inner: string, attrs = 'viewBox="0 0 100 100"') => `<svg ${attrs}>${inner}</svg>`;
+
+const reasons = (report: ImportReport, element: string): string[] =>
+  report.notes.filter((note) => note.element === element).map((note) => note.reason);
+
+/** Numbers to three decimals, which is the precision the renderer writes. */
+function trimmed<T>(value: T): T {
+  if (typeof value === 'number') return (Math.round(value * 1000) / 1000) as T;
+  if (Array.isArray(value)) return value.map(trimmed) as T;
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, inner]) => [key, trimmed(inner)]),
+    ) as T;
+  }
+  return value;
+}
+
+describe('the artboard', () => {
+  it('comes from the viewBox', () => {
+    expect(imported('<svg viewBox="0 0 24 24"/>').doc.artboard).toEqual({ width: 24, height: 24 });
+  });
+
+  it('moves the artwork when the viewBox does not start at the origin', () => {
+    const object = only('<svg viewBox="-10 -10 20 20"><rect x="-10" y="-5" width="4" height="4"/></svg>');
+    expect(object.geometry).toEqual({ kind: 'rect', x: 0, y: 5, w: 4, h: 4, radius: 0 });
+  });
+
+  it('falls back to width and height, and says so', () => {
+    const { doc, report } = imported('<svg width="48px" height="32"><rect width="4" height="4"/></svg>');
+    expect(doc.artboard).toEqual({ width: 48, height: 32 });
+    expect(reasons(report, 'svg')).toContainEqual(
+      'it has no viewBox, so the artboard was taken from its width and height',
+    );
+  });
+
+  it('uses the document default when the file states no size at all, and says so', () => {
+    const { doc, report } = imported('<svg><rect width="4" height="4"/></svg>');
+    expect(doc.artboard).toEqual({ width: 512, height: 512 });
+    expect(reasons(report, 'svg').join(' ')).toContain('neither a viewBox nor a usable width');
+  });
+
+  it('reports a viewBox it cannot read', () => {
+    const { report } = imported('<svg viewBox="0 0 nonsense"/>');
+    expect(reasons(report, 'svg').join(' ')).toContain('is not four numbers');
+  });
+});
+
+describe('the elements', () => {
+  it('maps each basic element to the kind of the same name', () => {
+    const { doc } = imported(
+      wrap(
+        '<rect width="10" height="10"/>' +
+          '<circle cx="5" cy="5" r="3"/>' +
+          '<ellipse cx="5" cy="5" rx="4" ry="2"/>' +
+          '<line x1="0" y1="0" x2="9" y2="9" stroke="black"/>' +
+          '<polyline points="0,0 5,5 9,0" stroke="black"/>' +
+          '<polygon points="0,0 5,5 9,0"/>' +
+          '<path d="M0 0 L9 9"/>',
+      ),
+    );
+    // Reversed on the way in: SVG paints in source order, and this model reads
+    // front to back.
+    expect(doc.objects.map((object) => object.geometry.kind)).toEqual([
+      'path',
+      'polygon',
+      'polyline',
+      'line',
+      'ellipse',
+      'circle',
+      'rect',
+    ]);
+  });
+
+  it('reads a rect, its position and its corner radius', () => {
+    expect(only(wrap('<rect x="2" y="3" width="10" height="6" rx="2"/>')).geometry).toEqual({
+      kind: 'rect',
+      x: 2,
+      y: 3,
+      w: 10,
+      h: 6,
+      radius: 2,
+    });
+  });
+
+  it('keeps one corner radius and reports the other when they differ', () => {
+    const { doc, report } = imported(wrap('<rect width="10" height="10" rx="4" ry="2"/>'));
+    expect(doc.objects[0]?.geometry).toMatchObject({ radius: 4 });
+    expect(reasons(report, 'rect').join(' ')).toContain('4 by 2');
+  });
+
+  it('reads an ellipse as the box it occupies', () => {
+    expect(only(wrap('<ellipse cx="10" cy="20" rx="4" ry="2"/>')).geometry).toEqual({
+      kind: 'ellipse',
+      x: 6,
+      y: 18,
+      w: 8,
+      h: 4,
+    });
+  });
+
+  it('reads a point list', () => {
+    expect(only(wrap('<polygon points="0,0 10,0 5,8"/>')).geometry).toEqual({
+      kind: 'polygon',
+      points: [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 5, y: 8 },
+      ],
+    });
+  });
+
+  it('takes the element id as the object name when there is one', () => {
+    expect(only(wrap('<rect id="frame" width="4" height="4"/>')).name).toBe('frame');
+  });
+
+  it('drops a shape that would paint nothing and says why', () => {
+    const { doc, report } = imported(wrap('<rect width="0" height="10"/>'));
+    expect(doc.objects).toHaveLength(0);
+    expect(reasons(report, 'rect').join(' ')).toContain('no width');
+  });
+});
+
+describe('groups', () => {
+  it('flattens a group onto its children and reports it', () => {
+    const { doc, report } = imported(wrap('<g fill="#0f0"><rect width="4" height="4"/></g>'));
+    expect(doc.objects).toHaveLength(1);
+    expect(doc.objects[0]?.fill.light).toBe('#00FF00');
+    expect(reasons(report, 'g').join(' ')).toContain('no groups');
+  });
+
+  it('composes nested group transforms', () => {
+    const object = only(
+      wrap('<g transform="translate(10 10)"><g transform="scale(2)"><rect width="4" height="4"/></g></g>'),
+    );
+    expect(object.geometry).toEqual({ kind: 'rect', x: 10, y: 10, w: 8, h: 8, radius: 0 });
+  });
+
+  it('lets a child override the paint its group hands down', () => {
+    const object = only(wrap('<g fill="red"><rect fill="blue" width="4" height="4"/></g>'));
+    expect(object.fill.light).toBe('#0000FF');
+  });
+
+  it('multiplies a group opacity into its children', () => {
+    const object = only(wrap('<g opacity="0.5"><rect opacity="0.5" width="4" height="4"/></g>'));
+    expect(object.opacity).toBe(25);
+  });
+});
+
+describe('transforms', () => {
+  it('moves and scales a rect without changing its kind', () => {
+    const object = only(wrap('<rect width="4" height="4" transform="translate(6 2) scale(2)"/>'));
+    expect(object.geometry).toEqual({ kind: 'rect', x: 6, y: 2, w: 8, h: 8, radius: 0 });
+    expect(object.rotation).toBe(0);
+  });
+
+  it('carries a rotation on the object rather than in the geometry', () => {
+    const object = only(wrap('<rect x="10" y="10" width="20" height="10" transform="rotate(30 20 15)"/>'));
+    expect(object.rotation).toBeCloseTo(30, 9);
+    expect(trimmed(object.geometry)).toEqual({ kind: 'rect', x: 10, y: 10, w: 20, h: 10, radius: 0 });
+  });
+
+  it('bakes a rotation into a point list, where it costs nothing', () => {
+    const object = only(wrap('<polygon points="0,0 10,0 10,10" transform="rotate(90)"/>'));
+    expect(object.rotation).toBe(0);
+    expect(trimmed(object.geometry)).toEqual({
+      kind: 'polygon',
+      points: [
+        { x: 0, y: 0 },
+        { x: 0, y: 10 },
+        { x: -10, y: 10 },
+      ],
+    });
+  });
+
+  it('turns a circle under an uneven scale into an ellipse, and reports it', () => {
+    const { doc, report } = imported(wrap('<circle cx="10" cy="10" r="5" transform="scale(2 1)"/>'));
+    expect(doc.objects[0]?.geometry).toEqual({ kind: 'ellipse', x: 10, y: 5, w: 20, h: 10 });
+    expect(reasons(report, 'circle')).toContainEqual('an uneven scale turned this circle into an ellipse');
+  });
+
+  it('bakes a skew into a path rather than approximating it, and reports it', () => {
+    const { doc, report } = imported(wrap('<rect width="10" height="10" transform="skewX(20)"/>'));
+    expect(doc.objects[0]?.geometry.kind).toBe('path');
+    expect(reasons(report, 'rect').join(' ')).toContain('baked into its coordinates');
+    // The skew is really in the coordinates: the top edge slid right by
+    // tan(20°) × 10 relative to the bottom.
+    const geometry = doc.objects[0]?.geometry;
+    if (geometry?.kind !== 'path') throw new Error('expected a path');
+    const corner = geometry.segments.find((segment) => segment.c === 'L');
+    expect(corner?.c === 'L' && corner.x).toBeCloseTo(10, 6);
+  });
+
+  it('bakes a skew into a point list without changing its kind, and still reports it', () => {
+    const { doc, report } = imported(wrap('<polygon points="0,0 10,0 0,10" transform="skewX(45)"/>'));
+    expect(trimmed(doc.objects[0]?.geometry)).toEqual({
+      kind: 'polygon',
+      points: [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 10 },
+      ],
+    });
+    expect(reasons(report, 'polygon').join(' ')).toContain('baked into its coordinates');
+  });
+
+  it('keeps an arc through a turn, tilting the axis it sits on', () => {
+    const object = only(wrap('<path d="M0 0 A 10 5 0 0 1 10 10" stroke="black" transform="rotate(90)"/>'));
+    if (object.geometry.kind !== 'path') throw new Error('expected a path');
+    const arc = object.geometry.segments.find((segment) => segment.c === 'A');
+    if (arc?.c !== 'A') throw new Error('expected the arc to survive');
+    expect(arc.rx).toBeCloseTo(10, 6);
+    expect(arc.ry).toBeCloseTo(5, 6);
+    expect(arc.rotation).toBeCloseTo(90, 6);
+  });
+
+  it('gives an arc up for cubics when the transform would distort it, and says so', () => {
+    const { doc, report } = imported(
+      wrap('<path d="M0 0 A 10 10 0 0 1 10 10" stroke="black" transform="scale(2 1)"/>'),
+    );
+    const geometry = doc.objects[0]?.geometry;
+    if (geometry?.kind !== 'path') throw new Error('expected a path');
+    expect(geometry.segments.some((segment) => segment.c === 'A')).toBe(false);
+    expect(geometry.segments.some((segment) => segment.c === 'C')).toBe(true);
+    expect(reasons(report, 'path').join(' ')).toContain('baked into its coordinates');
+  });
+
+  it('scales the stroke with the shape', () => {
+    expect(
+      only(wrap('<line x1="0" y1="0" x2="4" y2="0" stroke="black" stroke-width="2" transform="scale(3)"/>'))
+        .strokeWidth,
+    ).toBe(6);
+  });
+});
+
+describe('paint', () => {
+  it('reads hex shorthand and a named colour', () => {
+    expect(only(wrap('<rect width="4" height="4" fill="#0f8"/>')).fill.light).toBe('#00FF88');
+    expect(only(wrap('<rect width="4" height="4" fill="tomato"/>')).fill.light).toBe('#FF6347');
+  });
+
+  it('lets inline style beat the presentation attribute', () => {
+    expect(only(wrap('<rect width="4" height="4" fill="red" style="fill:#0000ff"/>')).fill.light).toBe(
+      '#0000FF',
+    );
+  });
+
+  it('fills both halves of the pair with the one colour, and says the dark half is a guess', () => {
+    const { doc, report } = imported(wrap('<rect width="4" height="4" fill="#123456"/>'));
+    expect(doc.objects[0]?.fill).toEqual({ light: '#123456', dark: '#123456' });
+    expect(reasons(report, 'svg').join(' ')).toContain('the dark one is a guess');
+  });
+
+  it('keeps an unfilled outline as the run that traces it', () => {
+    const { doc, report } = imported(
+      wrap('<rect width="10" height="10" fill="none" stroke="#000" stroke-width="2"/>'),
+    );
+    const object = doc.objects[0];
+    expect(object?.geometry.kind).toBe('path');
+    expect(object?.strokeWidth).toBe(2);
+    // Four sides, drawn rather than filled: the closing edge is spelled out.
+    if (object?.geometry.kind !== 'path') throw new Error('expected a path');
+    expect(object.geometry.segments.some((segment) => segment.c === 'Z')).toBe(false);
+    expect(object.geometry.segments).toHaveLength(5);
+    expect(reasons(report, 'rect').join(' ')).toContain('open path tracing its outline');
+  });
+
+  it('drops a shape that is neither filled nor stroked', () => {
+    const { doc, report } = imported(wrap('<rect width="10" height="10" fill="none"/>'));
+    expect(doc.objects).toHaveLength(0);
+    expect(reasons(report, 'rect').join(' ')).toContain('both none');
+  });
+
+  it('inherits the paint an outline icon states once on its root', () => {
+    // The shape most icon sets ship in: no fill, one stroke, stated at the top.
+    const object = only(
+      '<svg viewBox="0 0 24 24" fill="none" stroke="#FF0000" stroke-width="2"><path d="M3 12 L21 12"/></svg>',
+    );
+    expect(object.geometry.kind).toBe('path');
+    expect(object.stroke.light).toBe('#FF0000');
+    expect(object.strokeWidth).toBe(2);
+  });
+
+  it('fills black when nothing says otherwise, which is what SVG does', () => {
+    expect(only(wrap('<rect width="4" height="4"/>')).fill.light).toBe('#000000');
+  });
+
+  it('draws a run in its stroke colour, and leaves the region ones alone', () => {
+    const run = only(wrap('<polyline points="0,0 4,4" stroke="#ff0000" stroke-width="3"/>'));
+    expect(run.stroke.light).toBe('#FF0000');
+    expect(run.strokeWidth).toBe(3);
+  });
+
+  it('gives a region no outline when it has no stroke', () => {
+    expect(only(wrap('<rect width="4" height="4" fill="red"/>')).strokeWidth).toBe(0);
+  });
+
+  it('substitutes the default ink for currentColor and says so', () => {
+    const { doc, report } = imported(wrap('<path d="M0 0 L4 4" stroke="currentColor"/>'));
+    expect(doc.objects[0]?.stroke.light).toBe('#4E46C6');
+    expect(reasons(report, 'path').join(' ')).toContain('currentColor');
+  });
+
+  it('substitutes the default ink for a gradient reference and says so', () => {
+    const { doc, report } = imported(wrap('<rect width="4" height="4" fill="url(#g)"/>'));
+    expect(doc.objects[0]?.fill.light).toBe('#4E46C6');
+    expect(reasons(report, 'rect').join(' ')).toContain('url(#g)');
+  });
+
+  it('reads opacity as the number the properties panel shows', () => {
+    expect(only(wrap('<rect width="4" height="4" opacity="0.6"/>')).opacity).toBe(60);
+    expect(only(wrap('<rect width="4" height="4" fill-opacity="0.25"/>')).opacity).toBe(25);
+  });
+});
+
+describe('what an import refuses to carry', () => {
+  const cases: [string, string][] = [
+    ['text', '<text x="0" y="0">hi</text>'],
+    ['image', '<image href="a.png"/>'],
+    ['use', '<use href="#a"/>'],
+    ['filter', '<filter id="f"/>'],
+    ['mask', '<mask id="m"/>'],
+    ['clipPath', '<clipPath id="c"/>'],
+    ['linearGradient', '<linearGradient id="g"/>'],
+    ['pattern', '<pattern id="p"/>'],
+    ['symbol', '<symbol id="s"/>'],
+    ['style', '<style>.a{fill:red}</style>'],
+  ];
+
+  for (const [element, markup] of cases) {
+    it(`names ${element} in the report rather than dropping it silently`, () => {
+      const { report } = imported(wrap(markup));
+      expect(reasons(report, element)).toHaveLength(1);
+      expect(reasons(report, element)[0]).toBeTruthy();
+    });
+  }
+
+  it('does not walk into defs, so its contents are one note rather than many', () => {
+    const { doc, report } = imported(
+      wrap('<defs><linearGradient id="g"><stop offset="0"/></linearGradient></defs><rect width="4" height="4"/>'),
+    );
+    expect(doc.objects).toHaveLength(1);
+    expect(reasons(report, 'defs')).toHaveLength(1);
+    expect(reasons(report, 'stop')).toHaveLength(0);
+  });
+
+  it('names an element it has never heard of', () => {
+    const { report } = imported(wrap('<blink/>'));
+    expect(reasons(report, 'blink')).toEqual([
+      'this element is not one the document model has a kind for',
+    ]);
+  });
+
+  it('reports a class selector, which nothing here resolves', () => {
+    const { report } = imported(wrap('<rect class="brand" width="4" height="4"/>'));
+    expect(reasons(report, 'rect').join(' ')).toContain('class selector');
+  });
+
+  it('says nothing about a title or a description, which lose nothing', () => {
+    const { report } = imported(wrap('<title>an icon</title><desc>drawn by hand</desc>'));
+    expect(report.notes.map((note) => note.element)).not.toContain('title');
+  });
+
+  it('counts the objects it kept', () => {
+    const { report } = imported(wrap('<rect width="4" height="4"/><text>hi</text>'));
+    expect(report.objects).toBe(1);
+  });
+
+  it('fails a malformed file with a message rather than throwing', () => {
+    const outcome = importSvg('<svg><rect></svg>', 'broken.icon');
+    expect(outcome.ok).toBe(false);
+    if (outcome.ok) return;
+    expect(outcome.message).toContain('well-formed');
+  });
+});
+
+/* A rendered document, imported back, is the strongest evidence there is: the
+   two files are written by different halves of the app and agree on every
+   number, kind and colour in between. */
+describe('a round trip through the renderer', () => {
+  const pair = (hex: string): Pair => ({ light: hex, dark: hex });
+
+  const object = (name: string, geometry: Geometry, over: Partial<IconObject> = {}): IconObject => ({
+    id: name,
+    name,
+    geometry,
+    fill: pair('#4E46C6'),
+    stroke: pair('#4E46C6'),
+    strokeWidth: 0,
+    opacity: 100,
+    rotation: 0,
+    hidden: false,
+    locked: false,
+    motion: { takesPart: true, role: 'spins', pace: 1 },
+    ...over,
+  });
+
+  /**
+   * A run — a line, a polyline, an unclosed path — is drawn by its stroke and
+   * its fill is never painted at all, so a rendered file cannot carry one.
+   * Both halves are the same colour here rather than asserting a colour the
+   * SVG never held.
+   */
+  const run = (name: string, geometry: Geometry, hex: string, strokeWidth: number): IconObject =>
+    object(name, geometry, { fill: pair(hex), stroke: pair(hex), strokeWidth });
+
+  const source: IconDoc = {
+    ...emptyDocument('round-trip.icon', { width: 512, height: 512 }),
+    objects: [
+      object('rect', { kind: 'rect', x: 40, y: 40, w: 120, h: 80, radius: 16 }),
+      object(
+        'turned rect',
+        { kind: 'rect', x: 200, y: 40, w: 100, h: 60, radius: 0 },
+        { rotation: 30, stroke: pair('#25231D'), strokeWidth: 8 },
+      ),
+      object('circle', { kind: 'circle', cx: 380, cy: 90, r: 44 }, { opacity: 60 }),
+      object('ellipse', { kind: 'ellipse', x: 40, y: 160, w: 160, h: 90 }),
+      run('line', { kind: 'line', x1: 240, y1: 170, x2: 400, y2: 240 }, '#C0382E', 12),
+      run(
+        'polyline',
+        {
+          kind: 'polyline',
+          points: [
+            { x: 40, y: 300 },
+            { x: 100, y: 360 },
+            { x: 160, y: 300 },
+          ],
+        },
+        '#2E7D4F',
+        10,
+      ),
+      object('polygon', {
+        kind: 'polygon',
+        points: [
+          { x: 220, y: 300 },
+          { x: 300, y: 300 },
+          { x: 260, y: 380 },
+        ],
+      }),
+      object('wedge', {
+        kind: 'path',
+        segments: arcPath({ cx: 400, cy: 340, r: 60, inner: 0, start: -90, sweep: 200 }),
+      }),
+      run(
+        'spinner',
+        { kind: 'path', segments: arcPath({ cx: 140, cy: 440, r: 50, inner: 50, start: -90, sweep: 270 }) },
+        '#C29A2E',
+        14,
+      ),
+    ],
+  };
+
+  const painted = (icon: IconObject) => ({
+    geometry: trimmed(icon.geometry),
+    fill: icon.fill,
+    stroke: icon.stroke,
+    strokeWidth: icon.strokeWidth,
+    opacity: icon.opacity,
+    rotation: trimmed(icon.rotation),
+  });
+
+  it('comes back as the document it went in as', () => {
+    const svg = renderSvg(source, { ground: 'light', background: false });
+    const { doc, report } = imported(svg);
+
+    expect(report.objects).toBe(source.objects.length);
+    expect(doc.artboard).toEqual(source.artboard);
+    expect(doc.objects.map(painted)).toEqual(source.objects.map(painted));
+  });
+
+  it('brings every kind back as its own kind, in the same order', () => {
+    const svg = renderSvg(source, { ground: 'light', background: false });
+    const { doc } = imported(svg);
+    expect(doc.objects.map((icon) => icon.geometry.kind)).toEqual(
+      source.objects.map((icon) => icon.geometry.kind),
+    );
+  });
+
+  it('imports the background rect too when one was drawn', () => {
+    const svg = renderSvg(source, { ground: 'light', background: true });
+    const { doc } = imported(svg);
+    expect(doc.objects).toHaveLength(source.objects.length + 1);
+    // Painted first, so it is the backmost object in the list.
+    expect(doc.objects[doc.objects.length - 1]?.geometry).toEqual({
+      kind: 'rect',
+      x: 0,
+      y: 0,
+      w: 512,
+      h: 512,
+      radius: 0,
+    });
+  });
+});

@@ -6,6 +6,7 @@ import { canvasRoom } from './canvas/fit';
 import { useCanvasNavigation } from './canvas/use-canvas-navigation';
 import { EditorProvider, useEditor } from './editor-context';
 import { ExportDialog } from './export/export-dialog';
+import { ImportReportDialog } from './import/report-dialog';
 import { useDocuments } from './topbar/use-documents';
 import { ObjectList } from './rails/object-list';
 import { PropsPanel } from './rails/props-panel';
@@ -66,6 +67,11 @@ function Editor() {
     <div className="flex h-screen flex-col bg-gray-1 font-sans text-gray-12">
       <TopBar dim={dim} documents={documents} now={now} onExport={() => setExportOpen(true)} />
       {exportOpen ? <ExportDialog onClose={() => setExportOpen(false)} /> : null}
+      {/* Here rather than in the popover the file was chosen from, which
+          closes on the way: a report has to outlive the control that made it. */}
+      {documents.lastImport ? (
+        <ImportReportDialog summary={documents.lastImport} onClose={documents.dismissImport} />
+      ) : null}
 
       <div className="flex min-h-0 flex-1">
         <aside
