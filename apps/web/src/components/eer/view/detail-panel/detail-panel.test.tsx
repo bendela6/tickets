@@ -89,4 +89,13 @@ describe('panel badges', () => {
     expect(badge.className).toContain('text-blue-11');
     expect(badge.className).toContain('text-9/11');
   });
+
+  it('renders the control hints as outline Pills at 11px', () => {
+    render(<EmptyState model={null} />);
+    const hint = screen.getByText('middle-drag');
+    expect(hint.className).toContain('text-11/13');
+    expect(hint.className).toContain('border-2');
+    // The <kbd> element is gone — a deliberate, recorded trade.
+    expect(hint.tagName).toBe('SPAN');
+  });
 });
