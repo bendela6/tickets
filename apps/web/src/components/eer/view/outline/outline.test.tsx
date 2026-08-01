@@ -267,6 +267,15 @@ describe('Outline', () => {
     expect(tree.getAttribute('aria-activedescendant')).toBe(
       screen.getByRole('treeitem', { name: 'users' }).id,
     );
+    // 'users' renders no column rows while unfiltered — buildOutline only
+    // attaches columns on a query match — so it is a genuine LEAF: exactly
+    // the shape that used to compute `expanded: true` from the outline's
+    // `defaultExpanded` baseline alone, with ArrowLeft then toggling the
+    // leaf instead of walking to its parent group.
+    fireEvent.keyDown(tree, { key: 'ArrowLeft' });
+    expect(tree.getAttribute('aria-activedescendant')).toBe(
+      screen.getByRole('treeitem', { name: 'Zone One, 1 table' }).id,
+    );
     fireEvent.keyDown(tree, { key: 'End' });
     // Home/End land on the last navigable row — the last column, table or
     // group in the flattened, fully-expanded tree.
