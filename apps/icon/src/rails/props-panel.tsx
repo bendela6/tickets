@@ -7,7 +7,7 @@ import {
   SNAP_MIN,
   SNAP_PRESETS,
 } from '../doc/constants';
-import { aimLine, bounds, lineAngle } from '../doc/geometry';
+import { aimLine, bounds, lineAngle, rotatedBounds, type Box } from '../doc/geometry';
 import { selectedObject } from '../doc/store';
 import { useEditor } from '../editor-context';
 import type { IconObject } from '../doc/types';
@@ -138,6 +138,15 @@ function ObjectProperties({ object }: { object: IconObject }) {
 }
 
 /**
+ * One line, rounded to whole units — this is a readout, not a field anyone
+ * types into, so it does not owe sub-unit precision the way a dragged handle
+ * would.
+ */
+function formatOnArtboard(box: Box): string {
+  return `${Math.round(box.x)}, ${Math.round(box.y)} · ${Math.round(box.w)} × ${Math.round(box.h)}`;
+}
+
+/**
  * Where the object is, stated in the terms the shape is actually defined by.
  *
  * A line is two points, so quoting it an X/Y/W/H box describes a by-product of
@@ -161,6 +170,20 @@ function PositionGroup({ object }: { object: IconObject }) {
       onCommit={(degrees) => dispatch({ type: 'rotateObject', id: object.id, degrees })}
     />
   );
+
+  // The X/Y/W/H (or CX/CY/RADIUS) fields above stay in the shape's own,
+  // unrotated terms — correct, and what gets exported — so a turned shape
+  // needs a second, read-only readout of where that geometry actually lands
+  // once the rotation is applied.
+  const onArtboard =
+    object.rotation !== 0 ? (
+      <div className="flex h-7.5 items-center gap-1.5 rounded-md border-1 border-gray-6 bg-surface-raised px-2.25">
+        <span className="flex-none font-mono text-9 text-gray-9">ON ARTBOARD</span>
+        <span className="min-w-0 flex-1 text-right font-mono text-12 text-gray-12">
+          {formatOnArtboard(rotatedBounds(object))}
+        </span>
+      </div>
+    ) : null;
 
   const setGeometry = (next: typeof geometry, label: string) =>
     dispatch({ type: 'setGeometry', id: object.id, geometry: next, label });
@@ -231,6 +254,7 @@ function PositionGroup({ object }: { object: IconObject }) {
           onCommit={(r) => setGeometry({ ...geometry, r }, `resize ${object.name}`)}
         />
         {rotation}
+        {onArtboard}
       </RailGroup>
     );
   }
@@ -269,6 +293,7 @@ function PositionGroup({ object }: { object: IconObject }) {
         />
       </div>
       {rotation}
+      {onArtboard}
     </RailGroup>
   );
 }

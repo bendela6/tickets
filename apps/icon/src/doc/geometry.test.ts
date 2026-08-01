@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { newObject } from './defaults';
 import {
+  boxCentre,
   bounds,
+  centreOf,
   contains,
   extentOf,
   fitToBox,
   hitTest,
   lineEndpoints,
   polygonPoints,
+  rotatedBounds,
   translate,
 } from './geometry';
 import type { IconObject } from './types';
@@ -50,6 +53,39 @@ describe('bounds', () => {
   it('boxes a polygon by its circumradius', () => {
     const poly = newObject('polygon', 1, BOARD);
     expect(bounds(poly)).toEqual({ x: 256 - 120, y: 256 - 120, w: 240, h: 240 });
+  });
+});
+
+describe('rotatedBounds', () => {
+  it('is exactly the unrotated bounds at 0°, since there is no transform to apply', () => {
+    const square = rect({ geometry: { kind: 'rect', x: 156, y: 156, w: 200, h: 200, radius: 0 } });
+    expect(rotatedBounds(square)).toEqual(bounds(square));
+  });
+
+  it('grows a square to its diagonal at 45°, keeping the same centre', () => {
+    const square = rect({
+      geometry: { kind: 'rect', x: 156, y: 156, w: 200, h: 200, radius: 0 },
+      rotation: 45,
+    });
+    const box = rotatedBounds(square);
+    expect(box.w).toBeCloseTo(200 * Math.SQRT2, 5);
+    expect(box.h).toBeCloseTo(200 * Math.SQRT2, 5);
+    const centre = boxCentre(box);
+    expect(centre.x).toBeCloseTo(centreOf(square).x, 6);
+    expect(centre.y).toBeCloseTo(centreOf(square).y, 6);
+  });
+
+  it('swaps width and height at 90°, turning the box on its side', () => {
+    const wide = rect({
+      geometry: { kind: 'rect', x: 100, y: 200, w: 300, h: 100, radius: 0 },
+      rotation: 90,
+    });
+    const box = rotatedBounds(wide);
+    expect(box.w).toBeCloseTo(100, 5);
+    expect(box.h).toBeCloseTo(300, 5);
+    const centre = boxCentre(box);
+    expect(centre.x).toBeCloseTo(centreOf(wide).x, 6);
+    expect(centre.y).toBeCloseTo(centreOf(wide).y, 6);
   });
 });
 
