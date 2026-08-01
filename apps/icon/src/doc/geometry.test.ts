@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { newObject } from './defaults';
 import {
+  anchorControlPoints,
+  anchorControls,
   arcPath,
   boxCentre,
   bounds,
@@ -11,10 +13,15 @@ import {
   FLATTEN_TOLERANCE,
   flattenPath,
   hitTest,
+  insertVertex,
   isOpenRun,
   lineEndpoints,
+  nearestOnPath,
+  pathAnchors,
   polygonPoints,
+  removeVertex,
   rotatedBounds,
+  splitPath,
   translate,
   vertexPoints,
 } from './geometry';
@@ -597,8 +604,42 @@ describe('vertexPoints', () => {
     }
   });
 
-  it('is empty for a path as well, which is why it selects as a box and a knob', () => {
-    expect(vertexPoints(newObject('path', 1, BOARD))).toEqual([]);
+  it('is a path’s anchors: the endpoint of every command but Z, in order', () => {
+    // Upright, so the anchors come back as exactly the stored numbers. `Z`
+    // returns to a point the `M` already stated and contributes none of its own.
+    expect(
+      vertexPoints(
+        withPath([
+          { c: 'M', x: 10, y: 10 },
+          { c: 'L', x: 90, y: 10 },
+          { c: 'C', x1: 90, y1: 60, x2: 60, y2: 90, x: 10, y: 90 },
+          { c: 'Z' },
+        ]),
+      ),
+    ).toEqual([
+      { x: 10, y: 10 },
+      { x: 90, y: 10 },
+      { x: 10, y: 90 },
+    ]);
+  });
+
+  it('gives the arc preset a handle at each end of the arc it draws', () => {
+    const arc = newObject('path', 1, BOARD);
+    expect(vertexPoints(arc)).toHaveLength(2);
+  });
+
+  it('applies the object’s rotation to a path’s anchors too', () => {
+    const turned = withPath(
+      [
+        { c: 'M', x: 100, y: 100 },
+        { c: 'L', x: 200, y: 200 },
+      ],
+      { rotation: 180 },
+    );
+    const centre = centreOf(turned);
+    const [first] = vertexPoints(turned);
+    expect(first?.x).toBeCloseTo(centre.x + 50, 6);
+    expect(first?.y).toBeCloseTo(centre.y + 50, 6);
   });
 
   it('is a line’s two ends, so one overlay serves every shape made of points', () => {
@@ -728,5 +769,356 @@ describe('fitToBox', () => {
   it('never produces a negative size', () => {
     const fitted = fitToBox(rect(), { x: 0, y: 0, w: -50, h: -50 });
     expect(fitted).toMatchObject({ w: 0, h: 0 });
+  });
+});
+
+/** Two cubics meeting at (100,0), so the middle anchor has a handle either side. */
+const BOW: PathSegment[] = [
+  { c: 'M', x: 0, y: 0 },
+  { c: 'C', x1: 20, y1: -60, x2: 80, y2: -60, x: 100, y: 0 },
+  { c: 'C', x1: 120, y1: 60, x2: 180, y2: 60, x: 200, y: 0 },
+];
+
+describe('pathAnchors', () => {
+  it('names each anchor by the command it ends, skipping the one with no point', () => {
+    expect(
+      pathAnchors([
+        { c: 'M', x: 1, y: 2 },
+        { c: 'L', x: 3, y: 4 },
+        { c: 'Z' },
+        { c: 'M', x: 5, y: 6 },
+      ]),
+    ).toEqual([
+      { point: { x: 1, y: 2 }, segment: 0 },
+      { point: { x: 3, y: 4 }, segment: 1 },
+      { point: { x: 5, y: 6 }, segment: 3 },
+    ]);
+  });
+});
+
+describe('anchorControls', () => {
+  it('gives an anchor the control arriving at it and the one leaving it', () => {
+    // The middle anchor of the bow ends command 1 and starts command 2.
+    expect(anchorControls(BOW, 1)).toEqual([
+      { point: { x: 80, y: -60 }, segment: 1, which: 2 },
+      { point: { x: 120, y: 60 }, segment: 2, which: 1 },
+    ]);
+  });
+
+  it('gives every control exactly one owner, so no anchor drag moves one twice', () => {
+    const owners = new Map<string, number>();
+    for (const anchor of pathAnchors(BOW)) {
+      for (const control of anchorControls(BOW, anchor.segment)) {
+        const key = `${control.segment}-${control.which}`;
+        owners.set(key, (owners.get(key) ?? 0) + 1);
+      }
+    }
+    expect([...owners.values()].every((count) => count === 1)).toBe(true);
+    // All four controls of the two cubics are accounted for.
+    expect(owners.size).toBe(4);
+  });
+
+  it('hands a quadratic’s single control to the anchor it leaves', () => {
+    const quad: PathSegment[] = [
+      { c: 'M', x: 0, y: 0 },
+      { c: 'Q', x1: 50, y1: 100, x: 100, y: 0 },
+    ];
+    expect(anchorControls(quad, 0)).toEqual([{ point: { x: 50, y: 100 }, segment: 1, which: 1 }]);
+    // And not to the one it arrives at, which would claim it a second time.
+    expect(anchorControls(quad, 1)).toEqual([]);
+  });
+
+  it('has nothing to offer a straight command, which is steered by nothing', () => {
+    expect(
+      anchorControls(
+        [
+          { c: 'M', x: 0, y: 0 },
+          { c: 'L', x: 10, y: 0 },
+        ],
+        1,
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe('anchorControlPoints', () => {
+  it('places a control where its handle has to be drawn, rotation and all', () => {
+    const upright = withPath(BOW);
+    const turned = withPath(BOW, { rotation: 90 });
+    const centre = centreOf(turned);
+    const [incoming] = anchorControlPoints(turned, 1);
+    const [flat] = anchorControlPoints(upright, 1);
+    expect(flat?.at).toEqual({ x: 80, y: -60 });
+    // A quarter turn about the centre takes (dx, dy) to (−dy, dx).
+    expect(incoming?.at.x).toBeCloseTo(centre.x - (-60 - centre.y), 6);
+    expect(incoming?.at.y).toBeCloseTo(centre.y + (80 - centre.x), 6);
+  });
+
+  it('is empty for a shape that is not a path, and for a node that is not there', () => {
+    expect(anchorControlPoints(withPoints('polygon', TRIANGLE), 0)).toEqual([]);
+    expect(anchorControlPoints(withPath(BOW), 9)).toEqual([]);
+  });
+});
+
+describe('nearestOnPath', () => {
+  it('picks the command the point is actually nearest, not the first one near it', () => {
+    const hit = nearestOnPath(BOW, { x: 150, y: 40 });
+    expect(hit?.segment).toBe(2);
+  });
+
+  it('reports a straight command’s parameter as the fraction along it', () => {
+    const hit = nearestOnPath(
+      [
+        { c: 'M', x: 0, y: 0 },
+        { c: 'L', x: 100, y: 0 },
+      ],
+      { x: 25, y: 5 },
+    );
+    expect(hit?.t).toBeCloseTo(0.25, 6);
+    expect(hit?.distance).toBeCloseTo(5, 6);
+  });
+
+  it('finds the closing edge, which is drawn but has no command of its own', () => {
+    const square: PathSegment[] = [
+      { c: 'M', x: 0, y: 0 },
+      { c: 'L', x: 100, y: 0 },
+      { c: 'L', x: 100, y: 100 },
+      { c: 'Z' },
+    ];
+    // Nearest the diagonal home run from (100,100) back to (0,0).
+    expect(nearestOnPath(square, { x: 48, y: 52 })?.segment).toBe(3);
+  });
+
+  it('lands on the curve itself rather than on a chord across it', () => {
+    const hit = nearestOnPath(HUMP, { x: 50, y: -200 });
+    // The hump reaches y = −75 at its top, and that is where the point is.
+    expect(hit?.point.x).toBeCloseTo(50, 4);
+    expect(hit?.point.y).toBeCloseTo(-75, 4);
+  });
+
+  it('has nothing to report about a path with no commands', () => {
+    expect(nearestOnPath([], { x: 0, y: 0 })).toBeNull();
+  });
+});
+
+describe('splitPath', () => {
+  /** How far the two outlines stray from each other, sampled point by point. */
+  const strays = (before: PathSegment[], after: PathSegment[]): number => {
+    const original = flattenPath(before, 0.01).flat();
+    const split = flattenPath(after, 0.01);
+    let worst = 0;
+    for (const point of original) {
+      worst = Math.min(...split.map((run) => offRun(point, run)));
+      if (worst > FLATTEN_TOLERANCE) return worst;
+    }
+    return worst;
+  };
+
+  it('a cubic split leaves the outline where it was, within the flattening tolerance', () => {
+    const hit = nearestOnPath(HUMP, { x: 30, y: -90 });
+    expect(hit).not.toBeNull();
+    const split = hit ? splitPath(HUMP, hit) : null;
+    expect(split).not.toBeNull();
+    if (!split) return;
+    // The whole point of de Casteljau: two commands where there was one, and
+    // not one unit of movement anywhere along the curve.
+    expect(split).toHaveLength(3);
+    expect(strays(HUMP, split)).toBeLessThanOrEqual(FLATTEN_TOLERANCE);
+    expect(strays(split, HUMP)).toBeLessThanOrEqual(FLATTEN_TOLERANCE);
+  });
+
+  it('the new node sits exactly on the old curve, wherever it was cut', () => {
+    for (const t of [0.15, 0.5, 0.83]) {
+      const on = humpAt(t);
+      const hit = nearestOnPath(HUMP, on);
+      const split = hit ? splitPath(HUMP, hit) : null;
+      const node = split ? pathAnchors(split)[1] : undefined;
+      expect(node?.point.x).toBeCloseTo(on.x, 3);
+      expect(node?.point.y).toBeCloseTo(on.y, 3);
+    }
+  });
+
+  it('a quadratic split keeps it quadratic and keeps its outline', () => {
+    const quad: PathSegment[] = [
+      { c: 'M', x: 0, y: 0 },
+      { c: 'Q', x1: 50, y1: 100, x: 100, y: 0 },
+    ];
+    const hit = nearestOnPath(quad, { x: 30, y: 45 });
+    const split = hit ? splitPath(quad, hit) : null;
+    expect(split?.map((segment) => segment.c)).toEqual(['M', 'Q', 'Q']);
+    if (split) expect(strays(quad, split)).toBeLessThanOrEqual(FLATTEN_TOLERANCE);
+  });
+
+  it('a straight split is two straights along the same line', () => {
+    const line: PathSegment[] = [
+      { c: 'M', x: 0, y: 0 },
+      { c: 'L', x: 100, y: 0 },
+    ];
+    const hit = nearestOnPath(line, { x: 40, y: 3 });
+    expect(hit ? splitPath(line, hit) : null).toEqual([
+      { c: 'M', x: 0, y: 0 },
+      { c: 'L', x: 40, y: 0 },
+      { c: 'L', x: 100, y: 0 },
+    ]);
+  });
+
+  it('a closing edge splits into an L in front of the Z, which draws the same edge', () => {
+    const triangle: PathSegment[] = [
+      { c: 'M', x: 0, y: 0 },
+      { c: 'L', x: 100, y: 0 },
+      { c: 'L', x: 100, y: 100 },
+      { c: 'Z' },
+    ];
+    const hit = nearestOnPath(triangle, { x: 50, y: 50 });
+    const split = hit ? splitPath(triangle, hit) : null;
+    expect(split?.map((segment) => segment.c)).toEqual(['M', 'L', 'L', 'L', 'Z']);
+    if (split) expect(strays(triangle, split)).toBeLessThanOrEqual(FLATTEN_TOLERANCE);
+  });
+
+  it('refuses to split an arc rather than approximating one', () => {
+    // Stated as a refusal on purpose: an exact arc split is two arcs with the
+    // large-arc flag recomputed, and turning the arc into cubics instead would
+    // rewrite a command nobody asked to have rewritten.
+    const hit = nearestOnPath(SEMI, { x: 10, y: -12 });
+    expect(hit?.segment).toBe(1);
+    expect(hit ? splitPath(SEMI, hit) : null).toBeNull();
+  });
+
+  it('refuses a move, which draws nothing for a node to land on', () => {
+    expect(splitPath(HUMP, { segment: 0, t: 0.5, point: { x: 0, y: 0 }, distance: 0 })).toBeNull();
+  });
+});
+
+describe('insertVertex', () => {
+  it('lands a polygon’s new point between the two neighbours it was dropped between', () => {
+    const object = withPoints('polygon', TRIANGLE);
+    // Halfway down the edge from (200,100) to (100,200) — points 2 and 3.
+    const added = insertVertex(object, { x: 150, y: 150 }, 4);
+    expect(added?.index).toBe(2);
+    expect(added?.geometry).toEqual({
+      kind: 'polygon',
+      points: [TRIANGLE[0], TRIANGLE[1], { x: 150, y: 150 }, TRIANGLE[2]],
+    });
+  });
+
+  it('uses a polygon’s closing edge, which is as clickable as any other', () => {
+    const added = insertVertex(withPoints('polygon', TRIANGLE), { x: 100, y: 150 }, 4);
+    // The run home from (100,200) to (100,100) — so the new point goes last.
+    expect(added?.index).toBe(3);
+    expect(added?.geometry).toMatchObject({ points: [...TRIANGLE, { x: 100, y: 150 }] });
+  });
+
+  it('leaves a polyline’s ends open, having no edge to close', () => {
+    const chevron: Point[] = [
+      { x: 0, y: 0 },
+      { x: 50, y: 50 },
+      { x: 100, y: 0 },
+    ];
+    // Nearer the imaginary line from the last point back to the first than to
+    // either real edge — and there is no such edge on an open run.
+    const added = insertVertex(withPoints('polyline', chevron), { x: 50, y: -40 }, 100);
+    expect(added?.index).not.toBe(3);
+  });
+
+  it('refuses a click that is not near the outline at all', () => {
+    // Deep inside a filled triangle: the nearest edge is a long way off, and
+    // planting a node there would put it nowhere near the pointer.
+    expect(insertVertex(withPoints('polygon', TRIANGLE), { x: 120, y: 120 }, 2)).toBeNull();
+  });
+
+  it('reads through the object’s rotation, so a turned shape needs no special case', () => {
+    const turned = withPoints('polygon', TRIANGLE, { rotation: 90 });
+    const centre = centreOf(turned);
+    // Where the midpoint of edge 2 ends up after a quarter turn.
+    const midpoint = { x: 150, y: 150 };
+    const onScreen = {
+      x: centre.x - (midpoint.y - centre.y),
+      y: centre.y + (midpoint.x - centre.x),
+    };
+    expect(insertVertex(turned, onScreen, 1)?.index).toBe(2);
+  });
+
+  it('splits the path command that was hit and selects the node it made', () => {
+    const object = withPath(HUMP);
+    const added = insertVertex(object, humpAt(0.5), 5);
+    expect(added?.index).toBe(1);
+    expect(added?.geometry).toMatchObject({ kind: 'path' });
+  });
+
+  it('gives a shape with no nodes nothing to add one to', () => {
+    for (const kind of ['rect', 'circle', 'ellipse', 'line'] as const) {
+      const object = newObject(kind, 1, BOARD);
+      expect(insertVertex(object, centreOf(object), 1000)).toBeNull();
+    }
+  });
+
+  it('adds nothing to a path whose only command near the pointer is an arc', () => {
+    expect(insertVertex(withPath(SEMI), { x: 10, y: -10 }, 5)).toBeNull();
+  });
+});
+
+describe('removeVertex', () => {
+  it('takes the point out of a point list and leaves the order alone', () => {
+    const square: Point[] = [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 10 },
+      { x: 0, y: 10 },
+    ];
+    expect(removeVertex(withPoints('polygon', square), 1)).toEqual({
+      kind: 'polygon',
+      points: [square[0], square[2], square[3]],
+    });
+  });
+
+  it('holds a polygon at three points, which is the least that is still a polygon', () => {
+    expect(removeVertex(withPoints('polygon', TRIANGLE), 0)).toBeNull();
+  });
+
+  it('holds a polyline at two points, which is the least that is still a run', () => {
+    const pair: Point[] = [
+      { x: 0, y: 0 },
+      { x: 10, y: 10 },
+    ];
+    expect(removeVertex(withPoints('polyline', pair), 1)).toBeNull();
+    // One more and it does give.
+    expect(removeVertex(withPoints('polyline', [...pair, { x: 20, y: 0 }]), 1)).toMatchObject({
+      points: [pair[0], { x: 20, y: 0 }],
+    });
+  });
+
+  it('never lets a line drop an end, a line being two points by definition', () => {
+    const line = newObject('line', 1, BOARD);
+    expect(removeVertex(line, 0)).toBeNull();
+    expect(removeVertex(line, 1)).toBeNull();
+  });
+
+  it('holds a path at a move and one command after it', () => {
+    // The arc preset is exactly that: one `M` and one `A`.
+    const arc = newObject('path', 1, BOARD);
+    expect(removeVertex(arc, 0)).toBeNull();
+    expect(removeVertex(arc, 1)).toBeNull();
+  });
+
+  it('drops a path command, and the anchors after it keep their order', () => {
+    expect(removeVertex(withPath(BOW), 1)).toEqual({
+      kind: 'path',
+      segments: [BOW[0], BOW[2]],
+    });
+  });
+
+  it('promotes the next command when the move itself is removed', () => {
+    // The subpath still has to start somewhere, and it starts where the second
+    // node already was — as a plain move, the curve into it having gone with
+    // the point it curved from.
+    expect(removeVertex(withPath(BOW), 0)).toEqual({
+      kind: 'path',
+      segments: [{ c: 'M', x: 100, y: 0 }, BOW[2]],
+    });
+  });
+
+  it('has nothing to remove for the shapes with no nodes, or for a node that is not there', () => {
+    expect(removeVertex(rect(), 0)).toBeNull();
+    expect(removeVertex(withPath(BOW), 9)).toBeNull();
   });
 });

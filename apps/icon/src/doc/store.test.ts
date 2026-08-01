@@ -6,6 +6,7 @@ import {
   canUndo,
   editorReducer,
   initialState,
+  selectedNodeIndex,
   selectedObject,
   type Action,
   type EditorState,
@@ -437,5 +438,134 @@ describe('selection', () => {
     const deleted = editorReducer(state, { type: 'deleteObject', id });
     expect(selectedObject(deleted)).toBeNull();
     expect(deleted.selectedId).toBeNull();
+  });
+});
+
+const withPolygon = () => run(start(), { type: 'addObject', kind: 'polygon' });
+
+/** However many points the one object in the document has. */
+const pointCount = (state: EditorState): number => {
+  const geometry = state.doc.objects[0]?.geometry;
+  return geometry?.kind === 'polygon' || geometry?.kind === 'polyline' ? geometry.points.length : -1;
+};
+
+describe('node selection', () => {
+  it('is remembered against the object it was taken from', () => {
+    const state = run(withPolygon(), { type: 'selectNode', index: 2 });
+    expect(selectedNodeIndex(state)).toBe(2);
+  });
+
+  it('goes when another object is selected, and when the same one is', () => {
+    const chosen = run(withPolygon(), { type: 'selectNode', index: 2 });
+    const id = chosen.doc.objects[0]!.id;
+    // Clicking the body of the shape is how you stop editing one of its nodes.
+    expect(selectedNodeIndex(run(chosen, { type: 'selectObject', id }))).toBeNull();
+    expect(selectedNodeIndex(run(chosen, { type: 'selectObject', id: null }))).toBeNull();
+  });
+
+  it('is not offered when the index no longer names a point that exists', () => {
+    const chosen = run(withPolygon(), { type: 'selectNode', index: 5 });
+    const id = chosen.doc.objects[0]!.id;
+    // Two removals take the hexagon to four points, so index 5 is gone even
+    // though nothing explicitly cleared it.
+    const shrunk = run(
+      chosen,
+      { type: 'removeVertex', id, index: 0 },
+      { type: 'selectNode', index: 5 },
+      { type: 'removeVertex', id, index: 0 },
+      { type: 'selectNode', index: 5 },
+    );
+    expect(selectedNodeIndex(shrunk)).toBeNull();
+  });
+
+  it('is not an edit, so it never enters the history', () => {
+    const chosen = run(withPolygon(), { type: 'selectNode', index: 1 });
+    expect(chosen.past).toHaveLength(withPolygon().past.length);
+  });
+});
+
+describe('adding a node', () => {
+  it('splits the edge nearest the point and selects what it made', () => {
+    const state = withPolygon();
+    const id = state.doc.objects[0]!.id;
+    const before = state.doc.objects[0]!.geometry;
+    if (before.kind !== 'polygon') throw new Error('the polygon preset stopped being a polygon');
+    const a = before.points[0]!;
+    const b = before.points[1]!;
+    const added = run(state, {
+      type: 'insertVertex',
+      id,
+      at: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+      reach: 4,
+    });
+    expect(pointCount(added)).toBe(7);
+    expect(selectedNodeIndex(added)).toBe(1);
+    expect(added.past).toHaveLength(state.past.length + 1);
+  });
+
+  it('does nothing at all when the point is nowhere near the outline', () => {
+    const state = withPolygon();
+    const id = state.doc.objects[0]!.id;
+    const added = run(state, { type: 'insertVertex', id, at: { x: 256, y: 256 }, reach: 2 });
+    // Not merely unchanged: no history entry either, or undo would appear dead.
+    expect(added).toBe(state);
+  });
+
+  it('leaves a locked object alone', () => {
+    const state = withPolygon();
+    const id = state.doc.objects[0]!.id;
+    const locked = run(state, { type: 'toggleLocked', id });
+    const geometry = locked.doc.objects[0]!.geometry;
+    if (geometry.kind !== 'polygon') throw new Error('the polygon preset stopped being a polygon');
+    const a = geometry.points[0]!;
+    const b = geometry.points[1]!;
+    expect(
+      run(locked, {
+        type: 'insertVertex',
+        id,
+        at: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+        reach: 4,
+      }),
+    ).toBe(locked);
+  });
+});
+
+describe('removing a node', () => {
+  it('takes the node out and forgets the selection that named it', () => {
+    const state = run(withPolygon(), { type: 'selectNode', index: 3 });
+    const id = state.doc.objects[0]!.id;
+    const removed = run(state, { type: 'removeVertex', id, index: 3 });
+    expect(pointCount(removed)).toBe(5);
+    expect(selectedNodeIndex(removed)).toBeNull();
+  });
+
+  it('refuses at the floor, and refuses without deleting the object', () => {
+    const state = withPolygon();
+    const id = state.doc.objects[0]!.id;
+    // Down to the three a polygon must keep.
+    const trimmed = run(
+      state,
+      { type: 'removeVertex', id, index: 0 },
+      { type: 'removeVertex', id, index: 0 },
+      { type: 'removeVertex', id, index: 0 },
+    );
+    expect(pointCount(trimmed)).toBe(3);
+    const refused = run(trimmed, { type: 'removeVertex', id, index: 0 });
+    expect(refused).toBe(trimmed);
+    expect(refused.doc.objects).toHaveLength(1);
+  });
+
+  it('leaves a locked object alone', () => {
+    const state = withPolygon();
+    const id = state.doc.objects[0]!.id;
+    const locked = run(state, { type: 'toggleLocked', id });
+    expect(run(locked, { type: 'removeVertex', id, index: 1 })).toBe(locked);
+  });
+
+  it('is undoable, and the point comes back', () => {
+    const state = withPolygon();
+    const id = state.doc.objects[0]!.id;
+    const removed = run(state, { type: 'removeVertex', id, index: 1 });
+    expect(pointCount(run(removed, { type: 'undo' }))).toBe(6);
   });
 });

@@ -1,4 +1,15 @@
-import { boxCentre, pointsBox, rotatePoint, type Box, type Point } from '../doc/geometry';
+import {
+  anchorControls,
+  boxCentre,
+  flattenPath,
+  pathAnchors,
+  pointsBox,
+  rotatePoint,
+  translateSegments,
+  type Box,
+  type Point,
+} from '../doc/geometry';
+import type { PathSegment } from '../doc/types';
 
 /**
  * The eight resize handles and the rotation knob, named by where they sit.
@@ -25,13 +36,37 @@ export type ResizeHandle = CornerHandle | EdgeHandle;
  */
 export type VertexHandle = `v${number}`;
 
-export type Handle = ResizeHandle | VertexHandle | 'rotate';
+/**
+ * One control point of a path, named by the command that holds it and which of
+ * that command's two it is.
+ *
+ * Not a vertex: a control point is not on the curve, so it is not somewhere the
+ * shape passes through and not somewhere another node could be added. Naming it
+ * by its command rather than by its anchor's place in the list means the name
+ * still points at the same number after a node is added or removed elsewhere.
+ */
+export type ControlHandle = `c${number}-${1 | 2}`;
+
+export type Handle = ResizeHandle | VertexHandle | ControlHandle | 'rotate';
 
 export const vertexHandle = (index: number): VertexHandle => `v${index}`;
 
 export const isVertex = (handle: Handle): handle is VertexHandle => /^v\d+$/.test(handle);
 
 export const vertexIndex = (handle: VertexHandle): number => Number(handle.slice(1));
+
+const CONTROL_NAME = /^c(\d+)-([12])$/;
+
+export const controlHandle = (segment: number, which: 1 | 2): ControlHandle =>
+  `c${segment}-${which}`;
+
+export const isControl = (handle: Handle): handle is ControlHandle => CONTROL_NAME.test(handle);
+
+/** The command and the control number a handle names. */
+export function controlParts(handle: ControlHandle): { segment: number; which: 1 | 2 } {
+  const match = CONTROL_NAME.exec(handle);
+  return { segment: Number(match?.[1] ?? 0), which: match?.[2] === '2' ? 2 : 1 };
+}
 
 export const RESIZE_HANDLES: readonly ResizeHandle[] = [...CORNER_HANDLES, ...EDGE_HANDLES];
 
@@ -48,11 +83,13 @@ const FIXED_CURSOR: Record<ResizeHandle | 'rotate', string> = {
 };
 
 /**
- * Which cursor a handle wears. Every vertex wears the same one, so they are
- * answered by a rule rather than by a record that could never enumerate them.
+ * Which cursor a handle wears. Every vertex and every control wears the same
+ * one, so they are answered by a rule rather than by a record that could never
+ * enumerate them.
  */
 export function handleCursor(handle: Handle): string {
-  return isVertex(handle) ? 'move' : FIXED_CURSOR[handle];
+  if (isVertex(handle) || isControl(handle)) return 'move';
+  return FIXED_CURSOR[handle];
 }
 
 /** Smallest box a resize will produce, in document units. */
@@ -305,6 +342,149 @@ export function pointsFromWorld(world: readonly Point[], rotation: number): Poin
   const pivot = rotatePoint(boxCentre(pointsBox(unturned)), origin, rotation);
   return world.map((point) => rotatePoint(point, pivot, -rotation));
 }
+
+/** Which of a command's three coordinate pairs a reshape moves. */
+interface Shift {
+  /** The command's own on-path point. */
+  end?: boolean;
+  /** `x1`/`y1`. */
+  first?: boolean;
+  /** `x2`/`y2`. */
+  second?: boolean;
+}
+
+/** One command with the coordinates `shift` names moved by `d`. */
+function shiftSegment(segment: PathSegment, shift: Shift | undefined, d: Point): PathSegment {
+  if (!shift) return segment;
+  switch (segment.c) {
+    case 'Z':
+      return segment;
+    case 'M':
+    case 'L':
+    case 'A':
+      // An arc's radii are lengths rather than positions: dragging the point it
+      // ends at moves the point, and the arc bends to still reach it.
+      return shift.end ? { ...segment, x: segment.x + d.x, y: segment.y + d.y } : segment;
+    case 'Q':
+      return {
+        ...segment,
+        x1: shift.first ? segment.x1 + d.x : segment.x1,
+        y1: shift.first ? segment.y1 + d.y : segment.y1,
+        x: shift.end ? segment.x + d.x : segment.x,
+        y: shift.end ? segment.y + d.y : segment.y,
+      };
+    case 'C':
+      return {
+        ...segment,
+        x1: shift.first ? segment.x1 + d.x : segment.x1,
+        y1: shift.first ? segment.y1 + d.y : segment.y1,
+        x2: shift.second ? segment.x2 + d.x : segment.x2,
+        y2: shift.second ? segment.y2 + d.y : segment.y2,
+        x: shift.end ? segment.x + d.x : segment.x,
+        y: shift.end ? segment.y + d.y : segment.y,
+      };
+  }
+}
+
+const ORIGIN: Point = { x: 0, y: 0 };
+
+/** The point a path is drawn about: the centre of its flattened box. */
+const pathPivot = (segments: readonly PathSegment[]): Point =>
+  boxCentre(pointsBox(flattenPath(segments).flat()));
+
+/**
+ * A path with some of its stored coordinates moved by a screen-space delta, and
+ * everything else left exactly where it was on screen.
+ *
+ * The same problem `pointsFromWorld` solves, for the same reason: a path is
+ * turned about the centre of its own flattened box, so moving any coordinate in
+ * it — an anchor or a control — moves the pivot every other point is drawn
+ * around, and they all swing.
+ *
+ * Answered with a translation rather than a re-solve, because flattening
+ * commutes with translation: sliding every command by `t` slides the pivot by
+ * exactly `t`. If the edit drifted the pivot by `Δ`, then translating by
+ * `Rθ(Δ) − Δ` puts every untouched point back precisely where it was. What
+ * lands under the pointer then falls out on its own — the moved point ends at
+ * where it started plus the delta, whatever the pivot did in between — which is
+ * why nothing here has to iterate towards an answer.
+ */
+function movedPath(
+  segments: readonly PathSegment[],
+  shifts: ReadonlyMap<number, Shift>,
+  delta: Point,
+  rotation: number,
+): PathSegment[] {
+  // The drag is measured on screen; the coordinates it is added to are stored
+  // unturned, so it is turned back by −θ before it is added to any of them.
+  const local = rotatePoint(delta, ORIGIN, -rotation);
+  const moved = segments.map((segment, index) => shiftSegment(segment, shifts.get(index), local));
+  if (rotation === 0) return moved;
+
+  const before = pathPivot(segments);
+  const after = pathPivot(moved);
+  const drift = { x: after.x - before.x, y: after.y - before.y };
+  const turned = rotatePoint(drift, ORIGIN, rotation);
+  return translateSegments(moved, turned.x - drift.x, turned.y - drift.y);
+}
+
+/**
+ * The path with anchor `anchorIndex` dragged by a screen-space delta.
+ *
+ * The handles either side of the node travel with it. Leaving them behind does
+ * not merely look untidy: the node moves while the points that decide the
+ * curve's direction there stay put, so the curve swings round to arrive and
+ * leave along headings nobody asked for, and the outline pulls away from the
+ * node you are holding. Carrying them keeps the curve's shape and moves only
+ * where it sits.
+ */
+export function movePathAnchor(
+  segments: readonly PathSegment[],
+  anchorIndex: number,
+  delta: Point,
+  rotation: number,
+): PathSegment[] {
+  const anchor = pathAnchors(segments)[anchorIndex];
+  if (!anchor) return segments.slice();
+
+  const shifts = new Map<number, Shift>([[anchor.segment, { end: true }]]);
+  for (const control of anchorControls(segments, anchor.segment)) {
+    const already = shifts.get(control.segment) ?? {};
+    shifts.set(control.segment, {
+      ...already,
+      ...(control.which === 1 ? { first: true } : { second: true }),
+    });
+  }
+  return movedPath(segments, shifts, delta, rotation);
+}
+
+/**
+ * The path with one control point dragged by a screen-space delta.
+ *
+ * Only that control moves. A control is how you say what the curve does between
+ * two nodes without moving either of them, so an anchor dragged along with it
+ * would be answering a question that was not asked.
+ */
+export function movePathControl(
+  segments: readonly PathSegment[],
+  segment: number,
+  which: 1 | 2,
+  delta: Point,
+  rotation: number,
+): PathSegment[] {
+  const shift: Shift = which === 1 ? { first: true } : { second: true };
+  return movedPath(segments, new Map([[segment, shift]]), delta, rotation);
+}
+
+/**
+ * How near a shape's outline a double-click has to land to add a node to it, in
+ * CSS pixels.
+ *
+ * Stated in pixels rather than document units, and divided by the scale at the
+ * point of use: how accurately a pointer can be placed is a fact about the
+ * pointer, and it must not tighten as you zoom in or loosen as you zoom out.
+ */
+export const OUTLINE_REACH_PX = 6;
 
 /**
  * The point a dragged vertex's Shift constraint is measured from: its
