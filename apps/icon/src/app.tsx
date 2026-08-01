@@ -3,6 +3,7 @@ import { cn } from '@tickets/ui';
 import { Artboard } from './canvas/artboard';
 import { CanvasFooter } from './canvas/canvas-footer';
 import { canvasRoom } from './canvas/fit';
+import { useCanvasNavigation } from './canvas/use-canvas-navigation';
 import { EditorProvider, useEditor } from './editor-context';
 import { ExportDialog } from './export/export-dialog';
 import { useDocuments } from './topbar/use-documents';
@@ -12,7 +13,7 @@ import { TopBar } from './topbar/top-bar';
 import { HeldPoses } from './transport/held-poses';
 import { Transport } from './transport/transport';
 import { useShortcuts } from './use-shortcuts';
-import { chromeIsDim, steppedZoom, zoomToFit } from './view';
+import { chromeIsDim, scaleFor, zoomToFit } from './view';
 
 /** How long the status slot echoes an action before falling back to the selection line. */
 const ECHO_MS = 2000;
@@ -96,10 +97,9 @@ function Editor() {
 /**
  * The canvas region.
  *
- * It scrolls, because the artboard is now any size at any zoom and a 4096
- * board at 800% has to be reachable. That is also why the wheel is left alone
- * for scrolling and zoom is on ⌘/Ctrl + wheel: hijacking a plain wheel would
- * take away the only way to pan.
+ * It scrolls, because the artboard is any size at any zoom and a 4096 board at
+ * 800% has to be reachable — but the scrollbars are hidden, because you get
+ * around by wheel, middle-drag or two fingers rather than by dragging a bar.
  */
 function CanvasField({
   status,
@@ -110,20 +110,16 @@ function CanvasField({
   scrollerRef: RefObject<HTMLDivElement | null>;
   stackRef: RefObject<HTMLDivElement | null>;
 }) {
-  const { setView } = useEditor();
+  const { state, view, setView } = useEditor();
+  const boardRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const element = scrollerRef.current;
-    if (!element) return;
-    const onWheel = (event: WheelEvent) => {
-      if (!event.ctrlKey && !event.metaKey) return;
-      // Without this the browser's own page zoom takes the gesture.
-      event.preventDefault();
-      setView((v) => ({ ...v, zoom: steppedZoom(v.zoom, event.deltaY < 0 ? 1 : -1) }));
-    };
-    element.addEventListener('wheel', onWheel, { passive: false });
-    return () => element.removeEventListener('wheel', onWheel);
-  }, [scrollerRef, setView]);
+  useCanvasNavigation({
+    scrollerRef,
+    boardRef,
+    scale: scaleFor(state.doc.artboard, view.zoom),
+    zoom: view.zoom,
+    onZoom: (zoom) => setView((v) => ({ ...v, zoom })),
+  });
 
   return (
     <main className="relative min-w-0 flex-1 bg-surface-field">
@@ -133,13 +129,20 @@ function CanvasField({
           scroll away with the artboard — which it did. */}
       <div
         ref={scrollerRef}
-        className="absolute inset-0 flex items-center justify-center overflow-auto"
+        className="canvas-scroll absolute inset-0 flex overflow-auto"
       >
+        {/* Centring lives in `.canvas-scroll` as `safe center`, and there is
+            deliberately no `m-auto` here: an auto margin re-creates exactly the
+            unreachable-edge problem that `safe` exists to avoid. */}
         <div
           ref={stackRef}
-          className="relative m-auto flex flex-none flex-col items-center gap-3 p-8 pb-16"
+          className="relative flex flex-none flex-col items-center gap-3 p-8 pb-16"
         >
-          <Artboard />
+          {/* Wrapped so the zoom can measure exactly where the artboard is
+              without reaching into the artboard's own markup. */}
+          <div ref={boardRef} className="flex-none">
+            <Artboard />
+          </div>
           <Transport />
           <HeldPoses />
         </div>
