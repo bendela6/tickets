@@ -196,8 +196,8 @@ describe('Outline', () => {
 
   it('draws a hidden zone with a hollow swatch, not a filled one', async () => {
     // The swatch doubles as the visibility control, so its OFF state has to be
-    // unmistakable. It used to fake a ring by passing border classes through
-    // className; `hollow` is the real thing.
+    // unmistakable. It used to fake a ring by passing ring-styling classes
+    // through className; `hollow` is the real thing.
     await renderDiagram(<Outline />, twoZoneRaw());
     // The regex form from the plan (name: /Zone Two/) matches three buttons
     // in this row — the select button, the chevron, and the toggle — so this
