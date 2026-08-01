@@ -179,22 +179,6 @@ describe('selection follows the object it is selecting', () => {
 
     expect(overlay()?.style.transform).toBe('rotate(45deg)');
   });
-
-  it('reports each shape in the terms it is defined by, not always a box', async () => {
-    const { user } = setup();
-    const main = screen.getByRole('main');
-
-    await user.keyboard('r');
-    expect(main).toHaveTextContent('240 × 240');
-
-    await user.keyboard('l');
-    // A line's box is a by-product of where its ends are; its length is not.
-    expect(main).toHaveTextContent('240 long');
-    expect(main).not.toHaveTextContent('× 20');
-
-    await user.keyboard('p');
-    expect(main).toHaveTextContent('r 120 · 6 sides');
-  });
 });
 
 describe('handles match the shape', () => {
@@ -309,7 +293,6 @@ describe('every shape has equivalent controls', () => {
     await user.type(radius, '60');
     await user.tab();
     expect(within(propsRail()).getByLabelText('Centre X')).toHaveValue('256');
-    expect(screen.getByRole('main')).toHaveTextContent('r 60 · 6 sides');
   });
 });
 

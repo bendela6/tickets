@@ -5,13 +5,12 @@ import { gridPitch } from '../doc/snap';
 import { bounds, lineEndpoints } from '../doc/geometry';
 import { selectedObject } from '../doc/store';
 import { safeZoneWarnings } from '../doc/validate';
-import type { IconObject } from '../doc/types';
 import { useEditor } from '../editor-context';
 import { gridInk } from '../render/ink';
 import { renderPosed } from '../render/svg';
 import { chromeIsDim, posedFor, scaleFor } from '../view';
 import { EmptyArtboard } from './empty-artboard';
-import { DimensionPill, LineSelectionOverlay, SelectionOverlay } from './selection-overlay';
+import { LineSelectionOverlay, SelectionOverlay } from './selection-overlay';
 import { useArtboardPointer } from './use-artboard-pointer';
 
 /**
@@ -155,53 +154,27 @@ export function Artboard() {
       ) : null}
 
       {showHandles && selectionBox && selected ? (
-        <>
-          {selected.geometry.kind === 'line' ? (
-            <LineSelectionOverlay
-              endpoints={lineEndpoints(selected)}
-              box={selectionBox}
-              rotation={selected.rotation}
-              scale={scale}
-              onHandleDown={onHandleDown}
-            />
-          ) : (
-            <SelectionOverlay
-              box={selectionBox}
-              rotation={selected.rotation}
-              scale={scale}
-              onHandleDown={onHandleDown}
-            />
-          )}
-          <DimensionPill
+        selected.geometry.kind === 'line' ? (
+          <LineSelectionOverlay
+            endpoints={lineEndpoints(selected)}
             box={selectionBox}
             rotation={selected.rotation}
             scale={scale}
-            label={dimensionLabel(selected)}
+            onHandleDown={onHandleDown}
           />
-        </>
+        ) : (
+          <SelectionOverlay
+            box={selectionBox}
+            rotation={selected.rotation}
+            scale={scale}
+            onHandleDown={onHandleDown}
+          />
+        )
       ) : null}
 
       {state.doc.objects.length === 0 ? <EmptyArtboard /> : null}
     </div>
   );
-}
-
-/**
- * What the pill reports, in each shape's own terms.
- *
- * A line's box is a by-product of where its ends happen to be, so quoting
- * `260 × 20` for one is describing the wrong thing — its length is the
- * measurement that means something, and its thickness is a property with its
- * own field. A polygon is radial, so it reads as a radius.
- */
-function dimensionLabel(object: IconObject): string {
-  const g = object.geometry;
-  if (g.kind === 'line') {
-    return `${Math.round(Math.hypot(g.x2 - g.x1, g.y2 - g.y1))} long`;
-  }
-  if (g.kind === 'polygon') return `r ${Math.round(g.r)} · ${g.sides} sides`;
-  const box = bounds(object);
-  return `${Math.round(box.w)} × ${Math.round(box.h)}`;
 }
 
 /**
