@@ -6,8 +6,8 @@
 // graph declares no kinds (schemaGraphToModel passes none), so this renders
 // nothing on /schema — it exists for models that do.
 
+import { Dot, Pill } from '@tickets/ui';
 import { useDiagramActions, useDiagramModel, useDiagramUi } from '../../state/diagram-context';
-import { Chip } from './chip';
 
 export function KindFilters() {
   const model = useDiagramModel();
@@ -20,11 +20,23 @@ export function KindFilters() {
     <div className="shrink-0 border-t-1 border-gray-6 pt-2">
       <p className="px-1 pb-1.5 text-11 uppercase tracking-wider text-gray-11">Edges</p>
       <div className="flex flex-wrap gap-1">
-        {model.kinds.map((k) => (
-          <Chip key={k.id} on={!ui.hidden.kinds.has(k.id)} onClick={() => actions.toggleKind(k.id)}>
-            {k.label}
-          </Chip>
-        ))}
+        {model.kinds.map((k) => {
+          const on = !ui.hidden.kinds.has(k.id);
+          return (
+            <Pill
+              key={k.id}
+              variant="outline"
+              shape="round"
+              size="sm"
+              tone="neutral"
+              pressed={on}
+              strikethrough={!on}
+              icon={<Dot color={on ? 'var(--color-blue-9)' : undefined} hollow={!on} />}
+              label={k.label}
+              onClick={() => actions.toggleKind(k.id)}
+            />
+          );
+        })}
       </div>
     </div>
   );

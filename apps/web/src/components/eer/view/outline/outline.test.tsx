@@ -165,7 +165,7 @@ describe('Outline', () => {
     expect(focus).toHaveBeenCalledWith('users', 'manager_id');
   });
 
-  it('offers the edge-kind filters and toggles one', async () => {
+  it('offers the edge-kind filters as Pills and toggles one', async () => {
     await renderDiagram(
       <>
         <UiGrab />
@@ -173,8 +173,13 @@ describe('Outline', () => {
       </>,
       twoZoneRaw(),
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Many-to-many' }));
+    const nm = screen.getByRole('button', { name: 'Many-to-many' });
+    // Pill wires `pressed` to aria-pressed, which the hand-rolled chip never did —
+    // the ON/OFF state was previously visual only.
+    expect(nm).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(nm);
     expect(uiRef!.hidden.kinds.has('nm')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Many-to-many' })).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('omits the edge section entirely for a model that declares no kinds', async () => {
