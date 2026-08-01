@@ -11,9 +11,9 @@ import { axis, cn, HUE_TONES, over, TONE_SCALE, variants, type Tone } from '../.
 import { Icon, type IconName, type IconSize } from '../icon';
 
 /** How loudly the tone reads. These used to be `ToneEmphasis`, defined next to
- *  the table of finished class strings; with that table gone the four names
- *  belong to the component that offers them. Three are shared with Button; the
- *  fourth is `text` where a button's is `ghost`. */
+ *  the table of finished class strings; with that table gone the five names
+ *  belong to the component that offers them. Three are shared with Button;
+ *  `text` and `tint` are Pill-only, where a button's fourth is `ghost`. */
 export type PillVariant = 'subtle' | 'solid' | 'outline' | 'text' | 'tint';
 
 export type PillSize = 'xs' | 'sm' | 'md' | 'lg';
@@ -27,7 +27,7 @@ export type PillShape = 'square' | 'round';
 // is the only per-component decision the tone axis leaves open.
 const NEUTRAL_SCALE = axis('scale', HUE_TONES, 'gray');
 
-// The four variants spell their own rungs, so hover/opacity treatments can be
+// The five variants spell their own rungs, so hover/opacity treatments can be
 // added later without a second vocabulary. A test renders Pill and Button side
 // by side for every tone, since two components asking for the same treatment
 // must not disagree about which rungs it uses.
