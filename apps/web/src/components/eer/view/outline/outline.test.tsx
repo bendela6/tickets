@@ -214,4 +214,11 @@ describe('Outline', () => {
     expect(swatch().className).toContain('border-1');
     expect(swatch().className).not.toContain('bg-(--dot-color)');
   });
+
+  it('draws the disclosure caret as an icon, not a text glyph', async () => {
+    await renderDiagram(<Outline />, twoZoneRaw());
+    const caret = screen.getByRole('button', { name: 'Zone One subtree' });
+    expect(caret.querySelector('svg')).not.toBeNull();
+    expect(caret.textContent).toBe('');
+  });
 });
