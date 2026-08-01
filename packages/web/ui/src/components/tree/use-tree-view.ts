@@ -14,7 +14,6 @@ export interface TreeNode {
 
 export interface TreeRowModel {
   id: string;
-  label?: string;
   depth: number;
   expanded: boolean;
   hasChildren: boolean;
@@ -27,13 +26,21 @@ export interface UseTreeViewOptions {
   roots: TreeNode[];
   selectedId?: string | null;
   onSelect?: (id: string) => void;
-  /** Called when expanding a node whose `children` are `undefined`. */
+  /**
+   * Called when expanding a node whose `children` are `undefined` — whether
+   * that expansion came from a `toggle()` call or from the node simply
+   * rendering expanded (via `defaultExpanded`/`forceExpanded`) while still
+   * unloaded. Either way, an effectively-expanded, unloaded node IS a load
+   * request. Never called twice for the same id while it stays unloaded and
+   * expanded — the hook tracks which ids it has already asked for.
+   */
   onExpand?: (id: string) => void;
   /**
    * Render every node expanded, ignoring the collapsed set without discarding
    * it — for a filtered tree, where the caller has already pruned to matches
    * and a collapsed group would hide the very rows the query asked for.
-   * Collapsed state is restored when this goes back to false.
+   * Collapsed state is restored when this goes back to false. Composes with
+   * the async seam: an unloaded node forced open still fires `onExpand`.
    */
   forceExpanded?: boolean;
   /**
@@ -42,7 +49,8 @@ export interface UseTreeViewOptions {
    * needs (e.g. a schema outline), without seeding that via a mount-time
    * loop of `toggle()` calls. `toggle` still ever only records the one node
    * it was called on. Orthogonal to `forceExpanded`, which overrides on top
-   * of whichever polarity this picks.
+   * of whichever polarity this picks. Composes with the async seam: an
+   * unloaded node that starts open under this still fires `onExpand`.
    */
   defaultExpanded?: boolean;
   /** Prefix for generated row element ids, so two trees on a page never collide. */
@@ -98,14 +106,23 @@ export function useTreeView({
   const rootsRef = useRef(roots);
   rootsRef.current = roots;
 
+  // Ids `onExpand` has already been asked for, while they remain unloaded and
+  // effectively expanded. A ref, not state: writing it must never itself
+  // trigger a render, and it is read from inside a `useMemo` body (`toggle`,
+  // below) as well as an effect — both need the value as it stood at the
+  // instant they ran, not a stale render's closure over state.
+  const pendingLoadsRef = useRef<Set<string>>(new Set());
+
   // Consumers supply `roots` from a query that starts empty; seed focus once
   // they arrive rather than only at mount. Never clobbers a focus already set.
   useEffect(() => {
     if (focusId == null && roots[0]) setFocusId(roots[0].id);
   }, [focusId, roots]);
 
-  const rows = useMemo<TreeRowModel[]>(() => {
+  const { rows, toLoad, labelById } = useMemo(() => {
     const out: TreeRowModel[] = [];
+    const loads: string[] = [];
+    const labels = new Map<string, string>();
     const walk = (nodes: TreeNode[], depth: number) => {
       for (const n of nodes) {
         // Effective expansion composes three things without mutating any of
@@ -114,16 +131,30 @@ export function useTreeView({
         // from that baseline. Turning `forceExpanded` off, or toggling a
         // single node, therefore never discards anything else the user set.
         const isExpanded = forceExpanded || defaultExpanded !== exceptions.has(n.id);
+        // `undefined` children mean UNLOADED, so the node still gets a
+        // caret — without one it could never be expanded to trigger the
+        // load. An inert row never gets one: there is nothing under it to
+        // load or reveal.
+        const hasChildren = !n.inert && (n.children === undefined || n.children.length > 0);
+        if (n.label !== undefined) labels.set(n.id, n.label);
+        // An effectively-expanded, unloaded node is a load request, whether
+        // that expansion came from `toggle()` (handled separately, below) or
+        // simply from the node rendering open — `defaultExpanded` or
+        // `forceExpanded` — while nobody ever clicked its caret. Collected
+        // here and fired from an effect, never here: a `useMemo` body must
+        // stay a pure read of its inputs, not a place that calls out to the
+        // consumer.
+        if (isExpanded && !n.inert && n.children === undefined) loads.push(n.id);
         out.push({
           id: n.id,
-          label: n.label,
           depth,
-          expanded: isExpanded,
-          // `undefined` children mean UNLOADED, so the node still gets a
-          // caret — without one it could never be expanded to trigger the
-          // load. An inert row never gets one: there is nothing under it to
-          // load or reveal.
-          hasChildren: !n.inert && (n.children === undefined || n.children.length > 0),
+          // A childless node can never be expanded — without this a leaf
+          // that starts open under `defaultExpanded` still LOOKS expanded to
+          // `onKeyDown`'s ArrowLeft branch, which then toggles the leaf
+          // instead of walking to its parent. `TreeRow` already hides the
+          // caret and `aria-expanded` for a leaf; this makes the model agree.
+          expanded: isExpanded && hasChildren,
+          hasChildren,
           selected: selectedId === n.id,
           focused: focusId === n.id,
           inert: n.inert === true,
@@ -132,8 +163,32 @@ export function useTreeView({
       }
     };
     walk(roots, 0);
-    return out;
+    return { rows: out, toLoad: loads, labelById: labels };
   }, [roots, exceptions, forceExpanded, defaultExpanded, selectedId, focusId]);
+
+  // Fires the load `onExpand` promises for nodes that render open while still
+  // unloaded — the `defaultExpanded`/`forceExpanded` case `toggle` never sees,
+  // since nobody called it. Runs after commit, not during the memo above,
+  // because calling out to the consumer is a side effect.
+  //
+  // `pendingLoadsRef` guards against re-firing the same id on a later render
+  // while its load is still outstanding: `toLoad` is recomputed (and this
+  // effect re-runs) on every focus or selection change too, and the
+  // consumer's `onExpand` is not guaranteed idempotent. An id drops out of
+  // the pending set once it stops needing a load — either the children
+  // arrived, or it is no longer effectively expanded — so a genuine reload
+  // (the consumer clearing `children` back to `undefined`) can fire again.
+  useEffect(() => {
+    const stillPending = new Set(toLoad);
+    for (const id of pendingLoadsRef.current) {
+      if (!stillPending.has(id)) pendingLoadsRef.current.delete(id);
+    }
+    for (const id of toLoad) {
+      if (pendingLoadsRef.current.has(id)) continue;
+      pendingLoadsRef.current.add(id);
+      onExpand?.(id);
+    }
+  }, [toLoad, onExpand]);
 
   const navigable = useMemo(() => rows.filter((r) => !r.inert), [rows]);
 
@@ -160,7 +215,15 @@ export function useTreeView({
         else next.delete(id);
         return next;
       });
-      if (needsLoad) onExpand?.(id);
+      if (needsLoad) {
+        // Mark it pending BEFORE firing, same as the effect does: the render
+        // this triggers will recompute `toLoad` with this id still in it
+        // (still unloaded, now expanded), and without this the pending-loads
+        // effect would fire `onExpand` a second time for the very node this
+        // click just requested.
+        pendingLoadsRef.current.add(id);
+        onExpand?.(id);
+      }
     },
     [onExpand, forceExpanded, defaultExpanded],
   );
@@ -232,7 +295,7 @@ export function useTreeView({
           if (e.key.length === 1 && /[a-z0-9]/i.test(e.key)) {
             const start = i + 1;
             const found = [...navigable.slice(start), ...navigable.slice(0, start)].find((r) =>
-              r.label?.toLowerCase().startsWith(e.key.toLowerCase()),
+              labelById.get(r.id)?.toLowerCase().startsWith(e.key.toLowerCase()),
             );
             if (found) {
               e.preventDefault();
@@ -243,7 +306,7 @@ export function useTreeView({
         }
       }
     },
-    [navigable, focusId, toggle, select],
+    [navigable, focusId, toggle, select, labelById],
   );
 
   return {
