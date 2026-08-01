@@ -268,7 +268,7 @@ describe('paint', () => {
   it('fills both halves of the pair with the one colour, and says the dark half is a guess', () => {
     const { doc, report } = imported(wrap('<rect width="4" height="4" fill="#123456"/>'));
     expect(doc.objects[0]?.fill).toEqual({ light: '#123456', dark: '#123456' });
-    expect(reasons(report, 'svg').join(' ')).toContain('the dark one is a guess');
+    expect(reasons(report, 'svg').join(' ')).toContain('the dark half is a guess');
   });
 
   it('keeps an unfilled outline as the run that traces it', () => {
@@ -333,6 +333,240 @@ describe('paint', () => {
   });
 });
 
+/* A favicon written by the icon studio in this repo, kept exactly as that tool
+   emitted it. Every colour in it lives in the `<style>` block, which is the only
+   place an SVG can state two colour schemes — so a reader that skips the block
+   sees three unpainted paths and drops the whole file. */
+describe('a favicon that states its colours in CSS', () => {
+  const FAVICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <style>
+    .s1{stroke:#7167ff}.s2{stroke:#00bb9a}.s3{stroke:#ff298a}
+    @media (prefers-color-scheme:dark){.s1{stroke:#347aea}.s2{stroke:#12b898}.s3{stroke:#ff378c}}
+  </style>
+  <g fill="none">
+    <path d="M24 6L24 42" class="s3" stroke-width="8" stroke-linecap="round" fill="none" transform="rotate(100 24 24)"/>
+    <path d="M24 6L24 42" class="s2" stroke-width="8" stroke-linecap="round" fill="none" transform="rotate(49 24 24)"/>
+    <path d="M24 6L24 42" class="s1" stroke-width="8" stroke-linecap="round" fill="none" transform="rotate(0 24 24)"/>
+  </g>
+</svg>`;
+
+  it('imports as three strokes, each carrying both halves of its colour', () => {
+    const { doc, report } = imported(FAVICON);
+    expect(report.objects).toBe(3);
+    expect(doc.artboard).toEqual({ width: 48, height: 48 });
+    expect(doc.objects.map((object) => object.geometry.kind)).toEqual(['path', 'path', 'path']);
+    expect(doc.objects.map((object) => trimmed(object.strokeWidth))).toEqual([8, 8, 8]);
+    // Front to back, which is the reverse of the order the file paints them in.
+    expect(doc.objects.map((object) => object.stroke)).toEqual([
+      { light: '#7167FF', dark: '#347AEA' },
+      { light: '#00BB9A', dark: '#12B898' },
+      { light: '#FF298A', dark: '#FF378C' },
+    ]);
+  });
+
+  it('bakes each rotation into the coordinates the stroke is drawn along', () => {
+    const { doc } = imported(FAVICON);
+    expect(doc.objects.map((object) => object.rotation)).toEqual([0, 0, 0]);
+    expect(doc.objects.map((object) => trimmed(object.geometry))).toEqual([
+      // 0°, then 49° and 100° about the middle of the 48 board.
+      { kind: 'path', segments: [{ c: 'M', x: 24, y: 6 }, { c: 'L', x: 24, y: 42 }] },
+      {
+        kind: 'path',
+        segments: [
+          { c: 'M', x: 37.585, y: 12.191 },
+          { c: 'L', x: 10.415, y: 35.809 },
+        ],
+      },
+      {
+        kind: 'path',
+        segments: [
+          { c: 'M', x: 41.727, y: 27.126 },
+          { c: 'L', x: 6.273, y: 20.874 },
+        ],
+      },
+    ]);
+  });
+
+  it('claims no guess, because the file states every dark half itself', () => {
+    const { report } = imported(FAVICON);
+    expect(reasons(report, 'svg').join(' ')).not.toContain('guess');
+  });
+
+  it('draws the same three strokes when the document is rendered back out', () => {
+    const { doc } = imported(FAVICON);
+    const svg = renderSvg(doc, { ground: 'dark', background: false });
+    expect(svg.match(/stroke-linecap="round"/g)).toHaveLength(3);
+    expect(svg.match(/stroke-width="8"/g)).toHaveLength(3);
+    for (const hex of ['#347AEA', '#12B898', '#FF378C']) expect(svg).toContain(hex);
+  });
+});
+
+describe('the cascade a style block sets up', () => {
+  const styled = (css: string, markup: string) => wrap(`<style>${css}</style>${markup}`);
+
+  it('lets a class rule beat a presentation attribute', () => {
+    const object = only(
+      styled('.a{fill:#00ff00}', '<rect class="a" width="4" height="4" fill="#ff0000"/>'),
+    );
+    expect(object.fill.light).toBe('#00FF00');
+  });
+
+  it('lets an inline style beat a class rule', () => {
+    const object = only(
+      styled('.a{fill:#00ff00}', '<rect class="a" width="4" height="4" style="fill:#0000ff"/>'),
+    );
+    expect(object.fill.light).toBe('#0000FF');
+  });
+
+  it('lets an id rule beat a class rule written after it', () => {
+    const object = only(
+      styled('#mark{fill:#0000ff}.a{fill:#00ff00}', '<rect id="mark" class="a" width="4" height="4"/>'),
+    );
+    expect(object.fill.light).toBe('#0000FF');
+  });
+
+  it('lets the later of two rules of equal weight win', () => {
+    const object = only(styled('.a{fill:#ff0000}.a{fill:#0000ff}', '<rect class="a" width="4" height="4"/>'));
+    expect(object.fill.light).toBe('#0000FF');
+  });
+
+  it('takes a declaration from each class an element carries', () => {
+    const object = only(
+      styled(
+        '.a{fill:#ff0000}.b{stroke:#0000ff}',
+        '<rect class="a b" width="10" height="10" stroke-width="2"/>',
+      ),
+    );
+    expect(object.fill.light).toBe('#FF0000');
+    expect(object.stroke.light).toBe('#0000FF');
+    expect(object.strokeWidth).toBe(2);
+  });
+
+  it('reads a type selector, and reads a list of selectors as each of them', () => {
+    const { doc } = imported(
+      styled('circle, path{fill:#00ff00}', '<circle cx="5" cy="5" r="3"/><rect width="4" height="4"/>'),
+    );
+    // Front to back: the rect was painted last and the type selector missed it.
+    expect(doc.objects.map((object) => object.fill.light)).toEqual(['#000000', '#00FF00']);
+  });
+
+  it('applies a stylesheet stated inside defs, which is where drawing tools put one', () => {
+    const { doc, report } = imported(
+      wrap('<defs><style>.a{fill:#00ff00}</style></defs><rect class="a" width="4" height="4"/>'),
+    );
+    expect(doc.objects[0]?.fill.light).toBe('#00FF00');
+    // And says nothing about that defs having been passed over: it was read.
+    expect(reasons(report, 'defs')).toHaveLength(0);
+  });
+});
+
+describe('the dark half of a pair', () => {
+  const styled = (css: string, markup: string) => wrap(`<style>${css}</style>${markup}`);
+  const DARK = '@media (prefers-color-scheme:dark){.a{fill:#445566}}';
+
+  it('is filled by a prefers-color-scheme block, and the light half is not', () => {
+    const object = only(styled(`.a{fill:#112233}${DARK}`, '<rect class="a" width="4" height="4"/>'));
+    expect(object.fill).toEqual({ light: '#112233', dark: '#445566' });
+  });
+
+  it('is read however the query is spaced, and through a media type', () => {
+    for (const query of [
+      '(prefers-color-scheme:dark)',
+      '(prefers-color-scheme: dark)',
+      'screen and (prefers-color-scheme: dark)',
+    ]) {
+      const object = only(
+        styled(`.a{fill:#112233}@media ${query}{.a{fill:#445566}}`, '<rect class="a" width="4" height="4"/>'),
+      );
+      expect(object.fill).toEqual({ light: '#112233', dark: '#445566' });
+    }
+  });
+
+  it('is not called a guess when the file states it', () => {
+    const { report } = imported(styled(`.a{fill:#112233}${DARK}`, '<rect class="a" width="4" height="4"/>'));
+    expect(reasons(report, 'svg').join(' ')).not.toContain('guess');
+  });
+
+  it('is still copied off the light one where no rule states it, and still says so', () => {
+    const { doc, report } = imported(styled('.a{fill:#112233}', '<rect class="a" width="4" height="4"/>'));
+    expect(doc.objects[0]?.fill).toEqual({ light: '#112233', dark: '#112233' });
+    expect(reasons(report, 'svg').join(' ')).toContain('the dark half is a guess');
+  });
+
+  it('cannot hold a dark-scheme rule about anything but colour, and says which', () => {
+    const { doc, report } = imported(
+      styled(
+        '.a{stroke-width:2}@media (prefers-color-scheme:dark){.a{stroke-width:6}}',
+        '<path class="a" d="M0 0L4 4" stroke="#ff0000"/>',
+      ),
+    );
+    expect(doc.objects[0]?.strokeWidth).toBe(2);
+    expect(reasons(report, 'path').join(' ')).toContain('stroke-width');
+  });
+});
+
+describe('what the style reader will not do', () => {
+  const styled = (css: string, markup: string) => wrap(`<style>${css}</style>${markup}`);
+
+  it('reports a media query that is not about the colour scheme, and applies none of it', () => {
+    const { doc, report } = imported(
+      styled('@media (min-width:600px){.a{fill:#00ff00}}', '<rect class="a" width="4" height="4" fill="#ff0000"/>'),
+    );
+    expect(doc.objects[0]?.fill.light).toBe('#FF0000');
+    expect(reasons(report, 'style').join(' ')).toContain('colour scheme');
+  });
+
+  it('reports a selector form it does not resolve, and applies nothing from it', () => {
+    for (const selector of ['g rect', 'rect:hover', 'rect[fill]', '.a > .b']) {
+      const { doc, report } = imported(
+        styled(`${selector}{fill:#00ff00}`, '<g><rect class="a" width="4" height="4" fill="#ff0000"/></g>'),
+      );
+      expect(doc.objects[0]?.fill.light).toBe('#FF0000');
+      expect(reasons(report, 'style').join(' ')).toContain('does not resolve');
+    }
+  });
+
+  it('reports an @import rather than fetching it, and reads the rules after it', () => {
+    const { doc, report } = imported(
+      styled('@import url("brand.css");.a{fill:#00ff00}', '<rect class="a" width="4" height="4"/>'),
+    );
+    expect(doc.objects[0]?.fill.light).toBe('#00FF00');
+    expect(reasons(report, 'style').join(' ')).toContain('@import');
+  });
+
+  it('reports an at-rule it has no answer for, and drops what is inside it', () => {
+    const { doc, report } = imported(
+      styled('@supports (fill:red){.a{fill:#00ff00}}', '<rect class="a" width="4" height="4" fill="#ff0000"/>'),
+    );
+    expect(doc.objects[0]?.fill.light).toBe('#FF0000');
+    expect(reasons(report, 'style').join(' ')).toContain('@supports');
+  });
+
+  it('reports importance rather than weighing it', () => {
+    const { doc, report } = imported(
+      styled('.a{fill:#00ff00 !important}', '<rect class="a" width="4" height="4" style="fill:#0000ff"/>'),
+    );
+    expect(doc.objects[0]?.fill.light).toBe('#0000FF');
+    expect(reasons(report, 'style').join(' ')).toContain('!important');
+  });
+
+  it('keeps the rules a broken block states before it breaks, and imports the file', () => {
+    const { doc, report } = imported(
+      styled('.a{fill:#00ff00}.b{fill:#0000ff', '<rect class="a" width="4" height="4"/>'),
+    );
+    expect(doc.objects).toHaveLength(1);
+    expect(doc.objects[0]?.fill.light).toBe('#00FF00');
+    expect(reasons(report, 'style').join(' ')).toContain('closing brace');
+  });
+
+  it('keeps a second style block whole when the first one is broken', () => {
+    const object = only(
+      wrap('<style>.a{fill:</style><style>.a{fill:#00ff00}</style><rect class="a" width="4" height="4"/>'),
+    );
+    expect(object.fill.light).toBe('#00FF00');
+  });
+});
+
 describe('what an import refuses to carry', () => {
   const cases: [string, string][] = [
     ['text', '<text x="0" y="0">hi</text>'],
@@ -344,7 +578,6 @@ describe('what an import refuses to carry', () => {
     ['linearGradient', '<linearGradient id="g"/>'],
     ['pattern', '<pattern id="p"/>'],
     ['symbol', '<symbol id="s"/>'],
-    ['style', '<style>.a{fill:red}</style>'],
   ];
 
   for (const [element, markup] of cases) {
@@ -371,9 +604,15 @@ describe('what an import refuses to carry', () => {
     ]);
   });
 
-  it('reports a class selector, which nothing here resolves', () => {
-    const { report } = imported(wrap('<rect class="brand" width="4" height="4"/>'));
-    expect(reasons(report, 'rect').join(' ')).toContain('class selector');
+  it('says so plainly when nothing in the file became an object', () => {
+    const { doc, report } = imported(wrap('<text>hi</text>'));
+    expect(doc.objects).toHaveLength(0);
+    expect(reasons(report, 'svg').join(' ')).toContain('nothing in it could become an object');
+  });
+
+  it('says nothing of the kind when it did import something', () => {
+    const { report } = imported(wrap('<rect width="4" height="4"/>'));
+    expect(reasons(report, 'svg').join(' ')).not.toContain('nothing in it');
   });
 
   it('says nothing about a title or a description, which lose nothing', () => {

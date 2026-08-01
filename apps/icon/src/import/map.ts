@@ -4,6 +4,7 @@ import { isOpenRun } from '../doc/geometry';
 import type {
   Artboard,
   Geometry,
+  Ground,
   IconDoc,
   IconObject,
   Pair,
@@ -11,6 +12,7 @@ import type {
   Point,
   ShapeKind,
 } from '../doc/types';
+import { applyStylesheet, readStylesheet, type StyledNode } from './css';
 import {
   applyMatrix,
   IDENTITY,
@@ -23,7 +25,6 @@ import {
   parseTransform,
   translation,
   type Matrix,
-  type SvgNode,
 } from './parse';
 
 /**
@@ -89,19 +90,20 @@ const DROPPED: Readonly<Record<string, string>> = {
   symbol: 'a symbol is a template rather than artwork, so nothing in it was drawn',
   text: 'text is not one of the shapes a document may hold',
   image: 'an embedded image is pixels, and the model holds vector shapes only',
-  style: 'a CSS block is not applied — only presentation attributes and inline style are read',
   defs: 'definitions are not painted, so nothing inside was imported',
   svg: 'a nested svg brings its own viewport, which one artboard cannot hold',
   foreignObject: 'foreign content is not SVG artwork',
   marker: 'markers are drawn along a stroke, which the model has no term for',
 };
 
-const CLASS_NOTE =
-  'a class selector is not resolved — only presentation attributes and inline style are read';
 const PAIR_NOTE =
-  'every imported colour was copied into both the light and the dark half — the dark one is a guess nobody has made';
+  'a colour stated once was copied into both halves of the pair — no rule states a dark one, so the dark half is a guess nobody has made';
 const CURRENT_COLOUR_NOTE =
   'currentColor has no page to inherit from here, so the default ink was used';
+const ONE_HALF_NOTE =
+  'a rule paints it under one colour scheme and not under the other; every object here is painted in both, so the one colour it does state was used for both';
+const EMPTY_NOTE =
+  'the file was read, but nothing in it could become an object, so the document it opened is empty';
 
 const SHAPES = new Set<string>([
   'rect',
@@ -608,22 +610,84 @@ function place(geometry: Geometry, m: Matrix): Placed {
 
 const pairOf = (hex: string): Pair => ({ light: hex, dark: hex });
 
-type Ink = { kind: 'paint'; pair: Pair } | { kind: 'none' } | { kind: 'absent' };
+/**
+ * A value as both halves of the pair state it.
+ *
+ * The halves travel together rather than being resolved one at a time, because
+ * an element's own declaration replaces what it inherits in BOTH of them: a
+ * child that states a colour and says nothing about a dark preference does not
+ * keep its parent's dark colour, it loses it — which is what the cascade does
+ * and what a reader of the file would expect to see.
+ */
+interface Stated {
+  light: string | undefined;
+  /** What a dark preference makes of it — the light value when none states one. */
+  dark: string | undefined;
+  /** Whether that dark value was stated rather than copied off the light one. */
+  told: boolean;
+}
 
-function inkOf(value: string | undefined, tag: string, notes: Notes): Ink {
+const UNSTATED: Stated = { light: undefined, dark: undefined, told: false };
+
+function statedOf(node: StyledNode, name: string, parent: Stated): Stated {
+  const own = node.attrs[name];
+  const dark = node.dark[name];
+  if (own === undefined && dark === undefined) return parent;
+  return { light: own ?? parent.light, dark: dark ?? own ?? parent.dark, told: dark !== undefined };
+}
+
+/** One half of a pair: a colour the file gave, one this put there, or neither. */
+type Half =
+  | { kind: 'colour'; hex: string }
+  | { kind: 'substitute'; hex: string }
+  | { kind: 'none' }
+  | { kind: 'absent' };
+
+function halfOf(value: string | undefined, ground: Ground, tag: string, notes: Notes): Half {
   if (value === undefined || value.trim() === '') return { kind: 'absent' };
   if (value.trim().toLowerCase() === 'currentcolor') {
     notes.add(tag, CURRENT_COLOUR_NOTE);
-    return { kind: 'paint', pair: { ...DEFAULT_INK } };
+    return { kind: 'substitute', hex: DEFAULT_INK[ground] };
   }
   const colour = parseColour(value);
   if (colour.kind === 'none') return { kind: 'none' };
-  if (colour.kind === 'colour') return { kind: 'paint', pair: pairOf(colour.hex) };
+  if (colour.kind === 'colour') return { kind: 'colour', hex: colour.hex };
   notes.add(
     tag,
     `${colour.text} is not a colour this reads — a gradient, a pattern or an unknown name — so the default ink was used`,
   );
-  return { kind: 'paint', pair: { ...DEFAULT_INK } };
+  return { kind: 'substitute', hex: DEFAULT_INK[ground] };
+}
+
+/**
+ * `copied` is what the report's one honest sentence about colour rests on: a
+ * substituted ink arrives as a pair somebody chose, and a colour a dark-scheme
+ * rule stated is a pair the file chose, but a single hex duplicated into both
+ * halves is a pair nobody chose at all.
+ */
+type Ink = { kind: 'paint'; pair: Pair; copied: boolean } | { kind: 'none' } | { kind: 'absent' };
+
+const hexOf = (half: Half): string | null =>
+  half.kind === 'colour' || half.kind === 'substitute' ? half.hex : null;
+
+function inkOf(stated: Stated, tag: string, notes: Notes): Ink {
+  const light = halfOf(stated.light, 'light', tag, notes);
+  const dark = halfOf(stated.dark, 'dark', tag, notes);
+  const lightHex = hexOf(light);
+  const darkHex = hexOf(dark);
+
+  if (lightHex === null && darkHex === null) {
+    return light.kind === 'none' || dark.kind === 'none' ? { kind: 'none' } : { kind: 'absent' };
+  }
+  // One half painted and the other not is a thing the file can say and this
+  // model cannot: an object is drawn in both schemes or in neither.
+  if (lightHex === null || darkHex === null) notes.add(tag, ONE_HALF_NOTE);
+
+  return {
+    kind: 'paint',
+    pair: { light: lightHex ?? darkHex ?? '', dark: darkHex ?? lightHex ?? '' },
+    copied: !stated.told && light.kind === 'colour',
+  };
 }
 
 /** An alpha attribute — a number, or a percentage of one. */
@@ -640,8 +704,8 @@ function parseAlpha(value: string | undefined): number | null {
 /** What a group hands down: its transform, and the paint its children inherit. */
 interface Context {
   matrix: Matrix;
-  fill: string | undefined;
-  stroke: string | undefined;
+  fill: Stated;
+  stroke: Stated;
   strokeWidth: string | undefined;
   fillOpacity: string | undefined;
   strokeOpacity: string | undefined;
@@ -649,7 +713,13 @@ interface Context {
   opacity: number;
 }
 
-function geometryOf(node: SvgNode, notes: Notes): Geometry | null {
+/** What the walk keeps as it goes: how many shapes it took, and what it guessed. */
+interface Tally {
+  taken: number;
+  copied: boolean;
+}
+
+function geometryOf(node: StyledNode, notes: Notes): Geometry | null {
   const attrs = node.attrs;
   const number = (name: string): number => parseLength(attrs[name]) ?? 0;
 
@@ -743,10 +813,11 @@ function geometryOf(node: SvgNode, notes: Notes): Geometry | null {
  * you see — is a question only the placed geometry can answer.
  */
 function objectOf(
-  node: SvgNode,
+  node: StyledNode,
   context: Context,
   sequence: number,
   notes: Notes,
+  tally: Tally,
 ): IconObject | null {
   const geometry = geometryOf(node, notes);
   if (!geometry) return null;
@@ -755,8 +826,8 @@ function objectOf(
   if (placed.note) notes.add(node.tag, placed.note);
 
   const attrs = node.attrs;
-  const fill = inkOf(attrs['fill'] ?? context.fill, node.tag, notes);
-  const stroke = inkOf(attrs['stroke'] ?? context.stroke, node.tag, notes);
+  const fill = inkOf(statedOf(node, 'fill', context.fill), node.tag, notes);
+  const stroke = inkOf(statedOf(node, 'stroke', context.stroke), node.tag, notes);
   const width = parseLength(attrs['stroke-width'] ?? context.strokeWidth) ?? 1;
   const strokeWidth = Math.max(0, width * strokeScaleOf(context.matrix));
 
@@ -765,6 +836,10 @@ function objectOf(
   let paint: Pair;
   let outline: Pair;
   let outlineWidth: number;
+  // Whether the pair this object ends up wearing had its dark half invented.
+  // Read off the ink that actually paints it rather than off every ink stated,
+  // so a colour on a shape that draws nothing never provokes the report.
+  let copied: boolean;
 
   if (!run && fill.kind === 'none') {
     if (stroke.kind !== 'paint') {
@@ -788,15 +863,18 @@ function objectOf(
     // colour is what it meant, so that is what the stroke becomes.
     if (stroke.kind === 'paint') {
       paint = stroke.pair;
+      copied = stroke.copied;
     } else if (shape.kind === 'line') {
       notes.add(node.tag, 'a line with no stroke paints nothing — a fill has no area to cover');
       return null;
     } else if (fill.kind === 'paint') {
       notes.add(node.tag, 'it has no stroke, and a run is drawn by its stroke, so its fill colour was used');
       paint = fill.pair;
+      copied = fill.copied;
     } else if (fill.kind === 'absent') {
       notes.add(node.tag, "it states no paint at all, so SVG's default black became its stroke");
       paint = pairOf('#000000');
+      copied = true;
     } else {
       notes.add(node.tag, 'its fill and its stroke are both none, so it would paint nothing');
       return null;
@@ -808,7 +886,10 @@ function objectOf(
     paint = fill.kind === 'paint' ? fill.pair : pairOf('#000000');
     outline = stroke.kind === 'paint' ? stroke.pair : paint;
     outlineWidth = stroke.kind === 'paint' ? strokeWidth : 0;
+    copied = fill.kind === 'paint' ? fill.copied : true;
+    if (stroke.kind === 'paint' && stroke.copied) copied = true;
   }
+  if (copied) tally.copied = true;
 
   const fillAlpha = parseAlpha(attrs['fill-opacity'] ?? context.fillOpacity) ?? 1;
   const strokeAlpha = parseAlpha(attrs['stroke-opacity'] ?? context.strokeOpacity) ?? 1;
@@ -838,14 +919,14 @@ function objectOf(
   };
 }
 
-function contextFor(node: SvgNode, parent: Context): Context {
+function contextFor(node: StyledNode, parent: Context): Context {
   const attrs = node.attrs;
   const own = attrs['transform'];
   const matrix = own === undefined ? parent.matrix : multiply(parent.matrix, parseTransform(own).matrix);
   return {
     matrix,
-    fill: attrs['fill'] ?? parent.fill,
-    stroke: attrs['stroke'] ?? parent.stroke,
+    fill: statedOf(node, 'fill', parent.fill),
+    stroke: statedOf(node, 'stroke', parent.stroke),
     strokeWidth: attrs['stroke-width'] ?? parent.strokeWidth,
     fillOpacity: attrs['fill-opacity'] ?? parent.fillOpacity,
     strokeOpacity: attrs['stroke-opacity'] ?? parent.strokeOpacity,
@@ -856,27 +937,45 @@ function contextFor(node: SvgNode, parent: Context): Context {
   };
 }
 
-/** Elements that carry no artwork and lose nothing by being skipped. */
-const SILENT = new Set(['title', 'desc', 'metadata']);
+/**
+ * Elements that carry no artwork and lose nothing by being skipped. `style` is
+ * one of them now that its rules are read: whatever it said is already on the
+ * elements it named, and whatever it said that could not be is in the report.
+ */
+const SILENT = new Set(['title', 'desc', 'metadata', 'style']);
+
+/**
+ * A dark-scheme rule may change any property, and only a colour can differ
+ * between the two halves of this model — one width, one opacity, one shape.
+ */
+function reportDarkOnly(node: StyledNode, notes: Notes): void {
+  for (const property of Object.keys(node.dark)) {
+    if (property === 'fill' || property === 'stroke') continue;
+    notes.add(
+      node.tag,
+      `a dark-scheme rule sets ${property}, and only a colour may differ between the two halves here, so the light value was used`,
+    );
+  }
+}
 
 function walk(
-  node: SvgNode,
+  node: StyledNode,
   context: Context,
   out: IconObject[],
   notes: Notes,
-  count: { taken: number },
+  tally: Tally,
 ): void {
   for (const child of node.children) {
     const tag = child.tag;
     if (SILENT.has(tag)) continue;
-    if (child.attrs['class'] !== undefined) notes.add(tag, CLASS_NOTE);
+    reportDarkOnly(child, notes);
 
     if (tag === 'g') {
       notes.add(
         'g',
         'the model has no groups, so its transform and paint were pushed onto its children and the group itself dropped',
       );
-      walk(child, contextFor(child, context), out, notes, count);
+      walk(child, contextFor(child, context), out, notes, tally);
       continue;
     }
 
@@ -889,11 +988,16 @@ function walk(
       const parsed = transform === undefined ? null : parseTransform(transform);
       if (parsed?.error) notes.add(tag, parsed.error);
       const matrix = parsed ? multiply(context.matrix, parsed.matrix) : context.matrix;
-      count.taken += 1;
-      const object = objectOf(child, { ...context, matrix }, count.taken, notes);
+      tally.taken += 1;
+      const object = objectOf(child, { ...context, matrix }, tally.taken, notes, tally);
       if (object) out.push(object);
       continue;
     }
+
+    // A `<defs>` holding nothing but a stylesheet is where several drawing
+    // tools put one, and its rules are read: saying nothing inside it was
+    // imported would be the report's own kind of lie.
+    if (tag === 'defs' && child.children.every((inner) => SILENT.has(inner.tag))) continue;
 
     notes.add(tag, DROPPED[tag] ?? 'this element is not one the document model has a kind for');
   }
@@ -913,7 +1017,7 @@ const DEFAULT_ARTBOARD: Artboard = { width: 512, height: 512 };
  * a non-zero origin becomes the first translate every shape goes through. That
  * is exact, so nothing is reported for it.
  */
-function artboardOf(root: SvgNode, notes: Notes): { artboard: Artboard; origin: Point } {
+function artboardOf(root: StyledNode, notes: Notes): { artboard: Artboard; origin: Point } {
   const viewBox = root.attrs['viewBox'];
   if (viewBox !== undefined) {
     const numbers = parseNumbers(viewBox);
@@ -968,9 +1072,14 @@ export function importSvg(text: string, name: string): ImportOutcome {
   if (!parsed.ok) return parsed;
 
   const notes = new Notes();
-  const { artboard, origin } = artboardOf(parsed.root, notes);
-  const root = parsed.root;
-  if (root.attrs['class'] !== undefined) notes.add('svg', CLASS_NOTE);
+  // The stylesheet is resolved onto the tree before the walk begins: which
+  // elements a rule reaches is a question about the whole file, and the walk
+  // knows only where it is.
+  const sheet = readStylesheet(parsed.css);
+  for (const problem of sheet.problems) notes.add('style', problem);
+  const root = applyStylesheet(parsed.root, sheet);
+  const { artboard, origin } = artboardOf(root, notes);
+  reportDarkOnly(root, notes);
 
   const own = root.attrs['transform'];
   const matrix = multiply(
@@ -979,12 +1088,13 @@ export function importSvg(text: string, name: string): ImportOutcome {
   );
 
   const objects: IconObject[] = [];
+  const tally: Tally = { taken: 0, copied: false };
   walk(
     root,
     {
       matrix,
-      fill: root.attrs['fill'],
-      stroke: root.attrs['stroke'],
+      fill: statedOf(root, 'fill', UNSTATED),
+      stroke: statedOf(root, 'stroke', UNSTATED),
       strokeWidth: root.attrs['stroke-width'],
       fillOpacity: root.attrs['fill-opacity'],
       strokeOpacity: root.attrs['stroke-opacity'],
@@ -992,10 +1102,14 @@ export function importSvg(text: string, name: string): ImportOutcome {
     },
     objects,
     notes,
-    { taken: 0 },
+    tally,
   );
 
-  if (objects.length > 0) notes.add('svg', PAIR_NOTE);
+  if (tally.copied) notes.add('svg', PAIR_NOTE);
+  // Said outright rather than left to be inferred from a count of zero: a file
+  // that was understood and had nothing this model can hold looks exactly like
+  // one that was quietly lost.
+  if (objects.length === 0) notes.add('svg', EMPTY_NOTE);
 
   const doc: IconDoc = { ...emptyDocument(name, artboard), objects: objects.reverse() };
   return { ok: true, doc, report: { objects: objects.length, notes: notes.list } };

@@ -19,6 +19,13 @@ export function ImportReportDialog({
 }) {
   const notes = summary.ok ? summary.report.notes : [];
 
+  /**
+   * A file read whole that held nothing this model can draw is not the same
+   * event as a count of zero: without saying so, an empty document looks like
+   * the import quietly failed. Every reason it was empty is in the list below.
+   */
+  const emptied = summary.ok && summary.report.objects === 0;
+
   return (
     <DialogRoot open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="w-140 max-w-full p-0">
@@ -28,9 +35,11 @@ export function ImportReportDialog({
               {summary.ok ? `Imported ${summary.file}` : `Could not import ${summary.file}`}
             </DialogTitle>
             <span className="font-sans text-12 text-gray-11">
-              {summary.ok
-                ? `${summary.report.objects} ${summary.report.objects === 1 ? 'object' : 'objects'} into a new document. An import never merges into the one you were editing.`
-                : summary.message}
+              {!summary.ok
+                ? summary.message
+                : emptied
+                  ? 'The file was read whole, and nothing in it could become an object — the new document is empty. Every reason is below.'
+                  : `${summary.report.objects} ${summary.report.objects === 1 ? 'object' : 'objects'} into a new document. An import never merges into the one you were editing.`}
             </span>
           </div>
         </div>
