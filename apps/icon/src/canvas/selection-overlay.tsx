@@ -1,10 +1,10 @@
 import type { PointerEvent } from 'react';
 import type { Box, Point } from '../doc/geometry';
 import {
-  ENDPOINT_HANDLES,
-  HANDLE_CURSOR,
+  handleCursor,
   handlePosition,
   RESIZE_HANDLES,
+  vertexHandle,
   type Handle,
   type ResizeHandle,
 } from './interaction';
@@ -84,7 +84,7 @@ export function SelectionOverlay({ box, rotation, scale, onHandleDown }: Overlay
               top: (position.y - box.y) * scale - size.h / 2,
               width: size.w,
               height: size.h,
-              cursor: HANDLE_CURSOR[handle],
+              cursor: handleCursor(handle),
             }}
           />
         );
@@ -96,28 +96,39 @@ export function SelectionOverlay({ box, rotation, scale, onHandleDown }: Overlay
 }
 
 /**
- * A line's selection: its two ends, and nothing else.
- *
- * Drawn in artboard space rather than inside a rotated box, because the
- * endpoints already carry the line's direction — there is no box for them to
- * sit in the corners of.
+ * What a two-point run's ends are called. "Start" and "end" say more about a
+ * line than "point 1" and "point 2" do, and a line is the only shape whose
+ * points have names of their own.
  */
-export function LineSelectionOverlay({
-  endpoints,
+function vertexLabel(index: number, count: number): string {
+  if (count !== 2) return `Move point ${index + 1}`;
+  return index === 0 ? 'Move start point' : 'Move end point';
+}
+
+/**
+ * The selection for a shape made of points: one handle per point, and nothing
+ * else.
+ *
+ * Drawn in artboard space rather than inside a rotated box, because the points
+ * already carry the shape — there is no box for them to sit in the corners of,
+ * and dragging one must move only itself.
+ */
+export function PointsSelectionOverlay({
+  points,
   box,
   rotation,
   scale,
   onHandleDown,
-}: Omit<OverlayProps, 'box'> & { endpoints: [Point, Point]; box: Box }) {
+}: Omit<OverlayProps, 'box'> & { points: readonly Point[]; box: Box }) {
   return (
     <>
-      {ENDPOINT_HANDLES.map((handle, index) => {
-        const point = endpoints[index] ?? endpoints[0];
+      {points.map((point, index) => {
+        const handle = vertexHandle(index);
         return (
           <button
             key={handle}
             type="button"
-            aria-label={handle === 'p1' ? 'Move start point' : 'Move end point'}
+            aria-label={vertexLabel(index, points.length)}
             onPointerDown={(event) => onHandleDown(handle, event)}
             className={`${HANDLE_SKIN} rounded-full`}
             style={{
@@ -125,7 +136,7 @@ export function LineSelectionOverlay({
               top: point.y * scale - ENDPOINT_PX / 2,
               width: ENDPOINT_PX,
               height: ENDPOINT_PX,
-              cursor: HANDLE_CURSOR[handle],
+              cursor: handleCursor(handle),
             }}
           />
         );
@@ -170,7 +181,7 @@ function RotateKnob({ onHandleDown }: Pick<OverlayProps, 'onHandleDown'>) {
           top: -(ROTATE_STEM + ROTATE_KNOB),
           width: ROTATE_KNOB,
           height: ROTATE_KNOB,
-          cursor: HANDLE_CURSOR.rotate,
+          cursor: handleCursor('rotate'),
         }}
       />
     </>

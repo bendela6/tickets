@@ -8,12 +8,14 @@ import {
   extentOf,
   fitToBox,
   hitTest,
+  isOpenRun,
   lineEndpoints,
   polygonPoints,
   rotatedBounds,
   translate,
+  vertexPoints,
 } from './geometry';
-import type { IconObject } from './types';
+import type { IconObject, Point } from './types';
 
 /** The 512-square board most of these fixtures assume. */
 const BOARD = { width: 512, height: 512 };
@@ -22,6 +24,25 @@ const rect = (over: Partial<IconObject> = {}): IconObject => ({
   ...newObject('rect', 1, BOARD),
   ...over,
 });
+
+/** A shape with a given point list and no stroke, so its box is its points. */
+const withPoints = (
+  kind: 'polyline' | 'polygon',
+  points: Point[],
+  over: Partial<IconObject> = {},
+): IconObject => ({
+  ...newObject(kind, 1, BOARD),
+  geometry: { kind, points },
+  strokeWidth: 0,
+  ...over,
+});
+
+/** A right triangle with legs of 100, its corner at the origin of the box. */
+const TRIANGLE: Point[] = [
+  { x: 100, y: 100 },
+  { x: 200, y: 100 },
+  { x: 100, y: 200 },
+];
 
 describe('polygonPoints', () => {
   it('puts the first vertex directly above the centre, so a triangle points up', () => {
@@ -50,9 +71,37 @@ describe('bounds', () => {
     expect(box.w).toBe(376 - 136 + line.strokeWidth);
   });
 
-  it('boxes a polygon by its circumradius', () => {
-    const poly = newObject('polygon', 1, BOARD);
-    expect(bounds(poly)).toEqual({ x: 256 - 120, y: 256 - 120, w: 240, h: 240 });
+  it('boxes a circle by its radius', () => {
+    const circle = newObject('circle', 1, BOARD);
+    expect(bounds(circle)).toEqual({ x: 256 - 120, y: 256 - 120, w: 240, h: 240 });
+  });
+
+  it('boxes a point list by the points themselves, not by what they were made from', () => {
+    // The hexagon preset's own extents: a flat-sided hexagon is narrower than
+    // the circle it was generated on, and its box has to say so.
+    expect(bounds(withPoints('polygon', TRIANGLE))).toEqual({ x: 100, y: 100, w: 100, h: 100 });
+  });
+
+  it('inflates a polyline by its stroke, for the same reason a line is inflated', () => {
+    const run = withPoints('polyline', TRIANGLE, { strokeWidth: 10 });
+    expect(bounds(run)).toEqual({ x: 95, y: 95, w: 110, h: 110 });
+  });
+
+  it('has somewhere to be even with no points at all, rather than reporting infinity', () => {
+    const empty = withPoints('polyline', []);
+    expect(bounds(empty)).toEqual({ x: 0, y: 0, w: 0, h: 0 });
+  });
+});
+
+describe('isOpenRun', () => {
+  it('names the shapes with length and no area, which are drawn by their stroke', () => {
+    expect((['line', 'polyline'] as const).map(isOpenRun)).toEqual([true, true]);
+    expect((['rect', 'circle', 'ellipse', 'polygon'] as const).map(isOpenRun)).toEqual([
+      false,
+      false,
+      false,
+      false,
+    ]);
   });
 });
 
@@ -137,13 +186,32 @@ describe('contains', () => {
   });
 
   it('excludes the notches between a polygon’s vertices', () => {
-    const triangle: IconObject = {
-      ...newObject('polygon', 1, BOARD),
-      geometry: { kind: 'polygon', cx: 256, cy: 256, r: 120, sides: 3 },
-    };
-    expect(contains(triangle, { x: 256, y: 256 })).toBe(true);
-    // Top-left of the box: inside the circumcircle's box, outside the triangle.
-    expect(contains(triangle, { x: 145, y: 145 })).toBe(false);
+    const triangle = withPoints('polygon', TRIANGLE);
+    expect(contains(triangle, { x: 120, y: 120 })).toBe(true);
+    // Bottom-right of the box: inside it, outside the triangle's hypotenuse.
+    expect(contains(triangle, { x: 190, y: 190 })).toBe(false);
+  });
+
+  it('keeps a circle round, so its box corners are not on it', () => {
+    const circle = newObject('circle', 1, BOARD);
+    expect(contains(circle, { x: 256, y: 256 })).toBe(true);
+    expect(contains(circle, { x: 137, y: 137 })).toBe(false);
+  });
+
+  it('gives a polyline the width of its stroke along every segment, and no area', () => {
+    const run = withPoints('polyline', TRIANGLE, { strokeWidth: 10 });
+    // On the first segment, which runs from (100,100) to (200,100).
+    expect(contains(run, { x: 150, y: 103 })).toBe(true);
+    // Between the ends of the open run: inside the box, on no segment.
+    expect(contains(run, { x: 160, y: 160 })).toBe(false);
+  });
+
+  it('closes a polygon and leaves a polyline open, on the same points', () => {
+    const closed = withPoints('polygon', TRIANGLE);
+    const open = withPoints('polyline', TRIANGLE);
+    const inside = { x: 120, y: 120 };
+    expect(contains(closed, inside)).toBe(true);
+    expect(contains(open, inside)).toBe(false);
   });
 });
 
@@ -197,22 +265,94 @@ describe('translate', () => {
     const moved = translate({ kind: 'line', x1: 0, y1: 0, x2: 10, y2: 20 }, 5, -5);
     expect(moved).toEqual({ kind: 'line', x1: 5, y1: -5, x2: 15, y2: 15 });
   });
-  it('moves a polygon by its centre', () => {
-    expect(translate({ kind: 'polygon', cx: 10, cy: 10, r: 4, sides: 5 }, 3, 3)).toEqual({
-      kind: 'polygon',
+  it('moves a circle by its centre', () => {
+    expect(translate({ kind: 'circle', cx: 10, cy: 10, r: 4 }, 3, 3)).toEqual({
+      kind: 'circle',
       cx: 13,
       cy: 13,
       r: 4,
-      sides: 5,
+    });
+  });
+
+  it('moves every point of a run, so its shape is untouched', () => {
+    expect(translate({ kind: 'polygon', points: TRIANGLE }, 5, -5)).toEqual({
+      kind: 'polygon',
+      points: [
+        { x: 105, y: 95 },
+        { x: 205, y: 95 },
+        { x: 105, y: 195 },
+      ],
     });
   });
 });
 
+describe('vertexPoints', () => {
+  it('is empty for the shapes dragged by a box, which have no points to drag', () => {
+    for (const kind of ['rect', 'circle', 'ellipse'] as const) {
+      expect(vertexPoints(newObject(kind, 1, BOARD))).toEqual([]);
+    }
+  });
+
+  it('is a line’s two ends, so one overlay serves every shape made of points', () => {
+    const line = newObject('line', 1, BOARD);
+    expect(vertexPoints(line)).toEqual(lineEndpoints(line));
+  });
+
+  it('returns a point list as stored while the shape is upright', () => {
+    expect(vertexPoints(withPoints('polygon', TRIANGLE))).toEqual(TRIANGLE);
+  });
+
+  it('applies the object’s rotation, because that is where the handles have to be', () => {
+    const turned = withPoints('polygon', TRIANGLE, { rotation: 90 });
+    const centre = centreOf(turned);
+    const [first] = vertexPoints(turned);
+    // (100,100) is the box's top-left; a quarter turn takes it to the top-right.
+    expect(first?.x).toBeCloseTo(centre.x + 50, 6);
+    expect(first?.y).toBeCloseTo(centre.y - 50, 6);
+  });
+});
+
 describe('fitToBox', () => {
-  it('keeps a polygon regular by taking the smaller half-extent as its radius', () => {
-    const poly = newObject('polygon', 1, BOARD);
-    const fitted = fitToBox(poly, { x: 0, y: 0, w: 200, h: 80 });
-    expect(fitted).toEqual({ kind: 'polygon', cx: 100, cy: 40, r: 40, sides: 6 });
+  it('keeps a circle circular by taking the smaller half-extent as its radius', () => {
+    const circle = newObject('circle', 1, BOARD);
+    expect(fitToBox(circle, { x: 0, y: 0, w: 200, h: 80 })).toEqual({
+      kind: 'circle',
+      cx: 100,
+      cy: 40,
+      r: 40,
+    });
+  });
+
+  it('scales a point list into the new box, proportionally on each axis', () => {
+    const fitted = fitToBox(withPoints('polygon', TRIANGLE), { x: 0, y: 0, w: 200, h: 50 });
+    expect(fitted).toEqual({
+      kind: 'polygon',
+      points: [
+        { x: 0, y: 0 },
+        { x: 200, y: 0 },
+        { x: 0, y: 50 },
+      ],
+    });
+  });
+
+  it('leaves room for the stroke, so a run resized to its own box does not creep inwards', () => {
+    const run = withPoints('polyline', TRIANGLE, { strokeWidth: 10 });
+    expect(fitToBox(run, bounds(run))).toEqual({ kind: 'polyline', points: TRIANGLE });
+  });
+
+  it('collapses a flat run onto the new box rather than dividing by its zero extent', () => {
+    const flat = withPoints('polyline', [
+      { x: 10, y: 0 },
+      { x: 10, y: 40 },
+    ]);
+    const fitted = fitToBox(flat, { x: 100, y: 100, w: 0, h: 80 });
+    expect(fitted).toEqual({
+      kind: 'polyline',
+      points: [
+        { x: 100, y: 100 },
+        { x: 100, y: 180 },
+      ],
+    });
   });
 
   it('keeps a line running the same way it did', () => {
@@ -227,9 +367,12 @@ describe('fitToBox', () => {
   });
 
   it('round-trips: fitting a shape to its own bounds changes nothing', () => {
-    for (const kind of ['rect', 'ellipse', 'line', 'polygon'] as const) {
+    for (const kind of ['rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon'] as const) {
       const object = newObject(kind, 1, BOARD);
-      expect(fitToBox(object, bounds(object))).toEqual(object.geometry);
+      expect({ kind, geometry: fitToBox(object, bounds(object)) }).toEqual({
+        kind,
+        geometry: object.geometry,
+      });
     }
   });
 

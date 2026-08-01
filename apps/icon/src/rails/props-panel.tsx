@@ -7,7 +7,15 @@ import {
   SNAP_MIN,
   SNAP_PRESETS,
 } from '../doc/constants';
-import { aimLine, bounds, lineAngle, rotatedBounds, type Box } from '../doc/geometry';
+import {
+  aimLine,
+  bounds,
+  fitToBox,
+  isOpenRun,
+  lineAngle,
+  rotatedBounds,
+  type Box,
+} from '../doc/geometry';
 import { selectedObject } from '../doc/store';
 import { useEditor } from '../editor-context';
 import type { IconObject } from '../doc/types';
@@ -38,14 +46,7 @@ function Header({ object }: { object: IconObject | null }) {
   return (
     <div className="flex h-11 flex-none items-center gap-2.25 border-b-1 border-gray-6 px-3.5">
       <span className="flex-none text-gray-11">
-        {object ? (
-          <ShapeGlyph
-            kind={object.geometry.kind}
-            sides={object.geometry.kind === 'polygon' ? object.geometry.sides : undefined}
-          />
-        ) : (
-          <ShapeGlyph kind="rect" />
-        )}
+        <ShapeGlyph kind={object ? object.geometry.kind : 'rect'} />
       </span>
       <span className="min-w-0 flex-1 truncate font-mono text-12 font-500 text-gray-12">
         {object?.name ?? 'document'}
@@ -59,17 +60,17 @@ function Header({ object }: { object: IconObject | null }) {
 
 function ObjectProperties({ object }: { object: IconObject }) {
   const { state, dispatch, view } = useEditor();
-  const isLine = object.geometry.kind === 'line';
+  const isRun = isOpenRun(object.geometry.kind);
 
   return (
     <>
       <PositionGroup object={object} />
 
       <RailGroup label="APPEARANCE">
-        {/* A line has no area, so a fill would paint nothing. Everything else
+        {/* A run has no area, so a fill would paint nothing. Everything else
             gets both, and both are editable — a shape that can be given a
             stroke width it cannot colour is not a finished control. */}
-        {isLine ? null : (
+        {isRun ? null : (
           <ColourPairField
             label="FILL"
             value={object.fill}
@@ -104,10 +105,10 @@ function ObjectProperties({ object }: { object: IconObject }) {
         />
 
         <NumberField
-          label={isLine ? 'THICKNESS' : 'STROKE WIDTH'}
-          name={isLine ? 'Thickness' : 'Stroke width'}
+          label={isRun ? 'THICKNESS' : 'STROKE WIDTH'}
+          name={isRun ? 'Thickness' : 'Stroke width'}
           value={object.strokeWidth}
-          min={isLine ? 1 : 0}
+          min={isRun ? 1 : 0}
           onCommit={(width) => dispatch({ type: 'setStrokeWidth', id: object.id, width })}
         />
 
@@ -147,13 +148,29 @@ function formatOnArtboard(box: Box): string {
 }
 
 /**
+ * A row that states something rather than accepting it: same frame as a
+ * `NumberField` so it sits in the rail's rhythm, but no input, because nothing
+ * here would know what to do with a typed answer.
+ */
+function ReadOnlyRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex h-7.5 items-center gap-1.5 rounded-md border-1 border-gray-6 bg-surface-raised px-2.25">
+      <span className="flex-none font-mono text-9 text-gray-9">{label}</span>
+      <span className="min-w-0 flex-1 text-right font-mono text-12 text-gray-12">{value}</span>
+    </div>
+  );
+}
+
+/**
  * Where the object is, stated in the terms the shape is actually defined by.
  *
  * A line is two points, so quoting it an X/Y/W/H box describes a by-product of
  * where its ends happen to be — and offers a height field that really means
- * thickness. A polygon is a centre and a radius. Only the two box shapes are
- * boxes. Every shape still gets rotation, because rotation is a transform on
- * top of geometry rather than part of it, and `spins` needs it.
+ * thickness. A circle is a centre and a radius. A point list has no natural
+ * numbers of its own beyond the points themselves, so it is given the box it
+ * occupies, which scales it: a field per vertex would be a table, not a rail.
+ * Every shape still gets rotation, because rotation is a transform on top of
+ * geometry rather than part of it, and `spins` needs it.
  */
 function PositionGroup({ object }: { object: IconObject }) {
   const { state, dispatch } = useEditor();
@@ -177,12 +194,7 @@ function PositionGroup({ object }: { object: IconObject }) {
   // once the rotation is applied.
   const onArtboard =
     object.rotation !== 0 ? (
-      <div className="flex h-7.5 items-center gap-1.5 rounded-md border-1 border-gray-6 bg-surface-raised px-2.25">
-        <span className="flex-none font-mono text-9 text-gray-9">ON ARTBOARD</span>
-        <span className="min-w-0 flex-1 text-right font-mono text-12 text-gray-12">
-          {formatOnArtboard(rotatedBounds(object))}
-        </span>
-      </div>
+      <ReadOnlyRow label="ON ARTBOARD" value={formatOnArtboard(rotatedBounds(object))} />
     ) : null;
 
   const setGeometry = (next: typeof geometry, label: string) =>
@@ -227,7 +239,7 @@ function PositionGroup({ object }: { object: IconObject }) {
     );
   }
 
-  if (geometry.kind === 'polygon') {
+  if (geometry.kind === 'circle') {
     return (
       <RailGroup label="POSITION &amp; SIZE">
         <div className="grid grid-cols-2 gap-1.5">
@@ -235,14 +247,14 @@ function PositionGroup({ object }: { object: IconObject }) {
             label="CX"
             name="Centre X"
             value={geometry.cx}
-          step={step}
+            step={step}
             onCommit={(cx) => setGeometry({ ...geometry, cx }, `move ${object.name}`)}
           />
           <NumberField
             label="CY"
             name="Centre Y"
             value={geometry.cy}
-          step={step}
+            step={step}
             onCommit={(cy) => setGeometry({ ...geometry, cy }, `move ${object.name}`)}
           />
         </div>
@@ -260,6 +272,50 @@ function PositionGroup({ object }: { object: IconObject }) {
   }
 
   const box = bounds(object);
+
+  if (geometry.kind === 'polyline' || geometry.kind === 'polygon') {
+    // Every edit is the same one — a new box for the points to be scaled into
+    // — so all four fields go through `fitToBox` and differ only in wording.
+    const toBox = (next: Box, label: string) => setGeometry(fitToBox(object, next), label);
+    return (
+      <RailGroup label="POSITION &amp; SIZE">
+        <div className="grid grid-cols-2 gap-1.5">
+          <NumberField
+            label="X"
+            value={box.x}
+            step={step}
+            onCommit={(x) => toBox({ ...box, x }, `move ${object.name}`)}
+          />
+          <NumberField
+            label="Y"
+            value={box.y}
+            step={step}
+            onCommit={(y) => toBox({ ...box, y }, `move ${object.name}`)}
+          />
+          <NumberField
+            label="W"
+            name="Width"
+            value={box.w}
+            step={step}
+            min={1}
+            onCommit={(w) => toBox({ ...box, w }, `resize ${object.name}`)}
+          />
+          <NumberField
+            label="H"
+            name="Height"
+            value={box.h}
+            step={step}
+            min={1}
+            onCommit={(h) => toBox({ ...box, h }, `resize ${object.name}`)}
+          />
+        </div>
+        <ReadOnlyRow label="POINTS" value={String(geometry.points.length)} />
+        {rotation}
+        {onArtboard}
+      </RailGroup>
+    );
+  }
+
   return (
     <RailGroup label="POSITION &amp; SIZE">
       <div className="grid grid-cols-2 gap-1.5">
@@ -300,9 +356,10 @@ function PositionGroup({ object }: { object: IconObject }) {
 
 /**
  * The one group that depends on which shape is selected — corner radius for a
- * rectangle, sides for a polygon, nothing for the other two.
+ * rectangle, and nothing for anything else. A polygon used to offer a side
+ * count; it is a list of points now, and a count cannot describe one.
  *
- * A separate component rather than two ternaries inside `ObjectProperties`,
+ * A separate component rather than a ternary inside `ObjectProperties`,
  * because narrowing `object.geometry.kind` in a JSX condition does not narrow
  * it inside the callbacks underneath: a `const` here does what a condition
  * there cannot.
@@ -311,48 +368,25 @@ function ShapeSpecific({ object }: { object: IconObject }) {
   const { dispatch } = useEditor();
   const geometry = object.geometry;
 
-  if (geometry.kind === 'rect') {
-    return (
-      <RailGroup label="RECTANGLE">
-        <NumberField
-          label="CORNER RADIUS"
-          value={geometry.radius}
-          min={0}
-          onCommit={(radius) =>
-            dispatch({
-              type: 'setGeometry',
-              id: object.id,
-              geometry: { ...geometry, radius },
-              label: `radius ${object.name}`,
-            })
-          }
-        />
-      </RailGroup>
-    );
-  }
+  if (geometry.kind !== 'rect') return null;
 
-  if (geometry.kind === 'polygon') {
-    return (
-      <RailGroup label="POLYGON">
-        <NumberField
-          label="SIDES"
-          value={geometry.sides}
-          min={3}
-          max={24}
-          onCommit={(sides) =>
-            dispatch({
-              type: 'setGeometry',
-              id: object.id,
-              geometry: { ...geometry, sides },
-              label: `sides ${object.name}`,
-            })
-          }
-        />
-      </RailGroup>
-    );
-  }
-
-  return null;
+  return (
+    <RailGroup label="RECTANGLE">
+      <NumberField
+        label="CORNER RADIUS"
+        value={geometry.radius}
+        min={0}
+        onCommit={(radius) =>
+          dispatch({
+            type: 'setGeometry',
+            id: object.id,
+            geometry: { ...geometry, radius },
+            label: `radius ${object.name}`,
+          })
+        }
+      />
+    </RailGroup>
+  );
 }
 
 function DocumentProperties() {

@@ -21,18 +21,39 @@ export interface Pair {
 /** Which half of a pair is currently being previewed and edited. */
 export type Ground = 'light' | 'dark';
 
-export type ShapeKind = 'rect' | 'ellipse' | 'line' | 'polygon';
+/** A position in document units. Lives here because `Geometry` is stated in them. */
+export interface Point {
+  x: number;
+  y: number;
+}
+
+/**
+ * The shapes a document may hold.
+ *
+ * Every one of these is an SVG element, and that is the whole of the rule: a
+ * document cannot contain something the format it exports to has no name for.
+ * A regular n-gon is not on the list — SVG's `<polygon>` is a list of points
+ * and nothing else — so a hexagon is a preset that *makes* a point list rather
+ * than a kind that remembers being regular.
+ */
+export type ShapeKind = 'rect' | 'circle' | 'ellipse' | 'line' | 'polyline' | 'polygon';
 
 /**
  * Geometry, per kind. A line is stored as two endpoints rather than a box
- * because a box cannot say which way it runs, and a polygon as a centre and a
- * radius because that is what keeps it regular under resize.
+ * because a box cannot say which way it runs, and a circle as a centre and a
+ * radius because that is what keeps it circular under resize.
+ *
+ * A rect and an ellipse are both stored as boxes even though `<ellipse>` is
+ * written as a centre and two radii: which element a shape *is* and how its
+ * attributes are encoded are separate questions, and the renderer converts.
  */
 export type Geometry =
   | { kind: 'rect'; x: number; y: number; w: number; h: number; radius: number }
+  | { kind: 'circle'; cx: number; cy: number; r: number }
   | { kind: 'ellipse'; x: number; y: number; w: number; h: number }
   | { kind: 'line'; x1: number; y1: number; x2: number; y2: number }
-  | { kind: 'polygon'; cx: number; cy: number; r: number; sides: number };
+  | { kind: 'polyline'; points: Point[] }
+  | { kind: 'polygon'; points: Point[] };
 
 export type Role = 'spins' | 'moves' | 'fades';
 

@@ -27,10 +27,12 @@ describe('the screen', () => {
     expect(within(propsRail()).getByText('The artboard is empty.')).toBeInTheDocument();
   });
 
-  it('offers the four shapes on the artboard until the first one exists', async () => {
+  it('offers every shape on the artboard until the first one exists', async () => {
     const { user } = setup();
     const main = screen.getByRole('main');
-    expect(within(main).getByRole('button', { name: 'Rectangle' })).toBeInTheDocument();
+    for (const name of ['Rectangle', 'Circle', 'Ellipse', 'Line', 'Polyline', 'Polygon']) {
+      expect(within(main).getByRole('button', { name })).toBeInTheDocument();
+    }
     await user.click(within(main).getByRole('button', { name: 'Rectangle' }));
     expect(within(main).queryByText('place your first shape')).not.toBeInTheDocument();
   });
@@ -46,6 +48,28 @@ describe('adding and selecting', () => {
     );
     // Selection reads in the right rail too.
     expect(within(propsRail()).getByText('ELLIPSE')).toBeInTheDocument();
+  });
+
+  it('adds every kind from its own button, and selects what it added', async () => {
+    const tools = [
+      { label: 'Rectangle', name: 'rect 1', kind: 'RECT' },
+      { label: 'Circle', name: 'circle 1', kind: 'CIRCLE' },
+      { label: 'Ellipse', name: 'ellipse 1', kind: 'ELLIPSE' },
+      { label: 'Line', name: 'line 1', kind: 'LINE' },
+      { label: 'Polyline', name: 'polyline 1', kind: 'POLYLINE' },
+      { label: 'Polygon', name: 'polygon 1', kind: 'POLYGON' },
+    ];
+    for (const tool of tools) {
+      const { user } = setup();
+      await user.click(within(objectRail()).getByRole('button', { name: tool.label }));
+      expect(within(objectRail()).getByRole('button', { name: tool.name })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+      // Selection reads in the right rail too, which names the kind.
+      expect(within(propsRail()).getByText(tool.kind)).toBeInTheDocument();
+      cleanup();
+    }
   });
 
   it('puts each new shape in front of the last', async () => {
@@ -70,13 +94,22 @@ describe('adding and selecting', () => {
 });
 
 describe('keyboard', () => {
-  it('R, E, L and P each add their shape', async () => {
+  it('R, C, E, L, Y and P each add their shape', async () => {
     const { user } = setup();
-    await user.keyboard('r');
-    await user.keyboard('e');
-    await user.keyboard('l');
-    await user.keyboard('p');
-    expect(within(objectRail()).getAllByRole('listitem')).toHaveLength(4);
+    for (const key of ['r', 'c', 'e', 'l', 'y', 'p']) {
+      await user.keyboard(key);
+    }
+    const rows = within(objectRail()).getAllByRole('listitem');
+    expect(rows).toHaveLength(6);
+    // Front-to-back, so the last one pressed reads first.
+    expect(rows.map((row) => row.textContent)).toEqual([
+      expect.stringContaining('polygon 6'),
+      expect.stringContaining('polyline 5'),
+      expect.stringContaining('line 4'),
+      expect.stringContaining('ellipse 3'),
+      expect.stringContaining('circle 2'),
+      expect.stringContaining('rect 1'),
+    ]);
   });
 
   it('does not add a shape while a field has focus', async () => {
@@ -142,14 +175,17 @@ describe('properties', () => {
     expect(within(propsRail()).getByLabelText('X')).toHaveValue('200');
   });
 
-  it('shows corner radius for a rectangle and sides for a polygon, never both', async () => {
+  it('shows corner radius for a rectangle and for nothing else', async () => {
+    // A polygon used to offer a side count beside it. It is a list of points
+    // now, and a count cannot describe one — so the rectangle is the only
+    // shape left with a property of its own.
     const { user } = setup();
     await user.keyboard('r');
     expect(within(propsRail()).getByLabelText('CORNER RADIUS')).toBeInTheDocument();
-    expect(within(propsRail()).queryByLabelText('SIDES')).not.toBeInTheDocument();
-    await user.keyboard('p');
-    expect(within(propsRail()).getByLabelText('SIDES')).toBeInTheDocument();
-    expect(within(propsRail()).queryByLabelText('CORNER RADIUS')).not.toBeInTheDocument();
+    for (const key of ['c', 'e', 'l', 'y', 'p']) {
+      await user.keyboard(key);
+      expect(within(propsRail()).queryByLabelText('CORNER RADIUS')).not.toBeInTheDocument();
+    }
   });
 
   it('offers opacity as a slider as well as a number', async () => {
@@ -207,22 +243,54 @@ describe('handles match the shape', () => {
     expect(names.filter((name) => name.startsWith('Resize'))).toEqual([]);
   });
 
-  it('a line still rotates, because rotation is a transform and spins needs it', async () => {
+  it('a circle is resized as a box, since a box is what keeps it round', async () => {
     const { user } = setup();
-    await user.keyboard('l');
-    expect(handleNames()).toContain('Rotate');
+    await user.keyboard('c');
+    expect(handleNames()).toContain('Resize se');
+  });
+
+  it('a polygon gets one handle per point and no box handles at all', async () => {
+    const { user } = setup();
+    await user.keyboard('p');
+    const names = handleNames();
+    // The hexagon preset: six points, so six handles.
+    for (let i = 1; i <= 6; i++) expect(names).toContain(`Move point ${i}`);
+    expect(names).not.toContain('Move point 7');
+    expect(names.filter((name) => name.startsWith('Resize'))).toEqual([]);
+  });
+
+  it('a polyline gets one handle per point too', async () => {
+    const { user } = setup();
+    await user.keyboard('y');
+    const names = handleNames();
+    expect(names.filter((name) => name.startsWith('Move point'))).toEqual([
+      'Move point 1',
+      'Move point 2',
+      'Move point 3',
+    ]);
+  });
+
+  it('every shape still rotates, because rotation is a transform and spins needs it', async () => {
+    for (const key of ['r', 'c', 'e', 'l', 'y', 'p']) {
+      const { user } = setup();
+      await user.keyboard(key);
+      expect(handleNames()).toContain('Rotate');
+      cleanup();
+    }
   });
 });
 
 describe('every shape has equivalent controls', () => {
   const kinds = [
     { key: 'r', name: 'rect 1' },
+    { key: 'c', name: 'circle 1' },
     { key: 'e', name: 'ellipse 1' },
     { key: 'l', name: 'line 1' },
+    { key: 'y', name: 'polyline 1' },
     { key: 'p', name: 'polygon 1' },
   ];
 
-  it('all four can be given a stroke colour, not only a stroke width', async () => {
+  it('all of them can be given a stroke colour, not only a stroke width', async () => {
     for (const kind of kinds) {
       const { user } = setup();
       await user.keyboard(kind.key);
@@ -231,7 +299,7 @@ describe('every shape has equivalent controls', () => {
     }
   });
 
-  it('all four carry rotation, opacity and a thickness field', async () => {
+  it('all of them carry rotation, opacity and a thickness field', async () => {
     for (const kind of kinds) {
       const { user } = setup();
       await user.keyboard(kind.key);
@@ -246,11 +314,14 @@ describe('every shape has equivalent controls', () => {
   });
 
   it('only the shapes with an area offer a fill', async () => {
-    const { user } = setup();
-    await user.keyboard('r');
-    expect(within(propsRail()).getByLabelText('FILL light value')).toBeInTheDocument();
-    await user.keyboard('l');
-    expect(within(propsRail()).queryByLabelText('FILL light value')).not.toBeInTheDocument();
+    for (const kind of kinds) {
+      const { user } = setup();
+      await user.keyboard(kind.key);
+      const filled = within(propsRail()).queryByLabelText('FILL light value') !== null;
+      const isRun = kind.name.startsWith('line') || kind.name.startsWith('polyline');
+      expect({ name: kind.name, filled }).toEqual({ name: kind.name, filled: !isRun });
+      cleanup();
+    }
   });
 
   it('a line is stated as two points, never as a width and a height', async () => {
@@ -264,14 +335,26 @@ describe('every shape has equivalent controls', () => {
     expect(within(rail).queryByLabelText('Height')).not.toBeInTheDocument();
   });
 
-  it('a polygon is stated as a centre and a radius', async () => {
+  it('a circle is stated as a centre and a radius, never as a width and a height', async () => {
     const { user } = setup();
-    await user.keyboard('p');
+    await user.keyboard('c');
     const rail = propsRail();
     expect(within(rail).getByLabelText('Centre X')).toBeInTheDocument();
     expect(within(rail).getByLabelText('RADIUS')).toBeInTheDocument();
-    expect(within(rail).getByLabelText('SIDES')).toBeInTheDocument();
     expect(within(rail).queryByLabelText('Width')).not.toBeInTheDocument();
+  });
+
+  it('a point list is stated as the box it occupies, plus how many points it has', async () => {
+    const { user } = setup();
+    await user.keyboard('p');
+    const rail = propsRail();
+    for (const label of ['X', 'Y', 'Width', 'Height']) {
+      expect(within(rail).getByLabelText(label)).toBeInTheDocument();
+    }
+    expect(within(rail).getByText('POINTS')).toBeInTheDocument();
+    // The hexagon preset. It is a readout, not a field — nothing types into it.
+    expect(within(rail).getByText('6')).toBeInTheDocument();
+    expect(within(rail).queryByLabelText('POINTS')).not.toBeInTheDocument();
   });
 
   it('editing a line endpoint moves that end and leaves the other alone', async () => {
@@ -285,14 +368,29 @@ describe('every shape has equivalent controls', () => {
     expect(within(propsRail()).getByLabelText('X2')).toHaveValue('376');
   });
 
-  it('editing a polygon radius resizes it about its centre', async () => {
+  it('editing a circle radius resizes it about its centre', async () => {
     const { user } = setup();
-    await user.keyboard('p');
+    await user.keyboard('c');
     const radius = within(propsRail()).getByLabelText('RADIUS');
     await user.clear(radius);
     await user.type(radius, '60');
     await user.tab();
     expect(within(propsRail()).getByLabelText('Centre X')).toHaveValue('256');
+  });
+
+  it('editing a point list’s width scales it, keeping every point it had', async () => {
+    const { user } = setup();
+    await user.keyboard('p');
+    const rail = propsRail();
+    const before = within(rail).getByLabelText('X').getAttribute('value');
+    const width = within(rail).getByLabelText('Width');
+    await user.clear(width);
+    await user.type(width, '100');
+    await user.tab();
+    expect(within(propsRail()).getByLabelText('Width')).toHaveValue('100');
+    // Scaled from its own left edge rather than recentred.
+    expect(within(propsRail()).getByLabelText('X')).toHaveValue(before);
+    expect(within(propsRail()).getByText('6')).toBeInTheDocument();
   });
 });
 

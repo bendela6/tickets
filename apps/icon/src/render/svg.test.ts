@@ -73,14 +73,58 @@ describe('renderSvg', () => {
     );
   });
 
-  it('emits a polygon as points, first vertex above the centre', () => {
+  it('draws a circle as a circle, not as an ellipse with two equal radii', () => {
+    const circle = still(newObject('circle', 1, BOARD));
+    expect(renderSvg(docOf([circle]), { ground: 'light' })).toContain(
+      '<circle cx="256" cy="256" r="120"',
+    );
+  });
+
+  it('emits a polygon as the points it holds, in order', () => {
     const poly = still({
       ...newObject('polygon', 1, BOARD),
-      geometry: { kind: 'polygon', cx: 100, cy: 100, r: 50, sides: 4 },
+      geometry: {
+        kind: 'polygon',
+        points: [
+          { x: 100, y: 50 },
+          { x: 150, y: 100 },
+          { x: 100, y: 150 },
+          { x: 50, y: 100 },
+        ],
+      },
     });
     expect(renderSvg(docOf([poly]), { ground: 'light' })).toContain(
-      'points="100,50 150,100 100,150 50,100"',
+      '<polygon points="100,50 150,100 100,150 50,100"',
     );
+  });
+
+  it('draws a polyline stroked and unfilled, since it encloses nothing', () => {
+    const run = still({
+      ...newObject('polyline', 1, BOARD),
+      strokeWidth: 6,
+      stroke: { light: '#C0382E', dark: '#C0382E' },
+      fill: { light: '#2E7D4F', dark: '#2E7D4F' },
+      geometry: {
+        kind: 'polyline',
+        points: [
+          { x: 10, y: 20 },
+          { x: 30, y: 40 },
+        ],
+      },
+    });
+    const svg = renderSvg(docOf([run]), { ground: 'light' });
+    expect(svg).toContain('<polyline points="10,20 30,40" fill="none" stroke="#C0382E"');
+    expect(svg).toContain('stroke-width="6"');
+    // The fill pair would paint the area an open run does not enclose.
+    expect(svg).not.toContain('#2E7D4F');
+  });
+
+  it('gives the hexagon preset six vertices, the first directly above the centre', () => {
+    const preset = still(newObject('polygon', 1, BOARD));
+    const svg = renderSvg(docOf([preset]), { ground: 'light' });
+    const points = /<polygon points="([^"]+)"/.exec(svg)?.[1] ?? '';
+    expect(points.split(' ')).toHaveLength(6);
+    expect(points.startsWith('256,136')).toBe(true);
   });
 
   it('rotates about the object’s own centre, and says nothing when it does not rotate', () => {
@@ -113,7 +157,7 @@ describe('renderSvg', () => {
   });
 
   it('strokes a shape that has an area, so the stroke controls actually paint', () => {
-    for (const kind of ['rect', 'ellipse', 'polygon'] as const) {
+    for (const kind of ['rect', 'circle', 'ellipse', 'polygon'] as const) {
       const object = still({
         ...newObject(kind, 1, BOARD),
         strokeWidth: 8,
@@ -133,14 +177,16 @@ describe('renderSvg', () => {
     expect(svg).not.toContain('stroke-width=');
   });
 
-  it('a line is drawn by its stroke and gains no second one', () => {
-    const line = still({
-      ...newObject('line', 1, BOARD),
-      stroke: { light: '#2E6FCC', dark: '#2E6FCC' },
-    });
-    const svg = renderSvg(docOf([line]), { ground: 'light' });
-    expect(svg.match(/stroke="/g)).toHaveLength(1);
-    expect(svg.match(/stroke-width="/g)).toHaveLength(1);
+  it('a run is drawn by its stroke and gains no second one', () => {
+    for (const kind of ['line', 'polyline'] as const) {
+      const run = still({
+        ...newObject(kind, 1, BOARD),
+        stroke: { light: '#2E6FCC', dark: '#2E6FCC' },
+      });
+      const svg = renderSvg(docOf([run]), { ground: 'light' });
+      expect({ kind, strokes: svg.match(/stroke="/g)?.length }).toEqual({ kind, strokes: 1 });
+      expect({ kind, widths: svg.match(/stroke-width="/g)?.length }).toEqual({ kind, widths: 1 });
+    }
   });
 
   it('takes the stroke from the previewed half of the pair', () => {

@@ -1,4 +1,5 @@
 import { DEFAULT_GROUND, DEFAULT_INK, REFERENCE_SIZE } from './constants';
+import { isOpenRun, polygonPoints } from './geometry';
 import { snapGeometry, snapTo } from './snap';
 import type { Artboard, Geometry, IconDoc, IconObject, ShapeKind } from './types';
 
@@ -14,17 +15,24 @@ const PLACEMENT = {
   lineStart: 136 / REFERENCE_SIZE,
   lineEnd: 376 / REFERENCE_SIZE,
   lineWidth: 20 / REFERENCE_SIZE,
-  polygonRadius: 120 / REFERENCE_SIZE,
+  reach: 120 / REFERENCE_SIZE,
 } as const;
 
-const DEFAULT_SIDES = 6;
+/**
+ * The polygon tool is a hexagon preset: it calls the regular-polygon generator
+ * once, at creation, and hands back the points it produced. Nothing afterwards
+ * remembers the shape was ever regular, which is the point — a `<polygon>` is
+ * a list of points and dragging one vertex has to be allowed to ruin it.
+ */
+export const PRESET_SIDES = 6;
 
 function initialGeometry(kind: ShapeKind, artboard: Artboard): Geometry {
   const { width, height } = artboard;
-  // The shorter edge governs anything that has to stay round — a polygon on a
+  // The shorter edge governs anything that has to stay round — a circle on a
   // wide board should not spill off the top and bottom.
   const shorter = Math.min(width, height);
   const centre = { x: width / 2, y: height / 2 };
+  const reach = PLACEMENT.reach * shorter;
 
   switch (kind) {
     case 'rect':
@@ -35,6 +43,8 @@ function initialGeometry(kind: ShapeKind, artboard: Artboard): Geometry {
       if (kind === 'ellipse') return { kind: 'ellipse', ...box };
       return { kind: 'rect', ...box, radius: PLACEMENT.rectRadius * shorter };
     }
+    case 'circle':
+      return { kind: 'circle', cx: centre.x, cy: centre.y, r: reach };
     case 'line': {
       const half = ((PLACEMENT.lineEnd - PLACEMENT.lineStart) * width) / 2;
       return {
@@ -45,13 +55,22 @@ function initialGeometry(kind: ShapeKind, artboard: Artboard): Geometry {
         y2: centre.y,
       };
     }
+    case 'polyline':
+      // A chevron rather than a straight run of points: an open polyline with
+      // no bend in it is a line drawn the long way, and would not read as a
+      // different shape at all.
+      return {
+        kind: 'polyline',
+        points: [
+          { x: centre.x - reach, y: centre.y - reach / 2 },
+          { x: centre.x, y: centre.y + reach / 2 },
+          { x: centre.x + reach, y: centre.y - reach / 2 },
+        ],
+      };
     case 'polygon':
       return {
         kind: 'polygon',
-        cx: centre.x,
-        cy: centre.y,
-        r: PLACEMENT.polygonRadius * shorter,
-        sides: DEFAULT_SIDES,
+        points: polygonPoints(centre.x, centre.y, reach, PRESET_SIDES),
       };
   }
 }
@@ -88,8 +107,11 @@ export function newObject(
     geometry: snapGeometry(initialGeometry(kind, artboard), snap),
     fill: { ...DEFAULT_INK },
     stroke: { ...DEFAULT_INK },
-    strokeWidth:
-      kind === 'line' ? Math.max(snap, snapTo(PLACEMENT.lineWidth * shorter, snap)) : 0,
+    // A run has no area to fill, so its stroke is the only thing that would be
+    // drawn: it starts with one, and everything else starts without.
+    strokeWidth: isOpenRun(kind)
+      ? Math.max(snap, snapTo(PLACEMENT.lineWidth * shorter, snap))
+      : 0,
     opacity: 100,
     rotation: 0,
     hidden: false,

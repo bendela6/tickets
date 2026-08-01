@@ -8,6 +8,8 @@
     "packages/web/ui/src/foundation/colors/colors.ts::ratio: rounded,",
     "packages/web/ui/src/foundation/colors/colors.ts::passes: rounded >= min,",
     "apps/icon/src/view.ts::// Floored, not rounded: zoom is a whole percent, and rounding up puts the",
+    "apps/icon/src/rails/props-panel.tsx::* One line, rounded to whole units — this is a readout, not a field anyone",
+    "apps/icon/src/render/svg.ts::// enclose. The joins are rounded because its corners are its own.",
     "apps/icon/src/render/svg.test.ts::const rounded = still(newObject('rect', 1, BOARD));",
     "apps/icon/src/render/svg.test.ts::expect(renderSvg(docOf([rounded]), { ground: 'light' })).toContain('rx=\"32\"');",
     "apps/icon/src/render/svg.test.ts::...rounded,",

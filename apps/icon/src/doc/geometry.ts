@@ -1,4 +1,6 @@
-import type { Geometry, IconObject } from './types';
+import type { Geometry, IconObject, Point, ShapeKind } from './types';
+
+export type { Point };
 
 export interface Box {
   x: number;
@@ -7,33 +9,68 @@ export interface Box {
   h: number;
 }
 
-export interface Point {
-  x: number;
-  y: number;
+/**
+ * Whether the shape is a run rather than a region — a thing with length and no
+ * area. Those are drawn by their stroke and hit by proximity to it; a fill
+ * would paint an area they do not enclose, and an outline would be a second
+ * copy of the only mark they have.
+ */
+export const isOpenRun = (kind: ShapeKind): boolean => kind === 'line' || kind === 'polyline';
+
+/** The tightest box round a set of points. */
+export function pointsBox(points: readonly Point[]): Box {
+  const first = points[0];
+  // An empty run has no position to report, and Math.min of nothing is
+  // Infinity — which would travel into a style attribute and blank the canvas.
+  if (!first) return { x: 0, y: 0, w: 0, h: 0 };
+  let minX = first.x;
+  let maxX = first.x;
+  let minY = first.y;
+  let maxY = first.y;
+  for (const point of points) {
+    minX = Math.min(minX, point.x);
+    maxX = Math.max(maxX, point.x);
+    minY = Math.min(minY, point.y);
+    maxY = Math.max(maxY, point.y);
+  }
+  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
 }
+
+/** A box grown by `pad` on every side. */
+const inflate = (box: Box, pad: number): Box => ({
+  x: box.x - pad,
+  y: box.y - pad,
+  w: box.w + pad * 2,
+  h: box.h + pad * 2,
+});
 
 /**
  * The object's axis-aligned box before rotation, in document units.
  *
- * A line's box is inflated by half its stroke on each side: a horizontal line
- * has zero height as a segment, but the thing you see and click is as tall as
- * its stroke, and the selection outline has to agree with the pixels.
+ * Anything drawn as a stroked run — a line, a polyline, a polygon's outline —
+ * has its box inflated by half its stroke on each side: a horizontal line has
+ * zero height as a segment, but the thing you see and click is as tall as its
+ * stroke, and the selection outline has to agree with the pixels.
  */
 export function bounds(object: IconObject): Box {
   const g = object.geometry;
+  const half = object.strokeWidth / 2;
   switch (g.kind) {
-    case 'polygon':
+    case 'circle':
       return { x: g.cx - g.r, y: g.cy - g.r, w: g.r * 2, h: g.r * 2 };
-    case 'line': {
-      const half = object.strokeWidth / 2;
-      return {
-        x: Math.min(g.x1, g.x2) - half,
-        y: Math.min(g.y1, g.y2) - half,
-        w: Math.abs(g.x2 - g.x1) + object.strokeWidth,
-        h: Math.abs(g.y2 - g.y1) + object.strokeWidth,
-      };
-    }
-    default:
+    case 'line':
+      return inflate(
+        pointsBox([
+          { x: g.x1, y: g.y1 },
+          { x: g.x2, y: g.y2 },
+        ]),
+        half,
+      );
+    case 'polyline':
+    case 'polygon':
+      return inflate(pointsBox(g.points), half);
+    case 'rect':
+    case 'ellipse':
       return { x: g.x, y: g.y, w: g.w, h: g.h };
   }
 }
@@ -86,6 +123,23 @@ export function lineEndpoints(object: IconObject): [Point, Point] {
     rotatePoint({ x: g.x1, y: g.y1 }, centre, object.rotation),
     rotatePoint({ x: g.x2, y: g.y2 }, centre, object.rotation),
   ];
+}
+
+/**
+ * Every point a shape is dragged by, in artboard space, with the object's
+ * rotation already applied — which is where its handles actually have to be
+ * drawn. Empty for the shapes that are dragged by a box instead.
+ *
+ * A line's two ends and a point list's vertices are the same thing wearing
+ * different names, so one function answers for all three and the overlay does
+ * not have to know which kind it is looking at.
+ */
+export function vertexPoints(object: IconObject): Point[] {
+  const g = object.geometry;
+  if (g.kind === 'line') return lineEndpoints(object);
+  if (g.kind !== 'polyline' && g.kind !== 'polygon') return [];
+  const centre = centreOf(object);
+  return g.points.map((point) => rotatePoint(point, centre, object.rotation));
 }
 
 /**
@@ -215,25 +269,43 @@ function distanceToSegment(point: Point, a: Point, b: Point): number {
   return Math.hypot(point.x - (a.x + t * dx), point.y - (a.y + t * dy));
 }
 
+/**
+ * How close the pointer has to get to a stroked run to count as on it. A
+ * hairline shape still has to be clickable, so the floor is one document unit
+ * rather than the stroke width alone.
+ */
+const runReach = (object: IconObject): number => Math.max(object.strokeWidth, 1) / 2;
+
+/** Whether the point is within `reach` of any segment of an open run. */
+function nearRun(point: Point, run: readonly Point[], reach: number): boolean {
+  for (let i = 1; i < run.length; i++) {
+    const a = run[i - 1];
+    const b = run[i];
+    if (!a || !b) continue;
+    if (distanceToSegment(point, a, b) <= reach) return true;
+  }
+  return false;
+}
+
 function containsUnrotated(geometry: Geometry, object: IconObject, point: Point): boolean {
   switch (geometry.kind) {
     case 'rect':
       return pointInBox(point, bounds(object));
+    case 'circle':
     case 'ellipse':
       return pointInEllipse(point, bounds(object));
     case 'polygon':
-      return pointInPolygon(
-        point,
-        polygonPoints(geometry.cx, geometry.cy, geometry.r, geometry.sides),
-      );
+      return pointInPolygon(point, geometry.points);
+    case 'polyline':
+      return nearRun(point, geometry.points, runReach(object));
     case 'line':
-      return (
-        distanceToSegment(
-          point,
+      return nearRun(
+        point,
+        [
           { x: geometry.x1, y: geometry.y1 },
           { x: geometry.x2, y: geometry.y2 },
-        ) <=
-        Math.max(object.strokeWidth, 1) / 2
+        ],
+        runReach(object),
       );
   }
 }
@@ -276,49 +348,85 @@ export function translate(geometry: Geometry, dx: number, dy: number): Geometry 
         x2: geometry.x2 + dx,
         y2: geometry.y2 + dy,
       };
-    case 'polygon':
+    case 'circle':
       return { ...geometry, cx: geometry.cx + dx, cy: geometry.cy + dy };
-    default:
+    case 'polyline':
+    case 'polygon':
+      return {
+        ...geometry,
+        points: geometry.points.map((point) => ({ x: point.x + dx, y: point.y + dy })),
+      };
+    case 'rect':
+    case 'ellipse':
       return { ...geometry, x: geometry.x + dx, y: geometry.y + dy };
   }
+}
+
+/**
+ * Scale a run of points into `target`, which is stated in the same terms the
+ * points already occupy — stroke inflation removed.
+ *
+ * A run with no extent along an axis has no ratio to scale by, so every point
+ * collapses onto the target's own edge rather than being divided by zero.
+ */
+function fitPoints(points: readonly Point[], target: Box): Point[] {
+  const current = pointsBox(points);
+  const scaleX = current.w === 0 ? 0 : target.w / current.w;
+  const scaleY = current.h === 0 ? 0 : target.h / current.h;
+  return points.map((point) => ({
+    x: target.x + (point.x - current.x) * scaleX,
+    y: target.y + (point.y - current.y) * scaleY,
+  }));
 }
 
 /**
  * Rewrite a geometry so its bounding box becomes `box`.
  *
  * Every shape has to answer this the same way for one resize interaction to
- * work on all four. A polygon stays regular — it takes the smaller half-extent
- * as its radius rather than becoming an ellipse-like thing no longer describable
- * as a polygon — and a line keeps its diagonal direction while its endpoints
- * move to the new box's corners.
+ * work on all of them. A circle stays circular — it takes the smaller
+ * half-extent as its radius rather than becoming an ellipse, which is a
+ * different element — and a line keeps its diagonal direction while its
+ * endpoints move to the new box's corners.
+ *
+ * Anything stroked deflates the box by half its stroke first, because that is
+ * what `bounds` added: without it, resizing a shape to the box it already
+ * reports would shrink it a little more on every pass.
  */
 export function fitToBox(object: IconObject, box: Box): Geometry {
   const g = object.geometry;
+  const half = object.strokeWidth / 2;
+  const inner: Box = {
+    x: box.x + half,
+    y: box.y + half,
+    w: Math.max(0, box.w - object.strokeWidth),
+    h: Math.max(0, box.h - object.strokeWidth),
+  };
   switch (g.kind) {
-    case 'polygon':
+    case 'circle':
       return {
         ...g,
         cx: box.x + box.w / 2,
         cy: box.y + box.h / 2,
         r: Math.max(0, Math.min(box.w, box.h) / 2),
       };
+    case 'polyline':
+    case 'polygon':
+      return { ...g, points: fitPoints(g.points, inner) };
     case 'line': {
-      const half = object.strokeWidth / 2;
       const leftToRight = g.x2 >= g.x1;
       const topToBottom = g.y2 >= g.y1;
-      const left = box.x + half;
-      const right = box.x + box.w - half;
-      const top = box.y + half;
-      const bottom = box.y + box.h - half;
+      const right = inner.x + inner.w;
+      const bottom = inner.y + inner.h;
       return {
         ...g,
-        x1: leftToRight ? left : right,
-        x2: leftToRight ? right : left,
-        y1: topToBottom ? top : bottom,
-        y2: topToBottom ? bottom : top,
+        x1: leftToRight ? inner.x : right,
+        x2: leftToRight ? right : inner.x,
+        y1: topToBottom ? inner.y : bottom,
+        y2: topToBottom ? bottom : inner.y,
       };
     }
-    default:
+    case 'rect':
+    case 'ellipse':
       return { ...g, x: box.x, y: box.y, w: Math.max(0, box.w), h: Math.max(0, box.h) };
   }
 }

@@ -4,10 +4,10 @@ import {
   REFERENCE_SIZE,
   SUSTAIN_AMPLITUDE,
 } from '../doc/constants';
-import { bounds, centreOf } from '../doc/geometry';
+import { bounds, centreOf, isOpenRun, translate } from '../doc/geometry';
 import { poseAtState } from '../doc/pose';
 import { renderPosed } from '../render/svg';
-import type { Ground, IconDoc, IconObject, PosedObject, Sustain } from '../doc/types';
+import type { Ground, IconDoc, IconObject, Point, PosedObject, Sustain } from '../doc/types';
 import { cycleSeconds } from '../transport/clock';
 
 /**
@@ -76,7 +76,8 @@ export function animatedSvg(source: AnimatedSource): string {
   let animationIndex = 0;
   let elementIndex = -1;
 
-  const withAnimations = still.replace(/<(rect|ellipse|line|polygon)\b[^>]*\/>/g, (tag) => {
+  const shapeTag = /<(rect|circle|ellipse|line|polyline|polygon)\b[^>]*\/>/g;
+  const withAnimations = still.replace(shapeTag, (tag) => {
     // The background rect is painted first and is not an object.
     if (elementIndex === -1 && tag.startsWith('<rect x="0" y="0"')) {
       elementIndex = 0;
@@ -95,9 +96,9 @@ export function animatedSvg(source: AnimatedSource): string {
 /**
  * A Lottie document.
  *
- * Only rectangles and ellipses become real Lottie shape layers; a polygon
- * becomes its own path and a line a stroked path, so every object survives the
- * translation rather than a subset of them.
+ * Only the shapes Lottie has primitives for — rectangle, ellipse, circle —
+ * become real Lottie shapes; everything made of points becomes a path, so
+ * every object survives the translation rather than a subset of them.
  */
 export function lottie(source: AnimatedSource): unknown {
   const { doc, ground } = source;
@@ -114,7 +115,7 @@ export function lottie(source: AnimatedSource): unknown {
       const centre = centreOf(object);
       const amplitude = amplitudeFor(source, object);
       const colour = hexToUnit(
-        (object.geometry.kind === 'line' ? object.stroke : object.fill)[ground],
+        (isOpenRun(object.geometry.kind) ? object.stroke : object.fill)[ground],
       );
 
       const rotation =
@@ -182,7 +183,7 @@ export function lottie(source: AnimatedSource): unknown {
           {
             ty: 'gr',
             it: [
-              lottieGeometry(object, box),
+              lottieGeometry(object, box, centre),
               { ty: 'fl', c: { a: 0, k: colour }, o: { a: 0, k: 100 }, r: 1 },
               {
                 ty: 'tr',
@@ -215,55 +216,56 @@ export function lottie(source: AnimatedSource): unknown {
   };
 }
 
-function lottieGeometry(object: PosedObject, box: { w: number; h: number }) {
-  const g = object.geometry;
-  if (g.kind === 'ellipse') {
-    return { ty: 'el', p: { a: 0, k: [0, 0] }, s: { a: 0, k: [box.w, box.h] } };
-  }
-  if (g.kind === 'rect') {
-    return {
-      ty: 'rc',
-      p: { a: 0, k: [0, 0] },
-      s: { a: 0, k: [box.w, box.h] },
-      r: { a: 0, k: g.radius },
-    };
-  }
-  if (g.kind === 'polygon') {
-    return {
-      ty: 'sr', // star/polygon
-      sy: 2, // polygon rather than star
-      p: { a: 0, k: [0, 0] },
-      r: { a: 0, k: 0 },
-      pt: { a: 0, k: g.sides },
-      or: { a: 0, k: g.r },
-      os: { a: 0, k: 0 },
-    };
-  }
-  // A line has no closed area, so it becomes a two-point path drawn relative
-  // to the layer's own centre.
-  const halfX = (g.x2 - g.x1) / 2;
-  const halfY = (g.y2 - g.y1) / 2;
+/**
+ * A Lottie path through the given points, stated relative to the layer's own
+ * centre — Lottie positions the layer and draws the shape around its origin.
+ * `closed` is what separates a polygon from a polyline; the tangents are all
+ * zero because these are straight segments, not curves.
+ */
+function lottiePath(points: readonly Point[], centre: Point, closed: boolean) {
+  const zeroes = points.map(() => [0, 0]);
   return {
     ty: 'sh',
     ks: {
       a: 0,
       k: {
-        c: false,
-        v: [
-          [-halfX, -halfY],
-          [halfX, halfY],
-        ],
-        i: [
-          [0, 0],
-          [0, 0],
-        ],
-        o: [
-          [0, 0],
-          [0, 0],
-        ],
+        c: closed,
+        v: points.map((point) => [point.x - centre.x, point.y - centre.y]),
+        i: zeroes,
+        o: zeroes,
       },
     },
   };
+}
+
+function lottieGeometry(object: PosedObject, box: { w: number; h: number }, centre: Point) {
+  const g = object.geometry;
+  switch (g.kind) {
+    case 'circle':
+      return { ty: 'el', p: { a: 0, k: [0, 0] }, s: { a: 0, k: [g.r * 2, g.r * 2] } };
+    case 'ellipse':
+      return { ty: 'el', p: { a: 0, k: [0, 0] }, s: { a: 0, k: [box.w, box.h] } };
+    case 'rect':
+      return {
+        ty: 'rc',
+        p: { a: 0, k: [0, 0] },
+        s: { a: 0, k: [box.w, box.h] },
+        r: { a: 0, k: g.radius },
+      };
+    case 'polygon':
+      return lottiePath(g.points, centre, true);
+    case 'polyline':
+      return lottiePath(g.points, centre, false);
+    case 'line':
+      return lottiePath(
+        [
+          { x: g.x1, y: g.y1 },
+          { x: g.x2, y: g.y2 },
+        ],
+        centre,
+        false,
+      );
+  }
 }
 
 /** Lottie colours are 0–1 per channel, not bytes. */
@@ -371,14 +373,7 @@ function frameSvg(source: AnimatedSource, loop: number): string {
       };
     }
     const dy = Math.round(LOOP_MOVE_UNITS * scale * amplitude * Math.sin(wave));
-    return { ...object, geometry: shift(object, dy) };
+    return { ...object, geometry: translate(object.geometry, 0, dy) };
   });
   return renderPosed(doc, posed, { ground: source.ground });
-}
-
-function shift(object: IconObject, dy: number) {
-  const g = object.geometry;
-  if (g.kind === 'line') return { ...g, y1: g.y1 + dy, y2: g.y2 + dy };
-  if (g.kind === 'polygon') return { ...g, cy: g.cy + dy };
-  return { ...g, y: g.y + dy };
 }

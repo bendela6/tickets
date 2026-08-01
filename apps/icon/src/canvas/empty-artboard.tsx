@@ -2,10 +2,10 @@ import { useEditor } from '../editor-context';
 import { ShapeGlyph, SHAPE_TOOLS } from './shape-tools';
 
 /**
- * The invitation lives on the artboard, not in a modal or a tour: four dashed
- * wells sized as real hit targets, plus the shortcut that replaces them once
- * you know it. The same four affordances sit in the left rail, so this set can
- * disappear forever after the first shape.
+ * The invitation lives on the artboard, not in a modal or a tour: one dashed
+ * well per shape, sized as a real hit target, plus the shortcut that replaces
+ * them once you know it. The same affordances sit in the left rail, so this
+ * set can disappear forever after the first shape.
  */
 export function EmptyArtboard() {
   const { dispatch } = useEditor();

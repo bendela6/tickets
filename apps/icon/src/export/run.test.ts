@@ -142,16 +142,35 @@ describe('animated targets', () => {
       ...docWith(true),
       objects: [
         newObject('rect', 1, BOARD),
-        newObject('ellipse', 2, BOARD),
-        newObject('line', 3, BOARD),
-        newObject('polygon', 4, BOARD),
+        newObject('circle', 2, BOARD),
+        newObject('ellipse', 3, BOARD),
+        newObject('line', 4, BOARD),
+        newObject('polyline', 5, BOARD),
+        newObject('polygon', 6, BOARD),
       ],
     };
     const files = await build(['lottie'], doc);
     const parsed = JSON.parse(new TextDecoder().decode(files[0]!.bytes));
     const kinds = parsed.layers.map((layer: { shapes: { it: { ty: string }[] }[] }) => layer.shapes[0]!.it[0]!.ty);
     // Reversed, because the document is front-to-back and painting is not.
-    expect(kinds).toEqual(['sr', 'sh', 'el', 'rc']);
+    // Anything made of points is a path — Lottie has no polygon primitive that
+    // a hexagon dragged out of shape would still fit.
+    expect(kinds).toEqual(['sh', 'sh', 'sh', 'el', 'el', 'rc']);
+  });
+
+  it('a Lottie path is closed for a polygon and open for a polyline', async () => {
+    const doc: IconDoc = {
+      ...docWith(true),
+      objects: [newObject('polygon', 1, BOARD), newObject('polyline', 2, BOARD)],
+    };
+    const files = await build(['lottie'], doc);
+    const parsed = JSON.parse(new TextDecoder().decode(files[0]!.bytes));
+    const closed = parsed.layers.map(
+      (layer: { shapes: { it: { ks: { k: { c: boolean } } }[] }[] }) =>
+        layer.shapes[0]!.it[0]!.ks.k.c,
+    );
+    // Painted back to front: the polyline is drawn first.
+    expect(closed).toEqual([false, true]);
   });
 
   it('the animated favicon ships a script and its still fallback', async () => {

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { emptyDocument } from './defaults';
+import { emptyDocument, newObject } from './defaults';
+import { polygonPoints } from './geometry';
 import { memoryStore } from './persist';
+import type { Geometry, IconDoc } from './types';
+
+/** The 512-square board most of these fixtures assume. */
+const BOARD = { width: 512, height: 512 };
 
 describe('DocumentStore contract', () => {
   it('creates a document and hands back both its id and its content', async () => {
@@ -54,5 +59,43 @@ describe('DocumentStore contract', () => {
 
   it('removing something absent is not an error', async () => {
     await expect(memoryStore().remove('nope')).resolves.toBeUndefined();
+  });
+});
+
+describe('documents saved before a polygon was a list of points', () => {
+  /** A polygon as it used to be stored: a centre, a radius and a side count. */
+  const REGULAR = { kind: 'polygon', cx: 256, cy: 256, r: 120, sides: 6 } as unknown as Geometry;
+
+  const savedBefore = (): IconDoc => ({
+    ...emptyDocument('legacy.icon'),
+    objects: [{ ...newObject('polygon', 1, BOARD), geometry: REGULAR }],
+  });
+
+  const storeHolding = (doc: IconDoc) =>
+    memoryStore([
+      { id: 'old', name: doc.name, artboard: doc.artboard, updatedAt: 0, doc },
+    ]);
+
+  it('open as the same hexagon, now as the points a polygon actually is', async () => {
+    const loaded = await storeHolding(savedBefore()).load('old');
+    expect(loaded?.objects[0]?.geometry).toEqual({
+      kind: 'polygon',
+      points: polygonPoints(256, 256, 120, 6),
+    });
+  });
+
+  it('survive a round trip: saving what was opened and reopening it changes nothing', async () => {
+    const store = storeHolding(savedBefore());
+    const opened = await store.load('old');
+    expect(opened).not.toBeNull();
+    if (!opened) return;
+    await store.save('old', opened);
+    expect(await store.load('old')).toEqual(opened);
+  });
+
+  it('leave a document that needs nothing exactly as it was, so it does not read as edited', async () => {
+    const current = { ...emptyDocument('current.icon'), objects: [newObject('polygon', 1, BOARD)] };
+    const store = storeHolding(current);
+    expect(await store.load('old')).toBe(current);
   });
 });

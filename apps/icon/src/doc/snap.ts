@@ -50,15 +50,13 @@ export function snapGeometry(geometry: Geometry, step: number): Geometry {
         x2: at(geometry.x2),
         y2: at(geometry.y2),
       };
+    case 'circle':
+      return { ...geometry, cx: at(geometry.cx), cy: at(geometry.cy), r: at(geometry.r) };
+    case 'polyline':
     case 'polygon':
       return {
         ...geometry,
-        cx: at(geometry.cx),
-        cy: at(geometry.cy),
-        r: at(geometry.r),
-        // Sides are a count, not a measurement; snapping them to a grid of 8
-        // would turn every polygon into an octagon.
-        sides: geometry.sides,
+        points: geometry.points.map((point) => ({ x: at(point.x), y: at(point.y) })),
       };
   }
 }
