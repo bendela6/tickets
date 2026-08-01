@@ -1,5 +1,5 @@
 import type { Model } from '../../engine/model/types';
-import { Badge } from './badge';
+import { Pill } from '@tickets/ui';
 import { Kbd } from './kbd';
 import { Section } from './section';
 import { Stat } from './stat';
@@ -22,7 +22,7 @@ export function EmptyState({ model }: { model: Model | null }) {
   return (
     <div>
       <div className="border-b-1 border-gray-6 px-4 pb-3 pt-4">
-        <Badge tone="entity">Overview</Badge>
+        <Pill variant="tint" size="xs" tone="blue" label="Overview" className="font-mono uppercase" />
         {/* Matches what the adapter sets meta.title to, so nothing flashes the
             standalone app's old name before the model lands. */}
         <h2 className="mt-2 font-mono text-16 font-500 text-gray-12">{model?.meta.title ?? 'Database schema'}</h2>
