@@ -168,6 +168,26 @@ describe('Outline', () => {
     expect(focus).toHaveBeenCalledWith('users', 'manager_id');
   });
 
+  it('highlights a searched-to column with a background, not text colour alone', async () => {
+    // A lit column used to pair a background with the lightened text
+    // (`bg-surface-inset text-gray-12`); dropping the background during the
+    // tree migration would leave the "this is the field you searched for"
+    // callout reading as a faint hover instead of a real highlight.
+    await renderDiagram(<Outline />, twoZoneRaw());
+    fireEvent.change(screen.getByRole('textbox', { name: 'Filter tables' }), {
+      target: { value: 'manager' },
+    });
+    // Split, not a raw substring check: `TreeRow`'s own base classes always
+    // include `hover:bg-surface-inset`, which itself contains the substring
+    // "bg-surface-inset" whether or not the column is lit.
+    const classList = () =>
+      screen.getByRole('treeitem', { name: 'manager_id' }).className.split(/\s+/);
+    expect(classList()).not.toContain('bg-surface-inset');
+    fireEvent.click(screen.getByRole('treeitem', { name: 'manager_id' }));
+    expect(classList()).toContain('bg-surface-inset');
+    expect(classList()).toContain('text-gray-12');
+  });
+
   it('offers the edge-kind filters as Pills and toggles one', async () => {
     await renderDiagram(
       <>
@@ -195,17 +215,20 @@ describe('Outline', () => {
 
   it('renders a subgroup deeper than its zone, using guide columns rather than a nested container', async () => {
     // The recursive nesting container is gone — indentation is TreeRow's
-    // per-row guide columns, one per depth level, so a subgroup's row carries
-    // more of them than its parent zone's.
+    // per-row guide columns, one per depth level. Pinned to EXACT counts, not
+    // just "more than its parent": Zone is a root (depth 0, no guides), Sub
+    // nests one level under it (depth 1), and Sub's own table nests one level
+    // further still (depth 2) — the same three-level shape the old recursive
+    // container nesting asserted, expressed through the new mechanism.
     await renderDiagram(<Outline />, nestedRaw());
     const zoneRow = screen.getByRole('treeitem', { name: 'Zone, 3 tables' });
     const subRow = screen.getByRole('treeitem', { name: 'Sub, 2 tables' });
+    const memberRow = screen.getByRole('treeitem', { name: 'm1' });
     const guidesFor = (row: HTMLElement) =>
       row.closest('div')!.querySelectorAll('[data-tree-guide]').length;
-    expect(guidesFor(subRow)).toBeGreaterThan(guidesFor(zoneRow));
-    // …and Sub's own table is deeper still.
-    const memberRow = screen.getByRole('treeitem', { name: 'm1' });
-    expect(guidesFor(memberRow)).toBeGreaterThan(guidesFor(subRow));
+    expect(guidesFor(zoneRow)).toBe(0);
+    expect(guidesFor(subRow)).toBe(1);
+    expect(guidesFor(memberRow)).toBe(2);
   });
 
   it('draws a hidden zone with a hollow swatch, not a filled one', async () => {
@@ -237,8 +260,13 @@ describe('Outline', () => {
     await renderDiagram(<Outline />, twoZoneRaw());
     const tree = screen.getByRole('tree');
     expect(tree).toHaveAttribute('tabindex', '0');
+    // Focus seeds to the first root (Zone One); every group starts expanded,
+    // so its own table (`users`) is the very next flattened row — the
+    // strict target, not just "moved somewhere".
     fireEvent.keyDown(tree, { key: 'ArrowDown' });
-    expect(tree.getAttribute('aria-activedescendant')).not.toBeNull();
+    expect(tree.getAttribute('aria-activedescendant')).toBe(
+      screen.getByRole('treeitem', { name: 'users' }).id,
+    );
     fireEvent.keyDown(tree, { key: 'End' });
     // Home/End land on the last navigable row — the last column, table or
     // group in the flattened, fully-expanded tree.

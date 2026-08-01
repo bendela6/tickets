@@ -90,7 +90,16 @@ export function OutlineRow({
         {...common}
         caretLabel={e.label}
         label={e.label}
-        className={cn('font-mono text-12 text-gray-11', hidden && 'line-through')}
+        // `row.selected` also lightens the text — TreeRow's own selected
+        // treatment only paints the background (`bg-surface-inset`), which
+        // this migration must not be the ONLY selected cue: the pre-migration
+        // row paired that background with `text-gray-12`, same as a lit
+        // column below.
+        className={cn(
+          'font-mono text-12',
+          row.selected ? 'text-gray-12' : 'text-gray-11',
+          hidden && 'line-through',
+        )}
       >
         <span className="truncate" title={e.id}>
           {e.label}
@@ -106,7 +115,10 @@ export function OutlineRow({
       {...common}
       caretLabel={data.column}
       label={data.column}
-      className={cn('font-mono text-11', lit ? 'text-gray-12' : 'text-gray-11')}
+      // A lit column pairs a background with the lightened text — text-colour
+      // alone reads as a subtle hover, not a "this is the field you searched
+      // for" callout.
+      className={cn('font-mono text-11', lit ? 'bg-surface-inset text-gray-12' : 'text-gray-11')}
     >
       <span className="truncate">{data.column}</span>
     </TreeRow>
