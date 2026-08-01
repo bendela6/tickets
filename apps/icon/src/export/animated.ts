@@ -4,7 +4,7 @@ import {
   REFERENCE_SIZE,
   SUSTAIN_AMPLITUDE,
 } from '../doc/constants';
-import { bounds, centreOf, isOpenRun, translate } from '../doc/geometry';
+import { bounds, centreOf, flattenPath, isOpenRun, translate } from '../doc/geometry';
 import { poseAtState } from '../doc/pose';
 import { renderPosed } from '../render/svg';
 import type { Ground, IconDoc, IconObject, Point, PosedObject, Sustain } from '../doc/types';
@@ -76,7 +76,7 @@ export function animatedSvg(source: AnimatedSource): string {
   let animationIndex = 0;
   let elementIndex = -1;
 
-  const shapeTag = /<(rect|circle|ellipse|line|polyline|polygon)\b[^>]*\/>/g;
+  const shapeTag = /<(rect|circle|ellipse|line|polyline|polygon|path)\b[^>]*\/>/g;
   const withAnimations = still.replace(shapeTag, (tag) => {
     // The background rect is painted first and is not an object.
     if (elementIndex === -1 && tag.startsWith('<rect x="0" y="0"')) {
@@ -114,9 +114,7 @@ export function lottie(source: AnimatedSource): unknown {
       const box = bounds(object);
       const centre = centreOf(object);
       const amplitude = amplitudeFor(source, object);
-      const colour = hexToUnit(
-        (isOpenRun(object.geometry.kind) ? object.stroke : object.fill)[ground],
-      );
+      const colour = hexToUnit((isOpenRun(object.geometry) ? object.stroke : object.fill)[ground]);
 
       const rotation =
         object.motion.role === 'spins' && amplitude > 0
@@ -183,7 +181,7 @@ export function lottie(source: AnimatedSource): unknown {
           {
             ty: 'gr',
             it: [
-              lottieGeometry(object, box, centre),
+              ...lottieGeometry(object, box, centre),
               { ty: 'fl', c: { a: 0, k: colour }, o: { a: 0, k: 100 }, r: 1 },
               {
                 ty: 'tr',
@@ -238,33 +236,49 @@ function lottiePath(points: readonly Point[], centre: Point, closed: boolean) {
   };
 }
 
+/**
+ * The shape items for one object. A list rather than a single item because a
+ * path can hold more than one subpath, and a donut's hole is a second shape in
+ * the same group rather than a second layer that would fill over it.
+ */
 function lottieGeometry(object: PosedObject, box: { w: number; h: number }, centre: Point) {
   const g = object.geometry;
   switch (g.kind) {
     case 'circle':
-      return { ty: 'el', p: { a: 0, k: [0, 0] }, s: { a: 0, k: [g.r * 2, g.r * 2] } };
+      return [{ ty: 'el', p: { a: 0, k: [0, 0] }, s: { a: 0, k: [g.r * 2, g.r * 2] } }];
     case 'ellipse':
-      return { ty: 'el', p: { a: 0, k: [0, 0] }, s: { a: 0, k: [box.w, box.h] } };
+      return [{ ty: 'el', p: { a: 0, k: [0, 0] }, s: { a: 0, k: [box.w, box.h] } }];
     case 'rect':
-      return {
-        ty: 'rc',
-        p: { a: 0, k: [0, 0] },
-        s: { a: 0, k: [box.w, box.h] },
-        r: { a: 0, k: g.radius },
-      };
+      return [
+        {
+          ty: 'rc',
+          p: { a: 0, k: [0, 0] },
+          s: { a: 0, k: [box.w, box.h] },
+          r: { a: 0, k: g.radius },
+        },
+      ];
     case 'polygon':
-      return lottiePath(g.points, centre, true);
+      return [lottiePath(g.points, centre, true)];
     case 'polyline':
-      return lottiePath(g.points, centre, false);
+      return [lottiePath(g.points, centre, false)];
+    case 'path': {
+      // Lottie has no curve command that matches SVG's, so the flattened run
+      // is what crosses over: it is the same approximation the box and the hit
+      // test already work from, rather than a second one written here.
+      const closed = !isOpenRun(g);
+      return flattenPath(g.segments).map((run) => lottiePath(run, centre, closed));
+    }
     case 'line':
-      return lottiePath(
-        [
-          { x: g.x1, y: g.y1 },
-          { x: g.x2, y: g.y2 },
-        ],
-        centre,
-        false,
-      );
+      return [
+        lottiePath(
+          [
+            { x: g.x1, y: g.y1 },
+            { x: g.x2, y: g.y2 },
+          ],
+          centre,
+          false,
+        ),
+      ];
   }
 }
 

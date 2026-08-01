@@ -27,7 +27,7 @@ const docWith = (objects: IconDoc['objects']): IconDoc => ({
 
 describe('the rendered SVG is a document a browser will actually decode', () => {
   it('parses with every shape kind on the artboard', () => {
-    const kinds = ['rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon'] as const;
+    const kinds = ['rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'path'] as const;
     const doc = docWith(kinds.map((kind, index) => newObject(kind, index + 1, BOARD)));
     const parsed = parse(renderSvg(doc, { ground: 'light' }));
     expect(parsed.documentElement.tagName).toBe('svg');
@@ -36,7 +36,7 @@ describe('the rendered SVG is a document a browser will actually decode', () => 
   });
 
   it('draws each kind as the element it is named after, not as a stand-in', () => {
-    const kinds = ['circle', 'polyline', 'polygon'] as const;
+    const kinds = ['circle', 'polyline', 'polygon', 'path'] as const;
     for (const kind of kinds) {
       const parsed = parse(
         renderSvg(docWith([newObject(kind, 1, BOARD)]), { ground: 'light' }),

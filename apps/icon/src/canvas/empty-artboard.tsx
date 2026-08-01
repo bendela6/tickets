@@ -12,7 +12,9 @@ export function EmptyArtboard() {
   return (
     <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4">
       <span className="font-mono text-11 tracking-wide text-gray-9">place your first shape</span>
-      <div className="pointer-events-auto flex gap-2.5">
+      {/* Wraps rather than overflowing: the row is as wide as the artboard,
+          and the artboard can be any size. */}
+      <div className="pointer-events-auto flex flex-wrap justify-center gap-2.5">
         {SHAPE_TOOLS.map((tool) => (
           <button
             key={tool.kind}

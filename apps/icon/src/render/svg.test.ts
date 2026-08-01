@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { emptyDocument, newObject } from '../doc/defaults';
+import { arcPath } from '../doc/geometry';
 import type { IconDoc, IconObject } from '../doc/types';
-import { renderSvg } from './svg';
+import { pathData, renderSvg } from './svg';
 
 /** The 512-square board most of these fixtures assume. */
 const BOARD = { width: 512, height: 512 };
@@ -15,6 +16,36 @@ const docOf = (objects: IconObject[], over: Partial<IconDoc> = {}): IconDoc => (
 const still = (object: IconObject): IconObject => ({
   ...object,
   motion: { ...object.motion, takesPart: false },
+});
+
+describe('pathData', () => {
+  it('spells every command out, absolute and in the order they are stored', () => {
+    expect(
+      pathData([
+        { c: 'M', x: 1, y: 2 },
+        { c: 'L', x: 3, y: 4 },
+        { c: 'Q', x1: 5, y1: 6, x: 7, y: 8 },
+        { c: 'C', x1: 9, y1: 10, x2: 11, y2: 12, x: 13, y: 14 },
+        { c: 'A', rx: 15, ry: 16, rotation: 17, large: true, sweep: false, x: 18, y: 19 },
+        { c: 'Z' },
+      ]),
+    ).toBe('M 1 2 L 3 4 Q 5 6 7 8 C 9 10 11 12 13 14 A 15 16 17 1 0 18 19 Z');
+  });
+
+  it('writes an arc’s two choices as the digits SVG reads them as', () => {
+    const flags = (large: boolean, sweep: boolean) =>
+      pathData([{ c: 'A', rx: 1, ry: 1, rotation: 0, large, sweep, x: 2, y: 2 }]);
+    expect(flags(false, false)).toBe('A 1 1 0 0 0 2 2');
+    expect(flags(true, true)).toBe('A 1 1 0 1 1 2 2');
+  });
+
+  it('trims float noise the way every other number in the file is trimmed', () => {
+    expect(pathData([{ c: 'M', x: 1 / 3, y: 2 }])).toBe('M 0.333 2');
+  });
+
+  it('has nothing to say for a path with no commands', () => {
+    expect(pathData([])).toBe('');
+  });
 });
 
 describe('renderSvg', () => {
@@ -117,6 +148,46 @@ describe('renderSvg', () => {
     expect(svg).toContain('stroke-width="6"');
     // The fill pair would paint the area an open run does not enclose.
     expect(svg).not.toContain('#2E7D4F');
+  });
+
+  it('draws an open path stroked and unfilled, since it encloses nothing', () => {
+    const spinner = still({
+      ...newObject('path', 1, BOARD),
+      strokeWidth: 6,
+      stroke: { light: '#C0382E', dark: '#C0382E' },
+      fill: { light: '#2E7D4F', dark: '#2E7D4F' },
+      geometry: {
+        kind: 'path',
+        segments: arcPath({ cx: 50, cy: 50, r: 20, inner: 20, start: -90, sweep: 270 }),
+      },
+    });
+    const svg = renderSvg(docOf([spinner]), { ground: 'light' });
+    expect(svg).toContain('<path d="M 50 30 A 20 20 0 1 1 30 50" fill="none" stroke="#C0382E"');
+    expect(svg).toContain('stroke-width="6"');
+    // The fill pair would paint the area an open path does not enclose.
+    expect(svg).not.toContain('#2E7D4F');
+  });
+
+  it('draws the arc preset as a spinner: three quarters of a turn, open, stroked', () => {
+    const preset = still(newObject('path', 1, BOARD));
+    const svg = renderSvg(docOf([preset]), { ground: 'light' });
+    // A quarter of the shorter edge, opening at the top and running clockwise.
+    expect(svg).toContain('<path d="M 256 128 A 128 128 0 1 1 128 256" fill="none"');
+    expect(svg).toContain('stroke-width="20"');
+  });
+
+  it('fills a path that closes, the way it fills a polygon', () => {
+    const wedge = still({
+      ...newObject('path', 1, BOARD),
+      strokeWidth: 0,
+      fill: { light: '#2E7D4F', dark: '#2E7D4F' },
+      geometry: {
+        kind: 'path',
+        segments: arcPath({ cx: 50, cy: 50, r: 20, inner: 0, start: 0, sweep: 90 }),
+      },
+    });
+    const svg = renderSvg(docOf([wedge]), { ground: 'light' });
+    expect(svg).toContain('<path d="M 50 50 L 70 50 A 20 20 0 0 1 50 70 Z" fill="#2E7D4F"');
   });
 
   it('gives the hexagon preset six vertices, the first directly above the centre', () => {

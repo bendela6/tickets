@@ -1,6 +1,6 @@
 import { centreOf, isOpenRun } from '../doc/geometry';
 import { poseAtState } from '../doc/pose';
-import type { Ground, IconDoc, IconObject, PosedObject } from '../doc/types';
+import type { Ground, IconDoc, IconObject, PathSegment, PosedObject } from '../doc/types';
 
 /**
  * The document as SVG. This is the only place artwork is drawn for export —
@@ -23,7 +23,7 @@ function escapeAttribute(value: string): string {
 function colourFor(object: IconObject, ground: Ground): string {
   // A run is drawn with its stroke; everything else with its fill. Giving a
   // line a fill would paint nothing and silently lose the object.
-  const pair = isOpenRun(object.geometry.kind) ? object.stroke : object.fill;
+  const pair = isOpenRun(object.geometry) ? object.stroke : object.fill;
   return pair[ground];
 }
 
@@ -33,13 +33,43 @@ function colourFor(object: IconObject, ground: Ground): string {
  * file, and there is one per size per target.
  */
 function strokeAttributes(object: PosedObject, ground: Ground): string {
-  if (isOpenRun(object.geometry.kind) || object.strokeWidth <= 0) return '';
+  if (isOpenRun(object.geometry) || object.strokeWidth <= 0) return '';
   return ` stroke="${escapeAttribute(object.stroke[ground])}" stroke-width="${n(object.strokeWidth)}"`;
 }
 
 /** A point list as SVG's `points` attribute wants it. */
 function pointList(points: readonly { x: number; y: number }[]): string {
   return points.map((point) => `${n(point.x)},${n(point.y)}`).join(' ');
+}
+
+/**
+ * The `d` attribute: the commands in the order they are stored, spelled out
+ * absolute.
+ *
+ * Exported because it is the single statement of what a path *is* in SVG, and
+ * the toolbar's own glyph draws the arc preset with it — a second spelling
+ * would be a second thing to get wrong. Flags are written as the digits SVG
+ * reads them as; every other number goes through the same trimming the rest of
+ * the file uses.
+ */
+export function pathData(segments: readonly PathSegment[]): string {
+  return segments
+    .map((segment) => {
+      switch (segment.c) {
+        case 'M':
+        case 'L':
+          return `${segment.c} ${n(segment.x)} ${n(segment.y)}`;
+        case 'Q':
+          return `Q ${n(segment.x1)} ${n(segment.y1)} ${n(segment.x)} ${n(segment.y)}`;
+        case 'C':
+          return `C ${n(segment.x1)} ${n(segment.y1)} ${n(segment.x2)} ${n(segment.y2)} ${n(segment.x)} ${n(segment.y)}`;
+        case 'A':
+          return `A ${n(segment.rx)} ${n(segment.ry)} ${n(segment.rotation)} ${segment.large ? 1 : 0} ${segment.sweep ? 1 : 0} ${n(segment.x)} ${n(segment.y)}`;
+        case 'Z':
+          return 'Z';
+      }
+    })
+    .join(' ');
 }
 
 function transformOf(object: PosedObject): string {
@@ -75,6 +105,13 @@ function shapeMarkup(object: PosedObject, ground: Ground): string {
       return `<polyline points="${pointList(g.points)}" fill="none" stroke="${colour}" stroke-width="${n(object.strokeWidth)}" stroke-linecap="round" stroke-linejoin="round"${tail}/>`;
     case 'polygon':
       return `<polygon points="${pointList(g.points)}" fill="${colour}"${tail}/>`;
+    case 'path':
+      // The same two ways a point list is drawn, decided by the path itself:
+      // one that never closes encloses nothing, so it is stroked and left
+      // unfilled exactly as a polyline is.
+      return isOpenRun(g)
+        ? `<path d="${pathData(g.segments)}" fill="none" stroke="${colour}" stroke-width="${n(object.strokeWidth)}" stroke-linecap="round" stroke-linejoin="round"${tail}/>`
+        : `<path d="${pathData(g.segments)}" fill="${colour}"${tail}/>`;
   }
 }
 

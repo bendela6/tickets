@@ -1,4 +1,4 @@
-import type { Geometry, IconObject, Point, ShapeKind } from './types';
+import type { Geometry, IconObject, PathSegment, Point } from './types';
 
 export type { Point };
 
@@ -14,8 +14,16 @@ export interface Box {
  * area. Those are drawn by their stroke and hit by proximity to it; a fill
  * would paint an area they do not enclose, and an outline would be a second
  * copy of the only mark they have.
+ *
+ * Stated against the whole geometry rather than the kind alone, because a path
+ * answers it for itself: one that closes encloses something, one that does not
+ * is a run, and both are the same element. That is what lets one preset make
+ * both a spinner and a wedge.
  */
-export const isOpenRun = (kind: ShapeKind): boolean => kind === 'line' || kind === 'polyline';
+export const isOpenRun = (geometry: Geometry): boolean =>
+  geometry.kind === 'path'
+    ? !geometry.segments.some((segment) => segment.c === 'Z')
+    : geometry.kind === 'line' || geometry.kind === 'polyline';
 
 /** The tightest box round a set of points. */
 export function pointsBox(points: readonly Point[]): Box {
@@ -45,6 +53,377 @@ const inflate = (box: Box, pad: number): Box => ({
 });
 
 /**
+ * How far a flattened path may sit from the curve it stands in for, in
+ * document units.
+ *
+ * Half the finest snap step the document offers, so the approximation is never
+ * as much as one grid position out. It is also cheap at icon sizes: a quarter
+ * circle of radius 120 takes thirteen segments to hold, and the number grows
+ * with the square root of the radius rather than with it.
+ */
+export const FLATTEN_TOLERANCE = 0.25;
+
+/**
+ * The finest tolerance that will be honoured. Zero is unsatisfiable — a curve
+ * is never exactly a line — and asking for it would subdivide until the stack
+ * gave out.
+ */
+const FLATTEN_FINEST = 0.001;
+
+/**
+ * How many times a curve may be halved. 2¹⁰ segments is far past the point of
+ * visibility at any artboard size; the bound is there so a pathological curve
+ * cannot spin rather than because anything reaches it.
+ */
+const FLATTEN_DEPTH = 10;
+
+/** The same ceiling stated for an arc, which is sampled rather than halved. */
+const FLATTEN_STEPS = 1 << FLATTEN_DEPTH;
+
+const midpoint = (a: Point, b: Point): Point => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+
+/**
+ * The cubic's points appended to `out`, excluding the one it starts from —
+ * which the run it is being added to already holds.
+ *
+ * Halved until flat rather than sampled at a fixed count, so a gentle curve
+ * costs two segments and a tight one costs what it needs. Flatness is measured
+ * against the control points rather than the curve: the curve never strays
+ * further from the chord than they do, so the result is inside the tolerance
+ * rather than merely near it.
+ */
+function flattenCubic(
+  p0: Point,
+  p1: Point,
+  p2: Point,
+  p3: Point,
+  tolerance: number,
+  depth: number,
+  out: Point[],
+): void {
+  const flat =
+    distanceToSegment(p1, p0, p3) <= tolerance && distanceToSegment(p2, p0, p3) <= tolerance;
+  if (flat || depth >= FLATTEN_DEPTH) {
+    out.push(p3);
+    return;
+  }
+  // de Casteljau at the halfway point: the two halves are exact cubics, so
+  // nothing is approximated until the recursion stops.
+  const a = midpoint(p0, p1);
+  const b = midpoint(p1, p2);
+  const c = midpoint(p2, p3);
+  const d = midpoint(a, b);
+  const e = midpoint(b, c);
+  const mid = midpoint(d, e);
+  flattenCubic(p0, a, d, mid, tolerance, depth + 1, out);
+  flattenCubic(mid, e, c, p3, tolerance, depth + 1, out);
+}
+
+/**
+ * The arc's points, excluding the one it starts from.
+ *
+ * SVG states an arc by where it ends and which of the four candidate arcs to
+ * take; sampling one needs its centre and its two angles, so this is the
+ * conversion the SVG specification sets out, followed by even sampling.
+ */
+function flattenArc(from: Point, segment: Extract<PathSegment, { c: 'A' }>, tolerance: number): Point[] {
+  const to = { x: segment.x, y: segment.y };
+  let rx = Math.abs(segment.rx);
+  let ry = Math.abs(segment.ry);
+  // The specification's own degenerate cases: an arc with no radius is a
+  // straight line, and one that ends where it started is nothing at all.
+  if (rx === 0 || ry === 0) return [to];
+  if (from.x === to.x && from.y === to.y) return [];
+
+  const phi = (segment.rotation * Math.PI) / 180;
+  const cosPhi = Math.cos(phi);
+  const sinPhi = Math.sin(phi);
+  const halfX = (from.x - to.x) / 2;
+  const halfY = (from.y - to.y) / 2;
+  const x1 = cosPhi * halfX + sinPhi * halfY;
+  const y1 = -sinPhi * halfX + cosPhi * halfY;
+
+  // Radii too small to reach both ends are grown until they just do. This is
+  // the specification's repair, and it is what keeps a shrunk arc drawable
+  // instead of silently blank.
+  const oversize = (x1 * x1) / (rx * rx) + (y1 * y1) / (ry * ry);
+  if (oversize > 1) {
+    const grow = Math.sqrt(oversize);
+    rx *= grow;
+    ry *= grow;
+  }
+
+  const numerator = rx * rx * ry * ry - rx * rx * y1 * y1 - ry * ry * x1 * x1;
+  const denominator = rx * rx * y1 * y1 + ry * ry * x1 * x1;
+  const factor =
+    (segment.large === segment.sweep ? -1 : 1) * Math.sqrt(Math.max(0, numerator / denominator));
+  const centreX = (factor * rx * y1) / ry;
+  const centreY = (-factor * ry * x1) / rx;
+  const cx = cosPhi * centreX - sinPhi * centreY + (from.x + to.x) / 2;
+  const cy = sinPhi * centreX + cosPhi * centreY + (from.y + to.y) / 2;
+
+  const start = Math.atan2((y1 - centreY) / ry, (x1 - centreX) / rx);
+  const finish = Math.atan2((-y1 - centreY) / ry, (-x1 - centreX) / rx);
+  let delta = finish - start;
+  if (!segment.sweep && delta > 0) delta -= 2 * Math.PI;
+  if (segment.sweep && delta < 0) delta += 2 * Math.PI;
+
+  // A chord across `step` radians of a circle of radius R bulges R(1−cos(step/2))
+  // away from it, so this is the widest step whose bulge stays inside the
+  // tolerance. The larger radius governs, being the worse of the two.
+  const reach = Math.max(rx, ry);
+  const step = 2 * Math.acos(Math.max(-1, Math.min(1, 1 - tolerance / reach)));
+  const steps = Math.max(1, Math.min(FLATTEN_STEPS, Math.ceil(Math.abs(delta) / step)));
+
+  const points: Point[] = [];
+  for (let i = 1; i <= steps; i++) {
+    const angle = start + (delta * i) / steps;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    points.push({
+      x: cx + rx * cos * cosPhi - ry * sin * sinPhi,
+      y: cy + rx * cos * sinPhi + ry * sin * cosPhi,
+    });
+  }
+  // The last sample is the stated endpoint to within float noise; use the
+  // stored one, so the run ends exactly where the next command begins.
+  points[points.length - 1] = to;
+  return points;
+}
+
+/**
+ * The path as a run of straight segments, within `tolerance` document units of
+ * the true curve.
+ *
+ * This is the one approximation in the file, and everything else about a path
+ * is derived from it: its box, its hit test and its Lottie export all read
+ * these points rather than solving each command's own maths, which would be
+ * six answers per question instead of one.
+ *
+ * One run per subpath — an `M` starts a new one — so a shape with a hole comes
+ * back as two, which is what even-odd containment needs to tell a hole from a
+ * body. Every point is *on* the curve, so a box drawn round them can fall
+ * short of the true extreme by at most the tolerance and never overstates it.
+ */
+export function flattenPath(
+  segments: readonly PathSegment[],
+  tolerance: number = FLATTEN_TOLERANCE,
+): Point[][] {
+  const within = Math.max(tolerance, FLATTEN_FINEST);
+  const runs: Point[][] = [];
+  let run: Point[] | null = null;
+  let at: Point = { x: 0, y: 0 };
+  let opened: Point = at;
+
+  // The run in progress, started where the pen is if a command arrives before
+  // any `M`. That path is malformed, but dropping the shape teaches nobody
+  // anything and losing it is worse than drawing it.
+  const active = (): Point[] => {
+    if (run) return run;
+    const started = [at];
+    run = started;
+    runs.push(started);
+    return started;
+  };
+
+  for (const segment of segments) {
+    switch (segment.c) {
+      case 'M': {
+        at = { x: segment.x, y: segment.y };
+        opened = at;
+        const started = [at];
+        run = started;
+        runs.push(started);
+        break;
+      }
+      case 'L':
+        at = { x: segment.x, y: segment.y };
+        active().push(at);
+        break;
+      case 'Q': {
+        // A quadratic is a cubic whose two controls have been raised from its
+        // one, so a single flattener answers for both rather than two that
+        // could disagree about the same curve.
+        const end = { x: segment.x, y: segment.y };
+        const first = {
+          x: at.x + (2 / 3) * (segment.x1 - at.x),
+          y: at.y + (2 / 3) * (segment.y1 - at.y),
+        };
+        const second = {
+          x: end.x + (2 / 3) * (segment.x1 - end.x),
+          y: end.y + (2 / 3) * (segment.y1 - end.y),
+        };
+        flattenCubic(at, first, second, end, within, 0, active());
+        at = end;
+        break;
+      }
+      case 'C': {
+        const end = { x: segment.x, y: segment.y };
+        flattenCubic(
+          at,
+          { x: segment.x1, y: segment.y1 },
+          { x: segment.x2, y: segment.y2 },
+          end,
+          within,
+          0,
+          active(),
+        );
+        at = end;
+        break;
+      }
+      case 'A': {
+        const points = flattenArc(at, segment, within);
+        if (points.length > 0) {
+          const target = active();
+          for (const point of points) target.push(point);
+        }
+        at = { x: segment.x, y: segment.y };
+        break;
+      }
+      case 'Z':
+        // The closing edge is a real edge: without it the last side of a
+        // filled path would be missing from both its box and its hit test.
+        if (run) run.push(opened);
+        at = opened;
+        break;
+    }
+  }
+  return runs.filter((points) => points.length > 0);
+}
+
+/** A point on a circle, at a bearing in degrees clockwise from east. */
+function pointAt(cx: number, cy: number, radius: number, degrees: number): Point {
+  const radians = (degrees * Math.PI) / 180;
+  return { x: cx + radius * Math.cos(radians), y: cy + radius * Math.sin(radians) };
+}
+
+/** One `A` command onto `point`, along a circle of `radius`. */
+function arcSegment(
+  radius: number,
+  degrees: number,
+  clockwise: boolean,
+  point: Point,
+): PathSegment {
+  return {
+    c: 'A',
+    rx: radius,
+    ry: radius,
+    rotation: 0,
+    large: Math.abs(degrees) > 180,
+    sweep: clockwise,
+    x: point.x,
+    y: point.y,
+  };
+}
+
+/**
+ * The two `A` commands a full circle takes, from `start` back to it.
+ *
+ * One cannot do it: an arc is stated by the point it ends at, and for a whole
+ * turn that is the point it began at — which SVG reads as an arc of no length
+ * and draws nothing at all. Halving it gives each arc two distinct ends.
+ */
+function circleSegments(
+  cx: number,
+  cy: number,
+  radius: number,
+  start: number,
+  clockwise: boolean,
+): PathSegment[] {
+  const half = clockwise ? 180 : -180;
+  return [
+    arcSegment(radius, half, clockwise, pointAt(cx, cy, radius, start + half)),
+    arcSegment(radius, half, clockwise, pointAt(cx, cy, radius, start + half * 2)),
+  ];
+}
+
+/**
+ * A circular arc, wedge or donut segment as a path. `inner` of 0 gives a
+ * wedge; equal to `r`, an open arc.
+ *
+ * Angles are degrees clockwise from east, which is the convention `lineAngle`
+ * already reads in. Like the hexagon preset this is a generator and not a
+ * kind: what comes back is an ordinary list of commands, and nothing
+ * afterwards remembers it was ever an arc.
+ *
+ * A wedge and a donut segment close, so they are regions and take a fill; an
+ * open arc does not, so it is a run drawn by its stroke.
+ */
+export function arcPath(shape: {
+  cx: number;
+  cy: number;
+  r: number;
+  inner: number;
+  start: number;
+  sweep: number;
+}): PathSegment[] {
+  const { cx, cy, start } = shape;
+  const r = Math.max(0, shape.r);
+  // A hole wider than the shape is not a shape; the far end of that range is
+  // an open arc, which is the same thing said sensibly.
+  const inner = Math.min(Math.max(0, shape.inner), r);
+  const sweep = Math.max(-360, Math.min(360, shape.sweep));
+  if (r <= 0 || sweep === 0) return [];
+
+  const clockwise = sweep >= 0;
+  const whole = Math.abs(sweep) >= 360;
+  const finish = start + sweep;
+  const outerStart = pointAt(cx, cy, r, start);
+  const outerEnd = pointAt(cx, cy, r, finish);
+
+  if (inner >= r) {
+    const move: PathSegment = { c: 'M', x: outerStart.x, y: outerStart.y };
+    // Left open even when it comes back to its own start: a ring drawn by its
+    // stroke is a run, and closing it would make it a region with a fill.
+    return whole
+      ? [move, ...circleSegments(cx, cy, r, start, clockwise)]
+      : [move, arcSegment(r, sweep, clockwise, outerEnd)];
+  }
+
+  if (inner === 0) {
+    if (whole) {
+      return [
+        { c: 'M', x: outerStart.x, y: outerStart.y },
+        ...circleSegments(cx, cy, r, start, clockwise),
+        { c: 'Z' },
+      ];
+    }
+    // Starting at the centre rather than closing back to it puts the wedge's
+    // point where it belongs in the command order, and `Z` then draws the
+    // second straight side rather than a third.
+    return [
+      { c: 'M', x: cx, y: cy },
+      { c: 'L', x: outerStart.x, y: outerStart.y },
+      arcSegment(r, sweep, clockwise, outerEnd),
+      { c: 'Z' },
+    ];
+  }
+
+  const innerStart = pointAt(cx, cy, inner, start);
+  const innerEnd = pointAt(cx, cy, inner, finish);
+  if (whole) {
+    // Two closed subpaths, wound opposite ways. Even-odd would leave the hole
+    // either way, but SVG fills with the non-zero rule by default and two
+    // rings turning the same way would fill solid.
+    return [
+      { c: 'M', x: outerStart.x, y: outerStart.y },
+      ...circleSegments(cx, cy, r, start, clockwise),
+      { c: 'Z' },
+      { c: 'M', x: innerStart.x, y: innerStart.y },
+      ...circleSegments(cx, cy, inner, start, !clockwise),
+      { c: 'Z' },
+    ];
+  }
+  return [
+    { c: 'M', x: outerStart.x, y: outerStart.y },
+    arcSegment(r, sweep, clockwise, outerEnd),
+    { c: 'L', x: innerEnd.x, y: innerEnd.y },
+    arcSegment(inner, -sweep, !clockwise, innerStart),
+    { c: 'Z' },
+  ];
+}
+
+/**
  * The object's axis-aligned box before rotation, in document units.
  *
  * Anything drawn as a stroked run — a line, a polyline, a polygon's outline —
@@ -69,6 +448,11 @@ export function bounds(object: IconObject): Box {
     case 'polyline':
     case 'polygon':
       return inflate(pointsBox(g.points), half);
+    case 'path':
+      // Boxed by the flattened curve, never by the control points: a cubic's
+      // handles can sit well outside the shape they steer, and a box drawn
+      // round them would leave the selection outline nowhere near the artwork.
+      return inflate(pointsBox(flattenPath(g.segments).flat()), half);
     case 'rect':
     case 'ellipse':
       return { x: g.x, y: g.y, w: g.w, h: g.h };
@@ -298,6 +682,15 @@ function containsUnrotated(geometry: Geometry, object: IconObject, point: Point)
       return pointInPolygon(point, geometry.points);
     case 'polyline':
       return nearRun(point, geometry.points, runReach(object));
+    case 'path': {
+      const runs = flattenPath(geometry.segments);
+      // An open path has no inside to be in, so it is hit the way a polyline
+      // is: near its stroke, and nowhere else.
+      if (isOpenRun(geometry)) return runs.some((run) => nearRun(point, run, runReach(object)));
+      // Even-odd across every subpath, which is what makes a hole a hole
+      // rather than a second body drawn on top of the first.
+      return runs.reduce((inside, run) => inside !== pointInPolygon(point, run), false);
+    }
     case 'line':
       return nearRun(
         point,
@@ -337,6 +730,37 @@ export function hitTest(objects: IconObject[], point: Point): IconObject | null 
   return null;
 }
 
+/** One path command moved, coordinates and all. */
+function movedSegment(segment: PathSegment, dx: number, dy: number): PathSegment {
+  switch (segment.c) {
+    case 'M':
+    case 'L':
+      return { ...segment, x: segment.x + dx, y: segment.y + dy };
+    case 'Q':
+      return {
+        ...segment,
+        x1: segment.x1 + dx,
+        y1: segment.y1 + dy,
+        x: segment.x + dx,
+        y: segment.y + dy,
+      };
+    case 'C':
+      return {
+        ...segment,
+        x1: segment.x1 + dx,
+        y1: segment.y1 + dy,
+        x2: segment.x2 + dx,
+        y2: segment.y2 + dy,
+        x: segment.x + dx,
+        y: segment.y + dy,
+      };
+    case 'A':
+      return { ...segment, x: segment.x + dx, y: segment.y + dy };
+    case 'Z':
+      return segment;
+  }
+}
+
 /** Move an object's geometry by a document-space delta. */
 export function translate(geometry: Geometry, dx: number, dy: number): Geometry {
   switch (geometry.kind) {
@@ -355,6 +779,14 @@ export function translate(geometry: Geometry, dx: number, dy: number): Geometry 
       return {
         ...geometry,
         points: geometry.points.map((point) => ({ x: point.x + dx, y: point.y + dy })),
+      };
+    case 'path':
+      // Control points move with the curve they steer, so it arrives the same
+      // shape it left. An arc's radii are lengths rather than positions and
+      // are left exactly alone — moving them would resize the shape.
+      return {
+        ...geometry,
+        segments: geometry.segments.map((segment) => movedSegment(segment, dx, dy)),
       };
     case 'rect':
     case 'ellipse':
@@ -377,6 +809,63 @@ function fitPoints(points: readonly Point[], target: Box): Point[] {
     x: target.x + (point.x - current.x) * scaleX,
     y: target.y + (point.y - current.y) * scaleY,
   }));
+}
+
+/**
+ * Scale a path into `target`, stated in the same terms its flattened points
+ * occupy — stroke inflation removed.
+ *
+ * The real commands are rewritten rather than the flattened run, so a curve
+ * comes out a curve: control points scale with the points they steer, and an
+ * arc's radii scale with the axis each belongs to.
+ *
+ * An `A` that is turned on its own axis would need that rotation rewritten too
+ * when the axes scale by different amounts — a rotated ellipse squashed on one
+ * axis is a differently rotated ellipse. Nothing in the editor makes one yet,
+ * and the honest thing is to say so here rather than to leave it looking
+ * handled.
+ */
+function fitPath(segments: readonly PathSegment[], target: Box): PathSegment[] {
+  const current = pointsBox(flattenPath(segments).flat());
+  const scaleX = current.w === 0 ? 0 : target.w / current.w;
+  const scaleY = current.h === 0 ? 0 : target.h / current.h;
+  const at = (x: number, y: number): Point => ({
+    x: target.x + (x - current.x) * scaleX,
+    y: target.y + (y - current.y) * scaleY,
+  });
+
+  return segments.map((segment): PathSegment => {
+    switch (segment.c) {
+      case 'M':
+      case 'L':
+        return { ...segment, ...at(segment.x, segment.y) };
+      case 'Q': {
+        const control = at(segment.x1, segment.y1);
+        return { ...segment, x1: control.x, y1: control.y, ...at(segment.x, segment.y) };
+      }
+      case 'C': {
+        const first = at(segment.x1, segment.y1);
+        const second = at(segment.x2, segment.y2);
+        return {
+          ...segment,
+          x1: first.x,
+          y1: first.y,
+          x2: second.x,
+          y2: second.y,
+          ...at(segment.x, segment.y),
+        };
+      }
+      case 'A':
+        return {
+          ...segment,
+          rx: segment.rx * scaleX,
+          ry: segment.ry * scaleY,
+          ...at(segment.x, segment.y),
+        };
+      case 'Z':
+        return segment;
+    }
+  });
 }
 
 /**
@@ -412,6 +901,8 @@ export function fitToBox(object: IconObject, box: Box): Geometry {
     case 'polyline':
     case 'polygon':
       return { ...g, points: fitPoints(g.points, inner) };
+    case 'path':
+      return { ...g, segments: fitPath(g.segments, inner) };
     case 'line': {
       const leftToRight = g.x2 >= g.x1;
       const topToBottom = g.y2 >= g.y1;

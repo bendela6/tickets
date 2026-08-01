@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { emptyDocument, newObject } from '../doc/defaults';
+import { arcPath } from '../doc/geometry';
 import type { IconDoc } from '../doc/types';
 import { isPng, readIcns, readIco } from './containers';
 import { buildFiles, runExport, type Rasteriser } from './run';
@@ -121,6 +122,35 @@ describe('animated targets', () => {
     const svg = new TextDecoder().decode(files[0]!.bytes);
     expect(svg).toContain('repeatCount="indefinite"');
     expect(svg).toMatch(/<animate(Transform)?\b/);
+  });
+
+  it('the animated SVG reaches inside a path as well as the shapes with names', async () => {
+    const doc: IconDoc = { ...docWith(true), objects: [newObject('path', 1, BOARD)] };
+    const files = await build(['asvg'], doc);
+    const svg = new TextDecoder().decode(files[0]!.bytes);
+    expect(svg).toMatch(/<path\b[^>]*><animateTransform\b[^>]*\/><\/path>/);
+  });
+
+  it('a Lottie path carries one shape per subpath, so a donut keeps its hole', async () => {
+    const doc: IconDoc = {
+      ...docWith(true),
+      objects: [
+        {
+          ...newObject('path', 1, BOARD),
+          geometry: {
+            kind: 'path',
+            segments: arcPath({ cx: 256, cy: 256, r: 120, inner: 60, start: 0, sweep: 360 }),
+          },
+        },
+      ],
+    };
+    const files = await build(['lottie'], doc);
+    const parsed = JSON.parse(new TextDecoder().decode(files[0]!.bytes));
+    const items: { ty: string; ks?: { k: { c: boolean } } }[] = parsed.layers[0].shapes[0].it;
+    const paths = items.filter((item) => item.ty === 'sh');
+    expect(paths).toHaveLength(2);
+    // Both closed: a ring and the ring inside it, not an outline.
+    expect(paths.map((item) => item.ks?.k.c)).toEqual([true, true]);
   });
 
   it('the Lottie document is well-formed and matches the artboard', async () => {
