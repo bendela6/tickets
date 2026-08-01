@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger, cn } from '@tickets/ui';
 import { SUSTAINS } from '../doc/constants';
 import { useEditor } from '../editor-context';
 import type { IconState, Sustain } from '../doc/types';
 
 const labelFor = (sustain: Sustain) => sustain ?? 'settled';
+
+/** Named once so the row's title and the handler agree on what the chord is. */
+const REORDER_HINT = 'hold ⌥ and press ↑ or ↓ to reorder';
 
 const nextSustain = (sustain: Sustain): Sustain => {
   const index = SUSTAINS.indexOf(sustain);
@@ -21,14 +24,43 @@ export function StateManager() {
   const [renaming, setRenaming] = useState<string | null>(null);
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
+  const [announcement, setAnnouncement] = useState('');
+  // Keyed by state id rather than index, since the whole point of a move is
+  // that a row's index changes out from under it.
+  const rowButtons = useRef(new Map<string, HTMLButtonElement>());
+  const focusAfterMove = useRef<string | null>(null);
   const states = state.doc.states;
   const onlyOne = states.length <= 1;
+
+  // A dispatch re-renders the list with the moved state at a new index. Its
+  // `<li key={iconState.id}>` survives that re-render — same DOM node, just
+  // relocated — but the reorder still lands between two renders, one commit
+  // apart from the keydown that caused it. Refocusing has to wait for the
+  // commit the new index shows up in, which is exactly what an effect is for.
+  useEffect(() => {
+    const id = focusAfterMove.current;
+    if (!id) return;
+    focusAfterMove.current = null;
+    rowButtons.current.get(id)?.focus();
+  }, [states]);
+
+  const moveState = (iconState: IconState, index: number, delta: -1 | 1) => {
+    const to = index + delta;
+    // The floor and ceiling of the list are dead ends, not a wraparound — a
+    // traversal order has no "after the last state" to mean.
+    if (to < 0 || to >= states.length) return;
+    dispatch({ type: 'reorderStates', from: index, to });
+    focusAfterMove.current = iconState.id;
+    setAnnouncement(
+      `${iconState.name} moved ${delta === -1 ? 'up' : 'down'}, now ${to + 1} of ${states.length}`,
+    );
+  };
 
   return (
     <Popover>
       <PopoverTrigger
         aria-label="States"
-        title="Add, rename, reorder states"
+        title={`Add, rename, reorder states · ${REORDER_HINT} on a row`}
         className="flex size-5.5 flex-none items-center justify-center rounded-md text-13 text-gray-9 hover:bg-surface-inset"
       >
         ⋯
@@ -69,9 +101,22 @@ export function StateManager() {
                 setDragFrom(null);
                 setDragOver(null);
               }}
+              onMove={(delta) => moveState(iconState, index, delta)}
+              registerRef={(el) => {
+                if (el) rowButtons.current.set(iconState.id, el);
+                else rowButtons.current.delete(iconState.id);
+              }}
             />
           ))}
         </ul>
+
+        {/* No `role="status"` here on purpose: the canvas footer already owns
+            that role for the one status line the design has, and a second
+            element claiming it would make that query ambiguous everywhere
+            else in the app. `aria-live` alone still reaches a screen reader. */}
+        <div aria-live="polite" className="sr-only">
+          {announcement}
+        </div>
 
         <p className="px-3 pb-2 font-mono text-9/relaxed text-gray-9 text-pretty">
           settled holds a pose · sustained keeps moving while you stay in it
@@ -103,6 +148,8 @@ function StateRow({
   onDragStart,
   onDragOver,
   onDrop,
+  onMove,
+  registerRef,
 }: {
   state: IconState;
   current: boolean;
@@ -115,10 +162,13 @@ function StateRow({
   onDragStart: () => void;
   onDragOver: () => void;
   onDrop: () => void;
+  onMove: (delta: -1 | 1) => void;
+  registerRef: (el: HTMLButtonElement | null) => void;
 }) {
   return (
     <li
       draggable={!renaming}
+      title={renaming ? undefined : REORDER_HINT}
       onDragStart={onDragStart}
       onDragOver={(event) => {
         event.preventDefault();
@@ -149,7 +199,16 @@ function StateRow({
       ) : (
         <button
           type="button"
+          ref={registerRef}
           onClick={onRename}
+          onKeyDown={(event) => {
+            // Alt/Option is free over a list row — plain arrows are left alone
+            // entirely since nothing here scrolls or steps selection with them
+            // today.
+            if (!event.altKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
+            event.preventDefault();
+            onMove(event.key === 'ArrowUp' ? -1 : 1);
+          }}
           className={cn(
             'min-w-0 flex-1 cursor-text truncate text-left font-mono text-11',
             current ? 'text-gray-12' : 'text-gray-11',
