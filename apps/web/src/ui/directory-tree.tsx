@@ -14,8 +14,18 @@ function Row({
   onSelect: () => void;
 }) {
   if (row.note) {
+    // Mirrors TreeRow's own indentation exactly (depth guide columns, then
+    // the caret-width column every treeitem reserves) so an empty folder's
+    // note lines up under its parent at any depth, instead of collapsing to
+    // a flat left-edge padding that discards `row.depth`.
     return (
-      <div className="py-1 pr-2 pl-2 font-mono text-12/17 italic text-gray-9">{row.note}</div>
+      <div className="flex items-stretch gap-1">
+        {Array.from({ length: row.depth }, (_, i) => (
+          <span key={i} aria-hidden className="w-4 flex-none border-l-1 border-gray-6" />
+        ))}
+        <span aria-hidden className="size-4 flex-none" />
+        <span className="flex-1 py-1 pr-2 font-mono text-12/17 italic text-gray-9">{row.note}</span>
+      </div>
     );
   }
 
@@ -32,7 +42,7 @@ function Row({
       caret={row.loading ? <Spinner size="sm" tone="primary" /> : undefined}
       leading={
         row.isRoot ? (
-          <span className="self-center shrink-0 rounded-sm border-1 border-gray-7 px-1 font-mono text-11 leading-[15px] text-gray-11">
+          <span className="self-center shrink-0 rounded-sm border-1 border-gray-7 px-1 font-mono text-11/15 text-gray-11">
             {row.symbol}
           </span>
         ) : (
@@ -55,7 +65,13 @@ function Row({
       }
       onToggle={onToggle}
       onSelect={onSelect}
-      className="font-mono text-12/17"
+      // `TreeRow` paints its own `selected` styling as `bg-surface-inset` —
+      // identical to the tree panel's own background (and to hover), so it
+      // reads as invisible here. `className` is merged in LAST inside
+      // `TreeRow`, so a selected row's indigo treatment (matching the
+      // pre-migration treeitem exactly) wins over the primitive's default
+      // without touching the shared component.
+      className={cn('font-mono text-12/17', row.selected && 'bg-indigo-3 font-500 text-indigo-9')}
     >
       <span className="truncate">{row.isRoot ? row.annotation : row.label}</span>
     </TreeRow>

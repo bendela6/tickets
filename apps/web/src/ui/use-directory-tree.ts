@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useTreeView, type TreeNode } from '@tickets/ui';
+import { useTreeView, type TreeNode, type UseTreeViewResult } from '@tickets/ui';
 
 import { workdirDirQuery } from '../api/use-workdir-dirs';
 import type { WorkdirDirEntry, WorkdirRoot } from '../api/types';
@@ -38,17 +38,52 @@ export function useDirectoryTree(opts: {
   const nodesRef = useRef(nodes);
   nodesRef.current = nodes;
 
+  // Populated right after `tree` exists, below. `load`'s error branches need
+  // to revert the hook's own expansion exception when a load fails — but
+  // `load` is referenced by `useTreeView`'s `onExpand` option, which is
+  // constructed before `tree` itself exists. A ref breaks that ordering
+  // cycle: the closures below only read `treeRef.current` at call time
+  // (always after `tree` has been assigned), never at definition time.
+  const treeRef = useRef<UseTreeViewResult | null>(null);
+
+  // A node that failed to load must not keep the hook's expansion exception:
+  // otherwise `useTreeView`'s internal model still says "expanded" while the
+  // rendered row (composed with `!state.error` below) says "collapsed", and
+  // arrow-key navigation inside the hook's own `onKeyDown` acts on the
+  // model's belief, not on what is on screen (ArrowLeft would try to
+  // collapse an already-closed-looking row instead of jumping to the
+  // parent). Reverting the exception here — not just patching the render —
+  // keeps both in sync AND leaves the node genuinely "not expanded" so the
+  // next caret click reads as an expand attempt and retries.
+  //
+  // Guarded on "was still expanded when this settled": if the user manually
+  // collapsed the node while its load was in flight, this must not
+  // re-expand it out from under them.
+  const revertIfStillExpanded = useCallback((path: string) => {
+    const wasExpanded = treeRef.current?.rows.find((r) => r.id === path)?.expanded;
+    if (wasExpanded) treeRef.current?.toggle(path);
+  }, []);
+
   const load = useCallback(
     async (path: string) => {
-      setNodes((n) => ({ ...n, [path]: { ...n[path], loading: true } }));
+      // Clears any error left from a previous attempt so the retry guard
+      // below (in `onExpand`) is deciding from this attempt's state, not a
+      // stale one.
+      setNodes((n) => ({ ...n, [path]: { ...n[path], loading: true, error: undefined } }));
       try {
         const listing = await queryClient.fetchQuery(workdirDirQuery(path));
         setNodes((n) => ({ ...n, [path]: { entries: listing.entries, error: listing.error, loading: false } }));
+        // The API's real error shape (apps/api/src/workdir/workdir-fs.ts) is
+        // HTTP 200 with `entries: []` AND an inline `error` — EACCES/EPERM/
+        // ENOENT all collapse to this, never a thrown rejection. That path
+        // needs the same model-revert as the transport-failure `catch` below.
+        if (listing.error) revertIfStillExpanded(path);
       } catch {
         setNodes((n) => ({ ...n, [path]: { error: 'could not read', loading: false } }));
+        revertIfStillExpanded(path);
       }
     },
-    [queryClient],
+    [queryClient, revertIfStillExpanded],
   );
 
   // An errored node reports NO children, so useTreeView will ask to load again
@@ -63,7 +98,11 @@ export function useDirectoryTree(opts: {
       if (state?.error) return { id: path, label };
       if (!state?.entries) return { id: path, label };
       if (state.entries.length === 0) {
-        return { id: path, label, children: [{ id: `${path} empty`, inert: true }] };
+        // NUL is deliberately un-representable in a filesystem path, so this
+        // synthetic child id can never collide with a real sibling entry —
+        // unlike a plain space, which a directory could legitimately be
+        // named with.
+        return { id: path, label, children: [{ id: `${path}\u0000empty`, inert: true }] };
       }
       return { id: path, label, children: state.entries.map((e) => build(e.path, basename(e.path))) };
     };
@@ -75,10 +114,16 @@ export function useDirectoryTree(opts: {
     selectedId: selected,
     onSelect,
     onExpand: (path) => {
-      if (!nodesRef.current[path]?.entries) void load(path);
+      const state = nodesRef.current[path];
+      // An errored node must be reloadable even when the API's inline-error
+      // shape already gave it `entries: []` — an empty array is truthy, so
+      // checking only "no entries yet" would treat it as already loaded and
+      // never retry.
+      if (!state?.entries || state.error) void load(path);
     },
     idPrefix: 'dtree',
   });
+  treeRef.current = tree;
 
   const rootByPath = useMemo(() => new Map(roots.map((r) => [r.path, r])), [roots]);
 
