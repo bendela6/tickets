@@ -64,6 +64,18 @@ export function useDirectoryTree(opts: {
     if (wasExpanded) treeRef.current?.toggle(path);
   }, []);
 
+  // A previously-parked worry: two overlapping loads for the same path (the
+  // user collapses and re-expands a node while its first load is still in
+  // flight) could let a stale failure force-collapse a node whose retry
+  // succeeded. Investigated and found unreachable — NOT by anything in this
+  // hook, but by `queryClient.fetchQuery`'s own dedup: concurrent fetches on
+  // the same query key share one in-flight promise, so expand→collapse→
+  // re-expand while loading produces exactly one request, and every caller
+  // resolves/rejects together. `revertIfStillExpanded`'s toggle is also
+  // idempotent (unconditional add/delete of the exception), so even a
+  // same-outcome double-revert would be harmless. If `load` is ever changed
+  // to bypass `fetchQuery` (a raw `fetch`, a different cache, etc.), this
+  // safety goes with it and the two-overlapping-loads case needs its own fix.
   const load = useCallback(
     async (path: string) => {
       // Clears any error left from a previous attempt so the retry guard
