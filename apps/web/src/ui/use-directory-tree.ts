@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useTreeView, type TreeNode } from '@tickets/ui';
 
 import { workdirDirQuery } from '../api/use-workdir-dirs';
 import type { WorkdirDirEntry, WorkdirRoot } from '../api/types';
@@ -33,25 +34,9 @@ export function useDirectoryTree(opts: {
 }) {
   const { roots, selected, onSelect } = opts;
   const queryClient = useQueryClient();
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [nodes, setNodes] = useState<Record<string, NodeState>>({});
-  const [focus, setFocus] = useState<string | null>(roots[0]?.path ?? null);
-
-  // Mirrors of the latest state for reads inside `toggle`, so the decision of
-  // "expand vs collapse, load vs reuse" is made from fresh state BEFORE any
-  // setState call, never from inside a nested state-updater body (those must
-  // stay pure — StrictMode double-invokes them, which would double-fire `load`).
-  const expandedRef = useRef(expanded);
-  expandedRef.current = expanded;
   const nodesRef = useRef(nodes);
   nodesRef.current = nodes;
-
-  // Consumers supply `roots` from an async query that starts empty; sync the
-  // initial focus once roots arrive instead of only at mount. Never clobbers
-  // a focus the user (or keyboard nav) already set.
-  useEffect(() => {
-    if (focus == null && roots[0]) setFocus(roots[0].path);
-  }, [focus, roots]);
 
   const load = useCallback(
     async (path: string) => {
@@ -66,127 +51,84 @@ export function useDirectoryTree(opts: {
     [queryClient],
   );
 
-  const toggle = useCallback(
-    (path: string) => {
-      // Decide BEFORE touching state. Reading refs here (not the `expanded`/
-      // `nodes` closed over by this render) means the decision reflects the
-      // latest committed state even when this callback is invoked more than
-      // once (e.g. StrictMode), and `load` below runs exactly once, outside
-      // any updater body.
-      const isExpanded = expandedRef.current.has(path);
-      if (isExpanded) {
-        const hadError = Boolean(nodesRef.current[path]?.error);
-        setExpanded((prev) => {
-          const next = new Set(prev);
-          next.delete(path);
-          return next;
-        });
-        // errored nodes drop their cache so a re-expand retries (design rule)
-        if (hadError) {
-          setNodes((n) => ({ ...n, [path]: { loading: false } }));
-        }
-      } else {
-        const needsLoad = !nodesRef.current[path]?.entries;
-        setExpanded((prev) => {
-          const next = new Set(prev);
-          next.add(path);
-          return next;
-        });
-        if (needsLoad) void load(path);
-      }
-    },
-    [load],
-  );
-
-  const select = useCallback((path: string) => { setFocus(path); onSelect(path); }, [onSelect]);
-
-  const rows = useMemo<VisibleRow[]>(() => {
-    const out: VisibleRow[] = [];
-    const walk = (path: string, depth: number, root?: WorkdirRoot) => {
+  // An errored node reports NO children, so useTreeView will ask to load again
+  // on the next expand — which is the retry rule, expressed as data rather
+  // than as a special case in a toggle handler.
+  const treeRoots = useMemo<TreeNode[]>(() => {
+    // `label` carries the typeahead affordance (WAI-ARIA first-letter jump):
+    // a root row types against its symbol, everything else against its
+    // basename — the same string the pre-migration code typed against.
+    const build = (path: string, label: string): TreeNode => {
       const state = nodes[path];
-      const isExpanded = expanded.has(path) && !state?.error;
-      out.push({
-        path,
-        label: root ? root.symbol : basename(path),
-        depth,
-        isRoot: Boolean(root),
-        symbol: root?.symbol,
-        annotation: root?.annotation,
-        expanded: isExpanded,
-        loading: Boolean(state?.loading),
-        error: state?.error,
-        selected: selected === path,
-        focused: focus === path,
-      });
-      if (isExpanded && state?.entries) {
-        if (state.entries.length === 0) {
-          out.push({ path: `${path}\u0000empty`, label: '', depth: depth + 1, isRoot: false, expanded: false, loading: false, selected: false, focused: false, note: '— empty —' });
-        } else {
-          for (const child of state.entries) walk(child.path, depth + 1);
-        }
+      if (state?.error) return { id: path, label };
+      if (!state?.entries) return { id: path, label };
+      if (state.entries.length === 0) {
+        return { id: path, label, children: [{ id: `${path} empty`, inert: true }] };
       }
+      return { id: path, label, children: state.entries.map((e) => build(e.path, basename(e.path))) };
     };
-    for (const root of roots) walk(root.path, 0, root);
-    return out;
-  }, [roots, nodes, expanded, selected, focus]);
+    return roots.map((r) => build(r.path, r.symbol));
+  }, [roots, nodes]);
 
-  const interactive = useMemo(() => rows.filter((r) => !r.note), [rows]);
-
-  const onKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      const i = interactive.findIndex((r) => r.path === focus);
-      const move = (delta: number) => {
-        const next = interactive[Math.max(0, Math.min(interactive.length - 1, i + delta))];
-        if (next) setFocus(next.path);
-      };
-      switch (e.key) {
-        case 'ArrowDown': e.preventDefault(); move(1); break;
-        case 'ArrowUp': e.preventDefault(); move(-1); break;
-        case 'Home': e.preventDefault(); if (interactive[0]) setFocus(interactive[0].path); break;
-        case 'End': e.preventDefault(); { const last = interactive.at(-1); if (last) setFocus(last.path); } break;
-        case 'ArrowRight': {
-          e.preventDefault();
-          const row = interactive[i];
-          if (row && !row.expanded) toggle(row.path);
-          else move(1);
-          break;
-        }
-        case 'ArrowLeft': {
-          e.preventDefault();
-          const row = interactive[i];
-          if (row?.expanded) {
-            toggle(row.path);
-          } else if (row) {
-            // Parent is the nearest PRECEDING row with a strictly smaller depth —
-            // NOT `move(-1)`, which would land on the previous visible row (a
-            // sibling, when one exists) instead of the actual parent. If none is
-            // found (already at a root), stay put.
-            for (let j = i - 1; j >= 0; j--) {
-              const candidate = interactive[j];
-              if (candidate && candidate.depth < row.depth) {
-                setFocus(candidate.path);
-                break;
-              }
-            }
-          }
-          break;
-        }
-        case 'Enter':
-        case ' ': {
-          e.preventDefault();
-          if (focus) select(focus);
-          break;
-        }
-        default:
-          if (e.key.length === 1 && /[a-z0-9]/i.test(e.key)) {
-            const start = i + 1;
-            const found = [...interactive.slice(start), ...interactive.slice(0, start)].find((r) => r.label.toLowerCase().startsWith(e.key.toLowerCase()));
-            if (found) { e.preventDefault(); setFocus(found.path); }
-          }
-      }
+  const tree = useTreeView({
+    roots: treeRoots,
+    selectedId: selected,
+    onSelect,
+    onExpand: (path) => {
+      if (!nodesRef.current[path]?.entries) void load(path);
     },
-    [interactive, focus, toggle, select],
+    idPrefix: 'dtree',
+  });
+
+  const rootByPath = useMemo(() => new Map(roots.map((r) => [r.path, r])), [roots]);
+
+  const rows = useMemo<VisibleRow[]>(
+    () =>
+      tree.rows.map((r) => {
+        if (r.inert) {
+          return {
+            path: r.id,
+            label: '',
+            depth: r.depth,
+            isRoot: false,
+            expanded: false,
+            loading: false,
+            selected: false,
+            focused: false,
+            note: '— empty —',
+          };
+        }
+        const root = rootByPath.get(r.id);
+        const state = nodes[r.id];
+        return {
+          path: r.id,
+          label: root ? root.symbol : basename(r.id),
+          depth: r.depth,
+          isRoot: Boolean(root),
+          symbol: root?.symbol,
+          annotation: root?.annotation,
+          // `useTreeView` only knows the user asked to expand this node — it
+          // has no error concept. An errored node must still render CLOSED
+          // (collapsed caret, aria-expanded=false) even though the "expand"
+          // exception is recorded, because there is nothing under it to show.
+          expanded: r.expanded && !state?.error,
+          loading: Boolean(state?.loading),
+          error: state?.error,
+          selected: r.selected,
+          focused: r.focused,
+        };
+      }),
+    [tree.rows, rootByPath, nodes],
   );
 
-  return { rows, toggle, select, focus, setFocus, onKeyDown };
+  return {
+    rows,
+    toggle: tree.toggle,
+    select: tree.select,
+    focus: tree.focusId,
+    setFocus: tree.setFocusId,
+    onKeyDown: tree.onKeyDown,
+    rowElementId: tree.rowElementId,
+    activeDescendant: tree.activeDescendant,
+  };
 }
