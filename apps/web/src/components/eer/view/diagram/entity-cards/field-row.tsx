@@ -3,7 +3,7 @@ import { columnRoles, type ColumnRole } from '../../../engine/model/column-roles
 import { portKey } from '../../../engine/geometry/port-key';
 import { useDiagramDispatch } from '../../../state/diagram-context';
 import type { Column, Entity, Side } from '../../../engine/model/types';
-import { cn, runtimeStyle } from '@tickets/ui';
+import { cn, Pill, runtimeStyle } from '@tickets/ui';
 
 function Port({
   e,
@@ -84,17 +84,13 @@ export function FieldRow({
       }}
     >
       {badge && (
-        <span
-          className={cn(
-            'shrink-0 text-center font-mono text-9 font-600 tracking-wide text-gray-11',
-            {
-              'text-yellow-9': badge === 'pk',
-              'text-green-9': badge === 'fk',
-            },
-          )}
-        >
-          {badge.toUpperCase()}
-        </span>
+        <Pill
+          variant="text"
+          size="xs"
+          tone={badge === 'pk' ? 'yellow' : 'green'}
+          label={badge.toUpperCase()}
+          className="shrink-0 justify-center font-mono"
+        />
       )}
       <span
         className={cn('truncate font-mono text-gray-12', {
