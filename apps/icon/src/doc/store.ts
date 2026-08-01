@@ -371,6 +371,12 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         ...state,
         ...remember(state, `add point to ${object.name}`),
         doc: mapGeometry(state.doc, action.id, () => added.geometry),
+        // The object is selected too, not only the node inside it. A
+        // double-click lands on the outline, and a filled shape's hit test
+        // excludes its own boundary — so the press that opens the gesture
+        // deselects, and without this the new node would belong to nothing
+        // visible and no handles would be drawn to drag it by.
+        selectedId: action.id,
         selectedNode: { id: action.id, index: added.index },
       };
     }
