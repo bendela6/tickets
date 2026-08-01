@@ -75,6 +75,14 @@ export function useDocuments({
 
   const refresh = useCallback(async () => setList(await store.list()), [store]);
 
+  // The boot effect below runs once, at mount, so its own closure would only
+  // ever see `past` as it was then. The IndexedDB round-trip it awaits can
+  // stretch long enough for the user to have drawn something in the meantime,
+  // so whether that happened has to be read through a ref, at resolve time,
+  // rather than captured up front.
+  const editedRef = useRef(false);
+  editedRef.current = state.past.length > 0;
+
   // Boot: open the most recent document, or start one if there is none. The
   // ref guards against React's development double-invoke creating two.
   useEffect(() => {
@@ -86,6 +94,19 @@ export function useDocuments({
       if (newest) {
         const doc = await store.load(newest.id);
         if (doc) {
+          if (editedRef.current) {
+            // The user started editing before this load settled. `state.doc`
+            // is their real work and the loaded document is not, but there is
+            // no gesture here for `confirmDiscard` to be asked against — so
+            // rather than pick a side, the in-memory document is left alone
+            // and just given an identity of its own to be saved into.
+            const created = await store.create(UNTITLED);
+            setCurrentId(created.id);
+            setSavedDoc(created.doc);
+            setSavedAt(null);
+            await refresh();
+            return;
+          }
           dispatch({ type: 'replaceDocument', doc });
           setCurrentId(newest.id);
           setSavedDoc(doc);
