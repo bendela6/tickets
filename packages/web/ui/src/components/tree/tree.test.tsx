@@ -68,6 +68,14 @@ describe('Tree', () => {
     expect(container.querySelectorAll('[data-tree-guide]')).toHaveLength(3);
   });
 
+  it('announces depth via aria-level, since this tree is not nested DOM', () => {
+    // WAI-ARIA requires aria-level on treeitem whenever the tree isn't
+    // represented by real DOM nesting — exactly this shell's flat rows. depth
+    // is 0-based; aria-level is 1-based.
+    render(<Tree activeDescendant={undefined} onKeyDown={() => {}}>{row({ depth: 2 })}</Tree>);
+    expect(screen.getByRole('treeitem')).toHaveAttribute('aria-level', '3');
+  });
+
   it('accepts a caret override, for a loading spinner', () => {
     render(
       <Tree activeDescendant={undefined} onKeyDown={() => {}}>

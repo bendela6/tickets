@@ -99,6 +99,7 @@ export function TreeRow({
         id={elementId}
         tabIndex={-1}
         role="treeitem"
+        aria-level={depth + 1}
         aria-expanded={hasChildren ? expanded : undefined}
         aria-selected={selected}
         aria-label={label}
