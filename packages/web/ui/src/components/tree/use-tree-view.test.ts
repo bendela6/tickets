@@ -1,4 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
+import { createElement, StrictMode, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { useTreeView, type TreeNode } from './use-tree-view';
 
@@ -11,6 +12,10 @@ const key = (k: string) => ({ key: k, preventDefault: vi.fn() }) as never;
 
 function setup(opts: Partial<Parameters<typeof useTreeView>[0]> = {}) {
   return renderHook(() => useTreeView({ roots: ROOTS, idPrefix: 't', ...opts }));
+}
+
+function strictWrapper() {
+  return ({ children }: { children: ReactNode }) => createElement(StrictMode, null, children);
 }
 
 describe('useTreeView', () => {
@@ -51,6 +56,22 @@ describe('useTreeView', () => {
     const onExpand = vi.fn();
     const { result } = setup({ roots: [{ id: 'lazy' }], onExpand });
     act(() => result.current.toggle('lazy'));
+    act(() => result.current.toggle('lazy'));
+    expect(onExpand).toHaveBeenCalledTimes(1);
+  });
+
+  // Guards the ref-mirror shape of `toggle`: under StrictMode, React
+  // double-invokes state-updater functions to surface impure updaters. If
+  // `onExpand` were called from inside `setExceptions`'s updater body —
+  // instead of once, outside it, after deciding from a ref read — a single
+  // toggle would fire onExpand twice. Mirrors the equivalent guard in
+  // apps/web/src/ui/use-directory-tree.test.ts
+  // ("StrictMode: a single expand fetches the path exactly once").
+  it('StrictMode: a single toggle fires onExpand exactly once', () => {
+    const onExpand = vi.fn();
+    const { result } = renderHook(() => useTreeView({ roots: [{ id: 'lazy' }], idPrefix: 't', onExpand }), {
+      wrapper: strictWrapper(),
+    });
     act(() => result.current.toggle('lazy'));
     expect(onExpand).toHaveBeenCalledTimes(1);
   });
@@ -117,6 +138,9 @@ describe('useTreeView', () => {
     const { result } = renderHook(() => useTreeView({ roots, idPrefix: 't' }));
     act(() => result.current.toggle('a'));
     expect(result.current.rows.map((r) => r.id)).toEqual(['a', 'note', 'b']);
+    // An inert row has `children: undefined` (unloaded shape) but must never
+    // report a caret — there is nothing under it to load or reveal.
+    expect(result.current.rows.find((r) => r.id === 'note')?.hasChildren).toBe(false);
     act(() => result.current.onKeyDown(key('ArrowDown')));
     expect(result.current.focusId).toBe('b');
   });
@@ -147,5 +171,71 @@ describe('useTreeView', () => {
     expect(result.current.rows.map((r) => r.id)).toEqual(['a', 'a1', 'a2', 'a3', 'b']);
     rerender({ force: false });
     expect(result.current.rows.map((r) => r.id)).toEqual(['a', 'b']);
+  });
+
+  it('toggling a force-opened row records a collapse, not an expand, so turning force off restores it', () => {
+    // `toggle` used to read raw set membership (ignoring `forceExpanded`), so
+    // clicking a caret on a row that was only visually open because of
+    // `forceExpanded` got recorded as an EXPAND. The row looked unchanged
+    // while forcing stayed on, but once the filter cleared, the row the user
+    // had just tried to close came back open.
+    const { result, rerender } = renderHook(
+      ({ force }: { force: boolean }) => useTreeView({ roots: ROOTS, idPrefix: 't', forceExpanded: force }),
+      { initialProps: { force: true } },
+    );
+    expect(result.current.rows.map((r) => r.id)).toEqual(['a', 'a1', 'a2', 'a3', 'b']);
+    act(() => result.current.toggle('a'));
+    // Still forced open — no visible change while forcing is still on.
+    expect(result.current.rows.map((r) => r.id)).toEqual(['a', 'a1', 'a2', 'a3', 'b']);
+    rerender({ force: false });
+    expect(result.current.rows.map((r) => r.id)).toEqual(['a', 'b']);
+  });
+
+  it('typeahead jumps to the next row whose label starts with the pressed letter, wrapping around', () => {
+    const roots: TreeNode[] = [
+      { id: 'x', label: 'apple' },
+      { id: 'y', label: 'banana' },
+      { id: 'z', label: 'avocado' },
+    ];
+    const { result } = renderHook(() => useTreeView({ roots, idPrefix: 't' }));
+    expect(result.current.focusId).toBe('x');
+    act(() => result.current.onKeyDown(key('a')));
+    // Search starts AFTER the focused row, so the first 'a' skips 'apple'
+    // itself and lands on the next label starting with 'a'.
+    expect(result.current.focusId).toBe('z');
+    act(() => result.current.onKeyDown(key('a')));
+    // Wraps back around past the end to 'apple'.
+    expect(result.current.focusId).toBe('x');
+  });
+
+  describe('defaultExpanded', () => {
+    it('renders every node expanded by default when defaultExpanded is true', () => {
+      const { result } = setup({ defaultExpanded: true });
+      expect(result.current.rows.map((r) => r.id)).toEqual(['a', 'a1', 'a2', 'a3', 'b']);
+    });
+
+    it('toggle collapses a single node under defaultExpanded, without a mount-time sweep of toggle() calls', () => {
+      const { result } = setup({ defaultExpanded: true });
+      act(() => result.current.toggle('a'));
+      // 'a' itself is still a row — only its children stop being walked.
+      expect(result.current.rows.map((r) => r.id)).toEqual(['a', 'b']);
+      // The exception is per-node: toggling again reopens exactly that node.
+      act(() => result.current.toggle('a'));
+      expect(result.current.rows.map((r) => r.id)).toEqual(['a', 'a1', 'a2', 'a3', 'b']);
+    });
+
+    it('composes with forceExpanded, which overrides on top of the default-open polarity', () => {
+      const { result, rerender } = renderHook(
+        ({ force }: { force: boolean }) =>
+          useTreeView({ roots: ROOTS, idPrefix: 't', defaultExpanded: true, forceExpanded: force }),
+        { initialProps: { force: false } },
+      );
+      act(() => result.current.toggle('a'));
+      expect(result.current.rows.map((r) => r.id)).toEqual(['a', 'b']);
+      rerender({ force: true });
+      expect(result.current.rows.map((r) => r.id)).toEqual(['a', 'a1', 'a2', 'a3', 'b']);
+      rerender({ force: false });
+      expect(result.current.rows.map((r) => r.id)).toEqual(['a', 'b']);
+    });
   });
 });
