@@ -193,4 +193,20 @@ describe('Outline', () => {
     expect(within(zone).getByRole('button', { name: 'Sub, 2 tables' })).toBeInTheDocument();
     expect(within(zone).getByRole('button', { name: 'm1' })).toBeInTheDocument();
   });
+
+  it('draws a hidden zone with a hollow swatch, not a filled one', async () => {
+    // The swatch doubles as the visibility control, so its OFF state has to be
+    // unmistakable. It used to fake a ring by passing border classes through
+    // className; `hollow` is the real thing.
+    await renderDiagram(<Outline />, twoZoneRaw());
+    // The regex form from the plan (name: /Zone Two/) matches three buttons
+    // in this row — the select button, the chevron, and the toggle — so this
+    // pins the select button's exact accessible name instead.
+    const swatch = () => screen.getByRole('button', { name: 'Zone Two, 2 tables' })
+      .closest('div')!.querySelector('span[aria-hidden]') as HTMLElement;
+    expect(swatch().className).toContain('bg-(--dot-color)');
+    fireEvent.click(screen.getByRole('button', { name: 'Hide Zone Two' }));
+    expect(swatch().className).toContain('border-1');
+    expect(swatch().className).not.toContain('bg-(--dot-color)');
+  });
 });
