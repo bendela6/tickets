@@ -1,10 +1,12 @@
-import { act, cleanup, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import type { DiagramActions } from '../../state/diagram-provider';
 import { twoZoneRaw } from '../../test/models';
 import { renderDiagram } from '../../test/render';
+import { BADGE_TONE } from './badge-tone';
 import { DetailPanel } from './detail-panel';
+import { EmptyState } from './empty-state';
 
 afterEach(cleanup);
 
@@ -65,5 +67,26 @@ describe('DetailPanel', () => {
     expect(screen.getByText('.id')).toBeInTheDocument();
     expect(screen.getByText('orders')).toBeInTheDocument();
     expect(screen.getByText('.users_id')).toBeInTheDocument();
+  });
+});
+
+describe('panel badges', () => {
+  it('maps each eer badge tone to a library hue', () => {
+    expect(BADGE_TONE).toEqual({
+      entity: 'blue',
+      group: 'indigo',
+      subgroup: 'green',
+      edge: 'yellow',
+    });
+  });
+
+  it('renders the overview badge as a tinted Pill at the 9px rung', () => {
+    // The colours are what `tint` was added for: hue-9 at 15% behind hue-11 ink.
+    // A `subtle` Pill would fill from rung 3 instead and quietly restyle it.
+    render(<EmptyState model={null} />);
+    const badge = screen.getByText('Overview');
+    expect(badge.className).toContain('bg-blue-9/15');
+    expect(badge.className).toContain('text-blue-11');
+    expect(badge.className).toContain('text-9/11');
   });
 });
