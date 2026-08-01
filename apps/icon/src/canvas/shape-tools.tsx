@@ -1,5 +1,6 @@
-import { PRESET_SIDES } from '../doc/defaults';
-import { polygonPoints } from '../doc/geometry';
+import { PRESET_ARC, PRESET_SIDES } from '../doc/defaults';
+import { arcPath, polygonPoints } from '../doc/geometry';
+import { pathData } from '../render/svg';
 import type { ShapeKind } from '../doc/types';
 
 export interface ShapeTool {
@@ -23,6 +24,9 @@ export const SHAPE_TOOLS: readonly ShapeTool[] = [
   // are all spoken for.
   { kind: 'polyline', label: 'Polyline', key: 'Y' },
   { kind: 'polygon', label: 'Polygon', key: 'P' },
+  // The path tool draws an arc, the way the polygon tool draws a hexagon: a
+  // `<path>` is a list of commands and has no natural first shape of its own.
+  { kind: 'path', label: 'Arc', key: 'A' },
 ];
 
 export function shapeToolForKey(key: string): ShapeTool | undefined {
@@ -109,6 +113,26 @@ export function ShapeGlyph({ kind, size = 13 }: { kind: ShapeKind; size?: number
         <polygon
           points={points(polygonPoints(size / 2, size / 2, size / 2, PRESET_SIDES))}
           fill="currentColor"
+        />
+      ) : null}
+      {/* The spinner the tool's preset makes, drawn through the same generator
+          and the same `d` builder the artboard uses, so the mark cannot drift
+          from the shape it stands for. */}
+      {kind === 'path' ? (
+        <path
+          d={pathData(
+            arcPath({
+              cx: size / 2,
+              cy: size / 2,
+              r: span / 2,
+              inner: span / 2,
+              ...PRESET_ARC,
+            }),
+          )}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={stroke}
+          strokeLinecap="round"
         />
       ) : null}
     </svg>

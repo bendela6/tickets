@@ -36,7 +36,45 @@ export interface Point {
  * and nothing else — so a hexagon is a preset that *makes* a point list rather
  * than a kind that remembers being regular.
  */
-export type ShapeKind = 'rect' | 'circle' | 'ellipse' | 'line' | 'polyline' | 'polygon';
+export type ShapeKind =
+  | 'rect'
+  | 'circle'
+  | 'ellipse'
+  | 'line'
+  | 'polyline'
+  | 'polygon'
+  | 'path';
+
+/**
+ * One command of a path, in the absolute form only.
+ *
+ * SVG also writes each of these relative (lowercase) and offers the shorthands
+ * `H`, `V`, `S` and `T`. Storing all of them would make every consumer —
+ * bounds, hit-testing, translate, resize, snap, the renderer — handle nine
+ * cases instead of six, and none of the extra three can express anything these
+ * cannot. An importer converts on the way in, so this type stays the only
+ * thing a wider input grammar would have to change.
+ *
+ * `c` rather than `command`: a document holds hundreds of these and they are
+ * the one field on every one of them.
+ */
+export type PathSegment =
+  | { c: 'M'; x: number; y: number }
+  | { c: 'L'; x: number; y: number }
+  | { c: 'Q'; x1: number; y1: number; x: number; y: number }
+  | { c: 'C'; x1: number; y1: number; x2: number; y2: number; x: number; y: number }
+  | {
+      c: 'A';
+      rx: number;
+      ry: number;
+      /** Degrees the ellipse's own x-axis is turned by. */
+      rotation: number;
+      large: boolean;
+      sweep: boolean;
+      x: number;
+      y: number;
+    }
+  | { c: 'Z' };
 
 /**
  * Geometry, per kind. A line is stored as two endpoints rather than a box
@@ -46,6 +84,11 @@ export type ShapeKind = 'rect' | 'circle' | 'ellipse' | 'line' | 'polyline' | 'p
  * A rect and an ellipse are both stored as boxes even though `<ellipse>` is
  * written as a centre and two radii: which element a shape *is* and how its
  * attributes are encoded are separate questions, and the renderer converts.
+ *
+ * A path is its commands and nothing else — an arc, a wedge and a donut
+ * segment are all presets that *make* commands, the same way a hexagon is a
+ * preset that makes a point list. Nothing afterwards remembers which one it
+ * came from.
  */
 export type Geometry =
   | { kind: 'rect'; x: number; y: number; w: number; h: number; radius: number }
@@ -53,7 +96,8 @@ export type Geometry =
   | { kind: 'ellipse'; x: number; y: number; w: number; h: number }
   | { kind: 'line'; x1: number; y1: number; x2: number; y2: number }
   | { kind: 'polyline'; points: Point[] }
-  | { kind: 'polygon'; points: Point[] };
+  | { kind: 'polygon'; points: Point[] }
+  | { kind: 'path'; segments: PathSegment[] };
 
 export type Role = 'spins' | 'moves' | 'fades';
 

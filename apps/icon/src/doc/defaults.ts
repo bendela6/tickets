@@ -1,5 +1,5 @@
 import { DEFAULT_GROUND, DEFAULT_INK, REFERENCE_SIZE } from './constants';
-import { isOpenRun, polygonPoints } from './geometry';
+import { arcPath, isOpenRun, polygonPoints } from './geometry';
 import { snapGeometry, snapTo } from './snap';
 import type { Artboard, Geometry, IconDoc, IconObject, ShapeKind } from './types';
 
@@ -16,6 +16,7 @@ const PLACEMENT = {
   lineEnd: 376 / REFERENCE_SIZE,
   lineWidth: 20 / REFERENCE_SIZE,
   reach: 120 / REFERENCE_SIZE,
+  arcRadius: 128 / REFERENCE_SIZE,
 } as const;
 
 /**
@@ -25,6 +26,14 @@ const PLACEMENT = {
  * a list of points and dragging one vertex has to be allowed to ruin it.
  */
 export const PRESET_SIDES = 6;
+
+/**
+ * The arc tool is the same bargain in a `<path>`: three quarters of a turn
+ * opening at the top, which is a spinner — the arc anybody drawing an icon
+ * wants first, and the one the motion controls have something to say about.
+ * `inner` equal to the radius leaves it open, so it is drawn by its stroke.
+ */
+export const PRESET_ARC = { start: -90, sweep: 270 } as const;
 
 function initialGeometry(kind: ShapeKind, artboard: Artboard): Geometry {
   const { width, height } = artboard;
@@ -72,6 +81,21 @@ function initialGeometry(kind: ShapeKind, artboard: Artboard): Geometry {
         kind: 'polygon',
         points: polygonPoints(centre.x, centre.y, reach, PRESET_SIDES),
       };
+    case 'path': {
+      // A quarter of the shorter edge, so the arc reads as a spinner on a wide
+      // board as well as a square one.
+      const radius = PLACEMENT.arcRadius * shorter;
+      return {
+        kind: 'path',
+        segments: arcPath({
+          cx: centre.x,
+          cy: centre.y,
+          r: radius,
+          inner: radius,
+          ...PRESET_ARC,
+        }),
+      };
+    }
   }
 }
 
@@ -101,15 +125,18 @@ export function newObject(
   snap = 1,
 ): IconObject {
   const shorter = Math.min(artboard.width, artboard.height);
+  const geometry = snapGeometry(initialGeometry(kind, artboard), snap);
   return {
     id: objectId(kind, sequence),
     name: `${kind} ${sequence}`,
-    geometry: snapGeometry(initialGeometry(kind, artboard), snap),
+    geometry,
     fill: { ...DEFAULT_INK },
     stroke: { ...DEFAULT_INK },
     // A run has no area to fill, so its stroke is the only thing that would be
-    // drawn: it starts with one, and everything else starts without.
-    strokeWidth: isOpenRun(kind)
+    // drawn: it starts with one, and everything else starts without. Asked of
+    // the geometry rather than the kind, because whether a path is a run is
+    // something only its own commands can answer.
+    strokeWidth: isOpenRun(geometry)
       ? Math.max(snap, snapTo(PLACEMENT.lineWidth * shorter, snap))
       : 0,
     opacity: 100,

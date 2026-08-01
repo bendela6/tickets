@@ -1,5 +1,5 @@
 import { SNAP_MIN } from './constants';
-import type { Geometry } from './types';
+import type { Geometry, PathSegment } from './types';
 
 /**
  * Round a value onto the document's grid.
@@ -58,8 +58,27 @@ export function snapGeometry(geometry: Geometry, step: number): Geometry {
         ...geometry,
         points: geometry.points.map((point) => ({ x: at(point.x), y: at(point.y) })),
       };
+    case 'path':
+      return { ...geometry, segments: geometry.segments.map(snapSegment(at)) };
   }
 }
+
+/**
+ * A path command with the points that are actually *on* it laid on the grid.
+ *
+ * Control points and arc radii are deliberately left alone. The grid exists so
+ * that what gets drawn lands on whole units, and a control point is never
+ * drawn: moving one to a grid position puts nothing on the grid and pulls the
+ * curve somewhere unrelated to it. An arc's radii are the same argument twice
+ * over — they are lengths rather than positions, and SVG grows a radius that
+ * cannot reach its endpoint, so a snapped radius would be quietly overruled by
+ * the renderer anyway. The endpoints are what the eye lines up, and those do
+ * snap.
+ */
+const snapSegment =
+  (at: (value: number) => number) =>
+  (segment: PathSegment): PathSegment =>
+    segment.c === 'Z' ? segment : { ...segment, x: at(segment.x), y: at(segment.y) };
 
 /**
  * The pitch to draw the grid at, in document units, or null when even the

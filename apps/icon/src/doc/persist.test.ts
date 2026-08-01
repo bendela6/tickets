@@ -45,6 +45,39 @@ describe('DocumentStore contract', () => {
     expect((await store.load(id))?.name).toBe('wallet.icon');
   });
 
+  it('keeps a path’s commands through a save and a reopen, curves and flags and all', async () => {
+    const store = memoryStore();
+    const { id } = await store.create('spinner.icon');
+    const drawn: IconDoc = {
+      ...emptyDocument('spinner.icon'),
+      objects: [
+        {
+          ...newObject('path', 1, BOARD),
+          geometry: {
+            kind: 'path',
+            segments: [
+              { c: 'M', x: 10, y: 20 },
+              { c: 'Q', x1: 30, y1: 40, x: 50, y: 60 },
+              { c: 'C', x1: 1, y1: 2, x2: 3, y2: 4, x: 5, y: 6 },
+              { c: 'A', rx: 7, ry: 8, rotation: 9, large: true, sweep: false, x: 11, y: 12 },
+              { c: 'Z' },
+            ],
+          },
+        },
+      ],
+    };
+    await store.save(id, drawn);
+    expect((await store.load(id))?.objects[0]?.geometry).toEqual(drawn.objects[0]?.geometry);
+  });
+
+  it('reopens the arc preset as the same arc it was saved as', async () => {
+    const store = memoryStore();
+    const { id } = await store.create('arc.icon');
+    const doc = { ...emptyDocument('arc.icon'), objects: [newObject('path', 1, BOARD)] };
+    await store.save(id, doc);
+    expect(await store.load(id)).toEqual(doc);
+  });
+
   it('returns null for a document that is not there', async () => {
     expect(await memoryStore().load('nope')).toBeNull();
   });

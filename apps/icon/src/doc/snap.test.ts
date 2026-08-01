@@ -98,6 +98,33 @@ describe('snapGeometry', () => {
       points: [{ x: 1, y: 3 }],
     });
   });
+
+  it('snaps the points a path is drawn through and leaves its controls and radii alone', () => {
+    // A control point is never drawn, so putting one on the grid puts nothing
+    // on the grid and moves the curve for no reason anybody can see.
+    expect(
+      snapGeometry(
+        {
+          kind: 'path',
+          segments: [
+            { c: 'M', x: 1.4, y: 2.6 },
+            { c: 'C', x1: 3.4, y1: 4.6, x2: 5.4, y2: 6.6, x: 7.4, y: 8.6 },
+            { c: 'A', rx: 9.4, ry: 10.6, rotation: 12.4, large: true, sweep: false, x: 11.4, y: 12.6 },
+            { c: 'Z' },
+          ],
+        },
+        1,
+      ),
+    ).toEqual({
+      kind: 'path',
+      segments: [
+        { c: 'M', x: 1, y: 3 },
+        { c: 'C', x1: 3.4, y1: 4.6, x2: 5.4, y2: 6.6, x: 7, y: 9 },
+        { c: 'A', rx: 9.4, ry: 10.6, rotation: 12.4, large: true, sweep: false, x: 11, y: 13 },
+        { c: 'Z' },
+      ],
+    });
+  });
 });
 
 describe('gridPitch', () => {

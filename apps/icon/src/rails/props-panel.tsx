@@ -16,6 +16,7 @@ import {
   rotatedBounds,
   type Box,
 } from '../doc/geometry';
+import { snapTo } from '../doc/snap';
 import { selectedObject } from '../doc/store';
 import { useEditor } from '../editor-context';
 import type { IconObject } from '../doc/types';
@@ -60,7 +61,7 @@ function Header({ object }: { object: IconObject | null }) {
 
 function ObjectProperties({ object }: { object: IconObject }) {
   const { state, dispatch, view } = useEditor();
-  const isRun = isOpenRun(object.geometry.kind);
+  const isRun = isOpenRun(object.geometry);
 
   return (
     <>
@@ -147,6 +148,14 @@ function formatOnArtboard(box: Box): string {
   return `${Math.round(box.x)}, ${Math.round(box.y)} · ${Math.round(box.w)} × ${Math.round(box.h)}`;
 }
 
+/** A box stated on the document's grid. */
+const gridBox = (box: Box, step: number): Box => ({
+  x: snapTo(box.x, step),
+  y: snapTo(box.y, step),
+  w: snapTo(box.w, step),
+  h: snapTo(box.h, step),
+});
+
 /**
  * A row that states something rather than accepting it: same frame as a
  * `NumberField` so it sits in the rail's rhythm, but no input, because nothing
@@ -169,6 +178,7 @@ function ReadOnlyRow({ label, value }: { label: string; value: string }) {
  * thickness. A circle is a centre and a radius. A point list has no natural
  * numbers of its own beyond the points themselves, so it is given the box it
  * occupies, which scales it: a field per vertex would be a table, not a rail.
+ * A path is its commands, and the same answer holds for the same reason.
  * Every shape still gets rotation, because rotation is a transform on top of
  * geometry rather than part of it, and `spins` needs it.
  */
@@ -273,43 +283,55 @@ function PositionGroup({ object }: { object: IconObject }) {
 
   const box = bounds(object);
 
-  if (geometry.kind === 'polyline' || geometry.kind === 'polygon') {
+  if (geometry.kind === 'polyline' || geometry.kind === 'polygon' || geometry.kind === 'path') {
     // Every edit is the same one — a new box for the points to be scaled into
     // — so all four fields go through `fitToBox` and differ only in wording.
     const toBox = (next: Box, label: string) => setGeometry(fitToBox(object, next), label);
+    // A path's box is measured through a flattened stand-in for its curves, so
+    // it carries a fraction of a unit that is nobody's business: no drag could
+    // land on it and typing it back would not reproduce it. The fields state it
+    // on the document's own grid, which the shape is nearer to than one step.
+    const stated = geometry.kind === 'path' ? gridBox(box, step) : box;
+    // A path is defined by its commands, so what it counts is commands. There
+    // is no field per node here for the same reason there is none per vertex:
+    // the rail would become a table.
+    const detail =
+      geometry.kind === 'path'
+        ? { label: 'SEGMENTS', value: String(geometry.segments.length) }
+        : { label: 'POINTS', value: String(geometry.points.length) };
     return (
       <RailGroup label="POSITION &amp; SIZE">
         <div className="grid grid-cols-2 gap-1.5">
           <NumberField
             label="X"
-            value={box.x}
+            value={stated.x}
             step={step}
-            onCommit={(x) => toBox({ ...box, x }, `move ${object.name}`)}
+            onCommit={(x) => toBox({ ...stated, x }, `move ${object.name}`)}
           />
           <NumberField
             label="Y"
-            value={box.y}
+            value={stated.y}
             step={step}
-            onCommit={(y) => toBox({ ...box, y }, `move ${object.name}`)}
+            onCommit={(y) => toBox({ ...stated, y }, `move ${object.name}`)}
           />
           <NumberField
             label="W"
             name="Width"
-            value={box.w}
+            value={stated.w}
             step={step}
             min={1}
-            onCommit={(w) => toBox({ ...box, w }, `resize ${object.name}`)}
+            onCommit={(w) => toBox({ ...stated, w }, `resize ${object.name}`)}
           />
           <NumberField
             label="H"
             name="Height"
-            value={box.h}
+            value={stated.h}
             step={step}
             min={1}
-            onCommit={(h) => toBox({ ...box, h }, `resize ${object.name}`)}
+            onCommit={(h) => toBox({ ...stated, h }, `resize ${object.name}`)}
           />
         </div>
-        <ReadOnlyRow label="POINTS" value={String(geometry.points.length)} />
+        <ReadOnlyRow label={detail.label} value={detail.value} />
         {rotation}
         {onArtboard}
       </RailGroup>
