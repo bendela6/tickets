@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type DragEvent, type RefObject } from 'react';
 import { cn } from '@tickets/ui';
 import { Artboard } from './canvas/artboard';
 import { CanvasFooter } from './canvas/canvas-footer';
@@ -62,9 +62,16 @@ function Editor() {
   });
 
   const dim = chromeIsDim(view);
+  const drop = useSvgDrop(documents.importFile);
 
   return (
-    <div className="flex h-screen flex-col bg-gray-1 font-sans text-gray-12">
+    <div
+      {...drop.props}
+      className={cn(
+        'relative flex h-screen flex-col bg-gray-1 font-sans text-gray-12',
+        drop.over && 'outline-2 -outline-offset-2 outline-indigo-9',
+      )}
+    >
       <TopBar dim={dim} documents={documents} now={now} onExport={() => setExportOpen(true)} />
       {exportOpen ? <ExportDialog onClose={() => setExportOpen(false)} /> : null}
       {/* Here rather than in the popover the file was chosen from, which
@@ -156,6 +163,63 @@ function CanvasField({
       <CanvasFooter status={status} />
     </main>
   );
+}
+
+/** Whether a dragged item is a file the importer could actually take. */
+function carriesSvg(transfer: DataTransfer | null): boolean {
+  if (!transfer) return false;
+  // During a drag the browser withholds file names — only types are readable —
+  // so a `.svg` with no MIME type cannot be recognised until it is dropped.
+  // Any file is therefore allowed to hover, and the drop decides.
+  return [...transfer.items].some((item) => item.kind === 'file');
+}
+
+/**
+ * Dropping an SVG anywhere on the window imports it.
+ *
+ * The whole window, not the canvas: an import replaces the document outright
+ * rather than landing where it was dropped, so aiming at the artboard would
+ * promise a precision that does not exist.
+ *
+ * `dragleave` fires every time the pointer crosses into a child element, so a
+ * depth counter decides when the drag has genuinely left rather than merely
+ * moved over something inside.
+ */
+function useSvgDrop(importFile: (file: File) => void) {
+  const [over, setOver] = useState(false);
+  const depth = useRef(0);
+
+  return {
+    over,
+    props: {
+      onDragEnter: (event: DragEvent<HTMLElement>) => {
+        if (!carriesSvg(event.dataTransfer)) return;
+        depth.current += 1;
+        setOver(true);
+      },
+      onDragOver: (event: DragEvent<HTMLElement>) => {
+        if (!carriesSvg(event.dataTransfer)) return;
+        // Without this the browser navigates to the file and the app is gone.
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+      },
+      onDragLeave: () => {
+        depth.current = Math.max(0, depth.current - 1);
+        if (depth.current === 0) setOver(false);
+      },
+      onDrop: (event: DragEvent<HTMLElement>) => {
+        event.preventDefault();
+        depth.current = 0;
+        setOver(false);
+        const file = event.dataTransfer?.files[0];
+        if (!file) return;
+        // The picker filters by extension; a drop cannot, so it is checked
+        // here rather than letting the parser fail on a PNG.
+        if (!/\.svg$/i.test(file.name) && file.type !== 'image/svg+xml') return;
+        importFile(file);
+      },
+    },
+  };
 }
 
 /**

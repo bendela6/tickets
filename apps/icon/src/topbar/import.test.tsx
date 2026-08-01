@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { createEvent, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../app';
@@ -116,5 +116,45 @@ describe('importing an SVG from the documents popover', () => {
     const rows = within(screen.getByRole('list', { name: 'Saved documents' })).getAllByRole('button');
     expect(rows.map((row) => row.textContent).join(' ')).toContain('wallet.icon');
     expect(rows).toHaveLength(2);
+  });
+});
+
+/** A drag carrying one file, in the shape a browser hands to a handler. */
+const dragging = (file: File | null) => ({
+  dataTransfer: {
+    files: file ? [file] : [],
+    items: file ? [{ kind: 'file', type: file.type }] : [],
+    types: file ? ['Files'] : [],
+    dropEffect: 'none',
+  },
+});
+
+const window_ = () => screen.getByRole('banner').parentElement ?? document.body;
+
+describe('dropping a file', () => {
+  it('imports an SVG dropped anywhere on the window', async () => {
+    const { user } = await setup();
+    fireEvent.drop(window_(), dragging(svgFile('dropped.svg', ICON)));
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveTextContent('dropped.svg');
+    await done(user, dialog);
+    expect(within(objects()).getAllByRole('listitem')).toHaveLength(1);
+  });
+
+  it('ignores a file that is not an SVG rather than failing at the parser', async () => {
+    await setup();
+    fireEvent.drop(window_(), dragging(new File(['not markup'], 'photo.png', { type: 'image/png' })));
+    // No report at all: nothing was attempted, so there is nothing to report.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('takes the drag over, so the browser does not navigate away from the app', async () => {
+    await setup();
+    const target = window_();
+    const event = createEvent.dragOver(target, dragging(svgFile('dropped.svg', ICON)));
+    fireEvent(target, event);
+    // A drag the page does not claim is a page the browser replaces with the
+    // file, taking every unsaved document with it.
+    expect(event.defaultPrevented).toBe(true);
   });
 });
