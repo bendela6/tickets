@@ -193,3 +193,73 @@ contrast, validation, the container formats and the zip writer are pure function
 with direct unit tests. Every export target is asserted by decoding what was
 written — an `.ico` is parsed back, the zip's central directory is walked — not
 by asserting byte counts.
+
+## Decisions taken after the first release, 2026-08-01
+
+The four decisions above governed the build. These govern everything after it,
+and several of them overturn what shipped.
+
+### 5. A shape kind is an SVG element, or it does not exist
+
+The document may hold `rect`, `circle`, `ellipse`, `line`, `polyline`, `polygon`,
+`path`, and later `text`, `image` and `g` — the SVG element set, nothing beside
+it. This retired the original `polygon`, which was a regular n-gon
+(`{cx, cy, r, sides}`) and therefore not an element at all.
+
+Parametric shapes survive as **one-shot presets**: the toolbar's hexagon
+generates six points, the arc generates a path, and neither remembers it was
+generated. The cost is accepted deliberately — dragging a hexagon's corner moves
+that corner rather than keeping it regular. The alternative, an object carrying
+the parameters it came from, would have re-introduced two flavours of `polygon`
+under one kind, which is the hidden second kind this rule exists to prevent.
+
+### 6. Colour becomes gradient-capable, and stays paired
+
+Flat `Pair` is not enough for real icon work. Paint gains linear and radial
+gradients, with **each stop being a light/dark pair** — the pairing rule from
+decision 1 is not weakened, it is applied per stop. This touches the colour
+field, the contrast readout, both animated exports and every raster path.
+
+### 7. Import always opens a new document, and reports what it dropped
+
+An SVG import never merges into the open document: the incoming `viewBox` and the
+current artboard almost always disagree, and something would have to be silently
+scaled or clipped. Filters, masks, patterns, `<use>` and CSS classes are dropped
+and **named in a report**. An importer that silently loses half a file is worse
+than one that refuses it.
+
+### 8. Boolean ops buy their geometry
+
+Union, subtract, intersect and exclude take a real dependency — Skia pathops or
+paper.js — ending the zero-runtime-dependency property that the ZIP writer,
+`.ico`, `.icns`, SMIL and Lottie all upheld. Béziers intersecting béziers is
+where hand-rolled geometry produces subtly wrong output rather than errors, and
+this is the one place that trade is worth making. It is gated behind `path`.
+
+### 9. Text ships as text, and says so
+
+A `<text>` element renders with system fonts and exports as `<text>`. A font the
+viewer does not have renders as something else, so the export dialog warns.
+Converting to outlines needs a font parser — a second large dependency — and that
+decision waits until it is known to matter.
+
+### 10. The wheel zooms
+
+Zoom is continuous and multiplicative rather than a ladder on a modifier, and it
+anchors on the point under the cursor. A trackpad's two-finger scroll arrives as
+a wheel event too and must pan instead, so the two are told apart by a
+documented heuristic with the modifier as an override. Middle-drag also pans;
+scrollbars are hidden.
+
+Anchoring is a scroll correction, so it only has somewhere to go once the
+artboard outgrows the canvas region. Below that it degrades to centre-zoom.
+Closing that window means replacing the scroller with a transformed viewport,
+which is a different design and has not been taken.
+
+### 11. Animation is deferred, but its properties are settled
+
+Moving animation authoring into a side rail and restating it in CSS's terms —
+`@keyframes` versus `transition` — is postponed. When it happens, the animatable
+properties are **transform, opacity and colour**; geometry and path morphing are
+out, because morphing only works between paths with matching node counts and
+that matching step is its own project.
