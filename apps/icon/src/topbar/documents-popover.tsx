@@ -4,6 +4,15 @@ import type { Documents } from './use-documents';
 import { agoOf } from './use-documents';
 
 /**
+ * The footer's two actions — start an icon, or bring one in — which read as a
+ * pair and so are shaped once. `.popover-action` carries the corner: one of
+ * them is a `<button>` and the other a `<label>` wrapping a file input, so a
+ * shared component is not available to them, but a shared class is.
+ */
+const ACTION =
+  'popover-action flex h-7.5 flex-1 items-center justify-center gap-1.5 border-1 border-dashed border-gray-7 font-mono text-11 text-gray-11';
+
+/**
  * The document name was already in the top bar, so it becomes the control
  * rather than gaining one. No rail, no launcher, no file menu.
  */
@@ -83,17 +92,40 @@ export function DocumentsPopover({
           })}
         </ul>
 
-        <div className="px-1.5 pb-2 pt-0.5">
+        <div className="flex gap-1.5 px-1.5 pb-2 pt-0.5">
           <button
             type="button"
             onClick={() => {
               documents.create();
               setOpen(false);
             }}
-            className="flex h-7.5 w-full items-center justify-center gap-1.5 rounded-md border-1 border-dashed border-gray-7 font-mono text-11 text-gray-11"
+            className={ACTION}
           >
             + new icon
           </button>
+
+          {/* A label rather than a button: a file picker opens from a file
+              input and from nothing else. It is out of sight but not out of
+              the accessibility tree, which is where its name lives. */}
+          <label className={cn(ACTION, 'cursor-pointer')}>
+            ↑ import svg
+            <input
+              type="file"
+              aria-label="Import SVG"
+              accept=".svg,image/svg+xml"
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                // Cleared so picking the same file twice in a row is two
+                // imports rather than one: without it the second choice is not
+                // a change, and no event arrives.
+                event.target.value = '';
+                if (!file) return;
+                documents.importFile(file);
+                setOpen(false);
+              }}
+            />
+          </label>
         </div>
       </PopoverContent>
     </Popover>

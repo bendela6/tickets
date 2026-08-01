@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Action, EditorState } from '../doc/store';
+import { importSvg, type ImportSummary } from '../import/map';
 import { defaultStore, type DocumentStore } from '../doc/persist';
 import type { DocumentSummary, IconDoc } from '../doc/types';
 
@@ -16,6 +17,11 @@ export interface Documents {
   save: () => void;
   open: (id: string) => void;
   create: () => void;
+  /** Read an SVG into a new document. Never merges into the open one. */
+  importFile: (file: File) => void;
+  /** The last import's report, until it is dismissed. */
+  lastImport: ImportSummary | null;
+  dismissImport: () => void;
 }
 
 /**
@@ -71,6 +77,7 @@ export function useDocuments({
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [savedDoc, setSavedDoc] = useState<IconDoc | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [lastImport, setLastImport] = useState<ImportSummary | null>(null);
   const booted = useRef(false);
 
   const refresh = useCallback(async () => setList(await store.list()), [store]);
@@ -173,7 +180,54 @@ export function useDocuments({
     })();
   }, [confirmDiscard, dirty, dispatch, refresh, state.doc.name, store]);
 
-  return { list, currentId, dirty, savedAgo: agoOf(savedAt, now()), save, open, create };
+  /**
+   * An import is a create with contents, so it runs the same course a create
+   * does — ask before discarding, take an identity from the store, become the
+   * open document — with two differences.
+   *
+   * It never merges into the document being edited, because the incoming
+   * `viewBox` and the open artboard almost never agree and one of them would
+   * have to be silently scaled or clipped. And it is written straight away
+   * rather than left dirty: what arrived is a whole file's work, and losing it
+   * to a closed tab would be a poor reward for opening it.
+   */
+  const importFile = useCallback(
+    (file: File) => {
+      if (dirty && !confirmDiscard(state.doc.name)) return;
+      void (async () => {
+        const text = await file.text();
+        const outcome = importSvg(text, `${file.name.replace(/\.svg$/i, '')}.icon`);
+        if (!outcome.ok) {
+          setLastImport({ ok: false, file: file.name, message: outcome.message });
+          return;
+        }
+        const created = await store.create(outcome.doc.name, outcome.doc.artboard);
+        const summary = await store.save(created.id, outcome.doc);
+        dispatch({ type: 'replaceDocument', doc: outcome.doc });
+        setCurrentId(created.id);
+        setSavedDoc(outcome.doc);
+        setSavedAt(summary.updatedAt);
+        await refresh();
+        setLastImport({ ok: true, file: file.name, report: outcome.report });
+      })();
+    },
+    [confirmDiscard, dirty, dispatch, refresh, state.doc.name, store],
+  );
+
+  const dismissImport = useCallback(() => setLastImport(null), []);
+
+  return {
+    list,
+    currentId,
+    dirty,
+    savedAgo: agoOf(savedAt, now()),
+    save,
+    open,
+    create,
+    importFile,
+    lastImport,
+    dismissImport,
+  };
 }
 
 export { agoOf };
