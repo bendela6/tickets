@@ -5,7 +5,7 @@
 // padding class, which keeps the guide line and the offset in one place and
 // means no depth→class table to run off the end of.
 
-import { cn, Dot } from '@tickets/ui';
+import { cn, Dot, Icon } from '@tickets/ui';
 import { groupColor } from '../../engine/colors/group-color';
 import { zoneIdOf } from '../../engine/groups/zone-id-of';
 import { useDiagramActions, useDiagramModel, useDiagramUi } from '../../state/diagram-context';
@@ -50,9 +50,9 @@ export function GroupNode({
             aria-expanded={open}
             aria-label={`${g.label} subtree`}
             onClick={() => onToggle(g.id)}
-            className="flex h-5 w-4 flex-none items-center justify-center rounded-sm text-11 text-gray-11 hover:text-gray-12"
+            className="flex h-5 w-4 flex-none items-center justify-center rounded-sm text-gray-11 hover:text-gray-12"
           >
-            {open ? '▾' : '▸'}
+            <Icon name={open ? 'chevron-down' : 'chevron-right'} size="xs" />
           </button>
         ) : (
           <span className="h-5 w-4 flex-none" />
