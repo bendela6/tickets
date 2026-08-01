@@ -1,17 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { boxCentre, rotatePoint } from '../doc/geometry';
+import { boxCentre, rotatePoint, type Point } from '../doc/geometry';
 import {
   anchorPoint,
   angleFrom,
+  circleResize,
   constrainDelta,
+  handleCursor,
   handlePosition,
   handleDirection as handleDirectionForTest,
-  lineEndpointAt,
-  lineFromWorld,
-  polygonResize,
+  isVertex,
+  pointsFromWorld,
   resizeBox,
   resizeRotated,
   snapAngle,
+  vertexAnchor,
+  vertexAt,
+  vertexHandle,
+  vertexIndex,
   type ResizeHandle,
 } from './interaction';
 
@@ -215,11 +220,11 @@ function anchorTwin(handle: ResizeHandle): ResizeHandle {
   return opposite[handle];
 }
 
-describe('polygonResize', () => {
-  const poly = { cx: 100, cy: 100, r: 40 };
+describe('circleResize', () => {
+  const circle = { cx: 100, cy: 100, r: 40 };
 
-  /** Where a polygon's handle sits on screen. */
-  const polyHandle = (shape: typeof poly, handle: ResizeHandle, rotation: number) => {
+  /** Where a circle's handle sits on screen. */
+  const circleHandle = (shape: typeof circle, handle: ResizeHandle, rotation: number) => {
     const direction = handleDirectionForTest(handle);
     const isCorner = handle.length === 2;
     const reach = isCorner ? shape.r * Math.SQRT2 : shape.r;
@@ -231,20 +236,20 @@ describe('polygonResize', () => {
   };
 
   it('gives every handle something to do, including the horizontal ones', () => {
-    // Fitting a polygon into a dragged rectangle took min(w,h)/2, which left
-    // `e` inert on any polygon already wider than tall.
+    // Fitting a round shape into a dragged rectangle took min(w,h)/2, which
+    // left `e` inert on anything already wider than tall.
     for (const handle of ALL_HANDLES) {
-      const next = polygonResize(poly, handle, { x: 200, y: 200 }, 0);
-      expect({ handle, changed: next.r !== poly.r }).toEqual({ handle, changed: true });
+      const next = circleResize(circle, handle, { x: 200, y: 200 }, 0);
+      expect({ handle, changed: next.r !== circle.r }).toEqual({ handle, changed: true });
     }
   });
 
   it('leaves the opposite handle exactly where it was, at every angle', () => {
     for (const rotation of [0, 23, 90, 200]) {
       for (const handle of ALL_HANDLES) {
-        const before = polyHandle(poly, anchorTwin(handle), rotation);
-        const next = polygonResize(poly, handle, { x: 190, y: 60 }, rotation);
-        const after = polyHandle(next, anchorTwin(handle), rotation);
+        const before = circleHandle(circle, anchorTwin(handle), rotation);
+        const next = circleResize(circle, handle, { x: 190, y: 60 }, rotation);
+        const after = circleHandle(next, anchorTwin(handle), rotation);
         expect({ rotation, handle, x: after.x.toFixed(6), y: after.y.toFixed(6) }).toEqual({
           rotation,
           handle,
@@ -257,107 +262,165 @@ describe('polygonResize', () => {
 
   it('projects an off-axis wobble onto the handle’s own axis', () => {
     // Dragging `e` straight out, then wandering vertically, must not shrink it.
-    const straight = polygonResize(poly, 'e', { x: 180, y: 100 }, 0);
-    const wobbled = polygonResize(poly, 'e', { x: 180, y: 145 }, 0);
+    const straight = circleResize(circle, 'e', { x: 180, y: 100 }, 0);
+    const wobbled = circleResize(circle, 'e', { x: 180, y: 145 }, 0);
     expect(wobbled.r).toBeCloseTo(straight.r, 6);
   });
 
   it('grows from the anchor: dragging east doubles the reach across the shape', () => {
     // Anchor sits at x=60; pointer at x=200 means a 140 span, so r = 70.
-    expect(polygonResize(poly, 'e', { x: 200, y: 100 }, 0)).toMatchObject({ r: 70, cx: 130 });
+    expect(circleResize(circle, 'e', { x: 200, y: 100 }, 0)).toMatchObject({ r: 70, cx: 130 });
   });
 
   it('never collapses to nothing', () => {
-    expect(polygonResize(poly, 'e', { x: -500, y: 100 }, 0).r).toBeGreaterThan(0);
+    expect(circleResize(circle, 'e', { x: -500, y: 100 }, 0).r).toBeGreaterThan(0);
   });
 });
 
-describe('lineFromWorld', () => {
+describe('vertex handles', () => {
+  it('name a point by its place in the list, and read back the same number', () => {
+    expect(vertexHandle(0)).toBe('v0');
+    expect(vertexIndex(vertexHandle(12))).toBe(12);
+  });
+
+  it('are told apart from the box handles, which share the same union', () => {
+    expect(isVertex('v3')).toBe(true);
+    expect(isVertex('nw')).toBe(false);
+    expect(isVertex('rotate')).toBe(false);
+  });
+
+  it('all wear the move cursor, whatever their index', () => {
+    expect(handleCursor('v0')).toBe('move');
+    expect(handleCursor('v99')).toBe('move');
+    expect(handleCursor('nw')).toBe('nwse-resize');
+    expect(handleCursor('rotate')).toBe('grab');
+  });
+});
+
+describe('vertexAnchor', () => {
+  const run: Point[] = [
+    { x: 0, y: 0 },
+    { x: 10, y: 0 },
+    { x: 20, y: 10 },
+  ];
+
+  it('is the previous point, which is where the dragged one leaves from', () => {
+    expect(vertexAnchor(run, 2)).toEqual({ x: 10, y: 0 });
+  });
+
+  it('falls forward for the first point, which has nothing before it', () => {
+    expect(vertexAnchor(run, 0)).toEqual({ x: 10, y: 0 });
+  });
+
+  it('is the far end on a line, so Shift means there what it always did', () => {
+    const line: Point[] = [
+      { x: 0, y: 0 },
+      { x: 50, y: 50 },
+    ];
+    expect(vertexAnchor(line, 0)).toEqual({ x: 50, y: 50 });
+    expect(vertexAnchor(line, 1)).toEqual({ x: 0, y: 0 });
+  });
+
+  it('has nothing to offer a single point, rather than pointing at itself', () => {
+    expect(vertexAnchor([{ x: 1, y: 2 }], 0)).toBeNull();
+  });
+});
+
+/** How the renderer draws stored points: turned about the centre of their box. */
+const drawn = (stored: readonly Point[], rotation: number): Point[] => {
+  const xs = stored.map((point) => point.x);
+  const ys = stored.map((point) => point.y);
+  const pivot = {
+    x: (Math.min(...xs) + Math.max(...xs)) / 2,
+    y: (Math.min(...ys) + Math.max(...ys)) / 2,
+  };
+  return stored.map((point) => rotatePoint(point, pivot, rotation));
+};
+
+describe('pointsFromWorld', () => {
+  const triangle: Point[] = [
+    { x: 40, y: 90 },
+    { x: 300, y: 210 },
+    { x: 120, y: 260 },
+  ];
+
   it('is the identity at 0°', () => {
-    expect(lineFromWorld({ x: 10, y: 20 }, { x: 30, y: 40 }, 0)).toEqual({
-      x1: 10,
-      y1: 20,
-      x2: 30,
-      y2: 40,
-    });
+    expect(pointsFromWorld(triangle, 0)).toEqual(triangle);
   });
 
-  it('round-trips: rendering the result back out lands on the world points asked for', () => {
-    const a = { x: 40, y: 90 };
-    const b = { x: 300, y: 210 };
+  it('round-trips: drawing the result back out lands on the world points asked for', () => {
     for (const rotation of [0, 31, 90, 180, 305]) {
-      const stored = lineFromWorld(a, b, rotation);
-      // How the renderer draws it: rotate the stored ends about their midpoint.
-      const pivot = { x: (stored.x1 + stored.x2) / 2, y: (stored.y1 + stored.y2) / 2 };
-      const drawn1 = rotatePoint({ x: stored.x1, y: stored.y1 }, pivot, rotation);
-      const drawn2 = rotatePoint({ x: stored.x2, y: stored.y2 }, pivot, rotation);
-      expect({ rotation, x: drawn1.x.toFixed(6), y: drawn1.y.toFixed(6) }).toEqual({
-        rotation,
-        x: a.x.toFixed(6),
-        y: a.y.toFixed(6),
-      });
-      expect({ rotation, x: drawn2.x.toFixed(6), y: drawn2.y.toFixed(6) }).toEqual({
-        rotation,
-        x: b.x.toFixed(6),
-        y: b.y.toFixed(6),
-      });
+      for (const points of [triangle, triangle.slice(0, 2)]) {
+        const redrawn = drawn(pointsFromWorld(points, rotation), rotation);
+        expect({ rotation, at: redrawn.map((p) => `${p.x.toFixed(6)},${p.y.toFixed(6)}`) }).toEqual({
+          rotation,
+          at: points.map((p) => `${p.x.toFixed(6)},${p.y.toFixed(6)}`),
+        });
+      }
     }
   });
 
-  it('preserves length whatever the rotation', () => {
-    const a = { x: 0, y: 0 };
-    const b = { x: 120, y: 50 };
-    const expected = Math.hypot(120, 50);
+  it('preserves every distance, because a rotation is all it applies', () => {
     for (const rotation of [0, 45, 137]) {
-      const s = lineFromWorld(a, b, rotation);
-      expect(Math.hypot(s.x2 - s.x1, s.y2 - s.y1)).toBeCloseTo(expected, 6);
+      const stored = pointsFromWorld(triangle, rotation);
+      for (let i = 1; i < triangle.length; i++) {
+        const before = Math.hypot(
+          (triangle[i]?.x ?? 0) - (triangle[i - 1]?.x ?? 0),
+          (triangle[i]?.y ?? 0) - (triangle[i - 1]?.y ?? 0),
+        );
+        const after = Math.hypot(
+          (stored[i]?.x ?? 0) - (stored[i - 1]?.x ?? 0),
+          (stored[i]?.y ?? 0) - (stored[i - 1]?.y ?? 0),
+        );
+        expect(after).toBeCloseTo(before, 6);
+      }
     }
   });
 
-  it('moving one end leaves the other exactly where it was on screen', () => {
-    // The reported bug, stated directly.
+  it('moving one point leaves every other exactly where it was on screen', () => {
+    // The reported bug, stated directly: the pivot is the centre of the
+    // points' own box, and moving one point moves that box.
     const rotation = 40;
-    const fixedEnd = { x: 300, y: 210 };
-    const first = lineFromWorld({ x: 40, y: 90 }, fixedEnd, rotation);
-    const second = lineFromWorld({ x: 155, y: 12 }, fixedEnd, rotation);
+    const before = drawn(pointsFromWorld(triangle, rotation), rotation);
+    const moved = [{ x: 155, y: 12 }, ...triangle.slice(1)];
+    const after = drawn(pointsFromWorld(moved, rotation), rotation);
+    for (let i = 1; i < triangle.length; i++) {
+      expect(after[i]?.x).toBeCloseTo(before[i]?.x ?? Number.NaN, 6);
+      expect(after[i]?.y).toBeCloseTo(before[i]?.y ?? Number.NaN, 6);
+    }
+  });
 
-    const drawnFar = (s: typeof first) => {
-      const pivot = { x: (s.x1 + s.x2) / 2, y: (s.y1 + s.y2) / 2 };
-      return rotatePoint({ x: s.x2, y: s.y2 }, pivot, rotation);
-    };
-    const before = drawnFar(first);
-    const after = drawnFar(second);
-    expect(after.x).toBeCloseTo(before.x, 6);
-    expect(after.y).toBeCloseTo(before.y, 6);
+  it('has nothing to place when there are no points', () => {
+    expect(pointsFromWorld([], 45)).toEqual([]);
   });
 });
 
-describe('lineEndpointAt', () => {
+describe('vertexAt', () => {
   const anchor = { x: 0, y: 0 };
 
   it('follows the pointer exactly when free', () => {
-    expect(lineEndpointAt(anchor, { x: 37, y: -11 }, false)).toEqual({ x: 37, y: -11 });
+    expect(vertexAt(anchor, { x: 37, y: -11 }, false)).toEqual({ x: 37, y: -11 });
   });
 
   it('snaps the segment’s angle rather than locking an axis', () => {
     // 40° from horizontal, length 100 — Shift should land it on 45°.
     const pointer = { x: 100 * Math.cos(0.698), y: 100 * Math.sin(0.698) };
-    const snapped = lineEndpointAt(anchor, pointer, true);
+    const snapped = vertexAt(anchor, pointer, true);
     expect(Math.hypot(snapped.x, snapped.y)).toBeCloseTo(100, 6);
     expect((Math.atan2(snapped.y, snapped.x) * 180) / Math.PI).toBeCloseTo(45, 6);
   });
 
-  it('keeps the length while snapping, so Shift turns the line and does not stretch it', () => {
+  it('keeps the length while snapping, so Shift turns the segment and does not stretch it', () => {
     const pointer = { x: 60, y: 25 };
     const before = Math.hypot(pointer.x, pointer.y);
-    const snapped = lineEndpointAt(anchor, pointer, true);
+    const snapped = vertexAt(anchor, pointer, true);
     expect(Math.hypot(snapped.x, snapped.y)).toBeCloseTo(before, 6);
   });
 
   it('reaches both axes and both diagonals from its 15° steps', () => {
     const at = (degrees: number) => {
       const radians = (degrees * Math.PI) / 180;
-      const snapped = lineEndpointAt(anchor, { x: Math.cos(radians), y: Math.sin(radians) }, true);
+      const snapped = vertexAt(anchor, { x: Math.cos(radians), y: Math.sin(radians) }, true);
       return Math.round((Math.atan2(snapped.y, snapped.x) * 180) / Math.PI);
     };
     expect(at(2)).toBe(0);

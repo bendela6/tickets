@@ -27,15 +27,22 @@ const docWith = (objects: IconDoc['objects']): IconDoc => ({
 
 describe('the rendered SVG is a document a browser will actually decode', () => {
   it('parses with every shape kind on the artboard', () => {
-    const doc = docWith([
-      newObject('rect', 1, BOARD),
-      newObject('ellipse', 2, BOARD),
-      newObject('line', 3, BOARD),
-      newObject('polygon', 4, BOARD),
-    ]);
+    const kinds = ['rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon'] as const;
+    const doc = docWith(kinds.map((kind, index) => newObject(kind, index + 1, BOARD)));
     const parsed = parse(renderSvg(doc, { ground: 'light' }));
     expect(parsed.documentElement.tagName).toBe('svg');
-    expect(parsed.querySelectorAll('rect, ellipse, line, polygon')).toHaveLength(5);
+    // One element per object, plus the artboard's own background rect.
+    expect(parsed.querySelectorAll(kinds.join(', '))).toHaveLength(kinds.length + 1);
+  });
+
+  it('draws each kind as the element it is named after, not as a stand-in', () => {
+    const kinds = ['circle', 'polyline', 'polygon'] as const;
+    for (const kind of kinds) {
+      const parsed = parse(
+        renderSvg(docWith([newObject(kind, 1, BOARD)]), { ground: 'light' }),
+      );
+      expect({ kind, found: parsed.querySelectorAll(kind).length }).toEqual({ kind, found: 1 });
+    }
   });
 
   it('parses when a colour contains characters that would otherwise break an attribute', () => {

@@ -1,4 +1,4 @@
-import { centreOf, polygonPoints } from '../doc/geometry';
+import { centreOf, isOpenRun } from '../doc/geometry';
 import { poseAtState } from '../doc/pose';
 import type { Ground, IconDoc, IconObject, PosedObject } from '../doc/types';
 
@@ -21,9 +21,9 @@ function escapeAttribute(value: string): string {
 }
 
 function colourFor(object: IconObject, ground: Ground): string {
-  // A line is drawn with its stroke; everything else with its fill. Giving a
+  // A run is drawn with its stroke; everything else with its fill. Giving a
   // line a fill would paint nothing and silently lose the object.
-  const pair = object.geometry.kind === 'line' ? object.stroke : object.fill;
+  const pair = isOpenRun(object.geometry.kind) ? object.stroke : object.fill;
   return pair[ground];
 }
 
@@ -33,8 +33,13 @@ function colourFor(object: IconObject, ground: Ground): string {
  * file, and there is one per size per target.
  */
 function strokeAttributes(object: PosedObject, ground: Ground): string {
-  if (object.geometry.kind === 'line' || object.strokeWidth <= 0) return '';
+  if (isOpenRun(object.geometry.kind) || object.strokeWidth <= 0) return '';
   return ` stroke="${escapeAttribute(object.stroke[ground])}" stroke-width="${n(object.strokeWidth)}"`;
+}
+
+/** A point list as SVG's `points` attribute wants it. */
+function pointList(points: readonly { x: number; y: number }[]): string {
+  return points.map((point) => `${n(point.x)},${n(point.y)}`).join(' ');
 }
 
 function transformOf(object: PosedObject): string {
@@ -57,16 +62,19 @@ function shapeMarkup(object: PosedObject, ground: Ground): string {
       const radius = g.radius > 0 ? ` rx="${n(g.radius)}"` : '';
       return `<rect x="${n(g.x)}" y="${n(g.y)}" width="${n(g.w)}" height="${n(g.h)}"${radius} fill="${colour}"${tail}/>`;
     }
+    case 'circle':
+      return `<circle cx="${n(g.cx)}" cy="${n(g.cy)}" r="${n(g.r)}" fill="${colour}"${tail}/>`;
     case 'ellipse':
       return `<ellipse cx="${n(g.x + g.w / 2)}" cy="${n(g.y + g.h / 2)}" rx="${n(g.w / 2)}" ry="${n(g.h / 2)}" fill="${colour}"${tail}/>`;
     case 'line':
       return `<line x1="${n(g.x1)}" y1="${n(g.y1)}" x2="${n(g.x2)}" y2="${n(g.y2)}" stroke="${colour}" stroke-width="${n(object.strokeWidth)}" stroke-linecap="round"${tail}/>`;
-    case 'polygon': {
-      const points = polygonPoints(g.cx, g.cy, g.r, g.sides)
-        .map((p) => `${n(p.x)},${n(p.y)}`)
-        .join(' ');
-      return `<polygon points="${points}" fill="${colour}"${tail}/>`;
-    }
+    case 'polyline':
+      // `fill="none"` is not a default: SVG fills a polyline as though it were
+      // closed, so an open run left to itself paints the area it does not
+      // enclose. The joins are rounded because its corners are its own.
+      return `<polyline points="${pointList(g.points)}" fill="none" stroke="${colour}" stroke-width="${n(object.strokeWidth)}" stroke-linecap="round" stroke-linejoin="round"${tail}/>`;
+    case 'polygon':
+      return `<polygon points="${pointList(g.points)}" fill="${colour}"${tail}/>`;
   }
 }
 

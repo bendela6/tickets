@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { cn } from '@tickets/ui';
 import { MIN_GRID_PX, SAFE_ZONE } from '../doc/constants';
 import { gridPitch } from '../doc/snap';
-import { bounds, lineEndpoints } from '../doc/geometry';
+import { bounds, vertexPoints } from '../doc/geometry';
 import { selectedObject } from '../doc/store';
 import { safeZoneWarnings } from '../doc/validate';
 import { useEditor } from '../editor-context';
@@ -10,7 +10,7 @@ import { gridInk } from '../render/ink';
 import { renderPosed } from '../render/svg';
 import { chromeIsDim, posedFor, scaleFor } from '../view';
 import { EmptyArtboard } from './empty-artboard';
-import { LineSelectionOverlay, SelectionOverlay } from './selection-overlay';
+import { PointsSelectionOverlay, SelectionOverlay } from './selection-overlay';
 import { useArtboardPointer } from './use-artboard-pointer';
 
 /**
@@ -52,6 +52,9 @@ export function Artboard() {
   // moving, and the transport is the only lit thing during playback.
   const showHandles = selected !== null && !selected.hidden && !dim;
   const selectionBox = selected && !selected.hidden ? bounds(selected) : null;
+  // Empty for the shapes that are dragged by a box, so this is also the choice
+  // between the two overlays — the artboard never has to name a kind.
+  const vertices = selected ? vertexPoints(selected) : [];
 
   return (
     <div
@@ -154,9 +157,9 @@ export function Artboard() {
       ) : null}
 
       {showHandles && selectionBox && selected ? (
-        selected.geometry.kind === 'line' ? (
-          <LineSelectionOverlay
-            endpoints={lineEndpoints(selected)}
+        vertices.length > 0 ? (
+          <PointsSelectionOverlay
+            points={vertices}
             box={selectionBox}
             rotation={selected.rotation}
             scale={scale}

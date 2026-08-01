@@ -1,4 +1,4 @@
-import { boxCentre, rotatePoint, type Box, type Point } from '../doc/geometry';
+import { boxCentre, pointsBox, rotatePoint, type Box, type Point } from '../doc/geometry';
 
 /**
  * The eight resize handles and the rotation knob, named by where they sit.
@@ -14,24 +14,28 @@ export type EdgeHandle = (typeof EDGE_HANDLES)[number];
 export type ResizeHandle = CornerHandle | EdgeHandle;
 
 /**
- * A line's two ends. It gets these *instead* of the eight box handles: a line
- * is two points, and a bounding box cannot express one — dragging the box's
- * north edge on a horizontal line would be asking to change its thickness,
- * which is a different property with its own control.
+ * One stored point of a shape defined by points, named by its position in the
+ * list. A line's two ends, a polyline's vertices and a polygon's corners are
+ * all this: they get these handles *instead* of the eight box ones, because a
+ * bounding box cannot express a point — dragging the box's north edge on a
+ * horizontal line would be asking to change its thickness, which is a
+ * different property with its own control.
+ *
+ * Indexed rather than enumerated because the list has no fixed length.
  */
-export type EndpointHandle = 'p1' | 'p2';
+export type VertexHandle = `v${number}`;
 
-export type Handle = ResizeHandle | EndpointHandle | 'rotate';
+export type Handle = ResizeHandle | VertexHandle | 'rotate';
 
-export const ENDPOINT_HANDLES: readonly EndpointHandle[] = ['p1', 'p2'];
+export const vertexHandle = (index: number): VertexHandle => `v${index}`;
 
-export const isEndpoint = (handle: Handle): handle is EndpointHandle =>
-  handle === 'p1' || handle === 'p2';
+export const isVertex = (handle: Handle): handle is VertexHandle => /^v\d+$/.test(handle);
+
+export const vertexIndex = (handle: VertexHandle): number => Number(handle.slice(1));
 
 export const RESIZE_HANDLES: readonly ResizeHandle[] = [...CORNER_HANDLES, ...EDGE_HANDLES];
 
-/** Which cursor each handle wears. */
-export const HANDLE_CURSOR: Record<Handle, string> = {
+const FIXED_CURSOR: Record<ResizeHandle | 'rotate', string> = {
   nw: 'nwse-resize',
   se: 'nwse-resize',
   ne: 'nesw-resize',
@@ -40,10 +44,16 @@ export const HANDLE_CURSOR: Record<Handle, string> = {
   s: 'ns-resize',
   w: 'ew-resize',
   e: 'ew-resize',
-  p1: 'move',
-  p2: 'move',
   rotate: 'grab',
 };
+
+/**
+ * Which cursor a handle wears. Every vertex wears the same one, so they are
+ * answered by a rule rather than by a record that could never enumerate them.
+ */
+export function handleCursor(handle: Handle): string {
+  return isVertex(handle) ? 'move' : FIXED_CURSOR[handle];
+}
 
 /** Smallest box a resize will produce, in document units. */
 const MIN_SIDE = 1;
@@ -225,16 +235,16 @@ export function handleDirection(handle: ResizeHandle): Point {
   return { x: x / length, y: y / length };
 }
 
-export interface PolygonShape {
+export interface CircleShape {
   cx: number;
   cy: number;
   r: number;
 }
 
 /**
- * Resize a regular polygon, keeping the opposite handle still.
+ * Resize a circle, keeping the opposite handle still.
  *
- * A polygon is a centre and a radius, so a handle drag has to move both: the
+ * A circle is a centre and a radius, so a handle drag has to move both: the
  * anchor stays put and the centre slides to keep it there. Growing about the
  * centre instead would move every handle at once, which is exactly what a drag
  * on one of them should not do.
@@ -243,12 +253,12 @@ export interface PolygonShape {
  * does not shrink the shape. A corner sits `r√2` from the centre rather than
  * `r`, so a corner drag divides by that as well as by two.
  */
-export function polygonResize(
-  start: PolygonShape,
+export function circleResize(
+  start: CircleShape,
   handle: ResizeHandle,
   pointer: Point,
   rotation: number,
-): PolygonShape {
+): CircleShape {
   const centre = { x: start.cx, y: start.cy };
   const direction = handleDirection(handle);
   const isCorner = (CORNER_HANDLES as readonly string[]).includes(handle);
@@ -268,7 +278,7 @@ export function polygonResize(
   );
 
   return {
-    // Rotation pivots about the polygon's own centre, so the stored centre and
+    // Rotation pivots about the circle's own centre, so the stored centre and
     // the on-screen centre are the same point — no conversion needed.
     cx: anchorWorld.x + (axis.x * span) / 2,
     cy: anchorWorld.y + (axis.y * span) / 2,
@@ -277,35 +287,42 @@ export function polygonResize(
 }
 
 /**
- * A line's stored endpoints, given where its two ends should be on screen.
+ * Stored points, given where they should sit on screen.
  *
- * A line rotates about the midpoint of its endpoints — that is what its
- * bounding box's centre works out to — and rotation leaves a midpoint where it
- * found it. So the world midpoint of the pair IS the pivot, and each stored
- * endpoint is just its world position turned back by the rotation about it.
+ * A shape made of points rotates about the centre of *their* box, and moving
+ * one point moves that box — so the pivot the drag is measured against is
+ * itself moving. Anything expressed relative to the old pivot swings when it
+ * does, which is exactly how the far end of a line used to drift.
  *
- * This is what stops the far end drifting: moving one end changes the pivot,
- * and anything expressed relative to the old pivot swings when it does.
+ * Solved rather than iterated. Turning the wanted world points back by −θ puts
+ * their box centre at a position that does not depend on the pivot at all;
+ * turning *that* forward by θ is the pivot the answer must use. For two points
+ * this collapses to their midpoint, which is what a line has always used.
  */
-export function lineFromWorld(
-  a: Point,
-  b: Point,
-  rotation: number,
-): { x1: number; y1: number; x2: number; y2: number } {
-  const pivot = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-  const local1 = rotatePoint(a, pivot, -rotation);
-  const local2 = rotatePoint(b, pivot, -rotation);
-  return { x1: local1.x, y1: local1.y, x2: local2.x, y2: local2.y };
+export function pointsFromWorld(world: readonly Point[], rotation: number): Point[] {
+  const origin = { x: 0, y: 0 };
+  const unturned = world.map((point) => rotatePoint(point, origin, -rotation));
+  const pivot = rotatePoint(boxCentre(pointsBox(unturned)), origin, rotation);
+  return world.map((point) => rotatePoint(point, pivot, -rotation));
 }
 
 /**
- * Where a dragged line endpoint lands.
- *
- * Shift snaps the segment's *angle* rather than locking an axis: a line is two
- * points, so the useful constraint is the direction it runs in, and 15° steps
- * give both axes and both diagonals for free.
+ * The point a dragged vertex's Shift constraint is measured from: its
+ * neighbour in the run. A line has exactly one other point, so this is its far
+ * end and Shift means on a line what it always did.
  */
-export function lineEndpointAt(anchor: Point, pointer: Point, constrain: boolean): Point {
+export function vertexAnchor(points: readonly Point[], index: number): Point | null {
+  return points[index - 1] ?? points[index + 1] ?? null;
+}
+
+/**
+ * Where a dragged vertex lands.
+ *
+ * Shift snaps the segment's *angle* rather than locking an axis: the point is
+ * one end of a run, so the useful constraint is the direction that run leaves
+ * its neighbour in, and 15° steps give both axes and both diagonals for free.
+ */
+export function vertexAt(anchor: Point, pointer: Point, constrain: boolean): Point {
   if (!constrain) return pointer;
   const length = Math.hypot(pointer.x - anchor.x, pointer.y - anchor.y);
   const degrees = (Math.atan2(pointer.y - anchor.y, pointer.x - anchor.x) * 180) / Math.PI;

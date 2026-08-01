@@ -1,3 +1,4 @@
+import { PRESET_SIDES } from '../doc/defaults';
 import { polygonPoints } from '../doc/geometry';
 import type { ShapeKind } from '../doc/types';
 
@@ -8,10 +9,19 @@ export interface ShapeTool {
   key: string;
 }
 
+/**
+ * One tool per element the document may hold. The polygon tool draws a
+ * hexagon, which is a starting point rather than a kind of its own — the shape
+ * it makes is an ordinary point list from the moment it exists.
+ */
 export const SHAPE_TOOLS: readonly ShapeTool[] = [
   { kind: 'rect', label: 'Rectangle', key: 'R' },
+  { kind: 'circle', label: 'Circle', key: 'C' },
   { kind: 'ellipse', label: 'Ellipse', key: 'E' },
   { kind: 'line', label: 'Line', key: 'L' },
+  // Y rather than the taken P: a polyline is the shape whose initial letters
+  // are all spoken for.
+  { kind: 'polyline', label: 'Polyline', key: 'Y' },
   { kind: 'polygon', label: 'Polygon', key: 'P' },
 ];
 
@@ -24,15 +34,10 @@ export function shapeToolForKey(key: string): ShapeTool | undefined {
  * properties header. Drawn as SVG in `currentColor` so one glyph serves every
  * place at every size, rather than a div-and-clip-path per site.
  */
-export function ShapeGlyph({
-  kind,
-  size = 13,
-  sides = 6,
-}: {
-  kind: ShapeKind;
-  size?: number;
-  sides?: number;
-}) {
+const points = (list: readonly { x: number; y: number }[]) =>
+  list.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ');
+
+export function ShapeGlyph({ kind, size = 13 }: { kind: ShapeKind; size?: number }) {
   const stroke = size < 16 ? 1.5 : 1.6;
   const inset = stroke / 2;
   const span = size - stroke;
@@ -57,8 +62,20 @@ export function ShapeGlyph({
           strokeWidth={stroke}
         />
       ) : null}
-      {kind === 'ellipse' ? (
+      {kind === 'circle' ? (
         <circle cx={size / 2} cy={size / 2} r={span / 2} stroke="currentColor" strokeWidth={stroke} />
+      ) : null}
+      {/* Squashed on purpose: a circle is a separate element with its own mark,
+          so the ellipse's has to be one no circle could be mistaken for. */}
+      {kind === 'ellipse' ? (
+        <ellipse
+          cx={size / 2}
+          cy={size / 2}
+          rx={span / 2}
+          ry={span / 3}
+          stroke="currentColor"
+          strokeWidth={stroke}
+        />
       ) : null}
       {kind === 'line' ? (
         <line
@@ -71,11 +88,26 @@ export function ShapeGlyph({
           strokeLinecap="round"
         />
       ) : null}
+      {/* The chevron a new polyline is, so the mark and the shape agree. */}
+      {kind === 'polyline' ? (
+        <polyline
+          points={points([
+            { x: inset, y: inset },
+            { x: size / 2, y: size - inset },
+            { x: size - inset, y: inset },
+          ])}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : null}
+      {/* The hexagon the tool's preset makes. A polygon's own points are
+          arbitrary and would draw an illegible mark at 13 pixels. */}
       {kind === 'polygon' ? (
         <polygon
-          points={polygonPoints(size / 2, size / 2, size / 2, sides)
-            .map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`)
-            .join(' ')}
+          points={points(polygonPoints(size / 2, size / 2, size / 2, PRESET_SIDES))}
           fill="currentColor"
         />
       ) : null}

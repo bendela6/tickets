@@ -1,5 +1,59 @@
 import { emptyDocument } from './defaults';
-import type { Artboard, DocumentSummary, IconDoc } from './types';
+import { polygonPoints } from './geometry';
+import type { Artboard, DocumentSummary, Geometry, IconDoc } from './types';
+
+/** What a polygon was before `<polygon>` was taken literally: a regular n-gon. */
+interface RegularPolygon {
+  cx: number;
+  cy: number;
+  r: number;
+  sides: number;
+}
+
+function asRegularPolygon(geometry: Geometry): RegularPolygon | null {
+  if (geometry.kind !== 'polygon') return null;
+  const legacy = geometry as unknown as Partial<RegularPolygon>;
+  if (
+    typeof legacy.cx !== 'number' ||
+    typeof legacy.cy !== 'number' ||
+    typeof legacy.r !== 'number' ||
+    typeof legacy.sides !== 'number'
+  ) {
+    return null;
+  }
+  return { cx: legacy.cx, cy: legacy.cy, r: legacy.r, sides: legacy.sides };
+}
+
+/**
+ * Bring a document that was saved against an older model up to the current one.
+ *
+ * A polygon used to be a centre, a radius and a side count — a regular n-gon,
+ * which is not an SVG element and so not something a document may hold. Saved
+ * hexagons are turned into the point lists `<polygon>` has always meant, which
+ * draws the same hexagon it always did.
+ *
+ * On read rather than on write, because this is the only place a document from
+ * before the change can enter — nothing will ever write one again. The
+ * document is returned unchanged, and identical, when there was nothing to do:
+ * `dirty` is measured by comparing the open document against what was loaded,
+ * and a migration that rebuilt every document would report them all edited.
+ */
+export function migrate(doc: IconDoc): IconDoc {
+  let changed = false;
+  const objects = doc.objects.map((object) => {
+    const regular = asRegularPolygon(object.geometry);
+    if (!regular) return object;
+    changed = true;
+    return {
+      ...object,
+      geometry: {
+        kind: 'polygon' as const,
+        points: polygonPoints(regular.cx, regular.cy, regular.r, regular.sides),
+      },
+    };
+  });
+  return changed ? { ...doc, objects } : doc;
+}
 
 /**
  * Where documents live.
@@ -55,7 +109,8 @@ export function memoryStore(
       return [...records.values()].map(summaryOf).sort(byNewest);
     },
     async load(id) {
-      return records.get(id)?.doc ?? null;
+      const doc = records.get(id)?.doc;
+      return doc ? migrate(doc) : null;
     },
     async save(id, doc) {
       const record: Record_ = {
@@ -125,7 +180,7 @@ export function indexedDbStore(clock: () => number = () => Date.now()): Document
     },
     async load(id) {
       const record = await withStore<Record_ | undefined>('readonly', (store) => store.get(id));
-      return record?.doc ?? null;
+      return record ? migrate(record.doc) : null;
     },
     async save(id, doc) {
       const record: Record_ = {

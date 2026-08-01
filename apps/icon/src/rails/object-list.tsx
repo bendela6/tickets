@@ -74,10 +74,7 @@ function ObjectRow({
         className="flex min-w-0 flex-1 items-center gap-2 text-left"
       >
         <span className={cn('flex-none', selected ? 'text-indigo-9' : 'text-gray-11')}>
-          <ShapeGlyph
-            kind={object.geometry.kind}
-            sides={object.geometry.kind === 'polygon' ? object.geometry.sides : undefined}
-          />
+          <ShapeGlyph kind={object.geometry.kind} />
         </span>
         <span
           className={cn(
@@ -124,9 +121,10 @@ function ObjectRow({
 }
 
 /**
- * The left rail: what is on the artboard, front-to-back, and the four ways to
- * add to it. Selection reads three ways at once and nowhere else — handles on
- * the artboard, an accent row here, and a populated right rail.
+ * The left rail: what is on the artboard, front-to-back, and one way to add
+ * each shape the document may hold. Selection reads three ways at once and
+ * nowhere else — handles on the artboard, an accent row here, and a populated
+ * right rail.
  */
 export function ObjectList() {
   const { state, dispatch, view } = useEditor();

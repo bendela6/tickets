@@ -61,10 +61,42 @@ describe('snapGeometry', () => {
     });
   });
 
-  it('leaves a polygon’s side count alone — it is a count, not a measurement', () => {
-    // Snapping sides to a grid of 8 would turn every polygon into an octagon.
-    const snapped = snapGeometry({ kind: 'polygon', cx: 9.6, cy: 9.6, r: 5.4, sides: 6 }, 8);
-    expect(snapped).toEqual({ kind: 'polygon', cx: 8, cy: 8, r: 8, sides: 6 });
+  it('snaps a circle’s centre and its radius', () => {
+    expect(snapGeometry({ kind: 'circle', cx: 9.6, cy: 9.6, r: 5.4 }, 8)).toEqual({
+      kind: 'circle',
+      cx: 8,
+      cy: 8,
+      r: 8,
+    });
+  });
+
+  it('snaps every point of a run, so no vertex lands between grid lines', () => {
+    const snapped = snapGeometry(
+      {
+        kind: 'polygon',
+        points: [
+          { x: 0.4, y: 9.7 },
+          { x: 20.2, y: 3.5 },
+          { x: 5.5, y: 15.1 },
+        ],
+      },
+      1,
+    );
+    expect(snapped).toEqual({
+      kind: 'polygon',
+      points: [
+        { x: 0, y: 10 },
+        { x: 20, y: 4 },
+        { x: 6, y: 15 },
+      ],
+    });
+  });
+
+  it('snaps a polyline the same way, since a run is a run', () => {
+    expect(snapGeometry({ kind: 'polyline', points: [{ x: 1.4, y: 2.6 }] }, 1)).toEqual({
+      kind: 'polyline',
+      points: [{ x: 1, y: 3 }],
+    });
   });
 });
 

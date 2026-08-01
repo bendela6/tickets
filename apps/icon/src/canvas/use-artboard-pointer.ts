@@ -5,8 +5,8 @@ import {
   bounds,
   boxCentre,
   hitTest,
-  lineEndpoints,
   translate,
+  vertexPoints,
   type Box,
   type Point,
 } from '../doc/geometry';
@@ -14,24 +14,27 @@ import type { Action, EditorState } from '../doc/store';
 import type { Geometry, IconObject } from '../doc/types';
 import {
   angleFrom,
+  circleResize,
   constrainDelta,
-  isEndpoint,
-  lineEndpointAt,
-  lineFromWorld,
-  polygonResize,
+  isVertex,
+  pointsFromWorld,
   resizeRotated,
   snapAngle,
-  type EndpointHandle,
+  vertexAnchor,
+  vertexAt,
+  vertexIndex,
+  type CircleShape,
   type Handle,
-  type PolygonShape,
   type ResizeHandle,
 } from './interaction';
 
-const roundPolygon = (shape: PolygonShape): PolygonShape => ({
+const roundCircle = (shape: CircleShape): CircleShape => ({
   cx: Math.round(shape.cx),
   cy: Math.round(shape.cy),
   r: Math.round(shape.r),
 });
+
+const roundPoint = (point: Point): Point => ({ x: Math.round(point.x), y: Math.round(point.y) });
 
 type Gesture =
   | { mode: 'move'; id: string; startGeometry: Geometry; startPoint: Point; startBox: Box }
@@ -41,15 +44,16 @@ type Gesture =
       handle: ResizeHandle;
       startBox: Box;
       rotation: number;
-      /** Set only for a polygon, which resizes as a centre and a radius. */
-      startPolygon?: PolygonShape;
+      /** Set only for a circle, which resizes as a centre and a radius. */
+      startCircle?: CircleShape;
     }
   /**
-   * `anchorWorld` is captured once, when the drag starts, and never
-   * recomputed. Reading the far end's position from the document each frame
-   * would read it through a pivot that the drag itself is moving.
+   * `startWorld` holds every one of the shape's points, captured once when the
+   * drag starts and never recomputed. Reading the others' positions from the
+   * document each frame would read them through a pivot that the drag itself
+   * is moving.
    */
-  | { mode: 'endpoint'; id: string; handle: EndpointHandle; rotation: number; anchorWorld: Point }
+  | { mode: 'vertex'; id: string; index: number; rotation: number; startWorld: Point[] }
   /**
    * `line` is set when the object being turned is a line, which stores no
    * rotation of its own — turning it rewrites its endpoints instead.
@@ -175,15 +179,15 @@ export function useArtboardPointer({
       });
       return;
     }
-    if (isEndpoint(handle)) {
-      if (object.geometry.kind !== 'line') return;
-      const [start, end] = lineEndpoints(object);
+    if (isVertex(handle)) {
+      const startWorld = vertexPoints(object);
+      if (startWorld.length === 0) return;
       begin(event, {
-        mode: 'endpoint',
+        mode: 'vertex',
         id: object.id,
-        handle,
+        index: vertexIndex(handle),
         rotation: object.rotation,
-        anchorWorld: handle === 'p1' ? end : start,
+        startWorld,
       });
       return;
     }
@@ -193,9 +197,9 @@ export function useArtboardPointer({
       handle,
       startBox: bounds(object),
       rotation: object.rotation,
-      ...(object.geometry.kind === 'polygon'
+      ...(object.geometry.kind === 'circle'
         ? {
-            startPolygon: {
+            startCircle: {
               cx: object.geometry.cx,
               cy: object.geometry.cy,
               r: object.geometry.r,
@@ -237,45 +241,52 @@ export function useArtboardPointer({
       return;
     }
 
-    if (active.mode === 'endpoint') {
+    if (active.mode === 'vertex') {
       const g = object.geometry;
-      if (g.kind !== 'line') return;
-      // Both ends are decided in artboard space — the dragged one follows the
-      // pointer, the other stays exactly where it was when the drag began —
+      // Every point is decided in artboard space — the dragged one follows the
+      // pointer, the rest stay exactly where they were when the drag began —
       // and only then converted back to stored coordinates.
-      const moved = lineEndpointAt(active.anchorWorld, point, event.shiftKey);
-      const [a, b] = active.handle === 'p1' ? [moved, active.anchorWorld] : [active.anchorWorld, moved];
-      const next = lineFromWorld(a, b, active.rotation);
+      const anchor = vertexAnchor(active.startWorld, active.index);
+      const moved = anchor ? vertexAt(anchor, point, event.shiftKey) : point;
+      const world = active.startWorld.map((was, index) => (index === active.index ? moved : was));
+      const stored = pointsFromWorld(world, active.rotation).map(roundPoint);
+      const label = `reshape ${object.name}`;
+      if (g.kind === 'line') {
+        // A line's two stored points, spelled as the four numbers it keeps.
+        const [p1, p2] = stored;
+        if (!p1 || !p2) return;
+        dispatch({
+          type: 'setGeometry',
+          id: active.id,
+          geometry: { ...g, x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y },
+          label,
+          at: event.timeStamp,
+        });
+        return;
+      }
+      if (g.kind !== 'polyline' && g.kind !== 'polygon') return;
       dispatch({
         type: 'setGeometry',
         id: active.id,
-        geometry: {
-          ...g,
-          x1: Math.round(next.x1),
-          y1: Math.round(next.y1),
-          x2: Math.round(next.x2),
-          y2: Math.round(next.y2),
-        },
-        label: `reshape ${object.name}`,
+        geometry: { ...g, points: stored },
+        label,
         at: event.timeStamp,
       });
       return;
     }
 
     if (active.mode === 'resize') {
-      // A polygon is a centre and a radius, so its handle drag moves both:
-      // the anchor holds still and the centre slides to keep it there.
-      if (active.startPolygon) {
+      // A circle is a centre and a radius, so its handle drag moves both: the
+      // anchor holds still and the centre slides to keep it there.
+      if (active.startCircle) {
+        const g = object.geometry;
+        if (g.kind !== 'circle') return;
         dispatch({
           type: 'setGeometry',
           id: active.id,
           geometry: {
-            ...(object.geometry.kind === 'polygon'
-              ? object.geometry
-              : { kind: 'polygon' as const, sides: 6, cx: 0, cy: 0, r: 0 }),
-            ...roundPolygon(
-              polygonResize(active.startPolygon, active.handle, point, active.rotation),
-            ),
+            ...g,
+            ...roundCircle(circleResize(active.startCircle, active.handle, point, active.rotation)),
           },
           label: `resize ${object.name}`,
           at: event.timeStamp,
