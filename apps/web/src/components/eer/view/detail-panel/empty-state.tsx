@@ -1,6 +1,5 @@
 import type { Model } from '../../engine/model/types';
 import { Pill } from '@tickets/ui';
-import { Kbd } from './kbd';
 import { Section } from './section';
 import { Stat } from './stat';
 
@@ -43,7 +42,7 @@ export function EmptyState({ model }: { model: Model | null }) {
         <div className="flex flex-col gap-2 text-12 leading-relaxed text-gray-11">
           {rows.map(([k, label], i) => (
             <div key={i} className="flex items-baseline gap-2">
-              <Kbd>{k}</Kbd>
+              <Pill variant="outline" size="sm" tone="neutral" label={k} className="font-mono" />
               <span>{label}</span>
             </div>
           ))}
