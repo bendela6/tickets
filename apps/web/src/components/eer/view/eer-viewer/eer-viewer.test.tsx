@@ -22,8 +22,8 @@ describe('EerDiagram', () => {
     // sidebar of its own — on /schema both of those come from the app shell
     // instead, which is why this component is not what that route renders.
     expect(screen.getByRole('heading', { level: 1, name: 'Fixture' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Zone One, 1 table' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'users' })).toBeInTheDocument();
+    expect(screen.getByRole('treeitem', { name: 'Zone One, 1 table' })).toBeInTheDocument();
+    expect(screen.getByRole('treeitem', { name: 'users' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Fit' })).toBeInTheDocument();
     // the world layer only mounts once a model is present (see Diagram)
     expect(document.querySelector('[data-viewport]')).not.toBeNull();

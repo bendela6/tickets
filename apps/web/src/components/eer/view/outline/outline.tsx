@@ -10,15 +10,25 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import { cn } from '@tickets/ui';
+import { Tree, cn, useTreeView } from '@tickets/ui';
+import type { Selection } from '../../engine/model/types';
 import {
   useDiagramActionsOrNull,
   useDiagramModelOrNull,
   useDiagramUiOrNull,
 } from '../../state/diagram-context';
 import { buildOutline } from './build-outline';
-import { GroupNode } from './group-node';
 import { KindFilters } from './kind-filters';
+import { OutlineRow } from './group-node';
+import { entityRowId, groupRowId, indexOutline, outlineToTreeNodes, parseRowId } from './outline-tree';
+
+// The tree highlights whatever the CANVAS has selected too, not only what was
+// clicked here — one selection, shown in both places.
+function selectedRowId(sel: Selection): string | null {
+  if (sel.type === 'group') return groupRowId(sel.id);
+  if (sel.type === 'entity') return entityRowId(sel.id);
+  return null;
+}
 
 export function Outline() {
   const model = useDiagramModelOrNull();
@@ -26,27 +36,47 @@ export function Outline() {
   const actions = useDiagramActionsOrNull();
 
   const [query, setQuery] = useState('');
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set<string>());
 
   const nodes = useMemo(() => (model ? buildOutline(model, query) : []), [model, query]);
+  const treeRoots = useMemo(() => outlineToTreeNodes(nodes), [nodes]);
+  const index = useMemo(() => indexOutline(nodes), [nodes]);
 
-  // While filtering, every surviving group is forced open: buildOutline has
-  // already pruned the tree to matches, so a collapsed group would hide the
-  // very rows the query asked for.
   const filtering = query.trim().length > 0;
-  const isOpen = useCallback(
-    (id: string) => filtering || !collapsed.has(id),
-    [filtering, collapsed],
+
+  const onSelect = useCallback(
+    (rowId: string) => {
+      if (!actions) return;
+      const { kind, rest } = parseRowId(rowId);
+      if (kind === 'g') {
+        actions.selectGroup(rest);
+      } else if (kind === 'e') {
+        // Selects AND pans — a name in a list is no use if you then have to
+        // find the card yourself.
+        actions.focusFromSearch(rest);
+      } else {
+        // `c:<entityId>:<column>` — entity ids are schema-qualified, so the
+        // column is after the LAST colon.
+        const at = rest.lastIndexOf(':');
+        actions.focusFromSearch(rest.slice(0, at), rest.slice(at + 1));
+      }
+    },
+    [actions],
   );
-  const onToggle = useCallback(
-    (id: string) =>
-      setCollapsed((prev) => {
-        const next = new Set(prev);
-        if (!next.delete(id)) next.add(id);
-        return next;
-      }),
-    [],
-  );
+
+  const tree = useTreeView({
+    roots: treeRoots,
+    selectedId: ui ? selectedRowId(ui.panelSelection) : null,
+    onSelect,
+    // buildOutline has already pruned to matches, so a collapsed group would
+    // hide the very rows the query asked for. Non-destructive: clearing the
+    // filter restores whatever the user had collapsed.
+    forceExpanded: filtering,
+    // The outline has always started with every group open — a collapsed set
+    // seeded empty means "closed" to useTreeView by default, so this flips
+    // the baseline polarity instead of that.
+    defaultExpanded: true,
+    idPrefix: 'outline',
+  });
 
   if (!model || !ui || !actions) return null;
 
@@ -75,12 +105,25 @@ export function Outline() {
       </p>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {nodes.length === 0 ? (
+        {tree.rows.length === 0 ? (
           <p className="px-1 py-2 text-12 text-gray-11">No tables match.</p>
         ) : (
-          nodes.map((n) => (
-            <GroupNode key={n.group.id} node={n} isOpen={isOpen} onToggle={onToggle} />
-          ))
+          <Tree activeDescendant={tree.activeDescendant} onKeyDown={tree.onKeyDown}>
+            {tree.rows.map((r) => {
+              const data = index.get(r.id);
+              if (!data) return null;
+              return (
+                <OutlineRow
+                  key={r.id}
+                  row={r}
+                  data={data}
+                  elementId={tree.rowElementId(r.id)}
+                  onToggle={() => tree.toggle(r.id)}
+                  onSelect={() => tree.select(r.id)}
+                />
+              );
+            })}
+          </Tree>
         )}
       </div>
 

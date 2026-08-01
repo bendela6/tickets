@@ -139,9 +139,9 @@ describe('/schema inside the app shell', () => {
       await within(panel).findByRole('textbox', { name: 'Filter tables' }),
     ).toBeInTheDocument();
     expect(
-      await within(panel).findByRole('button', { name: 'Ticket data, 2 tables' }),
+      await within(panel).findByRole('treeitem', { name: 'Ticket data, 2 tables' }),
     ).toBeInTheDocument();
-    expect(within(panel).getByRole('button', { name: 'comments' })).toBeInTheDocument();
+    expect(within(panel).getByRole('treeitem', { name: 'comments' })).toBeInTheDocument();
     // Proves `panel` really is the panel and not some ancestor of the whole
     // page: the canvas toolbar sits in <main>, outside it.
     expect(within(panel).queryByRole('button', { name: 'Fit' })).not.toBeInTheDocument();
@@ -154,7 +154,7 @@ describe('/schema inside the app shell', () => {
     fireEvent.change(await screen.findByRole('textbox', { name: 'Filter tables' }), {
       target: { value: 'comments' },
     });
-    expect(screen.queryByRole('button', { name: 'tickets' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('treeitem', { name: 'tickets' })).not.toBeInTheDocument();
     // The filter is a table of contents, not a canvas filter — both cards stay.
     expect(container.querySelectorAll('[data-card]')).toHaveLength(2);
   });
