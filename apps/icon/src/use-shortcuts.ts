@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { shapeToolForKey } from './canvas/shape-tools';
-import type { Action, EditorState } from './doc/store';
+import { selectedNodeIndex, type Action, type EditorState } from './doc/store';
 
 /**
  * Whether the key belongs to whatever the user is typing into. A shape
@@ -66,6 +66,17 @@ export function useShortcuts({
 
       if ((event.key === 'Backspace' || event.key === 'Delete') && state.selectedId) {
         event.preventDefault();
+        const node = selectedNodeIndex(state);
+        // A selected node takes the key. It takes it even when the shape is at
+        // the floor for its kind and nothing can be removed: falling through to
+        // deleting the whole object would answer a request to remove one point
+        // by removing every point, which is not a smaller version of the same
+        // thing. Deselect the node — Escape, or a click on the shape — and the
+        // key goes back to meaning the object.
+        if (node !== null) {
+          dispatch({ type: 'removeVertex', id: state.selectedId, index: node });
+          return;
+        }
         dispatch({ type: 'deleteObject', id: state.selectedId });
         return;
       }
@@ -83,5 +94,9 @@ export function useShortcuts({
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [dispatch, onExport, onFitZoom, onResetZoom, onSave, state.selectedId]);
+    // On the whole state rather than on `selectedId` alone: deciding what
+    // Backspace means now reads the node selection and the shape it belongs to,
+    // and a handler bound to a stale document would delete the wrong thing.
+    // Rebinding one window listener costs nothing beside that.
+  }, [dispatch, onExport, onFitZoom, onResetZoom, onSave, state]);
 }

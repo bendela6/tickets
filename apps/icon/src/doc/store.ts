@@ -1,6 +1,14 @@
 import { ARTBOARD_MAX, ARTBOARD_MIN, SNAP_MIN } from './constants';
 import { newObject, objectId } from './defaults';
-import { bounds, fitToBox, translate, type Box } from './geometry';
+import {
+  bounds,
+  fitToBox,
+  insertVertex,
+  removeVertex,
+  translate,
+  vertexPoints,
+  type Box,
+} from './geometry';
 import { snapGeometry, snapTo } from './snap';
 import type {
   Artboard,
@@ -9,6 +17,7 @@ import type {
   IconDoc,
   IconObject,
   Pair,
+  Point,
   ShapeKind,
   Sustain,
   Timing,
@@ -33,6 +42,22 @@ const COALESCE_MS = 400;
 export interface EditorState {
   doc: IconDoc;
   selectedId: string | null;
+  /**
+   * Which node of the selected shape is selected, if any.
+   *
+   * Here rather than in the canvas's own state for two reasons. It is read as
+   * far away as the keyboard layer — Backspace has to remove a selected node
+   * instead of the whole object, and the shortcuts are bound at the top of the
+   * app, where a canvas-local `useState` is invisible. And it is one of a pair:
+   * an object selection and a node selection are the same idea at two scales,
+   * and splitting them across two owners means two places to invalidate when a
+   * shape is deleted, replaced or undone out from under them.
+   *
+   * It carries the object's id so a stale index cannot be read against the
+   * wrong shape, and like `selectedId` it is not an edit — nothing here enters
+   * the undo history.
+   */
+  selectedNode: { id: string; index: number } | null;
   /** Shapes ever added, so names stay unique across deletions. */
   sequence: number;
   past: Snapshot[];
@@ -52,6 +77,16 @@ interface Snapshot {
 export type Action =
   | { type: 'addObject'; kind: ShapeKind }
   | { type: 'selectObject'; id: string | null }
+  | { type: 'selectNode'; index: number | null }
+  /**
+   * `at` is in artboard units and `reach` is how near the outline it had to
+   * land. The reducer does the geometry rather than the caller so that adding a
+   * node is one undoable step that also leaves the new node selected — two
+   * dispatches would let a drag of the same object a moment earlier swallow it
+   * into the same history entry.
+   */
+  | { type: 'insertVertex'; id: string; at: Point; reach: number }
+  | { type: 'removeVertex'; id: string; index: number }
   | { type: 'deleteObject'; id: string }
   | { type: 'duplicateObject'; id: string }
   | { type: 'renameObject'; id: string; name: string }
@@ -84,6 +119,7 @@ export function initialState(doc: IconDoc): EditorState {
   return {
     doc,
     selectedId: null,
+    selectedNode: null,
     sequence: doc.objects.length,
     past: [],
     future: [],
@@ -167,7 +203,18 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
   switch (action.type) {
     // ----- selection is not an edit, so it is not undoable -----------------
     case 'selectObject':
-      return { ...state, selectedId: action.id };
+      // Selecting an object drops any node selection, including when it is the
+      // same object: clicking the body of a shape is how you stop editing one
+      // of its nodes.
+      return { ...state, selectedId: action.id, selectedNode: null };
+    case 'selectNode':
+      return {
+        ...state,
+        selectedNode:
+          action.index === null || state.selectedId === null
+            ? null
+            : { id: state.selectedId, index: action.index },
+      };
 
     // ----- history --------------------------------------------------------
     case 'undo': {
@@ -177,6 +224,9 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         ...state,
         doc: entry.doc,
         selectedId: entry.selectedId,
+        // The document that comes back may not have the node that was selected
+        // in it at all — undoing the addition of one is the obvious case.
+        selectedNode: null,
         past: state.past.slice(0, -1),
         future: [
           ...state.future,
@@ -193,6 +243,7 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         ...state,
         doc: entry.doc,
         selectedId: entry.selectedId,
+        selectedNode: null,
         past: [
           ...state.past,
           { doc: state.doc, selectedId: state.selectedId, label: entry.label },
@@ -223,6 +274,7 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         ...remember(state, label),
         doc: { ...state.doc, objects: state.doc.objects.filter((o) => o.id !== action.id) },
         selectedId: state.selectedId === action.id ? null : state.selectedId,
+        selectedNode: null,
       };
     }
     case 'duplicateObject': {
@@ -305,6 +357,35 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         ...state,
         ...remember(state, label, { key: `resize:${action.id}`, at: action.at ?? 0 }),
         doc: mapGeometry(state.doc, action.id, (o) => fitToBox(o, action.box)),
+      };
+    }
+    case 'insertVertex': {
+      const object = state.doc.objects.find((o) => o.id === action.id);
+      if (!object || object.locked) return state;
+      const added = insertVertex(object, action.at, action.reach);
+      // Nothing near enough to the outline, or a shape with no nodes to add
+      // one to. Doing nothing is the whole answer — a history entry for an
+      // edit that did not happen would be an undo that appears to do nothing.
+      if (!added) return state;
+      return {
+        ...state,
+        ...remember(state, `add point to ${object.name}`),
+        doc: mapGeometry(state.doc, action.id, () => added.geometry),
+        selectedNode: { id: action.id, index: added.index },
+      };
+    }
+    case 'removeVertex': {
+      const object = state.doc.objects.find((o) => o.id === action.id);
+      if (!object || object.locked) return state;
+      const geometry = removeVertex(object, action.index);
+      // At the floor for its kind: the key does nothing, and in particular it
+      // does not fall through to deleting the object.
+      if (!geometry) return state;
+      return {
+        ...state,
+        ...remember(state, `remove point from ${object.name}`),
+        doc: mapGeometry(state.doc, action.id, () => geometry),
+        selectedNode: null,
       };
     }
     case 'rotateObject': {
@@ -474,6 +555,21 @@ export const canRedo = (state: EditorState): boolean => state.future.length > 0;
 
 export function selectedObject(state: EditorState): IconObject | null {
   return state.doc.objects.find((object) => object.id === state.selectedId) ?? null;
+}
+
+/**
+ * Which node of the selected object is selected, or null.
+ *
+ * Checked against what is actually there rather than trusted: an index is only
+ * meaningful beside the shape it was taken from, and a shape can lose points
+ * while one of them is selected. Validating on the way out means no other case
+ * in the reducer has to remember to clear it.
+ */
+export function selectedNodeIndex(state: EditorState): number | null {
+  const node = state.selectedNode;
+  const object = selectedObject(state);
+  if (!node || !object || node.id !== object.id) return null;
+  return node.index >= 0 && node.index < vertexPoints(object).length ? node.index : null;
 }
 
 /** The selected object's box, or null — what the selection overlay draws around. */

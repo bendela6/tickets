@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { App } from './app';
@@ -261,13 +261,17 @@ describe('handles match the shape', () => {
     expect(names.filter((name) => name.startsWith('Resize'))).toEqual([]);
   });
 
-  it('a path is dragged by a box for now, since its nodes are not handles yet', async () => {
+  it('a path gets a handle at each of its nodes, the way a point list does', async () => {
     const { user } = setup();
     await user.keyboard('a');
     const names = handleNames();
-    expect(names).toContain('Resize se');
+    // The spinner preset is a move and one arc, so it has two anchors — and a
+    // two-point run's ends are a start and an end, whatever kind draws them.
+    expect(names).toContain('Move start point');
+    expect(names).toContain('Move end point');
+    // Like any other shape carried by its points, no box handles at all.
+    expect(names.filter((name) => name.startsWith('Resize'))).toEqual([]);
     expect(names).toContain('Rotate');
-    expect(names.filter((name) => name.startsWith('Move point'))).toEqual([]);
   });
 
   it('a polyline gets one handle per point too', async () => {
@@ -288,6 +292,116 @@ describe('handles match the shape', () => {
       expect(handleNames()).toContain('Rotate');
       cleanup();
     }
+  });
+});
+
+describe('editing the nodes of a shape', () => {
+  const handleNames = () =>
+    within(screen.getByRole('main'))
+      .getAllByRole('button')
+      .map((button) => button.getAttribute('aria-label'))
+      .filter((label): label is string => label !== null);
+
+  const nodeCount = () => handleNames().filter((name) => name.startsWith('Move point')).length;
+
+  const handle = (name: string) =>
+    within(screen.getByRole('main')).getByRole('button', { name });
+
+  const node = (index: number) => handle(`Move point ${index}`);
+
+  /**
+   * Press a handle and let go.
+   *
+   * The release goes to the artboard rather than to the handle, because handles
+   * are withdrawn for the duration of a drag — so by the time the pointer comes
+   * up, the button it went down on is not there any more, and the artboard
+   * underneath is what actually receives it.
+   */
+  const press = (target: HTMLElement) => {
+    fireEvent.pointerDown(target);
+    fireEvent.pointerUp(screen.getByRole('img'));
+  };
+
+  /**
+   * Document units to CSS pixels at the default zoom. The artboard has no
+   * layout in a test environment, so its own rectangle reads as the origin and
+   * a client coordinate is simply the document one scaled.
+   */
+  const SCALE = 448 / 512;
+
+  const doubleClickAt = (at: { x: number; y: number }) =>
+    fireEvent.doubleClick(screen.getByRole('img'), {
+      clientX: at.x * SCALE,
+      clientY: at.y * SCALE,
+    });
+
+  it('selects the node that was pressed, and only that one', async () => {
+    const { user } = setup();
+    await user.keyboard('p');
+    press(node(3));
+    expect(node(3)).toHaveAttribute('aria-pressed', 'true');
+    expect(node(1)).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('Backspace removes the selected node instead of the object', async () => {
+    const { user } = setup();
+    await user.keyboard('p');
+    expect(nodeCount()).toBe(6);
+    press(node(2));
+    await user.keyboard('{Backspace}');
+    expect(nodeCount()).toBe(5);
+    // The object is still there — the key took a point, not the shape.
+    expect(within(objectRail()).getByRole('button', { name: 'polygon 1' })).toBeInTheDocument();
+  });
+
+  it('Backspace goes back to meaning the object once no node is selected', async () => {
+    const { user } = setup();
+    await user.keyboard('p');
+    press(node(2));
+    // Removing a node clears the node selection, so the next press is the
+    // object's again. The precedence is a state, not a mode you get stuck in.
+    await user.keyboard('{Backspace}');
+    await user.keyboard('{Backspace}');
+    expect(within(objectRail()).getByText('— no objects —')).toBeInTheDocument();
+  });
+
+  it('Backspace at the floor does nothing at all, and above all does not delete the shape', async () => {
+    const { user } = setup();
+    await user.keyboard('l');
+    // A line is two points by definition, so its ends can never be removed.
+    press(handle('Move end point'));
+    await user.keyboard('{Backspace}');
+    expect(within(objectRail()).getByRole('button', { name: 'line 1' })).toBeInTheDocument();
+    expect(handle('Move end point')).toBeInTheDocument();
+  });
+
+  it('double-clicking an outline adds a node there and selects it', async () => {
+    const { user } = setup();
+    await user.keyboard('p');
+    // A shade inside the edge running from the hexagon's first point (256,136)
+    // to its second (360,196) — its midpoint, nudged towards the centre.
+    doubleClickAt({ x: 307, y: 167 });
+    expect(nodeCount()).toBe(7);
+    // It goes between the two neighbours it was dropped between, and it is what
+    // the next Backspace would take.
+    expect(node(2)).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('double-clicking away from any outline adds nothing', async () => {
+    const { user } = setup();
+    await user.keyboard('p');
+    // Dead centre of the hexagon: on the object, nowhere near its outline.
+    doubleClickAt({ x: 256, y: 256 });
+    expect(nodeCount()).toBe(6);
+  });
+
+  it('adding a node is one step, so undo takes it straight back out', async () => {
+    const { user } = setup();
+    await user.keyboard('p');
+    doubleClickAt({ x: 307, y: 167 });
+    expect(nodeCount()).toBe(7);
+    await user.keyboard('{Meta>}z{/Meta}');
+    expect(nodeCount()).toBe(6);
   });
 });
 

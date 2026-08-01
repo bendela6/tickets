@@ -1,22 +1,37 @@
-import { useCallback, useRef, useState, type PointerEvent, type RefObject } from 'react';
+import {
+  useCallback,
+  useRef,
+  useState,
+  type MouseEvent,
+  type PointerEvent,
+  type RefObject,
+} from 'react';
 import { objectId } from '../doc/defaults';
 import {
   aimLine,
   bounds,
   boxCentre,
+  centreOf,
+  controlPointAt,
   hitTest,
+  rotatePoint,
   translate,
   vertexPoints,
   type Box,
   type Point,
 } from '../doc/geometry';
 import type { Action, EditorState } from '../doc/store';
-import type { Geometry, IconObject } from '../doc/types';
+import type { Geometry, IconObject, PathSegment } from '../doc/types';
 import {
   angleFrom,
   circleResize,
   constrainDelta,
+  controlParts,
+  isControl,
   isVertex,
+  movePathAnchor,
+  movePathControl,
+  OUTLINE_REACH_PX,
   pointsFromWorld,
   resizeRotated,
   snapAngle,
@@ -52,8 +67,31 @@ type Gesture =
    * drag starts and never recomputed. Reading the others' positions from the
    * document each frame would read them through a pivot that the drag itself
    * is moving.
+   *
+   * `startSegments` is the same capture for a path, which is rewritten command
+   * by command rather than as a list of points.
    */
-  | { mode: 'vertex'; id: string; index: number; rotation: number; startWorld: Point[] }
+  | {
+      mode: 'vertex';
+      id: string;
+      index: number;
+      rotation: number;
+      startWorld: Point[];
+      startSegments?: readonly PathSegment[];
+    }
+  /**
+   * A control point. Its own mode because it is the one drag that must leave
+   * every node exactly where it is — including the node it hangs off.
+   */
+  | {
+      mode: 'control';
+      id: string;
+      segment: number;
+      which: 1 | 2;
+      rotation: number;
+      startWorld: Point;
+      startSegments: readonly PathSegment[];
+    }
   /**
    * `line` is set when the object being turned is a line, which stores no
    * rotation of its own — turning it rewrites its endpoints instead.
@@ -182,12 +220,35 @@ export function useArtboardPointer({
     if (isVertex(handle)) {
       const startWorld = vertexPoints(object);
       if (startWorld.length === 0) return;
+      const index = vertexIndex(handle);
+      // Pressing a node selects it. That is what brings its control handles on
+      // screen and what Backspace then acts on, and it costs the drag nothing:
+      // a press that turns out to be a click has still selected the node.
+      dispatch({ type: 'selectNode', index });
       begin(event, {
         mode: 'vertex',
         id: object.id,
-        index: vertexIndex(handle),
+        index,
         rotation: object.rotation,
         startWorld,
+        ...(object.geometry.kind === 'path' ? { startSegments: object.geometry.segments } : {}),
+      });
+      return;
+    }
+    if (isControl(handle)) {
+      const g = object.geometry;
+      if (g.kind !== 'path') return;
+      const { segment, which } = controlParts(handle);
+      const stored = controlPointAt(g.segments, segment, which);
+      if (!stored) return;
+      begin(event, {
+        mode: 'control',
+        id: object.id,
+        segment,
+        which,
+        rotation: object.rotation,
+        startWorld: rotatePoint(stored, centreOf(object), object.rotation),
+        startSegments: g.segments,
       });
       return;
     }
@@ -241,6 +302,28 @@ export function useArtboardPointer({
       return;
     }
 
+    if (active.mode === 'control') {
+      const g = object.geometry;
+      if (g.kind !== 'path') return;
+      dispatch({
+        type: 'setGeometry',
+        id: active.id,
+        geometry: {
+          ...g,
+          segments: movePathControl(
+            active.startSegments,
+            active.segment,
+            active.which,
+            { x: point.x - active.startWorld.x, y: point.y - active.startWorld.y },
+            active.rotation,
+          ),
+        },
+        label: `reshape ${object.name}`,
+        at: event.timeStamp,
+      });
+      return;
+    }
+
     if (active.mode === 'vertex') {
       const g = object.geometry;
       // Every point is decided in artboard space — the dragged one follows the
@@ -248,9 +331,34 @@ export function useArtboardPointer({
       // and only then converted back to stored coordinates.
       const anchor = vertexAnchor(active.startWorld, active.index);
       const moved = anchor ? vertexAt(anchor, point, event.shiftKey) : point;
+      const label = `reshape ${object.name}`;
+
+      if (g.kind === 'path') {
+        const from = active.startWorld[active.index];
+        const segments = active.startSegments;
+        if (!from || !segments) return;
+        // A path is stated as commands, not as a list of points, so the drag is
+        // handed over as a delta and the commands are rewritten around it.
+        dispatch({
+          type: 'setGeometry',
+          id: active.id,
+          geometry: {
+            ...g,
+            segments: movePathAnchor(
+              segments,
+              active.index,
+              { x: moved.x - from.x, y: moved.y - from.y },
+              active.rotation,
+            ),
+          },
+          label,
+          at: event.timeStamp,
+        });
+        return;
+      }
+
       const world = active.startWorld.map((was, index) => (index === active.index ? moved : was));
       const stored = pointsFromWorld(world, active.rotation).map(roundPoint);
-      const label = `reshape ${object.name}`;
       if (g.kind === 'line') {
         // A line's two stored points, spelled as the four numbers it keeps.
         const [p1, p2] = stored;
@@ -325,6 +433,28 @@ export function useArtboardPointer({
     });
   };
 
+  /**
+   * Double-clicking an outline adds a node to it, at the point of the outline
+   * nearest the pointer.
+   *
+   * The reach is the pointer's own tolerance or half the stroke, whichever is
+   * wider: a shape drawn with a thick stroke is *hit* anywhere on that stroke,
+   * and a double-click that selected the shape but then added nothing would
+   * read as the feature being broken rather than as the click being off.
+   */
+  const onDoubleClick = (event: MouseEvent<HTMLElement>) => {
+    const point = pointOf(event);
+    if (!point) return;
+    const hit = hitTest(state.doc.objects, point);
+    if (!hit || hit.locked) return;
+    dispatch({
+      type: 'insertVertex',
+      id: hit.id,
+      at: point,
+      reach: Math.max(OUTLINE_REACH_PX / scale, hit.strokeWidth / 2),
+    });
+  };
+
   const onPointerUp = (event: PointerEvent) => {
     if (!gesture.current) return;
     gesture.current = null;
@@ -337,7 +467,13 @@ export function useArtboardPointer({
 
   return {
     chrome,
-    surfaceProps: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp },
+    surfaceProps: {
+      onPointerDown,
+      onPointerMove,
+      onPointerUp,
+      onPointerCancel: onPointerUp,
+      onDoubleClick,
+    },
     onHandleDown,
   };
 }

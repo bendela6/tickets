@@ -1,6 +1,7 @@
-import type { PointerEvent } from 'react';
-import type { Box, Point } from '../doc/geometry';
+import type { MouseEvent, PointerEvent } from 'react';
+import type { Box, ControlHandlePoint, Point } from '../doc/geometry';
 import {
+  controlHandle,
   handleCursor,
   handlePosition,
   RESIZE_HANDLES,
@@ -26,6 +27,15 @@ const ROTATE_STEM = 14;
 const ROTATE_KNOB = 10;
 const ENDPOINT_PX = 10;
 
+/**
+ * A control point is drawn smaller than a node and turned onto its corner, and
+ * it is filled with the handle ink instead of being hollow. Shape and fill
+ * rather than a second colour: a node is a place the shape passes through and a
+ * control is not, and telling them apart must not depend on the viewer
+ * comparing two hues at eight pixels across.
+ */
+const CONTROL_PX = 8;
+
 const isCorner = (handle: ResizeHandle) => handle.length === 2;
 
 function handleSize(handle: ResizeHandle): { w: number; h: number } {
@@ -36,6 +46,7 @@ function handleSize(handle: ResizeHandle): { w: number; h: number } {
 }
 
 const HANDLE_SKIN = 'pointer-events-auto absolute border-1 border-handle bg-white p-0';
+const CONTROL_SKIN = 'pointer-events-auto absolute border-1 border-handle bg-handle p-0';
 
 export interface OverlayProps {
   /** The object's box, in document units, BEFORE rotation. */
@@ -96,9 +107,11 @@ export function SelectionOverlay({ box, rotation, scale, onHandleDown }: Overlay
 }
 
 /**
- * What a two-point run's ends are called. "Start" and "end" say more about a
- * line than "point 1" and "point 2" do, and a line is the only shape whose
- * points have names of their own.
+ * What a two-point run's ends are called. "Start" and "end" say more than
+ * "point 1" and "point 2" do, and a run with exactly two points has nothing
+ * else they could be — which holds for a line, for a two-point polyline and for
+ * a path of one move and one command, all of which reach here without the
+ * overlay ever having to ask which kind it is drawing.
  */
 function vertexLabel(index: number, count: number): string {
   if (count !== 2) return `Move point ${index + 1}`;
@@ -106,8 +119,15 @@ function vertexLabel(index: number, count: number): string {
 }
 
 /**
- * The selection for a shape made of points: one handle per point, and nothing
- * else.
+ * A node handle sits exactly on the outline, which is also where a double-click
+ * asks for a new node. Without this, double-clicking a node would plant a
+ * second one on top of it.
+ */
+const swallowDoubleClick = (event: MouseEvent) => event.stopPropagation();
+
+/**
+ * The selection for a shape made of points: one handle per point, the selected
+ * node's control handles if it has any, and nothing else.
  *
  * Drawn in artboard space rather than inside a rotated box, because the points
  * already carry the shape — there is no box for them to sit in the corners of,
@@ -118,8 +138,17 @@ export function PointsSelectionOverlay({
   box,
   rotation,
   scale,
+  selectedNode,
+  controls,
   onHandleDown,
-}: Omit<OverlayProps, 'box'> & { points: readonly Point[]; box: Box }) {
+}: Omit<OverlayProps, 'box'> & {
+  points: readonly Point[];
+  box: Box;
+  /** Which node is selected, or null. Only its controls are drawn. */
+  selectedNode: number | null;
+  controls: readonly ControlHandlePoint[];
+}) {
+  const anchor = selectedNode === null ? undefined : points[selectedNode];
   return (
     <>
       {points.map((point, index) => {
@@ -129,7 +158,9 @@ export function PointsSelectionOverlay({
             key={handle}
             type="button"
             aria-label={vertexLabel(index, points.length)}
+            aria-pressed={index === selectedNode}
             onPointerDown={(event) => onHandleDown(handle, event)}
+            onDoubleClick={swallowDoubleClick}
             className={`${HANDLE_SKIN} rounded-full`}
             style={{
               left: point.x * scale - ENDPOINT_PX / 2,
@@ -141,6 +172,19 @@ export function PointsSelectionOverlay({
           />
         );
       })}
+
+      {anchor && selectedNode !== null
+        ? controls.map((control) => (
+            <ControlHandle
+              key={`${control.segment}-${control.which}`}
+              control={control}
+              anchor={anchor}
+              node={selectedNode}
+              scale={scale}
+              onHandleDown={onHandleDown}
+            />
+          ))
+        : null}
 
       <div
         className="pointer-events-none absolute"
@@ -154,6 +198,70 @@ export function PointsSelectionOverlay({
       >
         <RotateKnob onHandleDown={onHandleDown} />
       </div>
+    </>
+  );
+}
+
+/**
+ * One control point, tethered to the node it belongs to.
+ *
+ * The tether is the whole idiom: a control point on its own is a mark floating
+ * beside the shape, and the line is what says which node it steers and how far
+ * out it reaches. It is drawn as a bar laid along the direction between the two
+ * rather than as an SVG line, because everything else on this layer is already
+ * a positioned box and one element type is easier to reason about than two.
+ */
+function ControlHandle({
+  control,
+  anchor,
+  node,
+  scale,
+  onHandleDown,
+}: {
+  control: ControlHandlePoint;
+  anchor: Point;
+  node: number;
+  scale: number;
+  onHandleDown: OverlayProps['onHandleDown'];
+}) {
+  const from = { x: anchor.x * scale, y: anchor.y * scale };
+  const to = { x: control.at.x * scale, y: control.at.y * scale };
+  const reach = Math.hypot(to.x - from.x, to.y - from.y);
+  const bearing = (Math.atan2(to.y - from.y, to.x - from.x) * 180) / Math.PI;
+  const handle = controlHandle(control.segment, control.which);
+  // `which` is the ownership rule read back: an anchor owns the second control
+  // of the command arriving at it and the first of the one leaving.
+  const direction = control.which === 2 ? 'incoming' : 'outgoing';
+
+  return (
+    <>
+      <span
+        aria-hidden
+        className="pointer-events-none absolute bg-handle"
+        style={{
+          left: from.x,
+          top: from.y,
+          width: reach,
+          height: 1,
+          transformOrigin: '0 0',
+          transform: `rotate(${bearing}deg)`,
+        }}
+      />
+      <button
+        type="button"
+        aria-label={`Move ${direction} control of point ${node + 1}`}
+        onPointerDown={(event) => onHandleDown(handle, event)}
+        onDoubleClick={swallowDoubleClick}
+        className={CONTROL_SKIN}
+        style={{
+          left: to.x - CONTROL_PX / 2,
+          top: to.y - CONTROL_PX / 2,
+          width: CONTROL_PX,
+          height: CONTROL_PX,
+          cursor: handleCursor(handle),
+          transform: 'rotate(45deg)',
+        }}
+      />
     </>
   );
 }

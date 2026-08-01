@@ -82,6 +82,32 @@ const FLATTEN_STEPS = 1 << FLATTEN_DEPTH;
 
 const midpoint = (a: Point, b: Point): Point => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 
+/** A point `t` of the way from `a` to `b`. */
+const lerp = (a: Point, b: Point, t: number): Point => ({
+  x: a.x + (b.x - a.x) * t,
+  y: a.y + (b.y - a.y) * t,
+});
+
+/**
+ * The two controls of the cubic a quadratic already is.
+ *
+ * Degree elevation, not approximation: the curve and its parameterisation are
+ * identical, which is why the flattener, the nearest-point search and the
+ * splitter can all speak one language and still hand a `Q` back a `Q`.
+ */
+function quadraticControls(from: Point, segment: Extract<PathSegment, { c: 'Q' }>): [Point, Point] {
+  return [
+    {
+      x: from.x + (2 / 3) * (segment.x1 - from.x),
+      y: from.y + (2 / 3) * (segment.y1 - from.y),
+    },
+    {
+      x: segment.x + (2 / 3) * (segment.x1 - segment.x),
+      y: segment.y + (2 / 3) * (segment.y1 - segment.y),
+    },
+  ];
+}
+
 /**
  * The cubic's points appended to `out`, excluding the one it starts from —
  * which the run it is being added to already holds.
@@ -245,14 +271,7 @@ export function flattenPath(
         // one, so a single flattener answers for both rather than two that
         // could disagree about the same curve.
         const end = { x: segment.x, y: segment.y };
-        const first = {
-          x: at.x + (2 / 3) * (segment.x1 - at.x),
-          y: at.y + (2 / 3) * (segment.y1 - at.y),
-        };
-        const second = {
-          x: end.x + (2 / 3) * (segment.x1 - end.x),
-          y: end.y + (2 / 3) * (segment.y1 - end.y),
-        };
+        const [first, second] = quadraticControls(at, segment);
         flattenCubic(at, first, second, end, within, 0, active());
         at = end;
         break;
@@ -510,17 +529,123 @@ export function lineEndpoints(object: IconObject): [Point, Point] {
 }
 
 /**
+ * One on-path point of a path, with the command it ends.
+ *
+ * A path's draggable points are its anchors and nothing else. `Z` has none of
+ * its own — it returns to a point another command already stated — and a
+ * control point is not *on* the curve at all: it steers it from outside, which
+ * is why it gets a handle of its own shape rather than a place in this list.
+ */
+export interface PathAnchor {
+  /** Where it sits, in stored units — before the object's rotation. */
+  point: Point;
+  /** Which command in `segments` ends here. */
+  segment: number;
+}
+
+/** Every anchor of a path, in the order its commands are written. */
+export function pathAnchors(segments: readonly PathSegment[]): PathAnchor[] {
+  const anchors: PathAnchor[] = [];
+  for (let index = 0; index < segments.length; index++) {
+    const segment = segments[index];
+    if (!segment || segment.c === 'Z') continue;
+    anchors.push({ point: { x: segment.x, y: segment.y }, segment: index });
+  }
+  return anchors;
+}
+
+/**
+ * One control point, named by the command that holds it and which of that
+ * command's two it is: `1` for `x1`/`y1`, `2` for `x2`/`y2`.
+ */
+export interface PathControl {
+  point: Point;
+  segment: number;
+  which: 1 | 2;
+}
+
+/** A command's control point, or null when it has none of that number. */
+export function controlPointAt(
+  segments: readonly PathSegment[],
+  segment: number,
+  which: 1 | 2,
+): Point | null {
+  const command = segments[segment];
+  if (!command) return null;
+  if (which === 1 && (command.c === 'C' || command.c === 'Q')) {
+    return { x: command.x1, y: command.y1 };
+  }
+  if (which === 2 && command.c === 'C') return { x: command.x2, y: command.y2 };
+  return null;
+}
+
+/**
+ * The control points an anchor owns: the second control of the command
+ * *arriving* at it, and the first control of the command *leaving* it.
+ *
+ * That rule gives every control exactly one owner — a cubic's `x1` belongs to
+ * the anchor it leaves and its `x2` to the anchor it reaches, and a quadratic's
+ * single control belongs to the anchor it leaves. The partition is what lets a
+ * node drag carry its handles without two neighbouring nodes both claiming the
+ * same control and moving it twice; it also decides, with no further rule, that
+ * `which === 2` is the handle coming in and `which === 1` the one going out.
+ */
+export function anchorControls(
+  segments: readonly PathSegment[],
+  segment: number,
+): PathControl[] {
+  const controls: PathControl[] = [];
+  const arriving = controlPointAt(segments, segment, 2);
+  if (arriving) controls.push({ point: arriving, segment, which: 2 });
+  const leaving = controlPointAt(segments, segment + 1, 1);
+  if (leaving) controls.push({ point: leaving, segment: segment + 1, which: 1 });
+  return controls;
+}
+
+/** A control point with the artboard-space position its handle is drawn at. */
+export interface ControlHandlePoint extends PathControl {
+  at: Point;
+}
+
+/**
+ * The control handles belonging to one anchor, in artboard space with the
+ * object's rotation applied — the same answer `vertexPoints` gives for the
+ * anchors themselves, for the points that steer between them.
+ *
+ * Asked one anchor at a time on purpose: a forty-node path with every handle on
+ * screen is a thicket, so only the node you selected shows what steers it.
+ */
+export function anchorControlPoints(object: IconObject, anchorIndex: number): ControlHandlePoint[] {
+  const g = object.geometry;
+  if (g.kind !== 'path') return [];
+  const anchor = pathAnchors(g.segments)[anchorIndex];
+  if (!anchor) return [];
+  const centre = centreOf(object);
+  return anchorControls(g.segments, anchor.segment).map((control) => ({
+    ...control,
+    at: rotatePoint(control.point, centre, object.rotation),
+  }));
+}
+
+/**
  * Every point a shape is dragged by, in artboard space, with the object's
  * rotation already applied — which is where its handles actually have to be
  * drawn. Empty for the shapes that are dragged by a box instead.
  *
- * A line's two ends and a point list's vertices are the same thing wearing
- * different names, so one function answers for all three and the overlay does
- * not have to know which kind it is looking at.
+ * A line's two ends, a point list's vertices and a path's anchors are the same
+ * thing wearing different names, so one function answers for all of them and
+ * the overlay does not have to know which kind it is looking at — which is also
+ * what lets one vertex gesture reshape all four without a mode of its own.
  */
 export function vertexPoints(object: IconObject): Point[] {
   const g = object.geometry;
   if (g.kind === 'line') return lineEndpoints(object);
+  if (g.kind === 'path') {
+    const centre = centreOf(object);
+    return pathAnchors(g.segments).map((anchor) =>
+      rotatePoint(anchor.point, centre, object.rotation),
+    );
+  }
   if (g.kind !== 'polyline' && g.kind !== 'polygon') return [];
   const centre = centreOf(object);
   return g.points.map((point) => rotatePoint(point, centre, object.rotation));
@@ -761,6 +886,24 @@ function movedSegment(segment: PathSegment, dx: number, dy: number): PathSegment
   }
 }
 
+/**
+ * Every command moved.
+ *
+ * Exported because reshaping a path has to translate one as well: a path turns
+ * about the centre of its own box, so an edit that moves that box is put back
+ * on screen by sliding the whole thing. Control points move with the curve they
+ * steer, so it arrives the same shape it left, and an arc's radii are lengths
+ * rather than positions and are left exactly alone — moving them would resize
+ * the shape.
+ */
+export function translateSegments(
+  segments: readonly PathSegment[],
+  dx: number,
+  dy: number,
+): PathSegment[] {
+  return segments.map((segment) => movedSegment(segment, dx, dy));
+}
+
 /** Move an object's geometry by a document-space delta. */
 export function translate(geometry: Geometry, dx: number, dy: number): Geometry {
   switch (geometry.kind) {
@@ -781,13 +924,7 @@ export function translate(geometry: Geometry, dx: number, dy: number): Geometry 
         points: geometry.points.map((point) => ({ x: point.x + dx, y: point.y + dy })),
       };
     case 'path':
-      // Control points move with the curve they steer, so it arrives the same
-      // shape it left. An arc's radii are lengths rather than positions and
-      // are left exactly alone — moving them would resize the shape.
-      return {
-        ...geometry,
-        segments: geometry.segments.map((segment) => movedSegment(segment, dx, dy)),
-      };
+      return { ...geometry, segments: translateSegments(geometry.segments, dx, dy) };
     case 'rect':
     case 'ellipse':
       return { ...geometry, x: geometry.x + dx, y: geometry.y + dy };
@@ -920,4 +1057,396 @@ export function fitToBox(object: IconObject, box: Box): Geometry {
     case 'ellipse':
       return { ...g, x: box.x, y: box.y, w: Math.max(0, box.w), h: Math.max(0, box.h) };
   }
+}
+
+// ----- adding and removing a node -----------------------------------------
+
+/** How far along the segment a→b the closest point to `point` sits, 0–1. */
+function closestOnSegment(point: Point, a: Point, b: Point): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const lengthSquared = dx * dx + dy * dy;
+  if (lengthSquared === 0) return 0;
+  return Math.max(0, Math.min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSquared));
+}
+
+/** A cubic evaluated by de Casteljau, which is also how it is split. */
+function cubicAt(p0: Point, p1: Point, p2: Point, p3: Point, t: number): Point {
+  const a = lerp(p0, p1, t);
+  const b = lerp(p1, p2, t);
+  const c = lerp(p2, p3, t);
+  return lerp(lerp(a, b, t), lerp(b, c, t), t);
+}
+
+/**
+ * How many places along a curve are tried before the search narrows, and how
+ * many times it then narrows.
+ *
+ * The exact answer is a root of a fifth-degree polynomial. A coarse sweep
+ * followed by thirty narrowings of a 1/32 window lands far inside
+ * FLATTEN_TOLERANCE and costs under a hundred evaluations, which is nothing for
+ * something that happens once per double-click.
+ */
+const NEAREST_SAMPLES = 32;
+const NEAREST_NARROWINGS = 30;
+
+/** How far along a cubic the closest point to `point` sits, and how far away it is. */
+function nearestOnCubic(
+  point: Point,
+  p0: Point,
+  p1: Point,
+  p2: Point,
+  p3: Point,
+): { t: number; distance: number } {
+  const away = (t: number): number => {
+    const on = cubicAt(p0, p1, p2, p3, t);
+    return Math.hypot(on.x - point.x, on.y - point.y);
+  };
+  let best = 0;
+  let bestDistance = away(0);
+  for (let i = 1; i <= NEAREST_SAMPLES; i++) {
+    const t = i / NEAREST_SAMPLES;
+    const distance = away(t);
+    if (distance < bestDistance) {
+      best = t;
+      bestDistance = distance;
+    }
+  }
+  // Narrowed by thirds rather than halved: distance along a curve has no
+  // derivative to bisect on, but it has one minimum inside a window this small,
+  // and comparing two interior points always discards a third of it.
+  let low = Math.max(0, best - 1 / NEAREST_SAMPLES);
+  let high = Math.min(1, best + 1 / NEAREST_SAMPLES);
+  for (let i = 0; i < NEAREST_NARROWINGS; i++) {
+    const third = (high - low) / 3;
+    if (away(low + third) <= away(high - third)) high -= third;
+    else low += third;
+  }
+  const t = (low + high) / 2;
+  return { t, distance: away(t) };
+}
+
+/** Where a point falls on a path. */
+export interface PathHit {
+  /** Index into `segments` of the command it landed on. */
+  segment: number;
+  /** How far along that command, 0–1. Meaningless on an `A`, which is not split. */
+  t: number;
+  /** The point on the curve itself. */
+  point: Point;
+  distance: number;
+}
+
+/** The nearest point on a run of straight points, reported as a hit on `segment`. */
+function nearestOnRun(point: Point, run: readonly Point[], segment: number): PathHit | null {
+  let best: PathHit | null = null;
+  for (let i = 1; i < run.length; i++) {
+    const a = run[i - 1];
+    const b = run[i];
+    if (!a || !b) continue;
+    const t = closestOnSegment(point, a, b);
+    const on = lerp(a, b, t);
+    const distance = Math.hypot(on.x - point.x, on.y - point.y);
+    if (!best || distance < best.distance) best = { segment, t, point: on, distance };
+  }
+  return best;
+}
+
+/**
+ * Which command of a path the point is nearest to, where along it, and how far.
+ *
+ * Solved against each command's own maths rather than against the flattened
+ * run, because the answer is what a split is then performed with: a `t` read
+ * off a chord of the flattened curve is not the `t` the curve itself has there,
+ * and splitting at the wrong parameter moves the outline.
+ */
+export function nearestOnPath(segments: readonly PathSegment[], point: Point): PathHit | null {
+  const hits: PathHit[] = [];
+  let at: Point = { x: 0, y: 0 };
+  let opened: Point = at;
+
+  const straight = (index: number, to: Point): void => {
+    const t = closestOnSegment(point, at, to);
+    const on = lerp(at, to, t);
+    hits.push({
+      segment: index,
+      t,
+      point: on,
+      distance: Math.hypot(on.x - point.x, on.y - point.y),
+    });
+  };
+  const curved = (index: number, p1: Point, p2: Point, p3: Point): void => {
+    const near = nearestOnCubic(point, at, p1, p2, p3);
+    hits.push({
+      segment: index,
+      t: near.t,
+      point: cubicAt(at, p1, p2, p3, near.t),
+      distance: near.distance,
+    });
+  };
+
+  for (let index = 0; index < segments.length; index++) {
+    const segment = segments[index];
+    if (!segment) continue;
+    switch (segment.c) {
+      case 'M':
+        // Nothing is drawn on the way to a move, so there is no edge here for a
+        // node to land on.
+        at = { x: segment.x, y: segment.y };
+        opened = at;
+        break;
+      case 'L': {
+        const end = { x: segment.x, y: segment.y };
+        straight(index, end);
+        at = end;
+        break;
+      }
+      case 'Q': {
+        const end = { x: segment.x, y: segment.y };
+        const [first, second] = quadraticControls(at, segment);
+        curved(index, first, second, end);
+        at = end;
+        break;
+      }
+      case 'C': {
+        const end = { x: segment.x, y: segment.y };
+        curved(index, { x: segment.x1, y: segment.y1 }, { x: segment.x2, y: segment.y2 }, end);
+        at = end;
+        break;
+      }
+      case 'A': {
+        // Measured on the flattened arc. An arc is never split, so all this has
+        // to decide is whether the arc is what the pointer was nearest to.
+        const hit = nearestOnRun(point, [at, ...flattenArc(at, segment, FLATTEN_TOLERANCE)], index);
+        if (hit) hits.push({ ...hit, t: 0 });
+        at = { x: segment.x, y: segment.y };
+        break;
+      }
+      case 'Z':
+        straight(index, opened);
+        at = opened;
+        break;
+    }
+  }
+  return hits.reduce<PathHit | null>(
+    (best, hit) => (best !== null && best.distance <= hit.distance ? best : hit),
+    null,
+  );
+}
+
+/** Where the pen stands, and where its subpath opened, just before command `index`. */
+function penBefore(segments: readonly PathSegment[], index: number): { at: Point; opened: Point } {
+  let at: Point = { x: 0, y: 0 };
+  let opened: Point = at;
+  for (let i = 0; i < index; i++) {
+    const segment = segments[i];
+    if (!segment) continue;
+    if (segment.c === 'Z') {
+      at = opened;
+      continue;
+    }
+    at = { x: segment.x, y: segment.y };
+    if (segment.c === 'M') opened = at;
+  }
+  return { at, opened };
+}
+
+/**
+ * The commands with the one at `hit` cut in two where it was hit, or null when
+ * that command cannot be cut.
+ *
+ * A straight cut is trivial. A curve is cut with de Casteljau, which is exact:
+ * the two halves *are* the original curve, so adding a node does not move the
+ * outline by so much as a unit. Dropping a point onto the curve and guessing
+ * fresh handles for it — the obvious shortcut — visibly shifts the shape, which
+ * is the one thing adding a node must never do.
+ *
+ * An `A` is refused rather than approximated. Splitting one exactly means two
+ * arcs sharing the split point, each keeping the original radii and axis
+ * rotation with the large-arc flag recomputed from the sweep each now covers.
+ * That needs the centre parameterisation this file only derives inside the
+ * flattener; the alternative — quietly turning the arc into cubics — would
+ * rewrite commands nobody asked to have rewritten. Declining is the honest
+ * answer until the exact one is written.
+ */
+export function splitPath(segments: readonly PathSegment[], hit: PathHit): PathSegment[] | null {
+  const segment = segments[hit.segment];
+  if (!segment) return null;
+  const { at, opened } = penBefore(segments, hit.segment);
+  const next = segments.slice();
+
+  switch (segment.c) {
+    case 'A':
+    case 'M':
+      return null;
+    case 'Z': {
+      // The closing edge is drawn but has no command of its own, so the node
+      // lands on an `L` put in front of the `Z` — which draws the same edge in
+      // two parts and leaves the `Z` closing the second of them.
+      const on = lerp(at, opened, hit.t);
+      next.splice(hit.segment, 0, { c: 'L', x: on.x, y: on.y });
+      return next;
+    }
+    case 'L': {
+      const on = lerp(at, { x: segment.x, y: segment.y }, hit.t);
+      next.splice(hit.segment, 1, { c: 'L', x: on.x, y: on.y }, segment);
+      return next;
+    }
+    case 'Q': {
+      const end = { x: segment.x, y: segment.y };
+      const control = { x: segment.x1, y: segment.y1 };
+      const a = lerp(at, control, hit.t);
+      const b = lerp(control, end, hit.t);
+      const on = lerp(a, b, hit.t);
+      next.splice(
+        hit.segment,
+        1,
+        { c: 'Q', x1: a.x, y1: a.y, x: on.x, y: on.y },
+        { c: 'Q', x1: b.x, y1: b.y, x: end.x, y: end.y },
+      );
+      return next;
+    }
+    case 'C': {
+      const p1 = { x: segment.x1, y: segment.y1 };
+      const p2 = { x: segment.x2, y: segment.y2 };
+      const p3 = { x: segment.x, y: segment.y };
+      const a = lerp(at, p1, hit.t);
+      const b = lerp(p1, p2, hit.t);
+      const c = lerp(p2, p3, hit.t);
+      const d = lerp(a, b, hit.t);
+      const e = lerp(b, c, hit.t);
+      const on = lerp(d, e, hit.t);
+      next.splice(
+        hit.segment,
+        1,
+        { c: 'C', x1: a.x, y1: a.y, x2: d.x, y2: d.y, x: on.x, y: on.y },
+        { c: 'C', x1: e.x, y1: e.y, x2: c.x, y2: c.y, x: p3.x, y: p3.y },
+      );
+      return next;
+    }
+  }
+}
+
+/** Where a new point belongs in a run of stored points, and where on the edge it lands. */
+function insertOnRun(
+  points: readonly Point[],
+  at: Point,
+  closed: boolean,
+): { index: number; point: Point; distance: number } | null {
+  let best: { index: number; point: Point; distance: number } | null = null;
+  // A closed run has one more edge than it has gaps between listed points: the
+  // one back from the last to the first, which is as clickable as any other.
+  const edges = closed ? points.length : points.length - 1;
+  for (let i = 0; i < edges; i++) {
+    const a = points[i];
+    const b = points[(i + 1) % points.length];
+    if (!a || !b) continue;
+    const t = closestOnSegment(at, a, b);
+    const on = lerp(a, b, t);
+    const distance = Math.hypot(on.x - at.x, on.y - at.y);
+    // The new point goes after the one that starts the edge it landed on, so it
+    // sits between exactly the two neighbours it was dropped between.
+    if (!best || distance < best.distance) best = { index: i + 1, point: on, distance };
+  }
+  return best;
+}
+
+export interface VertexInsertion {
+  geometry: Geometry;
+  /** The new node's place in `vertexPoints`, so the caller can select it. */
+  index: number;
+}
+
+/**
+ * The geometry with a node added at the point of its outline nearest `at`, or
+ * null when there is nothing there to add one to.
+ *
+ * `at` is in artboard space and is turned back into the object's own frame the
+ * way `contains` does, so a rotated shape needs no special case. `reach` is in
+ * document units, and it is what makes this a click on the *outline* rather
+ * than on the object: without it a double-click in the middle of a filled
+ * polygon would plant a node on whichever edge happened to be closest, nowhere
+ * near the pointer.
+ */
+export function insertVertex(object: IconObject, at: Point, reach: number): VertexInsertion | null {
+  const g = object.geometry;
+  const local = rotatePoint(at, centreOf(object), -object.rotation);
+
+  if (g.kind === 'polyline' || g.kind === 'polygon') {
+    const found = insertOnRun(g.points, local, g.kind === 'polygon');
+    if (!found || found.distance > reach) return null;
+    const points = g.points.slice();
+    points.splice(found.index, 0, found.point);
+    return { geometry: { ...g, points }, index: found.index };
+  }
+
+  if (g.kind !== 'path') return null;
+  const hit = nearestOnPath(g.segments, local);
+  if (!hit || hit.distance > reach) return null;
+  const segments = splitPath(g.segments, hit);
+  if (!segments) return null;
+  // However it was cut, the new node ends the command that was cut: the second
+  // half is always written after it.
+  const index = pathAnchors(segments).findIndex((anchor) => anchor.segment === hit.segment);
+  return index < 0 ? null : { geometry: { ...g, segments }, index };
+}
+
+/**
+ * The commands with the one ending at `index` taken out.
+ *
+ * Removing a move is the awkward case: the subpath still has to start
+ * somewhere, so the command after it becomes the new move — and it becomes a
+ * plain move rather than keeping its curve, because the point it curved *from*
+ * is the one being deleted.
+ */
+function withoutAnchor(segments: readonly PathSegment[], index: number): PathSegment[] {
+  const next = segments.slice();
+  const removed = next[index];
+  if (!removed) return next;
+  if (removed.c !== 'M') {
+    next.splice(index, 1);
+    return next;
+  }
+  const following = next[index + 1];
+  if (following && following.c !== 'M' && following.c !== 'Z') {
+    next.splice(index, 2, { c: 'M', x: following.x, y: following.y });
+    return next;
+  }
+  // Nothing was drawn from it, so the move goes — and so does a `Z` that would
+  // otherwise be left closing nothing.
+  next.splice(index, following?.c === 'Z' ? 2 : 1);
+  return next;
+}
+
+/**
+ * The geometry with node `index` removed, or null when removing it would take
+ * the shape below the floor its kind stands on.
+ *
+ * The floors are what each SVG element needs in order to still BE that element:
+ * a line is two points and never fewer, a polyline is at least two, a polygon
+ * at least three, and a path has to keep a move with something to draw after
+ * it. Below those the answer is null and the caller does nothing at all —
+ * deleting the whole object instead would be a different command quietly
+ * answering for this one.
+ */
+export function removeVertex(object: IconObject, index: number): Geometry | null {
+  const g = object.geometry;
+
+  if (g.kind === 'polyline' || g.kind === 'polygon') {
+    const floor = g.kind === 'polygon' ? 3 : 2;
+    if (g.points.length <= floor || index < 0 || index >= g.points.length) return null;
+    const points = g.points.slice();
+    points.splice(index, 1);
+    return { ...g, points };
+  }
+
+  if (g.kind !== 'path') return null;
+  const anchor = pathAnchors(g.segments)[index];
+  if (!anchor) return null;
+  const segments = withoutAnchor(g.segments, anchor.segment);
+  // A move with one command after it is two anchors, and the least a path can
+  // be while still drawing anything.
+  if (pathAnchors(segments).length < 2) return null;
+  if (!segments.some((segment) => segment.c === 'M')) return null;
+  return { ...g, segments };
 }

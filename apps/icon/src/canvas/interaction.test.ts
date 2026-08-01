@@ -1,14 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import { boxCentre, rotatePoint, type Point } from '../doc/geometry';
+import {
+  boxCentre,
+  flattenPath,
+  pointsBox,
+  rotatePoint,
+  type Point,
+} from '../doc/geometry';
+import type { PathSegment } from '../doc/types';
 import {
   anchorPoint,
   angleFrom,
   circleResize,
   constrainDelta,
+  controlHandle,
+  controlParts,
   handleCursor,
   handlePosition,
   handleDirection as handleDirectionForTest,
+  isControl,
   isVertex,
+  movePathAnchor,
+  movePathControl,
   pointsFromWorld,
   resizeBox,
   resizeRotated,
@@ -294,6 +306,167 @@ describe('vertex handles', () => {
     expect(handleCursor('v99')).toBe('move');
     expect(handleCursor('nw')).toBe('nwse-resize');
     expect(handleCursor('rotate')).toBe('grab');
+  });
+});
+
+describe('control handles', () => {
+  it('name a command and which of its two controls, and read both back', () => {
+    expect(controlHandle(7, 2)).toBe('c7-2');
+    expect(controlParts(controlHandle(7, 2))).toEqual({ segment: 7, which: 2 });
+    expect(controlParts(controlHandle(0, 1))).toEqual({ segment: 0, which: 1 });
+  });
+
+  it('are told apart from vertices, which they sit beside and are not', () => {
+    expect(isControl('c3-1')).toBe(true);
+    expect(isControl('v3')).toBe(false);
+    expect(isVertex('c3-1')).toBe(false);
+    expect(isControl('rotate')).toBe(false);
+  });
+
+  it('wear the move cursor too', () => {
+    expect(handleCursor('c2-2')).toBe('move');
+  });
+});
+
+/** Two cubics meeting at (100,0), so the middle anchor has a handle either side. */
+const BOW: PathSegment[] = [
+  { c: 'M', x: 0, y: 0 },
+  { c: 'C', x1: 20, y1: -60, x2: 80, y2: -60, x: 100, y: 0 },
+  { c: 'C', x1: 120, y1: 60, x2: 180, y2: 60, x: 200, y: 0 },
+];
+
+/**
+ * Every stored coordinate of a path, drawn where the renderer would put it: the
+ * SVG turns the whole path about the centre of its flattened box, which is what
+ * `centreOf` reports and what moving any single coordinate disturbs.
+ */
+const drawnPath = (segments: readonly PathSegment[], rotation: number): Point[] => {
+  const pivot = boxCentre(pointsBox(flattenPath(segments).flat()));
+  const points: Point[] = [];
+  for (const segment of segments) {
+    if (segment.c === 'Z') continue;
+    if (segment.c === 'C' || segment.c === 'Q') {
+      points.push(rotatePoint({ x: segment.x1, y: segment.y1 }, pivot, rotation));
+    }
+    if (segment.c === 'C') {
+      points.push(rotatePoint({ x: segment.x2, y: segment.y2 }, pivot, rotation));
+    }
+    points.push(rotatePoint({ x: segment.x, y: segment.y }, pivot, rotation));
+  }
+  return points;
+};
+
+const at = (points: readonly Point[], index: number): Point =>
+  points[index] ?? { x: Number.NaN, y: Number.NaN };
+
+/**
+ * A coordinate as a comparable string. `+ 0` folds negative zero onto zero:
+ * a value that rounds to nothing can still carry the sign of the float it came
+ * from, and `-0.000000000` is not a position different from `0.000000000`.
+ */
+const fixed = (value: number): string => (Number(value.toFixed(9)) + 0).toFixed(9);
+
+/** Where a point sits, as one string, so a failure names both axes at once. */
+const place = (point: Point): string => `${fixed(point.x)},${fixed(point.y)}`;
+
+describe('movePathAnchor', () => {
+  it('carries the handles either side of the node by the same delta', () => {
+    // Without this the node moves while the points steering the curve there
+    // stay put, and the outline swings away from the handle you are holding.
+    const moved = movePathAnchor(BOW, 1, { x: 30, y: -20 }, 0);
+    expect(moved[1]).toEqual({ c: 'C', x1: 20, y1: -60, x2: 110, y2: -80, x: 130, y: -20 });
+    expect(moved[2]).toEqual({ c: 'C', x1: 150, y1: 40, x2: 180, y2: 60, x: 200, y: 0 });
+    // The far ends of the two curves are not this node's business.
+    expect(moved[0]).toEqual(BOW[0]);
+  });
+
+  it('moves one node of a ROTATED path and leaves every other point exactly on screen', () => {
+    // The property that matters: a path turns about the centre of its own box,
+    // and moving any point in it moves that centre — so everything else swings
+    // unless the whole path is slid back by exactly what the pivot drifted.
+    for (const rotation of [0, 37, 90, 180, 213]) {
+      const before = drawnPath(BOW, rotation);
+      const after = drawnPath(movePathAnchor(BOW, 1, { x: 30, y: -20 }, rotation), rotation);
+      // BOW draws six coordinates; the node is the fourth and its two handles
+      // the third and fifth, so indices 0, 1 and 5 must not have moved at all.
+      for (const index of [0, 1, 5]) {
+        expect({ rotation, index, at: place(at(after, index)) }).toEqual({
+          rotation,
+          index,
+          at: place(at(before, index)),
+        });
+      }
+    }
+  });
+
+  it('puts the dragged node exactly under the pointer, at every angle', () => {
+    for (const rotation of [0, 37, 90, 213]) {
+      const before = drawnPath(BOW, rotation);
+      const after = drawnPath(movePathAnchor(BOW, 1, { x: 30, y: -20 }, rotation), rotation);
+      expect({ rotation, at: place(at(after, 3)) }).toEqual({
+        rotation,
+        at: place({ x: at(before, 3).x + 30, y: at(before, 3).y - 20 }),
+      });
+    }
+  });
+
+  it('drags an arc’s endpoint without touching its radii, which are lengths', () => {
+    const semi: PathSegment[] = [
+      { c: 'M', x: 0, y: 0 },
+      { c: 'A', rx: 10, ry: 10, rotation: 0, large: false, sweep: true, x: 20, y: 0 },
+    ];
+    expect(movePathAnchor(semi, 1, { x: 5, y: 5 }, 0)[1]).toEqual({
+      c: 'A',
+      rx: 10,
+      ry: 10,
+      rotation: 0,
+      large: false,
+      sweep: true,
+      x: 25,
+      y: 5,
+    });
+  });
+
+  it('has nothing to move for a node that is not there, and says so by changing nothing', () => {
+    expect(movePathAnchor(BOW, 9, { x: 10, y: 10 }, 0)).toEqual(BOW);
+  });
+});
+
+describe('movePathControl', () => {
+  it('moves that control and nothing else', () => {
+    const moved = movePathControl(BOW, 1, 2, { x: 15, y: 25 }, 0);
+    expect(moved[1]).toEqual({ c: 'C', x1: 20, y1: -60, x2: 95, y2: -35, x: 100, y: 0 });
+    expect(moved[0]).toEqual(BOW[0]);
+    expect(moved[2]).toEqual(BOW[2]);
+  });
+
+  it('leaves every node and every other control exactly on screen when rotated', () => {
+    // A control point steers the curve between two nodes; dragging one must not
+    // shift either of them, and the drifting pivot is what would.
+    for (const rotation of [0, 37, 90, 213]) {
+      const before = drawnPath(BOW, rotation);
+      const after = drawnPath(movePathControl(BOW, 1, 2, { x: 15, y: 25 }, rotation), rotation);
+      for (const index of [0, 1, 3, 4, 5]) {
+        expect({ rotation, index, at: place(at(after, index)) }).toEqual({
+          rotation,
+          index,
+          at: place(at(before, index)),
+        });
+      }
+      // And the one that was dragged lands exactly where it was asked to.
+      expect({ rotation, at: place(at(after, 2)) }).toEqual({
+        rotation,
+        at: place({ x: at(before, 2).x + 15, y: at(before, 2).y + 25 }),
+      });
+    }
+  });
+
+  it('leaves a command that has no such control alone', () => {
+    const straight: PathSegment[] = [
+      { c: 'M', x: 0, y: 0 },
+      { c: 'L', x: 10, y: 0 },
+    ];
+    expect(movePathControl(straight, 1, 1, { x: 5, y: 5 }, 0)).toEqual(straight);
   });
 });
 

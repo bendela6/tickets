@@ -2,8 +2,8 @@ import { useRef } from 'react';
 import { cn } from '@tickets/ui';
 import { MIN_GRID_PX, SAFE_ZONE } from '../doc/constants';
 import { gridPitch } from '../doc/snap';
-import { bounds, vertexPoints } from '../doc/geometry';
-import { selectedObject } from '../doc/store';
+import { anchorControlPoints, bounds, vertexPoints } from '../doc/geometry';
+import { selectedNodeIndex, selectedObject } from '../doc/store';
 import { safeZoneWarnings } from '../doc/validate';
 import { useEditor } from '../editor-context';
 import { gridInk } from '../render/ink';
@@ -55,6 +55,10 @@ export function Artboard() {
   // Empty for the shapes that are dragged by a box, so this is also the choice
   // between the two overlays — the artboard never has to name a kind.
   const vertices = selected ? vertexPoints(selected) : [];
+  const node = selectedNodeIndex(state);
+  // Only the selected node's controls: a path with forty nodes and every handle
+  // drawn is a thicket you cannot aim at.
+  const controls = selected && node !== null ? anchorControlPoints(selected, node) : [];
 
   return (
     <div
@@ -163,6 +167,8 @@ export function Artboard() {
             box={selectionBox}
             rotation={selected.rotation}
             scale={scale}
+            selectedNode={node}
+            controls={controls}
             onHandleDown={onHandleDown}
           />
         ) : (
