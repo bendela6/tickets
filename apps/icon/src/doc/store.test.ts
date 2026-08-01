@@ -503,6 +503,28 @@ describe('adding a node', () => {
     expect(added.past).toHaveLength(state.past.length + 1);
   });
 
+  it('selects the object as well, so the new node has handles to drag', () => {
+    // The real sequence: a double-click lands on the outline, and a filled
+    // shape's hit test excludes its own boundary — so by the time the insert
+    // runs, the press that opened the gesture has already deselected.
+    const base = withPolygon();
+    const state = { ...base, selectedId: null, selectedNode: null };
+    const object = state.doc.objects[0];
+    if (!object || object.geometry.kind !== 'polygon') {
+      throw new Error('the polygon preset stopped being a polygon');
+    }
+    const [a, b] = object.geometry.points;
+    if (!a || !b) throw new Error('the polygon preset stopped having points');
+    const added = run(state, {
+      type: 'insertVertex',
+      id: object.id,
+      at: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+      reach: 4,
+    });
+    expect(added.selectedId).toBe(object.id);
+    expect(selectedNodeIndex(added)).toBe(1);
+  });
+
   it('does nothing at all when the point is nowhere near the outline', () => {
     const state = withPolygon();
     const id = state.doc.objects[0]!.id;
