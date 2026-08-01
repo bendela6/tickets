@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createMemoryHistory, createRouter } from '@tanstack/react-router';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { SchemaGraph } from '../components/schema/erd-types';
 import { rootRoute } from './root-route';
@@ -19,7 +19,9 @@ beforeAll(() => {
 // at all — this fixture stays the minimal shape that proves both a card AND
 // a derived fk edge reach the DOM.
 const graph: SchemaGraph = {
-  groups: [{ key: 'records', label: 'Ticket data', color: 'orange', tables: ['comments', 'tickets'] }],
+  groups: [
+    { key: 'records', label: 'Ticket data', color: 'orange', tables: ['comments', 'tickets'] },
+  ],
   tables: [
     {
       name: 'tickets',
@@ -121,7 +123,40 @@ describe('/schema inside the app shell', () => {
     // resolved 'schema' and ModePanel took that branch.
     renderSchemaRoute();
     expect(await screen.findByText('SCHEMA')).toBeInTheDocument();
-    expect(await screen.findByRole('button', { name: 'tickets' })).toBeInTheDocument();
+    // By its aria-label, not its text. The outline below it lists a table
+    // ALSO called `tickets`, so `name: 'tickets'` matches that row instead and
+    // the assertion passes without the dropdown existing at all.
+    expect(await screen.findByRole('button', { name: 'Database: tickets' })).toBeInTheDocument();
+  });
+
+  it('renders the outline in the mode panel, under the database picker', async () => {
+    // The groups → tables tree lives in the shell's left panel, which only
+    // works because schemaRoute wraps the WHOLE shell in the diagram provider.
+    // Rendered inside <main> instead, none of this would be here.
+    renderSchemaRoute();
+    const panel = (await screen.findByText('SCHEMA')).closest('div')!.parentElement!;
+    expect(
+      await within(panel).findByRole('textbox', { name: 'Filter tables' }),
+    ).toBeInTheDocument();
+    expect(
+      await within(panel).findByRole('button', { name: 'Ticket data, 2 tables' }),
+    ).toBeInTheDocument();
+    expect(within(panel).getByRole('button', { name: 'comments' })).toBeInTheDocument();
+    // Proves `panel` really is the panel and not some ancestor of the whole
+    // page: the canvas toolbar sits in <main>, outside it.
+    expect(within(panel).queryByRole('button', { name: 'Fit' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Fit' })).toBeInTheDocument();
+  });
+
+  it('filters the outline without touching what the canvas draws', async () => {
+    const { container } = renderSchemaRoute();
+    await waitFor(() => expect(container.querySelectorAll('[data-card]')).toHaveLength(2));
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Filter tables' }), {
+      target: { value: 'comments' },
+    });
+    expect(screen.queryByRole('button', { name: 'tickets' })).not.toBeInTheDocument();
+    // The filter is a table of contents, not a canvas filter — both cards stay.
+    expect(container.querySelectorAll('[data-card]')).toHaveLength(2);
   });
 
   it('renders the diagram beside the shell', async () => {
@@ -141,9 +176,12 @@ describe('/schema inside the app shell', () => {
     renderSchemaRoute({ path: '/schema?database=postgres' });
     await screen.findByLabelText('Schema');
     await waitFor(() =>
-      expect(vi.mocked(fetch)).toHaveBeenCalledWith('/api/schema?database=postgres', expect.anything()),
+      expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+        '/api/schema?database=postgres',
+        expect.anything(),
+      ),
     );
-    expect(await screen.findByRole('button', { name: 'postgres' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Database: postgres' })).toBeInTheDocument();
   });
 
   it('says so when the chosen database has no tables, instead of a blank pane', async () => {
@@ -178,9 +216,9 @@ describe('/schema inside the app shell', () => {
 });
 
 describe('schemaRoute search params', () => {
-  const validate = schemaRoute.options.validateSearch as (
-    s: Record<string, unknown>,
-  ) => { database?: string };
+  const validate = schemaRoute.options.validateSearch as (s: Record<string, unknown>) => {
+    database?: string;
+  };
 
   it('keeps a database name', () => {
     expect(validate({ database: 'tickets_dev' })).toEqual({ database: 'tickets_dev' });
