@@ -19,7 +19,7 @@ function RoleTag({ role }: { role: 'pk' | 'fk' | null }) {
       size="xs"
       tone={role === 'pk' ? 'yellow' : 'green'}
       label={role.toUpperCase()}
-      className="w-7 shrink-0 justify-center font-mono"
+      className="w-7 shrink-0 justify-center font-mono font-600"
     />
   );
 }

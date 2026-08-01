@@ -28,7 +28,7 @@ export function Header({
           size="xs"
           tone={BADGE_TONE[tone]}
           label={badge}
-          className="font-mono uppercase"
+          className="font-mono uppercase font-600"
         />
         {titleColor && <Dot color={titleColor} />}
       </div>

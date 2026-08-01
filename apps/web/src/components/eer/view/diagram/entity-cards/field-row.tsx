@@ -89,7 +89,7 @@ export function FieldRow({
           size="xs"
           tone={badge === 'pk' ? 'yellow' : 'green'}
           label={badge.toUpperCase()}
-          className="shrink-0 justify-center font-mono"
+          className="shrink-0 justify-center font-mono font-600"
         />
       )}
       <span
