@@ -144,4 +144,23 @@ describe('Pill layout', () => {
     rerender(<Pill label="Assignee" />);
     expect(container.querySelector('svg')).toBeNull();
   });
+
+  it('tint paints the hue at 15% behind the text rung', () => {
+    render(<Pill label="Entity" tone="blue" variant="tint" />);
+    const el = screen.getByText('Entity');
+    expect(el.className).toContain('bg-blue-9/15');
+    expect(el.className).toContain('text-blue-11');
+  });
+
+  it('xs is the 9px rung and sits below sm on the height ladder', () => {
+    // The eer badges are 9px/0.1em; `xs` exists so they keep that on a shared
+    // scale. h-4 (16px) keeps the ladder monotonic — 16 / 18 / 22 / 28 — where
+    // preserving Badge's padding-sized 19px would have made xs TALLER than sm.
+    render(<Pill label="PK" tone="yellow" size="xs" />);
+    const el = screen.getByText('PK');
+    expect(el.className).toContain('text-9/11');
+    expect(el.className).toContain('tracking-widest');
+    expect(el.className).toContain('h-4');
+    expect(el.className).not.toContain('h-4.5');
+  });
 });

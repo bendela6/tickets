@@ -14,9 +14,9 @@ import { Icon, type IconName, type IconSize } from '../icon';
  *  the table of finished class strings; with that table gone the four names
  *  belong to the component that offers them. Three are shared with Button; the
  *  fourth is `text` where a button's is `ghost`. */
-export type PillVariant = 'subtle' | 'solid' | 'outline' | 'text';
+export type PillVariant = 'subtle' | 'solid' | 'outline' | 'text' | 'tint';
 
-export type PillSize = 'sm' | 'md' | 'lg';
+export type PillSize = 'xs' | 'sm' | 'md' | 'lg';
 
 /** Corner treatment. `square` lines up with the surrounding controls; `round`
  *  reads as a tag or a count. Neither is a size — they used to be spelled
@@ -41,6 +41,7 @@ const pillClass = variants({
         solid: over(NEUTRAL_SCALE, (tone) => `bg-${tone}-9 text-${tone}-contrast`),
         outline: over(NEUTRAL_SCALE, (tone) => `border-2 border-${tone}-7 text-${tone}-11`),
         text: over(NEUTRAL_SCALE, (tone) => `text-${tone}-11`),
+        tint: over(NEUTRAL_SCALE, (tone) => `bg-${tone}-9/15 text-${tone}-11`),
       },
     },
     shape: {
@@ -60,6 +61,7 @@ const pillClass = variants({
     size: {
       default: 'md',
       options: {
+        xs: 'h-4 gap-1 px-2 text-9/11 tracking-widest leading-none',
         sm: 'h-4.5 gap-1 px-1.75 text-11/13 tracking-wider leading-none',
         md: 'h-5.5 gap-1.5 px-2.25 text-12/17 leading-none',
         lg: 'h-7 gap-2 px-3 text-13/19 leading-none',
@@ -69,7 +71,7 @@ const pillClass = variants({
 });
 
 // The leading glyph scales with the pill rather than being pinned at 10px.
-const ICON_SIZE: Record<PillSize, IconSize> = { sm: '2xs', md: 'xs', lg: 'sm' };
+const ICON_SIZE: Record<PillSize, IconSize> = { xs: '2xs', sm: '2xs', md: 'xs', lg: 'sm' };
 
 // `children` is omitted because the content is `label`; `color` because a
 // Pill's colour comes from `tone` and the DOM attribute of that name would
