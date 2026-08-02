@@ -165,6 +165,20 @@ describe('Sidebar', () => {
     expect(aside()!.getAttribute('style')).toContain(`--panel-w: ${SIDEBAR_MAX}px`);
   });
 
+  it('pins itself to the viewport so the component list scrolls, not the page', () => {
+    // The gallery scrolls the document: GalleryShell's root is `flex
+    // min-h-screen`, so a statically positioned aside stretches to the full
+    // row height, its own overflow never engages, and the nav scrolls out of
+    // reach on any long component page. jsdom does no layout, so the
+    // positioning itself is the assertion.
+    mockViewport(false);
+    renderSidebar();
+    expect(aside()!.className).toContain('sticky');
+    expect(aside()!.className).toContain('top-0');
+    expect(aside()!.className).toContain('h-screen');
+    expect(aside()!.className).not.toContain('relative');
+  });
+
   it('offers a resize handle', () => {
     mockViewport(false);
     renderSidebar();
