@@ -298,3 +298,45 @@ never data anybody typed.
 
 Colour stays paired. `Pair` is not animation and never was — it is how one icon
 serves a light page and a dark one.
+
+### 13. Boolean ops arrive, and the zero-dependency property ends
+
+Union, subtract, intersect and exclude are built, and decision 8's trade is
+taken: `pathkit-wasm` — Skia's PathOps compiled to WebAssembly — is this app's
+first and only runtime dependency. The ZIP writer, `.ico`, `.icns`, the SVG
+parser and every export format remain hand-written, and the property they upheld
+is now stated more narrowly: **nothing we write out needs a library**. What we
+compute *with* one is where two béziers cross, and only that.
+
+**Why Skia's PathOps beat the alternatives.** paper.js is a whole scene graph —
+its own item tree, its own view, its own renderer — and taking it for one
+function would have meant a second document model living beside this one, with
+every result arriving as a paper.js `Path` that something then has to translate
+back. It is also an order of magnitude larger than the thing it is being asked
+to do. `path-bool` is the right size and the wrong maturity: pure TypeScript, a
+few hundred lines, and the failures a boolean library has are precisely the ones
+a young one has not found yet — a tangency that leaves a spurious sliver, a
+self-intersection that loops. PathOps is the code Chrome ships to composite
+every clip path on the web; it has been wrong in public and been fixed. The cost
+is a 250 kB WebAssembly module, and it is paid **only by someone who runs an
+operation** — it loads on the first press and never at startup.
+
+Three decisions fell out of building it and belong beside it. The engine is one
+function, `booleanOf(op, paths) => Promise<string>`, taking and returning `d`
+strings: no library type reaches the reducer, the rail or their tests, and the
+whole feature is proved against a fake except for the single file that runs the
+real module. Operands are **flattened into artboard units first** and the result
+is a top-level path with no transform — an operand may sit inside a group and
+carry a turn of its own, and a boolean has no way to hand either back. And
+**operand order is selection order**, which is what the store's selection has
+been a `Set` for all along: subtract removes the later operands from the first,
+and "the one you picked first" is the only rule a user can predict.
+
+One thing had to be repaired on the way back in. Skia answers with contours that
+are correct under the **even-odd** rule and makes no promise about which way each
+turns, while SVG fills with non-zero and this model has nowhere to say otherwise
+— `Geometry` has no fill rule, and the arc preset already states a donut by
+winding its inner ring backwards. So the answer is re-wound rather than the
+model widened: contours from a boolean never cross, so alternating direction
+with nesting depth makes the two rules agree everywhere. Left alone, a
+subtraction would have drawn as a solid shape with no hole in it.

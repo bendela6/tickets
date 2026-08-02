@@ -757,8 +757,14 @@ function pointInEllipse(point: Point, box: Box): boolean {
   return dx * dx + dy * dy <= 1;
 }
 
-/** Even-odd containment for a closed polygon. */
-function pointInPolygon(point: Point, vertices: Point[]): boolean {
+/**
+ * Even-odd containment for a closed polygon.
+ *
+ * Exported because "is this contour inside that one" is the question a path
+ * with holes in it is wound by, and the answer has to be the same one the hit
+ * test gives or a hole could be drawn where nothing may be clicked.
+ */
+export function pointInPolygon(point: Point, vertices: readonly Point[]): boolean {
   let inside = false;
   for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
     const a = vertices[i];

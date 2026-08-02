@@ -1,3 +1,4 @@
+import { combinePlan, nonZeroWound, type BooleanOp } from '../boolean/ops';
 import { ARTBOARD_MAX, ARTBOARD_MIN, SNAP_MIN } from './constants';
 import { NO_TRANSFORM, groupId, newObject, objectFor, objectId } from './defaults';
 import {
@@ -47,6 +48,7 @@ import type {
   IconNode,
   IconObject,
   Pair,
+  PathSegment,
   Point,
   ShapeKind,
 } from './types';
@@ -214,6 +216,25 @@ export type Action =
   | { type: 'groupSelection' }
   /** Take every selected group apart, putting its children back in its place. */
   | { type: 'ungroupSelection' }
+  /**
+   * The selection becomes one shape: the operands go, and `segments` — which is
+   * what the engine answered with, already in artboard units — arrives in their
+   * place as a single path.
+   *
+   * The commands come in from outside because working them out needs a
+   * WebAssembly module and a promise, neither of which belongs in a reducer.
+   * Everything else about the result is worked out *here*, from the ids and the
+   * document: which operand was frontmost, where the result goes and what it is
+   * painted with are statements about the document, and a caller that computed
+   * them would be a second place they could be decided differently.
+   */
+  | {
+      type: 'combineShapes';
+      op: BooleanOp;
+      /** The operands, in the order they were selected and sent to the engine. */
+      ids: readonly string[];
+      segments: PathSegment[];
+    }
   /**
    * Enter a tool. Leaving the pen is not a bare mode switch — there may be a
    * path half drawn — so it is routed through `penEnd`, which is the one place
@@ -673,6 +694,67 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         selectedIds: freed,
         selectedNode: null,
         entered: prunedEntry(objects, state.entered),
+      };
+    }
+
+    case 'combineShapes': {
+      const plan = combinePlan(state.doc.objects, action.ids);
+      // Worked out again rather than trusted: the engine is asynchronous, and
+      // between the button and the answer an operand can have been deleted,
+      // moved into a group or undone away. Nothing happens then — and no
+      // history entry is written, because an entry for an edit that did not
+      // land is an undo that appears to do nothing.
+      if (!plan || action.segments.length === 0) return state;
+      const sequence = state.sequence + 1;
+      const front = plan.front.shape;
+      const result: IconObject = {
+        id: objectId('path', sequence),
+        // Named for what made it. Every other object is named for its kind, but
+        // four operations all produce a `path` and the name is the only place
+        // the rail can say which of them this was.
+        name: `${action.op} ${sequence}`,
+        // Wound the way this document states a hole, which is the one thing
+        // about the answer that is the document's business rather than the
+        // engine's. Not put on the document's grid, though, and that is equally
+        // deliberate: the grid is where a position someone typed or dragged
+        // lands, while these commands are where two outlines actually cross,
+        // and laying them on it would move the result off the shapes it was cut
+        // from — visibly, at every corner.
+        geometry: { kind: 'path', segments: nonZeroWound(action.segments) },
+        // A boolean is a change of shape, not of colour: the result looks like
+        // the frontmost operand because that is the one that was on top, and
+        // the one whose colour you were already looking at.
+        fill: { ...front.fill },
+        stroke: { ...front.stroke },
+        // Stated in artboard units like everything else about the result, so an
+        // operand lifted out of a scaled group keeps the width it was drawn at.
+        strokeWidth: front.strokeWidth * plan.front.frame.scale,
+        opacity: front.opacity,
+        // The operands were flattened into artboard units before the operation,
+        // so there is no turn and no frame left over to carry.
+        rotation: 0,
+        hidden: false,
+        locked: false,
+      };
+      return {
+        ...state,
+        // One entry for the whole thing: pressing Union once is one thing the
+        // user did, however many shapes went into it.
+        ...remember(state, `${action.op} ${subjectOf(state, action.ids)}`),
+        doc: {
+          ...state.doc,
+          objects: [
+            ...plan.remaining.slice(0, plan.index),
+            result,
+            ...plan.remaining.slice(plan.index),
+          ],
+        },
+        selectedIds: new Set([result.id]),
+        selectedNode: null,
+        // The result is a top-level object, so there is no group left to be
+        // standing inside — the same rule `selectObject` follows.
+        entered: [],
+        sequence,
       };
     }
 

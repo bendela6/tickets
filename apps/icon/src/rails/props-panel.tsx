@@ -1,4 +1,7 @@
-import { Slider } from '@tickets/ui';
+import { useId } from 'react';
+import { Button, Slider } from '@tickets/ui';
+import { BOOLEAN_OPS } from '../boolean/ops';
+import { useCombine } from '../boolean/use-combine';
 import { ShapeGlyph } from '../canvas/shape-tools';
 import {
   ARTBOARD_MAX,
@@ -53,7 +56,55 @@ export function PropsPanel() {
       ) : (
         <DocumentProperties />
       )}
+      {nodes.length > 0 ? <CombineGroup /> : null}
     </div>
+  );
+}
+
+/**
+ * The four boolean operations.
+ *
+ * Under whichever of the four states above is showing rather than inside the
+ * multi-selection one, and offered whenever anything at all is selected. A
+ * button that is present and says what it needs teaches that the operations
+ * exist and what they take; one that appears only once the selection is already
+ * right teaches nothing, because by then you knew. Every refusal is `ops.ts`'s
+ * to state, so the rail and the reducer cannot disagree about what may be
+ * combined.
+ *
+ * The reason is bound to the buttons with `aria-describedby` rather than left
+ * as text near them: a disabled control that gives no reason is the same dead
+ * end whether or not there is a sentence somewhere on screen.
+ */
+function CombineGroup() {
+  const { refusal, failure, running, run } = useCombine();
+  const reasonId = useId();
+  const reason = refusal ?? failure;
+
+  return (
+    <RailGroup label="COMBINE">
+      <div className="grid grid-cols-2 gap-1.25">
+        {BOOLEAN_OPS.map(({ op, label }) => (
+          <Button
+            key={op}
+            type="button"
+            variant="subtle"
+            tone="gray"
+            size="sm"
+            disabled={refusal !== null || running}
+            aria-describedby={refusal === null ? undefined : reasonId}
+            onClick={() => run(op)}
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+      {reason === null ? null : (
+        <span id={reasonId} className="font-mono text-9/relaxed text-pretty text-gray-9">
+          {reason}
+        </span>
+      )}
+    </RailGroup>
   );
 }
 

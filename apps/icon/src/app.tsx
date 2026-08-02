@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type DragEvent, type RefObject } from 'react';
 import { cn } from '@tickets/ui';
+import type { BooleanEngine } from './boolean/ops';
 import { Artboard } from './canvas/artboard';
 import { CanvasFooter } from './canvas/canvas-footer';
 import { canvasRoom } from './canvas/fit';
@@ -27,9 +28,12 @@ const ECHO_MS = 2000;
  * *recessed* rather than raised. The artboard inside it is the single bright
  * surface on screen.
  */
-export function App() {
+export function App({ engine }: { engine?: BooleanEngine }) {
+  // The boolean engine is the one thing this screen takes from outside itself,
+  // and only so a test can supply one that is not WebAssembly. Left out, the
+  // provider reaches for the real one.
   return (
-    <EditorProvider>
+    <EditorProvider engine={engine}>
       <Editor />
     </EditorProvider>
   );

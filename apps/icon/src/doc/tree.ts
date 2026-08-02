@@ -135,6 +135,21 @@ export function placementOf(group: IconGroup): Placement {
 }
 
 /**
+ * A turn about a point, as a placement.
+ *
+ * A shape's own `rotation` is stated about the centre of its own box, exactly
+ * as a group's is about its content centre — and the conversion is the same one
+ * line as above, for the same reason. It is stated separately because a shape
+ * has no `GroupTransform` to be read out of, and anything that has to hand a
+ * shape's coordinates to something outside the document needs that turn as a
+ * frame rather than as a field beside them.
+ */
+export function spinAbout(centre: Point, degrees: number): Placement {
+  const held = placeVector({ scale: 1, rotation: degrees, x: 0, y: 0 }, centre);
+  return { scale: 1, rotation: degrees, x: centre.x - held.x, y: centre.y - held.y };
+}
+
+/**
  * The transform that puts the group's content centre at `centre` (stated in the
  * group's parent frame) — the inverse of the one line above, which every
  * gesture that moves or resizes a group ends in.
@@ -515,6 +530,22 @@ const mapSegment =
         return { ...segment, ...at(segment) };
     }
   };
+
+/**
+ * A run of path commands through a placement.
+ *
+ * The very map `nodeThrough` applies to a shape that *is* its coordinates,
+ * offered on its own because a boolean operation needs commands in artboard
+ * units before there is any object to hang them on. Sharing the one mapper is
+ * the point: an arc's own axis turns with the frame and its radii scale with
+ * it, and a second spelling of that would be a second chance to get it wrong.
+ */
+export function segmentsThrough(
+  segments: readonly PathSegment[],
+  frame: Placement,
+): PathSegment[] {
+  return segments.map(mapSegment((point) => place(frame, point), frame.rotation, frame.scale));
+}
 
 /**
  * A shape with its own turn written into its coordinates instead of carried
