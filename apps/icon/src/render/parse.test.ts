@@ -22,7 +22,6 @@ function parse(svg: string): Document {
 const docWith = (objects: IconDoc['objects']): IconDoc => ({
   ...emptyDocument('test'),
   objects,
-  states: [{ id: 's0', name: 'idle', sustain: null }],
 });
 
 describe('the rendered SVG is a document a browser will actually decode', () => {

@@ -1,6 +1,6 @@
 import { emptyDocument } from './defaults';
 import { polygonPoints } from './geometry';
-import type { Artboard, DocumentSummary, Geometry, IconDoc } from './types';
+import type { Artboard, DocumentSummary, Geometry, IconDoc, IconObject } from './types';
 
 /** What a polygon was before `<polygon>` was taken literally: a regular n-gon. */
 interface RegularPolygon {
@@ -24,16 +24,70 @@ function asRegularPolygon(geometry: Geometry): RegularPolygon | null {
   return { cx: legacy.cx, cy: legacy.cy, r: legacy.r, sides: legacy.sides };
 }
 
+/** What a document carried while it could animate. */
+interface Animated {
+  states?: unknown;
+  timing?: unknown;
+}
+
+/** What an object carried while it could animate. */
+interface Moving {
+  motion?: unknown;
+}
+
+/**
+ * The object as the one surviving picture holds it.
+ *
+ * A state never varied geometry — it was a phase number that the pose engine
+ * derived a rotation, an offset and an opacity from, and the first state's
+ * phase was 0, which derived none of them. So the first state resolved to
+ * exactly what was stored, and keeping the stored object *is* keeping the first
+ * pose.
+ *
+ * With one deliberate exception: the pose engine also held every moving
+ * object's opacity above a floor, so that a loop could never fade one entirely
+ * away. That floor is a property of the loop, not of the object, and the
+ * properties panel always showed the stored value rather than the floored one.
+ * The stored value is what is kept, so an object set to fully transparent stays
+ * fully transparent rather than being nudged back into view by machinery that
+ * no longer exists.
+ *
+ * Every field is named rather than spread, so a field added to `IconObject`
+ * later fails to compile here instead of silently going missing.
+ */
+function stillObject(object: IconObject): IconObject {
+  return {
+    id: object.id,
+    name: object.name,
+    geometry: object.geometry,
+    fill: object.fill,
+    stroke: object.stroke,
+    strokeWidth: object.strokeWidth,
+    opacity: object.opacity,
+    rotation: object.rotation,
+    hidden: object.hidden,
+    locked: object.locked,
+  };
+}
+
 /**
  * Bring a document that was saved against an older model up to the current one.
+ *
+ * Two changes have happened so far.
  *
  * A polygon used to be a centre, a radius and a side count — a regular n-gon,
  * which is not an SVG element and so not something a document may hold. Saved
  * hexagons are turned into the point lists `<polygon>` has always meant, which
  * draws the same hexagon it always did.
  *
+ * A document used to hold several named states, a timing block, and a `motion`
+ * field on every object. Animation is gone: a document is one static picture
+ * with one pose, so the first state's pose is kept and the rest is dropped
+ * without a word. That silence is the product decision — the states after the
+ * first were never data anybody typed, they were derived from a phase number.
+ *
  * On read rather than on write, because this is the only place a document from
- * before the change can enter — nothing will ever write one again. The
+ * before either change can enter — nothing will ever write one again. The
  * document is returned unchanged, and identical, when there was nothing to do:
  * `dirty` is measured by comparing the open document against what was loaded,
  * and a migration that rebuilt every document would report them all edited.
@@ -42,17 +96,33 @@ export function migrate(doc: IconDoc): IconDoc {
   let changed = false;
   const objects = doc.objects.map((object) => {
     const regular = asRegularPolygon(object.geometry);
-    if (!regular) return object;
+    const moved = (object as IconObject & Moving).motion !== undefined;
+    if (!regular && !moved) return object;
     changed = true;
+    const still = moved ? stillObject(object) : object;
+    if (!regular) return still;
     return {
-      ...object,
+      ...still,
       geometry: {
         kind: 'polygon' as const,
         points: polygonPoints(regular.cx, regular.cy, regular.r, regular.sides),
       },
     };
   });
-  return changed ? { ...doc, objects } : doc;
+
+  const animated = doc as IconDoc & Animated;
+  if (animated.states === undefined && animated.timing === undefined) {
+    return changed ? { ...doc, objects } : doc;
+  }
+  // Rebuilt field by field rather than spread, so `states` and `timing` are
+  // left behind rather than carried along inside the spread.
+  return {
+    name: doc.name,
+    artboard: doc.artboard,
+    snap: doc.snap,
+    background: doc.background,
+    objects,
+  };
 }
 
 /**

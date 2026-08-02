@@ -53,9 +53,10 @@ is a general drawing tool whose documents are its own.
 - Entirely client-side. Documents live in the browser (IndexedDB), and export
   produces a `.zip` download — there is no write path and no server, so nothing
   here can touch the repo.
-- Nine export targets are real: favicon `.ico`, PWA + manifest, iOS
-  `.appiconset`, Android mipmaps, macOS `.icns`, Windows `.ico`, animated SVG,
-  Lottie, and a canvas animated favicon. No runtime dependency backs any of them.
+- Six export targets are real: favicon `.ico`, PWA + manifest, iOS
+  `.appiconset`, Android mipmaps, macOS `.icns` and Windows `.ico`. No runtime
+  dependency backs any of them. A document is one static picture — there is no
+  animation, and nothing exports motion.
 - Checks: `pnpm --filter @tickets/icon test` · `typecheck` · `build`.
 
 ## Gotchas — all previously hit

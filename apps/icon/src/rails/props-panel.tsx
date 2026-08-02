@@ -21,7 +21,6 @@ import { selectedObject } from '../doc/store';
 import { useEditor } from '../editor-context';
 import type { IconObject } from '../doc/types';
 import { ColourPairField } from './colour-pair-field';
-import { MotionGroup } from './motion-group';
 import { NumberField } from './number-field';
 import { RailGroup } from './rail-group';
 
@@ -133,8 +132,6 @@ function ObjectProperties({ object }: { object: IconObject }) {
       </RailGroup>
 
       <ShapeSpecific object={object} />
-
-      <MotionGroup object={object} />
     </>
   );
 }
@@ -180,7 +177,7 @@ function ReadOnlyRow({ label, value }: { label: string; value: string }) {
  * occupies, which scales it: a field per vertex would be a table, not a rail.
  * A path is its commands, and the same answer holds for the same reason.
  * Every shape still gets rotation, because rotation is a transform on top of
- * geometry rather than part of it, and `spins` needs it.
+ * geometry rather than part of it.
  */
 function PositionGroup({ object }: { object: IconObject }) {
   const { state, dispatch } = useEditor();

@@ -221,36 +221,6 @@ describe('colour pairs', () => {
   });
 });
 
-describe('states', () => {
-  it('will not delete the last one — one state is a legal document', () => {
-    const state = start();
-    expect(editorReducer(state, { type: 'deleteState', id: state.doc.states[0]!.id })).toBe(state);
-  });
-
-  it('deletes down to one', () => {
-    let state = run(start(), { type: 'addState' }, { type: 'addState' });
-    expect(state.doc.states).toHaveLength(3);
-    state = editorReducer(state, { type: 'deleteState', id: state.doc.states[2]!.id });
-    state = editorReducer(state, { type: 'deleteState', id: state.doc.states[1]!.id });
-    expect(state.doc.states).toHaveLength(1);
-  });
-
-  it('gives each added state its own id', () => {
-    const state = run(start(), { type: 'addState' }, { type: 'addState' });
-    expect(new Set(state.doc.states.map((s) => s.id)).size).toBe(3);
-  });
-
-  it('cycles sustain without touching the other states', () => {
-    const state = run(start(), { type: 'addState' });
-    const after = editorReducer(state, {
-      type: 'setSustain',
-      id: state.doc.states[1]!.id,
-      sustain: 'pulsing',
-    });
-    expect(after.doc.states.map((s) => s.sustain)).toEqual([null, 'pulsing']);
-  });
-});
-
 describe('reordering', () => {
   it('moves an object through the stack', () => {
     let state = run(

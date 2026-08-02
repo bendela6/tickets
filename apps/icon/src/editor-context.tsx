@@ -30,7 +30,7 @@ export function EditorProvider({
   children: ReactNode;
 }) {
   const [state, dispatch] = useReducer(editorReducer, doc, initialState);
-  const [view, setView] = useState<ViewState>(() => initialView(doc));
+  const [view, setView] = useState<ViewState>(initialView);
   const value = useMemo(() => ({ state, dispatch, view, setView }), [state, view]);
   return <EditorContext.Provider value={value}>{children}</EditorContext.Provider>;
 }

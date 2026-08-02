@@ -718,35 +718,6 @@ describe('colour is a pair', () => {
   });
 });
 
-describe('motion', () => {
-  it('is a property of the object, with three controls and no more', async () => {
-    const { user } = setup();
-    await user.keyboard('r');
-    const rail = propsRail();
-    expect(within(rail).getByRole('switch')).toBeChecked();
-    expect(within(rail).getByRole('group', { name: 'Motion role' })).toBeInTheDocument();
-    expect(within(rail).getByRole('group', { name: 'Pace' })).toBeInTheDocument();
-    expect(within(rail).getByText('the only object in the animation')).toBeInTheDocument();
-  });
-
-  it('says what an object that takes no part does, rather than vanishing', async () => {
-    const { user } = setup();
-    await user.keyboard('r');
-    await user.click(within(propsRail()).getByRole('switch'));
-    expect(within(propsRail()).getByText(/Does not take part/)).toBeInTheDocument();
-    expect(within(propsRail()).queryByRole('group', { name: 'Pace' })).not.toBeInTheDocument();
-  });
-
-  it('names who leads and who follows once there is an order to name', async () => {
-    const { user } = setup();
-    await user.keyboard('r');
-    await user.keyboard('e');
-    // The ellipse is selected; both are at 1×, so document order decides.
-    await user.click(within(propsRail()).getByRole('button', { name: '2×' }));
-    expect(within(propsRail()).getByText(/leads/)).toBeInTheDocument();
-  });
-});
-
 describe('platform validation', () => {
   it('stays quiet until something actually reaches past the safe zone', async () => {
     const { user } = setup();

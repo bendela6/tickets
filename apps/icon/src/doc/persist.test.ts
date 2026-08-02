@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { emptyDocument, newObject } from './defaults';
 import { polygonPoints } from './geometry';
 import { memoryStore } from './persist';
-import type { Geometry, IconDoc } from './types';
+import type { Geometry, IconDoc, IconObject } from './types';
 
 /** The 512-square board most of these fixtures assume. */
 const BOARD = { width: 512, height: 512 };
@@ -95,6 +95,9 @@ describe('DocumentStore contract', () => {
   });
 });
 
+const storeHolding = (doc: IconDoc) =>
+  memoryStore([{ id: 'old', name: doc.name, artboard: doc.artboard, updatedAt: 0, doc }]);
+
 describe('documents saved before a polygon was a list of points', () => {
   /** A polygon as it used to be stored: a centre, a radius and a side count. */
   const REGULAR = { kind: 'polygon', cx: 256, cy: 256, r: 120, sides: 6 } as unknown as Geometry;
@@ -103,11 +106,6 @@ describe('documents saved before a polygon was a list of points', () => {
     ...emptyDocument('legacy.icon'),
     objects: [{ ...newObject('polygon', 1, BOARD), geometry: REGULAR }],
   });
-
-  const storeHolding = (doc: IconDoc) =>
-    memoryStore([
-      { id: 'old', name: doc.name, artboard: doc.artboard, updatedAt: 0, doc },
-    ]);
 
   it('open as the same hexagon, now as the points a polygon actually is', async () => {
     const loaded = await storeHolding(savedBefore()).load('old');
@@ -128,6 +126,64 @@ describe('documents saved before a polygon was a list of points', () => {
 
   it('leave a document that needs nothing exactly as it was, so it does not read as edited', async () => {
     const current = { ...emptyDocument('current.icon'), objects: [newObject('polygon', 1, BOARD)] };
+    const store = storeHolding(current);
+    expect(await store.load('old')).toBe(current);
+  });
+});
+
+describe('documents saved while the editor could animate', () => {
+  /** What the object was, and is again, once the motion field comes off it. */
+  const drawn = (): IconObject => ({
+    ...newObject('rect', 1, BOARD),
+    rotation: 30,
+    // Below the floor the pose engine held a moving object's opacity above.
+    opacity: 0,
+  });
+
+  /**
+   * A document as it used to be stored: three named states, one of them
+   * sustained, a timing block, and a `motion` field on the object.
+   */
+  const savedAnimated = (): IconDoc =>
+    ({
+      ...emptyDocument('spinner.icon'),
+      objects: [{ ...drawn(), motion: { takesPart: true, role: 'spins', pace: 2 } }],
+      states: [
+        { id: 's0', name: 'idle', sustain: null },
+        { id: 's1', name: 'loading', sustain: 'turning' },
+        { id: 's2', name: 'done', sustain: null },
+      ],
+      timing: { speed: 1.5, ramp: 'soft', rest: 0.18 },
+    }) as unknown as IconDoc;
+
+  it('open as one static picture, with the states, the timing and the motion gone', async () => {
+    const loaded = await storeHolding(savedAnimated()).load('old');
+    // Compared whole rather than field by field: an equality against the
+    // document the new model would have written is what proves `states`,
+    // `timing` and `motion` were left behind rather than carried along.
+    expect(loaded).toEqual({ ...emptyDocument('spinner.icon'), objects: [drawn()] });
+  });
+
+  it('keep the first state’s pose, which is the geometry exactly as it was drawn', async () => {
+    const loaded = await storeHolding(savedAnimated()).load('old');
+    const object = loaded?.objects[0];
+    expect(object?.geometry).toEqual(drawn().geometry);
+    expect(object?.rotation).toBe(30);
+    // The pose engine's opacity floor went with the loop it protected.
+    expect(object?.opacity).toBe(0);
+  });
+
+  it('survive a round trip: saving what was opened and reopening it changes nothing', async () => {
+    const store = storeHolding(savedAnimated());
+    const opened = await store.load('old');
+    expect(opened).not.toBeNull();
+    if (!opened) return;
+    await store.save('old', opened);
+    expect(await store.load('old')).toEqual(opened);
+  });
+
+  it('leave a document that never animated exactly as it was, so it does not read as edited', async () => {
+    const current = { ...emptyDocument('current.icon'), objects: [newObject('rect', 1, BOARD)] };
     const store = storeHolding(current);
     expect(await store.load('old')).toBe(current);
   });

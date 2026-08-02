@@ -99,19 +99,6 @@ export type Geometry =
   | { kind: 'polygon'; points: Point[] }
   | { kind: 'path'; segments: PathSegment[] };
 
-export type Role = 'spins' | 'moves' | 'fades';
-
-/** Relative running order. Higher leads. */
-export type Pace = 0.5 | 1 | 2 | 3;
-
-export interface Motion {
-  /** Off means the object holds its first-state pose in every state. */
-  takesPart: boolean;
-  role: Role;
-  /** Pace IS the running order — there is no separate ordering control. */
-  pace: Pace;
-}
-
 export interface IconObject {
   id: string;
   name: string;
@@ -125,30 +112,6 @@ export interface IconObject {
   rotation: number;
   hidden: boolean;
   locked: boolean;
-  motion: Motion;
-}
-
-/**
- * What a sustained state does while you stay in it. `null` is a settled
- * state — a static pose with an end.
- */
-export type Sustain = null | 'turning' | 'pulsing' | 'travelling';
-
-export interface IconState {
-  id: string;
-  name: string;
-  sustain: Sustain;
-}
-
-export type Speed = 0.5 | 1 | 1.5 | 2;
-export type Ramp = 'linear' | 'soft' | 'sharp';
-/** How far apart the objects' pauses are pushed, so they never all stop at once. */
-export type Rest = 0 | 0.08 | 0.18;
-
-export interface Timing {
-  speed: Speed;
-  ramp: Ramp;
-  rest: Rest;
 }
 
 export interface Artboard {
@@ -173,13 +136,7 @@ export interface IconDoc {
   background: Pair;
   /** Front-to-back. `objects[0]` is frontmost. */
   objects: IconObject[];
-  /** Never empty: one state is a legal document. */
-  states: IconState[];
-  timing: Timing;
 }
-
-/** An object with its pose for some moment resolved onto it. */
-export type PosedObject = IconObject;
 
 export interface DocumentSummary {
   id: string;

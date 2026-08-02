@@ -11,8 +11,6 @@ import { useDocuments } from './topbar/use-documents';
 import { ObjectList } from './rails/object-list';
 import { PropsPanel } from './rails/props-panel';
 import { TopBar } from './topbar/top-bar';
-import { HeldPoses } from './transport/held-poses';
-import { Transport } from './transport/transport';
 import { useShortcuts } from './use-shortcuts';
 import { chromeIsDim, scaleFor, zoomToFit } from './view';
 
@@ -55,7 +53,7 @@ function Editor() {
     onExport: () => setExportOpen(true),
     onResetZoom: () => setView((v) => ({ ...v, zoom: 100 })),
     onFitZoom: () => {
-      const room = canvasRoom(scrollerRef.current, stackRef.current, state.doc.artboard, view.zoom);
+      const room = canvasRoom(scrollerRef.current, stackRef.current);
       if (!room) return;
       setView((v) => ({ ...v, zoom: zoomToFit(state.doc.artboard, room) }));
     },
@@ -156,8 +154,6 @@ function CanvasField({
           <div ref={boardRef} className="flex-none">
             <Artboard />
           </div>
-          <Transport />
-          <HeldPoses />
         </div>
       </div>
       <CanvasFooter status={status} />

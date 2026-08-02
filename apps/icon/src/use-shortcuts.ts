@@ -4,7 +4,7 @@ import { selectedNodeIndex, type Action, type EditorState } from './doc/store';
 
 /**
  * Whether the key belongs to whatever the user is typing into. A shape
- * shortcut must not fire while someone is naming a state `rect`.
+ * shortcut must not fire while someone is naming a document `rect`.
  */
 function isTyping(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
