@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { isPenKey, shapeToolForKey } from './canvas/shape-tools';
-import { selectedNodeIndex, type Action, type EditorState } from './doc/store';
+import { selectedNodeIndex, selectedObject, type Action, type EditorState } from './doc/store';
 
 /**
  * Whether the key belongs to whatever the user is typing into. A shape
@@ -47,9 +47,20 @@ export function useShortcuts({
         onExport();
         return;
       }
-      if (accel && event.key.toLowerCase() === 'd' && state.selectedId) {
+      // One object only: what a duplicated selection of three should be — three
+      // loose copies, or the group nothing can make yet — is the grouping
+      // task's question, and answering it here would prejudge it.
+      const only = selectedObject(state);
+      if (accel && event.key.toLowerCase() === 'd' && only) {
         event.preventDefault();
-        dispatch({ type: 'duplicateObject', id: state.selectedId });
+        dispatch({ type: 'duplicateObject', id: only.id });
+        return;
+      }
+      if (accel && event.key.toLowerCase() === 'a') {
+        // Ahead of the plain `a` that adds an arc, which the accelerator guard
+        // below would otherwise leave to the browser's select-all.
+        event.preventDefault();
+        dispatch({ type: 'selectAll' });
         return;
       }
       // Matched on `code` rather than `key`, because shift turns the `0` key
@@ -93,7 +104,7 @@ export function useShortcuts({
         return;
       }
 
-      if ((event.key === 'Backspace' || event.key === 'Delete') && state.selectedId) {
+      if ((event.key === 'Backspace' || event.key === 'Delete') && state.selectedIds.size > 0) {
         event.preventDefault();
         const node = selectedNodeIndex(state);
         // A selected node takes the key. It takes it even when the shape is at
@@ -101,15 +112,21 @@ export function useShortcuts({
         // deleting the whole object would answer a request to remove one point
         // by removing every point, which is not a smaller version of the same
         // thing. Deselect the node — Escape, or a click on the shape — and the
-        // key goes back to meaning the object.
-        if (node !== null) {
-          dispatch({ type: 'removeVertex', id: state.selectedId, index: node });
+        // key goes back to meaning the object. A node is only ever selected
+        // inside a lone shape, so this precedence never has to choose between
+        // one node and several objects.
+        if (node !== null && only) {
+          dispatch({ type: 'removeVertex', id: only.id, index: node });
           return;
         }
-        dispatch({ type: 'deleteObject', id: state.selectedId });
+        // Every selected object, in one entry: one press of one key is one
+        // thing to take back.
+        dispatch({ type: 'deleteObjects', ids: [...state.selectedIds] });
         return;
       }
       if (event.key === 'Escape') {
+        // The whole selection, however many are in it: Escape means "never
+        // mind", and leaving two of three selected would be a different answer.
         dispatch({ type: 'selectObject', id: null });
         return;
       }

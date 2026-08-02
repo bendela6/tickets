@@ -17,9 +17,9 @@ import {
   type Box,
 } from '../doc/geometry';
 import { snapTo } from '../doc/snap';
-import { selectedObject } from '../doc/store';
+import { selectedObject, selectedObjects } from '../doc/store';
 import { useEditor } from '../editor-context';
-import type { IconObject } from '../doc/types';
+import type { IconObject, Pair } from '../doc/types';
 import { ColourPairField } from './colour-pair-field';
 import { NumberField } from './number-field';
 import { RailGroup } from './rail-group';
@@ -30,31 +30,160 @@ import { RailGroup } from './rail-group';
  * It is never blank: with nothing selected the same frame carries the
  * artboard's own size and background, so the rail does not collapse and the
  * document's properties have somewhere to live.
+ *
+ * Three states, not two. One object gets everything; several get the
+ * properties they genuinely share; none gets the document's own.
  */
 export function PropsPanel() {
   const { state } = useEditor();
   const object = selectedObject(state);
+  const objects = selectedObjects(state);
   return (
     <div className="flex w-full flex-col">
-      <Header object={object} />
-      {object ? <ObjectProperties object={object} /> : <DocumentProperties />}
+      <Header object={object} count={objects.length} />
+      {object ? (
+        <ObjectProperties object={object} />
+      ) : objects.length > 1 ? (
+        <SelectionProperties objects={objects} />
+      ) : (
+        <DocumentProperties />
+      )}
     </div>
   );
 }
 
-function Header({ object }: { object: IconObject | null }) {
+function Header({ object, count }: { object: IconObject | null; count: number }) {
+  // A glyph names a kind, and a selection of several has no single kind to
+  // name — so the slot goes empty rather than showing whichever one is first.
+  const several = object === null && count > 1;
+  const name = object?.name ?? (several ? `${count} objects` : 'document');
+  const kind = object ? object.geometry.kind.toUpperCase() : several ? 'SELECTION' : 'DOCUMENT';
   return (
     <div className="flex h-11 flex-none items-center gap-2.25 border-b-1 border-gray-6 px-3.5">
-      <span className="flex-none text-gray-11">
-        <ShapeGlyph kind={object ? object.geometry.kind : 'rect'} />
-      </span>
+      {several ? null : (
+        <span className="flex-none text-gray-11">
+          <ShapeGlyph kind={object ? object.geometry.kind : 'rect'} />
+        </span>
+      )}
       <span className="min-w-0 flex-1 truncate font-mono text-12 font-500 text-gray-12">
-        {object?.name ?? 'document'}
+        {name}
       </span>
       <span className="flex-none font-sans text-9 font-500 tracking-widest text-gray-9">
-        {object ? object.geometry.kind.toUpperCase() : 'DOCUMENT'}
+        {kind}
       </span>
     </div>
+  );
+}
+
+const samePair = (a: Pair, b: Pair): boolean => a.light === b.light && a.dark === b.dark;
+
+/** Whether every object answers a question the same way. */
+function agree<T>(
+  objects: readonly IconObject[],
+  read: (object: IconObject) => T,
+  same: (a: T, b: T) => boolean = Object.is,
+): boolean {
+  const first = objects[0];
+  if (first === undefined) return true;
+  const answer = read(first);
+  return objects.every((object) => same(read(object), answer));
+}
+
+/**
+ * The rail for a selection of several.
+ *
+ * Only the properties that mean the same thing for all of them: a colour, a
+ * stroke, an opacity. X, Y, width, corner radius and the point count are left
+ * out rather than averaged or blanked — they are per-shape by nature, and a
+ * field offering to set three shapes' X to one number is offering to stack
+ * them, which is not what anyone typing in an X field is asking for.
+ *
+ * Where a shared control's objects disagree it says `mixed` instead of showing
+ * one of them, and editing it writes to every one of them as a single entry.
+ */
+function SelectionProperties({ objects }: { objects: IconObject[] }) {
+  const { state, dispatch, view } = useEditor();
+  const first = objects[0];
+  if (first === undefined) return null;
+
+  const ids = objects.map((object) => object.id);
+  // A run has no area, so a fill would paint nothing on it. One run in the
+  // selection is enough to withdraw the field: a control that silently skipped
+  // some of what it was pointed at would be worse than not offering it.
+  const anyRun = objects.some((object) => isOpenRun(object.geometry));
+
+  return (
+    <>
+      <RailGroup label="APPEARANCE">
+        {anyRun ? null : (
+          <ColourPairField
+            label="FILL"
+            value={first.fill}
+            mixed={!agree(objects, (object) => object.fill, samePair)}
+            ground={view.ground}
+            against={state.doc.background}
+            onChange={(hex) =>
+              dispatch({ type: 'setColor', ids, channel: 'fill', ground: view.ground, hex })
+            }
+          />
+        )}
+
+        <ColourPairField
+          label="STROKE"
+          value={first.stroke}
+          mixed={!agree(objects, (object) => object.stroke, samePair)}
+          ground={view.ground}
+          against={state.doc.background}
+          onChange={(hex) =>
+            dispatch({ type: 'setColor', ids, channel: 'stroke', ground: view.ground, hex })
+          }
+        />
+
+        <NumberField
+          label="STROKE WIDTH"
+          name="Stroke width"
+          value={first.strokeWidth}
+          mixed={!agree(objects, (object) => object.strokeWidth)}
+          // A run is drawn by its stroke alone, so it cannot go to zero while
+          // one is in the selection.
+          min={anyRun ? 1 : 0}
+          onCommit={(width) => dispatch({ type: 'setStrokeWidth', ids, width })}
+        />
+
+        <div className="flex flex-col gap-1.5">
+          <NumberField
+            label="OPACITY"
+            value={first.opacity}
+            mixed={!agree(objects, (object) => object.opacity)}
+            min={0}
+            max={100}
+            suffix="%"
+            onCommit={(opacity) => dispatch({ type: 'setOpacity', ids, opacity })}
+          />
+          {/* The slider is withdrawn while they disagree rather than parked on
+              one object's value: a slider has a position, and a position is a
+              claim this control cannot make. The field above still edits. */}
+          {agree(objects, (object) => object.opacity) ? (
+            <Slider
+              label={`${objects.length} objects opacity`}
+              size="sm"
+              value={first.opacity}
+              valueText={`${first.opacity}%`}
+              onChange={(opacity) => dispatch({ type: 'setOpacity', ids, opacity })}
+            />
+          ) : null}
+        </div>
+      </RailGroup>
+
+      <div className="flex flex-col gap-1.25 px-3.5 py-3.25">
+        <span className="font-sans text-11/relaxed text-gray-11">
+          {objects.length} objects selected.
+        </span>
+        <span className="font-mono text-10 text-gray-9">
+          position and size belong to one shape — select a single object to edit them
+        </span>
+      </div>
+    </>
   );
 }
 
@@ -79,7 +208,7 @@ function ObjectProperties({ object }: { object: IconObject }) {
             onChange={(hex) =>
               dispatch({
                 type: 'setColor',
-                id: object.id,
+                ids: [object.id],
                 channel: 'fill',
                 ground: view.ground,
                 hex,
@@ -96,7 +225,7 @@ function ObjectProperties({ object }: { object: IconObject }) {
           onChange={(hex) =>
             dispatch({
               type: 'setColor',
-              id: object.id,
+              ids: [object.id],
               channel: 'stroke',
               ground: view.ground,
               hex,
@@ -109,7 +238,7 @@ function ObjectProperties({ object }: { object: IconObject }) {
           name={isRun ? 'Thickness' : 'Stroke width'}
           value={object.strokeWidth}
           min={isRun ? 1 : 0}
-          onCommit={(width) => dispatch({ type: 'setStrokeWidth', id: object.id, width })}
+          onCommit={(width) => dispatch({ type: 'setStrokeWidth', ids: [object.id], width })}
         />
 
         <div className="flex flex-col gap-1.5">
@@ -119,14 +248,14 @@ function ObjectProperties({ object }: { object: IconObject }) {
             min={0}
             max={100}
             suffix="%"
-            onCommit={(opacity) => dispatch({ type: 'setOpacity', id: object.id, opacity })}
+            onCommit={(opacity) => dispatch({ type: 'setOpacity', ids: [object.id], opacity })}
           />
           <Slider
             label={`${object.name} opacity`}
             size="sm"
             value={object.opacity}
             valueText={`${object.opacity}%`}
-            onChange={(opacity) => dispatch({ type: 'setOpacity', id: object.id, opacity })}
+            onChange={(opacity) => dispatch({ type: 'setOpacity', ids: [object.id], opacity })}
           />
         </div>
       </RailGroup>

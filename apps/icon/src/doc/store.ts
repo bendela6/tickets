@@ -1,11 +1,13 @@
 import { ARTBOARD_MAX, ARTBOARD_MIN, SNAP_MIN } from './constants';
 import { newObject, objectFor, objectId } from './defaults';
 import {
-  bounds,
   fitToBox,
   insertVertex,
+  objectsInBox,
   removeVertex,
+  rotatedBounds,
   translate,
+  unionBox,
   vertexPoints,
   type Box,
 } from './geometry';
@@ -51,7 +53,23 @@ export type Tool = 'select' | 'pen';
 
 export interface EditorState {
   doc: IconDoc;
-  selectedId: string | null;
+  /**
+   * What is selected, in the order it was selected.
+   *
+   * A `Set` because the two things asked of it pull in different directions. On
+   * every render every row of the object rail asks whether it is in there,
+   * which a list answers by scanning and this answers in one step. And what
+   * comes next — grouping, then boolean operations — needs an order: a subtract
+   * has a first operand, and "the one you picked first" is the only answer a
+   * user can predict. A `Set` iterates in insertion order, so it is both, and
+   * it cannot hold the same id twice — which is why the shift-click toggle has
+   * no duplicate case to defend against.
+   *
+   * Empty rather than null when nothing is selected. There is one accessor for
+   * the callers that mean *the* selected object — `selectedObject` — so nothing
+   * else has to compare a size against one.
+   */
+  selectedIds: ReadonlySet<string>;
   /**
    * Which node of the selected shape is selected, if any.
    *
@@ -64,8 +82,11 @@ export interface EditorState {
    * shape is deleted, replaced or undone out from under them.
    *
    * It carries the object's id so a stale index cannot be read against the
-   * wrong shape, and like `selectedId` it is not an edit — nothing here enters
-   * the undo history.
+   * wrong shape, and like `selectedIds` it is not an edit — nothing here enters
+   * the undo history. Editing a node is only meaningful while exactly one shape
+   * is selected: every selection action clears this, and `selectedNodeIndex`
+   * refuses to answer for a selection of several, so a second shape joining the
+   * selection can never leave a node selected inside the first.
    */
   selectedNode: { id: string; index: number } | null;
   /**
@@ -79,7 +100,7 @@ export interface EditorState {
    * tool button has to show whether the mode is on, which is a third subtree
    * again. One owner, or three copies to keep in step.
    *
-   * Like `selectedId` and `selectedNode`, neither field is an edit: entering
+   * Like `selectedIds` and `selectedNode`, neither field is an edit: entering
    * the pen writes `tool` and nothing else, so the document, the history and
    * whatever was selected are all exactly what they were. What is drawn only
    * becomes a document when the tool ends.
@@ -103,13 +124,32 @@ export interface EditorState {
 
 interface Snapshot {
   doc: IconDoc;
-  selectedId: string | null;
+  selectedIds: ReadonlySet<string>;
   label: string;
+}
+
+/** One object's new geometry, as a batch of them is stated. */
+export interface GeometryEdit {
+  id: string;
+  geometry: Geometry;
 }
 
 export type Action =
   | { type: 'addObject'; kind: ShapeKind }
+  /** Replace the whole selection with one object, or clear it. */
   | { type: 'selectObject'; id: string | null }
+  /** Shift-click: put the object into the selection, or take it back out. */
+  | { type: 'toggleSelect'; id: string }
+  /**
+   * What a marquee caught, in document units. `additive` is the shift that
+   * makes a band add to the selection rather than replace it.
+   *
+   * The reducer works out what the box touches rather than the caller, so the
+   * rule about what a band may catch sits beside select-all's rather than in
+   * the pointer layer, where only a pointer test could reach it.
+   */
+  | { type: 'selectInBox'; box: Box; additive: boolean }
+  | { type: 'selectAll' }
   | { type: 'selectNode'; index: number | null }
   /**
    * Enter a tool. Leaving the pen is not a bare mode switch — there may be a
@@ -142,7 +182,11 @@ export type Action =
    */
   | { type: 'insertVertex'; id: string; at: Point; reach: number }
   | { type: 'removeVertex'; id: string; index: number }
-  | { type: 'deleteObject'; id: string }
+  /**
+   * Delete every one of them, as one entry. Taking a selection of three away
+   * has to come back in one undo: it was one press of one key.
+   */
+  | { type: 'deleteObjects'; ids: readonly string[] }
   | { type: 'duplicateObject'; id: string }
   | { type: 'renameObject'; id: string; name: string }
   | { type: 'toggleHidden'; id: string }
@@ -150,11 +194,27 @@ export type Action =
   | { type: 'reorderObjects'; from: number; to: number }
   | { type: 'moveObject'; id: string; dx: number; dy: number; at?: number }
   | { type: 'setGeometry'; id: string; geometry: Geometry; label: string; at?: number }
+  /**
+   * Several objects rewritten at once — what a drag of a multiple selection
+   * commits. Each edit is the geometry that object should end up with, so the
+   * batch stays as absolute as the single case: the pointer recomputes every
+   * one of them from what it captured at the press.
+   */
+  | { type: 'setGeometries'; edits: readonly GeometryEdit[]; label: string; at?: number }
   | { type: 'resizeObject'; id: string; box: Box; at?: number }
   | { type: 'rotateObject'; id: string; degrees: number; at?: number }
-  | { type: 'setOpacity'; id: string; opacity: number; at?: number }
-  | { type: 'setStrokeWidth'; id: string; width: number }
-  | { type: 'setColor'; id: string; channel: 'fill' | 'stroke'; ground: Ground; hex: string }
+  // Appearance takes a list rather than an id: these are the properties a
+  // selection of several genuinely shares, and an edit to one of them has to
+  // reach all of them as a single entry.
+  | { type: 'setOpacity'; ids: readonly string[]; opacity: number; at?: number }
+  | { type: 'setStrokeWidth'; ids: readonly string[]; width: number }
+  | {
+      type: 'setColor';
+      ids: readonly string[];
+      channel: 'fill' | 'stroke';
+      ground: Ground;
+      hex: string;
+    }
   | { type: 'setBackground'; ground: Ground; hex: string }
   | { type: 'setArtboard'; artboard: Partial<Artboard> }
   | { type: 'setSnap'; snap: number }
@@ -163,10 +223,20 @@ export type Action =
   | { type: 'undo' }
   | { type: 'redo' };
 
+/** Nothing selected. One value rather than a fresh empty set each time. */
+const NOTHING: ReadonlySet<string> = new Set();
+
+/** The one member of a set, or null unless it holds exactly one. */
+function sole<T>(set: ReadonlySet<T>): T | null {
+  if (set.size !== 1) return null;
+  for (const item of set) return item;
+  return null;
+}
+
 export function initialState(doc: IconDoc): EditorState {
   return {
     doc,
-    selectedId: null,
+    selectedIds: NOTHING,
     selectedNode: null,
     tool: 'select',
     pen: [],
@@ -189,6 +259,16 @@ function moveWithin<T>(list: T[], from: number, to: number): T[] {
 
 function mapObject(doc: IconDoc, id: string, fn: (object: IconObject) => IconObject): IconDoc {
   return { ...doc, objects: doc.objects.map((object) => (object.id === id ? fn(object) : object)) };
+}
+
+/** The same, for an edit that reaches every object in a selection. */
+function mapObjects(
+  doc: IconDoc,
+  ids: readonly string[],
+  fn: (object: IconObject) => IconObject,
+): IconDoc {
+  const touched = new Set(ids);
+  return { ...doc, objects: doc.objects.map((o) => (touched.has(o.id) ? fn(o) : o)) };
 }
 
 /**
@@ -217,6 +297,16 @@ function nameOf(state: EditorState, id: string): string {
 }
 
 /**
+ * What an edit that may touch several objects calls them in the status slot.
+ * One shape is worth naming; three are a count — `fill rect 1, ellipse 2,
+ * line 3` states the same thing at four times the width.
+ */
+function subjectOf(state: EditorState, ids: readonly string[]): string {
+  const first = ids[0];
+  return ids.length === 1 && first !== undefined ? nameOf(state, first) : `${ids.length} objects`;
+}
+
+/**
  * Record the pre-change document, unless this edit continues one already
  * recorded. `key` identifies the gesture: dragging the same object twice
  * within COALESCE_MS is one undo entry, because a pointer drag arrives as
@@ -235,7 +325,7 @@ function remember(
     gesture.at - state.coalesce.at <= COALESCE_MS;
 
   const at = gesture?.at ?? 0;
-  const entry: Snapshot = { doc: state.doc, selectedId: state.selectedId, label };
+  const entry: Snapshot = { doc: state.doc, selectedIds: state.selectedIds, label };
   const past = continues ? state.past : [...state.past, entry].slice(-HISTORY_LIMIT);
 
   return {
@@ -252,19 +342,55 @@ function remember(
 export function editorReducer(state: EditorState, action: Action): EditorState {
   switch (action.type) {
     // ----- selection is not an edit, so it is not undoable -----------------
+    //
+    // Every case here clears the node selection, which is the whole of the rule
+    // keeping the two coherent: a node is a place inside one shape, so anything
+    // that changes which shapes are selected — including selecting the same one
+    // again, which is how clicking the body of a shape stops editing its nodes
+    // — ends node editing.
     case 'selectObject':
-      // Selecting an object drops any node selection, including when it is the
-      // same object: clicking the body of a shape is how you stop editing one
-      // of its nodes.
-      return { ...state, selectedId: action.id, selectedNode: null };
-    case 'selectNode':
+      return {
+        ...state,
+        selectedIds: action.id === null ? NOTHING : new Set([action.id]),
+        selectedNode: null,
+      };
+    case 'toggleSelect': {
+      const next = new Set(state.selectedIds);
+      // Taking one out and putting it back puts it back at the *end*, which is
+      // what insertion order is for: the selection reads in the order you
+      // actually built it, not the order you first touched each shape.
+      if (!next.delete(action.id)) next.add(action.id);
+      return { ...state, selectedIds: next, selectedNode: null };
+    }
+    case 'selectInBox': {
+      const caught = objectsInBox(state.doc.objects, action.box).map((object) => object.id);
+      return {
+        ...state,
+        selectedIds: action.additive
+          ? new Set([...state.selectedIds, ...caught])
+          : new Set(caught),
+        selectedNode: null,
+      };
+    }
+    case 'selectAll':
+      return {
+        ...state,
+        // Hidden objects are not on screen to be selected. A locked one is
+        // being held out of the way on purpose, and select-all is the one
+        // gesture that would sweep it back under the pointer unasked.
+        selectedIds: new Set(
+          state.doc.objects.filter((o) => !o.hidden && !o.locked).map((o) => o.id),
+        ),
+        selectedNode: null,
+      };
+    case 'selectNode': {
+      const id = sole(state.selectedIds);
       return {
         ...state,
         selectedNode:
-          action.index === null || state.selectedId === null
-            ? null
-            : { id: state.selectedId, index: action.index },
+          action.index === null || id === null ? null : { id, index: action.index },
       };
+    }
 
     // ----- the pen, which is a mode rather than an edit --------------------
     case 'setTool':
@@ -332,7 +458,7 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         // wrong about.
         ...remember(state, 'draw path'),
         doc: { ...state.doc, objects: [object, ...state.doc.objects] },
-        selectedId: object.id,
+        selectedIds: new Set([object.id]),
         selectedNode: null,
         sequence,
       };
@@ -345,14 +471,14 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
       return {
         ...state,
         doc: entry.doc,
-        selectedId: entry.selectedId,
+        selectedIds: entry.selectedIds,
         // The document that comes back may not have the node that was selected
         // in it at all — undoing the addition of one is the obvious case.
         selectedNode: null,
         past: state.past.slice(0, -1),
         future: [
           ...state.future,
-          { doc: state.doc, selectedId: state.selectedId, label: entry.label },
+          { doc: state.doc, selectedIds: state.selectedIds, label: entry.label },
         ],
         lastAction: { label: `undid · ${entry.label}`, at: 0 },
         coalesce: null,
@@ -364,11 +490,11 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
       return {
         ...state,
         doc: entry.doc,
-        selectedId: entry.selectedId,
+        selectedIds: entry.selectedIds,
         selectedNode: null,
         past: [
           ...state.past,
-          { doc: state.doc, selectedId: state.selectedId, label: entry.label },
+          { doc: state.doc, selectedIds: state.selectedIds, label: entry.label },
         ].slice(-HISTORY_LIMIT),
         future: state.future.slice(0, -1),
         lastAction: { label: `redid · ${entry.label}`, at: 0 },
@@ -385,17 +511,21 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         ...remember(state, `add ${action.kind}`),
         // Front-to-back: a new shape lands in front of everything.
         doc: { ...state.doc, objects: [object, ...state.doc.objects] },
-        selectedId: object.id,
+        selectedIds: new Set([object.id]),
+        selectedNode: null,
         sequence,
       };
     }
-    case 'deleteObject': {
-      const label = `delete ${nameOf(state, action.id)}`;
+    case 'deleteObjects': {
+      const removing = new Set(action.ids);
+      // Nothing named, nothing to answer for: a history entry here would be an
+      // undo that appears to do nothing.
+      if (removing.size === 0) return state;
       return {
         ...state,
-        ...remember(state, label),
-        doc: { ...state.doc, objects: state.doc.objects.filter((o) => o.id !== action.id) },
-        selectedId: state.selectedId === action.id ? null : state.selectedId,
+        ...remember(state, `delete ${subjectOf(state, action.ids)}`),
+        doc: { ...state.doc, objects: state.doc.objects.filter((o) => !removing.has(o.id)) },
+        selectedIds: new Set([...state.selectedIds].filter((id) => !removing.has(id))),
         selectedNode: null,
       };
     }
@@ -422,7 +552,8 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         ...state,
         ...remember(state, `duplicate ${source.name}`),
         doc: { ...state.doc, objects },
-        selectedId: copy.id,
+        selectedIds: new Set([copy.id]),
+        selectedNode: null,
         sequence,
       };
     }
@@ -473,6 +604,22 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         ...remember(state, action.label, { key: `geometry:${action.id}`, at: action.at ?? 0 }),
         doc: mapGeometry(state.doc, action.id, () => action.geometry),
       };
+    case 'setGeometries': {
+      if (action.edits.length === 0) return state;
+      // Keyed by everything the batch touches, so a drag of the same three
+      // shapes coalesces into one entry and a drag of a different three does
+      // not fold into it. A batch of one produces the key `setGeometry` does,
+      // which is what lets a single drag stay one gesture across the change.
+      const key = `geometry:${action.edits.map((edit) => edit.id).join(',')}`;
+      return {
+        ...state,
+        ...remember(state, action.label, { key, at: action.at ?? 0 }),
+        doc: action.edits.reduce(
+          (doc, edit) => mapGeometry(doc, edit.id, () => edit.geometry),
+          state.doc,
+        ),
+      };
+    }
     case 'resizeObject': {
       const label = `resize ${nameOf(state, action.id)}`;
       return {
@@ -493,12 +640,13 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         ...state,
         ...remember(state, `add point to ${object.name}`),
         doc: mapGeometry(state.doc, action.id, () => added.geometry),
-        // The object is selected too, not only the node inside it. A
-        // double-click lands on the outline, and a filled shape's hit test
-        // excludes its own boundary — so the press that opens the gesture
-        // deselects, and without this the new node would belong to nothing
-        // visible and no handles would be drawn to drag it by.
-        selectedId: action.id,
+        // The object is selected too, and *only* it: a double-click lands on
+        // the outline, and a filled shape's hit test excludes its own boundary
+        // — so the press that opens the gesture deselects, and without this the
+        // new node would belong to nothing visible and no handles would be
+        // drawn to drag it by. Node editing needs the shape alone, so this
+        // replaces the selection rather than joining it.
+        selectedIds: new Set([action.id]),
         selectedNode: { id: action.id, index: added.index },
       };
     }
@@ -528,34 +676,36 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
     }
 
     // ----- appearance -----------------------------------------------------
-    case 'setOpacity':
+    //
+    // Each of these takes every object it is asked for in one entry. An edit
+    // made once, in one field, with a whole selection under it, is one thing
+    // the user did — however many shapes it landed on.
+    case 'setOpacity': {
+      const opacity = Math.max(0, Math.min(100, Math.round(action.opacity)));
       return {
         ...state,
-        ...remember(state, `opacity ${nameOf(state, action.id)}`, {
-          key: `opacity:${action.id}`,
+        ...remember(state, `opacity ${subjectOf(state, action.ids)}`, {
+          key: `opacity:${action.ids.join(',')}`,
           at: action.at ?? 0,
         }),
-        doc: mapObject(state.doc, action.id, (o) => ({
-          ...o,
-          opacity: Math.max(0, Math.min(100, Math.round(action.opacity))),
-        })),
+        doc: mapObjects(state.doc, action.ids, (o) => ({ ...o, opacity })),
       };
-    case 'setStrokeWidth':
+    }
+    case 'setStrokeWidth': {
+      const strokeWidth = Math.max(0, snapTo(action.width, state.doc.snap));
       return {
         ...state,
-        ...remember(state, `stroke ${nameOf(state, action.id)}`),
-        doc: mapObject(state.doc, action.id, (o) => ({
-          ...o,
-          strokeWidth: Math.max(0, snapTo(action.width, state.doc.snap)),
-        })),
+        ...remember(state, `stroke ${subjectOf(state, action.ids)}`),
+        doc: mapObjects(state.doc, action.ids, (o) => ({ ...o, strokeWidth })),
       };
+    }
     case 'setColor': {
-      const label = `${action.channel} ${nameOf(state, action.id)}`;
+      const label = `${action.channel} ${subjectOf(state, action.ids)}`;
       const half = (pair: Pair): Pair => ({ ...pair, [action.ground]: action.hex });
       return {
         ...state,
         ...remember(state, label),
-        doc: mapObject(state.doc, action.id, (o) =>
+        doc: mapObjects(state.doc, action.ids, (o) =>
           action.channel === 'fill'
             ? { ...o, fill: half(o.fill) }
             : { ...o, stroke: half(o.stroke) },
@@ -619,8 +769,37 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
 export const canUndo = (state: EditorState): boolean => state.past.length > 0;
 export const canRedo = (state: EditorState): boolean => state.future.length > 0;
 
+/**
+ * The one selected object, or null — when nothing is selected, and equally
+ * when more than one thing is.
+ *
+ * This is the single-selection accessor, and the reason no caller counts the
+ * selection itself. The geometry fields, the shape-specific group, node
+ * editing and the rotate knob all mean *the* selected object, and every one of
+ * them is meaningless for a selection of two: X is not a property two shapes
+ * share, and a node is a place inside one of them. Answering null puts that
+ * judgement in one place instead of a `size === 1` in each of theirs.
+ */
 export function selectedObject(state: EditorState): IconObject | null {
-  return state.doc.objects.find((object) => object.id === state.selectedId) ?? null;
+  const id = sole(state.selectedIds);
+  return id === null ? null : (state.doc.objects.find((object) => object.id === id) ?? null);
+}
+
+/**
+ * Everything selected, in the order it was selected — which is the order a
+ * boolean operation will read its operands in.
+ *
+ * Ids that name nothing are dropped rather than reported as gaps: the
+ * selection is not part of the document, so an undo can hand back a document
+ * an id in it no longer names.
+ */
+export function selectedObjects(state: EditorState): IconObject[] {
+  const objects: IconObject[] = [];
+  for (const id of state.selectedIds) {
+    const object = state.doc.objects.find((candidate) => candidate.id === id);
+    if (object) objects.push(object);
+  }
+  return objects;
 }
 
 /**
@@ -638,8 +817,20 @@ export function selectedNodeIndex(state: EditorState): number | null {
   return node.index >= 0 && node.index < vertexPoints(object).length ? node.index : null;
 }
 
-/** The selected object's box, or null — what the selection overlay draws around. */
-export function selectionBox(state: EditorState): Box | null {
-  const object = selectedObject(state);
-  return object && !object.hidden ? bounds(object) : null;
+/**
+ * One box round everything selected, or null — what the artboard outlines when
+ * there are several.
+ *
+ * Measured on each object's rotated box, because a combined outline is upright
+ * and has to hold what is actually drawn: the objects inside it each have a
+ * rotation of their own, and the box round them has none it could carry.
+ * Hidden objects are left out of it — they can be selected from the rail, and
+ * an outline round something invisible describes nothing.
+ */
+export function selectionBounds(state: EditorState): Box | null {
+  return unionBox(
+    selectedObjects(state)
+      .filter((object) => !object.hidden)
+      .map(rotatedBounds),
+  );
 }
