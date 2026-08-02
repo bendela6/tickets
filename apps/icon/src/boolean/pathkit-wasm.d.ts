@@ -36,7 +36,20 @@ declare module 'pathkit-wasm/bin/pathkit.js' {
      * minus the argument".
      */
     op(other: SkPath, operation: SkPathOp): SkPath | null;
-    toSVGString(): string;
+    /**
+     * The path as Skia's own verbs: one entry per command, the verb first and
+     * that verb's numbers after it — `[MOVE_VERB, x, y]`,
+     * `[CONIC_VERB, x1, y1, x, y, w]`, `[CLOSE_VERB]`. Loosely typed because
+     * that is what it is: the length and the meaning of the tail are the verb's
+     * to decide, and a tuple per verb would be a union the runtime never hands
+     * over.
+     *
+     * Read in place of `toSVGString`, which is the other spelling the module
+     * offers and is not declared here because nothing calls it: SVG has no
+     * command for a conic, so that route subdivides every one into a run of
+     * quadratics before the caller ever sees the weight.
+     */
+    toCmds(): number[][];
     /**
      * Frees the wasm memory this path holds. Not optional and not a hint —
      * nothing in JavaScript's collector can see the heap this lives on.
@@ -47,6 +60,21 @@ declare module 'pathkit-wasm/bin/pathkit.js' {
   export interface PathKit {
     /** Null when the string is not something SVG could draw. */
     FromSVGString(d: string): SkPath | null;
+    /**
+     * The verb each command from `toCmds` opens with.
+     *
+     * Read off the module rather than written down as the numbers they happen
+     * to be: they are the binding layer's own constants, and a table of six
+     * integers copied into this file would be a second place they were decided.
+     * `number` rather than a literal type for the same reason — this file has
+     * no business fixing their values.
+     */
+    readonly MOVE_VERB: number;
+    readonly LINE_VERB: number;
+    readonly QUAD_VERB: number;
+    readonly CONIC_VERB: number;
+    readonly CUBIC_VERB: number;
+    readonly CLOSE_VERB: number;
     readonly PathOp: {
       readonly UNION: SkPathOp;
       readonly DIFFERENCE: SkPathOp;
