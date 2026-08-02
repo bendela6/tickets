@@ -3,7 +3,7 @@ import { cn } from '@tickets/ui';
 import { MIN_GRID_PX, SAFE_ZONE } from '../doc/constants';
 import { gridPitch } from '../doc/snap';
 import { anchorControlPoints, bounds, vertexPoints } from '../doc/geometry';
-import { selectedNodeIndex, selectedObject } from '../doc/store';
+import { selectedNodeIndex, selectedObject, selectionBounds } from '../doc/store';
 import { safeZoneWarnings } from '../doc/validate';
 import { useEditor } from '../editor-context';
 import { gridInk } from '../render/ink';
@@ -35,7 +35,7 @@ export function Artboard() {
   const pitch = gridPitch(state.doc.snap, scale, MIN_GRID_PX);
   const dim = chromeIsDim(view);
 
-  const { chrome, penChrome, surfaceProps, onHandleDown } = useArtboardPointer({
+  const { chrome, marquee, penChrome, surfaceProps, onHandleDown } = useArtboardPointer({
     state,
     dispatch,
     scale,
@@ -43,7 +43,20 @@ export function Artboard() {
     onDraggingChange: (dragging) => setView((v) => ({ ...v, dragging })),
   });
 
+  // The one selected object, or null when several are: everything below that
+  // belongs to a single shape — its handles, its nodes, its safe-zone warning —
+  // reads this rather than picking one out of the selection.
   const selected = selectedObject(state);
+  /**
+   * One box round the lot, drawn only when there are several.
+   *
+   * It carries no resize handles and no rotation knob, and that is deliberate
+   * rather than unfinished: resizing or rotating several objects at once is a
+   * group transform, which has to decide what happens to each shape's own
+   * rotation, stroke and curve as the box changes. That belongs with the
+   * grouping work, and this outline is what says a selection exists until then.
+   */
+  const groupBox = state.selectedIds.size > 1 ? selectionBounds(state) : null;
   const warnings = safeZoneWarnings(state.doc);
   const selectedWarns = selected ? warnings.some((w) => w.id === selected.id) : false;
   const showSafeZone = selectedWarns || view.safeZoneOpen;
@@ -162,6 +175,35 @@ export function Artboard() {
             width: selectionBox.w * scale,
             height: selectionBox.h * scale,
             transform: `rotate(${selected.rotation}deg)`,
+          }}
+        />
+      ) : null}
+
+      {/* Drawn through a drag as well as at rest — it is measured from the
+          document, so it travels with the objects the way the single-object
+          outline does. The pen withdraws it, as it withdraws the handles. */}
+      {groupBox && !drawing ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute outline-1 outline-handle"
+          style={{
+            left: groupBox.x * scale,
+            top: groupBox.y * scale,
+            width: groupBox.w * scale,
+            height: groupBox.h * scale,
+          }}
+        />
+      ) : null}
+
+      {marquee ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute border-1 border-dashed border-handle bg-handle/10"
+          style={{
+            left: marquee.x * scale,
+            top: marquee.y * scale,
+            width: marquee.w * scale,
+            height: marquee.h * scale,
           }}
         />
       ) : null}

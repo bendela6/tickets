@@ -5,6 +5,7 @@ import {
   anchorControls,
   arcPath,
   boxCentre,
+  boxesOverlap,
   bounds,
   centreOf,
   contains,
@@ -17,12 +18,14 @@ import {
   isOpenRun,
   lineEndpoints,
   nearestOnPath,
+  objectsInBox,
   pathAnchors,
   polygonPoints,
   removeVertex,
   rotatedBounds,
   splitPath,
   translate,
+  unionBox,
   vertexPoints,
 } from './geometry';
 import type { IconObject, PathSegment, Point } from './types';
@@ -513,6 +516,73 @@ describe('hitTest', () => {
 
   it('returns null on empty ground', () => {
     expect(hitTest([front], { x: 10, y: 10 })).toBeNull();
+  });
+});
+
+describe('objectsInBox', () => {
+  /** A hundred-unit square with its corner at `at`. */
+  const square = (id: string, at: number): IconObject =>
+    rect({ id, geometry: { kind: 'rect', x: at, y: at, w: 100, h: 100, radius: 0 } });
+
+  const near = square('near', 0);
+  const far = square('far', 300);
+  /** A band across the gap: over a corner of the far square, nowhere near the other. */
+  const BAND = { x: 250, y: 250, w: 100, h: 100 };
+
+  it('catches what it overlaps, without having to contain it', () => {
+    expect(objectsInBox([near, far], BAND).map((o) => o.id)).toEqual(['far']);
+  });
+
+  it('takes them front to back, the order the document is in', () => {
+    expect(objectsInBox([near, far], { x: 0, y: 0, w: 512, h: 512 }).map((o) => o.id)).toEqual([
+      'near',
+      'far',
+    ]);
+  });
+
+  it('skips a hidden object and still takes a locked one', () => {
+    expect(objectsInBox([{ ...far, hidden: true }], BAND)).toEqual([]);
+    expect(objectsInBox([{ ...far, locked: true }], BAND).map((o) => o.id)).toEqual(['far']);
+  });
+
+  it('measures a turned shape by where it actually lands', () => {
+    // Turned 45° about its own centre at 350, the square's corners swing out
+    // past the box it is stored as — and this band only reaches 290.
+    const corner = { x: 280, y: 340, w: 10, h: 10 };
+    expect(objectsInBox([{ ...far, rotation: 45 }], corner).map((o) => o.id)).toEqual(['far']);
+    expect(objectsInBox([far], corner)).toEqual([]);
+  });
+
+  it('catches nothing on empty ground', () => {
+    expect(objectsInBox([near, far], { x: 150, y: 150, w: 50, h: 50 })).toEqual([]);
+  });
+});
+
+describe('unionBox', () => {
+  it('holds every box it is given', () => {
+    expect(
+      unionBox([
+        { x: 10, y: 20, w: 30, h: 40 },
+        { x: 100, y: 0, w: 10, h: 10 },
+      ]),
+    ).toEqual({ x: 10, y: 0, w: 100, h: 60 });
+  });
+
+  it('has nothing to hold when there are no boxes', () => {
+    expect(unionBox([])).toBeNull();
+  });
+});
+
+describe('boxesOverlap', () => {
+  const box = { x: 0, y: 0, w: 10, h: 10 };
+
+  it('is true when they share area and false when they merely pass by', () => {
+    expect(boxesOverlap(box, { x: 5, y: 5, w: 10, h: 10 })).toBe(true);
+    expect(boxesOverlap(box, { x: 11, y: 0, w: 10, h: 10 })).toBe(false);
+  });
+
+  it('counts a shared edge, so a band drawn along one is not a miss', () => {
+    expect(boxesOverlap(box, { x: 10, y: 0, w: 10, h: 10 })).toBe(true);
   });
 });
 

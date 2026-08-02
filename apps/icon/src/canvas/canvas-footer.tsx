@@ -1,5 +1,5 @@
 import { Tabs, cn } from '@tickets/ui';
-import { selectedObject } from '../doc/store';
+import { selectedObject, type EditorState } from '../doc/store';
 import { safeZoneWarnings } from '../doc/validate';
 import { useEditor } from '../editor-context';
 import type { Ground } from '../doc/types';
@@ -56,18 +56,29 @@ function ToggleChip({
  * slot that holds either a platform warning or the status line, never both:
  * the warning is contextual, not permanent chrome.
  */
+/**
+ * What the status slot says about the selection.
+ *
+ * One object is worth naming — you selected that shape, and the name is what
+ * the rail calls it. Several are a count: naming them would print a list as
+ * wide as the canvas to say something the accented rows already show.
+ */
+function selectionLine(state: EditorState): string {
+  const one = selectedObject(state);
+  if (one) return `${one.name} selected`;
+  const count = state.selectedIds.size;
+  return count === 0 ? 'nothing selected' : `${count} objects selected`;
+}
+
 export function CanvasFooter({ status }: { status: string }) {
   const { state, view, setView, dispatch } = useEditor();
   const warnings = safeZoneWarnings(state.doc);
-  const selected = selectedObject(state);
   const showWarning = warnings.length > 0 && !view.dragging;
   const first = warnings[0];
   // Precedence: what is happening right now, then what an action just did,
   // then what is selected. A drag hint outlives its usefulness the moment the
   // pointer comes up, which is why it is not the fallback.
-  const line = view.dragging
-    ? DRAG_HINT
-    : status || (selected ? `${selected.name} selected` : 'nothing selected');
+  const line = view.dragging ? DRAG_HINT : status || selectionLine(state);
 
   return (
     <>

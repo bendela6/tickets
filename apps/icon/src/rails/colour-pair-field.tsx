@@ -3,6 +3,7 @@ import { cn } from '@tickets/ui';
 import { SWATCHES } from '../doc/constants';
 import { contrastRatio, grade } from '../doc/contrast';
 import type { Ground, Pair } from '../doc/types';
+import { MIXED } from './number-field';
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
@@ -23,6 +24,13 @@ const READABLE = 4.5;
  * ground you are previewing; the small one reports the other pair and turns
  * danger-coloured if that half fails, so a dark variant cannot quietly rot
  * while you work in light.
+ *
+ * `mixed` is what a selection of several says when they do not share a colour.
+ * Agreement is judged on the whole *pair* rather than on the half being edited,
+ * because this is one control for a pair: the swatch shows both halves at once
+ * and the readout reports the other ground. A field that called itself settled
+ * because the light halves matched would still be painting one object's dark
+ * half in the swatch as though it were everyone's.
  */
 export function ColourPairField({
   label,
@@ -31,6 +39,7 @@ export function ColourPairField({
   against,
   onChange,
   showContrast = true,
+  mixed = false,
 }: {
   /** What this colour is — `FILL`, `STROKE`, `ARTBOARD`. */
   label: string;
@@ -40,26 +49,40 @@ export function ColourPairField({
   against: Pair;
   onChange: (hex: string) => void;
   showContrast?: boolean;
+  /**
+   * The objects under this field do not share a colour, so `value` is one of
+   * their pairs rather than the selection's.
+   */
+  mixed?: boolean;
 }) {
   const other = otherGround(ground);
   const current = value[ground];
-  const [draft, setDraft] = useState(current);
+  const shown = mixed ? MIXED : current;
+  const [draft, setDraft] = useState(shown);
 
   // The field is controlled by the document, but the user types into it one
   // character at a time and `#4E4` is not yet a colour. The draft holds what
   // they have typed; it resyncs whenever the document's value changes under it
   // — swapping ground, picking a swatch, undoing.
-  useEffect(() => setDraft(current), [current]);
+  useEffect(() => setDraft(shown), [shown]);
 
   const commit = (text: string) => {
     const normalised = text.startsWith('#') ? text : `#${text}`;
     if (HEX.test(normalised)) onChange(normalised.toUpperCase());
-    else setDraft(current);
+    else setDraft(shown);
   };
 
   const ratio = contrastRatio(current, against[ground]);
   const otherRatio = contrastRatio(value[other], against[other]);
   const readable = ratio >= READABLE;
+  // A reading of one object's colour, printed beside a field that says the
+  // selection has several, would be a number about nothing on screen.
+  const contrast = showContrast && !mixed;
+  // No preset is the current one while the field is mixed: a pressed swatch
+  // would say the selection is that colour, which is the one thing known to be
+  // untrue. Every one of them still works.
+  const chosen = (hex: string): boolean =>
+    !mixed && hex.toUpperCase() === current.toUpperCase();
 
   return (
     <div className="flex flex-col gap-2.25 rounded-lg bg-surface-inset p-2.5">
@@ -68,14 +91,21 @@ export function ColourPairField({
           aria-hidden
           className="relative size-8 flex-none overflow-hidden rounded-md border-1 border-gray-7 shadow-raised"
         >
-          <span
-            className="absolute inset-0"
-            style={{ background: value.light, clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
-          />
-          <span
-            className="absolute inset-0"
-            style={{ background: value.dark, clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}
-          />
+          {/* The two halves are drawn only when they are the selection's. A
+              swatch is a claim about what the colour is, and a mixed field has
+              no such claim to make — so it shows the frame and nothing in it. */}
+          {mixed ? null : (
+            <>
+              <span
+                className="absolute inset-0"
+                style={{ background: value.light, clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
+              />
+              <span
+                className="absolute inset-0"
+                style={{ background: value.dark, clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}
+              />
+            </>
+          )}
         </span>
 
         <div className="flex min-w-0 flex-1 flex-col gap-0.75">
@@ -89,14 +119,14 @@ export function ColourPairField({
             onBlur={(event) => commit(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter') commit(event.currentTarget.value);
-              if (event.key === 'Escape') setDraft(current);
+              if (event.key === 'Escape') setDraft(shown);
             }}
             spellCheck={false}
             className="w-full bg-transparent font-mono text-13 font-500 uppercase text-gray-12 outline-none"
           />
         </div>
 
-        {showContrast ? (
+        {contrast ? (
           <div className="flex flex-none flex-col items-end gap-0.75">
             <span
               className={cn(
@@ -115,7 +145,7 @@ export function ColourPairField({
         <span className="min-w-0 flex-1 truncate font-mono text-9 text-gray-9">
           ground {against[ground].toUpperCase()}
         </span>
-        {showContrast ? (
+        {contrast ? (
           <span
             className={cn(
               'flex-none font-mono text-9',
@@ -138,11 +168,11 @@ export function ColourPairField({
             type="button"
             title={hex}
             aria-label={`Set ${label.toLowerCase()} to ${hex}`}
-            aria-pressed={hex.toUpperCase() === current.toUpperCase()}
+            aria-pressed={chosen(hex)}
             onClick={() => onChange(hex)}
             className={cn(
               'h-4.75 rounded-sm',
-              hex.toUpperCase() === current.toUpperCase()
+              chosen(hex)
                 ? 'border-2 border-indigo-9'
                 : 'border-1 border-gray-7',
             )}

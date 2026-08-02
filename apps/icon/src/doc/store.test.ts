@@ -8,10 +8,11 @@ import {
   initialState,
   selectedNodeIndex,
   selectedObject,
+  selectedObjects,
   type Action,
   type EditorState,
 } from './store';
-import type { PathSegment, Point } from './types';
+import type { Geometry, PathSegment, Point } from './types';
 
 const start = () => initialState(emptyDocument('test'));
 
@@ -30,7 +31,7 @@ describe('adding objects', () => {
       { type: 'addObject', kind: 'ellipse' },
     );
     expect(state.doc.objects.map((o) => o.geometry.kind)).toEqual(['ellipse', 'rect']);
-    expect(state.selectedId).toBe(state.doc.objects[0]?.id);
+    expect(selectedObject(state)?.id).toBe(state.doc.objects[0]?.id);
   });
 
   it('never reuses a name a deleted shape had', () => {
@@ -40,7 +41,7 @@ describe('adding objects', () => {
       { type: 'addObject', kind: 'rect' },
     );
     const second = state.doc.objects[0]!.id;
-    state = run(state, { type: 'deleteObject', id: second }, { type: 'addObject', kind: 'rect' });
+    state = run(state, { type: 'deleteObjects', ids: [second] }, { type: 'addObject', kind: 'rect' });
     expect(state.doc.objects.map((o) => o.name)).toEqual(['rect 3', 'rect 1']);
   });
 });
@@ -51,7 +52,7 @@ describe('undo', () => {
     const after = editorReducer(before, { type: 'addObject', kind: 'rect' });
     const undone = editorReducer(after, { type: 'undo' });
     expect(undone.doc).toEqual(before.doc);
-    expect(undone.selectedId).toBeNull();
+    expect(selectedObject(undone)).toBeNull();
   });
 
   it('past the start is a no-op rather than an error', () => {
@@ -187,7 +188,7 @@ describe('locking', () => {
     const locked = editorReducer(state, { type: 'toggleLocked', id });
     const recoloured = editorReducer(locked, {
       type: 'setColor',
-      id,
+      ids: [id],
       channel: 'fill',
       ground: 'light',
       hex: '#C0382E',
@@ -203,7 +204,7 @@ describe('colour pairs', () => {
     const before = state.doc.objects[0]!.fill;
     const after = editorReducer(state, {
       type: 'setColor',
-      id,
+      ids: [id],
       channel: 'fill',
       ground: 'dark',
       hex: '#000000',
@@ -244,8 +245,8 @@ describe('clamping', () => {
   it('keeps opacity inside 0–100', () => {
     const state = withRect();
     const id = state.doc.objects[0]!.id;
-    expect(editorReducer(state, { type: 'setOpacity', id, opacity: 250 }).doc.objects[0]?.opacity).toBe(100);
-    expect(editorReducer(state, { type: 'setOpacity', id, opacity: -8 }).doc.objects[0]?.opacity).toBe(0);
+    expect(editorReducer(state, { type: 'setOpacity', ids: [id], opacity: 250 }).doc.objects[0]?.opacity).toBe(100);
+    expect(editorReducer(state, { type: 'setOpacity', ids: [id], opacity: -8 }).doc.objects[0]?.opacity).toBe(0);
   });
 
   it('normalises rotation into 0–359, including from negatives', () => {
@@ -258,7 +259,7 @@ describe('clamping', () => {
   it('never lets stroke width go negative', () => {
     const state = withRect();
     const id = state.doc.objects[0]!.id;
-    expect(editorReducer(state, { type: 'setStrokeWidth', id, width: -4 }).doc.objects[0]?.strokeWidth).toBe(0);
+    expect(editorReducer(state, { type: 'setStrokeWidth', ids: [id], width: -4 }).doc.objects[0]?.strokeWidth).toBe(0);
   });
 });
 
@@ -406,9 +407,217 @@ describe('selection', () => {
     const state = withRect();
     const id = state.doc.objects[0]!.id;
     expect(selectedObject(state)?.id).toBe(id);
-    const deleted = editorReducer(state, { type: 'deleteObject', id });
+    const deleted = editorReducer(state, { type: 'deleteObjects', ids: [id] });
     expect(selectedObject(deleted)).toBeNull();
-    expect(deleted.selectedId).toBeNull();
+    expect(selectedObjects(deleted)).toEqual([]);
+  });
+});
+
+/**
+ * Two rectangles a hundred units square, well apart: one at the origin, one at
+ * 300, 300. Placed through the reducer rather than written into a document by
+ * hand, so they are exactly what an editing session would have produced.
+ */
+function twoApart(): { state: EditorState; first: string; second: string } {
+  const box = (x: number): Geometry => ({ kind: 'rect', x, y: x, w: 100, h: 100, radius: 0 });
+  let state = run(start(), { type: 'addObject', kind: 'rect' });
+  const first = state.doc.objects[0]!.id;
+  state = run(state, { type: 'setGeometry', id: first, geometry: box(0), label: 'move' });
+  state = run(state, { type: 'addObject', kind: 'rect' });
+  const second = state.doc.objects[0]!.id;
+  state = run(state, { type: 'setGeometry', id: second, geometry: box(300), label: 'move' });
+  return { state, first, second };
+}
+
+const selectedIdsOf = (state: EditorState): string[] =>
+  selectedObjects(state).map((object) => object.id);
+
+describe('selecting several', () => {
+  it('adds one with a toggle and takes it out with another', () => {
+    const { state, first, second } = twoApart();
+    const both = run(state, { type: 'selectObject', id: first }, { type: 'toggleSelect', id: second });
+    expect(selectedIdsOf(both)).toEqual([first, second]);
+    expect(selectedIdsOf(run(both, { type: 'toggleSelect', id: second }))).toEqual([first]);
+  });
+
+  it('reads back in the order it was built, which is what an operand order needs', () => {
+    const { state, first, second } = twoApart();
+    const built = run(
+      state,
+      { type: 'selectObject', id: second },
+      { type: 'toggleSelect', id: first },
+    );
+    expect(selectedIdsOf(built)).toEqual([second, first]);
+    // Taken out and put back is a fresh choice, so it goes to the end.
+    const again = run(built, { type: 'toggleSelect', id: second }, { type: 'toggleSelect', id: second });
+    expect(selectedIdsOf(again)).toEqual([first, second]);
+  });
+
+  it('a plain selection replaces whatever was there', () => {
+    const { state, first, second } = twoApart();
+    const both = run(state, { type: 'selectObject', id: first }, { type: 'toggleSelect', id: second });
+    expect(selectedIdsOf(run(both, { type: 'selectObject', id: first }))).toEqual([first]);
+    expect(selectedIdsOf(run(both, { type: 'selectObject', id: null }))).toEqual([]);
+  });
+
+  it('answers the single-selection accessor only while exactly one is selected', () => {
+    const { state, first, second } = twoApart();
+    const one = run(state, { type: 'selectObject', id: first });
+    expect(selectedObject(one)?.id).toBe(first);
+    expect(selectedObject(run(one, { type: 'toggleSelect', id: second }))).toBeNull();
+  });
+
+  it('a marquee catches what it overlaps, without having to contain it', () => {
+    const { state, first, second } = twoApart();
+    // 250–350 crosses the far rectangle's 300–400 and never reaches the near one.
+    const caught = run(state, {
+      type: 'selectInBox',
+      box: { x: 250, y: 250, w: 100, h: 100 },
+      additive: false,
+    });
+    expect(selectedIdsOf(caught)).toEqual([second]);
+    expect(selectedIdsOf(caught)).not.toContain(first);
+  });
+
+  it('a marquee skips a hidden object and still takes a locked one', () => {
+    const { state, first, second } = twoApart();
+    const whole = { x: 0, y: 0, w: 512, h: 512 };
+    const hidden = run(state, { type: 'toggleHidden', id: second }, {
+      type: 'selectInBox',
+      box: whole,
+      additive: false,
+    });
+    expect(selectedIdsOf(hidden)).toEqual([first]);
+
+    const locked = run(state, { type: 'toggleLocked', id: second }, {
+      type: 'selectInBox',
+      box: whole,
+      additive: false,
+    });
+    // Locked means it will not move, not that it cannot be picked up on.
+    expect(selectedIdsOf(locked)).toContain(second);
+  });
+
+  it('an additive marquee adds its catch rather than replacing the selection', () => {
+    const { state, first, second } = twoApart();
+    const added = run(state, { type: 'selectObject', id: first }, {
+      type: 'selectInBox',
+      box: { x: 250, y: 250, w: 100, h: 100 },
+      additive: true,
+    });
+    expect(selectedIdsOf(added)).toEqual([first, second]);
+  });
+
+  it('select-all takes every visible, unlocked object', () => {
+    const { state, first, second } = twoApart();
+    expect(selectedIdsOf(run(state, { type: 'selectAll' })).sort()).toEqual(
+      [first, second].sort(),
+    );
+    expect(
+      selectedIdsOf(run(state, { type: 'toggleHidden', id: first }, { type: 'selectAll' })),
+    ).toEqual([second]);
+    expect(
+      selectedIdsOf(run(state, { type: 'toggleLocked', id: first }, { type: 'selectAll' })),
+    ).toEqual([second]);
+  });
+
+  it('deletes every one of them as a single entry', () => {
+    const { state, first, second } = twoApart();
+    const deleted = run(state, { type: 'deleteObjects', ids: [first, second] });
+    expect(deleted.doc.objects).toEqual([]);
+    expect(deleted.lastAction?.label).toBe('delete 2 objects');
+    expect(run(deleted, { type: 'undo' }).doc.objects).toHaveLength(2);
+  });
+
+  it('moves every one of them as a single entry, and refuses the locked one', () => {
+    const { state, first, second } = twoApart();
+    const locked = run(state, { type: 'toggleLocked', id: first });
+    const moved = run(locked, {
+      type: 'setGeometries',
+      edits: [
+        { id: first, geometry: { kind: 'rect', x: 40, y: 40, w: 100, h: 100, radius: 0 } },
+        { id: second, geometry: { kind: 'rect', x: 340, y: 340, w: 100, h: 100, radius: 0 } },
+      ],
+      label: 'move 2 objects',
+      at: 1000,
+    });
+    expect(bounds(moved.doc.objects[1]!)).toMatchObject({ x: 0, y: 0 });
+    expect(bounds(moved.doc.objects[0]!)).toMatchObject({ x: 340, y: 340 });
+    expect(moved.past).toHaveLength(locked.past.length + 1);
+  });
+
+  it('folds a whole multi-object drag into one entry, the way a single one does', () => {
+    const { state, first, second } = twoApart();
+    const edits = (offset: number) => [
+      { id: first, geometry: { kind: 'rect' as const, x: offset, y: 0, w: 100, h: 100, radius: 0 } },
+      {
+        id: second,
+        geometry: { kind: 'rect' as const, x: 300 + offset, y: 300, w: 100, h: 100, radius: 0 },
+      },
+    ];
+    const dragged = run(
+      state,
+      { type: 'setGeometries', edits: edits(10), label: 'move 2 objects', at: 1000 },
+      { type: 'setGeometries', edits: edits(20), label: 'move 2 objects', at: 1050 },
+    );
+    expect(dragged.past).toHaveLength(state.past.length + 1);
+    expect(bounds(run(dragged, { type: 'undo' }).doc.objects[1]!)).toMatchObject({ x: 0 });
+  });
+
+  it('recolours every one of them as a single entry', () => {
+    const { state, first, second } = twoApart();
+    const painted = run(state, {
+      type: 'setColor',
+      ids: [first, second],
+      channel: 'fill',
+      ground: 'light',
+      hex: '#C0382E',
+    });
+    expect(painted.doc.objects.map((o) => o.fill.light)).toEqual(['#C0382E', '#C0382E']);
+    expect(painted.lastAction?.label).toBe('fill 2 objects');
+    expect(run(painted, { type: 'undo' }).doc.objects.map((o) => o.fill.light)).toEqual([
+      '#4E46C6',
+      '#4E46C6',
+    ]);
+  });
+
+  it('undo puts back the selection the edit was made with, however many were in it', () => {
+    const { state, first, second } = twoApart();
+    const both = run(state, { type: 'selectObject', id: first }, { type: 'toggleSelect', id: second });
+    const painted = run(both, {
+      type: 'setColor',
+      ids: [first, second],
+      channel: 'fill',
+      ground: 'light',
+      hex: '#C0382E',
+    });
+    expect(selectedIdsOf(run(painted, { type: 'undo' }))).toEqual([first, second]);
+  });
+
+  it('stops editing a node the moment a second object joins the selection', () => {
+    const { state, second } = twoApart();
+    const polygon = run(state, { type: 'addObject', kind: 'polygon' });
+    const id = polygon.doc.objects[0]!.id;
+    const editing = run(polygon, { type: 'selectObject', id }, { type: 'selectNode', index: 2 });
+    expect(selectedNodeIndex(editing)).toBe(2);
+
+    const both = run(editing, { type: 'toggleSelect', id: second });
+    expect(selectedNodeIndex(both)).toBeNull();
+    // Cleared rather than merely withheld: taking the second object back out
+    // leaves the polygon alone again, and the node is still not selected.
+    expect(selectedNodeIndex(run(both, { type: 'toggleSelect', id: second }))).toBeNull();
+  });
+
+  it('a marquee and select-all end node editing too', () => {
+    const polygon = withPolygon();
+    const id = polygon.doc.objects[0]!.id;
+    const editing = run(polygon, { type: 'selectNode', index: 2 });
+    const box = { x: 0, y: 0, w: 512, h: 512 };
+    expect(
+      selectedNodeIndex(run(editing, { type: 'selectInBox', box, additive: true })),
+    ).toBeNull();
+    expect(selectedNodeIndex(run(editing, { type: 'selectAll' }))).toBeNull();
+    expect(selectedObject(run(editing, { type: 'selectAll' }))?.id).toBe(id);
   });
 });
 
@@ -492,7 +701,7 @@ describe('adding a node', () => {
       at: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
       reach: 4,
     });
-    expect(added.selectedId).toBe(object.id);
+    expect(selectedObject(added)?.id).toBe(object.id);
     expect(selectedNodeIndex(added)).toBe(1);
   });
 
@@ -587,7 +796,7 @@ describe('entering the pen', () => {
     // The document, what is selected and everything undo could reach are the
     // same objects they were, not merely equal ones.
     expect(after.doc).toBe(before.doc);
-    expect(after.selectedId).toBe(before.selectedId);
+    expect(after.selectedIds).toBe(before.selectedIds);
     expect(after.past).toBe(before.past);
   });
 
@@ -599,7 +808,7 @@ describe('entering the pen', () => {
       { type: 'penEnd', close: false },
     );
     expect(round.tool).toBe('select');
-    expect(round.selectedId).toBe(before.selectedId);
+    expect(round.selectedIds).toBe(before.selectedIds);
     expect(round.doc).toBe(before.doc);
     expect(round.past).toBe(before.past);
   });
@@ -687,7 +896,7 @@ describe('finishing with the pen', () => {
       close: false,
     });
     expect(state.doc.objects).toHaveLength(1);
-    expect(state.selectedId).toBe(state.doc.objects[0]?.id);
+    expect(selectedObject(state)?.id).toBe(state.doc.objects[0]?.id);
   });
 
   it('is one history entry however many anchors were placed, and one undo takes it all', () => {

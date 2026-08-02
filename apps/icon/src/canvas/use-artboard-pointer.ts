@@ -14,14 +14,17 @@ import {
   centreOf,
   controlPointAt,
   hitTest,
+  pointsBox,
   rotatePoint,
+  rotatedBounds,
   translate,
+  unionBox,
   vertexPoints,
   type Box,
   type Point,
 } from '../doc/geometry';
 import { closesPath } from '../doc/pen';
-import type { Action, EditorState } from '../doc/store';
+import { selectedObject, type Action, type EditorState, type GeometryEdit } from '../doc/store';
 import type { Geometry, IconObject, PathSegment } from '../doc/types';
 import {
   angleFrom,
@@ -30,6 +33,7 @@ import {
   controlParts,
   isControl,
   isVertex,
+  MARQUEE_MIN_PX,
   movePathAnchor,
   movePathControl,
   OUTLINE_REACH_PX,
@@ -54,7 +58,51 @@ const roundCircle = (shape: CircleShape): CircleShape => ({
 const roundPoint = (point: Point): Point => ({ x: Math.round(point.x), y: Math.round(point.y) });
 
 type Gesture =
-  | { mode: 'move'; id: string; startGeometry: Geometry; startPoint: Point; startBox: Box }
+  /**
+   * A move, of one object or of a whole selection.
+   *
+   * `starts` is every object being carried with the geometry it had when the
+   * press landed, captured once and never re-read. That is the same absolute
+   * rule the single case has always kept, widened: each move recomputes every
+   * one of them from the start it was captured with, so a selection dragged in
+   * a circle comes back exactly where it began. Reading the current geometry
+   * each frame and adding a step to it would drift, and drift is visible.
+   *
+   * A locked object never gets into `starts` — it is left out at the press,
+   * so the rest of the selection moves around it.
+   */
+  | {
+      mode: 'move';
+      starts: readonly GeometryEdit[];
+      startPoint: Point;
+      startBox: Box;
+      /** The ghost's rotation. Zero for several, whose combined box has none. */
+      rotation: number;
+      /** What the status slot calls this move, decided once at the press. */
+      label: string;
+      /**
+       * The object to collapse the selection to if the press turns out to be a
+       * click. Set only when the press landed inside a selection of several,
+       * which is the one case where a plain press does not replace it outright.
+       */
+      collapse: string | null;
+      /** Whether the pointer has actually moved the shapes anywhere yet. */
+      moved: boolean;
+    }
+  /**
+   * A rubber band, opened by a press on empty canvas. What it catches is
+   * decided on the release rather than as it is dragged: a band that has caught
+   * and released a shape on the way past should leave nothing behind.
+   */
+  | {
+      mode: 'marquee';
+      startPoint: Point;
+      /** Where the press went down, in CSS pixels — the threshold is measured there. */
+      startClient: Point;
+      /** Shift: the band adds to the selection instead of replacing it. */
+      additive: boolean;
+      moved: boolean;
+    }
   | {
       mode: 'resize';
       id: string;
@@ -160,6 +208,8 @@ export function useArtboardPointer({
 }) {
   const gesture = useRef<Gesture | null>(null);
   const [chrome, setChrome] = useState<DragChrome | null>(null);
+  /** The rubber band as it stands, in document units. Null when there is none. */
+  const [marquee, setMarquee] = useState<Box | null>(null);
   const [penChrome, setPenChrome] = useState<PenChrome | null>(null);
   /**
    * Where the press that placed the current anchor went down, in CSS pixels.
@@ -240,37 +290,81 @@ export function useArtboardPointer({
     const hit = hitTest(state.doc.objects, point);
 
     if (!hit) {
-      dispatch({ type: 'selectObject', id: null });
+      // A press on empty canvas opens a rubber band. Nothing is deselected
+      // yet: the release decides, because only the band's own size can say
+      // whether this was a marquee or a click on the background.
+      gesture.current = {
+        mode: 'marquee',
+        startPoint: point,
+        startClient: { x: event.clientX, y: event.clientY },
+        additive: event.shiftKey,
+        moved: false,
+      };
+      setMarquee({ x: point.x, y: point.y, w: 0, h: 0 });
+      // Not `begin`: `dragging` dims the rails and prints the modifiers a move
+      // takes, and a band takes none of them.
+      event.currentTarget.setPointerCapture(event.pointerId);
       return;
     }
 
-    dispatch({ type: 'selectObject', id: hit.id });
+    // Shift adds the shape to the selection or takes it out again, and that
+    // press is the whole gesture — a shift-click that also picked the shape up
+    // would answer a question nobody asked.
+    if (event.shiftKey) {
+      dispatch({ type: 'toggleSelect', id: hit.id });
+      return;
+    }
+
+    // Pressing a member of a several-object selection keeps that selection:
+    // this press is how the whole group gets picked up. Pressing anything else
+    // replaces it — which is also what ends node editing.
+    const group = state.selectedIds.size > 1 && state.selectedIds.has(hit.id);
+    if (!group) dispatch({ type: 'selectObject', id: hit.id });
+
     // Locked means it will not move, not that it has left the document: it
     // still selects, so it can be unlocked from the rail.
     if (hit.locked) return;
 
     // Alt duplicates: the copy is what you drag away, leaving the original in
     // place. The new id is derived rather than read back from state, which
-    // has not updated yet.
+    // has not updated yet. One object only — duplicating a whole selection is
+    // the same question as grouping one, and is answered with it.
     let target = hit;
-    if (event.altKey) {
+    if (event.altKey && !group) {
       dispatch({ type: 'duplicateObject', id: hit.id });
       target = { ...hit, id: objectId(hit.geometry.kind, state.sequence + 1) };
     }
 
-    const startBox = bounds(target);
+    // Every geometry the drag will recompute from, taken here and only here.
+    // A locked object is left out rather than refused move by move, so the rest
+    // of the selection travels around it.
+    const carried = group
+      ? state.doc.objects.filter((o) => state.selectedIds.has(o.id) && !o.locked)
+      : [target];
+    const starts: GeometryEdit[] = carried.map((o) => ({ id: o.id, geometry: o.geometry }));
+    // A selection of nothing but locked objects has nothing to pick up.
+    if (starts.length === 0) return;
+
+    // The ghost is drawn round one object at its own angle, or round the lot
+    // upright: a combined box has no rotation of its own to be drawn at.
+    const startBox = group
+      ? (unionBox(carried.map(rotatedBounds)) ?? bounds(target))
+      : bounds(target);
     begin(event, {
       mode: 'move',
-      id: target.id,
-      startGeometry: target.geometry,
+      starts,
       startPoint: point,
       startBox,
+      rotation: group ? 0 : target.rotation,
+      label: group ? `move ${starts.length} objects` : `move ${target.name}`,
+      collapse: group ? hit.id : null,
+      moved: false,
     });
     setChrome({
       origin: startBox,
       current: startBox,
       delta: { x: 0, y: 0 },
-      rotation: target.rotation,
+      rotation: group ? 0 : target.rotation,
     });
   };
 
@@ -278,7 +372,10 @@ export function useArtboardPointer({
     // The overlay sits above the artboard; without this the artboard's own
     // handler would run too and start a move behind the resize.
     event.stopPropagation();
-    const object = state.selectedId ? objectById(state.selectedId) : undefined;
+    // Handles only ever belong to a single selection — resizing, rotating and
+    // node editing are all statements about one shape — so this reads the
+    // single-selection accessor rather than picking one out of a set.
+    const object = selectedObject(state);
     if (!object || object.locked) return;
 
     if (handle === 'rotate') {
@@ -353,8 +450,19 @@ export function useArtboardPointer({
     if (!active) return;
     const point = pointOf(event);
     if (!point) return;
-    const object = objectById(active.id);
-    if (!object) return;
+
+    if (active.mode === 'marquee') {
+      // Latched, the way the pen's pull is: a band that wandered out and back
+      // inside the threshold is still a band, not a click that changed its mind.
+      if (
+        Math.hypot(event.clientX - active.startClient.x, event.clientY - active.startClient.y) >
+        MARQUEE_MIN_PX
+      ) {
+        active.moved = true;
+      }
+      setMarquee(pointsBox([active.startPoint, point]));
+      return;
+    }
 
     if (active.mode === 'move') {
       const delta = constrainDelta(
@@ -364,21 +472,27 @@ export function useArtboardPointer({
       );
       const dx = Math.round(delta.x);
       const dy = Math.round(delta.y);
+      if (dx !== 0 || dy !== 0) active.moved = true;
       dispatch({
-        type: 'setGeometry',
-        id: active.id,
-        geometry: translate(active.startGeometry, dx, dy),
-        label: `move ${object.name}`,
+        type: 'setGeometries',
+        edits: active.starts.map((start) => ({
+          id: start.id,
+          geometry: translate(start.geometry, dx, dy),
+        })),
+        label: active.label,
         at: event.timeStamp,
       });
       setChrome({
         origin: active.startBox,
         current: { ...active.startBox, x: active.startBox.x + dx, y: active.startBox.y + dy },
         delta: { x: dx, y: dy },
-        rotation: object.rotation,
+        rotation: active.rotation,
       });
       return;
     }
+
+    const object = objectById(active.id);
+    if (!object) return;
 
     if (active.mode === 'control') {
       const g = object.geometry;
@@ -554,8 +668,35 @@ export function useArtboardPointer({
       }
       return;
     }
-    if (!gesture.current) return;
+    const active = gesture.current;
+    if (!active) return;
     gesture.current = null;
+
+    if (active.mode === 'marquee') {
+      setMarquee(null);
+      const point = pointOf(event);
+      if (active.moved && point) {
+        // Recomputed from the release rather than read off the last frame, for
+        // the reason every other gesture here is absolute: the band is the two
+        // points, not the moves between them.
+        dispatch({
+          type: 'selectInBox',
+          box: pointsBox([active.startPoint, point]),
+          additive: active.additive,
+        });
+      } else if (!active.additive) {
+        // A press that never travelled is a click on the background, which is
+        // how you deselect. Shift-clicking it is not: it aimed at nothing, and
+        // taking the selection away would be an odd way to say so.
+        dispatch({ type: 'selectObject', id: null });
+      }
+    } else if (active.mode === 'move' && !active.moved && active.collapse !== null) {
+      // A click rather than a drag. Pressing one member of a selection and
+      // letting go without moving is how you pick that one out of the group —
+      // the press could not do it, because it is also how the group is lifted.
+      dispatch({ type: 'selectObject', id: active.collapse });
+    }
+
     setChrome(null);
     onDraggingChange(false);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -565,6 +706,7 @@ export function useArtboardPointer({
 
   return {
     chrome,
+    marquee,
     penChrome,
     surfaceProps: {
       onPointerDown,

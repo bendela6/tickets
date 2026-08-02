@@ -500,6 +500,17 @@ export const OUTLINE_REACH_PX = 6;
 export const PEN_PULL_PX = 3;
 
 /**
+ * How far the pointer has to travel before a press on empty canvas is a
+ * marquee rather than a click that cleared the selection, in CSS pixels.
+ *
+ * In pixels for the reason the two above are. A band of no size is not the
+ * harmless thing it looks either: it is still *somewhere*, and a box of no area
+ * sitting inside a shape's own box overlaps it — so a click on bare canvas in
+ * the corner of a circle would select the circle it deliberately missed.
+ */
+export const MARQUEE_MIN_PX = 3;
+
+/**
  * The point a dragged vertex's Shift constraint is measured from: its
  * neighbour in the run. A line has exactly one other point, so this is its far
  * end and Shift means on a line what it always did.

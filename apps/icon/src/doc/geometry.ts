@@ -855,6 +855,49 @@ export function hitTest(objects: IconObject[], point: Point): IconObject | null 
   return null;
 }
 
+/** Whether two boxes share any area. Touching along an edge counts. */
+export function boxesOverlap(a: Box, b: Box): boolean {
+  return a.x <= b.x + b.w && b.x <= a.x + a.w && a.y <= b.y + b.h && b.y <= a.y + a.h;
+}
+
+/**
+ * The tightest box holding all of them, or null when there are none.
+ *
+ * Stated through `pointsBox` rather than by folding four running extremes,
+ * because a box is its two opposite corners and that function already knows
+ * what an empty run means.
+ */
+export function unionBox(boxes: readonly Box[]): Box | null {
+  if (boxes.length === 0) return null;
+  return pointsBox(
+    boxes.flatMap((box) => [
+      { x: box.x, y: box.y },
+      { x: box.x + box.w, y: box.y + box.h },
+    ]),
+  );
+}
+
+/**
+ * Every visible object a box touches, front to back — what a marquee catches.
+ *
+ * Overlap rather than containment: a band swept across a cluster is aimed at
+ * the shapes it crosses, and demanding that it swallow each one whole would
+ * make a large shape impossible to catch without leaving the artboard.
+ *
+ * It is each object's box that is tested rather than its outline, so a band
+ * that clips the corner of a circle's box without touching the circle still
+ * catches it. That errs towards catching what the pointer was aimed near,
+ * which is the error worth making — and it is the *rotated* box, because that
+ * is the extent actually on screen.
+ *
+ * Hidden objects are not there to be caught, for the same reason `hitTest`
+ * skips them. Locked ones are: locked means it will not move, not that it has
+ * left the document.
+ */
+export function objectsInBox(objects: readonly IconObject[], box: Box): IconObject[] {
+  return objects.filter((object) => !object.hidden && boxesOverlap(rotatedBounds(object), box));
+}
+
 /** One path command moved, coordinates and all. */
 function movedSegment(segment: PathSegment, dx: number, dy: number): PathSegment {
   switch (segment.c) {

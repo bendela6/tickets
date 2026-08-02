@@ -79,7 +79,16 @@ function ObjectRow({
         type="button"
         aria-pressed={selected}
         ref={registerRef}
-        onClick={() => dispatch({ type: 'selectObject', id: object.id })}
+        // Shift adds the row to the selection or takes it out, exactly as
+        // shift-clicking the shape on the artboard does: the rail and the
+        // canvas are two views of one selection, not two ways of selecting.
+        onClick={(event) =>
+          dispatch(
+            event.shiftKey
+              ? { type: 'toggleSelect', id: object.id }
+              : { type: 'selectObject', id: object.id },
+          )
+        }
         onKeyDown={(event) => {
           // Alt/Option is free over a list row — the browser owns Ctrl/Cmd+arrows
           // for tab and word navigation, and plain arrows are left alone entirely
@@ -140,8 +149,9 @@ function ObjectRow({
 /**
  * The left rail: what is on the artboard, front-to-back, and one way to add
  * each shape the document may hold. Selection reads three ways at once and
- * nowhere else — handles on the artboard, an accent row here, and a populated
- * right rail.
+ * nowhere else — an outline on the artboard, an accent row here, and a
+ * populated right rail. Every selected row reads as pressed, so a selection of
+ * three is three accented rows rather than one plus something implied.
  */
 export function ObjectList() {
   const { state, dispatch, view } = useEditor();
@@ -199,8 +209,10 @@ export function ObjectList() {
               key={object.id}
               object={object}
               index={index}
-              selected={object.id === state.selectedId}
-              moving={view.dragging && object.id === state.selectedId}
+              selected={state.selectedIds.has(object.id)}
+              // A locked object in the selection is not going anywhere, so it
+              // does not claim to be.
+              moving={view.dragging && state.selectedIds.has(object.id) && !object.locked}
               onDragStart={setDragFrom}
               onDragOver={setDragOver}
               onDrop={commitReorder}

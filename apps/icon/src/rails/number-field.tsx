@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react';
 
 /**
+ * What a field reads when the objects under it do not agree.
+ *
+ * A word rather than a blank. A blank field reads as "no value", invites a
+ * blur that would write one, and says nothing about why it is empty; `mixed`
+ * is a statement about the selection. It is still a live field — typing a
+ * number over it commits that number to every selected object — so this is the
+ * current answer rather than a disabled state.
+ */
+export const MIXED = 'mixed';
+
+/**
  * A hairline field holding one number, which is what almost every row in the
  * properties rail is: a small uppercase label on the left, the value right-
  * aligned in mono.
@@ -19,6 +30,7 @@ export function NumberField({
   step = 1,
   suffix,
   disabled,
+  mixed = false,
 }: {
   /** The short mark printed in the field — `X`, `W`, `ROTATION`. */
   label: string;
@@ -35,22 +47,34 @@ export function NumberField({
   step?: number;
   suffix?: string;
   disabled?: boolean;
+  /**
+   * The objects under this field disagree, so `value` is one of their answers
+   * rather than everyone's and must not be printed as though it were.
+   */
+  mixed?: boolean;
 }) {
-  const [draft, setDraft] = useState(String(value));
-  useEffect(() => setDraft(String(value)), [value]);
+  const shown = mixed ? MIXED : String(value);
+  const [draft, setDraft] = useState(shown);
+  useEffect(() => setDraft(shown), [shown]);
 
   const commit = (text: string) => {
     const parsed = Number(text);
     if (!Number.isFinite(parsed)) {
-      setDraft(String(value));
+      setDraft(shown);
       return;
     }
     const clamped = Math.min(max ?? Infinity, Math.max(min ?? -Infinity, parsed));
-    if (clamped !== value) onCommit(clamped);
+    // Out of a mixed field, even the value one object already has is a change:
+    // it is what the others are being told to become.
+    if (mixed || clamped !== value) onCommit(clamped);
     setDraft(String(clamped));
   };
 
-  const nudge = (direction: 1 | -1) => commit(String(value + direction * step));
+  // Nothing to step from while the field is mixed: `value` is one object's
+  // answer, and nudging it would quietly make it everyone's.
+  const nudge = (direction: 1 | -1) => {
+    if (!mixed) commit(String(value + direction * step));
+  };
 
   return (
     <label className="flex h-7.5 items-center gap-1.5 rounded-md border-1 border-gray-6 bg-surface-raised px-2.25">
@@ -64,7 +88,7 @@ export function NumberField({
         onBlur={(event) => commit(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === 'Enter') commit(event.currentTarget.value);
-          if (event.key === 'Escape') setDraft(String(value));
+          if (event.key === 'Escape') setDraft(shown);
           if (event.key === 'ArrowUp') {
             event.preventDefault();
             nudge(1);
