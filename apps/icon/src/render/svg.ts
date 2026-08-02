@@ -1,5 +1,6 @@
 import { centreOf, isOpenRun } from '../doc/geometry';
-import type { Ground, IconDoc, IconObject, PathSegment } from '../doc/types';
+import { isGroup, placementOf } from '../doc/tree';
+import type { Ground, IconDoc, IconGroup, IconNode, IconObject, PathSegment } from '../doc/types';
 
 /**
  * The document as SVG. This is the only place artwork is drawn for export —
@@ -77,8 +78,28 @@ function transformOf(object: IconObject): string {
   return ` transform="rotate(${n(object.rotation)} ${n(c.x)} ${n(c.y)})"`;
 }
 
-function opacityOf(object: IconObject): string {
-  return object.opacity >= 100 ? '' : ` opacity="${n(object.opacity / 100)}"`;
+function opacityOf(node: IconNode): string {
+  return node.opacity >= 100 ? '' : ` opacity="${n(node.opacity / 100)}"`;
+}
+
+/**
+ * A group's transform, spelled the way SVG spells one.
+ *
+ * The model turns and scales a group about its own centre, because that is what
+ * a rotation knob and a corner handle mean. SVG chains its transforms from the
+ * origin, so the pivot is folded into the translate on the way out — exactly,
+ * and in this one place. The three primitives are written in the order SVG
+ * applies them, and each is left out when it is the identity: a group that has
+ * only been moved reads `translate(10 20)` and nothing else, which is what
+ * anyone opening the exported file would have written by hand.
+ */
+function transformOfGroup(group: IconGroup): string {
+  const { scale, rotation, x, y } = placementOf(group);
+  const parts: string[] = [];
+  if (x !== 0 || y !== 0) parts.push(`translate(${n(x)} ${n(y)})`);
+  if (rotation % 360 !== 0) parts.push(`rotate(${n(rotation)})`);
+  if (scale !== 1) parts.push(`scale(${n(scale)})`);
+  return parts.length === 0 ? '' : ` transform="${parts.join(' ')}"`;
 }
 
 function shapeMarkup(object: IconObject, ground: Ground): string {
@@ -114,6 +135,31 @@ function shapeMarkup(object: IconObject, ground: Ground): string {
   }
 }
 
+/**
+ * One list of nodes, painted back to front.
+ *
+ * The list is reversed at every level and not only at the top: front-to-back is
+ * a property of a list of objects, and a group holds one of those.
+ *
+ * A hidden group is skipped whole, children and all — which is the model's
+ * "hidden propagates down" and costs nothing to say here, because a `<g>` that
+ * is not emitted cannot emit anything inside it.
+ */
+function nodesMarkup(nodes: readonly IconNode[], ground: Ground): string[] {
+  const parts: string[] = [];
+  for (const node of [...nodes].reverse()) {
+    if (node.hidden) continue;
+    if (isGroup(node)) {
+      parts.push(`<g${transformOfGroup(node)}${opacityOf(node)}>`);
+      parts.push(...nodesMarkup(node.children, ground));
+      parts.push('</g>');
+      continue;
+    }
+    parts.push(shapeMarkup(node, ground));
+  }
+  return parts;
+}
+
 export interface RenderOptions {
   /** Which half of every colour pair to paint. */
   ground: Ground;
@@ -137,10 +183,7 @@ export function renderSvg(doc: IconDoc, options: RenderOptions): string {
   }
   // Document order is front-to-back; SVG paints in source order, so the list
   // is reversed to put the frontmost object last.
-  for (const object of [...doc.objects].reverse()) {
-    if (object.hidden) continue;
-    parts.push(shapeMarkup(object, ground));
-  }
+  parts.push(...nodesMarkup(doc.objects, ground));
   parts.push('</svg>');
   return parts.join('');
 }

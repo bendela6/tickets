@@ -59,6 +59,13 @@ export interface OverlayProps {
 }
 
 /**
+ * Which resize handles to draw. Defaults to all eight; a group is given the
+ * four corners, because a group scales by one number and an edge handle would
+ * offer to change a second one that does not exist.
+ */
+type Handles = readonly ResizeHandle[];
+
+/**
  * The box, its eight resize handles and the rotation knob.
  *
  * The whole overlay is rotated with the object rather than drawn around its
@@ -66,7 +73,13 @@ export interface OverlayProps {
  * tells you nothing about which handle grows which side, and the box stops
  * touching the artwork at all.
  */
-export function SelectionOverlay({ box, rotation, scale, onHandleDown }: OverlayProps) {
+export function SelectionOverlay({
+  box,
+  rotation,
+  scale,
+  handles = RESIZE_HANDLES,
+  onHandleDown,
+}: OverlayProps & { handles?: Handles }) {
   return (
     <div
       // Not interactive itself — only the handles inside it are — so the
@@ -80,7 +93,7 @@ export function SelectionOverlay({ box, rotation, scale, onHandleDown }: Overlay
         transform: `rotate(${rotation}deg)`,
       }}
     >
-      {RESIZE_HANDLES.map((handle) => {
+      {handles.map((handle) => {
         const position = handlePosition(box, handle);
         const size = handleSize(handle);
         return (

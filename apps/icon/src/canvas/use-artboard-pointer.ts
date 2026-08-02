@@ -13,10 +13,8 @@ import {
   boxCentre,
   centreOf,
   controlPointAt,
-  hitTest,
   pointsBox,
   rotatePoint,
-  rotatedBounds,
   translate,
   unionBox,
   vertexPoints,
@@ -24,8 +22,29 @@ import {
   type Point,
 } from '../doc/geometry';
 import { closesPath } from '../doc/pen';
-import { selectedObject, type Action, type EditorState, type GeometryEdit } from '../doc/store';
-import type { Geometry, IconObject, PathSegment } from '../doc/types';
+import {
+  lockedInPlace,
+  selectedFrame,
+  selectedNodeOnly,
+  type Action,
+  type EditorState,
+  type PlacementEdit,
+} from '../doc/store';
+import {
+  ARTBOARD_FRAME,
+  boxThrough,
+  centreOfGroup,
+  findNode,
+  frameOf,
+  isGroup,
+  localBounds,
+  nodeAt,
+  outlineOf,
+  unplace,
+  unplaceVector,
+  type Placement,
+} from '../doc/tree';
+import type { Geometry, GroupTransform, IconNode, PathSegment } from '../doc/types';
 import {
   angleFrom,
   circleResize,
@@ -57,11 +76,23 @@ const roundCircle = (shape: CircleShape): CircleShape => ({
 
 const roundPoint = (point: Point): Point => ({ x: Math.round(point.x), y: Math.round(point.y) });
 
+/**
+ * One node being carried, with everything the drag needs to recompute it.
+ *
+ * `frame` is the placement its own coordinates are stated in — the identity at
+ * the top level, and the chain of groups above it anywhere else. The pointer
+ * delta is measured on the artboard and read back through this, so a shape
+ * inside a group turned 30° and halved still follows the pointer exactly.
+ */
+type Carried =
+  | { id: string; frame: Placement; geometry: Geometry }
+  | { id: string; frame: Placement; transform: GroupTransform };
+
 type Gesture =
   /**
-   * A move, of one object or of a whole selection.
+   * A move, of one node or of a whole selection.
    *
-   * `starts` is every object being carried with the geometry it had when the
+   * `starts` is every node being carried with the placement it had when the
    * press landed, captured once and never re-read. That is the same absolute
    * rule the single case has always kept, widened: each move recomputes every
    * one of them from the start it was captured with, so a selection dragged in
@@ -69,11 +100,12 @@ type Gesture =
    * each frame and adding a step to it would drift, and drift is visible.
    *
    * A locked object never gets into `starts` — it is left out at the press,
-   * so the rest of the selection moves around it.
+   * so the rest of the selection moves around it. So is one inside a locked
+   * group, which is the same statement one level up.
    */
   | {
       mode: 'move';
-      starts: readonly GeometryEdit[];
+      starts: readonly Carried[];
       startPoint: Point;
       startBox: Box;
       /** The ghost's rotation. Zero for several, whose combined box has none. */
@@ -109,6 +141,13 @@ type Gesture =
       handle: ResizeHandle;
       startBox: Box;
       rotation: number;
+      /** The frame the box above is stated in. Identity outside a group. */
+      frame: Placement;
+      /**
+       * A group, whose box is not geometry to be fitted but one scale to be
+       * changed — and whose drag is therefore always proportional.
+       */
+      group: boolean;
       /** Set only for a circle, which resizes as a centre and a radius. */
       startCircle?: CircleShape;
     }
@@ -126,6 +165,8 @@ type Gesture =
       id: string;
       index: number;
       rotation: number;
+      /** The frame `startWorld` is stated in, which the pointer is read into. */
+      frame: Placement;
       startWorld: Point[];
       startSegments?: readonly PathSegment[];
     }
@@ -139,6 +180,7 @@ type Gesture =
       segment: number;
       which: 1 | 2;
       rotation: number;
+      frame: Placement;
       startWorld: Point;
       startSegments: readonly PathSegment[];
     }
@@ -149,7 +191,9 @@ type Gesture =
   | {
       mode: 'rotate';
       id: string;
+      /** The pivot, in the same frame the pointer is read into. */
       centre: Point;
+      frame: Placement;
       line?: Extract<Geometry, { kind: 'line' }>;
     };
 
@@ -228,8 +272,7 @@ export function useArtboardPointer({
     [scale, surfaceRef],
   );
 
-  const objectById = (id: string): IconObject | undefined =>
-    state.doc.objects.find((object) => object.id === id);
+  const nodeById = (id: string): IconNode | null => findNode(state.doc.objects, id);
 
   const begin = (event: PointerEvent, next: Gesture) => {
     gesture.current = next;
@@ -287,7 +330,9 @@ export function useArtboardPointer({
       return;
     }
 
-    const hit = hitTest(state.doc.objects, point);
+    // What a click means at the level you are standing in: a group, not the
+    // shape inside it, unless you have gone in.
+    const hit = nodeAt(state.doc.objects, point, state.entered);
 
     if (!hit) {
       // A press on empty canvas opens a rubber band. Nothing is deselected
@@ -316,56 +361,67 @@ export function useArtboardPointer({
     }
 
     // Pressing a member of a several-object selection keeps that selection:
-    // this press is how the whole group gets picked up. Pressing anything else
+    // this press is how the whole lot gets picked up. Pressing anything else
     // replaces it — which is also what ends node editing.
-    const group = state.selectedIds.size > 1 && state.selectedIds.has(hit.id);
-    if (!group) dispatch({ type: 'selectObject', id: hit.id });
+    const several = state.selectedIds.size > 1 && state.selectedIds.has(hit.id);
+    if (!several) dispatch({ type: 'selectObject', id: hit.id });
 
     // Locked means it will not move, not that it has left the document: it
-    // still selects, so it can be unlocked from the rail.
-    if (hit.locked) return;
+    // still selects, so it can be unlocked from the rail. A locked group holds
+    // everything in it the same way.
+    if (lockedInPlace(state, hit.id)) return;
 
     // Alt duplicates: the copy is what you drag away, leaving the original in
-    // place. The new id is derived rather than read back from state, which
-    // has not updated yet. One object only — duplicating a whole selection is
-    // the same question as grouping one, and is answered with it.
-    let target = hit;
-    if (event.altKey && !group) {
+    // place. The new id is derived rather than read back from state, which has
+    // not updated yet. One node only, and not a group — a group's copy is a
+    // whole subtree of new ids, and deriving those here would be a second
+    // implementation of the reducer's own.
+    let target: IconNode = hit;
+    if (event.altKey && !several && !isGroup(hit)) {
       dispatch({ type: 'duplicateObject', id: hit.id });
       target = { ...hit, id: objectId(hit.geometry.kind, state.sequence + 1) };
     }
 
-    // Every geometry the drag will recompute from, taken here and only here.
-    // A locked object is left out rather than refused move by move, so the rest
-    // of the selection travels around it.
-    const carried = group
-      ? state.doc.objects.filter((o) => state.selectedIds.has(o.id) && !o.locked)
+    // Every placement the drag will recompute from, taken here and only here,
+    // each with the frame its own numbers are stated in. A locked node is left
+    // out rather than refused move by move, so the rest travels around it.
+    const chosen: IconNode[] = several
+      ? [...state.selectedIds]
+          .map((id) => nodeById(id))
+          .filter((node): node is IconNode => node !== null && !lockedInPlace(state, node.id))
       : [target];
-    const starts: GeometryEdit[] = carried.map((o) => ({ id: o.id, geometry: o.geometry }));
+    const starts: Carried[] = chosen.map((node) => {
+      const frame = frameOf(state.doc.objects, node.id);
+      return isGroup(node)
+        ? { id: node.id, frame, transform: node.transform }
+        : { id: node.id, frame, geometry: node.geometry };
+    });
     // A selection of nothing but locked objects has nothing to pick up.
     if (starts.length === 0) return;
 
-    // The ghost is drawn round one object at its own angle, or round the lot
+    // The ghost is drawn round one node at its own angle, or round the lot
     // upright: a combined box has no rotation of its own to be drawn at.
-    const startBox = group
-      ? (unionBox(carried.map(rotatedBounds)) ?? bounds(target))
-      : bounds(target);
+    const single = chosen[0];
+    const outline =
+      !several && single ? outlineOf(single, frameOf(state.doc.objects, single.id)) : null;
+    const startBox =
+      outline?.box ??
+      unionBox(
+        chosen.map((node) => boxThrough(localBounds(node), frameOf(state.doc.objects, node.id))),
+      ) ??
+      { x: point.x, y: point.y, w: 0, h: 0 };
+    const rotation = outline?.rotation ?? 0;
     begin(event, {
       mode: 'move',
       starts,
       startPoint: point,
       startBox,
-      rotation: group ? 0 : target.rotation,
-      label: group ? `move ${starts.length} objects` : `move ${target.name}`,
-      collapse: group ? hit.id : null,
+      rotation,
+      label: several ? `move ${starts.length} objects` : `move ${target.name}`,
+      collapse: several ? hit.id : null,
       moved: false,
     });
-    setChrome({
-      origin: startBox,
-      current: startBox,
-      delta: { x: 0, y: 0 },
-      rotation: group ? 0 : target.rotation,
-    });
+    setChrome({ origin: startBox, current: startBox, delta: { x: 0, y: 0 }, rotation });
   };
 
   const onHandleDown = (handle: Handle, event: PointerEvent) => {
@@ -373,16 +429,45 @@ export function useArtboardPointer({
     // handler would run too and start a move behind the resize.
     event.stopPropagation();
     // Handles only ever belong to a single selection — resizing, rotating and
-    // node editing are all statements about one shape — so this reads the
+    // node editing are all statements about one thing — so this reads the
     // single-selection accessor rather than picking one out of a set.
-    const object = selectedObject(state);
-    if (!object || object.locked) return;
+    const node = selectedNodeOnly(state);
+    if (!node || lockedInPlace(state, node.id)) return;
+    // The frame the node's own numbers live in. Every gesture below works in
+    // that frame and reads the pointer into it once, which is what leaves all
+    // the maths underneath exactly as it was before groups existed.
+    const frame = selectedFrame(state);
+
+    if (isGroup(node)) {
+      if (handle === 'rotate') {
+        // The pivot is stated in the same frame the pointer is read into, which
+        // for a group's own turn is its parent's — the frame its transform
+        // lives in and the one the properties rail shows.
+        begin(event, { mode: 'rotate', id: node.id, centre: centreOfGroup(node), frame });
+        return;
+      }
+      if (isVertex(handle) || isControl(handle)) return;
+      begin(event, {
+        mode: 'resize',
+        id: node.id,
+        handle,
+        startBox: outlineOf(node, frame).box,
+        rotation: outlineOf(node, frame).rotation,
+        frame: ARTBOARD_FRAME,
+        group: true,
+      });
+      return;
+    }
+
+    const object = node;
 
     if (handle === 'rotate') {
       begin(event, {
         mode: 'rotate',
         id: object.id,
+        // In the shape's own frame, which is where the pointer is read to.
         centre: boxCentre(bounds(object)),
+        frame,
         line: object.geometry.kind === 'line' ? object.geometry : undefined,
       });
       return;
@@ -400,6 +485,7 @@ export function useArtboardPointer({
         id: object.id,
         index,
         rotation: object.rotation,
+        frame,
         startWorld,
         ...(object.geometry.kind === 'path' ? { startSegments: object.geometry.segments } : {}),
       });
@@ -417,6 +503,7 @@ export function useArtboardPointer({
         segment,
         which,
         rotation: object.rotation,
+        frame,
         startWorld: rotatePoint(stored, centreOf(object), object.rotation),
         startSegments: g.segments,
       });
@@ -428,6 +515,8 @@ export function useArtboardPointer({
       handle,
       startBox: bounds(object),
       rotation: object.rotation,
+      frame,
+      group: false,
       ...(object.geometry.kind === 'circle'
         ? {
             startCircle: {
@@ -474,11 +563,23 @@ export function useArtboardPointer({
       const dy = Math.round(delta.y);
       if (dx !== 0 || dy !== 0) active.moved = true;
       dispatch({
-        type: 'setGeometries',
-        edits: active.starts.map((start) => ({
-          id: start.id,
-          geometry: translate(start.geometry, dx, dy),
-        })),
+        type: 'setPlacements',
+        edits: active.starts.map((start): PlacementEdit => {
+          // The pointer travelled this far on the artboard; the numbers it is
+          // added to are stated in the node's own frame, so the delta is read
+          // back through that frame before it touches either of them.
+          const step = unplaceVector(start.frame, { x: dx, y: dy });
+          return 'geometry' in start
+            ? { id: start.id, geometry: translate(start.geometry, step.x, step.y) }
+            : {
+                id: start.id,
+                transform: {
+                  ...start.transform,
+                  x: start.transform.x + step.x,
+                  y: start.transform.y + step.y,
+                },
+              };
+        }),
         label: active.label,
         at: event.timeStamp,
       });
@@ -491,8 +592,42 @@ export function useArtboardPointer({
       return;
     }
 
-    const object = objectById(active.id);
-    if (!object) return;
+    // A group carries a transform where a shape carries geometry, so the two
+    // gestures it answers are peeled off before the shape-only ones below.
+    const held = nodeById(active.id);
+    if (!held) return;
+
+    if (active.mode === 'rotate' && isGroup(held)) {
+      dispatch({
+        type: 'rotateObject',
+        id: active.id,
+        degrees: snapAngle(angleFrom(active.centre, unplace(active.frame, point)), event.shiftKey),
+        at: event.timeStamp,
+      });
+      return;
+    }
+
+    if (active.mode === 'resize' && active.group) {
+      if (!isGroup(held)) return;
+      // Corners only, and always proportional: the model holds one scale, so a
+      // box that changed its aspect would have to be answered by changing the
+      // shape of everything inside the group.
+      dispatch({
+        type: 'resizeGroup',
+        id: active.id,
+        box: resizeRotated(active.startBox, active.handle, point, active.rotation, true),
+        at: event.timeStamp,
+      });
+      return;
+    }
+
+    if (isGroup(held)) return;
+    const object = held;
+
+    // Every gesture below rewrites the shape's stored numbers, which are in its
+    // own frame — so the pointer is read into that frame once, here, and every
+    // line after this is the same one it was before the tree existed.
+    const local = unplace(active.frame, point);
 
     if (active.mode === 'control') {
       const g = object.geometry;
@@ -506,7 +641,7 @@ export function useArtboardPointer({
             active.startSegments,
             active.segment,
             active.which,
-            { x: point.x - active.startWorld.x, y: point.y - active.startWorld.y },
+            { x: local.x - active.startWorld.x, y: local.y - active.startWorld.y },
             active.rotation,
           ),
         },
@@ -522,7 +657,7 @@ export function useArtboardPointer({
       // pointer, the rest stay exactly where they were when the drag began —
       // and only then converted back to stored coordinates.
       const anchor = vertexAnchor(active.startWorld, active.index);
-      const moved = anchor ? vertexAt(anchor, point, event.shiftKey) : point;
+      const moved = anchor ? vertexAt(anchor, local, event.shiftKey) : local;
       const label = `reshape ${object.name}`;
 
       if (g.kind === 'path') {
@@ -586,7 +721,7 @@ export function useArtboardPointer({
           id: active.id,
           geometry: {
             ...g,
-            ...roundCircle(circleResize(active.startCircle, active.handle, point, active.rotation)),
+            ...roundCircle(circleResize(active.startCircle, active.handle, local, active.rotation)),
           },
           label: `resize ${object.name}`,
           at: event.timeStamp,
@@ -596,13 +731,13 @@ export function useArtboardPointer({
       dispatch({
         type: 'resizeObject',
         id: active.id,
-        box: resizeRotated(active.startBox, active.handle, point, active.rotation, event.shiftKey),
+        box: resizeRotated(active.startBox, active.handle, local, active.rotation, event.shiftKey),
         at: event.timeStamp,
       });
       return;
     }
 
-    const aimed = snapAngle(angleFrom(active.centre, point), event.shiftKey);
+    const aimed = snapAngle(angleFrom(active.centre, local), event.shiftKey);
     if (active.line) {
       // A line carries no rotation: turning it moves its ends. That is what
       // keeps the far end still when the near one is later dragged — a stored
@@ -647,13 +782,27 @@ export function useArtboardPointer({
     }
     const point = pointOf(event);
     if (!point) return;
-    const hit = hitTest(state.doc.objects, point);
-    if (!hit || hit.locked) return;
+    const hit = nodeAt(state.doc.objects, point, state.entered);
+    if (!hit) return;
+
+    // A double-click on a group goes in. Nothing else it could mean: a group
+    // has no outline of its own for a node to be added to, and the two
+    // gestures never compete because whatever is under the pointer is either a
+    // group at this level or a shape at it, never both.
+    if (isGroup(hit)) {
+      const inside = nodeAt(state.doc.objects, point, [...state.entered, hit.id]);
+      dispatch({ type: 'enterGroup', id: hit.id, select: inside?.id ?? null });
+      return;
+    }
+    if (lockedInPlace(state, hit.id)) return;
+    const frame = frameOf(state.doc.objects, hit.id);
     dispatch({
       type: 'insertVertex',
       id: hit.id,
-      at: point,
-      reach: Math.max(OUTLINE_REACH_PX / scale, hit.strokeWidth / 2),
+      // In the shape's own frame, and so is the reach: a group that halves what
+      // is inside it halves how near the outline a pointer landed.
+      at: unplace(frame, point),
+      reach: Math.max(OUTLINE_REACH_PX / (scale * frame.scale), hit.strokeWidth / 2),
     });
   };
 

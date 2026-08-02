@@ -1,7 +1,14 @@
 import { DEFAULT_GROUND, DEFAULT_INK, REFERENCE_SIZE } from './constants';
 import { arcPath, isOpenRun, polygonPoints } from './geometry';
 import { snapGeometry, snapTo } from './snap';
-import type { Artboard, Geometry, IconDoc, IconObject, ShapeKind } from './types';
+import type {
+  Artboard,
+  Geometry,
+  GroupTransform,
+  IconDoc,
+  IconObject,
+  ShapeKind,
+} from './types';
 
 /**
  * Where a new shape lands, stated as fractions of the artboard so the same
@@ -110,6 +117,18 @@ function initialGeometry(kind: ShapeKind, artboard: Artboard): Geometry {
 export function objectId(kind: ShapeKind, sequence: number): string {
   return `${kind}-${sequence}`;
 }
+
+/**
+ * The same, for a group. It draws from the one sequence every other node draws
+ * from, so no id can ever name two nodes — which is what the whole tree is
+ * addressed by.
+ */
+export function groupId(sequence: number): string {
+  return `group-${sequence}`;
+}
+
+/** A group with nothing done to it yet: children where they already were. */
+export const NO_TRANSFORM: GroupTransform = { x: 0, y: 0, rotation: 0, scale: 1 };
 
 /**
  * An object wrapped round a geometry that already exists, on the document's

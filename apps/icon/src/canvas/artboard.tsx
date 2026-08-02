@@ -2,8 +2,17 @@ import { useRef } from 'react';
 import { cn } from '@tickets/ui';
 import { MIN_GRID_PX, SAFE_ZONE } from '../doc/constants';
 import { gridPitch } from '../doc/snap';
-import { anchorControlPoints, bounds, vertexPoints } from '../doc/geometry';
-import { selectedNodeIndex, selectedObject, selectionBounds } from '../doc/store';
+import { anchorControlPoints, vertexPoints } from '../doc/geometry';
+import {
+  selectedFrame,
+  selectedNodeIndex,
+  selectedNodeOnly,
+  selectedObject,
+  selectionBounds,
+  selectionOutline,
+} from '../doc/store';
+import { isGroup, place } from '../doc/tree';
+import { CORNER_HANDLES } from './interaction';
 import { safeZoneWarnings } from '../doc/validate';
 import { useEditor } from '../editor-context';
 import { gridInk } from '../render/ink';
@@ -43,18 +52,25 @@ export function Artboard() {
     onDraggingChange: (dragging) => setView((v) => ({ ...v, dragging })),
   });
 
-  // The one selected object, or null when several are: everything below that
-  // belongs to a single shape — its handles, its nodes, its safe-zone warning —
-  // reads this rather than picking one out of the selection.
+  // The one selected node, or null when several are. `selected` narrows that to
+  // a shape: everything below it belongs to one — its nodes, its safe-zone
+  // warning — and a group answers none of those.
+  const node = selectedNodeOnly(state);
   const selected = selectedObject(state);
+  // The frame the selected node's own numbers are stated in, so the overlay can
+  // be drawn on the artboard from coordinates that are not in artboard units.
+  const frame = selectedFrame(state);
   /**
    * One box round the lot, drawn only when there are several.
    *
-   * It carries no resize handles and no rotation knob, and that is deliberate
-   * rather than unfinished: resizing or rotating several objects at once is a
-   * group transform, which has to decide what happens to each shape's own
-   * rotation, stroke and curve as the box changes. That belongs with the
-   * grouping work, and this outline is what says a selection exists until then.
+   * It still carries no resize handles and no rotation knob, and that is now
+   * settled rather than deferred. Transforming several objects at once has to
+   * decide what happens to each one's own rotation, stroke and curves as the
+   * box changes — and the answer this editor gives is **make them a group**.
+   * ⌘G takes the selection and hands back one node with one transform, which
+   * *does* have handles, a knob and a single scale that every child inherits
+   * exactly. A second, groupless multi-transform would be that same decision
+   * taken twice and allowed to disagree with itself.
    */
   const groupBox = state.selectedIds.size > 1 ? selectionBounds(state) : null;
   const warnings = safeZoneWarnings(state.doc);
@@ -66,15 +82,25 @@ export function Artboard() {
   // pen withdraws them too: what is selected is deliberately left alone by
   // entering the tool, but its handles are buttons sitting over the artboard
   // and every one of them would swallow a click meant for an anchor.
-  const showHandles = selected !== null && !selected.hidden && !dim && !drawing;
-  const selectionBox = selected && !selected.hidden ? bounds(selected) : null;
-  // Empty for the shapes that are dragged by a box, so this is also the choice
-  // between the two overlays — the artboard never has to name a kind.
-  const vertices = selected ? vertexPoints(selected) : [];
-  const node = selectedNodeIndex(state);
+  const showHandles = node !== null && !node.hidden && !dim && !drawing;
+  // Where the outline goes, in artboard units, and the angle it is drawn at —
+  // which for anything inside a group is its parents' turn plus its own.
+  const outline = selectionOutline(state);
+  // Empty for the shapes that are dragged by a box, and for a group, so this is
+  // also the choice between the two overlays — the artboard never names a kind.
+  // Each point is read out into artboard units, because that is where the
+  // handles are positioned.
+  const vertices = selected ? vertexPoints(selected).map((point) => place(frame, point)) : [];
+  const nodeIndex = selectedNodeIndex(state);
   // Only the selected node's controls: a path with forty nodes and every handle
   // drawn is a thicket you cannot aim at.
-  const controls = selected && node !== null ? anchorControlPoints(selected, node) : [];
+  const controls =
+    selected && nodeIndex !== null
+      ? anchorControlPoints(selected, nodeIndex).map((control) => ({
+          ...control,
+          at: place(frame, control.at),
+        }))
+      : [];
 
   return (
     <div
@@ -165,16 +191,16 @@ export function Artboard() {
         </>
       ) : null}
 
-      {selectionBox && selected && !showHandles && chrome ? (
+      {outline && !showHandles && chrome ? (
         <div
           aria-hidden
           className="pointer-events-none absolute outline-1 outline-handle"
           style={{
-            left: selectionBox.x * scale,
-            top: selectionBox.y * scale,
-            width: selectionBox.w * scale,
-            height: selectionBox.h * scale,
-            transform: `rotate(${selected.rotation}deg)`,
+            left: outline.box.x * scale,
+            top: outline.box.y * scale,
+            width: outline.box.w * scale,
+            height: outline.box.h * scale,
+            transform: `rotate(${outline.rotation}deg)`,
           }}
         />
       ) : null}
@@ -208,22 +234,27 @@ export function Artboard() {
         />
       ) : null}
 
-      {showHandles && selectionBox && selected ? (
+      {showHandles && outline && node ? (
         vertices.length > 0 ? (
           <PointsSelectionOverlay
             points={vertices}
-            box={selectionBox}
-            rotation={selected.rotation}
+            box={outline.box}
+            rotation={outline.rotation}
             scale={scale}
-            selectedNode={node}
+            selectedNode={nodeIndex}
             controls={controls}
             onHandleDown={onHandleDown}
           />
         ) : (
           <SelectionOverlay
-            box={selectionBox}
-            rotation={selected.rotation}
+            box={outline.box}
+            rotation={outline.rotation}
             scale={scale}
+            // A group offers its four corners and nothing else. Its scale is one
+            // number, so an edge handle would be a control for a second one the
+            // model does not have — and dragging it would silently be answered
+            // by a proportional resize, which is worse than not offering it.
+            handles={isGroup(node) ? CORNER_HANDLES : undefined}
             onHandleDown={onHandleDown}
           />
         )

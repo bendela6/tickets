@@ -12,9 +12,19 @@ import {
   type Action,
   type EditorState,
 } from './store';
-import type { Geometry, PathSegment, Point } from './types';
+import { everyShape } from './tree';
+import type { Geometry, IconDoc, IconObject, PathSegment, Point } from './types';
 
 const start = () => initialState(emptyDocument('test'));
+
+/**
+ * The shapes a document holds, front to back.
+ *
+ * Every fixture below is flat, so this is the same list `doc.objects` already
+ * is — but the list is a tree now, and a test that reaches for `.geometry` has
+ * to say it means a shape rather than whatever happens to be first.
+ */
+const flat = (doc: IconDoc): IconObject[] => everyShape(doc.objects);
 
 /** Apply a run of actions, so a test reads as the sequence a user performed. */
 function run(state: EditorState, ...actions: Action[]): EditorState {
@@ -30,7 +40,7 @@ describe('adding objects', () => {
       { type: 'addObject', kind: 'rect' },
       { type: 'addObject', kind: 'ellipse' },
     );
-    expect(state.doc.objects.map((o) => o.geometry.kind)).toEqual(['ellipse', 'rect']);
+    expect(flat(state.doc).map((o) => o.geometry.kind)).toEqual(['ellipse', 'rect']);
     expect(selectedObject(state)?.id).toBe(state.doc.objects[0]?.id);
   });
 
@@ -133,7 +143,7 @@ describe('coalescing', () => {
     const state = dragged(50);
     expect(state.past).toHaveLength(2); // the add, plus one for the whole drag
     const undone = editorReducer(state, { type: 'undo' });
-    expect(bounds(undone.doc.objects[0]!).x).toBe(136);
+    expect(bounds(flat(undone.doc)[0]!).x).toBe(136);
   });
 
   it('separates two drags with a pause between them', () => {
@@ -193,7 +203,7 @@ describe('locking', () => {
       ground: 'light',
       hex: '#C0382E',
     });
-    expect(recoloured.doc.objects[0]?.fill.light).toBe('#C0382E');
+    expect(flat(recoloured.doc)[0]?.fill.light).toBe('#C0382E');
   });
 });
 
@@ -201,7 +211,7 @@ describe('colour pairs', () => {
   it('edits only the previewed half, leaving the other alone', () => {
     const state = withRect();
     const id = state.doc.objects[0]!.id;
-    const before = state.doc.objects[0]!.fill;
+    const before = flat(state.doc)[0]!.fill;
     const after = editorReducer(state, {
       type: 'setColor',
       ids: [id],
@@ -209,7 +219,7 @@ describe('colour pairs', () => {
       ground: 'dark',
       hex: '#000000',
     });
-    expect(after.doc.objects[0]?.fill).toEqual({ light: before.light, dark: '#000000' });
+    expect(flat(after.doc)[0]?.fill).toEqual({ light: before.light, dark: '#000000' });
   });
 
   it('the artboard background works the same way', () => {
@@ -230,14 +240,14 @@ describe('reordering', () => {
       { type: 'addObject', kind: 'ellipse' },
       { type: 'addObject', kind: 'line' },
     );
-    state = editorReducer(state, { type: 'reorderObjects', from: 0, to: 2 });
-    expect(state.doc.objects.map((o) => o.geometry.kind)).toEqual(['ellipse', 'rect', 'line']);
+    state = editorReducer(state, { type: 'reorderObjects', parentId: null, from: 0, to: 2 });
+    expect(flat(state.doc).map((o) => o.geometry.kind)).toEqual(['ellipse', 'rect', 'line']);
   });
 
   it('an out-of-range or no-op move changes nothing at all, including the history', () => {
     const state = withRect();
-    expect(editorReducer(state, { type: 'reorderObjects', from: 0, to: 0 })).toBe(state);
-    expect(editorReducer(state, { type: 'reorderObjects', from: 0, to: 9 })).toBe(state);
+    expect(editorReducer(state, { type: 'reorderObjects', parentId: null, from: 0, to: 0 })).toBe(state);
+    expect(editorReducer(state, { type: 'reorderObjects', parentId: null, from: 0, to: 9 })).toBe(state);
   });
 });
 
@@ -252,14 +262,14 @@ describe('clamping', () => {
   it('normalises rotation into 0–359, including from negatives', () => {
     const state = withRect();
     const id = state.doc.objects[0]!.id;
-    expect(editorReducer(state, { type: 'rotateObject', id, degrees: 400 }).doc.objects[0]?.rotation).toBe(40);
-    expect(editorReducer(state, { type: 'rotateObject', id, degrees: -90 }).doc.objects[0]?.rotation).toBe(270);
+    expect(flat(editorReducer(state, { type: 'rotateObject', id, degrees: 400 }).doc)[0]?.rotation).toBe(40);
+    expect(flat(editorReducer(state, { type: 'rotateObject', id, degrees: -90 }).doc)[0]?.rotation).toBe(270);
   });
 
   it('never lets stroke width go negative', () => {
     const state = withRect();
     const id = state.doc.objects[0]!.id;
-    expect(editorReducer(state, { type: 'setStrokeWidth', ids: [id], width: -4 }).doc.objects[0]?.strokeWidth).toBe(0);
+    expect(flat(editorReducer(state, { type: 'setStrokeWidth', ids: [id], width: -4 }).doc)[0]?.strokeWidth).toBe(0);
   });
 });
 
@@ -270,7 +280,7 @@ describe('precision', () => {
   it('holds every route to the same grid — a typed value cannot beat a drag', () => {
     const state = snapped(1);
     const id = state.doc.objects[0]!.id;
-    const geometry = state.doc.objects[0]!.geometry;
+    const geometry = flat(state.doc)[0]!.geometry;
     if (geometry.kind !== 'rect') throw new Error('expected a rect');
 
     const typed = editorReducer(state, {
@@ -279,7 +289,7 @@ describe('precision', () => {
       geometry: { ...geometry, x: 1.5, y: 2.4 },
       label: 'move',
     });
-    expect(typed.doc.objects[0]?.geometry).toMatchObject({ x: 2, y: 2 });
+    expect(flat(typed.doc)[0]?.geometry).toMatchObject({ x: 2, y: 2 });
   });
 
   it('a step of 1 on a small board means 1, 2, 3 and nothing between', () => {
@@ -288,7 +298,7 @@ describe('precision', () => {
       { type: 'addObject', kind: 'rect' },
     );
     const id = state.doc.objects[0]!.id;
-    const geometry = state.doc.objects[0]!.geometry;
+    const geometry = flat(state.doc)[0]!.geometry;
     if (geometry.kind !== 'rect') throw new Error('expected a rect');
 
     for (const [asked, expected] of [
@@ -303,7 +313,7 @@ describe('precision', () => {
         geometry: { ...geometry, x: asked },
         label: 'move',
       });
-      expect({ asked, x: (next.doc.objects[0]?.geometry as { x: number }).x }).toEqual({
+      expect({ asked, x: (flat(next.doc)[0]?.geometry as { x: number }).x }).toEqual({
         asked,
         x: expected,
       });
@@ -313,7 +323,7 @@ describe('precision', () => {
   it('a finer step allows what a coarser one refuses', () => {
     const half = snapped(0.5);
     const id = half.doc.objects[0]!.id;
-    const geometry = half.doc.objects[0]!.geometry;
+    const geometry = flat(half.doc)[0]!.geometry;
     if (geometry.kind !== 'rect') throw new Error('expected a rect');
     const next = editorReducer(half, {
       type: 'setGeometry',
@@ -321,15 +331,15 @@ describe('precision', () => {
       geometry: { ...geometry, x: 1.5 },
       label: 'move',
     });
-    expect(next.doc.objects[0]?.geometry).toMatchObject({ x: 1.5 });
+    expect(flat(next.doc)[0]?.geometry).toMatchObject({ x: 1.5 });
   });
 
   it('snaps a drag as well as a typed value', () => {
     const state = snapped(8);
     const id = state.doc.objects[0]!.id;
-    const before = bounds(state.doc.objects[0]!);
+    const before = bounds(flat(state.doc)[0]!);
     const moved = editorReducer(state, { type: 'moveObject', id, dx: 3, dy: 3 });
-    const after = bounds(moved.doc.objects[0]!);
+    const after = bounds(flat(moved.doc)[0]!);
     expect((after.x - before.x) % 8).toBe(0);
   });
 
@@ -338,7 +348,7 @@ describe('precision', () => {
     // document is.
     const state = snapped(1);
     const coarse = editorReducer(state, { type: 'setSnap', snap: 64 });
-    const box = bounds(coarse.doc.objects[0]!);
+    const box = bounds(flat(coarse.doc)[0]!);
     expect(box.x % 64).toBe(0);
     expect(box.w % 64).toBe(0);
   });
@@ -348,7 +358,7 @@ describe('precision', () => {
   });
 
   it('a new shape arrives already on the grid', () => {
-    const box = bounds(snapped(8).doc.objects[0]!);
+    const box = bounds(flat(snapped(8).doc)[0]!);
     expect(box.x % 8).toBe(0);
     expect(box.w % 8).toBe(0);
   });
@@ -383,7 +393,7 @@ describe('artboard', () => {
       type: 'addObject',
       kind: 'rect',
     });
-    const box = bounds(small.doc.objects[0]!);
+    const box = bounds(flat(small.doc)[0]!);
     expect(box.w).toBeLessThanOrEqual(16);
     expect(box.x + box.w).toBeLessThanOrEqual(16);
   });
@@ -393,7 +403,7 @@ describe('artboard', () => {
       type: 'addObject',
       kind: 'polygon',
     });
-    const box = bounds(wide.doc.objects[0]!);
+    const box = bounds(flat(wide.doc)[0]!);
     expect(box.x + box.w / 2).toBeCloseTo(512, 0);
     expect(box.y + box.h / 2).toBeCloseTo(128, 0);
     // A polygon takes the shorter edge, so it stays on the board vertically.
@@ -533,7 +543,7 @@ describe('selecting several', () => {
     const { state, first, second } = twoApart();
     const locked = run(state, { type: 'toggleLocked', id: first });
     const moved = run(locked, {
-      type: 'setGeometries',
+      type: 'setPlacements',
       edits: [
         { id: first, geometry: { kind: 'rect', x: 40, y: 40, w: 100, h: 100, radius: 0 } },
         { id: second, geometry: { kind: 'rect', x: 340, y: 340, w: 100, h: 100, radius: 0 } },
@@ -541,8 +551,8 @@ describe('selecting several', () => {
       label: 'move 2 objects',
       at: 1000,
     });
-    expect(bounds(moved.doc.objects[1]!)).toMatchObject({ x: 0, y: 0 });
-    expect(bounds(moved.doc.objects[0]!)).toMatchObject({ x: 340, y: 340 });
+    expect(bounds(flat(moved.doc)[1]!)).toMatchObject({ x: 0, y: 0 });
+    expect(bounds(flat(moved.doc)[0]!)).toMatchObject({ x: 340, y: 340 });
     expect(moved.past).toHaveLength(locked.past.length + 1);
   });
 
@@ -557,11 +567,11 @@ describe('selecting several', () => {
     ];
     const dragged = run(
       state,
-      { type: 'setGeometries', edits: edits(10), label: 'move 2 objects', at: 1000 },
-      { type: 'setGeometries', edits: edits(20), label: 'move 2 objects', at: 1050 },
+      { type: 'setPlacements', edits: edits(10), label: 'move 2 objects', at: 1000 },
+      { type: 'setPlacements', edits: edits(20), label: 'move 2 objects', at: 1050 },
     );
     expect(dragged.past).toHaveLength(state.past.length + 1);
-    expect(bounds(run(dragged, { type: 'undo' }).doc.objects[1]!)).toMatchObject({ x: 0 });
+    expect(bounds(flat(run(dragged, { type: 'undo' }).doc)[1]!)).toMatchObject({ x: 0 });
   });
 
   it('recolours every one of them as a single entry', () => {
@@ -573,9 +583,9 @@ describe('selecting several', () => {
       ground: 'light',
       hex: '#C0382E',
     });
-    expect(painted.doc.objects.map((o) => o.fill.light)).toEqual(['#C0382E', '#C0382E']);
+    expect(flat(painted.doc).map((o) => o.fill.light)).toEqual(['#C0382E', '#C0382E']);
     expect(painted.lastAction?.label).toBe('fill 2 objects');
-    expect(run(painted, { type: 'undo' }).doc.objects.map((o) => o.fill.light)).toEqual([
+    expect(flat(run(painted, { type: 'undo' }).doc).map((o) => o.fill.light)).toEqual([
       '#4E46C6',
       '#4E46C6',
     ]);
@@ -625,7 +635,7 @@ const withPolygon = () => run(start(), { type: 'addObject', kind: 'polygon' });
 
 /** However many points the one object in the document has. */
 const pointCount = (state: EditorState): number => {
-  const geometry = state.doc.objects[0]?.geometry;
+  const geometry = flat(state.doc)[0]?.geometry;
   return geometry?.kind === 'polygon' || geometry?.kind === 'polyline' ? geometry.points.length : -1;
 };
 
@@ -668,7 +678,7 @@ describe('adding a node', () => {
   it('splits the edge nearest the point and selects what it made', () => {
     const state = withPolygon();
     const id = state.doc.objects[0]!.id;
-    const before = state.doc.objects[0]!.geometry;
+    const before = flat(state.doc)[0]!.geometry;
     if (before.kind !== 'polygon') throw new Error('the polygon preset stopped being a polygon');
     const a = before.points[0]!;
     const b = before.points[1]!;
@@ -689,7 +699,7 @@ describe('adding a node', () => {
     // runs, the press that opened the gesture has already deselected.
     const base = withPolygon();
     const state = { ...base, selectedId: null, selectedNode: null };
-    const object = state.doc.objects[0];
+    const object = flat(state.doc)[0];
     if (!object || object.geometry.kind !== 'polygon') {
       throw new Error('the polygon preset stopped being a polygon');
     }
@@ -717,7 +727,7 @@ describe('adding a node', () => {
     const state = withPolygon();
     const id = state.doc.objects[0]!.id;
     const locked = run(state, { type: 'toggleLocked', id });
-    const geometry = locked.doc.objects[0]!.geometry;
+    const geometry = flat(locked.doc)[0]!.geometry;
     if (geometry.kind !== 'polygon') throw new Error('the polygon preset stopped being a polygon');
     const a = geometry.points[0]!;
     const b = geometry.points[1]!;
@@ -784,7 +794,7 @@ const withPen = (...points: Point[]): EditorState =>
 
 /** The one drawn path in the document, or null. */
 const drawn = (state: EditorState): PathSegment[] | null => {
-  const geometry = state.doc.objects[0]?.geometry;
+  const geometry = flat(state.doc)[0]?.geometry;
   return geometry?.kind === 'path' ? geometry.segments : null;
 };
 
@@ -851,7 +861,7 @@ describe('drawing with the pen', () => {
     expect(drawn(state)?.at(-1)).toEqual({ c: 'Z' });
     // A closed path encloses something, so it is a region with a fill rather
     // than a run drawn by its stroke.
-    expect(state.doc.objects[0]?.strokeWidth).toBe(0);
+    expect(flat(state.doc)[0]?.strokeWidth).toBe(0);
   });
 
   it('lands on the document’s grid, the way every other position does', () => {

@@ -1,5 +1,6 @@
 import { SAFE_ZONE } from './constants';
-import { extentOf } from './geometry';
+import { extentOfBox, rotatedBounds } from './geometry';
+import { boxThrough, visibleShapes } from './tree';
 import type { IconDoc } from './types';
 
 export interface SafeZoneWarning {
@@ -17,14 +18,19 @@ export interface SafeZoneWarning {
  * maskable output only, and plenty of icons are exported for other targets
  * where it does not matter.
  *
- * Hidden objects are not measured — they are not in the picture.
+ * Hidden objects are not measured — they are not in the picture, and neither is
+ * anything inside a hidden group.
+ *
+ * Measured where each shape actually lands rather than where its own numbers
+ * say: a shape inside a group is stated in the group's frame, and the platform
+ * crops what is drawn on the artboard.
  */
 export function safeZoneWarnings(doc: IconDoc): SafeZoneWarning[] {
-  return doc.objects
-    .filter((object) => !object.hidden && extentOf(object, doc.artboard) > SAFE_ZONE)
-    .map((object) => ({
-      id: object.id,
-      name: object.name,
-      percent: Math.round(extentOf(object, doc.artboard) * 100),
-    }));
+  const warnings: SafeZoneWarning[] = [];
+  for (const { shape, frame } of visibleShapes(doc.objects)) {
+    const extent = extentOfBox(boxThrough(rotatedBounds(shape), frame), doc.artboard);
+    if (extent <= SAFE_ZONE) continue;
+    warnings.push({ id: shape.id, name: shape.name, percent: Math.round(extent * 100) });
+  }
+  return warnings;
 }

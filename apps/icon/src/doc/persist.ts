@@ -1,5 +1,6 @@
 import { emptyDocument } from './defaults';
 import { polygonPoints } from './geometry';
+import { isGroup } from './tree';
 import type { Artboard, DocumentSummary, Geometry, IconDoc, IconObject } from './types';
 
 /** What a polygon was before `<polygon>` was taken literally: a regular n-gon. */
@@ -86,6 +87,15 @@ function stillObject(object: IconObject): IconObject {
  * without a word. That silence is the product decision — the states after the
  * first were never data anybody typed, they were derived from a phase number.
  *
+ * A third change needed no migration at all, and saying why is the point of
+ * this paragraph. The object list became a tree: a group is a node with
+ * children, and a shape is a node without. Every document written before that
+ * is a flat list of shapes — which is a tree of depth one, already valid, with
+ * no marker missing from it. That is not luck; it is why a group is told apart
+ * by *having children* rather than by a `kind` field it would have to be given.
+ * A migration here would walk every document ever saved and hand each one back
+ * unchanged, and the only thing it could achieve is marking them all dirty.
+ *
  * On read rather than on write, because this is the only place a document from
  * before either change can enter — nothing will ever write one again. The
  * document is returned unchanged, and identical, when there was nothing to do:
@@ -95,6 +105,9 @@ function stillObject(object: IconObject): IconObject {
 export function migrate(doc: IconDoc): IconDoc {
   let changed = false;
   const objects = doc.objects.map((object) => {
+    // A group cannot be either of the two things this migration repairs: both
+    // predate groups entirely, so no document that holds one can hold them.
+    if (isGroup(object)) return object;
     const regular = asRegularPolygon(object.geometry);
     const moved = (object as IconObject & Moving).motion !== undefined;
     if (!regular && !moved) return object;

@@ -9,7 +9,8 @@
  *    no named palette, no references — you pick two colours, and the platform
  *    swaps them on `prefers-color-scheme`.
  * 2. **Objects are ordered front-to-back.** `objects[0]` is the frontmost, the
- *    way a layers list reads. The renderer paints in reverse.
+ *    way a layers list reads. The renderer paints in reverse. That holds at
+ *    every level of the tree, not only at the top.
  */
 
 /** A colour, which is always two colours. */
@@ -114,6 +115,79 @@ export interface IconObject {
   locked: boolean;
 }
 
+/**
+ * Where a group sits in the list that holds it: a move, a turn and a scale.
+ *
+ * **One `scale`, not two**, and that single number is the whole of the decision
+ * about what a group resize may do. A group is exported as `<g transform>` and
+ * its children keep the coordinates they were written with, so an uneven scale
+ * would reach every one of them at once: a `<circle>` inside it would come out
+ * an ellipse — a different element, which this model states separately and
+ * which a group has no business changing its children into — and a child that
+ * carries a turn of its own would come out skewed, which is a shape nothing in
+ * this model can say. Making the second number unwritable settles that once,
+ * here, instead of in every place a handle could be dragged.
+ *
+ * The turn and the scale are both about the group's own centre, which is where
+ * a handle drag means them. A uniform scale commutes with a rotation, so there
+ * is no order between the two to get wrong — the reason the pair is stated as
+ * two plain numbers rather than as a matrix.
+ */
+export interface GroupTransform {
+  /** Stated in the units the group's siblings are stated in, not in its own. */
+  x: number;
+  y: number;
+  /** Degrees, about the group's own centre. */
+  rotation: number;
+  /** Uniform, about the group's own centre. 1 is untouched. */
+  scale: number;
+}
+
+/**
+ * A group: children, and a place to put them. No geometry of its own — a group
+ * is where its children are, which is why its box is asked of them.
+ *
+ * A group has no fill, no stroke and no stroke width either, and that is not an
+ * omission. SVG lets a `<g>` state paint for its children to inherit; this
+ * model has no inheritance anywhere — every object states both halves of its
+ * own pair outright — so a paint on a group would be a second, invisible place
+ * a colour could come from.
+ */
+export interface IconGroup {
+  id: string;
+  name: string;
+  transform: GroupTransform;
+  /** 0–100, applied to the group as one thing. */
+  opacity: number;
+  hidden: boolean;
+  locked: boolean;
+  /** Front-to-back, like the document's own list. `children[0]` is frontmost. */
+  children: IconNode[];
+}
+
+/**
+ * What a list of objects may hold.
+ *
+ * A group is a **sibling** of `IconObject` rather than a member of it, and the
+ * reason is that almost everything `IconObject` promises is meaningless for a
+ * group. `geometry`, `fill`, `stroke` and `strokeWidth` are the four fields the
+ * bulk of this app reads, and a group answers none of them — so folding it into
+ * `IconObject` would make every one of those reads a question ("is this the
+ * kind that has geometry?") in code that has no business asking. As a separate
+ * type, `bounds`, `fitToBox`, `contains`, `vertexPoints` and the properties
+ * rail keep the signature they always had, and it stays *true*: they are
+ * statements about a shape.
+ *
+ * What that buys is exactly the enforcement wanted. `IconDoc.objects` is
+ * `IconNode[]`, so every traversal that used to reach for `.geometry` stops
+ * compiling until it says what a group does — there is no field a group happens
+ * to share that would let one slip through. Narrowing is `isGroup`, which tests
+ * for `children`: a structural discriminant rather than a tag, because a
+ * document saved before groups existed is a flat list of shapes and must remain
+ * a valid tree without being rewritten.
+ */
+export type IconNode = IconObject | IconGroup;
+
 export interface Artboard {
   width: number;
   height: number;
@@ -134,8 +208,8 @@ export interface IconDoc {
    */
   snap: number;
   background: Pair;
-  /** Front-to-back. `objects[0]` is frontmost. */
-  objects: IconObject[];
+  /** Front-to-back. `objects[0]` is frontmost. A tree, one level deep or many. */
+  objects: IconNode[];
 }
 
 export interface DocumentSummary {

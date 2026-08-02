@@ -13,12 +13,10 @@ import {
   fitToBox,
   FLATTEN_TOLERANCE,
   flattenPath,
-  hitTest,
   insertVertex,
   isOpenRun,
   lineEndpoints,
   nearestOnPath,
-  objectsInBox,
   pathAnchors,
   polygonPoints,
   removeVertex,
@@ -495,66 +493,6 @@ describe('contains', () => {
     const inside = { x: 120, y: 120 };
     expect(contains(closed, inside)).toBe(true);
     expect(contains(open, inside)).toBe(false);
-  });
-});
-
-describe('hitTest', () => {
-  const front = rect({ id: 'front' });
-  const back = rect({ id: 'back' });
-
-  it('returns the frontmost object, which is the first in document order', () => {
-    expect(hitTest([front, back], { x: 256, y: 256 })?.id).toBe('front');
-  });
-
-  it('skips hidden objects — they are not there to be hit', () => {
-    expect(hitTest([{ ...front, hidden: true }, back], { x: 256, y: 256 })?.id).toBe('back');
-  });
-
-  it('still hits a locked object, so it can be selected and unlocked', () => {
-    expect(hitTest([{ ...front, locked: true }], { x: 256, y: 256 })?.id).toBe('front');
-  });
-
-  it('returns null on empty ground', () => {
-    expect(hitTest([front], { x: 10, y: 10 })).toBeNull();
-  });
-});
-
-describe('objectsInBox', () => {
-  /** A hundred-unit square with its corner at `at`. */
-  const square = (id: string, at: number): IconObject =>
-    rect({ id, geometry: { kind: 'rect', x: at, y: at, w: 100, h: 100, radius: 0 } });
-
-  const near = square('near', 0);
-  const far = square('far', 300);
-  /** A band across the gap: over a corner of the far square, nowhere near the other. */
-  const BAND = { x: 250, y: 250, w: 100, h: 100 };
-
-  it('catches what it overlaps, without having to contain it', () => {
-    expect(objectsInBox([near, far], BAND).map((o) => o.id)).toEqual(['far']);
-  });
-
-  it('takes them front to back, the order the document is in', () => {
-    expect(objectsInBox([near, far], { x: 0, y: 0, w: 512, h: 512 }).map((o) => o.id)).toEqual([
-      'near',
-      'far',
-    ]);
-  });
-
-  it('skips a hidden object and still takes a locked one', () => {
-    expect(objectsInBox([{ ...far, hidden: true }], BAND)).toEqual([]);
-    expect(objectsInBox([{ ...far, locked: true }], BAND).map((o) => o.id)).toEqual(['far']);
-  });
-
-  it('measures a turned shape by where it actually lands', () => {
-    // Turned 45° about its own centre at 350, the square's corners swing out
-    // past the box it is stored as — and this band only reaches 290.
-    const corner = { x: 280, y: 340, w: 10, h: 10 };
-    expect(objectsInBox([{ ...far, rotation: 45 }], corner).map((o) => o.id)).toEqual(['far']);
-    expect(objectsInBox([far], corner)).toEqual([]);
-  });
-
-  it('catches nothing on empty ground', () => {
-    expect(objectsInBox([near, far], { x: 150, y: 150, w: 50, h: 50 })).toEqual([]);
   });
 });
 
