@@ -38,6 +38,8 @@ export const registry = {
   'x':              { viewBox: '0 0 16 16', node: <path d="m4 4 8 8M12 4l-8 8" {...s} /> },
   'check':          { viewBox: '0 0 16 16', node: <path d="m3 8.5 3.5 3.5L13 5" {...s} strokeWidth={1.8} /> },
   'minus':          { viewBox: '0 0 16 16', node: <path d="M3 8h10" {...s} /> },
+  'maximize':       { viewBox: '0 0 16 16', node: <path d="M9.5 6.5 13 3M10 3h3v3M6.5 9.5 3 13M6 13H3v-3" {...s} /> },
+  'minimize':       { viewBox: '0 0 16 16', node: <path d="M13 3 9.5 6.5M9.5 4v2.5H12M3 13l3.5-3.5M6.5 12V9.5H4" {...s} /> },
   'search':         { viewBox: '0 0 16 16', node: <><circle cx="7" cy="7" r="4.5" {...s} /><path d="m10.5 10.5 3.5 3.5" {...s} /></> },
   'copy':           { viewBox: '0 0 16 16', node: <><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" {...s} /><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2" {...s} /></> },
   'pencil':         { viewBox: '0 0 16 16', node: <path d="M11.2 2.6a1.6 1.6 0 0 1 2.2 2.2L6 12.2 2.8 13.2l1-3.2Z" {...s} strokeLinejoin="round" /> },

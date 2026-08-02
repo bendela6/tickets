@@ -1120,3 +1120,33 @@
     pointer-events: none;
   }
 }
+
+/* Overlay drawers arrive from the edge they are docked to: 200ms is the
+   open/close rung on the motion page, ease-out the arrival curve. Entry only —
+   radix unmounts content immediately, so there is no exit to animate. */
+@keyframes panel-slide-from-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes panel-slide-from-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+.panel-slide-right {
+  animation: panel-slide-from-right 200ms var(--ease-out);
+}
+
+.panel-slide-left {
+  animation: panel-slide-from-left 200ms var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-slide-right,
+  .panel-slide-left {
+    animation: none;
+  }
+}
