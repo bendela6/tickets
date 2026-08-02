@@ -30,6 +30,7 @@ export * from './row';
 export * from './screen-state';
 export * from './section-header';
 export * from './session-kind-glyph';
+export * from './side-panel';
 export * from './spinner';
 export * from './stack';
 export * from './switch';
