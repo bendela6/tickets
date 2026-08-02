@@ -218,6 +218,19 @@ describe('Drawer', () => {
     expect(screen.queryByRole('separator')).not.toBeInTheDocument();
   });
 
+  it('is modal: it takes pointer events off the page behind it, and gives them back on close', async () => {
+    // The scroll lock and focus trap are the visible half of `modal`; this is
+    // the half that bites call sites. Anything mounted outside the drawer's
+    // portal — a popover a library appends to <body> — is dead to the pointer
+    // until it claims `pointer-events: auto` back for itself.
+    render(<Host />);
+    expect(document.body.style.pointerEvents).toBe('');
+    await userEvent.click(screen.getByRole('button', { name: 'Open it' }));
+    expect(document.body.style.pointerEvents).toBe('none');
+    await userEvent.keyboard('{Escape}');
+    expect(document.body.style.pointerEvents).toBe('');
+  });
+
   it('refuses to render controls outside a Drawer', () => {
     // Rendering the controls loose would silently do nothing; failing loudly is
     // the difference between a caught mistake and a dead button.
