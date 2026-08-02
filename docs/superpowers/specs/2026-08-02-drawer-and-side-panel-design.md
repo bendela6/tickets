@@ -323,3 +323,45 @@ type UsePersistedFlag = (
   fallback: boolean,
 ) => [boolean, (next: boolean) => void];
 ```
+
+## Follow-ups left open at merge
+
+Recorded from the final whole-branch review and its fix wave, so they are not lost
+with the scratch workspace.
+
+**Not verified**
+
+1. **No browser check ran.** The plan's manual pass over the seven behavior changes
+   never happened — the devtools MCP could not attach to a browser. Three claims rest
+   on real layout and hit-testing that jsdom cannot exercise: the gallery sidebar's
+   `sticky` positioning, the mobile nav unmounting on rotation, and pointer-events on
+   the mention popover inside the modal drawer. Do this pass before deploying.
+
+**Small, known**
+
+2. **The `md` breakpoint is expressed twice** in `app-shell.tsx` — Tailwind's `md:`
+   (`width >= 768px`) and `useIsNarrow('md')` (`max-width: 767px`). At a fractional
+   width strictly between them the desktop rail stays hidden and the mobile hamburger
+   opens nothing. `(max-width: 767.98px)` closes it.
+3. **The drawer's focus trap classifies by DOM containment**, unlike DismissableLayer's
+   React-tree check. The mention popover works today only because its rows are not
+   focusable and `preventDefault()` on mousedown. Any future focusable control in that
+   popover will fight the trap.
+4. **`separatorProps` has no `aria-valuetext`**, so a screen reader announces a bare
+   number with no units.
+5. **Asymmetric overlay reset:** `SidePanel` clears its ephemeral overlay flag on
+   *entering* narrow, `AppShell` on *leaving*. Both correct, easy to misread.
+6. **`usePanelWidth` has no guard for `minWidth >= maxWidth`** — `clamp` silently
+   returns `maxWidth` for every input and the panel becomes unresizable with no error.
+7. **`SidePanel`'s narrow overlay hardcodes `size="sm"`** and forwards neither the
+   panel's own width bounds nor its `className`. Harmless for the one current adopter
+   because the values coincide; the next adopter inherits neither.
+8. **`collapsedTo="edge"` assumes the panel sits at a viewport edge** (`ReopenButton`
+   is `fixed`), so it cannot be used in a nested layout — which is also why the gallery
+   demo covers neither `edge` nor `overlayBelow`.
+
+**Stale project doc**
+
+9. `CLAUDE.md` states "Tailwind preflight is OFF". It is **ON** —
+   `packages/web/ui/src/tokens/tokens.css:8` imports `tailwindcss/preflight.css` into
+   `layer(base)`. That line misdirected this whole effort's risk assessment.
