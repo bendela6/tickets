@@ -991,8 +991,10 @@ describe('SidePanel', () => {
     mockViewport(false);
     renderPanel({ collapsible: true, collapsedTo: 'edge' });
     await userEvent.click(screen.getByRole('button', { name: 'Hide Navigation' }));
+    // No aside at all — the layout reclaims the whole column, which is the
+    // difference between this and collapsedTo="rail".
     expect(document.querySelector('aside')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Show Navigation' }).className).toContain('fixed');
+    expect(screen.getByRole('button', { name: 'Show Navigation' })).toBeInTheDocument();
   });
 
   it('remembers width and collapsed state under a storageKey', async () => {
@@ -1079,6 +1081,37 @@ export type SidePanelProps = {
 const TOGGLE =
   'flex size-7 shrink-0 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset hover:text-gray-12';
 
+// Shared by the two states that have no panel on screen to hang a toggle off:
+// collapsedTo="edge" and the narrow overlay. Fixed, so a shut panel costs the
+// content no horizontal space.
+function ReopenButton({
+  label,
+  side,
+  expanded,
+  onClick,
+}: {
+  label: string;
+  side: PanelSide;
+  expanded: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={`Show ${label}`}
+      aria-expanded={expanded}
+      onClick={onClick}
+      className={cn(
+        'fixed top-3 z-40 flex size-9 items-center justify-center rounded-md',
+        'border-1 border-gray-6 bg-surface-raised text-gray-11 shadow-sm hover:text-gray-12',
+        side === 'left' ? 'left-3' : 'right-3',
+      )}
+    >
+      <Icon name="rows" size="md" />
+    </button>
+  );
+}
+
 export function SidePanel({
   label,
   side = 'left',
@@ -1116,19 +1149,12 @@ export function SidePanel({
     // with radix's focus trap and scroll lock on top.
     return (
       <>
-        <button
-          type="button"
-          aria-label={`Show ${label}`}
-          aria-expanded={overlayOpen}
+        <ReopenButton
+          label={label}
+          side={side}
+          expanded={overlayOpen}
           onClick={() => setOverlayOpen(true)}
-          className={cn(
-            'fixed top-3 z-40 flex size-9 items-center justify-center rounded-md',
-            'border-1 border-gray-6 bg-surface-raised text-gray-11 shadow-sm hover:text-gray-12',
-            side === 'left' ? 'left-3' : 'right-3',
-          )}
-        >
-          <Icon name="rows" size="md" />
-        </button>
+        />
         <Drawer
           open={overlayOpen}
           onOpenChange={setOverlayOpen}
@@ -1146,22 +1172,7 @@ export function SidePanel({
 
   if (collapsed) {
     if (collapsedTo === 'edge') {
-      // Fixed, so a closed panel costs the content no horizontal space.
-      return (
-        <button
-          type="button"
-          aria-label={`Show ${label}`}
-          aria-expanded={false}
-          onClick={open}
-          className={cn(
-            'fixed top-3 z-40 flex size-9 items-center justify-center rounded-md',
-            'border-1 border-gray-6 bg-surface-raised text-gray-11 shadow-sm hover:text-gray-12',
-            side === 'left' ? 'left-3' : 'right-3',
-          )}
-        >
-          <Icon name="rows" size="md" />
-        </button>
-      );
+      return <ReopenButton label={label} side={side} expanded={false} onClick={open} />;
     }
     return (
       <button
