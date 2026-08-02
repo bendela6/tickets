@@ -11,7 +11,7 @@ describe('Icon', () => {
       'chevron-up', 'chevron-down', 'chevron-left', 'chevron-right',
       'arrow-up', 'arrow-down', 'arrow-up-right',
       'plus', 'x', 'check', 'search', 'copy', 'pencil', 'trash', 'filter', 'refresh',
-      'grip', 'ellipsis', 'eye', 'minus', 'list', 'quote', 'link',
+      'grip', 'ellipsis', 'eye', 'minus', 'maximize', 'minimize', 'list', 'quote', 'link',
       'columns', 'rows', 'rows-compact', 'folder', 'file', 'terminal', 'sliders', 'calendar', 'clock', 'tag', 'user',
     ]) {
       expect(ICON_NAMES, `missing glyph ${name}`).toContain(name);
