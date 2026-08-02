@@ -93,14 +93,12 @@ export function ItemDetail({
   indexes,
   item,
   variant,
-  onClose,
 }: {
   projectKey: string;
   board: Board;
   indexes: BoardIndexes;
   item: Item;
   variant: 'drawer' | 'page';
-  onClose?: () => void;
 }) {
   const navigate = useNavigate();
   const { userId } = useCurrentUser();
