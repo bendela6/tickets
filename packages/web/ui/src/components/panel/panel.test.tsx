@@ -33,6 +33,27 @@ function Harness({
 const widthOf = () =>
   screen.getByTestId('panel').style.getPropertyValue('--panel-w');
 
+// jsdom gives every element a zero-size rect, which would make a right-side
+// drag always clamp to the minimum and prove nothing. The drag math reads the
+// panel's rect fresh on every pointermove, so stubbing it after render is
+// enough — no need to route it through the ref or a layout effect.
+function stubPanelRect(rect: { left: number; right: number }) {
+  const panel = screen.getByTestId('panel');
+  panel.getBoundingClientRect = () =>
+    ({
+      left: rect.left,
+      right: rect.right,
+      top: 0,
+      bottom: 0,
+      width: rect.right - rect.left,
+      height: 0,
+      x: rect.left,
+      y: 0,
+      toJSON() {},
+    }) as DOMRect;
+  return panel;
+}
+
 describe('usePanelWidth', () => {
   it('starts at the default width', () => {
     render(<Harness />);
@@ -101,6 +122,71 @@ describe('usePanelWidth', () => {
       key: 'ArrowRight',
     });
     expect(localStorage.getItem('k')).toBe('248');
+  });
+});
+
+describe('usePanelWidth dragging', () => {
+  // The hook attaches its pointermove/pointerup listeners to the handle
+  // itself (for pointer capture), not to window, so the gesture must be
+  // fired at the handle, not dispatched globally.
+  it('drags a left panel by clientX - rect.left, and a right panel by rect.right - clientX — opposite directions for the same motion', () => {
+    const { unmount } = render(<Harness side="left" />);
+    stubPanelRect({ left: 0, right: 224 });
+    let handle = screen.getByRole('separator', { name: 'Resize Test panel' });
+    fireEvent.pointerDown(handle, { pointerId: 1, clientX: 224 });
+    fireEvent.pointerMove(handle, { pointerId: 1, clientX: 244 });
+    expect(widthOf()).toBe('244px');
+    fireEvent.pointerUp(handle, { pointerId: 1, clientX: 244 });
+    unmount();
+
+    render(<Harness side="right" />);
+    stubPanelRect({ left: 800, right: 1024 });
+    handle = screen.getByRole('separator', { name: 'Resize Test panel' });
+    fireEvent.pointerDown(handle, { pointerId: 1, clientX: 800 });
+    // The same rightward pointer motion (+20) that widened the left panel
+    // above narrows this one, because a right panel's inner (draggable) edge
+    // is its left edge: moving right shrinks the gap to rect.right.
+    fireEvent.pointerMove(handle, { pointerId: 1, clientX: 820 });
+    expect(widthOf()).toBe('204px');
+    fireEvent.pointerUp(handle, { pointerId: 1, clientX: 820 });
+  });
+
+  it('clamps a drag at both ends', () => {
+    render(<Harness side="left" />);
+    stubPanelRect({ left: 0, right: 224 });
+    const handle = screen.getByRole('separator', { name: 'Resize Test panel' });
+    fireEvent.pointerDown(handle, { pointerId: 1, clientX: 224 });
+    fireEvent.pointerMove(handle, { pointerId: 1, clientX: -50 });
+    expect(widthOf()).toBe('180px');
+    fireEvent.pointerMove(handle, { pointerId: 1, clientX: 1000 });
+    expect(widthOf()).toBe('400px');
+    fireEvent.pointerUp(handle, { pointerId: 1, clientX: 1000 });
+  });
+
+  it('stops resizing once the pointer is released', () => {
+    render(<Harness side="left" />);
+    stubPanelRect({ left: 0, right: 224 });
+    const handle = screen.getByRole('separator', { name: 'Resize Test panel' });
+    fireEvent.pointerDown(handle, { pointerId: 1, clientX: 224 });
+    fireEvent.pointerMove(handle, { pointerId: 1, clientX: 300 });
+    expect(widthOf()).toBe('300px');
+    fireEvent.pointerUp(handle, { pointerId: 1, clientX: 300 });
+    fireEvent.pointerMove(handle, { pointerId: 1, clientX: 350 });
+    expect(widthOf()).toBe('300px');
+  });
+
+  it('persists the dragged width only when a storageKey is given, and restores it on remount', () => {
+    const { unmount } = render(<Harness side="left" storageKey="k" />);
+    stubPanelRect({ left: 0, right: 224 });
+    const handle = screen.getByRole('separator', { name: 'Resize Test panel' });
+    fireEvent.pointerDown(handle, { pointerId: 1, clientX: 224 });
+    fireEvent.pointerMove(handle, { pointerId: 1, clientX: 260 });
+    fireEvent.pointerUp(handle, { pointerId: 1, clientX: 260 });
+    expect(localStorage.getItem('k')).toBe('260');
+    unmount();
+
+    render(<Harness side="left" storageKey="k" />);
+    expect(widthOf()).toBe('260px');
   });
 });
 
