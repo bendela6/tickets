@@ -38,7 +38,6 @@ export function ItemDrawer({
         indexes={indexes}
         item={item}
         variant="drawer"
-        onClose={onClose}
       />
     </Drawer>
   );
