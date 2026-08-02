@@ -37,7 +37,14 @@ export function Sidebar({
       collapsible
       collapsedTo="edge"
       overlayBelow="lg"
-      className="bg-surface-raised"
+      // The gallery scrolls the document, not a pane: GalleryShell's root is
+      // `flex min-h-screen`, so a `relative` aside (SidePanel's base) stretches
+      // to the full row height, its inner `overflow-y-auto` never engages, and
+      // the nav scrolls away with the page. Pinning it to a viewport-tall
+      // sticky box is what makes the component list scroll on its own.
+      // twMerge keeps the last position utility, so `sticky` replaces the base
+      // `relative`.
+      className="sticky top-0 z-40 h-screen bg-surface-raised"
     >
       <nav className="pg-scroll flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden px-4 py-6">
         <div className="flex h-7.5 min-w-0 shrink-0 items-center gap-1.5 rounded-lg border-1 border-gray-6 bg-surface-inset px-1.5 pl-2.5">
