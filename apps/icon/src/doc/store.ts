@@ -1,5 +1,5 @@
 import { ARTBOARD_MAX, ARTBOARD_MIN, SNAP_MIN } from './constants';
-import { newObject, objectId } from './defaults';
+import { newObject, objectFor, objectId } from './defaults';
 import {
   bounds,
   fitToBox,
@@ -9,6 +9,7 @@ import {
   vertexPoints,
   type Box,
 } from './geometry';
+import { penIsDrawable, penSegments, type PenAnchor } from './pen';
 import { snapGeometry, snapTo } from './snap';
 import type {
   Artboard,
@@ -39,6 +40,17 @@ const HISTORY_LIMIT = 50;
 /** Two drags of the same object closer together than this merge into one entry. */
 const COALESCE_MS = 400;
 
+/**
+ * What the pointer on the artboard currently means.
+ *
+ * `select` is the editor's whole behaviour up to now — press to select, drag to
+ * move, handles to resize — and every existing tool creates its shape outright
+ * rather than entering anything. The pen is the first that cannot: a path is
+ * built click by click, so the presses between the first and the last have to
+ * mean something other than what they normally mean.
+ */
+export type Tool = 'select' | 'pen';
+
 export interface EditorState {
   doc: IconDoc;
   selectedId: string | null;
@@ -58,6 +70,29 @@ export interface EditorState {
    * the undo history.
    */
   selectedNode: { id: string; index: number } | null;
+  /**
+   * Which tool the artboard is answering to, and the anchors of the path being
+   * drawn if that tool is the pen.
+   *
+   * Here rather than in the canvas's own state, for the reasons `selectedNode`
+   * is: it is read as far away as the keyboard layer — Enter finishes a path,
+   * Backspace takes back an anchor, and the shortcuts are bound at the top of
+   * the app where a canvas-local `useState` is invisible — and the left rail's
+   * tool button has to show whether the mode is on, which is a third subtree
+   * again. One owner, or three copies to keep in step.
+   *
+   * Like `selectedId` and `selectedNode`, neither field is an edit: entering
+   * the pen writes `tool` and nothing else, so the document, the history and
+   * whatever was selected are all exactly what they were. What is drawn only
+   * becomes a document when the tool ends.
+   *
+   * Where the pointer is *right now* is deliberately not here. It is read by
+   * one overlay and nothing else, and putting it through the reducer would
+   * re-render the whole editor on every mouse move to move one dashed line.
+   */
+  tool: Tool;
+  /** The anchors placed so far. Empty unless the pen is part way through a path. */
+  pen: PenAnchor[];
   /** Shapes ever added, so names stay unique across deletions. */
   sequence: number;
   past: Snapshot[];
@@ -78,6 +113,28 @@ export type Action =
   | { type: 'addObject'; kind: ShapeKind }
   | { type: 'selectObject'; id: string | null }
   | { type: 'selectNode'; index: number | null }
+  /**
+   * Enter a tool. Leaving the pen is not a bare mode switch — there may be a
+   * path half drawn — so it is routed through `penEnd`, which is the one place
+   * that decides what becomes of one.
+   */
+  | { type: 'setTool'; tool: Tool }
+  /** Place an anchor. `at` is in artboard units and lands on the document's grid. */
+  | { type: 'penPoint'; at: Point }
+  /**
+   * Pull a curve handle out of the anchor just placed. `at` is where the
+   * pointer is, not a delta: the anchor was snapped on the way in, and the
+   * handle has to be measured from where it actually landed.
+   */
+  | { type: 'penHandle'; at: Point }
+  /** Take back the last anchor placed. */
+  | { type: 'penBack' }
+  /**
+   * Finish, and leave the tool. `close` writes the `Z`. What was drawn becomes
+   * one object and one history entry, or nothing at all if it never grew past
+   * a single anchor.
+   */
+  | { type: 'penEnd'; close: boolean }
   /**
    * `at` is in artboard units and `reach` is how near the outline it had to
    * land. The reducer does the geometry rather than the caller so that adding a
@@ -120,6 +177,8 @@ export function initialState(doc: IconDoc): EditorState {
     doc,
     selectedId: null,
     selectedNode: null,
+    tool: 'select',
+    pen: [],
     sequence: doc.objects.length,
     past: [],
     future: [],
@@ -215,6 +274,78 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
             ? null
             : { id: state.selectedId, index: action.index },
       };
+
+    // ----- the pen, which is a mode rather than an edit --------------------
+    case 'setTool':
+      if (action.tool === state.tool) return state;
+      // Leaving the pen always goes through the one place that knows what to do
+      // with a half-drawn path, whether the user pressed Escape, pressed the
+      // tool button again, or reached for another tool entirely.
+      if (state.tool === 'pen') return editorReducer(state, { type: 'penEnd', close: false });
+      // Entering writes the tool and nothing else. No document, no history, no
+      // selection — which is what lets you leave again and carry on where you
+      // were.
+      return { ...state, tool: action.tool, pen: [] };
+    case 'penPoint': {
+      if (state.tool !== 'pen') return state;
+      // Snapped here rather than at the pointer, so the preview is drawn
+      // against the anchor that will actually be committed. The grid is a
+      // property of the document, and this is the document's own reducer.
+      const point = {
+        x: snapTo(action.at.x, state.doc.snap),
+        y: snapTo(action.at.y, state.doc.snap),
+      };
+      return { ...state, pen: [...state.pen, { point, handle: null }] };
+    }
+    case 'penHandle': {
+      const last = state.pen.at(-1);
+      if (state.tool !== 'pen' || !last) return state;
+      return {
+        ...state,
+        pen: [
+          ...state.pen.slice(0, -1),
+          {
+            ...last,
+            handle: { x: action.at.x - last.point.x, y: action.at.y - last.point.y },
+          },
+        ],
+      };
+    }
+    case 'penBack':
+      // Not undo: nothing has entered the document yet, so there is nothing for
+      // undo to take back. Emptying the list leaves the tool active — you have
+      // taken back every anchor, not left the mode.
+      return state.tool === 'pen' ? { ...state, pen: state.pen.slice(0, -1) } : state;
+    case 'penEnd': {
+      if (state.tool !== 'pen') return state;
+      const left: EditorState = { ...state, tool: 'select', pen: [] };
+      // A single anchor is not a shape. Discarding it rather than committing it
+      // costs nothing precisely because the draft was never in the document:
+      // there is no object to delete and no history entry to unpick.
+      if (!penIsDrawable(state.pen)) return left;
+      const sequence = state.sequence + 1;
+      const object = objectFor(
+        { kind: 'path', segments: penSegments(state.pen, action.close) },
+        sequence,
+        state.doc.artboard,
+        state.doc.snap,
+      );
+      return {
+        ...left,
+        // One `remember` for the whole drawing, because the whole drawing is
+        // one write. `setGeometry`'s coalescing key exists to merge the dozens
+        // of tiny writes a pointer drag makes, and it merges them by proximity
+        // in time — 400ms, which is shorter than the gap between two considered
+        // clicks of a pen. Holding the anchors outside the document until the
+        // gesture ends means there is nothing to merge, and no window to be
+        // wrong about.
+        ...remember(state, 'draw path'),
+        doc: { ...state.doc, objects: [object, ...state.doc.objects] },
+        selectedId: object.id,
+        selectedNode: null,
+        sequence,
+      };
+    }
 
     // ----- history --------------------------------------------------------
     case 'undo': {

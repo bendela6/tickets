@@ -112,6 +112,45 @@ export function objectId(kind: ShapeKind, sequence: number): string {
 }
 
 /**
+ * An object wrapped round a geometry that already exists, on the document's
+ * grid.
+ *
+ * Split out from `newObject` because the pen draws its shape before there is
+ * an object to put it in. Everything a new object needs beyond its geometry is
+ * decided *by* that geometry — its id and name from the kind, its stroke from
+ * whether the shape is a run — so no caller has to say which preset, if any, it
+ * came from.
+ */
+export function objectFor(
+  geometry: Geometry,
+  sequence: number,
+  artboard: Artboard,
+  snap = 1,
+): IconObject {
+  const shorter = Math.min(artboard.width, artboard.height);
+  const snapped = snapGeometry(geometry, snap);
+  return {
+    id: objectId(snapped.kind, sequence),
+    name: `${snapped.kind} ${sequence}`,
+    geometry: snapped,
+    fill: { ...DEFAULT_INK },
+    stroke: { ...DEFAULT_INK },
+    // A run has no area to fill, so its stroke is the only thing that would be
+    // drawn: it starts with one, and everything else starts without. Asked of
+    // the geometry rather than the kind, because whether a path is a run is
+    // something only its own commands can answer.
+    strokeWidth: isOpenRun(snapped)
+      ? Math.max(snap, snapTo(PLACEMENT.lineWidth * shorter, snap))
+      : 0,
+    opacity: 100,
+    rotation: 0,
+    hidden: false,
+    locked: false,
+    motion: { takesPart: true, role: 'spins', pace: 1 },
+  };
+}
+
+/**
  * A fresh object of `kind`, already on the document's grid. `sequence` is the
  * running count of shapes ever added, so names stay stable when earlier ones
  * are deleted — numbering by `objects.length` would hand a new shape a name a
@@ -124,27 +163,7 @@ export function newObject(
   artboard: Artboard,
   snap = 1,
 ): IconObject {
-  const shorter = Math.min(artboard.width, artboard.height);
-  const geometry = snapGeometry(initialGeometry(kind, artboard), snap);
-  return {
-    id: objectId(kind, sequence),
-    name: `${kind} ${sequence}`,
-    geometry,
-    fill: { ...DEFAULT_INK },
-    stroke: { ...DEFAULT_INK },
-    // A run has no area to fill, so its stroke is the only thing that would be
-    // drawn: it starts with one, and everything else starts without. Asked of
-    // the geometry rather than the kind, because whether a path is a run is
-    // something only its own commands can answer.
-    strokeWidth: isOpenRun(geometry)
-      ? Math.max(snap, snapTo(PLACEMENT.lineWidth * shorter, snap))
-      : 0,
-    opacity: 100,
-    rotation: 0,
-    hidden: false,
-    locked: false,
-    motion: { takesPart: true, role: 'spins', pace: 1 },
-  };
+  return objectFor(initialGeometry(kind, artboard), sequence, artboard, snap);
 }
 
 /**

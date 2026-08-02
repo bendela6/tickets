@@ -487,6 +487,19 @@ export function movePathControl(
 export const OUTLINE_REACH_PX = 6;
 
 /**
+ * How far the pointer has to travel before a press is read as pulling a curve
+ * handle out of an anchor rather than as a click that placed a corner, in CSS
+ * pixels.
+ *
+ * In pixels for the same reason `OUTLINE_REACH_PX` is: how still a hand can be
+ * held is a fact about the hand, and a threshold in document units would let a
+ * one-pixel tremor become a visible handle at 1600% zoom. Below it the anchor
+ * keeps the corner it was placed as, so a click is a click even when the mouse
+ * shifts under the finger.
+ */
+export const PEN_PULL_PX = 3;
+
+/**
  * The point a dragged vertex's Shift constraint is measured from: its
  * neighbour in the run. A line has exactly one other point, so this is its far
  * end and Shift means on a line what it always did.

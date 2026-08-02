@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { shapeToolForKey } from './canvas/shape-tools';
+import { isPenKey, shapeToolForKey } from './canvas/shape-tools';
 import { selectedNodeIndex, type Action, type EditorState } from './doc/store';
 
 /**
@@ -63,6 +63,35 @@ export function useShortcuts({
       // Any other accelerator belongs to the browser — ⌘R must still reload
       // rather than adding a rectangle.
       if (accel) return;
+
+      // The pen owns the plain keyboard for as long as it is active, the same
+      // way it owns the pointer. Accelerators are deliberately left above this:
+      // ⌘S saving the document is true whatever is being drawn, and a mode that
+      // swallowed them would be a mode you could get trapped in.
+      if (state.tool === 'pen') {
+        // Enter, Escape and the pen's own key are one gesture with three
+        // spellings: finish. What that leaves behind is `penEnd`'s decision —
+        // a path if there is one, nothing if there is not — rather than three
+        // slightly different rules the user has to learn apart.
+        if (event.key === 'Enter' || event.key === 'Escape' || isPenKey(event.key)) {
+          event.preventDefault();
+          dispatch({ type: 'penEnd', close: false });
+          return;
+        }
+        if (event.key === 'Backspace' || event.key === 'Delete') {
+          event.preventDefault();
+          dispatch({ type: 'penBack' });
+        }
+        // Everything else is swallowed rather than acted on. A shape key here
+        // would drop a preset behind the path being drawn, and the shape would
+        // be selected by the time the pen finished and stole the selection back.
+        return;
+      }
+      if (isPenKey(event.key)) {
+        event.preventDefault();
+        dispatch({ type: 'setTool', tool: 'pen' });
+        return;
+      }
 
       if ((event.key === 'Backspace' || event.key === 'Delete') && state.selectedId) {
         event.preventDefault();

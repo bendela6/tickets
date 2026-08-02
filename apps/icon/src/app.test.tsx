@@ -786,3 +786,229 @@ describe('looking at the document', () => {
     expect(screen.getByRole('button', { name: 'grid' })).toHaveAttribute('aria-pressed', 'false');
   });
 });
+
+describe('the pen', () => {
+  const artboard = () => screen.getByRole('img');
+
+  const handleNames = () =>
+    within(screen.getByRole('main'))
+      .getAllByRole('button')
+      .map((button) => button.getAttribute('aria-label'))
+      .filter((label): label is string => label !== null);
+
+  const penButton = () => within(objectRail()).getByRole('button', { name: 'Pen' });
+
+  /**
+   * Document units to CSS pixels at the default zoom. The artboard has no
+   * layout in a test environment, so its own rectangle reads as the origin and
+   * a client coordinate is simply the document one scaled.
+   */
+  const SCALE = 448 / 512;
+
+  const client = (at: { x: number; y: number }) => ({
+    button: 0,
+    clientX: at.x * SCALE,
+    clientY: at.y * SCALE,
+  });
+
+  /** A press and a release in the same place: one corner anchor. */
+  const clickAt = (at: { x: number; y: number }) => {
+    fireEvent.pointerDown(artboard(), client(at));
+    fireEvent.pointerUp(artboard(), client(at));
+  };
+
+  /** A press that travels before it lets go: one smooth anchor at `at`. */
+  const dragAt = (at: { x: number; y: number }, to: { x: number; y: number }) => {
+    fireEvent.pointerDown(artboard(), client(at));
+    fireEvent.pointerMove(artboard(), client(to));
+    fireEvent.pointerUp(artboard(), client(to));
+  };
+
+  /**
+   * The commands of the one path in the document, read back through the same
+   * renderer the export uses — which is the document itself, spelled the way
+   * SVG spells it.
+   */
+  const drawnPath = () => artboard().querySelector('svg path')?.getAttribute('d');
+
+  it('is entered from its toolbar button and from its key, and says which it is in', async () => {
+    const { user } = setup();
+    expect(penButton()).toHaveAttribute('aria-pressed', 'false');
+
+    await user.click(penButton());
+    expect(penButton()).toHaveAttribute('aria-pressed', 'true');
+    await user.keyboard('{Escape}');
+    expect(penButton()).toHaveAttribute('aria-pressed', 'false');
+
+    await user.keyboard('n');
+    expect(penButton()).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('three clicks and Enter draw three anchors joined by straight commands', async () => {
+    const { user } = setup();
+    await user.keyboard('n');
+    clickAt({ x: 100, y: 100 });
+    clickAt({ x: 300, y: 100 });
+    clickAt({ x: 300, y: 300 });
+    await user.keyboard('{Enter}');
+
+    expect(drawnPath()).toBe('M 100 100 L 300 100 L 300 300');
+    expect(within(objectRail()).getByRole('button', { name: 'path 1' })).toBeInTheDocument();
+    // And it is a path like any other from here on: one node handle per anchor.
+    expect(handleNames().filter((name) => name.startsWith('Move point'))).toEqual([
+      'Move point 1',
+      'Move point 2',
+      'Move point 3',
+    ]);
+    // The tool is done, not still waiting for a fourth anchor.
+    expect(penButton()).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('a press that drags pulls a curve out of the anchor, mirrored either side of it', async () => {
+    const { user } = setup();
+    await user.keyboard('n');
+    clickAt({ x: 100, y: 300 });
+    dragAt({ x: 200, y: 200 }, { x: 240, y: 200 });
+    clickAt({ x: 300, y: 300 });
+    await user.keyboard('{Enter}');
+
+    // 160 and 240 sit the same 40 units either side of the anchor at 200: the
+    // curve arrives and leaves along one straight line through it, which is
+    // what makes it smooth rather than kinked.
+    expect(drawnPath()).toBe('M 100 300 C 100 300 160 200 200 200 C 240 200 300 300 300 300');
+  });
+
+  it('a click on the first anchor closes the path and ends the tool', async () => {
+    const { user } = setup();
+    await user.keyboard('n');
+    clickAt({ x: 100, y: 100 });
+    clickAt({ x: 300, y: 100 });
+    clickAt({ x: 200, y: 300 });
+    clickAt({ x: 100, y: 100 });
+
+    expect(drawnPath()).toBe('M 100 100 L 300 100 L 200 300 Z');
+    expect(penButton()).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('a double-click ends the path where it was double-clicked', async () => {
+    const { user } = setup();
+    await user.keyboard('n');
+    clickAt({ x: 100, y: 100 });
+    clickAt({ x: 300, y: 100 });
+    // The real sequence a double-click arrives as: two presses, each of which
+    // has already placed an anchor, and then the double-click itself.
+    clickAt({ x: 300, y: 300 });
+    clickAt({ x: 300, y: 300 });
+    fireEvent.doubleClick(artboard(), client({ x: 300, y: 300 }));
+
+    expect(drawnPath()).toBe('M 100 100 L 300 100 L 300 300');
+  });
+
+  it('Escape discards a single anchor rather than leaving a shape that draws nothing', async () => {
+    const { user } = setup();
+    await user.keyboard('n');
+    clickAt({ x: 100, y: 100 });
+    await user.keyboard('{Escape}');
+
+    expect(within(objectRail()).getByText('— no objects —')).toBeInTheDocument();
+  });
+
+  it('Escape keeps three, because three anchors are a shape', async () => {
+    const { user } = setup();
+    await user.keyboard('n');
+    clickAt({ x: 100, y: 100 });
+    clickAt({ x: 300, y: 100 });
+    clickAt({ x: 300, y: 300 });
+    await user.keyboard('{Escape}');
+
+    expect(within(objectRail()).getByRole('button', { name: 'path 1' })).toBeInTheDocument();
+    expect(drawnPath()).toBe('M 100 100 L 300 100 L 300 300');
+  });
+
+  it('Backspace takes back the last anchor placed', async () => {
+    const { user } = setup();
+    await user.keyboard('n');
+    clickAt({ x: 100, y: 100 });
+    clickAt({ x: 300, y: 100 });
+    clickAt({ x: 300, y: 300 });
+    await user.keyboard('{Backspace}');
+    await user.keyboard('{Enter}');
+
+    expect(drawnPath()).toBe('M 100 100 L 300 100');
+  });
+
+  it('the whole drawing is one undo entry, however many anchors it took', async () => {
+    const { user } = setup();
+    await user.keyboard('n');
+    clickAt({ x: 100, y: 100 });
+    clickAt({ x: 200, y: 100 });
+    clickAt({ x: 300, y: 200 });
+    clickAt({ x: 300, y: 300 });
+    await user.keyboard('{Enter}');
+    expect(within(objectRail()).getAllByRole('listitem')).toHaveLength(1);
+
+    await user.keyboard('{Meta>}z{/Meta}');
+    // The whole path, not its last anchor.
+    expect(within(objectRail()).getByText('— no objects —')).toBeInTheDocument();
+  });
+
+  it('entering and leaving leaves the selection exactly as it found it', async () => {
+    const { user } = setup();
+    await user.keyboard('r');
+    await user.keyboard('n');
+    await user.keyboard('{Escape}');
+
+    expect(within(objectRail()).getByRole('button', { name: 'rect 1' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(within(propsRail()).getByText('RECT')).toBeInTheDocument();
+  });
+
+  it('withdraws the selection handles while it is active, and gives them straight back', async () => {
+    const { user } = setup();
+    await user.keyboard('r');
+    expect(handleNames()).toContain('Resize se');
+
+    // Handles are buttons sitting over the artboard; any one of them would
+    // swallow a click meant for an anchor.
+    await user.keyboard('n');
+    expect(handleNames()).not.toContain('Resize se');
+
+    await user.keyboard('{Escape}');
+    expect(handleNames()).toContain('Resize se');
+  });
+
+  it('a press on an existing shape neither selects it nor moves it', async () => {
+    const { user } = setup();
+    await user.keyboard('r');
+    await user.keyboard('{Escape}');
+    await user.keyboard('n');
+
+    // Dead centre of the rectangle, dragged well clear of it — which with the
+    // pen active is one anchor and its handle, and nothing to do with the rect.
+    dragAt({ x: 256, y: 256 }, { x: 400, y: 400 });
+    expect(within(objectRail()).getByRole('button', { name: 'rect 1' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+
+    await user.keyboard('{Escape}');
+    await user.click(within(objectRail()).getByRole('button', { name: 'rect 1' }));
+    expect(within(propsRail()).getByLabelText('X')).toHaveValue('136');
+  });
+
+  it('does not take a shape key while a path is being drawn', async () => {
+    const { user } = setup();
+    await user.keyboard('n');
+    clickAt({ x: 100, y: 100 });
+    clickAt({ x: 300, y: 100 });
+    // A rectangle here would land behind the path and be selected by the time
+    // the pen finished and took the selection back.
+    await user.keyboard('r');
+    await user.keyboard('{Enter}');
+
+    expect(within(objectRail()).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(objectRail()).getByRole('button', { name: 'path 1' })).toBeInTheDocument();
+  });
+});

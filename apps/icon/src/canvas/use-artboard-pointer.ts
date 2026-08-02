@@ -20,6 +20,7 @@ import {
   type Box,
   type Point,
 } from '../doc/geometry';
+import { closesPath } from '../doc/pen';
 import type { Action, EditorState } from '../doc/store';
 import type { Geometry, IconObject, PathSegment } from '../doc/types';
 import {
@@ -32,6 +33,7 @@ import {
   movePathAnchor,
   movePathControl,
   OUTLINE_REACH_PX,
+  PEN_PULL_PX,
   pointsFromWorld,
   resizeRotated,
   snapAngle,
@@ -103,6 +105,26 @@ type Gesture =
       line?: Extract<Geometry, { kind: 'line' }>;
     };
 
+/**
+ * What the pen overlay needs that the store does not hold: where the pointer is
+ * and whether the press that placed the last anchor is still down.
+ *
+ * Local to the canvas because it is view state in the strictest sense — one
+ * overlay reads it, it is meaningless the moment the tool ends, and nothing
+ * outside this file can act on it. The anchors themselves are in the store,
+ * where the keyboard and the rail can see them.
+ */
+export interface PenChrome {
+  /** Where the pointer is, in document units. */
+  at: Point;
+  /**
+   * A press is pulling a handle out of the last anchor, so the pointer is
+   * steering a curve rather than aiming at the next anchor — and there is
+   * nothing to preview.
+   */
+  pulling: boolean;
+}
+
 export interface DragChrome {
   /** Where the object started, so the ghost can be drawn there. */
   origin: Box;
@@ -138,6 +160,13 @@ export function useArtboardPointer({
 }) {
   const gesture = useRef<Gesture | null>(null);
   const [chrome, setChrome] = useState<DragChrome | null>(null);
+  const [penChrome, setPenChrome] = useState<PenChrome | null>(null);
+  /**
+   * Where the press that placed the current anchor went down, in CSS pixels.
+   * The threshold is a distance the *pointer* travelled, so it is measured
+   * against the raw press rather than against the snapped anchor it produced.
+   */
+  const penPress = useRef<{ x: number; y: number; pulling: boolean } | null>(null);
 
   const pointOf = useCallback(
     (event: { clientX: number; clientY: number }): Point | null => {
@@ -158,12 +187,56 @@ export function useArtboardPointer({
     onDraggingChange(true);
   };
 
+  /**
+   * A press while the pen is active.
+   *
+   * The anchor is placed on the press rather than on the release, which is what
+   * lets a drag mean anything at all: by the time the pointer moves there is
+   * already an anchor for it to pull a handle out of, and a click is simply a
+   * drag that never went anywhere.
+   */
+  const penDown = (event: PointerEvent, point: Point) => {
+    // Landing on the first anchor is how a path is told to close. Tested before
+    // anything else, because otherwise it would place an anchor on top of it.
+    if (closesPath(state.pen, point, OUTLINE_REACH_PX / scale)) {
+      dispatch({ type: 'penEnd', close: true });
+      setPenChrome(null);
+      return;
+    }
+    penPress.current = { x: event.clientX, y: event.clientY, pulling: false };
+    dispatch({ type: 'penPoint', at: point });
+    setPenChrome({ at: point, pulling: false });
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  /** Pointer movement while the pen is active: steering a handle, or aiming. */
+  const penMove = (event: PointerEvent, point: Point) => {
+    const press = penPress.current;
+    // Latched rather than re-tested each move: a drag that wanders back inside
+    // the threshold is still a drag, and letting it flip back to a click would
+    // strand the handle at whatever it happened to be.
+    if (press && !press.pulling) {
+      press.pulling = Math.hypot(event.clientX - press.x, event.clientY - press.y) > PEN_PULL_PX;
+    }
+    if (press?.pulling) dispatch({ type: 'penHandle', at: point });
+    setPenChrome({ at: point, pulling: press?.pulling === true });
+  };
+
   const onPointerDown = (event: PointerEvent) => {
     // The middle button pans the canvas and the right one is the context menu.
     // Only the primary button draws.
     if (event.button !== 0) return;
     const point = pointOf(event);
     if (!point) return;
+
+    // The pen sits in front of everything below it. While it is active the
+    // artboard is a surface being drawn on rather than a set of objects being
+    // picked from, so nothing here hit-tests, selects or moves anything.
+    if (state.tool === 'pen') {
+      penDown(event, point);
+      return;
+    }
+
     const hit = hitTest(state.doc.objects, point);
 
     if (!hit) {
@@ -271,6 +344,11 @@ export function useArtboardPointer({
   };
 
   const onPointerMove = (event: PointerEvent) => {
+    if (state.tool === 'pen') {
+      const at = pointOf(event);
+      if (at) penMove(event, at);
+      return;
+    }
     const active = gesture.current;
     if (!active) return;
     const point = pointOf(event);
@@ -443,6 +521,16 @@ export function useArtboardPointer({
    * read as the feature being broken rather than as the click being off.
    */
   const onDoubleClick = (event: MouseEvent<HTMLElement>) => {
+    if (state.tool === 'pen') {
+      // The press that opened the second click of a double-click has already
+      // placed an anchor on top of the one the first click placed, so it comes
+      // back out on the way through. Ending here means ending at the point that
+      // was double-clicked, not at two copies of it.
+      dispatch({ type: 'penBack' });
+      dispatch({ type: 'penEnd', close: false });
+      setPenChrome(null);
+      return;
+    }
     const point = pointOf(event);
     if (!point) return;
     const hit = hitTest(state.doc.objects, point);
@@ -456,6 +544,16 @@ export function useArtboardPointer({
   };
 
   const onPointerUp = (event: PointerEvent) => {
+    if (state.tool === 'pen') {
+      // Releasing commits the anchor as it now stands, curved or not. There is
+      // nothing to write: every move already wrote the handle it was pulling.
+      penPress.current = null;
+      setPenChrome((was) => (was ? { ...was, pulling: false } : was));
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      return;
+    }
     if (!gesture.current) return;
     gesture.current = null;
     setChrome(null);
@@ -467,6 +565,7 @@ export function useArtboardPointer({
 
   return {
     chrome,
+    penChrome,
     surfaceProps: {
       onPointerDown,
       onPointerMove,
