@@ -6,7 +6,7 @@ import type { Board, Item } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
 import { typePill } from '../domain/status';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, cn, Icon, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, useCopy, useToast } from '@tickets/ui';
+import { Button, cn, DrawerControls, Icon, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, useCopy, useToast } from '@tickets/ui';
 import { StatusSelect } from '../ui/status-select';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
@@ -294,9 +294,7 @@ export function ItemDetail({
             Open page ↗
           </Link>
           {archiveMenu}
-          <button type="button" aria-label="Close" onClick={onClose} className={ICON_BUTTON}>
-            ×
-          </button>
+          <DrawerControls />
         </div>
         <div className="flex min-h-0 flex-1 flex-col gap-4.5 overflow-y-auto px-5 pb-6 pt-4.5">
           {breadcrumb}

@@ -189,7 +189,7 @@ async function renderDrawer() {
       </CurrentUserProvider>
     </QueryClientProvider>,
   );
-  await screen.findByRole('complementary', { name: 'Item detail' });
+  await screen.findByRole('dialog', { name: 'Item detail' });
   return { onClose };
 }
 
@@ -224,11 +224,19 @@ test('renders key, title, fields, subtasks, links and comments from the board', 
   expect(screen.getByText('Mara K')).toBeInTheDocument();
 });
 
-test('drawer is a full-width sheet below md and 620px from md up', async () => {
+test('drawer is 620px wide, capped to leave a tap-to-close strip', async () => {
   await renderDrawer();
-  const aside = screen.getByRole('complementary', { name: 'Item detail' });
-  expect(aside.className).toContain('w-full');
-  expect(aside.className).toContain('md:w-155');
+  const panel = screen.getByRole('dialog', { name: 'Item detail' });
+  expect(panel.style.getPropertyValue('--panel-w')).toBe('min(620px, 100vw - 3rem)');
+});
+
+test('maximizing fills the viewport and restores', async () => {
+  await renderDrawer();
+  await userEvent.click(screen.getByRole('button', { name: 'Maximize' }));
+  const panel = screen.getByRole('dialog', { name: 'Item detail' });
+  expect(panel.style.getPropertyValue('--panel-w')).toBe('calc(100vw - 3rem)');
+  await userEvent.click(screen.getByRole('button', { name: 'Restore' }));
+  expect(panel.style.getPropertyValue('--panel-w')).toBe('min(620px, 100vw - 3rem)');
 });
 
 test('escape closes the drawer', async () => {
