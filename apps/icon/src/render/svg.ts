@@ -9,7 +9,16 @@ import type { Ground, IconDoc, IconGroup, IconNode, IconObject, PathSegment } fr
  *
  * Output is deterministic: fixed attribute order, fixed number formatting, no
  * generated ids. That is what lets a test compare two renders directly.
+ *
+ * It is also laid out to be read: one element per line, nesting indented. An
+ * exported `.svg` is a file somebody opens in an editor and reads in a diff,
+ * and a single 4kB line is neither. The layout is part of the output rather
+ * than something a viewer applies afterwards — a prettifier anywhere else would
+ * be a second spelling of the same document, and this file is the only one.
  */
+
+/** One level of nesting. */
+const INDENT = '  ';
 
 /** Trim float noise without turning integers into `1.00`. */
 function n(value: number): string {
@@ -144,18 +153,23 @@ function shapeMarkup(object: IconObject, ground: Ground): string {
  * A hidden group is skipped whole, children and all — which is the model's
  * "hidden propagates down" and costs nothing to say here, because a `<g>` that
  * is not emitted cannot emit anything inside it.
+ *
+ * Each line arrives already indented for `depth`, so nesting is stated by the
+ * one recursion that knows how deep it is rather than by a second pass over
+ * finished markup.
  */
-function nodesMarkup(nodes: readonly IconNode[], ground: Ground): string[] {
+function nodesMarkup(nodes: readonly IconNode[], ground: Ground, depth: number): string[] {
+  const pad = INDENT.repeat(depth);
   const parts: string[] = [];
   for (const node of [...nodes].reverse()) {
     if (node.hidden) continue;
     if (isGroup(node)) {
-      parts.push(`<g${transformOfGroup(node)}${opacityOf(node)}>`);
-      parts.push(...nodesMarkup(node.children, ground));
-      parts.push('</g>');
+      parts.push(`${pad}<g${transformOfGroup(node)}${opacityOf(node)}>`);
+      parts.push(...nodesMarkup(node.children, ground, depth + 1));
+      parts.push(`${pad}</g>`);
       continue;
     }
-    parts.push(shapeMarkup(node, ground));
+    parts.push(pad + shapeMarkup(node, ground));
   }
   return parts;
 }
@@ -178,12 +192,15 @@ export function renderSvg(doc: IconDoc, options: RenderOptions): string {
   ];
   if (background) {
     parts.push(
-      `<rect x="0" y="0" width="${n(width)}" height="${n(height)}" fill="${escapeAttribute(doc.background[ground])}"/>`,
+      `${INDENT}<rect x="0" y="0" width="${n(width)}" height="${n(height)}" fill="${escapeAttribute(doc.background[ground])}"/>`,
     );
   }
   // Document order is front-to-back; SVG paints in source order, so the list
   // is reversed to put the frontmost object last.
-  parts.push(...nodesMarkup(doc.objects, ground));
+  parts.push(...nodesMarkup(doc.objects, ground, 1));
   parts.push('</svg>');
-  return parts.join('');
+  // No trailing newline: the string is the file, and it is also what the source
+  // panel shows and what the copy control puts on the clipboard — a blank last
+  // line would be a character nobody asked for in all three.
+  return parts.join('\n');
 }

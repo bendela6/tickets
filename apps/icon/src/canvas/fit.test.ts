@@ -30,6 +30,27 @@ describe('canvasRoom', () => {
     });
   });
 
+  it('measures the scroller it is given, so the source panel really does take room', () => {
+    // The panel is a sibling of the scroller inside the canvas region rather
+    // than a layer over it, so opening it shortens the scroller itself. That is
+    // the whole mechanism: nothing here is told the panel exists, and ⇧⌘0 still
+    // fits the board into what is left instead of into a region it no longer
+    // has. A panel drawn over the artboard would leave this reading the old
+    // height and fitting the board to a box the panel covers.
+    const stack = boxed(ARTBOARD_PX + 64, ARTBOARD_PX + 64, 32);
+    const region = 700;
+    const panel = region / 3;
+
+    const shut = canvasRoom(boxed(900, region), stack);
+    const open = canvasRoom(boxed(900, region - panel), stack);
+
+    expect(shut?.height).toBe(region - 64);
+    expect(open?.height).toBe(region - panel - 64);
+    // Only the height moves: the panel spans the region rather than sitting
+    // beside the artboard.
+    expect(open?.width).toBe(shut?.width);
+  });
+
   it('reports nothing rather than a negative room when there is no layout', () => {
     expect(canvasRoom(boxed(0, 0), boxed(0, 0, 32))).toBeNull();
     expect(canvasRoom(null, boxed(900, 700, 32))).toBeNull();

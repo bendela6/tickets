@@ -66,6 +66,24 @@ describe('renderSvg', () => {
     expect(renderSvg(doc, { ground: 'light', background: false })).not.toContain('<rect');
   });
 
+  it('lays the file out to be read: one element per line, indented inside the root', () => {
+    // A `.svg` is a file somebody opens in an editor and reads in a diff, and
+    // it is the same string the source panel shows — so the layout is the
+    // renderer's business rather than a viewer's.
+    const svg = renderSvg(docOf([newObject('rect', 1, BOARD)]), { ground: 'light' });
+    expect(svg).toBe(
+      [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">',
+        '  <rect x="0" y="0" width="512" height="512" fill="#FFFFFF"/>',
+        '  <rect x="136" y="136" width="240" height="240" rx="32" fill="#4E46C6"/>',
+        '</svg>',
+      ].join('\n'),
+    );
+    // And it ends where the document does: a trailing blank line would be a
+    // character in every exported file and on the clipboard.
+    expect(svg.endsWith('</svg>')).toBe(true);
+  });
+
   it('paints in reverse document order, so objects[0] ends up in front', () => {
     const front = { ...newObject('rect', 1, BOARD), id: 'front', fill: { light: '#111111', dark: '#111111' } };
     const back = { ...newObject('ellipse', 2, BOARD), id: 'back', fill: { light: '#222222', dark: '#222222' } };
@@ -263,8 +281,8 @@ describe('renderSvg', () => {
 
   it('a group renders as `<g>` with its children inside', () => {
     const svg = renderSvg(docOf([groupOf([newObject('rect', 1, BOARD)])]), { ground: 'light' });
-    expect(svg).toContain('<g><rect x="136" y="136" width="240" height="240" rx="32"');
-    expect(svg).toContain('/></g>');
+    expect(svg).toContain('  <g>\n    <rect x="136" y="136" width="240" height="240" rx="32"');
+    expect(svg).toContain('/>\n  </g>');
   });
 
   it('says nothing about a group that has had nothing done to it', () => {
@@ -297,15 +315,20 @@ describe('renderSvg', () => {
     expect(svg).toContain('<g opacity="0.5">');
   });
 
-  it('a nested group nests', () => {
+  it('a nested group nests, one element per line and one indent per level', () => {
     const inner = groupOf([newObject('rect', 1, BOARD)], { x: 5, y: 0 });
     const outer = groupOf([inner], { x: 10, y: 0 });
     const svg = renderSvg(docOf([outer]), { ground: 'light', background: false });
     expect(svg).toBe(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">' +
-        '<g transform="translate(10 0)"><g transform="translate(5 0)">' +
-        '<rect x="136" y="136" width="240" height="240" rx="32" fill="#4E46C6"/>' +
-        '</g></g></svg>',
+      [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">',
+        '  <g transform="translate(10 0)">',
+        '    <g transform="translate(5 0)">',
+        '      <rect x="136" y="136" width="240" height="240" rx="32" fill="#4E46C6"/>',
+        '    </g>',
+        '  </g>',
+        '</svg>',
+      ].join('\n'),
     );
   });
 

@@ -19,6 +19,13 @@ export interface ViewState {
   dragging: boolean;
   /** The safe-zone ring was pinned open from the warning chip. */
   safeZoneOpen: boolean;
+  /**
+   * The SVG source panel is showing along the bottom of the canvas. Looking at
+   * the markup is looking, exactly as previewing the dark ground is: it belongs
+   * to nothing the document holds, so it is saved with nothing and undone by
+   * nothing.
+   */
+  sourceOpen: boolean;
 }
 
 export function initialView(): ViewState {
@@ -28,6 +35,7 @@ export function initialView(): ViewState {
     ground: 'light',
     dragging: false,
     safeZoneOpen: false,
+    sourceOpen: false,
   };
 }
 
