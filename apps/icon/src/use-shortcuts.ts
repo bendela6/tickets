@@ -1,6 +1,12 @@
 import { useEffect } from 'react';
 import { isPenKey, shapeToolForKey } from './canvas/shape-tools';
-import { selectedNodeIndex, selectedObject, type Action, type EditorState } from './doc/store';
+import {
+  selectedNodeIndex,
+  selectedNodeOnly,
+  selectedObject,
+  type Action,
+  type EditorState,
+} from './doc/store';
 
 /**
  * Whether the key belongs to whatever the user is typing into. A shape
@@ -47,10 +53,18 @@ export function useShortcuts({
         onExport();
         return;
       }
-      // One object only: what a duplicated selection of three should be — three
-      // loose copies, or the group nothing can make yet — is the grouping
-      // task's question, and answering it here would prejudge it.
-      const only = selectedObject(state);
+      // ⌘G collects the selection, ⇧⌘G takes a group apart. Above the guard
+      // below because the browser has nothing bound to either.
+      if (accel && event.key.toLowerCase() === 'g') {
+        event.preventDefault();
+        dispatch({ type: event.shiftKey ? 'ungroupSelection' : 'groupSelection' });
+        return;
+      }
+      // One node only, and that is now a complete answer rather than a deferral:
+      // three loose copies of a selection of three is what ⌘D means, and anyone
+      // who wanted one copy of the three together presses ⌘G first — which is
+      // exactly the thing a group is for.
+      const only = selectedNodeOnly(state);
       if (accel && event.key.toLowerCase() === 'd' && only) {
         event.preventDefault();
         dispatch({ type: 'duplicateObject', id: only.id });
@@ -107,6 +121,7 @@ export function useShortcuts({
       if ((event.key === 'Backspace' || event.key === 'Delete') && state.selectedIds.size > 0) {
         event.preventDefault();
         const node = selectedNodeIndex(state);
+        const shape = selectedObject(state);
         // A selected node takes the key. It takes it even when the shape is at
         // the floor for its kind and nothing can be removed: falling through to
         // deleting the whole object would answer a request to remove one point
@@ -115,8 +130,8 @@ export function useShortcuts({
         // key goes back to meaning the object. A node is only ever selected
         // inside a lone shape, so this precedence never has to choose between
         // one node and several objects.
-        if (node !== null && only) {
-          dispatch({ type: 'removeVertex', id: only.id, index: node });
+        if (node !== null && shape) {
+          dispatch({ type: 'removeVertex', id: shape.id, index: node });
           return;
         }
         // Every selected object, in one entry: one press of one key is one
@@ -125,9 +140,15 @@ export function useShortcuts({
         return;
       }
       if (event.key === 'Escape') {
-        // The whole selection, however many are in it: Escape means "never
-        // mind", and leaving two of three selected would be a different answer.
-        dispatch({ type: 'selectObject', id: null });
+        // Escape means "never mind", and what there is to mind depends on how
+        // far in you are. Inside a group it steps out one level, leaving that
+        // group selected — one press per level, so the key is how you climb
+        // back out of a nest rather than a single leap to the top that would
+        // lose where you had got to. Outside every group there is nothing left
+        // to leave, so it clears the selection — the whole selection, however
+        // many are in it, because leaving two of three would be a third answer.
+        if (state.entered.length > 0) dispatch({ type: 'exitGroup' });
+        else dispatch({ type: 'selectObject', id: null });
         return;
       }
 

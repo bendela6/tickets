@@ -1,11 +1,10 @@
 import { ARTBOARD_MAX, ARTBOARD_MIN, SNAP_MIN } from './constants';
-import { newObject, objectFor, objectId } from './defaults';
+import { NO_TRANSFORM, groupId, newObject, objectFor, objectId } from './defaults';
 import {
+  boxCentre,
   fitToBox,
   insertVertex,
-  objectsInBox,
   removeVertex,
-  rotatedBounds,
   translate,
   unionBox,
   vertexPoints,
@@ -13,11 +12,39 @@ import {
 } from './geometry';
 import { penIsDrawable, penSegments, type PenAnchor } from './pen';
 import { snapGeometry, snapTo } from './snap';
+import {
+  ARTBOARD_FRAME,
+  ancestorsOf,
+  boxThrough,
+  clampScale,
+  contentBox,
+  dissolved,
+  everyNode,
+  findNode,
+  frameOf,
+  isGroup,
+  isLocked,
+  levelOf,
+  listAt,
+  localBounds,
+  mapList,
+  mapNode,
+  nodesInBox,
+  outlineOf,
+  prunedEntry,
+  transformAt,
+  unplace,
+  withoutNodes,
+  type Placement,
+} from './tree';
 import type {
   Artboard,
   Geometry,
+  GroupTransform,
   Ground,
   IconDoc,
+  IconGroup,
+  IconNode,
   IconObject,
   Pair,
   Point,
@@ -112,7 +139,26 @@ export interface EditorState {
   tool: Tool;
   /** The anchors placed so far. Empty unless the pen is part way through a path. */
   pen: PenAnchor[];
-  /** Shapes ever added, so names stay unique across deletions. */
+  /**
+   * Which groups you are standing inside, outermost first.
+   *
+   * This is the whole of "entering" and "leaving" a group: not a mode and not a
+   * flag on the group, but the path down to the list that clicks pick from.
+   * Empty means the document's own list, which is where every session starts
+   * and where a document with no groups in it never leaves.
+   *
+   * On the state rather than in the canvas for the reason `selectedNode` is:
+   * Escape steps out and is bound at the top of the app, the rail has to show
+   * which level you are in, and the marquee and select-all both have to catch
+   * members of it. Three readers, so one owner.
+   *
+   * Like the selection it is not an edit and never enters the history — but it
+   * *is* derived from the selection: selecting a node opens exactly the groups
+   * above it, so there is no way to be looking at one level while something in
+   * another is selected.
+   */
+  entered: readonly string[];
+  /** Nodes ever added, so names and ids stay unique across deletions. */
   sequence: number;
   past: Snapshot[];
   future: Snapshot[];
@@ -128,11 +174,16 @@ interface Snapshot {
   label: string;
 }
 
-/** One object's new geometry, as a batch of them is stated. */
-export interface GeometryEdit {
-  id: string;
-  geometry: Geometry;
-}
+/**
+ * One node's new placement, as a batch of them is stated.
+ *
+ * A union rather than two optional fields, so a caller cannot hand over an edit
+ * that names neither and be silently ignored: a shape is its geometry and a
+ * group is its transform, and a drag of a mixed selection carries both.
+ */
+export type PlacementEdit =
+  | { id: string; geometry: Geometry }
+  | { id: string; transform: GroupTransform };
 
 export type Action =
   | { type: 'addObject'; kind: ShapeKind }
@@ -151,6 +202,18 @@ export type Action =
   | { type: 'selectInBox'; box: Box; additive: boolean }
   | { type: 'selectAll' }
   | { type: 'selectNode'; index: number | null }
+  /**
+   * Step into a group, so clicks pick its children rather than it. `select` is
+   * what was under the pointer once you were inside, because a double-click
+   * that entered and then selected nothing would throw away the aim.
+   */
+  | { type: 'enterGroup'; id: string; select: string | null }
+  /** Step out one level, leaving the group you were inside selected. */
+  | { type: 'exitGroup' }
+  /** Collect the selection into a group. */
+  | { type: 'groupSelection' }
+  /** Take every selected group apart, putting its children back in its place. */
+  | { type: 'ungroupSelection' }
   /**
    * Enter a tool. Leaving the pen is not a bare mode switch — there may be a
    * path half drawn — so it is routed through `penEnd`, which is the one place
@@ -191,18 +254,35 @@ export type Action =
   | { type: 'renameObject'; id: string; name: string }
   | { type: 'toggleHidden'; id: string }
   | { type: 'toggleLocked'; id: string }
-  | { type: 'reorderObjects'; from: number; to: number }
+  /**
+   * Move a row within the list it is in. `parentId` names that list — a group's
+   * id, or null for the document's own — because an index means nothing without
+   * one once the list is a tree.
+   */
+  | { type: 'reorderObjects'; parentId: string | null; from: number; to: number }
   | { type: 'moveObject'; id: string; dx: number; dy: number; at?: number }
   | { type: 'setGeometry'; id: string; geometry: Geometry; label: string; at?: number }
   /**
-   * Several objects rewritten at once — what a drag of a multiple selection
-   * commits. Each edit is the geometry that object should end up with, so the
+   * Several nodes rewritten at once — what a drag of a multiple selection
+   * commits. Each edit is the placement that node should end up with, so the
    * batch stays as absolute as the single case: the pointer recomputes every
    * one of them from what it captured at the press.
    */
-  | { type: 'setGeometries'; edits: readonly GeometryEdit[]; label: string; at?: number }
+  | { type: 'setPlacements'; edits: readonly PlacementEdit[]; label: string; at?: number }
   | { type: 'resizeObject'; id: string; box: Box; at?: number }
+  /**
+   * A group resized to `box`, which is stated in artboard units — the box the
+   * selection outline should end up occupying.
+   *
+   * Its own action rather than `resizeObject` because a group has no geometry to
+   * fit into a box: what changes is one scale, and the position that keeps the
+   * dragged corner under the pointer. The box arrives with the group's aspect
+   * ratio already preserved, so only its width is read.
+   */
+  | { type: 'resizeGroup'; id: string; box: Box; at?: number }
   | { type: 'rotateObject'; id: string; degrees: number; at?: number }
+  /** A group's transform typed rather than dragged. */
+  | { type: 'setGroupTransform'; id: string; transform: GroupTransform }
   // Appearance takes a list rather than an id: these are the properties a
   // selection of several genuinely shares, and an edit to one of them has to
   // reach all of them as a single entry.
@@ -240,7 +320,11 @@ export function initialState(doc: IconDoc): EditorState {
     selectedNode: null,
     tool: 'select',
     pen: [],
-    sequence: doc.objects.length,
+    entered: [],
+    // Counted through the whole tree, not across the top list: two nodes with
+    // the same id would make every lookup below ambiguous, and a document that
+    // arrives holding groups has more nodes than it has top-level rows.
+    sequence: everyNode(doc.objects).length,
     past: [],
     future: [],
     lastAction: null,
@@ -248,52 +332,97 @@ export function initialState(doc: IconDoc): EditorState {
   };
 }
 
-function moveWithin<T>(list: T[], from: number, to: number): T[] {
-  if (from === to || from < 0 || from >= list.length || to < 0 || to >= list.length) return list;
+function moveWithin<T>(list: readonly T[], from: number, to: number): T[] {
   const next = list.slice();
+  if (from === to || from < 0 || from >= list.length || to < 0 || to >= list.length) return next;
   const [item] = next.splice(from, 1);
-  if (item === undefined) return list;
+  if (item === undefined) return list.slice();
   next.splice(to, 0, item);
   return next;
 }
 
-function mapObject(doc: IconDoc, id: string, fn: (object: IconObject) => IconObject): IconDoc {
-  return { ...doc, objects: doc.objects.map((object) => (object.id === id ? fn(object) : object)) };
+/** The tree with one node rewritten, wherever in it that node sits. */
+function withNode(doc: IconDoc, id: string, fn: (node: IconNode) => IconNode): IconDoc {
+  return { ...doc, objects: mapNode(doc.objects, id, fn) };
 }
 
-/** The same, for an edit that reaches every object in a selection. */
-function mapObjects(
+/**
+ * The same, for an edit that reaches every *shape* in a selection.
+ *
+ * Shapes only, and that is the answer to what a fill does to a group: nothing.
+ * A group has no paint of its own to set — the model gives it none, so that a
+ * colour can never come from two places — and reaching through it to repaint
+ * every child would be a different command, one that cannot be undone by
+ * setting the colour back because it does not remember what each child was.
+ */
+function mapShapes(
   doc: IconDoc,
   ids: readonly string[],
   fn: (object: IconObject) => IconObject,
 ): IconDoc {
-  const touched = new Set(ids);
-  return { ...doc, objects: doc.objects.map((o) => (touched.has(o.id) ? fn(o) : o)) };
+  return ids.reduce(
+    (next, id) => withNode(next, id, (node) => (isGroup(node) ? node : fn(node))),
+    doc,
+  );
 }
 
 /**
- * Set an object's geometry, on the document's grid.
+ * Set a shape's geometry, on the document's grid.
  *
  * Every route that moves or resizes anything goes through here rather than
  * snapping at the pointer, so a value typed into the properties panel lands on
  * the same grid a drag does. Snapping only the pointer would let the panel
  * write positions no drag could ever produce.
+ *
+ * A locked *ancestor* holds it as firmly as its own lock does — locking a group
+ * is a statement about the arrangement inside it, and one that only held for
+ * the group's own outline would not be worth making.
  */
-function mapGeometry(
-  doc: IconDoc,
-  id: string,
-  fn: (object: IconObject) => Geometry,
-): IconDoc {
-  return mapObject(doc, id, (o) =>
-    o.locked ? o : { ...o, geometry: snapGeometry(fn(o), doc.snap) },
+function mapGeometry(doc: IconDoc, id: string, fn: (object: IconObject) => Geometry): IconDoc {
+  if (isLocked(doc.objects, id)) return doc;
+  return withNode(doc, id, (node) =>
+    isGroup(node) ? node : { ...node, geometry: snapGeometry(fn(node), doc.snap) },
   );
 }
+
+/** The same for a group, which has a transform where a shape has geometry. */
+function mapTransform(
+  doc: IconDoc,
+  id: string,
+  fn: (group: IconGroup) => GroupTransform,
+): IconDoc {
+  if (isLocked(doc.objects, id)) return doc;
+  return withNode(doc, id, (node) =>
+    isGroup(node) ? { ...node, transform: snapTransform(fn(node), doc.snap) } : node,
+  );
+}
+
+/**
+ * A group's transform on the document's grid.
+ *
+ * Its position lands on the grid for the same reason a shape's does. The scale
+ * and the turn do not: a scale is a ratio rather than a position, and rounding
+ * one to the grid would mean a group could not be made 1% bigger on a board
+ * whose step is 1.
+ */
+const snapTransform = (transform: GroupTransform, step: number): GroupTransform => ({
+  ...transform,
+  x: snapTo(transform.x, step),
+  y: snapTo(transform.y, step),
+  scale: clampScale(transform.scale),
+});
 
 const clampArtboard = (value: number): number =>
   Math.max(ARTBOARD_MIN, Math.min(ARTBOARD_MAX, Math.round(value)));
 
 function nameOf(state: EditorState, id: string): string {
-  return state.doc.objects.find((object) => object.id === id)?.name ?? 'object';
+  return findNode(state.doc.objects, id)?.name ?? 'object';
+}
+
+/** The shape with this id, or null when the id names a group or nothing. */
+function shapeById(doc: IconDoc, id: string): IconObject | null {
+  const node = findNode(doc.objects, id);
+  return node === null || isGroup(node) ? null : node;
 }
 
 /**
@@ -353,6 +482,13 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         ...state,
         selectedIds: action.id === null ? NOTHING : new Set([action.id]),
         selectedNode: null,
+        // Selecting something opens exactly the groups above it and closes
+        // every other one. That one rule is why entering a group needs no
+        // second concept: clicking a row deep in the rail steps in, clicking a
+        // top-level shape steps back out, and clicking bare canvas leaves
+        // altogether — because you cannot be standing inside a group with
+        // something outside it selected.
+        entered: action.id === null ? [] : ancestorsOf(state.doc.objects, action.id).map((g) => g.id),
       };
     case 'toggleSelect': {
       const next = new Set(state.selectedIds);
@@ -363,7 +499,9 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
       return { ...state, selectedIds: next, selectedNode: null };
     }
     case 'selectInBox': {
-      const caught = objectsInBox(state.doc.objects, action.box).map((object) => object.id);
+      // Members of the level you are standing in, for the same reason a click
+      // picks one: a band swept inside a group is aimed at what is in it.
+      const caught = nodesInBox(state.doc.objects, action.box, state.entered).map((n) => n.id);
       return {
         ...state,
         selectedIds: action.additive
@@ -377,12 +515,40 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         ...state,
         // Hidden objects are not on screen to be selected. A locked one is
         // being held out of the way on purpose, and select-all is the one
-        // gesture that would sweep it back under the pointer unasked.
+        // gesture that would sweep it back under the pointer unasked. "All" is
+        // all of the level you are in — inside a group, everything else is a
+        // different subject.
         selectedIds: new Set(
-          state.doc.objects.filter((o) => !o.hidden && !o.locked).map((o) => o.id),
+          levelOf(state.doc.objects, state.entered)
+            .list.filter((node) => !node.hidden && !node.locked)
+            .map((node) => node.id),
         ),
         selectedNode: null,
       };
+    case 'enterGroup': {
+      const chain = ancestorsOf(state.doc.objects, action.id).map((group) => group.id);
+      const target = findNode(state.doc.objects, action.id);
+      if (!target || !isGroup(target)) return state;
+      return {
+        ...state,
+        entered: [...chain, action.id],
+        selectedIds: action.select === null ? NOTHING : new Set([action.select]),
+        selectedNode: null,
+      };
+    }
+    case 'exitGroup': {
+      const leaving = state.entered.at(-1);
+      if (leaving === undefined) return state;
+      return {
+        ...state,
+        entered: state.entered.slice(0, -1),
+        // The group you were inside is what you were working on, so it is what
+        // you come back out holding. Stepping out and finding nothing selected
+        // would mean re-finding it to move it, which is the usual next thing.
+        selectedIds: new Set([leaving]),
+        selectedNode: null,
+      };
+    }
     case 'selectNode': {
       const id = sole(state.selectedIds);
       return {
@@ -460,7 +626,53 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         doc: { ...state.doc, objects: [object, ...state.doc.objects] },
         selectedIds: new Set([object.id]),
         selectedNode: null,
+        entered: [],
         sequence,
+      };
+    }
+
+    // ----- groups ---------------------------------------------------------
+    case 'groupSelection': {
+      const made = grouped(state);
+      if (!made) return state;
+      return {
+        ...state,
+        ...remember(state, `group ${made.group.children.length} objects`),
+        doc: { ...state.doc, objects: made.objects },
+        selectedIds: new Set([made.group.id]),
+        selectedNode: null,
+        // The new group sits in the list you were standing in, so the level
+        // does not change — but the group itself is now what is selected, and
+        // you are outside it looking at it rather than inside it.
+        entered: [...state.entered],
+        sequence: state.sequence + 1,
+      };
+    }
+    case 'ungroupSelection': {
+      const groups = [...state.selectedIds]
+        .map((id) => findNode(state.doc.objects, id))
+        .filter((node): node is IconGroup => node !== null && isGroup(node));
+      if (groups.length === 0) return state;
+
+      let objects = state.doc.objects;
+      const freed = new Set<string>();
+      for (const group of groups) {
+        const children = dissolved(group);
+        for (const child of children) freed.add(child.id);
+        const above = ancestorsOf(objects, group.id).at(-1)?.id ?? null;
+        objects = mapList(objects, above, (list) =>
+          list.flatMap((node) => (node.id === group.id ? children : [node])),
+        );
+      }
+      return {
+        ...state,
+        ...remember(state, `ungroup ${subjectOf(state, groups.map((g) => g.id))}`),
+        doc: { ...state.doc, objects },
+        // What comes back is what was inside: the thing you were holding is
+        // gone, and its contents are the nearest true answer to "what now".
+        selectedIds: freed,
+        selectedNode: null,
+        entered: prunedEntry(objects, state.entered),
       };
     }
 
@@ -473,8 +685,11 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         doc: entry.doc,
         selectedIds: entry.selectedIds,
         // The document that comes back may not have the node that was selected
-        // in it at all — undoing the addition of one is the obvious case.
+        // in it at all — undoing the addition of one is the obvious case. The
+        // same is true of the group you were standing inside, which is why the
+        // entered path is cut back to what still exists rather than trusted.
         selectedNode: null,
+        entered: prunedEntry(entry.doc.objects, state.entered),
         past: state.past.slice(0, -1),
         future: [
           ...state.future,
@@ -492,6 +707,7 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         doc: entry.doc,
         selectedIds: entry.selectedIds,
         selectedNode: null,
+        entered: prunedEntry(entry.doc.objects, state.entered),
         past: [
           ...state.past,
           { doc: state.doc, selectedIds: state.selectedIds, label: entry.label },
@@ -521,81 +737,114 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
       // Nothing named, nothing to answer for: a history entry here would be an
       // undo that appears to do nothing.
       if (removing.size === 0) return state;
+      // A group goes with everything in it. Nothing here says so: taking the
+      // node out of the tree takes its children with it, which is the one
+      // behaviour a tree gives away for free.
+      const objects = withoutNodes(state.doc.objects, removing);
       return {
         ...state,
         ...remember(state, `delete ${subjectOf(state, action.ids)}`),
-        doc: { ...state.doc, objects: state.doc.objects.filter((o) => !removing.has(o.id)) },
+        doc: { ...state.doc, objects },
         selectedIds: new Set([...state.selectedIds].filter((id) => !removing.has(id))),
         selectedNode: null,
+        entered: prunedEntry(objects, state.entered),
       };
     }
     case 'duplicateObject': {
-      const source = state.doc.objects.find((o) => o.id === action.id);
+      const source = findNode(state.doc.objects, action.id);
       if (!source) return state;
-      const sequence = state.sequence + 1;
-      const kind = source.geometry.kind;
-      // A copy is a new object, not a second reference: `structuredClone`
-      // rather than a spread, or the two would share one geometry and one
-      // colour pair and editing either would move both.
-      const copy: IconObject = {
-        ...structuredClone(source),
-        id: objectId(kind, sequence),
+      // A copy is a new node, not a second reference: `structuredClone` rather
+      // than a spread, or the two would share one geometry and one colour pair
+      // and editing either would move both. Every node in the copied subtree
+      // then takes a fresh id, because an id names one node in the whole tree
+      // and a duplicated group would otherwise hand back a second `rect 1`.
+      const renamed = reidentified(structuredClone(source), state.sequence);
+      const copy: IconNode = {
+        ...renamed.node,
         name: `${source.name} copy`,
         // A duplicate arrives unlocked whatever the original was, because it
         // was made to be moved.
         locked: false,
       };
-      const at = state.doc.objects.findIndex((o) => o.id === action.id);
-      const objects = state.doc.objects.slice();
-      objects.splice(at, 0, copy);
+      const { parentId, list } = siblings(state.doc.objects, action.id);
+      const at = list.findIndex((node) => node.id === action.id);
       return {
         ...state,
         ...remember(state, `duplicate ${source.name}`),
-        doc: { ...state.doc, objects },
+        doc: {
+          ...state.doc,
+          objects: mapList(state.doc.objects, parentId, (current) => {
+            const next = current.slice();
+            next.splice(at, 0, copy);
+            return next;
+          }),
+        },
         selectedIds: new Set([copy.id]),
         selectedNode: null,
-        sequence,
+        sequence: renamed.sequence,
       };
     }
+    // Name, visibility and lock are the three things a group and a shape both
+    // have, so all three reach a node of either kind without asking which.
     case 'renameObject':
       return {
         ...state,
         ...remember(state, `rename ${nameOf(state, action.id)}`),
-        doc: mapObject(state.doc, action.id, (o) => ({ ...o, name: action.name })),
+        doc: withNode(state.doc, action.id, (node) => ({ ...node, name: action.name })),
       };
     case 'toggleHidden': {
-      const object = state.doc.objects.find((o) => o.id === action.id);
-      const label = `${object?.hidden ? 'show' : 'hide'} ${nameOf(state, action.id)}`;
+      const node = findNode(state.doc.objects, action.id);
+      const label = `${node?.hidden ? 'show' : 'hide'} ${nameOf(state, action.id)}`;
       return {
         ...state,
         ...remember(state, label),
-        doc: mapObject(state.doc, action.id, (o) => ({ ...o, hidden: !o.hidden })),
+        doc: withNode(state.doc, action.id, (o) => ({ ...o, hidden: !o.hidden })),
       };
     }
     case 'toggleLocked': {
-      const object = state.doc.objects.find((o) => o.id === action.id);
-      const label = `${object?.locked ? 'unlock' : 'lock'} ${nameOf(state, action.id)}`;
+      const node = findNode(state.doc.objects, action.id);
+      const label = `${node?.locked ? 'unlock' : 'lock'} ${nameOf(state, action.id)}`;
       return {
         ...state,
         ...remember(state, label),
-        doc: mapObject(state.doc, action.id, (o) => ({ ...o, locked: !o.locked })),
+        doc: withNode(state.doc, action.id, (o) => ({ ...o, locked: !o.locked })),
       };
     }
     case 'reorderObjects': {
-      const objects = moveWithin(state.doc.objects, action.from, action.to);
-      if (objects === state.doc.objects) return state;
+      const list = listAt(state.doc.objects, action.parentId);
+      const { from, to } = action;
+      // A move to where it already is, or off either end of the list it is in,
+      // is not an edit — and a history entry for it would be an undo that
+      // appears to do nothing. Off the end of a *group* is a dead end for the
+      // same reason it is at the top level: there is no "after the back".
+      if (!list || from === to) return state;
+      if (from < 0 || from >= list.length || to < 0 || to >= list.length) return state;
+      const objects = mapList(state.doc.objects, action.parentId, (current) =>
+        moveWithin(current, from, to),
+      );
       return { ...state, ...remember(state, 'reorder'), doc: { ...state.doc, objects } };
     }
 
     // ----- direct manipulation -------------------------------------------
     case 'moveObject': {
       const label = `move ${nameOf(state, action.id)}`;
+      const node = findNode(state.doc.objects, action.id);
+      if (!node) return state;
+      // A group moves by its transform and a shape by its coordinates, and both
+      // are "move this by that much" — so one action means both rather than the
+      // rail and the keyboard having to know which they are holding.
+      const doc =
+        isGroup(node)
+          ? mapTransform(state.doc, action.id, (g) => ({
+              ...g.transform,
+              x: g.transform.x + action.dx,
+              y: g.transform.y + action.dy,
+            }))
+          : mapGeometry(state.doc, action.id, (o) => translate(o.geometry, action.dx, action.dy));
       return {
         ...state,
         ...remember(state, label, { key: `move:${action.id}`, at: action.at ?? 0 }),
-        doc: mapGeometry(state.doc, action.id, (o) =>
-          translate(o.geometry, action.dx, action.dy),
-        ),
+        doc,
       };
     }
     case 'setGeometry':
@@ -604,18 +853,21 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         ...remember(state, action.label, { key: `geometry:${action.id}`, at: action.at ?? 0 }),
         doc: mapGeometry(state.doc, action.id, () => action.geometry),
       };
-    case 'setGeometries': {
+    case 'setPlacements': {
       if (action.edits.length === 0) return state;
       // Keyed by everything the batch touches, so a drag of the same three
-      // shapes coalesces into one entry and a drag of a different three does
-      // not fold into it. A batch of one produces the key `setGeometry` does,
-      // which is what lets a single drag stay one gesture across the change.
+      // nodes coalesces into one entry and a drag of a different three does not
+      // fold into it. A batch of one produces the key `setGeometry` does, which
+      // is what lets a single drag stay one gesture across the change.
       const key = `geometry:${action.edits.map((edit) => edit.id).join(',')}`;
       return {
         ...state,
         ...remember(state, action.label, { key, at: action.at ?? 0 }),
         doc: action.edits.reduce(
-          (doc, edit) => mapGeometry(doc, edit.id, () => edit.geometry),
+          (doc, edit) =>
+            'geometry' in edit
+              ? mapGeometry(doc, edit.id, () => edit.geometry)
+              : mapTransform(doc, edit.id, () => edit.transform),
           state.doc,
         ),
       };
@@ -628,9 +880,37 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         doc: mapGeometry(state.doc, action.id, (o) => fitToBox(o, action.box)),
       };
     }
+    case 'resizeGroup': {
+      const group = findNode(state.doc.objects, action.id);
+      if (!group || !isGroup(group)) return state;
+      const inside = contentBox(group);
+      // A group with nothing in it, or with everything in it stacked on one
+      // point, has no width for a ratio to be taken against. Refusing is the
+      // whole answer — there is no size there to change.
+      if (inside.w <= 0 || action.box.w <= 0) return state;
+      const frame = frameOf(state.doc.objects, action.id);
+      const wanted = action.box.w / inside.w / frame.scale;
+      const centre = unplace(frame, boxCentre(action.box));
+      return {
+        ...state,
+        ...remember(state, `resize ${group.name}`, {
+          key: `resize:${action.id}`,
+          at: action.at ?? 0,
+        }),
+        doc: mapTransform(state.doc, action.id, (g) =>
+          transformAt(g, centre, g.transform.rotation, wanted),
+        ),
+      };
+    }
+    case 'setGroupTransform':
+      return {
+        ...state,
+        ...remember(state, `place ${nameOf(state, action.id)}`),
+        doc: mapTransform(state.doc, action.id, () => action.transform),
+      };
     case 'insertVertex': {
-      const object = state.doc.objects.find((o) => o.id === action.id);
-      if (!object || object.locked) return state;
+      const object = shapeById(state.doc, action.id);
+      if (!object || isLocked(state.doc.objects, action.id)) return state;
       const added = insertVertex(object, action.at, action.reach);
       // Nothing near enough to the outline, or a shape with no nodes to add
       // one to. Doing nothing is the whole answer — a history entry for an
@@ -651,8 +931,8 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
       };
     }
     case 'removeVertex': {
-      const object = state.doc.objects.find((o) => o.id === action.id);
-      if (!object || object.locked) return state;
+      const object = shapeById(state.doc, action.id);
+      if (!object || isLocked(state.doc.objects, action.id)) return state;
       const geometry = removeVertex(object, action.index);
       // At the floor for its kind: the key does nothing, and in particular it
       // does not fall through to deleting the object.
@@ -666,11 +946,19 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
     }
     case 'rotateObject': {
       const label = `rotate ${nameOf(state, action.id)}`;
+      const turn = ((action.degrees % 360) + 360) % 360;
+      if (isLocked(state.doc.objects, action.id)) return state;
       return {
         ...state,
         ...remember(state, label, { key: `rotate:${action.id}`, at: action.at ?? 0 }),
-        doc: mapObject(state.doc, action.id, (o) =>
-          o.locked ? o : { ...o, rotation: ((action.degrees % 360) + 360) % 360 },
+        // Stated in the node's own frame, which for a group means its parent's
+        // — the same frame its `x` and `y` are in, and the same one the
+        // properties rail shows. A group inside a turned group carries only the
+        // part of the turn it is answerable for.
+        doc: withNode(state.doc, action.id, (node) =>
+          isGroup(node)
+            ? { ...node, transform: { ...node.transform, rotation: turn } }
+            : { ...node, rotation: turn },
         ),
       };
     }
@@ -688,7 +976,12 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
           key: `opacity:${action.ids.join(',')}`,
           at: action.at ?? 0,
         }),
-        doc: mapObjects(state.doc, action.ids, (o) => ({ ...o, opacity })),
+        // Opacity is the one appearance property a group has of its own, so
+        // this is the one that reaches a node of either kind.
+        doc: action.ids.reduce(
+          (doc, id) => withNode(doc, id, (node) => ({ ...node, opacity })),
+          state.doc,
+        ),
       };
     }
     case 'setStrokeWidth': {
@@ -696,7 +989,7 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
       return {
         ...state,
         ...remember(state, `stroke ${subjectOf(state, action.ids)}`),
-        doc: mapObjects(state.doc, action.ids, (o) => ({ ...o, strokeWidth })),
+        doc: mapShapes(state.doc, action.ids, (o) => ({ ...o, strokeWidth })),
       };
     }
     case 'setColor': {
@@ -705,7 +998,7 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
       return {
         ...state,
         ...remember(state, label),
-        doc: mapObjects(state.doc, action.ids, (o) =>
+        doc: mapShapes(state.doc, action.ids, (o) =>
           action.channel === 'fill'
             ? { ...o, fill: half(o.fill) }
             : { ...o, stroke: half(o.stroke) },
@@ -734,21 +1027,29 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
     }
     case 'setSnap': {
       const snap = Math.max(SNAP_MIN, action.snap);
+      // Through the whole tree: a shape inside a group is stated in the group's
+      // frame, and that frame is what its own numbers are drawn on.
+      const onGrid = (nodes: readonly IconNode[]): IconNode[] =>
+        nodes.map((node) =>
+          isGroup(node)
+            ? {
+                ...node,
+                transform: snapTransform(node.transform, snap),
+                children: onGrid(node.children),
+              }
+            : {
+                ...node,
+                geometry: snapGeometry(node.geometry, snap),
+                strokeWidth: snapTo(node.strokeWidth, snap),
+              },
+        );
       // Re-snapping what is already there is the point: changing the step to 8
       // and leaving everything on halves would mean the grid describes what
       // will happen next rather than what the document is.
       return {
         ...state,
         ...remember(state, `step ${snap}`),
-        doc: {
-          ...state.doc,
-          snap,
-          objects: state.doc.objects.map((object) => ({
-            ...object,
-            geometry: snapGeometry(object.geometry, snap),
-            strokeWidth: snapTo(object.strokeWidth, snap),
-          })),
-        },
+        doc: { ...state.doc, snap, objects: onGrid(state.doc.objects) },
       };
     }
 
@@ -766,8 +1067,123 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
   }
 }
 
+/** The list a node sits in, and which group owns it. */
+function siblings(
+  nodes: readonly IconNode[],
+  id: string,
+): { list: readonly IconNode[]; parentId: string | null } {
+  const parent = ancestorsOf(nodes, id).at(-1);
+  return { list: parent ? parent.children : nodes, parentId: parent?.id ?? null };
+}
+
+/**
+ * Every node of a copied subtree with a fresh id, and the sequence left over.
+ *
+ * Names are left exactly as they were and only the ids change, because a name
+ * is what you called the thing and a duplicate of `wheel` is still a wheel —
+ * only the copy's own root is renamed, by the caller, and only so the two rows
+ * can be told apart.
+ */
+function reidentified(node: IconNode, sequence: number): { node: IconNode; sequence: number } {
+  const next = sequence + 1;
+  if (!isGroup(node)) return { node: { ...node, id: objectId(node.geometry.kind, next) }, sequence: next };
+  let running = next;
+  const children: IconNode[] = [];
+  for (const child of node.children) {
+    const done = reidentified(child, running);
+    children.push(done.node);
+    running = done.sequence;
+  }
+  return { node: { ...node, id: groupId(next), children }, sequence: running };
+}
+
+/**
+ * The document with the selection collected into one group, or null when there
+ * is nothing to collect.
+ *
+ * **Where the group lands: the frontmost member's place.** Objects picked out
+ * of a list are almost never next to each other, so collecting them has to move
+ * something past something else, and the only question is which direction. Put
+ * the group at the frontmost member's index and every member either stays where
+ * it was or comes *forward* — no member ever ends up behind something it was in
+ * front of. Put it at the backmost member's index instead and the opposite
+ * happens: parts of what you just selected disappear behind objects you did not
+ * select. Grouping is how you take hold of something, and it must not hide any
+ * of what you took hold of.
+ *
+ * Members are taken from one list only — the frontmost member's. A selection
+ * that reaches inside a group and outside it at the same time has no single
+ * list to be collected into, and quietly pulling objects out of a group is a
+ * restructuring nobody asked ⌘G for.
+ */
+function grouped(state: EditorState): { objects: IconNode[]; group: IconGroup } | null {
+  const chosen = new Set(state.selectedIds);
+  if (chosen.size === 0) return null;
+  const level = levelOf(state.doc.objects, state.entered);
+  const front = level.list.findIndex((node) => chosen.has(node.id));
+  if (front < 0) return null;
+
+  const members = level.list.filter((node) => chosen.has(node.id));
+  const group: IconGroup = {
+    id: groupId(state.sequence + 1),
+    name: `group ${state.sequence + 1}`,
+    // Nothing is moved by being grouped, so the transform is the identity and
+    // the children keep the very coordinates they had: they were already stated
+    // in this list's frame, and the group's own frame starts out as that frame.
+    transform: { ...NO_TRANSFORM },
+    opacity: 100,
+    hidden: false,
+    locked: false,
+    children: members,
+  };
+  const objects = mapList(state.doc.objects, level.parentId, (list) => {
+    const kept: IconNode[] = [];
+    for (const node of list) {
+      if (!chosen.has(node.id)) {
+        kept.push(node);
+        continue;
+      }
+      // The frontmost member's slot is where the group goes; the rest leave a
+      // hole behind them.
+      if (node.id === members[0]?.id) kept.push(group);
+    }
+    return kept;
+  });
+  return { objects, group };
+}
+
 export const canUndo = (state: EditorState): boolean => state.past.length > 0;
 export const canRedo = (state: EditorState): boolean => state.future.length > 0;
+
+/**
+ * The one selected node — a shape or a group — or null when nothing is selected
+ * and equally when more than one thing is.
+ */
+export function selectedNodeOnly(state: EditorState): IconNode | null {
+  const id = sole(state.selectedIds);
+  return id === null ? null : findNode(state.doc.objects, id);
+}
+
+/** Everything selected, in the order it was selected, groups included. */
+export function selectedNodes(state: EditorState): IconNode[] {
+  const nodes: IconNode[] = [];
+  for (const id of state.selectedIds) {
+    const node = findNode(state.doc.objects, id);
+    if (node) nodes.push(node);
+  }
+  return nodes;
+}
+
+/** The frame the one selected node's own coordinates are stated in. */
+export function selectedFrame(state: EditorState): Placement {
+  const id = sole(state.selectedIds);
+  return id === null ? ARTBOARD_FRAME : frameOf(state.doc.objects, id);
+}
+
+/** Whether the node, or any group above it, is locked. */
+export function lockedInPlace(state: EditorState, id: string): boolean {
+  return isLocked(state.doc.objects, id);
+}
 
 /**
  * The one selected object, or null — when nothing is selected, and equally
@@ -781,8 +1197,11 @@ export const canRedo = (state: EditorState): boolean => state.future.length > 0;
  * judgement in one place instead of a `size === 1` in each of theirs.
  */
 export function selectedObject(state: EditorState): IconObject | null {
-  const id = sole(state.selectedIds);
-  return id === null ? null : (state.doc.objects.find((object) => object.id === id) ?? null);
+  const node = selectedNodeOnly(state);
+  // A group is not one of these either. Everything below this accessor — the
+  // geometry fields, the node handles, the rotate knob's pivot — is a statement
+  // about a shape, and a group answers none of them the same way.
+  return node === null || isGroup(node) ? null : node;
 }
 
 /**
@@ -794,12 +1213,7 @@ export function selectedObject(state: EditorState): IconObject | null {
  * an id in it no longer names.
  */
 export function selectedObjects(state: EditorState): IconObject[] {
-  const objects: IconObject[] = [];
-  for (const id of state.selectedIds) {
-    const object = state.doc.objects.find((candidate) => candidate.id === id);
-    if (object) objects.push(object);
-  }
-  return objects;
+  return selectedNodes(state).filter((node): node is IconObject => !isGroup(node));
 }
 
 /**
@@ -829,8 +1243,15 @@ export function selectedNodeIndex(state: EditorState): number | null {
  */
 export function selectionBounds(state: EditorState): Box | null {
   return unionBox(
-    selectedObjects(state)
-      .filter((object) => !object.hidden)
-      .map(rotatedBounds),
+    selectedNodes(state)
+      .filter((node) => !node.hidden)
+      .map((node) => boxThrough(localBounds(node), frameOf(state.doc.objects, node.id))),
   );
+}
+
+/** The outline and the angle to draw it at for the one selected node. */
+export function selectionOutline(state: EditorState): { box: Box; rotation: number } | null {
+  const node = selectedNodeOnly(state);
+  if (!node || node.hidden) return null;
+  return outlineOf(node, frameOf(state.doc.objects, node.id));
 }

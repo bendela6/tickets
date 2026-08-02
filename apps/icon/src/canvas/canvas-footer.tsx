@@ -1,5 +1,5 @@
 import { Tabs, cn } from '@tickets/ui';
-import { selectedObject, type EditorState } from '../doc/store';
+import { selectedNodeOnly, type EditorState } from '../doc/store';
 import { safeZoneWarnings } from '../doc/validate';
 import { useEditor } from '../editor-context';
 import type { Ground } from '../doc/types';
@@ -64,7 +64,8 @@ function ToggleChip({
  * wide as the canvas to say something the accented rows already show.
  */
 function selectionLine(state: EditorState): string {
-  const one = selectedObject(state);
+  // A group is one thing you selected, so it is named the way a shape is.
+  const one = selectedNodeOnly(state);
   if (one) return `${one.name} selected`;
   const count = state.selectedIds.size;
   return count === 0 ? 'nothing selected' : `${count} objects selected`;

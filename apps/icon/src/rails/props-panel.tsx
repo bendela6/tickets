@@ -17,9 +17,10 @@ import {
   type Box,
 } from '../doc/geometry';
 import { snapTo } from '../doc/snap';
-import { selectedObject, selectedObjects } from '../doc/store';
+import { selectedNodeOnly, selectedNodes, selectedObject, selectedObjects } from '../doc/store';
+import { everyShape, isGroup } from '../doc/tree';
 import { useEditor } from '../editor-context';
-import type { IconObject, Pair } from '../doc/types';
+import type { IconGroup, IconNode, IconObject, Pair } from '../doc/types';
 import { ColourPairField } from './colour-pair-field';
 import { NumberField } from './number-field';
 import { RailGroup } from './rail-group';
@@ -31,20 +32,24 @@ import { RailGroup } from './rail-group';
  * artboard's own size and background, so the rail does not collapse and the
  * document's properties have somewhere to live.
  *
- * Three states, not two. One object gets everything; several get the
- * properties they genuinely share; none gets the document's own.
+ * Four states, not two. One shape gets everything; one group gets what a group
+ * has; several get the properties they genuinely share; none gets the
+ * document's own.
  */
 export function PropsPanel() {
   const { state } = useEditor();
+  const node = selectedNodeOnly(state);
   const object = selectedObject(state);
-  const objects = selectedObjects(state);
+  const nodes = selectedNodes(state);
   return (
     <div className="flex w-full flex-col">
-      <Header object={object} count={objects.length} />
+      <Header node={node} count={nodes.length} />
       {object ? (
         <ObjectProperties object={object} />
-      ) : objects.length > 1 ? (
-        <SelectionProperties objects={objects} />
+      ) : node && isGroup(node) ? (
+        <GroupProperties group={node} />
+      ) : nodes.length > 1 ? (
+        <SelectionProperties nodes={nodes} objects={selectedObjects(state)} />
       ) : (
         <DocumentProperties />
       )}
@@ -52,15 +57,23 @@ export function PropsPanel() {
   );
 }
 
-function Header({ object, count }: { object: IconObject | null; count: number }) {
+function Header({ node, count }: { node: IconNode | null; count: number }) {
   // A glyph names a kind, and a selection of several has no single kind to
   // name — so the slot goes empty rather than showing whichever one is first.
-  const several = object === null && count > 1;
-  const name = object?.name ?? (several ? `${count} objects` : 'document');
-  const kind = object ? object.geometry.kind.toUpperCase() : several ? 'SELECTION' : 'DOCUMENT';
+  const several = node === null && count > 1;
+  const name = node?.name ?? (several ? `${count} objects` : 'document');
+  const kind =
+    node === null
+      ? several
+        ? 'SELECTION'
+        : 'DOCUMENT'
+      : isGroup(node)
+        ? 'GROUP'
+        : node.geometry.kind.toUpperCase();
+  const object = node !== null && !isGroup(node) ? node : null;
   return (
     <div className="flex h-11 flex-none items-center gap-2.25 border-b-1 border-gray-6 px-3.5">
-      {several ? null : (
+      {several || (node !== null && isGroup(node)) ? null : (
         <span className="flex-none text-gray-11">
           <ShapeGlyph kind={object ? object.geometry.kind : 'rect'} />
         </span>
@@ -101,10 +114,12 @@ function agree<T>(
  * Where a shared control's objects disagree it says `mixed` instead of showing
  * one of them, and editing it writes to every one of them as a single entry.
  */
-function SelectionProperties({ objects }: { objects: IconObject[] }) {
+function SelectionProperties({ nodes, objects }: { nodes: IconNode[]; objects: IconObject[] }) {
   const { state, dispatch, view } = useEditor();
   const first = objects[0];
-  if (first === undefined) return null;
+  // A selection of nothing but groups shares no paint at all — a group has
+  // none. It still gets a count, which is the true thing left to say.
+  if (first === undefined) return <SelectionCount count={nodes.length} />;
 
   const ids = objects.map((object) => object.id);
   // A run has no area, so a fill would paint nothing on it. One run in the
@@ -175,12 +190,91 @@ function SelectionProperties({ objects }: { objects: IconObject[] }) {
         </div>
       </RailGroup>
 
+      <SelectionCount count={nodes.length} />
+    </>
+  );
+}
+
+function SelectionCount({ count }: { count: number }) {
+  return (
+    <div className="flex flex-col gap-1.25 px-3.5 py-3.25">
+      <span className="font-sans text-11/relaxed text-gray-11">{count} objects selected.</span>
+      <span className="font-mono text-10 text-gray-9">
+        position and size belong to one shape — ⌘G makes these one object
+      </span>
+    </div>
+  );
+}
+
+/**
+ * The rail for a group.
+ *
+ * Position, turn and scale — the three things its transform holds — and the one
+ * appearance property it has. No fill and no stroke, because it has none: a
+ * group is where its children are, and its children each state their own.
+ */
+function GroupProperties({ group }: { group: IconGroup }) {
+  const { dispatch } = useEditor();
+  const inside = everyShape(group.children).length;
+  const set = (transform: Partial<IconGroup['transform']>) =>
+    dispatch({
+      type: 'setGroupTransform',
+      id: group.id,
+      transform: { ...group.transform, ...transform },
+    });
+
+  return (
+    <>
+      <RailGroup label="PLACEMENT">
+        <div className="grid grid-cols-2 gap-1.5">
+          <NumberField label="X" value={group.transform.x} onCommit={(x) => set({ x })} />
+          <NumberField label="Y" value={group.transform.y} onCommit={(y) => set({ y })} />
+        </div>
+        <NumberField
+          label="ROTATION"
+          value={group.transform.rotation}
+          suffix="°"
+          onCommit={(rotation) => dispatch({ type: 'rotateObject', id: group.id, degrees: rotation })}
+        />
+        {/* A percentage, and one field rather than two: the model holds a single
+            scale, and a group that could be stretched on one axis would have to
+            answer what that does to a circle inside it. */}
+        <NumberField
+          label="SCALE"
+          name="Scale"
+          value={Math.round(group.transform.scale * 100)}
+          min={1}
+          suffix="%"
+          onCommit={(percent) => set({ scale: percent / 100 })}
+        />
+      </RailGroup>
+
+      <RailGroup label="APPEARANCE">
+        <div className="flex flex-col gap-1.5">
+          <NumberField
+            label="OPACITY"
+            value={group.opacity}
+            min={0}
+            max={100}
+            suffix="%"
+            onCommit={(opacity) => dispatch({ type: 'setOpacity', ids: [group.id], opacity })}
+          />
+          <Slider
+            label={`${group.name} opacity`}
+            size="sm"
+            value={group.opacity}
+            valueText={`${group.opacity}%`}
+            onChange={(opacity) => dispatch({ type: 'setOpacity', ids: [group.id], opacity })}
+          />
+        </div>
+      </RailGroup>
+
       <div className="flex flex-col gap-1.25 px-3.5 py-3.25">
         <span className="font-sans text-11/relaxed text-gray-11">
-          {objects.length} objects selected.
+          {inside} shape{inside === 1 ? '' : 's'} inside.
         </span>
         <span className="font-mono text-10 text-gray-9">
-          position and size belong to one shape — select a single object to edit them
+          double-click on the artboard to go in · ⇧⌘G takes it apart
         </span>
       </div>
     </>

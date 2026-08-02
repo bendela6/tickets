@@ -1,13 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import { emptyDocument, newObject } from '../doc/defaults';
 import { arcPath } from '../doc/geometry';
-import type { IconDoc, IconObject } from '../doc/types';
+import type { GroupTransform, IconDoc, IconGroup, IconNode } from '../doc/types';
+import type { IconObject } from '../doc/types';
 import { pathData, renderSvg } from './svg';
 
 /** The 512-square board most of these fixtures assume. */
 const BOARD = { width: 512, height: 512 };
 
-const docOf = (objects: IconObject[]): IconDoc => ({ ...emptyDocument('test'), objects });
+const docOf = (objects: IconNode[]): IconDoc => ({ ...emptyDocument('test'), objects });
+
+/** A group holding `children`, with `transform` where it differs from untouched. */
+const groupOf = (children: IconNode[], transform: Partial<GroupTransform> = {}): IconGroup => ({
+  id: 'g',
+  name: 'group',
+  transform: { x: 0, y: 0, rotation: 0, scale: 1, ...transform },
+  opacity: 100,
+  hidden: false,
+  locked: false,
+  children,
+});
 
 describe('pathData', () => {
   it('spells every command out, absolute and in the order they are stored', () => {
@@ -247,6 +259,68 @@ describe('renderSvg', () => {
       stroke: { light: '#111111', dark: '#EEEEEE' },
     };
     expect(renderSvg(docOf([object]), { ground: 'dark' })).toContain('stroke="#EEEEEE"');
+  });
+
+  it('a group renders as `<g>` with its children inside', () => {
+    const svg = renderSvg(docOf([groupOf([newObject('rect', 1, BOARD)])]), { ground: 'light' });
+    expect(svg).toContain('<g><rect x="136" y="136" width="240" height="240" rx="32"');
+    expect(svg).toContain('/></g>');
+  });
+
+  it('says nothing about a group that has had nothing done to it', () => {
+    const svg = renderSvg(docOf([groupOf([newObject('rect', 1, BOARD)])]), { ground: 'light' });
+    expect(svg).not.toContain('transform=');
+    expect(svg).not.toContain('opacity=');
+  });
+
+  it('writes a group’s transform as the three primitives SVG applies, in order', () => {
+    const moved = groupOf([newObject('rect', 1, BOARD)], { x: 10, y: 20 });
+    expect(renderSvg(docOf([moved]), { ground: 'light' })).toContain(
+      '<g transform="translate(10 20)">',
+    );
+    // The turn and the scale are about the group's own centre, which SVG has no
+    // way of saying on `rotate`'s siblings — so the pivot is folded into the
+    // translate. The rect preset is centred on 256, 256.
+    const turned = groupOf([newObject('rect', 1, BOARD)], { rotation: 90 });
+    expect(renderSvg(docOf([turned]), { ground: 'light' })).toContain(
+      '<g transform="translate(512 0) rotate(90)">',
+    );
+    const bigger = groupOf([newObject('rect', 1, BOARD)], { scale: 2 });
+    expect(renderSvg(docOf([bigger]), { ground: 'light' })).toContain(
+      '<g transform="translate(-256 -256) scale(2)">',
+    );
+  });
+
+  it('emits a group’s opacity on the group, so it composites as one thing', () => {
+    const half = groupOf([newObject('rect', 1, BOARD)]);
+    const svg = renderSvg(docOf([{ ...half, opacity: 50 }]), { ground: 'light' });
+    expect(svg).toContain('<g opacity="0.5">');
+  });
+
+  it('a nested group nests', () => {
+    const inner = groupOf([newObject('rect', 1, BOARD)], { x: 5, y: 0 });
+    const outer = groupOf([inner], { x: 10, y: 0 });
+    const svg = renderSvg(docOf([outer]), { ground: 'light', background: false });
+    expect(svg).toBe(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">' +
+        '<g transform="translate(10 0)"><g transform="translate(5 0)">' +
+        '<rect x="136" y="136" width="240" height="240" rx="32" fill="#4E46C6"/>' +
+        '</g></g></svg>',
+    );
+  });
+
+  it('paints a group’s children in reverse too, so front-to-back holds at every level', () => {
+    const front = { ...newObject('rect', 1, BOARD), fill: { light: '#111111', dark: '#111111' } };
+    const back = { ...newObject('ellipse', 2, BOARD), fill: { light: '#222222', dark: '#222222' } };
+    const svg = renderSvg(docOf([groupOf([front, back])]), { ground: 'light' });
+    expect(svg.indexOf('#222222')).toBeLessThan(svg.indexOf('#111111'));
+  });
+
+  it('omits a hidden group entirely, children and all', () => {
+    const hidden = { ...groupOf([newObject('rect', 1, BOARD)]), hidden: true };
+    const svg = renderSvg(docOf([hidden]), { ground: 'light' });
+    expect(svg).not.toContain('<g');
+    expect(svg).not.toContain('<rect x="136"');
   });
 
   it('is deterministic — the same document renders identically every time', () => {

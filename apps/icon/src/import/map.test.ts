@@ -3,6 +3,7 @@ import { arcPath } from '../doc/geometry';
 import { emptyDocument } from '../doc/defaults';
 import { renderSvg } from '../render/svg';
 import type { Geometry, IconDoc, IconObject, Pair } from '../doc/types';
+import { everyShape, isGroup } from '../doc/tree';
 import { importSvg, type ImportReport } from './map';
 
 /** The document an import produced, or a failure the test can name. */
@@ -12,9 +13,12 @@ function imported(svg: string): { doc: IconDoc; report: ImportReport } {
   return { doc: outcome.doc, report: outcome.report };
 }
 
+/** Every shape a document holds, front to back, whatever it is nested inside. */
+const shapes = (doc: IconDoc): IconObject[] => everyShape(doc.objects);
+
 const only = (svg: string): IconObject => {
   const { doc } = imported(svg);
-  const first = doc.objects[0];
+  const first = shapes(doc)[0];
   if (!first) throw new Error('nothing was imported');
   return first;
 };
@@ -81,7 +85,7 @@ describe('the elements', () => {
     );
     // Reversed on the way in: SVG paints in source order, and this model reads
     // front to back.
-    expect(doc.objects.map((object) => object.geometry.kind)).toEqual([
+    expect(shapes(doc).map((object) => object.geometry.kind)).toEqual([
       'path',
       'polygon',
       'polyline',
@@ -105,7 +109,7 @@ describe('the elements', () => {
 
   it('keeps one corner radius and reports the other when they differ', () => {
     const { doc, report } = imported(wrap('<rect width="10" height="10" rx="4" ry="2"/>'));
-    expect(doc.objects[0]?.geometry).toMatchObject({ radius: 4 });
+    expect(shapes(doc)[0]?.geometry).toMatchObject({ radius: 4 });
     expect(reasons(report, 'rect').join(' ')).toContain('4 by 2');
   });
 
@@ -142,18 +146,53 @@ describe('the elements', () => {
 });
 
 describe('groups', () => {
-  it('flattens a group onto its children and reports it', () => {
+  /** The one node the document holds, which these fixtures make a group. */
+  const group = (svg: string) => {
+    const node = imported(svg).doc.objects[0];
+    if (!node || !isGroup(node)) throw new Error('expected a group');
+    return node;
+  };
+
+  it('becomes a group rather than being flattened, and says nothing about it', () => {
     const { doc, report } = imported(wrap('<g fill="#0f0"><rect width="4" height="4"/></g>'));
     expect(doc.objects).toHaveLength(1);
-    expect(doc.objects[0]?.fill.light).toBe('#00FF00');
-    expect(reasons(report, 'g').join(' ')).toContain('no groups');
+    expect(group(wrap('<g fill="#0f0"><rect width="4" height="4"/></g>')).children).toHaveLength(1);
+    // The paint still resolves onto the child, because the model gives a group
+    // none — that part of the cascade was never a loss.
+    expect(shapes(doc)[0]?.fill.light).toBe('#00FF00');
+    // No note at all: a faithful import has nothing to apologise for.
+    expect(reasons(report, 'g')).toEqual([]);
   });
 
-  it('composes nested group transforms', () => {
-    const object = only(
+  it('keeps the transform on the group and the child’s coordinates as written', () => {
+    const made = group(wrap('<g transform="translate(10 10)"><rect width="4" height="4"/></g>'));
+    expect(made.transform).toMatchObject({ x: 10, y: 10, rotation: 0, scale: 1 });
+    expect(made.children[0]).toMatchObject({
+      geometry: { kind: 'rect', x: 0, y: 0, w: 4, h: 4, radius: 0 },
+    });
+  });
+
+  it('nests a group inside a group, each carrying its own transform', () => {
+    const outer = group(
       wrap('<g transform="translate(10 10)"><g transform="scale(2)"><rect width="4" height="4"/></g></g>'),
     );
-    expect(object.geometry).toEqual({ kind: 'rect', x: 10, y: 10, w: 8, h: 8, radius: 0 });
+    const inner = outer.children[0];
+    if (!inner || !isGroup(inner)) throw new Error('expected a group inside a group');
+    expect(inner.transform.scale).toBe(2);
+    expect(inner.children[0]).toMatchObject({ geometry: { kind: 'rect', x: 0, y: 0, w: 4, h: 4 } });
+  });
+
+  it('draws a nested group where the composed transforms put it', () => {
+    const svg = renderSvg(
+      imported(
+        wrap('<g transform="translate(10 10)"><g transform="scale(2)"><rect width="4" height="4"/></g></g>'),
+      ).doc,
+      { ground: 'light', background: false },
+    );
+    // translate(10 10) then scale(2): the rect's far corner lands at 18, 18.
+    expect(svg).toContain('<g transform="translate(10 10)">');
+    expect(svg).toContain('<g transform="scale(2)">');
+    expect(svg).toContain('<rect x="0" y="0" width="4" height="4"');
   });
 
   it('lets a child override the paint its group hands down', () => {
@@ -161,9 +200,27 @@ describe('groups', () => {
     expect(object.fill.light).toBe('#0000FF');
   });
 
-  it('multiplies a group opacity into its children', () => {
-    const object = only(wrap('<g opacity="0.5"><rect opacity="0.5" width="4" height="4"/></g>'));
-    expect(object.opacity).toBe(25);
+  it('keeps a group opacity on the group, where the file put it', () => {
+    const made = group(wrap('<g opacity="0.5"><rect opacity="0.5" width="4" height="4"/></g>'));
+    expect(made.opacity).toBe(50);
+    // The child keeps its own half rather than having the group's folded in:
+    // a group composites as one thing, which is what `<g opacity>` means.
+    expect(made.children[0]?.opacity).toBe(50);
+  });
+
+  it('flattens a `<g>` carrying a transform the model cannot state, and reports it', () => {
+    const { doc, report } = imported(
+      wrap('<g transform="scale(2 1)"><rect width="4" height="4"/></g>'),
+    );
+    expect(doc.objects.some(isGroup)).toBe(false);
+    expect(shapes(doc)[0]?.geometry).toEqual({ kind: 'rect', x: 0, y: 0, w: 8, h: 4, radius: 0 });
+    expect(reasons(report, 'g').join(' ')).toContain('uneven scale');
+  });
+
+  it('leaves out a `<g>` with nothing drawable in it rather than making an empty row', () => {
+    expect(imported(wrap('<g transform="translate(4 4)"><title>x</title></g>')).doc.objects).toEqual(
+      [],
+    );
   });
 });
 
@@ -195,17 +252,17 @@ describe('transforms', () => {
 
   it('turns a circle under an uneven scale into an ellipse, and reports it', () => {
     const { doc, report } = imported(wrap('<circle cx="10" cy="10" r="5" transform="scale(2 1)"/>'));
-    expect(doc.objects[0]?.geometry).toEqual({ kind: 'ellipse', x: 10, y: 5, w: 20, h: 10 });
+    expect(shapes(doc)[0]?.geometry).toEqual({ kind: 'ellipse', x: 10, y: 5, w: 20, h: 10 });
     expect(reasons(report, 'circle')).toContainEqual('an uneven scale turned this circle into an ellipse');
   });
 
   it('bakes a skew into a path rather than approximating it, and reports it', () => {
     const { doc, report } = imported(wrap('<rect width="10" height="10" transform="skewX(20)"/>'));
-    expect(doc.objects[0]?.geometry.kind).toBe('path');
+    expect(shapes(doc)[0]?.geometry.kind).toBe('path');
     expect(reasons(report, 'rect').join(' ')).toContain('baked into its coordinates');
     // The skew is really in the coordinates: the top edge slid right by
     // tan(20°) × 10 relative to the bottom.
-    const geometry = doc.objects[0]?.geometry;
+    const geometry = shapes(doc)[0]?.geometry;
     if (geometry?.kind !== 'path') throw new Error('expected a path');
     const corner = geometry.segments.find((segment) => segment.c === 'L');
     expect(corner?.c === 'L' && corner.x).toBeCloseTo(10, 6);
@@ -213,7 +270,7 @@ describe('transforms', () => {
 
   it('bakes a skew into a point list without changing its kind, and still reports it', () => {
     const { doc, report } = imported(wrap('<polygon points="0,0 10,0 0,10" transform="skewX(45)"/>'));
-    expect(trimmed(doc.objects[0]?.geometry)).toEqual({
+    expect(trimmed(shapes(doc)[0]?.geometry)).toEqual({
       kind: 'polygon',
       points: [
         { x: 0, y: 0 },
@@ -238,7 +295,7 @@ describe('transforms', () => {
     const { doc, report } = imported(
       wrap('<path d="M0 0 A 10 10 0 0 1 10 10" stroke="black" transform="scale(2 1)"/>'),
     );
-    const geometry = doc.objects[0]?.geometry;
+    const geometry = shapes(doc)[0]?.geometry;
     if (geometry?.kind !== 'path') throw new Error('expected a path');
     expect(geometry.segments.some((segment) => segment.c === 'A')).toBe(false);
     expect(geometry.segments.some((segment) => segment.c === 'C')).toBe(true);
@@ -267,7 +324,7 @@ describe('paint', () => {
 
   it('fills both halves of the pair with the one colour, and says the dark half is a guess', () => {
     const { doc, report } = imported(wrap('<rect width="4" height="4" fill="#123456"/>'));
-    expect(doc.objects[0]?.fill).toEqual({ light: '#123456', dark: '#123456' });
+    expect(shapes(doc)[0]?.fill).toEqual({ light: '#123456', dark: '#123456' });
     expect(reasons(report, 'svg').join(' ')).toContain('the dark half is a guess');
   });
 
@@ -275,7 +332,7 @@ describe('paint', () => {
     const { doc, report } = imported(
       wrap('<rect width="10" height="10" fill="none" stroke="#000" stroke-width="2"/>'),
     );
-    const object = doc.objects[0];
+    const object = shapes(doc)[0];
     expect(object?.geometry.kind).toBe('path');
     expect(object?.strokeWidth).toBe(2);
     // Four sides, drawn rather than filled: the closing edge is spelled out.
@@ -317,13 +374,13 @@ describe('paint', () => {
 
   it('substitutes the default ink for currentColor and says so', () => {
     const { doc, report } = imported(wrap('<path d="M0 0 L4 4" stroke="currentColor"/>'));
-    expect(doc.objects[0]?.stroke.light).toBe('#4E46C6');
+    expect(shapes(doc)[0]?.stroke.light).toBe('#4E46C6');
     expect(reasons(report, 'path').join(' ')).toContain('currentColor');
   });
 
   it('substitutes the default ink for a gradient reference and says so', () => {
     const { doc, report } = imported(wrap('<rect width="4" height="4" fill="url(#g)"/>'));
-    expect(doc.objects[0]?.fill.light).toBe('#4E46C6');
+    expect(shapes(doc)[0]?.fill.light).toBe('#4E46C6');
     expect(reasons(report, 'rect').join(' ')).toContain('url(#g)');
   });
 
@@ -354,10 +411,10 @@ describe('a favicon that states its colours in CSS', () => {
     const { doc, report } = imported(FAVICON);
     expect(report.objects).toBe(3);
     expect(doc.artboard).toEqual({ width: 48, height: 48 });
-    expect(doc.objects.map((object) => object.geometry.kind)).toEqual(['path', 'path', 'path']);
-    expect(doc.objects.map((object) => trimmed(object.strokeWidth))).toEqual([8, 8, 8]);
+    expect(shapes(doc).map((object) => object.geometry.kind)).toEqual(['path', 'path', 'path']);
+    expect(shapes(doc).map((object) => trimmed(object.strokeWidth))).toEqual([8, 8, 8]);
     // Front to back, which is the reverse of the order the file paints them in.
-    expect(doc.objects.map((object) => object.stroke)).toEqual([
+    expect(shapes(doc).map((object) => object.stroke)).toEqual([
       { light: '#7167FF', dark: '#347AEA' },
       { light: '#00BB9A', dark: '#12B898' },
       { light: '#FF298A', dark: '#FF378C' },
@@ -366,8 +423,8 @@ describe('a favicon that states its colours in CSS', () => {
 
   it('bakes each rotation into the coordinates the stroke is drawn along', () => {
     const { doc } = imported(FAVICON);
-    expect(doc.objects.map((object) => object.rotation)).toEqual([0, 0, 0]);
-    expect(doc.objects.map((object) => trimmed(object.geometry))).toEqual([
+    expect(shapes(doc).map((object) => object.rotation)).toEqual([0, 0, 0]);
+    expect(shapes(doc).map((object) => trimmed(object.geometry))).toEqual([
       // 0°, then 49° and 100° about the middle of the 48 board.
       { kind: 'path', segments: [{ c: 'M', x: 24, y: 6 }, { c: 'L', x: 24, y: 42 }] },
       {
@@ -447,14 +504,14 @@ describe('the cascade a style block sets up', () => {
       styled('circle, path{fill:#00ff00}', '<circle cx="5" cy="5" r="3"/><rect width="4" height="4"/>'),
     );
     // Front to back: the rect was painted last and the type selector missed it.
-    expect(doc.objects.map((object) => object.fill.light)).toEqual(['#000000', '#00FF00']);
+    expect(shapes(doc).map((object) => object.fill.light)).toEqual(['#000000', '#00FF00']);
   });
 
   it('applies a stylesheet stated inside defs, which is where drawing tools put one', () => {
     const { doc, report } = imported(
       wrap('<defs><style>.a{fill:#00ff00}</style></defs><rect class="a" width="4" height="4"/>'),
     );
-    expect(doc.objects[0]?.fill.light).toBe('#00FF00');
+    expect(shapes(doc)[0]?.fill.light).toBe('#00FF00');
     // And says nothing about that defs having been passed over: it was read.
     expect(reasons(report, 'defs')).toHaveLength(0);
   });
@@ -489,7 +546,7 @@ describe('the dark half of a pair', () => {
 
   it('is still copied off the light one where no rule states it, and still says so', () => {
     const { doc, report } = imported(styled('.a{fill:#112233}', '<rect class="a" width="4" height="4"/>'));
-    expect(doc.objects[0]?.fill).toEqual({ light: '#112233', dark: '#112233' });
+    expect(shapes(doc)[0]?.fill).toEqual({ light: '#112233', dark: '#112233' });
     expect(reasons(report, 'svg').join(' ')).toContain('the dark half is a guess');
   });
 
@@ -500,7 +557,7 @@ describe('the dark half of a pair', () => {
         '<path class="a" d="M0 0L4 4" stroke="#ff0000"/>',
       ),
     );
-    expect(doc.objects[0]?.strokeWidth).toBe(2);
+    expect(shapes(doc)[0]?.strokeWidth).toBe(2);
     expect(reasons(report, 'path').join(' ')).toContain('stroke-width');
   });
 });
@@ -512,7 +569,7 @@ describe('what the style reader will not do', () => {
     const { doc, report } = imported(
       styled('@media (min-width:600px){.a{fill:#00ff00}}', '<rect class="a" width="4" height="4" fill="#ff0000"/>'),
     );
-    expect(doc.objects[0]?.fill.light).toBe('#FF0000');
+    expect(shapes(doc)[0]?.fill.light).toBe('#FF0000');
     expect(reasons(report, 'style').join(' ')).toContain('colour scheme');
   });
 
@@ -521,7 +578,7 @@ describe('what the style reader will not do', () => {
       const { doc, report } = imported(
         styled(`${selector}{fill:#00ff00}`, '<g><rect class="a" width="4" height="4" fill="#ff0000"/></g>'),
       );
-      expect(doc.objects[0]?.fill.light).toBe('#FF0000');
+      expect(shapes(doc)[0]?.fill.light).toBe('#FF0000');
       expect(reasons(report, 'style').join(' ')).toContain('does not resolve');
     }
   });
@@ -530,7 +587,7 @@ describe('what the style reader will not do', () => {
     const { doc, report } = imported(
       styled('@import url("brand.css");.a{fill:#00ff00}', '<rect class="a" width="4" height="4"/>'),
     );
-    expect(doc.objects[0]?.fill.light).toBe('#00FF00');
+    expect(shapes(doc)[0]?.fill.light).toBe('#00FF00');
     expect(reasons(report, 'style').join(' ')).toContain('@import');
   });
 
@@ -538,7 +595,7 @@ describe('what the style reader will not do', () => {
     const { doc, report } = imported(
       styled('@supports (fill:red){.a{fill:#00ff00}}', '<rect class="a" width="4" height="4" fill="#ff0000"/>'),
     );
-    expect(doc.objects[0]?.fill.light).toBe('#FF0000');
+    expect(shapes(doc)[0]?.fill.light).toBe('#FF0000');
     expect(reasons(report, 'style').join(' ')).toContain('@supports');
   });
 
@@ -546,7 +603,7 @@ describe('what the style reader will not do', () => {
     const { doc, report } = imported(
       styled('.a{fill:#00ff00 !important}', '<rect class="a" width="4" height="4" style="fill:#0000ff"/>'),
     );
-    expect(doc.objects[0]?.fill.light).toBe('#0000FF');
+    expect(shapes(doc)[0]?.fill.light).toBe('#0000FF');
     expect(reasons(report, 'style').join(' ')).toContain('!important');
   });
 
@@ -555,7 +612,7 @@ describe('what the style reader will not do', () => {
       styled('.a{fill:#00ff00}.b{fill:#0000ff', '<rect class="a" width="4" height="4"/>'),
     );
     expect(doc.objects).toHaveLength(1);
-    expect(doc.objects[0]?.fill.light).toBe('#00FF00');
+    expect(shapes(doc)[0]?.fill.light).toBe('#00FF00');
     expect(reasons(report, 'style').join(' ')).toContain('closing brace');
   });
 
@@ -723,14 +780,14 @@ describe('a round trip through the renderer', () => {
 
     expect(report.objects).toBe(source.objects.length);
     expect(doc.artboard).toEqual(source.artboard);
-    expect(doc.objects.map(painted)).toEqual(source.objects.map(painted));
+    expect(shapes(doc).map(painted)).toEqual(everyShape(source.objects).map(painted));
   });
 
   it('brings every kind back as its own kind, in the same order', () => {
     const svg = renderSvg(source, { ground: 'light', background: false });
     const { doc } = imported(svg);
-    expect(doc.objects.map((icon) => icon.geometry.kind)).toEqual(
-      source.objects.map((icon) => icon.geometry.kind),
+    expect(shapes(doc).map((icon) => icon.geometry.kind)).toEqual(
+      everyShape(source.objects).map((icon) => icon.geometry.kind),
     );
   });
 
@@ -739,7 +796,7 @@ describe('a round trip through the renderer', () => {
     const { doc } = imported(svg);
     expect(doc.objects).toHaveLength(source.objects.length + 1);
     // Painted first, so it is the backmost object in the list.
-    expect(doc.objects[doc.objects.length - 1]?.geometry).toEqual({
+    expect(shapes(doc).at(-1)?.geometry).toEqual({
       kind: 'rect',
       x: 0,
       y: 0,

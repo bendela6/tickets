@@ -691,28 +691,37 @@ export function rotatePoint(point: Point, about: Point, degrees: number): Point 
  * a square turned 45° reaches further than its unrotated box does, and the
  * platform crops what is actually drawn.
  */
-export function extentOf(object: IconObject, artboard: { width: number; height: number }): number {
-  const b = bounds(object);
+export function extentOfBox(box: Box, artboard: { width: number; height: number }): number {
   const halfW = artboard.width / 2;
   const halfH = artboard.height / 2;
   if (halfW <= 0 || halfH <= 0) return 0;
-  const middle = { x: b.x + b.w / 2, y: b.y + b.h / 2 };
-  const corners: Point[] = [
-    { x: b.x, y: b.y },
-    { x: b.x + b.w, y: b.y },
-    { x: b.x, y: b.y + b.h },
-    { x: b.x + b.w, y: b.y + b.h },
-  ];
   let furthest = 0;
-  for (const corner of corners) {
-    const turned = rotatePoint(corner, middle, object.rotation);
+  for (const corner of boxCorners(box)) {
     furthest = Math.max(
       furthest,
-      Math.abs(turned.x - halfW) / halfW,
-      Math.abs(turned.y - halfH) / halfH,
+      Math.abs(corner.x - halfW) / halfW,
+      Math.abs(corner.y - halfH) / halfH,
     );
   }
   return furthest;
+}
+
+/**
+ * The same, for an object whose only transform is its own rotation — which is
+ * every object in a document with no groups in it.
+ */
+export function extentOf(object: IconObject, artboard: { width: number; height: number }): number {
+  return extentOfBox(rotatedBounds(object), artboard);
+}
+
+/** A box's four corners, in a fixed order. */
+export function boxCorners(box: Box): Point[] {
+  return [
+    { x: box.x, y: box.y },
+    { x: box.x + box.w, y: box.y },
+    { x: box.x, y: box.y + box.h },
+    { x: box.x + box.w, y: box.y + box.h },
+  ];
 }
 
 /**
@@ -725,13 +734,7 @@ export function rotatedBounds(object: IconObject): Box {
   const box = bounds(object);
   if (object.rotation === 0) return box;
   const centre = centreOf(object);
-  const corners: Point[] = [
-    { x: box.x, y: box.y },
-    { x: box.x + box.w, y: box.y },
-    { x: box.x, y: box.y + box.h },
-    { x: box.x + box.w, y: box.y + box.h },
-  ];
-  const turned = corners.map((corner) => rotatePoint(corner, centre, object.rotation));
+  const turned = boxCorners(box).map((corner) => rotatePoint(corner, centre, object.rotation));
   const xs = turned.map((point) => point.x);
   const ys = turned.map((point) => point.y);
   const minX = Math.min(...xs);
@@ -840,21 +843,6 @@ export function contains(object: IconObject, point: Point): boolean {
   return containsUnrotated(object.geometry, object, local);
 }
 
-/**
- * The frontmost object under the point, or null.
- *
- * Hidden objects are not there to be hit. Locked ones are: clicking a locked
- * object selects it so you can unlock it — locked means it will not move, not
- * that it has left the document.
- */
-export function hitTest(objects: IconObject[], point: Point): IconObject | null {
-  for (const object of objects) {
-    if (object.hidden) continue;
-    if (contains(object, point)) return object;
-  }
-  return null;
-}
-
 /** Whether two boxes share any area. Touching along an edge counts. */
 export function boxesOverlap(a: Box, b: Box): boolean {
   return a.x <= b.x + b.w && b.x <= a.x + a.w && a.y <= b.y + b.h && b.y <= a.y + a.h;
@@ -875,27 +863,6 @@ export function unionBox(boxes: readonly Box[]): Box | null {
       { x: box.x + box.w, y: box.y + box.h },
     ]),
   );
-}
-
-/**
- * Every visible object a box touches, front to back — what a marquee catches.
- *
- * Overlap rather than containment: a band swept across a cluster is aimed at
- * the shapes it crosses, and demanding that it swallow each one whole would
- * make a large shape impossible to catch without leaving the artboard.
- *
- * It is each object's box that is tested rather than its outline, so a band
- * that clips the corner of a circle's box without touching the circle still
- * catches it. That errs towards catching what the pointer was aimed near,
- * which is the error worth making — and it is the *rotated* box, because that
- * is the extent actually on screen.
- *
- * Hidden objects are not there to be caught, for the same reason `hitTest`
- * skips them. Locked ones are: locked means it will not move, not that it has
- * left the document.
- */
-export function objectsInBox(objects: readonly IconObject[], box: Box): IconObject[] {
-  return objects.filter((object) => !object.hidden && boxesOverlap(rotatedBounds(object), box));
 }
 
 /** One path command moved, coordinates and all. */

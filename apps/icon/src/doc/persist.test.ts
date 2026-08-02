@@ -2,10 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { emptyDocument, newObject } from './defaults';
 import { polygonPoints } from './geometry';
 import { memoryStore } from './persist';
+import { everyShape } from './tree';
 import type { Geometry, IconDoc, IconObject } from './types';
 
 /** The 512-square board most of these fixtures assume. */
 const BOARD = { width: 512, height: 512 };
+
+/** The shapes a loaded document holds. Every fixture here is a flat list. */
+const shapes = (doc: IconDoc | null | undefined): IconObject[] =>
+  doc ? everyShape(doc.objects) : [];
 
 describe('DocumentStore contract', () => {
   it('creates a document and hands back both its id and its content', async () => {
@@ -67,7 +72,7 @@ describe('DocumentStore contract', () => {
       ],
     };
     await store.save(id, drawn);
-    expect((await store.load(id))?.objects[0]?.geometry).toEqual(drawn.objects[0]?.geometry);
+    expect(shapes(await store.load(id))[0]?.geometry).toEqual(shapes(drawn)[0]?.geometry);
   });
 
   it('reopens the arc preset as the same arc it was saved as', async () => {
@@ -109,7 +114,7 @@ describe('documents saved before a polygon was a list of points', () => {
 
   it('open as the same hexagon, now as the points a polygon actually is', async () => {
     const loaded = await storeHolding(savedBefore()).load('old');
-    expect(loaded?.objects[0]?.geometry).toEqual({
+    expect(shapes(loaded)[0]?.geometry).toEqual({
       kind: 'polygon',
       points: polygonPoints(256, 256, 120, 6),
     });
@@ -166,7 +171,7 @@ describe('documents saved while the editor could animate', () => {
 
   it('keep the first state’s pose, which is the geometry exactly as it was drawn', async () => {
     const loaded = await storeHolding(savedAnimated()).load('old');
-    const object = loaded?.objects[0];
+    const object = shapes(loaded)[0];
     expect(object?.geometry).toEqual(drawn().geometry);
     expect(object?.rotation).toBe(30);
     // The pose engine's opacity floor went with the loop it protected.

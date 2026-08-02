@@ -1,11 +1,15 @@
 import { ARTBOARD_MAX, ARTBOARD_MIN, DEFAULT_INK } from '../doc/constants';
-import { emptyDocument, objectId } from '../doc/defaults';
-import { isOpenRun } from '../doc/geometry';
+import { emptyDocument, groupId, objectId } from '../doc/defaults';
+import { boxCentre, isOpenRun } from '../doc/geometry';
+import { contentBox, everyShape, placeVector } from '../doc/tree';
 import type {
   Artboard,
   Geometry,
+  GroupTransform,
   Ground,
   IconDoc,
+  IconGroup,
+  IconNode,
   IconObject,
   Pair,
   PathSegment,
@@ -709,11 +713,18 @@ interface Context {
   strokeWidth: string | undefined;
   fillOpacity: string | undefined;
   strokeOpacity: string | undefined;
-  /** Group opacity, already multiplied out. */
+  /**
+   * Opacity a child has to carry itself, because no group above it can.
+   *
+   * A `<g opacity>` that became a real group leaves this alone — the group holds
+   * its own opacity and composites as one thing, which is what the file said.
+   * Only a group that had to be flattened folds its opacity in here, and that is
+   * exact while its children do not overlap and near enough when they do.
+   */
   opacity: number;
 }
 
-/** What the walk keeps as it goes: how many shapes it took, and what it guessed. */
+/** What the walk keeps as it goes: how many nodes it took, and what it guessed. */
 interface Tally {
   taken: number;
   copied: boolean;
@@ -918,10 +929,16 @@ function objectOf(
   };
 }
 
-function contextFor(node: StyledNode, parent: Context): Context {
+/**
+ * What a `<g>` hands its children.
+ *
+ * `matrix` is where the children's coordinates end up. A group that became a
+ * real group hands down the matrix it *started* with, because its own transform
+ * travels on the group node instead; a group that had to be flattened hands
+ * down its own transform composed in, which is what flattening means.
+ */
+function contextFor(node: StyledNode, parent: Context, matrix: Matrix, opacity: number): Context {
   const attrs = node.attrs;
-  const own = attrs['transform'];
-  const matrix = own === undefined ? parent.matrix : multiply(parent.matrix, parseTransform(own).matrix);
   return {
     matrix,
     fill: statedOf(node, 'fill', parent.fill),
@@ -929,12 +946,69 @@ function contextFor(node: StyledNode, parent: Context): Context {
     strokeWidth: attrs['stroke-width'] ?? parent.strokeWidth,
     fillOpacity: attrs['fill-opacity'] ?? parent.fillOpacity,
     strokeOpacity: attrs['stroke-opacity'] ?? parent.strokeOpacity,
-    // Group opacity multiplies out. It is exact while a group's children do not
-    // overlap and near enough when they do — the alternative is a flattened
-    // group that is visibly darker than the file it came from.
-    opacity: parent.opacity * (parseAlpha(attrs['opacity']) ?? 1),
+    opacity,
   };
 }
+
+/** The matrix a `<g>` composes onto whatever it inherits. */
+function ownMatrix(node: StyledNode, parent: Matrix, notes: Notes): Matrix {
+  const own = node.attrs['transform'];
+  if (own === undefined) return parent;
+  const parsed = parseTransform(own);
+  if (parsed.error) notes.add(node.tag, parsed.error);
+  return multiply(parent, parsed.matrix);
+}
+
+const GROUP_BAKED_NOTE =
+  'its transform is a skew or an uneven scale, which a group here cannot carry — a group moves, turns and scales evenly — so the group was dissolved and its transform pushed onto its children';
+
+/** A matrix as an even scale and a turn, or null when it is neither. */
+function similarityOf(m: Matrix): { scale: number; degrees: number } | null {
+  const spot = placementOf(m);
+  if (spot.kind === 'similar') return { scale: spot.scale, degrees: spot.degrees };
+  if (spot.kind !== 'axis' || !near(Math.abs(spot.sx), Math.abs(spot.sy))) return null;
+  // Both axes negated is a half turn, not a mirror — and a half turn is exactly
+  // what a group can carry. One axis negated is a mirror, which it cannot.
+  if (spot.sx > 0 && spot.sy > 0) return { scale: spot.sx, degrees: 0 };
+  if (spot.sx < 0 && spot.sy < 0) return { scale: -spot.sx, degrees: 180 };
+  return null;
+}
+
+/**
+ * A `<g>`'s transform as a group's own, or null when the model cannot state it.
+ *
+ * A group carries a move, a turn and one scale. That covers every `<g>` written
+ * by hand and almost every one written by a drawing tool; what it does not
+ * cover is a mirror, a skew or an uneven scale, and there is no honest way to
+ * keep those on a group — the model has no second scale to put one in, and
+ * nudging a skew to the nearest similarity is the silent loss this importer
+ * exists to refuse. Those are the one surviving reason to flatten, and they are
+ * reported.
+ *
+ * The children have to exist first. A matrix turns and scales about the origin;
+ * a group turns and scales about its own centre, and its centre is wherever its
+ * children put it — so the offset that makes the two agree cannot be worked out
+ * until there is something inside.
+ */
+function groupTransformOf(children: readonly IconNode[], m: Matrix): GroupTransform | null {
+  const similar = similarityOf(m);
+  if (!similar) return null;
+  const { scale, degrees } = similar;
+  const centre = boxCentre(contentBox({ ...GROUP_SHELL, children: [...children] }));
+  const held = placeVector({ scale, rotation: degrees, x: 0, y: 0 }, centre);
+  return { x: m.e - centre.x + held.x, y: m.f - centre.y + held.y, rotation: degrees, scale };
+}
+
+/** Everything a group is besides its transform and its children. */
+const GROUP_SHELL = {
+  id: '',
+  name: '',
+  transform: { x: 0, y: 0, rotation: 0, scale: 1 },
+  opacity: 100,
+  hidden: false,
+  locked: false,
+  children: [] as IconNode[],
+} satisfies IconGroup;
 
 /**
  * Elements that carry no artwork and lose nothing by being skipped. `style` is
@@ -960,7 +1034,7 @@ function reportDarkOnly(node: StyledNode, notes: Notes): void {
 function walk(
   node: StyledNode,
   context: Context,
-  out: IconObject[],
+  out: IconNode[],
   notes: Notes,
   tally: Tally,
 ): void {
@@ -970,11 +1044,51 @@ function walk(
     reportDarkOnly(child, notes);
 
     if (tag === 'g') {
-      notes.add(
-        'g',
-        'the model has no groups, so its transform and paint were pushed onto its children and the group itself dropped',
+      // A `<g>` is a group. Its paint is still resolved onto its children,
+      // because that is what the cascade does and this model has no inherited
+      // paint for a group to hold — but its transform and its opacity are its
+      // own, which is what makes the import faithful rather than merely
+      // equivalent.
+      const alpha = parseAlpha(child.attrs['opacity']) ?? 1;
+      const own = ownMatrix(child, IDENTITY, notes);
+      // Decided before the children are read rather than after, so the one walk
+      // that happens is the right one and no shape is numbered twice.
+      const keeping = similarityOf(own) !== null;
+      if (!keeping) notes.add('g', GROUP_BAKED_NOTE);
+
+      const kept: IconNode[] = [];
+      walk(
+        child,
+        // A kept group's children are stated in the group's own frame, so they
+        // keep the coordinates the file wrote them with; a flattened one's are
+        // read through its transform, which is what flattening is.
+        keeping
+          ? contextFor(child, context, context.matrix, context.opacity)
+          : contextFor(child, context, multiply(context.matrix, own), context.opacity * alpha),
+        kept,
+        notes,
+        tally,
       );
-      walk(child, contextFor(child, context), out, notes, tally);
+      if (!keeping) {
+        out.push(...kept);
+        continue;
+      }
+      // A `<g>` with nothing drawable in it is not a group with no children —
+      // it is nothing, and a row in the rail for it would be a row for nothing.
+      if (kept.length === 0) continue;
+
+      const children = kept.reverse();
+      tally.taken += 1;
+      const named = child.attrs['id']?.trim();
+      out.push({
+        id: groupId(tally.taken),
+        name: named && named !== '' ? named : `group ${tally.taken}`,
+        transform: groupTransformOf(children, own) ?? { x: 0, y: 0, rotation: 0, scale: 1 },
+        opacity: Math.max(0, Math.min(100, Math.round(alpha * 1000) / 10)),
+        hidden: false,
+        locked: false,
+        children,
+      });
       continue;
     }
 
@@ -1086,7 +1200,7 @@ export function importSvg(text: string, name: string): ImportOutcome {
     own === undefined ? IDENTITY : parseTransform(own).matrix,
   );
 
-  const objects: IconObject[] = [];
+  const objects: IconNode[] = [];
   const tally: Tally = { taken: 0, copied: false };
   walk(
     root,
@@ -1111,5 +1225,7 @@ export function importSvg(text: string, name: string): ImportOutcome {
   if (objects.length === 0) notes.add('svg', EMPTY_NOTE);
 
   const doc: IconDoc = { ...emptyDocument(name, artboard), objects: objects.reverse() };
-  return { ok: true, doc, report: { objects: objects.length, notes: notes.list } };
+  // Shapes, through the whole tree: the report is about how much of the picture
+  // arrived, and a group is not a piece of the picture.
+  return { ok: true, doc, report: { objects: everyShape(doc.objects).length, notes: notes.list } };
 }

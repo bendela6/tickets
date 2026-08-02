@@ -329,7 +329,10 @@ describe('the chrome with several selected', () => {
     expect(screen.getByRole('status')).toHaveTextContent('nothing selected');
   });
 
-  it('offers no resize or rotate handles, since transforming a group is not built', async () => {
+  // Still none, and now that is an answer rather than a gap: transforming
+  // several things at once is what ⌘G is for — it hands back one node with one
+  // transform, and that node has handles.
+  it('offers no resize or rotate handles, because a group is how you get them', async () => {
     const { user } = setup();
     await twoRects(user);
     expect(handleNames()).toContain('Resize se');
