@@ -298,15 +298,22 @@ type SidePanelProps = {
 };
 
 type UsePanelWidth = (options: {
+  side: PanelSide;          // drag and arrow keys are mirrored per side
   defaultWidth: number;
   minWidth: number;
   maxWidth: number;
   storageKey?: string;
+  label: string;            // names the separator: "Resize <label>"
 }) => {
   width: number;
-  setWidth: (px: number) => void;
+  setWidth: (px: number) => number;   // returns the clamped value
+  panelRef: React.RefObject<HTMLElement | null>;  // the element a drag measures against
   separatorProps: React.HTMLAttributes<HTMLDivElement>;
 };
+
+// True when the viewport is narrower than `px`. Drawer uses it to drop a
+// resize handle there is no room to drag.
+type UseViewportUnder = (px: number) => boolean;
 
 // Backs SidePanel's `collapsed` and Drawer's `maximized` separately.
 // An unset key must not read as false: "never chosen" and "chosen false"
