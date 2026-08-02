@@ -3,7 +3,14 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SidePanel } from './side-panel';
 
-afterEach(() => localStorage.clear());
+// Several tests swap matchMedia to fake a viewport; put the setup stub back
+// after each so the swap cannot leak into its neighbours.
+const realMatchMedia = window.matchMedia;
+
+afterEach(() => {
+  localStorage.clear();
+  window.matchMedia = realMatchMedia;
+});
 
 // Drives the media query SidePanel watches, and lets a test flip it after
 // mount the way a real window resize would.
@@ -139,5 +146,23 @@ describe('SidePanel', () => {
     viewport.set(false);
     expect(screen.getByText('Panel body')).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('shuts the overlay when the window narrows again, rather than reopening it unprompted', async () => {
+    const viewport = mockViewport(true);
+    renderPanel({ collapsible: true, overlayBelow: 'lg' });
+    await userEvent.click(screen.getByRole('button', { name: 'Show Navigation' }));
+    expect(screen.getByRole('dialog', { name: 'Navigation' })).toBeInTheDocument();
+
+    viewport.set(false);
+    expect(screen.getByText('Panel body')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    viewport.set(true);
+    // No dialog and no gesture from the user — a widen/narrow cycle must not
+    // pop the overlay back open on its own.
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByText('Panel body')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show Navigation' })).toBeInTheDocument();
   });
 });
