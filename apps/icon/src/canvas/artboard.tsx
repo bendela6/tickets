@@ -10,6 +10,7 @@ import { gridInk } from '../render/ink';
 import { renderPosed } from '../render/svg';
 import { chromeIsDim, posedFor, scaleFor } from '../view';
 import { EmptyArtboard } from './empty-artboard';
+import { PenOverlay } from './pen-overlay';
 import { PointsSelectionOverlay, SelectionOverlay } from './selection-overlay';
 import { useArtboardPointer } from './use-artboard-pointer';
 
@@ -35,7 +36,7 @@ export function Artboard() {
   const posed = posedFor(state.doc, view);
   const dim = chromeIsDim(view);
 
-  const { chrome, surfaceProps, onHandleDown } = useArtboardPointer({
+  const { chrome, penChrome, surfaceProps, onHandleDown } = useArtboardPointer({
     state,
     dispatch,
     scale,
@@ -48,9 +49,13 @@ export function Artboard() {
   const selectedWarns = selected ? warnings.some((w) => w.id === selected.id) : false;
   const showSafeZone = selectedWarns || view.safeZoneOpen;
 
+  const drawing = state.tool === 'pen';
   // Handles are withdrawn while dragging or playing — you cannot resize while
-  // moving, and the transport is the only lit thing during playback.
-  const showHandles = selected !== null && !selected.hidden && !dim;
+  // moving, and the transport is the only lit thing during playback. The pen
+  // withdraws them too: what is selected is deliberately left alone by entering
+  // the tool, but its handles are buttons sitting over the artboard and every
+  // one of them would swallow a click meant for an anchor.
+  const showHandles = selected !== null && !selected.hidden && !dim && !drawing;
   const selectionBox = selected && !selected.hidden ? bounds(selected) : null;
   // Empty for the shapes that are dragged by a box, so this is also the choice
   // between the two overlays — the artboard never has to name a kind.
@@ -65,7 +70,10 @@ export function Artboard() {
       ref={surfaceRef}
       role="img"
       aria-label={`${state.doc.name} artboard, ${state.doc.objects.length} objects`}
-      className="relative flex-none touch-none outline-1 outline-gray-7 shadow-artboard"
+      className={cn(
+        'relative flex-none touch-none outline-1 outline-gray-7 shadow-artboard',
+        drawing && 'cursor-crosshair',
+      )}
       style={{
         width: screenWidth,
         height: screenHeight,
@@ -181,7 +189,19 @@ export function Artboard() {
         )
       ) : null}
 
-      {state.doc.objects.length === 0 ? <EmptyArtboard /> : null}
+      {drawing ? (
+        <PenOverlay
+          anchors={state.pen}
+          chrome={penChrome}
+          artboard={artboard}
+          scale={scale}
+        />
+      ) : null}
+
+      {/* The invitation goes while the pen is active. Its wells are real
+          buttons over the middle of the artboard, and drawing the first path on
+          an empty board is exactly when they would be in the way. */}
+      {state.doc.objects.length === 0 && !drawing ? <EmptyArtboard /> : null}
     </div>
   );
 }

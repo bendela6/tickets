@@ -11,6 +11,7 @@ import {
   type Action,
   type EditorState,
 } from './store';
+import type { PathSegment, Point } from './types';
 
 const start = () => initialState(emptyDocument('test'));
 
@@ -589,5 +590,196 @@ describe('removing a node', () => {
     const id = state.doc.objects[0]!.id;
     const removed = run(state, { type: 'removeVertex', id, index: 1 });
     expect(pointCount(run(removed, { type: 'undo' }))).toBe(6);
+  });
+});
+
+// ----- the pen ---------------------------------------------------------------
+
+/** Enter the pen and place a run of anchors, one per point. */
+const withPen = (...points: Point[]): EditorState =>
+  run(
+    start(),
+    { type: 'setTool', tool: 'pen' },
+    ...points.map((at): Action => ({ type: 'penPoint', at })),
+  );
+
+/** The one drawn path in the document, or null. */
+const drawn = (state: EditorState): PathSegment[] | null => {
+  const geometry = state.doc.objects[0]?.geometry;
+  return geometry?.kind === 'path' ? geometry.segments : null;
+};
+
+describe('entering the pen', () => {
+  it('changes nothing but the tool', () => {
+    const before = withRect();
+    const after = editorReducer(before, { type: 'setTool', tool: 'pen' });
+    expect(after.tool).toBe('pen');
+    // The document, what is selected and everything undo could reach are the
+    // same objects they were, not merely equal ones.
+    expect(after.doc).toBe(before.doc);
+    expect(after.selectedId).toBe(before.selectedId);
+    expect(after.past).toBe(before.past);
+  });
+
+  it('and leaving it again puts the selection back untouched', () => {
+    const before = withRect();
+    const round = run(
+      before,
+      { type: 'setTool', tool: 'pen' },
+      { type: 'penEnd', close: false },
+    );
+    expect(round.tool).toBe('select');
+    expect(round.selectedId).toBe(before.selectedId);
+    expect(round.doc).toBe(before.doc);
+    expect(round.past).toBe(before.past);
+  });
+});
+
+describe('drawing with the pen', () => {
+  it('three clicks and a finish give three anchors joined by straight commands', () => {
+    const state = run(withPen({ x: 10, y: 10 }, { x: 90, y: 10 }, { x: 90, y: 80 }), {
+      type: 'penEnd',
+      close: false,
+    });
+    expect(drawn(state)).toEqual([
+      { c: 'M', x: 10, y: 10 },
+      { c: 'L', x: 90, y: 10 },
+      { c: 'L', x: 90, y: 80 },
+    ]);
+    expect(state.tool).toBe('select');
+  });
+
+  it('a press that drags pulls a curve out of the anchor, mirrored either side', () => {
+    const state = run(
+      withPen({ x: 0, y: 100 }, { x: 100, y: 100 }),
+      // The press placed the anchor; the drag says where its handle reaches.
+      { type: 'penHandle', at: { x: 130, y: 100 } },
+      { type: 'penPoint', at: { x: 200, y: 100 } },
+      { type: 'penEnd', close: false },
+    );
+    expect(drawn(state)).toEqual([
+      { c: 'M', x: 0, y: 100 },
+      { c: 'C', x1: 0, y1: 100, x2: 70, y2: 100, x: 100, y: 100 },
+      { c: 'C', x1: 130, y1: 100, x2: 200, y2: 100, x: 200, y: 100 },
+    ]);
+  });
+
+  it('a click on the first anchor closes it', () => {
+    const state = run(withPen({ x: 10, y: 10 }, { x: 90, y: 10 }, { x: 50, y: 80 }), {
+      type: 'penEnd',
+      close: true,
+    });
+    expect(drawn(state)?.at(-1)).toEqual({ c: 'Z' });
+    // A closed path encloses something, so it is a region with a fill rather
+    // than a run drawn by its stroke.
+    expect(state.doc.objects[0]?.strokeWidth).toBe(0);
+  });
+
+  it('lands on the document’s grid, the way every other position does', () => {
+    const coarse = initialState({ ...emptyDocument('test'), snap: 8 });
+    const state = run(
+      coarse,
+      { type: 'setTool', tool: 'pen' },
+      { type: 'penPoint', at: { x: 11, y: 11 } },
+      { type: 'penPoint', at: { x: 93, y: 11 } },
+      { type: 'penEnd', close: false },
+    );
+    expect(drawn(state)).toEqual([
+      { c: 'M', x: 8, y: 8 },
+      { c: 'L', x: 96, y: 8 },
+    ]);
+  });
+
+  it('takes the last anchor back without touching the history', () => {
+    const three = withPen({ x: 10, y: 10 }, { x: 90, y: 10 }, { x: 90, y: 80 });
+    const back = editorReducer(three, { type: 'penBack' });
+    expect(back.pen).toHaveLength(2);
+    expect(back.past).toBe(three.past);
+    expect(drawn(run(back, { type: 'penEnd', close: false }))).toEqual([
+      { c: 'M', x: 10, y: 10 },
+      { c: 'L', x: 90, y: 10 },
+    ]);
+  });
+});
+
+describe('finishing with the pen', () => {
+  it('discards a single anchor rather than leaving a shape that draws nothing', () => {
+    const state = run(withPen({ x: 10, y: 10 }), { type: 'penEnd', close: false });
+    expect(state.doc.objects).toHaveLength(0);
+    // Nothing was ever written, so there is nothing for undo to unpick either.
+    expect(state.past).toHaveLength(0);
+    expect(state.tool).toBe('select');
+  });
+
+  it('keeps three, and selects what it drew', () => {
+    const state = run(withPen({ x: 10, y: 10 }, { x: 90, y: 10 }, { x: 90, y: 80 }), {
+      type: 'penEnd',
+      close: false,
+    });
+    expect(state.doc.objects).toHaveLength(1);
+    expect(state.selectedId).toBe(state.doc.objects[0]?.id);
+  });
+
+  it('is one history entry however many anchors were placed, and one undo takes it all', () => {
+    const before = start();
+    const state = run(
+      before,
+      { type: 'setTool', tool: 'pen' },
+      { type: 'penPoint', at: { x: 10, y: 10 } },
+      { type: 'penPoint', at: { x: 40, y: 10 } },
+      { type: 'penHandle', at: { x: 50, y: 20 } },
+      { type: 'penPoint', at: { x: 70, y: 40 } },
+      { type: 'penPoint', at: { x: 90, y: 80 } },
+      { type: 'penEnd', close: false },
+    );
+    expect(state.past).toHaveLength(1);
+    const undone = editorReducer(state, { type: 'undo' });
+    expect(undone.doc).toEqual(before.doc);
+    expect(canUndo(undone)).toBe(false);
+  });
+
+  it('does not swallow the entry before it, however fast it was drawn', () => {
+    // A drag coalesces by proximity in time; a pen gesture must not, or a path
+    // drawn straight after a move would take the move away with it.
+    const rect = withRect();
+    const moved = run(rect, {
+      type: 'moveObject',
+      id: rect.doc.objects[0]!.id,
+      dx: 4,
+      dy: 0,
+      at: 0,
+    });
+    const state = run(
+      moved,
+      { type: 'setTool', tool: 'pen' },
+      { type: 'penPoint', at: { x: 10, y: 10 } },
+      { type: 'penPoint', at: { x: 90, y: 10 } },
+      { type: 'penEnd', close: false },
+    );
+    expect(state.past).toHaveLength(moved.past.length + 1);
+    expect(run(state, { type: 'undo' }).doc).toEqual(moved.doc);
+  });
+
+  it('a second path is its own entry rather than joining the first', () => {
+    const first = run(withPen({ x: 10, y: 10 }, { x: 90, y: 10 }), {
+      type: 'penEnd',
+      close: false,
+    });
+    const second = run(
+      first,
+      { type: 'setTool', tool: 'pen' },
+      { type: 'penPoint', at: { x: 10, y: 200 } },
+      { type: 'penPoint', at: { x: 90, y: 200 } },
+      { type: 'penEnd', close: false },
+    );
+    expect(second.doc.objects).toHaveLength(2);
+    expect(run(second, { type: 'undo' }).doc.objects).toHaveLength(1);
+  });
+
+  it('is refused outright when the pen was never entered', () => {
+    const state = withRect();
+    expect(editorReducer(state, { type: 'penEnd', close: false })).toBe(state);
+    expect(editorReducer(state, { type: 'penPoint', at: { x: 1, y: 1 } })).toBe(state);
+    expect(editorReducer(state, { type: 'penBack' })).toBe(state);
   });
 });

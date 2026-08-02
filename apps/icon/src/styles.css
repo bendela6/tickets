@@ -25,6 +25,14 @@
   display: none;
 }
 
+/* The pen sits in the row of add-shape buttons but is not one of them: it turns
+   a mode on rather than placing a shape, so it carries a pressed state and its
+   own colours. Its corner is stated here so that the one thing it does have to
+   share with the buttons beside it cannot drift away from them. */
+.tool-toggle {
+  border-radius: var(--radius-lg);
+}
+
 /* The documents popover's footer holds two controls that are one control split
    in two — start an icon, or bring one in — so they have to keep the same
    corner. One is a <button> and the other a <label> wrapping a file input,

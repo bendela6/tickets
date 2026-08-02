@@ -34,6 +34,24 @@ export function shapeToolForKey(key: string): ShapeTool | undefined {
 }
 
 /**
+ * The pen, which is not one of the above.
+ *
+ * Every tool in `SHAPE_TOOLS` places a preset and is finished with; the pen
+ * enters a mode and stays there until the path is done, so it has no `kind` to
+ * add and does not belong in a list whose whole content is "which element does
+ * this button make".
+ *
+ * `N` because the pen's own initial is the polygon's, `E` is the ellipse's and
+ * `A` the arc's — every letter in "pen" and "path" is already spoken for. `N`
+ * is what this class of tool has settled on for the pen anyway, so the one free
+ * key and the conventional one turn out to be the same key.
+ */
+export const PEN_TOOL = { label: 'Pen', key: 'N' } as const;
+
+export const isPenKey = (key: string): boolean =>
+  key.toLowerCase() === PEN_TOOL.key.toLowerCase();
+
+/**
  * The mark that stands for a shape, in the rail rows, the add buttons and the
  * properties header. Drawn as SVG in `currentColor` so one glyph serves every
  * place at every size, rather than a div-and-clip-path per site.
@@ -135,6 +153,50 @@ export function ShapeGlyph({ kind, size = 13 }: { kind: ShapeKind; size?: number
           strokeLinecap="round"
         />
       ) : null}
+    </svg>
+  );
+}
+
+/**
+ * A nib, not a shape.
+ *
+ * Every other mark in the row stands for the element its button makes. The pen
+ * makes a `<path>` too, so a path glyph would be the arc's mark drawn twice —
+ * what distinguishes this button is that you draw the shape rather than being
+ * handed one, and a nib is what says that.
+ */
+export function PenGlyph({ size = 13 }: { size?: number }) {
+  const stroke = size < 16 ? 1.5 : 1.6;
+  const inset = stroke / 2;
+  const span = size - stroke;
+  const tip = { x: inset, y: size - inset };
+
+  return (
+    <svg
+      aria-hidden
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      fill="none"
+      className="flex-none"
+    >
+      <path
+        d={`M ${tip.x} ${tip.y} L ${inset + span * 0.3} ${inset} L ${size - inset} ${inset + span * 0.52} Z`}
+        stroke="currentColor"
+        strokeWidth={stroke}
+        strokeLinejoin="round"
+      />
+      {/* The slit. Without it the nib is a triangle, and a triangle in a row of
+          shapes reads as another shape. */}
+      <line
+        x1={tip.x}
+        y1={tip.y}
+        x2={inset + span * 0.44}
+        y2={inset + span * 0.5}
+        stroke="currentColor"
+        strokeWidth={stroke}
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@tickets/ui';
-import { ShapeGlyph, SHAPE_TOOLS } from '../canvas/shape-tools';
+import { PenGlyph, PEN_TOOL, ShapeGlyph, SHAPE_TOOLS } from '../canvas/shape-tools';
 import { useEditor } from '../editor-context';
 import type { IconObject } from '../doc/types';
 
@@ -227,7 +227,9 @@ export function ObjectList() {
 
       <div className="flex flex-none flex-col gap-2 border-t-1 border-gray-6 px-3 pb-3.25 pt-2.75">
         <span className="font-sans text-9 font-500 tracking-widest text-gray-9">ADD SHAPE</span>
-        <div className="flex gap-1.5">
+        {/* Four across rather than one row: the pen makes eight, and eight in a
+            232px rail leaves each one narrower than the mark inside it. */}
+        <div className="grid grid-cols-4 gap-1.5">
           {SHAPE_TOOLS.map((tool) => (
             <button
               key={tool.kind}
@@ -240,6 +242,32 @@ export function ObjectList() {
               <ShapeGlyph kind={tool.kind} size={15} />
             </button>
           ))}
+
+          {/* A toggle rather than an add: pressing it enters a mode, and the
+              shape it makes does not exist until the path is finished. It says
+              so with `aria-pressed`, which the seven beside it have nothing to
+              report. */}
+          <button
+            type="button"
+            title={`${PEN_TOOL.label} · ${PEN_TOOL.key}`}
+            aria-label={PEN_TOOL.label}
+            aria-pressed={state.tool === 'pen'}
+            onClick={() =>
+              dispatch(
+                state.tool === 'pen'
+                  ? { type: 'penEnd', close: false }
+                  : { type: 'setTool', tool: 'pen' },
+              )
+            }
+            className={cn(
+              'tool-toggle flex h-8.5 items-center justify-center border-1',
+              state.tool === 'pen'
+                ? 'border-indigo-9 bg-indigo-3 text-indigo-9'
+                : 'border-gray-6 bg-surface-raised text-gray-11 hover:text-gray-12',
+            )}
+          >
+            <PenGlyph size={15} />
+          </button>
         </div>
       </div>
     </>
