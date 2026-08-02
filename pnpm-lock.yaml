@@ -78,6 +78,9 @@ importers:
       '@tickets/ui':
         specifier: workspace:*
         version: link:../../packages/web/ui
+      pathkit-wasm:
+        specifier: ^1.0.0
+        version: 1.0.0
       react:
         specifier: ^19.2.5
         version: 19.2.7
@@ -432,7 +435,7 @@ importers:
         version: '@typescript/typescript6@6.0.2'
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@types/node@22.20.1)(jsdom@29.1.1)(vite@8.1.3(@types/node@22.20.1)(esbuild@0.27.7)(jiti@2.7.0)(sass@1.101.0)(tsx@4.23.0))
+        version: 4.1.10(@types/node@22.20.1)(jsdom@29.1.1)(vite@8.1.3(@types/node@22.20.1)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.101.0)(tsx@4.23.0))
 
   packages/signals/core:
     devDependencies:
@@ -450,7 +453,7 @@ importers:
         version: '@typescript/typescript6@6.0.2'
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@types/node@22.20.1)(jsdom@29.1.1)(vite@8.1.3(@types/node@22.20.1)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.101.0)(tsx@4.23.0))
+        version: 4.1.10(@types/node@22.20.1)(jsdom@29.1.1)(vite@8.1.3(@types/node@22.20.1)(esbuild@0.27.7)(jiti@2.7.0)(sass@1.101.0)(tsx@4.23.0))
 
   packages/signals/node:
     dependencies:
@@ -4130,6 +4133,9 @@ packages:
 
   pathe@2.0.3:
     resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
+
+  pathkit-wasm@1.0.0:
+    resolution: {integrity: sha512-oREIcGpwnBBto6PfB3C20aIw9jBPLcSNVF1AlL5tGlXsoL2zqWVuD0mi8WMJQHHNemm6aR1hHH2lz+TO551Fgw==}
 
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
@@ -7832,6 +7838,8 @@ snapshots:
   path-to-regexp@8.4.2: {}
 
   pathe@2.0.3: {}
+
+  pathkit-wasm@1.0.0: {}
 
   picocolors@1.1.1: {}
 
