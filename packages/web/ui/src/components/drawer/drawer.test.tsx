@@ -44,6 +44,54 @@ function Host({
   );
 }
 
+// Mirrors the Task 4 call site: `<Drawer open>` is a literal constant, and the
+// whole component is mounted when a row is selected and unmounted again on
+// close — there is never a false→true transition of the `open` prop itself.
+function MountedOpenHost() {
+  const [mounted, setMounted] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setMounted(true)}>
+        Row
+      </button>
+      {mounted && (
+        <Drawer open onOpenChange={() => setMounted(false)} side="right" size="lg" label="Detail">
+          <DrawerControls />
+          <p>Body text</p>
+        </Drawer>
+      )}
+    </>
+  );
+}
+
+// Mirrors a master-detail call site: one open Drawer instance whose `label`
+// and `children` are swapped by a link inside the panel itself, the way
+// ItemDetail's `onOpenItem` would.
+function ContentSwapHost() {
+  const [open, setOpen] = useState(false);
+  const [which, setWhich] = useState<'a' | 'b'>('a');
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}>
+        Open it
+      </button>
+      <Drawer
+        open={open}
+        onOpenChange={setOpen}
+        side="right"
+        size="lg"
+        label={which === 'a' ? 'Detail A' : 'Detail B'}
+      >
+        <DrawerControls />
+        <button type="button" onClick={() => setWhich('b')}>
+          Go to B
+        </button>
+        <p>{which}</p>
+      </Drawer>
+    </>
+  );
+}
+
 const panel = () => screen.getByRole('dialog', { name: 'Detail' });
 const widthOf = () => panel().style.getPropertyValue('--panel-w');
 
@@ -67,6 +115,30 @@ describe('Drawer', () => {
     render(<Host />);
     const trigger = screen.getByRole('button', { name: 'Open it' });
     await userEvent.click(trigger);
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
+  it('restores focus to the opener even when the drawer mounts already open', async () => {
+    // No false→true transition of `open` here: the trigger click mounts the
+    // whole <Drawer open> instance, exactly as the row-select call site does.
+    render(<MountedOpenHost />);
+    const trigger = screen.getByRole('button', { name: 'Row' });
+    await userEvent.click(trigger);
+    expect(screen.getByRole('dialog', { name: 'Detail' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
+  it('keeps the original opener as the restore target across an in-drawer content swap', async () => {
+    render(<ContentSwapHost />);
+    const trigger = screen.getByRole('button', { name: 'Open it' });
+    await userEvent.click(trigger);
+    await userEvent.click(screen.getByRole('button', { name: 'Go to B' }));
+    // The swap landed — same open Drawer instance, new content underneath it.
+    expect(screen.getByRole('dialog', { name: 'Detail B' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
