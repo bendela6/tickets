@@ -91,7 +91,14 @@ export function renderTh<T>({
         <button
           type="button"
           onClick={onSortClick}
-          className="flex cursor-pointer items-center gap-1 hover:text-gray-12"
+          // `uppercase` is repeated here rather than inherited from the cell.
+          // Chrome's UA stylesheet sets `text-transform: none` on form
+          // controls, and Tailwind's preflight re-inherits `font`,
+          // `letter-spacing` and `color` for buttons but NOT `text-transform` —
+          // so without this a sortable header renders in sentence case while
+          // its non-sortable neighbour is in caps. Measured in a browser, not
+          // deduced: jsdom computes no styles, so no test here can see it.
+          className="flex cursor-pointer items-center gap-1 uppercase hover:text-gray-12"
         >
           {column.header}
           {sort ? (
