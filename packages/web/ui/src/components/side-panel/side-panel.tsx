@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { cn } from '../../style/cn';
 import { runtimeStyle } from '../../style/runtime-style';
 import { Drawer } from '../drawer';
@@ -92,6 +92,15 @@ export function SidePanel({
   // writing it through would leave the panel collapsed once the window widens
   // again — losing the choice the user actually made while docked.
   const [overlayOpen, setOverlayOpen] = useState(false);
+  // Each time the viewport (re-)enters narrow, the overlay must start shut.
+  // Without this, widening past the breakpoint unmounts the Drawer but
+  // leaves `overlayOpen` at whatever it last was; narrowing again would then
+  // pop the Drawer back open with no user gesture. This is the ephemeral
+  // half of the state, so resetting it here does not touch the persisted
+  // `collapsed` flag or storage at all.
+  useEffect(() => {
+    if (narrow) setOverlayOpen(false);
+  }, [narrow]);
 
   if (narrow) {
     // Below the breakpoint the panel is an overlay: same children, same label,
