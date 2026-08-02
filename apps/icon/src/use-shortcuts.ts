@@ -25,6 +25,7 @@ export function useShortcuts({
   onExport,
   onResetZoom,
   onFitZoom,
+  onToggleSource,
 }: {
   state: EditorState;
   dispatch: (action: Action) => void;
@@ -32,6 +33,7 @@ export function useShortcuts({
   onExport: () => void;
   onResetZoom: () => void;
   onFitZoom: () => void;
+  onToggleSource: () => void;
 }): void {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -75,6 +77,16 @@ export function useShortcuts({
         // below would otherwise leave to the browser's select-all.
         event.preventDefault();
         dispatch({ type: 'selectAll' });
+        return;
+      }
+      // ⌘/ shows and hides the SVG source. Not ⌘U: that is the browser's own
+      // view-source, and taking it would mean intercepting the one chord a user
+      // already presses to see markup and answering with something else. Every
+      // ⌘-letter that could stand for source or markup is either the browser's
+      // or already this app's; ⌘/ is claimed by neither, on either platform.
+      if (accel && event.key === '/') {
+        event.preventDefault();
+        onToggleSource();
         return;
       }
       // Matched on `code` rather than `key`, because shift turns the `0` key
@@ -165,5 +177,5 @@ export function useShortcuts({
     // Backspace means now reads the node selection and the shape it belongs to,
     // and a handler bound to a stale document would delete the wrong thing.
     // Rebinding one window listener costs nothing beside that.
-  }, [dispatch, onExport, onFitZoom, onResetZoom, onSave, state]);
+  }, [dispatch, onExport, onFitZoom, onResetZoom, onSave, onToggleSource, state]);
 }

@@ -11,6 +11,7 @@ import { ImportReportDialog } from './import/report-dialog';
 import { useDocuments } from './topbar/use-documents';
 import { ObjectList } from './rails/object-list';
 import { PropsPanel } from './rails/props-panel';
+import { SourcePanel } from './render/source-panel';
 import { TopBar } from './topbar/top-bar';
 import { useShortcuts } from './use-shortcuts';
 import { chromeIsDim, scaleFor, zoomToFit } from './view';
@@ -61,6 +62,7 @@ function Editor() {
       if (!room) return;
       setView((v) => ({ ...v, zoom: zoomToFit(state.doc.artboard, room) }));
     },
+    onToggleSource: () => setView((v) => ({ ...v, sourceOpen: !v.sourceOpen })),
   });
 
   const dim = chromeIsDim(view);
@@ -137,30 +139,39 @@ function CanvasField({
   });
 
   return (
-    <main className="relative min-w-0 flex-1 bg-surface-field">
-      {/* The scroller is a layer inside the region rather than the region
-          itself, so the footer below stays pinned. Absolute positioning is
-          relative to the padding box, so a footer inside the scroller would
-          scroll away with the artboard — which it did. */}
-      <div
-        ref={scrollerRef}
-        className="canvas-scroll absolute inset-0 flex overflow-auto"
-      >
-        {/* Centring lives in `.canvas-scroll` as `safe center`, and there is
-            deliberately no `m-auto` here: an auto margin re-creates exactly the
-            unreachable-edge problem that `safe` exists to avoid. */}
+    <main className="relative flex min-w-0 flex-1 flex-col bg-surface-field">
+      {/* The artboard's half of the region, and the thing the source panel
+          takes its share from. The scroller is sized by this box rather than by
+          the whole region, which is what keeps `canvasRoom` honest: with the
+          panel open there is genuinely less room, and ⇧⌘0 fits into what is
+          left without anything having to be told the panel exists. */}
+      <div className="relative min-h-0 flex-1">
+        {/* The scroller is a layer inside the region rather than the region
+            itself, so the footer below stays pinned. Absolute positioning is
+            relative to the padding box, so a footer inside the scroller would
+            scroll away with the artboard — which it did. */}
         <div
-          ref={stackRef}
-          className="relative flex flex-none flex-col items-center gap-3 p-8 pb-16"
+          ref={scrollerRef}
+          className="canvas-scroll absolute inset-0 flex overflow-auto"
         >
-          {/* Wrapped so the zoom can measure exactly where the artboard is
-              without reaching into the artboard's own markup. */}
-          <div ref={boardRef} className="flex-none">
-            <Artboard />
+          {/* Centring lives in `.canvas-scroll` as `safe center`, and there is
+              deliberately no `m-auto` here: an auto margin re-creates exactly
+              the unreachable-edge problem that `safe` exists to avoid. */}
+          <div
+            ref={stackRef}
+            className="relative flex flex-none flex-col items-center gap-3 p-8 pb-16"
+          >
+            {/* Wrapped so the zoom can measure exactly where the artboard is
+                without reaching into the artboard's own markup. */}
+            <div ref={boardRef} className="flex-none">
+              <Artboard />
+            </div>
           </div>
         </div>
+        <CanvasFooter status={status} />
       </div>
-      <CanvasFooter status={status} />
+
+      {view.sourceOpen ? <SourcePanel /> : null}
     </main>
   );
 }

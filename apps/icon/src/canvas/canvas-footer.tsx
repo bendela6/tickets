@@ -94,6 +94,15 @@ export function CanvasFooter({ status }: { status: string }) {
           label="grid"
           onToggle={() => setView((v) => ({ ...v, grid: !v.grid }))}
         />
+        {/* Beside the grid and the ground because it is the third way of
+            *looking* at the same document, and none of the three is a property
+            of it. */}
+        <ToggleChip
+          on={view.sourceOpen}
+          label="source"
+          title="Show the SVG this document generates · ⌘/"
+          onToggle={() => setView((v) => ({ ...v, sourceOpen: !v.sourceOpen }))}
+        />
         <div className="flex h-6.5 items-center gap-1.75 rounded-md pl-2.25">
           <span className="font-mono text-11 text-gray-9">ground</span>
           <Tabs
