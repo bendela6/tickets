@@ -263,3 +263,38 @@ Moving animation authoring into a side rail and restating it in CSS's terms —
 properties are **transform, opacity and colour**; geometry and path morphing are
 out, because morphing only works between paths with matching node counts and
 that matching step is its own project.
+
+### 12. Animation is removed outright, and a document is one static picture
+
+Decision 11 postponed the redesign; this removes the thing that was waiting to be
+redesigned. Deferred work that stays in the tree is not deferred, it is unowned:
+every object still carried a `motion` field nobody could tune, every document a
+`states` array whose second entry existed only so a phase number would not be
+zero, and the export dialog three targets that were unavailable until you found
+the state manager and marked a state sustained.
+
+What came out is the whole of it. The **motion model** — `takesPart`, the
+`spins`/`moves`/`fades` roles, `pace`, and the pose engine that derived a pose
+from a state's index. **Multiple states** — `states`, `IconState`, `Sustain`,
+`Timing`, the state manager, and every action that added, renamed, reordered,
+deleted or sustained one. The **transport strip** under the artboard, with its
+play/pause, scrubber, cycling, timing controls and reduced-motion preview. A
+document is now a name, an artboard, a snap step, a background pair and a list
+of objects, and it holds exactly one picture.
+
+**Six export targets remain**: browser favicon, PWA, iOS, Android, macOS and
+Windows. The three that carried motion — SMIL animated SVG, Lottie, and the
+canvas animated favicon — are gone, which overturns decision 4. Every surviving
+target rasterises the same single SVG, so the property decision 4 was really
+protecting — no runtime dependency for any format we write — is untouched.
+
+Decision 1 is void: there is no phase, no index, and nothing to derive a pose
+from. Decision 11 still describes where animation would start from if it ever
+returns, and it would return as authoring rather than as derivation. Documents
+saved with states, motion and timing still open — migration lives at the read
+boundary beside the polygon one, keeps the first state's pose, and drops the
+rest silently. Nothing is warned about, because the states after the first were
+never data anybody typed.
+
+Colour stays paired. `Pair` is not animation and never was — it is how one icon
+serves a light page and a dark one.

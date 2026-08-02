@@ -1,7 +1,5 @@
-import type { Ground, IconDoc, Sustain } from '../doc/types';
+import type { Ground, IconDoc } from '../doc/types';
 import { renderSvg } from '../render/svg';
-import { sustainedState } from '../transport/clock';
-import { animatedFavicon, animatedSvg, lottie } from './animated';
 import { createIcns, createIco, type SizedPng } from './containers';
 import { rasteriseAll } from './raster';
 import { ANDROID_BUCKETS, TARGET_SIZES, type TargetId } from './targets';
@@ -10,8 +8,6 @@ import { createZip, type ZipEntry } from './zip';
 export interface ExportRequest {
   doc: IconDoc;
   ground: Ground;
-  /** Which state the static targets capture. */
-  stateId: string;
   targets: TargetId[];
 }
 
@@ -31,8 +27,8 @@ export async function buildFiles(
   request: ExportRequest,
   rasterise: Rasteriser = rasteriseAll,
 ): Promise<ZipEntry[]> {
-  const { doc, ground, stateId, targets } = request;
-  const svg = renderSvg(doc, { ground, stateId });
+  const { doc, ground, targets } = request;
+  const svg = renderSvg(doc, { ground });
   const files: ZipEntry[] = [];
 
   // Render each size once even when several targets want it.
@@ -87,26 +83,6 @@ export async function buildFiles(
 
   if (targets.includes('win')) {
     files.push({ path: 'app.ico', bytes: createIco(sized(TARGET_SIZES.win ?? [])) });
-  }
-
-  const sustained = sustainedState(doc);
-  if (sustained?.sustain) {
-    const source = {
-      doc,
-      ground,
-      stateId: sustained.id,
-      sustain: sustained.sustain as Exclude<Sustain, null>,
-    };
-    if (targets.includes('asvg')) {
-      files.push({ path: 'icon.svg', bytes: encode(animatedSvg(source)) });
-    }
-    if (targets.includes('lottie')) {
-      files.push({ path: 'icon.json', bytes: encode(JSON.stringify(lottie(source), null, 2)) });
-    }
-    if (targets.includes('afav')) {
-      files.push({ path: 'favicon.js', bytes: encode(animatedFavicon(source)) });
-      files.push({ path: 'favicon-32.png', bytes: pngAt(32) });
-    }
   }
 
   return files;

@@ -650,7 +650,6 @@ describe('a round trip through the renderer', () => {
     rotation: 0,
     hidden: false,
     locked: false,
-    motion: { takesPart: true, role: 'spins', pace: 1 },
     ...over,
   });
 

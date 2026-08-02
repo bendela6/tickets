@@ -915,7 +915,6 @@ function objectOf(
     rotation: placed.rotation,
     hidden: false,
     locked: false,
-    motion: { takesPart: true, role: 'spins', pace: 1 },
   };
 }
 

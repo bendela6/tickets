@@ -15,14 +15,6 @@ const openDialog = async (user: ReturnType<typeof userEvent.setup>) => {
   return screen.getByRole('dialog');
 };
 
-const makeSustained = async (user: ReturnType<typeof userEvent.setup>) => {
-  await user.click(screen.getByRole('button', { name: 'States' }));
-  await user.click(
-    screen.getByRole('list', { name: 'States' }).querySelector('button[title="Settled or sustained"]')!,
-  );
-  await user.keyboard('{Escape}');
-};
-
 describe('the export dialog', () => {
   it('opens only from the top-bar button', async () => {
     const { user } = await setup();
@@ -52,41 +44,20 @@ describe('the export dialog', () => {
     expect(within(dialog).getByText('pick at least one target')).toBeInTheDocument();
   });
 
-  it('carries a state picker, because a static target has to capture one', async () => {
+  it('offers the six platforms, and every one of them can be ticked', async () => {
     const { user } = await setup();
     const dialog = await openDialog(user);
-    expect(within(dialog).getByRole('group', { name: 'State to capture' })).toBeInTheDocument();
-  });
-});
-
-describe('animated targets', () => {
-  it('stay in place and state the reason when no state is sustained', async () => {
-    const { user } = await setup();
-    const dialog = await openDialog(user);
-    const lottie = within(dialog).getByRole('checkbox', { name: /Lottie/ });
-    expect(lottie).toBeInTheDocument();
-    expect(lottie).toHaveAttribute('aria-disabled', 'true');
-    expect(within(dialog).getAllByText('needs a sustained state')).toHaveLength(3);
-  });
-
-  it('cannot be ticked while unavailable', async () => {
-    const { user } = await setup();
-    const dialog = await openDialog(user);
-    await user.click(within(dialog).getByRole('checkbox', { name: /Lottie/ }));
-    expect(within(dialog).getByRole('checkbox', { name: /Lottie/ })).toHaveAttribute(
-      'aria-checked',
-      'false',
-    );
-  });
-
-  it('become available once a state is sustained, and name where motion comes from', async () => {
-    const { user } = await setup();
-    await makeSustained(user);
-    const dialog = await openDialog(user);
-    expect(within(dialog).getByRole('checkbox', { name: /Lottie/ })).not.toHaveAttribute(
-      'aria-disabled',
-    );
-    expect(within(dialog).getByText(/from the default state · 0\.90s loop/)).toBeInTheDocument();
+    const names = ['Browser favicon', 'PWA', 'iOS', 'Android', 'macOS', 'Windows'];
+    expect(within(dialog).getAllByRole('checkbox')).toHaveLength(names.length);
+    for (const name of names) {
+      const row = within(dialog).getByRole('checkbox', { name: new RegExp(name) });
+      const before = row.getAttribute('aria-checked');
+      await user.click(row);
+      expect(within(dialog).getByRole('checkbox', { name: new RegExp(name) })).not.toHaveAttribute(
+        'aria-checked',
+        before,
+      );
+    }
   });
 });
 

@@ -20,8 +20,6 @@ import type {
   Pair,
   Point,
   ShapeKind,
-  Sustain,
-  Timing,
 } from './types';
 
 /**
@@ -160,13 +158,6 @@ export type Action =
   | { type: 'setBackground'; ground: Ground; hex: string }
   | { type: 'setArtboard'; artboard: Partial<Artboard> }
   | { type: 'setSnap'; snap: number }
-  | { type: 'setMotion'; id: string; motion: Partial<IconObject['motion']> }
-  | { type: 'addState' }
-  | { type: 'renameState'; id: string; name: string }
-  | { type: 'deleteState'; id: string }
-  | { type: 'setSustain'; id: string; sustain: Sustain }
-  | { type: 'reorderStates'; from: number; to: number }
-  | { type: 'setTiming'; timing: Partial<Timing> }
   | { type: 'setDocumentName'; name: string }
   | { type: 'replaceDocument'; doc: IconDoc }
   | { type: 'undo' }
@@ -610,68 +601,6 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         },
       };
     }
-    case 'setMotion':
-      return {
-        ...state,
-        ...remember(state, `motion ${nameOf(state, action.id)}`),
-        doc: mapObject(state.doc, action.id, (o) => ({
-          ...o,
-          motion: { ...o.motion, ...action.motion },
-        })),
-      };
-
-    // ----- states ---------------------------------------------------------
-    case 'addState': {
-      const id = `state-${state.doc.states.length + 1}-${state.past.length}`;
-      const name = `state ${state.doc.states.length + 1}`;
-      return {
-        ...state,
-        ...remember(state, 'add state'),
-        doc: { ...state.doc, states: [...state.doc.states, { id, name, sustain: null }] },
-      };
-    }
-    case 'renameState':
-      return {
-        ...state,
-        ...remember(state, 'rename state'),
-        doc: {
-          ...state.doc,
-          states: state.doc.states.map((s) => (s.id === action.id ? { ...s, name: action.name } : s)),
-        },
-      };
-    case 'deleteState': {
-      // The floor is one, not two: a purely static icon is the common case,
-      // and a tool that insists on a second state invents motion the icon
-      // does not need.
-      if (state.doc.states.length <= 1) return state;
-      return {
-        ...state,
-        ...remember(state, 'delete state'),
-        doc: { ...state.doc, states: state.doc.states.filter((s) => s.id !== action.id) },
-      };
-    }
-    case 'setSustain':
-      return {
-        ...state,
-        ...remember(state, 'sustain'),
-        doc: {
-          ...state.doc,
-          states: state.doc.states.map((s) =>
-            s.id === action.id ? { ...s, sustain: action.sustain } : s,
-          ),
-        },
-      };
-    case 'reorderStates': {
-      const states = moveWithin(state.doc.states, action.from, action.to);
-      if (states === state.doc.states) return state;
-      return { ...state, ...remember(state, 'reorder states'), doc: { ...state.doc, states } };
-    }
-    case 'setTiming':
-      return {
-        ...state,
-        ...remember(state, 'timing'),
-        doc: { ...state.doc, timing: { ...state.doc.timing, ...action.timing } },
-      };
 
     // ----- document -------------------------------------------------------
     case 'setDocumentName':

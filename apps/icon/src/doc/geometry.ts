@@ -222,9 +222,9 @@ function flattenArc(from: Point, segment: Extract<PathSegment, { c: 'A' }>, tole
  * the true curve.
  *
  * This is the one approximation in the file, and everything else about a path
- * is derived from it: its box, its hit test and its Lottie export all read
- * these points rather than solving each command's own maths, which would be
- * six answers per question instead of one.
+ * is derived from it: its box and its hit test both read these points rather
+ * than solving each command's own maths, which would be six answers per
+ * question instead of one.
  *
  * One run per subpath — an `M` starts a new one — so a shape with a hole comes
  * back as two, which is what even-odd containment needs to tell a hole from a

@@ -1,13 +1,4 @@
-export type TargetId =
-  | 'fav'
-  | 'pwa'
-  | 'ios'
-  | 'and'
-  | 'mac'
-  | 'win'
-  | 'asvg'
-  | 'lottie'
-  | 'afav';
+export type TargetId = 'fav' | 'pwa' | 'ios' | 'and' | 'mac' | 'win';
 
 export interface Target {
   id: TargetId;
@@ -18,12 +9,10 @@ export interface Target {
   writes: string;
   /** How many files it contributes to the summary. */
   files: number;
-  /** Animated targets need a sustained state; without one they stay unavailable. */
-  animated?: true;
 }
 
 /**
- * The nine targets, transcribed from the design.
+ * The six platforms an icon is shipped to.
  *
  * `files` is what the running summary adds up, so it has to be the number of
  * files that actually land on disk — `run.test.ts` asserts that against what
@@ -43,23 +32,6 @@ export const TARGETS: readonly Target[] = [
   { id: 'and', name: 'Android', sizes: '48 → 512', writes: 'mipmap ×5', files: 5 },
   { id: 'mac', name: 'macOS', sizes: '16 → 1024', writes: 'icon.icns', files: 1 },
   { id: 'win', name: 'Windows', sizes: '16 → 256', writes: 'app.ico', files: 1 },
-  { id: 'asvg', name: 'Animated SVG', sizes: 'vector', writes: 'icon.svg', files: 1, animated: true },
-  {
-    id: 'lottie',
-    name: 'Lottie',
-    sizes: 'vector · json',
-    writes: 'icon.json',
-    files: 1,
-    animated: true,
-  },
-  {
-    id: 'afav',
-    name: 'Animated favicon',
-    sizes: '32 · canvas',
-    writes: 'favicon.js +1',
-    files: 2,
-    animated: true,
-  },
 ];
 
 /** The raster sizes each target needs, so nothing is rendered that no file uses. */
@@ -70,9 +42,6 @@ export const TARGET_SIZES: Partial<Record<TargetId, readonly number[]>> = {
   and: [48, 72, 96, 144, 192, 512],
   mac: [16, 32, 64, 128, 256, 512, 1024],
   win: [16, 24, 32, 48, 256],
-  // The animated favicon ships a still fallback, so it needs a raster of its
-  // own rather than borrowing one another target happened to request.
-  afav: [32],
 };
 
 /** Android's density buckets, which is what the mipmap folders are named for. */

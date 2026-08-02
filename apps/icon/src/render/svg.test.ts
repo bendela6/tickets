@@ -7,16 +7,7 @@ import { pathData, renderSvg } from './svg';
 /** The 512-square board most of these fixtures assume. */
 const BOARD = { width: 512, height: 512 };
 
-const docOf = (objects: IconObject[], over: Partial<IconDoc> = {}): IconDoc => ({
-  ...emptyDocument('test'),
-  objects,
-  ...over,
-});
-
-const still = (object: IconObject): IconObject => ({
-  ...object,
-  motion: { ...object.motion, takesPart: false },
-});
+const docOf = (objects: IconObject[]): IconDoc => ({ ...emptyDocument('test'), objects });
 
 describe('pathData', () => {
   it('spells every command out, absolute and in the order they are stored', () => {
@@ -64,23 +55,23 @@ describe('renderSvg', () => {
   });
 
   it('paints in reverse document order, so objects[0] ends up in front', () => {
-    const front = still({ ...newObject('rect', 1, BOARD), id: 'front', fill: { light: '#111111', dark: '#111111' } });
-    const back = still({ ...newObject('ellipse', 2, BOARD), id: 'back', fill: { light: '#222222', dark: '#222222' } });
+    const front = { ...newObject('rect', 1, BOARD), id: 'front', fill: { light: '#111111', dark: '#111111' } };
+    const back = { ...newObject('ellipse', 2, BOARD), id: 'back', fill: { light: '#222222', dark: '#222222' } };
     const svg = renderSvg(docOf([front, back]), { ground: 'light' });
     expect(svg.indexOf('#222222')).toBeLessThan(svg.indexOf('#111111'));
   });
 
   it('omits hidden objects entirely rather than drawing them transparent', () => {
-    const object = still({ ...newObject('rect', 1, BOARD), hidden: true });
+    const object = { ...newObject('rect', 1, BOARD), hidden: true };
     expect(renderSvg(docOf([object]), { ground: 'light' })).not.toContain('<rect x="136"');
   });
 
   it('draws a line with its stroke pair, not its fill', () => {
-    const line = still({
+    const line = {
       ...newObject('line', 1, BOARD),
       stroke: { light: '#C0382E', dark: '#C0382E' },
       fill: { light: '#2E7D4F', dark: '#2E7D4F' },
-    });
+    };
     const svg = renderSvg(docOf([line]), { ground: 'light' });
     expect(svg).toContain('stroke="#C0382E"');
     expect(svg).not.toContain('#2E7D4F');
@@ -88,31 +79,31 @@ describe('renderSvg', () => {
   });
 
   it('gives a rect a corner radius only when it has one', () => {
-    const rounded = still(newObject('rect', 1, BOARD));
-    expect(renderSvg(docOf([rounded]), { ground: 'light' })).toContain('rx="32"');
-    const square = still({
-      ...rounded,
+    const curved = newObject('rect', 1, BOARD);
+    expect(renderSvg(docOf([curved]), { ground: 'light' })).toContain('rx="32"');
+    const square: IconObject = {
+      ...curved,
       geometry: { kind: 'rect', x: 0, y: 0, w: 10, h: 10, radius: 0 },
-    });
+    };
     expect(renderSvg(docOf([square]), { ground: 'light' })).not.toContain('rx=');
   });
 
   it('centres an ellipse on its box', () => {
-    const ellipse = still(newObject('ellipse', 1, BOARD));
+    const ellipse = newObject('ellipse', 1, BOARD);
     expect(renderSvg(docOf([ellipse]), { ground: 'light' })).toContain(
       '<ellipse cx="256" cy="256" rx="120" ry="120"',
     );
   });
 
   it('draws a circle as a circle, not as an ellipse with two equal radii', () => {
-    const circle = still(newObject('circle', 1, BOARD));
+    const circle = newObject('circle', 1, BOARD);
     expect(renderSvg(docOf([circle]), { ground: 'light' })).toContain(
       '<circle cx="256" cy="256" r="120"',
     );
   });
 
   it('emits a polygon as the points it holds, in order', () => {
-    const poly = still({
+    const poly: IconObject = {
       ...newObject('polygon', 1, BOARD),
       geometry: {
         kind: 'polygon',
@@ -123,14 +114,14 @@ describe('renderSvg', () => {
           { x: 50, y: 100 },
         ],
       },
-    });
+    };
     expect(renderSvg(docOf([poly]), { ground: 'light' })).toContain(
       '<polygon points="100,50 150,100 100,150 50,100"',
     );
   });
 
   it('draws a polyline stroked and unfilled, since it encloses nothing', () => {
-    const run = still({
+    const run: IconObject = {
       ...newObject('polyline', 1, BOARD),
       strokeWidth: 6,
       stroke: { light: '#C0382E', dark: '#C0382E' },
@@ -142,7 +133,7 @@ describe('renderSvg', () => {
           { x: 30, y: 40 },
         ],
       },
-    });
+    };
     const svg = renderSvg(docOf([run]), { ground: 'light' });
     expect(svg).toContain('<polyline points="10,20 30,40" fill="none" stroke="#C0382E"');
     expect(svg).toContain('stroke-width="6"');
@@ -151,7 +142,7 @@ describe('renderSvg', () => {
   });
 
   it('draws an open path stroked and unfilled, since it encloses nothing', () => {
-    const spinner = still({
+    const spinner: IconObject = {
       ...newObject('path', 1, BOARD),
       strokeWidth: 6,
       stroke: { light: '#C0382E', dark: '#C0382E' },
@@ -160,7 +151,7 @@ describe('renderSvg', () => {
         kind: 'path',
         segments: arcPath({ cx: 50, cy: 50, r: 20, inner: 20, start: -90, sweep: 270 }),
       },
-    });
+    };
     const svg = renderSvg(docOf([spinner]), { ground: 'light' });
     expect(svg).toContain('<path d="M 50 30 A 20 20 0 1 1 30 50" fill="none" stroke="#C0382E"');
     expect(svg).toContain('stroke-width="6"');
@@ -169,7 +160,7 @@ describe('renderSvg', () => {
   });
 
   it('draws the arc preset as a spinner: three quarters of a turn, open, stroked', () => {
-    const preset = still(newObject('path', 1, BOARD));
+    const preset = newObject('path', 1, BOARD);
     const svg = renderSvg(docOf([preset]), { ground: 'light' });
     // A quarter of the shorter edge, opening at the top and running clockwise.
     expect(svg).toContain('<path d="M 256 128 A 128 128 0 1 1 128 256" fill="none"');
@@ -177,7 +168,7 @@ describe('renderSvg', () => {
   });
 
   it('fills a path that closes, the way it fills a polygon', () => {
-    const wedge = still({
+    const wedge: IconObject = {
       ...newObject('path', 1, BOARD),
       strokeWidth: 0,
       fill: { light: '#2E7D4F', dark: '#2E7D4F' },
@@ -185,13 +176,13 @@ describe('renderSvg', () => {
         kind: 'path',
         segments: arcPath({ cx: 50, cy: 50, r: 20, inner: 0, start: 0, sweep: 90 }),
       },
-    });
+    };
     const svg = renderSvg(docOf([wedge]), { ground: 'light' });
     expect(svg).toContain('<path d="M 50 50 L 70 50 A 20 20 0 0 1 50 70 Z" fill="#2E7D4F"');
   });
 
   it('gives the hexagon preset six vertices, the first directly above the centre', () => {
-    const preset = still(newObject('polygon', 1, BOARD));
+    const preset = newObject('polygon', 1, BOARD);
     const svg = renderSvg(docOf([preset]), { ground: 'light' });
     const points = /<polygon points="([^"]+)"/.exec(svg)?.[1] ?? '';
     expect(points.split(' ')).toHaveLength(6);
@@ -199,41 +190,30 @@ describe('renderSvg', () => {
   });
 
   it('rotates about the object’s own centre, and says nothing when it does not rotate', () => {
-    const object = still({ ...newObject('rect', 1, BOARD), rotation: 45 });
+    const object = { ...newObject('rect', 1, BOARD), rotation: 45 };
     expect(renderSvg(docOf([object]), { ground: 'light' })).toContain(
       'transform="rotate(45 256 256)"',
     );
-    expect(renderSvg(docOf([still(newObject('rect', 1, BOARD))]), { ground: 'light' })).not.toContain(
+    expect(renderSvg(docOf([newObject('rect', 1, BOARD)]), { ground: 'light' })).not.toContain(
       'transform',
     );
   });
 
   it('emits opacity as a fraction, and omits it at full', () => {
-    const half = still({ ...newObject('rect', 1, BOARD), opacity: 50 });
+    const half = { ...newObject('rect', 1, BOARD), opacity: 50 };
     expect(renderSvg(docOf([half]), { ground: 'light' })).toContain('opacity="0.5"');
-    expect(renderSvg(docOf([still(newObject('rect', 1, BOARD))]), { ground: 'light' })).not.toContain(
+    expect(renderSvg(docOf([newObject('rect', 1, BOARD)]), { ground: 'light' })).not.toContain(
       'opacity=',
     );
   });
 
-  it('draws the pose of the state it is asked for', () => {
-    const doc = docOf([{ ...newObject('rect', 1, BOARD), motion: { takesPart: true, role: 'spins', pace: 1 } }], {
-      states: [
-        { id: 'a', name: 'a', sustain: null },
-        { id: 'b', name: 'b', sustain: null },
-      ],
-    });
-    expect(renderSvg(doc, { ground: 'light', stateId: 'a' })).not.toContain('rotate');
-    expect(renderSvg(doc, { ground: 'light', stateId: 'b' })).toContain('rotate(110');
-  });
-
   it('strokes a shape that has an area, so the stroke controls actually paint', () => {
     for (const kind of ['rect', 'circle', 'ellipse', 'polygon'] as const) {
-      const object = still({
+      const object = {
         ...newObject(kind, 1, BOARD),
         strokeWidth: 8,
         stroke: { light: '#C0382E', dark: '#C0382E' },
-      });
+      };
       const svg = renderSvg(docOf([object]), { ground: 'light' });
       expect(svg).toContain('stroke="#C0382E"');
       expect(svg).toContain('stroke-width="8"');
@@ -242,7 +222,7 @@ describe('renderSvg', () => {
 
   it('omits the stroke entirely at zero width, rather than shipping dead attributes', () => {
     // One per shape per size per target adds up across an export.
-    const object = still({ ...newObject('rect', 1, BOARD), strokeWidth: 0 });
+    const object = { ...newObject('rect', 1, BOARD), strokeWidth: 0 };
     const svg = renderSvg(docOf([object]), { ground: 'light' });
     expect(svg).not.toContain('stroke=');
     expect(svg).not.toContain('stroke-width=');
@@ -250,10 +230,10 @@ describe('renderSvg', () => {
 
   it('a run is drawn by its stroke and gains no second one', () => {
     for (const kind of ['line', 'polyline'] as const) {
-      const run = still({
+      const run: IconObject = {
         ...newObject(kind, 1, BOARD),
         stroke: { light: '#2E6FCC', dark: '#2E6FCC' },
-      });
+      };
       const svg = renderSvg(docOf([run]), { ground: 'light' });
       expect({ kind, strokes: svg.match(/stroke="/g)?.length }).toEqual({ kind, strokes: 1 });
       expect({ kind, widths: svg.match(/stroke-width="/g)?.length }).toEqual({ kind, widths: 1 });
@@ -261,34 +241,34 @@ describe('renderSvg', () => {
   });
 
   it('takes the stroke from the previewed half of the pair', () => {
-    const object = still({
+    const object = {
       ...newObject('rect', 1, BOARD),
       strokeWidth: 4,
       stroke: { light: '#111111', dark: '#EEEEEE' },
-    });
+    };
     expect(renderSvg(docOf([object]), { ground: 'dark' })).toContain('stroke="#EEEEEE"');
   });
 
   it('is deterministic — the same document renders identically every time', () => {
-    const doc = docOf([still(newObject('rect', 1, BOARD)), still(newObject('polygon', 2, BOARD))]);
+    const doc = docOf([newObject('rect', 1, BOARD), newObject('polygon', 2, BOARD)]);
     expect(renderSvg(doc, { ground: 'light' })).toBe(renderSvg(doc, { ground: 'light' }));
   });
 
   it('escapes a colour that is not a plain hex rather than breaking the markup', () => {
-    const object = still({
+    const object = {
       ...newObject('rect', 1, BOARD),
       fill: { light: 'url(#x)"><script/>', dark: '#000000' },
-    });
+    };
     const svg = renderSvg(docOf([object]), { ground: 'light' });
     expect(svg).not.toContain('<script');
     expect(svg).toContain('&quot;');
   });
 
   it('trims float noise without turning integers into decimals', () => {
-    const object = still({
+    const object: IconObject = {
       ...newObject('rect', 1, BOARD),
       geometry: { kind: 'rect', x: 10, y: 1 / 3, w: 5, h: 5, radius: 0 },
-    });
+    };
     const svg = renderSvg(docOf([object]), { ground: 'light' });
     expect(svg).toContain('x="10"');
     expect(svg).toContain('y="0.333"');

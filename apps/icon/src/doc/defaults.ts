@@ -30,8 +30,8 @@ export const PRESET_SIDES = 6;
 /**
  * The arc tool is the same bargain in a `<path>`: three quarters of a turn
  * opening at the top, which is a spinner — the arc anybody drawing an icon
- * wants first, and the one the motion controls have something to say about.
- * `inner` equal to the radius leaves it open, so it is drawn by its stroke.
+ * wants first. `inner` equal to the radius leaves it open, so it is drawn by
+ * its stroke.
  */
 export const PRESET_ARC = { start: -90, sweep: 270 } as const;
 
@@ -146,7 +146,6 @@ export function objectFor(
     rotation: 0,
     hidden: false,
     locked: false,
-    motion: { takesPart: true, role: 'spins', pace: 1 },
   };
 }
 
@@ -166,11 +165,7 @@ export function newObject(
   return objectFor(initialGeometry(kind, artboard), sequence, artboard, snap);
 }
 
-/**
- * A new document. One state, because a purely static icon is the common case
- * and a tool that insists on a second state is inventing motion the icon does
- * not need.
- */
+/** A new document: an empty board, and one picture to draw on it. */
 export function emptyDocument(name: string, artboard: Artboard = { width: 512, height: 512 }): IconDoc {
   return {
     name,
@@ -178,7 +173,5 @@ export function emptyDocument(name: string, artboard: Artboard = { width: 512, h
     snap: 1,
     background: { ...DEFAULT_GROUND },
     objects: [],
-    states: [{ id: 'state-1', name: 'default', sustain: null }],
-    timing: { speed: 1, ramp: 'soft', rest: 0.08 },
   };
 }

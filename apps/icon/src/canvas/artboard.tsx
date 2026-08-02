@@ -7,8 +7,8 @@ import { selectedNodeIndex, selectedObject } from '../doc/store';
 import { safeZoneWarnings } from '../doc/validate';
 import { useEditor } from '../editor-context';
 import { gridInk } from '../render/ink';
-import { renderPosed } from '../render/svg';
-import { chromeIsDim, posedFor, scaleFor } from '../view';
+import { renderSvg } from '../render/svg';
+import { chromeIsDim, scaleFor } from '../view';
 import { EmptyArtboard } from './empty-artboard';
 import { PenOverlay } from './pen-overlay';
 import { PointsSelectionOverlay, SelectionOverlay } from './selection-overlay';
@@ -33,7 +33,6 @@ export function Artboard() {
   const screenWidth = artboard.width * scale;
   const screenHeight = artboard.height * scale;
   const pitch = gridPitch(state.doc.snap, scale, MIN_GRID_PX);
-  const posed = posedFor(state.doc, view);
   const dim = chromeIsDim(view);
 
   const { chrome, penChrome, surfaceProps, onHandleDown } = useArtboardPointer({
@@ -50,11 +49,10 @@ export function Artboard() {
   const showSafeZone = selectedWarns || view.safeZoneOpen;
 
   const drawing = state.tool === 'pen';
-  // Handles are withdrawn while dragging or playing — you cannot resize while
-  // moving, and the transport is the only lit thing during playback. The pen
-  // withdraws them too: what is selected is deliberately left alone by entering
-  // the tool, but its handles are buttons sitting over the artboard and every
-  // one of them would swallow a click meant for an anchor.
+  // Handles are withdrawn while dragging — you cannot resize while moving. The
+  // pen withdraws them too: what is selected is deliberately left alone by
+  // entering the tool, but its handles are buttons sitting over the artboard
+  // and every one of them would swallow a click meant for an anchor.
   const showHandles = selected !== null && !selected.hidden && !dim && !drawing;
   const selectionBox = selected && !selected.hidden ? bounds(selected) : null;
   // Empty for the shapes that are dragged by a box, so this is also the choice
@@ -84,7 +82,7 @@ export function Artboard() {
       <div
         aria-hidden
         dangerouslySetInnerHTML={{
-          __html: renderPosed(state.doc, posed, { ground: view.ground, background: false }),
+          __html: renderSvg(state.doc, { ground: view.ground, background: false }),
         }}
         className="absolute inset-0 [&>svg]:size-full"
       />

@@ -1,6 +1,5 @@
 import { centreOf, isOpenRun } from '../doc/geometry';
-import { poseAtState } from '../doc/pose';
-import type { Ground, IconDoc, IconObject, PathSegment, PosedObject } from '../doc/types';
+import type { Ground, IconDoc, IconObject, PathSegment } from '../doc/types';
 
 /**
  * The document as SVG. This is the only place artwork is drawn for export —
@@ -32,7 +31,7 @@ function colourFor(object: IconObject, ground: Ground): string {
  * draw — a `stroke-width` of 0 with a colour is dead weight in every exported
  * file, and there is one per size per target.
  */
-function strokeAttributes(object: PosedObject, ground: Ground): string {
+function strokeAttributes(object: IconObject, ground: Ground): string {
   if (isOpenRun(object.geometry) || object.strokeWidth <= 0) return '';
   return ` stroke="${escapeAttribute(object.stroke[ground])}" stroke-width="${n(object.strokeWidth)}"`;
 }
@@ -72,17 +71,17 @@ export function pathData(segments: readonly PathSegment[]): string {
     .join(' ');
 }
 
-function transformOf(object: PosedObject): string {
+function transformOf(object: IconObject): string {
   if (object.rotation % 360 === 0) return '';
   const c = centreOf(object);
   return ` transform="rotate(${n(object.rotation)} ${n(c.x)} ${n(c.y)})"`;
 }
 
-function opacityOf(object: PosedObject): string {
+function opacityOf(object: IconObject): string {
   return object.opacity >= 100 ? '' : ` opacity="${n(object.opacity / 100)}"`;
 }
 
-function shapeMarkup(object: PosedObject, ground: Ground): string {
+function shapeMarkup(object: IconObject, ground: Ground): string {
   const g = object.geometry;
   const colour = escapeAttribute(colourFor(object, ground));
   const tail = `${strokeAttributes(object, ground)}${opacityOf(object)}${transformOf(object)}`;
@@ -118,8 +117,6 @@ function shapeMarkup(object: PosedObject, ground: Ground): string {
 export interface RenderOptions {
   /** Which half of every colour pair to paint. */
   ground: Ground;
-  /** Which state's pose to draw. Defaults to the first. */
-  stateId?: string;
   /**
    * Draw the artboard's own background. Off for targets that want
    * transparency — a monochrome mask, an SVG favicon meant to sit on a page.
@@ -128,21 +125,6 @@ export interface RenderOptions {
 }
 
 export function renderSvg(doc: IconDoc, options: RenderOptions): string {
-  const stateId = options.stateId ?? doc.states[0]?.id ?? '';
-  const posed = poseAtState(doc, stateId);
-  return renderPosed(doc, posed, options);
-}
-
-/**
- * The same drawing from an already-posed object list — what the live canvas
- * and the animated exports use, where the pose comes from a moment rather than
- * from a state.
- */
-export function renderPosed(
-  doc: IconDoc,
-  posed: PosedObject[],
-  options: RenderOptions,
-): string {
   const { ground, background = true } = options;
   const { width, height } = doc.artboard;
   const parts: string[] = [
@@ -155,7 +137,7 @@ export function renderPosed(
   }
   // Document order is front-to-back; SVG paints in source order, so the list
   // is reversed to put the frontmost object last.
-  for (const object of [...posed].reverse()) {
+  for (const object of [...doc.objects].reverse()) {
     if (object.hidden) continue;
     parts.push(shapeMarkup(object, ground));
   }
