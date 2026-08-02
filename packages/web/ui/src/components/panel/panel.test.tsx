@@ -1,8 +1,25 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { usePanelWidth, usePersistedFlag, type PanelSide } from './index';
 
-afterEach(() => localStorage.clear());
+afterEach(() => {
+  vi.restoreAllMocks();
+  localStorage.clear();
+});
+
+// A user with site data blocked (Chrome's "block all cookies", an enterprise
+// policy, a sandboxed embed) gets a throw out of every localStorage call, not
+// a null — including the read these hooks do inside a `useState` initializer,
+// which would take the render down with it.
+function blockStorage() {
+  const denied = () => {
+    throw new DOMException('access denied', 'SecurityError');
+  };
+  return {
+    getItem: vi.spyOn(Storage.prototype, 'getItem').mockImplementation(denied),
+    setItem: vi.spyOn(Storage.prototype, 'setItem').mockImplementation(denied),
+  };
+}
 
 // A minimal host: the hook needs a real element to measure, and the width is
 // read back off the custom property exactly as the real components set it.
@@ -63,6 +80,33 @@ describe('usePanelWidth', () => {
   it('names the separator after the panel it resizes', () => {
     render(<Harness />);
     expect(screen.getByRole('separator', { name: 'Resize Test panel' })).toBeInTheDocument();
+  });
+
+  it('publishes the width it is dragging as a valid window splitter', () => {
+    // A focusable separator is the window-splitter form of the role, and ARIA
+    // requires aria-valuenow on it — without one the widget is invalid and a
+    // screen-reader user gets no feedback that the arrows did anything.
+    render(<Harness />);
+    const handle = screen.getByRole('separator', { name: 'Resize Test panel' });
+    expect(handle).toHaveAttribute('aria-valuemin', '180');
+    expect(handle).toHaveAttribute('aria-valuemax', '400');
+    expect(handle).toHaveAttribute('aria-valuenow', '224');
+    fireEvent.keyDown(handle, { key: 'ArrowRight' });
+    expect(handle).toHaveAttribute('aria-valuenow', '248');
+  });
+
+  it('degrades to the default width when storage throws, instead of taking the render down', () => {
+    const { setItem } = blockStorage();
+    render(<Harness storageKey="k" />);
+    expect(widthOf()).toBe('224px');
+
+    // The write path is the other half: a quota-exceeded setItem mid-drag
+    // would otherwise throw out of the pointerup handler.
+    fireEvent.keyDown(screen.getByRole('separator', { name: 'Resize Test panel' }), {
+      key: 'ArrowRight',
+    });
+    expect(widthOf()).toBe('248px');
+    expect(setItem).toHaveBeenCalled();
   });
 
   it('widens a left panel with ArrowRight and narrows it with ArrowLeft', () => {
@@ -223,5 +267,14 @@ describe('usePersistedFlag', () => {
     localStorage.setItem('f', 'yes');
     render(<FlagHarness storageKey="f" fallback />);
     expect(screen.getByRole('button')).toHaveTextContent('on');
+  });
+
+  it('falls back and keeps toggling when storage throws', () => {
+    const { setItem } = blockStorage();
+    render(<FlagHarness storageKey="f" fallback />);
+    expect(screen.getByRole('button')).toHaveTextContent('on');
+    fireEvent.click(screen.getByRole('button'));
+    expect(screen.getByRole('button')).toHaveTextContent('off');
+    expect(setItem).toHaveBeenCalled();
   });
 });

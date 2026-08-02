@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { readStored, writeStored } from './safe-storage';
 
 export type PanelSide = 'left' | 'right';
 
@@ -7,8 +8,7 @@ export const PANEL_KEY_STEP = 24;
 const clamp = (px: number, min: number, max: number) => Math.min(max, Math.max(min, px));
 
 function readWidth(key: string | undefined): number | undefined {
-  if (!key) return undefined;
-  const stored = localStorage.getItem(key);
+  const stored = readStored(key);
   if (stored === null) return undefined;
   const px = Number(stored);
   return Number.isFinite(px) && px > 0 ? px : undefined;
@@ -48,7 +48,7 @@ export function usePanelWidth({
 
   const persist = useCallback(
     (px: number) => {
-      if (storageKey) localStorage.setItem(storageKey, String(px));
+      writeStored(storageKey, String(px));
     },
     [storageKey],
   );
@@ -95,6 +95,13 @@ export function usePanelWidth({
       role: 'separator' as const,
       'aria-orientation': 'vertical' as const,
       'aria-label': `Resize ${label}`,
+      // A focusable separator is the window-splitter form of the role, and
+      // ARIA requires `aria-valuenow` on it: without one the widget is invalid
+      // and arrow-key resizing is silent to a screen reader. The value is the
+      // panel width in pixels, which is exactly what the arrows change.
+      'aria-valuenow': width,
+      'aria-valuemin': minWidth,
+      'aria-valuemax': maxWidth,
       tabIndex: 0,
       onPointerDown,
       onKeyDown,
