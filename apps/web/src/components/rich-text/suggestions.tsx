@@ -132,11 +132,24 @@ const SuggestionList = forwardRef<SuggestionListHandle, SuggestionListProps>(fun
 
   return (
     <div
+      // Names the popover in the DOM. It hangs off <body> rather than off the
+      // editor, so it is otherwise only findable by the text it happens to be
+      // showing.
+      data-suggestion-popover=""
       className={cn(
         'fixed z-50 rounded-xl border-1 border-gray-6 bg-surface-raised p-1.25 shadow-lg',
         width,
       )}
-      style={{ left: rect?.left ?? 0, top: rect?.bottom ?? 0 }}
+      // `pointerEvents` has to be claimed back explicitly. This popover hangs
+      // off <body>, and a modal radix layer — the item drawer — sets
+      // `pointer-events: none` there, re-granting them only inside its own
+      // portal. Without this the rows below are inert: the press sails through
+      // to <html>, which the drawer then reads as a click on the page behind
+      // it and closes on, taking the unsaved draft with it. Keyboard picking
+      // was never affected, which is why this went unnoticed.
+      // Inline rather than a utility class, next to the position that is
+      // already computed here, because it has to beat an inherited `none`.
+      style={{ left: rect?.left ?? 0, top: rect?.bottom ?? 0, pointerEvents: 'auto' }}
     >
       {items.length === 0 ? (
         <div className="px-2.25 py-1.5 font-sans text-13/19 text-gray-11">No matches</div>
