@@ -70,12 +70,29 @@ export function Drawer({
   // Radix only knows how to hand focus back to a `Dialog.Trigger`; this drawer
   // is opened by an arbitrary consumer-owned control, so it tracks and
   // restores focus itself rather than leaving it to fall back to <body>.
+  // `wasOpenRef` starts `false` regardless of the incoming `open` value so a
+  // consumer that mounts the whole component already open (Task 4: `<Drawer
+  // open>` mounted/unmounted around row selection, never a false→true
+  // transition) still gets a capture on its very first render, not only on a
+  // later transition. Captured during render, not an effect: the Content's
+  // own FocusScope mount effect (a descendant) runs before this component's
+  // effects would, and it moves focus into the panel first — by the time a
+  // `useEffect` here ran, `document.activeElement` would already be inside
+  // the drawer instead of the real opener.
+  //
+  // Deliberately NOT re-captured while already open: master-detail call
+  // sites swap `children`/`label` underneath one open `Drawer` instance via
+  // links inside the panel (e.g. `ItemDetail`'s `onOpenItem`). The modal
+  // scrim means the user cannot have focused anything behind the drawer in
+  // the meantime, so the correct restore target stays the element that was
+  // focused when the drawer first opened — where the user actually entered
+  // from — not wherever in-drawer navigation last happened to focus.
   const restoreFocusRef = useRef<HTMLElement | null>(null);
-  const wasOpenRef = useRef(open);
-  if (open !== wasOpenRef.current) {
-    if (open) restoreFocusRef.current = document.activeElement as HTMLElement | null;
-    wasOpenRef.current = open;
+  const wasOpenRef = useRef(false);
+  if (open && !wasOpenRef.current) {
+    restoreFocusRef.current = document.activeElement as HTMLElement | null;
   }
+  wasOpenRef.current = open;
 
   return (
     <DrawerContext.Provider value={{ maximized, setMaximized, maximizable }}>
