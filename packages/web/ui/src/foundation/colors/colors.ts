@@ -1,7 +1,7 @@
-import lightTokens from '../../tokens/next/colors.light.tokens.json';
-import darkTokens from '../../tokens/next/colors.dark.tokens.json';
-import semanticTokens from '../../tokens/next/semantic.tokens.json';
-import toneTokens from '../../tokens/next/tones.tokens.json';
+import lightTokens from '../../../tokens/colors.light.tokens.json';
+import darkTokens from '../../../tokens/colors.dark.tokens.json';
+import semanticTokens from '../../../tokens/semantic.tokens.json';
+import toneTokens from '../../../tokens/tones.tokens.json';
 
 export const HUES = toneTokens.hues as readonly string[];
 export const STEPS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
@@ -26,14 +26,19 @@ export const STEP_JOBS: Record<Step, string> = {
   12: 'text, high contrast',
 };
 
-const TOKENS: Record<Theme, Record<string, { $value: string }>> = {
-  light: lightTokens.ins,
-  dark: darkTokens.ins,
+// Keyed `[scale]: { [step]: … }`, which is how `colorOf` already asked for a
+// colour — the two-level lookup below used to have to re-join the parts into
+// `gray-1` first.
+type ScaleTokens = Record<string, { $value: string }>;
+
+const TOKENS: Record<Theme, Record<string, ScaleTokens>> = {
+  light: lightTokens,
+  dark: darkTokens,
 };
 
 /** Hex for a step (`9`) or the scale's contrast token (`'contrast'`). */
 export function colorOf(theme: Theme, scale: string, step: Step | 'contrast'): string {
-  const token = TOKENS[theme][`${scale}-${step}`];
+  const token = TOKENS[theme][scale]?.[step];
   if (!token) throw new Error(`unknown color token: ${scale}-${step} (${theme})`);
   return token.$value;
 }

@@ -17,12 +17,30 @@ here should need to leak back into those skills.
 
 ## tokenPipeline
 
-- Source of truth: `packages/web/ui/src/tokens/*.tokens.json` — DTCG-format
-  primitive + semantic (light/dark) token files.
+- Source of truth: `packages/web/ui/src/tokens/next/*.tokens.json` — DTCG-format.
+  There is no primitive→semantic alias layer any more: a ramp step IS the token
+  (`gray-1` is the app background, `red-9` the solid fill).
+- **A token file plays one of two roles — check which before "fixing" one.**
+  Only six of the ten are read by the generator, by design:
+  - *Emitted* — the value lives in the JSON and codegen puts it into CSS:
+    `colors.{light,dark}`, `shadows.{light,dark}`, `semantic`, `tones`.
+  - *Sanctioned rungs* — the value lives in the Tailwind class and the JSON
+    records which rungs may be used: `layout` (border/ring/z/breakpoint) and
+    `motion`'s durations. `duration-200` is 200ms because the class says so;
+    emitting `--duration-200` would create the second copy that is the only way
+    the two could disagree. `spec.test.ts` asserts the sheet declares NO token
+    for these, so wiring them into the generator breaks the suite on purpose.
+  - `radius` and `typography` straddle both: their values are hand-written into
+    the `@theme inline` block (next to the `initial` clears that retire
+    off-scale rungs — enforcement DTCG cannot express), and
+    `foundation/spec.ts`'s `drift()` matches the two copies **by value**, so an
+    edit to either side fails `spec.test.ts` rather than passing silently.
 - Codegen: `pnpm --filter @tickets/ui tokens:build` runs
   `packages/web/ui/scripts/build-tokens.mjs`, which splices the generated `--ins-*` /
   `--color-*` custom-property regions into
-  `packages/web/ui/src/tokens.css` between `/* tokens:… */` markers.
+  `packages/web/ui/src/tokens/tokens.css` between `/* tokens:… */` markers and
+  writes `src/style/tones/tones.generated.ts`; then `extract-safelist.mjs`
+  writes `src/tokens/safelist.generated.css`.
   Everything outside those markers (Tailwind theme mappings, component CSS)
   is hand-authored and untouched by codegen.
 - Gates: `tokens:lint` (`packages/web/ui/scripts/scan-hardcoded-values.mjs`) scans
@@ -30,6 +48,9 @@ here should need to leak back into those skills.
   `tokens:check` (`packages/web/ui/scripts/check-design-tokens.mjs`) checks the built tokens
   conform to `docs/design/design-system.html`. Both are aggregated (with a
   fresh-build drift check) behind `pnpm --filter @tickets/ui tokens:verify`.
+  The JSON↔CSS equivalence for the hand-written families is a *unit test*
+  (`foundation/spec.test.ts`), not part of `tokens:verify` — it runs under
+  `pnpm --filter @tickets/ui test`.
 
 ## workbench
 

@@ -15,11 +15,11 @@
     }
   },
   "animate": {
-    "ai-spin": {
+    "spin": {
       "$type": "string",
       "$value": "ai-spin 1.4s linear infinite"
     },
-    "ai-pulse": {
+    "pulse": {
       "$type": "string",
       "$value": "ai-pulse 1.8s ease-out infinite"
     }
