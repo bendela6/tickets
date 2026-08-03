@@ -43,14 +43,21 @@ here should need to leak back into those skills.
   writes `src/tokens/safelist.generated.css`.
   Everything outside those markers (Tailwind theme mappings, component CSS)
   is hand-authored and untouched by codegen.
-- Gates: `tokens:lint` (`packages/web/ui/scripts/scan-hardcoded-values.mjs`) scans
-  style-context source for hardcoded/literal values that should be tokens;
-  `tokens:check` (`packages/web/ui/scripts/check-design-tokens.mjs`) checks the built tokens
-  conform to `docs/design/design-system.html`. Both are aggregated (with a
-  fresh-build drift check) behind `pnpm --filter @tickets/ui tokens:verify`.
+- Gates: `pnpm --filter @tickets/ui tokens:verify` is now ONLY a freshness check —
+  it regenerates and fails if the three generated artifacts differ from a fresh
+  build. It no longer validates anything about the values themselves.
   The JSON↔CSS equivalence for the hand-written families is a *unit test*
   (`foundation/spec.test.ts`), not part of `tokens:verify` — it runs under
-  `pnpm --filter @tickets/ui test`.
+  `pnpm --filter @tickets/ui test`, and is the last automated check on tokens.
+- **Three gates were deleted on 2026-08-04.** Know what is no longer caught:
+  - `tokens:lint` / `scan-hardcoded-values.mjs` — nothing objects to
+    `bg-[#3b82f6]`, a hex in an inline `style=`, or a colour written straight
+    into hand-authored CSS.
+  - `tokens:check` / `check-design-tokens.mjs` — nothing compares the tokens to
+    `docs/design/design-system.html`. The design file is still the spec of
+    record, but drift from it is now found by eye or not at all.
+  - `vocabulary.ts` + its two baselines — bare `border`/`rounded` and arbitrary
+    `border-[1.5px]`/`rounded-[7px]` all compile silently.
 
 ## workbench
 
@@ -63,8 +70,9 @@ here should need to leak back into those skills.
 
 - Unit/component tests: `pnpm --filter @tickets/web test` (vitest).
 - Token pipeline gate: `pnpm --filter @tickets/ui tokens:verify` (rebuilds
-  tokens, fails if `packages/web/ui/src/tokens.css` drifts from a fresh build, then runs
-  `tokens:lint` + `tokens:check`).
+  tokens, fails if `packages/web/ui/src/tokens/tokens.css`,
+  `safelist.generated.css` or `tones.generated.ts` drifts from a fresh build).
+  Freshness only — no value or vocabulary checking remains.
 - GAP: no visual-regression runner wired up yet (no run command, no
   baseline-update command).
 - GAP: no automated accessibility (axe or equivalent) scan wired up yet.
@@ -97,12 +105,13 @@ here should need to leak back into those skills.
    option-color light hexes as persisted API data** — duplicates
    `--ins-opt-*`; a known drift point not yet covered by `tokens:check`
    (future work).
-5. **Bare `border` and bare `rounded` still compile.** Tailwind defines both as
-   static utilities, so `--border-*`/`--radius-*: initial` cannot remove them.
-   They are retired by convention; `packages/web/ui/src/tokens/vocabulary.test.ts`
-   is the only thing stopping them coming back. A new component that writes
-   `border` instead of `border-1` will render correctly and fail the suite.
-   The bare-`border` scanner matches the bare WORD, so it cannot distinguish a
-   class from prose or a data literal — `packages/web/ui/scripts/border-baseline.json`
-   holds 41 reviewed non-class hits, and the test asserts both `fresh === []`
-   and `fixed === []`, so the list can only shrink, never grow with new excuses.
+5. **Bare `border` and bare `rounded` still compile, and NOTHING now stops them.**
+   Tailwind defines both as static utilities, so `--border-*`/`--radius-*: initial`
+   cannot remove them. The `vocabulary.ts` scan and its two reviewed baselines
+   enforced the `border-1` / `rounded-sm` spelling; they were deleted 2026-08-04.
+   Both bare forms render identically to their rung (`border` = `border-1` = 1px;
+   `rounded` = `rounded-sm` = 4px), so what was lost is one spelling per concept,
+   not correct output. Off-scale ARBITRARY values (`border-[1.5px]`,
+   `rounded-[7px]`) are likewise unguarded now; the cleared rungs
+   (`rounded-xs`/`2xl`/`3xl`/`4xl`) still fail loudly because `initial` makes them
+   compile to nothing.
