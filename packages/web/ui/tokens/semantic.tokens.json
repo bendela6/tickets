@@ -18,10 +18,6 @@
     }
   },
   "literal": {
-    "folder": {
-      "light": "#c29a2e",
-      "dark": "#dfc060"
-    },
     "highlight": {
       "light": "#f1dfa0",
       "dark": "#4a4020"

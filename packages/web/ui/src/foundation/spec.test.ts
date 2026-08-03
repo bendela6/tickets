@@ -41,10 +41,10 @@ describe('liveTokens', () => {
   });
 
   it('resolves one level of var() indirection, per theme', () => {
-    // `--shadow-raised: var(--ins-shadow-raised)` and --ins-shadow-raised is declared
+    // `--shadow-xs: var(--ins-shadow-xs)` and --ins-shadow-xs is declared
     // twice — once per theme. Unresolved, both themes would read "var(...)".
-    const light = liveTokens(/^shadow-raised$/)[0];
-    const dark = liveTokens(/^shadow-raised$/, 'dark')[0];
+    const light = liveTokens(/^shadow-xs$/)[0];
+    const dark = liveTokens(/^shadow-xs$/, 'dark')[0];
     expect(light?.value).toMatch(/^0 /);
     expect(dark?.value).toMatch(/^0 /);
     expect(light?.value).not.toBe(dark?.value);
@@ -78,9 +78,9 @@ describe('spec tokens', () => {
     expect(FONT_WEIGHTS.map((w) => w.value)).toEqual(['400', '500', '600']);
     expect(DURATIONS.map((d) => d.name)).toEqual(['duration-120', 'duration-200', 'duration-320']);
     expect(EASINGS).toHaveLength(2);
-    expect(BORDERS.map((b) => b.name)).toEqual(['border-1', 'border-2']);
-    expect(RINGS.map((r) => r.name)).toEqual(['ring-3']);
-    expect(LAYERS.map((l) => l.name)).toEqual(['z-10', 'z-40', 'z-50']);
+    expect(BORDERS.map((b) => b.name)).toEqual(['border-1', 'border-2', 'border-3', 'border-4', 'border-5']);
+    expect(RINGS.map((r) => r.name)).toEqual(['ring-1', 'ring-2', 'ring-3', 'ring-4', 'ring-5']);
+    expect(LAYERS.map((l) => l.name)).toEqual(['z-0', 'z-10', 'z-20', 'z-30', 'z-40', 'z-50']);
     expect(BREAKPOINTS.map((b) => b.value)).toEqual(['640px', '768px', '1024px', '1280px', '1536px']);
   });
 });

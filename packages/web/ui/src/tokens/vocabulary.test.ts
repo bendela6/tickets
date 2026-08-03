@@ -57,9 +57,11 @@ describe('RETIRED patterns', () => {
     expect('xborder-[1.5px]'.match(RETIRED.border)).toBeNull();
   });
 
-  it('matches the off-ladder z rungs but not the ladder', () => {
-    expect('z-3 z-30'.match(RETIRED.z)).toEqual(['z-3', 'z-30']);
-    expect('z-10 z-40 z-50'.match(RETIRED.z)).toBeNull();
+  it('matches the off-ladder z rung but not the ladder', () => {
+    // The ladder widened to Tailwind's full 0/10/20/30/40/50, so `z-30` is a rung
+    // now and only the `z-3` typo is retired.
+    expect('z-3'.match(RETIRED.z)).toEqual(['z-3']);
+    expect('z-0 z-10 z-20 z-30 z-40 z-50'.match(RETIRED.z)).toBeNull();
   });
 
   it('matches both retired ring forms but never as a substring of a longer identifier', () => {

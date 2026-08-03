@@ -57,7 +57,11 @@ export const RETIRED: Record<RetiredFamily, RegExp> = {
   // state variant is still a real, functional utility, not prose.
   border: /(?<=[\s"'`{:])border(-[trblxy])?(?=[\s"'`}])|(?<![\w-])border(-[trblxy])?-\[1\.5px\]/g,
   ring: /(?<![\w-])ring-(\[3px\]|\(length:--ring-focus\))/g,
-  z: /(?<![\w-])z-(3|30)(?![\w-])/g,
+  // `z-30` used to be retired as off-ladder, back when layout.tokens.json
+  // sanctioned only 10/40/50. The ladder is now Tailwind's full 0/10/20/30/40/50,
+  // so 30 is a rung and only `z-3` is left — that one is not a layer at all but a
+  // `z-3` typo for `z-30`, which lands a would-be overlay under everything.
+  z: /(?<![\w-])z-3(?![\w-])/g,
 };
 
 function* walk(dir: string): Generator<string> {

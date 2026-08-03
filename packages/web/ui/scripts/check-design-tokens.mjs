@@ -1,15 +1,17 @@
 // Zero-dependency check: assert that docs/design/design-system.html's "01
 // Color" swatches match the resolved token hex values in
-// packages/web/ui/src/tokens/source/*.tokens.json.
+// packages/web/ui/tokens/*.tokens.json.
 //
-// Alias resolution (the one-level `{group.name}` lookup against primitives)
-// lives in build-tokens.mjs's `resolveTokenMaps()` — imported here rather
-// than re-derived, so there is exactly one resolver for the whole token
-// pipeline.
+// Token resolution lives in `scripts/generators/resolve-token-maps.ts` — imported
+// here rather than re-derived, so there is exactly one resolver for the whole
+// token pipeline. Importing a `.ts` module from this `.mjs` works because node
+// strips types on any file it loads. Imported directly rather than through the
+// generators barrel so this check pulls in the four family generators and
+// nothing else.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { resolveTokenMaps } from './build-tokens.mjs';
+import { resolveTokenMaps } from './generators/resolve-token-maps.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.join(__dirname, '..', '..', '..', '..');
@@ -35,7 +37,7 @@ function buildResolvedTokenMaps() {
 // The right-hand side is a ramp step now rather than a semantic alias: the
 // design file still speaks in roles ("text.secondary"), and this map is where
 // that vocabulary meets the numbered system. Roles resolve through
-// next/semantic.tokens.json — primary is indigo, danger is red — and the step
+// semantic.tokens.json — primary is indigo, danger is red — and the step
 // comes from the emphasis contract: 9 solid, 10 hover, 3 subtle, 11 text.
 const LABEL_TO_TOKEN = {
   'bg.app': 'gray-1',

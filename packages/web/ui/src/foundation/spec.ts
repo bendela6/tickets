@@ -1,9 +1,9 @@
-import radiusTokens from '../tokens/next/radius.tokens.json';
-import layoutTokens from '../tokens/next/layout.tokens.json';
-import motionTokens from '../tokens/next/motion.tokens.json';
-import typographyTokens from '../tokens/next/typography.tokens.json';
-import shadowsLightTokens from '../tokens/next/shadows.light.tokens.json';
-import shadowsDarkTokens from '../tokens/next/shadows.dark.tokens.json';
+import radiusTokens from '../../tokens/radius.tokens.json';
+import layoutTokens from '../../tokens/layout.tokens.json';
+import motionTokens from '../../tokens/motion.tokens.json';
+import typographyTokens from '../../tokens/typography.tokens.json';
+import shadowsLightTokens from '../../tokens/shadows.light.tokens.json';
+import shadowsDarkTokens from '../../tokens/shadows.dark.tokens.json';
 // The live stylesheet, read as text rather than transcribed into TypeScript.
 // A transcription would rot the first time someone edits tokens.css; parsing
 // the file itself means the "live" column of every view below is whatever the
@@ -61,7 +61,7 @@ export function liveTokens(pattern: RegExp, theme: 'light' | 'dark' = 'light'): 
 }
 
 // ---------------------------------------------------------------------------
-// Spec side — the numbered set proposed in tokens/next
+// Spec side — the token set declared in tokens/*.tokens.json
 // ---------------------------------------------------------------------------
 
 type TokenGroup = Record<string, { $value: string }>;
@@ -118,11 +118,18 @@ export interface ShadowToken {
   dark: string;
 }
 
-/** The only family whose value differs by theme, so both are carried. */
-export const SHADOWS: ShadowToken[] = Object.keys(group(shadowsLightTokens.ins)).map((key) => ({
-  name: key,
-  light: group(shadowsLightTokens.ins)[key]!.$value,
-  dark: group(shadowsDarkTokens.ins)[key]!.$value,
+/**
+ * The only family whose value differs by theme, so both are carried.
+ *
+ * The JSON is keyed `shadow: { xs, md, lg }` — group names the family, leaf is
+ * the rung. `name` re-joins the two because every consumer (the drift table,
+ * the elevation demo's `valueOf`) matches against the CSS custom property,
+ * which is `--shadow-xs`.
+ */
+export const SHADOWS: ShadowToken[] = Object.keys(group(shadowsLightTokens.shadow)).map((key) => ({
+  name: `shadow-${key}`,
+  light: group(shadowsLightTokens.shadow)[key]!.$value,
+  dark: group(shadowsDarkTokens.shadow)[key]!.$value,
 }));
 
 // ---------------------------------------------------------------------------
@@ -187,7 +194,7 @@ export interface DriftFamily {
  * Drift compares two copies of a value — the sheet's and the spec's — so it
  * only means something for families that HAVE two copies. Border, ring, z,
  * duration and breakpoint are Tailwind-native: `border-1` is 1px because the
- * class says so, and `next/layout.tokens.json` records which rungs are
+ * class says so, and `layout.tokens.json` records which rungs are
  * sanctioned, not what they resolve to. Listing them here would report every
  * rung as `dropped` in perpetuity.
  */
