@@ -100,7 +100,7 @@ function ApprovalCard({
     <div
       className={cn(
         'overflow-hidden rounded-xl border-2 border-orange-9 bg-orange-3 shadow-lg',
-        decided === null && 'animate-ai-pulse',
+        decided === null && 'animate-pulse',
       )}
     >
       <div className="flex items-center gap-2 px-3.5 py-2.5">
@@ -207,7 +207,7 @@ function ToolStatusDot({ status }: { status: ToolStatus }) {
     return (
       <span
         aria-hidden
-        className="size-2.75 shrink-0 rounded-full border-2 border-blue-9 animate-ai-spin"
+        className="size-2.75 shrink-0 rounded-full border-2 border-blue-9 animate-spin"
         style={{ background: 'linear-gradient(90deg, var(--color-blue-9) 50%, transparent 50%)' }}
       />
     );

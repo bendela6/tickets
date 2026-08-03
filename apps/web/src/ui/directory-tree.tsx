@@ -59,8 +59,8 @@ function Row({ row, onToggle, onSelect }: { row: VisibleRow; onToggle: (path: st
             aria-hidden
             className={cn(
               'size-3 shrink-0 rounded-sm border-1',
-              row.error ? 'border-red-9' : 'border-folder',
-              row.expanded && !row.error && 'bg-folder',
+              row.error ? 'border-red-9' : 'border-yellow-8',
+              row.expanded && !row.error && 'bg-yellow-8',
             )}
           />
         )}

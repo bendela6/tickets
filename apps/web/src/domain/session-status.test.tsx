@@ -12,7 +12,7 @@ describe('sessionStatus', () => {
     const s = sessionStatus('awaiting_input');
     expect(s.tone).toBe('orange');
     expect(s.variant).toBe('solid');
-    expect(s.className).toContain('animate-ai-pulse');
+    expect(s.className).toContain('animate-pulse');
     expect(s.label).toBe('awaiting input');
   });
   it('terminal kind overrides labels', () => {

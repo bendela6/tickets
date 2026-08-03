@@ -13,9 +13,9 @@ export const meta = {
 // Three levels because there are three answers: attached, floating over one
 // surface, and floating over everything.
 const SHADOW_JOBS: Record<string, string> = {
-  'shadow-raised': 'cards, rows — attached to the page',
-  'shadow-overlay': 'popovers, menus — dismissible',
-  'shadow-modal': 'dialogs, sheets — blocking',
+  'shadow-xs': 'cards, rows — attached to the page',
+  'shadow-md': 'popovers, menus — dismissible',
+  'shadow-lg': 'dialogs, sheets — blocking',
 };
 
 /** The one family whose token resolves differently per theme. */
@@ -78,14 +78,14 @@ function InUse() {
       <div className="relative flex min-h-64 items-start gap-4 overflow-hidden rounded-xl bg-gray-1 p-5">
         <div
           className="flex w-56 flex-col gap-1 rounded-lg bg-surface-raised p-3"
-          style={{ boxShadow: valueOf('shadow-raised') }}
+          style={{ boxShadow: valueOf('shadow-xs') }}
         >
           <span className="font-sans text-13/19 font-500 text-gray-12">Retry the gateway run</span>
           <span className="font-mono text-12/17 text-gray-9">TIX-214</span>
         </div>
         <div
           className="flex w-44 flex-col rounded-lg bg-surface-raised py-1"
-          style={{ boxShadow: valueOf('shadow-overlay') }}
+          style={{ boxShadow: valueOf('shadow-md') }}
         >
           {['Assign to me', 'Move to review', 'Archive'].map((label) => (
             <span key={label} className="px-3 py-1.5 font-sans text-13/19 text-gray-12">
@@ -96,7 +96,7 @@ function InUse() {
         <div className="absolute inset-0 flex items-center justify-center bg-black/40">
           <div
             className="flex w-64 flex-col gap-2 rounded-xl bg-surface-raised p-4"
-            style={{ boxShadow: valueOf('shadow-modal') }}
+            style={{ boxShadow: valueOf('shadow-lg') }}
           >
             <span className="font-sans text-16/22 font-500 text-gray-12">Discard changes?</span>
             <span className="font-sans text-13/19 text-gray-11">

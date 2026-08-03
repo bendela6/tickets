@@ -20,7 +20,7 @@ function ConnIndicator({ state }: { state: ConnState }) {
     <span className="inline-flex items-center gap-1.5 font-sans text-12/17 text-gray-11">
       <span
         aria-hidden
-        className={cn('size-2 rounded-full', it.dot, it.pulse && 'animate-ai-pulse')}
+        className={cn('size-2 rounded-full', it.dot, it.pulse && 'animate-pulse')}
       />
       {it.label}
     </span>
