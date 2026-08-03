@@ -14,6 +14,12 @@
    fails on drift. See scripts/extract-safelist.mjs. */
 @import './safelist.generated.css';
 
+/* Rich-text prose (`.rt`). Lived inline here until 2026-08-04, where 370 lines of
+   component CSS made up a third of "the token file". It carries its own
+   `@layer components` wrapper, and layer order is fixed by the declaration on
+   line 5, so its position in this list does not affect the cascade. */
+@import './prose.css';
+
 /* Every consumer's Tailwind build must scan this package's own sources —
    demo files today, the component library in P3. Relative to this file. */
 /* `../`, not `./`: @source is relative to THIS file, and the classes to scan
@@ -71,6 +77,7 @@
   --ins-gray-10: #6a665b;
   --ins-gray-11: #5d5a50;
   --ins-gray-12: #25231d;
+  --ins-gray-contrast: #ffffff;
   --ins-red-1: #fff6f4;
   --ins-red-2: #ffede9;
   --ins-red-3: #ffe2db;
@@ -83,6 +90,7 @@
   --ins-red-10: #b22922;
   --ins-red-11: #9e1a15;
   --ins-red-12: #590e0a;
+  --ins-red-contrast: #ffffff;
   --ins-orange-1: #fff8f3;
   --ins-orange-2: #fff0e7;
   --ins-orange-3: #ffe7d9;
@@ -95,6 +103,7 @@
   --ins-orange-10: #974200;
   --ins-orange-11: #853500;
   --ins-orange-12: #4b1c00;
+  --ins-orange-contrast: #ffffff;
   --ins-yellow-1: #fdfaf2;
   --ins-yellow-2: #f9f4e7;
   --ins-yellow-3: #f5ecd8;
@@ -107,6 +116,7 @@
   --ins-yellow-10: #7e5e00;
   --ins-yellow-11: #6e5100;
   --ins-yellow-12: #3d2c00;
+  --ins-yellow-contrast: #ffffff;
   --ins-green-1: #f6fcf7;
   --ins-green-2: #ecf8ee;
   --ins-green-3: #e1f2e4;
@@ -119,6 +129,7 @@
   --ins-green-10: #216437;
   --ins-green-11: #13562b;
   --ins-green-12: #0a3017;
+  --ins-green-contrast: #ffffff;
   --ins-teal-1: #f5fcfa;
   --ins-teal-2: #ebf7f4;
   --ins-teal-3: #def2ec;
@@ -131,6 +142,7 @@
   --ins-teal-10: #006151;
   --ins-teal-11: #005344;
   --ins-teal-12: #002e25;
+  --ins-teal-contrast: #ffffff;
   --ins-cyan-1: #f4fcfe;
   --ins-cyan-2: #ebf7fb;
   --ins-cyan-3: #def1f7;
@@ -143,6 +155,7 @@
   --ins-cyan-10: #005c72;
   --ins-cyan-11: #004e62;
   --ins-cyan-12: #002c37;
+  --ins-cyan-contrast: #ffffff;
   --ins-blue-1: #f5fbff;
   --ins-blue-2: #ebf5ff;
   --ins-blue-3: #deeeff;
@@ -155,6 +168,7 @@
   --ins-blue-10: #1e51a1;
   --ins-blue-11: #12438e;
   --ins-blue-12: #092551;
+  --ins-blue-contrast: #ffffff;
   --ins-indigo-1: #f7f9ff;
   --ins-indigo-2: #eff2ff;
   --ins-indigo-3: #e5eaff;
@@ -167,6 +181,7 @@
   --ins-indigo-10: #4439b8;
   --ins-indigo-11: #392aa4;
   --ins-indigo-12: #1f185e;
+  --ins-indigo-contrast: #ffffff;
   --ins-purple-1: #fdf7ff;
   --ins-purple-2: #faf0ff;
   --ins-purple-3: #f6e5ff;
@@ -179,6 +194,7 @@
   --ins-purple-10: #6f3393;
   --ins-purple-11: #602681;
   --ins-purple-12: #361449;
+  --ins-purple-contrast: #ffffff;
   --ins-pink-1: #fff6fa;
   --ins-pink-2: #ffedf5;
   --ins-pink-3: #ffe2ee;
@@ -191,26 +207,15 @@
   --ins-pink-10: #99255d;
   --ins-pink-11: #86174f;
   --ins-pink-12: #4c0d2b;
-  --ins-gray-contrast: #ffffff;
-  --ins-red-contrast: #ffffff;
-  --ins-orange-contrast: #ffffff;
-  --ins-yellow-contrast: #ffffff;
-  --ins-green-contrast: #ffffff;
-  --ins-teal-contrast: #ffffff;
-  --ins-cyan-contrast: #ffffff;
-  --ins-blue-contrast: #ffffff;
-  --ins-indigo-contrast: #ffffff;
-  --ins-purple-contrast: #ffffff;
   --ins-pink-contrast: #ffffff;
   --ins-surface-raised: #ffffff;
   --ins-surface-inset: #eceae3;
-  --ins-folder: #c29a2e;
   --ins-highlight: #f1dfa0;
   --ins-black: #000000;
   --ins-white: #ffffff;
-  --ins-shadow-raised: 0 1px 2px rgba(28, 26, 20, 0.06);
-  --ins-shadow-overlay: 0 6px 16px rgba(28, 26, 20, 0.10), 0 2px 4px rgba(28, 26, 20, 0.06);
-  --ins-shadow-modal: 0 16px 40px rgba(28, 26, 20, 0.16), 0 4px 10px rgba(28, 26, 20, 0.08);
+  --ins-shadow-xs: 0 1px 2px rgba(28, 26, 20, 0.06);
+  --ins-shadow-md: 0 6px 16px rgba(28, 26, 20, 0.10), 0 2px 4px rgba(28, 26, 20, 0.06);
+  --ins-shadow-lg: 0 16px 40px rgba(28, 26, 20, 0.16), 0 4px 10px rgba(28, 26, 20, 0.08);
   /* /tokens:light */
 }
 
@@ -228,6 +233,7 @@
   --ins-gray-10: #8f8b80;
   --ins-gray-11: #a6a296;
   --ins-gray-12: #edebe3;
+  --ins-gray-contrast: #ffffff;
   --ins-red-1: #200e0c;
   --ins-red-2: #2d1411;
   --ins-red-3: #3c1815;
@@ -240,6 +246,7 @@
   --ins-red-10: #f2786c;
   --ins-red-11: #fe8f83;
   --ins-red-12: #ffbbb2;
+  --ins-red-contrast: #2b0f0b;
   --ins-orange-1: #1c110a;
   --ins-orange-2: #28180d;
   --ins-orange-3: #351f0e;
@@ -252,6 +259,7 @@
   --ins-orange-10: #feb17a;
   --ins-orange-11: #ffc594;
   --ins-orange-12: #ffeacc;
+  --ins-orange-contrast: #371b06;
   --ins-yellow-1: #181307;
   --ins-yellow-2: #221b08;
   --ins-yellow-3: #2d2406;
@@ -264,6 +272,7 @@
   --ins-yellow-10: #eecf6f;
   --ins-yellow-11: #f8dc88;
   --ins-yellow-12: #fff5c3;
+  --ins-yellow-contrast: #33290a;
   --ins-green-1: #0c170f;
   --ins-green-2: #112015;
   --ins-green-3: #142a1b;
@@ -276,6 +285,7 @@
   --ins-green-10: #8ddaa5;
   --ins-green-11: #a5eaba;
   --ins-green-12: #d8ffe3;
+  --ins-green-contrast: #122c1a;
   --ins-teal-1: #0a1714;
   --ins-teal-2: #0d201c;
   --ins-teal-3: #0e2a24;
@@ -288,6 +298,7 @@
   --ins-teal-10: #7bd8c2;
   --ins-teal-11: #96e8d4;
   --ins-teal-12: #cefff2;
+  --ins-teal-contrast: #102d26;
   --ins-cyan-1: #0b1619;
   --ins-cyan-2: #0e1f24;
   --ins-cyan-3: #10282f;
@@ -300,6 +311,7 @@
   --ins-cyan-10: #82d3eb;
   --ins-cyan-11: #9ce3fa;
   --ins-cyan-12: #d2fdff;
+  --ins-cyan-contrast: #0c2831;
   --ins-blue-1: #0e141c;
   --ins-blue-2: #141c29;
   --ins-blue-3: #192536;
@@ -312,6 +324,7 @@
   --ins-blue-10: #99c2fe;
   --ins-blue-11: #aed4ff;
   --ins-blue-12: #daf1ff;
+  --ins-blue-contrast: #071a36;
   --ins-indigo-1: #121220;
   --ins-indigo-2: #1a192e;
   --ins-indigo-3: #22203d;
@@ -324,6 +337,7 @@
   --ins-indigo-10: #9e98fb;
   --ins-indigo-11: #b0abff;
   --ins-indigo-12: #cfceff;
+  --ins-indigo-contrast: #16143c;
   --ins-purple-1: #18101d;
   --ins-purple-2: #221729;
   --ins-purple-3: #2c1d37;
@@ -336,6 +350,7 @@
   --ins-purple-10: #d49ff7;
   --ins-purple-11: #e3b4ff;
   --ins-purple-12: #f7daff;
+  --ins-purple-contrast: #230b33;
   --ins-pink-1: #1c0f15;
   --ins-pink-2: #28151e;
   --ins-pink-3: #351b27;
@@ -348,193 +363,53 @@
   --ins-pink-10: #fea2ca;
   --ins-pink-11: #ffb7db;
   --ins-pink-12: #ffe1f6;
-  --ins-gray-contrast: #ffffff;
-  --ins-red-contrast: #2b0f0b;
-  --ins-orange-contrast: #371b06;
-  --ins-yellow-contrast: #33290a;
-  --ins-green-contrast: #122c1a;
-  --ins-teal-contrast: #102d26;
-  --ins-cyan-contrast: #0c2831;
-  --ins-blue-contrast: #071a36;
-  --ins-indigo-contrast: #16143c;
-  --ins-purple-contrast: #230b33;
   --ins-pink-contrast: #35081c;
   --ins-surface-raised: #252320;
   --ins-surface-inset: #141310;
-  --ins-folder: #dfc060;
   --ins-highlight: #4a4020;
   --ins-black: #000000;
   --ins-white: #ffffff;
-  --ins-shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --ins-shadow-overlay: 0 6px 16px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.3);
-  --ins-shadow-modal: 0 16px 40px rgba(0, 0, 0, 0.55), 0 4px 10px rgba(0, 0, 0, 0.4);
+  --ins-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --ins-shadow-md: 0 6px 16px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --ins-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55), 0 4px 10px rgba(0, 0, 0, 0.4);
   /* /tokens:dark */
 }
 
+/* Authored theme values. Everything in THIS block is a decision someone made
+   and is safe to edit; the generated block below it is not. The two used to
+   share one rule, so the only way to tell them apart was to find the closing
+   tokens:theme marker buried in the middle. Tailwind merges multiple @theme
+   blocks, so splitting them costs nothing.
+
+   Do not write a marker comment in prose anywhere in this file. CSS comments do
+   not nest, so an inline close-comment sequence ends the comment early and the
+   remaining prose is parsed as CSS — which is exactly how this block broke the
+   build the first time it was written.
+
+   `--color-*: initial` must stay HERE, ahead of the generated block: it clears
+   the stock Tailwind palette, and if it landed after the generated colours it
+   would wipe those instead. */
 @theme inline {
   --color-*: initial;
   --color-white: #ffffff;
   --color-black: #000000;
-  /* tokens:theme — generated, do not edit */
-  --color-gray-1: var(--ins-gray-1);
-  --color-gray-2: var(--ins-gray-2);
-  --color-gray-3: var(--ins-gray-3);
-  --color-gray-4: var(--ins-gray-4);
-  --color-gray-5: var(--ins-gray-5);
-  --color-gray-6: var(--ins-gray-6);
-  --color-gray-7: var(--ins-gray-7);
-  --color-gray-8: var(--ins-gray-8);
-  --color-gray-9: var(--ins-gray-9);
-  --color-gray-10: var(--ins-gray-10);
-  --color-gray-11: var(--ins-gray-11);
-  --color-gray-12: var(--ins-gray-12);
-  --color-red-1: var(--ins-red-1);
-  --color-red-2: var(--ins-red-2);
-  --color-red-3: var(--ins-red-3);
-  --color-red-4: var(--ins-red-4);
-  --color-red-5: var(--ins-red-5);
-  --color-red-6: var(--ins-red-6);
-  --color-red-7: var(--ins-red-7);
-  --color-red-8: var(--ins-red-8);
-  --color-red-9: var(--ins-red-9);
-  --color-red-10: var(--ins-red-10);
-  --color-red-11: var(--ins-red-11);
-  --color-red-12: var(--ins-red-12);
-  --color-orange-1: var(--ins-orange-1);
-  --color-orange-2: var(--ins-orange-2);
-  --color-orange-3: var(--ins-orange-3);
-  --color-orange-4: var(--ins-orange-4);
-  --color-orange-5: var(--ins-orange-5);
-  --color-orange-6: var(--ins-orange-6);
-  --color-orange-7: var(--ins-orange-7);
-  --color-orange-8: var(--ins-orange-8);
-  --color-orange-9: var(--ins-orange-9);
-  --color-orange-10: var(--ins-orange-10);
-  --color-orange-11: var(--ins-orange-11);
-  --color-orange-12: var(--ins-orange-12);
-  --color-yellow-1: var(--ins-yellow-1);
-  --color-yellow-2: var(--ins-yellow-2);
-  --color-yellow-3: var(--ins-yellow-3);
-  --color-yellow-4: var(--ins-yellow-4);
-  --color-yellow-5: var(--ins-yellow-5);
-  --color-yellow-6: var(--ins-yellow-6);
-  --color-yellow-7: var(--ins-yellow-7);
-  --color-yellow-8: var(--ins-yellow-8);
-  --color-yellow-9: var(--ins-yellow-9);
-  --color-yellow-10: var(--ins-yellow-10);
-  --color-yellow-11: var(--ins-yellow-11);
-  --color-yellow-12: var(--ins-yellow-12);
-  --color-green-1: var(--ins-green-1);
-  --color-green-2: var(--ins-green-2);
-  --color-green-3: var(--ins-green-3);
-  --color-green-4: var(--ins-green-4);
-  --color-green-5: var(--ins-green-5);
-  --color-green-6: var(--ins-green-6);
-  --color-green-7: var(--ins-green-7);
-  --color-green-8: var(--ins-green-8);
-  --color-green-9: var(--ins-green-9);
-  --color-green-10: var(--ins-green-10);
-  --color-green-11: var(--ins-green-11);
-  --color-green-12: var(--ins-green-12);
-  --color-teal-1: var(--ins-teal-1);
-  --color-teal-2: var(--ins-teal-2);
-  --color-teal-3: var(--ins-teal-3);
-  --color-teal-4: var(--ins-teal-4);
-  --color-teal-5: var(--ins-teal-5);
-  --color-teal-6: var(--ins-teal-6);
-  --color-teal-7: var(--ins-teal-7);
-  --color-teal-8: var(--ins-teal-8);
-  --color-teal-9: var(--ins-teal-9);
-  --color-teal-10: var(--ins-teal-10);
-  --color-teal-11: var(--ins-teal-11);
-  --color-teal-12: var(--ins-teal-12);
-  --color-cyan-1: var(--ins-cyan-1);
-  --color-cyan-2: var(--ins-cyan-2);
-  --color-cyan-3: var(--ins-cyan-3);
-  --color-cyan-4: var(--ins-cyan-4);
-  --color-cyan-5: var(--ins-cyan-5);
-  --color-cyan-6: var(--ins-cyan-6);
-  --color-cyan-7: var(--ins-cyan-7);
-  --color-cyan-8: var(--ins-cyan-8);
-  --color-cyan-9: var(--ins-cyan-9);
-  --color-cyan-10: var(--ins-cyan-10);
-  --color-cyan-11: var(--ins-cyan-11);
-  --color-cyan-12: var(--ins-cyan-12);
-  --color-blue-1: var(--ins-blue-1);
-  --color-blue-2: var(--ins-blue-2);
-  --color-blue-3: var(--ins-blue-3);
-  --color-blue-4: var(--ins-blue-4);
-  --color-blue-5: var(--ins-blue-5);
-  --color-blue-6: var(--ins-blue-6);
-  --color-blue-7: var(--ins-blue-7);
-  --color-blue-8: var(--ins-blue-8);
-  --color-blue-9: var(--ins-blue-9);
-  --color-blue-10: var(--ins-blue-10);
-  --color-blue-11: var(--ins-blue-11);
-  --color-blue-12: var(--ins-blue-12);
-  --color-indigo-1: var(--ins-indigo-1);
-  --color-indigo-2: var(--ins-indigo-2);
-  --color-indigo-3: var(--ins-indigo-3);
-  --color-indigo-4: var(--ins-indigo-4);
-  --color-indigo-5: var(--ins-indigo-5);
-  --color-indigo-6: var(--ins-indigo-6);
-  --color-indigo-7: var(--ins-indigo-7);
-  --color-indigo-8: var(--ins-indigo-8);
-  --color-indigo-9: var(--ins-indigo-9);
-  --color-indigo-10: var(--ins-indigo-10);
-  --color-indigo-11: var(--ins-indigo-11);
-  --color-indigo-12: var(--ins-indigo-12);
-  --color-purple-1: var(--ins-purple-1);
-  --color-purple-2: var(--ins-purple-2);
-  --color-purple-3: var(--ins-purple-3);
-  --color-purple-4: var(--ins-purple-4);
-  --color-purple-5: var(--ins-purple-5);
-  --color-purple-6: var(--ins-purple-6);
-  --color-purple-7: var(--ins-purple-7);
-  --color-purple-8: var(--ins-purple-8);
-  --color-purple-9: var(--ins-purple-9);
-  --color-purple-10: var(--ins-purple-10);
-  --color-purple-11: var(--ins-purple-11);
-  --color-purple-12: var(--ins-purple-12);
-  --color-pink-1: var(--ins-pink-1);
-  --color-pink-2: var(--ins-pink-2);
-  --color-pink-3: var(--ins-pink-3);
-  --color-pink-4: var(--ins-pink-4);
-  --color-pink-5: var(--ins-pink-5);
-  --color-pink-6: var(--ins-pink-6);
-  --color-pink-7: var(--ins-pink-7);
-  --color-pink-8: var(--ins-pink-8);
-  --color-pink-9: var(--ins-pink-9);
-  --color-pink-10: var(--ins-pink-10);
-  --color-pink-11: var(--ins-pink-11);
-  --color-pink-12: var(--ins-pink-12);
-  --color-gray-contrast: var(--ins-gray-contrast);
-  --color-red-contrast: var(--ins-red-contrast);
-  --color-orange-contrast: var(--ins-orange-contrast);
-  --color-yellow-contrast: var(--ins-yellow-contrast);
-  --color-green-contrast: var(--ins-green-contrast);
-  --color-teal-contrast: var(--ins-teal-contrast);
-  --color-cyan-contrast: var(--ins-cyan-contrast);
-  --color-blue-contrast: var(--ins-blue-contrast);
-  --color-indigo-contrast: var(--ins-indigo-contrast);
-  --color-purple-contrast: var(--ins-purple-contrast);
-  --color-pink-contrast: var(--ins-pink-contrast);
-  --color-surface-raised: var(--ins-surface-raised);
-  --color-surface-inset: var(--ins-surface-inset);
-  --color-folder: var(--ins-folder);
-  --color-highlight: var(--ins-highlight);
-  --color-black: var(--ins-black);
-  --color-white: var(--ins-white);
-  --shadow-raised: var(--ins-shadow-raised);
-  --shadow-overlay: var(--ins-shadow-overlay);
-  --shadow-modal: var(--ins-shadow-modal);
-  /* /tokens:theme */
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
-  /* AI session status pill motion (screen 10): a slow spinner for in-flight
-     work and a calm attention pulse for "awaiting input". */
-  --animate-ai-spin: ai-spin 1.4s linear infinite;
-  --animate-ai-pulse: ai-pulse 1.8s ease-out infinite;
+  /* Motion (next/motion.tokens.json). A slow spinner for in-flight work and a
+     calm attention pulse — first drawn for the AI session status pill
+     (screen 10), now the system's only spin and only pulse.
+
+     These deliberately REPLACE Tailwind's built-in `animate-spin` and
+     `animate-pulse`: naming ours `animate-ai-*` meant a skeleton loader that
+     wrote `animate-pulse` got Tailwind's 2s curve while the status pill got
+     ours, and nothing said which was intended. One name, one animation.
+
+     The @keyframes stay `ai-spin` / `ai-pulse` on purpose. Tailwind injects its
+     own `@keyframes spin` / `pulse` when those utilities compile, and two rules
+     with one name is a last-one-wins race. Only the TOKEN takes the short name;
+     the keyframe it points at keeps a name nothing else can claim. */
+  --animate-spin: ai-spin 1.4s linear infinite;
+  --animate-pulse: ai-pulse 1.8s ease-out infinite;
   /* Extended type scale (audit 2026-07-23) — inert until consumed. Existing
      label/meta/ui (11/12/13px) stay canonical for control chrome. */
   /* Letter-spacing for uppercase labels — names avoid Tailwind defaults
@@ -576,16 +451,223 @@
   --text-24: 24px;
 
 
-  /* Line heights, in px, for the `text-{size}/{leading}` pairing.
-     Open where the scale is closed: a size is a design decision and is
-     constrained to twelve rungs; a leading is DERIVED from its size, so
-     there is no drift to prevent by rationing it.
+  /* Numeric font weights, in 100 steps. `font-500` says what it does;
+     `font-medium` needs a lookup to find out.
 
-     The range is exhaustive on purpose. Tailwind resolves the modifier
-     against --leading-* only if the token exists and otherwise falls back
-     to the SPACING scale — `text-22/24` with no --leading-24 compiles to
-     a 96px line-height (24 x 0.25rem), silently and four times wrong.
-     Covering 8..96 makes that fallback unreachable for any real value. */
+     Only 400/500/600 exist, because only those have font files: main.tsx
+     loads Plex Sans 400/500/600 and Plex Mono 400/500. Declaring 700..900
+     would let a caller ask for a weight the browser has to synthesise —
+     a faked bold, not the typeface. Adding a rung means adding a
+     @fontsource import first. (This matches typography.tokens.json, which
+     has said 400/500/600 since the token package landed.) */
+  --font-weight-*: initial;
+  --font-weight-400: 400;
+  --font-weight-500: 500;
+  --font-weight-600: 600;
+  /* Motion (next/motion.tokens.json). Durations are written as numbers at the
+     call site — `duration-200` is 200ms, and a token could only restate it.
+     The curves stay named: `cubic-bezier(.2, 0, 0, 1)` has no number that
+     means anything to a reader. */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Paint-only transition set for the eer diagram (entity-card.tsx,
+     field-row.tsx, zone-boxes.tsx via `transition-(--transition-paint)`).
+     transform/translate are deliberately excluded so drag and pan stay
+     immediate — the diagram moves cards and zones via translate on every
+     pointermove, and animating that would make dragging feel laggy. Not a
+     `--duration-*`/`--ease-*` rung, so it does not generate its own utility;
+     it exists only to be read back through the arbitrary-value reference
+     already at each call site. Ported from the standalone apps/eer package's
+     `--transition-paint` (src/styles/tailwind.css), which this package does
+     not import. */
+  --transition-paint: opacity, border-color, background-color, box-shadow;
+  /* Radius (next/radius.tokens.json). Four rungs, not six: a radius is only
+     legible against the box it rounds — 4px on a chip and 12px on a panel read
+     as the same softness, while 4 and 5 on the same box read as a mistake.
+     The values are Tailwind's own sm/md/lg/xl, so the 174 existing usages of
+     those names (incl. side-specific forms like rounded-t-lg, across
+     packages/web/ui/src, packages/web/playground/src and apps/web/src) kept
+     the pixel they already had — no edit needed for them. The subsequent
+     sweep (converting arbitrary rounded-[Npx] sites onto these same four
+     rungs) brought the total to approximately 340 — an approximate figure,
+     since the scanner, a plain grep and this comment's own prose (which
+     itself contains "rounded-t-lg") each count it slightly differently;
+     that number belongs to the sweep, not to this naming decision.
+
+     `initial` on the rest is the enforcement: rounded-xs / 2xl / 3xl / 4xl stop
+     compiling, so an off-scale corner is a build-visible mistake rather than a
+     silent one. `rounded-full` survives — Tailwind hardcodes it to
+     `calc(infinity * 1px)` rather than reading a token, and a pill is not a
+     step on the scale. Bare `rounded` is likewise static (0.25rem) and cannot
+     be cleared here; `vocabulary.test.ts` is what keeps it out of the tree. */
+  --radius-xs: initial;
+  --radius-2xl: initial;
+  --radius-3xl: initial;
+  --radius-4xl: initial;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+}
+
+/* GENERATED by scripts/build-tokens.mjs — do not edit anything between the
+   marker comments. Regenerate with `pnpm --filter @tickets/ui tokens:build`. */
+@theme inline {
+  /* tokens:theme — generated, do not edit */
+  --color-gray-1: var(--ins-gray-1);
+  --color-gray-2: var(--ins-gray-2);
+  --color-gray-3: var(--ins-gray-3);
+  --color-gray-4: var(--ins-gray-4);
+  --color-gray-5: var(--ins-gray-5);
+  --color-gray-6: var(--ins-gray-6);
+  --color-gray-7: var(--ins-gray-7);
+  --color-gray-8: var(--ins-gray-8);
+  --color-gray-9: var(--ins-gray-9);
+  --color-gray-10: var(--ins-gray-10);
+  --color-gray-11: var(--ins-gray-11);
+  --color-gray-12: var(--ins-gray-12);
+  --color-gray-contrast: var(--ins-gray-contrast);
+  --color-red-1: var(--ins-red-1);
+  --color-red-2: var(--ins-red-2);
+  --color-red-3: var(--ins-red-3);
+  --color-red-4: var(--ins-red-4);
+  --color-red-5: var(--ins-red-5);
+  --color-red-6: var(--ins-red-6);
+  --color-red-7: var(--ins-red-7);
+  --color-red-8: var(--ins-red-8);
+  --color-red-9: var(--ins-red-9);
+  --color-red-10: var(--ins-red-10);
+  --color-red-11: var(--ins-red-11);
+  --color-red-12: var(--ins-red-12);
+  --color-red-contrast: var(--ins-red-contrast);
+  --color-orange-1: var(--ins-orange-1);
+  --color-orange-2: var(--ins-orange-2);
+  --color-orange-3: var(--ins-orange-3);
+  --color-orange-4: var(--ins-orange-4);
+  --color-orange-5: var(--ins-orange-5);
+  --color-orange-6: var(--ins-orange-6);
+  --color-orange-7: var(--ins-orange-7);
+  --color-orange-8: var(--ins-orange-8);
+  --color-orange-9: var(--ins-orange-9);
+  --color-orange-10: var(--ins-orange-10);
+  --color-orange-11: var(--ins-orange-11);
+  --color-orange-12: var(--ins-orange-12);
+  --color-orange-contrast: var(--ins-orange-contrast);
+  --color-yellow-1: var(--ins-yellow-1);
+  --color-yellow-2: var(--ins-yellow-2);
+  --color-yellow-3: var(--ins-yellow-3);
+  --color-yellow-4: var(--ins-yellow-4);
+  --color-yellow-5: var(--ins-yellow-5);
+  --color-yellow-6: var(--ins-yellow-6);
+  --color-yellow-7: var(--ins-yellow-7);
+  --color-yellow-8: var(--ins-yellow-8);
+  --color-yellow-9: var(--ins-yellow-9);
+  --color-yellow-10: var(--ins-yellow-10);
+  --color-yellow-11: var(--ins-yellow-11);
+  --color-yellow-12: var(--ins-yellow-12);
+  --color-yellow-contrast: var(--ins-yellow-contrast);
+  --color-green-1: var(--ins-green-1);
+  --color-green-2: var(--ins-green-2);
+  --color-green-3: var(--ins-green-3);
+  --color-green-4: var(--ins-green-4);
+  --color-green-5: var(--ins-green-5);
+  --color-green-6: var(--ins-green-6);
+  --color-green-7: var(--ins-green-7);
+  --color-green-8: var(--ins-green-8);
+  --color-green-9: var(--ins-green-9);
+  --color-green-10: var(--ins-green-10);
+  --color-green-11: var(--ins-green-11);
+  --color-green-12: var(--ins-green-12);
+  --color-green-contrast: var(--ins-green-contrast);
+  --color-teal-1: var(--ins-teal-1);
+  --color-teal-2: var(--ins-teal-2);
+  --color-teal-3: var(--ins-teal-3);
+  --color-teal-4: var(--ins-teal-4);
+  --color-teal-5: var(--ins-teal-5);
+  --color-teal-6: var(--ins-teal-6);
+  --color-teal-7: var(--ins-teal-7);
+  --color-teal-8: var(--ins-teal-8);
+  --color-teal-9: var(--ins-teal-9);
+  --color-teal-10: var(--ins-teal-10);
+  --color-teal-11: var(--ins-teal-11);
+  --color-teal-12: var(--ins-teal-12);
+  --color-teal-contrast: var(--ins-teal-contrast);
+  --color-cyan-1: var(--ins-cyan-1);
+  --color-cyan-2: var(--ins-cyan-2);
+  --color-cyan-3: var(--ins-cyan-3);
+  --color-cyan-4: var(--ins-cyan-4);
+  --color-cyan-5: var(--ins-cyan-5);
+  --color-cyan-6: var(--ins-cyan-6);
+  --color-cyan-7: var(--ins-cyan-7);
+  --color-cyan-8: var(--ins-cyan-8);
+  --color-cyan-9: var(--ins-cyan-9);
+  --color-cyan-10: var(--ins-cyan-10);
+  --color-cyan-11: var(--ins-cyan-11);
+  --color-cyan-12: var(--ins-cyan-12);
+  --color-cyan-contrast: var(--ins-cyan-contrast);
+  --color-blue-1: var(--ins-blue-1);
+  --color-blue-2: var(--ins-blue-2);
+  --color-blue-3: var(--ins-blue-3);
+  --color-blue-4: var(--ins-blue-4);
+  --color-blue-5: var(--ins-blue-5);
+  --color-blue-6: var(--ins-blue-6);
+  --color-blue-7: var(--ins-blue-7);
+  --color-blue-8: var(--ins-blue-8);
+  --color-blue-9: var(--ins-blue-9);
+  --color-blue-10: var(--ins-blue-10);
+  --color-blue-11: var(--ins-blue-11);
+  --color-blue-12: var(--ins-blue-12);
+  --color-blue-contrast: var(--ins-blue-contrast);
+  --color-indigo-1: var(--ins-indigo-1);
+  --color-indigo-2: var(--ins-indigo-2);
+  --color-indigo-3: var(--ins-indigo-3);
+  --color-indigo-4: var(--ins-indigo-4);
+  --color-indigo-5: var(--ins-indigo-5);
+  --color-indigo-6: var(--ins-indigo-6);
+  --color-indigo-7: var(--ins-indigo-7);
+  --color-indigo-8: var(--ins-indigo-8);
+  --color-indigo-9: var(--ins-indigo-9);
+  --color-indigo-10: var(--ins-indigo-10);
+  --color-indigo-11: var(--ins-indigo-11);
+  --color-indigo-12: var(--ins-indigo-12);
+  --color-indigo-contrast: var(--ins-indigo-contrast);
+  --color-purple-1: var(--ins-purple-1);
+  --color-purple-2: var(--ins-purple-2);
+  --color-purple-3: var(--ins-purple-3);
+  --color-purple-4: var(--ins-purple-4);
+  --color-purple-5: var(--ins-purple-5);
+  --color-purple-6: var(--ins-purple-6);
+  --color-purple-7: var(--ins-purple-7);
+  --color-purple-8: var(--ins-purple-8);
+  --color-purple-9: var(--ins-purple-9);
+  --color-purple-10: var(--ins-purple-10);
+  --color-purple-11: var(--ins-purple-11);
+  --color-purple-12: var(--ins-purple-12);
+  --color-purple-contrast: var(--ins-purple-contrast);
+  --color-pink-1: var(--ins-pink-1);
+  --color-pink-2: var(--ins-pink-2);
+  --color-pink-3: var(--ins-pink-3);
+  --color-pink-4: var(--ins-pink-4);
+  --color-pink-5: var(--ins-pink-5);
+  --color-pink-6: var(--ins-pink-6);
+  --color-pink-7: var(--ins-pink-7);
+  --color-pink-8: var(--ins-pink-8);
+  --color-pink-9: var(--ins-pink-9);
+  --color-pink-10: var(--ins-pink-10);
+  --color-pink-11: var(--ins-pink-11);
+  --color-pink-12: var(--ins-pink-12);
+  --color-pink-contrast: var(--ins-pink-contrast);
+  --color-surface-raised: var(--ins-surface-raised);
+  --color-surface-inset: var(--ins-surface-inset);
+  --color-highlight: var(--ins-highlight);
+  --color-black: var(--ins-black);
+  --color-white: var(--ins-white);
+  --shadow-xs: var(--ins-shadow-xs);
+  --shadow-md: var(--ins-shadow-md);
+  --shadow-lg: var(--ins-shadow-lg);
+  /* /tokens:theme */
+
+  /* tokens:leading — generated, do not edit */
   --leading-8: 8px;
   --leading-9: 9px;
   --leading-10: 10px;
@@ -675,64 +757,7 @@
   --leading-94: 94px;
   --leading-95: 95px;
   --leading-96: 96px;
-
-  /* Numeric font weights, in 100 steps. `font-500` says what it does;
-     `font-medium` needs a lookup to find out.
-
-     Only 400/500/600 exist, because only those have font files: main.tsx
-     loads Plex Sans 400/500/600 and Plex Mono 400/500. Declaring 700..900
-     would let a caller ask for a weight the browser has to synthesise —
-     a faked bold, not the typeface. Adding a rung means adding a
-     @fontsource import first. (This matches typography.tokens.json, which
-     has said 400/500/600 since the token package landed.) */
-  --font-weight-*: initial;
-  --font-weight-400: 400;
-  --font-weight-500: 500;
-  --font-weight-600: 600;
-  /* Motion (next/motion.tokens.json). Durations are written as numbers at the
-     call site — `duration-200` is 200ms, and a token could only restate it.
-     The curves stay named: `cubic-bezier(.2, 0, 0, 1)` has no number that
-     means anything to a reader. */
-  --ease-out: cubic-bezier(0.2, 0, 0, 1);
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  /* Paint-only transition set for the eer diagram (entity-card.tsx,
-     field-row.tsx, zone-boxes.tsx via `transition-(--transition-paint)`).
-     transform/translate are deliberately excluded so drag and pan stay
-     immediate — the diagram moves cards and zones via translate on every
-     pointermove, and animating that would make dragging feel laggy. Not a
-     `--duration-*`/`--ease-*` rung, so it does not generate its own utility;
-     it exists only to be read back through the arbitrary-value reference
-     already at each call site. Ported from the standalone apps/eer package's
-     `--transition-paint` (src/styles/tailwind.css), which this package does
-     not import. */
-  --transition-paint: opacity, border-color, background-color, box-shadow;
-  /* Radius (next/radius.tokens.json). Four rungs, not six: a radius is only
-     legible against the box it rounds — 4px on a chip and 12px on a panel read
-     as the same softness, while 4 and 5 on the same box read as a mistake.
-     The values are Tailwind's own sm/md/lg/xl, so the 174 existing usages of
-     those names (incl. side-specific forms like rounded-t-lg, across
-     packages/web/ui/src, packages/web/playground/src and apps/web/src) kept
-     the pixel they already had — no edit needed for them. The subsequent
-     sweep (converting arbitrary rounded-[Npx] sites onto these same four
-     rungs) brought the total to approximately 340 — an approximate figure,
-     since the scanner, a plain grep and this comment's own prose (which
-     itself contains "rounded-t-lg") each count it slightly differently;
-     that number belongs to the sweep, not to this naming decision.
-
-     `initial` on the rest is the enforcement: rounded-xs / 2xl / 3xl / 4xl stop
-     compiling, so an off-scale corner is a build-visible mistake rather than a
-     silent one. `rounded-full` survives — Tailwind hardcodes it to
-     `calc(infinity * 1px)` rather than reading a token, and a pill is not a
-     step on the scale. Bare `rounded` is likewise static (0.25rem) and cannot
-     be cleared here; `vocabulary.test.ts` is what keeps it out of the tree. */
-  --radius-xs: initial;
-  --radius-2xl: initial;
-  --radius-3xl: initial;
-  --radius-4xl: initial;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  /* /tokens:leading */
 }
 
 @keyframes ai-spin {
@@ -750,377 +775,6 @@
     opacity: 0.62;
   }
 }
-
-/* Rich-text prose (design §11, docs/design/design-system.html;
-   RichTextEditor.dc.html §04 mentions/refs + §05 rich blocks): the Tiptap
-   editing surface (RichTextEditor) and read-only render (RichTextView).
-   `.rt` wraps Tiptap's own `.ProseMirror` element, so most rules are plain
-   descendants; a few (first/last-child spacing) target `.ProseMirror`'s
-   direct children explicitly. Baseline ported from the legacy `.md` rules
-   (removed once every markdown surface was swapped to rich text) —
-   `[data-callout]`/chip/task-list/details additions are new. Callout kinds
-   draw from the hue tone palette (their hexes match the design's
-   info/success/warning palette exactly): info=opt-blue,
-   success=opt-green, warning=opt-orange, danger=danger. */
-@layer components {
-  .rt {
-    font-family: var(--font-sans);
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--color-gray-12);
-  }
-  .rt .ProseMirror {
-    outline: none;
-  }
-  .rt .ProseMirror > :first-child {
-    margin-top: 0;
-  }
-  .rt .ProseMirror > :last-child {
-    margin-bottom: 0;
-  }
-  .rt p {
-    margin: 6px 0;
-  }
-  .rt h1,
-  .rt h2,
-  .rt h3 {
-    font-family: var(--font-sans);
-    font-weight: 600;
-    color: var(--color-gray-12);
-    margin: 14px 0 6px;
-  }
-  .rt h1 {
-    font-size: 16px;
-    margin: 16px 0 8px;
-  }
-  .rt h2 {
-    font-size: 14px;
-  }
-  .rt h3 {
-    font-size: 13px;
-  }
-  .rt ul,
-  .rt ol {
-    margin: 6px 0;
-    padding-left: 20px;
-  }
-  .rt ul {
-    list-style: disc;
-  }
-  .rt ol {
-    list-style: decimal;
-  }
-  .rt li {
-    margin: 3px 0;
-  }
-  .rt code {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    background: var(--color-surface-inset);
-    border-radius: 5px;
-    padding: 2px 6px;
-  }
-  .rt pre {
-    background: var(--color-surface-inset);
-    border-radius: var(--radius-lg);
-    padding: 12px;
-    margin: 8px 0;
-    overflow-x: auto;
-    font-family: var(--font-mono);
-    font-size: var(--text-meta);
-    line-height: 1.5;
-  }
-  .rt pre code {
-    background: none;
-    border-radius: 0;
-    padding: 0;
-    font-size: inherit;
-  }
-  .rt a {
-    color: var(--color-indigo-9);
-  }
-  .rt a:hover {
-    text-decoration: underline;
-  }
-  /* Cursor-in-link tint (RichTextEditor.dc.html §07): a ProseMirror
-     decoration (packages/richtext LinkCursorDecoration) stamps this class
-     onto the active link's mark range while the (collapsed) cursor sits
-     inside it — purely visual, no document mutation. `.rt a` already sets
-     the accent text color unconditionally, so only the tinted fill is
-     needed here. */
-  .rt .is-editing-link {
-    background: var(--color-indigo-3);
-    border-radius: 3px;
-    padding: 1px 3px;
-  }
-  .rt strong {
-    font-weight: 600;
-    color: var(--color-gray-12);
-  }
-  .rt mark {
-    background: var(--color-highlight);
-    color: var(--color-gray-12);
-    border-radius: 3px;
-    padding: 0 1px;
-  }
-  .rt blockquote {
-    border-left: 2px solid var(--color-gray-6);
-    padding-left: 12px;
-    margin: 6px 0;
-    color: var(--color-gray-11);
-  }
-  .rt table {
-    border-collapse: collapse;
-    font-size: var(--text-meta);
-    margin: 8px 0;
-  }
-  .rt th,
-  .rt td {
-    border: 1px solid var(--color-gray-6);
-    padding: 5px 9px;
-    text-align: left;
-    color: var(--color-gray-11);
-  }
-  .rt th {
-    color: var(--color-gray-9);
-    font-size: var(--text-label);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-  .rt img {
-    max-width: 100%;
-    border-radius: 5px;
-  }
-  .rt hr {
-    border: none;
-    border-top: 1px solid var(--color-gray-6);
-    margin: 12px 0;
-  }
-
-  /* Callouts (RichTextEditor.dc.html §05 "CALLOUT VARIANTS"): tinted fill +
-     toned leading icon, radius 8, no border, no left-bar. The icon is a
-     pure-CSS ::before using mask-image on an inline SVG (Lucide-shaped
-     info/circle-check-big/triangle-alert/circle-alert) painted with
-     background-color so it follows the kind's toned token in both themes. */
-  .rt [data-callout] {
-    position: relative;
-    border-radius: var(--radius-lg);
-    padding: 10px 12px 10px 34px;
-    margin: 8px 0;
-    background: var(--color-blue-3);
-  }
-  .rt [data-callout]::before {
-    content: '';
-    position: absolute;
-    left: 12px;
-    top: 11px;
-    width: 15px;
-    height: 15px;
-    background-color: var(--color-blue-9);
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    mask-position: center;
-    -webkit-mask-size: contain;
-    mask-size: contain;
-  }
-  .rt [data-callout] p {
-    margin: 0;
-  }
-  .rt [data-callout] p + p {
-    margin-top: 4px;
-  }
-  .rt [data-callout='warning'] {
-    background: var(--color-orange-3);
-  }
-  .rt [data-callout='warning']::before {
-    background-color: var(--color-orange-9);
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z'/%3E%3Cpath d='M12 9v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z'/%3E%3Cpath d='M12 9v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
-  }
-  .rt [data-callout='success'] {
-    background: var(--color-green-3);
-  }
-  .rt [data-callout='success']::before {
-    background-color: var(--color-green-9);
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.801 10A10 10 0 1 1 17 3.335'/%3E%3Cpath d='m9 11 3 3L22 4'/%3E%3C/svg%3E");
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.801 10A10 10 0 1 1 17 3.335'/%3E%3Cpath d='m9 11 3 3L22 4'/%3E%3C/svg%3E");
-  }
-  .rt [data-callout='danger'] {
-    background: var(--color-red-3);
-  }
-  .rt [data-callout='danger']::before {
-    background-color: var(--color-red-9);
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4'/%3E%3Cpath d='M12 16h.01'/%3E%3C/svg%3E");
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4'/%3E%3Cpath d='M12 16h.01'/%3E%3C/svg%3E");
-  }
-
-  /* Mention chip (RichTextEditor.dc.html §04): 999px pill, accent-subtle
-     bg + accent text, leading 14px round initials avatar (rendered by
-     refs.ts as a `[data-mention-avatar]` child — see packages/richtext). */
-  .rt [data-mention] {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 1px 8px 1px 3px;
-    border-radius: 999px;
-    background: var(--color-indigo-3);
-    color: var(--color-indigo-9);
-    font-family: var(--font-sans);
-    font-size: 12.5px;
-    font-weight: 500;
-  }
-  .rt [data-mention-avatar] {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: var(--color-cyan-3);
-    color: var(--color-cyan-9);
-    font-family: var(--font-sans);
-    font-size: 7px;
-    font-weight: 600;
-  }
-
-  /* Ticket-ref chip (RichTextEditor.dc.html §04): bordered 6px chip, page
-     fill, mono ID text, leading 7px neutral status dot (the actual ticket
-     status isn't known at render time, so the dot uses a neutral token
-     rather than a real kind color). */
-  .rt [data-ticket-ref] {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 1px 8px;
-    border-radius: 6px;
-    border: 1px solid var(--color-gray-6);
-    background: var(--color-gray-1);
-    color: var(--color-gray-12);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-  }
-  .rt [data-ticket-ref]:hover {
-    background: var(--color-surface-inset);
-  }
-  .rt [data-ticket-ref-dot] {
-    flex: none;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--color-gray-9);
-  }
-
-  /* Task lists: Tiptap renders `<ul data-type="taskList">` with per-item
-     `<li data-checked>` and a real checkbox input — restore the marker-free
-     layout preflight would otherwise leave inconsistent. */
-  .rt ul[data-type='taskList'] {
-    list-style: none;
-    padding-left: 0;
-  }
-  .rt ul[data-type='taskList'] li {
-    display: flex;
-    align-items: flex-start;
-    gap: 6px;
-    margin: 3px 0;
-  }
-  /* Custom checkbox (design §11 "Task list"): 15px box, radius 4, checked =
-     accent fill + white check. Tiptap's TaskItem renders
-     `<label><input type="checkbox"><span></span></label>` — the native
-     input is kept for a11y/interaction but visually hidden; the sibling
-     `<span>` is painted as the box, and the check mark is a mask-image
-     ::after so its color (--color-on-accent) stays correct in both themes. */
-  .rt ul[data-type='taskList'] li > label {
-    position: relative;
-    display: inline-flex;
-    flex: none;
-    width: 15px;
-    height: 15px;
-    margin-top: 4px;
-  }
-  .rt ul[data-type='taskList'] li > label input[type='checkbox'] {
-    position: absolute;
-    inset: 0;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
-  }
-  .rt ul[data-type='taskList'] li > label span {
-    position: absolute;
-    inset: 0;
-    box-sizing: border-box;
-    border: 2px solid var(--color-gray-7);
-    border-radius: 4px;
-    background: var(--color-surface-raised);
-    pointer-events: none;
-  }
-  .rt ul[data-type='taskList'] li > label input[type='checkbox']:checked + span {
-    border-color: var(--color-indigo-9);
-    background: var(--color-indigo-9);
-  }
-  .rt ul[data-type='taskList'] li > label input[type='checkbox']:checked + span::after {
-    content: '';
-    position: absolute;
-    inset: 2px;
-    background-color: var(--color-indigo-contrast);
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    mask-position: center;
-    -webkit-mask-size: contain;
-    mask-size: contain;
-  }
-  .rt ul[data-type='taskList'] li[data-checked='true'] > div {
-    color: var(--color-gray-9);
-    text-decoration: line-through;
-  }
-
-  /* Details/summary: an explicit affordance since preflight strips the
-     native marker triangle. */
-  .rt details {
-    margin: 6px 0;
-    border: 1px solid var(--color-gray-6);
-    border-radius: var(--radius-lg);
-    padding: 8px 12px;
-  }
-  .rt details > summary {
-    cursor: pointer;
-    font-weight: 500;
-    color: var(--color-gray-11);
-  }
-  .rt details > summary:hover {
-    color: var(--color-gray-12);
-  }
-
-  /* Selected node outline (tables/images/callouts selected via NodeSelection). */
-  .rt .ProseMirror-selectednode {
-    outline: 2px solid var(--color-indigo-9);
-    outline-offset: 1px;
-    border-radius: 4px;
-  }
-
-  /* Empty-state placeholder: Tiptap's Placeholder extension (registered in
-     buildExtensions, packages/richtext/src/build-extensions.ts) decorates
-     the empty textblock itself with `is-empty is-editor-empty` classes and
-     a `data-placeholder` attribute — verified against its source
-     (@tiptap/extensions/src/placeholder/*). */
-  .rt .is-editor-empty:first-child::before {
-    content: attr(data-placeholder);
-    float: left;
-    height: 0;
-    color: var(--color-gray-9);
-    pointer-events: none;
-  }
-}
-
 /* Overlay drawers arrive from the edge they are docked to: 200ms is the
    open/close rung on the motion page, ease-out the arrival curve. Entry only —
    radix unmounts content immediately, so there is no exit to animate. */
