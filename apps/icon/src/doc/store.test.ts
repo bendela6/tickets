@@ -232,6 +232,86 @@ describe('colour pairs', () => {
   });
 });
 
+describe('materials', () => {
+  const withTwo = () =>
+    run(start(), { type: 'addObject', kind: 'rect' }, { type: 'addObject', kind: 'ellipse' });
+
+  it('is one undo entry, and undo takes the whole surface back off', () => {
+    const state = withRect();
+    const id = state.doc.objects[0]!.id;
+    const dressed = editorReducer(state, { type: 'setMaterial', ids: [id], material: 'glass' });
+    expect(flat(dressed.doc)[0]?.material).toBe('glass');
+    expect(dressed.past).toHaveLength(state.past.length + 1);
+    expect(editorReducer(dressed, { type: 'undo' }).doc).toEqual(state.doc);
+  });
+
+  it('none takes the field off rather than writing a word meaning nothing', () => {
+    const state = withRect();
+    const id = state.doc.objects[0]!.id;
+    const back = run(
+      state,
+      { type: 'setMaterial', ids: [id], material: 'metal' },
+      { type: 'setMaterial', ids: [id], material: null },
+    );
+    // Not `material: undefined` — the very document an old save produces.
+    expect(Object.hasOwn(flat(back.doc)[0]!, 'material')).toBe(false);
+    expect(back.doc).toEqual(state.doc);
+  });
+
+  it('reaches a whole selection as a single entry', () => {
+    const state = withTwo();
+    const ids = state.doc.objects.map((node) => node.id);
+    const dressed = editorReducer(state, { type: 'setMaterial', ids, material: 'paper' });
+    expect(flat(dressed.doc).map((shape) => shape.material)).toEqual(['paper', 'paper']);
+    expect(dressed.past).toHaveLength(state.past.length + 1);
+  });
+
+  it('leaves a group alone, which has no paint for a surface to sit on', () => {
+    const grouped = run(withTwo(), { type: 'selectAll' }, { type: 'groupSelection' });
+    const group = grouped.doc.objects[0]!;
+    const after = editorReducer(grouped, {
+      type: 'setMaterial',
+      ids: [group.id],
+      material: 'glow',
+    });
+    expect(after.doc.objects[0]).toEqual(group);
+  });
+
+  it('does not move the shape it is put on', () => {
+    const state = withRect();
+    const id = state.doc.objects[0]!.id;
+    const dressed = editorReducer(state, { type: 'setMaterial', ids: [id], material: 'glow' });
+    expect(bounds(flat(dressed.doc)[0]!)).toEqual(bounds(flat(state.doc)[0]!));
+    expect(flat(dressed.doc)[0]?.geometry).toEqual(flat(state.doc)[0]?.geometry);
+  });
+
+  it('does not change what a boolean answers, and the result wears the front one', () => {
+    const state = withTwo();
+    const [front, back] = state.doc.objects.map((node) => node.id) as [string, string];
+    const segments: PathSegment[] = [
+      { c: 'M', x: 0, y: 0 },
+      { c: 'L', x: 10, y: 0 },
+      { c: 'L', x: 10, y: 10 },
+      { c: 'Z' },
+    ];
+    const plain = editorReducer(state, {
+      type: 'combineShapes',
+      op: 'union',
+      ids: [front, back],
+      segments,
+    });
+    const dressed = editorReducer(
+      editorReducer(state, { type: 'setMaterial', ids: [front], material: 'metal' }),
+      { type: 'combineShapes', op: 'union', ids: [front, back], segments },
+    );
+    expect(flat(dressed.doc)[0]?.geometry).toEqual(flat(plain.doc)[0]?.geometry);
+    expect(flat(plain.doc)[0]?.material).toBeUndefined();
+    // The frontmost operand's surface travels with its colour: a boolean is a
+    // change of shape, not of appearance.
+    expect(flat(dressed.doc)[0]?.material).toBe('metal');
+  });
+});
+
 describe('reordering', () => {
   it('moves an object through the stack', () => {
     let state = run(

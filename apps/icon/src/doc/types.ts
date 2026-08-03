@@ -100,6 +100,25 @@ export type Geometry =
   | { kind: 'polygon'; points: Point[] }
   | { kind: 'path'; segments: PathSegment[] };
 
+/**
+ * How a surface behaves under light — never what colour it is.
+ *
+ * A material is a treatment layered *over* the paint a shape already states.
+ * The fill, the stroke, the stroke width and the opacity all keep the meaning
+ * they have always had, and every pass the renderer adds takes its colour from
+ * that same pair. That is the whole reason it is one word here rather than a
+ * block of paint of its own: the contrast readout still has a real colour to
+ * measure, the boolean engine still sees a plain outline, and the importer
+ * still has nothing new to fail to understand.
+ *
+ * Six, and the two that were left out say what the list is. An emboss and a
+ * long shadow both describe a *scene* — where the light is, where the floor is
+ * — and an icon has no scene: it is 16 pixels on somebody else's wallpaper.
+ * These six describe the surface itself, which is a statement that survives
+ * being shrunk.
+ */
+export type Material = 'glass' | 'glossy' | 'metal' | 'matte' | 'paper' | 'glow';
+
 export interface IconObject {
   id: string;
   name: string;
@@ -113,6 +132,22 @@ export interface IconObject {
   rotation: number;
   hidden: boolean;
   locked: boolean;
+  /**
+   * The treatment layered over this shape's paint, if it has one.
+   *
+   * Optional and absent rather than a required `'none'`, and that is what makes
+   * every document saved before materials existed still a valid one: no field
+   * is missing from it, because absence *is* the default. There is nothing for
+   * a migration to fill in and nothing for it to walk.
+   *
+   * **A shape only — a group has none, and cannot be given one.** A group has
+   * no paint of its own for a treatment to sit on top of, by the same rule that
+   * keeps it from having a fill. A material on a group would have to mean one
+   * of two different things — one surface spanning the children, or the same
+   * surface applied to each of them separately — and picking either would make
+   * a group's appearance a second place a shape's own could be decided.
+   */
+  material?: Material;
 }
 
 /**

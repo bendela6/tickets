@@ -114,6 +114,34 @@ describe('showing the SVG the document generates', () => {
     expect(within(panel()).getByText(`${withRect.length} bytes`)).toBeInTheDocument();
   });
 
+  it('shows a material arriving: the filter, and the shape pointing at it', async () => {
+    const { user } = setup();
+    await user.click(toggle());
+    await user.keyboard('r');
+    const plain = shown();
+
+    const picker = within(screen.getByRole('complementary', { name: 'Properties' })).getByRole(
+      'group',
+      { name: 'Material' },
+    );
+    await user.click(within(picker).getByRole('button', { name: 'metal' }));
+
+    const dressed = shown() ?? '';
+    const id = /filter="url\(#([^)]+)\)"/.exec(dressed)?.[1] ?? '';
+    expect(id).toContain('rect-1');
+    expect(dressed).toContain(`<filter id="${id}"`);
+    expect(dressed).toBe(
+      renderSvg(
+        { ...START, objects: [{ ...newObject('rect', 1, BOARD), material: 'metal' }] },
+        { ground: 'light' },
+      ),
+    );
+
+    // And back off again: the file is the one it was, not one that looks like it.
+    await user.click(within(picker).getByRole('button', { name: 'none' }));
+    expect(shown()).toBe(plain);
+  });
+
   it('is a way of looking rather than an edit — it dirties nothing and undoes nothing', async () => {
     const { user } = setup();
     await user.click(toggle());

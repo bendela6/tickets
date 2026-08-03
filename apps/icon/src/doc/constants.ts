@@ -1,4 +1,4 @@
-import type { Artboard, Pair } from './types';
+import type { Artboard, Material, Pair } from './types';
 
 /**
  * Values of record, transcribed from the design's prototype. Nothing here is a
@@ -67,6 +67,22 @@ export const SWATCHES: readonly string[] = [
   '#C29A2E',
   '#2E7D4F',
   '#2E6FCC',
+];
+
+/**
+ * The materials on offer, in the order the properties rail lists them.
+ *
+ * Softest surface first and brightest last, so the row reads as a scale rather
+ * than as an alphabet. `none` is not in the list: it is the absence of one, and
+ * the picker states it separately for the same reason the model does.
+ */
+export const MATERIALS: readonly Material[] = [
+  'glass',
+  'glossy',
+  'metal',
+  'matte',
+  'paper',
+  'glow',
 ];
 
 /** The colour a new object arrives in. */

@@ -47,6 +47,7 @@ import type {
   IconGroup,
   IconNode,
   IconObject,
+  Material,
   Pair,
   PathSegment,
   Point,
@@ -309,6 +310,12 @@ export type Action =
   // reach all of them as a single entry.
   | { type: 'setOpacity'; ids: readonly string[]; opacity: number; at?: number }
   | { type: 'setStrokeWidth'; ids: readonly string[]; width: number }
+  /**
+   * The treatment layered over the paint. `null` is none, which is what the
+   * document says by having no such field at all — so choosing it takes the
+   * field back off rather than writing a word meaning "nothing".
+   */
+  | { type: 'setMaterial'; ids: readonly string[]; material: Material | null }
   | {
       type: 'setColor';
       ids: readonly string[];
@@ -708,6 +715,11 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
       const sequence = state.sequence + 1;
       const front = plan.front.shape;
       const result: IconObject = {
+        // The frontmost operand's surface, for the same reason the result wears
+        // its colour: it is the one that was on top, and the one you were
+        // already looking at. Spread conditionally so a result cut from plain
+        // shapes carries no field at all rather than an empty one.
+        ...(front.material === undefined ? {} : { material: front.material }),
         id: objectId('path', sequence),
         // Named for what made it. Every other object is named for its kind, but
         // four operations all produce a `path` and the name is the only place
@@ -1072,6 +1084,23 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         ...state,
         ...remember(state, `stroke ${subjectOf(state, action.ids)}`),
         doc: mapShapes(state.doc, action.ids, (o) => ({ ...o, strokeWidth })),
+      };
+    }
+    case 'setMaterial': {
+      const material = action.material;
+      return {
+        ...state,
+        // One entry, whatever it lands on: picking a material is one press of
+        // one control, the same as picking a colour.
+        ...remember(state, `${material ?? 'no material'} ${subjectOf(state, action.ids)}`),
+        doc: mapShapes(state.doc, action.ids, (o) => {
+          if (material !== null) return { ...o, material };
+          // Taken off rather than set to a word: the model states "none" by
+          // having no field, and a shape that carried `material: undefined`
+          // would be a document that is not the one an old save produces.
+          const { material: _none, ...bare } = o;
+          return bare;
+        }),
       };
     }
     case 'setColor': {
