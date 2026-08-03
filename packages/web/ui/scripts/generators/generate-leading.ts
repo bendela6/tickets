@@ -16,8 +16,8 @@
  * loop, not a set of decisions, and writing them into a token file would just
  * move the typing somewhere else.
  */
-export const LEADING_MIN = 8;
-export const LEADING_MAX = 96;
+const LEADING_MIN = 8;
+const LEADING_MAX = 96;
 
 export function generateLeading(indent = '  '): string {
   let out = '';

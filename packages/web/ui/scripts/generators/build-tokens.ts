@@ -39,7 +39,7 @@ import type { Marker } from './utils/types.ts';
 
 // Only the text strictly between each pair is regenerated; the markers
 // themselves, and every hand-authored line outside them, are left alone.
-export const MARKERS: Marker[] = [
+const MARKERS: Marker[] = [
   { start: '/* tokens:light — generated, do not edit */', end: '/* /tokens:light */', region: 'light' },
   { start: '/* tokens:dark — generated, do not edit */', end: '/* /tokens:dark */', region: 'dark' },
   { start: '/* tokens:theme — generated, do not edit */', end: '/* /tokens:theme */', region: 'theme' },
