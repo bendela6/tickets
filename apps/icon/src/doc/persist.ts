@@ -57,7 +57,7 @@ interface Moving {
  * later fails to compile here instead of silently going missing.
  */
 function stillObject(object: IconObject): IconObject {
-  return {
+  const still: IconObject = {
     id: object.id,
     name: object.name,
     geometry: object.geometry,
@@ -69,6 +69,13 @@ function stillObject(object: IconObject): IconObject {
     hidden: object.hidden,
     locked: object.locked,
   };
+  // Carried only when it is there, so a document that never had a material does
+  // not come back out of here holding the key with nothing in it. No document
+  // this function ever runs on can have one — materials arrived long after
+  // animation left — but a field named nowhere is a field silently dropped, and
+  // that is the trap this whole function is shaped to avoid.
+  if (object.material !== undefined) still.material = object.material;
+  return still;
 }
 
 /**
@@ -95,6 +102,12 @@ function stillObject(object: IconObject): IconObject {
  * by *having children* rather than by a `kind` field it would have to be given.
  * A migration here would walk every document ever saved and hand each one back
  * unchanged, and the only thing it could achieve is marking them all dirty.
+ *
+ * A fourth needed none for the same reason, and it is worth naming because it
+ * is the shape every future one should take. A shape may now wear a material,
+ * and the field that says so is optional: a document saved before materials
+ * existed has no such field, and no such field *is* no material, which is the
+ * default. There is nothing to fill in, so nothing is walked.
  *
  * On read rather than on write, because this is the only place a document from
  * before either change can enter — nothing will ever write one again. The

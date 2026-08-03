@@ -192,4 +192,48 @@ describe('documents saved while the editor could animate', () => {
     const store = storeHolding(current);
     expect(await store.load('old')).toBe(current);
   });
+
+  it('keep a material through the rewrite, since a named field is the point of it', async () => {
+    // This migration rebuilds every object field by field, which is what stops
+    // `motion` travelling along inside a spread — and is also what would drop a
+    // field added afterwards without anyone noticing.
+    const saved = {
+      ...savedAnimated(),
+      objects: [{ ...drawn(), material: 'glass', motion: { takesPart: true } }],
+    } as unknown as IconDoc;
+    const loaded = await storeHolding(saved).load('old');
+    expect(shapes(loaded)[0]?.material).toBe('glass');
+  });
+});
+
+describe('documents saved before a shape could wear a material', () => {
+  it('open unchanged, because no field is missing from them', async () => {
+    // No migration runs at all: a material is optional, and its absence *is*
+    // none. The identity check is the whole assertion — anything that rebuilt
+    // the document would hand back an equal one and mark it edited.
+    const before = { ...emptyDocument('plain.icon'), objects: [newObject('rect', 1, BOARD)] };
+    expect(await storeHolding(before).load('old')).toBe(before);
+    expect(Object.hasOwn(shapes(before)[0]!, 'material')).toBe(false);
+  });
+
+  it('a material survives a save and a reopen, whole and unchanged', async () => {
+    const store = memoryStore();
+    const { id } = await store.create('dressed.icon');
+    const doc: IconDoc = {
+      ...emptyDocument('dressed.icon'),
+      objects: [
+        { ...newObject('rect', 1, BOARD), material: 'glass' },
+        { ...newObject('circle', 2, BOARD), material: 'paper' },
+        newObject('line', 3, BOARD),
+      ],
+    };
+    await store.save(id, doc);
+    const reopened = await store.load(id);
+    expect(reopened).toEqual(doc);
+    expect(shapes(reopened).map((shape) => shape.material)).toEqual([
+      'glass',
+      'paper',
+      undefined,
+    ]);
+  });
 });

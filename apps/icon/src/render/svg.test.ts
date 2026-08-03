@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { MATERIALS } from '../doc/constants';
 import { emptyDocument, newObject } from '../doc/defaults';
-import { arcPath } from '../doc/geometry';
-import type { GroupTransform, IconDoc, IconGroup, IconNode } from '../doc/types';
+import { arcPath, bounds, contains } from '../doc/geometry';
+import type { GroupTransform, IconDoc, IconGroup, IconNode, Material } from '../doc/types';
 import type { IconObject } from '../doc/types';
 import { pathData, renderSvg } from './svg';
 
@@ -369,5 +370,199 @@ describe('renderSvg', () => {
     const svg = renderSvg(docOf([object]), { ground: 'light' });
     expect(svg).toContain('x="10"');
     expect(svg).toContain('y="0.333"');
+  });
+});
+
+/* ── materials ──────────────────────────────────────────────────────────── */
+
+const wearing = (object: IconObject, material: Material): IconObject => ({ ...object, material });
+
+/** The id a shape's `filter="url(#…)"` points at, or null when it has none. */
+function filterRef(svg: string, tag: string): string | null {
+  const line = svg.split('\n').find((text) => text.includes(`<${tag} `) && text.includes('filter='));
+  return /filter="url\(#([^)]+)\)"/.exec(line ?? '')?.[1] ?? null;
+}
+
+describe('a material', () => {
+  it('changes nothing at all about a shape that has none', () => {
+    // The regression that matters most: every document written before materials
+    // existed, and every shape in one that still wears none, has to render the
+    // very file it always did — no defs, no reference, not a character.
+    const doc = docOf([newObject('rect', 1, BOARD), newObject('circle', 2, BOARD)]);
+    expect(renderSvg(doc, { ground: 'light' })).toBe(
+      [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">',
+        '  <rect x="0" y="0" width="512" height="512" fill="#FFFFFF"/>',
+        '  <circle cx="256" cy="256" r="120" fill="#4E46C6"/>',
+        '  <rect x="136" y="136" width="240" height="240" rx="32" fill="#4E46C6"/>',
+        '</svg>',
+      ].join('\n'),
+    );
+  });
+
+  it('defines a filter and points the shape at it, for every one of the six', () => {
+    for (const material of MATERIALS) {
+      const svg = renderSvg(docOf([wearing(newObject('rect', 1, BOARD), material)]), {
+        ground: 'light',
+      });
+      const id = filterRef(svg, 'rect');
+      expect({ material, referenced: id !== null }).toEqual({ material, referenced: true });
+      expect({ material, defined: svg.includes(`<filter id="${id}"`) }).toEqual({
+        material,
+        defined: true,
+      });
+    }
+  });
+
+  it('names its filter after the shape, so two shapes cannot share one', () => {
+    const doc = docOf([
+      wearing(newObject('rect', 1, BOARD), 'matte'),
+      wearing(newObject('circle', 2, BOARD), 'glow'),
+    ]);
+    const svg = renderSvg(doc, { ground: 'light' });
+    const forRect = filterRef(svg, 'rect');
+    const forCircle = filterRef(svg, 'circle');
+    expect(forRect).toContain('rect-1');
+    expect(forCircle).toContain('circle-2');
+    expect(forRect).not.toBe(forCircle);
+  });
+
+  it('gives two documents different ids, so both can sit in one page', () => {
+    // A filter id is global to whatever DOM the markup is inlined into, and
+    // `rect-1` is a name almost every document has — so the id has to carry
+    // something about the document as well as about the shape.
+    const one = docOf([wearing(newObject('rect', 1, BOARD), 'matte')]);
+    const two = docOf([
+      { ...wearing(newObject('rect', 1, BOARD), 'matte'), fill: { light: '#C0382E', dark: '#C0382E' } },
+    ]);
+    expect(filterRef(renderSvg(one, { ground: 'light' }), 'rect')).not.toBe(
+      filterRef(renderSvg(two, { ground: 'light' }), 'rect'),
+    );
+  });
+
+  it('emits the same ids every time, so the same document is the same file', () => {
+    const doc = docOf([wearing(newObject('rect', 1, BOARD), 'glass'), newObject('circle', 2, BOARD)]);
+    expect(renderSvg(doc, { ground: 'light' })).toBe(renderSvg(doc, { ground: 'light' }));
+  });
+
+  it('takes the glow’s colour from the shape’s own pair, one half at a time', () => {
+    const object = {
+      ...wearing(newObject('rect', 1, BOARD), 'glow'),
+      fill: { light: '#111111', dark: '#EEEEEE' },
+    };
+    expect(renderSvg(docOf([object]), { ground: 'light' })).toContain('flood-color="#111111"');
+    expect(renderSvg(docOf([object]), { ground: 'dark' })).toContain('flood-color="#EEEEEE"');
+  });
+
+  it('is self-contained: no reference leaves the file it is written in', () => {
+    for (const material of MATERIALS) {
+      const svg = renderSvg(docOf([wearing(newObject('rect', 1, BOARD), material)]), {
+        ground: 'light',
+      });
+      // Every `url(...)` names a fragment of this very document, and nothing
+      // fetches anything — the export rasterises through an `<img>`, which
+      // would load none of it.
+      const references = svg.match(/url\([^)]*\)/g) ?? [];
+      expect({ material, references }).toEqual({
+        material,
+        references: references.filter((reference) => reference.startsWith('url(#')),
+      });
+      // The `xmlns` on the root is a namespace name rather than something to
+      // fetch, and it is the only URL a self-contained file may hold.
+      const body = svg.split('\n').slice(1).join('\n');
+      expect({ material, external: /https?:|href|<style|@import/.test(body) }).toEqual({
+        material,
+        external: false,
+      });
+    }
+  });
+
+  it('writes one element per line, indented, the way the rest of the file is', () => {
+    const svg = renderSvg(docOf([wearing(newObject('rect', 1, BOARD), 'matte')]), {
+      ground: 'light',
+    });
+    const lines = svg.split('\n');
+    expect(lines).toContain('  <defs>');
+    expect(lines).toContain('  </defs>');
+    // A primitive sits one level inside its filter, which sits one level inside
+    // `<defs>`: four spaces then six.
+    expect(lines.some((line) => line.startsWith('    <filter id='))).toBe(true);
+    expect(lines.some((line) => line.startsWith('      <feOffset '))).toBe(true);
+    expect(lines.every((line) => line.split('<').length <= 2)).toBe(true);
+  });
+});
+
+describe('glass', () => {
+  const beneath = { ...newObject('circle', 2, BOARD), fill: { light: '#C0382E', dark: '#C0382E' } };
+
+  it('paints what is beneath it a second time, blurred and clipped to its outline', () => {
+    const svg = renderSvg(docOf([wearing(newObject('rect', 1, BOARD), 'glass'), beneath]), {
+      ground: 'light',
+    });
+    const clip = /clip-path="url\(#([^)]+)\)"/.exec(svg)?.[1];
+    const blur = /<g clip-path="url\(#[^)]+\)" filter="url\(#([^)]+)\)">/.exec(svg)?.[1];
+    expect(clip).toBeDefined();
+    expect(blur).toBeDefined();
+    // The clip is the glass shape's own outline, and the copy is what was under
+    // it — the circle, drawn a second time inside the group.
+    expect(svg).toContain(`<clipPath id="${clip}">`);
+    expect(svg).toContain(`<filter id="${blur}"`);
+    expect(svg).toContain('<feGaussianBlur stdDeviation=');
+    expect(svg.match(/<circle cx="256" cy="256" r="120"/g)).toHaveLength(2);
+    // And it goes immediately below the glass shape, so the shape draws over it.
+    const lines = svg.split('\n');
+    const copy = lines.findIndex((line) => line.includes('<g clip-path='));
+    const shape = lines.findIndex((line) => line.includes('<rect x="136"') && line.includes('filter='));
+    expect(copy).toBeLessThan(shape);
+  });
+
+  it('writes no copy at all when there is nothing beneath it', () => {
+    const svg = renderSvg(docOf([wearing(newObject('rect', 1, BOARD), 'glass')]), {
+      ground: 'light',
+    });
+    expect(svg).not.toContain('clip-path=');
+    expect(svg).not.toContain('<clipPath');
+    expect(svg.match(/<rect x="136"/g)).toHaveLength(1);
+  });
+
+  it('writes no copy for a run, which encloses nothing to be seen through', () => {
+    const svg = renderSvg(
+      docOf([wearing(newObject('line', 1, BOARD), 'glass'), newObject('circle', 2, BOARD)]),
+      { ground: 'light' },
+    );
+    expect(svg).not.toContain('clip-path=');
+    // Its own filter still applies — the stroke is the part of it there is.
+    expect(filterRef(svg, 'line')).not.toBeNull();
+  });
+
+  it('does not let a copy make copies of its own', () => {
+    // Two stacked glass shapes: the upper one copies the lower, and the lower's
+    // own copy is not repeated inside it — a blur through a blur is a file that
+    // grows exponentially to show a difference nobody can see.
+    const doc = docOf([
+      { ...wearing(newObject('rect', 1, BOARD), 'glass'), id: 'rect-1' },
+      { ...wearing(newObject('ellipse', 2, BOARD), 'glass'), id: 'ellipse-2' },
+      newObject('circle', 3, BOARD),
+    ]);
+    const svg = renderSvg(doc, { ground: 'light' });
+    expect(svg.match(/<g clip-path=/g)).toHaveLength(2);
+  });
+});
+
+describe('a material leaves the document alone', () => {
+  it('does not move the shape’s box or change what it contains', () => {
+    const plain = newObject('rect', 1, BOARD);
+    for (const material of MATERIALS) {
+      const dressed = wearing(plain, material);
+      expect({ material, box: bounds(dressed) }).toEqual({ material, box: bounds(plain) });
+      expect({ material, hit: contains(dressed, { x: 256, y: 256 }) }).toEqual({
+        material,
+        hit: contains(plain, { x: 256, y: 256 }),
+      });
+      expect({ material, out: contains(dressed, { x: 10, y: 10 }) }).toEqual({
+        material,
+        out: contains(plain, { x: 10, y: 10 }),
+      });
+    }
   });
 });

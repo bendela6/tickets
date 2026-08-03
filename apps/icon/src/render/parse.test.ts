@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MATERIALS } from '../doc/constants';
 import { emptyDocument, newObject } from '../doc/defaults';
 import type { IconDoc } from '../doc/types';
 import { renderSvg } from './svg';
@@ -67,6 +68,29 @@ describe('the rendered SVG is a document a browser will actually decode', () => 
   it('survives a name containing markup, since the document name reaches the manifest', () => {
     const doc: IconDoc = { ...docWith([newObject('rect', 1, BOARD)]), name: '<bad>&name' };
     expect(() => parse(renderSvg(doc, { ground: 'light' }))).not.toThrow();
+  });
+
+  it('parses with every material on the board, and every reference resolves', () => {
+    // A filter reference that names nothing is not an error anywhere — the
+    // element simply does not paint — so the check is that every `url(#…)`
+    // written has a definition with that id in the same file.
+    for (const material of MATERIALS) {
+      const doc = docWith([
+        { ...newObject('rect', 1, BOARD), material },
+        newObject('circle', 2, BOARD),
+      ]);
+      const markup = renderSvg(doc, { ground: 'light' });
+      const parsed = parse(markup);
+      const wanted = [...markup.matchAll(/url\(#([^)]+)\)/g)].map((match) => match[1] ?? '');
+      expect({ material, wanted: wanted.length > 0 }).toEqual({ material, wanted: true });
+      for (const id of wanted) {
+        expect({ material, id, defined: parsed.getElementById(id) !== null }).toEqual({
+          material,
+          id,
+          defined: true,
+        });
+      }
+    }
   });
 
   it('declares dimensions a rasteriser can scale from', () => {

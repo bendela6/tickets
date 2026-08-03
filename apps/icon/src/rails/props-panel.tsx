@@ -7,6 +7,7 @@ import {
   ARTBOARD_MAX,
   ARTBOARD_MIN,
   ARTBOARD_PRESETS,
+  MATERIALS,
   SNAP_MIN,
   SNAP_PRESETS,
 } from '../doc/constants';
@@ -23,7 +24,7 @@ import { snapTo } from '../doc/snap';
 import { selectedNodeOnly, selectedNodes, selectedObject, selectedObjects } from '../doc/store';
 import { everyShape, isGroup } from '../doc/tree';
 import { useEditor } from '../editor-context';
-import type { IconGroup, IconNode, IconObject, Pair } from '../doc/types';
+import type { IconGroup, IconNode, IconObject, Material, Pair } from '../doc/types';
 import { ColourPairField } from './colour-pair-field';
 import { NumberField } from './number-field';
 import { RailGroup } from './rail-group';
@@ -141,6 +142,59 @@ function Header({ node, count }: { node: IconNode | null; count: number }) {
 
 const samePair = (a: Pair, b: Pair): boolean => a.light === b.light && a.dark === b.dark;
 
+/**
+ * The surface treatment layered over the paint.
+ *
+ * Seven choices, `none` first and the default, in the same pressed-button row
+ * the artboard and snap presets already use — a material is a choice from a
+ * short fixed list, which is what that control is for, and there is nothing
+ * here a select or a menu would say better.
+ *
+ * A material is a *shape's*, so this control never appears for a group. Nothing
+ * has to enforce that here: the group rail has its own appearance block, and it
+ * offers opacity and nothing else for the same reason it offers no fill.
+ *
+ * `mixed` withdraws the pressed state and nothing else. A pressed button would
+ * claim the selection is that material, which is the one thing known to be
+ * untrue; every button still works, and pressing one settles them all.
+ */
+function MaterialField({
+  value,
+  mixed = false,
+  onChange,
+}: {
+  value: Material | undefined;
+  mixed?: boolean;
+  onChange: (material: Material | null) => void;
+}) {
+  const choices: readonly (Material | null)[] = [null, ...MATERIALS];
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="font-sans text-9 font-500 tracking-widest text-gray-9">MATERIAL</span>
+      <div role="group" aria-label="Material" className="grid grid-cols-4 gap-1.25">
+        {choices.map((choice) => {
+          const current = !mixed && (choice ?? undefined) === value;
+          return (
+            <button
+              key={choice ?? 'none'}
+              type="button"
+              aria-pressed={current}
+              onClick={() => onChange(choice)}
+              className={
+                current
+                  ? 'h-6.5 rounded-md border-1 border-indigo-9 bg-indigo-3 font-mono text-10 text-indigo-9'
+                  : 'h-6.5 rounded-md border-1 border-gray-6 bg-surface-raised font-mono text-10 text-gray-11'
+              }
+            >
+              {choice ?? 'none'}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /** Whether every object answers a question the same way. */
 function agree<T>(
   objects: readonly IconObject[],
@@ -239,6 +293,12 @@ function SelectionProperties({ nodes, objects }: { nodes: IconNode[]; objects: I
             />
           ) : null}
         </div>
+
+        <MaterialField
+          value={first.material}
+          mixed={!agree(objects, (object) => object.material)}
+          onChange={(material) => dispatch({ type: 'setMaterial', ids, material })}
+        />
       </RailGroup>
 
       <SelectionCount count={nodes.length} />
@@ -403,6 +463,11 @@ function ObjectProperties({ object }: { object: IconObject }) {
             onChange={(opacity) => dispatch({ type: 'setOpacity', ids: [object.id], opacity })}
           />
         </div>
+
+        <MaterialField
+          value={object.material}
+          onChange={(material) => dispatch({ type: 'setMaterial', ids: [object.id], material })}
+        />
       </RailGroup>
 
       <ShapeSpecific object={object} />
