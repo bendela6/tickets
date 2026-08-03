@@ -19,9 +19,10 @@ const FAMILIES = [generateColors, generateSurfaces, generateLiterals, generateSh
 /**
  * Resolve every emitted family into `name -> { value, type }` per theme.
  *
- * The single source of truth for token resolution: the CSS build and the
- * design-doc parity check (`scripts/check-design-tokens.mjs`) both call this
- * rather than re-deriving their own copy.
+ * The single source of truth for token resolution. The design-doc parity check
+ * used to call this too; it was deleted 2026-08-04, so the CSS build is now the
+ * only caller — kept exported because a second consumer is the normal case for
+ * this function, not an unusual one.
  *
  * Merging before emitting is what makes the symmetry check meaningful — a
  * per-family check would pass while the sheet as a whole was asymmetric.

@@ -499,7 +499,9 @@
      silent one. `rounded-full` survives — Tailwind hardcodes it to
      `calc(infinity * 1px)` rather than reading a token, and a pill is not a
      step on the scale. Bare `rounded` is likewise static (0.25rem) and cannot
-     be cleared here; `vocabulary.test.ts` is what keeps it out of the tree. */
+     be cleared here — and as of 2026-08-04 nothing keeps it out of the tree
+     either: the `vocabulary.test.ts` scan that used to was removed. It renders
+     the same 4px as `rounded-sm`, so this is a naming drift, not a visual one. */
   --radius-xs: initial;
   --radius-2xl: initial;
   --radius-3xl: initial;
