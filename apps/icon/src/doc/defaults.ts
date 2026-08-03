@@ -1,4 +1,4 @@
-import { DEFAULT_GROUND, DEFAULT_INK, REFERENCE_SIZE } from './constants';
+import { DEFAULT_GROUND, DEFAULT_INK, DEFAULT_SHADOW_INK, REFERENCE_SIZE } from './constants';
 import { arcPath, isOpenRun, polygonPoints } from './geometry';
 import { snapGeometry, snapTo } from './snap';
 import type {
@@ -7,6 +7,7 @@ import type {
   GroupTransform,
   IconDoc,
   IconObject,
+  Shadow,
   ShapeKind,
 } from './types';
 
@@ -24,7 +25,12 @@ const PLACEMENT = {
   lineWidth: 20 / REFERENCE_SIZE,
   reach: 120 / REFERENCE_SIZE,
   arcRadius: 128 / REFERENCE_SIZE,
+  shadowDrop: 16 / REFERENCE_SIZE,
+  shadowBlur: 24 / REFERENCE_SIZE,
 } as const;
+
+/** Well short of solid: one you cannot see through is a second copy, not depth. */
+const SHADOW_OPACITY = 40;
 
 /**
  * The polygon tool is a hexagon preset: it calls the regular-polygon generator
@@ -182,6 +188,27 @@ export function newObject(
   snap = 1,
 ): IconObject {
   return objectFor(initialGeometry(kind, artboard), sequence, artboard, snap);
+}
+
+/**
+ * The shadow a first press writes: straight down, soft, and dark.
+ *
+ * Its drop and radius are fractions of the artboard for the same reason every
+ * placement here is one — 16 units below is a shadow on a 512 board and most of
+ * a shape's own height below it on a 16 one — and land on the document's grid,
+ * because an offset is a position like any other. No horizontal throw: a shadow
+ * thrown sideways implies a light source, and an icon has no scene to put one in.
+ */
+export function newShadow(artboard: Artboard, snap = 1): Shadow {
+  const shorter = Math.min(artboard.width, artboard.height);
+  const on = (fraction: number) => Math.max(snap, snapTo(fraction * shorter, snap));
+  return {
+    dx: 0,
+    dy: on(PLACEMENT.shadowDrop),
+    blur: on(PLACEMENT.shadowBlur),
+    colour: { ...DEFAULT_SHADOW_INK },
+    opacity: SHADOW_OPACITY,
+  };
 }
 
 /** A new document: an empty board, and one picture to draw on it. */

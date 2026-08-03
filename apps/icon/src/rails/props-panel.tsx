@@ -1,16 +1,10 @@
 import { useId } from 'react';
-import { Button, Slider } from '@tickets/ui';
+import { Button, Slider, cn } from '@tickets/ui';
 import { BOOLEAN_OPS } from '../boolean/ops';
 import { useCombine } from '../boolean/use-combine';
 import { ShapeGlyph } from '../canvas/shape-tools';
-import {
-  ARTBOARD_MAX,
-  ARTBOARD_MIN,
-  ARTBOARD_PRESETS,
-  MATERIALS,
-  SNAP_MIN,
-  SNAP_PRESETS,
-} from '../doc/constants';
+import { ARTBOARD_MAX, ARTBOARD_MIN, ARTBOARD_PRESETS, SNAP_MIN, SNAP_PRESETS } from '../doc/constants';
+import { newShadow } from '../doc/defaults';
 import {
   aimLine,
   bounds,
@@ -24,7 +18,7 @@ import { snapTo } from '../doc/snap';
 import { selectedNodeOnly, selectedNodes, selectedObject, selectedObjects } from '../doc/store';
 import { everyShape, isGroup } from '../doc/tree';
 import { useEditor } from '../editor-context';
-import type { IconGroup, IconNode, IconObject, Material, Pair } from '../doc/types';
+import type { IconGroup, IconNode, IconObject, Pair, Shadow } from '../doc/types';
 import { ColourPairField } from './colour-pair-field';
 import { NumberField } from './number-field';
 import { RailGroup } from './rail-group';
@@ -143,54 +137,116 @@ function Header({ node, count }: { node: IconNode | null; count: number }) {
 const samePair = (a: Pair, b: Pair): boolean => a.light === b.light && a.dark === b.dark;
 
 /**
- * The surface treatment layered over the paint.
- *
- * Seven choices, `none` first and the default, in the same pressed-button row
- * the artboard and snap presets already use — a material is a choice from a
- * short fixed list, which is what that control is for, and there is nothing
- * here a select or a menu would say better.
- *
- * A material is a *shape's*, so this control never appears for a group. Nothing
- * has to enforce that here: the group rail has its own appearance block, and it
- * offers opacity and nothing else for the same reason it offers no fill.
- *
- * `mixed` withdraws the pressed state and nothing else. A pressed button would
- * claim the selection is that material, which is the one thing known to be
- * untrue; every button still works, and pressing one settles them all.
+ * The one look every pressed-or-not chip in this rail wears — artboard presets,
+ * snap presets, the shadow switch — so a fourth cannot arrive a shade off.
  */
-function MaterialField({
-  value,
-  mixed = false,
-  onChange,
-}: {
-  value: Material | undefined;
-  mixed?: boolean;
-  onChange: (material: Material | null) => void;
-}) {
-  const choices: readonly (Material | null)[] = [null, ...MATERIALS];
+const chip = (current: boolean): string =>
+  cn(
+    'h-6.5 rounded-md border-1 font-mono text-10',
+    current
+      ? 'border-indigo-9 bg-indigo-3 text-indigo-9'
+      : 'border-gray-6 bg-surface-raised text-gray-11',
+  );
+
+/**
+ * Blur and shadow: the two things done to an object after it is drawn.
+ *
+ * One component for a shape and for a group, because the model gives both the
+ * same two fields and for the same reason — a shadow is thrown by an outline,
+ * and a group has exactly one outline however many shapes are inside it.
+ *
+ * **The shadow is a press, not five fields greyed out.** A node with none shows
+ * a single button; pressing it writes a shadow anyone would keep and the fields
+ * appear underneath. Disabled fields would ask the reader to work out whether a
+ * shadow at zero offset and zero radius is the same as no shadow, and it is
+ * not: the document either carries the field or it does not.
+ *
+ * Every row commits on blur or Enter and sends the whole shadow back with one
+ * number changed, so each is exactly one undo entry.
+ */
+function EffectsFields({ node }: { node: IconNode }) {
+  const { state, dispatch, view } = useEditor();
+  const { doc } = state;
+  const ids = [node.id];
+  const shadow = node.shadow;
+  const setShadow = (next: Shadow) => dispatch({ type: 'setShadow', ids, shadow: next });
+
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="font-sans text-9 font-500 tracking-widest text-gray-9">MATERIAL</span>
-      <div role="group" aria-label="Material" className="grid grid-cols-4 gap-1.25">
-        {choices.map((choice) => {
-          const current = !mixed && (choice ?? undefined) === value;
-          return (
-            <button
-              key={choice ?? 'none'}
-              type="button"
-              aria-pressed={current}
-              onClick={() => onChange(choice)}
-              className={
-                current
-                  ? 'h-6.5 rounded-md border-1 border-indigo-9 bg-indigo-3 font-mono text-10 text-indigo-9'
-                  : 'h-6.5 rounded-md border-1 border-gray-6 bg-surface-raised font-mono text-10 text-gray-11'
-              }
-            >
-              {choice ?? 'none'}
-            </button>
-          );
-        })}
-      </div>
+      <NumberField
+        label="BLUR"
+        name="Blur"
+        value={node.blur ?? 0}
+        min={0}
+        step={doc.snap}
+        onCommit={(blur) => dispatch({ type: 'setBlur', ids, blur })}
+      />
+
+      <button
+        type="button"
+        aria-pressed={shadow !== undefined}
+        onClick={() =>
+          dispatch({
+            type: 'setShadow',
+            ids,
+            shadow: shadow === undefined ? newShadow(doc.artboard, doc.snap) : null,
+          })
+        }
+        className={chip(shadow !== undefined)}
+      >
+        SHADOW
+      </button>
+
+      {shadow === undefined ? null : (
+        <>
+          <div className="grid grid-cols-2 gap-1.5">
+            <NumberField
+              label="X"
+              name="Shadow x"
+              value={shadow.dx}
+              step={doc.snap}
+              onCommit={(dx) => setShadow({ ...shadow, dx })}
+            />
+            <NumberField
+              label="Y"
+              name="Shadow y"
+              value={shadow.dy}
+              step={doc.snap}
+              onCommit={(dy) => setShadow({ ...shadow, dy })}
+            />
+          </div>
+          <NumberField
+            label="RADIUS"
+            name="Shadow radius"
+            value={shadow.blur}
+            min={0}
+            step={doc.snap}
+            onCommit={(blur) => setShadow({ ...shadow, blur })}
+          />
+          <NumberField
+            label="OPACITY"
+            name="Shadow opacity"
+            value={shadow.opacity}
+            min={0}
+            max={100}
+            suffix="%"
+            onCommit={(opacity) => setShadow({ ...shadow, opacity })}
+          />
+          {/* No contrast grade. A shadow is not read against the ground — it is
+              the ground, partly covered — so a ratio printed here would be a
+              measurement of the wrong thing wearing an official-looking badge. */}
+          <ColourPairField
+            label="SHADOW"
+            value={shadow.colour}
+            ground={view.ground}
+            against={doc.background}
+            showContrast={false}
+            onChange={(hex) =>
+              setShadow({ ...shadow, colour: { ...shadow.colour, [view.ground]: hex } })
+            }
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -215,6 +271,12 @@ function agree<T>(
  * out rather than averaged or blanked — they are per-shape by nature, and a
  * field offering to set three shapes' X to one number is offering to stack
  * them, which is not what anyone typing in an X field is asking for.
+ *
+ * The blur and the shadow are left out on the same grounds, and it is worth
+ * saying which. "Shadow these three" has two readings — one shadow under the
+ * lot, or three separate ones that overlap and seam where they cross — and the
+ * one people mean is the first. ⌘G says it exactly: a group takes the shadow,
+ * throws one, and undoes as one thing. A field here would quietly do the other.
  *
  * Where a shared control's objects disagree it says `mixed` instead of showing
  * one of them, and editing it writes to every one of them as a single entry.
@@ -294,11 +356,6 @@ function SelectionProperties({ nodes, objects }: { nodes: IconNode[]; objects: I
           ) : null}
         </div>
 
-        <MaterialField
-          value={first.material}
-          mixed={!agree(objects, (object) => object.material)}
-          onChange={(material) => dispatch({ type: 'setMaterial', ids, material })}
-        />
       </RailGroup>
 
       <SelectionCount count={nodes.length} />
@@ -320,9 +377,12 @@ function SelectionCount({ count }: { count: number }) {
 /**
  * The rail for a group.
  *
- * Position, turn and scale — the three things its transform holds — and the one
- * appearance property it has. No fill and no stroke, because it has none: a
- * group is where its children are, and its children each state their own.
+ * Position, turn and scale — the three things its transform holds — and the
+ * appearance it genuinely has of its own: an opacity, a blur and a shadow. No
+ * fill and no stroke, because it has none: a group is where its children are,
+ * and its children each state their own paint. The three it does get are the
+ * three that are about the group as one thing rather than about the paint of
+ * anything inside it.
  */
 function GroupProperties({ group }: { group: IconGroup }) {
   const { dispatch } = useEditor();
@@ -378,6 +438,8 @@ function GroupProperties({ group }: { group: IconGroup }) {
             onChange={(opacity) => dispatch({ type: 'setOpacity', ids: [group.id], opacity })}
           />
         </div>
+
+        <EffectsFields node={group} />
       </RailGroup>
 
       <div className="flex flex-col gap-1.25 px-3.5 py-3.25">
@@ -464,10 +526,7 @@ function ObjectProperties({ object }: { object: IconObject }) {
           />
         </div>
 
-        <MaterialField
-          value={object.material}
-          onChange={(material) => dispatch({ type: 'setMaterial', ids: [object.id], material })}
-        />
+        <EffectsFields node={object} />
       </RailGroup>
 
       <ShapeSpecific object={object} />
@@ -783,11 +842,7 @@ function DocumentProperties() {
                 aria-pressed={current}
                 aria-label={`${preset.width} by ${preset.height}`}
                 onClick={() => dispatch({ type: 'setArtboard', artboard: preset })}
-                className={
-                  current
-                    ? 'h-6.5 flex-1 rounded-md border-1 border-indigo-9 bg-indigo-3 font-mono text-10 text-indigo-9'
-                    : 'h-6.5 flex-1 rounded-md border-1 border-gray-6 bg-surface-raised font-mono text-10 text-gray-11'
-                }
+                className={cn(chip(current), 'flex-1')}
               >
                 {preset.width}
               </button>
@@ -813,11 +868,7 @@ function DocumentProperties() {
               aria-pressed={preset === doc.snap}
               aria-label={`Step ${preset}`}
               onClick={() => dispatch({ type: 'setSnap', snap: preset })}
-              className={
-                preset === doc.snap
-                  ? 'h-6.5 flex-1 rounded-md border-1 border-indigo-9 bg-indigo-3 font-mono text-10 text-indigo-9'
-                  : 'h-6.5 flex-1 rounded-md border-1 border-gray-6 bg-surface-raised font-mono text-10 text-gray-11'
-              }
+              className={cn(chip(preset === doc.snap), 'flex-1')}
             >
               {preset}
             </button>

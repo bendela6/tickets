@@ -1,7 +1,7 @@
 import { emptyDocument } from './defaults';
 import { polygonPoints } from './geometry';
 import { isGroup } from './tree';
-import type { Artboard, DocumentSummary, Geometry, IconDoc, IconObject } from './types';
+import type { Artboard, DocumentSummary, Geometry, IconDoc, IconNode, IconObject } from './types';
 
 /** What a polygon was before `<polygon>` was taken literally: a regular n-gon. */
 interface RegularPolygon {
@@ -34,6 +34,33 @@ interface Animated {
 /** What an object carried while it could animate. */
 interface Moving {
   motion?: unknown;
+}
+
+/** What a shape carried while a surface could be picked from a list by name. */
+interface Dressed {
+  material?: unknown;
+}
+
+/**
+ * The node with any named surface taken off it, and the very node back when
+ * there was none. Nothing is put in its place: a `glass` was a bundle of a
+ * dozen filter primitives, and guessing which blur radius somebody would have
+ * picked instead would be inventing an edit they never made.
+ *
+ * This one walks into groups, unlike the two repairs below it — materials
+ * arrived long *after* groups did, so a save really can hold one three levels
+ * down.
+ */
+function undressed(node: IconNode): IconNode {
+  if (isGroup(node)) {
+    const children = node.children.map(undressed);
+    return children.every((child, index) => child === node.children[index])
+      ? node
+      : { ...node, children };
+  }
+  if (!('material' in node)) return node;
+  const { material: _withdrawn, ...bare } = node as IconObject & Dressed;
+  return bare;
 }
 
 /**
@@ -69,12 +96,13 @@ function stillObject(object: IconObject): IconObject {
     hidden: object.hidden,
     locked: object.locked,
   };
-  // Carried only when it is there, so a document that never had a material does
+  // Each carried only when it is there, so a document that never had one does
   // not come back out of here holding the key with nothing in it. No document
-  // this function ever runs on can have one — materials arrived long after
+  // this function ever runs on can have either — effects arrived long after
   // animation left — but a field named nowhere is a field silently dropped, and
   // that is the trap this whole function is shaped to avoid.
-  if (object.material !== undefined) still.material = object.material;
+  if (object.blur !== undefined) still.blur = object.blur;
+  if (object.shadow !== undefined) still.shadow = object.shadow;
   return still;
 }
 
@@ -103,23 +131,29 @@ function stillObject(object: IconObject): IconObject {
  * A migration here would walk every document ever saved and hand each one back
  * unchanged, and the only thing it could achieve is marking them all dirty.
  *
- * A fourth needed none for the same reason, and it is worth naming because it
- * is the shape every future one should take. A shape may now wear a material,
- * and the field that says so is optional: a document saved before materials
- * existed has no such field, and no such field *is* no material, which is the
- * default. There is nothing to fill in, so nothing is walked.
+ * A third that *did* need one, and it is the case worth studying because it is
+ * the one that went wrong. A shape could briefly name a surface — `glass`,
+ * `metal`, four more — and that field names a treatment no renderer here can
+ * draw any more, so it is dropped whole. Taking a field away costs one
+ * function, which is the argument for optional fields over preset enumerations.
+ *
+ * A fourth needs no migration at all, and is the shape every future one should
+ * take: an object may now carry a blur and a shadow, both optional, and having
+ * neither *is* having no effects. There is nothing to fill in.
  *
  * On read rather than on write, because this is the only place a document from
- * before either change can enter — nothing will ever write one again. The
+ * before any of these can enter — nothing will ever write one again. The
  * document is returned unchanged, and identical, when there was nothing to do:
  * `dirty` is measured by comparing the open document against what was loaded,
  * and a migration that rebuilt every document would report them all edited.
  */
 export function migrate(doc: IconDoc): IconDoc {
   let changed = false;
-  const objects = doc.objects.map((object) => {
-    // A group cannot be either of the two things this migration repairs: both
-    // predate groups entirely, so no document that holds one can hold them.
+  const objects = doc.objects.map((node) => {
+    const object = undressed(node);
+    if (object !== node) changed = true;
+    // A group cannot be either of the two things left to repair: both predate
+    // groups entirely, so no document that holds one can hold them.
     if (isGroup(object)) return object;
     const regular = asRegularPolygon(object.geometry);
     const moved = (object as IconObject & Moving).motion !== undefined;

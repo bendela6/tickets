@@ -1,4 +1,4 @@
-import type { Artboard, Material, Pair } from './types';
+import type { Artboard, Pair } from './types';
 
 /**
  * Values of record, transcribed from the design's prototype. Nothing here is a
@@ -69,24 +69,18 @@ export const SWATCHES: readonly string[] = [
   '#2E6FCC',
 ];
 
-/**
- * The materials on offer, in the order the properties rail lists them.
- *
- * Softest surface first and brightest last, so the row reads as a scale rather
- * than as an alphabet. `none` is not in the list: it is the absence of one, and
- * the picker states it separately for the same reason the model does.
- */
-export const MATERIALS: readonly Material[] = [
-  'glass',
-  'glossy',
-  'metal',
-  'matte',
-  'paper',
-  'glow',
-];
-
 /** The colour a new object arrives in. */
 export const DEFAULT_INK: Pair = { light: '#4E46C6', dark: '#A9A2F2' };
 
 /** The artboard's own ground. */
 export const DEFAULT_GROUND: Pair = { light: '#FFFFFF', dark: '#14130F' };
+
+/**
+ * The colour a new shadow arrives in.
+ *
+ * A warm near-black under a light ground and a true black under a dark one,
+ * which is the reason a shadow states a pair at all: the same soft grey that
+ * reads as depth on white reads as haze on `#14130F`, so the dark half goes
+ * further down rather than matching.
+ */
+export const DEFAULT_SHADOW_INK: Pair = { light: '#25231D', dark: '#000000' };

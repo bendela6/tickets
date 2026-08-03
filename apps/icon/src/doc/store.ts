@@ -40,6 +40,7 @@ import {
 } from './tree';
 import type {
   Artboard,
+  Effects,
   Geometry,
   GroupTransform,
   Ground,
@@ -47,10 +48,10 @@ import type {
   IconGroup,
   IconNode,
   IconObject,
-  Material,
   Pair,
   PathSegment,
   Point,
+  Shadow,
   ShapeKind,
 } from './types';
 
@@ -311,11 +312,18 @@ export type Action =
   | { type: 'setOpacity'; ids: readonly string[]; opacity: number; at?: number }
   | { type: 'setStrokeWidth'; ids: readonly string[]; width: number }
   /**
-   * The treatment layered over the paint. `null` is none, which is what the
-   * document says by having no such field at all — so choosing it takes the
-   * field back off rather than writing a word meaning "nothing".
+   * A gaussian softening of the whole object, in document units. Zero is none —
+   * which the document says by having no such field at all, so zero takes the
+   * field back off rather than writing a number meaning "nothing".
    */
-  | { type: 'setMaterial'; ids: readonly string[]; material: Material | null }
+  | { type: 'setBlur'; ids: readonly string[]; blur: number }
+  /**
+   * The shadow, whole, rather than a field of it at a time: the rail already
+   * holds the current one, and sending it back with one number changed keeps
+   * every edit a single entry without a reducer that merges partials. `null` is
+   * none, and takes the field off by the same rule as above.
+   */
+  | { type: 'setShadow'; ids: readonly string[]; shadow: Shadow | null }
   | {
       type: 'setColor';
       ids: readonly string[];
@@ -392,6 +400,19 @@ function mapShapes(
     (next, id) => withNode(next, id, (node) => (isGroup(node) ? node : fn(node))),
     doc,
   );
+}
+
+/**
+ * The node with one effect taken back off — removed rather than set to
+ * `undefined`, because the model states "none" by having no field at all. A
+ * node carrying `blur: undefined` is a document no fresh shape and no old save
+ * ever produces: identical on screen, different to every comparison.
+ */
+function withoutEffect(node: IconNode, key: keyof Effects): IconNode {
+  if (!(key in node)) return node;
+  const bare = { ...node };
+  delete bare[key];
+  return bare;
 }
 
 /**
@@ -715,11 +736,12 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
       const sequence = state.sequence + 1;
       const front = plan.front.shape;
       const result: IconObject = {
-        // The frontmost operand's surface, for the same reason the result wears
+        // The frontmost operand's effects, for the same reason the result wears
         // its colour: it is the one that was on top, and the one you were
         // already looking at. Spread conditionally so a result cut from plain
         // shapes carries no field at all rather than an empty one.
-        ...(front.material === undefined ? {} : { material: front.material }),
+        ...(front.blur === undefined ? {} : { blur: front.blur }),
+        ...(front.shadow === undefined ? {} : { shadow: front.shadow }),
         id: objectId('path', sequence),
         // Named for what made it. Every other object is named for its kind, but
         // four operations all produce a `path` and the name is the only place
@@ -1086,21 +1108,35 @@ export function editorReducer(state: EditorState, action: Action): EditorState {
         doc: mapShapes(state.doc, action.ids, (o) => ({ ...o, strokeWidth })),
       };
     }
-    case 'setMaterial': {
-      const material = action.material;
+    // Both reach a node of either kind, like `setOpacity` and unlike a fill: a
+    // shadow is thrown by an outline rather than by a paint, and a group has
+    // exactly one outline however many shapes are inside it.
+    case 'setBlur': {
+      const blur = Math.max(0, action.blur);
       return {
         ...state,
-        // One entry, whatever it lands on: picking a material is one press of
-        // one control, the same as picking a colour.
-        ...remember(state, `${material ?? 'no material'} ${subjectOf(state, action.ids)}`),
-        doc: mapShapes(state.doc, action.ids, (o) => {
-          if (material !== null) return { ...o, material };
-          // Taken off rather than set to a word: the model states "none" by
-          // having no field, and a shape that carried `material: undefined`
-          // would be a document that is not the one an old save produces.
-          const { material: _none, ...bare } = o;
-          return bare;
-        }),
+        // One entry, whatever it lands on: setting a blur is one edit in one
+        // field, the same as setting a colour.
+        ...remember(state, `blur ${subjectOf(state, action.ids)}`),
+        doc: action.ids.reduce(
+          (doc, id) =>
+            withNode(doc, id, (node) => (blur > 0 ? { ...node, blur } : withoutEffect(node, 'blur'))),
+          state.doc,
+        ),
+      };
+    }
+    case 'setShadow': {
+      const shadow = action.shadow;
+      return {
+        ...state,
+        ...remember(state, `${shadow === null ? 'no shadow' : 'shadow'} ${subjectOf(state, action.ids)}`),
+        doc: action.ids.reduce(
+          (doc, id) =>
+            withNode(doc, id, (node) =>
+              shadow === null ? withoutEffect(node, 'shadow') : { ...node, shadow },
+            ),
+          state.doc,
+        ),
       };
     }
     case 'setColor': {

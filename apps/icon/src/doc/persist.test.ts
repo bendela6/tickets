@@ -1,16 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import { emptyDocument, newObject } from './defaults';
+import { emptyDocument, newObject, newShadow } from './defaults';
 import { polygonPoints } from './geometry';
 import { memoryStore } from './persist';
 import { everyShape } from './tree';
-import type { Geometry, IconDoc, IconObject } from './types';
+import type { Geometry, IconDoc, IconGroup, IconNode, IconObject } from './types';
 
 /** The 512-square board most of these fixtures assume. */
 const BOARD = { width: 512, height: 512 };
 
-/** The shapes a loaded document holds. Every fixture here is a flat list. */
+/** The shapes a loaded document holds, at whatever depth they sit. */
 const shapes = (doc: IconDoc | null | undefined): IconObject[] =>
   doc ? everyShape(doc.objects) : [];
+
+/** The shadow a first press actually writes, rather than a parallel one. */
+const SHADOW = newShadow(BOARD);
+
+/** A group holding `children`, with nothing done to it. */
+const group = (children: IconNode[]): IconGroup => ({
+  id: 'group-9',
+  name: 'group 9',
+  transform: { x: 0, y: 0, rotation: 0, scale: 1 },
+  opacity: 100,
+  hidden: false,
+  locked: false,
+  children,
+});
 
 describe('DocumentStore contract', () => {
   it('creates a document and hands back both its id and its content', async () => {
@@ -193,47 +207,63 @@ describe('documents saved while the editor could animate', () => {
     expect(await store.load('old')).toBe(current);
   });
 
-  it('keep a material through the rewrite, since a named field is the point of it', async () => {
+  it('keep the effects through the rewrite, since a named field is the point of it', async () => {
     // This migration rebuilds every object field by field, which is what stops
     // `motion` travelling along inside a spread — and is also what would drop a
     // field added afterwards without anyone noticing.
     const saved = {
       ...savedAnimated(),
-      objects: [{ ...drawn(), material: 'glass', motion: { takesPart: true } }],
+      objects: [{ ...drawn(), blur: 6, shadow: SHADOW, motion: { takesPart: true } }],
     } as unknown as IconDoc;
     const loaded = await storeHolding(saved).load('old');
-    expect(shapes(loaded)[0]?.material).toBe('glass');
+    expect(shapes(loaded)[0]?.blur).toBe(6);
+    expect(shapes(loaded)[0]?.shadow).toEqual(SHADOW);
   });
 });
 
-describe('documents saved before a shape could wear a material', () => {
-  it('open unchanged, because no field is missing from them', async () => {
-    // No migration runs at all: a material is optional, and its absence *is*
-    // none. The identity check is the whole assertion — anything that rebuilt
-    // the document would hand back an equal one and mark it edited.
-    const before = { ...emptyDocument('plain.icon'), objects: [newObject('rect', 1, BOARD)] };
-    expect(await storeHolding(before).load('old')).toBe(before);
-    expect(Object.hasOwn(shapes(before)[0]!, 'material')).toBe(false);
+describe('documents saved while a shape could wear a material', () => {
+  /** A saved shape wearing one of the six surfaces that were withdrawn. */
+  const dressed = (kind: 'rect' | 'circle', sequence: number, material: string) =>
+    ({ ...newObject(kind, sequence, BOARD), material }) as unknown as IconObject;
+
+  it('open with the field dropped, at the top level and inside a group alike', async () => {
+    // Groups arrived *before* materials did, so a saved document really can
+    // hold one three levels down — which is why this repair walks the tree
+    // where the two older ones do not.
+    const saved: IconDoc = {
+      ...emptyDocument('dressed.icon'),
+      objects: [dressed('rect', 1, 'glass'), group([dressed('circle', 2, 'metal')])],
+    };
+    const loaded = await storeHolding(saved).load('old');
+    expect(loaded).toEqual({
+      ...emptyDocument('dressed.icon'),
+      objects: [newObject('rect', 1, BOARD), group([newObject('circle', 2, BOARD)])],
+    });
+    // Dropped, not blanked: a shape carrying `material: undefined` would be a
+    // document neither a fresh shape nor an old save ever produces.
+    for (const shape of shapes(loaded)) expect(Object.hasOwn(shape, 'material')).toBe(false);
   });
 
-  it('a material survives a save and a reopen, whole and unchanged', async () => {
+});
+
+describe('a blur and a shadow', () => {
+  it('survive a save and a reopen, whole and unchanged', async () => {
     const store = memoryStore();
-    const { id } = await store.create('dressed.icon');
+    const { id } = await store.create('effects.icon');
     const doc: IconDoc = {
-      ...emptyDocument('dressed.icon'),
+      ...emptyDocument('effects.icon'),
       objects: [
-        { ...newObject('rect', 1, BOARD), material: 'glass' },
-        { ...newObject('circle', 2, BOARD), material: 'paper' },
-        newObject('line', 3, BOARD),
+        { ...newObject('rect', 1, BOARD), blur: 6 },
+        { ...newObject('circle', 2, BOARD), shadow: SHADOW },
+        { ...group([newObject('line', 3, BOARD)]), blur: 2, shadow: SHADOW },
       ],
     };
     await store.save(id, doc);
-    const reopened = await store.load(id);
-    expect(reopened).toEqual(doc);
-    expect(shapes(reopened).map((shape) => shape.material)).toEqual([
-      'glass',
-      'paper',
-      undefined,
-    ]);
+    expect(await store.load(id)).toEqual(doc);
+    // And absent by default: a shape asking for neither carries neither key.
+    const plain = { ...emptyDocument('plain.icon'), objects: [newObject('rect', 1, BOARD)] };
+    const shape = shapes(await storeHolding(plain).load('old'))[0];
+    expect(shape && Object.hasOwn(shape, 'blur')).toBe(false);
+    expect(shape && Object.hasOwn(shape, 'shadow')).toBe(false);
   });
 });
