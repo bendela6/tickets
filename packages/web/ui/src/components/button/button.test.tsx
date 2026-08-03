@@ -115,7 +115,7 @@ test('loading shows an animating Spinner, hidden while not loading', () => {
   expect(spinner.tagName.toLowerCase()).toBe('svg');
   expect(spinner).toHaveAttribute('width', '12');
   expect(spinner).toHaveAttribute('height', '12');
-  expect(spinner).toHaveClass('animate-ai-spin');
+  expect(spinner).toHaveClass('animate-spin');
 
   rerender(<Button>Creating…</Button>);
   expect(screen.queryByRole('img', { name: 'Loading' })).toBeNull();

@@ -25,7 +25,7 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
         'absolute left-0 top-0',
         'w-(--card-width) translate-x-(--card-x) translate-y-(--card-y)',
         'border-1 border-(--card-border) rounded-lg',
-        'bg-gray-2 shadow-raised',
+        'bg-gray-2 shadow-xs',
         'transition-(--transition-paint) duration-120',
         {
           // Dimmed, not erased. At `opacity-22` a card's frame fell to 1.01:1
@@ -36,7 +36,7 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
           // body text, so they can go further.)
           'opacity-45': p.dim,
           'border-gray-7': p.focus,
-          'border-blue-9 ring-1 ring-blue-9 shadow-overlay': p.selected,
+          'border-blue-9 ring-1 ring-blue-9 shadow-md': p.selected,
           hidden: p.hidden,
         },
       )}

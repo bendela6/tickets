@@ -85,14 +85,14 @@ describe('variants', () => {
 
   it('Spinner variants pick a different glyph and animation', () => {
     const { container, rerender } = render(<Spinner variant="arc" />);
-    expect(container.querySelector('svg')!.getAttribute('class')).toContain('animate-ai-spin');
+    expect(container.querySelector('svg')!.getAttribute('class')).toContain('animate-spin');
     rerender(<Spinner variant="dashed" />);
-    expect(container.querySelector('svg')!.getAttribute('class')).toContain('animate-ai-spin');
+    expect(container.querySelector('svg')!.getAttribute('class')).toContain('animate-spin');
     // `pulse` deliberately does not rotate: it is a heartbeat, not work that
     // finishes, so spinning would promise the wrong thing.
     rerender(<Spinner variant="pulse" />);
     const cls = container.querySelector('svg')!.getAttribute('class')!;
-    expect(cls).toContain('animate-ai-pulse');
-    expect(cls).not.toContain('animate-ai-spin');
+    expect(cls).toContain('animate-pulse');
+    expect(cls).not.toContain('animate-spin');
   });
 });

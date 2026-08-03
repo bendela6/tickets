@@ -156,7 +156,7 @@ function Animations() {
         <SpecRow key={animation.name} name={animation.name} value={animation.value}>
           <span
             className={`inline-block size-5 rounded-full bg-indigo-9 motion-reduce:animate-none ${
-              animation.name === 'animate-ai-spin' ? 'animate-ai-spin' : 'animate-ai-pulse'
+              animation.name === 'animate-spin' ? 'animate-spin' : 'animate-pulse'
             }`}
           />
         </SpecRow>

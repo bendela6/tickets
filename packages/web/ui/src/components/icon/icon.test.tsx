@@ -62,7 +62,7 @@ describe('Icon', () => {
 
   it('animate is opt-in only', () => {
     const { container } = render(<Icon name="circle-half" animate="spin" />);
-    expect(container.querySelector('svg')!.getAttribute('class')).toContain('animate-ai-spin');
+    expect(container.querySelector('svg')!.getAttribute('class')).toContain('animate-spin');
     const { container: still } = render(<Icon name="circle-half" />);
     expect(still.querySelector('svg')!.getAttribute('class') ?? '').not.toContain('animate');
   });

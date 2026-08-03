@@ -84,7 +84,7 @@ describe('Pill', () => {
     const { container: el } = render(
       <Pill label="B" icon={<Icon name="circle-half" animate="spin" />} />,
     );
-    expect(el.querySelector('svg')!.getAttribute('class')).toContain('animate-ai-spin');
+    expect(el.querySelector('svg')!.getAttribute('class')).toContain('animate-spin');
   });
 
   it('shape full, strikethrough, trailing', () => {
