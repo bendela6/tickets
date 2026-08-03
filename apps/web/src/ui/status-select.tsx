@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { cn, ComboboxList, type ComboOption, fieldClass, fieldState, type FieldSize, Icon, Pill, Popover, PopoverContent, PopoverTrigger, TONE_SCALE, type Tone } from '@tickets/ui';
+import { cn, ComboboxList, type ComboOption, fieldClass, fieldState, type FieldSize, Icon, Pill, Popover, PopoverContent, PopoverTrigger, TONE_RAMP, type Tone } from '@tickets/ui';
 import type { StatusKind } from '../api/types';
 import { KIND_ICON, KIND_TONE, statusPill } from '../domain/status';
 

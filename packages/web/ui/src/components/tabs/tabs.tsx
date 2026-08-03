@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { axis, cn, HUE_TONES, over, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, cn, HUE_TONES, over, TONE_RAMP, variants, type Tone } from '../../style';
 import { Icon, type IconName, type IconSize } from '../icon';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
@@ -135,7 +135,7 @@ export function Tabs({
   className?: string;
 }) {
   const isTablist = role === 'tablist';
-  const scale = TONE_SCALE[tone];
+  const scale = TONE_RAMP[tone];
 
   return (
     <div

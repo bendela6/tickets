@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { axis, cn, HUE_TONES, over, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, cn, HUE_TONES, over, TONE_RAMP, variants, type Tone } from '../../style';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUE_TONES, 'indigo');
@@ -79,7 +79,7 @@ export function Progress({
         aria-valuemax={100}
         className={trackClass({ size, className: trackClassName })}
       >
-        <div className={fillClass({ scale: TONE_SCALE[tone] })} style={{ width: `${pct}%` }} />
+        <div className={fillClass({ scale: TONE_RAMP[tone] })} style={{ width: `${pct}%` }} />
       </div>
       {trailing != null ? <span className={figure}>{trailing}</span> : null}
     </div>

@@ -10,7 +10,7 @@ export {
   HUE_TONES,
   ROLE_TONES,
   TONE_NAMES,
-  TONE_SCALE,
+  TONE_RAMP,
   type HueTone,
   type RoleTone,
   type Tone,

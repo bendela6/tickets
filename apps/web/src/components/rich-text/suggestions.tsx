@@ -4,7 +4,7 @@ import type { SuggestionKeyDownProps, SuggestionProps } from '@tiptap/suggestion
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import type { StatusKind } from '../../api/types';
 import { KIND_TONE } from '../../domain/status';
-import { Avatar, cn, TONE_SCALE } from '@tickets/ui';
+import { Avatar, cn, TONE_RAMP } from '@tickets/ui';
 import { avatarFor } from '../../domain/actor';
 
 // RichTextEditor threads these two lookup sources through to the mention (@)
@@ -46,7 +46,7 @@ function deriveHandle(label: string): string {
 // kind→class table.
 function statusDotClass(kind: StatusKind | null | undefined): string {
   // The solid pair: 9 fills, contrast texts.
-  const scale = TONE_SCALE[kind ? KIND_TONE[kind] : 'gray'];
+  const scale = TONE_RAMP[kind ? KIND_TONE[kind] : 'gray'];
   return `bg-${scale}-9 text-${scale}-contrast`;
 }
 

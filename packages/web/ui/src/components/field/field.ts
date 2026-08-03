@@ -1,4 +1,4 @@
-import { axis, HUE_TONES, over, TONE_SCALE, variants, type HueTone } from '../../style';
+import { axis, HUE_TONES, over, TONE_RAMP, variants, type HueTone } from '../../style';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUE_TONES, 'indigo');
@@ -82,16 +82,17 @@ export const fieldClass = variants({
  */
 export function fieldState(tone: string | undefined): {
   state: 'neutral' | 'toned';
-  /** A ramp name, not a tone name — `primary` paints from `indigo`. Narrowed
-   *  to the ramp domain because that is what the `scale` axis accepts; it used
-   *  to be `string`, which let a tone name through to build `bg-primary-9`. */
+  /** Named for the `scale` variants axis it feeds; the value is a ramp name,
+   *  which `TONE_RAMP` now says at the source. Typed `HueTone` rather than
+   *  `string` — as `string` a tone name could pass through and build the
+   *  colourless `bg-primary-9`. */
   scale: HueTone;
   invalid: boolean;
 } {
-  const resolved = (tone ?? 'primary') as keyof typeof TONE_SCALE;
+  const resolved = (tone ?? 'primary') as keyof typeof TONE_RAMP;
   return {
     state: tone === undefined ? 'neutral' : 'toned',
-    scale: TONE_SCALE[resolved] ?? TONE_SCALE.primary,
+    scale: TONE_RAMP[resolved] ?? TONE_RAMP.primary,
     invalid: tone === 'danger',
   };
 }
