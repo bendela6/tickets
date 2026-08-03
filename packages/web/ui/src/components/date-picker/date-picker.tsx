@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { cn, TONE_SCALE, type Tone } from '../../style';
+import { cn, TONE_RAMP, type Tone } from '../../style';
 import { fieldClass, fieldState, type FieldSize } from '../field';
 import { Icon, type IconSize } from '../icon';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';

@@ -1,5 +1,5 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
-import { axis, HUE_TONES, over, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, HUE_TONES, over, TONE_RAMP, variants, type Tone } from '../../style';
 import { Icon, type IconSize } from '../icon';
 import { Spinner } from '../spinner';
 
@@ -143,7 +143,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       aria-busy={loading || undefined}
       className={buttonClass({
         variant,
-        scale: TONE_SCALE[tone],
+        scale: TONE_RAMP[tone],
         size,
         className: showDisabled ? `${DISABLED[variant]} ${className ?? ''}`.trim() : className,
       })}

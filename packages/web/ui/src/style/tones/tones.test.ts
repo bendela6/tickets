@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HUE_TONES, ROLE_TONES, TONE_NAMES, TONE_SCALE } from './tones';
+import { HUE_TONES, ROLE_TONES, TONE_NAMES, TONE_RAMP } from './tones';
 
 // What survives here is the VOCABULARY. There used to be tests for
 // `toneClasses()` (finished class strings per tone x emphasis), for the `STEP`
@@ -25,14 +25,14 @@ describe('tone system', () => {
     // The role is the only indirection left: `danger` names a JOB and this is
     // what says which ramp currently does it. A role pointing at something
     // outside HUE_TONES would build `bg-crimson-9` — a class with no colour.
-    expect(TONE_SCALE.primary).toBe('indigo');
-    expect(TONE_SCALE.secondary).toBe('gray');
-    expect(TONE_SCALE.success).toBe('green');
-    expect(TONE_SCALE.warning).toBe('orange');
-    expect(TONE_SCALE.danger).toBe('red');
-    expect(TONE_SCALE.neutral).toBe('gray');
+    expect(TONE_RAMP.primary).toBe('indigo');
+    expect(TONE_RAMP.secondary).toBe('gray');
+    expect(TONE_RAMP.success).toBe('green');
+    expect(TONE_RAMP.warning).toBe('orange');
+    expect(TONE_RAMP.danger).toBe('red');
+    expect(TONE_RAMP.neutral).toBe('gray');
     for (const tone of TONE_NAMES) {
-      expect(HUE_TONES).toContain(TONE_SCALE[tone]);
+      expect(HUE_TONES).toContain(TONE_RAMP[tone]);
     }
   });
 
@@ -40,7 +40,7 @@ describe('tone system', () => {
     // A hue IS the scale, so the mapping has to be the identity there — a hue
     // that redirected would make `tone="red"` paint something other than red.
     for (const hue of HUE_TONES) {
-      expect(TONE_SCALE[hue]).toBe(hue);
+      expect(TONE_RAMP[hue]).toBe(hue);
     }
   });
 });

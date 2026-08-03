@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { cn, TONE_SCALE, type Tone } from '../../style';
+import { cn, TONE_RAMP, type Tone } from '../../style';
 import { fieldClass, fieldState, type FieldSize } from '../field';
 import { Icon, type IconSize } from '../icon';
 import { Pill } from '../pill';
@@ -31,6 +31,12 @@ const BOX: Record<FieldSize, string> = {
 };
 
 const CHEVRON: Record<FieldSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
+
+// The placeholder used to be a fixed `text-13/19`, so `size` moved the box and
+// left the text behind. `md` is unchanged. The chips keep `text-12/17` at every
+// rung deliberately — a chip is a label on a value, not the field's own prose,
+// and it stays one step down so a full trigger does not read as a paragraph.
+const TEXT: Record<FieldSize, string> = { sm: 'text-12/17', md: 'text-13/19', lg: 'text-14/20' };
 
 export function MultiCombobox({
   id,
@@ -83,7 +89,7 @@ export function MultiCombobox({
         >
           <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
             {selectedOptions.length === 0 ? (
-              <span className="truncate font-sans text-13/19 text-gray-9">{placeholder}</span>
+              <span className={cn('truncate font-sans text-gray-9', TEXT[size])}>{placeholder}</span>
             ) : null}
             {/* Chips are read-only. Deselecting happens in the popover, where
                 the full set is visible and a mis-click is one click to undo —

@@ -1,4 +1,4 @@
-import { cn, TONE_SCALE, type Tone } from '../../style';
+import { cn, TONE_RAMP, type Tone } from '../../style';
 import { fieldClass, fieldState, type FieldSize } from '../field';
 import { Icon } from '../icon';
 
@@ -16,6 +16,10 @@ type NumberInputProps = {
   placeholder?: string;
   className?: string;
 };
+
+// The digits used to be a fixed `text-13/19`, so `size` moved the box and the
+// stepper buttons while the number itself stayed put. `md` is unchanged.
+const TEXT: Record<FieldSize, string> = { sm: 'text-12/17', md: 'text-13/19', lg: 'text-14/20' };
 
 function clamp(value: number, min?: number, max?: number) {
   let next = value;
@@ -79,7 +83,11 @@ export function NumberInput({
           const raw = event.target.value;
           onChange(raw === '' ? null : Number(raw));
         }}
-        className="w-16 bg-transparent px-2 text-right font-sans text-13/19 text-gray-12 tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+        className={cn(
+          'w-16 bg-transparent px-2 text-right font-sans text-gray-12 tabular-nums outline-none',
+          '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none',
+          TEXT[size],
+        )}
       />
       <div className="flex flex-col border-l-1 border-gray-6">
         <button

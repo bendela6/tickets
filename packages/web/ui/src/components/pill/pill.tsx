@@ -7,7 +7,7 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { axis, cn, HUE_TONES, over, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, cn, HUE_TONES, over, TONE_RAMP, variants, type Tone } from '../../style';
 import { Icon, type IconName, type IconSize } from '../icon';
 
 /** How loudly the tone reads. These used to be `ToneEmphasis`, defined next to
@@ -133,7 +133,7 @@ export const Pill = forwardRef<HTMLElement, PillProps>(function Pill(
       variant,
       shape,
       size,
-      scale: TONE_SCALE[tone],
+      scale: TONE_RAMP[tone],
       className: cn(extra, className),
     });
 
