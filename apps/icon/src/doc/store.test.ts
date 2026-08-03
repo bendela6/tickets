@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { emptyDocument } from './defaults';
+import { emptyDocument, newShadow } from './defaults';
 import { bounds } from './geometry';
 import {
   canRedo,
@@ -232,60 +232,89 @@ describe('colour pairs', () => {
   });
 });
 
-describe('materials', () => {
+describe('effects', () => {
+  // The shadow a first press actually writes, rather than a parallel one.
+  const SHADOW = newShadow({ width: 512, height: 512 });
+
   const withTwo = () =>
     run(start(), { type: 'addObject', kind: 'rect' }, { type: 'addObject', kind: 'ellipse' });
 
-  it('is one undo entry, and undo takes the whole surface back off', () => {
+  it('each is one undo entry, and undo takes it back off', () => {
     const state = withRect();
     const id = state.doc.objects[0]!.id;
-    const dressed = editorReducer(state, { type: 'setMaterial', ids: [id], material: 'glass' });
-    expect(flat(dressed.doc)[0]?.material).toBe('glass');
-    expect(dressed.past).toHaveLength(state.past.length + 1);
-    expect(editorReducer(dressed, { type: 'undo' }).doc).toEqual(state.doc);
+    const blurred = editorReducer(state, { type: 'setBlur', ids: [id], blur: 12 });
+    expect(flat(blurred.doc)[0]?.blur).toBe(12);
+    expect(blurred.past).toHaveLength(state.past.length + 1);
+    expect(editorReducer(blurred, { type: 'undo' }).doc).toEqual(state.doc);
+
+    const thrown = editorReducer(state, { type: 'setShadow', ids: [id], shadow: SHADOW });
+    expect(flat(thrown.doc)[0]?.shadow).toEqual(SHADOW);
+    expect(thrown.past).toHaveLength(state.past.length + 1);
+    expect(editorReducer(thrown, { type: 'undo' }).doc).toEqual(state.doc);
   });
 
-  it('none takes the field off rather than writing a word meaning nothing', () => {
+  it('changing one number of a shadow is one entry, not one per field', () => {
     const state = withRect();
     const id = state.doc.objects[0]!.id;
-    const back = run(
+    const thrown = editorReducer(state, { type: 'setShadow', ids: [id], shadow: SHADOW });
+    const deeper = editorReducer(thrown, {
+      type: 'setShadow',
+      ids: [id],
+      shadow: { ...SHADOW, dy: 40 },
+    });
+    expect(flat(deeper.doc)[0]?.shadow?.dy).toBe(40);
+    expect(deeper.past).toHaveLength(thrown.past.length + 1);
+    // And one ⌘Z is back to the shadow as it was, not to no shadow at all.
+    expect(flat(editorReducer(deeper, { type: 'undo' }).doc)[0]?.shadow).toEqual(SHADOW);
+  });
+
+  it('turning one off takes the field away rather than blanking it', () => {
+    // Not `blur: undefined` — the model states "none" by having no field, and
+    // the document has to come back to the one a fresh shape produces.
+    const state = withRect();
+    const id = state.doc.objects[0]!.id;
+    const unblurred = run(
       state,
-      { type: 'setMaterial', ids: [id], material: 'metal' },
-      { type: 'setMaterial', ids: [id], material: null },
+      { type: 'setBlur', ids: [id], blur: 9 },
+      { type: 'setBlur', ids: [id], blur: 0 },
     );
-    // Not `material: undefined` — the very document an old save produces.
-    expect(Object.hasOwn(flat(back.doc)[0]!, 'material')).toBe(false);
-    expect(back.doc).toEqual(state.doc);
+    expect(Object.hasOwn(flat(unblurred.doc)[0]!, 'blur')).toBe(false);
+    expect(unblurred.doc).toEqual(state.doc);
+
+    const unshaded = run(
+      state,
+      { type: 'setShadow', ids: [id], shadow: SHADOW },
+      { type: 'setShadow', ids: [id], shadow: null },
+    );
+    expect(Object.hasOwn(flat(unshaded.doc)[0]!, 'shadow')).toBe(false);
+    expect(unshaded.doc).toEqual(state.doc);
   });
 
-  it('reaches a whole selection as a single entry', () => {
-    const state = withTwo();
-    const ids = state.doc.objects.map((node) => node.id);
-    const dressed = editorReducer(state, { type: 'setMaterial', ids, material: 'paper' });
-    expect(flat(dressed.doc).map((shape) => shape.material)).toEqual(['paper', 'paper']);
-    expect(dressed.past).toHaveLength(state.past.length + 1);
-  });
-
-  it('leaves a group alone, which has no paint for a surface to sit on', () => {
+  it('reaches a group, which throws one shadow under everything inside it', () => {
     const grouped = run(withTwo(), { type: 'selectAll' }, { type: 'groupSelection' });
     const group = grouped.doc.objects[0]!;
     const after = editorReducer(grouped, {
-      type: 'setMaterial',
+      type: 'setShadow',
       ids: [group.id],
-      material: 'glow',
+      shadow: SHADOW,
     });
-    expect(after.doc.objects[0]).toEqual(group);
+    expect(after.doc.objects[0]?.shadow).toEqual(SHADOW);
+    // And it stops there: the children are untouched, so one shadow under the
+    // group can never leave two behind wearing one each.
+    expect(flat(after.doc).map((shape) => shape.shadow)).toEqual([undefined, undefined]);
   });
 
-  it('does not move the shape it is put on', () => {
-    const state = withRect();
-    const id = state.doc.objects[0]!.id;
-    const dressed = editorReducer(state, { type: 'setMaterial', ids: [id], material: 'glow' });
-    expect(bounds(flat(dressed.doc)[0]!)).toEqual(bounds(flat(state.doc)[0]!));
-    expect(flat(dressed.doc)[0]?.geometry).toEqual(flat(state.doc)[0]?.geometry);
-  });
+  it('moves nothing, and a boolean answers the same with the front one’s carried over', () => {
+    const one = withRect();
+    const onlyId = one.doc.objects[0]!.id;
+    const dressedOne = run(
+      one,
+      { type: 'setBlur', ids: [onlyId], blur: 20 },
+      { type: 'setShadow', ids: [onlyId], shadow: SHADOW },
+    );
+    expect(bounds(flat(dressedOne.doc)[0]!)).toEqual(bounds(flat(one.doc)[0]!));
+    expect(flat(dressedOne.doc)[0]?.geometry).toEqual(flat(one.doc)[0]?.geometry);
 
-  it('does not change what a boolean answers, and the result wears the front one', () => {
     const state = withTwo();
     const [front, back] = state.doc.objects.map((node) => node.id) as [string, string];
     const segments: PathSegment[] = [
@@ -301,14 +330,20 @@ describe('materials', () => {
       segments,
     });
     const dressed = editorReducer(
-      editorReducer(state, { type: 'setMaterial', ids: [front], material: 'metal' }),
+      run(
+        state,
+        { type: 'setBlur', ids: [front], blur: 5 },
+        { type: 'setShadow', ids: [front], shadow: SHADOW },
+      ),
       { type: 'combineShapes', op: 'union', ids: [front, back], segments },
     );
     expect(flat(dressed.doc)[0]?.geometry).toEqual(flat(plain.doc)[0]?.geometry);
-    expect(flat(plain.doc)[0]?.material).toBeUndefined();
-    // The frontmost operand's surface travels with its colour: a boolean is a
+    expect(Object.hasOwn(flat(plain.doc)[0]!, 'blur')).toBe(false);
+    expect(Object.hasOwn(flat(plain.doc)[0]!, 'shadow')).toBe(false);
+    // The frontmost operand's effects travel with its colour: a boolean is a
     // change of shape, not of appearance.
-    expect(flat(dressed.doc)[0]?.material).toBe('metal');
+    expect(flat(dressed.doc)[0]?.blur).toBe(5);
+    expect(flat(dressed.doc)[0]?.shadow).toEqual(SHADOW);
   });
 });
 

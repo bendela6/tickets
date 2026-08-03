@@ -2,7 +2,6 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { App } from '../app';
-import { MATERIALS } from '../doc/constants';
 import { newObject } from '../doc/defaults';
 import { rotatedBounds } from '../doc/geometry';
 
@@ -42,62 +41,99 @@ describe('the on-artboard readout', () => {
   });
 });
 
-describe('the material picker', () => {
-  const picker = () => within(propsRail()).getByRole('group', { name: 'Material' });
-  const pressed = () =>
-    within(picker())
-      .getAllByRole('button')
-      .filter((button) => button.getAttribute('aria-pressed') === 'true')
-      .map((button) => button.textContent);
 
-  it('offers seven surfaces and starts on none, which is what a shape arrives wearing', async () => {
+describe('the blur field', () => {
+  const blur = () => within(propsRail()).getByLabelText('Blur');
+
+  it('starts at zero and sets the radius it is typed, in one undo entry', async () => {
     const { user } = setup();
     await user.keyboard('r');
-    expect(within(picker()).getAllByRole('button')).toHaveLength(MATERIALS.length + 1);
-    expect(pressed()).toEqual(['none']);
-  });
-
-  it('sets the surface it names, and shows which one is on — exactly one', async () => {
-    const { user } = setup();
-    await user.keyboard('r');
-    for (const material of MATERIALS) {
-      await user.click(within(picker()).getByRole('button', { name: material }));
-      expect(pressed()).toEqual([material]);
-    }
-    await user.click(within(picker()).getByRole('button', { name: 'none' }));
-    expect(pressed()).toEqual(['none']);
-  });
-
-  it('is one undo away, so choosing one is one thing the user did', async () => {
-    const { user } = setup();
-    await user.keyboard('r');
-    await user.click(within(picker()).getByRole('button', { name: 'glow' }));
+    expect(blur()).toHaveValue('0');
+    await user.clear(blur());
+    await user.type(blur(), '12');
+    await user.tab();
+    expect(blur()).toHaveValue('12');
     await user.keyboard('{Meta>}z{/Meta}');
-    expect(pressed()).toEqual(['none']);
+    expect(blur()).toHaveValue('0');
+
+    // And refuses a negative radius, which no gaussian has.
+    await user.clear(blur());
+    await user.type(blur(), '-5');
+    await user.tab();
+    expect(blur()).toHaveValue('0');
+  });
+});
+
+describe('the shadow control', () => {
+  const toggle = () => within(propsRail()).getByRole('button', { name: 'SHADOW' });
+  const on = () => toggle().getAttribute('aria-pressed') === 'true';
+
+  it('shows no fields until it is pressed, then the offset, radius, opacity and colour', async () => {
+    const { user } = setup();
+    await user.keyboard('r');
+    expect(on()).toBe(false);
+    // Not five fields greyed out: an object either throws a shadow or it does
+    // not, and the button is the whole of that question.
+    expect(within(propsRail()).queryByLabelText('Shadow x')).not.toBeInTheDocument();
+    expect(within(propsRail()).queryByLabelText('Shadow radius')).not.toBeInTheDocument();
+
+    await user.click(toggle());
+    expect(on()).toBe(true);
+    const rail = within(propsRail());
+    expect(rail.getByLabelText('Shadow x')).toHaveValue('0');
+    expect(rail.getByLabelText('Shadow y')).toHaveValue('16');
+    expect(rail.getByLabelText('Shadow radius')).toHaveValue('24');
+    expect(rail.getByLabelText('Shadow opacity')).toHaveValue('40');
+    expect(rail.getByLabelText('SHADOW light value')).toHaveValue('#25231D');
   });
 
-  it('is not offered for a group, which has no paint for a surface to sit on', async () => {
+  it('turns on and off in one press each, and sets a number in one undo entry', async () => {
+    const { user } = setup();
+    await user.keyboard('r');
+    await user.click(toggle());
+    await user.keyboard('{Meta>}z{/Meta}');
+    expect(on()).toBe(false);
+    await user.click(toggle());
+    expect(on()).toBe(true);
+    const rail = () => within(propsRail());
+
+    await user.clear(rail().getByLabelText('Shadow y'));
+    await user.type(rail().getByLabelText('Shadow y'), '48');
+    await user.tab();
+    expect(rail().getByLabelText('Shadow y')).toHaveValue('48');
+    expect(rail().getByLabelText('Shadow radius')).toHaveValue('24');
+
+    // Out of the fields before the shortcut: ⌘Z is deliberately ignored while
+    // a text input has focus, so typing into one cannot undo the last edit.
+    await user.click(propsRail());
+    await user.keyboard('{Meta>}z{/Meta}');
+    // One ⌘Z is back to the shadow as it was, not back to no shadow at all.
+    expect(on()).toBe(true);
+    expect(rail().getByLabelText('Shadow y')).toHaveValue('16');
+
+    // The colour edits the half the canvas is previewing, like every other pair.
+    const hex = () => within(propsRail()).getByLabelText('SHADOW light value');
+    await user.clear(hex());
+    await user.type(hex(), '#C0382E');
+    await user.tab();
+    expect(hex()).toHaveValue('#C0382E');
+  });
+
+  it('is offered for a group but not for a selection of several, which ⌘G answers', async () => {
     const { user } = setup();
     await user.keyboard('r');
     await user.keyboard('e');
     await user.keyboard('{Meta>}a{/Meta}');
+    // "Shadow these two" has two readings, and the one people mean is one
+    // shadow under the lot — which is a group, and says so.
+    expect(within(propsRail()).getByText('SELECTION')).toBeInTheDocument();
+    expect(within(propsRail()).queryByRole('button', { name: 'SHADOW' })).not.toBeInTheDocument();
+    expect(within(propsRail()).queryByLabelText('Blur')).not.toBeInTheDocument();
+
     await user.keyboard('{Meta>}g{/Meta}');
     expect(within(propsRail()).getByText('GROUP')).toBeInTheDocument();
-    expect(within(propsRail()).queryByRole('group', { name: 'Material' })).not.toBeInTheDocument();
-  });
-
-  it('reads mixed as no surface pressed when a selection does not share one', async () => {
-    const { user } = setup();
-    await user.keyboard('r');
-    await user.click(within(picker()).getByRole('button', { name: 'paper' }));
-    await user.keyboard('e');
-    await user.keyboard('{Meta>}a{/Meta}');
-    // Two shapes, one dressed and one not: a pressed button would claim the
-    // selection is that surface, which is the one thing known to be untrue.
-    expect(within(propsRail()).getByText('SELECTION')).toBeInTheDocument();
-    expect(pressed()).toEqual([]);
-    // And every button still works — pressing one settles them both.
-    await user.click(within(picker()).getByRole('button', { name: 'matte' }));
-    expect(pressed()).toEqual(['matte']);
+    expect(within(propsRail()).getByLabelText('Blur')).toBeInTheDocument();
+    await user.click(toggle());
+    expect(on()).toBe(true);
   });
 });

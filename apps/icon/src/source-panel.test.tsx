@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { App } from './app';
-import { emptyDocument, newObject } from './doc/defaults';
+import { emptyDocument, newObject, newShadow } from './doc/defaults';
 import { renderSvg } from './render/svg';
 
 /** The document the app opens with, and the board its presets are sized to. */
@@ -114,31 +114,33 @@ describe('showing the SVG the document generates', () => {
     expect(within(panel()).getByText(`${withRect.length} bytes`)).toBeInTheDocument();
   });
 
-  it('shows a material arriving: the filter, and the shape pointing at it', async () => {
+  it('shows a shadow arriving: the filter, and the shape pointing at it', async () => {
     const { user } = setup();
     await user.click(toggle());
     await user.keyboard('r');
     const plain = shown();
 
-    const picker = within(screen.getByRole('complementary', { name: 'Properties' })).getByRole(
-      'group',
-      { name: 'Material' },
-    );
-    await user.click(within(picker).getByRole('button', { name: 'metal' }));
+    const rail = within(screen.getByRole('complementary', { name: 'Properties' }));
+    const toggleShadow = () => rail.getByRole('button', { name: 'SHADOW' });
+    await user.click(toggleShadow());
 
-    const dressed = shown() ?? '';
-    const id = /filter="url\(#([^)]+)\)"/.exec(dressed)?.[1] ?? '';
+    const thrown = shown() ?? '';
+    const id = /filter="url\(#([^)]+)\)"/.exec(thrown)?.[1] ?? '';
     expect(id).toContain('rect-1');
-    expect(dressed).toContain(`<filter id="${id}"`);
-    expect(dressed).toBe(
+    expect(thrown).toContain(`<filter id="${id}"`);
+    expect(thrown).toContain('<feDropShadow ');
+    expect(thrown).toBe(
       renderSvg(
-        { ...START, objects: [{ ...newObject('rect', 1, BOARD), material: 'metal' }] },
+        {
+          ...START,
+          objects: [{ ...newObject('rect', 1, BOARD), shadow: newShadow(BOARD, START.snap) }],
+        },
         { ground: 'light' },
       ),
     );
 
     // And back off again: the file is the one it was, not one that looks like it.
-    await user.click(within(picker).getByRole('button', { name: 'none' }));
+    await user.click(toggleShadow());
     expect(shown()).toBe(plain);
   });
 

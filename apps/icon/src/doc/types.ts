@@ -101,25 +101,51 @@ export type Geometry =
   | { kind: 'path'; segments: PathSegment[] };
 
 /**
- * How a surface behaves under light — never what colour it is.
+ * A shadow thrown by an object, stated in document units.
  *
- * A material is a treatment layered *over* the paint a shape already states.
- * The fill, the stroke, the stroke width and the opacity all keep the meaning
- * they have always had, and every pass the renderer adds takes its colour from
- * that same pair. That is the whole reason it is one word here rather than a
- * block of paint of its own: the contrast readout still has a real colour to
- * measure, the boolean engine still sees a plain outline, and the importer
- * still has nothing new to fail to understand.
- *
- * Six, and the two that were left out say what the list is. An emboss and a
- * long shadow both describe a *scene* — where the light is, where the floor is
- * — and an icon has no scene: it is 16 pixels on somebody else's wallpaper.
- * These six describe the surface itself, which is a statement that survives
- * being shrunk.
+ * The colour is a `Pair` because a shadow is a claim about the ground the mark
+ * is standing on, and the ground swaps. Near-black under a white page reads as
+ * depth; under a near-black page it is nothing at all, and one hex cannot say
+ * both. Its strength is a number beside that pair rather than alpha folded into
+ * it, because a `Pair` holds two hexes and nothing else.
  */
-export type Material = 'glass' | 'glossy' | 'metal' | 'matte' | 'paper' | 'glow';
+export interface Shadow {
+  /** Offset, in the object's own frame. Positive `dy` falls down the board. */
+  dx: number;
+  dy: number;
+  /** Gaussian radius. 0 is a hard-edged copy of the outline. */
+  blur: number;
+  colour: Pair;
+  /** 0–100. Stored as the number the properties panel shows. */
+  opacity: number;
+}
 
-export interface IconObject {
+/**
+ * What happens to an object between being drawn and being composited.
+ *
+ * Both fields are optional and both are absent by default, and that is the
+ * whole of the compatibility story: a document written before either existed is
+ * missing no field, because absence *is* none. There is nothing for a migration
+ * to fill in and nothing for it to walk.
+ *
+ * Stated as lengths in document units rather than as fractions of the object,
+ * the same as every other length in this model — a fraction of the *shape*
+ * would make a small dot and a large slab wear visibly different softness in
+ * one document.
+ *
+ * Carried by a group as well as by a shape. A group has no fill because its
+ * children each state their own and a colour may not come from two places, but
+ * a shadow is thrown by an outline rather than by a paint, and a group has
+ * exactly one outline: everything in it. Saying it on each of eleven shapes
+ * instead gives eleven overlapping shadows, with seams where they cross.
+ */
+export interface Effects {
+  /** Gaussian radius of the object itself. Zero or absent is none. */
+  blur?: number;
+  shadow?: Shadow;
+}
+
+export interface IconObject extends Effects {
   id: string;
   name: string;
   geometry: Geometry;
@@ -132,22 +158,6 @@ export interface IconObject {
   rotation: number;
   hidden: boolean;
   locked: boolean;
-  /**
-   * The treatment layered over this shape's paint, if it has one.
-   *
-   * Optional and absent rather than a required `'none'`, and that is what makes
-   * every document saved before materials existed still a valid one: no field
-   * is missing from it, because absence *is* the default. There is nothing for
-   * a migration to fill in and nothing for it to walk.
-   *
-   * **A shape only — a group has none, and cannot be given one.** A group has
-   * no paint of its own for a treatment to sit on top of, by the same rule that
-   * keeps it from having a fill. A material on a group would have to mean one
-   * of two different things — one surface spanning the children, or the same
-   * surface applied to each of them separately — and picking either would make
-   * a group's appearance a second place a shape's own could be decided.
-   */
-  material?: Material;
 }
 
 /**
@@ -188,7 +198,7 @@ export interface GroupTransform {
  * own pair outright — so a paint on a group would be a second, invisible place
  * a colour could come from.
  */
-export interface IconGroup {
+export interface IconGroup extends Effects {
   id: string;
   name: string;
   transform: GroupTransform;

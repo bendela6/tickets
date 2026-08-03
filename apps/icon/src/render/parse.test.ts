@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MATERIALS } from '../doc/constants';
-import { emptyDocument, newObject } from '../doc/defaults';
+import { emptyDocument, newObject, newShadow } from '../doc/defaults';
 import type { IconDoc } from '../doc/types';
 import { renderSvg } from './svg';
 
@@ -70,22 +69,24 @@ describe('the rendered SVG is a document a browser will actually decode', () => 
     expect(() => parse(renderSvg(doc, { ground: 'light' }))).not.toThrow();
   });
 
-  it('parses with every material on the board, and every reference resolves', () => {
+  it('parses with effects on the board, and every reference resolves', () => {
     // A filter reference that names nothing is not an error anywhere — the
     // element simply does not paint — so the check is that every `url(#…)`
     // written has a definition with that id in the same file.
-    for (const material of MATERIALS) {
+    const shadow = newShadow(BOARD);
+    const cases = [{ blur: 8 }, { shadow }, { blur: 8, shadow }];
+    for (const effects of cases) {
       const doc = docWith([
-        { ...newObject('rect', 1, BOARD), material },
+        { ...newObject('rect', 1, BOARD), ...effects },
         newObject('circle', 2, BOARD),
       ]);
       const markup = renderSvg(doc, { ground: 'light' });
       const parsed = parse(markup);
       const wanted = [...markup.matchAll(/url\(#([^)]+)\)/g)].map((match) => match[1] ?? '');
-      expect({ material, wanted: wanted.length > 0 }).toEqual({ material, wanted: true });
+      expect({ effects, wanted: wanted.length > 0 }).toEqual({ effects, wanted: true });
       for (const id of wanted) {
-        expect({ material, id, defined: parsed.getElementById(id) !== null }).toEqual({
-          material,
+        expect({ effects, id, defined: parsed.getElementById(id) !== null }).toEqual({
+          effects,
           id,
           defined: true,
         });
