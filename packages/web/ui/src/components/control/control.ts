@@ -65,3 +65,29 @@ export type ControlProps<T> = {
   readOnly?: boolean;
   className?: string;
 };
+
+/**
+ * The rest treatment for a read-only bordered field.
+ *
+ * Deliberately NOT the disabled look. Disabled says "not for you" and dims the
+ * text to `gray-9`; read-only says "not editable here" about a value that still
+ * matters, so the text keeps full contrast and only the ground and the
+ * affordances change. The border drops to the resting rung and stops answering
+ * to hover, because there is nothing to hover toward.
+ *
+ * Composed in TypeScript rather than as a `read-only:` variant on purpose:
+ * that variant compiles to the CSS `:read-only` pseudo-class, which matches
+ * every element that is not user-editable — including the wrapper `div`s
+ * `fieldClass` is applied to on NumberInput and an adorned Input. It would be
+ * permanently on there.
+ */
+export const readOnlyFieldClass = 'border-gray-6 bg-surface-inset hover:border-gray-6 cursor-default';
+
+/**
+ * The same idea for the mark-based controls — checkbox, switch, radio, slider.
+ *
+ * No ground to tint, so the signal is the loss of the affordance: the cursor
+ * stops inviting a click and the hover response goes. The mark keeps its tone,
+ * because the whole point of read-only is that the value stays readable.
+ */
+export const readOnlyMarkClass = 'cursor-default pointer-events-none';
