@@ -34,6 +34,22 @@ build 7/7, tokens gate clean, `@tickets/ui` 604 · `@tickets/web` 713 ·
   `@tanstack/markdown` was declared but absent from `pnpm-lock.yaml`, so
   `pnpm install --frozen-lockfile` would have failed. Fixed by the first merge.
 
+**The browser pass ran on `/gallery` (:4620) and found nothing wrong.** It was
+the last unverified claim in the migration — everything before it rested on
+measurement and tests. What it confirmed:
+
+- The control rungs survived the ×4 intact, measured in the live DOM rather
+  than eyeballed: 44px at 14px font, 36px at 13px (21 instances), 28px at
+  12–13px. That includes the deliberate asymmetry the brief called out — the
+  36px combobox carries 13px, not the 14px a 36px input would.
+- `slider.tsx`, the flagged silent breakage, renders across all 14 tones and
+  both sizes. Its thin track is by design, not a shrunk one: `h-0.75`→`h-3` and
+  `h-1`→`h-4` are 3px and 4px on both sides of the change, verified against the
+  pre-scale blob.
+- Light and dark both correct; the Table's dense layout, Tree's focus ring and
+  the full colour ramps all render. One console warning, unrelated (a deprecated
+  `apple-mobile-web-app-capable` meta tag).
+
 **What actually happened in step 3**, beyond the plan below:
 
 - The prefix list was derived from utility selectors in the built CSS, which
