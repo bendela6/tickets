@@ -81,11 +81,11 @@ describe('Tabs', () => {
     const { container: sm } = render(
       <Tabs variant="pill" size="sm" items={items} value="board" onChange={() => {}} />,
     );
-    expect(sm.querySelector('[role="tab"]')!.className).toContain('px-2');
+    expect(sm.querySelector('[role="tab"]')!.className).toContain('px-8');
     const { container: lg } = render(
       <Tabs variant="pill" size="lg" items={items} value="board" onChange={() => {}} />,
     );
-    expect(lg.querySelector('[role="tab"]')!.className).toContain('px-3.5');
+    expect(lg.querySelector('[role="tab"]')!.className).toContain('px-14');
   });
 
   it('segment is a hairline group over the page ground, not a filled well', () => {

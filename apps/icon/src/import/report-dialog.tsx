@@ -28,9 +28,9 @@ export function ImportReportDialog({
 
   return (
     <DialogRoot open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-140 max-w-full p-0">
-        <div className="flex items-start gap-3 border-b-1 border-gray-6 px-5 pb-3.5 pt-4">
-          <div className="flex min-w-0 flex-1 flex-col gap-0.75">
+      <DialogContent className="w-560 max-w-full p-0">
+        <div className="flex items-start gap-12 border-b-1 border-gray-6 px-20 pb-14 pt-16">
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
             <DialogTitle className="font-sans text-16 font-600 text-gray-12">
               {summary.ok ? `Imported ${summary.file}` : `Could not import ${summary.file}`}
             </DialogTitle>
@@ -44,7 +44,7 @@ export function ImportReportDialog({
           </div>
         </div>
 
-        <div className="flex flex-col gap-2.5 px-5 pb-4 pt-3.5">
+        <div className="flex flex-col gap-10 px-20 pb-16 pt-14">
           {summary.ok && notes.length === 0 ? (
             <span className="font-mono text-11 text-gray-9">
               nothing was dropped — the whole file is in the document
@@ -54,14 +54,14 @@ export function ImportReportDialog({
           {notes.length > 0 ? (
             <ul
               aria-label="What the import gave up"
-              className="flex max-h-80 flex-col gap-0.5 overflow-auto"
+              className="flex max-h-320 flex-col gap-2 overflow-auto"
             >
               {notes.map((note) => (
                 <li
                   key={`${note.element} ${note.reason}`}
-                  className="flex items-start gap-2.5 bg-surface-inset px-3.25 py-2"
+                  className="flex items-start gap-10 bg-surface-inset px-13 py-8"
                 >
-                  <span className="w-24 flex-none font-mono text-11 text-gray-12">
+                  <span className="w-96 flex-none font-mono text-11 text-gray-12">
                     {note.element}
                   </span>
                   <span className="min-w-0 flex-1 font-sans text-11/relaxed text-gray-11 text-pretty">
@@ -73,7 +73,7 @@ export function ImportReportDialog({
           ) : null}
         </div>
 
-        <div className="flex items-center gap-2.25 border-t-1 border-gray-6 bg-gray-1 px-5 py-3.25">
+        <div className="flex items-center gap-9 border-t-1 border-gray-6 bg-gray-1 px-20 py-13">
           <span className="flex-1 font-mono text-11 text-gray-9">
             {summary.ok
               ? `${notes.length} ${notes.length === 1 ? 'note' : 'notes'}`

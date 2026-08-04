@@ -10,7 +10,7 @@ import { agoOf } from './use-documents';
  * shared component is not available to them, but a shared class is.
  */
 const ACTION =
-  'popover-action flex h-7.5 flex-1 items-center justify-center gap-1.5 border-1 border-dashed border-gray-7 font-mono text-11 text-gray-11';
+  'popover-action flex h-30 flex-1 items-center justify-center gap-6 border-1 border-dashed border-gray-7 font-mono text-11 text-gray-11';
 
 /**
  * The document name was already in the top bar, so it becomes the control
@@ -35,7 +35,7 @@ export function DocumentsPopover({
       <PopoverTrigger
         aria-label="Documents"
         title="Documents"
-        className="flex h-6.5 items-center gap-1.75 rounded-md px-2 hover:bg-surface-inset"
+        className="flex h-26 items-center gap-7 rounded-md px-8 hover:bg-surface-inset"
       >
         <span className="font-mono text-13 font-500 tracking-tight text-gray-12">{name}</span>
         <span
@@ -44,12 +44,12 @@ export function DocumentsPopover({
         />
       </PopoverTrigger>
 
-      <PopoverContent side="bottom" align="start" className="w-62 p-0">
-        <div className="flex items-center gap-2 border-b-1 border-gray-6 px-3 py-2.5">
+      <PopoverContent side="bottom" align="start" className="w-248 p-0">
+        <div className="flex items-center gap-8 border-b-1 border-gray-6 px-12 py-10">
           <span className="flex-1 font-sans text-11 font-500 text-gray-12">Documents</span>
         </div>
 
-        <ul aria-label="Saved documents" className="p-1.5">
+        <ul aria-label="Saved documents" className="p-6">
           {documents.list.map((summary) => {
             const current = summary.id === documents.currentId;
             return (
@@ -62,14 +62,14 @@ export function DocumentsPopover({
                     setOpen(false);
                   }}
                   className={cn(
-                    'flex h-9 w-full items-center gap-2.25 rounded-md px-2 text-left',
+                    'flex h-36 w-full items-center gap-9 rounded-md px-8 text-left',
                     current && 'bg-surface-inset',
                   )}
                 >
                   <span
                     aria-hidden
                     className={cn(
-                      'size-1.25 flex-none rounded-full',
+                      'size-5 flex-none rounded-full',
                       current ? 'bg-gray-12' : 'bg-transparent',
                     )}
                   />
@@ -92,7 +92,7 @@ export function DocumentsPopover({
           })}
         </ul>
 
-        <div className="flex gap-1.5 px-1.5 pb-2 pt-0.5">
+        <div className="flex gap-6 px-6 pb-8 pt-2">
           <button
             type="button"
             onClick={() => {

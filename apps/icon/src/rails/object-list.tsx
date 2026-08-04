@@ -123,7 +123,7 @@ function ObjectRow({
       onDrop={onDrop}
       style={{ paddingLeft: `${(depth - 1) * INDENT_REM}rem` }}
       className={cn(
-        'flex h-7.5 items-center gap-2 rounded-md pl-2 pr-1.75',
+        'flex h-30 items-center gap-8 rounded-md pl-8 pr-7',
         selected && 'bg-indigo-3',
         node.hidden && 'opacity-50',
         // Rows outside the level you are standing in recede rather than
@@ -133,14 +133,14 @@ function ObjectRow({
       )}
     >
       {open === null ? (
-        <span aria-hidden className="size-3.5 flex-none" />
+        <span aria-hidden className="size-14 flex-none" />
       ) : (
         <button
           type="button"
           aria-label={`${open ? 'Collapse' : 'Expand'} ${node.name}`}
           aria-expanded={open}
           onClick={onToggleOpen}
-          className="flex size-3.5 flex-none items-center justify-center text-gray-9 hover:text-gray-12"
+          className="flex size-14 flex-none items-center justify-center text-gray-9 hover:text-gray-12"
         >
           <TwistyGlyph open={open} />
         </button>
@@ -168,7 +168,7 @@ function ObjectRow({
           event.preventDefault();
           onMove(event.key === 'ArrowUp' ? -1 : 1);
         }}
-        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+        className="flex min-w-0 flex-1 items-center gap-8 text-left"
       >
         <span className={cn('flex-none', selected ? 'text-indigo-9' : 'text-gray-11')}>
           {isGroup(node) ? <GroupGlyph /> : <ShapeGlyph kind={node.geometry.kind} />}
@@ -196,7 +196,7 @@ function ObjectRow({
         aria-label={node.hidden ? `Show ${node.name}` : `Hide ${node.name}`}
         aria-pressed={node.hidden}
         onClick={() => dispatch({ type: 'toggleHidden', id: node.id })}
-        className={cn('flex size-5 flex-none items-center justify-center rounded-sm', node.hidden ? 'text-gray-11' : 'text-gray-9')}
+        className={cn('flex size-20 flex-none items-center justify-center rounded-sm', node.hidden ? 'text-gray-11' : 'text-gray-9')}
       >
         <EyeGlyph hidden={node.hidden} />
       </button>
@@ -207,7 +207,7 @@ function ObjectRow({
         aria-pressed={node.locked}
         onClick={() => dispatch({ type: 'toggleLocked', id: node.id })}
         className={cn(
-          'flex size-5 flex-none items-center justify-center rounded-sm',
+          'flex size-20 flex-none items-center justify-center rounded-sm',
           node.locked ? 'text-gray-11' : 'text-gray-9 opacity-55',
         )}
       >
@@ -343,7 +343,7 @@ export function ObjectList() {
 
   return (
     <>
-      <div className="flex h-8.5 flex-none items-center gap-2 px-3.5">
+      <div className="flex h-34 flex-none items-center gap-8 px-14">
         <span className="font-sans text-9 font-500 tracking-widest text-gray-9">OBJECTS</span>
         <span className="font-mono text-10 text-gray-9">{level.list.length}</span>
       </div>
@@ -352,7 +352,7 @@ export function ObjectList() {
           when you are inside something: a document with no groups in it never
           has a level to be told about. */}
       {standingName === null ? null : (
-        <div className="flex h-6.5 flex-none items-center gap-2 px-3.5">
+        <div className="flex h-26 flex-none items-center gap-8 px-14">
           <span className="min-w-0 flex-1 truncate font-mono text-10 text-indigo-9">
             inside {standingName}
           </span>
@@ -368,10 +368,10 @@ export function ObjectList() {
         </div>
       )}
 
-      <div className="min-h-0 flex-1 overflow-auto px-1.75 pb-2">
+      <div className="min-h-0 flex-1 overflow-auto px-7 pb-8">
         <ul aria-label="Objects, front to back">{rows(state.doc.objects, null, 1)}</ul>
         {state.doc.objects.length === 0 ? (
-          <div className="px-2 pt-2.5 font-mono text-11 italic text-gray-9">— no objects —</div>
+          <div className="px-8 pt-10 font-mono text-11 italic text-gray-9">— no objects —</div>
         ) : null}
       </div>
 
@@ -383,11 +383,11 @@ export function ObjectList() {
         {announcement}
       </div>
 
-      <div className="flex flex-none flex-col gap-2 border-t-1 border-gray-6 px-3 pb-3.25 pt-2.75">
+      <div className="flex flex-none flex-col gap-8 border-t-1 border-gray-6 px-12 pb-13 pt-11">
         <span className="font-sans text-9 font-500 tracking-widest text-gray-9">ADD SHAPE</span>
         {/* Four across rather than one row: the pen makes eight, and eight in a
             232px rail leaves each one narrower than the mark inside it. */}
-        <div className="grid grid-cols-4 gap-1.5">
+        <div className="grid grid-cols-4 gap-6">
           {SHAPE_TOOLS.map((tool) => (
             <button
               key={tool.kind}
@@ -395,7 +395,7 @@ export function ObjectList() {
               title={`${tool.label} · ${tool.key}`}
               aria-label={tool.label}
               onClick={() => dispatch({ type: 'addObject', kind: tool.kind })}
-              className="flex h-8.5 flex-1 items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised text-gray-11 hover:text-gray-12"
+              className="flex h-34 flex-1 items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised text-gray-11 hover:text-gray-12"
             >
               <ShapeGlyph kind={tool.kind} size={15} />
             </button>
@@ -418,7 +418,7 @@ export function ObjectList() {
               )
             }
             className={cn(
-              'tool-toggle flex h-8.5 items-center justify-center border-1',
+              'tool-toggle flex h-34 items-center justify-center border-1',
               state.tool === 'pen'
                 ? 'border-indigo-9 bg-indigo-3 text-indigo-9'
                 : 'border-gray-6 bg-surface-raised text-gray-11 hover:text-gray-12',

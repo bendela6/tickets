@@ -85,11 +85,11 @@ export function ColourPairField({
     !mixed && hex.toUpperCase() === current.toUpperCase();
 
   return (
-    <div className="flex flex-col gap-2.25 rounded-lg bg-surface-inset p-2.5">
-      <div className="flex items-center gap-2.5">
+    <div className="flex flex-col gap-9 rounded-lg bg-surface-inset p-10">
+      <div className="flex items-center gap-10">
         <span
           aria-hidden
-          className="relative size-8 flex-none overflow-hidden rounded-md border-1 border-gray-7 shadow-raised"
+          className="relative size-32 flex-none overflow-hidden rounded-md border-1 border-gray-7 shadow-raised"
         >
           {/* The two halves are drawn only when they are the selection's. A
               swatch is a claim about what the colour is, and a mixed field has
@@ -108,7 +108,7 @@ export function ColourPairField({
           )}
         </span>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-0.75">
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
           <span className="font-sans text-9 font-500 tracking-widest text-gray-9">
             {label} · {ground} value
           </span>
@@ -127,10 +127,10 @@ export function ColourPairField({
         </div>
 
         {contrast ? (
-          <div className="flex flex-none flex-col items-end gap-0.75">
+          <div className="flex flex-none flex-col items-end gap-3">
             <span
               className={cn(
-                'inline-flex h-4.25 items-center rounded-sm px-1.5 font-sans text-9 font-500 tracking-wide',
+                'inline-flex h-17 items-center rounded-sm px-6 font-sans text-9 font-500 tracking-wide',
                 readable ? 'bg-indigo-3 text-indigo-9' : 'bg-surface-raised text-gray-11',
               )}
             >
@@ -141,7 +141,7 @@ export function ColourPairField({
         ) : null}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-8">
         <span className="min-w-0 flex-1 truncate font-mono text-9 text-gray-9">
           ground {against[ground].toUpperCase()}
         </span>
@@ -161,7 +161,7 @@ export function ColourPairField({
         )}
       </div>
 
-      <div className="grid grid-cols-8 gap-1">
+      <div className="grid grid-cols-8 gap-4">
         {SWATCHES.map((hex) => (
           <button
             key={hex}
@@ -171,7 +171,7 @@ export function ColourPairField({
             aria-pressed={chosen(hex)}
             onClick={() => onChange(hex)}
             className={cn(
-              'h-4.75 rounded-sm',
+              'h-19 rounded-sm',
               chosen(hex)
                 ? 'border-2 border-indigo-9'
                 : 'border-1 border-gray-7',

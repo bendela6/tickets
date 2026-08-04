@@ -55,9 +55,9 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
 
   return (
     <DialogRoot open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-140 max-w-full p-0">
-        <div className="flex items-start gap-3 border-b-1 border-gray-6 px-5 pb-3.5 pt-4">
-          <div className="flex min-w-0 flex-1 flex-col gap-0.75">
+      <DialogContent className="w-560 max-w-full p-0">
+        <div className="flex items-start gap-12 border-b-1 border-gray-6 px-20 pb-14 pt-16">
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
             <DialogTitle className="font-sans text-16 font-600 text-gray-12">
               Export icon
             </DialogTitle>
@@ -68,12 +68,12 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2.5 px-5 pb-4 pt-3.5">
+        <div className="flex flex-col gap-10 px-20 pb-16 pt-14">
           <span className="font-sans text-9 font-500 tracking-widest text-gray-9">
             TARGETS
           </span>
 
-          <ul className="flex flex-col gap-0.5">
+          <ul className="flex flex-col gap-2">
             {TARGETS.map((target) => (
               <TargetRow
                 key={target.id}
@@ -85,14 +85,14 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
           </ul>
 
           {firstWarning ? (
-            <div className="mt-0.5 flex items-start gap-2.5 rounded-lg bg-surface-inset px-3.25 py-2.75 inset-ring-1 inset-ring-red-9">
+            <div className="mt-2 flex items-start gap-10 rounded-lg bg-surface-inset px-13 py-11 inset-ring-1 inset-ring-red-9">
               <span
                 aria-hidden
-                className="mt-px flex size-4 flex-none items-center justify-center rounded-full border-1 border-red-9 font-sans text-10 font-600 text-red-9"
+                className="mt-px flex size-16 flex-none items-center justify-center rounded-full border-1 border-red-9 font-sans text-10 font-600 text-red-9"
               >
                 !
               </span>
-              <div className="flex min-w-0 flex-1 flex-col gap-0.75">
+              <div className="flex min-w-0 flex-1 flex-col gap-3">
                 <span className="font-sans text-12 font-500 text-red-9">
                   {firstWarning.name} reaches {firstWarning.percent}% of the tile
                 </span>
@@ -104,8 +104,8 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
             </div>
           ) : null}
 
-          <div className="mt-0.5 flex items-center gap-2.5 rounded-lg bg-surface-inset px-3.25 py-2.75">
-            <div className="flex flex-1 flex-col gap-0.5">
+          <div className="mt-2 flex items-center gap-10 rounded-lg bg-surface-inset px-13 py-11">
+            <div className="flex flex-1 flex-col gap-2">
               <span className="font-mono text-12 font-500 text-gray-12">
                 {fileCount} files · {chosen.length} targets
               </span>
@@ -117,7 +117,7 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.25 border-t-1 border-gray-6 bg-gray-1 px-5 py-3.25">
+        <div className="flex items-center gap-9 border-t-1 border-gray-6 bg-gray-1 px-20 py-13">
           <span className="flex-1 font-mono text-11 text-gray-9">
             {fileCount ? 'nothing is written until you press Export' : 'pick at least one target'}
           </span>
@@ -155,14 +155,14 @@ function TargetRow({
         aria-checked={on}
         onClick={onToggle}
         className={cn(
-          'flex h-8.5 w-full cursor-pointer items-center gap-2.5 rounded-md px-2.25 text-left',
+          'flex h-34 w-full cursor-pointer items-center gap-10 rounded-md px-9 text-left',
           on && 'bg-surface-inset',
         )}
       >
         <span
           aria-hidden
           className={cn(
-            'relative size-4 flex-none rounded-sm border-1',
+            'relative size-16 flex-none rounded-sm border-1',
             on ? 'border-indigo-9 bg-indigo-9' : 'border-gray-7 bg-surface-raised',
           )}
         >
@@ -191,7 +191,7 @@ function TargetRow({
         </span>
         <span className="flex-1" />
         <span className="flex-none font-mono text-11 text-gray-9">{target.sizes}</span>
-        <span className="w-28 flex-none text-right font-mono text-11 text-gray-11">
+        <span className="w-112 flex-none text-right font-mono text-11 text-gray-11">
           {target.writes}
         </span>
       </button>

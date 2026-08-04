@@ -34,12 +34,12 @@ function ToggleChip({
       aria-pressed={on}
       title={title}
       onClick={onToggle}
-      className="flex h-6.5 items-center gap-1.75 rounded-md px-2.25 text-gray-9 hover:bg-surface-inset hover:text-gray-11"
+      className="flex h-26 items-center gap-7 rounded-md px-9 text-gray-9 hover:bg-surface-inset hover:text-gray-11"
     >
       <span
         aria-hidden
         className={cn(
-          'size-2.75 flex-none rounded-sm border-2',
+          'size-11 flex-none rounded-sm border-2',
           on ? 'border-gray-11 bg-gray-11' : 'border-current bg-transparent',
         )}
       />
@@ -85,7 +85,7 @@ export function CanvasFooter({ status }: { status: string }) {
     <>
       <div
         className={cn(
-          'absolute bottom-3.25 left-3.5 flex items-center gap-2',
+          'absolute bottom-13 left-14 flex items-center gap-8',
           view.dragging && 'opacity-40',
         )}
       >
@@ -103,7 +103,7 @@ export function CanvasFooter({ status }: { status: string }) {
           title="Show the SVG this document generates · ⌘/"
           onToggle={() => setView((v) => ({ ...v, sourceOpen: !v.sourceOpen }))}
         />
-        <div className="flex h-6.5 items-center gap-1.75 rounded-md pl-2.25">
+        <div className="flex h-26 items-center gap-7 rounded-md pl-9">
           <span className="font-mono text-11 text-gray-9">ground</span>
           <Tabs
             role="group"
@@ -120,7 +120,7 @@ export function CanvasFooter({ status }: { status: string }) {
       {/* This slot stays fully lit while the rest of the chrome recedes: it is
           the one thing that has something new to say during a drag, and dimming
           it would hide exactly the modifiers it exists to teach. */}
-      <div className="absolute bottom-3.5 right-4 flex items-center gap-2.5">
+      <div className="absolute bottom-14 right-16 flex items-center gap-10">
         {showWarning && first ? (
           <button
             type="button"
@@ -129,11 +129,11 @@ export function CanvasFooter({ status }: { status: string }) {
               dispatch({ type: 'selectObject', id: first.id });
               setView((v) => ({ ...v, safeZoneOpen: true }));
             }}
-            className="flex h-5.5 items-center gap-1.5 rounded-md border-1 border-red-9 px-2 font-mono text-10 text-red-9"
+            className="flex h-22 items-center gap-6 rounded-md border-1 border-red-9 px-8 font-mono text-10 text-red-9"
           >
             <span
               aria-hidden
-              className="flex size-3.25 flex-none items-center justify-center rounded-full border-1 border-current font-sans text-9 font-600"
+              className="flex size-13 flex-none items-center justify-center rounded-full border-1 border-current font-sans text-9 font-600"
             >
               !
             </span>

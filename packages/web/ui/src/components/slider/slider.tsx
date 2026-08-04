@@ -22,7 +22,7 @@ const trackClass = variants({
   config: {
     size: {
       default: 'md',
-      options: { sm: 'h-0.75', md: 'h-1' },
+      options: { sm: 'h-3', md: 'h-4' },
     },
   },
 });
@@ -51,7 +51,7 @@ const rootClass = variants({
     },
     size: {
       default: 'md',
-      options: { sm: 'h-4', md: 'h-5' },
+      options: { sm: 'h-16', md: 'h-20' },
     },
   },
 });
