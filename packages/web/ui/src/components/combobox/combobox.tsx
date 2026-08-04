@@ -1,29 +1,30 @@
 import { useState } from 'react';
-import { cn, TONE_HUE, type Tone } from '../../style';
+import { cn } from '../../style';
 import { fieldClass, fieldState } from '../field';
 import { Icon, type IconSize } from '../icon';
 import { Pill } from '../pill';
-import { ComboboxList, type ComboOption } from '../combobox-list';
+import { ComboboxList } from '../combobox-list';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
-import type { ControlSize } from '../control';
+import { readOnlyFieldClass, type ControlProps, type ControlSize, type Option } from '../control';
 
-type ComboboxProps = {
-  id?: string;
-  options: ComboOption[];
-  value: string | null;
-  onChange: (value: string | null) => void;
+/**
+ * The shared control contract at `string | null` — a single select can always
+ * be empty — plus the three extras only a popover select has.
+ *
+ * `id`, `value`, `onChange`, `size`, `tone`, `disabled`, `readOnly` and
+ * `className` all arrive from `ControlProps` rather than being restated here,
+ * which is what keeps `tone` free of a default: an unset tone is the resting
+ * neutral field, not a quiet `'primary'`.
+ */
+type ComboboxProps = ControlProps<string | null> & {
+  options: Option[];
   placeholder?: string;
-  size?: ControlSize;
-  /** Which ramp the focus ring paints from. Defaults to `primary`. */
-  tone?: Tone;
-  disabled?: boolean;
   /**
    * Whether the open list offers a search box. Default true. Turn it off for a
    * short fixed set — over three options a search field is noise, and it costs
    * a keystroke to reach the list.
    */
   searchable?: boolean;
-  className?: string;
 };
 
 const PADDING: Record<ControlSize, string> = { sm: 'px-8', md: 'px-12', lg: 'px-14' };
@@ -46,6 +47,7 @@ export function Combobox({
   size = 'md',
   tone,
   disabled,
+  readOnly,
   searchable = true,
   className,
 }: ComboboxProps) {
@@ -54,13 +56,31 @@ export function Combobox({
   const selected = options.find((option) => option.value === value) ?? null;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      // Read-only is enforced at the popover, not at the trigger. The trigger
+      // keeps its tab stop and its click handler — what it loses is the list,
+      // and with the list unmounted there is nothing that can reach `onChange`.
+      // `open && !readOnly` rather than the guard alone, so a field that turns
+      // read-only while its list is open closes it instead of staying editable.
+      open={open && !readOnly}
+      onOpenChange={(next) => {
+        if (!readOnly) {
+          setOpen(next);
+        }
+      }}
+    >
       <div className={cn('relative', className)}>
         <PopoverTrigger asChild>
           <button
             id={id}
             type="button"
             disabled={disabled}
+            // NOT `disabled`. A read-only field is one you may not edit, not
+            // one that is inapplicable: it keeps its tab stop and its value
+            // keeps being submitted. `undefined` rather than `false` so the
+            // attribute is absent on an editable trigger — `aria-readonly
+            // ="false"` is the same as saying nothing, at the cost of saying it.
+            aria-readonly={readOnly || undefined}
             className={fieldClass({
               size,
               state: field.state,
@@ -71,12 +91,26 @@ export function Combobox({
                 TEXT[size],
                 PADDING[size],
                 'pr-28',
+                // Last, so it wins the border and the ground it is overriding.
+                // Deliberately not the disabled look — the text keeps full
+                // contrast, because a value you may not edit is still a value
+                // you have to be able to read.
+                readOnly && readOnlyFieldClass,
               ),
             })}
           >
             {selected ? (
               selected.color ? (
-                <Pill tone={selected.color} shape="round" label={selected.label} />
+                // `min-w-0` is load-bearing: a Pill is an unshrinkable flex
+                // item by default, so a long label pushed the chevron out of
+                // the trigger instead of being cut. The pill may shrink, and
+                // `truncate` on the label is what then ellipsises it.
+                <Pill
+                  tone={selected.color}
+                  shape="round"
+                  className="min-w-0"
+                  label={<span className="truncate">{selected.label}</span>}
+                />
               ) : (
                 <span className="truncate">{selected.label}</span>
               )

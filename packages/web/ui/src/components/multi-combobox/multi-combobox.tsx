@@ -1,25 +1,26 @@
 import { useState } from 'react';
-import { cn, TONE_HUE, type Tone } from '../../style';
+import { cn } from '../../style';
 import { fieldClass, fieldState } from '../field';
 import { Icon, type IconSize } from '../icon';
 import { Pill } from '../pill';
-import { ComboboxList, type ComboOption } from '../combobox-list';
+import { ComboboxList } from '../combobox-list';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
-import type { ControlSize } from '../control';
+import { readOnlyFieldClass, type ControlProps, type ControlSize, type Option } from '../control';
 
-type MultiComboboxProps = {
-  id?: string;
-  options: ComboOption[];
-  value: string[];
-  onChange: (value: string[]) => void;
+/**
+ * The multi-select field. Answers to `ControlProps<string[]>` like every other
+ * control in the package, so a caller that knows the value kind can drive it
+ * without knowing which control it holds.
+ *
+ * `value` is `string[]` — never null. "Nothing selected" is the empty array, so
+ * a caller never has to spell two empties, and every read (`value.length`,
+ * `value.includes`) is safe without a guard.
+ */
+type MultiComboboxProps = ControlProps<string[]> & {
+  options: Option[];
   placeholder?: string;
-  size?: ControlSize;
-  /** Which ramp the focus ring paints from. Defaults to `primary`. */
-  tone?: Tone;
-  disabled?: boolean;
   /** Max chips shown on the trigger before collapsing to +N. */
   maxChips?: number;
-  className?: string;
 };
 
 // The trigger wraps its chips onto more rows as they accumulate, so each rung
@@ -46,8 +47,12 @@ export function MultiCombobox({
   onChange,
   placeholder = 'Select…',
   size = 'md',
+  // No default. An unset tone is the resting neutral field, NOT a synonym for
+  // `primary` — `fieldState` reads the difference and only a named tone paints
+  // the border.
   tone,
   disabled,
+  readOnly,
   maxChips = 3,
   className,
 }: MultiComboboxProps) {
@@ -55,16 +60,39 @@ export function MultiCombobox({
   const field = fieldState(tone);
   const selectedOptions = value
     .map((entry) => options.find((option) => option.value === entry))
-    .filter((option): option is ComboOption => Boolean(option));
+    .filter((option): option is Option => Boolean(option));
   const shown = selectedOptions.slice(0, maxChips);
   const overflow = selectedOptions.length - shown.length;
 
+  // Read-only is not disabled: the trigger keeps its tab stop and the value
+  // keeps its place in a submission, so nothing about the platform refuses a
+  // write here — this does. One funnel, so a later affordance cannot be added
+  // without the check.
+  function commit(next: string[]) {
+    if (readOnly) {
+      return;
+    }
+    onChange(next);
+  }
+
   function toggle(entry: string) {
-    onChange(value.includes(entry) ? value.filter((item) => item !== entry) : [...value, entry]);
+    commit(value.includes(entry) ? value.filter((item) => item !== entry) : [...value, entry]);
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      // Refusing the open is what makes read-only stick. The chips carry no
+      // remove affordance, so the list is the only way to change the value, and
+      // a list that never opens is a value that cannot be edited. `open` is
+      // derived rather than merely guarded so a field that turns read-only
+      // while its list is open closes instead of staying editable.
+      open={open && !readOnly}
+      onOpenChange={(next) => {
+        if (!readOnly) {
+          setOpen(next);
+        }
+      }}
+    >
       {/* The whole shell is the trigger, not just the chevron. Now that the
           chips are read-only there is nothing inside it competing for a click,
           so a 12px glyph should not be the only way in — and the focus ring
@@ -75,6 +103,11 @@ export function MultiCombobox({
           id={id}
           type="button"
           aria-label={placeholder}
+          // Announced rather than enforced by the platform: `readonly` is not a
+          // button attribute, and reaching for `disabled` instead would be
+          // wrong twice over — it drops the tab stop, and it drops the value
+          // from submission, which a field locked by permission still owes.
+          aria-readonly={readOnly || undefined}
           disabled={disabled}
           className={fieldClass({
             size,
@@ -84,6 +117,11 @@ export function MultiCombobox({
               'flex w-full items-center gap-6 px-10 text-left',
               'disabled:pointer-events-none disabled:opacity-50',
               BOX[size],
+              // Merged after the field's own border and fill so it wins them,
+              // and before the caller's className so the caller still wins.
+              // Deliberately not the disabled look: the text keeps full
+              // contrast, because the value still matters.
+              readOnly && readOnlyFieldClass,
               className,
             ),
           })}
@@ -128,9 +166,7 @@ export function MultiCombobox({
               <button
                 type="button"
                 onClick={() =>
-                  onChange(
-                    options.filter((option) => !option.disabled).map((option) => option.value),
-                  )
+                  commit(options.filter((option) => !option.disabled).map((option) => option.value))
                 }
                 className="rounded-md px-4 font-sans text-12/17 font-500 text-indigo-9 hover:underline"
               >
@@ -138,7 +174,9 @@ export function MultiCombobox({
               </button>
               <button
                 type="button"
-                onClick={() => onChange([])}
+                // `[]`, not null: empty is a value of the same kind, so a
+                // consumer never has to spell two of them.
+                onClick={() => commit([])}
                 className="rounded-md px-4 font-sans text-12/17 font-500 text-gray-11 hover:underline"
               >
                 Clear ({value.length})

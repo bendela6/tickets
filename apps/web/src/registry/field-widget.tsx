@@ -113,9 +113,9 @@ export function FieldWidget({
       <Checkbox
         label=""
         aria-label={field.label}
-        checked={value === true}
+        value={value === true}
         disabled={disabled}
-        onChange={(event) => onChange(event.target.checked)}
+        onChange={(next) => onChange(next)}
       />
     );
   }
@@ -138,7 +138,7 @@ export function FieldWidget({
         aria-label={field.label}
         value={shown}
         disabled={disabled}
-        onChange={(event) => setJsonDraft(event.target.value)}
+        onChange={(next) => setJsonDraft(next)}
         onBlur={() => {
           if (jsonDraft === null) {
             return;

@@ -41,7 +41,7 @@ export function JsonInput(p: InputProps<JsonInputConfig, string>) {
         placeholder={p.config.placeholder}
         disabled={p.disabled}
         tone={error || p.error ? 'danger' : undefined}
-        onChange={(e) => p.onChange(e.target.value)}
+        onChange={p.onChange}
         onBlur={p.onBlur}
         className="font-mono"
       />

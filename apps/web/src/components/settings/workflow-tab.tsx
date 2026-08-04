@@ -566,8 +566,8 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     />
                     <Checkbox
                       label="Requires a comment"
-                      checked={edgeRequiresComment}
-                      onChange={(event) => setEdgeRequiresComment(event.target.checked)}
+                      value={edgeRequiresComment}
+                      onChange={(next) => setEdgeRequiresComment(next)}
                       disabled={disabled}
                     />
                     <Combobox

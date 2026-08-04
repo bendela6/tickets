@@ -1,21 +1,22 @@
-import { cn, TONE_HUE, type Tone } from '../../style';
+import { forwardRef } from 'react';
+import { cn } from '../../style';
 import { fieldClass, fieldState } from '../field';
 import { Icon } from '../icon';
-import type { ControlSize } from '../control';
+import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../control';
 
-type NumberInputProps = {
-  id?: string;
-  value: number | null;
-  onChange: (value: number | null) => void;
+/**
+ * The shared control contract at `T = number | null`, plus the four props only
+ * a numeric field has.
+ *
+ * `null` is not a stand-in for zero: an estimate nobody has given yet and an
+ * estimate of 0 are different facts, and the field has to be able to hold the
+ * first without inventing the second.
+ */
+type NumberInputProps = ControlProps<number | null> & {
   min?: number;
   max?: number;
   step?: number;
-  size?: ControlSize;
-  /** Which ramp the focus ring paints from. Defaults to `primary`. */
-  tone?: Tone;
-  disabled?: boolean;
   placeholder?: string;
-  className?: string;
 };
 
 // The digits used to be a fixed `text-13/19`, so `size` moved the box and the
@@ -33,25 +34,42 @@ function clamp(value: number, min?: number, max?: number) {
   return next;
 }
 
-export function NumberInput({
-  id,
-  value,
-  onChange,
-  min,
-  max,
-  step = 1,
-  size = 'md',
-  tone,
-  disabled,
-  placeholder,
-  className,
-}: NumberInputProps) {
+export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(function NumberInput(
+  {
+    id,
+    value,
+    onChange,
+    min,
+    max,
+    step = 1,
+    size = 'md',
+    tone,
+    disabled,
+    readOnly,
+    placeholder,
+    className,
+  },
+  ref,
+) {
   const field = fieldState(tone);
 
+  // Neither state may move the value, so neither gets the stepper's hover
+  // affordance either. They are NOT the same treatment otherwise: disabled
+  // dims the whole control and drops its tab stop, read-only keeps both.
+  const inert = disabled === true || readOnly === true;
+
   function nudge(delta: number) {
+    // HTML's `readonly` reaches the typing path and nothing else — the steppers
+    // are buttons, and would happily rewrite a field the user may not edit.
+    if (inert) return;
     const base = value ?? 0;
     onChange(clamp(base + delta, min, max));
   }
+
+  const stepper = cn(
+    'flex flex-1 items-center px-6 text-gray-9',
+    !inert && 'hover:bg-surface-inset hover:text-gray-12',
+  );
 
   return (
     <div
@@ -65,11 +83,17 @@ export function NumberInput({
         className: cn(
           'inline-flex items-stretch',
           disabled && 'pointer-events-none opacity-50',
+          // Composed here rather than through Tailwind's `read-only:` variant:
+          // that variant compiles to the CSS `:read-only` pseudo-class, which
+          // matches every element that is not user-editable — this wrapper
+          // `div` included, where it would be permanently on. See control.ts.
+          readOnly && readOnlyFieldClass,
           className,
         ),
       })}
     >
       <input
+        ref={ref}
         id={id}
         type="number"
         role="spinbutton"
@@ -79,6 +103,10 @@ export function NumberInput({
         max={max}
         step={step}
         disabled={disabled}
+        // The real attribute, not `aria-readonly`: this is a text-entry control,
+        // and `<input>` honours `readonly` natively — it keeps the tab stop and
+        // keeps the value in form submission, which `disabled` would drop.
+        readOnly={readOnly}
         placeholder={placeholder}
         onChange={(event) => {
           const raw = event.target.value;
@@ -95,8 +123,9 @@ export function NumberInput({
           type="button"
           aria-label="Increment"
           tabIndex={-1}
+          disabled={inert}
           onClick={() => nudge(step)}
-          className="flex flex-1 items-center px-6 text-gray-9 hover:bg-surface-inset hover:text-gray-12"
+          className={stepper}
         >
           <Icon name="chevron-up" size="2xs" />
         </button>
@@ -104,12 +133,13 @@ export function NumberInput({
           type="button"
           aria-label="Decrement"
           tabIndex={-1}
+          disabled={inert}
           onClick={() => nudge(-step)}
-          className="flex flex-1 items-center border-t-1 border-gray-6 px-6 text-gray-9 hover:bg-surface-inset hover:text-gray-12"
+          className={cn(stepper, 'border-t-1 border-gray-6')}
         >
           <Icon name="chevron-down" size="2xs" />
         </button>
       </div>
     </div>
   );
-}
+});

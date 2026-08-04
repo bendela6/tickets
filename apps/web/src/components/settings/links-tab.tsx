@@ -129,8 +129,8 @@ function CreateForm({
         </div>
         <Checkbox
           label="Directional"
-          checked={draft.directional}
-          onChange={(event) => onChange({ ...draft, directional: event.target.checked })}
+          value={draft.directional}
+          onChange={(next) => onChange({ ...draft, directional: next })}
         />
       </div>
       <div className="mt-12 flex justify-end gap-8">
@@ -183,8 +183,8 @@ function EditForm({
         </div>
         <Checkbox
           label="Directional"
-          checked={draft.directional}
-          onChange={(event) => onChange({ ...draft, directional: event.target.checked })}
+          value={draft.directional}
+          onChange={(next) => onChange({ ...draft, directional: next })}
         />
       </div>
       <div className="mt-12 flex justify-end gap-8">

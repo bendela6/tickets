@@ -18,9 +18,9 @@ const options = [
 // types — this pins the behaviour rather than the mechanism.
 describe('every field control can be disabled', () => {
   it('Input and Textarea disable natively', () => {
-    const { rerender } = render(<Input disabled aria-label="a" />);
+    const { rerender } = render(<Input disabled aria-label="a"  value="" onChange={() => {}} />);
     expect(screen.getByLabelText('a')).toBeDisabled();
-    rerender(<Textarea disabled aria-label="b" />);
+    rerender(<Textarea disabled aria-label="b"  value="" onChange={() => {}} />);
     expect(screen.getByLabelText('b')).toBeDisabled();
   });
 
@@ -49,7 +49,7 @@ describe('every field control can be disabled', () => {
   });
 
   it('a disabled field takes the muted border and fill, whatever its tone', () => {
-    render(<Input disabled tone="danger" aria-label="c" />);
+    render(<Input disabled tone="danger" aria-label="c"  value="" onChange={() => {}} />);
     const input = screen.getByLabelText('c');
     expect(input.className).toContain('disabled:border-gray-6');
     expect(input.className).toContain('disabled:bg-surface-inset');

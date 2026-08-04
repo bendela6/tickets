@@ -16,7 +16,7 @@ export function TextareaInput(p: InputProps<TextareaInputConfig, string>) {
       placeholder={p.config.placeholder}
       disabled={p.disabled}
       tone={p.error ? 'danger' : undefined}
-      onChange={(e) => p.onChange(e.target.value)}
+      onChange={p.onChange}
       onBlur={p.onBlur}
     />
   );

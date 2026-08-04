@@ -34,9 +34,9 @@ function ColumnChecklist({
         <Checkbox
           key={index}
           label={columnLabel(column, indexes)}
-          checked={column.hidden !== true}
-          onChange={(event) => {
-            const visible = event.target.checked;
+          value={column.hidden !== true}
+          onChange={(next) => {
+            const visible = next;
             onUpdate((current) => ({
               ...current,
               columns: current.columns.map((entry, entryIndex) =>
@@ -49,9 +49,9 @@ function ColumnChecklist({
       <div className="-mx-12 my-2 h-px bg-gray-6" />
       <Checkbox
         label="KPI strip"
-        checked={config.kpi}
-        onChange={(event) => {
-          const kpi = event.target.checked;
+        value={config.kpi}
+        onChange={(next) => {
+          const kpi = next;
           onUpdate((current) => ({ ...current, kpi }));
         }}
       />

@@ -79,7 +79,7 @@ export function TicketDispatch({ itemId, actorId }: { itemId: number; actorId?: 
             />
             <Textarea
               value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
+              onChange={(next) => setPrompt(next)}
               rows={3}
               placeholder="What should the agent do on this ticket?"
             />

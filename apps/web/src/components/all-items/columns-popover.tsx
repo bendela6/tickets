@@ -86,8 +86,8 @@ export function ColumnsPopover({
             >
               <Checkbox
                 label={row.label}
-                checked={enabled.has(row.id)}
-                onChange={(event) => onToggle(row.id, event.target.checked)}
+                value={enabled.has(row.id)}
+                onChange={(next) => onToggle(row.id, next)}
               />
               <span className="shrink-0 font-mono text-10 text-gray-9">{row.typeLabel}</span>
             </div>
@@ -120,8 +120,8 @@ export function ColumnsPopover({
           <div className="px-9 py-4">
             <Checkbox
               label="KPI strip"
-              checked={kpi}
-              onChange={(event) => onKpiChange(event.target.checked)}
+              value={kpi}
+              onChange={(next) => onKpiChange(next)}
             />
           </div>
         </div>
