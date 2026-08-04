@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { isDemoError, type CollectedDemo } from '@tickets/ui';
+import { Button, isDemoError, type CollectedDemo } from '@tickets/ui';
 import { ComponentPage } from '../../page/component-page';
 import { DemoPreview, fitsBesideDocs } from '../../preview/demo-preview';
 import { DocsPanel, DOCS_COLUMN } from '../../page/tabs/docs-panel';
@@ -100,13 +100,9 @@ export function GalleryShell({
                 Instrument control library. Compare against docs/design/design-system.html.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="h-36 rounded-md border-1 border-gray-7 bg-surface-raised px-14 text-13/19 text-gray-12 hover:bg-surface-inset"
-            >
+            <Button variant="outline" tone="neutral" onClick={toggleTheme}>
               Toggle theme
-            </button>
+            </Button>
           </header>
           {providers(
             <div className="flex flex-col gap-40">

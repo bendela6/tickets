@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   type AnyControlDef,
+  Button,
   cn,
   type CollectedDemo,
   Icon,
@@ -82,13 +83,14 @@ function OptionChips({ values }: { values: string[] }) {
         </span>
       )}
       {overflowing && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setExpanded(!expanded)}
-          className="ml-2 font-sans text-12/17 font-500 text-indigo-9 hover:underline"
+          className="ml-2 h-auto px-0 text-12/17 hover:underline"
         >
           {expanded ? 'Show fewer' : `Show all ${values.length}`}
-        </button>
+        </Button>
       )}
     </div>
   );
