@@ -1,5 +1,6 @@
-import { RADII } from '../spec';
-import { DriftView, Sheet, SpecHeader, SpecRow } from '../view';
+import { RADII } from '../../generated';
+import { specRows } from '../spec';
+import { Sheet, SpecHeader, SpecRow } from '../view';
 
 export const meta = {
   title: 'Radius',
@@ -33,7 +34,7 @@ function Scale() {
   return (
     <Sheet>
       <SpecHeader specimen="corner at 4× · in place" />
-      {RADII.map((radius) => (
+      {specRows('radius', RADII).map((radius) => (
         <SpecRow key={radius.name} name={radius.name} value={radius.value} note={RADIUS_JOBS[radius.name]}>
           <div className="flex items-center gap-4">
             {/* One corner, magnified 4×. At real size the difference between
@@ -104,5 +105,4 @@ function InUse() {
 export const states = [
   { name: 'Scale', render: () => <Scale /> },
   { name: 'In use', render: () => <InUse /> },
-  { name: 'Drift', render: () => <DriftView families={['radius']} /> },
 ];

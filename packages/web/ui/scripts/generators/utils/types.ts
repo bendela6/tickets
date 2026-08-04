@@ -2,75 +2,71 @@
 
 export type Theme = 'light' | 'dark';
 
+/** A value that differs by theme. Surfaces, ramps and shadows all carry both. */
+export interface Themed {
+  light: string;
+  dark: string;
+}
+
+/** Token name (`gray-1`, `shadow-xs`) to its value, for one theme. */
+export type TokenMap = Record<string, string>;
+
 /**
- * How a token reaches Tailwind. `color` bridges to `--color-<name>`, `shadow`
- * to `--shadow-<rung>` — two different var namespaces, which is the only reason
- * the kind has to ride along with the value instead of being re-derived from it.
+ * What every family generator returns.
+ *
+ * A family may produce a stylesheet, a TypeScript module, or both — breakpoints
+ * emit CSS that Tailwind reads AND a module the panel hooks read, while the
+ * border widths are documentation and emit no CSS at all.
  */
-export type TokenKind = 'color' | 'shadow';
-
-export interface ResolvedToken {
-  value: string;
-  type: TokenKind;
+export interface Family {
+  css?: string;
+  ts?: string;
 }
 
-/** Token name (`gray-1`, `shadow-xs`) to its resolved value, for one theme. */
-export type TokenMap = Record<string, ResolvedToken>;
+// ---------------------------------------------------------------------------
+// Token document shapes
+// ---------------------------------------------------------------------------
 
-/** What every family generator returns: the same token names, valued per theme. */
-export interface FamilyTokens {
-  light: TokenMap;
-  dark: TokenMap;
+/** `colors.tokens.json`. */
+export interface ColorsDoc {
+  /** `gray: { 1: { light, dark }, contrast: { … } }` — eleven perceptual scales. */
+  ramp: Record<string, Record<string, Themed>>;
+  /** A JOB (`danger`) to the ramp that currently does it (`red`). */
+  role: Record<string, string>;
+  /** Defined by what they sit above, which no ramp step expresses. */
+  surface: Record<string, Themed>;
+  /** Chosen for recognition rather than contrast — a highlighter is yellow. */
+  literal: Record<string, Themed>;
 }
 
-/** A DTCG leaf. Only `$value` is read; `$type` is documentation for the author. */
-export interface DesignToken {
-  $type?: string;
-  $value: string;
+/** `shadows.tokens.json`. */
+export interface ShadowsDoc {
+  shadow: Record<string, Themed>;
 }
 
-/** `colors.{light,dark}.tokens.json` — `{ gray: { 1: …, contrast: … }, … }`. */
-export type ColorDoc = Record<string, Record<string, DesignToken>>;
-
-/** `shadows.{light,dark}.tokens.json` — `{ shadow: { xs, md, lg } }`. */
-export interface ShadowDoc {
-  shadow: Record<string, DesignToken>;
-}
-
-/** `typography.tokens.json` — sizes, weights and families, none theme-varying. */
+/** `typography.tokens.json`. */
 export interface TypographyDoc {
-  text: Record<string, DesignToken>;
-  'font-weight': Record<string, DesignToken>;
-  font: Record<string, DesignToken>;
+  text: Record<string, { $value: string }>;
+  'font-weight': Record<string, { $value: string }>;
+  font: Record<string, { $value: string }>;
 }
 
-/** `radius.tokens.json` — the four corner rungs. */
-export interface RadiusDoc {
-  radius: Record<string, DesignToken>;
+/** `border.tokens.json`. Only `radius` reaches CSS; the rest is documentation. */
+export interface BorderDoc {
+  radius: Record<string, string>;
+  width: number[];
+  ring: number[];
 }
 
-/**
- * `motion.tokens.json`. `duration` is a sanctioned-rung registry that emits
- * nothing — `duration-200` is already 200ms because the Tailwind class says so.
- * The other three do emit.
- */
+/** `motion.tokens.json`. `duration` is sanctioned rungs and emits nothing. */
 export interface MotionDoc {
-  duration: Record<string, DesignToken>;
-  ease: Record<string, DesignToken>;
-  animate: Record<string, DesignToken>;
-  transition: Record<string, DesignToken>;
+  duration: Record<string, { $value: string }>;
+  ease: Record<string, { $value: string }>;
+  animate: Record<string, { $value: string }>;
+  transition: Record<string, { $value: string }>;
 }
 
-/** `semantic.tokens.json`. Surfaces and literals carry both themes inline. */
-export interface SemanticDoc {
-  scale: Record<string, string>;
-  surface: Record<string, Record<Theme, string>>;
-  literal: Record<string, Record<Theme, string>>;
-}
-
-/** One regenerable region of tokens.css, found by its marker comment pair. */
-export interface Marker {
-  start: string;
-  end: string;
-  region: string;
+/** `breakpoints.tokens.json`. */
+export interface BreakpointsDoc {
+  breakpoint: Record<string, { $value: string }>;
 }

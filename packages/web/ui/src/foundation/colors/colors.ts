@@ -1,24 +1,36 @@
-import lightTokens from '../../../tokens/colors.light.tokens.json';
-import darkTokens from '../../../tokens/colors.dark.tokens.json';
-import semanticTokens from '../../../tokens/semantic.tokens.json';
+import { HUE_TONES, LITERALS, RAMPS, SURFACES, TONE_RAMP } from '../../generated';
 
 /**
- * The ramps, in declaration order — gray last, after the chromatics.
+ * Contrast analysis over the generated colour tables.
  *
- * Derived from the colours rather than listed separately. A hand-kept list was
- * a second copy of the ramp names that could disagree with the ramps: a hue
- * listed but unpainted, or painted but unlisted. The ramps are the only place a
- * hue can exist, so they are the list.
+ * The VALUES live in `src/generated/colors.ts`, emitted from
+ * `tokens/colors.tokens.json`. What is hand-written here is the maths — WCAG
+ * luminance and the pairings the tone system can actually produce — because
+ * that is logic, not data, and no generator can derive which combinations a
+ * component will put next to each other.
  */
-export const HUES = Object.keys(lightTokens) as readonly string[];
-export const STEPS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 
 export type Theme = 'light' | 'dark';
-export type Step = (typeof STEPS)[number];
+
+/** The eleven ramps, in declaration order — gray last, after the chromatics. */
+export const HUES: readonly string[] = HUE_TONES;
+
+/**
+ * Rung numbers, derived from the ramps rather than restated.
+ *
+ * Any ramp can stand for the set — the generator asserts they all carry the
+ * same rungs, so a disagreement is a build failure, not a runtime surprise.
+ */
+export const STEPS = Object.keys(Object.values(RAMPS)[0] ?? {})
+  .filter((s) => /^\d+$/.test(s))
+  .map(Number);
+
+export type Step = number;
 
 // What each step is for. Identical on every scale, so a step number means one
 // thing everywhere — that is the whole point of numbering rather than naming.
-export const STEP_JOBS: Record<Step, string> = {
+// Prose, not data: it cannot be derived from the hexes.
+export const STEP_JOBS: Record<number, string> = {
   1: 'app background',
   2: 'subtle background',
   3: 'component background',
@@ -33,25 +45,16 @@ export const STEP_JOBS: Record<Step, string> = {
   12: 'text, high contrast',
 };
 
-// Keyed `[scale]: { [step]: … }`, which is how `colorOf` already asked for a
-// colour — the two-level lookup below used to have to re-join the parts into
-// `gray-1` first.
-type ScaleTokens = Record<string, { $value: string }>;
-
-const TOKENS: Record<Theme, Record<string, ScaleTokens>> = {
-  light: lightTokens,
-  dark: darkTokens,
-};
-
 /** Hex for a step (`9`) or the scale's contrast token (`'contrast'`). */
 export function colorOf(theme: Theme, scale: string, step: Step | 'contrast'): string {
-  const token = TOKENS[theme][scale]?.[step];
+  const ramp = (RAMPS as Record<string, Record<string, { light: string; dark: string }>>)[scale];
+  const token = ramp?.[String(step)];
   if (!token) throw new Error(`unknown color token: ${scale}-${step} (${theme})`);
-  return token.$value;
+  return token[theme];
 }
 
-export const SEMANTIC_SCALES = semanticTokens.scale as Record<string, string>;
-export const SURFACES = semanticTokens.surface as Partial<Record<string, Record<Theme, string>>>;
+export const SEMANTIC_SCALES: Record<string, string> = TONE_RAMP;
+export { SURFACES, LITERALS };
 
 // ---------------------------------------------------------------------------
 // Contrast
@@ -152,9 +155,9 @@ function pair(
 
 /**
  * Every foreground/background combination the tone system can produce, checked
- * against WCAG. One function, two consumers: the gallery renders it and
- * `tokens:verify` fails the build on the `required` ones — so the UI and the
- * gate cannot disagree about what is broken.
+ * against WCAG. One function, two consumers: the gallery renders it and the
+ * suite fails on the `required` ones — so the UI and the check cannot disagree
+ * about what is broken.
  */
 export function checkPairings(scales: readonly string[] = HUES): Pairing[] {
   const out: Pairing[] = [];

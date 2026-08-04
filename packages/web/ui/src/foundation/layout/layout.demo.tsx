@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { BREAKPOINTS } from '../spec';
+import { BREAKPOINTS } from '../../generated';
+import { NativeNote, Sheet, SpecHeader, SpecRow } from '../view';
 
 /**
  * Border widths, ring widths and z-index rungs, declared here rather than in a
@@ -19,7 +20,6 @@ import { BREAKPOINTS } from '../spec';
 const BORDERS = [1, 2, 3, 4, 5].map((n) => ({ name: `border-${n}`, value: `${n}px` }));
 const RINGS = [1, 2, 3, 4, 5].map((n) => ({ name: `ring-${n}`, value: `${n}px` }));
 const LAYERS = [0, 10, 20, 30, 40, 50].map((n) => ({ name: `z-${n}`, value: `${n}` }));
-import { NativeNote, Sheet, SpecHeader, SpecRow } from '../view';
 
 export const meta = {
   title: 'Layout',
@@ -131,8 +131,8 @@ function useViewportWidth(): number {
 
 function Breakpoints() {
   const width = useViewportWidth();
-  const breakpointLg = Number.parseInt(BREAKPOINTS.find((b) => b.name === 'breakpoint-lg')!.value, 10);
-  const breakpoint2xl = Number.parseInt(BREAKPOINTS.find((b) => b.name === 'breakpoint-2xl')!.value, 10);
+  const breakpointLg = BREAKPOINTS.lg;
+  const breakpoint2xl = BREAKPOINTS['2xl'];
   const band =
     width < breakpointLg
       ? 'below breakpoint-lg'
@@ -188,7 +188,6 @@ export const states = [
         <NativeNote family="border" />
         <NativeNote family="ring" />
         <NativeNote family="z" />
-        <NativeNote family="breakpoint" />
       </>
     ),
   },
