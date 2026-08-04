@@ -135,8 +135,8 @@ export function Studio() {
 
   return (
     <div className="min-h-screen bg-gray-1 font-sans text-gray-12">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6">
-        <header className="flex flex-col gap-1">
+      <div className="mx-auto flex max-w-6xl flex-col gap-24 p-24">
+        <header className="flex flex-col gap-4">
           <h1 className="text-24 font-600 tracking-tight">Icon studio</h1>
           <p className="max-w-prose text-13 text-gray-11">
             Tune the mark, then write every favicon and install icon into apps/web. The config is
@@ -145,13 +145,13 @@ export function Studio() {
         </header>
 
         {error ? (
-          <p role="status" className="rounded-lg border-1 border-pink-6 bg-pink-2 px-3 py-2 text-13 text-pink-11">
+          <p role="status" className="rounded-lg border-1 border-pink-6 bg-pink-2 px-12 py-8 text-13 text-pink-11">
             {error}
           </p>
         ) : null}
 
-        <div className="flex flex-col gap-6 lg:flex-row">
-          <div className="flex flex-col gap-5 lg:w-88 lg:shrink-0">
+        <div className="flex flex-col gap-24 lg:flex-row">
+          <div className="flex flex-col gap-20 lg:w-352 lg:shrink-0">
             <ElementPanel doc={state.doc} dispatch={dispatch} />
             <InkPanel doc={state.doc} base={base} onBaseChange={onBaseChange} />
             <ControlsPanel
@@ -171,8 +171,8 @@ export function Studio() {
             />
           </div>
 
-          <div className="flex flex-col gap-4 lg:flex-1">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-16 lg:flex-1">
+            <div className="flex items-center gap-12">
               <Button variant="solid" onClick={onGenerate} loading={busy}>
                 Generate all icons
               </Button>
@@ -186,7 +186,7 @@ export function Studio() {
             </div>
 
             {results ? (
-              <ul className="flex flex-col gap-1 rounded-lg border-1 border-gray-6 bg-gray-2 p-3">
+              <ul className="flex flex-col gap-4 rounded-lg border-1 border-gray-6 bg-gray-2 p-12">
                 {results.map((r) => (
                   <li key={r.path} className="font-mono text-12 text-gray-11">
                     <span className="text-gray-12">{r.status}</span> {r.path}
@@ -196,7 +196,7 @@ export function Studio() {
               </ul>
             ) : null}
 
-            <section className="flex flex-col gap-2 rounded-lg border-1 border-gray-6 bg-gray-2 p-3">
+            <section className="flex flex-col gap-8 rounded-lg border-1 border-gray-6 bg-gray-2 p-12">
               <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">
                 Loader
               </h2>
