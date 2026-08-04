@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { cn, runtimeStyle } from '@tickets/ui';
+import { cn } from '@tickets/ui';
 
 export function Chip({
   on,
@@ -33,7 +33,7 @@ export function Chip({
           'bg-blue-9': on && !color,
           'bg-gray-9': !on,
         })}
-        style={on && color ? runtimeStyle({ '--chip-color': color }) : undefined}
+        style={on && color ? { '--chip-color': color } : undefined}
       />
       {children}
     </button>

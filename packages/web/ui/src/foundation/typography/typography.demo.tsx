@@ -14,7 +14,7 @@ export const meta = {
 // actually sets text in. Long enough to wrap, because leading only becomes
 // visible when one line sits under another.
 const COPY =
-  'Gateway returned 504 after three retries. The run was marked failed and the queue drained.';
+  `Gateway returned 504 after three retries. The run was marked failed and the queue drained.`;
 
 // Written out rather than interpolated: `text-${size}` cannot be scanned, and
 // these maps ARE the documentation — the page shows the real utilities, not an
@@ -70,6 +70,7 @@ function Type({ font, size, weight, tracking, leading, uppercase, text: copy }: 
     <p
       className={cn(
         'm-0 max-w-160 text-gray-12',
+        'truncate',
         FONT[font],
         SIZE[size],
         WEIGHT[weight],

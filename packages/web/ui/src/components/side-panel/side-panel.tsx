@@ -1,6 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { cn } from '../../style/cn';
-import { runtimeStyle } from '../../style/runtime-style';
 import { Drawer } from '../drawer';
 import { Icon } from '../icon';
 import {
@@ -153,7 +152,7 @@ export function SidePanel({
     <aside
       ref={panelRef}
       aria-label={label}
-      style={runtimeStyle({ '--panel-w': `${width}px` })}
+      style={{ '--panel-w': `${width}px` }}
       className={cn(
         'relative flex w-(--panel-w) shrink-0 flex-col bg-gray-2',
         side === 'left' ? 'border-r-1 border-gray-6' : 'border-l-1 border-gray-6',

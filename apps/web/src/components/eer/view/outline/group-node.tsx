@@ -5,7 +5,7 @@
 // padding class, which keeps the guide line and the offset in one place and
 // means no depth→class table to run off the end of.
 
-import { cn, runtimeStyle } from '@tickets/ui';
+import { cn } from '@tickets/ui';
 import { groupColor } from '../../engine/colors/group-color';
 import { zoneIdOf } from '../../engine/groups/zone-id-of';
 import { useDiagramActions, useDiagramModel, useDiagramUi } from '../../state/diagram-context';
@@ -43,7 +43,7 @@ export function GroupNode({
   const swatch = (
     <span
       className={cn(dot, hidden ? 'border-1 border-gray-8' : 'bg-(--group-color)')}
-      style={hidden ? undefined : runtimeStyle({ '--group-color': color })}
+      style={hidden ? undefined : { '--group-color': color }}
     />
   );
 
