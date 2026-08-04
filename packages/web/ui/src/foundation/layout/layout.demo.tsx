@@ -1,5 +1,24 @@
 import { useEffect, useState } from 'react';
-import { BORDERS, BREAKPOINTS, LAYERS, RINGS } from '../spec';
+import { BREAKPOINTS } from '../spec';
+
+/**
+ * Border widths, ring widths and z-index rungs, declared here rather than in a
+ * token file.
+ *
+ * They had one (`layout.tokens.json`) until 2026-08-04. It was deleted because
+ * it could not do the job a token file exists to do: Tailwind has no
+ * `--border-width-*`, `--ring-*` or `--z-*` theme namespace, so these are
+ * bare-value utilities — the number in the class IS the value. Measured:
+ * `border-7`, `ring-42` and `z-999` all compile. There was nothing to emit and
+ * nothing to clear, so the file could only ever describe an agreement, never
+ * enforce one — and this page was its only reader.
+ *
+ * So the agreement lives where it is read. Fractions do not compile
+ * (`border-3.5` emits nothing), which is the one constraint Tailwind does give.
+ */
+const BORDERS = [1, 2, 3, 4, 5].map((n) => ({ name: `border-${n}`, value: `${n}px` }));
+const RINGS = [1, 2, 3, 4, 5].map((n) => ({ name: `ring-${n}`, value: `${n}px` }));
+const LAYERS = [0, 10, 20, 30, 40, 50].map((n) => ({ name: `z-${n}`, value: `${n}` }));
 import { NativeNote, Sheet, SpecHeader, SpecRow } from '../view';
 
 export const meta = {

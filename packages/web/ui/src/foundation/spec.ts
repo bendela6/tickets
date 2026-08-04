@@ -1,5 +1,5 @@
 import radiusTokens from '../../tokens/radius.tokens.json';
-import layoutTokens from '../../tokens/layout.tokens.json';
+import breakpointTokens from '../../tokens/breakpoints.tokens.json';
 import motionTokens from '../../tokens/motion.tokens.json';
 import typographyTokens from '../../tokens/typography.tokens.json';
 import shadowsLightTokens from '../../tokens/shadows.light.tokens.json';
@@ -117,10 +117,7 @@ export const RADII = tokens(radiusTokens.radius, 'radius');
 export const DURATIONS = tokens(motionTokens.duration, 'duration');
 export const EASINGS = tokens(motionTokens.ease, 'ease');
 export const ANIMATIONS = tokens(motionTokens.animate, 'animate');
-export const BORDERS = tokens(layoutTokens.border, 'border');
-export const RINGS = tokens(layoutTokens.ring, 'ring');
-export const LAYERS = tokens(layoutTokens.z, 'z');
-export const BREAKPOINTS = tokens(layoutTokens.breakpoint, 'breakpoint');
+export const BREAKPOINTS = tokens(breakpointTokens.breakpoint, 'breakpoint');
 
 export interface ShadowToken {
   name: string;
@@ -233,11 +230,20 @@ export function drift(): DriftFamily[] {
   ];
 }
 
-/** Families that ship no token, and why — rendered where a drift table would be. */
+/**
+ * Families that ship no token, and why — rendered where a drift table would be.
+ *
+ * Border, ring and z-index no longer have token files at all (dropped
+ * 2026-08-04). Measured: Tailwind has no `--border-width-*`, `--ring-*` or
+ * `--z-*` theme namespace, so `border-7`, `ring-42` and `z-999` all compile to
+ * exactly those values. A token file could not have constrained them — there is
+ * nothing to clear and nothing to look up — so the rungs the design sanctions
+ * are documented in `layout.demo.tsx`, the only place that ever read them.
+ */
 export const NATIVE_FAMILIES: Record<string, string> = {
-  border: 'border-1 / border-2 — the class states the width; a token would be a second copy of it.',
+  border: 'border-1 / border-2 — the class states the width; any integer compiles.',
   ring: 'ring-3 — same rule as border.',
-  z: 'z-10 / z-40 / z-50 — the class IS the layer number.',
+  z: 'z-10 / z-40 / z-50 — the class IS the layer number; any integer compiles.',
   duration: 'duration-120 / duration-200 / duration-320 — the class IS the millisecond count.',
   breakpoint: "Tailwind's standard sm/md/lg/xl/2xl, unmodified.",
 };

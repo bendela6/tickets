@@ -82,6 +82,14 @@ here should need to leak back into those skills.
   tokens, fails if `styles/tokens.generated.css`, `styles/safelist.generated.css`
   or `src/style/tones/tones.generated.ts` drifts from a fresh build).
   Freshness only — no value or vocabulary checking remains.
+- **Never assert token VALUES in a test.** A test listing the twelve type rungs
+  or the four radius values has to be edited every time a designer changes one,
+  and it can only fail if someone copied the JSON wrong twice. Assert the
+  contracts that survive a value change instead: naming rules (`text-13` IS
+  13px), shapes (a size token carries no line-height), and what must NOT exist
+  (no `--border-*`/`--z-*` token; `--radius-*: initial` precedes the rungs).
+  Assertions against inline fixtures are fine — they test the parser, not the
+  token set.
 - GAP: no visual-regression runner wired up yet (no run command, no
   baseline-update command).
 - GAP: no automated accessibility (axe or equivalent) scan wired up yet.
