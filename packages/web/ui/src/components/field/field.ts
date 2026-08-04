@@ -1,9 +1,8 @@
 import { axis, HUES, over, TONE_HUE, variants, type Hue } from '../../style';
+import type { ControlSize } from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
-
-export type FieldSize = 'sm' | 'md' | 'lg';
 
 /** Which pseudo-class the focus treatment hangs off — see `focus` below. */
 const FOCUS = axis('focus', ['focus', 'focus-within'], 'focus');

@@ -1,10 +1,11 @@
 import { forwardRef, useEffect, useRef, type InputHTMLAttributes } from 'react';
 import { cn, TONE_HUE, type Tone } from '../../style';
-import { toggleGlyphClass, toggleMarkClass, toggleRowClass, type ToggleSize } from '../toggle';
+import { toggleGlyphClass, toggleMarkClass, toggleRowClass } from '../toggle';
+import type { ControlSize } from '../control';
 
 type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> & {
   label: string;
-  size?: ToggleSize;
+  size?: ControlSize;
   /** Which ramp the checked fill and focus ring paint from. Defaults to `primary`. */
   tone?: Tone;
   indeterminate?: boolean;
@@ -12,7 +13,7 @@ type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'
 
 // The box and its overlay marks must agree exactly — the tick is drawn to bleed
 // over the input — so one table drives both.
-const BOX: Record<ToggleSize, string> = {
+const BOX: Record<ControlSize, string> = {
   sm: 'size-14',
   md: 'size-16',
   lg: 'size-20',
@@ -85,7 +86,13 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
             className: cn('inset-0 hidden p-px peer-indeterminate:block', box),
           })}
         >
-          <path d="M3 6h6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path
+            d="M3 6h6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
         </svg>
       </span>
       <span className="group-has-disabled:text-gray-9">{label}</span>

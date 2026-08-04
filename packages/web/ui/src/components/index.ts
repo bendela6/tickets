@@ -4,6 +4,7 @@ export * from './card';
 export * from './checkbox';
 export * from './combobox';
 export * from './combobox-list';
+export * from './control';
 export * from './copy-button';
 export * from './date-picker';
 export * from './dialog';

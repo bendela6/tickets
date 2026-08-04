@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { definePlayground, number, select, boolean } from '../../gallery';
 import { TONE_NAMES } from '../../style';
 import { Slider } from './slider';
+import type { ControlSize } from '../control';
 
 const SIZES = ['sm', 'md'] as const;
 
@@ -52,7 +53,10 @@ export const meta = { title: 'Slider', group: 'Components', size: 'sm' };
 export const states = [
   { name: 'Default', render: () => <DemoSlider /> },
   { name: 'Small', render: () => <DemoSlider size="sm" /> },
-  { name: 'Fractional steps', render: () => <DemoSlider initial={1} min={0} max={2} step={0.1} suffix="×" /> },
+  {
+    name: 'Fractional steps',
+    render: () => <DemoSlider initial={1} min={0} max={2} step={0.1} suffix="×" />,
+  },
   { name: 'Disabled', render: () => <DemoSlider disabled /> },
 ];
 
@@ -70,7 +74,7 @@ export const playground = definePlayground({
       step: 0.1,
       description: 'Grid the value snaps to, anchored at `min` rather than at zero.',
     }),
-    size: select(SIZES, { initial: 'md', type: 'SliderSize', description: 'Track thickness.' }),
+    size: select(SIZES, { initial: 'md', type: 'ControlSize', description: 'Track thickness.' }),
     tone: select([...TONE_NAMES], {
       allowNone: true,
       type: 'Tone',

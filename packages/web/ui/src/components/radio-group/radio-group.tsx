@@ -1,5 +1,6 @@
 import { axis, cn, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
-import { toggleGlyphClass, toggleMarkClass, toggleRowClass, type ToggleSize } from '../toggle';
+import { toggleGlyphClass, toggleMarkClass, toggleRowClass } from '../toggle';
+import type { ControlSize } from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
@@ -23,7 +24,7 @@ type RadioGroupProps = {
   options: RadioOption[];
   onValueChange: (value: string) => void;
   variant?: RadioGroupVariant;
-  size?: ToggleSize;
+  size?: ControlSize;
   /** Which ramp the selected dot and focus ring paint from. Defaults to `primary`. */
   tone?: Tone;
   className?: string;
@@ -46,9 +47,7 @@ const optionClass = variants({
         card: over(SCALE, CHECKED, (tone, state) =>
           cn(
             'rounded-md border-1 px-10 py-6',
-            state === 'on'
-              ? `border-${tone}-9 bg-${tone}-3`
-              : 'border-gray-7 hover:border-gray-9',
+            state === 'on' ? `border-${tone}-9 bg-${tone}-3` : 'border-gray-7 hover:border-gray-9',
           ),
         ),
       },
@@ -58,11 +57,11 @@ const optionClass = variants({
 
 // Circle and inner dot scale together: the dot stays half the circle so the
 // 2px accent ring around it reads the same at every rung.
-const CIRCLE: Record<ToggleSize, string> = { sm: 'size-14', md: 'size-16', lg: 'size-20' };
-const DOT: Record<ToggleSize, string> = { sm: 'size-6', md: 'size-8', lg: 'size-10' };
-const ROW_GAP: Record<ToggleSize, string> = { sm: 'gap-12', md: 'gap-16', lg: 'gap-20' };
+const CIRCLE: Record<ControlSize, string> = { sm: 'size-14', md: 'size-16', lg: 'size-20' };
+const DOT: Record<ControlSize, string> = { sm: 'size-6', md: 'size-8', lg: 'size-10' };
+const ROW_GAP: Record<ControlSize, string> = { sm: 'gap-12', md: 'gap-16', lg: 'gap-20' };
 // Cards carry their own padding, so they sit closer together than bare rows.
-const CARD_GAP: Record<ToggleSize, string> = { sm: 'gap-6', md: 'gap-8', lg: 'gap-10' };
+const CARD_GAP: Record<ControlSize, string> = { sm: 'gap-6', md: 'gap-8', lg: 'gap-10' };
 
 export function RadioGroup({
   name,

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { cn, TONE_HUE, type Tone } from '../../style';
-import { fieldClass, fieldState, type FieldSize } from '../field';
+import { fieldClass, fieldState } from '../field';
 import { Icon, type IconSize } from '../icon';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
 import { formatExact } from '../relative-date';
+import type { ControlSize } from '../control';
 
 const MONTH_NAMES = [
   'January',
@@ -40,20 +41,20 @@ type DatePickerProps = {
   value: string | null;
   onChange: (value: string | null) => void;
   placeholder?: string;
-  size?: FieldSize;
+  size?: ControlSize;
   /** Which ramp the focus ring paints from. Defaults to `primary`. */
   tone?: Tone;
   disabled?: boolean;
   className?: string;
 };
 
-const BOX: Record<FieldSize, string> = {
+const BOX: Record<ControlSize, string> = {
   sm: 'px-9 text-13',
   md: 'px-12 text-14',
   lg: 'px-14 text-15',
 };
 
-const CHEVRON: Record<FieldSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
+const CHEVRON: Record<ControlSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
 
 export function DatePicker({
   value,

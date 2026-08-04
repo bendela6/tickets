@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { definePlayground, select, text } from '../../gallery';
 import { TONE_NAMES } from '../../style';
 import { RadioGroup } from './radio-group';
+import type { ControlSize } from '../control';
 
 function DensityFixture({ variant }: { variant?: 'plain' | 'card' } = {}) {
   const [density, setDensity] = useState('comfortable');
@@ -61,7 +62,7 @@ export const states = [
 export const playground = definePlayground({
   controls: {
     variant: select(['plain', 'card'] as const, { initial: 'plain', type: 'RadioGroupVariant' }),
-    size: select(['sm', 'md', 'lg'] as const, { initial: 'md', type: 'ToggleSize' }),
+    size: select(['sm', 'md', 'lg'] as const, { initial: 'md', type: 'ControlSize' }),
     tone: select([...TONE_NAMES], { allowNone: true, type: 'Tone' }),
     label: text('Density'),
   },

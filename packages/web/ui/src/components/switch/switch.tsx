@@ -1,13 +1,14 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
 import { axis, cn, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
-import { toggleRowClass, type ToggleSize } from '../toggle';
+import { toggleRowClass } from '../toggle';
+import type { ControlSize } from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
 
 type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> & {
   label: string;
-  size?: ToggleSize;
+  size?: ControlSize;
   /** Which ramp the on-state track and focus ring paint from. Defaults to `primary`. */
   tone?: Tone;
 };
@@ -40,7 +41,7 @@ const trackClass = variants({
   },
 });
 
-const THUMB: Record<ToggleSize, string> = {
+const THUMB: Record<ControlSize, string> = {
   sm: 'size-12 peer-checked:translate-x-12',
   md: 'size-14 peer-checked:translate-x-14',
   lg: 'size-18 peer-checked:translate-x-18',
