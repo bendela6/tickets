@@ -426,7 +426,7 @@ describe('ComponentPage', () => {
       expect(screen.getAllByRole('button', { name: 'play-btn' })).toHaveLength(5);
       expect(screen.getByText('matrix: size × variant')).toBeTruthy();
 
-      fireEvent.change(screen.getByLabelText('rows'), { target: { value: 'tone' } });
+      pickControl('rows', 'tone');
       // rows=tone (2 options) x columns=variant (2) -> still 4 grid cells,
       // but the caption must reflect the newly picked axis name.
       expect(screen.getAllByRole('button', { name: 'play-btn' })).toHaveLength(5);
@@ -438,15 +438,15 @@ describe('ComponentPage', () => {
       expect(screen.getByText('matrix: size × variant')).toBeTruthy();
 
       // columns is currently "variant"; pick "variant" for rows too.
-      fireEvent.change(screen.getByLabelText('rows'), { target: { value: 'variant' } });
+      pickControl('rows', 'variant');
 
       // Axes swapped: rows=variant, columns=size — never equal.
       expect(screen.getByText('matrix: variant × size')).toBeTruthy();
-      expect((screen.getByLabelText('rows') as HTMLSelectElement).value).toBe('variant');
-      expect((screen.getByLabelText('columns') as HTMLSelectElement).value).toBe('size');
+      expect(controlValue('rows')).toBe('variant');
+      expect(controlValue('columns')).toBe('size');
 
       // Both axes remain independently usable after the swap.
-      fireEvent.change(screen.getByLabelText('columns'), { target: { value: 'tone' } });
+      pickControl('columns', 'tone');
       expect(screen.getByText('matrix: variant × tone')).toBeTruthy();
     });
   });

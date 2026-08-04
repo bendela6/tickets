@@ -1,4 +1,43 @@
-import { Icon, type AnyControlDef, type ControlValues, type PlaygroundDef } from '@tickets/ui';
+import {
+  Combobox,
+  FieldLabel,
+  type AnyControlDef,
+  type ControlValues,
+  type PlaygroundDef,
+} from '@tickets/ui';
+
+// One matrix axis. The label sits outside the trigger rather than inside it:
+// the Combobox trigger is already a bordered box with its own chevron, so
+// nesting "rows:" inside would be a box within a box.
+function AxisPicker({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (key: string) => void;
+}) {
+  return (
+    <div className="flex items-center gap-8">
+      {/* No trailing colon: the accessible name is what tests and screen
+          readers key on, and punctuation there earns nothing. */}
+      <FieldLabel htmlFor={`matrix-${label}`} className="font-sans text-13/19 text-gray-12">
+        {label}
+      </FieldLabel>
+      <Combobox
+        id={`matrix-${label}`}
+        size="sm"
+        searchable={false}
+        options={options.map((key) => ({ value: key, label: key }))}
+        value={value}
+        onChange={(picked) => picked && onChange(picked)}
+      />
+    </div>
+  );
+}
 
 export function matrixValues(
   controls: Record<string, AnyControlDef>,
@@ -40,38 +79,10 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
   return (
     <div className="flex flex-col gap-10">
       <div className="flex items-center gap-10">
-        <label className="flex items-center gap-8 h-28 px-10 border-1 border-gray-7 rounded-sm bg-surface-raised font-sans text-13/19 text-gray-12 cursor-pointer">
-          <span>rows:</span>
-          <select
-            value={yKey}
-            onChange={(e) => onYKeyChange(e.target.value)}
-            aria-label="rows"
-            className="appearance-none bg-transparent border-none p-0 font-sans text-13/19 text-gray-12 cursor-pointer"
-          >
-            {selectKeys.map((key) => (
-              <option key={key} value={key}>
-                {key}
-              </option>
-            ))}
-          </select>
-          <Icon name="chevron-down" size="2xs" className="text-gray-9" />
-        </label>
-        <label className="flex items-center gap-8 h-28 px-10 border-1 border-gray-7 rounded-sm bg-surface-raised font-sans text-13/19 text-gray-12 cursor-pointer">
-          <span>columns:</span>
-          <select
-            value={xKey}
-            onChange={(e) => onXKeyChange(e.target.value)}
-            aria-label="columns"
-            className="appearance-none bg-transparent border-none p-0 font-sans text-13/19 text-gray-12 cursor-pointer"
-          >
-            {selectKeys.map((key) => (
-              <option key={key} value={key}>
-                {key}
-              </option>
-            ))}
-          </select>
-          <Icon name="chevron-down" size="2xs" className="text-gray-9" />
-        </label>
+        {/* The axes pick from the demo's own select controls — never more than
+            a handful — so neither list needs a search box. */}
+        <AxisPicker label="rows" value={yKey} options={selectKeys} onChange={onYKeyChange} />
+        <AxisPicker label="columns" value={xKey} options={selectKeys} onChange={onXKeyChange} />
         <div className="flex-1" />
         <div className="font-mono text-11/13 tracking-wider text-gray-9">
           matrix: {yKey} × {xKey}

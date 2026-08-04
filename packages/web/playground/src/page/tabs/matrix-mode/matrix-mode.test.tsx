@@ -1,8 +1,25 @@
 import { useState } from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { vi } from 'vitest';
 import { boolean as booleanControl, definePlayground, select } from '@tickets/ui';
 import { MatrixMode, matrixValues } from './matrix-mode';
+
+// Each axis is a Combobox, not a native <select>, so changing one is two
+// gestures: open the trigger, click the option. The list is portalled, hence
+// the option query going through `screen`.
+function pickAxis(axis: 'rows' | 'columns', key: string) {
+  fireEvent.click(screen.getByLabelText(axis));
+  fireEvent.click(screen.getByRole('option', { name: key }));
+}
+
+// Cells are buttons — but so are the two axis triggers, so a page-wide button
+// count measures the chrome as much as the grid. Scope it to the grid, which
+// is the thing these assertions are actually about.
+function cells(): HTMLElement[] {
+  const grid = document.querySelector('.grid[style*="grid-template-columns"]');
+  if (!grid) throw new Error('the matrix grid did not render');
+  return within(grid as HTMLElement).getAllByRole('button');
+}
 
 describe('matrixValues', () => {
   it('throws when xKey is not a select control', () => {
@@ -89,9 +106,9 @@ describe('MatrixMode', () => {
       />,
     );
 
-    const cells = screen.getAllByRole('button');
+    const grid = cells();
     // 2 rows (primary, secondary) × 2 columns (sm, md) = 4 cells
-    expect(cells).toHaveLength(4);
+    expect(grid).toHaveLength(4);
   });
 
   it('renders axis labels', () => {
@@ -195,7 +212,7 @@ describe('MatrixMode', () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText('rows'), { target: { value: 'size' } });
+    pickAxis('rows', 'size');
     expect(onYKeyChange).toHaveBeenCalledWith('size');
   });
 
@@ -221,7 +238,7 @@ describe('MatrixMode', () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText('columns'), { target: { value: 'variant' } });
+    pickAxis('columns', 'variant');
     expect(onXKeyChange).toHaveBeenCalledWith('variant');
   });
 
@@ -252,15 +269,15 @@ describe('MatrixMode', () => {
 
     render(<Wrapper />);
     // Starting axis: rows=variant (3 options) × columns=status (2 options) = 6 cells.
-    expect(screen.getAllByRole('button')).toHaveLength(6);
+    expect(cells()).toHaveLength(6);
     expect(screen.getByText('matrix: variant × status')).toBeTruthy();
 
     // Re-pick rows as status too, to isolate the "grid re-renders off the
     // new yKey prop" behavior from the swap rule (covered separately in
     // component-page.test.tsx): status has 2 options, so rows×columns
     // becomes 2×2 = 4 cells.
-    fireEvent.change(screen.getByLabelText('rows'), { target: { value: 'status' } });
-    expect(screen.getAllByRole('button')).toHaveLength(4);
+    pickAxis('rows', 'status');
+    expect(cells()).toHaveLength(4);
     expect(screen.getByText('matrix: status × status')).toBeTruthy();
   });
 });
