@@ -17,9 +17,9 @@ export function KindFilters() {
   if (model.kinds.length === 0) return null;
 
   return (
-    <div className="shrink-0 border-t-1 border-gray-6 pt-2">
-      <p className="px-1 pb-1.5 text-11 uppercase tracking-wider text-gray-11">Edges</p>
-      <div className="flex flex-wrap gap-1">
+    <div className="shrink-0 border-t-1 border-gray-6 pt-8">
+      <p className="px-4 pb-6 text-11 uppercase tracking-wider text-gray-11">Edges</p>
+      <div className="flex flex-wrap gap-4">
         {model.kinds.map((k) => {
           const on = !ui.hidden.kinds.has(k.id);
           return (

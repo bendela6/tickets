@@ -61,12 +61,12 @@ export function OutlineRow({
               aria-label={`${hidden ? 'Show' : 'Hide'} ${g.label}`}
               title={hidden ? `Show ${g.label}` : `Hide ${g.label}`}
               onClick={() => actions.toggleGroup(g.id)}
-              className="flex h-5 w-4 flex-none items-center justify-center self-center"
+              className="flex h-20 w-16 flex-none items-center justify-center self-center"
             >
               {swatch}
             </button>
           ) : (
-            <span className="flex h-5 w-4 flex-none items-center justify-center self-center">{swatch}</span>
+            <span className="flex h-20 w-16 flex-none items-center justify-center self-center">{swatch}</span>
           )
         }
         trailing={

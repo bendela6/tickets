@@ -8,7 +8,7 @@ export const states = [
   {
     name: 'Colours',
     render: () => (
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-12">
         {HUES.map((h) => (
           <Dot key={h} color={`var(--color-${h}-9)`} />
         ))}
@@ -18,7 +18,7 @@ export const states = [
   {
     name: 'Hollow',
     render: () => (
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-12">
         <Dot color="var(--color-blue-9)" />
         <Dot color="var(--color-blue-9)" hollow />
       </div>
@@ -27,7 +27,7 @@ export const states = [
   {
     name: 'Beside text',
     render: () => (
-      <div className="flex items-center gap-2 text-13 text-gray-12">
+      <div className="flex items-center gap-8 text-13 text-gray-12">
         <Dot color="var(--color-green-9)" />
         <span>Workspace</span>
       </div>

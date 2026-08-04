@@ -73,9 +73,9 @@ export function TreeRow({
   children,
 }: TreeRowProps) {
   return (
-    <div className="flex items-stretch gap-1">
+    <div className="flex items-stretch gap-4">
       {Array.from({ length: depth }, (_, i) => (
-        <span key={i} data-tree-guide="" aria-hidden className="w-4 flex-none border-l-1 border-gray-6" />
+        <span key={i} data-tree-guide="" aria-hidden className="w-16 flex-none border-l-1 border-gray-6" />
       ))}
 
       {hasChildren ? (
@@ -84,12 +84,12 @@ export function TreeRow({
           tabIndex={-1}
           aria-label={`${expanded ? 'collapse' : 'expand'} ${caretLabel}`}
           onClick={onToggle}
-          className="grid size-4 flex-none self-center place-items-center rounded-sm text-gray-11 hover:bg-surface-inset hover:text-gray-12"
+          className="grid size-16 flex-none self-center place-items-center rounded-sm text-gray-11 hover:bg-surface-inset hover:text-gray-12"
         >
           {caret ?? <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size="xs" />}
         </button>
       ) : (
-        <span aria-hidden className="size-4 flex-none self-center" />
+        <span aria-hidden className="size-16 flex-none self-center" />
       )}
 
       {leading}
@@ -105,7 +105,7 @@ export function TreeRow({
         aria-label={label}
         onClick={onSelect}
         className={cn(
-          'flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-1.5 py-1 text-left',
+          'flex min-w-0 flex-1 items-center gap-6 rounded-md px-6 py-4 text-left',
           'hover:bg-surface-inset',
           selected && 'bg-surface-inset',
           focused && 'outline outline-2 -outline-offset-1 outline-indigo-9',

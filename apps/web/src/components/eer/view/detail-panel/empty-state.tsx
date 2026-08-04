@@ -20,17 +20,17 @@ export function EmptyState({ model }: { model: Model | null }) {
 
   return (
     <div>
-      <div className="border-b-1 border-gray-6 px-4 pb-3 pt-4">
+      <div className="border-b-1 border-gray-6 px-16 pb-12 pt-16">
         <Pill variant="tint" size="xs" tone="blue" label="Overview" className="font-mono uppercase font-600" />
         {/* Matches what the adapter sets meta.title to, so nothing flashes the
             standalone app's old name before the model lands. */}
-        <h2 className="mt-2 font-mono text-16 font-500 text-gray-12">{model?.meta.title ?? 'Database schema'}</h2>
-        <div className="mt-1 text-11 text-gray-11">Click an entity, group, or edge to inspect it.</div>
+        <h2 className="mt-8 font-mono text-16 font-500 text-gray-12">{model?.meta.title ?? 'Database schema'}</h2>
+        <div className="mt-4 text-11 text-gray-11">Click an entity, group, or edge to inspect it.</div>
       </div>
 
-      <div className="px-4 pb-5 pt-3">
+      <div className="px-16 pb-20 pt-12">
         {model && (
-          <div className="mb-4 flex gap-2">
+          <div className="mb-16 flex gap-8">
             <Stat value={model.entities.length} label="tables" />
             <Stat value={model.relationships.length} label="edges" />
             <Stat value={groups} label="groups" />
@@ -39,9 +39,9 @@ export function EmptyState({ model }: { model: Model | null }) {
         )}
 
         <Section title="Controls" />
-        <div className="flex flex-col gap-2 text-12 leading-relaxed text-gray-11">
+        <div className="flex flex-col gap-8 text-12 leading-relaxed text-gray-11">
           {rows.map(([k, label], i) => (
-            <div key={i} className="flex items-baseline gap-2">
+            <div key={i} className="flex items-baseline gap-8">
               <Pill variant="outline" size="sm" tone="neutral" label={k} className="font-mono" />
               <span>{label}</span>
             </div>
