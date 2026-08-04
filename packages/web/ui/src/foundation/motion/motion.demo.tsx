@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { ANIMATIONS, DURATIONS, EASINGS } from '../spec';
-import { DriftView, NativeNote, Sheet, SpecHeader, SpecRow } from '../view';
+import { ANIMATIONS, DURATIONS, EASINGS } from '../../generated';
+import { specRows } from '../spec';
+import { NativeNote, Sheet, SpecHeader, SpecRow } from '../view';
 
 export const meta = {
   title: 'Motion',
@@ -21,7 +22,7 @@ const EASE_JOBS: Record<string, string> = {
   'ease-in-out': 'things moving between two places',
 };
 
-const DEFAULT_EASE = EASINGS.find((e) => e.name === 'ease-out')!.value;
+const DEFAULT_EASE = EASINGS['out'];
 
 /**
  * Remounts its children on demand. A transition only runs on a change, so a
@@ -85,7 +86,7 @@ function Durations() {
       {(run) => (
         <Sheet>
           <SpecHeader specimen="the same distance, three speeds" />
-          {DURATIONS.map((duration) => (
+          {specRows('duration', Object.fromEntries(DURATIONS.map((d) => [d, d + 'ms']))).map((duration) => (
             <SpecRow
               key={duration.name}
               name={duration.name}
@@ -116,7 +117,7 @@ function Easings() {
       {(run) => (
         <Sheet>
           <SpecHeader specimen="curve · the same move, eased" />
-          {EASINGS.map((ease) => (
+          {specRows('ease', EASINGS).map((ease) => (
             <SpecRow
               key={ease.name}
               name={ease.name}
@@ -152,7 +153,7 @@ function Animations() {
   return (
     <Sheet>
       <SpecHeader specimen="looping · still under reduced motion" />
-      {ANIMATIONS.map((animation) => (
+      {specRows('animate', ANIMATIONS).map((animation) => (
         <SpecRow key={animation.name} name={animation.name} value={animation.value}>
           <span
             className={`inline-block size-5 rounded-full bg-indigo-9 motion-reduce:animate-none ${
@@ -183,5 +184,4 @@ export const states = [
   },
   { name: 'Easings', render: () => <Easings /> },
   { name: 'Animations', render: () => <Animations /> },
-  { name: 'Drift', render: () => <DriftView families={['ease', 'animate']} /> },
 ];

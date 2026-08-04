@@ -1,5 +1,8 @@
-import { SHADOWS } from '../spec';
-import { DriftView, Sheet, SpecHeader, SpecRow, useTheme } from '../view';
+import { SHADOWS } from '../../generated';
+import { Sheet, SpecHeader, SpecRow, useTheme } from '../view';
+
+// The generated module keys by rung; the spec rows want `shadow-xs` as a name.
+const ROWS = Object.entries(SHADOWS).map(([rung, v]) => ({ name: `shadow-${rung}`, ...v }));
 
 export const meta = {
   title: 'Elevation',
@@ -25,13 +28,13 @@ function useShadow() {
     ref,
     theme,
     valueOf: (name: string) => {
-      const token = SHADOWS.find((s) => s.name === name);
+      const token = ROWS.find((s) => s.name === name);
       // Naming the miss, rather than asserting it away: a renamed token used
       // to reach the DOM as `undefined` and take the page down with a message
       // about reading `light`, which says nothing about which token is gone.
       if (!token) {
         throw new Error(
-          `elevation demo asks for "${name}", which is not a shadow token (have: ${SHADOWS.map((s) => s.name).join(', ')})`,
+          `elevation demo asks for "${name}", which is not a shadow token (have: ${ROWS.map((s) => s.name).join(', ')})`,
         );
       }
       return theme === 'dark' ? token.dark : token.light;
@@ -44,7 +47,7 @@ function Levels() {
   return (
     <div ref={ref} className="flex w-full flex-col gap-3">
       <SpecHeader value="used for" specimen={`specimen · ${theme}`} />
-      {SHADOWS.map((shadow) => (
+      {ROWS.map((shadow) => (
         <SpecRow
           key={shadow.name}
           name={shadow.name}
@@ -112,5 +115,4 @@ function InUse() {
 export const states = [
   { name: 'Levels', render: () => <Levels /> },
   { name: 'In use', render: () => <InUse /> },
-  { name: 'Drift', render: () => <DriftView families={['shadow']} /> },
 ];

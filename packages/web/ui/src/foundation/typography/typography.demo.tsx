@@ -1,6 +1,6 @@
 import { definePlayground, number, select, text } from '../../gallery';
 import { cn } from '../../style';
-import { DriftView } from '../view';
+import { SpecHeader, SpecRow } from '../view';
 
 export const meta = {
   title: 'Typography',
@@ -97,12 +97,29 @@ const DEFAULTS: Specimen = {
   text: COPY,
 };
 
-export const states = [
-  {
-    name: 'Drift',
-    render: () => <DriftView families={['text', 'font', 'font-weight']} />,
-  },
-];
+/**
+ * The scale, at real size, in the app's own copy.
+ *
+ * This replaced a Drift tab that compared the token JSON against CSS generated
+ * FROM that JSON — every row read "matched" by construction. A specimen answers
+ * the question that table was pretending to: what does this rung look like.
+ *
+ * Driven off `SIZE`, so a rung added to the scale appears here without an edit.
+ */
+function Scale() {
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <SpecHeader value="rung" specimen="specimen" />
+      {(Object.keys(SIZE) as (keyof typeof SIZE)[]).map((size) => (
+        <SpecRow key={size} name={`text-${size}`} value={`${size}px`} align="start">
+          <Type {...DEFAULTS} size={size} />
+        </SpecRow>
+      ))}
+    </div>
+  );
+}
+
+export const states = [{ name: 'Scale', render: () => <Scale /> }];
 
 /**
  * The four axes are the four blocks: the state viewer derives one section per

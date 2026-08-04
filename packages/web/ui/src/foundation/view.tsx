@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pill } from '../components/pill';
 import { SectionHeader } from '../components/section-header';
-import { NATIVE_FAMILIES, drift, driftSummary, type DriftStatus } from './spec';
+import { NATIVE_FAMILIES } from './spec';
 // colors.ts owns the theme axis for the whole Foundation group — the colour
 // tokens are the only ones that vary per step. Imported, not re-exported: the
 // folder barrel already surfaces it from there, and a second path to the same
@@ -96,64 +96,6 @@ export function SpecHeader({ specimen, value = 'value' }: { specimen: string; va
   );
 }
 
-const STATUS_TONE: Record<DriftStatus, 'success' | 'primary' | 'warning'> = {
-  matched: 'success',
-  added: 'primary',
-  dropped: 'warning',
-};
-
-/**
- * What changes if the proposed numbered set replaces what tokens.css ships.
- * Every foundation page ends with its own slice of this, because a view of a
- * token set that nothing consumes yet is only half the story — the other half
- * is which live token it lands on.
- */
-export function DriftView({ families }: { families: string[] }) {
-  const all = drift().filter((f) => families.includes(f.family));
-  const counts = driftSummary(all);
-  const cell = 'border-b-1 border-gray-6 py-1.5 pr-4 text-left';
-  return (
-    <Sheet>
-      <p className="font-sans text-12/17 text-gray-11">
-        {counts.matched} proposed token{counts.matched === 1 ? '' : 's'} already exist under another
-        name · {counts.added} would be added · {counts.dropped} live token
-        {counts.dropped === 1 ? '' : 's'} would lose their value.
-      </p>
-      {all.map((family) => (
-        <div key={family.family} className="flex flex-col gap-2">
-          <SectionHeader title={family.family} count={`${family.rows.length}`} />
-          {family.note ? (
-            <p className="font-sans text-12/17 text-gray-9">{family.note}</p>
-          ) : null}
-          <table className="w-full border-collapse font-mono text-12/17">
-            <thead>
-              <tr className="text-gray-9">
-                <th className={`${cell} font-500`}>proposed</th>
-                <th className={`${cell} font-500`}>live</th>
-                <th className={`${cell} font-500`}>value</th>
-                <th className="border-b-1 border-gray-6 py-1.5 text-left font-500">status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {family.rows.map((row) => (
-                <tr key={`${row.spec ?? ''}-${row.live ?? ''}`} className="text-gray-12">
-                  <td className={cell}>{row.spec ?? <span className="text-gray-9">—</span>}</td>
-                  <td className={cell}>
-                    {row.live ? `--${row.live}` : <span className="text-gray-9">—</span>}
-                  </td>
-                  <td className={`${cell} text-gray-11`}>{row.value}</td>
-                  <td className="border-b-1 border-gray-6 py-1.5">
-                    <Pill label={row.status} tone={STATUS_TONE[row.status]} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
-    </Sheet>
-  );
-}
 
 /** Stands where a drift table would, for a family that ships no token. */
 export function NativeNote({ family }: { family: string }) {
