@@ -4,7 +4,7 @@ import type { StudioAction } from '../state';
 import { SliderRow } from './slider-row';
 
 const selectClass =
-  'h-7 min-w-0 flex-1 rounded-md border-1 border-gray-6 bg-gray-2 px-1.5 font-mono text-12 text-gray-12';
+  'h-28 min-w-0 flex-1 rounded-md border-1 border-gray-6 bg-gray-2 px-6 font-mono text-12 text-gray-12';
 
 /** Per-type numeric controls. Switches on `element.type` rather than
  * deriving fields generically, because each type's ranges differ and — per
@@ -88,18 +88,18 @@ export function ElementPanel({
   const inkNames = Object.keys(doc.inks);
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex flex-col gap-12">
       <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">Elements</h2>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-12">
         {doc.elements.map((element) => (
           <section
             key={element.id}
             role="group"
             aria-label={`${element.id} element`}
-            className="flex flex-col gap-2 rounded-lg border-1 border-gray-6 bg-gray-2 p-2"
+            className="flex flex-col gap-8 rounded-lg border-1 border-gray-6 bg-gray-2 p-8"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-8">
               <span className="flex-1 font-mono text-12 text-gray-12">
                 {element.id} <span className="text-gray-11">· {element.type}</span>
               </span>
@@ -112,8 +112,8 @@ export function ElementPanel({
               </Button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="w-24 shrink-0 font-mono text-12 text-gray-11">{element.id} ink</span>
+            <div className="flex items-center gap-8">
+              <span className="w-96 shrink-0 font-mono text-12 text-gray-11">{element.id} ink</span>
               <select
                 aria-label={`${element.id} ink`}
                 className={selectClass}
@@ -130,7 +130,7 @@ export function ElementPanel({
               </select>
             </div>
 
-            <label className="flex items-center gap-2 font-mono text-12 text-gray-11">
+            <label className="flex items-center gap-8 font-mono text-12 text-gray-11">
               <input
                 aria-label={`${element.id} spin`}
                 type="checkbox"
@@ -147,7 +147,7 @@ export function ElementPanel({
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-6">
         {ELEMENT_TYPES.map((type) => (
           <Button
             key={type}

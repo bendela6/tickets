@@ -107,5 +107,5 @@ test('padding md insets arbitrary content', async () => {
       <p>Panel body</p>
     </Dropdown>,
   );
-  expect(await screen.findByRole('dialog')).toHaveClass('p-3');
+  expect(await screen.findByRole('dialog')).toHaveClass('p-12');
 });

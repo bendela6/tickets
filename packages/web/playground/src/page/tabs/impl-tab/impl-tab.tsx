@@ -60,8 +60,8 @@ export function ImplTab({ demo, sources }: { demo: LiveDemo; sources?: ImplSourc
   }
 
   return (
-    <div className="flex flex-col gap-2.5">
-      <div className="flex items-center justify-between gap-4">
+    <div className="flex flex-col gap-10">
+      <div className="flex items-center justify-between gap-16">
         {available.length > 1 ? (
           <Tabs variant="pill" role="group"
             label="Implementation file"

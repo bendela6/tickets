@@ -15,10 +15,24 @@ export function makeStubRender<T>(): TableRender<T> {
         </div>
       );
     },
-    th: ({ column, index, sort, totalSorts, onSortClick, resize }) => {
+    th: ({
+      column,
+      index,
+      sort,
+      totalSorts,
+      onSortClick,
+      resize,
+      focused,
+      focusProps,
+      pin,
+      children,
+    }) => {
       return (
         <button
+          {...focusProps}
           data-slot="th"
+          data-pin={pin ? `${pin.side}:${pin.offset}${pin.edge ? ':edge' : ''}` : ''}
+          data-focused={String(Boolean(focused))}
           data-key={column.key}
           data-column-index={index}
           data-sort-direction={sort?.direction ?? ''}
@@ -28,8 +42,8 @@ export function makeStubRender<T>(): TableRender<T> {
           data-start-width={resize?.startWidth ?? ''}
           onClick={onSortClick}
         >
-          {column.header}
-          {resize && <span data-slot="resize" />}
+          {children ?? column.header}
+          {resize && <span data-slot="resize" onDoubleClick={resize.onAutoFit} />}
         </button>
       );
     },
@@ -40,36 +54,56 @@ export function makeStubRender<T>(): TableRender<T> {
         </div>
       );
     },
-    tr: ({ row, index, cells, gridTemplate, style, onClick }) => {
+    tr: ({ row, index, cells, gridTemplate, style, onClick, overlay, selected, hasPinned }) => {
       return (
         <div
           data-slot="tr"
           data-index={index}
+          data-selected={String(Boolean(selected))}
+          data-has-pinned={String(Boolean(hasPinned))}
           data-row-id={(row as { id?: string }).id ?? ''}
           data-grid-template={gridTemplate}
           style={style}
           onClick={onClick}
         >
           {cells}
+          {overlay ? <span data-slot="row-overlay">{overlay}</span> : null}
         </div>
       );
     },
-    td: ({ column, index, children }) => {
+    td: ({ column, index, children, focused, focusProps, pin }) => {
       return (
-        <div data-slot="td" data-key={column.key} data-column-index={index}>
+        <div
+          {...focusProps}
+          data-slot="td"
+          data-pin={pin ? `${pin.side}:${pin.offset}${pin.edge ? ':edge' : ''}` : ''}
+          data-focused={String(Boolean(focused))}
+          data-key={column.key}
+          data-column-index={index}
+        >
           {children}
         </div>
       );
     },
-    groupHeader: ({ key, header, gridTemplate, style }) => {
+    groupHeader: ({ key, header, gridTemplate, style, collapsed, onToggle, sticky }) => {
       return (
         <div
-          data-slot="group-header"
+          // A distinct slot name, not a flag on the same one: the pinned copy
+          // is a SECOND rendering of a band that is also in the row flow, so a
+          // test counting bands would otherwise silently count one too many.
+          data-slot={sticky ? 'sticky-group-header' : 'group-header'}
           data-key={key}
           data-grid-template={gridTemplate}
+          data-collapsed={String(collapsed)}
+          data-collapsible={onToggle ? 'true' : 'false'}
           style={style}
         >
           {header}
+          {onToggle ? (
+            <button data-slot={sticky ? 'sticky-group-toggle' : 'group-toggle'} onClick={onToggle}>
+              toggle
+            </button>
+          ) : null}
         </div>
       );
     },
@@ -83,5 +117,31 @@ export function makeStubRender<T>(): TableRender<T> {
       );
     },
     error: ({ error }) => <div data-slot="error">{error.message}</div>,
+    empty: ({ filtered }) => <div data-slot="empty" data-filtered={String(filtered)} />,
+    tfoot: ({ columns, gridTemplate }) => {
+      return (
+        <div data-slot="tfoot" data-grid-template={gridTemplate}>
+          {columns.map((c) => (
+            <div key={c.key} data-slot="tfoot-cell" data-key={c.key}>
+              {c.footer}
+            </div>
+          ))}
+        </div>
+      );
+    },
+    selectCell: ({ checked, indeterminate, isHeader, onChange, label }) => {
+      return (
+        <input
+          type="checkbox"
+          data-slot={isHeader ? 'select-all' : 'select-row'}
+          data-indeterminate={String(Boolean(indeterminate))}
+          aria-label={label}
+          checked={checked}
+          onChange={(e) =>
+            onChange(('shiftKey' in e.nativeEvent && e.nativeEvent.shiftKey) === true)
+          }
+        />
+      );
+    },
   };
 }

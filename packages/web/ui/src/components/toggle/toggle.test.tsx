@@ -38,20 +38,20 @@ describe('toggle controls', () => {
 
   it('marks scale across the 14/16/20 ladder', () => {
     const { rerender } = render(<Checkbox label="c" size="sm" />);
-    expect(screen.getByLabelText('c').className).toContain('size-3.5');
+    expect(screen.getByLabelText('c').className).toContain('size-14');
     rerender(<Checkbox label="c" size="md" />);
-    expect(screen.getByLabelText('c').className).toContain('size-4');
+    expect(screen.getByLabelText('c').className).toContain('size-16');
     rerender(<Checkbox label="c" size="lg" />);
-    expect(screen.getByLabelText('c').className).toContain('size-5');
+    expect(screen.getByLabelText('c').className).toContain('size-20');
   });
 
   it('the switch thumb travels exactly the track it is given', () => {
     // travel = width - thumb - 2*inset, so the pairs cannot be chosen apart:
     // 28-12-4=12, 32-14-4=14, 40-18-4=18.
     const cases = [
-      ['sm', 'w-7', 'translate-x-3'],
-      ['md', 'w-8', 'translate-x-3.5'],
-      ['lg', 'w-10', 'translate-x-4.5'],
+      ['sm', 'w-28', 'translate-x-12'],
+      ['md', 'w-32', 'translate-x-14'],
+      ['lg', 'w-40', 'translate-x-18'],
     ] as const;
     for (const [size, track, travel] of cases) {
       const { container, unmount } = render(<Switch label="s" size={size} />);
@@ -85,14 +85,14 @@ describe('variants', () => {
 
   it('Spinner variants pick a different glyph and animation', () => {
     const { container, rerender } = render(<Spinner variant="arc" />);
-    expect(container.querySelector('svg')!.getAttribute('class')).toContain('animate-ai-spin');
+    expect(container.querySelector('svg')!.getAttribute('class')).toContain('animate-spin');
     rerender(<Spinner variant="dashed" />);
-    expect(container.querySelector('svg')!.getAttribute('class')).toContain('animate-ai-spin');
+    expect(container.querySelector('svg')!.getAttribute('class')).toContain('animate-spin');
     // `pulse` deliberately does not rotate: it is a heartbeat, not work that
     // finishes, so spinning would promise the wrong thing.
     rerender(<Spinner variant="pulse" />);
     const cls = container.querySelector('svg')!.getAttribute('class')!;
-    expect(cls).toContain('animate-ai-pulse');
-    expect(cls).not.toContain('animate-ai-spin');
+    expect(cls).toContain('animate-pulse');
+    expect(cls).not.toContain('animate-spin');
   });
 });

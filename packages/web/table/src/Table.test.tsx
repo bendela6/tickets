@@ -174,10 +174,46 @@ describe('<Table> engine — states', () => {
     expect(skeletonRow).toHaveAttribute('data-row-height', '64');
   });
 
-  it('renders nothing inside root when not loading and rows are empty', () => {
+  it('renders the empty slot instead of a body when not loading and rows are empty', () => {
     const { container } = render(<Harness rows={[]} isLoading={false} />);
     expect(container.querySelector('[data-slot="tbody"]')).toBeNull();
     expect(container.querySelector('[data-slot="skeleton-row"]')).toBeNull();
+    expect(container.querySelector('[data-slot="empty"]')).not.toBeNull();
+  });
+
+  // The engine is handed rows, never the query behind them, so it cannot tell
+  // "nothing exists" from "the filters hide everything" on its own.
+  it('forwards isFiltered to the empty slot', () => {
+    const { container } = render(<Harness rows={[]} isLoading={false} />);
+    expect(container.querySelector('[data-slot="empty"]')).toHaveAttribute('data-filtered', 'false');
+  });
+
+  it('reports a filtered-empty table as filtered', () => {
+    const { container } = render(<Harness rows={[]} isLoading={false} isFiltered />);
+    expect(container.querySelector('[data-slot="empty"]')).toHaveAttribute('data-filtered', 'true');
+  });
+
+  it('prefers the skeleton over the empty slot while loading', () => {
+    const { container } = render(<Harness rows={[]} isLoading />);
+    expect(container.querySelector('[data-slot="skeleton-row"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="empty"]')).toBeNull();
+  });
+
+  it('prefers the error slot over the empty slot', () => {
+    const { container } = render(<Harness rows={[]} isLoading={false} error={new Error('nope')} />);
+    expect(container.querySelector('[data-slot="error"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="empty"]')).toBeNull();
+  });
+
+  it('renders a row overlay inside every row', () => {
+    const { container } = render(<Harness rowOverlay={(row) => <b>{`⋯${row.name}`}</b>} />);
+    const overlays = [...container.querySelectorAll('[data-slot="row-overlay"]')];
+    expect(overlays.map((el) => el.textContent)).toEqual(['⋯Alpha', '⋯Beta']);
+  });
+
+  it('renders no overlay when the caller supplies none', () => {
+    const { container } = render(<Harness />);
+    expect(container.querySelector('[data-slot="row-overlay"]')).toBeNull();
   });
 
   it('renders the error slot in place of everything when error is set', () => {
@@ -274,6 +310,40 @@ describe('<Table> engine — sizing', () => {
   });
 });
 
+// Virtualization is the engine's single most expensive promise and the one
+// nothing else in this file would miss. Every other body assertion — cell
+// content, row click, overlays — passes just as happily against a plain
+// `items.map(...)`, so deleting `useVirtualizer` would leave the suite green
+// while quietly mounting one DOM node per record. This is the test that goes
+// red instead.
+describe('<Table> engine — virtualization', () => {
+  const many: Row[] = Array.from({ length: 10_000 }, (_, i) => ({
+    id: String(i),
+    name: `Row ${i + 1}`,
+  }));
+
+  // The mocked ResizeObserver reports a 400px viewport, so a 40px row height
+  // fits ~10 rows plus the virtualizer's overscan of 8. The bound is 100 —
+  // two orders of magnitude below the row count — so it tolerates any
+  // reasonable change to the row height or overscan while still failing hard
+  // the moment the list is materialized.
+  it('mounts a bounded number of rows for a 10,000-row table', () => {
+    const { container } = render(<Harness rows={many} />);
+    const mounted = container.querySelectorAll('[data-slot="tr"]').length;
+    expect(mounted).toBeGreaterThan(0);
+    expect(mounted).toBeLessThan(100);
+  });
+
+  // A 10,000-row table must still size its scroll region for all 10,000, or
+  // the scrollbar lies about how much there is to scroll through. This is the
+  // other half of the guard: bounded MOUNTS, unbounded TOTAL.
+  it('still sizes the scroll region for every row', () => {
+    const { container } = render(<Harness rows={many} />);
+    const tbody = container.querySelector('[data-slot="tbody"]');
+    expect(Number(tbody?.getAttribute('data-total-size'))).toBe(10_000 * 40);
+  });
+});
+
 describe('<Table> engine — grouping', () => {
   const grouped = [
     { key: 'a', header: 'Group A', rows: [{ id: '1', name: 'Alpha' }] },
@@ -319,5 +389,189 @@ describe('<Table> engine — grouping', () => {
     const { container } = render(<Harness />);
     expect(container.querySelectorAll('[data-slot="group-header"]').length).toBe(0);
     expect(container.querySelectorAll('[data-slot="tr"]').length).toBe(2);
+  });
+});
+
+describe('<Table> engine — collapsible groups', () => {
+  const grouped = [
+    { key: 'a', header: 'Group A', rows: [{ id: '1', name: 'Alpha' }] },
+    { key: 'b', header: 'Group B', rows: [{ id: '2', name: 'Beta' }] },
+  ];
+  const state = (collapsed?: Set<string>) => ({ sort: [], widths: {}, collapsed });
+
+  // Collapsing is opt-in in the same way focus and selection are: without
+  // somewhere to send the result, a disclosure control would do nothing.
+  it('offers no toggle when the caller supplies no onCollapseChange', () => {
+    const { container } = render(<Harness rows={[]} groups={grouped} />);
+    const bands = [...container.querySelectorAll('[data-slot="group-header"]')];
+    expect(bands).toHaveLength(2);
+    expect(bands.every((b) => b.getAttribute('data-collapsible') === 'false')).toBe(true);
+  });
+
+  it('offers a toggle per band once onCollapseChange is supplied', () => {
+    const { container } = render(
+      <Harness rows={[]} groups={grouped} onCollapseChange={() => {}} />,
+    );
+    expect(container.querySelectorAll('[data-slot="group-toggle"]')).toHaveLength(2);
+  });
+
+  it('hides a collapsed group’s rows but keeps its band', () => {
+    const { container } = render(
+      <Harness rows={[]} groups={grouped} state={state(new Set(['a']))} onCollapseChange={() => {}} />,
+    );
+    expect(container.querySelectorAll('[data-slot="group-header"]')).toHaveLength(2);
+    const names = [...container.querySelectorAll('[data-slot="td"]')].map((c) => c.textContent);
+    expect(names).toEqual(['Beta']);
+  });
+
+  it('adds a group to the collapsed set when its band is toggled', () => {
+    const onCollapseChange = vi.fn();
+    const { container } = render(
+      <Harness rows={[]} groups={grouped} onCollapseChange={onCollapseChange} />,
+    );
+    fireEvent.click(container.querySelectorAll('[data-slot="group-toggle"]')[1] as HTMLElement);
+    expect(onCollapseChange).toHaveBeenCalledWith(new Set(['b']));
+  });
+
+  it('removes a group from the collapsed set when toggled again', () => {
+    const onCollapseChange = vi.fn();
+    const { container } = render(
+      <Harness
+        rows={[]}
+        groups={grouped}
+        state={state(new Set(['a', 'b']))}
+        onCollapseChange={onCollapseChange}
+      />,
+    );
+    fireEvent.click(container.querySelector('[data-slot="group-toggle"]') as HTMLElement);
+    expect(onCollapseChange).toHaveBeenCalledWith(new Set(['b']));
+  });
+
+  it('reports collapsed state to the band', () => {
+    const { container } = render(
+      <Harness rows={[]} groups={grouped} state={state(new Set(['a']))} onCollapseChange={() => {}} />,
+    );
+    const flags = [...container.querySelectorAll('[data-slot="group-header"]')].map((b) =>
+      b.getAttribute('data-collapsed'),
+    );
+    expect(flags).toEqual(['true', 'false']);
+  });
+});
+
+describe('<Table> engine — sticky group band', () => {
+  const grouped = [
+    { key: 'a', header: 'Group A', rows: [{ id: '1', name: 'Alpha' }] },
+    { key: 'b', header: 'Group B', rows: [{ id: '2', name: 'Beta' }] },
+  ];
+
+  it('pins a band for the group the topmost visible row belongs to', () => {
+    const { container } = render(<Harness rows={[]} groups={grouped} stickyGroupHeader />);
+    const pinned = container.querySelectorAll('[data-slot="sticky-group-header"]');
+    expect(pinned).toHaveLength(1);
+    expect(pinned[0]).toHaveTextContent('Group A');
+  });
+
+  // The real bands are positioned absolutely by the virtualizer, where
+  // `position: sticky` does nothing — so the pinned band is a SECOND rendering
+  // and both must exist at once.
+  it('pins in addition to the band in the row flow, not instead of it', () => {
+    const { container } = render(<Harness rows={[]} groups={grouped} stickyGroupHeader />);
+    expect(container.querySelectorAll('[data-slot="group-header"]')).toHaveLength(2);
+    expect(container.querySelectorAll('[data-slot="sticky-group-header"]')).toHaveLength(1);
+  });
+
+  // With the flag on but no groups, so this fails if the engine ever pins
+  // something for a flat table rather than passing for want of the opt-in.
+  it('pins nothing for an ungrouped table', () => {
+    const { container } = render(<Harness stickyGroupHeader />);
+    expect(container.querySelector('[data-slot="sticky-group-header"]')).toBeNull();
+  });
+
+  // It renders the band a second time, so switching it on silently would make
+  // every group label in every existing grouped table appear twice.
+  it('is off unless the caller asks for it', () => {
+    const { container } = render(<Harness rows={[]} groups={grouped} />);
+    expect(container.querySelector('[data-slot="sticky-group-header"]')).toBeNull();
+    expect(container.querySelectorAll('[data-slot="group-header"]')).toHaveLength(2);
+  });
+
+  it('pins nothing when there are no rows at all', () => {
+    const { container } = render(<Harness rows={[]} groups={[]} stickyGroupHeader isLoading={false} />);
+    expect(container.querySelector('[data-slot="sticky-group-header"]')).toBeNull();
+  });
+
+  it('carries the collapsed state onto the pinned band', () => {
+    const { container } = render(
+      <Harness
+        rows={[]}
+        stickyGroupHeader
+        groups={grouped}
+        state={{ sort: [], widths: {}, collapsed: new Set(['a']) }}
+        onCollapseChange={() => {}}
+      />,
+    );
+    expect(container.querySelector('[data-slot="sticky-group-header"]')).toHaveAttribute(
+      'data-collapsed',
+      'true',
+    );
+  });
+
+  it('collapses the right group from the pinned band', () => {
+    const onCollapseChange = vi.fn();
+    const { container } = render(
+      <Harness rows={[]} groups={grouped} stickyGroupHeader onCollapseChange={onCollapseChange} />,
+    );
+    fireEvent.click(container.querySelector('[data-slot="sticky-group-toggle"]') as HTMLElement);
+    expect(onCollapseChange).toHaveBeenCalledWith(new Set(['a']));
+  });
+});
+
+describe('<Table> engine — totals row', () => {
+  const withFooter: Column<Row>[] = [
+    { key: 'name', header: 'Name', value: (r) => r.name, footer: 'Total' },
+    { key: 'other', header: 'Other', value: () => '', footer: '2 rows' },
+  ];
+
+  it('renders no totals row when no column defines one', () => {
+    const { container } = render(<Harness />);
+    expect(container.querySelector('[data-slot="tfoot"]')).toBeNull();
+  });
+
+  it('renders a totals row as soon as one column defines a footer', () => {
+    const { container } = render(<Harness columns={withFooter} />);
+    expect(container.querySelector('[data-slot="tfoot"]')).not.toBeNull();
+  });
+
+  it('gives every column a footer cell, blank where none is defined', () => {
+    const partial: Column<Row>[] = [
+      { key: 'name', header: 'Name', value: (r) => r.name },
+      { key: 'other', header: 'Other', value: () => '', footer: '2 rows' },
+    ];
+    const { container } = render(<Harness columns={partial} />);
+    const cells = [...container.querySelectorAll('[data-slot="tfoot-cell"]')];
+    expect(cells.map((c) => c.textContent)).toEqual(['', '2 rows']);
+  });
+
+  // A total over a skeleton, an error or an empty table is summing nothing.
+  it('renders no totals row while loading', () => {
+    const { container } = render(<Harness columns={withFooter} rows={[]} isLoading />);
+    expect(container.querySelector('[data-slot="tfoot"]')).toBeNull();
+  });
+
+  it('renders no totals row when the table is empty', () => {
+    const { container } = render(<Harness columns={withFooter} rows={[]} isLoading={false} />);
+    expect(container.querySelector('[data-slot="tfoot"]')).toBeNull();
+  });
+
+  it('renders no totals row when the table failed', () => {
+    const { container } = render(<Harness columns={withFooter} error={new Error('no')} />);
+    expect(container.querySelector('[data-slot="tfoot"]')).toBeNull();
+  });
+
+  it('lays the totals row out on the same grid template as the rows', () => {
+    const { container } = render(<Harness columns={withFooter} />);
+    const foot = container.querySelector('[data-slot="tfoot"]');
+    const head = container.querySelector('[data-slot="thead"]');
+    expect(foot?.getAttribute('data-grid-template')).toBe(head?.getAttribute('data-grid-template'));
   });
 });

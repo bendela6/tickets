@@ -7,7 +7,7 @@ export const states = [
   {
     name: 'Headerless',
     render: () => (
-      <Card padding={4} className="w-80">
+      <Card padding={4} className="w-320">
         <span className="font-sans text-13/19 text-gray-11">
           A card with no header sets its own padding.
         </span>
@@ -17,7 +17,7 @@ export const states = [
   {
     name: 'With header',
     render: () => (
-      <Card className="w-80">
+      <Card className="w-320">
         <CardHeader><CardTitle>Filters</CardTitle></CardHeader>
         <CardBody>
           <span className="font-sans text-13/19 text-gray-11">
@@ -32,7 +32,7 @@ export const states = [
     render: () => (
       <Stack gap={3}>
         {(['md', 'lg', 'xl'] as const).map((radius) => (
-          <Card key={radius} radius={radius} padding={3} className="w-80">
+          <Card key={radius} radius={radius} padding={3} className="w-320">
             <span className="font-sans text-13/19 text-gray-11">radius {radius}</span>
           </Card>
         ))}
@@ -42,7 +42,7 @@ export const states = [
   {
     name: 'Interactive',
     render: () => (
-      <Card interactive padding={4} className="w-80">
+      <Card interactive padding={4} className="w-320">
         <span className="font-sans text-13/19 text-gray-11">Hover me — the border lifts.</span>
       </Card>
     ),

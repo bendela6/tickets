@@ -106,7 +106,7 @@ const iconOnly = defineState({
   title: 'icon only',
   render: () => (
     <Center>
-      <Button size="md" aria-label="More" className="w-9 p-0">
+      <Button size="md" aria-label="More" className="w-36 p-0">
         ⋯
       </Button>
     </Center>

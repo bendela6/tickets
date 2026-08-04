@@ -99,7 +99,7 @@ export function EerDiagram({ model }: { model: Model }) {
   return (
     <EerDiagramProvider model={model}>
       <div className="flex h-full min-h-0">
-        <aside className="flex w-64 flex-none flex-col gap-2 border-r-1 border-gray-6 bg-gray-2 p-3">
+        <aside className="flex w-256 flex-none flex-col gap-8 border-r-1 border-gray-6 bg-gray-2 p-12">
           <h1 className="text-14 font-600 tracking-tight">
             {model.meta.title ?? 'Database schema'}
           </h1>

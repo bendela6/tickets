@@ -19,7 +19,7 @@ function Label({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
     <SectionHeader
       title={children}
       count={hint != null ? <span className="font-400 normal-case text-gray-9">{hint}</span> : null}
-      className="mb-1.5 gap-1.5 tracking-wide"
+      className="mb-6 gap-6 tracking-wide"
     />
   );
 }
@@ -114,9 +114,9 @@ export function AgentEditor({
       <DialogContent className="w-[min(34rem,calc(100vw-2rem))]">
         <DialogTitle>{editing ? `Edit ${agent.name}` : 'New agent'}</DialogTitle>
 
-        <div className="mt-4 flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1">
+        <div className="mt-16 flex max-h-[70vh] flex-col gap-16 overflow-y-auto pr-4">
           {!caps.permissions || !caps.resume ? (
-            <div className="rounded-lg border-1 border-orange-9 bg-orange-3 px-3 py-2 font-sans text-12/17 text-gray-12">
+            <div className="rounded-lg border-1 border-orange-9 bg-orange-3 px-12 py-8 font-sans text-12/17 text-gray-12">
               <strong className="font-600">{providerLabel(providerKey)} can’t do everything.</strong>{' '}
               {!caps.permissions ? 'It can’t pause a run for tool approvals. ' : ''}
               {!caps.resume ? 'It can’t resume after a restart. ' : ''}
@@ -124,7 +124,7 @@ export function AgentEditor({
             </div>
           ) : null}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-12">
             <label className="block">
               <Label>Name</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Coder" />
@@ -141,7 +141,7 @@ export function AgentEditor({
             </label>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-12">
             <label className="block">
               <Label>Provider</Label>
               <Combobox
@@ -185,7 +185,7 @@ export function AgentEditor({
             />
           </label>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-12">
             <label className="block">
               <Label>Permission mode</Label>
               <Combobox

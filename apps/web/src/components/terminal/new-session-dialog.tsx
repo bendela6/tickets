@@ -39,7 +39,7 @@ function Label({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
     <SectionHeader
       title={children}
       count={hint != null ? <span className="font-400 normal-case text-gray-9">{hint}</span> : null}
-      className="mb-1.5 gap-1.5 tracking-wide"
+      className="mb-6 gap-6 tracking-wide"
     />
   );
 }
@@ -216,7 +216,7 @@ export function NewSessionDialog({
         <DialogTitle>New terminal session</DialogTitle>
         <DialogDescription>A real PTY running in the workdir.</DialogDescription>
 
-        <div className="mt-4 flex flex-col gap-4">
+        <div className="mt-16 flex flex-col gap-16">
           {showAddForm ? (
             <>
               <Form formApi={formApi} config={workdirFormConfig} registry={formRegistry} />
@@ -242,7 +242,7 @@ export function NewSessionDialog({
               <button
                 type="button"
                 onClick={() => setAddingWorkdir(true)}
-                className="mt-1.5 font-sans text-12/17 text-indigo-9 hover:underline"
+                className="mt-6 font-sans text-12/17 text-indigo-9 hover:underline"
               >
                 ＋ New workdir
               </button>
@@ -262,7 +262,7 @@ export function NewSessionDialog({
           {error ? <p className="font-sans text-12/17 text-red-9">{error}</p> : null}
         </div>
 
-        <div className="mt-5 flex items-center justify-between gap-2">
+        <div className="mt-20 flex items-center justify-between gap-8">
           <span className="font-mono text-11 text-gray-9">{hint}</span>
           <DialogFooter
             className="mt-0 border-0 p-0"

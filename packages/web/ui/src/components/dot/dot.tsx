@@ -1,4 +1,4 @@
-import { cn, runtimeStyle } from '../../style';
+import { cn } from '../../style';
 
 export interface DotProps {
   /**
@@ -23,7 +23,7 @@ export function Dot({ color, hollow, className }: DotProps) {
         hollow ? 'border-1 border-gray-8' : 'bg-(--dot-color)',
         className,
       )}
-      style={hollow ? undefined : runtimeStyle({ '--dot-color': color ?? 'var(--color-gray-9)' })}
+      style={hollow ? undefined : { '--dot-color': color ?? 'var(--color-gray-9)' }}
     />
   );
 }

@@ -16,8 +16,8 @@ describe('Row', () => {
   });
 
   it('keeps a caller-supplied className', () => {
-    render(<Row data-testid="r" className="mt-2" />);
-    expect(screen.getByTestId('r').className).toContain('mt-2');
+    render(<Row data-testid="r" className="mt-8" />);
+    expect(screen.getByTestId('r').className).toContain('mt-8');
   });
 
   it('forwards unknown props to the underlying div', () => {

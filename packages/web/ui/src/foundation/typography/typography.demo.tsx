@@ -1,6 +1,6 @@
 import { definePlayground, number, select, text } from '../../gallery';
 import { cn } from '../../style';
-import { DriftView } from '../view';
+import { SpecHeader, SpecRow } from '../view';
 
 export const meta = {
   title: 'Typography',
@@ -14,7 +14,7 @@ export const meta = {
 // actually sets text in. Long enough to wrap, because leading only becomes
 // visible when one line sits under another.
 const COPY =
-  'Gateway returned 504 after three retries. The run was marked failed and the queue drained.';
+  `Gateway returned 504 after three retries. The run was marked failed and the queue drained.`;
 
 // Written out rather than interpolated: `text-${size}` cannot be scanned, and
 // these maps ARE the documentation — the page shows the real utilities, not an
@@ -69,7 +69,8 @@ function Type({ font, size, weight, tracking, leading, uppercase, text: copy }: 
   return (
     <p
       className={cn(
-        'm-0 max-w-160 text-gray-12',
+        'm-0 max-w-640 text-gray-12',
+        'truncate',
         FONT[font],
         SIZE[size],
         WEIGHT[weight],
@@ -96,12 +97,29 @@ const DEFAULTS: Specimen = {
   text: COPY,
 };
 
-export const states = [
-  {
-    name: 'Drift',
-    render: () => <DriftView families={['text', 'font', 'font-weight']} />,
-  },
-];
+/**
+ * The scale, at real size, in the app's own copy.
+ *
+ * This replaced a Drift tab that compared the token JSON against CSS generated
+ * FROM that JSON — every row read "matched" by construction. A specimen answers
+ * the question that table was pretending to: what does this rung look like.
+ *
+ * Driven off `SIZE`, so a rung added to the scale appears here without an edit.
+ */
+function Scale() {
+  return (
+    <div className="flex w-full flex-col gap-12">
+      <SpecHeader value="rung" specimen="specimen" />
+      {(Object.keys(SIZE) as (keyof typeof SIZE)[]).map((size) => (
+        <SpecRow key={size} name={`text-${size}`} value={`${size}px`} align="start">
+          <Type {...DEFAULTS} size={size} />
+        </SpecRow>
+      ))}
+    </div>
+  );
+}
+
+export const states = [{ name: 'Scale', render: () => <Scale /> }];
 
 /**
  * The four axes are the four blocks: the state viewer derives one section per

@@ -1,4 +1,5 @@
 import type { TableRender } from '@tickets/table';
+import { SCROLL_EDGE } from './metrics';
 import { renderRoot } from './render-root';
 import { renderThead } from './render-thead';
 import { renderTh } from './render-th';
@@ -7,7 +8,10 @@ import { renderTr } from './render-tr';
 import { renderTd } from './render-td';
 import { renderSkeletonRow } from './render-skeleton-row';
 import { renderError } from './render-error';
+import { renderEmpty } from './render-empty';
+import { renderTfoot } from './render-tfoot';
 import { renderGroupHeader } from './render-group-header';
+import { renderSelectCell } from './render-select-cell';
 
 /**
  * The default styled render set, as a GENERIC FACTORY rather than a constant.
@@ -36,5 +40,13 @@ export function tableRender<T>(): TableRender<T> {
     groupHeader: renderGroupHeader,
     skeletonRow: renderSkeletonRow,
     error: renderError,
+    empty: renderEmpty,
+    tfoot: renderTfoot,
+    selectCell: renderSelectCell,
+    // The engine owns the scroll container — it holds the ref, the keyboard
+    // handler and the focus parking spot — so this hands it a class rather
+    // than a node. The engine says WHICH edges hide content; what that looks
+    // like stays here, in metrics.
+    scrollClass: ({ scrollX }) => SCROLL_EDGE[scrollX],
   };
 }

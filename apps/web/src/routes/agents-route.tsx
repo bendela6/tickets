@@ -7,7 +7,7 @@ import { rootRoute } from './root-route';
 function AgentsPage() {
   return (
     <AppShell>
-      <div className="flex h-full items-center justify-center px-6">
+      <div className="flex h-full items-center justify-center px-24">
         <p className="font-sans text-13/19 text-gray-9">
           Pick an agent session on the left, or dispatch one from a ticket.
         </p>

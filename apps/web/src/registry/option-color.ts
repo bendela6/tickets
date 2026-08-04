@@ -1,8 +1,8 @@
-import { colorOf, HUE_TONES, type HueTone } from '@tickets/ui';
+import { colorOf, HUES, type Hue } from '@tickets/ui';
 import type { StatusKind } from '../api/types';
 import { KIND_TONE } from '../domain/status';
 
-export type OptionColor = HueTone;
+export type OptionColor = Hue;
 
 // Option/status configs store free-form hex colors; the Instrument palette is
 // eleven named colors. Map by hue (circular distance), falling back to gray
@@ -72,7 +72,7 @@ export function hexToOptionColor(hex: string | undefined | null): OptionColor {
 // source wherever a picker needs an OptionColor (e.g. FieldWidget's combobox
 // chips). domain/status.ts's KIND_TONE is the app's ONE status-kind color
 // mapping — nothing else may decide it — so this delegates to it (OptionColor
-// is just a type alias for HueTone, KIND_TONE's value type) and only adds the
+// is just a type alias for Hue, KIND_TONE's value type) and only adds the
 // `null` case (unassigned/unknown kind) that KIND_TONE, indexed by the
 // non-nullable StatusKind, doesn't cover.
 export function kindColor(kind: StatusKind | null): OptionColor {
@@ -87,7 +87,7 @@ export function kindColor(kind: StatusKind | null): OptionColor {
 // Stored rows are unaffected: config.color is a literal hex, so a row saved
 // against the old list keeps rendering its own colour, and hexToOptionColor
 // above still maps it onto the nearest hue for chip tinting.
-export const OPTION_COLOR_CHOICES: { color: OptionColor; hex: string }[] = HUE_TONES.map(
+export const OPTION_COLOR_CHOICES: { color: OptionColor; hex: string }[] = HUES.map(
   (color) => ({ color, hex: colorOf('light', color, 9).toUpperCase() }),
 );
 

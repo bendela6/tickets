@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../popover';
  * dominant body is a list that draws its own row padding (OptionList, Menu
  * rows) and must bleed to the panel's rounded edge; `sm`/`md` are for
  * arbitrary content that needs breathing room. Before this, every call site
- * spelled the inset itself — three wrote `p-0`, one wrote `p-3`, and three
+ * spelled the inset itself — three wrote `p-0`, one wrote `p-12`, and three
  * wrote nothing and got 0 by accident.
  */
 export type DropdownPadding = 'none' | 'sm' | 'md';
@@ -24,8 +24,8 @@ const panelClass = variants({
       default: 'none',
       options: {
         none: 'p-0',
-        sm: 'p-2',
-        md: 'p-3',
+        sm: 'p-8',
+        md: 'p-12',
       },
     },
   },

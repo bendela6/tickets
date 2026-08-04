@@ -64,7 +64,7 @@ export const states = [
   {
     name: 'Error and description',
     render: () => (
-      <Stack gap={4} className="w-96">
+      <Stack gap={4} className="w-384">
         <FieldWrapper name="a" label="With description" required={false} touched={false} loading={false}
           description="Shown until an error replaces it">
           <TextInput {...shared} name="a" config={{}} value="" onChange={noop} />
@@ -78,7 +78,7 @@ export const states = [
   {
     name: 'Invalid JSON',
     render: () => (
-      <div className="w-96">
+      <div className="w-384">
         <JsonInput {...shared} name="j" config={{ rows: 4 }} value="{ nope" onChange={noop} />
       </div>
     ),

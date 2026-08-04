@@ -54,10 +54,10 @@ export function SdkSnippet({
   const code = snippetFor(active, dsn);
 
   return (
-    <div className={cn('flex flex-col gap-2', className)}>
-      <div className="flex items-center justify-between gap-2">
+    <div className={cn('flex flex-col gap-8', className)}>
+      <div className="flex items-center justify-between gap-8">
         <Tabs variant="pill" role="group"
-          className="h-7"
+          className="h-28"
           label="SDK platform"
           items={PLATFORMS.map((candidate) => ({ value: candidate, label: PLATFORM_LABELS[candidate] }))}
           value={active}
@@ -65,7 +65,7 @@ export function SdkSnippet({
         />
         <CopyButton value={code} failedLabel="Copy failed" className="shrink-0" />
       </div>
-      <pre className="overflow-x-auto rounded-lg border-1 border-gray-6 bg-surface-inset p-3 font-mono text-12 leading-relaxed text-gray-12">
+      <pre className="overflow-x-auto rounded-lg border-1 border-gray-6 bg-surface-inset p-12 font-mono text-12 leading-relaxed text-gray-12">
         <code>{code}</code>
       </pre>
     </div>

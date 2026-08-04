@@ -57,14 +57,14 @@ function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
     <span
       aria-hidden
       className={cn(
-        'flex size-9 shrink-0 items-center justify-center rounded-xl',
+        'flex size-36 shrink-0 items-center justify-center rounded-xl',
         colored ? iconColorClasses[hexToOptionColor(type.config.color)] : 'bg-surface-inset text-gray-11',
       )}
     >
       {dashed ? (
-        <span className="size-2.5 shrink-0 rounded-none border-2 border-dashed border-gray-9" />
+        <span className="size-10 shrink-0 rounded-none border-2 border-dashed border-gray-9" />
       ) : (
-        <span className="size-2.5 shrink-0 rounded-none bg-current" />
+        <span className="size-10 shrink-0 rounded-none bg-current" />
       )}
     </span>
   );
@@ -72,8 +72,8 @@ function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
 
 function ProjectChip({ project }: { project: Project }) {
   return (
-    <span className="inline-flex h-7 shrink-0 items-center gap-1.75 rounded-lg border-1 border-gray-6 px-2.5 font-sans text-13/19 font-500 text-gray-12">
-      <span className="rounded-sm bg-surface-inset px-1.25 py-0.5 font-mono text-11/13 tracking-wider font-500">
+    <span className="inline-flex h-28 shrink-0 items-center gap-7 rounded-lg border-1 border-gray-6 px-10 font-sans text-13/19 font-500 text-gray-12">
+      <span className="rounded-sm bg-surface-inset px-5 py-2 font-mono text-11/13 tracking-wider font-500">
         {project.itemPrefix}
       </span>
       {project.name}
@@ -88,7 +88,7 @@ function CloseButton() {
         type="button"
         aria-label="Close"
         className={cn(
-          'flex size-7.5 shrink-0 items-center justify-center rounded-lg border-1 border-gray-6 bg-transparent',
+          'flex size-30 shrink-0 items-center justify-center rounded-lg border-1 border-gray-6 bg-transparent',
           'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
           'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-indigo-3',
         )}
@@ -280,14 +280,14 @@ export function NewItemDialog({
       >
         {type === null ? (
           <>
-            <header className="flex items-center gap-2.5 border-b-1 border-gray-6 px-5 py-4">
+            <header className="flex items-center gap-10 border-b-1 border-gray-6 px-20 py-16">
               <DialogTitle>New item</DialogTitle>
               <span className="font-sans text-13/19 text-gray-11">in</span>
               <ProjectChip project={board.project} />
               <span className="flex-1" />
               <CloseButton />
             </header>
-            <div className="flex flex-col gap-2.5 px-5 py-4.5">
+            <div className="flex flex-col gap-10 px-20 py-18">
               {selectable.map((candidate, index) => {
                 const candidateRows = rowsForType(indexes, candidate);
                 const requiredCount = candidateRows.filter((row) => row.placement.required).length;
@@ -297,13 +297,13 @@ export function NewItemDialog({
                     type="button"
                     onClick={() => pick(candidate)}
                     className={cn(
-                      'flex w-full items-center gap-3 rounded-xl border-1 border-gray-6 bg-transparent px-4 py-3.5 text-left',
+                      'flex w-full items-center gap-12 rounded-xl border-1 border-gray-6 bg-transparent px-16 py-14 text-left',
                       'hover:border-gray-7 hover:bg-gray-1',
                       'focus-visible:border-indigo-9 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-indigo-3',
                     )}
                   >
                     <TypeIcon type={candidate} />
-                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="flex min-w-0 flex-1 flex-col gap-2">
                       <span className="font-sans text-14 font-600 text-gray-12">
                         {candidate.label}
                       </span>
@@ -315,7 +315,7 @@ export function NewItemDialog({
                     {index < 9 ? (
                       <span
                         aria-hidden
-                        className="shrink-0 rounded-sm border-1 border-gray-6 px-1.5 py-px font-mono text-11/13 tracking-wider text-gray-9"
+                        className="shrink-0 rounded-sm border-1 border-gray-6 px-6 py-px font-mono text-11/13 tracking-wider text-gray-9"
                       >
                         {index + 1}
                       </span>
@@ -324,9 +324,9 @@ export function NewItemDialog({
                 );
               })}
               {subtaskType ? (
-                <div className="flex items-center gap-3 rounded-xl border-1 border-dashed border-gray-6 px-4 py-3 opacity-65">
+                <div className="flex items-center gap-12 rounded-xl border-1 border-dashed border-gray-6 px-16 py-12 opacity-65">
                   <TypeIcon type={subtaskType} dashed />
-                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="flex min-w-0 flex-1 flex-col gap-2">
                     <span className="font-sans text-14 font-600 text-gray-11">
                       {subtaskType.label}
                     </span>
@@ -337,7 +337,7 @@ export function NewItemDialog({
                 </div>
               ) : null}
             </div>
-            <footer className="border-t-1 border-gray-6 bg-gray-1 px-5 py-3">
+            <footer className="border-t-1 border-gray-6 bg-gray-1 px-20 py-12">
               <p className="m-0 font-sans text-12/17 text-gray-11">
                 🔒 Type is permanent — it decides this item&rsquo;s form and can&rsquo;t be changed
                 after creation.
@@ -346,7 +346,7 @@ export function NewItemDialog({
           </>
         ) : (
           <>
-            <header className="flex items-center gap-2.5 border-b-1 border-gray-6 px-5 py-4">
+            <header className="flex items-center gap-10 border-b-1 border-gray-6 px-20 py-16">
               {selectable.length > 1 ? (
                 <button
                   type="button"
@@ -370,7 +370,7 @@ export function NewItemDialog({
               <span className="flex-1" />
               <CloseButton />
             </header>
-            <div className="flex max-h-[62vh] flex-col gap-3.5 overflow-y-auto px-5 py-4.5">
+            <div className="flex max-h-[62vh] flex-col gap-14 overflow-y-auto px-20 py-18">
               <Input
                 ref={titleRef}
                 autoFocus
@@ -379,12 +379,12 @@ export function NewItemDialog({
                 placeholder="Title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                className="h-10 shrink-0 rounded-lg px-3.25 text-15"
+                className="h-40 shrink-0 rounded-lg px-13 text-15"
               />
               {gridRows.length > 0 ? (
-                <div className="grid shrink-0 grid-cols-2 gap-x-4 gap-y-3">
+                <div className="grid shrink-0 grid-cols-2 gap-x-16 gap-y-12">
                   {gridRows.map(({ placement, field }) => (
-                    <div key={field.id} className="flex min-w-0 flex-col gap-1.25">
+                    <div key={field.id} className="flex min-w-0 flex-col gap-5">
                       <FieldLabel required={placement.required}>{field.label}</FieldLabel>
                       <FieldWidget
                         field={field}
@@ -405,7 +405,7 @@ export function NewItemDialog({
                 </div>
               ) : null}
               {markdownRows.map(({ placement, field }) => (
-                <div key={field.id} className="flex shrink-0 flex-col gap-1.25">
+                <div key={field.id} className="flex shrink-0 flex-col gap-5">
                   <FieldLabel required={placement.required}>{field.label}</FieldLabel>
                   <FieldWidget
                     field={field}
@@ -424,9 +424,9 @@ export function NewItemDialog({
                 </div>
               ))}
             </div>
-            <footer className="flex items-center gap-2.5 border-t-1 border-gray-6 bg-surface-inset px-5 py-3.5">
+            <footer className="flex items-center gap-10 border-t-1 border-gray-6 bg-surface-inset px-20 py-14">
               {workflowField ? (
-                <div className="w-48 shrink-0">
+                <div className="w-192 shrink-0">
                   <StatusSelect
                     statuses={statusOptions}
                     legalTargets={entryStatuses.map((status) => status.value)}
@@ -513,13 +513,13 @@ export function SubtaskQuickCreate({
   return (
     <div
       className={cn(
-        'flex items-center gap-2.5 rounded-xl border-1 border-gray-7 bg-surface-raised py-1.5 pl-3.25 pr-1.5',
+        'flex items-center gap-10 rounded-xl border-1 border-gray-7 bg-surface-raised py-6 pl-13 pr-6',
         'focus-within:border-indigo-9 focus-within:ring-3 focus-within:ring-indigo-3',
       )}
     >
       <span
         aria-hidden
-        className="size-2.25 shrink-0 rounded-full border-2 border-dashed border-gray-7"
+        className="size-9 shrink-0 rounded-full border-2 border-dashed border-gray-7"
       />
       <input
         value={title}
@@ -540,7 +540,7 @@ export function SubtaskQuickCreate({
       </span>
       <Combobox
         size="sm"
-        className="w-30 shrink-0"
+        className="w-120 shrink-0"
         options={types.map((type) => ({ value: type.key, label: type.label }))}
         value={effectiveTypeKey}
         onChange={(next) => setTypeKey(next)}

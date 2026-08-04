@@ -1,24 +1,30 @@
-import radiusTokens from '../tokens/next/radius.tokens.json';
-import layoutTokens from '../tokens/next/layout.tokens.json';
-import motionTokens from '../tokens/next/motion.tokens.json';
-import typographyTokens from '../tokens/next/typography.tokens.json';
-import shadowsLightTokens from '../tokens/next/shadows.light.tokens.json';
-import shadowsDarkTokens from '../tokens/next/shadows.dark.tokens.json';
-// The live stylesheet, read as text rather than transcribed into TypeScript.
-// A transcription would rot the first time someone edits tokens.css; parsing
-// the file itself means the "live" column of every view below is whatever the
-// app actually ships, by construction.
-import tokensCss from '../tokens/tokens.css?raw';
+// What the app actually ships, read back out of the stylesheets it ships.
+//
+// The gallery's foundation pages claim to show the live token values. Parsing
+// the generated sheets is what makes that true by construction — a transcription
+// into TypeScript would rot the first time someone edited a token.
+//
+// The SPEC side (what the token files declare) is no longer here. It used to be
+// derived from raw JSON imports and compared against this live side by drift().
+// Both are generated from the same token files now, so that comparison could
+// only ever report "matched" — see src/generated/ for the values themselves.
+import colorsCss from '../../styles/generated/colors.css?raw';
+import shadowsCss from '../../styles/generated/shadows.css?raw';
+import typographyCss from '../../styles/generated/typography.css?raw';
+import borderCss from '../../styles/generated/border.css?raw';
+import motionCss from '../../styles/generated/motion.css?raw';
+import breakpointsCss from '../../styles/generated/breakpoints.css?raw';
+
+// Every generated sheet, concatenated — the custom properties are split one
+// file per token type, so reading a single file would silently narrow every
+// lookup below to whichever family that file happens to own.
+const tokensCss = [colorsCss, shadowsCss, typographyCss, borderCss, motionCss, breakpointsCss].join('\n');
 
 export interface Token {
   /** Token name without the leading `--`. */
   name: string;
   value: string;
 }
-
-// ---------------------------------------------------------------------------
-// Live side — what tokens.css defines today
-// ---------------------------------------------------------------------------
 
 const DECLARATION = /--([\w-]+)\s*:\s*([^;]+);/g;
 
@@ -60,174 +66,32 @@ export function liveTokens(pattern: RegExp, theme: 'light' | 'dark' = 'light'): 
   return out;
 }
 
-// ---------------------------------------------------------------------------
-// Spec side — the numbered set proposed in tokens/next
-// ---------------------------------------------------------------------------
-
-type TokenGroup = Record<string, { $value: string }>;
-
-function group(source: unknown): TokenGroup {
-  return source as TokenGroup;
-}
-
-function tokens(source: unknown, prefix: string): Token[] {
-  return Object.entries(group(source)).map(([key, token]) => ({
+/**
+ * A generated record as the `{ name, value }` rows the spec tables render.
+ *
+ * The generated modules export records, because a record is what CODE wants —
+ * `RADII.md`, `BREAKPOINTS.lg`. The gallery is the one consumer that wants a
+ * list, and prefixing the key here is what turns `md` into the custom-property
+ * name a reader can search for.
+ */
+export function specRows(prefix: string, record: Record<string, string | number>): Token[] {
+  return Object.entries(record).map(([key, value]) => ({
     name: `${prefix}-${key}`,
-    value: token.$value,
+    value: String(value),
   }));
 }
 
-export interface TextSize extends Token {
-  /** The step number, which is also the size in px. */
-  step: string;
-  lineHeight?: string;
-  letterSpacing?: string;
-}
-
-const TEXT = group(typographyTokens.text);
-
 /**
- * The nine sizes, without the `--line-height` / `--letter-spacing` companions
- * that share the `text` namespace — those are folded onto their size instead,
- * which is how they are actually used.
+ * Families that ship no CSS token, and why — rendered where a value table would
+ * otherwise be.
+ *
+ * Measured: Tailwind has no `--border-width-*`, `--ring-*` or `--z-*` theme
+ * namespace, so these are bare-value utilities and `border-7`, `ring-42` and
+ * `z-999` all compile. No token file could have constrained them.
  */
-export const TEXT_SIZES: TextSize[] = Object.keys(TEXT)
-  .filter((key) => !key.includes('--'))
-  .map((step) => ({
-    name: `text-${step}`,
-    step,
-    value: TEXT[step]!.$value,
-    lineHeight: TEXT[`${step}--line-height`]?.$value,
-    letterSpacing: TEXT[`${step}--letter-spacing`]?.$value,
-  }));
-
-export const FONT_WEIGHTS = tokens(typographyTokens['font-weight'], 'font-weight');
-export const FONT_FAMILIES = tokens(typographyTokens.font, 'font');
-export const RADII = tokens(radiusTokens.radius, 'radius');
-export const DURATIONS = tokens(motionTokens.duration, 'duration');
-export const EASINGS = tokens(motionTokens.ease, 'ease');
-export const ANIMATIONS = tokens(motionTokens.animate, 'animate');
-export const BORDERS = tokens(layoutTokens.border, 'border');
-export const RINGS = tokens(layoutTokens.ring, 'ring');
-export const LAYERS = tokens(layoutTokens.z, 'z');
-export const BREAKPOINTS = tokens(layoutTokens.breakpoint, 'breakpoint');
-
-export interface ShadowToken {
-  name: string;
-  light: string;
-  dark: string;
-}
-
-/** The only family whose value differs by theme, so both are carried. */
-export const SHADOWS: ShadowToken[] = Object.keys(group(shadowsLightTokens.ins)).map((key) => ({
-  name: key,
-  light: group(shadowsLightTokens.ins)[key]!.$value,
-  dark: group(shadowsDarkTokens.ins)[key]!.$value,
-}));
-
-// ---------------------------------------------------------------------------
-// Drift — what changes if the proposed set replaces the live one
-// ---------------------------------------------------------------------------
-
-/**
- * Values are compared, not names: the proposal renames every token (`--text-ui`
- * becomes `text-13`), so name equality would report the whole system as
- * replaced. Matching on value instead says the useful thing — which live token
- * each proposed one *is*, and which sizes genuinely appear or disappear.
- */
-function normalize(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .replace(/(^|[\s(,])(-?)(?:0*)(\.\d+|\d+(?:\.\d+)?)/g, (_, lead, sign, num) => `${lead}${sign}${Number.parseFloat(num)}`);
-}
-
-export type DriftStatus = 'matched' | 'added' | 'dropped';
-
-export interface DriftRow {
-  family: string;
-  status: DriftStatus;
-  /** Proposed token name — absent when the row is a live token being dropped. */
-  spec?: string;
-  /** Live token name — absent when the row is a proposed token being added. */
-  live?: string;
-  value: string;
-}
-
-export function driftFor(family: string, spec: Token[], live: Token[]): DriftRow[] {
-  const rows: DriftRow[] = [];
-  const claimed = new Set<string>();
-  for (const token of spec) {
-    const match = live.find((l) => !claimed.has(l.name) && normalize(l.value) === normalize(token.value));
-    if (match) claimed.add(match.name);
-    rows.push({
-      family,
-      status: match ? 'matched' : 'added',
-      spec: token.name,
-      live: match?.name,
-      value: token.value,
-    });
-  }
-  for (const token of live) {
-    if (claimed.has(token.name)) continue;
-    rows.push({ family, status: 'dropped', live: token.name, value: token.value });
-  }
-  return rows;
-}
-
-export interface DriftFamily {
-  family: string;
-  rows: DriftRow[];
-  /** Why a family drifts, where the raw counts would mislead. */
-  note?: string;
-}
-
-/**
- * Drift compares two copies of a value — the sheet's and the spec's — so it
- * only means something for families that HAVE two copies. Border, ring, z,
- * duration and breakpoint are Tailwind-native: `border-1` is 1px because the
- * class says so, and `next/layout.tokens.json` records which rungs are
- * sanctioned, not what they resolve to. Listing them here would report every
- * rung as `dropped` in perpetuity.
- */
-export function drift(): DriftFamily[] {
-  return [
-    // `[a-z0-9]`, not `[a-z]`: the sizes are numeric now, and a
-    // letters-only pattern made every new rung invisible to drift.
-    { family: 'text', rows: driftFor('text', TEXT_SIZES, liveTokens(/^text-[a-z0-9]+$/)) },
-    { family: 'radius', rows: driftFor('radius', RADII, liveTokens(/^radius-(sm|md|lg|xl)$/)) },
-    {
-      family: 'shadow',
-      rows: driftFor(
-        'shadow',
-        SHADOWS.map((s) => ({ name: s.name, value: s.light })),
-        liveTokens(/^shadow-[a-z]+$/),
-      ),
-    },
-    { family: 'font', rows: driftFor('font', FONT_FAMILIES, liveTokens(/^font-(sans|mono)$/)) },
-    {
-      family: 'font-weight',
-      rows: driftFor('font-weight', FONT_WEIGHTS, liveTokens(/^font-weight-/)),
-      note: 'Tailwind ships font-weight utilities without our declaring them; these name the three the design actually uses.',
-    },
-    { family: 'ease', rows: driftFor('ease', EASINGS, liveTokens(/^ease-/)) },
-    { family: 'animate', rows: driftFor('animate', ANIMATIONS, liveTokens(/^animate-/)) },
-  ];
-}
-
-/** Families that ship no token, and why — rendered where a drift table would be. */
 export const NATIVE_FAMILIES: Record<string, string> = {
-  border: 'border-1 / border-2 — the class states the width; a token would be a second copy of it.',
+  border: 'border-1 / border-2 — the class states the width; any integer compiles.',
   ring: 'ring-3 — same rule as border.',
-  z: 'z-10 / z-40 / z-50 — the class IS the layer number.',
+  z: 'z-10 / z-40 / z-50 — the class IS the layer number; any integer compiles.',
   duration: 'duration-120 / duration-200 / duration-320 — the class IS the millisecond count.',
-  breakpoint: "Tailwind's standard sm/md/lg/xl/2xl, unmodified.",
 };
-
-/** Counts for a headline, so a page can say "12 matched, 5 added" up front. */
-export function driftSummary(families: DriftFamily[] = drift()): Record<DriftStatus, number> {
-  const out: Record<DriftStatus, number> = { matched: 0, added: 0, dropped: 0 };
-  for (const family of families) for (const row of family.rows) out[row.status] += 1;
-  return out;
-}

@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { ANIMATIONS, DURATIONS, EASINGS } from '../spec';
-import { DriftView, NativeNote, Sheet, SpecHeader, SpecRow } from '../view';
+import { ANIMATIONS, DURATIONS, EASINGS } from '../../generated';
+import { specRows } from '../spec';
+import { NativeNote, Sheet, SpecHeader, SpecRow } from '../view';
 
 export const meta = {
   title: 'Motion',
@@ -21,7 +22,7 @@ const EASE_JOBS: Record<string, string> = {
   'ease-in-out': 'things moving between two places',
 };
 
-const DEFAULT_EASE = EASINGS.find((e) => e.name === 'ease-out')!.value;
+const DEFAULT_EASE = EASINGS['out'];
 
 /**
  * Remounts its children on demand. A transition only runs on a change, so a
@@ -31,11 +32,11 @@ const DEFAULT_EASE = EASINGS.find((e) => e.name === 'ease-out')!.value;
 function Replay({ children }: { children: (run: number) => ReactNode }) {
   const [run, setRun] = useState(0);
   return (
-    <div className="flex w-full flex-col gap-3">
+    <div className="flex w-full flex-col gap-12">
       <button
         type="button"
         onClick={() => setRun((n) => n + 1)}
-        className="self-start rounded-md border-1 border-gray-6 bg-surface-raised px-3 py-1 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
+        className="self-start rounded-md border-1 border-gray-6 bg-surface-raised px-12 py-4 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
       >
         Replay
       </button>
@@ -65,9 +66,9 @@ function Travel({ run, duration, ease }: { run: number; duration: string; ease: 
     };
   }, [run]);
   return (
-    <div className="relative h-6 overflow-hidden rounded-md bg-surface-inset">
+    <div className="relative h-24 overflow-hidden rounded-md bg-surface-inset">
       <span
-        className="absolute inset-y-1 w-10 rounded-sm bg-indigo-9"
+        className="absolute inset-y-4 w-40 rounded-sm bg-indigo-9"
         style={{
           left: arrived ? 'calc(100% - 2.75rem)' : '0.25rem',
           transitionProperty: 'left',
@@ -85,7 +86,7 @@ function Durations() {
       {(run) => (
         <Sheet>
           <SpecHeader specimen="the same distance, three speeds" />
-          {DURATIONS.map((duration) => (
+          {specRows('duration', Object.fromEntries(DURATIONS.map((d) => [d, d + 'ms']))).map((duration) => (
             <SpecRow
               key={duration.name}
               name={duration.name}
@@ -116,7 +117,7 @@ function Easings() {
       {(run) => (
         <Sheet>
           <SpecHeader specimen="curve · the same move, eased" />
-          {EASINGS.map((ease) => (
+          {specRows('ease', EASINGS).map((ease) => (
             <SpecRow
               key={ease.name}
               name={ease.name}
@@ -124,10 +125,10 @@ function Easings() {
               note={EASE_JOBS[ease.name]}
               align="start"
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-16">
                 {/* Progress against time. A curve that leaves the box early and
                     flattens is one that arrives fast and settles. */}
-                <svg viewBox="-6 -6 112 112" className="size-24 shrink-0" aria-hidden="true">
+                <svg viewBox="-6 -6 112 112" className="size-96 shrink-0" aria-hidden="true">
                   <rect x="0" y="0" width="100" height="100" className="fill-surface-inset" />
                   <path
                     d={curvePath(ease.value)}
@@ -152,11 +153,11 @@ function Animations() {
   return (
     <Sheet>
       <SpecHeader specimen="looping · still under reduced motion" />
-      {ANIMATIONS.map((animation) => (
+      {specRows('animate', ANIMATIONS).map((animation) => (
         <SpecRow key={animation.name} name={animation.name} value={animation.value}>
           <span
-            className={`inline-block size-5 rounded-full bg-indigo-9 motion-reduce:animate-none ${
-              animation.name === 'animate-ai-spin' ? 'animate-ai-spin' : 'animate-ai-pulse'
+            className={`inline-block size-20 rounded-full bg-indigo-9 motion-reduce:animate-none ${
+              animation.name === 'animate-spin' ? 'animate-spin' : 'animate-pulse'
             }`}
           />
         </SpecRow>
@@ -183,5 +184,4 @@ export const states = [
   },
   { name: 'Easings', render: () => <Easings /> },
   { name: 'Animations', render: () => <Animations /> },
-  { name: 'Drift', render: () => <DriftView families={['ease', 'animate']} /> },
 ];

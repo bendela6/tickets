@@ -14,9 +14,9 @@ type TextareaProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'size'> &
 // `h-*` for the single-line controls, so each rung evicts it with `h-auto`
 // before setting its own `min-h-*`.
 const BOX: Record<FieldSize, string> = {
-  sm: 'h-auto min-h-14 px-2.25 py-2 text-13',
-  md: 'h-auto min-h-18 px-3 py-2.5 text-14',
-  lg: 'h-auto min-h-22 px-3.5 py-3 text-15',
+  sm: 'h-auto min-h-56 px-9 py-8 text-13',
+  md: 'h-auto min-h-72 px-12 py-10 text-14',
+  lg: 'h-auto min-h-88 px-14 py-12 text-15',
 };
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(

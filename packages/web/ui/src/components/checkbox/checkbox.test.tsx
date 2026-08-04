@@ -28,11 +28,11 @@ test('reflects the indeterminate prop onto the DOM node and keeps the accent fil
   expect(input.className).toContain('indeterminate:bg-indigo-9');
 });
 
-test('input keeps size-4 and shrink-0 so it never collapses as a flex item', () => {
+test('input keeps size-16 and shrink-0 so it never collapses as a flex item', () => {
   // Without shrink-0 the 16px input is squished to ~9px wide inside the
   // inline-flex wrapper (jsdom has no layout, so we guard the classes).
   render(<Checkbox label="Sized" />);
   const input = screen.getByRole('checkbox');
-  expect(input.className).toContain('size-4');
+  expect(input.className).toContain('size-16');
   expect(input.className).toContain('shrink-0');
 });

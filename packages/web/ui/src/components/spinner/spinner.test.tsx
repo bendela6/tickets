@@ -7,7 +7,7 @@ describe('Spinner', () => {
     const { container } = render(<Spinner />);
     const svg = container.querySelector('svg')!;
     expect(svg).not.toBeNull();
-    expect(svg.getAttribute('class')).toContain('animate-ai-spin');
+    expect(svg.getAttribute('class')).toContain('animate-spin');
   });
 
   it('defaults to the md rung, sized via the size prop', () => {

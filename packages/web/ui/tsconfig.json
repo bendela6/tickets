@@ -12,10 +12,22 @@
       "vite/client",
       "@testing-library/jest-dom/vitest"
     ],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    // `src/generators/` is run directly by node (`node src/generators/build-tokens.ts`),
+    // and Node's ESM resolver requires the real file extension on relative
+    // imports — `./cssLines` does not resolve, `./cssLines.ts` does. TypeScript
+    // rejects that spelling unless this is on; it is only permitted alongside
+    // `noEmit`, which tsconfig.base.json already sets.
+    "allowImportingTsExtensions": true
   },
+  // `scripts` is included so the token generators are typechecked. They live
+  // outside `src` because they are build tooling — keeping them out of the
+  // package barrel is what stops `node:fs` reaching a browser bundle — but
+  // being unshipped is no reason to be unchecked. Only `.ts` is picked up;
+  // the sibling `.mjs` gates are invisible to tsc without `allowJs`.
   "include": [
     "src",
-    "dev"
+    "dev",
+    "scripts"
   ]
 }

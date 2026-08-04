@@ -19,12 +19,12 @@ const CHIP_CAP = 12;
 // row — there a `flex-1` preview sibling would otherwise squeeze a merely
 // capped column down to its content width. Keep the two in step; the
 // docs-panel test pins them together.
-export const DOCS_MEASURE = 'max-w-200';
-export const DOCS_COLUMN = 'w-200 shrink-0';
+export const DOCS_MEASURE = 'max-w-800';
+export const DOCS_COLUMN = 'w-800 shrink-0';
 
 const CHIP =
-  'inline-flex h-5.5 items-center rounded-md border-1 border-gray-6 bg-surface-raised px-2 font-mono text-11/13 tracking-wider tracking-normal text-gray-11';
-const META_LINE = 'flex flex-wrap gap-6 font-mono text-11/13 tracking-wider tracking-normal text-gray-9';
+  'inline-flex h-22 items-center rounded-md border-1 border-gray-6 bg-surface-raised px-8 font-mono text-11/13 tracking-wider tracking-normal text-gray-11';
+const META_LINE = 'flex flex-wrap gap-24 font-mono text-11/13 tracking-wider tracking-normal text-gray-9';
 
 // Which package a demo belongs to, for the API header's right column. Derived
 // from the demo path rather than declared, so it can never drift.
@@ -65,7 +65,7 @@ function prose(text: string): ReactNode[] {
     i % 2 === 1 ? (
       <span
         key={i}
-        className="rounded-sm bg-surface-inset px-1.5 py-px font-mono text-13/19 text-gray-12"
+        className="rounded-sm bg-surface-inset px-6 py-px font-mono text-13/19 text-gray-12"
       >
         {part}
       </span>
@@ -81,7 +81,7 @@ function OptionChips({ values }: { values: string[] }) {
   const shown = overflowing && !expanded ? values.slice(0, CHIP_CAP) : values;
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-6">
       {shown.map((value) => (
         <span key={value} className={CHIP}>
           {value}
@@ -96,7 +96,7 @@ function OptionChips({ values }: { values: string[] }) {
         <button
           type="button"
           onClick={() => setExpanded(!expanded)}
-          className="ml-0.5 font-sans text-12/17 font-500 text-indigo-9 hover:underline"
+          className="ml-2 font-sans text-12/17 font-500 text-indigo-9 hover:underline"
         >
           {expanded ? 'Show fewer' : `Show all ${values.length}`}
         </button>
@@ -110,24 +110,24 @@ function PropRow({ name, def }: { name: string; def: AnyControlDef }) {
   const truncated = values.length > CHIP_CAP;
 
   return (
-    // Flex with a fixed first column rather than a grid template: `w-50` is
+    // Flex with a fixed first column rather than a grid template: `w-200` is
     // the same 200px the design draws, without an arbitrary track list.
-    <div className="flex gap-7 border-t-1 border-gray-6 py-4.5">
-      <div className="flex w-50 shrink-0 flex-col gap-1.5">
+    <div className="flex gap-28 border-t-1 border-gray-6 py-18">
+      <div className="flex w-200 shrink-0 flex-col gap-6">
         <span className="font-mono text-13/19 font-600 text-gray-12">{name}</span>
         <span className="font-mono text-11/13 tracking-wider tracking-normal text-gray-9 text-pretty">
           {def.type ?? derivedType(def)}
         </span>
         <span
           className={cn(
-            'inline-flex h-4.5 items-center self-start rounded-sm px-1.5 font-mono text-10/14 font-500 tracking-wider',
+            'inline-flex h-18 items-center self-start rounded-sm px-6 font-mono text-10/14 font-500 tracking-wider',
             def.required ? 'bg-indigo-3 text-indigo-9' : 'bg-surface-inset text-gray-9',
           )}
         >
           {def.required ? 'REQUIRED' : 'OPTIONAL'}
         </span>
       </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+      <div className="flex min-w-0 flex-1 flex-col gap-10">
         {def.description && (
           <div className="font-sans text-13/19 leading-relaxed text-gray-11 text-pretty">
             {prose(def.description)}
@@ -167,8 +167,8 @@ export function DocsPanel({ demo, railNote = true }: { demo: LiveDemo; railNote?
 
   return (
     <div className={cn('flex flex-col', DOCS_MEASURE)}>
-      <div className="mt-6 mb-1.5 flex items-start justify-between gap-8">
-        <div className="flex max-w-lg flex-col gap-2">
+      <div className="mt-24 mb-6 flex items-start justify-between gap-32">
+        <div className="flex max-w-lg flex-col gap-8">
           <span className="font-mono text-10/14 font-500 tracking-widest text-gray-9">
             API
           </span>
@@ -183,7 +183,7 @@ export function DocsPanel({ demo, railNote = true }: { demo: LiveDemo; railNote?
             </div>
           )}
         </div>
-        <div className="flex flex-none flex-col gap-1.5 font-mono text-11/13 tracking-wider tracking-normal text-gray-9">
+        <div className="flex flex-none flex-col gap-6 font-mono text-11/13 tracking-wider tracking-normal text-gray-9">
           <span>{packageLabel(demo.path)}</span>
           {docs?.version && <span>{docs.version}</span>}
           {docs?.status && <span className="text-green-9">{docs.status}</span>}
@@ -195,8 +195,8 @@ export function DocsPanel({ demo, railNote = true }: { demo: LiveDemo; railNote?
       ))}
 
       {railNote && (
-        <div className="mt-6 flex gap-2.5 rounded-lg bg-green-3 p-3.5">
-          <span className="mt-px inline-flex size-4 flex-none items-center justify-center rounded-full bg-green-9 font-sans text-9/12 font-600 text-green-contrast">
+        <div className="mt-24 flex gap-10 rounded-lg bg-green-3 p-14">
+          <span className="mt-px inline-flex size-16 flex-none items-center justify-center rounded-full bg-green-9 font-sans text-9/12 font-600 text-green-contrast">
             i
           </span>
           <span className="font-sans text-12/17 leading-normal text-green-9 text-pretty">

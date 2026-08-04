@@ -54,9 +54,9 @@ function SectionCard({
   return (
     <section
       id={id}
-      className="flex w-full flex-col gap-3 rounded-lg border-1 border-gray-6 bg-surface-raised px-3.5 py-3"
+      className="flex w-full flex-col gap-12 rounded-lg border-1 border-gray-6 bg-surface-raised px-14 py-12"
     >
-      <header className="flex items-center justify-between gap-4">
+      <header className="flex items-center justify-between gap-16">
         <span className={CAPTION}>{title}</span>
         {/* A real tablist, not a toggle group: each item genuinely swaps the
             panel below for another one, which is exactly the promise the role
@@ -101,13 +101,13 @@ function AxisCard({
            specimens hang above it. A size axis is exactly the case that breaks
            under `items-start`: the tallest rung pushes its own caption down and
            the labels stagger, reading as misalignment not scale. */
-        <div className="flex flex-wrap items-end gap-x-5 gap-y-4">
+        <div className="flex flex-wrap items-end gap-x-20 gap-y-16">
           {section.cells.map((cell) => (
-            <figure key={cell.slug} id={cell.slug} className="m-0 flex min-w-0 flex-col gap-2">
+            <figure key={cell.slug} id={cell.slug} className="m-0 flex min-w-0 flex-col gap-8">
               {/* Same contravariance gap MatrixMode hits: the values are built
                   generically, so they are asserted back into the concrete shape
                   this playground's render declares. */}
-              <div className="flex min-h-9 items-center">
+              <div className="flex min-h-36 items-center">
                 {playground.render(cell.values as ControlValues<Record<string, AnyControlDef>>)}
               </div>
               <figcaption className="font-mono text-11/13 tracking-wider text-gray-9">
@@ -199,12 +199,12 @@ function AuthoredCard({
 // is no source to show and no axis to derive, so this is the whole card.
 function LegacyStates({ demo }: { demo: LiveDemo }) {
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-10">
       {demo.states.map((state) => (
         <figure
           key={state.slug}
           id={state.slug}
-          className="m-0 flex w-full flex-col gap-3 rounded-lg border-1 border-gray-6 bg-surface-raised px-3.5 py-3"
+          className="m-0 flex w-full flex-col gap-12 rounded-lg border-1 border-gray-6 bg-surface-raised px-14 py-12"
         >
           <figcaption className={CAPTION}>{state.name}</figcaption>
           <div className="flex w-full min-w-0 max-w-full items-center overflow-x-auto">
@@ -241,14 +241,14 @@ export function StateGrid({
   const sections = demo.playground && authored.length === 0 ? deriveAxes(demo.playground.controls, demo.slug) : [];
   const component = demo.meta.title.replace(/\s+/g, '');
   return (
-    <section id={demo.slug} className="flex flex-col gap-3">
+    <section id={demo.slug} className="flex flex-col gap-12">
       <h2 className="font-sans text-11/13 tracking-wider font-500 uppercase tracking-wider text-gray-11">
         {demo.meta.title}
       </h2>
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-10">
         <div className={CAPTION}>STATES</div>
         {authored.length > 0 ? (
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-10">
             {authored.map((state) => (
               <AuthoredCard
                 key={state.slug}
@@ -259,7 +259,7 @@ export function StateGrid({
             ))}
           </div>
         ) : sections.length > 0 && demo.playground ? (
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-10">
             {sections.map((section) =>
               section.kind === 'cross' ? (
                 <CrossCard
@@ -288,7 +288,7 @@ export function StateGrid({
 
 export function DemoErrorCard({ path, error }: { path: string; error: string }) {
   return (
-    <section className="rounded-lg border-1 border-red-9 bg-red-3 p-4 font-mono text-12/17 text-red-9">
+    <section className="rounded-lg border-1 border-red-9 bg-red-3 p-16 font-mono text-12/17 text-red-9">
       {path}: {error}
     </section>
   );

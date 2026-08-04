@@ -40,7 +40,7 @@ export function PromptComposer({
   onEffortChange: (effort: string) => void;
 }) {
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-2">
+    <div className="mx-auto flex max-w-3xl flex-col gap-8">
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -52,22 +52,22 @@ export function PromptComposer({
         }}
         rows={2}
         placeholder="Message the agent…  (⌘/Ctrl+Enter to send)"
-        className="min-h-9.5 resize-y rounded-lg border-1 border-gray-7 bg-surface-raised px-3 py-2 font-sans text-13/19 text-gray-12 placeholder:text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-3 focus:ring-indigo-3"
+        className="min-h-38 resize-y rounded-lg border-1 border-gray-7 bg-surface-raised px-12 py-8 font-sans text-13/19 text-gray-12 placeholder:text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-3 focus:ring-indigo-3"
       />
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-8">
         <Combobox
           options={AGENT_MODELS}
           value={model}
           onChange={(v) => onModelChange(v ?? model)}
           size="sm"
-          className="w-40"
+          className="w-160"
         />
         <Combobox
           options={EFFORT_LEVELS}
           value={effort}
           onChange={(v) => onEffortChange(v ?? effort)}
           size="sm"
-          className="w-28"
+          className="w-112"
         />
         <span className="flex-1" />
         {running ? (

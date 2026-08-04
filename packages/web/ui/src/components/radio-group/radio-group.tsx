@@ -1,8 +1,8 @@
-import { axis, cn, HUE_TONES, over, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, cn, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
 import { toggleGlyphClass, toggleMarkClass, toggleRowClass, type ToggleSize } from '../toggle';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
-const SCALE = axis('scale', HUE_TONES, 'indigo');
+const SCALE = axis('scale', HUES, 'indigo');
 
 type RadioOption = { value: string; label: string; disabled?: boolean };
 
@@ -45,7 +45,7 @@ const optionClass = variants({
         plain: '',
         card: over(SCALE, CHECKED, (tone, state) =>
           cn(
-            'rounded-md border-1 px-2.5 py-1.5',
+            'rounded-md border-1 px-10 py-6',
             state === 'on'
               ? `border-${tone}-9 bg-${tone}-3`
               : 'border-gray-7 hover:border-gray-9',
@@ -58,11 +58,11 @@ const optionClass = variants({
 
 // Circle and inner dot scale together: the dot stays half the circle so the
 // 2px accent ring around it reads the same at every rung.
-const CIRCLE: Record<ToggleSize, string> = { sm: 'size-3.5', md: 'size-4', lg: 'size-5' };
-const DOT: Record<ToggleSize, string> = { sm: 'size-1.5', md: 'size-2', lg: 'size-2.5' };
-const ROW_GAP: Record<ToggleSize, string> = { sm: 'gap-3', md: 'gap-4', lg: 'gap-5' };
+const CIRCLE: Record<ToggleSize, string> = { sm: 'size-14', md: 'size-16', lg: 'size-20' };
+const DOT: Record<ToggleSize, string> = { sm: 'size-6', md: 'size-8', lg: 'size-10' };
+const ROW_GAP: Record<ToggleSize, string> = { sm: 'gap-12', md: 'gap-16', lg: 'gap-20' };
 // Cards carry their own padding, so they sit closer together than bare rows.
-const CARD_GAP: Record<ToggleSize, string> = { sm: 'gap-1.5', md: 'gap-2', lg: 'gap-2.5' };
+const CARD_GAP: Record<ToggleSize, string> = { sm: 'gap-6', md: 'gap-8', lg: 'gap-10' };
 
 export function RadioGroup({
   name,
@@ -75,7 +75,7 @@ export function RadioGroup({
   tone = 'primary',
   className,
 }: RadioGroupProps) {
-  const scale = TONE_SCALE[tone];
+  const scale = TONE_HUE[tone];
   return (
     <fieldset
       className={cn(
