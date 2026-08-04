@@ -1,10 +1,24 @@
-import type { AnyControlDef } from '@tickets/ui';
+import {
+  Combobox,
+  FieldLabel,
+  Input,
+  NumberInput,
+  Switch,
+  type AnyControlDef,
+  type ComboOption,
+} from '@tickets/ui';
 
-const inputClasses =
-  'h-28 rounded-md border-1 border-gray-7 bg-surface-raised px-8 font-sans text-13/19 text-gray-12 focus:outline-none focus:ring-2 focus:ring-indigo-3';
+// An `allowNone` select needs a pickable way back to "no value". Combobox has
+// no clear affordance by design — a single select is changed by picking, not
+// emptied — so the escape hatch has to be an option like any other. The empty
+// string is safe as its value because a control's own options are prop names,
+// never blank.
+const UNSET = '';
 
-// One labeled row per control. Native elements only — this panel must not
-// depend on apps/web primitives (they move into this package in P3).
+// One labeled row per control, built from the library's own primitives. This
+// panel used native elements until the components moved into @tickets/ui;
+// hand-rolled controls in the tool that documents the controls was the odd
+// thing about it.
 export function ControlsPanel({
   controls,
   values,
@@ -16,79 +30,82 @@ export function ControlsPanel({
 }) {
   return (
     <div className="flex flex-col gap-10">
-      {Object.entries(controls).map(([key, def]) => (
-        <div
-          key={key}
-          className="grid grid-cols-[96px_1fr] items-center gap-10 border-b-1 border-gray-6 py-10"
-        >
-          <label htmlFor={key} className="font-mono text-11/13 tracking-wider uppercase tracking-widest text-gray-9">
-            {def.label ?? key}
-          </label>
-          {def.kind === 'select' && (
-            <select
-              id={key}
-              className={inputClasses}
-              value={(values[key] as string | undefined) ?? ''}
-              onChange={(e) => onChange(key, e.target.value === '' ? undefined : e.target.value)}
-              aria-label={def.label ?? key}
+      {Object.entries(controls).map(([key, def]) => {
+        const label = def.label ?? key;
+
+        // A toggle carries its own label in this library, so a second one in
+        // the left column would say everything twice. Boolean rows give up the
+        // two-column grid and let the Switch label the row.
+        if (def.kind === 'boolean') {
+          return (
+            <div key={key} className="border-b-1 border-gray-6 py-10">
+              <Switch
+                id={key}
+                label={label}
+                checked={values[key] as boolean}
+                onChange={(event) => onChange(key, event.target.checked)}
+              />
+            </div>
+          );
+        }
+
+        return (
+          <div
+            key={key}
+            className="grid grid-cols-[96px_1fr] items-center gap-10 border-b-1 border-gray-6 py-10"
+          >
+            <FieldLabel
+              htmlFor={key}
+              className="font-mono text-11/13 uppercase tracking-widest text-gray-9"
             >
-              {def.allowNone && <option value="">(unset)</option>}
-              {def.options.map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
-          )}
-          {def.kind === 'boolean' && (
-            <input
-              id={key}
-              type="checkbox"
-              className="size-16 accent-(--color-accent)"
-              checked={values[key] as boolean}
-              onChange={(e) => onChange(key, e.target.checked)}
-              aria-label={def.label ?? key}
-            />
-          )}
-          {def.kind === 'text' && (
-            <input
-              id={key}
-              type="text"
-              className={inputClasses}
-              placeholder={def.placeholder}
-              value={values[key] as string}
-              onChange={(e) => onChange(key, e.target.value)}
-              aria-label={def.label ?? key}
-            />
-          )}
-          {def.kind === 'number' && (
-            <input
-              id={key}
-              type="number"
-              className={`${inputClasses} w-80`}
-              min={def.min}
-              max={def.max}
-              step={def.step}
-              value={(values[key] as number | undefined) ?? ''}
-              placeholder={def.allowNone ? 'unset' : undefined}
-              onChange={(e) =>
-                onChange(
-                  key,
-                  e.target.value === ''
-                    ? // An allowNone control empties to undefined so the demo can
-                      // show the component's own default; otherwise emptying the
-                      // box falls back to the initial rather than to NaN.
-                      def.allowNone
-                      ? undefined
-                      : def.initial
-                    : Number(e.target.value),
-                )
-              }
-              aria-label={def.label ?? key}
-            />
-          )}
-        </div>
-      ))}
+              {label}
+            </FieldLabel>
+
+            {def.kind === 'select' && (
+              <Combobox
+                id={key}
+                // A control's option set is short and fixed — tone, size,
+                // variant — so a search box would be one keystroke of noise
+                // between opening the list and reaching the option.
+                searchable={false}
+                options={[
+                  ...(def.allowNone ? [{ value: UNSET, label: '(unset)' }] : []),
+                  ...def.options.map((option): ComboOption => ({ value: option, label: option })),
+                ]}
+                value={(values[key] as string | undefined) ?? UNSET}
+                onChange={(picked) => onChange(key, picked === UNSET ? undefined : (picked ?? undefined))}
+              />
+            )}
+
+            {def.kind === 'text' && (
+              <Input
+                id={key}
+                placeholder={def.placeholder}
+                value={values[key] as string}
+                onChange={(event) => onChange(key, event.target.value)}
+              />
+            )}
+
+            {def.kind === 'number' && (
+              <NumberInput
+                id={key}
+                className="w-80"
+                min={def.min}
+                max={def.max}
+                step={def.step}
+                value={(values[key] as number | undefined) ?? null}
+                placeholder={def.allowNone ? 'unset' : undefined}
+                // Emptying an allowNone control returns undefined so the demo
+                // shows the component's own default; without allowNone it falls
+                // back to the initial rather than to NaN.
+                onChange={(next) =>
+                  onChange(key, next ?? (def.allowNone ? undefined : def.initial))
+                }
+              />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
