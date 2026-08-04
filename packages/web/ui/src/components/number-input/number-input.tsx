@@ -1,6 +1,7 @@
 import { cn, TONE_HUE, type Tone } from '../../style';
-import { fieldClass, fieldState, type FieldSize } from '../field';
+import { fieldClass, fieldState } from '../field';
 import { Icon } from '../icon';
+import type { ControlSize } from '../control';
 
 type NumberInputProps = {
   id?: string;
@@ -9,7 +10,7 @@ type NumberInputProps = {
   min?: number;
   max?: number;
   step?: number;
-  size?: FieldSize;
+  size?: ControlSize;
   /** Which ramp the focus ring paints from. Defaults to `primary`. */
   tone?: Tone;
   disabled?: boolean;
@@ -19,7 +20,7 @@ type NumberInputProps = {
 
 // The digits used to be a fixed `text-13/19`, so `size` moved the box and the
 // stepper buttons while the number itself stayed put. `md` is unchanged.
-const TEXT: Record<FieldSize, string> = { sm: 'text-12/17', md: 'text-13/19', lg: 'text-14/20' };
+const TEXT: Record<ControlSize, string> = { sm: 'text-12/17', md: 'text-13/19', lg: 'text-14/20' };
 
 function clamp(value: number, min?: number, max?: number) {
   let next = value;
@@ -57,7 +58,7 @@ export function NumberInput({
       className={fieldClass({
         size,
         state: field.state,
-            scale: field.scale,
+        scale: field.scale,
         // Focus lands on the inner <input>, never on this wrapper, so the ring
         // has to hang off focus-within.
         focus: 'focus-within',

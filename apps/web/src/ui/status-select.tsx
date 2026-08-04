@@ -1,5 +1,19 @@
 import { useMemo, useState } from 'react';
-import { cn, ComboboxList, type ComboOption, fieldClass, fieldState, type FieldSize, Icon, Pill, Popover, PopoverContent, PopoverTrigger, TONE_HUE, type Tone } from '@tickets/ui';
+import {
+  cn,
+  ComboboxList,
+  type ComboOption,
+  fieldClass,
+  fieldState,
+  Icon,
+  Pill,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  TONE_HUE,
+  type Tone,
+  type ControlSize,
+} from '@tickets/ui';
 import type { StatusKind } from '../api/types';
 import { KIND_ICON, KIND_TONE, statusPill } from '../domain/status';
 
@@ -11,14 +25,14 @@ type StatusSelectProps = {
   onChange: (value: string) => void;
   /** Keys reachable from the current status per the workflow graph. Undefined = all allowed. */
   legalTargets?: string[];
-  size?: FieldSize;
+  size?: ControlSize;
   /** Which ramp the focus ring paints from. Defaults to `primary`. */
   tone?: Tone;
   disabled?: boolean;
   className?: string;
 };
 
-const PADDING: Record<FieldSize, string> = {
+const PADDING: Record<ControlSize, string> = {
   sm: 'pr-8 pl-6',
   md: 'pr-8 pl-6',
   lg: 'pr-10 pl-8',

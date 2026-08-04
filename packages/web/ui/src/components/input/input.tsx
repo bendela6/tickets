@@ -1,9 +1,10 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode } from 'react';
 import { cn, type Tone } from '../../style';
-import { fieldClass, fieldState, type FieldSize } from '../field';
+import { fieldClass, fieldState } from '../field';
+import type { ControlSize } from '../control';
 
 type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> & {
-  size?: FieldSize;
+  size?: ControlSize;
   /** What the field is saying about itself. Unset is the resting field —
    *  gray border, accent focus ring. Any tone colours the border, and
    *  `danger` also sets aria-invalid. */
@@ -17,11 +18,10 @@ type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> & {
 
 // Padding and font-size are per-component, not part of `fieldClass` — see the
 // note there. These values are Input's existing ones, with lg extrapolated.
-const BOX: Record<FieldSize, string> = {
+const BOX: Record<ControlSize, string> = {
   sm: 'px-9 text-13',
   md: 'px-12 text-14',
-  lg: 'px-14 text-15',
-};
+  lg: 'px-14 text-15' };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   { size = 'md', tone, leading, trailing, className, ...rest },
@@ -41,8 +41,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           state: field.state,
           scale: field.scale,
           size,
-          className: cn('w-full', BOX[size], className),
-        })}
+          className: cn('w-full', BOX[size], className) })}
         {...rest}
       />
     );
@@ -59,8 +58,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         scale: field.scale,
         size,
         focus: 'focus-within',
-        className: cn('flex w-full items-center gap-8', BOX[size], className),
-      })}
+        className: cn('flex w-full items-center gap-8', BOX[size], className) })}
     >
       {leading}
       <input

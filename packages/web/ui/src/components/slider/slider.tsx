@@ -1,10 +1,9 @@
 import { useCallback, useRef, type KeyboardEvent, type PointerEvent } from 'react';
 import { axis, cn, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
+import type { ControlSize } from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
-
-export type SliderSize = 'sm' | 'md';
 
 /**
  * A single-value slider.
@@ -22,7 +21,9 @@ const trackClass = variants({
   config: {
     size: {
       default: 'md',
-      options: { sm: 'h-3', md: 'h-4' },
+      // 3 / 4 / 5px. The rung the slider was missing: `lg` existed on every
+      // other control, and a slider beside a 44px field had nothing to match.
+      options: { sm: 'h-3', md: 'h-4', lg: 'h-5' },
     },
   },
 });
@@ -51,7 +52,9 @@ const rootClass = variants({
     },
     size: {
       default: 'md',
-      options: { sm: 'h-16', md: 'h-20' },
+      // The row the thumb sits in — 16 / 20 / 24px, the same three-step ladder
+      // the toggle marks use.
+      options: { sm: 'h-16', md: 'h-20', lg: 'h-24' },
     },
   },
 });
@@ -90,7 +93,7 @@ export function Slider({
   step?: number;
   /** Accessible name. Required — a slider with no name is unusable by voice or screen reader. */
   label: string;
-  size?: SliderSize;
+  size?: ControlSize;
   /** Which ramp the fill and focus ring paint from. Defaults to `primary`. */
   tone?: Tone;
   disabled?: boolean;

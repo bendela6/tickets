@@ -1,10 +1,11 @@
 import { axis, HUES, over, variants } from '../../style';
+import type { ControlSize } from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
 
-/** Checkbox, RadioGroup and Switch share a ladder: 14 / 16 / 20px marks. */
-export type ToggleSize = 'sm' | 'md' | 'lg';
+/* Checkbox, RadioGroup and Switch share a ladder: 14 / 16 / 20px marks — the
+   mark geometry that hangs off the shared ControlSize rungs. */
 
 /**
  * The label row all three wear: the clickable strip holding the mark and its

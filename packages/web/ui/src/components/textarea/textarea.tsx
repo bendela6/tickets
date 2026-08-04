@@ -1,9 +1,10 @@
 import { forwardRef, type TextareaHTMLAttributes } from 'react';
 import { cn, type Tone } from '../../style';
-import { fieldClass, fieldState, type FieldSize } from '../field';
+import { fieldClass, fieldState } from '../field';
+import type { ControlSize } from '../control';
 
 type TextareaProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'size'> & {
-  size?: FieldSize;
+  size?: ControlSize;
   /** What the field is saying about itself. Unset is the resting field;
    *  any tone colours the border, and `danger` also sets aria-invalid. */
   tone?: Tone;
@@ -13,7 +14,7 @@ type TextareaProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'size'> &
 // roughly two, three and four lines of body text. `fieldClass` contributes an
 // `h-*` for the single-line controls, so each rung evicts it with `h-auto`
 // before setting its own `min-h-*`.
-const BOX: Record<FieldSize, string> = {
+const BOX: Record<ControlSize, string> = {
   sm: 'h-auto min-h-56 px-9 py-8 text-13',
   md: 'h-auto min-h-72 px-12 py-10 text-14',
   lg: 'h-auto min-h-88 px-14 py-12 text-15',
