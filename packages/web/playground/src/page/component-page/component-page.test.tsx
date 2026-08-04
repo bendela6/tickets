@@ -6,9 +6,9 @@ import {
   collectDemos,
   definePlayground,
   defineState,
-  HUE_TONES,
+  HUES,
   isDemoError,
-  ROLE_TONES,
+  ROLES,
   select,
   TONE_NAMES,
 } from '@tickets/ui';
@@ -509,10 +509,10 @@ describe('the tone switch', () => {
 
     const tabs = within(screen.getByRole('tablist', { name: 'tone set' }));
     fireEvent.click(tabs.getByRole('tab', { name: 'roles' }));
-    expect(screen.getByText(`tones:${ROLE_TONES.length}`)).toBeTruthy();
+    expect(screen.getByText(`tones:${ROLES.length}`)).toBeTruthy();
 
     fireEvent.click(tabs.getByRole('tab', { name: 'palette' }));
-    expect(screen.getByText(`tones:${HUE_TONES.length}`)).toBeTruthy();
+    expect(screen.getByText(`tones:${HUES.length}`)).toBeTruthy();
   });
 
   it('remembers the choice, because it is a view setting and not a prop', () => {
@@ -525,7 +525,7 @@ describe('the tone switch', () => {
     first.unmount();
 
     render(<ComponentPage demo={authoredDemo} />);
-    expect(screen.getByText(`tones:${ROLE_TONES.length}`)).toBeTruthy();
+    expect(screen.getByText(`tones:${ROLES.length}`)).toBeTruthy();
   });
 });
 

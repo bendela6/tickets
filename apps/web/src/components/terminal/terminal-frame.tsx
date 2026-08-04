@@ -17,10 +17,10 @@ const INDICATOR: Record<ConnState, { dot: string; label: string; pulse?: boolean
 function ConnIndicator({ state }: { state: ConnState }) {
   const it = INDICATOR[state];
   return (
-    <span className="inline-flex items-center gap-1.5 font-sans text-12/17 text-gray-11">
+    <span className="inline-flex items-center gap-6 font-sans text-12/17 text-gray-11">
       <span
         aria-hidden
-        className={cn('size-2 rounded-full', it.dot, it.pulse && 'animate-pulse')}
+        className={cn('size-8 rounded-full', it.dot, it.pulse && 'animate-pulse')}
       />
       {it.label}
     </span>
@@ -56,8 +56,8 @@ export function TerminalFrame({
   const ended = conn === 'ended';
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-raised">
-      <div className="flex items-center gap-3 border-b-1 border-gray-6 px-3.5 py-2">
-        <div className="flex min-w-0 flex-1 items-baseline gap-2.5">
+      <div className="flex items-center gap-12 border-b-1 border-gray-6 px-14 py-8">
+        <div className="flex min-w-0 flex-1 items-baseline gap-10">
           <span className="truncate font-sans text-13/19 font-500 text-gray-12">{title}</span>
           {workspacePath ? (
             <span className="truncate font-mono text-12/17 text-gray-9">{workspacePath}</span>
@@ -67,12 +67,12 @@ export function TerminalFrame({
         {actions}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-hidden p-2" style={{ background }}>
+      <div className="min-h-0 flex-1 overflow-hidden p-8" style={{ background }}>
         {children}
       </div>
 
       {ended || truncated ? (
-        <div className="flex items-center gap-3 border-t-1 border-gray-6 px-3.5 py-2 font-sans text-12/17">
+        <div className="flex items-center gap-12 border-t-1 border-gray-6 px-14 py-8 font-sans text-12/17">
           {ended ? (
             <span className="text-gray-11">
               {exitCode == null ? (

@@ -63,7 +63,7 @@ export function DetailFields({
   });
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-10">
       {userId === null ? (
         <p className="m-0 font-sans text-12/17 text-orange-9">
           Pick a user in the header to edit items.
@@ -74,14 +74,14 @@ export function DetailFields({
       ) : null}
       <div
         className={
-          layout === 'grid' ? 'grid grid-cols-2 gap-x-4.5 gap-y-2.5' : 'flex flex-col gap-3'
+          layout === 'grid' ? 'grid grid-cols-2 gap-x-18 gap-y-10' : 'flex flex-col gap-12'
         }
       >
         {rows.map(({ placement, field }) => (
           <label
             key={field.id}
             className={
-              layout === 'grid' ? 'flex min-w-0 items-start gap-2.5' : 'flex flex-col gap-1.25'
+              layout === 'grid' ? 'flex min-w-0 items-start gap-10' : 'flex flex-col gap-5'
             }
           >
             <SectionHeader
@@ -91,7 +91,7 @@ export function DetailFields({
                   {placement.required ? <span className="text-red-9"> *</span> : null}
                 </>
               }
-              className={layout === 'grid' ? 'w-19 shrink-0 pt-2.5' : undefined}
+              className={layout === 'grid' ? 'w-76 shrink-0 pt-10' : undefined}
             />
             <span className="min-w-0 flex-1">
               <FieldWidget

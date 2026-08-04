@@ -49,7 +49,7 @@ function useShadow() {
 function Levels() {
   const { ref, theme, valueOf } = useShadow();
   return (
-    <div ref={ref} className="flex w-full flex-col gap-3">
+    <div ref={ref} className="flex w-full flex-col gap-12">
       <SpecHeader value="used for" specimen={`specimen · ${theme}`} />
       {ROWS.map((shadow) => (
         <SpecRow
@@ -59,9 +59,9 @@ function Levels() {
           note={theme === 'dark' ? 'dark values' : 'light values'}
           align="start"
         >
-          <div className="flex items-center gap-4 bg-gray-1 p-5">
+          <div className="flex items-center gap-16 bg-gray-1 p-20">
             <span
-              className="flex h-16 w-40 items-center justify-center rounded-lg bg-surface-raised font-mono text-12/17 text-gray-9"
+              className="flex h-64 w-160 items-center justify-center rounded-lg bg-surface-raised font-mono text-12/17 text-gray-9"
               style={{ boxShadow: valueOf(shadow.name) }}
             >
               {shadow.name.replace('shadow-', '')}
@@ -79,30 +79,30 @@ function Levels() {
 function InUse() {
   const { ref, valueOf } = useShadow();
   return (
-    <div ref={ref} className="flex w-full flex-col gap-3">
+    <div ref={ref} className="flex w-full flex-col gap-12">
       {/* All three stacked in one scene, because elevation is comparative —
           a modal only reads as blocking next to something it blocks. */}
-      <div className="relative flex min-h-64 items-start gap-4 overflow-hidden rounded-xl bg-gray-1 p-5">
+      <div className="relative flex min-h-256 items-start gap-16 overflow-hidden rounded-xl bg-gray-1 p-20">
         <div
-          className="flex w-56 flex-col gap-1 rounded-lg bg-surface-raised p-3"
+          className="flex w-224 flex-col gap-4 rounded-lg bg-surface-raised p-12"
           style={{ boxShadow: valueOf('shadow-xs') }}
         >
           <span className="font-sans text-13/19 font-500 text-gray-12">Retry the gateway run</span>
           <span className="font-mono text-12/17 text-gray-9">TIX-214</span>
         </div>
         <div
-          className="flex w-44 flex-col rounded-lg bg-surface-raised py-1"
+          className="flex w-176 flex-col rounded-lg bg-surface-raised py-4"
           style={{ boxShadow: valueOf('shadow-md') }}
         >
           {['Assign to me', 'Move to review', 'Archive'].map((label) => (
-            <span key={label} className="px-3 py-1.5 font-sans text-13/19 text-gray-12">
+            <span key={label} className="px-12 py-6 font-sans text-13/19 text-gray-12">
               {label}
             </span>
           ))}
         </div>
         <div className="absolute inset-0 flex items-center justify-center bg-black/40">
           <div
-            className="flex w-64 flex-col gap-2 rounded-xl bg-surface-raised p-4"
+            className="flex w-256 flex-col gap-8 rounded-xl bg-surface-raised p-16"
             style={{ boxShadow: valueOf('shadow-lg') }}
           >
             <span className="font-sans text-16/22 font-500 text-gray-12">Discard changes?</span>

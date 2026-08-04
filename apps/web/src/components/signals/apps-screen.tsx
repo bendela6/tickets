@@ -60,7 +60,7 @@ function TableHeader() {
   return (
     <div
       role="row"
-      className="grid h-9 shrink-0 items-center border-b-1 border-gray-6 bg-gray-1 px-3.5 font-sans text-11/13 tracking-wider font-500 tracking-wider text-gray-11 uppercase"
+      className="grid h-36 shrink-0 items-center border-b-1 border-gray-6 bg-gray-1 px-14 font-sans text-11/13 tracking-wider font-500 tracking-wider text-gray-11 uppercase"
       style={{ gridTemplateColumns: APPS_GRID_COLUMNS }}
     >
       <span>App</span>
@@ -89,13 +89,13 @@ function AppRow({
     <div
       role="row"
       onClick={goToApp}
-      className="group grid h-12.5 cursor-pointer items-center border-b-1 border-gray-6 px-3.5 last:border-b-0 hover:bg-gray-1"
+      className="group grid h-50 cursor-pointer items-center border-b-1 border-gray-6 px-14 last:border-b-0 hover:bg-gray-1"
       style={{ gridTemplateColumns: APPS_GRID_COLUMNS }}
     >
-      <span className="flex min-w-0 items-center gap-2.5">
+      <span className="flex min-w-0 items-center gap-10">
         <span
           className={cn(
-            'flex size-5.5 shrink-0 items-center justify-center rounded-md font-mono text-9 font-600',
+            'flex size-22 shrink-0 items-center justify-center rounded-md font-mono text-9 font-600',
             avatarTone(app.slug),
           )}
         >
@@ -114,7 +114,7 @@ function AppRow({
       >
         {app.errors24h > 0 ? formatCount(app.errors24h) : '—'}
       </span>
-      <span className="pl-6 font-mono text-11 text-gray-9">{formatDate(app.createdAt)}</span>
+      <span className="pl-24 font-mono text-11 text-gray-9">{formatDate(app.createdAt)}</span>
       {/* stopPropagation on the whole cell — both the trigger and (via the
       portal-rendered MenuContent living outside this row's DOM subtree)
       every item click must never also fire the row's onClick/goToApp. */}
@@ -124,7 +124,7 @@ function AppRow({
             <button
               type="button"
               aria-label={`${app.slug} actions`}
-              className="hidden size-7 items-center justify-center rounded-md text-gray-9 hover:bg-surface-inset hover:text-gray-12 group-hover:flex data-[state=open]:flex"
+              className="hidden size-28 items-center justify-center rounded-md text-gray-9 hover:bg-surface-inset hover:text-gray-12 group-hover:flex data-[state=open]:flex"
             >
               ⋯
             </button>
@@ -185,8 +185,8 @@ export function AppsScreen() {
     : `${rows.length} ${rows.length === 1 ? 'app' : 'apps'} · ${formatCount(totalSignals24h)} signals last 24h`;
 
   return (
-    <div className="flex h-full min-h-0 flex-col p-6 md:p-7">
-      <div className="mb-2.5 flex flex-wrap items-center gap-3">
+    <div className="flex h-full min-h-0 flex-col p-24 md:p-28">
+      <div className="mb-10 flex flex-wrap items-center gap-12">
         <h1 className="m-0 font-sans text-22 leading-tight font-600 text-gray-12">Signals</h1>
         {!isLoading && !isError ? <span className="font-mono text-12/17 text-gray-9">{headMeta}</span> : null}
         <span className="flex-1" />
@@ -209,7 +209,7 @@ export function AppsScreen() {
               ))}
             </div>
           </div>
-          <div className="flex h-9.5 shrink-0 items-center gap-2 px-1 pt-2 font-mono text-11 text-gray-9">
+          <div className="flex h-38 shrink-0 items-center gap-8 px-4 pt-8 font-mono text-11 text-gray-9">
             <span>
               {rows.length} {rows.length === 1 ? 'app' : 'apps'} · sending to {window.location.origin}
               /signals-api
@@ -222,7 +222,7 @@ export function AppsScreen() {
 
       {isLoading ? (
         <div className="flex flex-1 items-center justify-center">
-          <span className="flex items-center gap-2.5 font-mono text-[11.5px] text-gray-9">
+          <span className="flex items-center gap-10 font-mono text-[11.5px] text-gray-9">
             <Spinner size="xs" tone="secondary" />
             loading apps…
           </span>
@@ -232,7 +232,7 @@ export function AppsScreen() {
       {isError ? (
         <div className="flex flex-1 items-center justify-center">
           <ScreenState
-            className="max-w-115"
+            className="max-w-460"
             tone="danger"
             icon="triangle-alert"
             title="Couldn't load apps"
@@ -241,7 +241,7 @@ export function AppsScreen() {
               <button
                 type="button"
                 onClick={() => void appsQuery.refetch()}
-                className="h-8 rounded-lg border-1 border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+                className="h-32 rounded-lg border-1 border-gray-7 bg-surface-raised px-13 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
               >
                 ↻ Retry
               </button>
@@ -252,29 +252,29 @@ export function AppsScreen() {
 
       {isEmpty ? (
         <div className="flex flex-1 items-center justify-center">
-          <div className="flex max-w-137.5 flex-col items-center gap-4.5 text-center">
-            <span className="flex size-11 items-center justify-center rounded-xl bg-indigo-3 font-mono text-22 text-indigo-9">
+          <div className="flex max-w-550 flex-col items-center gap-18 text-center">
+            <span className="flex size-44 items-center justify-center rounded-xl bg-indigo-3 font-mono text-22 text-indigo-9">
               ∿
             </span>
             <div className="font-sans text-22 font-600 text-gray-12">Connect your first app</div>
-            <div className="max-w-110 text-pretty font-sans text-13 leading-relaxed text-gray-11">
+            <div className="max-w-440 text-pretty font-sans text-13 leading-relaxed text-gray-11">
               Signals is your local error and event monitor. Register an app to get a DSN, drop the SDK
               into your code, and everything it reports lands here — nothing leaves this machine.
             </div>
             <Button variant="solid" onClick={() => setNewAppOpen(true)}>
               ＋ New app
             </Button>
-            <div className="mt-1.5 flex gap-3">
+            <div className="mt-6 flex gap-12">
               {ONBOARDING_STEPS.map((step) => (
                 <div
                   key={step.n}
-                  className="w-46.5 rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5 text-left"
+                  className="w-186 rounded-xl border-1 border-gray-6 bg-surface-raised p-14 text-left"
                 >
                   <span className="block font-mono text-10 text-gray-9">{step.n}</span>
-                  <span className="mt-1.5 block font-sans text-[12.5px] font-500 text-gray-12">
+                  <span className="mt-6 block font-sans text-[12.5px] font-500 text-gray-12">
                     {step.title}
                   </span>
-                  <span className="mt-1 block font-sans text-[11.5px] leading-relaxed text-gray-11">
+                  <span className="mt-4 block font-sans text-[11.5px] leading-relaxed text-gray-11">
                     {step.body}
                   </span>
                 </div>

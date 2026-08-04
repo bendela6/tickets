@@ -49,11 +49,11 @@ const avatarClass = variants({
     size: {
       default: 'sm',
       options: {
-        xs: 'size-4 text-9',
-        sm: 'size-4.5 text-9',
-        md: 'size-5.5 text-10',
-        lg: 'size-7 text-12',
-        xl: 'size-9 text-15',
+        xs: 'size-16 text-9',
+        sm: 'size-18 text-9',
+        md: 'size-22 text-10',
+        lg: 'size-28 text-12',
+        xl: 'size-36 text-15',
       },
     },
   },

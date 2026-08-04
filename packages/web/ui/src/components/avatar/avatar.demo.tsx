@@ -13,7 +13,7 @@ export const states = [
   {
     name: 'sizes',
     render: () => (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-8">
         {SIZES.map((size) => (
           <Avatar key={size} name="Mara K." size={size} />
         ))}
@@ -23,7 +23,7 @@ export const states = [
   {
     name: 'tones',
     render: () => (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-8">
         {(['cyan', 'success', 'warning', 'danger', 'purple'] as const).map((tone) => (
           <Avatar key={tone} name="Mara K." size="md" tone={tone} />
         ))}

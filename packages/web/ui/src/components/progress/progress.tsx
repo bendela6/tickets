@@ -12,9 +12,9 @@ const trackClass = variants({
     size: {
       default: 'md',
       options: {
-        sm: 'h-0.5 min-w-7',
-        md: 'h-1 min-w-9',
-        lg: 'h-1.5 min-w-12',
+        sm: 'h-2 min-w-28',
+        md: 'h-4 min-w-36',
+        lg: 'h-6 min-w-48',
       },
     },
   },
@@ -70,7 +70,7 @@ export function Progress({
   const pct = Math.min(100, Math.max(0, value));
   const figure = cn('font-mono text-gray-11 tabular-nums', TEXT[size]);
   return (
-    <div className={cn('flex items-center gap-2', className)}>
+    <div className={cn('flex items-center gap-8', className)}>
       {label != null ? <span className={figure}>{label}</span> : null}
       <div
         role="progressbar"

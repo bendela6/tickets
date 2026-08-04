@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { cn, ComboboxList, type ComboOption, fieldClass, fieldState, type FieldSize, Icon, Pill, Popover, PopoverContent, PopoverTrigger, TONE_RAMP, type Tone } from '@tickets/ui';
+import { cn, ComboboxList, type ComboOption, fieldClass, fieldState, type FieldSize, Icon, Pill, Popover, PopoverContent, PopoverTrigger, TONE_HUE, type Tone } from '@tickets/ui';
 import type { StatusKind } from '../api/types';
 import { KIND_ICON, KIND_TONE, statusPill } from '../domain/status';
 
@@ -19,9 +19,9 @@ type StatusSelectProps = {
 };
 
 const PADDING: Record<FieldSize, string> = {
-  sm: 'pr-2 pl-1.5',
-  md: 'pr-2 pl-1.5',
-  lg: 'pr-2.5 pl-2',
+  sm: 'pr-8 pl-6',
+  md: 'pr-8 pl-6',
+  lg: 'pr-10 pl-8',
 };
 
 const KIND_ORDER: { key: StatusKind; label: string }[] = [
@@ -76,7 +76,7 @@ export function StatusSelect({
             state: field.state,
             scale: field.scale,
             className: cn(
-              'flex w-full items-center justify-between gap-2',
+              'flex w-full items-center justify-between gap-8',
               'disabled:pointer-events-none disabled:opacity-50',
               PADDING[size],
               className,
@@ -86,7 +86,7 @@ export function StatusSelect({
           {current ? (
             <Pill {...statusPill(current.kind)} label={current.label} />
           ) : (
-            <span className="pl-1 font-sans text-13/19 text-gray-9">Set status…</span>
+            <span className="pl-4 font-sans text-13/19 text-gray-9">Set status…</span>
           )}
           <span aria-hidden className="text-10 text-gray-9">
             <Icon name="chevron-down" size="sm" />
@@ -106,7 +106,7 @@ export function StatusSelect({
           renderOption={(option) => {
             const kind = kindByKey.get(option.value) ?? 'todo';
             return (
-              <span className="inline-flex items-center gap-2.25">
+              <span className="inline-flex items-center gap-9">
                 <span className="inline-flex">
                   <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
                 </span>

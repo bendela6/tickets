@@ -7,7 +7,7 @@ function ComposerFixture() {
   const [effort, setEffort] = useState('medium');
   const [running, setRunning] = useState(true);
   return (
-    <div className="flex w-full flex-col gap-2">
+    <div className="flex w-full flex-col gap-8">
       <PromptComposer
         value={value}
         onChange={setValue}

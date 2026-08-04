@@ -53,18 +53,18 @@ describe('Pill', () => {
   it('sizes the pill and its glyph together', () => {
     const { rerender } = render(<Pill label="s" size="sm" icon="circle" />);
     const at = () => screen.getByText('s').closest('span')!;
-    expect(at().className).toContain('h-4.5');
+    expect(at().className).toContain('h-18');
     rerender(<Pill label="s" size="md" icon="circle" />);
-    expect(at().className).toContain('h-5.5');
+    expect(at().className).toContain('h-22');
     rerender(<Pill label="s" size="lg" icon="circle" />);
-    expect(at().className).toContain('h-7');
+    expect(at().className).toContain('h-28');
   });
 
   it('renders the shared shell with neutral subtle defaults', () => {
     render(<Pill label="Chore" />);
     const el = screen.getByText('Chore');
     const pill = el.closest('span')!;
-    for (const cls of ['inline-flex', 'h-5.5', 'items-center', 'gap-1.5', 'rounded-md', 'px-2.25', 'text-12/17', 'font-500']) {
+    for (const cls of ['inline-flex', 'h-22', 'items-center', 'gap-6', 'rounded-md', 'px-9', 'text-12/17', 'font-500']) {
       expect(pill.className).toContain(cls);
     }
     expect(pill.className).toContain('bg-gray-3');

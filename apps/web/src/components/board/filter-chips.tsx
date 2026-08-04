@@ -47,7 +47,7 @@ function RuleValues({ rule, indexes }: { rule: FilterRule; indexes: BoardIndexes
               label={value}
               tone={KIND_TONE[value as keyof typeof KIND_TONE] ?? 'gray'}
               shape="round"
-              className="h-4.5"
+              className="h-18"
             />
           );
         }
@@ -59,7 +59,7 @@ function RuleValues({ rule, indexes }: { rule: FilterRule; indexes: BoardIndexes
               label={option?.label ?? value}
               tone={kindColor(option?.kind ?? null)}
               shape="round"
-              className="h-4.5"
+              className="h-18"
             />
           );
         }
@@ -72,7 +72,7 @@ function RuleValues({ rule, indexes }: { rule: FilterRule; indexes: BoardIndexes
             label={option?.label ?? value}
             tone={hexToOptionColor(option?.config.color)}
             shape="round"
-            className="h-4.5"
+            className="h-18"
           />
         );
       })}
@@ -162,13 +162,13 @@ function AddFilter({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="inline-flex h-7 cursor-pointer items-center gap-1.25 rounded-lg border-1 border-dashed border-gray-7 px-2.5 font-sans text-12/17 font-500 text-gray-11 hover:text-gray-12"
+          className="inline-flex h-28 cursor-pointer items-center gap-5 rounded-lg border-1 border-dashed border-gray-7 px-10 font-sans text-12/17 font-500 text-gray-11 hover:text-gray-12"
         >
           ＋ Filter
         </button>
       </PopoverTrigger>
       <PopoverContent>
-        <div className="flex w-64 flex-col gap-2 p-3">
+        <div className="flex w-256 flex-col gap-8 p-12">
           <Combobox
             size="sm"
             options={fieldOptions}
@@ -212,7 +212,7 @@ function AddFilter({
               onChange={(event) => setText(event.target.value)}
             />
           ) : null}
-          <div className="flex items-center justify-end gap-2 pt-0.5">
+          <div className="flex items-center justify-end gap-8 pt-2">
             <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
               Cancel
             </Button>
@@ -265,13 +265,13 @@ export function FilterChips({
   onSaveToView: () => void;
 }) {
   return (
-    <div className="mb-3 flex shrink-0 flex-wrap items-center gap-2">
+    <div className="mb-12 flex shrink-0 flex-wrap items-center gap-8">
       {rules.map((rule, index) => {
         const field = indexes.fieldByKey.get(rule.fieldKey);
         return (
           <span
             key={index}
-            className="inline-flex h-7 items-center gap-1.5 rounded-lg border-1 border-gray-6 bg-surface-raised px-2.5 font-sans text-12/17 text-gray-11"
+            className="inline-flex h-28 items-center gap-6 rounded-lg border-1 border-gray-6 bg-surface-raised px-10 font-sans text-12/17 text-gray-11"
           >
             <strong className="font-500 text-gray-12">
               {field?.label ?? rule.fieldKey}

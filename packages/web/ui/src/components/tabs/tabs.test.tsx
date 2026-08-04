@@ -81,11 +81,11 @@ describe('Tabs', () => {
     const { container: sm } = render(
       <Tabs variant="pill" size="sm" items={items} value="board" onChange={() => {}} />,
     );
-    expect(sm.querySelector('[role="tab"]')!.className).toContain('px-2');
+    expect(sm.querySelector('[role="tab"]')!.className).toContain('px-8');
     const { container: lg } = render(
       <Tabs variant="pill" size="lg" items={items} value="board" onChange={() => {}} />,
     );
-    expect(lg.querySelector('[role="tab"]')!.className).toContain('px-3.5');
+    expect(lg.querySelector('[role="tab"]')!.className).toContain('px-14');
   });
 
   it('accepts an accessible label on the tablist, omitted when unset', () => {

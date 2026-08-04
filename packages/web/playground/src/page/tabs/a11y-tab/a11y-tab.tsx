@@ -80,7 +80,7 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
     : 0;
 
   return (
-    <div className="flex flex-col gap-3.5">
+    <div className="flex flex-col gap-14">
       {/* Header with meta and button */}
       <div className="flex items-center justify-between">
         <span className="font-mono text-12/17 text-gray-9">{metaText}</span>
@@ -88,7 +88,7 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
           type="button"
           onClick={runAudit}
           disabled={auditState.isLoading}
-          className="h-7 rounded-lg border-1 border-gray-7 bg-surface-raised px-3 font-sans text-12/17 text-gray-12 hover:bg-surface-inset disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-28 rounded-lg border-1 border-gray-7 bg-surface-raised px-12 font-sans text-12/17 text-gray-12 hover:bg-surface-inset disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {auditState.isLoading ? 'auditing…' : 'Run audit'}
         </button>
@@ -96,19 +96,19 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
 
       {/* Results */}
       {auditState.results && (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-10">
           {hasViolations ? (
             // Violations cards
             auditState.results.violations.map((violation) => (
               <div
                 key={violation.id}
-                className="rounded-lg border-1 border-gray-6 bg-surface-raised p-3.5 flex flex-col gap-2"
+                className="rounded-lg border-1 border-gray-6 bg-surface-raised p-14 flex flex-col gap-8"
               >
                 {/* Impact chip + Rule ID */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-8">
                   <span
                     className={cn(
-                      'h-5 px-2 rounded-md font-mono text-11/13 tracking-wider inline-flex items-center',
+                      'h-20 px-8 rounded-md font-mono text-11/13 tracking-wider inline-flex items-center',
                       getImpactClasses(violation.impact),
                     )}
                   >
@@ -121,8 +121,8 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
                 <p className="font-sans text-12/17 text-gray-11">{violation.description}</p>
 
                 {/* Target selector and Learn more link */}
-                <div className="flex items-center justify-between gap-2.5">
-                  <code className="font-mono text-11/13 tracking-wider text-gray-11 bg-surface-inset rounded-md px-1.75 py-0.5 overflow-x-auto text-nowrap">
+                <div className="flex items-center justify-between gap-10">
+                  <code className="font-mono text-11/13 tracking-wider text-gray-11 bg-surface-inset rounded-md px-7 py-2 overflow-x-auto text-nowrap">
                     {String(violation.nodes[0]?.target?.[0]) || '(selector)'}
                   </code>
                   <a
@@ -138,8 +138,8 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
             ))
           ) : (
             // All clear banner
-            <div className="flex items-center gap-2.5 rounded-lg bg-green-3 p-3.5">
-              <span className="flex-none size-4 rounded-full bg-green-9 text-gray-1 flex items-center justify-center font-sans text-9/12 font-600">
+            <div className="flex items-center gap-10 rounded-lg bg-green-3 p-14">
+              <span className="flex-none size-16 rounded-full bg-green-9 text-gray-1 flex items-center justify-center font-sans text-9/12 font-600">
                 ✓
               </span>
               <span className="font-sans text-13/19 font-500 text-green-9">

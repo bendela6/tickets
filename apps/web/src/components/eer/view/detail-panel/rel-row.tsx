@@ -5,7 +5,7 @@ import { Dot } from './dot';
 
 // The row style shared by every clickable list row in the panel.
 export const rowClass =
-  'flex w-full cursor-pointer items-center gap-2 rounded-md border-1 border-transparent px-2 py-2 text-left text-12 hover:border-gray-7 hover:bg-surface-inset';
+  'flex w-full cursor-pointer items-center gap-8 rounded-md border-1 border-transparent px-8 py-8 text-left text-12 hover:border-gray-7 hover:bg-surface-inset';
 
 export function RelRow({
   model,

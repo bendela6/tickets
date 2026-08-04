@@ -54,11 +54,11 @@ describe('Progress', () => {
 
   it('sizes the bar across three rungs', () => {
     const { rerender } = render(<Progress value={10} size="sm" />);
-    expect(bar().className).toContain('h-0.5');
+    expect(bar().className).toContain('h-2');
     rerender(<Progress value={10} size="md" />);
-    expect(bar().className).toContain('h-1');
+    expect(bar().className).toContain('h-4');
     rerender(<Progress value={10} size="lg" />);
-    expect(bar().className).toContain('h-1.5');
+    expect(bar().className).toContain('h-6');
   });
 
   it('renders label and trailing content, including a numeric zero', () => {
@@ -77,19 +77,19 @@ describe('Progress', () => {
   });
 
   it('merges an extra className onto the outer wrapper, not the track', () => {
-    const { container } = render(<Progress value={10} className="w-15" />);
-    expect(container.firstElementChild!.className).toContain('w-15');
-    expect(bar().className).not.toContain('w-15');
+    const { container } = render(<Progress value={10} className="w-60" />);
+    expect(container.firstElementChild!.className).toContain('w-60');
+    expect(bar().className).not.toContain('w-60');
   });
 
   it('lets trackClassName override the track floor and height via twMerge', () => {
     const { rerender } = render(<Progress value={10} />);
-    expect(bar().className).toContain('min-w-9');
+    expect(bar().className).toContain('min-w-36');
     rerender(<Progress value={10} trackClassName="min-w-0" />);
     expect(bar().className.split(' ')).toContain('min-w-0');
-    expect(bar().className.split(' ')).not.toContain('min-w-9');
-    rerender(<Progress value={10} trackClassName="h-2" />);
-    expect(bar().className.split(' ')).toContain('h-2');
-    expect(bar().className.split(' ')).not.toContain('h-1');
+    expect(bar().className.split(' ')).not.toContain('min-w-36');
+    rerender(<Progress value={10} trackClassName="h-8" />);
+    expect(bar().className.split(' ')).toContain('h-8');
+    expect(bar().className.split(' ')).not.toContain('h-4');
   });
 });

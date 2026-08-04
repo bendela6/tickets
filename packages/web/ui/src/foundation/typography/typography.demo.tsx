@@ -69,7 +69,7 @@ function Type({ font, size, weight, tracking, leading, uppercase, text: copy }: 
   return (
     <p
       className={cn(
-        'm-0 max-w-160 text-gray-12',
+        'm-0 max-w-640 text-gray-12',
         'truncate',
         FONT[font],
         SIZE[size],
@@ -108,7 +108,7 @@ const DEFAULTS: Specimen = {
  */
 function Scale() {
   return (
-    <div className="flex w-full flex-col gap-3">
+    <div className="flex w-full flex-col gap-12">
       <SpecHeader value="rung" specimen="specimen" />
       {(Object.keys(SIZE) as (keyof typeof SIZE)[]).map((size) => (
         <SpecRow key={size} name={`text-${size}`} value={`${size}px`} align="start">

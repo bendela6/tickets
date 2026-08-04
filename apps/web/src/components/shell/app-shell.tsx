@@ -63,12 +63,12 @@ export function AppShell({
   return (
     <div className="flex h-screen flex-col bg-gray-1 font-sans text-gray-12 md:flex-row">
       {/* Mobile top bar */}
-      <div className="flex h-12 shrink-0 items-center gap-1.5 border-b-1 border-gray-6 bg-gray-1 px-2 md:hidden">
+      <div className="flex h-48 shrink-0 items-center gap-6 border-b-1 border-gray-6 bg-gray-1 px-8 md:hidden">
         <button
           type="button"
           aria-label="Open navigation"
           onClick={() => setMobileNavOpen(true)}
-          className="inline-flex size-9 items-center justify-center rounded-lg text-16 text-gray-11 hover:bg-surface-inset"
+          className="inline-flex size-36 items-center justify-center rounded-lg text-16 text-gray-11 hover:bg-surface-inset"
         >
           ☰
         </button>

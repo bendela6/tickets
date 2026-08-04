@@ -19,7 +19,7 @@ type ComboboxProps = {
   className?: string;
 };
 
-const PADDING: Record<FieldSize, string> = { sm: 'px-2', md: 'px-3', lg: 'px-3.5' };
+const PADDING: Record<FieldSize, string> = { sm: 'px-8', md: 'px-12', lg: 'px-14' };
 const CHEVRON: Record<FieldSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
 
 // The trigger's label used to be a fixed `text-13/19`, so `size="lg"` grew the
@@ -58,11 +58,11 @@ export function Combobox({
               state: field.state,
             scale: field.scale,
               className: cn(
-                'flex w-full items-center justify-between gap-2 font-sans',
+                'flex w-full items-center justify-between gap-8 font-sans',
                 'disabled:opacity-50 disabled:pointer-events-none',
                 TEXT[size],
                 PADDING[size],
-                'pr-7',
+                'pr-28',
               ),
             })}
           >
@@ -82,7 +82,7 @@ export function Combobox({
             <Icon
               name="chevron-down"
               size={CHEVRON[size]}
-              className="pointer-events-none absolute right-2 text-gray-9"
+              className="pointer-events-none absolute right-8 text-gray-9"
             />
           </button>
         </PopoverTrigger>

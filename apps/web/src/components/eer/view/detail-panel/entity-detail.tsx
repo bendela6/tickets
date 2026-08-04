@@ -76,7 +76,7 @@ export function EntityDetail({
         description={e.description}
       />
 
-      <div className="px-4 pb-5">
+      <div className="px-16 pb-20">
         <Section title="Fields" count={e.columns.length} />
         <div className="flex flex-col">
           {e.columns.map((f) => {
@@ -85,14 +85,14 @@ export function EntityDetail({
             const badge = role?.pk ? 'pk' : role?.fk ? 'fk' : null;
             const fk = fkTarget(e, f.name);
             return (
-              <div key={f.name} className="border-b-1 border-gray-6/50 py-2 last:border-0">
-                <div className="flex items-center gap-2">
+              <div key={f.name} className="border-b-1 border-gray-6/50 py-8 last:border-0">
+                <div className="flex items-center gap-8">
                   <RoleTag role={badge} />
                   <span className={cn('font-mono text-12', { 'text-yellow-9': badge === 'pk', 'text-gray-12': badge !== 'pk' })}>{f.name}</span>
                   {fk && (
                     <button
                       type="button"
-                      className="ml-1 rounded-sm bg-gray-3 px-1 py-px font-mono text-10 text-green-9 hover:bg-surface-inset"
+                      className="ml-4 rounded-sm bg-gray-3 px-4 py-px font-mono text-10 text-green-9 hover:bg-surface-inset"
                       onClick={() => {
                         actions.selectEntity(fk.table);
                         actions.centerOn(fk.table);
@@ -103,7 +103,7 @@ export function EntityDetail({
                   )}
                   <span className="ml-auto shrink-0 font-mono text-11 text-gray-11">{f.type}</span>
                 </div>
-                {note && <div className="mt-1 pl-7 text-11 leading-snug text-gray-11">{note}</div>}
+                {note && <div className="mt-4 pl-28 text-11 leading-snug text-gray-11">{note}</div>}
               </div>
             );
           })}

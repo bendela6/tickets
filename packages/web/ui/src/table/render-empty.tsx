@@ -17,7 +17,7 @@ import { ScreenState } from '../components/screen-state';
 export function renderEmpty({ filtered }: RenderEmptyCtx) {
   return (
     <ScreenState
-      className="py-16"
+      className="py-64"
       tone="neutral"
       icon="search"
       title={filtered ? 'No matches' : 'Nothing here yet'}

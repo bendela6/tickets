@@ -4,7 +4,7 @@ import type { SuggestionKeyDownProps, SuggestionProps } from '@tiptap/suggestion
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import type { StatusKind } from '../../api/types';
 import { KIND_TONE } from '../../domain/status';
-import { Avatar, cn, TONE_RAMP } from '@tickets/ui';
+import { Avatar, cn, TONE_HUE } from '@tickets/ui';
 import { avatarFor } from '../../domain/actor';
 
 // RichTextEditor threads these two lookup sources through to the mention (@)
@@ -46,7 +46,7 @@ function deriveHandle(label: string): string {
 // kind→class table.
 function statusDotClass(kind: StatusKind | null | undefined): string {
   // The solid pair: 9 fills, contrast texts.
-  const scale = TONE_RAMP[kind ? KIND_TONE[kind] : 'gray'];
+  const scale = TONE_HUE[kind ? KIND_TONE[kind] : 'gray'];
   return `bg-${scale}-9 text-${scale}-contrast`;
 }
 
@@ -66,11 +66,11 @@ function PeopleRow({ item, selected }: { item: SuggestionItem; selected: boolean
 function TicketRow({ item }: { item: SuggestionItem }) {
   return (
     <>
-      <span className="shrink-0 rounded-md border-1 border-gray-6 bg-gray-1 px-1.5 py-0.5 font-mono text-11 font-500 text-gray-11">
+      <span className="shrink-0 rounded-md border-1 border-gray-6 bg-gray-1 px-6 py-2 font-mono text-11 font-500 text-gray-11">
         {item.label}
       </span>
       <span className="min-w-0 flex-1 truncate font-sans text-13/19 text-gray-12">{item.title}</span>
-      <span className={cn('size-2 shrink-0 rounded-full', statusDotClass(item.statusKind))} />
+      <span className={cn('size-8 shrink-0 rounded-full', statusDotClass(item.statusKind))} />
     </>
   );
 }
@@ -127,7 +127,7 @@ const SuggestionList = forwardRef<SuggestionListHandle, SuggestionListProps>(fun
   }));
 
   // RichTextEditor.dc.html §04: people popover is 272px, tickets 328px.
-  const width = trigger === '@' ? 'w-68' : 'w-82';
+  const width = trigger === '@' ? 'w-272' : 'w-328';
   const sectionLabel = trigger === '@' ? 'PEOPLE' : 'TICKETS';
 
   return (
@@ -137,7 +137,7 @@ const SuggestionList = forwardRef<SuggestionListHandle, SuggestionListProps>(fun
       // showing.
       data-suggestion-popover=""
       className={cn(
-        'fixed z-50 rounded-xl border-1 border-gray-6 bg-surface-raised p-1.25 shadow-lg',
+        'fixed z-50 rounded-xl border-1 border-gray-6 bg-surface-raised p-5 shadow-lg',
         width,
       )}
       // `pointerEvents` has to be claimed back explicitly. This popover hangs
@@ -152,10 +152,10 @@ const SuggestionList = forwardRef<SuggestionListHandle, SuggestionListProps>(fun
       style={{ left: rect?.left ?? 0, top: rect?.bottom ?? 0, pointerEvents: 'auto' }}
     >
       {items.length === 0 ? (
-        <div className="px-2.25 py-1.5 font-sans text-13/19 text-gray-11">No matches</div>
+        <div className="px-9 py-6 font-sans text-13/19 text-gray-11">No matches</div>
       ) : (
         <>
-          <div className="px-2.25 pt-1.25 pb-1 font-mono text-10 font-500 tracking-widest text-gray-9">
+          <div className="px-9 pt-5 pb-4 font-mono text-10 font-500 tracking-widest text-gray-9">
             {sectionLabel}
           </div>
           {items.map((item, index) => {
@@ -164,7 +164,7 @@ const SuggestionList = forwardRef<SuggestionListHandle, SuggestionListProps>(fun
               <div
                 key={item.id ?? item.label}
                 className={cn(
-                  'flex h-8.5 cursor-pointer items-center gap-2.25 rounded-md px-2.25',
+                  'flex h-34 cursor-pointer items-center gap-9 rounded-md px-9',
                   isSelected ? 'bg-surface-inset' : 'hover:bg-gray-1',
                 )}
                 // Suggestion's mousedown-driven selection would otherwise blur

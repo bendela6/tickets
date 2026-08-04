@@ -49,7 +49,7 @@ function Ramp({ theme, scale, height = 40 }: { theme: Theme; scale: string; heig
       </div>
       <div
         title={`${scale}-contrast · ${colorOf(theme, scale, 'contrast')}`}
-        className="ml-2 w-6 shrink-0 rounded-sm"
+        className="ml-8 w-24 shrink-0 rounded-sm"
         style={{ background: colorOf(theme, scale, 'contrast'), height, ...RING }}
       />
     </div>
@@ -64,7 +64,7 @@ function StepHeader() {
           {step}
         </span>
       ))}
-      <span className="ml-2 w-6 text-center">ct</span>
+      <span className="ml-8 w-24 text-center">ct</span>
     </div>
   );
 }
@@ -72,10 +72,10 @@ function StepHeader() {
 function Palette() {
   const [theme, ref] = useTheme();
   return (
-    <div ref={ref} className="flex w-full flex-col gap-4">
+    <div ref={ref} className="flex w-full flex-col gap-16">
       <StepHeader />
       {HUES.map((scale) => (
-        <div key={scale} className="flex flex-col gap-1">
+        <div key={scale} className="flex flex-col gap-4">
           <span className="font-mono text-12/17 font-500 text-gray-12">{scale}</span>
           <Ramp theme={theme} scale={scale} />
         </div>
@@ -100,7 +100,7 @@ function Verdict({
       : { background: '#f8e7e5', color: '#a82f26', mark: '✕' };
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-sm px-1.5 font-mono text-10 font-500"
+      className="inline-flex items-center gap-4 rounded-sm px-6 font-mono text-10 font-500"
       style={{ background: style.background, color: style.color }}
     >
       <span className="opacity-70">{what}</span>
@@ -112,7 +112,7 @@ function Verdict({
 
 function GroupLabel({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-center gap-3 pt-2">
+    <div className="flex items-center gap-12 pt-8">
       <span className="font-mono text-10 uppercase tracking-widest text-gray-9">
         {children}
       </span>
@@ -130,7 +130,7 @@ function GroupLabel({ children }: { children: ReactNode }) {
 function StepSpecimen({ theme, scale, step }: { theme: Theme; scale: string; step: Step }) {
   const c = colorOf(theme, scale, step);
   const page = colorOf(theme, 'gray', 1);
-  const box = 'flex h-8 w-full items-center justify-center rounded-sm font-sans text-12/17';
+  const box = 'flex h-32 w-full items-center justify-center rounded-sm font-sans text-12/17';
 
   if (step <= 5) {
     return <div className={box} style={{ background: c, ...RING }} title={c} />;
@@ -174,12 +174,12 @@ function StepsInUseRow({
   note?: string;
 }) {
   return (
-    <div className="flex items-start gap-4">
-      <span className="flex w-28 shrink-0 flex-col pt-1 font-mono text-12/17">
+    <div className="flex items-start gap-16">
+      <span className="flex w-112 shrink-0 flex-col pt-4 font-mono text-12/17">
         <span className="font-500 text-gray-12">{label}</span>
         {note ? <span className="text-10 text-gray-9">{note}</span> : null}
       </span>
-      <div className="grid min-w-0 flex-1 grid-cols-12 gap-1">
+      <div className="grid min-w-0 flex-1 grid-cols-12 gap-4">
         {STEPS.map((step) => (
           <StepSpecimen key={step} theme={theme} scale={scale} step={step} />
         ))}
@@ -200,12 +200,12 @@ function StepsInUse() {
     ...HUES.map((scale) => ({ key: `hue-${scale}`, scale, label: scale, note: undefined })),
   ];
   return (
-    <div ref={ref} className="flex w-full flex-col gap-3">
-      <div className="flex items-start gap-4">
-        <span className="w-28 shrink-0" />
-        <div className="grid min-w-0 flex-1 grid-cols-12 gap-1 font-mono text-9 leading-tight text-gray-9">
+    <div ref={ref} className="flex w-full flex-col gap-12">
+      <div className="flex items-start gap-16">
+        <span className="w-112 shrink-0" />
+        <div className="grid min-w-0 flex-1 grid-cols-12 gap-4 font-mono text-9 leading-tight text-gray-9">
           {STEPS.map((step) => (
-            <span key={step} className="flex flex-col gap-0.5">
+            <span key={step} className="flex flex-col gap-2">
               <span className="text-gray-11">{step}</span>
               <span>{STEP_JOBS[step]}</span>
             </span>
@@ -213,7 +213,7 @@ function StepsInUse() {
         </div>
       </div>
       {rows.map((row, i) => (
-        <div key={row.key} className="flex flex-col gap-3">
+        <div key={row.key} className="flex flex-col gap-12">
           {i === 0 ? <GroupLabel>Roles</GroupLabel> : null}
           {row.key === `hue-${HUES[0]}` ? <GroupLabel>Palette</GroupLabel> : null}
           <StepsInUseRow theme={theme} scale={row.scale} label={row.label} note={row.note} />
@@ -231,17 +231,17 @@ function Roles() {
   const surfaces = Object.keys(PALETTE.light.surface).map(
     (name) => [name, { light: PALETTE.light.surface[name]!, dark: PALETTE.dark.surface[name]! }] as const,
   );
-  const name = 'flex w-40 shrink-0 items-baseline gap-1.5 font-mono text-12/17';
+  const name = 'flex w-160 shrink-0 items-baseline gap-6 font-mono text-12/17';
   return (
-    <div ref={ref} className="flex w-full flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <span className="w-40 shrink-0" />
+    <div ref={ref} className="flex w-full flex-col gap-12">
+      <div className="flex items-center gap-12">
+        <span className="w-160 shrink-0" />
         <div className="min-w-0 flex-1">
           <StepHeader />
         </div>
       </div>
       {Object.entries(SEMANTIC_SCALES).map(([role, scale]) => (
-        <div key={role} className="flex items-center gap-3">
+        <div key={role} className="flex items-center gap-12">
           <span className={name}>
             <span className="text-gray-12">{role}</span>
             <span className="text-gray-9">→</span>
@@ -253,7 +253,7 @@ function Roles() {
         </div>
       ))}
       {surfaces.map(([surface, value]) => (
-        <div key={surface} className="flex items-center gap-3">
+        <div key={surface} className="flex items-center gap-12">
           <span className={name}>
             <span className="text-gray-12">surface-{surface}</span>
             <span className="text-gray-9">→</span>
@@ -261,7 +261,7 @@ function Roles() {
           </span>
           <div className="min-w-0 flex-1">
             <div
-              className="h-7 w-full rounded-sm"
+              className="h-28 w-full rounded-sm"
               title={`--color-surface-${surface} · ${value[theme]}`}
               style={{ background: value[theme], ...RING }}
             />
@@ -277,9 +277,9 @@ function Report() {
   const required = all.filter((p) => p.severity === 'required');
   const failing = required.filter((p) => !p.passes);
   const advisory = all.filter((p) => p.severity === 'advisory' && !p.passes);
-  const cell = 'border-b-1 border-gray-6 py-1.5 pr-4';
+  const cell = 'border-b-1 border-gray-6 py-6 pr-16';
   return (
-    <div className="flex w-full flex-col gap-3">
+    <div className="flex w-full flex-col gap-12">
       <p className="font-sans text-12/17 text-gray-11">
         {failing.length === 0
           ? `All ${required.length} required pairings meet their target.`
@@ -291,14 +291,14 @@ function Report() {
       </p>
       {failing.length > 0 && (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-140 border-collapse font-mono text-12/17">
+          <table className="w-full min-w-560 border-collapse font-mono text-12/17">
             <thead>
               <tr className="text-left text-gray-9">
                 <th className={`${cell} font-500`}>emphasis</th>
                 <th className={`${cell} font-500`}>scale</th>
                 <th className={`${cell} font-500`}>theme</th>
                 <th className={`${cell} font-500`}>pair</th>
-                <th className="border-b-1 border-gray-6 py-1.5 font-500">ratio</th>
+                <th className="border-b-1 border-gray-6 py-6 font-500">ratio</th>
               </tr>
             </thead>
             <tbody>
@@ -310,7 +310,7 @@ function Report() {
                   <td className={`${cell} text-gray-9`}>
                     {f.fgLabel} on {f.bgLabel}
                   </td>
-                  <td className="border-b-1 border-gray-6 py-1.5">
+                  <td className="border-b-1 border-gray-6 py-6">
                     <Verdict what={f.what} ratio={f.ratio} min={f.min} passes={false} />
                   </td>
                 </tr>

@@ -22,13 +22,13 @@ test('tone repaints without touching shape or typeface', () => {
 
 test('the size ladder runs 16 to 36px, defaulting to the 18px rung', () => {
   const { rerender } = render(<Avatar name="M" />);
-  expect(screen.getByTitle('M')).toHaveClass('size-4.5');
+  expect(screen.getByTitle('M')).toHaveClass('size-18');
   for (const [size, cls] of [
-    ['xs', 'size-4'],
-    ['sm', 'size-4.5'],
-    ['md', 'size-5.5'],
-    ['lg', 'size-7'],
-    ['xl', 'size-9'],
+    ['xs', 'size-16'],
+    ['sm', 'size-18'],
+    ['md', 'size-22'],
+    ['lg', 'size-28'],
+    ['xl', 'size-36'],
   ] as const) {
     rerender(<Avatar name="M" size={size} />);
     expect(screen.getByTitle('M')).toHaveClass(cls);

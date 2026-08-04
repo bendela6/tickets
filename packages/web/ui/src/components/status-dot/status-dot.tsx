@@ -13,7 +13,7 @@ const SCALE = axis('scale', HUES, 'green');
 export type StatusDotState = 'active' | 'resting';
 
 const dotClass = variants({
-  base: 'size-2 shrink-0 rounded-full',
+  base: 'size-8 shrink-0 rounded-full',
   config: {
     fill: {
       default: 'solid',

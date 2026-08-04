@@ -73,6 +73,11 @@ export interface MotionDoc {
   transition: Record<string, { $value: string }>;
 }
 
+/** `spacing.tokens.json`. One value: the multiplier every rung resolves through. */
+export interface SpacingDoc {
+  spacing: string;
+}
+
 /** `breakpoints.tokens.json`. */
 export interface BreakpointsDoc {
   breakpoint: Record<string, { $value: string }>;

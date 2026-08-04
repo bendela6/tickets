@@ -1,0 +1,4 @@
+{
+  "$comment": "The multiplier every spacing utility resolves through: `p-16` is `calc(var(--spacing) * 16)`. At 1px a number in a class name IS pixels, which is the vocabulary the type scale (`text-13`) and the line-height ladder (`leading-19`) already use. Tailwind's default is 0.25rem, which made spacing the one place where a number was multiplied by four before it reached the screen.",
+  "spacing": "1px"
+}

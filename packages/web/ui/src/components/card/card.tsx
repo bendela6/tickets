@@ -15,12 +15,12 @@ const RADIUS: Record<CardRadius, string> = {
 
 export const PAD: Record<Padding, string> = {
   0: 'p-0',
-  1: 'p-1',
-  2: 'p-2',
-  3: 'p-3',
-  4: 'p-4',
-  6: 'p-6',
-  8: 'p-8',
+  1: 'p-4',
+  2: 'p-8',
+  3: 'p-12',
+  4: 'p-16',
+  6: 'p-24',
+  8: 'p-32',
 };
 
 type CardProps = HTMLAttributes<HTMLDivElement> & {
@@ -67,7 +67,7 @@ export function Card({
 
 /** Header band with the dividing rule. Carries its own padding — see Card. */
 export function CardHeader({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('border-b-1 border-gray-6 px-4 py-3', className)} {...rest} />;
+  return <div className={cn('border-b-1 border-gray-6 px-16 py-12', className)} {...rest} />;
 }
 
 /** The header's heading. Always an h3, so a card inside a page section lands

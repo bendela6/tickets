@@ -29,7 +29,7 @@ export function ViewTabs({
   const active = views.find((view) => view.id === activeViewId) ?? null;
 
   return (
-    <div className="mb-3 flex shrink-0 items-center gap-1.5 border-b-1 border-gray-6">
+    <div className="mb-12 flex shrink-0 items-center gap-6 border-b-1 border-gray-6">
       {views.map((view) => {
         const isActive = view.id === activeViewId;
         return (
@@ -38,7 +38,7 @@ export function ViewTabs({
             to="/p/$projectKey/v/$viewId"
             params={{ projectKey, viewId: String(view.id) }}
             className={cn(
-              '-mb-px border-b-2 px-3 py-2 font-sans text-13/19',
+              '-mb-px border-b-2 px-12 py-8 font-sans text-13/19',
               isActive
                 ? 'border-indigo-9 font-500 text-gray-12'
                 : 'border-transparent text-gray-11 hover:text-gray-12',
@@ -56,7 +56,7 @@ export function ViewTabs({
           aria-label="New view name"
           value={draft}
           disabled={userId === null}
-          className="mx-1 w-36"
+          className="mx-4 w-144"
           onBlur={() => setAdding(false)}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={async (event) => {
@@ -82,14 +82,14 @@ export function ViewTabs({
         <button
           type="button"
           aria-label="New view"
-          className="px-2.5 py-2 font-sans text-13/19 text-gray-9 hover:text-gray-12"
+          className="px-10 py-8 font-sans text-13/19 text-gray-9 hover:text-gray-12"
           onClick={() => setAdding(true)}
         >
           ＋
         </button>
       )}
       <span className="flex-1" />
-      {active ? <span className="py-2 font-mono text-11 text-gray-9">view saved</span> : null}
+      {active ? <span className="py-8 font-mono text-11 text-gray-9">view saved</span> : null}
     </div>
   );
 }

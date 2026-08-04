@@ -14,7 +14,7 @@ function ReleaseRow({ appId, release }: { appId: number; release: AppReleaseRow 
   return (
     <div
       role="row"
-      className="grid h-8.5 items-center border-b-1 border-gray-6 px-4 last:border-b-0"
+      className="grid h-34 items-center border-b-1 border-gray-6 px-16 last:border-b-0"
       style={{ gridTemplateColumns: RELEASES_GRID_COLUMNS }}
     >
       <span className="truncate font-mono text-[11.5px] font-500 text-gray-12">{release.release}</span>
@@ -42,7 +42,7 @@ function ReleaseRow({ appId, release }: { appId: number; release: AppReleaseRow 
           aria-label={`Delete release ${release.release}`}
           onClick={() => setConfirming(true)}
           disabled={deleteRelease.isPending}
-          className="flex size-6 items-center justify-center rounded-md text-gray-9 hover:bg-red-3 hover:text-red-9 disabled:pointer-events-none disabled:opacity-40"
+          className="flex size-24 items-center justify-center rounded-md text-gray-9 hover:bg-red-3 hover:text-red-9 disabled:pointer-events-none disabled:opacity-40"
         >
           ✕
         </button>
@@ -77,7 +77,7 @@ export function ReleasesCard({ appId }: { appId: number }) {
 
   return (
     <div className="flex-none overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
-      <div className="flex h-10.5 items-center gap-2.5 border-b-1 border-gray-6 px-4">
+      <div className="flex h-42 items-center gap-10 border-b-1 border-gray-6 px-16">
         <span className="font-sans text-[13.5px] font-600 text-gray-12">Releases</span>
         {!isLoading && rows.length > 0 ? (
           <span className="font-mono text-11 text-gray-9">{rows.length}</span>
@@ -85,7 +85,7 @@ export function ReleasesCard({ appId }: { appId: number }) {
       </div>
       <div
         role="row"
-        className="grid h-7.5 items-center border-b-1 border-gray-6 bg-gray-1 px-4 font-sans text-[10.5px] font-500 tracking-wide text-gray-11 uppercase"
+        className="grid h-30 items-center border-b-1 border-gray-6 bg-gray-1 px-16 font-sans text-[10.5px] font-500 tracking-wide text-gray-11 uppercase"
         style={{ gridTemplateColumns: RELEASES_GRID_COLUMNS }}
       >
         <span>Release</span>
@@ -96,9 +96,9 @@ export function ReleasesCard({ appId }: { appId: number }) {
         <span />
       </div>
       {isLoading ? (
-        <div className="px-4 py-4 font-mono text-[11.5px] text-gray-9">loading releases…</div>
+        <div className="px-16 py-16 font-mono text-[11.5px] text-gray-9">loading releases…</div>
       ) : isEmpty ? (
-        <div className="px-4 py-4 font-mono text-[11.5px] text-gray-9">no releases yet</div>
+        <div className="px-16 py-16 font-mono text-[11.5px] text-gray-9">no releases yet</div>
       ) : (
         rows.map((release) => <ReleaseRow key={release.release} appId={appId} release={release} />)
       )}

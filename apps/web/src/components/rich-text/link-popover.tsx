@@ -144,7 +144,7 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
   return (
     <div
       ref={popoverRef}
-      className="fixed z-50 flex items-center gap-2 rounded-lg border-1 border-gray-6 bg-surface-raised px-2.5 py-1.5 shadow-lg"
+      className="fixed z-50 flex items-center gap-8 rounded-lg border-1 border-gray-6 bg-surface-raised px-10 py-6 shadow-lg"
       style={{ left: rect?.left ?? 0, top: rect?.bottom ?? 0 }}
       // Keeps the editor's own selection/focus intact when clicking a
       // button in here — a real mousedown-driven focus change would blur
@@ -172,17 +172,17 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
               setEditing(false);
             }
           }}
-          className="w-55 bg-transparent font-mono text-12 text-indigo-9 outline-none"
+          className="w-220 bg-transparent font-mono text-12 text-indigo-9 outline-none"
         />
       ) : (
         <>
           <span className="inline-flex shrink-0 text-indigo-9">
             <Icon name="link" size="sm" />
           </span>
-          <span className="max-w-55 truncate font-mono text-12 text-indigo-9">{href}</span>
+          <span className="max-w-220 truncate font-mono text-12 text-indigo-9">{href}</span>
         </>
       )}
-      <span className="h-3.5 w-px shrink-0 bg-gray-6" />
+      <span className="h-14 w-px shrink-0 bg-gray-6" />
       <button
         type="button"
         aria-label="Edit link"
@@ -190,7 +190,7 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
           setDraft(href);
           setEditing(true);
         }}
-        className="flex size-5.5 shrink-0 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
+        className="flex size-22 shrink-0 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
       >
         <Icon name="pencil" size="sm" />
       </button>
@@ -198,7 +198,7 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
         type="button"
         aria-label="Remove link"
         onClick={remove}
-        className="flex size-5.5 shrink-0 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
+        className="flex size-22 shrink-0 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
       >
         <Icon name="trash" size="sm" />
       </button>

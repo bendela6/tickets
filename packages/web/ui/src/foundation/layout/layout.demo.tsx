@@ -54,25 +54,25 @@ function Edges() {
           value={border.value}
           note={BORDER_JOBS[border.name]}
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-16">
             <span
-              className={`h-10 w-40 rounded-md border-solid border-gray-6 bg-surface-raised ${BORDER_CLASS[border.name]}`}
+              className={`h-40 w-160 rounded-md border-solid border-gray-6 bg-surface-raised ${BORDER_CLASS[border.name]}`}
             />
             {/* A rule on its own, where the weight difference is easiest to
                 judge — a box's four corners and anti-aliasing make 1px vs 2px
                 harder to compare at a glance than a single straight line. */}
             <span
-              className="w-40 bg-gray-6"
+              className="w-160 bg-gray-6"
               style={{ height: border.value }}
             />
           </div>
         </SpecRow>
       ))}
       <SpecRow name={ring.name} value={ring.value} note="keyboard focus, all controls">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-16">
           <button
             type="button"
-            className="rounded-md border-1 border-gray-6 bg-surface-raised px-3 py-1 font-sans text-13/19 text-gray-12 outline-none focus-visible:ring-3 focus-visible:ring-indigo-9"
+            className="rounded-md border-1 border-gray-6 bg-surface-raised px-12 py-4 font-sans text-13/19 text-gray-12 outline-none focus-visible:ring-3 focus-visible:ring-indigo-9"
           >
             Tab to me
           </button>
@@ -94,9 +94,9 @@ function Layers() {
       ))}
       {/* The three planes in one stack, at their real z-index, so the order is
           demonstrated rather than asserted. */}
-      <div className="relative mt-2 h-44 overflow-hidden rounded-xl bg-gray-1">
+      <div className="relative mt-8 h-176 overflow-hidden rounded-xl bg-gray-1">
         <div
-          className="absolute inset-x-4 top-4 flex h-10 items-center rounded-lg border-1 border-gray-6 bg-surface-raised px-3 font-mono text-12/17 text-gray-11"
+          className="absolute inset-x-16 top-16 flex h-40 items-center rounded-lg border-1 border-gray-6 bg-surface-raised px-12 font-mono text-12/17 text-gray-11"
           style={{ zIndex: Number(LAYERS.find((l) => l.name === 'z-10')!.value) }}
         >
           z-10 · pinned header
@@ -106,7 +106,7 @@ function Layers() {
           style={{ zIndex: Number(LAYERS.find((l) => l.name === 'z-40')!.value) }}
         />
         <div
-          className="absolute inset-x-16 top-16 flex h-20 items-center justify-center rounded-xl bg-surface-raised font-mono text-12/17 text-gray-12"
+          className="absolute inset-x-64 top-64 flex h-80 items-center justify-center rounded-xl bg-surface-raised font-mono text-12/17 text-gray-12"
           style={{ zIndex: Number(LAYERS.find((l) => l.name === 'z-50')!.value) }}
         >
           z-50 · dialog
@@ -158,8 +158,8 @@ function Breakpoints() {
       </SpecRow>
       {/* A ruler, so the two numbers have somewhere to sit relative to the
           window they describe. */}
-      <div className="mt-2 flex flex-col gap-2">
-        <div className="relative h-8 overflow-hidden rounded-md bg-surface-inset">
+      <div className="mt-8 flex flex-col gap-8">
+        <div className="relative h-32 overflow-hidden rounded-md bg-surface-inset">
           <span
             className="absolute inset-y-0 left-0 bg-indigo-3"
             style={{ width: `${Math.min(100, (width / breakpoint2xl) * 100)}%` }}

@@ -29,8 +29,8 @@ export function GeneratedCode({
   }
 
   return (
-    <div className="flex flex-col gap-2.5">
-      <div className="flex items-baseline justify-between gap-4">
+    <div className="flex flex-col gap-10">
+      <div className="flex items-baseline justify-between gap-16">
         <span className="font-mono text-11/13 tracking-wider uppercase tracking-widest text-gray-9">
           CODE
         </span>

@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import { type HueTone, type IconName, type Pill } from '@tickets/ui';
+import { type Hue, type IconName, type Pill } from '@tickets/ui';
 import type { StatusKind } from '../api/types';
 
 // The app's ONE ticket-status mapping. Nothing else in apps/web may decide
@@ -14,7 +14,7 @@ export const KIND_ICON: Record<StatusKind, IconName> = {
 
 // Tone-only view of the mapping, for call sites (e.g. filter chips) that
 // render a kind's color without its icon.
-export const KIND_TONE: Record<StatusKind, HueTone> = {
+export const KIND_TONE: Record<StatusKind, Hue> = {
   todo: 'gray',
   active: 'blue',
   blocked: 'orange',
@@ -32,7 +32,7 @@ export const typePill = {
 } as const satisfies Partial<ComponentProps<typeof Pill>>;
 
 export function statusPill(kind: StatusKind): {
-  tone: HueTone;
+  tone: Hue;
   icon: IconName;
   strikethrough?: true;
 } {

@@ -1,7 +1,7 @@
 import type { AnyControlDef } from '@tickets/ui';
 
 const inputClasses =
-  'h-7 rounded-md border-1 border-gray-7 bg-surface-raised px-2 font-sans text-13/19 text-gray-12 focus:outline-none focus:ring-2 focus:ring-indigo-3';
+  'h-28 rounded-md border-1 border-gray-7 bg-surface-raised px-8 font-sans text-13/19 text-gray-12 focus:outline-none focus:ring-2 focus:ring-indigo-3';
 
 // One labeled row per control. Native elements only — this panel must not
 // depend on apps/web primitives (they move into this package in P3).
@@ -15,11 +15,11 @@ export function ControlsPanel({
   onChange: (key: string, value: string | number | boolean | undefined) => void;
 }) {
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-10">
       {Object.entries(controls).map(([key, def]) => (
         <div
           key={key}
-          className="grid grid-cols-[96px_1fr] items-center gap-2.5 border-b-1 border-gray-6 py-2.5"
+          className="grid grid-cols-[96px_1fr] items-center gap-10 border-b-1 border-gray-6 py-10"
         >
           <label htmlFor={key} className="font-mono text-11/13 tracking-wider uppercase tracking-widest text-gray-9">
             {def.label ?? key}
@@ -44,7 +44,7 @@ export function ControlsPanel({
             <input
               id={key}
               type="checkbox"
-              className="size-4 accent-(--color-accent)"
+              className="size-16 accent-(--color-accent)"
               checked={values[key] as boolean}
               onChange={(e) => onChange(key, e.target.checked)}
               aria-label={def.label ?? key}
@@ -65,7 +65,7 @@ export function ControlsPanel({
             <input
               id={key}
               type="number"
-              className={`${inputClasses} w-20`}
+              className={`${inputClasses} w-80`}
               min={def.min}
               max={def.max}
               step={def.step}

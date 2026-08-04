@@ -9,7 +9,7 @@ export const states = [
   {
     name: 'label + required',
     render: () => (
-      <div className="w-56">
+      <div className="w-224">
         <FieldLabel htmlFor="demo-key" required>
           Key
         </FieldLabel>
@@ -18,7 +18,7 @@ export const states = [
           defaultValue="core"
           tone="danger"
           aria-describedby="demo-key-err"
-          className="mt-1"
+          className="mt-4"
         />
         <FieldError id="demo-key-err">Key must be 2–24 chars, kebab-case</FieldError>
       </div>

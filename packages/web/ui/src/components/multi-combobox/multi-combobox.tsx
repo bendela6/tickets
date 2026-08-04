@@ -25,9 +25,9 @@ type MultiComboboxProps = {
 // is a floor rather than a height — `h-auto` evicts the fixed height fieldClass
 // contributes for the single-line controls.
 const BOX: Record<FieldSize, string> = {
-  sm: 'h-auto min-h-7 py-0.5',
-  md: 'h-auto min-h-9 py-1',
-  lg: 'h-auto min-h-11 py-1.5',
+  sm: 'h-auto min-h-28 py-2',
+  md: 'h-auto min-h-36 py-4',
+  lg: 'h-auto min-h-44 py-6',
 };
 
 const CHEVRON: Record<FieldSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
@@ -80,14 +80,14 @@ export function MultiCombobox({
             state: field.state,
             scale: field.scale,
             className: cn(
-              'flex w-full items-center gap-1.5 px-2.5 text-left',
+              'flex w-full items-center gap-6 px-10 text-left',
               'disabled:pointer-events-none disabled:opacity-50',
               BOX[size],
               className,
             ),
           })}
         >
-          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-6">
             {selectedOptions.length === 0 ? (
               <span className={cn('truncate font-sans text-gray-9', TEXT[size])}>{placeholder}</span>
             ) : null}
@@ -120,14 +120,14 @@ export function MultiCombobox({
                     options.filter((option) => !option.disabled).map((option) => option.value),
                   )
                 }
-                className="rounded-md px-1 font-sans text-12/17 font-500 text-indigo-9 hover:underline"
+                className="rounded-md px-4 font-sans text-12/17 font-500 text-indigo-9 hover:underline"
               >
                 Select all
               </button>
               <button
                 type="button"
                 onClick={() => onChange([])}
-                className="rounded-md px-1 font-sans text-12/17 font-500 text-gray-11 hover:underline"
+                className="rounded-md px-4 font-sans text-12/17 font-500 text-gray-11 hover:underline"
               >
                 Clear ({value.length})
               </button>

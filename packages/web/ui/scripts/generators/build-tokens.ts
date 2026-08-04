@@ -24,6 +24,7 @@ import { generateBreakpoints } from './breakpoints.ts';
 import { generateColors } from './colors.ts';
 import { generateMotion } from './motion.ts';
 import { generateShadows } from './shadows.ts';
+import { generateSpacing } from './spacing.ts';
 import { generateTypography } from './typography.ts';
 import { GENERATED_DIR, GENERATED_TS_DIR, generatedCssFile, generatedTsFile } from './utils/paths.ts';
 import type { Family } from './utils/types.ts';
@@ -36,6 +37,7 @@ const FAMILIES: Record<string, () => Family> = {
   motion: generateMotion,
   shadows: generateShadows,
   breakpoints: generateBreakpoints,
+  spacing: generateSpacing,
 };
 
 const CSS_HEADER =

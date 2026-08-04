@@ -31,7 +31,7 @@ function HttpStatusPill({ status }: { status: number }) {
     <Pill
       tone={ok ? 'green' : 'danger'}
       label={status}
-      className={cn('h-4.25 rounded-sm px-1.5 font-mono text-10', !ok && 'font-600')}
+      className={cn('h-17 rounded-sm px-6 font-mono text-10', !ok && 'font-600')}
     />
   );
 }
@@ -51,7 +51,7 @@ function BreadcrumbRow({ crumb }: { crumb: SignalBreadcrumb }) {
   return (
     <div
       role="row"
-      className="grid items-center gap-x-2.5 border-b-1 border-gray-6 px-4 py-1.5 last:border-b-0"
+      className="grid items-center gap-x-10 border-b-1 border-gray-6 px-16 py-6 last:border-b-0"
       style={{ gridTemplateColumns: BREADCRUMB_GRID_COLUMNS }}
     >
       <Icon
@@ -63,7 +63,7 @@ function BreadcrumbRow({ crumb }: { crumb: SignalBreadcrumb }) {
       <span className="font-mono text-[10.5px] text-gray-9">
         {consoleMethod === 'warn' || consoleMethod === 'error' ? `console.${consoleMethod}` : crumb.type}
       </span>
-      <span className="flex min-w-0 items-center gap-2">
+      <span className="flex min-w-0 items-center gap-8">
         <span
           className={cn(
             'truncate font-mono text-12',
@@ -95,14 +95,14 @@ function TerminalBreadcrumbRow({ terminal }: { terminal: TerminalBreadcrumb }) {
   return (
     <div
       role="row"
-      className="grid items-center gap-x-2.5 bg-red-3 px-4 py-1.5"
+      className="grid items-center gap-x-10 bg-red-3 px-16 py-6"
       style={{ gridTemplateColumns: BREADCRUMB_GRID_COLUMNS }}
     >
-      <span className="flex size-5 items-center justify-center rounded-md bg-red-9 font-mono text-10 font-600 text-red-contrast">
+      <span className="flex size-20 items-center justify-center rounded-md bg-red-9 font-mono text-10 font-600 text-red-contrast">
         ✕
       </span>
       <span className="font-mono text-[10.5px] font-500 text-red-9">{terminal.name}</span>
-      <span className="flex min-w-0 items-center gap-2">
+      <span className="flex min-w-0 items-center gap-8">
         <span className="truncate font-mono text-12 font-500 text-red-9">{terminal.message ?? ''}</span>
       </span>
       <span className="font-mono text-11 font-500 text-red-9">
@@ -135,7 +135,7 @@ export function BreadcrumbList({
 
   return (
     <div className="flex-none overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
-      <div className="flex h-10.5 items-center gap-2.5 border-b-1 border-gray-6 px-4">
+      <div className="flex h-42 items-center gap-10 border-b-1 border-gray-6 px-16">
         <span className="font-sans text-[13.5px] font-600 text-gray-12">Breadcrumbs</span>
         {rows.length > 0 ? (
           <span className="font-mono text-11 text-gray-9">
@@ -154,7 +154,7 @@ export function BreadcrumbList({
         ) : null}
       </div>
       {rows.length === 0 && terminal === undefined ? (
-        <div className="px-4 py-4 font-mono text-[11.5px] text-gray-9">no breadcrumbs recorded</div>
+        <div className="px-16 py-16 font-mono text-[11.5px] text-gray-9">no breadcrumbs recorded</div>
       ) : (
         <div>
           {rows.map((crumb, index) => (

@@ -40,7 +40,7 @@ describe('ThemeSplit', () => {
       expect(panel.className).toContain('border-1');
       expect(panel.className).toContain('border-gray-6');
       expect(panel.className).toContain('bg-gray-1');
-      expect(panel.className).toContain('p-4');
+      expect(panel.className).toContain('p-16');
     });
   });
 });

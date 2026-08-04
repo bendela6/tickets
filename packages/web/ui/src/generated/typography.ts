@@ -28,8 +28,3 @@ export const FONT_FAMILIES = {
   "mono": "'IBM Plex Mono', ui-monospace, monospace"
 };
 
-export const LEADING_RANGE = {
-  "min": 8,
-  "max": 96
-};
-
