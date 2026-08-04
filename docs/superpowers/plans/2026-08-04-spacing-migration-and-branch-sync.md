@@ -1,7 +1,38 @@
 # Spacing migration + worktree sync
 
-**Status:** step 3 (spacing on `main`) is DONE — `bc8292f`. Steps 1, 4 and 5
-(the migration script and the per-branch sync) remain.
+**Status: COMPLETE.** Spacing landed on `main` at `bc8292f`; all three stale
+branches were synced and merged (`73d0fc3`, `e6b2906`, `76c61c2`). Every branch
+in the repo is now 0 commits ahead of `main`. `main` is green: typecheck 24/24,
+build 7/7, tokens gate clean, `@tickets/ui` 604 · `@tickets/web` 713 ·
+`@tickets/icon` 837.
+
+**What the sync actually found**, beyond the mechanical migration:
+
+- **`feat/live-schema-introspection` was already on `main`.** `042eb00` had
+  landed the same feature by another route. Measured before resolving anything:
+  158 of its 189 `components/eer` files were byte-identical to main's, 24
+  differed only where main had modernised them, 7 existed only on the branch —
+  and those 7 were the local components main deliberately retired. The whole
+  merge resolved to main's side. **Measure overlap before hand-merging a long
+  branch**; the conflict count says nothing about how much is genuinely new.
+- **Two branches carried real design work inside files `main` had deleted**,
+  which the deletion would have swallowed silently. `icon-editor` had four new
+  tokens in the retired `tokens/next/*.json` (`surface.field`, `literal.handle`,
+  `literal.safe-zone`, `shadows.artboard`) — ported into main's structure and
+  verified to emit. `live-schema-introspection` had `--transition-paint`, which
+  turned out to be on main already, verbatim. **Read what a branch changed in a
+  deleted file before accepting the deletion.**
+- **The flagged silent breakages behaved as predicted.** `slider.tsx` used the
+  old `TONE_SCALE` and would have merged clean and failed to compile; it now
+  reads `TONE_HUE`. `search-box.tsx` was superseded rather than broken — main
+  moved search into the outline, keeping the same engine actions.
+- **`@tickets/icon`'s interaction tests are flaky under parallel load.** Four
+  (shift-click, ⌘G, undo) failed once when turbo ran three suites concurrently,
+  and passed twice when the suite ran alone. Not introduced by the merge; worth
+  fixing before anyone treats a red icon suite as signal.
+- **`main`'s lockfile was out of sync with its own `package.json`** —
+  `@tanstack/markdown` was declared but absent from `pnpm-lock.yaml`, so
+  `pnpm install --frozen-lockfile` would have failed. Fixed by the first merge.
 
 **What actually happened in step 3**, beyond the plan below:
 
