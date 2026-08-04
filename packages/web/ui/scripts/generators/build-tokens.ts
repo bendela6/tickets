@@ -30,7 +30,7 @@ import { generateTypography } from './generate-typography.ts';
 import { resolveTokenMaps } from './resolve-token-maps.ts';
 import { colorVarLines } from './utils/color-var-lines.ts';
 import { shadowVarLines } from './utils/shadow-var-lines.ts';
-import { GENERATED_DIR, TONES_FILE, generatedCssFile } from './utils/paths.ts';
+import { GENERATED_DIR, GENERATED_TS_DIR, generatedCssFile, generatedTsFile } from './utils/paths.ts';
 import type { TokenMap } from './utils/types.ts';
 
 const HEADER =
@@ -41,7 +41,7 @@ const pick = (map: TokenMap, kind: 'color' | 'shadow'): TokenMap =>
   Object.fromEntries(Object.entries(map).filter(([, token]) => token.type === kind));
 
 /** Every generated stylesheet, keyed by the file it is written to. */
-export function emitStylesheets(): Record<string, string> {
+function emitStylesheets(): Record<string, string> {
   const { light, dark } = resolveTokenMaps();
 
   return {
@@ -66,18 +66,29 @@ export function emitStylesheets(): Record<string, string> {
   };
 }
 
+/** Every generated TypeScript module, keyed by the file it is written to. */
+function emitModules(): Record<string, string> {
+  const { light } = resolveTokenMaps();
+  return { 'tones.ts': generateTones(light) };
+}
+
 export function build(): void {
   mkdirSync(GENERATED_DIR, { recursive: true });
+  mkdirSync(GENERATED_TS_DIR, { recursive: true });
+
+  const write = (file: string, contents: string): void => {
+    writeFileSync(file, contents, 'utf8');
+    console.log(`Updated ${path.relative(process.cwd(), file)}`);
+  };
 
   for (const [name, css] of Object.entries(emitStylesheets())) {
-    const file = generatedCssFile(name);
-    writeFileSync(file, HEADER + css, 'utf8');
-    console.log(`Updated ${path.relative(process.cwd(), file)}`);
+    write(generatedCssFile(name), HEADER + css);
   }
-
-  const { light } = resolveTokenMaps();
-  writeFileSync(TONES_FILE, generateTones(light), 'utf8');
-  console.log(`Updated ${path.relative(process.cwd(), TONES_FILE)}`);
+  // The TS modules carry their own header — each states which token file it came
+  // from, which differs per module and would be wrong as one shared string.
+  for (const [name, ts] of Object.entries(emitModules())) {
+    write(generatedTsFile(name), ts);
+  }
 }
 
 // Importing this module must not write files.

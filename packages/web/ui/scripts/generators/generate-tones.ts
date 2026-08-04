@@ -2,7 +2,7 @@ import { readTokenFile } from './utils/read-token-file.ts';
 import type { ColorDoc, SemanticDoc, TokenMap } from './utils/types.ts';
 
 /**
- * Emit `src/style/tones/tones.generated.ts` — the tone vocabulary.
+ * Emit `src/generated/tones.ts` — the tone vocabulary.
  *
  * The vocabulary ONLY. Rung numbers live at the call site that builds the
  * class, so there is no STEP table and no table of finished class strings.

@@ -29,7 +29,7 @@ const PACKAGE_ROOT = path.join(GENERATORS_DIR, '..', '..');
 export const TOKENS_DIR = path.join(PACKAGE_ROOT, 'tokens');
 
 /** All shipped CSS — authored and generated alike. */
-export const STYLES_DIR = path.join(PACKAGE_ROOT, 'styles');
+const STYLES_DIR = path.join(PACKAGE_ROOT, 'styles');
 
 /**
  * Owned outright by the generator. Every file in here is overwritten whole on
@@ -40,5 +40,11 @@ export const GENERATED_DIR = path.join(STYLES_DIR, 'generated');
 
 export const generatedCssFile = (name: string): string => path.join(GENERATED_DIR, name);
 
-/** Overwritten whole. TypeScript, so it sits with the code that imports it. */
-export const TONES_FILE = path.join(PACKAGE_ROOT, 'src', 'style', 'tones', 'tones.generated.ts');
+/**
+ * Generated TypeScript, one file per family — the `styles/generated/` rule
+ * applied to code. Under `src/` because it is imported by the package's own
+ * modules and ships with them; the directory is the "do not edit" marker.
+ */
+export const GENERATED_TS_DIR = path.join(PACKAGE_ROOT, 'src', 'generated');
+
+export const generatedTsFile = (name: string): string => path.join(GENERATED_TS_DIR, name);

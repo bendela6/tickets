@@ -14,4 +14,4 @@ export {
   type HueTone,
   type RoleTone,
   type Tone,
-} from './tones.generated';
+} from '../../generated/tones';
