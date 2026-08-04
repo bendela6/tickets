@@ -51,19 +51,6 @@ export const colorVars = (names: string[]): string =>
 export const shadowVars = (names: string[]): string =>
   names.map((n) => `  --shadow-${n.slice('shadow-'.length)}: var(--ins-${n});\n`).join('');
 
-/** Split a map of theme pairs into one map per theme. */
-export function splitThemes(
-  entries: Record<string, { light: string; dark: string }>,
-): { light: TokenMap; dark: TokenMap } {
-  const light: TokenMap = {};
-  const dark: TokenMap = {};
-  for (const [name, value] of Object.entries(entries)) {
-    light[name] = value.light;
-    dark[name] = value.dark;
-  }
-  return { light, dark };
-}
-
 /**
  * Every token must exist in both themes.
  *

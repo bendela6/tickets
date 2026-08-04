@@ -7,7 +7,7 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { axis, cn, HUE_TONES, over, TONE_RAMP, variants, type Tone } from '../../style';
+import { axis, cn, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
 import { Icon, type IconName, type IconSize } from '../icon';
 
 /** How loudly the tone reads. These used to be `ToneEmphasis`, defined next to
@@ -25,7 +25,7 @@ export type PillShape = 'square' | 'round';
 
 // A Pill rests on neutral where a Button rests on primary — the resting ramp
 // is the only per-component decision the tone axis leaves open.
-const NEUTRAL_SCALE = axis('scale', HUE_TONES, 'gray');
+const NEUTRAL_SCALE = axis('scale', HUES, 'gray');
 
 // The four variants spell their own rungs, so hover/opacity treatments can be
 // added later without a second vocabulary. A test renders Pill and Button side
@@ -133,7 +133,7 @@ export const Pill = forwardRef<HTMLElement, PillProps>(function Pill(
       variant,
       shape,
       size,
-      scale: TONE_RAMP[tone],
+      scale: TONE_HUE[tone],
       className: cn(extra, className),
     });
 

@@ -15,6 +15,7 @@
     "tokens:verify": "node scripts/generators/build-tokens.ts && node scripts/extract-safelist.mjs && git diff --exit-code styles/generated/colors.css styles/generated/shadows.css styles/generated/typography.css styles/generated/radius.css styles/generated/motion.css styles/generated/safelist.css src/generated/tones.ts"
   },
   "dependencies": {
+    "@tanstack/markdown": "^0.0.12",
     "@tickets/form": "workspace:*",
     "@tickets/table": "workspace:*",
     "clsx": "^2.1.1",

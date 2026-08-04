@@ -1,4 +1,4 @@
-import { cn, TONE_RAMP, type Tone } from '../../style';
+import { cn, TONE_HUE, type Tone } from '../../style';
 import { fieldClass, fieldState, type FieldSize } from '../field';
 import { Icon } from '../icon';
 

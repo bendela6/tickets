@@ -1,601 +1,5 @@
 {
-  "$comment": "Every colour the system paints with. `ramp` is the eleven perceptual scales, each rung carrying both themes. `role` maps a JOB to the ramp that currently does it. `surface` and `literal` are the values no ramp step can express — a surface is defined by what it sits above, a literal by recognition (a highlighter is yellow).",
-  "ramp": {
-    "red": {
-      "1": {
-        "light": "#fff6f4",
-        "dark": "#200e0c"
-      },
-      "2": {
-        "light": "#ffede9",
-        "dark": "#2d1411"
-      },
-      "3": {
-        "light": "#ffe2db",
-        "dark": "#3c1815"
-      },
-      "4": {
-        "light": "#ffd6cd",
-        "dark": "#4c1d19"
-      },
-      "5": {
-        "light": "#ffc9bf",
-        "dark": "#5d221d"
-      },
-      "6": {
-        "light": "#ffbbaf",
-        "dark": "#732b25"
-      },
-      "7": {
-        "light": "#ffa99b",
-        "dark": "#8d352e"
-      },
-      "8": {
-        "light": "#ff9080",
-        "dark": "#b1483f"
-      },
-      "9": {
-        "light": "#c0382e",
-        "dark": "#e26a5f"
-      },
-      "10": {
-        "light": "#b22922",
-        "dark": "#f2786c"
-      },
-      "11": {
-        "light": "#9e1a15",
-        "dark": "#fe8f83"
-      },
-      "12": {
-        "light": "#590e0a",
-        "dark": "#ffbbb2"
-      },
-      "contrast": {
-        "light": "#ffffff",
-        "dark": "#2b0f0b"
-      }
-    },
-    "orange": {
-      "1": {
-        "light": "#fff8f3",
-        "dark": "#1c110a"
-      },
-      "2": {
-        "light": "#fff0e7",
-        "dark": "#28180d"
-      },
-      "3": {
-        "light": "#ffe7d9",
-        "dark": "#351f0e"
-      },
-      "4": {
-        "light": "#ffdcca",
-        "dark": "#432610"
-      },
-      "5": {
-        "light": "#ffd2ba",
-        "dark": "#522e11"
-      },
-      "6": {
-        "light": "#fdc6a9",
-        "dark": "#653916"
-      },
-      "7": {
-        "light": "#f9b794",
-        "dark": "#7c471c"
-      },
-      "8": {
-        "light": "#f1a177",
-        "dark": "#9d5d2a"
-      },
-      "9": {
-        "light": "#a44e14",
-        "dark": "#efa36c"
-      },
-      "10": {
-        "light": "#974200",
-        "dark": "#feb17a"
-      },
-      "11": {
-        "light": "#853500",
-        "dark": "#ffc594"
-      },
-      "12": {
-        "light": "#4b1c00",
-        "dark": "#ffeacc"
-      },
-      "contrast": {
-        "light": "#ffffff",
-        "dark": "#371b06"
-      }
-    },
-    "yellow": {
-      "1": {
-        "light": "#fdfaf2",
-        "dark": "#181307"
-      },
-      "2": {
-        "light": "#f9f4e7",
-        "dark": "#221b08"
-      },
-      "3": {
-        "light": "#f5ecd8",
-        "dark": "#2d2406"
-      },
-      "4": {
-        "light": "#f1e4c8",
-        "dark": "#382c04"
-      },
-      "5": {
-        "light": "#ecdcb8",
-        "dark": "#453600"
-      },
-      "6": {
-        "light": "#e5d2a7",
-        "dark": "#564300"
-      },
-      "7": {
-        "light": "#ddc591",
-        "dark": "#695300"
-      },
-      "8": {
-        "light": "#d1b473",
-        "dark": "#866b00"
-      },
-      "9": {
-        "light": "#8a6a10",
-        "dark": "#dfc060"
-      },
-      "10": {
-        "light": "#7e5e00",
-        "dark": "#eecf6f"
-      },
-      "11": {
-        "light": "#6e5100",
-        "dark": "#f8dc88"
-      },
-      "12": {
-        "light": "#3d2c00",
-        "dark": "#fff5c3"
-      },
-      "contrast": {
-        "light": "#ffffff",
-        "dark": "#33290a"
-      }
-    },
-    "green": {
-      "1": {
-        "light": "#f6fcf7",
-        "dark": "#0c170f"
-      },
-      "2": {
-        "light": "#ecf8ee",
-        "dark": "#112015"
-      },
-      "3": {
-        "light": "#e1f2e4",
-        "dark": "#142a1b"
-      },
-      "4": {
-        "light": "#d4edd9",
-        "dark": "#173522"
-      },
-      "5": {
-        "light": "#c8e6ce",
-        "dark": "#1b4129"
-      },
-      "6": {
-        "light": "#b9dfc1",
-        "dark": "#225133"
-      },
-      "7": {
-        "light": "#a8d5b1",
-        "dark": "#2a633f"
-      },
-      "8": {
-        "light": "#8fc79c",
-        "dark": "#3b7f53"
-      },
-      "9": {
-        "light": "#2e7042",
-        "dark": "#7fcb97"
-      },
-      "10": {
-        "light": "#216437",
-        "dark": "#8ddaa5"
-      },
-      "11": {
-        "light": "#13562b",
-        "dark": "#a5eaba"
-      },
-      "12": {
-        "light": "#0a3017",
-        "dark": "#d8ffe3"
-      },
-      "contrast": {
-        "light": "#ffffff",
-        "dark": "#122c1a"
-      }
-    },
-    "teal": {
-      "1": {
-        "light": "#f5fcfa",
-        "dark": "#0a1714"
-      },
-      "2": {
-        "light": "#ebf7f4",
-        "dark": "#0d201c"
-      },
-      "3": {
-        "light": "#def2ec",
-        "dark": "#0e2a24"
-      },
-      "4": {
-        "light": "#d1ece4",
-        "dark": "#0f352d"
-      },
-      "5": {
-        "light": "#c3e6dc",
-        "dark": "#0f4137"
-      },
-      "6": {
-        "light": "#b4ded2",
-        "dark": "#135145"
-      },
-      "7": {
-        "light": "#a1d5c6",
-        "dark": "#176355"
-      },
-      "8": {
-        "light": "#86c7b5",
-        "dark": "#267f6e"
-      },
-      "9": {
-        "light": "#176d5c",
-        "dark": "#6cc9b4"
-      },
-      "10": {
-        "light": "#006151",
-        "dark": "#7bd8c2"
-      },
-      "11": {
-        "light": "#005344",
-        "dark": "#96e8d4"
-      },
-      "12": {
-        "light": "#002e25",
-        "dark": "#cefff2"
-      },
-      "contrast": {
-        "light": "#ffffff",
-        "dark": "#102d26"
-      }
-    },
-    "cyan": {
-      "1": {
-        "light": "#f4fcfe",
-        "dark": "#0b1619"
-      },
-      "2": {
-        "light": "#ebf7fb",
-        "dark": "#0e1f24"
-      },
-      "3": {
-        "light": "#def1f7",
-        "dark": "#10282f"
-      },
-      "4": {
-        "light": "#d0eaf4",
-        "dark": "#12333c"
-      },
-      "5": {
-        "light": "#c2e4ef",
-        "dark": "#143e49"
-      },
-      "6": {
-        "light": "#b3dbe9",
-        "dark": "#1a4d5b"
-      },
-      "7": {
-        "light": "#a0d1e2",
-        "dark": "#1f5f70"
-      },
-      "8": {
-        "light": "#84c2d7",
-        "dark": "#2f798e"
-      },
-      "9": {
-        "light": "#14687e",
-        "dark": "#74c4dc"
-      },
-      "10": {
-        "light": "#005c72",
-        "dark": "#82d3eb"
-      },
-      "11": {
-        "light": "#004e62",
-        "dark": "#9ce3fa"
-      },
-      "12": {
-        "light": "#002c37",
-        "dark": "#d2fdff"
-      },
-      "contrast": {
-        "light": "#ffffff",
-        "dark": "#0c2831"
-      }
-    },
-    "blue": {
-      "1": {
-        "light": "#f5fbff",
-        "dark": "#0e141c"
-      },
-      "2": {
-        "light": "#ebf5ff",
-        "dark": "#141c29"
-      },
-      "3": {
-        "light": "#deeeff",
-        "dark": "#192536"
-      },
-      "4": {
-        "light": "#d1e7ff",
-        "dark": "#1f2e45"
-      },
-      "5": {
-        "light": "#c3dfff",
-        "dark": "#253955"
-      },
-      "6": {
-        "light": "#b5d5ff",
-        "dark": "#2e4668"
-      },
-      "7": {
-        "light": "#a2caff",
-        "dark": "#3a5780"
-      },
-      "8": {
-        "light": "#89b8ff",
-        "dark": "#4d70a2"
-      },
-      "9": {
-        "light": "#2a5dae",
-        "dark": "#8bb4ef"
-      },
-      "10": {
-        "light": "#1e51a1",
-        "dark": "#99c2fe"
-      },
-      "11": {
-        "light": "#12438e",
-        "dark": "#aed4ff"
-      },
-      "12": {
-        "light": "#092551",
-        "dark": "#daf1ff"
-      },
-      "contrast": {
-        "light": "#ffffff",
-        "dark": "#071a36"
-      }
-    },
-    "indigo": {
-      "1": {
-        "light": "#f7f9ff",
-        "dark": "#121220"
-      },
-      "2": {
-        "light": "#eff2ff",
-        "dark": "#1a192e"
-      },
-      "3": {
-        "light": "#e5eaff",
-        "dark": "#22203d"
-      },
-      "4": {
-        "light": "#dbe1ff",
-        "dark": "#2b284e"
-      },
-      "5": {
-        "light": "#d0d7ff",
-        "dark": "#343060"
-      },
-      "6": {
-        "light": "#c4ccff",
-        "dark": "#413c77"
-      },
-      "7": {
-        "light": "#b6beff",
-        "dark": "#514a92"
-      },
-      "8": {
-        "light": "#a3aaff",
-        "dark": "#6961b7"
-      },
-      "9": {
-        "light": "#4e46c6",
-        "dark": "#918aec"
-      },
-      "10": {
-        "light": "#4439b8",
-        "dark": "#9e98fb"
-      },
-      "11": {
-        "light": "#392aa4",
-        "dark": "#b0abff"
-      },
-      "12": {
-        "light": "#1f185e",
-        "dark": "#cfceff"
-      },
-      "contrast": {
-        "light": "#ffffff",
-        "dark": "#16143c"
-      }
-    },
-    "purple": {
-      "1": {
-        "light": "#fdf7ff",
-        "dark": "#18101d"
-      },
-      "2": {
-        "light": "#faf0ff",
-        "dark": "#221729"
-      },
-      "3": {
-        "light": "#f6e5ff",
-        "dark": "#2c1d37"
-      },
-      "4": {
-        "light": "#f1dbff",
-        "dark": "#382445"
-      },
-      "5": {
-        "light": "#ecd0ff",
-        "dark": "#452b55"
-      },
-      "6": {
-        "light": "#e6c4ff",
-        "dark": "#553669"
-      },
-      "7": {
-        "light": "#deb4fd",
-        "dark": "#694381"
-      },
-      "8": {
-        "light": "#d29ef7",
-        "dark": "#8558a3"
-      },
-      "9": {
-        "light": "#7b3fa0",
-        "dark": "#c591e8"
-      },
-      "10": {
-        "light": "#6f3393",
-        "dark": "#d49ff7"
-      },
-      "11": {
-        "light": "#602681",
-        "dark": "#e3b4ff"
-      },
-      "12": {
-        "light": "#361449",
-        "dark": "#f7daff"
-      },
-      "contrast": {
-        "light": "#ffffff",
-        "dark": "#230b33"
-      }
-    },
-    "pink": {
-      "1": {
-        "light": "#fff6fa",
-        "dark": "#1c0f15"
-      },
-      "2": {
-        "light": "#ffedf5",
-        "dark": "#28151e"
-      },
-      "3": {
-        "light": "#ffe2ee",
-        "dark": "#351b27"
-      },
-      "4": {
-        "light": "#ffd6e6",
-        "dark": "#432131"
-      },
-      "5": {
-        "light": "#ffc9df",
-        "dark": "#52283c"
-      },
-      "6": {
-        "light": "#ffbbd5",
-        "dark": "#65324a"
-      },
-      "7": {
-        "light": "#ffaaca",
-        "dark": "#7d3e5b"
-      },
-      "8": {
-        "light": "#fa91ba",
-        "dark": "#9e5275"
-      },
-      "9": {
-        "light": "#a63368",
-        "dark": "#ee94bc"
-      },
-      "10": {
-        "light": "#99255d",
-        "dark": "#fea2ca"
-      },
-      "11": {
-        "light": "#86174f",
-        "dark": "#ffb7db"
-      },
-      "12": {
-        "light": "#4c0d2b",
-        "dark": "#ffe1f6"
-      },
-      "contrast": {
-        "light": "#ffffff",
-        "dark": "#35081c"
-      }
-    },
-    "gray": {
-      "1": {
-        "light": "#f7f6f2",
-        "dark": "#1b1a17"
-      },
-      "2": {
-        "light": "#f2f1ec",
-        "dark": "#201e1a"
-      },
-      "3": {
-        "light": "#edece6",
-        "dark": "#25231e"
-      },
-      "4": {
-        "light": "#e9e7e1",
-        "dark": "#2a2821"
-      },
-      "5": {
-        "light": "#e4e2db",
-        "dark": "#2f2c25"
-      },
-      "6": {
-        "light": "#e0ddd5",
-        "dark": "#343128"
-      },
-      "7": {
-        "light": "#c9c5ba",
-        "dark": "#4c483d"
-      },
-      "8": {
-        "light": "#ada89d",
-        "dark": "#625e53"
-      },
-      "9": {
-        "light": "#777368",
-        "dark": "#79756a"
-      },
-      "10": {
-        "light": "#6a665b",
-        "dark": "#8f8b80"
-      },
-      "11": {
-        "light": "#5d5a50",
-        "dark": "#a6a296"
-      },
-      "12": {
-        "light": "#25231d",
-        "dark": "#edebe3"
-      },
-      "contrast": {
-        "light": "#ffffff",
-        "dark": "#ffffff"
-      }
-    }
-  },
+  "$comment": "Every colour the system paints with, one block per theme. A HUE is a full scale — twelve numbered steps plus the `contrast` that sits on step 9 — and a step number means the same job on every hue: 1-2 page backgrounds, 3-5 component fills, 6-8 borders, 9-10 solid fills, 11-12 text. `role` sits outside the themes because it does not vary by one: it maps a JOB (danger) to the hue that currently does it (red). `surface` and `literal` are the values no step can express — a surface is defined by what it sits above, a literal by recognition.",
   "role": {
     "primary": "indigo",
     "secondary": "gray",
@@ -604,28 +8,360 @@
     "danger": "red",
     "neutral": "gray"
   },
-  "surface": {
-    "raised": {
-      "light": "#ffffff",
-      "dark": "#252320"
+  "light": {
+    "hue": {
+      "red": {
+        "1": "#fff6f4",
+        "2": "#ffede9",
+        "3": "#ffe2db",
+        "4": "#ffd6cd",
+        "5": "#ffc9bf",
+        "6": "#ffbbaf",
+        "7": "#ffa99b",
+        "8": "#ff9080",
+        "9": "#c0382e",
+        "10": "#b22922",
+        "11": "#9e1a15",
+        "12": "#590e0a",
+        "contrast": "#ffffff"
+      },
+      "orange": {
+        "1": "#fff8f3",
+        "2": "#fff0e7",
+        "3": "#ffe7d9",
+        "4": "#ffdcca",
+        "5": "#ffd2ba",
+        "6": "#fdc6a9",
+        "7": "#f9b794",
+        "8": "#f1a177",
+        "9": "#a44e14",
+        "10": "#974200",
+        "11": "#853500",
+        "12": "#4b1c00",
+        "contrast": "#ffffff"
+      },
+      "yellow": {
+        "1": "#fdfaf2",
+        "2": "#f9f4e7",
+        "3": "#f5ecd8",
+        "4": "#f1e4c8",
+        "5": "#ecdcb8",
+        "6": "#e5d2a7",
+        "7": "#ddc591",
+        "8": "#d1b473",
+        "9": "#8a6a10",
+        "10": "#7e5e00",
+        "11": "#6e5100",
+        "12": "#3d2c00",
+        "contrast": "#ffffff"
+      },
+      "green": {
+        "1": "#f6fcf7",
+        "2": "#ecf8ee",
+        "3": "#e1f2e4",
+        "4": "#d4edd9",
+        "5": "#c8e6ce",
+        "6": "#b9dfc1",
+        "7": "#a8d5b1",
+        "8": "#8fc79c",
+        "9": "#2e7042",
+        "10": "#216437",
+        "11": "#13562b",
+        "12": "#0a3017",
+        "contrast": "#ffffff"
+      },
+      "teal": {
+        "1": "#f5fcfa",
+        "2": "#ebf7f4",
+        "3": "#def2ec",
+        "4": "#d1ece4",
+        "5": "#c3e6dc",
+        "6": "#b4ded2",
+        "7": "#a1d5c6",
+        "8": "#86c7b5",
+        "9": "#176d5c",
+        "10": "#006151",
+        "11": "#005344",
+        "12": "#002e25",
+        "contrast": "#ffffff"
+      },
+      "cyan": {
+        "1": "#f4fcfe",
+        "2": "#ebf7fb",
+        "3": "#def1f7",
+        "4": "#d0eaf4",
+        "5": "#c2e4ef",
+        "6": "#b3dbe9",
+        "7": "#a0d1e2",
+        "8": "#84c2d7",
+        "9": "#14687e",
+        "10": "#005c72",
+        "11": "#004e62",
+        "12": "#002c37",
+        "contrast": "#ffffff"
+      },
+      "blue": {
+        "1": "#f5fbff",
+        "2": "#ebf5ff",
+        "3": "#deeeff",
+        "4": "#d1e7ff",
+        "5": "#c3dfff",
+        "6": "#b5d5ff",
+        "7": "#a2caff",
+        "8": "#89b8ff",
+        "9": "#2a5dae",
+        "10": "#1e51a1",
+        "11": "#12438e",
+        "12": "#092551",
+        "contrast": "#ffffff"
+      },
+      "indigo": {
+        "1": "#f7f9ff",
+        "2": "#eff2ff",
+        "3": "#e5eaff",
+        "4": "#dbe1ff",
+        "5": "#d0d7ff",
+        "6": "#c4ccff",
+        "7": "#b6beff",
+        "8": "#a3aaff",
+        "9": "#4e46c6",
+        "10": "#4439b8",
+        "11": "#392aa4",
+        "12": "#1f185e",
+        "contrast": "#ffffff"
+      },
+      "purple": {
+        "1": "#fdf7ff",
+        "2": "#faf0ff",
+        "3": "#f6e5ff",
+        "4": "#f1dbff",
+        "5": "#ecd0ff",
+        "6": "#e6c4ff",
+        "7": "#deb4fd",
+        "8": "#d29ef7",
+        "9": "#7b3fa0",
+        "10": "#6f3393",
+        "11": "#602681",
+        "12": "#361449",
+        "contrast": "#ffffff"
+      },
+      "pink": {
+        "1": "#fff6fa",
+        "2": "#ffedf5",
+        "3": "#ffe2ee",
+        "4": "#ffd6e6",
+        "5": "#ffc9df",
+        "6": "#ffbbd5",
+        "7": "#ffaaca",
+        "8": "#fa91ba",
+        "9": "#a63368",
+        "10": "#99255d",
+        "11": "#86174f",
+        "12": "#4c0d2b",
+        "contrast": "#ffffff"
+      },
+      "gray": {
+        "1": "#f7f6f2",
+        "2": "#f2f1ec",
+        "3": "#edece6",
+        "4": "#e9e7e1",
+        "5": "#e4e2db",
+        "6": "#e0ddd5",
+        "7": "#c9c5ba",
+        "8": "#ada89d",
+        "9": "#777368",
+        "10": "#6a665b",
+        "11": "#5d5a50",
+        "12": "#25231d",
+        "contrast": "#ffffff"
+      }
     },
-    "inset": {
-      "light": "#eceae3",
-      "dark": "#141310"
+    "surface": {
+      "raised": "#ffffff",
+      "inset": "#eceae3"
+    },
+    "literal": {
+      "highlight": "#f1dfa0",
+      "black": "#000000",
+      "white": "#ffffff"
     }
   },
-  "literal": {
-    "highlight": {
-      "light": "#f1dfa0",
-      "dark": "#4a4020"
+  "dark": {
+    "hue": {
+      "red": {
+        "1": "#200e0c",
+        "2": "#2d1411",
+        "3": "#3c1815",
+        "4": "#4c1d19",
+        "5": "#5d221d",
+        "6": "#732b25",
+        "7": "#8d352e",
+        "8": "#b1483f",
+        "9": "#e26a5f",
+        "10": "#f2786c",
+        "11": "#fe8f83",
+        "12": "#ffbbb2",
+        "contrast": "#2b0f0b"
+      },
+      "orange": {
+        "1": "#1c110a",
+        "2": "#28180d",
+        "3": "#351f0e",
+        "4": "#432610",
+        "5": "#522e11",
+        "6": "#653916",
+        "7": "#7c471c",
+        "8": "#9d5d2a",
+        "9": "#efa36c",
+        "10": "#feb17a",
+        "11": "#ffc594",
+        "12": "#ffeacc",
+        "contrast": "#371b06"
+      },
+      "yellow": {
+        "1": "#181307",
+        "2": "#221b08",
+        "3": "#2d2406",
+        "4": "#382c04",
+        "5": "#453600",
+        "6": "#564300",
+        "7": "#695300",
+        "8": "#866b00",
+        "9": "#dfc060",
+        "10": "#eecf6f",
+        "11": "#f8dc88",
+        "12": "#fff5c3",
+        "contrast": "#33290a"
+      },
+      "green": {
+        "1": "#0c170f",
+        "2": "#112015",
+        "3": "#142a1b",
+        "4": "#173522",
+        "5": "#1b4129",
+        "6": "#225133",
+        "7": "#2a633f",
+        "8": "#3b7f53",
+        "9": "#7fcb97",
+        "10": "#8ddaa5",
+        "11": "#a5eaba",
+        "12": "#d8ffe3",
+        "contrast": "#122c1a"
+      },
+      "teal": {
+        "1": "#0a1714",
+        "2": "#0d201c",
+        "3": "#0e2a24",
+        "4": "#0f352d",
+        "5": "#0f4137",
+        "6": "#135145",
+        "7": "#176355",
+        "8": "#267f6e",
+        "9": "#6cc9b4",
+        "10": "#7bd8c2",
+        "11": "#96e8d4",
+        "12": "#cefff2",
+        "contrast": "#102d26"
+      },
+      "cyan": {
+        "1": "#0b1619",
+        "2": "#0e1f24",
+        "3": "#10282f",
+        "4": "#12333c",
+        "5": "#143e49",
+        "6": "#1a4d5b",
+        "7": "#1f5f70",
+        "8": "#2f798e",
+        "9": "#74c4dc",
+        "10": "#82d3eb",
+        "11": "#9ce3fa",
+        "12": "#d2fdff",
+        "contrast": "#0c2831"
+      },
+      "blue": {
+        "1": "#0e141c",
+        "2": "#141c29",
+        "3": "#192536",
+        "4": "#1f2e45",
+        "5": "#253955",
+        "6": "#2e4668",
+        "7": "#3a5780",
+        "8": "#4d70a2",
+        "9": "#8bb4ef",
+        "10": "#99c2fe",
+        "11": "#aed4ff",
+        "12": "#daf1ff",
+        "contrast": "#071a36"
+      },
+      "indigo": {
+        "1": "#121220",
+        "2": "#1a192e",
+        "3": "#22203d",
+        "4": "#2b284e",
+        "5": "#343060",
+        "6": "#413c77",
+        "7": "#514a92",
+        "8": "#6961b7",
+        "9": "#918aec",
+        "10": "#9e98fb",
+        "11": "#b0abff",
+        "12": "#cfceff",
+        "contrast": "#16143c"
+      },
+      "purple": {
+        "1": "#18101d",
+        "2": "#221729",
+        "3": "#2c1d37",
+        "4": "#382445",
+        "5": "#452b55",
+        "6": "#553669",
+        "7": "#694381",
+        "8": "#8558a3",
+        "9": "#c591e8",
+        "10": "#d49ff7",
+        "11": "#e3b4ff",
+        "12": "#f7daff",
+        "contrast": "#230b33"
+      },
+      "pink": {
+        "1": "#1c0f15",
+        "2": "#28151e",
+        "3": "#351b27",
+        "4": "#432131",
+        "5": "#52283c",
+        "6": "#65324a",
+        "7": "#7d3e5b",
+        "8": "#9e5275",
+        "9": "#ee94bc",
+        "10": "#fea2ca",
+        "11": "#ffb7db",
+        "12": "#ffe1f6",
+        "contrast": "#35081c"
+      },
+      "gray": {
+        "1": "#1b1a17",
+        "2": "#201e1a",
+        "3": "#25231e",
+        "4": "#2a2821",
+        "5": "#2f2c25",
+        "6": "#343128",
+        "7": "#4c483d",
+        "8": "#625e53",
+        "9": "#79756a",
+        "10": "#8f8b80",
+        "11": "#a6a296",
+        "12": "#edebe3",
+        "contrast": "#ffffff"
+      }
     },
-    "black": {
-      "light": "#000000",
-      "dark": "#000000"
+    "surface": {
+      "raised": "#252320",
+      "inset": "#141310"
     },
-    "white": {
-      "light": "#ffffff",
-      "dark": "#ffffff"
+    "literal": {
+      "highlight": "#4a4020",
+      "black": "#000000",
+      "white": "#ffffff"
     }
   }
 }

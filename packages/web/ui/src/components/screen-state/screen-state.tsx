@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '../../style/cn';
 import { Icon, type IconName } from '../icon';
-import { TONE_RAMP, type Tone } from '../../style/tones';
+import { TONE_HUE, type Tone } from '../../style/tones';
 
 // The shared shell for a screen's error/empty/not-found state: an optional
 // tone-colored icon disc, a title, optional body copy, and an optional
@@ -29,7 +29,7 @@ export function ScreenState({
           className={cn(
             'flex size-7.5 items-center justify-center rounded-full',
             // The subtle pair: 3 fills, 11 texts.
-            `bg-${TONE_RAMP[tone]}-3 text-${TONE_RAMP[tone]}-11`,
+            `bg-${TONE_HUE[tone]}-3 text-${TONE_HUE[tone]}-11`,
           )}
         >
           <Icon name={icon} size="md" />

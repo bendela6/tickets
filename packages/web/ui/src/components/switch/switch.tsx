@@ -1,9 +1,9 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
-import { axis, cn, HUE_TONES, over, TONE_RAMP, variants, type Tone } from '../../style';
+import { axis, cn, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
 import { toggleRowClass, type ToggleSize } from '../toggle';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
-const SCALE = axis('scale', HUE_TONES, 'indigo');
+const SCALE = axis('scale', HUES, 'indigo');
 
 type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> & {
   label: string;
@@ -68,7 +68,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   { label, size = 'md', tone = 'primary', className, ...rest },
   ref,
 ) {
-  const scale = TONE_RAMP[tone];
+  const scale = TONE_HUE[tone];
   return (
     <label className={toggleRowClass({ size, className })}>
       <span className="relative inline-flex">

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import borderCss from '../../styles/generated/border.css?raw';
-import { RAMPS, TEXT_SIZES, TONE_NAMES, TONE_RAMP, HUE_TONES, ROLE_TONES } from '../generated';
+import { PALETTE, TEXT_SIZES, TONE_NAMES, TONE_HUE, HUES, ROLES } from '../generated';
 import { liveTokens, parseCustomProperties } from './spec';
 
 // Nothing here restates a token VALUE. A test listing the twelve type sizes or
@@ -54,26 +54,30 @@ describe('the generated vocabulary', () => {
   });
 
   it('splits the tone names in two with nothing lost or counted twice', () => {
-    expect([...ROLE_TONES, ...HUE_TONES]).toEqual([...TONE_NAMES]);
+    expect([...ROLES, ...HUES]).toEqual([...TONE_NAMES]);
   });
 
-  it('resolves every tone onto a ramp that exists', () => {
-    // A tone pointing outside HUE_TONES would build `bg-crimson-9` — a class
+  it('resolves every tone onto a hue that exists', () => {
+    // A tone pointing outside HUES would build `bg-crimson-9` — a class
     // with no colour behind it.
-    for (const tone of TONE_NAMES) expect(HUE_TONES).toContain(TONE_RAMP[tone]);
+    for (const tone of TONE_NAMES) expect(HUES).toContain(TONE_HUE[tone]);
   });
 
   it('maps every hue onto itself', () => {
-    // A hue IS the ramp, so the mapping has to be the identity there — a hue
+    // A hue IS the scale, so the mapping has to be the identity there — a hue
     // that redirected would make `tone="red"` paint something other than red.
-    for (const hue of HUE_TONES) expect(TONE_RAMP[hue]).toBe(hue);
+    for (const hue of HUES) expect(TONE_HUE[hue]).toBe(hue);
   });
 
-  it('gives every ramp the same rungs', () => {
-    // A ramp missing a rung makes `bg-teal-3` a class with no colour.
-    const expected = Object.keys(Object.values(RAMPS)[0]!);
-    for (const [name, ramp] of Object.entries(RAMPS)) {
-      expect(`${name}: ${Object.keys(ramp).join(',')}`).toBe(`${name}: ${expected.join(',')}`);
+  it('gives every hue the same steps, in both themes', () => {
+    // A hue missing a step makes `bg-teal-3` a class with no colour. Theme-at-root
+    // puts the two blocks ~300 lines apart, so this is the only thing that sees
+    // a step added to one and not the other.
+    const expected = Object.keys(Object.values(PALETTE.light.hue)[0]!).join(',');
+    for (const theme of ['light', 'dark'] as const) {
+      for (const [name, steps] of Object.entries(PALETTE[theme].hue)) {
+        expect(`${theme}.${name}: ${Object.keys(steps).join(',')}`).toBe(`${theme}.${name}: ${expected}`);
+      }
     }
   });
 });

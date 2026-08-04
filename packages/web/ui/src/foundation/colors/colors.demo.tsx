@@ -1,11 +1,9 @@
 import { type ReactNode } from 'react';
 import { useTheme } from '../view';
 import {
-  HUES,
   STEPS,
   STEP_JOBS,
   SEMANTIC_SCALES,
-  SURFACES,
   checkPairings,
   colorOf,
   type Pairing,
@@ -13,6 +11,7 @@ import {
   type Step,
   type Theme,
 } from './colors';
+import { HUES, PALETTE } from '../../generated';
 
 export const meta = {
   title: 'Colors',
@@ -227,8 +226,10 @@ function StepsInUse() {
 /** Roles, as a list — each with the full ramp it resolves to. */
 function Roles() {
   const [theme, ref] = useTheme();
-  const surfaces = Object.entries(SURFACES).filter(
-    (entry): entry is [string, Record<Theme, string>] => entry[1] != null,
+  // PALETTE is keyed by theme now, so re-pivot to name -> both themes, which is
+  // what a per-surface row wants.
+  const surfaces = Object.keys(PALETTE.light.surface).map(
+    (name) => [name, { light: PALETTE.light.surface[name]!, dark: PALETTE.dark.surface[name]! }] as const,
   );
   const name = 'flex w-40 shrink-0 items-baseline gap-1.5 font-mono text-12/17';
   return (

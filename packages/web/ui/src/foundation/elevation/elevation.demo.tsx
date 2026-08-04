@@ -1,8 +1,12 @@
 import { SHADOWS } from '../../generated';
 import { Sheet, SpecHeader, SpecRow, useTheme } from '../view';
 
-// The generated module keys by rung; the spec rows want `shadow-xs` as a name.
-const ROWS = Object.entries(SHADOWS).map(([rung, v]) => ({ name: `shadow-${rung}`, ...v }));
+// SHADOWS is keyed by theme; a row wants one rung with both themes on it.
+const ROWS = Object.keys(SHADOWS.light).map((rung) => ({
+  name: `shadow-${rung}`,
+  light: SHADOWS.light[rung]!,
+  dark: SHADOWS.dark[rung]!,
+}));
 
 export const meta = {
   title: 'Elevation',

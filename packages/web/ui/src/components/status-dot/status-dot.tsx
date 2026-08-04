@@ -1,4 +1,4 @@
-import { axis, cn, HUE_TONES, over, TONE_RAMP, variants, type Tone } from '../../style';
+import { axis, cn, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
 
 // Something running right now has to be findable with peripheral vision, and something
 // stopped has to recede without disappearing. Colour alone cannot carry that, so the
@@ -8,7 +8,7 @@ import { axis, cn, HUE_TONES, over, TONE_RAMP, variants, type Tone } from '../..
 // Deliberately only two states. Anything richer — blocked, failed, queued — is a
 // caller's vocabulary, not this library's, and belongs in a Pill next to the dot.
 
-const SCALE = axis('scale', HUE_TONES, 'green');
+const SCALE = axis('scale', HUES, 'green');
 
 export type StatusDotState = 'active' | 'resting';
 
@@ -52,7 +52,7 @@ export function StatusDot({
         className={cn(
           dotClass({
             fill: active ? 'solid' : 'hollow',
-            scale: TONE_RAMP[active ? tone : 'neutral'],
+            scale: TONE_HUE[active ? tone : 'neutral'],
           }),
           active && 'motion-safe:animate-pulse',
         )}
