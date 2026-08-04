@@ -129,10 +129,12 @@ here should need to leak back into those skills.
    are now mostly redundant but harmless. `styles/index.css` adds a small base
    block AFTER preflight for the handful it does not set: `cursor: pointer` on
    buttons, `background-image: none`, and `:disabled { cursor: default }`.
-2. **Legacy `apps/web/src/styles/globals.css` is unlayered.** Its bare
-   element selectors (e.g. `button { font: inherit }`) beat every Tailwind
-   utility class by specificity/order, including on already-redesigned
-   screens, until that screen's legacy CSS is deleted.
+2. **Unlayered CSS outranks every layered rule, whatever the specificity.**
+   The legacy `globals.css` that used to bite here is gone, but the hazard is
+   structural, not historical: any third-party stylesheet imported without
+   `layer(...)` beats all of Tailwind. `styles/index.css` handles the one live
+   case by declaring `@layer xterm, …` first and importing `xterm.css` into that
+   bottom layer. A new third-party stylesheet must be wrapped the same way.
 3. **`twMerge` drops a color class when it sits next to a custom text-size
    token** (patched in `cn.ts`, but watch for regressions). If a color class
    silently vanishes from the rendered DOM, inspect the `cn()`/`twMerge`
