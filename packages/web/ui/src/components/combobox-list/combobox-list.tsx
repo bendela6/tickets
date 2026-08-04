@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Hue } from '../../style/tones';
 import { cn } from '../../style/cn';
 import { Pill } from '../pill';
@@ -17,6 +17,13 @@ type ComboboxListProps = {
   onPick: (value: string) => void;
   /** Keep focus in the search box after a pick (multi-select). */
   keepOpen?: boolean;
+  /**
+   * Whether to draw the search box. Default true. Turn it off for a short,
+   * fixed set — a search field over three options is noise, and it costs a
+   * keystroke to reach the list. The keyboard model does not change: when the
+   * box is gone the list itself takes focus and the same arrow/Enter handling.
+   */
+  searchable?: boolean;
   searchPlaceholder?: string;
   /** Group header for an option, e.g. status kind. Options keep input order within a group. */
   groupOf?: (option: ComboOption) => string;
@@ -29,13 +36,15 @@ type ComboboxListProps = {
   emptyLabel?: string;
 };
 
-// The searchable, keyboard-navigable listbox shared by Combobox, MultiCombobox
-// and StatusSelect. Selection semantics live in the caller via isSelected/onPick.
+// The keyboard-navigable listbox shared by Combobox, MultiCombobox and
+// StatusSelect. Selection semantics live in the caller via isSelected/onPick.
+// Searching is on by default and can be turned off for a short fixed set.
 export function ComboboxList({
   options,
   isSelected,
   onPick,
   keepOpen = false,
+  searchable = true,
   searchPlaceholder = 'Search…',
   groupOf,
   groups,
@@ -48,6 +57,19 @@ export function ComboboxList({
   const [activeIndex, setActiveIndex] = useState(0);
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  // The search input takes focus on mount via `autoFocus`; with no input there
+  // is nothing to receive it, and the popover would open with focus left on the
+  // trigger — so arrow keys would scroll the page instead of moving the
+  // selection. Focus the list itself instead. Done in an effect rather than
+  // with `autoFocus` on the <ul>, because that attribute is only honoured for
+  // form controls in jsdom, which would make this untestable.
+  useEffect(() => {
+    if (!searchable) {
+      listRef.current?.focus();
+    }
+  }, [searchable]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -93,32 +115,46 @@ export function ComboboxList({
 
   return (
     <div className="flex max-h-288 w-256 flex-col">
-      <div className="flex items-center gap-8 border-b-1 border-gray-6 px-12 py-9">
-        <span aria-hidden className="font-sans text-12/17 text-gray-9">
-          ⌕
-        </span>
-        <input
-          ref={inputRef}
-          role="combobox"
-          aria-expanded
-          aria-controls={listId}
-          aria-activedescendant={activeId}
-          autoFocus
-          value={query}
-          placeholder={searchPlaceholder}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setActiveIndex(0);
-          }}
-          onKeyDown={onKeyDown}
-          className={cn(
-            'min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-13/19 text-gray-12',
-            'placeholder:text-gray-9 focus:outline-none focus:ring-0',
-          )}
-        />
-      </div>
+      {searchable ? (
+        <div className="flex items-center gap-8 border-b-1 border-gray-6 px-12 py-9">
+          <span aria-hidden className="font-sans text-12/17 text-gray-9">
+            ⌕
+          </span>
+          <input
+            ref={inputRef}
+            role="combobox"
+            aria-expanded
+            aria-controls={listId}
+            aria-activedescendant={activeId}
+            autoFocus
+            value={query}
+            placeholder={searchPlaceholder}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setActiveIndex(0);
+            }}
+            onKeyDown={onKeyDown}
+            className={cn(
+              'min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-13/19 text-gray-12',
+              'placeholder:text-gray-9 focus:outline-none focus:ring-0',
+            )}
+          />
+        </div>
+      ) : null}
       {header ? <div className="border-b-1 border-gray-6 px-6 py-4">{header}</div> : null}
-      <ul id={listId} role="listbox" className="flex-1 overflow-y-auto p-5">
+      {/* Without the search box the list is what opens focused, so it carries
+          the arrow/Enter handling and the active-descendant pointer the input
+          would otherwise own. `tabIndex={-1}` makes it programmatically
+          focusable without adding a tab stop. */}
+      <ul
+        id={listId}
+        role="listbox"
+        ref={listRef}
+        aria-activedescendant={searchable ? undefined : activeId}
+        tabIndex={searchable ? undefined : -1}
+        onKeyDown={searchable ? undefined : onKeyDown}
+        className="flex-1 overflow-y-auto p-5 focus:outline-none"
+      >
         {filtered.length === 0 ? (
           <li className="px-8 py-12 text-center font-sans text-12/17 text-gray-9">{emptyLabel}</li>
         ) : null}
