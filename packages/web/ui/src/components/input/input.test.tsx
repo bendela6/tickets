@@ -41,3 +41,26 @@ test('input associates label and error', () => {
   expect(input).toHaveAccessibleDescription('Key must be kebab-case');
   expect(input).toHaveAttribute('aria-invalid', 'true');
 });
+
+test('an adorned input keeps the field chrome on the wrapper, not the inner box', () => {
+  // The border has to draw around the adornment too, so it moves outward and
+  // the inner input goes bare. Focus still lands on the input, which is why
+  // the ring hangs off focus-within on the wrapper.
+  const { container } = render(<Input aria-label="Filter" trailing={<kbd>⌘K</kbd>} />);
+  const input = screen.getByLabelText('Filter');
+  const wrapper = container.firstElementChild!;
+
+  expect(input).not.toHaveClass('border-1');
+  expect(wrapper.className).toContain('border-1');
+  expect(wrapper.className).toContain('focus-within:');
+  expect(wrapper).toContainElement(screen.getByText('⌘K'));
+});
+
+test('without an adornment the input is unwrapped, exactly as before', () => {
+  // Every existing call site takes this path, so the chrome must stay on the
+  // input itself and `className` must still land there.
+  const { container } = render(<Input aria-label="Plain" className="w-200" />);
+  const input = screen.getByLabelText('Plain');
+  expect(container.firstElementChild).toBe(input);
+  expect(input).toHaveClass('border-1', 'w-200');
+});
