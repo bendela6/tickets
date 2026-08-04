@@ -1,10 +1,12 @@
-import { act, cleanup, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import type { DiagramActions } from '../../state/diagram-provider';
 import { twoZoneRaw } from '../../test/models';
 import { renderDiagram } from '../../test/render';
+import { BADGE_TONE } from './badge-tone';
 import { DetailPanel } from './detail-panel';
+import { EmptyState } from './empty-state';
 
 afterEach(cleanup);
 
@@ -42,6 +44,15 @@ describe('DetailPanel', () => {
     expect(screen.getByText('.manager_id')).toBeInTheDocument();
   });
 
+  it('keeps the entity badge at font-600 — Pill\'s own base is font-500, so the weight has to be restored explicitly', async () => {
+    // tailwind-merge treats `font-500`/`font-600` as one group: passing
+    // `font-mono uppercase` in className does NOT restore 600 on top of
+    // Pill's font-500 base. Without an explicit font-600 the badge silently
+    // regresses to 500.
+    await renderPanel((a) => a.selectEntity('users'));
+    expect(screen.getByText('Entity').className).toContain('font-600');
+  });
+
   it('lists member tables for a selected group', async () => {
     const { container } = await renderPanel((a) => a.selectGroup('z2'));
     expect(screen.getByText('Group')).toBeInTheDocument();
@@ -65,5 +76,35 @@ describe('DetailPanel', () => {
     expect(screen.getByText('.id')).toBeInTheDocument();
     expect(screen.getByText('orders')).toBeInTheDocument();
     expect(screen.getByText('.users_id')).toBeInTheDocument();
+  });
+});
+
+describe('panel badges', () => {
+  it('maps each eer badge tone to a library hue', () => {
+    expect(BADGE_TONE).toEqual({
+      entity: 'blue',
+      group: 'indigo',
+      subgroup: 'green',
+      edge: 'yellow',
+    });
+  });
+
+  it('renders the overview badge as a tinted Pill at the 9px rung', () => {
+    // The colours are what `tint` was added for: hue-9 at 15% behind hue-11 ink.
+    // A `subtle` Pill would fill from rung 3 instead and quietly restyle it.
+    render(<EmptyState model={null} />);
+    const badge = screen.getByText('Overview');
+    expect(badge.className).toContain('bg-blue-9/15');
+    expect(badge.className).toContain('text-blue-11');
+    expect(badge.className).toContain('text-9/11');
+  });
+
+  it('renders the control hints as outline Pills at 11px', () => {
+    render(<EmptyState model={null} />);
+    const hint = screen.getByText('middle-drag');
+    expect(hint.className).toContain('text-11/13');
+    expect(hint.className).toContain('border-2');
+    // The <kbd> element is gone — a deliberate, recorded trade.
+    expect(hint.tagName).toBe('SPAN');
   });
 });

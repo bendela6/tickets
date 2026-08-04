@@ -74,7 +74,7 @@ function Toggle({
   onChange: (next: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 font-sans text-13/19 text-gray-11">
+    <label className="flex cursor-pointer items-center gap-8 font-sans text-13/19 text-gray-11">
       <input
         type="checkbox"
         checked={checked}
@@ -83,14 +83,14 @@ function Toggle({
       />
       <span
         className={cn(
-          'relative inline-block h-4.5 w-8 rounded-full',
+          'relative inline-block h-18 w-32 rounded-full',
           checked ? 'bg-indigo-9' : 'bg-gray-7',
         )}
       >
         <span
           className={cn(
-            'absolute top-0.5 h-3.5 w-3.5 rounded-full bg-surface-raised transition-all',
-            checked ? 'right-0.5' : 'left-0.5',
+            'absolute top-2 h-14 w-14 rounded-full bg-surface-raised transition-all',
+            checked ? 'right-2' : 'left-2',
           )}
         />
       </span>
@@ -212,8 +212,8 @@ export function ComponentPage({
   };
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b-1 border-gray-6 pb-2">
+    <div className="flex flex-col gap-20">
+      <div className="flex flex-wrap items-center justify-between gap-x-24 gap-y-8 border-b-1 border-gray-6 pb-8">
         <Tabs
           variant="underline"
           label={`${demo.meta.title} views`}
@@ -223,7 +223,7 @@ export function ComponentPage({
           onChange={(next) => setTab(next as TabKey)}
         />
         {tab === 'preview' && playground && (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-16">
             <Toggle label="Split themes" checked={splitThemes} onChange={setSplitThemes} />
             {/* Matrix mode toggle - only visible if ≥2 select controls */}
             {selectKeys.length >= 2 && (
@@ -233,7 +233,7 @@ export function ComponentPage({
               type="button"
               aria-expanded={!controlsCollapsed}
               onClick={() => setCollapsed(!controlsCollapsed)}
-              className="inline-flex h-6.5 items-center gap-1.5 rounded-md border-1 border-gray-7 bg-surface-raised px-2 font-sans text-11/13 tracking-wider font-500 text-gray-11 hover:text-gray-12"
+              className="inline-flex h-26 items-center gap-6 rounded-md border-1 border-gray-7 bg-surface-raised px-8 font-sans text-11/13 tracking-wider font-500 text-gray-11 hover:text-gray-12"
             >
               <Icon name={controlsCollapsed ? 'chevron-left' : 'chevron-right'} size="sm" />
               {controlsCollapsed ? 'Show controls' : 'Hide controls'}
@@ -259,7 +259,7 @@ export function ComponentPage({
                   below a states list that can run to seventeen tone swatches —
                   changing a control used to scroll the thing you were changing
                   off the screen. */}
-              <div className="flex flex-col gap-6 pr-6">
+              <div className="flex flex-col gap-24 pr-24">
                 <PlaygroundCard
                   ref={previewRef}
                   component={demo.meta.title.replace(/\s+/g, '')}
@@ -302,12 +302,12 @@ export function ComponentPage({
                 if (collapsed !== controlsCollapsed) setCollapsed(collapsed);
               }}
             >
-              <div className={cn('flex h-full flex-col pl-6', controlsCollapsed && 'hidden')}>
+              <div className={cn('flex h-full flex-col pl-24', controlsCollapsed && 'hidden')}>
                 {/* Above the controls and separated from them, because this one
                     is not a prop: it changes what the states show, and nothing
                     about it reaches the generated code below the playground. */}
                 {authored && (
-                  <div className="flex flex-col gap-2 border-b-1 border-gray-6 pb-3">
+                  <div className="flex flex-col gap-8 border-b-1 border-gray-6 pb-12">
                     <span className="font-mono text-11/13 uppercase tracking-widest text-gray-9">
                       TONES
                     </span>
@@ -325,7 +325,7 @@ export function ComponentPage({
                     />
                   </div>
                 )}
-                <div className="flex items-center justify-between pb-2.5 pt-3">
+                <div className="flex items-center justify-between pb-10 pt-12">
                   <span className="font-mono text-11/13 tracking-wider uppercase tracking-widest text-gray-9">
                     CONTROLS
                   </span>
@@ -342,7 +342,7 @@ export function ComponentPage({
                   values={values}
                   onChange={(key, value) => setValues((v) => ({ ...v, [key]: value }))}
                 />
-                <p className="mt-3 font-sans text-11/13 tracking-wider text-gray-9">
+                <p className="mt-12 font-sans text-11/13 tracking-wider text-gray-9">
                   Unset props fall back to the component default and are omitted from generated
                   code.
                 </p>

@@ -22,7 +22,7 @@ export function ModePanel({
   schemaDatabase?: string;
 }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col px-3 pb-3 pt-3.5">
+    <div className="flex min-h-0 flex-1 flex-col px-12 pb-12 pt-14">
       {mode === 'terminals' ? (
         <TerminalsPanel onNavigateSession={onNavigateSession} onNavigate={onNavigate} />
       ) : mode === 'agents' ? (

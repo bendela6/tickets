@@ -1,8 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { DiagramUi } from '../../state/diagram-reducer';
-import { useDiagramUi } from '../../state/diagram-context';
 import { DiagramProvider } from '../../state/diagram-provider';
 import { twoZoneRaw } from '../../test/models';
 import { renderDiagram } from '../../test/render';
@@ -10,47 +8,31 @@ import { TopBar } from './top-bar';
 
 afterEach(cleanup);
 
-// The provider is the only source of model/view/ui now, so probe its ui slice
-// to assert the chip toggles land in state (replacing the old onToggle* spies).
-let uiRef: DiagramUi | null = null;
-function UiGrab() {
-  uiRef = useDiagramUi();
-  return null;
-}
-
 describe('TopBar', () => {
-  it('falls back to the default title while no model is loaded', () => {
+  // The toolbar is now three controls and nothing else — the title, the search
+  // box, the group chips and the edge-kind chips all moved to the outline. This
+  // is the assertion that keeps them from creeping back.
+  it('carries only Lines, Fit and Rearrange', async () => {
+    await renderDiagram(<TopBar />, twoZoneRaw());
+    expect(screen.getAllByRole('button').map((b) => b.textContent)).toEqual([
+      'Lines: avoid▾',
+      'Fit',
+      'Rearrange',
+    ]);
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Zone One' })).not.toBeInTheDocument();
+  });
+
+  it('renders without a model, since the toolbar reads none', () => {
+    // The canvas mounts before the schema resolves; the toolbar has to survive
+    // that frame rather than reaching into a model that is not there yet.
     render(
       <DiagramProvider>
         <TopBar />
       </DiagramProvider>,
     );
-    expect(screen.getByRole('heading', { name: 'Database schema' })).toBeInTheDocument();
-    expect(screen.getByText('loading…')).toBeInTheDocument();
-    expect(screen.queryByText('Groups')).not.toBeInTheDocument();
-  });
-
-  it('renders the model title plus zone and kind chips', async () => {
-    await renderDiagram(<TopBar />, twoZoneRaw());
-    expect(screen.getByRole('heading', { name: 'Fixture' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Zone One' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Zone Two' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'FK constraint' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Many-to-many' })).toBeInTheDocument();
-  });
-
-  it('clicking a chip toggles the group/kind hidden state', async () => {
-    await renderDiagram(
-      <>
-        <UiGrab />
-        <TopBar />
-      </>,
-      twoZoneRaw(),
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Zone Two' }));
-    expect(uiRef!.hidden.groups.has('z2')).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Many-to-many' }));
-    expect(uiRef!.hidden.kinds.has('nm')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Lines: curved' })).toBeInTheDocument();
   });
 
   it('Fit / Rearrange dispatch their actions', async () => {
@@ -63,10 +45,14 @@ describe('TopBar', () => {
     expect(rearrange).toHaveBeenCalledTimes(1);
   });
 
-  it('the routing button reflects view.routing and cycles on click', async () => {
-    // twoZoneRaw loads with routing='avoid'; one click advances avoid → ortho.
+  it('the Lines menu offers every mode and applies the one picked', async () => {
+    // twoZoneRaw loads with routing='avoid'. A menu, not a cycle button: the
+    // point of the change is that 'ortho' is reachable in one click from
+    // 'avoid' AND that 'curved' — two steps away in the old cycle — is too.
     await renderDiagram(<TopBar />, twoZoneRaw());
     fireEvent.click(screen.getByRole('button', { name: 'Lines: avoid' }));
-    expect(screen.getByRole('button', { name: 'Lines: ortho' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Ortho/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Curved/ }));
+    expect(screen.getByRole('button', { name: 'Lines: curved' })).toBeInTheDocument();
   });
 });

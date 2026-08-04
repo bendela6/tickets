@@ -1,10 +1,10 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
-import { axis, HUE_TONES, over, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
 import { Icon, type IconSize } from '../icon';
 import { Spinner } from '../spinner';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
-const SCALE = axis('scale', HUE_TONES, 'indigo');
+const SCALE = axis('scale', HUES, 'indigo');
 
 /**
  * How much of the tone the button spends. Shares three of its four names with
@@ -42,7 +42,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 // Read each option down, not across: fill, text, border, focus, extra.
 const buttonClass = variants({
   base: [
-    'inline-flex items-center justify-center gap-2 font-sans font-500',
+    'inline-flex items-center justify-center gap-8 font-sans font-500',
     'transition-colors select-none active:translate-y-px',
     'focus-visible:outline-none',
     'disabled:pointer-events-none',
@@ -93,9 +93,9 @@ const buttonClass = variants({
     size: {
       default: 'md',
       options: {
-        sm: 'h-7 px-2.5 rounded-md text-12',
-        md: 'h-9 px-3.5 rounded-lg text-13',
-        lg: 'h-11 px-[18px] rounded-xl text-14',
+        sm: 'h-28 px-10 rounded-md text-12',
+        md: 'h-36 px-14 rounded-lg text-13',
+        lg: 'h-44 px-[18px] rounded-xl text-14',
       },
     },
   },
@@ -143,7 +143,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       aria-busy={loading || undefined}
       className={buttonClass({
         variant,
-        scale: TONE_SCALE[tone],
+        scale: TONE_HUE[tone],
         size,
         className: showDisabled ? `${DISABLED[variant]} ${className ?? ''}`.trim() : className,
       })}
@@ -151,7 +151,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     >
       {loading ? <Spinner size={SPINNER[size]} /> : null}
       {children}
-      {chevron ? <Icon name="chevron-down" size={CHEVRON[size]} className="-mr-0.5" /> : null}
+      {chevron ? <Icon name="chevron-down" size={CHEVRON[size]} className="-mr-2" /> : null}
     </button>
   );
 });

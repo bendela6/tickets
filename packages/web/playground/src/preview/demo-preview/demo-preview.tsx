@@ -21,11 +21,11 @@ export function DemoPreview({ demo }: { demo: LiveDemo }) {
     : demo.states[0]?.render(DEFAULT_VIEW);
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-10">
       <span className="font-mono text-11/13 tracking-wider uppercase tracking-widest text-gray-9">
         PREVIEW
       </span>
-      <div className="flex min-h-32 items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised p-7">
+      <div className="flex min-h-128 items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised p-28">
         {node}
       </div>
     </div>

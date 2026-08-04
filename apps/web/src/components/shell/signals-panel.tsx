@@ -4,7 +4,7 @@ import { cn, RailLabel } from '@tickets/ui';
 
 function navItemClasses(active: boolean) {
   return cn(
-    'flex h-8 items-center gap-2 rounded-lg px-2.25 font-sans text-13/19',
+    'flex h-32 items-center gap-8 rounded-lg px-9 font-sans text-13/19',
     active ? 'bg-surface-inset font-500 text-gray-12' : 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
   );
 }
@@ -18,10 +18,10 @@ export function SignalsPanel({ onNavigate }: { onNavigate?: () => void } = {}) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center justify-between px-1 pb-2">
+      <div className="flex items-center justify-between px-4 pb-8">
         <RailLabel>SIGNALS</RailLabel>
       </div>
-      <nav className="flex flex-col gap-0.5">
+      <nav className="flex flex-col gap-2">
         <Link
           to="/signals"
           onClick={onNavigate}

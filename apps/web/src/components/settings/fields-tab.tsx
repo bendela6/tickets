@@ -35,7 +35,7 @@ function slugifyKey(label: string): string {
 
 function ArchChip() {
   return (
-    <span className="inline-flex h-4.25 shrink-0 items-center rounded-sm bg-surface-inset px-1.5 font-mono text-10 font-500 text-gray-9">
+    <span className="inline-flex h-17 shrink-0 items-center rounded-sm bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
       ARCH
     </span>
   );
@@ -88,7 +88,7 @@ function PlacementRow({
   }
 
   return (
-    <div className={cn('grid items-center gap-2 border-b-1 border-gray-6 px-2.5 py-2', GRID_COLUMNS)}>
+    <div className={cn('grid items-center gap-8 border-b-1 border-gray-6 px-10 py-8', GRID_COLUMNS)}>
       <span className="truncate font-sans text-13/19 font-500 text-gray-12">{field.label}</span>
       <Pill {...typePill} label={field.type} className={cn(typePill.className, 'font-mono text-11')} />
       <Switch
@@ -125,13 +125,13 @@ function PlacementRow({
       ) : (
         <span className="font-mono text-12/17 text-gray-9">—</span>
       )}
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-2">
         <button
           type="button"
           aria-label={`Move ${field.label} up`}
           disabled={disabled || index === 0}
           onClick={() => move(-1)}
-          className="flex size-5.5 cursor-pointer items-center justify-center rounded-md font-sans text-11 text-gray-9 hover:bg-surface-inset hover:text-gray-12 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex size-22 cursor-pointer items-center justify-center rounded-md font-sans text-11 text-gray-9 hover:bg-surface-inset hover:text-gray-12 disabled:cursor-not-allowed disabled:opacity-40"
         >
           ↑
         </button>
@@ -140,7 +140,7 @@ function PlacementRow({
           aria-label={`Move ${field.label} down`}
           disabled={disabled || index === placements.length - 1}
           onClick={() => move(1)}
-          className="flex size-5.5 cursor-pointer items-center justify-center rounded-md font-sans text-11 text-gray-9 hover:bg-surface-inset hover:text-gray-12 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex size-22 cursor-pointer items-center justify-center rounded-md font-sans text-11 text-gray-9 hover:bg-surface-inset hover:text-gray-12 disabled:cursor-not-allowed disabled:opacity-40"
         >
           ↓
         </button>
@@ -154,7 +154,7 @@ function PlacementRow({
           if (userId === null) return;
           unplaceField.mutate({ actorId: userId, itemTypeId: typeId, fieldId: field.id });
         }}
-        className="flex size-5.5 cursor-pointer items-center justify-center rounded-md font-sans text-13/19 text-gray-9 hover:bg-surface-inset hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex size-22 cursor-pointer items-center justify-center rounded-md font-sans text-13/19 text-gray-9 hover:bg-surface-inset hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
       >
         ⌫
       </button>
@@ -192,10 +192,10 @@ function NewFieldComposer({
   }
 
   return (
-    <form onSubmit={submit} className="mb-4 rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5">
-      <div className="mb-3 font-sans text-13/19 font-600 text-gray-12">New field</div>
-      <div className="grid grid-cols-[1.4fr_1fr_1fr] gap-3">
-        <div className="flex flex-col gap-1.25">
+    <form onSubmit={submit} className="mb-16 rounded-xl border-1 border-gray-6 bg-surface-raised p-14">
+      <div className="mb-12 font-sans text-13/19 font-600 text-gray-12">New field</div>
+      <div className="grid grid-cols-[1.4fr_1fr_1fr] gap-12">
+        <div className="flex flex-col gap-5">
           <FieldLabel htmlFor="new-field-label">Label</FieldLabel>
           <Input
             id="new-field-label"
@@ -210,7 +210,7 @@ function NewFieldComposer({
             }}
           />
         </div>
-        <div className="flex flex-col gap-1.25">
+        <div className="flex flex-col gap-5">
           <FieldLabel htmlFor="new-field-key">Key</FieldLabel>
           <Input
             id="new-field-key"
@@ -223,7 +223,7 @@ function NewFieldComposer({
             className="font-mono text-13"
           />
         </div>
-        <div className="flex flex-col gap-1.25">
+        <div className="flex flex-col gap-5">
           <FieldLabel id="new-field-type">Type</FieldLabel>
           <Combobox
             options={FIELD_TYPES.map((candidate) => ({ value: candidate, label: candidate }))}
@@ -233,9 +233,9 @@ function NewFieldComposer({
         </div>
       </div>
       {createField.isError ? (
-        <p className="m-0 mt-2.5 font-sans text-12/17 text-red-9">{(createField.error as Error).message}</p>
+        <p className="m-0 mt-10 font-sans text-12/17 text-red-9">{(createField.error as Error).message}</p>
       ) : null}
-      <div className="mt-3.5 flex items-center justify-end gap-2">
+      <div className="mt-14 flex items-center justify-end gap-8">
         <Button size="sm" variant="ghost" onClick={onClose}>
           Cancel
         </Button>
@@ -294,14 +294,14 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
   const sortedFields = [...board.fields].sort((left, right) => left.label.localeCompare(right.label));
 
   return (
-    <section className="flex min-h-0 flex-col px-6 py-5.5">
-      <div className="mb-1.5 flex items-center gap-3">
+    <section className="flex min-h-0 flex-col px-24 py-22">
+      <div className="mb-6 flex items-center gap-12">
         <h1 className="m-0 font-sans text-20 font-600 text-gray-12">Fields</h1>
         <span className="font-mono text-12/17 text-gray-9">
           {board.fields.length} field{board.fields.length === 1 ? '' : 's'} in this scheme
         </span>
       </div>
-      <p className="mb-4 mt-0 font-sans text-12/17 text-gray-9">
+      <p className="mb-16 mt-0 font-sans text-12/17 text-gray-9">
         Choose a type, then place library fields onto it, reorder them, and set which are required.
       </p>
 
@@ -311,7 +311,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
         <>
           <Tabs
             variant="pill"
-            className="mb-4 flex-wrap"
+            className="mb-16 flex-wrap"
             items={activeTypes.map((type) => ({ value: String(type.id), label: type.label }))}
             value={String(activeTypeId)}
             onChange={(next) => setSelectedTypeId(Number(next))}
@@ -323,11 +323,11 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
               <div
                 role="region"
                 aria-label="Placements"
-                className="mb-4 overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised"
+                className="mb-16 overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised"
               >
                 <div
                   className={cn(
-                    'grid h-8.5 items-center border-b-1 border-gray-6 bg-gray-1 px-2.5 font-sans text-11 font-500 uppercase tracking-wider text-gray-11',
+                    'grid h-34 items-center border-b-1 border-gray-6 bg-gray-1 px-10 font-sans text-11 font-500 uppercase tracking-wider text-gray-11',
                     GRID_COLUMNS,
                   )}
                 >
@@ -355,11 +355,11 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
                   );
                 })}
                 {placements.length === 0 ? (
-                  <ScreenState className="px-3 py-5" title="No fields placed on this type yet." />
+                  <ScreenState className="px-12 py-20" title="No fields placed on this type yet." />
                 ) : null}
               </div>
 
-              <div className="mb-5 flex items-center gap-2">
+              <div className="mb-20 flex items-center gap-8">
                 <Combobox
                   options={pickOptions}
                   value={pickFieldId}
@@ -367,7 +367,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
                   placeholder="Choose a field to place…"
                   size="sm"
                   disabled={disabled || pickOptions.length === 0}
-                  className="w-72"
+                  className="w-288"
                 />
                 <Button
                   size="sm"
@@ -397,8 +397,8 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
         </>
       )}
 
-      <div className="mt-2">
-        <h2 className="mb-2 font-sans text-13/19 font-600 text-gray-12">Field library</h2>
+      <div className="mt-8">
+        <h2 className="mb-8 font-sans text-13/19 font-600 text-gray-12">Field library</h2>
         <div
           role="region"
           aria-label="Field library"
@@ -410,14 +410,14 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
               <div
                 key={field.id}
                 className={cn(
-                  'flex items-center gap-2.5 border-b-1 border-gray-6 px-2.5 py-2',
+                  'flex items-center gap-10 border-b-1 border-gray-6 px-10 py-8',
                   field.archivedAt && 'opacity-60',
                 )}
               >
                 <span className="min-w-0 flex-1 truncate font-sans text-13/19 text-gray-12">{field.label}</span>
                 {field.archivedAt ? <ArchChip /> : null}
                 <Pill {...typePill} label={field.type} className={cn(typePill.className, 'font-mono text-11')} />
-                <span className="w-16 shrink-0 font-mono text-12/17 text-gray-9">
+                <span className="w-64 shrink-0 font-mono text-12/17 text-gray-9">
                   {placedCount} type{placedCount === 1 ? '' : 's'}
                 </span>
                 <Button
@@ -436,7 +436,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
             );
           })}
           {sortedFields.length === 0 ? (
-            <ScreenState className="px-3 py-5" title="No fields yet." />
+            <ScreenState className="px-12 py-20" title="No fields yet." />
           ) : null}
         </div>
       </div>

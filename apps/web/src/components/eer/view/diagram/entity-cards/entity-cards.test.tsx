@@ -1,9 +1,9 @@
-import { act, fireEvent } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { expect, it } from 'vitest';
 
 import { useDiagramModelOrNull } from '../../../state/diagram-context';
-import { fkTo, pkField } from '../../../test/models';
+import { fkTo, pkField, twoZoneRaw } from '../../../test/models';
 import { renderDiagram } from '../../../test/render';
 import { EntityCards } from './entity-cards';
 
@@ -94,4 +94,20 @@ it('field hover highlights + dispatches; hiding a zone hides its cards', async (
   expect(row.hasAttribute('data-hot')).toBe(false);
   await act(async () => actions.toggleGroup('z1'));
   expect(container.querySelector('[data-card][data-entity="users"]')!.classList.contains('hidden')).toBe(true);
+});
+
+it('draws the pk/fk marks as text Pills on the library rung', async () => {
+  // Rung 11, not the rung 9 this used to hardcode. Pill's `text` variant
+  // paints from the text rung on every scale; matching it is the point of
+  // the migration, and the shift is recorded in the spec.
+  const { container } = await renderDiagram(
+    <Loaded>
+      <EntityCards />
+    </Loaded>,
+    twoZoneRaw(),
+  );
+  const pk = screen.getAllByText('PK')[0]!;
+  expect(pk.className).toContain('text-yellow-11');
+  expect(pk.className).toContain('text-9/11');
+  expect(container.querySelectorAll('[data-role="pk"]').length).toBeGreaterThan(0);
 });

@@ -435,7 +435,7 @@ importers:
         version: '@typescript/typescript6@6.0.2'
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@types/node@22.20.1)(jsdom@29.1.1)(vite@8.1.3(@types/node@22.20.1)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.101.0)(tsx@4.23.0))
+        version: 4.1.10(@types/node@22.20.1)(jsdom@29.1.1)(vite@8.1.3(@types/node@22.20.1)(esbuild@0.27.7)(jiti@2.7.0)(sass@1.101.0)(tsx@4.23.0))
 
   packages/signals/core:
     devDependencies:
@@ -453,7 +453,7 @@ importers:
         version: '@typescript/typescript6@6.0.2'
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@types/node@22.20.1)(jsdom@29.1.1)(vite@8.1.3(@types/node@22.20.1)(esbuild@0.27.7)(jiti@2.7.0)(sass@1.101.0)(tsx@4.23.0))
+        version: 4.1.10(@types/node@22.20.1)(jsdom@29.1.1)(vite@8.1.3(@types/node@22.20.1)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.101.0)(tsx@4.23.0))
 
   packages/signals/node:
     dependencies:
@@ -724,6 +724,9 @@ importers:
 
   packages/web/ui:
     dependencies:
+      '@tanstack/markdown':
+        specifier: ^0.0.12
+        version: 0.0.12(react@19.2.7)
       '@tickets/form':
         specifier: workspace:*
         version: link:../form
@@ -767,9 +770,15 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^6.0.1
         version: 6.0.3(vite@8.1.3(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.101.0)(tsx@4.23.0))
+      axe-core:
+        specifier: ^4.12.1
+        version: 4.12.1
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1
+      playwright-core:
+        specifier: ^1.62.1
+        version: 1.62.1
       react:
         specifier: ^19.2.5
         version: 19.2.7
@@ -2755,6 +2764,17 @@ packages:
     resolution: {integrity: sha512-79pf/RkhteYZTRgcR4F9kbk84P2N8rugQJswxfIqovlbRiT3yI7eBE+5QorIrZaOKktsgzRlXh1l/du/xpl4iA==}
     engines: {node: '>=20.19'}
 
+  '@tanstack/markdown@0.0.12':
+    resolution: {integrity: sha512-xQdEIMzbMe5Bl4Wy+CE67nCkeoBUdMkUGa9iYDySV+6TvFBbZZEZmXwL/2JK2ZAJGpuC/XxVtNvRz5Ysdgf+Ww==}
+    peerDependencies:
+      octane: '>=0.1.12'
+      react: '>=18'
+    peerDependenciesMeta:
+      octane:
+        optional: true
+      react:
+        optional: true
+
   '@tanstack/pacer-lite@0.1.1':
     resolution: {integrity: sha512-y/xtNPNt/YeyoVxE/JCx+T7yjEzpezmbb+toK8DDD1P4m7Kzs5YR956+7OKexG3f8aXgC3rLZl7b1V+yNUSy5w==}
     engines: {node: '>=18'}
@@ -4164,6 +4184,11 @@ packages:
 
   pkg-types@1.3.1:
     resolution: {integrity: sha512-/Jm5M4RvtBFVkKWRu2BLUTNP8/M2a+UwuAX+ae4770q1qVGtfjG+WTCupoZixokjmHiry8uI+dlY8KXYV5HVVQ==}
+
+  playwright-core@1.62.1:
+    resolution: {integrity: sha512-wPYSwEBJY9GHraISXqyqtx0na0LpO3XEX7jNDhntbex7tzUS7kLnZsOlFruFJB4Hi/rhDMjXGqHewDZ68nYZVw==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   postcss-load-config@6.0.1:
     resolution: {integrity: sha512-oPtTM4oerL+UXmx+93ytZVN82RrlY/wPUV8IeDxFrzIjXOLF1pN+EmKPLbubvKHT2HC20xXsCAH2Z+CKV6Oz/g==}
@@ -6502,6 +6527,10 @@ snapshots:
 
   '@tanstack/history@1.162.0': {}
 
+  '@tanstack/markdown@0.0.12(react@19.2.7)':
+    optionalDependencies:
+      react: 19.2.7
+
   '@tanstack/pacer-lite@0.1.1': {}
 
   '@tanstack/query-core@5.101.2': {}
@@ -7874,6 +7903,8 @@ snapshots:
       confbox: 0.1.8
       mlly: 1.8.2
       pathe: 2.0.3
+
+  playwright-core@1.62.1: {}
 
   postcss-load-config@6.0.1(jiti@2.7.0)(postcss@8.5.16)(tsx@4.23.0):
     dependencies:

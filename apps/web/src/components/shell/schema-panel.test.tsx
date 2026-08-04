@@ -55,9 +55,12 @@ describe('SchemaPanel', () => {
       isLoading: false,
     });
     render(<SchemaPanel selected={undefined} />);
-    await userEvent.click(screen.getByRole('button', { name: 'tickets' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Database: tickets' }));
     await userEvent.click(await screen.findByRole('button', { name: 'tickets_dev' }));
-    expect(mockNavigate).toHaveBeenCalledWith({ to: '/schema', search: { database: 'tickets_dev' } });
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/schema',
+      search: { database: 'tickets_dev' },
+    });
   });
 
   it('omits the database param entirely when choosing the current database', async () => {
@@ -68,7 +71,7 @@ describe('SchemaPanel', () => {
     // Start on a non-default selection so the click genuinely changes
     // something, rather than choosing the value already shown.
     render(<SchemaPanel selected="tickets_dev" />);
-    await userEvent.click(screen.getByRole('button', { name: 'tickets_dev' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Database: tickets_dev' }));
     await userEvent.click(await screen.findByRole('button', { name: 'tickets' }));
     expect(mockNavigate).toHaveBeenCalledWith({ to: '/schema', search: {} });
   });

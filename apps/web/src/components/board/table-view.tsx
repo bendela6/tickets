@@ -110,8 +110,8 @@ function ProgressCell({ ticket, indexes }: { ticket: Item; indexes: BoardIndexes
   }
   const percent = Math.round((done / total) * 100);
   return (
-    <span className="inline-flex items-center gap-1.75" title={`${done} of ${total} subtasks done`}>
-      <Progress tone="green" value={percent} className="w-9" />
+    <span className="inline-flex items-center gap-7" title={`${done} of ${total} subtasks done`}>
+      <Progress tone="green" value={percent} className="w-36" />
       <span className="font-mono text-11 text-gray-11">
         {done}/{total}
       </span>
@@ -124,10 +124,10 @@ function RowActions({ projectKey, ticket }: { projectKey: string; ticket: Item }
   const { userId } = useCurrentUser();
   const patch = usePatchItem();
   const actionClasses =
-    'flex size-7.5 items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised font-sans text-13/19 text-gray-11 shadow-sm hover:text-gray-12';
+    'flex size-30 items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised font-sans text-13/19 text-gray-11 shadow-sm hover:text-gray-12';
   return (
     <span
-      className="absolute top-1/2 right-2.5 hidden -translate-y-1/2 items-center gap-1.25 group-hover:flex"
+      className="absolute top-1/2 right-10 hidden -translate-y-1/2 items-center gap-5 group-hover:flex"
       onClick={(event) => event.stopPropagation()}
     >
       <Link
@@ -234,7 +234,7 @@ export function TableView({
   const cell = (column: ViewColumn, ticket: Item, key: number) => {
     if (column.source === 'number') {
       return (
-        <span key={key} className="px-3">
+        <span key={key} className="px-12">
           <ItemKey prefix={board.project.itemPrefix} number={ticket.number} />
         </span>
       );
@@ -242,14 +242,14 @@ export function TableView({
     if (column.source === 'type') {
       const type = indexes.typeById.get(ticket.typeId);
       return (
-        <span key={key} className="px-2">
+        <span key={key} className="px-8">
           <Pill {...typePill} label={type?.label ?? '?'} />
         </span>
       );
     }
     if (column.source === 'progress') {
       return (
-        <span key={key} className="px-2">
+        <span key={key} className="px-8">
           <ProgressCell ticket={ticket} indexes={indexes} />
         </span>
       );
@@ -260,20 +260,20 @@ export function TableView({
     }
     if (field.type === 'option' && field.config.workflow === true) {
       return (
-        <span key={key} className="px-2" onClick={(event) => event.stopPropagation()}>
+        <span key={key} className="px-8" onClick={(event) => event.stopPropagation()}>
           <StatusCell board={board} indexes={indexes} ticket={ticket} />
         </span>
       );
     }
     if (field.key === 'title') {
       return (
-        <span key={key} className="truncate px-2 font-sans text-13/19 text-gray-12">
+        <span key={key} className="truncate px-8 font-sans text-13/19 text-gray-12">
           {String(ticket.values[field.key] ?? '')}
         </span>
       );
     }
     return (
-      <span key={key} className="min-w-0 truncate px-2 font-sans text-13/19 text-gray-11">
+      <span key={key} className="min-w-0 truncate px-8 font-sans text-13/19 text-gray-11">
         {getCellContent(field, ticket.values[field.key], indexes, ticket.typeId)}
       </span>
     );
@@ -283,7 +283,7 @@ export function TableView({
     <div className="flex min-h-0 flex-1 flex-col overflow-auto rounded-t-xl border-1 border-gray-6 bg-surface-raised">
       <div
         role="row"
-        className="sticky top-0 z-10 grid h-9 min-w-170 shrink-0 items-center border-b-1 border-gray-6 bg-gray-1 px-1"
+        className="sticky top-0 z-10 grid h-36 min-w-680 shrink-0 items-center border-b-1 border-gray-6 bg-gray-1 px-4"
         style={{ gridTemplateColumns }}
       >
         {visible.map(({ column, index }) => {
@@ -295,7 +295,7 @@ export function TableView({
               onClick={() => cycleSort(column)}
               className={cn(
                 'cursor-pointer text-left font-sans text-11/13 tracking-wider font-500 uppercase',
-                column.source === 'number' ? 'px-3' : 'px-2',
+                column.source === 'number' ? 'px-12' : 'px-8',
                 active ? 'text-gray-12' : 'text-gray-11 hover:text-gray-12',
               )}
             >
@@ -307,7 +307,7 @@ export function TableView({
       </div>
       {rows.length === 0 ? (
         <ScreenState
-          className="flex-1 justify-center py-16"
+          className="flex-1 justify-center py-64"
           tone="neutral"
           icon="search"
           title={filtered ? 'No items match these filters' : 'No items yet'}
@@ -318,11 +318,11 @@ export function TableView({
           }
           action={
             filtered ? (
-              <Button size="md" className="h-8" onClick={onClearFilters}>
+              <Button size="md" className="h-32" onClick={onClearFilters}>
                 Clear filters
               </Button>
             ) : (
-              <Button size="md" className="h-8" onClick={onNewTicket}>
+              <Button size="md" className="h-32" onClick={onNewTicket}>
                 ＋ New item
               </Button>
             )
@@ -335,8 +335,8 @@ export function TableView({
             role="row"
             onClick={() => onOpenTicket(ticket.number)}
             className={cn(
-              'group relative grid min-w-170 shrink-0 cursor-pointer items-center border-b-1 border-gray-6 px-1 hover:bg-gray-1',
-              config.density === 'compact' ? 'h-8' : 'h-10.5',
+              'group relative grid min-w-680 shrink-0 cursor-pointer items-center border-b-1 border-gray-6 px-4 hover:bg-gray-1',
+              config.density === 'compact' ? 'h-32' : 'h-42',
             )}
             style={{ gridTemplateColumns }}
           >

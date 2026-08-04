@@ -65,11 +65,11 @@ export function RenameAppDialog({
     <DialogRoot open={open} onOpenChange={change}>
       <DialogContent>
         <DialogTitle>Rename app</DialogTitle>
-        <div className="mt-4">
+        <div className="mt-16">
           <FieldLabel htmlFor="rename-app-name">Name</FieldLabel>
           <Input
             id="rename-app-name"
-            className="mt-1.5"
+            className="mt-6"
             value={name}
             autoFocus
             onChange={(event) => setName(event.target.value)}
@@ -81,7 +81,7 @@ export function RenameAppDialog({
           />
         </div>
         {errorMessage !== null ? (
-          <p className="mt-2 font-sans text-12/17 text-red-9">{errorMessage}</p>
+          <p className="mt-8 font-sans text-12/17 text-red-9">{errorMessage}</p>
         ) : null}
         <DialogFooter cancel={<Button variant="ghost" onClick={() => change(false)}>Cancel</Button>}>
           <Button

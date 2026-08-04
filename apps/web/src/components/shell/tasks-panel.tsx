@@ -7,7 +7,7 @@ import { NewProjectDialog } from './new-project-dialog';
 
 function navItemClasses(active: boolean) {
   return cn(
-    'flex h-8 items-center gap-2 rounded-lg px-2.25 font-sans text-13/19',
+    'flex h-32 items-center gap-8 rounded-lg px-9 font-sans text-13/19',
     active ? 'bg-surface-inset font-500 text-gray-12' : 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
   );
 }
@@ -53,13 +53,13 @@ export function TasksPanel({
       <button
         type="button"
         title="Command palette (coming soon)"
-        className="mb-2 flex h-8 cursor-pointer items-center gap-1.75 rounded-lg border-1 border-gray-6 bg-surface-raised px-2.5 hover:border-gray-7"
+        className="mb-8 flex h-32 cursor-pointer items-center gap-7 rounded-lg border-1 border-gray-6 bg-surface-raised px-10 hover:border-gray-7"
       >
         <span aria-hidden className="text-12/17 text-gray-9">
           ⌕
         </span>
         <span className="flex-1 text-left font-sans text-13/19 text-gray-9">Search…</span>
-        <span className="rounded-sm border-1 border-gray-6 px-1 font-mono text-10 text-gray-9">
+        <span className="rounded-sm border-1 border-gray-6 px-4 font-mono text-10 text-gray-9">
           ⌘K
         </span>
       </button>
@@ -67,12 +67,12 @@ export function TasksPanel({
       <button
         type="button"
         onClick={handleNewTicket}
-        className="mb-3.5 h-8.5 rounded-lg bg-indigo-9 font-sans text-13/19 font-500 text-indigo-contrast hover:bg-indigo-10"
+        className="mb-14 h-34 rounded-lg bg-indigo-9 font-sans text-13/19 font-500 text-indigo-contrast hover:bg-indigo-10"
       >
         ＋ New item
       </button>
 
-      <nav className="flex flex-col gap-0.5">
+      <nav className="flex flex-col gap-2">
         <Link to="/" onClick={onNavigate} className={navItemClasses(Boolean(matchRoute({ to: '/' })))}>
           <span aria-hidden>⌂</span>
           <span className="flex-1">Home</span>
@@ -84,8 +84,8 @@ export function TasksPanel({
         </Link>
       </nav>
 
-      <RailLabel className="block px-2.25 pb-1.5 pt-4">PROJECTS</RailLabel>
-      <div className="flex flex-col gap-0.5">
+      <RailLabel className="block px-9 pb-6 pt-16">PROJECTS</RailLabel>
+      <div className="flex flex-col gap-2">
         {projectList.map((project) => {
           const stat = statsByKey.get(project.key);
           return (
@@ -96,14 +96,14 @@ export function TasksPanel({
               onClick={onNavigate}
               className={navItemClasses(project.key === activeProjectKey)}
             >
-              <span className="rounded-sm bg-surface-inset px-1.25 py-0.5 font-mono text-10 font-500 text-gray-11">
+              <span className="rounded-sm bg-surface-inset px-5 py-2 font-mono text-10 font-500 text-gray-11">
                 {project.itemPrefix}
               </span>
               <span className="flex-1 truncate">{project.name}</span>
               <Progress
                 tone="green"
                 value={stat?.pct ?? 0}
-                className="w-6.5"
+                className="w-26"
                 trackClassName="min-w-0"
               />
             </Link>
@@ -115,7 +115,7 @@ export function TasksPanel({
             onNavigate?.();
             setCreatingProject(true);
           }}
-          className="flex h-7.5 cursor-pointer items-center gap-2 rounded-lg px-2.25 font-sans text-12/17 text-gray-9 hover:bg-surface-inset"
+          className="flex h-30 cursor-pointer items-center gap-8 rounded-lg px-9 font-sans text-12/17 text-gray-9 hover:bg-surface-inset"
         >
           ＋<span>New project</span>
         </button>
@@ -128,7 +128,7 @@ export function TasksPanel({
         if (!settingsProjectKey) {
           return (
             <div
-              className={cn(navItemClasses(false), 'mb-2 cursor-default opacity-60')}
+              className={cn(navItemClasses(false), 'mb-8 cursor-default opacity-60')}
               title="Settings — create a project first"
             >
               <span aria-hidden>⚙</span>
@@ -142,7 +142,7 @@ export function TasksPanel({
             to="/p/$projectKey/settings"
             params={{ projectKey: settingsProjectKey }}
             onClick={onNavigate}
-            className={cn(navItemClasses(onSettings), 'mb-2')}
+            className={cn(navItemClasses(onSettings), 'mb-8')}
           >
             <span aria-hidden>⚙</span>
             <span className="flex-1">Settings</span>

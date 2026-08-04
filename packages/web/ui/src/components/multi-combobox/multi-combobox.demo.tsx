@@ -15,7 +15,7 @@ const LABEL_OPTIONS: ComboOption[] = [
 function MultiComboboxFixture() {
   const [labels, setLabels] = useState<string[]>(['frontend', 'api']);
   return (
-    <div className="w-72">
+    <div className="w-288">
       <MultiCombobox
         options={LABEL_OPTIONS}
         value={labels}
@@ -37,7 +37,7 @@ function MultiComboboxPlaygroundFixture({
 }) {
   const [labels, setLabels] = useState<string[]>(['frontend', 'api']);
   return (
-    <div className="w-72">
+    <div className="w-288">
       <MultiCombobox
         options={LABEL_OPTIONS}
         value={labels}

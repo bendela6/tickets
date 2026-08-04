@@ -48,16 +48,16 @@ function FrameRow({ frame, defaultExpanded }: { frame: SignalStackFrame; default
         type="button"
         onClick={() => hasContext && setExpanded((value) => !value)}
         className={cn(
-          'flex w-full items-center gap-2.5 px-4 py-2 text-left',
+          'flex w-full items-center gap-10 px-16 py-8 text-left',
           hasContext ? 'cursor-pointer' : 'cursor-default',
         )}
       >
-        <span aria-hidden className="w-3.5 shrink-0 font-sans text-11 text-gray-9">
+        <span aria-hidden className="w-14 shrink-0 font-sans text-11 text-gray-9">
           {hasContext ? <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size="2xs" /> : null}
         </span>
         <span className="font-mono text-[12.5px] font-600 text-gray-12">{frame.functionName}</span>
         {frame.inApp ? (
-          <span className="inline-flex h-4.25 shrink-0 items-center rounded-sm bg-indigo-3 px-1.5 font-mono text-[9.5px] font-500 text-indigo-9">
+          <span className="inline-flex h-17 shrink-0 items-center rounded-sm bg-indigo-3 px-6 font-mono text-[9.5px] font-500 text-indigo-9">
             in-app
           </span>
         ) : null}
@@ -67,18 +67,18 @@ function FrameRow({ frame, defaultExpanded }: { frame: SignalStackFrame; default
         </span>
       </button>
       {expanded && hasContext ? (
-        <div className="border-t-1 border-gray-6 bg-gray-1 px-4 pt-2.5 pb-3">
-          <div className="overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-inset py-2 font-mono text-[11.5px] leading-[1.75]">
+        <div className="border-t-1 border-gray-6 bg-gray-1 px-16 pt-10 pb-12">
+          <div className="overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-inset py-8 font-mono text-[11.5px] leading-[1.75]">
             {frame.contextLines!.map((contextLine) => {
               const isErrorLine = contextLine.line === frame.line;
               return (
                 <div
                   key={contextLine.line}
-                  className={cn('flex gap-3.5 px-3.5', isErrorLine && 'bg-red-3')}
+                  className={cn('flex gap-14 px-14', isErrorLine && 'bg-red-3')}
                 >
                   <span
                     className={cn(
-                      'w-5.5 shrink-0 text-right text-gray-9',
+                      'w-22 shrink-0 text-right text-gray-9',
                       isErrorLine && 'font-600 text-red-9',
                     )}
                   >
@@ -102,9 +102,9 @@ function VendorGroup({ frames }: { frames: SignalStackFrame[] }) {
       <button
         type="button"
         onClick={() => setExpanded((value) => !value)}
-        className="flex w-full items-center gap-2.5 px-4 py-2 text-left opacity-55 hover:opacity-80"
+        className="flex w-full items-center gap-10 px-16 py-8 text-left opacity-55 hover:opacity-80"
       >
-        <span aria-hidden className="w-3.5 shrink-0 font-sans text-11 text-gray-9">
+        <span aria-hidden className="w-14 shrink-0 font-sans text-11 text-gray-9">
           <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size="2xs" />
         </span>
         <span className="font-mono text-[11.5px] text-gray-9">
@@ -112,7 +112,7 @@ function VendorGroup({ frames }: { frames: SignalStackFrame[] }) {
         </span>
       </button>
       {expanded ? (
-        <div className="border-t-1 border-gray-6 px-4 py-2.5 font-mono text-11 leading-[1.9] text-gray-11">
+        <div className="border-t-1 border-gray-6 px-16 py-10 font-mono text-11 leading-[1.9] text-gray-11">
           {frames.map((frame, index) => (
             <div key={index}>
               {frame.functionName} <span className="text-gray-9">@</span> {frame.file}:{frame.line}:
@@ -149,8 +149,8 @@ function SymFrames({ frames }: { frames: SignalStackFrame[] }) {
 // than rendering a bare "unknown".
 function NoSourceMapsBanner({ release }: { release: string | null | undefined }) {
   return (
-    <div className="flex items-center gap-2.5 border-b-1 border-gray-6 bg-orange-3 px-4 py-2.5">
-      <span aria-hidden className="size-2 shrink-0 rotate-45 rounded-none bg-orange-9" />
+    <div className="flex items-center gap-10 border-b-1 border-gray-6 bg-orange-3 px-16 py-10">
+      <span aria-hidden className="size-8 shrink-0 rotate-45 rounded-none bg-orange-9" />
       <span className="flex-1 font-sans text-12 leading-normal text-orange-9">
         No source maps uploaded
         {release ? (
@@ -177,7 +177,7 @@ function RawFrames({
   return (
     <div>
       {noSourceMaps ? <NoSourceMapsBanner release={release} /> : null}
-      <div className="px-4 py-3 font-mono text-[11.5px] leading-[1.9] text-gray-11">
+      <div className="px-16 py-12 font-mono text-[11.5px] leading-[1.9] text-gray-11">
         {frames.length === 0 ? <div className="text-gray-9">no raw frames recorded</div> : null}
         {frames.map((frame, index) => (
           <div key={index}>
@@ -186,7 +186,7 @@ function RawFrames({
           </div>
         ))}
         {noSourceMaps ? (
-          <div className="mt-2.5 rounded-lg border-1 border-gray-6 bg-surface-inset px-3 py-2 font-mono text-11 leading-relaxed text-gray-11">
+          <div className="mt-10 rounded-lg border-1 border-gray-6 bg-surface-inset px-12 py-8 font-mono text-11 leading-relaxed text-gray-11">
             <span className="text-gray-9">$</span> npx signals sourcemaps upload ./dist --release{' '}
             {release ?? '?'}
           </div>
@@ -245,7 +245,7 @@ export function StackTrace({
 
   return (
     <div className="flex-none overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
-      <div className="flex h-10.5 items-center gap-2.5 border-b-1 border-gray-6 px-4">
+      <div className="flex h-42 items-center gap-10 border-b-1 border-gray-6 px-16">
         <span className="font-sans text-[13.5px] font-600 text-gray-12">Stack trace</span>
         {occurrenceTime ? (
           <span className="font-mono text-11 text-gray-9">
@@ -267,9 +267,9 @@ export function StackTrace({
       </div>
 
       {payload === undefined ? (
-        <div className="px-4 py-4 font-mono text-[11.5px] text-gray-9">no occurrence data</div>
+        <div className="px-16 py-16 font-mono text-[11.5px] text-gray-9">no occurrence data</div>
       ) : !hasFrames ? (
-        <div className="px-4 py-4 font-mono text-[11.5px] text-gray-9">no stack frames recorded</div>
+        <div className="px-16 py-16 font-mono text-[11.5px] text-gray-9">no stack frames recorded</div>
       ) : activeTab === 'sym' ? (
         <>
           {expectedSourceMaps ? <NoSourceMapsBanner release={release} /> : null}

@@ -10,7 +10,7 @@ export const states = [
   {
     name: 'Tones',
     render: () => (
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-12">
         {TONE_NAMES.map((tone) => (
           <Pill key={tone} label={tone} tone={tone} />
         ))}
@@ -20,8 +20,8 @@ export const states = [
   {
     name: 'Variants',
     render: () => (
-      <div className="flex flex-wrap gap-3">
-        {(['subtle', 'solid', 'outline', 'text'] as const).map((variant) => (
+      <div className="flex flex-wrap gap-12">
+        {(['subtle', 'solid', 'outline', 'text', 'tint'] as const).map((variant) => (
           <Pill key={variant} label={variant} tone="green" variant={variant} />
         ))}
       </div>
@@ -30,8 +30,8 @@ export const states = [
   {
     name: 'Sizes',
     render: () => (
-      <div className="flex flex-wrap items-center gap-3">
-        {(['sm', 'md', 'lg'] as const).map((size) => (
+      <div className="flex flex-wrap items-center gap-12">
+        {(['xs', 'sm', 'md', 'lg'] as const).map((size) => (
           <Pill key={size} label={size} tone="blue" size={size} icon="circle" />
         ))}
       </div>
@@ -40,7 +40,7 @@ export const states = [
   {
     name: 'Chevron',
     render: () => (
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-12">
         <Pill label="Assignee" chevron onClick={() => {}} />
         <Pill label="Status" tone="blue" chevron onClick={() => {}} />
       </div>
@@ -49,7 +49,7 @@ export const states = [
   {
     name: 'Shapes',
     render: () => (
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-12">
         <Pill label="square" shape="square" tone="purple" />
         <Pill label="round" shape="round" tone="purple" />
       </div>
@@ -58,7 +58,7 @@ export const states = [
   {
     name: 'With icons',
     render: () => (
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-12">
         <Pill label="circle" icon="circle" />
         <Pill label="spinning" icon={<Icon name="circle-half" animate="spin" />} />
         <Pill label="diamond" icon="diamond" />
@@ -69,7 +69,7 @@ export const states = [
   {
     name: 'Toggle',
     render: () => (
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-12">
         <Pill label="pressed" onClick={() => {}} pressed />
         <Pill label="unpressed" onClick={() => {}} />
         <Pill label="disabled" onClick={() => {}} disabled />
@@ -79,7 +79,7 @@ export const states = [
   {
     name: 'Trailing + strikethrough',
     render: () => (
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-12">
         <Pill label="done" strikethrough trailing={<span>3</span>} />
         <Pill label="tag" shape="round" trailing={<span>5</span>} />
       </div>
@@ -105,13 +105,13 @@ export const playground = definePlayground({
       description:
         'Semantic colour. The six semantic names carry meaning across themes; the eleven hue names are for user-chosen colours, where the hue itself is the label.',
     }),
-    variant: select(['subtle', 'solid', 'outline', 'text'] as const, {
+    variant: select(['subtle', 'solid', 'outline', 'text', 'tint'] as const, {
       initial: 'subtle',
       type: 'PillVariant',
       description:
         'How loudly the tone reads. `subtle` is the default and the right pick inside lists; `solid` is for the one pill that has to win the row.',
     }),
-    size: select(['sm', 'md', 'lg'] as const, {
+    size: select(['xs', 'sm', 'md', 'lg'] as const, {
       initial: 'md',
       type: 'PillSize',
       description:

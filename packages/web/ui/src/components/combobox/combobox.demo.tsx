@@ -14,7 +14,7 @@ const PRIORITY_OPTIONS: ComboOption[] = [
 function ComboboxFixture() {
   const [priority, setPriority] = useState<string | null>('p0');
   return (
-    <div className="w-56">
+    <div className="w-224">
       <Combobox
         options={PRIORITY_OPTIONS}
         value={priority}
@@ -36,7 +36,7 @@ function ComboboxPlaygroundFixture({
 }) {
   const [priority, setPriority] = useState<string | null>('p0');
   return (
-    <div className="w-56">
+    <div className="w-224">
       <Combobox
         options={PRIORITY_OPTIONS}
         value={priority}

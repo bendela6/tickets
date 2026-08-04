@@ -27,7 +27,7 @@ export function Sparkline({
     <div
       role="img"
       aria-label="signal volume, last 14 days"
-      className={cn('inline-flex h-[18px] items-end gap-0.5 px-0.5', className)}
+      className={cn('inline-flex h-[18px] items-end gap-2 px-2', className)}
     >
       {bars.map((count, i) => {
         const isLast = i === bars.length - 1;

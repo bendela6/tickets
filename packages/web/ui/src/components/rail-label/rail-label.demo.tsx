@@ -8,7 +8,7 @@ export const states = [
   {
     name: 'In a row with trailing actions',
     render: () => (
-      <div className="flex w-56 items-center justify-between">
+      <div className="flex w-224 items-center justify-between">
         <RailLabel>TERMINALS</RailLabel>
         <span className="font-sans text-12/17 text-indigo-9">＋ New</span>
       </div>

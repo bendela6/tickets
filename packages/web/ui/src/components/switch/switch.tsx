@@ -1,9 +1,9 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
-import { axis, cn, HUE_TONES, over, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, cn, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
 import { toggleRowClass, type ToggleSize } from '../toggle';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
-const SCALE = axis('scale', HUE_TONES, 'indigo');
+const SCALE = axis('scale', HUES, 'indigo');
 
 type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> & {
   label: string;
@@ -32,22 +32,22 @@ const trackClass = variants({
     size: {
       default: 'md',
       options: {
-        sm: 'h-4 w-7',
-        md: 'h-4.5 w-8',
-        lg: 'h-5.5 w-10',
+        sm: 'h-16 w-28',
+        md: 'h-18 w-32',
+        lg: 'h-22 w-40',
       },
     },
   },
 });
 
 const THUMB: Record<ToggleSize, string> = {
-  sm: 'size-3 peer-checked:translate-x-3',
-  md: 'size-3.5 peer-checked:translate-x-3.5',
-  lg: 'size-4.5 peer-checked:translate-x-4.5',
+  sm: 'size-12 peer-checked:translate-x-12',
+  md: 'size-14 peer-checked:translate-x-14',
+  lg: 'size-18 peer-checked:translate-x-18',
 };
 
 const thumbClass = variants({
-  base: 'pointer-events-none absolute left-0.5 top-0.5 rounded-full transition-transform',
+  base: 'pointer-events-none absolute left-2 top-2 rounded-full transition-transform',
   config: {
     thumb: {
       default: 'default',
@@ -68,7 +68,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   { label, size = 'md', tone = 'primary', className, ...rest },
   ref,
 ) {
-  const scale = TONE_SCALE[tone];
+  const scale = TONE_HUE[tone];
   return (
     <label className={toggleRowClass({ size, className })}>
       <span className="relative inline-flex">

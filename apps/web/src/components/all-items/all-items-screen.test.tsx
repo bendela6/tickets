@@ -307,7 +307,7 @@ test('inline status edit PATCHes /api/items/:id with a commandId envelope', asyn
 test('clicking a row opens the ticket drawer with that project’s board', async () => {
   await renderScreen();
   fireEvent.click(screen.getByText('Ship mobile nav'));
-  const drawer = await screen.findByRole('complementary', { name: 'Item detail' });
+  const drawer = await screen.findByRole('dialog', { name: 'Item detail' });
   expect(within(drawer).getByText('APP-1')).toBeInTheDocument();
   expect(within(drawer).getByRole('button', { name: /ship mobile nav/i })).toBeInTheDocument();
 });

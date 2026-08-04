@@ -57,17 +57,17 @@ export function DeleteAppDialog({
     <DialogRoot open={open} onOpenChange={change}>
       <DialogContent>
         <DialogTitle>Delete app</DialogTitle>
-        <p className="mt-1.5 font-sans text-12/17 text-gray-11">
+        <p className="mt-6 font-sans text-12/17 text-gray-11">
           This permanently deletes <strong className="font-500 text-gray-12">{app.slug}</strong> — its
           signals, issues, releases, and source maps. This cannot be undone.
         </p>
-        <div className="mt-4">
+        <div className="mt-16">
           <FieldLabel htmlFor="delete-app-confirm">
             Type <span className="font-mono text-gray-12 normal-case">{app.slug}</span> to confirm
           </FieldLabel>
           <Input
             id="delete-app-confirm"
-            className="mt-1.5"
+            className="mt-6"
             value={typed}
             autoFocus
             onChange={(event) => setTyped(event.target.value)}
@@ -79,7 +79,7 @@ export function DeleteAppDialog({
           />
         </div>
         {deleteApp.isError ? (
-          <p className="mt-2 font-sans text-12/17 text-red-9">
+          <p className="mt-8 font-sans text-12/17 text-red-9">
             {deleteApp.error instanceof Error ? deleteApp.error.message : 'Could not delete the app'}
           </p>
         ) : null}

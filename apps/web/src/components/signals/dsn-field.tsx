@@ -13,7 +13,7 @@ export function DsnField({ dsn, className }: { dsn: string; className?: string }
       role="group"
       aria-label="DSN"
       className={cn(
-        'flex h-9 max-w-[520px] items-center gap-2.5 rounded-lg border-1 border-gray-6 bg-surface-inset py-0 pr-1.5 pl-3',
+        'flex h-36 max-w-[520px] items-center gap-10 rounded-lg border-1 border-gray-6 bg-surface-inset py-0 pr-6 pl-12',
         className,
       )}
     >
