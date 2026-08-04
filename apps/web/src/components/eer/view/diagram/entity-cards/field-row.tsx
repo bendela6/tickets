@@ -3,7 +3,7 @@ import { columnRoles, type ColumnRole } from '../../../engine/model/column-roles
 import { portKey } from '../../../engine/geometry/port-key';
 import { useDiagramDispatch } from '../../../state/diagram-context';
 import type { Column, Entity, Side } from '../../../engine/model/types';
-import { cn, runtimeStyle } from '@tickets/ui';
+import { cn } from '@tickets/ui';
 
 function Port({
   e,
@@ -44,7 +44,7 @@ function Port({
       data-field={f.name}
       data-side={side}
       data-connected={connected.has(key) ? '' : undefined}
-      style={off > 0 ? runtimeStyle({ '--port-height': `${2 * off + 11}px` }) : undefined}
+      style={off > 0 ? { '--port-height': `${2 * off + 11}px` } : undefined}
     />
   );
 }

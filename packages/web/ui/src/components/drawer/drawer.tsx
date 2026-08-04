@@ -1,7 +1,6 @@
 import { createContext, useContext, useRef, type ReactNode } from 'react';
 import { Dialog as RadixDialog } from 'radix-ui';
 import { cn } from '../../style/cn';
-import { runtimeStyle } from '../../style/runtime-style';
 import { Icon } from '../icon';
 import { usePanelWidth, usePersistedFlag, useViewportUnder, type PanelSide } from '../panel';
 
@@ -108,7 +107,7 @@ export function Drawer({
               event.preventDefault();
               restoreFocusRef.current?.focus();
             }}
-            style={runtimeStyle({ '--panel-w': panelWidth })}
+            style={{ '--panel-w': panelWidth }}
             className={cn(
               'fixed inset-y-0 z-50 flex w-(--panel-w) flex-col outline-none',
               'border-gray-6 bg-surface-raised font-sans text-gray-12 shadow-lg',

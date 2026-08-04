@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { Entity } from '../../../engine/model/types';
-import { cn, runtimeStyle } from '@tickets/ui';
+import { cn } from '@tickets/ui';
 import { mix } from '../../../ui/color-mix';
 import { FieldRow } from './field-row';
 
@@ -46,7 +46,7 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
       data-dim={p.dim ? '' : undefined}
       data-focus={p.focus ? '' : undefined}
       data-selected={p.selected ? '' : undefined}
-      style={runtimeStyle({
+      style={{
         '--card-width': `${e._w}px`,
         '--card-x': `${e.x}px`,
         '--card-y': `${e.y}px`,
@@ -54,7 +54,7 @@ export const EntityCard = memo(function EntityCard(p: EntityCardProps) {
         '--card-border': mix(frame, 28, 'var(--color-gray-6)'),
         '--card-hd-border': mix(frame, 22, 'var(--color-gray-6)'),
         '--card-hd-bg': mix(p.color || 'var(--color-gray-3)', 13, 'var(--color-gray-3)'),
-      })}
+      }}
     >
       <div
         className={cn(

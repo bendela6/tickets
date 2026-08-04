@@ -3,6 +3,15 @@ import { Card, CardBody, CardHeader } from '../components/card';
 import { Row } from '../components/row';
 import { Stack } from '../components/stack';
 
+/**
+ * TODO: move all those layout components to separate folder with individual files
+ * card-layout.tsx
+ * group-layout.tsx
+ * row-layout.tsx
+ * column-layout.tsx
+ * index.ts for barrel exports
+ * */
+
 type TitledProps = { title?: string; description?: string };
 type BareProps = Record<string, never>;
 

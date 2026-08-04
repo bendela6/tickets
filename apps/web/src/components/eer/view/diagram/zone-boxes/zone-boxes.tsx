@@ -1,6 +1,6 @@
 import { groupColor } from '../../../engine/colors/group-color';
 import { useDiagramModel, useDiagramUi } from '../../../state/diagram-context';
-import { cn, runtimeStyle } from '@tickets/ui';
+import { cn } from '@tickets/ui';
 import { mix } from '../../../ui/color-mix';
 import { useFocusSets, useHiddenIds } from '../entity-cards';
 
@@ -44,7 +44,7 @@ export function ZoneBoxes() {
             data-parent={b.parent ?? undefined}
             data-selected={selected ? '' : undefined}
             data-dim={lit && !lit.has(b.id) ? '' : undefined}
-            style={runtimeStyle({
+            style={{
               '--zone-left': `${b.x}px`,
               '--zone-top': `${b.y}px`,
               '--zone-width': `${b.w}px`,
@@ -60,7 +60,7 @@ export function ZoneBoxes() {
               '--zone-bg': mix(c, selected ? (subgroup ? 8 : 11) : subgroup ? 4 : 6),
               '--zone-handle': mix(c, 45),
               '--zone-ink': subgroup ? mix(c, 40, 'var(--color-gray-11)') : mix(c, 60, 'var(--color-gray-11)'),
-            })}
+            }}
           >
             <div
               data-zone-label=""
