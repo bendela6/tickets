@@ -33,7 +33,7 @@ export function SearchBox() {
         autoComplete="off"
         spellCheck={false}
         className={cn(
-          'w-48 rounded-md border-1 border-gray-6 bg-gray-2 px-3 py-2 text-13 text-gray-12',
+          'w-192 rounded-md border-1 border-gray-6 bg-gray-2 px-12 py-8 text-13 text-gray-12',
           'outline-none placeholder:text-gray-9 focus:border-gray-7',
         )}
         onChange={(e) => run(e.target.value)}
@@ -50,22 +50,22 @@ export function SearchBox() {
       {open && (
         <div
           className={cn(
-            'absolute left-0 top-full z-40 mt-1 max-h-85 min-w-56 overflow-auto',
-            'rounded-lg border-1 border-gray-7 bg-surface-raised p-1 shadow-modal',
+            'absolute left-0 top-full z-40 mt-4 max-h-340 min-w-224 overflow-auto',
+            'rounded-lg border-1 border-gray-7 bg-surface-raised p-4 shadow-modal',
           )}
         >
           {results.map((m, i) => (
             <button
               key={i}
               type="button"
-              className="block w-full rounded-md px-2 py-2 text-left text-13 hover:bg-surface-inset"
+              className="block w-full rounded-md px-8 py-8 text-left text-13 hover:bg-surface-inset"
               onMouseDown={(e) => {
                 e.preventDefault();
                 pick(m);
               }}
             >
               <span className="font-mono">{m.label}</span>
-              <span className="ml-2 text-11 text-gray-11">
+              <span className="ml-8 text-11 text-gray-11">
                 {m.kind === 'field' ? `${m.entityLabel} · field` : 'entity'}
               </span>
             </button>

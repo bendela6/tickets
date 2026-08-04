@@ -25,7 +25,7 @@ export function ZoneBoxes() {
           'data-[resize-cursor=ew-resize]:cursor-ew-resize data-[resize-cursor=ns-resize]:cursor-ns-resize',
           'data-[resize-cursor=nesw-resize]:cursor-nesw-resize',
           'data-[resize-cursor=nwse-resize]:cursor-nwse-resize',
-          'after:pointer-events-none after:absolute after:bottom-1 after:right-1 after:h-3 after:w-3',
+          'after:pointer-events-none after:absolute after:bottom-4 after:right-4 after:h-12 after:w-12',
           'after:rounded-br-md after:border-b-2 after:border-r-2 after:border-(--zone-handle)',
           'after:opacity-0 after:transition-opacity after:duration-120 hover:after:opacity-100',
           {
@@ -65,7 +65,7 @@ export function ZoneBoxes() {
             <div
               data-zone-label=""
               className={cn(
-                'pointer-events-none absolute left-3 top-2',
+                'pointer-events-none absolute left-12 top-8',
                 'text-12 font-600 uppercase tracking-wide text-(--zone-ink)',
                 {
                   'text-10 font-500 normal-case': subgroup,

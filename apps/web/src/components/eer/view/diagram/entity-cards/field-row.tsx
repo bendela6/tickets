@@ -27,7 +27,7 @@ function Port({
   return (
     <span
       className={cn(
-        'absolute top-1/2 z-4 h-4 w-1 -translate-y-1/2',
+        'absolute top-1/2 z-4 h-16 w-4 -translate-y-1/2',
         'bg-gray-10',
         'transition-(--transition-paint) duration-120',
         connected.has(key) ? 'opacity-100' : 'opacity-0',
@@ -68,7 +68,7 @@ export function FieldRow({
   const badge = role?.pk ? 'pk' : role?.fk ? 'fk' : null;
   return (
     <div
-      className="relative flex h-6 cursor-default items-center gap-2 px-3 text-12 hover:bg-surface-inset"
+      className="relative flex h-24 cursor-default items-center gap-8 px-12 text-12 hover:bg-surface-inset"
       data-entity={e.id}
       data-field={f.name}
       data-index={String(index)}

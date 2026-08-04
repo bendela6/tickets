@@ -32,7 +32,7 @@ export function TopBar() {
   return (
     <header
       className={cn(
-        'z-10 flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3',
+        'z-10 flex flex-wrap items-center gap-x-16 gap-y-8 px-16 py-12',
         'border-b-1 border-gray-6 bg-gray-1/95',
       )}
     >
@@ -41,13 +41,13 @@ export function TopBar() {
             fallback matches instead of flashing the old standalone app's name
             ('EER model viewer') for the frame before the model arrives. */}
         <h1 className="text-16 font-600 tracking-tight">{model?.meta.title ?? 'Database schema'}</h1>
-        <p className="mt-1 max-w-sm truncate text-12 text-gray-11">
+        <p className="mt-4 max-w-sm truncate text-12 text-gray-11">
           {model?.meta.description ??
             (model ? `${model.entities.length} tables · ${model.relationships.length} relationships` : 'loading…')}
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-8">
         <SearchBox />
 
         {model && model.groups.some((g) => !g.parent) && (
