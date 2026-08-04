@@ -40,6 +40,20 @@
       "dependsOn": ["^build", "build"],
       "outputs": []
     },
+    // Never cached: it regenerates the token artifacts and asks git whether the
+    // result differs from what is committed, so its real input is the working
+    // tree, which turbo cannot hash. A cache hit would report a stale verdict.
+    "tokens:verify": {
+      "cache": false
+    },
+    // The gate only earns its keep if something runs it. It sat behind a manual
+    // root script from 2026-07 to 2026-08, and in that window it rotted into
+    // naming two deleted files without one run to notice. Hanging it off the
+    // package's own test keeps it on the path everyone already takes.
+    "@tickets/ui#test": {
+      "dependsOn": ["^build", "build", "tokens:verify"],
+      "outputs": []
+    },
     // Two pairs of suites share one live database, and each sets
     // `fileParallelism: false` only WITHIN its own package — turbo would still
     // run the two packages concurrently and let them truncate each other's rows
