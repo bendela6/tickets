@@ -18,6 +18,8 @@ description: Use when starting, restarting, deploying, or screenshotting the app
 | Postgres (docker) | `127.0.0.1:5532` | ONE server, TWO databases: `tickets` (prod, used by the deployed app) and `tickets_dev` (dev, used by local tooling); loopback-only. Inspect: `docker exec -it tickets-postgres-1 psql -U postgres -d tickets` (or `-d tickets_dev`) |
 | Gallery | `/gallery` on either web | primitives showcase; what verifying-a-component measures |
 | Icon editor (vite) | http://localhost:4670 | `@tickets/icon` — the canvas icon builder; part of `pnpm dev` (mprocs pane `icon`). Same IPv6 gotcha as the studio: use `localhost`, never `127.0.0.1` |
+| Session board (web) | http://localhost:4681 | `@tickets/board` — live view of every Claude Code session on this machine (tasks, prompts, git, decisions, activity). Part of `pnpm dev` (pane `board`) |
+| Session board (api) | http://localhost:4680 | read-only local API over `~/.claude`; loopback-only, started by the same pane. The web dev server proxies `/api` here |
 
 ## Commands
 

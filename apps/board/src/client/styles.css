@@ -1,0 +1,14 @@
+@import '@tickets/ui/tokens.css';
+
+/* Tailwind must scan this app's own class literals. Relative to this file. */
+@source '../';
+
+/* The shell is a full-height grid, which only works if its ancestors have a height
+   to fill — percentage heights need a definite parent, all the way up. */
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+}
