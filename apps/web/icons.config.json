@@ -6,7 +6,7 @@
     },
     "top": {
       "light": "#7167ff",
-      "dark": "#6652ff"
+      "dark": "#347aea"
     },
     "mid": {
       "light": "#00bb9a",
@@ -23,27 +23,27 @@
       "ink": "top",
       "spin": true,
       "type": "stick",
-      "angle": 62,
+      "angle": 0,
       "reach": 18,
-      "weight": 6
+      "weight": 8
     },
     {
       "id": "mid",
       "ink": "mid",
       "spin": true,
       "type": "stick",
-      "angle": 27,
+      "angle": 49,
       "reach": 18,
-      "weight": 6
+      "weight": 8
     },
     {
       "id": "low",
       "ink": "low",
       "spin": true,
       "type": "stick",
-      "angle": 160,
+      "angle": 100,
       "reach": 18,
-      "weight": 6
+      "weight": 8
     }
   ],
   "variants": {
@@ -57,7 +57,7 @@
     },
     "chip": {
       "inks": "dark",
-      "scale": 0.7777777777777778,
+      "scale": 1,
       "field": {
         "ink": "field",
         "radius": 11
@@ -65,7 +65,7 @@
     },
     "apple": {
       "inks": "dark",
-      "scale": 0.7777777777777778,
+      "scale": 1,
       "field": {
         "ink": "field",
         "radius": 0
@@ -75,7 +75,7 @@
   "motion": {
     "speed": 120,
     "restSpread": 8,
-    "ramp": 0.9,
+    "ramp": 0.2,
     "restPose": "logo"
   }
 }
