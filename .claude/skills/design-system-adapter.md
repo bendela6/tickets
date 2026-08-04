@@ -21,43 +21,51 @@ here should need to leak back into those skills.
   package root rather than under `src/`, because they are what the package is
   built FROM, not code it ships. There is no primitive→semantic alias layer: a
   ramp step IS the token (`gray-1` is the app background, `red-9` the solid fill).
-- **A token file plays one of two roles — check which before "fixing" one.**
-  Only five of the nine are read by the generator, by design:
-  - *Emitted* — the value lives in the JSON and codegen puts it into CSS:
-    `colors.{light,dark}`, `shadows.{light,dark}`, `semantic`.
-  - *Sanctioned rungs* — the value lives in the Tailwind class and the JSON
-    records which rungs may be used: `layout` (border/ring/z/breakpoint) and
-    `motion`'s durations. `duration-200` is 200ms because the class says so;
-    emitting `--duration-200` would create the second copy that is the only way
-    the two could disagree. `spec.test.ts` asserts the sheet declares NO token
-    for these, so wiring them into the generator breaks the suite on purpose.
-  - `radius` and `typography` straddle both: their values are hand-authored in
-    `styles/theme.css` (next to the `initial` clears that retire off-scale rungs
-    — enforcement DTCG cannot express), and `foundation/spec.ts`'s `drift()`
-    matches the two copies **by value**, so an edit to either side fails
-    `spec.test.ts` rather than passing silently.
-  - There is no `tones.tokens.json`. The hue list is derived from the keys of
-    `colors.light.tokens.json` — the ramps are the only place a hue can exist,
-    so a separate list was just a second copy that could disagree.
-- **All CSS lives in `packages/web/ui/styles/`, and generated files are whole
-  files.** Nothing is spliced into hand-authored content any more:
+- **One family per row, one name across all four tiers.** Adding a family is a
+  new generator file plus one entry in `build-tokens.ts`, which holds no
+  knowledge of any family itself.
+
+  | family | generator | JSON | CSS | TS |
+  | --- | --- | --- | --- | --- |
+  | colors | `generators/colors.ts` | `colors` | `colors.css` | `colors.ts` |
+  | typography | `generators/typography.ts` | `typography` | `typography.css` | `typography.ts` |
+  | border | `generators/border.ts` | `border` | `border.css` | `border.ts` |
+  | motion | `generators/motion.ts` | `motion` | `motion.css` | `motion.ts` |
+  | shadows | `generators/shadows.ts` | `shadows` | `shadows.css` | `shadows.ts` |
+  | breakpoints | `generators/breakpoints.ts` | `breakpoints` | `breakpoints.css` | `breakpoints.ts` |
+  | *(safelist)* | `extract-safelist.mjs` | — | `safelist.css` | — |
+
+  Each generator is one self-contained function returning `{ css, ts }`.
+  `colors` holds ramps, roles, surfaces and literals — all `--color-*`, so all
+  behind one `--color-*: initial`.
+- **Not everything in a token file is emitted, by design.** `motion.duration`
+  and `border.width`/`border.ring` produce no CSS: Tailwind has no namespace for
+  them, so `duration-200` is 200ms and `border-7` is 7px because the class says
+  so. Measured — any integer compiles. Those lists are documentation the build
+  cannot enforce; `spec.test.ts` asserts the sheet declares NO token for them.
+- **All CSS lives in `packages/web/ui/styles/`; generated files are whole
+  files.** Nothing is spliced into hand-authored content:
   - `index.css` — the entry (`@tickets/ui/tokens.css` resolves here). Layer
     declaration, imports, `@source`, `@custom-variant`, `@layer base`, keyframes.
-  - `theme.css` — AUTHORED `@theme inline`: fonts, type scale, weights, radius,
-    easings. **Imported before `tokens.generated.css`**, because `--color-*:
-    initial` lives here and after the generated colours it would wipe them.
-  - `tokens.generated.css` — GENERATED whole by `scripts/generators/build-tokens.ts`.
-  - `safelist.generated.css` — GENERATED whole by `scripts/extract-safelist.mjs`.
+  - `generated/*.css` — one per family, each carrying its own `initial` clear
+    above the values it applies to. That is what makes the `@import` list
+    order-independent: no file can wipe another's namespace.
   - `prose.css` — authored `.rt` rich-text rules.
-- Codegen: `pnpm --filter @tickets/ui tokens:build`. Also writes
-  `src/style/tones/tones.generated.ts` (the tone vocabulary), which is TypeScript
-  and so sits with the code that imports it.
-- Gates: `pnpm --filter @tickets/ui tokens:verify` is now ONLY a freshness check —
-  it regenerates and fails if the three generated artifacts differ from a fresh
-  build. It no longer validates anything about the values themselves.
-  The JSON↔CSS equivalence for the hand-written families is a *unit test*
-  (`foundation/spec.test.ts`), not part of `tokens:verify` — it runs under
-  `pnpm --filter @tickets/ui test`, and is the last automated check on tokens.
+- **Generated TypeScript lives in `src/generated/`**, one file per family plus a
+  regenerated `index.ts` barrel. `foundation/` imports these rather than reading
+  raw JSON, so `cn.ts`'s registered type scale and `use-is-narrow`'s breakpoints
+  cannot fall behind the tokens. The contrast maths in `foundation/colors` stays
+  hand-written — that is logic, not data.
+- Codegen: `pnpm --filter @tickets/ui tokens:build`.
+- Gates: `pnpm --filter @tickets/ui tokens:verify` is ONLY a freshness check —
+  it regenerates and fails if the generated artifacts differ from a fresh build.
+  It validates nothing about the values themselves.
+  What remains beyond that runs under `pnpm --filter @tickets/ui test`:
+  `spec.test.ts` (contracts — naming rules, ramp uniformity, what must NOT be
+  emitted) and the generators' own build-time assertions (theme symmetry per
+  family, every ramp carries the same rungs, every role resolves).
+  `drift()` was deleted 2026-08-04: it compared the token JSON against CSS
+  generated FROM that JSON, so every row read "matched" by construction.
 - **Three gates were deleted on 2026-08-04.** Know what is no longer caught:
   - `tokens:lint` / `scan-hardcoded-values.mjs` — nothing objects to
     `bg-[#3b82f6]`, a hex in an inline `style=`, or a colour written straight

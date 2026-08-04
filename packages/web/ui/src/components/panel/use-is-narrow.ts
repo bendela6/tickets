@@ -1,7 +1,21 @@
 import { useEffect, useState } from 'react';
+import { BREAKPOINTS } from '../../generated';
 
 // Below these a docked panel cannot sit beside the content without squeezing it.
-const QUERIES = { md: '(max-width: 767px)', lg: '(max-width: 1023px)' } as const;
+//
+// Derived from the breakpoint tokens rather than written out. These were
+// `(max-width: 767px)` and `(max-width: 1023px)` until 2026-08-04 — hand-computed
+// `md - 1` and `lg - 1`, with nothing linking them to the tokens they came from.
+// Moving a breakpoint left the panel on the old one, silently.
+//
+// `- 1` because `max-width` is inclusive and the token is where the NEXT band
+// starts: a viewport of exactly `md` belongs above the boundary, not below it.
+const BELOW = (px: number): string => `(max-width: ${px - 1}px)`;
+
+const QUERIES = {
+  md: BELOW(BREAKPOINTS.md),
+  lg: BELOW(BREAKPOINTS.lg),
+} as const;
 
 export type PanelBreakpoint = keyof typeof QUERIES;
 
