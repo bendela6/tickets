@@ -7,11 +7,13 @@ import {
   type PanelImperativeHandle,
 } from 'react-resizable-panels';
 import {
+  Button,
   cn,
   isToneSet,
   type CollectedDemo,
   Icon,
   initialValues,
+  Switch,
   Tabs,
   TONE_SET_NAMES,
   TONE_SETS,
@@ -64,6 +66,10 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]['key'];
 
+// The workbench's own switch — a visually-hidden checkbox behind a hand-drawn
+// track and thumb — is what the library's Switch is. This wrapper survives only
+// to keep the `onChange(next: boolean)` shape the three call sites below use;
+// Switch speaks the native event.
 function Toggle({
   label,
   checked,
@@ -74,28 +80,11 @@ function Toggle({
   onChange: (next: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-8 font-sans text-13/19 text-gray-11">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="sr-only"
-      />
-      <span
-        className={cn(
-          'relative inline-block h-18 w-32 rounded-full',
-          checked ? 'bg-indigo-9' : 'bg-gray-7',
-        )}
-      >
-        <span
-          className={cn(
-            'absolute top-2 h-14 w-14 rounded-full bg-surface-raised transition-all',
-            checked ? 'right-2' : 'left-2',
-          )}
-        />
-      </span>
-      <span>{label}</span>
-    </label>
+    <Switch
+      label={label}
+      checked={checked}
+      onChange={(event) => onChange(event.target.checked)}
+    />
   );
 }
 
@@ -229,15 +218,17 @@ export function ComponentPage({
             {selectKeys.length >= 2 && (
               <Toggle label="Matrix" checked={matrixMode} onChange={setMatrixMode} />
             )}
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              tone="neutral"
+              size="sm"
               aria-expanded={!controlsCollapsed}
               onClick={() => setCollapsed(!controlsCollapsed)}
-              className="inline-flex h-26 items-center gap-6 rounded-md border-1 border-gray-7 bg-surface-raised px-8 font-sans text-11/13 tracking-wider font-500 text-gray-11 hover:text-gray-12"
+              className="text-11/13 tracking-wider"
             >
               <Icon name={controlsCollapsed ? 'chevron-left' : 'chevron-right'} size="sm" />
               {controlsCollapsed ? 'Show controls' : 'Hide controls'}
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -329,13 +320,14 @@ export function ComponentPage({
                   <span className="font-mono text-11/13 tracking-wider uppercase tracking-widest text-gray-9">
                     CONTROLS
                   </span>
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setValues(initialValues(playground.controls))}
-                    className="font-sans text-11/13 tracking-wider font-500 text-indigo-9 hover:underline"
+                    className="h-auto px-0 text-11/13 tracking-wider hover:underline"
                   >
                     Reset
-                  </button>
+                  </Button>
                 </div>
                 <ControlsPanel
                   controls={playground.controls}

@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import { cn } from '@tickets/ui';
+import { cn, CopyButton } from '@tickets/ui';
 import { getHighlighter } from '../highlight';
-
-const COPY_STATE_RESET_MS = 1500;
 
 // The fixed-dark syntax surface shared by every code view in the workbench
 // (the Preview stage's generated snippet, the Demo tab, the Implementation
@@ -19,7 +17,6 @@ export function CodeBlock({
   className?: string;
 }) {
   const [html, setHtml] = useState<string | null>(null);
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
 
   useEffect(() => {
     let cancelled = false;
@@ -31,21 +28,6 @@ export function CodeBlock({
     };
   }, [code]);
 
-  useEffect(() => {
-    if (copyState === 'idle') return;
-    const timer = window.setTimeout(() => setCopyState('idle'), COPY_STATE_RESET_MS);
-    return () => window.clearTimeout(timer);
-  }, [copyState]);
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopyState('copied');
-    } catch {
-      setCopyState('failed');
-    }
-  }
-
   return (
     <div
       className={cn(
@@ -54,13 +36,15 @@ export function CodeBlock({
         className,
       )}
     >
-      <button
-        type="button"
-        onClick={() => void handleCopy()}
-        className="pg-code-copy absolute top-10 right-10 inline-flex h-26 items-center gap-6 rounded-md border-1 border-transparent px-10 font-sans text-11/13 tracking-wider font-500"
-      >
-        {copyState === 'copied' ? 'Copied' : copyState === 'failed' ? 'Copy failed' : '⧉ Copy'}
-      </button>
+      {/* `pg-code-copy` still carries the on-dark colours this surface needs —
+          the block is fixed-dark regardless of theme, so the library's default
+          gray border would disappear into it. Everything else, including the
+          idle/copied/failed timer this file used to run itself, is CopyButton's. */}
+      <CopyButton
+        value={code}
+        failedLabel="Copy failed"
+        className="pg-code-copy absolute top-10 right-10"
+      />
       {html !== null ? <div dangerouslySetInnerHTML={{ __html: html }} /> : <pre>{code}</pre>}
     </div>
   );

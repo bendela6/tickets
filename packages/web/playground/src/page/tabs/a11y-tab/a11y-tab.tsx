@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AxeResults } from 'axe-core';
-import { Icon, Pill, type Tone } from '@tickets/ui';
+import { Button, Icon, Pill, type Tone } from '@tickets/ui';
 
 interface AuditState {
   results: AxeResults | null;
@@ -88,14 +88,18 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
       {/* Header with meta and button */}
       <div className="flex items-center justify-between">
         <span className="font-mono text-12/17 text-gray-9">{metaText}</span>
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          tone="neutral"
+          size="sm"
           onClick={runAudit}
-          disabled={auditState.isLoading}
-          className="h-28 rounded-lg border-1 border-gray-7 bg-surface-raised px-12 font-sans text-12/17 text-gray-12 hover:bg-surface-inset disabled:opacity-50 disabled:cursor-not-allowed"
+          // `loading` draws the spinner and disables the button, which is what
+          // the hand-rolled version spelled as a disabled attribute plus a
+          // swapped label.
+          loading={auditState.isLoading}
         >
           {auditState.isLoading ? 'auditing…' : 'Run audit'}
-        </button>
+        </Button>
       </div>
 
       {/* Results */}

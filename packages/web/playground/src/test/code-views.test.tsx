@@ -77,7 +77,7 @@ describe('GeneratedCode', () => {
     );
     // Before the (mocked, still-async) highlighter resolves, the raw text is
     // already visible — no flash of nothing.
-    expect(block(container).textContent).toBe('⧉ Copy<Button variant="secondary" />');
+    expect(block(container).textContent).toBe('Copy<Button variant="secondary" />');
     expect(screen.getByText(/loading unset → omitted/)).toBeTruthy();
 
     await waitFor(() => {
@@ -89,10 +89,10 @@ describe('GeneratedCode', () => {
     const { container, rerender } = render(
       <GeneratedCode demo={demo} values={{ variant: 'primary', loading: false }} />,
     );
-    expect(block(container).textContent).toBe('⧉ Copy<Button />');
+    expect(block(container).textContent).toBe('Copy<Button />');
 
     rerender(<GeneratedCode demo={demo} values={{ variant: 'secondary', loading: true }} />);
-    expect(block(container).textContent).toBe('⧉ Copy<Button variant="secondary" loading />');
+    expect(block(container).textContent).toBe('Copy<Button variant="secondary" loading />');
     expect(screen.queryByText(/unset → omitted/)).toBeNull();
 
     await waitFor(() => {
@@ -121,10 +121,10 @@ describe('DemoTab', () => {
 
   it('shows the raw source before highlighting, then the highlighted markup', async () => {
     const { container } = render(<DemoTab demo={demo} source={source} />);
-    expect(block(container).textContent).toBe(`⧉ Copy${source}`);
+    expect(block(container).textContent).toBe(`Copy${source}`);
 
     await waitFor(() => {
-      expect(block(container).textContent).toBe(`⧉ CopyHL:${source}`);
+      expect(block(container).textContent).toBe(`CopyHL:${source}`);
     });
   });
 
