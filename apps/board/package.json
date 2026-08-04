@@ -1,0 +1,41 @@
+{
+  "name": "@tickets/board",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n server,web -c blue,magenta \"pnpm dev:server\" \"vite\"",
+    "dev:server": "tsx watch src/server/main.ts",
+    "start": "tsx src/server/main.ts",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.99.2",
+    "@tanstack/react-router": "^1.170.17",
+    "@tickets/ui": "workspace:*",
+    "clsx": "^2.1.1",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@fontsource/ibm-plex-mono": "^5.2.7",
+    "@fontsource/ibm-plex-sans": "^5.2.8",
+    "@tailwindcss/vite": "^4.3.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^9.2.1",
+    "jsdom": "^29.1.1",
+    "tailwindcss": "^4.3.2",
+    "tsx": "^4.21.0",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "vite": "^8.0.12",
+    "vitest": "^4.1.10"
+  }
+}

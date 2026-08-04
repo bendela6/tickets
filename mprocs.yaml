@@ -17,6 +17,10 @@ procs:
   # ::1 first and Vite binds only that.
   icon:
     shell: pnpm --filter @tickets/icon dev
+  # Watches every Claude Code session on this machine, not just this repo, so it is
+  # useful across projects — stop the pane with `x` if you don't want it running.
+  board:
+    shell: pnpm --filter @tickets/board dev
   studio:
     shell: pnpm db:studio
   watchers:
