@@ -1,5 +1,13 @@
-import { Fragment, useState, type ReactNode } from 'react';
-import { type AnyControlDef, cn, type CollectedDemo, UI_SRC_ROOT, WEB_SRC_ROOT } from '@tickets/ui';
+import { useState } from 'react';
+import {
+  type AnyControlDef,
+  cn,
+  type CollectedDemo,
+  Icon,
+  Prose,
+  UI_SRC_ROOT,
+  WEB_SRC_ROOT,
+} from '@tickets/ui';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
@@ -56,25 +64,6 @@ function chipValues(def: AnyControlDef): string[] {
   return [];
 }
 
-// Doc prose — both the API summary and each prop's description — renders
-// `backticked` spans as inline code, matching the design's inline chip. Split
-// on the delimiter and alternate: odd indices are the code spans. Code in
-// documentation is always written in backticks, never quotes.
-function prose(text: string): ReactNode[] {
-  return text.split('`').map((part, i) =>
-    i % 2 === 1 ? (
-      <span
-        key={i}
-        className="rounded-sm bg-surface-inset px-6 py-px font-mono text-13/19 text-gray-12"
-      >
-        {part}
-      </span>
-    ) : (
-      <Fragment key={i}>{part}</Fragment>
-    ),
-  );
-}
-
 function OptionChips({ values }: { values: string[] }) {
   const [expanded, setExpanded] = useState(false);
   const overflowing = values.length > CHIP_CAP;
@@ -128,11 +117,7 @@ function PropRow({ name, def }: { name: string; def: AnyControlDef }) {
         </span>
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-10">
-        {def.description && (
-          <div className="font-sans text-13/19 leading-relaxed text-gray-11 text-pretty">
-            {prose(def.description)}
-          </div>
-        )}
+        <Prose className="text-pretty">{def.description}</Prose>
         {values.length > 0 && <OptionChips values={values} />}
         <div className={META_LINE}>
           <span>
@@ -173,9 +158,7 @@ export function DocsPanel({ demo, railNote = true }: { demo: LiveDemo; railNote?
             API
           </span>
           {docs?.summary ? (
-            <div className="font-sans text-14/21 leading-relaxed text-gray-11 text-pretty">
-              {prose(docs.summary)}
-            </div>
+            <Prose className="text-pretty">{docs.summary}</Prose>
           ) : (
             <div className="font-sans text-14/21 leading-relaxed text-gray-9 text-pretty">
               Props marked unsettable fall back to the component default and are omitted from
@@ -196,9 +179,8 @@ export function DocsPanel({ demo, railNote = true }: { demo: LiveDemo; railNote?
 
       {railNote && (
         <div className="mt-24 flex gap-10 rounded-lg bg-green-3 p-14">
-          <span className="mt-px inline-flex size-16 flex-none items-center justify-center rounded-full bg-green-9 font-sans text-9/12 font-600 text-green-contrast">
-            i
-          </span>
+          {/* Registry glyph rather than a circle drawn around the letter i. */}
+          <Icon name="circle-info" size="sm" className="mt-px flex-none text-green-9" />
           <span className="font-sans text-12/17 leading-normal text-green-9 text-pretty">
             Every prop on this page is wired to the controls rail — edit a value there and the code
             on the Preview tab regenerates.

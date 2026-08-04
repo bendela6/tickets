@@ -125,11 +125,12 @@ describe('DocsPanel — prop rows', () => {
   it('renders backticked code inside a description, not literal backticks', () => {
     const description = within(row('variant')).getByText(/Visual weight and intent/);
     expect(description.textContent).toBe('Visual weight and intent. Pass ghost inside a toolbar.');
-    // `ghost` is also an option chip in this row, so match the code span by class.
-    const code = [...description.querySelectorAll('span')].map((s) => s.className);
+    // Backticks become a real <code>, which is the assertion worth making —
+    // the element carries the meaning, where the chip styling is Prose's to
+    // change without breaking anything.
+    const code = description.querySelectorAll('code');
     expect(code).toHaveLength(1);
-    expect(code[0]).toContain('font-mono');
-    expect(code[0]).toContain('bg-surface-inset');
+    expect(code[0]?.textContent).toBe('ghost');
   });
 
   it('badges required props apart from optional ones', () => {
