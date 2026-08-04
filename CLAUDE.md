@@ -18,7 +18,6 @@ Generic design→code method — stack specifics live in `design-system-adapter.
 
 Project-specific ops:
 - `running-the-stack` — ports, URLs, deploy, startup gotchas
-- `migrating-legacy-screens` — porting screens off globals.css / deleting legacy CSS
 - `syncing-design` — pushing/pulling the claude.ai/design project
 
 ## Running (details in running-the-stack)
