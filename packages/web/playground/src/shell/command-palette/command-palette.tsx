@@ -58,10 +58,10 @@ export function CommandPalette({
     <Command.Dialog
       open={open}
       onOpenChange={onOpenChange}
-      className="[&_[cmdk-dialog]]:fixed [&_[cmdk-dialog]]:inset-0 [&_[cmdk-dialog]]:flex [&_[cmdk-dialog]]:items-start [&_[cmdk-dialog]]:justify-center [&_[cmdk-dialog]]:bg-black/40 [&_[cmdk-dialog]]:pt-18"
+      className="[&_[cmdk-dialog]]:fixed [&_[cmdk-dialog]]:inset-0 [&_[cmdk-dialog]]:flex [&_[cmdk-dialog]]:items-start [&_[cmdk-dialog]]:justify-center [&_[cmdk-dialog]]:bg-black/40 [&_[cmdk-dialog]]:pt-72"
     >
-      <div className="w-130 rounded-xl border-1 border-gray-6 bg-surface-raised shadow-lg overflow-hidden">
-        <div className="flex items-center gap-2.5 px-4 py-3 border-b-1 border-gray-6">
+      <div className="w-520 rounded-xl border-1 border-gray-6 bg-surface-raised shadow-lg overflow-hidden">
+        <div className="flex items-center gap-10 px-16 py-12 border-b-1 border-gray-6">
           <span className="text-11/13 tracking-wider text-gray-9">⌕</span>
           <Command.Input
             value={query}
@@ -72,13 +72,13 @@ export function CommandPalette({
           <span className="text-11/13 tracking-wider text-gray-9">Jump to component…</span>
         </div>
 
-        <div className="py-2 px-1.5 flex flex-col max-h-96 overflow-y-auto">
+        <div className="py-8 px-6 flex flex-col max-h-384 overflow-y-auto">
           {groups.map((group) => {
             const groupDemos = demos.filter((d) => d.meta.group === group);
             return (
               <div key={group} className="flex flex-col">
                 <Command.Group value={group}>
-                  <div className="font-mono text-11/13 tracking-wider uppercase tracking-label text-gray-9 px-3 py-2">
+                  <div className="font-mono text-11/13 tracking-wider uppercase tracking-label text-gray-9 px-12 py-8">
                     {group}
                   </div>
                   {groupDemos.map((demo) => (
@@ -89,7 +89,7 @@ export function CommandPalette({
                         onSelect(demo.slug);
                         onOpenChange(false);
                       }}
-                      className="h-8.5 px-3 py-0 flex items-center rounded-lg text-13/19 cursor-pointer data-[selected=true]:bg-indigo-3"
+                      className="h-34 px-12 py-0 flex items-center rounded-lg text-13/19 cursor-pointer data-[selected=true]:bg-indigo-3"
                     >
                       <span className="text-gray-11 data-[selected=true]:text-indigo-9">
                         {highlightMatch(demo.meta.title, query)}
@@ -106,7 +106,7 @@ export function CommandPalette({
           })}
         </div>
 
-        <div className="flex items-center px-4 py-2.25 border-t-1 border-gray-6 bg-gray-1">
+        <div className="flex items-center px-16 py-9 border-t-1 border-gray-6 bg-gray-1">
           <span className="font-mono text-11/13 tracking-wider text-gray-9">
             ↑↓ navigate · ↵ open · esc close
           </span>

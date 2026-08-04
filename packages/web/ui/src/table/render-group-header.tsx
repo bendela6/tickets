@@ -17,7 +17,7 @@ import { Icon } from '../components/icon';
  * count, and `minmax(240px, 1fr)` cannot be counted by splitting on spaces.
  * The band reads as a one-cell row, which is honest.
  *
- * `px-4` is not an independent choice: it is the 16px the leading column's
+ * `px-16` is not an independent choice: it is the 16px the leading column's
  * content sits at (a row's 4px inset plus that column's 12px gutter — see
  * metrics.ts), so a group's label lines up with the keys beneath it.
  */
@@ -43,12 +43,12 @@ export function renderGroupHeader({
         // height. Height zero also keeps it out of flow height, so the rows
         // below are not pushed down by it.
         //
-        // `top-9` is the column header's height (HEAD_HEIGHT), so this lands
+        // `top-36` is the column header's height (HEAD_HEIGHT), so this lands
         // directly beneath it rather than under it.
         //
         // `z-9`, below the header's `z-10` and above the rows: it must cover
         // rows sliding past and be covered by the header.
-        className="sticky top-9 z-9 h-0"
+        className="sticky top-36 z-9 h-0"
         // A duplicate of a band that is already in the row flow. Announcing it
         // would read the same group twice. The real band stays in the
         // rowgroup, which is what a screen reader walks.
@@ -73,7 +73,7 @@ export function renderGroupHeader({
               }
             : {})}
           className={cn(
-            'flex w-full items-center gap-2.5 border-b-1 border-gray-6 bg-gray-1 px-4 text-left',
+            'flex w-full items-center gap-10 border-b-1 border-gray-6 bg-gray-1 px-16 text-left',
             onToggle && 'cursor-pointer hover:bg-surface-inset',
           )}
           // The one place a band's height is stated rather than handed over by
@@ -119,7 +119,7 @@ function renderBand({ header, style, collapsed, onToggle }: RenderGroupHeaderCtx
             ? { type: 'button' as const, onClick: onToggle, 'aria-expanded': !collapsed }
             : {})}
           className={cn(
-            'flex h-full w-full items-center gap-2.5 px-4 text-left',
+            'flex h-full w-full items-center gap-10 px-16 text-left',
             onToggle && 'cursor-pointer hover:bg-surface-inset',
           )}
         >

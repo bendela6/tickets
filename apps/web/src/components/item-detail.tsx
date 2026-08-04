@@ -20,7 +20,7 @@ import { RichTextEditor } from './rich-text/rich-text-editor';
 import { TicketDispatch } from './agent/ticket-dispatch';
 
 const ICON_BUTTON =
-  'inline-flex size-7.5 shrink-0 items-center justify-center rounded-lg border-1 border-gray-6 ' +
+  'inline-flex size-30 shrink-0 items-center justify-center rounded-lg border-1 border-gray-6 ' +
   'bg-transparent text-gray-11 hover:bg-surface-inset hover:text-gray-12';
 
 // Click-to-edit title: static heading until clicked, then a borderless input
@@ -223,7 +223,7 @@ export function ItemDetail({
     <button
       type="button"
       onClick={() => openItem(parent.number)}
-      className="flex w-fit min-w-0 items-center gap-1.5 bg-transparent p-0 text-left font-sans text-12/17 font-500 text-indigo-9 hover:underline"
+      className="flex w-fit min-w-0 items-center gap-6 bg-transparent p-0 text-left font-sans text-12/17 font-500 text-indigo-9 hover:underline"
     >
       <span aria-hidden>‹</span>
       <span className="shrink-0 font-mono">
@@ -235,7 +235,7 @@ export function ItemDetail({
 
   const descriptionSection = descriptionField ? (
     <section>
-      <SectionHeader title="Description" className="mb-2" />
+      <SectionHeader title="Description" className="mb-8" />
       <RichTextEditor
         value={
           typeof item.values[descriptionField.key] === 'string'
@@ -268,8 +268,8 @@ export function ItemDetail({
   if (variant === 'drawer') {
     return (
       <>
-        <div className="flex shrink-0 items-center gap-2.25 border-b-1 border-gray-6 px-5 py-3.5">
-          <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-md bg-surface-inset px-1.75 py-0.75" />
+        <div className="flex shrink-0 items-center gap-9 border-b-1 border-gray-6 px-20 py-14">
+          <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-md bg-surface-inset px-7 py-3" />
           <Pill {...typePill} label={type?.label ?? '?'} />
           {workflowField ? (
             <StatusSelect
@@ -287,14 +287,14 @@ export function ItemDetail({
           <Link
             to="/p/$projectKey/t/$number"
             params={{ projectKey, number: String(item.number) }}
-            className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border-1 border-gray-7 bg-surface-raised px-2.5 font-sans text-12 font-500 text-gray-12 hover:bg-surface-inset"
+            className="inline-flex h-28 shrink-0 items-center gap-4 rounded-md border-1 border-gray-7 bg-surface-raised px-10 font-sans text-12 font-500 text-gray-12 hover:bg-surface-inset"
           >
             Open page ↗
           </Link>
           {archiveMenu}
           <DrawerControls />
         </div>
-        <div className="flex min-h-0 flex-1 flex-col gap-4.5 overflow-y-auto px-5 pb-6 pt-4.5">
+        <div className="flex min-h-0 flex-1 flex-col gap-18 overflow-y-auto px-20 pb-24 pt-18">
           {breadcrumb}
           <InlineTitle
             value={title}
@@ -315,7 +315,7 @@ export function ItemDetail({
               value={tab}
               onChange={(next) => setTab(next as typeof tab)}
             />
-            <div className="pt-3">
+            <div className="pt-12">
               {tab === 'comments' ? (
                 <DetailComments indexes={indexes} item={item} prefix={prefix} onOpenItem={openItem} />
               ) : (
@@ -330,7 +330,7 @@ export function ItemDetail({
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center gap-2.25 border-b-1 border-gray-6 py-3.5">
+      <div className="flex items-center gap-9 border-b-1 border-gray-6 py-14">
         <Link
           to="/p/$projectKey"
           params={{ projectKey }}
@@ -352,12 +352,12 @@ export function ItemDetail({
         </Button>
         {archiveMenu}
       </div>
-      <div className="flex gap-9 pb-10 pt-6.5">
-        <div className="flex min-w-0 flex-1 flex-col gap-5.5">
+      <div className="flex gap-36 pb-40 pt-26">
+        <div className="flex min-w-0 flex-1 flex-col gap-22">
           <div>
-            {breadcrumb ? <div className="mb-2.5">{breadcrumb}</div> : null}
-            <div className="mb-2.5 flex items-center gap-2.25">
-              <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-md bg-surface-inset px-1.75 py-0.75" />
+            {breadcrumb ? <div className="mb-10">{breadcrumb}</div> : null}
+            <div className="mb-10 flex items-center gap-9">
+              <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-md bg-surface-inset px-7 py-3" />
               <Pill {...typePill} label={type?.label ?? '?'} />
               <span className="font-mono text-11/13 tracking-wider text-gray-9">
                 created{' '}
@@ -376,17 +376,17 @@ export function ItemDetail({
           {childrenSection}
           {linksSection}
           <section>
-            <SectionHeader title="Comments" className="mb-3" />
+            <SectionHeader title="Comments" className="mb-12" />
             <DetailComments indexes={indexes} item={item} prefix={prefix} onOpenItem={openItem} />
           </section>
         </div>
-        <div className="flex w-80 shrink-0 flex-col gap-5">
-          <section className="flex flex-col gap-3 rounded-xl border-1 border-gray-6 bg-surface-raised p-4">
+        <div className="flex w-320 shrink-0 flex-col gap-20">
+          <section className="flex flex-col gap-12 rounded-xl border-1 border-gray-6 bg-surface-raised p-16">
             <SectionHeader title={`Fields — ${type?.label ?? '?'} form`} />
             <DetailFields board={board} indexes={indexes} item={item} layout="rail" />
           </section>
           <section>
-            <SectionHeader title="Activity" className="mb-2.5" />
+            <SectionHeader title="Activity" className="mb-10" />
             <DetailActivity item={item} indexes={indexes} />
           </section>
         </div>

@@ -39,7 +39,7 @@ function ResizeHandle({ resize }: { resize: RenderThResize }) {
       // the gesture every spreadsheet has trained people to expect, and it is
       // the fastest way out of a column that truncates everything.
       onDoubleClick={resize.onAutoFit}
-      className="absolute top-0 right-0 h-full w-1 cursor-col-resize hover:bg-gray-8"
+      className="absolute top-0 right-0 h-full w-4 cursor-col-resize hover:bg-gray-8"
     />
   );
 }
@@ -98,7 +98,7 @@ export function renderTh<T>({
           // so without this a sortable header renders in sentence case while
           // its non-sortable neighbour is in caps. Measured in a browser, not
           // deduced: jsdom computes no styles, so no test here can see it.
-          className="flex cursor-pointer items-center gap-1 uppercase hover:text-gray-12"
+          className="flex cursor-pointer items-center gap-4 uppercase hover:text-gray-12"
         >
           {column.header}
           {sort ? (

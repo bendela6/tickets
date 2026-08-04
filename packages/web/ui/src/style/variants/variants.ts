@@ -18,7 +18,7 @@ import { isExpansion, type Axis, type Expansion } from './axis';
  *           bare: 'bg-transparent',
  *         },
  *       },
- *       size: { default: 'md', options: { sm: 'h-7', md: 'h-9' } },
+ *       size: { default: 'md', options: { sm: 'h-28', md: 'h-36' } },
  *     },
  *   });
  *

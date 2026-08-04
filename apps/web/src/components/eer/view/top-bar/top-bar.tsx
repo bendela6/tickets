@@ -17,7 +17,7 @@ export function TopBar() {
   return (
     <header
       className={cn(
-        'z-10 flex flex-wrap items-center gap-2 px-4 py-3',
+        'z-10 flex flex-wrap items-center gap-8 px-16 py-12',
         'border-b-1 border-gray-6 bg-gray-1/95',
       )}
     >

@@ -16,7 +16,7 @@
  * track, the header row, body rows and skeleton rows must all carry it — a row
  * that omits it is offset from the rest of the table by 4px.
  */
-export const ROW_INSET = 'px-1';
+export const ROW_INSET = 'px-4';
 
 /**
  * Fixed header height. Fixed rather than derived from the header cells'
@@ -24,7 +24,7 @@ export const ROW_INSET = 'px-1';
  * into a header — an icon or a taller control in one column must not make the
  * whole header grow.
  */
-export const HEAD_HEIGHT = 'h-9';
+export const HEAD_HEIGHT = 'h-36';
 
 /**
  * Per-cell gutter. The leading column is roomier than the rest, which puts
@@ -36,7 +36,7 @@ export const HEAD_HEIGHT = 'h-9';
  * identity, and `column.key` cannot answer it.
  */
 export function cellGutter(index: number): string {
-  return index === 0 ? 'px-3' : 'px-2';
+  return index === 0 ? 'px-12' : 'px-8';
 }
 
 /** The two row densities the design defines. */

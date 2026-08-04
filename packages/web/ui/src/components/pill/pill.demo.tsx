@@ -10,7 +10,7 @@ export const states = [
   {
     name: 'Tones',
     render: () => (
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-12">
         {TONE_NAMES.map((tone) => (
           <Pill key={tone} label={tone} tone={tone} />
         ))}
@@ -20,7 +20,7 @@ export const states = [
   {
     name: 'Variants',
     render: () => (
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-12">
         {(['subtle', 'solid', 'outline', 'text'] as const).map((variant) => (
           <Pill key={variant} label={variant} tone="green" variant={variant} />
         ))}
@@ -30,7 +30,7 @@ export const states = [
   {
     name: 'Sizes',
     render: () => (
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-12">
         {(['sm', 'md', 'lg'] as const).map((size) => (
           <Pill key={size} label={size} tone="blue" size={size} icon="circle" />
         ))}
@@ -40,7 +40,7 @@ export const states = [
   {
     name: 'Chevron',
     render: () => (
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-12">
         <Pill label="Assignee" chevron onClick={() => {}} />
         <Pill label="Status" tone="blue" chevron onClick={() => {}} />
       </div>
@@ -49,7 +49,7 @@ export const states = [
   {
     name: 'Shapes',
     render: () => (
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-12">
         <Pill label="square" shape="square" tone="purple" />
         <Pill label="round" shape="round" tone="purple" />
       </div>
@@ -58,7 +58,7 @@ export const states = [
   {
     name: 'With icons',
     render: () => (
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-12">
         <Pill label="circle" icon="circle" />
         <Pill label="spinning" icon={<Icon name="circle-half" animate="spin" />} />
         <Pill label="diamond" icon="diamond" />
@@ -69,7 +69,7 @@ export const states = [
   {
     name: 'Toggle',
     render: () => (
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-12">
         <Pill label="pressed" onClick={() => {}} pressed />
         <Pill label="unpressed" onClick={() => {}} />
         <Pill label="disabled" onClick={() => {}} disabled />
@@ -79,7 +79,7 @@ export const states = [
   {
     name: 'Trailing + strikethrough',
     render: () => (
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-12">
         <Pill label="done" strikethrough trailing={<span>3</span>} />
         <Pill label="tag" shape="round" trailing={<span>5</span>} />
       </div>

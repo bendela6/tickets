@@ -96,7 +96,7 @@ function Layout({ width, className, children }: LayoutProps & { width: SlotWidth
  */
 export function Wrap({ children, className }: LayoutProps) {
   return (
-    <Layout width="inline" className={cn('flex flex-wrap items-end gap-x-5 gap-y-4', className)}>
+    <Layout width="inline" className={cn('flex flex-wrap items-end gap-x-20 gap-y-16', className)}>
       {children}
     </Layout>
   );
@@ -105,7 +105,7 @@ export function Wrap({ children, className }: LayoutProps) {
 /** One specimen per line, each spanning the width — rows, streams, banners. */
 export function List({ children, className }: LayoutProps) {
   return (
-    <Layout width="block" className={cn('flex flex-col gap-3', className)}>
+    <Layout width="block" className={cn('flex flex-col gap-12', className)}>
       {children}
     </Layout>
   );
@@ -134,7 +134,7 @@ export function Grid({
   className,
 }: LayoutProps & { columns?: GridColumns }) {
   return (
-    <Layout width="block" className={cn('grid items-end gap-4', COLUMNS[columns], className)}>
+    <Layout width="block" className={cn('grid items-end gap-16', COLUMNS[columns], className)}>
       {children}
     </Layout>
   );
@@ -148,7 +148,7 @@ export function Grid({
  */
 export function Center({ children, className }: LayoutProps) {
   return (
-    <Layout width="inline" className={cn('flex items-center justify-center py-6', className)}>
+    <Layout width="inline" className={cn('flex items-center justify-center py-24', className)}>
       {children}
     </Layout>
   );
@@ -192,7 +192,7 @@ export function Matrix<R extends string, C extends string>({
               never scrolls vertically, so nothing sticks to the top. */}
           <th className="sticky left-0 z-10 bg-surface-raised" />
           {columns.map((column) => (
-            <th key={column} scope="col" className={cn('px-3 py-2 text-center', HEAD)}>
+            <th key={column} scope="col" className={cn('px-12 py-8 text-center', HEAD)}>
               {column}
             </th>
           ))}
@@ -203,12 +203,12 @@ export function Matrix<R extends string, C extends string>({
           <tr key={row}>
             <th
               scope="row"
-              className={cn('sticky left-0 z-10 bg-surface-raised pr-3 text-right', HEAD)}
+              className={cn('sticky left-0 z-10 bg-surface-raised pr-12 text-right', HEAD)}
             >
               {row}
             </th>
             {columns.map((column) => (
-              <td key={column} className="px-3 py-2 text-center">
+              <td key={column} className="px-12 py-8 text-center">
                 {cell(row, column)}
               </td>
             ))}
@@ -235,8 +235,8 @@ export function Slot({
   const width = useContext(SlotWidthContext);
   const block = width === 'block';
   return (
-    <figure className={cn('m-0 flex min-w-0 flex-col gap-2', block && 'w-full', className)}>
-      <div className={cn('flex min-h-9 items-center', block && 'w-full')}>{children}</div>
+    <figure className={cn('m-0 flex min-w-0 flex-col gap-8', block && 'w-full', className)}>
+      <div className={cn('flex min-h-36 items-center', block && 'w-full')}>{children}</div>
       {label !== undefined && (
         <figcaption className="font-mono text-11/13 tracking-wider text-gray-9">{label}</figcaption>
       )}

@@ -17,7 +17,7 @@ export function MessageStream({
   onRespond?: RespondFn;
 }) {
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-10">
       {blocks.map((block) => (
         <Block key={`${block.kind}-${block.seq}`} block={block} onRespond={onRespond} />
       ))}
@@ -43,7 +43,7 @@ function Block({ block, onRespond }: { block: StreamBlock; onRespond?: RespondFn
       );
     case 'result':
       return (
-        <div className="flex items-center gap-2 pt-0.5 font-mono text-12/17 text-gray-9">
+        <div className="flex items-center gap-8 pt-2 font-mono text-12/17 text-gray-9">
           <span className={block.isError ? 'text-red-9' : 'text-green-9'}>
             {block.isError ? '✕ turn failed' : '✓ turn complete'}
           </span>
@@ -55,7 +55,7 @@ function Block({ block, onRespond }: { block: StreamBlock; onRespond?: RespondFn
       );
     case 'error':
       return (
-        <div className="rounded-lg border-1 border-red-9 bg-red-3 px-3 py-2 font-sans text-12/17 text-red-9">
+        <div className="rounded-lg border-1 border-red-9 bg-red-3 px-12 py-8 font-sans text-12/17 text-red-9">
           {block.message}
         </div>
       );
@@ -103,14 +103,14 @@ function ApprovalCard({
         decided === null && 'animate-pulse',
       )}
     >
-      <div className="flex items-center gap-2 px-3.5 py-2.5">
-        <span aria-hidden className="size-2.5 shrink-0 rotate-45 rounded-none bg-orange-9" />
+      <div className="flex items-center gap-8 px-14 py-10">
+        <span aria-hidden className="size-10 shrink-0 rotate-45 rounded-none bg-orange-9" />
         <span className="font-sans text-13/19 font-600 text-gray-12">Approval required</span>
         <Pill
           tone="secondary"
           variant="outline"
           label={toolName}
-          className="h-auto rounded-md border-gray-6 bg-surface-raised px-1.5 py-0 font-mono text-11"
+          className="h-auto rounded-md border-gray-6 bg-surface-raised px-6 py-0 font-mono text-11"
         />
         <span className="flex-1" />
         {decided ? (
@@ -124,14 +124,14 @@ function ApprovalCard({
         {diff ? (
           <DiffBody lines={diff.lines} />
         ) : (
-          <pre className="overflow-x-auto px-3.5 py-2 font-mono text-11 leading-relaxed text-gray-11">
+          <pre className="overflow-x-auto px-14 py-8 font-mono text-11 leading-relaxed text-gray-11">
             {pretty(input)}
           </pre>
         )}
       </div>
 
       {decided === null ? (
-        <div className="flex flex-col gap-2 px-3.5 py-2.5">
+        <div className="flex flex-col gap-8 px-14 py-10">
           {denying ? (
             <textarea
               value={reason}
@@ -139,10 +139,10 @@ function ApprovalCard({
               rows={2}
               autoFocus
               placeholder="Why deny? (optional — sent back to the agent)"
-              className="resize-y rounded-lg border-1 border-gray-7 bg-surface-raised px-2.5 py-1.5 font-sans text-12/17 text-gray-12 placeholder:text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-3 focus:ring-indigo-3"
+              className="resize-y rounded-lg border-1 border-gray-7 bg-surface-raised px-10 py-6 font-sans text-12/17 text-gray-12 placeholder:text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-3 focus:ring-indigo-3"
             />
           ) : null}
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-8">
             {denying ? (
               <>
                 <Button size="sm" variant="ghost" onClick={() => setDenying(false)}>
@@ -176,7 +176,7 @@ function ThinkingBlock({ text }: { text: string }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 rounded-lg border-1 border-dashed border-gray-7 px-2.5 py-1 font-sans text-12/17 italic text-gray-9 hover:text-gray-11"
+        className="flex items-center gap-8 rounded-lg border-1 border-dashed border-gray-7 px-10 py-4 font-sans text-12/17 italic text-gray-9 hover:text-gray-11"
       >
         <span aria-hidden className="font-mono not-italic">
           ✦
@@ -187,7 +187,7 @@ function ThinkingBlock({ text }: { text: string }) {
         </span>
       </button>
       {open ? (
-        <p className="mt-1.5 whitespace-pre-wrap border-l-2 border-gray-6 pl-3 font-sans text-12/17 italic text-gray-9">
+        <p className="mt-6 whitespace-pre-wrap border-l-2 border-gray-6 pl-12 font-sans text-12/17 italic text-gray-9">
           {text}
         </p>
       ) : null}
@@ -207,18 +207,18 @@ function ToolStatusDot({ status }: { status: ToolStatus }) {
     return (
       <span
         aria-hidden
-        className="size-2.75 shrink-0 rounded-full border-2 border-blue-9 animate-spin"
+        className="size-11 shrink-0 rounded-full border-2 border-blue-9 animate-spin"
         style={{ background: 'linear-gradient(90deg, var(--color-blue-9) 50%, transparent 50%)' }}
       />
     );
   }
   if (status === 'error') {
-    return <span aria-hidden className="size-2.5 shrink-0 rotate-45 rounded-none bg-red-9" />;
+    return <span aria-hidden className="size-10 shrink-0 rotate-45 rounded-none bg-red-9" />;
   }
   return (
     <span
       aria-hidden
-      className="inline-flex size-3 shrink-0 items-center justify-center rounded-full bg-green-9 text-9 font-600 text-green-contrast"
+      className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-green-9 text-9 font-600 text-green-contrast"
     >
       ✓
     </span>
@@ -243,17 +243,17 @@ function ToolCard({ name, input, result }: { name: string; input: unknown; resul
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center gap-2 px-2.75 py-1.5 text-left hover:bg-surface-inset"
+        className="flex w-full items-center gap-8 px-11 py-6 text-left hover:bg-surface-inset"
       >
         <ToolStatusDot status={status} />
         <span className="shrink-0 font-mono text-12/17 font-600 text-gray-12">{name}</span>
         <span className="flex-1 truncate font-mono text-12/17 text-gray-9">{summary}</span>
         {diff ? (
           <>
-            <span className="rounded-sm bg-green-3 px-1.5 font-mono text-10 text-green-9">
+            <span className="rounded-sm bg-green-3 px-6 font-mono text-10 text-green-9">
               +{diff.added}
             </span>
-            <span className="rounded-sm bg-red-3 px-1.5 font-mono text-10 text-red-9">
+            <span className="rounded-sm bg-red-3 px-6 font-mono text-10 text-red-9">
               −{diff.removed}
             </span>
           </>
@@ -267,14 +267,14 @@ function ToolCard({ name, input, result }: { name: string; input: unknown; resul
           {diff ? (
             <DiffBody lines={diff.lines} />
           ) : (
-            <pre className="overflow-x-auto px-3 py-2 font-mono text-11 leading-relaxed text-gray-11">
+            <pre className="overflow-x-auto px-12 py-8 font-mono text-11 leading-relaxed text-gray-11">
               {pretty(input)}
             </pre>
           )}
           {result ? (
             <pre
               className={cn(
-                'overflow-x-auto border-t-1 border-gray-6 px-3 py-2 font-mono text-11 leading-relaxed',
+                'overflow-x-auto border-t-1 border-gray-6 px-12 py-8 font-mono text-11 leading-relaxed',
                 result.isError ? 'text-red-9' : 'text-gray-9',
               )}
             >
@@ -299,9 +299,9 @@ function SubagentGroup({
   children: ReactNode;
 }) {
   return (
-    <div className="my-0.5 flex flex-col gap-2 border-l-2 border-gray-7 pl-3">
-      <div className="flex items-center gap-2">
-        <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-sm bg-indigo-3 font-mono text-9 font-600 text-indigo-9">
+    <div className="my-2 flex flex-col gap-8 border-l-2 border-gray-7 pl-12">
+      <div className="flex items-center gap-8">
+        <span className="inline-flex size-16 shrink-0 items-center justify-center rounded-sm bg-indigo-3 font-mono text-9 font-600 text-indigo-9">
           {name.slice(0, 2).toUpperCase()}
         </span>
         <span className="font-mono text-12/17 font-600 text-gray-12">{name}</span>
@@ -309,7 +309,7 @@ function SubagentGroup({
           tone="secondary"
           variant="outline"
           label="subagent"
-          className="h-auto rounded-sm px-1.5 py-0 font-mono text-9 uppercase tracking-wide"
+          className="h-auto rounded-sm px-6 py-0 font-mono text-9 uppercase tracking-wide"
         />
         <ToolStatusDot status={statusOf(result)} />
         <span className="truncate font-mono text-12/17 text-gray-9">{oneLineInput(input)}</span>
@@ -377,12 +377,12 @@ function diffLines(input: unknown): { lines: DiffLine[]; added: number; removed:
 
 function DiffBody({ lines }: { lines: DiffLine[] }) {
   return (
-    <div className="overflow-x-auto py-1 font-mono text-11 leading-relaxed">
+    <div className="overflow-x-auto py-4 font-mono text-11 leading-relaxed">
       {lines.map((line, i) => (
         <div
           key={i}
           className={cn(
-            'whitespace-pre px-3',
+            'whitespace-pre px-12',
             line.sign === '+' && 'bg-green-3 text-green-9',
             line.sign === '-' && 'bg-red-3 text-red-9',
             line.sign === ' ' && 'text-gray-11',

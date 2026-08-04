@@ -43,7 +43,7 @@ export function useTheme(): [Theme, (node: HTMLElement | null) => void] {
 export function Sheet({ children }: { children: ReactNode }) {
   const [, ref] = useTheme();
   return (
-    <div ref={ref} className="flex w-full flex-col gap-3">
+    <div ref={ref} className="flex w-full flex-col gap-12">
       {children}
     </div>
   );
@@ -70,9 +70,9 @@ export function SpecRow({
   align?: 'center' | 'start';
 }) {
   return (
-    <div className={`flex gap-4 ${align === 'start' ? 'items-start' : 'items-center'}`}>
-      <span className="w-36 shrink-0 font-mono text-12/17 font-500 text-gray-12">{name}</span>
-      <span className="flex w-32 shrink-0 flex-col font-mono text-12/17 text-gray-9">
+    <div className={`flex gap-16 ${align === 'start' ? 'items-start' : 'items-center'}`}>
+      <span className="w-144 shrink-0 font-mono text-12/17 font-500 text-gray-12">{name}</span>
+      <span className="flex w-128 shrink-0 flex-col font-mono text-12/17 text-gray-9">
         <span>{value}</span>
         {note ? <span className="text-9/12">{note}</span> : null}
       </span>
@@ -88,9 +88,9 @@ export function SpecRow({
  */
 export function SpecHeader({ specimen, value = 'value' }: { specimen: string; value?: string }) {
   return (
-    <div className="flex gap-4 font-mono text-9/12 uppercase tracking-widest text-gray-9">
-      <span className="w-36 shrink-0">token</span>
-      <span className="w-32 shrink-0">{value}</span>
+    <div className="flex gap-16 font-mono text-9/12 uppercase tracking-widest text-gray-9">
+      <span className="w-144 shrink-0">token</span>
+      <span className="w-128 shrink-0">{value}</span>
       <span className="min-w-0 flex-1">{specimen}</span>
     </div>
   );
@@ -105,7 +105,7 @@ export function NativeNote({ family }: { family: string }) {
         <span className="font-mono text-12/17 text-gray-12">{family}</span> is Tailwind-native — no
         token. {NATIVE_FAMILIES[family]}
       </p>
-      <p className="mt-2 font-sans text-12/17 text-gray-9">
+      <p className="mt-8 font-sans text-12/17 text-gray-9">
         There is no drift to measure: the value exists once, at the call site.
       </p>
     </Sheet>

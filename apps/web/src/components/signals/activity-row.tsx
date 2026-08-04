@@ -18,7 +18,7 @@ export function ActivityRow({ signal }: { signal: SignalListRow }) {
   return (
     <div
       role="row"
-      className="grid h-11 items-center border-b-1 border-gray-6 px-3.5 hover:bg-gray-1"
+      className="grid h-44 items-center border-b-1 border-gray-6 px-14 hover:bg-gray-1"
       style={{ gridTemplateColumns: ACTIVITY_GRID_COLUMNS }}
     >
       <span className="flex">
@@ -27,14 +27,14 @@ export function ActivityRow({ signal }: { signal: SignalListRow }) {
       <span className="flex">
         <LevelDot level={signal.level} />
       </span>
-      <span className="min-w-0 pr-3">
+      <span className="min-w-0 pr-12">
         <span className="block truncate font-sans text-13/19 text-gray-11">
           <strong className="font-600 text-gray-12">{signal.name}</strong>
           {signal.message !== null ? ` · ${signal.message}` : null}
         </span>
       </span>
       <span>
-        <span className="inline-flex h-5 max-w-25 items-center overflow-hidden rounded-md bg-surface-inset px-1.75 font-mono text-[10.5px] font-500 text-gray-11">
+        <span className="inline-flex h-20 max-w-100 items-center overflow-hidden rounded-md bg-surface-inset px-7 font-mono text-[10.5px] font-500 text-gray-11">
           {signal.appSlug}
         </span>
       </span>
@@ -66,15 +66,15 @@ export function ActivityRowSkeleton({ index = 0 }: { index?: number }) {
     <div
       role="row"
       aria-hidden
-      className="grid h-11 animate-pulse items-center border-b-1 border-gray-6 px-3.5"
+      className="grid h-44 animate-pulse items-center border-b-1 border-gray-6 px-14"
       style={{ gridTemplateColumns: ACTIVITY_GRID_COLUMNS }}
     >
-      <span className="size-3.5 rounded-md bg-surface-inset" />
-      <span className="size-2.25 rounded-full bg-surface-inset" />
-      <span className="block h-2.75 rounded-sm bg-surface-inset" style={{ width: `${width}%` }} />
-      <span className="inline-block h-3.5 w-18 rounded-sm bg-surface-inset" />
-      <span className="inline-block h-2.25 w-6.5 rounded-sm bg-surface-inset" />
-      <span className="inline-block h-2.25 w-13 rounded-sm bg-surface-inset" />
+      <span className="size-14 rounded-md bg-surface-inset" />
+      <span className="size-9 rounded-full bg-surface-inset" />
+      <span className="block h-11 rounded-sm bg-surface-inset" style={{ width: `${width}%` }} />
+      <span className="inline-block h-14 w-72 rounded-sm bg-surface-inset" />
+      <span className="inline-block h-9 w-26 rounded-sm bg-surface-inset" />
+      <span className="inline-block h-9 w-52 rounded-sm bg-surface-inset" />
     </div>
   );
 }

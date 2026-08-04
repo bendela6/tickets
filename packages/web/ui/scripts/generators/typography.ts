@@ -33,8 +33,6 @@ export function generateTypography(indent = '  '): Family {
       decls(doc['font-weight'], 'font-weight') +
       `\n` +
       decls(doc.font, 'font') +
-      `\n` +
-      leadingLadder(indent) +
       `}\n`,
     ts: tsModule({
       source: 'typography.tokens.json',
@@ -46,30 +44,22 @@ export function generateTypography(indent = '  '): Family {
         constant('TEXT_SIZES', Object.keys(doc.text)),
         constant('FONT_WEIGHTS', Object.keys(doc['font-weight'])),
         constant('FONT_FAMILIES', Object.fromEntries(Object.entries(doc.font).map(([k, v]) => [k, v.$value]))),
-        constant('LEADING_RANGE', { min: LEADING_MIN, max: LEADING_MAX }),
       ],
     }),
   };
 }
 
 /**
- * The line-height ladder, in px, for the `text-{size}/{leading}` pairing.
+ * There is no line-height ladder any more, and none is needed.
  *
- * Open where the type scale is closed: a size is a design decision and is
- * rationed; a leading is DERIVED from its size, so there is no drift to prevent
- * by rationing it.
+ * It existed to cover 8..96 because Tailwind resolves the `/N` modifier against
+ * `--leading-*` only if that token exists, and otherwise falls through to the
+ * SPACING scale. At the old `--spacing: .25rem` that fallback was a trap —
+ * `text-13/7` compiled to `calc(var(--spacing) * 7)`, which is 28px, not 7px —
+ * so 89 rungs were emitted to make it unreachable.
  *
- * The range is exhaustive on purpose and must STAY exhaustive. Measured:
- * Tailwind resolves the `/N` modifier against `--leading-*` only if that token
- * exists, and otherwise falls through to the SPACING scale — `text-13/7`
- * compiles to `calc(var(--spacing) * 7)`, which is 28px, not 7px. Covering
- * 8..96 makes that fallback unreachable for any plausible value.
+ * `--spacing: 1px` makes the fallback correct instead: `text-13/19` resolves to
+ * `calc(1px * 19)` = 19px, exactly what the ladder used to state, and it works
+ * for every integer rather than a fenced range. The ladder became 89 lines
+ * asserting what the fallback already does.
  */
-const LEADING_MIN = 8;
-const LEADING_MAX = 96;
-
-function leadingLadder(indent: string): string {
-  let out = '';
-  for (let n = LEADING_MIN; n <= LEADING_MAX; n++) out += `${indent}--leading-${n}: ${n}px;\n`;
-  return out;
-}

@@ -92,8 +92,8 @@ export function ComboboxList({
   let lastGroup: string | null = null;
 
   return (
-    <div className="flex max-h-72 w-64 flex-col">
-      <div className="flex items-center gap-2 border-b-1 border-gray-6 px-3 py-2.25">
+    <div className="flex max-h-288 w-256 flex-col">
+      <div className="flex items-center gap-8 border-b-1 border-gray-6 px-12 py-9">
         <span aria-hidden className="font-sans text-12/17 text-gray-9">
           ⌕
         </span>
@@ -117,10 +117,10 @@ export function ComboboxList({
           )}
         />
       </div>
-      {header ? <div className="border-b-1 border-gray-6 px-1.5 py-1">{header}</div> : null}
-      <ul id={listId} role="listbox" className="flex-1 overflow-y-auto p-1.25">
+      {header ? <div className="border-b-1 border-gray-6 px-6 py-4">{header}</div> : null}
+      <ul id={listId} role="listbox" className="flex-1 overflow-y-auto p-5">
         {filtered.length === 0 ? (
-          <li className="px-2 py-3 text-center font-sans text-12/17 text-gray-9">{emptyLabel}</li>
+          <li className="px-8 py-12 text-center font-sans text-12/17 text-gray-9">{emptyLabel}</li>
         ) : null}
         {filtered.map((option, index) => {
           const groupKey = groupOf ? groupOf(option) : null;
@@ -132,7 +132,7 @@ export function ComboboxList({
           return (
             <li key={option.value}>
               {showHeader ? (
-                <div className="px-2.25 pb-0.75 pt-1.5 font-mono text-10 font-500 uppercase tracking-[0.08em] text-gray-9">
+                <div className="px-9 pb-3 pt-6 font-mono text-10 font-500 uppercase tracking-[0.08em] text-gray-9">
                   {groupLabel}
                 </div>
               ) : null}
@@ -145,7 +145,7 @@ export function ComboboxList({
                 onMouseEnter={() => setActiveIndex(index)}
                 onClick={() => pick(index)}
                 className={cn(
-                  'flex w-full items-center justify-between gap-2 rounded-md px-2.25 py-1.75 text-left font-sans text-13/19 text-gray-12',
+                  'flex w-full items-center justify-between gap-8 rounded-md px-9 py-7 text-left font-sans text-13/19 text-gray-12',
                   active && 'bg-surface-inset',
                   option.disabled && 'cursor-not-allowed opacity-50',
                 )}
@@ -166,7 +166,7 @@ export function ComboboxList({
         })}
       </ul>
       {footer ? (
-        <div className="border-t-1 border-gray-6 px-3 py-1.75 font-sans text-11 text-gray-9">
+        <div className="border-t-1 border-gray-6 px-12 py-7 font-sans text-11 text-gray-9">
           {footer}
         </div>
       ) : null}

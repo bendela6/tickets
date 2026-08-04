@@ -18,6 +18,7 @@
 @import './generated/border.css';
 @import './generated/motion.css';
 @import './generated/breakpoints.css';
+@import './generated/spacing.css';
 
 /* Classes that only ever exist as template literals inside a `variants()`
    config — `bg-${scale}-9`, `hover:bg-${scale}-10/40` — so scanning source text

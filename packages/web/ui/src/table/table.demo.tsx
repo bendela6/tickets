@@ -284,7 +284,7 @@ function Demo({
       }))
     : undefined;
   return (
-    <div className="h-100 w-full">
+    <div className="h-400 w-full">
       <Table<Row>
         {...table}
         columns={columns}
@@ -310,8 +310,8 @@ function Demo({
         rowOverlay={
           overlay
             ? () => (
-                <span className="absolute top-1/2 right-2.5 hidden -translate-y-1/2 items-center gap-1.25 group-hover:flex">
-                  <Button variant="outline" size="sm" className="w-7 p-0" aria-label="Open">
+                <span className="absolute top-1/2 right-10 hidden -translate-y-1/2 items-center gap-5 group-hover:flex">
+                  <Button variant="outline" size="sm" className="w-28 p-0" aria-label="Open">
                     <Icon name="arrow-up-right" size="sm" />
                   </Button>
                 </span>

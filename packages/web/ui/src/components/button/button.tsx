@@ -42,7 +42,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 // Read each option down, not across: fill, text, border, focus, extra.
 const buttonClass = variants({
   base: [
-    'inline-flex items-center justify-center gap-2 font-sans font-500',
+    'inline-flex items-center justify-center gap-8 font-sans font-500',
     'transition-colors select-none active:translate-y-px',
     'focus-visible:outline-none',
     'disabled:pointer-events-none',
@@ -93,9 +93,9 @@ const buttonClass = variants({
     size: {
       default: 'md',
       options: {
-        sm: 'h-7 px-2.5 rounded-md text-12',
-        md: 'h-9 px-3.5 rounded-lg text-13',
-        lg: 'h-11 px-[18px] rounded-xl text-14',
+        sm: 'h-28 px-10 rounded-md text-12',
+        md: 'h-36 px-14 rounded-lg text-13',
+        lg: 'h-44 px-[18px] rounded-xl text-14',
       },
     },
   },
@@ -151,7 +151,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     >
       {loading ? <Spinner size={SPINNER[size]} /> : null}
       {children}
-      {chevron ? <Icon name="chevron-down" size={CHEVRON[size]} className="-mr-0.5" /> : null}
+      {chevron ? <Icon name="chevron-down" size={CHEVRON[size]} className="-mr-2" /> : null}
     </button>
   );
 });

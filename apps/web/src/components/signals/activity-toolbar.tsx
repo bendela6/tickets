@@ -2,7 +2,7 @@ import type { IssueLevel, SignalsAppRow } from '../../api/signals/signals-api';
 import { cn, Input } from '@tickets/ui';
 
 const selectClasses =
-  'h-7 rounded-lg border-1 border-gray-6 bg-surface-raised px-2 font-sans text-12 text-gray-11 ' +
+  'h-28 rounded-lg border-1 border-gray-6 bg-surface-raised px-8 font-sans text-12 text-gray-11 ' +
   'hover:border-gray-7 focus:border-indigo-9 focus:outline-none focus:ring-3 focus:ring-indigo-3';
 
 const DAY_OPTIONS = [7, 14, 30, 90];
@@ -40,7 +40,7 @@ export function ActivityToolbar({
   dimmed?: boolean;
 }) {
   return (
-    <div className={cn('mb-3 flex flex-wrap items-center gap-2', dimmed && 'opacity-50')}>
+    <div className={cn('mb-12 flex flex-wrap items-center gap-8', dimmed && 'opacity-50')}>
       <select
         aria-label="Filter by app"
         className={selectClasses}
@@ -103,7 +103,7 @@ export function ActivityToolbar({
         placeholder="Search message, name…"
         value={q}
         onChange={(event) => onQChange(event.target.value)}
-        className="h-7 w-57.5"
+        className="h-28 w-230"
       />
     </div>
   );

@@ -84,7 +84,7 @@ export function NumberInput({
           onChange(raw === '' ? null : Number(raw));
         }}
         className={cn(
-          'w-16 bg-transparent px-2 text-right font-sans text-gray-12 tabular-nums outline-none',
+          'w-64 bg-transparent px-8 text-right font-sans text-gray-12 tabular-nums outline-none',
           '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none',
           TEXT[size],
         )}
@@ -95,7 +95,7 @@ export function NumberInput({
           aria-label="Increment"
           tabIndex={-1}
           onClick={() => nudge(step)}
-          className="flex flex-1 items-center px-1.5 text-gray-9 hover:bg-surface-inset hover:text-gray-12"
+          className="flex flex-1 items-center px-6 text-gray-9 hover:bg-surface-inset hover:text-gray-12"
         >
           <Icon name="chevron-up" size="2xs" />
         </button>
@@ -104,7 +104,7 @@ export function NumberInput({
           aria-label="Decrement"
           tabIndex={-1}
           onClick={() => nudge(-step)}
-          className="flex flex-1 items-center border-t-1 border-gray-6 px-1.5 text-gray-9 hover:bg-surface-inset hover:text-gray-12"
+          className="flex flex-1 items-center border-t-1 border-gray-6 px-6 text-gray-9 hover:bg-surface-inset hover:text-gray-12"
         >
           <Icon name="chevron-down" size="2xs" />
         </button>

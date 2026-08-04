@@ -31,7 +31,7 @@ const HEADING_LEVELS = [1, 2, 3] as const;
 // 26px / min-width 26 / radius 6 (RteToolbar.dc.html BTN const); hover =
 // inset bg, active = accent-subtle bg + accent content.
 const BTN =
-  'inline-flex h-6.5 min-w-6.5 flex-none items-center justify-center gap-0.75 rounded-md px-1.5 ' +
+  'inline-flex h-26 min-w-26 flex-none items-center justify-center gap-3 rounded-md px-6 ' +
   'text-gray-11 hover:bg-surface-inset disabled:pointer-events-none disabled:opacity-40';
 const ACTIVE = 'bg-indigo-3 text-indigo-9 hover:bg-indigo-3';
 
@@ -101,7 +101,7 @@ const CONTROLS: Record<string, ControlDef> = {
   },
   taskList: {
     content: (
-      <span className="box-border flex h-3 w-3 items-center justify-center rounded-sm border-2 border-current">
+      <span className="box-border flex h-12 w-12 items-center justify-center rounded-sm border-2 border-current">
         <Icon name="check" size="2xs" />
       </span>
     ),
@@ -120,8 +120,8 @@ const CONTROLS: Record<string, ControlDef> = {
   },
   image: {
     content: (
-      <span className="relative box-border inline-block h-3 w-3.75 rounded-sm border-2 border-current">
-        <span className="absolute top-0.5 left-0.5 h-0.75 w-0.75 rounded-full bg-current" />
+      <span className="relative box-border inline-block h-12 w-15 rounded-sm border-2 border-current">
+        <span className="absolute top-2 left-2 h-3 w-3 rounded-full bg-current" />
       </span>
     ),
     // The click handler special-cases 'image' to open the hidden file
@@ -249,14 +249,14 @@ export function Toolbar({ editor, controls, disabled, variant = 'full', onImageF
   };
 
   return (
-    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-0.5">
+    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
       {blockTypeControl ? <BlockTypeSelect editor={editor} disabled={disabled} /> : null}
       {groups.map((group, index) => (
         <div
           key={group[0]!.group}
           className={cn(
-            'flex items-center gap-0.5',
-            (index > 0 || blockTypeControl !== undefined) && 'ml-1 border-l-1 border-gray-6 pl-1',
+            'flex items-center gap-2',
+            (index > 0 || blockTypeControl !== undefined) && 'ml-4 border-l-1 border-gray-6 pl-4',
           )}
         >
           {group.map(renderStripButton)}
@@ -264,7 +264,7 @@ export function Toolbar({ editor, controls, disabled, variant = 'full', onImageF
       ))}
       {overflowIds.size > 0 ? (
         <div
-          className={cn((groups.length > 0 || blockTypeControl !== undefined) && 'ml-1 border-l-1 border-gray-6 pl-1')}
+          className={cn((groups.length > 0 || blockTypeControl !== undefined) && 'ml-4 border-l-1 border-gray-6 pl-4')}
         >
           <OverflowMenu editor={editor} ids={overflowIds} disabled={disabled} />
         </div>
@@ -313,13 +313,13 @@ function BlockTypeSelect({ editor, disabled }: { editor: Editor | null; disabled
         <button
           type="button"
           disabled={disabled === true || editor === null}
-          className="mr-1 inline-flex h-6.5 flex-none items-center gap-1 rounded-md px-2 text-gray-11 hover:bg-surface-inset disabled:pointer-events-none disabled:opacity-40"
+          className="mr-4 inline-flex h-26 flex-none items-center gap-4 rounded-md px-8 text-gray-11 hover:bg-surface-inset disabled:pointer-events-none disabled:opacity-40"
         >
           <span className="font-sans text-12 font-500">{currentBlockLabel(editor)}</span>
           <Icon name="chevron-down" size="sm" />
         </button>
       </MenuTrigger>
-      <MenuContent align="start" className="min-w-37.5">
+      <MenuContent align="start" className="min-w-150">
         {BLOCK_TYPES.map((type) => (
           <MenuItem
             key={type.level}
@@ -373,11 +373,11 @@ function OverflowMenu({
           <Icon name="plus" size="md" />
         </button>
       </MenuTrigger>
-      <MenuContent align="end" className="w-54 rounded-xl p-1.5">
+      <MenuContent align="end" className="w-216 rounded-xl p-6">
         {ids.has('highlight') ? (
-          <MenuItem className="h-7.5" shortcut="⌘⇧H" onSelect={() => run(CONTROLS.highlight!.run)}>
-            <span className="inline-flex items-center gap-2.25">
-              <span className="flex h-4 w-4 items-center justify-center rounded-sm bg-highlight font-sans text-12 font-600 text-gray-12">
+          <MenuItem className="h-30" shortcut="⌘⇧H" onSelect={() => run(CONTROLS.highlight!.run)}>
+            <span className="inline-flex items-center gap-9">
+              <span className="flex h-16 w-16 items-center justify-center rounded-sm bg-highlight font-sans text-12 font-600 text-gray-12">
                 A
               </span>
               Highlight
@@ -387,8 +387,8 @@ function OverflowMenu({
         {ids.has('color') ? <TextColorRow onPick={(value) => run((e) => applyTextColor(e, value))} /> : null}
         {hasColorRow && hasInsertRow ? <MenuSeparator /> : null}
         {ids.has('callout') ? (
-          <MenuItem className="h-7.5" onSelect={() => run(CONTROLS.callout!.run)}>
-            <span className="inline-flex items-center gap-2.25">
+          <MenuItem className="h-30" onSelect={() => run(CONTROLS.callout!.run)}>
+            <span className="inline-flex items-center gap-9">
               <span className="inline-flex text-gray-11">
                 <Icon name="circle-info" size="md" />
               </span>
@@ -397,8 +397,8 @@ function OverflowMenu({
           </MenuItem>
         ) : null}
         {ids.has('details') ? (
-          <MenuItem className="h-7.5" onSelect={() => run(CONTROLS.details!.run)}>
-            <span className="inline-flex items-center gap-2.25">
+          <MenuItem className="h-30" onSelect={() => run(CONTROLS.details!.run)}>
+            <span className="inline-flex items-center gap-9">
               <span className="inline-flex text-gray-11">
                 <Icon name="chevron-right" size="md" />
               </span>
@@ -407,8 +407,8 @@ function OverflowMenu({
           </MenuItem>
         ) : null}
         {ids.has('horizontalRule') ? (
-          <MenuItem className="h-7.5" onSelect={() => run(CONTROLS.horizontalRule!.run)}>
-            <span className="inline-flex items-center gap-2.25">
+          <MenuItem className="h-30" onSelect={() => run(CONTROLS.horizontalRule!.run)}>
+            <span className="inline-flex items-center gap-9">
               <span className="inline-flex text-gray-11">
                 <Icon name="minus" size="md" />
               </span>
@@ -436,7 +436,7 @@ function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
   return (
     <DropdownMenu.Sub>
       <DropdownMenu.SubTrigger asChild>
-        <div className="flex h-7.5 cursor-pointer items-center gap-2.25 rounded-md px-2 text-gray-12 outline-none select-none data-[highlighted]:bg-surface-inset data-[state=open]:bg-surface-inset">
+        <div className="flex h-30 cursor-pointer items-center gap-9 rounded-md px-8 text-gray-12 outline-none select-none data-[highlighted]:bg-surface-inset data-[state=open]:bg-surface-inset">
           <span className="font-sans text-[12.5px] leading-[1.15] font-600 text-indigo-9 [border-bottom:3px_solid_var(--color-indigo-9)]">
             A
           </span>
@@ -446,7 +446,7 @@ function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
       <DropdownMenu.Portal>
         <DropdownMenu.SubContent
           sideOffset={4}
-          className="z-50 flex items-center gap-1.5 rounded-lg border-1 border-gray-6 bg-surface-raised p-1.5 shadow-lg"
+          className="z-50 flex items-center gap-6 rounded-lg border-1 border-gray-6 bg-surface-raised p-6 shadow-lg"
         >
           {COLOR_SWATCHES.map((swatch) => (
             <button
@@ -454,7 +454,7 @@ function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
               type="button"
               aria-label={swatch.label}
               onClick={() => onPick(swatch.value)}
-              className="h-5.5 w-5.5 flex-none rounded-full border-1 border-gray-6"
+              className="h-22 w-22 flex-none rounded-full border-1 border-gray-6"
               style={{ background: swatch.value ?? 'var(--color-surface-raised)' }}
             />
           ))}

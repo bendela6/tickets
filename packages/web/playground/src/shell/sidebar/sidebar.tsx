@@ -46,8 +46,8 @@ export function Sidebar({
       // `relative`.
       className="sticky top-0 z-40 h-screen bg-surface-raised"
     >
-      <nav className="pg-scroll flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden px-4 py-6">
-        <div className="flex h-7.5 min-w-0 shrink-0 items-center gap-1.5 rounded-lg border-1 border-gray-6 bg-surface-inset px-1.5 pl-2.5">
+      <nav className="pg-scroll flex min-w-0 flex-1 flex-col gap-16 overflow-y-auto overflow-x-hidden px-16 py-24">
+        <div className="flex h-30 min-w-0 shrink-0 items-center gap-6 rounded-lg border-1 border-gray-6 bg-surface-inset px-6 pl-10">
           <input
             type="text"
             placeholder="Filter components…"
@@ -58,7 +58,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={onOpenPalette}
-            className="h-4.5 shrink-0 rounded-sm border-1 border-gray-7 bg-surface-raised px-1.5 text-11/13 tracking-wider text-gray-9 hover:text-gray-11"
+            className="h-18 shrink-0 rounded-sm border-1 border-gray-7 bg-surface-raised px-6 text-11/13 tracking-wider text-gray-9 hover:text-gray-11"
           >
             ⌘K
           </button>
@@ -67,15 +67,15 @@ export function Sidebar({
         <a
           {...linkProps({ slug: null })}
           className={cn(
-            'shrink-0 truncate rounded-md px-2 py-1 text-13/19',
+            'shrink-0 truncate rounded-md px-8 py-4 text-13/19',
             selected === null ? 'bg-indigo-3 text-indigo-9' : 'text-gray-11 hover:text-gray-12',
           )}
         >
           All
         </a>
         {shownGroups.map((group) => (
-          <div key={group} className="flex shrink-0 flex-col gap-0.5">
-            <span className="truncate px-2 font-mono text-11/13 uppercase tracking-wider text-gray-9">
+          <div key={group} className="flex shrink-0 flex-col gap-2">
+            <span className="truncate px-8 font-mono text-11/13 uppercase tracking-wider text-gray-9">
               {group}
             </span>
             {filtered
@@ -86,7 +86,7 @@ export function Sidebar({
                   {...linkProps({ slug: d.slug })}
                   title={d.meta.title}
                   className={cn(
-                    'shrink-0 truncate rounded-md px-2 py-1 text-13/19',
+                    'shrink-0 truncate rounded-md px-8 py-4 text-13/19',
                     selected === d.slug
                       ? 'bg-indigo-3 text-indigo-9'
                       : 'text-gray-11 hover:text-gray-12',

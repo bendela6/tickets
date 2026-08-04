@@ -50,12 +50,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               }
             }}
             className={cn(
-              'flex items-center justify-between gap-4 rounded-lg border-1 border-gray-6 bg-surface-raised px-3.5 py-2.5 shadow-lg',
+              'flex items-center justify-between gap-16 rounded-lg border-1 border-gray-6 bg-surface-raised px-14 py-10 shadow-lg',
               'font-sans text-13/19 text-gray-12',
               'data-[state=open]:animate-in data-[state=closed]:animate-out',
             )}
           >
-            <RadixToast.Title className="flex items-center gap-1.5">{entry.title}</RadixToast.Title>
+            <RadixToast.Title className="flex items-center gap-6">{entry.title}</RadixToast.Title>
             {entry.action ? (
               <RadixToast.Action
                 altText={entry.action.label}
@@ -88,7 +88,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         <RadixToast.Viewport
           aria-live="off"
           style={{ pointerEvents: entries.length > 0 ? 'auto' : undefined }}
-          className="fixed bottom-4 right-4 z-50 flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2 outline-none"
+          className="fixed bottom-16 right-16 z-50 flex w-320 max-w-[calc(100vw-2rem)] flex-col gap-8 outline-none"
         />
       </RadixToast.Provider>
     </ToastContext.Provider>

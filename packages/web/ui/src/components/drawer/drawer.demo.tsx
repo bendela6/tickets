@@ -24,11 +24,11 @@ function DrawerDemo({ side, maximizable }: { side: 'left' | 'right'; maximizable
         maximizable={maximizable}
         label="Demo drawer"
       >
-        <div className="flex shrink-0 items-center gap-2 border-b-1 border-gray-6 px-4 py-3">
+        <div className="flex shrink-0 items-center gap-8 border-b-1 border-gray-6 px-16 py-12">
           <span className="flex-1 font-sans text-14 font-500 text-gray-12">Demo drawer</span>
           <DrawerControls />
         </div>
-        <div className="flex-1 overflow-y-auto px-4 py-3 font-sans text-13/19 text-gray-11">
+        <div className="flex-1 overflow-y-auto px-16 py-12 font-sans text-13/19 text-gray-11">
           Drag the inner edge to resize. Esc closes.
         </div>
       </Drawer>

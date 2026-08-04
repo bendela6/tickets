@@ -121,7 +121,7 @@ export function Drawer({
               <div
                 {...separatorProps}
                 className={cn(
-                  'absolute inset-y-0 z-10 w-1.5 cursor-col-resize hover:bg-indigo-9',
+                  'absolute inset-y-0 z-10 w-6 cursor-col-resize hover:bg-indigo-9',
                   side === 'right' ? 'left-0' : 'right-0',
                 )}
               />
@@ -135,7 +135,7 @@ export function Drawer({
 }
 
 const CONTROL =
-  'inline-flex size-7 shrink-0 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset hover:text-gray-12';
+  'inline-flex size-28 shrink-0 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset hover:text-gray-12';
 
 export function DrawerControls({ className }: { className?: string }) {
   const context = useContext(DrawerContext);
@@ -144,7 +144,7 @@ export function DrawerControls({ className }: { className?: string }) {
   }
   const { maximized, setMaximized, maximizable } = context;
   return (
-    <div className={cn('flex shrink-0 items-center gap-0.5', className)}>
+    <div className={cn('flex shrink-0 items-center gap-2', className)}>
       {maximizable ? (
         <button
           type="button"

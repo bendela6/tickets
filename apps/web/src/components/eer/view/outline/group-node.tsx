@@ -11,8 +11,8 @@ import { zoneIdOf } from '../../engine/groups/zone-id-of';
 import { useDiagramActions, useDiagramModel, useDiagramUi } from '../../state/diagram-context';
 import { outlineCount, type OutlineEntity, type OutlineNode } from './build-outline';
 
-const indent = 'ml-3 border-l-1 border-gray-6 pl-1';
-const dot = 'h-2 w-2 rounded-full';
+const indent = 'ml-12 border-l-1 border-gray-6 pl-4';
+const dot = 'h-8 w-8 rounded-full';
 
 export function GroupNode({
   node,
@@ -49,19 +49,19 @@ export function GroupNode({
 
   return (
     <div>
-      <div className={cn('flex items-center gap-0.5 rounded-md', selected && 'bg-surface-inset')}>
+      <div className={cn('flex items-center gap-2 rounded-md', selected && 'bg-surface-inset')}>
         {filled ? (
           <button
             type="button"
             aria-expanded={open}
             aria-label={`${g.label} subtree`}
             onClick={() => onToggle(g.id)}
-            className="flex h-5 w-4 flex-none items-center justify-center rounded-sm text-11 text-gray-11 hover:text-gray-12"
+            className="flex h-20 w-16 flex-none items-center justify-center rounded-sm text-11 text-gray-11 hover:text-gray-12"
           >
             {open ? '▾' : '▸'}
           </button>
         ) : (
-          <span className="h-5 w-4 flex-none" />
+          <span className="h-20 w-16 flex-none" />
         )}
 
         {zone ? (
@@ -71,12 +71,12 @@ export function GroupNode({
             aria-label={`${hidden ? 'Show' : 'Hide'} ${g.label}`}
             title={hidden ? `Show ${g.label}` : `Hide ${g.label}`}
             onClick={() => actions.toggleGroup(g.id)}
-            className="flex h-5 w-4 flex-none items-center justify-center"
+            className="flex h-20 w-16 flex-none items-center justify-center"
           >
             {swatch}
           </button>
         ) : (
-          <span className="flex h-5 w-4 flex-none items-center justify-center">{swatch}</span>
+          <span className="flex h-20 w-16 flex-none items-center justify-center">{swatch}</span>
         )}
 
         <button
@@ -87,7 +87,7 @@ export function GroupNode({
           aria-label={`${g.label}, ${count} ${count === 1 ? 'table' : 'tables'}`}
           onClick={() => actions.selectGroup(g.id)}
           className={cn(
-            'flex min-w-0 flex-1 items-center gap-1.5 rounded-md py-1 pl-1 pr-1.5 text-left text-12',
+            'flex min-w-0 flex-1 items-center gap-6 rounded-md py-4 pl-4 pr-6 text-left text-12',
             hidden ? 'text-gray-11 line-through' : 'text-gray-12',
           )}
         >
@@ -131,7 +131,7 @@ function EntityRow({ item, hidden }: { item: OutlineEntity; hidden: boolean }) {
         title={entity.id}
         onClick={() => actions.focusFromSearch(entity.id)}
         className={cn(
-          'flex w-full rounded-md px-1.5 py-1 text-left font-mono text-12 hover:bg-surface-inset hover:text-gray-12',
+          'flex w-full rounded-md px-6 py-4 text-left font-mono text-12 hover:bg-surface-inset hover:text-gray-12',
           selected ? 'bg-surface-inset text-gray-12' : 'text-gray-11',
           hidden && 'line-through',
         )}
@@ -149,7 +149,7 @@ function EntityRow({ item, hidden }: { item: OutlineEntity; hidden: boolean }) {
                 type="button"
                 onClick={() => actions.focusFromSearch(entity.id, c)}
                 className={cn(
-                  'flex w-full rounded-md px-1.5 py-0.5 text-left font-mono text-11 hover:bg-surface-inset hover:text-gray-12',
+                  'flex w-full rounded-md px-6 py-2 text-left font-mono text-11 hover:bg-surface-inset hover:text-gray-12',
                   lit ? 'bg-surface-inset text-gray-12' : 'text-gray-11',
                 )}
               >

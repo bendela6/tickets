@@ -91,25 +91,25 @@ export function GalleryShell({
       {/* min-w-0 lets the workbench's overflowing children (code blocks, wide
           state grids) scroll inside the main column instead of stretching the
           flex row and pushing the sidebar off-screen. */}
-      <main className="min-w-0 flex-1 px-8 py-10">
-        <div className="flex w-full flex-col gap-10">
+      <main className="min-w-0 flex-1 px-32 py-40">
+        <div className="flex w-full flex-col gap-40">
           <header className="flex items-center justify-between">
             <div>
               <h1 className="text-24/30 font-600 text-gray-12">{title}</h1>
-              <p className="mt-1 text-12/17 text-gray-11">
+              <p className="mt-4 text-12/17 text-gray-11">
                 Instrument control library. Compare against docs/design/design-system.html.
               </p>
             </div>
             <button
               type="button"
               onClick={toggleTheme}
-              className="h-9 rounded-md border-1 border-gray-7 bg-surface-raised px-3.5 text-13/19 text-gray-12 hover:bg-surface-inset"
+              className="h-36 rounded-md border-1 border-gray-7 bg-surface-raised px-14 text-13/19 text-gray-12 hover:bg-surface-inset"
             >
               Toggle theme
             </button>
           </header>
           {providers(
-            <div className="flex flex-col gap-10">
+            <div className="flex flex-col gap-40">
               {shown.map((d) =>
                 selected === d.slug ? (
                   <ComponentPage
@@ -130,15 +130,15 @@ export function GalleryShell({
                   <section
                     key={d.slug}
                     id={d.slug}
-                    className="pg-docs-entry flex flex-col border-t-2 border-gray-7 pt-10 pb-16 first:border-t-0 first:pt-0"
+                    className="pg-docs-entry flex flex-col border-t-2 border-gray-7 pt-40 pb-64 first:border-t-0 first:pt-0"
                   >
-                    <div className="flex items-start gap-8">
-                      <div className={`flex flex-col gap-4 ${DOCS_COLUMN}`}>
-                        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+                    <div className="flex items-start gap-32">
+                      <div className={`flex flex-col gap-16 ${DOCS_COLUMN}`}>
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-24 gap-y-8">
                           <h2 className="font-sans text-20/26 font-600 text-gray-12">
                             {d.meta.title}
                           </h2>
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-16">
                             {JUMP_TABS.map(({ tab, label }) => (
                               <a
                                 key={tab}
@@ -157,7 +157,7 @@ export function GalleryShell({
                           usable column beside them, and sticks while a long
                           entry scrolls past. */}
                       {fitsBesideDocs(d) && (
-                        <div className="sticky top-8 hidden min-w-0 max-w-200 flex-1 2xl:block">
+                        <div className="sticky top-32 hidden min-w-0 max-w-800 flex-1 2xl:block">
                           <DemoPreview demo={d} />
                         </div>
                       )}

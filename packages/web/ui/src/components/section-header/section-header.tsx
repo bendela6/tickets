@@ -47,7 +47,7 @@ export function SectionHeader({
 }) {
   const Title = as;
   return (
-    <div className={cn('flex items-center gap-2 text-11/13 tracking-wider', className)}>
+    <div className={cn('flex items-center gap-8 text-11/13 tracking-wider', className)}>
       <Title
         className={cn('font-sans text-11/13 tracking-wider font-500 uppercase text-gray-11', titleClassName)}
       >

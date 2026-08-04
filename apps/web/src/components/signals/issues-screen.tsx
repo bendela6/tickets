@@ -32,10 +32,10 @@ const HEADER_CELLS: { label: string; className?: string }[] = [
   { label: 'Issue' },
   { label: 'App' },
   { label: 'Events', className: 'text-right' },
-  { label: 'First', className: 'pl-3.5' },
+  { label: 'First', className: 'pl-14' },
   { label: 'Last' },
-  { label: '14 days', className: 'pl-1.5' },
-  { label: 'Status', className: 'pl-1' },
+  { label: '14 days', className: 'pl-6' },
+  { label: 'Status', className: 'pl-4' },
   { label: '' },
 ];
 
@@ -43,7 +43,7 @@ function TableHeader() {
   return (
     <div
       role="row"
-      className="grid h-9 shrink-0 items-center border-b-1 border-gray-6 bg-gray-1 px-3.5 font-sans text-11/13 tracking-wider font-500 tracking-wider text-gray-11 uppercase"
+      className="grid h-36 shrink-0 items-center border-b-1 border-gray-6 bg-gray-1 px-14 font-sans text-11/13 tracking-wider font-500 tracking-wider text-gray-11 uppercase"
       style={{ gridTemplateColumns: ISSUES_GRID_COLUMNS }}
     >
       {HEADER_CELLS.map((cell, index) => (
@@ -122,8 +122,8 @@ export function IssuesScreen() {
   const filtersActive = appId !== undefined || level !== undefined || debouncedQ.trim() !== '';
 
   return (
-    <div className="flex h-full min-h-0 flex-col p-6 md:p-7">
-      <div className="mb-2.5 flex flex-wrap items-center gap-3">
+    <div className="flex h-full min-h-0 flex-col p-24 md:p-28">
+      <div className="mb-10 flex flex-wrap items-center gap-12">
         <h1 className="m-0 font-sans text-22 leading-tight font-600 text-gray-12">Signals</h1>
         <span className="font-mono text-12/17 text-gray-9">
           {openCount.data?.total ?? 0} open issues · {formatCount(loadedEvents)} events last {days}d
@@ -174,11 +174,11 @@ export function IssuesScreen() {
                 />
               ))}
             </div>
-            <div className="flex h-9.5 shrink-0 items-center gap-2 border-t-1 border-gray-6 bg-gray-1 px-3.5 font-mono text-11 text-gray-9">
+            <div className="flex h-38 shrink-0 items-center gap-8 border-t-1 border-gray-6 bg-gray-1 px-14 font-mono text-11 text-gray-9">
               <span>{total} issues</span>
               <span className="flex-1" />
               {total > PER_PAGE ? (
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-8">
                   <button
                     type="button"
                     aria-label="Previous page"
@@ -213,7 +213,7 @@ export function IssuesScreen() {
                 <IssueRowSkeleton key={index} index={index} />
               ))}
             </div>
-            <div className="flex h-9.5 shrink-0 items-center gap-2.5 border-t-1 border-gray-6 bg-gray-1 px-3.5 font-mono text-11 text-gray-9">
+            <div className="flex h-38 shrink-0 items-center gap-10 border-t-1 border-gray-6 bg-gray-1 px-14 font-mono text-11 text-gray-9">
               <Spinner size="xs" tone="secondary" />
               <span>loading issues…</span>
             </div>
@@ -223,14 +223,14 @@ export function IssuesScreen() {
         {isError ? (
           <div className="flex flex-1 items-center justify-center">
             <ScreenState
-              className="max-w-115"
+              className="max-w-460"
               tone="danger"
               icon="triangle-alert"
               title="Couldn't load issues"
               body={
                 <>
                   <div className="font-mono text-[11.5px] leading-relaxed text-gray-9">{displayUrl(filters)}</div>
-                  <div className="mt-1">
+                  <div className="mt-4">
                     The signals daemon isn't responding. Check that it's running, then try again.
                   </div>
                 </>
@@ -239,7 +239,7 @@ export function IssuesScreen() {
                 <button
                   type="button"
                   onClick={() => void issuesQuery.refetch()}
-                  className="h-8 rounded-lg border-1 border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+                  className="h-32 rounded-lg border-1 border-gray-7 bg-surface-raised px-13 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
                 >
                   ↻ Retry
                 </button>
@@ -251,7 +251,7 @@ export function IssuesScreen() {
         {isEmpty ? (
           <div className="flex flex-1 items-center justify-center">
             <ScreenState
-              className="max-w-110"
+              className="max-w-440"
               tone="success"
               icon="circle-check"
               title={

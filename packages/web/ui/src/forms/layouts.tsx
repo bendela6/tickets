@@ -69,7 +69,7 @@ export function GroupLayout({ props, children }: LayoutComponentProps<TitledProp
     title: props.title,
     description: props.description,
     as: 'h4',
-    className: 'border-t-1 border-gray-6 pt-3',
+    className: 'border-t-1 border-gray-6 pt-12',
   });
   return (
     <Stack gap={2}>

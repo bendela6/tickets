@@ -64,9 +64,9 @@ export const fieldClass = variants({
     size: {
       default: 'md',
       options: {
-        sm: 'h-7 rounded-md',
-        md: 'h-9 rounded-lg',
-        lg: 'h-11 rounded-xl',
+        sm: 'h-28 rounded-md',
+        md: 'h-36 rounded-lg',
+        lg: 'h-44 rounded-xl',
       },
     },
   },

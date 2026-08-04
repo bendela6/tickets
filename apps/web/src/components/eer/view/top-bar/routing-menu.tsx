@@ -25,7 +25,7 @@ export function RoutingMenu() {
       trigger={
         // The caret is aria-hidden so the trigger's accessible name stays the
         // mode itself ("Lines: avoid") — the state, not the decoration.
-        <button type="button" className={cn(btn, 'flex items-center gap-2')} title={current.tip}>
+        <button type="button" className={cn(btn, 'flex items-center gap-8')} title={current.tip}>
           Lines: {current.mode}
           <span aria-hidden className="text-gray-11">
             ▾
@@ -34,7 +34,7 @@ export function RoutingMenu() {
       }
     >
       {(close) => (
-        <div className="flex w-56 flex-col gap-0.5">
+        <div className="flex w-224 flex-col gap-2">
           {MODES.map((m) => (
             <button
               key={m.mode}
@@ -44,7 +44,7 @@ export function RoutingMenu() {
                 close();
               }}
               className={cn(
-                'flex flex-col gap-0.5 rounded-lg px-2 py-1.5 text-left',
+                'flex flex-col gap-2 rounded-lg px-8 py-6 text-left',
                 m.mode === view.routing ? 'bg-surface-inset' : 'hover:bg-surface-inset',
               )}
             >
