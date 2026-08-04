@@ -21,8 +21,8 @@ export function Header({
   description?: string | null;
 }) {
   return (
-    <div className="sticky top-0 z-10 border-b-1 border-gray-6 bg-gray-2 px-4 pb-3 pt-4">
-      <div className="mb-2 flex items-center gap-2">
+    <div className="sticky top-0 z-10 border-b-1 border-gray-6 bg-gray-2 px-16 pb-12 pt-16">
+      <div className="mb-8 flex items-center gap-8">
         <Pill
           variant="tint"
           size="xs"
@@ -33,8 +33,8 @@ export function Header({
         {titleColor && <Dot color={titleColor} />}
       </div>
       <h2 className="font-mono text-16 font-500 leading-tight text-gray-12">{title}</h2>
-      <div className="mt-1 text-11 text-gray-11">{sub}</div>
-      {description && <p className="mt-2 text-12 leading-relaxed text-gray-11">{description}</p>}
+      <div className="mt-4 text-11 text-gray-11">{sub}</div>
+      {description && <p className="mt-8 text-12 leading-relaxed text-gray-11">{description}</p>}
     </div>
   );
 }

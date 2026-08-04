@@ -19,12 +19,12 @@ function Row({
     // note lines up under its parent at any depth, instead of collapsing to
     // a flat left-edge padding that discards `row.depth`.
     return (
-      <div className="flex items-stretch gap-1">
+      <div className="flex items-stretch gap-4">
         {Array.from({ length: row.depth }, (_, i) => (
-          <span key={i} aria-hidden className="w-4 flex-none border-l-1 border-gray-6" />
+          <span key={i} aria-hidden className="w-16 flex-none border-l-1 border-gray-6" />
         ))}
-        <span aria-hidden className="size-4 flex-none" />
-        <span className="flex-1 py-1 pr-2 font-mono text-12/17 italic text-gray-9">{row.note}</span>
+        <span aria-hidden className="size-16 flex-none" />
+        <span className="flex-1 py-4 pr-8 font-mono text-12/17 italic text-gray-9">{row.note}</span>
       </div>
     );
   }
@@ -42,14 +42,14 @@ function Row({
       caret={row.loading ? <Spinner size="sm" tone="primary" /> : undefined}
       leading={
         row.isRoot ? (
-          <span className="self-center shrink-0 rounded-sm border-1 border-gray-7 px-1 font-mono text-11/15 text-gray-11">
+          <span className="self-center shrink-0 rounded-sm border-1 border-gray-7 px-4 font-mono text-11/15 text-gray-11">
             {row.symbol}
           </span>
         ) : (
           <span
             aria-hidden
             className={cn(
-              'size-3 shrink-0 self-center rounded-sm border-1',
+              'size-12 shrink-0 self-center rounded-sm border-1',
               row.error ? 'border-red-9' : 'border-folder',
               row.expanded && !row.error && 'bg-folder',
             )}
@@ -90,7 +90,7 @@ export function DirectoryTree({ roots, selected, onSelect }: DirectoryTreeProps)
     <Tree
       activeDescendant={tree.activeDescendant}
       onKeyDown={tree.onKeyDown}
-      className="max-h-62 overflow-y-auto rounded-lg bg-surface-inset p-1"
+      className="max-h-248 overflow-y-auto rounded-lg bg-surface-inset p-4"
     >
       {tree.rows.map((row) => (
         <Row

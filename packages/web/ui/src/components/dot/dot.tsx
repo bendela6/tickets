@@ -19,7 +19,7 @@ export function Dot({ color, hollow, className }: DotProps) {
     <span
       aria-hidden
       className={cn(
-        'inline-block h-2 w-2 shrink-0 rounded-full',
+        'inline-block h-8 w-8 shrink-0 rounded-full',
         hollow ? 'border-1 border-gray-8' : 'bg-(--dot-color)',
         className,
       )}

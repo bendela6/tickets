@@ -61,10 +61,10 @@ const pillClass = variants({
     size: {
       default: 'md',
       options: {
-        xs: 'h-4 gap-1 px-2 text-9/11 tracking-widest leading-none',
-        sm: 'h-4.5 gap-1 px-1.75 text-11/13 tracking-wider leading-none',
-        md: 'h-5.5 gap-1.5 px-2.25 text-12/17 leading-none',
-        lg: 'h-7 gap-2 px-3 text-13/19 leading-none',
+        xs: 'h-16 gap-4 px-8 text-9/11 tracking-widest leading-none',
+        sm: 'h-18 gap-4 px-7 text-11/13 tracking-wider leading-none',
+        md: 'h-22 gap-6 px-9 text-12/17 leading-none',
+        lg: 'h-28 gap-8 px-12 text-13/19 leading-none',
       },
     },
   },
@@ -127,7 +127,7 @@ export const Pill = forwardRef<HTMLElement, PillProps>(function Pill(
       {isValidElement(icon) ? icon : icon ? <Icon name={icon} size={ICON_SIZE[size]} /> : null}
       {strikethrough ? <s className="line-through">{label}</s> : label}
       {trailing}
-      {chevron ? <Icon name="chevron-down" size={ICON_SIZE[size]} className="-mr-0.5" /> : null}
+      {chevron ? <Icon name="chevron-down" size={ICON_SIZE[size]} className="-mr-2" /> : null}
     </>
   );
   const classes = (extra?: string) =>
