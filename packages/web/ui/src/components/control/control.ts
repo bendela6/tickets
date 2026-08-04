@@ -1,3 +1,4 @@
+import type { SyntheticEvent } from 'react';
 import type { Hue, Tone } from '../../style';
 
 /**
@@ -44,7 +45,20 @@ export type Option = {
 export type ControlProps<T> = {
   id?: string;
   value: T;
-  onChange: (value: T) => void;
+  /**
+   * The new value — and, second, the event that produced it where one exists.
+   *
+   * The value is the contract: a generic driver passes only that, and every
+   * ordinary call site writes `onChange={setFoo}` and never sees the second
+   * argument. It exists because a handful of call sites legitimately need the
+   * modifier keys, and without it they cannot be written at all.
+   *
+   * The case that forced it is the table's own select cell, which reads
+   * `shiftKey` off the native event to extend a row range. Under a strict
+   * one-argument signature that feature does not fail to compile — it silently
+   * stops working, which is the worst way for it to go.
+   */
+  onChange: (value: T, event?: SyntheticEvent) => void;
   size?: ControlSize;
   tone?: Tone;
   /** Not applicable: removed from the tab order and from form submission. */
