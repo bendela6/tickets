@@ -9,8 +9,8 @@ here should need to leak back into those skills.
 - `docs/design/design-system.html` — the Instrument design spec, exported
   from the Claude Design project. This is the visual reference/baseline for
   every component.
-- `packages/web/ui/src/tokens.css` — holds the `--ins-*` CSS custom
-  properties (the actual token values consumed by the app).
+- `packages/web/ui/styles/generated/*.css` — the `--ins-*` custom properties
+  the app actually consumes, one file per token family.
 - GAP: no visual-baseline images exist yet (no screenshot corpus to diff
   against — verification today is by measurement against the spec doc, not
   image comparison).
@@ -20,7 +20,7 @@ here should need to leak back into those skills.
 - Source of truth: `packages/web/ui/tokens/*.tokens.json` — DTCG-format, at the
   package root rather than under `src/`, because they are what the package is
   built FROM, not code it ships. There is no primitive→semantic alias layer: a
-  ramp step IS the token (`gray-1` is the app background, `red-9` the solid fill).
+  hue step IS the token (`gray-1` is the app background, `red-9` the solid fill).
 - **One family per row, one name across all four tiers.** Adding a family is a
   new generator file plus one entry in `build-tokens.ts`, which holds no
   knowledge of any family itself.
@@ -33,10 +33,11 @@ here should need to leak back into those skills.
   | motion | `generators/motion.ts` | `motion` | `motion.css` | `motion.ts` |
   | shadows | `generators/shadows.ts` | `shadows` | `shadows.css` | `shadows.ts` |
   | breakpoints | `generators/breakpoints.ts` | `breakpoints` | `breakpoints.css` | `breakpoints.ts` |
+  | spacing | `generators/spacing.ts` | `spacing` | `spacing.css` | `spacing.ts` |
   | *(safelist)* | `extract-safelist.mjs` | — | `safelist.css` | — |
 
   Each generator is one self-contained function returning `{ css, ts }`.
-  `colors` holds ramps, roles, surfaces and literals — all `--color-*`, so all
+  `colors` holds hues, roles, surfaces and literals — all `--color-*`, so all
   behind one `--color-*: initial`.
 - **Not everything in a token file is emitted, by design.** `motion.duration`
   and `border.width`/`border.ring` produce no CSS: Tailwind has no namespace for
@@ -61,9 +62,9 @@ here should need to leak back into those skills.
   it regenerates and fails if the generated artifacts differ from a fresh build.
   It validates nothing about the values themselves.
   What remains beyond that runs under `pnpm --filter @tickets/ui test`:
-  `spec.test.ts` (contracts — naming rules, ramp uniformity, what must NOT be
+  `spec.test.ts` (contracts — naming rules, hue uniformity, what must NOT be
   emitted) and the generators' own build-time assertions (theme symmetry per
-  family, every ramp carries the same rungs, every role resolves).
+  family, every hue carries the same steps, every role resolves).
   `drift()` was deleted 2026-08-04: it compared the token JSON against CSS
   generated FROM that JSON, so every row read "matched" by construction.
 - **Three gates were deleted on 2026-08-04.** Know what is no longer caught:
@@ -87,9 +88,8 @@ here should need to leak back into those skills.
 
 - Unit/component tests: `pnpm --filter @tickets/web test` (vitest).
 - Token pipeline gate: `pnpm --filter @tickets/ui tokens:verify` (rebuilds
-  tokens, fails if `styles/tokens.generated.css`, `styles/safelist.generated.css`
-  or `src/style/tones/tones.generated.ts` drifts from a fresh build).
-  Freshness only — no value or vocabulary checking remains.
+  tokens, fails if any file under `styles/generated/` or `src/generated/` drifts
+  from a fresh build). Freshness only — no value or vocabulary checking remains.
 - **Never assert token VALUES in a test.** A test listing the twelve type rungs
   or the four radius values has to be edited every time a designer changes one,
   and it can only fail if someone copied the JSON wrong twice. Assert the
@@ -104,20 +104,31 @@ here should need to leak back into those skills.
 
 ## componentConventions
 
-- Components live in `apps/web/src/ui`.
+- Components live in `packages/web/ui/src/components` (45 of them). A handful
+  of app-specific ones remain in `apps/web/src/ui`.
 - Headless layer idiom: React hooks + radix-ui primitives (behavior/state
   via hooks and radix, markup/styling layered on top).
 - Variant styling: Tailwind utility classes composed through a `cn()`
   helper (`tailwind-merge`-based) — no separate variant-config tool (e.g. no
   `cva`) in use.
-- Stack: React 19, TanStack Router/Query, Tailwind v4 with **preflight OFF**.
+- Stack: React 19, TanStack Router/Query, Tailwind v4 with **preflight ON**
+  (`styles/index.css` line 8 imports it into the `base` layer).
 
 ## knownTraps
 
-1. **Tailwind preflight is OFF.** Native controls (`input`, `button`,
-   `select`) leak user-agent margin, padding, background, and font — they
-   need `appearance-none m-0 shrink-0` plus explicit `border`/`bg` classes to
-   look intentional.
+0. **`--spacing` is 1px, so a number in a class name IS pixels.** `p-16` is 16px,
+   `gap-8` is 8px. Tailwind ships `.25rem`; this repo overrides it (2026-08-04)
+   so spacing reads like `text-13` and `leading-19`. Anything written against
+   the stock scale — copied from Tailwind docs, an AI suggestion, or a branch
+   cut before that date — will render at a quarter size and still compile.
+   There is also no `--leading-*` ladder any more: at 1px the spacing fallback
+   produces N px for every integer, which is what the ladder used to state.
+
+1. **Preflight is ON** — it was off historically, and that is where the
+   `appearance-none m-0 shrink-0` habit in older components comes from. Those
+   are now mostly redundant but harmless. `styles/index.css` adds a small base
+   block AFTER preflight for the handful it does not set: `cursor: pointer` on
+   buttons, `background-image: none`, and `:disabled { cursor: default }`.
 2. **Legacy `apps/web/src/styles/globals.css` is unlayered.** Its bare
    element selectors (e.g. `button { font: inherit }`) beat every Tailwind
    utility class by specificity/order, including on already-redesigned
