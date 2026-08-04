@@ -5,8 +5,8 @@ import { formatCount } from './format';
 
 function RailCard({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="flex-none rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5">
-      <div className="mb-2.5 font-mono text-10 font-500 tracking-wide text-gray-9">{title}</div>
+    <div className="flex-none rounded-xl border-1 border-gray-6 bg-surface-raised p-14">
+      <div className="mb-10 font-mono text-10 font-500 tracking-wide text-gray-9">{title}</div>
       {children}
     </div>
   );
@@ -26,8 +26,8 @@ function UserCard({
     <RailCard title="USER">
       {id !== undefined || email !== undefined ? (
         <>
-          <div className="mb-2.5 flex items-center gap-2.5">
-            <span className="flex size-6.5 shrink-0 items-center justify-center rounded-full bg-indigo-3 font-sans text-10 font-600 text-indigo-9">
+          <div className="mb-10 flex items-center gap-10">
+            <span className="flex size-26 shrink-0 items-center justify-center rounded-full bg-indigo-3 font-sans text-10 font-600 text-indigo-9">
               {(id ?? email ?? '??').slice(0, 2).toUpperCase()}
             </span>
             <div>
@@ -55,7 +55,7 @@ function TagPill({ tagKey, value }: { tagKey: string; value: unknown }) {
       tone={danger ? 'danger' : 'secondary'}
       label={String(value)}
       shape="round"
-      className={cn('h-5 text-11 font-mono', !danger && 'text-gray-12')}
+      className={cn('h-20 text-11 font-mono', !danger && 'text-gray-12')}
     />
   );
 }
@@ -81,7 +81,7 @@ function TagsCard({
 
   return (
     <RailCard title="TAGS">
-      <div className="grid grid-cols-[88px_1fr] items-center gap-x-2.5 gap-y-1.75">
+      <div className="grid grid-cols-[88px_1fr] items-center gap-x-10 gap-y-7">
         {rows.map(([key, value]) => (
           <Fragment key={key}>
             <span className="font-mono text-11 text-gray-9">{key}</span>
@@ -142,12 +142,12 @@ function PlatformCard({
 
   return (
     <RailCard title="PLATFORM">
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-6">
         {chips.map((chip, index) => (
           <span
             key={index}
             className={cn(
-              'inline-flex h-5 items-center gap-1 rounded-md px-1.75 font-mono text-[10.5px] font-500',
+              'inline-flex h-20 items-center gap-4 rounded-md px-7 font-mono text-[10.5px] font-500',
               chip.accent ? 'bg-blue-3 text-blue-9' : 'bg-surface-inset text-gray-11',
             )}
           >
@@ -175,16 +175,16 @@ function ContextCard({ contexts }: { contexts: Record<string, unknown> | undefin
   }
 
   return (
-    <div className="flex-none rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5">
+    <div className="flex-none rounded-xl border-1 border-gray-6 bg-surface-raised p-14">
       {entries.map(([key, value], index) => {
         const fields =
           value !== null && typeof value === 'object' ? Object.entries(value as Record<string, unknown>) : [];
         return (
-          <div key={key} className={index > 0 ? 'mt-3.5' : undefined}>
-            <div className="mb-2.5 font-mono text-10 font-500 tracking-wide text-gray-9">
+          <div key={key} className={index > 0 ? 'mt-14' : undefined}>
+            <div className="mb-10 font-mono text-10 font-500 tracking-wide text-gray-9">
               CONTEXT · {key.toUpperCase()}
             </div>
-            <div className="grid grid-cols-[96px_1fr] gap-x-2.5 gap-y-1.5 font-mono text-[11.5px]">
+            <div className="grid grid-cols-[96px_1fr] gap-x-10 gap-y-6 font-mono text-[11.5px]">
               {fields.map(([fieldKey, fieldValue]) => (
                 <Fragment key={fieldKey}>
                   <span className="text-gray-9">{fieldKey}</span>
@@ -207,7 +207,7 @@ function ContextCard({ contexts }: { contexts: Record<string, unknown> | undefin
  */
 export function ContextRail({ issue, payload }: { issue: IssueDetail; payload: SignalPayload | undefined }) {
   return (
-    <div className="flex flex-col gap-3.5 overflow-auto">
+    <div className="flex flex-col gap-14 overflow-auto">
       <UserCard user={payload?.user} userCount={issue.userCount} />
       <TagsCard release={issue.releaseRange.last} tags={payload?.tags} />
       <PlatformCard platform={payload?.platform} sdk={payload?.sdk} />

@@ -11,7 +11,7 @@ describe('Icon', () => {
       'chevron-up', 'chevron-down', 'chevron-left', 'chevron-right',
       'arrow-up', 'arrow-down', 'arrow-up-right',
       'plus', 'x', 'check', 'search', 'copy', 'pencil', 'trash', 'filter', 'refresh',
-      'grip', 'ellipsis', 'eye', 'minus', 'list', 'quote', 'link',
+      'grip', 'ellipsis', 'eye', 'minus', 'maximize', 'minimize', 'list', 'quote', 'link',
       'columns', 'rows', 'rows-compact', 'folder', 'file', 'terminal', 'sliders', 'calendar', 'clock', 'tag', 'user',
     ]) {
       expect(ICON_NAMES, `missing glyph ${name}`).toContain(name);
@@ -62,7 +62,7 @@ describe('Icon', () => {
 
   it('animate is opt-in only', () => {
     const { container } = render(<Icon name="circle-half" animate="spin" />);
-    expect(container.querySelector('svg')!.getAttribute('class')).toContain('animate-ai-spin');
+    expect(container.querySelector('svg')!.getAttribute('class')).toContain('animate-spin');
     const { container: still } = render(<Icon name="circle-half" />);
     expect(still.querySelector('svg')!.getAttribute('class') ?? '').not.toContain('animate');
   });

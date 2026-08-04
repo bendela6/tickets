@@ -104,11 +104,11 @@ export function NewAppDialog({
         {created === null ? (
           <>
             <DialogTitle>New app</DialogTitle>
-            <div className="mt-4">
+            <div className="mt-16">
               <FieldLabel htmlFor="new-app-name">Name</FieldLabel>
               <Input
                 id="new-app-name"
-                className="mt-1.5"
+                className="mt-6"
                 placeholder="storefront-web"
                 value={name}
                 autoFocus
@@ -121,7 +121,7 @@ export function NewAppDialog({
               />
             </div>
             {createApp.isError ? (
-              <p className="mt-2 font-sans text-12/17 text-red-9">
+              <p className="mt-8 font-sans text-12/17 text-red-9">
                 {createApp.error instanceof Error ? createApp.error.message : 'Could not create the app'}
               </p>
             ) : null}
@@ -138,38 +138,38 @@ export function NewAppDialog({
           </>
         ) : (
           <>
-            <div className="flex items-start gap-3">
-              <span className="flex size-7.5 shrink-0 items-center justify-center rounded-full bg-green-3 font-sans text-13 font-600 text-green-9">
+            <div className="flex items-start gap-12">
+              <span className="flex size-30 shrink-0 items-center justify-center rounded-full bg-green-3 font-sans text-13 font-600 text-green-9">
                 ✓
               </span>
               <div className="flex-1">
                 <DialogTitle>
                   <span className="font-mono text-15">{created.slug}</span> is ready
                 </DialogTitle>
-                <p className="mt-1 font-sans text-[12.5px] leading-relaxed text-gray-11">
+                <p className="mt-4 font-sans text-[12.5px] leading-relaxed text-gray-11">
                   Wire the SDK to this DSN. Signals send to your local daemon — nothing leaves the
                   machine.
                 </p>
               </div>
             </div>
 
-            <div className="mt-4">
-              <div className="mb-1.5 font-mono text-11/13 tracking-wider font-500 tracking-wide text-gray-9">DSN</div>
+            <div className="mt-16">
+              <div className="mb-6 font-mono text-11/13 tracking-wider font-500 tracking-wide text-gray-9">DSN</div>
               <DsnField dsn={created.dsn} />
             </div>
 
-            <div className="mt-4">
+            <div className="mt-16">
               <Tabs
                 items={TABS.map((candidate) => ({ value: candidate.id, label: candidate.label }))}
                 value={tab}
                 onChange={(next) => setTab(next as SnippetTab)}
               />
-              <pre className="overflow-x-auto rounded-b-lg border-1 border-t-0 border-gray-6 bg-surface-inset px-3.5 py-3 font-mono text-[11.5px] leading-relaxed text-gray-11">
+              <pre className="overflow-x-auto rounded-b-lg border-1 border-t-0 border-gray-6 bg-surface-inset px-14 py-12 font-mono text-[11.5px] leading-relaxed text-gray-11">
                 {snippetFor(tab, created.dsn)}
               </pre>
             </div>
 
-            <div className="mt-4 flex items-center gap-2.5 border-t-1 border-gray-6 pt-3.5">
+            <div className="mt-16 flex items-center gap-10 border-t-1 border-gray-6 pt-14">
               <span className="font-mono text-[11.5px] text-gray-9">
                 Send your first signal and it will appear under Issues.
               </span>

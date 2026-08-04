@@ -24,15 +24,15 @@ function ProjectLayout() {
   return (
     <AppShell activeProjectKey={projectKey} onNewTicket={() => setDialogOpen(true)}>
       {boardQuery.isLoading ? (
-        <p className="px-8 py-7 font-sans text-13/19 text-gray-9">Loading {projectKey}…</p>
+        <p className="px-32 py-28 font-sans text-13/19 text-gray-9">Loading {projectKey}…</p>
       ) : boardQuery.isError || !board || !indexes ? (
-        <div className="px-8 py-7">
+        <div className="px-32 py-28">
           <p className="font-sans text-13/19 text-red-9">
             Could not load project “{projectKey}” — {(boardQuery.error as Error | null)?.message}
           </p>
           <Link
             to="/"
-            className="mt-3 inline-flex h-8 items-center rounded-lg border-1 border-gray-7 bg-surface-raised px-3 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
+            className="mt-12 inline-flex h-32 items-center rounded-lg border-1 border-gray-7 bg-surface-raised px-12 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
           >
             ← projects
           </Link>
@@ -40,7 +40,7 @@ function ProjectLayout() {
       ) : (
         // Instrument board area; design main padding is 22px 28px 0 on
         // desktop, tightened below md for 390px screens.
-        <div className="flex h-full min-h-0 flex-col px-4 pt-4 md:px-7 md:pt-5.5">
+        <div className="flex h-full min-h-0 flex-col px-16 pt-16 md:px-28 md:pt-22">
           <ViewTabs
             projectKey={projectKey}
             board={board}

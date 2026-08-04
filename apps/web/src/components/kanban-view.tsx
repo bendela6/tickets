@@ -91,7 +91,7 @@ export function KanbanView({
 
   if (!workflowField) {
     return (
-      <div className="px-4 py-6 font-sans text-13/19 text-gray-9">
+      <div className="px-16 py-24 font-sans text-13/19 text-gray-9">
         This project has no workflow field, so board mode is unavailable.
       </div>
     );
@@ -206,11 +206,11 @@ export function KanbanView({
         }}
         onDragEnd={() => setDraggingId(null)}
         className={cn(
-          'flex shrink-0 cursor-pointer flex-col gap-2 rounded-xl border-1 border-gray-6 bg-surface-raised px-3.25 py-2.75 text-left shadow-sm',
+          'flex shrink-0 cursor-pointer flex-col gap-8 rounded-xl border-1 border-gray-6 bg-surface-raised px-13 py-11 text-left shadow-sm',
           draggingId === ticket.id && 'opacity-40',
         )}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-8">
           <ItemKey
             prefix={board.project.itemPrefix}
             number={ticket.number}
@@ -221,7 +221,7 @@ export function KanbanView({
               label={priorityOption.label}
               tone={hexToOptionColor(priorityOption.config.color)}
               shape="round"
-              className="h-4.5 px-1.75 text-10"
+              className="h-18 px-7 text-10"
             />
           ) : null}
           <span className="flex-1" />
@@ -229,7 +229,7 @@ export function KanbanView({
             <Pill
               {...typePill}
               label={type.label}
-              className={cn(typePill.className, 'h-4.5 rounded-md px-1.75 text-10')}
+              className={cn(typePill.className, 'h-18 rounded-md px-7 text-10')}
             />
           ) : null}
         </div>
@@ -237,7 +237,7 @@ export function KanbanView({
           {String(ticket.values['title'] ?? '')}
         </div>
         {hasFooter ? (
-          <div className="flex items-center gap-2.25">
+          <div className="flex items-center gap-9">
             {assigneeUser ? (
               <Avatar name={assigneeUser.name} {...avatarFor(assigneeUser.kind)} size="sm" />
             ) : null}
@@ -257,7 +257,7 @@ export function KanbanView({
   };
 
   return (
-    <div className="relative flex flex-1 gap-3.5 overflow-x-auto overflow-y-auto pb-5">
+    <div className="relative flex flex-1 gap-14 overflow-x-auto overflow-y-auto pb-20">
       {columns.map((option) => {
         const cards = cardsByValue.get(option.value) ?? [];
         const mode = columnMode(option);
@@ -267,7 +267,7 @@ export function KanbanView({
             key={option.id}
             aria-label={option.label}
             className={cn(
-              'flex w-[85vw] flex-none flex-col rounded-xl bg-surface-inset md:w-63',
+              'flex w-[85vw] flex-none flex-col rounded-xl bg-surface-inset md:w-252',
               mode === 'illegal' && 'opacity-50',
             )}
             onDragOver={
@@ -289,7 +289,7 @@ export function KanbanView({
                 : undefined
             }
           >
-            <div className="flex items-center gap-2 px-3.25 pt-3 pb-2">
+            <div className="flex items-center gap-8 px-13 pt-12 pb-8">
               <span className="inline-flex shrink-0">
                 <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
               </span>
@@ -302,16 +302,16 @@ export function KanbanView({
               </span>
             </div>
             {mode === 'illegal' ? (
-              <div className="mx-2.5 mb-2 rounded-lg bg-red-3 px-2.5 py-1.75 font-sans text-11 leading-[1.4] text-red-9">
+              <div className="mx-10 mb-8 rounded-lg bg-red-3 px-10 py-7 font-sans text-11 leading-[1.4] text-red-9">
                 ✕ workflow: no transition {draggedFromLabel} → {option.label}
               </div>
             ) : null}
             {mode === 'legal' ? (
-              <div className="mx-2.5 mb-2 flex h-[74px] shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-indigo-9 bg-indigo-3 font-sans text-12/17 font-500 text-indigo-9">
+              <div className="mx-10 mb-8 flex h-[74px] shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-indigo-9 bg-indigo-3 font-sans text-12/17 font-500 text-indigo-9">
                 Drop — {draggedFromLabel} → {option.label}
               </div>
             ) : null}
-            <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-2.5 pb-2.5">
+            <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-10 pb-10">
               {cards.map((ticket) => renderCard(ticket))}
               {mode === 'origin' && dragged ? (
                 <div className="flex h-[74px] shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-gray-7 font-mono text-11 text-gray-9">

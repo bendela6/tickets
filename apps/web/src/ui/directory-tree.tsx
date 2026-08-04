@@ -50,8 +50,8 @@ function Row({
             aria-hidden
             className={cn(
               'size-12 shrink-0 self-center rounded-sm border-1',
-              row.error ? 'border-red-9' : 'border-folder',
-              row.expanded && !row.error && 'bg-folder',
+              row.error ? 'border-red-9' : 'border-yellow-8',
+              row.expanded && !row.error && 'bg-yellow-8',
             )}
           />
         )

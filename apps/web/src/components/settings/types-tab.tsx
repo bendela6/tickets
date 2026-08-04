@@ -22,7 +22,7 @@ function slugify(name: string): string {
 
 function ArchChip() {
   return (
-    <span className="inline-flex h-4.25 shrink-0 items-center rounded-sm bg-surface-inset px-1.5 font-mono text-10 font-500 text-gray-9">
+    <span className="inline-flex h-17 shrink-0 items-center rounded-sm bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
       ARCH
     </span>
   );
@@ -38,7 +38,7 @@ function ColorSwatches({
   disabled?: boolean;
 }) {
   return (
-    <div className="mt-2 flex items-center gap-1.5">
+    <div className="mt-8 flex items-center gap-6">
       {OPTION_COLOR_CHOICES.map(({ color, hex }) => (
         <button
           key={color}
@@ -48,7 +48,7 @@ function ColorSwatches({
           aria-pressed={value === hex}
           onClick={() => onChange(hex)}
           className={cn(
-            'size-5 shrink-0 rounded-full border-2 transition-shadow',
+            'size-20 shrink-0 rounded-full border-2 transition-shadow',
             value === hex ? 'border-gray-12' : 'border-transparent hover:border-gray-9',
           )}
           style={{ backgroundColor: hex }}
@@ -78,7 +78,7 @@ function ChildTypeChips({
     return <p className="m-0 font-sans text-12/17 text-gray-9">No other types to allow as children.</p>;
   }
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-6">
       {candidates.map((candidate) => {
         const active = selected.includes(candidate.id);
         return (
@@ -92,7 +92,7 @@ function ChildTypeChips({
             tone={active ? 'primary' : 'secondary'}
             variant={active ? 'subtle' : 'outline'}
             className={cn(
-              'h-6 border-1 px-2.5 transition-colors',
+              'h-24 border-1 px-10 transition-colors',
               active ? 'border-indigo-9' : 'border-gray-7 bg-surface-raised hover:bg-surface-inset',
             )}
           />
@@ -123,17 +123,17 @@ function TypeForm({
 }) {
   const nameId = `${idPrefix}-name`;
   return (
-    <div className="max-w-105 rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5">
+    <div className="max-w-420 rounded-xl border-1 border-gray-6 bg-surface-raised p-14">
       <FieldLabel htmlFor={nameId}>Name</FieldLabel>
       <Input
         id={nameId}
-        className="mt-1"
+        className="mt-4"
         placeholder="Bug"
         value={draft.label}
         onChange={(event) => onChange({ ...draft, label: event.target.value })}
       />
       <ColorSwatches value={draft.color} onChange={(color) => onChange({ ...draft, color })} />
-      <div className="mt-3 flex justify-end gap-2">
+      <div className="mt-12 flex justify-end gap-8">
         <Button variant="ghost" size="sm" onClick={onCancel}>
           Cancel
         </Button>
@@ -249,16 +249,16 @@ export function TypesTab({ board }: SettingsTabProps) {
   }
 
   return (
-    <section className="flex min-h-0 flex-col px-6 py-5.5">
-      <div className="mb-1.5 flex items-center gap-3">
+    <section className="flex min-h-0 flex-col px-24 py-22">
+      <div className="mb-6 flex items-center gap-12">
         <h1 className="m-0 font-sans text-20 font-600 text-gray-12">Types</h1>
         <span className="font-mono text-12/17 text-gray-9">{countLabel}</span>
       </div>
-      <p className="mb-4 mt-0 font-sans text-12/17 text-gray-9">
+      <p className="mb-16 mt-0 font-sans text-12/17 text-gray-9">
         Create, rename, and archive ticket types, and choose which types may nest under each one.
       </p>
 
-      <div className="mb-4">
+      <div className="mb-16">
         {creating ? (
           <TypeForm
             idPrefix="new-type"
@@ -276,7 +276,7 @@ export function TypesTab({ board }: SettingsTabProps) {
         )}
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-16">
         {types.length === 0 ? (
           <p className="m-0 font-sans text-12/17 text-gray-9">No ticket types yet.</p>
         ) : (
@@ -287,15 +287,15 @@ export function TypesTab({ board }: SettingsTabProps) {
               <section
                 key={type.id}
                 className={cn(
-                  'max-w-165 rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5',
+                  'max-w-660 rounded-xl border-1 border-gray-6 bg-surface-raised p-14',
                   type.archivedAt && 'opacity-60',
                 )}
               >
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-10">
                   {type.config.color ? (
                     <span
                       aria-hidden
-                      className="size-2 shrink-0 rounded-full"
+                      className="size-8 shrink-0 rounded-full"
                       style={{ backgroundColor: type.config.color }}
                     />
                   ) : null}
@@ -324,7 +324,7 @@ export function TypesTab({ board }: SettingsTabProps) {
                 </div>
 
                 {editingId === type.id ? (
-                  <div className="mt-2.5">
+                  <div className="mt-10">
                     <TypeForm
                       idPrefix={`edit-type-${type.id}`}
                       draft={editDraft}
@@ -338,8 +338,8 @@ export function TypesTab({ board }: SettingsTabProps) {
                 ) : null}
 
                 {!type.archivedAt ? (
-                  <div className="mt-2.5">
-                    <SectionHeader title="Allowed children" className="mb-1.5" />
+                  <div className="mt-10">
+                    <SectionHeader title="Allowed children" className="mb-6" />
                     <ChildTypeChips
                       candidates={candidates}
                       selected={selected}

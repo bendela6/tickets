@@ -13,7 +13,7 @@ export function renderSkeletonRow<T>({ columns, gridTemplate, rowHeight }: Rende
     >
       {columns.map((col, index) => (
         <div key={col.key} className={cn('flex items-center', cellGutter(index))}>
-          <div className="h-2 w-3/5 animate-pulse rounded-sm bg-gray-4" />
+          <div className="h-8 w-3/5 animate-pulse rounded-sm bg-gray-4" />
         </div>
       ))}
     </div>

@@ -37,33 +37,33 @@ export function NewProjectDialog({
     <DialogRoot open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogTitle>New project</DialogTitle>
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="mt-16 flex flex-col gap-12">
           <div>
             <FieldLabel htmlFor="np-name">Name</FieldLabel>
             <Input
               id="np-name"
-              className="mt-1"
+              className="mt-4"
               placeholder="Gateway"
               value={draft.name}
               onChange={(event) => setDraft({ ...draft, name: event.target.value })}
             />
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-12">
             <div className="flex-1">
               <FieldLabel htmlFor="np-key">Key</FieldLabel>
               <Input
                 id="np-key"
-                className="mt-1"
+                className="mt-4"
                 placeholder="gateway"
                 value={draft.key}
                 onChange={(event) => setDraft({ ...draft, key: event.target.value })}
               />
             </div>
-            <div className="w-32">
+            <div className="w-128">
               <FieldLabel htmlFor="np-prefix">Prefix</FieldLabel>
               <Input
                 id="np-prefix"
-                className="mt-1 font-mono uppercase"
+                className="mt-4 font-mono uppercase"
                 placeholder="GW"
                 value={draft.itemPrefix}
                 onChange={(event) => setDraft({ ...draft, itemPrefix: event.target.value })}

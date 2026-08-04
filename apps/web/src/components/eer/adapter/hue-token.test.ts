@@ -23,7 +23,9 @@ const read = (p: string) => readFileSync(join(repoRoot, p), 'utf8');
 
 const schemaGroupsSrc = read('packages/db/src/schema/schema-groups.ts');
 const groupTablesSrc = read('packages/db/src/schema/introspect/group-tables.ts');
-const tokensCss = read('packages/web/ui/src/tokens/tokens.css');
+// The generated stylesheets are split one per token type; colours.css is the
+// only one that declares the `--color-*` bridge this test reads.
+const tokensCss = read('packages/web/ui/styles/generated/colors.css');
 
 // Curated hues: every `color: '<hue>'` in SCHEMA_GROUPS.
 const curatedHues = [...schemaGroupsSrc.matchAll(/^\s*color: '([a-z]+)',$/gm)].map((m) => m[1]!);

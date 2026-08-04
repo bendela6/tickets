@@ -28,7 +28,7 @@ function slugify(label: string): string {
 
 function ArchChip() {
   return (
-    <span className="inline-flex h-4.25 shrink-0 items-center rounded-sm bg-surface-inset px-1.5 font-mono text-10 font-500 text-gray-9">
+    <span className="inline-flex h-17 shrink-0 items-center rounded-sm bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
       ARCH
     </span>
   );
@@ -59,7 +59,7 @@ function KindPicker({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-6">
       {KIND_ORDER.map((kind) => (
         <button
           key={kind}
@@ -68,7 +68,7 @@ function KindPicker({
           aria-pressed={value === kind}
           onClick={() => onChange(kind)}
           className={cn(
-            'inline-flex h-7 items-center gap-1.5 rounded-md border-1 px-2 font-sans text-12 font-500 capitalize',
+            'inline-flex h-28 items-center gap-6 rounded-md border-1 px-8 font-sans text-12 font-500 capitalize',
             value === kind
               ? 'border-indigo-9 bg-indigo-3 text-gray-12'
               : 'border-gray-7 bg-surface-raised text-gray-11 hover:border-gray-9',
@@ -94,7 +94,7 @@ function ColorSwatches({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-6">
       {OPTION_COLOR_CHOICES.map(({ color, hex }) => (
         <button
           key={color}
@@ -104,7 +104,7 @@ function ColorSwatches({
           aria-pressed={value === hex}
           onClick={() => onChange(hex)}
           className={cn(
-            'size-5 shrink-0 rounded-full border-2 transition-shadow',
+            'size-20 shrink-0 rounded-full border-2 transition-shadow',
             value === hex ? 'border-gray-12' : 'border-transparent hover:border-gray-9',
           )}
           style={{ backgroundColor: hex }}
@@ -137,14 +137,14 @@ function OptionForm({
 }) {
   const labelId = `${idPrefix}-label`;
   return (
-    <div className="flex flex-col gap-2.5 border-t-1 border-gray-6 bg-gray-1 px-4 py-3">
-      <div className="flex flex-col gap-1.25">
+    <div className="flex flex-col gap-10 border-t-1 border-gray-6 bg-gray-1 px-16 py-12">
+      <div className="flex flex-col gap-5">
         <FieldLabel htmlFor={labelId}>Label</FieldLabel>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-10">
           <Input
             id={labelId}
             size="sm"
-            className="max-w-70"
+            className="max-w-280"
             placeholder="e.g. In review"
             value={draft.label}
             onChange={(event) => onChange({ ...draft, label: event.target.value })}
@@ -152,15 +152,15 @@ function OptionForm({
           {valueHint ? <span className="font-mono text-11/13 tracking-wider text-gray-9">{valueHint}</span> : null}
         </div>
       </div>
-      <div className="flex flex-col gap-1.25">
+      <div className="flex flex-col gap-5">
         <FieldLabel>Kind</FieldLabel>
         <KindPicker value={draft.kind} onChange={(kind) => onChange({ ...draft, kind })} />
       </div>
-      <div className="flex flex-col gap-1.25">
+      <div className="flex flex-col gap-5">
         <FieldLabel>Colour</FieldLabel>
         <ColorSwatches value={draft.color} onChange={(color) => onChange({ ...draft, color })} />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-8">
         <Button
           variant="solid"
           size="sm"
@@ -341,12 +341,12 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
   }
 
   return (
-    <section className="flex min-h-0 flex-col px-6 py-5.5">
-      <div className="mb-1.5 flex items-center gap-3">
+    <section className="flex min-h-0 flex-col px-24 py-22">
+      <div className="mb-6 flex items-center gap-12">
         <h1 className="m-0 font-sans text-20 font-600 text-gray-12">Workflow</h1>
         <span className="font-mono text-12/17 text-gray-9">{projectKey}</span>
       </div>
-      <p className="mb-4 mt-0 font-sans text-12/17 text-gray-9">
+      <p className="mb-16 mt-0 font-sans text-12/17 text-gray-9">
         Pick a type, then manage its workflow statuses and the moves allowed between them.
       </p>
 
@@ -356,7 +356,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
         <>
           <Tabs
             variant="pill"
-            className="mb-4 flex-wrap"
+            className="mb-16 flex-wrap"
             items={activeTypes.map((type) => ({ value: String(type.id), label: type.label }))}
             value={String(activeTypeId)}
             onChange={(next) => setSelectedTypeId(Number(next))}
@@ -374,9 +374,9 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
               <div
                 role="region"
                 aria-label="Options"
-                className="mb-4 overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised"
+                className="mb-16 overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised"
               >
-                <div className="flex items-center gap-2.25 border-b-1 border-gray-6 bg-gray-1 px-4 py-2.75">
+                <div className="flex items-center gap-9 border-b-1 border-gray-6 bg-gray-1 px-16 py-11">
                   <span className="font-sans text-14 font-600 text-gray-12">Options</span>
                   <span className="font-mono text-11/13 tracking-wider text-gray-9">
                     {options.length} option{options.length === 1 ? '' : 's'}
@@ -388,7 +388,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                   </Button>
                 </div>
                 {options.length === 0 ? (
-                  <p className="m-0 px-4 py-5 text-center font-sans text-12/17 text-gray-9">
+                  <p className="m-0 px-16 py-20 text-center font-sans text-12/17 text-gray-9">
                     No options yet on this workflow field.
                   </p>
                 ) : (
@@ -398,7 +398,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     const kind = (option.kind ?? 'todo') as StatusKind;
                     return (
                       <div key={option.id} className="border-b-1 border-gray-6 last:border-b-0">
-                        <div className={cn('flex h-10.5 items-center gap-2.5 px-4', archived && 'opacity-60')}>
+                        <div className={cn('flex h-42 items-center gap-10 px-16', archived && 'opacity-60')}>
                           <span className="inline-flex shrink-0">
                             <Icon name={KIND_ICON[kind]} tone={KIND_TONE[kind]} size="xs" />
                           </span>
@@ -412,7 +412,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                           {option.config.color ? (
                             <span
                               aria-hidden
-                              className="size-2 shrink-0 rounded-full"
+                              className="size-8 shrink-0 rounded-full"
                               style={{ backgroundColor: option.config.color }}
                             />
                           ) : null}
@@ -469,7 +469,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
 
               {/* transitions — the graph of allowed moves for this type */}
               <div className="overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
-                <div className="flex items-center gap-2.25 border-b-1 border-gray-6 bg-gray-1 px-4 py-2.75">
+                <div className="flex items-center gap-9 border-b-1 border-gray-6 bg-gray-1 px-16 py-11">
                   <span className="font-sans text-14 font-600 text-gray-12">Transitions</span>
                   <span className="font-mono text-11/13 tracking-wider text-gray-9">
                     {transitions.length} edge{transitions.length === 1 ? '' : 's'}
@@ -477,11 +477,11 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                 </div>
                 <div role="region" aria-label="Transitions">
                   {transitions.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center gap-1.5 px-6 py-8 text-center">
+                    <div className="flex flex-col items-center justify-center gap-6 px-24 py-32 text-center">
                       <span className="font-sans text-15 font-600 text-gray-12">
                         No edges defined — any move is allowed
                       </span>
-                      <p className="m-0 max-w-90 font-sans text-12/17 text-gray-11">
+                      <p className="m-0 max-w-360 font-sans text-12/17 text-gray-11">
                         Items using this type can move between any two options. Add the first edge to start
                         constraining moves.
                       </p>
@@ -493,7 +493,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                       return (
                         <div
                           key={t.id}
-                          className="flex h-10.5 items-center gap-2.5 border-b-1 border-gray-6 px-4 last:border-b-0"
+                          className="flex h-42 items-center gap-10 border-b-1 border-gray-6 px-16 last:border-b-0"
                         >
                           {from ? (
                             <Pill {...statusPill((from.kind ?? 'todo') as StatusKind)} label={from.label} />
@@ -527,7 +527,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                             aria-label={`Remove transition ${transitionLabel(t)}`}
                             title="Remove transition"
                             disabled={disabled || deleteTransition.isPending}
-                            className="shrink-0 px-1 font-sans text-13/19 text-gray-9 hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="shrink-0 px-4 font-sans text-13/19 text-gray-9 hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
                             onClick={() => void removeEdge(t)}
                           >
                             ×
@@ -537,7 +537,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     })
                   )}
                   <form
-                    className="flex flex-wrap items-center gap-1.5 border-t-1 border-gray-6 bg-gray-1 px-4 py-2.75"
+                    className="flex flex-wrap items-center gap-6 border-t-1 border-gray-6 bg-gray-1 px-16 py-11"
                     onSubmit={(event) => {
                       event.preventDefault();
                       void submitEdge();
@@ -545,7 +545,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                   >
                     <Combobox
                       size="sm"
-                      className="w-44"
+                      className="w-176"
                       placeholder="From option"
                       options={fromOptions}
                       value={edgeFrom}
@@ -557,7 +557,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     </span>
                     <Combobox
                       size="sm"
-                      className="w-44"
+                      className="w-176"
                       placeholder="To option"
                       options={toOptions}
                       value={edgeTo}
@@ -572,7 +572,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     />
                     <Combobox
                       size="sm"
-                      className="w-44"
+                      className="w-176"
                       placeholder="Requires field"
                       options={guardFieldOptions}
                       value={edgeRequiresField}

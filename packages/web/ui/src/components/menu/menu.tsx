@@ -18,7 +18,7 @@ export const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(function
         sideOffset={sideOffset}
         align={align}
         className={cn(
-          'z-50 min-w-47.5 rounded-lg border-1 border-gray-6 bg-surface-raised p-1 text-gray-12 shadow-lg',
+          'z-50 min-w-190 rounded-lg border-1 border-gray-6 bg-surface-raised p-4 text-gray-12 shadow-lg',
           'font-sans text-13/19 outline-none',
           className,
         )}
@@ -43,7 +43,7 @@ export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(function MenuI
     <DropdownMenu.Item
       ref={ref}
       className={cn(
-        'flex cursor-pointer items-center justify-between gap-6 rounded-md px-2 py-1.5 outline-none select-none',
+        'flex cursor-pointer items-center justify-between gap-24 rounded-md px-8 py-6 outline-none select-none',
         'data-[highlighted]:bg-surface-inset data-disabled:pointer-events-none data-disabled:opacity-50',
         destructive ? 'text-red-9 data-[highlighted]:bg-red-3' : 'text-gray-12',
         className,
@@ -57,5 +57,5 @@ export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(function MenuI
 });
 
 export function MenuSeparator({ className }: { className?: string }) {
-  return <DropdownMenu.Separator className={cn('mx-1 my-1 h-px bg-gray-6', className)} />;
+  return <DropdownMenu.Separator className={cn('mx-4 my-4 h-px bg-gray-6', className)} />;
 }

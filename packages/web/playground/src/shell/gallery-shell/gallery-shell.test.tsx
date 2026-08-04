@@ -95,7 +95,7 @@ describe('GalleryShell v2', () => {
     // Half a viewport minimum, so scrolling lands about one component per
     // screenful. jsdom applies no stylesheet, so the class is the assertion.
     expect(section.className).toContain('pg-docs-entry');
-    expect(section.className).toContain('pb-16');
+    expect(section.className).toContain('pb-64');
     // A 2px rule in the control tone, not a hairline — and the first entry
     // draws none above it.
     expect(section.className).toContain('border-t-2');
@@ -103,8 +103,8 @@ describe('GalleryShell v2', () => {
     expect(section.className).toContain('first:border-t-0');
     // The rule spans the column; only the docs inside keep the measure — as a
     // fixed basis, since a flex-1 preview sits beside them.
-    expect(section.className).not.toContain('w-200');
-    expect(heading.parentElement!.parentElement!.className).toContain('w-200 shrink-0');
+    expect(section.className).not.toContain('w-800');
+    expect(heading.parentElement!.parentElement!.className).toContain('w-800 shrink-0');
 
     const links = [...section.querySelectorAll('a')].map((a) => [a.textContent, a.getAttribute('href')]);
     expect(links).toEqual([

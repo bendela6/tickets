@@ -26,7 +26,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
               type="button"
               aria-label={current ? `Acting as ${current.name}` : 'Pick a user'}
               title={current ? `Acting as ${current.name}` : 'Pick a user'}
-              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full hover:bg-surface-inset"
+              className="flex size-36 shrink-0 cursor-pointer items-center justify-center rounded-full hover:bg-surface-inset"
             >
               {current ? (
                 <Avatar
@@ -34,7 +34,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
                   size="md"
                 />
               ) : (
-                <span className="inline-flex size-5.5 shrink-0 items-center justify-center rounded-full bg-surface-inset font-sans text-10 text-gray-9">
+                <span className="inline-flex size-22 shrink-0 items-center justify-center rounded-full bg-surface-inset font-sans text-10 text-gray-9">
                   ?
                 </span>
               )}
@@ -42,7 +42,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
           ) : (
             <button
               type="button"
-              className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-lg border-1 border-gray-6 bg-surface-raised px-2 py-1.5 text-left hover:border-gray-7"
+              className="flex min-w-0 flex-1 cursor-pointer items-center gap-8 rounded-lg border-1 border-gray-6 bg-surface-raised px-8 py-6 text-left hover:border-gray-7"
             >
               {current ? (
                 <Avatar
@@ -50,7 +50,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
                   size="md"
                 />
               ) : (
-                <span className="inline-flex size-5.5 shrink-0 items-center justify-center rounded-full bg-surface-inset font-sans text-10 text-gray-9">
+                <span className="inline-flex size-22 shrink-0 items-center justify-center rounded-full bg-surface-inset font-sans text-10 text-gray-9">
                   ?
                 </span>
               )}
@@ -69,7 +69,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
         <MenuContent align="start" side="top">
           {active.map((user) => (
             <MenuItem key={user.id} onSelect={() => setUserId(user.id)}>
-              <span className="inline-flex items-center gap-2">
+              <span className="inline-flex items-center gap-8">
                 <Avatar name={user.name} {...avatarFor(user.kind === 'agent' ? 'agent' : 'human')} />
                 {user.name}
               </span>
@@ -83,17 +83,17 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
       <DialogRoot open={creating} onOpenChange={setCreating}>
         <DialogContent>
           <DialogTitle>New user</DialogTitle>
-          <div className="mt-4">
+          <div className="mt-16">
             <FieldLabel htmlFor="nu-name">Name</FieldLabel>
             <Input
               id="nu-name"
-              className="mt-1"
+              className="mt-4"
               placeholder="Mara K."
               value={nameDraft}
               onChange={(event) => setNameDraft(event.target.value)}
             />
           </div>
-          <div className="mt-5 flex justify-end gap-2">
+          <div className="mt-20 flex justify-end gap-8">
             <Button variant="ghost" onClick={() => setCreating(false)}>
               Cancel
             </Button>
