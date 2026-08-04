@@ -192,9 +192,40 @@ codemod, then Checks A and B. Delete the leading ladder once green.
 Shortest first — `ui-primitives-treeview` (20), then `icon-editor` (41), then
 `live-schema-introspection` (54) — so the process is proven on the small one.
 
+**The migration splits in two, and the halves go on opposite sides of the
+merge.** This was learned the hard way on `ui-primitives-treeview`; the order in
+the original plan (`merge main -> run migration`) is wrong for spacing.
+
 ```
-merge main -> run migration -> typecheck + test + build -> commit as one labelled commit
+x4 the branch's OWN files  ->  merge main  ->  renames  ->  regenerate safelist
+                                                        ->  typecheck + test + build
 ```
+
+- **`x4` must run BEFORE the merge.** It is only sound on a tree where every
+  file speaks one vocabulary, and a stale branch is uniformly pre-migration.
+  After merging main the tree is a MIXTURE — main's files already scaled, the
+  branch's not, hand-resolved files part each — and no blanket pass can tell the
+  halves apart, so main's would silently go to 16×.
+- **Scope it to the files the branch actually changed** (`git diff --name-only
+  $(git merge-base HEAD main)..HEAD`). Scaling everything is worse than
+  useless: for a file the branch never touched the merge already takes main's
+  copy, so editing it here only converts a clean take into a conflict. Measured
+  on `ui-primitives-treeview` — the unscoped pass raised conflicts from 15 to 33.
+- **The renames go AFTER**, and are idempotent by construction: `TONE_SCALE`
+  does not exist on main, so rewriting it is a no-op wherever main won.
+- The payoff is not fewer conflicts — it was 15 either way. It is that **"take
+  ours" becomes a correct resolution**: the branch side arrives already scaled,
+  so what is left in each conflict is the genuine design difference with the
+  mechanical noise stripped out.
+
+**Free oracle for the x4:** for any file the branch never touched, both sides
+started from identical bytes, so applying the same x4 must reproduce main's
+version exactly. On `ui-primitives-treeview`, 170 of 257 such files matched
+byte-for-byte; the remainder differed only where main did non-spacing work.
+
+**Watch the lockfile.** Merging a branch that ran `pnpm install` collides with
+any session holding `pnpm-lock.yaml` dirty. Back the file up, `git checkout --`
+it, merge, then restore the backup — verify by md5 that the bytes came back.
 
 ### 5. Per-branch UI check
 
