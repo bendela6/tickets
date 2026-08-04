@@ -138,6 +138,19 @@ function pageTabs() {
   return within(screen.getByRole('tablist', { name: 'Button views' }));
 }
 
+// A select control is a Combobox, not a native <select>, so changing it is two
+// gestures: open the trigger, click the option. The list renders in a portal,
+// which is why the option is queried off `screen` rather than the trigger.
+function pickControl(label: string, option: string) {
+  fireEvent.click(screen.getByLabelText(label));
+  fireEvent.click(screen.getByRole('option', { name: option }));
+}
+
+// What a native select exposed as `.value` is now the trigger's rendered label.
+function controlValue(label: string): string {
+  return screen.getByLabelText(label).textContent?.trim() ?? '';
+}
+
 describe('ComponentPage', () => {
   afterEach(() => {
     localStorage.clear();
@@ -170,7 +183,7 @@ describe('ComponentPage', () => {
 
     // A control change is reflected without leaving the tab — the whole point
     // of hosting the snippet next to the playground.
-    fireEvent.change(screen.getByLabelText('variant'), { target: { value: 'secondary' } });
+    pickControl('variant', 'secondary');
     expect(within(previewWrapper).getByText(/variant="secondary"/)).toBeTruthy();
 
     // The props documentation is no longer on this stage; it has its own tab.
@@ -200,7 +213,7 @@ describe('ComponentPage', () => {
     const previewWrapper = root.children[1] as HTMLElement;
     const docsWrapper = root.children[2] as HTMLElement;
 
-    fireEvent.change(screen.getByLabelText('variant'), { target: { value: 'secondary' } });
+    pickControl('variant', 'secondary');
     expect(stage().getAttribute('data-variant')).toBe('secondary');
     expect(previewWrapper.className).toBe('');
     expect(docsWrapper.className).toBe('hidden');
@@ -217,7 +230,7 @@ describe('ComponentPage', () => {
     expect(previewWrapper.className).toBe('');
     expect(docsWrapper.className).toBe('hidden');
     expect(stage().getAttribute('data-variant')).toBe('secondary');
-    expect((screen.getByLabelText('variant') as HTMLSelectElement).value).toBe('secondary');
+    expect(controlValue('variant')).toBe('secondary');
   });
 
   it('rail renders ControlsPanel for the playground controls', () => {
@@ -228,7 +241,7 @@ describe('ComponentPage', () => {
 
   it('Reset restores initial control values', () => {
     render(<ComponentPage demo={demo} />);
-    fireEvent.change(screen.getByLabelText('variant'), { target: { value: 'secondary' } });
+    pickControl('variant', 'secondary');
     expect(stage().getAttribute('data-variant')).toBe('secondary');
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
     expect(stage().getAttribute('data-variant')).toBe('primary');
