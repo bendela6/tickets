@@ -93,15 +93,15 @@ function PlacementRow({
       <Pill {...typePill} label={field.type} className={cn(typePill.className, 'font-mono text-11')} />
       <Switch
         label="Required"
-        checked={placement.required}
+        value={placement.required}
         disabled={disabled || updatePlacement.isPending}
-        onChange={(event) => {
+        onChange={(next) => {
           if (userId === null) return;
           updatePlacement.mutate({
             actorId: userId,
             itemTypeId: typeId,
             fieldId: field.id,
-            required: event.target.checked,
+            required: next,
           });
         }}
       />

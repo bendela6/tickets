@@ -82,8 +82,8 @@ function Toggle({
   return (
     <Switch
       label={label}
-      checked={checked}
-      onChange={(event) => onChange(event.target.checked)}
+      value={checked}
+      onChange={(next) => onChange(next)}
     />
   );
 }

@@ -42,8 +42,8 @@ export function ControlsPanel({
               <Switch
                 id={key}
                 label={label}
-                checked={values[key] as boolean}
-                onChange={(event) => onChange(key, event.target.checked)}
+                value={values[key] as boolean}
+                onChange={(next) => onChange(key, next)}
               />
             </div>
           );

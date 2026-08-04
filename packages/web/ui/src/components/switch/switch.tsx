@@ -1,17 +1,35 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
-import { axis, cn, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
+import { axis, cn, HUES, over, TONE_HUE, variants } from '../../style';
 import { toggleRowClass } from '../toggle';
-import type { ControlSize } from '../control';
+import { readOnlyMarkClass, type ControlProps, type ControlSize } from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
 
-type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> & {
-  label: string;
-  size?: ControlSize;
-  /** Which ramp the on-state track and focus ring paint from. Defaults to `primary`. */
-  tone?: Tone;
-};
+/**
+ * The shared control contract over a boolean, plus the native attributes that
+ * still make sense on a checkbox input (`name`, `id`, `aria-*`, `onBlur`).
+ *
+ * `value`/`onChange` are omitted from the native side and re-declared by
+ * `ControlProps`: a caller drives this the way it drives every other control in
+ * the package — with the value, not with the DOM event the input happens to
+ * fire underneath.
+ */
+export type SwitchProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'onChange' | 'size' | 'type'
+> &
+  ControlProps<boolean> & {
+    /**
+     * Inline copy beside the track.
+     *
+     * Optional, because a switch is as often named from outside — a field row's
+     * caption pointing at `id`, a settings row whose text is the row itself.
+     * Requiring it only bought callers an empty string to satisfy the type,
+     * which renders an empty text node and its gap.
+     */
+    label?: string;
+  };
 
 // A switch does not use toggleMarkClass: its resting state is a solid gray
 // track rather than a bordered box, and the border only appears when disabled.
@@ -66,23 +84,45 @@ const thumbClass = variants({
 });
 
 export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
-  { label, size = 'md', tone = 'primary', className, ...rest },
+  { label, value, onChange, size = 'md', tone = 'primary', disabled, readOnly, className, ...rest },
   ref,
 ) {
   const scale = TONE_HUE[tone];
   return (
-    <label className={toggleRowClass({ size, className })}>
+    <label
+      className={toggleRowClass({
+        size,
+        // On the row rather than on the input: the row is what the pointer
+        // actually lands on (the input sits inside its label), so this is the
+        // only place `cursor-default` can beat the row's own `cursor-pointer`
+        // and the only place that stops a click reaching the mark at all.
+        className: cn(readOnly && readOnlyMarkClass, className),
+      })}
+    >
       <span className="relative inline-flex">
         <input
+          {...rest}
           ref={ref}
           type="checkbox"
           role="switch"
+          checked={value}
+          disabled={disabled}
+          // HTML's `readonly` does not apply to a checkbox — it is parsed and
+          // ignored — so the refusal has to be stated in ARIA and enforced here.
+          // Deliberately not `disabled`: a locked switch keeps its tab stop and
+          // its place in form submission.
+          aria-readonly={readOnly || undefined}
+          onChange={(event) => {
+            if (readOnly) return;
+            // The event goes second, matching ControlProps: a caller that needs
+            // the modifier keys can reach them, and everyone else ignores it.
+            onChange(event.target.checked, event);
+          }}
           className={trackClass({ scale, size })}
-          {...rest}
         />
         <span aria-hidden className={thumbClass({ scale, className: cn(THUMB[size]) })} />
       </span>
-      <span className="group-has-disabled:text-gray-9">{label}</span>
+      {label ? <span className="group-has-disabled:text-gray-9">{label}</span> : null}
     </label>
   );
 });

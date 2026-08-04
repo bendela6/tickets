@@ -169,7 +169,7 @@ export function AgentEditor({
             <Label hint="what the persona is for">System prompt</Label>
             <Textarea
               value={systemPrompt}
-              onChange={(e) => setSystemPrompt(e.target.value)}
+              onChange={(next) => setSystemPrompt(next)}
               placeholder="You are a terse senior engineer…"
               rows={3}
             />

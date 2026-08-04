@@ -1,6 +1,6 @@
 import { useCallback, useRef, type KeyboardEvent, type PointerEvent } from 'react';
-import { axis, cn, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
-import type { ControlSize } from '../control';
+import { axis, cn, HUES, over, TONE_HUE, variants } from '../../style';
+import { readOnlyMarkClass, type ControlProps } from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
@@ -73,7 +73,32 @@ export function quantise(raw: number, min: number, max: number, step: number): n
   return Number(clamped.toFixed(places));
 }
 
+/**
+ * The slider on the shared control contract, `ControlProps<number>`.
+ *
+ * `value` is a plain `number` rather than `number | null` on purpose: the thumb
+ * has to be drawn somewhere, so "no value" would still render as a position and
+ * lie about it. A field that can be empty resolves that one layer up, by not
+ * rendering a slider or by naming a default.
+ *
+ * `label` stays REQUIRED and stays a prop, which is the one place this control
+ * diverges from the text controls. Those can be named from outside by a
+ * `<label for>`; a `div[role="slider"]` cannot, because `for` only binds to
+ * labelable elements and a div is not one. The name has to come through the
+ * component or it does not exist.
+ */
+type SliderProps = ControlProps<number> & {
+  min?: number;
+  max?: number;
+  step?: number;
+  /** Accessible name. Required — a slider with no name is unusable by voice or screen reader. */
+  label: string;
+  /** Spoken form of the value where the number alone would mislead — `42%`, `1.5×`. */
+  valueText?: string;
+};
+
 export function Slider({
+  id,
   value,
   onChange,
   min = 0,
@@ -81,28 +106,20 @@ export function Slider({
   step = 1,
   label,
   size = 'md',
+  // A mark is always painted from some ramp — there is no neutral slider — so
+  // this defaults where the bordered fields leave `tone` unset. See ControlProps.
   tone = 'primary',
   disabled = false,
+  readOnly = false,
   valueText,
   className,
-}: {
-  value: number;
-  onChange: (value: number) => void;
-  min?: number;
-  max?: number;
-  step?: number;
-  /** Accessible name. Required — a slider with no name is unusable by voice or screen reader. */
-  label: string;
-  size?: ControlSize;
-  /** Which ramp the fill and focus ring paint from. Defaults to `primary`. */
-  tone?: Tone;
-  disabled?: boolean;
-  /** Spoken form of the value where the number alone would mislead — `42%`, `1.5×`. */
-  valueText?: string;
-  className?: string;
-}) {
+}: SliderProps) {
   const scale = TONE_HUE[tone];
   const trackRef = useRef<HTMLDivElement>(null);
+  // Both input paths ask the same question, and both have to ask it: a
+  // read-only slider keeps its tab stop, so the keyboard reaches it even
+  // though `pointer-events-none` has already closed the pointer off.
+  const locked = disabled || readOnly;
   const span = max - min;
   const fraction = span === 0 ? 0 : (value - min) / span;
 
@@ -118,7 +135,7 @@ export function Slider({
   );
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (disabled) return;
+    if (locked) return;
     // Capture on the element that received the press, so a drag that leaves
     // the track keeps reporting instead of stopping at the edge.
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -126,12 +143,15 @@ export function Slider({
   };
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (disabled || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
+    if (locked || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
     emitFromPointer(event.clientX);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (disabled) return;
+    // Returning before `preventDefault` rather than after: a locked slider owns
+    // none of these keys, so PageDown should scroll the page as it would
+    // anywhere else instead of being swallowed by a control that ignores it.
+    if (locked) return;
     const jump = span === 0 ? step : Math.max(step, span / 10);
     const next: Record<string, number> = {
       ArrowLeft: value - step,
@@ -151,6 +171,7 @@ export function Slider({
 
   return (
     <div
+      id={id}
       role="slider"
       aria-label={label}
       aria-valuemin={min}
@@ -158,14 +179,33 @@ export function Slider({
       aria-valuenow={value}
       aria-valuetext={valueText}
       aria-disabled={disabled || undefined}
+      // HTML's `readonly` does not reach a range input, let alone a div, which
+      // is exactly the gap ARIA fills for this role. Deliberately NOT
+      // `aria-disabled`: the value still matters and the control still takes
+      // focus, so a screen reader should read it, not skip it.
+      aria-readonly={readOnly || undefined}
       aria-orientation="horizontal"
+      // Read-only keeps its tab stop. Only `disabled` leaves the tab order.
       tabIndex={disabled ? -1 : 0}
       onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
-      className={rootClass({ scale, size, className })}
+      // The visual half of read-only: the fill keeps its tone, because the
+      // whole point is that the value stays readable, and what goes is the
+      // affordance — no pointer target, no inviting cursor.
+      className={rootClass({
+        scale,
+        size,
+        className: cn(readOnly && readOnlyMarkClass, className),
+      })}
     >
-      <div ref={trackRef} className={trackClass({ size })}>
+      {/* The track is where `cursor-pointer` lives, so it needs the override of
+          its own — `variants` merges `className` last, which is what lets
+          `cursor-default` evict it rather than sit beside it. */}
+      <div
+        ref={trackRef}
+        className={trackClass({ size, className: readOnly ? 'cursor-default' : undefined })}
+      >
         <div
           aria-hidden
           className={fillClass({ scale })}

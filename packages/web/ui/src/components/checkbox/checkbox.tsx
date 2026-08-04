@@ -1,15 +1,30 @@
 import { forwardRef, useEffect, useRef, type InputHTMLAttributes } from 'react';
-import { cn, TONE_HUE, type Tone } from '../../style';
+import { cn, TONE_HUE } from '../../style';
 import { toggleGlyphClass, toggleMarkClass, toggleRowClass } from '../toggle';
-import type { ControlSize } from '../control';
+import { readOnlyMarkClass, type ControlProps, type ControlSize } from '../control';
 
-type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> & {
-  label: string;
-  size?: ControlSize;
-  /** Which ramp the checked fill and focus ring paint from. Defaults to `primary`. */
-  tone?: Tone;
-  indeterminate?: boolean;
-};
+type CheckboxProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'onChange' | 'size' | 'type'
+> &
+  ControlProps<boolean> & {
+    /**
+     * The text beside the box. Optional, because plenty of checkboxes are named
+     * from outside — a table's selection column and a field row both label the
+     * control elsewhere and pass `aria-label` or point a `<label htmlFor>` at
+     * `id`. Omitting it renders no span at all, rather than an empty one whose
+     * only effect is to leave the row's gap as dead space beside the mark.
+     */
+    label?: string;
+    /**
+     * The third display state, pushed onto the DOM node rather than expressed
+     * through `value`: `indeterminate` is an IDL property with no attribute, so
+     * only an effect can set it. It is orthogonal to the value — a half-checked
+     * box still submits whatever `value` says — which is why it stays its own
+     * prop and not a third member of the value domain.
+     */
+    indeterminate?: boolean;
+  };
 
 // The box and its overlay marks must agree exactly — the tick is drawn to bleed
 // over the input — so one table drives both.
@@ -20,7 +35,17 @@ const BOX: Record<ControlSize, string> = {
 };
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
-  { label, size = 'md', tone = 'primary', indeterminate = false, className, ...rest },
+  {
+    label,
+    value,
+    onChange,
+    size = 'md',
+    tone = 'primary',
+    readOnly = false,
+    indeterminate = false,
+    className,
+    ...rest
+  },
   ref,
 ) {
   const inner = useRef<HTMLInputElement | null>(null);
@@ -32,7 +57,13 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
   const box = BOX[size];
   const scale = TONE_HUE[tone];
   return (
-    <label className={toggleRowClass({ size, className })}>
+    <label
+      // The read-only treatment goes on the ROW, not the input: the cursor it
+      // has to cancel (`cursor-pointer`) lives here, and a label forwards its
+      // clicks to the control it wraps, so blocking pointer events on the
+      // input alone would still leave the text clickable.
+      className={toggleRowClass({ size, className: cn(readOnly && readOnlyMarkClass, className) })}
+    >
       <span className={cn('relative inline-flex shrink-0', box)}>
         <input
           ref={(node) => {
@@ -43,7 +74,25 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
               ref.current = node;
             }
           }}
+          // Passthrough first, so nothing a caller happens to spread can win
+          // over the four attributes this component owns.
+          {...rest}
           type="checkbox"
+          checked={value}
+          // HTML's `readonly` does not apply to a checkbox — the platform
+          // ignores it outright — so the state is announced through ARIA and
+          // enforced by refusing to emit. `disabled` would be the wrong reach:
+          // it drops the tab stop and the submitted value, both of which a
+          // field locked by permission still owes.
+          aria-readonly={readOnly || undefined}
+          onChange={(event) => {
+            if (readOnly) return;
+            // The event goes second so a caller that needs the modifier keys
+            // can still reach them — the table's select cell extends a row
+            // range off `shiftKey`, and a value-only signature would have
+            // broken that silently rather than loudly.
+            onChange(event.target.checked, event);
+          }}
           className={toggleMarkClass({
             fill: 'box',
             scale,
@@ -51,7 +100,6 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
             // from 16px to ~9px wide (the switch/radio inputs already have it).
             className: cn('rounded-sm border-2', box),
           })}
-          {...rest}
         />
         {/* Checkmark / dash rendered as overlays (not bg-image) so they never
             conflict with the checked fill under tailwind-merge.
@@ -95,7 +143,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           />
         </svg>
       </span>
-      <span className="group-has-disabled:text-gray-9">{label}</span>
+      {label !== undefined && <span className="group-has-disabled:text-gray-9">{label}</span>}
     </label>
   );
 });
