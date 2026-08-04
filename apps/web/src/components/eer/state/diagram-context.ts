@@ -33,6 +33,17 @@ export function useDiagramView(): DiagramView {
 export function useDiagramUi(): DiagramUi {
   return req(useContext(UiContext), 'useDiagramUi');
 }
+// Null-tolerant variants, for UI that renders in a shell OUTSIDE the diagram's
+// own subtree — the app's mode panel hosts <Outline/> on /schema, and the same
+// panel component is also rendered on routes where no <DiagramProvider> exists.
+// Such a component reads all three and bails when any is absent, instead of
+// throwing the way the strict hooks above deliberately do.
+export function useDiagramUiOrNull(): DiagramUi | null {
+  return useContext(UiContext);
+}
+export function useDiagramActionsOrNull(): DiagramActions | null {
+  return useContext(ActionsContext);
+}
 export function useDiagramGeometry(): EdgeGeometry {
   return req(useContext(GeometryContext), 'useDiagramGeometry');
 }

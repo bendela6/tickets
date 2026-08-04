@@ -1,15 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import {
-  HUES,
   advisoryPairings,
   STEPS,
   checkPairings,
   colorOf,
+  surfaceOf,
   contrastRatio,
   failingPairings,
   luminance,
-  SURFACES,
 } from './colors';
+import { HUES } from '../../generated';
 
 describe('contrastRatio', () => {
   it('matches the WCAG extremes', () => {
@@ -82,7 +82,7 @@ describe('checkPairings', () => {
       const p = checkPairings().find((x) => x.emphasis === 'field-border' && x.theme === theme);
       const border = colorOf(theme, 'gray', 7);
       const vsPage = contrastRatio(border, colorOf(theme, 'gray', 1));
-      const vsFill = contrastRatio(border, SURFACES.raised![theme]);
+      const vsFill = contrastRatio(border, surfaceOf(theme, 'raised'));
       expect(p?.ratio).toBeCloseTo(Math.min(vsPage, vsFill), 2);
       expect(p?.bgLabel).toBe(vsPage <= vsFill ? 'page' : 'field fill');
       // The two sides genuinely differ, so taking the minimum is doing work.

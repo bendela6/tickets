@@ -10,6 +10,8 @@
 // never touch `packageDemos` — every screen except the gallery route. If that
 // flag is ever removed, all 18 demo modules and their raw source text land in
 // the app's entry chunk.
+import './style/css-custom-properties';
+
 export * from './components';
 export * from './forms';
 export * from './table';

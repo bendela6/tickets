@@ -28,7 +28,7 @@ function clamp(value: number, min?: number, max?: number): number {
  */
 export function NumberFormInput(p: InputProps<NumberInputConfig, number | null>) {
   return (
-    <div onBlur={p.onBlur} className="flex items-center gap-2">
+    <div onBlur={p.onBlur} className="flex items-center gap-8">
       <NumberInput
         id={p.name}
         value={p.value ?? null}

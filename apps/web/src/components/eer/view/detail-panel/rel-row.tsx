@@ -1,7 +1,7 @@
+import { Dot } from '@tickets/ui';
 import { entityColor } from '../../engine/colors/entity-color';
 import type { Model } from '../../engine/model/types';
 import { Card } from './card';
-import { Dot } from './dot';
 
 // The row style shared by every clickable list row in the panel.
 export const rowClass =

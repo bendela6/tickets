@@ -24,8 +24,8 @@ describe('Stack', () => {
 
   // A caller's className surviving is an API contract, not an internal choice.
   it('keeps a caller-supplied className', () => {
-    render(<Stack data-testid="s" className="mt-2" />);
-    expect(screen.getByTestId('s').className).toContain('mt-2');
+    render(<Stack data-testid="s" className="mt-8" />);
+    expect(screen.getByTestId('s').className).toContain('mt-8');
   });
 
   it('forwards unknown props to the underlying div', () => {

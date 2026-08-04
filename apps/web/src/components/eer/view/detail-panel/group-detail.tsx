@@ -1,9 +1,8 @@
+import { cn, Dot } from '@tickets/ui';
 import { entityColor } from '../../engine/colors/entity-color';
 import { entityIdsInGroup } from '../../engine/groups/entity-ids-in-group';
 import type { Model } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';
-import { cn } from '@tickets/ui';
-import { Dot } from './dot';
 import { Empty } from './empty';
 import { Header } from './header';
 import { RelRow, rowClass } from './rel-row';

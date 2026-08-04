@@ -97,9 +97,9 @@ export function DetailLinks({
             ＋ Add link
           </button>
         }
-        className="mb-2"
+        className="mb-8"
       />
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-6">
         {item.links.length === 0 ? (
           <p className="m-0 font-sans text-12/17 text-gray-9">No links.</p>
         ) : (
@@ -115,12 +115,12 @@ export function DetailLinks({
             return (
               <div
                 key={link.id}
-                className="flex h-8.5 items-center gap-2.25 rounded-lg border-1 border-gray-6 px-2.75 hover:bg-gray-1"
+                className="flex h-34 items-center gap-9 rounded-lg border-1 border-gray-6 px-11 hover:bg-gray-1"
               >
                 <Pill
                   tone={chip.blocked ? 'orange' : 'secondary'}
                   label={chip.text}
-                  className="h-5 rounded-md text-11/13 tracking-wider"
+                  className="h-20 rounded-md text-11/13 tracking-wider"
                 />
                 <button
                   type="button"
@@ -157,7 +157,7 @@ export function DetailLinks({
       </div>
       {adding ? (
         <form
-          className="mt-2 flex flex-wrap items-center gap-1.5"
+          className="mt-8 flex flex-wrap items-center gap-6"
           onSubmit={(event) => {
             event.preventDefault();
             void submit();
@@ -165,7 +165,7 @@ export function DetailLinks({
         >
           <Combobox
             size="sm"
-            className="w-44"
+            className="w-176"
             options={options}
             value={choice}
             disabled={userId === null}
@@ -173,7 +173,7 @@ export function DetailLinks({
           />
           <Input
             size="sm"
-            className="w-28"
+            className="w-112"
             placeholder={`${prefix}-131`}
             aria-label="Item number"
             value={numberDraft}

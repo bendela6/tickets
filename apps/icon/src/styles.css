@@ -1,0 +1,43 @@
+@import '@tickets/ui/tokens.css';
+/* Tailwind must scan this app's own class literals; `@source` is relative to
+   this file, so `./` is apps/icon/src. */
+@source './';
+
+/* The canvas is navigated by wheel, middle-drag and two fingers, so its
+   scrollbars are chrome nobody reaches for — and the width they take changes
+   how much room `fit` believes it has. Scrolling still works; only the bars
+   are gone. Written here rather than as an arbitrary Tailwind value because
+   `scrollbar-width` has no utility and this codebase does not use `[...]`. */
+.canvas-scroll {
+  scrollbar-width: none;
+
+  /* `safe` centring, not plain centring. A centred flex child that grows past
+     its container overflows in BOTH directions, and `scrollLeft` cannot go
+     negative — so the leading edge becomes permanently unreachable and a
+     cursor-anchored zoom silently stops tracking. `safe` falls back to
+     start-alignment the moment the content stops fitting, which is what makes
+     the whole artboard reachable at 1600%. */
+  align-items: safe center;
+  justify-content: safe center;
+}
+
+.canvas-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* The pen sits in the row of add-shape buttons but is not one of them: it turns
+   a mode on rather than placing a shape, so it carries a pressed state and its
+   own colours. Its corner is stated here so that the one thing it does have to
+   share with the buttons beside it cannot drift away from them. */
+.tool-toggle {
+  border-radius: var(--radius-lg);
+}
+
+/* The documents popover's footer holds two controls that are one control split
+   in two — start an icon, or bring one in — so they have to keep the same
+   corner. One is a <button> and the other a <label> wrapping a file input,
+   which cannot share a component; stating the shape once here is what stops
+   the two of them drifting apart. */
+.popover-action {
+  border-radius: var(--radius-md);
+}

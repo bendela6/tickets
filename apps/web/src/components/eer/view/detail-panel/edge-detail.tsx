@@ -1,8 +1,8 @@
+import { Dot } from '@tickets/ui';
 import { entityColor } from '../../engine/colors/entity-color';
 import type { Model, Relationship } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';
 import { Card } from './card';
-import { Dot } from './dot';
 import { Header } from './header';
 import { rowClass } from './rel-row';
 import { Section } from './section';

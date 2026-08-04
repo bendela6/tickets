@@ -23,7 +23,7 @@ export function ImageColumn(opts: ImageColumnOpts = {}): Renderer<string | null 
           src={value}
           alt={opts.fallback?.(row) ?? ''}
           loading="lazy"
-          className="size-6 rounded-sm object-cover"
+          className="size-24 rounded-sm object-cover"
         />
       );
     }

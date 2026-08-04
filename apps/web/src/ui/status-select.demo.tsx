@@ -14,7 +14,7 @@ const STATUSES: StatusOption[] = [
 function StatusSelectFixture() {
   const [status, setStatus] = useState<string | null>('in-progress');
   return (
-    <div className="w-56">
+    <div className="w-224">
       <StatusSelect
         statuses={STATUSES}
         value={status}
@@ -34,7 +34,7 @@ function StatusSelectPlaygroundFixture({
 }) {
   const [status, setStatus] = useState<string | null>('in-progress');
   return (
-    <div className="w-56">
+    <div className="w-224">
       <StatusSelect
         statuses={STATUSES}
         value={status}

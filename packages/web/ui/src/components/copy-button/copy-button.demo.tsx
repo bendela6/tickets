@@ -11,7 +11,7 @@ export const states = [
   {
     name: 'Custom labels',
     render: () => (
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-12">
         <CopyButton value="npm install @tickets/ui" label="Copy install command" copiedLabel="Copied!" />
         <CopyButton value="https://tickets.local/issues/42" label="Copy link" />
       </div>

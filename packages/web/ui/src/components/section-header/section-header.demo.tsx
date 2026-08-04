@@ -13,11 +13,11 @@ export const states = [
         title="Subtasks"
         count={
           <>
-            <Progress tone="green" value={60} className="w-15" />
+            <Progress tone="green" value={60} className="w-60" />
             <span className="font-mono text-11/13 tracking-wider text-gray-9">3/5 done</span>
           </>
         }
-        className="gap-2.5"
+        className="gap-10"
       />
     ),
   },

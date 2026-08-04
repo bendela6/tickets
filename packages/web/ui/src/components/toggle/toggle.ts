@@ -1,7 +1,7 @@
-import { axis, HUE_TONES, over, variants } from '../../style';
+import { axis, HUES, over, variants } from '../../style';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
-const SCALE = axis('scale', HUE_TONES, 'indigo');
+const SCALE = axis('scale', HUES, 'indigo');
 
 /** Checkbox, RadioGroup and Switch share a ladder: 14 / 16 / 20px marks. */
 export type ToggleSize = 'sm' | 'md' | 'lg';
@@ -17,9 +17,9 @@ export const toggleRowClass = variants({
     size: {
       default: 'md',
       options: {
-        sm: 'gap-1.5 text-12/17',
-        md: 'gap-2 text-13/19',
-        lg: 'gap-2.5 text-15',
+        sm: 'gap-6 text-12/17',
+        md: 'gap-8 text-13/19',
+        lg: 'gap-10 text-15',
       },
     },
   },

@@ -10,6 +10,13 @@ procs:
       WEB_DEV_PORT: "4620"
   signals:
     shell: pnpm --filter @tickets/signals dev
+  # Client-only, so it needs no database and no api — but it shares
+  # @tickets/ui, and a token change that breaks it should break it here rather
+  # than the next time somebody opens it on purpose. Reach it at
+  # http://localhost:4670, never 127.0.0.1:4670: Windows resolves localhost to
+  # ::1 first and Vite binds only that.
+  icon:
+    shell: pnpm --filter @tickets/icon dev
   studio:
     shell: pnpm db:studio
   watchers:

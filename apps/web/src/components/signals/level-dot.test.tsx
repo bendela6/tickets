@@ -10,17 +10,17 @@ test('labels each level for assistive tech', () => {
 // A border-radius at or beyond half a box's own side turns that box into a
 // circle regardless of any rotation applied to it — rotating a circle is a
 // visual no-op. The Tailwind side these tokens compile to (tokens.css):
-// size-2 = 8px, size-2.25 = 9px, size-2.5 = 10px; rounded-none = 0,
+// size-8 = 8px, size-9 = 9px, size-10 = 10px; rounded-none = 0,
 // rounded-sm = 4px, rounded-full = always fully round. These maps let the
 // test compute real geometry from the class list instead of only checking
 // that a rotation utility is present, which is what let warning quietly
 // become a circle (rotate-45 rounded-sm at 8px: 4px is exactly half of 8px).
 const SIZE_PX: Record<string, number> = {
-  'size-2': 8,
-  'size-2.25': 9,
-  'size-2.5': 10,
-  'size-2.75': 11,
-  'size-3': 12,
+  'size-8': 8,
+  'size-9': 9,
+  'size-10': 10,
+  'size-11': 11,
+  'size-12': 12,
 };
 
 const RADIUS_PX: Record<string, number> = {

@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useRef, type InputHTMLAttributes } from 'react';
-import { cn, TONE_SCALE, type Tone } from '../../style';
+import { cn, TONE_HUE, type Tone } from '../../style';
 import { toggleGlyphClass, toggleMarkClass, toggleRowClass, type ToggleSize } from '../toggle';
 
 type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> & {
@@ -13,9 +13,9 @@ type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'
 // The box and its overlay marks must agree exactly — the tick is drawn to bleed
 // over the input — so one table drives both.
 const BOX: Record<ToggleSize, string> = {
-  sm: 'size-3.5',
-  md: 'size-4',
-  lg: 'size-5',
+  sm: 'size-14',
+  md: 'size-16',
+  lg: 'size-20',
 };
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
@@ -29,7 +29,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
     }
   }, [indeterminate]);
   const box = BOX[size];
-  const scale = TONE_SCALE[tone];
+  const scale = TONE_HUE[tone];
   return (
     <label className={toggleRowClass({ size, className })}>
       <span className={cn('relative inline-flex shrink-0', box)}>

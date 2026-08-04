@@ -25,13 +25,13 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
 
   return (
     <div className="flex-none overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
-      <div className="flex h-10.5 items-center gap-2.5 border-b-1 border-gray-6 px-4">
+      <div className="flex h-42 items-center gap-10 border-b-1 border-gray-6 px-16">
         <span className="font-sans text-[13.5px] font-600 text-gray-12">Occurrences</span>
         <span className="font-mono text-11 text-gray-9">{formatCount(total)} total</span>
       </div>
       <div
         role="row"
-        className="grid h-7.5 items-center border-b-1 border-gray-6 bg-gray-1 px-4 font-sans text-[10.5px] font-500 tracking-wide text-gray-11 uppercase"
+        className="grid h-30 items-center border-b-1 border-gray-6 bg-gray-1 px-16 font-sans text-[10.5px] font-500 tracking-wide text-gray-11 uppercase"
         style={{ gridTemplateColumns: OCCURRENCES_GRID_COLUMNS }}
       >
         <span>Time</span>
@@ -40,7 +40,7 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
         <span />
       </div>
       {rows.length === 0 ? (
-        <div className="px-4 py-4 font-mono text-[11.5px] text-gray-9">no occurrences recorded</div>
+        <div className="px-16 py-16 font-mono text-[11.5px] text-gray-9">no occurrences recorded</div>
       ) : (
         rows.map((row, index) => {
           // The stack trace + breadcrumbs cards above are built from the newest
@@ -53,7 +53,7 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
               key={row.id}
               role="row"
               className={cn(
-                'grid h-8.5 items-center border-b-1 border-gray-6 px-4 last:border-b-0',
+                'grid h-34 items-center border-b-1 border-gray-6 px-16 last:border-b-0',
                 isNewest && 'bg-indigo-3',
               )}
               style={{ gridTemplateColumns: OCCURRENCES_GRID_COLUMNS }}
@@ -80,7 +80,7 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
           );
         })
       )}
-      <div className="flex h-8.5 items-center gap-2 border-t-1 border-gray-6 bg-gray-1 px-4 font-mono text-11 text-gray-9">
+      <div className="flex h-34 items-center gap-8 border-t-1 border-gray-6 bg-gray-1 px-16 font-mono text-11 text-gray-9">
         <span>{OCCURRENCES_PER_PAGE} per page</span>
         <span className="flex-1" />
         {total > OCCURRENCES_PER_PAGE ? (
@@ -115,7 +115,7 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
 
 function IssueNotFound() {
   return (
-    <div className="flex h-full items-center justify-center p-6">
+    <div className="flex h-full items-center justify-center p-24">
       <ScreenState
         title="Issue not found"
         action={
@@ -187,9 +187,9 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
     }
 
     return (
-      <div className="flex h-full items-center justify-center p-6">
+      <div className="flex h-full items-center justify-center p-24">
         <ScreenState
-          className="max-w-115"
+          className="max-w-460"
           tone="danger"
           icon="triangle-alert"
           title="Couldn't load issue"
@@ -198,7 +198,7 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
             <button
               type="button"
               onClick={() => void issueQuery.refetch()}
-              className="h-8 rounded-lg border-1 border-gray-7 bg-surface-raised px-3.25 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+              className="h-32 rounded-lg border-1 border-gray-7 bg-surface-raised px-13 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
             >
               ↻ Retry
             </button>
@@ -217,26 +217,26 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
   const hot = issue.status === 'open' && (issue.spark[issue.spark.length - 1] ?? 0) > 0;
 
   return (
-    <div className="flex h-full min-h-0 flex-col p-6 md:p-7">
-      <div className="mb-3 font-mono text-12 text-gray-9">
+    <div className="flex h-full min-h-0 flex-col p-24 md:p-28">
+      <div className="mb-12 font-mono text-12 text-gray-9">
         <Link to="/signals" className="text-indigo-9 hover:underline">
           ‹ Issues
         </Link>{' '}
         / {issue.key}
       </div>
 
-      <div className="mb-3 flex items-start gap-3">
-        <LevelDot level={issue.level} className="mt-2" />
+      <div className="mb-12 flex items-start gap-12">
+        <LevelDot level={issue.level} className="mt-8" />
         <div className="min-w-0 flex-1">
           <div className="font-sans text-18 leading-tight font-600 text-gray-12">
             <span className="font-mono text-16">{name}</span>
             {message !== null ? (
-              <span className="ml-2 font-sans text-16 font-400 text-gray-11">— {message}</span>
+              <span className="ml-8 font-sans text-16 font-400 text-gray-11">— {message}</span>
             ) : null}
           </div>
-          <div className="mt-1.75 flex items-center gap-2">
+          <div className="mt-7 flex items-center gap-8">
             <Pill {...signalStatus(issue.status)} />
-            <span className="inline-flex h-5.5 items-center rounded-md bg-surface-inset px-2 font-mono text-11 font-500 text-gray-11">
+            <span className="inline-flex h-22 items-center rounded-md bg-surface-inset px-8 font-mono text-11 font-500 text-gray-11">
               {issue.appSlug}
             </span>
             <span className="font-mono text-11 text-gray-9">
@@ -264,35 +264,35 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
         ) : null}
       </div>
 
-      <div className="mb-4 flex flex-none items-center gap-6.5 rounded-xl border-1 border-gray-6 bg-surface-raised px-4.5 py-3">
+      <div className="mb-16 flex flex-none items-center gap-26 rounded-xl border-1 border-gray-6 bg-surface-raised px-18 py-12">
         <div>
-          <div className="mb-0.75 font-mono text-10 font-500 tracking-wide text-gray-9">EVENTS</div>
+          <div className="mb-3 font-mono text-10 font-500 tracking-wide text-gray-9">EVENTS</div>
           <div className="font-mono text-14 font-600 text-gray-12">{formatCount(issue.eventCount)}</div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-10 font-500 tracking-wide text-gray-9">SESSIONS</div>
+          <div className="mb-3 font-mono text-10 font-500 tracking-wide text-gray-9">SESSIONS</div>
           <div className="font-mono text-14 font-500 text-gray-12">{formatCount(issue.sessionCount)}</div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-10 font-500 tracking-wide text-gray-9">FIRST SEEN</div>
+          <div className="mb-3 font-mono text-10 font-500 tracking-wide text-gray-9">FIRST SEEN</div>
           <div className="font-sans text-13 text-gray-12">
             {relativeTime(issue.firstSeen)} ago
             {issue.releaseRange.first !== null ? (
-              <span className="ml-1.5 font-mono text-11 text-gray-9">· {issue.releaseRange.first}</span>
+              <span className="ml-6 font-mono text-11 text-gray-9">· {issue.releaseRange.first}</span>
             ) : null}
           </div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-10 font-500 tracking-wide text-gray-9">LAST SEEN</div>
+          <div className="mb-3 font-mono text-10 font-500 tracking-wide text-gray-9">LAST SEEN</div>
           <div className="font-sans text-13 font-500 text-gray-12">
             {relativeTime(issue.lastSeen)} ago
             {issue.releaseRange.last !== null ? (
-              <span className="ml-1.5 font-mono text-11 font-400 text-gray-9">· {issue.releaseRange.last}</span>
+              <span className="ml-6 font-mono text-11 font-400 text-gray-9">· {issue.releaseRange.last}</span>
             ) : null}
           </div>
         </div>
         <div>
-          <div className="mb-0.75 font-mono text-10 font-500 tracking-wide text-gray-9">RELEASES</div>
+          <div className="mb-3 font-mono text-10 font-500 tracking-wide text-gray-9">RELEASES</div>
           <div className="font-mono text-12 text-gray-12">
             {issue.releaseRange.first ?? '—'} → {issue.releaseRange.last ?? '—'}
           </div>
@@ -301,8 +301,8 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
         <Sparkline counts={issue.spark} hot={hot} />
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_330px] gap-4.5 overflow-hidden">
-        <div className="flex flex-col gap-4 overflow-auto pr-0.5">
+      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_330px] gap-18 overflow-hidden">
+        <div className="flex flex-col gap-16 overflow-auto pr-2">
           <StackTrace
             payload={payload}
             release={sessionQuery.data?.session.release}

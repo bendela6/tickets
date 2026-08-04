@@ -1,6 +1,5 @@
 import type { Model } from '../../engine/model/types';
-import { Badge } from './badge';
-import { Kbd } from './kbd';
+import { Pill } from '@tickets/ui';
 import { Section } from './section';
 import { Stat } from './stat';
 
@@ -22,7 +21,7 @@ export function EmptyState({ model }: { model: Model | null }) {
   return (
     <div>
       <div className="border-b-1 border-gray-6 px-16 pb-12 pt-16">
-        <Badge tone="entity">Overview</Badge>
+        <Pill variant="tint" size="xs" tone="blue" label="Overview" className="font-mono uppercase font-600" />
         {/* Matches what the adapter sets meta.title to, so nothing flashes the
             standalone app's old name before the model lands. */}
         <h2 className="mt-8 font-mono text-16 font-500 text-gray-12">{model?.meta.title ?? 'Database schema'}</h2>
@@ -43,7 +42,7 @@ export function EmptyState({ model }: { model: Model | null }) {
         <div className="flex flex-col gap-8 text-12 leading-relaxed text-gray-11">
           {rows.map(([k, label], i) => (
             <div key={i} className="flex items-baseline gap-8">
-              <Kbd>{k}</Kbd>
+              <Pill variant="outline" size="sm" tone="neutral" label={k} className="font-mono" />
               <span>{label}</span>
             </div>
           ))}

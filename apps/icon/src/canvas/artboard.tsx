@@ -1,0 +1,326 @@
+import { useRef } from 'react';
+import { cn } from '@tickets/ui';
+import { MIN_GRID_PX, SAFE_ZONE } from '../doc/constants';
+import { gridPitch } from '../doc/snap';
+import { anchorControlPoints, vertexPoints } from '../doc/geometry';
+import {
+  selectedFrame,
+  selectedNodeIndex,
+  selectedNodeOnly,
+  selectedObject,
+  selectionBounds,
+  selectionOutline,
+} from '../doc/store';
+import { isGroup, place } from '../doc/tree';
+import { CORNER_HANDLES } from './interaction';
+import { safeZoneWarnings } from '../doc/validate';
+import { useEditor } from '../editor-context';
+import { gridInk } from '../render/ink';
+import { renderSvg } from '../render/svg';
+import { chromeIsDim, scaleFor } from '../view';
+import { EmptyArtboard } from './empty-artboard';
+import { PenOverlay } from './pen-overlay';
+import { PointsSelectionOverlay, SelectionOverlay } from './selection-overlay';
+import { useArtboardPointer } from './use-artboard-pointer';
+
+/**
+ * The artboard: the one bright, high-contrast surface on screen, and the only
+ * thing that is the subject rather than apparatus.
+ *
+ * The artwork is painted by the *same* renderer the export uses, so what is on
+ * screen and what lands in a PNG cannot diverge. That also means the shapes
+ * carry no DOM identity — selection and dragging go through hit-testing in
+ * document space rather than through per-shape event handlers, which is what
+ * a rotated polygon needs anyway.
+ */
+export function Artboard() {
+  const { state, dispatch, view, setView } = useEditor();
+  const surfaceRef = useRef<HTMLDivElement>(null);
+
+  const { artboard } = state.doc;
+  const scale = scaleFor(artboard, view.zoom);
+  const screenWidth = artboard.width * scale;
+  const screenHeight = artboard.height * scale;
+  const pitch = gridPitch(state.doc.snap, scale, MIN_GRID_PX);
+  const dim = chromeIsDim(view);
+
+  const { chrome, marquee, penChrome, surfaceProps, onHandleDown } = useArtboardPointer({
+    state,
+    dispatch,
+    scale,
+    surfaceRef,
+    onDraggingChange: (dragging) => setView((v) => ({ ...v, dragging })),
+  });
+
+  // The one selected node, or null when several are. `selected` narrows that to
+  // a shape: everything below it belongs to one — its nodes, its safe-zone
+  // warning — and a group answers none of those.
+  const node = selectedNodeOnly(state);
+  const selected = selectedObject(state);
+  // The frame the selected node's own numbers are stated in, so the overlay can
+  // be drawn on the artboard from coordinates that are not in artboard units.
+  const frame = selectedFrame(state);
+  /**
+   * One box round the lot, drawn only when there are several.
+   *
+   * It still carries no resize handles and no rotation knob, and that is now
+   * settled rather than deferred. Transforming several objects at once has to
+   * decide what happens to each one's own rotation, stroke and curves as the
+   * box changes — and the answer this editor gives is **make them a group**.
+   * ⌘G takes the selection and hands back one node with one transform, which
+   * *does* have handles, a knob and a single scale that every child inherits
+   * exactly. A second, groupless multi-transform would be that same decision
+   * taken twice and allowed to disagree with itself.
+   */
+  const groupBox = state.selectedIds.size > 1 ? selectionBounds(state) : null;
+  const warnings = safeZoneWarnings(state.doc);
+  const selectedWarns = selected ? warnings.some((w) => w.id === selected.id) : false;
+  const showSafeZone = selectedWarns || view.safeZoneOpen;
+
+  const drawing = state.tool === 'pen';
+  // Handles are withdrawn while dragging — you cannot resize while moving. The
+  // pen withdraws them too: what is selected is deliberately left alone by
+  // entering the tool, but its handles are buttons sitting over the artboard
+  // and every one of them would swallow a click meant for an anchor.
+  const showHandles = node !== null && !node.hidden && !dim && !drawing;
+  // Where the outline goes, in artboard units, and the angle it is drawn at —
+  // which for anything inside a group is its parents' turn plus its own.
+  const outline = selectionOutline(state);
+  // Empty for the shapes that are dragged by a box, and for a group, so this is
+  // also the choice between the two overlays — the artboard never names a kind.
+  // Each point is read out into artboard units, because that is where the
+  // handles are positioned.
+  const vertices = selected ? vertexPoints(selected).map((point) => place(frame, point)) : [];
+  const nodeIndex = selectedNodeIndex(state);
+  // Only the selected node's controls: a path with forty nodes and every handle
+  // drawn is a thicket you cannot aim at.
+  const controls =
+    selected && nodeIndex !== null
+      ? anchorControlPoints(selected, nodeIndex).map((control) => ({
+          ...control,
+          at: place(frame, control.at),
+        }))
+      : [];
+
+  return (
+    <div
+      ref={surfaceRef}
+      role="img"
+      aria-label={`${state.doc.name} artboard, ${state.doc.objects.length} objects`}
+      className={cn(
+        'relative flex-none touch-none outline-1 outline-gray-7 shadow-artboard',
+        drawing && 'cursor-crosshair',
+      )}
+      style={{
+        width: screenWidth,
+        height: screenHeight,
+        background: state.doc.background[view.ground],
+      }}
+      {...surfaceProps}
+    >
+      <div
+        aria-hidden
+        dangerouslySetInnerHTML={{
+          __html: renderSvg(state.doc, { ground: view.ground, background: false }),
+        }}
+        className="absolute inset-0 [&>svg]:size-full"
+      />
+
+      {/* The grid draws the snap step itself, so what you see is what a drag
+          will land on — thinned by doubling when the step is too fine to read
+          at this zoom, and dropped entirely when even that is too dense. */}
+      {view.grid && pitch !== null ? (
+        <div
+          aria-hidden
+          className={cn('pointer-events-none absolute inset-0', dim && 'opacity-50')}
+          style={{
+            backgroundImage:
+              'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
+            backgroundSize: `${pitch * scale}px ${pitch * scale}px`,
+            color: gridInk(state.doc.background[view.ground]),
+          }}
+        />
+      ) : null}
+
+      {showSafeZone ? (
+        <>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute rounded-full border-1 border-dashed border-safe-zone"
+            style={{
+              left: `${((1 - SAFE_ZONE) / 2) * 100}%`,
+              top: `${((1 - SAFE_ZONE) / 2) * 100}%`,
+              width: `${SAFE_ZONE * 100}%`,
+              height: `${SAFE_ZONE * 100}%`,
+            }}
+          />
+          <span className="pointer-events-none absolute bottom-8 left-8 flex h-16 items-center whitespace-nowrap rounded-sm bg-safe-zone px-6 font-mono text-9 text-white">
+            {Math.round(SAFE_ZONE * 100)}% maskable safe zone
+          </span>
+        </>
+      ) : null}
+
+      {chrome ? (
+        <>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute border-1 border-dashed border-handle/45"
+            style={{
+              left: chrome.origin.x * scale,
+              top: chrome.origin.y * scale,
+              width: chrome.origin.w * scale,
+              height: chrome.origin.h * scale,
+              transform: `rotate(${chrome.rotation}deg)`,
+            }}
+          />
+          <Guides box={chrome.current} scale={scale} />
+          <span
+            className="pointer-events-none absolute flex h-20 items-center gap-8 whitespace-nowrap rounded-sm bg-gray-12 px-8 font-mono text-10 text-gray-1"
+            style={{
+              left: (chrome.current.x + chrome.current.w) * scale - 6,
+              top: (chrome.current.y + chrome.current.h) * scale + 10,
+            }}
+          >
+            {Math.round(chrome.current.x)}, {Math.round(chrome.current.y)}
+            <span>
+              Δ {chrome.delta.x >= 0 ? '+' : '−'}
+              {Math.abs(chrome.delta.x)} {chrome.delta.y >= 0 ? '+' : '−'}
+              {Math.abs(chrome.delta.y)}
+            </span>
+          </span>
+        </>
+      ) : null}
+
+      {outline && !showHandles && chrome ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute outline-1 outline-handle"
+          style={{
+            left: outline.box.x * scale,
+            top: outline.box.y * scale,
+            width: outline.box.w * scale,
+            height: outline.box.h * scale,
+            transform: `rotate(${outline.rotation}deg)`,
+          }}
+        />
+      ) : null}
+
+      {/* Drawn through a drag as well as at rest — it is measured from the
+          document, so it travels with the objects the way the single-object
+          outline does. The pen withdraws it, as it withdraws the handles. */}
+      {groupBox && !drawing ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute outline-1 outline-handle"
+          style={{
+            left: groupBox.x * scale,
+            top: groupBox.y * scale,
+            width: groupBox.w * scale,
+            height: groupBox.h * scale,
+          }}
+        />
+      ) : null}
+
+      {marquee ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute border-1 border-dashed border-handle bg-handle/10"
+          style={{
+            left: marquee.x * scale,
+            top: marquee.y * scale,
+            width: marquee.w * scale,
+            height: marquee.h * scale,
+          }}
+        />
+      ) : null}
+
+      {showHandles && outline && node ? (
+        vertices.length > 0 ? (
+          <PointsSelectionOverlay
+            points={vertices}
+            box={outline.box}
+            rotation={outline.rotation}
+            scale={scale}
+            selectedNode={nodeIndex}
+            controls={controls}
+            onHandleDown={onHandleDown}
+          />
+        ) : (
+          <SelectionOverlay
+            box={outline.box}
+            rotation={outline.rotation}
+            scale={scale}
+            // A group offers its four corners and nothing else. Its scale is one
+            // number, so an edge handle would be a control for a second one the
+            // model does not have — and dragging it would silently be answered
+            // by a proportional resize, which is worse than not offering it.
+            handles={isGroup(node) ? CORNER_HANDLES : undefined}
+            onHandleDown={onHandleDown}
+          />
+        )
+      ) : null}
+
+      {drawing ? (
+        <PenOverlay
+          anchors={state.pen}
+          chrome={penChrome}
+          artboard={artboard}
+          scale={scale}
+        />
+      ) : null}
+
+      {/* The invitation goes while the pen is active. Its wells are real
+          buttons over the middle of the artboard, and drawing the first path on
+          an empty board is exactly when they would be in the way. */}
+      {state.doc.objects.length === 0 && !drawing ? <EmptyArtboard /> : null}
+    </div>
+  );
+}
+
+/**
+ * The two centre guides shown mid-drag. Each states something true — one names
+ * the object's own centres, the other the artboard's — rather than being
+ * decoration that appears because something is moving.
+ */
+function Guides({ box, scale }: { box: { x: number; y: number; w: number; h: number }; scale: number }) {
+  const cx = (box.x + box.w / 2) * scale;
+  const cy = (box.y + box.h / 2) * scale;
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0">
+      <div
+        className="absolute"
+        style={{
+          left: cx,
+          top: 0,
+          bottom: 0,
+          width: 1,
+          backgroundImage:
+            'repeating-linear-gradient(to bottom, var(--color-handle) 0 4px, transparent 4px 8px)',
+        }}
+      />
+      <div
+        className="absolute"
+        style={{
+          top: cy,
+          left: 0,
+          right: 0,
+          height: 1,
+          backgroundImage:
+            'repeating-linear-gradient(to right, var(--color-handle) 0 4px, transparent 4px 8px)',
+        }}
+      />
+      <span
+        className="absolute flex h-16 items-center whitespace-nowrap rounded-sm bg-white px-5 font-mono text-9 tracking-wide text-handle inset-ring-1 inset-ring-handle/30"
+        style={{ left: cx + 5, top: 9 }}
+      >
+        centres
+      </span>
+      <span
+        className="absolute flex h-16 items-center whitespace-nowrap rounded-sm bg-white px-5 font-mono text-9 tracking-wide text-handle inset-ring-1 inset-ring-handle/30"
+        style={{ top: cy + 5, left: 9 }}
+      >
+        artboard centre
+      </span>
+    </div>
+  );
+}

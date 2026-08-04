@@ -1,5 +1,6 @@
 import { Button } from '@tickets/ui';
-import { REST_POSES, type MarkConfig, type RestPose } from '../config';
+import { REST_POSES, type RestPose } from '../config';
+import type { IconDoc } from '../doc';
 import {
   isSpinning, MARK_STATES, planMove, rampSpread, statePose, type MarkState,
 } from '../motion';
@@ -7,22 +8,22 @@ import type { StudioAction } from '../state';
 import { SliderRow } from './slider-row';
 
 export function MotionPanel({
-  config, state, dispatch, onState,
+  doc, state, dispatch, onState,
 }: {
-  config: MarkConfig;
+  doc: IconDoc;
   state: MarkState;
   dispatch: (action: StudioAction) => void;
   onState: (state: MarkState) => void;
 }) {
-  const { motion } = config;
+  const { motion } = doc;
   const even = motion.restPose === 'fan';
 
   return (
-    <section className="flex flex-col gap-2">
+    <section className="flex flex-col gap-8">
       <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">Motion</h2>
 
       {/* Clicking a state animates to it from wherever the mark is now. */}
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-6">
         {MARK_STATES.map((s) => (
           <Button
             key={s}
@@ -35,7 +36,7 @@ export function MotionPanel({
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-6">
         {REST_POSES.map((pose: RestPose) => (
           <Button
             key={pose}
@@ -71,10 +72,10 @@ export function MotionPanel({
         and on the even `fan` pose the ramp step is twice the mark spec's derived
         Δd, which is worth being able to check.
       */}
-      <div className="flex flex-col gap-0.5 font-mono text-11 text-gray-11">
+      <div className="flex flex-col gap-2 font-mono text-11 text-gray-11">
         {MARK_STATES.filter((s) => s !== state).map((s) => (
           <p key={s}>
-            → {s} {planMove(config, { pose: statePose(config, state), spinning: isSpinning(state) }, s).duration.toFixed(2)}s
+            → {s} {planMove(doc, { pose: statePose(doc, state), spinning: isSpinning(state) }, s).duration.toFixed(2)}s
           </p>
         ))}
         <p>{even ? `ramp step ${rampSpread(motion).toFixed(3)}s` : 'uneven rest pose'}</p>

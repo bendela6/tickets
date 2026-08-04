@@ -24,9 +24,9 @@ export function TerminalsPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center justify-between px-1 pb-2">
+      <div className="flex items-center justify-between px-4 pb-8">
         <RailLabel>TERMINALS</RailLabel>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-8">
           <button
             type="button"
             onClick={() => setArchived((v) => !v)}
@@ -44,7 +44,7 @@ export function TerminalsPanel({
         </div>
       </div>
       {rows.length === 0 ? (
-        <p className="px-1 font-sans text-12/17 text-gray-9">
+        <p className="px-4 font-sans text-12/17 text-gray-9">
           {archived ? 'No archived terminal sessions.' : 'No terminal sessions yet.'}
         </p>
       ) : (

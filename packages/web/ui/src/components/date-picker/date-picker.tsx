@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { cn, TONE_SCALE, type Tone } from '../../style';
+import { cn, TONE_HUE, type Tone } from '../../style';
 import { fieldClass, fieldState, type FieldSize } from '../field';
 import { Icon, type IconSize } from '../icon';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
@@ -48,9 +48,9 @@ type DatePickerProps = {
 };
 
 const BOX: Record<FieldSize, string> = {
-  sm: 'px-2.25 text-13',
-  md: 'px-3 text-14',
-  lg: 'px-3.5 text-15',
+  sm: 'px-9 text-13',
+  md: 'px-12 text-14',
+  lg: 'px-14 text-15',
 };
 
 const CHEVRON: Record<FieldSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
@@ -103,7 +103,7 @@ export function DatePicker({
             state: field.state,
             scale: field.scale,
             className: cn(
-              'flex w-full items-center justify-between gap-2 font-sans',
+              'flex w-full items-center justify-between gap-8 font-sans',
               'disabled:pointer-events-none disabled:opacity-50',
               BOX[size],
               selected ? 'text-gray-12' : 'text-gray-9',
@@ -115,13 +115,13 @@ export function DatePicker({
           <Icon name="chevron-down" size={CHEVRON[size]} className="text-gray-9" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-59 rounded-xl p-3">
-        <div className="mb-2 flex items-center justify-between">
+      <PopoverContent className="w-236 rounded-xl p-12">
+        <div className="mb-8 flex items-center justify-between">
           <button
             type="button"
             aria-label="Previous month"
             onClick={() => shiftMonth(-1)}
-            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
+            className="inline-flex h-24 w-24 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
           >
             <Icon name="chevron-left" size="sm" />
           </button>
@@ -132,12 +132,12 @@ export function DatePicker({
             type="button"
             aria-label="Next month"
             onClick={() => shiftMonth(1)}
-            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
+            className="inline-flex h-24 w-24 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
           >
             <Icon name="chevron-right" size="sm" />
           </button>
         </div>
-        <div className="grid grid-cols-[repeat(7,28px)] justify-center gap-0.5">
+        <div className="grid grid-cols-[repeat(7,28px)] justify-center gap-2">
           {WEEKDAYS.map((weekday, index) => (
             <div key={index} className="text-center font-mono text-10 font-500 text-gray-9">
               {weekday}
@@ -161,7 +161,7 @@ export function DatePicker({
                 type="button"
                 onClick={() => pick(day)}
                 className={cn(
-                  'flex h-7 w-7 items-center justify-center rounded-md font-sans text-12',
+                  'flex h-28 w-28 items-center justify-center rounded-md font-sans text-12',
                   isSelected
                     ? 'bg-indigo-9 text-indigo-contrast'
                     : isToday
@@ -193,7 +193,7 @@ export function DatePicker({
             size: 'sm',
             state: field.state,
             scale: field.scale,
-            className: 'mt-2.5 w-full px-2.25 font-mono text-12/17 text-gray-9',
+            className: 'mt-10 w-full px-9 font-mono text-12/17 text-gray-9',
           })}
         />
       </PopoverContent>

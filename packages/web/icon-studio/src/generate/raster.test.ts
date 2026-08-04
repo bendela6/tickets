@@ -1,9 +1,9 @@
-import { DEFAULT_CONFIG } from '../config';
-import { svgChip } from './svg';
+import { DEFAULT_DOC } from '../doc';
 import { dataUri, RASTER_SIZES } from './raster';
+import { renderSvg } from './render';
 
 test('encodes svg as a utf-8 data uri', () => {
-  const uri = dataUri(svgChip(DEFAULT_CONFIG));
+  const uri = dataUri(renderSvg(DEFAULT_DOC, 'chip'));
   const prefix = 'data:image/svg+xml;charset=utf-8,';
   expect(uri.startsWith(prefix)).toBe(true);
   expect(uri).not.toContain('<');

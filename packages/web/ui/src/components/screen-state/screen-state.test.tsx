@@ -65,8 +65,8 @@ describe('ScreenState', () => {
   });
 
   it('merges an extra className onto the outer wrapper', () => {
-    const { container } = render(<ScreenState title="No agents yet" className="max-w-115" />);
-    expect(container.firstElementChild!.className).toContain('max-w-115');
+    const { container } = render(<ScreenState title="No agents yet" className="max-w-460" />);
+    expect(container.firstElementChild!.className).toContain('max-w-460');
   });
 
   it('renders title as a ReactNode, not just a string', () => {

@@ -13,7 +13,7 @@ export const states = [
   {
     name: 'tone',
     render: () => (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-8">
         <Input tone="success" placeholder="validated" />
         <Input tone="warning" placeholder="needs review" />
       </div>
@@ -28,5 +28,5 @@ export const playground = definePlayground({
     tone: select([...TONE_NAMES], { allowNone: true }),
     disabled: boolean(),
   },
-  render: (v) => <div className="w-56"><Input {...v} /></div>,
+  render: (v) => <div className="w-224"><Input {...v} /></div>,
 });

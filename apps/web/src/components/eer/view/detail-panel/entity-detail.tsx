@@ -2,12 +2,27 @@ import { entityColor } from '../../engine/colors/entity-color';
 import { columnRoles } from '../../engine/model/column-roles';
 import type { Entity, Model } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';
-import { cn } from '@tickets/ui';
+import { cn, Pill } from '@tickets/ui';
 import { Empty } from './empty';
 import { Header } from './header';
 import { RelRow } from './rel-row';
-import { RoleTag } from './role-tag';
 import { Section } from './section';
+
+// Was role-tag.tsx. The 28px column keeps the field rows' names aligned
+// whether or not a row has a badge, so the null case is a spacer, not
+// nothing.
+function RoleTag({ role }: { role: 'pk' | 'fk' | null }) {
+  if (!role) return <span className="inline-block w-28 shrink-0" aria-hidden />;
+  return (
+    <Pill
+      variant="tint"
+      size="xs"
+      tone={role === 'pk' ? 'yellow' : 'green'}
+      label={role.toUpperCase()}
+      className="w-28 shrink-0 justify-center font-mono font-600"
+    />
+  );
+}
 
 interface RelView {
   id: string;

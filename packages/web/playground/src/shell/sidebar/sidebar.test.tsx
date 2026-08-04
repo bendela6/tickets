@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import { collectDemos, isDemoError, type CollectedDemo } from '@tickets/ui';
-import { clampWidth, Sidebar, SIDEBAR_MAX, SIDEBAR_MIN } from './sidebar';
+import { Sidebar, SIDEBAR_MAX } from './sidebar';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
 
@@ -83,42 +83,43 @@ describe('Sidebar', () => {
     mockViewport(false);
     const { unmount } = renderSidebar();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Hide component list' }));
-    const opener = screen.getByRole('button', { name: 'Show component list' });
+    fireEvent.click(screen.getByRole('button', { name: 'Hide Components' }));
+    const opener = screen.getByRole('button', { name: 'Show Components' });
     expect(opener.getAttribute('aria-expanded')).toBe('false');
     expect(opener.className).toContain('fixed');
     expect(aside()).toBeNull();
-    expect(localStorage.getItem('gallery-sidebar-collapsed')).toBe('true');
+    expect(localStorage.getItem('gallery-sidebar:collapsed')).toBe('true');
 
     // The preference survives a remount.
     unmount();
     renderSidebar();
-    expect(screen.getByRole('button', { name: 'Show component list' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Show Components' })).toBeTruthy();
   });
 
   it('starts collapsed on a narrow window, whatever the stored preference', () => {
-    localStorage.setItem('gallery-sidebar-collapsed', 'false');
+    localStorage.setItem('gallery-sidebar:collapsed', 'false');
     mockViewport(true);
     renderSidebar();
-    expect(screen.getByRole('button', { name: 'Show component list' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Show Components' })).toBeTruthy();
   });
 
   it('overlays the content instead of pushing it when reopened on a narrow window', () => {
     mockViewport(true);
     renderSidebar();
-    fireEvent.click(screen.getByRole('button', { name: 'Show component list' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show Components' }));
 
-    // fixed (not sticky/in-flow) plus a scrim over the page behind it.
-    expect(aside()!.className).toContain('fixed');
-    expect(aside()!.className).not.toContain('sticky');
-    expect(document.querySelector('[aria-hidden]')).toBeTruthy();
+    // A narrow reopen goes through SidePanel's Drawer, not the docked <aside>.
+    expect(screen.getByRole('dialog', { name: 'Components' })).toBeTruthy();
+    expect(aside()).toBeNull();
+    // Same nav content, now inside the overlay.
+    expect(screen.getByRole('link', { name: 'Button' })).toBeTruthy();
   });
 
   it('does not persist a temporary peek on a narrow window', () => {
     mockViewport(true);
     renderSidebar();
-    fireEvent.click(screen.getByRole('button', { name: 'Show component list' }));
-    expect(localStorage.getItem('gallery-sidebar-collapsed')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Show Components' }));
+    expect(localStorage.getItem('gallery-sidebar:collapsed')).toBeNull();
   });
 
   it('closes itself when the window becomes narrow and reopens when it widens back', () => {
@@ -127,7 +128,7 @@ describe('Sidebar', () => {
     expect(aside()).toBeTruthy();
 
     viewport.set(true);
-    expect(screen.getByRole('button', { name: 'Show component list' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Show Components' })).toBeTruthy();
 
     viewport.set(false);
     expect(aside()).toBeTruthy();
@@ -159,29 +160,31 @@ describe('Sidebar', () => {
 
   it('restores a persisted width, clamped to the allowed range', () => {
     mockViewport(false);
-    localStorage.setItem('gallery-sidebar', JSON.stringify({ width: 9999 }));
+    localStorage.setItem('gallery-sidebar:width', '9999');
     renderSidebar();
-    expect(aside()!.getAttribute('style')).toContain(`--sidebar-width: ${SIDEBAR_MAX}px`);
+    expect(aside()!.getAttribute('style')).toContain(`--panel-w: ${SIDEBAR_MAX}px`);
+  });
+
+  it('pins itself to the viewport so the component list scrolls, not the page', () => {
+    // The gallery scrolls the document: GalleryShell's root is `flex
+    // min-h-screen`, so a statically positioned aside stretches to the full
+    // row height, its own overflow never engages, and the nav scrolls out of
+    // reach on any long component page. jsdom does no layout, so the
+    // positioning itself is the assertion.
+    mockViewport(false);
+    renderSidebar();
+    expect(aside()!.className).toContain('sticky');
+    expect(aside()!.className).toContain('top-0');
+    expect(aside()!.className).toContain('h-screen');
+    expect(aside()!.className).not.toContain('relative');
   });
 
   it('offers a resize handle', () => {
     mockViewport(false);
     renderSidebar();
-    const handle = screen.getByRole('separator', { name: 'Resize component list' });
+    const handle = screen.getByRole('separator', { name: 'Resize Components' });
     expect(handle.getAttribute('aria-orientation')).toBe('vertical');
     expect(handle.className).toContain('cursor-col-resize');
-  });
-});
-
-describe('clampWidth', () => {
-  it('holds the sidebar between its min and max', () => {
-    expect(clampWidth(10)).toBe(SIDEBAR_MIN);
-    expect(clampWidth(9999)).toBe(SIDEBAR_MAX);
-    expect(clampWidth(260)).toBe(260);
-  });
-
-  it('has a range wide enough to be worth dragging', () => {
-    expect(SIDEBAR_MAX - SIDEBAR_MIN).toBeGreaterThan(100);
   });
 });
 

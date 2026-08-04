@@ -1,17 +1,34 @@
-import lightTokens from '../../tokens/next/colors.light.tokens.json';
-import darkTokens from '../../tokens/next/colors.dark.tokens.json';
-import semanticTokens from '../../tokens/next/semantic.tokens.json';
-import toneTokens from '../../tokens/next/tones.tokens.json';
+import { HUES, PALETTE, TONE_HUE } from '../../generated';
 
-export const HUES = toneTokens.hues as readonly string[];
-export const STEPS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
+/**
+ * Contrast analysis over the generated colour tables.
+ *
+ * The VALUES live in `src/generated/colors.ts`, emitted from
+ * `tokens/colors.tokens.json`. What is hand-written here is the maths — WCAG
+ * luminance and the pairings the tone system can actually produce — because
+ * that is logic, not data, and no generator can derive which combinations a
+ * component will put next to each other.
+ */
 
 export type Theme = 'light' | 'dark';
-export type Step = (typeof STEPS)[number];
+
+/**
+ * Step numbers, derived from the hues rather than restated.
+ *
+ * Any hue can stand for the set — the generator asserts they all carry the same
+ * steps in both themes, so a disagreement is a build failure rather than a
+ * runtime surprise.
+ */
+export const STEPS = Object.keys(Object.values(PALETTE.light.hue)[0] ?? {})
+  .filter((s) => /^\d+$/.test(s))
+  .map(Number);
+
+export type Step = number;
 
 // What each step is for. Identical on every scale, so a step number means one
 // thing everywhere — that is the whole point of numbering rather than naming.
-export const STEP_JOBS: Record<Step, string> = {
+// Prose, not data: it cannot be derived from the hexes.
+export const STEP_JOBS: Record<number, string> = {
   1: 'app background',
   2: 'subtle background',
   3: 'component background',
@@ -26,20 +43,21 @@ export const STEP_JOBS: Record<Step, string> = {
   12: 'text, high contrast',
 };
 
-const TOKENS: Record<Theme, Record<string, { $value: string }>> = {
-  light: lightTokens.ins,
-  dark: darkTokens.ins,
-};
-
-/** Hex for a step (`9`) or the scale's contrast token (`'contrast'`). */
-export function colorOf(theme: Theme, scale: string, step: Step | 'contrast'): string {
-  const token = TOKENS[theme][`${scale}-${step}`];
-  if (!token) throw new Error(`unknown color token: ${scale}-${step} (${theme})`);
-  return token.$value;
+/** Hex for a step (`9`) or the hue's contrast token (`'contrast'`). */
+export function colorOf(theme: Theme, hue: string, step: Step | 'contrast'): string {
+  const value = PALETTE[theme].hue[hue]?.[String(step)];
+  if (!value) throw new Error(`unknown color token: ${hue}-${step} (${theme})`);
+  return value;
 }
 
-export const SEMANTIC_SCALES = semanticTokens.scale as Record<string, string>;
-export const SURFACES = semanticTokens.surface as Partial<Record<string, Record<Theme, string>>>;
+/** A surface's hex in one theme. */
+export function surfaceOf(theme: Theme, name: string): string {
+  const value = PALETTE[theme].surface[name];
+  if (!value) throw new Error(`unknown surface: ${name} (${theme})`);
+  return value;
+}
+
+export const SEMANTIC_SCALES: Record<string, string> = TONE_HUE;
 
 // ---------------------------------------------------------------------------
 // Contrast
@@ -140,15 +158,15 @@ function pair(
 
 /**
  * Every foreground/background combination the tone system can produce, checked
- * against WCAG. One function, two consumers: the gallery renders it and
- * `tokens:verify` fails the build on the `required` ones — so the UI and the
- * gate cannot disagree about what is broken.
+ * against WCAG. One function, two consumers: the gallery renders it and the
+ * suite fails on the `required` ones — so the UI and the check cannot disagree
+ * about what is broken.
  */
 export function checkPairings(scales: readonly string[] = HUES): Pairing[] {
   const out: Pairing[] = [];
   for (const theme of ['light', 'dark'] as const) {
     const page: Side = ['page', colorOf(theme, 'gray', 1)];
-    const field: Side = ['field fill', SURFACES.raised![theme]];
+    const field: Side = ['field fill', surfaceOf(theme, 'raised')];
 
     for (const scale of scales) {
       const step = (n: Step): Side => [`step ${n}`, colorOf(theme, scale, n)];

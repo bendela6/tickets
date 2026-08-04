@@ -5,7 +5,7 @@ import {
   createRootRoute,
   createRouter,
 } from '@tanstack/react-router';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { Board } from '../api/types';
@@ -189,7 +189,7 @@ async function renderDrawer() {
       </CurrentUserProvider>
     </QueryClientProvider>,
   );
-  await screen.findByRole('complementary', { name: 'Item detail' });
+  await screen.findByRole('dialog', { name: 'Item detail' });
   return { onClose };
 }
 
@@ -224,17 +224,92 @@ test('renders key, title, fields, subtasks, links and comments from the board', 
   expect(screen.getByText('Mara K')).toBeInTheDocument();
 });
 
-test('drawer is a full-width sheet below md and 620px from md up', async () => {
+test('drawer is 620px wide, capped to leave a tap-to-close strip', async () => {
   await renderDrawer();
-  const aside = screen.getByRole('complementary', { name: 'Item detail' });
-  expect(aside.className).toContain('w-full');
-  expect(aside.className).toContain('md:w-155');
+  const panel = screen.getByRole('dialog', { name: 'Item detail' });
+  expect(panel.style.getPropertyValue('--panel-w')).toBe('min(620px, 100vw - 3rem)');
+});
+
+test('maximizing fills the viewport and restores', async () => {
+  await renderDrawer();
+  await userEvent.click(screen.getByRole('button', { name: 'Maximize' }));
+  const panel = screen.getByRole('dialog', { name: 'Item detail' });
+  expect(panel.style.getPropertyValue('--panel-w')).toBe('calc(100vw - 3rem)');
+  await userEvent.click(screen.getByRole('button', { name: 'Restore' }));
+  expect(panel.style.getPropertyValue('--panel-w')).toBe('min(620px, 100vw - 3rem)');
 });
 
 test('escape closes the drawer', async () => {
   const { onClose } = await renderDrawer();
   fireEvent.keyDown(document, { key: 'Escape' });
   expect(onClose).toHaveBeenCalledTimes(1);
+});
+
+// The drawer is a modal radix layer, and tiptap mounts its @/# popover as a
+// <body> child — outside the portal radix re-grants pointer events to. That
+// left the rows inert, and the press that fell through them landed on <html>,
+// which the drawer read as a click on the page behind it and closed on,
+// discarding the draft. Keyboard picking never touched either path, which is
+// why nothing caught it.
+const descriptionEditor = () =>
+  Array.from(document.querySelectorAll('[contenteditable="true"]')).find((el) =>
+    el.textContent?.includes('rowVirtualizer'),
+  ) as HTMLElement;
+
+const suggestionPopover = () =>
+  document.querySelector('[data-suggestion-popover]') as HTMLElement | null;
+
+test('a mention can be picked with the mouse from inside the drawer, and picking one does not close it', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const user = userEvent.setup();
+  const { onClose } = await renderDrawer();
+
+  await user.click(descriptionEditor());
+  await user.keyboard('@Mar');
+  const popover = await waitFor(() => {
+    const node = suggestionPopover();
+    if (!node) throw new Error('suggestion popover never opened');
+    return node;
+  });
+
+  // Fails outright without the fix: the popover inherits `pointer-events: none`
+  // from <body>, so userEvent refuses the click exactly as a real pointer would
+  // sail past it.
+  await user.click(within(popover).getByText('Mara K'));
+
+  expect(document.querySelector('[data-mention="Mara K"]')).not.toBeNull();
+  expect(onClose).not.toHaveBeenCalled();
+  expect(screen.getByRole('dialog', { name: 'Item detail' })).toBeInTheDocument();
+});
+
+test('a press-and-release inside the suggestion popover is not an interaction outside the drawer', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const user = userEvent.setup();
+  const { onClose } = await renderDrawer();
+
+  await user.click(descriptionEditor());
+  await user.keyboard('@Mar');
+  const popover = await waitFor(() => {
+    const node = suggestionPopover();
+    if (!node) throw new Error('suggestion popover never opened');
+    return node;
+  });
+
+  // Press and release inside the popover without picking a row — dragging
+  // across the list, or grabbing its chrome. What keeps the drawer open is
+  // that radix classifies an interaction by the React tree rather than the
+  // DOM, and tiptap's ReactRenderer portals the popover out of the editor
+  // that is inside the drawer; a popover mounted as its own React root would
+  // dismiss the drawer here. Radix defers a modal dialog's outside dismissal
+  // from the pointerdown to the click that follows, so both halves have to be
+  // delivered — with fireEvent, because userEvent moves focus on mousedown,
+  // which blurs the editor and tears the popover down first.
+  fireEvent.pointerDown(popover);
+  fireEvent.click(popover);
+
+  expect(suggestionPopover()).not.toBeNull();
+  expect(onClose).not.toHaveBeenCalled();
+  expect(screen.getByRole('dialog', { name: 'Item detail' })).toBeInTheDocument();
 });
 
 test('editing the title PATCHes /api/items/:id with a commandId envelope', async () => {
@@ -290,3 +365,4 @@ test('changing the status select PATCHes the workflow field key', async () => {
     values: { status: 'in-review' },
   });
 });
+

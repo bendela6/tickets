@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
+import { Drawer, SidePanel, useIsNarrow } from '@tickets/ui';
 import { ActivityRail } from './activity-rail';
 import { BrandMark } from './brand-mark';
 import { ModePanel } from './mode-panel';
@@ -21,6 +22,19 @@ export function AppShell({
   // `/schema` — this shell renders across every route.
   const search = useRouterState({ select: (s) => s.location.search as { database?: string } });
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  // The mobile nav has to be gated in JS, not by `md:hidden`: a class only
+  // reaches the drawer's own panel, leaving the scrim painted, the focus trap
+  // armed and `pointer-events: none` on <body> when a phone rotates to
+  // landscape or a narrow window is widened with the nav open — the desktop UI
+  // it uncovers would read as frozen. `(max-width: 767px)` is the exact
+  // complement of Tailwind's `md:`, so the two agree on where mobile ends.
+  const narrow = useIsNarrow('md');
+  // Nothing else ever clears the flag on a viewport change, so a nav left open
+  // on a phone would spring back open the next time the window narrowed, with
+  // no gesture behind it.
+  useEffect(() => {
+    if (!narrow) setMobileNavOpen(false);
+  }, [narrow]);
 
   // The session viewer routes are split by kind (/terminals/$sessionId,
   // /agents/$sessionId), so the path alone determines the mode — no session
@@ -62,21 +76,34 @@ export function AppShell({
         <span className="font-mono text-15 font-600 text-gray-12">tickets</span>
       </div>
 
-      {/* Desktop: rail + panel */}
+      {/* Desktop: rail + resizable panel */}
       <div className="hidden md:flex">
         <ActivityRail mode={mode} />
-        <div className="flex w-224 flex-none flex-col overflow-y-auto border-r-1 border-gray-6">{panel}</div>
+        <SidePanel
+          label="Navigation"
+          storageKey="app-nav"
+          defaultWidth={224}
+          minWidth={180}
+          maxWidth={400}
+          collapsible
+        >
+          {panel}
+        </SidePanel>
       </div>
 
-      {/* Mobile slide-over: rail row on top + panel */}
-      {mobileNavOpen ? (
-        <div className="md:hidden">
-          <div aria-hidden className="fixed inset-0 z-40 bg-black/20" onClick={() => setMobileNavOpen(false)} />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-288 bg-gray-1 shadow-lg">
-            <ActivityRail mode={mode} onNavigate={() => setMobileNavOpen(false)} />
-            <div className="flex flex-1 flex-col overflow-y-auto">{panel}</div>
-          </aside>
-        </div>
+      {/* Mobile: the same rail and panel, as an overlay */}
+      {narrow ? (
+        <Drawer
+          open={mobileNavOpen}
+          onOpenChange={setMobileNavOpen}
+          side="left"
+          size="sm"
+          label="Navigation"
+          className="flex-row bg-gray-1"
+        >
+          <ActivityRail mode={mode} onNavigate={() => setMobileNavOpen(false)} />
+          <div className="flex flex-1 flex-col overflow-y-auto">{panel}</div>
+        </Drawer>
       ) : null}
 
       <main className="min-h-0 min-w-0 flex-1 overflow-auto">{children}</main>
