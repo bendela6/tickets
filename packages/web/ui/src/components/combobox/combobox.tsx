@@ -16,6 +16,12 @@ type ComboboxProps = {
   /** Which ramp the focus ring paints from. Defaults to `primary`. */
   tone?: Tone;
   disabled?: boolean;
+  /**
+   * Whether the open list offers a search box. Default true. Turn it off for a
+   * short fixed set — over three options a search field is noise, and it costs
+   * a keystroke to reach the list.
+   */
+  searchable?: boolean;
   className?: string;
 };
 
@@ -39,6 +45,7 @@ export function Combobox({
   size = 'md',
   tone,
   disabled,
+  searchable = true,
   className,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
@@ -90,6 +97,7 @@ export function Combobox({
       <PopoverContent className="p-0">
         <ComboboxList
           options={options}
+          searchable={searchable}
           isSelected={(candidate) => candidate === value}
           onPick={(picked) => {
             onChange(picked);
