@@ -1,5 +1,5 @@
 import { forwardRef, type ReactNode } from 'react';
-import type { AnyControlDef } from '@tickets/ui';
+import { Card, type AnyControlDef } from '@tickets/ui';
 
 // The design's PLAYGROUND caption (1a, right of the label): the component
 // name followed by whatever is currently set, so the stage reads back its own
@@ -47,14 +47,20 @@ export const PlaygroundCard = forwardRef<
           code) that all render the same component, so the live one needs to be
           distinguishable — to a screen reader walking landmarks, and to a test
           asserting which specimen reflects the current controls. */}
-      <div
+      <Card
         ref={ref}
         role="region"
         aria-label="Playground preview"
-        className="flex min-h-128 items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised p-28"
+        radius="lg"
+        // 24px, down from a hand-written p-28. Card's padding reuses Stack's
+        // gap domain and 28 is not on it — keeping the old value would have
+        // meant passing an off-scale class straight back through className,
+        // which is the thing the scale exists to prevent.
+        padding={6}
+        className="flex min-h-128 items-center justify-center"
       >
         {playground.render(values as never)}
-      </div>
+      </Card>
     </div>
   );
 });

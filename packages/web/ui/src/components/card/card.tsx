@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from 'react';
+import { forwardRef, type HTMLAttributes } from 'react';
 import { cn } from '../../style';
 import type { Gap } from '../stack';
 
@@ -44,15 +44,13 @@ type CardProps = HTMLAttributes<HTMLDivElement> & {
  * `overflow-hidden` is load-bearing: without it a CardHeader's rule and any
  * full-bleed child square off the rounded corners.
  */
-export function Card({
-  radius = 'xl',
-  padding = 0,
-  interactive,
-  className,
-  ...rest
-}: CardProps) {
+export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
+  { radius = 'xl', padding = 0, interactive, className, ...rest },
+  ref,
+) {
   return (
     <div
+      ref={ref}
       className={cn(
         'overflow-hidden border-1 border-gray-6 bg-surface-raised',
         RADIUS[radius],
@@ -63,7 +61,7 @@ export function Card({
       {...rest}
     />
   );
-}
+});
 
 /** Header band with the dividing rule. Carries its own padding — see Card. */
 export function CardHeader({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
