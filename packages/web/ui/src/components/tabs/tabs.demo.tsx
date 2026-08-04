@@ -59,7 +59,7 @@ export const states = [
   {
     name: 'Sizes',
     render: () => (
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-12">
         {SIZES.map((size) => (
           <DemoTabs key={size} variant="pill" size={size} />
         ))}

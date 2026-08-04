@@ -28,11 +28,11 @@ export function TopBar({
   return (
     <header
       className={cn(
-        'flex h-12 flex-none items-center gap-2.75 border-b-1 border-gray-6 pl-4 pr-3.25',
+        'flex h-48 flex-none items-center gap-11 border-b-1 border-gray-6 pl-16 pr-13',
         dim && 'opacity-40',
       )}
     >
-      <span aria-hidden className="size-2.5 flex-none rounded-sm bg-indigo-9" />
+      <span aria-hidden className="size-10 flex-none rounded-sm bg-indigo-9" />
 
       <DocumentsPopover name={state.doc.name} documents={documents} now={now} />
 
@@ -41,13 +41,13 @@ export function TopBar({
       </span>
 
       {documents.dirty ? (
-        <span className="flex flex-none items-center gap-1.5">
-          <span aria-hidden className="size-1.25 flex-none rounded-full bg-gray-11" />
+        <span className="flex flex-none items-center gap-6">
+          <span aria-hidden className="size-5 flex-none rounded-full bg-gray-11" />
           <span className="font-mono text-10 text-gray-11">unsaved</span>
           <button
             type="button"
             onClick={documents.save}
-            className="flex h-5.5 items-center gap-1.5 rounded-md border-1 border-gray-7 bg-surface-raised px-2 font-mono text-10 text-gray-12"
+            className="flex h-22 items-center gap-6 rounded-md border-1 border-gray-7 bg-surface-raised px-8 font-mono text-10 text-gray-12"
           >
             save ⌘S
           </button>
@@ -58,12 +58,12 @@ export function TopBar({
 
       <span className="flex-1" />
 
-      <div className="flex h-7 flex-none items-center overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-raised">
+      <div className="flex h-28 flex-none items-center overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-raised">
         <button
           type="button"
           aria-label="Zoom out"
           onClick={() => setView((v) => ({ ...v, zoom: steppedZoom(v.zoom, -1) }))}
-          className="h-6.5 w-6.75 text-14 text-gray-11"
+          className="h-26 w-27 text-14 text-gray-11"
         >
           −
         </button>
@@ -72,7 +72,7 @@ export function TopBar({
           aria-label="Reset zoom"
           title="Reset to 100% · ⌘0 — fit the board ⇧⌘0"
           onClick={() => setView((v) => ({ ...v, zoom: 100 }))}
-          className="w-12 text-center font-mono text-11 text-gray-11"
+          className="w-48 text-center font-mono text-11 text-gray-11"
         >
           {/* The stored zoom is fractional because the wheel is continuous;
               only the readout is whole. */}
@@ -82,7 +82,7 @@ export function TopBar({
           type="button"
           aria-label="Zoom in"
           onClick={() => setView((v) => ({ ...v, zoom: steppedZoom(v.zoom, 1) }))}
-          className="h-6.5 w-6.75 text-14 text-gray-11"
+          className="h-26 w-27 text-14 text-gray-11"
         >
           +
         </button>
@@ -91,7 +91,7 @@ export function TopBar({
       <button
         type="button"
         onClick={onExport}
-        className="h-7.5 rounded-lg bg-indigo-9 px-3.75 font-sans text-12 font-500 text-indigo-contrast"
+        className="h-30 rounded-lg bg-indigo-9 px-15 font-sans text-12 font-500 text-indigo-contrast"
       >
         Export
       </button>

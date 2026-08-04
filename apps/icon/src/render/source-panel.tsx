@@ -49,7 +49,7 @@ export function SourcePanel() {
       aria-label="SVG source"
       className="flex h-1/3 min-h-0 flex-none flex-col border-t-1 border-gray-6 bg-gray-1"
     >
-      <div className="flex h-8 flex-none items-center gap-2.5 border-b-1 border-gray-6 pl-4 pr-3">
+      <div className="flex h-32 flex-none items-center gap-10 border-b-1 border-gray-6 pl-16 pr-12">
         <span className="font-sans text-9 font-500 tracking-widest text-gray-9">SVG SOURCE</span>
         <span className="font-mono text-10 text-gray-9">{bytes} bytes</span>
         <span className="flex-1" />
@@ -60,7 +60,7 @@ export function SourcePanel() {
           type="button"
           onClick={() => void copy(markup)}
           className={cn(
-            'flex h-5.5 items-center px-1 font-mono text-10',
+            'flex h-22 items-center px-4 font-mono text-10',
             copied ? 'text-green-11' : failed ? 'text-red-11' : 'text-gray-11 hover:text-gray-12',
           )}
         >
@@ -73,7 +73,7 @@ export function SourcePanel() {
           artboard, the rails and the fields are where the document is changed. */}
       <pre
         role="code"
-        className="min-h-0 flex-1 overflow-auto px-4 py-2.5 font-mono text-11/relaxed text-gray-9"
+        className="min-h-0 flex-1 overflow-auto px-16 py-10 font-mono text-11/relaxed text-gray-9"
       >
         {tokens.map((token, index) => (
           <span key={index} className={TONE[token.kind]}>

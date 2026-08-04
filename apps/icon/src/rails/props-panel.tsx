@@ -78,7 +78,7 @@ function CombineGroup() {
 
   return (
     <RailGroup label="COMBINE">
-      <div className="grid grid-cols-2 gap-1.25">
+      <div className="grid grid-cols-2 gap-5">
         {BOOLEAN_OPS.map(({ op, label }) => (
           <Button
             key={op}
@@ -118,7 +118,7 @@ function Header({ node, count }: { node: IconNode | null; count: number }) {
         : node.geometry.kind.toUpperCase();
   const object = node !== null && !isGroup(node) ? node : null;
   return (
-    <div className="flex h-11 flex-none items-center gap-2.25 border-b-1 border-gray-6 px-3.5">
+    <div className="flex h-44 flex-none items-center gap-9 border-b-1 border-gray-6 px-14">
       {several || (node !== null && isGroup(node)) ? null : (
         <span className="flex-none text-gray-11">
           <ShapeGlyph kind={object ? object.geometry.kind : 'rect'} />
@@ -142,7 +142,7 @@ const samePair = (a: Pair, b: Pair): boolean => a.light === b.light && a.dark ==
  */
 const chip = (current: boolean): string =>
   cn(
-    'h-6.5 rounded-md border-1 font-mono text-10',
+    'h-26 rounded-md border-1 font-mono text-10',
     current
       ? 'border-indigo-9 bg-indigo-3 text-indigo-9'
       : 'border-gray-6 bg-surface-raised text-gray-11',
@@ -172,7 +172,7 @@ function EffectsFields({ node }: { node: IconNode }) {
   const setShadow = (next: Shadow) => dispatch({ type: 'setShadow', ids, shadow: next });
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-6">
       <NumberField
         label="BLUR"
         name="Blur"
@@ -199,7 +199,7 @@ function EffectsFields({ node }: { node: IconNode }) {
 
       {shadow === undefined ? null : (
         <>
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="grid grid-cols-2 gap-6">
             <NumberField
               label="X"
               name="Shadow x"
@@ -332,7 +332,7 @@ function SelectionProperties({ nodes, objects }: { nodes: IconNode[]; objects: I
           onCommit={(width) => dispatch({ type: 'setStrokeWidth', ids, width })}
         />
 
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-6">
           <NumberField
             label="OPACITY"
             value={first.opacity}
@@ -365,7 +365,7 @@ function SelectionProperties({ nodes, objects }: { nodes: IconNode[]; objects: I
 
 function SelectionCount({ count }: { count: number }) {
   return (
-    <div className="flex flex-col gap-1.25 px-3.5 py-3.25">
+    <div className="flex flex-col gap-5 px-14 py-13">
       <span className="font-sans text-11/relaxed text-gray-11">{count} objects selected.</span>
       <span className="font-mono text-10 text-gray-9">
         position and size belong to one shape — ⌘G makes these one object
@@ -397,7 +397,7 @@ function GroupProperties({ group }: { group: IconGroup }) {
   return (
     <>
       <RailGroup label="PLACEMENT">
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 gap-6">
           <NumberField label="X" value={group.transform.x} onCommit={(x) => set({ x })} />
           <NumberField label="Y" value={group.transform.y} onCommit={(y) => set({ y })} />
         </div>
@@ -421,7 +421,7 @@ function GroupProperties({ group }: { group: IconGroup }) {
       </RailGroup>
 
       <RailGroup label="APPEARANCE">
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-6">
           <NumberField
             label="OPACITY"
             value={group.opacity}
@@ -442,7 +442,7 @@ function GroupProperties({ group }: { group: IconGroup }) {
         <EffectsFields node={group} />
       </RailGroup>
 
-      <div className="flex flex-col gap-1.25 px-3.5 py-3.25">
+      <div className="flex flex-col gap-5 px-14 py-13">
         <span className="font-sans text-11/relaxed text-gray-11">
           {inside} shape{inside === 1 ? '' : 's'} inside.
         </span>
@@ -508,7 +508,7 @@ function ObjectProperties({ object }: { object: IconObject }) {
           onCommit={(width) => dispatch({ type: 'setStrokeWidth', ids: [object.id], width })}
         />
 
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-6">
           <NumberField
             label="OPACITY"
             value={object.opacity}
@@ -558,7 +558,7 @@ const gridBox = (box: Box, step: number): Box => ({
  */
 function ReadOnlyRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex h-7.5 items-center gap-1.5 rounded-md border-1 border-gray-6 bg-surface-raised px-2.25">
+    <div className="flex h-30 items-center gap-6 rounded-md border-1 border-gray-6 bg-surface-raised px-9">
       <span className="flex-none font-mono text-9 text-gray-9">{label}</span>
       <span className="min-w-0 flex-1 text-right font-mono text-12 text-gray-12">{value}</span>
     </div>
@@ -608,7 +608,7 @@ function PositionGroup({ object }: { object: IconObject }) {
   if (geometry.kind === 'line') {
     return (
       <RailGroup label="POSITION">
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 gap-6">
           <NumberField
             label="X1"
             value={geometry.x1}
@@ -647,7 +647,7 @@ function PositionGroup({ object }: { object: IconObject }) {
   if (geometry.kind === 'circle') {
     return (
       <RailGroup label="POSITION &amp; SIZE">
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 gap-6">
           <NumberField
             label="CX"
             name="Centre X"
@@ -696,7 +696,7 @@ function PositionGroup({ object }: { object: IconObject }) {
         : { label: 'POINTS', value: String(geometry.points.length) };
     return (
       <RailGroup label="POSITION &amp; SIZE">
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 gap-6">
           <NumberField
             label="X"
             value={stated.x}
@@ -735,7 +735,7 @@ function PositionGroup({ object }: { object: IconObject }) {
 
   return (
     <RailGroup label="POSITION &amp; SIZE">
-      <div className="grid grid-cols-2 gap-1.5">
+      <div className="grid grid-cols-2 gap-6">
         <NumberField
           label="X"
           value={box.x}
@@ -813,7 +813,7 @@ function DocumentProperties() {
   return (
     <>
       <RailGroup label="ARTBOARD">
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 gap-6">
           <NumberField
             label="W"
             name="Artboard width"
@@ -831,7 +831,7 @@ function DocumentProperties() {
             onCommit={(height) => dispatch({ type: 'setArtboard', artboard: { height } })}
           />
         </div>
-        <div className="flex gap-1.25">
+        <div className="flex gap-5">
           {ARTBOARD_PRESETS.map((preset) => {
             const current =
               preset.width === doc.artboard.width && preset.height === doc.artboard.height;
@@ -860,7 +860,7 @@ function DocumentProperties() {
           step={0.5}
           onCommit={(snap) => dispatch({ type: 'setSnap', snap })}
         />
-        <div className="flex gap-1.25">
+        <div className="flex gap-5">
           {SNAP_PRESETS.map((preset) => (
             <button
               key={preset}
@@ -890,7 +890,7 @@ function DocumentProperties() {
         />
       </RailGroup>
 
-      <div className="flex flex-col gap-1.25 px-3.5 py-3.25">
+      <div className="flex flex-col gap-5 px-14 py-13">
         <span className="font-sans text-11/relaxed text-gray-11">
           {doc.objects.length === 0
             ? 'The artboard is empty.'

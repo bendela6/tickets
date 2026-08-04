@@ -10,11 +10,11 @@ import { ShapeGlyph, SHAPE_TOOLS } from './shape-tools';
 export function EmptyArtboard() {
   const { dispatch } = useEditor();
   return (
-    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4">
+    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-16">
       <span className="font-mono text-11 tracking-wide text-gray-9">place your first shape</span>
       {/* Wraps rather than overflowing: the row is as wide as the artboard,
           and the artboard can be any size. */}
-      <div className="pointer-events-auto flex flex-wrap justify-center gap-2.5">
+      <div className="pointer-events-auto flex flex-wrap justify-center gap-10">
         {SHAPE_TOOLS.map((tool) => (
           <button
             key={tool.kind}
@@ -22,7 +22,7 @@ export function EmptyArtboard() {
             title={tool.label}
             aria-label={tool.label}
             onClick={() => dispatch({ type: 'addObject', kind: tool.kind })}
-            className="flex size-14 items-center justify-center rounded-lg border-1 border-dashed border-gray-7 text-gray-9 hover:text-gray-11"
+            className="flex size-56 items-center justify-center rounded-lg border-1 border-dashed border-gray-7 text-gray-9 hover:text-gray-11"
           >
             <ShapeGlyph kind={tool.kind} size={22} />
           </button>

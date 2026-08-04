@@ -88,7 +88,7 @@ function Editor() {
         <aside
           aria-label="Objects"
           className={cn(
-            'flex w-58 flex-none flex-col border-r-1 border-gray-6',
+            'flex w-232 flex-none flex-col border-r-1 border-gray-6',
             dim && 'opacity-40',
           )}
         >
@@ -100,7 +100,7 @@ function Editor() {
         <aside
           aria-label="Properties"
           className={cn(
-            'w-66 flex-none overflow-auto border-l-1 border-gray-6',
+            'w-264 flex-none overflow-auto border-l-1 border-gray-6',
             dim && 'opacity-40',
           )}
         >
@@ -159,7 +159,7 @@ function CanvasField({
               the unreachable-edge problem that `safe` exists to avoid. */}
           <div
             ref={stackRef}
-            className="relative flex flex-none flex-col items-center gap-3 p-8 pb-16"
+            className="relative flex flex-none flex-col items-center gap-12 p-32 pb-64"
           >
             {/* Wrapped so the zoom can measure exactly where the artboard is
                 without reaching into the artboard's own markup. */}

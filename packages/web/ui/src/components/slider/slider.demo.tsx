@@ -26,7 +26,7 @@ function DemoSlider({
 }) {
   const [value, setValue] = useState(initial);
   return (
-    <div className="flex w-64 items-center gap-3">
+    <div className="flex w-256 items-center gap-12">
       <Slider
         label="Opacity"
         value={value}
@@ -39,7 +39,7 @@ function DemoSlider({
         disabled={disabled}
         valueText={`${value}${suffix}`}
       />
-      <span className="w-10 shrink-0 text-right font-mono text-12 text-gray-11">
+      <span className="w-40 shrink-0 text-right font-mono text-12 text-gray-11">
         {value}
         {suffix}
       </span>
