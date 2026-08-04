@@ -1,58 +1,4 @@
 {
-  "gray": {
-    "1": {
-      "$type": "color",
-      "$value": "#1b1a17"
-    },
-    "2": {
-      "$type": "color",
-      "$value": "#201e1a"
-    },
-    "3": {
-      "$type": "color",
-      "$value": "#25231e"
-    },
-    "4": {
-      "$type": "color",
-      "$value": "#2a2821"
-    },
-    "5": {
-      "$type": "color",
-      "$value": "#2f2c25"
-    },
-    "6": {
-      "$type": "color",
-      "$value": "#343128"
-    },
-    "7": {
-      "$type": "color",
-      "$value": "#4c483d"
-    },
-    "8": {
-      "$type": "color",
-      "$value": "#625e53"
-    },
-    "9": {
-      "$type": "color",
-      "$value": "#79756a"
-    },
-    "10": {
-      "$type": "color",
-      "$value": "#8f8b80"
-    },
-    "11": {
-      "$type": "color",
-      "$value": "#a6a296"
-    },
-    "12": {
-      "$type": "color",
-      "$value": "#edebe3"
-    },
-    "contrast": {
-      "$type": "color",
-      "$value": "#ffffff"
-    }
-  },
   "red": {
     "1": {
       "$type": "color",
@@ -591,6 +537,60 @@
     "contrast": {
       "$type": "color",
       "$value": "#35081c"
+    }
+  },
+  "gray": {
+    "1": {
+      "$type": "color",
+      "$value": "#1b1a17"
+    },
+    "2": {
+      "$type": "color",
+      "$value": "#201e1a"
+    },
+    "3": {
+      "$type": "color",
+      "$value": "#25231e"
+    },
+    "4": {
+      "$type": "color",
+      "$value": "#2a2821"
+    },
+    "5": {
+      "$type": "color",
+      "$value": "#2f2c25"
+    },
+    "6": {
+      "$type": "color",
+      "$value": "#343128"
+    },
+    "7": {
+      "$type": "color",
+      "$value": "#4c483d"
+    },
+    "8": {
+      "$type": "color",
+      "$value": "#625e53"
+    },
+    "9": {
+      "$type": "color",
+      "$value": "#79756a"
+    },
+    "10": {
+      "$type": "color",
+      "$value": "#8f8b80"
+    },
+    "11": {
+      "$type": "color",
+      "$value": "#a6a296"
+    },
+    "12": {
+      "$type": "color",
+      "$value": "#edebe3"
+    },
+    "contrast": {
+      "$type": "color",
+      "$value": "#ffffff"
     }
   }
 }

@@ -1,9 +1,16 @@
 import lightTokens from '../../../tokens/colors.light.tokens.json';
 import darkTokens from '../../../tokens/colors.dark.tokens.json';
 import semanticTokens from '../../../tokens/semantic.tokens.json';
-import toneTokens from '../../../tokens/tones.tokens.json';
 
-export const HUES = toneTokens.hues as readonly string[];
+/**
+ * The ramps, in declaration order — gray last, after the chromatics.
+ *
+ * Derived from the colours rather than listed separately. A hand-kept list was
+ * a second copy of the ramp names that could disagree with the ramps: a hue
+ * listed but unpainted, or painted but unlisted. The ramps are the only place a
+ * hue can exist, so they are the list.
+ */
+export const HUES = Object.keys(lightTokens) as readonly string[];
 export const STEPS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 
 export type Theme = 'light' | 'dark';
