@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AxeResults } from 'axe-core';
-import { cn } from '@tickets/ui';
+import { Icon, Pill, type Tone } from '@tickets/ui';
 
 interface AuditState {
   results: AxeResults | null;
@@ -22,14 +22,18 @@ function formatRelativeTime(timestamp: number): string {
   return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 }
 
-function getImpactClasses(impact: string | null | undefined): string {
+// Axe's impact levels collapse onto the library's role tones, so the severity
+// reads the same here as anywhere else in the app. Naming the role rather than
+// the hue is the point: `danger` survives a change to which ramp danger paints
+// from, a literal `red` does not.
+function impactTone(impact: string | null | undefined): Tone {
   if (impact === 'critical' || impact === 'serious') {
-    return 'bg-red-3 text-red-9';
+    return 'danger';
   }
   if (impact === 'moderate' || impact === 'minor') {
-    return 'bg-orange-3 text-orange-9';
+    return 'warning';
   }
-  return 'bg-gray-7 text-gray-11';
+  return 'neutral';
 }
 
 export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<AxeResults> }) {
@@ -106,14 +110,12 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
               >
                 {/* Impact chip + Rule ID */}
                 <div className="flex items-center gap-8">
-                  <span
-                    className={cn(
-                      'h-20 px-8 rounded-md font-mono text-11/13 tracking-wider inline-flex items-center',
-                      getImpactClasses(violation.impact),
-                    )}
-                  >
-                    {violation.impact}
-                  </span>
+                  <Pill
+                    size="sm"
+                    tone={impactTone(violation.impact)}
+                    label={violation.impact}
+                    className="font-mono"
+                  />
                   <span className="font-sans text-13/19 font-500 text-gray-12">{violation.id}</span>
                 </div>
 
@@ -139,9 +141,9 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
           ) : (
             // All clear banner
             <div className="flex items-center gap-10 rounded-lg bg-green-3 p-14">
-              <span className="flex-none size-16 rounded-full bg-green-9 text-gray-1 flex items-center justify-center font-sans text-9/12 font-600">
-                ✓
-              </span>
+              {/* The registry's own tick, rather than a circle drawn by hand
+                  around a ✓ character. */}
+              <Icon name="circle-check" size="sm" className="flex-none text-green-9" />
               <span className="font-sans text-13/19 font-500 text-green-9">
                 No violations found
               </span>

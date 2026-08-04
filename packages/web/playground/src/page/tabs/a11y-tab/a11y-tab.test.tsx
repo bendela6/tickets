@@ -1,6 +1,7 @@
 import type { AxeResults } from 'axe-core';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { TONE_HUE } from '@tickets/ui';
 import { A11yTab } from './a11y-tab';
 
 // A11yTab now takes a `runAudit` callback directly (component-page.tsx is
@@ -154,15 +155,12 @@ describe('A11yTab', () => {
       expect(screen.getByText('color-contrast')).toBeTruthy();
     });
 
-    // Verify serious impact chip has danger colors
-    const seriousChip = screen.getByText('serious');
-    expect(seriousChip.className).toContain('bg-red-3');
-    expect(seriousChip.className).toContain('text-red-9');
-
-    // Verify moderate impact chip has orange colors
-    const moderateChip = screen.getByText('moderate');
-    expect(moderateChip.className).toContain('bg-orange-3');
-    expect(moderateChip.className).toContain('text-orange-9');
+    // What matters is the mapping — serious is a danger, moderate is a warning
+    // — not which hue those roles happen to paint from today. Reading the ramp
+    // through TONE_HUE asserts the severity and survives a re-pointed role;
+    // spelling `red` here would fail the day danger moves ramp, for no defect.
+    expect(screen.getByText('serious').className).toContain(`bg-${TONE_HUE.danger}-3`);
+    expect(screen.getByText('moderate').className).toContain(`bg-${TONE_HUE.warning}-3`);
   });
 
   it('displays rule descriptions and target selectors', async () => {
@@ -198,8 +196,12 @@ describe('A11yTab', () => {
 
     await waitFor(() => {
       expect(screen.getByText('No violations found')).toBeTruthy();
-      expect(screen.getByText('✓')).toBeTruthy();
     });
+    // The tick is a registry glyph now, not a ✓ character — decorative, so it
+    // is aria-hidden and has no accessible name to query by.
+    expect(
+      screen.getByText('No violations found').parentElement?.querySelector('svg'),
+    ).toBeTruthy();
   });
 
   it('calculates element count from passes.nodes.length', async () => {
