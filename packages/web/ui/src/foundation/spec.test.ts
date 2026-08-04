@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import radiusCss from '../../styles/generated/radius.css?raw';
 import {
   BORDERS,
   BREAKPOINTS,
@@ -96,15 +97,21 @@ describe('the radius scale in the live sheet', () => {
     });
   });
 
-  it('clears the off-scale rungs so they cannot drift back', () => {
-    const cleared = liveTokens(/^radius-(xs|2xl|3xl|4xl)$/);
-    expect(cleared.map((r) => r.name).sort()).toEqual([
-      'radius-2xl',
-      'radius-3xl',
-      'radius-4xl',
-      'radius-xs',
-    ]);
-    expect(cleared.every((r) => r.value === 'initial')).toBe(true);
+  it('clears the whole namespace first, so off-scale rungs cannot drift back', () => {
+    // Asserted against the raw text rather than `liveTokens`, which parses
+    // `--name: value` and cannot see a `*` in the name.
+    //
+    // The wildcard replaced four named clears (xs/2xl/3xl/4xl) on 2026-08-04.
+    // Same result for today's Tailwind, but it also catches any rung a future
+    // version adds — the named list would have let that one through silently.
+    expect(radiusCss).toMatch(/--radius-\*:\s*initial;/);
+    expect(radiusCss.indexOf('--radius-*')).toBeLessThan(radiusCss.indexOf('--radius-sm'));
+  });
+
+  it('leaves rounded-full reachable, since Tailwind hardcodes it', () => {
+    // `calc(infinity * 1px)`, not a token read — so the namespace clear above
+    // cannot remove it, and a pill is not a step on the scale anyway.
+    expect(radiusCss).not.toContain('--radius-full');
   });
 });
 

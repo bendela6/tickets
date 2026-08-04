@@ -23,5 +23,11 @@
       "$type": "string",
       "$value": "ai-pulse 1.8s ease-out infinite"
     }
+  },
+  "transition": {
+    "paint": {
+      "$type": "string",
+      "$value": "opacity, border-color, background-color, box-shadow"
+    }
   }
 }

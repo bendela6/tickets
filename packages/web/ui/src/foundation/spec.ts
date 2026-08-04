@@ -5,10 +5,20 @@ import typographyTokens from '../../tokens/typography.tokens.json';
 import shadowsLightTokens from '../../tokens/shadows.light.tokens.json';
 import shadowsDarkTokens from '../../tokens/shadows.dark.tokens.json';
 // The live stylesheet, read as text rather than transcribed into TypeScript.
-// A transcription would rot the first time someone edits tokens.css; parsing
-// the file itself means the "live" column of every view below is whatever the
+// A transcription would rot the first time someone edits the sheet; parsing the
+// files themselves means the "live" column of every view below is whatever the
 // app actually ships, by construction.
-import tokensCss from '../tokens/tokens.css?raw';
+//
+// Every generated sheet, concatenated — the custom properties are split one
+// file per token type now, so reading a single file would silently narrow every
+// lookup below to whichever family that file happens to own.
+import colorsCss from '../../styles/generated/colors.css?raw';
+import shadowsCss from '../../styles/generated/shadows.css?raw';
+import typographyCss from '../../styles/generated/typography.css?raw';
+import radiusCss from '../../styles/generated/radius.css?raw';
+import motionCss from '../../styles/generated/motion.css?raw';
+
+const tokensCss = [colorsCss, shadowsCss, typographyCss, radiusCss, motionCss].join('\n');
 
 export interface Token {
   /** Token name without the leading `--`. */

@@ -17,8 +17,3 @@ import { TOKENS_DIR } from './paths.ts';
 export function readTokenFile<T>(name: string): T {
   return JSON.parse(readFileSync(path.join(TOKENS_DIR, name), 'utf8')) as T;
 }
-
-/** Drop the `$comment` / `$description` keys DTCG allows beside real entries. */
-export function withoutMeta<T>(entries: Record<string, T>): Record<string, T> {
-  return Object.fromEntries(Object.entries(entries).filter(([key]) => !key.startsWith('$')));
-}

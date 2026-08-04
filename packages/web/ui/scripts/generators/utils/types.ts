@@ -37,18 +37,35 @@ export interface ShadowDoc {
   shadow: Record<string, DesignToken>;
 }
 
+/** `typography.tokens.json` — sizes, weights and families, none theme-varying. */
+export interface TypographyDoc {
+  text: Record<string, DesignToken>;
+  'font-weight': Record<string, DesignToken>;
+  font: Record<string, DesignToken>;
+}
+
+/** `radius.tokens.json` — the four corner rungs. */
+export interface RadiusDoc {
+  radius: Record<string, DesignToken>;
+}
+
+/**
+ * `motion.tokens.json`. `duration` is a sanctioned-rung registry that emits
+ * nothing — `duration-200` is already 200ms because the Tailwind class says so.
+ * The other three do emit.
+ */
+export interface MotionDoc {
+  duration: Record<string, DesignToken>;
+  ease: Record<string, DesignToken>;
+  animate: Record<string, DesignToken>;
+  transition: Record<string, DesignToken>;
+}
+
 /** `semantic.tokens.json`. Surfaces and literals carry both themes inline. */
 export interface SemanticDoc {
   scale: Record<string, string>;
   surface: Record<string, Record<Theme, string>>;
   literal: Record<string, Record<Theme, string>>;
-}
-
-/** `tones.tokens.json`. `$comment` keys are stripped before either map is read. */
-export interface TonesDoc {
-  hues: string[];
-  steps: Record<string, number | string>;
-  emphasis: Record<string, Record<string, string>>;
 }
 
 /** One regenerable region of tokens.css, found by its marker comment pair. */

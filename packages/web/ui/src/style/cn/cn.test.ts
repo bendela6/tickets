@@ -7,8 +7,11 @@ import { cn } from './cn';
 // sizes of their own, so they're filtered out by the double dash. (Read from
 // the package root — vitest's cwd — since import.meta.url isn't a file URL
 // under the dev-server transform.)
+//
+// `styles/generated/typography.css` is the one file that declares them — the
+// generated stylesheets are split one per token type.
 const THEME_TEXT_SIZES = [
-  ...readFileSync(join(process.cwd(), 'src/tokens/tokens.css'), 'utf8').matchAll(
+  ...readFileSync(join(process.cwd(), 'styles/generated/typography.css'), 'utf8').matchAll(
     /^\s+--text-([a-z0-9-]+):/gm,
   ),
 ]
@@ -35,9 +38,9 @@ describe('cn', () => {
   it('keeps the font family next to every numeric weight the theme defines', () => {
     // `font-*` serves both family and weight, so an unregistered `font-500`
     // is read as a family and evicts `font-sans` — the same trap as the
-    // sizes, one namespace over. Driven off tokens.css for the same reason.
+    // sizes, one namespace over. Driven off theme.css for the same reason.
     const weights = [
-      ...readFileSync(join(process.cwd(), 'src/tokens/tokens.css'), 'utf8').matchAll(
+      ...readFileSync(join(process.cwd(), 'styles/generated/typography.css'), 'utf8').matchAll(
         /^\s+--font-weight-(\d+):/gm,
       ),
     ].map((m) => m[1]!);

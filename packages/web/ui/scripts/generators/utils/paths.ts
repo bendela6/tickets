@@ -28,8 +28,17 @@ const PACKAGE_ROOT = path.join(GENERATORS_DIR, '..', '..');
  */
 export const TOKENS_DIR = path.join(PACKAGE_ROOT, 'tokens');
 
-/** Spliced in place — only the marked regions are rewritten. Shipped, so `src/`. */
-export const TOKENS_CSS_FILE = path.join(PACKAGE_ROOT, 'src', 'tokens', 'tokens.css');
+/** All shipped CSS — authored and generated alike. */
+export const STYLES_DIR = path.join(PACKAGE_ROOT, 'styles');
 
-/** Overwritten whole. Shipped, so `src/`. */
+/**
+ * Owned outright by the generator. Every file in here is overwritten whole on
+ * every build, so the directory itself is the "do not edit" marker — there is
+ * no hand-authored line anywhere inside it to preserve.
+ */
+export const GENERATED_DIR = path.join(STYLES_DIR, 'generated');
+
+export const generatedCssFile = (name: string): string => path.join(GENERATED_DIR, name);
+
+/** Overwritten whole. TypeScript, so it sits with the code that imports it. */
 export const TONES_FILE = path.join(PACKAGE_ROOT, 'src', 'style', 'tones', 'tones.generated.ts');

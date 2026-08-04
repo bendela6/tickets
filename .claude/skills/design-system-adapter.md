@@ -17,32 +17,41 @@ here should need to leak back into those skills.
 
 ## tokenPipeline
 
-- Source of truth: `packages/web/ui/src/tokens/next/*.tokens.json` — DTCG-format.
-  There is no primitive→semantic alias layer any more: a ramp step IS the token
-  (`gray-1` is the app background, `red-9` the solid fill).
+- Source of truth: `packages/web/ui/tokens/*.tokens.json` — DTCG-format, at the
+  package root rather than under `src/`, because they are what the package is
+  built FROM, not code it ships. There is no primitive→semantic alias layer: a
+  ramp step IS the token (`gray-1` is the app background, `red-9` the solid fill).
 - **A token file plays one of two roles — check which before "fixing" one.**
-  Only six of the ten are read by the generator, by design:
+  Only five of the nine are read by the generator, by design:
   - *Emitted* — the value lives in the JSON and codegen puts it into CSS:
-    `colors.{light,dark}`, `shadows.{light,dark}`, `semantic`, `tones`.
+    `colors.{light,dark}`, `shadows.{light,dark}`, `semantic`.
   - *Sanctioned rungs* — the value lives in the Tailwind class and the JSON
     records which rungs may be used: `layout` (border/ring/z/breakpoint) and
     `motion`'s durations. `duration-200` is 200ms because the class says so;
     emitting `--duration-200` would create the second copy that is the only way
     the two could disagree. `spec.test.ts` asserts the sheet declares NO token
     for these, so wiring them into the generator breaks the suite on purpose.
-  - `radius` and `typography` straddle both: their values are hand-written into
-    the `@theme inline` block (next to the `initial` clears that retire
-    off-scale rungs — enforcement DTCG cannot express), and
-    `foundation/spec.ts`'s `drift()` matches the two copies **by value**, so an
-    edit to either side fails `spec.test.ts` rather than passing silently.
-- Codegen: `pnpm --filter @tickets/ui tokens:build` runs
-  `packages/web/ui/scripts/build-tokens.mjs`, which splices the generated `--ins-*` /
-  `--color-*` custom-property regions into
-  `packages/web/ui/src/tokens/tokens.css` between `/* tokens:… */` markers and
-  writes `src/style/tones/tones.generated.ts`; then `extract-safelist.mjs`
-  writes `src/tokens/safelist.generated.css`.
-  Everything outside those markers (Tailwind theme mappings, component CSS)
-  is hand-authored and untouched by codegen.
+  - `radius` and `typography` straddle both: their values are hand-authored in
+    `styles/theme.css` (next to the `initial` clears that retire off-scale rungs
+    — enforcement DTCG cannot express), and `foundation/spec.ts`'s `drift()`
+    matches the two copies **by value**, so an edit to either side fails
+    `spec.test.ts` rather than passing silently.
+  - There is no `tones.tokens.json`. The hue list is derived from the keys of
+    `colors.light.tokens.json` — the ramps are the only place a hue can exist,
+    so a separate list was just a second copy that could disagree.
+- **All CSS lives in `packages/web/ui/styles/`, and generated files are whole
+  files.** Nothing is spliced into hand-authored content any more:
+  - `index.css` — the entry (`@tickets/ui/tokens.css` resolves here). Layer
+    declaration, imports, `@source`, `@custom-variant`, `@layer base`, keyframes.
+  - `theme.css` — AUTHORED `@theme inline`: fonts, type scale, weights, radius,
+    easings. **Imported before `tokens.generated.css`**, because `--color-*:
+    initial` lives here and after the generated colours it would wipe them.
+  - `tokens.generated.css` — GENERATED whole by `scripts/generators/build-tokens.ts`.
+  - `safelist.generated.css` — GENERATED whole by `scripts/extract-safelist.mjs`.
+  - `prose.css` — authored `.rt` rich-text rules.
+- Codegen: `pnpm --filter @tickets/ui tokens:build`. Also writes
+  `src/style/tones/tones.generated.ts` (the tone vocabulary), which is TypeScript
+  and so sits with the code that imports it.
 - Gates: `pnpm --filter @tickets/ui tokens:verify` is now ONLY a freshness check —
   it regenerates and fails if the three generated artifacts differ from a fresh
   build. It no longer validates anything about the values themselves.
@@ -70,8 +79,8 @@ here should need to leak back into those skills.
 
 - Unit/component tests: `pnpm --filter @tickets/web test` (vitest).
 - Token pipeline gate: `pnpm --filter @tickets/ui tokens:verify` (rebuilds
-  tokens, fails if `packages/web/ui/src/tokens/tokens.css`,
-  `safelist.generated.css` or `tones.generated.ts` drifts from a fresh build).
+  tokens, fails if `styles/tokens.generated.css`, `styles/safelist.generated.css`
+  or `src/style/tones/tones.generated.ts` drifts from a fresh build).
   Freshness only — no value or vocabulary checking remains.
 - GAP: no visual-regression runner wired up yet (no run command, no
   baseline-update command).
