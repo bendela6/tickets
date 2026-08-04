@@ -29,16 +29,16 @@ const BG: Record<Row['ground'], string> = {
 
 export function FileGrid({ doc }: { doc: IconDoc }) {
   return (
-    <div className="grid gap-3 md:grid-cols-2">
+    <div className="grid gap-12 md:grid-cols-2">
       {rows(doc).map((row) => (
         <div key={row.file} className="overflow-hidden rounded-xl border-1 border-gray-6 bg-gray-2">
-          <div className="flex flex-col gap-0.5 px-3 pt-3">
+          <div className="flex flex-col gap-2 px-12 pt-12">
             <span className="font-mono text-13 font-600 text-gray-12">{row.file}</span>
             <span className="text-12 text-gray-11">{row.use}</span>
           </div>
-          <div className={`mt-3 flex flex-wrap items-end justify-center gap-5 p-4 ${BG[row.ground]}`}>
+          <div className={`mt-12 flex flex-wrap items-end justify-center gap-20 p-16 ${BG[row.ground]}`}>
             {row.sizes.map((size) => (
-              <figure key={size} className="m-0 flex flex-col items-center gap-1.5">
+              <figure key={size} className="m-0 flex flex-col items-center gap-6">
                 <img src={dataUri(row.svg)} width={size} height={size} alt="" />
                 <figcaption className="font-mono text-11 text-gray-11">{size}px</figcaption>
               </figure>

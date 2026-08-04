@@ -23,9 +23,9 @@ export function InkPanel({
   const inkNames = Object.keys(base);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-20">
       {(['light', 'dark'] as const).map((mode) => (
-        <section key={mode} className="flex flex-col gap-2">
+        <section key={mode} className="flex flex-col gap-8">
           <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">{mode} theme</h2>
           {inkNames.map((name) => {
             const rawHex = base[name]?.[mode] ?? '#000000';

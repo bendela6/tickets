@@ -119,7 +119,7 @@ export function MotionPreview({
   const painted = [...doc.elements.entries()].reverse();
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-16">
       <svg
         viewBox={`0 0 ${CENTRE * 2} ${CENTRE * 2}`}
         width={size}
@@ -177,24 +177,24 @@ export function MotionPreview({
         </g>
       </svg>
 
-      <dl className="flex flex-col gap-0.5 font-mono text-11 text-gray-11">
-        <div className="flex gap-2">
-          <dt className="w-14">state</dt>
+      <dl className="flex flex-col gap-2 font-mono text-11 text-gray-11">
+        <div className="flex gap-8">
+          <dt className="w-56">state</dt>
           <dd className="tabular-nums text-gray-12">{state}</dd>
         </div>
-        <div className="flex gap-2">
-          <dt className="w-14">gaps</dt>
+        <div className="flex gap-8">
+          <dt className="w-56">gaps</dt>
           <dd className="tabular-nums text-gray-12">
             {first.toFixed(1)}° · {second.toFixed(1)}°
           </dd>
         </div>
-        <div className="flex gap-2">
-          <dt className="w-14">turning</dt>
+        <div className="flex gap-8">
+          <dt className="w-56">turning</dt>
           <dd className="tabular-nums text-gray-12">{readout.spinning ? 'yes' : 'no'}</dd>
         </div>
         {reduced ? (
-          <div className="flex gap-2">
-            <dt className="w-14">motion</dt>
+          <div className="flex gap-8">
+            <dt className="w-56">motion</dt>
             <dd className="text-orange-11">cut — reduced-motion</dd>
           </div>
         ) : null}
