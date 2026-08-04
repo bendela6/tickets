@@ -1,58 +1,4 @@
 {
-  "gray": {
-    "1": {
-      "$type": "color",
-      "$value": "#f7f6f2"
-    },
-    "2": {
-      "$type": "color",
-      "$value": "#f2f1ec"
-    },
-    "3": {
-      "$type": "color",
-      "$value": "#edece6"
-    },
-    "4": {
-      "$type": "color",
-      "$value": "#e9e7e1"
-    },
-    "5": {
-      "$type": "color",
-      "$value": "#e4e2db"
-    },
-    "6": {
-      "$type": "color",
-      "$value": "#e0ddd5"
-    },
-    "7": {
-      "$type": "color",
-      "$value": "#c9c5ba"
-    },
-    "8": {
-      "$type": "color",
-      "$value": "#ada89d"
-    },
-    "9": {
-      "$type": "color",
-      "$value": "#777368"
-    },
-    "10": {
-      "$type": "color",
-      "$value": "#6a665b"
-    },
-    "11": {
-      "$type": "color",
-      "$value": "#5d5a50"
-    },
-    "12": {
-      "$type": "color",
-      "$value": "#25231d"
-    },
-    "contrast": {
-      "$type": "color",
-      "$value": "#ffffff"
-    }
-  },
   "red": {
     "1": {
       "$type": "color",
@@ -587,6 +533,60 @@
     "12": {
       "$type": "color",
       "$value": "#4c0d2b"
+    },
+    "contrast": {
+      "$type": "color",
+      "$value": "#ffffff"
+    }
+  },
+  "gray": {
+    "1": {
+      "$type": "color",
+      "$value": "#f7f6f2"
+    },
+    "2": {
+      "$type": "color",
+      "$value": "#f2f1ec"
+    },
+    "3": {
+      "$type": "color",
+      "$value": "#edece6"
+    },
+    "4": {
+      "$type": "color",
+      "$value": "#e9e7e1"
+    },
+    "5": {
+      "$type": "color",
+      "$value": "#e4e2db"
+    },
+    "6": {
+      "$type": "color",
+      "$value": "#e0ddd5"
+    },
+    "7": {
+      "$type": "color",
+      "$value": "#c9c5ba"
+    },
+    "8": {
+      "$type": "color",
+      "$value": "#ada89d"
+    },
+    "9": {
+      "$type": "color",
+      "$value": "#777368"
+    },
+    "10": {
+      "$type": "color",
+      "$value": "#6a665b"
+    },
+    "11": {
+      "$type": "color",
+      "$value": "#5d5a50"
+    },
+    "12": {
+      "$type": "color",
+      "$value": "#25231d"
     },
     "contrast": {
       "$type": "color",
