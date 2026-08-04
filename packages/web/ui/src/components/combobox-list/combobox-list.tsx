@@ -1,5 +1,5 @@
 import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { HueTone } from '../../style/tones';
+import type { Hue } from '../../style/tones';
 import { cn } from '../../style/cn';
 import { Pill } from '../pill';
 
@@ -7,7 +7,7 @@ import { Pill } from '../pill';
 export type ComboOption = {
   value: string;
   label: string;
-  color?: HueTone;
+  color?: Hue;
   disabled?: boolean;
 };
 

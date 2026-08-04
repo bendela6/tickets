@@ -1,10 +1,10 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
-import { axis, HUE_TONES, over, TONE_RAMP, variants, type Tone } from '../../style';
+import { axis, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
 import { Icon, type IconSize } from '../icon';
 import { Spinner } from '../spinner';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
-const SCALE = axis('scale', HUE_TONES, 'indigo');
+const SCALE = axis('scale', HUES, 'indigo');
 
 /**
  * How much of the tone the button spends. Shares three of its four names with
@@ -143,7 +143,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       aria-busy={loading || undefined}
       className={buttonClass({
         variant,
-        scale: TONE_RAMP[tone],
+        scale: TONE_HUE[tone],
         size,
         className: showDisabled ? `${DISABLED[variant]} ${className ?? ''}`.trim() : className,
       })}

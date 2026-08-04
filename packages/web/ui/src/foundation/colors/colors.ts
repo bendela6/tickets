@@ -1,4 +1,4 @@
-import { HUE_TONES, LITERALS, RAMPS, SURFACES, TONE_RAMP } from '../../generated';
+import { HUES, PALETTE, TONE_HUE } from '../../generated';
 
 /**
  * Contrast analysis over the generated colour tables.
@@ -12,16 +12,14 @@ import { HUE_TONES, LITERALS, RAMPS, SURFACES, TONE_RAMP } from '../../generated
 
 export type Theme = 'light' | 'dark';
 
-/** The eleven ramps, in declaration order — gray last, after the chromatics. */
-export const HUES: readonly string[] = HUE_TONES;
-
 /**
- * Rung numbers, derived from the ramps rather than restated.
+ * Step numbers, derived from the hues rather than restated.
  *
- * Any ramp can stand for the set — the generator asserts they all carry the
- * same rungs, so a disagreement is a build failure, not a runtime surprise.
+ * Any hue can stand for the set — the generator asserts they all carry the same
+ * steps in both themes, so a disagreement is a build failure rather than a
+ * runtime surprise.
  */
-export const STEPS = Object.keys(Object.values(RAMPS)[0] ?? {})
+export const STEPS = Object.keys(Object.values(PALETTE.light.hue)[0] ?? {})
   .filter((s) => /^\d+$/.test(s))
   .map(Number);
 
@@ -45,16 +43,21 @@ export const STEP_JOBS: Record<number, string> = {
   12: 'text, high contrast',
 };
 
-/** Hex for a step (`9`) or the scale's contrast token (`'contrast'`). */
-export function colorOf(theme: Theme, scale: string, step: Step | 'contrast'): string {
-  const ramp = (RAMPS as Record<string, Record<string, { light: string; dark: string }>>)[scale];
-  const token = ramp?.[String(step)];
-  if (!token) throw new Error(`unknown color token: ${scale}-${step} (${theme})`);
-  return token[theme];
+/** Hex for a step (`9`) or the hue's contrast token (`'contrast'`). */
+export function colorOf(theme: Theme, hue: string, step: Step | 'contrast'): string {
+  const value = PALETTE[theme].hue[hue]?.[String(step)];
+  if (!value) throw new Error(`unknown color token: ${hue}-${step} (${theme})`);
+  return value;
 }
 
-export const SEMANTIC_SCALES: Record<string, string> = TONE_RAMP;
-export { SURFACES, LITERALS };
+/** A surface's hex in one theme. */
+export function surfaceOf(theme: Theme, name: string): string {
+  const value = PALETTE[theme].surface[name];
+  if (!value) throw new Error(`unknown surface: ${name} (${theme})`);
+  return value;
+}
+
+export const SEMANTIC_SCALES: Record<string, string> = TONE_HUE;
 
 // ---------------------------------------------------------------------------
 // Contrast
@@ -163,7 +166,7 @@ export function checkPairings(scales: readonly string[] = HUES): Pairing[] {
   const out: Pairing[] = [];
   for (const theme of ['light', 'dark'] as const) {
     const page: Side = ['page', colorOf(theme, 'gray', 1)];
-    const field: Side = ['field fill', SURFACES.raised![theme]];
+    const field: Side = ['field fill', surfaceOf(theme, 'raised')];
 
     for (const scale of scales) {
       const step = (n: Step): Side => [`step ${n}`, colorOf(theme, scale, n)];

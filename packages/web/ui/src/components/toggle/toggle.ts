@@ -1,7 +1,7 @@
-import { axis, HUE_TONES, over, variants } from '../../style';
+import { axis, HUES, over, variants } from '../../style';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
-const SCALE = axis('scale', HUE_TONES, 'indigo');
+const SCALE = axis('scale', HUES, 'indigo');
 
 /** Checkbox, RadioGroup and Switch share a ladder: 14 / 16 / 20px marks. */
 export type ToggleSize = 'sm' | 'md' | 'lg';

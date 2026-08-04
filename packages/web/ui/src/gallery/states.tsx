@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react';
-import { cn, HUE_TONES, ROLE_TONES, TONE_NAMES, type Tone } from '../style';
+import { cn, HUES, ROLES, TONE_NAMES, type Tone } from '../style';
 
 /**
  * The two halves of the tone vocabulary, plus both at once.
@@ -11,8 +11,8 @@ import { cn, HUE_TONES, ROLE_TONES, TONE_NAMES, type Tone } from '../style';
  */
 export const TONE_SETS = {
   all: TONE_NAMES,
-  roles: ROLE_TONES,
-  palette: HUE_TONES,
+  roles: ROLES,
+  palette: HUES,
 } as const satisfies Record<string, readonly Tone[]>;
 
 export type ToneSet = keyof typeof TONE_SETS;

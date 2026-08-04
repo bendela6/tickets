@@ -4,10 +4,10 @@ import {
   type MouseEventHandler,
   type Ref,
 } from 'react';
-import { axis, HUE_TONES, over, TONE_RAMP, variants, type Tone } from '../../style';
+import { axis, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
-const SCALE = axis('scale', HUE_TONES, 'indigo');
+const SCALE = axis('scale', HUES, 'indigo');
 
 export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 export type AvatarShape = 'round' | 'square';
@@ -84,7 +84,7 @@ export const Avatar = forwardRef<HTMLElement, AvatarProps>(function Avatar(
   },
   ref,
 ) {
-  const classes = avatarClass({ shape, font, size, scale: TONE_RAMP[tone], className });
+  const classes = avatarClass({ shape, font, size, scale: TONE_HUE[tone], className });
   if (onClick) {
     return (
       <button

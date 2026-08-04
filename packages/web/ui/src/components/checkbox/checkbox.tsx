@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useRef, type InputHTMLAttributes } from 'react';
-import { cn, TONE_RAMP, type Tone } from '../../style';
+import { cn, TONE_HUE, type Tone } from '../../style';
 import { toggleGlyphClass, toggleMarkClass, toggleRowClass, type ToggleSize } from '../toggle';
 
 type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> & {
@@ -29,7 +29,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
     }
   }, [indeterminate]);
   const box = BOX[size];
-  const scale = TONE_RAMP[tone];
+  const scale = TONE_HUE[tone];
   return (
     <label className={toggleRowClass({ size, className })}>
       <span className={cn('relative inline-flex shrink-0', box)}>

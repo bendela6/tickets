@@ -2,10 +2,10 @@
 
 export type Theme = 'light' | 'dark';
 
-/** A value that differs by theme. Surfaces, ramps and shadows all carry both. */
-export interface Themed {
-  light: string;
-  dark: string;
+/** A pair of theme blocks of the same shape. */
+export interface ByTheme<T> {
+  light: T;
+  dark: T;
 }
 
 /** Token name (`gray-1`, `shadow-xs`) to its value, for one theme. */
@@ -27,22 +27,29 @@ export interface Family {
 // Token document shapes
 // ---------------------------------------------------------------------------
 
-/** `colors.tokens.json`. */
-export interface ColorsDoc {
-  /** `gray: { 1: { light, dark }, contrast: { … } }` — eleven perceptual scales. */
-  ramp: Record<string, Record<string, Themed>>;
-  /** A JOB (`danger`) to the ramp that currently does it (`red`). */
-  role: Record<string, string>;
-  /** Defined by what they sit above, which no ramp step expresses. */
-  surface: Record<string, Themed>;
+/** One theme's worth of colour. */
+export interface ColorTheme {
+  /** `gray: { 1: '#f7f6f2', contrast: '#ffffff' }` — eleven perceptual scales. */
+  hue: Record<string, Record<string, string>>;
+  /** Defined by what they sit above, which no hue step expresses. */
+  surface: Record<string, string>;
   /** Chosen for recognition rather than contrast — a highlighter is yellow. */
-  literal: Record<string, Themed>;
+  literal: Record<string, string>;
 }
 
-/** `shadows.tokens.json`. */
-export interface ShadowsDoc {
-  shadow: Record<string, Themed>;
+/**
+ * `colors.tokens.json`. Theme at the ROOT, so each block reads as a palette.
+ *
+ * `role` sits outside them because it does not vary by theme: it maps a JOB
+ * (`danger`) to the hue that currently does it (`red`), and putting it under
+ * one theme would duplicate it and invite the copies to disagree.
+ */
+export interface ColorsDoc extends ByTheme<ColorTheme> {
+  role: Record<string, string>;
 }
+
+/** `shadows.tokens.json`. Rung to value, one block per theme. */
+export type ShadowsDoc = ByTheme<Record<string, string>>;
 
 /** `typography.tokens.json`. */
 export interface TypographyDoc {

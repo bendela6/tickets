@@ -7,11 +7,11 @@
 // 6-8 borders, 9-10 solid fills, 11-12 text — which holds on every scale and
 // is drawn on the Colors page.
 export {
-  HUE_TONES,
-  ROLE_TONES,
+  HUES,
+  ROLES,
   TONE_NAMES,
-  TONE_RAMP,
-  type HueTone,
-  type RoleTone,
+  TONE_HUE,
+  type Hue,
+  type Role,
   type Tone,
-} from '../../generated/tones';
+} from '../../generated/colors';
