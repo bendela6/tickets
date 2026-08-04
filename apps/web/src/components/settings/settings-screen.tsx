@@ -73,11 +73,11 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
   }
 
   if (boardQuery.isLoading) {
-    return <p className="px-8 py-7 font-sans text-13/19 text-gray-9">Loading {projectKey} settings…</p>;
+    return <p className="px-32 py-28 font-sans text-13/19 text-gray-9">Loading {projectKey} settings…</p>;
   }
   if (boardQuery.isError || !board || !indexes) {
     return (
-      <p className="px-8 py-7 font-sans text-13/19 text-red-9">
+      <p className="px-32 py-28 font-sans text-13/19 text-red-9">
         Could not load project "{projectKey}" — {(boardQuery.error as Error | null)?.message}
       </p>
     );
@@ -88,7 +88,7 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* scheme banner */}
-      <div className="flex flex-none items-center gap-3 border-b-1 border-gray-6 bg-surface-inset px-6 py-3">
+      <div className="flex flex-none items-center gap-12 border-b-1 border-gray-6 bg-surface-inset px-24 py-12">
         <p className="m-0 flex-1 font-sans text-13/19 text-gray-11">
           Editing the shared scheme <span className="font-500 text-gray-12">#{board.project.schemeId}</span> —
           changes affect all projects on this scheme.
@@ -107,7 +107,7 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
       <div className="flex min-h-0 flex-1">
         <nav
           aria-label="Settings sections"
-          className="w-53 flex-none overflow-y-auto border-r-1 border-gray-6 bg-gray-1 px-3 py-5.5"
+          className="w-212 flex-none overflow-y-auto border-r-1 border-gray-6 bg-gray-1 px-12 py-22"
         >
           <Tabs
             variant="rail"

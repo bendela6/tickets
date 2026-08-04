@@ -91,19 +91,19 @@ function svgIcon(paths: string, size: number): SVGSVGElement {
 function renderPending(entry: UploadEntry): void {
   entry.root.innerHTML = '';
   entry.root.className =
-    'my-1 block w-full max-w-xs overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-raised';
+    'my-4 block w-full max-w-xs overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-raised';
   entry.root.dataset['uploadStatus'] = 'pending';
 
   const preview = document.createElement('div');
-  preview.className = 'h-37.5 opacity-50';
+  preview.className = 'h-150 opacity-50';
   preview.style.backgroundImage =
     'repeating-linear-gradient(45deg, var(--color-surface-inset) 0 8px, transparent 8px 16px)';
 
   const caption = document.createElement('div');
-  caption.className = 'border-t-1 border-gray-6 px-3 py-2.25';
+  caption.className = 'border-t-1 border-gray-6 px-12 py-9';
 
   const row = document.createElement('div');
-  row.className = 'mb-1.75 flex items-center gap-2';
+  row.className = 'mb-7 flex items-center gap-8';
   const name = document.createElement('span');
   name.className = 'min-w-0 flex-1 truncate font-mono text-11 text-gray-11';
   name.textContent = entry.file.name;
@@ -113,7 +113,7 @@ function renderPending(entry: UploadEntry): void {
   row.append(name, pct);
 
   const track = document.createElement('div');
-  track.className = 'h-0.75 overflow-hidden rounded-full bg-surface-inset';
+  track.className = 'h-3 overflow-hidden rounded-full bg-surface-inset';
   const bar = document.createElement('div');
   bar.className = 'h-full rounded-full bg-indigo-9';
   bar.style.width = '0%';
@@ -151,7 +151,7 @@ function updateProgress(entry: UploadEntry, progress: number): void {
 function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void {
   entry.root.innerHTML = '';
   entry.root.className =
-    'my-1 box-border flex h-49 w-full max-w-xs flex-col items-center justify-center gap-1.5 rounded-lg border-1 border-red-9 bg-red-3';
+    'my-4 box-border flex h-196 w-full max-w-xs flex-col items-center justify-center gap-6 rounded-lg border-1 border-red-9 bg-red-3';
   entry.root.dataset['uploadStatus'] = 'failed';
   entry.nameEl = null;
   entry.pctEl = null;
@@ -172,12 +172,12 @@ function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void 
   meta.textContent = `${entry.file.name} · ${formatFileSize(entry.file.size)}`;
 
   const actions = document.createElement('div');
-  actions.className = 'mt-1.5 flex items-center gap-2';
+  actions.className = 'mt-6 flex items-center gap-8';
 
   const retryBtn = document.createElement('button');
   retryBtn.type = 'button';
   retryBtn.className =
-    'inline-flex h-6.5 items-center gap-1.5 rounded-md border-1 border-gray-7 bg-surface-raised px-2.75 font-sans text-12 font-500 text-gray-12';
+    'inline-flex h-26 items-center gap-6 rounded-md border-1 border-gray-7 bg-surface-raised px-11 font-sans text-12 font-500 text-gray-12';
   retryBtn.append(svgIcon(ROTATE_CCW_PATHS, 12), document.createTextNode('Retry'));
   retryBtn.addEventListener('click', () => {
     // Single-flight guard: a rapid second Retry click (or a stray click on a
@@ -194,7 +194,7 @@ function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void 
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
   removeBtn.className =
-    'inline-flex h-6.5 items-center rounded-md px-2.25 font-sans text-12 font-500 text-gray-9 hover:bg-black/4';
+    'inline-flex h-26 items-center rounded-md px-9 font-sans text-12 font-500 text-gray-9 hover:bg-black/4';
   removeBtn.textContent = 'Remove';
   removeBtn.addEventListener('click', () => handlersRef.current.onRemove(entry.id));
 

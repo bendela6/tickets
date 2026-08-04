@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { BARE_REACH, type MarkConfig } from '../config';
+import type { IconDoc } from '../doc';
+import { resolveInk } from '../generate/render';
 import {
   isSpinning, planMove, separations, statePose, type Formation, type MarkState,
 } from '../motion';
@@ -30,14 +31,19 @@ function useReducedMotion(): boolean {
 }
 
 export function MotionPreview({
-  config, state, size = 132,
+  doc, state, size = 132,
 }: {
-  config: MarkConfig;
+  doc: IconDoc;
   state: MarkState;
   size?: number;
 }) {
   const reduced = useReducedMotion();
-  const sticks = useRef<(SVGPathElement | null)[]>([null, null, null]);
+  // One ref slot per document index, populated only for `stick` elements —
+  // a ring or dot never carries a rotate transform (see the render loop
+  // below), so the animation loop below simply has nothing to write there.
+  // Sized and indexed by `doc.elements`, not a fixed three, so it tracks
+  // however many elements the document actually holds.
+  const sticks = useRef<(SVGPathElement | null)[]>([]);
 
   /**
    * The live formation is a ref, not React state: the frame loop writes each
@@ -47,7 +53,7 @@ export function MotionPreview({
    * earlier version came to stop after two frames.
    */
   const live = useRef<Formation>({
-    pose: statePose(config, state),
+    pose: statePose(doc, state),
     spinning: isSpinning(state),
   });
 
@@ -63,14 +69,14 @@ export function MotionPreview({
     };
 
     if (reduced) {
-      paint({ pose: statePose(config, state), spinning: isSpinning(state) });
+      paint({ pose: statePose(doc, state), spinning: isSpinning(state) });
       setReadout(live.current);
       return;
     }
 
     // Planned once, from wherever the mark actually is — so clicking a second
     // state mid-flight continues from the current pose rather than snapping.
-    const move = planMove(config, live.current, state);
+    const move = planMove(doc, live.current, state);
     let frame = 0;
     let startedAt: number | null = null;
     let lastReadout = 0;
@@ -100,12 +106,20 @@ export function MotionPreview({
 
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [config, state, reduced]);
+  }, [doc, state, reduced]);
 
   const [first, second] = separations(readout.pose);
 
+  // Painted in reverse document order, exactly like `render.ts`:
+  // `elements[0]` is frontmost and the leader a running formation follows,
+  // and SVG has no z-index, so the frontmost element must be the *last*
+  // markup emitted. Each entry keeps its own document index `i` — that is
+  // what both the ref array and `live.current.pose` are keyed to, never the
+  // position an element happens to paint in.
+  const painted = [...doc.elements.entries()].reverse();
+
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-16">
       <svg
         viewBox={`0 0 ${CENTRE * 2} ${CENTRE * 2}`}
         width={size}
@@ -115,41 +129,72 @@ export function MotionPreview({
         className="rounded-lg bg-gray-2"
       >
         <g fill="none">
-          {/* Painted low, mid, top so the leading stick stays frontmost. */}
-          {[2, 1, 0].map((i) => (
-            <path
-              key={i}
-              ref={(node) => {
-                sticks.current[i] = node;
-              }}
-              d={`M${CENTRE} ${CENTRE - BARE_REACH}L${CENTRE} ${CENTRE + BARE_REACH}`}
-              stroke={config.light[i]}
-              strokeWidth={config.bareWeight}
-              strokeLinecap="round"
-              transform={`rotate(${live.current.pose[i] ?? 0} ${CENTRE} ${CENTRE})`}
-            />
-          ))}
+          {painted.map(([i, element]) => {
+            // Light-theme only: this preview never re-renders for a theme
+            // change, so there is no "current theme" to resolve `theme`
+            // against — same posture as the single hardcoded stroke it
+            // replaces. `resolveInk` (not a raw `doc.inks[...]` read) is
+            // what keeps this own-key-safe against a document built by
+            // `structuredClone`ing parsed JSON (see render.ts).
+            const color = resolveInk(doc, element.ink, 'light').light;
+            switch (element.type) {
+              case 'stick':
+                return (
+                  <path
+                    key={element.id}
+                    ref={(node) => {
+                      sticks.current[i] = node;
+                    }}
+                    d={`M${CENTRE} ${CENTRE - element.reach}L${CENTRE} ${CENTRE + element.reach}`}
+                    stroke={color}
+                    strokeWidth={element.weight}
+                    strokeLinecap="round"
+                    transform={`rotate(${live.current.pose[i] ?? 0} ${CENTRE} ${CENTRE})`}
+                  />
+                );
+              case 'ring':
+                // Rotationally symmetric about the centre, so — like
+                // render.ts — it never needs a rotate transform, spinning or
+                // not: there would be nothing visibly different to animate.
+                return (
+                  <circle
+                    key={element.id}
+                    cx={CENTRE}
+                    cy={CENTRE}
+                    r={element.radius}
+                    stroke={color}
+                    strokeWidth={element.weight}
+                  />
+                );
+              case 'dot':
+                // Same posture as render.ts: a dot is drawn at its own fixed
+                // point and never rotated, spinning or not.
+                return (
+                  <circle key={element.id} cx={element.at[0]} cy={element.at[1]} r={element.radius} fill={color} />
+                );
+            }
+          })}
         </g>
       </svg>
 
-      <dl className="flex flex-col gap-0.5 font-mono text-11 text-gray-11">
-        <div className="flex gap-2">
-          <dt className="w-14">state</dt>
+      <dl className="flex flex-col gap-2 font-mono text-11 text-gray-11">
+        <div className="flex gap-8">
+          <dt className="w-56">state</dt>
           <dd className="tabular-nums text-gray-12">{state}</dd>
         </div>
-        <div className="flex gap-2">
-          <dt className="w-14">gaps</dt>
+        <div className="flex gap-8">
+          <dt className="w-56">gaps</dt>
           <dd className="tabular-nums text-gray-12">
             {first.toFixed(1)}° · {second.toFixed(1)}°
           </dd>
         </div>
-        <div className="flex gap-2">
-          <dt className="w-14">turning</dt>
+        <div className="flex gap-8">
+          <dt className="w-56">turning</dt>
           <dd className="tabular-nums text-gray-12">{readout.spinning ? 'yes' : 'no'}</dd>
         </div>
         {reduced ? (
-          <div className="flex gap-2">
-            <dt className="w-14">motion</dt>
+          <div className="flex gap-8">
+            <dt className="w-56">motion</dt>
             <dd className="text-orange-11">cut — reduced-motion</dd>
           </div>
         ) : null}

@@ -1,48 +1,37 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { FONT_WEIGHTS, TEXT_SIZES } from '../../generated';
 import { cn } from './cn';
 
-// Every `--text-*` size token the theme actually generates a utility for.
-// `--text-11--line-height` and friends are modifiers on those tokens, not
-// sizes of their own, so they're filtered out by the double dash. (Read from
-// the package root — vitest's cwd — since import.meta.url isn't a file URL
-// under the dev-server transform.)
-const THEME_TEXT_SIZES = [
-  ...readFileSync(join(process.cwd(), 'src/tokens/tokens.css'), 'utf8').matchAll(
-    /^\s+--text-([a-z0-9-]+):/gm,
-  ),
-]
-  .map((m) => m[1]!)
-  .filter((name) => !name.includes('--'));
+// These are behaviour tests, not value tests: they assert what tailwind-merge
+// DOES for every rung on the scale, which is a claim about a third-party
+// library's bucketing and can fail for a reason worth knowing about.
+//
+// The scale is imported rather than parsed back out of the stylesheet. It used
+// to be read from the CSS to pin cn.ts's hand-copied list against it; cn.ts
+// imports the same generated module now, so the two cannot disagree and the
+// file read was indirection without a check inside it.
 
 describe('cn', () => {
   it('merges conflicting tailwind classes, last wins', () => {
     expect(cn('px-8', 'px-16')).toBe('px-16');
   });
 
-  it('keeps a color class next to every font-size token the theme defines', () => {
+  it('keeps a color class next to every font-size on the scale', () => {
     // Without registration, tailwind-merge buckets unknown text-* into the
-    // text-COLOR group and drops the color. Driven off tokens.css rather than
-    // a hand-copied list: adding a `--text-*` token without registering it in
-    // cn.ts fails silently in the browser, and only where a color sits beside
-    // it, so this is the only place that catches it.
-    expect(THEME_TEXT_SIZES.length).toBeGreaterThan(3);
-    for (const name of THEME_TEXT_SIZES) {
-      expect(cn('text-indigo-contrast', `text-${name}`)).toBe(`text-indigo-contrast text-${name}`);
+    // text-COLOR group and drops the color. A size added to the scale but not
+    // reaching cn fails silently in the browser, and only where a colour sits
+    // beside it — this is the only place that catches it.
+    expect(TEXT_SIZES.length).toBeGreaterThan(3);
+    for (const size of TEXT_SIZES) {
+      expect(cn('text-indigo-contrast', `text-${size}`)).toBe(`text-indigo-contrast text-${size}`);
     }
   });
 
-  it('keeps the font family next to every numeric weight the theme defines', () => {
-    // `font-*` serves both family and weight, so an unregistered `font-500`
-    // is read as a family and evicts `font-sans` — the same trap as the
-    // sizes, one namespace over. Driven off tokens.css for the same reason.
-    const weights = [
-      ...readFileSync(join(process.cwd(), 'src/tokens/tokens.css'), 'utf8').matchAll(
-        /^\s+--font-weight-(\d+):/gm,
-      ),
-    ].map((m) => m[1]!);
-    expect(weights.length).toBeGreaterThan(0);
-    for (const weight of weights) {
+  it('keeps the font family next to every numeric weight', () => {
+    // `font-*` serves both family and weight, so an unregistered `font-500` is
+    // read as a family and evicts `font-sans` — the same trap one namespace
+    // over.
+    expect(FONT_WEIGHTS.length).toBeGreaterThan(0);
+    for (const weight of FONT_WEIGHTS) {
       expect(cn('font-sans', `font-${weight}`)).toBe(`font-sans font-${weight}`);
     }
   });

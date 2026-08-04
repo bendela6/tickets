@@ -3,7 +3,7 @@ import { definePlayground, select, number } from '../../gallery';
 import { TONE_NAMES } from '../../style';
 import { Tabs } from './tabs';
 
-const VARIANTS = ['underline', 'pill', 'rail'] as const;
+const VARIANTS = ['underline', 'pill', 'rail', 'segment'] as const;
 const SIZES = ['sm', 'md', 'lg'] as const;
 const ROLES = ['tablist', 'group'] as const;
 
@@ -19,20 +19,28 @@ function DemoTabs({
   variant,
   size,
   role,
+  showPrevious,
 }: {
   variant: (typeof VARIANTS)[number];
   size?: (typeof SIZES)[number];
   role?: (typeof ROLES)[number];
+  showPrevious?: boolean;
 }) {
-  const [value, setValue] = useState(ALL_ITEMS[0]!.value);
+  const items = ALL_ITEMS.slice(0, 3);
+  const [value, setValue] = useState(items[0]!.value);
+  const [previous, setPrevious] = useState<string | undefined>(undefined);
   return (
     <Tabs
       variant={variant}
       size={size}
       role={role}
-      items={ALL_ITEMS.slice(0, 3)}
+      items={items}
       value={value}
-      onChange={setValue}
+      previousValue={showPrevious ? (previous ?? items[2]!.value) : undefined}
+      onChange={(next) => {
+        setPrevious(value);
+        setValue(next);
+      }}
     />
   );
 }
@@ -43,10 +51,15 @@ export const states = [
   { name: 'Underline', render: () => <DemoTabs variant="underline" /> },
   { name: 'Pill', render: () => <DemoTabs variant="pill" /> },
   { name: 'Rail', render: () => <DemoTabs variant="rail" /> },
+  { name: 'Segment', render: () => <DemoTabs variant="segment" role="group" /> },
+  {
+    name: 'Segment · came from',
+    render: () => <DemoTabs variant="segment" role="group" showPrevious />,
+  },
   {
     name: 'Sizes',
     render: () => (
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-12">
         {SIZES.map((size) => (
           <DemoTabs key={size} variant="pill" size={size} />
         ))}
@@ -98,7 +111,7 @@ export const playground = definePlayground({
       initial: 'underline',
       type: 'TabsVariant',
       description:
-        '`underline` for the tabs at the top of a pane, `pill` for a compact inline switch, `rail` for a vertical sidebar list.',
+        '`underline` for the tabs at the top of a pane, `pill` for a compact inline switch, `rail` for a vertical sidebar list, `segment` for a hairline group of mono values that sits on the page ground.',
     }),
     size: select(SIZES, {
       initial: 'md',

@@ -379,20 +379,20 @@ export function RichTextEditor({
     <div>
       <div className={cn('overflow-hidden rounded-xl border-1', stateClasses)}>
         {composer === undefined ? (
-          <div className={cn('flex items-center border-b-1 border-gray-6 px-2 py-1.25', disabled && 'opacity-45')}>
+          <div className={cn('flex items-center border-b-1 border-gray-6 px-8 py-5', disabled && 'opacity-45')}>
             {toolbar}
           </div>
         ) : null}
         <EditorContent
           editor={editor}
           className={cn(
-            'rt block w-full p-3 font-sans text-13/19 leading-[1.6] text-gray-12 outline-none',
-            composer !== undefined ? 'min-h-11' : 'min-h-27.5',
+            'rt block w-full p-12 outline-none',
+            composer !== undefined ? 'min-h-44' : 'min-h-110',
             disabled && 'cursor-not-allowed',
           )}
         />
         {composer !== undefined ? (
-          <div className="flex items-center gap-2 border-t-1 border-gray-6 bg-gray-1 px-2 py-1.5 dark:bg-surface-inset">
+          <div className="flex items-center gap-8 border-t-1 border-gray-6 bg-gray-1 px-8 py-6 dark:bg-surface-inset">
             <div className={cn('min-w-0 flex-1', disabled && 'opacity-45')}>{toolbar}</div>
             <span className="font-mono text-11 text-gray-9">⌘↩</span>
             <Button

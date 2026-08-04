@@ -15,7 +15,7 @@ function slugify(label: string): string {
 
 function ArchChip() {
   return (
-    <span className="inline-flex h-4.25 shrink-0 items-center rounded-sm bg-surface-inset px-1.5 font-mono text-10 font-500 text-gray-9">
+    <span className="inline-flex h-17 shrink-0 items-center rounded-sm bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
       ARCH
     </span>
   );
@@ -24,7 +24,7 @@ function ArchChip() {
 // Same folded-direction chip text as detail-links: outgoing "label →",
 // incoming "← inverseLabel", symmetric "label ↔".
 function DirectionChip({ text }: { text: string }) {
-  return <Pill tone="secondary" label={text} className="h-5 rounded-md text-11/13 tracking-wider" />;
+  return <Pill tone="secondary" label={text} className="h-20 rounded-md text-11/13 tracking-wider" />;
 }
 
 // Toggling a chip PUTs the *whole* new set to /api/link-types/:id/target-types
@@ -48,7 +48,7 @@ function TargetTypeChips({
     return <p className="m-0 font-sans text-12/17 text-gray-9">No ticket types to target.</p>;
   }
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-6">
       {candidates.map((candidate) => {
         const active = selected.includes(candidate.id);
         return (
@@ -62,7 +62,7 @@ function TargetTypeChips({
             tone={active ? 'primary' : 'secondary'}
             variant={active ? 'subtle' : 'outline'}
             className={cn(
-              'h-6 border-1 px-2.5 transition-colors',
+              'h-24 border-1 px-10 transition-colors',
               active ? 'border-indigo-9' : 'border-gray-7 bg-surface-raised hover:bg-surface-inset',
             )}
           />
@@ -93,24 +93,24 @@ function CreateForm({
   const typeOptions: ComboOption[] = types.map((type) => ({ value: String(type.id), label: type.label }));
   const canSubmit = draft.itemTypeId !== null && draft.label.trim() !== '';
   return (
-    <div className="max-w-130 rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5">
-      <div className="flex flex-col gap-2.5">
+    <div className="max-w-520 rounded-xl border-1 border-gray-6 bg-surface-raised p-14">
+      <div className="flex flex-col gap-10">
         <div>
           <FieldLabel>Type</FieldLabel>
           <Combobox
-            className="mt-1 w-48"
+            className="mt-4 w-192"
             placeholder="Type"
             options={typeOptions}
             value={draft.itemTypeId === null ? null : String(draft.itemTypeId)}
             onChange={(value) => onChange({ ...draft, itemTypeId: value === null ? null : Number(value) })}
           />
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-10">
           <div className="flex-1">
             <FieldLabel htmlFor="new-link-outward">Outward label</FieldLabel>
             <Input
               id="new-link-outward"
-              className="mt-1"
+              className="mt-4"
               placeholder="Blocks"
               value={draft.label}
               onChange={(event) => onChange({ ...draft, label: event.target.value })}
@@ -120,7 +120,7 @@ function CreateForm({
             <FieldLabel htmlFor="new-link-inward">Inward label</FieldLabel>
             <Input
               id="new-link-inward"
-              className="mt-1"
+              className="mt-4"
               placeholder="Is blocked by"
               value={draft.inverseLabel}
               onChange={(event) => onChange({ ...draft, inverseLabel: event.target.value })}
@@ -133,7 +133,7 @@ function CreateForm({
           onChange={(event) => onChange({ ...draft, directional: event.target.checked })}
         />
       </div>
-      <div className="mt-3 flex justify-end gap-2">
+      <div className="mt-12 flex justify-end gap-8">
         <Button variant="ghost" size="sm" onClick={onCancel}>
           Cancel
         </Button>
@@ -159,14 +159,14 @@ function EditForm({
   pending: boolean;
 }) {
   return (
-    <div className="mt-2.5 max-w-130 rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5">
-      <div className="flex flex-col gap-2.5">
-        <div className="flex items-center gap-2.5">
+    <div className="mt-10 max-w-520 rounded-xl border-1 border-gray-6 bg-surface-raised p-14">
+      <div className="flex flex-col gap-10">
+        <div className="flex items-center gap-10">
           <div className="flex-1">
             <FieldLabel htmlFor="edit-link-outward">Outward label</FieldLabel>
             <Input
               id="edit-link-outward"
-              className="mt-1"
+              className="mt-4"
               value={draft.label}
               onChange={(event) => onChange({ ...draft, label: event.target.value })}
             />
@@ -175,7 +175,7 @@ function EditForm({
             <FieldLabel htmlFor="edit-link-inward">Inward label</FieldLabel>
             <Input
               id="edit-link-inward"
-              className="mt-1"
+              className="mt-4"
               value={draft.inverseLabel}
               onChange={(event) => onChange({ ...draft, inverseLabel: event.target.value })}
             />
@@ -187,7 +187,7 @@ function EditForm({
           onChange={(event) => onChange({ ...draft, directional: event.target.checked })}
         />
       </div>
-      <div className="mt-3 flex justify-end gap-2">
+      <div className="mt-12 flex justify-end gap-8">
         <Button variant="ghost" size="sm" onClick={onCancel}>
           Cancel
         </Button>
@@ -332,16 +332,16 @@ export function LinksTab({ board }: SettingsTabProps) {
   }
 
   return (
-    <section className="flex min-h-0 flex-col px-6 py-5.5">
-      <div className="mb-1.5 flex items-center gap-3">
+    <section className="flex min-h-0 flex-col px-24 py-22">
+      <div className="mb-6 flex items-center gap-12">
         <h1 className="m-0 font-sans text-20 font-600 text-gray-12">Links</h1>
         <span className="font-mono text-12/17 text-gray-9">{countLabel}</span>
       </div>
-      <p className="mb-4 mt-0 font-sans text-12/17 text-gray-9">
+      <p className="mb-16 mt-0 font-sans text-12/17 text-gray-9">
         Create link types owned by a ticket type, and choose which types they may target.
       </p>
 
-      <div className="mb-4">
+      <div className="mb-16">
         {creating ? (
           <CreateForm
             types={activeTypes}
@@ -363,7 +363,7 @@ export function LinksTab({ board }: SettingsTabProps) {
         )}
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-16">
         {linkTypes.length === 0 ? (
           <p className="m-0 font-sans text-12/17 text-gray-9">No link types yet.</p>
         ) : (
@@ -374,11 +374,11 @@ export function LinksTab({ board }: SettingsTabProps) {
               <section
                 key={linkType.id}
                 className={cn(
-                  'max-w-165 rounded-xl border-1 border-gray-6 bg-surface-raised p-3.5',
+                  'max-w-660 rounded-xl border-1 border-gray-6 bg-surface-raised p-14',
                   linkType.archivedAt && 'opacity-60',
                 )}
               >
-                <div className="flex flex-wrap items-center gap-2.5">
+                <div className="flex flex-wrap items-center gap-10">
                   <span className="truncate font-sans text-13/19 font-600 text-gray-12">{linkType.label}</span>
                   <span className="font-mono text-12/17 text-gray-9">{linkType.key}</span>
                   <DirectionChip
@@ -425,8 +425,8 @@ export function LinksTab({ board }: SettingsTabProps) {
                 ) : null}
 
                 {!linkType.archivedAt ? (
-                  <div className="mt-2.5">
-                    <SectionHeader title="Target types" className="mb-1.5" />
+                  <div className="mt-10">
+                    <SectionHeader title="Target types" className="mb-6" />
                     <TargetTypeChips
                       candidates={activeTypes}
                       selected={selected}

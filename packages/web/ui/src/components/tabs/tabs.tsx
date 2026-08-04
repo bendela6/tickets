@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
-import { axis, cn, HUE_TONES, over, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, cn, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
 import { Icon, type IconName, type IconSize } from '../icon';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
-const SCALE = axis('scale', HUE_TONES, 'indigo');
+const SCALE = axis('scale', HUES, 'indigo');
 
-export type TabsVariant = 'underline' | 'pill' | 'rail';
+export type TabsVariant = 'underline' | 'pill' | 'rail' | 'segment';
 export type TabsSize = 'sm' | 'md' | 'lg';
 
 /**
@@ -20,15 +20,24 @@ export type TabsSize = 'sm' | 'md' | 'lg';
 export type TabsRole = 'tablist' | 'group';
 
 const LIST_BOX: Record<TabsVariant, Record<TabsSize, string>> = {
-  underline: { sm: 'gap-3', md: 'gap-4.5', lg: 'gap-6' },
-  pill: { sm: 'gap-0.5 p-0.5', md: 'gap-1 p-0.75', lg: 'gap-1 p-1' },
-  rail: { sm: 'gap-0.5', md: 'gap-0.5', lg: 'gap-1' },
+  underline: { sm: 'gap-12', md: 'gap-18', lg: 'gap-24' },
+  pill: { sm: 'gap-2 p-2', md: 'gap-4 p-3', lg: 'gap-4 p-4' },
+  rail: { sm: 'gap-2', md: 'gap-2', lg: 'gap-4' },
+  segment: { sm: 'gap-2 p-2', md: 'gap-2 p-2', lg: 'gap-4 p-3' },
 };
 
 /** The rung, shared by the list and its tabs so the two cannot disagree. */
 const SIZE = axis('size', ['sm', 'md', 'lg'], 'md');
-/** Whether a tab is the selected one. */
-const STATE = axis('state', ['active', 'inactive'], 'inactive');
+/**
+ * Whether a tab is the selected one.
+ *
+ * `previous` is the one the selection just left. Only `segment` draws it
+ * differently — an outline where `active` is a fill — because a segmented
+ * control is the one place a set shows both where you are and where you came
+ * from at once. Every other variant reads it as `inactive`, which is what the
+ * `state === 'active' ? … : …` branches below already do.
+ */
+const STATE = axis('state', ['active', 'previous', 'inactive'], 'inactive');
 
 const listClass = variants({
   base: '',
@@ -43,6 +52,16 @@ const listClass = variants({
           cn('inline-flex items-center rounded-lg bg-surface-inset', LIST_BOX.pill[size]),
         ),
         rail: over(SIZE, (size) => cn('flex flex-col', LIST_BOX.rail[size])),
+        // A hairline container over the page ground, not a filled well. Its
+        // one-pixel edge is what separates the group from whatever it sits
+        // on, so `segment` works directly on the app background where `pill`
+        // needs a surface beneath it.
+        segment: over(SIZE, (size) =>
+          cn(
+            'inline-flex items-center rounded-lg border-1 border-gray-6',
+            LIST_BOX.segment[size],
+          ),
+        ),
       },
     },
   },
@@ -54,24 +73,31 @@ const listClass = variants({
 // each row is exactly what that variant rendered before the axis existed.
 const TAB_BOX: Record<TabsVariant, Record<TabsSize, string>> = {
   underline: {
-    sm: 'px-0.5 pt-1.25 pb-1.5 text-12/17',
-    md: 'px-0.5 pt-1.75 pb-2 text-13/19',
-    lg: 'px-1 pt-2.25 pb-2.5 text-15',
+    sm: 'px-2 pt-5 pb-6 text-12/17',
+    md: 'px-2 pt-7 pb-8 text-13/19',
+    lg: 'px-4 pt-9 pb-10 text-15',
   },
   pill: {
-    sm: 'rounded-md px-2 py-0.5 text-11/13 tracking-wider',
-    md: 'rounded-md px-3 py-1 text-12/17',
-    lg: 'rounded-md px-3.5 py-1.5 text-13/19',
+    sm: 'rounded-md px-8 py-2 text-11/13 tracking-wider',
+    md: 'rounded-md px-12 py-4 text-12/17',
+    lg: 'rounded-md px-14 py-6 text-13/19',
   },
   rail: {
-    sm: 'rounded-md px-2 py-1 text-left text-12/17',
-    md: 'rounded-md px-2.5 py-1.5 text-left text-13/19',
-    lg: 'rounded-md px-3 py-2 text-left text-15',
+    sm: 'rounded-md px-8 py-4 text-left text-12/17',
+    md: 'rounded-md px-10 py-6 text-left text-13/19',
+    lg: 'rounded-md px-12 py-8 text-left text-15',
+  },
+  // Mono, because a segment names a value — `1.5×`, `soft`, `dark` — where
+  // the other variants name a place.
+  segment: {
+    sm: 'rounded-md px-8 py-2 font-mono text-10',
+    md: 'rounded-md px-12 py-4 font-mono text-11',
+    lg: 'rounded-md px-14 py-6 font-mono text-12',
   },
 };
 
 const tabClass = variants({
-  base: 'inline-flex items-center gap-1.5',
+  base: 'inline-flex items-center gap-6',
   config: {
     variant: {
       default: 'underline',
@@ -105,6 +131,14 @@ const tabClass = variants({
               : 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
           ),
         ),
+        segment: over(SCALE, SIZE, STATE, (tone, size, state) =>
+          cn(
+            TAB_BOX.segment[size],
+            state === 'active' ? `bg-${tone}-3 font-500 text-${tone}-9` : '',
+            state === 'previous' ? `inset-ring-1 inset-ring-${tone}-9 text-${tone}-9` : '',
+            state === 'inactive' ? 'text-gray-11 hover:text-gray-12' : '',
+          ),
+        ),
       },
     },
   },
@@ -119,6 +153,7 @@ export function Tabs({
   role = 'tablist',
   items,
   value,
+  previousValue,
   onChange,
   label,
   className,
@@ -130,12 +165,18 @@ export function Tabs({
   role?: TabsRole;
   items: { value: string; label: ReactNode; icon?: IconName; badge?: ReactNode }[];
   value: string;
+  /**
+   * The item the selection just left, drawn outlined by `segment`. Ignored by
+   * every other variant, and by any value equal to `value` — leaving and
+   * arriving at the same item is not a journey.
+   */
+  previousValue?: string;
   onChange: (value: string) => void;
   label?: string;
   className?: string;
 }) {
   const isTablist = role === 'tablist';
-  const scale = TONE_SCALE[tone];
+  const scale = TONE_HUE[tone];
 
   return (
     <div
@@ -145,6 +186,7 @@ export function Tabs({
     >
       {items.map((item) => {
         const active = item.value === value;
+        const previous = !active && item.value === previousValue;
         return (
           <button
             key={item.value}
@@ -161,7 +203,7 @@ export function Tabs({
               variant,
               scale,
               size,
-              state: active ? 'active' : 'inactive',
+              state: active ? 'active' : previous ? 'previous' : 'inactive',
             })}
           >
             {item.icon ? <Icon name={item.icon} size={GLYPH[size]} /> : null}

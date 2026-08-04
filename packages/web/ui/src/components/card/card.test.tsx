@@ -30,14 +30,14 @@ describe('Card', () => {
 
   it('keeps a caller-supplied className on each part', () => {
     render(
-      <Card data-testid="c" className="mt-2">
-        <CardHeader data-testid="h" className="mt-3">h</CardHeader>
-        <CardBody data-testid="b" className="mt-4">b</CardBody>
+      <Card data-testid="c" className="mt-8">
+        <CardHeader data-testid="h" className="mt-12">h</CardHeader>
+        <CardBody data-testid="b" className="mt-16">b</CardBody>
       </Card>,
     );
-    expect(screen.getByTestId('c').className).toContain('mt-2');
-    expect(screen.getByTestId('h').className).toContain('mt-3');
-    expect(screen.getByTestId('b').className).toContain('mt-4');
+    expect(screen.getByTestId('c').className).toContain('mt-8');
+    expect(screen.getByTestId('h').className).toContain('mt-12');
+    expect(screen.getByTestId('b').className).toContain('mt-16');
   });
 
   it('forwards unknown props to the underlying div', () => {

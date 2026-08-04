@@ -7,16 +7,16 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { axis, cn, HUE_TONES, over, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, cn, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
 import { Icon, type IconName, type IconSize } from '../icon';
 
 /** How loudly the tone reads. These used to be `ToneEmphasis`, defined next to
- *  the table of finished class strings; with that table gone the four names
- *  belong to the component that offers them. Three are shared with Button; the
- *  fourth is `text` where a button's is `ghost`. */
-export type PillVariant = 'subtle' | 'solid' | 'outline' | 'text';
+ *  the table of finished class strings; with that table gone the five names
+ *  belong to the component that offers them. Three are shared with Button;
+ *  `text` and `tint` are Pill-only, where a button's fourth is `ghost`. */
+export type PillVariant = 'subtle' | 'solid' | 'outline' | 'text' | 'tint';
 
-export type PillSize = 'sm' | 'md' | 'lg';
+export type PillSize = 'xs' | 'sm' | 'md' | 'lg';
 
 /** Corner treatment. `square` lines up with the surrounding controls; `round`
  *  reads as a tag or a count. Neither is a size — they used to be spelled
@@ -25,9 +25,9 @@ export type PillShape = 'square' | 'round';
 
 // A Pill rests on neutral where a Button rests on primary — the resting ramp
 // is the only per-component decision the tone axis leaves open.
-const NEUTRAL_SCALE = axis('scale', HUE_TONES, 'gray');
+const NEUTRAL_SCALE = axis('scale', HUES, 'gray');
 
-// The four variants spell their own rungs, so hover/opacity treatments can be
+// The five variants spell their own rungs, so hover/opacity treatments can be
 // added later without a second vocabulary. A test renders Pill and Button side
 // by side for every tone, since two components asking for the same treatment
 // must not disagree about which rungs it uses.
@@ -41,6 +41,7 @@ const pillClass = variants({
         solid: over(NEUTRAL_SCALE, (tone) => `bg-${tone}-9 text-${tone}-contrast`),
         outline: over(NEUTRAL_SCALE, (tone) => `border-2 border-${tone}-7 text-${tone}-11`),
         text: over(NEUTRAL_SCALE, (tone) => `text-${tone}-11`),
+        tint: over(NEUTRAL_SCALE, (tone) => `bg-${tone}-9/15 text-${tone}-11`),
       },
     },
     shape: {
@@ -60,16 +61,17 @@ const pillClass = variants({
     size: {
       default: 'md',
       options: {
-        sm: 'h-4.5 gap-1 px-1.75 text-11/13 tracking-wider leading-none',
-        md: 'h-5.5 gap-1.5 px-2.25 text-12/17 leading-none',
-        lg: 'h-7 gap-2 px-3 text-13/19 leading-none',
+        xs: 'h-16 gap-4 px-8 text-9/11 tracking-widest leading-none',
+        sm: 'h-18 gap-4 px-7 text-11/13 tracking-wider leading-none',
+        md: 'h-22 gap-6 px-9 text-12/17 leading-none',
+        lg: 'h-28 gap-8 px-12 text-13/19 leading-none',
       },
     },
   },
 });
 
 // The leading glyph scales with the pill rather than being pinned at 10px.
-const ICON_SIZE: Record<PillSize, IconSize> = { sm: '2xs', md: 'xs', lg: 'sm' };
+const ICON_SIZE: Record<PillSize, IconSize> = { xs: '2xs', sm: '2xs', md: 'xs', lg: 'sm' };
 
 // `children` is omitted because the content is `label`; `color` because a
 // Pill's colour comes from `tone` and the DOM attribute of that name would
@@ -125,7 +127,7 @@ export const Pill = forwardRef<HTMLElement, PillProps>(function Pill(
       {isValidElement(icon) ? icon : icon ? <Icon name={icon} size={ICON_SIZE[size]} /> : null}
       {strikethrough ? <s className="line-through">{label}</s> : label}
       {trailing}
-      {chevron ? <Icon name="chevron-down" size={ICON_SIZE[size]} className="-mr-0.5" /> : null}
+      {chevron ? <Icon name="chevron-down" size={ICON_SIZE[size]} className="-mr-2" /> : null}
     </>
   );
   const classes = (extra?: string) =>
@@ -133,7 +135,7 @@ export const Pill = forwardRef<HTMLElement, PillProps>(function Pill(
       variant,
       shape,
       size,
-      scale: TONE_SCALE[tone],
+      scale: TONE_HUE[tone],
       className: cn(extra, className),
     });
 

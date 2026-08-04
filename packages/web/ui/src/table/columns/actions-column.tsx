@@ -26,11 +26,11 @@ type ActionsColumnOpts = { items: ActionItem[] };
  * is passed as a child `<Icon>` rather than a prop. There is also no
  * icon-only size rung; per the button gallery ("icon-only is geometry, not a
  * rung"), a size is squared off with `w-<n> p-0` matching that size's height
- * (`sm` is `h-7`, so `w-7 p-0`).
+ * (`sm` is `h-28`, so `w-28 p-0`).
  */
 export function ActionsColumn(opts: ActionsColumnOpts): Renderer<unknown> {
   return ({ row }) => (
-    <div className="flex items-center justify-end gap-1">
+    <div className="flex items-center justify-end gap-4">
       {opts.items.map((item) => (
         <Button
           key={item.label}
@@ -39,7 +39,7 @@ export function ActionsColumn(opts: ActionsColumnOpts): Renderer<unknown> {
           tone={item.tone}
           aria-label={item.label}
           title={item.label}
-          className="w-7 p-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+          className="w-28 p-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
           onClick={(e) => {
             // The row opens a drawer on click; without this an action would do
             // its own job and open the drawer behind it.

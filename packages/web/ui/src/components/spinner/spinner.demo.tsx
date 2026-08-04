@@ -8,7 +8,7 @@ export const states = [
   {
     name: 'Sizes',
     render: () => (
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-16">
         <Spinner size="xs" tone="primary" />
         <Spinner size="md" tone="primary" />
         <Spinner size="xl" tone="primary" />
@@ -21,7 +21,7 @@ export const states = [
     // a grid of samples rather than a row that should widen its container.
     name: 'Tones',
     render: () => (
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="flex flex-wrap items-center gap-16">
         {TONE_NAMES.map((tone) => (
           <Spinner key={tone} tone={tone} />
         ))}

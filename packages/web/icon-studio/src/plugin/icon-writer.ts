@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
 import type { Plugin } from 'vite';
-import { DEFAULT_CONFIG } from '../config';
+import { DEFAULT_DOC } from '../doc';
 import { MAX_BYTES } from './validate';
 import { runGenerate } from './write';
 
@@ -75,8 +75,12 @@ export function iconWriter({ repoRoot }: { repoRoot: string }): Plugin {
             send(res, 200, JSON.parse(await readFile(file, 'utf8')));
           } catch (error) {
             if (isFsError(error) && error.code === 'ENOENT') {
-              // No config file committed yet — hand back the locked defaults.
-              send(res, 200, DEFAULT_CONFIG);
+              // No config file committed yet — hand back the locked defaults,
+              // already in the `IconDoc` shape. The client's `toDoc` accepts
+              // both shapes, but serving the retired `MarkConfig` here just
+              // to have the client immediately migrate it on every fresh
+              // checkout was makework the moment `DEFAULT_DOC` existed.
+              send(res, 200, DEFAULT_DOC);
               return;
             }
             // The file exists but couldn't be read or parsed. Falling back

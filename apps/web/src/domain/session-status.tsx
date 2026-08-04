@@ -30,7 +30,7 @@ const MAP: Record<SessionStatus, Entry> = {
   awaiting_input: {
     tone: 'orange',
     variant: 'solid',
-    className: 'font-600 animate-ai-pulse',
+    className: 'font-600 animate-pulse',
     icon: <Icon name="diamond" size="2xs" />,
     label: 'awaiting input',
   },

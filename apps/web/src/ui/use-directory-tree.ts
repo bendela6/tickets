@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useTreeView, type TreeNode, type UseTreeViewResult } from '@tickets/ui';
 
 import { workdirDirQuery } from '../api/use-workdir-dirs';
 import type { WorkdirDirEntry, WorkdirRoot } from '../api/types';
@@ -33,160 +34,158 @@ export function useDirectoryTree(opts: {
 }) {
   const { roots, selected, onSelect } = opts;
   const queryClient = useQueryClient();
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [nodes, setNodes] = useState<Record<string, NodeState>>({});
-  const [focus, setFocus] = useState<string | null>(roots[0]?.path ?? null);
-
-  // Mirrors of the latest state for reads inside `toggle`, so the decision of
-  // "expand vs collapse, load vs reuse" is made from fresh state BEFORE any
-  // setState call, never from inside a nested state-updater body (those must
-  // stay pure — StrictMode double-invokes them, which would double-fire `load`).
-  const expandedRef = useRef(expanded);
-  expandedRef.current = expanded;
   const nodesRef = useRef(nodes);
   nodesRef.current = nodes;
 
-  // Consumers supply `roots` from an async query that starts empty; sync the
-  // initial focus once roots arrive instead of only at mount. Never clobbers
-  // a focus the user (or keyboard nav) already set.
-  useEffect(() => {
-    if (focus == null && roots[0]) setFocus(roots[0].path);
-  }, [focus, roots]);
+  // Populated right after `tree` exists, below. `load`'s error branches need
+  // to revert the hook's own expansion exception when a load fails — but
+  // `load` is referenced by `useTreeView`'s `onExpand` option, which is
+  // constructed before `tree` itself exists. A ref breaks that ordering
+  // cycle: the closures below only read `treeRef.current` at call time
+  // (always after `tree` has been assigned), never at definition time.
+  const treeRef = useRef<UseTreeViewResult | null>(null);
 
+  // A node that failed to load must not keep the hook's expansion exception:
+  // otherwise `useTreeView`'s internal model still says "expanded" while the
+  // rendered row (composed with `!state.error` below) says "collapsed", and
+  // arrow-key navigation inside the hook's own `onKeyDown` acts on the
+  // model's belief, not on what is on screen (ArrowLeft would try to
+  // collapse an already-closed-looking row instead of jumping to the
+  // parent). Reverting the exception here — not just patching the render —
+  // keeps both in sync AND leaves the node genuinely "not expanded" so the
+  // next caret click reads as an expand attempt and retries.
+  //
+  // Guarded on "was still expanded when this settled": if the user manually
+  // collapsed the node while its load was in flight, this must not
+  // re-expand it out from under them.
+  const revertIfStillExpanded = useCallback((path: string) => {
+    const wasExpanded = treeRef.current?.rows.find((r) => r.id === path)?.expanded;
+    if (wasExpanded) treeRef.current?.toggle(path);
+  }, []);
+
+  // A previously-parked worry: two overlapping loads for the same path (the
+  // user collapses and re-expands a node while its first load is still in
+  // flight) could let a stale failure force-collapse a node whose retry
+  // succeeded. Investigated and found unreachable — NOT by anything in this
+  // hook, but by `queryClient.fetchQuery`'s own dedup: concurrent fetches on
+  // the same query key share one in-flight promise, so expand→collapse→
+  // re-expand while loading produces exactly one request, and every caller
+  // resolves/rejects together. `revertIfStillExpanded`'s toggle is also
+  // idempotent (unconditional add/delete of the exception), so even a
+  // same-outcome double-revert would be harmless. If `load` is ever changed
+  // to bypass `fetchQuery` (a raw `fetch`, a different cache, etc.), this
+  // safety goes with it and the two-overlapping-loads case needs its own fix.
   const load = useCallback(
     async (path: string) => {
-      setNodes((n) => ({ ...n, [path]: { ...n[path], loading: true } }));
+      // Clears any error left from a previous attempt so the retry guard
+      // below (in `onExpand`) is deciding from this attempt's state, not a
+      // stale one.
+      setNodes((n) => ({ ...n, [path]: { ...n[path], loading: true, error: undefined } }));
       try {
         const listing = await queryClient.fetchQuery(workdirDirQuery(path));
         setNodes((n) => ({ ...n, [path]: { entries: listing.entries, error: listing.error, loading: false } }));
+        // The API's real error shape (apps/api/src/workdir/workdir-fs.ts) is
+        // HTTP 200 with `entries: []` AND an inline `error` — EACCES/EPERM/
+        // ENOENT all collapse to this, never a thrown rejection. That path
+        // needs the same model-revert as the transport-failure `catch` below.
+        if (listing.error) revertIfStillExpanded(path);
       } catch {
         setNodes((n) => ({ ...n, [path]: { error: 'could not read', loading: false } }));
+        revertIfStillExpanded(path);
       }
     },
-    [queryClient],
+    [queryClient, revertIfStillExpanded],
   );
 
-  const toggle = useCallback(
-    (path: string) => {
-      // Decide BEFORE touching state. Reading refs here (not the `expanded`/
-      // `nodes` closed over by this render) means the decision reflects the
-      // latest committed state even when this callback is invoked more than
-      // once (e.g. StrictMode), and `load` below runs exactly once, outside
-      // any updater body.
-      const isExpanded = expandedRef.current.has(path);
-      if (isExpanded) {
-        const hadError = Boolean(nodesRef.current[path]?.error);
-        setExpanded((prev) => {
-          const next = new Set(prev);
-          next.delete(path);
-          return next;
-        });
-        // errored nodes drop their cache so a re-expand retries (design rule)
-        if (hadError) {
-          setNodes((n) => ({ ...n, [path]: { loading: false } }));
-        }
-      } else {
-        const needsLoad = !nodesRef.current[path]?.entries;
-        setExpanded((prev) => {
-          const next = new Set(prev);
-          next.add(path);
-          return next;
-        });
-        if (needsLoad) void load(path);
-      }
-    },
-    [load],
-  );
-
-  const select = useCallback((path: string) => { setFocus(path); onSelect(path); }, [onSelect]);
-
-  const rows = useMemo<VisibleRow[]>(() => {
-    const out: VisibleRow[] = [];
-    const walk = (path: string, depth: number, root?: WorkdirRoot) => {
+  // An errored node reports NO children, so useTreeView will ask to load again
+  // on the next expand — which is the retry rule, expressed as data rather
+  // than as a special case in a toggle handler.
+  const treeRoots = useMemo<TreeNode[]>(() => {
+    // `label` carries the typeahead affordance (WAI-ARIA first-letter jump):
+    // a root row types against its symbol, everything else against its
+    // basename — the same string the pre-migration code typed against.
+    const build = (path: string, label: string): TreeNode => {
       const state = nodes[path];
-      const isExpanded = expanded.has(path) && !state?.error;
-      out.push({
-        path,
-        label: root ? root.symbol : basename(path),
-        depth,
-        isRoot: Boolean(root),
-        symbol: root?.symbol,
-        annotation: root?.annotation,
-        expanded: isExpanded,
-        loading: Boolean(state?.loading),
-        error: state?.error,
-        selected: selected === path,
-        focused: focus === path,
-      });
-      if (isExpanded && state?.entries) {
-        if (state.entries.length === 0) {
-          out.push({ path: `${path}\u0000empty`, label: '', depth: depth + 1, isRoot: false, expanded: false, loading: false, selected: false, focused: false, note: '— empty —' });
-        } else {
-          for (const child of state.entries) walk(child.path, depth + 1);
-        }
+      if (state?.error) return { id: path, label };
+      if (!state?.entries) return { id: path, label };
+      if (state.entries.length === 0) {
+        // NUL is deliberately un-representable in a filesystem path, so this
+        // synthetic child id can never collide with a real sibling entry —
+        // unlike a plain space, which a directory could legitimately be
+        // named with.
+        return { id: path, label, children: [{ id: `${path}\u0000empty`, inert: true }] };
       }
+      return { id: path, label, children: state.entries.map((e) => build(e.path, basename(e.path))) };
     };
-    for (const root of roots) walk(root.path, 0, root);
-    return out;
-  }, [roots, nodes, expanded, selected, focus]);
+    return roots.map((r) => build(r.path, r.symbol));
+  }, [roots, nodes]);
 
-  const interactive = useMemo(() => rows.filter((r) => !r.note), [rows]);
-
-  const onKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      const i = interactive.findIndex((r) => r.path === focus);
-      const move = (delta: number) => {
-        const next = interactive[Math.max(0, Math.min(interactive.length - 1, i + delta))];
-        if (next) setFocus(next.path);
-      };
-      switch (e.key) {
-        case 'ArrowDown': e.preventDefault(); move(1); break;
-        case 'ArrowUp': e.preventDefault(); move(-1); break;
-        case 'Home': e.preventDefault(); if (interactive[0]) setFocus(interactive[0].path); break;
-        case 'End': e.preventDefault(); { const last = interactive.at(-1); if (last) setFocus(last.path); } break;
-        case 'ArrowRight': {
-          e.preventDefault();
-          const row = interactive[i];
-          if (row && !row.expanded) toggle(row.path);
-          else move(1);
-          break;
-        }
-        case 'ArrowLeft': {
-          e.preventDefault();
-          const row = interactive[i];
-          if (row?.expanded) {
-            toggle(row.path);
-          } else if (row) {
-            // Parent is the nearest PRECEDING row with a strictly smaller depth —
-            // NOT `move(-1)`, which would land on the previous visible row (a
-            // sibling, when one exists) instead of the actual parent. If none is
-            // found (already at a root), stay put.
-            for (let j = i - 1; j >= 0; j--) {
-              const candidate = interactive[j];
-              if (candidate && candidate.depth < row.depth) {
-                setFocus(candidate.path);
-                break;
-              }
-            }
-          }
-          break;
-        }
-        case 'Enter':
-        case ' ': {
-          e.preventDefault();
-          if (focus) select(focus);
-          break;
-        }
-        default:
-          if (e.key.length === 1 && /[a-z0-9]/i.test(e.key)) {
-            const start = i + 1;
-            const found = [...interactive.slice(start), ...interactive.slice(0, start)].find((r) => r.label.toLowerCase().startsWith(e.key.toLowerCase()));
-            if (found) { e.preventDefault(); setFocus(found.path); }
-          }
-      }
+  const tree = useTreeView({
+    roots: treeRoots,
+    selectedId: selected,
+    onSelect,
+    onExpand: (path) => {
+      const state = nodesRef.current[path];
+      // An errored node must be reloadable even when the API's inline-error
+      // shape already gave it `entries: []` — an empty array is truthy, so
+      // checking only "no entries yet" would treat it as already loaded and
+      // never retry.
+      if (!state?.entries || state.error) void load(path);
     },
-    [interactive, focus, toggle, select],
+    idPrefix: 'dtree',
+  });
+  treeRef.current = tree;
+
+  const rootByPath = useMemo(() => new Map(roots.map((r) => [r.path, r])), [roots]);
+
+  const rows = useMemo<VisibleRow[]>(
+    () =>
+      tree.rows.map((r) => {
+        if (r.inert) {
+          return {
+            path: r.id,
+            label: '',
+            depth: r.depth,
+            isRoot: false,
+            expanded: false,
+            loading: false,
+            selected: false,
+            focused: false,
+            note: '— empty —',
+          };
+        }
+        const root = rootByPath.get(r.id);
+        const state = nodes[r.id];
+        return {
+          path: r.id,
+          label: root ? root.symbol : basename(r.id),
+          depth: r.depth,
+          isRoot: Boolean(root),
+          symbol: root?.symbol,
+          annotation: root?.annotation,
+          // `useTreeView` only knows the user asked to expand this node — it
+          // has no error concept. An errored node must still render CLOSED
+          // (collapsed caret, aria-expanded=false) even though the "expand"
+          // exception is recorded, because there is nothing under it to show.
+          expanded: r.expanded && !state?.error,
+          loading: Boolean(state?.loading),
+          error: state?.error,
+          selected: r.selected,
+          focused: r.focused,
+        };
+      }),
+    [tree.rows, rootByPath, nodes],
   );
 
-  return { rows, toggle, select, focus, setFocus, onKeyDown };
+  return {
+    rows,
+    toggle: tree.toggle,
+    select: tree.select,
+    focus: tree.focusId,
+    setFocus: tree.setFocusId,
+    onKeyDown: tree.onKeyDown,
+    rowElementId: tree.rowElementId,
+    activeDescendant: tree.activeDescendant,
+  };
 }

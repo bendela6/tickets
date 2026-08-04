@@ -54,20 +54,20 @@ test('composite fields hang the ring on focus-within, plain ones on focus', () =
 
 test('every rung sets height, radius and font size together', () => {
   const { rerender } = render(<Input size="sm" aria-label="f" />);
-  expect(screen.getByLabelText('f')).toHaveClass('h-7', 'rounded-md', 'text-13', 'px-2.25');
+  expect(screen.getByLabelText('f')).toHaveClass('h-28', 'rounded-md', 'text-13', 'px-9');
   rerender(<Input size="md" aria-label="f" />);
-  expect(screen.getByLabelText('f')).toHaveClass('h-9', 'rounded-lg', 'text-14', 'px-3');
+  expect(screen.getByLabelText('f')).toHaveClass('h-36', 'rounded-lg', 'text-14', 'px-12');
   rerender(<Input size="lg" aria-label="f" />);
-  expect(screen.getByLabelText('f')).toHaveClass('h-11', 'rounded-xl', 'text-15', 'px-3.5');
+  expect(screen.getByLabelText('f')).toHaveClass('h-44', 'rounded-xl', 'text-15', 'px-14');
 });
 
 test('textarea rungs set a floor and evict the single-line height', () => {
   const { rerender } = render(<Textarea size="sm" aria-label="body" />);
   const at = () => screen.getByLabelText('body');
-  expect(at()).toHaveClass('h-auto', 'min-h-14');
-  expect(at()).not.toHaveClass('h-7');
+  expect(at()).toHaveClass('h-auto', 'min-h-56');
+  expect(at()).not.toHaveClass('h-28');
   rerender(<Textarea size="md" aria-label="body" />);
-  expect(at()).toHaveClass('h-auto', 'min-h-18');
+  expect(at()).toHaveClass('h-auto', 'min-h-72');
   rerender(<Textarea size="lg" aria-label="body" />);
-  expect(at()).toHaveClass('h-auto', 'min-h-22');
+  expect(at()).toHaveClass('h-auto', 'min-h-88');
 });

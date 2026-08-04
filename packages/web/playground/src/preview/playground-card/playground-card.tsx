@@ -34,8 +34,8 @@ export const PlaygroundCard = forwardRef<
   }
 >(function PlaygroundCard({ component, playground, values }, ref) {
   return (
-    <div className="flex flex-col gap-2.5">
-      <div className="flex items-baseline justify-between gap-4">
+    <div className="flex flex-col gap-10">
+      <div className="flex items-baseline justify-between gap-16">
         <span className="font-mono text-11/13 tracking-wider uppercase tracking-widest text-gray-9">
           PLAYGROUND
         </span>
@@ -51,7 +51,7 @@ export const PlaygroundCard = forwardRef<
         ref={ref}
         role="region"
         aria-label="Playground preview"
-        className="flex min-h-32 items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised p-7"
+        className="flex min-h-128 items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised p-28"
       >
         {playground.render(values as never)}
       </div>

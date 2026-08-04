@@ -18,5 +18,5 @@ export const playground = definePlayground({
     tone: select([...TONE_NAMES], { allowNone: true }),
     disabled: boolean(),
   },
-  render: (v) => <div className="w-72"><Textarea {...v} /></div>,
+  render: (v) => <div className="w-288"><Textarea {...v} /></div>,
 });

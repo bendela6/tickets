@@ -1,4 +1,4 @@
-// color-mix() recipe strings for runtimeStyle custom properties. Per-element
+// color-mix() recipe strings for inline custom properties. Per-element
 // palette colors (zones, entities, edges) can't become static theme tokens: a
 // var() embedded in a :root token is substituted at :root, so it would ignore
 // the element's own color. Building the final string in JS keeps the recipe
