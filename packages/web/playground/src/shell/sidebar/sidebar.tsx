@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { cn, SidePanel, type CollectedDemo } from '@tickets/ui';
+import { Button, cn, Input, SidePanel, type CollectedDemo } from '@tickets/ui';
 import type { GalleryNavigation } from '../navigation';
 
 type LiveDemo = Extract<CollectedDemo, { slug: string }>;
@@ -47,22 +47,28 @@ export function Sidebar({
       className="sticky top-0 z-40 h-screen bg-surface-raised"
     >
       <nav className="pg-scroll flex min-w-0 flex-1 flex-col gap-16 overflow-y-auto overflow-x-hidden px-16 py-24">
-        <div className="flex h-30 min-w-0 shrink-0 items-center gap-6 rounded-lg border-1 border-gray-6 bg-surface-inset px-6 pl-10">
-          <input
-            type="text"
-            placeholder="Filter components…"
-            value={filterQuery}
-            onChange={(e) => setFilterQuery(e.target.value)}
-            className="min-w-0 flex-1 bg-transparent text-13/19 text-gray-11 outline-none placeholder:text-gray-9"
-          />
-          <button
-            type="button"
-            onClick={onOpenPalette}
-            className="h-18 shrink-0 rounded-sm border-1 border-gray-7 bg-surface-raised px-6 text-11/13 tracking-wider text-gray-9 hover:text-gray-11"
-          >
-            ⌘K
-          </button>
-        </div>
+        <Input
+          size="sm"
+          type="text"
+          aria-label="Filter components"
+          placeholder="Filter components…"
+          value={filterQuery}
+          onChange={(e) => setFilterQuery(e.target.value)}
+          className="shrink-0"
+          // The shortcut hint belongs inside the field's border — it is about
+          // this field, not next to it.
+          trailing={
+            <Button
+              variant="outline"
+              tone="neutral"
+              size="sm"
+              onClick={onOpenPalette}
+              className="h-18 shrink-0 px-6 text-11/13 tracking-wider"
+            >
+              ⌘K
+            </Button>
+          }
+        />
 
         <a
           {...linkProps({ slug: null })}
