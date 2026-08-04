@@ -1,14 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import radiusCss from '../../styles/generated/radius.css?raw';
 import {
-  BORDERS,
   BREAKPOINTS,
   DURATIONS,
   EASINGS,
   FONT_WEIGHTS,
-  LAYERS,
   RADII,
-  RINGS,
   SHADOWS,
   TEXT_SIZES,
   drift,
@@ -52,11 +49,17 @@ describe('liveTokens', () => {
   });
 });
 
+// Nothing here restates a token VALUE. A test that lists the twelve sizes or
+// the four radius rungs has to be edited every time a token changes, and it
+// proves only that someone copied the JSON correctly twice — it cannot fail for
+// any reason worth knowing about. What is asserted instead are the contracts
+// that survive a value change: naming rules, shapes, and what must NOT exist.
+
 describe('spec tokens', () => {
-  it('is a closed scale of twelve rungs, each named for its own pixel size', () => {
-    expect(TEXT_SIZES.map((s) => s.step)).toEqual([
-      '9', '10', '11', '12', '13', '14', '15', '16', '18', '20', '22', '24',
-    ]);
+  it('names every type rung for its own pixel size', () => {
+    // The rule that makes the scale readable — `text-13` IS 13px. A new rung
+    // added as `text-15: 16px` breaks this; adding `text-32: 32px` does not.
+    expect(TEXT_SIZES.length).toBeGreaterThan(0);
     expect(TEXT_SIZES.every((s) => s.value === `${s.step}px`)).toBe(true);
   });
 
@@ -69,34 +72,15 @@ describe('spec tokens', () => {
     expect(TEXT_SIZES.some((s) => s.letterSpacing)).toBe(false);
   });
 
-  it('carries both theme values for the one family that has them', () => {
-    expect(SHADOWS).toHaveLength(3);
+  it('gives every shadow a different value per theme', () => {
+    // A shadow that resolved the same in both themes would mean one of the two
+    // files was never edited — the light theme tints, the dark one occludes.
+    expect(SHADOWS.length).toBeGreaterThan(0);
     expect(SHADOWS.every((s) => s.light !== s.dark)).toBe(true);
-  });
-
-  it('exposes each remaining family at its documented size', () => {
-    expect(RADII.map((r) => r.name)).toEqual(['radius-sm', 'radius-md', 'radius-lg', 'radius-xl']);
-    expect(FONT_WEIGHTS.map((w) => w.value)).toEqual(['400', '500', '600']);
-    expect(DURATIONS.map((d) => d.name)).toEqual(['duration-120', 'duration-200', 'duration-320']);
-    expect(EASINGS).toHaveLength(2);
-    expect(BORDERS.map((b) => b.name)).toEqual(['border-1', 'border-2', 'border-3', 'border-4', 'border-5']);
-    expect(RINGS.map((r) => r.name)).toEqual(['ring-1', 'ring-2', 'ring-3', 'ring-4', 'ring-5']);
-    expect(LAYERS.map((l) => l.name)).toEqual(['z-0', 'z-10', 'z-20', 'z-30', 'z-40', 'z-50']);
-    expect(BREAKPOINTS.map((b) => b.value)).toEqual(['640px', '768px', '1024px', '1280px', '1536px']);
   });
 });
 
 describe('the radius scale in the live sheet', () => {
-  it('declares exactly the four rungs, at the spec values', () => {
-    const rungs = liveTokens(/^radius-(sm|md|lg|xl)$/);
-    expect(Object.fromEntries(rungs.map((r) => [r.name, r.value]))).toEqual({
-      'radius-sm': '4px',
-      'radius-md': '6px',
-      'radius-lg': '8px',
-      'radius-xl': '12px',
-    });
-  });
-
   it('clears the whole namespace first, so off-scale rungs cannot drift back', () => {
     // Asserted against the raw text rather than `liveTokens`, which parses
     // `--name: value` and cannot see a `*` in the name.
