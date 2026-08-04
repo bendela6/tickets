@@ -48,12 +48,12 @@ export function TicketDispatch({ itemId, actorId }: { itemId: number; actorId?: 
   }
 
   return (
-    <span className="flex items-center gap-2">
+    <span className="flex items-center gap-8">
       {live ? (
         <Link
           to="/agents/$sessionId"
           params={{ sessionId: String(live.id) }}
-          className="inline-flex items-center gap-1.5"
+          className="inline-flex items-center gap-6"
           title="an agent is working this ticket"
         >
           <span className="font-mono text-12/17 text-gray-9">✳ {live.title}</span>
@@ -70,7 +70,7 @@ export function TicketDispatch({ itemId, actorId }: { itemId: number; actorId?: 
           <DialogDescription>
             The agent runs in its own worktree and comments its result back here.
           </DialogDescription>
-          <div className="mt-4 flex flex-col gap-3">
+          <div className="mt-16 flex flex-col gap-12">
             <Combobox
               options={(agents.data ?? []).map((a) => ({ value: String(a.id), label: a.name }))}
               value={agentId}

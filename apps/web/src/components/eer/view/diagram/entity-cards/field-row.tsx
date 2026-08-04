@@ -3,7 +3,7 @@ import { columnRoles, type ColumnRole } from '../../../engine/model/column-roles
 import { portKey } from '../../../engine/geometry/port-key';
 import { useDiagramDispatch } from '../../../state/diagram-context';
 import type { Column, Entity, Side } from '../../../engine/model/types';
-import { cn, runtimeStyle } from '@tickets/ui';
+import { cn, Pill } from '@tickets/ui';
 
 function Port({
   e,
@@ -27,7 +27,7 @@ function Port({
   return (
     <span
       className={cn(
-        'absolute top-1/2 z-4 h-4 w-1 -translate-y-1/2',
+        'absolute top-1/2 z-4 h-16 w-4 -translate-y-1/2',
         'bg-gray-10',
         'transition-(--transition-paint) duration-120',
         connected.has(key) ? 'opacity-100' : 'opacity-0',
@@ -44,7 +44,7 @@ function Port({
       data-field={f.name}
       data-side={side}
       data-connected={connected.has(key) ? '' : undefined}
-      style={off > 0 ? runtimeStyle({ '--port-height': `${2 * off + 11}px` }) : undefined}
+      style={off > 0 ? { '--port-height': `${2 * off + 11}px` } : undefined}
     />
   );
 }
@@ -68,7 +68,7 @@ export function FieldRow({
   const badge = role?.pk ? 'pk' : role?.fk ? 'fk' : null;
   return (
     <div
-      className="relative flex h-6 cursor-default items-center gap-2 px-3 text-12 hover:bg-surface-inset"
+      className="relative flex h-24 cursor-default items-center gap-8 px-12 text-12 hover:bg-surface-inset"
       data-entity={e.id}
       data-field={f.name}
       data-index={String(index)}
@@ -84,17 +84,13 @@ export function FieldRow({
       }}
     >
       {badge && (
-        <span
-          className={cn(
-            'shrink-0 text-center font-mono text-9 font-600 tracking-wide text-gray-11',
-            {
-              'text-yellow-9': badge === 'pk',
-              'text-green-9': badge === 'fk',
-            },
-          )}
-        >
-          {badge.toUpperCase()}
-        </span>
+        <Pill
+          variant="text"
+          size="xs"
+          tone={badge === 'pk' ? 'yellow' : 'green'}
+          label={badge.toUpperCase()}
+          className="shrink-0 justify-center font-mono font-600"
+        />
       )}
       <span
         className={cn('truncate font-mono text-gray-12', {

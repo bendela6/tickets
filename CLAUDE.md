@@ -1,12 +1,12 @@
 # tickets
 
-pnpm + turbo monorepo. `apps/api` (Fastify-style API, port 4600) · `apps/web` (React 19, TanStack Router/Query, Tailwind v4 via vite plugin, radix-ui, IBM Plex fonts) · `apps/icon` (the canvas icon editor, :4670, client-only) · `apps/mcp` (MCP server) · `packages/` incl. `@tickets/db`.
+pnpm + turbo monorepo. `apps/api` (Fastify-style API, port 4600) · `apps/web` (React 19, TanStack Router/Query, Tailwind v4 via vite plugin, radix-ui, IBM Plex fonts) · `apps/mcp` (MCP server) · `packages/` incl. `@tickets/db`.
 
-## UI redesign (in progress, branch `redesign`)
+## Design system — Instrument
 
-- Total redesign to the **Instrument** design system. Spec of record: `docs/design/design-system.html` (exported from the Claude Design project). Brief: `docs/superpowers/specs/2026-07-05-ui-redesign-design.md`; plans in `docs/superpowers/plans/`.
-- Locked decisions: full-stack scope; **replace per phase** (legacy `styles/globals.css` screens coexist with redesigned ones until ported); extend vocabulary + seed data; verify by measurement, not screenshot judgment; autonomous execution with a commit per task.
-- **Tailwind preflight is ON** — `tokens.css` imports `tailwindcss/preflight.css` into the `base` layer. (This line said OFF long after the redesign turned it on; it cost real debugging time, so check `tokens.css` rather than trusting prose.)
+- The redesign is **complete** (2026-07-07): every screen is Instrument, the legacy `styles/globals.css` is deleted, and Tailwind **preflight is ON**. Spec of record: `docs/design/design-system.html` (exported from the Claude Design project). Brief: `docs/superpowers/specs/2026-07-05-ui-redesign-design.md`; plans in `docs/superpowers/plans/`.
+- Shared components and tokens live in `packages/web/ui` (`@tickets/ui`). Tokens are GENERATED from `tokens/*.tokens.json` into `styles/generated/` and `src/generated/` — never hand-edit either; run `pnpm --filter @tickets/ui tokens:build`. Details in `design-system-adapter.md`.
+- **`--spacing` is 1px, so a number in a class name IS pixels** — `p-16` is 16px, `gap-8` is 8px (changed 2026-08-04). Anything written against Tailwind's stock `.25rem` scale renders at a quarter size and still compiles.
 
 ## Project skills (in `.claude/skills/` — use them)
 
@@ -18,7 +18,6 @@ Generic design→code method — stack specifics live in `design-system-adapter.
 
 Project-specific ops:
 - `running-the-stack` — ports, URLs, deploy, startup gotchas
-- `migrating-legacy-screens` — porting screens off globals.css / deleting legacy CSS
 - `syncing-design` — pushing/pulling the claude.ai/design project
 
 ## Running (details in running-the-stack)

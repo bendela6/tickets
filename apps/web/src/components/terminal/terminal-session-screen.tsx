@@ -139,8 +139,8 @@ export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
   }
 
   return (
-    <div className="flex h-full flex-col gap-3 px-6 py-5">
-      <div className="flex items-center gap-2">
+    <div className="flex h-full flex-col gap-12 px-24 py-20">
+      <div className="flex items-center gap-8">
         <button
           type="button"
           onClick={() => void navigate({ to: '/terminals' })}
@@ -160,7 +160,7 @@ export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
           background={terminalTheme(currentThemeName()).background}
           onRestart={handleRestart}
           actions={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-8">
               <Pill
                 tone={st.tone}
                 variant={st.variant}
@@ -174,7 +174,7 @@ export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
                   <button
                     type="button"
                     aria-label="Session actions"
-                    className="inline-flex size-6 items-center justify-center rounded-md border-1 border-gray-6 bg-surface-raised font-sans text-gray-11 hover:border-gray-7"
+                    className="inline-flex size-24 items-center justify-center rounded-md border-1 border-gray-6 bg-surface-raised font-sans text-gray-11 hover:border-gray-7"
                   >
                     ⋯
                   </button>

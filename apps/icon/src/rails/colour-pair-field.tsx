@@ -89,7 +89,7 @@ export function ColourPairField({
       <div className="flex items-center gap-10">
         <span
           aria-hidden
-          className="relative size-32 flex-none overflow-hidden rounded-md border-1 border-gray-7 shadow-raised"
+          className="relative size-32 flex-none overflow-hidden rounded-md border-1 border-gray-7 shadow-xs"
         >
           {/* The two halves are drawn only when they are the selection's. A
               swatch is a claim about what the colour is, and a mixed field has

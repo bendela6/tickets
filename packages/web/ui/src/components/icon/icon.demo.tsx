@@ -17,9 +17,9 @@ export const states = [
   {
     name: 'Registry',
     render: () => (
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-16">
         {ICON_NAMES.map((name) => (
-          <div key={name} className="flex w-20 flex-col items-center gap-1.5 text-gray-11">
+          <div key={name} className="flex w-80 flex-col items-center gap-6 text-gray-11">
             <Icon name={name} size="lg" />
             <span className="font-mono text-10 text-gray-9">{name}</span>
           </div>
@@ -30,7 +30,7 @@ export const states = [
   {
     name: 'Composed',
     render: () => (
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-16">
         <Icon name="circle-half" tone="blue" animate="spin" />
         <Icon name="diamond" tone="orange" animate="pulse" />
         <Icon name="circle-check" tone="green" />

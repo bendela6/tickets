@@ -8,7 +8,7 @@ import { KIND_ICON, KIND_TONE, typePill } from '../../domain/status';
 import { getCellContent } from '../../registry/get-cell-content';
 import { useCurrentUser } from '../../state/current-user-context';
 import { Table, useTableWidths, type Column, type SortBy, type TableGroup } from '@tickets/table';
-import { Avatar, Button, cn, DialogContent, DialogRoot, DialogTitle, Icon, Input, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, tableRender, Tabs, TONE_SCALE } from '@tickets/ui';
+import { Avatar, Button, cn, DialogContent, DialogRoot, DialogTitle, Icon, Input, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, ScreenState, tableRender, Tabs, TONE_HUE } from '@tickets/ui';
 import { avatarFor } from '../../domain/actor';
 import { StatusSelect } from '../../ui/status-select';
 import { childProgress } from '../../utils/child-progress';
@@ -206,7 +206,7 @@ function SaveViewDialog({
     >
       <DialogContent>
         <DialogTitle>New global view</DialogTitle>
-        <form onSubmit={submit} className="mt-3.5 flex flex-col gap-3.5">
+        <form onSubmit={submit} className="mt-14 flex flex-col gap-14">
           <Input
             autoFocus
             aria-label="View name"
@@ -214,7 +214,7 @@ function SaveViewDialog({
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-8">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
@@ -268,7 +268,7 @@ export function AllItemsScreen() {
   const loading =
     projectsQuery.isLoading || (projects.length > 0 && boardQueries.every((q) => !q.data));
   if (loading) {
-    return <p className="px-8 py-7 font-sans text-13/19 text-gray-9">Loading all items…</p>;
+    return <p className="px-32 py-28 font-sans text-13/19 text-gray-9">Loading all items…</p>;
   }
 
   const { shared, unshared } = computeSharedFields(entries);
@@ -346,7 +346,7 @@ export function AllItemsScreen() {
         key: entry.project.key,
         header: (
           <>
-            <span className="rounded-sm bg-surface-inset px-1.5 py-0.5 font-mono text-11 font-500 text-gray-12">
+            <span className="rounded-sm bg-surface-inset px-6 py-2 font-mono text-11 font-500 text-gray-12">
               {entry.project.itemPrefix}
             </span>
             <span className="font-sans text-13/19 font-500 text-gray-12">{entry.project.name}</span>
@@ -359,9 +359,9 @@ export function AllItemsScreen() {
   } else {
     const entryOrder = new Map(entries.map((entry, index) => [entry, index]));
     for (const { kind, label } of KIND_ORDER) {
-      // 11 is the text rung; the role goes through TONE_SCALE because `danger`
+      // 11 is the text rung; the role goes through TONE_HUE because `danger`
       // is a job, not a colour family.
-      const textClass = `text-${TONE_SCALE[KIND_TONE[kind]]}-11`;
+      const textClass = `text-${TONE_HUE[KIND_TONE[kind]]}-11`;
       const rows = allRows
         .filter((row) => kindOf(row) === kind)
         .sort(
@@ -521,9 +521,9 @@ export function AllItemsScreen() {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col px-4 pt-4 md:px-7 md:pt-5.5">
+    <div className="flex h-full min-h-0 flex-col px-16 pt-16 md:px-28 md:pt-22">
       {/* Header: title · meta · search · columns · density */}
-      <div className="mb-3.5 flex shrink-0 flex-wrap items-center gap-3.5 gap-y-2">
+      <div className="mb-14 flex shrink-0 flex-wrap items-center gap-14 gap-y-8">
         <h1 className="m-0 font-sans text-22 leading-tight font-600 text-gray-12">
           All items
         </h1>
@@ -537,7 +537,7 @@ export function AllItemsScreen() {
           placeholder="Search titles…"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          className="h-8 w-full md:w-55"
+          className="h-32 w-full md:w-220"
         />
         <ColumnsPopover
           projectCount={entries.length}
@@ -564,7 +564,7 @@ export function AllItemsScreen() {
       </div>
 
       {/* Global view tabs + group selector */}
-      <div className="mb-3 flex shrink-0 items-center gap-1.5 border-b-1 border-gray-6">
+      <div className="mb-12 flex shrink-0 items-center gap-6 border-b-1 border-gray-6">
         <Tabs
           className="border-b-0"
           items={[DEFAULT_GLOBAL_VIEW, ...views].map((view) => ({
@@ -572,7 +572,7 @@ export function AllItemsScreen() {
             label: view.name,
             badge:
               view.id === activeId && dirty ? (
-                <span aria-hidden title="Unsaved changes" className="inline-block size-1.5 rounded-full bg-orange-9" />
+                <span aria-hidden title="Unsaved changes" className="inline-block size-6 rounded-full bg-orange-9" />
               ) : undefined,
           }))}
           value={activeId}
@@ -584,7 +584,7 @@ export function AllItemsScreen() {
         <button
           type="button"
           aria-label="New global view"
-          className="cursor-pointer px-2.5 py-2 font-sans text-13/19 text-gray-9 hover:text-gray-12"
+          className="cursor-pointer px-10 py-8 font-sans text-13/19 text-gray-9 hover:text-gray-12"
           onClick={() => setNaming(true)}
         >
           ＋
@@ -592,7 +592,7 @@ export function AllItemsScreen() {
         <span className="flex-1" />
         <Menu>
           <MenuTrigger asChild>
-            <button type="button" className="cursor-pointer py-2 font-sans text-12/17 text-gray-11">
+            <button type="button" className="cursor-pointer py-8 font-sans text-12/17 text-gray-11">
               Group:{' '}
               <strong className="font-500 text-gray-12">
                 {config.group === 'project' ? 'Project' : 'Status kind'}
@@ -629,7 +629,7 @@ export function AllItemsScreen() {
         />
       ) : null}
 
-      <div className="mb-2 shrink-0 font-mono text-12/17 text-gray-9">
+      <div className="mb-8 shrink-0 font-mono text-12/17 text-gray-9">
         {allRows.length} of {totalCount} match filters
       </div>
 
@@ -637,7 +637,7 @@ export function AllItemsScreen() {
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-xl border-1 border-gray-6 bg-surface-raised">
         {allRows.length === 0 ? (
           <ScreenState
-            className="flex-1 justify-center py-16"
+            className="flex-1 justify-center py-64"
             tone="neutral"
             icon="search"
             title={totalCount > 0 ? 'No items match these filters' : 'No items yet'}

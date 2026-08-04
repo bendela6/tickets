@@ -17,7 +17,7 @@ export function CostMeter({
   return (
     <span
       className={cn(
-        'inline-flex h-6 items-center gap-2 rounded-md border-1 border-gray-6 bg-surface-raised px-2',
+        'inline-flex h-24 items-center gap-8 rounded-md border-1 border-gray-6 bg-surface-raised px-8',
         className,
       )}
       title={capped ? `spend $${costUsd.toFixed(4)} of $${capUsd.toFixed(2)} cap` : 'spend so far'}

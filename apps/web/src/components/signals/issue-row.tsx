@@ -47,7 +47,7 @@ export function IssueRow({
       role="row"
       onClick={onOpen}
       className={cn(
-        'group relative grid h-13.5 cursor-pointer items-center border-b-1 border-gray-6 px-3.5 hover:bg-gray-1',
+        'group relative grid h-54 cursor-pointer items-center border-b-1 border-gray-6 px-14 hover:bg-gray-1',
         dimmed && 'opacity-60',
       )}
       style={{ gridTemplateColumns: ISSUES_GRID_COLUMNS }}
@@ -55,36 +55,36 @@ export function IssueRow({
       <span className="flex">
         <LevelDot level={issue.level} />
       </span>
-      <span className="min-w-0 pr-3">
+      <span className="min-w-0 pr-12">
         <span className="block truncate font-sans text-13/19 text-gray-11">
           <strong className="font-600 text-gray-12">{name}</strong>
           {message !== null ? ` · ${message}` : null}
         </span>
-        <span className="mt-0.5 block truncate font-mono text-11 text-gray-9">
+        <span className="mt-2 block truncate font-mono text-11 text-gray-9">
           {issue.culprit !== null ? `${issue.key} · ${issue.culprit}` : issue.key}
         </span>
       </span>
       <span>
-        <span className="inline-flex h-5 max-w-25 items-center overflow-hidden rounded-md bg-surface-inset px-1.75 font-mono text-[10.5px] font-500 text-gray-11">
+        <span className="inline-flex h-20 max-w-100 items-center overflow-hidden rounded-md bg-surface-inset px-7 font-mono text-[10.5px] font-500 text-gray-11">
           {issue.appSlug}
         </span>
       </span>
       <span className="text-right font-mono text-12 font-500 text-gray-12">
         {formatCount(issue.eventCount)}
       </span>
-      <span className="pl-3.5 font-mono text-11 text-gray-9">{relativeTime(issue.firstSeen)}</span>
+      <span className="pl-14 font-mono text-11 text-gray-9">{relativeTime(issue.firstSeen)}</span>
       <span className={cn('font-mono text-11 font-500', hot ? 'text-gray-12' : 'text-gray-9')}>
         {relativeTime(issue.lastSeen)}
       </span>
-      <span className="pl-1.5">
+      <span className="pl-6">
         <Sparkline counts={issue.spark} hot={hot} />
       </span>
-      <span className="pl-1">
+      <span className="pl-4">
         <Pill {...signalStatus(issue.status)} />
       </span>
       {/* Hover-revealed row actions, mirroring board/table-view.tsx's RowActions. */}
       <span
-        className="flex justify-end gap-1"
+        className="flex justify-end gap-4"
         onClick={(event) => event.stopPropagation()}
       >
         {/* A settled row offers the way back out; an open row offers the two
@@ -95,7 +95,7 @@ export function IssueRow({
             title="Reopen"
             aria-label="Reopen"
             onClick={onReopen}
-            className="hidden size-6 items-center justify-center rounded-md text-gray-9 hover:bg-surface-inset hover:text-gray-12 group-hover:flex"
+            className="hidden size-24 items-center justify-center rounded-md text-gray-9 hover:bg-surface-inset hover:text-gray-12 group-hover:flex"
           >
             ↺
           </button>
@@ -106,7 +106,7 @@ export function IssueRow({
             title="Resolve"
             aria-label="Resolve"
             onClick={onResolve}
-            className="hidden size-6 items-center justify-center rounded-md text-gray-9 hover:bg-green-3 hover:text-green-9 group-hover:flex"
+            className="hidden size-24 items-center justify-center rounded-md text-gray-9 hover:bg-green-3 hover:text-green-9 group-hover:flex"
           >
             ✓
           </button>
@@ -117,7 +117,7 @@ export function IssueRow({
             title="Ignore"
             aria-label="Ignore"
             onClick={onIgnore}
-            className="hidden size-6 items-center justify-center rounded-md text-gray-9 hover:bg-surface-inset hover:text-gray-12 group-hover:flex"
+            className="hidden size-24 items-center justify-center rounded-md text-gray-9 hover:bg-surface-inset hover:text-gray-12 group-hover:flex"
           >
             ⊘
           </button>
@@ -150,29 +150,29 @@ export function IssueRowSkeleton({ index = 0 }: { index?: number }) {
     <div
       role="row"
       aria-hidden
-      className="grid h-13.5 animate-pulse items-center border-b-1 border-gray-6 px-3.5"
+      className="grid h-54 animate-pulse items-center border-b-1 border-gray-6 px-14"
       style={{ gridTemplateColumns: ISSUES_GRID_COLUMNS }}
     >
-      <span className="size-2.25 rounded-full bg-surface-inset" />
+      <span className="size-9 rounded-full bg-surface-inset" />
       <span>
-        <span className="block h-2.75 rounded-sm bg-surface-inset" style={{ width: `${w1}%` }} />
-        <span className="mt-1.5 block h-2 rounded-sm bg-surface-inset" style={{ width: `${w2}%` }} />
+        <span className="block h-11 rounded-sm bg-surface-inset" style={{ width: `${w1}%` }} />
+        <span className="mt-6 block h-8 rounded-sm bg-surface-inset" style={{ width: `${w2}%` }} />
       </span>
-      <span className="inline-block h-3.5 w-18 rounded-sm bg-surface-inset" />
+      <span className="inline-block h-14 w-72 rounded-sm bg-surface-inset" />
       <span className="flex justify-end">
-        <span className="inline-block h-2.75 w-8 rounded-sm bg-surface-inset" />
+        <span className="inline-block h-11 w-32 rounded-sm bg-surface-inset" />
       </span>
-      <span className="pl-3.5">
-        <span className="inline-block h-2.25 w-6.5 rounded-sm bg-surface-inset" />
+      <span className="pl-14">
+        <span className="inline-block h-9 w-26 rounded-sm bg-surface-inset" />
       </span>
       <span>
-        <span className="inline-block h-2.25 w-6.5 rounded-sm bg-surface-inset" />
+        <span className="inline-block h-9 w-26 rounded-sm bg-surface-inset" />
       </span>
-      <span className="pl-1.5">
-        <span className="inline-block h-3 w-23 rounded-sm bg-surface-inset" />
+      <span className="pl-6">
+        <span className="inline-block h-12 w-92 rounded-sm bg-surface-inset" />
       </span>
-      <span className="pl-1">
-        <span className="inline-block h-4 w-16 rounded-md bg-surface-inset" />
+      <span className="pl-4">
+        <span className="inline-block h-16 w-64 rounded-md bg-surface-inset" />
       </span>
       <span />
     </div>

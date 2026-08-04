@@ -1,5 +1,5 @@
 import { cn } from '../../style/cn';
-import { TONE_SCALE, type Tone } from '../../style/tones';
+import { TONE_HUE, type Tone } from '../../style/tones';
 import { registry, type IconName } from './registry';
 
 /**
@@ -49,9 +49,9 @@ export function Icon({
         'shrink-0',
         // 11 is the text rung. Every one of these exists as literal text in
         // Button's enumerated variants, which is what puts it in the safelist.
-        tone ? `text-${TONE_SCALE[tone]}-11` : undefined,
-        animate === 'spin' && 'animate-ai-spin',
-        animate === 'pulse' && 'animate-ai-pulse',
+        tone ? `text-${TONE_HUE[tone]}-11` : undefined,
+        animate === 'spin' && 'animate-spin',
+        animate === 'pulse' && 'animate-pulse',
         className,
       )}
       {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true })}

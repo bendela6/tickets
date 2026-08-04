@@ -44,7 +44,7 @@ export function getCellContent(
     }
     const options = indexes.optionsForField(typeId, field);
     return (
-      <span className="inline-flex flex-wrap items-center gap-1">
+      <span className="inline-flex flex-wrap items-center gap-4">
         {values.map((value, index) => {
           const option = options.find((candidate) => candidate.value === value);
           return (

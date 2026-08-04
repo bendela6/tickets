@@ -37,8 +37,8 @@ describe('SectionHeader', () => {
   });
 
   it('merges an extra className onto the outer row', () => {
-    const { container } = render(<SectionHeader title="Links" className="mb-2" />);
-    expect(container.firstElementChild!.className).toContain('mb-2');
+    const { container } = render(<SectionHeader title="Links" className="mb-8" />);
+    expect(container.firstElementChild!.className).toContain('mb-8');
   });
 
   // Fix 1 (task-12 review): count/hint must resolve to the 11px caption size

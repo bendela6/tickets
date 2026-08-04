@@ -1,9 +1,8 @@
+import { cn, Dot } from '@tickets/ui';
 import { entityColor } from '../../engine/colors/entity-color';
 import { entityIdsInGroup } from '../../engine/groups/entity-ids-in-group';
 import type { Model } from '../../engine/model/types';
 import { useDiagramActions } from '../../state/diagram-context';
-import { cn } from '@tickets/ui';
-import { Dot } from './dot';
 import { Empty } from './empty';
 import { Header } from './header';
 import { RelRow, rowClass } from './rel-row';
@@ -44,7 +43,7 @@ export function GroupDetail({
         }
       />
 
-      <div className="px-4 pb-5">
+      <div className="px-16 pb-20">
         {!isSub && subgroups.length > 0 && (
           <>
             <Section title="Subgroups" count={subgroups.length} />
@@ -74,7 +73,7 @@ export function GroupDetail({
             <Dot color={entityColor(model, e.id, colors)} />
             <span className="truncate font-mono text-gray-12">{e.label}</span>
             {e.group !== id && (
-              <span className="ml-auto mr-1 shrink-0 text-10 text-gray-11">
+              <span className="ml-auto mr-4 shrink-0 text-10 text-gray-11">
                 {model.groups.find((g) => g.id === e.group)?.label ?? e.group}
               </span>
             )}

@@ -1,8 +1,8 @@
 import { useCallback, useRef, type KeyboardEvent, type PointerEvent } from 'react';
-import { axis, cn, HUE_TONES, over, TONE_SCALE, variants, type Tone } from '../../style';
+import { axis, cn, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
-const SCALE = axis('scale', HUE_TONES, 'indigo');
+const SCALE = axis('scale', HUES, 'indigo');
 
 export type SliderSize = 'sm' | 'md';
 
@@ -98,7 +98,7 @@ export function Slider({
   valueText?: string;
   className?: string;
 }) {
-  const scale = TONE_SCALE[tone];
+  const scale = TONE_HUE[tone];
   const trackRef = useRef<HTMLDivElement>(null);
   const span = max - min;
   const fraction = span === 0 ? 0 : (value - min) / span;

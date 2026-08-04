@@ -68,7 +68,7 @@ export function DetailChildren({
               <Progress
                 tone="green"
                 value={progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0}
-                className="w-15"
+                className="w-60"
               />
               <span className="font-mono text-11/13 tracking-wider text-gray-9">
                 {progress.done}/{progress.total} done
@@ -76,7 +76,7 @@ export function DetailChildren({
             </>
           ) : null
         }
-        className="mb-2 gap-2.5"
+        className="mb-8 gap-10"
       />
       <div className="overflow-hidden rounded-xl border-1 border-gray-6">
         {children.map((child) => {
@@ -102,7 +102,7 @@ export function DetailChildren({
           return (
             <div
               key={child.id}
-              className="flex h-9.5 cursor-pointer items-center gap-2.5 border-b-1 border-gray-6 px-3 hover:bg-gray-1"
+              className="flex h-38 cursor-pointer items-center gap-10 border-b-1 border-gray-6 px-12 hover:bg-gray-1"
               onClick={() => onOpenItem(child.number)}
             >
               <span aria-hidden className="inline-flex shrink-0">
@@ -137,7 +137,7 @@ export function DetailChildren({
           );
         })}
         <form
-          className="flex h-9.5 items-center gap-2.5 bg-gray-1 px-3"
+          className="flex h-38 items-center gap-10 bg-gray-1 px-12"
           onSubmit={async (event) => {
             event.preventDefault();
             if (userId === null || title.trim().length === 0) {
@@ -155,7 +155,7 @@ export function DetailChildren({
         >
           <span
             aria-hidden
-            className="size-2.25 shrink-0 rounded-full border-2 border-dashed border-gray-7"
+            className="size-9 shrink-0 rounded-full border-2 border-dashed border-gray-7"
           />
           <input
             className="m-0 min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-13/19 text-gray-12 outline-none placeholder:text-gray-9"
@@ -173,7 +173,7 @@ export function DetailChildren({
         </form>
       </div>
       {createItem.isError ? (
-        <p className="m-0 mt-1.5 font-sans text-12/17 text-red-9">
+        <p className="m-0 mt-6 font-sans text-12/17 text-red-9">
           {(createItem.error as Error).message}
         </p>
       ) : null}

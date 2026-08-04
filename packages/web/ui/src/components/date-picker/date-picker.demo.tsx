@@ -6,7 +6,7 @@ import { DatePicker } from './date-picker';
 function DatePickerFixture() {
   const [date, setDate] = useState<string | null>('2026-07-09T00:00:00Z');
   return (
-    <div className="w-56">
+    <div className="w-224">
       <DatePicker value={date} onChange={setDate} />
     </div>
   );
@@ -21,7 +21,7 @@ function DatePickerPlaygroundFixture({
 }) {
   const [date, setDate] = useState<string | null>('2026-07-09T00:00:00Z');
   return (
-    <div className="w-56">
+    <div className="w-224">
       <DatePicker value={date} onChange={setDate} size={size} disabled={disabled} />
     </div>
   );

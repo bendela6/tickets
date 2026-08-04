@@ -53,18 +53,18 @@ describe('Pill', () => {
   it('sizes the pill and its glyph together', () => {
     const { rerender } = render(<Pill label="s" size="sm" icon="circle" />);
     const at = () => screen.getByText('s').closest('span')!;
-    expect(at().className).toContain('h-4.5');
+    expect(at().className).toContain('h-18');
     rerender(<Pill label="s" size="md" icon="circle" />);
-    expect(at().className).toContain('h-5.5');
+    expect(at().className).toContain('h-22');
     rerender(<Pill label="s" size="lg" icon="circle" />);
-    expect(at().className).toContain('h-7');
+    expect(at().className).toContain('h-28');
   });
 
   it('renders the shared shell with neutral subtle defaults', () => {
     render(<Pill label="Chore" />);
     const el = screen.getByText('Chore');
     const pill = el.closest('span')!;
-    for (const cls of ['inline-flex', 'h-5.5', 'items-center', 'gap-1.5', 'rounded-md', 'px-2.25', 'text-12/17', 'font-500']) {
+    for (const cls of ['inline-flex', 'h-22', 'items-center', 'gap-6', 'rounded-md', 'px-9', 'text-12/17', 'font-500']) {
       expect(pill.className).toContain(cls);
     }
     expect(pill.className).toContain('bg-gray-3');
@@ -84,7 +84,7 @@ describe('Pill', () => {
     const { container: el } = render(
       <Pill label="B" icon={<Icon name="circle-half" animate="spin" />} />,
     );
-    expect(el.querySelector('svg')!.getAttribute('class')).toContain('animate-ai-spin');
+    expect(el.querySelector('svg')!.getAttribute('class')).toContain('animate-spin');
   });
 
   it('shape full, strikethrough, trailing', () => {
@@ -143,5 +143,24 @@ describe('Pill layout', () => {
     expect(container.querySelector('svg')).not.toBeNull();
     rerender(<Pill label="Assignee" />);
     expect(container.querySelector('svg')).toBeNull();
+  });
+
+  it('tint paints the hue at 15% behind the text rung', () => {
+    render(<Pill label="Entity" tone="blue" variant="tint" />);
+    const el = screen.getByText('Entity');
+    expect(el.className).toContain('bg-blue-9/15');
+    expect(el.className).toContain('text-blue-11');
+  });
+
+  it('xs is the 9px rung and sits below sm on the height ladder', () => {
+    // The eer badges are 9px/0.1em; `xs` exists so they keep that on a shared
+    // scale. h-16 (16px) keeps the ladder monotonic — 16 / 18 / 22 / 28 — where
+    // preserving Badge's padding-sized 19px would have made xs TALLER than sm.
+    render(<Pill label="PK" tone="yellow" size="xs" />);
+    const el = screen.getByText('PK');
+    expect(el.className).toContain('text-9/11');
+    expect(el.className).toContain('tracking-widest');
+    expect(el.className).toContain('h-16');
+    expect(el.className).not.toContain('h-18');
   });
 });

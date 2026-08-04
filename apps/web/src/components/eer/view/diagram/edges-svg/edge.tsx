@@ -9,7 +9,7 @@ import {
   useDiagramView,
 } from '../../../state/diagram-context';
 import type { Relationship } from '../../../engine/model/types';
-import { cn, runtimeStyle } from '@tickets/ui';
+import { cn } from '@tickets/ui';
 import { mix } from '../../../ui/color-mix';
 
 interface EdgeProps {
@@ -65,14 +65,14 @@ export const Edge = memo(function Edge({ rel, active, dim, forcedHot, hidden }: 
       data-hot={hot ? '' : undefined}
       data-active={active ? '' : undefined}
       data-dim={dim ? '' : undefined}
-      style={runtimeStyle({
+      style={{
         '--edge-c': color,
         '--edge-hot': hotColor,
         // The glow rides the emphasis colour, not the base one: a halo in the
         // stronger colour reinforces the width bump instead of ringing the
         // line in something closer to the background.
         '--edge-glow': `0 0 3px ${hotColor}`,
-      })}
+      }}
       onMouseEnter={() => {
         if (!dim) {
           setHover(true);

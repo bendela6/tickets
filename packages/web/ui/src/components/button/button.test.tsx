@@ -42,12 +42,12 @@ test('outline shares its border-2 weight with Pill/CopyButton outline', () => {
 
 test('sizes match design height/padding/radius/font-size', () => {
   const { rerender } = render(<Button size="sm">c</Button>);
-  expect(screen.getByRole('button')).toHaveClass('h-7', 'px-2.5', 'rounded-md', 'text-12');
+  expect(screen.getByRole('button')).toHaveClass('h-28', 'px-10', 'rounded-md', 'text-12');
   rerender(<Button size="md">r</Button>);
-  expect(screen.getByRole('button')).toHaveClass('h-9', 'px-3.5', 'rounded-lg', 'text-13');
+  expect(screen.getByRole('button')).toHaveClass('h-36', 'px-14', 'rounded-lg', 'text-13');
   rerender(<Button size="lg">t</Button>);
   expect(screen.getByRole('button')).toHaveClass(
-    'h-11',
+    'h-44',
     'px-[18px]',
     'rounded-xl',
     'text-14',
@@ -115,7 +115,7 @@ test('loading shows an animating Spinner, hidden while not loading', () => {
   expect(spinner.tagName.toLowerCase()).toBe('svg');
   expect(spinner).toHaveAttribute('width', '12');
   expect(spinner).toHaveAttribute('height', '12');
-  expect(spinner).toHaveClass('animate-ai-spin');
+  expect(spinner).toHaveClass('animate-spin');
 
   rerender(<Button>Creating…</Button>);
   expect(screen.queryByRole('img', { name: 'Loading' })).toBeNull();

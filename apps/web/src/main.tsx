@@ -22,7 +22,7 @@ void initWebSignals();
 function AppCrashedFallback() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-1 font-sans text-gray-12">
-      <div className="flex flex-col items-center gap-4 text-center">
+      <div className="flex flex-col items-center gap-16 text-center">
         <p className="text-gray-12">Something broke. If Signals is connected, the error was reported.</p>
         <Button variant="solid" onClick={() => location.reload()}>
           Reload

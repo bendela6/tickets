@@ -54,8 +54,8 @@ export function ControlsPanel({
   const chip = doc.variants.chip;
 
   return (
-    <div className="flex flex-col gap-5">
-      <section className="flex flex-col gap-2">
+    <div className="flex flex-col gap-20">
+      <section className="flex flex-col gap-8">
         <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">Chip field</h2>
         <SwatchRow
           label="chip field"
@@ -64,7 +64,7 @@ export function ControlsPanel({
           ground={doc.inks.top?.dark ?? GROUND.dark}
           onChange={(hex) => dispatch({ type: 'setInk', name: 'field', patch: { light: hex, dark: hex } })}
         />
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-6">
           {(Object.keys(PRESETS) as PresetName[]).map((name) => (
             <Button key={name} variant="outline" size="sm" onClick={() => onApplyPreset(name)}>
               {name}
@@ -73,10 +73,10 @@ export function ControlsPanel({
         </div>
       </section>
 
-      <section className="flex flex-col gap-2">
+      <section className="flex flex-col gap-8">
         <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">Vividness &amp; brightness</h2>
         {(['light', 'dark'] as const).map((mode) => (
-          <div key={mode} className="flex flex-col gap-2">
+          <div key={mode} className="flex flex-col gap-8">
             <SliderRow
               label={`${mode} vivid`} min={0.3} max={1.8} step={0.02}
               value={mode === 'light' ? adjLight.sat : adjDark.sat}
@@ -107,7 +107,7 @@ export function ControlsPanel({
         </div>
       </section>
 
-      <section className="flex flex-col gap-2">
+      <section className="flex flex-col gap-8">
         <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">Stick spacing</h2>
         {/* Angle and weight are edited per-element in ElementPanel now; this
          * stays here as a document-wide occlusion check across every stick,
@@ -118,7 +118,7 @@ export function ControlsPanel({
       </section>
 
       {chip ? (
-        <section className="flex flex-col gap-2">
+        <section className="flex flex-col gap-8">
           <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">Chip variant</h2>
           <SliderRow
             label="chip scale" min={0.2} max={1.5} step={0.01} value={chip.scale}
