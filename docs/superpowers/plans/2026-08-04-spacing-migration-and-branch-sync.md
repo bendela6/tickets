@@ -1,7 +1,21 @@
 # Spacing migration + worktree sync
 
-**Status:** planned, not started. Blocked on a UI cleanup pass first (see "Before
-we start").
+**Status:** step 3 (spacing on `main`) is DONE — `bc8292f`. Steps 1, 4 and 5
+(the migration script and the per-branch sync) remain.
+
+**What actually happened in step 3**, beyond the plan below:
+
+- The prefix list was derived from utility selectors in the built CSS, which
+  cannot see anything reaching CSS only through `@apply`. Two things were missed
+  and both were caught by Check A, not by review: `prose.css` was never walked at
+  all (every `.rt` rule came out four times too tight), and bare `inset` was
+  absent from the list. **Any future codemod of this shape must walk `.css` as
+  well as `.ts`/`.tsx`.**
+- `leading` needed a condition rather than a flat ×4: only values outside the
+  old 8..96 ladder were spacing-derived. In practice one site, `leading-4`.
+- The leading ladder is now deleted — at 1px the fallback produces what the
+  ladder stated, for every integer rather than a fenced range.
+- Final scope: 2,411 rewrites across 243 files, plus 56 in `prose.css`.
 **Written:** 2026-08-04, after the token-pipeline restructure landed on `main`
 (`f6b07f9`..`8c86bf9`).
 
@@ -96,21 +110,33 @@ See the companion cleanup list.
 
 ### 1. One idempotent migration script
 
-Every rename from the 2026-08-04 session is mechanical, so a single script
+Every change from the 2026-08-04 session is mechanical, so a single script
 covers all three branches and `apps/board`:
 
 ```
-TONE_SCALE                    -> TONE_RAMP
+TONE_SCALE -> TONE_RAMP -> TONE_HUE   (renamed twice that day; land on TONE_HUE)
+HUE_TONES / HueTone           -> HUES / Hue
+ROLE_TONES / RoleTone         -> ROLES / Role
+RAMPS                         -> PALETTE, and re-keyed by theme
 shadow-raised/overlay/modal   -> shadow-xs/md/lg
 animate-ai-spin/pulse         -> animate-spin/pulse
 bg-folder / border-folder     -> bg-yellow-8 / border-yellow-8
+runtimeStyle({...})           -> plain style objects
 tokens/next/*.json            -> tokens/*.json            (import paths)
 src/tokens/tokens.css         -> styles/generated/*.css   (raw readers)
-delete: vocabulary.ts, vocabulary.test.ts, scan-baseline.test.ts, *-baseline.json
+src/style/tones/tones.generated.ts -> src/generated/colors.ts
+EVERY spacing class            -> x4, in .ts/.tsx AND .css @apply
+delete: vocabulary.ts, vocabulary.test.ts, scan-baseline.test.ts,
+        *-baseline.json, scan-hardcoded-values.mjs, check-design-tokens.mjs,
+        drift()/DriftView and its gallery tabs
 ```
 
 Idempotent — re-running is a no-op. This turns each branch from a manual hunt
 into a mechanical operation.
+
+**The spacing ×4 is the dangerous half.** A missed class does not fail to
+compile; it renders at a quarter size. Run Check A per branch, not just on
+`main`.
 
 ### 2. Spacing on `main` FIRST, before syncing branches
 
