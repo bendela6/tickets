@@ -1,0 +1,120 @@
+/* `xterm` is declared FIRST so it is the lowest-priority layer: xterm.css is
+   third-party UNLAYERED CSS and unlayered CSS outranks every layered rule —
+   left as-is it would beat Instrument. Wrapping it in the bottom layer keeps the
+   terminal's own canvas styles while letting any app utility win on conflict. */
+@layer xterm, theme, base, components, utilities;
+@import '@xterm/xterm/css/xterm.css' layer(xterm);
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* Everything under `generated/` is written whole by `pnpm tokens:build` — one
+   file per token type, none of it hand-editable. Each carries its own
+   `--x-*: initial` clear above the values that clear applies to, which is what
+   makes this list order-independent: no file can wipe another's namespace. */
+@import './generated/colors.css';
+@import './generated/shadows.css';
+@import './generated/typography.css';
+@import './generated/radius.css';
+@import './generated/motion.css';
+
+/* Classes that only ever exist as template literals inside a `variants()`
+   config — `bg-${scale}-9`, `hover:bg-${scale}-10/40` — so scanning source text
+   can never find them. See scripts/extract-safelist.mjs. */
+@import './generated/safelist.css';
+
+/* Rich-text prose (`.rt`), lifted out of the token sheet on 2026-08-04. It
+   carries its own `@layer components` wrapper, so it keeps its cascade position
+   wherever this import sits. */
+@import './prose.css';
+
+/* Every consumer's Tailwind build must scan this package's own sources —
+   component and demo files. Relative to THIS file, which now lives in
+   `styles/`, so the sources are one level up and over in `src/`. Pointing this
+   at `../` would also sweep `tokens/`, `scripts/` and this folder itself. */
+@source '../src';
+
+/* The table ENGINE lives in a sibling package but styles the one node it owns
+   outright — its scroll container. Nothing else scans that package, so without
+   this the container's utilities are generated only by coincidence, wherever an
+   app happens to use them already. */
+@source '../../table/src';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* App-wide base on top of preflight. This block shares the base layer with
+   preflight but loads after it, so these rules win on ties — notably
+   button{font:inherit} and cursor:pointer, which preflight does not set. */
+@layer base {
+  body {
+    background-color: var(--color-gray-1);
+    color: var(--color-gray-12);
+    font-family: var(--font-sans);
+  }
+  button,
+  [type='button'],
+  [type='reset'],
+  [type='submit'] {
+    background-color: transparent;
+    background-image: none;
+    border: 0 solid;
+    cursor: pointer;
+    font: inherit;
+  }
+  button:disabled {
+    cursor: default;
+  }
+  a {
+    color: inherit;
+  }
+}
+
+/* Keyframes stay hand-authored and stay HERE, not in generated/motion.css. The
+   token there is `--animate-spin: ai-spin 1.4s linear infinite` — a reference to
+   a name. This is the name. They are deliberately `ai-`prefixed: Tailwind
+   injects its own `spin`/`pulse` keyframes whenever those utilities compile, and
+   two @keyframes rules sharing one name is a last-one-wins race. */
+@keyframes ai-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ai-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.62;
+  }
+}
+/* Overlay drawers arrive from the edge they are docked to: 200ms is the
+   open/close rung on the motion page, ease-out the arrival curve. Entry only —
+   radix unmounts content immediately, so there is no exit to animate. */
+@keyframes panel-slide-from-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes panel-slide-from-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+.panel-slide-right {
+  animation: panel-slide-from-right 200ms var(--ease-out);
+}
+
+.panel-slide-left {
+  animation: panel-slide-from-left 200ms var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-slide-right,
+  .panel-slide-left {
+    animation: none;
+  }
+}

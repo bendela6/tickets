@@ -1,5 +1,5 @@
-import safelistCss from './safelist.generated.css?raw';
-import tokensCss from './tokens.css?raw';
+import safelistCss from '../../styles/generated/safelist.css?raw';
+import indexCss from '../../styles/index.css?raw';
 import { Button } from '../components/button';
 import { collectSafelist } from '../style';
 
@@ -16,8 +16,8 @@ const declared = new Set(
 );
 
 describe('generated safelist', () => {
-  it('is imported by tokens.css, or Tailwind never sees it', () => {
-    expect(tokensCss).toContain("@import './safelist.generated.css';");
+  it('is imported by the stylesheet entry, or Tailwind never sees it', () => {
+    expect(indexCss).toContain("@import './generated/safelist.css';");
   });
 
   it('covers every class the variants() calls loaded here can produce', () => {
