@@ -15,7 +15,35 @@
   old 8..96 ladder were spacing-derived. In practice one site, `leading-4`.
 - The leading ladder is now deleted — at 1px the fallback produces what the
   ladder stated, for every integer rather than a fenced range.
-- Final scope: 2,411 rewrites across 243 files, plus 56 in `prose.css`.
+- **The ROOT list was assumed, and two consumers were missed.** The codemod ran
+  over `ui/src`, `playground/src` and `apps/web/src` — a list from memory. But
+  `apps/board` and `packages/web/icon-studio` also `@import
+  '@tickets/ui/tokens.css'`, so both inherited `--spacing: 1px` while their
+  classes still meant quarter-rems. Everything in them rendered at a quarter
+  size and still compiled; it surfaced only because a human looked at the board
+  UI. **Derive the roots from who imports the stylesheet**, not from memory:
+
+  ```
+  grep -rn "@tickets/ui/tokens.css" --include=*.css .
+  grep -rln '"@tickets/ui"' --include=package.json packages apps
+  ```
+
+- **The safelist has to be regenerated after the codemod, not before.** It is
+  produced by executing the components, so a pre-codemod safelist lists
+  `gap-1.5` while the `variants()` configs now emit `gap-6`. Interpolated
+  classes are precisely the ones only the safelist can carry, so they render
+  unstyled — and nothing fails.
+- Final scope: 2,411 rewrites across 243 files, 56 in `prose.css`, and 190 more
+  in the two missed consumers.
+
+**A cheap repo-wide audit catches both classes of miss.** After a correct ×4
+every value is an integer, because every rung on the old scale was a multiple of
+0.25. So *any* surviving fractional spacing class anywhere is a miss:
+
+```
+grep -rE '\b(-)?(p|px|py|m|mx|gap|w|h|size|min-w|max-w|top|left|inset)-[0-9]+\.[0-9]+\b' \
+  --include=*.ts --include=*.tsx --include=*.css . | grep -v node_modules
+```
 **Written:** 2026-08-04, after the token-pipeline restructure landed on `main`
 (`f6b07f9`..`8c86bf9`).
 
@@ -135,8 +163,15 @@ Idempotent — re-running is a no-op. This turns each branch from a manual hunt
 into a mechanical operation.
 
 **The spacing ×4 is the dangerous half.** A missed class does not fail to
-compile; it renders at a quarter size. Run Check A per branch, not just on
-`main`.
+compile; it renders at a quarter size. Per branch:
+
+1. derive the roots from the import graph (see the two greps above) — do not
+   reuse this list, since a branch may add a consumer
+2. run the ×4 over `.ts`, `.tsx` **and** `.css` (`@apply`)
+3. regenerate the safelist AFTER, never before
+4. run the fractional-class audit — it is one grep and catches both misses that
+   happened on `main`
+5. run Check A against that branch's own before/after bundle
 
 ### 2. Spacing on `main` FIRST, before syncing branches
 
