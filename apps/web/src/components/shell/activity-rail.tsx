@@ -24,8 +24,8 @@ const ITEMS: {
 export function ActivityRail({ mode, onNavigate }: { mode: Mode | null; onNavigate?: () => void }) {
   const [theme, setTheme] = useState(document.documentElement.dataset.theme ?? 'light');
   return (
-    <aside className="flex w-12 flex-none flex-col items-center gap-1.5 border-r-1 border-gray-6 bg-gray-1 py-3">
-      <Link to="/" onClick={onNavigate} className="mb-2" aria-label="tickets home">
+    <aside className="flex w-48 flex-none flex-col items-center gap-6 border-r-1 border-gray-6 bg-gray-1 py-12">
+      <Link to="/" onClick={onNavigate} className="mb-8" aria-label="tickets home">
         <BrandMark />
       </Link>
       {ITEMS.map((item) => (
@@ -36,7 +36,7 @@ export function ActivityRail({ mode, onNavigate }: { mode: Mode | null; onNaviga
           aria-label={item.label}
           title={item.label}
           className={cn(
-            'flex size-9 items-center justify-center rounded-lg font-mono text-13',
+            'flex size-36 items-center justify-center rounded-lg font-mono text-13',
             mode === item.mode
               ? 'bg-indigo-9 text-indigo-contrast'
               : 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
@@ -54,7 +54,7 @@ export function ActivityRail({ mode, onNavigate }: { mode: Mode | null; onNaviga
           applyTheme(next);
           setTheme(next);
         }}
-        className="flex size-9 items-center justify-center rounded-lg text-gray-11 hover:bg-surface-inset"
+        className="flex size-36 items-center justify-center rounded-lg text-gray-11 hover:bg-surface-inset"
       >
         ◐
       </button>

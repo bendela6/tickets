@@ -49,12 +49,12 @@ export function AppShell({
   return (
     <div className="flex h-screen flex-col bg-gray-1 font-sans text-gray-12 md:flex-row">
       {/* Mobile top bar */}
-      <div className="flex h-12 shrink-0 items-center gap-1.5 border-b-1 border-gray-6 bg-gray-1 px-2 md:hidden">
+      <div className="flex h-48 shrink-0 items-center gap-6 border-b-1 border-gray-6 bg-gray-1 px-8 md:hidden">
         <button
           type="button"
           aria-label="Open navigation"
           onClick={() => setMobileNavOpen(true)}
-          className="inline-flex size-9 items-center justify-center rounded-lg text-16 text-gray-11 hover:bg-surface-inset"
+          className="inline-flex size-36 items-center justify-center rounded-lg text-16 text-gray-11 hover:bg-surface-inset"
         >
           ☰
         </button>
@@ -65,14 +65,14 @@ export function AppShell({
       {/* Desktop: rail + panel */}
       <div className="hidden md:flex">
         <ActivityRail mode={mode} />
-        <div className="flex w-56 flex-none flex-col overflow-y-auto border-r-1 border-gray-6">{panel}</div>
+        <div className="flex w-224 flex-none flex-col overflow-y-auto border-r-1 border-gray-6">{panel}</div>
       </div>
 
       {/* Mobile slide-over: rail row on top + panel */}
       {mobileNavOpen ? (
         <div className="md:hidden">
           <div aria-hidden className="fixed inset-0 z-40 bg-black/20" onClick={() => setMobileNavOpen(false)} />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-72 bg-gray-1 shadow-lg">
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-288 bg-gray-1 shadow-lg">
             <ActivityRail mode={mode} onNavigate={() => setMobileNavOpen(false)} />
             <div className="flex flex-1 flex-col overflow-y-auto">{panel}</div>
           </aside>

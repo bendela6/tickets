@@ -12,7 +12,7 @@ import { DetailPanel } from './detail-panel';
 
 const MIN_WIDTH = 240;
 const MAX_WIDTH = 640;
-const DEFAULT_WIDTH = 320; // matches the old fixed w-80
+const DEFAULT_WIDTH = 320; // matches the old fixed w-320
 const KEY_STEP = 24;
 
 const clampWidth = (w: number) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, w));
@@ -50,7 +50,7 @@ export function SidePanel() {
         aria-expanded={false}
         title="Expand panel"
         className={cn(
-          'flex h-full w-6 shrink-0 items-center justify-center border-l-1 border-gray-6',
+          'flex h-full w-24 shrink-0 items-center justify-center border-l-1 border-gray-6',
           'bg-gray-2 text-gray-11 hover:bg-surface-inset hover:text-gray-12',
         )}
         onClick={() => setCollapsed(false)}
@@ -70,20 +70,20 @@ export function SidePanel() {
         aria-orientation="vertical"
         aria-label="Resize panel"
         tabIndex={0}
-        className="absolute left-0 top-0 z-10 h-full w-2 cursor-col-resize bg-transparent hover:bg-blue-9"
+        className="absolute left-0 top-0 z-10 h-full w-8 cursor-col-resize bg-transparent hover:bg-blue-9"
         onPointerDown={startDrag}
         onKeyDown={(e) => {
           if (e.key === 'ArrowLeft') setWidth((w) => clampWidth(w + KEY_STEP));
           else if (e.key === 'ArrowRight') setWidth((w) => clampWidth(w - KEY_STEP));
         }}
       />
-      <div className="flex shrink-0 justify-end border-b-1 border-gray-6 px-2 py-1">
+      <div className="flex shrink-0 justify-end border-b-1 border-gray-6 px-8 py-4">
         <button
           type="button"
           aria-label="Collapse panel"
           aria-expanded
           title="Collapse panel"
-          className="rounded-sm px-2 text-gray-11 hover:bg-surface-inset hover:text-gray-12"
+          className="rounded-sm px-8 text-gray-11 hover:bg-surface-inset hover:text-gray-12"
           onClick={() => setCollapsed(true)}
         >
           ›

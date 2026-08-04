@@ -41,14 +41,14 @@ export function EdgeDetail({
         sub={
           <>
             <Card>{rel.cardinality}</Card>
-            <span className="ml-2">{rel.kind ?? 'edge'}</span>
-            {rel.cardinalityInferred && <span className="ml-2 text-gray-11">· inferred from roles</span>}
+            <span className="ml-8">{rel.kind ?? 'edge'}</span>
+            {rel.cardinalityInferred && <span className="ml-8 text-gray-11">· inferred from roles</span>}
           </>
         }
         description={rel.label}
       />
 
-      <div className="px-4 pb-5">
+      <div className="px-16 pb-20">
         <Section title="Endpoints" />
         {endpoint(rel.source, rel.sourceField, 'source')}
         {endpoint(rel.target, rel.targetField, 'target')}

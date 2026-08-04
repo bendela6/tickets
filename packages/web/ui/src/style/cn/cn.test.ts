@@ -17,7 +17,7 @@ const THEME_TEXT_SIZES = [
 
 describe('cn', () => {
   it('merges conflicting tailwind classes, last wins', () => {
-    expect(cn('px-2', 'px-4')).toBe('px-4');
+    expect(cn('px-8', 'px-16')).toBe('px-16');
   });
 
   it('keeps a color class next to every font-size token the theme defines', () => {

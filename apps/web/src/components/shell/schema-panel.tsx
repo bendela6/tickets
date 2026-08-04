@@ -4,7 +4,7 @@ import { useDatabases } from '../../api/use-schema';
 
 function optionClasses(active: boolean) {
   return cn(
-    'flex h-8 w-full items-center rounded-lg px-2.25 text-left font-sans text-13/19',
+    'flex h-32 w-full items-center rounded-lg px-9 text-left font-sans text-13/19',
     active ? 'bg-surface-inset font-500 text-gray-12' : 'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
   );
 }
@@ -45,7 +45,7 @@ export function SchemaPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center justify-between px-1 pb-2">
+      <div className="flex items-center justify-between px-4 pb-8">
         <RailLabel>SCHEMA</RailLabel>
       </div>
       {isLoading || !data ? null : (
@@ -59,7 +59,7 @@ export function SchemaPanel({
           }
         >
           {(close) => (
-            <div className="flex w-44 flex-col gap-0.5">
+            <div className="flex w-176 flex-col gap-2">
               {data.databases.map((name) => (
                 <button
                   key={name}

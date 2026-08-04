@@ -33,13 +33,13 @@ function SchemaPage() {
   // clips the diagram.
   return (
     <AppShell>
-      {isLoading && <p className="p-6 font-sans text-13 text-gray-11">Loading schema…</p>}
-      {error && <p className="p-6 font-sans text-13 text-red-11">Failed to load schema.</p>}
+      {isLoading && <p className="p-24 font-sans text-13 text-gray-11">Loading schema…</p>}
+      {error && <p className="p-24 font-sans text-13 text-red-11">Failed to load schema.</p>}
       {drawable && result?.errors.length ? (
-        <p className="p-6 font-sans text-13 text-red-11">This schema could not be drawn.</p>
+        <p className="p-24 font-sans text-13 text-red-11">This schema could not be drawn.</p>
       ) : null}
       {data && data.tables.length === 0 && (
-        <p className="p-6 font-sans text-13 text-gray-11">No tables in this database.</p>
+        <p className="p-24 font-sans text-13 text-gray-11">No tables in this database.</p>
       )}
       {result?.model && drawable ? (
         <div className="flex h-full min-h-0 flex-col">
@@ -51,13 +51,13 @@ function SchemaPage() {
               schema shouldn't be nagged about, and a broken one shouldn't cost
               the diagram half its height. */}
           {result.warnings.length > 0 && (
-            <details className="shrink-0 border-b-1 border-gray-6 bg-gray-2 px-4 py-2 font-sans text-12 text-gray-11">
+            <details className="shrink-0 border-b-1 border-gray-6 bg-gray-2 px-16 py-8 font-sans text-12 text-gray-11">
               <summary className="cursor-pointer text-yellow-11">
                 {result.warnings.length === 1
                   ? '1 part of this schema could not be drawn'
                   : `${result.warnings.length} parts of this schema could not be drawn`}
               </summary>
-              <ul className="mt-2 list-disc pl-5">
+              <ul className="mt-8 list-disc pl-20">
                 {result.warnings.map((w) => (
                   <li key={w}>{w}</li>
                 ))}
