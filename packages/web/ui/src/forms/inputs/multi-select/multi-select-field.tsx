@@ -2,14 +2,14 @@ import type { InputProps } from '@tickets/form';
 import type { Option } from '../../../components/inputs/control';
 import { MultiCombobox } from '../../../components/inputs/multi-combobox';
 
-export type MultiSelectInputConfig = {
-  /** Resolved options — see SelectInputConfig. */
+export type MultiSelectFieldConfig = {
+  /** Resolved options — see SelectFieldConfig. */
   options?: Option[];
   placeholder?: string;
   maxChips?: number;
 };
 
-export function MultiSelectInput(p: InputProps<MultiSelectInputConfig, string[]>) {
+export function MultiSelectField(p: InputProps<MultiSelectFieldConfig, string[]>) {
   return (
     <div onBlur={p.onBlur}>
       <MultiCombobox

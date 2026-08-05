@@ -3,7 +3,7 @@ import { FieldError } from '../../../components/field-error';
 import { Textarea } from '../../../components/inputs/textarea';
 import { Stack } from '../../../components/stack';
 
-export type JsonInputConfig = {
+export type JsonFieldConfig = {
   rows?: number;
   placeholder?: string;
 };
@@ -28,7 +28,7 @@ function parseError(value: string | undefined): string | null {
  * of the current value, so an effect would only add a frame where the message
  * disagrees with the text on screen — including after an external reset.
  */
-export function JsonInput(p: InputProps<JsonInputConfig, string>) {
+export function JsonField(p: InputProps<JsonFieldConfig, string>) {
   const error = parseError(p.value);
   return (
     <Stack gap={1}>

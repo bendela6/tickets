@@ -1,7 +1,7 @@
 import type { InputProps } from '@tickets/form';
 import { Switch } from '../../../components/inputs/switch';
 
-export type ToggleInputConfig = {
+export type ToggleFieldConfig = {
   /** Inline copy beside the switch. FieldWrapper renders the field's caption
    *  above, so this is a second, optional piece of text — and now genuinely
    *  optional: it used to be passed as `''` because Switch demanded a label it
@@ -9,7 +9,7 @@ export type ToggleInputConfig = {
   label?: string;
 };
 
-export function ToggleInput(p: InputProps<ToggleInputConfig, boolean>) {
+export function ToggleField(p: InputProps<ToggleFieldConfig, boolean>) {
   return (
     <Switch
       id={p.name}

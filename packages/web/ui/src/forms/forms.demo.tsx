@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { FieldWrapper } from './field-wrapper';
-import { JsonInput } from './inputs/json/json-input';
-import { MultiSelectInput } from './inputs/multi-select/multi-select-input';
-import { NumberFormInput } from './inputs/number/number-input';
-import { SelectInput } from './inputs/select/select-input';
-import { TextInput } from './inputs/text/text-input';
-import { TextareaInput } from './inputs/textarea/textarea-input';
-import { ToggleInput } from './inputs/toggle/toggle-input';
+import { JsonField } from './inputs/json/json-field';
+import { MultiSelectField } from './inputs/multi-select/multi-select-field';
+import { NumberField } from './inputs/number/number-field';
+import { SelectField } from './inputs/select/select-field';
+import { TextField } from './inputs/text/text-field';
+import { TextAreaField } from './inputs/textarea/textarea-field';
+import { ToggleField } from './inputs/toggle/toggle-field';
 import { CardLayout, GroupLayout } from './layouts';
 import { Stack } from '../components/stack';
 
@@ -32,27 +32,27 @@ function Demo() {
   return (
     <CardLayout props={{ title: 'New ticket', description: 'Every registered input' }}>
       <FieldWrapper name="title" label="Title" required touched={false} loading={false}>
-        <TextInput {...shared} name="title" config={{ placeholder: 'Short summary' }} value={text} onChange={setText} />
+        <TextField {...shared} name="title" config={{ placeholder: 'Short summary' }} value={text} onChange={setText} />
       </FieldWrapper>
       <FieldWrapper name="body" label="Description" required={false} touched={false} loading={false}>
-        <TextareaInput {...shared} name="body" config={{ rows: 3 }} value={body} onChange={setBody} />
+        <TextAreaField {...shared} name="body" config={{ rows: 3 }} value={body} onChange={setBody} />
       </FieldWrapper>
       <FieldWrapper name="estimate" label="Estimate" required={false} touched={false} loading={false}
         description="Rounded to whole hours">
-        <NumberFormInput {...shared} name="estimate" config={{ min: 0, max: 40, suffix: 'hours' }} value={num} onChange={setNum} />
+        <NumberField {...shared} name="estimate" config={{ min: 0, max: 40, suffix: 'hours' }} value={num} onChange={setNum} />
       </FieldWrapper>
       <FieldWrapper name="priority" label="Priority" required={false} touched={false} loading={false}>
-        <SelectInput {...shared} name="priority" config={{ options: OPTIONS }} value={sel} onChange={setSel} />
+        <SelectField {...shared} name="priority" config={{ options: OPTIONS }} value={sel} onChange={setSel} />
       </FieldWrapper>
       <FieldWrapper name="labels" label="Labels" required={false} touched={false} loading={false}>
-        <MultiSelectInput {...shared} name="labels" config={{ options: OPTIONS }} value={multi} onChange={setMulti} />
+        <MultiSelectField {...shared} name="labels" config={{ options: OPTIONS }} value={multi} onChange={setMulti} />
       </FieldWrapper>
       <FieldWrapper name="notify" label="Notify" required={false} touched={false} loading={false}>
-        <ToggleInput {...shared} name="notify" config={{ label: 'Email me on change' }} value={on} onChange={setOn} />
+        <ToggleField {...shared} name="notify" config={{ label: 'Email me on change' }} value={on} onChange={setOn} />
       </FieldWrapper>
       <GroupLayout props={{ title: 'Advanced' }}>
         <FieldWrapper name="payload" label="Payload" required={false} touched={false} loading={false}>
-          <JsonInput {...shared} name="payload" config={{ rows: 4 }} value={json} onChange={setJson} />
+          <JsonField {...shared} name="payload" config={{ rows: 4 }} value={json} onChange={setJson} />
         </FieldWrapper>
       </GroupLayout>
     </CardLayout>
@@ -67,10 +67,10 @@ export const states = [
       <Stack gap={4} className="w-384">
         <FieldWrapper name="a" label="With description" required={false} touched={false} loading={false}
           description="Shown until an error replaces it">
-          <TextInput {...shared} name="a" config={{}} value="" onChange={noop} />
+          <TextField {...shared} name="a" config={{}} value="" onChange={noop} />
         </FieldWrapper>
         <FieldWrapper name="b" label="Touched with error" required touched loading={false} error="Required">
-          <TextInput {...shared} name="b" config={{}} value="" onChange={noop} error="Required" />
+          <TextField {...shared} name="b" config={{}} value="" onChange={noop} error="Required" />
         </FieldWrapper>
       </Stack>
     ),
@@ -79,7 +79,7 @@ export const states = [
     name: 'Invalid JSON',
     render: () => (
       <div className="w-384">
-        <JsonInput {...shared} name="j" config={{ rows: 4 }} value="{ nope" onChange={noop} />
+        <JsonField {...shared} name="j" config={{ rows: 4 }} value="{ nope" onChange={noop} />
       </div>
     ),
   },

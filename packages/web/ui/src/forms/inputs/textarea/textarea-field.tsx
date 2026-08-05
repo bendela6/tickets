@@ -1,12 +1,12 @@
 import type { InputProps } from '@tickets/form';
 import { Textarea } from '../../../components/inputs/textarea';
 
-export type TextareaInputConfig = {
+export type TextAreaFieldConfig = {
   rows?: number;
   placeholder?: string;
 };
 
-export function TextareaInput(p: InputProps<TextareaInputConfig, string>) {
+export function TextAreaField(p: InputProps<TextAreaFieldConfig, string>) {
   return (
     <Textarea
       id={p.name}

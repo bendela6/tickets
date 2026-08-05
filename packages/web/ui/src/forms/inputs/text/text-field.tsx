@@ -2,14 +2,14 @@ import type { InputProps } from '@tickets/form';
 import { cn } from '../../../style';
 import { Input } from '../../../components/inputs/input';
 
-export type TextInputConfig = {
+export type TextFieldConfig = {
   placeholder?: string;
   mono?: boolean;
   /** Static leading affix, e.g. a fixed URL scheme. Not editable. */
   prefix?: string;
 };
 
-export function TextInput(p: InputProps<TextInputConfig, string>) {
+export function TextField(p: InputProps<TextFieldConfig, string>) {
   return (
     <div className="flex items-stretch gap-8">
       {p.config.prefix ? (
