@@ -35,6 +35,7 @@ export * from './tag-input';
 export * from './file-input';
 export * from './date-picker';
 export * from './time-picker';
+export * from './date-range-picker';
 export * from './color-picker';
 export * from './icon-picker';
 export * from './user-picker';
