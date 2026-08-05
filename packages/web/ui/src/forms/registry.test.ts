@@ -4,7 +4,8 @@ import { baseInputs, baseLayouts } from './registry';
 describe('form registry maps', () => {
   it('registers every input the package ships', () => {
     expect(Object.keys(baseInputs).sort()).toEqual(
-      ['json', 'multi-select', 'number', 'select', 'text', 'textarea', 'toggle'],
+      ['checkbox', 'date', 'json', 'multi-select', 'number', 'radio', 'select',
+       'slider', 'text', 'textarea', 'toggle'],
     );
   });
 
@@ -25,6 +26,21 @@ describe('form registry maps', () => {
     expect(baseInputs.select.defaultValue).toBeNull();
     expect(baseInputs['multi-select'].defaultValue).toEqual([]);
     expect(baseInputs.toggle.defaultValue).toBe(false);
+    expect(baseInputs.checkbox.defaultValue).toBe(false);
+    expect(baseInputs.radio.defaultValue).toBe('');
+    expect(baseInputs.date.defaultValue).toBeNull();
+    expect(baseInputs.slider.defaultValue).toBe(0);
+  });
+
+  // The gap this closed: DatePicker, RadioGroup, Slider and Checkbox all
+  // existed as controls and answered to ControlProps, but none had a field
+  // adapter — so no generated form could reach them at all, whatever the
+  // stored config said. A control without a kind is a control the engine
+  // cannot render.
+  it('every control the package ships can be reached from a form', () => {
+    for (const kind of ['date', 'radio', 'slider', 'checkbox'] as const) {
+      expect(baseInputs[kind], kind).toBeDefined();
+    }
   });
 
   it('gives every input a component', () => {
