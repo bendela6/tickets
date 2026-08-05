@@ -105,7 +105,7 @@ export function BoardHeader({
             aria-label="Search titles"
             placeholder="Search titles…"
             value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
+            onChange={(next) => onQueryChange(next)}
             className="h-32 w-full md:w-200"
           />
           <Popover>

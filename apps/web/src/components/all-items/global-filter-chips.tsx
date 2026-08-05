@@ -186,7 +186,7 @@ function AddFilter({
               size="sm"
               placeholder="text…"
               value={text}
-              onChange={(event) => setText(event.target.value)}
+              onChange={(next) => setText(next)}
             />
           ) : null}
           <div className="flex items-center justify-end gap-8 pt-2">

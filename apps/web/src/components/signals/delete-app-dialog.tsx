@@ -70,7 +70,7 @@ export function DeleteAppDialog({
             className="mt-6"
             value={typed}
             autoFocus
-            onChange={(event) => setTyped(event.target.value)}
+            onChange={(next) => setTyped(next)}
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
                 void confirm();

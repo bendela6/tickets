@@ -130,7 +130,7 @@ function TypeForm({
         className="mt-4"
         placeholder="Bug"
         value={draft.label}
-        onChange={(event) => onChange({ ...draft, label: event.target.value })}
+        onChange={(next) => onChange({ ...draft, label: next })}
       />
       <ColorSwatches value={draft.color} onChange={(color) => onChange({ ...draft, color })} />
       <div className="mt-12 flex justify-end gap-8">

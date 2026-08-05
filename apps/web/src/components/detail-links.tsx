@@ -178,7 +178,7 @@ export function DetailLinks({
             aria-label="Item number"
             value={numberDraft}
             disabled={userId === null}
-            onChange={(event) => setNumberDraft(event.target.value)}
+            onChange={(next) => setNumberDraft(next)}
           />
           <Button
             type="submit"

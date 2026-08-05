@@ -26,7 +26,7 @@ export function DirectoryPicker({
       <Input
         id={id}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(next) => onChange(next)}
         placeholder="/absolute path — or pick above"
         className="rounded-none border-0 border-t-1 border-gray-6 font-mono text-13"
       />

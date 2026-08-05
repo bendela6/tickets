@@ -53,7 +53,7 @@ export function Sidebar({
           aria-label="Filter components"
           placeholder="Filter components…"
           value={filterQuery}
-          onChange={(e) => setFilterQuery(e.target.value)}
+          onChange={(next) => setFilterQuery(next)}
           className="shrink-0"
           // The shortcut hint belongs inside the field's border — it is about
           // this field, not next to it.

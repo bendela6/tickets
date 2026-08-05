@@ -113,7 +113,7 @@ function CreateForm({
               className="mt-4"
               placeholder="Blocks"
               value={draft.label}
-              onChange={(event) => onChange({ ...draft, label: event.target.value })}
+              onChange={(next) => onChange({ ...draft, label: next })}
             />
           </div>
           <div className="flex-1">
@@ -123,7 +123,7 @@ function CreateForm({
               className="mt-4"
               placeholder="Is blocked by"
               value={draft.inverseLabel}
-              onChange={(event) => onChange({ ...draft, inverseLabel: event.target.value })}
+              onChange={(next) => onChange({ ...draft, inverseLabel: next })}
             />
           </div>
         </div>
@@ -168,7 +168,7 @@ function EditForm({
               id="edit-link-outward"
               className="mt-4"
               value={draft.label}
-              onChange={(event) => onChange({ ...draft, label: event.target.value })}
+              onChange={(next) => onChange({ ...draft, label: next })}
             />
           </div>
           <div className="flex-1">
@@ -177,7 +177,7 @@ function EditForm({
               id="edit-link-inward"
               className="mt-4"
               value={draft.inverseLabel}
-              onChange={(event) => onChange({ ...draft, inverseLabel: event.target.value })}
+              onChange={(next) => onChange({ ...draft, inverseLabel: next })}
             />
           </div>
         </div>

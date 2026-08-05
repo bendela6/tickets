@@ -27,7 +27,11 @@ export function TextInput(p: InputProps<TextInputConfig, string>) {
         placeholder={p.config.placeholder}
         disabled={p.disabled}
         tone={p.error ? 'danger' : undefined}
-        onChange={(e) => p.onChange(e.target.value)}
+        // Wrapped rather than passed straight through, to drop the event the
+        // control offers second. A form field has no use for modifier keys,
+        // and `p.onChange` takes exactly one argument — handing it a second
+        // would be passing something the form layer never asked for.
+        onChange={(next) => p.onChange(next)}
         onBlur={p.onBlur}
         className={cn(p.config.mono && 'font-mono text-13')}
       />

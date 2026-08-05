@@ -58,7 +58,7 @@ export function SessionTitle({
           autoFocus
           aria-label="Session title"
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(next) => setDraft(next)}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
               setDraft(title ?? '');

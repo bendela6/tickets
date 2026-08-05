@@ -147,7 +147,7 @@ function OptionForm({
             className="max-w-280"
             placeholder="e.g. In review"
             value={draft.label}
-            onChange={(event) => onChange({ ...draft, label: event.target.value })}
+            onChange={(next) => onChange({ ...draft, label: next })}
           />
           {valueHint ? <span className="font-mono text-11/13 tracking-wider text-gray-9">{valueHint}</span> : null}
         </div>

@@ -75,12 +75,27 @@ export function Combobox({
             id={id}
             type="button"
             disabled={disabled}
-            // NOT `disabled`. A read-only field is one you may not edit, not
-            // one that is inapplicable: it keeps its tab stop and its value
-            // keeps being submitted. `undefined` rather than `false` so the
-            // attribute is absent on an editable trigger — `aria-readonly
-            // ="false"` is the same as saying nothing, at the cost of saying it.
-            aria-readonly={readOnly || undefined}
+            // `aria-disabled`, not `aria-readonly`, and not the `disabled`
+            // attribute. Three-way choice, each rejected for a measured reason:
+            //
+            //   disabled       drops the tab stop AND the submitted value; a
+            //                  field locked by permission still owes both.
+            //   aria-readonly  the honest word, but ARIA does not permit it on
+            //                  `button` — axe flags aria-allowed-attr and
+            //                  assistive tech ignores it, so it announces
+            //                  nothing at all.
+            //   role=combobox  would make aria-readonly legal, and was tried.
+            //                  But a combobox takes its name from an author,
+            //                  where a button takes it from its content — and
+            //                  only 2 of 30 call sites label these controls, so
+            //                  28 would have silently lost their accessible
+            //                  name. A worse regression than the bug.
+            //
+            // So: the attribute a button does permit, which announces the
+            // trigger as not-operable while keeping focus and submission. The
+            // proper fix is to label these controls and then adopt
+            // `role="combobox"`; until then this is the honest second best.
+            aria-disabled={readOnly || undefined}
             className={fieldClass({
               size,
               state: field.state,

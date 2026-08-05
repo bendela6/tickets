@@ -253,7 +253,7 @@ export function NewSessionDialog({
             <Label hint="optional — defaults to your shell">Command</Label>
             <Input
               value={command}
-              onChange={(e) => setCommand(e.target.value)}
+              onChange={(next) => setCommand(next)}
               placeholder="claude"
               className="font-mono text-13"
             />

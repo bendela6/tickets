@@ -212,7 +212,7 @@ function SaveViewDialog({
             aria-label="View name"
             placeholder="View name…"
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(next) => setName(next)}
           />
           <div className="flex justify-end gap-8">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -536,7 +536,7 @@ export function AllItemsScreen() {
           aria-label="Search titles"
           placeholder="Search titles…"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(next) => setQuery(next)}
           className="h-32 w-full md:w-220"
         />
         <ColumnsPopover

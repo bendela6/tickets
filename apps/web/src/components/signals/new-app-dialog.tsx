@@ -112,7 +112,7 @@ export function NewAppDialog({
                 placeholder="storefront-web"
                 value={name}
                 autoFocus
-                onChange={(event) => setName(event.target.value)}
+                onChange={(next) => setName(next)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') {
                     void submit();

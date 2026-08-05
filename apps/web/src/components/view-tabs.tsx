@@ -58,7 +58,7 @@ export function ViewTabs({
           disabled={userId === null}
           className="mx-4 w-144"
           onBlur={() => setAdding(false)}
-          onChange={(event) => setDraft(event.target.value)}
+          onChange={(next) => setDraft(next)}
           onKeyDown={async (event) => {
             if (event.key === 'Enter' && draft.trim().length > 0 && userId !== null) {
               const created = await createView.mutateAsync({

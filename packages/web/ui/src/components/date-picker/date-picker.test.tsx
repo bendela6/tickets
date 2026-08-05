@@ -50,14 +50,14 @@ test('read-only refuses the calendar but keeps the tab stop', async () => {
   // Read-only is not disabled: the value is still shown, still reachable and
   // still submitted, and focus survives the refused click.
   expect(trigger).not.toBeDisabled();
-  expect(trigger).toHaveAttribute('aria-readonly', 'true');
+  expect(trigger).toHaveAttribute('aria-disabled', 'true');
   expect(trigger).toHaveTextContent('Jul 12, 2026');
   expect(trigger).toHaveFocus();
 });
 
 test('a rest field carries no readonly claim', () => {
   render(<DatePicker value={null} onChange={() => {}} />);
-  expect(screen.getByRole('button')).not.toHaveAttribute('aria-readonly');
+  expect(screen.getByRole('button')).not.toHaveAttribute('aria-disabled');
 });
 
 test('the value round-trips as an ISO string', async () => {

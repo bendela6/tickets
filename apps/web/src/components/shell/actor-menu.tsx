@@ -90,7 +90,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
               className="mt-4"
               placeholder="Mara K."
               value={nameDraft}
-              onChange={(event) => setNameDraft(event.target.value)}
+              onChange={(next) => setNameDraft(next)}
             />
           </div>
           <div className="mt-20 flex justify-end gap-8">

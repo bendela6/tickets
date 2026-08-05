@@ -102,7 +102,7 @@ export function ActivityToolbar({
         aria-label="Search activity"
         placeholder="Search message, name…"
         value={q}
-        onChange={(event) => onQChange(event.target.value)}
+        onChange={(next) => onQChange(next)}
         className="h-28 w-230"
       />
     </div>

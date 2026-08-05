@@ -122,8 +122,13 @@ export function ComboboxList({
           </span>
           <input
             ref={inputRef}
-            role="combobox"
-            aria-expanded
+            // A filter box inside the popup, not the combobox itself. The
+            // `combobox` role belongs to the TRIGGER — which is what makes
+            // `aria-readonly` legal there, since a plain button does not permit
+            // it. Two elements claiming the role would be one too many, and the
+            // inner one was never the right owner.
+            type="text"
+            role="searchbox"
             aria-controls={listId}
             aria-activedescendant={activeId}
             autoFocus

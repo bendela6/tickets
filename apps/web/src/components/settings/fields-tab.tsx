@@ -202,10 +202,10 @@ function NewFieldComposer({
             autoFocus
             value={label}
             placeholder="e.g. Severity"
-            onChange={(event) => {
-              setLabel(event.target.value);
+            onChange={(next) => {
+              setLabel(next);
               if (!keyTouched) {
-                setKey(slugifyKey(event.target.value));
+                setKey(slugifyKey(next));
               }
             }}
           />
@@ -216,9 +216,9 @@ function NewFieldComposer({
             id="new-field-key"
             value={key}
             placeholder="severity"
-            onChange={(event) => {
+            onChange={(next) => {
               setKeyTouched(true);
-              setKey(event.target.value);
+              setKey(next);
             }}
             className="font-mono text-13"
           />
