@@ -19,6 +19,7 @@ export * from './password-input';
 export * from './search-input';
 export * from './number-input';
 export * from './slider';
+export * from './rating';
 export * from './checkbox';
 export * from './switch';
 export * from './combobox';
