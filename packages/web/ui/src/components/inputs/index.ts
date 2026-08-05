@@ -20,6 +20,7 @@ export * from './slider';
 export * from './checkbox';
 export * from './switch';
 export * from './combobox';
+export * from './select';
 export * from './radio-group';
 export * from './multi-combobox';
 export * from './date-picker';
