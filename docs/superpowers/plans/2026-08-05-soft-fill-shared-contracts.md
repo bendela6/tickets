@@ -16,7 +16,8 @@
 - **Never write `ring-*` on a control** — call `focusRing()`. Adapter trap 9.
 - **`ring-<number>` takes integers only**; `ring-1.5` compiles to nothing. Adapter trap 10.
 - **A regenerated safelist does not reach a running dev server.** After `pnpm --filter @tickets/ui tokens:build`, verify against `pnpm --filter @tickets/web build`, not :4620. Adapter trap 11.
-- Interpolated classes reach CSS only via the safelist; run `pnpm --filter @tickets/ui tokens:build` after any change to an interpolated class and commit the regenerated `safelist.css`.
+- **Any class built by interpolation MUST be produced inside a `variants()` config.** `scripts/extract-safelist.mjs` enumerates `variants()` calls and nothing else — its own first line says so. A tone class assembled in `cn()` (`` cn(`bg-${hue}-2`) ``) is invisible to both Tailwind's source scanner and the extractor, so it compiles to nothing and the component ships unstyled with no error anywhere. This applies even when the hue is a fixed literal, because the *string* is still assembled at runtime and never appears in source. `fieldClass` and `toggleMarkClass` are the pattern to copy: `variants({ config: { … over(SCALE, (hue) => [...]) } })`.
+- Interpolated classes reach CSS only via the safelist; run `pnpm --filter @tickets/ui tokens:build` after any change to an interpolated class and commit the regenerated `safelist.css`. **Verify the class count actually grew** — an unchanged count after adding interpolated classes means they were not collected.
 - Conventional commits scoped by app: `feat(ui): …`, `refactor(ui): …`.
 - Checks: `pnpm --filter @tickets/ui test` · `pnpm typecheck --force`.
 
@@ -357,6 +358,17 @@ are grids, and they take the shell with no rows at all."
 ```
 
 ---
+
+> **Correction, found while executing Task 1.** The `OptionRow` and `Chip`
+> implementations sketched in Tasks 3 and 4 compose their classes in `cn()`.
+> That does not work here: the extractor collects `variants()` output only, so
+> every interpolated class in them — `focusRing(...)`'s output included, since it
+> assembles strings at runtime even for a literal hue — would be missing from the
+> safelist and compile to nothing. Both components must express their
+> tone-varying and focus classes through a `variants()` config using
+> `over(SCALE, …)`, the way `fieldClass` and `toggleMarkClass` already do. Treat
+> the code blocks below as the structure and the comments as the intent, not as
+> the class-composition mechanism.
 
 ### Task 3: `OptionRow` — three independent channels
 
