@@ -2,7 +2,7 @@ import type { InputProps } from '@tickets/form';
 import type { Option } from '../../../components/inputs/control';
 import { Combobox } from '../../../components/inputs/combobox';
 
-export type SelectInputConfig = {
+export type SelectFieldConfig = {
   /** Resolved options. An author may declare this as an AsyncResolver in the
    *  form config; the engine resolves it and flips `loading` while it does, so
    *  this adapter only ever sees a settled array. */
@@ -10,7 +10,7 @@ export type SelectInputConfig = {
   placeholder?: string;
 };
 
-export function SelectInput(p: InputProps<SelectInputConfig, string | null>) {
+export function SelectField(p: InputProps<SelectFieldConfig, string | null>) {
   return (
     <div onBlur={p.onBlur}>
       <Combobox

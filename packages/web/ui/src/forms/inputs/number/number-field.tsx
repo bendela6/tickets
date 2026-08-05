@@ -1,7 +1,7 @@
 import type { InputProps } from '@tickets/form';
 import { NumberInput } from '../../../components/inputs/number-input';
 
-export type NumberInputConfig = {
+export type NumberFieldConfig = {
   min?: number;
   max?: number;
   step?: number;
@@ -17,7 +17,7 @@ function clamp(value: number, min?: number, max?: number): number {
 }
 
 /**
- * Named `NumberFormInput` so it does not shadow the `NumberInput` primitive it
+ * Named `NumberField` so it does not shadow the `NumberInput` primitive it
  * wraps.
  *
  * The primitive exposes no `onBlur`, so the wrapper div carries it — React's
@@ -26,7 +26,7 @@ function clamp(value: number, min?: number, max?: number): number {
  * config, and the primitive is also used outside forms where the caller owns
  * that policy.
  */
-export function NumberFormInput(p: InputProps<NumberInputConfig, number | null>) {
+export function NumberField(p: InputProps<NumberFieldConfig, number | null>) {
   return (
     <div onBlur={p.onBlur} className="flex items-center gap-8">
       <NumberInput
