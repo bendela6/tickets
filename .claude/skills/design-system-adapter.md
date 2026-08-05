@@ -220,3 +220,22 @@ here should need to leak back into those skills.
     written out literally in source are unaffected — only interpolated ones go
     through the safelist, which is why the resting floor looked right while
     focus did nothing.
+11. **The design project has more files than the one you are handed.**
+    `19 Input Layer FINAL Soft Fill` is the contract, but `22 Disabled ReadOnly
+    and Tones` carries the six-way comparison behind the disabled/read-only
+    decision — including the rejected alternatives and WHY, which the FINAL file
+    only states as an outcome. `20 Form Layouts` and `21 Input Interactions`
+    are likewise unread. `DesignSync list_files` before assuming one file is the
+    whole spec.
+    Also: `get_file` truncates around 256 KiB. `19 …Soft Fill` is cut mid-§25,
+    so §26 FileInput's specimen has never been readable — it was built from the
+    section's intro line alone.
+12. **`cn.ts` has now been bitten three times by the same trap, in three
+    namespaces.** A custom token that Tailwind understands but tailwind-merge
+    does not gets bucketed into the wrong class group, and the eviction it
+    should perform silently does not happen: `text-13` swallowed colours,
+    `font-500` swallowed families, and `rounded-control-md` refused to be
+    replaced by `rounded-none`. All three are registered in `cn.ts` now. **Any
+    future token namespace with custom rungs needs the same registration**, and
+    the failure mode is always two surviving classes with stylesheet order
+    deciding — never an error.
