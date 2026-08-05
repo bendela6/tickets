@@ -1,19 +1,5 @@
 import { useMemo, useState } from 'react';
-import {
-  cn,
-  ComboboxList,
-  type ComboOption,
-  fieldClass,
-  fieldState,
-  Icon,
-  Pill,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  TONE_HUE,
-  type Tone,
-  type ControlSize,
-} from '@tickets/ui';
+import { cn, ComboboxList, type Option, fieldClass, fieldState, Icon, Pill, Popover, PopoverContent, PopoverTrigger, TONE_HUE, type Tone, type ControlSize } from '@tickets/ui';
 import type { StatusKind } from '../api/types';
 import { KIND_ICON, KIND_TONE, statusPill } from '../domain/status';
 
@@ -73,7 +59,7 @@ export function StatusSelect({
   }, [statuses, legalTargets, value]);
 
   const hiddenCount = statuses.length - shown.length;
-  const options: ComboOption[] = shown.map((status) => ({
+  const options: Option[] = shown.map((status) => ({
     value: status.key,
     label: status.label,
   }));

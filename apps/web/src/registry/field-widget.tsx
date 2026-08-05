@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Feature } from '@tickets/richtext';
 import type { Board, Field, Item } from '../api/types';
 import { RichTextEditor } from '../components/rich-text/rich-text-editor';
-import { Checkbox, Combobox, type ComboOption, DatePicker, Input, MultiCombobox, NumberInput, Textarea } from '@tickets/ui';
+import { Checkbox, Combobox, type Option, DatePicker, Input, MultiCombobox, NumberInput, Textarea } from '@tickets/ui';
 import type { BoardIndexes } from '../utils/index-board';
 import { hexToOptionColor, kindColor } from './option-color';
 
@@ -43,7 +43,7 @@ function BlurCommitInput({
   );
 }
 
-function toComboOptions(typeId: number, field: Field, indexes: BoardIndexes): ComboOption[] {
+function toComboOptions(typeId: number, field: Field, indexes: BoardIndexes): Option[] {
   const options = indexes.optionsForField(typeId, field);
   return options.map((option) => ({
     value: option.value,
@@ -146,7 +146,6 @@ export function FieldWidget({
   if (field.type === 'boolean') {
     return (
       <Checkbox
-        label=""
         aria-label={field.label}
         value={value === true}
         disabled={disabled}
@@ -219,7 +218,7 @@ export function FieldWidget({
   }
   if (field.type === 'user') {
     const users = board.users.filter((user) => !user.archivedAt);
-    const options: ComboOption[] = users.map((user) => ({ value: String(user.id), label: user.name }));
+    const options: Option[] = users.map((user) => ({ value: String(user.id), label: user.name }));
     const currentId =
       typeof value === 'number'
         ? value

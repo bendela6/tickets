@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Combobox, type ComboOption, Input, MultiCombobox, Pill, Popover, PopoverContent, PopoverTrigger } from '@tickets/ui';
+import { Button, Combobox, type Option, Input, MultiCombobox, Pill, Popover, PopoverContent, PopoverTrigger } from '@tickets/ui';
 import { KIND_TONE } from '../../domain/status';
 import type { FilterRule } from '../../utils/view-config';
 import type { GlobalFilterRule } from './global-views';
@@ -84,12 +84,12 @@ function AddFilter({
       : (sharedFields.find((candidate) => candidate.key === fieldKey) ?? null);
   const optionish = isOptionish(selectedField);
 
-  const fieldOptions: ComboOption[] = sharedFields.map((field) => ({
+  const fieldOptions: Option[] = sharedFields.map((field) => ({
     value: field.key,
     label: field.label,
   }));
 
-  const opOptions: ComboOption[] = [
+  const opOptions: Option[] = [
     ...(optionish
       ? [
           { value: 'any-of', label: 'is any of' },
@@ -101,7 +101,7 @@ function AddFilter({
     { value: 'not-empty', label: 'is not empty' },
   ];
 
-  const valueOptions: ComboOption[] = !selectedField
+  const valueOptions: Option[] = !selectedField
     ? []
     : op === 'kinds'
       ? KINDS.map((kind) => ({

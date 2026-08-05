@@ -1,10 +1,10 @@
 import type { InputProps } from '@tickets/form';
-import type { ComboOption } from '../../../components/combobox-list';
+import type { Option } from '../../../components/control';
 import { MultiCombobox } from '../../../components/multi-combobox';
 
 export type MultiSelectInputConfig = {
   /** Resolved options — see SelectInputConfig. */
-  options?: ComboOption[];
+  options?: Option[];
   placeholder?: string;
   maxChips?: number;
 };

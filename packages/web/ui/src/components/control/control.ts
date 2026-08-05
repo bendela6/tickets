@@ -16,7 +16,7 @@ export type ControlSize = 'sm' | 'md' | 'lg';
 
 /**
  * One option vocabulary for every control that offers a choice, replacing the
- * near-identical `ComboOption` and `RadioOption`.
+ * near-identical `Option` and `RadioOption`.
  *
  * `color` is honoured by the controls that draw a swatch; `SelectRadio` ignores
  * it, having nowhere to paint one.

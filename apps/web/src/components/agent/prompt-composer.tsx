@@ -1,14 +1,14 @@
-import { Button, Combobox, type ComboOption } from '@tickets/ui';
+import { Button, Combobox, type Option } from '@tickets/ui';
 
 // Models the Claude provider offers (mirror of apps/api CLAUDE_MODELS). The
 // switcher is compact and lives in the composer per screen 10.
-export const AGENT_MODELS: ComboOption[] = [
+export const AGENT_MODELS: Option[] = [
   { value: 'claude-opus-4-8', label: 'Opus 4.8' },
   { value: 'claude-sonnet-5', label: 'Sonnet 5' },
   { value: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5' },
 ];
 
-export const EFFORT_LEVELS: ComboOption[] = [
+export const EFFORT_LEVELS: Option[] = [
   { value: 'low', label: 'low' },
   { value: 'medium', label: 'medium' },
   { value: 'high', label: 'high' },

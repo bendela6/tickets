@@ -1,12 +1,4 @@
-import {
-  Combobox,
-  FieldLabel,
-  Input,
-  NumberInput,
-  Switch,
-  type AnyControlDef,
-  type ComboOption,
-} from '@tickets/ui';
+import { Combobox, FieldLabel, Input, NumberInput, Switch, type AnyControlDef, type Option } from '@tickets/ui';
 
 // An `allowNone` select needs a pickable way back to "no value". Combobox has
 // no clear affordance by design — a single select is changed by picking, not
@@ -70,7 +62,7 @@ export function ControlsPanel({
                 searchable={false}
                 options={[
                   ...(def.allowNone ? [{ value: UNSET, label: '(unset)' }] : []),
-                  ...def.options.map((option): ComboOption => ({ value: option, label: option })),
+                  ...def.options.map((option): Option => ({ value: option, label: option })),
                 ]}
                 value={(values[key] as string | undefined) ?? UNSET}
                 onChange={(picked) => onChange(key, picked === UNSET ? undefined : (picked ?? undefined))}
