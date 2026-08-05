@@ -11,6 +11,33 @@ what they hold.
 
 **Written:** 2026-08-05, after the playground was moved onto the library.
 
+**Status: COMPLETE**, all six steps — `e840bf2`..`5d97253`. The seam is
+`InputKind` + `ValueOfKind` in `forms/registry.ts`, which is what `propsToForm`
+can now be written against.
+
+**Four things the work found that this plan did not predict**, each recorded at
+its own commit:
+
+- **The table's own select cell reads `shiftKey`** off the native event to
+  extend a row range. A value-only `onChange` made that unreachable — and it
+  would not have failed to compile, range selection would have silently stopped
+  working. `onChange` carries the event as an optional second argument for
+  exactly this, and that cell is its only caller.
+- **`aria-readonly` is not permitted on `role="button"`**, so the read-only
+  announcement on the three popover triggers was inert. `role="combobox"` would
+  have made it legal and was tried — it also changes how the accessible name is
+  computed, and only 2 of 30 call sites label these controls, so 28 would have
+  silently lost their name. The triggers use `aria-disabled` instead. Labelling
+  them properly, then adopting the role, is the real fix and is not done.
+- **A demo that declares plain `{name, render}` literals AND has a playground
+  never renders those literals** — the derived axes win the page. Several
+  controls' states had been invisible in `/gallery` for as long as they had a
+  playground. That is why the coverage numbers below moved so far.
+- **A bare `<fieldset>` is `role="group"`**, where `aria-readonly` is also not
+  defined, so RadioGroup's announcement was landing on the floor too.
+
+State coverage went from 27 declared across all ten controls to well over 200.
+
 ## Inventory — ten controls, seven field adapters
 
 `components/` holds the controls; `forms/inputs/` already holds a field layer
@@ -96,25 +123,37 @@ Each control extends it with its own extras (`options`, `min`/`max`/`step`,
 `placeholder`, `indeterminate`) and keeps native-attribute passthrough via
 `Omit<…HTMLAttributes<…>, 'value' | 'onChange' | 'size'>`.
 
-### Names
+### Names — AS BUILT
 
-| today | becomes | why |
-| --- | --- | --- |
-| `Input` | `TextInput` | value kind |
-| `Textarea` | `TextArea` | same kind, other shape |
-| `NumberInput` | `NumberInput` | unchanged |
-| `Slider` | `NumberSlider` | same kind, other shape |
-| `Checkbox` | `ToggleInput` | see the open question below |
-| `Switch` | `ToggleSwitch` | " |
-| `Combobox` | `SelectInput` | value kind |
-| `RadioGroup` | `SelectRadio` | same kind, other shape |
-| `MultiCombobox` | `MultiSelectInput` | matches the field name already in use |
-| `DatePicker` | `DateInput` | only one date control |
+The value-kind rename drafted here was **not** carried out, and the reasoning is
+worth keeping because it is the more interesting half.
 
-The field layer moves to `XField`, which is what frees `NumberInput`:
+Three value kinds have two controls each, so a value-kind name can only fit one
+of the pair. Drafted: `Checkbox` → `ToggleInput` and `Switch` → `ToggleSwitch`,
+and so on for number and select. Decided instead: **the controls keep their own
+names.** `Checkbox` and `Switch` are both recognisable, both say what they draw,
+and forcing one into a suffix bought nothing — the engine reaches them through a
+`kind`, never through their names.
 
-`TextField` · `TextAreaField` · `NumberField` · `SelectField` ·
-`MultiSelectField` · `ToggleField` · `JsonField`
+What *was* forced is the layer above. `forms/inputs/number` exported
+`NumberFormInput`, a name nobody would choose, picked only to dodge the
+collision with the `NumberInput` control. That collision is the whole reason
+this step existed, and `XField` resolves it — one layer says what a thing IS,
+the other says where it sits:
+
+| was | is | 
+| --- | --- |
+| `TextInput` | `TextField` |
+| `TextareaInput` | `TextAreaField` |
+| **`NumberFormInput`** | **`NumberField`** |
+| `SelectInput` | `SelectField` |
+| `MultiSelectInput` | `MultiSelectField` |
+| `ToggleInput` | `ToggleField` |
+| `JsonInput` | `JsonField` |
+
+The registry's kind strings (`'text'`, `'select'`, …) are deliberately
+unchanged: they are serialised into stored FormConfigs, so renaming one is a
+data migration rather than a refactor.
 
 ## Steps
 
