@@ -1,5 +1,20 @@
+import type { UploadFile } from '../components/inputs/file-input';
 import { CheckboxField } from './inputs/checkbox/checkbox-field';
+import { CheckboxGroupField } from './inputs/checkbox-group/checkbox-group-field';
+import { ColorField } from './inputs/color/color-field';
 import { DateField } from './inputs/date/date-field';
+import { DateRangeField } from './inputs/date-range/date-range-field';
+import { DurationField } from './inputs/duration/duration-field';
+import { FileField } from './inputs/file/file-field';
+import { IconField } from './inputs/icon/icon-field';
+import { PasswordField } from './inputs/password/password-field';
+import { PinField } from './inputs/pin/pin-field';
+import { RangeField } from './inputs/range-slider/range-slider-field';
+import { RatingField } from './inputs/rating/rating-field';
+import { SegmentedField } from './inputs/segmented/segmented-field';
+import { TagsField } from './inputs/tags/tags-field';
+import { TimeField } from './inputs/time/time-field';
+import { UserField } from './inputs/user/user-field';
 import { JsonField } from './inputs/json/json-field';
 import { MultiSelectField } from './inputs/multi-select/multi-select-field';
 import { NumberField } from './inputs/number/number-field';
@@ -33,6 +48,24 @@ export const baseInputs = {
   date: { Component: DateField, defaultValue: null },
   slider: { Component: SliderField, defaultValue: 0 },
   json: { Component: JsonField, defaultValue: '' },
+
+  // The sixteen from the Soft Fill design. `search` is the one control that got
+  // no kind: it filters a view rather than holding a value, so a form has
+  // nothing to store for it.
+  password: { Component: PasswordField, defaultValue: '' },
+  pin: { Component: PinField, defaultValue: '' },
+  segmented: { Component: SegmentedField, defaultValue: '' },
+  'checkbox-group': { Component: CheckboxGroupField, defaultValue: [] as string[] },
+  tags: { Component: TagsField, defaultValue: [] as string[] },
+  rating: { Component: RatingField, defaultValue: 0 },
+  range: { Component: RangeField, defaultValue: [0, 100] as [number, number] },
+  'date-range': { Component: DateRangeField, defaultValue: [null, null] as [string | null, string | null] },
+  time: { Component: TimeField, defaultValue: null },
+  duration: { Component: DurationField, defaultValue: null },
+  color: { Component: ColorField, defaultValue: null },
+  icon: { Component: IconField, defaultValue: null },
+  user: { Component: UserField, defaultValue: [] as string[] },
+  file: { Component: FileField, defaultValue: [] as UploadFile[] },
 };
 
 /**
@@ -75,6 +108,31 @@ export type ValueOfKind = {
    *  position and lie about it. A number that can be empty is `number`. */
   slider: number;
   json: string;
+
+  password: string;
+  /** The whole code, not one value per cell. */
+  pin: string;
+  segmented: string;
+  'checkbox-group': string[];
+  /** Free text, so these are the values themselves rather than ids into a list. */
+  tags: string[];
+  /** 0 is unrated — a real answer, which is why this is not nullable. */
+  rating: number;
+  /** Two thumbs are always somewhere, so a range is never null. */
+  range: [number, number];
+  /** Either half may be null: a half-picked range is a real state to hold. */
+  'date-range': [string | null, string | null];
+  /** `HH:MM`, a clock reading. */
+  time: string | null;
+  /** MINUTES, a length. Looks like `time` and means something else entirely. */
+  duration: number | null;
+  /** A hue name from the eleven ramps. */
+  color: string | null;
+  /** An icon name from the registry. */
+  icon: string | null;
+  /** Person ids, in both single and multi mode. */
+  user: string[];
+  file: UploadFile[];
 };
 
 /** Compile-time proof that the two stay in step: a kind added to `baseInputs`
