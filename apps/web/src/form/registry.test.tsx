@@ -6,8 +6,10 @@ import { formRegistry } from './registry';
 describe('formRegistry', () => {
   it('registers every base input plus the app-specific directory', () => {
     expect(Object.keys(formRegistry.inputs).sort()).toEqual([
-      'checkbox', 'date', 'directory', 'json', 'multi-select', 'number', 'radio',
-      'select', 'slider', 'text', 'textarea', 'toggle',
+      'checkbox', 'checkbox-group', 'color', 'date', 'date-range', 'directory',
+      'duration', 'file', 'icon', 'json', 'multi-select', 'number', 'password',
+      'pin', 'radio', 'range', 'rating', 'segmented', 'select', 'slider', 'tags',
+      'text', 'textarea', 'time', 'toggle', 'user',
     ]);
   });
 
