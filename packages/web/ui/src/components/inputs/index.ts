@@ -28,3 +28,4 @@ export * from './segmented-control';
 export * from './radio-group';
 export * from './multi-combobox';
 export * from './date-picker';
+export * from './color-picker';
