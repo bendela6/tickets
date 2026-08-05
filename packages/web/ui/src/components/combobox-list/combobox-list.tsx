@@ -39,7 +39,10 @@ type ComboboxListProps = {
   renderOption?: (option: Option, selected: boolean) => ReactNode;
   header?: ReactNode;
   footer?: ReactNode;
+  /** Shown when there is nothing to offer at all. */
   emptyLabel?: string;
+  /** Shown when the filter hid everything — a different fact, and a different fix. */
+  noMatchLabel?: string;
 };
 
 // The keyboard-navigable listbox shared by Combobox, MultiCombobox and
@@ -57,7 +60,8 @@ export function ComboboxList({
   renderOption,
   header,
   footer,
-  emptyLabel = 'No matches',
+  emptyLabel = 'Nothing to pick',
+  noMatchLabel = 'No matches',
 }: ComboboxListProps) {
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
@@ -100,13 +104,30 @@ export function ComboboxList({
     }
   }
 
+  /**
+   * The next selectable row in `step` direction, skipping disabled ones.
+   *
+   * Arrowing onto a disabled option used to be possible, and Enter there did
+   * nothing at all — no move, no pick, no sound. Silence is the worst answer a
+   * keypress can get, so the highlight never stops somewhere Enter cannot act.
+   * Returns `from` unchanged when there is nowhere else to go.
+   */
+  function nextEnabled(from: number, step: number): number {
+    for (let i = from + step; i >= 0 && i < filtered.length; i += step) {
+      if (!filtered[i]?.disabled) {
+        return i;
+      }
+    }
+    return from;
+  }
+
   function onKeyDown(event: React.KeyboardEvent) {
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setActiveIndex((index) => Math.min(index + 1, filtered.length - 1));
+      setActiveIndex((index) => nextEnabled(index, 1));
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      setActiveIndex((index) => Math.max(index - 1, 0));
+      setActiveIndex((index) => nextEnabled(index, -1));
     } else if (event.key === 'Enter') {
       event.preventDefault();
       pick(activeIndex);
@@ -165,7 +186,12 @@ export function ComboboxList({
         className="flex-1 overflow-y-auto p-5 focus:outline-none"
       >
         {filtered.length === 0 ? (
-          <li className="px-8 py-12 text-center font-sans text-12/17 text-gray-9">{emptyLabel}</li>
+          <li className="px-8 py-12 text-center font-sans text-12/17 text-gray-9">
+            {/* Two different empties. "No matches" in front of a list that was
+                never populated reads as though a filter is hiding something,
+                and sends you looking for the filter to clear. */}
+            {options.length === 0 ? emptyLabel : noMatchLabel}
+          </li>
         ) : null}
         {filtered.map((option, index) => {
           const groupKey = groupOf ? groupOf(option) : null;
@@ -191,6 +217,10 @@ export function ComboboxList({
                 onClick={() => pick(index)}
                 className={cn(
                   'flex w-full items-center justify-between gap-8 rounded-md px-9 py-7 text-left font-sans text-13/19 text-gray-12',
+                  // `min-w-0` so the label below may shrink: the panel is a
+                  // fixed 256px and a long option pushed the tick out of the
+                  // row instead of being cut — the same trap the trigger had.
+                  'min-w-0',
                   active && 'bg-surface-inset',
                   option.disabled && 'cursor-not-allowed opacity-50',
                 )}
@@ -198,9 +228,17 @@ export function ComboboxList({
                 {renderOption ? (
                   renderOption(option, selected)
                 ) : option.color ? (
-                  <Pill tone={option.color} shape="round" label={option.label} />
+                  // Same shape as the trigger: a Pill is an unshrinkable flex
+                  // item, so it needs `min-w-0` before the label's `truncate`
+                  // can fire at all.
+                  <Pill
+                    tone={option.color}
+                    shape="round"
+                    className="min-w-0"
+                    label={<span className="truncate">{option.label}</span>}
+                  />
                 ) : (
-                  <span>{option.label}</span>
+                  <span className="truncate">{option.label}</span>
                 )}
                 {selected ? (
                   <span className="font-sans text-12/17 font-500 text-indigo-9">✓</span>

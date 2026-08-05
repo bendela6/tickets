@@ -289,3 +289,25 @@ test('native input attributes still pass through', () => {
   expect(input).toHaveAttribute('maxlength', '140');
   expect(input).toHaveAttribute('autocomplete', 'off');
 });
+
+test('disabled dims the adorned field the same as the bare one', async () => {
+  // The two render paths are where this component can drift, and they did:
+  // `fieldClass` styles `disabled:*`, which only fires on the element carrying
+  // the attribute. On the adorned path that is the inner input, never the
+  // wrapper — so an adorned disabled field kept the raised ground and
+  // full-contrast text while the bare one dimmed. Same prop, two looks.
+  const { container: bare } = render(<Input aria-label="bare" value="" onChange={() => {}} disabled />);
+  const { container: adorned } = render(
+    <Input aria-label="adorned" value="" onChange={() => {}} disabled trailing={<kbd>⌘K</kbd>} />,
+  );
+
+  // The chrome-bearing element differs per path: the input itself, or the wrapper.
+  const bareField = bare.firstElementChild!;
+  const adornedField = adorned.firstElementChild!;
+
+  for (const token of ['border-gray-6', 'bg-surface-inset', 'text-gray-9']) {
+    expect(adornedField.className).toContain(token);
+  }
+  // And the bare path still says it the way it always did, through the variant.
+  expect(bareField.className).toContain('disabled:bg-surface-inset');
+});
