@@ -29,7 +29,7 @@ type CheckboxProps = Omit<
 // The box and its overlay marks must agree exactly — the tick is drawn to bleed
 // over the input — so one table drives both.
 const BOX: Record<ControlSize, string> = {
-  sm: 'size-14',
+  xs: 'size-14',
   md: 'size-16',
   lg: 'size-20',
 };

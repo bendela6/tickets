@@ -68,10 +68,10 @@ test('readOnly also changes how the field looks', () => {
   render(<Input value="locked" onChange={noop} readOnly aria-label="Title" />);
   const input = screen.getByLabelText('Title');
 
-  expect(input).toHaveClass('bg-surface-inset', 'border-gray-6', 'cursor-default');
-  expect(input.className).toContain('hover:border-gray-6');
+  expect(input).toHaveClass('bg-transparent', 'border-gray-7', 'cursor-default');
+  expect(input.className).toContain('hover:bg-transparent');
   // twMerge has to have evicted the editable treatment, not stacked on top of it.
-  expect(input).not.toHaveClass('bg-surface-raised');
+  expect(input).not.toHaveClass('bg-gray-4');
   expect(input).not.toHaveClass('border-gray-7');
   expect(input.className).not.toContain('hover:border-gray-11');
 });
@@ -87,8 +87,8 @@ test('readOnly reaches BOTH render paths — attribute inside, treatment on the 
   const wrapper = container.firstElementChild!;
 
   expect(input.readOnly).toBe(true);
-  expect(wrapper).toHaveClass('bg-surface-inset', 'border-gray-6', 'cursor-default');
-  expect(wrapper).not.toHaveClass('bg-surface-raised');
+  expect(wrapper).toHaveClass('bg-transparent', 'border-gray-7', 'cursor-default');
+  expect(wrapper).not.toHaveClass('bg-gray-4');
   expect(wrapper).not.toHaveClass('border-gray-7');
 });
 
@@ -103,9 +103,9 @@ test('an editable field carries none of the read-only treatment, on either path'
   const wrapper = container.lastElementChild!;
 
   expect(plain).not.toHaveAttribute('readonly');
-  expect(plain).toHaveClass('bg-surface-raised', 'border-gray-7');
+  expect(plain).toHaveClass('bg-gray-4', 'border-transparent');
   expect(plain).not.toHaveClass('cursor-default');
-  expect(wrapper).toHaveClass('bg-surface-raised', 'border-gray-7');
+  expect(wrapper).toHaveClass('bg-gray-4', 'border-transparent');
   expect(wrapper).not.toHaveClass('cursor-default');
 });
 
@@ -146,9 +146,9 @@ test('disabled and readOnly are two different states, not two names for one', ()
   // variant; read-only swaps the ground unconditionally and keeps full text
   // contrast, because the value still matters.
   expect(off.className).toContain('disabled:text-gray-9');
-  expect(off).not.toHaveClass('bg-surface-inset');
+  expect(off).not.toHaveClass('bg-transparent');
   expect(off).not.toHaveClass('cursor-default');
-  expect(locked).toHaveClass('bg-surface-inset', 'text-gray-12');
+  expect(locked).toHaveClass('bg-transparent', 'text-gray-12');
 });
 
 test('read-only drops a toned border to the resting rung but keeps the invalid claim', () => {
@@ -208,7 +208,7 @@ test('md input carries the spec size classes', () => {
 });
 
 test('sm input overrides height, padding, radius, and font size', () => {
-  render(<Input value="" onChange={noop} size="sm" aria-label="Estimate" />);
+  render(<Input value="" onChange={noop} size="xs" aria-label="Estimate" />);
   const input = screen.getByLabelText('Estimate');
   expect(input).toHaveClass('h-28', 'px-9', 'rounded-md', 'text-13');
   expect(input).not.toHaveClass('text-14');
@@ -315,5 +315,5 @@ test('disabled dims the adorned field the same as the bare one', async () => {
     expect(adornedField.className).toContain(token);
   }
   // And the bare path still says it the way it always did, through the variant.
-  expect(bareField.className).toContain('disabled:bg-surface-inset');
+  expect(bareField.className).toContain('disabled:text-gray-9');
 });

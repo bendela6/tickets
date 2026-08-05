@@ -1,10 +1,14 @@
 {
   "$comment": "Edge treatment: corner radius, plus the border and ring widths the design sanctions. Only `radius` is emitted — Tailwind has no --border-width-* or --ring-* namespace, so border-2 is 2px because the class says so and any integer compiles. The width lists are documentation for the gallery, and cannot be enforced by a token.",
+  "$radiusComment": "sm..xl are the general rungs. control-* is the form-control ladder from the Soft Fill design — a radius is only legible against the box it rounds, and 3/4/5 belong to boxes of 30/38/46px. control-md duplicating sm's 4px is an alias at the component tier, not a stray literal.",
   "radius": {
     "sm": "4px",
     "md": "6px",
     "lg": "8px",
-    "xl": "12px"
+    "xl": "12px",
+    "control-xs": "3px",
+    "control-md": "4px",
+    "control-lg": "5px"
   },
   "width": [
     1,

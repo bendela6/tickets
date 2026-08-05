@@ -273,7 +273,7 @@ export function ItemDetail({
           <Pill {...typePill} label={type?.label ?? '?'} />
           {workflowField ? (
             <StatusSelect
-              size="sm"
+              size="xs"
               className="w-auto"
               statuses={statusOptions}
               legalTargets={legalKeys}

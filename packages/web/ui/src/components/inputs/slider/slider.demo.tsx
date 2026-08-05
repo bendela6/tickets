@@ -4,7 +4,7 @@ import { TONE_NAMES } from '../../../style';
 import { Slider } from './slider';
 import type { ControlSize } from '../control';
 
-const SIZES = ['sm', 'md', 'lg'] as const satisfies readonly ControlSize[];
+const SIZES = ['xs', 'md', 'lg'] as const satisfies readonly ControlSize[];
 
 // The coverage axes, as data — every state below is derived from one of these,
 // so a new rung or a new interaction expands the page without anyone editing

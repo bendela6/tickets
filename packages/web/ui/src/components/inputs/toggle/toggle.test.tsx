@@ -38,7 +38,7 @@ describe('toggle controls', () => {
   });
 
   it('marks scale across the 14/16/20 ladder', () => {
-    const { rerender } = render(<Checkbox label="c" size="sm"  value={false} onChange={() => {}} />);
+    const { rerender } = render(<Checkbox label="c" size="xs"  value={false} onChange={() => {}} />);
     expect(screen.getByLabelText('c').className).toContain('size-14');
     rerender(<Checkbox label="c" size="md"  value={false} onChange={() => {}} />);
     expect(screen.getByLabelText('c').className).toContain('size-16');
@@ -50,7 +50,7 @@ describe('toggle controls', () => {
     // travel = width - thumb - 2*inset, so the pairs cannot be chosen apart:
     // 28-12-4=12, 32-14-4=14, 40-18-4=18.
     const cases = [
-      ['sm', 'w-28', 'translate-x-12'],
+      ['xs', 'w-28', 'translate-x-12'],
       ['md', 'w-32', 'translate-x-14'],
       ['lg', 'w-40', 'translate-x-18'],
     ] as const;

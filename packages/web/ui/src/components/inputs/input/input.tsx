@@ -31,7 +31,7 @@ type InputProps = Omit<
 // Padding and font-size are per-component, not part of `fieldClass` — see the
 // note there. These values are Input's existing ones, with lg extrapolated.
 const BOX: Record<ControlSize, string> = {
-  sm: 'px-9 text-13',
+  xs: 'px-9 text-13',
   md: 'px-12 text-14',
   lg: 'px-14 text-15' };
 
