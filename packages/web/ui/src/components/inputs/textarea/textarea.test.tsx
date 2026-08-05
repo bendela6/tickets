@@ -173,3 +173,17 @@ test('native textarea attributes still pass through', () => {
   expect(box).toHaveAttribute('rows', '6');
   expect(box).toHaveAttribute('maxlength', '280');
 });
+
+test('a locked textarea keeps no resize grip', () => {
+  // The handle promises an edit. On a disabled or read-only box, dragging it
+  // changes the one thing you are still allowed to change, which reads as the
+  // control half-working rather than as locked.
+  const { rerender } = render(<Textarea value="x" onChange={() => {}} aria-label="a" disabled />);
+  expect(screen.getByLabelText('a').className).toContain('resize-none');
+
+  rerender(<Textarea value="x" onChange={() => {}} aria-label="a" readOnly />);
+  expect(screen.getByLabelText('a').className).toContain('resize-none');
+
+  rerender(<Textarea value="x" onChange={() => {}} aria-label="a" />);
+  expect(screen.getByLabelText('a').className).toContain('resize-y');
+});

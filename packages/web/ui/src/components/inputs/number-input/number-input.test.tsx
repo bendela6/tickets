@@ -75,3 +75,24 @@ test('stepping up from empty starts at zero rather than NaN', async () => {
   await userEvent.click(screen.getByRole('button', { name: /increment/i }));
   expect(onChange).toHaveBeenCalledWith(5);
 });
+
+test('the stepper reaches the right edge, and the field fills its column', () => {
+  // Two faults reported together and sharing a cause. `inline-flex` made the
+  // control shrink to its content, so it sat narrower than every field above it
+  // in the same form; and the ladder's horizontal padding applied to the
+  // WRAPPER, holding the seam and the arrows 12px inside the field.
+  const { container } = render(<NumberInput value={3} onChange={() => {}} />);
+  const wrapper = container.firstElementChild!;
+
+  expect(wrapper.className).toContain('w-full');
+  expect(wrapper.className).not.toContain('inline-flex');
+  // The right padding is given up so the stepper column can meet the edge.
+  expect(wrapper.className).toContain('pr-0');
+});
+
+test('the value grows to fill, rather than sitting at a fixed width', () => {
+  const { container } = render(<NumberInput value={3} onChange={() => {}} />);
+  const input = container.querySelector('input')!;
+  expect(input.className).toContain('flex-1');
+  expect(input.className).not.toMatch(/\bw-64\b/);
+});
