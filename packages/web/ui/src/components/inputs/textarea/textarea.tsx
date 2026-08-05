@@ -62,7 +62,12 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
         // the wrong tool. It lands in `className`, which `variants` merges last,
         // so it beats the resting border and the toned one alike.
         className: cn(
-          'w-full resize-y leading-normal',
+          'w-full leading-normal',
+          // A locked field keeps no resize grip. The handle is an affordance
+          // that promises an edit, and dragging it on a disabled or read-only
+          // box changes the one thing you are still allowed to change — which
+          // reads as the control half-working rather than as locked.
+          disabled || readOnly ? 'resize-none' : 'resize-y',
           BOX[size],
           readOnly && readOnlyFieldClass,
           className,

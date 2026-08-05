@@ -77,7 +77,14 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
         // has to hang off focus-within.
         focus: 'focus-within',
         className: cn(
-          'inline-flex items-stretch',
+          // `flex w-full`, not `inline-flex`: every other control is block-level
+          // and fills its column, and a stepper that shrank to its content sat
+          // at a different width from the field above it in the same form.
+          //
+          // `pr-0` gives up the ladder's right padding so the stepper column can
+          // reach the edge. With it, the seam and the arrows floated 12px inside
+          // the field and read as though they belonged to something else.
+          'flex w-full items-stretch pr-0',
           disabled && 'pointer-events-none opacity-50',
           // Composed here rather than through Tailwind's `read-only:` variant:
           // that variant compiles to the CSS `:read-only` pseudo-class, which
@@ -109,11 +116,17 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
           onChange(raw === '' ? null : Number(raw));
         }}
         className={cn(
-          'w-64 bg-transparent px-8 text-right font-sans text-gray-12 tabular-nums outline-none',
+          // Grows rather than sitting at a fixed 64px, which is what pushes the
+          // stepper column to the right edge instead of leaving it wherever a
+          // short value happened to end.
+          'min-w-0 flex-1 bg-transparent pr-8 text-right font-sans text-gray-12 tabular-nums outline-none',
           '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none',
         )}
       />
-      <div className="flex flex-col border-l-1 border-gray-6">
+      {/* The seam is a 1px rung-7 line, per the design — a Soft Fill control has
+          no rim of its own, so a divider is the one place the fill treatment
+          still needs a drawn edge. */}
+      <div className="flex flex-col border-l-1 border-gray-7">
         <button
           type="button"
           aria-label="Increment"
