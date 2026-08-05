@@ -41,7 +41,7 @@ const SIZES = ['sm', 'md', 'lg'] as const satisfies readonly ControlSize[];
 // follow the ramp, which four tones show as well as seventeen.
 const TONES = ['primary', 'success', 'warning', 'danger'] as const;
 
-export const meta = { title: 'Checkbox', group: 'Components', size: 'sm' };
+export const meta = { title: 'Checkbox', group: 'Inputs', size: 'sm' };
 
 export const states = [
   ...DISPLAY.flatMap(({ name, label, initial, indeterminate }) =>
