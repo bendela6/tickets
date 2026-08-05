@@ -96,3 +96,25 @@ test('the value grows to fill, rather than sitting at a fixed width', () => {
   expect(input.className).toContain('flex-1');
   expect(input.className).not.toMatch(/\bw-64\b/);
 });
+
+test('at a bound the step is dimmed, not removed', () => {
+  // The design: "step dimmed, not removed". A stepper column that loses an
+  // arrow changes height and shifts the other one under a pointer that was
+  // about to click it, so the geometry has to hold still.
+  render(<NumberInput value={0} onChange={() => {}} min={0} max={10} />);
+  const down = screen.getByRole('button', { name: 'Decrement' });
+  const up = screen.getByRole('button', { name: 'Increment' });
+
+  expect(down).toBeInTheDocument();
+  expect(down).toBeDisabled();
+  expect(down.className).toContain('opacity-40');
+  expect(up).toBeEnabled();
+});
+
+test('an unset value is at neither bound', () => {
+  // Dimming both arrows on an empty field suggests the control is broken
+  // rather than empty.
+  render(<NumberInput value={null} onChange={() => {}} min={0} max={10} />);
+  expect(screen.getByRole('button', { name: 'Decrement' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Increment' })).toBeEnabled();
+});

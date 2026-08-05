@@ -62,6 +62,19 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
     onChange(clamp(base + delta, min, max));
   }
 
+  /**
+   * At a bound the step is DIMMED, not removed — the design is explicit about
+   * it, and the reason is that a stepper column which loses an arrow changes
+   * height and shifts the other one under a pointer that was about to click it.
+   * Dimming says "this way is spent" while the geometry holds still.
+   *
+   * An unset value counts as being at neither bound: there is nothing to be at
+   * the floor of yet, and dimming both arrows on an empty field would suggest
+   * the control is broken rather than empty.
+   */
+  const atFloor = value !== null && min !== undefined && value <= min;
+  const atCeiling = value !== null && max !== undefined && value >= max;
+
   const stepper = cn(
     'flex flex-1 items-center px-6 text-gray-9',
     !inert && 'hover:bg-surface-inset hover:text-gray-12',
@@ -131,9 +144,9 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
           type="button"
           aria-label="Increment"
           tabIndex={-1}
-          disabled={inert}
+          disabled={inert || atCeiling}
           onClick={() => nudge(step)}
-          className={stepper}
+          className={cn(stepper, atCeiling && 'opacity-40')}
         >
           <Icon name="chevron-up" size="2xs" />
         </button>
@@ -141,9 +154,9 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
           type="button"
           aria-label="Decrement"
           tabIndex={-1}
-          disabled={inert}
+          disabled={inert || atFloor}
           onClick={() => nudge(-step)}
-          className={cn(stepper, 'border-t-1 border-gray-6')}
+          className={cn(stepper, 'border-t-1 border-gray-7', atFloor && 'opacity-40')}
         >
           <Icon name="chevron-down" size="2xs" />
         </button>
