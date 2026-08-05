@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import { DatePicker } from './date-picker';
@@ -150,4 +150,71 @@ test('today is an INSET outline, so it cannot overlap its neighbours', async () 
 test('the calendar digits are mono, so a month aligns on its columns', async () => {
   await openCalendar();
   expect(screen.getByRole('button', { name: '14' }).className).toContain('font-mono');
+});
+
+const openAt = async (iso = '2026-08-14T00:00:00Z') => {
+  const onChange = vi.fn();
+  render(<DatePicker value={iso} onChange={onChange} />);
+  // The trigger is the only button before the popover opens, so match it that
+  // way rather than by its formatted date — which changes with the month under
+  // test and made this helper silently unusable outside August.
+  await userEvent.click(screen.getAllByRole('button')[0]!);
+  return onChange;
+};
+
+test('the grid is one tab stop, not thirty-one', async () => {
+  // A roving tabindex. Tabbing through every day to leave a calendar is how a
+  // keyboard user ends up trapped in one.
+  await openAt();
+  const days = screen.getAllByRole('button').filter((b) => /^\d+$/.test(b.textContent ?? ''));
+  const tabbable = days.filter((d) => d.getAttribute('tabindex') === '0');
+  expect(days.length).toBeGreaterThan(27);
+  expect(tabbable).toHaveLength(1);
+  expect(tabbable[0]!.textContent).toBe('14');
+});
+
+test('arrows move a day, up and down move a week', async () => {
+  await openAt();
+  const cursorNow = () =>
+    screen.getAllByRole('button').find((b) => b.dataset.cursor === 'true')!.textContent;
+
+  const grid = screen.getByRole('grid');
+  fireEvent.keyDown(grid, { key: 'ArrowRight' });
+  expect(cursorNow()).toBe('15');
+  fireEvent.keyDown(grid, { key: 'ArrowDown' });
+  expect(cursorNow()).toBe('22');
+  fireEvent.keyDown(grid, { key: 'ArrowUp' });
+  expect(cursorNow()).toBe('15');
+  fireEvent.keyDown(grid, { key: 'ArrowLeft' });
+  expect(cursorNow()).toBe('14');
+});
+
+test('moving the cursor commits nothing — they are two different facts', async () => {
+  // Collapsing cursor into selection would mean arrowing across a month emitted
+  // a value on every keypress.
+  const onChange = await openAt();
+  const grid = screen.getByRole('grid');
+  fireEvent.keyDown(grid, { key: 'ArrowRight' });
+  fireEvent.keyDown(grid, { key: 'ArrowDown' });
+  expect(onChange).not.toHaveBeenCalled();
+
+  fireEvent.keyDown(grid, { key: 'Enter' });
+  expect(onChange).toHaveBeenCalledWith('2026-08-22T00:00:00Z');
+});
+
+test('arrowing off the end of a month pulls the view with it', async () => {
+  // 31 Aug + 1 day is 1 September, and the cursor must never sit on a day the
+  // grid is not drawing.
+  await openAt('2026-08-31T00:00:00Z');
+  fireEvent.keyDown(screen.getByRole('grid'), { key: 'ArrowRight' });
+  expect(screen.getByText(/September 2026/)).toBeInTheDocument();
+});
+
+test('page keys move a month and clamp onto the shorter one', async () => {
+  // 31 Jan + 1 month is 28 Feb, not 3 March.
+  await openAt('2026-01-31T00:00:00Z');
+  fireEvent.keyDown(screen.getByRole('grid'), { key: 'PageDown' });
+  expect(screen.getByText(/February 2026/)).toBeInTheDocument();
+  const cursor = screen.getAllByRole('button').find((b) => b.dataset.cursor === 'true');
+  expect(cursor!.textContent).toBe('28');
 });

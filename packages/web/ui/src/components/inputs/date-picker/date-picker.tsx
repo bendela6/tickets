@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { cn, focusRing } from '../../../style';
+import { useEffect, useRef, useState } from 'react';
+import { cn, cursorRing, focusRing } from '../../../style';
 import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../control';
 import { fieldClass, fieldState } from '../field';
 import { Icon, type IconSize } from '../../icon';
@@ -35,6 +35,31 @@ function pad(value: number) {
  */
 function isoDay(value: string) {
   return value.slice(0, 10);
+}
+
+type Parts = { year: number; month: number; day: number };
+
+/**
+ * Move a calendar day by `n` days, rolling over months and years.
+ *
+ * Through `Date.UTC` rather than by arithmetic on `day`: adding 7 to the 28th
+ * of a February has to know which February, and only the calendar does. UTC
+ * throughout for the same reason `isoDay` uses it — a local zone west of
+ * Greenwich turns midnight into the previous evening.
+ */
+function addDays(parts: Parts, n: number): Parts {
+  const moved = new Date(Date.UTC(parts.year, parts.month, parts.day + n));
+  return { year: moved.getUTCFullYear(), month: moved.getUTCMonth(), day: moved.getUTCDate() };
+}
+
+/** Same, by whole months, clamping onto the shorter month — 31 Jan + 1 month is
+ *  28 Feb, not 3 March, which is what plain arithmetic would give. */
+function addMonths(parts: Parts, n: number): Parts {
+  const target = parts.month + n;
+  const year = parts.year + Math.floor(target / 12);
+  const month = ((target % 12) + 12) % 12;
+  const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  return { year, month, day: Math.min(parts.day, lastDay) };
 }
 
 function parseParts(value: string | null): { year: number; month: number; day: number } | null {
@@ -100,6 +125,70 @@ export function DatePicker({
     year: selected?.year ?? today.getUTCFullYear(),
     month: selected?.month ?? today.getUTCMonth(),
   }));
+
+  /**
+   * The keyboard cursor — where the arrows are, which is NOT what is selected.
+   *
+   * Two separate facts, and the design draws them as two channels: selection is
+   * a solid rung-9 tile, the cursor is the inward ring. Collapsing them would
+   * mean arrowing across a month committed a value on every keypress.
+   *
+   * The grid is a roving tabindex: only the cursor day is tabbable, so Tab
+   * enters and leaves the calendar in one press instead of walking 31 buttons.
+   */
+  const [cursor, setCursor] = useState<Parts>(
+    () => selected ?? { year: view.year, month: view.month, day: today.getUTCDate() },
+  );
+  // Focus only follows the cursor when a KEY moved it. Without this the grid
+  // would grab focus the moment the popover opened, taking it from the trigger
+  // that is still announcing itself.
+  const navigating = useRef(false);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!navigating.current) return;
+    navigating.current = false;
+    gridRef.current?.querySelector<HTMLButtonElement>('[data-cursor="true"]')?.focus();
+  }, [cursor]);
+
+  function moveCursor(next: Parts) {
+    navigating.current = true;
+    setCursor(next);
+    // Arrowing past either edge of the month pulls the view along, so the
+    // cursor is never on a day that is not being drawn.
+    if (next.year !== view.year || next.month !== view.month) {
+      setView({ year: next.year, month: next.month });
+    }
+  }
+
+  function onGridKeyDown(event: React.KeyboardEvent) {
+    // The design's shortcut line: "↑↓ week". Page keys move a month, matching
+    // every other calendar, and Home/End bracket the month rather than the week
+    // — a week already costs one arrow press either way.
+    const moves: Record<string, () => Parts> = {
+      ArrowLeft: () => addDays(cursor, -1),
+      ArrowRight: () => addDays(cursor, 1),
+      ArrowUp: () => addDays(cursor, -7),
+      ArrowDown: () => addDays(cursor, 7),
+      PageUp: () => addMonths(cursor, -1),
+      PageDown: () => addMonths(cursor, 1),
+      Home: () => ({ ...cursor, day: 1 }),
+      End: () => ({
+        ...cursor,
+        day: new Date(Date.UTC(cursor.year, cursor.month + 1, 0)).getUTCDate(),
+      }),
+    };
+    const move = moves[event.key];
+    if (move) {
+      event.preventDefault();
+      moveCursor(move());
+      return;
+    }
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      commit(cursor);
+    }
+  }
 
   const startWeekday = new Date(Date.UTC(view.year, view.month, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(view.year, view.month + 1, 0)).getUTCDate();
@@ -204,7 +293,12 @@ export function DatePicker({
             <Icon name="chevron-right" size="xs" />
           </button>
         </div>
-        <div className="grid grid-cols-[repeat(7,28px)] justify-center gap-2">
+        <div
+          ref={gridRef}
+          role="grid"
+          onKeyDown={onGridKeyDown}
+          className="grid grid-cols-[repeat(7,28px)] justify-center gap-2"
+        >
           {WEEKDAYS.map((weekday, index) => (
             <div key={index} className="text-center font-mono text-10 font-500 text-gray-9">
               {weekday}
@@ -223,6 +317,8 @@ export function DatePicker({
               today.getUTCMonth() === view.month &&
               today.getUTCDate() === day;
             const blocked = outOfRange(`${view.year}-${pad(view.month + 1)}-${pad(day)}`);
+            const isCursor =
+              cursor.year === view.year && cursor.month === view.month && cursor.day === day;
             return (
               <button
                 key={day}
@@ -231,6 +327,13 @@ export function DatePicker({
                 // the field itself, it holds no value, so `disabled` is the
                 // right refusal here and drops it from the tab order too.
                 disabled={blocked}
+                data-cursor={isCursor || undefined}
+                aria-selected={isSelected}
+                // Roving tabindex: one tab stop for the whole grid. Tabbing
+                // through 31 buttons to leave a calendar is how a keyboard user
+                // ends up trapped in one.
+                tabIndex={isCursor ? 0 : -1}
+                onFocus={() => setCursor({ year: view.year, month: view.month, day })}
                 onClick={() => commit({ year: view.year, month: view.month, day })}
                 className={cn(
                   // Mono, like every other date in the system, so the columns
@@ -240,6 +343,10 @@ export function DatePicker({
                   // The focused day wears the inward ring — a day cell is inside
                   // a grid, where an outward halo would overlap its neighbours.
                   focusRing(field.scale, 'focus-visible', 'inward'),
+                  // The cursor is drawn from STATE, not from `:focus`: it has to
+                  // survive the grid losing focus to the typed-date box below,
+                  // and it is the same rim either way so the two cannot disagree.
+                  isCursor && !isSelected && cursorRing(field.scale),
                   isSelected
                     ? // A solid rung-9 tile, on the field's own ramp rather than
                       // a hardcoded indigo — a danger-toned picker used to open
