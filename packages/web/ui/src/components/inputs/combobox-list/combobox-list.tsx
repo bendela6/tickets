@@ -198,6 +198,15 @@ export function ComboboxList({
         </div>
       ) : null}
       {header ? <div className="border-b-1 border-gray-6 px-6 py-4">{header}</div> : null}
+      {/* Only while filtering. On an unfiltered list the total says nothing the
+          list itself does not, and a permanent counter over three options is
+          noise; while filtering it is the difference between "this is a short
+          list" and "your query hid 211 things". */}
+      {query.trim() && filtered.length > 0 ? (
+        <div className="px-12 pt-6 font-mono text-10 text-gray-9">
+          {filtered.length} of {options.length}
+        </div>
+      ) : null}
       {/* Without the search box the list is what opens focused, so it carries
           the arrow/Enter handling and the active-descendant pointer the input
           would otherwise own. `tabIndex={-1}` makes it programmatically
