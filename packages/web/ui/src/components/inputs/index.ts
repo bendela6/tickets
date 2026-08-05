@@ -15,6 +15,8 @@ export * from './toggle';
 
 export * from './input';
 export * from './textarea';
+export * from './password-input';
+export * from './search-input';
 export * from './number-input';
 export * from './slider';
 export * from './checkbox';
