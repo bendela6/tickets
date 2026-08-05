@@ -1,5 +1,5 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
-import { axis, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
+import { axis, focusRing, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
 import { Icon, type IconSize } from '../icon';
 import { Spinner } from '../spinner';
 
@@ -55,14 +55,14 @@ const buttonClass = variants({
           `bg-${tone}-9 hover:bg-${tone}-10`,
           `text-${tone}-contrast`,
           'border-1 border-transparent',
-          `focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-${tone}-3`,
+          focusRing(tone),
           'focus-visible:shadow-[inset_0_0_0_1px_var(--color-gray-1)]',
         ]),
         subtle: over(SCALE, (tone) => [
           `bg-${tone}-3 hover:bg-${tone}-4`,
           `text-${tone}-11`,
           'border-1 border-transparent',
-          `focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-${tone}-3`,
+          focusRing(tone),
         ]),
         // Border and text follow the tone, matching what `TONES.outline`
         // resolves to for a Pill asking for the same treatment — the two must
@@ -71,7 +71,7 @@ const buttonClass = variants({
           `bg-surface-raised hover:bg-${tone}-3`,
           `text-${tone}-11`,
           `border-2 border-${tone}-7 hover:border-${tone}-8`,
-          `focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-${tone}-3 focus-visible:border-${tone}-9`,
+          [focusRing(tone), `focus-visible:border-${tone}-9`],
         ]),
         // Ghost is Button's answer to Pill's `text` emphasis — the same tone
         // text, plus the hover surface a button needs and a tag does not.
@@ -79,7 +79,7 @@ const buttonClass = variants({
           `bg-transparent hover:bg-${tone}-4`,
           `text-${tone}-11 hover:text-${tone}-12`,
           'border-1 border-transparent',
-          `focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-${tone}-3`,
+          focusRing(tone),
         ]),
       },
     },

@@ -1,5 +1,5 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
-import { axis, cn, HUES, over, TONE_HUE, variants } from '../../../style';
+import { axis, cn, focusRing, HUES, over, TONE_HUE, variants } from '../../../style';
 import { toggleRowClass } from '../toggle';
 import { readOnlyMarkClass, type ControlProps, type ControlSize } from '../control';
 
@@ -41,7 +41,7 @@ const trackClass = variants({
       options: {
         on: over(SCALE, (tone) => [
           `checked:bg-${tone}-9`,
-          `focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-${tone}-3`,
+          focusRing(tone),
           'disabled:cursor-not-allowed disabled:border-1 disabled:border-gray-6 disabled:bg-surface-inset',
         ]),
       },

@@ -1,5 +1,5 @@
 import { useCallback, useRef, type KeyboardEvent, type PointerEvent } from 'react';
-import { axis, cn, HUES, over, TONE_HUE, variants } from '../../../style';
+import { axis, cn, focusRing, HUES, over, TONE_HUE, variants } from '../../../style';
 import { readOnlyMarkClass, type ControlProps } from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
@@ -45,7 +45,7 @@ const rootClass = variants({
       default: 'on',
       options: {
         on: over(SCALE, (tone) => [
-          `focus-visible:ring-3 focus-visible:ring-${tone}-3`,
+          focusRing(tone),
           'aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
         ]),
       },

@@ -1,8 +1,17 @@
 import { render, screen } from '@testing-library/react';
 import { expect, test } from 'vitest';
+import { focusRing } from '../../../style';
 import { Input } from '../input';
 import { Textarea } from '../textarea';
 import { fieldClass } from './field';
+
+// None of these name a rung. A test that spells out `-9` or `-11` fails the
+// moment a designer moves a value and can only ever catch someone copying the
+// number wrong twice, so what is asserted here is the WIRING: which ramp a
+// state paints from, which pseudo-class the ring hangs off, and that the three
+// interaction states are distinct from one another. `focusRing()` is the single
+// definition, so referring to it keeps these honest for free.
+const rung = (className: string, pattern: RegExp) => className.match(pattern)?.[1];
 
 test('a tone colours the border outright, not only on focus', () => {
   // The point of tone on a field is to say something at a glance — a validated
@@ -10,22 +19,27 @@ test('a tone colours the border outright, not only on focus', () => {
   // field is a colour nobody sees.
   render(<Input tone="success" aria-label="Budget"  value="" onChange={() => {}} />);
   const input = screen.getByLabelText('Budget');
-  expect(input).toHaveClass('border-green-9');
+  expect(input.className).toMatch(/(?:^|\s)border-green-\d/);
   expect(input).not.toHaveClass('border-gray-7');
-  // The BORDER is the unconditional part. The ring is not — see below.
-  expect(input).not.toHaveClass('ring-3');
+  // The BORDER is the unconditional part. The ring is not — it belongs to focus,
+  // and an always-on ring leaves focus with nothing to add.
+  expect(input.className).not.toMatch(/(?:^|\s)ring-\d/);
 });
 
 test('a toned field still has somewhere to go on hover and on focus', () => {
-  // The regression: `toned` wore `ring-3 ring-{tone}-3` unconditionally and
-  // stepped its border 9→10 on hover. Focus therefore contributed nothing but
-  // `outline-none`, and 9→10 is 1.17:1 — so a danger field measured and looked
-  // the same at rest, hovered and focused. Every state needs its own delta.
+  // The regression: `toned` wore its ring unconditionally and moved its border
+  // by a single rung on hover, so a danger field measured identically at rest,
+  // hovered and focused. Asserted as a shape — three states, three appearances —
+  // rather than as three numbers.
   render(<Input tone="danger" aria-label="Key"  value="" onChange={() => {}} />);
-  const input = screen.getByLabelText('Key');
-  expect(input).toHaveClass('hover:border-red-11');
-  expect(input).toHaveClass('focus:border-red-11', 'focus:ring-3', 'focus:ring-red-3');
-  expect(input).not.toHaveClass('hover:border-red-10');
+  const { className } = screen.getByLabelText('Key');
+
+  const rest = rung(className, /(?:^|\s)border-red-(\d+)/);
+  const hover = rung(className, /hover:border-red-(\d+)/);
+  expect(rest).toBeDefined();
+  expect(hover).toBeDefined();
+  expect(hover).not.toBe(rest);
+  expect(className).toContain(focusRing('red', 'focus'));
 });
 
 test('a toned field keeps its own colour on focus rather than turning accent', () => {
@@ -34,9 +48,9 @@ test('a toned field keeps its own colour on focus rather than turning accent', (
   // the user had gone to fix it.
   render(<Input tone="danger" aria-label="Key"  value="" onChange={() => {}} />);
   const input = screen.getByLabelText('Key');
-  expect(input).toHaveClass('border-red-9', 'focus:ring-red-3');
+  expect(input.className).toContain(focusRing('red', 'focus'));
+  expect(input.className).not.toContain(focusRing('indigo', 'focus'));
   expect(input).not.toHaveClass('focus:border-indigo-9');
-  expect(input).not.toHaveClass('focus:ring-indigo-3');
 });
 
 test('tone is what makes a field invalid — nothing else announces it', () => {
@@ -52,18 +66,20 @@ test('an unset tone is the resting field, not a coloured one', () => {
   // Every input wearing its tone's border would paint the whole form indigo.
   render(<Input aria-label="Title"  value="" onChange={() => {}} />);
   const input = screen.getByLabelText('Title');
-  expect(input).toHaveClass('border-gray-7', 'hover:border-gray-9');
+  expect(input.className).toMatch(/(?:^|\s)border-gray-\d/);
+  expect(input.className).toMatch(/hover:border-gray-\d/);
   expect(input).not.toHaveClass('border-indigo-9');
   // …but the focus ring still follows the accent.
-  expect(input).toHaveClass('focus:ring-indigo-3');
+  expect(input.className).toContain(focusRing('indigo', 'focus'));
 });
 
 test('composite fields hang the ring on focus-within, plain ones on focus', () => {
   // A tag list or a stepper focuses an inner input, so its shell never matches
-  // `:focus` — same ring, different trigger.
-  expect(fieldClass({ focus: 'focus-within' })).toContain('focus-within:ring-indigo-3');
-  expect(fieldClass({ focus: 'focus-within' })).not.toContain('focus:ring-indigo-3');
-  expect(fieldClass()).toContain('focus:ring-indigo-3');
+  // `:focus` — same ring, different trigger. The trigger is the contract; the
+  // ring's own appearance is `focusRing`'s business, not this test's.
+  expect(fieldClass({ focus: 'focus-within' })).toContain(focusRing('indigo', 'focus-within'));
+  expect(fieldClass({ focus: 'focus-within' })).not.toContain(focusRing('indigo', 'focus'));
+  expect(fieldClass()).toContain(focusRing('indigo', 'focus'));
 });
 
 test('every rung sets height, radius and font size together', () => {

@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { focusRing } from '../../../style';
 import { Checkbox } from '../checkbox';
 import { RadioGroup } from '../radio-group';
 import { Spinner } from '../../spinner';
@@ -14,7 +15,7 @@ describe('toggle controls', () => {
   it('all three take the accent from tone rather than a fixed indigo', () => {
     const { unmount } = render(<Checkbox label="c" tone="success"  value={false} onChange={() => {}} />);
     expect(screen.getByLabelText('c').className).toContain('checked:bg-green-9');
-    expect(screen.getByLabelText('c').className).toContain('focus-visible:ring-green-3');
+    expect(screen.getByLabelText('c').className).toContain(focusRing('green'));
     unmount();
 
     const { unmount: u2 } = render(

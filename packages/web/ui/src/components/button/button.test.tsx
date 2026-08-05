@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
+import { focusRing } from '../../style';
 import { Button } from './button';
 
 test('renders and clicks', async () => {
@@ -54,16 +55,15 @@ test('sizes match design height/padding/radius/font-size', () => {
   );
 });
 
-test('focus halo is 3px accent-subtle, following tone', () => {
+test('the focus halo follows tone, and is the library-wide one', () => {
+  // What the halo looks like is `focusRing`'s to decide — this asserts only
+  // that the button wears THAT ring, and that it repaints with tone.
   const { rerender } = render(<Button variant="solid">New</Button>);
-  expect(screen.getByRole('button')).toHaveClass(
-    'focus-visible:ring-3',
-    'focus-visible:ring-indigo-3',
-  );
+  expect(screen.getByRole('button').className).toContain(focusRing('indigo'));
   rerender(<Button variant="solid" tone="danger">Archive</Button>);
   const danger = screen.getByRole('button');
-  expect(danger).toHaveClass('focus-visible:ring-red-3');
-  expect(danger).not.toHaveClass('focus-visible:ring-indigo-3');
+  expect(danger.className).toContain(focusRing('red'));
+  expect(danger.className).not.toContain(focusRing('indigo'));
 });
 
 test('tone repaints the variant onto another ramp', () => {

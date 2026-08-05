@@ -188,3 +188,23 @@ here should need to leak back into those skills.
    the `disabled` ATTRIBUTE for read-only anywhere: it drops the tab stop and
    drops the value from form submission, and a field locked by permission still
    owes both.
+9. **The focus ring is `focusRing()` in `src/style/focus-ring/`, and nothing else.**
+   Five components (Button, the field shell, the toggle marks, Switch, Slider)
+   used to spell it out themselves, which is how all five ended up wearing a
+   ring nobody could see — the rung was `-3`, a fill tint measuring **1.00:1**
+   against the dark ground and 1.20:1 against the light one, far under the 3:1
+   WCAG 2.2 asks of a focus indicator. Never write `ring-*` on a control; call
+   `focusRing(hue, trigger)`. The trigger is the only thing a caller chooses:
+   `focus-visible` (default, for anything clicked AND tabbed), `focus` (a text
+   field, which should ring whenever it holds the caret), `focus-within` (a
+   composite whose shell never matches `:focus`). Tests assert
+   `.toContain(focusRing(hue))` rather than any rung, so they follow a change
+   instead of blocking it.
+10. **`ring-<number>` takes INTEGERS only — `ring-1.5` compiles to nothing.**
+    Not an error, not a warning: the utility silently does not exist, so the
+    control keeps its ring colour and its ring offset and paints no ring at all,
+    which looks like a cascade problem and is not one. Use `ring-[1.5px]`. The
+    sibling trap is `ring-offset-<n>` with no colour — Tailwind's
+    `--tw-ring-offset-color` defaults to **white**, drawing a white hairline
+    around every control in the dark theme, so an offset ring MUST name its
+    surface (`ring-offset-surface-raised` here).

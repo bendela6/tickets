@@ -1,4 +1,4 @@
-import { axis, HUES, over, TONE_HUE, variants, type Hue } from '../../../style';
+import { axis, focusRing, HUES, over, TONE_HUE, variants, type Hue } from '../../../style';
 import type { ControlSize } from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
@@ -27,6 +27,9 @@ const FOCUS = axis('focus', ['focus', 'focus-within'], 'focus');
  *             focus with nothing to add and made a toned field look identical
  *             focused, hovered and at rest.
  *
+ * The ring itself is not defined here — `focusRing()` owns it for every control
+ * in the library. All this file chooses is which pseudo-class it hangs off.
+ *
  * `focus` is the *variant prefix*: a plain `<input>` takes focus itself, while
  * a composite field (a tag list, a stepper) focuses an inner element and has
  * to react to `focus-within`. A toned field keeps its own colour on focus
@@ -43,13 +46,14 @@ export const fieldClass = variants({
     state: {
       default: 'neutral',
       // Two axes: the ramp, and which pseudo-class the focus treatment hangs
-      // off. `ring()` is not reachable here — it is pinned to `focus-visible`,
-      // and a field's whole point is that the trigger varies.
+      // off. `focusRing`'s default is `focus-visible`, which is wrong for a
+      // field — a text field should ring whenever it holds the caret, however
+      // the caret got there — so the trigger is always passed explicitly.
       options: {
         neutral: over(SCALE, FOCUS, (tone, focus) => [
-          'border-gray-7 hover:border-gray-9',
-          `${focus}:border-${tone}-9 ${focus}:outline-none`,
-          `${focus}:ring-3 ${focus}:ring-${tone}-3`,
+          'border-gray-7 hover:border-gray-11',
+          `${focus}:border-${tone}-9`,
+          focusRing(tone, focus),
         ]),
         // Structurally the same three lines as `neutral` — border steps on
         // hover, ring appears on focus — differing only in where the border
@@ -60,8 +64,8 @@ export const fieldClass = variants({
         // fill, and it is the nearest one that can actually be seen.
         toned: over(SCALE, FOCUS, (tone, focus) => [
           `border-${tone}-9 hover:border-${tone}-11`,
-          `${focus}:border-${tone}-11 ${focus}:outline-none`,
-          `${focus}:ring-3 ${focus}:ring-${tone}-3`,
+          `${focus}:border-${tone}-11`,
+          focusRing(tone, focus),
         ]),
       },
     },
