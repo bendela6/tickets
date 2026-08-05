@@ -18,6 +18,31 @@ import { OptionRow } from '../option-row';
  */
 export type ComboOption = Option;
 
+/**
+ * The label with the matched run bolded.
+ *
+ * Weight rather than colour, per the design — the row already spends colour on
+ * three channels (cursor, hover, selection) and the options may carry colours
+ * of their own, so a highlight would be a fourth signal competing with all of
+ * them. Weight is the one channel nothing else is using.
+ *
+ * Case-insensitive on the match but the ORIGINAL casing is rendered: showing
+ * the query's casing back would silently rewrite the option's own name.
+ */
+function MatchedLabel({ label, query }: { label: string; query: string }) {
+  const needle = query.trim();
+  if (!needle) return <>{label}</>;
+  const at = label.toLowerCase().indexOf(needle.toLowerCase());
+  if (at === -1) return <>{label}</>;
+  return (
+    <>
+      {label.slice(0, at)}
+      <b className="font-600">{label.slice(at, at + needle.length)}</b>
+      {label.slice(at + needle.length)}
+    </>
+  );
+}
+
 type ComboboxListProps = {
   options: Option[];
   isSelected: (value: string) => boolean;
@@ -231,7 +256,7 @@ export function ComboboxList({
                     label={<span className="truncate">{option.label}</span>}
                   />
                 ) : (
-                  option.label
+                  <MatchedLabel label={option.label} query={query} />
                 )}
               </OptionRow>
             </li>

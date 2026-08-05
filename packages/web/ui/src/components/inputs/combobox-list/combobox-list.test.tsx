@@ -99,3 +99,17 @@ test('a resting mouse cannot change what Enter commits', async () => {
   // is visual only and must not have moved it.
   expect(onPick).toHaveBeenCalledWith('b');
 });
+
+test('the matched run is bolded, never colour-highlighted', async () => {
+  // The design: "Match is bolded, never highlighted with colour." Colour here
+  // would collide with the three channels the row already spends colour on —
+  // cursor, hover and selection — and with option colours themselves.
+  render(
+    <ComboboxList options={OPTIONS} isSelected={() => false} onPick={() => {}} />,
+  );
+  await userEvent.type(screen.getByRole('searchbox'), 'lph');
+
+  const mark = screen.getByText('lph');
+  expect(mark.tagName.toLowerCase()).toBe('b');
+  expect(mark.className).not.toMatch(/bg-|text-(red|green|blue|indigo|orange)-/);
+});
