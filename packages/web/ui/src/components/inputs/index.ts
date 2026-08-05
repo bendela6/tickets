@@ -8,6 +8,8 @@
 export * from './control';
 export * from './field';
 export * from './combobox-list';
+export * from './option-row';
+export * from './popup';
 export * from './toggle';
 
 export * from './input';
