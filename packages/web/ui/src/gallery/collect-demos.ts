@@ -91,7 +91,11 @@ function collectState(state: AnyDemoState, demoSlug: string): CollectedState {
  * Deprecated stays pinned to the bottom — it is the one group you should never
  * reach for, and putting it anywhere else invites picking from it by accident.
  */
-const GROUP_ORDER = ['Foundation', 'Components'];
+// `Inputs` sits between them on purpose: the form controls are their own layer
+// now — one directory, one contract, one size ladder — and they are what you
+// reach for most. Burying them alphabetically among the other components would
+// hide the group that has the most to compare.
+const GROUP_ORDER = ['Foundation', 'Inputs', 'Components'];
 const TRAILING = ['Ungrouped', 'Deprecated'];
 
 function groupRank(group: string): number {

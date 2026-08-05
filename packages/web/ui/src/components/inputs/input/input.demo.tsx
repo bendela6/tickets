@@ -107,7 +107,7 @@ function Box({ children }: { children: ReactNode }) {
   return <div className="w-224">{children}</div>;
 }
 
-export const meta = { title: 'Input', group: 'Components', size: 'md' };
+export const meta = { title: 'Input', group: 'Inputs', size: 'md' };
 
 const contentByAvailability = defineState({
   title: 'content × availability',

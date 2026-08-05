@@ -88,7 +88,7 @@ function Choice({
   );
 }
 
-export const meta = { title: 'RadioGroup', group: 'Components', size: 'full' };
+export const meta = { title: 'RadioGroup', group: 'Inputs', size: 'full' };
 
 // Both axes at once: `card` carries padding and a border that `plain` does
 // not, so the rungs land on different total heights and only the crossing
