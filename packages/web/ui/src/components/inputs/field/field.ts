@@ -1,5 +1,5 @@
 import { axis, focusRing, HUES, over, TONE_HUE, variants, type Hue } from '../../../style';
-import type { ControlSize } from '../control';
+import { CONTROL_LADDER, type ControlSize } from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
@@ -8,80 +8,82 @@ const SCALE = axis('scale', HUES, 'indigo');
 const FOCUS = axis('focus', ['focus', 'focus-within'], 'focus');
 
 /**
- * The shell every text-entry control wears: surface fill, a border that reacts
- * to hover and focus, and the disabled treatment. Seven components used to
- * carry their own copy of it, which is how five of them ended up with the
- * accent hardcoded to indigo.
+ * The shell every text-entry control wears, on the Soft Fill design
+ * (2026-08-05, `19 Input Layer FINAL Soft Fill.dc.html`).
  *
- * `state` is what a tone means to a field:
+ * The model inverted. A field used to be a raised surface with a visible
+ * border; it is now a **filled floor with a transparent border**, and focus
+ * *lifts* it — the floor drops away to the field surface and the border it was
+ * already carrying gets coloured in. Nothing changes size in any state, which
+ * is the point of keeping a transparent border at rest rather than adding one
+ * on focus.
  *
- *   neutral — the resting field. Gray border, accent focus ring. An input with
- *             nothing to say about itself is not coloured, so this stays the
- *             default; making every field wear its tone's border would paint
- *             the whole form indigo.
- *   toned   — the field is saying something. Border and ring both take the
- *             ramp, and the BORDER is the part that is on whether or not it has
- *             focus, because an error or a confirmation has to be visible at a
- *             glance. The ring stays the focus treatment, exactly as in
- *             `neutral` — it was once pinned on permanently here, which left
- *             focus with nothing to add and made a toned field look identical
- *             focused, hovered and at rest.
+ * The six recipes, from the design's contract table:
  *
- * The ring itself is not defined here — `focusRing()` owns it for every control
- * in the library. All this file chooses is which pseudo-class it hangs off.
+ *   rest      floor rung 4 · 1px transparent border · no shadow
+ *   hover     floor rung 5 · 120ms
+ *   focus     floor surface · rim rung 11 light / 9 dark · halo 4px @22/30%
+ *   active    floor rung 6 · inset well, held until a popup opens
+ *   disabled  45° hatch rung 4/7 · value rung 9 · no tab stop
+ *   read-only NO floor · 1px rule rung 7 · value stays rung 12 · keeps tab stop
+ *
+ * `state` is what a tone means to a field, and under Soft Fill the answer is
+ * "the floor swaps ramp, everything else holds":
+ *
+ *   neutral — the resting field, on GRAY rung 4. An input with nothing to say
+ *             about itself is not coloured. Gray needs rung 4 to register at
+ *             all, which is why it does not share the toned rung.
+ *   toned   — the field is saying something, on its own ramp's rung 2. Two
+ *             rungs lower than neutral because a saturated ramp carries at a
+ *             lighter step, and a form of rung-4 colour would shout.
+ *
+ * A toned field keeps its own ramp on focus rather than reverting to the
+ * accent — an invalid field that turns indigo the moment you click into it has
+ * hidden the error exactly when you need it. `focusRing` takes the ramp, so
+ * that falls out rather than being special-cased.
  *
  * `focus` is the *variant prefix*: a plain `<input>` takes focus itself, while
- * a composite field (a tag list, a stepper) focuses an inner element and has
- * to react to `focus-within`. A toned field keeps its own colour on focus
- * rather than reverting to the accent — an invalid field that turns indigo the
- * moment you click into it has hidden the error exactly when you need it.
+ * a composite field (a tag list, a stepper) focuses an inner element and has to
+ * react to `focus-within`.
  */
 export const fieldClass = variants({
   base: [
-    'appearance-none border-1 bg-surface-raised font-sans text-gray-12 placeholder:text-gray-9',
-    'transition-colors',
-    'disabled:border-gray-6 disabled:bg-surface-inset disabled:text-gray-9',
+    'appearance-none font-sans text-gray-12 placeholder:text-gray-10',
+    // The border is present and transparent from rest, so the focus rim costs
+    // no layout. Removing it and adding one on focus would shift the value by
+    // a pixel every time the caret lands.
+    'border-1 border-transparent',
+    'transition-colors duration-120',
+    // Disabled is a hatch, not a tint — a filled floor cannot say "unavailable"
+    // by going one rung quieter, because every other state is also a floor.
+    'disabled:bg-hatch disabled:text-gray-9 disabled:cursor-not-allowed',
   ],
   config: {
     state: {
       default: 'neutral',
-      // Two axes: the ramp, and which pseudo-class the focus treatment hangs
-      // off. `focusRing`'s default is `focus-visible`, which is wrong for a
-      // field — a text field should ring whenever it holds the caret, however
-      // the caret got there — so the trigger is always passed explicitly.
       options: {
         neutral: over(SCALE, FOCUS, (tone, focus) => [
-          'border-gray-7 hover:border-gray-11',
-          `${focus}:border-${tone}-9`,
+          'bg-gray-4 hover:bg-gray-5 active:bg-gray-6',
+          `${focus}:bg-surface-field`,
           focusRing(tone, focus),
         ]),
-        // Structurally the same three lines as `neutral` — border steps on
-        // hover, ring appears on focus — differing only in where the border
-        // starts. `-11`, not the conventional `-10`: a toned border already
-        // rests on the solid rung, and 9→10 measures 1.17:1 against 1.98:1 for
-        // neutral's 7→9, which on one pixel is no change at all. 9→11 is 1.47:1.
-        // The rung is a text step by convention, but this is a border, not a
-        // fill, and it is the nearest one that can actually be seen.
         toned: over(SCALE, FOCUS, (tone, focus) => [
-          `border-${tone}-9 hover:border-${tone}-11`,
-          `${focus}:border-${tone}-11`,
+          `bg-${tone}-2 hover:bg-${tone}-3 active:bg-${tone}-4`,
+          `${focus}:bg-surface-field`,
           focusRing(tone, focus),
         ]),
       },
     },
-    // Height and radius only — deliberately not padding or font-size.
-    // A stepper, a tag list and a plain input want different insets at the same
-    // height, and their font sizes genuinely differ today (Input is 14px, the
-    // comboboxes are text-13/19 at 13px) with nothing in the spec saying they
-    // should not. Folding either in here would change appearance under cover
-    // of a refactor. Radius IS shared: design-system.html §07 puts the 36px
-    // combobox trigger at 8px, same as the input.
+    // Height, radius, padding and font size now move together — the design
+    // states one set of ratios and `CONTROL_LADDER` is that table. They used to
+    // be deliberately split, back when a 36px input was 14px and a 36px
+    // combobox 13px for no reason the spec gave; Soft Fill settles it.
     size: {
       default: 'md',
       options: {
-        sm: 'h-28 rounded-md',
-        md: 'h-36 rounded-lg',
-        lg: 'h-44 rounded-xl',
+        xs: `${CONTROL_LADDER.xs.height} ${CONTROL_LADDER.xs.radius} ${CONTROL_LADDER.xs.text} ${CONTROL_LADDER.xs.padX}`,
+        md: `${CONTROL_LADDER.md.height} ${CONTROL_LADDER.md.radius} ${CONTROL_LADDER.md.text} ${CONTROL_LADDER.md.padX}`,
+        lg: `${CONTROL_LADDER.lg.height} ${CONTROL_LADDER.lg.radius} ${CONTROL_LADDER.lg.text} ${CONTROL_LADDER.lg.padX}`,
       },
     },
   },
@@ -111,3 +113,7 @@ export function fieldState(tone: string | undefined): {
     invalid: tone === 'danger',
   };
 }
+
+/** Re-exported so a control that needs one rung of the ladder does not reach
+ *  past this module for it. */
+export { CONTROL_LADDER, type ControlSize };

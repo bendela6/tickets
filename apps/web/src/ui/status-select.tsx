@@ -19,7 +19,7 @@ type StatusSelectProps = {
 };
 
 const PADDING: Record<ControlSize, string> = {
-  sm: 'pr-8 pl-6',
+  xs: 'pr-8 pl-6',
   md: 'pr-8 pl-6',
   lg: 'pr-10 pl-8',
 };

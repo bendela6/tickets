@@ -3,7 +3,7 @@ import { boolean, definePlayground, number, select } from '../../../gallery';
 import { TONE_NAMES } from '../../../style';
 import { NumberInput } from './number-input';
 
-const SIZES = ['sm', 'md', 'lg'] as const;
+const SIZES = ['xs', 'md', 'lg'] as const;
 
 // A sample rather than all of TONE_NAMES: a field's tone only moves its border
 // and its focus ring, so four ramps say everything the other thirteen repeat.

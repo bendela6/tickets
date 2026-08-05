@@ -71,11 +71,11 @@ const optionClass = variants({
 
 // Circle and inner dot scale together: the dot stays half the circle so the
 // 2px accent ring around it reads the same at every rung.
-const CIRCLE: Record<ControlSize, string> = { sm: 'size-14', md: 'size-16', lg: 'size-20' };
-const DOT: Record<ControlSize, string> = { sm: 'size-6', md: 'size-8', lg: 'size-10' };
-const ROW_GAP: Record<ControlSize, string> = { sm: 'gap-12', md: 'gap-16', lg: 'gap-20' };
+const CIRCLE: Record<ControlSize, string> = { xs: 'size-14', md: 'size-16', lg: 'size-20' };
+const DOT: Record<ControlSize, string> = { xs: 'size-6', md: 'size-8', lg: 'size-10' };
+const ROW_GAP: Record<ControlSize, string> = { xs: 'gap-12', md: 'gap-16', lg: 'gap-20' };
 // Cards carry their own padding, so they sit closer together than bare rows.
-const CARD_GAP: Record<ControlSize, string> = { sm: 'gap-6', md: 'gap-8', lg: 'gap-10' };
+const CARD_GAP: Record<ControlSize, string> = { xs: 'gap-6', md: 'gap-8', lg: 'gap-10' };
 
 export function RadioGroup({
   id,

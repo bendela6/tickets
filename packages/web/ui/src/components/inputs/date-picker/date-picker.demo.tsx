@@ -49,7 +49,7 @@ const INTERACTION = [
 ] as const;
 
 const SIZES = [
-  { size: 'sm', height: 28 },
+  { size: 'xs', height: 28 },
   { size: 'md', height: 36 },
   { size: 'lg', height: 44 },
 ] as const;
@@ -138,7 +138,7 @@ export const playground = definePlayground({
   },
   controls: {
     placeholder: text('Set date…'),
-    size: select(['sm', 'md', 'lg'], { allowNone: true, type: 'ControlSize' }),
+    size: select(['xs', 'md', 'lg'], { allowNone: true, type: 'ControlSize' }),
     tone: select([...TONE_NAMES], {
       allowNone: true,
       type: 'Tone',

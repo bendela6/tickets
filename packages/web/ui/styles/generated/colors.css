@@ -152,6 +152,7 @@
   --ins-safe-zone: #c0382e;
   --ins-black: #000000;
   --ins-white: #ffffff;
+  --ins-well: rgba(37,35,29,.10);
 }
 
 [data-theme='dark'] {
@@ -306,6 +307,7 @@
   --ins-safe-zone: #c0382e;
   --ins-black: #000000;
   --ins-white: #ffffff;
+  --ins-well: rgba(0,0,0,.55);
 }
 
 @theme inline {
@@ -461,4 +463,5 @@
   --color-safe-zone: var(--ins-safe-zone);
   --color-black: var(--ins-black);
   --color-white: var(--ins-white);
+  --color-well: var(--ins-well);
 }

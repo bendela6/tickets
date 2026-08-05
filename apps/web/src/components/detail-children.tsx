@@ -124,7 +124,7 @@ export function DetailChildren({
               </span>
               <span className="shrink-0" onClick={(event) => event.stopPropagation()}>
                 <StatusSelect
-                  size="sm"
+                  size="xs"
                   className="w-auto"
                   statuses={childStatusOptions}
                   legalTargets={legalKeys}

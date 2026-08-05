@@ -51,7 +51,7 @@ const trackClass = variants({
     size: {
       default: 'md',
       options: {
-        sm: 'h-16 w-28',
+        xs: 'h-16 w-28',
         md: 'h-18 w-32',
         lg: 'h-22 w-40',
       },
@@ -60,7 +60,7 @@ const trackClass = variants({
 });
 
 const THUMB: Record<ControlSize, string> = {
-  sm: 'size-12 peer-checked:translate-x-12',
+  xs: 'size-12 peer-checked:translate-x-12',
   md: 'size-14 peer-checked:translate-x-14',
   lg: 'size-18 peer-checked:translate-x-18',
 };

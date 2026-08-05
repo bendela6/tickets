@@ -57,7 +57,7 @@ type AvailabilityKey = keyof typeof AVAILABILITY;
 const AVAILABILITY_KEYS = Object.keys(AVAILABILITY) as AvailabilityKey[];
 
 // Height, padding and font size — 28 / 36 / 44px.
-const SIZES = ['sm', 'md', 'lg'] as const satisfies readonly ControlSize[];
+const SIZES = ['xs', 'md', 'lg'] as const satisfies readonly ControlSize[];
 
 /**
  * The two render paths, crossed with everything below.
@@ -69,7 +69,7 @@ const SIZES = ['sm', 'md', 'lg'] as const satisfies readonly ControlSize[];
  */
 const SHELL = {
   bare: {},
-  adorned: { leading: <Icon name="search" size="sm" className="text-gray-9" /> },
+  adorned: { leading: <Icon name="search" size="xs" className="text-gray-9" /> },
 } as const satisfies Record<string, Partial<ComponentProps<typeof Input>>>;
 
 type ShellKey = keyof typeof SHELL;
@@ -81,10 +81,10 @@ const SHELL_KEYS = Object.keys(SHELL) as ShellKey[];
  * either side once the value is long.
  */
 const ADORNMENT = {
-  leading: { leading: <Icon name="search" size="sm" className="text-gray-9" /> },
+  leading: { leading: <Icon name="search" size="xs" className="text-gray-9" /> },
   trailing: { trailing: <kbd className="font-mono text-11/13 text-gray-9">⌘K</kbd> },
   both: {
-    leading: <Icon name="search" size="sm" className="text-gray-9" />,
+    leading: <Icon name="search" size="xs" className="text-gray-9" />,
     trailing: <kbd className="font-mono text-11/13 text-gray-9">⌘K</kbd>,
   },
 } as const satisfies Record<string, Partial<ComponentProps<typeof Input>>>;

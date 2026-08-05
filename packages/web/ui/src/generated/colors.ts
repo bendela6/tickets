@@ -223,7 +223,8 @@ export const PALETTE: Record<"light" | "dark", ColorTheme> = {
       "handle": "#4e46c6",
       "safe-zone": "#c0382e",
       "black": "#000000",
-      "white": "#ffffff"
+      "white": "#ffffff",
+      "well": "rgba(37,35,29,.10)"
     }
   },
   "dark": {
@@ -404,7 +405,8 @@ export const PALETTE: Record<"light" | "dark", ColorTheme> = {
       "handle": "#4e46c6",
       "safe-zone": "#c0382e",
       "black": "#000000",
-      "white": "#ffffff"
+      "white": "#ffffff",
+      "well": "rgba(0,0,0,.55)"
     }
   }
 };

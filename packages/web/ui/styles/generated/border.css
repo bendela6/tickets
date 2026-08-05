@@ -6,4 +6,7 @@
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 12px;
+  --radius-control-xs: 3px;
+  --radius-control-md: 4px;
+  --radius-control-lg: 5px;
 }

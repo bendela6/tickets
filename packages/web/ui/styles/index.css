@@ -44,6 +44,29 @@
 
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
+/* Two Soft Fill treatments that cannot be expressed as utility composition.
+   Authored here as real utilities rather than arbitrary values at each call
+   site, so `disabled:bg-hatch` and `active:shadow-well` behave like any other
+   class and the values live in one place.
+
+   The hatch is what says "unavailable" once every state is a filled floor: a
+   disabled field cannot go one rung quieter, because quieter is what rest
+   already looks like. 45°, 5px stripe, rungs 4 and 7 — from the design's
+   contract table. */
+@utility bg-hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--color-gray-4) 0 5px,
+    var(--color-gray-7) 5px 10px
+  );
+}
+
+/* The well pressed into a control while it is held — and held until a popup
+   opens, so a trigger stays visibly down for as long as its menu is up. */
+@utility shadow-well {
+  box-shadow: inset 0 2px 0 var(--color-well);
+}
+
 /* App-wide base on top of preflight. This block shares the base layer with
    preflight but loads after it, so these rules win on ties — notably
    button{font:inherit} and cursor:pointer, which preflight does not set. */

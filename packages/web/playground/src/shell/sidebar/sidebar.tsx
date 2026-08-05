@@ -48,7 +48,7 @@ export function Sidebar({
     >
       <nav className="pg-scroll flex min-w-0 flex-1 flex-col gap-16 overflow-y-auto overflow-x-hidden px-16 py-24">
         <Input
-          size="sm"
+          size="xs"
           type="text"
           aria-label="Filter components"
           placeholder="Filter components…"

@@ -169,7 +169,7 @@ describe('Slider', () => {
     // `lg` is the rung the slider was missing — a 44px field beside it had
     // nothing to match. It is here so it cannot quietly fall out again.
     const rungs = [
-      { size: 'sm', track: 'h-3', row: 'h-16' },
+      { size: 'xs', track: 'h-3', row: 'h-16' },
       { size: 'md', track: 'h-4', row: 'h-20' },
       { size: 'lg', track: 'h-5', row: 'h-24' },
     ] as const;

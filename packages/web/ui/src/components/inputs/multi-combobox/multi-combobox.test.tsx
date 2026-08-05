@@ -40,17 +40,39 @@ test('select all picks every option', async () => {
   expect(onChange).toHaveBeenCalledWith(['frontend', 'api', 'infra']);
 });
 
-test('deselecting happens in the popover, not on the trigger', async () => {
-  // The chips are read-only. Picking an already-selected option toggles it off,
-  // with the full set visible — an X on the trigger removed a value from a list
-  // you could not see, next to the control that opens it.
+test('deselecting works from the chip AND from the popover', async () => {
+  // This reverses an earlier decision. The objection to a remove target on the
+  // trigger was that it "puts a 12px target next to the control that opens it";
+  // the Soft Fill chip answers that by making the target the whole square and
+  // stopping its click from reaching the trigger underneath. Both routes now
+  // work, and the popover one has to keep working.
   const onChange = vi.fn();
-  render(<MultiCombobox options={OPTIONS} value={['frontend', 'api']} onChange={onChange} />);
-  expect(screen.queryByRole('button', { name: /remove frontend/i })).toBeNull();
+  const { rerender } = render(
+    <MultiCombobox options={OPTIONS} value={['frontend', 'api']} onChange={onChange} />,
+  );
 
+  await userEvent.click(screen.getByRole('button', { name: /remove frontend/i }));
+  expect(onChange).toHaveBeenCalledWith(['api']);
+  // The trigger must NOT have opened — the chip's click stops there.
+  expect(screen.queryByRole('listbox')).toBeNull();
+
+  onChange.mockClear();
+  rerender(<MultiCombobox options={OPTIONS} value={['frontend', 'api']} onChange={onChange} />);
   await userEvent.click(screen.getByRole('button', { name: /select/i }));
   await userEvent.click(await screen.findByRole('option', { name: /frontend/i }));
   expect(onChange).toHaveBeenCalledWith(['api']);
+});
+
+test('a locked field offers no remove target at all, rather than a dead one', () => {
+  const { rerender } = render(
+    <MultiCombobox options={OPTIONS} value={['frontend']} onChange={() => {}} readOnly />,
+  );
+  expect(screen.queryByRole('button', { name: /remove frontend/i })).toBeNull();
+
+  rerender(
+    <MultiCombobox options={OPTIONS} value={['frontend']} onChange={() => {}} disabled />,
+  );
+  expect(screen.queryByRole('button', { name: /remove frontend/i })).toBeNull();
 });
 
 test('the trigger carries no clear-all affordance', () => {
@@ -273,7 +295,7 @@ test('a read-only field takes the read-only ground, not the disabled one', () =>
     />,
   );
   const trigger = screen.getByRole('button', { name: /labels/i });
-  expect(trigger.className).toContain('bg-surface-inset');
+  expect(trigger.className).toContain('bg-transparent');
   expect(trigger.className).toContain('cursor-default');
   // The dimming is still gated behind `disabled:` — read-only keeps full
   // contrast, because the value it holds still matters.
