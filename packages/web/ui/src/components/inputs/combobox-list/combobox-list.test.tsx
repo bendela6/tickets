@@ -113,3 +113,17 @@ test('the matched run is bolded, never colour-highlighted', async () => {
   expect(mark.tagName.toLowerCase()).toBe('b');
   expect(mark.className).not.toMatch(/bg-|text-(red|green|blue|indigo|orange)-/);
 });
+
+test('a filtered list says how much it is hiding', async () => {
+  // The design shows "3 of 214". Without the total, a filter that hid almost
+  // everything looks identical to a short list — you cannot tell whether to
+  // keep typing or to clear the query.
+  render(<ComboboxList options={OPTIONS} isSelected={() => false} onPick={() => {}} />);
+  await userEvent.type(screen.getByRole('searchbox'), 'a');
+  expect(screen.getByText(/of 3$/)).toBeTruthy();
+});
+
+test('an unfiltered list shows no count, because there is nothing to compare', async () => {
+  render(<ComboboxList options={OPTIONS} isSelected={() => false} onPick={() => {}} />);
+  expect(screen.queryByText(/ of \d+$/)).toBeNull();
+});
