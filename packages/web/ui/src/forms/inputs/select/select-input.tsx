@@ -1,12 +1,12 @@
 import type { InputProps } from '@tickets/form';
-import type { ComboOption } from '../../../components/combobox-list';
+import type { Option } from '../../../components/control';
 import { Combobox } from '../../../components/combobox';
 
 export type SelectInputConfig = {
   /** Resolved options. An author may declare this as an AsyncResolver in the
    *  form config; the engine resolves it and flips `loading` while it does, so
    *  this adapter only ever sees a settled array. */
-  options?: ComboOption[];
+  options?: Option[];
   placeholder?: string;
 };
 

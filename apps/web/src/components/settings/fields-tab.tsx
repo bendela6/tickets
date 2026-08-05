@@ -1,16 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import type { Field, FieldType, ItemTypeField } from '../../api/types';
-import {
-  useCreateField,
-  usePlaceField,
-  useUnplaceField,
-  useUpdateField,
-  useUpdatePlacement,
-} from '../../api/use-admin';
+import { useCreateField, usePlaceField, useUnplaceField, useUpdateField, useUpdatePlacement } from '../../api/use-admin';
 import { typePill } from '../../domain/status';
 import { hexToOptionColor } from '../../registry/option-color';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, cn, Combobox, type ComboOption, FieldLabel, Input, MultiCombobox, Pill, ScreenState, Switch, Tabs } from '@tickets/ui';
+import { Button, cn, Combobox, type Option as ComboOption, FieldLabel, Input, MultiCombobox, Pill, ScreenState, Switch, Tabs } from '@tickets/ui';
 import type { BoardIndexes } from '../../utils/index-board';
 import type { SettingsTabProps } from './types-tab';
 

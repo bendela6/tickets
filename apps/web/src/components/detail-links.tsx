@@ -3,7 +3,7 @@ import type { Board, Item } from '../api/types';
 import { useCreateLink } from '../api/use-create-link';
 import { useDeleteLink } from '../api/use-delete-link';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, Combobox, type ComboOption, Input, ItemKey, Pill, SectionHeader } from '@tickets/ui';
+import { Button, Combobox, type Option, Input, ItemKey, Pill, SectionHeader } from '@tickets/ui';
 import type { BoardIndexes } from '../utils/index-board';
 
 // Direction is folded into the chip text: outgoing "label →", incoming
@@ -42,7 +42,7 @@ export function DetailLinks({
     .filter((linkType) => !linkType.archivedAt)
     .sort((left, right) => left.position - right.position);
   // `${key}|out` / `${key}|in` — one combobox entry per legal direction.
-  const options: ComboOption[] = linkTypes.flatMap((linkType) =>
+  const options: Option[] = linkTypes.flatMap((linkType) =>
     linkType.directional
       ? [
           { value: `${linkType.key}|out`, label: `${linkType.label} →` },

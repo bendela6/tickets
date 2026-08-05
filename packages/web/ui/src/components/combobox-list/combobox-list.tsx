@@ -1,18 +1,24 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { Hue } from '../../style/tones';
+import type { Option } from '../control';
 import { cn } from '../../style/cn';
 import { Pill } from '../pill';
 
 
-export type ComboOption = {
-  value: string;
-  label: string;
-  color?: Hue;
-  disabled?: boolean;
-};
+/**
+ * Retired in favour of `Option`, which is the same four fields and covers the
+ * radio group too — a control that never had a "combo" anything. Kept as an
+ * alias only so a consumer outside this repo does not break on the rename.
+ *
+ * Both combobox conversions flagged the duplicate independently: MultiCombobox
+ * was already handing `Option[]` to this component and compiling purely because
+ * the shapes matched, so a drift in either would have broken it silently.
+ *
+ * @deprecated Use `Option`.
+ */
+export type ComboOption = Option;
 
 type ComboboxListProps = {
-  options: ComboOption[];
+  options: Option[];
   isSelected: (value: string) => boolean;
   onPick: (value: string) => void;
   /** Keep focus in the search box after a pick (multi-select). */
@@ -26,11 +32,11 @@ type ComboboxListProps = {
   searchable?: boolean;
   searchPlaceholder?: string;
   /** Group header for an option, e.g. status kind. Options keep input order within a group. */
-  groupOf?: (option: ComboOption) => string;
+  groupOf?: (option: Option) => string;
   /** Order + display labels for groups. */
   groups?: { key: string; label: string }[];
   /** Custom rendering for an option's inner content (defaults to Pill/label). */
-  renderOption?: (option: ComboOption, selected: boolean) => ReactNode;
+  renderOption?: (option: Option, selected: boolean) => ReactNode;
   header?: ReactNode;
   footer?: ReactNode;
   emptyLabel?: string;
@@ -122,11 +128,9 @@ export function ComboboxList({
           </span>
           <input
             ref={inputRef}
-            // A filter box inside the popup, not the combobox itself. The
-            // `combobox` role belongs to the TRIGGER — which is what makes
-            // `aria-readonly` legal there, since a plain button does not permit
-            // it. Two elements claiming the role would be one too many, and the
-            // inner one was never the right owner.
+            // A filter box inside the popup, not a combobox. It claimed
+            // `role="combobox"` before, which belongs to whatever OPENS a list
+            // rather than to a field that narrows one already open.
             type="text"
             role="searchbox"
             aria-controls={listId}
