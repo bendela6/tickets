@@ -138,7 +138,7 @@ function OptionForm({
         <div className="flex items-center gap-10">
           <Input
             id={labelId}
-            size="sm"
+            size="xs"
             className="max-w-280"
             placeholder="e.g. In review"
             value={draft.label}
@@ -539,7 +539,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     }}
                   >
                     <Combobox
-                      size="sm"
+                      size="xs"
                       className="w-176"
                       placeholder="From option"
                       options={fromOptions}
@@ -551,7 +551,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                       →
                     </span>
                     <Combobox
-                      size="sm"
+                      size="xs"
                       className="w-176"
                       placeholder="To option"
                       options={toOptions}
@@ -566,7 +566,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                       disabled={disabled}
                     />
                     <Combobox
-                      size="sm"
+                      size="xs"
                       className="w-176"
                       placeholder="Requires field"
                       options={guardFieldOptions}

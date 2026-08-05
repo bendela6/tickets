@@ -35,7 +35,7 @@ const REACH = [
   { suffix: ' · read-only', props: { readOnly: true } },
 ] as const;
 
-const SIZES = ['sm', 'md', 'lg'] as const satisfies readonly ControlSize[];
+const SIZES = ['xs', 'md', 'lg'] as const satisfies readonly ControlSize[];
 
 // A sample, not the whole vocabulary: the point is that the fill and the ring
 // follow the ramp, which four tones show as well as seventeen.

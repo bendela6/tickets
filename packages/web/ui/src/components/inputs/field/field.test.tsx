@@ -3,7 +3,7 @@ import { expect, test } from 'vitest';
 import { focusRing } from '../../../style';
 import { Input } from '../input';
 import { Textarea } from '../textarea';
-import { fieldClass } from './field';
+import { CONTROL_LADDER, fieldClass } from './field';
 
 // None of these name a rung. A test that spells out `-9` or `-11` fails the
 // moment a designer moves a value and can only ever catch someone copying the
@@ -19,11 +19,14 @@ test('a tone colours the border outright, not only on focus', () => {
   // field is a colour nobody sees.
   render(<Input tone="success" aria-label="Budget"  value="" onChange={() => {}} />);
   const input = screen.getByLabelText('Budget');
-  expect(input.className).toMatch(/(?:^|\s)border-green-\d/);
-  expect(input).not.toHaveClass('border-gray-7');
-  // The BORDER is the unconditional part. The ring is not — it belongs to focus,
+  // Under Soft Fill the tone paints the FLOOR, not the border — the border is
+  // transparent at rest on every field and only gets coloured in on focus.
+  expect(input.className).toMatch(/(?:^|\s)bg-green-\d/);
+  expect(input.className).not.toMatch(/(?:^|\s)bg-gray-\d/);
+  // The floor is the unconditional part. The ring is not — it belongs to focus,
   // and an always-on ring leaves focus with nothing to add.
   expect(input.className).not.toMatch(/(?:^|\s)ring-\d/);
+  expect(input).toHaveClass('border-transparent');
 });
 
 test('a toned field still has somewhere to go on hover and on focus', () => {
@@ -34,8 +37,8 @@ test('a toned field still has somewhere to go on hover and on focus', () => {
   render(<Input tone="danger" aria-label="Key"  value="" onChange={() => {}} />);
   const { className } = screen.getByLabelText('Key');
 
-  const rest = rung(className, /(?:^|\s)border-red-(\d+)/);
-  const hover = rung(className, /hover:border-red-(\d+)/);
+  const rest = rung(className, /(?:^|\s)bg-red-(\d+)/);
+  const hover = rung(className, /hover:bg-red-(\d+)/);
   expect(rest).toBeDefined();
   expect(hover).toBeDefined();
   expect(hover).not.toBe(rest);
@@ -66,9 +69,9 @@ test('an unset tone is the resting field, not a coloured one', () => {
   // Every input wearing its tone's border would paint the whole form indigo.
   render(<Input aria-label="Title"  value="" onChange={() => {}} />);
   const input = screen.getByLabelText('Title');
-  expect(input.className).toMatch(/(?:^|\s)border-gray-\d/);
-  expect(input.className).toMatch(/hover:border-gray-\d/);
-  expect(input).not.toHaveClass('border-indigo-9');
+  expect(input.className).toMatch(/(?:^|\s)bg-gray-\d/);
+  expect(input.className).toMatch(/hover:bg-gray-\d/);
+  expect(input.className).not.toMatch(/(?:^|\s)bg-indigo-\d/);
   // …but the focus ring still follows the accent.
   expect(input.className).toContain(focusRing('indigo', 'focus'));
 });
@@ -82,17 +85,23 @@ test('composite fields hang the ring on focus-within, plain ones on focus', () =
   expect(fieldClass()).toContain(focusRing('indigo', 'focus'));
 });
 
-test('every rung sets height, radius and font size together', () => {
-  const { rerender } = render(<Input size="sm" aria-label="f"  value="" onChange={() => {}} />);
-  expect(screen.getByLabelText('f')).toHaveClass('h-28', 'rounded-md', 'text-13', 'px-9');
-  rerender(<Input size="md" aria-label="f"  value="" onChange={() => {}} />);
-  expect(screen.getByLabelText('f')).toHaveClass('h-36', 'rounded-lg', 'text-14', 'px-12');
-  rerender(<Input size="lg" aria-label="f"  value="" onChange={() => {}} />);
-  expect(screen.getByLabelText('f')).toHaveClass('h-44', 'rounded-xl', 'text-15', 'px-14');
+test('every rung sets height, radius, font size and padding together', () => {
+  // Reads the ladder rather than restating it: the design moves these numbers
+  // and this test should follow, not block. What it guards is that a rung sets
+  // all four — a control that took the height and kept its own padding is the
+  // failure this catches.
+  for (const size of ['xs', 'md', 'lg'] as const) {
+    const { unmount } = render(<Input size={size} aria-label="f" value="" onChange={() => {}} />);
+    const rung = CONTROL_LADDER[size];
+    expect(screen.getByLabelText('f'), size).toHaveClass(
+      rung.height, rung.radius, rung.text, rung.padX,
+    );
+    unmount();
+  }
 });
 
 test('textarea rungs set a floor and evict the single-line height', () => {
-  const { rerender } = render(<Textarea size="sm" aria-label="body"  value="" onChange={() => {}} />);
+  const { rerender } = render(<Textarea size="xs" aria-label="body"  value="" onChange={() => {}} />);
   const at = () => screen.getByLabelText('body');
   expect(at()).toHaveClass('h-auto', 'min-h-56');
   expect(at()).not.toHaveClass('h-28');

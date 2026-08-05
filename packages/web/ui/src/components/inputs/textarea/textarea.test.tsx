@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
+import { CONTROL_LADDER } from '../field';
 import { Textarea } from './textarea';
 
 function Controlled({ initial = '', ...props }: { initial?: string } & Record<string, unknown>) {
@@ -49,11 +50,11 @@ test('readOnly also changes how the field looks', () => {
   render(<Textarea value="locked" onChange={() => {}} readOnly aria-label="Notes" />);
   const box = screen.getByLabelText('Notes');
 
-  expect(box).toHaveClass('bg-surface-inset', 'border-gray-6', 'cursor-default');
-  expect(box.className).toContain('hover:border-gray-6');
+  expect(box).toHaveClass('bg-transparent', 'border-gray-7', 'cursor-default');
+  expect(box.className).toContain('hover:bg-transparent');
   // twMerge has to have evicted the editable treatment, not stacked on top of it.
-  expect(box).not.toHaveClass('bg-surface-raised');
-  expect(box).not.toHaveClass('border-gray-7');
+  expect(box).not.toHaveClass('bg-gray-4');
+  expect(box).not.toHaveClass('bg-gray-4', 'border-transparent');
   expect(box.className).not.toContain('hover:border-gray-9');
 });
 
@@ -62,7 +63,7 @@ test('an editable field carries none of the read-only treatment', () => {
   const box = screen.getByLabelText('Notes');
 
   expect(box).not.toHaveAttribute('readonly');
-  expect(box).toHaveClass('bg-surface-raised', 'border-gray-7');
+  expect(box).toHaveClass('bg-gray-4', 'border-transparent');
   expect(box).not.toHaveClass('cursor-default');
 });
 
@@ -103,9 +104,9 @@ test('disabled and readOnly are two different states, not two names for one', ()
   // variant; read-only swaps the ground unconditionally and keeps full text
   // contrast, because the value still matters.
   expect(off.className).toContain('disabled:text-gray-9');
-  expect(off).not.toHaveClass('bg-surface-inset');
+  expect(off).not.toHaveClass('bg-transparent');
   expect(off).not.toHaveClass('cursor-default');
-  expect(locked).toHaveClass('bg-surface-inset', 'text-gray-12');
+  expect(locked).toHaveClass('bg-transparent', 'text-gray-12');
 });
 
 test('read-only drops a toned border to the resting rung but keeps the invalid claim', () => {
@@ -113,15 +114,15 @@ test('read-only drops a toned border to the resting rung but keeps the invalid c
   const box = screen.getByLabelText('Key');
 
   expect(box).toHaveAttribute('aria-invalid', 'true');
-  expect(box).toHaveClass('border-gray-6');
-  expect(box).not.toHaveClass('border-red-9');
+  expect(box).toHaveClass('border-gray-7', 'bg-transparent');
+  expect(box).not.toHaveClass('bg-red-2');
 });
 
 test('an unset tone is the resting field, not primary', () => {
   render(<Textarea value="" onChange={() => {}} aria-label="Notes" />);
   const box = screen.getByLabelText('Notes');
 
-  expect(box).toHaveClass('border-gray-7');
+  expect(box).toHaveClass('bg-gray-4', 'border-transparent');
   expect(box).not.toHaveClass('border-indigo-9');
   expect(box).not.toHaveAttribute('aria-invalid');
 });
@@ -134,28 +135,30 @@ test('a toned field wears the ramp, and only danger claims invalid', () => {
     </>,
   );
 
-  expect(screen.getByLabelText('Bad')).toHaveClass('border-red-9');
+  expect(screen.getByLabelText('Bad')).toHaveClass('bg-red-2');
   expect(screen.getByLabelText('Bad')).toHaveAttribute('aria-invalid', 'true');
   expect(screen.getByLabelText('Good')).not.toHaveAttribute('aria-invalid');
 });
 
 test('each size rung evicts the single-line height and sets its own floor', () => {
-  // `fieldClass` contributes an `h-*` for the one-line controls. A textarea
-  // grows, so every rung has to clear it before setting a min-height — without
-  // the `h-auto` the box is pinned to 28/36/44px and never grows.
+  // `fieldClass` contributes a fixed `h-*` for the one-line controls. A
+  // textarea grows, so every rung has to clear it before setting a min-height —
+  // without the `h-auto` the box is pinned to the ladder's height and never
+  // grows. The FONT comes from the ladder, not from the textarea's own map:
+  // restating it there would win the twMerge and pin the old scale.
   const rungs = [
-    { size: 'sm', min: 'min-h-56', text: 'text-13' },
-    { size: 'md', min: 'min-h-72', text: 'text-14' },
-    { size: 'lg', min: 'min-h-88', text: 'text-15' },
+    { size: 'xs', min: 'min-h-56' },
+    { size: 'md', min: 'min-h-72' },
+    { size: 'lg', min: 'min-h-88' },
   ] as const;
 
-  for (const { size, min, text } of rungs) {
+  for (const { size, min } of rungs) {
     const { unmount } = render(
       <Textarea value="" onChange={() => {}} size={size} aria-label={size} />,
     );
     const box = screen.getByLabelText(size);
-    expect(box).toHaveClass('h-auto', min, text, 'resize-y');
-    expect(box.className).not.toMatch(/(^|\s)h-(28|36|44)(\s|$)/);
+    expect(box).toHaveClass('h-auto', min, CONTROL_LADDER[size].text, 'resize-y');
+    expect(box.className).not.toContain(CONTROL_LADDER[size].height);
     unmount();
   }
 });

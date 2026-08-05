@@ -21,40 +21,33 @@ import type { Hue } from '../tones';
  */
 
 /**
- * 1.5px of ring, held 1px off the control.
+ * A 4px halo, and a 1px rim drawn as the control's own border.
  *
- * The width is an arbitrary length, against the usual house rule, because
- * Tailwind's `ring-<number>` only accepts integers — `ring-1.5` parses as
- * nothing, compiles to nothing, and leaves the control with no ring at all
- * while every other class on it still looks right. There is no 1.5 rung to
- * reach for instead.
- */
-const WIDTH = '[1.5px]';
-const OFFSET = 1;
-
-/**
- * What the 1px gap is painted with — and it MUST be painted. Tailwind's
- * `--tw-ring-offset-color` defaults to white, so an offset ring with no colour
- * named draws a white hairline around every control in the dark theme.
+ * The Soft Fill design (2026-08-05) states focus as "1px rim rung 11 light / 9
+ * dark · halo 4px @22%". The rim is a border rather than a second ring because
+ * a Soft Fill control rests with a *transparent* border it can colour in — the
+ * geometry never changes between rest and focus, so nothing reflows.
  *
- * `surface-raised` is what sits behind a control on a card, a panel or a table
- * row, which is where they nearly all live (measured: the painted ancestor of a
- * field in the gallery is `#252320`, this token). A control dropped straight
- * onto the page ground or into an inset well would show a faint 1px seam here;
- * that is the trade for a gap that works without a per-surface variable.
+ * The rung flips by theme because the ramps do: rung 11 is the readable step on
+ * a light ground and rung 9 on a dark one. The halo takes rung 9 in both and
+ * varies its alpha instead, 22% light / 30% dark, because a translucent wash
+ * needs more weight to register against a dark ground.
  */
-const OFFSET_SURFACE = 'surface-raised';
+const HALO = 4;
+const RIM_LIGHT = 11;
+const RIM_DARK = 9;
+const HALO_RUNG = 9;
+const HALO_ALPHA_LIGHT = 22;
+const HALO_ALPHA_DARK = 30;
 
-/**
- * `-11`. The only rung that is bold on the ground in BOTH themes (7.1–11.3:1
- * dark, 8.0–10.3:1 light) AND still legible on the mark controls, which fill
- * `-9` when checked — a `-9` ring on a `-9` fill is 1.00:1, so focus would read
- * as the box merely growing. Against `-9`, `-11` is 1.4:1.
- */
-const RUNG = 11;
+/** The inset rim's width. 2px, not 1.5 — `ring-<number>` rejects fractions. */
+const RIM_WIDTH = 2;
 
 export const FOCUS_TRIGGERS = ['focus', 'focus-visible', 'focus-within'] as const;
 export type FocusTrigger = (typeof FOCUS_TRIGGERS)[number];
+
+export const FOCUS_PLACEMENTS = ['outward', 'inward'] as const;
+export type FocusPlacement = (typeof FOCUS_PLACEMENTS)[number];
 
 /**
  * Every control's focus treatment. Pass the ramp it paints from; pass a trigger
@@ -63,12 +56,50 @@ export type FocusTrigger = (typeof FOCUS_TRIGGERS)[number];
  * Returns a plain string so it composes inside a `variants()` config, which is
  * what lets the safelist extractor see the interpolated classes.
  */
-export function focusRing(hue: Hue, on: FocusTrigger = 'focus-visible'): string {
+export function focusRing(
+  hue: Hue,
+  on: FocusTrigger = 'focus-visible',
+  placement: FocusPlacement = 'outward',
+): string {
+  // Inside a joined control or a popup row there is nowhere for a halo to go:
+  // it is either clipped by the parent or bleeds over the neighbouring row, and
+  // in both cases it stops reading as "this one". So the inward placement drops
+  // the halo and draws the rim inset — a ring rather than a border, because a
+  // row has no border of its own to colour in.
+  if (placement === 'inward') {
+    return [
+      `${on}:outline-none`,
+      `${on}:ring-${RIM_WIDTH}`,
+      `${on}:ring-inset`,
+      `${on}:ring-${hue}-${RIM_LIGHT}`,
+      `dark:${on}:ring-${hue}-${RIM_DARK}`,
+    ].join(' ');
+  }
   return [
     `${on}:outline-none`,
-    `${on}:ring-${WIDTH}`,
-    `${on}:ring-${hue}-${RUNG}`,
-    `${on}:ring-offset-${OFFSET}`,
-    `${on}:ring-offset-${OFFSET_SURFACE}`,
+    // The rim. Paints the transparent border a Soft Fill control already has.
+    `${on}:border-${hue}-${RIM_LIGHT}`,
+    `dark:${on}:border-${hue}-${RIM_DARK}`,
+    // The halo.
+    `${on}:ring-${HALO}`,
+    `${on}:ring-${hue}-${HALO_RUNG}/${HALO_ALPHA_LIGHT}`,
+    `dark:${on}:ring-${hue}-${HALO_RUNG}/${HALO_ALPHA_DARK}`,
   ].join(' ');
+}
+
+/**
+ * The keyboard cursor, drawn from STATE rather than from `:focus`.
+ *
+ * A listbox row never holds DOM focus — the input does, and points at the row
+ * with `aria-activedescendant` — so a `focus-visible:` variant would never fire
+ * on the row the cursor is actually on. Same rim as the inward placement, with
+ * no pseudo-class in front of it, so a row wearing both cannot show two
+ * competing signals.
+ *
+ * It exists so `OptionRow` does not hand-write a ring. Every ring in this
+ * library comes from this module, and that rule is what ended six components
+ * wearing a focus treatment nobody could see.
+ */
+export function cursorRing(hue: Hue): string {
+  return `ring-${RIM_WIDTH} ring-inset ring-${hue}-${RIM_LIGHT} dark:ring-${hue}-${RIM_DARK}`;
 }

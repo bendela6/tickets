@@ -19,7 +19,7 @@ describe('MultiSelectField', () => {
   it('adds the option the user picks to the existing selection', async () => {
     const onChange = vi.fn();
     render(<MultiSelectField {...base} value={['a']} onChange={onChange} />);
-    await userEvent.click(screen.getByRole('button'));
+    await userEvent.click(screen.getByRole('button', { name: /select/i }));
     await userEvent.click(screen.getByText('Beta'));
     expect(onChange).toHaveBeenCalledWith(['a', 'b']);
   });
@@ -28,11 +28,11 @@ describe('MultiSelectField', () => {
     render(
       <MultiSelectField {...base} value={undefined as unknown as string[]} onChange={vi.fn()} />,
     );
-    expect(screen.getByRole('button')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /select/i })).toBeInTheDocument();
   });
 
   it('is disabled while the engine resolves async config', () => {
     render(<MultiSelectField {...base} value={[]} onChange={vi.fn()} loading />);
-    expect(screen.getByRole('button')).toBeDisabled();
+    expect(screen.getByRole('button', { name: /select/i })).toBeDisabled();
   });
 });

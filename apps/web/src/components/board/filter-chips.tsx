@@ -170,7 +170,7 @@ function AddFilter({
       <PopoverContent>
         <div className="flex w-256 flex-col gap-8 p-12">
           <Combobox
-            size="sm"
+            size="xs"
             options={fieldOptions}
             value={fieldKey}
             placeholder="Field…"
@@ -184,7 +184,7 @@ function AddFilter({
           />
           {selectedField ? (
             <Combobox
-              size="sm"
+              size="xs"
               options={opOptions}
               value={op}
               onChange={(next) => {
@@ -197,7 +197,7 @@ function AddFilter({
           ) : null}
           {selectedField && needsValues ? (
             <MultiCombobox
-              size="sm"
+              size="xs"
               options={valueOptions}
               value={values}
               onChange={setValues}
@@ -206,7 +206,7 @@ function AddFilter({
           ) : null}
           {selectedField && op === 'contains' ? (
             <Input
-              size="sm"
+              size="xs"
               placeholder="text…"
               value={text}
               onChange={(next) => setText(next)}

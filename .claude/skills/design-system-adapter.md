@@ -208,3 +208,15 @@ here should need to leak back into those skills.
     `--tw-ring-offset-color` defaults to **white**, drawing a white hairline
     around every control in the dark theme, so an offset ring MUST name its
     surface (`ring-offset-surface-raised` here).
+11. **A regenerated safelist does not reach a RUNNING dev server.** `tokens:build`
+    rewrites `styles/generated/safelist.css`, but Vite keeps serving the CSS it
+    compiled at boot, so every newly-interpolated class is on the element and
+    has no rule behind it. It reads exactly like a cascade bug — the classes are
+    right there in the DOM — and it is not one. Measured 2026-08-05: the whole
+    Soft Fill focus treatment (`focus:border-{hue}-11`, `focus:ring-{hue}-9/22`,
+    `focus:bg-surface-field`) was absent from the served CSS and present three
+    times over in a fresh `pnpm --filter @tickets/web build`. Restart the dev
+    server after `tokens:build`, or verify against a production build. Classes
+    written out literally in source are unaffected — only interpolated ones go
+    through the safelist, which is why the resting floor looked right while
+    focus did nothing.

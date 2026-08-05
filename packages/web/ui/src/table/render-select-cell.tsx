@@ -25,7 +25,7 @@ export function renderSelectCell({ checked, indeterminate, onChange, label }: Re
   return (
     <Checkbox
       aria-label={label}
-      size="sm"
+      size="xs"
       value={checked}
       indeterminate={indeterminate}
       onChange={(_checked, event) => {

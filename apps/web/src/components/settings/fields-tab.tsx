@@ -113,7 +113,7 @@ function PlacementRow({
             });
           }}
           placeholder="All options allowed"
-          size="sm"
+          size="xs"
           disabled={disabled}
         />
       ) : (
@@ -359,7 +359,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
                   value={pickFieldId}
                   onChange={setPickFieldId}
                   placeholder="Choose a field to place…"
-                  size="sm"
+                  size="xs"
                   disabled={disabled || pickOptions.length === 0}
                   className="w-288"
                 />

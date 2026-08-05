@@ -100,7 +100,7 @@ const content = defineState({
 // so each rung is where an empty trigger starts, not where a full one stops.
 // Every rung carries the same three chips so the growth is the only difference.
 const SIZES = [
-  { size: 'sm', floor: 28 },
+  { size: 'xs', floor: 28 },
   { size: 'md', floor: 36 },
   { size: 'lg', floor: 44 },
 ] as const;
@@ -177,7 +177,7 @@ export const playground = definePlayground({
   },
   controls: {
     placeholder: text('Labels'),
-    size: select(['sm', 'md', 'lg'] as const, { allowNone: true, type: 'ControlSize' }),
+    size: select(['xs', 'md', 'lg'] as const, { allowNone: true, type: 'ControlSize' }),
     tone: select([...TONE_NAMES], {
       allowNone: true,
       type: 'Tone',

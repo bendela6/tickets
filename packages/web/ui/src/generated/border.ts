@@ -5,7 +5,10 @@ export const RADII = {
   "sm": "4px",
   "md": "6px",
   "lg": "8px",
-  "xl": "12px"
+  "xl": "12px",
+  "control-xs": "3px",
+  "control-md": "4px",
+  "control-lg": "5px"
 };
 
 export const WIDTHS = [

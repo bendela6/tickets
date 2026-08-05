@@ -539,7 +539,7 @@ export function SubtaskQuickCreate({
         ↵ creates {board.project.itemPrefix}-{nextNumber}
       </span>
       <Combobox
-        size="sm"
+        size="xs"
         className="w-120 shrink-0"
         options={types.map((type) => ({ value: type.key, label: type.label }))}
         value={effectiveTypeKey}

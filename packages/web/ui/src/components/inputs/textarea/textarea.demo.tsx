@@ -62,7 +62,7 @@ const AVAILABILITY_KEYS = Object.keys(AVAILABILITY) as AvailabilityKey[];
 
 // The size axis sets a floor, not a height — roughly two, three and four lines.
 const SIZES = [
-  { size: 'sm', minHeight: 56 },
+  { size: 'xs', minHeight: 56 },
   { size: 'md', minHeight: 72 },
   { size: 'lg', minHeight: 88 },
 ] as const satisfies readonly { size: ControlSize; minHeight: number }[];
@@ -142,7 +142,7 @@ export const playground = definePlayground({
   },
   controls: {
     placeholder: text(PLACEHOLDER),
-    size: select(['sm', 'md', 'lg'] as const, {
+    size: select(['xs', 'md', 'lg'] as const, {
       allowNone: true,
       type: 'ControlSize',
       description: 'Minimum height, padding and font size — roughly two, three and four lines.',

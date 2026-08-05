@@ -38,7 +38,7 @@ const MANY: Option[] = Array.from({ length: 60 }, (_, index) => ({
 }));
 
 const SIZES = [
-  { size: 'sm', height: 28 },
+  { size: 'xs', height: 28 },
   { size: 'md', height: 36 },
   { size: 'lg', height: 44 },
 ] as const satisfies readonly { size: ControlSize; height: number }[];
@@ -185,7 +185,7 @@ export const playground = definePlayground({
   },
   controls: {
     placeholder: text('Priority', { placeholder: 'shown when nothing is picked…' }),
-    size: select(['sm', 'md', 'lg'], { allowNone: true, type: 'ControlSize' }),
+    size: select(['xs', 'md', 'lg'], { allowNone: true, type: 'ControlSize' }),
     tone: select([...TONE_NAMES], { allowNone: true, type: 'Tone' }),
     searchable: boolean(true, {
       description: 'Draws a search box above the list. Turn it off for a short fixed set.',

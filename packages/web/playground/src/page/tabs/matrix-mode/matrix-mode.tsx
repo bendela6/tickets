@@ -29,7 +29,7 @@ function AxisPicker({
       </FieldLabel>
       <Combobox
         id={`matrix-${label}`}
-        size="sm"
+        size="xs"
         searchable={false}
         options={options.map((key) => ({ value: key, label: key }))}
         value={value}

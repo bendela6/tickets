@@ -4,7 +4,7 @@ import { ROLES, TONE_NAMES, type Tone } from '../../../style';
 import { Switch } from './switch';
 import type { ControlSize } from '../control';
 
-const SIZES = ['sm', 'md', 'lg'] as const satisfies readonly ControlSize[];
+const SIZES = ['xs', 'md', 'lg'] as const satisfies readonly ControlSize[];
 
 /**
  * The switch is controlled — `value` in, `value` out — so every specimen owns

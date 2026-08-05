@@ -77,7 +77,7 @@ function StatusCell({
     .map((option) => ({ key: option.value, label: option.label, kind: option.kind ?? 'todo' }));
   return (
     <StatusSelect
-      size="sm"
+      size="xs"
       statuses={statuses}
       value={typeof raw === 'string' ? raw : null}
       legalTargets={legalStatusTargets(board, indexes, ticket, ticket.typeId).map(
