@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'rea
 import type { Option } from '../control';
 import { cn } from '../../../style/cn';
 import { Pill } from '../../pill';
+import { OptionRow } from '../option-row';
 
 
 /**
@@ -64,7 +65,7 @@ export function ComboboxList({
   noMatchLabel = 'No matches',
 }: ComboboxListProps) {
   const [query, setQuery] = useState('');
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [cursorIndex, setCursorIndex] = useState(0);
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -124,18 +125,18 @@ export function ComboboxList({
   function onKeyDown(event: React.KeyboardEvent) {
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setActiveIndex((index) => nextEnabled(index, 1));
+      setCursorIndex((index) => nextEnabled(index, 1));
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      setActiveIndex((index) => nextEnabled(index, -1));
+      setCursorIndex((index) => nextEnabled(index, -1));
     } else if (event.key === 'Enter') {
       event.preventDefault();
-      pick(activeIndex);
+      pick(cursorIndex);
     }
   }
 
-  const activeId = filtered[activeIndex]
-    ? `${listId}-opt-${filtered[activeIndex].value}`
+  const cursorId = filtered[cursorIndex]
+    ? `${listId}-opt-${filtered[cursorIndex].value}`
     : undefined;
 
   let lastGroup: string | null = null;
@@ -155,13 +156,13 @@ export function ComboboxList({
             type="text"
             role="searchbox"
             aria-controls={listId}
-            aria-activedescendant={activeId}
+            aria-activedescendant={cursorId}
             autoFocus
             value={query}
             placeholder={searchPlaceholder}
             onChange={(event) => {
               setQuery(event.target.value);
-              setActiveIndex(0);
+              setCursorIndex(0);
             }}
             onKeyDown={onKeyDown}
             className={cn(
@@ -180,7 +181,7 @@ export function ComboboxList({
         id={listId}
         role="listbox"
         ref={listRef}
-        aria-activedescendant={searchable ? undefined : activeId}
+        aria-activedescendant={searchable ? undefined : cursorId}
         tabIndex={searchable ? undefined : -1}
         onKeyDown={searchable ? undefined : onKeyDown}
         className="flex-1 overflow-y-auto p-5 focus:outline-none"
@@ -199,7 +200,6 @@ export function ComboboxList({
           lastGroup = groupKey;
           const groupLabel = groups?.find((group) => group.key === groupKey)?.label ?? groupKey;
           const selected = isSelected(option.value);
-          const active = index === activeIndex;
           return (
             <li key={option.value}>
               {showHeader ? (
@@ -207,23 +207,16 @@ export function ComboboxList({
                   {groupLabel}
                 </div>
               ) : null}
-              <button
-                type="button"
-                role="option"
+              {/* No onMouseEnter. The cursor is the parent's state and hover
+                  is CSS inside OptionRow, so a mouse resting over the list can
+                  no longer decide what Enter commits. OptionRow also draws the
+                  selection check, which is why none is passed here. */}
+              <OptionRow
                 id={`${listId}-opt-${option.value}`}
-                aria-selected={selected}
+                selected={selected}
+                cursor={index === cursorIndex}
                 disabled={option.disabled}
-                onMouseEnter={() => setActiveIndex(index)}
-                onClick={() => pick(index)}
-                className={cn(
-                  'flex w-full items-center justify-between gap-8 rounded-md px-9 py-7 text-left font-sans text-13/19 text-gray-12',
-                  // `min-w-0` so the label below may shrink: the panel is a
-                  // fixed 256px and a long option pushed the tick out of the
-                  // row instead of being cut — the same trap the trigger had.
-                  'min-w-0',
-                  active && 'bg-surface-inset',
-                  option.disabled && 'cursor-not-allowed opacity-50',
-                )}
+                onPick={() => pick(index)}
               >
                 {renderOption ? (
                   renderOption(option, selected)
@@ -238,12 +231,9 @@ export function ComboboxList({
                     label={<span className="truncate">{option.label}</span>}
                   />
                 ) : (
-                  <span className="truncate">{option.label}</span>
+                  option.label
                 )}
-                {selected ? (
-                  <span className="font-sans text-12/17 font-500 text-indigo-9">✓</span>
-                ) : null}
-              </button>
+              </OptionRow>
             </li>
           );
         })}
