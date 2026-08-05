@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import { focusRing } from '../../../style';
+import { CONTROL_LADDER } from '../field';
 import { FieldError } from '../../field-error';
 import { FieldLabel } from '../../field-label';
 import { Input } from './input';
@@ -62,9 +63,10 @@ test('readOnly sets the real HTML attribute', () => {
 });
 
 test('readOnly also changes how the field looks', () => {
-  // The attribute alone leaves the field identical to an editable one. The
-  // ground goes inset, the border drops to the resting rung and stops
-  // answering to hover, and the cursor stops inviting a click.
+  // The attribute alone leaves the field identical to an editable one. Under
+  // Soft Fill the floor goes away entirely and a rung-7 rule takes its place —
+  // the one state that does not fill — hover stops responding, and the cursor
+  // stops inviting a click.
   render(<Input value="locked" onChange={noop} readOnly aria-label="Title" />);
   const input = screen.getByLabelText('Title');
 
@@ -72,8 +74,8 @@ test('readOnly also changes how the field looks', () => {
   expect(input.className).toContain('hover:bg-transparent');
   // twMerge has to have evicted the editable treatment, not stacked on top of it.
   expect(input).not.toHaveClass('bg-gray-4');
-  expect(input).not.toHaveClass('border-gray-7');
-  expect(input.className).not.toContain('hover:border-gray-11');
+  expect(input).not.toHaveClass('border-transparent');
+  expect(input.className).not.toContain('hover:bg-gray-5');
 });
 
 test('readOnly reaches BOTH render paths — attribute inside, treatment on the chrome', () => {
@@ -89,7 +91,7 @@ test('readOnly reaches BOTH render paths — attribute inside, treatment on the 
   expect(input.readOnly).toBe(true);
   expect(wrapper).toHaveClass('bg-transparent', 'border-gray-7', 'cursor-default');
   expect(wrapper).not.toHaveClass('bg-gray-4');
-  expect(wrapper).not.toHaveClass('border-gray-7');
+  expect(wrapper).not.toHaveClass('border-transparent');
 });
 
 test('an editable field carries none of the read-only treatment, on either path', () => {
@@ -151,21 +153,24 @@ test('disabled and readOnly are two different states, not two names for one', ()
   expect(locked).toHaveClass('bg-transparent', 'text-gray-12');
 });
 
-test('read-only drops a toned border to the resting rung but keeps the invalid claim', () => {
+test('read-only drops a toned floor for the rule, but keeps the invalid claim', () => {
+  // Under Soft Fill read-only is the ABSENCE of a floor plus a rung-7 rule, so
+  // a toned read-only field loses its fill — the tone had nothing left to
+  // colour — while `aria-invalid` still reports what the tone meant.
   render(<Input value="x" onChange={noop} tone="danger" readOnly aria-label="Key" />);
   const input = screen.getByLabelText('Key');
 
   expect(input).toHaveAttribute('aria-invalid', 'true');
-  expect(input).toHaveClass('border-gray-6');
-  expect(input).not.toHaveClass('border-red-9');
+  expect(input).toHaveClass('border-gray-7', 'bg-transparent');
+  expect(input.className).not.toMatch(/(?:^|\s)bg-red-\d/);
 });
 
 test('an unset tone is the resting field, not primary', () => {
   render(<Input value="" onChange={noop} aria-label="Title" />);
   const input = screen.getByLabelText('Title');
 
-  expect(input).toHaveClass('border-gray-7');
-  expect(input).not.toHaveClass('border-indigo-9');
+  expect(input).toHaveClass('bg-gray-4', 'border-transparent');
+  expect(input.className).not.toMatch(/(?:^|\s)bg-indigo-\d/);
   expect(input).not.toHaveAttribute('aria-invalid');
 });
 
@@ -197,21 +202,23 @@ test('nothing a caller spreads can beat the contract props', () => {
   expect(screen.getByLabelText('Key')).toHaveAttribute('aria-invalid', 'true');
 });
 
-test('md input carries the spec size classes', () => {
+test('md input carries the ladder rung and the resting floor', () => {
   render(<Input value="" onChange={noop} aria-label="Title" />);
   const input = screen.getByLabelText('Title');
-  expect(input).toHaveClass('h-36', 'px-12', 'rounded-lg', 'bg-surface-raised', 'border-gray-7');
-  // Regression guard: tailwind-merge must not let the 14px font size evict the
-  // ink text color (the same trap the primary button hit with text-13/19).
-  expect(input).toHaveClass('text-14');
+  const md = CONTROL_LADDER.md;
+  expect(input).toHaveClass(md.height, md.padX, md.radius, 'bg-gray-4', 'border-transparent');
+  // Regression guard: tailwind-merge must not let the font size evict the ink
+  // text color (the same trap the primary button hit with text-13/19).
+  expect(input).toHaveClass(md.text);
   expect(input).toHaveClass('text-gray-12');
 });
 
-test('sm input overrides height, padding, radius, and font size', () => {
+test('the xs rung overrides height, padding, radius and font size', () => {
   render(<Input value="" onChange={noop} size="xs" aria-label="Estimate" />);
   const input = screen.getByLabelText('Estimate');
-  expect(input).toHaveClass('h-28', 'px-9', 'rounded-md', 'text-13');
-  expect(input).not.toHaveClass('text-14');
+  const xs = CONTROL_LADDER.xs;
+  expect(input).toHaveClass(xs.height, xs.padX, xs.radius, xs.text);
+  expect(input).not.toHaveClass(CONTROL_LADDER.md.text);
 });
 
 test('invalid input shows the danger border at rest, and the halo on focus', () => {
