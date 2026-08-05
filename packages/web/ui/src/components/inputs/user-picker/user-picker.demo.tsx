@@ -63,7 +63,7 @@ export const states = [
   }),
 
   defineState({
-    title: 'every rung, and the locked states',
+    title: 'set and empty, at every rung',
     render: () => (
       <Matrix
         rows={['assigned', 'unassigned'] as const}
