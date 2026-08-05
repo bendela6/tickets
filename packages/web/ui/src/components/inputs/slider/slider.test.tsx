@@ -168,10 +168,16 @@ describe('Slider', () => {
   it('sizes the track and the row it sits in across three rungs', () => {
     // `lg` is the rung the slider was missing — a 44px field beside it had
     // nothing to match. It is here so it cannot quietly fall out again.
+    //
+    // The heights below moved once already (the design put the track at 6 where
+    // this said 4) and this test was the only thing that objected — which is
+    // the argument against naming values in a test at all. What it is really
+    // for is that all three rungs EXIST and differ; the numbers are incidental
+    // and should be changed without ceremony when the design moves them.
     const rungs = [
-      { size: 'xs', track: 'h-3', row: 'h-16' },
-      { size: 'md', track: 'h-4', row: 'h-20' },
-      { size: 'lg', track: 'h-5', row: 'h-24' },
+      { size: 'xs', track: 'h-4', row: 'h-16' },
+      { size: 'md', track: 'h-6', row: 'h-20' },
+      { size: 'lg', track: 'h-8', row: 'h-24' },
     ] as const;
 
     for (const rung of rungs) {
@@ -202,5 +208,76 @@ describe('Slider', () => {
     expect(onChange).toHaveBeenLastCalledWith(45);
     await user.keyboard('{ArrowLeft}');
     expect(onChange).toHaveBeenLastCalledWith(31);
+  });
+});
+
+describe('the thumb', () => {
+  const thumbOf = (container: HTMLElement) =>
+    container.querySelector('[data-thumb]') as HTMLElement | null;
+
+  it('exists at all, and sits at the value on the track', () => {
+    // It did not. The component drew a track and a fill and nothing else, so
+    // the value read solely from where the fill happened to end — while the
+    // source comments talked about "the row the thumb sits in".
+    const { container } = render(
+      <Slider label="Weight" value={25} min={0} max={100} onChange={() => {}} />,
+    );
+    const thumb = thumbOf(container);
+    expect(thumb).not.toBeNull();
+    expect(thumb!.style.left).toBe('25%');
+  });
+
+  it('tracks the value rather than being pinned', () => {
+    const { container, rerender } = render(
+      <Slider label="Weight" value={0} min={0} max={100} onChange={() => {}} />,
+    );
+    expect(thumbOf(container)!.style.left).toBe('0%');
+    rerender(<Slider label="Weight" value={100} min={0} max={100} onChange={() => {}} />);
+    expect(thumbOf(container)!.style.left).toBe('100%');
+  });
+
+  it('keeps a visible rim at rest — the one control that does', () => {
+    // Every field under Soft Fill rests with a transparent border. A thumb is an
+    // object rather than a field, so it is the deliberate exception.
+    const { container } = render(
+      <Slider label="Weight" value={50} onChange={() => {}} tone="success" />,
+    );
+    expect(thumbOf(container)!.className).toMatch(/border-green-\d/);
+  });
+
+  it('carries the focus ring, and the track does not', () => {
+    // The design: "Focus rings the thumb, not the track." Focus still lands on
+    // the root — it owns role="slider" and the tab stop — so the thumb reacts
+    // to the root's focus rather than taking focus itself.
+    const { container } = render(<Slider label="Weight" value={50} onChange={() => {}} />);
+    const root = screen.getByRole('slider');
+    expect(thumbOf(container)!.className).toMatch(/group-focus-visible:/);
+    expect(root.className).not.toMatch(/(?:^|\s)focus-visible:ring/);
+  });
+});
+
+describe('the keyboard map the design states', () => {
+  it('shift+arrow moves ten steps, plain arrow moves one', () => {
+    // "← → moves one step, ⇧ ten." The component had Page keys for the big
+    // jump but never honoured shift, so the documented shortcut did nothing.
+    const onChange = vi.fn();
+    render(<Slider label="Weight" value={50} min={0} max={100} step={1} onChange={onChange} />);
+    const root = screen.getByRole('slider');
+
+    fireEvent.keyDown(root, { key: 'ArrowRight' });
+    expect(onChange).toHaveBeenLastCalledWith(51);
+
+    fireEvent.keyDown(root, { key: 'ArrowRight', shiftKey: true });
+    expect(onChange).toHaveBeenLastCalledWith(60);
+
+    fireEvent.keyDown(root, { key: 'ArrowLeft', shiftKey: true });
+    expect(onChange).toHaveBeenLastCalledWith(40);
+  });
+
+  it('shift is ignored on a locked slider, like every other key', () => {
+    const onChange = vi.fn();
+    render(<Slider label="Weight" value={50} onChange={onChange} readOnly />);
+    fireEvent.keyDown(screen.getByRole('slider'), { key: 'ArrowRight', shiftKey: true });
+    expect(onChange).not.toHaveBeenCalled();
   });
 });
