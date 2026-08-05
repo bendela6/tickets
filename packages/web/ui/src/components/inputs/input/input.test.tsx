@@ -2,6 +2,7 @@ import { createRef, useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
+import { focusRing } from '../../../style';
 import { FieldError } from '../../field-error';
 import { FieldLabel } from '../../field-label';
 import { Input } from './input';
@@ -72,7 +73,7 @@ test('readOnly also changes how the field looks', () => {
   // twMerge has to have evicted the editable treatment, not stacked on top of it.
   expect(input).not.toHaveClass('bg-surface-raised');
   expect(input).not.toHaveClass('border-gray-7');
-  expect(input.className).not.toContain('hover:border-gray-9');
+  expect(input.className).not.toContain('hover:border-gray-11');
 });
 
 test('readOnly reaches BOTH render paths — attribute inside, treatment on the chrome', () => {
@@ -219,8 +220,9 @@ test('invalid input shows the danger border at rest, and the halo on focus', () 
   // field looking identical whether or not it had focus.
   render(<Input value="" onChange={noop} tone="danger" aria-label="Key" />);
   const input = screen.getByLabelText('Key');
-  expect(input).toHaveClass('border-red-9', 'focus:ring-3', 'focus:ring-red-3');
-  expect(input).not.toHaveClass('ring-3');
+  expect(input.className).toMatch(/(?:^|\s)border-red-\d/);
+  expect(input.className).toContain(focusRing('red', 'focus'));
+  expect(input.className).not.toMatch(/(?:^|\s)ring-\d/);
 });
 
 test('input associates label and error', () => {

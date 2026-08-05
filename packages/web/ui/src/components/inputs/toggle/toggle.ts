@@ -1,4 +1,4 @@
-import { axis, HUES, over, variants } from '../../../style';
+import { axis, focusRing, HUES, over, variants } from '../../../style';
 import type { ControlSize } from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
@@ -62,13 +62,13 @@ export const toggleMarkClass = variants({
           'border-gray-7',
           `checked:border-${tone}-9 checked:bg-${tone}-9`,
           `indeterminate:border-${tone}-9 indeterminate:bg-${tone}-9`,
-          `focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-${tone}-3`,
+          focusRing(tone),
           'disabled:cursor-not-allowed disabled:border-gray-6 disabled:bg-surface-inset',
         ]),
         ring: over(SCALE, (tone) => [
           'border-gray-7',
           `checked:border-${tone}-9`,
-          `focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-${tone}-3`,
+          focusRing(tone),
           'disabled:cursor-not-allowed disabled:border-gray-6 disabled:bg-surface-inset',
         ]),
       },
