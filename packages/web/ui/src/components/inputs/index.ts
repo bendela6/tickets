@@ -32,6 +32,7 @@ export * from './segmented-control';
 export * from './radio-group';
 export * from './multi-combobox';
 export * from './tag-input';
+export * from './file-input';
 export * from './date-picker';
 export * from './time-picker';
 export * from './color-picker';
