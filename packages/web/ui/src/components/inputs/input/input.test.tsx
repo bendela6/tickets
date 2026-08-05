@@ -227,7 +227,7 @@ test('invalid input shows the danger border at rest, and the halo on focus', () 
   // field looking identical whether or not it had focus.
   render(<Input value="" onChange={noop} tone="danger" aria-label="Key" />);
   const input = screen.getByLabelText('Key');
-  expect(input.className).toMatch(/(?:^|\s)border-red-\d/);
+  expect(input.className).toMatch(/(?:^|\s)bg-red-\d/);
   expect(input.className).toContain(focusRing('red', 'focus'));
   expect(input.className).not.toMatch(/(?:^|\s)ring-\d/);
 });
@@ -318,7 +318,7 @@ test('disabled dims the adorned field the same as the bare one', async () => {
   const bareField = bare.firstElementChild!;
   const adornedField = adorned.firstElementChild!;
 
-  for (const token of ['border-gray-6', 'bg-surface-inset', 'text-gray-9']) {
+  for (const token of ['bg-hatch', 'text-gray-9', 'cursor-not-allowed']) {
     expect(adornedField.className).toContain(token);
   }
   // And the bare path still says it the way it always did, through the variant.

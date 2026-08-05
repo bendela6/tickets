@@ -273,7 +273,7 @@ test('a read-only field takes the read-only ground, not the disabled one', () =>
     />,
   );
   const trigger = screen.getByRole('button', { name: /labels/i });
-  expect(trigger.className).toContain('bg-surface-inset');
+  expect(trigger.className).toContain('bg-transparent');
   expect(trigger.className).toContain('cursor-default');
   // The dimming is still gated behind `disabled:` — read-only keeps full
   // contrast, because the value it holds still matters.
