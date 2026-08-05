@@ -6,6 +6,7 @@
 
   --animate-spin: ai-spin 1.4s linear infinite;
   --animate-pulse: ai-pulse 1.8s ease-out infinite;
+  --animate-nudge: ai-nudge 320ms cubic-bezier(0.2, 0, 0, 1) 1;
 
   --transition-paint: opacity, border-color, background-color, box-shadow;
 }
