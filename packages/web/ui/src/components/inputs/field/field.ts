@@ -20,8 +20,12 @@ const FOCUS = axis('focus', ['focus', 'focus-within'], 'focus');
  *             default; making every field wear its tone's border would paint
  *             the whole form indigo.
  *   toned   — the field is saying something. Border and ring both take the
- *             ramp, and the border is on whether or not it has focus, because
- *             an error or a confirmation has to be visible at a glance.
+ *             ramp, and the BORDER is the part that is on whether or not it has
+ *             focus, because an error or a confirmation has to be visible at a
+ *             glance. The ring stays the focus treatment, exactly as in
+ *             `neutral` — it was once pinned on permanently here, which left
+ *             focus with nothing to add and made a toned field look identical
+ *             focused, hovered and at rest.
  *
  * `focus` is the *variant prefix*: a plain `<input>` takes focus itself, while
  * a composite field (a tag list, a stepper) focuses an inner element and has
@@ -47,9 +51,17 @@ export const fieldClass = variants({
           `${focus}:border-${tone}-9 ${focus}:outline-none`,
           `${focus}:ring-3 ${focus}:ring-${tone}-3`,
         ]),
+        // Structurally the same three lines as `neutral` — border steps on
+        // hover, ring appears on focus — differing only in where the border
+        // starts. `-11`, not the conventional `-10`: a toned border already
+        // rests on the solid rung, and 9→10 measures 1.17:1 against 1.98:1 for
+        // neutral's 7→9, which on one pixel is no change at all. 9→11 is 1.47:1.
+        // The rung is a text step by convention, but this is a border, not a
+        // fill, and it is the nearest one that can actually be seen.
         toned: over(SCALE, FOCUS, (tone, focus) => [
-          `border-${tone}-9 hover:border-${tone}-10`,
-          `ring-3 ring-${tone}-3 ${focus}:outline-none`,
+          `border-${tone}-9 hover:border-${tone}-11`,
+          `${focus}:border-${tone}-11 ${focus}:outline-none`,
+          `${focus}:ring-3 ${focus}:ring-${tone}-3`,
         ]),
       },
     },
