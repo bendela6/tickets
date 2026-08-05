@@ -21,6 +21,7 @@ export * from './number-input';
 export * from './slider';
 export * from './rating';
 export * from './checkbox';
+export * from './checkbox-group';
 export * from './switch';
 export * from './combobox';
 export * from './select';
