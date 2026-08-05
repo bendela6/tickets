@@ -152,13 +152,26 @@ export const readOnlyFieldClass =
   // instead — which is why it cannot be mistaken for disabled (a hatch) or for
   // rest (a fill). The value stays rung 12 at full contrast because reading it
   // is the entire point.
-  // Every interactive channel has to be cancelled, not just the floor. When
-  // hover gained a RIM as well as a fill (2026-08-06), cancelling only
-  // `hover:bg-*` left a read-only field lighting up its border under the
-  // pointer — a control that answers a gesture it will not honour.
+  // A PRINTED ROW, not a quieter box. `22 Disabled ReadOnly and Tones` records
+  // six candidates and picks F for this: the slot goes away entirely and the
+  // value is printed over a rule. The rejected alternative it names is exactly
+  // the trap a bordered version falls into — "read-only still has a floor, so
+  // it looks editable and invites a click that does nothing. A glyph cannot fix
+  // an affordance you left in place."
+  //
+  // So: no floor, no radius, no box — one hairline under the value, and the
+  // padding collapses to 2px because there is no longer a field to inset from.
+  //
+  // Every interactive channel is cancelled, not just the floor. When hover
+  // gained a RIM as well as a fill (2026-08-06), cancelling only `hover:bg-*`
+  // left a read-only field lighting its border under the pointer — a control
+  // answering a gesture it will not honour.
   [
     'bg-transparent hover:bg-transparent active:bg-transparent',
-    'border-gray-7 hover:border-gray-7 active:border-gray-7',
+    'border-transparent border-b-gray-7',
+    'hover:border-transparent hover:border-b-gray-7',
+    'active:border-transparent active:border-b-gray-7',
+    'rounded-none px-2',
     'text-gray-12 cursor-default',
   ].join(' ');
 

@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { extendTailwindMerge } from 'tailwind-merge';
-import { FONT_WEIGHTS, TEXT_SIZES } from '../../generated';
+import { FONT_WEIGHTS, RADII, TEXT_SIZES } from '../../generated';
 
 // The app defines custom font-size tokens. tailwind-merge doesn't know they're
 // font sizes, so by default it buckets them into the text-COLOR group and
@@ -21,11 +21,23 @@ import { FONT_WEIGHTS, TEXT_SIZES } from '../../generated';
 // weights with font files are registered, because only those compile to
 // anything; a `font-700` nobody can produce needs no protection.
 
+// The same trap a third time, in the radius namespace. `rounded-control-xs|md|lg`
+// are custom rungs, so tailwind-merge does not recognise them as border-radius
+// and will not let a later `rounded-none` evict one — both survive, and which
+// wins is left to stylesheet order. Found when read-only stopped being a box:
+// its `rounded-none` sat beside the ladder's `rounded-control-md` and the
+// corners stayed rounded.
+//
+// `control-*` is two segments, which the object form does not match on its own,
+// so the rungs are registered as whole class names.
+const RADIUS_RUNGS = Object.keys(RADII);
+
 const twMerge = extendTailwindMerge({
   extend: {
     classGroups: {
       'font-size': [{ text: TEXT_SIZES }],
       'font-weight': [{ font: FONT_WEIGHTS }],
+      rounded: [{ rounded: RADIUS_RUNGS }],
     },
   },
 });

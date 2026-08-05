@@ -50,7 +50,7 @@ test('readOnly also changes how the field looks', () => {
   render(<Textarea value="locked" onChange={() => {}} readOnly aria-label="Notes" />);
   const box = screen.getByLabelText('Notes');
 
-  expect(box).toHaveClass('bg-transparent', 'border-gray-7', 'cursor-default');
+  expect(box).toHaveClass('bg-transparent', 'border-b-gray-7', 'rounded-none', 'cursor-default');
   expect(box.className).toContain('hover:bg-transparent');
   // twMerge has to have evicted the editable treatment, not stacked on top of it.
   expect(box).not.toHaveClass('bg-gray-5');
@@ -114,7 +114,7 @@ test('read-only drops a toned border to the resting rung but keeps the invalid c
   const box = screen.getByLabelText('Key');
 
   expect(box).toHaveAttribute('aria-invalid', 'true');
-  expect(box).toHaveClass('border-gray-7', 'bg-transparent');
+  expect(box).toHaveClass('border-b-gray-7', 'bg-transparent');
   expect(box).not.toHaveClass('bg-red-2');
 });
 
