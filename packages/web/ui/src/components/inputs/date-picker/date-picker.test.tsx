@@ -109,3 +109,16 @@ test('a typed date obeys the same bounds as a clicked one', async () => {
   await userEvent.type(entry, '2026-07-10{Enter}');
   expect(onChange).toHaveBeenCalledWith(expect.stringMatching(/^2026-07-10/));
 });
+
+test('a date is monospace so a column of them aligns on the digits', () => {
+  // The design: "Dates are always monospace." In a table a proportional face
+  // makes every row a different width, and the digits stop lining up.
+  render(<DatePicker value="2026-08-14T00:00:00Z" onChange={() => {}} />);
+  const shown = screen.getByText(/2026|14/);
+  expect(shown.className).toMatch(/font-mono/);
+});
+
+test('the placeholder stays proportional, because it is prose and not a date', () => {
+  render(<DatePicker value={null} onChange={() => {}} placeholder="No due date" />);
+  expect(screen.getByText('No due date').className).not.toMatch(/font-mono/);
+});

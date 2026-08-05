@@ -166,7 +166,15 @@ export function DatePicker({
             ),
           })}
         >
-          {value ? formatExact(value) : placeholder}
+          {/* Monospace, per the design — a column of dates in a table has to
+              align on its digits, and a proportional face makes every row a
+              different width. The PLACEHOLDER stays proportional: it is prose,
+              not a date, and setting it in mono would read as a value. */}
+          {value ? (
+            <span className="font-mono tabular-nums">{formatExact(value)}</span>
+          ) : (
+            placeholder
+          )}
           {/* Dropped when read-only: a chevron promises a calendar that is not
               going to open. */}
           {readOnly ? null : (
