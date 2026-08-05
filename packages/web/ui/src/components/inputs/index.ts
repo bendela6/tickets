@@ -18,6 +18,8 @@ export * from './textarea';
 export * from './password-input';
 export * from './search-input';
 export * from './number-input';
+export * from './pin-input';
+export * from './duration-input';
 export * from './slider';
 export * from './rating';
 export * from './checkbox';
