@@ -110,3 +110,30 @@ test('passes native attributes through', () => {
   render(<Switch label="KPI strip" name="kpi" value={false} onChange={() => {}} />);
   expect(screen.getByRole('switch', { name: 'KPI strip' })).toHaveAttribute('name', 'kpi');
 });
+
+test('a pending switch keeps the value you chose and spins in the knob', async () => {
+  // Optimistic, per the design. Snapping back to the old position while saving
+  // would report a failure that has not happened.
+  const { container } = render(
+    <Switch label="Notify" value onChange={() => {}} pending />,
+  );
+  const input = screen.getByLabelText('Notify') as HTMLInputElement;
+  expect(input.checked).toBe(true);
+  expect(input).toHaveAttribute('aria-busy', 'true');
+  expect(container.querySelector('svg')).not.toBeNull();
+});
+
+test('pending is not disabled — the tab stop survives the request', async () => {
+  const onChange = vi.fn();
+  render(<Switch label="Notify" value={false} onChange={onChange} pending />);
+  const input = screen.getByLabelText('Notify');
+  expect(input).not.toBeDisabled();
+  await userEvent.tab();
+  expect(input).toHaveFocus();
+});
+
+test('a settled switch has no spinner and makes no busy claim', () => {
+  const { container } = render(<Switch label="Notify" value onChange={() => {}} />);
+  expect(container.querySelector('svg')).toBeNull();
+  expect(screen.getByLabelText('Notify')).not.toHaveAttribute('aria-busy');
+});

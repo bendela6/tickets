@@ -26,14 +26,43 @@ type InputProps = Omit<
     /** Content pinned inside the field, after the text — a unit, a shortcut hint,
      *  a clear button. */
     trailing?: ReactNode;
+    /**
+     * Draw a `62/80` count in the trailing gutter. Requires the native
+     * `maxLength`, because a count with no ceiling is a number nobody can act
+     * on — how many you have typed only matters against how many you may.
+     *
+     * Deliberately opt-in rather than implied by `maxLength`: plenty of fields
+     * cap their length defensively at a limit the user will never approach, and
+     * showing a counter there invites them to treat a storage detail as a
+     * writing target.
+     */
+    showCount?: boolean;
   };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { value, onChange, size = 'md', tone, disabled, readOnly, leading, trailing, className, ...rest },
+  { value, onChange, size = 'md', tone, disabled, readOnly, leading, trailing, showCount, className, ...rest },
   ref,
 ) {
   const field = fieldState(tone);
   const invalid = field.invalid || undefined;
+
+  const { maxLength } = rest;
+  const counter =
+    showCount && maxLength !== undefined ? (
+      <span aria-hidden className="shrink-0 font-mono text-11 tabular-nums text-gray-10">
+        {value.length}/{maxLength}
+      </span>
+    ) : null;
+  // A counter is trailing content, so it takes the adorned path — otherwise the
+  // bare <input> has nowhere to put it. Composed with any trailing the caller
+  // already passed rather than replacing it.
+  const trail =
+    trailing || counter ? (
+      <>
+        {trailing}
+        {counter}
+      </>
+    ) : null;
 
   // The half of the contract that lands on the <input> itself, identical down
   // both render paths. Shared rather than written out twice so the adorned path
@@ -56,7 +85,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   // The plain field: chrome on the <input> itself, and `className` landing
   // there. `rest` is spread FIRST so nothing a caller happens to spread in can
   // beat the contract props that follow it.
-  if (!leading && !trailing) {
+  if (!leading && !trail) {
     return (
       <input
         {...rest}
@@ -110,7 +139,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         {...control}
         className="min-w-0 flex-1 bg-transparent p-0 font-sans text-gray-12 outline-none placeholder:text-gray-9"
       />
-      {trailing}
+      {trail}
     </div>
   );
 });

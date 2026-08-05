@@ -324,3 +324,30 @@ test('disabled dims the adorned field the same as the bare one', async () => {
   // And the bare path still says it the way it always did, through the variant.
   expect(bareField.className).toContain('disabled:text-gray-9');
 });
+
+test('the character counter shows what you have against what you may', () => {
+  // "62/80" in the design. The ceiling is the point — a count with no limit is
+  // a number nobody can act on.
+  render(<Input value="Retry webhook" onChange={noop} maxLength={80} showCount aria-label="Title" />);
+  expect(screen.getByText('13/80')).toBeInTheDocument();
+});
+
+test('the counter is opt-in, so a defensive maxLength does not sprout one', () => {
+  // Plenty of fields cap length at a limit nobody will approach; a counter there
+  // invites treating a storage detail as a writing target.
+  render(<Input value="x" onChange={noop} maxLength={4000} aria-label="Title" />);
+  expect(screen.queryByText(/\/4000/)).toBeNull();
+});
+
+test('showCount with no maxLength draws nothing rather than a half-counter', () => {
+  render(<Input value="abc" onChange={noop} showCount aria-label="Title" />);
+  expect(screen.queryByText(/3\//)).toBeNull();
+});
+
+test('the counter joins any trailing the caller already passed', () => {
+  render(
+    <Input value="ab" onChange={noop} maxLength={10} showCount trailing={<kbd>⌘K</kbd>} aria-label="Title" />,
+  );
+  expect(screen.getByText('⌘K')).toBeInTheDocument();
+  expect(screen.getByText('2/10')).toBeInTheDocument();
+});
