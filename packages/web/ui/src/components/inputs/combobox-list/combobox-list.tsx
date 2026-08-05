@@ -67,8 +67,14 @@ type ComboboxListProps = {
   footer?: ReactNode;
   /** Shown when there is nothing to offer at all. */
   emptyLabel?: string;
-  /** Shown when the filter hid everything — a different fact, and a different fix. */
+  /**
+   * Shown when the filter hid everything — a different fact, and a different
+   * fix. Left unset it names the query, which is what tells the reader their
+   * own typing is the cause rather than an empty source.
+   */
   noMatchLabel?: string;
+  /** A second line under the empty result — what to try instead. */
+  noMatchHint?: ReactNode;
 };
 
 // The keyboard-navigable listbox shared by Combobox, MultiCombobox and
@@ -87,7 +93,8 @@ export function ComboboxList({
   header,
   footer,
   emptyLabel = 'Nothing to pick',
-  noMatchLabel = 'No matches',
+  noMatchLabel,
+  noMatchHint,
 }: ComboboxListProps) {
   const [query, setQuery] = useState('');
   const [cursorIndex, setCursorIndex] = useState(0);
@@ -224,8 +231,24 @@ export function ComboboxList({
           <li className="px-8 py-12 text-center font-sans text-12/17 text-gray-9">
             {/* Two different empties. "No matches" in front of a list that was
                 never populated reads as though a filter is hiding something,
-                and sends you looking for the filter to clear. */}
-            {options.length === 0 ? emptyLabel : noMatchLabel}
+                and sends you looking for the filter to clear.
+                When a query IS the cause, naming it back is what makes that
+                obvious — and it must never be invented for a list that was
+                simply empty. */}
+            {options.length === 0 ? (
+              emptyLabel
+            ) : (
+              <>
+                <div className="text-gray-11">
+                  {noMatchLabel ?? (
+                    <>
+                      No matches for <span className="font-500">“{query.trim()}”</span>
+                    </>
+                  )}
+                </div>
+                {noMatchHint ? <div className="pt-4 text-11">{noMatchHint}</div> : null}
+              </>
+            )}
           </li>
         ) : null}
         {filtered.map((option, index) => {

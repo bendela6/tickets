@@ -51,7 +51,10 @@ test('an empty option set says so, rather than blaming a filter', async () => {
 test('a filter that hides everything says THAT instead', async () => {
   render(list({ searchable: true }));
   await userEvent.type(screen.getByRole('searchbox'), 'zzzz');
-  expect(screen.getByText('No matches')).toBeTruthy();
+  // Names the query rather than saying a bare "No matches", so it is obvious
+  // the typing is the cause and not an empty source.
+  expect(screen.getByText(/No matches for/)).toBeTruthy();
+  expect(screen.getByText(/zzzz/)).toBeTruthy();
   expect(screen.queryByText('Nothing to pick')).toBeNull();
 });
 
@@ -126,4 +129,32 @@ test('a filtered list says how much it is hiding', async () => {
 test('an unfiltered list shows no count, because there is nothing to compare', async () => {
   render(<ComboboxList options={OPTIONS} isSelected={() => false} onPick={() => {}} />);
   expect(screen.queryByText(/ of \d+$/)).toBeNull();
+});
+
+test('an empty result names the query, and an empty list does not', async () => {
+  // Two different empties, and the design distinguishes them: "No repository
+  // matches 'zzz'" tells you your query is the cause, where a bare "No matches"
+  // leaves you unsure whether anything was ever there. A list with no options
+  // at all has no query to blame, so it must not invent one.
+  const { rerender } = render(
+    <ComboboxList options={OPTIONS} isSelected={() => false} onPick={() => {}} />,
+  );
+  await userEvent.type(screen.getByRole('searchbox'), 'zzz');
+  expect(screen.getByText(/zzz/)).toBeTruthy();
+
+  rerender(<ComboboxList options={[]} isSelected={() => false} onPick={() => {}} />);
+  expect(screen.getByText('Nothing to pick')).toBeTruthy();
+});
+
+test('a hint can be offered alongside the empty result', async () => {
+  render(
+    <ComboboxList
+      options={OPTIONS}
+      isSelected={() => false}
+      onPick={() => {}}
+      noMatchHint="Check the spelling, or paste a full URL."
+    />,
+  );
+  await userEvent.type(screen.getByRole('searchbox'), 'zzz');
+  expect(screen.getByText(/Check the spelling/)).toBeTruthy();
 });
