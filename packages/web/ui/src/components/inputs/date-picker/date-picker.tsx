@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { cn } from '../../../style';
+import { cn, focusRing } from '../../../style';
 import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../control';
 import { fieldClass, fieldState } from '../field';
 import { Icon, type IconSize } from '../../icon';
@@ -233,12 +233,25 @@ export function DatePicker({
                 disabled={blocked}
                 onClick={() => commit({ year: view.year, month: view.month, day })}
                 className={cn(
-                  'flex h-28 w-28 items-center justify-center rounded-md font-sans text-12',
+                  // Mono, like every other date in the system, so the columns
+                  // of a month align on their digits instead of drifting with
+                  // the width of a 1 against an 8.
+                  'flex h-28 w-28 items-center justify-center rounded-control-xs font-mono text-12 tabular-nums',
+                  // The focused day wears the inward ring — a day cell is inside
+                  // a grid, where an outward halo would overlap its neighbours.
+                  focusRing(field.scale, 'focus-visible', 'inward'),
                   isSelected
-                    ? 'bg-indigo-9 text-indigo-contrast'
+                    ? // A solid rung-9 tile, on the field's own ramp rather than
+                      // a hardcoded indigo — a danger-toned picker used to open
+                      // onto an indigo selection.
+                      `bg-${field.scale}-9 text-${field.scale}-contrast`
                     : isToday
-                      ? 'text-gray-12 ring-1 ring-surface-inset ring-indigo-9 hover:bg-surface-inset'
-                      : 'text-gray-12 hover:bg-surface-inset',
+                      ? // Today is a 1px INSET outline: the tile is 28px and an
+                        // outward ring on the middle of a grid overlaps the days
+                        // either side of it. It also used to name two ring
+                        // colours at once, so which one won was down to order.
+                        `text-gray-12 ring-1 ring-inset ring-${field.scale}-9 hover:bg-gray-4`
+                      : 'text-gray-12 hover:bg-gray-4',
                   blocked && 'cursor-default opacity-40 hover:bg-transparent',
                 )}
               >
