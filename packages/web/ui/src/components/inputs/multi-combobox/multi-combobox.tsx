@@ -23,22 +23,7 @@ type MultiComboboxProps = ControlProps<string[]> & {
   maxChips?: number;
 };
 
-// The trigger wraps its chips onto more rows as they accumulate, so each rung
-// is a floor rather than a height — `h-auto` evicts the fixed height fieldClass
-// contributes for the single-line controls.
-const BOX: Record<ControlSize, string> = {
-  xs: 'h-auto min-h-28 py-2',
-  md: 'h-auto min-h-36 py-4',
-  lg: 'h-auto min-h-44 py-6',
-};
-
 const CHEVRON: Record<ControlSize, IconSize> = { xs: 'sm', md: 'sm', lg: 'md' };
-
-// The placeholder used to be a fixed `text-13/19`, so `size` moved the box and
-// left the text behind. `md` is unchanged. The chips keep `text-12/17` at every
-// rung deliberately — a chip is a label on a value, not the field's own prose,
-// and it stays one step down so a full trigger does not read as a paragraph.
-const TEXT: Record<ControlSize, string> = { xs: 'text-12/17', md: 'text-13/19', lg: 'text-14/20' };
 
 export function MultiCombobox({
   id,
@@ -119,7 +104,6 @@ export function MultiCombobox({
             className: cn(
               'flex w-full items-center gap-6 px-10 text-left',
               'disabled:pointer-events-none disabled:opacity-50',
-              BOX[size],
               // Merged after the field's own border and fill so it wins them,
               // and before the caller's className so the caller still wins.
               // Deliberately not the disabled look: the text keeps full
@@ -131,7 +115,7 @@ export function MultiCombobox({
         >
           <span className="flex min-w-0 flex-1 flex-wrap items-center gap-6">
             {selectedOptions.length === 0 ? (
-              <span className={cn('truncate font-sans text-gray-9', TEXT[size])}>
+              <span className={cn('truncate font-sans text-gray-9')}>
                 {placeholder}
               </span>
             ) : null}

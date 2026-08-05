@@ -19,10 +19,6 @@ type NumberInputProps = ControlProps<number | null> & {
   placeholder?: string;
 };
 
-// The digits used to be a fixed `text-13/19`, so `size` moved the box and the
-// stepper buttons while the number itself stayed put. `md` is unchanged.
-const TEXT: Record<ControlSize, string> = { xs: 'text-12/17', md: 'text-13/19', lg: 'text-14/20' };
-
 function clamp(value: number, min?: number, max?: number) {
   let next = value;
   if (min !== undefined) {
@@ -115,7 +111,6 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
         className={cn(
           'w-64 bg-transparent px-8 text-right font-sans text-gray-12 tabular-nums outline-none',
           '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none',
-          TEXT[size],
         )}
       />
       <div className="flex flex-col border-l-1 border-gray-6">
