@@ -73,9 +73,9 @@ test('readOnly also changes how the field looks', () => {
   expect(input).toHaveClass('bg-transparent', 'border-gray-7', 'cursor-default');
   expect(input.className).toContain('hover:bg-transparent');
   // twMerge has to have evicted the editable treatment, not stacked on top of it.
-  expect(input).not.toHaveClass('bg-gray-4');
+  expect(input).not.toHaveClass('bg-gray-5');
   expect(input).not.toHaveClass('border-transparent');
-  expect(input.className).not.toContain('hover:bg-gray-5');
+  expect(input.className).not.toContain('hover:bg-gray-6');
 });
 
 test('readOnly reaches BOTH render paths — attribute inside, treatment on the chrome', () => {
@@ -90,7 +90,7 @@ test('readOnly reaches BOTH render paths — attribute inside, treatment on the 
 
   expect(input.readOnly).toBe(true);
   expect(wrapper).toHaveClass('bg-transparent', 'border-gray-7', 'cursor-default');
-  expect(wrapper).not.toHaveClass('bg-gray-4');
+  expect(wrapper).not.toHaveClass('bg-gray-5');
   expect(wrapper).not.toHaveClass('border-transparent');
 });
 
@@ -105,9 +105,9 @@ test('an editable field carries none of the read-only treatment, on either path'
   const wrapper = container.lastElementChild!;
 
   expect(plain).not.toHaveAttribute('readonly');
-  expect(plain).toHaveClass('bg-gray-4', 'border-transparent');
+  expect(plain).toHaveClass('bg-gray-5', 'border-transparent');
   expect(plain).not.toHaveClass('cursor-default');
-  expect(wrapper).toHaveClass('bg-gray-4', 'border-transparent');
+  expect(wrapper).toHaveClass('bg-gray-5', 'border-transparent');
   expect(wrapper).not.toHaveClass('cursor-default');
 });
 
@@ -169,7 +169,7 @@ test('an unset tone is the resting field, not primary', () => {
   render(<Input value="" onChange={noop} aria-label="Title" />);
   const input = screen.getByLabelText('Title');
 
-  expect(input).toHaveClass('bg-gray-4', 'border-transparent');
+  expect(input).toHaveClass('bg-gray-5', 'border-transparent');
   expect(input.className).not.toMatch(/(?:^|\s)bg-indigo-\d/);
   expect(input).not.toHaveAttribute('aria-invalid');
 });
@@ -206,7 +206,7 @@ test('md input carries the ladder rung and the resting floor', () => {
   render(<Input value="" onChange={noop} aria-label="Title" />);
   const input = screen.getByLabelText('Title');
   const md = CONTROL_LADDER.md;
-  expect(input).toHaveClass(md.height, md.padX, md.radius, 'bg-gray-4', 'border-transparent');
+  expect(input).toHaveClass(md.height, md.padX, md.radius, 'bg-gray-5', 'border-transparent');
   // Regression guard: tailwind-merge must not let the font size evict the ink
   // text color (the same trap the primary button hit with text-13/19).
   expect(input).toHaveClass(md.text);
@@ -318,7 +318,7 @@ test('disabled dims the adorned field the same as the bare one', async () => {
   const bareField = bare.firstElementChild!;
   const adornedField = adorned.firstElementChild!;
 
-  for (const token of ['bg-hatch', 'text-gray-9', 'cursor-default']) {
+  for (const token of ['opacity-45', 'text-gray-9', 'cursor-default']) {
     expect(adornedField.className).toContain(token);
   }
   // And the bare path still says it the way it always did, through the variant.

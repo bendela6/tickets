@@ -51,7 +51,7 @@ describe('every field control can be disabled', () => {
   it('a disabled field takes the muted border and fill, whatever its tone', () => {
     render(<Input disabled tone="danger" aria-label="c"  value="" onChange={() => {}} />);
     const input = screen.getByLabelText('c');
-    expect(input.className).toContain('disabled:bg-hatch');
+    expect(input.className).toContain('disabled:opacity-45');
     expect(input.className).toContain('disabled:text-gray-9');
   });
 });

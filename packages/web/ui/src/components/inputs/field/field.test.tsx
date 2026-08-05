@@ -19,14 +19,24 @@ test('a tone colours the border outright, not only on focus', () => {
   // field is a colour nobody sees.
   render(<Input tone="success" aria-label="Budget"  value="" onChange={() => {}} />);
   const input = screen.getByLabelText('Budget');
-  // Under Soft Fill the tone paints the FLOOR, not the border — the border is
-  // transparent at rest on every field and only gets coloured in on focus.
+  // The tone paints the FLOOR, and — since 2026-08-06 — a hairline rim too.
+  // A toned field is the one place a resting field is bordered; that rim is how
+  // it reads as toned before you reach its glyph.
   expect(input.className).toMatch(/(?:^|\s)bg-green-\d/);
+  expect(input.className).toMatch(/(?:^|\s)border-green-\d/);
   expect(input.className).not.toMatch(/(?:^|\s)bg-gray-\d/);
-  // The floor is the unconditional part. The ring is not — it belongs to focus,
-  // and an always-on ring leaves focus with nothing to add.
+  expect(input).not.toHaveClass('border-transparent');
+  // The floor and rim are the unconditional part. The ring is not — it belongs
+  // to focus, and an always-on ring leaves focus with nothing to add.
   expect(input.className).not.toMatch(/(?:^|\s)ring-\d/);
-  expect(input).toHaveClass('border-transparent');
+});
+
+test('an unset field stays rimless, which is what keeps a stacked form quiet', () => {
+  // The other half of the same rule: only a field with something to say draws
+  // an edge at rest. Every field bordered would be the rim noise the design
+  // gave up borders to avoid.
+  render(<Input aria-label="Title" value="" onChange={() => {}} />);
+  expect(screen.getByLabelText('Title')).toHaveClass('border-transparent');
 });
 
 test('a toned field still has somewhere to go on hover and on focus', () => {

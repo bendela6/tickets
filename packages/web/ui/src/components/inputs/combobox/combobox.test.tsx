@@ -153,8 +153,8 @@ test('an unset tone is the resting neutral field, not a quiet primary', () => {
   // — which ramp `primary` resolves to is not this component's business.
   const props = { options: OPTIONS, value: null, onChange: () => {} };
   const { rerender } = render(<Combobox {...props} />);
-  expect(classes(screen.getByRole('button'))).toContain('bg-gray-4');
+  expect(classes(screen.getByRole('button'))).toContain('bg-gray-5');
 
   rerender(<Combobox {...props} tone="primary" />);
-  expect(classes(screen.getByRole('button'))).not.toContain('bg-gray-4');
+  expect(classes(screen.getByRole('button'))).not.toContain('bg-gray-5');
 });

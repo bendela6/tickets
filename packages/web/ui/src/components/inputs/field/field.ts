@@ -48,32 +48,48 @@ const FOCUS = axis('focus', ['focus', 'focus-within'], 'focus');
  */
 export const fieldClass = variants({
   base: [
-    'appearance-none font-sans text-gray-12 placeholder:text-gray-10',
-    // The border is present and transparent from rest, so the focus rim costs
-    // no layout. Removing it and adding one on focus would shift the value by
-    // a pixel every time the caret lands.
+    // Rung 11, not 10: the design moved the hint up for contrast — 5.38:1 light
+    // and 5.47:1 dark, where rung 10 measured 3.8:1.
+    'appearance-none font-sans text-gray-12 placeholder:text-gray-11',
+    // The border is present and transparent from rest, so the rim costs no
+    // layout. Removing it and adding one later would shift the value by a pixel
+    // every time the state changed.
     'border-1 border-transparent',
     'transition-colors duration-120',
-    // Disabled is a hatch, not a tint — a filled floor cannot say "unavailable"
-    // by going one rung quieter, because every other state is also a floor.
-    // `cursor-default`, never `not-allowed`. The barred circle reads as a
-    // refusal aimed at the person rather than a statement about the field, and
-    // it says the same thing over a permanently-inapplicable control as over a
-    // temporarily-locked one. Read-only already uses `cursor-default` for the
-    // same reason; disabled now matches it.
-    'disabled:bg-hatch disabled:text-gray-9 disabled:cursor-default',
+    // Disabled fades the WHOLE control — chrome and value together — rather
+    // than restyling it. The 45° hatch this replaced said "unavailable" loudly
+    // but also redrew the field as something that was never a field, and it
+    // could not be applied to a mark or a swatch without inventing a second
+    // treatment. Opacity applies to anything.
+    //
+    // `cursor-default`, never `not-allowed`: the barred circle reads as a
+    // refusal aimed at the person rather than a statement about the field.
+    'disabled:opacity-45 disabled:text-gray-9 disabled:cursor-default',
   ],
   config: {
     state: {
       default: 'neutral',
       options: {
+        // Every interactive state now moves the floor AND the rim together.
+        // The design's reason is measured: the warm neutral ramp moves only
+        // 1.06:1 between adjacent fill rungs, so a floor change alone cannot
+        // carry a state — which is exactly the invisible-hover defect this
+        // library already had once, fixed there by a rung nudge and fixed here
+        // structurally.
         neutral: over(SCALE, FOCUS, (tone, focus) => [
-          'bg-gray-4 hover:bg-gray-5 active:bg-gray-6',
+          'bg-gray-5 hover:bg-gray-6 active:bg-gray-7',
+          'hover:border-gray-9 active:border-gray-10',
           `${focus}:bg-surface-field`,
           focusRing(tone, focus),
         ]),
         toned: over(SCALE, FOCUS, (tone, focus) => [
-          `bg-${tone}-2 hover:bg-${tone}-3 active:bg-${tone}-4`,
+          // A toned field is the ONE place a resting field is bordered: the
+          // rung-6 hairline is how it reads as toned before you reach its
+          // glyph. Unset stays rimless, which is what keeps a stacked form free
+          // of rim noise.
+          `bg-${tone}-2 border-${tone}-6`,
+          `hover:bg-${tone}-3 hover:border-${tone}-9`,
+          `active:bg-${tone}-4 active:border-${tone}-10`,
           `${focus}:bg-surface-field`,
           focusRing(tone, focus),
         ]),
