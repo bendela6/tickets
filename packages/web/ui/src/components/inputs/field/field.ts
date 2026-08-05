@@ -56,7 +56,12 @@ export const fieldClass = variants({
     'transition-colors duration-120',
     // Disabled is a hatch, not a tint — a filled floor cannot say "unavailable"
     // by going one rung quieter, because every other state is also a floor.
-    'disabled:bg-hatch disabled:text-gray-9 disabled:cursor-not-allowed',
+    // `cursor-default`, never `not-allowed`. The barred circle reads as a
+    // refusal aimed at the person rather than a statement about the field, and
+    // it says the same thing over a permanently-inapplicable control as over a
+    // temporarily-locked one. Read-only already uses `cursor-default` for the
+    // same reason; disabled now matches it.
+    'disabled:bg-hatch disabled:text-gray-9 disabled:cursor-default',
   ],
   config: {
     state: {

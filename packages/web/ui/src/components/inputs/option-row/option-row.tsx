@@ -42,7 +42,7 @@ const optionRowClass = variants({
     'flex h-34 w-full min-w-0 items-center gap-8 rounded-control-xs px-9 text-left',
     'font-sans text-13 text-gray-12',
     'hover:bg-gray-4',
-    'disabled:cursor-not-allowed disabled:opacity-50',
+    'disabled:cursor-default disabled:opacity-50',
   ],
   config: {
     cursor: {

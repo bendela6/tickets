@@ -18,7 +18,7 @@
 @source inline("active:bg-yellow-4");
 @source inline("active:translate-y-px");
 @source inline("appearance-none");
-@source inline("aria-disabled:cursor-not-allowed");
+@source inline("aria-disabled:cursor-default");
 @source inline("aria-disabled:opacity-50");
 @source inline("aspect-square");
 @source inline("bg-blue-2");
@@ -248,7 +248,7 @@
 @source inline("disabled:bg-surface-inset");
 @source inline("disabled:border-1");
 @source inline("disabled:border-gray-6");
-@source inline("disabled:cursor-not-allowed");
+@source inline("disabled:cursor-default");
 @source inline("disabled:opacity-50");
 @source inline("disabled:pointer-events-none");
 @source inline("disabled:text-gray-9");
@@ -386,7 +386,7 @@
 @source inline("h-5");
 @source inline("h-6");
 @source inline("h-full");
-@source inline("has-disabled:cursor-not-allowed");
+@source inline("has-disabled:cursor-default");
 @source inline("hover:bg-blue-10");
 @source inline("hover:bg-blue-3");
 @source inline("hover:bg-blue-4");

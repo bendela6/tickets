@@ -99,7 +99,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           // the raised ground and full-contrast text while the bare one dimmed:
           // the same prop, two different looks. Stated here instead, the way
           // NumberInput already does for its stepper.
-          disabled && 'bg-hatch text-gray-9 cursor-not-allowed',
+          disabled && 'bg-hatch text-gray-9 cursor-default',
           readOnly && readOnlyFieldClass,
           className) })}
     >

@@ -318,7 +318,7 @@ test('disabled dims the adorned field the same as the bare one', async () => {
   const bareField = bare.firstElementChild!;
   const adornedField = adorned.firstElementChild!;
 
-  for (const token of ['bg-hatch', 'text-gray-9', 'cursor-not-allowed']) {
+  for (const token of ['bg-hatch', 'text-gray-9', 'cursor-default']) {
     expect(adornedField.className).toContain(token);
   }
   // And the bare path still says it the way it always did, through the variant.

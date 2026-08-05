@@ -121,7 +121,7 @@ describe('RichTextEditor', () => {
     expect(container.className).toContain('bg-gray-1');
     const toolbarWrap = document.querySelector('.rt')!.previousElementSibling!;
     expect(toolbarWrap.className).toContain('opacity-45');
-    expect(document.querySelector('.rt')!.className).toContain('cursor-not-allowed');
+    expect(document.querySelector('.rt')!.className).toContain('cursor-default');
   });
 
   it('composer renders the toolbar in a bottom action row with the submit button and ⌘↩ hint', () => {
