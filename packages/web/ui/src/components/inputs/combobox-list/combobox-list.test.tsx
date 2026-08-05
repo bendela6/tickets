@@ -158,3 +158,18 @@ test('a hint can be offered alongside the empty result', async () => {
   await userEvent.type(screen.getByRole('searchbox'), 'zzz');
   expect(screen.getByText(/Check the spelling/)).toBeTruthy();
 });
+
+test('loading draws skeleton rows rather than an empty state', async () => {
+  // The design: "Skeleton rows keep the popup height stable." Showing the empty
+  // state while options are still in flight says "there is nothing" when the
+  // truth is "not yet" — and collapsing to a one-line message makes the popup
+  // jump the moment results land.
+  render(<ComboboxList options={[]} isSelected={() => false} onPick={() => {}} loading />);
+  expect(screen.getAllByRole('presentation').length).toBeGreaterThan(1);
+  expect(screen.queryByText('Nothing to pick')).toBeNull();
+});
+
+test('a loading list offers no options to arrow onto', () => {
+  render(<ComboboxList options={[]} isSelected={() => false} onPick={() => {}} loading />);
+  expect(screen.queryAllByRole('option')).toHaveLength(0);
+});

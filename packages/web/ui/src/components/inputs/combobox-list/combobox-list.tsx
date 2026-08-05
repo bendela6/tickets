@@ -75,7 +75,16 @@ type ComboboxListProps = {
   noMatchLabel?: string;
   /** A second line under the empty result — what to try instead. */
   noMatchHint?: ReactNode;
+  /**
+   * Options are still in flight. Draws skeleton rows rather than an empty
+   * state: "nothing here" is the wrong answer to "not yet", and a one-line
+   * message makes the popup jump the moment results land.
+   */
+  loading?: boolean;
 };
+
+/** Enough rows to hold a popup's height without pretending to know the count. */
+const SKELETON_ROWS = 5;
 
 // The keyboard-navigable listbox shared by Combobox, MultiCombobox and
 // StatusSelect. Selection semantics live in the caller via isSelected/onPick.
@@ -95,6 +104,7 @@ export function ComboboxList({
   emptyLabel = 'Nothing to pick',
   noMatchLabel,
   noMatchHint,
+  loading = false,
 }: ComboboxListProps) {
   const [query, setQuery] = useState('');
   const [cursorIndex, setCursorIndex] = useState(0);
@@ -227,7 +237,20 @@ export function ComboboxList({
         onKeyDown={searchable ? undefined : onKeyDown}
         className="flex-1 overflow-y-auto p-5 focus:outline-none"
       >
-        {filtered.length === 0 ? (
+        {loading
+          ? Array.from({ length: SKELETON_ROWS }, (_, row) => (
+              <li
+                key={row}
+                role="presentation"
+                // The same 34px an OptionRow occupies, so the popup does not
+                // resize when the real rows replace these.
+                className="flex h-34 items-center px-9"
+              >
+                <span className="h-8 w-full animate-pulse rounded-control-xs bg-gray-5" />
+              </li>
+            ))
+          : null}
+        {!loading && filtered.length === 0 ? (
           <li className="px-8 py-12 text-center font-sans text-12/17 text-gray-9">
             {/* Two different empties. "No matches" in front of a list that was
                 never populated reads as though a filter is hiding something,
@@ -251,7 +274,7 @@ export function ComboboxList({
             )}
           </li>
         ) : null}
-        {filtered.map((option, index) => {
+        {loading ? null : filtered.map((option, index) => {
           const groupKey = groupOf ? groupOf(option) : null;
           const showHeader = groupKey !== null && groupKey !== lastGroup;
           lastGroup = groupKey;
