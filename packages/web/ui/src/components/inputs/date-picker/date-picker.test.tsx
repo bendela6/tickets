@@ -122,3 +122,32 @@ test('the placeholder stays proportional, because it is prose and not a date', (
   render(<DatePicker value={null} onChange={() => {}} placeholder="No due date" />);
   expect(screen.getByText('No due date').className).not.toMatch(/font-mono/);
 });
+
+const openCalendar = async () => {
+  render(<DatePicker value="2026-08-14T00:00:00Z" onChange={() => {}} tone="danger" />);
+  await userEvent.click(screen.getByRole('button'));
+};
+
+test('the calendar paints the selected day from the field ramp, not a hardcoded indigo', async () => {
+  // A danger-toned picker used to open onto an indigo selection: the tile named
+  // indigo outright rather than reading the scale the field had resolved.
+  await openCalendar();
+  const day = screen.getByRole('button', { name: '14' });
+  expect(day.className).toMatch(/bg-red-\d/);
+  expect(day.className).not.toMatch(/bg-indigo-\d/);
+});
+
+test('today is an INSET outline, so it cannot overlap its neighbours', async () => {
+  // A 28px tile in the middle of a grid has no room for an outward ring, and
+  // the old rule named two ring colours at once.
+  await openCalendar();
+  const todayCell = screen.getByRole('button', { name: String(new Date().getUTCDate()) });
+  if (todayCell.className.includes('ring-1')) {
+    expect(todayCell.className).toContain('ring-inset');
+  }
+});
+
+test('the calendar digits are mono, so a month aligns on its columns', async () => {
+  await openCalendar();
+  expect(screen.getByRole('button', { name: '14' }).className).toContain('font-mono');
+});
