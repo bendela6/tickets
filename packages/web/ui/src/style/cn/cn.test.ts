@@ -50,3 +50,14 @@ describe('cn', () => {
     expect(cn('a', false && 'b', undefined, 'c')).toBe('a c');
   });
 });
+
+test('a custom radius rung can be evicted, like any other radius', () => {
+  // The third instance of one trap: an unregistered custom rung is not
+  // recognised as its own property, so both classes survive and stylesheet
+  // order silently decides. Found when read-only stopped being a box and its
+  // `rounded-none` could not beat the ladder's `rounded-control-md`.
+  expect(cn('rounded-control-md', 'rounded-none')).toBe('rounded-none');
+  expect(cn('rounded-control-md', 'rounded-control-lg')).toBe('rounded-control-lg');
+  // …and the stock rungs still behave.
+  expect(cn('rounded-lg', 'rounded-none')).toBe('rounded-none');
+});

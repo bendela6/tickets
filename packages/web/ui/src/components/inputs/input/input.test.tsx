@@ -70,11 +70,14 @@ test('readOnly also changes how the field looks', () => {
   render(<Input value="locked" onChange={noop} readOnly aria-label="Title" />);
   const input = screen.getByLabelText('Title');
 
-  expect(input).toHaveClass('bg-transparent', 'border-gray-7', 'cursor-default');
+  expect(input).toHaveClass('bg-transparent', 'border-b-gray-7', 'rounded-none', 'cursor-default');
   expect(input.className).toContain('hover:bg-transparent');
   // twMerge has to have evicted the editable treatment, not stacked on top of it.
   expect(input).not.toHaveClass('bg-gray-5');
-  expect(input).not.toHaveClass('border-transparent');
+  // The sides STAY transparent — only the bottom carries the rule, because
+  // read-only is a printed row rather than a quieter box.
+  expect(input).toHaveClass('border-transparent');
+  expect(input).not.toHaveClass('rounded-control-md');
   expect(input.className).not.toContain('hover:bg-gray-6');
 });
 
@@ -89,9 +92,9 @@ test('readOnly reaches BOTH render paths — attribute inside, treatment on the 
   const wrapper = container.firstElementChild!;
 
   expect(input.readOnly).toBe(true);
-  expect(wrapper).toHaveClass('bg-transparent', 'border-gray-7', 'cursor-default');
+  expect(wrapper).toHaveClass('bg-transparent', 'border-b-gray-7', 'rounded-none', 'cursor-default');
   expect(wrapper).not.toHaveClass('bg-gray-5');
-  expect(wrapper).not.toHaveClass('border-transparent');
+  expect(wrapper).toHaveClass('border-transparent');
 });
 
 test('an editable field carries none of the read-only treatment, on either path', () => {
@@ -161,7 +164,7 @@ test('read-only drops a toned floor for the rule, but keeps the invalid claim', 
   const input = screen.getByLabelText('Key');
 
   expect(input).toHaveAttribute('aria-invalid', 'true');
-  expect(input).toHaveClass('border-gray-7', 'bg-transparent');
+  expect(input).toHaveClass('border-b-gray-7', 'bg-transparent');
   expect(input.className).not.toMatch(/(?:^|\s)bg-red-\d/);
 });
 
