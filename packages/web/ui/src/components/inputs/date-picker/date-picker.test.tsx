@@ -218,3 +218,41 @@ test('page keys move a month and clamp onto the shorter one', async () => {
   const cursor = screen.getAllByRole('button').find((b) => b.dataset.cursor === 'true');
   expect(cursor!.textContent).toBe('28');
 });
+
+test('the footer jumps to today, and to the NEXT friday', async () => {
+  const onChange = vi.fn();
+  render(<DatePicker value="2026-08-14T00:00:00Z" onChange={onChange} />);
+  await userEvent.click(screen.getAllByRole('button')[0]!);
+
+  await userEvent.click(screen.getByRole('button', { name: 'today' }));
+  const now = new Date();
+  const expected = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
+  expect(onChange).toHaveBeenCalledWith(`${expected}T00:00:00Z`);
+});
+
+test('friday is always in the future, even when today is a friday', async () => {
+  // The shortcut means "the end of the week I am working toward". Handing back
+  // today under a different name is the one answer nobody wants from it.
+  const onChange = vi.fn();
+  render(<DatePicker value="2026-08-14T00:00:00Z" onChange={onChange} />);
+  await userEvent.click(screen.getAllByRole('button')[0]!);
+  await userEvent.click(screen.getByRole('button', { name: 'friday' }));
+
+  const emitted = onChange.mock.calls[0]![0] as string;
+  const picked = new Date(emitted);
+  expect(picked.getUTCDay()).toBe(5);
+  expect(picked.getTime()).toBeGreaterThan(Date.now());
+});
+
+test('clear is offered only when there is something to clear', async () => {
+  const { unmount } = render(<DatePicker value={null} onChange={() => {}} />);
+  await userEvent.click(screen.getAllByRole('button')[0]!);
+  expect(screen.queryByRole('button', { name: 'clear' })).toBeNull();
+  unmount();
+
+  const onChange = vi.fn();
+  render(<DatePicker value="2026-08-14T00:00:00Z" onChange={onChange} />);
+  await userEvent.click(screen.getAllByRole('button')[0]!);
+  await userEvent.click(screen.getByRole('button', { name: 'clear' }));
+  expect(onChange).toHaveBeenCalledWith(null);
+});

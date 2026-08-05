@@ -3,7 +3,7 @@ import { cn, cursorRing, focusRing } from '../../../style';
 import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../control';
 import { fieldClass, fieldState } from '../field';
 import { Icon, type IconSize } from '../../icon';
-import { Popover, PopoverContent, PopoverTrigger } from '../../popover';
+import { Popup } from '../popup';
 import { formatExact } from '../../relative-date';
 
 const MONTH_NAMES = [
@@ -104,6 +104,11 @@ export type DatePickerProps = ControlProps<string | null> & {
 
 const CHEVRON: Record<ControlSize, IconSize> = { xs: 'sm', md: 'sm', lg: 'md' };
 
+/** The footer's quick actions — lower-case and mono, so they read as shortcuts
+ *  rather than as the buttons that commit the form around them. */
+const FOOTER_ACTION =
+  'rounded-control-xs px-6 py-2 font-mono text-11 text-gray-11 hover:bg-gray-4 hover:text-gray-12';
+
 export function DatePicker({
   id,
   value,
@@ -190,6 +195,16 @@ export function DatePicker({
     }
   }
 
+  const todayParts: Parts = {
+    year: today.getUTCFullYear(),
+    month: today.getUTCMonth(),
+    day: today.getUTCDate(),
+  };
+  // The NEXT Friday, never today even when today is one: the shortcut means
+  // "the end of the week I am working toward", and offering a due date of
+  // today under a different name is the one answer nobody wants from it.
+  const nextFriday = addDays(todayParts, ((5 - today.getUTCDay() + 7) % 7) || 7);
+
   const startWeekday = new Date(Date.UTC(view.year, view.month, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(view.year, view.month + 1, 0)).getUTCDate();
   const cells: (number | null)[] = [
@@ -221,15 +236,19 @@ export function DatePicker({
   }
 
   return (
-    <Popover
+    <Popup
       open={open}
       // Read-only refuses to OPEN; it does not drop the trigger. The button
       // keeps its tab stop and its value — `disabled` would take both, and a
       // field locked by permission still owes its value to the form. See
       // `ControlProps.readOnly`.
       onOpenChange={(next) => setOpen(readOnly ? false : next)}
-    >
-      <PopoverTrigger asChild>
+      // The shell owns offset, radius, padding and elevation. Only the width is
+      // this control's to say: a calendar is seven 28px columns plus its gaps,
+      // and unlike a select it must NOT match the trigger — a narrow date field
+      // would squash the grid and a wide one would strand it.
+      className="w-236"
+      trigger={
         <button
           // The label's target. Without it a `<FieldLabel htmlFor>` points at
           // nothing and the field cannot be named at all — no `getByLabelText`,
@@ -270,8 +289,9 @@ export function DatePicker({
             <Icon name="chevron-down" size={CHEVRON[size]} className="text-gray-9" />
           )}
         </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-236 rounded-xl p-12">
+      }
+    >
+      <div className="p-7">
         <div className="mb-8 flex items-center justify-between">
           <button
             type="button"
@@ -391,7 +411,36 @@ export function DatePicker({
             className: 'mt-10 w-full px-9 font-mono text-12/17 text-gray-9',
           })}
         />
-      </PopoverContent>
-    </Popover>
+        {/* The design's footer: two jumps, a clear, and the shortcut that is
+            otherwise undiscoverable. `friday` is there because "end of this
+            week" is the most-asked-for due date in a tracker and costs four
+            arrow presses otherwise. */}
+        <div className="mt-8 flex items-center gap-8 border-t-1 border-gray-6 pt-8">
+          <button type="button" onClick={() => commit(todayParts)} className={FOOTER_ACTION}>
+            today
+          </button>
+          <button type="button" onClick={() => commit(nextFriday)} className={FOOTER_ACTION}>
+            friday
+          </button>
+          {/* Only offered when there is something to clear — a dead `clear` on
+              an empty field is a target that does nothing. */}
+          {value ? (
+            <button
+              type="button"
+              onClick={() => {
+                onChange(null);
+                setOpen(false);
+              }}
+              className={FOOTER_ACTION}
+            >
+              clear
+            </button>
+          ) : null}
+          <span aria-hidden className="ml-auto font-mono text-10 text-gray-9">
+            ↑↓ week
+          </span>
+        </div>
+      </div>
+    </Popup>
   );
 }
