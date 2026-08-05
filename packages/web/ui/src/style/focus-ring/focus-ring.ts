@@ -43,7 +43,17 @@ const HALO_ALPHA_DARK = 30;
 /** The inset rim's width. 2px, not 1.5 — `ring-<number>` rejects fractions. */
 const RIM_WIDTH = 2;
 
-export const FOCUS_TRIGGERS = ['focus', 'focus-visible', 'focus-within'] as const;
+export const FOCUS_TRIGGERS = [
+  'focus',
+  'focus-visible',
+  'focus-within',
+  // For a control whose focus lands on one element and whose ring belongs on
+  // another. The slider is the case: the root owns `role="slider"` and the tab
+  // stop, but the design rings the THUMB — "focus rings the thumb, not the
+  // track" — so the thumb reacts to an ancestor's focus. Requires `group` on
+  // that ancestor.
+  'group-focus-visible',
+] as const;
 export type FocusTrigger = (typeof FOCUS_TRIGGERS)[number];
 
 export const FOCUS_PLACEMENTS = ['outward', 'inward'] as const;
