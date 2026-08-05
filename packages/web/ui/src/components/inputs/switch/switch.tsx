@@ -42,7 +42,7 @@ const trackClass = variants({
         on: over(SCALE, (tone) => [
           `checked:bg-${tone}-9`,
           focusRing(tone),
-          'disabled:cursor-not-allowed disabled:border-1 disabled:border-gray-6 disabled:bg-surface-inset',
+          'disabled:cursor-default disabled:border-1 disabled:border-gray-6 disabled:bg-surface-inset',
         ]),
       },
     },

@@ -46,7 +46,7 @@ const rootClass = variants({
       options: {
         on: over(SCALE, (tone) => [
           focusRing(tone),
-          'aria-disabled:cursor-not-allowed aria-disabled:opacity-50',
+          'aria-disabled:cursor-default aria-disabled:opacity-50',
         ]),
       },
     },

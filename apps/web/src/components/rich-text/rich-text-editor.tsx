@@ -388,7 +388,7 @@ export function RichTextEditor({
           className={cn(
             'rt block w-full p-12 outline-none',
             composer !== undefined ? 'min-h-44' : 'min-h-110',
-            disabled && 'cursor-not-allowed',
+            disabled && 'cursor-default',
           )}
         />
         {composer !== undefined ? (

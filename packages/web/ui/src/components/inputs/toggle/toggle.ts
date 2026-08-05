@@ -13,7 +13,7 @@ const SCALE = axis('scale', HUES, 'indigo');
  * geometry differs too much between a box, a circle and a track to share.
  */
 export const toggleRowClass = variants({
-  base: 'group inline-flex cursor-pointer items-center font-sans text-gray-12 has-disabled:cursor-not-allowed',
+  base: 'group inline-flex cursor-pointer items-center font-sans text-gray-12 has-disabled:cursor-default',
   config: {
     size: {
       default: 'md',
@@ -63,13 +63,13 @@ export const toggleMarkClass = variants({
           `checked:border-${tone}-9 checked:bg-${tone}-9`,
           `indeterminate:border-${tone}-9 indeterminate:bg-${tone}-9`,
           focusRing(tone),
-          'disabled:cursor-not-allowed disabled:border-gray-6 disabled:bg-surface-inset',
+          'disabled:cursor-default disabled:border-gray-6 disabled:bg-surface-inset',
         ]),
         ring: over(SCALE, (tone) => [
           'border-gray-7',
           `checked:border-${tone}-9`,
           focusRing(tone),
-          'disabled:cursor-not-allowed disabled:border-gray-6 disabled:bg-surface-inset',
+          'disabled:cursor-default disabled:border-gray-6 disabled:bg-surface-inset',
         ]),
       },
     },
