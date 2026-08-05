@@ -28,6 +28,7 @@ export * from './select';
 export * from './segmented-control';
 export * from './radio-group';
 export * from './multi-combobox';
+export * from './tag-input';
 export * from './date-picker';
 export * from './color-picker';
 export * from './icon-picker';

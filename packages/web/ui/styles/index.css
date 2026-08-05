@@ -117,6 +117,16 @@
 /* Overlay drawers arrive from the edge they are docked to: 200ms is the
    open/close rung on the motion page, ease-out the arrival curve. Entry only —
    radix unmounts content immediately, so there is no exit to animate. */
+/* One shot, not a loop — `ai-pulse` runs forever and says "busy", where this
+   says "that one, there, already". Used when an action is refused because the
+   thing it would have created is already on screen: pointing at the existing
+   one answers the question better than any message can. */
+@keyframes ai-nudge {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
 @keyframes panel-slide-from-right {
   from {
     transform: translateX(100%);
