@@ -152,7 +152,15 @@ export const readOnlyFieldClass =
   // instead — which is why it cannot be mistaken for disabled (a hatch) or for
   // rest (a fill). The value stays rung 12 at full contrast because reading it
   // is the entire point.
-  'bg-transparent hover:bg-transparent active:bg-transparent border-gray-7 text-gray-12 cursor-default';
+  // Every interactive channel has to be cancelled, not just the floor. When
+  // hover gained a RIM as well as a fill (2026-08-06), cancelling only
+  // `hover:bg-*` left a read-only field lighting up its border under the
+  // pointer — a control that answers a gesture it will not honour.
+  [
+    'bg-transparent hover:bg-transparent active:bg-transparent',
+    'border-gray-7 hover:border-gray-7 active:border-gray-7',
+    'text-gray-12 cursor-default',
+  ].join(' ');
 
 /**
  * The same idea for the mark-based controls — checkbox, switch, radio, slider.

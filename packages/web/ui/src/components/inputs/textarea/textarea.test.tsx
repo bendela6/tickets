@@ -53,8 +53,8 @@ test('readOnly also changes how the field looks', () => {
   expect(box).toHaveClass('bg-transparent', 'border-gray-7', 'cursor-default');
   expect(box.className).toContain('hover:bg-transparent');
   // twMerge has to have evicted the editable treatment, not stacked on top of it.
-  expect(box).not.toHaveClass('bg-gray-4');
-  expect(box).not.toHaveClass('bg-gray-4', 'border-transparent');
+  expect(box).not.toHaveClass('bg-gray-5');
+  expect(box).not.toHaveClass('bg-gray-5', 'border-transparent');
   expect(box.className).not.toContain('hover:border-gray-9');
 });
 
@@ -63,7 +63,7 @@ test('an editable field carries none of the read-only treatment', () => {
   const box = screen.getByLabelText('Notes');
 
   expect(box).not.toHaveAttribute('readonly');
-  expect(box).toHaveClass('bg-gray-4', 'border-transparent');
+  expect(box).toHaveClass('bg-gray-5', 'border-transparent');
   expect(box).not.toHaveClass('cursor-default');
 });
 
@@ -122,7 +122,7 @@ test('an unset tone is the resting field, not primary', () => {
   render(<Textarea value="" onChange={() => {}} aria-label="Notes" />);
   const box = screen.getByLabelText('Notes');
 
-  expect(box).toHaveClass('bg-gray-4', 'border-transparent');
+  expect(box).toHaveClass('bg-gray-5', 'border-transparent');
   expect(box).not.toHaveClass('border-indigo-9');
   expect(box).not.toHaveAttribute('aria-invalid');
 });
