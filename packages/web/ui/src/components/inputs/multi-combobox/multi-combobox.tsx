@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { cn } from '../../../style';
 import { fieldClass, fieldState } from '../field';
 import { Icon, type IconSize } from '../../icon';
-import { Pill } from '../../pill';
+import { Chip } from '../chip';
 import { ComboboxList } from '../combobox-list';
 import { Popover, PopoverContent, PopoverTrigger } from '../../popover';
 import { readOnlyFieldClass, type ControlProps, type ControlSize, type Option } from '../control';
@@ -42,6 +42,10 @@ export function MultiCombobox({
   className,
 }: MultiComboboxProps) {
   const [open, setOpen] = useState(false);
+  // Both close the affordance, for different reasons: disabled has no business
+  // offering one at all, and read-only owes the value but not the edit. A chip
+  // with no `onRemove` renders no target rather than a dead one.
+  const locked = disabled || readOnly;
   const field = fieldState(tone);
   const selectedOptions = value
     .map((entry) => options.find((option) => option.value === entry))
@@ -66,11 +70,10 @@ export function MultiCombobox({
 
   return (
     <Popover
-      // Refusing the open is what makes read-only stick. The chips carry no
-      // remove affordance, so the list is the only way to change the value, and
-      // a list that never opens is a value that cannot be edited. `open` is
-      // derived rather than merely guarded so a field that turns read-only
-      // while its list is open closes instead of staying editable.
+      // Refusing the open is one half of what makes read-only stick; the chips
+      // dropping their remove target is the other. `open` is derived rather
+      // than merely guarded so a field that turns read-only while its list is
+      // open closes instead of staying editable.
       open={open && !readOnly}
       onOpenChange={(next) => {
         if (!readOnly) {
@@ -78,11 +81,11 @@ export function MultiCombobox({
         }
       }}
     >
-      {/* The whole shell is the trigger, not just the chevron. Now that the
-          chips are read-only there is nothing inside it competing for a click,
-          so a 12px glyph should not be the only way in — and the focus ring
-          hangs off `focus` rather than `focus-within` because focus lands here
-          rather than on some inner control. */}
+      {/* The whole shell is the trigger, not just the chevron — a 12px glyph
+          should not be the only way in. The chips inside it are now targets of
+          their own, which works because each stops its click from reaching this
+          button. The focus ring hangs off `focus` rather than `focus-within`
+          because focus lands here rather than on some inner control. */}
       <PopoverTrigger asChild>
         <button
           id={id}
@@ -119,20 +122,31 @@ export function MultiCombobox({
                 {placeholder}
               </span>
             ) : null}
-            {/* Chips are read-only. Deselecting happens in the popover, where
-                the full set is visible and a mis-click is one click to undo —
-                an X on the trigger removes a value from a list you cannot see,
-                and puts a 12px target next to the control that opens it. */}
+            {/* Chips became removable here, reversing an earlier call. The
+                objection then was that an X on the trigger "puts a 12px target
+                next to the control that opens it" — which the Soft Fill chip
+                answers directly by making the remove target the full square
+                rather than the glyph, and by stopping its click from reaching
+                the trigger underneath. */}
             {shown.map((option) => (
-              <Pill
+              <Chip
                 key={option.value}
-                tone={option.color ?? 'gray'}
-                shape="round"
                 label={option.label}
+                size={size}
+                tone={option.color ?? 'primary'}
+                onRemove={locked ? undefined : () => toggle(option.value)}
               />
             ))}
+            {/* "+N is a target, not a label." As a bare span it stood for
+                values that no keyboard could reach — the only way to see them
+                was a mouse click on the trigger. */}
             {overflow > 0 ? (
-              <span className="font-mono text-12/17 font-500 text-gray-11">+{overflow}</span>
+              <Chip
+                label={`+${overflow}`}
+                size={size}
+                tone="neutral"
+                onClick={locked ? undefined : () => setOpen(true)}
+              />
             ) : null}
           </span>
           <Icon
