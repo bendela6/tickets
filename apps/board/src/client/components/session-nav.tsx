@@ -44,7 +44,7 @@ export function SessionNav({ board, activeId }: { board: BoardState; activeId?: 
           aria-label="Filter sessions by title"
           placeholder="Filter by title…"
           value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          onChange={(next) => setFilter(next)}
         />
       </div>
 

@@ -127,13 +127,13 @@ export function AgentEditor({
           <div className="grid grid-cols-2 gap-12">
             <label className="block">
               <Label>Name</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Coder" />
+              <Input value={name} onChange={(next) => setName(next)} placeholder="Coder" />
             </label>
             <label className="block">
               <Label hint={editing ? 'fixed' : undefined}>Key</Label>
               <Input
                 value={key}
-                onChange={(e) => setKey(e.target.value)}
+                onChange={(next) => setKey(next)}
                 placeholder="coder"
                 disabled={editing}
                 className="font-mono text-13"
@@ -179,7 +179,7 @@ export function AgentEditor({
             <Label hint="comma-separated">Tool allowlist</Label>
             <Input
               value={tools}
-              onChange={(e) => setTools(e.target.value)}
+              onChange={(next) => setTools(next)}
               placeholder="Read, Grep, Edit, Bash"
               className="font-mono text-13"
             />

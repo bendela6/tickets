@@ -82,7 +82,7 @@ export function ControlsPanel({
                 id={key}
                 placeholder={def.placeholder}
                 value={values[key] as string}
-                onChange={(event) => onChange(key, event.target.value)}
+                onChange={(next) => onChange(key, next)}
               />
             )}
 

@@ -108,7 +108,7 @@ export function IssuesToolbar({
         aria-label="Search issues"
         placeholder="Search message, type, file…"
         value={q}
-        onChange={(event) => onQChange(event.target.value)}
+        onChange={(next) => onQChange(next)}
         className="h-28 w-230"
       />
     </div>

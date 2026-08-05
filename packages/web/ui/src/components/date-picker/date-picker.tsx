@@ -154,7 +154,9 @@ export function DatePicker({
           id={id}
           type="button"
           disabled={disabled}
-          aria-readonly={readOnly || undefined}
+          // aria-disabled rather than aria-readonly: ARIA does not permit
+          // the latter on a button. See Combobox for the full reasoning.
+          aria-disabled={readOnly || undefined}
           className={fieldClass({
             size,
             state: field.state,

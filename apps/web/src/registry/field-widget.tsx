@@ -6,6 +6,43 @@ import { Checkbox, Combobox, type ComboOption, DatePicker, Input, MultiCombobox,
 import type { BoardIndexes } from '../utils/index-board';
 import { hexToOptionColor, kindColor } from './option-color';
 
+/**
+ * A text field that saves on blur rather than on every keystroke — one PATCH
+ * per edit instead of one per character.
+ *
+ * It used to get that from `defaultValue` plus an `onBlur` reading the DOM.
+ * Input is controlled now, so the draft has to live somewhere: here, keyed by
+ * the committed value so an edit made elsewhere still lands. `key` rather than
+ * an effect, because remounting on a new committed value is exactly the reset
+ * an effect would be simulating.
+ */
+function BlurCommitInput({
+  value,
+  disabled,
+  label,
+  onCommit,
+}: {
+  value: string;
+  disabled?: boolean;
+  label: string;
+  onCommit: (next: string) => void;
+}) {
+  const [draft, setDraft] = useState(value);
+  return (
+    <Input
+      value={draft}
+      onChange={setDraft}
+      disabled={disabled}
+      aria-label={label}
+      onBlur={() => {
+        if (draft !== value) {
+          onCommit(draft);
+        }
+      }}
+    />
+  );
+}
+
 function toComboOptions(typeId: number, field: Field, indexes: BoardIndexes): ComboOption[] {
   const options = indexes.optionsForField(typeId, field);
   return options.map((option) => ({
@@ -59,16 +96,14 @@ export function FieldWidget({
   }
   if (field.type === 'string') {
     return (
-      <Input
-        defaultValue={typeof value === 'string' ? value : ''}
+      <BlurCommitInput
+        // Remount when the committed value changes, so an edit made elsewhere
+        // replaces the draft instead of being masked by it.
+        key={typeof value === 'string' ? value : ''}
+        value={typeof value === 'string' ? value : ''}
         disabled={disabled}
-        aria-label={field.label}
-        onBlur={(event) => {
-          const next = event.target.value;
-          if (next !== (value ?? '')) {
-            onChange(next.length > 0 ? next : null);
-          }
-        }}
+        label={field.label}
+        onCommit={(next) => onChange(next.length > 0 ? next : null)}
       />
     );
   }

@@ -179,7 +179,7 @@ test('a read-only trigger is announced read-only and is not disabled', () => {
     />,
   );
   const trigger = screen.getByRole('button', { name: /labels/i });
-  expect(trigger).toHaveAttribute('aria-readonly', 'true');
+  expect(trigger).toHaveAttribute('aria-disabled', 'true');
   expect(trigger).not.toBeDisabled();
   expect(trigger).not.toHaveAttribute('disabled');
 });

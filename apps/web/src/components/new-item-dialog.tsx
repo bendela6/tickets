@@ -378,7 +378,7 @@ export function NewItemDialog({
                 aria-label="Title"
                 placeholder="Title"
                 value={title}
-                onChange={(event) => setTitle(event.target.value)}
+                onChange={(next) => setTitle(next)}
                 className="h-40 shrink-0 rounded-lg px-13 text-15"
               />
               {gridRows.length > 0 ? (

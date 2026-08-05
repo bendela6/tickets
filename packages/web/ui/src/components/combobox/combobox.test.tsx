@@ -22,7 +22,7 @@ test('opens, filters by search, and selects an option', async () => {
   const onChange = vi.fn();
   render(<Combobox options={OPTIONS} value={null} onChange={onChange} placeholder="Priority" />);
   await userEvent.click(screen.getByRole('button', { name: /priority/i }));
-  const search = await screen.findByRole('combobox');
+  const search = await screen.findByRole('searchbox');
   await userEvent.type(search, 'high');
   // only P1 · high remains after filtering
   expect(screen.queryByRole('option', { name: /P0/ })).not.toBeInTheDocument();
@@ -41,7 +41,7 @@ test('searchable={false} drops the search box but still lists every option', asy
   expect(await screen.findAllByRole('option')).toHaveLength(3);
   // The trigger keeps role=button; only the list's own search input was a
   // combobox, so its absence is what proves the box is gone.
-  expect(screen.queryByRole('combobox')).toBeNull();
+  expect(screen.queryByRole('searchbox')).toBeNull();
 });
 
 test('searchable={false} keeps the keyboard model the search box used to own', async () => {
@@ -82,7 +82,7 @@ test('read-only refuses to open the list, by pointer or by key', async () => {
 
   // With no list there is nothing that can pick, so nothing can emit.
   expect(onChange).not.toHaveBeenCalled();
-  expect(trigger).toHaveAttribute('aria-readonly', 'true');
+  expect(trigger).toHaveAttribute('aria-disabled', 'true');
 });
 
 test('read-only stays focusable and is NOT disabled', async () => {
@@ -101,9 +101,11 @@ test('read-only stays focusable and is NOT disabled', async () => {
 });
 
 test('an editable combobox says nothing about being read-only', () => {
-  // `aria-readonly="false"` is the same as silence, at the cost of saying it.
+  // An editable trigger says nothing at all: the attribute is absent rather
+  // than present-and-false, which is the same information at the cost of
+  // saying it.
   render(<Combobox options={OPTIONS} value="p0" onChange={() => {}} />);
-  expect(screen.getByRole('button')).not.toHaveAttribute('aria-readonly');
+  expect(screen.getByRole('button')).not.toHaveAttribute('aria-disabled');
 });
 
 test('disabled still opts out of the tab order — read-only did not replace it', async () => {

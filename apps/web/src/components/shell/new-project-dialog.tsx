@@ -45,7 +45,7 @@ export function NewProjectDialog({
               className="mt-4"
               placeholder="Gateway"
               value={draft.name}
-              onChange={(event) => setDraft({ ...draft, name: event.target.value })}
+              onChange={(next) => setDraft({ ...draft, name: next })}
             />
           </div>
           <div className="flex gap-12">
@@ -56,7 +56,7 @@ export function NewProjectDialog({
                 className="mt-4"
                 placeholder="gateway"
                 value={draft.key}
-                onChange={(event) => setDraft({ ...draft, key: event.target.value })}
+                onChange={(next) => setDraft({ ...draft, key: next })}
               />
             </div>
             <div className="w-128">
@@ -66,7 +66,7 @@ export function NewProjectDialog({
                 className="mt-4 font-mono uppercase"
                 placeholder="GW"
                 value={draft.itemPrefix}
-                onChange={(event) => setDraft({ ...draft, itemPrefix: event.target.value })}
+                onChange={(next) => setDraft({ ...draft, itemPrefix: next })}
               />
             </div>
           </div>

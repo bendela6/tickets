@@ -13,9 +13,13 @@ export const states = [
         <FieldLabel htmlFor="demo-key" required>
           Key
         </FieldLabel>
+        {/* Controlled with a fixed value: this specimen is about the label and
+            its error, so the field holds still rather than carrying state the
+            demo would then have to own. */}
         <Input
           id="demo-key"
-          defaultValue="core"
+          value="core"
+          onChange={() => {}}
           tone="danger"
           aria-describedby="demo-key-err"
           className="mt-4"

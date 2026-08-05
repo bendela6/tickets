@@ -107,7 +107,10 @@ export function MultiCombobox({
           // button attribute, and reaching for `disabled` instead would be
           // wrong twice over — it drops the tab stop, and it drops the value
           // from submission, which a field locked by permission still owes.
-          aria-readonly={readOnly || undefined}
+          // aria-disabled rather than aria-readonly: ARIA does not permit
+          // the latter on a button, so it announced nothing. See Combobox for
+          // why role=combobox was tried and rejected.
+          aria-disabled={readOnly || undefined}
           disabled={disabled}
           className={fieldClass({
             size,

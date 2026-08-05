@@ -72,7 +72,7 @@ export function RenameAppDialog({
             className="mt-6"
             value={name}
             autoFocus
-            onChange={(event) => setName(event.target.value)}
+            onChange={(next) => setName(next)}
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
                 void submit();
