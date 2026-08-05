@@ -71,3 +71,31 @@ test('a long label inside a coloured pill truncates too', () => {
   expect(label.className).toContain('truncate');
   expect((label.parentElement as HTMLElement).className).toContain('min-w-0');
 });
+
+test('a resting mouse cannot change what Enter commits', async () => {
+  // The old behaviour: onMouseEnter called setActiveIndex, so hovering a row
+  // moved the keyboard cursor there and Enter picked it. A user arrowing with
+  // the mouse parked anywhere over the list committed whatever was under the
+  // pointer instead of what they had navigated to.
+  const onPick = vi.fn();
+  render(
+    <ComboboxList
+      options={[
+        { value: 'a', label: 'Alpha' },
+        { value: 'b', label: 'Beta' },
+        { value: 'c', label: 'Gamma' },
+      ]}
+      isSelected={() => false}
+      onPick={onPick}
+      searchable={false}
+    />,
+  );
+
+  const rows = screen.getAllByRole('option');
+  await userEvent.hover(rows[2]!);
+  await userEvent.keyboard('{ArrowDown}{Enter}');
+
+  // The cursor starts at 0; one ArrowDown puts it on 1. The hover over row 2
+  // is visual only and must not have moved it.
+  expect(onPick).toHaveBeenCalledWith('b');
+});
