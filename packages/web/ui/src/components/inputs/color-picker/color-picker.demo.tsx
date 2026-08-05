@@ -56,13 +56,23 @@ export const states = [
   }),
 
   defineState({
-    title: 'empty, every rung, and the locked states',
+    title: 'chosen and empty, at every rung',
     render: () => (
       <Matrix
         rows={['chosen', 'empty'] as const}
         columns={SIZES}
         cell={(row, size) => <Live size={size} {...(row === 'empty' ? { initial: null } : {})} />}
       />
+    ),
+  }),
+
+  defineState({
+    title: 'read-only drops the chevron; disabled dims the field',
+    render: () => (
+      <div className="flex flex-col gap-12">
+        <Live readOnly />
+        <Live disabled />
+      </div>
     ),
   }),
 ];
