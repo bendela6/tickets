@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { NumberInput } from '../../../components/number-input';
+import { NumberInput } from '../../../components/inputs/number-input';
 
 export type NumberInputConfig = {
   min?: number;
