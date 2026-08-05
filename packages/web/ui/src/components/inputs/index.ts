@@ -7,6 +7,7 @@
 // the only group that uses them.
 export * from './control';
 export * from './field';
+export * from './chip';
 export * from './combobox-list';
 export * from './option-row';
 export * from './popup';
