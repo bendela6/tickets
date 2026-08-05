@@ -153,3 +153,23 @@ here should need to leak back into those skills.
    `rounded-[7px]`) are likewise unguarded now; the cleared rungs
    (`rounded-xs`/`2xl`/`3xl`/`4xl`) still fail loudly because `initial` makes them
    compile to nothing.
+6. **A demo that declares plain `{ name, render }` literals AND has a playground
+   never renders those literals.** `state-grid.tsx` prefers the derived axes
+   when a playground exists, so authored states are silently dropped — several
+   controls' states were invisible in `/gallery` for as long as they had one.
+   Use `defineState()` for a demo with a playground, and note that mixing the
+   two forms in one file is a hard `collectDemos` error, so it is all-or-nothing
+   per file.
+7. **A NEW `*.demo.tsx` does not appear in a running dev server.** The gallery
+   collects through `import.meta.glob('../**/*.demo.tsx', { eager: true })`, and
+   Vite does not re-evaluate an eager glob when a file is added — the demo
+   collects fine under vitest while `/gallery` keeps the old list, which reads
+   as "my demo is broken". Touch `src/gallery/demos.ts` to invalidate it, or
+   restart the dev server. Editing an EXISTING demo is fine.
+8. **Read-only has two spellings, and one of them is illegal on a button.**
+   `aria-readonly` is not a permitted attribute on `role="button"`, so the three
+   popover triggers (Combobox, MultiCombobox, DatePicker) use `aria-disabled`
+   instead — axe's `aria-allowed-attr` is what catches this. Never substitute
+   the `disabled` ATTRIBUTE for read-only anywhere: it drops the tab stop and
+   drops the value from form submission, and a field locked by permission still
+   owes both.
