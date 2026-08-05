@@ -13,6 +13,7 @@ export const EASINGS = {
 
 export const ANIMATIONS = {
   "spin": "ai-spin 1.4s linear infinite",
-  "pulse": "ai-pulse 1.8s ease-out infinite"
+  "pulse": "ai-pulse 1.8s ease-out infinite",
+  "nudge": "ai-nudge 320ms cubic-bezier(0.2, 0, 0, 1) 1"
 };
 
