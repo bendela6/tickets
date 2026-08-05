@@ -28,13 +28,6 @@ type InputProps = Omit<
     trailing?: ReactNode;
   };
 
-// Padding and font-size are per-component, not part of `fieldClass` — see the
-// note there. These values are Input's existing ones, with lg extrapolated.
-const BOX: Record<ControlSize, string> = {
-  xs: 'px-9 text-13',
-  md: 'px-12 text-14',
-  lg: 'px-14 text-15' };
-
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   { value, onChange, size = 'md', tone, disabled, readOnly, leading, trailing, className, ...rest },
   ref,
@@ -81,7 +74,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           // adorned path below renders, where it would be permanently on. It
           // lands in `className`, which `variants` merges last, so it beats the
           // resting border and the toned one alike.
-          className: cn('w-full', BOX[size], readOnly && readOnlyFieldClass, className) })}
+          className: cn('w-full', readOnly && readOnlyFieldClass, className) })}
       />
     );
   }
@@ -100,14 +93,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         focus: 'focus-within',
         className: cn(
           'flex w-full items-center gap-8',
-          BOX[size],
           // `fieldClass` says `disabled:*`, and those variants only fire on the
           // element that carries the attribute — which on this path is the
           // inner input, never this wrapper. So an adorned disabled field kept
           // the raised ground and full-contrast text while the bare one dimmed:
           // the same prop, two different looks. Stated here instead, the way
           // NumberInput already does for its stepper.
-          disabled && 'border-gray-6 bg-surface-inset text-gray-9',
+          disabled && 'bg-hatch text-gray-9 cursor-not-allowed',
           readOnly && readOnlyFieldClass,
           className) })}
     >

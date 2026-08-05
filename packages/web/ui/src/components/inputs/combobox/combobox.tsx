@@ -26,17 +26,7 @@ type ComboboxProps = ControlProps<string | null> & {
    */
   searchable?: boolean;
 };
-
-const PADDING: Record<ControlSize, string> = { xs: 'px-8', md: 'px-12', lg: 'px-14' };
 const CHEVRON: Record<ControlSize, IconSize> = { xs: 'sm', md: 'sm', lg: 'md' };
-
-// The trigger's label used to be a fixed `text-13/19`, so `size="lg"` grew the
-// box by 8px and left the text where it was. The `md` rung is unchanged — 13/19
-// is what the spec draws for a 36px combobox, and what this has always
-// rendered — so only the two rungs that were inert move. Not shared with
-// `fieldClass`: the spec puts a 36px input at 14px and a 36px combobox at 13px,
-// so a single size-to-text table across all the controls would be wrong.
-const TEXT: Record<ControlSize, string> = { xs: 'text-12/17', md: 'text-13/19', lg: 'text-14/20' };
 
 export function Combobox({
   id,
@@ -103,8 +93,6 @@ export function Combobox({
               className: cn(
                 'flex w-full items-center justify-between gap-8 font-sans',
                 'disabled:opacity-50 disabled:pointer-events-none',
-                TEXT[size],
-                PADDING[size],
                 'pr-28',
                 // Last, so it wins the border and the ground it is overriding.
                 // Deliberately not the disabled look — the text keeps full

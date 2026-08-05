@@ -20,14 +20,17 @@ type TextareaProps = Omit<
 > &
   ControlProps<string>;
 
-// A textarea grows, so its size axis sets a floor rather than a height —
-// roughly two, three and four lines of body text. `fieldClass` contributes an
-// `h-*` for the single-line controls, so each rung evicts it with `h-auto`
-// before setting its own `min-h-*`.
+// A textarea grows, so its size axis sets a FLOOR rather than a height —
+// roughly two, three and four lines of body text. This is the one thing the
+// shared ladder cannot supply: `fieldClass` contributes a fixed `h-*` for the
+// single-line controls, so each rung has to evict it with `h-auto` before
+// setting its own `min-h-*`. Horizontal padding and font size are NOT repeated
+// here — they come from `CONTROL_LADDER`, and restating them would win the
+// twMerge and silently pin the old ladder.
 const BOX: Record<ControlSize, string> = {
-  xs: 'h-auto min-h-56 px-9 py-8 text-13',
-  md: 'h-auto min-h-72 px-12 py-10 text-14',
-  lg: 'h-auto min-h-88 px-14 py-12 text-15',
+  xs: 'h-auto min-h-56 py-8',
+  md: 'h-auto min-h-72 py-10',
+  lg: 'h-auto min-h-88 py-12',
 };
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
