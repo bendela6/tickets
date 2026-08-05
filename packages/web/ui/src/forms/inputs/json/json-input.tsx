@@ -1,6 +1,6 @@
 import type { InputProps } from '@tickets/form';
 import { FieldError } from '../../../components/field-error';
-import { Textarea } from '../../../components/textarea';
+import { Textarea } from '../../../components/inputs/textarea';
 import { Stack } from '../../../components/stack';
 
 export type JsonInputConfig = {

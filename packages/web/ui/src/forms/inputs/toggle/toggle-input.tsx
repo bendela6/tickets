@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { Switch } from '../../../components/switch';
+import { Switch } from '../../../components/inputs/switch';
 
 export type ToggleInputConfig = {
   /** Inline copy beside the switch. FieldWrapper renders the field's caption
