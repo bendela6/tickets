@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { cn } from '../../../style';
 import { fieldClass, fieldState } from '../field';
 import { Icon, type IconSize } from '../../icon';
-import { Pill } from '../../pill';
 import { ComboboxList } from '../combobox-list';
 import { Popover, PopoverContent, PopoverTrigger } from '../../popover';
 import { readOnlyFieldClass, type ControlProps, type ControlSize, type Option } from '../control';
@@ -102,21 +101,22 @@ export function Combobox({
               ),
             })}
           >
+            {/* Plain text, never a chip. Chips say "one of several things I am
+                holding" and belong only to the multi-value controls; a combobox
+                holds exactly one. A coloured option keeps a leading DOT,
+                because the colour is data — a status has one and dropping it
+                loses the only thing the chip was carrying. Found by looking at
+                the gallery: the tests all passed with a pill here. */}
             {selected ? (
-              selected.color ? (
-                // `min-w-0` is load-bearing: a Pill is an unshrinkable flex
-                // item by default, so a long label pushed the chevron out of
-                // the trigger instead of being cut. The pill may shrink, and
-                // `truncate` on the label is what then ellipsises it.
-                <Pill
-                  tone={selected.color}
-                  shape="round"
-                  className="min-w-0"
-                  label={<span className="truncate">{selected.label}</span>}
-                />
-              ) : (
+              <span className="flex min-w-0 items-center gap-8">
+                {selected.color ? (
+                  <span
+                    aria-hidden
+                    className={cn('size-8 shrink-0 rounded-full', `bg-${selected.color}-9`)}
+                  />
+                ) : null}
                 <span className="truncate">{selected.label}</span>
-              )
+              </span>
             ) : (
               <span className="truncate text-gray-9">{placeholder}</span>
             )}
