@@ -40,8 +40,14 @@ const HALO_RUNG = 9;
 const HALO_ALPHA_LIGHT = 22;
 const HALO_ALPHA_DARK = 30;
 
+/** The inset rim's width. 2px, not 1.5 — `ring-<number>` rejects fractions. */
+const RIM_WIDTH = 2;
+
 export const FOCUS_TRIGGERS = ['focus', 'focus-visible', 'focus-within'] as const;
 export type FocusTrigger = (typeof FOCUS_TRIGGERS)[number];
+
+export const FOCUS_PLACEMENTS = ['outward', 'inward'] as const;
+export type FocusPlacement = (typeof FOCUS_PLACEMENTS)[number];
 
 /**
  * Every control's focus treatment. Pass the ramp it paints from; pass a trigger
@@ -50,7 +56,25 @@ export type FocusTrigger = (typeof FOCUS_TRIGGERS)[number];
  * Returns a plain string so it composes inside a `variants()` config, which is
  * what lets the safelist extractor see the interpolated classes.
  */
-export function focusRing(hue: Hue, on: FocusTrigger = 'focus-visible'): string {
+export function focusRing(
+  hue: Hue,
+  on: FocusTrigger = 'focus-visible',
+  placement: FocusPlacement = 'outward',
+): string {
+  // Inside a joined control or a popup row there is nowhere for a halo to go:
+  // it is either clipped by the parent or bleeds over the neighbouring row, and
+  // in both cases it stops reading as "this one". So the inward placement drops
+  // the halo and draws the rim inset — a ring rather than a border, because a
+  // row has no border of its own to colour in.
+  if (placement === 'inward') {
+    return [
+      `${on}:outline-none`,
+      `${on}:ring-${RIM_WIDTH}`,
+      `${on}:ring-inset`,
+      `${on}:ring-${hue}-${RIM_LIGHT}`,
+      `dark:${on}:ring-${hue}-${RIM_DARK}`,
+    ].join(' ');
+  }
   return [
     `${on}:outline-none`,
     // The rim. Paints the transparent border a Soft Fill control already has.
@@ -61,4 +85,21 @@ export function focusRing(hue: Hue, on: FocusTrigger = 'focus-visible'): string 
     `${on}:ring-${hue}-${HALO_RUNG}/${HALO_ALPHA_LIGHT}`,
     `dark:${on}:ring-${hue}-${HALO_RUNG}/${HALO_ALPHA_DARK}`,
   ].join(' ');
+}
+
+/**
+ * The keyboard cursor, drawn from STATE rather than from `:focus`.
+ *
+ * A listbox row never holds DOM focus — the input does, and points at the row
+ * with `aria-activedescendant` — so a `focus-visible:` variant would never fire
+ * on the row the cursor is actually on. Same rim as the inward placement, with
+ * no pseudo-class in front of it, so a row wearing both cannot show two
+ * competing signals.
+ *
+ * It exists so `OptionRow` does not hand-write a ring. Every ring in this
+ * library comes from this module, and that rule is what ended six components
+ * wearing a focus treatment nobody could see.
+ */
+export function cursorRing(hue: Hue): string {
+  return `ring-${RIM_WIDTH} ring-inset ring-${hue}-${RIM_LIGHT} dark:ring-${hue}-${RIM_DARK}`;
 }
