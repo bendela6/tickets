@@ -101,6 +101,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         className: cn(
           'flex w-full items-center gap-8',
           BOX[size],
+          // `fieldClass` says `disabled:*`, and those variants only fire on the
+          // element that carries the attribute — which on this path is the
+          // inner input, never this wrapper. So an adorned disabled field kept
+          // the raised ground and full-contrast text while the bare one dimmed:
+          // the same prop, two different looks. Stated here instead, the way
+          // NumberInput already does for its stepper.
+          disabled && 'border-gray-6 bg-surface-inset text-gray-9',
           readOnly && readOnlyFieldClass,
           className) })}
     >
