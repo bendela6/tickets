@@ -20,6 +20,7 @@
 @source inline("appearance-none");
 @source inline("aria-disabled:cursor-not-allowed");
 @source inline("aria-disabled:opacity-50");
+@source inline("aspect-square");
 @source inline("bg-blue-2");
 @source inline("bg-blue-3");
 @source inline("bg-blue-9");
@@ -503,6 +504,9 @@
 @source inline("pb-8");
 @source inline("peer");
 @source inline("peer-disabled:bg-gray-6");
+@source inline("pl-6");
+@source inline("pl-8");
+@source inline("pl-9");
 @source inline("placeholder:text-gray-10");
 @source inline("pointer-events-none");
 @source inline("pt-5");
