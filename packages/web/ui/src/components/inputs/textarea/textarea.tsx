@@ -25,7 +25,7 @@ type TextareaProps = Omit<
 // `h-*` for the single-line controls, so each rung evicts it with `h-auto`
 // before setting its own `min-h-*`.
 const BOX: Record<ControlSize, string> = {
-  sm: 'h-auto min-h-56 px-9 py-8 text-13',
+  xs: 'h-auto min-h-56 px-9 py-8 text-13',
   md: 'h-auto min-h-72 px-12 py-10 text-14',
   lg: 'h-auto min-h-88 px-14 py-12 text-15',
 };

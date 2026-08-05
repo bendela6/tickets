@@ -348,7 +348,7 @@ function SelectionProperties({ nodes, objects }: { nodes: IconNode[]; objects: I
           {agree(objects, (object) => object.opacity) ? (
             <Slider
               label={`${objects.length} objects opacity`}
-              size="sm"
+              size="xs"
               value={first.opacity}
               valueText={`${first.opacity}%`}
               onChange={(opacity) => dispatch({ type: 'setOpacity', ids, opacity })}
@@ -432,7 +432,7 @@ function GroupProperties({ group }: { group: IconGroup }) {
           />
           <Slider
             label={`${group.name} opacity`}
-            size="sm"
+            size="xs"
             value={group.opacity}
             valueText={`${group.opacity}%`}
             onChange={(opacity) => dispatch({ type: 'setOpacity', ids: [group.id], opacity })}
@@ -519,7 +519,7 @@ function ObjectProperties({ object }: { object: IconObject }) {
           />
           <Slider
             label={`${object.name} opacity`}
-            size="sm"
+            size="xs"
             value={object.opacity}
             valueText={`${object.opacity}%`}
             onChange={(opacity) => dispatch({ type: 'setOpacity', ids: [object.id], opacity })}

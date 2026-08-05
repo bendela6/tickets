@@ -27,18 +27,18 @@ type MultiComboboxProps = ControlProps<string[]> & {
 // is a floor rather than a height — `h-auto` evicts the fixed height fieldClass
 // contributes for the single-line controls.
 const BOX: Record<ControlSize, string> = {
-  sm: 'h-auto min-h-28 py-2',
+  xs: 'h-auto min-h-28 py-2',
   md: 'h-auto min-h-36 py-4',
   lg: 'h-auto min-h-44 py-6',
 };
 
-const CHEVRON: Record<ControlSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
+const CHEVRON: Record<ControlSize, IconSize> = { xs: 'sm', md: 'sm', lg: 'md' };
 
 // The placeholder used to be a fixed `text-13/19`, so `size` moved the box and
 // left the text behind. `md` is unchanged. The chips keep `text-12/17` at every
 // rung deliberately — a chip is a label on a value, not the field's own prose,
 // and it stays one step down so a full trigger does not read as a paragraph.
-const TEXT: Record<ControlSize, string> = { sm: 'text-12/17', md: 'text-13/19', lg: 'text-14/20' };
+const TEXT: Record<ControlSize, string> = { xs: 'text-12/17', md: 'text-13/19', lg: 'text-14/20' };
 
 export function MultiCombobox({
   id,

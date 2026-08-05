@@ -59,14 +59,14 @@ export function PromptComposer({
           options={AGENT_MODELS}
           value={model}
           onChange={(v) => onModelChange(v ?? model)}
-          size="sm"
+          size="xs"
           className="w-160"
         />
         <Combobox
           options={EFFORT_LEVELS}
           value={effort}
           onChange={(v) => onEffortChange(v ?? effort)}
-          size="sm"
+          size="xs"
           className="w-112"
         />
         <span className="flex-1" />

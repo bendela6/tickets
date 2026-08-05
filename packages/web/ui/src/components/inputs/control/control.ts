@@ -2,17 +2,68 @@ import type { SyntheticEvent } from 'react';
 import type { Hue, Tone } from '../../../style';
 
 /**
- * The one size domain for every form control — 28 / 36 / 44px.
+ * The one size domain for every form control — 30 / 38 / 46px.
  *
- * Replaces the three names this used to have — one per module that happened to
- * need it — two of them character-for-character identical unions and the third
- * missing its top rung for no stated reason.
- *
- * Height is what the rung fixes. Font size and padding stay per-control — the
- * spec puts a 36px input at 14px and a 36px select at 13px, and folding those
- * together here would change appearance under cover of a refactor.
+ * `xs` replaced `sm` in the Soft Fill redesign (2026-08-05): the bottom rung
+ * both shrank and was renamed, because a dense table cell and a filter bar
+ * needed something below the old 28px `sm` and the design settled the ladder at
+ * 30 / 38 / 46. Renaming rather than adding was deliberate — three rungs is the
+ * whole domain, and a fourth would have been chosen at random by every caller.
  */
-export type ControlSize = 'sm' | 'md' | 'lg';
+export type ControlSize = 'xs' | 'md' | 'lg';
+
+/**
+ * The ladder, as data, so no control invents its own rung.
+ *
+ * One set of ratios in 8px steps — the design states it once and every control
+ * reads it. Previously each control carried a private `Record<ControlSize,
+ * string>`, which is how three of them ended up with different padding at the
+ * same height.
+ *
+ * Classes are written out rather than interpolated so Tailwind's scanner finds
+ * them; nothing here needs the safelist.
+ */
+export const CONTROL_LADDER = {
+  xs: {
+    height: 'h-30',
+    radius: 'rounded-control-xs',
+    text: 'text-12',
+    padX: 'px-9',
+    /** Checkbox / radio / switch-thumb box. */
+    mark: 'size-14',
+    /** Leading and trailing glyphs, in px — icons take a number, not a class. */
+    icon: 12,
+    /** A removable chip inside a multi-value trigger. */
+    chip: 'h-20',
+    gap: 'gap-6',
+    label: 'text-11',
+    help: 'text-11',
+  },
+  md: {
+    height: 'h-38',
+    radius: 'rounded-control-md',
+    text: 'text-13',
+    padX: 'px-12',
+    mark: 'size-16',
+    icon: 14,
+    chip: 'h-24',
+    gap: 'gap-8',
+    label: 'text-12',
+    help: 'text-12',
+  },
+  lg: {
+    height: 'h-46',
+    radius: 'rounded-control-lg',
+    text: 'text-14',
+    padX: 'px-14',
+    mark: 'size-20',
+    icon: 16,
+    chip: 'h-28',
+    gap: 'gap-9',
+    label: 'text-13',
+    help: 'text-12',
+  },
+} as const satisfies Record<ControlSize, Record<string, string | number>>;
 
 /**
  * One option vocabulary for every control that offers a choice, replacing the
@@ -95,7 +146,13 @@ export type ControlProps<T> = {
  * `fieldClass` is applied to on NumberInput and an adorned Input. It would be
  * permanently on there.
  */
-export const readOnlyFieldClass = 'border-gray-6 bg-surface-inset hover:border-gray-6 cursor-default';
+export const readOnlyFieldClass =
+  // Soft Fill's read-only is the absence of the floor, not a different floor.
+  // Every other state fills; this one does not, and shows a single rung-7 rule
+  // instead — which is why it cannot be mistaken for disabled (a hatch) or for
+  // rest (a fill). The value stays rung 12 at full contrast because reading it
+  // is the entire point.
+  'bg-transparent hover:bg-transparent active:bg-transparent border-gray-7 text-gray-12 cursor-default';
 
 /**
  * The same idea for the mark-based controls — checkbox, switch, radio, slider.

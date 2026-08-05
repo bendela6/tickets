@@ -27,8 +27,8 @@ type ComboboxProps = ControlProps<string | null> & {
   searchable?: boolean;
 };
 
-const PADDING: Record<ControlSize, string> = { sm: 'px-8', md: 'px-12', lg: 'px-14' };
-const CHEVRON: Record<ControlSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
+const PADDING: Record<ControlSize, string> = { xs: 'px-8', md: 'px-12', lg: 'px-14' };
+const CHEVRON: Record<ControlSize, IconSize> = { xs: 'sm', md: 'sm', lg: 'md' };
 
 // The trigger's label used to be a fixed `text-13/19`, so `size="lg"` grew the
 // box by 8px and left the text where it was. The `md` rung is unchanged — 13/19
@@ -36,7 +36,7 @@ const CHEVRON: Record<ControlSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
 // rendered — so only the two rungs that were inert move. Not shared with
 // `fieldClass`: the spec puts a 36px input at 14px and a 36px combobox at 13px,
 // so a single size-to-text table across all the controls would be wrong.
-const TEXT: Record<ControlSize, string> = { sm: 'text-12/17', md: 'text-13/19', lg: 'text-14/20' };
+const TEXT: Record<ControlSize, string> = { xs: 'text-12/17', md: 'text-13/19', lg: 'text-14/20' };
 
 export function Combobox({
   id,

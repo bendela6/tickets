@@ -78,12 +78,12 @@ export type DatePickerProps = ControlProps<string | null> & {
 };
 
 const BOX: Record<ControlSize, string> = {
-  sm: 'px-9 text-13',
+  xs: 'px-9 text-13',
   md: 'px-12 text-14',
   lg: 'px-14 text-15',
 };
 
-const CHEVRON: Record<ControlSize, IconSize> = { sm: 'sm', md: 'sm', lg: 'md' };
+const CHEVRON: Record<ControlSize, IconSize> = { xs: 'sm', md: 'sm', lg: 'md' };
 
 export function DatePicker({
   id,
@@ -189,7 +189,7 @@ export function DatePicker({
             onClick={() => shiftMonth(-1)}
             className="inline-flex h-24 w-24 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
           >
-            <Icon name="chevron-left" size="sm" />
+            <Icon name="chevron-left" size="xs" />
           </button>
           <span className="font-sans text-13/19 font-600 text-gray-12">
             {MONTH_NAMES[view.month]} {view.year}
@@ -200,7 +200,7 @@ export function DatePicker({
             onClick={() => shiftMonth(1)}
             className="inline-flex h-24 w-24 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
           >
-            <Icon name="chevron-right" size="sm" />
+            <Icon name="chevron-right" size="xs" />
           </button>
         </div>
         <div className="grid grid-cols-[repeat(7,28px)] justify-center gap-2">
@@ -264,7 +264,7 @@ export function DatePicker({
             }
           }}
           className={fieldClass({
-            size: 'sm',
+            size: 'xs',
             state: field.state,
             scale: field.scale,
             className: 'mt-10 w-full px-9 font-mono text-12/17 text-gray-9',

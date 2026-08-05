@@ -164,7 +164,7 @@ export function DetailLinks({
           }}
         >
           <Combobox
-            size="sm"
+            size="xs"
             className="w-176"
             options={options}
             value={choice}
@@ -172,7 +172,7 @@ export function DetailLinks({
             onChange={setChoice}
           />
           <Input
-            size="sm"
+            size="xs"
             className="w-112"
             placeholder={`${prefix}-131`}
             aria-label="Item number"

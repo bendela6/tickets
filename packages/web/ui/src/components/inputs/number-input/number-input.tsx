@@ -21,7 +21,7 @@ type NumberInputProps = ControlProps<number | null> & {
 
 // The digits used to be a fixed `text-13/19`, so `size` moved the box and the
 // stepper buttons while the number itself stayed put. `md` is unchanged.
-const TEXT: Record<ControlSize, string> = { sm: 'text-12/17', md: 'text-13/19', lg: 'text-14/20' };
+const TEXT: Record<ControlSize, string> = { xs: 'text-12/17', md: 'text-13/19', lg: 'text-14/20' };
 
 function clamp(value: number, min?: number, max?: number) {
   let next = value;

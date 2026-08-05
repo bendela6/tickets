@@ -56,7 +56,7 @@ type ControlName = (typeof CONTROLS)[number];
 const AVAILABILITY = ['rest', 'disabled', 'read-only'] as const;
 type Availability = (typeof AVAILABILITY)[number];
 
-const SIZES: ControlSize[] = ['sm', 'md', 'lg'];
+const SIZES: ControlSize[] = ['xs', 'md', 'lg'];
 
 type Flags = { disabled?: boolean; readOnly?: boolean; size?: ControlSize; tone?: 'danger' };
 

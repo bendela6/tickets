@@ -15,7 +15,7 @@ import { RadioGroup, type RadioGroupVariant } from './radio-group';
 import type { ControlSize, Option } from '../control';
 
 const VARIANTS = ['plain', 'card'] as const;
-const SIZES = ['sm', 'md', 'lg'] as const;
+const SIZES = ['xs', 'md', 'lg'] as const;
 
 /** Rest, and the two ways a group stops taking edits. */
 const INTERACTIONS = ['rest', 'disabled', 'read-only'] as const;
