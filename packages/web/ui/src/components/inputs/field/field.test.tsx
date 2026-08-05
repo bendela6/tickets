@@ -10,8 +10,22 @@ test('a tone colours the border outright, not only on focus', () => {
   // field is a colour nobody sees.
   render(<Input tone="success" aria-label="Budget"  value="" onChange={() => {}} />);
   const input = screen.getByLabelText('Budget');
-  expect(input).toHaveClass('border-green-9', 'ring-green-3');
+  expect(input).toHaveClass('border-green-9');
   expect(input).not.toHaveClass('border-gray-7');
+  // The BORDER is the unconditional part. The ring is not — see below.
+  expect(input).not.toHaveClass('ring-3');
+});
+
+test('a toned field still has somewhere to go on hover and on focus', () => {
+  // The regression: `toned` wore `ring-3 ring-{tone}-3` unconditionally and
+  // stepped its border 9→10 on hover. Focus therefore contributed nothing but
+  // `outline-none`, and 9→10 is 1.17:1 — so a danger field measured and looked
+  // the same at rest, hovered and focused. Every state needs its own delta.
+  render(<Input tone="danger" aria-label="Key"  value="" onChange={() => {}} />);
+  const input = screen.getByLabelText('Key');
+  expect(input).toHaveClass('hover:border-red-11');
+  expect(input).toHaveClass('focus:border-red-11', 'focus:ring-3', 'focus:ring-red-3');
+  expect(input).not.toHaveClass('hover:border-red-10');
 });
 
 test('a toned field keeps its own colour on focus rather than turning accent', () => {
@@ -20,7 +34,7 @@ test('a toned field keeps its own colour on focus rather than turning accent', (
   // the user had gone to fix it.
   render(<Input tone="danger" aria-label="Key"  value="" onChange={() => {}} />);
   const input = screen.getByLabelText('Key');
-  expect(input).toHaveClass('border-red-9', 'ring-3', 'ring-red-3');
+  expect(input).toHaveClass('border-red-9', 'focus:ring-red-3');
   expect(input).not.toHaveClass('focus:border-indigo-9');
   expect(input).not.toHaveClass('focus:ring-indigo-3');
 });

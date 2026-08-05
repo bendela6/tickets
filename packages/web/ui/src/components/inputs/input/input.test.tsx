@@ -213,10 +213,14 @@ test('sm input overrides height, padding, radius, and font size', () => {
   expect(input).not.toHaveClass('text-14');
 });
 
-test('invalid input shows the danger border and always-on halo', () => {
+test('invalid input shows the danger border at rest, and the halo on focus', () => {
+  // The border is what makes the error visible at a glance; the halo is the
+  // focus treatment. The halo used to be unconditional, which left a danger
+  // field looking identical whether or not it had focus.
   render(<Input value="" onChange={noop} tone="danger" aria-label="Key" />);
   const input = screen.getByLabelText('Key');
-  expect(input).toHaveClass('border-red-9', 'ring-3', 'ring-red-3');
+  expect(input).toHaveClass('border-red-9', 'focus:ring-3', 'focus:ring-red-3');
+  expect(input).not.toHaveClass('ring-3');
 });
 
 test('input associates label and error', () => {
