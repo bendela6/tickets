@@ -1,5 +1,6 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
 import { axis, cn, focusRing, HUES, over, TONE_HUE, variants } from '../../../style';
+import { Spinner } from '../../spinner';
 import { toggleRowClass } from '../toggle';
 import { readOnlyMarkClass, type ControlProps, type ControlSize } from '../control';
 
@@ -29,6 +30,20 @@ export type SwitchProps = Omit<
      * which renders an empty text node and its gap.
      */
     label?: string;
+    /**
+     * A save is in flight. The knob carries a spinner and the track keeps the
+     * value you just chose.
+     *
+     * Optimistic on purpose, per the design: a switch that snapped back to its
+     * old position while saving would report a failure that has not happened,
+     * and the two states it flickers between are the only two that mean
+     * anything. The caller reverts on a real error.
+     *
+     * Not `disabled`: the control is still yours, it is simply mid-flight, and
+     * dropping the tab stop for the length of a request would move focus out
+     * from under whoever just pressed it.
+     */
+    pending?: boolean;
   };
 
 // A switch does not use toggleMarkClass: its resting state is a solid gray
@@ -66,7 +81,13 @@ const THUMB: Record<ControlSize, string> = {
 };
 
 const thumbClass = variants({
-  base: 'pointer-events-none absolute left-2 top-2 rounded-full transition-transform',
+  // `flex` so a pending spinner centres in the knob rather than sitting in its
+  // corner — the knob is the smallest round thing on screen and an off-centre
+  // spinner inside it reads as a rendering fault.
+  base: [
+    'pointer-events-none absolute left-2 top-2 rounded-full transition-transform',
+    'flex items-center justify-center',
+  ],
   config: {
     thumb: {
       default: 'default',
@@ -84,7 +105,7 @@ const thumbClass = variants({
 });
 
 export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
-  { label, value, onChange, size = 'md', tone = 'primary', disabled, readOnly, className, ...rest },
+  { label, value, onChange, size = 'md', tone = 'primary', disabled, readOnly, pending, className, ...rest },
   ref,
 ) {
   const scale = TONE_HUE[tone];
@@ -112,6 +133,10 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
           // Deliberately not `disabled`: a locked switch keeps its tab stop and
           // its place in form submission.
           aria-readonly={readOnly || undefined}
+          // Announces the save without claiming the control is unavailable —
+          // `disabled` would drop the tab stop out from under whoever just
+          // pressed it, for the length of a request.
+          aria-busy={pending || undefined}
           onChange={(event) => {
             if (readOnly) return;
             // The event goes second, matching ControlProps: a caller that needs
@@ -120,7 +145,9 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
           }}
           className={trackClass({ scale, size })}
         />
-        <span aria-hidden className={thumbClass({ scale, className: cn(THUMB[size]) })} />
+        <span aria-hidden className={thumbClass({ scale, className: cn(THUMB[size]) })}>
+          {pending ? <Spinner size="2xs" className="text-gray-9" /> : null}
+        </span>
       </span>
       {label ? <span className="group-has-disabled:text-gray-9">{label}</span> : null}
     </label>
