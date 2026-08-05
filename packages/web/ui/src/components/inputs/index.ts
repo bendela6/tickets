@@ -22,6 +22,7 @@ export * from './pin-input';
 export * from './duration-input';
 export * from './slider';
 export * from './rating';
+export * from './range-slider';
 export * from './checkbox';
 export * from './checkbox-group';
 export * from './switch';
