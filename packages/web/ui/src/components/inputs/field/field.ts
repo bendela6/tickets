@@ -62,6 +62,17 @@ export const fieldClass = variants({
     // layout. Removing it and adding one later would shift the value by a pixel
     // every time the state changed.
     'border-1 border-transparent',
+    // The bordered escape hatch, from `19 Soft Fill Library`: "A rimless fill
+    // measures ~1.2:1 against the card, which is below WCAG 1.4.11's 3:1
+    // boundary threshold. Ship a bordered escape hatch […] and switch to it
+    // automatically under prefers-contrast: more and forced-colors: active.
+    // Focus, tone and disabled all already clear 3:1, so this is the only gap."
+    //
+    // The whole Soft Fill idea is that a resting field has no edge, and that is
+    // the one thing it cannot offer someone who needs boundaries drawn. Rather
+    // than compromise the default, the rim comes back when the platform says it
+    // is wanted — which is also the only honest reading of a user preference.
+    'contrast-more:border-gray-7 forced-colors:border-gray-7',
     'transition-colors duration-120',
     // Disabled fades the WHOLE control — chrome and value together — rather
     // than restyling it. The 45° hatch this replaced said "unavailable" loudly
