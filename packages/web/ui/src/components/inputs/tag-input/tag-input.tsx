@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { cn } from '../../../style';
 import { Chip } from '../chip';
-import { CONTROL_LADDER, type ControlProps, type Option, disabledTreatment } from '../control';
+import { CONTROL_LADDER, type ControlProps, type Option, disabledTreatment, readOnlyFieldClass } from '../control';
 import { fieldClass, fieldState } from '../field';
 
 export type TagInputProps = ControlProps<string[]> & {
@@ -95,7 +95,7 @@ export function TagInput({
             'flex h-auto w-full flex-wrap items-center py-4',
             rung.gap,
             disabled && disabledTreatment,
-            readOnly && 'cursor-default',
+            readOnly && readOnlyFieldClass,
             className,
           ),
         })}

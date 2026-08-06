@@ -89,3 +89,13 @@ test('over budget is stated as a fact, and the field keeps its tone', () => {
   expect(screen.getByText(/5h 45m over estimate/)).toBeInTheDocument();
   expect(screen.getByRole('textbox')).not.toHaveAttribute('aria-invalid');
 });
+
+test('a read-only duration prints, rather than only changing its cursor', () => {
+  // It accepted readOnly and applied nothing but `cursor-default`, so a locked
+  // estimate kept its floor and looked editable — the trap the design names:
+  // "a glyph cannot fix an affordance you left in place."
+  render(<DurationInput value={150} onChange={() => {}} readOnly aria-label="Estimate" />);
+  const box = screen.getByRole('textbox');
+  expect(box.className).toContain('bg-transparent');
+  expect(box.className).toContain('border-b-gray-7');
+});
