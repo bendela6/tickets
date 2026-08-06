@@ -302,6 +302,7 @@
 @source inline("flex");
 @source inline("flex-1");
 @source inline("flex-col");
+@source inline("focus-visible:bg-surface-field");
 @source inline("focus-visible:border-blue-11");
 @source inline("focus-visible:border-blue-9");
 @source inline("focus-visible:border-cyan-11");

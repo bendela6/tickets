@@ -101,6 +101,7 @@ export function ColorPicker({
         size,
         state: field.state,
         scale: field.scale,
+        focus: 'focus-visible',
         className: cn(
           'flex w-full items-center justify-between gap-8 font-sans',
           'disabled:pointer-events-none disabled:opacity-50',

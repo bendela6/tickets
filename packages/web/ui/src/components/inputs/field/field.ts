@@ -4,8 +4,15 @@ import { CONTROL_LADDER, type ControlSize } from '../control';
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
 
-/** Which pseudo-class the focus treatment hangs off — see `focus` below. */
-const FOCUS = axis('focus', ['focus', 'focus-within'], 'focus');
+/**
+ * Which pseudo-class the focus treatment hangs off — see `focus` below.
+ *
+ * Three, and the choice is not cosmetic. `21 Input Interactions`: "Triggers use
+ * `:focus-visible` — clicking one leaves no ring, tabbing to it does. Text
+ * fields ring on click too, via `:focus-within`, because a clicked text field
+ * genuinely holds the caret and hiding that would be the bug."
+ */
+const FOCUS = axis('focus', ['focus', 'focus-within', 'focus-visible'], 'focus');
 
 /**
  * The shell every text-entry control wears, on the Soft Fill design
