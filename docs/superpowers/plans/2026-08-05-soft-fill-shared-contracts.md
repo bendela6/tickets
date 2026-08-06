@@ -8,6 +8,35 @@
 
 **Tech Stack:** React 19, TypeScript, Tailwind v4 (`--spacing: 1px`), radix-ui (`Popover`), vitest + @testing-library/react.
 
+**Status: COMPLETE.** All seven tasks landed and the boxes below are ticked
+retroactively — the work went in without the plan being updated as it went,
+which is why they sat unchecked for a day. `Popup`, `OptionRow` and `Chip` live
+in `components/inputs/` and are exported from its barrel; `ComboboxList` is now
+a composition of the first two, and `Combobox` reaches `OptionRow` through it
+rather than directly.
+
+**What the layer grew afterwards, beyond this plan.** Sixteen further controls
+were built against these contracts, taking the layer from 10 to 26. Three of the
+26 are **presets** rather than peers — `PasswordInput` and `SearchInput` wrap
+`Input`, `CheckboxGroup` wraps `Checkbox` — and they inherit the whole contract
+through `...rest`, which is the point of a preset and not a gap in one.
+`SearchInput` deliberately has no form kind: a search box's kind is `text`.
+
+**Three defects a cross-tab found that per-control review had not**, each now
+guarded in `control.test.ts`:
+
+- Three controls accepted `readOnly` and drew nothing for it.
+- `Checkbox`, `RadioGroup` and `Slider` restated `CONTROL_LADDER`'s mark column
+  by hand — character-identical, so they agreed by coincidence until someone
+  retuned the ladder. Fixed at `6c84d8f`.
+- `Rating` and `FileInput` had swapped the disabled and read-only treatments in
+  opposite directions: a disabled rating never dimmed, and a read-only drop
+  target dimmed when it should not. Fixed at `c268cd4`.
+
+The pattern behind all three: a control that looks correct on its own page has
+nothing to disagree with. Tabulating the set is what makes an odd one out
+visible, and it is worth doing again whenever the layer grows.
+
 ## Global Constraints
 
 - Spec of record: `docs/superpowers/specs/2026-08-05-soft-fill-shared-contracts-design.md`. Design source: `19 Input Layer FINAL Soft Fill.dc.html` (read via DesignSync `get_file`, never WebFetch).
@@ -49,7 +78,7 @@
 - Produces: `focusRing(hue: Hue, on?: FocusTrigger, placement?: FocusPlacement): string` where `FocusPlacement = 'outward' | 'inward'`, default `'outward'`. Every existing two-argument call site keeps working unchanged.
 - Produces: `cursorRing(hue: Hue): string` — the same inset rim with **no pseudo-class prefix**, for a keyboard cursor that is drawn by state rather than by `:focus`. `OptionRow` needs this because in an `aria-activedescendant` listbox the row never holds DOM focus — the input does — so a `focus-visible:` variant would never fire on the row the cursor is on.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { expect, test } from 'vitest';
@@ -83,12 +112,12 @@ test('both placements still kill the native outline and follow the trigger', () 
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `pnpm --filter @tickets/ui test -- --run src/style/focus-ring`
 Expected: FAIL — `focusRing` takes two arguments, so the third is a type error and `inward` is identical to `outward`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Replace the `focusRing` function and add the placement type. Keep the existing `WIDTH`/`OFFSET`/rung constants and their comments untouched.
 
@@ -168,7 +197,7 @@ test('the cursor ring is state-driven, so it carries no pseudo-class', () => {
 });
 ```
 
-- [ ] **Step 4: Export the new type**
+- [x] **Step 4: Export the new type**
 
 In `packages/web/ui/src/style/focus-ring/index.ts`:
 
@@ -183,7 +212,7 @@ export {
 } from './focus-ring';
 ```
 
-- [ ] **Step 5: Regenerate the safelist and verify**
+- [x] **Step 5: Regenerate the safelist and verify**
 
 ```bash
 pnpm --filter @tickets/ui tokens:build
@@ -192,7 +221,7 @@ pnpm typecheck --force
 ```
 Expected: tests PASS, typecheck 24/24. The safelist grows by the `ring-inset` variants.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/web/ui/src/style/focus-ring packages/web/ui/styles/generated/safelist.css
@@ -218,7 +247,7 @@ Default is unchanged, so every existing call site keeps its outward rim+halo."
 - Consumes: `PopoverContent` from `../../popover`.
 - Produces: `<Popup open onOpenChange trigger matchTriggerWidth?>{children}</Popup>` and `popupClass` (the geometry recipe as a string, for anything that must render its own container).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 import { render, screen } from '@testing-library/react';
@@ -259,12 +288,12 @@ test('the geometry recipe is one string, so a caller that must render its own co
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `pnpm --filter @tickets/ui test -- --run src/components/inputs/popup`
 Expected: FAIL — `Cannot find module './popup'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/ui/src/components/inputs/popup/popup.tsx`:
 
@@ -341,12 +370,12 @@ export function Popup({
 export { Popup, popupClass, POPUP_OFFSET } from './popup';
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `pnpm --filter @tickets/ui test -- --run src/components/inputs/popup`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/ui/src/components/inputs/popup
@@ -381,7 +410,7 @@ are grids, and they take the shell with no rows at all."
 - Consumes: `focusRing` (Task 1).
 - Produces: `<OptionRow selected cursor disabled leading trailing onPick id>{children}</OptionRow>`. `cursor` and `selected` are independent booleans; hover is CSS-only and has no prop.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 import { render, screen } from '@testing-library/react';
@@ -446,12 +475,12 @@ test('a disabled row refuses to pick', async () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `pnpm --filter @tickets/ui test -- --run src/components/inputs/option-row`
 Expected: FAIL — `Cannot find module './option-row'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/ui/src/components/inputs/option-row/option-row.tsx`:
 
@@ -540,7 +569,7 @@ export function OptionRow({
 export { OptionRow } from './option-row';
 ```
 
-- [ ] **Step 4: Run the tests and regenerate the safelist**
+- [x] **Step 4: Run the tests and regenerate the safelist**
 
 ```bash
 pnpm --filter @tickets/ui tokens:build
@@ -548,7 +577,7 @@ pnpm --filter @tickets/ui test -- --run src/components/inputs/option-row
 ```
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/ui/src/components/inputs/option-row packages/web/ui/styles/generated/safelist.css
@@ -573,7 +602,7 @@ rather than merely absent."
 - Consumes: `CONTROL_LADDER`, `ControlSize` from `../control`.
 - Produces: `<Chip label size tone onRemove? onClick? removeLabel?>`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 import { render, screen } from '@testing-library/react';
@@ -623,12 +652,12 @@ test('every rung takes its height from the ladder', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `pnpm --filter @tickets/ui test -- --run src/components/inputs/chip`
 Expected: FAIL — `Cannot find module './chip'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `packages/web/ui/src/components/inputs/chip/chip.tsx`:
 
@@ -727,7 +756,7 @@ export function Chip({
 export { Chip } from './chip';
 ```
 
-- [ ] **Step 4: Regenerate the safelist and run**
+- [x] **Step 4: Regenerate the safelist and run**
 
 ```bash
 pnpm --filter @tickets/ui tokens:build
@@ -736,7 +765,7 @@ pnpm typecheck --force
 ```
 Expected: PASS (5 tests), typecheck 24/24. `bg-{hue}-2`, `text-{hue}-11` and `hover:bg-{hue}-3` are interpolated, so the safelist must grow — check it did before committing.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/ui/src/components/inputs/chip packages/web/ui/styles/generated/safelist.css
@@ -762,7 +791,7 @@ This is where the contracts stop being theory. The behavioural change is real: t
 - Consumes: `OptionRow` (Task 3).
 - Produces: no prop changes — `ComboboxListProps` is unchanged, which is what makes the existing suite a regression gate.
 
-- [ ] **Step 1: Write the failing test — the behaviour that must change**
+- [x] **Step 1: Write the failing test — the behaviour that must change**
 
 Append to `combobox-list.test.tsx`:
 
@@ -795,12 +824,12 @@ test('a resting mouse cannot change what Enter commits', async () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `pnpm --filter @tickets/ui test -- --run src/components/inputs/combobox-list`
 Expected: FAIL — `picked` is `['c']`, because hover moved the cursor.
 
-- [ ] **Step 3: Delete the mouse handler and render through `OptionRow`**
+- [x] **Step 3: Delete the mouse handler and render through `OptionRow`**
 
 In `combobox-list.tsx`, replace the `<button role="option">` block (around lines 210–248) with an `OptionRow`, and **delete `onMouseEnter={() => setActiveIndex(index)}` entirely**:
 
@@ -825,12 +854,12 @@ Add the import: `import { OptionRow } from '../option-row';`
 
 Rename `activeIndex`/`setActiveIndex` to `cursorIndex`/`setCursorIndex` throughout the file — the old name is what let the two channels be conflated in the first place, and the rename is what stops it recurring.
 
-- [ ] **Step 4: Run the whole existing suite**
+- [x] **Step 4: Run the whole existing suite**
 
 Run: `pnpm --filter @tickets/ui test -- --run src/components/inputs`
 Expected: PASS, including every pre-existing `combobox-list` test **unchanged**. That is the proof the retrofit altered no behaviour beyond the one it meant to.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/ui/src/components/inputs/combobox-list
@@ -857,7 +886,7 @@ so the existing suite passing untouched is the regression gate."
 - Consumes: `Chip` (Task 4).
 - Produces: no prop changes.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 test('the overflow +N is focusable and opens the popup', async () => {
@@ -895,16 +924,16 @@ test('removing a chip does not also open the popup', async () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `pnpm --filter @tickets/ui test -- --run src/components/inputs/multi-combobox`
 Expected: FAIL — the `+N` is not a button.
 
-- [ ] **Step 3: Replace the chip markup with `Chip`**
+- [x] **Step 3: Replace the chip markup with `Chip`**
 
 Swap each rendered value chip for `<Chip label={option.label} size={size} tone={option.color ?? 'primary'} onRemove={() => remove(option.value)} />`, and render the overflow as `<Chip label={`+${hidden}`} size={size} onClick={openPopup} />`. Import `Chip` from `../chip`.
 
-- [ ] **Step 4: Run and typecheck**
+- [x] **Step 4: Run and typecheck**
 
 ```bash
 pnpm --filter @tickets/ui test -- --run src/components/inputs
@@ -912,7 +941,7 @@ pnpm typecheck --force
 ```
 Expected: PASS, typecheck 24/24.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/ui/src/components/inputs/multi-combobox
@@ -930,7 +959,7 @@ the popup, and removal stops propagating so it no longer opens it too."
 **Files:**
 - Modify: `packages/web/ui/src/components/inputs/index.ts`
 
-- [ ] **Step 1: Add the exports**
+- [x] **Step 1: Add the exports**
 
 ```ts
 export { Chip } from './chip';
@@ -938,7 +967,7 @@ export { OptionRow } from './option-row';
 export { Popup, popupClass, POPUP_OFFSET } from './popup';
 ```
 
-- [ ] **Step 2: Full verification**
+- [x] **Step 2: Full verification**
 
 ```bash
 pnpm --filter @tickets/ui tokens:build
@@ -948,7 +977,7 @@ pnpm --filter @tickets/web build
 ```
 Expected: all tests PASS, typecheck 24/24, build succeeds.
 
-- [ ] **Step 3: Confirm the interpolated classes actually compiled**
+- [x] **Step 3: Confirm the interpolated classes actually compiled**
 
 The safelist gate — adapter trap 11. Do NOT check :4620; it serves pre-safelist CSS.
 
@@ -959,7 +988,7 @@ done
 ```
 Expected: a non-zero count for each. A zero means the class never compiled and the component is silently unstyled.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/web/ui/src/components/inputs/index.ts packages/web/ui/styles/generated/safelist.css
