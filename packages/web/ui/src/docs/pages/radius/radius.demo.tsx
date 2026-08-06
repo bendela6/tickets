@@ -6,7 +6,7 @@ export const meta = {
   title: 'Radius',
   order: 3,
   size: 'full',
-  impl: ['./foundation.ts', './foundation-view.tsx'],
+  impl: ['../spec.ts', '../view.tsx'],
 };
 
 // What each step is for. Four steps rather than six because a radius is only

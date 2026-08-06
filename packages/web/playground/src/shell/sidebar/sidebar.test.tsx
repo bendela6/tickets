@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { vi } from 'vitest';
 import { collectDemos, isDemoError, type CollectedDemo } from '@tickets/ui';
 import { Sidebar, SIDEBAR_MAX } from './sidebar';
@@ -9,6 +9,10 @@ const demos = collectDemos({
   a: { meta: { title: 'Button', group: 'Form controls' }, states: [{ name: 's', render: () => null }] },
   b: { meta: { title: 'Input', group: 'Form controls' }, states: [{ name: 's', render: () => null }] },
   c: { meta: { title: 'Pill', group: 'Display' }, states: [{ name: 's', render: () => null }] },
+  d: {
+    meta: { title: 'Old Thing', group: 'Display', deprecated: true },
+    states: [{ name: 's', render: () => null }],
+  },
 }).filter((d): d is LiveDemo => !isDemoError(d));
 
 const linkProps = (target: { slug?: string | null }) => ({
@@ -65,6 +69,17 @@ describe('Sidebar', () => {
     );
     expect(screen.getByText('Form controls')).toBeTruthy();
     expect(screen.getByText('Display')).toBeTruthy();
+  });
+
+  it('badges a deprecated entry instead of letting it read as a live component', () => {
+    mockViewport(false);
+    renderSidebar();
+    const link = screen.getByRole('link', { name: /Old Thing/ });
+    expect(within(link).getByText('Deprecated')).toBeTruthy();
+    // A non-deprecated entry gets no such marker.
+    expect(
+      within(screen.getByRole('link', { name: 'Button' })).queryByText('Deprecated'),
+    ).toBeNull();
   });
 
   it('filters the list without dropping its groups', () => {

@@ -21,8 +21,8 @@ const PACKAGE_ROOT = path.join(GENERATORS_DIR, '..', '..');
  * `src/tokens/` now holds only what comes out the other side (tokens.css and
  * the generated safelist), so "input" and "output" are never in one folder.
  *
- * Every consumer reads these by path — this file, and `foundation/spec.ts` /
- * `foundation/colors` by relative import. There is deliberately no barrel:
+ * Every consumer reads these by path — this file, and `src/docs/pages/spec.ts` /
+ * `src/docs/pages/colors/` by relative import. There is deliberately no barrel:
  * routing ~2500 lines of JSON through one would be pure cost for the app
  * bundle, which needs none of it.
  */
