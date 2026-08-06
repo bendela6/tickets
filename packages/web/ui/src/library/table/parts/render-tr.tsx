@@ -1,5 +1,5 @@
 import type { RenderTrCtx } from '@tickets/table';
-import { cn } from '../../style';
+import { cn } from '../../../style';
 import { ROW_INSET } from './metrics';
 
 export function renderTr<T>({

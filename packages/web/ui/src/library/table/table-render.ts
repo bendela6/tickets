@@ -1,17 +1,17 @@
 import type { TableRender } from '@tickets/table';
-import { SCROLL_EDGE } from './metrics';
-import { renderRoot } from './render-root';
-import { renderThead } from './render-thead';
-import { renderTh } from './render-th';
-import { renderTbody } from './render-tbody';
-import { renderTr } from './render-tr';
-import { renderTd } from './render-td';
-import { renderSkeletonRow } from './render-skeleton-row';
-import { renderError } from './render-error';
-import { renderEmpty } from './render-empty';
-import { renderTfoot } from './render-tfoot';
-import { renderGroupHeader } from './render-group-header';
-import { renderSelectCell } from './render-select-cell';
+import { SCROLL_EDGE } from './parts/metrics';
+import { renderRoot } from './parts/render-root';
+import { renderThead } from './parts/render-thead';
+import { renderTh } from './parts/render-th';
+import { renderTbody } from './parts/render-tbody';
+import { renderTr } from './parts/render-tr';
+import { renderTd } from './parts/render-td';
+import { renderSkeletonRow } from './parts/render-skeleton-row';
+import { renderError } from './parts/render-error';
+import { renderEmpty } from './parts/render-empty';
+import { renderTfoot } from './parts/render-tfoot';
+import { renderGroupHeader } from './parts/render-group-header';
+import { renderSelectCell } from './parts/render-select-cell';
 
 /**
  * The default styled render set, as a GENERIC FACTORY rather than a constant.

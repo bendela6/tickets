@@ -1,6 +1,6 @@
 import type { CellPin, RenderTdCtx } from '@tickets/table';
 import type { CSSProperties } from 'react';
-import { cn } from '../../style';
+import { cn } from '../../../style';
 import { CELL_FOCUS_RING, cellGutter, PINNED_CELL, PINNED_EDGE } from './metrics';
 
 /** The engine works out how far in a frozen column sits; this only turns that

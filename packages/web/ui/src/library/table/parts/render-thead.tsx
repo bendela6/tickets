@@ -1,5 +1,5 @@
 import type { RenderTheadCtx } from '@tickets/table';
-import { cn } from '../../style';
+import { cn } from '../../../style';
 import { HEAD_HEIGHT, ROW_INSET } from './metrics';
 
 export function renderThead({ children, gridTemplate }: RenderTheadCtx) {
