@@ -7,7 +7,7 @@ export const meta = {
   title: 'Motion',
   order: 5,
   size: 'full',
-  impl: ['./foundation.ts', './foundation-view.tsx'],
+  impl: ['../spec.ts', '../view.tsx'],
 };
 
 const DURATION_JOBS: Record<string, string> = {

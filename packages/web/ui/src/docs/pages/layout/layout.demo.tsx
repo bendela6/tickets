@@ -25,7 +25,7 @@ export const meta = {
   title: 'Layout',
   order: 6,
   size: 'full',
-  impl: ['./foundation.ts', './foundation-view.tsx'],
+  impl: ['../spec.ts', '../view.tsx'],
 };
 
 const BORDER_JOBS: Record<string, string> = {

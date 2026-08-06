@@ -99,6 +99,9 @@ export function Sidebar({
                   )}
                 >
                   {d.meta.title}
+                  {d.meta.deprecated && (
+                    <span className="ml-4 text-11/13 text-gray-9">Deprecated</span>
+                  )}
                 </a>
               ))}
           </div>

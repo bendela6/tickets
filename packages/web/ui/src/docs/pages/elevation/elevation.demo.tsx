@@ -12,7 +12,7 @@ export const meta = {
   title: 'Elevation',
   order: 4,
   size: 'full',
-  impl: ['./foundation.ts', './foundation-view.tsx'],
+  impl: ['../spec.ts', '../view.tsx'],
 };
 
 // Elevation answers "how far above the page is this, and can I dismiss it?".
