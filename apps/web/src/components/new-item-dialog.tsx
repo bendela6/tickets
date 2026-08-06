@@ -14,7 +14,7 @@ import { typePill } from '../domain/status';
 import { FieldWidget } from '../registry/field-widget';
 import { hexToOptionColor, type OptionColor } from '../registry/option-color';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, cn, Combobox, DialogClose, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, Input, Pill } from '@tickets/ui';
+import { Button, cn, Combobox, DialogClose, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, FieldWrapper, Input, Pill } from '@tickets/ui';
 import { StatusSelect } from '../ui/status-select';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
@@ -381,46 +381,73 @@ export function NewItemDialog({
                 onChange={(next) => setTitle(next)}
                 className="h-40 shrink-0 rounded-lg px-13 text-15"
               />
+              {/* Composed through the shared `FieldWrapper` rather than a
+                  hand-built label/control/error stack, so this dialog inherits
+                  design file 20's layout rules: labels move beside the field at
+                  >=520px of the field's own box, and the pairs below split into
+                  two columns at >=760px of the dialog's.
+
+                  NOT converted to the form engine itself. `FieldWidget`
+                  dispatches on a database field definition — `field.type` plus
+                  `field.config` — and needs `board`, `indexes` and `typeId`,
+                  none of which the engine's `InputProps` carries. Driving this
+                  from a FormConfig means a DB-field -> `InputKind` mapping,
+                  which is `propsToForm`, which is not scoped yet. */}
               {gridRows.length > 0 ? (
-                <div className="grid shrink-0 grid-cols-2 gap-x-16 gap-y-12">
-                  {gridRows.map(({ placement, field }) => (
-                    <div key={field.id} className="flex min-w-0 flex-col gap-5">
-                      <FieldLabel required={placement.required}>{field.label}</FieldLabel>
-                      <FieldWidget
-                        field={field}
-                        value={fieldValues[field.key]}
-                        board={board}
-                        indexes={indexes}
-                        ticket={null}
-                        typeId={type.id}
-                        onChange={setValue(field.key)}
-                      />
-                      {missingKeys.has(field.key) ? (
-                        <FieldError className="m-0">
-                          Required for {type.label.toLowerCase()}s
-                        </FieldError>
-                      ) : null}
-                    </div>
-                  ))}
+                <div className="@container shrink-0">
+                  <div className="flex flex-col gap-12 @form-columns:grid @form-columns:grid-cols-2 @form-columns:gap-x-16">
+                    {gridRows.map(({ placement, field }) => (
+                      <FieldWrapper
+                        key={field.id}
+                        name={field.key}
+                        label={field.label}
+                        required={placement.required}
+                        touched={false}
+                        loading={false}
+                        error={
+                          missingKeys.has(field.key)
+                            ? `Required for ${type.label.toLowerCase()}s`
+                            : undefined
+                        }
+                      >
+                        <FieldWidget
+                          field={field}
+                          value={fieldValues[field.key]}
+                          board={board}
+                          indexes={indexes}
+                          ticket={null}
+                          typeId={type.id}
+                          onChange={setValue(field.key)}
+                        />
+                      </FieldWrapper>
+                    ))}
+                  </div>
                 </div>
               ) : null}
               {markdownRows.map(({ placement, field }) => (
-                <div key={field.id} className="flex shrink-0 flex-col gap-5">
-                  <FieldLabel required={placement.required}>{field.label}</FieldLabel>
-                  <FieldWidget
-                    field={field}
-                    value={fieldValues[field.key]}
-                    board={board}
-                    indexes={indexes}
-                    ticket={null}
-                    typeId={type.id}
-                    onChange={setValue(field.key)}
-                  />
-                  {missingKeys.has(field.key) ? (
-                    <FieldError className="m-0">
-                      Required for {type.label.toLowerCase()}s
-                    </FieldError>
-                  ) : null}
+                <div key={field.id} className="shrink-0">
+                  <FieldWrapper
+                    name={field.key}
+                    label={field.label}
+                    required={placement.required}
+                    touched={false}
+                    loading={false}
+                    error={
+                      missingKeys.has(field.key)
+                        ? `Required for ${type.label.toLowerCase()}s`
+                        : undefined
+                    }
+                  >
+                    <FieldWidget
+                      field={field}
+                      value={fieldValues[field.key]}
+                      board={board}
+                      indexes={indexes}
+                      ticket={null}
+                      typeId={type.id}
+                      onChange={setValue(field.key)}
+                    />
+                  </FieldWrapper>
                 </div>
               ))}
             </div>
