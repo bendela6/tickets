@@ -1,8 +1,31 @@
-import { collectDemos, kebab, prepareDemos, rebaseGlobKeys } from './collect-demos';
+import { collectDemos, groupFromPath, kebab, prepareDemos, rebaseGlobKeys } from './collect-demos';
 import { isDemoError } from './types';
 import { UI_SRC_ROOT, WEB_SRC_ROOT } from './roots';
 import { boolean as booleanControl, definePlayground } from './controls';
 import { defineState } from './states';
+
+describe('groupFromPath', () => {
+  it('reads the group out of a library path', () => {
+    expect(groupFromPath('packages/web/ui/src/library/primitives/components/pill/pill.demo.tsx'))
+      .toBe('Primitives');
+    expect(groupFromPath('packages/web/ui/src/library/inputs/components/select/select.demo.tsx'))
+      .toBe('Inputs');
+  });
+
+  it('reads a group whose demo sits at the group root, not under components/', () => {
+    expect(groupFromPath('packages/web/ui/src/library/inputs/inputs.demo.tsx')).toBe('Inputs');
+    expect(groupFromPath('packages/web/ui/src/library/table/table.demo.tsx')).toBe('Table');
+  });
+
+  it('calls the app its own group', () => {
+    expect(groupFromPath('apps/web/src/components/ai/message-stream.demo.tsx')).toBe('App');
+  });
+
+  it('refuses to guess', () => {
+    expect(groupFromPath('packages/web/ui/src/style/cn/cn.demo.tsx')).toBeNull();
+    expect(groupFromPath('somewhere/else/x.demo.tsx')).toBeNull();
+  });
+});
 
 const good = (title: string, group: string, order?: number) => ({
   meta: { title, group, order },
