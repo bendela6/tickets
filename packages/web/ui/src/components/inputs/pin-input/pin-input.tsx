@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { cn } from '../../../style';
-import { CONTROL_LADDER, type ControlProps } from '../control';
+import { CONTROL_LADDER, readOnlyFieldClass, type ControlProps } from '../control';
 import { fieldClass, fieldState } from '../field';
 
 export type PinInputProps = ControlProps<string> & {
@@ -128,7 +128,15 @@ export function PinInput({
             size,
             state: field.state,
             scale: field.scale,
-            className: cn('w-38 text-center font-mono tabular-nums', readOnly && 'cursor-default'),
+            // The shared read-only treatment, like every other field. It was
+            // only taking `cursor-default`, so a locked code kept its filled
+            // cells while the field above it in the same form became a printed
+            // row — visible only on the all-inputs page, where the column makes
+            // the odd one out obvious.
+            className: cn(
+              'w-38 text-center font-mono tabular-nums',
+              readOnly && readOnlyFieldClass,
+            ),
           })}
         />
       ))}

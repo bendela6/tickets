@@ -36,12 +36,13 @@ test('read-only takes the real attribute and refuses typing', async () => {
   expect(onChange).not.toHaveBeenCalled();
 });
 
-test('read-only neutralises the steppers', async () => {
-  const onChange = vi.fn();
-  render(<NumberInput value={8} onChange={onChange} readOnly />);
-  await userEvent.click(screen.getByRole('button', { name: /increment/i }));
-  await userEvent.click(screen.getByRole('button', { name: /decrement/i }));
-  expect(onChange).not.toHaveBeenCalled();
+test('read-only removes the steppers rather than neutralising them', () => {
+  // This used to assert they survived and were merely disabled. That was the
+  // trap the design names for read-only — "a glyph cannot fix an affordance you
+  // left in place" — so the affordance goes and the value stays.
+  render(<NumberInput value={8} onChange={() => {}} readOnly />);
+  expect(screen.queryByRole('button', { name: /increment/i })).toBeNull();
+  expect(screen.queryByRole('button', { name: /decrement/i })).toBeNull();
   // Still showing the value it holds — read-only hides nothing.
   expect(screen.getByRole('spinbutton')).toHaveValue(8);
 });
@@ -117,4 +118,20 @@ test('an unset value is at neither bound', () => {
   render(<NumberInput value={null} onChange={() => {}} min={0} max={10} />);
   expect(screen.getByRole('button', { name: 'Decrement' })).toBeEnabled();
   expect(screen.getByRole('button', { name: 'Increment' })).toBeEnabled();
+});
+
+test('a read-only stepper is removed, not merely disabled', () => {
+  // The same call DatePicker's chevron makes. The design's own warning about
+  // read-only is that "a glyph cannot fix an affordance you left in place" —
+  // a dead stepper is exactly that affordance.
+  render(<NumberInput value={3} onChange={() => {}} readOnly />);
+  expect(screen.queryByRole('button', { name: 'Increment' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Decrement' })).toBeNull();
+});
+
+test('a disabled stepper stays, dimmed with the rest of the control', () => {
+  // Disabled fades the whole control as one; removing part of it mid-fade would
+  // change the shape as well as the weight.
+  render(<NumberInput value={3} onChange={() => {}} disabled />);
+  expect(screen.getByRole('button', { name: 'Increment' })).toBeInTheDocument();
 });
