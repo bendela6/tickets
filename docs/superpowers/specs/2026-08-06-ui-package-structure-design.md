@@ -57,9 +57,10 @@ package's own relative imports, which the compiler checks exhaustively.
 3. **`inputs/` promotes its contract and bins its parts.** `control/control.ts`
    becomes `inputs/contract.ts`; the other six shared pieces go to
    `inputs/parts/`.
-4. **The gallery's group is derived from the directory.** `meta.group` is
-   deleted from all 68 demos — 64 in the package, 4 in `apps/web` — and
-   `deprecated` becomes a flag.
+4. **The gallery's group is derived from the directory.** The authored
+   `group:` line goes from all 68 demos — 64 in the package, 4 in `apps/web` —
+   and the collector writes the derived group back into `meta`, so every reader
+   is untouched. `deprecated` becomes a flag.
 5. **`forms/` is a peer group, not a layer.** It depends on `inputs`, but
    `table` depends on `primitives` and `overlays/drawer` on `overlays/popover` —
    groups importing groups is already normal, so forms was a peer sitting one
@@ -171,7 +172,8 @@ Everything else is `git mv` plus import rewrites the compiler will find.
 | `src/index.ts` | Three re-exports — `./style`, `./library`, `./docs` — where it named six things. The `sideEffects: false` comment about the eager demo globs moves with it and stays true. |
 | `library/index.ts` | Was `components/index.ts`. Re-exports eight groups instead of 34 component folders; `forms` and `table` join the list rather than being exported from the root. |
 | `docs/gallery/collect-demos.ts` | Derives `group` from the demo's path instead of reading `meta.group` — see "Deriving the group" below. `GROUP_ORDER` becomes `['Primitives', 'Inputs', 'Forms', 'Table', 'Layout', 'Navigation', 'Overlays', 'Feedback', 'App']` — the order the tree lists them in, most-reached-for first. `Ungrouped` disappears; every file is now somewhere. |
-| `docs/gallery/types.ts` | `DemoMeta.group` removed, `deprecated?: boolean` added. Validation stops requiring a group and starts rejecting one. |
+| `docs/gallery/types.ts` | `DemoMeta` is the **authored** shape and loses `group`; it gains `deprecated?: boolean`. A new `CollectedMeta = DemoMeta & { group: string }` is what `CollectedDemo.meta` carries. Validation stops requiring a group and starts rejecting an authored one. See "Derived into meta, not beside it". |
+| `CLAUDE.md` | The design-system section names `src/generated/` as a tokens output directory; it becomes `src/style/generated/`. |
 | 64 × `packages/web/ui/**/*.demo.tsx` | `group:` deleted from every `meta`. The 7 deprecated components gain `deprecated: true`. |
 | 4 × `apps/web/**/*.demo.tsx` | `group: 'Ungrouped'` deleted from Cost Meter, Message Stream, Prompt Composer and StatusSelect. They derive to `App`. |
 | `library/domain-free.test.ts` | Scans `library/` rather than `components/`, and its two skip-prefixes are paths: `icon/registry` → `primitives/components/icon/registry`, `session-kind-glyph/` → `primitives/components/session-kind-glyph/`. Silently stops guarding if missed. |
@@ -198,7 +200,28 @@ knowing about the other:
 Stream, Prompt Composer and StatusSelect are `apps/web` components, and no
 amount of grouping in this library will make them library components.
 
-## Deprecation after `meta.group` goes
+### Derived into meta, not beside it
+
+`@tickets/playground` reads `d.meta.group` in **shipped** code — `sidebar.tsx`
+groups and filters by it in three places, `command-palette.tsx` in two — on top
+of eight test fixtures that build `meta: { title, group }` literals.
+
+So the group stays on `meta`. What changes is who writes it:
+
+```ts
+/** What a demo file authors. No `group` — the directory decides that. */
+export interface DemoMeta { title: string; order?: number; deprecated?: boolean; … }
+
+/** What `collectDemos` hands back. */
+export type CollectedMeta = DemoMeta & { group: string };
+```
+
+The collector derives the group and writes it in. Authors cannot set it — the
+validator rejects an authored `group` — and every reader keeps working
+untouched. Moving the field off `meta` instead would have bought nothing and
+cost changes across thirteen playground files.
+
+## Deprecation once the group is derived
 
 Seven components are deprecated today: `copy-button`, `field-label`,
 `item-key`, `rail-label`, `relative-date`, `section-header`,
@@ -220,10 +243,11 @@ accident" survives while the directory stays the source of truth for role.
 - `pnpm build` clean.
 - All five consumers compile with **zero changes to shipped source** —
   `apps/web`, `apps/icon`, `apps/board`, `@tickets/playground`,
-  `@tickets/icon-studio`. Exactly two edits land outside `packages/web/ui`: the
-  playground fixture string, and `group:` dropped from four `apps/web` demos.
-  Any *other* edit needed outside the package means a symbol stopped being
-  exported — a defect in the move, not a consequence of it.
+  `@tickets/icon-studio`. Exactly three things land outside `packages/web/ui`:
+  one playground test fixture string, `group:` dropped from four `apps/web`
+  demos, and one line of `CLAUDE.md`. Any *other* edit needed outside the
+  package means a symbol stopped being exported, or the group moved off `meta`
+  — both defects in the move, not consequences of it.
 - The gallery renders nine groups (eight plus `App`), no `Ungrouped`, and the 7
   deprecated components appear badged in the pinned bottom group.
 - `rg "group:\s*'" packages/web/ui/src apps/web/src` returns nothing — no demo
