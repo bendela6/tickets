@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Popover, PopoverContent, PopoverTrigger } from '../../../popover';
+import { Popover, PopoverContent, PopoverTrigger } from '../../../overlays/components/popover';
 import { cn } from '../../../../style';
 
 /**

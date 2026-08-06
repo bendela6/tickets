@@ -4,7 +4,7 @@ import { fieldClass, fieldState } from '../../parts/field';
 import { Icon, type IconSize } from '../../../primitives/components/icon';
 import { Chip } from '../../parts/chip';
 import { ComboboxList } from '../../parts/combobox-list';
-import { Popover, PopoverContent, PopoverTrigger } from '../../../popover';
+import { Popover, PopoverContent, PopoverTrigger } from '../../../overlays/components/popover';
 import { readOnlyFieldClass, type ControlProps, type ControlSize, type Option } from '../../contract';
 
 /**

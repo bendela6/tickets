@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
-import { Avatar } from '../primitives/components/avatar';
-import { Button } from '../primitives/components/button';
-import { Pill } from '../primitives/components/pill';
+import { Avatar } from '../../../primitives/components/avatar';
+import { Button } from '../../../primitives/components/button';
+import { Pill } from '../../../primitives/components/pill';
 import { Dropdown } from './dropdown';
 
 test('opens on trigger click and renders the panel body', async () => {

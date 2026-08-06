@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { definePlayground, text, boolean } from '../../gallery';
-import { Button } from '../primitives/components/button';
+import { definePlayground, text, boolean } from '../../../../gallery';
+import { Button } from '../../../primitives/components/button';
 import { ConfirmDialog } from './dialog';
 
 function DialogFixture() {

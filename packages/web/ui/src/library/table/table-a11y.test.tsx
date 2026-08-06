@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { render } from '@testing-library/react';
 import axe from 'axe-core';
 import { ToastProvider } from '../toast';
-import { TooltipProvider } from '../tooltip';
+import { TooltipProvider } from '../overlays/components/tooltip';
 import { states } from './table.demo';
 
 // The virtualizer measures its scroll element through ResizeObserver, and

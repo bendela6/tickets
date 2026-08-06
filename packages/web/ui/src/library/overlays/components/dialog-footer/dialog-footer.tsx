@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { cn } from '../../style/cn';
+import { cn } from '../../../../style/cn';
 
 // The action row at the bottom of a dialog: a top hairline separator,
 // actions right-aligned, Cancel (if any) first. This package can't import

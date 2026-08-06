@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Tooltip as RadixTooltip } from 'radix-ui';
-import { cn } from '../../style/cn';
+import { cn } from '../../../../style/cn';
 
 export function TooltipProvider({ children }: { children: ReactNode }) {
   return <RadixTooltip.Provider delayDuration={300}>{children}</RadixTooltip.Provider>;

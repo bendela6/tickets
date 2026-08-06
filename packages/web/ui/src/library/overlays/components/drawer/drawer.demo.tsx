@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button } from '../primitives/components/button';
+import { Button } from '../../../primitives/components/button';
 import { Drawer, DrawerControls } from './drawer';
 
 export const meta = {
