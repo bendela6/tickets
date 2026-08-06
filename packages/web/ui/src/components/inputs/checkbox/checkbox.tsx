@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useRef, type InputHTMLAttributes } from 'react';
 import { cn, TONE_HUE } from '../../../style';
 import { toggleGlyphClass, toggleMarkClass, toggleRowClass } from '../toggle';
-import { readOnlyMarkClass, type ControlProps, type ControlSize } from '../control';
+import { CONTROL_LADDER, readOnlyMarkClass, type ControlProps, type ControlSize } from '../control';
 
 type CheckboxProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -27,11 +27,14 @@ type CheckboxProps = Omit<
   };
 
 // The box and its overlay marks must agree exactly — the tick is drawn to bleed
-// over the input — so one table drives both.
+// over the input — so one table drives both. That table is the LADDER's, not a
+// local copy: these three values were spelled out here and matched
+// `CONTROL_LADDER.*.mark` by coincidence, which is drift waiting to happen. A
+// checkbox next to a md Input has to be the mark height the ladder names for md.
 const BOX: Record<ControlSize, string> = {
-  xs: 'size-14',
-  md: 'size-16',
-  lg: 'size-20',
+  xs: CONTROL_LADDER.xs.mark,
+  md: CONTROL_LADDER.md.mark,
+  lg: CONTROL_LADDER.lg.mark,
 };
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
