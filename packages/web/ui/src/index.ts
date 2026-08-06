@@ -1,7 +1,7 @@
 // The package's single entry point — `@tickets/ui` resolves here and nothing
 // else does, apart from the tokens.css stylesheet.
 //
-// `tokens/` is not re-exported: the JSON is read by path from foundation/, and
+// `tokens/` is not re-exported: the JSON is read by path from docs/pages/, and
 // pulling ~2500 lines of it through the barrel would be pure cost.
 //
 // `gallery/demos` and `gallery/demo-sources` ARE re-exported, and they each run
@@ -12,9 +12,7 @@
 // the app's entry chunk.
 import './style/css-custom-properties';
 
-export * from './components';
-export * from './forms';
-export * from './table';
+export * from './library';
 export * from './style';
 export * from './foundation';
 export * from './gallery';
