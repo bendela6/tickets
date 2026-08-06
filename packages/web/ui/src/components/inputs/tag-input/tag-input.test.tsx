@@ -84,3 +84,11 @@ test('read-only drops the remove targets and refuses new tags', async () => {
   await userEvent.type(field(), 'more{Enter}');
   expect(onChange).not.toHaveBeenCalled();
 });
+
+test('a read-only tag list prints, rather than only changing its cursor', () => {
+  // Same gap as DurationInput, found the same way — by tabulating which control
+  // uses which read-only treatment rather than by looking at either alone.
+  const { container } = render(<TagInput value={['flaky']} onChange={() => {}} readOnly />);
+  const shell = container.querySelector('[class*="border-b-gray-7"]');
+  expect(shell).not.toBeNull();
+});

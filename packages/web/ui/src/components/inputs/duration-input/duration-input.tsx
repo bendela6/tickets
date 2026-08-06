@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { cn } from '../../../style';
-import { type ControlProps } from '../control';
+import { type ControlProps, readOnlyFieldClass } from '../control';
 import { fieldClass, fieldState } from '../field';
 
 export type DurationInputProps = ControlProps<number | null> & {
@@ -134,7 +134,7 @@ export function DurationInput({
           size,
           state: unparsed ? 'toned' : field.state,
           scale: unparsed ? 'red' : field.scale,
-          className: cn('w-full font-mono tabular-nums', readOnly && 'cursor-default', className),
+          className: cn('w-full font-mono tabular-nums', readOnly && readOnlyFieldClass, className),
         })}
       />
 
