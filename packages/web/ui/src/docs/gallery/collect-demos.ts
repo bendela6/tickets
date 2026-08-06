@@ -230,6 +230,17 @@ export function prepareDemos(demos: CollectedDemo[]): CollectedDemo[] {
 // one level up from *different* directories, and merging the maps lets one
 // shadow the other. Rebasing each onto its workspace-relative root makes
 // every key unique, and readable while we're at it.
+//
+// This single strip-and-prepend is only correct when the globbing module
+// really does sit exactly one directory below `root` — true of apps/web's
+// gallery route (`routes/`, one below `apps/web/src/`), which is the reason
+// this function is still exported and still written this way: that call
+// site is outside this package, and changing the signature to fix it there
+// too would force an edit this task has no business making. Nothing under
+// this package's OWN `src/` should call it, though — reach for
+// `rebaseNestedGlobKeys` instead, whose doc comment has the story of what
+// goes wrong here otherwise: a path that still looks like a path, wrong in a
+// way nothing notices until something reads its segments.
 export function rebaseGlobKeys<T>(root: string, glob: Record<string, T>): Record<string, T> {
   return Object.fromEntries(
     Object.entries(glob).map(([key, value]) => [`${root}/${key.replace(/^\.\.\//, '')}`, value]),
