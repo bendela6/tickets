@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { render } from '@testing-library/react';
 import axe from 'axe-core';
-import { ToastProvider } from '../toast';
+import { ToastProvider } from '../feedback/components/toast';
 import { TooltipProvider } from '../overlays/components/tooltip';
 import { states } from './table.demo';
 

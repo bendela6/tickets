@@ -1,6 +1,6 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
 import { axis, cn, focusRing, HUES, over, TONE_HUE, variants } from '../../../../style';
-import { Spinner } from '../../../spinner';
+import { Spinner } from '../../../feedback/components/spinner';
 import { toggleRowClass } from '../../parts/toggle';
 import { readOnlyMarkClass, type ControlProps, type ControlSize, disabledClass } from '../../contract';
 
