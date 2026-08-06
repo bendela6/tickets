@@ -108,7 +108,7 @@ Exit criteria: eer renders on Instrument tokens in both themes; no hand-rolled p
 
 ## Phase 7 — Rich text + AI sub-entries, wrap-up
 
-1. Move `apps/web/src/components/rich-text/*` UI → `packages/ui/rich-text` (or into `packages/richtext` beside its logic — decide at phase start); rebuild `Suggestions` on ComboboxList/Popover; replace the 2 raw textareas.
+1. Move `apps/web/src/components/rich-text/*` UI → `packages/web/ui/rich-text` (or into `packages/web/richtext` beside its logic — decide at phase start); rebuild `Suggestions` on ComboboxList/Popover; replace the 2 raw textareas.
 2. `@tickets/ui/ai`: MessageStream, PromptComposer, CostMeter/ContextMeter (on Meter), ProviderPicker, StackTrace.
 3. Final design-sync push, deploy, update CLAUDE.md (package map + stale redesign section), close-out commit.
 

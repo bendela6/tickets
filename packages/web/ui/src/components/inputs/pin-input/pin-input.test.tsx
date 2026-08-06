@@ -62,3 +62,13 @@ test('read-only refuses input but keeps the cells reachable', async () => {
   expect(onChange).not.toHaveBeenCalled();
   expect(cells()[0]!).not.toBeDisabled();
 });
+
+test('a read-only code prints like every other read-only field', () => {
+  // It was taking only `cursor-default`, so a locked code kept its filled cells
+  // while the field above it in the same form became a printed row. Visible
+  // only on the all-inputs page, which is what that page is for.
+  render(<PinInput value="429" onChange={() => {}} readOnly />);
+  const cell = screen.getAllByRole('textbox')[0]!;
+  expect(cell.className).toContain('bg-transparent');
+  expect(cell.className).toContain('border-b-gray-7');
+});

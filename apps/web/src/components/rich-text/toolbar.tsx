@@ -85,7 +85,7 @@ const CONTROLS: Record<string, ControlDef> = {
   at: {
     content: <span className="font-sans text-[13.5px] font-500">@</span>,
     // Inserts a literal '@' at the caret — the mentions Suggestion plugin
-    // (packages/richtext/src/nodes/refs.ts) watches document transactions
+    // (packages/web/richtext/src/nodes/refs.ts) watches document transactions
     // for the trigger char and opens its own popover from there.
     run: (editor) => editor.chain().focus().insertContent('@').run(),
   },

@@ -139,6 +139,11 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
       {/* The seam is a 1px rung-7 line, per the design — a Soft Fill control has
           no rim of its own, so a divider is the one place the fill treatment
           still needs a drawn edge. */}
+      {/* Dropped when read-only, the same call DatePicker's chevron makes: a
+          stepper promises an edit the field will not honour, and leaving a dead
+          affordance in place is the trap the design names for read-only —
+          "a glyph cannot fix an affordance you left in place". */}
+      {readOnly ? null : (
       <div className="flex flex-col border-l-1 border-gray-7">
         <button
           type="button"
@@ -161,6 +166,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
           <Icon name="chevron-down" size="2xs" />
         </button>
       </div>
+      )}
     </div>
   );
 });
