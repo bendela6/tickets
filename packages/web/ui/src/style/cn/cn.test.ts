@@ -1,4 +1,4 @@
-import { FONT_WEIGHTS, TEXT_SIZES } from '../../generated';
+import { FONT_WEIGHTS, TEXT_SIZES } from '../generated';
 import { cn } from './cn';
 
 // These are behaviour tests, not value tests: they assert what tailwind-merge

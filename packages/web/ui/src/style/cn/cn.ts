@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { extendTailwindMerge } from 'tailwind-merge';
-import { FONT_WEIGHTS, RADII, TEXT_SIZES } from '../../generated';
+import { FONT_WEIGHTS, RADII, TEXT_SIZES } from '../generated';
 
 // The app defines custom font-size tokens. tailwind-merge doesn't know they're
 // font sizes, so by default it buckets them into the text-COLOR group and
@@ -8,7 +8,7 @@ import { FONT_WEIGHTS, RADII, TEXT_SIZES } from '../../generated';
 // collapses to just `text-13`. Registering them is what keeps one shared cn
 // correct for every consumer.
 //
-// Both lists come from `src/generated`, so they cannot fall behind the scale.
+// Both lists come from `src/style/generated`, so they cannot fall behind the scale.
 // They were hand-copied until 2026-08-04, kept honest by a test that read the
 // stylesheet back and compared — a test standing in for an import.
 //

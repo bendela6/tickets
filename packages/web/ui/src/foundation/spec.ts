@@ -7,7 +7,7 @@
 // The SPEC side (what the token files declare) is no longer here. It used to be
 // derived from raw JSON imports and compared against this live side by drift().
 // Both are generated from the same token files now, so that comparison could
-// only ever report "matched" — see src/generated/ for the values themselves.
+// only ever report "matched" — see src/style/generated/ for the values themselves.
 import colorsCss from '../../styles/generated/colors.css?raw';
 import shadowsCss from '../../styles/generated/shadows.css?raw';
 import typographyCss from '../../styles/generated/typography.css?raw';

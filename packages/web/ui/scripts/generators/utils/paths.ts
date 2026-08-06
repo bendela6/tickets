@@ -42,9 +42,10 @@ export const generatedCssFile = (name: string): string => path.join(GENERATED_DI
 
 /**
  * Generated TypeScript, one file per family — the `styles/generated/` rule
- * applied to code. Under `src/` because it is imported by the package's own
- * modules and ships with them; the directory is the "do not edit" marker.
+ * applied to code. Under `src/style/` because that is the only code that reads
+ * it: `cn.ts` and `tones.ts` both did so as `../../generated` before the move.
+ * The directory is the "do not edit" marker.
  */
-export const GENERATED_TS_DIR = path.join(PACKAGE_ROOT, 'src', 'generated');
+export const GENERATED_TS_DIR = path.join(PACKAGE_ROOT, 'src', 'style', 'generated');
 
 export const generatedTsFile = (name: string): string => path.join(GENERATED_TS_DIR, name);

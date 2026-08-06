@@ -1,9 +1,9 @@
-import { HUES, PALETTE, TONE_HUE } from '../../generated';
+import { HUES, PALETTE, TONE_HUE } from '../../style/generated';
 
 /**
  * Contrast analysis over the generated colour tables.
  *
- * The VALUES live in `src/generated/colors.ts`, emitted from
+ * The VALUES live in `src/style/generated/colors.ts`, emitted from
  * `tokens/colors.tokens.json`. What is hand-written here is the maths — WCAG
  * luminance and the pairings the tone system can actually produce — because
  * that is logic, not data, and no generator can derive which combinations a

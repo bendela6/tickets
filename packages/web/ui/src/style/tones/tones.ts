@@ -14,4 +14,4 @@ export {
   type Hue,
   type Role,
   type Tone,
-} from '../../generated/colors';
+} from '../generated/colors';

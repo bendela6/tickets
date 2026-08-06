@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import borderCss from '../../styles/generated/border.css?raw';
-import { PALETTE, TEXT_SIZES, TONE_NAMES, TONE_HUE, HUES, ROLES } from '../generated';
+import { PALETTE, TEXT_SIZES, TONE_NAMES, TONE_HUE, HUES, ROLES } from '../style/generated';
 import { liveTokens, parseCustomProperties } from './spec';
 
 // Nothing here restates a token VALUE. A test listing the twelve type sizes or
