@@ -115,3 +115,29 @@ file, and it is a screen decision rather than a component one.
 Building this means `FieldWrapper` gaining a label-placement axis and the form
 layouts gaining a width-aware column rule. It is a real feature, not a style
 pass, and it belongs to whoever owns the New Ticket and Detail screens.
+
+## Declined, with the reasoning (2026-08-06)
+
+Two of the four design files ask for things that are **not being built**. Both
+were live questions, both were answered deliberately, and both are recorded here
+so the next session reads the decision rather than rediscovering the question.
+
+- **Read-only's copy-on-hover affordance (file 22) — not building it.**
+  `CopyButton` exists and the design shows a read-only field revealing it on
+  hover. The cost is that every read-only control reserves a trailing slot,
+  which changes its width at rest whether or not anyone hovers. A narrower
+  version — only the controls whose value is text worth copying — was offered
+  and also declined. **Read-only stays a printed row with no chrome.**
+
+- **Commit-on-Enter / revert-on-Escape with a dirty dot (file 21, P3) —
+  deferred.** All 26 controls are fully controlled and hold no draft value, so
+  the pattern needs a new owner for the pending edit. The likely shape is a
+  form-layer wrapper holding the draft while the controls stay unchanged, rather
+  than an opt-in uncontrolled mode on all 26. **Not being decided now**: nothing
+  in the app edits inline today, so the question is better answered against a
+  real call site than in the abstract.
+
+Still open, and genuinely unbuilt rather than declined: **file 20's form-layout
+rules** (label-left at ≥520px, two columns past ~760px). That one needs
+`FieldWrapper` to gain a label-placement axis and belongs to whoever owns the
+New Ticket and Detail screens — see the section above.
