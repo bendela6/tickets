@@ -10,10 +10,18 @@ import type { BoardIndexes } from '../utils/index-board';
 // markdown section) by ItemDetail, so the form skips them here.
 const LIFTED_KEYS = new Set(['title', 'description']);
 
-// The per-type field form. Two layouts per the design: 'grid' is the drawer's
-// compact two-column grid (label left, control right; status lives in the
-// drawer header); 'rail' is the full page's stacked right-rail form (label
-// above control, status included).
+// The per-type field form.
+//
+// `layout` no longer picks the VISUAL shape — design file 20 makes that a
+// function of the container's width, and the same rules now live in
+// `FieldWrapper`: labels move beside the field at >=520px, and fields pair into
+// two columns at >=760px. Both are container queries, so the drawer stacks and
+// the wide page pairs without either caller being told which it is.
+//
+// What `layout` still decides is what the container SHEDS, which is a genuine
+// per-container judgement rather than a width: the drawer's header owns the
+// status select, so the drawer must not draw it twice. That is the "honest
+// container" idea from the design file, and it cannot be derived from a width.
 export function DetailFields({
   board,
   indexes,
@@ -72,41 +80,44 @@ export function DetailFields({
       {patch.isError ? (
         <p className="m-0 font-sans text-12/17 text-red-9">{(patch.error as Error).message}</p>
       ) : null}
-      <div
-        className={
-          layout === 'grid' ? 'grid grid-cols-2 gap-x-18 gap-y-10' : 'flex flex-col gap-12'
-        }
-      >
-        {rows.map(({ placement, field }) => (
-          <label
-            key={field.id}
-            className={
-              layout === 'grid' ? 'flex min-w-0 items-start gap-10' : 'flex flex-col gap-5'
-            }
-          >
-            <SectionHeader
-              title={
-                <>
-                  {field.label}
-                  {placement.required ? <span className="text-red-9"> *</span> : null}
-                </>
-              }
-              className={layout === 'grid' ? 'w-76 shrink-0 pt-10' : undefined}
-            />
-            <span className="min-w-0 flex-1">
-              <FieldWidget
-                field={field}
-                value={item.values[field.key]}
-                disabled={userId === null || patch.isPending}
-                board={board}
-                indexes={indexes}
-                ticket={item}
-                typeId={item.typeId}
-                onChange={(next) => saveValue(field.key, next)}
-              />
-            </span>
-          </label>
-        ))}
+      {/* The container both rules below measure themselves against. An element
+          cannot query the container it establishes, so this wrapper exists
+          purely to be measured. */}
+      <div className="@container">
+        <div className="flex flex-col gap-12 @form-columns:grid @form-columns:grid-cols-2 @form-columns:gap-x-18 @form-columns:gap-y-10">
+          {rows.map(({ placement, field }) => (
+            // Each field measures its own box too, so a field sitting in one
+            // half of the two-column grid asks about the ~370px it actually
+            // has rather than the form's full width — and correctly keeps its
+            // label on top, since 370px cannot hold a 104px label column plus
+            // a usable control.
+            <label key={field.id} className="@container">
+              <span className="flex flex-col gap-5 @form-labels:flex-row @form-labels:items-start @form-labels:gap-10">
+                <SectionHeader
+                  title={
+                    <>
+                      {field.label}
+                      {placement.required ? <span className="text-red-9"> *</span> : null}
+                    </>
+                  }
+                  className="@form-labels:w-104 @form-labels:shrink-0 @form-labels:pt-10"
+                />
+                <span className="min-w-0 flex-1">
+                  <FieldWidget
+                    field={field}
+                    value={item.values[field.key]}
+                    disabled={userId === null || patch.isPending}
+                    board={board}
+                    indexes={indexes}
+                    ticket={item}
+                    typeId={item.typeId}
+                    onChange={(next) => saveValue(field.key, next)}
+                  />
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
       </div>
     </div>
   );
