@@ -6,4 +6,6 @@
   --breakpoint-lg: 64rem;
   --breakpoint-xl: 80rem;
   --breakpoint-2xl: 96rem;
+  --container-form-labels: 32.5rem;
+  --container-form-columns: 47.5rem;
 }

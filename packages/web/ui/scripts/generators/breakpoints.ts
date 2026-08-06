@@ -21,24 +21,34 @@ const PX_PER_REM = 16;
  * changed nothing.
  */
 export function generateBreakpoints(indent = '  '): Family {
-  const { breakpoint } = readTokenFile<BreakpointsDoc>('breakpoints.tokens.json');
+  const { breakpoint, container } = readTokenFile<BreakpointsDoc>('breakpoints.tokens.json');
 
-  const px = Object.fromEntries(
-    Object.entries(breakpoint).map(([name, token]) => [name, Number.parseFloat(token.$value)]),
-  );
+  const toPx = (group: Record<string, { $value: string }>): Record<string, number> =>
+    Object.fromEntries(
+      Object.entries(group).map(([name, token]) => [name, Number.parseFloat(token.$value)]),
+    );
 
-  const rungs = Object.entries(px)
-    .map(([name, value]) => `${indent}--breakpoint-${name}: ${value / PX_PER_REM}rem;\n`)
-    .join('');
+  const px = toPx(breakpoint);
+  const containerPx = toPx(container);
+
+  const rem = (prefix: string, values: Record<string, number>): string =>
+    Object.entries(values)
+      .map(([name, value]) => `${indent}--${prefix}-${name}: ${value / PX_PER_REM}rem;\n`)
+      .join('');
 
   return {
-    css: `@theme inline {\n${rungs}}\n`,
+    // `--container-*` is Tailwind v4's container-query namespace: a rung named
+    // `form-labels` becomes the `@form-labels:` variant, which applies at that
+    // width of the nearest `@container` ancestor rather than the viewport.
+    css: `@theme inline {\n${rem('breakpoint', px)}${rem('container', containerPx)}}\n`,
     ts: tsModule({
       source: 'breakpoints.tokens.json',
       summary:
         'In px, for code that reasons about widths — matchMedia and the panel\n' +
-        'hooks. The stylesheet emits the same values in rem; see the generator.',
-      declarations: [constant('BREAKPOINTS', px)],
+        'hooks. The stylesheet emits the same values in rem; see the generator.\n' +
+        '`CONTAINERS` measures a form\'s own box, not the viewport, so a form in\n' +
+        'a narrow drawer stacks its labels however wide the window is.',
+      declarations: [constant('BREAKPOINTS', px), constant('CONTAINERS', containerPx)],
     }),
   };
 }

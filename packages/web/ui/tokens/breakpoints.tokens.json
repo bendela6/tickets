@@ -20,5 +20,17 @@
       "$type": "dimension",
       "$value": "1536px"
     }
+  },
+  "container": {
+    "form-labels": {
+      "$type": "dimension",
+      "$value": "520px",
+      "$description": "Labels move beside the field at or above this CONTAINER width. Design file 20: 'a 104px label column plus a usable field needs that much. Below it, labels go on top.' Container, not viewport — a form in a 400px drawer stacks its labels on a 2560px monitor."
+    },
+    "form-columns": {
+      "$type": "dimension",
+      "$value": "760px",
+      "$description": "A form pairs its fields into two columns at or above this container width. Design file 20: 'otherwise the pairs are too narrow to hold a date beside a duration.'"
+    }
   }
 }

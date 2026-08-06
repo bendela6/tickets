@@ -54,4 +54,34 @@ describe('form layouts', () => {
     expect(screen.getByText('a')).toBeInTheDocument();
     expect(screen.getByText('b')).toBeInTheDocument();
   });
+
+  // Design file 20: "two columns only past ~760px — otherwise the pairs are too
+  // narrow to hold a date beside a duration."
+  describe('RowLayout pairs its fields only once there is room', () => {
+    it('stacks by default and goes side by side at the form-columns width', () => {
+      const { container } = render(
+        <RowLayout props={{}}><span>a</span><span>b</span></RowLayout>,
+      );
+      const row = container.querySelector('[class*="form-columns"]') as HTMLElement;
+
+      // `Row` renders `flex-row` in its base; this className says `flex-col`.
+      // They are the same CSS property, so which wins is decided by twMerge and
+      // NOT by class order — a browser would pick whichever Tailwind emitted
+      // later regardless of how they are written here. Asserting the merged
+      // output is the only way to know the narrow case actually stacks.
+      expect(row.className).toContain('flex-col');
+      expect(row.className).not.toMatch(/(^|\s)flex-row(\s|$)/);
+      expect(row.className).toContain('@form-columns:flex-row');
+    });
+
+    it('establishes the container it queries', () => {
+      // A container query needs a container, and an element cannot query the one
+      // it establishes — hence the wrapper. Without it every rule below is inert
+      // and nothing anywhere reports an error.
+      const { container } = render(
+        <RowLayout props={{}}><span>a</span></RowLayout>,
+      );
+      expect((container.firstElementChild as HTMLElement).className).toContain('@container');
+    });
+  });
 });
