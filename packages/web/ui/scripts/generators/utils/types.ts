@@ -81,4 +81,10 @@ export interface SpacingDoc {
 /** `breakpoints.tokens.json`. */
 export interface BreakpointsDoc {
   breakpoint: Record<string, { $value: string }>;
+  /**
+   * Container-query widths. A different axis from `breakpoint`, not more of the
+   * same: these measure the element a form is laid out inside, so a form in a
+   * narrow drawer stacks its labels no matter how wide the window is.
+   */
+  container: Record<string, { $value: string }>;
 }

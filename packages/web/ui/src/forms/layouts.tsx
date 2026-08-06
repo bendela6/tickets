@@ -79,13 +79,38 @@ export function GroupLayout({ props, children }: LayoutComponentProps<TitledProp
   );
 }
 
-/** Fields side by side. `align="start"` so a field with an error message does
- *  not drag its neighbours' controls downward as the message appears. */
+/** Fields side by side — but **only once the form is wide enough to hold them**
+ *  (design file 20: two columns past ~760px, "otherwise the pairs are too
+ *  narrow to hold a date beside a duration"). Below that the row stacks, so a
+ *  form declaring `row` gets a sensible narrow layout for free rather than two
+ *  cramped columns.
+ *
+ *  Measured against the form's container, not the viewport, so a paired row in
+ *  a drawer stacks however wide the monitor is. `align="start"` so a field with
+ *  an error message does not drag its neighbours' controls downward as the
+ *  message appears.
+ *
+ *  `[&>*]:flex-1` gives the children equal widths only when side by side —
+ *  stacked, `flex-col` makes it a no-op on the main axis. Without it a short
+ *  field and a long one split the row by content width, which is not what a
+ *  two-column form means. */
 export function RowLayout({ children }: LayoutComponentProps<BareProps>) {
   return (
-    <Row gap={4} align="start">
-      {children}
-    </Row>
+    // The outer div establishes the container the Row queries — an element
+    // cannot query the container it establishes. Measuring its own box rather
+    // than the form root's is deliberate: a row nested inside another layout
+    // has whatever width that layout left it, and `root` is optional in the
+    // registry, so reading from the top would fail silently for any consumer
+    // that omits it.
+    <div className="@container">
+      <Row
+        gap={4}
+        align="start"
+        className="flex-col @form-columns:flex-row @form-columns:[&>*]:min-w-0 @form-columns:[&>*]:flex-1"
+      >
+        {children}
+      </Row>
+    </div>
   );
 }
 
