@@ -1,5 +1,5 @@
 import type { RootWrapperProps } from '@tickets/form';
-import { Stack } from '../stack';
+import { Stack } from '../layout/components/stack';
 
 /**
  * The registry's `root` slot — the spacing between top-level fields.

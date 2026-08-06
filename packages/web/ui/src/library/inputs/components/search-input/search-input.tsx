@@ -1,7 +1,7 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
 import { focusRing } from '../../../../style';
 import { Icon } from '../../../primitives/components/icon';
-import { Spinner } from '../../../spinner';
+import { Spinner } from '../../../feedback/components/spinner';
 import { Input } from '../input';
 import type { ControlProps } from '../../contract';
 

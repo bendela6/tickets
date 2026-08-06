@@ -1,7 +1,7 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
 import { axis, focusRing, HUES, over, TONE_HUE, variants, type Tone } from '../../../../style';
 import { Icon, type IconSize } from '../icon';
-import { Spinner } from '../../../spinner';
+import { Spinner } from '../../../feedback/components/spinner';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');

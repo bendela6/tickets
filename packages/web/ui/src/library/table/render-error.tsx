@@ -1,5 +1,5 @@
 import type { RenderErrorCtx } from '@tickets/table';
-import { ScreenState } from '../screen-state';
+import { ScreenState } from '../feedback/components/screen-state';
 
 /** Reuses ScreenState so a failed table looks like every other failed surface
  *  in the app rather than inventing a second error treatment.

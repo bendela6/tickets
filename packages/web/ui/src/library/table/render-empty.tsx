@@ -1,5 +1,5 @@
 import type { RenderEmptyCtx } from '@tickets/table';
-import { ScreenState } from '../screen-state';
+import { ScreenState } from '../feedback/components/screen-state';
 
 /**
  * Zero rows, not loading, no error.

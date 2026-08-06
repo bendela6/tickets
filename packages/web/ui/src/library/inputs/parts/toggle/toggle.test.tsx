@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { focusRing } from '../../../../style';
 import { Checkbox } from '../../components/checkbox';
 import { RadioGroup } from '../../components/radio-group';
-import { Spinner } from '../../../spinner';
+import { Spinner } from '../../../feedback/components/spinner';
 import { Switch } from '../../components/switch';
 
 const options = [

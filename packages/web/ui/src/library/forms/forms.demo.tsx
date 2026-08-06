@@ -12,7 +12,7 @@ import { TextField } from './inputs/text/text-field';
 import { TextAreaField } from './inputs/textarea/textarea-field';
 import { ToggleField } from './inputs/toggle/toggle-field';
 import { CardLayout, GroupLayout } from './layouts';
-import { Stack } from '../stack';
+import { Stack } from '../layout/components/stack';
 
 export const meta = { title: 'Form inputs', group: 'Forms', size: 'md' };
 

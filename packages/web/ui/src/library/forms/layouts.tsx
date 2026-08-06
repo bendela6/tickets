@@ -1,7 +1,7 @@
 import type { LayoutComponentProps } from '@tickets/form';
-import { Card, CardBody, CardHeader } from '../card';
-import { Row } from '../row';
-import { Stack } from '../stack';
+import { Card, CardBody, CardHeader } from '../layout/components/card';
+import { Row } from '../layout/components/row';
+import { Stack } from '../layout/components/stack';
 
 /**
  * TODO: move all those layout components to separate folder with individual files
