@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '../../../../style';
-import { Icon, type IconSize } from '../../../icon';
+import { Icon, type IconSize } from '../../../primitives/components/icon';
 import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../../contract';
 import { fieldClass, fieldState } from '../../parts/field';
 import { OptionRow } from '../../parts/option-row';

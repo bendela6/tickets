@@ -1,6 +1,6 @@
 import type { Renderer } from '@tickets/table';
-import { Button } from '../../button';
-import { Icon, type IconName } from '../../icon';
+import { Button } from '../../primitives/components/button';
+import { Icon, type IconName } from '../../primitives/components/icon';
 import type { Tone } from '../../../style';
 
 type ActionItem = {

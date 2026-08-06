@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { cn, cursorRing, focusRing, HUES, type Hue } from '../../../../style';
-import { Icon, type IconSize } from '../../../icon';
+import { Icon, type IconSize } from '../../../primitives/components/icon';
 import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../../contract';
 import { fieldClass, fieldState } from '../../parts/field';
 import { Popup } from '../../parts/popup';

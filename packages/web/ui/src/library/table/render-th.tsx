@@ -1,6 +1,6 @@
 import { useColumnResize, type RenderThCtx, type RenderThResize } from '@tickets/table';
 import { cn } from '../../style';
-import { Icon } from '../icon';
+import { Icon } from '../primitives/components/icon';
 import { CELL_FOCUS_RING, cellGutter, PINNED_CELL, PINNED_EDGE } from './metrics';
 import { pinStyle } from './render-td';
 

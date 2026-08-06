@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { definePlayground, select } from '../../gallery';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
-import { Button } from '../button';
+import { Button } from '../primitives/components/button';
 
 function PopoverPlaygroundFixture({
   side,

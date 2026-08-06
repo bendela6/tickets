@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Option } from '../../contract';
 import { cn } from '../../../../style/cn';
-import { Pill } from '../../../pill';
+import { Pill } from '../../../primitives/components/pill';
 import { OptionRow } from '../option-row';
 
 

@@ -1,4 +1,4 @@
-import { Icon, type IconName, type IconSize } from '../icon';
+import { Icon, type IconName, type IconSize } from '../primitives/components/icon';
 import type { Tone } from '../../style/tones';
 
 /**

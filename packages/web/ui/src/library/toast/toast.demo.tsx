@@ -1,5 +1,5 @@
 import { definePlayground, text } from '../../gallery';
-import { Button } from '../button';
+import { Button } from '../primitives/components/button';
 import { useToast } from './toast';
 
 function ToastFixture() {

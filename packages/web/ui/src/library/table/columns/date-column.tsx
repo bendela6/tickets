@@ -1,5 +1,5 @@
 import type { Renderer } from '@tickets/table';
-import { RelativeDate } from '../../relative-date';
+import { RelativeDate } from '../../primitives/components/relative-date';
 
 type DateColumnOpts = { style?: 'relative' | 'absolute' };
 

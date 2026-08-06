@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { cn, cursorRing, focusRing } from '../../../../style';
 import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../../contract';
 import { fieldClass, fieldState } from '../../parts/field';
-import { Icon, type IconSize } from '../../../icon';
+import { Icon, type IconSize } from '../../../primitives/components/icon';
 import { Popup } from '../../parts/popup';
-import { formatExact } from '../../../relative-date';
+import { formatExact } from '../../../primitives/components/relative-date';
 
 const MONTH_NAMES = [
   'January',

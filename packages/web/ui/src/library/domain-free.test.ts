@@ -50,10 +50,10 @@ describe('@tickets/ui stays domain-free', () => {
       const rel = path.relative(COMPONENTS, file).replaceAll('\\', '/');
       // The icon registry keys name shapes; `terminal` there is a picture of a
       // terminal window, the same way `folder` is a picture of a folder.
-      if (rel.startsWith('icon/registry')) continue;
-      // SessionKindGlyph is a known leak, already sitting in the Deprecated
-      // group and on its way to apps/web. Listed rather than silently skipped.
-      if (rel.startsWith('session-kind-glyph/')) continue;
+      if (rel.startsWith('primitives/components/icon/registry')) continue;
+      // SessionKindGlyph is a known leak, already deprecated and on its way to
+      // apps/web. Listed rather than silently skipped.
+      if (rel.startsWith('primitives/components/session-kind-glyph/')) continue;
 
       const src = readFileSync(file, 'utf8');
       // Strip comments so prose explaining the rule does not trip it.

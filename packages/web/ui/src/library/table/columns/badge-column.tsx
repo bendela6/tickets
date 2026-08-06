@@ -1,5 +1,5 @@
 import type { Renderer } from '@tickets/table';
-import { Pill } from '../../pill';
+import { Pill } from '../../primitives/components/pill';
 import type { Tone } from '../../../style';
 
 type BadgeColumnOpts<V> = {

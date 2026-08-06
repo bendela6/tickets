@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { cn } from '../../../../style';
-import { Avatar, type AvatarSize } from '../../../avatar';
-import { Icon, type IconSize } from '../../../icon';
+import { Avatar, type AvatarSize } from '../../../primitives/components/avatar';
+import { Icon, type IconSize } from '../../../primitives/components/icon';
 import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../../contract';
 import { fieldClass, fieldState } from '../../parts/field';
 import { OptionRow } from '../../parts/option-row';

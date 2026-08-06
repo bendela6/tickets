@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Pill } from '../library/pill';
+import { Pill } from '../library/primitives/components/pill';
 import { SectionHeader } from '../library/section-header';
 import { NATIVE_FAMILIES } from './spec';
 // colors.ts owns the theme axis for the whole Foundation group — the colour

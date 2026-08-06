@@ -1,7 +1,7 @@
 import { Table, sortRows, useTable, type Column } from '@tickets/table';
 import { boolean, definePlayground, select } from '../../gallery';
-import { Button } from '../button';
-import { Icon } from '../icon';
+import { Button } from '../primitives/components/button';
+import { Icon } from '../primitives/components/icon';
 import { rowHeightFor } from './metrics';
 import { tableRender } from './table-render';
 import { ActionsColumn } from './columns/actions-column';
