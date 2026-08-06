@@ -28,3 +28,47 @@ test('no control spells its own disabled opacity', async () => {
   }
   expect(offenders).toEqual([]);
 });
+
+test('every control that accepts readOnly also DRAWS it', () => {
+  // Found three times by hand before this existed — PinInput, DurationInput and
+  // TagInput each accepted `readOnly`, set `cursor-default`, and kept their
+  // floor. A locked field that still looks editable is the exact trap the
+  // design names: "read-only still has a floor, so it looks editable and
+  // invites a click that does nothing. A glyph cannot fix an affordance you
+  // left in place."
+  //
+  // None of the three was visible from its own page. A page of one control has
+  // nothing to disagree with, which is why this is a test and not a review.
+  const { readdirSync, readFileSync, statSync } = require('node:fs') as typeof import('node:fs');
+  const { join } = require('node:path') as typeof import('node:path');
+  const root = 'src/components/inputs';
+  const BASES = new Set(['control', 'field', 'popup', 'option-row', 'chip', 'toggle', 'combobox-list']);
+
+  const offenders: string[] = [];
+  for (const dir of readdirSync(root)) {
+    const full = join(root, dir);
+    if (!statSync(full).isDirectory() || BASES.has(dir)) continue;
+    const files = readdirSync(full).filter(
+      (f) => /\.tsx?$/.test(f) && !/\.(test|demo)\./.test(f) && f !== 'index.ts',
+    );
+    if (!files.length) continue;
+    const src = files.map((f) => readFileSync(join(full, f), 'utf8')).join('\n');
+
+    if (!/\breadOnly\b/.test(src)) continue;
+    const drawsIt = /readOnly(Field|Mark)Class/.test(src);
+    // Delegating is legitimate: PasswordInput and SearchInput hand `readOnly`
+    // to an inner Input, which draws it. CheckboxGroup hands it to its rows.
+    //
+    // The receiver must be a COMPONENT. `readOnly={readOnly}` on a native
+    // <input> only sets the HTML attribute — it refuses the edit and draws
+    // nothing, which is the entire bug this test exists for. Matching that as
+    // delegation is how the first version of this guard passed against a
+    // control I had deliberately broken to check it.
+    const delegates = /<[A-Z]\w*(?:\s[^>]*)?\sreadOnly=\{readOnly\}/.test(src);
+    // A control may also refuse the state outright by never rendering the
+    // affordance — FileInput drops its remove buttons entirely.
+    const refuses = /locked \? null|readOnly \? null/.test(src);
+    if (!drawsIt && !delegates && !refuses) offenders.push(dir);
+  }
+  expect(offenders).toEqual([]);
+});
