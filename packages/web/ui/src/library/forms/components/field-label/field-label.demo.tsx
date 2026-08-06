@@ -1,4 +1,4 @@
-import { boolean, definePlayground, text } from '../../../../gallery';
+import { boolean, definePlayground, text } from '../../../../docs/gallery';
 import { FieldLabel } from './field-label';
 import { FieldError } from '../field-error';
 import { Input } from '../../../inputs/components/input';

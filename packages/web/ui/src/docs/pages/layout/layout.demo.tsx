@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BREAKPOINTS } from '../../style/generated';
+import { BREAKPOINTS } from '../../../style/generated';
 import { NativeNote, Sheet, SpecHeader, SpecRow } from '../view';
 
 /**

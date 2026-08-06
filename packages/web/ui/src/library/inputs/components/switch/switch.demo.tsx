@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { boolean, definePlayground, select, text } from '../../../../gallery';
+import { boolean, definePlayground, select, text } from '../../../../docs/gallery';
 import { ROLES, TONE_NAMES, type Tone } from '../../../../style';
 import { Switch } from './switch';
 import type { ControlSize } from '../../contract';

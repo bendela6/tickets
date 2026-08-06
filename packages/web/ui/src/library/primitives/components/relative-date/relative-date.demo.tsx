@@ -1,4 +1,4 @@
-import { boolean, definePlayground, text } from '../../../../gallery';
+import { boolean, definePlayground, text } from '../../../../docs/gallery';
 import { RelativeDate } from './relative-date';
 
 // Fixed reference instant so RelativeDate output is deterministic in the gallery.

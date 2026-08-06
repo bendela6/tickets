@@ -9,7 +9,7 @@ import {
   failingPairings,
   luminance,
 } from './colors';
-import { HUES } from '../../style/generated';
+import { HUES } from '../../../style/generated';
 
 describe('contrastRatio', () => {
   it('matches the WCAG extremes', () => {

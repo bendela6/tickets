@@ -1,5 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
-import { TONE_NAMES } from '../style';
+import { TONE_NAMES } from '../../style';
 import {
   Center,
   defineState,

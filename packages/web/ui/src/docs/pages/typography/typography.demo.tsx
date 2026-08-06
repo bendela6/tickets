@@ -1,5 +1,5 @@
 import { definePlayground, number, select, text } from '../../gallery';
-import { cn } from '../../style';
+import { cn } from '../../../style';
 import { SpecHeader, SpecRow } from '../view';
 
 export const meta = {

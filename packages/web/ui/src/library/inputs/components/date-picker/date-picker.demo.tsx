@@ -7,7 +7,7 @@ import {
   Slot,
   text,
   Wrap,
-} from '../../../../gallery';
+} from '../../../../docs/gallery';
 import { TONE_NAMES } from '../../../../style';
 import { DatePicker, type DatePickerProps } from './date-picker';
 

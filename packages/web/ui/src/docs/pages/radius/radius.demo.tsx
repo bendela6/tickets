@@ -1,4 +1,4 @@
-import { RADII } from '../../style/generated';
+import { RADII } from '../../../style/generated';
 import { specRows } from '../spec';
 import { Sheet, SpecHeader, SpecRow } from '../view';
 

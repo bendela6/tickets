@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { boolean, defineState, definePlayground, Matrix, select, Slot, text, Wrap } from '../../../../gallery';
+import { boolean, defineState, definePlayground, Matrix, select, Slot, text, Wrap } from '../../../../docs/gallery';
 import { TONE_NAMES, type Tone } from '../../../../style';
 import { Combobox } from './combobox';
 import type { ControlSize, Option } from '../../contract';

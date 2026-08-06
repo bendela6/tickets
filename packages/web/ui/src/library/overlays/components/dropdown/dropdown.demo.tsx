@@ -1,4 +1,4 @@
-import { definePlayground, boolean, select } from '../../../../gallery';
+import { definePlayground, boolean, select } from '../../../../docs/gallery';
 import { Avatar } from '../../../primitives/components/avatar';
 import { Button } from '../../../primitives/components/button';
 import { Pill } from '../../../primitives/components/pill';

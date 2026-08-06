@@ -1,4 +1,4 @@
-import { definePlayground, select, boolean, text } from '../../../../gallery';
+import { definePlayground, select, boolean, text } from '../../../../docs/gallery';
 import { TONE_NAMES } from '../../../../style/tones';
 import { ICON_NAMES } from '../icon/registry';
 import { Pill } from './pill';

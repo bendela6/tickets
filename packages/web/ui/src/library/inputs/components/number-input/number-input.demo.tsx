@@ -1,5 +1,5 @@
 import { useState, type ComponentProps } from 'react';
-import { boolean, definePlayground, number, select } from '../../../../gallery';
+import { boolean, definePlayground, number, select } from '../../../../docs/gallery';
 import { TONE_NAMES } from '../../../../style';
 import { NumberInput } from './number-input';
 

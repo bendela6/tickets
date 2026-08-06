@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { definePlayground, number, select, boolean } from '../../../../gallery';
+import { definePlayground, number, select, boolean } from '../../../../docs/gallery';
 import { TONE_NAMES } from '../../../../style';
 import { Slider } from './slider';
 import type { ControlSize } from '../../contract';
