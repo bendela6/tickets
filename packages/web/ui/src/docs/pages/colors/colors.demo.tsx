@@ -11,7 +11,7 @@ import {
   type Step,
   type Theme,
 } from './colors';
-import { HUES, PALETTE } from '../../style/generated';
+import { HUES, PALETTE } from '../../../style/generated';
 
 export const meta = {
   title: 'Colors',

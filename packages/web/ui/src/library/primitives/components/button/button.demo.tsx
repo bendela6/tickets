@@ -9,7 +9,7 @@ import {
   Slot,
   text,
   Wrap,
-} from '../../../../gallery';
+} from '../../../../docs/gallery';
 import { TONE_NAMES } from '../../../../style';
 import { Button } from './button';
 

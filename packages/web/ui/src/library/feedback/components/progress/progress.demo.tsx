@@ -1,4 +1,4 @@
-import { definePlayground, number, select, text } from '../../../../gallery';
+import { definePlayground, number, select, text } from '../../../../docs/gallery';
 import { TONE_NAMES } from '../../../../style/tones';
 import { Progress } from './progress';
 

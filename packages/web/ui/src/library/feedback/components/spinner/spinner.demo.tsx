@@ -1,4 +1,4 @@
-import { definePlayground, select } from '../../../../gallery';
+import { definePlayground, select } from '../../../../docs/gallery';
 import { TONE_NAMES } from '../../../../style/tones';
 import { Spinner } from './spinner';
 

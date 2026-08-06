@@ -9,7 +9,7 @@ import {
   Slot,
   text,
   Wrap,
-} from '../../../../gallery';
+} from '../../../../docs/gallery';
 import { TONE_NAMES, type Tone } from '../../../../style';
 import { RadioGroup, type RadioGroupVariant } from './radio-group';
 import type { ControlSize, Option } from '../../contract';

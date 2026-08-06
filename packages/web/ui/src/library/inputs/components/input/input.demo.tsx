@@ -1,5 +1,5 @@
 import { useState, type ComponentProps, type ReactNode } from 'react';
-import { boolean, definePlayground, defineState, List, Matrix, select, Slot, text } from '../../../../gallery';
+import { boolean, definePlayground, defineState, List, Matrix, select, Slot, text } from '../../../../docs/gallery';
 import { TONE_NAMES, type Tone } from '../../../../style';
 import { Icon } from '../../../primitives/components/icon';
 import { Input } from './input';

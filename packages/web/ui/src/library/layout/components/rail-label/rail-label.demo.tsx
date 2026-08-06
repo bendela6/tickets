@@ -1,4 +1,4 @@
-import { definePlayground, text } from '../../../../gallery';
+import { definePlayground, text } from '../../../../docs/gallery';
 import { RailLabel } from './rail-label';
 
 export const meta = { title: 'RailLabel', group: 'Deprecated', size: 'sm' };

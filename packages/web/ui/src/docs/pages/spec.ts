@@ -8,12 +8,12 @@
 // derived from raw JSON imports and compared against this live side by drift().
 // Both are generated from the same token files now, so that comparison could
 // only ever report "matched" — see src/style/generated/ for the values themselves.
-import colorsCss from '../../styles/generated/colors.css?raw';
-import shadowsCss from '../../styles/generated/shadows.css?raw';
-import typographyCss from '../../styles/generated/typography.css?raw';
-import borderCss from '../../styles/generated/border.css?raw';
-import motionCss from '../../styles/generated/motion.css?raw';
-import breakpointsCss from '../../styles/generated/breakpoints.css?raw';
+import colorsCss from '../../../styles/generated/colors.css?raw';
+import shadowsCss from '../../../styles/generated/shadows.css?raw';
+import typographyCss from '../../../styles/generated/typography.css?raw';
+import borderCss from '../../../styles/generated/border.css?raw';
+import motionCss from '../../../styles/generated/motion.css?raw';
+import breakpointsCss from '../../../styles/generated/breakpoints.css?raw';
 
 // Every generated sheet, concatenated — the custom properties are split one
 // file per token type, so reading a single file would silently narrow every

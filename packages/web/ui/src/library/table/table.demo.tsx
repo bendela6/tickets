@@ -1,5 +1,5 @@
 import { Table, sortRows, useTable, type Column } from '@tickets/table';
-import { boolean, definePlayground, select } from '../../gallery';
+import { boolean, definePlayground, select } from '../../docs/gallery';
 import { Button } from '../primitives/components/button';
 import { Icon } from '../primitives/components/icon';
 import { rowHeightFor } from './parts/metrics';

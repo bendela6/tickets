@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react';
-import { cn, HUES, ROLES, TONE_NAMES, type Tone } from '../style';
+import { cn, HUES, ROLES, TONE_NAMES, type Tone } from '../../style';
 
 /**
  * The two halves of the tone vocabulary, plus both at once.

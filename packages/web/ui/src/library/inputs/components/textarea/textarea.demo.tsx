@@ -1,5 +1,5 @@
 import { useState, type ComponentProps } from 'react';
-import { boolean, definePlayground, defineState, List, Matrix, select, Slot, text } from '../../../../gallery';
+import { boolean, definePlayground, defineState, List, Matrix, select, Slot, text } from '../../../../docs/gallery';
 import { TONE_NAMES, type Tone } from '../../../../style';
 import { Textarea } from './textarea';
 import type { ControlSize } from '../../contract';

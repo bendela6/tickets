@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { defineState, Matrix, Slot } from '../../../../gallery';
+import { defineState, Matrix, Slot } from '../../../../docs/gallery';
 import type { ControlSize } from '../../contract';
 import { SearchInput } from './search-input';
 

@@ -1,4 +1,4 @@
-import { definePlayground, boolean, text } from '../../../../gallery';
+import { definePlayground, boolean, text } from '../../../../docs/gallery';
 import { DialogFooter } from './dialog-footer';
 
 export const meta = { title: 'DialogFooter', group: 'Ungrouped', size: 'lg' };

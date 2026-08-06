@@ -12,9 +12,6 @@
 // the app's entry chunk.
 import './style/css-custom-properties';
 
-export * from './library';
 export * from './style';
-export * from './foundation';
-export * from './gallery';
-export * from './gallery/demos';
-export * from './gallery/demo-sources';
+export * from './library';
+export * from './docs';

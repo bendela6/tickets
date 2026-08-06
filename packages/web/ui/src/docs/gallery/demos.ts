@@ -8,6 +8,6 @@ import { UI_SRC_ROOT } from './roots';
 export const packageDemos = collectDemos(
   rebaseGlobKeys(
     UI_SRC_ROOT,
-    import.meta.glob('../**/*.demo.tsx', { eager: true }) as Record<string, unknown>,
+    import.meta.glob('../../**/*.demo.tsx', { eager: true }) as Record<string, unknown>,
   ),
 );

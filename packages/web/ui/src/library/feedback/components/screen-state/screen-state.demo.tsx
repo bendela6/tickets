@@ -1,4 +1,4 @@
-import { definePlayground, select, text } from '../../../../gallery';
+import { definePlayground, select, text } from '../../../../docs/gallery';
 import { TONE_NAMES } from '../../../../style/tones';
 import { ICON_NAMES } from '../../../primitives/components/icon/registry';
 import { ScreenState } from './screen-state';

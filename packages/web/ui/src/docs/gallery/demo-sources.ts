@@ -5,7 +5,7 @@ import { UI_SRC_ROOT } from './roots';
 // resolves after the web route merges these with the app's own maps.
 export const packageDemoSources = rebaseGlobKeys(
   UI_SRC_ROOT,
-  import.meta.glob('../**/*.demo.tsx', {
+  import.meta.glob('../../**/*.demo.tsx', {
     query: '?raw',
     import: 'default',
     eager: true,
@@ -23,7 +23,7 @@ export const packageDemoSources = rebaseGlobKeys(
 // read them.
 export const packageComponentSources = rebaseGlobKeys(
   UI_SRC_ROOT,
-  import.meta.glob(['../**/*.{ts,tsx}', '!../**/*.demo.tsx', '!../**/*.test.{ts,tsx}'], {
+  import.meta.glob(['../../**/*.{ts,tsx}', '!../../**/*.demo.tsx', '!../../**/*.test.{ts,tsx}'], {
     query: '?raw',
     import: 'default',
   }) as Record<string, () => Promise<string>>,

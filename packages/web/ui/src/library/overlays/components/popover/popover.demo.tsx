@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { definePlayground, select } from '../../../../gallery';
+import { definePlayground, select } from '../../../../docs/gallery';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { Button } from '../../../primitives/components/button';
 

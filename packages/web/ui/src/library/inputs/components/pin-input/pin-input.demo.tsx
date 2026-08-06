@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { defineState, Slot } from '../../../../gallery';
+import { defineState, Slot } from '../../../../docs/gallery';
 import { PinInput } from './pin-input';
 
 export const meta = { title: 'PinInput', group: 'Inputs', size: 'sm' };

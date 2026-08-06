@@ -1,4 +1,4 @@
-import { SHADOWS } from '../../style/generated';
+import { SHADOWS } from '../../../style/generated';
 import { Sheet, SpecHeader, SpecRow, useTheme } from '../view';
 
 // SHADOWS is keyed by theme; a row wants one rung with both themes on it.

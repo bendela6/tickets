@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { definePlayground, text, boolean } from '../../../../gallery';
+import { definePlayground, text, boolean } from '../../../../docs/gallery';
 import { Button } from '../../../primitives/components/button';
 import { ConfirmDialog } from './dialog';
 

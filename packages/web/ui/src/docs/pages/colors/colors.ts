@@ -1,4 +1,4 @@
-import { HUES, PALETTE, TONE_HUE } from '../../style/generated';
+import { HUES, PALETTE, TONE_HUE } from '../../../style/generated';
 
 /**
  * Contrast analysis over the generated colour tables.

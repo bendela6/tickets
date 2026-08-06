@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { defineState, Slot } from '../../../../gallery';
+import { defineState, Slot } from '../../../../docs/gallery';
 import { DurationInput } from './duration-input';
 
 export const meta = { title: 'DurationInput', group: 'Inputs', size: 'sm' };

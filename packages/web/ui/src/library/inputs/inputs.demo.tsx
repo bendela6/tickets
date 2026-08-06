@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { defineState, Matrix, Slot } from '../../gallery';
+import { defineState, Matrix, Slot } from '../../docs/gallery';
 import type { ControlSize, Option } from './contract';
 import { Checkbox } from './components/checkbox';
 import { CheckboxGroup } from './components/checkbox-group';

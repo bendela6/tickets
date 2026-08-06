@@ -1,4 +1,4 @@
-import { definePlayground, text } from '../../../../gallery';
+import { definePlayground, text } from '../../../../docs/gallery';
 import { Button } from '../../../primitives/components/button';
 import { useToast } from './toast';
 

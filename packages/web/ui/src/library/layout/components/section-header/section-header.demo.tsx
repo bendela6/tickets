@@ -1,4 +1,4 @@
-import { definePlayground, text } from '../../../../gallery';
+import { definePlayground, text } from '../../../../docs/gallery';
 import { Progress } from '../../../feedback/components/progress';
 import { SectionHeader } from './section-header';
 

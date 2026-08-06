@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import { render } from '@testing-library/react';
 import { packageDemos } from './demos';
 import { DEFAULT_VIEW, TONE_SETS } from './states';
-import { ToastProvider } from '../library/feedback/components/toast';
-import { TooltipProvider } from '../library/overlays/components/tooltip';
+import { ToastProvider } from '../../library/feedback/components/toast';
+import { TooltipProvider } from '../../library/overlays/components/tooltip';
 import { isDemoError, type CollectedDemo } from './types';
 
 /**

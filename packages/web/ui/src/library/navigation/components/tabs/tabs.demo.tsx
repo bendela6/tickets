@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { definePlayground, select, number } from '../../../../gallery';
+import { definePlayground, select, number } from '../../../../docs/gallery';
 import { TONE_NAMES } from '../../../../style';
 import { Tabs } from './tabs';
 

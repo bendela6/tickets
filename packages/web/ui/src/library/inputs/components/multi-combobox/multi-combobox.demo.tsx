@@ -8,7 +8,7 @@ import {
   Slot,
   text,
   Wrap,
-} from '../../../../gallery';
+} from '../../../../docs/gallery';
 import { TONE_NAMES, type Tone } from '../../../../style';
 import { MultiCombobox } from './multi-combobox';
 import type { ControlSize, Option } from '../../contract';

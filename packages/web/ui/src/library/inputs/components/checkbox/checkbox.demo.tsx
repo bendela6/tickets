@@ -1,5 +1,5 @@
 import { useState, type ComponentProps } from 'react';
-import { boolean, definePlayground, select, text } from '../../../../gallery';
+import { boolean, definePlayground, select, text } from '../../../../docs/gallery';
 import { TONE_NAMES } from '../../../../style';
 import { Checkbox } from './checkbox';
 import type { ControlSize } from '../../contract';
