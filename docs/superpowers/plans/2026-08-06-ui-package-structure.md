@@ -359,7 +359,7 @@ export * from './components';
 
 The three rewrites you will make hundreds of times here:
 - inside `components/<ctrl>/` — `'../control'` becomes `'../../contract'`, `'../field'` becomes `'../../parts/field'`, `'../../../style'` becomes `'../../../../style'`, `'../../gallery'` becomes `'../../../../gallery'`
-- inside `parts/<part>/` — `'../control'` becomes `'../../contract'`, `'../../../style'` becomes `'../../../../style'`, `'../../popover'` becomes `'../../../overlays-not-yet/popover'` — **no**: `popover` is still at `library/popover/` until Task 5, so it is `'../../../popover'`
+- inside `parts/<part>/` — `'../control'` becomes `'../../contract'`, and `'../../../style'` becomes `'../../../../style'`. `popup/popup.tsx` imports Popover, which is still at `library/popover/` until Task 5, so its `'../../popover'` becomes `'../../../popover'` — one more level, same destination. Task 5 moves it again.
 - inside `library/forms/bindings`-to-be (still `library/forms/inputs/`) — `'../../../inputs/control'` becomes `'../../../inputs/contract'`
 
 - [ ] **Step 9: GREEN GATE, then confirm the app still compiles**
@@ -619,7 +619,9 @@ export * from './components';
 
 - [ ] **Step 4: Run the TYPECHECK-FIX LOOP**
 
-`library/forms/field-wrapper.tsx` imports `'../components/stack'` — after Task 2 that was `'../layout-not-yet'`; it is now `'../layout/components/stack'`. `docs/pages`-to-be (`src/foundation/view.tsx`) imports `SectionHeader` and `Pill` — those become `'../library/layout/components/section-header'` and `'../library/primitives/components/pill'`.
+`library/forms/field-wrapper.tsx` imports Stack. Task 2 left that as `'../stack'` (Stack sat at `library/stack/`); it now becomes `'../layout/components/stack'`.
+
+`src/foundation/view.tsx` — still at `src/foundation/` until Task 9 — imports `SectionHeader` and `Pill`. Those become `'../library/layout/components/section-header'` and `'../library/primitives/components/pill'`.
 
 - [ ] **Step 5: GREEN GATE, then commit**
 
@@ -683,35 +685,26 @@ export * from './field-wrapper';
 
 - [ ] **Step 4: Write the bindings barrel**
 
-`library/forms/bindings/index.ts` — all 25, so the barrel stops exporting an arbitrary 7 of them:
+`library/forms/bindings/index.ts` — **exactly the seven `forms/index.ts` exports today, no more and no fewer.**
 
 ```ts
+// The seven this package has always exported by name. The other eighteen
+// adapters reach consumers the way all twenty-five actually get used: through
+// `baseInputs`, which apps/web spreads and extends with its own `directory`
+// kind. Nothing anywhere imports a *Field by name from @tickets/ui — verified
+// across all 177 import sites — so widening this barrel would add symbols with
+// no caller, and narrowing it would remove symbols with no caller. Either is a
+// deliberate change to make on its own, not inside a 340-file move.
 export * from './text/text-field';
 export * from './textarea/textarea-field';
 export * from './number/number-field';
-export * from './password/password-field';
-export * from './pin/pin-field';
-export * from './duration/duration-field';
-export * from './slider/slider-field';
-export * from './range-slider/range-slider-field';
-export * from './rating/rating-field';
-export * from './checkbox/checkbox-field';
-export * from './checkbox-group/checkbox-group-field';
-export * from './toggle/toggle-field';
-export * from './radio/radio-field';
-export * from './segmented/segmented-field';
 export * from './select/select-field';
 export * from './multi-select/multi-select-field';
-export * from './tags/tags-field';
-export * from './file/file-field';
-export * from './date/date-field';
-export * from './time/time-field';
-export * from './date-range/date-range-field';
-export * from './color/color-field';
-export * from './icon/icon-field';
-export * from './user/user-field';
+export * from './toggle/toggle-field';
 export * from './json/json-field';
 ```
+
+**Do not add the other eighteen.** The public API must be byte-identical before and after this reorg — that is what makes Task 11's "nothing changed outside the package" check a real gate. A dropped export cannot hide behind an added one.
 
 - [ ] **Step 5: Rewrite the group barrel**
 
