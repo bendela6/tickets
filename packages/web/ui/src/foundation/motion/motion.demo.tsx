@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { ANIMATIONS, DURATIONS, EASINGS } from '../../generated';
+import { ANIMATIONS, DURATIONS, EASINGS } from '../../style/generated';
 import { specRows } from '../spec';
 import { NativeNote, Sheet, SpecHeader, SpecRow } from '../view';
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BREAKPOINTS } from '../../generated';
+import { BREAKPOINTS } from '../../style/generated';
 
 // Below these a docked panel cannot sit beside the content without squeezing it.
 //

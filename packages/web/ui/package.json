@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "tokens:build": "node scripts/generators/build-tokens.ts && node scripts/extract-safelist.mjs",
-    "tokens:verify": "node scripts/generators/build-tokens.ts && node scripts/extract-safelist.mjs && git diff --exit-code -- styles/generated src/generated"
+    "tokens:verify": "node scripts/generators/build-tokens.ts && node scripts/extract-safelist.mjs && git diff --exit-code -- styles/generated src/style/generated"
   },
   "dependencies": {
     "@tanstack/markdown": "^0.0.12",
