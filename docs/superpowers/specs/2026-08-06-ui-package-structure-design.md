@@ -171,7 +171,7 @@ Everything else is `git mv` plus import rewrites the compiler will find.
 | --- | --- |
 | `src/index.ts` | Three re-exports — `./style`, `./library`, `./docs` — where it named six things. The `sideEffects: false` comment about the eager demo globs moves with it and stays true. |
 | `library/index.ts` | Was `components/index.ts`. Re-exports eight groups instead of 34 component folders; `forms` and `table` join the list rather than being exported from the root. |
-| `docs/gallery/collect-demos.ts` | Derives `group` from the demo's path instead of reading `meta.group` — see "Deriving the group" below. `GROUP_ORDER` becomes `['Primitives', 'Inputs', 'Forms', 'Table', 'Layout', 'Navigation', 'Overlays', 'Feedback', 'App']` — the order the tree lists them in, most-reached-for first. `Ungrouped` disappears; every file is now somewhere. |
+| `docs/gallery/collect-demos.ts` | Derives `group` from the demo's path instead of reading `meta.group` — see "Deriving the group" below. `GROUP_ORDER` becomes `['Foundation', 'Primitives', 'Inputs', 'Forms', 'Table', 'Layout', 'Navigation', 'Overlays', 'Feedback', 'App']`. `Ungrouped` disappears; every file is now somewhere. Also gains `rebaseNestedGlobKeys`, because `rebaseGlobKeys` strips exactly one leading `../` and `import.meta.glob` reports the *shortest* specifier per match — from `src/docs/gallery/`, a `docs/pages/*` match arrives one level up and a `library/**` match two, so a single-strip rebase mangles one or the other. Harmless until something parses the path for meaning, which is exactly what this change starts doing. |
 | `docs/gallery/types.ts` | `DemoMeta` is the **authored** shape and loses `group`; it gains `deprecated?: boolean`. A new `CollectedMeta = DemoMeta & { group: string }` is what `CollectedDemo.meta` carries. Validation stops requiring a group and starts rejecting an authored one. See "Derived into meta, not beside it". |
 | `CLAUDE.md` | The design-system section names `src/generated/` as a tokens output directory; it becomes `src/style/generated/`. |
 | 64 × `packages/web/ui/**/*.demo.tsx` | `group:` deleted from every `meta`. The 7 deprecated components gain `deprecated: true`. |
@@ -192,9 +192,17 @@ Derivation reads those paths, so it covers both sets without either package
 knowing about the other:
 
 - `packages/web/ui/src/library/<group>/…` → that group, title-cased.
+- `packages/web/ui/src/docs/pages/…` → `Foundation`.
 - `apps/web/src/…` → `App`.
 - Anything else → a demo error card, the same treatment a demo missing its
   `title` already gets. A silent fallback group is what produced `Ungrouped`.
+
+The `Foundation` rule was missed when this spec was written and found during
+implementation: six of the sixty-eight demos are the token pages themselves,
+which live under `docs/pages/` rather than `library/`. Without a rule of their
+own they resolve to `null` and become error cards. So `GROUP_ORDER` has ten
+entries, not nine — `Foundation` leads it, because what the system is made of
+reads before what is built from it.
 
 `App` is the honest name for the four app-side demos: Cost Meter, Message
 Stream, Prompt Composer and StatusSelect are `apps/web` components, and no
