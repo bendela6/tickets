@@ -83,3 +83,35 @@ against `--radius-sm` is an alias at a different tier, not a stray literal.
 
 Per-control detail lives in the design file's own sections — read them there
 rather than restating them here, so there is one copy.
+
+## Every design file read (2026-08-06)
+
+The project holds four input-layer files, not one. Each was read; each changed
+or confirmed something. **They are not versioned together — the newer wins.**
+
+| file | what it gave |
+| --- | --- |
+| `19 Input Layer FINAL Soft Fill` | The contract. Revised 2026-08-06: floors up a rung, hover/active/toned-rest gain rims, hatch → 45% opacity. |
+| `22 Disabled ReadOnly and Tones` | Six candidates for not-editable, and the two that shipped. Read-only is a PRINTED ROW, not a quieter box. |
+| `21 Input Interactions` | Triggers use `:focus-visible`, text fields `:focus-within`. Still describes the hatch — predates the revision. |
+| `19 Soft Fill Library` | The WCAG 1.4.11 escape hatch. Its ladder (28/38/48) and 2px focus rim contradict FINAL — an earlier draft. |
+| `20 Form Layouts` | **No control changes** — "nothing about a control changes between layouts". |
+
+### What `20 Form Layouts` asks for, which does not exist yet
+
+Two rules, both form-layer rather than control-layer:
+
+- **Labels go left only at ≥520px container width** — "a 104px label column plus
+  a usable field needs that much. Below it, labels go on top." `FieldWrapper`
+  only knows labels-on-top, so there is no way to express the left form today.
+- **Two columns only past ~760px** — "otherwise the pairs are too narrow to hold
+  a date beside a duration."
+
+Seven containers are drawn (drawer, small modal, wide modal, page, inline panel,
+sheet, row-edit). Four carry all nine fields; three drop some and **each names
+what it sheds and why** — the honest-container idea is the substance of the
+file, and it is a screen decision rather than a component one.
+
+Building this means `FieldWrapper` gaining a label-placement axis and the form
+layouts gaining a width-aware column rule. It is a real feature, not a style
+pass, and it belongs to whoever owns the New Ticket and Detail screens.
