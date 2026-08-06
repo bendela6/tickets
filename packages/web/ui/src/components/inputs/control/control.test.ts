@@ -31,6 +31,45 @@ test('no control spells its own disabled opacity', async () => {
   expect(offenders).toEqual([]);
 });
 
+test('disabled and read-only never share one treatment', () => {
+  // Rating dimmed on neither: it applied `readOnlyMarkClass` on
+  // `locked = disabled || readOnly`, and `readOnlyMarkClass` is only
+  // `cursor-default pointer-events-none`. A disabled rating was therefore
+  // pixel-identical to a read-only one — no 45% dim, no grey.
+  //
+  // The states mean opposite things. Read-only says "this is real data you may
+  // read and copy"; disabled says "this is unavailable". Collapsing them into
+  // one `locked` flag for the VISUAL is always wrong, even though collapsing
+  // them for pointer-events is right, which is exactly why it survived review.
+  const { readdirSync, readFileSync, statSync } = require('node:fs') as typeof import('node:fs');
+  const { join } = require('node:path') as typeof import('node:path');
+  const root = 'src/components/inputs';
+  const BASES = new Set(['control', 'field', 'popup', 'option-row', 'chip', 'toggle', 'combobox-list']);
+
+  const offenders: string[] = [];
+  for (const dir of readdirSync(root)) {
+    const full = join(root, dir);
+    if (!statSync(full).isDirectory() || BASES.has(dir)) continue;
+    const files = readdirSync(full).filter(
+      (f) => /\.tsx?$/.test(f) && !/\.(test|demo)\./.test(f) && f !== 'index.ts',
+    );
+    if (!files.length) continue;
+    const src = files.map((f) => readFileSync(join(full, f), 'utf8')).join('\n');
+
+    // Only controls that actually collapse the two into one flag.
+    if (!/const locked = disabled \|\| readOnly/.test(src)) continue;
+    // Having done so, they must still dim on `disabled` alone — via the shared
+    // treatment, the `disabled:` variant, or the native attribute on a field
+    // whose chrome carries `disabledClass`.
+    const dims =
+      /disabled && disabledTreatment/.test(src) ||
+      /disabledClass|disabledAriaClass/.test(src) ||
+      /fieldClass\(/.test(src);
+    if (!dims) offenders.push(dir);
+  }
+  expect(offenders).toEqual([]);
+});
+
 test('no control restates a size the ladder already names', () => {
   // Checkbox, RadioGroup and Slider each carried their own {xs,md,lg} mark
   // table spelled `size-14 / size-16 / size-20` — character-identical to

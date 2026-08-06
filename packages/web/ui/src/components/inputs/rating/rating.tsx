@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { cn, focusRing, TONE_HUE } from '../../../style';
-import { CONTROL_LADDER, readOnlyMarkClass, type ControlProps } from '../control';
+import {
+  CONTROL_LADDER,
+  disabledTreatment,
+  readOnlyMarkClass,
+  type ControlProps,
+} from '../control';
 
 export type RatingProps = ControlProps<number> & {
   /** How many marks. Five unless a scale says otherwise. */
@@ -61,7 +66,17 @@ export function Rating({
       aria-disabled={disabled || undefined}
       aria-readonly={readOnly || undefined}
       onMouseLeave={() => setPreview(null)}
-      className={cn('flex items-center', rung.gap, locked && readOnlyMarkClass, className)}
+      className={cn(
+        'flex items-center',
+        rung.gap,
+        // Two states, two treatments — this used to apply only the read-only
+        // one on `locked`, so a DISABLED rating never dimmed and read as an
+        // ordinary printed value. Read-only means "real data you may read";
+        // disabled means "unavailable". They must not look the same.
+        disabled && disabledTreatment,
+        locked && readOnlyMarkClass,
+        className,
+      )}
     >
       {Array.from({ length: max }, (_unused, index) => {
         const position = index + 1;
