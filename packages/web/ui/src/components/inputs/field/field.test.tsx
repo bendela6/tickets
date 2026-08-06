@@ -136,3 +136,17 @@ test('a popup trigger rings on Tab but not on click; a text field rings on both'
   // The default stays `focus`, which is what a plain text field wants.
   expect(fieldClass()).toContain(focusRing('indigo', 'focus'));
 });
+
+test('a rimless field gets its rim back when the platform asks for one', () => {
+  // `19 Soft Fill Library`: a rimless fill is ~1.2:1 against the card, below
+  // WCAG 1.4.11's 3:1 boundary threshold. The whole Soft Fill idea is that a
+  // resting field has no edge — which is the one thing it cannot offer someone
+  // who needs boundaries drawn. So the rim returns under the platform's own
+  // signals rather than the default being compromised for everyone.
+  render(<Input aria-label="Title" value="" onChange={() => {}} />);
+  const { className } = screen.getByLabelText('Title');
+  expect(className).toContain('contrast-more:border-gray-7');
+  expect(className).toContain('forced-colors:border-gray-7');
+  // …and it is still rimless by default.
+  expect(className).toContain('border-transparent');
+});

@@ -156,6 +156,7 @@
 @source inline("checked:border-red-9");
 @source inline("checked:border-teal-9");
 @source inline("checked:border-yellow-9");
+@source inline("contrast-more:border-gray-7");
 @source inline("cursor-pointer");
 @source inline("dark:bg-gray-1");
 @source inline("dark:focus-visible:border-blue-9");
@@ -406,6 +407,7 @@
 @source inline("font-600");
 @source inline("font-mono");
 @source inline("font-sans");
+@source inline("forced-colors:border-gray-7");
 @source inline("gap-10");
 @source inline("gap-12");
 @source inline("gap-18");
