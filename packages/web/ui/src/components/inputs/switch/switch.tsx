@@ -2,7 +2,7 @@ import { forwardRef, type InputHTMLAttributes } from 'react';
 import { axis, cn, focusRing, HUES, over, TONE_HUE, variants } from '../../../style';
 import { Spinner } from '../../spinner';
 import { toggleRowClass } from '../toggle';
-import { readOnlyMarkClass, type ControlProps, type ControlSize } from '../control';
+import { readOnlyMarkClass, type ControlProps, type ControlSize, disabledClass } from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
@@ -57,7 +57,7 @@ const trackClass = variants({
         on: over(SCALE, (tone) => [
           `checked:bg-${tone}-9`,
           focusRing(tone),
-          'disabled:cursor-default disabled:border-1 disabled:border-gray-6 disabled:bg-surface-inset',
+          disabledClass,
         ]),
       },
     },

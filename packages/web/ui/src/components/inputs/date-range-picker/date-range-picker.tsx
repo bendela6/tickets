@@ -125,7 +125,6 @@ export function DateRangePicker({
         focus: 'focus-visible',
         className: cn(
           'flex w-full items-center justify-between gap-8 font-sans',
-          'disabled:pointer-events-none disabled:opacity-50',
           start ? 'text-gray-12' : 'text-gray-9',
           readOnly && readOnlyFieldClass,
           className,

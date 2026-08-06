@@ -116,7 +116,6 @@ export function Select({
         focus: 'focus-visible',
         className: cn(
           'flex w-full items-center justify-between gap-8 font-sans',
-          'disabled:pointer-events-none disabled:opacity-50',
           selected ? 'text-gray-12' : 'text-gray-9',
           readOnly && readOnlyFieldClass,
           className,

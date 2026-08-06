@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { cn, cursorRing, focusRing, TONE_HUE } from '../../../style';
-import { readOnlyMarkClass, type ControlProps } from '../control';
+import { readOnlyMarkClass, type ControlProps, disabledTreatment } from '../control';
 import { quantise } from '../slider';
 
 /** Which end is being moved. Named rather than indexed so the clamping below
@@ -141,7 +141,7 @@ export function RangeSlider({
   return (
     <div
       id={id}
-      className={cn('flex w-full items-center', disabled && 'opacity-50', locked && readOnlyMarkClass, className)}
+      className={cn('flex w-full items-center', disabled && disabledTreatment, locked && readOnlyMarkClass, className)}
     >
       <div
         ref={trackRef}

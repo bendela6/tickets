@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { cn, focusRing, TONE_HUE } from '../../../style';
 import { Icon } from '../../icon';
 import { Progress } from '../../progress';
-import { CONTROL_LADDER, type ControlProps } from '../control';
+import { CONTROL_LADDER, type ControlProps, disabledTreatment } from '../control';
 
 /**
  * A file as this control shows it — NOT the browser's `File`.
@@ -117,7 +117,7 @@ export function FileInput({
               // changed alone is easy to miss while your eyes are on the file.
               `border-${hue}-9 bg-${hue}-2 text-${hue}-11`
             : 'border-gray-7 bg-gray-4 text-gray-11 hover:bg-gray-5',
-          locked && 'cursor-default opacity-50 hover:bg-gray-4',
+          locked && cn(disabledTreatment, 'hover:bg-gray-4'),
         )}
       >
         <Icon name="file" size="sm" />

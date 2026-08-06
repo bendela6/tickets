@@ -49,7 +49,9 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             onClick={() => setRevealed((current) => !current)}
             className={[
               'shrink-0 rounded-control-xs px-4 font-mono text-11 text-gray-11',
-              'hover:text-gray-12 disabled:opacity-50',
+              // No disabled opacity of its own: the field around it already fades
+              // as one, and a second opacity on a child compounds with it.
+              'hover:text-gray-12',
               focusRing('indigo', 'focus-visible', 'inward'),
             ].join(' ')}
           >

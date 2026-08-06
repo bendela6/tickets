@@ -1,7 +1,7 @@
 import { forwardRef, type ChangeEvent, type InputHTMLAttributes, type ReactNode } from 'react';
 import { cn } from '../../../style';
 import { fieldClass, fieldState } from '../field';
-import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../control';
+import { readOnlyFieldClass, type ControlProps, type ControlSize, disabledTreatment } from '../control';
 
 /**
  * The single-line text control, on the shared control contract.
@@ -128,7 +128,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           // the raised ground and full-contrast text while the bare one dimmed:
           // the same prop, two different looks. Stated here instead, the way
           // NumberInput already does for its stepper.
-          disabled && 'opacity-45 text-gray-9 cursor-default',
+          disabled && disabledTreatment,
           readOnly && readOnlyFieldClass,
           className) })}
     >

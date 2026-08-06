@@ -107,7 +107,6 @@ export function TimePicker({
         focus: 'focus-visible',
         className: cn(
           'flex w-full items-center justify-between gap-8',
-          'disabled:pointer-events-none disabled:opacity-50',
           selected !== null ? 'text-gray-12' : 'text-gray-9',
           readOnly && readOnlyFieldClass,
           className,
