@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { defineState, Slot } from '../../../../docs/gallery';
 import { PinInput } from './pin-input';
 
-export const meta = { title: 'PinInput', group: 'Inputs', size: 'sm' };
+export const meta = { title: 'PinInput', size: 'sm' };
 
 /*
  * The cells are one VALUE, not six. Six independent fields would leave the

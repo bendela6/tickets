@@ -4,7 +4,6 @@ import { Sheet, SpecHeader, SpecRow } from '../view';
 
 export const meta = {
   title: 'Radius',
-  group: 'Foundation',
   order: 3,
   size: 'full',
   impl: ['./foundation.ts', './foundation-view.tsx'],

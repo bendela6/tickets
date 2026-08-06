@@ -1,6 +1,6 @@
 import { SessionKindGlyph } from './session-kind-glyph';
 
-export const meta = { title: 'Session Kind Glyph', group: 'Deprecated', order: 2, size: 'sm' };
+export const meta = { title: 'Session Kind Glyph', deprecated: true, order: 2, size: 'sm' };
 
 export const states = [
   {

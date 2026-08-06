@@ -51,7 +51,7 @@ const INTERACTIONS = [
   { name: 'content · read-only', props: { readOnly: true } },
 ] satisfies { name: string; props: Partial<SpecimenProps> }[];
 
-export const meta = { title: 'NumberInput', group: 'Inputs', size: 'md' };
+export const meta = { title: 'NumberInput', size: 'md' };
 
 export const states = [
   ...INTERACTIONS.map(({ name, props }) => ({

@@ -4,7 +4,7 @@ import { Progress } from './progress';
 
 const SIZES = ['sm', 'md', 'lg'] as const;
 
-export const meta = { title: 'Progress', group: 'Components', size: 'md' };
+export const meta = { title: 'Progress', size: 'md' };
 
 export const states = [
   { name: 'empty', render: () => <Progress value={0} className="w-160" /> },

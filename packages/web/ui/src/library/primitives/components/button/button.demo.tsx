@@ -20,7 +20,7 @@ const SIZES = [
   { size: 'lg', height: 44 },
 ] as const;
 
-export const meta = { title: 'Button', group: 'Components', order: 1, size: 'sm' };
+export const meta = { title: 'Button', order: 1, size: 'sm' };
 
 // `variant` decides how much of the tone a button spends and `tone` decides
 // which ramp, so neither axis means anything alone — a row of variants and a

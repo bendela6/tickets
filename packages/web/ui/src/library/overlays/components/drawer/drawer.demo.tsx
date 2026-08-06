@@ -4,7 +4,6 @@ import { Drawer, DrawerControls } from './drawer';
 
 export const meta = {
   title: 'Drawer',
-  group: 'Components',
   size: 'lg',
   impl: ['./drawer.tsx'],
 };

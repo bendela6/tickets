@@ -127,7 +127,7 @@ function PlaygroundFixture({
   );
 }
 
-export const meta = { title: 'DatePicker', group: 'Inputs', size: 'md' };
+export const meta = { title: 'DatePicker', size: 'md' };
 
 export const states = [content, interaction, sizes, tones];
 

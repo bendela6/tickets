@@ -59,7 +59,7 @@ function DropdownPlaygroundFixture({
   );
 }
 
-export const meta = { title: 'Dropdown', group: 'Components', size: 'md' };
+export const meta = { title: 'Dropdown', size: 'md' };
 
 export const states = [
   // The trigger axis — the reason the component exists. Each of these must

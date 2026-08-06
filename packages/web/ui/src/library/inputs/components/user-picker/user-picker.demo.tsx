@@ -3,7 +3,7 @@ import { defineState, Matrix, Slot } from '../../../../docs/gallery';
 import type { ControlSize } from '../../contract';
 import { UserPicker, type Person } from './user-picker';
 
-export const meta = { title: 'UserPicker', group: 'Inputs', size: 'md' };
+export const meta = { title: 'UserPicker', size: 'md' };
 
 /*
  * The most-used control in the product, so it gets the shortest path: avatar,

@@ -5,7 +5,6 @@ import { ICON_NAMES } from './registry';
 
 export const meta = {
   title: 'Icon',
-  group: 'Foundation',
   order: 2,
   size: 'full',
   // The glyphs themselves are the interesting half, so the Implementation tab

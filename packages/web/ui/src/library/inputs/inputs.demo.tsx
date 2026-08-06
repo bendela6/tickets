@@ -28,7 +28,7 @@ import { Textarea } from './components/textarea';
 import { TimePicker } from './components/time-picker';
 import { UserPicker, type Person } from './components/user-picker';
 
-export const meta = { title: 'All inputs', group: 'Inputs', size: 'full' };
+export const meta = { title: 'All inputs', size: 'full' };
 
 /*
  * Every control, side by side, against the axes they all share.

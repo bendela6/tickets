@@ -3,7 +3,7 @@ import { defineState, Matrix, Slot } from '../../../../docs/gallery';
 import type { ControlSize } from '../../contract';
 import { DateRangePicker, type DateRange } from './date-range-picker';
 
-export const meta = { title: 'DateRangePicker', group: 'Inputs', size: 'md' };
+export const meta = { title: 'DateRangePicker', size: 'md' };
 
 /*
  * A span of days. The half-picked state is the one that matters: "4 Aug →" with

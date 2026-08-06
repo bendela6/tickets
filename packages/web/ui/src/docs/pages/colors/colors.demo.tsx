@@ -15,7 +15,6 @@ import { HUES, PALETTE } from '../../../style/generated';
 
 export const meta = {
   title: 'Colors',
-  group: 'Foundation',
   order: 1,
   size: 'full',
   // The component is a `.ts` data + contrast module, so the convention

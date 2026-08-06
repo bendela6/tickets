@@ -5,7 +5,6 @@ import { NativeNote, Sheet, SpecHeader, SpecRow } from '../view';
 
 export const meta = {
   title: 'Motion',
-  group: 'Foundation',
   order: 5,
   size: 'full',
   impl: ['./foundation.ts', './foundation-view.tsx'],

@@ -4,7 +4,7 @@ import { Avatar } from './avatar';
 
 const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const;
 
-export const meta = { title: 'Avatar', group: 'Components', order: 5, size: 'sm' };
+export const meta = { title: 'Avatar', order: 5, size: 'sm' };
 
 export const states = [
   { name: 'round', render: () => <Avatar name="Mara K." /> },

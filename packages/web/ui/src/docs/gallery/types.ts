@@ -8,10 +8,19 @@ import type { DefinedState, StateView } from './states';
 export const DEMO_SIZES = ['sm', 'md', 'lg', 'full'] as const;
 export type DemoSize = (typeof DEMO_SIZES)[number];
 
+/**
+ * What a demo file authors.
+ *
+ * No `group`: the directory decides that, and a hand-typed one could disagree
+ * with where the file actually lives — which is how seven demos ended up in an
+ * `Ungrouped` bucket. `collectDemos` derives it and hands back `CollectedMeta`.
+ */
 export interface DemoMeta {
   title: string;
-  group: string;
   order?: number;
+  /** Badged in the sidebar and sorted last within its group. The directory
+   *  still decides the role; this only decides whether to warn. */
+  deprecated?: boolean;
   /** Container width for this demo's state cells. Defaults to 'md'. */
   size?: DemoSize;
   /**
@@ -21,6 +30,16 @@ export interface DemoMeta {
    */
   impl?: string | string[];
 }
+
+/**
+ * What `collectDemos` hands back: the authored fields plus the derived group.
+ *
+ * The group lives here rather than beside `meta` because every reader already
+ * looks for it here — @tickets/playground's sidebar and command palette both
+ * group by `d.meta.group` in shipped code. Deriving INTO meta changes who
+ * writes the field without touching anyone who reads it.
+ */
+export type CollectedMeta = DemoMeta & { group: string };
 
 /** The pre-`defineState` literal. Still valid, still ignored when the demo has
  *  a playground to derive axes from — see `defineState` for why. */
@@ -53,7 +72,7 @@ export interface DemoModule {
 }
 
 export type CollectedDemo =
-  | { path: string; slug: string; meta: DemoMeta; states: CollectedState[]; playground?: AnyPlayground }
+  | { path: string; slug: string; meta: CollectedMeta; states: CollectedState[]; playground?: AnyPlayground }
   | { path: string; error: string };
 
 export function isDemoError(d: CollectedDemo): d is { path: string; error: string } {

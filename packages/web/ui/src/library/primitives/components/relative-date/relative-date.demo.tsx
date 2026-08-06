@@ -4,7 +4,7 @@ import { RelativeDate } from './relative-date';
 // Fixed reference instant so RelativeDate output is deterministic in the gallery.
 const NOW = new Date('2026-07-06T00:00:00Z');
 
-export const meta = { title: 'Relative Date', group: 'Deprecated', order: 7, size: 'sm' };
+export const meta = { title: 'Relative Date', deprecated: true, order: 7, size: 'sm' };
 
 export const states = [
   {

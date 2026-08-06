@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { defineState, Slot } from '../../../../docs/gallery';
 import { DurationInput } from './duration-input';
 
-export const meta = { title: 'DurationInput', group: 'Inputs', size: 'sm' };
+export const meta = { title: 'DurationInput', size: 'sm' };
 
 /*
  * A LENGTH of time, not a clock time. 14:30 is half past two; 2h30 is two and a

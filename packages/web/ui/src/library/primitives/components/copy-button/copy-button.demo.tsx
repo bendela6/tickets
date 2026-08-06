@@ -1,7 +1,7 @@
 import { definePlayground, number, text } from '../../../../docs/gallery';
 import { CopyButton } from './copy-button';
 
-export const meta = { title: 'CopyButton', group: 'Deprecated', size: 'lg' };
+export const meta = { title: 'CopyButton', deprecated: true, size: 'lg' };
 
 export const states = [
   {

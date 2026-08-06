@@ -3,7 +3,7 @@ import { defineState, Matrix, Slot } from '../../../../docs/gallery';
 import type { ControlSize, Option } from '../../contract';
 import { Select } from './select';
 
-export const meta = { title: 'Select', group: 'Inputs', size: 'md' };
+export const meta = { title: 'Select', size: 'md' };
 
 /*
  * The plain single-select — the one the library was missing.

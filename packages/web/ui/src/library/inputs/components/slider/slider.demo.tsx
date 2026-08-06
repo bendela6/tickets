@@ -90,7 +90,7 @@ function DemoSlider({
   );
 }
 
-export const meta = { title: 'Slider', group: 'Inputs', size: 'sm' };
+export const meta = { title: 'Slider', size: 'sm' };
 
 export const states = [
   // Content: the thumb at both ends and in the middle.

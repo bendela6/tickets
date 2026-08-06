@@ -166,7 +166,7 @@ const tones = defineState({
   ),
 });
 
-export const meta = { title: 'MultiCombobox', group: 'Inputs', size: 'lg' };
+export const meta = { title: 'MultiCombobox', size: 'lg' };
 
 export const states = [content, sizes, interaction, tones];
 

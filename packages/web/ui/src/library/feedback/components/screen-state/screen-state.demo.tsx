@@ -3,7 +3,7 @@ import { TONE_NAMES } from '../../../../style/tones';
 import { ICON_NAMES } from '../../../primitives/components/icon/registry';
 import { ScreenState } from './screen-state';
 
-export const meta = { title: 'ScreenState', group: 'Ungrouped', size: 'lg' };
+export const meta = { title: 'ScreenState', size: 'lg' };
 
 export const states = [
   {

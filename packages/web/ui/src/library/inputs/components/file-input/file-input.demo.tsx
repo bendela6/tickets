@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { defineState, Slot } from '../../../../docs/gallery';
 import { FileInput, type UploadFile } from './file-input';
 
-export const meta = { title: 'FileInput', group: 'Inputs', size: 'md' };
+export const meta = { title: 'FileInput', size: 'md' };
 
 /*
  * A drop target that is ALSO a button — both, not either. Dropping is faster

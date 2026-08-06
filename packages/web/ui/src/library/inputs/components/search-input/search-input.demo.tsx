@@ -3,7 +3,7 @@ import { defineState, Matrix, Slot } from '../../../../docs/gallery';
 import type { ControlSize } from '../../contract';
 import { SearchInput } from './search-input';
 
-export const meta = { title: 'SearchInput', group: 'Inputs', size: 'md' };
+export const meta = { title: 'SearchInput', size: 'md' };
 
 /*
  * One leading glyph, and a trailing gutter that says three different things.

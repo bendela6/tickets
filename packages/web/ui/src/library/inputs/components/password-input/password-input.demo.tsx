@@ -3,7 +3,7 @@ import { defineState, Matrix, Slot } from '../../../../docs/gallery';
 import type { ControlSize } from '../../contract';
 import { PasswordInput } from './password-input';
 
-export const meta = { title: 'PasswordInput', group: 'Inputs', size: 'md' };
+export const meta = { title: 'PasswordInput', size: 'md' };
 
 /*
  * A secret, with a reveal.

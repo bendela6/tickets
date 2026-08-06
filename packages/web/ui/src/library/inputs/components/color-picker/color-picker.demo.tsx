@@ -4,7 +4,7 @@ import { Chip } from '../../parts/chip';
 import type { ControlSize } from '../../contract';
 import { ColorPicker } from './color-picker';
 
-export const meta = { title: 'ColorPicker', group: 'Inputs', size: 'md' };
+export const meta = { title: 'ColorPicker', size: 'md' };
 
 /*
  * Eleven ramps and nothing else — no spectrum, no eyedropper. Every colour here

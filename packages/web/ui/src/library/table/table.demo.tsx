@@ -12,7 +12,7 @@ import { LinkColumn } from './columns/link-column';
 import { NumberColumn } from './columns/number-column';
 import { TextColumn } from './columns/text-column';
 
-export const meta = { title: 'Table', group: 'Components', size: 'full' };
+export const meta = { title: 'Table', size: 'full' };
 
 type Row = {
   id: string;

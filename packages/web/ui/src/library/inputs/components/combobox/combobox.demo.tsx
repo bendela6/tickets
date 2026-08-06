@@ -95,7 +95,7 @@ function Fixture({
   );
 }
 
-export const meta = { title: 'Combobox', group: 'Inputs', size: 'lg' };
+export const meta = { title: 'Combobox', size: 'lg' };
 
 // What the trigger has to draw, which is where this component actually breaks.
 // A label longer than its box must be cut by the box rather than push the

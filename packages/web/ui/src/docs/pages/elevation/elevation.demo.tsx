@@ -10,7 +10,6 @@ const ROWS = Object.keys(SHADOWS.light).map((rung) => ({
 
 export const meta = {
   title: 'Elevation',
-  group: 'Foundation',
   order: 4,
   size: 'full',
   impl: ['./foundation.ts', './foundation-view.tsx'],
