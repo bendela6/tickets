@@ -206,10 +206,13 @@ describe('prepareDemos duplicate-slug guard', () => {
 
 describe('rebaseGlobKeys', () => {
   it('strips the leading `../` and prefixes the workspace root', () => {
-    const keys = { '../components/pill/pill.tsx': 1, '../components/icon/icon.tsx': 2 };
+    const keys = {
+      '../library/primitives/components/pill/pill.tsx': 1,
+      '../library/primitives/components/icon/icon.tsx': 2,
+    };
     expect(rebaseGlobKeys(UI_SRC_ROOT, keys)).toEqual({
-      'packages/web/ui/src/components/pill/pill.tsx': 1,
-      'packages/web/ui/src/components/icon/icon.tsx': 2,
+      'packages/web/ui/src/library/primitives/components/pill/pill.tsx': 1,
+      'packages/web/ui/src/library/primitives/components/icon/icon.tsx': 2,
     });
   });
 

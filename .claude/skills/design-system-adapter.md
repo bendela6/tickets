@@ -104,11 +104,14 @@ here should need to leak back into those skills.
 
 ## componentConventions
 
-- Components live in `packages/web/ui/src/components`. A handful of
-  app-specific ones remain in `apps/web/src/ui`.
-- **The ten form controls are in `components/inputs/`**, with the four pieces
-  only they use: `control` (the contract), `field` (the bordered chrome),
-  `combobox-list` (the popup) and `toggle` (the shared label row).
+- Components live in `packages/web/ui/src/library/<group>/components/` —
+  eight groups: primitives, inputs, forms, table, layout, navigation,
+  overlays, feedback. A handful of app-specific ones remain in
+  `apps/web/src/ui`.
+- **The ten form controls are in `library/inputs/components/`.** The contract
+  is promoted to `library/inputs/contract.ts`; the pieces only the controls
+  use — `field` (the bordered chrome), `combobox-list` (the popup) and
+  `toggle` (the shared label row) — sit in `library/inputs/parts/`.
 - **Every control answers to `ControlProps<T>`** — `value` in,
   `onChange(value, event?)` out, plus `size`/`tone`/`disabled`/`readOnly`. Two
   parts of that are easy to get wrong from outside:
@@ -116,11 +119,11 @@ here should need to leak back into those skills.
     extend a row range; a value-only signature broke that silently;
   - `tone` unset is the resting neutral state, NOT a quiet `'primary'`. The
     bordered fields leave it undefined; only the mark controls default.
-- The layer above is `forms/inputs/*` — `XField`, bound to `@tickets/form`. The
-  seam anything GENERATING a form targets is `InputKind` + `ValueOfKind` in
-  `forms/registry.ts`, derived from `baseInputs` with a compile-time drift
-  guard. Those kind strings are serialised into stored FormConfigs, so renaming
-  one is a data migration.
+- The layer above is `library/forms/bindings/*` — `XField`, bound to
+  `@tickets/form`. The seam anything GENERATING a form targets is `InputKind` +
+  `ValueOfKind` in `library/forms/registry.ts`, derived from `baseInputs` with
+  a compile-time drift guard. Those kind strings are serialised into stored
+  FormConfigs, so renaming one is a data migration.
 - Headless layer idiom: React hooks + radix-ui primitives (behavior/state
   via hooks and radix, markup/styling layered on top).
 - Variant styling: Tailwind utility classes composed through a `cn()`

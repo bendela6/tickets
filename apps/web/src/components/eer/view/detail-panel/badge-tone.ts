@@ -2,7 +2,7 @@ import type { Tone } from '@tickets/ui';
 
 /**
  * What a panel badge is labelling. This vocabulary stays in apps/web —
- * `packages/web/ui/src/components/domain-free.test.ts` fails the build if a
+ * `packages/web/ui/src/library/domain-free.test.ts` fails the build if a
  * library component names a domain concept, and these four are exactly that.
  *
  * Named `BadgeTone`, not `Tone`, because @tickets/ui exports a `Tone` of its
