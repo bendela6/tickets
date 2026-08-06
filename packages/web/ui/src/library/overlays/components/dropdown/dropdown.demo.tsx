@@ -1,7 +1,7 @@
-import { definePlayground, boolean, select } from '../../gallery';
-import { Avatar } from '../primitives/components/avatar';
-import { Button } from '../primitives/components/button';
-import { Pill } from '../primitives/components/pill';
+import { definePlayground, boolean, select } from '../../../../gallery';
+import { Avatar } from '../../../primitives/components/avatar';
+import { Button } from '../../../primitives/components/button';
+import { Pill } from '../../../primitives/components/pill';
 import { Dropdown, type DropdownAlign, type DropdownPadding, type DropdownSide } from './dropdown';
 
 // The coverage axes, as data — every cell below is derived from these, so

@@ -1,8 +1,8 @@
 import { createContext, useContext, useRef, type ReactNode } from 'react';
 import { Dialog as RadixDialog } from 'radix-ui';
-import { cn } from '../../style/cn';
-import { Icon } from '../primitives/components/icon';
-import { usePanelWidth, usePersistedFlag, useViewportUnder, type PanelSide } from '../panel';
+import { cn } from '../../../../style/cn';
+import { Icon } from '../../../primitives/components/icon';
+import { usePanelWidth, usePersistedFlag, useViewportUnder, type PanelSide } from '../../parts/panel';
 
 export const DRAWER_SIZES = { sm: 288, md: 400, lg: 620 } as const;
 

@@ -1,5 +1,5 @@
 import { useState, type ReactElement, type ReactNode } from 'react';
-import { variants } from '../../style';
+import { variants } from '../../../../style';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
 
 /**

@@ -1,14 +1,14 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { cn } from '../../style/cn';
+import { cn } from '../../../../style/cn';
 import { Drawer } from '../drawer';
-import { Icon } from '../primitives/components/icon';
+import { Icon } from '../../../primitives/components/icon';
 import {
   useIsNarrow,
   usePanelWidth,
   usePersistedFlag,
   type PanelBreakpoint,
   type PanelSide,
-} from '../panel';
+} from '../../parts/panel';
 
 export type CollapsedTo = 'rail' | 'edge';
 

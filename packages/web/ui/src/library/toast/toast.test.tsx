@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
-import { Drawer } from '../drawer';
+import { Drawer } from '../overlays/components/drawer';
 import { ToastProvider, useToast } from './toast';
 
 function Harness({ onUndo }: { onUndo?: () => void } = {}) {
