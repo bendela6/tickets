@@ -266,7 +266,6 @@ export function DatePicker({
         focus: 'focus-visible',
             className: cn(
               'flex w-full items-center justify-between gap-8 font-sans',
-              'disabled:pointer-events-none disabled:opacity-50',
               selected ? 'text-gray-12' : 'text-gray-9',
               // Ground and affordances change; the text keeps full contrast,
               // because the whole point is that the value stays readable.

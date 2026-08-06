@@ -1,5 +1,5 @@
 import { cn, focusRing, TONE_HUE } from '../../../style';
-import { CONTROL_LADDER, readOnlyMarkClass, type ControlProps, type Option } from '../control';
+import { CONTROL_LADDER, readOnlyMarkClass, type ControlProps, type Option, disabledTreatment } from '../control';
 
 export type SegmentedControlProps = ControlProps<string> & {
   options: Option[];
@@ -56,7 +56,7 @@ export function SegmentedControl({
         'relative isolate inline-flex bg-gray-5 p-2',
         rung.height,
         rung.radius,
-        disabled && 'opacity-50',
+        disabled && disabledTreatment,
         locked && readOnlyMarkClass,
         className,
       )}
@@ -97,7 +97,7 @@ export function SegmentedControl({
               // spill over the segment next door and point at both.
               focusRing(hue, 'focus-visible', 'inward'),
               isSelected ? 'font-500 text-gray-12' : 'text-gray-11 hover:text-gray-12',
-              option.disabled && 'cursor-default opacity-50',
+              option.disabled && disabledTreatment,
             )}
           >
             {option.label}

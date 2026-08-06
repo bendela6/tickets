@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { cn } from '../../../style';
-import { CONTROL_LADDER, readOnlyFieldClass, type ControlProps } from '../control';
+import { CONTROL_LADDER, readOnlyFieldClass, type ControlProps, disabledTreatment } from '../control';
 import { fieldClass, fieldState } from '../field';
 
 export type PinInputProps = ControlProps<string> & {
@@ -101,7 +101,7 @@ export function PinInput({
       role="group"
       aria-label={label}
       aria-invalid={field.invalid || undefined}
-      className={cn('flex', rung.gap, disabled && 'opacity-50', className)}
+      className={cn('flex', rung.gap, disabled && disabledTreatment, className)}
     >
       {characters.map((character, index) => (
         <input

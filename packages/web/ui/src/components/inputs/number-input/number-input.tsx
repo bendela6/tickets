@@ -2,7 +2,7 @@ import { forwardRef } from 'react';
 import { cn } from '../../../style';
 import { fieldClass, fieldState } from '../field';
 import { Icon } from '../../icon';
-import { readOnlyFieldClass, type ControlProps, type ControlSize } from '../control';
+import { readOnlyFieldClass, type ControlProps, type ControlSize, disabledTreatment } from '../control';
 
 /**
  * The shared control contract at `T = number | null`, plus the four props only
@@ -98,7 +98,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
           // reach the edge. With it, the seam and the arrows floated 12px inside
           // the field and read as though they belonged to something else.
           'flex w-full items-stretch pr-0',
-          disabled && 'pointer-events-none opacity-50',
+          disabled && disabledTreatment,
           // Composed here rather than through Tailwind's `read-only:` variant:
           // that variant compiles to the CSS `:read-only` pseudo-class, which
           // matches every element that is not user-editable — this wrapper

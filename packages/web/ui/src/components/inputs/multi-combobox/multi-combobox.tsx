@@ -106,7 +106,6 @@ export function MultiCombobox({
             scale: field.scale,
             className: cn(
               'flex w-full items-center gap-6 px-10 text-left',
-              'disabled:pointer-events-none disabled:opacity-50',
               // Merged after the field's own border and fill so it wins them,
               // and before the caller's className so the caller still wins.
               // Deliberately not the disabled look: the text keeps full

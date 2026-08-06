@@ -146,6 +146,37 @@ export type ControlProps<T> = {
  * `fieldClass` is applied to on NumberInput and an adorned Input. It would be
  * permanently on there.
  */
+/**
+ * Not applicable to you — one definition, three spellings.
+ *
+ * The design: "floor rung 5 at 45% opacity — chrome and value fade together".
+ * One opacity, no second palette to maintain, and it applies to a mark or a
+ * swatch as readily as to a field, which is why it replaced the 45° hatch.
+ *
+ * It lives here beside the read-only treatments because it was previously
+ * written out at FIFTEEN call sites with THREE different answers: `fieldClass`
+ * said 45%, nine triggers said 50% inline (and won, being merged later), and
+ * the marks still tinted a ground and drew a border — the pre-Soft-Fill
+ * treatment, which never went through `fieldClass` and so never got migrated.
+ * Read-only has never had that problem, because it has always been a constant.
+ *
+ * Spelled out literally rather than built from a list: Tailwind's scanner reads
+ * source text, so an interpolated `disabled:${c}` would compile to nothing.
+ */
+const DISABLED_VISUAL = 'opacity-45 text-gray-9 cursor-default pointer-events-none';
+
+/** For a control that applies it conditionally in TS rather than by variant. */
+export const disabledTreatment = DISABLED_VISUAL;
+
+/** For an element carrying the real `disabled` attribute. */
+export const disabledClass =
+  'disabled:opacity-45 disabled:text-gray-9 disabled:cursor-default disabled:pointer-events-none';
+
+/** For a role-based control that can only say `aria-disabled` — a slider div,
+ *  a rating group. HTML's attribute does not reach those roles. */
+export const disabledAriaClass =
+  'aria-disabled:opacity-45 aria-disabled:text-gray-9 aria-disabled:cursor-default aria-disabled:pointer-events-none';
+
 export const readOnlyFieldClass =
   // Soft Fill's read-only is the absence of the floor, not a different floor.
   // Every other state fills; this one does not, and shows a single rung-7 rule

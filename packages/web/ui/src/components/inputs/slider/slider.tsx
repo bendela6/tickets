@@ -1,6 +1,6 @@
 import { useCallback, useRef, type KeyboardEvent, type PointerEvent } from 'react';
 import { axis, cn, focusRing, HUES, over, TONE_HUE, variants } from '../../../style';
-import { readOnlyMarkClass, type ControlProps } from '../control';
+import { readOnlyMarkClass, type ControlProps, disabledAriaClass } from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
@@ -88,7 +88,7 @@ const rootClass = variants({
     root: {
       default: 'on',
       options: {
-        on: over(SCALE, () => ['aria-disabled:cursor-default aria-disabled:opacity-50']),
+        on: over(SCALE, () => [disabledAriaClass]),
       },
     },
     size: {

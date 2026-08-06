@@ -92,7 +92,6 @@ export function Combobox({
         focus: 'focus-visible',
               className: cn(
                 'flex w-full items-center justify-between gap-8 font-sans',
-                'disabled:opacity-50 disabled:pointer-events-none',
                 'pr-28',
                 // Last, so it wins the border and the ground it is overriding.
                 // Deliberately not the disabled look — the text keeps full

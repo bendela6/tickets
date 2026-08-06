@@ -1,5 +1,5 @@
 import { axis, focusRing, HUES, over, TONE_HUE, variants, type Hue } from '../../../style';
-import { CONTROL_LADDER, type ControlSize } from '../control';
+import { CONTROL_LADDER, type ControlSize, disabledClass } from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
@@ -82,7 +82,7 @@ export const fieldClass = variants({
     //
     // `cursor-default`, never `not-allowed`: the barred circle reads as a
     // refusal aimed at the person rather than a statement about the field.
-    'disabled:opacity-45 disabled:text-gray-9 disabled:cursor-default',
+    disabledClass,
   ],
   config: {
     state: {
