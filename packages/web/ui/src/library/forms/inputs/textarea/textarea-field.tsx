@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { Textarea } from '../../../inputs/textarea';
+import { Textarea } from '../../../inputs/components/textarea';
 
 export type TextAreaFieldConfig = {
   rows?: number;

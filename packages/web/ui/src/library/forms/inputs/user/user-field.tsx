@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { UserPicker, type Person } from '../../../inputs/user-picker';
+import { UserPicker, type Person } from '../../../inputs/components/user-picker';
 
 export type UserFieldConfig = {
   /** Resolved people. An author may declare an AsyncResolver; the engine settles

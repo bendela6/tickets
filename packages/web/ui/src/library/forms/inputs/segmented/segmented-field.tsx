@@ -1,6 +1,6 @@
 import type { InputProps } from '@tickets/form';
-import type { Option } from '../../../inputs/control';
-import { SegmentedControl } from '../../../inputs/segmented-control';
+import type { Option } from '../../../inputs/contract';
+import { SegmentedControl } from '../../../inputs/components/segmented-control';
 
 export type SegmentedFieldConfig = {
   options?: Option[];

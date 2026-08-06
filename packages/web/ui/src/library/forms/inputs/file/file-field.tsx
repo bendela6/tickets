@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { FileInput, type UploadFile } from '../../../inputs/file-input';
+import { FileInput, type UploadFile } from '../../../inputs/components/file-input';
 
 export type FileFieldConfig = {
   accept?: string;

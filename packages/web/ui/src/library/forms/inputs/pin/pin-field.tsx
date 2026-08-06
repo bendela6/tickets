@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { PinInput } from '../../../inputs/pin-input';
+import { PinInput } from '../../../inputs/components/pin-input';
 
 export type PinFieldConfig = { length?: number };
 

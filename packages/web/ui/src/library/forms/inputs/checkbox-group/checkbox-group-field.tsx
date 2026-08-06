@@ -1,6 +1,6 @@
 import type { InputProps } from '@tickets/form';
-import { CheckboxGroup } from '../../../inputs/checkbox-group';
-import type { Option } from '../../../inputs/control';
+import { CheckboxGroup } from '../../../inputs/components/checkbox-group';
+import type { Option } from '../../../inputs/contract';
 
 export type CheckboxGroupFieldConfig = {
   options?: Option[];

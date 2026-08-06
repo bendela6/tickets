@@ -1,6 +1,6 @@
 import type { InputProps } from '@tickets/form';
-import type { Option } from '../../../inputs/control';
-import { RadioGroup } from '../../../inputs/radio-group';
+import type { Option } from '../../../inputs/contract';
+import { RadioGroup } from '../../../inputs/components/radio-group';
 
 export type RadioFieldConfig = {
   /** Resolved options — an author may declare an AsyncResolver, and the engine

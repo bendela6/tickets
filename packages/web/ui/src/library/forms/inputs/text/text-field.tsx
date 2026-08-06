@@ -1,6 +1,6 @@
 import type { InputProps } from '@tickets/form';
 import { cn } from '../../../../style';
-import { Input } from '../../../inputs/input';
+import { Input } from '../../../inputs/components/input';
 
 export type TextFieldConfig = {
   placeholder?: string;

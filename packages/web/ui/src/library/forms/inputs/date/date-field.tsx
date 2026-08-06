@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { DatePicker } from '../../../inputs/date-picker';
+import { DatePicker } from '../../../inputs/components/date-picker';
 
 export type DateFieldConfig = {
   placeholder?: string;

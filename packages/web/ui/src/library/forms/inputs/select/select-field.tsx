@@ -1,6 +1,6 @@
 import type { InputProps } from '@tickets/form';
-import type { Option } from '../../../inputs/control';
-import { Combobox } from '../../../inputs/combobox';
+import type { Option } from '../../../inputs/contract';
+import { Combobox } from '../../../inputs/components/combobox';
 
 export type SelectFieldConfig = {
   /** Resolved options. An author may declare this as an AsyncResolver in the

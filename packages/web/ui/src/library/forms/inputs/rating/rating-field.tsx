@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { Rating } from '../../../inputs/rating';
+import { Rating } from '../../../inputs/components/rating';
 
 export type RatingFieldConfig = { max?: number; label?: string; showValue?: boolean };
 

@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { TimePicker } from '../../../inputs/time-picker';
+import { TimePicker } from '../../../inputs/components/time-picker';
 
 export type TimeFieldConfig = { stepMinutes?: number; placeholder?: string };
 
