@@ -1,11 +1,7 @@
-export * from './field-wrapper';
+// Fields and forms: the labelled row, one adapter per control, and the
+// registry the @tickets/form engine consumes.
+export * from './components';
+export * from './bindings';
 export * from './root-wrapper';
 export * from './layouts';
 export * from './registry';
-export * from './inputs/text/text-field';
-export * from './inputs/textarea/textarea-field';
-export * from './inputs/number/number-field';
-export * from './inputs/select/select-field';
-export * from './inputs/multi-select/multi-select-field';
-export * from './inputs/toggle/toggle-field';
-export * from './inputs/json/json-field';

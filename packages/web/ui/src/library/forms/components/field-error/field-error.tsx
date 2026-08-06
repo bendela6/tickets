@@ -1,5 +1,5 @@
 import type { HTMLAttributes } from 'react';
-import { cn } from '../../style/cn';
+import { cn } from '../../../../style/cn';
 
 export function FieldError({ className, ...rest }: HTMLAttributes<HTMLParagraphElement>) {
   return (

@@ -1,7 +1,7 @@
-import { boolean, definePlayground, text } from '../../gallery';
+import { boolean, definePlayground, text } from '../../../../gallery';
 import { FieldLabel } from './field-label';
 import { FieldError } from '../field-error';
-import { Input } from '../inputs/components/input';
+import { Input } from '../../../inputs/components/input';
 
 export const meta = { title: 'FieldLabel', group: 'Deprecated', size: 'md' };
 

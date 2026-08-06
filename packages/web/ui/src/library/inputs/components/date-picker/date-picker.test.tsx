@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import { DatePicker } from './date-picker';
-import { FieldLabel } from '../../../field-label';
+import { FieldLabel } from '../../../forms/components/field-label';
 
 test('opens to the value month and emits the picked day', async () => {
   const onChange = vi.fn();

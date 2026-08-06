@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { FieldError } from '../../../field-error';
+import { FieldError } from '../../components/field-error';
 import { Textarea } from '../../../inputs/components/textarea';
 import { Stack } from '../../../layout/components/stack';
 
