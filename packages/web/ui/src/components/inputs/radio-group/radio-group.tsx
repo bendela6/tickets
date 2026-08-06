@@ -1,7 +1,13 @@
 import { useId } from 'react';
 import { axis, cn, HUES, over, TONE_HUE, variants } from '../../../style';
 import { toggleGlyphClass, toggleMarkClass, toggleRowClass } from '../toggle';
-import { readOnlyMarkClass, type ControlProps, type ControlSize, type Option } from '../control';
+import {
+  CONTROL_LADDER,
+  readOnlyMarkClass,
+  type ControlProps,
+  type ControlSize,
+  type Option,
+} from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
@@ -71,7 +77,14 @@ const optionClass = variants({
 
 // Circle and inner dot scale together: the dot stays half the circle so the
 // 2px accent ring around it reads the same at every rung.
-const CIRCLE: Record<ControlSize, string> = { xs: 'size-14', md: 'size-16', lg: 'size-20' };
+// The ladder's mark column, not a copy of it — a radio and a checkbox at the
+// same size have to be the same circle, and that only stays true if both read
+// the one table.
+const CIRCLE: Record<ControlSize, string> = {
+  xs: CONTROL_LADDER.xs.mark,
+  md: CONTROL_LADDER.md.mark,
+  lg: CONTROL_LADDER.lg.mark,
+};
 const DOT: Record<ControlSize, string> = { xs: 'size-6', md: 'size-8', lg: 'size-10' };
 const ROW_GAP: Record<ControlSize, string> = { xs: 'gap-12', md: 'gap-16', lg: 'gap-20' };
 // Cards carry their own padding, so they sit closer together than bare rows.

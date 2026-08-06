@@ -1,4 +1,6 @@
 
+import { CONTROL_LADDER } from './control';
+
 test('no control spells its own disabled opacity', async () => {
   // The failure this prevents: disabled was written out at fifteen call sites
   // with THREE different answers — fieldClass said 45%, nine triggers said 50%
@@ -24,6 +26,43 @@ test('no control spells its own disabled opacity', async () => {
       // "this control is unavailable", and catching them would push the next
       // person to delete a real treatment to quiet a test.
       if (/disabled:opacity-/.test(src)) offenders.push(`${dir}/${file}`);
+    }
+  }
+  expect(offenders).toEqual([]);
+});
+
+test('no control restates a size the ladder already names', () => {
+  // Checkbox, RadioGroup and Slider each carried their own {xs,md,lg} mark
+  // table spelled `size-14 / size-16 / size-20` — character-identical to
+  // `CONTROL_LADDER.*.mark`. Slider's even had a comment saying "the mark
+  // ladder" directly above the copy.
+  //
+  // Agreement by coincidence is the failure mode: nothing was wrong on screen,
+  // and nothing would have been wrong until someone retuned the ladder and
+  // watched the fields move while the checkboxes stayed put. A tabulation found
+  // this, not a review — three files that each look correct alone.
+  const { readdirSync, readFileSync, statSync } = require('node:fs') as typeof import('node:fs');
+  const { join } = require('node:path') as typeof import('node:path');
+  const root = 'src/components/inputs';
+
+  // Every literal the ladder owns. A control may still write a size the ladder
+  // does NOT name — Switch's thumb is 12/14/18 because a thumb is inset in a
+  // track, which is a genuinely different measurement, not a copy.
+  const owned = new Set<string>();
+  for (const rung of Object.values(CONTROL_LADDER)) {
+    for (const v of [rung.mark, rung.height]) if (v) owned.add(v);
+  }
+
+  const offenders: string[] = [];
+  for (const dir of readdirSync(root)) {
+    const full = join(root, dir);
+    if (!statSync(full).isDirectory() || dir === 'control' || dir === 'field') continue;
+    for (const file of readdirSync(full)) {
+      if (!/\.tsx?$/.test(file) || /\.(test|demo)\./.test(file)) continue;
+      const src = readFileSync(join(full, file), 'utf8');
+      for (const [, literal] of src.matchAll(/'((?:size|h)-\d+)'/g)) {
+        if (literal && owned.has(literal)) offenders.push(`${dir}/${file}: '${literal}'`);
+      }
     }
   }
   expect(offenders).toEqual([]);

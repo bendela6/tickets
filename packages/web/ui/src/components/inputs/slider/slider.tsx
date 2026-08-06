@@ -1,6 +1,11 @@
 import { useCallback, useRef, type KeyboardEvent, type PointerEvent } from 'react';
 import { axis, cn, focusRing, HUES, over, TONE_HUE, variants } from '../../../style';
-import { readOnlyMarkClass, type ControlProps, disabledAriaClass } from '../control';
+import {
+  CONTROL_LADDER,
+  readOnlyMarkClass,
+  type ControlProps,
+  disabledAriaClass,
+} from '../control';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');
@@ -61,9 +66,14 @@ const thumbClass = variants({
     },
     size: {
       default: 'md',
-      // 14 / 16 / 20 — the mark ladder, so a thumb and a checkbox beside it are
-      // the same object size.
-      options: { xs: 'size-14', md: 'size-16', lg: 'size-20' },
+      // The mark ladder, so a thumb and a checkbox beside it are the same object
+      // size. Read from `CONTROL_LADDER` rather than restated — this comment
+      // used to sit above a hand-written 14/16/20 that happened to agree.
+      options: {
+        xs: CONTROL_LADDER.xs.mark,
+        md: CONTROL_LADDER.md.mark,
+        lg: CONTROL_LADDER.lg.mark,
+      },
     },
   },
 });
