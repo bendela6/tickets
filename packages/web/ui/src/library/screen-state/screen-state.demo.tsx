@@ -1,6 +1,6 @@
 import { definePlayground, select, text } from '../../gallery';
 import { TONE_NAMES } from '../../style/tones';
-import { ICON_NAMES } from '../icon/registry';
+import { ICON_NAMES } from '../primitives/components/icon/registry';
 import { ScreenState } from './screen-state';
 
 export const meta = { title: 'ScreenState', group: 'Ungrouped', size: 'lg' };

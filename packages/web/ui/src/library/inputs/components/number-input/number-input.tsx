@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 import { cn } from '../../../../style';
 import { fieldClass, fieldState } from '../../parts/field';
-import { Icon } from '../../../icon';
+import { Icon } from '../../../primitives/components/icon';
 import { readOnlyFieldClass, type ControlProps, type ControlSize, disabledTreatment } from '../../contract';
 
 /**

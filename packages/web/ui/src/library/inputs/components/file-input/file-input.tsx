@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { cn, focusRing, TONE_HUE } from '../../../../style';
-import { Icon } from '../../../icon';
+import { Icon } from '../../../primitives/components/icon';
 import { Progress } from '../../../progress';
 import { CONTROL_LADDER, type ControlProps, disabledTreatment } from '../../contract';
 

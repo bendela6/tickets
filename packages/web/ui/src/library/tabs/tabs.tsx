@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { axis, cn, HUES, over, TONE_HUE, variants, type Tone } from '../../style';
-import { Icon, type IconName, type IconSize } from '../icon';
+import { Icon, type IconName, type IconSize } from '../primitives/components/icon';
 
 // Which ramp this component paints from. `scale` is the prop it surfaces as.
 const SCALE = axis('scale', HUES, 'indigo');

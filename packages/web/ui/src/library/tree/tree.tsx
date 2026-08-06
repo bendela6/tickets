@@ -1,6 +1,6 @@
 import type { KeyboardEvent, ReactNode } from 'react';
 import { cn } from '../../style';
-import { Icon } from '../icon';
+import { Icon } from '../primitives/components/icon';
 
 export interface TreeProps {
   activeDescendant: string | undefined;

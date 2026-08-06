@@ -8,8 +8,8 @@ import { ScreenState } from '../screen-state';
  *  the wrapper is what makes the failure announce itself to assistive tech.
  *
  *  Icon: the brief's `alert-triangle` is not in the registry
- *  (packages/web/ui/src/library/icon/registry.ts); the equivalent glyph
- *  is registered as `triangle-alert`, used here instead. */
+ *  (packages/web/ui/src/library/primitives/components/icon/registry.ts); the
+ *  equivalent glyph is registered as `triangle-alert`, used here instead. */
 export function renderError({ error }: RenderErrorCtx) {
   return (
     <div role="alert">

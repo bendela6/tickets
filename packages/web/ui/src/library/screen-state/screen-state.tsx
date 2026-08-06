@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { cn } from '../../style/cn';
-import { Icon, type IconName } from '../icon';
+import { Icon, type IconName } from '../primitives/components/icon';
 import { TONE_HUE, type Tone } from '../../style/tones';
 
 // The shared shell for a screen's error/empty/not-found state: an optional

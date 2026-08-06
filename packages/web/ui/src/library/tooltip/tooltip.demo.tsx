@@ -1,5 +1,5 @@
 import { definePlayground, text, select } from '../../gallery';
-import { Button } from '../button';
+import { Button } from '../primitives/components/button';
 import { Tooltip } from './tooltip';
 
 function TooltipFixture() {

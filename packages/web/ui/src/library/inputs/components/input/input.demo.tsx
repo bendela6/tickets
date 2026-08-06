@@ -1,7 +1,7 @@
 import { useState, type ComponentProps, type ReactNode } from 'react';
 import { boolean, definePlayground, defineState, List, Matrix, select, Slot, text } from '../../../../gallery';
 import { TONE_NAMES, type Tone } from '../../../../style';
-import { Icon } from '../../../icon';
+import { Icon } from '../../../primitives/components/icon';
 import { Input } from './input';
 import type { ControlSize } from '../../contract';
 

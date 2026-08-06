@@ -1,5 +1,5 @@
 import type { Renderer } from '@tickets/table';
-import { Avatar } from '../../avatar';
+import { Avatar } from '../../primitives/components/avatar';
 
 type ImageColumnOpts = {
   /** Derives the name an Avatar falls back to when there is no image. */
