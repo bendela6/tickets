@@ -45,7 +45,7 @@ function DemoTabs({
   );
 }
 
-export const meta = { title: 'Tabs', group: 'Components', size: 'md' };
+export const meta = { title: 'Tabs', size: 'md' };
 
 export const states = [
   { name: 'Underline', render: () => <DemoTabs variant="underline" /> },

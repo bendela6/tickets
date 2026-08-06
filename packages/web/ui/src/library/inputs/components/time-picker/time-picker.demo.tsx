@@ -3,7 +3,7 @@ import { defineState, Matrix, Slot } from '../../../../docs/gallery';
 import type { ControlSize } from '../../contract';
 import { TimePicker } from './time-picker';
 
-export const meta = { title: 'TimePicker', group: 'Inputs', size: 'md' };
+export const meta = { title: 'TimePicker', size: 'md' };
 
 /*
  * A time of DAY, where DurationInput is a length of time. Held as `HH:MM`

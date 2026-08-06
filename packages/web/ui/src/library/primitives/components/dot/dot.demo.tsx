@@ -1,6 +1,6 @@
 import { Dot } from './dot';
 
-export const meta = { title: 'Dot', group: 'Components', size: 'sm' };
+export const meta = { title: 'Dot', size: 'sm' };
 
 const HUES = ['blue', 'green', 'orange', 'purple', 'teal'] as const;
 

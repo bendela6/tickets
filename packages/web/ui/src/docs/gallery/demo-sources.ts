@@ -1,10 +1,15 @@
-import { rebaseGlobKeys } from './collect-demos';
+import { rebaseNestedGlobKeys } from './collect-demos';
 import { UI_SRC_ROOT } from './roots';
 
-// Keys are rebased onto the same root as packageDemos, so `sources[demo.path]`
-// resolves after the web route merges these with the app's own maps.
-export const packageDemoSources = rebaseGlobKeys(
-  UI_SRC_ROOT,
+// This module's own directory: it sits two below UI_SRC_ROOT (docs/gallery/),
+// so rebaseNestedGlobKeys is needed rather than rebaseGlobKeys — see that
+// function's doc comment in collect-demos.ts. Both globs below share it so
+// `sources[demo.path]` resolves against the exact same paths packageDemos
+// produces, after the web route merges these with the app's own maps.
+const MODULE_DIR = `${UI_SRC_ROOT}/docs/gallery`;
+
+export const packageDemoSources = rebaseNestedGlobKeys(
+  MODULE_DIR,
   import.meta.glob('../../**/*.demo.tsx', {
     query: '?raw',
     import: 'default',
@@ -21,8 +26,8 @@ export const packageDemoSources = rebaseGlobKeys(
 // them in makes rollup warn that the dynamic import can't split a module it
 // also has statically. Tests are excluded because nobody opens this tab to
 // read them.
-export const packageComponentSources = rebaseGlobKeys(
-  UI_SRC_ROOT,
+export const packageComponentSources = rebaseNestedGlobKeys(
+  MODULE_DIR,
   import.meta.glob(['../../**/*.{ts,tsx}', '!../../**/*.demo.tsx', '!../../**/*.test.{ts,tsx}'], {
     query: '?raw',
     import: 'default',

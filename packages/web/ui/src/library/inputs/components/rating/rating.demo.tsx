@@ -3,7 +3,7 @@ import { defineState, Matrix, Slot } from '../../../../docs/gallery';
 import type { ControlSize } from '../../contract';
 import { Rating } from './rating';
 
-export const meta = { title: 'Rating', group: 'Inputs', size: 'sm' };
+export const meta = { title: 'Rating', size: 'sm' };
 
 /*
  * The rung pair is the whole design here: a hover PREVIEW is rung 8, a

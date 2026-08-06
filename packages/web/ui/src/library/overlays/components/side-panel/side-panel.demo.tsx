@@ -2,7 +2,6 @@ import { SidePanel } from './side-panel';
 
 export const meta = {
   title: 'SidePanel',
-  group: 'Components',
   size: 'lg',
   impl: ['./side-panel.tsx'],
 };

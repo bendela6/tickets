@@ -3,7 +3,7 @@ import { defineState, Slot } from '../../../../docs/gallery';
 import type { Option } from '../../contract';
 import { CheckboxGroup } from './checkbox-group';
 
-export const meta = { title: 'CheckboxGroup', group: 'Inputs', size: 'sm' };
+export const meta = { title: 'CheckboxGroup', size: 'sm' };
 
 /*
  * Several independent choices, all visible — the multi-select counterpart to

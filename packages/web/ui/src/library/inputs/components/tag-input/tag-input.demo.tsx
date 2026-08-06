@@ -3,7 +3,7 @@ import { defineState, Slot } from '../../../../docs/gallery';
 import type { ControlSize, Option } from '../../contract';
 import { TagInput } from './tag-input';
 
-export const meta = { title: 'TagInput', group: 'Inputs', size: 'md' };
+export const meta = { title: 'TagInput', size: 'md' };
 
 /*
  * Free text in, chips out — for values that do not exist until someone types

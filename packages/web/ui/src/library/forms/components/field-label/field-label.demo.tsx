@@ -3,7 +3,7 @@ import { FieldLabel } from './field-label';
 import { FieldError } from '../field-error';
 import { Input } from '../../../inputs/components/input';
 
-export const meta = { title: 'FieldLabel', group: 'Deprecated', size: 'md' };
+export const meta = { title: 'FieldLabel', deprecated: true, size: 'md' };
 
 export const states = [
   {

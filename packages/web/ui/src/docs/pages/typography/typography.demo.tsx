@@ -4,7 +4,6 @@ import { SpecHeader, SpecRow } from '../view';
 
 export const meta = {
   title: 'Typography',
-  group: 'Foundation',
   order: 2,
   size: 'full',
   impl: ['../spec.ts', '../view.tsx'],

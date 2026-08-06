@@ -1,7 +1,7 @@
 import { useTreeView, type TreeNode } from './use-tree-view';
 import { Tree, TreeRow } from './tree';
 
-export const meta = { title: 'Tree', group: 'Components', size: 'md', impl: ['tree.tsx', 'use-tree-view.ts'] };
+export const meta = { title: 'Tree', size: 'md', impl: ['tree.tsx', 'use-tree-view.ts'] };
 
 const ROOTS: TreeNode[] = [
   {

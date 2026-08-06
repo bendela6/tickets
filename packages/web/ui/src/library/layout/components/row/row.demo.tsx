@@ -1,6 +1,6 @@
 import { Row } from './row';
 
-export const meta = { title: 'Row', group: 'Components', size: 'sm' };
+export const meta = { title: 'Row', size: 'sm' };
 
 const Box = ({ children }: { children: React.ReactNode }) => (
   <div className="rounded-md border-1 border-gray-6 bg-gray-1 px-12 py-8 font-sans text-13/19 text-gray-11">

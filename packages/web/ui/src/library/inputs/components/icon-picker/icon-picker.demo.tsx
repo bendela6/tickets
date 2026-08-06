@@ -3,7 +3,7 @@ import { defineState, Matrix, Slot } from '../../../../docs/gallery';
 import type { ControlSize } from '../../contract';
 import { IconPicker } from './icon-picker';
 
-export const meta = { title: 'IconPicker', group: 'Inputs', size: 'md' };
+export const meta = { title: 'IconPicker', size: 'md' };
 
 /*
  * The trigger shows the GLYPH. `circle-dashed` describes a drawing far less well

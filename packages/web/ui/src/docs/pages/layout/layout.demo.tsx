@@ -23,7 +23,6 @@ const LAYERS = [0, 10, 20, 30, 40, 50].map((n) => ({ name: `z-${n}`, value: `${n
 
 export const meta = {
   title: 'Layout',
-  group: 'Foundation',
   order: 6,
   size: 'full',
   impl: ['./foundation.ts', './foundation-view.tsx'],

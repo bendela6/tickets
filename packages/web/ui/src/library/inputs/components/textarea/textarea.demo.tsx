@@ -75,7 +75,7 @@ const TONE_SAMPLE = [
   { tone: 'success', note: 'Saved to the ticket.' },
 ] as const satisfies readonly { tone: Tone; note: string }[];
 
-export const meta = { title: 'Textarea', group: 'Inputs', size: 'md' };
+export const meta = { title: 'Textarea', size: 'md' };
 
 const contentByAvailability = defineState({
   title: 'content × availability',

@@ -58,7 +58,7 @@ const MODES = [
   { name: 'read-only', props: { readOnly: true } },
 ] as const;
 
-export const meta = { title: 'Switch', group: 'Inputs', size: 'sm' };
+export const meta = { title: 'Switch', size: 'sm' };
 
 export const states = [
   ...MODES.flatMap((mode) =>

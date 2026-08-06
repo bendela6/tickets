@@ -24,7 +24,7 @@ function TooltipPlaygroundFixture({
   );
 }
 
-export const meta = { title: 'Tooltip', group: 'Components', size: 'sm' };
+export const meta = { title: 'Tooltip', size: 'sm' };
 
 export const states = [{ name: 'hover', render: () => <TooltipFixture /> }];
 

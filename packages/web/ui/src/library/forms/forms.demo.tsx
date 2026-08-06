@@ -14,7 +14,7 @@ import { ToggleField } from './bindings/toggle/toggle-field';
 import { CardLayout, GroupLayout } from './layouts';
 import { Stack } from '../layout/components/stack';
 
-export const meta = { title: 'Form inputs', group: 'Forms', size: 'md' };
+export const meta = { title: 'Form inputs', size: 'md' };
 
 const OPTIONS = [
   { value: 'low', label: 'Low' },

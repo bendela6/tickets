@@ -1,7 +1,7 @@
 import { Card, CardBody, CardHeader, CardTitle } from './card';
 import { Stack } from '../stack';
 
-export const meta = { title: 'Card', group: 'Components', size: 'md' };
+export const meta = { title: 'Card', size: 'md' };
 
 export const states = [
   {

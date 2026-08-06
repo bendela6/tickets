@@ -3,7 +3,7 @@ import { defineState, Matrix, Slot } from '../../../../docs/gallery';
 import type { ControlSize, Option } from '../../contract';
 import { SegmentedControl } from './segmented-control';
 
-export const meta = { title: 'SegmentedControl', group: 'Inputs', size: 'sm' };
+export const meta = { title: 'SegmentedControl', size: 'sm' };
 
 /*
  * The same exclusive choice a Select makes, spent differently: width, in

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { defineState, Slot } from '../../../../docs/gallery';
 import { RangeSlider } from './range-slider';
 
-export const meta = { title: 'RangeSlider', group: 'Inputs', size: 'sm' };
+export const meta = { title: 'RangeSlider', size: 'sm' };
 
 /*
  * Two thumbs, and they NEVER swap. Dragging low past high pins it at high
