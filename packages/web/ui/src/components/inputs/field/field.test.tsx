@@ -120,3 +120,19 @@ test('textarea rungs set a floor and evict the single-line height', () => {
   rerender(<Textarea size="lg" aria-label="body"  value="" onChange={() => {}} />);
   expect(at()).toHaveClass('h-auto', 'min-h-88');
 });
+
+test('a popup trigger rings on Tab but not on click; a text field rings on both', () => {
+  // `21 Input Interactions`: "Triggers use :focus-visible — clicking one leaves
+  // no ring, tabbing to it does. Text fields ring on click too, via
+  // :focus-within, because a clicked text field genuinely holds the caret and
+  // hiding that would be the bug."
+  //
+  // A trigger opens a popup; a ring left behind on it after the click points at
+  // the trigger while the user is looking at the list.
+  expect(fieldClass({ focus: 'focus-visible' })).toContain(
+    focusRing('indigo', 'focus-visible'),
+  );
+  expect(fieldClass({ focus: 'focus-visible' })).not.toContain(focusRing('indigo', 'focus'));
+  // The default stays `focus`, which is what a plain text field wants.
+  expect(fieldClass()).toContain(focusRing('indigo', 'focus'));
+});

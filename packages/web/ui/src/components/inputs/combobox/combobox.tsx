@@ -89,6 +89,7 @@ export function Combobox({
               size,
               state: field.state,
               scale: field.scale,
+        focus: 'focus-visible',
               className: cn(
                 'flex w-full items-center justify-between gap-8 font-sans',
                 'disabled:opacity-50 disabled:pointer-events-none',
