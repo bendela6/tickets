@@ -117,7 +117,12 @@ export function FileInput({
               // changed alone is easy to miss while your eyes are on the file.
               `border-${hue}-9 bg-${hue}-2 text-${hue}-11`
             : 'border-gray-7 bg-gray-4 text-gray-11 hover:bg-gray-5',
-          locked && cn(disabledTreatment, 'hover:bg-gray-4'),
+          // The dim belongs to `disabled` alone. This read `locked`, so a
+          // READ-ONLY drop target came out at 45% and grey — the inverse of
+          // Rating's bug and just as wrong. A read-only file list is real data
+          // at full contrast; it simply stops accepting drops.
+          disabled && disabledTreatment,
+          locked && 'cursor-default hover:bg-gray-4',
         )}
       >
         <Icon name="file" size="sm" />
