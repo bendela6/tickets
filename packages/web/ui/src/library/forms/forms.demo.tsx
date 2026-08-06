@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import { FieldWrapper } from './field-wrapper';
-import { CheckboxField } from './inputs/checkbox/checkbox-field';
-import { DateField } from './inputs/date/date-field';
-import { JsonField } from './inputs/json/json-field';
-import { MultiSelectField } from './inputs/multi-select/multi-select-field';
-import { NumberField } from './inputs/number/number-field';
-import { RadioField } from './inputs/radio/radio-field';
-import { SelectField } from './inputs/select/select-field';
-import { SliderField } from './inputs/slider/slider-field';
-import { TextField } from './inputs/text/text-field';
-import { TextAreaField } from './inputs/textarea/textarea-field';
-import { ToggleField } from './inputs/toggle/toggle-field';
+import { FieldWrapper } from './components/field-wrapper';
+import { CheckboxField } from './bindings/checkbox/checkbox-field';
+import { DateField } from './bindings/date/date-field';
+import { JsonField } from './bindings/json/json-field';
+import { MultiSelectField } from './bindings/multi-select/multi-select-field';
+import { NumberField } from './bindings/number/number-field';
+import { RadioField } from './bindings/radio/radio-field';
+import { SelectField } from './bindings/select/select-field';
+import { SliderField } from './bindings/slider/slider-field';
+import { TextField } from './bindings/text/text-field';
+import { TextAreaField } from './bindings/textarea/textarea-field';
+import { ToggleField } from './bindings/toggle/toggle-field';
 import { CardLayout, GroupLayout } from './layouts';
 import { Stack } from '../layout/components/stack';
 

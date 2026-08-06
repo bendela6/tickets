@@ -1,5 +1,5 @@
 import type { LabelHTMLAttributes } from 'react';
-import { cn } from '../../style/cn';
+import { cn } from '../../../../style/cn';
 
 type FieldLabelProps = LabelHTMLAttributes<HTMLLabelElement> & { required?: boolean };
 

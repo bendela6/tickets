@@ -5,8 +5,6 @@
 export * from './inputs';
 
 export * from './feedback';
-export * from './field-error';
-export * from './field-label';
 export * from './layout';
 export * from './navigation';
 export * from './overlays';

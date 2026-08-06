@@ -4,8 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import { focusRing } from '../../../../style';
 import { CONTROL_LADDER } from '../../parts/field';
-import { FieldError } from '../../../field-error';
-import { FieldLabel } from '../../../field-label';
+import { FieldError } from '../../../forms/components/field-error';
+import { FieldLabel } from '../../../forms/components/field-label';
 import { Input } from './input';
 
 function Controlled({ initial = '', ...props }: { initial?: string } & Record<string, unknown>) {
