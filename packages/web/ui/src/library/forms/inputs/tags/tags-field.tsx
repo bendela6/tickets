@@ -1,6 +1,6 @@
 import type { InputProps } from '@tickets/form';
-import type { Option } from '../../../inputs/control';
-import { TagInput } from '../../../inputs/tag-input';
+import type { Option } from '../../../inputs/contract';
+import { TagInput } from '../../../inputs/components/tag-input';
 
 export type TagsFieldConfig = { suggestions?: Option[]; placeholder?: string };
 

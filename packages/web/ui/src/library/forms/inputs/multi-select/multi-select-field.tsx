@@ -1,6 +1,6 @@
 import type { InputProps } from '@tickets/form';
-import type { Option } from '../../../inputs/control';
-import { MultiCombobox } from '../../../inputs/multi-combobox';
+import type { Option } from '../../../inputs/contract';
+import { MultiCombobox } from '../../../inputs/components/multi-combobox';
 
 export type MultiSelectFieldConfig = {
   /** Resolved options — see SelectFieldConfig. */

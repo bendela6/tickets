@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { PasswordInput } from '../../../inputs/password-input';
+import { PasswordInput } from '../../../inputs/components/password-input';
 
 export type PasswordFieldConfig = { placeholder?: string };
 

@@ -1,5 +1,5 @@
 import type { RenderSelectCellCtx } from '@tickets/table';
-import { Checkbox } from '../inputs/checkbox';
+import { Checkbox } from '../inputs/components/checkbox';
 
 /**
  * The row-selection checkbox, in a row and above the column.

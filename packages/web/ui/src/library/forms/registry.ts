@@ -1,4 +1,4 @@
-import type { UploadFile } from '../inputs/file-input';
+import type { UploadFile } from '../inputs/components/file-input';
 import { CheckboxField } from './inputs/checkbox/checkbox-field';
 import { CheckboxGroupField } from './inputs/checkbox-group/checkbox-group-field';
 import { ColorField } from './inputs/color/color-field';

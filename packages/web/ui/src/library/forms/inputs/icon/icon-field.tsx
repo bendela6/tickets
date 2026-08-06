@@ -1,6 +1,6 @@
 import type { InputProps } from '@tickets/form';
 import type { IconName } from '../../../icon';
-import { IconPicker } from '../../../inputs/icon-picker';
+import { IconPicker } from '../../../inputs/components/icon-picker';
 
 export type IconFieldConfig = { placeholder?: string; icons?: IconName[] };
 

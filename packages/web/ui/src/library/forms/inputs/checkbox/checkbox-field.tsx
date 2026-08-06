@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { Checkbox } from '../../../inputs/checkbox';
+import { Checkbox } from '../../../inputs/components/checkbox';
 
 export type CheckboxFieldConfig = {
   /**

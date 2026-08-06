@@ -1,0 +1,356 @@
+import { createRef, useState } from 'react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { expect, test, vi } from 'vitest';
+import { focusRing } from '../../../../style';
+import { CONTROL_LADDER } from '../../parts/field';
+import { FieldError } from '../../../field-error';
+import { FieldLabel } from '../../../field-label';
+import { Input } from './input';
+
+function Controlled({ initial = '', ...props }: { initial?: string } & Record<string, unknown>) {
+  const [value, setValue] = useState(initial);
+  return <Input value={value} onChange={setValue} aria-label="Title" {...props} />;
+}
+
+const noop = () => {};
+
+test('onChange hands over the value, not the DOM event', async () => {
+  const onChange = vi.fn();
+  render(<Input value="" onChange={onChange} aria-label="Title" />);
+
+  await userEvent.type(screen.getByLabelText('Title'), 'a');
+
+  // The whole point of ControlProps<string>: `onChange={setTitle}` has to be a
+  // legal call site. Passing the SyntheticEvent first would type-check at the
+  // component and store an event object in the caller's state.
+  expect(typeof onChange.mock.calls[0]![0]).toBe('string');
+  expect(onChange.mock.calls[0]![0]).toBe('a');
+});
+
+test('the event rides along second, for the call sites that need it', async () => {
+  const onChange = vi.fn();
+  render(<Input value="" onChange={onChange} aria-label="Title" />);
+
+  await userEvent.type(screen.getByLabelText('Title'), 'x');
+
+  // Optional and ignored by every ordinary caller, but reachable: a handful of
+  // call sites read modifier keys off it, and without it they cannot be written.
+  const event = onChange.mock.calls[0]![1];
+  expect(event).toBeTruthy();
+  expect(event.type).toBe('change');
+  expect(event.target).toBe(screen.getByLabelText('Title'));
+});
+
+test('the value round-trips through a caller that just holds a string', async () => {
+  render(<Controlled />);
+  const input = screen.getByLabelText('Title');
+
+  await userEvent.type(input, 'ship it');
+
+  expect(input).toHaveValue('ship it');
+});
+
+test('readOnly sets the real HTML attribute', () => {
+  // An <input> is one of the elements HTML's `readonly` actually reaches, so
+  // the attribute — not aria-readonly — is what carries the behaviour here.
+  render(<Input value="locked" onChange={noop} readOnly aria-label="Title" />);
+  const input = screen.getByLabelText('Title') as HTMLInputElement;
+
+  expect(input).toHaveAttribute('readonly');
+  expect(input.readOnly).toBe(true);
+  expect(input).not.toHaveAttribute('aria-readonly');
+});
+
+test('readOnly also changes how the field looks', () => {
+  // The attribute alone leaves the field identical to an editable one. Under
+  // Soft Fill the floor goes away entirely and a rung-7 rule takes its place —
+  // the one state that does not fill — hover stops responding, and the cursor
+  // stops inviting a click.
+  render(<Input value="locked" onChange={noop} readOnly aria-label="Title" />);
+  const input = screen.getByLabelText('Title');
+
+  expect(input).toHaveClass('bg-transparent', 'border-b-gray-7', 'rounded-none', 'cursor-default');
+  expect(input.className).toContain('hover:bg-transparent');
+  // twMerge has to have evicted the editable treatment, not stacked on top of it.
+  expect(input).not.toHaveClass('bg-gray-5');
+  // The sides STAY transparent — only the bottom carries the rule, because
+  // read-only is a printed row rather than a quieter box.
+  expect(input).toHaveClass('border-transparent');
+  expect(input).not.toHaveClass('rounded-control-md');
+  expect(input.className).not.toContain('hover:bg-gray-6');
+});
+
+test('readOnly reaches BOTH render paths — attribute inside, treatment on the chrome', () => {
+  // The trap this guards: the chrome moves to the wrapper when there is an
+  // adornment, so a read-only treatment written only on the <input> would look
+  // right until somebody added a trailing icon and then silently do nothing.
+  const { container } = render(
+    <Input value="locked" onChange={noop} readOnly aria-label="Title" trailing={<kbd>⌘K</kbd>} />,
+  );
+  const input = screen.getByLabelText('Title') as HTMLInputElement;
+  const wrapper = container.firstElementChild!;
+
+  expect(input.readOnly).toBe(true);
+  expect(wrapper).toHaveClass('bg-transparent', 'border-b-gray-7', 'rounded-none', 'cursor-default');
+  expect(wrapper).not.toHaveClass('bg-gray-5');
+  expect(wrapper).toHaveClass('border-transparent');
+});
+
+test('an editable field carries none of the read-only treatment, on either path', () => {
+  const { container } = render(
+    <>
+      <Input value="" onChange={noop} aria-label="Plain" />
+      <Input value="" onChange={noop} aria-label="Adorned" trailing={<kbd>⌘K</kbd>} />
+    </>,
+  );
+  const plain = screen.getByLabelText('Plain');
+  const wrapper = container.lastElementChild!;
+
+  expect(plain).not.toHaveAttribute('readonly');
+  expect(plain).toHaveClass('bg-gray-5', 'border-transparent');
+  expect(plain).not.toHaveClass('cursor-default');
+  expect(wrapper).toHaveClass('bg-gray-5', 'border-transparent');
+  expect(wrapper).not.toHaveClass('cursor-default');
+});
+
+test('a read-only field is still focusable and still holds its value, but emits nothing', async () => {
+  const onChange = vi.fn();
+  render(<Input value="locked" onChange={onChange} readOnly aria-label="Title" />);
+  const input = screen.getByLabelText('Title');
+
+  await userEvent.type(input, 'x');
+
+  expect(input).toHaveFocus();
+  expect(input).toHaveValue('locked');
+  expect(onChange).not.toHaveBeenCalled();
+});
+
+test('disabled and readOnly are two different states, not two names for one', () => {
+  render(
+    <>
+      <Input value="off" onChange={noop} disabled aria-label="Disabled" />
+      <Input value="locked" onChange={noop} readOnly aria-label="Locked" />
+    </>,
+  );
+  const off = screen.getByLabelText('Disabled') as HTMLInputElement;
+  const locked = screen.getByLabelText('Locked') as HTMLInputElement;
+
+  // Behaviour: only one of them leaves the tab order and drops out of submission.
+  expect(off).toBeDisabled();
+  expect(off.readOnly).toBe(false);
+  expect(locked).not.toBeDisabled();
+  expect(locked.readOnly).toBe(true);
+
+  off.focus();
+  expect(off).not.toHaveFocus();
+  locked.focus();
+  expect(locked).toHaveFocus();
+
+  // Looks: disabled dims the text and swaps the ground behind the `disabled:`
+  // variant; read-only swaps the ground unconditionally and keeps full text
+  // contrast, because the value still matters.
+  expect(off.className).toContain('disabled:text-gray-9');
+  expect(off).not.toHaveClass('bg-transparent');
+  expect(off).not.toHaveClass('cursor-default');
+  expect(locked).toHaveClass('bg-transparent', 'text-gray-12');
+});
+
+test('read-only drops a toned floor for the rule, but keeps the invalid claim', () => {
+  // Under Soft Fill read-only is the ABSENCE of a floor plus a rung-7 rule, so
+  // a toned read-only field loses its fill — the tone had nothing left to
+  // colour — while `aria-invalid` still reports what the tone meant.
+  render(<Input value="x" onChange={noop} tone="danger" readOnly aria-label="Key" />);
+  const input = screen.getByLabelText('Key');
+
+  expect(input).toHaveAttribute('aria-invalid', 'true');
+  expect(input).toHaveClass('border-b-gray-7', 'bg-transparent');
+  expect(input.className).not.toMatch(/(?:^|\s)bg-red-\d/);
+});
+
+test('an unset tone is the resting field, not primary', () => {
+  render(<Input value="" onChange={noop} aria-label="Title" />);
+  const input = screen.getByLabelText('Title');
+
+  expect(input).toHaveClass('bg-gray-5', 'border-transparent');
+  expect(input.className).not.toMatch(/(?:^|\s)bg-indigo-\d/);
+  expect(input).not.toHaveAttribute('aria-invalid');
+});
+
+test('the ref lands on the inner input, adornment or not', () => {
+  const bare = createRef<HTMLInputElement>();
+  const adorned = createRef<HTMLInputElement>();
+  render(
+    <>
+      <Input ref={bare} value="" onChange={noop} aria-label="Plain" />
+      <Input ref={adorned} value="" onChange={noop} aria-label="Filter" leading={<span>@</span>} />
+    </>,
+  );
+
+  // Not the wrapper: a caller that takes a ref wants to focus or select the
+  // field, and a <div> answers neither.
+  expect(bare.current).toBe(screen.getByLabelText('Plain'));
+  expect(adorned.current).toBe(screen.getByLabelText('Filter'));
+  expect(adorned.current!.tagName).toBe('INPUT');
+
+  adorned.current!.focus();
+  expect(screen.getByLabelText('Filter')).toHaveFocus();
+});
+
+test('nothing a caller spreads can beat the contract props', () => {
+  // `rest` is spread FIRST for exactly this: a props bag carrying a stale
+  // `aria-invalid` must not outrank what `tone` decided.
+  render(<Input value="" onChange={noop} tone="danger" aria-invalid={false} aria-label="Key" />);
+
+  expect(screen.getByLabelText('Key')).toHaveAttribute('aria-invalid', 'true');
+});
+
+test('md input carries the ladder rung and the resting floor', () => {
+  render(<Input value="" onChange={noop} aria-label="Title" />);
+  const input = screen.getByLabelText('Title');
+  const md = CONTROL_LADDER.md;
+  expect(input).toHaveClass(md.height, md.padX, md.radius, 'bg-gray-5', 'border-transparent');
+  // Regression guard: tailwind-merge must not let the font size evict the ink
+  // text color (the same trap the primary button hit with text-13/19).
+  expect(input).toHaveClass(md.text);
+  expect(input).toHaveClass('text-gray-12');
+});
+
+test('the xs rung overrides height, padding, radius and font size', () => {
+  render(<Input value="" onChange={noop} size="xs" aria-label="Estimate" />);
+  const input = screen.getByLabelText('Estimate');
+  const xs = CONTROL_LADDER.xs;
+  expect(input).toHaveClass(xs.height, xs.padX, xs.radius, xs.text);
+  expect(input).not.toHaveClass(CONTROL_LADDER.md.text);
+});
+
+test('invalid input shows the danger border at rest, and the halo on focus', () => {
+  // The border is what makes the error visible at a glance; the halo is the
+  // focus treatment. The halo used to be unconditional, which left a danger
+  // field looking identical whether or not it had focus.
+  render(<Input value="" onChange={noop} tone="danger" aria-label="Key" />);
+  const input = screen.getByLabelText('Key');
+  expect(input.className).toMatch(/(?:^|\s)bg-red-\d/);
+  expect(input.className).toContain(focusRing('red', 'focus'));
+  expect(input.className).not.toMatch(/(?:^|\s)ring-\d/);
+});
+
+test('input associates label and error', () => {
+  render(
+    <>
+      <FieldLabel htmlFor="key" required>
+        Key
+      </FieldLabel>
+      <Input id="key" value="" onChange={noop} tone="danger" aria-describedby="key-error" />
+      <FieldError id="key-error">Key must be kebab-case</FieldError>
+    </>,
+  );
+  const input = screen.getByLabelText('Key *');
+  expect(input).toHaveAccessibleDescription('Key must be kebab-case');
+  expect(input).toHaveAttribute('aria-invalid', 'true');
+});
+
+test('an adorned input keeps the field chrome on the wrapper, not the inner box', () => {
+  // The border has to draw around the adornment too, so it moves outward and
+  // the inner input goes bare. Focus still lands on the input, which is why
+  // the ring hangs off focus-within on the wrapper.
+  const { container } = render(
+    <Input value="" onChange={noop} aria-label="Filter" trailing={<kbd>⌘K</kbd>} />,
+  );
+  const input = screen.getByLabelText('Filter');
+  const wrapper = container.firstElementChild!;
+
+  expect(input).not.toHaveClass('border-1');
+  expect(wrapper.className).toContain('border-1');
+  expect(wrapper.className).toContain('focus-within:');
+  expect(wrapper).toContainElement(screen.getByText('⌘K'));
+});
+
+test('without an adornment the input is unwrapped, exactly as before', () => {
+  // Every existing call site takes this path, so the chrome must stay on the
+  // input itself and `className` must still land there.
+  const { container } = render(
+    <Input value="" onChange={noop} aria-label="Plain" className="w-200" />,
+  );
+  const input = screen.getByLabelText('Plain');
+  expect(container.firstElementChild).toBe(input);
+  expect(input).toHaveClass('border-1', 'w-200');
+});
+
+test('the adorned path still drives the contract, and still types', async () => {
+  render(<Controlled leading={<span>@</span>} />);
+  const input = screen.getByLabelText('Title');
+
+  await userEvent.type(input, 'beka');
+
+  expect(input).toHaveValue('beka');
+});
+
+test('native input attributes still pass through', () => {
+  render(
+    <Input
+      value=""
+      onChange={noop}
+      aria-label="Title"
+      name="title"
+      type="search"
+      maxLength={140}
+      autoComplete="off"
+    />,
+  );
+  const input = screen.getByLabelText('Title');
+
+  expect(input).toHaveAttribute('name', 'title');
+  expect(input).toHaveAttribute('type', 'search');
+  expect(input).toHaveAttribute('maxlength', '140');
+  expect(input).toHaveAttribute('autocomplete', 'off');
+});
+
+test('disabled dims the adorned field the same as the bare one', async () => {
+  // The two render paths are where this component can drift, and they did:
+  // `fieldClass` styles `disabled:*`, which only fires on the element carrying
+  // the attribute. On the adorned path that is the inner input, never the
+  // wrapper — so an adorned disabled field kept the raised ground and
+  // full-contrast text while the bare one dimmed. Same prop, two looks.
+  const { container: bare } = render(<Input aria-label="bare" value="" onChange={() => {}} disabled />);
+  const { container: adorned } = render(
+    <Input aria-label="adorned" value="" onChange={() => {}} disabled trailing={<kbd>⌘K</kbd>} />,
+  );
+
+  // The chrome-bearing element differs per path: the input itself, or the wrapper.
+  const bareField = bare.firstElementChild!;
+  const adornedField = adorned.firstElementChild!;
+
+  for (const token of ['opacity-45', 'text-gray-9', 'cursor-default']) {
+    expect(adornedField.className).toContain(token);
+  }
+  // And the bare path still says it the way it always did, through the variant.
+  expect(bareField.className).toContain('disabled:text-gray-9');
+});
+
+test('the character counter shows what you have against what you may', () => {
+  // "62/80" in the design. The ceiling is the point — a count with no limit is
+  // a number nobody can act on.
+  render(<Input value="Retry webhook" onChange={noop} maxLength={80} showCount aria-label="Title" />);
+  expect(screen.getByText('13/80')).toBeInTheDocument();
+});
+
+test('the counter is opt-in, so a defensive maxLength does not sprout one', () => {
+  // Plenty of fields cap length at a limit nobody will approach; a counter there
+  // invites treating a storage detail as a writing target.
+  render(<Input value="x" onChange={noop} maxLength={4000} aria-label="Title" />);
+  expect(screen.queryByText(/\/4000/)).toBeNull();
+});
+
+test('showCount with no maxLength draws nothing rather than a half-counter', () => {
+  render(<Input value="abc" onChange={noop} showCount aria-label="Title" />);
+  expect(screen.queryByText(/3\//)).toBeNull();
+});
+
+test('the counter joins any trailing the caller already passed', () => {
+  render(
+    <Input value="ab" onChange={noop} maxLength={10} showCount trailing={<kbd>⌘K</kbd>} aria-label="Title" />,
+  );
+  expect(screen.getByText('⌘K')).toBeInTheDocument();
+  expect(screen.getByText('2/10')).toBeInTheDocument();
+});

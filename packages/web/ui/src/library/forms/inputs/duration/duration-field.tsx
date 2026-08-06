@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { DurationInput } from '../../../inputs/duration-input';
+import { DurationInput } from '../../../inputs/components/duration-input';
 
 export type DurationFieldConfig = { placeholder?: string; budgetMinutes?: number };
 

@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { ColorPicker } from '../../../inputs/color-picker';
+import { ColorPicker } from '../../../inputs/components/color-picker';
 
 export type ColorFieldConfig = { placeholder?: string; label?: string };
 

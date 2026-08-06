@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { RangeSlider } from '../../../inputs/range-slider';
+import { RangeSlider } from '../../../inputs/components/range-slider';
 
 export type RangeFieldConfig = { min?: number; max?: number; step?: number; label?: string };
 

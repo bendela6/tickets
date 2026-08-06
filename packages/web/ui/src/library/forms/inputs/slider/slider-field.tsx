@@ -1,5 +1,5 @@
 import type { InputProps } from '@tickets/form';
-import { Slider } from '../../../inputs/slider';
+import { Slider } from '../../../inputs/components/slider';
 
 export type SliderFieldConfig = {
   min?: number;
