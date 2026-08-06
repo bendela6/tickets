@@ -1,6 +1,6 @@
 import { GROUP_ROW_HEIGHT, type RenderGroupHeaderCtx } from '@tickets/table';
-import { cn } from '../../style';
-import { Icon } from '../primitives/components/icon';
+import { cn } from '../../../style';
+import { Icon } from '../../primitives/components/icon';
 
 /**
  * A group's banner row. It does NOT take the column grid template: the header

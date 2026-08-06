@@ -1,5 +1,5 @@
 import type { RenderSkeletonRowCtx } from '@tickets/table';
-import { cn } from '../../style';
+import { cn } from '../../../style';
 import { cellGutter, ROW_INSET } from './metrics';
 
 export function renderSkeletonRow<T>({ columns, gridTemplate, rowHeight }: RenderSkeletonRowCtx<T>) {

@@ -1,5 +1,5 @@
 import type { RenderTfootCtx } from '@tickets/table';
-import { cn } from '../../style';
+import { cn } from '../../../style';
 import { cellGutter, HEAD_HEIGHT, ROW_INSET } from './metrics';
 
 function alignClass(align: 'left' | 'right' | 'center' | undefined) {
