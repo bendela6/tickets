@@ -23,7 +23,7 @@ function buildDemo(
   controls: Record<string, AnyControlDef>,
   opts: { path?: string; docs?: PlaygroundDocs } = {},
 ) {
-  const path = opts.path ?? 'packages/web/ui/src/components/pill/pill.demo.tsx';
+  const path = opts.path ?? 'packages/web/ui/src/library/primitives/components/pill/pill.demo.tsx';
   const collected = collectDemos({
     [path]: {
       meta: { title: 'Pill', group: 'Display' },

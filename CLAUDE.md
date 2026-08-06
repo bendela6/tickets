@@ -5,7 +5,8 @@ pnpm + turbo monorepo. `apps/api` (Fastify-style API, port 4600) · `apps/web` (
 ## Design system — Instrument
 
 - The redesign is **complete** (2026-07-07): every screen is Instrument, the legacy `styles/globals.css` is deleted, and Tailwind **preflight is ON**. Spec of record: `docs/design/design-system.html` (exported from the Claude Design project). Brief: `docs/superpowers/specs/2026-07-05-ui-redesign-design.md`; plans in `docs/superpowers/plans/`.
-- Shared components and tokens live in `packages/web/ui` (`@tickets/ui`). Tokens are GENERATED from `tokens/*.tokens.json` into `styles/generated/` and `src/generated/` — never hand-edit either; run `pnpm --filter @tickets/ui tokens:build`. Details in `design-system-adapter.md`.
+- Shared components and tokens live in `packages/web/ui` (`@tickets/ui`). Tokens are GENERATED from `tokens/*.tokens.json` into `styles/generated/` and `src/style/generated/` — never hand-edit either; run `pnpm --filter @tickets/ui tokens:build`. Details in `design-system-adapter.md`.
+- `@tickets/ui` is three layers — `src/style/` (paint), `src/library/` (eight role groups), `src/docs/` (gallery + token pages) — and imports point downward only. Inside a group: `components/` is what you reach for, `parts/` is what those are built from. Full rationale in `docs/superpowers/specs/2026-08-06-ui-package-structure-design.md`.
 - **`--spacing` is 1px, so a number in a class name IS pixels** — `p-16` is 16px, `gap-8` is 8px (changed 2026-08-04). Anything written against Tailwind's stock `.25rem` scale renders at a quarter size and still compiles.
 
 ## Project skills (in `.claude/skills/` — use them)
