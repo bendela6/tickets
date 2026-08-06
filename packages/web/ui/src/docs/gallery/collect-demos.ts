@@ -15,6 +15,31 @@ export function kebab(s: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+/**
+ * Which group a demo belongs to, read off its path.
+ *
+ * The group used to be hand-typed in `meta.group`, which let the sidebar
+ * disagree with the tree — and produced an `Ungrouped` bucket holding seven
+ * demos that simply never got a category. The directory is now the only source
+ * of truth, so a demo cannot be filed wrong without being *moved* wrong.
+ *
+ * Both maps arrive rebased onto workspace-relative roots (see rebaseGlobKeys),
+ * which is what lets one function serve the package's demos and the app's.
+ * `docs/pages/` gets a fixed label rather than a title-cased segment: those six
+ * pages document the design system itself (type scale, radius, elevation, ...)
+ * rather than a `library/` group, so there is no directory name to read.
+ *
+ * Returns null rather than a fallback group: a silent default is exactly how
+ * `Ungrouped` grew, so an unrecognised path becomes a visible error card.
+ */
+export function groupFromPath(path: string): string | null {
+  const lib = path.match(/(?:^|\/)packages\/web\/ui\/src\/library\/([^/]+)\//);
+  if (lib) return lib[1].replace(/(^|-)(\w)/g, (_, sep, c) => (sep ? ' ' : '') + c.toUpperCase());
+  if (/(?:^|\/)packages\/web\/ui\/src\/docs\/pages\//.test(path)) return 'Foundation';
+  if (/(?:^|\/)apps\/web\/src\//.test(path)) return 'App';
+  return null;
+}
+
 function validate(mod: unknown): { ok: true; demo: DemoModule } | { ok: false; error: string } {
   const m = mod as Partial<DemoModule> | null;
   if (!m || typeof m !== 'object') return { ok: false, error: 'module is not an object' };
