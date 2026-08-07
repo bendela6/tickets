@@ -8,6 +8,33 @@
 
 **Tech Stack:** React 19 · TypeScript · `@tanstack/react-virtual` · Tailwind v4 · vitest + @testing-library/react · pnpm workspaces
 
+**Status: COMPLETE.** All eleven tasks landed; the boxes below were ticked
+retroactively on 2026-08-08 after verifying each task's deliverable against the
+tree, because the work went in without the plan being updated as it went.
+
+- **T1–T5, the engine** — `packages/web/table`, 28 files, **220 tests green**:
+  `types.ts`, `sort-utils.ts`, `sort-rows.ts`, `use-table-widths.ts`,
+  `use-column-resize.ts`, `Table.tsx`, `cell-focus.ts`, `use-cell-focus.ts`,
+  `selection.ts`, `tab-stops.ts`, `flatten-groups.ts`. T4's two motivating
+  cases are both real: `TableProps.rowHeight` drives the screen's
+  comfortable/compact density toggle, and `Column.width?: number | string`
+  takes a track function so the Title column can be `minmax(240px, 1fr)`.
+- **T6–T10, the styled adapter** — 13 render parts and 7 column helpers under
+  `packages/web/ui/src/library/table/`, plus the barrel and `table.demo.tsx`.
+  (Note the path: a later reorganisation moved `src/table/` to
+  `src/library/table/`, so the File Structure section below names the old tree.)
+- **T11, the migration** — `all-items-screen.tsx` imports `Table`,
+  `useTableWidths`, `Column`, `SortBy` and `TableGroup` from `@tickets/table`.
+  Five more screens have since adopted it: the board and four signals screens.
+
+**What this plan did NOT cover, and is still unbuilt:** the *definition* half.
+`@tickets/table-schema` — plan `2026-08-02-table-schema-package.md`, 40 tasks,
+none started — is what turns a declarative table definition into compiled
+columns. Today's dynamism is bespoke: `all-items-screen` builds its
+`Column<Row>[]` in TSX and picks visible columns via heuristics in
+`shared-fields.ts` that pattern-match field NAMES. `propsToForm`, the layer-5
+seam, is likewise unimplemented and exists only in comments.
+
 Spec: `docs/superpowers/specs/2026-07-29-items-core-ui-port-design.md`
 Source: `../items-core/packages/web/table/src/` and `../items-core/packages/web/ui/src/table/`
 Prerequisite: **Plan 1 Task 1 must be merged** — the adapter's demos use `Stack`. Nothing else in Plan 1 is required.
@@ -86,7 +113,7 @@ apps/web/src/components/all-items/all-items-screen.tsx   modified: Task 11
 **Interfaces:**
 - Produces: `Column<T>`, `Renderer<V>`, `SortBy<F>`, `TableRender<T>`, every `Render*Ctx`, `ROW_HEIGHT`, `toggleSort`, `multiSortToggle`. Everything downstream depends on these names.
 
-- [ ] **Step 1: Get approval for the new dependency**
+- [x] **Step 1: Get approval for the new dependency**
 
 `@tanstack/react-virtual` is not in the workspace. **Invoke the `add-package` skill** before installing it — it presents candidates and waits for explicit approval. Do not run `pnpm add` first.
 
@@ -96,7 +123,7 @@ Once approved:
 pnpm --filter @tickets/table add @tanstack/react-virtual
 ```
 
-- [ ] **Step 2: Create the package manifest**
+- [x] **Step 2: Create the package manifest**
 
 Create `packages/web/table/package.json`, mirroring `packages/web/form/package.json`'s toolchain pins:
 
@@ -177,29 +204,29 @@ export default defineConfig({
 Run: `pnpm install`
 Expected: the workspace picks up the new package
 
-- [ ] **Step 3: Port types.ts**
+- [x] **Step 3: Port types.ts**
 
 Copy `../items-core/packages/web/table/src/types.ts` to `packages/web/table/src/types.ts` **unchanged**. It has no imports to rewrite — it imports only from `react`. Keep `ROW_HEIGHT = 40` as the default; Task 4 makes it overridable rather than removing it.
 
-- [ ] **Step 4: Write the failing test for the sort utils**
+- [x] **Step 4: Write the failing test for the sort utils**
 
 Create `packages/web/table/src/sort-utils.test.ts` by copying `../items-core/packages/web/table/src/sort-utils.test.ts` unchanged — it imports only `./sort-utils` and has no `@bw` references. It covers the asc → desc → cleared cycle and multi-sort add/cycle/remove.
 
-- [ ] **Step 5: Run it to make sure it fails**
+- [x] **Step 5: Run it to make sure it fails**
 
 Run: `pnpm --filter @tickets/table test -- src/sort-utils.test.ts`
 Expected: FAIL — `Failed to resolve import "./sort-utils"`
 
-- [ ] **Step 6: Port sort-utils.ts**
+- [x] **Step 6: Port sort-utils.ts**
 
 Copy `../items-core/packages/web/table/src/sort-utils.ts` to `packages/web/table/src/sort-utils.ts` unchanged — its only import is `./types`.
 
-- [ ] **Step 7: Run the test to verify it passes**
+- [x] **Step 7: Run the test to verify it passes**
 
 Run: `pnpm --filter @tickets/table test -- src/sort-utils.test.ts`
 Expected: PASS
 
-- [ ] **Step 8: Create the barrel**
+- [x] **Step 8: Create the barrel**
 
 Create `packages/web/table/src/index.ts`:
 
@@ -226,7 +253,7 @@ export { toggleSort, multiSortToggle } from './sort-utils';
 Run: `pnpm --filter @tickets/table typecheck`
 Expected: exit 0
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add packages/web/table pnpm-lock.yaml
@@ -247,7 +274,7 @@ git commit -m "feat(table): scaffold @tickets/table with render types and sort u
 
 **The one deliberate edit:** `use-table-widths.ts` persists under `` `bw:table:${id}:widths` ``. Change the prefix to `tickets:` — a `bw:` key in this app's localStorage is a leftover from another product.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Copy both test files across unchanged:
 - `../items-core/packages/web/table/src/use-table-widths.test.ts` → `packages/web/table/src/use-table-widths.test.ts`
@@ -255,12 +282,12 @@ Copy both test files across unchanged:
 
 Then, in `use-table-widths.test.ts`, update any literal `bw:table:` key to `tickets:table:` so the test pins the new prefix.
 
-- [ ] **Step 2: Run them to make sure they fail**
+- [x] **Step 2: Run them to make sure they fail**
 
 Run: `pnpm --filter @tickets/table test -- src/use-table-widths.test.ts src/use-column-resize.test.tsx`
 Expected: FAIL — imports unresolved
 
-- [ ] **Step 3: Port both hooks**
+- [x] **Step 3: Port both hooks**
 
 Copy `../items-core/packages/web/table/src/use-column-resize.ts` unchanged — it imports only from `react`.
 
@@ -270,12 +297,12 @@ Copy `../items-core/packages/web/table/src/use-table-widths.ts` and change exact
 const KEY = (id: string) => `tickets:table:${id}:widths`;
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm --filter @tickets/table test -- src/use-table-widths.test.ts src/use-column-resize.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Export from the barrel**
+- [x] **Step 5: Export from the barrel**
 
 Append to `packages/web/table/src/index.ts`:
 
@@ -285,7 +312,7 @@ export { useColumnResize } from './use-column-resize';
 export type { UseColumnResizeOptions, UseColumnResizeHandlers } from './use-column-resize';
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/web/table/src
@@ -306,7 +333,7 @@ git commit -m "feat(table): column resize and persisted width hooks"
 
 **This task changes no logic.** It exists so the engine lands with a test suite you did not write, before Tasks 4 and 5 modify it. If a test fails here, the port is wrong — do not "fix" it by editing the test.
 
-- [ ] **Step 1: Copy the test and the stub across**
+- [x] **Step 1: Copy the test and the stub across**
 
 Copy unchanged:
 - `../items-core/packages/web/table/src/render-stub.tsx` → `packages/web/table/src/render-stub.tsx`
@@ -314,12 +341,12 @@ Copy unchanged:
 
 Both import only from `./Table`, `./render-stub` and `./types` — no `@bw` specifiers to rewrite. `Table.test.tsx` installs its own `ResizeObserver` mock in `beforeAll`, which jsdom needs and does not provide; keep it.
 
-- [ ] **Step 2: Run it to make sure it fails**
+- [x] **Step 2: Run it to make sure it fails**
 
 Run: `pnpm --filter @tickets/table test -- src/Table.test.tsx`
 Expected: FAIL — `Failed to resolve import "./Table"`
 
-- [ ] **Step 3: Port Table.tsx**
+- [x] **Step 3: Port Table.tsx**
 
 Copy `../items-core/packages/web/table/src/Table.tsx` to `packages/web/table/src/Table.tsx` unchanged. Its imports are all relative (`./sort-utils`, `./types`) plus `react` and `@tanstack/react-virtual` — nothing to rewrite.
 
@@ -331,12 +358,12 @@ Read it once before moving on. The shape that matters for Tasks 4 and 5:
 - Skeleton rows appear only when `isLoading && rows.length === 0`.
 - Every slot is invoked through a tiny `Render*` component wrapper, so slots may use hooks.
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `pnpm --filter @tickets/table test -- src/Table.test.tsx`
 Expected: PASS, 11 tests across three describe blocks
 
-- [ ] **Step 5: Export from the barrel**
+- [x] **Step 5: Export from the barrel**
 
 Add to `packages/web/table/src/index.ts`:
 
@@ -348,7 +375,7 @@ export { makeStubRender } from './render-stub';
 
 `makeStubRender` is exported from the package, not kept test-local, because the `@tickets/ui` adapter's tests use it to drive a real engine without the styled chrome.
 
-- [ ] **Step 6: Run the whole package and typecheck**
+- [x] **Step 6: Run the whole package and typecheck**
 
 Run: `pnpm --filter @tickets/table test`
 Expected: PASS
@@ -356,7 +383,7 @@ Expected: PASS
 Run: `pnpm --filter @tickets/table typecheck`
 Expected: exit 0
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add packages/web/table/src
@@ -375,7 +402,7 @@ git commit -m "feat(table): port the headless table engine from items-core"
 
 Both gaps come from `all-items-screen.tsx`: a density toggle switching rows between 32px and 42px, and a Title column of `minmax(240px, 1fr)`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `packages/web/table/src/Table.test.tsx`:
 
@@ -442,12 +469,12 @@ describe('<Table> engine — sizing', () => {
 });
 ```
 
-- [ ] **Step 2: Run them to make sure they fail**
+- [x] **Step 2: Run them to make sure they fail**
 
 Run: `pnpm --filter @tickets/table test -- src/Table.test.tsx`
 Expected: FAIL on the six new tests; the original 11 still PASS
 
-- [ ] **Step 3: Widen the Column width type**
+- [x] **Step 3: Widen the Column width type**
 
 In `packages/web/table/src/types.ts`, change `Column<T>`'s width field:
 
@@ -459,7 +486,7 @@ In `packages/web/table/src/types.ts`, change `Column<T>`'s width field:
   width?: number | string;
 ```
 
-- [ ] **Step 4: Implement both changes in Table.tsx**
+- [x] **Step 4: Implement both changes in Table.tsx**
 
 Add `rowHeight` to `TableProps<T>`:
 
@@ -512,12 +539,12 @@ There is a second place the width is read — the `resize.startWidth` computatio
         state.widths[col.key] ?? (typeof col.width === 'number' ? col.width : 160);
 ```
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 Run: `pnpm --filter @tickets/table test -- src/Table.test.tsx`
 Expected: PASS, 17 tests — the original 11 unchanged
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/web/table/src
@@ -538,7 +565,7 @@ git commit -m "feat(table): caller-supplied row height and track-function column
 
 Groups flatten into one virtualized list so the table keeps one scroll region and one sticky header — rendering a Table per group would give each its own of both. Flattening is a pure function, so it is tested on its own before the engine wires it in.
 
-- [ ] **Step 1: Write the failing test for the flattener**
+- [x] **Step 1: Write the failing test for the flattener**
 
 Create `packages/web/table/src/flatten-groups.test.ts`:
 
@@ -582,12 +609,12 @@ describe('flattenGroups', () => {
 });
 ```
 
-- [ ] **Step 2: Run it to make sure it fails**
+- [x] **Step 2: Run it to make sure it fails**
 
 Run: `pnpm --filter @tickets/table test -- src/flatten-groups.test.ts`
 Expected: FAIL — `Failed to resolve import "./flatten-groups"`
 
-- [ ] **Step 3: Add the group types**
+- [x] **Step 3: Add the group types**
 
 Append to `packages/web/table/src/types.ts`:
 
@@ -624,7 +651,7 @@ Add `groupHeader` to the `TableRender<T>` interface, after `td`:
   groupHeader: (ctx: RenderGroupHeaderCtx) => ReactNode;
 ```
 
-- [ ] **Step 4: Implement the flattener**
+- [x] **Step 4: Implement the flattener**
 
 Create `packages/web/table/src/flatten-groups.ts`:
 
@@ -656,12 +683,12 @@ export function flattenGroups<T>(groups: TableGroup<T>[]): VirtualRow<T>[] {
 }
 ```
 
-- [ ] **Step 5: Run the flattener test to verify it passes**
+- [x] **Step 5: Run the flattener test to verify it passes**
 
 Run: `pnpm --filter @tickets/table test -- src/flatten-groups.test.ts`
 Expected: PASS, 5 tests
 
-- [ ] **Step 6: Write the failing engine test**
+- [x] **Step 6: Write the failing engine test**
 
 First extend the stub. In `packages/web/table/src/render-stub.tsx`, add `data-start-width` to the **existing** `th` slot's attributes, right after `data-resizable`:
 
@@ -756,12 +783,12 @@ describe('<Table> engine — grouping', () => {
 });
 ```
 
-- [ ] **Step 7: Run it to make sure it fails**
+- [x] **Step 7: Run it to make sure it fails**
 
 Run: `pnpm --filter @tickets/table test -- src/Table.test.tsx`
 Expected: FAIL on the six grouping tests; the previous 17 still PASS
 
-- [ ] **Step 8: Wire grouping into the engine**
+- [x] **Step 8: Wire grouping into the engine**
 
 In `packages/web/table/src/Table.tsx`:
 
@@ -862,12 +889,12 @@ function RenderGroupHeader(props: {
 
 The prop is named `groupKey`, not `key` — React would swallow a prop literally called `key`.
 
-- [ ] **Step 9: Run the tests to verify they pass**
+- [x] **Step 9: Run the tests to verify they pass**
 
 Run: `pnpm --filter @tickets/table test`
 Expected: PASS, 28 tests. **Every test from Task 3 must still pass unchanged** — that is the point of having ported them first.
 
-- [ ] **Step 10: Export the new names**
+- [x] **Step 10: Export the new names**
 
 Add to `packages/web/table/src/index.ts`:
 
@@ -880,7 +907,7 @@ export { flattenGroups } from './flatten-groups';
 Run: `pnpm --filter @tickets/table typecheck`
 Expected: exit 0
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add packages/web/table/src
@@ -901,7 +928,7 @@ git commit -m "feat(table): grouped rows sharing one virtualized scroll region"
 
 This is a **restyle**, not a copy. items-core's slots are the behavioural reference; every class is rewritten. Their `▲`/`▼` text glyphs become `Icon` entries, and their arbitrary values (`text-[10px]`, `w-8` resize handle) become tokens and round steps.
 
-- [ ] **Step 1: Add the dependency**
+- [x] **Step 1: Add the dependency**
 
 In `packages/web/ui/package.json`, add to `dependencies`:
 
@@ -911,7 +938,7 @@ In `packages/web/ui/package.json`, add to `dependencies`:
 
 Run: `pnpm install`
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Create `packages/web/ui/src/table/table-render.test.tsx`:
 
@@ -1003,12 +1030,12 @@ describe('tableRender', () => {
 });
 ```
 
-- [ ] **Step 3: Run it to make sure it fails**
+- [x] **Step 3: Run it to make sure it fails**
 
 Run: `pnpm --filter @tickets/ui test -- src/table/table-render.test.tsx`
 Expected: FAIL — `Failed to resolve import "./table-render"`
 
-- [ ] **Step 4: Implement the eight slots**
+- [x] **Step 4: Implement the eight slots**
 
 Create `packages/web/ui/src/table/render-root.tsx`:
 
@@ -1268,12 +1295,12 @@ export function tableRender<T>(): TableRender<T> {
 }
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `pnpm --filter @tickets/ui test -- src/table/table-render.test.tsx`
 Expected: PASS, 8 tests. Typecheck will still fail on the missing `groupHeader` — Task 7 closes it.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/web/ui/package.json packages/web/ui/src/table pnpm-lock.yaml
@@ -1292,7 +1319,7 @@ git commit -m "feat(ui): Instrument-styled table render slots"
 - Consumes: `RenderGroupHeaderCtx`, `GROUP_ROW_HEIGHT` from `@tickets/table` (Task 5)
 - Produces: `renderGroupHeader`; completes `tableRender`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `packages/web/ui/src/table/table-render.test.tsx`:
 
@@ -1322,12 +1349,12 @@ describe('tableRender — groups', () => {
 });
 ```
 
-- [ ] **Step 2: Run it to make sure it fails**
+- [x] **Step 2: Run it to make sure it fails**
 
 Run: `pnpm --filter @tickets/ui test -- src/table/table-render.test.tsx`
 Expected: FAIL — `render.groupHeader is not a function`
 
-- [ ] **Step 3: Implement the slot**
+- [x] **Step 3: Implement the slot**
 
 Create `packages/web/ui/src/table/render-group-header.tsx`:
 
@@ -1363,7 +1390,7 @@ import { renderGroupHeader } from './render-group-header';
   groupHeader: renderGroupHeader,
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `pnpm --filter @tickets/ui test -- src/table/table-render.test.tsx`
 Expected: PASS, 11 tests
@@ -1371,7 +1398,7 @@ Expected: PASS, 11 tests
 Run: `pnpm --filter @tickets/ui typecheck`
 Expected: exit 0 — `tableRender` now satisfies `TableRender` completely
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/ui/src/table
@@ -1391,7 +1418,7 @@ git commit -m "feat(ui): group header render slot"
 
 **`DateColumn` drops items-core's `formatRelative`.** tickets already has a `RelativeDate` component; porting a second relative-time formatter would give the app two that disagree at the boundaries.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `packages/web/ui/src/table/columns/columns.test.tsx`:
 
@@ -1520,12 +1547,12 @@ describe('LinkColumn', () => {
 });
 ```
 
-- [ ] **Step 2: Run it to make sure it fails**
+- [x] **Step 2: Run it to make sure it fails**
 
 Run: `pnpm --filter @tickets/ui test -- src/table/columns/columns.test.tsx`
 Expected: FAIL — imports unresolved
 
-- [ ] **Step 3: Implement the four helpers**
+- [x] **Step 3: Implement the four helpers**
 
 Create `packages/web/ui/src/table/columns/text-column.tsx`:
 
@@ -1663,12 +1690,12 @@ export function LinkColumn(opts: LinkColumnOpts): Renderer<string> {
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `pnpm --filter @tickets/ui test -- src/table/columns/columns.test.tsx`
 Expected: PASS, 15 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/ui/src/table/columns
@@ -1691,7 +1718,7 @@ git commit -m "feat(ui): text, number, date and link column helpers"
 
 `BadgeColumn` uses `Pill`; `ImageColumn` falls back to `Avatar` instead of hand-rolling an initial disc.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `packages/web/ui/src/table/columns/columns.test.tsx`:
 
@@ -1775,12 +1802,12 @@ describe('ActionsColumn', () => {
 });
 ```
 
-- [ ] **Step 2: Run them to make sure they fail**
+- [x] **Step 2: Run them to make sure they fail**
 
 Run: `pnpm --filter @tickets/ui test -- src/table/columns/columns.test.tsx`
 Expected: FAIL on the eight new tests; the previous 12 still PASS
 
-- [ ] **Step 3: Implement the three helpers**
+- [x] **Step 3: Implement the three helpers**
 
 Create `packages/web/ui/src/table/columns/badge-column.tsx`:
 
@@ -1894,12 +1921,12 @@ export function ActionsColumn(opts: ActionsColumnOpts): Renderer<unknown> {
 
 Check `components/button`'s props for the icon-only form — if it takes `icon` as an element rather than an `IconName`, pass `<Icon name={item.icon} />`.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm --filter @tickets/ui test -- src/table/columns/columns.test.tsx`
 Expected: PASS, 20 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/ui/src/table/columns
@@ -1917,7 +1944,7 @@ git commit -m "feat(ui): badge, image and actions column helpers"
 **Interfaces:**
 - Produces: the public `@tickets/ui` table surface — `tableRender` and all seven column helpers
 
-- [ ] **Step 1: Create the barrel**
+- [x] **Step 1: Create the barrel**
 
 Create `packages/web/ui/src/table/index.ts`:
 
@@ -1940,7 +1967,7 @@ In `packages/web/ui/src/index.ts`, add after the `./forms` line (or after `./com
 export * from './table';
 ```
 
-- [ ] **Step 2: Add the demo**
+- [x] **Step 2: Add the demo**
 
 Create `packages/web/ui/src/table/table.demo.tsx`:
 
@@ -2028,7 +2055,7 @@ export const states = [
 ];
 ```
 
-- [ ] **Step 3: Run every check**
+- [x] **Step 3: Run every check**
 
 Run: `pnpm --filter @tickets/ui test`
 Expected: PASS
@@ -2039,11 +2066,11 @@ Expected: exit 0
 Run: `pnpm --filter @tickets/ui tokens:verify`
 Expected: exit 0
 
-- [ ] **Step 4: Look at it**
+- [x] **Step 4: Look at it**
 
 Start the playground per `running-the-stack` and open the Table page. Check all four states, drag a column edge, click a sortable header, and scroll a grouped table far enough to confirm rows below the first group land at the right offsets — an off-by-one in `estimateSize` shows up as rows drifting, and no test catches it.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/web/ui/src/table packages/web/ui/src/index.ts
@@ -2065,12 +2092,12 @@ git commit -m "feat(ui): table adapter barrel and gallery demo"
 
 **What already lines up:** the screen's `groups` array is built as `{ key, header: ReactNode, rows: Row[] }[]` — exactly `TableGroup<Row>`. It needs no reshaping.
 
-- [ ] **Step 1: Run the existing tests and record the baseline**
+- [x] **Step 1: Run the existing tests and record the baseline**
 
 Run: `pnpm --filter @tickets/web test -- src/components/all-items`
 Expected: PASS. Note the count — it must be identical at the end.
 
-- [ ] **Step 2: Add the dependency**
+- [x] **Step 2: Add the dependency**
 
 In `apps/web/package.json`, add to `dependencies`:
 
@@ -2080,7 +2107,7 @@ In `apps/web/package.json`, add to `dependencies`:
 
 Run: `pnpm install`
 
-- [ ] **Step 3: Build the column definitions**
+- [x] **Step 3: Build the column definitions**
 
 In `all-items-screen.tsx`, replace the hand-built `gridTemplateColumns` array (around line 341) with a `Column<Row>[]`. The two fixed columns keep their exact track sizes, and the dynamic ones keep `columnWidthFor`'s output — which is why Task 4 made `width` accept a string:
 
@@ -2115,7 +2142,7 @@ const columns: Column<Row>[] = [
 
 `columnWidthFor` returns CSS track strings today, so its return type is already `string` — no change needed there.
 
-- [ ] **Step 4: Replace the rendering**
+- [x] **Step 4: Replace the rendering**
 
 Delete the sticky header block and the `groups.map(...)` row loop (roughly lines 555–615). Keep the surrounding scroll container and the `ScreenState` empty branch — the engine renders nothing for an empty table, so the screen keeps owning that:
 
@@ -2155,7 +2182,7 @@ Delete the sticky header block and the `groups.map(...)` row loop (roughly lines
 
 Note `overflow-auto` became `overflow-hidden` on the wrapper: the engine owns its own scroll container, and two nested scrollers would fight.
 
-- [ ] **Step 5: Add the sort and width state**
+- [x] **Step 5: Add the sort and width state**
 
 Near the other `useState` calls:
 
@@ -2166,12 +2193,12 @@ const [widths, setWidth] = useTableWidths('all-items');
 
 Sorting is now live where it was not before. The screen already sorts rows inside each group by ticket number; leave that as the default ordering and let `sort` reorder on top of it — apply it in the group-building code where rows are sorted, or leave the columns non-sortable in this task and enable them in a follow-up. **Prefer leaving `sortable` off every column here.** Turning it on without wiring `sort` into the actual row ordering would give the user a control that does nothing, which is worse than no control.
 
-- [ ] **Step 6: Run the acceptance gate**
+- [x] **Step 6: Run the acceptance gate**
 
 Run: `pnpm --filter @tickets/web test -- src/components/all-items`
 Expected: PASS with the same test count as Step 1, **no test file edited**
 
-- [ ] **Step 7: Run every check**
+- [x] **Step 7: Run every check**
 
 Run: `pnpm typecheck`
 Run: `pnpm --filter @tickets/web test`
@@ -2180,11 +2207,11 @@ Run: `pnpm --filter @tickets/table test`
 Run: `pnpm build`
 Expected: all exit 0
 
-- [ ] **Step 8: Verify in the running app**
+- [x] **Step 8: Verify in the running app**
 
 Start the stack per `running-the-stack` and open All items. Check: both grouping modes, the density toggle (rows must not drift), the columns popover adding and removing columns, clicking a row opening the drawer, dragging a column edge, and scrolling a long list to the bottom.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add apps/web/src/components/all-items/all-items-screen.tsx apps/web/package.json pnpm-lock.yaml
