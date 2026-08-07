@@ -1,6 +1,9 @@
 services:
   postgres:
     image: postgres:17-alpine
+    # Come back after a crash or a host reboot. `unless-stopped` (not `always`)
+    # so a deliberate `docker stop` stays stopped.
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -16,6 +19,7 @@ services:
       retries: 20
 
   app:
+    restart: unless-stopped
     build:
       context: .
       target: app
