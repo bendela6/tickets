@@ -66,7 +66,7 @@ function PeopleRow({ item, selected }: { item: SuggestionItem; selected: boolean
 function TicketRow({ item }: { item: SuggestionItem }) {
   return (
     <>
-      <span className="shrink-0 rounded-md border-1 border-gray-6 bg-gray-1 px-6 py-2 font-mono text-11 font-500 text-gray-11">
+      <span className="shrink-0 rounded-6 border-1 border-gray-6 bg-gray-1 px-6 py-2 font-mono text-11 font-500 text-gray-11">
         {item.label}
       </span>
       <span className="min-w-0 flex-1 truncate font-sans text-13/19 text-gray-12">{item.title}</span>
@@ -137,7 +137,7 @@ const SuggestionList = forwardRef<SuggestionListHandle, SuggestionListProps>(fun
       // showing.
       data-suggestion-popover=""
       className={cn(
-        'fixed z-50 rounded-xl border-1 border-gray-6 bg-surface-raised p-5 shadow-lg',
+        'fixed z-50 rounded-12 border-1 border-gray-6 bg-surface-raised p-5 shadow-lg',
         width,
       )}
       // `pointerEvents` has to be claimed back explicitly. This popover hangs
@@ -164,7 +164,7 @@ const SuggestionList = forwardRef<SuggestionListHandle, SuggestionListProps>(fun
               <div
                 key={item.id ?? item.label}
                 className={cn(
-                  'flex h-34 cursor-pointer items-center gap-9 rounded-md px-9',
+                  'flex h-34 cursor-pointer items-center gap-9 rounded-6 px-9',
                   isSelected ? 'bg-surface-inset' : 'hover:bg-gray-1',
                 )}
                 // Suggestion's mousedown-driven selection would otherwise blur

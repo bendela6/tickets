@@ -22,7 +22,7 @@ function slugify(name: string): string {
 
 function ArchChip() {
   return (
-    <span className="inline-flex h-17 shrink-0 items-center rounded-sm bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
+    <span className="inline-flex h-17 shrink-0 items-center rounded-4 bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
       ARCH
     </span>
   );
@@ -123,7 +123,7 @@ function TypeForm({
 }) {
   const nameId = `${idPrefix}-name`;
   return (
-    <div className="max-w-420 rounded-xl border-1 border-gray-6 bg-surface-raised p-14">
+    <div className="max-w-420 rounded-12 border-1 border-gray-6 bg-surface-raised p-14">
       <FieldLabel htmlFor={nameId}>Name</FieldLabel>
       <Input
         id={nameId}
@@ -287,7 +287,7 @@ export function TypesTab({ board }: SettingsTabProps) {
               <section
                 key={type.id}
                 className={cn(
-                  'max-w-660 rounded-xl border-1 border-gray-6 bg-surface-raised p-14',
+                  'max-w-660 rounded-12 border-1 border-gray-6 bg-surface-raised p-14',
                   type.archivedAt && 'opacity-60',
                 )}
               >

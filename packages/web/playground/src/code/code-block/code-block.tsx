@@ -31,7 +31,7 @@ export function CodeBlock({
   return (
     <div
       className={cn(
-        'pg-code-block rounded-lg p-20 font-mono text-13/19',
+        'pg-code-block rounded-8 p-20 font-mono text-13/19',
         numbered && 'pg-code-block--numbered',
         className,
       )}

@@ -32,7 +32,7 @@ export const DOCS_MEASURE = 'max-w-800';
 export const DOCS_COLUMN = 'w-800 shrink-0';
 
 const CHIP =
-  'inline-flex h-22 items-center rounded-md border-1 border-gray-6 bg-surface-raised px-8 font-mono text-11/13 tracking-wider tracking-normal text-gray-11';
+  'inline-flex h-22 items-center rounded-6 border-1 border-gray-6 bg-surface-raised px-8 font-mono text-11/13 tracking-wider tracking-normal text-gray-11';
 const META_LINE = 'flex flex-wrap gap-24 font-mono text-11/13 tracking-wider tracking-normal text-gray-9';
 
 // Which package a demo belongs to, for the API header's right column. Derived
@@ -111,7 +111,7 @@ function PropRow({ name, def }: { name: string; def: AnyControlDef }) {
         </span>
         <span
           className={cn(
-            'inline-flex h-18 items-center self-start rounded-sm px-6 font-mono text-10/14 font-500 tracking-wider',
+            'inline-flex h-18 items-center self-start rounded-4 px-6 font-mono text-10/14 font-500 tracking-wider',
             def.required ? 'bg-indigo-3 text-indigo-9' : 'bg-surface-inset text-gray-9',
           )}
         >
@@ -180,7 +180,7 @@ export function DocsPanel({ demo, railNote = true }: { demo: LiveDemo; railNote?
       ))}
 
       {railNote && (
-        <div className="mt-24 flex gap-10 rounded-lg bg-green-3 p-14">
+        <div className="mt-24 flex gap-10 rounded-8 bg-green-3 p-14">
           {/* Registry glyph rather than a circle drawn around the letter i. */}
           <Icon name="circle-info" size="sm" className="mt-px flex-none text-green-9" />
           <span className="font-sans text-12/17 leading-normal text-green-9 text-pretty">

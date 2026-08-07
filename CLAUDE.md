@@ -8,6 +8,7 @@ pnpm + turbo monorepo. `apps/api` (Fastify-style API, port 4600) · `apps/web` (
 - Shared components and tokens live in `packages/web/ui` (`@tickets/ui`). Tokens are GENERATED from `tokens/*.tokens.json` into `styles/generated/` and `src/style/generated/` — never hand-edit either; run `pnpm --filter @tickets/ui tokens:build`. Details in `design-system-adapter.md`.
 - `@tickets/ui` is three layers — `src/style/` (paint), `src/library/` (eight role groups), `src/docs/` (gallery + token pages) — and imports point downward only. Inside a group: `components/` is what you reach for, `parts/` is what those are built from. Full rationale in `docs/superpowers/specs/2026-08-06-ui-package-structure-design.md`.
 - **`--spacing` is 1px, so a number in a class name IS pixels** — `p-16` is 16px, `gap-8` is 8px (changed 2026-08-04). Anything written against Tailwind's stock `.25rem` scale renders at a quarter size and still compiles.
+- **Radius is a number too: `rounded-6` is 6px** (changed 2026-08-07). The t-shirt rungs and the parallel `rounded-control-*` ladder are gone; the design sanctions 3/4/5/6/8/12 but any integer compiles. Radius is NOT on the spacing scale — it works because `border.css` redefines the fifteen `rounded[-corner]-*` utilities, so a t-shirt spelling or a fraction emits no rule at all rather than the wrong size. `rounded-full`/`rounded-none`/`rounded-[7px]` still work; bare `rounded` no longer does.
 
 ## Project skills (in `.claude/skills/` — use them)
 

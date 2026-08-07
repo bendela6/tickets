@@ -30,7 +30,7 @@ function chipText(value: unknown): string {
 function ValueChip({ value }: { value: unknown }) {
   const text = chipText(value);
   return (
-    <span className="rounded-sm bg-surface-inset px-5 py-px font-mono text-11 text-gray-12">{text}</span>
+    <span className="rounded-4 bg-surface-inset px-5 py-px font-mono text-11 text-gray-12">{text}</span>
   );
 }
 

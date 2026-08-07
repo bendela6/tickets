@@ -43,14 +43,14 @@ test('outline shares its border-2 weight with Pill/CopyButton outline', () => {
 
 test('sizes match design height/padding/radius/font-size', () => {
   const { rerender } = render(<Button size="sm">c</Button>);
-  expect(screen.getByRole('button')).toHaveClass('h-28', 'px-10', 'rounded-md', 'text-12');
+  expect(screen.getByRole('button')).toHaveClass('h-28', 'px-10', 'rounded-6', 'text-12');
   rerender(<Button size="md">r</Button>);
-  expect(screen.getByRole('button')).toHaveClass('h-36', 'px-14', 'rounded-lg', 'text-13');
+  expect(screen.getByRole('button')).toHaveClass('h-36', 'px-14', 'rounded-8', 'text-13');
   rerender(<Button size="lg">t</Button>);
   expect(screen.getByRole('button')).toHaveClass(
     'h-44',
     'px-[18px]',
-    'rounded-xl',
+    'rounded-12',
     'text-14',
   );
 });

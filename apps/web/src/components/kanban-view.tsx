@@ -206,7 +206,7 @@ export function KanbanView({
         }}
         onDragEnd={() => setDraggingId(null)}
         className={cn(
-          'flex shrink-0 cursor-pointer flex-col gap-8 rounded-xl border-1 border-gray-6 bg-surface-raised px-13 py-11 text-left shadow-sm',
+          'flex shrink-0 cursor-pointer flex-col gap-8 rounded-12 border-1 border-gray-6 bg-surface-raised px-13 py-11 text-left shadow-sm',
           draggingId === ticket.id && 'opacity-40',
         )}
       >
@@ -229,7 +229,7 @@ export function KanbanView({
             <Pill
               {...typePill}
               label={type.label}
-              className={cn(typePill.className, 'h-18 rounded-md px-7 text-10')}
+              className={cn(typePill.className, 'h-18 rounded-6 px-7 text-10')}
             />
           ) : null}
         </div>
@@ -267,7 +267,7 @@ export function KanbanView({
             key={option.id}
             aria-label={option.label}
             className={cn(
-              'flex w-[85vw] flex-none flex-col rounded-xl bg-surface-inset md:w-252',
+              'flex w-[85vw] flex-none flex-col rounded-12 bg-surface-inset md:w-252',
               mode === 'illegal' && 'opacity-50',
             )}
             onDragOver={
@@ -302,19 +302,19 @@ export function KanbanView({
               </span>
             </div>
             {mode === 'illegal' ? (
-              <div className="mx-10 mb-8 rounded-lg bg-red-3 px-10 py-7 font-sans text-11 leading-[1.4] text-red-9">
+              <div className="mx-10 mb-8 rounded-8 bg-red-3 px-10 py-7 font-sans text-11 leading-[1.4] text-red-9">
                 ✕ workflow: no transition {draggedFromLabel} → {option.label}
               </div>
             ) : null}
             {mode === 'legal' ? (
-              <div className="mx-10 mb-8 flex h-[74px] shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-indigo-9 bg-indigo-3 font-sans text-12/17 font-500 text-indigo-9">
+              <div className="mx-10 mb-8 flex h-[74px] shrink-0 items-center justify-center rounded-12 border-2 border-dashed border-indigo-9 bg-indigo-3 font-sans text-12/17 font-500 text-indigo-9">
                 Drop — {draggedFromLabel} → {option.label}
               </div>
             ) : null}
             <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-10 pb-10">
               {cards.map((ticket) => renderCard(ticket))}
               {mode === 'origin' && dragged ? (
-                <div className="flex h-[74px] shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-gray-7 font-mono text-11 text-gray-9">
+                <div className="flex h-[74px] shrink-0 items-center justify-center rounded-12 border-2 border-dashed border-gray-7 font-mono text-11 text-gray-9">
                   {board.project.itemPrefix}-{dragged.number} — dragging…
                 </div>
               ) : null}

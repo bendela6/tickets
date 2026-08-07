@@ -52,7 +52,7 @@ export function PromptComposer({
         }}
         rows={2}
         placeholder="Message the agent…  (⌘/Ctrl+Enter to send)"
-        className="min-h-38 resize-y rounded-lg border-1 border-gray-7 bg-surface-raised px-12 py-8 font-sans text-13/19 text-gray-12 placeholder:text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-3 focus:ring-indigo-3"
+        className="min-h-38 resize-y rounded-8 border-1 border-gray-7 bg-surface-raised px-12 py-8 font-sans text-13/19 text-gray-12 placeholder:text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-3 focus:ring-indigo-3"
       />
       <div className="flex items-center gap-8">
         <Combobox

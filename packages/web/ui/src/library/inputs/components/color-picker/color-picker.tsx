@@ -115,7 +115,7 @@ export function ColorPicker({
             cannot be searched; a name alone is the thing you were avoiding by
             using colour in the first place. */}
         {selected ? (
-          <span aria-hidden className={cn('size-14 shrink-0 rounded-control-xs', `bg-${selected}-9`)} />
+          <span aria-hidden className={cn('size-14 shrink-0 rounded-3', `bg-${selected}-9`)} />
         ) : null}
         <span className="truncate">{selected ? displayName(selected) : placeholder}</span>
       </span>
@@ -154,7 +154,7 @@ export function ColorPicker({
               onFocus={() => setCursor(index)}
               onClick={() => commit(index)}
               className={cn(
-                'flex size-28 items-center justify-center rounded-control-xs',
+                'flex size-28 items-center justify-center rounded-3',
                 `bg-${hue}-9`,
                 focusRing(field.scale, 'focus-visible', 'inward'),
                 index === cursor && cursorRing(field.scale),

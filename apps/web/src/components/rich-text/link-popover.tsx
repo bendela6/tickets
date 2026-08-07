@@ -144,7 +144,7 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
   return (
     <div
       ref={popoverRef}
-      className="fixed z-50 flex items-center gap-8 rounded-lg border-1 border-gray-6 bg-surface-raised px-10 py-6 shadow-lg"
+      className="fixed z-50 flex items-center gap-8 rounded-8 border-1 border-gray-6 bg-surface-raised px-10 py-6 shadow-lg"
       style={{ left: rect?.left ?? 0, top: rect?.bottom ?? 0 }}
       // Keeps the editor's own selection/focus intact when clicking a
       // button in here — a real mousedown-driven focus change would blur
@@ -190,7 +190,7 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
           setDraft(href);
           setEditing(true);
         }}
-        className="flex size-22 shrink-0 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
+        className="flex size-22 shrink-0 items-center justify-center rounded-6 text-gray-11 hover:bg-surface-inset"
       >
         <Icon name="pencil" size="sm" />
       </button>
@@ -198,7 +198,7 @@ export function LinkEditPopover({ editor }: { editor: Editor | null }) {
         type="button"
         aria-label="Remove link"
         onClick={remove}
-        className="flex size-22 shrink-0 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
+        className="flex size-22 shrink-0 items-center justify-center rounded-6 text-gray-11 hover:bg-surface-inset"
       >
         <Icon name="trash" size="sm" />
       </button>

@@ -47,7 +47,7 @@ function DecisionCard({ decision }: { decision: Decision }) {
   return (
     <article
       className={[
-        'min-w-0 overflow-hidden rounded-lg border bg-surface-raised',
+        'min-w-0 overflow-hidden rounded-8 border bg-surface-raised',
         status === 'open' ? 'border-orange-7' : 'border-gray-6',
         spent ? 'opacity-70' : '',
       ].join(' ')}
@@ -98,7 +98,7 @@ function DecisionCard({ decision }: { decision: Decision }) {
           // a superseded or reversed choice must not read as still in force.
           <div
             className={[
-              'rounded-md border px-12 py-8',
+              'rounded-6 border px-12 py-8',
               status === 'open'
                 ? 'border-orange-7 bg-orange-3'
                 : status === 'decided'
@@ -130,7 +130,7 @@ function OptionRow({ option }: { option: DecisionOption }) {
   return (
     <li
       className={[
-        'flex min-w-0 gap-8 rounded-md border px-10 py-6',
+        'flex min-w-0 gap-8 rounded-6 border px-10 py-6',
         chosen
           ? 'border-green-7 bg-green-3'
           : recommended

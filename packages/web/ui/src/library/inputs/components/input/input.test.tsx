@@ -77,7 +77,7 @@ test('readOnly also changes how the field looks', () => {
   // The sides STAY transparent — only the bottom carries the rule, because
   // read-only is a printed row rather than a quieter box.
   expect(input).toHaveClass('border-transparent');
-  expect(input).not.toHaveClass('rounded-control-md');
+  expect(input).not.toHaveClass('rounded-4');
   expect(input.className).not.toContain('hover:bg-gray-6');
 });
 

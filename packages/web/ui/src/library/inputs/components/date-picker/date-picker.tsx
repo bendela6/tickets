@@ -107,7 +107,7 @@ const CHEVRON: Record<ControlSize, IconSize> = { xs: 'sm', md: 'sm', lg: 'md' };
 /** The footer's quick actions — lower-case and mono, so they read as shortcuts
  *  rather than as the buttons that commit the form around them. */
 const FOOTER_ACTION =
-  'rounded-control-xs px-6 py-2 font-mono text-11 text-gray-11 hover:bg-gray-4 hover:text-gray-12';
+  'rounded-3 px-6 py-2 font-mono text-11 text-gray-11 hover:bg-gray-4 hover:text-gray-12';
 
 export function DatePicker({
   id,
@@ -297,7 +297,7 @@ export function DatePicker({
             type="button"
             aria-label="Previous month"
             onClick={() => shiftMonth(-1)}
-            className="inline-flex h-24 w-24 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
+            className="inline-flex h-24 w-24 items-center justify-center rounded-6 text-gray-11 hover:bg-surface-inset"
           >
             <Icon name="chevron-left" size="xs" />
           </button>
@@ -308,7 +308,7 @@ export function DatePicker({
             type="button"
             aria-label="Next month"
             onClick={() => shiftMonth(1)}
-            className="inline-flex h-24 w-24 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset"
+            className="inline-flex h-24 w-24 items-center justify-center rounded-6 text-gray-11 hover:bg-surface-inset"
           >
             <Icon name="chevron-right" size="xs" />
           </button>
@@ -359,7 +359,7 @@ export function DatePicker({
                   // Mono, like every other date in the system, so the columns
                   // of a month align on their digits instead of drifting with
                   // the width of a 1 against an 8.
-                  'flex h-28 w-28 items-center justify-center rounded-control-xs font-mono text-12 tabular-nums',
+                  'flex h-28 w-28 items-center justify-center rounded-3 font-mono text-12 tabular-nums',
                   // The focused day wears the inward ring — a day cell is inside
                   // a grid, where an outward halo would overlap its neighbours.
                   focusRing(field.scale, 'focus-visible', 'inward'),

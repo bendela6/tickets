@@ -124,7 +124,7 @@ export function MatrixMode<C extends Record<string, AnyControlDef>>({
             items.push(
               <div
                 key={`cell-${yi}-${xi}`}
-                className="flex items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised px-8 py-12"
+                className="flex items-center justify-center rounded-8 border-1 border-gray-6 bg-surface-raised px-8 py-12"
               >
                 {playground.render(cell(xi, yi) as ControlValues<C>)}
               </div>,

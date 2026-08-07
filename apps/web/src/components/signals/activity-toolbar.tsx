@@ -2,7 +2,7 @@ import type { IssueLevel, SignalsAppRow } from '../../api/signals/signals-api';
 import { cn, Input } from '@tickets/ui';
 
 const selectClasses =
-  'h-28 rounded-lg border-1 border-gray-6 bg-surface-raised px-8 font-sans text-12 text-gray-11 ' +
+  'h-28 rounded-8 border-1 border-gray-6 bg-surface-raised px-8 font-sans text-12 text-gray-11 ' +
   'hover:border-gray-7 focus:border-indigo-9 focus:outline-none focus:ring-3 focus:ring-indigo-3';
 
 const DAY_OPTIONS = [7, 14, 30, 90];

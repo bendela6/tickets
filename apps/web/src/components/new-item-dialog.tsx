@@ -57,7 +57,7 @@ function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
     <span
       aria-hidden
       className={cn(
-        'flex size-36 shrink-0 items-center justify-center rounded-xl',
+        'flex size-36 shrink-0 items-center justify-center rounded-12',
         colored ? iconColorClasses[hexToOptionColor(type.config.color)] : 'bg-surface-inset text-gray-11',
       )}
     >
@@ -72,8 +72,8 @@ function TypeIcon({ type, dashed }: { type: ItemType; dashed?: boolean }) {
 
 function ProjectChip({ project }: { project: Project }) {
   return (
-    <span className="inline-flex h-28 shrink-0 items-center gap-7 rounded-lg border-1 border-gray-6 px-10 font-sans text-13/19 font-500 text-gray-12">
-      <span className="rounded-sm bg-surface-inset px-5 py-2 font-mono text-11/13 tracking-wider font-500">
+    <span className="inline-flex h-28 shrink-0 items-center gap-7 rounded-8 border-1 border-gray-6 px-10 font-sans text-13/19 font-500 text-gray-12">
+      <span className="rounded-4 bg-surface-inset px-5 py-2 font-mono text-11/13 tracking-wider font-500">
         {project.itemPrefix}
       </span>
       {project.name}
@@ -88,7 +88,7 @@ function CloseButton() {
         type="button"
         aria-label="Close"
         className={cn(
-          'flex size-30 shrink-0 items-center justify-center rounded-lg border-1 border-gray-6 bg-transparent',
+          'flex size-30 shrink-0 items-center justify-center rounded-8 border-1 border-gray-6 bg-transparent',
           'text-gray-11 hover:bg-surface-inset hover:text-gray-12',
           'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-indigo-3',
         )}
@@ -297,7 +297,7 @@ export function NewItemDialog({
                     type="button"
                     onClick={() => pick(candidate)}
                     className={cn(
-                      'flex w-full items-center gap-12 rounded-xl border-1 border-gray-6 bg-transparent px-16 py-14 text-left',
+                      'flex w-full items-center gap-12 rounded-12 border-1 border-gray-6 bg-transparent px-16 py-14 text-left',
                       'hover:border-gray-7 hover:bg-gray-1',
                       'focus-visible:border-indigo-9 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-indigo-3',
                     )}
@@ -315,7 +315,7 @@ export function NewItemDialog({
                     {index < 9 ? (
                       <span
                         aria-hidden
-                        className="shrink-0 rounded-sm border-1 border-gray-6 px-6 py-px font-mono text-11/13 tracking-wider text-gray-9"
+                        className="shrink-0 rounded-4 border-1 border-gray-6 px-6 py-px font-mono text-11/13 tracking-wider text-gray-9"
                       >
                         {index + 1}
                       </span>
@@ -324,7 +324,7 @@ export function NewItemDialog({
                 );
               })}
               {subtaskType ? (
-                <div className="flex items-center gap-12 rounded-xl border-1 border-dashed border-gray-6 px-16 py-12 opacity-65">
+                <div className="flex items-center gap-12 rounded-12 border-1 border-dashed border-gray-6 px-16 py-12 opacity-65">
                   <TypeIcon type={subtaskType} dashed />
                   <span className="flex min-w-0 flex-1 flex-col gap-2">
                     <span className="font-sans text-14 font-600 text-gray-11">
@@ -352,7 +352,7 @@ export function NewItemDialog({
                   type="button"
                   onClick={() => setPickedTypeId(null)}
                   className={cn(
-                    'shrink-0 rounded-md bg-transparent font-sans text-12/17 font-500 text-indigo-9 hover:text-indigo-10',
+                    'shrink-0 rounded-6 bg-transparent font-sans text-12/17 font-500 text-indigo-9 hover:text-indigo-10',
                     'focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-indigo-3',
                   )}
                 >
@@ -379,7 +379,7 @@ export function NewItemDialog({
                 placeholder="Title"
                 value={title}
                 onChange={(next) => setTitle(next)}
-                className="h-40 shrink-0 rounded-lg px-13 text-15"
+                className="h-40 shrink-0 rounded-8 px-13 text-15"
               />
               {/* Composed through the shared `FieldWrapper` rather than a
                   hand-built label/control/error stack, so this dialog inherits
@@ -540,7 +540,7 @@ export function SubtaskQuickCreate({
   return (
     <div
       className={cn(
-        'flex items-center gap-10 rounded-xl border-1 border-gray-7 bg-surface-raised py-6 pl-13 pr-6',
+        'flex items-center gap-10 rounded-12 border-1 border-gray-7 bg-surface-raised py-6 pl-13 pr-6',
         'focus-within:border-indigo-9 focus-within:ring-3 focus-within:ring-indigo-3',
       )}
     >

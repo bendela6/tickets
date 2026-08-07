@@ -126,7 +126,7 @@ export function MotionPreview({
         height={size}
         role="img"
         aria-label={`Loader, ${state}`}
-        className="rounded-lg bg-gray-2"
+        className="rounded-8 bg-gray-2"
       >
         <g fill="none">
           {painted.map(([i, element]) => {

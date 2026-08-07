@@ -31,7 +31,7 @@ export function SessionNav({ board, activeId }: { board: BoardState; activeId?: 
           aria-label="Project"
           value={project}
           onChange={(e) => setProject(e.target.value)}
-          className="w-full rounded-md border border-gray-6 bg-surface-raised px-8 py-6 text-12/17 text-gray-12"
+          className="w-full rounded-6 border border-gray-6 bg-surface-raised px-8 py-6 text-12/17 text-gray-12"
         >
           <option value="">{`All projects · ${total}`}</option>
           {board.projects.map((p) => (
@@ -66,7 +66,7 @@ function NavRow({ session, active }: { session: SessionSummary; active: boolean 
       to="/session/$id/$tab"
       params={{ id: session.id, tab: 'features' }}
       className={[
-        'mb-2 block rounded-md border px-10 py-8 no-underline',
+        'mb-2 block rounded-6 border px-10 py-8 no-underline',
         active ? 'border-indigo-8 bg-surface-raised' : 'border-transparent hover:bg-surface-raised',
       ].join(' ')}
     >

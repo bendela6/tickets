@@ -5,7 +5,7 @@ import { formatCount } from './format';
 
 function RailCard({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="flex-none rounded-xl border-1 border-gray-6 bg-surface-raised p-14">
+    <div className="flex-none rounded-12 border-1 border-gray-6 bg-surface-raised p-14">
       <div className="mb-10 font-mono text-10 font-500 tracking-wide text-gray-9">{title}</div>
       {children}
     </div>
@@ -147,7 +147,7 @@ function PlatformCard({
           <span
             key={index}
             className={cn(
-              'inline-flex h-20 items-center gap-4 rounded-md px-7 font-mono text-[10.5px] font-500',
+              'inline-flex h-20 items-center gap-4 rounded-6 px-7 font-mono text-[10.5px] font-500',
               chip.accent ? 'bg-blue-3 text-blue-9' : 'bg-surface-inset text-gray-11',
             )}
           >
@@ -175,7 +175,7 @@ function ContextCard({ contexts }: { contexts: Record<string, unknown> | undefin
   }
 
   return (
-    <div className="flex-none rounded-xl border-1 border-gray-6 bg-surface-raised p-14">
+    <div className="flex-none rounded-12 border-1 border-gray-6 bg-surface-raised p-14">
       {entries.map(([key, value], index) => {
         const fields =
           value !== null && typeof value === 'object' ? Object.entries(value as Record<string, unknown>) : [];

@@ -35,7 +35,7 @@ export function DocumentsPopover({
       <PopoverTrigger
         aria-label="Documents"
         title="Documents"
-        className="flex h-26 items-center gap-7 rounded-md px-8 hover:bg-surface-inset"
+        className="flex h-26 items-center gap-7 rounded-6 px-8 hover:bg-surface-inset"
       >
         <span className="font-mono text-13 font-500 tracking-tight text-gray-12">{name}</span>
         <span
@@ -62,7 +62,7 @@ export function DocumentsPopover({
                     setOpen(false);
                   }}
                   className={cn(
-                    'flex h-36 w-full items-center gap-9 rounded-md px-8 text-left',
+                    'flex h-36 w-full items-center gap-9 rounded-6 px-8 text-left',
                     current && 'bg-surface-inset',
                   )}
                 >

@@ -18,7 +18,7 @@ export function SessionKindGlyph({
       role="img"
       aria-label={terminal ? 'terminal session' : 'agent session'}
       className={cn(
-        'inline-flex size-20 shrink-0 select-none items-center justify-center rounded-md font-mono leading-none',
+        'inline-flex size-20 shrink-0 select-none items-center justify-center rounded-6 font-mono leading-none',
         terminal
           ? 'bg-gray-12 text-gray-1 text-9 font-600'
           : 'bg-indigo-3 text-indigo-9 text-10 font-500',

@@ -154,7 +154,7 @@ export function Artboard() {
               height: `${SAFE_ZONE * 100}%`,
             }}
           />
-          <span className="pointer-events-none absolute bottom-8 left-8 flex h-16 items-center whitespace-nowrap rounded-sm bg-safe-zone px-6 font-mono text-9 text-white">
+          <span className="pointer-events-none absolute bottom-8 left-8 flex h-16 items-center whitespace-nowrap rounded-4 bg-safe-zone px-6 font-mono text-9 text-white">
             {Math.round(SAFE_ZONE * 100)}% maskable safe zone
           </span>
         </>
@@ -175,7 +175,7 @@ export function Artboard() {
           />
           <Guides box={chrome.current} scale={scale} />
           <span
-            className="pointer-events-none absolute flex h-20 items-center gap-8 whitespace-nowrap rounded-sm bg-gray-12 px-8 font-mono text-10 text-gray-1"
+            className="pointer-events-none absolute flex h-20 items-center gap-8 whitespace-nowrap rounded-4 bg-gray-12 px-8 font-mono text-10 text-gray-1"
             style={{
               left: (chrome.current.x + chrome.current.w) * scale - 6,
               top: (chrome.current.y + chrome.current.h) * scale + 10,
@@ -310,13 +310,13 @@ function Guides({ box, scale }: { box: { x: number; y: number; w: number; h: num
         }}
       />
       <span
-        className="absolute flex h-16 items-center whitespace-nowrap rounded-sm bg-white px-5 font-mono text-9 tracking-wide text-handle inset-ring-1 inset-ring-handle/30"
+        className="absolute flex h-16 items-center whitespace-nowrap rounded-4 bg-white px-5 font-mono text-9 tracking-wide text-handle inset-ring-1 inset-ring-handle/30"
         style={{ left: cx + 5, top: 9 }}
       >
         centres
       </span>
       <span
-        className="absolute flex h-16 items-center whitespace-nowrap rounded-sm bg-white px-5 font-mono text-9 tracking-wide text-handle inset-ring-1 inset-ring-handle/30"
+        className="absolute flex h-16 items-center whitespace-nowrap rounded-4 bg-white px-5 font-mono text-9 tracking-wide text-handle inset-ring-1 inset-ring-handle/30"
         style={{ top: cy + 5, left: 9 }}
       >
         artboard centre

@@ -57,7 +57,7 @@ export function TaskRow({ task }: { task: Task }) {
   return (
     <li
       className={[
-        'min-w-0 rounded-md border border-gray-6 bg-surface-raised px-12 py-8',
+        'min-w-0 rounded-6 border border-gray-6 bg-surface-raised px-12 py-8',
         finished ? 'opacity-60' : '',
       ].join(' ')}
     >

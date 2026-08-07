@@ -93,7 +93,7 @@ const rootClass = variants({
   // tab stop and the ARIA and gives up the ring: the design puts it on the
   // thumb, and a ring around the whole row pointed at the control rather than
   // at the value you were about to move.
-  base: 'group flex w-full items-center rounded-md outline-none',
+  base: 'group flex w-full items-center rounded-6 outline-none',
   config: {
     root: {
       default: 'on',

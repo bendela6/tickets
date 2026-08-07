@@ -96,7 +96,7 @@ export function Rating({
             onBlur={() => setPreview(null)}
             onClick={() => commit(position)}
             className={cn(
-              'rounded-control-xs leading-none transition-colors',
+              'rounded-3 leading-none transition-colors',
               rung.text,
               focusRing(hue, 'focus-visible', 'inward'),
               filled

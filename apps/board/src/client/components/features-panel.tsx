@@ -51,7 +51,7 @@ function FeatureRow({ feature, onOpen }: { feature: Feature; onOpen: () => void 
       <button
         type="button"
         onClick={onOpen}
-        className="w-full rounded-md border border-gray-6 bg-surface-raised px-14 py-12 text-left hover:border-gray-7"
+        className="w-full rounded-6 border border-gray-6 bg-surface-raised px-14 py-12 text-left hover:border-gray-7"
       >
         <span className="mb-8 flex min-w-0 items-center gap-8">
           <span className="min-w-0 flex-1 truncate font-semibold text-13 text-gray-12">

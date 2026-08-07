@@ -57,7 +57,7 @@ function FrameRow({ frame, defaultExpanded }: { frame: SignalStackFrame; default
         </span>
         <span className="font-mono text-[12.5px] font-600 text-gray-12">{frame.functionName}</span>
         {frame.inApp ? (
-          <span className="inline-flex h-17 shrink-0 items-center rounded-sm bg-indigo-3 px-6 font-mono text-[9.5px] font-500 text-indigo-9">
+          <span className="inline-flex h-17 shrink-0 items-center rounded-4 bg-indigo-3 px-6 font-mono text-[9.5px] font-500 text-indigo-9">
             in-app
           </span>
         ) : null}
@@ -68,7 +68,7 @@ function FrameRow({ frame, defaultExpanded }: { frame: SignalStackFrame; default
       </button>
       {expanded && hasContext ? (
         <div className="border-t-1 border-gray-6 bg-gray-1 px-16 pt-10 pb-12">
-          <div className="overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-inset py-8 font-mono text-[11.5px] leading-[1.75]">
+          <div className="overflow-hidden rounded-8 border-1 border-gray-6 bg-surface-inset py-8 font-mono text-[11.5px] leading-[1.75]">
             {frame.contextLines!.map((contextLine) => {
               const isErrorLine = contextLine.line === frame.line;
               return (
@@ -186,7 +186,7 @@ function RawFrames({
           </div>
         ))}
         {noSourceMaps ? (
-          <div className="mt-10 rounded-lg border-1 border-gray-6 bg-surface-inset px-12 py-8 font-mono text-11 leading-relaxed text-gray-11">
+          <div className="mt-10 rounded-8 border-1 border-gray-6 bg-surface-inset px-12 py-8 font-mono text-11 leading-relaxed text-gray-11">
             <span className="text-gray-9">$</span> npx signals sourcemaps upload ./dist --release{' '}
             {release ?? '?'}
           </div>
@@ -244,7 +244,7 @@ export function StackTrace({
   const activeTab: Tab = showToggle ? tab : 'sym';
 
   return (
-    <div className="flex-none overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
+    <div className="flex-none overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised">
       <div className="flex h-42 items-center gap-10 border-b-1 border-gray-6 px-16">
         <span className="font-sans text-[13.5px] font-600 text-gray-12">Stack trace</span>
         {occurrenceTime ? (

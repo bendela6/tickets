@@ -102,7 +102,7 @@ describe('variants', () => {
   const ALPHA = axis('alpha', ['40', '60'], '40');
 
   const alphaClass = variants({
-    base: 'rounded-sm',
+    base: 'rounded-4',
     config: {
       emphasis: {
         default: 'solid',
@@ -117,7 +117,7 @@ describe('variants', () => {
   it('enumerates the full cross-product of two axes on one option', () => {
     expect(new Set(alphaClass.classes)).toEqual(
       new Set([
-        'rounded-sm',
+        'rounded-4',
         'bg-red-9',
         'bg-blue-9',
         'hover:bg-red-10/40',
@@ -134,7 +134,7 @@ describe('variants', () => {
 
   it('renders one cell of that product', () => {
     expect(alphaClass({ tone: 'blue', alpha: '60' })).toBe(
-      'rounded-sm bg-blue-9 hover:bg-blue-10/60',
+      'rounded-4 bg-blue-9 hover:bg-blue-10/60',
     );
   });
 

@@ -115,12 +115,12 @@ export function DetailLinks({
             return (
               <div
                 key={link.id}
-                className="flex h-34 items-center gap-9 rounded-lg border-1 border-gray-6 px-11 hover:bg-gray-1"
+                className="flex h-34 items-center gap-9 rounded-8 border-1 border-gray-6 px-11 hover:bg-gray-1"
               >
                 <Pill
                   tone={chip.blocked ? 'orange' : 'secondary'}
                   label={chip.text}
-                  className="h-20 rounded-md text-11/13 tracking-wider"
+                  className="h-20 rounded-6 text-11/13 tracking-wider"
                 />
                 <button
                   type="button"

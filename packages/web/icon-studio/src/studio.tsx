@@ -145,7 +145,7 @@ export function Studio() {
         </header>
 
         {error ? (
-          <p role="status" className="rounded-lg border-1 border-pink-6 bg-pink-2 px-12 py-8 text-13 text-pink-11">
+          <p role="status" className="rounded-8 border-1 border-pink-6 bg-pink-2 px-12 py-8 text-13 text-pink-11">
             {error}
           </p>
         ) : null}
@@ -186,7 +186,7 @@ export function Studio() {
             </div>
 
             {results ? (
-              <ul className="flex flex-col gap-4 rounded-lg border-1 border-gray-6 bg-gray-2 p-12">
+              <ul className="flex flex-col gap-4 rounded-8 border-1 border-gray-6 bg-gray-2 p-12">
                 {results.map((r) => (
                   <li key={r.path} className="font-mono text-12 text-gray-11">
                     <span className="text-gray-12">{r.status}</span> {r.path}
@@ -196,7 +196,7 @@ export function Studio() {
               </ul>
             ) : null}
 
-            <section className="flex flex-col gap-8 rounded-lg border-1 border-gray-6 bg-gray-2 p-12">
+            <section className="flex flex-col gap-8 rounded-8 border-1 border-gray-6 bg-gray-2 p-12">
               <h2 className="font-mono text-11 uppercase tracking-wider text-gray-11">
                 Loader
               </h2>

@@ -16,7 +16,7 @@ import { cn } from '../../../../style';
  * tone, so it has nothing to interpolate.
  */
 export const popupClass =
-  'z-50 rounded-md border-1 border-gray-6 bg-surface-raised p-5 shadow-lg';
+  'z-50 rounded-6 border-1 border-gray-6 bg-surface-raised p-5 shadow-lg';
 
 /** 4px below the trigger — the design's number, kept next to the class it pairs with. */
 export const POPUP_OFFSET = 4;

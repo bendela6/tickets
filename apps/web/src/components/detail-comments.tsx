@@ -72,7 +72,7 @@ export function DetailComments({
                 <div className="mb-3 flex items-baseline gap-8">
                   <span className="font-sans text-13/19 font-500 text-gray-12">{name}</span>
                   {author?.kind === 'agent' ? (
-                    <span className="self-center rounded-sm bg-indigo-3 px-5 font-mono text-9 font-500 text-indigo-9">
+                    <span className="self-center rounded-4 bg-indigo-3 px-5 font-mono text-9 font-500 text-indigo-9">
                       AGENT
                     </span>
                   ) : null}

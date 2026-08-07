@@ -174,7 +174,7 @@ export function TerminalSessionScreen({ sessionId }: { sessionId: number }) {
                   <button
                     type="button"
                     aria-label="Session actions"
-                    className="inline-flex size-24 items-center justify-center rounded-md border-1 border-gray-6 bg-surface-raised font-sans text-gray-11 hover:border-gray-7"
+                    className="inline-flex size-24 items-center justify-center rounded-6 border-1 border-gray-6 bg-surface-raised font-sans text-gray-11 hover:border-gray-7"
                   >
                     ⋯
                   </button>

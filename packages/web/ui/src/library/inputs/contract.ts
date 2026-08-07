@@ -26,7 +26,7 @@ export type ControlSize = 'xs' | 'md' | 'lg';
 export const CONTROL_LADDER = {
   xs: {
     height: 'h-30',
-    radius: 'rounded-control-xs',
+    radius: 'rounded-3',
     text: 'text-12',
     padX: 'px-9',
     /** Checkbox / radio / switch-thumb box. */
@@ -41,7 +41,7 @@ export const CONTROL_LADDER = {
   },
   md: {
     height: 'h-38',
-    radius: 'rounded-control-md',
+    radius: 'rounded-4',
     text: 'text-13',
     padX: 'px-12',
     mark: 'size-16',
@@ -53,7 +53,7 @@ export const CONTROL_LADDER = {
   },
   lg: {
     height: 'h-46',
-    radius: 'rounded-control-lg',
+    radius: 'rounded-5',
     text: 'text-14',
     padX: 'px-14',
     mark: 'size-20',

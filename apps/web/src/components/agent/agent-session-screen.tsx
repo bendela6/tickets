@@ -91,7 +91,7 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
         >
           ← sessions
         </button>
-        <span className="inline-flex size-24 items-center justify-center rounded-md bg-indigo-3 font-mono text-13 text-indigo-9">
+        <span className="inline-flex size-24 items-center justify-center rounded-6 bg-indigo-3 font-mono text-13 text-indigo-9">
           ✳
         </span>
         <span className="truncate font-sans text-13/19 font-500 text-gray-12">
@@ -111,7 +111,7 @@ export function AgentSessionScreen({ sessionId }: { sessionId: number }) {
             <button
               type="button"
               aria-label="Session actions"
-              className="inline-flex size-24 items-center justify-center rounded-md border-1 border-gray-6 bg-surface-raised font-sans text-gray-11 hover:border-gray-7"
+              className="inline-flex size-24 items-center justify-center rounded-6 border-1 border-gray-6 bg-surface-raised font-sans text-gray-11 hover:border-gray-7"
             >
               ⋯
             </button>
@@ -200,7 +200,7 @@ function renderTimeline(entries: Entry[], onRespond: RespondFn) {
 function UserBubble({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-10 self-end">
-      <div className="max-w-[85%] rounded-xl border-1 border-gray-6 bg-surface-inset px-12 py-8 font-sans text-13/19 text-gray-12">
+      <div className="max-w-[85%] rounded-12 border-1 border-gray-6 bg-surface-inset px-12 py-8 font-sans text-13/19 text-gray-12">
         {text}
       </div>
     </div>

@@ -174,7 +174,7 @@ export function IconPicker({
                 onFocus={() => setCursor(index)}
                 onClick={() => commit(index)}
                 className={cn(
-                  'flex size-32 items-center justify-center rounded-control-xs text-gray-11',
+                  'flex size-32 items-center justify-center rounded-3 text-gray-11',
                   'hover:bg-gray-4 hover:text-gray-12',
                   focusRing(field.scale, 'focus-visible', 'inward'),
                   index === cursor && cursorRing(field.scale),

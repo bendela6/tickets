@@ -58,12 +58,9 @@ export interface TypographyDoc {
   font: Record<string, { $value: string }>;
 }
 
-/** `border.tokens.json`. Only `radius` reaches CSS; the rest is documentation. */
-export interface BorderDoc {
-  radius: Record<string, string>;
-  width: number[];
-  ring: number[];
-}
+// `border` has no Doc type: it reads no token file. Every edge family is a
+// bare-value utility, so the number in the class IS the pixel count and there
+// was never a value to declare — see `generators/border.ts`.
 
 /** `motion.tokens.json`. `duration` is sanctioned rungs and emits nothing. */
 export interface MotionDoc {

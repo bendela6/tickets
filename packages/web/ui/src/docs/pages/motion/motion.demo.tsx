@@ -35,7 +35,7 @@ function Replay({ children }: { children: (run: number) => ReactNode }) {
       <button
         type="button"
         onClick={() => setRun((n) => n + 1)}
-        className="self-start rounded-md border-1 border-gray-6 bg-surface-raised px-12 py-4 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
+        className="self-start rounded-6 border-1 border-gray-6 bg-surface-raised px-12 py-4 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
       >
         Replay
       </button>
@@ -65,9 +65,9 @@ function Travel({ run, duration, ease }: { run: number; duration: string; ease: 
     };
   }, [run]);
   return (
-    <div className="relative h-24 overflow-hidden rounded-md bg-surface-inset">
+    <div className="relative h-24 overflow-hidden rounded-6 bg-surface-inset">
       <span
-        className="absolute inset-y-4 w-40 rounded-sm bg-indigo-9"
+        className="absolute inset-y-4 w-40 rounded-4 bg-indigo-9"
         style={{
           left: arrived ? 'calc(100% - 2.75rem)' : '0.25rem',
           transitionProperty: 'left',

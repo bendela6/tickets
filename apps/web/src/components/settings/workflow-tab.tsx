@@ -23,7 +23,7 @@ function slugify(label: string): string {
 
 function ArchChip() {
   return (
-    <span className="inline-flex h-17 shrink-0 items-center rounded-sm bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
+    <span className="inline-flex h-17 shrink-0 items-center rounded-4 bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
       ARCH
     </span>
   );
@@ -63,7 +63,7 @@ function KindPicker({
           aria-pressed={value === kind}
           onClick={() => onChange(kind)}
           className={cn(
-            'inline-flex h-28 items-center gap-6 rounded-md border-1 px-8 font-sans text-12 font-500 capitalize',
+            'inline-flex h-28 items-center gap-6 rounded-6 border-1 px-8 font-sans text-12 font-500 capitalize',
             value === kind
               ? 'border-indigo-9 bg-indigo-3 text-gray-12'
               : 'border-gray-7 bg-surface-raised text-gray-11 hover:border-gray-9',
@@ -369,7 +369,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
               <div
                 role="region"
                 aria-label="Options"
-                className="mb-16 overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised"
+                className="mb-16 overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised"
               >
                 <div className="flex items-center gap-9 border-b-1 border-gray-6 bg-gray-1 px-16 py-11">
                   <span className="font-sans text-14 font-600 text-gray-12">Options</span>
@@ -463,7 +463,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
               </div>
 
               {/* transitions — the graph of allowed moves for this type */}
-              <div className="overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
+              <div className="overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised">
                 <div className="flex items-center gap-9 border-b-1 border-gray-6 bg-gray-1 px-16 py-11">
                   <span className="font-sans text-14 font-600 text-gray-12">Transitions</span>
                   <span className="font-mono text-11/13 tracking-wider text-gray-9">

@@ -135,7 +135,7 @@ export function Drawer({
 }
 
 const CONTROL =
-  'inline-flex size-28 shrink-0 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset hover:text-gray-12';
+  'inline-flex size-28 shrink-0 items-center justify-center rounded-6 text-gray-11 hover:bg-surface-inset hover:text-gray-12';
 
 export function DrawerControls({ className }: { className?: string }) {
   const context = useContext(DrawerContext);

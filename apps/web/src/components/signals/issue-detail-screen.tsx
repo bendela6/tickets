@@ -24,7 +24,7 @@ function OccurrencesCard({ issueId }: { issueId: number }) {
   const pageCount = Math.max(1, Math.ceil(total / OCCURRENCES_PER_PAGE));
 
   return (
-    <div className="flex-none overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
+    <div className="flex-none overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised">
       <div className="flex h-42 items-center gap-10 border-b-1 border-gray-6 px-16">
         <span className="font-sans text-[13.5px] font-600 text-gray-12">Occurrences</span>
         <span className="font-mono text-11 text-gray-9">{formatCount(total)} total</span>
@@ -198,7 +198,7 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
             <button
               type="button"
               onClick={() => void issueQuery.refetch()}
-              className="h-32 rounded-lg border-1 border-gray-7 bg-surface-raised px-13 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+              className="h-32 rounded-8 border-1 border-gray-7 bg-surface-raised px-13 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
             >
               ↻ Retry
             </button>
@@ -236,7 +236,7 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
           </div>
           <div className="mt-7 flex items-center gap-8">
             <Pill {...signalStatus(issue.status)} />
-            <span className="inline-flex h-22 items-center rounded-md bg-surface-inset px-8 font-mono text-11 font-500 text-gray-11">
+            <span className="inline-flex h-22 items-center rounded-6 bg-surface-inset px-8 font-mono text-11 font-500 text-gray-11">
               {issue.appSlug}
             </span>
             <span className="font-mono text-11 text-gray-9">
@@ -264,7 +264,7 @@ export function IssueDetailScreen({ issueId }: { issueId: number }) {
         ) : null}
       </div>
 
-      <div className="mb-16 flex flex-none items-center gap-26 rounded-xl border-1 border-gray-6 bg-surface-raised px-18 py-12">
+      <div className="mb-16 flex flex-none items-center gap-26 rounded-12 border-1 border-gray-6 bg-surface-raised px-18 py-12">
         <div>
           <div className="mb-3 font-mono text-10 font-500 tracking-wide text-gray-9">EVENTS</div>
           <div className="font-mono text-14 font-600 text-gray-12">{formatCount(issue.eventCount)}</div>

@@ -17,7 +17,7 @@ export const states = [
         action={
           <button
             type="button"
-            className="h-32 rounded-lg border-1 border-gray-7 bg-surface-raised px-13 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+            className="h-32 rounded-8 border-1 border-gray-7 bg-surface-raised px-13 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
           >
             ↻ Retry
           </button>

@@ -77,7 +77,7 @@ export function NumberField({
   };
 
   return (
-    <label className="flex h-30 items-center gap-6 rounded-md border-1 border-gray-6 bg-surface-raised px-9">
+    <label className="flex h-30 items-center gap-6 rounded-6 border-1 border-gray-6 bg-surface-raised px-9">
       <span className="flex-none font-mono text-9 text-gray-9">{label}</span>
       <input
         aria-label={name ?? label}

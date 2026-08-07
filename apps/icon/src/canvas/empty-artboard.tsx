@@ -22,7 +22,7 @@ export function EmptyArtboard() {
             title={tool.label}
             aria-label={tool.label}
             onClick={() => dispatch({ type: 'addObject', kind: tool.kind })}
-            className="flex size-56 items-center justify-center rounded-lg border-1 border-dashed border-gray-7 text-gray-9 hover:text-gray-11"
+            className="flex size-56 items-center justify-center rounded-8 border-1 border-dashed border-gray-7 text-gray-9 hover:text-gray-11"
           >
             <ShapeGlyph kind={tool.kind} size={22} />
           </button>

@@ -51,13 +51,26 @@ describe('cn', () => {
   });
 });
 
-test('a custom radius rung can be evicted, like any other radius', () => {
-  // The third instance of one trap: an unregistered custom rung is not
-  // recognised as its own property, so both classes survive and stylesheet
-  // order silently decides. Found when read-only stopped being a box and its
-  // `rounded-none` could not beat the ladder's `rounded-control-md`.
-  expect(cn('rounded-control-md', 'rounded-none')).toBe('rounded-none');
-  expect(cn('rounded-control-md', 'rounded-control-lg')).toBe('rounded-control-lg');
-  // …and the stock rungs still behave.
-  expect(cn('rounded-lg', 'rounded-none')).toBe('rounded-none');
+test('a numeric radius rung can be evicted, like any other radius', () => {
+  // The third instance of one trap: a rung tailwind-merge does not recognise is
+  // not bucketed as border-radius, so both classes survive and stylesheet order
+  // silently decides. Found when read-only stopped being a box and its
+  // `rounded-none` could not beat the ladder's rung. Radius is spelled in pixels
+  // now, which no stock validator matches — `isTshirtSize` accepts `md`, never `6`.
+  expect(cn('rounded-4', 'rounded-none')).toBe('rounded-none');
+  expect(cn('rounded-4', 'rounded-5')).toBe('rounded-5');
+  expect(cn('rounded-8', 'rounded-full')).toBe('rounded-full');
+});
+
+test('every corner group evicts too, not just the all-corners one', () => {
+  // The fourteen corner utilities are separate class groups. Under the old
+  // t-shirt spelling they came free from `isTshirtSize`; in pixels each one has
+  // to be registered, and a miss looks like a cascade bug rather than an error.
+  expect(cn('rounded-t-4', 'rounded-t-none')).toBe('rounded-t-none');
+  expect(cn('rounded-bl-3', 'rounded-bl-12')).toBe('rounded-bl-12');
+  expect(cn('rounded-s-6', 'rounded-s-full')).toBe('rounded-s-full');
+  // A corner still yields to a later all-corners rung, as it does stock.
+  expect(cn('rounded-tl-4', 'rounded-8')).toBe('rounded-8');
+  // …but not the other way round: the corner is the more specific statement.
+  expect(cn('rounded-8', 'rounded-tl-4')).toBe('rounded-8 rounded-tl-4');
 });

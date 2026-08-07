@@ -124,7 +124,7 @@ function RowActions({ projectKey, ticket }: { projectKey: string; ticket: Item }
   const { userId } = useCurrentUser();
   const patch = usePatchItem();
   const actionClasses =
-    'flex size-30 items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised font-sans text-13/19 text-gray-11 shadow-sm hover:text-gray-12';
+    'flex size-30 items-center justify-center rounded-8 border-1 border-gray-6 bg-surface-raised font-sans text-13/19 text-gray-11 shadow-sm hover:text-gray-12';
   return (
     <span
       className="absolute top-1/2 right-10 hidden -translate-y-1/2 items-center gap-5 group-hover:flex"
@@ -280,7 +280,7 @@ export function TableView({
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-auto rounded-t-xl border-1 border-gray-6 bg-surface-raised">
+    <div className="flex min-h-0 flex-1 flex-col overflow-auto rounded-t-12 border-1 border-gray-6 bg-surface-raised">
       <div
         role="row"
         className="sticky top-0 z-10 grid h-36 min-w-680 shrink-0 items-center border-b-1 border-gray-6 bg-gray-1 px-4"

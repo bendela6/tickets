@@ -70,9 +70,11 @@ export function liveTokens(pattern: RegExp, theme: 'light' | 'dark' = 'light'): 
  * A generated record as the `{ name, value }` rows the spec tables render.
  *
  * The generated modules export records, because a record is what CODE wants —
- * `RADII.md`, `BREAKPOINTS.lg`. The gallery is the one consumer that wants a
- * list, and prefixing the key here is what turns `md` into the custom-property
- * name a reader can search for.
+ * `BREAKPOINTS.lg`. The gallery is the one consumer that wants a list, and
+ * prefixing the key here is what turns `lg` into the custom-property name a
+ * reader can search for. A family whose values are bare numbers (radius, border,
+ * ring) exports an ARRAY instead and builds its own rows — there is no key to
+ * prefix, because the class already spells the value.
  */
 export function specRows(prefix: string, record: Record<string, string | number>): Token[] {
   return Object.entries(record).map(([key, value]) => ({

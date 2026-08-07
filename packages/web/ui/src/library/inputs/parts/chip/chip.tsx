@@ -27,7 +27,7 @@ const SCALE = axis('scale', HUES, 'indigo');
  * interpolated, and the extractor collects `variants()` output only.
  */
 const chipClass = variants({
-  base: 'inline-flex items-center gap-4 rounded-control-xs font-sans text-12',
+  base: 'inline-flex items-center gap-4 rounded-3 font-sans text-12',
   config: {
     fill: {
       default: 'on',
@@ -52,7 +52,7 @@ const chipClass = variants({
  * roughly a 10px target inside a 24px one and misses on every touch.
  */
 const removeClass = variants({
-  base: 'inline-flex aspect-square shrink-0 items-center justify-center rounded-control-xs',
+  base: 'inline-flex aspect-square shrink-0 items-center justify-center rounded-3',
   config: {
     fill: {
       default: 'on',

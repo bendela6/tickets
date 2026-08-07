@@ -102,7 +102,7 @@ export function Outline() {
         autoComplete="off"
         spellCheck={false}
         className={cn(
-          'w-full rounded-md border-1 border-gray-6 bg-gray-2 px-8 py-6 text-12 text-gray-12',
+          'w-full rounded-6 border-1 border-gray-6 bg-gray-2 px-8 py-6 text-12 text-gray-12',
           'outline-none placeholder:text-gray-9 focus:border-gray-7',
         )}
         onChange={(e) => setQuery(e.target.value)}

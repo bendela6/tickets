@@ -8,9 +8,9 @@ export type CardRadius = 'md' | 'lg' | 'xl';
 export type Padding = Gap;
 
 const RADIUS: Record<CardRadius, string> = {
-  md: 'rounded-md',
-  lg: 'rounded-lg',
-  xl: 'rounded-xl',
+  md: 'rounded-6',
+  lg: 'rounded-8',
+  xl: 'rounded-12',
 };
 
 export const PAD: Record<Padding, string> = {

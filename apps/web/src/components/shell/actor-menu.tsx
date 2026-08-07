@@ -42,7 +42,7 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
           ) : (
             <button
               type="button"
-              className="flex min-w-0 flex-1 cursor-pointer items-center gap-8 rounded-lg border-1 border-gray-6 bg-surface-raised px-8 py-6 text-left hover:border-gray-7"
+              className="flex min-w-0 flex-1 cursor-pointer items-center gap-8 rounded-8 border-1 border-gray-6 bg-surface-raised px-8 py-6 text-left hover:border-gray-7"
             >
               {current ? (
                 <Avatar

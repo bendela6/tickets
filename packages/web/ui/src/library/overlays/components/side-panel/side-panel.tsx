@@ -27,7 +27,7 @@ export type SidePanelProps = {
 };
 
 const TOGGLE =
-  'flex size-28 shrink-0 items-center justify-center rounded-md text-gray-11 hover:bg-surface-inset hover:text-gray-12';
+  'flex size-28 shrink-0 items-center justify-center rounded-6 text-gray-11 hover:bg-surface-inset hover:text-gray-12';
 
 // Shared by the two states that have no panel on screen to hang a toggle off:
 // collapsedTo="edge" and the narrow overlay. Fixed, so a shut panel costs the
@@ -50,7 +50,7 @@ function ReopenButton({
       aria-expanded={expanded}
       onClick={onClick}
       className={cn(
-        'fixed top-12 z-40 flex size-36 items-center justify-center rounded-md',
+        'fixed top-12 z-40 flex size-36 items-center justify-center rounded-6',
         'border-1 border-gray-6 bg-surface-raised text-gray-11 shadow-sm hover:text-gray-12',
         side === 'left' ? 'left-12' : 'right-12',
       )}

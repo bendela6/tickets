@@ -42,7 +42,7 @@ function ReleaseRow({ appId, release }: { appId: number; release: AppReleaseRow 
           aria-label={`Delete release ${release.release}`}
           onClick={() => setConfirming(true)}
           disabled={deleteRelease.isPending}
-          className="flex size-24 items-center justify-center rounded-md text-gray-9 hover:bg-red-3 hover:text-red-9 disabled:pointer-events-none disabled:opacity-40"
+          className="flex size-24 items-center justify-center rounded-6 text-gray-9 hover:bg-red-3 hover:text-red-9 disabled:pointer-events-none disabled:opacity-40"
         >
           ✕
         </button>
@@ -76,7 +76,7 @@ export function ReleasesCard({ appId }: { appId: number }) {
   const isEmpty = !isLoading && rows.length === 0;
 
   return (
-    <div className="flex-none overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
+    <div className="flex-none overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised">
       <div className="flex h-42 items-center gap-10 border-b-1 border-gray-6 px-16">
         <span className="font-sans text-[13.5px] font-600 text-gray-12">Releases</span>
         {!isLoading && rows.length > 0 ? (

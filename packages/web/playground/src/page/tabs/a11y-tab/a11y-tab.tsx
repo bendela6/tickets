@@ -110,7 +110,7 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
             auditState.results.violations.map((violation) => (
               <div
                 key={violation.id}
-                className="rounded-lg border-1 border-gray-6 bg-surface-raised p-14 flex flex-col gap-8"
+                className="rounded-8 border-1 border-gray-6 bg-surface-raised p-14 flex flex-col gap-8"
               >
                 {/* Impact chip + Rule ID */}
                 <div className="flex items-center gap-8">
@@ -128,7 +128,7 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
 
                 {/* Target selector and Learn more link */}
                 <div className="flex items-center justify-between gap-10">
-                  <code className="font-mono text-11/13 tracking-wider text-gray-11 bg-surface-inset rounded-md px-7 py-2 overflow-x-auto text-nowrap">
+                  <code className="font-mono text-11/13 tracking-wider text-gray-11 bg-surface-inset rounded-6 px-7 py-2 overflow-x-auto text-nowrap">
                     {String(violation.nodes[0]?.target?.[0]) || '(selector)'}
                   </code>
                   <a
@@ -144,7 +144,7 @@ export function A11yTab({ runAudit: runAuditImpl }: { runAudit: () => Promise<Ax
             ))
           ) : (
             // All clear banner
-            <div className="flex items-center gap-10 rounded-lg bg-green-3 p-14">
+            <div className="flex items-center gap-10 rounded-8 bg-green-3 p-14">
               {/* The registry's own tick, rather than a circle drawn by hand
                   around a ✓ character. */}
               <Icon name="circle-check" size="sm" className="flex-none text-green-9" />

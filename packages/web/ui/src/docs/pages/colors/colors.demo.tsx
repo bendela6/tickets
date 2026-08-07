@@ -36,7 +36,7 @@ const RING = { boxShadow: 'inset 0 0 0 1px rgba(128,120,100,.35)' } as const;
 function Ramp({ theme, scale, height = 40 }: { theme: Theme; scale: string; height?: number }) {
   return (
     <div className="flex w-full">
-      <div className="flex min-w-0 flex-1 overflow-hidden rounded-sm" style={RING}>
+      <div className="flex min-w-0 flex-1 overflow-hidden rounded-4" style={RING}>
         {STEPS.map((step) => (
           <div
             key={step}
@@ -48,7 +48,7 @@ function Ramp({ theme, scale, height = 40 }: { theme: Theme; scale: string; heig
       </div>
       <div
         title={`${scale}-contrast · ${colorOf(theme, scale, 'contrast')}`}
-        className="ml-8 w-24 shrink-0 rounded-sm"
+        className="ml-8 w-24 shrink-0 rounded-4"
         style={{ background: colorOf(theme, scale, 'contrast'), height, ...RING }}
       />
     </div>
@@ -99,7 +99,7 @@ function Verdict({
       : { background: '#f8e7e5', color: '#a82f26', mark: '✕' };
   return (
     <span
-      className="inline-flex items-center gap-4 rounded-sm px-6 font-mono text-10 font-500"
+      className="inline-flex items-center gap-4 rounded-4 px-6 font-mono text-10 font-500"
       style={{ background: style.background, color: style.color }}
     >
       <span className="opacity-70">{what}</span>
@@ -129,7 +129,7 @@ function GroupLabel({ children }: { children: ReactNode }) {
 function StepSpecimen({ theme, scale, step }: { theme: Theme; scale: string; step: Step }) {
   const c = colorOf(theme, scale, step);
   const page = colorOf(theme, 'gray', 1);
-  const box = 'flex h-32 w-full items-center justify-center rounded-sm font-sans text-12/17';
+  const box = 'flex h-32 w-full items-center justify-center rounded-4 font-sans text-12/17';
 
   if (step <= 5) {
     return <div className={box} style={{ background: c, ...RING }} title={c} />;
@@ -260,7 +260,7 @@ function Roles() {
           </span>
           <div className="min-w-0 flex-1">
             <div
-              className="h-28 w-full rounded-sm"
+              className="h-28 w-full rounded-4"
               title={`--color-surface-${surface} · ${value[theme]}`}
               style={{ background: value[theme], ...RING }}
             />

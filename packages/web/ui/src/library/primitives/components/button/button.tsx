@@ -93,9 +93,9 @@ const buttonClass = variants({
     size: {
       default: 'md',
       options: {
-        sm: 'h-28 px-10 rounded-md text-12',
-        md: 'h-36 px-14 rounded-lg text-13',
-        lg: 'h-44 px-[18px] rounded-xl text-14',
+        sm: 'h-28 px-10 rounded-6 text-12',
+        md: 'h-36 px-14 rounded-8 text-13',
+        lg: 'h-44 px-[18px] rounded-12 text-14',
       },
     },
   },

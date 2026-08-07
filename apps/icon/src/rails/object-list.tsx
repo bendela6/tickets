@@ -123,7 +123,7 @@ function ObjectRow({
       onDrop={onDrop}
       style={{ paddingLeft: `${(depth - 1) * INDENT_REM}rem` }}
       className={cn(
-        'flex h-30 items-center gap-8 rounded-md pl-8 pr-7',
+        'flex h-30 items-center gap-8 rounded-6 pl-8 pr-7',
         selected && 'bg-indigo-3',
         node.hidden && 'opacity-50',
         // Rows outside the level you are standing in recede rather than
@@ -196,7 +196,7 @@ function ObjectRow({
         aria-label={node.hidden ? `Show ${node.name}` : `Hide ${node.name}`}
         aria-pressed={node.hidden}
         onClick={() => dispatch({ type: 'toggleHidden', id: node.id })}
-        className={cn('flex size-20 flex-none items-center justify-center rounded-sm', node.hidden ? 'text-gray-11' : 'text-gray-9')}
+        className={cn('flex size-20 flex-none items-center justify-center rounded-4', node.hidden ? 'text-gray-11' : 'text-gray-9')}
       >
         <EyeGlyph hidden={node.hidden} />
       </button>
@@ -207,7 +207,7 @@ function ObjectRow({
         aria-pressed={node.locked}
         onClick={() => dispatch({ type: 'toggleLocked', id: node.id })}
         className={cn(
-          'flex size-20 flex-none items-center justify-center rounded-sm',
+          'flex size-20 flex-none items-center justify-center rounded-4',
           node.locked ? 'text-gray-11' : 'text-gray-9 opacity-55',
         )}
       >
@@ -395,7 +395,7 @@ export function ObjectList() {
               title={`${tool.label} · ${tool.key}`}
               aria-label={tool.label}
               onClick={() => dispatch({ type: 'addObject', kind: tool.kind })}
-              className="flex h-34 flex-1 items-center justify-center rounded-lg border-1 border-gray-6 bg-surface-raised text-gray-11 hover:text-gray-12"
+              className="flex h-34 flex-1 items-center justify-center rounded-8 border-1 border-gray-6 bg-surface-raised text-gray-11 hover:text-gray-12"
             >
               <ShapeGlyph kind={tool.kind} size={15} />
             </button>

@@ -4,7 +4,7 @@ import type { StudioAction } from '../state';
 import { SliderRow } from './slider-row';
 
 const selectClass =
-  'h-28 min-w-0 flex-1 rounded-md border-1 border-gray-6 bg-gray-2 px-6 font-mono text-12 text-gray-12';
+  'h-28 min-w-0 flex-1 rounded-6 border-1 border-gray-6 bg-gray-2 px-6 font-mono text-12 text-gray-12';
 
 /** Per-type numeric controls. Switches on `element.type` rather than
  * deriving fields generically, because each type's ranges differ and — per
@@ -97,7 +97,7 @@ export function ElementPanel({
             key={element.id}
             role="group"
             aria-label={`${element.id} element`}
-            className="flex flex-col gap-8 rounded-lg border-1 border-gray-6 bg-gray-2 p-8"
+            className="flex flex-col gap-8 rounded-8 border-1 border-gray-6 bg-gray-2 p-8"
           >
             <div className="flex items-center gap-8">
               <span className="flex-1 font-mono text-12 text-gray-12">

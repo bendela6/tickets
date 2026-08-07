@@ -91,7 +91,7 @@ function svgIcon(paths: string, size: number): SVGSVGElement {
 function renderPending(entry: UploadEntry): void {
   entry.root.innerHTML = '';
   entry.root.className =
-    'my-4 block w-full max-w-xs overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-raised';
+    'my-4 block w-full max-w-xs overflow-hidden rounded-8 border-1 border-gray-6 bg-surface-raised';
   entry.root.dataset['uploadStatus'] = 'pending';
 
   const preview = document.createElement('div');
@@ -151,7 +151,7 @@ function updateProgress(entry: UploadEntry, progress: number): void {
 function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void {
   entry.root.innerHTML = '';
   entry.root.className =
-    'my-4 box-border flex h-196 w-full max-w-xs flex-col items-center justify-center gap-6 rounded-lg border-1 border-red-9 bg-red-3';
+    'my-4 box-border flex h-196 w-full max-w-xs flex-col items-center justify-center gap-6 rounded-8 border-1 border-red-9 bg-red-3';
   entry.root.dataset['uploadStatus'] = 'failed';
   entry.nameEl = null;
   entry.pctEl = null;
@@ -177,7 +177,7 @@ function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void 
   const retryBtn = document.createElement('button');
   retryBtn.type = 'button';
   retryBtn.className =
-    'inline-flex h-26 items-center gap-6 rounded-md border-1 border-gray-7 bg-surface-raised px-11 font-sans text-12 font-500 text-gray-12';
+    'inline-flex h-26 items-center gap-6 rounded-6 border-1 border-gray-7 bg-surface-raised px-11 font-sans text-12 font-500 text-gray-12';
   retryBtn.append(svgIcon(ROTATE_CCW_PATHS, 12), document.createTextNode('Retry'));
   retryBtn.addEventListener('click', () => {
     // Single-flight guard: a rapid second Retry click (or a stray click on a
@@ -194,7 +194,7 @@ function renderFailed(entry: UploadEntry, handlersRef: UploadHandlersRef): void 
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
   removeBtn.className =
-    'inline-flex h-26 items-center rounded-md px-9 font-sans text-12 font-500 text-gray-9 hover:bg-black/4';
+    'inline-flex h-26 items-center rounded-6 px-9 font-sans text-12 font-500 text-gray-9 hover:bg-black/4';
   removeBtn.textContent = 'Remove';
   removeBtn.addEventListener('click', () => handlersRef.current.onRemove(entry.id));
 

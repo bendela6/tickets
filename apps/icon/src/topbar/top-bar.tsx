@@ -32,7 +32,7 @@ export function TopBar({
         dim && 'opacity-40',
       )}
     >
-      <span aria-hidden className="size-10 flex-none rounded-sm bg-indigo-9" />
+      <span aria-hidden className="size-10 flex-none rounded-4 bg-indigo-9" />
 
       <DocumentsPopover name={state.doc.name} documents={documents} now={now} />
 
@@ -47,7 +47,7 @@ export function TopBar({
           <button
             type="button"
             onClick={documents.save}
-            className="flex h-22 items-center gap-6 rounded-md border-1 border-gray-7 bg-surface-raised px-8 font-mono text-10 text-gray-12"
+            className="flex h-22 items-center gap-6 rounded-6 border-1 border-gray-7 bg-surface-raised px-8 font-mono text-10 text-gray-12"
           >
             save ⌘S
           </button>
@@ -58,7 +58,7 @@ export function TopBar({
 
       <span className="flex-1" />
 
-      <div className="flex h-28 flex-none items-center overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-raised">
+      <div className="flex h-28 flex-none items-center overflow-hidden rounded-8 border-1 border-gray-6 bg-surface-raised">
         <button
           type="button"
           aria-label="Zoom out"
@@ -91,7 +91,7 @@ export function TopBar({
       <button
         type="button"
         onClick={onExport}
-        className="h-30 rounded-lg bg-indigo-9 px-15 font-sans text-12 font-500 text-indigo-contrast"
+        className="h-30 rounded-8 bg-indigo-9 px-15 font-sans text-12 font-500 text-indigo-contrast"
       >
         Export
       </button>

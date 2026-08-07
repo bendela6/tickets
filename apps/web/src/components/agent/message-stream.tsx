@@ -55,7 +55,7 @@ function Block({ block, onRespond }: { block: StreamBlock; onRespond?: RespondFn
       );
     case 'error':
       return (
-        <div className="rounded-lg border-1 border-red-9 bg-red-3 px-12 py-8 font-sans text-12/17 text-red-9">
+        <div className="rounded-8 border-1 border-red-9 bg-red-3 px-12 py-8 font-sans text-12/17 text-red-9">
           {block.message}
         </div>
       );
@@ -99,7 +99,7 @@ function ApprovalCard({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-xl border-2 border-orange-9 bg-orange-3 shadow-lg',
+        'overflow-hidden rounded-12 border-2 border-orange-9 bg-orange-3 shadow-lg',
         decided === null && 'animate-pulse',
       )}
     >
@@ -110,7 +110,7 @@ function ApprovalCard({
           tone="secondary"
           variant="outline"
           label={toolName}
-          className="h-auto rounded-md border-gray-6 bg-surface-raised px-6 py-0 font-mono text-11"
+          className="h-auto rounded-6 border-gray-6 bg-surface-raised px-6 py-0 font-mono text-11"
         />
         <span className="flex-1" />
         {decided ? (
@@ -139,7 +139,7 @@ function ApprovalCard({
               rows={2}
               autoFocus
               placeholder="Why deny? (optional — sent back to the agent)"
-              className="resize-y rounded-lg border-1 border-gray-7 bg-surface-raised px-10 py-6 font-sans text-12/17 text-gray-12 placeholder:text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-3 focus:ring-indigo-3"
+              className="resize-y rounded-8 border-1 border-gray-7 bg-surface-raised px-10 py-6 font-sans text-12/17 text-gray-12 placeholder:text-gray-9 focus:border-indigo-9 focus:outline-none focus:ring-3 focus:ring-indigo-3"
             />
           ) : null}
           <div className="flex items-center justify-end gap-8">
@@ -176,7 +176,7 @@ function ThinkingBlock({ text }: { text: string }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-8 rounded-lg border-1 border-dashed border-gray-7 px-10 py-4 font-sans text-12/17 italic text-gray-9 hover:text-gray-11"
+        className="flex items-center gap-8 rounded-8 border-1 border-dashed border-gray-7 px-10 py-4 font-sans text-12/17 italic text-gray-9 hover:text-gray-11"
       >
         <span aria-hidden className="font-mono not-italic">
           ✦
@@ -236,7 +236,7 @@ function ToolCard({ name, input, result }: { name: string; input: unknown; resul
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-lg border-1 bg-surface-raised',
+        'overflow-hidden rounded-8 border-1 bg-surface-raised',
         status === 'error' ? 'border-red-9' : 'border-gray-6',
       )}
     >
@@ -250,10 +250,10 @@ function ToolCard({ name, input, result }: { name: string; input: unknown; resul
         <span className="flex-1 truncate font-mono text-12/17 text-gray-9">{summary}</span>
         {diff ? (
           <>
-            <span className="rounded-sm bg-green-3 px-6 font-mono text-10 text-green-9">
+            <span className="rounded-4 bg-green-3 px-6 font-mono text-10 text-green-9">
               +{diff.added}
             </span>
-            <span className="rounded-sm bg-red-3 px-6 font-mono text-10 text-red-9">
+            <span className="rounded-4 bg-red-3 px-6 font-mono text-10 text-red-9">
               −{diff.removed}
             </span>
           </>
@@ -301,7 +301,7 @@ function SubagentGroup({
   return (
     <div className="my-2 flex flex-col gap-8 border-l-2 border-gray-7 pl-12">
       <div className="flex items-center gap-8">
-        <span className="inline-flex size-16 shrink-0 items-center justify-center rounded-sm bg-indigo-3 font-mono text-9 font-600 text-indigo-9">
+        <span className="inline-flex size-16 shrink-0 items-center justify-center rounded-4 bg-indigo-3 font-mono text-9 font-600 text-indigo-9">
           {name.slice(0, 2).toUpperCase()}
         </span>
         <span className="font-mono text-12/17 font-600 text-gray-12">{name}</span>
@@ -309,7 +309,7 @@ function SubagentGroup({
           tone="secondary"
           variant="outline"
           label="subagent"
-          className="h-auto rounded-sm px-6 py-0 font-mono text-9 uppercase tracking-wide"
+          className="h-auto rounded-4 px-6 py-0 font-mono text-9 uppercase tracking-wide"
         />
         <ToolStatusDot status={statusOf(result)} />
         <span className="truncate font-mono text-12/17 text-gray-9">{oneLineInput(input)}</span>
