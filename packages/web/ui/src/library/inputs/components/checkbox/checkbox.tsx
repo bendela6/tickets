@@ -101,7 +101,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
             scale,
             // shrink-0 is required: as a flex item the input otherwise collapses
             // from 16px to ~9px wide (the switch/radio inputs already have it).
-            className: cn('rounded-sm border-2', box),
+            className: cn('rounded-4 border-2', box),
           })}
         />
         {/* Checkmark / dash rendered as overlays (not bg-image) so they never

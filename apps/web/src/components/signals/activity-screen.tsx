@@ -130,7 +130,7 @@ export function ActivityScreen() {
         dimmed={isLoading || isError}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised">
         <TableHeader />
 
         {isList ? (
@@ -205,7 +205,7 @@ export function ActivityScreen() {
                 <button
                   type="button"
                   onClick={() => void activityQuery.refetch()}
-                  className="h-32 rounded-lg border-1 border-gray-7 bg-surface-raised px-13 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+                  className="h-32 rounded-8 border-1 border-gray-7 bg-surface-raised px-13 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
                 >
                   ↻ Retry
                 </button>

@@ -32,8 +32,8 @@ function Port({
         'transition-(--transition-paint) duration-120',
         connected.has(key) ? 'opacity-100' : 'opacity-0',
         {
-          'right-full rounded-l-sm': side === 'L',
-          'left-full rounded-r-sm': side === 'R',
+          'right-full rounded-l-4': side === 'L',
+          'left-full rounded-r-4': side === 'R',
           'bg-yellow-9': !!role?.pk,
           'bg-green-9': !role?.pk && !!role?.fk,
           'bg-blue-9 ring-3 ring-blue-9/30': hot,

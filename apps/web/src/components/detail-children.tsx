@@ -78,7 +78,7 @@ export function DetailChildren({
         }
         className="mb-8 gap-10"
       />
-      <div className="overflow-hidden rounded-xl border-1 border-gray-6">
+      <div className="overflow-hidden rounded-12 border-1 border-gray-6">
         {children.map((child) => {
           const wf = indexes.workflowField(child.typeId);
           const rawStatus = wf ? child.values[wf.key] : undefined;

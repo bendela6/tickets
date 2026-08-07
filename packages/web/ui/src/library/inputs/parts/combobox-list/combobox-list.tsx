@@ -246,7 +246,7 @@ export function ComboboxList({
                 // resize when the real rows replace these.
                 className="flex h-34 items-center px-9"
               >
-                <span className="h-8 w-full animate-pulse rounded-control-xs bg-gray-5" />
+                <span className="h-8 w-full animate-pulse rounded-3 bg-gray-5" />
               </li>
             ))
           : null}

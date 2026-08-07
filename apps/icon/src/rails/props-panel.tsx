@@ -142,7 +142,7 @@ const samePair = (a: Pair, b: Pair): boolean => a.light === b.light && a.dark ==
  */
 const chip = (current: boolean): string =>
   cn(
-    'h-26 rounded-md border-1 font-mono text-10',
+    'h-26 rounded-6 border-1 font-mono text-10',
     current
       ? 'border-indigo-9 bg-indigo-3 text-indigo-9'
       : 'border-gray-6 bg-surface-raised text-gray-11',
@@ -558,7 +558,7 @@ const gridBox = (box: Box, step: number): Box => ({
  */
 function ReadOnlyRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex h-30 items-center gap-6 rounded-md border-1 border-gray-6 bg-surface-raised px-9">
+    <div className="flex h-30 items-center gap-6 rounded-6 border-1 border-gray-6 bg-surface-raised px-9">
       <span className="flex-none font-mono text-9 text-gray-9">{label}</span>
       <span className="min-w-0 flex-1 text-right font-mono text-12 text-gray-12">{value}</span>
     </div>

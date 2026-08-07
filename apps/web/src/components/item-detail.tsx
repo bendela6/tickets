@@ -20,7 +20,7 @@ import { RichTextEditor } from './rich-text/rich-text-editor';
 import { TicketDispatch } from './agent/ticket-dispatch';
 
 const ICON_BUTTON =
-  'inline-flex size-30 shrink-0 items-center justify-center rounded-lg border-1 border-gray-6 ' +
+  'inline-flex size-30 shrink-0 items-center justify-center rounded-8 border-1 border-gray-6 ' +
   'bg-transparent text-gray-11 hover:bg-surface-inset hover:text-gray-12';
 
 // Click-to-edit title: static heading until clicked, then a borderless input
@@ -201,7 +201,7 @@ export function ItemDetail({
   };
 
   const archivedChip = item.archivedAt ? (
-    <Pill tone="secondary" label="archived" className="rounded-md text-11/13 tracking-wider text-gray-9" />
+    <Pill tone="secondary" label="archived" className="rounded-6 text-11/13 tracking-wider text-gray-9" />
   ) : null;
 
   const archiveMenu = (
@@ -269,7 +269,7 @@ export function ItemDetail({
     return (
       <>
         <div className="flex shrink-0 items-center gap-9 border-b-1 border-gray-6 px-20 py-14">
-          <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-md bg-surface-inset px-7 py-3" />
+          <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-6 bg-surface-inset px-7 py-3" />
           <Pill {...typePill} label={type?.label ?? '?'} />
           {workflowField ? (
             <StatusSelect
@@ -287,7 +287,7 @@ export function ItemDetail({
           <Link
             to="/p/$projectKey/t/$number"
             params={{ projectKey, number: String(item.number) }}
-            className="inline-flex h-28 shrink-0 items-center gap-4 rounded-md border-1 border-gray-7 bg-surface-raised px-10 font-sans text-12 font-500 text-gray-12 hover:bg-surface-inset"
+            className="inline-flex h-28 shrink-0 items-center gap-4 rounded-6 border-1 border-gray-7 bg-surface-raised px-10 font-sans text-12 font-500 text-gray-12 hover:bg-surface-inset"
           >
             Open page ↗
           </Link>
@@ -357,7 +357,7 @@ export function ItemDetail({
           <div>
             {breadcrumb ? <div className="mb-10">{breadcrumb}</div> : null}
             <div className="mb-10 flex items-center gap-9">
-              <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-md bg-surface-inset px-7 py-3" />
+              <ItemKey prefix={prefix} number={item.number} className="shrink-0 rounded-6 bg-surface-inset px-7 py-3" />
               <Pill {...typePill} label={type?.label ?? '?'} />
               <span className="font-mono text-11/13 tracking-wider text-gray-9">
                 created{' '}
@@ -381,7 +381,7 @@ export function ItemDetail({
           </section>
         </div>
         <div className="flex w-320 shrink-0 flex-col gap-20">
-          <section className="flex flex-col gap-12 rounded-xl border-1 border-gray-6 bg-surface-raised p-16">
+          <section className="flex flex-col gap-12 rounded-12 border-1 border-gray-6 bg-surface-raised p-16">
             <SectionHeader title={`Fields — ${type?.label ?? '?'} form`} />
             <DetailFields board={board} indexes={indexes} item={item} layout="rail" />
           </section>

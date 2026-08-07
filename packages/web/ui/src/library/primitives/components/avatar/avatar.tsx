@@ -36,7 +36,7 @@ const avatarClass = variants({
       default: 'round',
       options: {
         round: over(SCALE, (tone) => `rounded-full bg-${tone}-3 text-${tone}-9`),
-        square: over(SCALE, (tone) => `rounded-md bg-${tone}-3 text-${tone}-9`),
+        square: over(SCALE, (tone) => `rounded-6 bg-${tone}-3 text-${tone}-9`),
       },
     },
     font: {

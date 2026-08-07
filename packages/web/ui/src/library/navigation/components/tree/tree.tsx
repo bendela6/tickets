@@ -84,7 +84,7 @@ export function TreeRow({
           tabIndex={-1}
           aria-label={`${expanded ? 'collapse' : 'expand'} ${caretLabel}`}
           onClick={onToggle}
-          className="grid size-16 flex-none self-center place-items-center rounded-sm text-gray-11 hover:bg-surface-inset hover:text-gray-12"
+          className="grid size-16 flex-none self-center place-items-center rounded-4 text-gray-11 hover:bg-surface-inset hover:text-gray-12"
         >
           {caret ?? <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size="xs" />}
         </button>
@@ -105,7 +105,7 @@ export function TreeRow({
         aria-label={label}
         onClick={onSelect}
         className={cn(
-          'flex min-w-0 flex-1 items-center gap-6 rounded-md px-6 py-4 text-left',
+          'flex min-w-0 flex-1 items-center gap-6 rounded-6 px-6 py-4 text-left',
           'hover:bg-surface-inset',
           selected && 'bg-surface-inset',
           focused && 'outline outline-2 -outline-offset-1 outline-indigo-9',

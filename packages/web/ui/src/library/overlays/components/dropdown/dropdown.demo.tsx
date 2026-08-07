@@ -24,7 +24,7 @@ function Rows({ count }: { count: number }) {
   return (
     <ul className="max-h-160 w-192 overflow-y-auto p-4">
       {Array.from({ length: count }, (_, index) => (
-        <li key={index} className="rounded-md px-8 py-6 font-sans text-13/19 text-gray-12">
+        <li key={index} className="rounded-6 px-8 py-6 font-sans text-13/19 text-gray-12">
           Row {index + 1}
         </li>
       ))}

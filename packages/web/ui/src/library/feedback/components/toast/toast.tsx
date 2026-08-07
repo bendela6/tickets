@@ -50,7 +50,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               }
             }}
             className={cn(
-              'flex items-center justify-between gap-16 rounded-lg border-1 border-gray-6 bg-surface-raised px-14 py-10 shadow-lg',
+              'flex items-center justify-between gap-16 rounded-8 border-1 border-gray-6 bg-surface-raised px-14 py-10 shadow-lg',
               'font-sans text-13/19 text-gray-12',
               'data-[state=open]:animate-in data-[state=closed]:animate-out',
             )}

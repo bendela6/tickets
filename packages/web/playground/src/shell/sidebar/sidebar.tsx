@@ -73,7 +73,7 @@ export function Sidebar({
         <a
           {...linkProps({ slug: null })}
           className={cn(
-            'shrink-0 truncate rounded-md px-8 py-4 text-13/19',
+            'shrink-0 truncate rounded-6 px-8 py-4 text-13/19',
             selected === null ? 'bg-indigo-3 text-indigo-9' : 'text-gray-11 hover:text-gray-12',
           )}
         >
@@ -92,7 +92,7 @@ export function Sidebar({
                   {...linkProps({ slug: d.slug })}
                   title={d.meta.title}
                   className={cn(
-                    'shrink-0 truncate rounded-md px-8 py-4 text-13/19',
+                    'shrink-0 truncate rounded-6 px-8 py-4 text-13/19',
                     selected === d.slug
                       ? 'bg-indigo-3 text-indigo-9'
                       : 'text-gray-11 hover:text-gray-12',

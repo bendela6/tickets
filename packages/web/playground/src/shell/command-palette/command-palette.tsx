@@ -60,7 +60,7 @@ export function CommandPalette({
       onOpenChange={onOpenChange}
       className="[&_[cmdk-dialog]]:fixed [&_[cmdk-dialog]]:inset-0 [&_[cmdk-dialog]]:flex [&_[cmdk-dialog]]:items-start [&_[cmdk-dialog]]:justify-center [&_[cmdk-dialog]]:bg-black/40 [&_[cmdk-dialog]]:pt-72"
     >
-      <div className="w-520 rounded-xl border-1 border-gray-6 bg-surface-raised shadow-lg overflow-hidden">
+      <div className="w-520 rounded-12 border-1 border-gray-6 bg-surface-raised shadow-lg overflow-hidden">
         <div className="flex items-center gap-10 px-16 py-12 border-b-1 border-gray-6">
           <span className="text-11/13 tracking-wider text-gray-9">⌕</span>
           <Command.Input
@@ -89,7 +89,7 @@ export function CommandPalette({
                         onSelect(demo.slug);
                         onOpenChange(false);
                       }}
-                      className="h-34 px-12 py-0 flex items-center rounded-lg text-13/19 cursor-pointer data-[selected=true]:bg-indigo-3"
+                      className="h-34 px-12 py-0 flex items-center rounded-8 text-13/19 cursor-pointer data-[selected=true]:bg-indigo-3"
                     >
                       <span className="text-gray-11 data-[selected=true]:text-indigo-9">
                         {highlightMatch(demo.meta.title, query)}

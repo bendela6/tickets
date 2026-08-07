@@ -22,7 +22,7 @@ export const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
           collisionPadding={collisionPadding}
           align={align}
           className={cn(
-            'z-50 rounded-lg border-1 border-gray-6 bg-surface-raised text-gray-12 shadow-lg',
+            'z-50 rounded-8 border-1 border-gray-6 bg-surface-raised text-gray-12 shadow-lg',
             'font-sans text-13/19 outline-none',
             'data-[state=open]:animate-in data-[state=closed]:animate-out',
             className,

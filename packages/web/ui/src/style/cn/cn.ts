@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
-import { extendTailwindMerge } from 'tailwind-merge';
-import { FONT_WEIGHTS, RADII, TEXT_SIZES } from '../generated';
+import { extendTailwindMerge, validators } from 'tailwind-merge';
+import { FONT_WEIGHTS, TEXT_SIZES } from '../generated';
 
 // The app defines custom font-size tokens. tailwind-merge doesn't know they're
 // font sizes, so by default it buckets them into the text-COLOR group and
@@ -21,23 +21,47 @@ import { FONT_WEIGHTS, RADII, TEXT_SIZES } from '../generated';
 // weights with font files are registered, because only those compile to
 // anything; a `font-700` nobody can produce needs no protection.
 
-// The same trap a third time, in the radius namespace. `rounded-control-xs|md|lg`
-// are custom rungs, so tailwind-merge does not recognise them as border-radius
-// and will not let a later `rounded-none` evict one — both survive, and which
-// wins is left to stylesheet order. Found when read-only stopped being a box:
-// its `rounded-none` sat beside the ladder's `rounded-control-md` and the
-// corners stayed rounded.
+// The same trap a third time, in the radius namespace. Radius is spelled as a
+// pixel count here (`rounded-6`, not `rounded-md`), and tailwind-merge's stock
+// border-radius group accepts `isTshirtSize` — which matches `md` and `2xl` but
+// NOT a bare number. An unrecognised rung is not an error: it lands in no group,
+// the eviction silently does not happen, and both classes survive with
+// stylesheet order deciding. Found when read-only stopped being a box — its
+// `rounded-none` sat beside the ladder's rung and the corners stayed rounded.
 //
-// `control-*` is two segments, which the object form does not match on its own,
-// so the rungs are registered as whole class names.
-const RADIUS_RUNGS = Object.keys(RADII);
+// `isInteger` rather than `isNumber` because that is what actually compiles:
+// `rounded-4.5` emits no rule at all, the same way `ring-1.5` does not.
+//
+// All FIFTEEN groups, not just `rounded`: the corner utilities are separate
+// groups in tailwind-merge, so registering only the all-corners one leaves
+// `rounded-t-4 rounded-t-none` keeping both. Under the old t-shirt spelling
+// those fourteen came free from `isTshirtSize`, which is exactly why the gap
+// would not have been noticed.
+const RADIUS = [validators.isInteger];
+const CORNERS = [
+  'rounded-s',
+  'rounded-e',
+  'rounded-t',
+  'rounded-r',
+  'rounded-b',
+  'rounded-l',
+  'rounded-ss',
+  'rounded-se',
+  'rounded-ee',
+  'rounded-es',
+  'rounded-tl',
+  'rounded-tr',
+  'rounded-br',
+  'rounded-bl',
+] as const;
 
 const twMerge = extendTailwindMerge({
   extend: {
     classGroups: {
       'font-size': [{ text: TEXT_SIZES }],
       'font-weight': [{ font: FONT_WEIGHTS }],
-      rounded: [{ rounded: RADIUS_RUNGS }],
+      rounded: [{ rounded: RADIUS }],
+      ...Object.fromEntries(CORNERS.map((corner) => [corner, [{ [corner]: RADIUS }]])),
     },
   },
 });

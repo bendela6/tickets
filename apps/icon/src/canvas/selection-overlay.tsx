@@ -102,7 +102,7 @@ export function SelectionOverlay({
             type="button"
             aria-label={`Resize ${handle}`}
             onPointerDown={(event) => onHandleDown(handle, event)}
-            className={`${HANDLE_SKIN} rounded-sm`}
+            className={`${HANDLE_SKIN} rounded-4`}
             style={{
               left: (position.x - box.x) * scale - size.w / 2,
               top: (position.y - box.y) * scale - size.h / 2,

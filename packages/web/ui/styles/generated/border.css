@@ -2,11 +2,70 @@
    Regenerate with `pnpm --filter @tickets/ui tokens:build`. */
 @theme inline {
   --radius-*: initial;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
-  --radius-control-xs: 3px;
-  --radius-control-md: 4px;
-  --radius-control-lg: 5px;
+}
+
+@utility rounded-* {
+  border-radius: calc(--value(integer) * 1px);
+}
+
+@utility rounded-s-* {
+  border-start-start-radius: calc(--value(integer) * 1px);
+  border-end-start-radius: calc(--value(integer) * 1px);
+}
+
+@utility rounded-e-* {
+  border-start-end-radius: calc(--value(integer) * 1px);
+  border-end-end-radius: calc(--value(integer) * 1px);
+}
+
+@utility rounded-t-* {
+  border-top-left-radius: calc(--value(integer) * 1px);
+  border-top-right-radius: calc(--value(integer) * 1px);
+}
+
+@utility rounded-r-* {
+  border-top-right-radius: calc(--value(integer) * 1px);
+  border-bottom-right-radius: calc(--value(integer) * 1px);
+}
+
+@utility rounded-b-* {
+  border-bottom-right-radius: calc(--value(integer) * 1px);
+  border-bottom-left-radius: calc(--value(integer) * 1px);
+}
+
+@utility rounded-l-* {
+  border-top-left-radius: calc(--value(integer) * 1px);
+  border-bottom-left-radius: calc(--value(integer) * 1px);
+}
+
+@utility rounded-ss-* {
+  border-start-start-radius: calc(--value(integer) * 1px);
+}
+
+@utility rounded-se-* {
+  border-start-end-radius: calc(--value(integer) * 1px);
+}
+
+@utility rounded-ee-* {
+  border-end-end-radius: calc(--value(integer) * 1px);
+}
+
+@utility rounded-es-* {
+  border-end-start-radius: calc(--value(integer) * 1px);
+}
+
+@utility rounded-tl-* {
+  border-top-left-radius: calc(--value(integer) * 1px);
+}
+
+@utility rounded-tr-* {
+  border-top-right-radius: calc(--value(integer) * 1px);
+}
+
+@utility rounded-br-* {
+  border-bottom-right-radius: calc(--value(integer) * 1px);
+}
+
+@utility rounded-bl-* {
+  border-bottom-left-radius: calc(--value(integer) * 1px);
 }

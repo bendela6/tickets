@@ -29,7 +29,7 @@ function slugifyKey(label: string): string {
 
 function ArchChip() {
   return (
-    <span className="inline-flex h-17 shrink-0 items-center rounded-sm bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
+    <span className="inline-flex h-17 shrink-0 items-center rounded-4 bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
       ARCH
     </span>
   );
@@ -125,7 +125,7 @@ function PlacementRow({
           aria-label={`Move ${field.label} up`}
           disabled={disabled || index === 0}
           onClick={() => move(-1)}
-          className="flex size-22 cursor-pointer items-center justify-center rounded-md font-sans text-11 text-gray-9 hover:bg-surface-inset hover:text-gray-12 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex size-22 cursor-pointer items-center justify-center rounded-6 font-sans text-11 text-gray-9 hover:bg-surface-inset hover:text-gray-12 disabled:cursor-not-allowed disabled:opacity-40"
         >
           ↑
         </button>
@@ -134,7 +134,7 @@ function PlacementRow({
           aria-label={`Move ${field.label} down`}
           disabled={disabled || index === placements.length - 1}
           onClick={() => move(1)}
-          className="flex size-22 cursor-pointer items-center justify-center rounded-md font-sans text-11 text-gray-9 hover:bg-surface-inset hover:text-gray-12 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex size-22 cursor-pointer items-center justify-center rounded-6 font-sans text-11 text-gray-9 hover:bg-surface-inset hover:text-gray-12 disabled:cursor-not-allowed disabled:opacity-40"
         >
           ↓
         </button>
@@ -148,7 +148,7 @@ function PlacementRow({
           if (userId === null) return;
           unplaceField.mutate({ actorId: userId, itemTypeId: typeId, fieldId: field.id });
         }}
-        className="flex size-22 cursor-pointer items-center justify-center rounded-md font-sans text-13/19 text-gray-9 hover:bg-surface-inset hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex size-22 cursor-pointer items-center justify-center rounded-6 font-sans text-13/19 text-gray-9 hover:bg-surface-inset hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
       >
         ⌫
       </button>
@@ -186,7 +186,7 @@ function NewFieldComposer({
   }
 
   return (
-    <form onSubmit={submit} className="mb-16 rounded-xl border-1 border-gray-6 bg-surface-raised p-14">
+    <form onSubmit={submit} className="mb-16 rounded-12 border-1 border-gray-6 bg-surface-raised p-14">
       <div className="mb-12 font-sans text-13/19 font-600 text-gray-12">New field</div>
       <div className="grid grid-cols-[1.4fr_1fr_1fr] gap-12">
         <div className="flex flex-col gap-5">
@@ -317,7 +317,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
               <div
                 role="region"
                 aria-label="Placements"
-                className="mb-16 overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised"
+                className="mb-16 overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised"
               >
                 <div
                   className={cn(
@@ -396,7 +396,7 @@ export function FieldsTab({ board, indexes }: SettingsTabProps) {
         <div
           role="region"
           aria-label="Field library"
-          className="overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised"
+          className="overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised"
         >
           {sortedFields.map((field) => {
             const placedCount = board.placements.filter((placement) => placement.fieldId === field.id).length;

@@ -33,14 +33,14 @@ const A = (p: El<'a'>) => (
 const Code = (p: El<'code'>) => (
   <code
     {...p}
-    className="rounded-sm bg-surface-inset px-4 py-2 font-mono text-12 text-gray-12"
+    className="rounded-4 bg-surface-inset px-4 py-2 font-mono text-12 text-gray-12"
   />
 );
 // The <code> inside a fence inherits the block's type, so its own chrome is removed.
 const Pre = (p: El<'pre'>) => (
   <pre
     {...p}
-    className="my-12 overflow-x-auto rounded-md bg-surface-inset p-12 font-mono text-12/17 text-gray-12"
+    className="my-12 overflow-x-auto rounded-6 bg-surface-inset p-12 font-mono text-12/17 text-gray-12"
   />
 );
 const Blockquote = (p: El<'blockquote'>) => (
@@ -61,7 +61,7 @@ const Th = (p: El<'th'>) => (
 const Td = (p: El<'td'>) => (
   <td {...p} className="border-gray-6 border-b-1 px-8 py-4 align-top text-gray-11" />
 );
-const Img = (p: El<'img'>) => <img {...p} alt={p.alt ?? ''} className="my-12 max-w-full rounded-sm" />;
+const Img = (p: El<'img'>) => <img {...p} alt={p.alt ?? ''} className="my-12 max-w-full rounded-4" />;
 
 const COMPONENTS: MarkdownComponents = {
   h1: H1,

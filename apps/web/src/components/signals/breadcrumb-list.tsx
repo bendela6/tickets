@@ -31,7 +31,7 @@ function HttpStatusPill({ status }: { status: number }) {
     <Pill
       tone={ok ? 'green' : 'danger'}
       label={status}
-      className={cn('h-17 rounded-sm px-6 font-mono text-10', !ok && 'font-600')}
+      className={cn('h-17 rounded-4 px-6 font-mono text-10', !ok && 'font-600')}
     />
   );
 }
@@ -98,7 +98,7 @@ function TerminalBreadcrumbRow({ terminal }: { terminal: TerminalBreadcrumb }) {
       className="grid items-center gap-x-10 bg-red-3 px-16 py-6"
       style={{ gridTemplateColumns: BREADCRUMB_GRID_COLUMNS }}
     >
-      <span className="flex size-20 items-center justify-center rounded-md bg-red-9 font-mono text-10 font-600 text-red-contrast">
+      <span className="flex size-20 items-center justify-center rounded-6 bg-red-9 font-mono text-10 font-600 text-red-contrast">
         ✕
       </span>
       <span className="font-mono text-[10.5px] font-500 text-red-9">{terminal.name}</span>
@@ -134,7 +134,7 @@ export function BreadcrumbList({
   const rows = breadcrumbs ?? [];
 
   return (
-    <div className="flex-none overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
+    <div className="flex-none overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised">
       <div className="flex h-42 items-center gap-10 border-b-1 border-gray-6 px-16">
         <span className="font-sans text-[13.5px] font-600 text-gray-12">Breadcrumbs</span>
         {rows.length > 0 ? (

@@ -31,7 +31,7 @@ export function FileGrid({ doc }: { doc: IconDoc }) {
   return (
     <div className="grid gap-12 md:grid-cols-2">
       {rows(doc).map((row) => (
-        <div key={row.file} className="overflow-hidden rounded-xl border-1 border-gray-6 bg-gray-2">
+        <div key={row.file} className="overflow-hidden rounded-12 border-1 border-gray-6 bg-gray-2">
           <div className="flex flex-col gap-2 px-12 pt-12">
             <span className="font-mono text-13 font-600 text-gray-12">{row.file}</span>
             <span className="text-12 text-gray-11">{row.use}</span>

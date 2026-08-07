@@ -4,7 +4,7 @@ import { PALETTE, TEXT_SIZES, TONE_NAMES, TONE_HUE, HUES, ROLES } from '../../st
 import { liveTokens, parseCustomProperties } from './spec';
 
 // Nothing here restates a token VALUE. A test listing the twelve type sizes or
-// the four radius rungs has to be edited whenever a designer changes one, and
+// the six sanctioned radii has to be edited whenever a designer changes one, and
 // can only fail if the JSON was copied wrong twice — it detects change, not
 // breakage. What is asserted are the contracts that survive a value change:
 // naming rules, shapes, and what must NOT exist.
@@ -83,23 +83,48 @@ describe('the generated vocabulary', () => {
 });
 
 describe('the radius scale in the live sheet', () => {
-  it('clears the whole namespace first, so off-scale rungs cannot drift back', () => {
+  it('clears the whole namespace and declares no rung of its own', () => {
     // Asserted against the raw text rather than `liveTokens`, which parses
     // `--name: value` and cannot see a `*` in the name.
     //
     // The wildcard replaced four named clears (xs/2xl/3xl/4xl). Same result for
     // today's Tailwind, but it also catches any rung a future version adds.
     expect(borderCss).toMatch(/--radius-\*:\s*initial;/);
-    // The clear must precede the first real rung, or it would wipe them too.
-    const firstRung = /--radius-(?!\*)[a-z0-9]+:/.exec(borderCss);
-    expect(firstRung).not.toBeNull();
-    expect(borderCss.indexOf('--radius-*')).toBeLessThan(firstRung!.index);
+    // Nothing may be declared back over the clear. A named rung here would be a
+    // second spelling for a size the class already states — the two could then
+    // disagree, which is the whole reason the t-shirt ladder was retired.
+    expect(borderCss).not.toMatch(/--radius-(?!\*)[\w-]+\s*:/);
+    expect(liveTokens(/^radius-/)).toEqual([]);
+  });
+
+  it('defines the radius utility over the cleared namespace, in integers', () => {
+    // `rounded-6` is 6px because the class says so — Tailwind's stock utility
+    // reads `--radius-*` and has no bare-value form, so with the namespace
+    // cleared it would compile to nothing without this.
+    //
+    // `--value(integer)` and not `number`: `rounded-4.5` emits no rule, the same
+    // constraint `border-3.5` and `ring-1.5` carry.
+    expect(borderCss).toMatch(/@utility rounded-\* \{[^}]*--value\(integer\)/);
+    expect(borderCss).not.toContain('--value(number)');
+  });
+
+  it('defines every corner utility, not just the all-corners one', () => {
+    // A missing corner is invisible: `rounded-tr-8` would compile to nothing and
+    // the corner would stay square, with no error anywhere. Asserted as a set
+    // rather than by value, so a redrawn scale does not touch this test.
+    const corners = ['s', 'e', 't', 'r', 'b', 'l', 'ss', 'se', 'ee', 'es', 'tl', 'tr', 'br', 'bl'];
+    for (const corner of corners) {
+      expect(borderCss).toContain(`@utility rounded-${corner}-* {`);
+    }
   });
 
   it('leaves rounded-full reachable, since Tailwind hardcodes it', () => {
-    // `calc(infinity * 1px)`, not a token read — so the namespace clear cannot
-    // remove it, and a pill is not a step on the scale anyway.
+    // `calc(infinity * 1px)`, not a token read — so neither the namespace clear
+    // nor the redefinition can remove it, and a pill is not a step on the scale
+    // anyway. Same for `rounded-none`, which is a static `0`.
     expect(borderCss).not.toContain('--radius-full');
+    expect(borderCss).not.toContain('@utility rounded-full');
+    expect(borderCss).not.toContain('@utility rounded-none');
   });
 });
 

@@ -34,7 +34,7 @@ export function ActivityRow({ signal }: { signal: SignalListRow }) {
         </span>
       </span>
       <span>
-        <span className="inline-flex h-20 max-w-100 items-center overflow-hidden rounded-md bg-surface-inset px-7 font-mono text-[10.5px] font-500 text-gray-11">
+        <span className="inline-flex h-20 max-w-100 items-center overflow-hidden rounded-6 bg-surface-inset px-7 font-mono text-[10.5px] font-500 text-gray-11">
           {signal.appSlug}
         </span>
       </span>
@@ -69,12 +69,12 @@ export function ActivityRowSkeleton({ index = 0 }: { index?: number }) {
       className="grid h-44 animate-pulse items-center border-b-1 border-gray-6 px-14"
       style={{ gridTemplateColumns: ACTIVITY_GRID_COLUMNS }}
     >
-      <span className="size-14 rounded-md bg-surface-inset" />
+      <span className="size-14 rounded-6 bg-surface-inset" />
       <span className="size-9 rounded-full bg-surface-inset" />
-      <span className="block h-11 rounded-sm bg-surface-inset" style={{ width: `${width}%` }} />
-      <span className="inline-block h-14 w-72 rounded-sm bg-surface-inset" />
-      <span className="inline-block h-9 w-26 rounded-sm bg-surface-inset" />
-      <span className="inline-block h-9 w-52 rounded-sm bg-surface-inset" />
+      <span className="block h-11 rounded-4 bg-surface-inset" style={{ width: `${width}%` }} />
+      <span className="inline-block h-14 w-72 rounded-4 bg-surface-inset" />
+      <span className="inline-block h-9 w-26 rounded-4 bg-surface-inset" />
+      <span className="inline-block h-9 w-52 rounded-4 bg-surface-inset" />
     </div>
   );
 }

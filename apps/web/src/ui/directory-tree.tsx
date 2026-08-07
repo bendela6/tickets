@@ -42,14 +42,14 @@ function Row({
       caret={row.loading ? <Spinner size="sm" tone="primary" /> : undefined}
       leading={
         row.isRoot ? (
-          <span className="self-center shrink-0 rounded-sm border-1 border-gray-7 px-4 font-mono text-11/15 text-gray-11">
+          <span className="self-center shrink-0 rounded-4 border-1 border-gray-7 px-4 font-mono text-11/15 text-gray-11">
             {row.symbol}
           </span>
         ) : (
           <span
             aria-hidden
             className={cn(
-              'size-12 shrink-0 self-center rounded-sm border-1',
+              'size-12 shrink-0 self-center rounded-4 border-1',
               row.error ? 'border-red-9' : 'border-yellow-8',
               row.expanded && !row.error && 'bg-yellow-8',
             )}
@@ -90,7 +90,7 @@ export function DirectoryTree({ roots, selected, onSelect }: DirectoryTreeProps)
     <Tree
       activeDescendant={tree.activeDescendant}
       onKeyDown={tree.onKeyDown}
-      className="max-h-248 overflow-y-auto rounded-lg bg-surface-inset p-4"
+      className="max-h-248 overflow-y-auto rounded-8 bg-surface-inset p-4"
     >
       {tree.rows.map((row) => (
         <Row

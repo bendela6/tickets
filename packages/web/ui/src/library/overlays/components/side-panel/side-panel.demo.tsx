@@ -7,7 +7,7 @@ export const meta = {
 };
 
 function Frame({ children }: { children: React.ReactNode }) {
-  return <div className="flex h-256 overflow-hidden rounded-lg border-1 border-gray-6">{children}</div>;
+  return <div className="flex h-256 overflow-hidden rounded-8 border-1 border-gray-6">{children}</div>;
 }
 
 const body = (

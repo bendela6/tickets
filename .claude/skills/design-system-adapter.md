@@ -29,7 +29,7 @@ here should need to leak back into those skills.
   | --- | --- | --- | --- | --- |
   | colors | `generators/colors.ts` | `colors` | `colors.css` | `colors.ts` |
   | typography | `generators/typography.ts` | `typography` | `typography.css` | `typography.ts` |
-  | border | `generators/border.ts` | `border` | `border.css` | `border.ts` |
+  | border | `generators/border.ts` | — | `border.css` | — |
   | motion | `generators/motion.ts` | `motion` | `motion.css` | `motion.ts` |
   | shadows | `generators/shadows.ts` | `shadows` | `shadows.css` | `shadows.ts` |
   | breakpoints | `generators/breakpoints.ts` | `breakpoints` | `breakpoints.css` | `breakpoints.ts` |
@@ -38,12 +38,33 @@ here should need to leak back into those skills.
 
   Each generator is one self-contained function returning `{ css, ts }`.
   `colors` holds hues, roles, surfaces and literals — all `--color-*`, so all
-  behind one `--color-*: initial`.
+  behind one `--color-*: initial`. The barrel is built from the families that
+  actually RETURNED a `ts`, not from the family list — `border` returns CSS
+  alone, and a barrel over the names would re-export a module never written.
+- **A family with no values does not get a token file.** `border` is the only
+  one, since 2026-08-07: every edge family is a bare-value utility, so
+  `border-7` is 7px and `rounded-6` is 6px because the class says so, and there
+  was nothing left to declare. What its generator emits is a utility DEFINITION
+  (see below), which reads no values. `border.tokens.json` and
+  `src/style/generated/border.ts` were deleted; the six sanctioned radii now
+  live on the gallery's Radius page, the way border/ring/z widths live on the
+  Layout page since `layout.tokens.json` went the same way on 2026-08-04. **The
+  rule both deletions follow: a list that reaches no stylesheet can only
+  describe an agreement, never enforce one — so keep it where it is read.**
 - **Not everything in a token file is emitted, by design.** `motion.duration`
-  and `border.width`/`border.ring` produce no CSS: Tailwind has no namespace for
-  them, so `duration-200` is 200ms and `border-7` is 7px because the class says
-  so. Measured — any integer compiles. Those lists are documentation the build
-  cannot enforce; `spec.test.ts` asserts the sheet declares NO token for them.
+  produces no custom property: the class IS the value (`duration-200` is 200ms).
+  Measured — any integer compiles. That list is documentation the build cannot
+  enforce; `spec.test.ts` asserts the sheet declares NO token for it.
+- **`border.css` is the one generated sheet that emits UTILITIES, not values.**
+  Radius reads that way only because the generator clears `--radius-*` and
+  redefines all fifteen `rounded[-corner]-*` utilities over it with
+  `calc(--value(integer) * 1px)`. Tailwind's stock `rounded-*` reads the theme
+  namespace and has no bare-value form — radius is NOT on the `--spacing` scale
+  the way padding is, so `rounded-4` compiles to nothing without this. Three
+  things survive the redefinition (measured, Tailwind 4.3.2): `rounded-full` and
+  `rounded-none` (static utilities), `rounded-[7px]` (core keeps the arbitrary
+  case, which is why `--value()` is given `integer` ALONE — adding `[length]`
+  emits `6pxpx`), and variants. Bare `rounded` does not survive, deliberately.
 - **All CSS lives in `packages/web/ui/styles/`; generated files are whole
   files.** Nothing is spliced into hand-authored content:
   - `index.css` — the entry (`@tickets/ui/tokens.css` resolves here). Layer
@@ -91,11 +112,13 @@ here should need to leak back into those skills.
   tokens, fails if any file under `styles/generated/` or `src/generated/` drifts
   from a fresh build). Freshness only — no value or vocabulary checking remains.
 - **Never assert token VALUES in a test.** A test listing the twelve type rungs
-  or the four radius values has to be edited every time a designer changes one,
+  or the six sanctioned radii has to be edited every time a designer changes one,
   and it can only fail if someone copied the JSON wrong twice. Assert the
   contracts that survive a value change instead: naming rules (`text-13` IS
-  13px), shapes (a size token carries no line-height), and what must NOT exist
-  (no `--border-*`/`--z-*` token; `--radius-*: initial` precedes the rungs).
+  13px, `rounded-6` IS 6px), shapes (a size token carries no line-height), and
+  what must NOT exist (no `--border-*`/`--z-*`/`--radius-*` token at all; every
+  one of the fifteen corner utilities defined, since a missing one compiles to
+  nothing and leaves the corner square with no error anywhere).
   Assertions against inline fixtures are fine — they test the parser, not the
   token set.
 - GAP: no visual-regression runner wired up yet (no run command, no
@@ -161,16 +184,18 @@ here should need to leak back into those skills.
    option-color light hexes as persisted API data** — duplicates
    `--ins-opt-*`; a known drift point not yet covered by `tokens:check`
    (future work).
-5. **Bare `border` and bare `rounded` still compile, and NOTHING now stops them.**
-   Tailwind defines both as static utilities, so `--border-*`/`--radius-*: initial`
-   cannot remove them. The `vocabulary.ts` scan and its two reviewed baselines
-   enforced the `border-1` / `rounded-sm` spelling; they were deleted 2026-08-04.
-   Both bare forms render identically to their rung (`border` = `border-1` = 1px;
-   `rounded` = `rounded-sm` = 4px), so what was lost is one spelling per concept,
-   not correct output. Off-scale ARBITRARY values (`border-[1.5px]`,
-   `rounded-[7px]`) are likewise unguarded now; the cleared rungs
-   (`rounded-xs`/`2xl`/`3xl`/`4xl`) still fail loudly because `initial` makes them
-   compile to nothing.
+5. **Bare `border` still compiles and NOTHING stops it; bare `rounded` no longer
+   does.** Tailwind defines `border` as a static utility, so `--border-*: initial`
+   cannot remove it and it renders as `border-1` (1px) — one lost spelling, not
+   wrong output. `rounded` used to behave the same way (a silent 4px), and stopped
+   on 2026-08-07: the generator redefines `rounded-*` as a functional utility over
+   a cleared namespace, and a bare `rounded` matches no definition, so it compiles
+   to nothing and the corner stays square. The `vocabulary.ts` scan that once
+   enforced the spelling was deleted 2026-08-04. Off-scale ARBITRARY values
+   (`border-[1.5px]`, `rounded-[7px]`) remain unguarded — `rounded-[7px]` is the
+   documented escape hatch now that every integer compiles. The retired rungs
+   (`rounded-sm`/`md`/`lg`/`xl`, `rounded-control-*`, `rounded-xs`/`2xl`/`3xl`/`4xl`)
+   all fail loudly: nothing defines them, so they emit no rule at all.
 6. **A demo that declares plain `{ name, render }` literals AND has a playground
    never renders those literals.** `state-grid.tsx` prefers the derived axes
    when a playground exists, so authored states are silently dropped — several
@@ -237,8 +262,13 @@ here should need to leak back into those skills.
     namespaces.** A custom token that Tailwind understands but tailwind-merge
     does not gets bucketed into the wrong class group, and the eviction it
     should perform silently does not happen: `text-13` swallowed colours,
-    `font-500` swallowed families, and `rounded-control-md` refused to be
-    replaced by `rounded-none`. All three are registered in `cn.ts` now. **Any
-    future token namespace with custom rungs needs the same registration**, and
-    the failure mode is always two surviving classes with stylesheet order
-    deciding — never an error.
+    `font-500` swallowed families, and the radius ladder refused to be replaced
+    by `rounded-none`. All three are registered in `cn.ts` now. **Any future
+    token namespace with custom rungs needs the same registration**, and the
+    failure mode is always two surviving classes with stylesheet order deciding
+    — never an error.
+    Radius is registered as `validators.isInteger` across **fifteen** groups, not
+    one: tailwind-merge models each corner (`rounded-t`, `rounded-tl`, …) as its
+    own group. Under the old t-shirt spelling those fourteen came free from
+    `isTshirtSize`, which is exactly why the gap would not have been noticed —
+    numbers match no stock validator at all.

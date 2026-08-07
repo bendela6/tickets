@@ -377,7 +377,7 @@ export function RichTextEditor({
 
   return (
     <div>
-      <div className={cn('overflow-hidden rounded-xl border-1', stateClasses)}>
+      <div className={cn('overflow-hidden rounded-12 border-1', stateClasses)}>
         {composer === undefined ? (
           <div className={cn('flex items-center border-b-1 border-gray-6 px-8 py-5', disabled && 'opacity-45')}>
             {toolbar}

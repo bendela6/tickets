@@ -167,7 +167,7 @@ export function DateRangePicker({
             type="button"
             aria-label="Previous month"
             onClick={() => shiftMonth(-1)}
-            className="inline-flex size-24 items-center justify-center rounded-control-xs text-gray-11 hover:bg-gray-4"
+            className="inline-flex size-24 items-center justify-center rounded-3 text-gray-11 hover:bg-gray-4"
           >
             <Icon name="chevron-left" size="xs" />
           </button>
@@ -178,7 +178,7 @@ export function DateRangePicker({
             type="button"
             aria-label="Next month"
             onClick={() => shiftMonth(1)}
-            className="inline-flex size-24 items-center justify-center rounded-control-xs text-gray-11 hover:bg-gray-4"
+            className="inline-flex size-24 items-center justify-center rounded-3 text-gray-11 hover:bg-gray-4"
           >
             <Icon name="chevron-right" size="xs" />
           </button>
@@ -213,10 +213,10 @@ export function DateRangePicker({
                   // The ends are SQUARE where they meet the span and rounded on
                   // the outside, so the two tiles and the bar between them read
                   // as one shape rather than three.
-                  isFrom && spanTo !== spanFrom ? 'rounded-l-control-xs' : '',
-                  isTo && spanTo !== spanFrom ? 'rounded-r-control-xs' : '',
-                  isEnd && spanFrom === spanTo ? 'rounded-control-xs' : '',
-                  !isEnd && !inSpan ? 'rounded-control-xs' : '',
+                  isFrom && spanTo !== spanFrom ? 'rounded-l-3' : '',
+                  isTo && spanTo !== spanFrom ? 'rounded-r-3' : '',
+                  isEnd && spanFrom === spanTo ? 'rounded-3' : '',
+                  !isEnd && !inSpan ? 'rounded-3' : '',
                   isEnd
                     ? `bg-${field.scale}-9 text-${field.scale}-contrast`
                     : inSpan
@@ -239,7 +239,7 @@ export function DateRangePicker({
               onChange([null, null]);
               setPreview(null);
             }}
-            className="rounded-control-xs px-6 py-2 font-mono text-11 text-gray-11 hover:bg-gray-4 hover:text-gray-12"
+            className="rounded-3 px-6 py-2 font-mono text-11 text-gray-11 hover:bg-gray-4 hover:text-gray-12"
           >
             clear
           </button>

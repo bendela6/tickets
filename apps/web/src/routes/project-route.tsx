@@ -32,7 +32,7 @@ function ProjectLayout() {
           </p>
           <Link
             to="/"
-            className="mt-12 inline-flex h-32 items-center rounded-lg border-1 border-gray-7 bg-surface-raised px-12 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
+            className="mt-12 inline-flex h-32 items-center rounded-8 border-1 border-gray-7 bg-surface-raised px-12 font-sans text-13/19 text-gray-12 hover:bg-surface-inset"
           >
             ← projects
           </Link>

@@ -346,7 +346,7 @@ export function AllItemsScreen() {
         key: entry.project.key,
         header: (
           <>
-            <span className="rounded-sm bg-surface-inset px-6 py-2 font-mono text-11 font-500 text-gray-12">
+            <span className="rounded-4 bg-surface-inset px-6 py-2 font-mono text-11 font-500 text-gray-12">
               {entry.project.itemPrefix}
             </span>
             <span className="font-sans text-13/19 font-500 text-gray-12">{entry.project.name}</span>
@@ -634,7 +634,7 @@ export function AllItemsScreen() {
       </div>
 
       {/* Grouped table */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-xl border-1 border-gray-6 bg-surface-raised">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-12 border-1 border-gray-6 bg-surface-raised">
         {allRows.length === 0 ? (
           <ScreenState
             className="flex-1 justify-center py-64"

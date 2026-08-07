@@ -95,7 +95,7 @@ function AppRow({
       <span className="flex min-w-0 items-center gap-10">
         <span
           className={cn(
-            'flex size-22 shrink-0 items-center justify-center rounded-md font-mono text-9 font-600',
+            'flex size-22 shrink-0 items-center justify-center rounded-6 font-mono text-9 font-600',
             avatarTone(app.slug),
           )}
         >
@@ -124,7 +124,7 @@ function AppRow({
             <button
               type="button"
               aria-label={`${app.slug} actions`}
-              className="hidden size-28 items-center justify-center rounded-md text-gray-9 hover:bg-surface-inset hover:text-gray-12 group-hover:flex data-[state=open]:flex"
+              className="hidden size-28 items-center justify-center rounded-6 text-gray-9 hover:bg-surface-inset hover:text-gray-12 group-hover:flex data-[state=open]:flex"
             >
               ⋯
             </button>
@@ -201,7 +201,7 @@ export function AppsScreen() {
 
       {isList ? (
         <>
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised">
             <TableHeader />
             <div className="flex-1 overflow-auto">
               {rows.map((app) => (
@@ -241,7 +241,7 @@ export function AppsScreen() {
               <button
                 type="button"
                 onClick={() => void appsQuery.refetch()}
-                className="h-32 rounded-lg border-1 border-gray-7 bg-surface-raised px-13 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+                className="h-32 rounded-8 border-1 border-gray-7 bg-surface-raised px-13 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
               >
                 ↻ Retry
               </button>
@@ -253,7 +253,7 @@ export function AppsScreen() {
       {isEmpty ? (
         <div className="flex flex-1 items-center justify-center">
           <div className="flex max-w-550 flex-col items-center gap-18 text-center">
-            <span className="flex size-44 items-center justify-center rounded-xl bg-indigo-3 font-mono text-22 text-indigo-9">
+            <span className="flex size-44 items-center justify-center rounded-12 bg-indigo-3 font-mono text-22 text-indigo-9">
               ∿
             </span>
             <div className="font-sans text-22 font-600 text-gray-12">Connect your first app</div>
@@ -268,7 +268,7 @@ export function AppsScreen() {
               {ONBOARDING_STEPS.map((step) => (
                 <div
                   key={step.n}
-                  className="w-186 rounded-xl border-1 border-gray-6 bg-surface-raised p-14 text-left"
+                  className="w-186 rounded-12 border-1 border-gray-6 bg-surface-raised p-14 text-left"
                 >
                   <span className="block font-mono text-10 text-gray-9">{step.n}</span>
                   <span className="mt-6 block font-sans text-[12.5px] font-500 text-gray-12">

@@ -45,20 +45,20 @@ function formatStartedAt(iso: string): string {
 function SessionSkeleton() {
   return (
     <div className="flex h-full min-h-0 flex-col p-24 md:p-28">
-      <div className="mb-12 h-12 w-160 animate-pulse rounded-sm bg-surface-inset" />
+      <div className="mb-12 h-12 w-160 animate-pulse rounded-4 bg-surface-inset" />
       <div className="mb-12 flex items-center gap-10">
-        <div className="h-20 w-192 animate-pulse rounded-sm bg-surface-inset" />
-        <div className="h-22 w-64 animate-pulse rounded-md bg-surface-inset" />
+        <div className="h-20 w-192 animate-pulse rounded-4 bg-surface-inset" />
+        <div className="h-22 w-64 animate-pulse rounded-6 bg-surface-inset" />
       </div>
-      <div className="mb-16 h-64 flex-none animate-pulse rounded-xl border-1 border-gray-6 bg-surface-raised" />
-      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border-1 border-gray-6 bg-surface-raised p-16 md:p-20">
+      <div className="mb-16 h-64 flex-none animate-pulse rounded-12 border-1 border-gray-6 bg-surface-raised" />
+      <div className="min-h-0 flex-1 overflow-hidden rounded-12 border-1 border-gray-6 bg-surface-raised p-16 md:p-20">
         <div className="flex flex-col gap-12">
           {Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="flex items-center gap-12">
-              <div className="h-12 w-40 flex-none animate-pulse rounded-sm bg-surface-inset" />
-              <div className="size-20 flex-none animate-pulse rounded-md bg-surface-inset" />
+              <div className="h-12 w-40 flex-none animate-pulse rounded-4 bg-surface-inset" />
+              <div className="size-20 flex-none animate-pulse rounded-6 bg-surface-inset" />
               <div
-                className="h-12 animate-pulse rounded-sm bg-surface-inset"
+                className="h-12 animate-pulse rounded-4 bg-surface-inset"
                 style={{ width: `${38 + ((i * 7) % 45)}%` }}
               />
             </div>
@@ -173,7 +173,7 @@ function CopySessionIdButton({ sessionId }: { sessionId: string }) {
     <button
       type="button"
       onClick={() => void copy(sessionId)}
-      className="h-32 flex-none rounded-lg border-1 border-gray-7 bg-surface-raised px-13 font-sans text-[12.5px] font-500 text-gray-12 hover:border-gray-9 hover:bg-surface-inset"
+      className="h-32 flex-none rounded-8 border-1 border-gray-7 bg-surface-raised px-13 font-sans text-[12.5px] font-500 text-gray-12 hover:border-gray-9 hover:bg-surface-inset"
     >
       {copied ? 'Copied' : failed ? 'Copy failed' : '⧉ Copy session id'}
     </button>
@@ -183,7 +183,7 @@ function CopySessionIdButton({ sessionId }: { sessionId: string }) {
 function ErrorCard({ row }: { row: SessionEventRow }) {
   const culprit = errorCulprit(row.payload, row.mechanism);
   return (
-    <div className="rounded-xl border-1 border-red-9 bg-red-3 px-14 py-11">
+    <div className="rounded-12 border-1 border-red-9 bg-red-3 px-14 py-11">
       <div className="flex items-center gap-10">
         <span className="flex-none font-mono text-13 font-600 text-red-9">{row.name}</span>
         <span className="min-w-0 flex-1 truncate font-sans text-[12.5px] text-gray-12">{row.message}</span>
@@ -191,7 +191,7 @@ function ErrorCard({ row }: { row: SessionEventRow }) {
           <Link
             to="/signals/issues/$issueId"
             params={{ issueId: String(row.issueId) }}
-            className="inline-flex h-26 flex-none items-center rounded-md border-1 border-red-9 px-10 font-sans text-11 font-500 text-red-9 hover:bg-red-9/10"
+            className="inline-flex h-26 flex-none items-center rounded-6 border-1 border-red-9 px-10 font-sans text-11 font-500 text-red-9 hover:bg-red-9/10"
           >
             View issue {row.issueKey} →
           </Link>
@@ -299,7 +299,7 @@ function LoadError({ onRetry }: { onRetry: () => void }) {
           <button
             type="button"
             onClick={onRetry}
-            className="h-32 rounded-lg border-1 border-gray-7 bg-surface-raised px-13 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
+            className="h-32 rounded-8 border-1 border-gray-7 bg-surface-raised px-13 font-sans text-[12.5px] font-500 text-gray-12 hover:bg-surface-inset"
           >
             ↻ Retry
           </button>
@@ -365,7 +365,7 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-10">
             <span className="font-mono text-18 font-600 text-gray-12">{session.sessionId}</span>
-            <span className="inline-flex h-22 items-center rounded-md bg-surface-inset px-8 font-mono text-11 font-500 text-gray-11">
+            <span className="inline-flex h-22 items-center rounded-6 bg-surface-inset px-8 font-mono text-11 font-500 text-gray-11">
               {session.appSlug ?? `app ${session.appId}`}
             </span>
             {user !== undefined ? (
@@ -392,7 +392,7 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
         <CopySessionIdButton sessionId={session.sessionId} />
       </div>
 
-      <div className="mb-16 flex flex-none items-center gap-26 rounded-xl border-1 border-gray-6 bg-surface-raised px-18 py-12">
+      <div className="mb-16 flex flex-none items-center gap-26 rounded-12 border-1 border-gray-6 bg-surface-raised px-18 py-12">
         <div>
           <div className="mb-3 font-mono text-10 font-500 tracking-wide text-gray-9">STARTED</div>
           <div className="font-mono text-13 font-500 text-gray-12">{formatStartedAt(session.startedAt)}</div>
@@ -423,7 +423,7 @@ export function SessionScreen({ sessionId }: { sessionId: string }) {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto rounded-xl border-1 border-gray-6 bg-surface-raised p-16 md:p-20">
+      <div className="min-h-0 flex-1 overflow-auto rounded-12 border-1 border-gray-6 bg-surface-raised p-16 md:p-20">
         <div className="flex max-w-980 flex-col">
           {timeline.map((item, index) => (
             <TimelineRow

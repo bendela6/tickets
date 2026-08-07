@@ -144,7 +144,7 @@ export function TagInput({
             <button
               type="button"
               onClick={() => add(trimmed)}
-              className="rounded-control-xs px-6 py-2 font-mono text-11 text-gray-11 hover:bg-gray-4 hover:text-gray-12"
+              className="rounded-3 px-6 py-2 font-mono text-11 text-gray-11 hover:bg-gray-4 hover:text-gray-12"
             >
               + Create “{trimmed}” ↩
             </button>
@@ -154,7 +154,7 @@ export function TagInput({
               key={option.value}
               type="button"
               onClick={() => add(option.value)}
-              className="rounded-control-xs px-6 py-2 font-mono text-11 text-gray-11 hover:bg-gray-4 hover:text-gray-12"
+              className="rounded-3 px-6 py-2 font-mono text-11 text-gray-11 hover:bg-gray-4 hover:text-gray-12"
             >
               {option.label}
             </button>

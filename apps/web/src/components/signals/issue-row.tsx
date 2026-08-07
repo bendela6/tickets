@@ -65,7 +65,7 @@ export function IssueRow({
         </span>
       </span>
       <span>
-        <span className="inline-flex h-20 max-w-100 items-center overflow-hidden rounded-md bg-surface-inset px-7 font-mono text-[10.5px] font-500 text-gray-11">
+        <span className="inline-flex h-20 max-w-100 items-center overflow-hidden rounded-6 bg-surface-inset px-7 font-mono text-[10.5px] font-500 text-gray-11">
           {issue.appSlug}
         </span>
       </span>
@@ -95,7 +95,7 @@ export function IssueRow({
             title="Reopen"
             aria-label="Reopen"
             onClick={onReopen}
-            className="hidden size-24 items-center justify-center rounded-md text-gray-9 hover:bg-surface-inset hover:text-gray-12 group-hover:flex"
+            className="hidden size-24 items-center justify-center rounded-6 text-gray-9 hover:bg-surface-inset hover:text-gray-12 group-hover:flex"
           >
             ↺
           </button>
@@ -106,7 +106,7 @@ export function IssueRow({
             title="Resolve"
             aria-label="Resolve"
             onClick={onResolve}
-            className="hidden size-24 items-center justify-center rounded-md text-gray-9 hover:bg-green-3 hover:text-green-9 group-hover:flex"
+            className="hidden size-24 items-center justify-center rounded-6 text-gray-9 hover:bg-green-3 hover:text-green-9 group-hover:flex"
           >
             ✓
           </button>
@@ -117,7 +117,7 @@ export function IssueRow({
             title="Ignore"
             aria-label="Ignore"
             onClick={onIgnore}
-            className="hidden size-24 items-center justify-center rounded-md text-gray-9 hover:bg-surface-inset hover:text-gray-12 group-hover:flex"
+            className="hidden size-24 items-center justify-center rounded-6 text-gray-9 hover:bg-surface-inset hover:text-gray-12 group-hover:flex"
           >
             ⊘
           </button>
@@ -155,24 +155,24 @@ export function IssueRowSkeleton({ index = 0 }: { index?: number }) {
     >
       <span className="size-9 rounded-full bg-surface-inset" />
       <span>
-        <span className="block h-11 rounded-sm bg-surface-inset" style={{ width: `${w1}%` }} />
-        <span className="mt-6 block h-8 rounded-sm bg-surface-inset" style={{ width: `${w2}%` }} />
+        <span className="block h-11 rounded-4 bg-surface-inset" style={{ width: `${w1}%` }} />
+        <span className="mt-6 block h-8 rounded-4 bg-surface-inset" style={{ width: `${w2}%` }} />
       </span>
-      <span className="inline-block h-14 w-72 rounded-sm bg-surface-inset" />
+      <span className="inline-block h-14 w-72 rounded-4 bg-surface-inset" />
       <span className="flex justify-end">
-        <span className="inline-block h-11 w-32 rounded-sm bg-surface-inset" />
+        <span className="inline-block h-11 w-32 rounded-4 bg-surface-inset" />
       </span>
       <span className="pl-14">
-        <span className="inline-block h-9 w-26 rounded-sm bg-surface-inset" />
+        <span className="inline-block h-9 w-26 rounded-4 bg-surface-inset" />
       </span>
       <span>
-        <span className="inline-block h-9 w-26 rounded-sm bg-surface-inset" />
+        <span className="inline-block h-9 w-26 rounded-4 bg-surface-inset" />
       </span>
       <span className="pl-6">
-        <span className="inline-block h-12 w-92 rounded-sm bg-surface-inset" />
+        <span className="inline-block h-12 w-92 rounded-4 bg-surface-inset" />
       </span>
       <span className="pl-4">
-        <span className="inline-block h-16 w-64 rounded-md bg-surface-inset" />
+        <span className="inline-block h-16 w-64 rounded-6 bg-surface-inset" />
       </span>
       <span />
     </div>

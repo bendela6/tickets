@@ -44,7 +44,7 @@ export function RoutingMenu() {
                 close();
               }}
               className={cn(
-                'flex flex-col gap-2 rounded-lg px-8 py-6 text-left',
+                'flex flex-col gap-2 rounded-8 px-8 py-6 text-left',
                 m.mode === view.routing ? 'bg-surface-inset' : 'hover:bg-surface-inset',
               )}
             >

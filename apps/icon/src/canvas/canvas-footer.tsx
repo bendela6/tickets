@@ -34,12 +34,12 @@ function ToggleChip({
       aria-pressed={on}
       title={title}
       onClick={onToggle}
-      className="flex h-26 items-center gap-7 rounded-md px-9 text-gray-9 hover:bg-surface-inset hover:text-gray-11"
+      className="flex h-26 items-center gap-7 rounded-6 px-9 text-gray-9 hover:bg-surface-inset hover:text-gray-11"
     >
       <span
         aria-hidden
         className={cn(
-          'size-11 flex-none rounded-sm border-2',
+          'size-11 flex-none rounded-4 border-2',
           on ? 'border-gray-11 bg-gray-11' : 'border-current bg-transparent',
         )}
       />
@@ -103,7 +103,7 @@ export function CanvasFooter({ status }: { status: string }) {
           title="Show the SVG this document generates · ⌘/"
           onToggle={() => setView((v) => ({ ...v, sourceOpen: !v.sourceOpen }))}
         />
-        <div className="flex h-26 items-center gap-7 rounded-md pl-9">
+        <div className="flex h-26 items-center gap-7 rounded-6 pl-9">
           <span className="font-mono text-11 text-gray-9">ground</span>
           <Tabs
             role="group"
@@ -129,7 +129,7 @@ export function CanvasFooter({ status }: { status: string }) {
               dispatch({ type: 'selectObject', id: first.id });
               setView((v) => ({ ...v, safeZoneOpen: true }));
             }}
-            className="flex h-22 items-center gap-6 rounded-md border-1 border-red-9 px-8 font-mono text-10 text-red-9"
+            className="flex h-22 items-center gap-6 rounded-6 border-1 border-red-9 px-8 font-mono text-10 text-red-9"
           >
             <span
               aria-hidden

@@ -108,7 +108,7 @@ export function FileInput({
           pick(event.dataTransfer.files);
         }}
         className={cn(
-          'flex w-full flex-col items-center justify-center gap-4 rounded-control-md',
+          'flex w-full flex-col items-center justify-center gap-4 rounded-4',
           'border-1 border-dashed px-16 py-24 transition-colors',
           rung.text,
           focusRing(hue, 'focus-visible', 'outward'),
@@ -155,7 +155,7 @@ export function FileInput({
             <li
               key={file.id}
               className={cn(
-                'flex items-center gap-8 rounded-control-xs px-8 py-6',
+                'flex items-center gap-8 rounded-3 px-8 py-6',
                 file.error ? 'bg-red-2' : 'bg-gray-4',
               )}
             >
@@ -177,7 +177,7 @@ export function FileInput({
                   aria-label={`Remove ${file.name}`}
                   onClick={() => remove(file.id)}
                   className={cn(
-                    'shrink-0 rounded-control-xs p-2 text-gray-9 hover:text-gray-12',
+                    'shrink-0 rounded-3 p-2 text-gray-9 hover:text-gray-12',
                     focusRing(hue, 'focus-visible', 'inward'),
                   )}
                 >

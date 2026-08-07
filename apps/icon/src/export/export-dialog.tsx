@@ -85,7 +85,7 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
           </ul>
 
           {firstWarning ? (
-            <div className="mt-2 flex items-start gap-10 rounded-lg bg-surface-inset px-13 py-11 inset-ring-1 inset-ring-red-9">
+            <div className="mt-2 flex items-start gap-10 rounded-8 bg-surface-inset px-13 py-11 inset-ring-1 inset-ring-red-9">
               <span
                 aria-hidden
                 className="mt-px flex size-16 flex-none items-center justify-center rounded-full border-1 border-red-9 font-sans text-10 font-600 text-red-9"
@@ -104,7 +104,7 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
             </div>
           ) : null}
 
-          <div className="mt-2 flex items-center gap-10 rounded-lg bg-surface-inset px-13 py-11">
+          <div className="mt-2 flex items-center gap-10 rounded-8 bg-surface-inset px-13 py-11">
             <div className="flex flex-1 flex-col gap-2">
               <span className="font-mono text-12 font-500 text-gray-12">
                 {fileCount} files · {chosen.length} targets
@@ -155,14 +155,14 @@ function TargetRow({
         aria-checked={on}
         onClick={onToggle}
         className={cn(
-          'flex h-34 w-full cursor-pointer items-center gap-10 rounded-md px-9 text-left',
+          'flex h-34 w-full cursor-pointer items-center gap-10 rounded-6 px-9 text-left',
           on && 'bg-surface-inset',
         )}
       >
         <span
           aria-hidden
           className={cn(
-            'relative size-16 flex-none rounded-sm border-1',
+            'relative size-16 flex-none rounded-4 border-1',
             on ? 'border-indigo-9 bg-indigo-9' : 'border-gray-7 bg-surface-raised',
           )}
         >

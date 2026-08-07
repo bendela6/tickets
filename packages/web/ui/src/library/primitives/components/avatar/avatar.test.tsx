@@ -8,7 +8,7 @@ test('shape and typeface are independent axes', () => {
   const { rerender } = render(<Avatar name="Mara K." />);
   expect(screen.getByTitle('Mara K.')).toHaveClass('rounded-full', 'font-sans');
   rerender(<Avatar name="Mara K." shape="square" />);
-  expect(screen.getByTitle('Mara K.')).toHaveClass('rounded-md', 'font-sans');
+  expect(screen.getByTitle('Mara K.')).toHaveClass('rounded-6', 'font-sans');
   rerender(<Avatar name="Mara K." shape="round" font="mono" />);
   expect(screen.getByTitle('Mara K.')).toHaveClass('rounded-full', 'font-mono');
 });

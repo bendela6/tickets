@@ -15,7 +15,7 @@ function slugify(label: string): string {
 
 function ArchChip() {
   return (
-    <span className="inline-flex h-17 shrink-0 items-center rounded-sm bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
+    <span className="inline-flex h-17 shrink-0 items-center rounded-4 bg-surface-inset px-6 font-mono text-10 font-500 text-gray-9">
       ARCH
     </span>
   );
@@ -24,7 +24,7 @@ function ArchChip() {
 // Same folded-direction chip text as detail-links: outgoing "label →",
 // incoming "← inverseLabel", symmetric "label ↔".
 function DirectionChip({ text }: { text: string }) {
-  return <Pill tone="secondary" label={text} className="h-20 rounded-md text-11/13 tracking-wider" />;
+  return <Pill tone="secondary" label={text} className="h-20 rounded-6 text-11/13 tracking-wider" />;
 }
 
 // Toggling a chip PUTs the *whole* new set to /api/link-types/:id/target-types
@@ -93,7 +93,7 @@ function CreateForm({
   const typeOptions: ComboOption[] = types.map((type) => ({ value: String(type.id), label: type.label }));
   const canSubmit = draft.itemTypeId !== null && draft.label.trim() !== '';
   return (
-    <div className="max-w-520 rounded-xl border-1 border-gray-6 bg-surface-raised p-14">
+    <div className="max-w-520 rounded-12 border-1 border-gray-6 bg-surface-raised p-14">
       <div className="flex flex-col gap-10">
         <div>
           <FieldLabel>Type</FieldLabel>
@@ -159,7 +159,7 @@ function EditForm({
   pending: boolean;
 }) {
   return (
-    <div className="mt-10 max-w-520 rounded-xl border-1 border-gray-6 bg-surface-raised p-14">
+    <div className="mt-10 max-w-520 rounded-12 border-1 border-gray-6 bg-surface-raised p-14">
       <div className="flex flex-col gap-10">
         <div className="flex items-center gap-10">
           <div className="flex-1">
@@ -374,7 +374,7 @@ export function LinksTab({ board }: SettingsTabProps) {
               <section
                 key={linkType.id}
                 className={cn(
-                  'max-w-660 rounded-xl border-1 border-gray-6 bg-surface-raised p-14',
+                  'max-w-660 rounded-12 border-1 border-gray-6 bg-surface-raised p-14',
                   linkType.archivedAt && 'opacity-60',
                 )}
               >

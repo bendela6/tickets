@@ -18,10 +18,10 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
     <Link
       to="/p/$projectKey"
       params={{ projectKey: project.key }}
-      className="flex cursor-pointer flex-col gap-13 rounded-xl border-1 border-gray-6 bg-surface-raised px-20 py-18 shadow-sm hover:border-gray-7"
+      className="flex cursor-pointer flex-col gap-13 rounded-12 border-1 border-gray-6 bg-surface-raised px-20 py-18 shadow-sm hover:border-gray-7"
     >
       <div className="flex items-center gap-10">
-        <span className="rounded-md bg-surface-inset px-7 py-3 font-mono text-12/17 font-500 text-gray-12">
+        <span className="rounded-6 bg-surface-inset px-7 py-3 font-mono text-12/17 font-500 text-gray-12">
           {project.itemPrefix}
         </span>
         <span className="flex-1 truncate font-sans text-15 font-600 text-gray-12">
@@ -71,7 +71,7 @@ function ProjectCard({ stats }: { stats: ProjectStats }) {
             <span
               key={index}
               // rounded-t-full, not a scale rung: bars are 5px wide (w-5) and
-              // as short as BAR_MIN_PX (3px) — a rounded-t-sm corner (4px) would
+              // as short as BAR_MIN_PX (3px) — a rounded-t-4 corner (4px) would
               // overflow both the width and the minimum height, so this stays
               // off the radius scale deliberately, matching sparkline.tsx.
               className="w-5 rounded-t-full bg-gray-7"
@@ -124,14 +124,14 @@ export function ProjectsHome() {
           ) : (
             <div
               key={project.id}
-              className="min-h-150 animate-pulse rounded-xl border-1 border-gray-6 bg-surface-raised"
+              className="min-h-150 animate-pulse rounded-12 border-1 border-gray-6 bg-surface-raised"
             />
           );
         })}
         <button
           type="button"
           onClick={() => setCreating(true)}
-          className="flex min-h-150 cursor-pointer flex-col items-center justify-center gap-6 rounded-xl border-1 border-dashed border-gray-7 text-gray-9 hover:border-gray-9 hover:text-gray-11"
+          className="flex min-h-150 cursor-pointer flex-col items-center justify-center gap-6 rounded-12 border-1 border-dashed border-gray-7 text-gray-9 hover:border-gray-9 hover:text-gray-11"
         >
           <span className="font-sans text-20">＋</span>
           <span className="font-sans text-13/19 font-500">New project</span>

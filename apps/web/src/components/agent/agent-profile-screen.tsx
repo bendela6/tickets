@@ -77,7 +77,7 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
               {providerLabel(agent.providerKey)} · {agent.model}
             </span>
             <PermissionBadge mode={agent.permissionMode} />
-            <span className="inline-flex h-20 items-center rounded-md border-1 border-gray-6 px-7 text-10 text-gray-11">
+            <span className="inline-flex h-20 items-center rounded-6 border-1 border-gray-6 px-7 text-10 text-gray-11">
               {agent.allowedTools.length} tools
             </span>
           </div>
@@ -101,11 +101,11 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
       <section>
         <SectionHeader as="h2" title="Recent sessions" className="mb-8 tracking-wide" />
         {mine.length === 0 ? (
-          <p className="rounded-lg border-1 border-gray-6 bg-surface-raised px-16 py-24 text-center font-sans text-12/17 text-gray-9">
+          <p className="rounded-8 border-1 border-gray-6 bg-surface-raised px-16 py-24 text-center font-sans text-12/17 text-gray-9">
             No sessions yet — run one to get started.
           </p>
         ) : (
-          <div className="overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-raised">
+          <div className="overflow-hidden rounded-8 border-1 border-gray-6 bg-surface-raised">
             {mine.slice(0, 8).map((s) => (
               <Link
                 key={s.id}
@@ -138,7 +138,7 @@ export function AgentProfileScreen({ agentId }: { agentId: number }) {
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="flex-1 rounded-xl border-1 border-gray-6 bg-surface-raised px-16 py-12">
+    <div className="flex-1 rounded-12 border-1 border-gray-6 bg-surface-raised px-16 py-12">
       <div className="font-mono text-18 font-600 text-gray-12">{value}</div>
       <div className="mt-2 font-sans text-12/17 text-gray-9">{label}</div>
     </div>

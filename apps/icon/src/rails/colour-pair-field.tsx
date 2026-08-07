@@ -85,11 +85,11 @@ export function ColourPairField({
     !mixed && hex.toUpperCase() === current.toUpperCase();
 
   return (
-    <div className="flex flex-col gap-9 rounded-lg bg-surface-inset p-10">
+    <div className="flex flex-col gap-9 rounded-8 bg-surface-inset p-10">
       <div className="flex items-center gap-10">
         <span
           aria-hidden
-          className="relative size-32 flex-none overflow-hidden rounded-md border-1 border-gray-7 shadow-xs"
+          className="relative size-32 flex-none overflow-hidden rounded-6 border-1 border-gray-7 shadow-xs"
         >
           {/* The two halves are drawn only when they are the selection's. A
               swatch is a claim about what the colour is, and a mixed field has
@@ -130,7 +130,7 @@ export function ColourPairField({
           <div className="flex flex-none flex-col items-end gap-3">
             <span
               className={cn(
-                'inline-flex h-17 items-center rounded-sm px-6 font-sans text-9 font-500 tracking-wide',
+                'inline-flex h-17 items-center rounded-4 px-6 font-sans text-9 font-500 tracking-wide',
                 readable ? 'bg-indigo-3 text-indigo-9' : 'bg-surface-raised text-gray-11',
               )}
             >
@@ -171,7 +171,7 @@ export function ColourPairField({
             aria-pressed={chosen(hex)}
             onClick={() => onChange(hex)}
             className={cn(
-              'h-19 rounded-sm',
+              'h-19 rounded-4',
               chosen(hex)
                 ? 'border-2 border-indigo-9'
                 : 'border-1 border-gray-7',

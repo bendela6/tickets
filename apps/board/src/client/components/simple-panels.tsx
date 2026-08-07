@@ -12,7 +12,7 @@ export function PromptsPanel({ prompts }: { prompts: Prompt[] }) {
       {prompts.map((p, i) => (
         <li
           key={`${p.at ?? i}-${i}`}
-          className="min-w-0 rounded-md border border-gray-6 bg-surface-raised px-12 py-8"
+          className="min-w-0 rounded-6 border border-gray-6 bg-surface-raised px-12 py-8"
         >
           <p className="whitespace-pre-wrap text-13/19 text-gray-12">{p.text}</p>
           <p className="mt-4 text-11 text-gray-11">{relative(p.at)}</p>
@@ -140,7 +140,7 @@ export function ActivityPanel({ activity }: { activity: Activity | null }) {
             {subagents.map((a) => (
               <li
                 key={a.id}
-                className="min-w-0 rounded-md border border-gray-6 bg-surface-raised px-12 py-8"
+                className="min-w-0 rounded-6 border border-gray-6 bg-surface-raised px-12 py-8"
               >
                 <p className="text-12/17 text-gray-12">{a.task || 'no task recorded'}</p>
                 <p className="mt-2 text-11 text-gray-11">

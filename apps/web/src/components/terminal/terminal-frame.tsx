@@ -55,7 +55,7 @@ export function TerminalFrame({
 }) {
   const ended = conn === 'ended';
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border-1 border-gray-6 bg-surface-raised">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-8 border-1 border-gray-6 bg-surface-raised">
       <div className="flex items-center gap-12 border-b-1 border-gray-6 px-14 py-8">
         <div className="flex min-w-0 flex-1 items-baseline gap-10">
           <span className="truncate font-sans text-13/19 font-500 text-gray-12">{title}</span>

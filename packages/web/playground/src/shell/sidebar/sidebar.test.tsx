@@ -157,7 +157,7 @@ describe('Sidebar', () => {
     // it (measured: the All link rendered 8px tall instead of 28). Every
     // truncating item has to opt out of shrinking.
     for (const el of aside()!.querySelectorAll('.truncate')) {
-      const row = el.className.includes('rounded-md') ? el : el.parentElement!;
+      const row = el.className.includes('rounded-6') ? el : el.parentElement!;
       expect(row.className).toContain('shrink-0');
     }
   });

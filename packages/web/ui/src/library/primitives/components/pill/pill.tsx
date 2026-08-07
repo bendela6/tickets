@@ -47,7 +47,7 @@ const pillClass = variants({
     shape: {
       default: 'square',
       options: {
-        square: 'rounded-md',
+        square: 'rounded-6',
         round: 'rounded-full',
       },
     },

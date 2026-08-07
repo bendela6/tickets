@@ -49,7 +49,7 @@ const listClass = variants({
           cn('flex items-center border-b-2 border-gray-6', LIST_BOX.underline[size]),
         ),
         pill: over(SIZE, (size) =>
-          cn('inline-flex items-center rounded-lg bg-surface-inset', LIST_BOX.pill[size]),
+          cn('inline-flex items-center rounded-8 bg-surface-inset', LIST_BOX.pill[size]),
         ),
         rail: over(SIZE, (size) => cn('flex flex-col', LIST_BOX.rail[size])),
         // A hairline container over the page ground, not a filled well. Its
@@ -58,7 +58,7 @@ const listClass = variants({
         // needs a surface beneath it.
         segment: over(SIZE, (size) =>
           cn(
-            'inline-flex items-center rounded-lg border-1 border-gray-6',
+            'inline-flex items-center rounded-8 border-1 border-gray-6',
             LIST_BOX.segment[size],
           ),
         ),
@@ -78,21 +78,21 @@ const TAB_BOX: Record<TabsVariant, Record<TabsSize, string>> = {
     lg: 'px-4 pt-9 pb-10 text-15',
   },
   pill: {
-    sm: 'rounded-md px-8 py-2 text-11/13 tracking-wider',
-    md: 'rounded-md px-12 py-4 text-12/17',
-    lg: 'rounded-md px-14 py-6 text-13/19',
+    sm: 'rounded-6 px-8 py-2 text-11/13 tracking-wider',
+    md: 'rounded-6 px-12 py-4 text-12/17',
+    lg: 'rounded-6 px-14 py-6 text-13/19',
   },
   rail: {
-    sm: 'rounded-md px-8 py-4 text-left text-12/17',
-    md: 'rounded-md px-10 py-6 text-left text-13/19',
-    lg: 'rounded-md px-12 py-8 text-left text-15',
+    sm: 'rounded-6 px-8 py-4 text-left text-12/17',
+    md: 'rounded-6 px-10 py-6 text-left text-13/19',
+    lg: 'rounded-6 px-12 py-8 text-left text-15',
   },
   // Mono, because a segment names a value — `1.5×`, `soft`, `dark` — where
   // the other variants name a place.
   segment: {
-    sm: 'rounded-md px-8 py-2 font-mono text-10',
-    md: 'rounded-md px-12 py-4 font-mono text-11',
-    lg: 'rounded-md px-14 py-6 font-mono text-12',
+    sm: 'rounded-6 px-8 py-2 font-mono text-10',
+    md: 'rounded-6 px-12 py-4 font-mono text-11',
+    lg: 'rounded-6 px-14 py-6 font-mono text-12',
   },
 };
 

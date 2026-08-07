@@ -66,7 +66,7 @@ const optionClass = variants({
         plain: '',
         card: over(SCALE, CHECKED, (tone, state) =>
           cn(
-            'rounded-md border-1 px-10 py-6',
+            'rounded-6 border-1 px-10 py-6',
             state === 'on' ? `border-${tone}-9 bg-${tone}-3` : 'border-gray-7 hover:border-gray-9',
           ),
         ),

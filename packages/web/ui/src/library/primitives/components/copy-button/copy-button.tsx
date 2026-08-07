@@ -46,7 +46,7 @@ export function CopyButton({
       type="button"
       onClick={() => void copy(value)}
       className={cn(
-        'inline-flex items-center gap-6 rounded-md border-2 px-10 py-4 font-mono text-11',
+        'inline-flex items-center gap-6 rounded-6 border-2 px-10 py-4 font-mono text-11',
         // The outline pair — 7 borders, 11 texts — on the scales `success` and
         // `danger` resolve to. Spelled rather than resolved: only two states
         // exist here and neither is parameterised, so a lookup would hide two

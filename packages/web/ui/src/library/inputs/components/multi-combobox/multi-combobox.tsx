@@ -168,7 +168,7 @@ export function MultiCombobox({
                 onClick={() =>
                   commit(options.filter((option) => !option.disabled).map((option) => option.value))
                 }
-                className="rounded-md px-4 font-sans text-12/17 font-500 text-indigo-9 hover:underline"
+                className="rounded-6 px-4 font-sans text-12/17 font-500 text-indigo-9 hover:underline"
               >
                 Select all
               </button>
@@ -177,7 +177,7 @@ export function MultiCombobox({
                 // `[]`, not null: empty is a value of the same kind, so a
                 // consumer never has to spell two of them.
                 onClick={() => commit([])}
-                className="rounded-md px-4 font-sans text-12/17 font-500 text-gray-11 hover:underline"
+                className="rounded-6 px-4 font-sans text-12/17 font-500 text-gray-11 hover:underline"
               >
                 Clear ({value.length})
               </button>

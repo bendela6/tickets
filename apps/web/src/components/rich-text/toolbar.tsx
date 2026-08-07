@@ -31,7 +31,7 @@ const HEADING_LEVELS = [1, 2, 3] as const;
 // 26px / min-width 26 / radius 6 (RteToolbar.dc.html BTN const); hover =
 // inset bg, active = accent-subtle bg + accent content.
 const BTN =
-  'inline-flex h-26 min-w-26 flex-none items-center justify-center gap-3 rounded-md px-6 ' +
+  'inline-flex h-26 min-w-26 flex-none items-center justify-center gap-3 rounded-6 px-6 ' +
   'text-gray-11 hover:bg-surface-inset disabled:pointer-events-none disabled:opacity-40';
 const ACTIVE = 'bg-indigo-3 text-indigo-9 hover:bg-indigo-3';
 
@@ -101,7 +101,7 @@ const CONTROLS: Record<string, ControlDef> = {
   },
   taskList: {
     content: (
-      <span className="box-border flex h-12 w-12 items-center justify-center rounded-sm border-2 border-current">
+      <span className="box-border flex h-12 w-12 items-center justify-center rounded-4 border-2 border-current">
         <Icon name="check" size="2xs" />
       </span>
     ),
@@ -120,7 +120,7 @@ const CONTROLS: Record<string, ControlDef> = {
   },
   image: {
     content: (
-      <span className="relative box-border inline-block h-12 w-15 rounded-sm border-2 border-current">
+      <span className="relative box-border inline-block h-12 w-15 rounded-4 border-2 border-current">
         <span className="absolute top-2 left-2 h-3 w-3 rounded-full bg-current" />
       </span>
     ),
@@ -313,7 +313,7 @@ function BlockTypeSelect({ editor, disabled }: { editor: Editor | null; disabled
         <button
           type="button"
           disabled={disabled === true || editor === null}
-          className="mr-4 inline-flex h-26 flex-none items-center gap-4 rounded-md px-8 text-gray-11 hover:bg-surface-inset disabled:pointer-events-none disabled:opacity-40"
+          className="mr-4 inline-flex h-26 flex-none items-center gap-4 rounded-6 px-8 text-gray-11 hover:bg-surface-inset disabled:pointer-events-none disabled:opacity-40"
         >
           <span className="font-sans text-12 font-500">{currentBlockLabel(editor)}</span>
           <Icon name="chevron-down" size="sm" />
@@ -373,11 +373,11 @@ function OverflowMenu({
           <Icon name="plus" size="md" />
         </button>
       </MenuTrigger>
-      <MenuContent align="end" className="w-216 rounded-xl p-6">
+      <MenuContent align="end" className="w-216 rounded-12 p-6">
         {ids.has('highlight') ? (
           <MenuItem className="h-30" shortcut="⌘⇧H" onSelect={() => run(CONTROLS.highlight!.run)}>
             <span className="inline-flex items-center gap-9">
-              <span className="flex h-16 w-16 items-center justify-center rounded-sm bg-highlight font-sans text-12 font-600 text-gray-12">
+              <span className="flex h-16 w-16 items-center justify-center rounded-4 bg-highlight font-sans text-12 font-600 text-gray-12">
                 A
               </span>
               Highlight
@@ -436,7 +436,7 @@ function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
   return (
     <DropdownMenu.Sub>
       <DropdownMenu.SubTrigger asChild>
-        <div className="flex h-30 cursor-pointer items-center gap-9 rounded-md px-8 text-gray-12 outline-none select-none data-[highlighted]:bg-surface-inset data-[state=open]:bg-surface-inset">
+        <div className="flex h-30 cursor-pointer items-center gap-9 rounded-6 px-8 text-gray-12 outline-none select-none data-[highlighted]:bg-surface-inset data-[state=open]:bg-surface-inset">
           <span className="font-sans text-[12.5px] leading-[1.15] font-600 text-indigo-9 [border-bottom:3px_solid_var(--color-indigo-9)]">
             A
           </span>
@@ -446,7 +446,7 @@ function TextColorRow({ onPick }: { onPick: (value: string | null) => void }) {
       <DropdownMenu.Portal>
         <DropdownMenu.SubContent
           sideOffset={4}
-          className="z-50 flex items-center gap-6 rounded-lg border-1 border-gray-6 bg-surface-raised p-6 shadow-lg"
+          className="z-50 flex items-center gap-6 rounded-8 border-1 border-gray-6 bg-surface-raised p-6 shadow-lg"
         >
           {COLOR_SWATCHES.map((swatch) => (
             <button

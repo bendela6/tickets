@@ -44,13 +44,13 @@
     @apply my-4;
   }
   .rt code {
-    @apply rounded-sm bg-surface-inset;
+    @apply rounded-4 bg-surface-inset;
     @apply font-mono text-12;
     @apply py-2 px-6;
   }
   .rt pre {
     @apply overflow-x-auto;
-    @apply rounded-lg bg-surface-inset;
+    @apply rounded-8 bg-surface-inset;
     @apply font-mono text-12/18;
     @apply my-8 p-12;
   }
@@ -65,14 +65,14 @@
     @apply underline;
   }
   .rt .is-editing-link {
-    @apply rounded-sm bg-indigo-3;
+    @apply rounded-4 bg-indigo-3;
     @apply py-2 px-4;
   }
   .rt strong {
     @apply font-600 text-gray-12;
   }
   .rt mark {
-    @apply rounded-sm bg-highlight;
+    @apply rounded-4 bg-highlight;
     @apply text-gray-12;
     @apply py-0 px-2;
   }
@@ -97,7 +97,7 @@
   }
   .rt img {
     @apply max-w-full;
-    @apply rounded-md;
+    @apply rounded-6;
   }
   .rt hr {
     @apply border-t-1 border-gray-6;
@@ -106,7 +106,7 @@
 
   .rt [data-callout] {
     @apply relative;
-    @apply rounded-lg bg-blue-3;
+    @apply rounded-8 bg-blue-3;
     @apply my-8 py-12 pr-12 pl-36;
   }
   .rt [data-callout]::before {
@@ -161,7 +161,7 @@
 
   .rt [data-ticket-ref] {
     @apply inline-flex cursor-pointer items-center;
-    @apply rounded-md border-1 border-gray-6 bg-gray-1;
+    @apply rounded-6 border-1 border-gray-6 bg-gray-1;
     @apply font-mono text-12 font-500 text-gray-12;
     @apply gap-6 py-2 px-8;
   }
@@ -189,7 +189,7 @@
   }
   .rt ul[data-type='taskList'] li > label span {
     @apply pointer-events-none absolute inset-0 box-border;
-    @apply rounded-sm border-2 border-gray-7 bg-surface-raised;
+    @apply rounded-4 border-2 border-gray-7 bg-surface-raised;
   }
   .rt ul[data-type='taskList'] li > label input[type='checkbox']:checked + span {
     @apply border-indigo-9 bg-indigo-9;
@@ -206,7 +206,7 @@
   }
 
   .rt details {
-    @apply rounded-lg border-1 border-gray-6;
+    @apply rounded-8 border-1 border-gray-6;
     @apply my-8 py-8 px-12;
   }
   .rt details > summary {
@@ -218,7 +218,7 @@
   }
 
   .rt .ProseMirror-selectednode {
-    @apply rounded-sm outline-2 outline-offset-1 outline-indigo-9;
+    @apply rounded-4 outline-2 outline-offset-1 outline-indigo-9;
   }
 
   .rt .is-editor-empty:first-child::before {

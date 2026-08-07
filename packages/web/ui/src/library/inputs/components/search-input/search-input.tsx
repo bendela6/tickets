@@ -41,7 +41,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
       disabled={disabled || readOnly}
       onClick={() => onChange('')}
       className={[
-        'shrink-0 rounded-control-xs p-2 text-gray-9 hover:text-gray-12',
+        'shrink-0 rounded-3 p-2 text-gray-9 hover:text-gray-12',
         focusRing('indigo', 'focus-visible', 'inward'),
       ].join(' ')}
     >
