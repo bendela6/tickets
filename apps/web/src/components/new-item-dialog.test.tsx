@@ -115,7 +115,7 @@ function renderWithProviders(node: ReactNode) {
   );
 }
 
-function renderDialog(board: Board) {
+function renderDialog(board: Board, initialStatus: string | null = null) {
   const onClose = vi.fn();
   renderWithProviders(
     <NewItemDialog
@@ -124,6 +124,7 @@ function renderDialog(board: Board) {
       indexes={indexBoard(board)}
       open
       onClose={onClose}
+      initialStatus={initialStatus}
     />,
   );
   return { onClose };
@@ -203,6 +204,29 @@ test('pick type → fill title → required gate → submit POSTs body and opens
   };
   expect(navArg.to).toBe('.');
   expect(navArg.search({})).toEqual({ t: 136 });
+});
+
+// A kanban column's ＋ opens the dialog on that column's status.
+test('an initial status the type may start in is preselected and posted', async () => {
+  const fetchMock = mockCreateFetch({ id: 501, number: 137 });
+  const board = makeBoard();
+  renderDialog({ ...board, types: board.types.filter((type) => type.key !== 'bug') }, 'in-review');
+  await userEvent.type(screen.getByRole('textbox', { name: 'Title' }), 'Started in review');
+  await userEvent.click(screen.getByRole('button', { name: 'Create item' }));
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+  const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  expect(JSON.parse(String(init.body))).toMatchObject({ values: { status: 'in-review' } });
+});
+
+test('an initial status the type does not offer falls back to the default', async () => {
+  const fetchMock = mockCreateFetch({ id: 502, number: 138 });
+  const board = makeBoard();
+  renderDialog({ ...board, types: board.types.filter((type) => type.key !== 'bug') }, 'resolved');
+  await userEvent.type(screen.getByRole('textbox', { name: 'Title' }), 'Started where it can');
+  await userEvent.click(screen.getByRole('button', { name: 'Create item' }));
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+  const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  expect(JSON.parse(String(init.body))).toMatchObject({ values: { status: 'backlog' } });
 });
 
 test('skips the picker when only one creatable type exists', () => {

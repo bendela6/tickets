@@ -41,17 +41,43 @@ function isPastDate(value: string, now: Date): boolean {
 
 type DragMode = 'idle' | 'origin' | 'legal' | 'illegal';
 
-// Board-mode kanban: one column per active workflow option (of the board's
-// primary type — the scheme shares one status set across types), cards
-// draggable between columns. While dragging, columns the workflow allows show
-// a drop slot and the rest dim with a "no transition" note (mirrors
-// legalStatusTargets, which mirrors the server rule). Dropping PATCHes the
-// workflow field.
+// The columns: every status any type's workflow offers, in option order.
+// Types may narrow a shared status set (allowedOptionIds) or own a workflow
+// field of their own, and every card must find its column either way, so
+// this is the union over the board's types (and the types of the rows, in
+// case one is archived), merged by value.
+function workflowColumns(board: Board, indexes: BoardIndexes, rows: Item[]): Option[] {
+  const typeIds = new Set(board.types.filter((type) => !type.archivedAt).map((type) => type.id));
+  for (const row of rows) typeIds.add(row.typeId);
+  const setOrder: number[] = [];
+  const byValue = new Map<string, Option>();
+  for (const typeId of typeIds) {
+    const field = indexes.workflowField(typeId);
+    if (!field) continue;
+    for (const option of indexes.optionsForField(typeId, field)) {
+      if (byValue.has(option.value)) continue;
+      byValue.set(option.value, option);
+      if (!setOrder.includes(option.optionSetId)) setOrder.push(option.optionSetId);
+    }
+  }
+  return [...byValue.values()].sort(
+    (a, b) =>
+      setOrder.indexOf(a.optionSetId) - setOrder.indexOf(b.optionSetId) || a.position - b.position,
+  );
+}
+
+// Board-mode kanban: one column per workflow status (workflowColumns), cards
+// draggable between columns. While dragging, columns the card's workflow
+// allows show a drop slot and the rest dim with a "no transition" note
+// (mirrors legalStatusTargets, which mirrors the server rule). Dropping
+// PATCHes the card's own workflow field. A card whose status has no column
+// (unset, or an archived option) sits in a trailing "Other" column.
 export function KanbanView({
   board,
   indexes,
   rows,
   onOpenTicket,
+  onNewTicket,
 }: {
   board: Board;
   indexes: BoardIndexes;
@@ -59,22 +85,15 @@ export function KanbanView({
   /** Kept for API symmetry with TableView; keys render from the itemPrefix. */
   projectKey: string;
   onOpenTicket: (ticketNumber: number) => void;
+  /** A column's ＋: start a new item in that status. */
+  onNewTicket?: (status: string) => void;
 }): JSX.Element {
   const { userId } = useCurrentUser();
   const patch = usePatchItem();
   const queryClient = useQueryClient();
   const [draggingId, setDraggingId] = useState<number | null>(null);
 
-  const firstType = board.types[0];
-  const workflowField = firstType ? indexes.workflowField(firstType.id) : undefined;
-
-  const columns = useMemo(
-    () =>
-      !workflowField || workflowField.optionSetId === null
-        ? []
-        : (indexes.optionsBySetId.get(workflowField.optionSetId) ?? []),
-    [workflowField, indexes],
-  );
+  const columns = useMemo(() => workflowColumns(board, indexes, rows), [board, indexes, rows]);
 
   const priorityField = useMemo(
     () => findFieldByPattern(board.fields, ['option'], /prio|priority|severity/i),
@@ -89,7 +108,7 @@ export function KanbanView({
     [board.fields],
   );
 
-  if (!workflowField) {
+  if (columns.length === 0) {
     return (
       <div className="px-16 py-24 font-sans text-13/19 text-gray-9">
         This project has no workflow field, so board mode is unavailable.
@@ -98,26 +117,32 @@ export function KanbanView({
   }
 
   const statusValueOf = (ticket: Item): string | null => {
-    const raw = ticket.values[workflowField.key];
+    const field = indexes.workflowField(ticket.typeId);
+    const raw = field ? ticket.values[field.key] : undefined;
     return typeof raw === 'string' ? raw : null;
+  };
+  const statusOptionOf = (ticket: Item): Option | undefined => {
+    const field = indexes.workflowField(ticket.typeId);
+    const value = statusValueOf(ticket);
+    return field && value !== null ? indexes.optionByValue(field, value) : undefined;
   };
 
   const cardsByValue = new Map<string, Item[]>(columns.map((option) => [option.value, []]));
+  const unplaced: Item[] = [];
   for (const ticket of rows) {
     const value = statusValueOf(ticket);
-    if (value !== null) {
-      cardsByValue.get(value)?.push(ticket);
+    const column = value === null ? undefined : cardsByValue.get(value);
+    if (column) {
+      column.push(ticket);
+    } else {
+      unplaced.push(ticket);
     }
   }
 
   const dragged = draggingId === null ? null : (rows.find((t) => t.id === draggingId) ?? null);
   const draggedFromValue = dragged ? statusValueOf(dragged) : null;
   const draggedFromLabel =
-    (draggedFromValue
-      ? indexes.optionByValue(workflowField, draggedFromValue)?.label
-      : undefined) ??
-    draggedFromValue ??
-    '?';
+    (dragged ? statusOptionOf(dragged)?.label : undefined) ?? draggedFromValue ?? '?';
   const legalTargetValues = dragged
     ? new Set(
         legalStatusTargets(board, indexes, dragged, dragged.typeId).map((option) => option.value),
@@ -137,7 +162,8 @@ export function KanbanView({
   const dropOnColumn = (target: Option) => {
     const ticket = dragged;
     setDraggingId(null);
-    if (!ticket || userId === null || statusValueOf(ticket) === target.value) {
+    const field = ticket ? indexes.workflowField(ticket.typeId) : undefined;
+    if (!ticket || !field || userId === null || statusValueOf(ticket) === target.value) {
       return;
     }
     patch.mutate(
@@ -145,7 +171,7 @@ export function KanbanView({
         itemId: ticket.id,
         actorId: userId,
         expectedUpdatedAt: ticket.updatedAt,
-        values: { [workflowField.key]: target.value },
+        values: { [field.key]: target.value },
       },
       { onError: () => void queryClient.invalidateQueries({ queryKey: ['board'] }) },
     );
@@ -176,7 +202,7 @@ export function KanbanView({
 
     const dueRaw = dueField ? ticket.values[dueField.key] : undefined;
     const due = typeof dueRaw === 'string' && dueRaw !== '' ? dueRaw : null;
-    const kind = indexes.optionByValue(workflowField, statusValueOf(ticket) ?? '')?.kind;
+    const kind = statusOptionOf(ticket)?.kind;
     const overdue =
       due !== null && kind !== 'done' && kind !== 'dropped' && isPastDate(due, new Date());
 
@@ -296,10 +322,16 @@ export function KanbanView({
               <span className="font-sans text-13/19 font-500 text-gray-12">{option.label}</span>
               <span className="font-mono text-11 text-gray-9">{cards.length}</span>
               <span className="flex-1" />
-              {/* Inert for now: card creation from a column lands in a later task. */}
-              <span aria-hidden className="font-sans text-13/19 text-gray-9">
-                ＋
-              </span>
+              {onNewTicket ? (
+                <button
+                  type="button"
+                  aria-label={`New item in ${option.label}`}
+                  onClick={() => onNewTicket(option.value)}
+                  className="inline-flex size-22 items-center justify-center rounded-6 bg-transparent font-sans text-13/19 text-gray-9 hover:bg-surface-raised hover:text-gray-12"
+                >
+                  ＋
+                </button>
+              ) : null}
             </div>
             {mode === 'illegal' ? (
               <div className="mx-10 mb-8 rounded-8 bg-red-3 px-10 py-7 font-sans text-11 leading-[1.4] text-red-9">
@@ -322,6 +354,26 @@ export function KanbanView({
           </section>
         );
       })}
+      {unplaced.length > 0 ? (
+        <section
+          aria-label="Other"
+          className={cn(
+            'flex w-[85vw] flex-none flex-col rounded-12 bg-surface-inset md:w-252',
+            dragged && 'opacity-50',
+          )}
+        >
+          <div className="flex items-center gap-8 px-13 pt-12 pb-8">
+            <span className="font-sans text-13/19 font-500 text-gray-12">Other</span>
+            <span className="font-mono text-11 text-gray-9">{unplaced.length}</span>
+          </div>
+          <p className="m-0 px-13 pb-8 font-sans text-11 leading-[1.4] text-gray-9">
+            No status, or one no longer offered. Open a card to set it.
+          </p>
+          <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-10 pb-10">
+            {unplaced.map((ticket) => renderCard(ticket))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

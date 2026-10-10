@@ -106,12 +106,15 @@ export function NewItemDialog({
   indexes,
   open,
   onClose,
+  initialStatus = null,
 }: {
   projectKey: string;
   board: Board;
   indexes: BoardIndexes;
   open: boolean;
   onClose: () => void;
+  /** Preselects this status (a kanban column's ＋) when the type may start in it. */
+  initialStatus?: string | null;
 }) {
   const navigate = useNavigate();
   const { userId } = useCurrentUser();
@@ -158,7 +161,9 @@ export function NewItemDialog({
     type && workflowField ? indexes.optionsForField(type.id, workflowField) : [];
   const initialOption =
     typeStatusOptions.find((option) => option.kind === 'todo') ?? typeStatusOptions[0];
-  const defaultStatusValue = initialOption?.value ?? entryStatuses[0]?.value ?? null;
+  const presetOption = entryStatuses.find((option) => option.value === initialStatus);
+  const defaultStatusValue =
+    presetOption?.value ?? initialOption?.value ?? entryStatuses[0]?.value ?? null;
   const effectiveStatusValue = statusValue ?? defaultStatusValue;
   const statusOptions = typeStatusOptions.map((option) => ({
     key: option.value,
