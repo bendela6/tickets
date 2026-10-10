@@ -156,9 +156,9 @@ function makeBoard(): Board {
   };
 }
 
-function renderKanban() {
-  const board = makeBoard();
+function renderKanban(board: Board = makeBoard()) {
   const onOpenTicket = vi.fn();
+  const onNewTicket = vi.fn();
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -171,11 +171,52 @@ function renderKanban() {
           rows={board.items}
           projectKey="CORE"
           onOpenTicket={onOpenTicket}
+          onNewTicket={onNewTicket}
         />
       </CurrentUserProvider>
     </QueryClientProvider>,
   );
-  return { onOpenTicket };
+  return { onOpenTicket, onNewTicket };
+}
+
+// A second type, Incident, with a workflow field and status set of its own
+// (field 20, set 3: open → resolved), and one incident on the board.
+function boardWithIncidents(): Board {
+  const board = makeBoard();
+  const createdAt = '2026-01-01T00:00:00.000Z';
+  board.types.push({ id: 2, schemeId: 1, key: 'incident', label: 'Incident', position: 2, config: {}, archivedAt: null });
+  board.fields.push({
+    id: 20,
+    schemeId: 1,
+    key: 'state',
+    label: 'State',
+    type: 'option',
+    config: { workflow: true },
+    optionSetId: 3,
+    archivedAt: null,
+  });
+  board.placements.push(
+    { itemTypeId: 2, fieldId: 20, position: 1, required: true, configOverride: null },
+    { itemTypeId: 2, fieldId: 11, position: 2, required: true, configOverride: null },
+  );
+  board.options.push(
+    { id: 30, optionSetId: 3, value: 'open', label: 'Open', position: 1, kind: 'todo', config: {}, archivedAt: null },
+    { id: 31, optionSetId: 3, value: 'resolved', label: 'Resolved', position: 2, kind: 'done', config: {}, archivedAt: null },
+  );
+  board.items.push({
+    id: 102,
+    number: 123,
+    typeId: 2,
+    parentId: null,
+    createdBy: 7,
+    archivedAt: null,
+    createdAt,
+    updatedAt: createdAt,
+    values: { state: 'open', title: 'Pager storm at 3am' },
+    comments: [],
+    links: [],
+  });
+  return board;
 }
 
 afterEach(() => {
@@ -195,6 +236,60 @@ test('renders one column per workflow option and groups items by values[status]'
   // column counts
   expect(within(backlog).getByText('1')).toBeInTheDocument();
   expect(within(shipped).getByText('0')).toBeInTheDocument();
+});
+
+// Columns used to come from the first type's workflow alone, so a type with
+// its own status field had no columns and its cards vanished.
+test('a type with its own workflow field gets its columns, after the first set', () => {
+  renderKanban(boardWithIncidents());
+  const names = screen.getAllByRole('region').map((region) => region.getAttribute('aria-label'));
+  expect(names).toEqual(['Backlog', 'In review', 'Shipped', 'Open', 'Resolved']);
+  expect(within(screen.getByRole('region', { name: 'Open' })).getByText('CORE-123')).toBeInTheDocument();
+});
+
+test('a type narrowed by allowedOptionIds adds no columns it cannot use', () => {
+  const board = boardWithIncidents();
+  board.items = board.items.filter((item) => item.typeId === 1);
+  const incidentState = board.placements.find((p) => p.itemTypeId === 2 && p.fieldId === 20);
+  if (incidentState) incidentState.configOverride = { allowedOptionIds: [30] };
+  renderKanban(board);
+  expect(screen.getByRole('region', { name: 'Open' })).toBeInTheDocument();
+  expect(screen.queryByRole('region', { name: 'Resolved' })).not.toBeInTheDocument();
+});
+
+test('dropping a card PATCHes its own type’s workflow field', async () => {
+  localStorage.setItem('tickets-user-id', '7');
+  const fetchMock = vi.fn().mockResolvedValue({
+    ok: true,
+    text: () => Promise.resolve(JSON.stringify({ id: 102, updatedAt: 'later' })),
+  });
+  vi.stubGlobal('fetch', fetchMock);
+  renderKanban(boardWithIncidents());
+  fireEvent.dragStart(screen.getByRole('button', { name: /pager storm at 3am/i }));
+  fireEvent.drop(screen.getByRole('region', { name: 'Resolved' }));
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+  const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  expect(JSON.parse(String(init.body))).toMatchObject({ values: { state: 'resolved' } });
+});
+
+test('a card whose status has no column lands in Other instead of vanishing', () => {
+  const board = makeBoard();
+  const second = board.items[1];
+  if (second) second.values = { title: 'Ship the drop slots' };
+  renderKanban(board);
+  const other = screen.getByRole('region', { name: 'Other' });
+  expect(within(other).getByText('CORE-122')).toBeInTheDocument();
+});
+
+test('no Other column while every card has a column', () => {
+  renderKanban();
+  expect(screen.queryByRole('region', { name: 'Other' })).not.toBeInTheDocument();
+});
+
+test('a column’s ＋ starts a new item in that status', async () => {
+  const { onNewTicket } = renderKanban();
+  await userEvent.click(screen.getByRole('button', { name: 'New item in In review' }));
+  expect(onNewTicket).toHaveBeenCalledWith('in-review');
 });
 
 test('column glyph tint follows the option kind', () => {

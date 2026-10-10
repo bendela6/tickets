@@ -30,7 +30,8 @@ export function BoardScreen() {
   const view = board?.views.find((candidate) => candidate.id === Number(params.viewId));
   const { userId } = useCurrentUser();
   const { config, update } = useViewConfig(board, view, userId);
-  const [creating, setCreating] = useState(false);
+  // Open with the status a kanban column's ＋ preselects, or none.
+  const [creating, setCreating] = useState<{ status: string | null } | null>(null);
 
   if (!board || !indexes) {
     return null;
@@ -102,6 +103,7 @@ export function BoardScreen() {
           rows={rows}
           projectKey={projectKey}
           onOpenTicket={(ticketNumber) => setSearch({ t: ticketNumber })}
+          onNewTicket={(status) => setCreating({ status })}
         />
       ) : (
         <TableView
@@ -116,7 +118,7 @@ export function BoardScreen() {
           onUpdate={update}
           onOpenTicket={(ticketNumber) => setSearch({ t: ticketNumber })}
           onClearFilters={() => setSearch({ f: [], q: undefined })}
-          onNewTicket={() => setCreating(true)}
+          onNewTicket={() => setCreating({ status: null })}
         />
       )}
       {openTicket ? (
@@ -132,8 +134,9 @@ export function BoardScreen() {
         projectKey={projectKey}
         board={board}
         indexes={indexes}
-        open={creating}
-        onClose={() => setCreating(false)}
+        open={creating !== null}
+        initialStatus={creating?.status ?? null}
+        onClose={() => setCreating(null)}
       />
     </div>
   );
