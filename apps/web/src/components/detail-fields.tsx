@@ -1,3 +1,4 @@
+import { OWN_ERROR } from '../api/mutation-meta';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Board, Item } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
@@ -34,7 +35,7 @@ export function DetailFields({
   layout: 'grid' | 'rail';
 }) {
   const { userId } = useCurrentUser();
-  const patch = usePatchItem();
+  const patch = usePatchItem(OWN_ERROR);
   const queryClient = useQueryClient();
 
   const placements = indexes.placementsByType.get(item.typeId) ?? [];

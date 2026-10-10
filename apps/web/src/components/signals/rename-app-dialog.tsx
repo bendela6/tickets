@@ -1,3 +1,4 @@
+import { OWN_ERROR } from '../../api/mutation-meta';
 import { useEffect, useState } from 'react';
 import { ApiError } from '../../api/api-error';
 import type { SignalsAppRow } from '../../api/signals/signals-api';
@@ -22,7 +23,7 @@ export function RenameAppDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const patchApp = usePatchApp();
+  const patchApp = usePatchApp(OWN_ERROR);
   const [name, setName] = useState(app.name);
 
   // Reset to the app's current name whenever the dialog (re)opens — the same

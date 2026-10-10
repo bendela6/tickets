@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
+import { OWN_ERROR } from '../../api/mutation-meta';
 import { useCreateProject } from '../../api/use-create-project';
 import { useCurrentUser } from '../../state/current-user-context';
-import { Button, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldLabel, Input } from '@tickets/ui';
+import { Button, DialogContent, DialogFooter, DialogRoot, DialogTitle, FieldError, FieldLabel, Input } from '@tickets/ui';
 
 export function NewProjectDialog({
   open,
@@ -12,7 +13,7 @@ export function NewProjectDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const navigate = useNavigate();
-  const createProject = useCreateProject();
+  const createProject = useCreateProject(OWN_ERROR);
   const { userId } = useCurrentUser();
   const [draft, setDraft] = useState({ key: '', name: '', itemPrefix: '' });
   const valid =
@@ -22,19 +23,30 @@ export function NewProjectDialog({
     if (userId === null) {
       return;
     }
-    const created = await createProject.mutateAsync({
-      actorId: userId,
-      key: draft.key.trim(),
-      name: draft.name.trim(),
-      itemPrefix: draft.itemPrefix.trim().toUpperCase(),
-    });
+    let created;
+    try {
+      created = await createProject.mutateAsync({
+        actorId: userId,
+        key: draft.key.trim(),
+        name: draft.name.trim(),
+        itemPrefix: draft.itemPrefix.trim().toUpperCase(),
+      });
+    } catch {
+      return; // shown under the fields; the dialog stays open to fix it
+    }
     onOpenChange(false);
     setDraft({ key: '', name: '', itemPrefix: '' });
     void navigate({ to: '/p/$projectKey', params: { projectKey: created.key } });
   }
 
   return (
-    <DialogRoot open={open} onOpenChange={onOpenChange}>
+    <DialogRoot
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) createProject.reset();
+        onOpenChange(next);
+      }}
+    >
       <DialogContent>
         <DialogTitle>New project</DialogTitle>
         <div className="mt-16 flex flex-col gap-12">
@@ -70,6 +82,9 @@ export function NewProjectDialog({
               />
             </div>
           </div>
+          {createProject.isError ? (
+            <FieldError className="m-0">{createProject.error.message}</FieldError>
+          ) : null}
         </div>
         <DialogFooter cancel={<Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>}>
           <Button

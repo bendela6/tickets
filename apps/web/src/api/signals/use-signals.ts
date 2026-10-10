@@ -19,6 +19,7 @@ import {
   rotateAppKey,
 } from './signals-api';
 import type { ActivityFilters, ClearSignalsFilters, IssueFilters, IssueStatus } from './signals-api';
+import type { MutationHookOptions } from '../mutation-meta';
 
 // `enabled` defaults to true so existing callers (IssuesScreen, the
 // segmented-control counts, AppsScreen) are unaffected — it exists so a
@@ -101,9 +102,10 @@ export function useSignalsMeta() {
   });
 }
 
-export function useCreateSignalsApp() {
+export function useCreateSignalsApp(options: MutationHookOptions = {}) {
   const queryClient = useQueryClient();
   return useMutation({
+    ...options,
     mutationFn: (name: string) => createApp(name),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['signals', 'apps'] });
@@ -122,9 +124,10 @@ export function usePatchIssueStatus() {
   });
 }
 
-export function usePatchApp() {
+export function usePatchApp(options: MutationHookOptions = {}) {
   const queryClient = useQueryClient();
   return useMutation({
+    ...options,
     mutationFn: ({ id, name }: { id: number; name: string }) => patchApp(id, name),
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['signals', 'app', variables.id] });
@@ -137,9 +140,10 @@ export function usePatchApp() {
   });
 }
 
-export function useRotateAppKey() {
+export function useRotateAppKey(options: MutationHookOptions = {}) {
   const queryClient = useQueryClient();
   return useMutation({
+    ...options,
     mutationFn: (id: number) => rotateAppKey(id),
     onSuccess: async (_data, id) => {
       await queryClient.invalidateQueries({ queryKey: ['signals', 'app', id] });
@@ -148,9 +152,10 @@ export function useRotateAppKey() {
   });
 }
 
-export function useDeleteApp() {
+export function useDeleteApp(options: MutationHookOptions = {}) {
   const queryClient = useQueryClient();
   return useMutation({
+    ...options,
     mutationFn: (id: number) => deleteApp(id),
     // DELETE /apps/:id also hard-deletes the app's signals and issues, so —
     // like useClearAppSignals/useDeleteRelease — invalidate the app detail,
@@ -165,9 +170,10 @@ export function useDeleteApp() {
   });
 }
 
-export function useClearAppSignals() {
+export function useClearAppSignals(options: MutationHookOptions = {}) {
   const queryClient = useQueryClient();
   return useMutation({
+    ...options,
     mutationFn: ({ id, filters }: { id: number; filters?: ClearSignalsFilters }) => clearAppSignals(id, filters),
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['signals', 'app', variables.id] });

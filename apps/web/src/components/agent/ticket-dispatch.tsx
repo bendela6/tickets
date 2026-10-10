@@ -1,3 +1,4 @@
+import { OWN_ERROR } from '../../api/mutation-meta';
 import { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import type { AgentSessionStatus } from '../../api/types';
@@ -17,7 +18,7 @@ export function TicketDispatch({ itemId, actorId }: { itemId: number; actorId?: 
   const navigate = useNavigate();
   const sessions = useAgentSessions();
   const agents = useAgents();
-  const dispatch = useDispatchAgent();
+  const dispatch = useDispatchAgent(OWN_ERROR);
 
   const [open, setOpen] = useState(false);
   const [agentId, setAgentId] = useState<string | null>(null);

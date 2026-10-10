@@ -1,3 +1,4 @@
+import { OWN_ERROR } from '../../api/mutation-meta';
 import { useEffect, useState } from 'react';
 import type { SignalsAppDetail, SignalsAppRow } from '../../api/signals/signals-api';
 import { useRotateAppKey } from '../../api/signals/use-signals';
@@ -24,7 +25,7 @@ export function RotateKeyDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const rotateKey = useRotateAppKey();
+  const rotateKey = useRotateAppKey(OWN_ERROR);
   const [typed, setTyped] = useState('');
   const [rotated, setRotated] = useState<SignalsAppDetail | null>(null);
 

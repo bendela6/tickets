@@ -1,3 +1,4 @@
+import { OWN_ERROR } from '../../api/mutation-meta';
 import { useMemo, useState, type ReactNode } from 'react';
 import type { Agent, AgentProviderInfo, PermissionMode } from '../../api/types';
 import { useCreateAgent } from '../../api/use-create-agent';
@@ -40,8 +41,8 @@ export function AgentEditor({
 }) {
   const editing = agent != null;
   const workdirs = useWorkdirs();
-  const create = useCreateAgent();
-  const patch = usePatchAgent();
+  const create = useCreateAgent(OWN_ERROR);
+  const patch = usePatchAgent(OWN_ERROR);
 
   const [name, setName] = useState(agent?.name ?? '');
   const [key, setKey] = useState(agent?.key ?? '');

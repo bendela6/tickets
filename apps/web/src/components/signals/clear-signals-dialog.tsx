@@ -1,3 +1,4 @@
+import { OWN_ERROR } from '../../api/mutation-meta';
 import { useEffect, useState } from 'react';
 import type { ClearSignalsFilters, SignalsAppRow } from '../../api/signals/signals-api';
 import { useAppReleases, useClearAppSignals } from '../../api/signals/use-signals';
@@ -55,7 +56,7 @@ export function ClearSignalsDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const releasesQuery = useAppReleases(app.id);
-  const clearSignals = useClearAppSignals();
+  const clearSignals = useClearAppSignals(OWN_ERROR);
   const [mode, setMode] = useState<Mode>('all');
   const [olderThanDays, setOlderThanDays] = useState<OlderThanDays>(7);
   const [release, setRelease] = useState('');

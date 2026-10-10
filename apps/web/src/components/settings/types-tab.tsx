@@ -1,3 +1,4 @@
+import { toasted } from '../../api/mutation-meta';
 import { useState } from 'react';
 import type { Board, ItemType } from '../../api/types';
 import { useCreateType, useSetChildTypes, useUpdateType } from '../../api/use-admin';
@@ -265,7 +266,7 @@ export function TypesTab({ board }: SettingsTabProps) {
             draft={createDraft}
             onChange={setCreateDraft}
             onCancel={() => setCreating(false)}
-            onSubmit={() => void submitCreate()}
+            onSubmit={() => void submitCreate().catch(toasted)}
             submitLabel="Create type"
             pending={createType.isPending}
           />
@@ -317,7 +318,7 @@ export function TypesTab({ board }: SettingsTabProps) {
                     size="sm"
                     disabled={disabled}
                     aria-label={`${type.archivedAt ? 'Unarchive' : 'Archive'} ${type.label}`}
-                    onClick={() => void toggleArchive(type)}
+                    onClick={() => void toggleArchive(type).catch(toasted)}
                   >
                     {type.archivedAt ? 'Unarchive' : 'Archive'}
                   </Button>
@@ -330,7 +331,7 @@ export function TypesTab({ board }: SettingsTabProps) {
                       draft={editDraft}
                       onChange={setEditDraft}
                       onCancel={() => setEditingId(null)}
-                      onSubmit={() => void submitEdit(type.id)}
+                      onSubmit={() => void submitEdit(type.id).catch(toasted)}
                       submitLabel="Save"
                       pending={updateType.isPending}
                     />
@@ -344,7 +345,7 @@ export function TypesTab({ board }: SettingsTabProps) {
                       candidates={candidates}
                       selected={selected}
                       disabled={disabled}
-                      onToggle={(childTypeId) => void toggleChild(type.id, childTypeId)}
+                      onToggle={(childTypeId) => void toggleChild(type.id, childTypeId).catch(toasted)}
                     />
                   </div>
                 ) : null}

@@ -1,3 +1,4 @@
+import { toasted } from '../../api/mutation-meta';
 import { useState } from 'react';
 import type { Option, StatusKind, Transition } from '../../api/types';
 import { useCreateOption, useCreateTransition, useDeleteTransition, useUpdateOption } from '../../api/use-admin';
@@ -427,7 +428,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                             variant="ghost"
                             disabled={disabled}
                             aria-label={`${archived ? 'Restore' : 'Archive'} ${option.label}`}
-                            onClick={() => void toggleArchiveOption(option)}
+                            onClick={() => void toggleArchiveOption(option).catch(toasted)}
                           >
                             {archived ? 'Restore' : 'Archive'}
                           </Button>
@@ -438,7 +439,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                             draft={editOption}
                             onChange={setEditOption}
                             onCancel={() => setEditingOptionId(null)}
-                            onSubmit={() => void submitEditOption(option)}
+                            onSubmit={() => void submitEditOption(option).catch(toasted)}
                             submitLabel="Save"
                             pending={updateOption.isPending}
                             valueHint={`value ${option.value} 🔒 immutable`}
@@ -454,7 +455,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     draft={newOption}
                     onChange={setNewOption}
                     onCancel={() => setAddingOption(false)}
-                    onSubmit={() => void submitCreateOption()}
+                    onSubmit={() => void submitCreateOption().catch(toasted)}
                     submitLabel="Create option"
                     pending={createOption.isPending}
                     valueHint={newOption.label.trim() ? `value: ${slugify(newOption.label)}` : undefined}
@@ -523,7 +524,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                             title="Remove transition"
                             disabled={disabled || deleteTransition.isPending}
                             className="shrink-0 px-4 font-sans text-13/19 text-gray-9 hover:text-red-9 disabled:cursor-not-allowed disabled:opacity-40"
-                            onClick={() => void removeEdge(t)}
+                            onClick={() => void removeEdge(t).catch(toasted)}
                           >
                             ×
                           </button>
@@ -535,7 +536,7 @@ export function WorkflowTab({ board, indexes, projectKey }: SettingsTabProps) {
                     className="flex flex-wrap items-center gap-6 border-t-1 border-gray-6 bg-gray-1 px-16 py-11"
                     onSubmit={(event) => {
                       event.preventDefault();
-                      void submitEdge();
+                      void submitEdge().catch(toasted);
                     }}
                   >
                     <Combobox

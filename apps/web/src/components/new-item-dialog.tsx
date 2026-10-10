@@ -1,3 +1,4 @@
+import { OWN_ERROR } from '../api/mutation-meta';
 import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import type {
@@ -114,7 +115,7 @@ export function NewItemDialog({
 }) {
   const navigate = useNavigate();
   const { userId } = useCurrentUser();
-  const createItem = useCreateItem();
+  const createItem = useCreateItem(OWN_ERROR);
   const titleRef = useRef<HTMLInputElement>(null);
 
   const selectable = useMemo(
@@ -526,13 +527,19 @@ export function SubtaskQuickCreate({
     if (userId === null || title.trim().length === 0 || createItem.isPending) {
       return;
     }
-    const created = await createItem.mutateAsync({
-      projectKey,
-      actorId: userId,
-      typeKey: effectiveTypeKey,
-      parentId: parent.id,
-      values: { title: title.trim() },
-    });
+    // A failure keeps the title for a retry; MutationErrorToasts says why.
+    let created: CreatedItem;
+    try {
+      created = await createItem.mutateAsync({
+        projectKey,
+        actorId: userId,
+        typeKey: effectiveTypeKey,
+        parentId: parent.id,
+        values: { title: title.trim() },
+      });
+    } catch {
+      return;
+    }
     setTitle('');
     onCreated(created);
   };

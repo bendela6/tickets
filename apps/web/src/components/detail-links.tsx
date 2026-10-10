@@ -1,3 +1,4 @@
+import { OWN_ERROR } from '../api/mutation-meta';
 import { useState } from 'react';
 import type { Board, Item } from '../api/types';
 import { useCreateLink } from '../api/use-create-link';
@@ -34,7 +35,7 @@ export function DetailLinks({
   onOpenItem: (itemNumber: number) => void;
 }) {
   const { userId } = useCurrentUser();
-  const createLink = useCreateLink();
+  const createLink = useCreateLink(OWN_ERROR);
   const deleteLink = useDeleteLink();
 
   const prefix = board.project.itemPrefix;

@@ -1,3 +1,4 @@
+import { toasted } from '../../api/mutation-meta';
 import { useState } from 'react';
 import type { ItemType, LinkType } from '../../api/types';
 import { useCreateLinkType, useSetTargetTypes, useUpdateLinkType } from '../../api/use-admin';
@@ -348,7 +349,7 @@ export function LinksTab({ board }: SettingsTabProps) {
             draft={createDraft}
             onChange={setCreateDraft}
             onCancel={() => setCreating(false)}
-            onSubmit={() => void submitCreate()}
+            onSubmit={() => void submitCreate().catch(toasted)}
             pending={createLinkType.isPending}
           />
         ) : (
@@ -408,7 +409,7 @@ export function LinksTab({ board }: SettingsTabProps) {
                     size="sm"
                     disabled={disabled}
                     aria-label={`${linkType.archivedAt ? 'Unarchive' : 'Archive'} ${linkType.label}`}
-                    onClick={() => void toggleArchive(linkType)}
+                    onClick={() => void toggleArchive(linkType).catch(toasted)}
                   >
                     {linkType.archivedAt ? 'Unarchive' : 'Archive'}
                   </Button>
@@ -419,7 +420,7 @@ export function LinksTab({ board }: SettingsTabProps) {
                     draft={editDraft}
                     onChange={setEditDraft}
                     onCancel={() => setEditingId(null)}
-                    onSubmit={() => void submitEdit(linkType.id)}
+                    onSubmit={() => void submitEdit(linkType.id).catch(toasted)}
                     pending={updateLinkType.isPending}
                   />
                 ) : null}
@@ -431,7 +432,7 @@ export function LinksTab({ board }: SettingsTabProps) {
                       candidates={activeTypes}
                       selected={selected}
                       disabled={disabled}
-                      onToggle={(targetTypeId) => void toggleTarget(linkType.id, targetTypeId)}
+                      onToggle={(targetTypeId) => void toggleTarget(linkType.id, targetTypeId).catch(toasted)}
                     />
                   </div>
                 ) : null}

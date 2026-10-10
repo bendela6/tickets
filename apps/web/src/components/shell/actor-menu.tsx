@@ -101,17 +101,21 @@ export function ActorMenu({ compact = false }: { compact?: boolean } = {}) {
               variant="solid"
               disabled={nameDraft.trim() === '' || userId === null}
               loading={createUser.isPending}
-              onClick={async () => {
+              onClick={() => {
                 if (userId === null) {
                   return;
                 }
-                const created = await createUser.mutateAsync({
-                  actorId: userId,
-                  name: nameDraft.trim(),
-                });
-                setUserId(created.id);
-                setCreating(false);
-                setNameDraft('');
+                // A failure is toasted by MutationErrorToasts.
+                createUser.mutate(
+                  { actorId: userId, name: nameDraft.trim() },
+                  {
+                    onSuccess: (created) => {
+                      setUserId(created.id);
+                      setCreating(false);
+                      setNameDraft('');
+                    },
+                  },
+                );
               }}
             >
               Add user

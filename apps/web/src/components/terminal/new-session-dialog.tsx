@@ -1,3 +1,4 @@
+import { OWN_ERROR } from '../../api/mutation-meta';
 import {
   useCallback,
   useEffect,
@@ -58,8 +59,8 @@ export function NewSessionDialog({
   onCreated: (sessionId: number) => void;
 }) {
   const workdirs = useWorkdirs();
-  const createSession = useCreateTerminalSession();
-  const createWorkdir = useCreateWorkdir();
+  const createSession = useCreateTerminalSession(OWN_ERROR);
+  const createWorkdir = useCreateWorkdir(OWN_ERROR);
 
   // Own the add-workdir form at the dialog level so we can seed `name` from a
   // picked folder and read live values for the hint / Start gate. The form is
