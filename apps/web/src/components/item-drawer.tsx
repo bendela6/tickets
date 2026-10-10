@@ -11,12 +11,14 @@ export function ItemDrawer({
   indexes,
   item,
   onClose,
+  onOpenItem,
 }: {
   projectKey: string;
   board: Board;
   indexes: BoardIndexes;
   item: Item;
   onClose: () => void;
+  onOpenItem?: (itemNumber: number) => void;
 }) {
   return (
     <Drawer
@@ -38,6 +40,7 @@ export function ItemDrawer({
         indexes={indexes}
         item={item}
         variant="drawer"
+        onOpenItem={onOpenItem}
       />
     </Drawer>
   );
