@@ -1,3 +1,4 @@
+import { OWN_ERROR } from '../api/mutation-meta';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Board, Item, StatusKind } from '../api/types';
@@ -27,7 +28,7 @@ export function DetailChildren({
   onOpenItem: (itemNumber: number) => void;
 }) {
   const { userId } = useCurrentUser();
-  const createItem = useCreateItem();
+  const createItem = useCreateItem(OWN_ERROR);
   const patch = usePatchItem();
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');

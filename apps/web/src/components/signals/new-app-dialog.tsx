@@ -1,3 +1,4 @@
+import { OWN_ERROR } from '../../api/mutation-meta';
 import { useState } from 'react';
 import type { SignalsAppDetail } from '../../api/signals/signals-api';
 import { useCreateSignalsApp } from '../../api/signals/use-signals';
@@ -65,7 +66,7 @@ export function NewAppDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const createApp = useCreateSignalsApp();
+  const createApp = useCreateSignalsApp(OWN_ERROR);
   const [name, setName] = useState('');
   const [created, setCreated] = useState<SignalsAppDetail | null>(null);
   const [tab, setTab] = useState<SnippetTab>('react');

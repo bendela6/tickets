@@ -1,3 +1,4 @@
+import { OWN_ERROR } from '../../api/mutation-meta';
 import { useState, type FormEvent } from 'react';
 import type { Field, FieldType, ItemTypeField } from '../../api/types';
 import { useCreateField, usePlaceField, useUnplaceField, useUpdateField, useUpdatePlacement } from '../../api/use-admin';
@@ -167,7 +168,7 @@ function NewFieldComposer({
   onClose: () => void;
 }) {
   const { userId } = useCurrentUser();
-  const createField = useCreateField();
+  const createField = useCreateField(OWN_ERROR);
   const [label, setLabel] = useState('');
   const [key, setKey] = useState('');
   const [keyTouched, setKeyTouched] = useState(false);

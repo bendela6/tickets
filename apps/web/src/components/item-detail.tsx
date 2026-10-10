@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { ApiError } from '../api/api-error';
 import type { Board, Item } from '../api/types';
 import { usePatchItem } from '../api/use-patch-item';
 import { typePill } from '../domain/status';
 import { useCurrentUser } from '../state/current-user-context';
-import { Button, cn, DrawerControls, Icon, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, useCopy, useToast } from '@tickets/ui';
+import { Button, cn, DrawerControls, Icon, ItemKey, Menu, MenuContent, MenuItem, MenuTrigger, Pill, RelativeDate, SectionHeader, Tabs, useCopy } from '@tickets/ui';
 import { StatusSelect } from '../ui/status-select';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
@@ -108,7 +107,6 @@ export function ItemDetail({
   const { userId } = useCurrentUser();
   const patch = usePatchItem();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   const [tab, setTab] = useState<'comments' | 'activity'>('comments');
   const { copied, copy: copyLink } = useCopy();
 
@@ -195,14 +193,9 @@ export function ItemDetail({
         expectedUpdatedAt: item.updatedAt,
         values: { [workflowField.key]: next },
       },
-      {
-        onError: (error) => {
-          void queryClient.invalidateQueries({ queryKey: ['board'] });
-          if (error instanceof ApiError && error.status === 422) {
-            toast({ title: error.message });
-          }
-        },
-      },
+      // A rejected move (422) is toasted by MutationErrorToasts like any
+      // other failed save.
+      saveMutationOptions,
     );
   };
 

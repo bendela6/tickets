@@ -1,3 +1,4 @@
+import { OWN_ERROR } from '../../api/mutation-meta';
 import { useMemo, useState } from 'react';
 import { useBoard } from '../../api/use-board';
 import { useForkScheme, useUpdateProject } from '../../api/use-admin';
@@ -33,8 +34,8 @@ export function SettingsScreen({ projectKey }: { projectKey: string }) {
   const indexes = useMemo(() => (board ? indexBoard(board) : null), [board]);
   const [tab, setTab] = useState<TabKey>('types');
   const { userId } = useCurrentUser();
-  const forkScheme = useForkScheme();
-  const updateProject = useUpdateProject();
+  const forkScheme = useForkScheme(OWN_ERROR);
+  const updateProject = useUpdateProject(OWN_ERROR);
   const { toast } = useToast();
 
   async function handleFork() {

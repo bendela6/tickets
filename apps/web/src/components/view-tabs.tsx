@@ -59,19 +59,22 @@ export function ViewTabs({
           className="mx-4 w-144"
           onBlur={() => setAdding(false)}
           onChange={(next) => setDraft(next)}
-          onKeyDown={async (event) => {
+          onKeyDown={(event) => {
             if (event.key === 'Enter' && draft.trim().length > 0 && userId !== null) {
-              const created = await createView.mutateAsync({
-                projectKey,
-                actorId: userId,
-                name: draft.trim(),
-              });
-              setAdding(false);
-              setDraft('');
-              void navigate({
-                to: '/p/$projectKey/v/$viewId',
-                params: { projectKey, viewId: String(created.id) },
-              });
+              // A failure is toasted by MutationErrorToasts.
+              createView.mutate(
+                { projectKey, actorId: userId, name: draft.trim() },
+                {
+                  onSuccess: (created) => {
+                    setAdding(false);
+                    setDraft('');
+                    void navigate({
+                      to: '/p/$projectKey/v/$viewId',
+                      params: { projectKey, viewId: String(created.id) },
+                    });
+                  },
+                },
+              );
             }
             if (event.key === 'Escape') {
               setAdding(false);

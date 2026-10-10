@@ -1,3 +1,4 @@
+import { OWN_ERROR } from '../../api/mutation-meta';
 import { useEffect, useState } from 'react';
 import type { SignalsAppRow } from '../../api/signals/signals-api';
 import { useDeleteApp } from '../../api/signals/use-signals';
@@ -25,7 +26,7 @@ export function DeleteAppDialog({
   onOpenChange: (open: boolean) => void;
   onDeleted?: () => void;
 }) {
-  const deleteApp = useDeleteApp();
+  const deleteApp = useDeleteApp(OWN_ERROR);
   const [typed, setTyped] = useState('');
 
   useEffect(() => {

@@ -1,3 +1,4 @@
+import { OWN_ERROR } from '../api/mutation-meta';
 import { useState } from 'react';
 import type { Item } from '../api/types';
 import { useCreateComment } from '../api/use-create-comment';
@@ -23,7 +24,7 @@ export function DetailComments({
   onOpenItem?: (number: number) => void;
 }) {
   const { userId } = useCurrentUser();
-  const createComment = useCreateComment();
+  const createComment = useCreateComment(OWN_ERROR);
   // Remount the composer after a successful post so its draft clears.
   const [composerKey, setComposerKey] = useState(0);
 
