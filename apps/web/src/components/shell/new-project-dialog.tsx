@@ -23,11 +23,11 @@ export function NewProjectDialog({
     if (userId === null) {
       return;
     }
-    let created;
+    const key = draft.key.trim();
     try {
-      created = await createProject.mutateAsync({
+      await createProject.mutateAsync({
         actorId: userId,
-        key: draft.key.trim(),
+        key,
         name: draft.name.trim(),
         itemPrefix: draft.itemPrefix.trim().toUpperCase(),
       });
@@ -36,7 +36,8 @@ export function NewProjectDialog({
     }
     onOpenChange(false);
     setDraft({ key: '', name: '', itemPrefix: '' });
-    void navigate({ to: '/p/$projectKey', params: { projectKey: created.key } });
+    // The API answers with the id alone, so the page opens on the key we sent.
+    void navigate({ to: '/p/$projectKey', params: { projectKey: key } });
   }
 
   return (
