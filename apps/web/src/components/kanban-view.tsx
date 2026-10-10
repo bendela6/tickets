@@ -11,6 +11,7 @@ import { avatarFor } from '../domain/actor';
 import { childProgress } from '../utils/child-progress';
 import type { BoardIndexes } from '../utils/index-board';
 import { legalStatusTargets } from '../utils/legal-status-targets';
+import { creatableTypes } from './new-item-dialog';
 
 // Card decorations come from conventionally named fields; the board schema is
 // user-defined, so we match by key/label rather than hard-coding field ids.
@@ -94,6 +95,17 @@ export function KanbanView({
   const [draggingId, setDraggingId] = useState<number | null>(null);
 
   const columns = useMemo(() => workflowColumns(board, indexes, rows), [board, indexes, rows]);
+  // A column's ＋ shows only where some type may start (its entry statuses),
+  // so it never opens New item on a status the item can't be created in.
+  const startable = useMemo(
+    () =>
+      new Set(
+        creatableTypes(board).flatMap((type) =>
+          legalStatusTargets(board, indexes, null, type.id).map((option) => option.value),
+        ),
+      ),
+    [board, indexes],
+  );
 
   const priorityField = useMemo(
     () => findFieldByPattern(board.fields, ['option'], /prio|priority|severity/i),
@@ -322,7 +334,7 @@ export function KanbanView({
               <span className="font-sans text-13/19 font-500 text-gray-12">{option.label}</span>
               <span className="font-mono text-11 text-gray-9">{cards.length}</span>
               <span className="flex-1" />
-              {onNewTicket ? (
+              {onNewTicket && startable.has(option.value) ? (
                 <button
                   type="button"
                   aria-label={`New item in ${option.label}`}

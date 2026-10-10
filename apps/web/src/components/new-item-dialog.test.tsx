@@ -229,6 +229,21 @@ test('an initial status the type does not offer falls back to the default', asyn
   expect(JSON.parse(String(init.body))).toMatchObject({ values: { status: 'backlog' } });
 });
 
+test('from a column, the picker offers only the types that may start in its status', () => {
+  // tasks start in backlog, bugs in review
+  renderDialog(
+    makeBoard({
+      transitions: [
+        { id: 1, fieldId: 10, itemTypeId: 1, fromOptionId: null, toOptionId: 1000, config: null },
+        { id: 2, fieldId: 10, itemTypeId: 2, fromOptionId: null, toOptionId: 1001, config: null },
+      ],
+    }),
+    'in-review',
+  );
+  // one type left, so the picker is skipped
+  expect(screen.getByText('New Bug')).toBeInTheDocument();
+});
+
 test('skips the picker when only one creatable type exists', () => {
   const board = makeBoard();
   renderDialog({ ...board, types: board.types.filter((type) => type.key !== 'bug') });
