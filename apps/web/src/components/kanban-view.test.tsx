@@ -292,6 +292,15 @@ test('a column’s ＋ starts a new item in that status', async () => {
   expect(onNewTicket).toHaveBeenCalledWith('in-review');
 });
 
+test('the ＋ shows only on columns some type may start in', () => {
+  const board = makeBoard();
+  // an entry edge: tasks start in backlog, nowhere else
+  board.transitions.push({ id: 2, fieldId: 10, itemTypeId: null, fromOptionId: null, toOptionId: 1, config: null });
+  renderKanban(board);
+  expect(screen.getByRole('button', { name: 'New item in Backlog' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'New item in In review' })).not.toBeInTheDocument();
+});
+
 test('column glyph tint follows the option kind', () => {
   renderKanban();
   const backlog = screen.getByRole('region', { name: 'Backlog' });

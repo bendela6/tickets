@@ -24,6 +24,11 @@ import { legalStatusTargets } from '../utils/legal-status-targets';
 // below), never from the global picker — the picker shows them as a disabled row.
 const SUBTASK_KEY = 'subtask';
 
+/** The types the New item picker offers: every live type but subtasks. */
+export function creatableTypes(board: Board): ItemType[] {
+  return board.types.filter((type) => !type.archivedAt && type.key !== SUBTASK_KEY);
+}
+
 type PlacementRow = { placement: ItemTypeField; field: Field };
 
 // The type's form, resolved through indexes.placementsByType (type → ordered
@@ -121,10 +126,15 @@ export function NewItemDialog({
   const createItem = useCreateItem(OWN_ERROR);
   const titleRef = useRef<HTMLInputElement>(null);
 
-  const selectable = useMemo(
-    () => board.types.filter((type) => !type.archivedAt && type.key !== SUBTASK_KEY),
-    [board.types],
-  );
+  // From a kanban column's ＋, only the types that may start in its status.
+  const selectable = useMemo(() => {
+    const creatable = creatableTypes(board);
+    if (initialStatus === null) return creatable;
+    const startHere = creatable.filter((type) =>
+      legalStatusTargets(board, indexes, null, type.id).some((option) => option.value === initialStatus),
+    );
+    return startHere.length > 0 ? startHere : creatable;
+  }, [board, indexes, initialStatus]);
   const subtaskType =
     board.types.find((type) => !type.archivedAt && type.key === SUBTASK_KEY) ?? null;
 
