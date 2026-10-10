@@ -5,6 +5,7 @@ import { commands } from '@tickets/db';
 import { HttpError } from '../errors';
 import { writeEvent } from '../event/write';
 import { notifyOutbox } from '../outbox/notify';
+import { describeIssues } from '../utils/parse-body';
 import type { CommandDef, CommandContext } from './registry';
 import type { CommandEnvelope } from './envelope';
 
@@ -14,12 +15,11 @@ export async function runCommand<S extends v.GenericSchema, TResult>(
   envelope: CommandEnvelope,
   rawInput: unknown,
 ): Promise<TResult> {
-  let input: v.InferOutput<S>;
-  try {
-    input = v.parse(cmd.input, rawInput);
-  } catch {
-    throw new HttpError(400, 'invalid command input');
+  const parsed = v.safeParse(cmd.input, rawInput);
+  if (!parsed.success) {
+    throw new HttpError(400, `invalid command input: ${describeIssues(parsed.issues)}`);
   }
+  const input: v.InferOutput<S> = parsed.output;
   const agg = cmd.aggregate(input);
   for (let attempt = 0; ; attempt++) {
     try {

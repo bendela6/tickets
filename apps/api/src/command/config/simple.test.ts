@@ -26,6 +26,25 @@ it('creates a project and a user, each emitting its typed event', async () => {
   expect(kinds).toContain('user.created');
 });
 
+// The web's New project dialog sends no schemeId.
+it('creates a project on the shared software scheme when no scheme is given', async () => {
+  const fx = await seedFixture();
+  const p = await runCommand(testDb, projectCreate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
+    key: 'p3', name: 'Third', itemPrefix: 'P3',
+  });
+  const row = (await testDb.select().from(projects).where(eq(projects.id, p.id)))[0]!;
+  expect(row.schemeId).toBe(fx.schemeId);
+});
+
+it('a command whose input fails says which field', async () => {
+  const fx = await seedFixture();
+  const attempt = runCommand(testDb, projectCreate, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
+    key: 'p4', name: 'Fourth',
+  });
+  await expect(attempt).rejects.toBeInstanceOf(HttpError);
+  await expect(attempt).rejects.toThrow(/^invalid command input: itemPrefix: /);
+});
+
 it('forks a scheme then repoints the project to it, emitting project.updated', async () => {
   const fx = await seedFixture();
   const forked = await runCommand(testDb, schemeFork, { commandId: crypto.randomUUID(), actorId: fx.actorId }, {
